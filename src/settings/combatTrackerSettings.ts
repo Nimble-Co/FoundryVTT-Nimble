@@ -1,3 +1,5 @@
+import { SYSTEM_ID } from '#system';
+
 export const COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY =
 	'combatTrackerPlayersCanExpandMonsterCards';
 export const COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY =
@@ -92,7 +94,7 @@ function registerWorldSetting(
 	options: Parameters<typeof game.settings.register>[2],
 ): void {
 	game.settings.register(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		key as 'rollMode',
 		options as unknown as Parameters<typeof game.settings.register>[2],
 	);
@@ -321,7 +323,7 @@ export function registerCombatTrackerSettings(): void {
 		default: DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.borderGlowColor,
 	});
 	const legacyColorDefault = normalizeCombatTrackerAnimationColor(
-		game.settings.get('nimble' as 'core', LEGACY_CURRENT_TURN_COLOR_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', LEGACY_CURRENT_TURN_COLOR_SETTING_KEY as 'rollMode'),
 	);
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseAnimation, {
 		name: 'Combat Tracker Current Turn Pulse Animation',
@@ -395,7 +397,7 @@ export function registerCombatTrackerSettings(): void {
 export function getCombatTrackerPlayersCanExpandMonsterCards(): boolean {
 	return Boolean(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -410,7 +412,7 @@ export function isCombatTrackerPlayerMonsterExpansionSettingKey(settingKey: unkn
 export function getCombatTrackerResourceDrawerHoverEnabled(): boolean {
 	return Boolean(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -419,7 +421,7 @@ export function getCombatTrackerResourceDrawerHoverEnabled(): boolean {
 export function getCombatTrackerPlayerHpBarTextMode(): CombatTrackerPlayerHpBarTextMode {
 	return normalizeHpBarTextMode(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -428,7 +430,7 @@ export function getCombatTrackerPlayerHpBarTextMode(): CombatTrackerPlayerHpBarT
 export function getCombatTrackerNonPlayerHpBarEnabled(): boolean {
 	return Boolean(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -437,7 +439,7 @@ export function getCombatTrackerNonPlayerHpBarEnabled(): boolean {
 export function getCombatTrackerNonPlayerHpBarTextMode(): CombatTrackerNonPlayerHpBarTextMode {
 	return normalizeHpBarTextMode(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -445,26 +447,29 @@ export function getCombatTrackerNonPlayerHpBarTextMode(): CombatTrackerNonPlayer
 
 export function getCombatTrackerCtEnabled(): boolean {
 	return Boolean(
-		game.settings.get('nimble' as 'core', COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode'),
 	);
 }
 
 export function getCombatTrackerCtWidthLevel(): number {
 	return normalizeCtWidthLevel(
-		game.settings.get('nimble' as 'core', COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY as 'rollMode'),
 	);
 }
 
 export function getCombatTrackerCtCardSizeLevel(): number {
 	return normalizeCtCardSizeLevel(
-		game.settings.get('nimble' as 'core', COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY as 'rollMode'),
+		game.settings.get(
+			SYSTEM_ID as 'core',
+			COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY as 'rollMode',
+		),
 	);
 }
 
 export function getCombatTrackerCtLeftToRightOrdering(): boolean {
 	return Boolean(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -473,7 +478,7 @@ export function getCombatTrackerCtLeftToRightOrdering(): boolean {
 export function getCombatTrackerActionDiceColor(): string {
 	return normalizeHexColor(
 		game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY as 'rollMode',
 		),
 	);
@@ -481,7 +486,7 @@ export function getCombatTrackerActionDiceColor(): string {
 
 export function getCombatTrackerReactionColor(): string {
 	return normalizeHexColor(
-		game.settings.get('nimble' as 'core', COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY as 'rollMode'),
 	);
 }
 
@@ -549,51 +554,51 @@ export function getCurrentTurnAnimationSettings(): CurrentTurnAnimationSettings 
 	return {
 		pulseAnimation: Boolean(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseAnimation as 'rollMode',
 			),
 		),
 		pulseSpeed: normalizeCurrentTurnAnimationSliderValue(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseSpeed as 'rollMode',
 			),
 			DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.pulseSpeed,
 		),
 		borderGlow: Boolean(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlow as 'rollMode',
 			),
 		),
 		borderGlowColor: normalizeCombatTrackerAnimationColor(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowColor as 'rollMode',
 			),
 		),
 		borderGlowSize: normalizeCurrentTurnAnimationSliderValue(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowSize as 'rollMode',
 			),
 			DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.borderGlowSize,
 		),
 		edgeCrawler: Boolean(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawler as 'rollMode',
 			),
 		),
 		edgeCrawlerColor: normalizeCombatTrackerAnimationColor(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerColor as 'rollMode',
 			),
 		),
 		edgeCrawlerSize: normalizeCurrentTurnAnimationSliderValue(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerSize as 'rollMode',
 			),
 			DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.edgeCrawlerSize,
@@ -614,7 +619,7 @@ export function isCurrentTurnAnimationSettingKey(settingKey: unknown): boolean {
 
 export async function setCombatTrackerPlayersCanExpandMonsterCards(value: boolean): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
@@ -622,7 +627,7 @@ export async function setCombatTrackerPlayersCanExpandMonsterCards(value: boolea
 
 export async function setCombatTrackerResourceDrawerHoverEnabled(value: boolean): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
@@ -632,7 +637,7 @@ export async function setCombatTrackerPlayerHpBarTextMode(
 	value: CombatTrackerPlayerHpBarTextMode,
 ): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
 		normalizeHpBarTextMode(value) as never,
 	);
@@ -640,7 +645,7 @@ export async function setCombatTrackerPlayerHpBarTextMode(
 
 export async function setCombatTrackerNonPlayerHpBarEnabled(value: boolean): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
@@ -650,7 +655,7 @@ export async function setCombatTrackerNonPlayerHpBarTextMode(
 	value: CombatTrackerNonPlayerHpBarTextMode,
 ): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
 		normalizeHpBarTextMode(value) as never,
 	);
@@ -658,7 +663,7 @@ export async function setCombatTrackerNonPlayerHpBarTextMode(
 
 export async function setCombatTrackerCtEnabled(value: boolean): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
@@ -666,7 +671,7 @@ export async function setCombatTrackerCtEnabled(value: boolean): Promise<void> {
 
 export async function setCombatTrackerCtWidthLevel(value: number): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY as 'rollMode',
 		normalizeCtWidthLevel(value) as never,
 	);
@@ -674,7 +679,7 @@ export async function setCombatTrackerCtWidthLevel(value: number): Promise<void>
 
 export async function setCombatTrackerCtCardSizeLevel(value: number): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY as 'rollMode',
 		normalizeCtCardSizeLevel(value) as never,
 	);
@@ -682,7 +687,7 @@ export async function setCombatTrackerCtCardSizeLevel(value: number): Promise<vo
 
 export async function setCombatTrackerCtLeftToRightOrdering(value: boolean): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
@@ -692,7 +697,7 @@ export async function setCombatTrackerActionDiceColor(value: string): Promise<vo
 	const normalizedColor = normalizeHexColor(value);
 	applyCtActionDiceColorCssVariable(normalizedColor);
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY as 'rollMode',
 		normalizedColor as never,
 	);
@@ -702,7 +707,7 @@ export async function setCombatTrackerReactionColor(value: string): Promise<void
 	const normalizedColor = normalizeHexColor(value);
 	applyCtReactionColorCssVariable(normalizedColor);
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY as 'rollMode',
 		normalizedColor as never,
 	);
@@ -719,5 +724,5 @@ export async function setCurrentTurnAnimationSetting(
 		normalizedValue = normalizeCurrentTurnAnimationSliderValue(value, 50);
 	}
 
-	await game.settings.set('nimble' as 'core', settingKey as 'rollMode', normalizedValue as never);
+	await game.settings.set(SYSTEM_ID as 'core', settingKey as 'rollMode', normalizedValue as never);
 }

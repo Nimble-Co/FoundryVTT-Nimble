@@ -6,6 +6,7 @@
 	import { getContext } from 'svelte';
 	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
 	import { getPools, getPoolsForItem } from '../../../utils/chargePool/chargePoolSync.js';
+	import { SYSTEM_ID } from '#system';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
@@ -153,7 +154,7 @@
 	);
 
 	// Settings
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	// All charge pools for the actor

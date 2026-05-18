@@ -13,9 +13,9 @@
 				"label": "Explorer of the Wilds"
 			},
 			{
-				"type": "speedBonus",
-				"value": "@attributes.movement.walk",
-				"movementType": "climb",
+				"type": "grantMovement",
+				"mode": "climb",
+				"speed": "@attributes.movement.walk",
 				"label": "Explorer of the Wilds"
 			}
 		],

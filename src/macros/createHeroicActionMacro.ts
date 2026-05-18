@@ -1,4 +1,4 @@
-import { SYSTEM_PATH } from '#utils/systemId.ts';
+import { SYSTEM_PATH } from '#system';
 
 interface HeroicActionMacroData {
 	actionId: string;

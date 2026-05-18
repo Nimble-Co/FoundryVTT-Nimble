@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import getDeterministicBonus from '../dice/getDeterministicBonus.js';
 import {
 	getItemSourceId,
@@ -28,7 +29,7 @@ type ActorWithCollections = Actor & {
 	getRollData?: () => Record<string, unknown>;
 };
 
-const COMBAT_MANA_FLAG_SCOPE = 'nimble';
+const COMBAT_MANA_FLAG_SCOPE = SYSTEM_ID;
 const COMBAT_MANA_FLAG_KEY = 'combatManaGrants';
 
 function normalizeGrantMap(value: unknown): CombatManaGrantMap {

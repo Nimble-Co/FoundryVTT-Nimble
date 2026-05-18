@@ -13,7 +13,9 @@ import {
 	hasWeaponProficiency,
 } from '../utils/attackUtils.js';
 import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
+import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
 import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
+import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -411,14 +413,14 @@ class ItemActivationManager {
 			// items here since the dispatcher does the same elsewhere.
 			let currentFaces: number[] | null = null;
 			if (poolId.startsWith('actor:')) {
-				const map = foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+				const map = foundry.utils.getProperty(actor, DicePoolRuleConfig.flagPath) as
 					| Record<string, { faces?: number[] }>
 					| undefined;
 				const entry = map?.[poolId];
 				currentFaces = Array.isArray(entry?.faces) ? [...entry.faces] : null;
 			} else {
 				for (const item of actor.items.contents) {
-					const map = foundry.utils.getProperty(item, 'flags.nimble.dicePools') as
+					const map = foundry.utils.getProperty(item, DicePoolRuleConfig.flagPath) as
 						| Record<string, { faces?: number[] }>
 						| undefined;
 					const entry = map?.[poolId];
@@ -462,7 +464,7 @@ class ItemActivationManager {
 			// values, so read current and 'set' to current - count.
 			let currentValue = 0;
 			for (const item of actor.items.contents) {
-				const map = foundry.utils.getProperty(item, 'flags.nimble.chargePools') as
+				const map = foundry.utils.getProperty(item, ChargePoolRuleConfig.flagPath) as
 					| Record<string, { current?: number }>
 					| undefined;
 				const poolEntry = map?.[entry.poolId];
@@ -525,18 +527,18 @@ class ItemActivationManager {
 
 		if (node.poolType === 'dice') {
 			const readPool = (): { label?: string; faces: number[] } => {
-				// Item-scoped pools live on item.flags.nimble.dicePools[identifier];
-				// actor-scoped pools (id "actor:identifier") live on actor.flags.nimble.dicePools.
+				// Item-scoped pools live on item flags under DicePoolRuleConfig.flagPath[identifier];
+				// actor-scoped pools (id "actor:identifier") live on the actor under the same path.
 				if (poolId.startsWith('actor:')) {
 					const actorMap =
-						(foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+						(foundry.utils.getProperty(actor, DicePoolRuleConfig.flagPath) as
 							| Record<string, { label?: string; faces?: number[] }>
 							| undefined) ?? {};
 					const entry = actorMap[poolId];
 					return { label: entry?.label, faces: Array.isArray(entry?.faces) ? entry.faces : [] };
 				}
 				for (const item of actor.items.contents) {
-					const itemMap = foundry.utils.getProperty(item, 'flags.nimble.dicePools') as
+					const itemMap = foundry.utils.getProperty(item, DicePoolRuleConfig.flagPath) as
 						| Record<string, { label?: string; faces?: number[] }>
 						| undefined;
 					if (!itemMap) continue;
@@ -596,7 +598,7 @@ class ItemActivationManager {
 		if (node.poolType === 'charge') {
 			const readChargePool = (): { label?: string; current: number } => {
 				for (const item of actor.items.contents) {
-					const map = foundry.utils.getProperty(item, 'flags.nimble.chargePools') as
+					const map = foundry.utils.getProperty(item, ChargePoolRuleConfig.flagPath) as
 						| Record<string, { label?: string; current?: number; identifier?: string }>
 						| undefined;
 					if (!map) continue;

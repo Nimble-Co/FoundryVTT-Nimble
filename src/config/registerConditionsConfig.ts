@@ -1,4 +1,4 @@
-import { SYSTEM_PATH } from '#utils/systemId.ts';
+import { SYSTEM_PATH } from '#system';
 
 /**
  * Canonical status-effect IDs for system-managed conditions. The keys here are the

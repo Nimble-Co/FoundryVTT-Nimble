@@ -23,7 +23,9 @@ import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
+import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import './scss/main.scss';
+import { SYSTEM_ID } from '#system';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
 import { injectViteHmrClient } from '#utils/viteHmr.js';
 
@@ -46,7 +48,7 @@ async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
 			actor.update({
 				'system.resources.mana.baseMax': 0,
 				'system.resources.mana.current': 0,
-				'flags.nimble.combatManaGrants': grants,
+				[`flags.${SYSTEM_ID}.combatManaGrants`]: grants,
 			} as Record<string, unknown>),
 		);
 		return acc;
@@ -63,6 +65,10 @@ injectViteHmrClient();
 /** ----------------------------------- */
 //                Hooks
 /** ----------------------------------- */
+// Dev-build-only: rebrand legacy stable-id flags on world load. See
+// src/migration/devFlagRebrand.ts for details. Must be registered before
+// the main `init` handler so it fires first.
+Hooks.once('init', runDevFlagRebrandPreInit);
 Hooks.once('init', init);
 Hooks.once('setup', setup);
 Hooks.once('ready', ready);

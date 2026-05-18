@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import {
 	getCombatManaGrantForCombat,
 	getCombatManaGrantMap,
@@ -39,7 +40,7 @@ export default async function combatManaHandler({
 		combatant.actor.update({
 			'system.resources.mana.baseMax': combatMana,
 			'system.resources.mana.current': combatMana,
-			'flags.nimble.combatManaGrants': grants,
+			[`flags.${SYSTEM_ID}.combatManaGrants`]: grants,
 		} as Record<string, unknown>),
 	);
 }

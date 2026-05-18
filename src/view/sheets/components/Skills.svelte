@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 
 	import localize from '../../../utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	function getSkillValueLabel(modifier) {
@@ -21,7 +22,7 @@
 
 	const actor = getContext('actor');
 
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let compactSkillsView = $derived(flags?.compactSkillsView ?? true);
 	let showPassiveSkillScores = $derived(flags?.showPassiveSkillScores ?? false);

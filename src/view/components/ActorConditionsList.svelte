@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import prepareActorConditions from '../dataPreparationHelpers/prepareActorConditions.js';
 	import localize from '../../utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 
 	interface Props {
 		actor: (Actor.Implementation & { reactive: Actor.Implementation }) | null;
@@ -25,7 +26,7 @@
 	let { actor, mode = 'sheet', allowRemove = true }: Props = $props();
 	let effectVersion = $state(0);
 
-	let flags = $derived(actor?.reactive.flags.nimble);
+	let flags = $derived(actor?.reactive.flags[SYSTEM_ID]);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 
 	let actorConditions = $derived.by(() => {

@@ -1,6 +1,7 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import { SYSTEM_ID } from '#system';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 import { getHeroicReactionUsageState } from '#utils/getHeroicReactionUsageState.js';
 import {
@@ -326,7 +327,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Derived State
 	// ============================================================================
 
-	const flags = $derived(getActor().reactive.flags.nimble);
+	const flags = $derived(getActor().reactive.flags[SYSTEM_ID]);
 	const showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	function isActionDisabled(action: HeroicAction): boolean {

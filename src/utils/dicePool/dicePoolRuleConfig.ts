@@ -1,3 +1,5 @@
+import { SYSTEM_ID } from '#system';
+
 const DicePoolRuleConfig = {
 	scopes: ['item', 'actor'],
 	dieSizes: ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'],
@@ -27,9 +29,9 @@ const DicePoolRuleConfig = {
 	// Optional delivery filter for autoBonus pools. When set, the pool's faces
 	// auto-add only to attacks of the matching delivery.
 	attackDeliveryFilters: ['melee', 'ranged', 'any'] as const,
-	flagScope: 'nimble',
+	flagScope: SYSTEM_ID,
 	flagKey: 'dicePools',
-	flagPath: 'flags.nimble.dicePools',
+	flagPath: `flags.${SYSTEM_ID}.dicePools`,
 } as const;
 
 export { DicePoolRuleConfig };

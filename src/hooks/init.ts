@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import { NimbleTemplateLayer } from '../canvas/layers/templateLayer.js';
 import { NIMBLE } from '../config.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -104,7 +105,7 @@ export default function init() {
 	foundry.documents.collections.Actors.unregisterSheet('core', foundry.appv1.sheets.ActorSheet);
 
 	foundry.documents.collections.Actors.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		NPCSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['npc'],
@@ -114,7 +115,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Actors.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		PlayerCharacterSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['character'],
@@ -124,7 +125,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Actors.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		NPCSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['soloMonster'],
@@ -134,7 +135,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Actors.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		NPCSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['minion'],
@@ -146,7 +147,7 @@ export default function init() {
 	foundry.documents.collections.Items.unregisterSheet('core', foundry.appv1.sheets.ItemSheet);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		BackgroundSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['background'],
@@ -156,7 +157,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		BoonSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['boon'],
@@ -165,7 +166,7 @@ export default function init() {
 		},
 	);
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		ClassSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['class'],
@@ -175,7 +176,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		FeatureSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['feature'],
@@ -185,7 +186,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		MonsterFeatureSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['monsterFeature'],
@@ -195,7 +196,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		ObjectSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['object'],
@@ -205,7 +206,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		AncestrySheet as unknown as ItemSheetConstructor,
 		{
 			types: ['ancestry'],
@@ -215,7 +216,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		SpellSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['spell'],
@@ -225,7 +226,7 @@ export default function init() {
 	);
 
 	foundry.documents.collections.Items.registerSheet(
-		'nimble',
+		SYSTEM_ID,
 		SubclassSheet as unknown as ItemSheetConstructor,
 		{
 			types: ['subclass'],

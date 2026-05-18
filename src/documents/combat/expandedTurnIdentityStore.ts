@@ -1,7 +1,8 @@
+import { SYSTEM_ID } from '#system';
 import type { TurnIdentity } from './combatTypes.js';
 
 const expandedTurnIdentityByCombatId = new Map<string, TurnIdentity>();
-export const EXPANDED_TURN_IDENTITY_FLAG_PATH = 'flags.nimble.expandedTurnIdentity';
+export const EXPANDED_TURN_IDENTITY_FLAG_PATH = `flags.${SYSTEM_ID}.expandedTurnIdentity`;
 
 function normalizeTurnIdentity(value: unknown): TurnIdentity | null {
 	if (!value || typeof value !== 'object') return null;

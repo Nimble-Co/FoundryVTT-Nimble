@@ -1,9 +1,11 @@
+import { SYSTEM_ID } from '#system';
+
 export const ADJACENCY_SYNC_SETTING_KEY = 'autoTrackTokenAdjacency';
 export const ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY = 'adjacencyIncludesDiagonals';
 
 export function registerAdjacencySettings(): void {
 	game.settings.register(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		ADJACENCY_SYNC_SETTING_KEY as 'rollMode',
 		{
 			name: 'NIMBLE.settings.autoTrackTokenAdjacency.name',
@@ -18,8 +20,8 @@ export function registerAdjacencySettings(): void {
 					// Tracking disabled — clear adjacency flags on all actors so stale
 					// data doesn't persist across the required reload.
 					game.actors?.forEach((actor) => {
-						if (actor.getFlag('nimble', 'adjacency')) {
-							actor.unsetFlag('nimble', 'adjacency');
+						if (actor.getFlag(SYSTEM_ID, 'adjacency')) {
+							actor.unsetFlag(SYSTEM_ID, 'adjacency');
 						}
 					});
 				}
@@ -31,14 +33,14 @@ export function registerAdjacencySettings(): void {
 }
 
 export function getAdjacencySyncEnabled(): boolean {
-	if (!game.settings.settings.has(`nimble.${ADJACENCY_SYNC_SETTING_KEY}` as 'core.rollMode'))
+	if (!game.settings.settings.has(`${SYSTEM_ID}.${ADJACENCY_SYNC_SETTING_KEY}` as 'core.rollMode'))
 		return false;
-	return Boolean(game.settings.get('nimble' as 'core', ADJACENCY_SYNC_SETTING_KEY as 'rollMode'));
+	return Boolean(game.settings.get(SYSTEM_ID as 'core', ADJACENCY_SYNC_SETTING_KEY as 'rollMode'));
 }
 
 function registerAdjacencyIncludesDiagonalsSetting(): void {
 	game.settings.register(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY as 'rollMode',
 		{
 			name: 'NIMBLE.settings.adjacencyIncludesDiagonals.name',
@@ -54,6 +56,6 @@ function registerAdjacencyIncludesDiagonalsSetting(): void {
 
 export function getAdjacencyIncludesDiagonals(): boolean {
 	return Boolean(
-		game.settings.get('nimble' as 'core', ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY as 'rollMode'),
 	);
 }

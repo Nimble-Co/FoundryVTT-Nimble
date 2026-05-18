@@ -6,6 +6,7 @@
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/sortItems.js';
+	import { SYSTEM_ID } from '#system';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 	import prepareObjectTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
@@ -146,7 +147,7 @@
 	let currency = $derived(actor.reactive?.system?.currency);
 
 	// Settings
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 	let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
 </script>

@@ -1,10 +1,12 @@
 <script>
 	import { getContext } from 'svelte';
 
+	import { SYSTEM_ID } from '#system';
+
 	let { icon = 'fa-solid fa-message', item } = $props();
 
 	let actor = getContext('actor');
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let hasUses = false;
 </script>

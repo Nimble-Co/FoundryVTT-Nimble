@@ -8,6 +8,7 @@
 	import SecondaryNavigation from '#view/components/SecondaryNavigation.svelte';
 	import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 	import prepareSpellTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareSpellTooltip.js';
+	import { SYSTEM_ID } from '#system';
 	import SearchBar from '#view/sheets/components/SearchBar.svelte';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
@@ -163,7 +164,7 @@
 	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 
 	// Settings
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 

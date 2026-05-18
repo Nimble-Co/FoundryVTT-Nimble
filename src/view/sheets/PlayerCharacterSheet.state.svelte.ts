@@ -2,6 +2,7 @@ import { setContext, untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
 import { incrementDieSize } from '#managers/HitDiceManager.js';
+import { SYSTEM_ID } from '#system';
 import {
 	getInitiativeCombatManaRules,
 	primeActorCombatManaSourceRules,
@@ -178,7 +179,7 @@ export function createPlayerCharacterSheetState(params: {
 		return classHasManaFormula;
 	});
 
-	const flags = $derived(actor.reactive.flags.nimble);
+	const flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	const actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	const actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	const actorImageScale = $derived(flags?.actorImageScale ?? 100);
@@ -317,7 +318,7 @@ export function createPlayerCharacterSheetState(params: {
 	}
 
 	async function toggleEditingEnabled(): Promise<void> {
-		await actor.setFlag('nimble', 'editingEnabled', !editingEnabled);
+		await actor.setFlag(SYSTEM_ID, 'editingEnabled', !editingEnabled);
 	}
 
 	return {
