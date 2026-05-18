@@ -16,6 +16,13 @@ This file provides guidance for AI assistants working on this codebase.
 - **Don't modify test infrastructure**: `tests/setup.ts` and `tests/mocks/foundry.js` are stable shared infrastructure — fix your test, not the setup
 - **English localization only**: Agents may add or modify English source strings in `en.json` but must flag all changes for human review. Never generate, modify, or translate locale files for any other language.
 - **Base branch is `dev`**: When comparing against remote, creating PRs, or referencing the base branch, always use `dev` — never `main`.
+- **Never hardcode `'nimble'` as the system id**: Always import `SYSTEM_ID` from `#system` (or `SYSTEM_PATH` for `systems/<id>/...` asset paths). The dev rolling release rebuilds under a different system id (`nimble-dev`), and hardcoded `'nimble'` literals silently break flags, settings, sheet registration, and pack UUIDs in that build. This applies to:
+  - **Flag scope:** `actor.setFlag(SYSTEM_ID, ...)`, `getFlag`, `unsetFlag`
+  - **Flag paths:** `` `flags.${SYSTEM_ID}.X` `` (or use the existing `*RuleConfig.flagPath`/`flagScope` constants when applicable)
+  - **Property access:** `actor.flags[SYSTEM_ID]`, not `actor.flags.nimble`
+  - **Settings:** `game.settings.get/set/register(SYSTEM_ID as 'core', ...)`
+  - **Sheet/keybinding registration:** `Actors.registerSheet(SYSTEM_ID, ...)`, `game.keybindings.register(SYSTEM_ID, ...)`
+  - **Asset paths:** `` `${SYSTEM_PATH}/icons/foo.svg` `` instead of `'systems/nimble/icons/foo.svg'`
 
 ## References
 
@@ -38,7 +45,7 @@ System internals (read before touching the area):
 - **Props types**: Define in separate `types/components/*.d.ts` files, not inline
 - **Naming**: PascalCase for components/classes, camelCase for functions/directories
 - **Localization**: Use `localize()` from `src/utils/localize.ts` for all user-facing strings
-- **Path aliases**: Use `#documents/*`, `#lib/*`, `#managers/*`, `#stores/*`, `#types/*`, `#utils/*`, `#view/*`
+- **Path aliases**: Use `#documents/*`, `#lib/*`, `#managers/*`, `#stores/*`, `#system`, `#types/*`, `#utils/*`, `#view/*`
 
 ### Engineering Principles
 These are mandatory implementation constraints, not slogans.
