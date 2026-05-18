@@ -1,5 +1,5 @@
 import { mount, unmount } from 'svelte';
-
+import { SYSTEM_ID } from '#system';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
@@ -18,7 +18,7 @@ export default async function ready() {
 	// Only the GM should run migrations (requires world-level write permissions)
 	if (game.user?.isGM) {
 		const worldSchemaVersion = game.settings.get(
-			'nimble' as 'core',
+			SYSTEM_ID as 'core',
 			'worldSchemaVersion' as 'rollMode',
 		) as unknown as number;
 		const latestSchemaVersion = MigrationRunnerBase.LATEST_SCHEMA_VERSION;

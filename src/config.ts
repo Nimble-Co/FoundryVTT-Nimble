@@ -1,7 +1,7 @@
+import { SYSTEM_PATH } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
-import { SYSTEM_PATH } from '#utils/systemId.ts';
 import registerConditionsConfig from './config/registerConditionsConfig.js';
 import registerDocumentConfig from './config/registerDocumentConfig.js';
 import registerPredicateConfig from './config/registerPredicateConfig.js';

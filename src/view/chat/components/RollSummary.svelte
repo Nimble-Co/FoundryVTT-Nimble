@@ -4,6 +4,7 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
+	import { SYSTEM_ID } from '#system';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
 	const {
@@ -17,7 +18,7 @@
 		targetDisposition,
 	}: RollSummaryProps = $props();
 	const { hitDice } = CONFIG.NIMBLE;
-	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
+	const autoExpand = game.settings.get(SYSTEM_ID, 'autoExpandRolls');
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 	let expanded = $state(autoExpand);
 

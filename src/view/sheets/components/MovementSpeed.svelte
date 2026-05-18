@@ -1,10 +1,11 @@
 <script lang="ts">
 	import localize from '../../../utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 
 	const { movementTypes, movementTypeIcons } = CONFIG.NIMBLE;
 
 	let { actor, showDefaultSpeed = false, editingEnabled: editingEnabledProp } = $props();
-	let flags = $derived(actor?.reactive.flags.nimble);
+	let flags = $derived(actor?.reactive.flags[SYSTEM_ID]);
 	let editingEnabledFromFlags = $derived(flags?.editingEnabled ?? false);
 	let editingEnabled = $derived(editingEnabledProp ?? editingEnabledFromFlags);
 

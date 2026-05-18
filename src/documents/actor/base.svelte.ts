@@ -1,5 +1,6 @@
 import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
+import { SYSTEM_ID } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -277,7 +278,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 	_populateDerivedTags(): void {
 		if (getAdjacencySyncEnabled()) {
-			const adjacency = this.getFlag('nimble', 'adjacency') as
+			const adjacency = this.getFlag(SYSTEM_ID, 'adjacency') as
 				| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
 				| undefined;
 
@@ -556,7 +557,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		}
 
 		const autoExecMacros =
-			(this as Actor).getFlag('nimble', 'automaticallyExecuteAvailableMacros') ?? true;
+			(this as Actor).getFlag(SYSTEM_ID, 'automaticallyExecuteAvailableMacros') ?? true;
 		if (autoExecMacros) {
 			options.executeMacro ??= item?.hasMacro;
 		}

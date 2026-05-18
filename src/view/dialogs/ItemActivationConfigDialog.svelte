@@ -3,6 +3,7 @@
 	import type { ItemActivationConfigDialogProps } from '#types/components/ItemActivationConfigDialog.d.ts';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
 	import localize from '#utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
@@ -14,7 +15,7 @@
 		actor: () => actor,
 		item: () => item,
 		initialRollMode: untrack(() => rollMode),
-		hideRollsDefault: !!game.settings.get('nimble', 'hideRolls'),
+		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
 	});
 
 	function onSubmit() {

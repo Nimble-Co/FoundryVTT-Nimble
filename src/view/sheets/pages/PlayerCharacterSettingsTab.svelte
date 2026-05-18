@@ -1,8 +1,9 @@
 <script>
 	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
+	import { SYSTEM_ID } from '#system';
 	import { getContext } from 'svelte';
 	let actor = getContext('actor');
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 
 	const editingEnabledStore = getContext('editingEnabled');
 	let editingEnabled = $derived($editingEnabledStore ?? true);
@@ -54,7 +55,7 @@
 				<input
 					type="number"
 					value={actorImageXOffset}
-					onchange={({ target }) => actor.setFlag('nimble', 'actorImageXOffset', target.value)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageXOffset', target.value)}
 					disabled={!editingEnabled}
 				/>
 			</label>
@@ -67,7 +68,7 @@
 				<input
 					type="number"
 					value={actorImageYOffset}
-					onchange={({ target }) => actor.setFlag('nimble', 'actorImageYOffset', target.value)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageYOffset', target.value)}
 					disabled={!editingEnabled}
 				/>
 			</label>
@@ -80,7 +81,7 @@
 				<input
 					type="number"
 					value={actorImageScale}
-					onchange={({ target }) => actor.setFlag('nimble', 'actorImageScale', target.value)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageScale', target.value)}
 					disabled={!editingEnabled}
 				/>
 			</label>
@@ -97,7 +98,7 @@
 				type="checkbox"
 				checked={automaticallyExecuteAvailableMacros}
 				onchange={({ target }) =>
-					actor.setFlag('nimble', 'automaticallyExecuteAvailableMacros', target.checked)}
+					actor.setFlag(SYSTEM_ID, 'automaticallyExecuteAvailableMacros', target.checked)}
 				disabled={!editingEnabled}
 			/>
 
@@ -109,7 +110,7 @@
 				type="checkbox"
 				checked={showEmbeddedDocumentImages}
 				onchange={({ target }) =>
-					actor.setFlag('nimble', 'showEmbeddedDocumentImages', target.checked)}
+					actor.setFlag(SYSTEM_ID, 'showEmbeddedDocumentImages', target.checked)}
 				disabled={!editingEnabled}
 			/>
 
@@ -126,7 +127,7 @@
 			<input
 				type="checkbox"
 				checked={trackInventorySlots}
-				onchange={({ target }) => actor.setFlag('nimble', 'trackInventorySlots', target.checked)}
+				onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'trackInventorySlots', target.checked)}
 				disabled={!editingEnabled}
 			/>
 
@@ -138,7 +139,7 @@
 				<input
 					type="checkbox"
 					checked={includeCurrencyBulk}
-					onchange={({ target }) => actor.setFlag('nimble', 'includeCurrencyBulk', target.checked)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'includeCurrencyBulk', target.checked)}
 					disabled={!editingEnabled}
 				/>
 
@@ -188,7 +189,7 @@
 			<input
 				type="checkbox"
 				checked={compactSkillsView}
-				onchange={({ target }) => actor.setFlag('nimble', 'compactSkillsView', target.checked)}
+				onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'compactSkillsView', target.checked)}
 				disabled={!editingEnabled}
 			/>
 
@@ -199,7 +200,8 @@
 			<input
 				type="checkbox"
 				checked={showPassiveSkillScores}
-				onchange={({ target }) => actor.setFlag('nimble', 'showPassiveSkillScores', target.checked)}
+				onchange={({ target }) =>
+					actor.setFlag(SYSTEM_ID, 'showPassiveSkillScores', target.checked)}
 				disabled={!editingEnabled}
 			/>
 

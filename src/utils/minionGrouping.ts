@@ -1,6 +1,7 @@
+import { SYSTEM_ID } from '#system';
 import { isCombatantDead } from './isCombatantDead.js';
 
-export const MINION_GROUP_FLAG_ROOT = 'flags.nimble.minionGroup';
+export const MINION_GROUP_FLAG_ROOT = `flags.${SYSTEM_ID}.minionGroup`;
 export const MINION_GROUP_ID_PATH = `${MINION_GROUP_FLAG_ROOT}.id`;
 export const MINION_GROUP_ROLE_PATH = `${MINION_GROUP_FLAG_ROOT}.role`;
 export const MINION_GROUP_TEMPORARY_PATH = `${MINION_GROUP_FLAG_ROOT}.temporary`;

@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import localize from '../utils/localize.js';
 import type { MigrationBase } from './MigrationBase.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
@@ -19,7 +20,7 @@ class MigrationRunner extends MigrationRunnerBase {
 	override needsMigration(): boolean {
 		return super.needsMigration(
 			game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				'worldSchemaVersion' as 'rollMode',
 			) as unknown as number,
 		);
@@ -452,7 +453,7 @@ class MigrationRunner extends MigrationRunnerBase {
 		const migrationVersion = {
 			latest: MigrationRunner.LATEST_SCHEMA_VERSION,
 			current: game.settings.get(
-				'nimble' as 'core',
+				SYSTEM_ID as 'core',
 				'worldSchemaVersion' as 'rollMode',
 			) as unknown as number,
 		};
@@ -479,7 +480,7 @@ class MigrationRunner extends MigrationRunnerBase {
 				await this.runMigrations(phase);
 				const lastVersion = phase[phase.length - 1].version;
 				await game.settings.set(
-					'nimble' as 'core',
+					SYSTEM_ID as 'core',
 					'worldSchemaVersion' as 'rollMode',
 					lastVersion as unknown as foundry.CONST.DICE_ROLL_MODES,
 				);

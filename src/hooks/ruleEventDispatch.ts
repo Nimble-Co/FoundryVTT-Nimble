@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type {
 	ActorHealthContext,
 	InitiativeRolledContext,
@@ -44,7 +45,7 @@ interface NimbleInitiativePayload {
 function isAutoApplyEnabled(): boolean {
 	try {
 		return Boolean(
-			game.settings?.get('nimble' as 'core', AUTO_APPLY_CONDITIONS_SETTING as 'rollMode'),
+			game.settings?.get(SYSTEM_ID as 'core', AUTO_APPLY_CONDITIONS_SETTING as 'rollMode'),
 		);
 	} catch {
 		return false;

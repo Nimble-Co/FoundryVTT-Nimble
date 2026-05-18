@@ -9,6 +9,7 @@
 	import { registerCombatStateHooks } from '../../../utils/combatState.js';
 	import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 	import localize from '../../../utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 	// Components
 	import AbilityScores from '../components/AbilityScores.svelte';
@@ -57,7 +58,7 @@
 			const lateJoinCombat = combat as CombatWithLateJoinCharacterSupport;
 			const autoAddCharacterToCombatOnInitiativeRoll = Boolean(
 				game.settings?.get?.(
-					'nimble' as 'core',
+					SYSTEM_ID as 'core',
 					AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY as 'rollMode',
 				),
 			);
@@ -98,7 +99,7 @@
 	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 	let initiativeRequestPending = $state(false);
 
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 
 	let skills = $derived(actor.reactive.system.skills);

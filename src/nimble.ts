@@ -24,6 +24,7 @@ import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
+import { SYSTEM_ID } from '#system';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
 import { injectViteHmrClient } from '#utils/viteHmr.js';
 
@@ -46,7 +47,7 @@ async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
 			actor.update({
 				'system.resources.mana.baseMax': 0,
 				'system.resources.mana.current': 0,
-				'flags.nimble.combatManaGrants': grants,
+				[`flags.${SYSTEM_ID}.combatManaGrants`]: grants,
 			} as Record<string, unknown>),
 		);
 		return acc;

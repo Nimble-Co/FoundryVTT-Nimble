@@ -176,6 +176,7 @@ const config = defineConfig({
 			'#lib': path.resolve(__dirname, 'lib'),
 			'#managers': path.resolve(__dirname, 'src/managers'),
 			'#stores': path.resolve(__dirname, 'src/stores'),
+			'#system': path.resolve(__dirname, 'src/utils/systemId.ts'),
 			'#types': path.resolve(__dirname, 'types'),
 			'#utils': path.resolve(__dirname, 'src/utils'),
 			'#view': path.resolve(__dirname, 'src/view'),

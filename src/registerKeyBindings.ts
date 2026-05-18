@@ -1,5 +1,7 @@
+import { SYSTEM_ID } from '#system';
+
 export default function registerKeybindings() {
-	game.keybindings.register('nimble', 'system-settings-open-close', {
+	game.keybindings.register(SYSTEM_ID, 'system-settings-open-close', {
 		name: 'Open/Close System Settings',
 		editable: [{ key: 'KeyS', modifiers: ['ALT'] }],
 		onDown: () => {

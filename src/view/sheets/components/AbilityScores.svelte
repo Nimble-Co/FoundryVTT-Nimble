@@ -1,13 +1,14 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	let { abilities } = $props();
 
 	const { abilityScores, abilityScoreAbbreviations, sectionHeaders } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 

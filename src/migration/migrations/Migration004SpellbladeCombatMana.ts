@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import {
 	getCombatManaGrantForCombat,
 	getCombatManaGrantMap,
@@ -171,7 +172,7 @@ class Migration004SpellbladeCombatMana extends MigrationBase {
 			await actor.update({
 				'system.resources.mana.baseMax': combatMana,
 				'system.resources.mana.current': combatMana,
-				'flags.nimble.combatManaGrants': grants,
+				[`flags.${SYSTEM_ID}.combatManaGrants`]: grants,
 			} as Record<string, unknown>);
 		}
 	}

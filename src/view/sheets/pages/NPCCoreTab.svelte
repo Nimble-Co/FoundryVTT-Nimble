@@ -3,6 +3,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import sortItems from '#utils/sortItems.js';
+	import { SYSTEM_ID } from '#system';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import ArmorClass from '#view/sheets/components/ArmorClass.svelte';
 	import MovementSpeed from '#view/sheets/components/MovementSpeed.svelte';
@@ -374,7 +375,7 @@
 
 		// Persist to document in background if editable (non-blocking)
 		if (isEditable) {
-			item.reactive.update({ 'flags.nimble.collapsed': shouldCollapse });
+			item.reactive.update({ [`flags.${SYSTEM_ID}.collapsed`]: shouldCollapse });
 		}
 	}
 
@@ -385,7 +386,7 @@
 			return localCollapsedState.get(item.reactive._id);
 		}
 		// Fall back to document flags
-		return item.reactive.flags.nimble?.collapsed ?? false;
+		return item.reactive.flags[SYSTEM_ID]?.collapsed ?? false;
 	}
 
 	let dragOverItemId = $state(null);
@@ -398,7 +399,7 @@
 	let categorizedItems = $derived(groupItemsByType(items));
 	let flatActionList = $derived(getFlatActionList(categorizedItems['action'] || []));
 
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	let allCollapsed = $derived(items.every((item) => getItemCollapsed(item)));

@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
@@ -381,7 +382,9 @@ function getChargeConsumers(
 	if (hasExplicitConsumer) return consumers;
 
 	if (item.flags == null || typeof item.flags !== 'object') return [];
-	const nimbleFlags = item.flags.nimble;
+	const nimbleFlags = (item.flags as Record<string, unknown>)[SYSTEM_ID] as
+		| Record<string, unknown>
+		| undefined;
 	if (nimbleFlags == null || typeof nimbleFlags !== 'object') return [];
 	const chargePoolsOnItem = nimbleFlags.chargePools;
 	if (
@@ -528,10 +531,10 @@ async function persistChargePoolMap(
 		itemUpdates.push(
 			item.update(
 				{
-					'flags.nimble.chargePools': itemPoolUpdatePayload,
+					[ChargePoolRuleConfig.flagPath]: itemPoolUpdatePayload,
 				} as Record<string, unknown>,
 				{
-					nimble: {
+					[SYSTEM_ID]: {
 						skipChargePoolSync: true,
 					},
 				} as Record<string, unknown>,
