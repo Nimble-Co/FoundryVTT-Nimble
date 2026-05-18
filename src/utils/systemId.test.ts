@@ -62,6 +62,9 @@ const EXCLUDE_GLOBS: readonly string[] = [
 	'src/**/*.spec.ts',
 	// systemId.ts is the source of truth for the value.
 	'src/utils/systemId.ts',
+	// The dev-build rebrand module *must* reference the legacy 'nimble' id —
+	// its whole job is migrating data away from that key. Audited exception.
+	'src/migration/devFlagRebrand.ts',
 ];
 
 const SELF_PATH_FRAGMENT = 'src/utils/systemId.test.ts';

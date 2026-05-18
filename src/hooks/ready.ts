@@ -1,5 +1,6 @@
 import { mount, unmount } from 'svelte';
 import { SYSTEM_ID } from '#system';
+import { runDevFlagRebrandPersist } from '../migration/devFlagRebrand.js';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
@@ -17,6 +18,11 @@ let canvasConditionsPanelComponent: object | null = null;
 export default async function ready() {
 	// Only the GM should run migrations (requires world-level write permissions)
 	if (game.user?.isGM) {
+		// Dev-build-only phase 2: persist the in-memory rebrand (from
+		// preInitGame) to the database. No-op on the stable install, on
+		// non-GM clients, and on already-clean dev worlds.
+		await runDevFlagRebrandPersist();
+
 		const worldSchemaVersion = game.settings.get(
 			SYSTEM_ID as 'core',
 			'worldSchemaVersion' as 'rollMode',
