@@ -420,7 +420,7 @@ export function getCombatTrackerPlayersCanExpandMonsterCards(): boolean {
 export function isCombatTrackerPlayerMonsterExpansionSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY}`;
 }
 
 export function getCombatTrackerResourceDrawerHoverEnabled(): boolean {
@@ -507,73 +507,73 @@ export function getCombatTrackerReactionColor(): string {
 export function isCombatTrackerResourceDrawerHoverSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY}`;
 }
 
 export function isCombatTrackerPlayerHpBarTextModeSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY}`;
 }
 
 export function isCombatTrackerNonPlayerHpBarEnabledSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY}`;
 }
 
 export function isCombatTrackerNonPlayerHpBarTextModeSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY}`;
 }
 
 export function isCombatTrackerEnabledSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_ENABLED_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`;
 }
 
 export function isCombatTrackerWidthLevelSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY}`;
 }
 
 export function isCombatTrackerCardSizeLevelSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY}`;
 }
 
 export function isCombatTrackerLeftToRightOrderingSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY}`;
 }
 
 export function isCombatTrackerActionDiceColorSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY}`;
 }
 
 export function isCombatTrackerReactionColorSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY}`;
 }
 
 export function getCombatTrackerHoverColor(): string {
 	return normalizeHexColor(
-		game.settings.get('nimble' as 'core', COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY as 'rollMode'),
 	);
 }
 
 export function isCombatTrackerHoverColorSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY}`;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY}`;
 }
 
 export function getCurrentTurnAnimationSettings(): CurrentTurnAnimationSettings {
@@ -637,9 +637,9 @@ export function isCurrentTurnAnimationSettingKey(settingKey: unknown): boolean {
 	if (CURRENT_TURN_ANIMATION_SETTING_KEY_SET.has(settingKey as CurrentTurnAnimationSettingKey)) {
 		return true;
 	}
-	if (!settingKey.startsWith('nimble.')) return false;
+	if (!settingKey.startsWith(`${SYSTEM_ID}.`)) return false;
 	return CURRENT_TURN_ANIMATION_SETTING_KEY_SET.has(
-		settingKey.slice('nimble.'.length) as CurrentTurnAnimationSettingKey,
+		settingKey.slice(`${SYSTEM_ID}.`.length) as CurrentTurnAnimationSettingKey,
 	);
 }
 
@@ -741,7 +741,7 @@ export async function setCombatTrackerReactionColor(value: string): Promise<void
 
 export async function setCombatTrackerHoverColor(value: string): Promise<void> {
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY as 'rollMode',
 		normalizeHexColor(value) as never,
 	);
