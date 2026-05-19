@@ -94,8 +94,8 @@
 			{#each tokens as token}
 				<li
 					class="nimble-card"
-					onmouseenter={(event) => tokenHoverIn(token.object, event)}
-					onmouseleave={(event) => tokenHoverOut(token.object, event)}
+					onmouseenter={() => tokenHoverIn(token.object)}
+					onmouseleave={() => tokenHoverOut(token.object)}
 				>
 					<img
 						class="nimble-card__img"

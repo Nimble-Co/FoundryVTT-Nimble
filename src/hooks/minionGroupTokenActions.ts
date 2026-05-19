@@ -1582,13 +1582,13 @@ function renderGroupAttackTargetSection(params: {
 			image.alt = targetToken.name;
 			targetButton.append(image);
 
-			targetButton.addEventListener('mouseenter', (event) => {
+			targetButton.addEventListener('mouseenter', () => {
 				showGroupAttackTargetPopover(targetButton, targetToken);
-				tokenHoverIn(targetToken.token, event);
+				tokenHoverIn(targetToken.token);
 			});
-			targetButton.addEventListener('mouseleave', (event) => {
+			targetButton.addEventListener('mouseleave', () => {
 				hideGroupAttackTargetPopover();
-				tokenHoverOut(targetToken.token, event);
+				tokenHoverOut(targetToken.token);
 			});
 			targetButton.addEventListener('focus', () => {
 				showGroupAttackTargetPopover(targetButton, targetToken);
@@ -1734,8 +1734,8 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 			const combatant = combat?.combatants.get(member.combatantId) ?? null;
 			return (combatant?.token?.object as unknown) ?? null;
 		};
-		row.addEventListener('mouseenter', (event) => tokenHoverIn(getNonMinionToken(), event));
-		row.addEventListener('mouseleave', (event) => tokenHoverOut(getNonMinionToken(), event));
+		row.addEventListener('mouseenter', () => tokenHoverIn(getNonMinionToken()));
+		row.addEventListener('mouseleave', () => tokenHoverOut(getNonMinionToken()));
 
 		const memberCell = createGroupAttackMemberCell(member);
 
@@ -1801,10 +1801,8 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 		if (hasNoActionsRemaining) {
 			controlsRow.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
-		controlsRow.addEventListener('mouseenter', (event) => tokenHoverIn(getNonMinionToken(), event));
-		controlsRow.addEventListener('mouseleave', (event) =>
-			tokenHoverOut(getNonMinionToken(), event),
-		);
+		controlsRow.addEventListener('mouseenter', () => tokenHoverIn(getNonMinionToken()));
+		controlsRow.addEventListener('mouseleave', () => tokenHoverOut(getNonMinionToken()));
 
 		const controlsCell = document.createElement('td');
 		controlsCell.className = 'nimble-minion-group-attack-panel__monster-controls-cell';
@@ -1837,8 +1835,8 @@ function renderGroupAttackMinionSection(panel: HTMLDivElement): void {
 			const combatant = combat?.combatants.get(member.combatantId) ?? null;
 			return (combatant?.token?.object as unknown) ?? null;
 		};
-		row.addEventListener('mouseenter', (event) => tokenHoverIn(getMinionToken(), event));
-		row.addEventListener('mouseleave', (event) => tokenHoverOut(getMinionToken(), event));
+		row.addEventListener('mouseenter', () => tokenHoverIn(getMinionToken()));
+		row.addEventListener('mouseleave', () => tokenHoverOut(getMinionToken()));
 
 		const memberCell = createGroupAttackMemberCell(member);
 

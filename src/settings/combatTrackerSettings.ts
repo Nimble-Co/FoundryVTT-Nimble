@@ -76,7 +76,6 @@ const ANIMATION_SLIDER_MIN = 0;
 const ANIMATION_SLIDER_MAX = 100;
 const CT_ACTION_DICE_COLOR_CSS_VAR = '--nimble-ct-action-die-color';
 const CT_REACTION_COLOR_CSS_VAR = '--nimble-ct-reaction-color';
-const CT_HOVER_COLOR_CSS_VAR = '--nimble-ct-hover-color';
 type CurrentTurnAnimationSettingKey =
 	(typeof CURRENT_TURN_ANIMATION_SETTING_KEYS)[keyof typeof CURRENT_TURN_ANIMATION_SETTING_KEYS];
 const CURRENT_TURN_ANIMATION_SETTING_KEY_SET = new Set<CurrentTurnAnimationSettingKey>(
@@ -172,12 +171,6 @@ function applyCtReactionColorCssVariable(value: unknown): void {
 	if (typeof document === 'undefined') return;
 	const normalizedColor = normalizeHexColor(value);
 	document.documentElement.style.setProperty(CT_REACTION_COLOR_CSS_VAR, normalizedColor);
-}
-
-function applyCtHoverColorCssVariable(value: unknown): void {
-	if (typeof document === 'undefined') return;
-	const normalizedColor = normalizeHexColor(value);
-	document.documentElement.style.setProperty(CT_HOVER_COLOR_CSS_VAR, normalizedColor);
 }
 
 function dispatchCtClientSettingUpdated(settingKey: string): void {
@@ -320,8 +313,7 @@ export function registerCombatTrackerSettings(): void {
 		config: false,
 		type: String,
 		default: DEFAULT_CT_HOVER_COLOR_SETTING,
-		onChange: (value) => {
-			applyCtHoverColorCssVariable(value);
+		onChange: () => {
 			dispatchCtClientSettingUpdated(COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY);
 		},
 	});
@@ -414,7 +406,6 @@ export function registerCombatTrackerSettings(): void {
 
 	applyCtActionDiceColorCssVariable(getCombatTrackerActionDiceColor());
 	applyCtReactionColorCssVariable(getCombatTrackerReactionColor());
-	applyCtHoverColorCssVariable(getCombatTrackerHoverColor());
 }
 
 export function getCombatTrackerPlayersCanExpandMonsterCards(): boolean {
@@ -749,12 +740,10 @@ export async function setCombatTrackerReactionColor(value: string): Promise<void
 }
 
 export async function setCombatTrackerHoverColor(value: string): Promise<void> {
-	const normalizedColor = normalizeHexColor(value);
-	applyCtHoverColorCssVariable(normalizedColor);
 	await game.settings.set(
 		'nimble' as 'core',
 		COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY as 'rollMode',
-		normalizedColor as never,
+		normalizeHexColor(value) as never,
 	);
 }
 

@@ -519,7 +519,7 @@ export function createCtTopTrackerState() {
 		combatant: Combatant.Implementation,
 	): void {
 		if (!canvas?.ready) return;
-		tokenHoverIn(getCombatantToken(combatant), event);
+		tokenHoverIn(getCombatantToken(combatant));
 	}
 
 	function handleCombatantCardMouseLeave(
@@ -527,18 +527,18 @@ export function createCtTopTrackerState() {
 		combatant: Combatant.Implementation,
 	): void {
 		if (!canvas?.ready) return;
-		tokenHoverOut(getCombatantToken(combatant), event);
+		tokenHoverOut(getCombatantToken(combatant));
 	}
 
 	function handleMonsterStackMouseEnter(event: MouseEvent, entry: MonsterStackTrackEntry): void {
 		if (!canvas?.ready) return;
 		const tokens = entry.combatants.map(getCombatantToken).filter((t) => t !== null);
-		tokenGroupHoverIn(tokens, event);
+		tokenGroupHoverIn(tokens);
 	}
 
 	function handleMonsterStackMouseLeave(event: MouseEvent, _entry: MonsterStackTrackEntry): void {
 		if (!canvas?.ready) return;
-		tokenHoverOut(null, event);
+		tokenHoverOut(null);
 	}
 
 	function canRemoveCombatant(): boolean {
