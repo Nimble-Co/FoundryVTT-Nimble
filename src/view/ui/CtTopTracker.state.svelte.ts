@@ -515,7 +515,7 @@ export function createCtTopTrackerState() {
 	}
 
 	function handleCombatantCardMouseEnter(
-		event: MouseEvent,
+		_event: MouseEvent,
 		combatant: Combatant.Implementation,
 	): void {
 		if (!canvas?.ready) return;
@@ -523,20 +523,20 @@ export function createCtTopTrackerState() {
 	}
 
 	function handleCombatantCardMouseLeave(
-		event: MouseEvent,
+		_event: MouseEvent,
 		combatant: Combatant.Implementation,
 	): void {
 		if (!canvas?.ready) return;
 		tokenHoverOut(getCombatantToken(combatant));
 	}
 
-	function handleMonsterStackMouseEnter(event: MouseEvent, entry: MonsterStackTrackEntry): void {
+	function handleMonsterStackMouseEnter(_event: MouseEvent, entry: MonsterStackTrackEntry): void {
 		if (!canvas?.ready) return;
 		const tokens = entry.combatants.map(getCombatantToken).filter((t) => t !== null);
 		tokenGroupHoverIn(tokens);
 	}
 
-	function handleMonsterStackMouseLeave(event: MouseEvent, _entry: MonsterStackTrackEntry): void {
+	function handleMonsterStackMouseLeave(_event: MouseEvent, _entry: MonsterStackTrackEntry): void {
 		if (!canvas?.ready) return;
 		tokenHoverOut(null);
 	}
