@@ -1144,6 +1144,7 @@
 				"colorsSection": "Colors",
 				"actionColor": "Action Color",
 				"reactionColor": "Reaction Color",
+				"hoverColor": "Hover Color",
 				"colorWhite": "White",
 				"colorGreen": "Green",
 				"colorRed": "Red",
@@ -2037,6 +2038,95 @@
 				"name": "Debug Mode",
 				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
 				"openTestbench": "Open Dice Testbench"
+			},
+			"combatTrackerHoverColor": {
+				"name": "Combat Tracker Hover Color",
+				"hint": "Choose your personal token hover highlight color"
+			},
+			"combatTrackerPlayersCanExpandMonsterCards": {
+				"name": "Combat Tracker Monster Card Visibility",
+				"hint": "Allow players to view individual monster and minion cards when the GM expands them"
+			},
+			"combatTrackerResourceDrawerHover": {
+				"name": "Combat Tracker Resource Drawer Hover",
+				"hint": "When enabled, player resource drawers open only on hover"
+			},
+			"combatTrackerPlayerHpBarTextMode": {
+				"name": "Combat Tracker Player HP Bar Center Text",
+				"hint": "Choose whether player HP bars show nothing, health state, or HP percentage"
+			},
+			"combatTrackerNonPlayerHpBarEnabled": {
+				"name": "Combat Tracker Non-Player HP Bar",
+				"hint": "Show a hit point bar below individual non-player combatant cards"
+			},
+			"combatTrackerNonPlayerHpBarTextMode": {
+				"name": "Combat Tracker Non-Player HP Bar Center Text",
+				"hint": "Choose whether centered text in the non-player HP bar shows nothing, health state, or HP percentage"
+			},
+			"hpBarTextMode": {
+				"none": "None",
+				"hpState": "Health State",
+				"percentage": "HP %"
+			},
+			"combatTrackerEnabled": {
+				"name": "Enable Combat Tracker",
+				"hint": "Show the Combat Tracker at the top of the screen"
+			},
+			"combatTrackerWidthLevel": {
+				"name": "Combat Tracker Width Level",
+				"hint": "Controls how wide Combat Tracker can be in the top tracker"
+			},
+			"combatTrackerCardSizeLevel": {
+				"name": "Combat Tracker Card Size Level",
+				"hint": "Controls how large Combat Tracker combatant cards appear"
+			},
+			"combatTrackerActionDiceColor": {
+				"name": "Combat Tracker Action Color",
+				"hint": "Choose your personal action color for Combat Tracker"
+			},
+			"combatTrackerReactionColor": {
+				"name": "Combat Tracker Reaction Color",
+				"hint": "Choose your personal reaction color for Combat Tracker"
+			},
+			"combatTrackerLeftToRightOrdering": {
+				"name": "Combat Tracker Left-to-Right Ordering",
+				"hint": "Display combatants in fixed left-to-right order instead of centering the active combatant"
+			},
+			"combatTrackerCurrentTurnColorLegacy": {
+				"name": "Combat Tracker Current Turn Color (Legacy)",
+				"hint": "Legacy current turn color setting used before per-animation colors"
+			},
+			"combatTrackerCurrentTurnPulseAnimation": {
+				"name": "Combat Tracker Current Turn Pulse Animation",
+				"hint": "Enable pulse animation for the active combatant card"
+			},
+			"combatTrackerCurrentTurnPulseSpeed": {
+				"name": "Combat Tracker Current Turn Pulse Speed",
+				"hint": "Adjust pulse animation speed for the active combatant card"
+			},
+			"combatTrackerCurrentTurnBorderGlow": {
+				"name": "Combat Tracker Current Turn Border Glow",
+				"hint": "Enable border glow for the active combatant card"
+			},
+			"combatTrackerCurrentTurnBorderGlowColor": {
+				"name": "Combat Tracker Border Glow Color",
+				"hint": "Color used by the border glow for the active combatant card"
+			},
+			"combatTrackerCurrentTurnBorderGlowSize": {
+				"name": "Combat Tracker Border Glow Size",
+				"hint": "Adjust the glow size for the active combatant card border"
+			},
+			"combatTrackerCurrentTurnEdgeCrawler": {
+				"name": "Combat Tracker Current Turn Edge Crawler",
+				"hint": "Enable edge crawler effect for the active combatant card"
+			},
+			"combatTrackerCurrentTurnEdgeCrawlerColor": {
+				"name": "Combat Tracker Edge Crawler Color",
+				"hint": "Color used by the edge crawler for the active combatant card"
+			},
+			"combatTrackerCurrentTurnEdgeCrawlerSize": {
+				"name": "Combat Tracker Edge Crawler Size",
+				"hint": "Adjust capsule size for the active combatant edge crawler effect"
 			}
 		},
 		"diceTestbench": {

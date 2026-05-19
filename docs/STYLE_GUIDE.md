@@ -1470,6 +1470,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
 | `countAdjacentEnemies()`, `ADJACENCY_QUALIFIER` | `src/utils/tokenAdjacency.ts` | Count enemy tokens adjacent to a given token; respects the `adjacencyIncludesDiagonals` world setting; accepts position overrides for pre-commit token moves |
+| `tokenHoverIn()`, `tokenGroupHoverIn()`, `tokenHoverOut()` | `src/utils/tokenHoverHighlight.ts` | Draw/remove a PIXI ring on canvas tokens on hover; `tokenGroupHoverIn` highlights multiple tokens simultaneously (used for monster stacks) |
 
 ### Shared Stores
 

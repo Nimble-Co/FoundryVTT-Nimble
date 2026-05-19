@@ -14,6 +14,7 @@ import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { isCombatStarted } from '#utils/isCombatStarted.js';
 import localize from '#utils/localize.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
+import { tokenGroupHoverIn, tokenHoverIn, tokenHoverOut } from '#utils/tokenHoverHighlight.js';
 import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
 import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 import {
@@ -511,6 +512,33 @@ export function createCtTopTrackerState() {
 		event.preventDefault();
 		event.stopPropagation();
 		void pingCombatantToken(combatant);
+	}
+
+	function handleCombatantCardMouseEnter(
+		_event: MouseEvent,
+		combatant: Combatant.Implementation,
+	): void {
+		if (!canvas?.ready) return;
+		tokenHoverIn(getCombatantToken(combatant));
+	}
+
+	function handleCombatantCardMouseLeave(
+		_event: MouseEvent,
+		combatant: Combatant.Implementation,
+	): void {
+		if (!canvas?.ready) return;
+		tokenHoverOut(getCombatantToken(combatant));
+	}
+
+	function handleMonsterStackMouseEnter(_event: MouseEvent, entry: MonsterStackTrackEntry): void {
+		if (!canvas?.ready) return;
+		const tokens = entry.combatants.map(getCombatantToken).filter((t) => t !== null);
+		tokenGroupHoverIn(tokens);
+	}
+
+	function handleMonsterStackMouseLeave(_event: MouseEvent, _entry: MonsterStackTrackEntry): void {
+		if (!canvas?.ready) return;
+		tokenHoverOut(null);
 	}
 
 	function canRemoveCombatant(): boolean {
@@ -1589,11 +1617,15 @@ export function createCtTopTrackerState() {
 		handleCombatantCardClick,
 		handleCombatantCardContextMenu,
 		handleCombatantCardKeyDown,
+		handleCombatantCardMouseEnter,
+		handleCombatantCardMouseLeave,
 		canRemoveCombatant,
 		handleRemoveCombatant,
 		handleMonsterStackClick,
 		handleMonsterStackContextMenu,
 		handleMonsterStackKeyDown,
+		handleMonsterStackMouseEnter,
+		handleMonsterStackMouseLeave,
 		handleTrackDragOver,
 		handleTrackDrop,
 		handleTrackScroll,

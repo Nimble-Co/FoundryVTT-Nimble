@@ -76,11 +76,15 @@
 	const handleCombatantCardClick = trackerViewState.handleCombatantCardClick;
 	const handleCombatantCardContextMenu = trackerViewState.handleCombatantCardContextMenu;
 	const handleCombatantCardKeyDown = trackerViewState.handleCombatantCardKeyDown;
+	const handleCombatantCardMouseEnter = trackerViewState.handleCombatantCardMouseEnter;
+	const handleCombatantCardMouseLeave = trackerViewState.handleCombatantCardMouseLeave;
 	const canRemoveCombatant = trackerViewState.canRemoveCombatant;
 	const handleRemoveCombatant = trackerViewState.handleRemoveCombatant;
 	const handleMonsterStackClick = trackerViewState.handleMonsterStackClick;
 	const handleMonsterStackContextMenu = trackerViewState.handleMonsterStackContextMenu;
 	const handleMonsterStackKeyDown = trackerViewState.handleMonsterStackKeyDown;
+	const handleMonsterStackMouseEnter = trackerViewState.handleMonsterStackMouseEnter;
+	const handleMonsterStackMouseLeave = trackerViewState.handleMonsterStackMouseLeave;
 	const handleTrackDragOver = trackerViewState.handleTrackDragOver;
 	const handleTrackDrop = trackerViewState.handleTrackDrop;
 	const handleTrackScroll = trackerViewState.handleTrackScroll;
@@ -384,6 +388,8 @@
 									onclick={(event) => handleCombatantCardClick(event, entry.combatant)}
 									oncontextmenu={(event) => handleCombatantCardContextMenu(event, entry.combatant)}
 									onkeydown={(event) => handleCombatantCardKeyDown(event, entry.combatant)}
+									onmouseenter={(event) => handleCombatantCardMouseEnter(event, entry.combatant)}
+									onmouseleave={(event) => handleCombatantCardMouseLeave(event, entry.combatant)}
 								>
 									<img
 										class="nimble-ct__image"
@@ -542,6 +548,8 @@
 									onclick={(event) => handleMonsterStackClick(event, entry)}
 									oncontextmenu={(event) => handleMonsterStackContextMenu(event, entry)}
 									onkeydown={(event) => handleMonsterStackKeyDown(event, entry)}
+									onmouseenter={(event) => handleMonsterStackMouseEnter(event, entry)}
+									onmouseleave={(event) => handleMonsterStackMouseLeave(event, entry)}
 								>
 									{#if canDragEntry}
 										<div

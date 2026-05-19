@@ -1,6 +1,7 @@
-<script>
+<script lang="ts">
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
 
 	function addSelectedTokensAsTargets() {
 		messageDocument.addSelectedTokensAsTargets();
@@ -10,7 +11,7 @@
 		messageDocument.addTargetedTokensAsTargets();
 	}
 
-	function getArmorIcon(token) {
+	function getArmorIcon(token: TokenDocument.Implementation) {
 		const armor = token.actor?.system?.attributes.armor;
 		const armorIcon = npcArmorIcons[armor];
 
@@ -26,7 +27,7 @@
 	`;
 	}
 
-	function getArmorTooltip(armor) {
+	function getArmorTooltip(armor: string) {
 		const armorEffect = npcArmorEffects[armor];
 		const armorIcon = npcArmorIcons[armor];
 		const armorLabel = npcArmorTypes[armor];
@@ -43,27 +44,12 @@
     `;
 	}
 
-	async function handleTokenHighlight(event, tokenDocument, mode) {
-		event.preventDefault();
-
-		const token = tokenDocument.object;
-
-		if (!token || !token.isVisible || token.controlled) return;
-
-		if (mode === 'enter') {
-			token._onHoverIn(event, { hoverOutOthers: true });
-		} else {
-			token._onHoverOut(event);
-		}
-	}
-
-	async function prepareTargets(targetIDs) {
+	async function prepareTargets(targetIDs: string[]) {
 		const tokenDocuments = await Promise.all(targetIDs.map((id) => fromUuid(id)));
 		return tokenDocuments.filter(Boolean);
 	}
 
-	function removeTarget(targetId) {
-		console.log('CLICKED!');
+	function removeTarget(targetId: string) {
 		messageDocument.removeTarget(targetId);
 	}
 
@@ -107,8 +93,8 @@
 			{#each tokens as token}
 				<li
 					class="nimble-card"
-					onmouseenter={(event) => handleTokenHighlight(event, token, 'enter')}
-					onmouseleave={(event) => handleTokenHighlight(event, token, 'leave')}
+					onmouseenter={() => tokenHoverIn(token.object)}
+					onmouseleave={() => tokenHoverOut(token.object)}
 				>
 					<img
 						class="nimble-card__img"

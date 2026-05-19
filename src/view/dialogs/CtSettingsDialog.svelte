@@ -246,6 +246,36 @@
 					/>
 				</div>
 			</div>
+			<div class="nimble-ct-settings__color-row">
+				<div class="nimble-ct-settings__color-head">
+					<label class="nimble-ct-settings__label" for="nimble-ct-hover-color"
+						>{localize('NIMBLE.ui.ctSettings.hoverColor')}</label
+					>
+				</div>
+				<div class="nimble-ct-settings__color-controls">
+					{#each COLOR_PRESETS as preset}
+						<button
+							type="button"
+							class="nimble-ct-settings__color-swatch"
+							class:nimble-ct-settings__color-swatch--active={state.hoverColor === preset.color}
+							style={`--nimble-ct-color: ${preset.color};`}
+							aria-label={localize(preset.labelKey)}
+							data-tooltip={localize(preset.labelKey)}
+							onclick={() => state.applyHoverColor(preset.color)}
+						></button>
+					{/each}
+					<input
+						id="nimble-ct-hover-color"
+						type="color"
+						class="nimble-ct-settings__color-picker"
+						value={state.hoverColor}
+						oninput={(event) =>
+							state.applyHoverColor((event.currentTarget as HTMLInputElement).value)}
+						onchange={(event) =>
+							state.applyHoverColor((event.currentTarget as HTMLInputElement).value)}
+					/>
+				</div>
+			</div>
 		</div>
 	</fieldset>
 </section>

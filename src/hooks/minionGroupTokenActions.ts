@@ -27,6 +27,7 @@ import {
 } from '../utils/minionGroupAttackSession.js';
 import { isMinionCombatant } from '../utils/minionGrouping.js';
 import resolveItemActionCost from '../utils/resolveItemActionCost.js';
+import { tokenHoverIn, tokenHoverOut } from '../utils/tokenHoverHighlight.js';
 
 const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
 const MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY = 'NIMBLE_ENABLE_GROUP_TOKEN_UI_LOGS';
@@ -79,6 +80,7 @@ let groupAttackTargetPopoverElement: HTMLDivElement | null = null;
 let groupAttackTargetPopoverRefreshInterval: ReturnType<typeof setInterval> | null = null;
 let groupAttackActionDescriptionPopoverElement: HTMLDivElement | null = null;
 let groupAttackImagePopoverElement: HTMLDivElement | null = null;
+let panelHoverAbortController: AbortController | null = null;
 let sceneControlsRefreshHandle: ReturnType<typeof setTimeout> | null = null;
 let ncswSidebarViewMode: NcswSidebarViewMode = 'ncs';
 let hasInitializedNcswSidebarViewMode = false;
@@ -1243,6 +1245,8 @@ function handleGroupAttackPanelDragStart(event: PointerEvent): void {
 }
 
 function hideGroupAttackPanel(options: { clearTargets?: boolean } = {}): void {
+	panelHoverAbortController?.abort();
+	panelHoverAbortController = null;
 	if (minionGroupAttackPanelElement) {
 		minionGroupAttackPanelElement.hidden = true;
 		minionGroupAttackPanelElement.replaceChildren();
@@ -1488,6 +1492,8 @@ function buildSelectionWarnings(result: {
 }
 
 function resetGroupAttackPanelForRender(panel: HTMLDivElement): void {
+	panelHoverAbortController?.abort();
+	panelHoverAbortController = new AbortController();
 	panel.hidden = false;
 	hideGroupAttackTargetPopover();
 	hideGroupAttackActionDescriptionPopover();
@@ -1581,12 +1587,23 @@ function renderGroupAttackTargetSection(params: {
 			image.alt = targetToken.name;
 			targetButton.append(image);
 
-			targetButton.addEventListener('mouseenter', () => {
-				showGroupAttackTargetPopover(targetButton, targetToken);
-			});
-			targetButton.addEventListener('mouseleave', () => {
-				hideGroupAttackTargetPopover();
-			});
+			const { signal } = panelHoverAbortController!;
+			targetButton.addEventListener(
+				'mouseenter',
+				() => {
+					showGroupAttackTargetPopover(targetButton, targetToken);
+					tokenHoverIn(targetToken.token);
+				},
+				{ signal },
+			);
+			targetButton.addEventListener(
+				'mouseleave',
+				() => {
+					hideGroupAttackTargetPopover();
+					tokenHoverOut(targetToken.token);
+				},
+				{ signal },
+			);
 			targetButton.addEventListener('focus', () => {
 				showGroupAttackTargetPopover(targetButton, targetToken);
 			});
@@ -1726,6 +1743,17 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 			row.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
 
+		const combat = getCombatForCurrentScene();
+		const nonMinionToken =
+			(combat?.combatants.get(member.combatantId)?.token?.object as unknown) ?? null;
+		const { signal: nonMinionSignal } = panelHoverAbortController!;
+		row.addEventListener('mouseenter', () => tokenHoverIn(nonMinionToken), {
+			signal: nonMinionSignal,
+		});
+		row.addEventListener('mouseleave', () => tokenHoverOut(nonMinionToken), {
+			signal: nonMinionSignal,
+		});
+
 		const memberCell = createGroupAttackMemberCell(member);
 
 		const actionCell = document.createElement('td');
@@ -1790,6 +1818,12 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 		if (hasNoActionsRemaining) {
 			controlsRow.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
+		controlsRow.addEventListener('mouseenter', () => tokenHoverIn(nonMinionToken), {
+			signal: nonMinionSignal,
+		});
+		controlsRow.addEventListener('mouseleave', () => tokenHoverOut(nonMinionToken), {
+			signal: nonMinionSignal,
+		});
 
 		const controlsCell = document.createElement('td');
 		controlsCell.className = 'nimble-minion-group-attack-panel__monster-controls-cell';
@@ -1816,6 +1850,13 @@ function renderGroupAttackMinionSection(panel: HTMLDivElement): void {
 		if (member.actionsRemaining < 1) {
 			row.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
+
+		const minionToken =
+			(getCombatForCurrentScene()?.combatants.get(member.combatantId)?.token?.object as unknown) ??
+			null;
+		const { signal: minionSignal } = panelHoverAbortController!;
+		row.addEventListener('mouseenter', () => tokenHoverIn(minionToken), { signal: minionSignal });
+		row.addEventListener('mouseleave', () => tokenHoverOut(minionToken), { signal: minionSignal });
 
 		const memberCell = createGroupAttackMemberCell(member);
 
