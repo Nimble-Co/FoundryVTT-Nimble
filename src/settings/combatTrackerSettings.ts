@@ -184,8 +184,8 @@ function dispatchCtClientSettingUpdated(settingKey: string): void {
 
 export function registerCombatTrackerSettings(): void {
 	registerWorldSetting(COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY, {
-		name: 'Combat Tracker Player Expanded Monster Visibility',
-		hint: 'Allow players to view individual monster and minion cards when the GM expands them',
+		name: 'NIMBLE.settings.combatTrackerPlayersCanExpandMonsterCards.name',
+		hint: 'NIMBLE.settings.combatTrackerPlayersCanExpandMonsterCards.hint',
 		scope: 'world',
 		config: false,
 		type: Boolean,
@@ -193,8 +193,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY, {
-		name: 'Combat Tracker Resource Drawer Hover',
-		hint: 'When enabled, player resource drawers open only on hover',
+		name: 'NIMBLE.settings.combatTrackerResourceDrawerHover.name',
+		hint: 'NIMBLE.settings.combatTrackerResourceDrawerHover.hint',
 		scope: 'client',
 		config: false,
 		type: Boolean,
@@ -205,15 +205,15 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY, {
-		name: 'Combat Tracker Player HP Bar Center Text',
-		hint: 'Choose whether player HP bars show nothing, health state, or HP percentage',
+		name: 'NIMBLE.settings.combatTrackerPlayerHpBarTextMode.name',
+		hint: 'NIMBLE.settings.combatTrackerPlayerHpBarTextMode.hint',
 		scope: 'client',
 		config: false,
 		type: String,
 		choices: {
-			none: 'None',
-			hpState: 'Health State',
-			percentage: 'HP %',
+			none: 'NIMBLE.settings.hpBarTextMode.none',
+			hpState: 'NIMBLE.settings.hpBarTextMode.hpState',
+			percentage: 'NIMBLE.settings.hpBarTextMode.percentage',
 		},
 		default: DEFAULT_CT_PLAYER_HP_BAR_TEXT_MODE_SETTING,
 		onChange: () => {
@@ -222,8 +222,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY, {
-		name: 'Combat Tracker Non-player HP Bar',
-		hint: 'Show a hit point bar below individual non-player combatant cards',
+		name: 'NIMBLE.settings.combatTrackerNonPlayerHpBarEnabled.name',
+		hint: 'NIMBLE.settings.combatTrackerNonPlayerHpBarEnabled.hint',
 		scope: 'world',
 		config: false,
 		type: Boolean,
@@ -231,22 +231,22 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY, {
-		name: 'Combat Tracker Non-player HP Bar Center Text',
-		hint: 'Choose whether centered text in the non-player HP bar shows nothing, health state, or HP percentage',
+		name: 'NIMBLE.settings.combatTrackerNonPlayerHpBarTextMode.name',
+		hint: 'NIMBLE.settings.combatTrackerNonPlayerHpBarTextMode.hint',
 		scope: 'world',
 		config: false,
 		type: String,
 		choices: {
-			none: 'None',
-			hpState: 'Health State',
-			percentage: 'HP %',
+			none: 'NIMBLE.settings.hpBarTextMode.none',
+			hpState: 'NIMBLE.settings.hpBarTextMode.hpState',
+			percentage: 'NIMBLE.settings.hpBarTextMode.percentage',
 		},
 		default: DEFAULT_CT_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING,
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_ENABLED_SETTING_KEY, {
-		name: 'Enable Combat Tracker',
-		hint: 'Show the Combat Tracker at the top of the screen',
+		name: 'NIMBLE.settings.combatTrackerEnabled.name',
+		hint: 'NIMBLE.settings.combatTrackerEnabled.hint',
 		scope: 'client',
 		config: true,
 		type: Boolean,
@@ -257,8 +257,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY, {
-		name: 'Combat Tracker Width Level',
-		hint: 'Controls how wide Combat Tracker can be in the top tracker',
+		name: 'NIMBLE.settings.combatTrackerWidthLevel.name',
+		hint: 'NIMBLE.settings.combatTrackerWidthLevel.hint',
 		scope: 'client',
 		config: false,
 		type: Number,
@@ -269,8 +269,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY, {
-		name: 'Combat Tracker Card Size Level',
-		hint: 'Controls how large Combat Tracker combatant cards appear',
+		name: 'NIMBLE.settings.combatTrackerCardSizeLevel.name',
+		hint: 'NIMBLE.settings.combatTrackerCardSizeLevel.hint',
 		scope: 'client',
 		config: false,
 		type: Number,
@@ -281,8 +281,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY, {
-		name: 'Combat Tracker Action Color',
-		hint: 'Choose your personal action color for Combat Tracker',
+		name: 'NIMBLE.settings.combatTrackerActionDiceColor.name',
+		hint: 'NIMBLE.settings.combatTrackerActionDiceColor.hint',
 		scope: 'client',
 		config: false,
 		type: String,
@@ -294,8 +294,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY, {
-		name: 'Combat Tracker Reaction Color',
-		hint: 'Choose your personal reaction color for Combat Tracker',
+		name: 'NIMBLE.settings.combatTrackerReactionColor.name',
+		hint: 'NIMBLE.settings.combatTrackerReactionColor.hint',
 		scope: 'client',
 		config: false,
 		type: String,
@@ -319,8 +319,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY, {
-		name: 'Combat Tracker Left-to-Right Ordering',
-		hint: 'Display combatants in fixed left-to-right order instead of centering the active combatant',
+		name: 'NIMBLE.settings.combatTrackerLeftToRightOrdering.name',
+		hint: 'NIMBLE.settings.combatTrackerLeftToRightOrdering.hint',
 		scope: 'world',
 		config: false,
 		type: Boolean,
@@ -329,8 +329,8 @@ export function registerCombatTrackerSettings(): void {
 
 	// Legacy settings retained as hidden registrations so existing worlds keep their values.
 	registerWorldSetting(LEGACY_CURRENT_TURN_COLOR_SETTING_KEY, {
-		name: 'Combat Tracker Current Turn Color (Legacy)',
-		hint: 'Legacy current turn color setting used before per-animation colors',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnColorLegacy.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnColorLegacy.hint',
 		scope: 'world',
 		config: false,
 		type: String,
@@ -340,64 +340,64 @@ export function registerCombatTrackerSettings(): void {
 		game.settings.get(SYSTEM_ID as 'core', LEGACY_CURRENT_TURN_COLOR_SETTING_KEY as 'rollMode'),
 	);
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseAnimation, {
-		name: 'Combat Tracker Current Turn Pulse Animation',
-		hint: 'Enable pulse animation for the active combatant card',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnPulseAnimation.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnPulseAnimation.hint',
 		scope: 'world',
 		config: false,
 		type: Boolean,
 		default: DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.pulseAnimation,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseSpeed, {
-		name: 'Combat Tracker Current Turn Pulse Speed',
-		hint: 'Adjust pulse animation speed for the active combatant card',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnPulseSpeed.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnPulseSpeed.hint',
 		scope: 'world',
 		config: false,
 		type: Number,
 		default: DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.pulseSpeed,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlow, {
-		name: 'Combat Tracker Current Turn Border Glow',
-		hint: 'Enable border glow for the active combatant card',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnBorderGlow.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnBorderGlow.hint',
 		scope: 'world',
 		config: false,
 		type: Boolean,
 		default: DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.borderGlow,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowColor, {
-		name: 'Combat Tracker Border Glow Color',
-		hint: 'Color used by the border glow for the active combatant card',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnBorderGlowColor.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnBorderGlowColor.hint',
 		scope: 'world',
 		config: false,
 		type: String,
 		default: legacyColorDefault,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowSize, {
-		name: 'Combat Tracker Border Glow Size',
-		hint: 'Adjust the glow size for the active combatant card border',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnBorderGlowSize.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnBorderGlowSize.hint',
 		scope: 'world',
 		config: false,
 		type: Number,
 		default: DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.borderGlowSize,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawler, {
-		name: 'Combat Tracker Current Turn Edge Crawler',
-		hint: 'Enable edge crawler effect for the active combatant card',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnEdgeCrawler.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnEdgeCrawler.hint',
 		scope: 'world',
 		config: false,
 		type: Boolean,
 		default: DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS.edgeCrawler,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerColor, {
-		name: 'Combat Tracker Edge Crawler Color',
-		hint: 'Color used by the edge crawler for the active combatant card',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnEdgeCrawlerColor.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnEdgeCrawlerColor.hint',
 		scope: 'world',
 		config: false,
 		type: String,
 		default: legacyColorDefault,
 	});
 	registerWorldSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerSize, {
-		name: 'Combat Tracker Edge Crawler Size',
-		hint: 'Adjust capsule size for the active combatant edge crawler effect',
+		name: 'NIMBLE.settings.combatTrackerCurrentTurnEdgeCrawlerSize.name',
+		hint: 'NIMBLE.settings.combatTrackerCurrentTurnEdgeCrawlerSize.hint',
 		scope: 'world',
 		config: false,
 		type: Number,

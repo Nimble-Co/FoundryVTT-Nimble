@@ -11,7 +11,7 @@
 		messageDocument.addTargetedTokensAsTargets();
 	}
 
-	function getArmorIcon(token) {
+	function getArmorIcon(token: TokenDocument.Implementation) {
 		const armor = token.actor?.system?.attributes.armor;
 		const armorIcon = npcArmorIcons[armor];
 
@@ -27,7 +27,7 @@
 	`;
 	}
 
-	function getArmorTooltip(armor) {
+	function getArmorTooltip(armor: string) {
 		const armorEffect = npcArmorEffects[armor];
 		const armorIcon = npcArmorIcons[armor];
 		const armorLabel = npcArmorTypes[armor];
@@ -44,13 +44,12 @@
     `;
 	}
 
-	async function prepareTargets(targetIDs) {
+	async function prepareTargets(targetIDs: string[]) {
 		const tokenDocuments = await Promise.all(targetIDs.map((id) => fromUuid(id)));
 		return tokenDocuments.filter(Boolean);
 	}
 
-	function removeTarget(targetId) {
-		console.log('CLICKED!');
+	function removeTarget(targetId: string) {
 		messageDocument.removeTarget(targetId);
 	}
 

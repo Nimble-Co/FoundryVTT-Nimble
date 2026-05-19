@@ -1729,13 +1729,11 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 			row.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
 
-		const getNonMinionToken = () => {
-			const combat = getCombatForCurrentScene();
-			const combatant = combat?.combatants.get(member.combatantId) ?? null;
-			return (combatant?.token?.object as unknown) ?? null;
-		};
-		row.addEventListener('mouseenter', () => tokenHoverIn(getNonMinionToken()));
-		row.addEventListener('mouseleave', () => tokenHoverOut(getNonMinionToken()));
+		const combat = getCombatForCurrentScene();
+		const nonMinionToken =
+			(combat?.combatants.get(member.combatantId)?.token?.object as unknown) ?? null;
+		row.addEventListener('mouseenter', () => tokenHoverIn(nonMinionToken));
+		row.addEventListener('mouseleave', () => tokenHoverOut(nonMinionToken));
 
 		const memberCell = createGroupAttackMemberCell(member);
 
@@ -1801,8 +1799,8 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 		if (hasNoActionsRemaining) {
 			controlsRow.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
-		controlsRow.addEventListener('mouseenter', () => tokenHoverIn(getNonMinionToken()));
-		controlsRow.addEventListener('mouseleave', () => tokenHoverOut(getNonMinionToken()));
+		controlsRow.addEventListener('mouseenter', () => tokenHoverIn(nonMinionToken));
+		controlsRow.addEventListener('mouseleave', () => tokenHoverOut(nonMinionToken));
 
 		const controlsCell = document.createElement('td');
 		controlsCell.className = 'nimble-minion-group-attack-panel__monster-controls-cell';
@@ -1830,13 +1828,11 @@ function renderGroupAttackMinionSection(panel: HTMLDivElement): void {
 			row.classList.add('nimble-minion-group-attack-panel__row--inactive');
 		}
 
-		const getMinionToken = () => {
-			const combat = getCombatForCurrentScene();
-			const combatant = combat?.combatants.get(member.combatantId) ?? null;
-			return (combatant?.token?.object as unknown) ?? null;
-		};
-		row.addEventListener('mouseenter', () => tokenHoverIn(getMinionToken()));
-		row.addEventListener('mouseleave', () => tokenHoverOut(getMinionToken()));
+		const minionToken =
+			(getCombatForCurrentScene()?.combatants.get(member.combatantId)?.token?.object as unknown) ??
+			null;
+		row.addEventListener('mouseenter', () => tokenHoverIn(minionToken));
+		row.addEventListener('mouseleave', () => tokenHoverOut(minionToken));
 
 		const memberCell = createGroupAttackMemberCell(member);
 
