@@ -2,6 +2,12 @@
   color: var(--nimble-dark-text-color);
   font-size: var(--nimble-sm-text);
 
+  // Reset cursor inside open windows so body-level cursor rules from other UI
+  // elements (e.g. the combat tracker's grab cursor) don't bleed through.
+  .window-content {
+    cursor: default;
+  }
+
   .window-resize-handle {
     z-index: 200 !important;
     pointer-events: all !important;

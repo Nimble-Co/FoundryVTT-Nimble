@@ -68,9 +68,15 @@
 				{@const isSelected = Array.isArray(selectedAbilityScores)
 					? selectedAbilityScores.includes(abilityKey)
 					: selectedAbilityScores === abilityKey}
+				{@const isAtMax =
+					(document.system.abilities[abilityKey]?.baseValue ?? 0) +
+						(characterClass?.ASI?.[abilityKey] ?? 0) >=
+					5}
 				<label
 					class="nimble-stat-selection__option"
 					class:nimble-stat-selection__option--selected={isSelected}
+					class:nimble-stat-selection__option--disabled={isAtMax}
+					data-tooltip={isAtMax ? 'NIMBLE.statConfig.statAtMax' : undefined}
 				>
 					{abilityScores[abilityKey] ?? abilityKey}
 
@@ -80,9 +86,10 @@
 							type="checkbox"
 							name="{document.id}-stat-increase"
 							value={abilityKey}
-							disabled={!isSelected &&
-								Array.isArray(selectedAbilityScores) &&
-								selectedAbilityScores.length === 2}
+							disabled={isAtMax ||
+								(!isSelected &&
+									Array.isArray(selectedAbilityScores) &&
+									selectedAbilityScores.length === 2)}
 							bind:group={selectedAbilityScores}
 						/>
 					{:else}
@@ -91,6 +98,7 @@
 							type="radio"
 							name="{document.id}-stat-increase"
 							value={abilityKey}
+							disabled={isAtMax}
 							bind:group={selectedAbilityScores}
 						/>
 					{/if}
@@ -131,6 +139,11 @@
 			&--selected {
 				color: var(--nimble-light-text-color);
 				background: hsl(0, 0%, 24%);
+			}
+
+			&--disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
 			}
 		}
 

@@ -70,6 +70,7 @@
 			"cancel": "Cancel",
 			"applyChanges": "Apply Changes",
 			"toggleStatIncrease": "Toggle Stat Increase",
+			"statAtMax": "Stat is at its maximum (+5 from increases)",
 			"primaryTooltip": "+1 to one of your Key Stats",
 			"secondaryTooltip": "+1 to one of your Secondary Stats",
 			"capstoneTooltip": "+1 to any 2 of your stats",
@@ -1682,12 +1683,19 @@
 		},
 		"skillsConfig": {
 			"skill": "Skill",
-			"abilityModifier": "Ability Modifier",
-			"skillBonus": "Skill Bonus",
-			"skillPoints": "Skill Points",
+			"abilityModifier": "Abil. Mod",
+			"skillBonus": "Bonus",
+			"skillPoints": "Points",
 			"total": "Total",
-			"decrementSkillPoints": "Decrement Skill Points",
-			"incrementSkillPoints": "Increment Skill Points"
+			"change": "Change",
+			"levelUpHistory": "Level-Up History",
+			"levelUpHistorySubtitle": "Points allocated through leveling",
+			"levelLabel": "Level {level}",
+			"editingLevel": "Editing Level {level}",
+			"remainingPoints": "{remaining} of {total} remaining",
+			"edit": "Edit",
+			"save": "Save",
+			"cancel": "Cancel"
 		},
 		"movementConfig": {
 			"gridSpacesNote": "All measurements are in grid spaces.",

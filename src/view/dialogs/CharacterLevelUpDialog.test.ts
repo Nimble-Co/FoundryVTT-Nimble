@@ -48,6 +48,93 @@ describe('CharacterLevelUpDialog Component', () => {
 		cleanup();
 	});
 
+	describe('ASI Cap Enforcement', () => {
+		it('disables an ability option when it already has 5 stat increases', async () => {
+			const document = createMockCharacterDocument({
+				classes: {
+					warrior: {
+						system: {
+							classLevel: 1,
+							abilityScoreData: {
+								2: { statIncreaseType: 'primary' },
+							},
+							keyAbilityScores: ['strength', 'dexterity'],
+						},
+						identifier: 'warrior',
+						ASI: { strength: 5 },
+					},
+				},
+			});
+			const dialog = createMockDialog();
+
+			render(CharacterLevelUpDialog, { props: { document, dialog } });
+			await waitForFeaturesLoaded();
+
+			await waitFor(() => {
+				const strengthInput = screen.getByRole('radio', { name: /strength/i });
+				expect(strengthInput).toBeDisabled();
+
+				const dexterityInput = screen.getByRole('radio', { name: /dexterity/i });
+				expect(dexterityInput).not.toBeDisabled();
+			});
+		});
+
+		it('keeps an ability option enabled when its ASI count is below 5', async () => {
+			const document = createMockCharacterDocument({
+				classes: {
+					warrior: {
+						system: {
+							classLevel: 1,
+							abilityScoreData: {
+								2: { statIncreaseType: 'primary' },
+							},
+							keyAbilityScores: ['strength', 'dexterity'],
+						},
+						identifier: 'warrior',
+						ASI: { strength: 4 },
+					},
+				},
+			});
+			const dialog = createMockDialog();
+
+			render(CharacterLevelUpDialog, { props: { document, dialog } });
+			await waitForFeaturesLoaded();
+
+			await waitFor(() => {
+				const strengthInput = screen.getByRole('radio', { name: /strength/i });
+				expect(strengthInput).not.toBeDisabled();
+			});
+		});
+
+		it('shows the statAtMax tooltip on a disabled ability label', async () => {
+			const document = createMockCharacterDocument({
+				classes: {
+					warrior: {
+						system: {
+							classLevel: 1,
+							abilityScoreData: {
+								2: { statIncreaseType: 'primary' },
+							},
+							keyAbilityScores: ['strength', 'dexterity'],
+						},
+						identifier: 'warrior',
+						ASI: { strength: 5 },
+					},
+				},
+			});
+			const dialog = createMockDialog();
+
+			const { container } = render(CharacterLevelUpDialog, { props: { document, dialog } });
+			await waitForFeaturesLoaded();
+
+			await waitFor(() => {
+				const disabledLabel = container.querySelector('.nimble-stat-selection__option--disabled');
+				expect(disabledLabel).toBeTruthy();
+				expect(disabledLabel?.getAttribute('data-tooltip')).toBe('NIMBLE.statConfig.statAtMax');
+			});
+		});
+	});
+
 	describe('Ability Score Increase Causing Skill Over Max', () => {
 		it('should disable submit when selecting strength pushes might over 12', async () => {
 			const document = createMockCharacterDocument();
