@@ -119,41 +119,201 @@
 			document.reactive.system.abilities,
 		),
 	);
+
+	let editingLevel = $state(null);
+	let editingChanges = $state({});
+	let editingBudget = $state(0);
+
+	let remainingPoints = $derived(
+		editingBudget - Object.values(editingChanges).reduce((sum, v) => sum + v, 0),
+	);
+
+	function getLevel1Changes() {
+		const allLevelUpChanges = {};
+		for (const entry of document.reactive.system.levelUpHistory) {
+			for (const [skillKey, change] of Object.entries(entry.skillIncreases)) {
+				allLevelUpChanges[skillKey] = (allLevelUpChanges[skillKey] ?? 0) + change;
+			}
+		}
+		const changes = {};
+		for (const [skillKey, skillData] of Object.entries(document.reactive.system.skills)) {
+			const level1Points = skillData.points - (allLevelUpChanges[skillKey] ?? 0);
+			if (level1Points > 0) changes[skillKey] = level1Points;
+		}
+		return changes;
+	}
+
+	function startEditing(level) {
+		if (level === 1) {
+			const changes = getLevel1Changes();
+			editingBudget = Object.values(changes).reduce((sum, v) => sum + v, 0);
+			editingChanges = changes;
+		} else {
+			const entry = document.reactive.system.levelUpHistory.find((e) => e.level === level);
+			const raw = entry?.skillIncreases ?? {};
+			editingChanges = Object.fromEntries(Object.entries(raw).filter(([, v]) => v > 0));
+			editingBudget = 1;
+		}
+		editingLevel = level;
+	}
+
+	function adjustChange(skillKey, delta) {
+		const current = editingChanges[skillKey] ?? 0;
+		const next = current + delta;
+		if (next < 0) return;
+		if (delta > 0 && remainingPoints <= 0) return;
+		editingChanges[skillKey] = next;
+	}
+
+	function cancelEdit() {
+		editingLevel = null;
+		editingChanges = {};
+		editingBudget = 0;
+	}
+
+	async function saveEdits() {
+		if (remainingPoints !== 0) return;
+
+		const updates = {};
+
+		const oldChanges =
+			editingLevel === 1
+				? getLevel1Changes()
+				: (document.system.levelUpHistory.find((e) => e.level === editingLevel)?.skillIncreases ??
+					{});
+
+		const allSkillKeys = new Set([...Object.keys(oldChanges), ...Object.keys(editingChanges)]);
+		for (const skillKey of allSkillKeys) {
+			const delta = (editingChanges[skillKey] ?? 0) - (oldChanges[skillKey] ?? 0);
+			if (delta !== 0) {
+				updates[`system.skills.${skillKey}.points`] =
+					(document.system.skills[skillKey]?.points ?? 0) + delta;
+			}
+		}
+
+		if (editingLevel !== 1) {
+			const cleanedChanges = Object.fromEntries(
+				Object.entries(editingChanges).filter(([, v]) => v !== 0),
+			);
+			updates['system.levelUpHistory'] = document.system.levelUpHistory.map((entry) =>
+				entry.level === editingLevel ? { ...entry, skillIncreases: cleanedChanges } : entry,
+			);
+		}
+
+		if (Object.keys(updates).length > 0) {
+			await document.update(updates);
+		}
+
+		editingLevel = null;
+		editingChanges = {};
+		editingBudget = 0;
+	}
 </script>
 
 <section
 	class="nimble-sheet__body nimble-sheet__body--skill-config"
 	style="padding-inline: 0.75rem;"
 >
-	<table class="nimble-skill-config-table">
-		<thead>
-			<tr>
-				<th class="nimble-skill-config-table__col--skill"
-					>{localize('NIMBLE.skillsConfig.skill')}</th
+	{#if editingLevel !== null}
+		<div class="nimble-skill-editor__banner">
+			<div class="nimble-skill-editor__banner-info">
+				<span class="nimble-skill-editor__banner-title">
+					{localize('NIMBLE.skillsConfig.editingLevel', { level: String(editingLevel) })}
+				</span>
+				<span
+					class="nimble-skill-editor__banner-points"
+					class:nimble-skill-editor__banner-points--spent={remainingPoints === 0}
 				>
-				<th>{localize('NIMBLE.skillsConfig.abilityModifier')}</th>
-				<th>{localize('NIMBLE.skillsConfig.skillBonus')}</th>
-				<th>{localize('NIMBLE.skillsConfig.skillPoints')}</th>
-				<th>{localize('NIMBLE.skillsConfig.total')}</th>
-			</tr>
-		</thead>
+					{localize('NIMBLE.skillsConfig.remainingPoints', {
+						remaining: String(remainingPoints),
+						total: String(editingBudget),
+					})}
+				</span>
+			</div>
+			<div class="nimble-skill-editor__banner-actions">
+				<button
+					class="nimble-skill-editor__btn nimble-skill-editor__btn--cancel"
+					onclick={cancelEdit}
+				>
+					{localize('NIMBLE.skillsConfig.cancel')}
+				</button>
+				<button
+					class="nimble-skill-editor__btn nimble-skill-editor__btn--save"
+					disabled={remainingPoints !== 0}
+					onclick={saveEdits}
+				>
+					{localize('NIMBLE.skillsConfig.save')}
+				</button>
+			</div>
+		</div>
 
-		<tbody>
-			{#each sortedSkillEntries as [key, skill]}
-				{@const skillName = skills[key] ?? key}
-				{@const defaultAbility = defaultSkillAbilities[key] ?? 'Strength'}
-				{@const abilityMod = document?.reactive?.system?.abilities[defaultAbility]?.mod ?? 0}
-
+		<table class="nimble-skill-config-table">
+			<thead>
 				<tr>
-					<th class="nimble-skill-config-table__skill-name">{skillName}</th>
-					<td>{replaceHyphenWithMinusSign(abilityMod)}</td>
-					<td>{replaceHyphenWithMinusSign(skill.bonus)}</td>
-					<td>{replaceHyphenWithMinusSign(skill.points)}</td>
-					<td class="nimble-skill-config-table__total">{replaceHyphenWithMinusSign(skill.mod)}</td>
+					<th class="nimble-skill-config-table__col--skill"
+						>{localize('NIMBLE.skillsConfig.skill')}</th
+					>
+					<th>{localize('NIMBLE.skillsConfig.change')}</th>
+					<th></th>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each sortedSkillEntries as [key]}
+					{@const skillName = skills[key] ?? key}
+					{@const change = editingChanges[key] ?? 0}
+					<tr>
+						<th class="nimble-skill-config-table__skill-name">{skillName}</th>
+						<td
+							class="nimble-skill-config-table__change"
+							class:nimble-skill-config-table__change--positive={change > 0}
+							>{change > 0 ? `+${change}` : change}</td
+						>
+						<td class="nimble-skill-config-table__controls">
+							<button
+								class="nimble-skill-editor__ctrl"
+								disabled={change <= 0}
+								onclick={() => adjustChange(key, -1)}>−</button
+							>
+							<button
+								class="nimble-skill-editor__ctrl"
+								disabled={remainingPoints <= 0}
+								onclick={() => adjustChange(key, 1)}>+</button
+							>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	{:else}
+		<table class="nimble-skill-config-table">
+			<thead>
+				<tr>
+					<th class="nimble-skill-config-table__col--skill"
+						>{localize('NIMBLE.skillsConfig.skill')}</th
+					>
+					<th>{localize('NIMBLE.skillsConfig.abilityModifier')}</th>
+					<th>{localize('NIMBLE.skillsConfig.skillBonus')}</th>
+					<th>{localize('NIMBLE.skillsConfig.skillPoints')}</th>
+					<th>{localize('NIMBLE.skillsConfig.total')}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each sortedSkillEntries as [key, skill]}
+					{@const skillName = skills[key] ?? key}
+					{@const defaultAbility = defaultSkillAbilities[key] ?? 'Strength'}
+					{@const abilityMod = document?.reactive?.system?.abilities[defaultAbility]?.mod ?? 0}
+					<tr>
+						<th class="nimble-skill-config-table__skill-name">{skillName}</th>
+						<td>{replaceHyphenWithMinusSign(abilityMod)}</td>
+						<td>{replaceHyphenWithMinusSign(skill.bonus)}</td>
+						<td>{replaceHyphenWithMinusSign(skill.points)}</td>
+						<td class="nimble-skill-config-table__total">{replaceHyphenWithMinusSign(skill.mod)}</td
+						>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	{/if}
 
 	{#if skillHistory.length > 0}
 		<div class="nimble-skill-history">
@@ -168,7 +328,10 @@
 
 			<div class="nimble-skill-history__grid">
 				{#each skillHistory as { level, changes }}
-					<div class="nimble-skill-history__entry">
+					<div
+						class="nimble-skill-history__entry"
+						class:nimble-skill-history__entry--editing={editingLevel === level}
+					>
 						<span class="nimble-skill-history__level">
 							{localize('NIMBLE.skillsConfig.levelLabel', { level: String(level) })}
 						</span>
@@ -192,6 +355,11 @@
 								</span>
 							{/each}
 						</div>
+						<button
+							class="nimble-skill-history__edit-btn"
+							data-tooltip="NIMBLE.skillsConfig.edit"
+							onclick={() => startEditing(level)}><i class="fa-solid fa-pen"></i></button
+						>
 					</div>
 				{/each}
 			</div>
@@ -383,6 +551,151 @@
 			padding: 0.1rem 0.375rem;
 			border-radius: 3px;
 			font-variant-numeric: tabular-nums;
+		}
+
+		&__edit-btn {
+			flex-shrink: 0;
+			width: 1.5rem;
+			height: 1.5rem;
+			padding: 0;
+			border-radius: 3px;
+			border: 1px solid var(--nimble-card-border-color);
+			background: transparent;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+
+			&:hover {
+				background: hsla(0, 0%, 0%, 0.05);
+				color: var(--nimble-dark-text-color);
+			}
+		}
+
+		&__entry--editing {
+			border-color: hsl(220, 70%, 50%);
+			background: hsla(220, 70%, 50%, 0.06);
+		}
+	}
+
+	.nimble-skill-editor {
+		&__banner {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.75rem;
+			padding: 0.5rem 0;
+			margin-block-end: 0.25rem;
+			border-bottom: 2px solid var(--nimble-card-border-color);
+		}
+
+		&__banner-info {
+			display: flex;
+			align-items: baseline;
+			gap: 0.625rem;
+		}
+
+		&__banner-title {
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__banner-points {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+
+			&--spent {
+				color: hsl(145, 50%, 28%);
+				font-weight: 600;
+			}
+		}
+
+		&__banner-actions {
+			display: flex;
+			gap: 0.375rem;
+		}
+
+		&__btn {
+			padding: 0.25rem 0.75rem;
+			border-radius: 4px;
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			cursor: pointer;
+			border: 1px solid transparent;
+			line-height: 1.4;
+
+			&--cancel {
+				background: transparent;
+				border-color: var(--nimble-card-border-color);
+				color: var(--nimble-medium-text-color);
+
+				&:hover {
+					background: hsla(0, 0%, 0%, 0.05);
+				}
+			}
+
+			&--save {
+				background: hsl(145, 50%, 35%);
+				color: hsl(145, 50%, 95%);
+
+				&:hover:not(:disabled) {
+					background: hsl(145, 50%, 30%);
+				}
+
+				&:disabled {
+					opacity: 0.4;
+					cursor: not-allowed;
+				}
+			}
+		}
+
+		&__ctrl {
+			width: 1.5rem;
+			height: 1.5rem;
+			border-radius: 3px;
+			border: 1px solid var(--nimble-card-border-color);
+			background: transparent;
+			cursor: pointer;
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			color: var(--nimble-dark-text-color);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+
+			&:hover:not(:disabled) {
+				background: hsla(0, 0%, 0%, 0.07);
+			}
+
+			&:disabled {
+				opacity: 0.25;
+				cursor: not-allowed;
+			}
+		}
+	}
+
+	.nimble-skill-config-table {
+		&__change {
+			font-size: var(--nimble-md-text);
+			color: var(--nimble-medium-text-color);
+
+			&--positive {
+				color: hsl(145, 50%, 28%);
+				font-weight: 700;
+			}
+		}
+
+		&__controls {
+			display: flex;
+			gap: 0.3rem;
+			justify-content: center;
+			align-items: center;
 		}
 	}
 </style>

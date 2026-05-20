@@ -1310,9 +1310,15 @@
 			"skillBonus": "Bonus",
 			"skillPoints": "Points",
 			"total": "Total",
+			"change": "Change",
 			"levelUpHistory": "Level-Up History",
 			"levelUpHistorySubtitle": "Points allocated through leveling",
-			"levelLabel": "Level {level}"
+			"levelLabel": "Level {level}",
+			"editingLevel": "Editing Level {level}",
+			"remainingPoints": "{remaining} of {total} remaining",
+			"edit": "Edit",
+			"save": "Save",
+			"cancel": "Cancel"
 		},
 		"movementConfig": {
 			"gridSpacesNote": "All measurements are in grid spaces.",
