@@ -357,6 +357,7 @@
 						</div>
 						<button
 							class="nimble-skill-history__edit-btn"
+							aria-label={localize('NIMBLE.skillsConfig.edit')}
 							data-tooltip="NIMBLE.skillsConfig.edit"
 							onclick={() => startEditing(level)}><i class="fa-solid fa-pen"></i></button
 						>
