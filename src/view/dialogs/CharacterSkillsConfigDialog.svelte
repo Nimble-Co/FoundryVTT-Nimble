@@ -389,6 +389,7 @@
 				text-transform: uppercase;
 				letter-spacing: 0.04em;
 				color: var(--nimble-dark-text-color);
+				text-align: center;
 			}
 		}
 
@@ -407,6 +408,7 @@
 		td {
 			font-size: var(--nimble-md-text);
 			padding: 0.4rem 0.5rem;
+			text-align: center;
 		}
 
 		&__col--skill {
@@ -458,8 +460,6 @@
 
 		&__grid {
 			padding: 0.625rem 0.75rem 0.75rem;
-			max-height: calc(100vh - 22rem);
-			overflow-y: auto;
 			display: grid;
 			grid-template-columns: 1fr 1fr;
 			gap: 0.5rem;

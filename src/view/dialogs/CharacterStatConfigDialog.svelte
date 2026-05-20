@@ -423,6 +423,7 @@
 				data-tooltip={isAtMax
 					? 'NIMBLE.statConfig.statAtMax'
 					: 'NIMBLE.statConfig.toggleStatIncrease'}
+				data-tooltip-direction="UP"
 				disabled={isAtMax}
 				onclick={() => toggleStatIncreaseOption(level, key)}
 			>
