@@ -152,7 +152,7 @@
 			const entry = document.reactive.system.levelUpHistory.find((e) => e.level === level);
 			const raw = entry?.skillIncreases ?? {};
 			editingChanges = Object.fromEntries(Object.entries(raw).filter(([, v]) => v > 0));
-			editingBudget = 1;
+			editingBudget = Object.values(editingChanges).reduce((sum, v) => sum + v, 0);
 		}
 		editingLevel = level;
 	}
@@ -210,10 +210,7 @@
 	}
 </script>
 
-<section
-	class="nimble-sheet__body nimble-sheet__body--skill-config"
-	style="padding-inline: 0.75rem;"
->
+<section class="nimble-sheet__body nimble-sheet__body--skill-config">
 	{#if editingLevel !== null}
 		<div class="nimble-skill-editor__banner">
 			<div class="nimble-skill-editor__banner-info">
@@ -371,6 +368,7 @@
 <style lang="scss">
 	.nimble-sheet__body--skill-config {
 		padding-block-end: 0.75rem;
+		padding-inline: 0.75rem;
 	}
 
 	.nimble-skill-config-table {
@@ -428,6 +426,23 @@
 
 		&__total {
 			font-weight: 700;
+		}
+
+		&__change {
+			font-size: var(--nimble-md-text);
+			color: var(--nimble-medium-text-color);
+
+			&--positive {
+				color: hsl(145, 50%, 28%);
+				font-weight: 700;
+			}
+		}
+
+		&__controls {
+			display: flex;
+			gap: 0.3rem;
+			justify-content: center;
+			align-items: center;
 		}
 	}
 
@@ -678,25 +693,6 @@
 				opacity: 0.25;
 				cursor: not-allowed;
 			}
-		}
-	}
-
-	.nimble-skill-config-table {
-		&__change {
-			font-size: var(--nimble-md-text);
-			color: var(--nimble-medium-text-color);
-
-			&--positive {
-				color: hsl(145, 50%, 28%);
-				font-weight: 700;
-			}
-		}
-
-		&__controls {
-			display: flex;
-			gap: 0.3rem;
-			justify-content: center;
-			align-items: center;
 		}
 	}
 </style>
