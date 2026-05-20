@@ -1,392 +1,45 @@
-<script>
-	import arraysAreEqual from '../../utils/arraysAreEqual.js';
-	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
-	import localize from '../../utils/localize.js';
-	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
-
-	function checkBaseStatsMatchCoreArray(characterAbilityScores) {
-		const baseScores = Object.values(characterAbilityScores).map(({ baseValue }) => baseValue);
-
-		return Object.values(statArrayModifiers).some((standardArrayOption) =>
-			arraysAreEqual(standardArrayOption, baseScores),
-		);
-	}
-
-	/**
-	 * Detects which standard array (if any) matches the current base values,
-	 * and builds the assignment map (which ability has which array index).
-	 */
-	function detectCurrentArrayAndAssignment(characterAbilityScores) {
-		const abilityKeys = Object.keys(abilityScores);
-		const baseScores = abilityKeys.map((key) => characterAbilityScores[key]?.baseValue ?? 0);
-
-		for (const [arrayKey, arrayValues] of Object.entries(statArrayModifiers)) {
-			// Check if sorted values match (arrays can be assigned in any order)
-			const sortedBase = [...baseScores].sort((a, b) => b - a);
-			const sortedArray = [...arrayValues].sort((a, b) => b - a);
-
-			if (arraysAreEqual(sortedBase, sortedArray)) {
-				// Build assignment: for each ability, find which array index it uses
-				const assignment = {};
-				const usedIndices = new Set();
-
-				for (let i = 0; i < abilityKeys.length; i++) {
-					const abilityKey = abilityKeys[i];
-					const baseValue = baseScores[i];
-
-					// Find first unused index with matching value
-					const matchingIndex = arrayValues.findIndex(
-						(val, idx) => val === baseValue && !usedIndices.has(idx),
-					);
-
-					if (matchingIndex !== -1) {
-						assignment[abilityKey] = matchingIndex;
-						usedIndices.add(matchingIndex);
-					} else {
-						assignment[abilityKey] = null;
-					}
-				}
-
-				return {
-					arrayKey,
-					arrayOption: statArrayOptions.find((opt) => opt.key === arrayKey),
-					assignment,
-				};
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Prepares stat array options in the same format as character creation
-	 */
-	function prepareStatArrayOptions() {
-		return Object.entries(statArrayModifiers).reduce((arrays, [key, array]) => {
-			arrays.push({
-				key,
-				array,
-				name: statArrays[key],
-			});
-			return arrays;
-		}, []);
-	}
-
-	/**
-	 * Extracts ability bonus sources from all items on the character
-	 * Returns a map of ability -> array of { itemName, value }
-	 */
-	function getAbilityBonusSources(actor) {
-		const bonusSources = Object.keys(abilityScores).reduce((acc, key) => {
-			acc[key] = [];
-			return acc;
-		}, {});
-
-		if (!actor?.items) return bonusSources;
-
-		for (const item of actor.items) {
-			if (!item.rules) continue;
-
-			for (const [, rule] of item.rules) {
-				if (rule.type !== 'abilityBonus') continue;
-				if (rule.disabled) continue;
-
-				let abilities = rule.abilities ?? [];
-				if (abilities.includes('all')) {
-					abilities = Object.keys(abilityScores);
-				}
-
-				const value =
-					typeof rule.value === 'string' ? parseInt(rule.value, 10) || 0 : (rule.value ?? 0);
-
-				if (value === 0) continue;
-
-				for (const ability of abilities) {
-					if (bonusSources[ability]) {
-						bonusSources[ability].push({
-							itemName: item.name,
-							itemId: item.id,
-							value,
-						});
-					}
-				}
-			}
-		}
-
-		return bonusSources;
-	}
-
-	/**
-	 * Prepares the stat increase data from class levels
-	 */
-	function prepareStatIncreases(statIncreaseData, currentClassLevel) {
-		if (!statIncreaseData || currentClassLevel === 0) return [];
-
-		const increases = [];
-
-		Object.entries(statIncreaseData).forEach(([level, data]) => {
-			if (Number(level) > currentClassLevel) return;
-
-			const { statIncreaseType, type, value } = data;
-
-			if (type === 'boon') {
-				increases.push({
-					level: Number(level),
-					type: 'boon',
-					statIncreaseType: null,
-					value,
-					label: `Level ${level}`,
-				});
-				return;
-			}
-
-			// StringField coerces arrays to comma-separated strings on save; handle both forms.
-			const selectedValues = Array.isArray(value)
-				? value
-				: value
-					? value.split(',').filter(Boolean)
-					: [];
-
-			increases.push({
-				level: Number(level),
-				type: 'statIncrease',
-				statIncreaseType,
-				selectedAbilities: selectedValues,
-				label: `Level ${level}`,
-			});
-		});
-
-		return increases.sort((a, b) => a.level - b.level);
-	}
-
-	function toggleStatIncreaseOption(level, key) {
-		if (!characterClass) return;
-
-		const currentData = characterClass.system.abilityScoreData?.[level];
-		if (!currentData) return;
-
-		const { value, statIncreaseType } = currentData;
-
-		// Normalize value: StringField coerces arrays to comma-separated strings on save.
-		const currentValues = Array.isArray(value)
-			? value
-			: value
-				? value.split(',').filter(Boolean)
-				: [];
-
-		const isSelected = currentValues.includes(key);
-		const baseValue = characterAbilityScores[key]?.baseValue ?? 0;
-		const asiCount = allAssignedASI[key] ?? 0;
-		if (!isSelected && baseValue + asiCount >= 5) return;
-
-		// For capstone, toggle between adding/removing from the selection (max 2)
-		if (statIncreaseType === 'capstone') {
-			let newValues;
-
-			if (currentValues.includes(key)) {
-				newValues = currentValues.filter((k) => k !== key);
-			} else if (currentValues.length < 2) {
-				newValues = [...currentValues, key];
-			} else {
-				// Already have 2 selected, replace the first one
-				newValues = [currentValues[1], key];
-			}
-
-			// Save as comma-separated string to avoid StringField coercion issues
-			return document.updateItem(characterClass._id, {
-				[`system.abilityScoreData.${level}.value`]: newValues.join(','),
-			});
-		}
-
-		// For normal stat increases, just set the single value
-		return document.updateItem(characterClass._id, {
-			[`system.abilityScoreData.${level}.value`]: key,
-		});
-	}
-
-	function formatModifier(value) {
-		return replaceHyphenWithMinusSign(
-			new Intl.NumberFormat('en-US', {
-				signDisplay: 'always',
-			}).format(value),
-		);
-	}
-
-	function getStatIncreaseTypeLabel(type) {
-		const labels = {
-			primary: localize('NIMBLE.statConfig.primary'),
-			secondary: localize('NIMBLE.statConfig.secondary'),
-			capstone: localize('NIMBLE.statConfig.capstone'),
-		};
-		return labels[type] ?? type;
-	}
-
-	function getStatIncreaseTypeTooltip(type) {
-		const tooltips = {
-			primary: localize('NIMBLE.statConfig.primaryTooltip'),
-			secondary: localize('NIMBLE.statConfig.secondaryTooltip'),
-			capstone: localize('NIMBLE.statConfig.capstoneTooltip'),
-		};
-		return tooltips[type] ?? '';
-	}
-
-	const { abilityScores, abilityScoreTooltips, statArrayModifiers, statArrays } = CONFIG.NIMBLE;
-	const abilityScoreKeys = Object.keys(abilityScores);
-	const abilityScoreLabels = Object.values(abilityScores);
-	const abilityScoreCount = abilityScoreLabels.length;
-	const statArrayOptions = prepareStatArrayOptions();
-
-	let { document } = $props();
-
-	// State for editing base scores
-	let isEditing = $state(false);
-	let selectedArray = $state(null);
-	let tempSelectedAbilityScores = $state(generateBlankAttributeSet());
-
-	/**
-	 * Handle drag-and-drop of ability modifiers between abilities (swap logic)
-	 */
-	function handleAbilityModifierDrop(event, abilityKey) {
-		const modifierIndex = Number.parseInt(event.dataTransfer.getData('modifier'), 10);
-
-		const existingModifier = Object.entries(tempSelectedAbilityScores).find(
-			([, value]) => value === modifierIndex,
-		);
-
-		if (existingModifier) {
-			const [previousKey] = existingModifier;
-			tempSelectedAbilityScores[previousKey] = tempSelectedAbilityScores[abilityKey];
-		}
-
-		tempSelectedAbilityScores[abilityKey] = modifierIndex;
-	}
-
-	/**
-	 * Select a new array and reset assignments
-	 */
-	function selectArray(arrayOption) {
-		selectedArray = arrayOption;
-		tempSelectedAbilityScores = generateBlankAttributeSet();
-	}
-
-	/**
-	 * Apply the base score changes to the document
-	 */
-	function applyBaseScoreChanges() {
-		if (!selectedArray) return;
-
-		const updates = {};
-		for (const [abilityKey, arrayIndex] of Object.entries(tempSelectedAbilityScores)) {
-			if (arrayIndex !== null) {
-				updates[`system.abilities.${abilityKey}.baseValue`] = selectedArray.array[arrayIndex];
-			}
-		}
-
-		document.update(updates);
-		isEditing = false;
-	}
-
-	/**
-	 * Cancel editing and revert to detected values
-	 */
-	function cancelEditing() {
-		const detected = detectCurrentArrayAndAssignment(characterAbilityScores);
-		if (detected) {
-			selectedArray = detected.arrayOption;
-			tempSelectedAbilityScores = { ...detected.assignment };
-		} else {
-			selectedArray = null;
-			tempSelectedAbilityScores = generateBlankAttributeSet();
-		}
-		isEditing = false;
-	}
-
-	/**
-	 * Start editing mode
-	 */
-	function startEditing() {
-		const detected = detectCurrentArrayAndAssignment(characterAbilityScores);
-		if (detected) {
-			selectedArray = detected.arrayOption;
-			tempSelectedAbilityScores = { ...detected.assignment };
-		} else {
-			selectedArray = null;
-			tempSelectedAbilityScores = generateBlankAttributeSet();
-		}
-		isEditing = true;
-	}
-
-	// Get class data directly from reactive document each time to ensure proper reactivity
-	let characterClass = $derived(document.reactive.items.find((item) => item.type === 'class'));
-
-	let characterAbilityScores = $derived(document.reactive.system.abilities);
-	let keyAbilityScores = $derived(characterClass?.system?.keyAbilityScores ?? []);
-
-	// Saving throw advantage/disadvantage from class
-	let savingThrowAdvantage = $derived(characterClass?.system?.savingThrows?.advantage ?? null);
-	let savingThrowDisadvantage = $derived(
-		characterClass?.system?.savingThrows?.disadvantage ?? null,
-	);
-
-	function isKeyAbility(abilityKey) {
-		return keyAbilityScores.includes(abilityKey);
-	}
-
-	function getSavingThrowStatus(abilityKey) {
-		if (abilityKey === savingThrowAdvantage) return 'advantage';
-		if (abilityKey === savingThrowDisadvantage) return 'disadvantage';
-		return null;
-	}
-
-	// Detect current array on initial load
-	let detectedArrayInfo = $derived(detectCurrentArrayAndAssignment(characterAbilityScores));
-
-	// Check if all stats in temp are selected
-	let allStatsSelected = $derived(
-		Object.values(tempSelectedAbilityScores).every((value) => value !== null),
-	);
-
-	let baseStatsMatchCoreArray = $derived(checkBaseStatsMatchCoreArray(characterAbilityScores));
-
-	let abilityBonusSources = $derived(getAbilityBonusSources(document.reactive));
-
-	// Use $derived.by to ensure reactive tracking of nested class properties
-	let abilityScoreIncreases = $derived.by(() => {
-		const classItem = document.reactive.items.find((item) => item.type === 'class');
-		if (!classItem) return [];
-
-		const classLevel = classItem.system?.classLevel ?? 0;
-		const abilityScoreData = classItem.system?.abilityScoreData ?? {};
-
-		return prepareStatIncreases(abilityScoreData, classLevel);
-	});
-
-	let classASI = $derived.by(() => {
-		const classItem = document.reactive.items.find((item) => item.type === 'class');
-		return classItem?.ASI ?? {};
-	});
-
-	// Counts all assigned stat increases across every level, regardless of current class level.
-	// Used for cap enforcement so future pre-assignments are counted against the +5 limit.
-	let allAssignedASI = $derived.by(() => {
-		const classItem = document.reactive.items.find((item) => item.type === 'class');
-		return classItem?.totalASI ?? {};
-	});
-
-	// Calculate totals for each section
-	let bonusTotals = $derived(
-		abilityScoreKeys.reduce((acc, key) => {
-			acc[key] = abilityBonusSources[key]?.reduce((sum, source) => sum + source.value, 0) ?? 0;
-			return acc;
-		}, {}),
-	);
-
-	let asiTotals = $derived(
-		abilityScoreKeys.reduce((acc, key) => {
-			acc[key] = classASI[key] ?? 0;
-			return acc;
-		}, {}),
-	);
+<script lang="ts">
+	import type { CharacterStatConfigDialogProps } from '#types/components/CharacterStatConfigDialog.d.ts';
+	import localize from '#utils/localize.ts';
+	import {
+		createCharacterStatConfigDialogState,
+		formatModifier,
+	} from './CharacterStatConfigDialogState.svelte.ts';
+
+	let { document }: CharacterStatConfigDialogProps = $props();
+
+	const state = createCharacterStatConfigDialogState(() => document);
+	const {
+		abilityScores,
+		abilityScoreTooltips,
+		abilityScoreKeys,
+		abilityScoreLabels,
+		abilityScoreCount,
+		statArrayOptions,
+		handleAbilityModifierDrop,
+		selectArray,
+		applyBaseScoreChanges,
+		cancelEditing,
+		startEditing,
+		isKeyAbility,
+		getSavingThrowStatus,
+		toggleStatIncreaseOption,
+		getStatIncreaseTypeLabel,
+		getStatIncreaseTypeTooltip,
+	} = state;
+	const isEditing = $derived(state.isEditing);
+	const selectedArray = $derived(state.selectedArray);
+	const tempSelectedAbilityScores = $derived(state.tempSelectedAbilityScores);
+	const characterAbilityScores = $derived(state.characterAbilityScores);
+	const keyAbilityScores = $derived(state.keyAbilityScores);
+	const detectedArrayInfo = $derived(state.detectedArrayInfo);
+	const allStatsSelected = $derived(state.allStatsSelected);
+	const baseStatsMatchCoreArray = $derived(state.baseStatsMatchCoreArray);
+	const abilityBonusSources = $derived(state.abilityBonusSources);
+	const abilityScoreIncreases = $derived(state.abilityScoreIncreases);
+	const allAssignedASI = $derived(state.allAssignedASI);
+	const bonusTotals = $derived(state.bonusTotals);
+	const asiTotals = $derived(state.asiTotals);
 </script>
 
 {#snippet sectionHeader(title, subtitle = null)}
