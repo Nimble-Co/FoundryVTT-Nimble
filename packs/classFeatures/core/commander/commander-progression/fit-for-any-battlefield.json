@@ -27,7 +27,7 @@
 				"predicate": {},
 				"priority": 2,
 				"scope": "item",
-				"max": "@strength",
+				"max": "@strength + @combatDiceBonus",
 				"dieSize": "d6",
 				"initial": "zero",
 				"recoveries": [
@@ -139,7 +139,14 @@
 		"group": "commander-progression",
 		"gainedAtLevel": 4,
 		"subclass": false,
-		"gainedAtLevels": [4, 6, 8, 10, 12, 16],
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			10,
+			12,
+			16
+		],
 		"levelUpOptions": [
 			{
 				"id": "combat-tactic",
@@ -148,7 +155,9 @@
 					4
 				],
 				"rules": [],
-				"selectionGroups": ["combat-tactics"]
+				"selectionGroups": [
+					"combat-tactics"
+				]
 			},
 			{
 				"id": "max-combat-die",
@@ -162,15 +171,10 @@
 				],
 				"rules": [
 					{
-						"type": "grantItem",
-						"disabled": false,
-						"id": "maxCombatDieGrant",
-						"label": "+1 Max Combat Die",
-						"predicate": {},
-						"priority": 1,
-						"allowDuplicate": true,
-						"inMemoryOnly": false,
-						"uuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt"
+						"type": "poolMaxBonus",
+						"poolIdentifier": "combat-dice",
+						"amount": 1,
+						"grantItemUuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt"
 					}
 				],
 				"selectionGroups": []
@@ -186,7 +190,10 @@
 					16
 				],
 				"rules": [],
-				"selectionGroups": ["combat-tactics", "commanders-orders"]
+				"selectionGroups": [
+					"combat-tactics",
+					"commanders-orders"
+				]
 			}
 		]
 	},

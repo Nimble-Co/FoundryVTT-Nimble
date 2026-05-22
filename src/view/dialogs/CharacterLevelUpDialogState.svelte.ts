@@ -440,6 +440,28 @@ export function createLevelUpState(
 		return result;
 	}
 
+	function computePoolMaxBonuses(): Record<string, number> {
+		if (!classFeatures) return {};
+		const bonuses: Record<string, number> = {};
+		for (const feature of classFeatures.optionFeatures) {
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			if (!selectedOptionId) continue;
+			const option = (feature.system.levelUpOptions ?? [])
+				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.find((o) => o.id === selectedOptionId);
+			if (!option) continue;
+			for (const rule of option.rules) {
+				if ((rule.type as string) !== 'poolMaxBonus') continue;
+				const poolId = rule.poolIdentifier as string | undefined;
+				const amount = rule.amount as number | undefined;
+				if (poolId && typeof amount === 'number') {
+					bonuses[poolId] = (bonuses[poolId] ?? 0) + amount;
+				}
+			}
+		}
+		return bonuses;
+	}
+
 	// Actions
 	function submit() {
 		getDialog().submit({
@@ -453,6 +475,7 @@ export function createLevelUpState(
 						autoGrant: classFeatures.autoGrant.map((f) => f.uuid),
 						selected: selectedClassFeatures,
 						grantedOptionItems: computeGrantedOptionItems(),
+						poolMaxBonuses: computePoolMaxBonuses(),
 					}
 				: undefined,
 			spellUuids: getGrantedSpellUuids(),
