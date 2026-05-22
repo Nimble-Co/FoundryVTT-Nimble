@@ -97,7 +97,7 @@
 			const baseSize = Number(sizeStr);
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = hitDieData?.bonus ?? 0;
-			if (bonus > 0) {
+			if (bonus !== 0) {
 				bySize[size] ??= { current: 0, total: 0 };
 				bySize[size].total += bonus;
 
@@ -107,6 +107,11 @@
 					bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 				}
 			}
+		}
+
+		for (const data of Object.values(bySize)) {
+			data.total = Math.max(data.total, 0);
+			data.current = Math.min(Math.max(data.current, 0), data.total);
 		}
 
 		return bySize;

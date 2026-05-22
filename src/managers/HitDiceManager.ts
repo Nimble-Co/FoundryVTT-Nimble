@@ -9,6 +9,17 @@ function incrementDieSize(baseSize: number, steps: number): number {
 	return DIE_SIZES[newIndex];
 }
 
+function clampHitDiceBySize(
+	hitDiceBySize: Record<string, { current: number; total: number }>,
+): Record<string, { current: number; total: number }> {
+	for (const data of Object.values(hitDiceBySize)) {
+		data.total = Math.max(data.total, 0);
+		data.current = Math.min(Math.max(data.current, 0), data.total);
+	}
+
+	return hitDiceBySize;
+}
+
 class HitDiceManager {
 	#actor: NimbleCharacterInterface;
 
@@ -66,7 +77,7 @@ class HitDiceManager {
 			const baseSize = Number(sizeStr);
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = (hitDieData as { bonus?: number }).bonus ?? 0;
-			if (bonus > 0) {
+			if (bonus !== 0) {
 				this.#max += bonus;
 
 				// If this is a new size not from classes or bonusHitDice array, get stored current
@@ -76,6 +87,18 @@ class HitDiceManager {
 					currentCounted.add(size);
 				}
 				this.dieSizes.add(size);
+			}
+		}
+
+		const bySize = this.bySize;
+		this.#max = 0;
+		this.#value = 0;
+		this.dieSizes = new Set<number>();
+		for (const [size, { current, total }] of Object.entries(bySize)) {
+			this.#max += total;
+			this.#value += current;
+			if (total > 0) {
+				this.dieSizes.add(Number(size));
 			}
 		}
 	}
@@ -143,7 +166,7 @@ class HitDiceManager {
 			const baseSize = Number(sizeStr);
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = (hitDieData as { bonus?: number }).bonus ?? 0;
-			if (bonus > 0) {
+			if (bonus !== 0) {
 				hitDiceByClass[size] ??= { current: 0, total: 0 };
 				hitDiceByClass[size].total += bonus;
 
@@ -156,7 +179,7 @@ class HitDiceManager {
 			}
 		}
 
-		return hitDiceByClass;
+		return clampHitDiceBySize(hitDiceByClass);
 	}
 
 	getHitDieData(size: number) {
