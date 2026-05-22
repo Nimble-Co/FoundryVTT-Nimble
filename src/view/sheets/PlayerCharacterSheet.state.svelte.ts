@@ -1,7 +1,7 @@
 import { setContext, untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
-import { incrementDieSize } from '#managers/HitDiceManager.js';
+import { clampHitDiceBySize, incrementDieSize } from '#managers/HitDiceManager.js';
 import { SYSTEM_ID } from '#system';
 import {
 	getInitiativeCombatManaRules,
@@ -247,16 +247,16 @@ export function createPlayerCharacterSheetState(params: {
 			}
 		}
 
+		const clampedBySize = clampHitDiceBySize(bySize);
+
 		let value = 0;
 		let max = 0;
-		for (const data of Object.values(bySize)) {
-			data.total = Math.max(data.total, 0);
-			data.current = Math.min(Math.max(data.current, 0), data.total);
+		for (const data of Object.values(clampedBySize)) {
 			value += data.current;
 			max += data.total;
 		}
 
-		return { bySize, value, max };
+		return { bySize: clampedBySize, value, max };
 	});
 
 	{

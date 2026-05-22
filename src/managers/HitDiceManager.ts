@@ -9,9 +9,11 @@ function incrementDieSize(baseSize: number, steps: number): number {
 	return DIE_SIZES[newIndex];
 }
 
-function clampHitDiceBySize(
-	hitDiceBySize: Record<string, { current: number; total: number }>,
-): Record<string, { current: number; total: number }> {
+type HitDiceBySize =
+	| Record<number, { current: number; total: number }>
+	| Record<string, { current: number; total: number }>;
+
+function clampHitDiceBySize<T extends HitDiceBySize>(hitDiceBySize: T): T {
 	for (const data of Object.values(hitDiceBySize)) {
 		data.total = Math.max(data.total, 0);
 		data.current = Math.min(Math.max(data.current, 0), data.total);
@@ -32,68 +34,7 @@ class HitDiceManager {
 	constructor(actor: NimbleCharacterInterface) {
 		this.#actor = actor;
 
-		// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
-		const hitDiceSizeBonus =
-			(this.#actor.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0;
-
-		// Track which sizes we've already counted current for
-		const currentCounted = new Set<number>();
-
-		// Process class hit dice
-		Object.values(this.#actor.classes).forEach((cls) => {
-			// Apply hit dice size bonus to get effective size
-			const size = incrementDieSize(cls.hitDice.size, hitDiceSizeBonus);
-			const current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
-
-			this.#max += cls.hitDice.total;
-			if (!currentCounted.has(size)) {
-				this.#value += current;
-				currentCounted.add(size);
-			}
-			this.dieSizes.add(size);
-		});
-
-		// Account for bonus hit dice from the bonusHitDice array
-		// Apply hitDiceSizeBonus to increment these dice as well
-		for (const entry of this.#actor.system.attributes.bonusHitDice ?? []) {
-			const size = incrementDieSize(entry.size, hitDiceSizeBonus);
-			this.#max += entry.value;
-
-			// If this is a new size not from classes, get its current value
-			if (!currentCounted.has(size)) {
-				const current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
-				this.#value += current;
-				currentCounted.add(size);
-			}
-			this.dieSizes.add(size);
-		}
-
-		// Account for bonus hit dice from rules (stored in hitDice[size].bonus)
-		// Rule bonuses add to max; current comes from stored value (restored on rest)
-		// Apply hitDiceSizeBonus to increment these dice as well
-		for (const [sizeStr, hitDieData] of Object.entries(
-			this.#actor.system.attributes.hitDice ?? {},
-		)) {
-			const baseSize = Number(sizeStr);
-			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
-			const bonus = (hitDieData as { bonus?: number }).bonus ?? 0;
-			if (bonus !== 0) {
-				this.#max += bonus;
-
-				// If this is a new size not from classes or bonusHitDice array, get stored current
-				if (!currentCounted.has(size)) {
-					const current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
-					this.#value += current;
-					currentCounted.add(size);
-				}
-				this.dieSizes.add(size);
-			}
-		}
-
 		const bySize = this.bySize;
-		this.#max = 0;
-		this.#value = 0;
-		this.dieSizes = new Set<number>();
 		for (const [size, { current, total }] of Object.entries(bySize)) {
 			this.#max += total;
 			this.#value += current;
@@ -324,4 +265,4 @@ export interface UpdateDataOptions {
 	restoreLargest?: boolean | undefined;
 }
 
-export { HitDiceManager, incrementDieSize };
+export { HitDiceManager, clampHitDiceBySize, incrementDieSize };

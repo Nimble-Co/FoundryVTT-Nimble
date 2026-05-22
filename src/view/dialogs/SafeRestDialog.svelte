@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-	import { incrementDieSize } from '#managers/HitDiceManager.js';
+	import { clampHitDiceBySize, incrementDieSize } from '#managers/HitDiceManager.js';
 	import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
@@ -109,12 +109,7 @@
 			}
 		}
 
-		for (const data of Object.values(bySize)) {
-			data.total = Math.max(data.total, 0);
-			data.current = Math.min(Math.max(data.current, 0), data.total);
-		}
-
-		return bySize;
+		return clampHitDiceBySize(bySize);
 	});
 
 	let hitDiceRecovery = $derived(
