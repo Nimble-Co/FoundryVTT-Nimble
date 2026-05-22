@@ -72,6 +72,21 @@ async function applyRefillTriggersToPools(
 				continue;
 			}
 
+			if (refill.mode === 'setIfEmpty') {
+				// 'setIfEmpty' rolls `target` fresh dice only when the pool is
+				// currently empty. Matches rulebook phrasing like Oathsworn
+				// Radiant Judgment: "if you have no Judgment Dice, roll your
+				// Judgment dice (2d6)." A pool with live dice is left alone.
+				if (pool.faces.length > 0) continue;
+				const target = Math.min(amount, pool.max);
+				for (let index = 0; index < target; index += 1) {
+					const face = await rollSingleDieFace(pool.dieSize);
+					pool.faces.push(face);
+					rolledFaces.push(face);
+				}
+				continue;
+			}
+
 			// 'add' mode — push N new dice up to max.
 			const room = pool.max - pool.faces.length;
 			const toAdd = Math.max(0, Math.min(amount, room));
