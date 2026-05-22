@@ -2,7 +2,8 @@
 	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
-	import { clampHitDiceBySize, incrementDieSize } from '../../managers/HitDiceManager.js';
+	import { incrementDieSize } from '../../managers/HitDiceManager.js';
+	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 
 	interface HitDiceAdvantageRule {
 		id: string;

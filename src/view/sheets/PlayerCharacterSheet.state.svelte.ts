@@ -1,8 +1,9 @@
 import { setContext, untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
-import { clampHitDiceBySize, incrementDieSize } from '#managers/HitDiceManager.js';
+import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { SYSTEM_ID } from '#system';
+import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 import {
 	getInitiativeCombatManaRules,
 	primeActorCombatManaSourceRules,

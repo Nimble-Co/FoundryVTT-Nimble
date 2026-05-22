@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-	import { clampHitDiceBySize, incrementDieSize } from '#managers/HitDiceManager.js';
+	import { incrementDieSize } from '#managers/HitDiceManager.js';
 	import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
 	interface Props {

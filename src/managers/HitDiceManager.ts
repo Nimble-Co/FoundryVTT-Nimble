@@ -1,3 +1,5 @@
+import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
+
 // Die size progression: d4 -> d6 -> d8 -> d10 -> d12 -> d20
 const DIE_SIZES = [4, 6, 8, 10, 12, 20];
 
@@ -7,19 +9,6 @@ function incrementDieSize(baseSize: number, steps: number): number {
 
 	const newIndex = Math.min(currentIndex + steps, DIE_SIZES.length - 1);
 	return DIE_SIZES[newIndex];
-}
-
-type HitDiceBySize =
-	| Record<number, { current: number; total: number }>
-	| Record<string, { current: number; total: number }>;
-
-function clampHitDiceBySize<T extends HitDiceBySize>(hitDiceBySize: T): T {
-	for (const data of Object.values(hitDiceBySize)) {
-		data.total = Math.max(data.total, 0);
-		data.current = Math.min(Math.max(data.current, 0), data.total);
-	}
-
-	return hitDiceBySize;
 }
 
 class HitDiceManager {
@@ -265,4 +254,4 @@ export interface UpdateDataOptions {
 	restoreLargest?: boolean | undefined;
 }
 
-export { HitDiceManager, clampHitDiceBySize, incrementDieSize };
+export { HitDiceManager, incrementDieSize };
