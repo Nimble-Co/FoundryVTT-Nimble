@@ -3,6 +3,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { SYSTEM_ID } from '#system';
+import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 import {
 	getInitiativeCombatManaRules,
 	primeActorCombatManaSourceRules,
@@ -235,7 +236,7 @@ export function createPlayerCharacterSheetState(params: {
 			const baseSize = Number(sizeStr);
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = (hitDieData as { bonus?: number })?.bonus ?? 0;
-			if (bonus > 0) {
+			if (bonus !== 0) {
 				bySize[size] ??= { current: 0, total: 0 };
 				bySize[size].total += bonus;
 
@@ -247,14 +248,16 @@ export function createPlayerCharacterSheetState(params: {
 			}
 		}
 
+		const clampedBySize = clampHitDiceBySize(bySize);
+
 		let value = 0;
 		let max = 0;
-		for (const data of Object.values(bySize)) {
+		for (const data of Object.values(clampedBySize)) {
 			value += data.current;
 			max += data.total;
 		}
 
-		return { bySize, value, max };
+		return { bySize: clampedBySize, value, max };
 	});
 
 	{

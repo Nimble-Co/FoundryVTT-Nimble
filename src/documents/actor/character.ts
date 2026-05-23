@@ -609,7 +609,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const oldBonus = oldBonusContributions[size] ?? 0;
 			const newBonus = newBonusContributions[size] ?? 0;
 			const bonusDelta = newBonus - oldBonus;
-			const newMax = classTotal + newBonus;
+			const newMax = Math.max(classTotal + newBonus, 0);
 
 			const currentValue = this.system.attributes.hitDice[size]?.current ?? 0;
 
