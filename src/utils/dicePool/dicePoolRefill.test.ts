@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyRefillTriggersToPools } from './dicePoolRefill.js';
+import { buildEffectiveDicePoolMap } from './helpers.js';
 import type { CharacterActorLike, DicePoolMap, DicePoolState, DiceRefillEntry } from './types.js';
 
 // The shared Foundry Die mock in tests/mocks/foundry.ts doesn't implement
@@ -245,5 +246,86 @@ describe('applyRefillTriggersToPools — @poolMax / @poolCurrent tokens', () => 
 		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
 
 		expect(nextPools.judgment.faces).toHaveLength(2);
+	});
+});
+
+// End-to-end check that the shape shipped in radiant-judgement.json plus the
+// L14 modifyPool produces the rulebook-correct refill behavior.
+describe('Oathsworn Radiant Judgement (post-Task-4 pack shape)', () => {
+	type MockRule = { type: string; [key: string]: unknown };
+	type MockItem = {
+		id: string;
+		name: string;
+		rules: Map<string, MockRule>;
+		flags: Record<string, Record<string, unknown>>;
+	};
+
+	function judgmentPoolRule(): MockRule {
+		return {
+			type: 'dicePool',
+			id: 'judgment-pool-base',
+			identifier: 'judgment',
+			scope: 'item',
+			dieSize: 'd6',
+			max: '2',
+			initial: 'zero',
+			refills: [{ trigger: 'onAttacked', mode: 'setIfEmpty', value: '@poolMax' }],
+		};
+	}
+
+	function l14ModifyRule(): MockRule {
+		return {
+			type: 'modifyPool',
+			id: 'judgment-plus1-l14',
+			poolType: 'dice',
+			poolIdentifier: 'judgment',
+			maxDelta: '+1',
+		};
+	}
+
+	function makeOathsworn(rules: MockRule[]): CharacterActorLike {
+		const item: MockItem = {
+			id: 'radiant-judgement',
+			name: 'Radiant Judgement',
+			rules: new Map(rules.map((rule, idx) => [String(idx), rule])),
+			flags: {},
+		};
+		return {
+			type: 'character',
+			items: { contents: [item], get: () => item },
+			flags: {},
+			getRollData: vi.fn(() => ({})),
+		} as unknown as CharacterActorLike;
+	}
+
+	it('L1 empty pool: onAttacked refills to 2 dice', async () => {
+		const actor = makeOathsworn([judgmentPoolRule()]);
+		const pools = buildEffectiveDicePoolMap(actor);
+		expect(pools.judgment.max).toBe(2);
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toHaveLength(2);
+	});
+
+	it('L1 non-empty pool: onAttacked is a no-op (no double-set on repeat attacks)', async () => {
+		const actor = makeOathsworn([judgmentPoolRule()]);
+		const pools = buildEffectiveDicePoolMap(actor);
+		pools.judgment.faces = [4, 5];
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toEqual([4, 5]);
+		expect(entries).toEqual([]);
+	});
+
+	it('L14 empty pool: onAttacked refills to 3 dice (max bumped by modifyPool)', async () => {
+		const actor = makeOathsworn([judgmentPoolRule(), l14ModifyRule()]);
+		const pools = buildEffectiveDicePoolMap(actor);
+		expect(pools.judgment.max).toBe(3);
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toHaveLength(3);
 	});
 });
