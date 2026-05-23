@@ -175,3 +175,16 @@ Adding a new `ArrayField<X>` element type requires extending `SchemaFieldRendere
 ### Coverage test
 
 `src/view/rulesBuilder/components/RuleCard.allRules.test.ts` instantiates every registered rule type with default values and fails on any inline-error block or "no widget" warning. It runs automatically — your new rule is covered as soon as it's registered.
+
+## Pool storage vs. pool consumption
+
+Both pool kinds (`dicePool`, `chargePool`) are **pure storage rules** — they declare the pool (max, dieSize, initial state, refill/recovery triggers) but say nothing about how the pool is *spent*. Spending is the job of a paired consumer rule on the same item.
+
+| Pool type | Storage rule | Consumer rule | Consumption modes |
+|---|---|---|---|
+| Charges (scalar count) | `chargePool` | `chargeConsumer` | spend on activation (cost formula) |
+| Rolled dice (face array) | `dicePool` | `diceConsumer` | `manual` (dialog spend) / `autoBonus` (auto-add to qualifying attacks, no consume) |
+
+A `dicePool` rule with no paired `diceConsumer` defaults to `manual` spending — the dialog prompts the player at activation time. To make a pool snowball as a damage bonus (Berserker Fury Dice), add a sibling `diceConsumer` with `mode: 'autoBonus'` and the desired `bonusOnAttackDelivery` filter (`'melee'`, `'ranged'`, `'any'`, or `null`).
+
+Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` consumer for outgoing damage and a `manual` consumer that a reaction effect spends from. This is how features like Berserker's "That all you got?!" reaction share the Fury Dice pool with the auto-bonus damage path.

@@ -22,3 +22,4 @@ export { Migration021RagePoolActivation } from './Migration021RagePoolActivation
 export { Migration022CelestialSavingThrow } from './Migration022CelestialSavingThrow.js';
 export { Migration023SpellClasses } from './Migration023SpellClasses.js';
 export { Migration024OathswornRefillMode } from './Migration024OathswornRefillMode.js';
+export { Migration025DiceConsumerSplit } from './Migration025DiceConsumerSplit.js';

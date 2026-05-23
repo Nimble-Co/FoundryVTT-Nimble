@@ -625,6 +625,7 @@
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
 			"grantMovement": "Grant Movement",
+			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
@@ -683,6 +684,9 @@
 			},
 			"chargeConsumer": {
 				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
+			},
+			"diceConsumer": {
+				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool."
 			},
 			"chargePool": {
 				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers.",

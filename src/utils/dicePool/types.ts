@@ -50,7 +50,16 @@ type DicePoolRuleLike = {
 	icon?: string;
 	initial?: string;
 	refills?: unknown;
-	consumption?: string;
+};
+
+type DiceConsumerRuleLike = {
+	type?: string;
+	disabled?: boolean;
+	id?: string;
+	poolIdentifier?: string;
+	poolScope?: string;
+	mode?: string;
+	cost?: string;
 	bonusOnAttackDelivery?: string | null;
 };
 
@@ -64,7 +73,7 @@ type ModifyPoolRuleLike = {
 	maxDelta?: string | null;
 };
 
-type DicePoolRuleAny = DicePoolRuleLike & ModifyPoolRuleLike;
+type DicePoolRuleAny = DicePoolRuleLike & DiceConsumerRuleLike & ModifyPoolRuleLike;
 
 type RuleBackedItem = Item.Implementation & {
 	rules?: Map<string, DicePoolRuleAny>;
@@ -79,6 +88,7 @@ type CharacterActorLike = Actor.Implementation & {
 export type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
+	DiceConsumerRuleLike,
 	DiceConsumptionMode,
 	DicePoolDefinition,
 	DicePoolInitialMode,
