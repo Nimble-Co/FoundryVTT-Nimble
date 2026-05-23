@@ -22,8 +22,13 @@
 				"refills": [
 					{
 						"trigger": "onAttacked",
-						"mode": "set",
-						"value": "2"
+						"mode": "setIfEmpty",
+						"value": "@poolMax"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "clear",
+						"value": "0"
 					}
 				]
 			},

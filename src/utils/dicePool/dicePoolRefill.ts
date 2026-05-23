@@ -68,6 +68,15 @@ async function applyRefillTriggersToPools(
 			if (!triggerSet.has(refill.trigger)) continue;
 			matchingTrigger = refill.trigger;
 
+			if (refill.mode === 'clear') {
+				// 'clear' wipes the pool. Used by pools that reset between encounters
+				// (Oathsworn Judgment Dice expire at encounter end, rulebook: "The
+				// dice are expended whether you hit or miss"). The `value` field is
+				// ignored — clearing is unconditional.
+				pool.faces.length = 0;
+				continue;
+			}
+
 			if (refill.mode === 'refresh') {
 				const needed = pool.max - pool.faces.length;
 				for (let index = 0; index < needed; index += 1) {
