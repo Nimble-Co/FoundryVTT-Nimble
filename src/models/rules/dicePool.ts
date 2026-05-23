@@ -7,8 +7,6 @@ const DICE_POOL_DIE_SIZES = [...DicePoolRuleConfig.dieSizes];
 const DICE_POOL_INITIAL_VALUES = [...DicePoolRuleConfig.initialModes];
 const DICE_REFILL_TRIGGERS = [...DicePoolRuleConfig.refillTriggers];
 const DICE_REFILL_MODES = [...DicePoolRuleConfig.refillModes];
-const DICE_CONSUMPTION_MODES = [...DicePoolRuleConfig.consumptionModes];
-const DICE_ATTACK_DELIVERY_FILTERS = [...DicePoolRuleConfig.attackDeliveryFilters];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -85,25 +83,6 @@ function schema() {
 				hint: 'NIMBLE.rules.dicePool.refills.hint',
 			} as unknown as never,
 		),
-		// 'manual' (default) preserves the existing dialog-spend behavior:
-		// the player opts in to each die, dice consumed after the roll.
-		// 'autoBonus' adds every face to qualifying attacks automatically and
-		// never consumes the pool (Fury Dice snowball semantics).
-		consumption: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: 'manual',
-			choices: DICE_CONSUMPTION_MODES,
-		}),
-		// Restricts autoBonus dice to attacks of this delivery. `null` means
-		// no filter (auto-bonus applies to every attack roll). Ignored when
-		// consumption === 'manual'.
-		bonusOnAttackDelivery: new fields.StringField({
-			required: false,
-			nullable: true,
-			initial: null,
-			choices: DICE_ATTACK_DELIVERY_FILTERS,
-		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'dicePool' }),
 	};
 }
@@ -124,10 +103,6 @@ class DicePoolRule extends NimbleBaseRule<DicePoolRule.Schema> {
 
 	declare initial: (typeof DicePoolRuleConfig.initialModes)[number];
 
-	declare consumption: (typeof DicePoolRuleConfig.consumptionModes)[number];
-
-	declare bonusOnAttackDelivery: (typeof DicePoolRuleConfig.attackDeliveryFilters)[number] | null;
-
 	static override defineSchema(): DicePoolRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -143,8 +118,6 @@ class DicePoolRule extends NimbleBaseRule<DicePoolRule.Schema> {
 				['max', 'string'],
 				['initial', '"max" | "zero"'],
 				['refills', 'Array<{ trigger: string; mode: string; value: string }>'],
-				['consumption', '"manual" | "autoBonus"'],
-				['bonusOnAttackDelivery', '"melee" | "ranged" | "any" | null'],
 			]),
 		);
 	}

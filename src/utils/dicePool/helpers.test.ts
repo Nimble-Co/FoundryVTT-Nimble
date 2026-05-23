@@ -204,6 +204,107 @@ describe('getDicePoolDefinitions', () => {
 
 		expect(getDicePoolDefinitions(actor)).toHaveLength(0);
 	});
+
+	it('defaults to consumption=manual when no diceConsumer rule is present', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Plain Pool', [
+				{
+					type: 'dicePool',
+					id: 'judgment-rule',
+					identifier: 'judgment',
+					scope: 'actor',
+					dieSize: 'd6',
+					max: '2',
+					initial: 'max',
+				},
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs).toHaveLength(1);
+		expect(defs[0].consumption).toBe('manual');
+		expect(defs[0].bonusOnAttackDelivery).toBe(null);
+	});
+
+	it('derives consumption + bonusOnAttackDelivery from a paired diceConsumer rule on the same item', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+					dieSize: 'd4',
+					max: '3',
+					initial: 'zero',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'autoBonus',
+					cost: '1',
+					bonusOnAttackDelivery: 'melee',
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs).toHaveLength(1);
+		expect(defs[0].consumption).toBe('autoBonus');
+		expect(defs[0].bonusOnAttackDelivery).toBe('melee');
+	});
+
+	it('ignores diceConsumer rules that target a different pool identifier', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Mixed Pools', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'judgment-autobonus',
+					poolIdentifier: 'judgment',
+					poolScope: 'actor',
+					mode: 'autoBonus',
+					cost: '1',
+					bonusOnAttackDelivery: 'any',
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('manual');
+		expect(defs[0].bonusOnAttackDelivery).toBe(null);
+	});
+
+	it('ignores disabled diceConsumer rules', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					mode: 'autoBonus',
+					bonusOnAttackDelivery: 'melee',
+					disabled: true,
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('manual');
+	});
 });
 
 describe('getDicePoolModifiers', () => {

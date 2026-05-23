@@ -6,6 +6,7 @@ import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
@@ -40,6 +41,7 @@ export default function registerRulesConfig() {
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
+		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
 		dicePool: 'NIMBLE.ruleTypes.dicePool',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
@@ -73,6 +75,7 @@ export default function registerRulesConfig() {
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
 		grantMovement: GrantMovementRule,
+		diceConsumer: DiceConsumerRule,
 		dicePool: DicePoolRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,

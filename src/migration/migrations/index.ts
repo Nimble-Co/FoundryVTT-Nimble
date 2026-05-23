@@ -21,3 +21,4 @@ export { Migration020DicePoolBackfill } from './Migration020DicePoolBackfill.js'
 export { Migration021RagePoolActivation } from './Migration021RagePoolActivation.js';
 export { Migration022CelestialSavingThrow } from './Migration022CelestialSavingThrow.js';
 export { Migration023SpellClasses } from './Migration023SpellClasses.js';
+export { Migration025DiceConsumerSplit } from './Migration025DiceConsumerSplit.js';

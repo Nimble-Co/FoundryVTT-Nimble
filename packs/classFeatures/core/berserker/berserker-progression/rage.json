@@ -19,8 +19,20 @@
 				"dieSize": "d4",
 				"max": "@key",
 				"initial": "zero",
-				"refills": [],
-				"consumption": "autoBonus",
+				"refills": []
+			},
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "fury-pool-autobonus",
+				"identifier": "",
+				"label": "Fury Dice — STR auto-bonus",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"poolScope": "item",
+				"mode": "autoBonus",
+				"cost": "1",
 				"bonusOnAttackDelivery": "melee"
 			}
 		],

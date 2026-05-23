@@ -5,6 +5,7 @@ import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
 import type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
+	DiceConsumerRuleLike,
 	DiceConsumptionMode,
 	DicePoolDefinition,
 	DicePoolInitialMode,
@@ -303,6 +304,27 @@ function applyModifiersToDefinition(
 	return { ...definition, dieSize, max };
 }
 
+/**
+ * Find a `diceConsumer` rule on the same item that targets the given pool
+ * identifier. Returns the first match (one consumer per pool is the supported
+ * shape today — manual + autoBonus on the same pool would each ship as
+ * separate consumer rules and the dialog already routes manual through the
+ * spend flow, autoBonus through the bonus flow).
+ */
+function findDiceConsumerRule(
+	rules: Map<string, DicePoolRuleLike & DiceConsumerRuleLike & ModifyPoolRuleLike>,
+	poolIdentifier: string,
+): DiceConsumerRuleLike | undefined {
+	for (const rule of rules.values()) {
+		if (rule.type !== 'diceConsumer' || rule.disabled) continue;
+		const consumer = rule as DiceConsumerRuleLike;
+		const consumerPoolIdentifier = normalizeIdentifier(consumer.poolIdentifier);
+		if (consumerPoolIdentifier !== poolIdentifier) continue;
+		return consumer;
+	}
+	return undefined;
+}
+
 function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[] {
 	const definitions: DicePoolDefinition[] = [];
 	const modifiersByIdentifier = getDicePoolModifiers(actor);
@@ -327,6 +349,8 @@ function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[]
 			const initial: DicePoolInitialMode = poolRule.initial === 'zero' ? 'zero' : 'max';
 			const refills = normalizeRefills(poolRule.refills);
 
+			const consumerRule = findDiceConsumerRule(rules, identifier);
+
 			const baseDefinition: DicePoolDefinition = {
 				id,
 				identifier,
@@ -339,8 +363,8 @@ function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[]
 				icon: normalizeIcon(poolRule.icon),
 				initial,
 				refills,
-				consumption: toConsumptionMode(poolRule.consumption),
-				bonusOnAttackDelivery: toAttackDeliveryFilter(poolRule.bonusOnAttackDelivery),
+				consumption: toConsumptionMode(consumerRule?.mode),
+				bonusOnAttackDelivery: toAttackDeliveryFilter(consumerRule?.bonusOnAttackDelivery),
 			};
 
 			definitions.push(
