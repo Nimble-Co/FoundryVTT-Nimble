@@ -1462,6 +1462,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `itemSourceRules` | `src/utils/itemSourceRules.ts` | Resolve compendium source IDs and rules for embedded items |
 | `ChargePoolRuleConfig` | `src/utils/chargePoolRuleConfig.ts` | Shared charge-system constants (scopes, triggers, flags) |
 | `ChargePoolService` | `src/utils/chargePool/chargePoolConsume.ts`, `chargePoolRecover.ts`, `chargePoolPreview.ts`, `chargePoolSync.ts` | Charge pool sync, consumption, and recovery operations |
+| `clampHitDiceBySize()` | `src/utils/clampHitDiceBySize.ts` | Clamp hit-dice totals to zero or higher and current values between zero and total |
 | `manaRecovery` | `src/utils/manaRecovery.ts` | Mana recovery calculations |
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |

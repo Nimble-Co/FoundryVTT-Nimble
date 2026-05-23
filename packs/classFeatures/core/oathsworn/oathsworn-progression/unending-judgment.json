@@ -6,7 +6,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "damageBonus",
+				"disabled": false,
+				"id": "unending-judgment-l18",
+				"identifier": "",
+				"label": "Unending Judgment",
+				"predicate": {
+					"self": "noJudgmentDice"
+				},
+				"priority": 1,
+				"value": "5",
+				"damageType": "",
+				"delivery": "melee",
+				"source": "weapon"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

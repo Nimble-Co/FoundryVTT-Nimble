@@ -3,6 +3,7 @@
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
+	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 
 	interface HitDiceAdvantageRule {
 		id: string;
@@ -90,7 +91,7 @@
 			const baseSize = Number(sizeStr);
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = hitDieData?.bonus ?? 0;
-			if (bonus > 0) {
+			if (bonus !== 0) {
 				bySize[size] ??= { current: 0, total: 0 };
 				bySize[size].total += bonus;
 
@@ -102,7 +103,7 @@
 			}
 		}
 
-		return bySize;
+		return clampHitDiceBySize(bySize);
 	});
 
 	// Get hit dice advantage rules from the actor

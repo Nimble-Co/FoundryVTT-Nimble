@@ -4,6 +4,7 @@
 	import { incrementDieSize } from '#managers/HitDiceManager.js';
 	import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
 	interface Props {
@@ -97,7 +98,7 @@
 			const baseSize = Number(sizeStr);
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = hitDieData?.bonus ?? 0;
-			if (bonus > 0) {
+			if (bonus !== 0) {
 				bySize[size] ??= { current: 0, total: 0 };
 				bySize[size].total += bonus;
 
@@ -109,7 +110,7 @@
 			}
 		}
 
-		return bySize;
+		return clampHitDiceBySize(bySize);
 	});
 
 	let hitDiceRecovery = $derived(
