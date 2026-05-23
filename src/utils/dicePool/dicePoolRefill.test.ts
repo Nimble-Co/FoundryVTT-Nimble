@@ -156,6 +156,70 @@ describe('applyRefillTriggersToPools — setIfEmpty mode', () => {
 	});
 });
 
+describe('applyRefillTriggersToPools — clear mode', () => {
+	it('wipes all dice when the trigger matches', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [3, 5],
+				refills: [refill({ trigger: 'encounterEnd', mode: 'clear' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['encounterEnd']);
+
+		expect(nextPools.judgment.faces).toEqual([]);
+		expect(entries).toHaveLength(1);
+		expect(entries[0].previousFaces).toEqual([3, 5]);
+		expect(entries[0].newFaces).toEqual([]);
+		expect(entries[0].rolledFaces).toEqual([]);
+	});
+
+	it('is a no-op when the pool is already empty (no spurious event)', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [],
+				refills: [refill({ trigger: 'encounterEnd', mode: 'clear' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['encounterEnd']);
+
+		expect(nextPools.judgment.faces).toEqual([]);
+		expect(entries).toEqual([]);
+	});
+
+	it('does not fire when the trigger does not match', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [4],
+				refills: [refill({ trigger: 'encounterEnd', mode: 'clear' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toEqual([4]);
+		expect(entries).toEqual([]);
+	});
+
+	it('ignores the value field (clearing is unconditional)', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [2, 3],
+				refills: [refill({ trigger: 'encounterEnd', mode: 'clear', value: '99' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['encounterEnd']);
+
+		expect(nextPools.judgment.faces).toEqual([]);
+	});
+});
+
 describe('applyRefillTriggersToPools — @poolMax / @poolCurrent tokens', () => {
 	it('resolves @poolMax to the pool max for set mode (Oathsworn L14 scaling)', async () => {
 		const actor = makeActor();
@@ -269,7 +333,10 @@ describe('Oathsworn Radiant Judgement (post-Task-4 pack shape)', () => {
 			dieSize: 'd6',
 			max: '2',
 			initial: 'zero',
-			refills: [{ trigger: 'onAttacked', mode: 'setIfEmpty', value: '@poolMax' }],
+			refills: [
+				{ trigger: 'onAttacked', mode: 'setIfEmpty', value: '@poolMax' },
+				{ trigger: 'encounterEnd', mode: 'clear', value: '0' },
+			],
 		};
 	}
 
@@ -327,5 +394,17 @@ describe('Oathsworn Radiant Judgement (post-Task-4 pack shape)', () => {
 		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
 
 		expect(nextPools.judgment.faces).toHaveLength(3);
+	});
+
+	it('encounterEnd wipes the Judgment Dice pool', async () => {
+		const actor = makeOathsworn([judgmentPoolRule()]);
+		const pools = buildEffectiveDicePoolMap(actor);
+		pools.judgment.faces = [4, 6];
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['encounterEnd']);
+
+		expect(nextPools.judgment.faces).toEqual([]);
+		expect(entries).toHaveLength(1);
+		expect(entries[0].trigger).toBe('encounterEnd');
 	});
 });

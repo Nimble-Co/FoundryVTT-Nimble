@@ -18,7 +18,7 @@ const DicePoolRuleConfig = {
 		'onBloodied',
 		'onAttacked',
 	],
-	refillModes: ['add', 'set', 'refresh', 'setIfEmpty'],
+	refillModes: ['add', 'set', 'refresh', 'setIfEmpty', 'clear'],
 	restTypes: ['safe', 'field'],
 	encounterTriggerTypes: ['encounterStart', 'encounterEnd'] as const,
 	// How dice are spent: 'manual' = player opts in per roll, dice consumed.

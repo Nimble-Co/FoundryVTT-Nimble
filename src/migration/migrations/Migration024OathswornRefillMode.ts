@@ -3,19 +3,28 @@ import { MigrationBase } from '../MigrationBase.js';
 const RADIANT_JUDGEMENT_SOURCE_ID = 'Compendium.nimble.class-features.Item.qiQeJrIxla9y6XY0';
 const JUDGMENT_POOL_RULE_ID = 'judgment-pool-base';
 
+const ENCOUNTER_END_CLEAR_REFILL = {
+	trigger: 'encounterEnd',
+	mode: 'clear',
+	value: '0',
+} as const;
+
 /**
- * Migrates the Oathsworn Radiant Judgement refill from `mode: "set"` / `value: "2"`
- * to `mode: "setIfEmpty"` / `value: "@poolMax"`.
+ * Migrates the Oathsworn Radiant Judgement pool to its corrected refill shape:
  *
- * Rationale (rulebook: "if you have no Judgment Dice, roll your Judgment dice"):
- * - `set` re-rolled the pool every onAttacked even when dice were already live.
- * - The hard-coded `2` ignored the L14 "roll 1 more" modifier, so refills at L14
- *   only ever produced 2 dice instead of 3. `@poolMax` resolves against the
- *   per-actor pool max so L1 still rolls 2 and L14+ rolls 3.
+ * 1. `onAttacked` refill changes from `mode: "set"` / `value: "2"` to
+ *    `mode: "setIfEmpty"` / `value: "@poolMax"`. Fixes two correctness bugs:
+ *    - `set` re-rolled the pool every onAttacked even when dice were live.
+ *    - Hard-coded `2` ignored the L14 "roll 1 more" modifier; `@poolMax`
+ *      resolves against the per-actor pool max so L1 rolls 2 and L14+ rolls 3.
+ *
+ * 2. Adds an `encounterEnd` refill with `mode: "clear"` so the pool wipes at
+ *    end of combat. Rulebook: "The dice are expended whether you hit or miss,"
+ *    paired with "if you have no Judgment Dice" gating on refill — together
+ *    these mean the pool must end the encounter empty.
  *
  * Matches strictly on compendium source id; homebrew copies and unlinked items
- * are left alone. Idempotent: already-migrated rules are detected by their new
- * shape and skipped.
+ * are left alone. Idempotent: already-migrated state is detected and skipped.
  */
 class Migration024OathswornRefillMode extends MigrationBase {
 	static override readonly version = 24;
@@ -31,20 +40,34 @@ class Migration024OathswornRefillMode extends MigrationBase {
 		const poolRule = rules.find((rule) => rule?.id === JUDGMENT_POOL_RULE_ID);
 		if (!poolRule) return;
 
-		const refills: any[] = Array.isArray(poolRule.refills) ? poolRule.refills : [];
-		const target = refills.find((entry) => entry?.trigger === 'onAttacked');
-		if (!target) return;
+		if (!Array.isArray(poolRule.refills)) {
+			poolRule.refills = [];
+		}
+		const refills: any[] = poolRule.refills;
 
-		const alreadyMigrated = target.mode === 'setIfEmpty' && target.value === '@poolMax';
-		if (alreadyMigrated) return;
+		let changed = false;
 
-		target.mode = 'setIfEmpty';
-		target.value = '@poolMax';
+		const onAttacked = refills.find((entry) => entry?.trigger === 'onAttacked');
+		if (onAttacked && !(onAttacked.mode === 'setIfEmpty' && onAttacked.value === '@poolMax')) {
+			onAttacked.mode = 'setIfEmpty';
+			onAttacked.value = '@poolMax';
+			changed = true;
+		}
 
-		// eslint-disable-next-line no-console
-		console.log(
-			`Nimble Migration | ${source.name ?? sourceId}: updated onAttacked refill to setIfEmpty / @poolMax`,
+		const hasEncounterEndClear = refills.some(
+			(entry) => entry?.trigger === 'encounterEnd' && entry?.mode === 'clear',
 		);
+		if (!hasEncounterEndClear) {
+			refills.push({ ...ENCOUNTER_END_CLEAR_REFILL });
+			changed = true;
+		}
+
+		if (changed) {
+			// eslint-disable-next-line no-console
+			console.log(
+				`Nimble Migration | ${source.name ?? sourceId}: updated Judgment Dice refill rules`,
+			);
+		}
 	}
 }
 

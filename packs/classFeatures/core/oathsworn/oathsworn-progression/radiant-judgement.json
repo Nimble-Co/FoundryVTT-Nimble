@@ -24,6 +24,11 @@
 						"trigger": "onAttacked",
 						"mode": "setIfEmpty",
 						"value": "@poolMax"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "clear",
+						"value": "0"
 					}
 				]
 			},

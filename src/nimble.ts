@@ -12,6 +12,7 @@ import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSyn
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
 import { registerAttackedTriggerHooks } from './hooks/dicePoolTriggers/attackedTrigger.js';
+import { registerEncounterEndTriggerHooks } from './hooks/dicePoolTriggers/encounterEndTrigger.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -118,6 +119,7 @@ registerKillTriggerHooks();
 registerBloodiedTriggerHooks();
 registerInitiativeTriggerHooks();
 registerAttackedTriggerHooks();
+registerEncounterEndTriggerHooks();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
