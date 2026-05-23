@@ -55,6 +55,106 @@ function refill(
 	} as DiceRefillEntry;
 }
 
+describe('applyRefillTriggersToPools — setIfEmpty mode', () => {
+	it('rolls fresh dice up to `value` when the pool is empty', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [],
+				refills: [refill({ trigger: 'onAttacked', mode: 'setIfEmpty', value: '2' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toHaveLength(2);
+		expect(entries).toHaveLength(1);
+		expect(entries[0].rolledFaces).toHaveLength(2);
+		expect(entries[0].previousFaces).toEqual([]);
+	});
+
+	it('is a no-op when the pool already has live dice', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [5],
+				refills: [refill({ trigger: 'onAttacked', mode: 'setIfEmpty', value: '2' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toEqual([5]);
+		expect(entries).toEqual([]);
+	});
+
+	it('is a no-op even when the pool is below max but non-empty', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				max: 3,
+				faces: [4],
+				refills: [refill({ trigger: 'onAttacked', mode: 'setIfEmpty', value: '3' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toEqual([4]);
+		expect(entries).toEqual([]);
+	});
+
+	it('clamps the roll count to pool.max', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				max: 2,
+				faces: [],
+				refills: [refill({ trigger: 'onAttacked', mode: 'setIfEmpty', value: '99' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onAttacked']);
+
+		expect(nextPools.judgment.faces).toHaveLength(2);
+		expect(entries[0].rolledFaces).toHaveLength(2);
+	});
+
+	it('does not fire when the trigger does not match', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			judgment: makePool({
+				faces: [],
+				refills: [refill({ trigger: 'onAttacked', mode: 'setIfEmpty', value: '2' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['safeRest']);
+
+		expect(nextPools.judgment.faces).toEqual([]);
+		expect(entries).toEqual([]);
+	});
+
+	it('does not affect other modes on the same pool', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				label: 'Fury Dice',
+				max: 4,
+				faces: [3, 3],
+				refills: [refill({ trigger: 'safeRest', mode: 'refresh' })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['safeRest']);
+
+		expect(nextPools.fury.faces).toHaveLength(4);
+		expect(entries).toHaveLength(1);
+	});
+});
+
 describe('applyRefillTriggersToPools — @poolMax / @poolCurrent tokens', () => {
 	it('resolves @poolMax to the pool max for set mode (Oathsworn L14 scaling)', async () => {
 		const actor = makeActor();
