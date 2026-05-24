@@ -3,9 +3,11 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import type { ChargePoolState } from '#utils/chargePool/types.js';
-import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import type { DicePoolState } from '#utils/dicePool/types.js';
+import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
+import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
 
 const POOL_STATE_HOOK_NAMES = [
 	'nimble.dicePool.changed',
@@ -47,6 +49,7 @@ type RolledPoolView = {
 	max: number;
 	faces: number[];
 	total: number;
+	hasConsumers: boolean;
 };
 
 type CountPoolView = {
@@ -63,7 +66,7 @@ export type LivePoolView = RolledPoolView | CountPoolView;
 
 // Die-face icons live in #utils/dicePool/dieFaceIcons.js (see DicePoolTracker.svelte).
 
-function rolledFromDice(pool: DicePoolState): RolledPoolView {
+function rolledFromDice(pool: DicePoolState, hasConsumers: boolean): RolledPoolView {
 	const total = pool.faces.reduce((sum, face) => sum + face, 0);
 	return {
 		kind: 'rolled',
@@ -74,6 +77,7 @@ function rolledFromDice(pool: DicePoolState): RolledPoolView {
 		max: pool.max,
 		faces: [...pool.faces],
 		total,
+		hasConsumers,
 	};
 }
 
@@ -100,7 +104,9 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		subscribePoolState();
 		const actor = getActor();
 
-		const dice = getDicePools(actor).map(rolledFromDice);
+		const dice = getDicePools(actor).map((pool) =>
+			rolledFromDice(pool, getDicePoolConsumers(actor, pool).length > 0),
+		);
 		// Charge pools without a `dieSize` are pure counters and are already
 		// rendered by ChargeIndicator elsewhere on the sheet. Only surface
 		// charge pools that have a die-size hint (roll-on-spend resources like
@@ -146,6 +152,37 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		await rollChargeDie(getActor(), pool.id, { flavor: pool.label });
 	}
 
+	/** Set a single die face value (GM/owner inline edit). Clamps to 1..max. */
+	async function setDieFaceValue(poolId: string, dieIndex: number, value: number): Promise<void> {
+		const pool = pools.find((p) => p.id === poolId);
+		if (!pool || pool.kind !== 'rolled') return;
+		if (dieIndex < 0 || dieIndex >= pool.faces.length) return;
+		const maxFace = dieSizeToMaxFace(pool.dieSize as DieSize);
+		const clamped = Math.max(1, Math.min(maxFace, Math.floor(value)));
+		const next = [...pool.faces];
+		next[dieIndex] = clamped;
+		await setPoolFaces(getActor(), poolId, next);
+	}
+
+	/** Roll one die into a rolled pool (GM tool). Delegates to dicePoolRefill. */
+	async function rollOneIntoPool(poolId: string): Promise<void> {
+		const pool = pools.find((p) => p.id === poolId);
+		if (!pool || pool.kind !== 'rolled') return;
+		await rollDieIntoPool(getActor(), poolId, { flavor: pool.label });
+	}
+
+	/** Open the Spend Dice dialog for a rolled pool. */
+	async function openSpendDialog(poolId: string): Promise<void> {
+		const pool = pools.find((p) => p.id === poolId);
+		if (!pool || pool.kind !== 'rolled') return;
+		if (pool.faces.length < 1) return;
+		const { default: SpendDicePoolDialog } = await import(
+			'#documents/dialogs/SpendDicePoolDialog.svelte.js'
+		);
+		const dialog = new SpendDicePoolDialog(getActor(), poolId);
+		await dialog.render(true);
+	}
+
 	return {
 		get pools() {
 			return pools;
@@ -153,8 +190,17 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		get hasPools() {
 			return hasPools;
 		},
+		get isOwner() {
+			return getActor().isOwner === true;
+		},
+		get isGM() {
+			return (game?.user?.isGM ?? false) === true;
+		},
 		expendRolledDie,
 		expendAllRolled,
 		rollAndSpendCountPool,
+		setDieFaceValue,
+		rollOneIntoPool,
+		openSpendDialog,
 	};
 }

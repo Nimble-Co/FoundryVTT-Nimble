@@ -6,14 +6,30 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "tayg-fury-consumer",
+				"identifier": "",
+				"label": "That all you got?!",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"poolScope": "item",
+				"mode": "manual",
+				"cost": "1",
+				"bonusOnAttackDelivery": null,
+				"effectFormula": "(@strength + @dexterity) * @n"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "When you are attacked",
+				"details": "when you are attacked",
 				"quantity": 1,
-				"type": "none",
-				"isReaction": false
+				"type": "action",
+				"isReaction": true
 			},
 			"duration": {
 				"details": "",
@@ -33,7 +49,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you are attacked, you may expend 1 or more Fury Dice to reduce the damage taken by STR+DEX for each die spent.</p>",
+		"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset, it will roll (STR+DEX) × N for you.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

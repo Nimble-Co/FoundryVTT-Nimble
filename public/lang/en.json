@@ -578,6 +578,14 @@
 			"clearDocument": "Clear document",
 			"clear": "Clear",
 			"dragDocumentHere": "Drag a document here",
+			"dicePoolPicker": {
+				"empty": "No dice pools defined on this actor",
+				"notFound": "⚠ {identifier} (not found)"
+			},
+			"chargePoolPicker": {
+				"empty": "No charge pools defined on this actor",
+				"notFound": "⚠ {identifier} (not found)"
+			},
 			"templateValueHintBefore": "Use",
 			"templateValueHintAfter": "to insert the formula result.",
 			"pickerMissingMetaTooltip": "Description missing — flag for review.",
@@ -983,7 +991,32 @@
 			"clickToSpend": "Rolled {value} – Click to spend",
 			"spendDieAria": "Spend {label} die (value: {value})",
 			"expendAllAria": "Expend all {label} ({total})",
-			"expendAllTooltip": "Expend all – total {total}"
+			"expendAllTooltip": "Expend all – total {total}",
+			"openSpendDialog": "Open spend dialog for {label}",
+			"rollOneIntoPool": "Roll one die into this pool",
+			"editDie": {
+				"title": "Edit die value",
+				"label": "Value (1–{max})",
+				"save": "Save",
+				"cancel": "Cancel"
+			},
+			"spendDialog": {
+				"poolMissing": "Pool is no longer available.",
+				"noConsumers": "No features can spend from this pool.",
+				"poolMeta": "{count} / {max}",
+				"toggleDescription": "Toggle description",
+				"toggleDie": "Toggle die (value: {value})",
+				"pickDice": "Pick dice to spend",
+				"summary": "{count} selected · sum {total}",
+				"effectPreview": "Effect: {total}",
+				"spend": "Spend",
+				"spendWithCount": "Spend ({count})",
+				"back": "Back",
+				"cancel": "Cancel",
+				"chat": {
+					"spent": "Spent {count} {label} ({faces})"
+				}
+			}
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",
