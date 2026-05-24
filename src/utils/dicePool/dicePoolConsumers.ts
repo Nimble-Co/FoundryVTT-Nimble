@@ -27,7 +27,7 @@ function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
 
 /**
  * Enumerate manual-mode `diceConsumer` rules across the actor that target the
- * given pool. Used by the SpendDicePoolDialog to populate its preset list:
+ * given pool. Used by the DicePoolPanel to populate its feature list:
  * features the player can pick when committing dice from the pool.
  *
  * Filters:

@@ -1,41 +1,19 @@
 <script lang="ts">
 	import type { DicePoolTrackerProps } from '#types/components/DicePoolTracker.d.ts';
-	import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
-	import type { DieSize } from '#utils/dicePool/types.js';
 	import localize from '../../../utils/localize.js';
+	import DicePoolPanel from './DicePoolPanel.svelte';
 	import { createDicePoolTrackerState } from './DicePoolTracker.svelte.ts';
 
 	let { actor }: DicePoolTrackerProps = $props();
 
 	const tracker = createDicePoolTrackerState(() => actor);
-
-	// Inline edit popover tracker. One popover at a time, keyed by pool + die.
-	let editTarget = $state(null as { poolId: string; dieIndex: number; max: number } | null);
-	let editValue = $state(1);
-
-	function openEditPopover(poolId: string, dieIndex: number, dieSize: string, value: number) {
-		if (!tracker.isOwner) return;
-		editTarget = { poolId, dieIndex, max: dieSizeToMaxFace(dieSize as DieSize) };
-		editValue = value;
-	}
-
-	function closeEditPopover() {
-		editTarget = null;
-	}
-
-	async function submitEditPopover() {
-		if (!editTarget) return;
-		const { poolId, dieIndex } = editTarget;
-		await tracker.setDieFaceValue(poolId, dieIndex, editValue);
-		closeEditPopover();
-	}
 </script>
 
 {#if tracker.hasPools}
 	<div class="dice-pool-tracker">
 		<div class="dice-pool-tracker__panel">
-			{#each tracker.pools as pool (pool.identifier)}
+			{#each tracker.pools as pool, poolIndex (pool.identifier)}
 				<div class="dice-pool-tracker__group">
 					{#if pool.kind === 'count'}
 						<!-- Roll-on-spend (e.g. Commander Combat Dice): static die-face badge, then one pip per charge. -->
@@ -71,56 +49,56 @@
 								<i class="fa-solid {getDieFaceIcon(pool.dieSize)}"></i>
 							</button>
 						{/each}
+
+						{#if tracker.isOwner}
+							<button
+								class="dice-pool-tracker__action-chip"
+								class:dice-pool-tracker__action-chip--open={tracker.isPanelOpen(pool.id)}
+								type="button"
+								aria-label={localize('NIMBLE.dicePoolTracker.togglePanel', {
+									label: pool.label,
+								})}
+								data-tooltip={localize('NIMBLE.dicePoolTracker.togglePanel', {
+									label: pool.label,
+								})}
+								data-tooltip-direction="RIGHT"
+								onclick={() => tracker.togglePanel(pool.id)}
+							>
+								<i class="fa-solid fa-chevron-right"></i>
+							</button>
+						{/if}
 					{:else if pool.faces.length > 0}
-						<!-- Rolled pool with stored faces: badge opens spend dialog when owner
-						 AND the actor has at least one manual-mode diceConsumer feature
-						 with an effectFormula for this pool. Without a feature to pick,
-						 the dialog would be empty — fall back to per-die click-to-spend. -->
-						{@const badgeClickable = tracker.isOwner && pool.hasConsumers}
-						<button
+						<!-- Rolled pool with stored faces: badge is a passive identity
+							 marker. The chevron chip toggles the inline DicePoolPanel
+							 below (edit dice + use feature in one place). -->
+						<div
 							class="dice-pool-tracker__badge dice-pool-tracker__badge--static"
-							class:dice-pool-tracker__badge--clickable={badgeClickable}
-							type="button"
-							disabled={!badgeClickable}
-							aria-label={badgeClickable
-								? localize('NIMBLE.dicePoolTracker.openSpendDialog', { label: pool.label })
-								: localize('NIMBLE.dicePoolTracker.rolledTooltip', {
-										label: pool.label,
-										count: String(pool.faces.length),
-										max: String(pool.max),
-										total: String(pool.total),
-									})}
-							data-tooltip={badgeClickable
-								? localize('NIMBLE.dicePoolTracker.openSpendDialog', { label: pool.label })
-								: localize('NIMBLE.dicePoolTracker.rolledTooltip', {
-										label: pool.label,
-										count: String(pool.faces.length),
-										max: String(pool.max),
-										total: String(pool.total),
-									})}
+							data-tooltip={localize('NIMBLE.dicePoolTracker.rolledTooltip', {
+								label: pool.label,
+								count: String(pool.faces.length),
+								max: String(pool.max),
+								total: String(pool.total),
+							})}
 							data-tooltip-direction="RIGHT"
-							onclick={() => badgeClickable && tracker.openSpendDialog(pool.id)}
 						>
 							<i class="fa-solid {getDieFaceIcon(pool.dieSize)}"></i>
-						</button>
+						</div>
 
 						{#each pool.faces as value, i (i)}
 							<button
 								class="dice-pool-tracker__die-chip"
 								type="button"
-								aria-label={localize('NIMBLE.dicePoolTracker.spendDieAria', {
+								aria-label={localize('NIMBLE.dicePoolTracker.discardDieAria', {
 									label: pool.label,
 									value: String(value),
 								})}
-								data-tooltip={localize('NIMBLE.dicePoolTracker.clickToSpend', {
+								data-tooltip={localize('NIMBLE.dicePoolTracker.rightClickToDiscard', {
 									value: String(value),
 								})}
 								data-tooltip-direction="RIGHT"
-								onclick={() => tracker.expendRolledDie(pool.id, i)}
 								oncontextmenu={(e) => {
-									if (!tracker.isOwner) return;
 									e.preventDefault();
-									openEditPopover(pool.id, i, pool.dieSize, value);
+									tracker.discardRolledDie(pool.id, i);
 								}}
 							>
 								{value}
@@ -144,23 +122,46 @@
 							<button
 								class="dice-pool-tracker__die-total"
 								type="button"
-								aria-label={localize('NIMBLE.dicePoolTracker.expendAllAria', {
+								aria-label={localize('NIMBLE.dicePoolTracker.discardAllAria', {
 									label: pool.label,
 									total: String(pool.total),
 								})}
-								data-tooltip={localize('NIMBLE.dicePoolTracker.expendAllTooltip', {
+								data-tooltip={localize('NIMBLE.dicePoolTracker.rightClickToDiscardAll', {
 									total: String(pool.total),
 								})}
 								data-tooltip-direction="RIGHT"
-								onclick={() => tracker.expendAllRolled(pool.id)}
+								oncontextmenu={(e) => {
+									e.preventDefault();
+									tracker.discardAllRolled(pool.id);
+								}}
 							>
 								{pool.total}
 							</button>
 						{/if}
+
+						{#if tracker.isOwner}
+							<button
+								class="dice-pool-tracker__action-chip"
+								class:dice-pool-tracker__action-chip--open={tracker.isPanelOpen(pool.id)}
+								type="button"
+								aria-label={localize('NIMBLE.dicePoolTracker.togglePanel', {
+									label: pool.label,
+								})}
+								data-tooltip={localize('NIMBLE.dicePoolTracker.togglePanel', {
+									label: pool.label,
+								})}
+								data-tooltip-direction="RIGHT"
+								onclick={() => tracker.togglePanel(pool.id)}
+							>
+								<i class="fa-solid fa-chevron-right"></i>
+							</button>
+						{/if}
 					{:else}
 						<!-- Rolled pool, currently empty: display-only badge. Pools fill via
-						 refill triggers (e.g. Oathsworn Judgment Dice on `onAttacked`).
-						 The tracker is a view, not the fill mechanism. -->
+							 refill triggers (e.g. Oathsworn Judgment Dice on `onAttacked`).
+							 The tracker is a view, not the fill mechanism. The panel is
+							 hidden for empty rolled pools because there are no dice to
+							 edit and no useful spend flow. -->
 						<div
 							class="dice-pool-tracker__badge dice-pool-tracker__badge--static"
 							data-tooltip={localize('NIMBLE.dicePoolTracker.emptyTooltip', {
@@ -185,46 +186,21 @@
 							</button>
 						{/if}
 					{/if}
+
+					{#if tracker.isPanelOpen(pool.id)}
+						<!-- Inline expandable panel anchored to this pool's row. Each open
+							 panel offsets vertically by its pool index so multiple open
+							 panels stack down the right edge instead of overlapping. -->
+						<div
+							class="dice-pool-tracker__panel-anchor"
+							style="--dice-pool-panel-offset: {poolIndex * 0.5}rem"
+						>
+							<DicePoolPanel {actor} {pool} onClose={() => tracker.closePanel(pool.id)} />
+						</div>
+					{/if}
 				</div>
 			{/each}
 		</div>
-
-		{#if editTarget}
-			<div
-				class="dice-pool-tracker__edit-popover"
-				role="dialog"
-				aria-label={localize('NIMBLE.dicePoolTracker.editDie.title')}
-			>
-				<label class="dice-pool-tracker__edit-label">
-					{localize('NIMBLE.dicePoolTracker.editDie.label', {
-						max: String(editTarget.max),
-					})}
-					<input
-						type="number"
-						min="1"
-						max={editTarget.max}
-						bind:value={editValue}
-						onkeydown={(e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								submitEditPopover();
-							} else if (e.key === 'Escape') {
-								e.preventDefault();
-								closeEditPopover();
-							}
-						}}
-					/>
-				</label>
-				<div class="dice-pool-tracker__edit-actions">
-					<button type="button" onclick={closeEditPopover}>
-						{localize('NIMBLE.dicePoolTracker.editDie.cancel')}
-					</button>
-					<button type="button" onclick={submitEditPopover}>
-						{localize('NIMBLE.dicePoolTracker.editDie.save')}
-					</button>
-				</div>
-			</div>
-		{/if}
 	</div>
 {/if}
 
@@ -246,6 +222,7 @@
 		}
 
 		&__group {
+			position: relative;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -280,18 +257,6 @@
 
 				i {
 					color: var(--nimble-dark-text-color);
-				}
-			}
-
-			&--clickable {
-				cursor: pointer;
-
-				&:hover {
-					border-color: var(--nimble-dice-pool-tracker-expend-hover-color);
-
-					i {
-						color: var(--nimble-dice-pool-tracker-expend-hover-color);
-					}
 				}
 			}
 		}
@@ -379,41 +344,47 @@
 			}
 		}
 
-		&__edit-popover {
-			position: absolute;
-			top: 0;
-			left: calc(100% + 0.25rem);
-			z-index: 10;
+		// Per-pool chevron chip that toggles the inline DicePoolPanel for this
+		// pool. Rotates 90° when open to flip from "›" (closed, opens →) to "⌄"
+		// (open, panel currently shown to the right).
+		&__action-chip {
 			display: flex;
-			flex-direction: column;
-			gap: 0.4rem;
-			padding: 0.5rem;
-			background: var(--nimble-dice-pool-tracker-badge-background);
-			border: 1px solid var(--nimble-dice-pool-tracker-panel-border-color);
+			align-items: center;
+			justify-content: center;
+			width: 1.625rem;
+			height: 1.125rem;
+			padding: 0;
+			background: var(--nimble-dice-pool-tracker-available-color);
+			border: none;
 			border-radius: 4px;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-		}
+			cursor: pointer;
+			color: var(--nimble-sheet-background);
+			transition:
+				background 0.15s ease,
+				transform 0.15s ease;
 
-		&__edit-label {
-			display: flex;
-			flex-direction: column;
-			gap: 0.25rem;
-			font-size: 0.75rem;
-
-			input {
-				width: 4rem;
-				padding: 0.15rem 0.25rem;
-			}
-		}
-
-		&__edit-actions {
-			display: flex;
-			gap: 0.25rem;
-			justify-content: flex-end;
-
-			button {
-				padding: 0.15rem 0.5rem;
+			i {
 				font-size: 0.75rem;
+				transition: transform 0.15s ease;
+			}
+
+			&:hover {
+				background: var(--nimble-dice-pool-tracker-expend-hover-color);
+				transform: translateX(2px);
+			}
+
+			&--open {
+				background: var(--nimble-dice-pool-tracker-expend-hover-color);
+
+				i {
+					transform: rotate(90deg);
+				}
+			}
+
+			&:disabled {
+				cursor: default;
+				opacity: 0.35;
+				transform: none;
 			}
 		}
 
@@ -434,6 +405,16 @@
 			&:hover {
 				color: var(--nimble-dice-pool-tracker-expend-hover-color);
 			}
+		}
+
+		// Anchor for the inline DicePoolPanel. Mounts to the right of the
+		// tracker. `--dice-pool-panel-offset` is set inline from the pool's
+		// index so stacked panels don't overlap each other vertically.
+		&__panel-anchor {
+			position: absolute;
+			top: var(--dice-pool-panel-offset, 0);
+			left: calc(100% + 0.5rem);
+			z-index: 10;
 		}
 	}
 

@@ -988,33 +988,35 @@
 			"rollAndSpendOne": "Roll and spend 1 {label}",
 			"spent": "{label} spent",
 			"clickToRoll": "Click to roll & spend",
-			"clickToSpend": "Rolled {value} – Click to spend",
-			"spendDieAria": "Spend {label} die (value: {value})",
-			"expendAllAria": "Expend all {label} ({total})",
-			"expendAllTooltip": "Expend all – total {total}",
-			"openSpendDialog": "Open spend dialog for {label}",
+			"rightClickToDiscard": "Rolled {value} – Right-click to discard",
+			"discardDieAria": "Discard {label} die (value: {value})",
+			"discardAllAria": "Discard all {label} ({total})",
+			"rightClickToDiscardAll": "Right-click to discard all – total {total}",
+			"togglePanel": "Toggle {label} actions",
 			"rollOneIntoPool": "Roll one die into this pool",
-			"editDie": {
-				"title": "Edit die value",
-				"label": "Value (1–{max})",
-				"save": "Save",
-				"cancel": "Cancel"
-			},
-			"spendDialog": {
-				"poolMissing": "Pool is no longer available.",
-				"noConsumers": "No features can spend from this pool.",
-				"poolMeta": "{count} / {max}",
-				"toggleDescription": "Toggle description",
-				"toggleDie": "Toggle die (value: {value})",
-				"pickDice": "Pick dice to spend",
-				"summary": "{count} selected · sum {total}",
-				"effectPreview": "Effect: {total}",
-				"spend": "Spend",
-				"spendWithCount": "Spend ({count})",
-				"back": "Back",
-				"cancel": "Cancel",
-				"chat": {
-					"spent": "Spent {count} {label} ({faces})"
+			"panel": {
+				"ariaLabel": "{label} actions",
+				"rolledMeta": "{count}/{max} · sum {total}",
+				"countMeta": "{current}/{max}",
+				"close": "Close",
+				"editDice": {
+					"heading": "Edit dice",
+					"decrement": "Decrement",
+					"increment": "Increment",
+					"discard": "Discard die"
+				},
+				"editCharge": {
+					"heading": "Edit current",
+					"label": "Current (max {max})"
+				},
+				"useFeature": {
+					"heading": "Use a feature",
+					"pickDice": "Pick dice to spend",
+					"toggleDie": "Toggle die (value: {value})",
+					"summary": "Selected {count} · sum {total}",
+					"effectPreview": "Effect: {total}",
+					"spend": "Spend",
+					"spendWithCount": "Spend ({count})"
 				}
 			}
 		},

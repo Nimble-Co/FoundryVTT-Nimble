@@ -132,8 +132,8 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 	// Actions
 	// ============================================================================
 
-	/** Spend one rolled die from a pool by index. */
-	async function expendRolledDie(poolId: string, dieIndex: number): Promise<void> {
+	/** Discard one rolled die from a pool by index (no game effect). */
+	async function discardRolledDie(poolId: string, dieIndex: number): Promise<void> {
 		const pool = pools.find((p) => p.id === poolId);
 		if (!pool || pool.kind !== 'rolled') return;
 		const next = [...pool.faces];
@@ -141,8 +141,8 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		await setPoolFaces(getActor(), poolId, next);
 	}
 
-	/** Clear all faces from a rolled pool (used by sum-and-expend UX). */
-	async function expendAllRolled(poolId: string): Promise<void> {
+	/** Clear all faces from a rolled pool (sum-and-discard UX). */
+	async function discardAllRolled(poolId: string): Promise<void> {
 		await setPoolFaces(getActor(), poolId, []);
 	}
 
@@ -171,16 +171,26 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		await rollDieIntoPool(getActor(), poolId, { flavor: pool.label });
 	}
 
-	/** Open the Spend Dice dialog for a rolled pool. */
-	async function openSpendDialog(poolId: string): Promise<void> {
-		const pool = pools.find((p) => p.id === poolId);
-		if (!pool || pool.kind !== 'rolled') return;
-		if (pool.faces.length < 1) return;
-		const { default: SpendDicePoolDialog } = await import(
-			'#documents/dialogs/SpendDicePoolDialog.svelte.js'
-		);
-		const dialog = new SpendDicePoolDialog(getActor(), poolId);
-		await dialog.render(true);
+	// Per-pool panel open-state. Multiple panels may be open simultaneously;
+	// each chevron toggles its pool's entry in this set.
+	let openPanelIds = $state<Set<string>>(new Set());
+
+	function isPanelOpen(poolId: string): boolean {
+		return openPanelIds.has(poolId);
+	}
+
+	function togglePanel(poolId: string): void {
+		const next = new Set(openPanelIds);
+		if (next.has(poolId)) next.delete(poolId);
+		else next.add(poolId);
+		openPanelIds = next;
+	}
+
+	function closePanel(poolId: string): void {
+		if (!openPanelIds.has(poolId)) return;
+		const next = new Set(openPanelIds);
+		next.delete(poolId);
+		openPanelIds = next;
 	}
 
 	return {
@@ -196,11 +206,13 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		get isGM() {
 			return (game?.user?.isGM ?? false) === true;
 		},
-		expendRolledDie,
-		expendAllRolled,
+		discardRolledDie,
+		discardAllRolled,
 		rollAndSpendCountPool,
 		setDieFaceValue,
 		rollOneIntoPool,
-		openSpendDialog,
+		isPanelOpen,
+		togglePanel,
+		closePanel,
 	};
 }
