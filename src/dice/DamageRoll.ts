@@ -241,9 +241,18 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** Nimble modifier tokens that trigger modifier-mode when present on any Die term. */
 	private static readonly NIMBLE_MODIFIER_TOKENS = new Set(['c', 'cv', 'v', 'n']);
 
+	/** Matches `khn` / `kln` with an optional positive integer count (e.g. `khn`, `kln3`). */
+	private static readonly NIMBLE_KEEP_MODIFIER_RE = /^(?:khn|kln)\d*$/;
+
 	/**
 	 * Check whether any Die term in `this.terms` carries a Nimble modifier.
 	 * If so, the roll enters modifier-mode and skips PrimaryDie extraction.
+	 *
+	 * Recognises both the metadata modifiers (`c`/`cv`/`v`/`n`) and the keep
+	 * modifiers (`khn`/`kln`, with optional count). A bare `khn`/`kln` formula
+	 * (e.g. `2d20khn` for initiative-with-advantage) must skip primary-die
+	 * extraction — otherwise the legacy path splits it into a PrimaryDie plus
+	 * leftover Die and sums them, which is wrong for advantage/disadvantage.
 	 */
 	private _hasNimbleModifiers(): boolean {
 		for (const term of this.terms) {
@@ -251,6 +260,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			if (!Array.isArray(term.modifiers)) continue;
 			for (const m of term.modifiers) {
 				if (DamageRoll.NIMBLE_MODIFIER_TOKENS.has(m)) return true;
+				if (DamageRoll.NIMBLE_KEEP_MODIFIER_RE.test(m)) return true;
 			}
 		}
 		return false;

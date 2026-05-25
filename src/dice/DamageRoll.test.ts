@@ -1951,6 +1951,61 @@ describe('die modifier vocabulary — modifier-mode', () => {
 			expect(roll.modifierMode).toBe(false);
 			expect(roll.primaryDie).toBeDefined(); // legacy PrimaryDie
 		});
+
+		it('2d20khn (initiative-with-advantage) enters modifier-mode and does not split', () => {
+			const roll = new DamageRoll(
+				'2d20khn',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+			expect(roll.primaryDie).toBeUndefined();
+			// Single 2d20khn Die term — must NOT have been split into PrimaryDie + Die.
+			const dieTerms = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die);
+			expect(dieTerms).toHaveLength(1);
+			expect(dieTerms[0].number).toBe(2);
+			expect(dieTerms[0].modifiers).toContain('khn');
+		});
+
+		it('2d20kln (initiative-with-disadvantage) enters modifier-mode and does not split', () => {
+			const roll = new DamageRoll(
+				'2d20kln',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+			expect(roll.primaryDie).toBeUndefined();
+			const dieTerms = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die);
+			expect(dieTerms).toHaveLength(1);
+			expect(dieTerms[0].modifiers).toContain('kln');
+		});
+
+		it('khn with explicit count (khn2) enters modifier-mode', () => {
+			const roll = new DamageRoll(
+				'3d20khn2',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+		});
 	});
 
 	describe('per-die crit detection', () => {
