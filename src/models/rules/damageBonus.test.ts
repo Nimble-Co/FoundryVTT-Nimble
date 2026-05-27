@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Predicate } from '../../etc/Predicate.js';
 import { getDamageBonusFormulas, getDamageBonusTotal } from '../../utils/attackUtils.js';
 import {
 	type DamageBonusDelivery,
@@ -912,6 +913,115 @@ describe('targetCondition filtering', () => {
 
 		// Empty {} should not require a target — matches unconditionally
 		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(5);
+	});
+
+	describe('$or / $and composition in targetCondition', () => {
+		it('should match $or when any branch matches the target domain', () => {
+			const actor = {
+				system: {
+					damageBonuses: [
+						{
+							value: 5,
+							formula: null,
+							damageType: '',
+							delivery: 'any' as const,
+							source: 'any' as const,
+							targetCondition: {
+								$or: ['target:bloodied', 'target:concentrating'],
+							},
+						},
+					],
+				},
+			};
+
+			// Branch 1 matches
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:bloodied'])),
+			).toBe(5);
+			// Branch 2 matches
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:concentrating'])),
+			).toBe(5);
+			// Neither branch matches
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:fullHp'])),
+			).toBe(0);
+		});
+
+		it('should require both branches for nested $and in targetCondition', () => {
+			const actor = {
+				system: {
+					damageBonuses: [
+						{
+							value: 7,
+							formula: null,
+							damageType: '',
+							delivery: 'any' as const,
+							source: 'any' as const,
+							targetCondition: {
+								$and: ['target:bloodied', 'target:concentrating'],
+							},
+						},
+					],
+				},
+			};
+
+			expect(
+				getDamageBonusTotal(
+					actor,
+					'melee',
+					'weapon',
+					undefined,
+					new Set(['target:bloodied', 'target:concentrating']),
+				),
+			).toBe(7);
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:bloodied'])),
+			).toBe(0);
+		});
+
+		it('should round-trip $or through PredicateField → afterPrepareData → bonus entry → matchesBonus', () => {
+			// Exercises the full schema integration path with a real Predicate (not a mock).
+			// This is the gap Fronix flagged on the prior review for plain targetCondition:
+			// no test let a real Predicate flow from the rule into the bonus entry and back.
+			const actor = createMockActor({});
+			const rule = createDamageBonusRule({ value: '3', delivery: 'any', source: 'any' }, actor);
+
+			const realPredicate = new Predicate({
+				$or: ['target:bloodied', 'target:concentrating'],
+			});
+			Object.defineProperty(rule, '_targetCondition', {
+				get: () => realPredicate,
+				configurable: true,
+			});
+
+			rule.afterPrepareData();
+
+			// Bonus entry serializes the $or structure verbatim
+			expect(actor.system.damageBonuses?.[0]?.targetCondition).toEqual({
+				$or: ['target:bloodied', 'target:concentrating'],
+			});
+
+			// And matchesBonus rebuilds the Predicate from that serialized form
+			expect(
+				getDamageBonusTotal(
+					{ system: actor.system } as { system: { damageBonuses?: DamageBonusEntry[] } },
+					'melee',
+					'weapon',
+					undefined,
+					new Set(['target:concentrating']),
+				),
+			).toBe(3);
+			expect(
+				getDamageBonusTotal(
+					{ system: actor.system } as { system: { damageBonuses?: DamageBonusEntry[] } },
+					'melee',
+					'weapon',
+					undefined,
+					new Set(['target:fullHp']),
+				),
+			).toBe(0);
+		});
 	});
 
 	it('should not match self:* tags through targetCondition (namespace isolation)', () => {

@@ -1,6 +1,7 @@
 import { isPlainObject } from '../utils/isPlainObject.js';
 
 const BINARY_PROPS = new Set(['equal', 'max', 'min']);
+const LOGICAL_KEYS = new Set(['$and', '$or']);
 
 class Predicate extends Map<string, Statement> {
 	readonly isValid: boolean;
@@ -13,8 +14,13 @@ class Predicate extends Map<string, Statement> {
 		this.isValid = Predicate.isValid([...this.entries()]);
 	}
 
-	static isValid(statements: unknown): statements is PredicateStatement {
-		return Array.isArray(statements) && statements.every((s) => Predicate.isStatement(s[1]));
+	static isValid(entries: unknown): boolean {
+		if (!Array.isArray(entries)) return false;
+		return entries.every(([key, val]) => {
+			if (typeof key !== 'string') return false;
+			if (Predicate.isLogicalKey(key)) return Predicate.isLogicalValue(val);
+			return Predicate.isStatement(val);
+		});
 	}
 
 	/** ---------------------------------------------- */
@@ -72,13 +78,41 @@ class Predicate extends Map<string, Statement> {
 	#isTrue(statement: PredicateStatement, domain: Set<string>): boolean {
 		const [key, val] = statement;
 
+		// Top-level logical operators: $and / $or compose array elements recursively.
+		// Each element is either an atom string (presence-checked against the domain)
+		// or a plain-object sub-predicate (evaluated via #testRaw).
+		if (key === '$and') {
+			if (!Array.isArray(val)) return false;
+			return (val as LogicalArrayItem[]).every((item) => this.#testLogicalItem(item, domain));
+		}
+		if (key === '$or') {
+			if (!Array.isArray(val)) return false;
+			return (val as LogicalArrayItem[]).some((item) => this.#testLogicalItem(item, domain));
+		}
+
 		return (
-			(val === true && domain.has(key)) ||
 			(typeof val === 'string' && domain.has(`${key}:${val}`)) ||
 			(Predicate.isBinaryOperation(val) && this.#testBinaryOperation(key, val, domain)) ||
 			(Predicate.isArrayOperation(val) && this.#testArrayOperation(key, val, domain)) ||
 			false // TODO: Implement Complex Operation
 		);
+	}
+
+	#testLogicalItem(item: LogicalArrayItem, domain: Set<string>): boolean {
+		if (typeof item === 'string') return domain.has(item);
+		return this.#testRaw(item, domain);
+	}
+
+	/**
+	 * Evaluate a raw predicate object against the domain. Used by $and / $or to
+	 * recurse into sub-predicates without constructing a full Predicate instance
+	 * (avoids the Map allocation per attack-time evaluation). An empty sub-predicate
+	 * is vacuously true, matching the top-level test() behavior.
+	 */
+	#testRaw(raw: RawPredicate, domain: Set<string>): boolean {
+		const entries = Object.entries(raw);
+		if (entries.length === 0) return true;
+		return entries.every((s) => this.#isTrue(s as PredicateStatement, domain));
 	}
 
 	/**
@@ -142,7 +176,7 @@ class Predicate extends Map<string, Statement> {
 		}
 
 		const domain = options instanceof Set ? options : new Set(options);
-		return [...this.entries()].every((s) => this.#isTrue(s, domain));
+		return [...this.entries()].every((s) => this.#isTrue(s as PredicateStatement, domain));
 	}
 
 	toObject(): RawPredicate {
@@ -156,10 +190,33 @@ class Predicate extends Map<string, Statement> {
 	/** ---------------------------------------------- */
 	/** Validators                                     */
 	/** ---------------------------------------------- */
-	static isStatement(statement: unknown): statement is PredicateStatement {
-		// Only `true` is valid (presence-check for AND composition). `false` is
-		// intentionally rejected — there is no "not-present" semantics.
-		if (statement === true) return true;
+	static isLogicalKey(key: string): key is '$and' | '$or' {
+		return LOGICAL_KEYS.has(key);
+	}
+
+	/**
+	 * A logical operator value must be an array. Each element is either:
+	 *   - a non-empty atom string (presence-checked against the full tag), or
+	 *   - a non-empty plain-object sub-predicate (recursively validated).
+	 * Empty sub-predicates `{}` are rejected to avoid silent always-true bonuses
+	 * (e.g. `{ "$or": [{}] }` would otherwise vacuously pass). Empty arrays at
+	 * the operator level are still allowed: `$and: []` is vacuously true,
+	 * `$or: []` is vacuously false — mathematically consistent if rarely used.
+	 */
+	static isLogicalValue(value: unknown): value is LogicalArrayItem[] {
+		if (!Array.isArray(value)) return false;
+		return value.every((item) => {
+			if (typeof item === 'string') return item.length > 0;
+			if (isPlainObject(item)) {
+				const entries = Object.entries(item);
+				if (entries.length === 0) return false;
+				return Predicate.isValid(entries);
+			}
+			return false;
+		});
+	}
+
+	static isStatement(statement: unknown): boolean {
 		if (isPlainObject(statement)) return Predicate.isBinaryOperation(statement);
 		if (Array.isArray(statement)) return Predicate.isArrayOperation(statement);
 		if (typeof statement === 'string') return Predicate.isAtomicOperation(statement);
@@ -203,8 +260,10 @@ type BinaryOperation = {
 	equal?: number | string;
 };
 
-type PresenceCheck = true;
-type Statement = PresenceCheck | AtomicOperation | BinaryOperation | ArrayOperation;
+type LogicalArrayItem = string | RawPredicate;
+type LogicalArray = LogicalArrayItem[];
+
+type Statement = AtomicOperation | BinaryOperation | ArrayOperation | LogicalArray;
 
 type PredicateStatement = [string, Statement];
 type RawPredicate = Record<string, Statement>;

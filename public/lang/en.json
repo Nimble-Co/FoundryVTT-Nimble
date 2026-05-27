@@ -748,7 +748,7 @@
 				},
 				"targetCondition": {
 					"label": "Target condition",
-					"hint": "Optional predicate evaluated against the target's domain. Bonus only applies when the target matches (e.g. target:bloodied)."
+					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
 				}
 			},
 			"dicePool": {

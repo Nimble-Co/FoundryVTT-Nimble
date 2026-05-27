@@ -47,7 +47,7 @@ Every rule has a `predicate` field (a `PredicateField`) that gates whether the r
 
 ### Predicate syntax
 
-Three forms are supported:
+#### Leaf forms
 
 ```jsonc
 // Atomic — key:value must exist in domain
@@ -56,15 +56,63 @@ Three forms are supported:
 // Array OR — at least one value must match
 { "armor": ["unarmored", "light"] } // domain.has("armor:unarmored") || domain.has("armor:light")
 
-// Presence-check (AND composition) — full tag must exist in domain
-{ "self:bloodied": true, "self:concentrating": true }  // both must be present
+// Binary — min / max / equal against numeric tag suffixes
+{ "level": { "min": 5 } }          // any "level:N" in domain where N >= 5
 ```
 
-All entries in a predicate are AND'd together. The presence-check form (`true`) enables AND composition for tags under the same namespace (e.g. multiple `self:*` conditions). Only `true` is valid — `false` is rejected (there is no "not-present" semantics).
+#### Composition with `$and` / `$or`
+
+For tags whose value is already part of the key (e.g. `self:bloodied`, `target:concentrating`) or for combining tags across namespaces, use the `$and` / `$or` operators. Their value is an array — each element is either an **atom string** (presence-checked against the full tag) or a **sub-predicate object** for nesting.
+
+```jsonc
+// AND — every atom must be present
+{ "$and": ["self:raging", "self:bloodied"] }
+
+// OR — at least one atom must be present
+{ "$or": ["self:bloodied", "self:dying"] }
+
+// Berserker: raging AND (bloodied OR dying) — nest with a sub-predicate object
+{
+  "$and": [
+    "self:raging",
+    { "$or": ["self:bloodied", "self:dying"] }
+  ]
+}
+
+// Mix atoms with other leaf forms inside the array
+{
+  "$and": [
+    "self:bloodied",
+    { "armor": "unarmored" },
+    { "level": { "min": 5 } }
+  ]
+}
+```
+
+The top-level object is an implicit AND over its entries, so you can combine a `$or` with other leaf forms at the top level:
+
+```jsonc
+{
+  "armor": "unarmored",
+  "$or": ["self:bloodied", "self:concentrating"]
+}
+```
+
+`$and: []` is vacuously true; `$or: []` is vacuously false.
 
 ### Domain tags
 
 Tags are populated during `_populateDerivedTags()` in actor data prep, before rules run.
+
+#### Lifecycle timing — which tags are available when
+
+Not every tag exists at every lifecycle phase. Three populating points, in order:
+
+1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`. Runs *just before* `prePrepareData` hooks fire, so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+3. **Late in `prepareDerivedData()`** (after abilities and HP are finalized) — emits `self:fullHp` and character `<ability>:<mod>` tags. These run *after* `prePrepareData` has already fired, so they are visible **only in `afterPrepareData` and later hooks**.
+
+If your rule's `predicate` gates on `self:fullHp` or an `<ability>:<mod>` tag and the rule's effect runs in `prePrepareData`, the predicate will fail at the wrong time. Either move the effect to `afterPrepareData` (the default for bonus-style rules like `damageBonus`) or gate on a tag from pool 1 / 2 instead.
 
 #### Tags on all actors
 
@@ -109,12 +157,22 @@ Tags are populated during `_populateDerivedTags()` in actor data prep, before ru
 The `damageBonus` rule has an optional `targetCondition` field — a predicate evaluated against the **target's** domain at activation time (not the rule owner's domain). This enables bonuses that gate on target state:
 
 ```jsonc
+// +@level damage when the target is bloodied
 {
   "type": "damageBonus",
   "value": "@level",
   "delivery": "any",
   "source": "any",
-  "targetCondition": { "target": "bloodied" }
+  "targetCondition": { "$and": ["target:bloodied"] }
+}
+
+// +1d6 damage when the target is bloodied OR concentrating
+{
+  "type": "damageBonus",
+  "value": "1d6",
+  "delivery": "any",
+  "source": "any",
+  "targetCondition": { "$or": ["target:bloodied", "target:concentrating"] }
 }
 ```
 
