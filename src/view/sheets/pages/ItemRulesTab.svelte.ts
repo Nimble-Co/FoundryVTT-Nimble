@@ -4,7 +4,9 @@ import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 import type { RuleSource } from '#view/rulesBuilder/types.js';
 
-export const COPY_TYPE = 'nimble.Rule';
+// Internal clipboard drag-drop type, set and matched by the same code; never
+// crosses the Foundry system-id boundary, so the literal is intentional.
+export const COPY_TYPE = 'nimble.Rule'; // allow-hardcoded-system-id
 
 type DialogComponent = Parameters<typeof GenericDialog.getOrCreate>[1];
 

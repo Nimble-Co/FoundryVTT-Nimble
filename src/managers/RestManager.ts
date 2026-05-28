@@ -1,4 +1,5 @@
 import { HitDiceManager } from '#managers/HitDiceManager.js';
+import { systemHookName } from '#system';
 import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
@@ -102,7 +103,7 @@ class RestManager {
 
 		// Broadcast rest completion for systems that react to rest events (e.g., charge recovery).
 		(Hooks.callAll as (event: string, ...args: unknown[]) => boolean)(
-			'nimble.restCompleted',
+			systemHookName('restCompleted'),
 			this.#actor,
 			{
 				restType: this.#restType,

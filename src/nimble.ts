@@ -26,7 +26,7 @@ import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import './scss/main.scss';
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
 import { injectViteHmrClient } from '#utils/viteHmr.js';
 
@@ -104,7 +104,7 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 
 // Condition immunity — block protected conditions before application
 (Hooks.on as (event: string, fn: HookFn) => number)(
-	'nimble.preApplyCondition',
+	systemHookName('preApplyCondition'),
 	conditionImmunityGuard as object as HookFn,
 );
 

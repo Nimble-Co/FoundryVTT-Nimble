@@ -1,4 +1,4 @@
-import { SYSTEM_PATH } from '#system';
+import { SYSTEM_ID, SYSTEM_PATH } from '#system';
 
 interface HeroicActionMacroData {
 	actionId: string;
@@ -44,7 +44,7 @@ export async function createHeroicActionMacro(data: HeroicActionMacroData, slot:
 				img: expectedIcon,
 				command: command,
 				flags: {
-					nimble: {
+					[SYSTEM_ID]: {
 						heroicActionMacro: true,
 						actionId: data.actionId,
 						actionType: data.actionType,

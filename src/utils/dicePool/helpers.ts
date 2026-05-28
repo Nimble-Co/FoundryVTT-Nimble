@@ -206,9 +206,9 @@ function getDicePoolMapFromActor(actor: CharacterActorLike): DicePoolMap {
 
 	for (const item of actor.items.contents) {
 		const itemFlags = item.flags as Record<string, unknown>;
-		const nimbleFlags = itemFlags.nimble;
-		if (!nimbleFlags || typeof nimbleFlags !== 'object' || Array.isArray(nimbleFlags)) continue;
-		const dicePoolsOnItem = (nimbleFlags as Record<string, unknown>).dicePools;
+		const systemFlags = itemFlags[DicePoolRuleConfig.flagScope];
+		if (!systemFlags || typeof systemFlags !== 'object' || Array.isArray(systemFlags)) continue;
+		const dicePoolsOnItem = (systemFlags as Record<string, unknown>)[DicePoolRuleConfig.flagKey];
 		if (!dicePoolsOnItem || typeof dicePoolsOnItem !== 'object' || Array.isArray(dicePoolsOnItem)) {
 			continue;
 		}
@@ -566,7 +566,7 @@ async function persistDicePoolMap(actor: CharacterActorLike, pools: DicePoolMap)
 					[DicePoolRuleConfig.flagPath]: actorPoolUpdatePayload,
 				} as Record<string, unknown>,
 				{
-					nimble: {
+					[DicePoolRuleConfig.flagScope]: {
 						skipDicePoolSync: true,
 					},
 				} as Record<string, unknown>,

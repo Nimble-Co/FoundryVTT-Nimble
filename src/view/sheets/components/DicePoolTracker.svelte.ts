@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { systemHookName } from '#system';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import type { ChargePoolState } from '#utils/chargePool/types.js';
@@ -10,10 +11,10 @@ import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
 
 const POOL_STATE_HOOK_NAMES = [
-	'nimble.dicePool.changed',
-	'nimble.dicePool.refilled',
-	'nimble.chargePool.changed',
-	'nimble.chargePool.recovered',
+	systemHookName('dicePool.changed'),
+	systemHookName('dicePool.refilled'),
+	systemHookName('chargePool.changed'),
+	systemHookName('chargePool.recovered'),
 	'updateItem',
 	'updateActor',
 ] as const;

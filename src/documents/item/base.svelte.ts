@@ -1,4 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { SYSTEM_ID, systemHookName } from '#system';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
@@ -179,7 +180,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		 * @returns {boolean}  Explicitly return `false` to prevent the item from being used.
 		 */
 		// @ts-expect-error - nimble.preUseItem is a custom hook
-		const allowed = Hooks.call('nimble.preUseItem', this, {
+		const allowed = Hooks.call(systemHookName('preUseItem'), this, {
 			rolls,
 			isCritical,
 			isMiss,
@@ -212,7 +213,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				sound: CONFIG.sounds.dice,
 				rolls,
 				flags: {
-					nimble: {
+					[SYSTEM_ID]: {
 						itemId: this.id,
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,
@@ -257,7 +258,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			 * @param {Token[]} context.targets   The targets of the item use
 			 */
 			// @ts-expect-error - nimble.useItem is custom
-			Hooks.callAll('nimble.useItem', this, chatCard, {
+			Hooks.callAll(systemHookName('useItem'), this, chatCard, {
 				rolls,
 				isCritical,
 				isMiss,

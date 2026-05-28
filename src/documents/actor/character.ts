@@ -4,7 +4,7 @@ import type { NimbleBoonItem } from '#documents/item/boon.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
@@ -1546,7 +1546,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		await manager.rest();
 
 		// @ts-expect-error - nimble.rest is a custom Nimble hook consumed by ruleEventDispatch
-		Hooks.callAll('nimble.rest', {
+		Hooks.callAll(systemHookName('rest'), {
 			actor: this,
 			restType: restData.restType,
 		});

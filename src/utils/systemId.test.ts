@@ -53,6 +53,49 @@ const FORBIDDEN_PATTERNS: readonly ForbiddenPattern[] = [
 		re: /\.flags\.nimble(?=[\s.?[)\];,}]|$)/,
 		hint: 'Use `flags[SYSTEM_ID]` for property access instead of `flags.nimble`.',
 	},
+	{
+		// Catches `.nimble` dot-access on any identifier (e.g. a `flags` value
+		// aliased to a local: `const f = item.flags; f.nimble`). The dedicated
+		// `.flags.nimble` pattern above misses these because the `flags` part is
+		// gone by the time the scope key is dereferenced.
+		//
+		// `game.nimble` is a DELIBERATE, AUDITED exemption: it is the system's own
+		// API namespace that we assign to the global `game` object (init.ts:
+		// `game.nimble = NIMBLE_GAME`) and read back with the same literal key, so
+		// it is self-consistent and works identically on the stable (`nimble`) and
+		// dev (`nimble-dev`) installs — it is NOT validated against the installed
+		// id the way flags are. It is intentionally a fixed key (persisted macro
+		// command strings reference `game.nimble.macros.*`), so it must stay
+		// literal. This is a naming-convention choice, not a dev-build hazard.
+		id: 'nimble-property-access',
+		re: /\b(?!game\.nimble)[A-Za-z_$][\w$]*\.nimble(?=[\s.?[)\];,}]|$)/,
+		hint: 'Use `obj[SYSTEM_ID]` for the system flag scope instead of `.nimble` property access (note: `game.nimble` is a deliberate exemption — see pattern comment).',
+	},
+	{
+		// Catches an object-literal key `nimble:` (e.g. update options like
+		// `{ nimble: { skipDicePoolSync: true } }`). Use a computed key
+		// `[SYSTEM_ID]:` so it tracks the dev rebrand.
+		id: 'nimble-object-key',
+		re: /(?<![\w$.'"`])nimble\s*:/,
+		hint: 'Use a computed key `[SYSTEM_ID]:` (or a *RuleConfig.flagScope constant) instead of a literal `nimble:` key.',
+	},
+	{
+		// Catches quoted custom-hook names prefixed with the literal system id
+		// (e.g. `'nimble.damageApplied'`, `'nimble.dicePool.changed'`). Custom
+		// hooks are namespaced by the installed id, so emitter and listeners must
+		// derive the name from SYSTEM_ID (use `systemHookName('suffix')` from
+		// `#system`) or they silently stop matching under the dev id.
+		//
+		// Compendium pack collection ids (`nimble.nimble-*`) are deliberately
+		// NOT matched: those are rebranded by the dev-flag-rebrand migration, not
+		// by SYSTEM_ID at call sites. Genuinely intentional literals (clipboard
+		// copy types, DOM `name=` selectors) use the inline opt-out comment.
+		// Only single/double quotes (not backticks): JSDoc examples wrap hook
+		// names in backticks (`nimble.damageApplied`) and must not trip the guard.
+		id: 'nimble-quoted-hook-name',
+		re: /['"]nimble\.(?!nimble-)[A-Za-z]/,
+		hint: "Custom hook names must derive from SYSTEM_ID — use `systemHookName('suffix')` from '#system' (or a subsystem helper) instead of a literal `nimble.` prefix.",
+	},
 ];
 
 const SOURCE_GLOB = 'src/**/*.{ts,svelte,svelte.ts}';
@@ -62,9 +105,11 @@ const EXCLUDE_GLOBS: readonly string[] = [
 	'src/**/*.spec.ts',
 	// systemId.ts is the source of truth for the value.
 	'src/utils/systemId.ts',
-	// The dev-build rebrand module *must* reference the legacy 'nimble' id —
-	// its whole job is migrating data away from that key. Audited exception.
-	'src/migration/devFlagRebrand.ts',
+	// Migrations reference stable `Compendium.nimble.*` source ids and legacy
+	// `flags.nimble.*` keys by design — they read/rewrite data created under the
+	// stable install. The dev-flag-rebrand handles the live remapping; migration
+	// source ids must stay literal. Audited exception.
+	'src/migration/**',
 ];
 
 const SELF_PATH_FRAGMENT = 'src/utils/systemId.test.ts';

@@ -3,7 +3,9 @@ import { SvelteSet } from 'svelte/reactivity';
 import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 import type { RuleSource } from '#view/rulesBuilder/types.js';
 
-export const COPY_TYPE = 'nimble.Rule';
+// Internal clipboard drag-drop type, set and matched by the same code; never
+// crosses the Foundry system-id boundary, so the literal is intentional.
+export const COPY_TYPE = 'nimble.Rule'; // allow-hardcoded-system-id
 
 export function createRulesBuilderWindowState(getItem: () => NimbleBaseItem) {
 	const rawRules = $derived(

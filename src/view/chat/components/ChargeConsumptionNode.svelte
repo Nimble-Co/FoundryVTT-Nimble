@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SYSTEM_ID } from '#system';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
@@ -6,7 +7,9 @@
 	let { node: _node } = $props();
 
 	const messageDocument = getContext('messageDocument');
-	let consumption = $derived(messageDocument?.reactive?.flags?.nimble?.chargeConsumption ?? []);
+	let consumption = $derived(
+		messageDocument?.reactive?.flags?.[SYSTEM_ID]?.chargeConsumption ?? [],
+	);
 
 	function getChangeColor(change) {
 		return change < 0

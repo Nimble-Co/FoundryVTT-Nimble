@@ -1,6 +1,6 @@
 import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -701,7 +701,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		const combatant = game.combat?.getCombatantByActor(this.id ?? '') ?? null;
 		if (combatant) {
 			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch
-			Hooks.callAll('nimble.initiativeRolled', {
+			Hooks.callAll(systemHookName('initiativeRolled'), {
 				actor: this,
 				combatant,
 			});
@@ -895,9 +895,12 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			foundry.utils.hasProperty(changesObj, 'system.attributes.hp.value') ||
 			foundry.utils.hasProperty(changesObj, 'system.attributes.hp.temp');
 		if (hpWasChanged) {
+			// In-memory update-options passthrough (set here in _preUpdate, read in
+			// _onUpdate on the same options object); never persisted as a flag, so
+			// the literal key is self-consistent and intentional.
 			const optionsWithTracking = options as Actor.Database.PreUpdateOptions & HpTrackingOptions;
-			optionsWithTracking.nimble ??= {};
-			optionsWithTracking.nimble.previousHp = this.#getCurrentHpSnapshot();
+			optionsWithTracking.nimble ??= {}; // allow-hardcoded-system-id
+			optionsWithTracking.nimble.previousHp = this.#getCurrentHpSnapshot(); // allow-hardcoded-system-id
 		}
 
 		// If hp drops below 0, set the value to 0.
@@ -933,7 +936,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		const currentHp = this.#getCurrentHpSnapshot();
 		const optionsWithTracking = options as Actor.Database.OnUpdateOperation & HpTrackingOptions;
-		const previousHp = optionsWithTracking.nimble?.previousHp ?? this.#lastHpSnapshot;
+		const previousHp = optionsWithTracking.nimble?.previousHp ?? this.#lastHpSnapshot; // allow-hardcoded-system-id
 
 		this.#lastHpSnapshot = currentHp;
 		if (!previousHp) return;

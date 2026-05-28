@@ -1,3 +1,4 @@
+import { SYSTEM_ID, systemHookName } from '#system';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
@@ -50,7 +51,7 @@ export class NimbleSpellItem extends NimbleBaseItem {
 		 * @returns {boolean}  Explicitly return `false` to prevent the item from being used.
 		 */
 		// @ts-expect-error - nimble.preUseItem is a custom hook
-		const allowed = Hooks.call('nimble.preUseItem', this, {
+		const allowed = Hooks.call(systemHookName('preUseItem'), this, {
 			rolls,
 			isCritical,
 			isMiss,
@@ -82,7 +83,7 @@ export class NimbleSpellItem extends NimbleBaseItem {
 				sound: CONFIG.sounds.dice,
 				rolls,
 				flags: {
-					nimble: {
+					[SYSTEM_ID]: {
 						itemId: this.id,
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,
@@ -128,7 +129,7 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
 			 * @param {Token[]} context.targets   The targets of the item use
 			 */
-			Hooks.callAll('nimble.useItem' as any, this, chatCard, {
+			Hooks.callAll(systemHookName('useItem') as any, this, chatCard, {
 				rolls,
 				isCritical,
 				isMiss,

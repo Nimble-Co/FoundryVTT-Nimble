@@ -174,8 +174,8 @@ export default function registerSystemSettings() {
 		if (element.querySelector('.nimble-dice-testbench-launch')) return;
 
 		const checkbox =
-			element.querySelector<HTMLInputElement>('input[name="nimble.debugMode"]') ??
-			element.querySelector<HTMLInputElement>('[name="nimble.debugMode"]');
+			element.querySelector<HTMLInputElement>(`input[name="${SYSTEM_ID}.debugMode"]`) ??
+			element.querySelector<HTMLInputElement>(`[name="${SYSTEM_ID}.debugMode"]`);
 		if (!checkbox) return;
 
 		const formGroup = checkbox.closest('.form-group') ?? checkbox.closest('div');

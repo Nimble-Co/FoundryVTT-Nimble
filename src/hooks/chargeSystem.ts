@@ -1,4 +1,4 @@
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import {
 	consumeOnResolvedItemUse,
 	validateItemChargeConsumption,
@@ -118,7 +118,7 @@ function registerActorSyncHooks(): void {
 }
 
 function registerItemUseHooks(): void {
-	registerCustomHook('nimble.preUseItem', (item) => {
+	registerCustomHook(systemHookName('preUseItem'), (item) => {
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return true;
 
@@ -131,7 +131,7 @@ function registerItemUseHooks(): void {
 		return false;
 	});
 
-	registerCustomHook('nimble.useItem', (item, chatMessage, context) => {
+	registerCustomHook(systemHookName('useItem'), (item, chatMessage, context) => {
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return;
 		const itemUseContext = toItemUseContext(context);
@@ -155,7 +155,7 @@ function registerItemUseHooks(): void {
 }
 
 function registerRestHooks(): void {
-	registerCustomHook('nimble.restCompleted', (actor, context) => {
+	registerCustomHook(systemHookName('restCompleted'), (actor, context) => {
 		const characterActor = toCharacterActor(actor);
 		if (!characterActor) return;
 		const restContext = toRestContext(context);

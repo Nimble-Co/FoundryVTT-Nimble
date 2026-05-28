@@ -1,17 +1,16 @@
+import { systemHookName } from '#system';
 import type { CharacterActorLike } from './types.js';
-
-const HOOK_PREFIX = 'nimble.dicePool';
 
 type DicePoolHookPayload = Record<string, unknown>;
 
 function emit(hookName: string, payload: DicePoolHookPayload): void {
 	// @ts-expect-error Custom hooks are not typed in Foundry
-	Hooks.call(`${HOOK_PREFIX}.${hookName}`, payload);
+	Hooks.call(systemHookName(`dicePool.${hookName}`), payload);
 }
 
 function emitCancelable(hookName: string, payload: DicePoolHookPayload): boolean {
 	// @ts-expect-error Custom hooks are not typed in Foundry
-	return Hooks.call(`${HOOK_PREFIX}.${hookName}`, payload) !== false;
+	return Hooks.call(systemHookName(`dicePool.${hookName}`), payload) !== false;
 }
 
 function emitForCharacter(

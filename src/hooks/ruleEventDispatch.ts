@@ -1,4 +1,4 @@
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type {
 	ActorHealthContext,
 	InitiativeRolledContext,
@@ -180,12 +180,12 @@ export default function registerRuleEventDispatch(): void {
 	if (didRegister) return;
 	didRegister = true;
 
-	onHook('nimble.damageApplied', handleDamageApplied as HookFn);
+	onHook(systemHookName('damageApplied'), handleDamageApplied as HookFn);
 	onHook('combatTurn', handleCombatTurn as HookFn);
 	onHook('updateActor', handleActorUpdate as HookFn);
-	onHook('nimble.saveResolved', handleSaveResolved as HookFn);
-	onHook('nimble.rest', handleRest as HookFn);
-	onHook('nimble.initiativeRolled', handleInitiativeRolled as HookFn);
+	onHook(systemHookName('saveResolved'), handleSaveResolved as HookFn);
+	onHook(systemHookName('rest'), handleRest as HookFn);
+	onHook(systemHookName('initiativeRolled'), handleInitiativeRolled as HookFn);
 }
 
 export {
