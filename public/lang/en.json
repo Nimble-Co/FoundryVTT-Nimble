@@ -578,6 +578,14 @@
 			"clearDocument": "Clear document",
 			"clear": "Clear",
 			"dragDocumentHere": "Drag a document here",
+			"dicePoolPicker": {
+				"empty": "No dice pools defined on this actor",
+				"notFound": "⚠ {identifier} (not found)"
+			},
+			"chargePoolPicker": {
+				"empty": "No charge pools defined on this actor",
+				"notFound": "⚠ {identifier} (not found)"
+			},
 			"templateValueHintBefore": "Use",
 			"templateValueHintAfter": "to insert the formula result.",
 			"pickerMissingMetaTooltip": "Description missing — flag for review.",
@@ -980,10 +988,37 @@
 			"rollAndSpendOne": "Roll and spend 1 {label}",
 			"spent": "{label} spent",
 			"clickToRoll": "Click to roll & spend",
-			"clickToSpend": "Rolled {value} – Click to spend",
-			"spendDieAria": "Spend {label} die (value: {value})",
-			"expendAllAria": "Expend all {label} ({total})",
-			"expendAllTooltip": "Expend all – total {total}"
+			"rightClickToDiscard": "Rolled {value} – Right-click to discard",
+			"discardDieAria": "Discard {label} die (value: {value})",
+			"discardAllAria": "Discard all {label} ({total})",
+			"rightClickToDiscardAll": "Right-click to discard all – total {total}",
+			"togglePanel": "Toggle {label} actions",
+			"rollOneIntoPool": "Roll one die into this pool",
+			"panel": {
+				"ariaLabel": "{label} actions",
+				"rolledMeta": "{count}/{max} · sum {total}",
+				"countMeta": "{current}/{max}",
+				"close": "Close",
+				"editDice": {
+					"heading": "Edit dice",
+					"decrement": "Decrement",
+					"increment": "Increment",
+					"discard": "Discard die"
+				},
+				"editCharge": {
+					"heading": "Edit current",
+					"label": "Current (max {max})"
+				},
+				"useFeature": {
+					"heading": "Use a feature",
+					"pickDice": "Pick dice to spend",
+					"toggleDie": "Toggle die (value: {value})",
+					"summary": "Selected {count} · sum {total}",
+					"effectPreview": "Effect: {total}",
+					"spend": "Spend",
+					"spendWithCount": "Spend ({count})"
+				}
+			}
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",

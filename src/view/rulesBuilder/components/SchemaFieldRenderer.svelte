@@ -5,6 +5,8 @@
 	import { createSchemaFieldRendererState } from '#view/rulesBuilder/components/SchemaFieldRendererState.svelte.js';
 	import type { SchemaFieldRendererProps } from '#view/rulesBuilder/types.js';
 	import TagGroup from '#view/components/TagGroup.svelte';
+	import ChargePoolPicker from './ChargePoolPicker.svelte';
+	import DicePoolPicker from './DicePoolPicker.svelte';
 	import DocumentPicker from './DocumentPicker.svelte';
 	import FormulaInput from './FormulaInput.svelte';
 	import PredicateBuilder from './PredicateBuilder.svelte';
@@ -68,6 +70,22 @@
 			<code>{`{value}`}</code>
 			{localize('NIMBLE.rulesBuilder.templateValueHintAfter')}
 		</small>
+	{:else if state.widget === 'dicePoolPicker'}
+		<DicePoolPicker
+			value={String(value ?? '')}
+			onChange={(v) => onChange(v)}
+			{disabled}
+			{document}
+			required={(field as unknown as { required?: boolean }).required ?? false}
+		/>
+	{:else if state.widget === 'chargePoolPicker'}
+		<ChargePoolPicker
+			value={String(value ?? '')}
+			onChange={(v) => onChange(v)}
+			{disabled}
+			{document}
+			required={(field as unknown as { required?: boolean }).required ?? false}
+		/>
 	{:else if state.widget === 'predicate' || field instanceof PredicateField}
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />
 	{:else if field instanceof fields.BooleanField}

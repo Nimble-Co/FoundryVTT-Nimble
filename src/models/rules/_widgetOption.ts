@@ -24,6 +24,8 @@ export const WIDGET_HINTS = [
 	'templateString',
 	'richText',
 	'hidden',
+	'dicePoolPicker',
+	'chargePoolPicker',
 ] as const;
 
 export type WidgetHint = (typeof WIDGET_HINTS)[number];

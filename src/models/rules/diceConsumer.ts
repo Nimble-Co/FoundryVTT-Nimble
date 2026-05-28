@@ -10,7 +10,14 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		poolIdentifier: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		poolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'dicePoolPicker',
+			}),
+		),
 		poolScope: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -37,6 +44,14 @@ function schema() {
 			initial: null,
 			choices: DICE_ATTACK_DELIVERY_FILTERS,
 		}),
+		effectFormula: new fields.StringField(
+			withWidget({
+				required: false,
+				nullable: true,
+				initial: null,
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -63,6 +78,8 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	declare bonusOnAttackDelivery: (typeof DicePoolRuleConfig.attackDeliveryFilters)[number] | null;
 
+	declare effectFormula: string | null;
+
 	static override defineSchema(): DiceConsumerRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -78,6 +95,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 				['mode', '"manual" | "autoBonus"'],
 				['cost', 'string'],
 				['bonusOnAttackDelivery', '"melee" | "ranged" | "any" | null'],
+				['effectFormula', 'string | null'],
 			]),
 		);
 	}

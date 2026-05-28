@@ -8,7 +8,14 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		poolIdentifier: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		poolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'chargePoolPicker',
+			}),
+		),
 		poolScope: new fields.StringField({
 			required: true,
 			nullable: false,

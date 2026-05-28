@@ -25,13 +25,21 @@ function schema() {
 			hint: 'NIMBLE.rules.modifyPool.poolType.hint',
 			choices: [...POOL_TYPES] as string[],
 		}),
-		poolIdentifier: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '',
-			label: 'NIMBLE.rules.modifyPool.poolIdentifier.label',
-			hint: 'NIMBLE.rules.modifyPool.poolIdentifier.hint',
-		}),
+		poolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.modifyPool.poolIdentifier.label',
+				hint: 'NIMBLE.rules.modifyPool.poolIdentifier.hint',
+				// modifyPool can target either a dice or charge pool (`poolType`
+				// switches between them). The widget catalog has no conditional-
+				// widget primitive yet, so default to the dice picker — the more
+				// common case — and let authors fall back to typing for charge
+				// pools (the stored value is a plain string regardless).
+				widget: 'dicePoolPicker',
+			}),
+		),
 		dieSize: new fields.StringField({
 			required: false,
 			nullable: true,

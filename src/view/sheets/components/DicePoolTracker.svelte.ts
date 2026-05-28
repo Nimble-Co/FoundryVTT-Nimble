@@ -3,9 +3,11 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import type { ChargePoolState } from '#utils/chargePool/types.js';
-import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import type { DicePoolState } from '#utils/dicePool/types.js';
+import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
+import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
 
 const POOL_STATE_HOOK_NAMES = [
 	'nimble.dicePool.changed',
@@ -47,6 +49,7 @@ type RolledPoolView = {
 	max: number;
 	faces: number[];
 	total: number;
+	hasConsumers: boolean;
 };
 
 type CountPoolView = {
@@ -63,7 +66,7 @@ export type LivePoolView = RolledPoolView | CountPoolView;
 
 // Die-face icons live in #utils/dicePool/dieFaceIcons.js (see DicePoolTracker.svelte).
 
-function rolledFromDice(pool: DicePoolState): RolledPoolView {
+function rolledFromDice(pool: DicePoolState, hasConsumers: boolean): RolledPoolView {
 	const total = pool.faces.reduce((sum, face) => sum + face, 0);
 	return {
 		kind: 'rolled',
@@ -74,6 +77,7 @@ function rolledFromDice(pool: DicePoolState): RolledPoolView {
 		max: pool.max,
 		faces: [...pool.faces],
 		total,
+		hasConsumers,
 	};
 }
 
@@ -100,7 +104,9 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		subscribePoolState();
 		const actor = getActor();
 
-		const dice = getDicePools(actor).map(rolledFromDice);
+		const dice = getDicePools(actor).map((pool) =>
+			rolledFromDice(pool, getDicePoolConsumers(actor, pool).length > 0),
+		);
 		// Charge pools without a `dieSize` are pure counters and are already
 		// rendered by ChargeIndicator elsewhere on the sheet. Only surface
 		// charge pools that have a die-size hint (roll-on-spend resources like
@@ -126,8 +132,8 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 	// Actions
 	// ============================================================================
 
-	/** Spend one rolled die from a pool by index. */
-	async function expendRolledDie(poolId: string, dieIndex: number): Promise<void> {
+	/** Discard one rolled die from a pool by index (no game effect). */
+	async function discardRolledDie(poolId: string, dieIndex: number): Promise<void> {
 		const pool = pools.find((p) => p.id === poolId);
 		if (!pool || pool.kind !== 'rolled') return;
 		const next = [...pool.faces];
@@ -135,8 +141,8 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		await setPoolFaces(getActor(), poolId, next);
 	}
 
-	/** Clear all faces from a rolled pool (used by sum-and-expend UX). */
-	async function expendAllRolled(poolId: string): Promise<void> {
+	/** Clear all faces from a rolled pool (sum-and-discard UX). */
+	async function discardAllRolled(poolId: string): Promise<void> {
 		await setPoolFaces(getActor(), poolId, []);
 	}
 
@@ -146,6 +152,47 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		await rollChargeDie(getActor(), pool.id, { flavor: pool.label });
 	}
 
+	/** Set a single die face value (GM/owner inline edit). Clamps to 1..max. */
+	async function setDieFaceValue(poolId: string, dieIndex: number, value: number): Promise<void> {
+		const pool = pools.find((p) => p.id === poolId);
+		if (!pool || pool.kind !== 'rolled') return;
+		if (dieIndex < 0 || dieIndex >= pool.faces.length) return;
+		const maxFace = dieSizeToMaxFace(pool.dieSize as DieSize);
+		const clamped = Math.max(1, Math.min(maxFace, Math.floor(value)));
+		const next = [...pool.faces];
+		next[dieIndex] = clamped;
+		await setPoolFaces(getActor(), poolId, next);
+	}
+
+	/** Roll one die into a rolled pool (GM tool). Delegates to dicePoolRefill. */
+	async function rollOneIntoPool(poolId: string): Promise<void> {
+		const pool = pools.find((p) => p.id === poolId);
+		if (!pool || pool.kind !== 'rolled') return;
+		await rollDieIntoPool(getActor(), poolId, { flavor: pool.label });
+	}
+
+	// Per-pool panel open-state. Multiple panels may be open simultaneously;
+	// each chevron toggles its pool's entry in this set.
+	let openPanelIds = $state<Set<string>>(new Set());
+
+	function isPanelOpen(poolId: string): boolean {
+		return openPanelIds.has(poolId);
+	}
+
+	function togglePanel(poolId: string): void {
+		const next = new Set(openPanelIds);
+		if (next.has(poolId)) next.delete(poolId);
+		else next.add(poolId);
+		openPanelIds = next;
+	}
+
+	function closePanel(poolId: string): void {
+		if (!openPanelIds.has(poolId)) return;
+		const next = new Set(openPanelIds);
+		next.delete(poolId);
+		openPanelIds = next;
+	}
+
 	return {
 		get pools() {
 			return pools;
@@ -153,8 +200,19 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		get hasPools() {
 			return hasPools;
 		},
-		expendRolledDie,
-		expendAllRolled,
+		get isOwner() {
+			return getActor().isOwner === true;
+		},
+		get isGM() {
+			return (game?.user?.isGM ?? false) === true;
+		},
+		discardRolledDie,
+		discardAllRolled,
 		rollAndSpendCountPool,
+		setDieFaceValue,
+		rollOneIntoPool,
+		isPanelOpen,
+		togglePanel,
+		closePanel,
 	};
 }

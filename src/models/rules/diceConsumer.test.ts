@@ -11,6 +11,13 @@ describe('DiceConsumerRule', () => {
 			expect(schema).toHaveProperty('mode');
 			expect(schema).toHaveProperty('cost');
 			expect(schema).toHaveProperty('bonusOnAttackDelivery');
+			expect(schema).toHaveProperty('effectFormula');
+		});
+
+		it('defaults effectFormula to null', () => {
+			const schema = DiceConsumerRule.defineSchema();
+			const effectFormula = schema.effectFormula as unknown as { initial: unknown };
+			expect(effectFormula.initial).toBeNull();
 		});
 	});
 
