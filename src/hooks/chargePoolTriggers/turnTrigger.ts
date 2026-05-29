@@ -11,8 +11,8 @@ export function registerTurnTriggerHooks(): void {
 		'combatTurn',
 		(
 			combat: Combat,
-			_updateData: { round: number; turn: number },
-			_updateOptions: { advanceTime: number; direction: number },
+			_updateData: { round?: number; turn?: number },
+			_updateOptions: { advanceTime?: number; direction?: number },
 		) => {
 			const combatant = combat.combatant;
 			if (!combatant || combatant.type !== 'character') return;

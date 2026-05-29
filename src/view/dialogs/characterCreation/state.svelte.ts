@@ -696,7 +696,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	function submit() {
 		// Prepare class features data
 		const classFeatureData = {
-			autoGrant: classFeatures?.autoGrant?.map((f) => f.uuid) ?? [],
+			autoGrant: classFeatures?.autoGrant?.map((f) => f.uuid ?? '') ?? [],
 			selected: selectedClassFeatures,
 		};
 

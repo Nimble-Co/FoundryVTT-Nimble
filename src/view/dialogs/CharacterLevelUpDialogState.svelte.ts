@@ -195,7 +195,7 @@ export function createLevelUpState(
 				// Subclass features are resolved separately, so filter already-owned
 				// entries here before merging them into the current level grants.
 				const filteredAutoGrant = [...rawFeatures.autoGrant, ...subclassFeatures].filter(
-					(feature) => !ownedFeatureUuids.has(feature.uuid),
+					(feature) => !ownedFeatureUuids.has(feature.uuid ?? ''),
 				);
 
 				classFeatures = {

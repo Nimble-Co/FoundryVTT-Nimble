@@ -3,7 +3,7 @@ import type { CombatantBaseActions, NimbleCombatantSystem } from './combatTypes.
 function getCombatantSystem(combatant: Combatant.Implementation): NimbleCombatantSystem | null {
 	const system = combatant.system;
 	if (!system || typeof system !== 'object') return null;
-	return system as NimbleCombatantSystem;
+	return system as unknown as NimbleCombatantSystem;
 }
 
 function normalizeNonNegativeInteger(value: unknown): number {

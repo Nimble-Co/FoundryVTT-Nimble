@@ -323,7 +323,7 @@ async function executeChatReaction(
 	const reactionName = localize(config.localizationKey);
 	if (!(await resolveAndUseReaction(actor, config.reactionKeys, reactionName))) return;
 
-	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
+	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid ?? '');
 
 	for (const msg of config.messages) {
 		await ChatMessage.create(
@@ -461,7 +461,7 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 		},
 	];
 
-	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
+	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid ?? '');
 
 	const chatData = {
 		author: game.user?.id,

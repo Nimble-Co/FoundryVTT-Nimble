@@ -49,7 +49,7 @@ export default async function getEpicBoons(): Promise<EpicBoonChoice[]> {
 				if (boon.system.boonType !== 'epic') continue;
 
 				epicBoons.push({
-					uuid: boon.uuid,
+					uuid: boon.uuid ?? '',
 					name: boon.name,
 					img: (boon.img as string) ?? 'icons/svg/item-bag.svg',
 					system: {

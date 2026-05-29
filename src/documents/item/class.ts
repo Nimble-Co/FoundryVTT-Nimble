@@ -6,7 +6,7 @@ import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleClassItem extends NimbleBaseItem {
+export class NimbleClassItem extends NimbleBaseItem<'class'> {
 	declare ASI: Record<string, number>;
 
 	declare totalASI: Record<string, number>;
@@ -181,7 +181,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 	override async _preUpdate(
 		changed: Record<string, unknown>,
 		options: Item.Database.UpdateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 	): Promise<boolean | undefined> {
 		const result = await super._preUpdate(changed, options, user);
 

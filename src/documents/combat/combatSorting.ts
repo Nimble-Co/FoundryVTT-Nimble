@@ -61,7 +61,7 @@ function resolveDropSource(params: {
 	if (sourceCombatantIds.length > 0) {
 		const sourceCombatants = sourceCombatantIds
 			.map((combatantId) => combat.combatants.get(combatantId) ?? null)
-			.filter((combatant): combatant is Combatant.Implementation => Boolean(combatant));
+			.filter((combatant) => Boolean(combatant)) as Combatant.Implementation[];
 		if (sourceCombatants.length !== sourceCombatantIds.length) return null;
 		if (
 			sourceCombatants.some(

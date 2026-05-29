@@ -163,9 +163,7 @@ class RecordField<
 		options: foundry.data.fields.DataField.ValidationOptions & { partial?: boolean } = {},
 	): void {
 		if (!(values instanceof Object)) {
-			throw new foundry.data.validation.DataModelValidationFailure({
-				message: 'must be an Object',
-			});
+			throw new foundry.data.validation.DataModelValidationFailure('must be an Object');
 		}
 
 		const failure = this._validateValues(

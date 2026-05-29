@@ -55,7 +55,7 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 						feature.system?.gainedAtLevel ?? level,
 					);
 					if (!raw) return;
-					result.set(feature.uuid, await TextEditor.enrichHTML(raw));
+					result.set(feature.uuid ?? '', await TextEditor.enrichHTML(raw));
 				}),
 			);
 			if (!cancelled) levelDescriptions = result;
@@ -80,7 +80,7 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 
 	function handleDeleteWorldItem(event: MouseEvent, feature: NimbleFeatureItem): void {
 		event.stopPropagation();
-		getProps().onDeleteWorldItem(feature.uuid, feature.name);
+		getProps().onDeleteWorldItem(feature.uuid ?? '', feature.name);
 	}
 
 	function handleAddFeature(event: MouseEvent): void {

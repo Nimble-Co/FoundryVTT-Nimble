@@ -1,6 +1,6 @@
 import { NimbleCharacterData } from './CharacterDataModel.js';
-import { NimbleNPCData } from './NPCDataModel.js';
 import { NimbleMinionData } from './MinionDataModel.js';
+import { NimbleNPCData } from './NPCDataModel.js';
 import { NimbleSoloMonsterData } from './SoloMonsterDataModel.js';
 
 const actorDataModels = {
@@ -16,9 +16,10 @@ export default actorDataModels;
 declare global {
 	interface DataModelConfig {
 		Actor: {
-			character: NimbleCharacterData;
-			npc: NimbleNPCData;
-			soloMonster: NimbleSoloMonsterData;
+			character: typeof NimbleCharacterData;
+			npc: typeof NimbleNPCData;
+			minion: typeof NimbleMinionData;
+			soloMonster: typeof NimbleSoloMonsterData;
 		};
 	}
 }

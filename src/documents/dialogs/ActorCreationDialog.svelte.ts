@@ -65,7 +65,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 			const characterCreationDialog = new CharacterCreationDialog({}, { folder });
 			characterCreationDialog.render(true);
 		} else {
-			(documentClasses as Record<string, typeof Actor>)[actorType].create(
+			(documentClasses as unknown as Record<string, typeof Actor>)[actorType].create(
 				{ name: 'New Actor', type: actorType, ...this.data } as object as Actor.CreateData,
 				{ pack: this.pack, parent: this.parent, renderSheet: true } as object,
 			);

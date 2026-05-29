@@ -136,7 +136,8 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 	for (const item of game.items) {
 		if (item.type !== 'feature') continue;
 		const featureItem = item as NimbleFeatureItem;
-		processFeature(featureItem.uuid, featureItem.system);
+		// World items are stored, so `uuid` is always present.
+		processFeature(featureItem.uuid ?? '', featureItem.system);
 	}
 
 	// Process compendium packs
@@ -152,7 +153,6 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
 
-		// @ts-expect-error - Foundry types don't include custom index fields, but the API accepts them
 		const packIndex = await pack.getIndex({ fields: indexFields });
 		for (const indexEntry of packIndex) {
 			const packEntry = indexEntry as FeatureIndexEntry;
