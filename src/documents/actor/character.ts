@@ -220,6 +220,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Prepare Class Data
 		this.prepareClassData(actorData);
 
+		// self:fullHp — computed here (not in base _populateDerivedTags) because
+		// character hp.max is derived from class data, not stored.
+		if (
+			actorData.attributes.hp.max > 0 &&
+			actorData.attributes.hp.value >= actorData.attributes.hp.max
+		) {
+			this.tags.add('self:fullHp');
+		}
+
 		// Prepare max Mana
 		actorData.resources.mana.value = actorData.resources.mana.current;
 		actorData.resources.mana.max = this._prepareMaxMana(actorData);
@@ -276,6 +285,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			return [...item.rules.values()].some((rule) => rule.type === 'armorClass');
 		});
 		this.tags.add(`armor:${hasArmor ? 'equipped' : 'unarmored'}`);
+
+		// Shield status tag — character-only. Monsters/NPCs don't have an equipment
+		// system, so predicates using self:shield / self:noShield only apply to PCs.
+		const hasShield = this.items.some((item) => {
+			if (!item.isType('object')) return false;
+			const objectItem = item as unknown as NimbleObjectItem;
+			return objectItem.system.objectType === 'shield';
+		});
+		this.tags.add(hasShield ? 'self:shield' : 'self:noShield');
 	}
 
 	getClassAbilityBonuses() {

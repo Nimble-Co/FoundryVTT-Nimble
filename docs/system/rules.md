@@ -41,6 +41,149 @@ Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from
 - **Forward declarations**: Use local interfaces for `NimbleBaseActor` / `NimbleBaseItem` to avoid circular imports — see the pattern in `base.ts`.
 - **Mutate via `foundry.utils.setProperty()`**: e.g., `foundry.utils.setProperty(actor.system, 'abilities.str.bonus', newValue)`.
 
+## Predicates & Domain Tags
+
+Every rule has a `predicate` field (a `PredicateField`) that gates whether the rule applies. When `this.test()` is called, the predicate is evaluated against the actor's **domain** — a `Set<string>` of tags describing the actor's current state.
+
+### Predicate syntax
+
+#### Leaf forms
+
+```jsonc
+// Atomic — key:value must exist in domain
+{ "armor": "unarmored" }           // domain.has("armor:unarmored")
+
+// Array OR — at least one value must match
+{ "armor": ["unarmored", "light"] } // domain.has("armor:unarmored") || domain.has("armor:light")
+
+// Binary — min / max / equal against numeric tag suffixes
+{ "level": { "min": 5 } }          // any "level:N" in domain where N >= 5
+```
+
+#### Composition with `$and` / `$or`
+
+For tags whose value is already part of the key (e.g. `self:bloodied`, `target:concentrating`) or for combining tags across namespaces, use the `$and` / `$or` operators. Their value is an array — each element is either an **atom string** (presence-checked against the full tag) or a **sub-predicate object** for nesting.
+
+```jsonc
+// AND — every atom must be present
+{ "$and": ["self:raging", "self:bloodied"] }
+
+// OR — at least one atom must be present
+{ "$or": ["self:bloodied", "self:dying"] }
+
+// Berserker: raging AND (bloodied OR dying) — nest with a sub-predicate object
+{
+  "$and": [
+    "self:raging",
+    { "$or": ["self:bloodied", "self:dying"] }
+  ]
+}
+
+// Mix atoms with other leaf forms inside the array
+{
+  "$and": [
+    "self:bloodied",
+    { "armor": "unarmored" },
+    { "level": { "min": 5 } }
+  ]
+}
+```
+
+The top-level object is an implicit AND over its entries, so you can combine a `$or` with other leaf forms at the top level:
+
+```jsonc
+{
+  "armor": "unarmored",
+  "$or": ["self:bloodied", "self:concentrating"]
+}
+```
+
+`$and: []` is vacuously true; `$or: []` is vacuously false.
+
+### Domain tags
+
+Tags are populated during `_populateDerivedTags()` in actor data prep, before rules run.
+
+#### Lifecycle timing — which tags are available when
+
+Not every tag exists at every lifecycle phase. Three populating points, in order:
+
+1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`. Runs *just before* `prePrepareData` hooks fire, so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+3. **Late in `prepareDerivedData()`** (after abilities and HP are finalized) — emits `self:fullHp` and character `<ability>:<mod>` tags. These run *after* `prePrepareData` has already fired, so they are visible **only in `afterPrepareData` and later hooks**.
+
+If your rule's `predicate` gates on `self:fullHp` or an `<ability>:<mod>` tag and the rule's effect runs in `prePrepareData`, the predicate will fail at the wrong time. Either move the effect to `afterPrepareData` (the default for bonus-style rules like `damageBonus`) or gate on a tag from pool 1 / 2 instead.
+
+#### Tags on all actors
+
+| Tag | Source | When |
+|-----|--------|------|
+| `size:<category>` | `sizeCategory` attribute | Always |
+| `disposition:<type>` | Token disposition | Always |
+| `enemiesAdjacent:<count>` | Adjacency sync | In combat |
+| `enemiesAdjacent:most` | Adjacency sync | Has most adjacent enemies |
+| `self:bloodied` | `actor.statuses` | Bloodied status active |
+| `self:dying` | `actor.statuses` (dying) | PC/Hero at 0 HP with wounds remaining |
+| `self:lastStand` | `actor.statuses` (lastStand) | Solo/Legendary monster phase change at 0 HP |
+| `self:fullHp` | HP value/max | HP equals max |
+| `self:concentrating` | `actor.statuses` | Concentration status active |
+| `target:bloodied` | `actor.statuses` | Bloodied status active (for `targetCondition`) |
+| `target:concentrating` | `actor.statuses` | Concentration status active (for `targetCondition`) |
+
+#### Character-only tags
+
+| Tag | Source | When |
+|-----|--------|------|
+| `level:<n>` | Class data | Always |
+| `class:<identifier>` | Class items | Per class |
+| `ancestry:<identifier>` | Ancestry item | If present |
+| `background:<identifier>` | Background item | If present |
+| `armor:equipped` / `armor:unarmored` | Equipment scan | Has armor with armorClass rules |
+| `self:shield` / `self:noShield` | Equipment scan | Has shield item equipped |
+| `proficiency:armor:<type>` | Proficiencies | Per armor proficiency |
+| `proficiency:weapon:<type>` | Proficiencies | Per weapon proficiency |
+| `proficiency:language:<type>` | Proficiencies | Per language |
+| `<ability>:<mod>` | Ability scores | After ability mods computed |
+
+#### Actor type tags
+
+| Tag | Actor type |
+|-----|-----------|
+| `solo-monster` | Solo Monster |
+| `minion` | Minion |
+
+### `targetCondition` on `damageBonus`
+
+The `damageBonus` rule has an optional `targetCondition` field — a predicate evaluated against the **target's** domain at activation time (not the rule owner's domain). This enables bonuses that gate on target state:
+
+```jsonc
+// +@level damage when the target is bloodied
+{
+  "type": "damageBonus",
+  "value": "@level",
+  "delivery": "any",
+  "source": "any",
+  "targetCondition": { "$and": ["target:bloodied"] }
+}
+
+// +1d6 damage when the target is bloodied OR concentrating
+{
+  "type": "damageBonus",
+  "value": "1d6",
+  "delivery": "any",
+  "source": "any",
+  "targetCondition": { "$or": ["target:bloodied", "target:concentrating"] }
+}
+```
+
+`targetCondition` is evaluated via `getTargetDomain()`, which returns only `target:*` tags. This prevents `self:*` tags from the target actor leaking into the evaluation.
+
+When no target is selected, bonuses with `targetCondition` are excluded. Bonuses without `targetCondition` (or with `targetCondition: {}`) always apply regardless of target.
+
+::: tip
+`targetCondition` is only available on `damageBonus`. Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
+:::
+
 ## RulesManager API
 
 `RulesManager` extends `Map<string, NimbleBaseRule>`:

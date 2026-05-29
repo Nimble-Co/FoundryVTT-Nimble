@@ -199,11 +199,12 @@ class ItemActivationManager {
 			}
 		}
 
-		// Get Targets
+		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
+		const targetDomain = this.#getFirstTargetDomain();
 
 		let rolls: (Roll | DamageRoll)[] = [];
-		rolls = await this.#getRolls(dialogData);
+		rolls = await this.#getRolls(dialogData, targetDomain);
 
 		// Persist consumption of pool dice the player spent in the dialog.
 		// The dialog already included their face value in rollFormula above.
@@ -231,7 +232,10 @@ class ItemActivationManager {
 	 * @param dialogData - Configuration from the activation dialog.
 	 * @returns Array of evaluated Roll/DamageRoll instances.
 	 */
-	async #getRolls(dialogData: ItemActivationManager.DialogData): Promise<(Roll | DamageRoll)[]> {
+	async #getRolls(
+		dialogData: ItemActivationManager.DialogData,
+		targetDomain?: Set<string>,
+	): Promise<(Roll | DamageRoll)[]> {
 		if (['ancestry', 'background', 'boon', 'class', 'subclass'].includes(this.#item.type))
 			return [];
 
@@ -304,9 +308,15 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
-					// Apply damage bonuses filtered by delivery, source, and damage type
+					// Apply damage bonuses filtered by delivery, source, damage type, and target
 					if (delivery) {
-						const numericBonus = getDamageBonusTotal(this.actor, delivery, source, node.damageType);
+						const numericBonus = getDamageBonusTotal(
+							this.actor,
+							delivery,
+							source,
+							node.damageType,
+							targetDomain,
+						);
 						if (numericBonus > 0) {
 							formula = `${formula} + ${numericBonus}`;
 						}
@@ -315,6 +325,7 @@ class ItemActivationManager {
 							delivery,
 							source,
 							node.damageType,
+							targetDomain,
 						)) {
 							formula = `${formula} + ${diceFormula}`;
 						}
@@ -658,6 +669,27 @@ class ItemActivationManager {
 		return {
 			...options,
 		};
+	}
+
+	/**
+	 * Resolves the first targeted token's target-namespace domain for targetCondition
+	 * evaluation. Returns only `target:*` tags to prevent `self:*` tags from leaking
+	 * into target predicate evaluation.
+	 *
+	 * Note: multi-target / AoE bonuses gated by targetCondition are not supported —
+	 * insertion-order first target is used. Single-target features (Hunter's Mark,
+	 * Hexbinder) are the intended use case per #579.
+	 */
+	#getFirstTargetDomain(): Set<string> | undefined {
+		const targets = game.user?.targets;
+		if (!targets || targets.size === 0) return undefined;
+
+		const firstTarget = targets.values().next().value as Token | undefined;
+		const targetActor = firstTarget?.actor as
+			| { getTargetDomain?: () => Set<string> }
+			| null
+			| undefined;
+		return targetActor?.getTargetDomain?.();
 	}
 
 	/**

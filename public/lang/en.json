@@ -758,6 +758,10 @@
 				"source": {
 					"label": "Source",
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				},
+				"targetCondition": {
+					"label": "Target condition",
+					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
 				}
 			},
 			"dicePool": {

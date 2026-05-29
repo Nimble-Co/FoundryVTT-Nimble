@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Predicate } from '../../etc/Predicate.js';
 import { getDamageBonusFormulas, getDamageBonusTotal } from '../../utils/attackUtils.js';
 import {
 	type DamageBonusDelivery,
@@ -85,6 +86,11 @@ function createDamageBonusRule(
 		configurable: true,
 	});
 
+	Object.defineProperty(rule, '_targetCondition', {
+		get: () => ({ size: 0 }),
+		configurable: true,
+	});
+
 	return rule;
 }
 
@@ -104,7 +110,14 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 3, formula: null, damageType: '', delivery: 'melee', source: 'weapon' },
+				{
+					value: 3,
+					formula: null,
+					damageType: '',
+					delivery: 'melee',
+					source: 'weapon',
+					targetCondition: null,
+				},
 			]);
 		});
 
@@ -118,7 +131,14 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 10, formula: null, damageType: '', delivery: 'any', source: 'any' },
+				{
+					value: 10,
+					formula: null,
+					damageType: '',
+					delivery: 'any',
+					source: 'any',
+					targetCondition: null,
+				},
 			]);
 		});
 
@@ -229,8 +249,89 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 5, formula: null, damageType: 'necrotic', delivery: 'any', source: 'spell' },
+				{
+					value: 5,
+					formula: null,
+					damageType: 'necrotic',
+					delivery: 'any',
+					source: 'spell',
+					targetCondition: null,
+				},
 			]);
+		});
+	});
+
+	describe('targetCondition integration', () => {
+		it('should handle a rule without explicit targetCondition in source data', () => {
+			const actor = createMockActor({ level: 5 });
+			const item = createMockItem(actor);
+
+			// No targetCondition key — ObjectField initializes to {} which
+			// PredicateField converts to an empty Predicate (size: 0).
+			// The getter guard (tc && tc.size > 0) also handles the truly
+			// undefined case defensively, though that path is unreachable
+			// through normal schema initialization.
+			const sourceData = {
+				value: '3',
+				damageType: '',
+				delivery: 'melee',
+				source: 'weapon',
+				disabled: false,
+				label: 'Legacy Rule',
+				id: 'legacy-rule-id',
+				identifier: '',
+				priority: 1,
+				predicate: {},
+				type: 'damageBonus',
+			};
+
+			const rule = new DamageBonusRule(
+				sourceData as foundry.data.fields.SchemaField.CreateData<
+					DamageBonusRule['schema']['fields']
+				>,
+				{ parent: item as unknown as foundry.abstract.DataModel.Any, strict: false },
+			);
+
+			(rule as any).value = '3';
+			(rule as any).damageType = '';
+			(rule as any).delivery = 'melee';
+			(rule as any).source = 'weapon';
+			(rule as any).disabled = false;
+
+			Object.defineProperty(rule, 'item', {
+				get: () => item,
+				configurable: true,
+			});
+
+			Object.defineProperty(rule, '_predicate', {
+				get: () => ({ size: 0 }),
+				configurable: true,
+			});
+
+			// _targetCondition is NOT stubbed — exercises the real getter with missing field
+			expect(() => rule.afterPrepareData()).not.toThrow();
+			expect(actor.system.damageBonuses?.[0]?.targetCondition).toBeNull();
+		});
+
+		it('should serialize a non-empty targetCondition as RawPredicate on the bonus entry', () => {
+			const actor = createMockActor({ level: 5 });
+			const rule = createDamageBonusRule({ value: '3', delivery: 'any', source: 'any' }, actor);
+
+			// Override _targetCondition with a real Predicate-like object
+			const mockPredicate = {
+				size: 1,
+				toObject: () => ({ target: 'bloodied' }),
+			};
+			Object.defineProperty(rule, '_targetCondition', {
+				get: () => mockPredicate,
+				configurable: true,
+			});
+
+			rule.afterPrepareData();
+
+			expect(actor.system.damageBonuses?.[0]?.targetCondition).toEqual({
+				target: 'bloodied',
+			});
 		});
 	});
 
@@ -498,7 +599,14 @@ describe('DamageBonusRule — dice-based values', () => {
 		rule.afterPrepareData();
 
 		expect(actor.system.damageBonuses).toEqual([
-			{ value: null, formula: '1d6', damageType: '', delivery: 'any', source: 'any' },
+			{
+				value: null,
+				formula: '1d6',
+				damageType: '',
+				delivery: 'any',
+				source: 'any',
+				targetCondition: null,
+			},
 		]);
 	});
 
@@ -638,5 +746,308 @@ describe('getDamageBonusFormulas', () => {
 		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(5);
 		// getDamageBonusFormulas only returns dice
 		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['1d6']);
+	});
+});
+
+describe('targetCondition filtering', () => {
+	it('should include bonus when targetCondition matches target domain', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		const targetDomain = new Set(['target:bloodied']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(5);
+	});
+
+	it('should exclude bonus when targetCondition does not match target domain', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		const targetDomain = new Set(['target:concentrating']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(0);
+	});
+
+	it('should exclude bonus with targetCondition when no target domain is provided', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'marked' },
+					},
+				],
+			},
+		};
+
+		// No target selected — targetCondition bonuses should not apply
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(0);
+	});
+
+	it('should include bonus without targetCondition regardless of target domain', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 3,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: null,
+					},
+				],
+			},
+		};
+
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(3);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set())).toBe(3);
+	});
+
+	it('should filter dice formulas by targetCondition', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: null,
+						formula: '1d6',
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'marked' },
+					},
+					{
+						value: null,
+						formula: '2d8',
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: null,
+					},
+				],
+			},
+		};
+
+		// Without target — only unconditional bonus
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['2d8']);
+
+		// With matching target — both
+		const targetDomain = new Set(['target:marked']);
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon', undefined, targetDomain)).toEqual([
+			'1d6',
+			'2d8',
+		]);
+	});
+
+	it('should combine delivery/source filtering with targetCondition', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+						targetCondition: { target: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		const targetDomain = new Set(['target:bloodied']);
+
+		// Matches delivery + source + target
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(5);
+
+		// Matches target but not delivery
+		expect(getDamageBonusTotal(actor, 'ranged', 'weapon', undefined, targetDomain)).toBe(0);
+
+		// Matches delivery but not target
+		expect(
+			getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:fullHp'])),
+		).toBe(0);
+	});
+
+	it('should treat empty targetCondition {} same as null (no target required)', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: {},
+					},
+				],
+			},
+		};
+
+		// Empty {} should not require a target — matches unconditionally
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(5);
+	});
+
+	describe('$or / $and composition in targetCondition', () => {
+		it('should match $or when any branch matches the target domain', () => {
+			const actor = {
+				system: {
+					damageBonuses: [
+						{
+							value: 5,
+							formula: null,
+							damageType: '',
+							delivery: 'any' as const,
+							source: 'any' as const,
+							targetCondition: {
+								$or: ['target:bloodied', 'target:concentrating'],
+							},
+						},
+					],
+				},
+			};
+
+			// Branch 1 matches
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:bloodied'])),
+			).toBe(5);
+			// Branch 2 matches
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:concentrating'])),
+			).toBe(5);
+			// Neither branch matches
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:fullHp'])),
+			).toBe(0);
+		});
+
+		it('should require both branches for nested $and in targetCondition', () => {
+			const actor = {
+				system: {
+					damageBonuses: [
+						{
+							value: 7,
+							formula: null,
+							damageType: '',
+							delivery: 'any' as const,
+							source: 'any' as const,
+							targetCondition: {
+								$and: ['target:bloodied', 'target:concentrating'],
+							},
+						},
+					],
+				},
+			};
+
+			expect(
+				getDamageBonusTotal(
+					actor,
+					'melee',
+					'weapon',
+					undefined,
+					new Set(['target:bloodied', 'target:concentrating']),
+				),
+			).toBe(7);
+			expect(
+				getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:bloodied'])),
+			).toBe(0);
+		});
+
+		it('should round-trip $or through PredicateField → afterPrepareData → bonus entry → matchesBonus', () => {
+			// Exercises the full schema integration path with a real Predicate (not a mock).
+			// This is the gap Fronix flagged on the prior review for plain targetCondition:
+			// no test let a real Predicate flow from the rule into the bonus entry and back.
+			const actor = createMockActor({});
+			const rule = createDamageBonusRule({ value: '3', delivery: 'any', source: 'any' }, actor);
+
+			const realPredicate = new Predicate({
+				$or: ['target:bloodied', 'target:concentrating'],
+			});
+			Object.defineProperty(rule, '_targetCondition', {
+				get: () => realPredicate,
+				configurable: true,
+			});
+
+			rule.afterPrepareData();
+
+			// Bonus entry serializes the $or structure verbatim
+			expect(actor.system.damageBonuses?.[0]?.targetCondition).toEqual({
+				$or: ['target:bloodied', 'target:concentrating'],
+			});
+
+			// And matchesBonus rebuilds the Predicate from that serialized form
+			expect(
+				getDamageBonusTotal(
+					{ system: actor.system } as { system: { damageBonuses?: DamageBonusEntry[] } },
+					'melee',
+					'weapon',
+					undefined,
+					new Set(['target:concentrating']),
+				),
+			).toBe(3);
+			expect(
+				getDamageBonusTotal(
+					{ system: actor.system } as { system: { damageBonuses?: DamageBonusEntry[] } },
+					'melee',
+					'weapon',
+					undefined,
+					new Set(['target:fullHp']),
+				),
+			).toBe(0);
+		});
+	});
+
+	it('should not match self:* tags through targetCondition (namespace isolation)', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { self: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		// A target domain with only target:* tags should NOT match a predicate
+		// checking for self:bloodied — that's the attacker's namespace
+		const targetDomain = new Set(['target:bloodied']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(0);
+
+		// Only matches if the domain actually contains self:bloodied
+		// (which getTargetDomain() would never include)
+		const leakyDomain = new Set(['target:bloodied', 'self:bloodied']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, leakyDomain)).toBe(5);
 	});
 });

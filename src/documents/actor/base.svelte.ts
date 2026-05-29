@@ -3,6 +3,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
@@ -277,6 +278,49 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	_populateDerivedTags(): void {
+		// Self-state and target-state tags — derived from status effects.
+		// actor.statuses is the canonical source: Foundry syncs it with ActiveEffects,
+		// and the system's condition toggle (registerConditionsConfig) round-trips through it.
+		const statuses = this.statuses as Set<string> | undefined;
+		if (statuses) {
+			const sysData = this.system as unknown as BaseActorSystemData;
+			const hpVal = sysData.attributes.hp.value;
+			const hpMax = sysData.attributes.hp.max;
+			const isDying = statuses.has(STATUS_EFFECT_IDS.dying);
+
+			// self:dying = PC/Hero at 0 HP with wounds remaining (the dying condition)
+			if (isDying) {
+				this.tags.add('self:dying');
+			}
+			// self:lastStand = Solo/Legendary monster at 0 HP, triggers phase change.
+			// Intentionally NOT mutually exclusive with bloodied — lastStand monsters
+			// are still at very low HP, and content authors targeting "bloodied"
+			// likely want the bonus to apply to lastStand monsters too.
+			if (statuses.has(STATUS_EFFECT_IDS.lastStand)) {
+				this.tags.add('self:lastStand');
+			}
+			// Bloodied: check status (canonical) OR HP threshold (failsafe if status
+			// and HP get out of sync, e.g. a code path modifies HP without toggling).
+			// Mutually exclusive with dying per #579 — dying is its own state, not
+			// "extra bloodied". An actor at 0 HP would otherwise match both via the
+			// status (if the system also flags bloodied when wounded out).
+			if (
+				!isDying &&
+				(statuses.has(STATUS_EFFECT_IDS.bloodied) || (hpMax > 0 && hpVal > 0 && hpVal <= hpMax / 2))
+			) {
+				this.tags.add('self:bloodied');
+				this.tags.add('target:bloodied');
+			}
+			if (statuses.has(STATUS_EFFECT_IDS.concentration)) {
+				this.tags.add('self:concentrating');
+				this.tags.add('target:concentrating');
+			}
+		}
+
+		// self:fullHp is NOT set here — hp.max is derived (not stored) for characters,
+		// so it would be stale at this point. Each actor subclass adds it in their
+		// prepareDerivedData() after HP is finalized.
+
 		if (getAdjacencySyncEnabled()) {
 			const adjacency = this.getFlag(SYSTEM_ID, 'adjacency') as
 				| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
@@ -508,9 +552,27 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		return data;
 	}
 
+	/**
+	 * Returns the live `this.tags` Set used by predicate evaluation. Callers MUST
+	 * treat it as read-only — mutating the returned Set mutates actor state and
+	 * will corrupt subsequent predicate tests. Clone with `new Set(actor.getDomain())`
+	 * if mutation is required.
+	 */
 	getDomain(): Set<string> {
-		const domain = this.tags;
-		return domain;
+		return this.tags;
+	}
+
+	/**
+	 * Returns only `target:*` tags from this actor's domain. Used when evaluating
+	 * a `targetCondition` predicate against this actor as a target — prevents
+	 * `self:*` tags from leaking into the target evaluation namespace.
+	 */
+	getTargetDomain(): Set<string> {
+		const targetTags = new Set<string>();
+		for (const tag of this.tags) {
+			if (tag.startsWith('target:')) targetTags.add(tag);
+		}
+		return targetTags;
 	}
 
 	async configureItem(id: string): Promise<void> {
