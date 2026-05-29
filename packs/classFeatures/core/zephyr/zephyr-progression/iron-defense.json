@@ -20,9 +20,10 @@
 			{
 				"id": "iron-defense-l13",
 				"type": "armorClass",
-				"mode": "multiply",
-				"formula": "2",
+				"mode": "override",
+				"formula": "(@dexterity + @strength) * 2",
 				"label": "Iron Defense (2)",
+				"priority": 2,
 				"predicate": {
 					"armor": "unarmored",
 					"level": {

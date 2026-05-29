@@ -202,8 +202,6 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	override prepareData(): void {
-		if (this.initialized) return;
-
 		this.initialized = true;
 		super.prepareData();
 
