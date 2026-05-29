@@ -2,7 +2,7 @@ import type { NimbleAncestryData } from '../../models/item/AncestryDataModel.js'
 
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleAncestryItem extends NimbleBaseItem {
+export class NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 	declare system: NimbleAncestryData;
 
 	override async prepareChatCardData() {
@@ -28,7 +28,7 @@ export class NimbleAncestryItem extends NimbleBaseItem {
 	override async _preCreate(
 		data: Item.CreateData,
 		options: Item.Database.PreCreateOptions,
-		user: User,
+		user: User.Stored,
 	) {
 		if (this.isEmbedded) {
 			const actor = this.parent;

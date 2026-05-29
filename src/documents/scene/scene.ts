@@ -107,7 +107,7 @@ export class NimbleScene extends Scene {
 	protected override async _preCreate(
 		data: Scene.CreateData,
 		options: Scene.Database.PreCreateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
 		if (!shouldConvertSceneFromFeetToSpaces(this)) {

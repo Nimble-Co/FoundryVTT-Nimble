@@ -2,7 +2,7 @@ import type { NimbleBackgroundData } from '../../models/item/BackgroundDataModel
 
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleBackgroundItem extends NimbleBaseItem {
+export class NimbleBackgroundItem extends NimbleBaseItem<'background'> {
 	declare system: NimbleBackgroundData;
 
 	override async prepareChatCardData() {
@@ -28,7 +28,7 @@ export class NimbleBackgroundItem extends NimbleBaseItem {
 	override async _preCreate(
 		data: Item.CreateData,
 		options: Item.Database.PreCreateOptions,
-		user: User,
+		user: User.Stored,
 	) {
 		if (this.isEmbedded) {
 			const actor = this.parent;

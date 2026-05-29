@@ -70,8 +70,8 @@ importers:
         specifier: ^3.12.5
         version: 3.15.0(eslint@9.39.2)(svelte@5.53.0)
       fvtt-types:
-        specifier: npm:@league-of-foundry-developers/foundry-vtt-types@^13.345.1
-        version: '@league-of-foundry-developers/foundry-vtt-types@13.345.1(6c574db58d500d3ecfd5fe5f98038db3)'
+        specifier: github:Fronix/foundry-vtt-types#v14.363.0
+        version: '@league-of-foundry-developers/foundry-vtt-types@https://codeload.github.com/Fronix/foundry-vtt-types/tar.gz/80655fb4248e680cfbe3abe636e1da65d29faecd(6c574db58d500d3ecfd5fe5f98038db3)'
       glob:
         specifier: ^11.0.3
         version: 11.1.0
@@ -518,10 +518,17 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@league-of-foundry-developers/foundry-vtt-types@13.345.1':
-    resolution: {integrity: sha512-7lWpbriLGK0gd6XLC/srYCdzAEkhb+YJoU/9ygefBHqq55ce2zKtm8/zFn8zFmZJlwEa2RUUEPqGmKDLU3tmvw==}
+  '@league-of-foundry-developers/foundry-vtt-types@https://codeload.github.com/Fronix/foundry-vtt-types/tar.gz/80655fb4248e680cfbe3abe636e1da65d29faecd':
+    resolution: {tarball: https://codeload.github.com/Fronix/foundry-vtt-types/tar.gz/80655fb4248e680cfbe3abe636e1da65d29faecd}
+    version: 14.363.0
     peerDependencies:
-      typescript: ^5.4
+      '@typescript/native-preview': '*'
+      typescript: '>=5.4'
+    peerDependenciesMeta:
+      '@typescript/native-preview':
+        optional: true
+      typescript:
+        optional: true
 
   '@lezer/common@1.4.0':
     resolution: {integrity: sha512-DVeMRoGrgn/k45oQNu189BoW4SZwgZFzJ1+1TV5j2NJ/KFC83oa/enRqZSGshyeMk5cPWMhsKs9nx+8o0unwGg==}
@@ -3485,7 +3492,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@league-of-foundry-developers/foundry-vtt-types@13.345.1(6c574db58d500d3ecfd5fe5f98038db3)':
+  '@league-of-foundry-developers/foundry-vtt-types@https://codeload.github.com/Fronix/foundry-vtt-types/tar.gz/80655fb4248e680cfbe3abe636e1da65d29faecd(6c574db58d500d3ecfd5fe5f98038db3)':
     dependencies:
       '@codemirror/lang-html': 6.4.11
       '@codemirror/lang-javascript': 6.2.4
@@ -3526,6 +3533,7 @@ snapshots:
       socket.io-client: 4.8.1
       spark-md5: 3.0.2
       tinymce: 6.8.6
+    optionalDependencies:
       typescript: 5.9.3
     transitivePeerDependencies:
       - '@pixi/assets'

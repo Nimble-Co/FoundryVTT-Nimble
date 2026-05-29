@@ -5,7 +5,7 @@ import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
 import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefaults.js';
 
-export class NimbleMinion extends NimbleBaseActor {
+export class NimbleMinion extends NimbleBaseActor<'minion'> {
 	declare system: NimbleMinionData;
 
 	#dialogs: Record<string, any>;

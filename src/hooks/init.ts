@@ -36,8 +36,10 @@ export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
 	CONFIG.Actor.documentClass = ActorProxy as typeof CONFIG.Actor.documentClass;
 	CONFIG.Combat.documentClass = NimbleCombat as typeof CONFIG.Combat.documentClass;
-	CONFIG.Combatant.documentClass = NimbleCombatant as typeof CONFIG.Combatant.documentClass;
-	CONFIG.ChatMessage.documentClass = NimbleChatMessage as typeof CONFIG.ChatMessage.documentClass;
+	CONFIG.Combatant.documentClass =
+		NimbleCombatant as unknown as typeof CONFIG.Combatant.documentClass;
+	CONFIG.ChatMessage.documentClass =
+		NimbleChatMessage as unknown as typeof CONFIG.ChatMessage.documentClass;
 	CONFIG.Item.documentClass = ItemProxy as typeof CONFIG.Item.documentClass;
 	CONFIG.Scene.documentClass = NimbleScene as typeof CONFIG.Scene.documentClass;
 	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;

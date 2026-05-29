@@ -7,7 +7,7 @@ import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefau
 
 type MonsterFeatureSubtype = 'bloodied' | 'lastStand';
 
-export class NimbleSoloMonster extends NimbleBaseActor {
+export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 	declare system: NimbleSoloMonsterData;
 
 	#dialogs: Record<string, any>;
@@ -75,7 +75,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Bloodied`,
-			speaker: ChatMessage.getSpeaker({ actor: this }),
+			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rolls: [] as Roll[],
@@ -105,7 +105,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
-			speaker: ChatMessage.getSpeaker({ actor: this }),
+			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			rolls: [] as Roll[],
 			rollMode,

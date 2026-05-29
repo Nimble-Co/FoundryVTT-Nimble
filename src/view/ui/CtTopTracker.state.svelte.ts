@@ -1131,7 +1131,7 @@ export function createCtTopTrackerState() {
 
 		const sourceCombatants = activeDragSourceCombatantIds
 			.map((combatantId) => currentCombat.combatants.get(combatantId) ?? null)
-			.filter((combatant): combatant is Combatant.Implementation => Boolean(combatant));
+			.filter((combatant) => Boolean(combatant)) as Combatant.Implementation[];
 		if (sourceCombatants.length !== activeDragSourceCombatantIds.length) return null;
 		if (sourceCombatants.some((combatant) => combatant.parent?.id !== currentCombat.id))
 			return null;
@@ -1199,7 +1199,7 @@ export function createCtTopTrackerState() {
 
 		const sourceDocuments = sourceCombatantIds
 			.map((combatantId) => combat.combatants.get(combatantId) ?? null)
-			.filter((combatant): combatant is Combatant.Implementation => Boolean(combatant));
+			.filter((combatant) => Boolean(combatant)) as Combatant.Implementation[];
 		if (sourceDocuments.length !== sourceCombatantIds.length) {
 			event.preventDefault();
 			return;

@@ -95,7 +95,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 	#dialogs: Record<string, GenericDialog>;
 
-	constructor(data: Actor.CreateData, context?: Actor.ConstructionContext) {
+	constructor(data: Actor.CreateData<'character'>, context?: Actor.ConstructionContext) {
 		super(data, context);
 
 		this.#dialogs = {};
@@ -913,7 +913,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			flavor: `${this.name}: Hit Dice Roll`,
 			content,
 			rolls: [roll],
-			speaker: ChatMessage.getSpeaker({ actor: this }),
+			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 		};
 
 		ChatMessage.applyRollMode(
@@ -1312,7 +1312,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				// Create a copy of the subclass for the character
 				const subclassData = subclass.toObject();
 				(subclassData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
-					subclass.uuid;
+					subclass.uuid ?? undefined;
 
 				await this.createEmbeddedDocuments('Item', [subclassData]);
 			} else {
@@ -1327,7 +1327,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (typedDialogData.selectedEpicBoon) {
 			const boonData = typedDialogData.selectedEpicBoon.toObject();
 			(boonData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
-				typedDialogData.selectedEpicBoon.uuid;
+				typedDialogData.selectedEpicBoon.uuid ?? undefined;
 			const created = await this.createEmbeddedDocuments('Item', [boonData] as Parameters<
 				typeof this.createEmbeddedDocuments
 			>[1]);
@@ -1660,7 +1660,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	protected override async _preCreate(
 		data: Actor.CreateData,
 		options: Actor.Database.PreCreateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
 		// Player character configuration. In Foundry v13 token sight is keyed on

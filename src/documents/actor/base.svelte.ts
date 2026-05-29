@@ -20,6 +20,10 @@ export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
 import type { SystemItemTypes } from '../item/itemInterfaces.js';
 
 interface NimbleBaseItem extends Item {
+	// Items in an actor's embedded collection are always stored, so these are non-null.
+	id: string;
+	_id: string;
+	uuid: string;
 	rules: RulesManagerInterface;
 	identifier: string;
 	hasMacro?: boolean;
@@ -30,7 +34,7 @@ interface NimbleBaseItem extends Item {
 	): this is NimbleBaseItem & {
 		type: TypeName;
 		system: TypeName extends keyof DataModelConfig['Item']
-			? DataModelConfig['Item'][TypeName]
+			? InstanceType<DataModelConfig['Item'][TypeName]>
 			: object;
 	};
 }
@@ -88,14 +92,22 @@ function toSignedIntegerString(value: number): string {
 	return `${integerValue}`;
 }
 
-class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> extends Actor {
+// @ts-expect-error TS2321: comparing the generic subclass `NimbleBaseActor<ActorType>` against
+// the generic `Actor<ActorType>` base exceeds v14 fvtt-types' instantiation-depth limit. This is
+// a type-checker depth ceiling, not a real type error; `system` still resolves correctly per subtype.
+class NimbleBaseActor<
+	ActorType extends SystemActorTypes = SystemActorTypes,
+> extends Actor<ActorType> {
 	declare type: ActorType;
 
 	declare initialized: boolean;
 
 	declare rules: NimbleBaseRule[];
 
-	declare items: foundry.abstract.EmbeddedCollection<NimbleBaseItem, Actor.Implementation>;
+	declare items: foundry.abstract.EmbeddedCollection<
+		NimbleBaseItem & Item.Stored,
+		Actor.Implementation
+	>;
 
 	#subscribe: ReturnType<typeof createSubscriber>;
 	#lastHpSnapshot: HpSnapshot | null = null;
@@ -103,7 +115,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	tags: Set<string> = new Set();
 
 	// *************************************************
-	constructor(data: Actor.CreateData, context?: Actor.ConstructionContext) {
+	constructor(data: Actor.CreateData<ActorType>, context?: Actor.ConstructionContext) {
 		super(data, context);
 		this.#lastHpSnapshot = this.#getCurrentHpSnapshot();
 
@@ -644,7 +656,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			return undefined;
 		}
 
-		return item.update(data);
+		return item.update(data) as unknown as Promise<NimbleBaseItem | undefined>;
 	}
 
 	/** ------------------------------------------------------ */
@@ -725,7 +737,10 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		rollMode: number,
 		options = {} as ActorRollOptions,
 	) {
-		const rollFormula = getRollFormula(this, {
+		// `this` (a generic NimbleBaseActor<ActorType>) is not assignable to the
+		// non-generic NimbleBaseActor param due to the polymorphic `_initializeSource`
+		// contravariance introduced by v14 fvtt-types; the value is correct at runtime.
+		const rollFormula = getRollFormula(this as unknown as NimbleBaseActor, {
 			abilityKey,
 			rollMode,
 			situationalMods: options.situationalMods ?? '',
@@ -787,7 +802,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		const chatData = (await roll.toMessage(
 			{
-				speaker: ChatMessage.getSpeaker({ actor: this }),
+				speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: this.name }),
 				flags: { core: { initiativeRoll: true } },
 			},
@@ -846,7 +861,8 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		rollMode: number,
 		options = {} as ActorRollOptions,
 	) {
-		const rollFormula = getRollFormula(this, {
+		// See note in getDefaultAbilityCheckData re: `this` cast.
+		const rollFormula = getRollFormula(this as unknown as NimbleBaseActor, {
 			saveKey,
 			rollMode,
 			situationalMods: options.situationalMods ?? '',
@@ -990,7 +1006,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	override async _preUpdate(
 		changes: Actor.UpdateData,
 		options: Actor.Database.PreUpdateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 	) {
 		const changesObj = changes as Record<string, unknown>;
 		const hpWasChanged =

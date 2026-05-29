@@ -25,7 +25,6 @@ export function createExpandableDocumentListState(
 			expandedDataMap = new Map(expandedDataMap);
 		} else {
 			try {
-				// @ts-expect-error — Foundry's fromUuid accepts any string at runtime
 				const data = await fromUuid(uuid);
 				expandedUuids.add(uuid);
 				expandedUuids = new Set(expandedUuids);

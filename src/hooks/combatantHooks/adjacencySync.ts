@@ -120,9 +120,10 @@ export default function registerAdjacencySync() {
 				foundry.utils.hasProperty(changes, 'x') || foundry.utils.hasProperty(changes, 'y');
 			if (!hasPos) return;
 			if (_tokenDoc.id) {
+				const changeData = changes as Record<string, unknown>;
 				pendingPositions.set(_tokenDoc.id, {
-					x: typeof changes.x === 'number' ? changes.x : _tokenDoc.x,
-					y: typeof changes.y === 'number' ? changes.y : _tokenDoc.y,
+					x: typeof changeData.x === 'number' ? changeData.x : _tokenDoc.x,
+					y: typeof changeData.y === 'number' ? changeData.y : _tokenDoc.y,
 				});
 			}
 			scheduleSync();

@@ -26,7 +26,7 @@ function syncRuleSourcesToEquippedState(item: NimbleObjectItem): void {
 	} as Record<string, unknown>);
 }
 
-export class NimbleObjectItem extends NimbleBaseItem {
+export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	declare system: NimbleObjectData;
 
 	override _populateBaseTags(): void {
@@ -74,7 +74,7 @@ export class NimbleObjectItem extends NimbleBaseItem {
 	override async _preCreate(
 		data: Item.CreateData,
 		options: Item.Database.PreCreateOptions,
-		user: User,
+		user: User.Stored,
 	) {
 		// Update quantity if object already exists and is stackable or smallSized
 		const objectSizeTypesWithQuantity = new Set(['stackable', 'smallSized']);

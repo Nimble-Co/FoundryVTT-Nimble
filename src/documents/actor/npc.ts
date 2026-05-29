@@ -5,7 +5,7 @@ import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
 import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefaults.js';
 
-export class NimbleNPC extends NimbleBaseActor {
+export class NimbleNPC extends NimbleBaseActor<'npc'> {
 	declare system: NimbleNPCData;
 
 	#dialogs: Record<string, any>;
