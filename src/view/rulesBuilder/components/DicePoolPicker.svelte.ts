@@ -1,10 +1,11 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { systemHookName } from '#system';
 import { getPools } from '#utils/dicePool/dicePoolSync.js';
 import type { DicePoolState } from '#utils/dicePool/types.js';
 
 const POOL_HOOK_NAMES = [
-	'nimble.dicePool.changed',
-	'nimble.dicePool.refilled',
+	systemHookName('dicePool.changed'),
+	systemHookName('dicePool.refilled'),
 	'updateItem',
 	'updateActor',
 ] as const;

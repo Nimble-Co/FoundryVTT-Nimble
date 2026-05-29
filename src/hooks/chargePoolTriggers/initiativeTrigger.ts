@@ -1,3 +1,4 @@
+import { systemHookName } from '#system';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
 
@@ -16,7 +17,7 @@ export function registerInitiativeTriggerHooks(): void {
 	// @ts-expect-error nimble.initiativeRolled is a custom Nimble hook not in
 	// Foundry's typed Hooks union; emitted by combat.svelte.ts and the actor
 	// initiative-roll path, consumed here to drive onInitiativeRolled recovery.
-	Hooks.on('nimble.initiativeRolled', (payload: { actor?: unknown }) => {
+	Hooks.on(systemHookName('initiativeRolled'), (payload: { actor?: unknown }) => {
 		const actor = payload?.actor;
 		if (!actor || typeof actor !== 'object') return;
 		const typedActor = actor as Actor.Implementation;

@@ -1,6 +1,7 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
+import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
@@ -495,7 +496,7 @@ class NimbleChatMessage extends ChatMessage {
 			const wasKilled = hpBefore > 0 && hpAfter === 0;
 
 			// @ts-expect-error - nimble.damageApplied is a custom Nimble hook consumed by ruleEventDispatch
-			Hooks.callAll('nimble.damageApplied', {
+			Hooks.callAll(systemHookName('damageApplied'), {
 				sourceItem,
 				sourceActor,
 				targetActor: target.actor,

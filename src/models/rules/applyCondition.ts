@@ -1,3 +1,4 @@
+import { systemHookName } from '#system';
 import type { ConditionNode, EffectNode } from '#types/effectTree.js';
 import {
 	type ActivationCardContext,
@@ -211,7 +212,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		// Blocking hook — listeners can return false to prevent condition application
 		// (e.g. condition immunity, resistance, or redirect).
 		// @ts-expect-error - nimble.preApplyCondition is a custom Nimble hook
-		const allowed = Hooks.call('nimble.preApplyCondition', {
+		const allowed = Hooks.call(systemHookName('preApplyCondition'), {
 			target,
 			condition: this.condition,
 			source: this.item,
@@ -224,7 +225,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 		// Notify listeners that a condition was successfully applied.
 		// @ts-expect-error - nimble.conditionApplied is a custom Nimble hook
-		Hooks.callAll('nimble.conditionApplied', {
+		Hooks.callAll(systemHookName('conditionApplied'), {
 			target,
 			condition: this.condition,
 			effect: typeof result === 'object' ? result : null,

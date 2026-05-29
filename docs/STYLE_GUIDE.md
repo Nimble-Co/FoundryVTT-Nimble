@@ -1263,6 +1263,24 @@ export function registerReadyHooks(): void {
 }
 ```
 
+**Custom (system-namespaced) hooks must derive their name from `SYSTEM_ID`.** Foundry namespaces nothing for you here, but the dev rolling release runs under a different id (`nimble-dev`), so a hardcoded `'nimble.X'` string makes emitters and listeners silently stop matching. Use `systemHookName('suffix')` from `#system` on **both** sides:
+
+```typescript
+import { systemHookName } from '#system';
+
+// Emit (system/document/manager code)
+Hooks.callAll(systemHookName('damageApplied'), payload);
+
+// Listen (hooks/, Svelte state files)
+Hooks.on(systemHookName('damageApplied'), handler);
+
+// Subsystem emit helpers build their own infix the same way, e.g.
+// dicePoolHooks.ts: systemHookName(`dicePool.${hook}`)
+// listeners then use systemHookName('dicePool.changed') directly.
+```
+
+Never write a literal `'nimble.X'` hook string. `src/utils/systemId.test.ts` fails the build if you do.
+
 ### Sheet Registration
 
 Define sheet classes that bridge Foundry and Svelte:
@@ -1445,7 +1463,7 @@ export const myStore = writable<MyStoreState>(initialState);
 
 | Utility | Location | Purpose |
 |---------|----------|---------|
-| `SYSTEM_ID`, `SYSTEM_PATH` | `src/utils/systemId.ts` (alias: `#system`) | Build-time-baked system id from `public/system.json` and `systems/<id>` path prefix. Use for every flag scope, settings namespace, sheet/keybinding registration, and asset path — never hardcode `'nimble'`. The dev rolling release rebuilds under a different id |
+| `SYSTEM_ID`, `SYSTEM_PATH`, `systemHookName()` | `src/utils/systemId.ts` (alias: `#system`) | Build-time-baked system id from `public/system.json`, the `systems/<id>` path prefix, and a helper that namespaces custom hook names (`systemHookName('damageApplied')` → `<id>.damageApplied`). Use for every flag scope, flag-object key, settings namespace, sheet/keybinding registration, asset path, and custom hook name — never hardcode `'nimble'`. The dev rolling release rebuilds under a different id (`nimble-dev`). Enforced by `src/utils/systemId.test.ts` |
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
 | `isCombatStarted()` | `src/utils/isCombatStarted.ts` | Determine whether a combat encounter has started |
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |

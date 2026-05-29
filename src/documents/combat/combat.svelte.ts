@@ -1,6 +1,7 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
+import { systemHookName } from '#system';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
@@ -1054,7 +1055,7 @@ class NimbleCombat extends Combat {
 			const actor = combatant?.actor;
 			if (!actor) continue;
 			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch and chargePool/dicePool triggers
-			Hooks.callAll('nimble.initiativeRolled', { actor, combatant });
+			Hooks.callAll(systemHookName('initiativeRolled'), { actor, combatant });
 		}
 
 		if (combatManaUpdates.length > 0) {

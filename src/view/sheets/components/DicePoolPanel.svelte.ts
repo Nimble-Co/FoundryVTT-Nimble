@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { systemHookName } from '#system';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
@@ -11,10 +12,10 @@ import type { LivePoolView } from './DicePoolTracker.svelte.ts';
 // Reactive subscription so the panel reflects pool mutations made by other
 // surfaces (sheet edits, chat-card triggered refills, GM tools) while open.
 const PANEL_HOOK_NAMES = [
-	'nimble.dicePool.changed',
-	'nimble.dicePool.refilled',
-	'nimble.chargePool.changed',
-	'nimble.chargePool.recovered',
+	systemHookName('dicePool.changed'),
+	systemHookName('dicePool.refilled'),
+	systemHookName('chargePool.changed'),
+	systemHookName('chargePool.recovered'),
 	'updateItem',
 	'createItem',
 	'deleteItem',

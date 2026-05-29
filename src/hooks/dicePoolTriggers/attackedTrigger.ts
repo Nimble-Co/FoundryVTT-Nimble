@@ -1,3 +1,4 @@
+import { systemHookName } from '#system';
 import { applyRefillToActorIfEligible } from '#utils/dicePool/dicePoolRefill.js';
 import type { CharacterActorLike } from '#utils/dicePool/types.js';
 
@@ -18,7 +19,7 @@ export function registerAttackedTriggerHooks(): void {
 	// @ts-expect-error nimble.damageApplied is a custom Nimble hook not in
 	// Foundry's typed Hooks union; emitted by the damage application pipeline
 	// once per affected target, consumed here to drive onAttacked refill.
-	Hooks.on('nimble.damageApplied', (payload: { targetActor?: unknown }) => {
+	Hooks.on(systemHookName('damageApplied'), (payload: { targetActor?: unknown }) => {
 		const target = payload?.targetActor;
 		if (!target || typeof target !== 'object') return;
 		const actor = target as Actor.Implementation;

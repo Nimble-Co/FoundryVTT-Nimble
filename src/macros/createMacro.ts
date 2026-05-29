@@ -1,3 +1,5 @@
+import { SYSTEM_ID } from '#system';
+
 export async function createMacro(data: { uuid: string }, slot: number) {
 	const item = await fromUuid(data.uuid as `Item.${string}`);
 
@@ -25,7 +27,7 @@ export async function createMacro(data: { uuid: string }, slot: number) {
 				img: (item as Item).img,
 				command: command,
 				flags: {
-					nimble: {
+					[SYSTEM_ID]: {
 						itemUuid: data.uuid,
 						itemMacro: true,
 					},

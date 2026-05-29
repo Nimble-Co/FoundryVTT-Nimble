@@ -125,9 +125,11 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 
 	for (const item of actor.items.contents) {
 		const itemFlags = item.flags as Record<string, unknown>;
-		const nimbleFlags = itemFlags.nimble;
-		if (!nimbleFlags || typeof nimbleFlags !== 'object' || Array.isArray(nimbleFlags)) continue;
-		const chargePoolsOnItem = (nimbleFlags as Record<string, unknown>).chargePools;
+		const systemFlags = itemFlags[ChargePoolRuleConfig.flagScope];
+		if (!systemFlags || typeof systemFlags !== 'object' || Array.isArray(systemFlags)) continue;
+		const chargePoolsOnItem = (systemFlags as Record<string, unknown>)[
+			ChargePoolRuleConfig.flagKey
+		];
 		if (
 			!chargePoolsOnItem ||
 			typeof chargePoolsOnItem !== 'object' ||
@@ -553,7 +555,7 @@ async function persistChargePoolMap(
 					[ChargePoolRuleConfig.flagPath]: actorPoolUpdatePayload,
 				} as Record<string, unknown>,
 				{
-					nimble: {
+					[ChargePoolRuleConfig.flagScope]: {
 						skipChargePoolSync: true,
 					},
 				} as Record<string, unknown>,

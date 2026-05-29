@@ -23,6 +23,11 @@ This file provides guidance for AI assistants working on this codebase.
   - **Settings:** `game.settings.get/set/register(SYSTEM_ID as 'core', ...)`
   - **Sheet/keybinding registration:** `Actors.registerSheet(SYSTEM_ID, ...)`, `game.keybindings.register(SYSTEM_ID, ...)`
   - **Asset paths:** `` `${SYSTEM_PATH}/icons/foo.svg` `` instead of `'systems/nimble/icons/foo.svg'`
+  - **Custom hook names:** use `systemHookName('suffix')` from `#system` (e.g. `systemHookName('damageApplied')` → `nimble.damageApplied` / `nimble-dev.damageApplied`) for both `Hooks.call`/`callAll` emitters and `Hooks.on` listeners, so they stay in lockstep across installs. Never write a literal `'nimble.X'` hook string. The dicePool/chargePool emit helpers build their names this way (`systemHookName(\`dicePool.${hook}\`)`); listeners use `systemHookName('dicePool.changed')` directly.
+  - **Object-literal scope keys:** use a computed key `[SYSTEM_ID]:` (or `[*RuleConfig.flagScope]:`) — never a literal `nimble:` key. This applies to flag bags (`flags: { [SYSTEM_ID]: {...} }`) and `Document#update` option scopes (`{ [SYSTEM_ID]: { skipDicePoolSync: true } }`).
+  - **Aliased flag access:** `const f = item.flags; f[SYSTEM_ID]` — not `f.nimble`. The scope key is still the system id even when the `flags` object is dereferenced through a local.
+  - **Audited exceptions:** `game.nimble` (our own arbitrary API namespace on `game`, assigned and read with the same literal key — self-consistent, not id-validated, and referenced by persisted macro command strings) and `Compendium.nimble.*` source ids in `src/migration/**` (handled by the dev-flag-rebrand) intentionally stay literal. The `systemId.test.ts` guard exempts these; new exceptions need an inline `// allow-hardcoded-system-id` comment with justification.
+  - **Enforcement:** `src/utils/systemId.test.ts` statically scans production source for the forbidden literal forms and fails the build. Run it (part of `pnpm check`) after touching anything in this area.
 
 ## References
 

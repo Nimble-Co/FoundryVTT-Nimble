@@ -1,6 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { cleanup } from '@testing-library/svelte';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 

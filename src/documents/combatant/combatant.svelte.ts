@@ -9,13 +9,11 @@ function getRequestedInitiativeRollLockData(
 	if (nextLock === undefined) return undefined;
 	if (nextLock === null) return null;
 
-	return initiativeRollLock.get({
-		flags: {
-			nimble: {
-				initiativeRollLock: nextLock,
-			},
-		},
-	});
+	// Build a synthetic flag-bearing object keyed by the lock's own path so it
+	// stays consistent with the installed system id (stable vs dev).
+	const synthetic: { flags?: Record<string, unknown> } = {};
+	foundry.utils.setProperty(synthetic, initiativeRollLock.path, nextLock);
+	return initiativeRollLock.get(synthetic);
 }
 
 export class NimbleCombatant extends Combatant {

@@ -1,10 +1,11 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { systemHookName } from '#system';
 import { getPools } from '#utils/chargePool/chargePoolSync.js';
 import type { ChargePoolState } from '#utils/chargePool/types.js';
 
 const POOL_HOOK_NAMES = [
-	'nimble.chargePool.changed',
-	'nimble.chargePool.recovered',
+	systemHookName('chargePool.changed'),
+	systemHookName('chargePool.recovered'),
 	'updateItem',
 	'updateActor',
 ] as const;
