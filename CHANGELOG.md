@@ -6,6 +6,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.6] - 2026-05-29
+
+### Added
+
+- [#745] Add grantMovement rule type. @tristin-albers
+- [#758] Detect target disposition on Searing Light to show heal or damage button. @trevlar
+- [#760] Schema-driven rules editor. @fronix
+- [#767] Add dicePool and modifyPool rules. @fronix
+- [#768] Dice/charge pool content, refill triggers, and tracker UI. @fronix
+- [#780] Highlight canvas token on hover in combat UI. @trevlar
+- [#782] Expand predicate vocabulary with self/target tags and targetCondition. @tristin-albers
+- [#787] Add `setIfEmpty` dice-pool refill mode. @fronix
+- [#788] Resolve `@poolMax` / `@poolCurrent` tokens in dice-pool refill values. @fronix
+- [#790] Split dicePool consumption onto a new diceConsumer rule. @fronix
+- [#791] Dice-pool spend UX, inline panel, and pool-picker widget. @fronix
+
+### Fixed
+
+- [#771] Theme-token cleanup and JSON editor fixes in rules builder. @fronix
+- [#775] Cap stat increases at +5 from level-up and stat config editor. @trevlar
+- [#777] Place new actors in the selected folder when creating from sidebar. @trevlar
+- [#778] Celestial saving throw bug, source labels on option cards, and responsive ancestry grid. @trevlar
+- [#779] Migration023 — propagate class restrictions onto existing spells. @trevlar
+- [#786] Apply negative max hit dice bonuses. @PuneetDixit
+- [#789] Judgment Dice refill correctness, combat-end clear, and L18 Unending Judgment. @fronix
+- [#792] Route bare khn/kln formulas into DamageRoll modifier-mode. @fronix
+
+### Changed
+
+- [#770] Adjust AoE targeting string. @fronix
+
+---
+
+
 ## [0.8.5] - 2026-05-13
 
 ### Added
