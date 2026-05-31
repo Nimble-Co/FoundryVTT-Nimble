@@ -249,7 +249,7 @@
 							"id": "hOvBWCvldkhCdAu1",
 							"type": "damage",
 							"damageType": "poison",
-							"formula": "1d8+2",
+							"formula": "2d8+4",
 							"parentContext": null,
 							"parentNode": null,
 							"canCrit": true,
