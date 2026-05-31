@@ -184,15 +184,15 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 			rejectClose: false,
 			buttons: [
 				{
-					action: 'no',
-					icon: 'fa-solid fa-xmark',
-					label: localize('No'),
-				},
-				{
 					action: 'yes',
 					icon: 'fa-solid fa-check',
 					label: localize('Yes'),
 					default: true,
+				},
+				{
+					action: 'no',
+					icon: 'fa-solid fa-xmark',
+					label: localize('No'),
 				},
 			],
 		});

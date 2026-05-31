@@ -249,15 +249,15 @@ export function createCtTopTrackerState() {
 			rejectClose: false,
 			buttons: [
 				{
-					action: 'no',
-					icon: 'fa-solid fa-xmark',
-					label: noLabel,
-				},
-				{
 					action: 'yes',
 					icon: 'fa-solid fa-check',
 					label: yesLabel,
 					default: true,
+				},
+				{
+					action: 'no',
+					icon: 'fa-solid fa-xmark',
+					label: noLabel,
 				},
 			],
 		});
@@ -281,15 +281,15 @@ export function createCtTopTrackerState() {
 			rejectClose: false,
 			buttons: [
 				{
-					action: 'no',
-					icon: 'fa-solid fa-xmark',
-					label: localize('No'),
-				},
-				{
 					action: 'yes',
 					icon: 'fa-solid fa-check',
 					label: localize('Yes'),
 					default: true,
+				},
+				{
+					action: 'no',
+					icon: 'fa-solid fa-xmark',
+					label: localize('No'),
 				},
 			],
 		});
