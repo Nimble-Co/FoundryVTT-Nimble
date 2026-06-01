@@ -44,7 +44,22 @@
 			3,
 			5
 		],
-		"levelUpOptions": [],
+		"levelUpOptions": [
+			{
+				"id": "direbeast-form",
+				"label": "Choose a Direbeast Form",
+				"applyAtLevels": [
+					2,
+					3,
+					5
+				],
+				"rules": [],
+				"selectionGroups": [
+					"direbeast-form"
+				],
+				"selectionCount": 1
+			}
+		],
 		"selectionCountByLevel": {}
 	},
 	"effects": [],
