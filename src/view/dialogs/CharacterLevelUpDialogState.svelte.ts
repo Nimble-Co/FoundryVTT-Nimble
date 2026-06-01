@@ -111,6 +111,8 @@ export function createLevelUpState(
 	// Class features state
 	let classFeatures: ClassFeatureResult | null = $state(null);
 	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
+	let selectedFeatureOptions: Map<string, string> = $state(new Map());
+	let selectedOptionSubItems: Map<string, string[]> = $state(new Map());
 	let featuresLoading = $state(true);
 
 	// Spell grants state
@@ -131,6 +133,19 @@ export function createLevelUpState(
 			console.warn('Nimble | Failed to load spell index:', err);
 		});
 
+	const ownedFeatureUuids = $derived(
+		new Set(
+			(getDocument().items ?? [])
+				.filter((item) => item.type === 'feature')
+				.flatMap((item) => {
+					const compendiumSource = item._stats?.compendiumSource;
+					return typeof compendiumSource === 'string' && compendiumSource.length > 0
+						? [compendiumSource]
+						: [];
+				}),
+		),
+	);
+
 	// Load class features when dialog opens, and re-run when a subclass is selected.
 	// Reading selectedSubclass synchronously ensures Svelte tracks it as a dependency.
 	$effect(() => {
@@ -145,17 +160,6 @@ export function createLevelUpState(
 		Promise.all([buildClassFeatureIndex(), buildSubclassFeatureIndex()])
 			.then(async ([classIndex, subclassIndex]) => {
 				const parentClassIdentifier = characterClass.identifier;
-				const items = getDocument().items ?? [];
-				const ownedFeatureUuids = new Set(
-					items
-						.filter((item) => item.type === 'feature')
-						.flatMap((item) => {
-							const compendiumSource = item._stats?.compendiumSource;
-							return typeof compendiumSource === 'string' && compendiumSource.length > 0
-								? [compendiumSource]
-								: [];
-						}),
-				);
 				const rawFeatures = await getClassFeaturesFromIndex(
 					classIndex,
 					parentClassIdentifier,
@@ -172,7 +176,7 @@ export function createLevelUpState(
 						currentSelectedSubclass.name as string & { slugify(opts: { strict: boolean }): string }
 					).slugify({ strict: true });
 				} else {
-					const existingSubclass = items.find(
+					const existingSubclass = (getDocument().items ?? []).find(
 						(item) =>
 							item.type === 'subclass' && item.system?.parentClass === parentClassIdentifier,
 					);
@@ -201,6 +205,7 @@ export function createLevelUpState(
 				classFeatures = {
 					autoGrant: filteredAutoGrant,
 					selectionGroups: rawFeatures.selectionGroups,
+					optionFeatures: rawFeatures.optionFeatures,
 				};
 				featuresLoading = false;
 			})
@@ -341,6 +346,20 @@ export function createLevelUpState(
 				return false;
 			}
 		}
+
+		for (const feature of classFeatures.optionFeatures) {
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			if (!selectedOptionId) return false;
+			const selectedOption = (feature.system.levelUpOptions ?? [])
+				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.find((o) => o.id === selectedOptionId);
+			if ((selectedOption?.selectionGroups?.length ?? 0) > 0) {
+				const required = selectedOption?.selectionCount ?? 1;
+				const picks = selectedOptionSubItems.get(feature.uuid) ?? [];
+				if (picks.length < required) return false;
+			}
+		}
+
 		return true;
 	});
 
@@ -399,6 +418,50 @@ export function createLevelUpState(
 		);
 	});
 
+	function computeGrantedOptionItems(): string[] {
+		if (!classFeatures) return [];
+		const result: string[] = [];
+		for (const feature of classFeatures.optionFeatures) {
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			if (!selectedOptionId) continue;
+			const option = (feature.system.levelUpOptions ?? [])
+				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.find((o) => o.id === selectedOptionId);
+			if (!option) continue;
+			if (option.selectionGroups?.length) {
+				const subItemUuids = selectedOptionSubItems.get(feature.uuid) ?? [];
+				result.push(...subItemUuids);
+			} else {
+				for (const rule of option.rules) {
+					if ((rule.type as string) === 'grantItem' && rule.uuid) result.push(rule.uuid as string);
+				}
+			}
+		}
+		return result;
+	}
+
+	function computePoolMaxBonuses(): Record<string, number> {
+		if (!classFeatures) return {};
+		const bonuses: Record<string, number> = {};
+		for (const feature of classFeatures.optionFeatures) {
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			if (!selectedOptionId) continue;
+			const option = (feature.system.levelUpOptions ?? [])
+				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.find((o) => o.id === selectedOptionId);
+			if (!option) continue;
+			for (const rule of option.rules) {
+				if ((rule.type as string) !== 'poolMaxBonus') continue;
+				const poolId = rule.poolIdentifier as string | undefined;
+				const amount = rule.amount as number | undefined;
+				if (poolId && typeof amount === 'number') {
+					bonuses[poolId] = (bonuses[poolId] ?? 0) + amount;
+				}
+			}
+		}
+		return bonuses;
+	}
+
 	// Actions
 	function submit() {
 		getDialog().submit({
@@ -411,6 +474,8 @@ export function createLevelUpState(
 				? {
 						autoGrant: classFeatures.autoGrant.map((f) => f.uuid),
 						selected: selectedClassFeatures,
+						grantedOptionItems: computeGrantedOptionItems(),
+						poolMaxBonuses: computePoolMaxBonuses(),
 					}
 				: undefined,
 			spellUuids: getGrantedSpellUuids(),
@@ -559,6 +624,21 @@ export function createLevelUpState(
 		},
 		set selectedClassFeatures(v: Map<string, NimbleFeatureItem[]>) {
 			selectedClassFeatures = v;
+		},
+		get selectedFeatureOptions() {
+			return selectedFeatureOptions;
+		},
+		set selectedFeatureOptions(v: Map<string, string>) {
+			selectedFeatureOptions = v;
+		},
+		get selectedOptionSubItems() {
+			return selectedOptionSubItems;
+		},
+		set selectedOptionSubItems(v: Map<string, string[]>) {
+			selectedOptionSubItems = v;
+		},
+		get ownedFeatureUuids() {
+			return ownedFeatureUuids;
 		},
 		submit,
 		getSubmitButtonTooltip,
