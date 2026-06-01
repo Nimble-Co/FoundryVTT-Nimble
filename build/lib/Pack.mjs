@@ -22,6 +22,8 @@ export default class Pack {
 		['the-cheat', 1],
 	]);
 
+	static #GROUP_FOLDER_DISPLAY_NAME = new Map([['commanders-orders', "Commander's Orders"]]);
+
 	constructor(dirName, data) {
 		const metadata = Pack.#packsMetadata.find(
 			(p) => path.basename(p.path).split('.')[0] === path.basename(dirName),
@@ -253,16 +255,31 @@ export default class Pack {
 				classData = {
 					name: className,
 					progressionName: `${className} Progression`,
+					subclassesName: `${className} Subclasses`,
 					subclasses: new Map(),
+					abilityGroups: new Map(),
 				};
 				classFolderData.set(classId, classData);
 			}
 
 			const subclassId = this.#getSubclassId(file, source);
-			if (!subclassId) continue;
+			if (subclassId) {
+				const subclassName = this.#getSubclassFolderName(file, source, subclassId);
+				if (!classData.subclasses.has(subclassId))
+					classData.subclasses.set(subclassId, subclassName);
+				continue;
+			}
 
-			const subclassName = this.#getSubclassFolderName(file, source, subclassId);
-			if (!classData.subclasses.has(subclassId)) classData.subclasses.set(subclassId, subclassName);
+			const groupName = source?.system?.group;
+			if (
+				groupName &&
+				!groupName.endsWith('-progression') &&
+				!classData.abilityGroups.has(groupName)
+			) {
+				const displayName =
+					Pack.#GROUP_FOLDER_DISPLAY_NAME.get(groupName) ?? this.#toDisplayClassName(groupName);
+				classData.abilityGroups.set(groupName, displayName);
+			}
 		}
 
 		const folders = [];
@@ -309,6 +326,22 @@ export default class Pack {
 				type: this.documentType,
 			});
 
+			const subclassesFolderId = Pack.#folderIdForSubclassesId(classId);
+			if (classData.subclasses.size > 0) {
+				folders.push({
+					_id: subclassesFolderId,
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: classFolderId,
+					name: classData.subclassesName,
+					sort: 10,
+					sorting: 'm',
+					type: this.documentType,
+				});
+			}
+
 			const subclassFolderLookup = new Map();
 			const sortedSubclasses = [...classData.subclasses.entries()].sort(([, aName], [, bName]) =>
 				aName.localeCompare(bName, undefined, { sensitivity: 'base' }),
@@ -324,10 +357,33 @@ export default class Pack {
 					color: null,
 					description: '',
 					flags: {},
-					folder: classFolderId,
+					folder: subclassesFolderId,
 					name: subclassName,
-					sort: (subclassIndex + 1) * 10,
+					sort: subclassIndex * 10,
 					sorting: 'm',
+					type: this.documentType,
+				});
+			});
+
+			const groupFolderLookup = new Map();
+			const sortedGroups = [...classData.abilityGroups.entries()].sort(([, aName], [, bName]) =>
+				aName.localeCompare(bName, undefined, { sensitivity: 'base' }),
+			);
+
+			sortedGroups.forEach(([groupName, groupDisplayName], groupIndex) => {
+				const groupFolderId = Pack.#folderIdForGroupId(classId, groupName);
+				groupFolderLookup.set(groupName, groupFolderId);
+
+				folders.push({
+					_id: groupFolderId,
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: progressionFolderId,
+					name: groupDisplayName,
+					sort: groupIndex * 10,
+					sorting: 'a',
 					type: this.documentType,
 				});
 			});
@@ -336,6 +392,7 @@ export default class Pack {
 				classFolderId,
 				progressionFolderId,
 				subclassFolderLookup,
+				groupFolderLookup,
 			});
 		});
 
@@ -352,6 +409,12 @@ export default class Pack {
 			const subclassId = this.#getSubclassId(file, source);
 			if (subclassId && classFolders.subclassFolderLookup.has(subclassId)) {
 				folderAssignments.set(source._id, classFolders.subclassFolderLookup.get(subclassId));
+				continue;
+			}
+
+			const groupName = source?.system?.group;
+			if (groupName && classFolders.groupFolderLookup.has(groupName)) {
+				folderAssignments.set(source._id, classFolders.groupFolderLookup.get(groupName));
 				continue;
 			}
 
@@ -628,5 +691,13 @@ export default class Pack {
 
 	static #folderIdForProgressionId(classId) {
 		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-progression`);
+	}
+
+	static #folderIdForSubclassesId(classId) {
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-subclasses`);
+	}
+
+	static #folderIdForGroupId(classId, groupName) {
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-group-${groupName}`);
 	}
 }
