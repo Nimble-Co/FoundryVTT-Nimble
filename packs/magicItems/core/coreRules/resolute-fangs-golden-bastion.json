@@ -15,7 +15,7 @@
 				"label": "Resolute fangs",
 				"predicate": {},
 				"priority": 1,
-				"formula": "+8",
+				"formula": "8",
 				"mode": "add"
 			}
 		],

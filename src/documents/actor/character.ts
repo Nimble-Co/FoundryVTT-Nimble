@@ -172,6 +172,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	override prepareDerivedData(): void {
+		// Reset armor components so afterPrepareData() rules always start from a clean slate.
+		// Without this, removing an ancestry then re-adding it leaves stale entries in the array.
+		this.system.attributes.armor.components = [];
+
 		super.prepareDerivedData();
 
 		// Setup Managers - cast to NimbleCharacterInterface to satisfy type requirements
