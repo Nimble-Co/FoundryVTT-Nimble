@@ -59,6 +59,7 @@
 		"featureType": "class",
 		"class": "commander",
 		"group": "commanders-orders",
+		"groupLabel": "Commander's Orders",
 		"gainedAtLevel": 1,
 		"subclass": false,
 		"gainedAtLevels": [
