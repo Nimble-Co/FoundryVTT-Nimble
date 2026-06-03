@@ -318,6 +318,7 @@
 									value={item.reactive.system.quantity || 1}
 									min="0"
 									step="1"
+									onclick={(event) => event.stopPropagation()}
 									onchange={({ currentTarget }) =>
 										actor.updateItem(item._id, {
 											'system.quantity': currentTarget.value,

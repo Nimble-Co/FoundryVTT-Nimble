@@ -347,6 +347,24 @@
     text-align: center;
     line-height: 1;
     height: 1.5rem;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: text;
+    transition: border-color var(--nimble-standard-transition);
+
+    &:not(:disabled):hover {
+      border-color: var(--nimble-medium-text-color);
+    }
+
+    &:focus {
+      border-color: var(--nimble-input-focus-border-color, var(--color-border-highlight));
+      outline: none;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
   }
 
   &__charges {
