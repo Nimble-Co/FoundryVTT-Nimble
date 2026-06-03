@@ -1,7 +1,7 @@
 {
 	"name": "Commander's Orders",
 	"type": "feature",
-	"img": "icons/commodities/treasure/medal-ribbon-gold-red.webp",
+	"img": "icons/skills/melee/unarmed-punch-fist-white.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -40,7 +40,11 @@
 		"subclass": false,
 		"gainedAtLevels": [
 			1,
-			2
+			6,
+			8,
+			10,
+			12,
+			16
 		],
 		"selectionCountByLevel": {},
 		"levelUpOptions": [
@@ -49,7 +53,11 @@
 				"label": "Choose a Commander's Order",
 				"applyAtLevels": [
 					1,
-					2
+					6,
+					8,
+					10,
+					12,
+					16
 				],
 				"rules": [],
 				"selectionGroups": [

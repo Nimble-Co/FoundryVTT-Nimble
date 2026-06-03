@@ -1,7 +1,7 @@
 {
 	"name": "Sacred Decree",
 	"type": "feature",
-	"img": "icons/magic/holy/prayer-hands-glowing-yellow.webp",
+	"img": "icons/magic/light/beam-strike-orange-gold.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

@@ -1,7 +1,7 @@
 {
-	"name": "Spell Shaper",
+	"name": "Spellshaper",
 	"type": "feature",
-	"img": "icons/magic/lightning/bolt-strike-purple.webp",
+	"img": "icons/magic/movement/trail-streak-impact-blue.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -47,7 +47,7 @@
 		"levelUpOptions": [
 			{
 				"id": "spell-shaper-initial",
-				"label": "Choose 2 Spell Shaper Abilities",
+				"label": "Choose 2 Spellshaper Abilities",
 				"applyAtLevels": [
 					4
 				],
