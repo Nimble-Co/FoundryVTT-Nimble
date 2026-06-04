@@ -204,16 +204,20 @@ function handleUseItem(
 
 // Encounter-end dedup: updateCombat with started:false fires first when the
 // GM ends combat normally; deleteCombat fires as fallback (or when combat is
-// just deleted from the tracker). The same combat ID can hit both within a
-// tick, so we record dispatched IDs and clear on the next microtask.
+// just deleted from the tracker). The same combat ID can hit both, so we
+// record dispatched IDs in updateCombat and clear them inside deleteCombat
+// after the dedup check — same pattern as
+// src/hooks/dicePoolTriggers/encounterEndTrigger.ts.
 const dispatchedEncounterEndIds = new Set<string>();
-function markEncounterEndDispatched(combatId: string): void {
-	dispatchedEncounterEndIds.add(combatId);
-	void Promise.resolve().then(() => dispatchedEncounterEndIds.delete(combatId));
+
+function getCombatIdentifier(combat: CombatWithCombatants): string | null {
+	if (typeof combat.id !== 'string') return null;
+	const trimmed = combat.id.trim();
+	return trimmed.length > 0 ? trimmed : null;
 }
 
 interface CombatWithCombatants {
-	id: string;
+	id: string | null | undefined;
 	combatants?: { contents?: Array<{ actor?: ActorWithRules | null }> };
 }
 
@@ -233,16 +237,20 @@ function dispatchEncounterEnd(combat: CombatWithCombatants): void {
 function handleUpdateCombat(combat: CombatWithCombatants, change: Record<string, unknown>): void {
 	if (!isAutoApplyEnabled()) return;
 	if (change.started !== false) return;
-	if (dispatchedEncounterEndIds.has(combat.id)) return;
-	markEncounterEndDispatched(combat.id);
+	const combatId = getCombatIdentifier(combat);
+	if (combatId && dispatchedEncounterEndIds.has(combatId)) return;
+	if (combatId) dispatchedEncounterEndIds.add(combatId);
 	dispatchEncounterEnd(combat);
 }
 
 function handleDeleteCombat(combat: CombatWithCombatants): void {
 	if (!isAutoApplyEnabled()) return;
-	if (dispatchedEncounterEndIds.has(combat.id)) return;
-	markEncounterEndDispatched(combat.id);
-	dispatchEncounterEnd(combat);
+	const combatId = getCombatIdentifier(combat);
+	const alreadyHandled = combatId ? dispatchedEncounterEndIds.has(combatId) : false;
+	if (!alreadyHandled) {
+		dispatchEncounterEnd(combat);
+	}
+	if (combatId) dispatchedEncounterEndIds.delete(combatId);
 }
 
 function handleConditionApplied(payload: NimbleConditionAppliedPayload): void {

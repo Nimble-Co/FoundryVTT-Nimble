@@ -63,6 +63,7 @@ interface ActiveEffectLike {
 	id: string;
 	disabled: boolean;
 	getFlag(scope: string, key: string): unknown;
+	update(data: Record<string, unknown>): Promise<unknown>;
 }
 
 interface ActorWithEffects {
@@ -123,16 +124,27 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 * Toggle entry point — flips the backing AE on/off when this rule's owning
 	 * item is activated. Predicate-gated so authors can constrain when the
 	 * toggle is allowed to flip.
+	 *
+	 * Three-state flip:
+	 * - no AE → create (toggle on)
+	 * - existing AE disabled → re-enable (player previously turned it off via
+	 *   the effects panel; re-activating the item turns it back on without
+	 *   churning embedded docs)
+	 * - existing AE enabled → delete (toggle off)
 	 */
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
 		if (context.sourceItem !== this.item) return;
 		if (!this.test()) return;
 		const existing = this.#findActiveEffect();
-		if (existing) {
-			await this.#deleteActiveEffect(existing.id);
-		} else {
+		if (!existing) {
 			await this.#createActiveEffect();
+			return;
 		}
+		if (existing.disabled) {
+			await existing.update({ disabled: false });
+			return;
+		}
+		await this.#deleteActiveEffect(existing.id);
 	}
 
 	override async onActorKilled(context: ActorHealthContext): Promise<void> {
@@ -181,16 +193,19 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 	async #createActiveEffect(): Promise<void> {
 		const actor = this.actor as unknown as ActorWithEffects;
-		const item = this.item as unknown as { name: string; img: string };
+		const item = this.item as unknown as { name: string; img: string; uuid: string; id: string };
 		await actor.createEmbeddedDocuments('ActiveEffect', [
 			{
 				name: this.label || item.name,
 				img: item.img,
 				disabled: false,
+				// Origin lets Foundry surface the source item in the effects
+				// panel and lets downstream cleanup follow item deletion.
+				origin: item.uuid,
 				flags: {
 					[SYSTEM_ID]: {
 						[TOGGLE_EFFECT_RULE_ID_FLAG]: this.id,
-						[TOGGLE_EFFECT_ITEM_ID_FLAG]: (this.item as unknown as { id: string }).id,
+						[TOGGLE_EFFECT_ITEM_ID_FLAG]: item.id,
 					},
 				},
 			},

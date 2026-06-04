@@ -12,6 +12,7 @@ interface MockActiveEffect {
 	disabled: boolean;
 	flags: Record<string, Record<string, unknown>>;
 	getFlag: Mock<(scope: string, key: string) => unknown>;
+	update: Mock<(data: Record<string, unknown>) => Promise<unknown>>;
 }
 
 interface MockActor {
@@ -57,14 +58,19 @@ function createMockActiveEffect(
 	flags: Record<string, Record<string, unknown>>,
 	overrides: Partial<MockActiveEffect> = {},
 ): MockActiveEffect {
-	return {
+	const effect: MockActiveEffect = {
 		id: overrides.id ?? 'effect-id',
 		name: overrides.name ?? 'Test Effect',
 		img: overrides.img ?? 'icons/svg/aura.svg',
 		disabled: overrides.disabled ?? false,
 		flags,
 		getFlag: vi.fn((scope: string, key: string) => flags[scope]?.[key]),
+		update: vi.fn().mockImplementation(async (data: Record<string, unknown>) => {
+			if ('disabled' in data) effect.disabled = data.disabled as boolean;
+			return undefined;
+		}),
 	};
+	return effect;
 }
 
 function createMockActor(effects: MockActiveEffect[] = []): MockActor {
@@ -316,7 +322,23 @@ describe('ToggleEffectRule', () => {
 			});
 		});
 
-		it('deletes the existing AE on second activation (toggle behavior)', async () => {
+		it('stamps the AE with origin: <item uuid> so the effects panel links back to the item', async () => {
+			const actor = createMockActor();
+			const item = createMockItem(actor, { uuid: 'Actor.abc.Item.rage-1' });
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: ['onRest'] },
+				actor,
+				item,
+			);
+
+			await rule.onItemActivated(buildContext(item, actor));
+
+			const [, data] = actor.createEmbeddedDocuments.mock.calls[0] ?? [];
+			const created = (data as Array<Record<string, unknown>>)[0];
+			expect(created?.origin).toBe('Actor.abc.Item.rage-1');
+		});
+
+		it('deletes the existing enabled AE on second activation (toggle off behavior)', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
 			actor.effects.push(
@@ -329,6 +351,22 @@ describe('ToggleEffectRule', () => {
 			await rule.onItemActivated(buildContext(rule.item as unknown as MockItem, actor));
 
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-existing']);
+			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('re-enables a disabled AE instead of deleting it (player toggled off via effects panel)', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
+			const disabledEffect = createMockActiveEffect(
+				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+				{ id: 'ae-disabled', disabled: true },
+			);
+			actor.effects.push(disabledEffect);
+
+			await rule.onItemActivated(buildContext(rule.item as unknown as MockItem, actor));
+
+			expect(disabledEffect.update).toHaveBeenCalledWith({ disabled: false });
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 		});
 

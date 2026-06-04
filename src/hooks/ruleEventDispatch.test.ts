@@ -324,9 +324,12 @@ describe('ruleEventDispatch', () => {
 	});
 
 	describe('updateCombat / deleteCombat → onEncounterEnd', () => {
-		function buildCombatWithCombatants(actors: Array<{ rules: RuleLike[] }>) {
+		function buildCombatWithCombatants(
+			actors: Array<{ rules: RuleLike[] }>,
+			id = `combat-${Math.random().toString(36).slice(2, 10)}`,
+		) {
 			return {
-				id: 'combat-1',
+				id,
 				combatants: { contents: actors.map((actor) => ({ actor })) },
 			} as unknown as Combat;
 		}
@@ -394,6 +397,25 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onEncounterEnd).not.toHaveBeenCalled();
+		});
+
+		it('does not pollute the dedup set when combat.id is missing', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combatA = {
+				id: undefined,
+				combatants: { contents: [{ actor }] },
+			} as unknown as Combat;
+			const combatB = buildCombatWithCombatants([actor]);
+
+			// First update with no id should not block a subsequent legit combat-end.
+			handlers.get('updateCombat')?.(combatA, { started: false });
+			handlers.get('updateCombat')?.(combatB, { started: false });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			// One fire from combatA (no-id dispatch still happens), one from combatB.
+			expect(rule.onEncounterEnd).toHaveBeenCalledTimes(2);
 		});
 	});
 

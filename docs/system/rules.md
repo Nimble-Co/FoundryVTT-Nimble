@@ -239,7 +239,7 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 
 ### Priority note
 
-`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case) always see them. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, give that sibling a higher `priority` than the `toggleEffect` rule so it runs after the tags are in place.
+`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case — `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
 
 ## RulesManager API
 
