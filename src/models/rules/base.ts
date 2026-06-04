@@ -93,6 +93,32 @@ interface InitiativeRolledContext {
 	combatant: Combatant;
 }
 
+// Context passed to onItemActivated — fires once per item activation, regardless
+// of whether the activation produced damage (unlike onItemUsed, which only fires
+// when damage is actually applied to a target). Use this for player-controlled
+// toggles and other rule-lifecycle work that should happen on every activation.
+interface ItemActivatedContext {
+	sourceItem: NimbleBaseItem;
+	sourceActor: NimbleBaseActor;
+	card: ChatMessage | null;
+}
+
+// Context passed to onEncounterEnd — fires once per combatant when a combat
+// ends (either via updateCombat transitioning started: true → false, or via
+// deleteCombat as a fallback; the dispatcher dedup's the pair).
+interface EncounterEndContext {
+	combat: Combat;
+	actor: NimbleBaseActor;
+}
+
+// Context passed to onUnconscious — fires when the unconscious condition is
+// applied to an actor. Distinct from onActorKilled (HP ≤ 0), which can fire
+// for other reasons (dying for PCs, instant-kill effects for monsters).
+interface UnconsciousContext {
+	actor: NimbleBaseActor;
+	source: NimbleBaseItem | null;
+}
+
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
@@ -297,6 +323,26 @@ abstract class NimbleBaseRule<
 	}
 
 	/**
+	 * Hook called once per item activation (post chat-card), regardless of whether
+	 * the activation produced damage. Use this for player-controlled toggles like
+	 * toggleEffect — unlike onItemUsed, this fires on every activation, even for
+	 * items that don't roll damage.
+	 */
+	async onItemActivated(_context: ItemActivatedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called once per combatant when a combat ends. */
+	async onEncounterEnd(_context: EncounterEndContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when the unconscious condition is applied to an actor. */
+	async onUnconscious(_context: UnconsciousContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
 	 * into the card's render tree — surfaces rule-driven outcomes (e.g. a
@@ -323,4 +369,7 @@ export {
 	type RestContext,
 	type InitiativeRolledContext,
 	type ActivationCardContext,
+	type ItemActivatedContext,
+	type EncounterEndContext,
+	type UnconsciousContext,
 };

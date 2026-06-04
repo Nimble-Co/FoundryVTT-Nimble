@@ -184,6 +184,63 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 `targetCondition` is only available on `damageBonus`. Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
 :::
 
+## `toggleEffect` — player-controlled tag pushes
+
+`toggleEffect` is a foundation rule that pushes one or more domain tags into the actor's domain while a backing Foundry `ActiveEffect` is enabled. The rule itself doesn't carry nested rules or express any modifiers — its only job is the tag push. Sibling rules elsewhere predicate on those tags via the standard `predicate` field.
+
+```jsonc
+{
+  "type": "toggleEffect",
+  "label": "Rage",
+  "tags": ["self:raging"],
+  "turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
+}
+```
+
+### Lifecycle
+
+- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor, flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel — players can disable it from there.
+- **Toggle off (manual)**: the player disables the AE via the effects panel (sets `disabled: true`) or activates the item again (the rule toggles it off).
+- **Toggle off (event)**: any event listed in `turnOff` deletes the AE when it fires for the rule's owning actor.
+- **Tag push**: during `prePrepareData()` the rule scans the actor's effects; if a matching AE exists and is not disabled, every entry in `tags` is added to `actor.tags`. Tags drop on the next prep when the AE is gone or disabled.
+
+### `turnOff` triggers
+
+| Value | Fires from |
+|---|---|
+| `onActorKilled` | `updateActor` when HP drops to 0 |
+| `onActorWounded` | `updateActor` on bloodied / lastStand transition |
+| `onRest` | `nimble.rest` hook |
+| `onTurnStart` | `combatTurn` start of owner's turn |
+| `onTurnEnd` | `combatTurn` end of owner's turn |
+| `onEncounterEnd` | `updateCombat(started:false)` or `deleteCombat` (dedup'd) |
+| `onUnconscious` | `nimble.conditionApplied` with `condition: 'unconscious'` |
+
+### Worked example: Rage
+
+The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "while raging" features (Intensifying Fury, etc.) live on their own items and just predicate on `self:raging`:
+
+```jsonc
+[
+  {
+    "type": "toggleEffect",
+    "tags": ["self:raging"],
+    "turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
+  },
+  {
+    "type": "damageBonus",
+    "value": "@level",
+    "delivery": "melee",
+    "source": "weapon",
+    "predicate": { "self": "raging" }
+  }
+]
+```
+
+### Priority note
+
+`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case) always see them. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, give that sibling a higher `priority` than the `toggleEffect` rule so it runs after the tags are in place.
+
 ## RulesManager API
 
 `RulesManager` extends `Map<string, NimbleBaseRule>`:

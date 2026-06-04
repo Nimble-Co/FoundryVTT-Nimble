@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.stubGlobal('Hooks', { call: vi.fn().mockReturnValue(true), callAll: vi.fn() });
 
-import { ToggleEffectRule } from './toggleEffect.js';
+import { ToggleEffectRule, type TurnOffEvent } from './toggleEffect.js';
 
 interface MockActiveEffect {
 	id: string;
@@ -36,7 +36,7 @@ interface MockItem {
 
 interface ToggleEffectSource {
 	tags: string[];
-	turnOff: string[];
+	turnOff: TurnOffEvent[];
 	disabled?: boolean;
 	label?: string;
 	id?: string;
@@ -48,7 +48,7 @@ interface ToggleEffectSource {
 
 interface ToggleEffectRuleTestInstance extends ToggleEffectRule {
 	tags: string[];
-	turnOff: string[];
+	turnOff: TurnOffEvent[];
 	disabled: boolean;
 	label: string;
 }
@@ -177,7 +177,7 @@ describe('ToggleEffectRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ToggleEffectRule.group).toBe('triggers');
-			expect(ToggleEffectRule.description).toBe('NIMBLE.ruleDescriptions.toggleEffect');
+			expect(ToggleEffectRule.description).toBe('NIMBLE.rules.toggleEffect.description');
 		});
 	});
 
@@ -359,7 +359,7 @@ describe('ToggleEffectRule', () => {
 	});
 
 	describe('turnOff dispatch — per-event AE deletion', () => {
-		function pushAE(actor: MockActor, ruleId: string, itemId: string): MockActiveEffect {
+		function pushAE(actor: MockActor, ruleId: string, itemId: string | null): MockActiveEffect {
 			const ae = createMockActiveEffect(
 				{ nimble: { toggleEffectRuleId: ruleId, toggleEffectItemId: itemId } },
 				{ id: 'ae-active', disabled: false },

@@ -1,20 +1,28 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type {
 	ActorHealthContext,
+	EncounterEndContext,
 	InitiativeRolledContext,
+	ItemActivatedContext,
 	ItemUsedContext,
 	NimbleBaseRule,
 	RestContext,
 	SaveResolvedContext,
 	TurnContext,
+	UnconsciousContext,
 } from '../models/rules/base.js';
 import { getActorHealthState } from '../utils/actorHealthState.js';
 import { ACTOR_HP_PATHS, hasAnyActorChangeAt } from '../utils/actorHpChangePaths.js';
 
 const AUTO_APPLY_CONDITIONS_SETTING = 'automation.autoApplyConditions';
+const UNCONSCIOUS_STATUS_ID = 'unconscious';
 
 interface ActorWithRules {
 	rules?: NimbleBaseRule[];
+}
+
+interface ItemWithActor {
+	actor: ActorWithRules | null;
 }
 
 interface NimbleDamageAppliedPayload {
@@ -40,6 +48,14 @@ interface NimbleRestPayload {
 interface NimbleInitiativePayload {
 	actor: ActorWithRules;
 	combatant: Combatant;
+}
+
+interface NimbleConditionAppliedPayload {
+	target: ActorWithRules;
+	condition: string;
+	effect: unknown;
+	source: unknown;
+	rule: unknown;
 }
 
 function isAutoApplyEnabled(): boolean {
@@ -170,6 +186,77 @@ function handleInitiativeRolled(payload: NimbleInitiativePayload): void {
 	void dispatch(payload.actor, 'onInitiativeRolled', context);
 }
 
+function handleUseItem(
+	item: ItemWithActor | null,
+	card: ChatMessage | null,
+	_context: unknown,
+): void {
+	if (!isAutoApplyEnabled()) return;
+	const sourceActor = item?.actor ?? null;
+	if (!sourceActor) return;
+	const activatedContext: ItemActivatedContext = {
+		sourceItem: item as unknown as ItemActivatedContext['sourceItem'],
+		sourceActor: sourceActor as unknown as ItemActivatedContext['sourceActor'],
+		card,
+	};
+	void dispatch(sourceActor, 'onItemActivated', activatedContext);
+}
+
+// Encounter-end dedup: updateCombat with started:false fires first when the
+// GM ends combat normally; deleteCombat fires as fallback (or when combat is
+// just deleted from the tracker). The same combat ID can hit both within a
+// tick, so we record dispatched IDs and clear on the next microtask.
+const dispatchedEncounterEndIds = new Set<string>();
+function markEncounterEndDispatched(combatId: string): void {
+	dispatchedEncounterEndIds.add(combatId);
+	void Promise.resolve().then(() => dispatchedEncounterEndIds.delete(combatId));
+}
+
+interface CombatWithCombatants {
+	id: string;
+	combatants?: { contents?: Array<{ actor?: ActorWithRules | null }> };
+}
+
+function dispatchEncounterEnd(combat: CombatWithCombatants): void {
+	const combatants = combat.combatants?.contents ?? [];
+	for (const combatant of combatants) {
+		const actor = combatant.actor ?? null;
+		if (!actor) continue;
+		const ctx: EncounterEndContext = {
+			combat: combat as unknown as Combat,
+			actor: actor as unknown as EncounterEndContext['actor'],
+		};
+		void dispatch(actor, 'onEncounterEnd', ctx);
+	}
+}
+
+function handleUpdateCombat(combat: CombatWithCombatants, change: Record<string, unknown>): void {
+	if (!isAutoApplyEnabled()) return;
+	if (change.started !== false) return;
+	if (dispatchedEncounterEndIds.has(combat.id)) return;
+	markEncounterEndDispatched(combat.id);
+	dispatchEncounterEnd(combat);
+}
+
+function handleDeleteCombat(combat: CombatWithCombatants): void {
+	if (!isAutoApplyEnabled()) return;
+	if (dispatchedEncounterEndIds.has(combat.id)) return;
+	markEncounterEndDispatched(combat.id);
+	dispatchEncounterEnd(combat);
+}
+
+function handleConditionApplied(payload: NimbleConditionAppliedPayload): void {
+	if (!isAutoApplyEnabled()) return;
+	if (payload.condition !== UNCONSCIOUS_STATUS_ID) return;
+	const targetActor = payload.target;
+	if (!targetActor) return;
+	const ctx: UnconsciousContext = {
+		actor: targetActor as unknown as UnconsciousContext['actor'],
+		source: payload.source as UnconsciousContext['source'],
+	};
+	void dispatch(targetActor, 'onUnconscious', ctx);
+}
+
 let didRegister = false;
 
 type HookFn = (...args: unknown[]) => void;
@@ -186,6 +273,10 @@ export default function registerRuleEventDispatch(): void {
 	onHook(systemHookName('saveResolved'), handleSaveResolved as HookFn);
 	onHook(systemHookName('rest'), handleRest as HookFn);
 	onHook(systemHookName('initiativeRolled'), handleInitiativeRolled as HookFn);
+	onHook(systemHookName('useItem'), handleUseItem as HookFn);
+	onHook('updateCombat', handleUpdateCombat as HookFn);
+	onHook('deleteCombat', handleDeleteCombat as HookFn);
+	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);
 }
 
 export {

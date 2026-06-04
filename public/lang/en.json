@@ -654,6 +654,7 @@
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
 			"speedBonus": "Speed Bonus",
+			"toggleEffect": "Toggle Effect",
 			"unarmedDamage": "Unarmed Damage"
 		},
 		"rules": {
@@ -939,6 +940,17 @@
 				"movementType": {
 					"label": "Movement type (blank = walk)",
 					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it."
+				}
+			},
+			"toggleEffect": {
+				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
+				"tags": {
+					"label": "Tags",
+					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
+				},
+				"turnOff": {
+					"label": "Turn off on",
+					"hint": "Events that automatically toggle the effect off."
 				}
 			},
 			"unarmedDamage": {
