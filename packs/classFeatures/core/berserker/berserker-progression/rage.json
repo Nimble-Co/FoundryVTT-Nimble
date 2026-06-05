@@ -15,8 +15,14 @@
 				"label": "Rage",
 				"predicate": {},
 				"priority": 1,
-				"tags": ["self:raging"],
-				"turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
+				"tags": [
+					"self:raging"
+				],
+				"turnOff": [
+					"onActorKilled",
+					"onEncounterEnd",
+					"onRest"
+				]
 			},
 			{
 				"type": "dicePool",
@@ -38,7 +44,9 @@
 				"id": "fury-pool-autobonus",
 				"identifier": "",
 				"label": "Fury Dice — STR auto-bonus",
-				"predicate": { "self": "raging" },
+				"predicate": {
+					"self": "raging"
+				},
 				"priority": 1,
 				"poolIdentifier": "fury",
 				"poolScope": "item",
