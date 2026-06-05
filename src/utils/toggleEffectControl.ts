@@ -98,14 +98,6 @@ async function createToggleEffectAE(
 }
 
 /**
- * Player-initiated toggle off (from the on/off switch). When the rule sets
- * `confirmEndPrompt`, show a confirm dialog first so a misclick doesn't
- * silently drop a long-running effect. On confirm (or when no prompt is
- * set) clear any pools listed in `clearPoolsOnEnd` then delete the AE.
- *
- * Returns true if the toggle was ended, false if the user cancelled.
- */
-/**
  * Returns true if any pool listed in `clearPoolsOnEnd` currently has dice
  * faces — i.e. the player would actually lose something by ending the
  * toggle. When every pool is empty there's nothing to lose, so we skip the
@@ -124,6 +116,15 @@ function hasPoolContentToLose(actor: ActorForToggle, poolIds: string[] | undefin
 	return false;
 }
 
+/**
+ * Player-initiated toggle off (from the on/off switch). When the rule sets
+ * `confirmEndPrompt` AND at least one of the linked pools has dice to lose,
+ * show a confirm dialog first so a misclick doesn't silently drop a
+ * long-running effect. On confirm (or when no prompt fires) clear any pools
+ * listed in `clearPoolsOnEnd` then delete the AE.
+ *
+ * Returns true if the toggle was ended, false if the user cancelled.
+ */
 async function disableToggleEffect(
 	actor: ActorForToggle,
 	item: ItemForToggle,
