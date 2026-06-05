@@ -228,7 +228,7 @@ function emitRefillEvents(
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string } = {},
+	options: { flavor?: string; suppressChat?: boolean } = {},
 ): Promise<boolean> {
 	if (!isCharacterActor(actor)) return false;
 	if (typeof poolId !== 'string' || poolId.length < 1) return false;
@@ -241,11 +241,14 @@ async function rollDieIntoPool(
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`1d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
+	if (!options.suppressChat) {
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		await roll.toMessage({
+			speaker: ChatMessageCls.getSpeaker({ actor }),
+			flavor: options.flavor ?? pool.label,
+		});
+	}
 
 	const face = roll.total ?? 1;
 	const previousFaces = [...pool.faces];
@@ -275,7 +278,7 @@ async function rollDieIntoPool(
 async function rollPoolFresh(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string } = {},
+	options: { flavor?: string; suppressChat?: boolean } = {},
 ): Promise<boolean> {
 	if (!isCharacterActor(actor)) return false;
 	if (typeof poolId !== 'string' || poolId.length < 1) return false;
@@ -288,11 +291,14 @@ async function rollPoolFresh(
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`${pool.max}d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
+	if (!options.suppressChat) {
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		await roll.toMessage({
+			speaker: ChatMessageCls.getSpeaker({ actor }),
+			flavor: options.flavor ?? pool.label,
+		});
+	}
 
 	const previousFaces = [...pool.faces];
 	const newFaces: number[] = [];

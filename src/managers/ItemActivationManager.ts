@@ -553,7 +553,10 @@ class ItemActivationManager {
 				const before = readPool();
 				let applied = false;
 				for (let i = 0; i < count; i += 1) {
-					const ok = await rollDieIntoPool(actor, poolId);
+					// suppressChat: the activation card already renders rolledFaces
+					// in its result section, so a separate roll chat card would be
+					// redundant.
+					const ok = await rollDieIntoPool(actor, poolId, { suppressChat: true });
 					if (!ok) break;
 					applied = true;
 				}
@@ -569,7 +572,7 @@ class ItemActivationManager {
 			}
 			if (node.action === 'rollPool') {
 				const before = readPool();
-				const ok = await rollPoolFresh(actor, poolId);
+				const ok = await rollPoolFresh(actor, poolId, { suppressChat: true });
 				const after = readPool();
 				node.result = {
 					applied: ok,

@@ -132,6 +132,27 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(mockRollDieIntoPool).not.toHaveBeenCalled();
 		});
 
+		it('rollDie/rollPool from activation: forwards suppressChat so the activation card is the only chat output', async () => {
+			// The activation card already renders rolledFaces in node.result, so
+			// a separate roll chat from rollDieIntoPool/rollPoolFresh would be
+			// redundant — verify the option is forwarded.
+			const actor = makeActor(3);
+
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }));
+			expect(mockRollDieIntoPool).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				expect.objectContaining({ suppressChat: true }),
+			);
+
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollPool', value: 0 }));
+			expect(mockRollPoolFresh).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				expect.objectContaining({ suppressChat: true }),
+			);
+		});
+
 		it('clear: invokes setPoolFaces with []', async () => {
 			const actor = makeActor(3);
 			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'clear' }));
