@@ -38,7 +38,7 @@
 				"id": "fury-pool-autobonus",
 				"identifier": "",
 				"label": "Fury Dice — STR auto-bonus",
-				"predicate": {},
+				"predicate": { "self": "raging" },
 				"priority": 1,
 				"poolIdentifier": "fury",
 				"poolScope": "item",

@@ -320,6 +320,9 @@ function findDiceConsumerRule(
 		const consumer = rule as DiceConsumerRuleLike;
 		const consumerPoolIdentifier = normalizeIdentifier(consumer.poolIdentifier);
 		if (consumerPoolIdentifier !== poolIdentifier) continue;
+		// Respect the rule's predicate (e.g. self:raging gating the auto-bonus).
+		const ruleWithApplies = rule as { appliesTo?: () => boolean };
+		if (typeof ruleWithApplies.appliesTo === 'function' && !ruleWithApplies.appliesTo()) continue;
 		return consumer;
 	}
 	return undefined;

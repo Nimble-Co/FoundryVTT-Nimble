@@ -305,6 +305,59 @@ describe('getDicePoolDefinitions', () => {
 		const defs = getDicePoolDefinitions(actor);
 		expect(defs[0].consumption).toBe('manual');
 	});
+
+	it('skips diceConsumer rules whose appliesTo() predicate returns false (self:raging gating)', () => {
+		// Rage's auto-bonus is predicated on self:raging. When the toggle is off
+		// the predicate fails, and the pool must report manual consumption so
+		// the Fury Dice no longer auto-add to melee attacks.
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					mode: 'autoBonus',
+					bonusOnAttackDelivery: 'melee',
+					appliesTo: () => false,
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('manual');
+		expect(defs[0].bonusOnAttackDelivery).toBe(null);
+	});
+
+	it('honors diceConsumer rules whose appliesTo() predicate returns true', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					mode: 'autoBonus',
+					bonusOnAttackDelivery: 'melee',
+					appliesTo: () => true,
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('autoBonus');
+		expect(defs[0].bonusOnAttackDelivery).toBe('melee');
+	});
 });
 
 describe('getDicePoolModifiers', () => {
