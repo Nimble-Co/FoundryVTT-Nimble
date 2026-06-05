@@ -942,6 +942,11 @@
 					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it."
 				}
 			},
+			"featureMessages": {
+				"berserker": {
+					"rageEndConfirm": "Are you sure you want to end Rage? Your Fury Dice will be lost."
+				}
+			},
 			"toggleEffect": {
 				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
 				"tags": {
@@ -951,7 +956,18 @@
 				"turnOff": {
 					"label": "Turn off on",
 					"hint": "Events that automatically toggle the effect off."
-				}
+				},
+				"confirmEndPrompt": {
+					"label": "End confirm prompt (i18n key)",
+					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Provide an i18n key whose value is the dialog body. Leave empty to disable the prompt."
+				},
+				"clearPoolsOnEnd": {
+					"label": "Clear pools on end",
+					"hint": "Pool identifiers to empty when the toggle ends — either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
+				},
+				"confirmDialogTitle": "End {name}?",
+				"confirmDialogConfirm": "End",
+				"confirmDialogCancel": "Cancel"
 			},
 			"unarmedDamage": {
 				"description": "Override the actor’s unarmed-strike damage formula."
@@ -1333,6 +1349,8 @@
 				"noSpellsFound": "No spells found.",
 				"unarmedStrike": "Unarmed Strike",
 				"feature": "Feature",
+				"toggleOn": "Activate {name}",
+				"toggleOff": "Deactivate {name}",
 				"mana": "{cost} Mana",
 				"thrown": "Thrown: {distance}",
 				"baseEffect": "Effect",
@@ -1841,6 +1859,7 @@
 			"poolNode": {
 				"defaultLabel": "Pool",
 				"noChange": "— no change",
+				"atMax": "— pool at max",
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
 					"rollDie": "Rolled",
@@ -1862,6 +1881,8 @@
 					"valueLabel": "Value",
 					"predicateLabel": "Predicate (JSON)",
 					"predicateInvalid": "Predicate must be valid JSON",
+					"suppressChatLabel": "Suppress roll chat card",
+					"suppressChatHint": "When enabled, the helper does not post a standalone roll card — use when the feature's own activation card already shows the rolled faces.",
 					"poolTypeDice": "Dice Pool",
 					"poolTypeCharge": "Charge Pool",
 					"actionRollDie": "Roll Die",

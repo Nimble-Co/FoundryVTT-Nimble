@@ -140,9 +140,43 @@ describe('rollDieIntoPool — item-scoped pool persistence (Judgment Dice)', () 
 
 		const result = await rollDieIntoPool(actor, 'judgment', { flavor: 'Judgment Dice' });
 
-		expect(result).toBe(true);
+		expect(result).toEqual({ applied: true, face: 4 });
 		expect(updateSpy).toHaveBeenCalledTimes(1);
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([4]);
+	});
+
+	it('at max: rolls a face but does not modify the pool — returns applied: false with the face value', async () => {
+		// RAW (Berserker Rage): "If you are already at your max, roll as
+		// normal and decide which ones to keep." The helper must surface the
+		// face so the caller (chat card / activation manager / widget) can
+		// display the roll and let the player choose what to do.
+		const { actor, item, updateSpy } = makeOathswornActor();
+		item.flags = {
+			nimble: {
+				dicePools: {
+					judgment: {
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						sourceItemId: 'qiQeJrIxla9y6XY0',
+						sourceItemName: 'Radiant Judgement',
+						label: 'Judgment Dice',
+						dieSize: 'd6',
+						max: 2,
+						faces: [5, 6],
+						refills: [],
+						consumption: 'manual',
+						bonusOnAttackDelivery: null,
+					},
+				},
+			},
+		};
+
+		const result = await rollDieIntoPool(actor, 'judgment', { flavor: 'Judgment Dice' });
+
+		expect(result).toEqual({ applied: false, face: 4 });
+		expect(updateSpy).not.toHaveBeenCalled();
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([5, 6]);
 	});
 
 	it('adds a second face when the pool already has one (faces array grows)', async () => {
@@ -174,7 +208,7 @@ describe('rollDieIntoPool — item-scoped pool persistence (Judgment Dice)', () 
 
 		const result = await rollDieIntoPool(actor, 'judgment', { flavor: 'Judgment Dice' });
 
-		expect(result).toBe(true);
+		expect(result).toEqual({ applied: true, face: 4 });
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([5, 4]);
 	});
 });

@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.stubGlobal('Hooks', { call: vi.fn().mockReturnValue(true), callAll: vi.fn() });
 
+vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
+	setPoolFaces: vi.fn().mockResolvedValue(true),
+}));
+
 import { ToggleEffectRule, type TurnOffEvent } from './toggleEffect.js';
 
 interface MockActiveEffect {
@@ -45,6 +49,8 @@ interface ToggleEffectSource {
 	priority?: number;
 	predicate?: Record<string, unknown>;
 	type?: string;
+	confirmEndPrompt?: string;
+	clearPoolsOnEnd?: string[];
 }
 
 interface ToggleEffectRuleTestInstance extends ToggleEffectRule {
@@ -130,6 +136,8 @@ function createToggleEffectRule(
 		priority: config.priority ?? 1,
 		predicate: config.predicate ?? {},
 		type: 'toggleEffect',
+		confirmEndPrompt: config.confirmEndPrompt ?? '',
+		clearPoolsOnEnd: config.clearPoolsOnEnd ?? [],
 	};
 
 	const rule = new ToggleEffectRule(
@@ -141,6 +149,16 @@ function createToggleEffectRule(
 	rule.turnOff = config.turnOff;
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? '';
+	Object.defineProperty(rule, 'clearPoolsOnEnd', {
+		value: config.clearPoolsOnEnd ?? [],
+		configurable: true,
+		writable: true,
+	});
+	Object.defineProperty(rule, 'confirmEndPrompt', {
+		value: config.confirmEndPrompt ?? '',
+		configurable: true,
+		writable: true,
+	});
 
 	Object.defineProperty(rule, 'item', { get: () => parentItem, configurable: true });
 	Object.defineProperty(rule, '_predicate', {
@@ -162,6 +180,8 @@ describe('ToggleEffectRule', () => {
 			expect(schema).toHaveProperty('type');
 			expect(schema).toHaveProperty('tags');
 			expect(schema).toHaveProperty('turnOff');
+			expect(schema).toHaveProperty('confirmEndPrompt');
+			expect(schema).toHaveProperty('clearPoolsOnEnd');
 		});
 
 		it('declares the supported turnOff trigger choices', () => {

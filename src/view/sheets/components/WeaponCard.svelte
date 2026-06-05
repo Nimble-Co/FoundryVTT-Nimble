@@ -13,6 +13,7 @@
 		disabled = false,
 		showImage = true,
 		itemId = null,
+		toggle = null,
 		onToggleDescription = null,
 		onclick,
 		ondragstart = null,
@@ -64,6 +65,24 @@
 				<i class="fa-solid fa-burst"></i>
 				{damage}
 			</span>
+		{/if}
+
+		{#if toggle}
+			<button
+				type="button"
+				class="weapon-card__toggle"
+				class:weapon-card__toggle--on={toggle.enabled}
+				role="switch"
+				aria-checked={toggle.enabled}
+				aria-label={toggle.ariaLabel}
+				data-tooltip={toggle.ariaLabel}
+				onclick={(e) => {
+					e.stopPropagation();
+					void toggle.onClick(e);
+				}}
+			>
+				<i class={toggle.enabled ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off'}></i>
+			</button>
 		{/if}
 
 		{#if description && onToggleDescription}
@@ -195,6 +214,35 @@
 			i {
 				font-size: 0.875rem;
 				color: hsl(0, 60%, 50%);
+			}
+		}
+
+		&__toggle {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			background: transparent;
+			border: none;
+			cursor: pointer;
+			flex-shrink: 0;
+			color: var(--nimble-medium-text-color);
+			transition: color 0.15s ease;
+
+			i {
+				font-size: 1.25rem;
+			}
+
+			&:hover {
+				color: var(--nimble-dark-text-color);
+			}
+		}
+
+		&__toggle--on {
+			color: hsl(120, 45%, 40%);
+
+			&:hover {
+				color: hsl(120, 45%, 50%);
 			}
 		}
 

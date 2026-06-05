@@ -22,6 +22,10 @@
 					"onActorKilled",
 					"onEncounterEnd",
 					"onRest"
+				],
+				"confirmEndPrompt": "NIMBLE.rules.featureMessages.berserker.rageEndConfirm",
+				"clearPoolsOnEnd": [
+					"fury"
 				]
 			},
 			{
@@ -81,6 +85,7 @@
 							"max": 4
 						}
 					},
+					"suppressChat": true,
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -96,6 +101,7 @@
 							"min": 5
 						}
 					},
+					"suppressChat": true,
 					"parentContext": null,
 					"parentNode": null
 				}

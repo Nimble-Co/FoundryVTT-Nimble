@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import {
 	type ActorHealthContext,
 	type EncounterEndContext,
@@ -52,6 +53,29 @@ function schema() {
 				hint: 'NIMBLE.rules.toggleEffect.turnOff.hint',
 			},
 		),
+		// i18n key for the confirm-end dialog content. Empty = no prompt
+		// (turn-off triggers and the effects-panel toggle path never prompt;
+		// only the explicit on/off switch consults this).
+		confirmEndPrompt: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.toggleEffect.confirmEndPrompt.label',
+			hint: 'NIMBLE.rules.toggleEffect.confirmEndPrompt.hint',
+		}),
+		// Pool identifiers (dice or charge) to clear when the toggle ends —
+		// either via a turn-off trigger or a player toggle-off. Lets authors
+		// model rules like Berserker Rage's "Fury Dice are lost when your
+		// Rage ends" without coupling toggleEffect to a specific feature.
+		clearPoolsOnEnd: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, initial: '' }),
+			{
+				required: true,
+				nullable: false,
+				label: 'NIMBLE.rules.toggleEffect.clearPoolsOnEnd.label',
+				hint: 'NIMBLE.rules.toggleEffect.clearPoolsOnEnd.hint',
+			},
+		),
 	};
 }
 
@@ -82,6 +106,8 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 	declare tags: string[];
 	declare turnOff: TurnOffEvent[];
+	declare confirmEndPrompt: string;
+	declare clearPoolsOnEnd: string[];
 
 	static override defineSchema(): ToggleEffectRule.Schema {
 		return {
@@ -179,7 +205,26 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		if (actor !== this.actor) return;
 		if (!this.turnOff.includes(event)) return;
 		const existing = this.#findActiveEffect();
-		if (existing) await this.#deleteActiveEffect(existing.id);
+		if (!existing) return;
+		await this.#clearLinkedPools();
+		await this.#deleteActiveEffect(existing.id);
+	}
+
+	/**
+	 * Empty every pool listed in `clearPoolsOnEnd`. Used by both the
+	 * automatic turn-off path and the player-initiated toggle-off so the
+	 * "resources are lost when the effect ends" rule applies uniformly
+	 * (e.g. Berserker Rage's Fury Dice).
+	 */
+	async #clearLinkedPools(): Promise<void> {
+		const pools = this.clearPoolsOnEnd ?? [];
+		if (pools.length < 1) return;
+		const actor = this.actor as unknown as Actor | null | undefined;
+		for (const poolId of pools) {
+			const trimmed = (poolId ?? '').trim();
+			if (trimmed.length < 1) continue;
+			await setPoolFaces(actor, trimmed, []);
+		}
 	}
 
 	#findActiveEffect(): ActiveEffectLike | null {
