@@ -8,6 +8,17 @@
 		"identifier": "",
 		"rules": [
 			{
+				"type": "toggleEffect",
+				"disabled": false,
+				"id": "rage-toggle",
+				"identifier": "",
+				"label": "Rage",
+				"predicate": {},
+				"priority": 1,
+				"tags": ["self:raging"],
+				"turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
+			},
+			{
 				"type": "dicePool",
 				"disabled": false,
 				"id": "fury-pool-base",
@@ -111,7 +122,7 @@
 		"systemId": "nimble",
 		"systemVersion": "0.1.8",
 		"createdTime": 1759180745583,
-		"modifiedTime": 1761434416421,
+		"modifiedTime": 1780675542986,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "GjPt8evcIoVuQ6zg"
