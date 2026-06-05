@@ -1,7 +1,7 @@
 import { SYSTEM_ID } from '#system';
-import { setPoolFaces } from './dicePool/dicePoolRefill.js';
-import { buildEffectiveDicePoolMap } from './dicePool/helpers.js';
-import localize from './localize.js';
+import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { buildEffectiveDicePoolMap } from '#utils/dicePool/helpers.js';
+import localize from '#utils/localize.js';
 
 /**
  * Helpers for the UI affordances that drive `toggleEffect` rules from outside
