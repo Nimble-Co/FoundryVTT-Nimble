@@ -121,16 +121,18 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	}
 
 	/**
-	 * Toggle entry point — flips the backing AE on/off when this rule's owning
+	 * Toggle entry point — ensures the backing AE is on when this rule's owning
 	 * item is activated. Predicate-gated so authors can constrain when the
 	 * toggle is allowed to flip.
 	 *
-	 * Three-state flip:
-	 * - no AE → create (toggle on)
-	 * - existing AE disabled → re-enable (player previously turned it off via
-	 *   the effects panel; re-activating the item turns it back on without
-	 *   churning embedded docs)
-	 * - existing AE enabled → delete (toggle off)
+	 * Item activation only turns the toggle ON; turning OFF is the player's
+	 * job via the effects panel (or a `turnOff` trigger). This avoids
+	 * misclick footguns where re-using the item mid-rage accidentally drops
+	 * the effect.
+	 *
+	 * - no AE → create
+	 * - existing AE disabled → re-enable
+	 * - existing AE enabled → no-op
 	 */
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
 		if (context.sourceItem !== this.item) return;
@@ -142,9 +144,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		}
 		if (existing.disabled) {
 			await existing.update({ disabled: false });
-			return;
 		}
-		await this.#deleteActiveEffect(existing.id);
 	}
 
 	override async onActorKilled(context: ActorHealthContext): Promise<void> {

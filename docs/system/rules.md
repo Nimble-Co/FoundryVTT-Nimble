@@ -199,8 +199,8 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 
 ### Lifecycle
 
-- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor, flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel — players can disable it from there.
-- **Toggle off (manual)**: the player disables the AE via the effects panel (sets `disabled: true`) or activates the item again (the rule toggles it off).
+- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor (or re-enables a disabled one), flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel. Re-activating the item while the AE is already enabled is a no-op — item use is "ensure on," never "flip off," so re-rolling resources mid-rage can't accidentally drop the effect.
+- **Toggle off (manual)**: the player disables (or deletes) the AE via the effects panel.
 - **Toggle off (event)**: any event listed in `turnOff` deletes the AE when it fires for the rule's owning actor.
 - **Tag push**: during `prePrepareData()` the rule scans the actor's effects; if a matching AE exists and is not disabled, every entry in `tags` is added to `actor.tags`. Tags drop on the next prep when the AE is gone or disabled.
 

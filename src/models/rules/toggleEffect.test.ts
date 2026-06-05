@@ -338,20 +338,20 @@ describe('ToggleEffectRule', () => {
 			expect(created?.origin).toBe('Actor.abc.Item.rage-1');
 		});
 
-		it('deletes the existing enabled AE on second activation (toggle off behavior)', async () => {
+		it('is a no-op when the AE is already enabled (re-use does not turn off — avoids misclick footgun)', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
-			actor.effects.push(
-				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
-					{ id: 'ae-existing', disabled: false },
-				),
+			const existing = createMockActiveEffect(
+				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+				{ id: 'ae-existing', disabled: false },
 			);
+			actor.effects.push(existing);
 
 			await rule.onItemActivated(buildContext(rule.item as unknown as MockItem, actor));
 
-			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-existing']);
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(existing.update).not.toHaveBeenCalled();
 		});
 
 		it('re-enables a disabled AE instead of deleting it (player toggled off via effects panel)', async () => {
