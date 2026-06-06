@@ -207,7 +207,7 @@ describe('ToggleEffectRule', () => {
 		});
 	});
 
-	describe('prePrepareData — tag push', () => {
+	describe('prePrepareData: tag push', () => {
 		it('pushes all configured tags into actor.tags when an enabled AE exists', () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule(
@@ -307,7 +307,7 @@ describe('ToggleEffectRule', () => {
 		});
 	});
 
-	describe('onItemActivated — toggle on/off', () => {
+	describe('onItemActivated: toggle on/off', () => {
 		function buildContext(item: MockItem, actor: MockActor) {
 			type Ctx = Parameters<ToggleEffectRule['onItemActivated']>[0];
 			return {
@@ -358,7 +358,7 @@ describe('ToggleEffectRule', () => {
 			expect(created?.origin).toBe('Actor.abc.Item.rage-1');
 		});
 
-		it('is a no-op when the AE is already enabled (re-use does not turn off — avoids misclick footgun)', async () => {
+		it('is a no-op when the AE is already enabled (re-use does not turn off (avoids misclick footgun))', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
 			const existing = createMockActiveEffect(
@@ -416,7 +416,7 @@ describe('ToggleEffectRule', () => {
 		});
 	});
 
-	describe('turnOff dispatch — per-event AE deletion', () => {
+	describe('turnOff dispatch: per-event AE deletion', () => {
 		function pushAE(actor: MockActor, ruleId: string, itemId: string | null): MockActiveEffect {
 			const ae = createMockActiveEffect(
 				{ nimble: { toggleEffectRuleId: ruleId, toggleEffectItemId: itemId } },

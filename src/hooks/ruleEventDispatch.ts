@@ -206,7 +206,7 @@ function handleUseItem(
 // GM ends combat normally; deleteCombat fires as fallback (or when combat is
 // just deleted from the tracker). The same combat ID can hit both, so we
 // record dispatched IDs in updateCombat and clear them inside deleteCombat
-// after the dedup check — same pattern as
+// after the dedup check. Same pattern as
 // src/hooks/dicePoolTriggers/encounterEndTrigger.ts.
 const dispatchedEncounterEndIds = new Set<string>();
 

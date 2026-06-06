@@ -145,7 +145,7 @@ describe('rollDieIntoPool — item-scoped pool persistence (Judgment Dice)', () 
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([4]);
 	});
 
-	it('at max: rolls a face but does not modify the pool — returns applied: false with the face value', async () => {
+	it('at max: rolls a face but does not modify the pool. Returns applied: false with the face value', async () => {
 		// RAW (Berserker Rage): "If you are already at your max, roll as
 		// normal and decide which ones to keep." The helper must surface the
 		// face so the caller (chat card / activation manager / widget) can

@@ -120,7 +120,7 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 		it('rollDie: continues rolling even when the pool fills up so all rolls are surfaced (player decides what to keep)', async () => {
 			// Old behavior was to short-circuit on the first at-max return; that
 			// hid roll outcomes from the player. RAW: "roll as normal and
-			// decide which ones to keep" — so every die must be rolled and
+			// decide which ones to keep" so every die must be rolled and
 			// every face surfaced in the result for the chat card to display.
 			mockRollDieIntoPool
 				.mockResolvedValueOnce({ applied: true, face: 3 })

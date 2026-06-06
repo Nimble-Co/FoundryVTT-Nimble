@@ -63,7 +63,7 @@ function schema() {
 			label: 'NIMBLE.rules.toggleEffect.confirmEndPrompt.label',
 			hint: 'NIMBLE.rules.toggleEffect.confirmEndPrompt.hint',
 		}),
-		// Pool identifiers (dice or charge) to clear when the toggle ends —
+		// Pool identifiers (dice or charge) to clear when the toggle ends,
 		// either via a turn-off trigger or a player toggle-off. Lets authors
 		// model rules like Berserker Rage's "Fury Dice are lost when your
 		// Rage ends" without coupling toggleEffect to a specific feature.
@@ -147,7 +147,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	}
 
 	/**
-	 * Toggle entry point — ensures the backing AE is on when this rule's owning
+	 * Toggle entry point. Ensures the backing AE is on when this rule's owning
 	 * item is activated. Predicate-gated so authors can constrain when the
 	 * toggle is allowed to flip.
 	 *

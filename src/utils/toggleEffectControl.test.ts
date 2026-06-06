@@ -105,7 +105,7 @@ describe('toggleEffectControl', () => {
 		});
 	});
 
-	describe('toggleEffectAE — enable path', () => {
+	describe('toggleEffectAE: enable path', () => {
 		it('creates a new AE when none exists, flagged with rule + item ids', async () => {
 			const createSpy = vi.fn().mockResolvedValue([]);
 			const actor = {
@@ -138,7 +138,7 @@ describe('toggleEffectControl', () => {
 		});
 	});
 
-	// TODO(follow-up): unit tests for toggleEffectAE disable path —
+	// TODO(follow-up): unit tests for toggleEffectAE disable path:
 	// confirmEndPrompt skip when pool empty, prompt + confirm/cancel branches.
 	// Requires mocking buildEffectiveDicePoolMap which doesn't intercept
 	// cleanly in the current vi.mock setup. Integration-verified manually.

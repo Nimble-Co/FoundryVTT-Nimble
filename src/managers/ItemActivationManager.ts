@@ -550,7 +550,7 @@ class ItemActivationManager {
 			};
 
 			// Authors opt in to suppressing the roll helper's own chat card per
-			// effect node — set when the feature's activation card already
+			// effect node: set when the feature's activation card already
 			// displays the rolled faces (e.g. Rage). Defaults to false so
 			// existing data keeps emitting the standalone roll card.
 			const suppressChat = node.suppressChat === true;
@@ -558,7 +558,7 @@ class ItemActivationManager {
 			if (node.action === 'rollDie') {
 				const before = readPool();
 				let applied = false;
-				// Capture every face that came up — including rolls that didn't
+				// Capture every face that came up, including rolls that didn't
 				// land in the pool because it was at max. RAW (Berserker Rage):
 				// "If you are already at your max, roll as normal and decide
 				// which ones to keep." The chat card displays these so the

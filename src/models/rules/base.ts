@@ -93,7 +93,7 @@ interface InitiativeRolledContext {
 	combatant: Combatant;
 }
 
-// Context passed to onItemActivated — fires once per item activation, regardless
+// Context passed to onItemActivated. Fires once per item activation, regardless
 // of whether the activation produced damage (unlike onItemUsed, which only fires
 // when damage is actually applied to a target). Use this for player-controlled
 // toggles and other rule-lifecycle work that should happen on every activation.
@@ -103,7 +103,7 @@ interface ItemActivatedContext {
 	card: ChatMessage | null;
 }
 
-// Context passed to onEncounterEnd — fires once per combatant when a combat
+// Context passed to onEncounterEnd. Fires once per combatant when a combat
 // ends (either via updateCombat transitioning started: true → false, or via
 // deleteCombat as a fallback; the dispatcher dedup's the pair).
 interface EncounterEndContext {
@@ -111,7 +111,7 @@ interface EncounterEndContext {
 	actor: NimbleBaseActor;
 }
 
-// Context passed to onUnconscious — fires when the unconscious condition is
+// Context passed to onUnconscious. Fires when the unconscious condition is
 // applied to an actor. Distinct from onActorKilled (HP ≤ 0), which can fire
 // for other reasons (dying for PCs, instant-kill effects for monsters).
 interface UnconsciousContext {
@@ -325,7 +325,7 @@ abstract class NimbleBaseRule<
 	/**
 	 * Hook called once per item activation (post chat-card), regardless of whether
 	 * the activation produced damage. Use this for player-controlled toggles like
-	 * toggleEffect — unlike onItemUsed, this fires on every activation, even for
+	 * toggleEffect. Unlike onItemUsed, this fires on every activation, even for
 	 * items that don't roll damage.
 	 */
 	async onItemActivated(_context: ItemActivatedContext): Promise<void> {

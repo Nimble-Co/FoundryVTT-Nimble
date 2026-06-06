@@ -963,7 +963,7 @@
 				},
 				"clearPoolsOnEnd": {
 					"label": "Clear pools on end",
-					"hint": "Pool identifiers to empty when the toggle ends — either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
+					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
 				},
 				"confirmDialogTitle": "End {name}?",
 				"confirmDialogConfirm": "End",
@@ -1859,7 +1859,7 @@
 			"poolNode": {
 				"defaultLabel": "Pool",
 				"noChange": "— no change",
-				"atMax": "— pool at max",
+				"atMax": "(pool at max)",
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
 					"rollDie": "Rolled",
@@ -1882,7 +1882,7 @@
 					"predicateLabel": "Predicate (JSON)",
 					"predicateInvalid": "Predicate must be valid JSON",
 					"suppressChatLabel": "Suppress roll chat card",
-					"suppressChatHint": "When enabled, the helper does not post a standalone roll card — use when the feature's own activation card already shows the rolled faces.",
+					"suppressChatHint": "When enabled, the helper does not post a standalone roll card. Use when the feature's own activation card already shows the rolled faces.",
 					"poolTypeDice": "Dice Pool",
 					"poolTypeCharge": "Charge Pool",
 					"actionRollDie": "Roll Die",

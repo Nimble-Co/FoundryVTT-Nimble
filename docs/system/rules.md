@@ -184,9 +184,9 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 `targetCondition` is only available on `damageBonus`. Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
 :::
 
-## `toggleEffect` — player-controlled tag pushes
+## `toggleEffect` (player-controlled tag pushes)
 
-`toggleEffect` is a foundation rule that pushes one or more domain tags into the actor's domain while a backing Foundry `ActiveEffect` is enabled. The rule itself doesn't carry nested rules or express any modifiers — its only job is the tag push. Sibling rules elsewhere predicate on those tags via the standard `predicate` field.
+`toggleEffect` is a foundation rule that pushes one or more domain tags into the actor's domain while a backing Foundry `ActiveEffect` is enabled. The rule itself doesn't carry nested rules or express any modifiers; its only job is the tag push. Sibling rules elsewhere predicate on those tags via the standard `predicate` field.
 
 ```jsonc
 {
@@ -199,7 +199,7 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 
 ### Lifecycle
 
-- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor (or re-enables a disabled one), flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel. Re-activating the item while the AE is already enabled is a no-op — item use is "ensure on," never "flip off," so re-rolling resources mid-rage can't accidentally drop the effect.
+- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor (or re-enables a disabled one), flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel. Re-activating the item while the AE is already enabled is a no-op. Item use is "ensure on," never "flip off," so re-rolling resources mid-rage can't accidentally drop the effect.
 - **Toggle off (manual)**: the player disables (or deletes) the AE via the effects panel.
 - **Toggle off (event)**: any event listed in `turnOff` deletes the AE when it fires for the rule's owning actor.
 - **Tag push**: during `prePrepareData()` the rule scans the actor's effects; if a matching AE exists and is not disabled, every entry in `tags` is added to `actor.tags`. Tags drop on the next prep when the AE is gone or disabled.
@@ -239,7 +239,7 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 
 ### Priority note
 
-`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case — `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
+`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
 
 ## RulesManager API
 

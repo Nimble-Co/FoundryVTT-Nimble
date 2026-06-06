@@ -5,8 +5,8 @@ import localize from '#utils/localize.js';
 
 /**
  * Helpers for the UI affordances that drive `toggleEffect` rules from outside
- * the rule pipeline — e.g. the on/off switch surfaced on attack-feature rows
- * in the heroic actions panel.
+ * the rule pipeline (e.g. the on/off switch surfaced on attack-feature rows
+ * in the heroic actions panel).
  *
  * These live in a plain TS module so the Svelte 5 compiler does not
  * instrument the Map iteration and effect lookup as reactive code (which
@@ -99,8 +99,8 @@ async function createToggleEffectAE(
 
 /**
  * Returns true if any pool listed in `clearPoolsOnEnd` currently has dice
- * faces — i.e. the player would actually lose something by ending the
- * toggle. When every pool is empty there's nothing to lose, so we skip the
+ * faces (i.e. the player would actually lose something by ending the
+ * toggle). When every pool is empty there's nothing to lose, so we skip the
  * confirm prompt entirely (no need to interrupt for a no-op).
  */
 function hasPoolContentToLose(actor: ActorForToggle, poolIds: string[] | undefined): boolean {

@@ -21,7 +21,7 @@
 		() => onActivateItem,
 	);
 
-	// toggleEffect switch — surfaces a Foundry AE toggle on attack-feature rows.
+	// toggleEffect switch: surfaces a Foundry AE toggle on attack-feature rows.
 	// state.effectVersion is bumped by Hooks listeners registered in the state
 	// file when any AE on this actor is created/updated/deleted, so the
 	// switch updates from the in-panel click, the PASSIVE EFFECTS panel, or a

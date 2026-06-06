@@ -255,7 +255,7 @@ async function rollDieIntoPool(
 
 	// At max: the die is rolled (RAW: "If you are already at your max, roll as
 	// normal and decide which ones to keep") but the pool is untouched. The
-	// caller — and the chat card — gets the face so the player can see what
+	// caller (and the chat card) gets the face so the player can see what
 	// came up. Per-pool "decide which to keep" semantics layer on top of this.
 	if (pool.faces.length >= pool.max) {
 		return { applied: false, face };
