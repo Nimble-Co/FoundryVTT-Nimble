@@ -3,7 +3,7 @@
 	import { tick } from 'svelte';
 
 	type EditorOptions = foundry.applications.elements.HTMLProseMirrorElement.ProseMirrorInputConfig;
-	type EnrichOptions = foundry.applications.ux.TextEditor.implementation.EnrichmentOptions;
+	type EnrichOptions = foundry.applications.ux.TextEditor.EnrichmentOptions;
 
 	interface ProseMirrorElement extends HTMLElement {
 		_getValue?(): string;
