@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { NimbleChatMessage } from '../../../documents/chatMessage.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
 
@@ -12,7 +13,9 @@
 	}
 
 	function getArmorIcon(token: TokenDocument.Implementation) {
-		const armor = token.actor?.system?.attributes.armor;
+		const armor = (token.actor?.system as { attributes?: { armor?: string } } | undefined)
+			?.attributes?.armor;
+		if (!armor) return null;
 		const armorIcon = npcArmorIcons[armor];
 
 		if (armor !== 'heavy' && armor !== 'medium') return null;
@@ -44,9 +47,11 @@
     `;
 	}
 
-	async function prepareTargets(targetIDs: string[]) {
-		const tokenDocuments = await Promise.all(targetIDs.map((id) => fromUuid(id)));
-		return tokenDocuments.filter(Boolean);
+	async function prepareTargets(targetIDs: string[]): Promise<TokenDocument.Implementation[]> {
+		const tokenDocuments = await Promise.all(
+			targetIDs.map((id) => fromUuid(id as Parameters<typeof fromUuid>[0])),
+		);
+		return tokenDocuments.filter(Boolean) as unknown as TokenDocument.Implementation[];
 	}
 
 	function removeTarget(targetId: string) {
@@ -55,8 +60,10 @@
 
 	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
 
-	let messageDocument = getContext('messageDocument');
-	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
+	let messageDocument = getContext('messageDocument') as NimbleChatMessage;
+	let targets = $derived(
+		(messageDocument?.reactive?.system as { targets?: string[] } | undefined)?.targets ?? [],
+	);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
