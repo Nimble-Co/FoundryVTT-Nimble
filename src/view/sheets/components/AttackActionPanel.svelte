@@ -10,7 +10,13 @@
 	const actor = getContext<NimbleCharacter>('actor');
 	const sheet = getContext<{ _onDragStart(event: DragEvent): void }>('application');
 
-	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
+	let {
+		onActivateItem = async (_cost: number) => {},
+		showEmbeddedDocumentImages = true,
+	}: {
+		onActivateItem?: (cost: number) => Promise<void>;
+		showEmbeddedDocumentImages?: boolean;
+	} = $props();
 
 	const state = createAttackPanelState(
 		() => actor,
@@ -55,34 +61,40 @@
 			{/if}
 
 			{#each state.sortItems(state.weapons) as item (item._id)}
+				{@const reactiveItem = (item as unknown as { reactive: { name: string; img: string } })
+					.reactive}
+				{@const itemId = item._id ?? ''}
 				<WeaponCard
-					name={item.reactive.name}
-					image={item.reactive.img}
+					name={reactiveItem.name}
+					image={reactiveItem.img}
 					damage={state.getWeaponDamage(item)}
 					properties={state.getWeaponProperties(item)}
 					description={state.getItemDescription(item)}
-					isExpanded={state.expandedDescriptions.has(item._id)}
+					isExpanded={state.expandedDescriptions.has(itemId)}
 					showImage={showEmbeddedDocumentImages}
-					itemId={item._id}
-					onclick={() => state.handleItemClick(item._id)}
+					{itemId}
+					onclick={() => state.handleItemClick(itemId)}
 					ondragstart={(event) => sheet._onDragStart(event)}
-					onToggleDescription={(e) => state.toggleDescription(item._id, e)}
+					onToggleDescription={(e) => state.toggleDescription(itemId, e)}
 				/>
 			{/each}
 
 			{#each state.sortItems(state.attackFeatures) as item (item._id)}
+				{@const reactiveItem = (item as unknown as { reactive: { name: string; img: string } })
+					.reactive}
+				{@const itemId = item._id ?? ''}
 				<WeaponCard
-					name={item.reactive.name}
-					image={item.reactive.img}
+					name={reactiveItem.name}
+					image={reactiveItem.img}
 					damage={state.getWeaponDamage(item)}
 					properties={[localize('NIMBLE.ui.heroicActions.feature')]}
 					description={state.getItemDescription(item)}
-					isExpanded={state.expandedDescriptions.has(item._id)}
+					isExpanded={state.expandedDescriptions.has(itemId)}
 					showImage={showEmbeddedDocumentImages}
-					itemId={item._id}
-					onclick={() => state.handleItemClick(item._id)}
+					{itemId}
+					onclick={() => state.handleItemClick(itemId)}
 					ondragstart={(event) => sheet._onDragStart(event)}
-					onToggleDescription={(e) => state.toggleDescription(item._id, e)}
+					onToggleDescription={(e) => state.toggleDescription(itemId, e)}
 				/>
 			{/each}
 		</ul>
