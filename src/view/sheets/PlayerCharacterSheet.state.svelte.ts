@@ -1,4 +1,4 @@
-import { setContext, untrack } from 'svelte';
+import { type Component, setContext, untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
 import { incrementDieSize } from '#managers/HitDiceManager.js';
@@ -10,15 +10,19 @@ import {
 } from '#utils/combatManaRules.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 
+// Tab components have heterogeneous prop shapes; they are rendered without props here.
+// biome-ignore lint/suspicious/noExplicitAny: heterogeneous tab component container
+type TabComponent = Component<any>;
+
 type NavigationComponents = {
-	core: unknown;
-	actions: unknown;
-	conditions: unknown;
-	inventory: unknown;
-	features: unknown;
-	spells: unknown;
-	bio: unknown;
-	settings: unknown;
+	core: TabComponent;
+	actions: TabComponent;
+	conditions: TabComponent;
+	inventory: TabComponent;
+	features: TabComponent;
+	spells: TabComponent;
+	bio: TabComponent;
+	settings: TabComponent;
 };
 
 function getHitPointPercentage(currentHP: number, maxHP: number): number {

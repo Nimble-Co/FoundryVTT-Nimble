@@ -2,11 +2,12 @@
 	import { SYSTEM_ID } from '#system';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
+	import type { NimbleChatMessage } from '#documents/chatMessage.js';
 	import { getContext } from 'svelte';
 
 	let { node: _node } = $props();
 
-	const messageDocument = getContext('messageDocument');
+	const messageDocument = getContext('messageDocument') as NimbleChatMessage;
 	let consumption = $derived(
 		messageDocument?.reactive?.flags?.[SYSTEM_ID]?.chargeConsumption ?? [],
 	);

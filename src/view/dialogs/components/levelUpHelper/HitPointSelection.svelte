@@ -63,7 +63,9 @@
 				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'average'}
 			>
 				<i class="fa-solid fa-gauge"></i>
-				{game.i18n.format(CONFIG.NIMBLE.levelUpDialog.takeAverage, { average: averageHp })}
+				{game.i18n.format(CONFIG.NIMBLE.levelUpDialog.takeAverage, {
+					average: String(averageHp),
+				})}
 
 				<input
 					class="nimble-hit-point-selection__input"

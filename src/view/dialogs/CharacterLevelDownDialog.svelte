@@ -1,14 +1,17 @@
 <script lang="ts">
 	import type { CharacterLevelDownDialogProps } from '#types/components/CharacterLevelDownDialog.d.ts';
 
-	import { createLevelDownState } from './CharacterLevelDownDialogState.svelte.ts';
+	import {
+		createLevelDownState,
+		type LevelDownActor,
+	} from './CharacterLevelDownDialogState.svelte.ts';
 
 	let { document: actor, dialog }: CharacterLevelDownDialogProps = $props();
 
 	const { levelDownDialog } = CONFIG.NIMBLE;
 
 	const state = createLevelDownState(
-		() => actor,
+		() => actor as unknown as LevelDownActor,
 		() => dialog,
 	);
 

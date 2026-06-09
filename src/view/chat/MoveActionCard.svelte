@@ -7,7 +7,9 @@
 
 	const { messageDocument }: MoveActionCardProps = $props();
 
-	const system = $derived(messageDocument.reactive.system);
+	const system = $derived(
+		messageDocument.reactive.system as unknown as { actorName: string; speed: number },
+	);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 

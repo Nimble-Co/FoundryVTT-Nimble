@@ -6,7 +6,7 @@ interface ClassItemShape {
 }
 
 /** Structural type for what the factory accesses on the actor document */
-interface LevelDownActor {
+export interface LevelDownActor {
 	system: {
 		levelUpHistory: Array<{
 			classIdentifier: string;

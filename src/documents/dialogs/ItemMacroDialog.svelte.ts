@@ -1,3 +1,4 @@
+import type * as svelte from 'svelte';
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
@@ -11,7 +12,7 @@ export default class ItemMacroDialog extends SvelteApplicationMixin(ApplicationV
 
 	data: any;
 
-	protected root = ItemMacroDialogComponent;
+	protected root = ItemMacroDialogComponent as unknown as svelte.Component<Record<string, never>>;
 
 	constructor(item, data = {}, options = {} as SvelteApplicationRenderContext) {
 		super(

@@ -785,6 +785,7 @@ const charges = {
 	saveChanges: 'NIMBLE.charges.saveChanges',
 	max: 'NIMBLE.charges.setMax',
 	empty: 'NIMBLE.charges.setEmpty',
+	manuallyAdjusted: 'NIMBLE.charges.manuallyAdjusted',
 };
 
 const safeRest = {
