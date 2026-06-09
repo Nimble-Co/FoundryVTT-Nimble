@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
+	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { RulesManager } from '#managers/RulesManager.js';
 	import localize from '#utils/localize.js';
@@ -49,9 +50,9 @@
 		return null;
 	}
 
-	function groupItemsByType(items) {
-		return items.reduce((categories, item) => {
-			const { objectType } = item.reactive.system;
+	function groupItemsByType(items: NimbleBaseItem[]) {
+		return items.reduce<Record<string, NimbleBaseItem[]>>((categories, item) => {
+			const { objectType } = item.reactive.system as unknown as { objectType: string };
 
 			categories[objectType] ??= [];
 			categories[objectType].push(item);
@@ -113,7 +114,9 @@
 			return;
 		}
 
-		await sheet._onSortItem(event, item);
+		await (
+			sheet as unknown as { _onSortItem(e: DragEvent, i: InventorySortableItem): Promise<unknown> }
+		)._onSortItem(event, item);
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
@@ -126,7 +129,7 @@
 	let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
 	let categorizedItems = $derived(groupItemsByType(items));
 
-	let itemRulesManagers = new SvelteMap();
+	let itemRulesManagers = new SvelteMap<string, RulesManager>();
 
 	// All charge pools for the actor
 	let allPools = $derived(getPools(actor.reactive));
@@ -138,8 +141,10 @@
 	$effect(() => {
 		// Rebuild the maps when items change
 		items.forEach((item) => {
-			const rulesManager = new RulesManager(item);
-			itemRulesManagers.set(item.id, rulesManager);
+			const rulesManager = new RulesManager(
+				item as unknown as ConstructorParameters<typeof RulesManager>[0],
+			);
+			itemRulesManagers.set(item.id ?? '', rulesManager);
 		});
 	});
 
@@ -197,7 +202,7 @@
 				value={denomination.value}
 				onchange={({ target }) =>
 					actor.update({
-						[`system.currency.${key}.value`]: target.value,
+						[`system.currency.${key}.value`]: (target as HTMLInputElement).value,
 					})}
 			/>
 		</label>
@@ -205,7 +210,7 @@
 </header>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
-	{#each Object.entries(categorizedItems).sort(([aKey], [bKey]) => aKey - bKey) as [key, itemCategory]}
+	{#each Object.entries(categorizedItems).sort(([aKey], [bKey]) => Number(aKey) - Number(bKey)) as [key, itemCategory]}
 		{@const categoryName = objectTypeHeadings[key] ?? key}
 
 		<div>
@@ -218,7 +223,15 @@
 			<ul class="nimble-item-list">
 				{#each sortItems(itemCategory) as item (item.reactive._id)}
 					{@const metadata = getObjectMetadata(item)}
-					{@const rules = itemRulesManagers.get(item.id)}
+					{@const rules = itemRulesManagers.get(item.id ?? '')}
+					{@const itemId = item.reactive._id ?? ''}
+					{@const itemSystem = item.reactive.system as unknown as {
+						rules?: unknown[];
+						equipped?: boolean;
+						objectType?: string;
+						objectSizeType?: string;
+						quantity?: number;
+					}}
 
 					<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
 					<!-- svelte-ignore  a11y_click_events_have_key_events -->
@@ -228,10 +241,10 @@
 						class:nimble-document-card--no-meta={!metadata}
 						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
 							droppedItemFlashIds,
-							item.reactive._id,
+							itemId,
 						)}
-						data-item-id={item.reactive._id}
-						data-tooltip={tooltipCache.get(item.reactive._id) || ''}
+						data-item-id={itemId}
+						data-tooltip={tooltipCache.get(itemId) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
 						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
@@ -240,9 +253,9 @@
 						ondragstart={(event) =>
 							(sheet as unknown as { _onDragStart(e: DragEvent): void })._onDragStart(event)}
 						ondragover={(event) => event.preventDefault()}
-						ondrop={(event) => handleItemDrop(event, item)}
-						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
-						onclick={() => actor.activateItem(item._id)}
+						ondrop={(event) => handleItemDrop(event, { _id: itemId })}
+						onanimationend={(event) => handleDropFlashAnimationEnd(event, itemId)}
+						onclick={() => actor.activateItem(item._id ?? '')}
 					>
 						<header class="u-semantic-only">
 							{#if showEmbeddedDocumentImages}
@@ -260,14 +273,10 @@
 							</h4>
 
 							<div class="nimble-document-card__charges">
-								<ChargeIndicator
-									pools={getItemPools(item.reactive._id)}
-									{actor}
-									itemId={item.reactive._id}
-								/>
+								<ChargeIndicator pools={getItemPools(itemId)} {actor} {itemId} />
 							</div>
 
-							{#if rules && (item.reactive.system.rules?.length ?? 0) > 0}
+							{#if rules && (itemSystem.rules?.length ?? 0) > 0}
 								<button
 									class="nimble-button"
 									data-button-variant="icon"
@@ -275,19 +284,19 @@
 									aria-label={localize('NIMBLE.prompts.toggleEquipment', {
 										name: item.reactive.name,
 									})}
-									data-tooltip={item.reactive.system.equipped
+									data-tooltip={itemSystem.equipped
 										? localize('NIMBLE.prompts.equippedTooltip')
 										: localize('NIMBLE.prompts.unequippedTooltip')}
 									onclick={async (event) => {
 										event.stopPropagation();
-										const newEquippedState = !item.reactive.system.equipped;
+										const newEquippedState = !itemSystem.equipped;
 										const rulesUpdated = newEquippedState
 											? await rules.enableAllRules()
 											: await rules.disableAllRules();
 
 										if (!rulesUpdated) return;
 
-										const updatedItem = await actor.updateItem(item._id, {
+										const updatedItem = await actor.updateItem(item._id ?? '', {
 											'system.equipped': newEquippedState,
 										});
 
@@ -300,13 +309,13 @@
 										}
 									}}
 								>
-									{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
-										{#if item.reactive.system.equipped}
+									{#if ['armor', 'shield'].includes(itemSystem.objectType ?? '')}
+										{#if itemSystem.equipped}
 											<i class="fa-solid fa-shield"></i>
 										{:else}
 											<i class="fa-regular fa-shield"></i>
 										{/if}
-									{:else if item.reactive.system.equipped}
+									{:else if itemSystem.equipped}
 										<i class="fa-solid fa-hand"></i>
 									{:else}
 										<i class="fa-regular fa-hand"></i>
@@ -316,15 +325,15 @@
 								<input
 									class="nimble-document-card__quantity"
 									type="number"
-									value={item.reactive.system.quantity || 1}
+									value={itemSystem.quantity || 1}
 									min="0"
 									step="1"
 									onclick={(event) => event.stopPropagation()}
 									onchange={({ currentTarget }) =>
-										actor.updateItem(item._id, {
+										actor.updateItem(item._id ?? '', {
 											'system.quantity': currentTarget.value,
 										})}
-									disabled={item.system.objectSizeType === 'slots'}
+									disabled={itemSystem.objectSizeType === 'slots'}
 								/>
 							{/if}
 
