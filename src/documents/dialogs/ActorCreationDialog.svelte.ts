@@ -81,42 +81,18 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 	}
 
 	async importActorFromJson() {
-		const input = document.createElement('input');
-		input.type = 'file';
-		input.accept = '.json,application/json';
+		const { default: ImportPlayerCharacterDialog } = await import(
+			'../../import/playerCharacter/ImportPlayerCharacterDialog.svelte.js'
+		);
 
-		input.addEventListener('change', async () => {
-			const file = input.files?.[0];
-			if (!file) return;
-
-			try {
-				const text = await file.text();
-				const data = JSON.parse(text) as Record<string, unknown>;
-
-				// Drop the source id so Foundry generates a fresh one for this world.
-				delete data._id;
-
-				const { documentClasses } = CONFIG.NIMBLE.Actor;
-				const actorType = (data.type as string | undefined) ?? 'character';
-				const documentClass =
-					(documentClasses as Record<string, typeof Actor>)[actorType] ??
-					(documentClasses as Record<string, typeof Actor>).character;
-
-				const folder = (this.data.folder as string | null | undefined) ?? null;
-
-				await documentClass.create(
-					{ ...data, folder } as object as Actor.CreateData,
-					{ parent: this.parent, pack: this.pack, renderSheet: true } as object,
-				);
-
-				ui.notifications?.info(game.i18n.localize('NIMBLE.actorImport.jsonSuccess'));
-			} catch (error) {
-				console.error('Actor JSON import failed:', error);
-				ui.notifications?.error(game.i18n.localize('NIMBLE.actorImport.jsonError'));
-			}
+		const folder = (this.data.folder as string | null | undefined) ?? null;
+		const dialog = new ImportPlayerCharacterDialog({
+			folder,
+			parent: this.parent,
+			pack: this.pack,
 		});
+		dialog.render(true);
 
-		input.click();
 		return super.close();
 	}
 
