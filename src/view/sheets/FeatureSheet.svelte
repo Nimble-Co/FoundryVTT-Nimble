@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext, untrack } from 'svelte';
+	import { setContext, untrack, type Snippet } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 
@@ -22,7 +22,7 @@
 
 	const featureState = createFeatureSheetState(() => ({ item, sheet }));
 
-	const snippetsByTab: Record<FeatureSheetTabName, () => void> = {
+	const snippetsByTab: Record<FeatureSheetTabName, Snippet> = {
 		description: descriptionTab,
 		config: configTab,
 		activationConfig: activationConfigTab,
@@ -61,7 +61,10 @@
 			<input
 				type="text"
 				value={item.reactive.identifier || ''}
-				onchange={({ target }) => item.update({ 'system.identifier': target.value })}
+				onchange={({ target }) =>
+					item.update({
+						'system.identifier': (target as HTMLInputElement).value,
+					} as Record<string, unknown>)}
 			/>
 		</div>
 
@@ -86,7 +89,11 @@
 				<input
 					type="text"
 					value={item.reactive.system.class || ''}
-					onchange={({ target }) => item.update({ 'system.class': target.value })}
+					onchange={({ target }) =>
+						item.update({ 'system.class': (target as HTMLInputElement).value } as Record<
+							string,
+							unknown
+						>)}
 				/>
 			</div>
 
@@ -98,7 +105,11 @@
 				<input
 					type="text"
 					value={item.reactive.system.group || ''}
-					onchange={({ target }) => item.update({ 'system.group': target.value })}
+					onchange={({ target }) =>
+						item.update({ 'system.group': (target as HTMLInputElement).value } as Record<
+							string,
+							unknown
+						>)}
 				/>
 			</div>
 

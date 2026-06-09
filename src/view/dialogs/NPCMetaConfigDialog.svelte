@@ -24,7 +24,8 @@
 		<input
 			type="text"
 			value={actor.reactive.system.details.level}
-			onchange={({ target }) => actor.update({ 'system.details.level': target.value })}
+			onchange={({ target }) =>
+				actor.update({ 'system.details.level': (target as HTMLInputElement).value })}
 		/>
 	</label>
 
@@ -36,7 +37,8 @@
 		<input
 			type="text"
 			value={actor.reactive.system.details.creatureType}
-			onchange={({ target }) => actor.update({ 'system.details.creatureType': target.value })}
+			onchange={({ target }) =>
+				actor.update({ 'system.details.creatureType': (target as HTMLInputElement).value })}
 		/>
 	</label>
 
@@ -57,7 +59,8 @@
 			<input
 				type="checkbox"
 				checked={actor.reactive.system.details.isFlunky}
-				onchange={({ target }) => actor.update({ 'system.details.isFlunky': target.checked })}
+				onchange={({ target }) =>
+					actor.update({ 'system.details.isFlunky': (target as HTMLInputElement).checked })}
 			/>
 
 			<h3 class="nimble-heading" data-heading-variant="field">

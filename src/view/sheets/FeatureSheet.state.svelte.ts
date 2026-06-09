@@ -26,8 +26,8 @@ export function createFeatureSheetState(getProps: () => FeatureSheetProps) {
 			const { item } = getProps();
 			return getSelectionCountByLevelDisplayValue(item.reactive.system.selectionCountByLevel ?? {});
 		},
-		updateFeatureType(newSelection: string) {
-			void getProps().item.update({ 'system.featureType': newSelection } as Record<
+		updateFeatureType(newSelection: string | number) {
+			void getProps().item.update({ 'system.featureType': String(newSelection) } as Record<
 				string,
 				unknown
 			>);
