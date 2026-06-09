@@ -38,7 +38,9 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 
 	constructor(
 		title: string,
-		component: svelte.Component<Record<string, never>>,
+		// Dialogs accept components with arbitrary prop shapes; props are supplied via `data`.
+		// biome-ignore lint/suspicious/noExplicitAny: heterogeneous component container
+		component: svelte.Component<any>,
 		data: Record<string, unknown> = {},
 		options: GenericDialogOptions = {},
 	) {
@@ -77,7 +79,8 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	 */
 	static getOrCreate(
 		title: string,
-		component: svelte.Component<Record<string, never>>,
+		// biome-ignore lint/suspicious/noExplicitAny: heterogeneous component container
+		component: svelte.Component<any>,
 		data: Record<string, unknown> = {},
 		options: GenericDialogOptions & { uniqueId: string },
 	): GenericDialog {
