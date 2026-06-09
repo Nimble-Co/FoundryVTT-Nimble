@@ -47,7 +47,11 @@
 
 	let mana = $derived(actor.reactive.system.resources.mana);
 	let manaRecoveryTypes = $derived.by(() =>
-		getManaRecoveryTypesFromClasses(actor.reactive.items.filter((i) => i.type === 'class')),
+		getManaRecoveryTypesFromClasses(
+			actor.reactive.items.filter((i) => i.type === 'class') as Parameters<
+				typeof getManaRecoveryTypesFromClasses
+			>[0],
+		),
 	);
 	let restoresManaOnSafeRest = $derived.by(() => restoresManaOnRest(manaRecoveryTypes, 'safe'));
 	let manaRecovery = $derived(restoresManaOnSafeRest ? mana.max - mana.current : 0);
@@ -60,22 +64,27 @@
 		const hitDiceAttr = actor.reactive.system.attributes.hitDice;
 		const bonusHitDice = actor.reactive.system.attributes.bonusHitDice ?? [];
 		const classes = actor.reactive.items.filter((i) => i.type === 'class');
-		const hitDiceSizeBonus = actor.reactive.system.attributes.hitDiceSizeBonus ?? 0;
+		const hitDiceSizeBonus =
+			(actor.reactive.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0;
 
 		const bySize: Record<number, { current: number; total: number }> = {};
 
 		// Add from classes (apply hitDiceSizeBonus to get effective size)
 		for (const cls of classes) {
-			const baseSize = cls.system.hitDieSize;
+			const classSystem = cls.system as unknown as { hitDieSize: number; classLevel: number };
+			const baseSize = classSystem.hitDieSize;
 			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			bySize[size] ??= { current: 0, total: 0 };
-			bySize[size].total += cls.system.classLevel;
+			bySize[size].total += classSystem.classLevel;
 			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 		}
 
 		// Get effective class sizes (after applying bonus) for later checks
 		const effectiveClassSizes = classes.map((cls) =>
-			incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus),
+			incrementDieSize(
+				(cls.system as unknown as { hitDieSize: number }).hitDieSize,
+				hitDiceSizeBonus,
+			),
 		);
 
 		// Add from bonusHitDice array (apply hitDiceSizeBonus to increment)
