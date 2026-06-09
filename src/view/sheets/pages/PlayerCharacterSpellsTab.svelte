@@ -24,6 +24,15 @@
 		tooltip: string;
 	}
 
+	interface SpellSystem {
+		school?: string;
+		tier?: number;
+		properties: { selected: string[] };
+	}
+
+	const spellSystem = (spell: NimbleBaseItem): SpellSystem =>
+		spell.reactive.system as unknown as SpellSystem;
+
 	async function configureItem(event, id) {
 		event.stopPropagation();
 
@@ -95,7 +104,8 @@
 
 	function getSpellSchoolTabs(spells: NimbleBaseItem[]): SpellSchoolTab[] {
 		const actorSpellSchools = spells.reduce((relevantSpellSchools, spell) => {
-			if (spell.system.school) relevantSpellSchools.add(spell.system.school);
+			const school = (spell.system as unknown as SpellSystem).school;
+			if (school) relevantSpellSchools.add(school);
 
 			return relevantSpellSchools;
 		}, new Set());
@@ -127,16 +137,14 @@
 	function getVisibleSpells(spells: NimbleBaseItem[], tabName?: string) {
 		if (!tabName || tabName === 'all') return groupSpellsByTier(spells);
 
-		const spellsOfSpecifiedSchool = spells.filter(
-			(spell) => spell.reactive.system.school === tabName,
-		);
+		const spellsOfSpecifiedSchool = spells.filter((spell) => spellSystem(spell).school === tabName);
 
 		const spellsByTier = groupSpellsByTier(spellsOfSpecifiedSchool);
 
-		if (currentTab.name && currentTab.name !== 'all' && foundry.utils.isEmpty(spellsByTier)) {
+		if (currentTab?.name && currentTab.name !== 'all' && foundry.utils.isEmpty(spellsByTier)) {
 			currentTab = subNavigation[0];
 
-			if (currentTab.name && currentTab.name !== 'all') {
+			if (currentTab?.name && currentTab.name !== 'all') {
 				return getVisibleSpells(spells, 'all');
 			}
 		}
@@ -146,9 +154,10 @@
 
 	function groupSpellsByTier(spells: NimbleBaseItem[]) {
 		return spells.reduce<Record<number, NimbleBaseItem[]>>((tiers, spell) => {
-			const utilitySpell = spell.reactive.system.properties.selected.includes('utilitySpell');
+			const system = spellSystem(spell);
+			const utilitySpell = system.properties.selected.includes('utilitySpell');
 
-			const tier = utilitySpell ? 0 : spell.reactive.system.tier;
+			const tier = utilitySpell ? 0 : (system.tier ?? 0);
 
 			tiers[tier] ??= [];
 			tiers[tier].push(spell);
@@ -263,10 +272,11 @@
 
 			<ul class="nimble-item-list">
 				{#each sortItems(tierSpells) as spell (spell.reactive._id)}
+					{@const spellId = spell.reactive._id ?? ''}
 					{@const meta = getSpellMetadata(spell)}
 					{@const requiresConcentration =
-						spell.reactive.system.properties.selected.includes('concentration')}
-					{@const utilitySpell = spell.reactive.system.properties.selected.includes('utilitySpell')}
+						spellSystem(spell).properties.selected.includes('concentration')}
+					{@const utilitySpell = spellSystem(spell).properties.selected.includes('utilitySpell')}
 
 					<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
 					<!-- svelte-ignore  a11y_click_events_have_key_events -->
@@ -287,8 +297,8 @@
 						role="button"
 						ondragstart={(event) =>
 							(sheet as unknown as { _onDragStart(e: DragEvent): void })._onDragStart(event)}
-						onanimationend={(event) => handleDropFlashAnimationEnd(event, spell.reactive._id)}
-						onclick={() => actor.activateItem(spell._id)}
+						onanimationend={(event) => handleDropFlashAnimationEnd(event, spellId)}
+						onclick={() => actor.activateItem(spell._id ?? '')}
 					>
 						{#if showEmbeddedDocumentImages}
 							<div class="nimble-document-card__img-wrapper">
@@ -308,7 +318,7 @@
 									{#if !currentTab || currentTab?.name === 'all'}
 										<i
 											class="nimble-document-card__marker nimble-document-card__marker--spell-school {spellSchoolIcons[
-												spell.reactive.system.school
+												spellSystem(spell).school ?? ''
 											]}"
 										></i>
 									{/if}
@@ -326,11 +336,7 @@
 							</h4>
 
 							<div class="nimble-document-card__charges">
-								<ChargeIndicator
-									pools={getItemPools(spell.reactive._id)}
-									{actor}
-									itemId={spell.reactive._id}
-								/>
+								<ChargeIndicator pools={getItemPools(spellId)} {actor} itemId={spellId} />
 							</div>
 
 							<button
