@@ -27,6 +27,7 @@
 		keyAbilityScores,
 		onFeatureClick,
 		onAddFeature,
+		getSourceTag,
 		onDeleteWorldItem,
 	}));
 </script>

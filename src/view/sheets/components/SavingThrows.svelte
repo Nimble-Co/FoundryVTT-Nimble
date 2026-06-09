@@ -12,7 +12,7 @@
 		);
 	}
 
-	let { characterSavingThrows, editingEnabled: editingEnabledProp } = $props();
+	let { characterSavingThrows, editingEnabled: editingEnabledProp = undefined } = $props();
 
 	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');

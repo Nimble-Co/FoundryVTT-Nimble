@@ -4,7 +4,11 @@
 
 	const { movementTypes, movementTypeIcons } = CONFIG.NIMBLE;
 
-	let { actor, showDefaultSpeed = false, editingEnabled: editingEnabledProp } = $props();
+	let {
+		actor,
+		showDefaultSpeed = false,
+		editingEnabled: editingEnabledProp = undefined,
+	} = $props();
 	let flags = $derived(actor?.reactive.flags[SYSTEM_ID]);
 	let editingEnabledFromFlags = $derived(flags?.editingEnabled ?? false);
 	let editingEnabled = $derived(editingEnabledProp ?? editingEnabledFromFlags);

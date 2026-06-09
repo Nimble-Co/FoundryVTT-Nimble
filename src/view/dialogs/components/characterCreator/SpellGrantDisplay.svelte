@@ -274,7 +274,7 @@
 				{@const spellUuids = selectedSpells.get(group.ruleId) ?? []}
 				{@const spells = spellUuids
 					.map((uuid) => group.availableSpells.find((s) => s.uuid === uuid))
-					.filter(Boolean)}
+					.filter((spell): spell is NonNullable<typeof spell> => spell !== undefined)}
 				{#if spells.length > 0}
 					<div class="spell-grants__school-group">
 						<h4 class="spell-grants__school-label nimble-heading" data-heading-variant="subsection">
