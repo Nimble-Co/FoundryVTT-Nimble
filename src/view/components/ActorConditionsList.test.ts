@@ -10,7 +10,7 @@ function createActor({
 	owner?: boolean;
 	statuses?: string[];
 	effects?: ActiveEffect[];
-} = {}): Actor.Implementation {
+} = {}): Actor.Implementation & { reactive: Actor.Implementation } {
 	const actor = {
 		id: 'actor-1',
 		name: 'Hero',
@@ -40,7 +40,7 @@ function createActor({
 		flags: { nimble: { editingEnabled: owner } },
 	};
 
-	return actor as unknown as Actor.Implementation;
+	return actor as unknown as Actor.Implementation & { reactive: Actor.Implementation };
 }
 
 describe('ActorConditionsList', () => {

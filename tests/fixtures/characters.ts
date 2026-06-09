@@ -3,12 +3,14 @@
  * These provide realistic test data for character documents
  */
 
+import type { NimbleCharacter } from '#documents/actor/character.js';
+
 /**
  * Creates a mock character document for testing
  * @param overrides - Object to override default values
  * @returns A mock character document with the specified overrides applied
  */
-export function createMockCharacterDocument(overrides = {}) {
+export function createMockCharacterDocument(overrides: Record<string, unknown> = {}): NimbleCharacter {
 	return {
 		id: 'test-character-id',
 		classes: {
@@ -58,5 +60,5 @@ export function createMockCharacterDocument(overrides = {}) {
 			},
 		},
 		...overrides,
-	};
+	} as unknown as NimbleCharacter;
 }

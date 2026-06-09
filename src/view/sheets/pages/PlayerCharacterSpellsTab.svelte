@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
+	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
@@ -16,6 +17,12 @@
 		type SheetDropItemFlashState,
 	} from '#view/sheets/dropItemFlashState.js';
 	import { getContext } from 'svelte';
+
+	interface SpellSchoolTab {
+		icon: string;
+		name: string;
+		tooltip: string;
+	}
 
 	async function configureItem(event, id) {
 		event.stopPropagation();
@@ -86,7 +93,7 @@
 		return null;
 	}
 
-	function getSpellSchoolTabs(spells) {
+	function getSpellSchoolTabs(spells: NimbleBaseItem[]): SpellSchoolTab[] {
 		const actorSpellSchools = spells.reduce((relevantSpellSchools, spell) => {
 			if (spell.system.school) relevantSpellSchools.add(spell.system.school);
 
@@ -117,7 +124,7 @@
 		);
 	}
 
-	function getVisibleSpells(spells, tabName) {
+	function getVisibleSpells(spells: NimbleBaseItem[], tabName?: string) {
 		if (!tabName || tabName === 'all') return groupSpellsByTier(spells);
 
 		const spellsOfSpecifiedSchool = spells.filter(
@@ -137,8 +144,8 @@
 		return spellsByTier;
 	}
 
-	function groupSpellsByTier(spells) {
-		return spells.reduce((tiers, spell) => {
+	function groupSpellsByTier(spells: NimbleBaseItem[]) {
+		return spells.reduce<Record<number, NimbleBaseItem[]>>((tiers, spell) => {
 			const utilitySpell = spell.reactive.system.properties.selected.includes('utilitySpell');
 
 			const tier = utilitySpell ? 0 : spell.reactive.system.tier;
@@ -172,7 +179,7 @@
 	let searchTerm = $state('');
 	let spells = $derived(filterItems(actor.reactive, ['spell'], searchTerm));
 	let subNavigation = $derived(getSpellSchoolTabs(spells));
-	let currentTab = $state(null);
+	let currentTab = $state<SpellSchoolTab | null>(null);
 	let visibleSpells = $derived(getVisibleSpells(spells, currentTab?.name));
 
 	const tooltipCache = new Map();
@@ -246,7 +253,7 @@
 </header>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
-	{#each Object.entries(visibleSpells).sort(([aKey], [bKey]) => aKey - bKey) as [tier, tierSpells]}
+	{#each Object.entries(visibleSpells).sort(([aKey], [bKey]) => Number(aKey) - Number(bKey)) as [tier, tierSpells]}
 		<div>
 			<header>
 				<h3 class="nimble-heading" data-heading-variant="section">

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import type { NimbleBaseActor } from '#documents/actor/base.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import sortItems from '#utils/sortItems.js';
 	import { SYSTEM_ID } from '#system';
@@ -354,7 +355,7 @@
 
 	const { npcArmorTypeAbbreviations, creatureFeatures, monsterFeatureTypes } = CONFIG.NIMBLE;
 
-	let actor = getContext('actor');
+	let actor = getContext<NimbleBaseActor>('actor');
 	let sheet = getContext('application');
 
 	// Local state for collapsed items - always use for immediate UI response
@@ -389,10 +390,10 @@
 		return item.reactive.flags[SYSTEM_ID]?.collapsed ?? false;
 	}
 
-	let dragOverItemId = $state(null);
-	let dragOverPosition = $state(null); // 'above' or 'below'
-	let draggedItemCategory = $state(null); // track category of item being dragged
-	let dragOverTargetParent = $state(null); // track what parent the item would have if dropped here
+	let dragOverItemId = $state<string | null>(null);
+	let dragOverPosition = $state<'above' | 'below' | null>(null); // 'above' or 'below'
+	let draggedItemCategory = $state<string | null>(null); // track category of item being dragged
+	let dragOverTargetParent = $state<string | null>(null); // track what parent the item would have if dropped here
 	let draggedItemIsAttackSequence = $state(false); // track if dragged item is an attack sequence
 
 	let items = $derived(filterMonsterFeatures(actor.reactive));
@@ -578,7 +579,7 @@
 					<ul
 						class="nimble-item-list"
 						ondragover={(event) => {
-							if (event.dataTransfer.types.includes('nimble/reorder')) event.preventDefault();
+							if (event.dataTransfer?.types.includes('nimble/reorder')) event.preventDefault();
 						}}
 					>
 						{#if categoryName === 'action'}
@@ -661,6 +662,7 @@
 			!draggedItemIsAttackSequence}
 		draggable={isEditable}
 		ondragstart={(event) => {
+			if (!event.dataTransfer) return;
 			event.dataTransfer.setData('nimble/reorder', itemId);
 			// Set standard Foundry drag data for cross-actor transfers
 			const dragData = item.toDragData();
@@ -691,7 +693,7 @@
 			}
 		}}
 		ondragleave={(event) => {
-			if (event.currentTarget.contains(event.relatedTarget)) return;
+			if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
 			if (dragOverItemId === itemId) {
 				dragOverItemId = null;
 				dragOverPosition = null;
@@ -774,6 +776,7 @@
 			!draggedItemIsAttackSequence}
 		draggable={isEditable}
 		ondragstart={(event) => {
+			if (!event.dataTransfer) return;
 			event.dataTransfer.setData('nimble/reorder', item.reactive._id);
 			// Set standard Foundry drag data for cross-actor transfers
 			const dragData = item.toDragData();
@@ -810,7 +813,7 @@
 			}
 		}}
 		ondragleave={(event) => {
-			if (event.currentTarget.contains(event.relatedTarget)) return;
+			if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
 			if (dragOverItemId === item.reactive._id) {
 				dragOverItemId = null;
 				dragOverPosition = null;
@@ -982,6 +985,7 @@
 			dragOverPosition === 'below'}
 		draggable={isEditable}
 		ondragstart={(event) => {
+			if (!event.dataTransfer) return;
 			event.dataTransfer.setData('nimble/reorder', item.reactive._id);
 			// Set standard Foundry drag data for cross-actor transfers
 			const dragData = item.toDragData();
@@ -999,7 +1003,7 @@
 			dragOverPosition = event.clientY < midpoint ? 'above' : 'below';
 		}}
 		ondragleave={(event) => {
-			if (event.currentTarget.contains(event.relatedTarget)) return;
+			if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
 			if (dragOverItemId === item.reactive._id) {
 				dragOverItemId = null;
 				dragOverPosition = null;
