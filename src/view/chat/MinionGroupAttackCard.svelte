@@ -50,7 +50,7 @@
 	function getRowRolledTotal(row: MinionGroupAttackRow): number | null {
 		if (row.roll) {
 			try {
-				const roll = Roll.fromData(row.roll as Roll.Data);
+				const roll = Roll.fromData(row.roll as unknown as Roll.Data);
 				const rollTotal = Number(roll.total ?? 0);
 				if (Number.isFinite(rollTotal)) return Math.max(0, Math.floor(rollTotal));
 			} catch (_error) {
@@ -75,7 +75,7 @@
 			return prepareRollTooltip(
 				String(system.actorType ?? ''),
 				Number(system.permissions ?? 0),
-				Roll.fromData(row.roll as Roll.Data),
+				Roll.fromData(row.roll as unknown as Roll.Data),
 			);
 		} catch (_error) {
 			return null;

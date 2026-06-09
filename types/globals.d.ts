@@ -72,6 +72,7 @@ declare global {
 	/** Interface for Nimble base item with common methods */
 	interface NimbleBaseItem extends Item {
 		identifier: string;
+		reactive: this;
 		hasMacro?: boolean;
 		rules?: RulesManagerInterface;
 		tags?: Set<string>;

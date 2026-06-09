@@ -106,14 +106,16 @@
 		{/if}
 
 		{#each sortItems(meleeWeapons) as item (item._id)}
+			{@const reactiveItem = (item as unknown as { reactive: { name: string; img: string } })
+				.reactive}
 			<WeaponCard
-				name={item.reactive.name}
-				image={item.reactive.img}
+				name={reactiveItem.name}
+				image={reactiveItem.img}
 				damage={getWeaponDamage(item)}
 				properties={getWeaponProperties(item)}
 				showImage={showEmbeddedDocumentImages}
 				itemId={item._id}
-				onclick={() => handleItemClick(item._id)}
+				onclick={() => handleItemClick(item._id ?? '')}
 				ondragstart={(event) =>
 					(sheet as unknown as { _onDragStart(e: DragEvent): void })._onDragStart(event)}
 			/>
