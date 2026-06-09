@@ -1,4 +1,4 @@
-interface TagGroupOption {
+export interface TagGroupOption {
 	label: string;
 	value: string | number;
 	icon?: string;

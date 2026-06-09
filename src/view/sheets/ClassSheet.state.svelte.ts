@@ -67,12 +67,13 @@ export function createClassSheetState(getProps: () => ClassSheetProps) {
 				),
 			} as Record<string, unknown>);
 		},
-		toggleAdvantageSavingThrow(savingThrow: string) {
+		toggleAdvantageSavingThrow(savingThrow: string | number) {
 			void getProps().item.update({
-				'system.savingThrows.advantage': savingThrow,
+				'system.savingThrows.advantage': String(savingThrow),
 			} as Record<string, unknown>);
 		},
-		toggleArmorProficiency(armorType: string) {
+		toggleArmorProficiency(armorTypeValue: string | number) {
+			const armorType = String(armorTypeValue);
 			const { item } = getProps();
 			const current = item.reactive.system.armorProficiencies;
 			void item.update({
@@ -81,20 +82,23 @@ export function createClassSheetState(getProps: () => ClassSheetProps) {
 					: [...current, armorType],
 			} as Record<string, unknown>);
 		},
-		toggleDisadvantageSavingThrow(savingThrow: string) {
+		toggleDisadvantageSavingThrow(savingThrow: string | number) {
 			void getProps().item.update({
-				'system.savingThrows.disadvantage': savingThrow,
+				'system.savingThrows.disadvantage': String(savingThrow),
 			} as Record<string, unknown>);
 		},
-		toggleHitDieSize(hitDie: number) {
-			void getProps().item.update({ 'system.hitDieSize': hitDie } as Record<string, unknown>);
-		},
-		toggleManaRecoveryType(recoveryType: string) {
+		toggleHitDieSize(hitDie: string | number) {
 			void getProps().item.update({
-				'system.mana.recovery': recoveryType,
+				'system.hitDieSize': Number(hitDie),
 			} as Record<string, unknown>);
 		},
-		toggleKeyAbilityScoreOption(abilityScore: string) {
+		toggleManaRecoveryType(recoveryType: string | number) {
+			void getProps().item.update({
+				'system.mana.recovery': String(recoveryType),
+			} as Record<string, unknown>);
+		},
+		toggleKeyAbilityScoreOption(abilityScoreValue: string | number) {
+			const abilityScore = String(abilityScoreValue);
 			const { item } = getProps();
 			const current = item.reactive.system.keyAbilityScores;
 			void item.update({

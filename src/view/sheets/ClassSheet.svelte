@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext, untrack } from 'svelte';
+	import { setContext, untrack, type Snippet } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import { CLASS_SHEET_TAB_CONFIG, type ClassSheetTabName } from './ClassSheetConstants.js';
@@ -17,7 +17,7 @@
 
 	const classState = createClassSheetState(() => ({ item, sheet }));
 
-	const snippetsByTab: Record<ClassSheetTabName, () => void> = {
+	const snippetsByTab: Record<ClassSheetTabName, Snippet> = {
 		description: descriptionTab,
 		config: configTab,
 		progression: progressionTab,
@@ -54,7 +54,10 @@
 			<input
 				type="text"
 				value={item.reactive.identifier || ''}
-				onchange={({ target }) => item.update({ 'system.identifier': target.value })}
+				onchange={({ target }) =>
+					item.update({
+						'system.identifier': (target as HTMLInputElement).value,
+					} as Record<string, unknown>)}
 			/>
 		</section>
 
@@ -71,7 +74,7 @@
 				onchange={({ currentTarget }) =>
 					item.update({
 						'system.complexity': Number(currentTarget.value),
-					})}
+					} as Record<string, unknown>)}
 			/>
 		</section>
 
@@ -151,7 +154,7 @@
 				type="text"
 				value={item.reactive.system.mana.formula || ''}
 				onchange={({ currentTarget }) =>
-					item.update({ 'system.mana.formula': currentTarget.value })}
+					item.update({ 'system.mana.formula': currentTarget.value } as Record<string, unknown>)}
 			/>
 		</section>
 
@@ -212,7 +215,11 @@
 							<input
 								type="text"
 								value={weapon}
-								onchange={(event) => classState.updateWeaponProficiency(index, event.target.value)}
+								onchange={(event) =>
+									classState.updateWeaponProficiency(
+										index,
+										(event.target as HTMLInputElement).value,
+									)}
 							/>
 
 							<button
@@ -260,7 +267,8 @@
 							<input
 								type="text"
 								value={featureGroup}
-								onchange={(event) => classState.updateFeatureGroup(index, event.target.value)}
+								onchange={(event) =>
+									classState.updateFeatureGroup(index, (event.target as HTMLInputElement).value)}
 							/>
 
 							<button

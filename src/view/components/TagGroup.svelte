@@ -6,7 +6,7 @@
 		grid?: boolean;
 		options: TagGroupOption[];
 		selectedOptions: (string | number)[] | Set<string | number>;
-		toggleOption: (newValue: string | number) => Promise<void>;
+		toggleOption: (newValue: string | number, event?: MouseEvent) => void | Promise<void>;
 	}
 
 	let { disabled = false, grid = false, options, selectedOptions, toggleOption }: props = $props();
