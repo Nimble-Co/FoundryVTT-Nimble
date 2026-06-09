@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext, untrack } from 'svelte';
+	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import localize from '../../../utils/localize.js';
 	import { createHeroicActionsTabState } from './PlayerCharacterHeroicActionsTab.svelte.js';
 
@@ -27,7 +28,7 @@
 		heroicActionTarget?: HeroicActionTarget | null;
 	}
 
-	let actor = getContext('actor');
+	let actor = getContext<NimbleCharacter>('actor');
 	const sheetState = getContext<SheetState>('sheetState');
 	const heroicState = createHeroicActionsTabState(() => actor);
 	let forceNextOpportunityReactionUse = $state(false);

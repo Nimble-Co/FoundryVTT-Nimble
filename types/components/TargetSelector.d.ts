@@ -1,10 +1,12 @@
+type TargetToken = Token | null | undefined;
+
 export interface TargetSelectorProps {
 	label: string;
 	noTargetMessage: string;
 	multipleTargetsMessage: string;
-	availableTargets: unknown[];
-	selectedTarget: unknown;
-	getTargetName: (target: unknown) => string;
+	availableTargets: TargetToken[];
+	selectedTarget: TargetToken;
+	getTargetName: (target: TargetToken) => string;
 	targetBackground: string;
 	targetBorderColor: string;
 }
