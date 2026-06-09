@@ -131,6 +131,7 @@ const characterCreation = {
 
 const actorImport = {
 	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
+	jsonButtonLabel: 'NIMBLE.actorImport.jsonButtonLabel',
 	dialogTitle: 'NIMBLE.actorImport.dialogTitle',
 	searchPlaceholder: 'NIMBLE.actorImport.searchPlaceholder',
 	selectAll: 'NIMBLE.actorImport.selectAll',

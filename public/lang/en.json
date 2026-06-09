@@ -2398,8 +2398,8 @@
 		},
 		"actorImport": {
 			"buttonLabel": "Import from Nimble Nexus",
-			"jsonButtonLabel": "Import Actor from JSON",
-			"jsonSuccess": "Actor imported successfully",
+			"jsonButtonLabel": "Import Player Character",
+			"jsonSuccess": "Player character imported successfully",
 			"jsonError": "Failed to import actor: invalid file",
 			"dialogTitle": "Import from Nimble Nexus",
 			"searchPlaceholder": "Search monsters...",

@@ -112,10 +112,15 @@
 
 	.nimble-import-section {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		gap: 0.5rem;
 		margin-top: 1rem;
 		padding-top: 1rem;
 		border-top: 1px solid var(--color-border-light-tertiary);
+
+		button {
+			flex: 1 1 0;
+			min-width: 0;
+		}
 	}
 </style>
