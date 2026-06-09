@@ -24,7 +24,7 @@ interface ClassItemShape {
 }
 
 /** Structural type for what the factory accesses on the actor document */
-interface LevelUpDocument {
+export interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{
 		type: string;

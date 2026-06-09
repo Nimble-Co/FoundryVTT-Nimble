@@ -8,7 +8,7 @@
 	import LevelUpSpellGrants from './components/levelUpHelper/LevelUpSpellGrants.svelte';
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
 	import SubclassSelection from './components/levelUpHelper/SubclassSelection.svelte';
-	import { createLevelUpState } from './CharacterLevelUpDialogState.svelte.ts';
+	import { createLevelUpState, type LevelUpDocument } from './CharacterLevelUpDialogState.svelte.ts';
 	import { SUBCLASS_LEVEL, EPIC_BOON_LEVEL } from './const/levelUpConstants.ts';
 
 	let { document, dialog }: CharacterLevelUpDialogProps = $props();
@@ -16,11 +16,11 @@
 	const { forms } = CONFIG.NIMBLE;
 
 	const state = createLevelUpState(
-		() => document,
+		() => document as unknown as LevelUpDocument,
 		() => dialog,
 	);
 
-	const { boons, submit, getSubmitButtonTooltip, getSubmitButtonAriaLabel } = state;
+	const { submit, getSubmitButtonTooltip, getSubmitButtonAriaLabel } = state;
 	const characterClass = $derived(state.characterClass);
 	const levelingTo = $derived(state.levelingTo);
 	const subclasses = $derived(state.subclasses);
@@ -35,7 +35,6 @@
 	<HitPointSelection {document} bind:hitPointRollSelection={state.hitPointRollSelection} />
 
 	<AbilityScoreIncrease
-		{boons}
 		{characterClass}
 		{document}
 		{levelingTo}
@@ -46,10 +45,8 @@
 	/>
 
 	<SkillPointAssignment
-		chooseBoon={state.chooseBoon}
 		{document}
 		selectedBoon={state.selectedBoon}
-		selectedAbilityScore={state.selectedAbilityScores}
 		bind:skillPointChanges={state.skillPointChanges}
 		bind:selectedAbilityScores={state.selectedAbilityScores}
 		bind:skillPointsOverMax={state.skillPointsOverMax}
