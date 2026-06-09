@@ -13,6 +13,8 @@ export interface StatIncreaseEntry {
 	label: string;
 }
 
+import type { StatConfigDocument } from '#view/dialogs/CharacterStatConfigDialogState.svelte.ts';
+
 export interface CharacterStatConfigDialogProps {
-	document: unknown;
+	document: StatConfigDocument;
 }

@@ -32,7 +32,7 @@ interface ClassItem {
 	items?: unknown;
 }
 
-interface StatConfigDocument {
+export interface StatConfigDocument {
 	reactive: {
 		items: ClassItem[];
 		system: { abilities: Record<string, AbilityData> };
@@ -404,7 +404,8 @@ export function createCharacterStatConfigDialogState(getDocument: () => StatConf
 		});
 	}
 
-	function getStatIncreaseTypeLabel(type: string): string {
+	function getStatIncreaseTypeLabel(type: string | null): string {
+		if (!type) return '';
 		const labels: Record<string, string> = {
 			primary: localize('NIMBLE.statConfig.primary'),
 			secondary: localize('NIMBLE.statConfig.secondary'),
@@ -413,7 +414,8 @@ export function createCharacterStatConfigDialogState(getDocument: () => StatConf
 		return labels[type] ?? type;
 	}
 
-	function getStatIncreaseTypeTooltip(type: string): string {
+	function getStatIncreaseTypeTooltip(type: string | null): string {
+		if (!type) return '';
 		const tooltips: Record<string, string> = {
 			primary: localize('NIMBLE.statConfig.primaryTooltip'),
 			secondary: localize('NIMBLE.statConfig.secondaryTooltip'),

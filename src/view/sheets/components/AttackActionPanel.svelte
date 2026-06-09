@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import localize from '../../../utils/localize.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
 
 	import SearchBar from './SearchBar.svelte';
 	import WeaponCard from './WeaponCard.svelte';
 
-	const actor = getContext('actor');
-	const sheet = getContext('application');
+	const actor = getContext<NimbleCharacter>('actor');
+	const sheet = getContext<{ _onDragStart(event: DragEvent): void }>('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
 

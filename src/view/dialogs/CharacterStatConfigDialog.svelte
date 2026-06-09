@@ -42,7 +42,7 @@
 	const asiTotals = $derived(state.asiTotals);
 </script>
 
-{#snippet sectionHeader(title, subtitle = null)}
+{#snippet sectionHeader(title: string, subtitle: string | null = null)}
 	<tr class="nimble-stat-config__section-header">
 		<th colspan={abilityScoreCount + 1}>
 			<div class="nimble-stat-config__section-title">
@@ -211,8 +211,9 @@
 										role="listitem"
 										draggable="true"
 										ondragstart={(e) => {
+											if (!e.dataTransfer) return;
 											e.dataTransfer.dropEffect = 'move';
-											e.dataTransfer.setData('modifier', arrayIndex);
+											e.dataTransfer.setData('modifier', String(arrayIndex));
 										}}
 									>
 										<i class="fa-solid fa-grip-vertical drag-icon"></i>
@@ -253,8 +254,9 @@
 										class="nimble-array-value-list__option"
 										draggable="true"
 										ondragstart={(e) => {
+											if (!e.dataTransfer) return;
 											e.dataTransfer.dropEffect = 'move';
-											e.dataTransfer.setData('modifier', modifierIndex);
+											e.dataTransfer.setData('modifier', String(modifierIndex));
 										}}
 									>
 										<i class="fa-solid fa-grip-vertical drag-icon"></i>
