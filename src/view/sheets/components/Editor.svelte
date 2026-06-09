@@ -30,6 +30,16 @@
 		enrichOptions = {} as EnrichOptions,
 	}: Props = $props();
 
+	// Foundry's Document.Any does not expose the Nimble-augmented members used below.
+	let doc = $derived(
+		document as foundry.abstract.Document.Any & {
+			isOwner: boolean;
+			actor?: { getRollData(): object };
+			getRollData(): object;
+			update(data: Record<string, unknown>): Promise<unknown>;
+		},
+	);
+
 	// Check if content is empty (no text or just whitespace/empty tags)
 	function isContentEmpty(html: string): boolean {
 		if (!html) return true;
@@ -59,8 +69,8 @@
 	const mergedEnrichOptions = $derived(
 		foundry.utils.mergeObject(
 			{
-				secrets: document.isOwner || game.user?.isGM,
-				rollData: document.isEmbedded ? document.actor.getRollData() : document.getRollData(),
+				secrets: doc.isOwner || game.user?.isGM,
+				rollData: doc.isEmbedded && doc.actor ? doc.actor.getRollData() : doc.getRollData(),
 				relativeTo: document,
 			},
 			enrichOptions,
@@ -118,7 +128,7 @@
 		// Get the current value and save it to the document
 		if (typeof proseMirror._getValue === 'function') {
 			const value = proseMirror._getValue();
-			document.update({ [field]: value });
+			doc.update({ [field]: value });
 		}
 
 		// Dispatch a 'save' event on the proseMirror element to trigger save handlers
@@ -163,7 +173,7 @@
 			const target = event.target as ProseMirrorElement;
 			if (target?._getValue) {
 				const value = target._getValue();
-				document.update({ [field]: value });
+				doc.update({ [field]: value });
 			}
 		});
 
@@ -178,7 +188,8 @@
 		proseMirrorElem.replaceWith(element);
 
 		// Start observing editor state for active class changes
-		return observeEditorState();
+		// (cleanup cannot be returned from an async onMount callback)
+		observeEditorState();
 	});
 </script>
 
