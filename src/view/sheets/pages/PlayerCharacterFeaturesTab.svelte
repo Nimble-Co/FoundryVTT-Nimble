@@ -137,19 +137,21 @@
 	// Class features (grouped, non-subclass) sorted by level — rendered nested under the class card
 	let classFeatureItems = $derived(
 		sortFeatureItems(
-			items.filter(
-				(item) =>
-					item.reactive.type === 'feature' &&
-					item.reactive.system.group &&
-					!item.reactive.system.subclass,
-			),
+			items.filter((item) => {
+				const featureSystem = item.reactive.system as { group?: unknown; subclass?: unknown };
+				return item.reactive.type === 'feature' && featureSystem.group && !featureSystem.subclass;
+			}),
 		),
 	);
 
 	// Subclass features sorted by level — rendered nested under the subclass card
 	let subclassFeatureItems = $derived(
 		sortFeatureItems(
-			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
+			items.filter(
+				(item) =>
+					item.reactive.type === 'feature' &&
+					(item.reactive.system as { subclass?: unknown }).subclass,
+			),
 		),
 	);
 
@@ -174,7 +176,8 @@
 		)}
 		data-item-id={item.reactive._id}
 		draggable="true"
-		ondragstart={(event) => sheet._onDragStart(event)}
+		ondragstart={(event) =>
+			(sheet as unknown as { _onDragStart(e: DragEvent): void })._onDragStart(event)}
 		onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
 	>
 		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->

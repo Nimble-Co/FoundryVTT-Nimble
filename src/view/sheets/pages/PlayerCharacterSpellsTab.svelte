@@ -285,7 +285,8 @@
 						onmouseenter={(event) => handleTooltipMouseEnter(event, spell)}
 						draggable="true"
 						role="button"
-						ondragstart={(event) => sheet._onDragStart(event)}
+						ondragstart={(event) =>
+							(sheet as unknown as { _onDragStart(e: DragEvent): void })._onDragStart(event)}
 						onanimationend={(event) => handleDropFlashAnimationEnd(event, spell.reactive._id)}
 						onclick={() => actor.activateItem(spell._id)}
 					>

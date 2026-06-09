@@ -123,7 +123,7 @@
 					itemName,
 					pools: poolData,
 				},
-			} as Parameters<typeof ChatMessage.create>[0]);
+			} as unknown as Parameters<typeof ChatMessage.create>[0]);
 		}
 
 		dialog.submit();

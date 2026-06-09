@@ -27,7 +27,7 @@
 	let groupLabel = $derived((system.groupLabel as string | undefined)?.trim() ?? '');
 	const i18nLocalize = (key: string): string => game.i18n.localize(key as never);
 	const i18nFormat = (key: string, data: Record<string, unknown>): string =>
-		game.i18n.format(key as never, data);
+		game.i18n.format(key as never, data as Record<string, string>);
 
 	let subheading = $derived(
 		groupLabel.length > 0
@@ -50,7 +50,7 @@
 	function getRowRolledTotal(row: MinionGroupAttackRow): number | null {
 		if (row.roll) {
 			try {
-				const roll = Roll.fromData(row.roll as Roll.JSON);
+				const roll = Roll.fromData(row.roll as Roll.Data);
 				const rollTotal = Number(roll.total ?? 0);
 				if (Number.isFinite(rollTotal)) return Math.max(0, Math.floor(rollTotal));
 			} catch (_error) {
@@ -75,7 +75,7 @@
 			return prepareRollTooltip(
 				String(system.actorType ?? ''),
 				Number(system.permissions ?? 0),
-				Roll.fromData(row.roll as Roll.JSON),
+				Roll.fromData(row.roll as Roll.Data),
 			);
 		} catch (_error) {
 			return null;

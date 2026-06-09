@@ -114,7 +114,8 @@
 				showImage={showEmbeddedDocumentImages}
 				itemId={item._id}
 				onclick={() => handleItemClick(item._id)}
-				ondragstart={(event) => sheet._onDragStart(event)}
+				ondragstart={(event) =>
+					(sheet as unknown as { _onDragStart(e: DragEvent): void })._onDragStart(event)}
 			/>
 		{/each}
 

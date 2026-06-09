@@ -2,10 +2,12 @@
 	import { onMount } from 'svelte';
 	import ActorConditionsList from '../components/ActorConditionsList.svelte';
 
-	let actor = $state<Actor.Implementation | null>(null);
+	let actor = $state<(Actor.Implementation & { reactive: Actor.Implementation }) | null>(null);
 
 	function getControlledActor() {
-		return canvas?.tokens?.controlled?.[0]?.actor ?? null;
+		return (canvas?.tokens?.controlled?.[0]?.actor ?? null) as
+			| (Actor.Implementation & { reactive: Actor.Implementation })
+			| null;
 	}
 
 	function refreshActor() {
@@ -28,12 +30,12 @@
 		];
 
 		const hooks = hookListeners.map(({ hook, listener }) => {
-			return { hook, id: Hooks.on(hook, listener) };
+			return { hook, id: Hooks.on(hook as Parameters<typeof Hooks.on>[0], listener) };
 		});
 
 		return () => {
 			for (const { hook, id } of hooks) {
-				Hooks.off(hook, id);
+				Hooks.off(hook as Parameters<typeof Hooks.off>[0], id);
 			}
 		};
 	});

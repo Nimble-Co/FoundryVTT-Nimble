@@ -53,7 +53,7 @@
 			},
 		};
 
-		await ChatMessage.create(chatData as Parameters<typeof ChatMessage.create>[0]);
+		await ChatMessage.create(chatData as unknown as Parameters<typeof ChatMessage.create>[0]);
 	}
 </script>
 
