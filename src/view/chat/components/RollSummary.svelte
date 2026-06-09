@@ -18,7 +18,9 @@
 		targetDisposition,
 	}: RollSummaryProps = $props();
 	const { hitDice } = CONFIG.NIMBLE;
-	const autoExpand = game.settings.get(SYSTEM_ID, 'autoExpandRolls');
+	const autoExpand = Boolean(
+		game.settings.get(SYSTEM_ID as 'core', 'autoExpandRolls' as 'rollMode'),
+	);
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 	let expanded = $state(autoExpand);
 
@@ -28,7 +30,11 @@
 		const canApplyDamageFunction = messageDocument?.canApplyDamage;
 		if (typeof canApplyDamageFunction !== 'function') return true;
 
-		return canApplyDamageFunction.call(messageDocument, total, options);
+		return canApplyDamageFunction.call(
+			messageDocument,
+			total,
+			options as Parameters<NimbleChatMessage['canApplyDamage']>[1],
+		);
 	});
 	let applyDamageLabel = $derived(localize('NIMBLE.chat.applyDamage'));
 	let applyDamageTooltip = $derived(
@@ -76,8 +82,8 @@
 
 {#if showRollDetails}
 	<div class="roll-details">
-		<span>{hitDice.primaryDieValue}: {options.rollOptions.primaryDieValue}</span>
-		<span>{hitDice.primaryDieModifier}: {options.rollOptions.primaryDieModifier}</span>
+		<span>{hitDice.primaryDieValue}: {options?.rollOptions?.primaryDieValue}</span>
+		<span>{hitDice.primaryDieModifier}: {options?.rollOptions?.primaryDieModifier}</span>
 	</div>
 {/if}
 
@@ -96,7 +102,11 @@
 		data-tooltip={applyDamageTooltip}
 		data-tooltip-direction="UP"
 		disabled={!canApplyDamage}
-		onclick={() => messageDocument?.applyDamage(total, options)}
+		onclick={() =>
+			messageDocument?.applyDamage(
+				total,
+				options as Parameters<NimbleChatMessage['applyDamage']>[1],
+			)}
 	>
 		{applyDamageLabel}
 	</button>

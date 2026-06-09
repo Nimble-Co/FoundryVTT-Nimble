@@ -11,14 +11,16 @@
 
 	let { actor, dialog, type = 'abilityCheck', ...data }: CheckRollDialogProps = $props();
 	let selectedRollMode = $state(untrack(() => Math.clamp(Number(data.rollMode ?? 0), -6, 6)));
-	let shouldRollBeHidden = $state(Boolean(game.settings.get(SYSTEM_ID, 'hideRolls')));
+	let shouldRollBeHidden = $state(
+		Boolean(game.settings.get(SYSTEM_ID as 'core', 'hideRolls' as 'rollMode')),
+	);
 
 	let rollFormula = $derived.by(() => {
 		if (type === 'initiative') {
 			return actor._getInitiativeFormula({ rollMode: selectedRollMode });
 		}
 
-		return getRollFormula(actor as Parameters<typeof getRollFormula>[0], {
+		return getRollFormula(actor as unknown as Parameters<typeof getRollFormula>[0], {
 			...data,
 			rollMode: selectedRollMode,
 			type,

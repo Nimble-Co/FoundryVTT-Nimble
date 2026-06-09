@@ -63,7 +63,7 @@ export interface ItemActivationConfigDialogInstance {
 }
 
 export interface ItemActivationConfigDialogProps {
-	actor: Actor;
+	actor: NimbleBaseActor;
 	dialog: ItemActivationConfigDialogInstance;
 	item: Item;
 	rollMode?: number;

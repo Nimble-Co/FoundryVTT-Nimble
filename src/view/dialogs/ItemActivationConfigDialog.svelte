@@ -15,7 +15,7 @@
 		actor: () => actor,
 		item: () => item,
 		initialRollMode: untrack(() => rollMode),
-		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
+		hideRollsDefault: !!game.settings.get(SYSTEM_ID as 'core', 'hideRolls' as 'rollMode'),
 	});
 
 	function onSubmit() {

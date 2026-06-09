@@ -42,7 +42,9 @@
 	let baseMax = $state(untrack(() => actor.system.resources.mana.baseMax ?? 0));
 
 	let classManaContributions = $derived.by(() => {
-		const classes = actor.items.filter((i: Item) => i.type === 'class') as ClassWithManaFormula[];
+		const classes = actor.items.filter(
+			(i: Item) => i.type === 'class',
+		) as unknown as ClassWithManaFormula[];
 		const includeClassFormula = actor.levels.character > 1;
 		const rollData = actor.getRollData();
 
@@ -68,7 +70,9 @@
 
 	let effectiveRecoveryTypes = $derived.by(() => {
 		const classes = actor.items.filter((i: Item) => i.type === 'class');
-		const types = getManaRecoveryTypesFromClasses(classes);
+		const types = getManaRecoveryTypesFromClasses(
+			classes as Parameters<typeof getManaRecoveryTypesFromClasses>[0],
+		);
 		if (types.size === 0) {
 			types.add('safeRest');
 		}
