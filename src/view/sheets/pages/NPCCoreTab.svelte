@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import type { NimbleBaseActor } from '#documents/actor/base.svelte.js';
+	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import sortItems from '#utils/sortItems.js';
 	import { SYSTEM_ID } from '#system';
@@ -28,8 +29,8 @@
 		await actor.deleteItem(id);
 	}
 
-	function groupItemsByType(items) {
-		return items.reduce((categories, item) => {
+	function groupItemsByType(items: NimbleBaseItem[]) {
+		return items.reduce<Record<string, NimbleBaseItem[]>>((categories, item) => {
 			// Group attackSequence items with action items
 			const itemType = mapMonsterFeatureToCategory(item);
 			categories[itemType] ??= [];
@@ -38,7 +39,7 @@
 		}, {});
 	}
 
-	function sortItemCategories([categoryA], [categoryB]) {
+	function sortItemCategories([categoryA]: [string, unknown], [categoryB]: [string, unknown]) {
 		return categoryOrder.indexOf(categoryA) - categoryOrder.indexOf(categoryB);
 	}
 
@@ -47,56 +48,70 @@
 	// Categories for grouping/display (attackSequence is grouped with action)
 	const categoryOrder = ['feature', 'action', 'bloodied', 'lastStand'];
 
-	function filterMonsterFeatures(actor) {
+	type FeatureLike = { system?: unknown; reactive?: { system?: unknown } };
+
+	function featureSystem(item: { system?: unknown }): { subtype?: string; parentItemId?: string } {
+		return (item.system ?? {}) as { subtype?: string; parentItemId?: string };
+	}
+
+	function filterMonsterFeatures(actor: NimbleBaseActor): NimbleBaseItem[] {
 		return actor.items.filter((item) => {
-			if (!validSubtypes.includes(item.system?.subtype)) return false;
+			if (!validSubtypes.includes(featureSystem(item).subtype ?? '')) return false;
 
-			return item.name.toLocaleLowerCase();
-		});
+			return Boolean(item.name.toLocaleLowerCase());
+		}) as unknown as NimbleBaseItem[];
 	}
 
-	function mapMonsterFeatureToType(item) {
-		return item.system?.subtype || 'feature';
+	function mapMonsterFeatureToType(item: FeatureLike) {
+		return featureSystem(item).subtype || 'feature';
 	}
 
-	function mapMonsterFeatureToCategory(item) {
-		const subtype = item.system?.subtype || 'feature';
+	function mapMonsterFeatureToCategory(item: FeatureLike) {
+		const subtype = featureSystem(item).subtype || 'feature';
 		// Group attackSequence items with action items
 		if (subtype === 'attackSequence') return 'action';
 		// Actions with a parent are still in the action category
 		return subtype;
 	}
 
-	function isAttackSequenceItem(item) {
-		const subtype = item.system?.subtype || item.reactive?.system?.subtype;
+	function isAttackSequenceItem(item: FeatureLike) {
+		const subtype = featureSystem(item).subtype || featureSystem(item.reactive ?? {}).subtype;
 		return subtype === 'attackSequence';
 	}
 
-	function isActionItem(item) {
-		const subtype = item.system?.subtype || item.reactive?.system?.subtype;
+	function isActionItem(item: FeatureLike) {
+		const subtype = featureSystem(item).subtype || featureSystem(item.reactive ?? {}).subtype;
 		return subtype === 'action';
 	}
 
-	function getParentItemId(item) {
-		return item.system?.parentItemId || item.reactive?.system?.parentItemId || null;
+	function getParentItemId(item: FeatureLike): string | null {
+		return (
+			featureSystem(item).parentItemId || featureSystem(item.reactive ?? {}).parentItemId || null
+		);
+	}
+
+	interface FlatActionEntry {
+		item: NimbleBaseItem;
+		parentId: string | null;
+		isAttackSequence?: boolean;
 	}
 
 	// Get a flat list of action items in display order (for unified drag-drop)
 	// Order: orphan actions first, then each attackSequence followed by its children
-	function getFlatActionList(actionItems) {
+	function getFlatActionList(actionItems: NimbleBaseItem[]): FlatActionEntry[] {
 		const attackSequences = sortItems(actionItems.filter(isAttackSequenceItem));
 		const actions = actionItems.filter(isActionItem);
 
 		// Build a set of valid attack sequence IDs
-		const validAttackSequenceIds = new Set();
+		const validAttackSequenceIds = new Set<string>();
 		for (const attackSeq of attackSequences) {
 			const id = attackSeq.reactive?._id || attackSeq._id;
 			if (id) validAttackSequenceIds.add(id);
 		}
 
 		// Group actions by their parent (only if parent exists)
-		const childrenByParent = new Map();
-		const orphanActions = [];
+		const childrenByParent = new Map<string, NimbleBaseItem[]>();
+		const orphanActions: NimbleBaseItem[] = [];
 
 		for (const action of actions) {
 			const parentId = getParentItemId(action);
@@ -105,7 +120,7 @@
 				if (!childrenByParent.has(parentId)) {
 					childrenByParent.set(parentId, []);
 				}
-				childrenByParent.get(parentId).push(action);
+				childrenByParent.get(parentId)?.push(action);
 			} else {
 				// Treat as orphan if no parent or parent doesn't exist
 				orphanActions.push(action);
@@ -118,7 +133,7 @@
 		}
 
 		// Build flat list in display order
-		const flatList = [];
+		const flatList: FlatActionEntry[] = [];
 
 		// First: orphan actions
 		for (const action of sortItems(orphanActions)) {
@@ -127,7 +142,7 @@
 
 		// Then: each attackSequence followed by its children
 		for (const attackSeq of attackSequences) {
-			const attackSeqId = attackSeq.reactive?._id || attackSeq._id;
+			const attackSeqId = attackSeq.reactive?._id || attackSeq._id || '';
 			flatList.push({ item: attackSeq, parentId: null, isAttackSequence: true });
 
 			const children = childrenByParent.get(attackSeqId) || [];
@@ -140,7 +155,11 @@
 	}
 
 	// Determine what parent an item would have if dropped at position relative to target
-	function getDropTargetParent(flatList, targetId, position) {
+	function getDropTargetParent(
+		flatList: FlatActionEntry[],
+		targetId: string,
+		position: 'above' | 'below' | null,
+	): string | null {
 		const targetIndex = flatList.findIndex((entry) => entry.item.reactive._id === targetId);
 		if (targetIndex === -1) return null;
 
@@ -204,11 +223,16 @@
 	// 	}
 	// }
 
-	async function handleDrop(event, targetId, position, newParentId) {
-		const draggedId = event.dataTransfer.getData('nimble/reorder');
+	async function handleDrop(
+		event: DragEvent,
+		targetId: string | null,
+		position: 'above' | 'below' | null,
+		newParentId: string | null = null,
+	) {
+		const draggedId = event.dataTransfer?.getData('nimble/reorder');
 		if (!draggedId) {
 			// No nimble/reorder data - try to handle as a standard Foundry drop
-			const textData = event.dataTransfer.getData('text/plain');
+			const textData = event.dataTransfer?.getData('text/plain');
 			if (textData) {
 				try {
 					const data = JSON.parse(textData);
@@ -231,11 +255,11 @@
 		event.preventDefault();
 
 		const draggedItem = actor.items.get(draggedId);
-		const targetItem = actor.items.get(targetId);
+		const targetItem = targetId ? actor.items.get(targetId) : undefined;
 
 		// If dragged item not found in this actor, it's from another actor - handle as external drop
 		if (!draggedItem) {
-			const textData = event.dataTransfer.getData('text/plain');
+			const textData = event.dataTransfer?.getData('text/plain');
 			if (textData) {
 				try {
 					const data = JSON.parse(textData);
@@ -320,7 +344,7 @@
 
 		const newItems = [...categoryItems];
 		newItems.splice(draggedIndex, 1);
-		newItems.splice(targetIndex, 0, draggedItem);
+		newItems.splice(targetIndex, 0, draggedItem as unknown as (typeof newItems)[number]);
 
 		const updates = newItems.map((item, index) => ({
 			_id: item.reactive._id,
@@ -333,22 +357,24 @@
 		return npcArmorTypeAbbreviations[armor] ?? '-';
 	}
 
-	function updateArmorCategory(direction) {
-		const armor = actor.reactive.system.attributes.armor;
+	function updateArmorCategory(direction: 'increase' | 'decrease') {
+		const armor = (actor.reactive.system as { attributes?: { armor?: string } }).attributes?.armor;
+		const updateArmor = (value: string) =>
+			actor.update({ 'system.attributes.armor': value } as Record<string, unknown>);
 
 		if (direction === 'increase') {
 			if (armor === 'heavy') return;
 
 			if (armor === 'medium') {
-				actor.update({ 'system.attributes.armor': 'heavy' });
+				updateArmor('heavy');
 			} else {
-				actor.update({ 'system.attributes.armor': 'medium' });
+				updateArmor('medium');
 			}
 		} else if (direction === 'decrease') {
 			if (armor === 'heavy') {
-				actor.update({ 'system.attributes.armor': 'medium' });
+				updateArmor('medium');
 			} else if (armor === 'medium') {
-				actor.update({ 'system.attributes.armor': 'none' });
+				updateArmor('none');
 			}
 		}
 	}
@@ -356,7 +382,9 @@
 	const { npcArmorTypeAbbreviations, creatureFeatures, monsterFeatureTypes } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleBaseActor>('actor');
-	let sheet = getContext('application');
+	let sheet = getContext<{
+		_onDropItem?(event: DragEvent, data: Record<string, unknown>): Promise<unknown>;
+	}>('application');
 
 	// Local state for collapsed items - always use for immediate UI response
 	let localCollapsedState = new SvelteMap();
@@ -402,6 +430,15 @@
 
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+
+	// NPC system data is a union across actor types; narrow it for template reads.
+	let npcSystem = $derived(
+		actor.reactive.system as unknown as {
+			savingThrows: Record<string, unknown>;
+			armor?: string;
+			attributes: { armor?: string };
+		},
+	);
 
 	let allCollapsed = $derived(items.every((item) => getItemCollapsed(item)));
 
@@ -453,7 +490,7 @@
 
 <section class="nimble-sheet__body nimble-sheet__body--npc">
 	<section class="nimble-monster-sheet-section nimble-monster-sheet-section--defenses">
-		<SavingThrows characterSavingThrows={actor.reactive.system.savingThrows} editingEnabled />
+		<SavingThrows characterSavingThrows={npcSystem.savingThrows} editingEnabled />
 
 		<MovementSpeed {actor} showDefaultSpeed={false} />
 
@@ -464,7 +501,7 @@
 				</h3>
 			</header>
 
-			<ArmorClass armorClass={getArmorClassLabel(actor.reactive.system.attributes.armor)} />
+			<ArmorClass armorClass={getArmorClassLabel(npcSystem.attributes.armor)} />
 
 			<button
 				class="nimble-button nimble-armor-config-button nimble-armor-config-button--decrement"
@@ -472,7 +509,7 @@
 				type="button"
 				aria-label={game.i18n.localize('NIMBLE.npcSheet.decreaseArmor')}
 				data-tooltip={game.i18n.localize('NIMBLE.npcSheet.decreaseArmor')}
-				disabled={actor.reactive.system.armor === 'none'}
+				disabled={npcSystem.armor === 'none'}
 				onclick={() => updateArmorCategory('decrease')}
 			>
 				-
@@ -484,7 +521,7 @@
 				type="button"
 				aria-label={game.i18n.localize('NIMBLE.npcSheet.increaseArmor')}
 				data-tooltip={game.i18n.localize('NIMBLE.npcSheet.increaseArmor')}
-				disabled={actor.reactive.system.armor === 'heavy'}
+				disabled={npcSystem.armor === 'heavy'}
 				onclick={() => updateArmorCategory('increase')}
 			>
 				+
@@ -943,7 +980,7 @@
 							requestAnimationFrame(() => {
 								game.tooltip.activate(event.currentTarget, {
 									text: wasCollapsed ? creatureFeatures.collapse : creatureFeatures.expand,
-									direction: 'DOWN',
+									direction: foundry.helpers.interaction.TooltipManager.TOOLTIP_DIRECTIONS.DOWN,
 									cssClass: 'nimble-tooltip nimble-tooltip--compact',
 								});
 							});
@@ -1122,7 +1159,7 @@
 							requestAnimationFrame(() => {
 								game.tooltip.activate(event.currentTarget, {
 									text: wasCollapsed ? creatureFeatures.collapse : creatureFeatures.expand,
-									direction: 'DOWN',
+									direction: foundry.helpers.interaction.TooltipManager.TOOLTIP_DIRECTIONS.DOWN,
 									cssClass: 'nimble-tooltip nimble-tooltip--compact',
 								});
 							});

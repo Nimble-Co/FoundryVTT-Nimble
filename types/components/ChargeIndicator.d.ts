@@ -1,4 +1,4 @@
-import type { NimbleCharacter } from '../../src/documents/actor/character.js';
+import type { NimbleBaseActor } from '../../src/documents/actor/base.svelte.js';
 
 export interface ChargeIndicatorPoolState {
 	id: string;
@@ -17,6 +17,6 @@ export interface ChargeIndicatorPoolState {
 
 export interface ChargeIndicatorProps {
 	pools: ChargeIndicatorPoolState[];
-	actor: NimbleCharacter;
+	actor: NimbleBaseActor;
 	itemId: string;
 }
