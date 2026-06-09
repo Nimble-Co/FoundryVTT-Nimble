@@ -2411,6 +2411,7 @@
 				"statHp": "Max HP",
 				"statItems": "Items",
 				"contentsHeader": "What will be imported",
+				"levelTag": "Lvl {level}",
 				"noItems": "This character has no embedded items.",
 				"chooseDifferent": "Choose a different file",
 				"confirm": "Import Character",

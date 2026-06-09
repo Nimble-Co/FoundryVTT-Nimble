@@ -16,6 +16,12 @@ interface ParsedActorItem {
 	name?: string;
 	type?: string;
 	img?: string;
+	system?: Record<string, unknown>;
+}
+
+interface ImportPreviewItem {
+	name: string;
+	level: number | null;
 }
 
 interface ParsedActor {
@@ -29,7 +35,7 @@ interface ParsedActor {
 interface ImportPreviewGroup {
 	type: string;
 	label: string;
-	names: string[];
+	items: ImportPreviewItem[];
 }
 
 interface ImportPreview {
@@ -134,11 +140,14 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 
 		const items = Array.isArray(data.items) ? data.items : [];
 
-		const groups = new Map<string, string[]>();
+		const groups = new Map<string, ImportPreviewItem[]>();
 		for (const item of items) {
 			const type = item?.type ?? 'base';
 			if (!groups.has(type)) groups.set(type, []);
-			groups.get(type)!.push(item?.name ?? '—');
+			groups.get(type)!.push({
+				name: item?.name ?? '—',
+				level: ImportPlayerCharacterDialog.#itemLevel(item),
+			});
 		}
 
 		const itemGroups: ImportPreviewGroup[] = [...groups.entries()]
@@ -147,29 +156,64 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 				const indexB = ITEM_TYPE_ORDER.indexOf(b);
 				return (indexA < 0 ? 99 : indexA) - (indexB < 0 ? 99 : indexB);
 			})
-			.map(([type, names]) => ({
+			.map(([type, groupItems]) => ({
 				type,
 				label: game.i18n.localize(`TYPES.Item.${type}`),
-				names,
+				items: groupItems,
 			}));
 
 		const findName = (type: string) => items.find((item) => item?.type === type)?.name ?? null;
 
 		const classData = data.system?.classData as { levels?: unknown } | undefined;
 		const levels = classData?.levels;
-		const attributes = data.system?.attributes as { hp?: { max?: number } } | undefined;
 
 		return {
 			name: data.name?.trim() || game.i18n.localize('NIMBLE.actorImport.json.unnamed'),
 			img: data.img ?? null,
 			typeLabel: game.i18n.localize(`TYPES.Actor.${data.type ?? 'character'}`),
 			level: Array.isArray(levels) ? levels.length : null,
-			hpMax: attributes?.hp?.max ?? null,
+			hpMax: ImportPlayerCharacterDialog.#deriveMaxHp(data, items),
 			ancestry: findName('ancestry'),
 			className: findName('class'),
 			itemGroups,
 			totalItems: items.length,
 		};
+	}
+
+	/** The class level at which a feature item was gained, if recorded. */
+	static #itemLevel(item: ParsedActorItem | undefined): number | null {
+		const system = item?.system as { gainedAtLevel?: unknown } | undefined;
+		const level = system?.gainedAtLevel;
+		return typeof level === 'number' && level > 0 ? level : null;
+	}
+
+	/**
+	 * Compute the character's derived max HP from class hit-die data.
+	 *
+	 * Mirrors the runtime derivation (see `character.ts#_prepareHitPoints` and
+	 * `class.ts`): `hp.max` is never stored, so reading it from the export yields
+	 * 0. Each class contributes `startingHpByHitDieSize[size] + sum(hpData)`, plus
+	 * the actor's flat `hp.bonus`.
+	 */
+	static #deriveMaxHp(data: ParsedActor, items: ParsedActorItem[]): number | null {
+		const classItems = items.filter((item) => item?.type === 'class');
+		if (classItems.length === 0) return null;
+
+		const startingByDie =
+			(CONFIG.NIMBLE as { startingHpByHitDieSize?: Record<number, number> })
+				.startingHpByHitDieSize ?? {};
+		const attributes = data.system?.attributes as { hp?: { bonus?: number } } | undefined;
+		const bonus = attributes?.hp?.bonus ?? 0;
+
+		return classItems.reduce((total, item) => {
+			const system = (item.system ?? {}) as { hitDieSize?: number; hpData?: number[] };
+			const starting =
+				system.hitDieSize !== undefined ? (startingByDie[system.hitDieSize] ?? 0) : 0;
+			const fromLevels = Array.isArray(system.hpData)
+				? system.hpData.reduce((acc, value) => acc + (value || 0), 0)
+				: 0;
+			return total + starting + fromLevels;
+		}, bonus);
 	}
 
 	/** Read and parse a selected file, populating the preview or an error. */

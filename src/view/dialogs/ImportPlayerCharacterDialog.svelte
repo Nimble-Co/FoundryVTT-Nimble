@@ -128,11 +128,20 @@
 					{#each preview.itemGroups as group (group.type)}
 						<div class="nimble-import-json__group">
 							<span class="nimble-import-json__group-label">
-								{group.label} ({group.names.length})
+								{group.label} ({group.items.length})
 							</span>
 							<ul class="nimble-import-json__group-items">
-								{#each group.names as name, index (index)}
-									<li>{name}</li>
+								{#each group.items as item, index (index)}
+									<li>
+										<span class="nimble-import-json__item-name">{item.name}</span>
+										{#if item.level !== null}
+											<span class="nimble-import-json__item-level">
+												{game.i18n.format('NIMBLE.actorImport.json.levelTag', {
+													level: item.level,
+												})}
+											</span>
+										{/if}
+									</li>
 								{/each}
 							</ul>
 						</div>
@@ -148,10 +157,11 @@
 			</p>
 		{/if}
 
-		<footer class="nimble-import-json__footer">
+		<footer class="nimble-sheet__footer nimble-import-json__footer">
 			<button
 				type="button"
 				class="nimble-button"
+				data-button-variant="basic"
 				onclick={() => dialog.clearFile()}
 				disabled={dialog.isImporting}
 			>
@@ -160,15 +170,15 @@
 			<button
 				type="button"
 				class="nimble-button"
-				data-button-variant="primary"
+				data-button-variant="basic"
 				onclick={() => dialog.confirmImport()}
 				disabled={dialog.isImporting}
 			>
 				{#if dialog.isImporting}
-					<i class="fa-solid fa-spinner fa-spin"></i>
+					<i class="nimble-button__icon fa-solid fa-spinner fa-spin"></i>
 					{localize('NIMBLE.actorImport.json.importing')}
 				{:else}
-					<i class="fa-solid fa-file-import"></i>
+					<i class="nimble-button__icon fa-solid fa-file-import"></i>
 					{localize('NIMBLE.actorImport.json.confirm')}
 				{/if}
 			</button>
@@ -316,6 +326,24 @@
 			padding-left: 1.25rem;
 			font-size: var(--nimble-sm-text, 0.9rem);
 			opacity: 0.9;
+
+			li {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				gap: 0.5rem;
+			}
+		}
+
+		&__item-name {
+			min-width: 0;
+		}
+
+		&__item-level {
+			flex: 0 0 auto;
+			font-size: var(--nimble-xs-text, 0.75rem);
+			opacity: 0.65;
+			white-space: nowrap;
 		}
 
 		&__empty {
@@ -333,6 +361,7 @@
 		}
 
 		&__footer {
+			--nimble-button-padding: 0.5rem 1rem;
 			display: flex;
 			gap: 0.5rem;
 
