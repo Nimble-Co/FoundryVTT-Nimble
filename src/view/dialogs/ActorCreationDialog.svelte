@@ -28,8 +28,17 @@
 		{/each}
 	</ul>
 
-	{#if game.user.isGM}
-		<div class="nimble-import-section">
+	<div class="nimble-import-section">
+		<button
+			class="nimble-button"
+			data-button-variant="full-width"
+			onclick={() => dialog.importActorFromJson.call(dialog)}
+		>
+			<i class="fa-solid fa-file-import"></i>
+			{game.i18n.localize(actorImport.jsonButtonLabel)}
+		</button>
+
+		{#if game.user.isGM}
 			<button
 				class="nimble-button"
 				data-button-variant="full-width"
@@ -38,8 +47,8 @@
 				<i class="fa-solid fa-file-import"></i>
 				{game.i18n.localize(actorImport.buttonLabel)}
 			</button>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </article>
 
 <style lang="scss">
@@ -102,6 +111,9 @@
 	}
 
 	.nimble-import-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 		margin-top: 1rem;
 		padding-top: 1rem;
 		border-top: 1px solid var(--color-border-light-tertiary);

@@ -2397,7 +2397,10 @@
 			}
 		},
 		"actorImport": {
-			"buttonLabel": "Import Actor",
+			"buttonLabel": "Import from Nimble Nexus",
+			"jsonButtonLabel": "Import Actor from JSON",
+			"jsonSuccess": "Actor imported successfully",
+			"jsonError": "Failed to import actor: invalid file",
 			"dialogTitle": "Import from Nimble Nexus",
 			"searchPlaceholder": "Search monsters...",
 			"selectAll": "Select All",
@@ -2441,6 +2444,13 @@
 					"support": "Support"
 				}
 			}
+		},
+		"jsonExport": {
+			"sectionHeader": "Export",
+			"exportButton": "Export Character Sheet (JSON)",
+			"exporting": "Exporting...",
+			"success": "Character exported successfully",
+			"error": "Failed to export character"
 		}
 	}
 }
