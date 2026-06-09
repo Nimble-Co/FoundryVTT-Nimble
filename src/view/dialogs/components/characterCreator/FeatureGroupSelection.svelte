@@ -28,7 +28,7 @@
 		}
 
 		return game.i18n.format('NIMBLE.classFeatureSelection.chooseN', {
-			count: selectionCount,
+			count: String(selectionCount),
 		});
 	}
 
@@ -36,8 +36,8 @@
 		if (state.isFixed) return null;
 
 		return game.i18n.format('NIMBLE.classFeatureSelection.nOfMSelected', {
-			current: state.selectedCount,
-			required: selectionCount,
+			current: String(state.selectedCount),
+			required: String(selectionCount),
 		});
 	}
 </script>

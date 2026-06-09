@@ -175,7 +175,7 @@
 			<input type="checkbox" bind:checked={addStrBonus} />
 			<span
 				>{game.i18n.format(CONFIG.NIMBLE.hitDice.addStrBonus, {
-					bonus: actor.system.abilities.strength.mod,
+					bonus: String(actor.system.abilities.strength.mod),
 				})}</span
 			>
 		</label>
@@ -210,7 +210,7 @@
 	<button class="nimble-button" data-button-variant="basic" onclick={submit} disabled={!canRoll}>
 		<i class="fa-solid fa-dice"></i>
 		{game.i18n.format(CONFIG.NIMBLE.hitDice.rollHitDice, {
-			count: totalSelected,
+			count: String(totalSelected),
 			dieWord: totalSelected === 1 ? 'Die' : 'Dice',
 		})}
 	</button>

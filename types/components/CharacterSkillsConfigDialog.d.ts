@@ -10,6 +10,8 @@ export interface SkillHistoryEntry {
 	changes: SkillHistoryChange[];
 }
 
+import type { SkillsDocument } from '#view/dialogs/CharacterSkillsConfigDialogState.svelte.ts';
+
 export interface CharacterSkillsConfigDialogProps {
-	document: unknown;
+	document: SkillsDocument;
 }

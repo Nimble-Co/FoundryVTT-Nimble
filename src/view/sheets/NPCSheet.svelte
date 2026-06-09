@@ -173,7 +173,7 @@
 			value={actor.reactive.name}
 			autocomplete="off"
 			spellcheck="false"
-			onchange={({ target }) => actor.update({ name: target.value })}
+			onchange={({ target }) => actor.update({ name: (target as HTMLInputElement).value })}
 		/>
 
 		<h4 class="nimble-monster-meta">

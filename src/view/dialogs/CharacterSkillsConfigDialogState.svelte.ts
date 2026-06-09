@@ -11,7 +11,7 @@ interface LevelUpHistoryEntry {
 	skillIncreases: Record<string, number>;
 }
 
-interface SkillsDocument {
+export interface SkillsDocument {
 	reactive: {
 		system: {
 			skills: Record<string, SkillData>;
