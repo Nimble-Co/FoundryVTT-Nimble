@@ -3,34 +3,15 @@
 
 	import localize from '#utils/localize.ts';
 
+	import { exportCharacterToJson } from './CharacterJsonExportButton.utils.ts';
+
 	const { actor }: CharacterJsonExportButtonProps = $props();
 
 	const { jsonExport } = CONFIG.NIMBLE;
 
 	function handleExport() {
 		try {
-			// Mirrors Foundry core's exportToJSON, which hardcodes its filename
-			// (fvtt-Actor-<name>-<id>); we serialize the same way but name the
-			// file fvtt-<system>-<character>-<classes> instead. Note exportSource
-			// lives under _stats in v13 (flags.exportSource is a read-only
-			// deprecation shim).
-			const data = actor.toCompendium(null, { clearSource: false });
-			const stats = (data._stats ?? {}) as Record<string, unknown>;
-			stats.exportSource = {
-				worldId: game.world.id,
-				uuid: actor.uuid,
-				coreVersion: game.version,
-				systemId: game.system.id,
-				systemVersion: game.system.version,
-			};
-			(data as Record<string, unknown>)._stats = stats;
-
-			const classNames = Object.values(actor.classes ?? {}).map((cls) => cls.name);
-			const filename = ['fvtt', game.system.id, actor.name, ...classNames]
-				.map((part) => part?.slugify({ strict: true }))
-				.filterJoin('-');
-
-			foundry.utils.saveDataToFile(JSON.stringify(data, null, 2), 'text/json', `${filename}.json`);
+			exportCharacterToJson(actor);
 			ui.notifications?.info(localize(jsonExport.success));
 		} catch (error) {
 			console.error('Character JSON export failed:', error);
