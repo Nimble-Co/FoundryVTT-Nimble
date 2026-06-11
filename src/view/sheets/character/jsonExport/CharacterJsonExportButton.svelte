@@ -15,15 +15,19 @@
 		try {
 			// Mirrors Foundry core's exportToJSON, which hardcodes its filename
 			// (fvtt-Actor-<name>-<id>); we serialize the same way but name the
-			// file fvtt-<system>-<character>-<classes> instead.
-			const data = actor.toCompendium(null, {});
-			data.flags ??= {};
-			(data.flags as Record<string, unknown>).exportSource = {
-				world: game.world.id,
-				system: game.system.id,
+			// file fvtt-<system>-<character>-<classes> instead. Note exportSource
+			// lives under _stats in v13 (flags.exportSource is a read-only
+			// deprecation shim).
+			const data = actor.toCompendium(null, { clearSource: false });
+			const stats = (data._stats ?? {}) as Record<string, unknown>;
+			stats.exportSource = {
+				worldId: game.world.id,
+				uuid: actor.uuid,
 				coreVersion: game.version,
+				systemId: game.system.id,
 				systemVersion: game.system.version,
 			};
+			(data as Record<string, unknown>)._stats = stats;
 
 			const classNames = Object.values(actor.classes ?? {}).map((cls) => cls.name);
 			const filename = ['fvtt', game.system.id, actor.name, ...classNames]

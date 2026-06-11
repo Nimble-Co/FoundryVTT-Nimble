@@ -31,6 +31,9 @@ interface ParsedActor {
 	img?: string;
 	system?: Record<string, unknown>;
 	items?: ParsedActorItem[];
+	/** v13 exports record their source system here. */
+	_stats?: { exportSource?: { systemId?: string } | null };
+	/** Pre-v13 exports recorded it under flags instead. */
 	flags?: { exportSource?: { system?: string } } & Record<string, unknown>;
 }
 
@@ -245,7 +248,8 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 			// Only Nimble exports are supported. The stable and dev builds install
 			// under different system ids (`nimble` / `nimble-dev`), so compare with
 			// the dev suffix normalized to keep exports portable between them.
-			const sourceSystem = data.flags?.exportSource?.system;
+			// v13 exports record the system under _stats; pre-v13 used flags.
+			const sourceSystem = data._stats?.exportSource?.systemId ?? data.flags?.exportSource?.system;
 			if (
 				typeof sourceSystem === 'string' &&
 				sourceSystem.replace(/-dev$/, '') !== String(SYSTEM_ID).replace(/-dev$/, '')
