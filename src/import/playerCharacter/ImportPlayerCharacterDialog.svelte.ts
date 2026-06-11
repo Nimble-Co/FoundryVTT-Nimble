@@ -78,7 +78,10 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 
 	private _isImporting = $state(false);
 
-	constructor(data: { folder?: string | null; parent?: unknown; pack?: unknown } = {}, _options = {}) {
+	constructor(
+		data: { folder?: string | null; parent?: unknown; pack?: unknown } = {},
+		_options = {},
+	) {
 		const width = 480;
 		super({
 			position: {

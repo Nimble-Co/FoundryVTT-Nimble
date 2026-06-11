@@ -208,7 +208,9 @@
 			border-radius: 6px;
 			background: transparent;
 			cursor: pointer;
-			transition: border-color 0.15s ease, background-color 0.15s ease;
+			transition:
+				border-color 0.15s ease,
+				background-color 0.15s ease;
 
 			&:hover,
 			&.is-dragging {
