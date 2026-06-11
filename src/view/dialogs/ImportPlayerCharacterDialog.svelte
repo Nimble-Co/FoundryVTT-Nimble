@@ -1,10 +1,14 @@
 <script lang="ts">
-	let { dialog } = $props();
+	import type { ImportPlayerCharacterDialogProps } from '#types/components/ImportPlayerCharacterDialog.js';
+
+	import localize from '#utils/localize.ts';
+
+	let { dialog }: ImportPlayerCharacterDialogProps = $props();
+
+	const { json } = CONFIG.NIMBLE.actorImport;
 
 	let fileInput: HTMLInputElement;
 	let isDragging = $state(false);
-
-	const localize = (key: string) => game.i18n.localize(key);
 
 	function openPicker() {
 		fileInput?.click();
@@ -55,10 +59,10 @@
 		>
 			<i class="fa-solid fa-file-arrow-up"></i>
 			<span class="nimble-import-json__dropzone-title">
-				{localize('NIMBLE.actorImport.json.selectPrompt')}
+				{localize(json.selectPrompt)}
 			</span>
 			<span class="nimble-import-json__dropzone-hint">
-				{localize('NIMBLE.actorImport.json.selectHint')}
+				{localize(json.selectHint)}
 			</span>
 		</button>
 
@@ -68,7 +72,7 @@
 				{dialog.error}
 			</p>
 		{/if}
-	{:else}
+	{:else if dialog.preview}
 		{@const preview = dialog.preview}
 		<div class="nimble-import-json__preview">
 			<header class="nimble-import-json__heading">
@@ -95,7 +99,7 @@
 					<div class="nimble-import-json__stat">
 						<span class="nimble-import-json__stat-value">{preview.level}</span>
 						<span class="nimble-import-json__stat-label">
-							{localize('NIMBLE.actorImport.json.statLevel')}
+							{localize(json.statLevel)}
 						</span>
 					</div>
 				{/if}
@@ -103,26 +107,26 @@
 					<div class="nimble-import-json__stat">
 						<span class="nimble-import-json__stat-value">{preview.hpMax}</span>
 						<span class="nimble-import-json__stat-label">
-							{localize('NIMBLE.actorImport.json.statHp')}
+							{localize(json.statHp)}
 						</span>
 					</div>
 				{/if}
 				<div class="nimble-import-json__stat">
 					<span class="nimble-import-json__stat-value">{preview.totalItems}</span>
 					<span class="nimble-import-json__stat-label">
-						{localize('NIMBLE.actorImport.json.statItems')}
+						{localize(json.statItems)}
 					</span>
 				</div>
 			</div>
 
 			<section class="nimble-import-json__contents">
 				<h3 class="nimble-heading" data-heading-variant="section">
-					{localize('NIMBLE.actorImport.json.contentsHeader')}
+					{localize(json.contentsHeader)}
 				</h3>
 
 				{#if preview.totalItems === 0}
 					<p class="nimble-import-json__empty">
-						{localize('NIMBLE.actorImport.json.noItems')}
+						{localize(json.noItems)}
 					</p>
 				{:else}
 					{#each preview.itemGroups as group (group.type)}
@@ -131,14 +135,12 @@
 								{group.label} ({group.items.length})
 							</span>
 							<ul class="nimble-import-json__group-items">
-								{#each group.items as item, index (index)}
+								{#each group.items as item}
 									<li>
 										<span class="nimble-import-json__item-name">{item.name}</span>
 										{#if item.level !== null}
 											<span class="nimble-import-json__item-level">
-												{game.i18n.format('NIMBLE.actorImport.json.levelTag', {
-													level: item.level,
-												})}
+												{localize(json.levelTag, { level: String(item.level) })}
 											</span>
 										{/if}
 									</li>
@@ -165,7 +167,7 @@
 				onclick={() => dialog.clearFile()}
 				disabled={dialog.isImporting}
 			>
-				{localize('NIMBLE.actorImport.json.chooseDifferent')}
+				{localize(json.chooseDifferent)}
 			</button>
 			<button
 				type="button"
@@ -176,10 +178,10 @@
 			>
 				{#if dialog.isImporting}
 					<i class="nimble-button__icon fa-solid fa-spinner fa-spin"></i>
-					{localize('NIMBLE.actorImport.json.importing')}
+					{localize(json.importing)}
 				{:else}
 					<i class="nimble-button__icon fa-solid fa-file-import"></i>
-					{localize('NIMBLE.actorImport.json.confirm')}
+					{localize(json.confirm)}
 				{/if}
 			</button>
 		</footer>

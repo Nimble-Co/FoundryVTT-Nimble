@@ -9,64 +9,11 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import { SYSTEM_ID } from '#system';
+import localize from '#utils/localize.ts';
 import ImportPlayerCharacterDialogComponent from '#view/dialogs/ImportPlayerCharacterDialog.svelte';
+import buildImportPreview, { type ImportPreview, type ParsedActor } from './buildImportPreview.ts';
 
 const { ApplicationV2 } = foundry.applications.api;
-
-interface ParsedActorItem {
-	name?: string;
-	type?: string;
-	img?: string;
-	system?: Record<string, unknown>;
-}
-
-interface ImportPreviewItem {
-	name: string;
-	level: number | null;
-}
-
-interface ParsedActor {
-	name?: string;
-	type?: string;
-	img?: string;
-	system?: Record<string, unknown>;
-	items?: ParsedActorItem[];
-	/** v13 exports record their source system here. */
-	_stats?: { exportSource?: { systemId?: string } | null };
-	/** Pre-v13 exports recorded it under flags instead. */
-	flags?: { exportSource?: { system?: string } } & Record<string, unknown>;
-}
-
-interface ImportPreviewGroup {
-	type: string;
-	label: string;
-	items: ImportPreviewItem[];
-}
-
-interface ImportPreview {
-	name: string;
-	img: string | null;
-	typeLabel: string;
-	level: number | null;
-	hpMax: number | null;
-	ancestry: string | null;
-	className: string | null;
-	itemGroups: ImportPreviewGroup[];
-	totalItems: number;
-}
-
-/** Display order for grouped item types in the preview. */
-const ITEM_TYPE_ORDER = [
-	'ancestry',
-	'background',
-	'class',
-	'subclass',
-	'feature',
-	'spell',
-	'object',
-	'boon',
-	'monsterFeature',
-];
 
 export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(ApplicationV2) {
 	protected root;
@@ -77,7 +24,7 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 
 	private _parsedData: ParsedActor | null = $state(null);
 
-	private _fileName: string | null = $state(null);
+	private _preview: ImportPreview | null = $state(null);
 
 	private _error: string | null = $state(null);
 
@@ -109,10 +56,6 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 			title: 'NIMBLE.actorImport.json.dialogTitle',
 			resizable: true,
 		},
-		position: {
-			width: 480,
-			height: 'auto' as const,
-		},
 	};
 
 	protected override async _prepareContext(
@@ -123,10 +66,6 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 		return {
 			dialog: this,
 		} as foundry.applications.api.ApplicationV2.RenderContext;
-	}
-
-	get fileName(): string | null {
-		return this._fileName;
 	}
 
 	get error(): string | null {
@@ -143,94 +82,16 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 
 	/** Structured, localized summary of the character that would be imported. */
 	get preview(): ImportPreview | null {
-		const data = this._parsedData;
-		if (!data) return null;
-
-		const items = Array.isArray(data.items) ? data.items : [];
-
-		const groups = new Map<string, ImportPreviewItem[]>();
-		for (const item of items) {
-			const type = item?.type ?? 'base';
-			if (!groups.has(type)) groups.set(type, []);
-			groups.get(type)!.push({
-				name: item?.name ?? '—',
-				level: ImportPlayerCharacterDialog.#itemLevel(item),
-			});
-		}
-
-		const itemGroups: ImportPreviewGroup[] = [...groups.entries()]
-			.sort(([a], [b]) => {
-				const indexA = ITEM_TYPE_ORDER.indexOf(a);
-				const indexB = ITEM_TYPE_ORDER.indexOf(b);
-				return (indexA < 0 ? 99 : indexA) - (indexB < 0 ? 99 : indexB);
-			})
-			.map(([type, groupItems]) => ({
-				type,
-				label: game.i18n.localize(`TYPES.Item.${type}`),
-				items: groupItems,
-			}));
-
-		const findName = (type: string) => items.find((item) => item?.type === type)?.name ?? null;
-
-		const classData = data.system?.classData as { levels?: unknown } | undefined;
-		const levels = classData?.levels;
-
-		return {
-			name: data.name?.trim() || game.i18n.localize('NIMBLE.actorImport.json.unnamed'),
-			img: data.img ?? null,
-			typeLabel: game.i18n.localize(`TYPES.Actor.${data.type ?? 'character'}`),
-			level: Array.isArray(levels) ? levels.length : null,
-			hpMax: ImportPlayerCharacterDialog.#deriveMaxHp(data, items),
-			ancestry: findName('ancestry'),
-			className: findName('class'),
-			itemGroups,
-			totalItems: items.length,
-		};
-	}
-
-	/** The class level at which a feature item was gained, if recorded. */
-	static #itemLevel(item: ParsedActorItem | undefined): number | null {
-		const system = item?.system as { gainedAtLevel?: unknown } | undefined;
-		const level = system?.gainedAtLevel;
-		return typeof level === 'number' && level > 0 ? level : null;
-	}
-
-	/**
-	 * Compute the character's derived max HP from class hit-die data.
-	 *
-	 * Mirrors the runtime derivation (see `character.ts#_prepareHitPoints` and
-	 * `class.ts`): `hp.max` is never stored, so reading it from the export yields
-	 * 0. Each class contributes `startingHpByHitDieSize[size] + sum(hpData)`, plus
-	 * the actor's flat `hp.bonus`.
-	 */
-	static #deriveMaxHp(data: ParsedActor, items: ParsedActorItem[]): number | null {
-		const classItems = items.filter((item) => item?.type === 'class');
-		if (classItems.length === 0) return null;
-
-		const startingByDie =
-			(CONFIG.NIMBLE as { startingHpByHitDieSize?: Record<number, number> })
-				.startingHpByHitDieSize ?? {};
-		const attributes = data.system?.attributes as { hp?: { bonus?: number } } | undefined;
-		const bonus = attributes?.hp?.bonus ?? 0;
-
-		return classItems.reduce((total, item) => {
-			const system = (item.system ?? {}) as { hitDieSize?: number; hpData?: number[] };
-			const starting =
-				system.hitDieSize !== undefined ? (startingByDie[system.hitDieSize] ?? 0) : 0;
-			const fromLevels = Array.isArray(system.hpData)
-				? system.hpData.reduce((acc, value) => acc + (value || 0), 0)
-				: 0;
-			return total + starting + fromLevels;
-		}, bonus);
+		return this._preview;
 	}
 
 	/** Read and parse a selected file, populating the preview or an error. */
 	async loadFile(file: File | null | undefined): Promise<void> {
-		this._error = null;
-		this._parsedData = null;
-		this._fileName = file?.name ?? null;
+		this.clearFile();
 
 		if (!file) return;
+
+		const { json } = CONFIG.NIMBLE.actorImport;
 
 		try {
 			const text = await file.text();
@@ -241,7 +102,7 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 			}
 
 			if (data.type !== 'character') {
-				this._error = game.i18n.localize('NIMBLE.actorImport.json.notACharacterError');
+				this._error = localize(json.notACharacterError);
 				return;
 			}
 
@@ -254,21 +115,22 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 				typeof sourceSystem === 'string' &&
 				sourceSystem.replace(/-dev$/, '') !== String(SYSTEM_ID).replace(/-dev$/, '')
 			) {
-				this._error = game.i18n.localize('NIMBLE.actorImport.json.wrongSystemError');
+				this._error = localize(json.wrongSystemError);
 				return;
 			}
 
 			this._parsedData = data;
+			this._preview = buildImportPreview(data);
 		} catch (error) {
 			console.error('Player character import: failed to parse JSON', error);
-			this._error = game.i18n.localize('NIMBLE.actorImport.json.parseError');
+			this._error = localize(json.parseError);
 		}
 	}
 
 	/** Clear the current selection so the user can pick a different file. */
 	clearFile(): void {
 		this._parsedData = null;
-		this._fileName = null;
+		this._preview = null;
 		this._error = null;
 	}
 
@@ -278,8 +140,14 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 
 		this._isImporting = true;
 
+		const { json } = CONFIG.NIMBLE.actorImport;
+
 		try {
-			const data = { ...(this._parsedData as Record<string, unknown>) };
+			const folder = (this.data.folder as string | null | undefined) ?? null;
+			const data: Record<string, unknown> = {
+				...(this._parsedData as Record<string, unknown>),
+				folder,
+			};
 
 			// Drop the source id so Foundry generates a fresh one for this world,
 			// and replace the source world's ownership with a grant to the
@@ -294,18 +162,20 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 			const documentClass = (CONFIG.NIMBLE.Actor.documentClasses as Record<string, typeof Actor>)
 				.character;
 
-			const folder = (this.data.folder as string | null | undefined) ?? null;
-
 			await documentClass.create(
-				{ ...data, folder } as object as Actor.CreateData,
-				{ parent: this.data.parent, pack: this.data.pack, renderSheet: true } as object,
+				data as object as Actor.CreateData,
+				{
+					parent: this.data.parent,
+					pack: this.data.pack,
+					renderSheet: true,
+				} as object,
 			);
 
-			ui.notifications?.info(game.i18n.localize('NIMBLE.actorImport.json.success'));
+			ui.notifications?.info(localize(json.success));
 			await this.close();
 		} catch (error) {
 			console.error('Player character import failed:', error);
-			this._error = game.i18n.localize('NIMBLE.actorImport.json.importError');
+			this._error = localize(json.importError);
 			this._isImporting = false;
 		}
 	}

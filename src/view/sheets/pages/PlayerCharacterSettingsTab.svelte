@@ -1,5 +1,5 @@
 <script>
-	import CharacterJsonExportButton from '#view/sheets/character/jsonExport/CharacterJsonExportButton.svelte';
+	import CharacterJsonExportButton from '#view/sheets/components/CharacterJsonExportButton.svelte';
 
 	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 	import { SYSTEM_ID } from '#system';
@@ -265,7 +265,7 @@
 	<section>
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.jsonExport.sectionHeader')}
+				{localize(CONFIG.NIMBLE.jsonExport.sectionHeader)}
 			</h3>
 		</header>
 

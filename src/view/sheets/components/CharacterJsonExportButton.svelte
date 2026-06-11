@@ -5,13 +5,9 @@
 
 	const { actor }: CharacterJsonExportButtonProps = $props();
 
-	let isExporting = $state(false);
+	const { jsonExport } = CONFIG.NIMBLE;
 
-	async function handleExport() {
-		if (isExporting) return;
-
-		isExporting = true;
-
+	function handleExport() {
 		try {
 			// Mirrors Foundry core's exportToJSON, which hardcodes its filename
 			// (fvtt-Actor-<name>-<id>); we serialize the same way but name the
@@ -35,28 +31,15 @@
 				.filterJoin('-');
 
 			foundry.utils.saveDataToFile(JSON.stringify(data, null, 2), 'text/json', `${filename}.json`);
-			ui.notifications?.info(localize('NIMBLE.jsonExport.success'));
+			ui.notifications?.info(localize(jsonExport.success));
 		} catch (error) {
 			console.error('Character JSON export failed:', error);
-			ui.notifications?.error(localize('NIMBLE.jsonExport.error'));
-		} finally {
-			isExporting = false;
+			ui.notifications?.error(localize(jsonExport.error));
 		}
 	}
 </script>
 
-<button
-	class="nimble-button"
-	data-button-variant="full-width"
-	type="button"
-	disabled={isExporting}
-	onclick={handleExport}
->
-	{#if isExporting}
-		<i class="fa-solid fa-spinner fa-spin"></i>
-		{localize('NIMBLE.jsonExport.exporting')}
-	{:else}
-		<i class="fa-solid fa-file-export"></i>
-		{localize('NIMBLE.jsonExport.exportButton')}
-	{/if}
+<button class="nimble-button" data-button-variant="full-width" type="button" onclick={handleExport}>
+	<i class="fa-solid fa-file-export"></i>
+	{localize(jsonExport.exportButton)}
 </button>

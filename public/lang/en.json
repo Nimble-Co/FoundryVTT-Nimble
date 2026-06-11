@@ -2409,6 +2409,7 @@
 				"importError": "Failed to import the character. Please try again.",
 				"success": "Player character imported successfully",
 				"unnamed": "Unnamed Character",
+				"unnamedItem": "Unnamed Item",
 				"statLevel": "Level",
 				"statHp": "Max HP",
 				"statItems": "Items",
@@ -2466,7 +2467,6 @@
 		"jsonExport": {
 			"sectionHeader": "Export",
 			"exportButton": "Export Character Sheet (JSON)",
-			"exporting": "Exporting...",
 			"success": "Character exported successfully",
 			"error": "Failed to export character"
 		}

@@ -144,6 +144,27 @@ const actorImport = {
 	loadMore: 'NIMBLE.actorImport.loadMore',
 	successMessage: 'NIMBLE.actorImport.successMessage',
 	partialSuccessMessage: 'NIMBLE.actorImport.partialSuccessMessage',
+	json: {
+		dialogTitle: 'NIMBLE.actorImport.json.dialogTitle',
+		selectPrompt: 'NIMBLE.actorImport.json.selectPrompt',
+		selectHint: 'NIMBLE.actorImport.json.selectHint',
+		parseError: 'NIMBLE.actorImport.json.parseError',
+		notACharacterError: 'NIMBLE.actorImport.json.notACharacterError',
+		wrongSystemError: 'NIMBLE.actorImport.json.wrongSystemError',
+		importError: 'NIMBLE.actorImport.json.importError',
+		success: 'NIMBLE.actorImport.json.success',
+		unnamed: 'NIMBLE.actorImport.json.unnamed',
+		unnamedItem: 'NIMBLE.actorImport.json.unnamedItem',
+		statLevel: 'NIMBLE.actorImport.json.statLevel',
+		statHp: 'NIMBLE.actorImport.json.statHp',
+		statItems: 'NIMBLE.actorImport.json.statItems',
+		contentsHeader: 'NIMBLE.actorImport.json.contentsHeader',
+		levelTag: 'NIMBLE.actorImport.json.levelTag',
+		noItems: 'NIMBLE.actorImport.json.noItems',
+		chooseDifferent: 'NIMBLE.actorImport.json.chooseDifferent',
+		confirm: 'NIMBLE.actorImport.json.confirm',
+		importing: 'NIMBLE.actorImport.json.importing',
+	},
 	filters: {
 		level: 'NIMBLE.actorImport.filters.level',
 		type: 'NIMBLE.actorImport.filters.type',
@@ -587,6 +608,13 @@ const spellTierHeadings = {
 	9: 'NIMBLE.spells.tierHeadings.tier9',
 };
 
+const jsonExport = {
+	sectionHeader: 'NIMBLE.jsonExport.sectionHeader',
+	exportButton: 'NIMBLE.jsonExport.exportButton',
+	success: 'NIMBLE.jsonExport.success',
+	error: 'NIMBLE.jsonExport.error',
+};
+
 const startingHpByHitDieSize = {
 	4: 7,
 	6: 10,
@@ -908,6 +936,7 @@ const NIMBLE = {
 	hints,
 	hitDice,
 	hitPoints,
+	jsonExport,
 	languageHints,
 	languageImages,
 	languages,
