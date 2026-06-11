@@ -13,9 +13,24 @@
 		isExporting = true;
 
 		try {
-			// Foundry core: serializes the actor + all embedded documents and
-			// triggers the download itself.
-			await actor.exportToJSON();
+			// Mirrors Foundry core's exportToJSON, which hardcodes its filename
+			// (fvtt-Actor-<name>-<id>); we serialize the same way but name the
+			// file fvtt-<system>-<character>-<classes> instead.
+			const data = actor.toCompendium(null, {});
+			data.flags ??= {};
+			(data.flags as Record<string, unknown>).exportSource = {
+				world: game.world.id,
+				system: game.system.id,
+				coreVersion: game.version,
+				systemVersion: game.system.version,
+			};
+
+			const classNames = Object.values(actor.classes ?? {}).map((cls) => cls.name);
+			const filename = ['fvtt', game.system.id, actor.name, ...classNames]
+				.map((part) => part?.slugify({ strict: true }))
+				.filterJoin('-');
+
+			foundry.utils.saveDataToFile(JSON.stringify(data, null, 2), 'text/json', `${filename}.json`);
 			ui.notifications?.info(localize('NIMBLE.jsonExport.success'));
 		} catch (error) {
 			console.error('Character JSON export failed:', error);
