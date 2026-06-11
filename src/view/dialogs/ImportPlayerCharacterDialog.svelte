@@ -3,44 +3,19 @@
 
 	import localize from '#utils/localize.ts';
 
+	import { createImportPlayerCharacterDialogState } from './ImportPlayerCharacterDialog.state.svelte.ts';
+
 	let { dialog }: ImportPlayerCharacterDialogProps = $props();
 
 	const { json } = CONFIG.NIMBLE.actorImport;
 
-	let fileInput: HTMLInputElement;
-	let isDragging = $state(false);
-
-	function openPicker() {
-		fileInput?.click();
-	}
-
-	async function onFileChange(event: Event) {
-		const input = event.currentTarget as HTMLInputElement;
-		await dialog.loadFile(input.files?.[0]);
-		// Reset so selecting the same file again still fires a change event.
-		input.value = '';
-	}
-
-	function onDrop(event: DragEvent) {
-		event.preventDefault();
-		isDragging = false;
-		const file = event.dataTransfer?.files?.[0];
-		if (file) dialog.loadFile(file);
-	}
-
-	function onDragOver(event: DragEvent) {
-		event.preventDefault();
-		isDragging = true;
-	}
-
-	function onDragLeave() {
-		isDragging = false;
-	}
+	const state = createImportPlayerCharacterDialogState(dialog);
+	const { openPicker, onFileChange, onDrop, onDragOver, onDragLeave } = state;
 </script>
 
 <article class="nimble-import-json">
 	<input
-		bind:this={fileInput}
+		bind:this={state.fileInput}
 		type="file"
 		accept=".json,application/json"
 		class="nimble-import-json__file-input"
@@ -51,7 +26,7 @@
 		<button
 			type="button"
 			class="nimble-import-json__dropzone"
-			class:is-dragging={isDragging}
+			class:is-dragging={state.isDragging}
 			onclick={openPicker}
 			ondrop={onDrop}
 			ondragover={onDragOver}
