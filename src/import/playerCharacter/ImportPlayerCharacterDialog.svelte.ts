@@ -8,6 +8,7 @@
 
 import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import { SYSTEM_ID } from '#system';
 import ImportPlayerCharacterDialogComponent from '#view/dialogs/ImportPlayerCharacterDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -30,6 +31,7 @@ interface ParsedActor {
 	img?: string;
 	system?: Record<string, unknown>;
 	items?: ParsedActorItem[];
+	flags?: { exportSource?: { system?: string } } & Record<string, unknown>;
 }
 
 interface ImportPreviewGroup {
@@ -235,6 +237,23 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 				throw new Error('Not a valid actor export');
 			}
 
+			if (data.type !== 'character') {
+				this._error = game.i18n.localize('NIMBLE.actorImport.json.notACharacterError');
+				return;
+			}
+
+			// Only Nimble exports are supported. The stable and dev builds install
+			// under different system ids (`nimble` / `nimble-dev`), so compare with
+			// the dev suffix normalized to keep exports portable between them.
+			const sourceSystem = data.flags?.exportSource?.system;
+			if (
+				typeof sourceSystem === 'string' &&
+				sourceSystem.replace(/-dev$/, '') !== String(SYSTEM_ID).replace(/-dev$/, '')
+			) {
+				this._error = game.i18n.localize('NIMBLE.actorImport.json.wrongSystemError');
+				return;
+			}
+
 			this._parsedData = data;
 		} catch (error) {
 			console.error('Player character import: failed to parse JSON', error);
@@ -258,14 +277,18 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 		try {
 			const data = { ...(this._parsedData as Record<string, unknown>) };
 
-			// Drop the source id so Foundry generates a fresh one for this world.
+			// Drop the source id so Foundry generates a fresh one for this world,
+			// and replace the source world's ownership with a grant to the
+			// importing user.
 			delete data._id;
+			data.ownership = {
+				default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE,
+				[game.user!.id]: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
+			};
 
-			const { documentClasses } = CONFIG.NIMBLE.Actor;
-			const actorType = (data.type as string | undefined) ?? 'character';
-			const documentClass =
-				(documentClasses as Record<string, typeof Actor>)[actorType] ??
-				(documentClasses as Record<string, typeof Actor>).character;
+			// loadFile guarantees type === 'character'.
+			const documentClass = (CONFIG.NIMBLE.Actor.documentClasses as Record<string, typeof Actor>)
+				.character;
 
 			const folder = (this.data.folder as string | null | undefined) ?? null;
 

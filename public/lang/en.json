@@ -2404,6 +2404,8 @@
 				"selectPrompt": "Select a character JSON file",
 				"selectHint": "Click to browse, or drag a file here",
 				"parseError": "Could not read that file. Make sure it's a character exported as JSON.",
+				"notACharacterError": "That file isn't a player character export. Only player characters can be imported here.",
+				"wrongSystemError": "That file was exported from a different game system. Only Nimble character exports can be imported.",
 				"importError": "Failed to import the character. Please try again.",
 				"success": "Player character imported successfully",
 				"unnamed": "Unnamed Character",
