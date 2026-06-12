@@ -1,6 +1,9 @@
 <script>
+	import CharacterJsonExportButton from '#view/sheets/components/CharacterJsonExportButton.svelte';
+
 	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 	import { SYSTEM_ID } from '#system';
+	import localize from '#utils/localize.ts';
 	import { getContext } from 'svelte';
 	let actor = getContext('actor');
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -256,6 +259,18 @@
 			>
 				Reset spell tier
 			</button>
+		</div>
+	</section>
+
+	<section>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize(CONFIG.NIMBLE.jsonExport.sectionHeader)}
+			</h3>
+		</header>
+
+		<div class="nimble-field">
+			<CharacterJsonExportButton {actor} />
 		</div>
 	</section>
 </section>

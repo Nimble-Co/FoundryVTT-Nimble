@@ -2397,7 +2397,29 @@
 			}
 		},
 		"actorImport": {
-			"buttonLabel": "Import Actor",
+			"buttonLabel": "Import from Nimble Nexus",
+			"jsonButtonLabel": "Import Player Character",
+			"json": {
+				"dialogTitle": "Import Player Character from JSON",
+				"selectPrompt": "Select a character JSON file",
+				"selectHint": "Click to browse, or drag a file here",
+				"parseError": "Could not read that file. Make sure it's a character exported as JSON.",
+				"notACharacterError": "That file isn't a player character export. Only player characters can be imported here.",
+				"wrongSystemError": "That file was exported from a different game system. Only Nimble character exports can be imported.",
+				"importError": "Failed to import the character. Please try again.",
+				"success": "Player character imported successfully",
+				"unnamed": "Unnamed Character",
+				"unnamedItem": "Unnamed Item",
+				"statLevel": "Level",
+				"statHp": "Max HP",
+				"statItems": "Items",
+				"contentsHeader": "What will be imported",
+				"levelTag": "Lvl {level}",
+				"noItems": "This character has no embedded items.",
+				"chooseDifferent": "Choose a different file",
+				"confirm": "Import Character",
+				"importing": "Importing..."
+			},
 			"dialogTitle": "Import from Nimble Nexus",
 			"searchPlaceholder": "Search monsters...",
 			"selectAll": "Select All",
@@ -2441,6 +2463,12 @@
 					"support": "Support"
 				}
 			}
+		},
+		"jsonExport": {
+			"sectionHeader": "Export",
+			"exportButton": "Export Character Sheet (JSON)",
+			"success": "Character exported successfully",
+			"error": "Failed to export character"
 		}
 	}
 }
