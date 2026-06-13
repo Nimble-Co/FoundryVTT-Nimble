@@ -69,12 +69,18 @@
 	let searchQuery = $state('');
 	let searchActive = $derived(!!searchQuery.trim());
 
-	// Group items by category, filtered by search query when active
+	// Group items by category, filtered by search query when active.
+	// A category whose label matches the query keeps ALL its items visible,
+	// so searching "inventory" shows every inventory item, not just items whose
+	// name happens to contain the word "inventory".
 	let itemsByCategory = $derived.by(() => {
 		const query = searchQuery.trim().toLowerCase();
 		const groups: Record<string, SelectableItem[]> = {};
 		for (const item of selectableItems) {
-			if (query && !item.label.toLowerCase().includes(query)) continue;
+			if (query) {
+				const categoryLabel = getCategoryLabel(item.category).toLowerCase();
+				if (!categoryLabel.includes(query) && !item.label.toLowerCase().includes(query)) continue;
+			}
 			if (!groups[item.category]) {
 				groups[item.category] = [];
 			}
