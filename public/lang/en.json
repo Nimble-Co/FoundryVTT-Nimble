@@ -2497,6 +2497,7 @@
 			"templateLined": "With Lines",
 			"templateNoLines": "Without Lines",
 			"columnOverflow": "Content exceeds column capacity. Some text may be cut off.",
+			"search": "Search items...",
 			"selectAll": "Select All",
 			"deselectAll": "Deselect All",
 			"categories": {

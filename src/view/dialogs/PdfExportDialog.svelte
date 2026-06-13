@@ -65,10 +65,16 @@
 	// Get selectable items grouped by category
 	let selectableItems = $derived(getSelectableItems(actor));
 
-	// Group items by category
+	// Search query for filtering the content picker
+	let searchQuery = $state('');
+	let searchActive = $derived(!!searchQuery.trim());
+
+	// Group items by category, filtered by search query when active
 	let itemsByCategory = $derived.by(() => {
+		const query = searchQuery.trim().toLowerCase();
 		const groups: Record<string, SelectableItem[]> = {};
 		for (const item of selectableItems) {
+			if (query && !item.label.toLowerCase().includes(query)) continue;
 			if (!groups[item.category]) {
 				groups[item.category] = [];
 			}
@@ -299,6 +305,16 @@
 				{localize('NIMBLE.pdfExport.contentPicker')}
 			</h3>
 
+			<div class="pdf-export-dialog__search-wrapper">
+				<i class="fa-solid fa-magnifying-glass pdf-export-dialog__search-icon"></i>
+				<input
+					type="search"
+					class="pdf-export-dialog__search"
+					placeholder={localize('NIMBLE.pdfExport.search')}
+					bind:value={searchQuery}
+				/>
+			</div>
+
 			<div class="pdf-export-dialog__categories">
 				{#each Object.entries(itemsByCategory) as [category, items]}
 					<div class="pdf-export-dialog__category">
@@ -332,7 +348,7 @@
 								</button>
 							</div>
 
-							{#if expandedCategories.has(category)}
+							{#if expandedCategories.has(category) || searchActive}
 								<div class="pdf-export-dialog__category-items">
 									<label class="pdf-export-dialog__item pdf-export-dialog__item--select-all">
 										<input
@@ -581,6 +597,46 @@
 
 			.pdf-export-dialog__section-title {
 				padding-left: 1.6875rem;
+			}
+		}
+
+		&__search-wrapper {
+			position: relative;
+			flex-shrink: 0;
+		}
+
+		&__search-icon {
+			position: absolute;
+			left: 0.5rem;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 0.625rem;
+			color: var(--nimble-medium-text-color);
+			pointer-events: none;
+		}
+
+		&__search {
+			width: 100%;
+			padding: 0.3rem 0.5rem 0.3rem 1.625rem;
+			font-size: var(--nimble-sm-text);
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			color: var(--nimble-dark-text-color);
+			box-sizing: border-box;
+
+			&::placeholder {
+				color: var(--nimble-medium-text-color);
+			}
+
+			&:focus {
+				outline: none;
+				border-color: var(--nimble-accent-color, hsl(210, 70%, 50%));
+			}
+
+			// Hide the browser's native clear (×) button — we clear on empty query naturally
+			&::-webkit-search-cancel-button {
+				-webkit-appearance: none;
 			}
 		}
 
