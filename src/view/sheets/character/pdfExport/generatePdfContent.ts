@@ -1080,8 +1080,8 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 	}
 
 	// Character notes
-	const notes = (actor.system as { details?: { notes?: string } }).details?.notes;
-	if (notes?.trim()) {
+	const notes = (actor.system as { details?: { notes?: string } }).details?.notes?.trim();
+	if (notes) {
 		items.push({
 			id: 'character-notes',
 			category: 'character',
