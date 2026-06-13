@@ -258,6 +258,20 @@
 		return labels[category] ?? category;
 	}
 
+	function resetToDefault() {
+		const freshContent = generateInitialColumnContentHtml(actor);
+		column1Html = freshContent[0];
+		column2Html = freshContent[1];
+		column3Html = freshContent[2];
+		// The $effect only refreshes the editor on tab changes, so update the active column directly
+		if (editorElement) {
+			let activeContent = freshContent[0];
+			if (activeColumnTab === 2) activeContent = freshContent[1];
+			if (activeColumnTab === 3) activeContent = freshContent[2];
+			editorElement.innerHTML = activeContent;
+		}
+	}
+
 	async function generatePdf() {
 		dialog.submit({
 			columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
@@ -405,9 +419,20 @@
 
 		<!-- Column Editor Section -->
 		<section class="pdf-export-dialog__editor">
-			<h3 class="pdf-export-dialog__section-title">
-				{localize('NIMBLE.pdfExport.columnEditor')}
-			</h3>
+			<div class="pdf-export-dialog__editor-header">
+				<h3 class="pdf-export-dialog__section-title">
+					{localize('NIMBLE.pdfExport.columnEditor')}
+				</h3>
+				<button
+					type="button"
+					class="pdf-export-dialog__reset-btn"
+					title={localize('NIMBLE.pdfExport.resetToDefault')}
+					onclick={resetToDefault}
+				>
+					<i class="fa-solid fa-rotate-left"></i>
+					{localize('NIMBLE.pdfExport.resetToDefault')}
+				</button>
+			</div>
 
 			<!-- Template Selection -->
 			<div class="pdf-export-dialog__template-selection">
@@ -751,6 +776,34 @@
 			min-height: 0;
 			overflow: hidden;
 			gap: 0.5rem;
+		}
+
+		&__editor-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		&__reset-btn {
+			display: flex;
+			align-items: center;
+			gap: 0.3rem;
+			padding: 0.2rem 0.5rem;
+			font-size: var(--nimble-xs-text, 0.625rem);
+			background: transparent;
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			color: var(--nimble-medium-text-color);
+			cursor: pointer;
+
+			&:hover {
+				background: var(--nimble-box-background-hover-color, rgba(0, 0, 0, 0.05));
+				color: var(--nimble-dark-text-color);
+			}
+
+			i {
+				font-size: 0.6rem;
+			}
 		}
 
 		&__template-selection {
