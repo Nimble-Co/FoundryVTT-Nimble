@@ -6,18 +6,7 @@
 
 import type { jsPDF } from 'jspdf';
 
-import type { StyledLine, StyledSegment } from './parseHtmlToStyledSegments.ts';
-
-interface DrawStyledTextOptions {
-	pdf: jsPDF;
-	lines: StyledLine[];
-	startX: number;
-	startY: number;
-	maxWidth: number;
-	lineHeight: number;
-	fontSize: number;
-	maxLines?: number;
-}
+import type { DrawStyledTextOptions, StyledSegment } from './pdfExport.types.ts';
 
 interface WrappedSegment {
 	text: string;
@@ -187,4 +176,3 @@ function drawStyledText(options: DrawStyledTextOptions): number {
 }
 
 export { drawStyledText };
-export type { DrawStyledTextOptions };

@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 
-import { generatePdfPreviewUrl, type TemplateType } from './exportCharacterPdf.ts';
+import { generatePdfPreviewUrl } from './exportCharacterPdf.ts';
+import type { TemplateType } from './pdfExport.types.ts';
 
 /**
  * Show a PDF preview in a new window.

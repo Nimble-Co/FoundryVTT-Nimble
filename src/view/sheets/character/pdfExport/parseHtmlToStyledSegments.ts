@@ -4,19 +4,7 @@
  * unordered lists (<ul>/<li>), and ordered lists (<ol>/<li>).
  */
 
-interface StyledSegment {
-	text: string;
-	bold: boolean;
-	italic: boolean;
-}
-
-interface StyledLine {
-	segments: StyledSegment[];
-	/** Set for heading elements; drives font-size scaling in the renderer. */
-	headerLevel?: 1 | 2 | 3 | 4 | 5 | 6;
-	/** Prefix drawn before the line's text (e.g. "• " or "1. "). */
-	listMarker?: string;
-}
+import type { StyledLine, StyledSegment } from './pdfExport.types.ts';
 
 /**
  * Parse HTML string into an array of styled lines.
@@ -169,4 +157,3 @@ function getPlainTextFromHtml(html: string): string {
 }
 
 export { getPlainTextFromHtml, parseHtmlToStyledSegments };
-export type { StyledLine, StyledSegment };

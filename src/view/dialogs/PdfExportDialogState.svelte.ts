@@ -2,7 +2,6 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.ts';
 import type { PreviewState } from '#types/components/PdfPreviewDialog.js';
 import localize from '#utils/localize.ts';
-import type { TemplateType } from '../sheets/character/pdfExport/exportCharacterPdf.ts';
 import {
 	CHARS_PER_COLUMN,
 	generateInitialColumnContentHtml,
@@ -10,6 +9,7 @@ import {
 	type SelectableItem,
 } from '../sheets/character/pdfExport/generatePdfContent.ts';
 import { getPlainTextFromHtml } from '../sheets/character/pdfExport/parseHtmlToStyledSegments.ts';
+import type { TemplateType } from '../sheets/character/pdfExport/pdfExport.types.ts';
 
 export function createPdfExportDialogState(
 	getActor: () => NimbleCharacter,

@@ -2,7 +2,7 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.ts';
 import localize from '#utils/localize.ts';
 
-import type { TemplateType } from './exportCharacterPdf.ts';
+import type { TemplateType } from './pdfExport.types.ts';
 
 export function createCharacterPdfExportButtonState(
 	getActor: () => NimbleCharacter,

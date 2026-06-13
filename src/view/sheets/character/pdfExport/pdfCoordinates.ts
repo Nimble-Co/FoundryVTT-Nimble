@@ -8,6 +8,8 @@
  * All coordinates are in PDF points.
  */
 
+import type { LinedTextAreaConfig, PdfCoordinates, TextPosition } from './pdfExport.types.ts';
+
 /** Template width in pixels */
 const TEMPLATE_WIDTH = 4960;
 
@@ -37,70 +39,6 @@ function pdfY(pixelY: number): number {
 /** Convert pixel width to PDF width */
 function pdfW(pixelW: number): number {
 	return pixelW * SCALE_X;
-}
-
-interface TextPosition {
-	x: number;
-	y: number;
-	fontSize: number;
-	maxWidth?: number;
-}
-
-interface LinedTextAreaConfig {
-	startY: number;
-	leftMargin: number;
-	columnWidth: number;
-	columnGap: number;
-	columnCount: number;
-	linesPerColumn: number;
-	lineHeight: number;
-	fontSize: number;
-	headerFontSize: number;
-	pageHeight: number;
-}
-
-interface SaveArrowPosition {
-	upX: number;
-	upY: number;
-	downX: number;
-	downY: number;
-	fontSize: number;
-}
-
-interface PdfCoordinates {
-	characterName: TextPosition;
-	ancestryClassLevel: TextPosition;
-	heightWeightSpeed: TextPosition;
-	hitDice: TextPosition;
-	hitPoints: TextPosition;
-	armor: TextPosition;
-	initiative: TextPosition;
-	wounds: TextPosition;
-	abilities: {
-		strength: TextPosition;
-		dexterity: TextPosition;
-		intelligence: TextPosition;
-		will: TextPosition;
-	};
-	saveArrows: {
-		strength: SaveArrowPosition;
-		dexterity: SaveArrowPosition;
-		intelligence: SaveArrowPosition;
-		will: SaveArrowPosition;
-	};
-	skills: {
-		arcana: TextPosition;
-		examination: TextPosition;
-		finesse: TextPosition;
-		influence: TextPosition;
-		insight: TextPosition;
-		lore: TextPosition;
-		might: TextPosition;
-		naturecraft: TextPosition;
-		perception: TextPosition;
-		stealth: TextPosition;
-	};
-	linedTextArea: LinedTextAreaConfig;
 }
 
 /**
@@ -285,4 +223,3 @@ const pdfCoordinates: PdfCoordinates = {
 };
 
 export { pdfCoordinates };
-export type { LinedTextAreaConfig, PdfCoordinates, TextPosition };

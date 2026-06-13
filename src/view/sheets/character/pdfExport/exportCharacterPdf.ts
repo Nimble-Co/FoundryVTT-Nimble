@@ -5,20 +5,17 @@ import { SYSTEM_PATH } from '#system';
 
 import { drawStyledText } from './drawStyledText.ts';
 import { parseHtmlToStyledSegments } from './parseHtmlToStyledSegments.ts';
-import { type LinedTextAreaConfig, pdfCoordinates, type TextPosition } from './pdfCoordinates.ts';
+import { pdfCoordinates } from './pdfCoordinates.ts';
+import type {
+	ExportOptions,
+	LinedTextAreaConfig,
+	TemplateType,
+	TextPosition,
+} from './pdfExport.types.ts';
 
 /** PDF page dimensions in points (letter size) */
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
-
-/** Template options */
-type TemplateType = 'lined' | 'noLines';
-
-interface ExportOptions {
-	columnContent: [string, string, string];
-	template?: TemplateType;
-	returnPdf?: boolean;
-}
 
 /**
  * Format a modifier value with a sign prefix.
@@ -303,4 +300,3 @@ async function generatePdfPreviewUrl(
 }
 
 export { exportCharacterPdf, generatePdfPreviewUrl };
-export type { ExportOptions, TemplateType };
