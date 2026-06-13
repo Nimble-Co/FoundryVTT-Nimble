@@ -1,320 +1,46 @@
 <script lang="ts">
 	import type { PdfExportDialogProps } from '#types/components/PdfExportDialog.js';
-
-	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.ts';
 	import localize from '#utils/localize.ts';
-
-	import type { TemplateType } from '../sheets/character/pdfExport/exportCharacterPdf.ts';
-	import {
-		CHARS_PER_COLUMN,
-		generateInitialColumnContentHtml,
-		getSelectableItems,
-		type SelectableItem,
-	} from '../sheets/character/pdfExport/generatePdfContent.ts';
-	import { getPlainTextFromHtml } from '../sheets/character/pdfExport/parseHtmlToStyledSegments.ts';
+	import { CHARS_PER_COLUMN } from '../sheets/character/pdfExport/generatePdfContent.ts';
 	import PdfPreviewDialog from './PdfPreviewDialog.svelte';
+	import { createPdfExportDialogState } from './PdfExportDialogState.svelte.ts';
 
 	let { actor, dialog }: PdfExportDialogProps = $props();
 
-	// Initialize columns with generated HTML content
-	// svelte-ignore state_referenced_locally
-	const initialContent = generateInitialColumnContentHtml(actor);
-	let column1Html = $state(initialContent[0]);
-	let column2Html = $state(initialContent[1]);
-	let column3Html = $state(initialContent[2]);
+	const state = createPdfExportDialogState(
+		() => actor,
+		() => dialog,
+		PdfPreviewDialog,
+	);
+	const {
+		toggleCategory,
+		areCategoryItemsAllSelected,
+		toggleSelectAllInCategory,
+		toggleItem,
+		insertSelected,
+		handleEditorInput,
+		handleEditorKeydown,
+		handleEditorCutPaste,
+		applyFormat,
+		getCategoryLabel,
+		resetToDefault,
+		generatePdf,
+		openPreviewDialog,
+	} = state;
 
-	// Template selection (lined or no lines)
-	let selectedTemplate = $state<TemplateType>('lined');
-
-	// Shared reactive state passed to the preview dialog so it updates live
-	let previewState = $state<{ columnContent: [string, string, string]; template: TemplateType }>({
-		columnContent: [initialContent[0], initialContent[1], initialContent[2]],
-		template: 'lined',
-	});
-
-	// Sync template change immediately to preview
-	$effect(() => {
-		previewState.template = selectedTemplate;
-	});
-
-	// Sync column content to preview with debounce (avoid regenerating on every keystroke)
-	let columnSyncTimer: number | null = null;
-	$effect(() => {
-		const c1 = column1Html;
-		const c2 = column2Html;
-		const c3 = column3Html;
-		if (columnSyncTimer !== null) window.clearTimeout(columnSyncTimer);
-		columnSyncTimer = window.setTimeout(() => {
-			previewState.columnContent = [c1, c2, c3];
-			columnSyncTimer = null;
-		}, 800);
-		return () => {
-			if (columnSyncTimer !== null) {
-				window.clearTimeout(columnSyncTimer);
-				columnSyncTimer = null;
-			}
-		};
-	});
-
-	// Active column tab (1, 2, or 3)
-	let activeColumnTab = $state(1);
-
-	// Selected items for insertion
-	let selectedItems = $state(new Set<string>());
-
-	// Get selectable items grouped by category
-	let selectableItems = $derived(getSelectableItems(actor));
-
-	// Search query for filtering the content picker
-	let searchQuery = $state('');
-	let searchActive = $derived(!!searchQuery.trim());
-
-	// Group items by category, filtered by search query when active.
-	// A category whose label matches the query keeps ALL its items visible,
-	// so searching "inventory" shows every inventory item, not just items whose
-	// name happens to contain the word "inventory".
-	let itemsByCategory = $derived.by(() => {
-		const query = searchQuery.trim().toLowerCase();
-		const groups: Record<string, SelectableItem[]> = {};
-		for (const item of selectableItems) {
-			if (query) {
-				const categoryLabel = getCategoryLabel(item.category).toLowerCase();
-				if (!categoryLabel.includes(query) && !item.label.toLowerCase().includes(query)) continue;
-			}
-			if (!groups[item.category]) {
-				groups[item.category] = [];
-			}
-			groups[item.category].push(item);
-		}
-		return groups;
-	});
-
-	// Category expansion state (empty = all collapsed by default)
-	let expandedCategories = $state(new Set<string>());
-
-	// Active preview dialog — close before opening a new one
-	let activePreviewDialog: ReturnType<typeof GenericDialog.getOrCreate> | null = null;
-
-	// Character counts (derived from plain text)
-	let column1Count = $derived(getPlainTextFromHtml(column1Html).length);
-	let column2Count = $derived(getPlainTextFromHtml(column2Html).length);
-	let column3Count = $derived(getPlainTextFromHtml(column3Html).length);
-
-	// Over limit checks
-	let column1OverLimit = $derived(column1Count > CHARS_PER_COLUMN);
-	let column2OverLimit = $derived(column2Count > CHARS_PER_COLUMN);
-	let column3OverLimit = $derived(column3Count > CHARS_PER_COLUMN);
-
-	// Tooltip text for over-limit columns (array indexed by column number - 1)
-	let columnTooltips = $derived.by(() => {
-		const tooltip = localize('NIMBLE.pdfExport.columnOverflow');
-		return [
-			column1OverLimit ? tooltip : undefined,
-			column2OverLimit ? tooltip : undefined,
-			column3OverLimit ? tooltip : undefined,
-		];
-	});
-
-	let activeColumnCount = $derived.by(() => {
-		if (activeColumnTab === 1) return column1Count;
-		if (activeColumnTab === 2) return column2Count;
-		return column3Count;
-	});
-
-	let activeColumnOverLimit = $derived.by(() => {
-		if (activeColumnTab === 1) return column1OverLimit;
-		if (activeColumnTab === 2) return column2OverLimit;
-		return column3OverLimit;
-	});
-
-	// Reference to the contenteditable element
-	let editorElement: HTMLDivElement | null = $state(null);
-
-	// Track the last active tab to detect tab changes (starts at 1, same as activeColumnTab)
-	let lastActiveTab = $state(1);
-
-	// Set editor content when element is bound or tab changes
-	$effect(() => {
-		if (!editorElement) return;
-
-		// On mount or tab change, set the content
-		if (activeColumnTab !== lastActiveTab || editorElement.innerHTML === '') {
-			lastActiveTab = activeColumnTab;
-			// Get the correct content for the current tab
-			let content = column1Html;
-			if (activeColumnTab === 2) content = column2Html;
-			if (activeColumnTab === 3) content = column3Html;
-			editorElement.innerHTML = content;
-		}
-	});
-
-	function toggleCategory(category: string) {
-		if (expandedCategories.has(category)) {
-			expandedCategories.delete(category);
-		} else {
-			expandedCategories.add(category);
-		}
-		expandedCategories = new Set(expandedCategories);
-	}
-
-	function areCategoryItemsAllSelected(category: string): boolean {
-		const items = itemsByCategory[category];
-		if (!items || items.length === 0) return false;
-		return items.every((item) => selectedItems.has(item.id));
-	}
-
-	function toggleSelectAllInCategory(category: string) {
-		const items = itemsByCategory[category];
-		if (!items) return;
-		const allSelected = areCategoryItemsAllSelected(category);
-		if (allSelected) {
-			for (const item of items) selectedItems.delete(item.id);
-		} else {
-			for (const item of items) selectedItems.add(item.id);
-		}
-		selectedItems = new Set(selectedItems);
-	}
-
-	function toggleItem(itemId: string) {
-		if (selectedItems.has(itemId)) {
-			selectedItems.delete(itemId);
-		} else {
-			selectedItems.add(itemId);
-		}
-		selectedItems = new Set(selectedItems);
-	}
-
-	function insertSelected() {
-		if (selectedItems.size === 0) return;
-
-		const contentToInsert: string[] = [];
-		for (const item of selectableItems) {
-			if (selectedItems.has(item.id)) {
-				contentToInsert.push(item.contentHtml);
-			}
-		}
-
-		const insertHtml = contentToInsert.join('<br>');
-
-		// Insert at cursor position or append
-		if (editorElement) {
-			const selection = window.getSelection();
-			if (selection && selection.rangeCount > 0 && editorElement.contains(selection.anchorNode)) {
-				// Insert at cursor
-				document.execCommand('insertHTML', false, insertHtml);
-			} else {
-				// Append to end
-				const currentHtml = editorElement.innerHTML;
-				editorElement.innerHTML = currentHtml ? `${currentHtml}<br>${insertHtml}` : insertHtml;
-			}
-			handleEditorInput();
-		}
-
-		selectedItems = new Set();
-	}
-
-	function handleEditorInput() {
-		if (!editorElement) return;
-		const html = editorElement.innerHTML;
-
-		if (activeColumnTab === 1) {
-			column1Html = html;
-		} else if (activeColumnTab === 2) {
-			column2Html = html;
-		} else {
-			column3Html = html;
-		}
-	}
-
-	/**
-	 * Stop keyboard events from propagating to Foundry's global handlers.
-	 * This ensures cut/copy/paste and other keyboard shortcuts work correctly in the editor.
-	 */
-	function handleEditorKeydown(event: KeyboardEvent) {
-		// Stop propagation to prevent Foundry from capturing these events
-		event.stopPropagation();
-	}
-
-	/**
-	 * Handle cut/paste events - update state after the browser modifies the DOM.
-	 */
-	function handleEditorCutPaste() {
-		// Use setTimeout to let the browser complete the cut/paste operation first
-		setTimeout(() => {
-			handleEditorInput();
-		}, 0);
-	}
-
-	function applyFormat(command: string, value?: string) {
-		document.execCommand(command, false, value);
-		editorElement?.focus();
-		handleEditorInput();
-	}
-
-	function getCategoryLabel(category: string): string {
-		const labels: Record<string, string> = {
-			ancestry: localize('NIMBLE.pdfExport.categories.ancestry'),
-			background: localize('NIMBLE.pdfExport.categories.background'),
-			features: localize('NIMBLE.pdfExport.categories.features'),
-			subclassFeatures: localize('NIMBLE.pdfExport.categories.subclassFeatures'),
-			spells: localize('NIMBLE.pdfExport.categories.spells'),
-			inventory: localize('NIMBLE.pdfExport.categories.inventory'),
-			character: localize('NIMBLE.pdfExport.categories.character'),
-		};
-		return labels[category] ?? category;
-	}
-
-	function resetToDefault() {
-		const freshContent = generateInitialColumnContentHtml(actor);
-		column1Html = freshContent[0];
-		column2Html = freshContent[1];
-		column3Html = freshContent[2];
-		// The $effect only refreshes the editor on tab changes, so update the active column directly
-		if (editorElement) {
-			let activeContent = freshContent[0];
-			if (activeColumnTab === 2) activeContent = freshContent[1];
-			if (activeColumnTab === 3) activeContent = freshContent[2];
-			editorElement.innerHTML = activeContent;
-		}
-	}
-
-	async function generatePdf() {
-		dialog.submit({
-			columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
-			template: selectedTemplate,
-		});
-	}
-
-	function openPreviewDialog() {
-		// Immediately flush any pending debounced column sync
-		if (columnSyncTimer !== null) {
-			window.clearTimeout(columnSyncTimer);
-			columnSyncTimer = null;
-		}
-		previewState.template = selectedTemplate;
-		previewState.columnContent = [column1Html, column2Html, column3Html];
-
-		// If preview is already open, bring it to front — live sync handles the update
-		if (activePreviewDialog?.rendered) {
-			activePreviewDialog.bringToFront();
-			return;
-		}
-
-		activePreviewDialog = new GenericDialog(
-			localize('NIMBLE.pdfExport.previewTitle'),
-			PdfPreviewDialog as unknown as Parameters<typeof GenericDialog>[1],
-			{
-				actor,
-				previewState,
-			},
-			{
-				icon: 'fa-solid fa-eye',
-				width: 700,
-				height: 900,
-			},
-		);
-		activePreviewDialog.render(true);
-	}
+	const searchActive = $derived(state.searchActive);
+	const itemsByCategory = $derived(state.itemsByCategory);
+	const selectedItems = $derived(state.selectedItems);
+	const expandedCategories = $derived(state.expandedCategories);
+	const column1OverLimit = $derived(state.column1OverLimit);
+	const column2OverLimit = $derived(state.column2OverLimit);
+	const column3OverLimit = $derived(state.column3OverLimit);
+	const columnTooltips = $derived(state.columnTooltips);
+	const column1Count = $derived(state.column1Count);
+	const column2Count = $derived(state.column2Count);
+	const column3Count = $derived(state.column3Count);
+	const activeColumnCount = $derived(state.activeColumnCount);
+	const activeColumnOverLimit = $derived(state.activeColumnOverLimit);
 </script>
 
 <article class="nimble-sheet__body pdf-export-dialog">
@@ -331,7 +57,7 @@
 					type="search"
 					class="pdf-export-dialog__search"
 					placeholder={localize('NIMBLE.pdfExport.search')}
-					bind:value={searchQuery}
+					bind:value={state.searchQuery}
 				/>
 			</div>
 
@@ -411,7 +137,7 @@
 				onclick={insertSelected}
 			>
 				<i class="fa-solid fa-plus"></i>
-				{localize('NIMBLE.pdfExport.insertToColumn', { column: activeColumnTab })}
+				{localize('NIMBLE.pdfExport.insertToColumn', { column: state.activeColumnTab })}
 			</button>
 			<!-- Invisible spacer mirrors the char-count row height so the button bottom aligns with the text box bottom -->
 			<div
@@ -448,15 +174,15 @@
 				<button
 					type="button"
 					class="nimble-button pdf-export-dialog__template-btn"
-					class:pdf-export-dialog__template-btn--active={selectedTemplate === 'lined'}
-					onclick={() => (selectedTemplate = 'lined')}
+					class:pdf-export-dialog__template-btn--active={state.selectedTemplate === 'lined'}
+					onclick={() => (state.selectedTemplate = 'lined')}
 					>{localize('NIMBLE.pdfExport.templateLined')}</button
 				>
 				<button
 					type="button"
 					class="nimble-button pdf-export-dialog__template-btn"
-					class:pdf-export-dialog__template-btn--active={selectedTemplate === 'noLines'}
-					onclick={() => (selectedTemplate = 'noLines')}
+					class:pdf-export-dialog__template-btn--active={state.selectedTemplate === 'noLines'}
+					onclick={() => (state.selectedTemplate = 'noLines')}
 					>{localize('NIMBLE.pdfExport.templateNoLines')}</button
 				>
 			</div>
@@ -471,11 +197,11 @@
 					<button
 						type="button"
 						class="pdf-export-dialog__tab"
-						class:pdf-export-dialog__tab--active={activeColumnTab === num}
+						class:pdf-export-dialog__tab--active={state.activeColumnTab === num}
 						class:pdf-export-dialog__tab--over-limit={isOverLimit}
 						data-tooltip={columnTooltips[num - 1]}
 						data-tooltip-direction="UP"
-						onclick={() => (activeColumnTab = num)}
+						onclick={() => (state.activeColumnTab = num)}
 					>
 						{localize('NIMBLE.pdfExport.column', { number: num })}
 						{#if num === 1}
@@ -547,7 +273,7 @@
 
 			<!-- Rich Text Editor -->
 			<div
-				bind:this={editorElement}
+				bind:this={state.editorElement}
 				class="pdf-export-dialog__rich-editor"
 				class:pdf-export-dialog__rich-editor--over-limit={activeColumnOverLimit}
 				contenteditable="true"

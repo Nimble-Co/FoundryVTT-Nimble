@@ -1,63 +1,17 @@
 <script lang="ts">
-	import type { NimbleCharacter } from '#documents/actor/character.js';
-
+	import type { PdfPreviewDialogProps } from '#types/components/PdfPreviewDialog.js';
 	import localize from '#utils/localize.ts';
+	import { createPdfPreviewDialogState } from './PdfPreviewDialogState.svelte.ts';
 
-	import {
-		generatePdfPreviewUrl,
-		type TemplateType,
-	} from '../sheets/character/pdfExport/exportCharacterPdf.ts';
+	let { actor, previewState }: PdfPreviewDialogProps = $props();
 
-	interface PreviewState {
-		columnContent: [string, string, string];
-		template: TemplateType;
-	}
-
-	interface PdfPreviewDialogProps {
-		actor: NimbleCharacter;
-		previewState: PreviewState;
-		dialog: { close(): void };
-	}
-
-	let { actor, previewState, dialog: _dialog }: PdfPreviewDialogProps = $props();
-
-	let previewUrl: string | null = $state(null);
-	let isGenerating = $state(true);
-	let hasError = $state(false);
-
-	$effect(() => {
-		// Read from reactive previewState to create dependencies — effect re-runs when either changes
-		const columnContent = previewState.columnContent;
-		const template = previewState.template;
-
-		isGenerating = true;
-		hasError = false;
-
-		let cancelled = false;
-		let objectUrl: string | null = null;
-
-		generatePdfPreviewUrl(actor, { columnContent, template })
-			.then((url) => {
-				if (cancelled) {
-					URL.revokeObjectURL(url);
-					return;
-				}
-				objectUrl = url;
-				previewUrl = url;
-			})
-			.catch((_err) => {
-				if (!cancelled) hasError = true;
-			})
-			.finally(() => {
-				if (!cancelled) isGenerating = false;
-			});
-
-		return () => {
-			cancelled = true;
-			if (objectUrl) URL.revokeObjectURL(objectUrl);
-			previewUrl = null;
-		};
-	});
+	const state = createPdfPreviewDialogState(
+		() => actor,
+		() => previewState,
+	);
+	const isGenerating = $derived(state.isGenerating);
+	const hasError = $derived(state.hasError);
+	const previewUrl = $derived(state.previewUrl);
 </script>
 
 <article class="nimble-sheet__body pdf-preview-dialog">
