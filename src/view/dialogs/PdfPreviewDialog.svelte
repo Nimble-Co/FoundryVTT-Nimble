@@ -9,23 +9,20 @@
 		() => actor,
 		() => previewState,
 	);
-	const isGenerating = $derived(state.isGenerating);
-	const hasError = $derived(state.hasError);
-	const previewUrl = $derived(state.previewUrl);
 </script>
 
 <article class="nimble-sheet__body pdf-preview-dialog">
-	{#if isGenerating}
+	{#if state.isGenerating}
 		<div class="pdf-preview-dialog__loading">
 			<i class="fa-solid fa-spinner fa-spin"></i>
 			{localize('NIMBLE.pdfExport.generatingPreview')}
 		</div>
-	{:else if hasError}
+	{:else if state.hasError}
 		<div class="pdf-preview-dialog__loading">
 			{localize('NIMBLE.pdfExport.error')}
 		</div>
-	{:else if previewUrl}
-		<iframe src={previewUrl} class="pdf-preview-dialog__iframe" title="PDF Preview"></iframe>
+	{:else if state.previewUrl}
+		<iframe src={state.previewUrl} class="pdf-preview-dialog__iframe" title="PDF Preview"></iframe>
 	{/if}
 </article>
 

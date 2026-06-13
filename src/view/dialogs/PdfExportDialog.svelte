@@ -27,20 +27,6 @@
 		generatePdf,
 		openPreviewDialog,
 	} = state;
-
-	const searchActive = $derived(state.searchActive);
-	const itemsByCategory = $derived(state.itemsByCategory);
-	const selectedItems = $derived(state.selectedItems);
-	const expandedCategories = $derived(state.expandedCategories);
-	const column1OverLimit = $derived(state.column1OverLimit);
-	const column2OverLimit = $derived(state.column2OverLimit);
-	const column3OverLimit = $derived(state.column3OverLimit);
-	const columnTooltips = $derived(state.columnTooltips);
-	const column1Count = $derived(state.column1Count);
-	const column2Count = $derived(state.column2Count);
-	const column3Count = $derived(state.column3Count);
-	const activeColumnCount = $derived(state.activeColumnCount);
-	const activeColumnOverLimit = $derived(state.activeColumnOverLimit);
 </script>
 
 <article class="nimble-sheet__body pdf-export-dialog">
@@ -62,13 +48,13 @@
 			</div>
 
 			<div class="pdf-export-dialog__categories">
-				{#each Object.entries(itemsByCategory) as [category, items]}
+				{#each Object.entries(state.itemsByCategory) as [category, items]}
 					<div class="pdf-export-dialog__category">
 						{#if items.length === 1}
 							<label class="pdf-export-dialog__item pdf-export-dialog__item--single">
 								<input
 									type="checkbox"
-									checked={selectedItems.has(items[0].id)}
+									checked={state.selectedItems.has(items[0].id)}
 									onchange={() => toggleItem(items[0].id)}
 								/>
 								<span class="pdf-export-dialog__item-label">
@@ -86,15 +72,15 @@
 								>
 									<i
 										class="fa-solid"
-										class:fa-chevron-down={expandedCategories.has(category)}
-										class:fa-chevron-right={!expandedCategories.has(category)}
+										class:fa-chevron-down={state.expandedCategories.has(category)}
+										class:fa-chevron-right={!state.expandedCategories.has(category)}
 									></i>
 									<span>{getCategoryLabel(category)}</span>
 									<span class="pdf-export-dialog__category-count">({items.length})</span>
 								</button>
 							</div>
 
-							{#if expandedCategories.has(category) || searchActive}
+							{#if state.expandedCategories.has(category) || state.searchActive}
 								<div class="pdf-export-dialog__category-items">
 									<label class="pdf-export-dialog__item pdf-export-dialog__item--select-all">
 										<input
@@ -114,7 +100,7 @@
 										<label class="pdf-export-dialog__item">
 											<input
 												type="checkbox"
-												checked={selectedItems.has(item.id)}
+												checked={state.selectedItems.has(item.id)}
 												onchange={() => toggleItem(item.id)}
 											/>
 											<span class="pdf-export-dialog__item-label">{item.label}</span>
@@ -133,7 +119,7 @@
 				data-button-variant="full-width"
 				data-tooltip={localize('NIMBLE.pdfExport.insertAtCursor')}
 				data-tooltip-direction="UP"
-				disabled={selectedItems.size === 0}
+				disabled={state.selectedItems.size === 0}
 				onclick={insertSelected}
 			>
 				<i class="fa-solid fa-plus"></i>
@@ -191,25 +177,25 @@
 			<nav class="pdf-export-dialog__tabs">
 				{#each [1, 2, 3] as num}
 					{@const isOverLimit =
-						(num === 1 && column1OverLimit) ||
-						(num === 2 && column2OverLimit) ||
-						(num === 3 && column3OverLimit)}
+						(num === 1 && state.column1OverLimit) ||
+						(num === 2 && state.column2OverLimit) ||
+						(num === 3 && state.column3OverLimit)}
 					<button
 						type="button"
 						class="pdf-export-dialog__tab"
 						class:pdf-export-dialog__tab--active={state.activeColumnTab === num}
 						class:pdf-export-dialog__tab--over-limit={isOverLimit}
-						data-tooltip={columnTooltips[num - 1]}
+						data-tooltip={state.columnTooltips[num - 1]}
 						data-tooltip-direction="UP"
 						onclick={() => (state.activeColumnTab = num)}
 					>
 						{localize('NIMBLE.pdfExport.column', { number: num })}
 						{#if num === 1}
-							<span class="pdf-export-dialog__tab-count">({column1Count})</span>
+							<span class="pdf-export-dialog__tab-count">({state.column1Count})</span>
 						{:else if num === 2}
-							<span class="pdf-export-dialog__tab-count">({column2Count})</span>
+							<span class="pdf-export-dialog__tab-count">({state.column2Count})</span>
 						{:else}
-							<span class="pdf-export-dialog__tab-count">({column3Count})</span>
+							<span class="pdf-export-dialog__tab-count">({state.column3Count})</span>
 						{/if}
 					</button>
 				{/each}
@@ -275,7 +261,7 @@
 			<div
 				bind:this={state.editorElement}
 				class="pdf-export-dialog__rich-editor"
-				class:pdf-export-dialog__rich-editor--over-limit={activeColumnOverLimit}
+				class:pdf-export-dialog__rich-editor--over-limit={state.activeColumnOverLimit}
 				contenteditable="true"
 				role="textbox"
 				tabindex="0"
@@ -290,9 +276,9 @@
 			<!-- Character Count -->
 			<div
 				class="pdf-export-dialog__char-count"
-				class:pdf-export-dialog__char-count--over-limit={activeColumnOverLimit}
+				class:pdf-export-dialog__char-count--over-limit={state.activeColumnOverLimit}
 			>
-				{activeColumnCount}/{CHARS_PER_COLUMN}
+				{state.activeColumnCount}/{CHARS_PER_COLUMN}
 			</div>
 		</section>
 	</div>
