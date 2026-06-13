@@ -14,11 +14,6 @@ function slugify(str: string): string {
 	return (str as FoundryString).slugify({ strict: true });
 }
 
-interface ContentSection {
-	header: string;
-	items: string[];
-}
-
 interface ContentSectionHtml {
 	header: string;
 	items: string[];
@@ -143,24 +138,6 @@ function isSpellProgressionFeature(name: string): boolean {
 }
 
 /**
- * Extract ancestry content.
- */
-function extractAncestrySection(actor: NimbleCharacter): ContentSection | null {
-	const ancestry = actor.ancestry;
-	if (!ancestry) return null;
-
-	const abilities = extractMechanicalAbilities(ancestry.system.description);
-	const header = abilities
-		? `ANCESTRY: ${ancestry.name} - ${abilities}`
-		: `ANCESTRY: ${ancestry.name}`;
-
-	return {
-		header,
-		items: [],
-	};
-}
-
-/**
  * Extract ancestry content as HTML.
  */
 function extractAncestrySectionHtml(actor: NimbleCharacter): ContentSectionHtml | null {
@@ -171,24 +148,6 @@ function extractAncestrySectionHtml(actor: NimbleCharacter): ContentSectionHtml 
 	const header = abilities
 		? `<strong>ANCESTRY:</strong> ${ancestry.name} - ${abilities}`
 		: `<strong>ANCESTRY:</strong> ${ancestry.name}`;
-
-	return {
-		header,
-		items: [],
-	};
-}
-
-/**
- * Extract background content.
- */
-function extractBackgroundSection(actor: NimbleCharacter): ContentSection | null {
-	const background = actor.background;
-	if (!background) return null;
-
-	const abilities = extractMechanicalAbilities(background.system.description);
-	const header = abilities
-		? `BACKGROUND: ${background.name} - ${abilities}`
-		: `BACKGROUND: ${background.name}`;
 
 	return {
 		header,
@@ -212,116 +171,6 @@ function extractBackgroundSectionHtml(actor: NimbleCharacter): ContentSectionHtm
 		header,
 		items: [],
 	};
-}
-
-/**
- * Extract class features grouped by class, including group-selection features
- * and a separate section for each subclass.
- */
-function extractClassFeaturesSection(actor: NimbleCharacter): ContentSection[] {
-	const sections: ContentSection[] = [];
-	const classes = actor.classes ?? {};
-
-	for (const [classId, classItem] of Object.entries(classes)) {
-		const groupIdentifiers: string[] = (classItem as NimbleClassItem).system.groupIdentifiers ?? [];
-
-		// Subclass items for this class — computed first so we can exclude their features below
-		const subclassItems = actor.items.filter(
-			(i) =>
-				i.type === 'subclass' &&
-				(i as NimbleSubclassItem).system.parentClass === classItem.identifier,
-		) as NimbleSubclassItem[];
-
-		// Collect IDs of features that belong to a real subclass section so they can be excluded
-		const subclassFeatureIds = new Set<string>();
-		for (const subclassItem of subclassItems) {
-			const subclassGroupKey = slugify(subclassItem.name ?? '');
-			for (const item of actor.items) {
-				if (!item.isType('feature') || !item.id) continue;
-				const feature = item as NimbleFeatureItem;
-				if (
-					feature.system.subclass === true &&
-					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
-					feature.system.group === subclassGroupKey
-				) {
-					subclassFeatureIds.add(item.id);
-				}
-			}
-		}
-
-		// Inclusive OR: class match OR group match — handles features where system.class may not
-		// match classId exactly (e.g. authored with an old ID or a different identifier convention)
-		const allClassFeatures = actor.items.filter((item) => {
-			if (!item.isType('feature')) return false;
-			const feature = item as NimbleFeatureItem;
-			if (item.id && subclassFeatureIds.has(item.id)) return false;
-			const classMatch =
-				feature.system.class === classId || feature.system.class === classItem.identifier;
-			const groupMatch =
-				!!feature.system.group &&
-				feature.system.group !== 'ungrouped' &&
-				groupIdentifiers.includes(feature.system.group);
-			return classMatch || groupMatch;
-		}) as NimbleFeatureItem[];
-
-		allClassFeatures.sort((a, b) => {
-			const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
-			const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
-			const levelDiff = aLevel - bLevel;
-			if (levelDiff !== 0) return levelDiff;
-			return (a.name ?? '').localeCompare(b.name ?? '');
-		});
-
-		if (allClassFeatures.length > 0) {
-			const items: string[] = [];
-			for (const feature of allClassFeatures) {
-				if (isSpellProgressionFeature(feature.name ?? '')) continue;
-				const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
-				const levelStr = level ? ` (Lvl ${level})` : '';
-				const desc = stripHtml(feature.system.description);
-				items.push(desc ? `• ${feature.name}${levelStr}: ${desc}` : `• ${feature.name}${levelStr}`);
-			}
-			if (items.length > 0) {
-				sections.push({ header: `${classItem.name.toUpperCase()} FEATURES`, items });
-			}
-		}
-
-		for (const subclassItem of subclassItems) {
-			const subclassGroupKey = slugify(subclassItem.name ?? '');
-			const subclassFeatures = actor.items.filter((item) => {
-				if (!item.isType('feature')) return false;
-				const feature = item as NimbleFeatureItem;
-				return (
-					feature.system.subclass === true &&
-					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
-					feature.system.group === subclassGroupKey
-				);
-			}) as NimbleFeatureItem[];
-
-			subclassFeatures.sort((a, b) => {
-				const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
-				const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
-				const levelDiff = aLevel - bLevel;
-				if (levelDiff !== 0) return levelDiff;
-				return (a.name ?? '').localeCompare(b.name ?? '');
-			});
-
-			if (subclassFeatures.length > 0) {
-				const items: string[] = [];
-				for (const feature of subclassFeatures) {
-					const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
-					const levelStr = level ? ` (Lvl ${level})` : '';
-					const desc = stripHtml(feature.system.description);
-					items.push(
-						desc ? `• ${feature.name}${levelStr}: ${desc}` : `• ${feature.name}${levelStr}`,
-					);
-				}
-				sections.push({ header: `${subclassItem.name.toUpperCase()} (SUBCLASS)`, items });
-			}
-		}
-	}
-
-	return sections;
 }
 
 /**
@@ -527,51 +376,6 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 }
 
 /**
- * Extract spells grouped by tier with details.
- */
-function extractSpellsSection(actor: NimbleCharacter): ContentSection | null {
-	const spells = actor.items.filter((item) => item.isType('spell')) as NimbleSpellItem[];
-
-	if (spells.length === 0) return null;
-
-	spells.sort((a, b) => {
-		const tierDiff = (a.system.tier ?? 0) - (b.system.tier ?? 0);
-		if (tierDiff !== 0) return tierDiff;
-		return (a.name ?? '').localeCompare(b.name ?? '');
-	});
-
-	const spellsByTier: Record<number, NimbleSpellItem[]> = {};
-	for (const spell of spells) {
-		const tier = spell.system.tier ?? 0;
-		if (!spellsByTier[tier]) spellsByTier[tier] = [];
-		spellsByTier[tier].push(spell);
-	}
-
-	const items: string[] = [];
-
-	for (const tier of Object.keys(spellsByTier)
-		.map(Number)
-		.sort((a, b) => a - b)) {
-		const tierSpells = spellsByTier[tier];
-		const tierLabel = tier === 0 ? 'CANTRIPS' : `TIER ${tier}`;
-		items.push(tierLabel);
-		for (const spell of tierSpells) {
-			const details = extractSpellDetails(spell);
-			if (details) {
-				items.push(`• ${spell.name}: ${details}`);
-			} else {
-				items.push(`• ${spell.name}`);
-			}
-		}
-	}
-
-	return {
-		header: 'SPELLS',
-		items,
-	};
-}
-
-/**
  * Extract spells grouped by tier with details as HTML.
  */
 function extractSpellsSectionHtml(actor: NimbleCharacter): ContentSectionHtml | null {
@@ -691,30 +495,6 @@ function extractItemDetails(obj: NimbleObjectItem): string {
 }
 
 /**
- * Extract inventory items with full details.
- */
-function extractInventorySection(actor: NimbleCharacter): ContentSection | null {
-	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
-	const { gp, sp, cp } = actor.system.currency;
-
-	if (objects.length === 0 && gp.value === 0 && sp.value === 0 && cp.value === 0) return null;
-
-	const items: string[] = [];
-
-	// Currency always first
-	items.push(`• Currency: ${gp.value} GP, ${sp.value} SP, ${cp.value} CP`);
-
-	for (const obj of objects) {
-		items.push(`• ${extractItemDetails(obj)}`);
-	}
-
-	return {
-		header: 'INVENTORY',
-		items,
-	};
-}
-
-/**
  * Extract inventory items with full details as HTML.
  */
 function extractInventorySectionHtml(actor: NimbleCharacter): ContentSectionHtml | null {
@@ -745,24 +525,6 @@ function extractInventorySectionHtml(actor: NimbleCharacter): ContentSectionHtml
 }
 
 /**
- * Convert content sections to a flat string array plus a set of line indices that are
- * section headers. The header-index set is used by distributeToColumns to prevent a
- * header from being stranded as the last line of a column with no items following it.
- */
-function sectionsToLines(sections: ContentSection[]): [string[], Set<number>] {
-	const lines: string[] = [];
-	const headerIndices = new Set<number>();
-	for (const section of sections) {
-		headerIndices.add(lines.length);
-		lines.push(section.header);
-		for (const item of section.items) {
-			if (item) lines.push(item);
-		}
-	}
-	return [lines, headerIndices];
-}
-
-/**
  * Convert HTML content sections to a flat string array plus a set of line indices that
  * are section headers.
  */
@@ -777,29 +539,6 @@ function sectionsToLinesHtml(sections: ContentSectionHtml[]): [string[], Set<num
 		}
 	}
 	return [lines, headerIndices];
-}
-
-/**
- * Distribute lines across columns, balancing content evenly.
- * Cut points are bumped back when they would orphan a section header at the end of a
- * column — the header (and its items) then start the next column instead.
- */
-function distributeToColumns(
-	lines: string[],
-	headerIndices: Set<number>,
-): [string, string, string] {
-	const totalLines = lines.length;
-	let cut1 = Math.ceil(totalLines / 3);
-	let cut2 = cut1 * 2;
-
-	while (cut1 > 0 && headerIndices.has(cut1 - 1)) cut1--;
-	while (cut2 > cut1 && headerIndices.has(cut2 - 1)) cut2--;
-
-	return [
-		lines.slice(0, cut1).join('\n'),
-		lines.slice(cut1, cut2).join('\n'),
-		lines.slice(cut2).join('\n'),
-	];
 }
 
 /**
@@ -823,32 +562,6 @@ function distributeToColumnsHtml(
 		lines.slice(cut1, cut2).join('<br>'),
 		lines.slice(cut2).join('<br>'),
 	];
-}
-
-/**
- * Generate initial column content from a character.
- * Returns a tuple of 3 strings, one for each column.
- */
-function generateInitialColumnContent(actor: NimbleCharacter): [string, string, string] {
-	const contentSections: ContentSection[] = [];
-
-	const ancestrySection = extractAncestrySection(actor);
-	if (ancestrySection) contentSections.push(ancestrySection);
-
-	const backgroundSection = extractBackgroundSection(actor);
-	if (backgroundSection) contentSections.push(backgroundSection);
-
-	const classFeaturesSections = extractClassFeaturesSection(actor);
-	contentSections.push(...classFeaturesSections);
-
-	const spellsSection = extractSpellsSection(actor);
-	if (spellsSection) contentSections.push(spellsSection);
-
-	const inventorySection = extractInventorySection(actor);
-	if (inventorySection) contentSections.push(inventorySection);
-
-	const [lines, headerIndices] = sectionsToLines(contentSections);
-	return distributeToColumns(lines, headerIndices);
 }
 
 /**
@@ -1121,9 +834,7 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 
 export {
 	CHARS_PER_COLUMN,
-	generateInitialColumnContent,
 	generateInitialColumnContentHtml,
 	getSelectableItems,
-	type ContentSection,
 	type SelectableItem,
 };
