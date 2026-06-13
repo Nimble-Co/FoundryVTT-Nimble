@@ -745,59 +745,84 @@ function extractInventorySectionHtml(actor: NimbleCharacter): ContentSectionHtml
 }
 
 /**
- * Convert content sections to a flat string array for distribution.
+ * Convert content sections to a flat string array plus a set of line indices that are
+ * section headers. The header-index set is used by distributeToColumns to prevent a
+ * header from being stranded as the last line of a column with no items following it.
  */
-function sectionsToLines(sections: ContentSection[]): string[] {
+function sectionsToLines(sections: ContentSection[]): [string[], Set<number>] {
 	const lines: string[] = [];
+	const headerIndices = new Set<number>();
 	for (const section of sections) {
+		headerIndices.add(lines.length);
 		lines.push(section.header);
 		for (const item of section.items) {
 			if (item) lines.push(item);
 		}
 	}
-	return lines;
+	return [lines, headerIndices];
 }
 
 /**
- * Convert HTML content sections to a flat string array for distribution.
+ * Convert HTML content sections to a flat string array plus a set of line indices that
+ * are section headers.
  */
-function sectionsToLinesHtml(sections: ContentSectionHtml[]): string[] {
+function sectionsToLinesHtml(sections: ContentSectionHtml[]): [string[], Set<number>] {
 	const lines: string[] = [];
+	const headerIndices = new Set<number>();
 	for (const section of sections) {
+		headerIndices.add(lines.length);
 		lines.push(section.header);
 		for (const item of section.items) {
 			if (item) lines.push(item);
 		}
 	}
-	return lines;
+	return [lines, headerIndices];
 }
 
 /**
  * Distribute lines across columns, balancing content evenly.
+ * Cut points are bumped back when they would orphan a section header at the end of a
+ * column — the header (and its items) then start the next column instead.
  */
-function distributeToColumns(lines: string[]): [string, string, string] {
+function distributeToColumns(
+	lines: string[],
+	headerIndices: Set<number>,
+): [string, string, string] {
 	const totalLines = lines.length;
-	const linesPerColumn = Math.ceil(totalLines / 3);
+	let cut1 = Math.ceil(totalLines / 3);
+	let cut2 = cut1 * 2;
 
-	const column1Lines = lines.slice(0, linesPerColumn);
-	const column2Lines = lines.slice(linesPerColumn, linesPerColumn * 2);
-	const column3Lines = lines.slice(linesPerColumn * 2);
+	while (cut1 > 0 && headerIndices.has(cut1 - 1)) cut1--;
+	while (cut2 > cut1 && headerIndices.has(cut2 - 1)) cut2--;
 
-	return [column1Lines.join('\n'), column2Lines.join('\n'), column3Lines.join('\n')];
+	return [
+		lines.slice(0, cut1).join('\n'),
+		lines.slice(cut1, cut2).join('\n'),
+		lines.slice(cut2).join('\n'),
+	];
 }
 
 /**
  * Distribute HTML lines across columns, balancing content evenly.
+ * Cut points are bumped back when they would orphan a section header at the end of a
+ * column — the header (and its items) then start the next column instead.
  */
-function distributeToColumnsHtml(lines: string[]): [string, string, string] {
+function distributeToColumnsHtml(
+	lines: string[],
+	headerIndices: Set<number>,
+): [string, string, string] {
 	const totalLines = lines.length;
-	const linesPerColumn = Math.ceil(totalLines / 3);
+	let cut1 = Math.ceil(totalLines / 3);
+	let cut2 = cut1 * 2;
 
-	const column1Lines = lines.slice(0, linesPerColumn);
-	const column2Lines = lines.slice(linesPerColumn, linesPerColumn * 2);
-	const column3Lines = lines.slice(linesPerColumn * 2);
+	while (cut1 > 0 && headerIndices.has(cut1 - 1)) cut1--;
+	while (cut2 > cut1 && headerIndices.has(cut2 - 1)) cut2--;
 
-	return [column1Lines.join('<br>'), column2Lines.join('<br>'), column3Lines.join('<br>')];
+	return [
+		lines.slice(0, cut1).join('<br>'),
+		lines.slice(cut1, cut2).join('<br>'),
+		lines.slice(cut2).join('<br>'),
+	];
 }
 
 /**
@@ -822,8 +847,8 @@ function generateInitialColumnContent(actor: NimbleCharacter): [string, string, 
 	const inventorySection = extractInventorySection(actor);
 	if (inventorySection) contentSections.push(inventorySection);
 
-	const lines = sectionsToLines(contentSections);
-	return distributeToColumns(lines);
+	const [lines, headerIndices] = sectionsToLines(contentSections);
+	return distributeToColumns(lines, headerIndices);
 }
 
 /**
@@ -848,8 +873,8 @@ function generateInitialColumnContentHtml(actor: NimbleCharacter): [string, stri
 	const inventorySection = extractInventorySectionHtml(actor);
 	if (inventorySection) contentSections.push(inventorySection);
 
-	const lines = sectionsToLinesHtml(contentSections);
-	return distributeToColumnsHtml(lines);
+	const [lines, headerIndices] = sectionsToLinesHtml(contentSections);
+	return distributeToColumnsHtml(lines, headerIndices);
 }
 
 /**
