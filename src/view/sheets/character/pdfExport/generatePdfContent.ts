@@ -1,10 +1,18 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import type { NimbleSpellItem } from '#documents/item/spell.js';
+import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 
 /** Estimated characters per column based on PDF config */
 const CHARS_PER_COLUMN = 1150;
+
+/** FoundryVTT adds String.prototype.slugify at runtime; this cast surfaces it to TypeScript. */
+type FoundryString = string & { slugify(opts: { strict: boolean }): string };
+function slugify(str: string): string {
+	return (str as FoundryString).slugify({ strict: true });
+}
 
 interface ContentSection {
 	header: string;
@@ -207,47 +215,108 @@ function extractBackgroundSectionHtml(actor: NimbleCharacter): ContentSectionHtm
 }
 
 /**
- * Extract class features grouped by class.
+ * Extract class features grouped by class, including group-selection features
+ * and a separate section for each subclass.
  */
 function extractClassFeaturesSection(actor: NimbleCharacter): ContentSection[] {
 	const sections: ContentSection[] = [];
 	const classes = actor.classes ?? {};
 
 	for (const [classId, classItem] of Object.entries(classes)) {
-		const classFeatures = actor.items.filter((item) => {
+		const groupIdentifiers: string[] = (classItem as NimbleClassItem).system.groupIdentifiers ?? [];
+
+		// Subclass items for this class — computed first so we can exclude their features below
+		const subclassItems = actor.items.filter(
+			(i) =>
+				i.type === 'subclass' &&
+				(i as NimbleSubclassItem).system.parentClass === classItem.identifier,
+		) as NimbleSubclassItem[];
+
+		// Collect IDs of features that belong to a real subclass section so they can be excluded
+		const subclassFeatureIds = new Set<string>();
+		for (const subclassItem of subclassItems) {
+			const subclassGroupKey = slugify(subclassItem.name ?? '');
+			for (const item of actor.items) {
+				if (!item.isType('feature') || !item.id) continue;
+				const feature = item as NimbleFeatureItem;
+				if (
+					feature.system.subclass === true &&
+					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
+					feature.system.group === subclassGroupKey
+				) {
+					subclassFeatureIds.add(item.id);
+				}
+			}
+		}
+
+		// Inclusive OR: class match OR group match — handles features where system.class may not
+		// match classId exactly (e.g. authored with an old ID or a different identifier convention)
+		const allClassFeatures = actor.items.filter((item) => {
 			if (!item.isType('feature')) return false;
 			const feature = item as NimbleFeatureItem;
-			return feature.system.class === classId || feature.system.class === classItem.identifier;
+			if (item.id && subclassFeatureIds.has(item.id)) return false;
+			const classMatch =
+				feature.system.class === classId || feature.system.class === classItem.identifier;
+			const groupMatch =
+				!!feature.system.group &&
+				feature.system.group !== 'ungrouped' &&
+				groupIdentifiers.includes(feature.system.group);
+			return classMatch || groupMatch;
 		}) as NimbleFeatureItem[];
 
-		// Sort features by level, then by name
-		classFeatures.sort((a, b) => {
-			const levelDiff = (a.system.gainedAtLevel ?? 0) - (b.system.gainedAtLevel ?? 0);
+		allClassFeatures.sort((a, b) => {
+			const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
+			const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
+			const levelDiff = aLevel - bLevel;
 			if (levelDiff !== 0) return levelDiff;
 			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
-		if (classFeatures.length > 0) {
+		if (allClassFeatures.length > 0) {
 			const items: string[] = [];
-			for (const feature of classFeatures) {
+			for (const feature of allClassFeatures) {
 				if (isSpellProgressionFeature(feature.name ?? '')) continue;
-
-				const feat = feature as NimbleFeatureItem;
-				const level = feat.system.gainedAtLevel;
+				const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
 				const levelStr = level ? ` (Lvl ${level})` : '';
-				const desc = stripHtml(feat.system.description);
-				if (desc) {
-					items.push(`• ${feature.name}${levelStr}: ${desc}`);
-				} else {
-					items.push(`• ${feature.name}${levelStr}`);
-				}
+				const desc = stripHtml(feature.system.description);
+				items.push(desc ? `• ${feature.name}${levelStr}: ${desc}` : `• ${feature.name}${levelStr}`);
 			}
-
 			if (items.length > 0) {
-				sections.push({
-					header: `${classItem.name.toUpperCase()} FEATURES`,
-					items,
-				});
+				sections.push({ header: `${classItem.name.toUpperCase()} FEATURES`, items });
+			}
+		}
+
+		for (const subclassItem of subclassItems) {
+			const subclassGroupKey = slugify(subclassItem.name ?? '');
+			const subclassFeatures = actor.items.filter((item) => {
+				if (!item.isType('feature')) return false;
+				const feature = item as NimbleFeatureItem;
+				return (
+					feature.system.subclass === true &&
+					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
+					feature.system.group === subclassGroupKey
+				);
+			}) as NimbleFeatureItem[];
+
+			subclassFeatures.sort((a, b) => {
+				const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
+				const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
+				const levelDiff = aLevel - bLevel;
+				if (levelDiff !== 0) return levelDiff;
+				return (a.name ?? '').localeCompare(b.name ?? '');
+			});
+
+			if (subclassFeatures.length > 0) {
+				const items: string[] = [];
+				for (const feature of subclassFeatures) {
+					const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
+					const levelStr = level ? ` (Lvl ${level})` : '';
+					const desc = stripHtml(feature.system.description);
+					items.push(
+						desc ? `• ${feature.name}${levelStr}: ${desc}` : `• ${feature.name}${levelStr}`,
+					);
+				}
+				sections.push({ header: `${subclassItem.name.toUpperCase()} (SUBCLASS)`, items });
 			}
 		}
 	}
@@ -256,45 +325,118 @@ function extractClassFeaturesSection(actor: NimbleCharacter): ContentSection[] {
 }
 
 /**
- * Extract class features grouped by class as HTML.
+ * Extract class features grouped by class as HTML, including group-selection features
+ * and a separate section for each subclass.
  */
 function extractClassFeaturesSectionHtml(actor: NimbleCharacter): ContentSectionHtml[] {
 	const sections: ContentSectionHtml[] = [];
 	const classes = actor.classes ?? {};
 
 	for (const [classId, classItem] of Object.entries(classes)) {
-		const classFeatures = actor.items.filter((item) => {
+		const groupIdentifiers: string[] = (classItem as NimbleClassItem).system.groupIdentifiers ?? [];
+
+		// Subclass items for this class — computed first so we can exclude their features below
+		const subclassItems = actor.items.filter(
+			(i) =>
+				i.type === 'subclass' &&
+				(i as NimbleSubclassItem).system.parentClass === classItem.identifier,
+		) as NimbleSubclassItem[];
+
+		// Collect IDs of features that belong to a real subclass section so they can be excluded
+		const subclassFeatureIds = new Set<string>();
+		for (const subclassItem of subclassItems) {
+			const subclassGroupKey = slugify(subclassItem.name ?? '');
+			for (const item of actor.items) {
+				if (!item.isType('feature') || !item.id) continue;
+				const feature = item as NimbleFeatureItem;
+				if (
+					feature.system.subclass === true &&
+					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
+					feature.system.group === subclassGroupKey
+				) {
+					subclassFeatureIds.add(item.id);
+				}
+			}
+		}
+
+		// Inclusive OR: class match OR group match — handles features where system.class may not
+		// match classId exactly (e.g. authored with an old ID or a different identifier convention)
+		const allClassFeatures = actor.items.filter((item) => {
 			if (!item.isType('feature')) return false;
 			const feature = item as NimbleFeatureItem;
-			return feature.system.class === classId || feature.system.class === classItem.identifier;
+			if (item.id && subclassFeatureIds.has(item.id)) return false;
+			const classMatch =
+				feature.system.class === classId || feature.system.class === classItem.identifier;
+			const groupMatch =
+				!!feature.system.group &&
+				feature.system.group !== 'ungrouped' &&
+				groupIdentifiers.includes(feature.system.group);
+			return classMatch || groupMatch;
 		}) as NimbleFeatureItem[];
 
-		// Sort features by level, then by name
-		classFeatures.sort((a, b) => {
-			const levelDiff = (a.system.gainedAtLevel ?? 0) - (b.system.gainedAtLevel ?? 0);
+		allClassFeatures.sort((a, b) => {
+			const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
+			const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
+			const levelDiff = aLevel - bLevel;
 			if (levelDiff !== 0) return levelDiff;
 			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
-		if (classFeatures.length > 0) {
+		if (allClassFeatures.length > 0) {
 			const items: string[] = [];
-			for (const feature of classFeatures) {
+			for (const feature of allClassFeatures) {
 				if (isSpellProgressionFeature(feature.name ?? '')) continue;
-
-				const feat = feature as NimbleFeatureItem;
-				const level = feat.system.gainedAtLevel;
+				const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
 				const levelStr = level ? ` (Lvl ${level})` : '';
-				const desc = stripHtml(feat.system.description);
-				if (desc) {
-					items.push(`• <strong>${feature.name}${levelStr}:</strong> ${desc}`);
-				} else {
-					items.push(`• <strong>${feature.name}${levelStr}</strong>`);
-				}
+				const desc = stripHtml(feature.system.description);
+				items.push(
+					desc
+						? `• <strong>${feature.name}${levelStr}:</strong> ${desc}`
+						: `• <strong>${feature.name}${levelStr}</strong>`,
+				);
 			}
-
 			if (items.length > 0) {
 				sections.push({
 					header: `<strong>${classItem.name.toUpperCase()} FEATURES</strong>`,
+					items,
+				});
+			}
+		}
+
+		for (const subclassItem of subclassItems) {
+			const subclassGroupKey = slugify(subclassItem.name ?? '');
+			const subclassFeatures = actor.items.filter((item) => {
+				if (!item.isType('feature')) return false;
+				const feature = item as NimbleFeatureItem;
+				return (
+					feature.system.subclass === true &&
+					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
+					feature.system.group === subclassGroupKey
+				);
+			}) as NimbleFeatureItem[];
+
+			subclassFeatures.sort((a, b) => {
+				const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
+				const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
+				const levelDiff = aLevel - bLevel;
+				if (levelDiff !== 0) return levelDiff;
+				return (a.name ?? '').localeCompare(b.name ?? '');
+			});
+
+			if (subclassFeatures.length > 0) {
+				const items: string[] = [];
+				for (const feature of subclassFeatures) {
+					const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
+					const levelStr = level ? ` (Lvl ${level})` : '';
+					const desc = stripHtml(feature.system.description);
+					items.push(
+						desc
+							? `• <strong>${feature.name}${levelStr}:</strong> ${desc}`
+							: `• <strong>${feature.name}${levelStr}</strong>`,
+					);
+				}
+				sections.push({
+					header: `<strong>${subclassItem.name.toUpperCase()} (SUBCLASS)</strong>`,
 					items,
 				});
 			}
@@ -553,10 +695,15 @@ function extractItemDetails(obj: NimbleObjectItem): string {
  */
 function extractInventorySection(actor: NimbleCharacter): ContentSection | null {
 	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
+	const { gp, sp, cp } = actor.system.currency;
 
-	if (objects.length === 0) return null;
+	if (objects.length === 0 && gp.value === 0 && sp.value === 0 && cp.value === 0) return null;
 
 	const items: string[] = [];
+
+	// Currency always first
+	items.push(`• Currency: ${gp.value} GP, ${sp.value} SP, ${cp.value} CP`);
+
 	for (const obj of objects) {
 		items.push(`• ${extractItemDetails(obj)}`);
 	}
@@ -572,16 +719,20 @@ function extractInventorySection(actor: NimbleCharacter): ContentSection | null 
  */
 function extractInventorySectionHtml(actor: NimbleCharacter): ContentSectionHtml | null {
 	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
+	const { gp, sp, cp } = actor.system.currency;
 
-	if (objects.length === 0) return null;
+	if (objects.length === 0 && gp.value === 0 && sp.value === 0 && cp.value === 0) return null;
 
 	const items: string[] = [];
+
+	// Currency always first
+	items.push(`• <strong>Currency:</strong> ${gp.value} GP, ${sp.value} SP, ${cp.value} CP`);
+
 	for (const obj of objects) {
 		const qty = obj.system.quantity ?? 1;
 		const qtyStr = qty > 1 ? ` (x${qty})` : '';
 		const equipped = obj.system.equipped ? ' [E]' : '';
 		const details = extractItemDetails(obj);
-		// Make the item name bold
 		items.push(
 			`• <strong>${obj.name}${qtyStr}${equipped}:</strong> ${details.substring(details.indexOf('|') + 1).trim()}`,
 		);
@@ -754,43 +905,109 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 		});
 	}
 
-	// Class features
+	// Class features (regular + group-selection) and subclass features
 	const classes = actor.classes ?? {};
 	for (const [classId, classItem] of Object.entries(classes)) {
-		const classFeatures = actor.items.filter((item) => {
+		const groupIdentifiers: string[] = (classItem as NimbleClassItem).system.groupIdentifiers ?? [];
+
+		// Subclass items for this class — computed first so we can exclude their features below
+		const subclassItems = actor.items.filter(
+			(i) =>
+				i.type === 'subclass' &&
+				(i as NimbleSubclassItem).system.parentClass === classItem.identifier,
+		) as NimbleSubclassItem[];
+
+		// Collect IDs of features that belong to a real subclass section so they can be excluded
+		const subclassFeatureIds = new Set<string>();
+		for (const subclassItem of subclassItems) {
+			const subclassGroupKey = slugify(subclassItem.name ?? '');
+			for (const item of actor.items) {
+				if (!item.isType('feature') || !item.id) continue;
+				const feature = item as NimbleFeatureItem;
+				if (
+					feature.system.subclass === true &&
+					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
+					feature.system.group === subclassGroupKey
+				) {
+					subclassFeatureIds.add(item.id);
+				}
+			}
+		}
+
+		// Inclusive OR: class match OR group match — handles features where system.class may not
+		// match classId exactly (e.g. authored with an old ID or a different identifier convention)
+		const allClassFeatures = actor.items.filter((item) => {
 			if (!item.isType('feature')) return false;
 			const feature = item as NimbleFeatureItem;
-			return feature.system.class === classId || feature.system.class === classItem.identifier;
+			if (item.id && subclassFeatureIds.has(item.id)) return false;
+			const classMatch =
+				feature.system.class === classId || feature.system.class === classItem.identifier;
+			const groupMatch =
+				!!feature.system.group &&
+				feature.system.group !== 'ungrouped' &&
+				groupIdentifiers.includes(feature.system.group);
+			return classMatch || groupMatch;
 		}) as NimbleFeatureItem[];
 
-		// Sort features by level, then by name
-		classFeatures.sort((a, b) => {
-			const levelDiff = (a.system.gainedAtLevel ?? 0) - (b.system.gainedAtLevel ?? 0);
+		allClassFeatures.sort((a, b) => {
+			const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
+			const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
+			const levelDiff = aLevel - bLevel;
 			if (levelDiff !== 0) return levelDiff;
 			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
-		for (const feature of classFeatures) {
+		for (const feature of allClassFeatures) {
 			if (isSpellProgressionFeature(feature.name ?? '')) continue;
-
-			const feat = feature as NimbleFeatureItem;
-			const level = feat.system.gainedAtLevel;
+			const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
 			const levelStr = level ? ` (Lvl ${level})` : '';
-			const desc = stripHtml(feat.system.description);
-			const content = desc
-				? `• ${feature.name}${levelStr}: ${desc}`
-				: `• ${feature.name}${levelStr}`;
-			const contentHtml = desc
-				? `• <strong>${feature.name}${levelStr}:</strong> ${desc}`
-				: `• <strong>${feature.name}${levelStr}</strong>`;
-
+			const desc = stripHtml(feature.system.description);
 			items.push({
 				id: `feature-${feature.id}`,
 				category: 'features',
 				label: `${feature.name}${levelStr}`,
-				content,
-				contentHtml,
+				content: desc ? `• ${feature.name}${levelStr}: ${desc}` : `• ${feature.name}${levelStr}`,
+				contentHtml: desc
+					? `• <strong>${feature.name}${levelStr}:</strong> ${desc}`
+					: `• <strong>${feature.name}${levelStr}</strong>`,
 			});
+		}
+
+		// Subclass features in their own category
+		for (const subclassItem of subclassItems) {
+			const subclassGroupKey = slugify(subclassItem.name ?? '');
+			const subclassFeatures = actor.items.filter((item) => {
+				if (!item.isType('feature')) return false;
+				const feature = item as NimbleFeatureItem;
+				return (
+					feature.system.subclass === true &&
+					(feature.system.class === classId || feature.system.class === classItem.identifier) &&
+					feature.system.group === subclassGroupKey
+				);
+			}) as NimbleFeatureItem[];
+
+			subclassFeatures.sort((a, b) => {
+				const aLevel = a.system.gainedAtLevel ?? a.system.gainedAtLevels[0] ?? 0;
+				const bLevel = b.system.gainedAtLevel ?? b.system.gainedAtLevels[0] ?? 0;
+				const levelDiff = aLevel - bLevel;
+				if (levelDiff !== 0) return levelDiff;
+				return (a.name ?? '').localeCompare(b.name ?? '');
+			});
+
+			for (const feature of subclassFeatures) {
+				const level = feature.system.gainedAtLevel ?? feature.system.gainedAtLevels[0] ?? null;
+				const levelStr = level ? ` (Lvl ${level})` : '';
+				const desc = stripHtml(feature.system.description);
+				items.push({
+					id: `subclass-feature-${feature.id}`,
+					category: 'subclassFeatures',
+					label: `${feature.name}${levelStr}`,
+					content: desc ? `• ${feature.name}${levelStr}: ${desc}` : `• ${feature.name}${levelStr}`,
+					contentHtml: desc
+						? `• <strong>${feature.name}${levelStr}:</strong> ${desc}`
+						: `• <strong>${feature.name}${levelStr}</strong>`,
+				});
+			}
 		}
 	}
 
@@ -833,8 +1050,18 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 		}
 	}
 
-	// Inventory items
+	// Inventory items — currency always first, then individual objects
 	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
+	const { gp, sp, cp } = actor.system.currency;
+	const currencyText = `${gp.value} GP, ${sp.value} SP, ${cp.value} CP`;
+	items.push({
+		id: 'currency',
+		category: 'inventory',
+		label: `Currency: ${currencyText}`,
+		content: `• Currency: ${currencyText}`,
+		contentHtml: `• <strong>Currency:</strong> ${currencyText}`,
+	});
+
 	for (const obj of objects) {
 		const qty = obj.system.quantity ?? 1;
 		const qtyStr = qty > 1 ? ` (x${qty})` : '';
@@ -849,6 +1076,18 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 			label: `${obj.name}${qtyStr}${equipped}`,
 			content,
 			contentHtml,
+		});
+	}
+
+	// Character notes
+	const notes = (actor.system as { details?: { notes?: string } }).details?.notes;
+	if (notes && notes.trim()) {
+		items.push({
+			id: 'character-notes',
+			category: 'character',
+			label: 'Character Notes',
+			content: stripHtml(notes) || notes,
+			contentHtml: notes,
 		});
 	}
 

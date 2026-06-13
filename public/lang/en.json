@@ -2480,24 +2480,33 @@
 			"contentPicker": "Content Picker",
 			"columnEditor": "Column Editor",
 			"column": "Column {number}",
-			"insertToColumn": "Insert to Column {column}",
+			"insertToColumn": "Add to Column {column}",
+			"insertAtCursor": "Inserts selected items at your cursor's position",
 			"generatePdf": "Generate PDF",
 			"previewPdf": "Preview PDF",
 			"previewTitle": "Preview",
 			"generatingPreview": "Generating preview...",
 			"bold": "Bold",
 			"italic": "Italic",
+			"heading1": "Heading 1",
+			"heading2": "Heading 2",
+			"heading3": "Heading 3",
+			"bulletList": "Bulleted List",
+			"numberedList": "Numbered List",
 			"template": "Template",
 			"templateLined": "With Lines",
 			"templateNoLines": "Without Lines",
 			"columnOverflow": "Content exceeds column capacity. Some text may be cut off.",
 			"selectAll": "Select All",
+			"deselectAll": "Deselect All",
 			"categories": {
 				"ancestry": "Ancestry",
 				"background": "Background",
 				"features": "Class Features",
+				"subclassFeatures": "Subclass Features",
 				"spells": "Spells",
-				"inventory": "Inventory"
+				"inventory": "Inventory",
+				"character": "Character"
 			}
 		}
 	}

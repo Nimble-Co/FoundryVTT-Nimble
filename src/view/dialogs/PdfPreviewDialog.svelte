@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
-	import { onMount } from 'svelte';
 
 	import localize from '#utils/localize.ts';
 
@@ -9,42 +8,56 @@
 		type TemplateType,
 	} from '../sheets/character/pdfExport/exportCharacterPdf.ts';
 
-	interface PdfPreviewDialogProps {
-		actor: NimbleCharacter;
+	interface PreviewState {
 		columnContent: [string, string, string];
 		template: TemplateType;
+	}
+
+	interface PdfPreviewDialogProps {
+		actor: NimbleCharacter;
+		previewState: PreviewState;
 		dialog: { close(): void };
 	}
 
-	let { actor, columnContent, template, dialog: _dialog }: PdfPreviewDialogProps = $props();
+	let { actor, previewState, dialog: _dialog }: PdfPreviewDialogProps = $props();
 
-	let previewUrl = $state<string | null>(null);
+	let previewUrl: string | null = $state(null);
 	let isGenerating = $state(true);
+	let hasError = $state(false);
 
-	// Generate preview on mount (only once)
-	onMount(() => {
-		generatePreview();
+	$effect(() => {
+		// Read from reactive previewState to create dependencies — effect re-runs when either changes
+		const columnContent = previewState.columnContent;
+		const template = previewState.template;
 
-		// Cleanup on unmount
+		isGenerating = true;
+		hasError = false;
+
+		let cancelled = false;
+		let objectUrl: string | null = null;
+
+		generatePdfPreviewUrl(actor, { columnContent, template })
+			.then((url) => {
+				if (cancelled) {
+					URL.revokeObjectURL(url);
+					return;
+				}
+				objectUrl = url;
+				previewUrl = url;
+			})
+			.catch((_err) => {
+				if (!cancelled) hasError = true;
+			})
+			.finally(() => {
+				if (!cancelled) isGenerating = false;
+			});
+
 		return () => {
-			if (previewUrl) {
-				URL.revokeObjectURL(previewUrl);
-			}
+			cancelled = true;
+			if (objectUrl) URL.revokeObjectURL(objectUrl);
+			previewUrl = null;
 		};
 	});
-
-	async function generatePreview() {
-		isGenerating = true;
-		try {
-			const url = await generatePdfPreviewUrl(actor, {
-				columnContent,
-				template,
-			});
-			previewUrl = url;
-		} finally {
-			isGenerating = false;
-		}
-	}
 </script>
 
 <article class="nimble-sheet__body pdf-preview-dialog">
@@ -52,6 +65,10 @@
 		<div class="pdf-preview-dialog__loading">
 			<i class="fa-solid fa-spinner fa-spin"></i>
 			{localize('NIMBLE.pdfExport.generatingPreview')}
+		</div>
+	{:else if hasError}
+		<div class="pdf-preview-dialog__loading">
+			{localize('NIMBLE.pdfExport.error')}
 		</div>
 	{:else if previewUrl}
 		<iframe src={previewUrl} class="pdf-preview-dialog__iframe" title="PDF Preview"></iframe>

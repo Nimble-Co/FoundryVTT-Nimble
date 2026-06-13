@@ -1,11 +1,12 @@
 /**
  * Draws styled text segments to a jsPDF document.
- * Handles word wrapping with mixed bold/italic styles.
+ * Handles word wrapping with mixed bold/italic styles, heading levels,
+ * and list markers.
  */
 
 import type { jsPDF } from 'jspdf';
 
-import type { StyledLine } from './parseHtmlToStyledSegments.ts';
+import type { StyledLine, StyledSegment } from './parseHtmlToStyledSegments.ts';
 
 interface DrawStyledTextOptions {
 	pdf: jsPDF;
@@ -25,9 +26,16 @@ interface WrappedSegment {
 	width: number;
 }
 
-/**
- * Get the jsPDF font style string based on bold/italic flags.
- */
+/** Font-size multipliers for each heading level relative to body fontSize. */
+const HEADER_SCALES: Record<number, number> = {
+	1: 1.5,
+	2: 1.33,
+	3: 1.17,
+	4: 1.1,
+	5: 1.1,
+	6: 1.1,
+};
+
 function getFontStyle(bold: boolean, italic: boolean): string {
 	if (bold && italic) return 'bolditalic';
 	if (bold) return 'bold';
@@ -35,9 +43,6 @@ function getFontStyle(bold: boolean, italic: boolean): string {
 	return 'normal';
 }
 
-/**
- * Measure the width of text with specific styling.
- */
 function measureText(
 	pdf: jsPDF,
 	text: string,
@@ -56,7 +61,7 @@ function measureText(
  */
 function wrapStyledLine(
 	pdf: jsPDF,
-	styledLine: StyledLine,
+	styledLine: { segments: StyledSegment[] },
 	maxWidth: number,
 	fontSize: number,
 ): WrappedSegment[][] {
@@ -66,30 +71,22 @@ function wrapStyledLine(
 	const spaceWidth = measureText(pdf, ' ', fontSize, false, false);
 
 	for (const segment of styledLine.segments) {
-		// Split segment text into words
 		const words = segment.text.split(/\s+/).filter((w) => w.length > 0);
 
-		for (let i = 0; i < words.length; i++) {
-			const word = words[i];
+		for (const word of words) {
 			const wordWidth = measureText(pdf, word, fontSize, segment.bold, segment.italic);
-
-			// Check if we need a space before this word
 			const needsSpace = currentLineSegments.length > 0;
 			const totalWidth = currentLineWidth + (needsSpace ? spaceWidth : 0) + wordWidth;
 
 			if (totalWidth > maxWidth && currentLineSegments.length > 0) {
-				// Start a new line
 				outputLines.push(currentLineSegments);
 				currentLineSegments = [];
 				currentLineWidth = 0;
 			}
 
-			// Add space before word if needed (and we have content on the line)
 			if (currentLineSegments.length > 0) {
-				// Add space to the previous segment or create a new space segment
 				const lastSegment = currentLineSegments[currentLineSegments.length - 1];
 				if (lastSegment.bold === segment.bold && lastSegment.italic === segment.italic) {
-					// Same styling, append space and word to last segment
 					lastSegment.text += ` ${word}`;
 					lastSegment.width = measureText(
 						pdf,
@@ -100,7 +97,6 @@ function wrapStyledLine(
 					);
 					currentLineWidth = currentLineSegments.reduce((sum, s) => sum + s.width, 0);
 				} else {
-					// Different styling, add space to previous segment and new segment for word
 					lastSegment.text += ' ';
 					lastSegment.width = measureText(
 						pdf,
@@ -118,7 +114,6 @@ function wrapStyledLine(
 					currentLineWidth = currentLineSegments.reduce((sum, s) => sum + s.width, 0);
 				}
 			} else {
-				// First word on the line
 				currentLineSegments.push({
 					text: word,
 					bold: segment.bold,
@@ -130,17 +125,15 @@ function wrapStyledLine(
 		}
 	}
 
-	// Push any remaining content
-	if (currentLineSegments.length > 0) {
-		outputLines.push(currentLineSegments);
-	}
+	if (currentLineSegments.length > 0) outputLines.push(currentLineSegments);
 
 	return outputLines;
 }
 
 /**
  * Draw styled text to the PDF with word wrapping.
- * Returns the number of lines drawn.
+ * Headings render at scaled font sizes; list items are prefixed with their marker.
+ * Returns the number of output lines drawn.
  */
 function drawStyledText(options: DrawStyledTextOptions): number {
 	const { pdf, lines, startX, startY, maxWidth, lineHeight, fontSize, maxLines } = options;
@@ -151,26 +144,41 @@ function drawStyledText(options: DrawStyledTextOptions): number {
 	pdf.setTextColor(0, 0, 0);
 
 	for (const styledLine of lines) {
-		// Wrap this line into multiple output lines if needed
-		const wrappedLines = wrapStyledLine(pdf, styledLine, maxWidth, fontSize);
+		// Resolve font size for this line
+		const lineFontSize =
+			styledLine.headerLevel !== undefined
+				? Math.round(fontSize * (HEADER_SCALES[styledLine.headerLevel] ?? 1))
+				: fontSize;
+
+		// Build segments: prepend list marker, apply heading bold
+		let segments: StyledSegment[] = styledLine.segments;
+
+		if (styledLine.listMarker) {
+			segments = [{ text: styledLine.listMarker, bold: false, italic: false }, ...segments];
+		}
+
+		if (styledLine.headerLevel !== undefined) {
+			segments = segments.map((s) => ({ ...s, bold: true }));
+		}
+
+		const wrappedLines = wrapStyledLine(pdf, { segments }, maxWidth, lineFontSize);
+		// Headers use the same line height as body text — they just render larger/bolder
+		// without disturbing the vertical rhythm of the PDF grid
+		const scaledLineHeight =
+			styledLine.headerLevel !== undefined ? lineHeight : lineHeight * (lineFontSize / fontSize);
 
 		for (const wrappedSegments of wrappedLines) {
-			// Check if we've exceeded max lines
-			if (maxLines !== undefined && linesDrawn >= maxLines) {
-				return linesDrawn;
-			}
+			if (maxLines !== undefined && linesDrawn >= maxLines) return linesDrawn;
 
-			// Draw each segment on this line
 			let currentX = startX;
-
 			for (const segment of wrappedSegments) {
 				pdf.setFont('helvetica', getFontStyle(segment.bold, segment.italic));
-				pdf.setFontSize(fontSize);
+				pdf.setFontSize(lineFontSize);
 				pdf.text(segment.text, currentX, currentY);
 				currentX += segment.width;
 			}
 
-			currentY += lineHeight;
+			currentY += scaledLineHeight;
 			linesDrawn++;
 		}
 	}

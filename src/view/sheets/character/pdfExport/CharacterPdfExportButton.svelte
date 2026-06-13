@@ -28,6 +28,7 @@
 			{
 				icon: 'fa-solid fa-file-pdf',
 				width: 900,
+				height: Math.min(window.innerHeight - 100, 750),
 				uniqueId,
 			},
 		);

@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { SYSTEM_PATH } from '#system';
 
 import { drawStyledText } from './drawStyledText.ts';
 import { parseHtmlToStyledSegments } from './parseHtmlToStyledSegments.ts';
@@ -43,7 +44,7 @@ function extractCharacterData(actor: NimbleCharacter) {
 	const characterLevel = actor.levels.character;
 	const ancestryClassLevel = [ancestryName, className, `Lvl ${characterLevel}`]
 		.filter(Boolean)
-		.join(' ');
+		.join(', ');
 
 	// Build height/weight/speed string
 	const height = system.details?.height ?? '';
@@ -182,7 +183,7 @@ async function generateCharacterPdf(
 	// Select template based on option
 	const templateFile =
 		template === 'noLines' ? 'CharacterSheet-Full-NoLines.png' : 'CharacterSheet-Full.png';
-	const templateUrl = `systems/nimble/assets/pdf/${templateFile}`;
+	const templateUrl = `${SYSTEM_PATH}/assets/pdf/${templateFile}`;
 
 	// Load the template image
 	const templateResponse = await fetch(templateUrl);

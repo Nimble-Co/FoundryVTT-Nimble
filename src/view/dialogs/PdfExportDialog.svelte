@@ -26,6 +26,36 @@
 	// Template selection (lined or no lines)
 	let selectedTemplate = $state<TemplateType>('lined');
 
+	// Shared reactive state passed to the preview dialog so it updates live
+	let previewState = $state<{ columnContent: [string, string, string]; template: TemplateType }>({
+		columnContent: [initialContent[0], initialContent[1], initialContent[2]],
+		template: 'lined',
+	});
+
+	// Sync template change immediately to preview
+	$effect(() => {
+		previewState.template = selectedTemplate;
+	});
+
+	// Sync column content to preview with debounce (avoid regenerating on every keystroke)
+	let columnSyncTimer: number | null = null;
+	$effect(() => {
+		const c1 = column1Html;
+		const c2 = column2Html;
+		const c3 = column3Html;
+		if (columnSyncTimer !== null) window.clearTimeout(columnSyncTimer);
+		columnSyncTimer = window.setTimeout(() => {
+			previewState.columnContent = [c1, c2, c3];
+			columnSyncTimer = null;
+		}, 800);
+		return () => {
+			if (columnSyncTimer !== null) {
+				window.clearTimeout(columnSyncTimer);
+				columnSyncTimer = null;
+			}
+		};
+	});
+
 	// Active column tab (1, 2, or 3)
 	let activeColumnTab = $state(1);
 
@@ -49,6 +79,9 @@
 
 	// Category expansion state (empty = all collapsed by default)
 	let expandedCategories = $state(new Set<string>());
+
+	// Active preview dialog — close before opening a new one
+	let activePreviewDialog: ReturnType<typeof GenericDialog.getOrCreate> | null = null;
 
 	// Character counts (derived from plain text)
 	let column1Count = $derived(getPlainTextFromHtml(column1Html).length);
@@ -112,12 +145,20 @@
 		expandedCategories = new Set(expandedCategories);
 	}
 
-	function selectAllInCategory(category: string, event: Event) {
-		event.stopPropagation();
+	function areCategoryItemsAllSelected(category: string): boolean {
+		const items = itemsByCategory[category];
+		if (!items || items.length === 0) return false;
+		return items.every((item) => selectedItems.has(item.id));
+	}
+
+	function toggleSelectAllInCategory(category: string) {
 		const items = itemsByCategory[category];
 		if (!items) return;
-		for (const item of items) {
-			selectedItems.add(item.id);
+		const allSelected = areCategoryItemsAllSelected(category);
+		if (allSelected) {
+			for (const item of items) selectedItems.delete(item.id);
+		} else {
+			for (const item of items) selectedItems.add(item.id);
 		}
 		selectedItems = new Set(selectedItems);
 	}
@@ -192,8 +233,8 @@
 		}, 0);
 	}
 
-	function applyFormat(command: string) {
-		document.execCommand(command, false);
+	function applyFormat(command: string, value?: string) {
+		document.execCommand(command, false, value);
 		editorElement?.focus();
 		handleEditorInput();
 	}
@@ -203,8 +244,10 @@
 			ancestry: localize('NIMBLE.pdfExport.categories.ancestry'),
 			background: localize('NIMBLE.pdfExport.categories.background'),
 			features: localize('NIMBLE.pdfExport.categories.features'),
+			subclassFeatures: localize('NIMBLE.pdfExport.categories.subclassFeatures'),
 			spells: localize('NIMBLE.pdfExport.categories.spells'),
 			inventory: localize('NIMBLE.pdfExport.categories.inventory'),
+			character: localize('NIMBLE.pdfExport.categories.character'),
 		};
 		return labels[category] ?? category;
 	}
@@ -217,13 +260,26 @@
 	}
 
 	function openPreviewDialog() {
-		const previewDialog = new GenericDialog(
+		// Immediately flush any pending debounced column sync
+		if (columnSyncTimer !== null) {
+			window.clearTimeout(columnSyncTimer);
+			columnSyncTimer = null;
+		}
+		previewState.template = selectedTemplate;
+		previewState.columnContent = [column1Html, column2Html, column3Html];
+
+		// If preview is already open, bring it to front — live sync handles the update
+		if (activePreviewDialog?.rendered) {
+			activePreviewDialog.bringToFront();
+			return;
+		}
+
+		activePreviewDialog = new GenericDialog(
 			localize('NIMBLE.pdfExport.previewTitle'),
 			PdfPreviewDialog as unknown as Parameters<typeof GenericDialog>[1],
 			{
 				actor,
-				columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
-				template: selectedTemplate,
+				previewState,
 			},
 			{
 				icon: 'fa-solid fa-eye',
@@ -231,7 +287,7 @@
 				height: 900,
 			},
 		);
-		previewDialog.render(true);
+		activePreviewDialog.render(true);
 	}
 </script>
 
@@ -246,45 +302,64 @@
 			<div class="pdf-export-dialog__categories">
 				{#each Object.entries(itemsByCategory) as [category, items]}
 					<div class="pdf-export-dialog__category">
-						<div class="pdf-export-dialog__category-header">
-							<button
-								type="button"
-								class="pdf-export-dialog__category-toggle"
-								onclick={() => toggleCategory(category)}
-							>
-								<i
-									class="fa-solid"
-									class:fa-chevron-down={expandedCategories.has(category)}
-									class:fa-chevron-right={!expandedCategories.has(category)}
-								></i>
-								<span>{getCategoryLabel(category)}</span>
-								<span class="pdf-export-dialog__category-count">({items.length})</span>
-							</button>
-							<button
-								type="button"
-								class="pdf-export-dialog__select-all-btn"
-								aria-label={localize('NIMBLE.pdfExport.selectAll')}
-								data-tooltip={localize('NIMBLE.pdfExport.selectAll')}
-								data-tooltip-direction="UP"
-								onclick={(e) => selectAllInCategory(category, e)}
-							>
-								<i class="fa-solid fa-check-double"></i>
-							</button>
-						</div>
+						{#if items.length === 1}
+							<label class="pdf-export-dialog__item pdf-export-dialog__item--single">
+								<input
+									type="checkbox"
+									checked={selectedItems.has(items[0].id)}
+									onchange={() => toggleItem(items[0].id)}
+								/>
+								<span class="pdf-export-dialog__item-label">
+									<span class="pdf-export-dialog__item-category">{getCategoryLabel(category)}:</span
+									>
+									{items[0].label}
+								</span>
+							</label>
+						{:else}
+							<div class="pdf-export-dialog__category-header">
+								<button
+									type="button"
+									class="pdf-export-dialog__category-toggle"
+									onclick={() => toggleCategory(category)}
+								>
+									<i
+										class="fa-solid"
+										class:fa-chevron-down={expandedCategories.has(category)}
+										class:fa-chevron-right={!expandedCategories.has(category)}
+									></i>
+									<span>{getCategoryLabel(category)}</span>
+									<span class="pdf-export-dialog__category-count">({items.length})</span>
+								</button>
+							</div>
 
-						{#if expandedCategories.has(category)}
-							<div class="pdf-export-dialog__category-items">
-								{#each items as item}
-									<label class="pdf-export-dialog__item">
+							{#if expandedCategories.has(category)}
+								<div class="pdf-export-dialog__category-items">
+									<label class="pdf-export-dialog__item pdf-export-dialog__item--select-all">
 										<input
 											type="checkbox"
-											checked={selectedItems.has(item.id)}
-											onchange={() => toggleItem(item.id)}
+											checked={areCategoryItemsAllSelected(category)}
+											onchange={() => toggleSelectAllInCategory(category)}
 										/>
-										<span class="pdf-export-dialog__item-label">{item.label}</span>
+										<span
+											class="pdf-export-dialog__item-label pdf-export-dialog__item-label--select-all"
+										>
+											{areCategoryItemsAllSelected(category)
+												? localize('NIMBLE.pdfExport.deselectAll')
+												: localize('NIMBLE.pdfExport.selectAll')}
+										</span>
 									</label>
-								{/each}
-							</div>
+									{#each items as item}
+										<label class="pdf-export-dialog__item">
+											<input
+												type="checkbox"
+												checked={selectedItems.has(item.id)}
+												onchange={() => toggleItem(item.id)}
+											/>
+											<span class="pdf-export-dialog__item-label">{item.label}</span>
+										</label>
+									{/each}
+								</div>
+							{/if}
 						{/if}
 					</div>
 				{/each}
@@ -293,13 +368,23 @@
 			<button
 				type="button"
 				class="nimble-button pdf-export-dialog__insert-btn"
-				data-button-variant="basic"
+				data-button-variant="full-width"
+				data-tooltip={localize('NIMBLE.pdfExport.insertAtCursor')}
+				data-tooltip-direction="UP"
 				disabled={selectedItems.size === 0}
 				onclick={insertSelected}
 			>
 				<i class="fa-solid fa-plus"></i>
 				{localize('NIMBLE.pdfExport.insertToColumn', { column: activeColumnTab })}
 			</button>
+			<!-- Invisible spacer mirrors the char-count row height so the button bottom aligns with the text box bottom -->
+			<div
+				class="pdf-export-dialog__char-count"
+				aria-hidden="true"
+				style="visibility: hidden; pointer-events: none;"
+			>
+				&nbsp;
+			</div>
 		</section>
 
 		<!-- Column Editor Section -->
@@ -313,26 +398,20 @@
 				<span class="pdf-export-dialog__template-label"
 					>{localize('NIMBLE.pdfExport.template')}:</span
 				>
-				<label class="pdf-export-dialog__template-option">
-					<input
-						type="radio"
-						name="template"
-						value="lined"
-						checked={selectedTemplate === 'lined'}
-						onchange={() => (selectedTemplate = 'lined')}
-					/>
-					<span>{localize('NIMBLE.pdfExport.templateLined')}</span>
-				</label>
-				<label class="pdf-export-dialog__template-option">
-					<input
-						type="radio"
-						name="template"
-						value="noLines"
-						checked={selectedTemplate === 'noLines'}
-						onchange={() => (selectedTemplate = 'noLines')}
-					/>
-					<span>{localize('NIMBLE.pdfExport.templateNoLines')}</span>
-				</label>
+				<button
+					type="button"
+					class="nimble-button pdf-export-dialog__template-btn"
+					class:pdf-export-dialog__template-btn--active={selectedTemplate === 'lined'}
+					onclick={() => (selectedTemplate = 'lined')}
+					>{localize('NIMBLE.pdfExport.templateLined')}</button
+				>
+				<button
+					type="button"
+					class="nimble-button pdf-export-dialog__template-btn"
+					class:pdf-export-dialog__template-btn--active={selectedTemplate === 'noLines'}
+					onclick={() => (selectedTemplate = 'noLines')}
+					>{localize('NIMBLE.pdfExport.templateNoLines')}</button
+				>
 			</div>
 
 			<!-- Column Tabs -->
@@ -380,6 +459,42 @@
 					onclick={() => applyFormat('italic')}
 				>
 					<i class="fa-solid fa-italic"></i>
+				</button>
+				<div class="pdf-export-dialog__toolbar-divider"></div>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn pdf-export-dialog__toolbar-btn--heading"
+					title={localize('NIMBLE.pdfExport.heading1')}
+					onclick={() => applyFormat('formatBlock', 'h1')}>H1</button
+				>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn pdf-export-dialog__toolbar-btn--heading"
+					title={localize('NIMBLE.pdfExport.heading2')}
+					onclick={() => applyFormat('formatBlock', 'h2')}>H2</button
+				>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn pdf-export-dialog__toolbar-btn--heading"
+					title={localize('NIMBLE.pdfExport.heading3')}
+					onclick={() => applyFormat('formatBlock', 'h3')}>H3</button
+				>
+				<div class="pdf-export-dialog__toolbar-divider"></div>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn"
+					title={localize('NIMBLE.pdfExport.bulletList')}
+					onclick={() => applyFormat('insertUnorderedList')}
+				>
+					<i class="fa-solid fa-list-ul"></i>
+				</button>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn"
+					title={localize('NIMBLE.pdfExport.numberedList')}
+					onclick={() => applyFormat('insertOrderedList')}
+				>
+					<i class="fa-solid fa-list-ol"></i>
 				</button>
 			</div>
 
@@ -432,13 +547,16 @@
 		flex-direction: column;
 		gap: 1rem;
 		padding: 1rem;
-		min-height: 500px;
 		height: 100%;
+		min-height: 0;
+		overflow: hidden;
 
 		&__layout {
 			display: flex;
 			gap: 1rem;
 			flex: 1;
+			min-height: 0;
+			overflow: hidden;
 		}
 
 		&__section-title {
@@ -458,6 +576,8 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
+			min-height: 0;
+			overflow: hidden;
 
 			.pdf-export-dialog__section-title {
 				padding-left: 1.6875rem;
@@ -517,21 +637,26 @@
 			color: var(--nimble-medium-text-color);
 		}
 
-		&__select-all-btn {
+		&__item--single {
 			padding: 0.25rem 0.5rem;
-			margin-right: 0.25rem;
-			background: transparent;
-			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
-			cursor: pointer;
-			color: var(--nimble-medium-text-color);
-			font-size: 0.625rem;
 
-			&:hover {
-				background: var(--nimble-accent-color, hsl(210, 70%, 50%));
-				color: white;
-				border-color: var(--nimble-accent-color, hsl(210, 70%, 50%));
+			.pdf-export-dialog__item-category {
+				font-weight: 600;
+				color: var(--nimble-medium-text-color);
+				margin-right: 0.25rem;
 			}
+		}
+
+		&__item--select-all {
+			border-bottom: 1px solid var(--nimble-card-border-color);
+			margin-bottom: 0.125rem;
+			padding-bottom: 0.25rem;
+		}
+
+		&__item-label--select-all {
+			font-weight: 600;
+			font-style: italic;
 		}
 
 		&__category-items {
@@ -559,7 +684,7 @@
 		}
 
 		&__insert-btn {
-			margin-top: auto;
+			flex-shrink: 0;
 		}
 
 		&__editor {
@@ -567,6 +692,8 @@
 			display: flex;
 			flex-direction: column;
 			min-width: 0;
+			min-height: 0;
+			overflow: hidden;
 			gap: 0.5rem;
 		}
 
@@ -586,16 +713,19 @@
 			color: var(--nimble-dark-text-color);
 		}
 
-		&__template-option {
-			display: flex;
-			align-items: center;
-			gap: 0.375rem;
-			cursor: pointer;
+		&__template-btn {
+			padding: 0.25rem 0.75rem;
 			font-size: var(--nimble-sm-text);
-			color: var(--nimble-dark-text-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			background: var(--nimble-box-background-color);
+			color: var(--nimble-medium-text-color);
+			cursor: pointer;
 
-			input[type='radio'] {
-				margin: 0;
+			&--active {
+				background: var(--nimble-accent-color, hsl(210, 70%, 50%));
+				border-color: var(--nimble-accent-color, hsl(210, 70%, 50%));
+				color: white;
 			}
 		}
 
@@ -652,6 +782,13 @@
 			border-radius: 4px;
 		}
 
+		&__toolbar-divider {
+			width: 1px;
+			background: var(--nimble-card-border-color);
+			margin: 0.125rem 0.125rem;
+			align-self: stretch;
+		}
+
 		&__toolbar-btn {
 			padding: 0.375rem 0.5rem;
 			background: transparent;
@@ -659,6 +796,7 @@
 			border-radius: 4px;
 			cursor: pointer;
 			color: var(--nimble-dark-text-color);
+			line-height: 1;
 
 			&:hover {
 				background: var(--nimble-box-background-hover-color, rgba(0, 0, 0, 0.05));
@@ -668,11 +806,18 @@
 				background: var(--nimble-accent-color, hsl(210, 70%, 50%));
 				color: white;
 			}
+
+			&--heading {
+				font-size: var(--nimble-xs-text, 0.625rem);
+				font-weight: 700;
+				padding: 0.375rem 0.375rem;
+				min-width: 1.75rem;
+			}
 		}
 
 		&__rich-editor {
 			flex: 1;
-			min-height: 300px;
+			min-height: 0;
 			padding: 0.5rem;
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
@@ -692,7 +837,7 @@
 				background: hsla(0, 65%, 50%, 0.05);
 			}
 
-			// Style bold and italic text
+			// Bold and italic
 			:global(b),
 			:global(strong) {
 				font-weight: 700;
@@ -701,6 +846,44 @@
 			:global(i),
 			:global(em) {
 				font-style: italic;
+			}
+
+			// Headings
+			:global(h1),
+			:global(h2),
+			:global(h3) {
+				font-weight: 700;
+				line-height: 1.2;
+				margin: 0.4em 0 0.15em;
+			}
+
+			:global(h1) {
+				font-size: 1.2em;
+			}
+			:global(h2) {
+				font-size: 1.1em;
+			}
+			:global(h3) {
+				font-size: 1em;
+			}
+
+			:global(h4),
+			:global(h5),
+			:global(h6) {
+				font-weight: 700;
+				font-size: 0.95em;
+				margin: 0.3em 0 0.1em;
+			}
+
+			// Lists
+			:global(ul),
+			:global(ol) {
+				padding-left: 1.25rem;
+				margin: 0.25em 0;
+			}
+
+			:global(li) {
+				margin: 0.1em 0;
 			}
 		}
 

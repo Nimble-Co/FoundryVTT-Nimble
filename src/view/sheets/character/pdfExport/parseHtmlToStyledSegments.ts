@@ -1,6 +1,7 @@
 /**
  * Parses HTML content into styled text segments for PDF rendering.
- * Supports bold (<strong>, <b>) and italic (<em>, <i>) formatting.
+ * Supports bold (<strong>, <b>), italic (<em>, <i>), headings (<h1>–<h3>),
+ * unordered lists (<ul>/<li>), and ordered lists (<ol>/<li>).
  */
 
 interface StyledSegment {
@@ -11,122 +12,144 @@ interface StyledSegment {
 
 interface StyledLine {
 	segments: StyledSegment[];
+	/** Set for heading elements; drives font-size scaling in the renderer. */
+	headerLevel?: 1 | 2 | 3 | 4 | 5 | 6;
+	/** Prefix drawn before the line's text (e.g. "• " or "1. "). */
+	listMarker?: string;
 }
 
 /**
  * Parse HTML string into an array of styled lines.
- * Each line contains segments with bold/italic styling information.
+ * Each line carries segments with bold/italic flags, plus optional
+ * headerLevel and listMarker metadata.
  */
 function parseHtmlToStyledSegments(html: string): StyledLine[] {
 	if (!html || html.trim() === '') {
 		return [];
 	}
 
-	// Create a temporary element to parse HTML
 	const container = document.createElement('div');
 	container.innerHTML = html;
 
 	const lines: StyledLine[] = [];
 	let currentLine: StyledSegment[] = [];
+	let currentLineMeta: { headerLevel?: 1 | 2 | 3 | 4 | 5 | 6; listMarker?: string } = {};
 
 	function pushCurrentLine(): void {
 		if (currentLine.length > 0) {
-			lines.push({ segments: currentLine });
+			lines.push({ segments: currentLine, ...currentLineMeta });
 			currentLine = [];
 		}
+		currentLineMeta = {};
 	}
 
-	function processNode(node: Node, inheritedBold: boolean, inheritedItalic: boolean): void {
+	function processNode(
+		node: Node,
+		inheritedBold: boolean,
+		inheritedItalic: boolean,
+		listCtx?: { type: 'ul' | 'ol'; counter: { value: number } } | null,
+	): void {
 		if (node.nodeType === Node.TEXT_NODE) {
 			const text = node.textContent ?? '';
 			if (text) {
-				// Split text by newlines
 				const parts = text.split(/\n/);
 				for (let i = 0; i < parts.length; i++) {
 					const part = parts[i];
 					if (part) {
-						currentLine.push({
-							text: part,
-							bold: inheritedBold,
-							italic: inheritedItalic,
-						});
+						currentLine.push({ text: part, bold: inheritedBold, italic: inheritedItalic });
 					}
-					// Add line break between parts (not after last)
-					if (i < parts.length - 1) {
-						pushCurrentLine();
-					}
+					if (i < parts.length - 1) pushCurrentLine();
 				}
 			}
 			return;
 		}
 
-		if (node.nodeType !== Node.ELEMENT_NODE) {
-			return;
-		}
+		if (node.nodeType !== Node.ELEMENT_NODE) return;
 
 		const element = node as Element;
 		const tagName = element.tagName.toLowerCase();
 
-		// Determine styling based on tag
 		let bold = inheritedBold;
 		let italic = inheritedItalic;
 
-		if (tagName === 'strong' || tagName === 'b') {
-			bold = true;
-		}
-		if (tagName === 'em' || tagName === 'i') {
-			italic = true;
+		if (tagName === 'strong' || tagName === 'b') bold = true;
+		if (tagName === 'em' || tagName === 'i') italic = true;
+
+		// --- Headings ---
+		if (/^h[1-6]$/.test(tagName)) {
+			const level = parseInt(tagName[1], 10) as 1 | 2 | 3 | 4 | 5 | 6;
+			pushCurrentLine(); // flush anything before the heading
+			currentLineMeta.headerLevel = level;
+			for (const child of element.childNodes) {
+				processNode(child, true, italic, listCtx);
+			}
+			pushCurrentLine();
+			return;
 		}
 
-		// Handle block elements that create line breaks
-		const isBlockElement =
-			tagName === 'p' ||
-			tagName === 'div' ||
-			tagName === 'br' ||
-			tagName === 'li' ||
-			tagName === 'h1' ||
-			tagName === 'h2' ||
-			tagName === 'h3' ||
-			tagName === 'h4' ||
-			tagName === 'h5' ||
-			tagName === 'h6';
+		// --- Unordered list ---
+		if (tagName === 'ul') {
+			const ulCtx = { type: 'ul' as const, counter: { value: 0 } };
+			for (const child of element.childNodes) {
+				processNode(child, bold, italic, ulCtx);
+			}
+			return;
+		}
 
-		// For <br>, just add a line break
+		// --- Ordered list ---
+		if (tagName === 'ol') {
+			const olCtx = { type: 'ol' as const, counter: { value: 0 } };
+			for (const child of element.childNodes) {
+				processNode(child, bold, italic, olCtx);
+			}
+			return;
+		}
+
+		// --- List item ---
+		if (tagName === 'li') {
+			pushCurrentLine(); // flush any text before this item
+			if (listCtx?.type === 'ol') {
+				listCtx.counter.value++;
+				currentLineMeta.listMarker = `${listCtx.counter.value}. `;
+			} else {
+				currentLineMeta.listMarker = '• '; // •
+			}
+			for (const child of element.childNodes) {
+				processNode(child, bold, italic, listCtx);
+			}
+			pushCurrentLine();
+			return;
+		}
+
+		// --- Line break ---
 		if (tagName === 'br') {
 			pushCurrentLine();
 			return;
 		}
 
-		// Process children
+		// --- Generic block elements ---
+		const isBlock = tagName === 'p' || tagName === 'div';
+
 		for (const child of element.childNodes) {
-			processNode(child, bold, italic);
+			processNode(child, bold, italic, listCtx);
 		}
 
-		// Add line break after block elements
-		if (isBlockElement && currentLine.length > 0) {
-			pushCurrentLine();
-		}
+		if (isBlock && currentLine.length > 0) pushCurrentLine();
 	}
 
-	// Process all children of the container
 	for (const child of container.childNodes) {
 		processNode(child, false, false);
 	}
 
-	// Push any remaining content
 	pushCurrentLine();
 
-	// If no lines were created but there was content, add empty line placeholder
+	// Fallback for plain text without HTML tags
 	if (lines.length === 0 && html.trim()) {
-		// Plain text without HTML tags
 		const text = container.textContent ?? '';
 		if (text) {
-			const textLines = text.split('\n');
-			for (const line of textLines) {
+			for (const line of text.split('\n')) {
 				if (line.trim()) {
-					lines.push({
-						segments: [{ text: line, bold: false, italic: false }],
-					});
+					lines.push({ segments: [{ text: line, bold: false, italic: false }] });
 				}
 			}
 		}

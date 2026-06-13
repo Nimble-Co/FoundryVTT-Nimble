@@ -272,10 +272,10 @@
 		</header>
 
 		<div class="nimble-field">
-			<CharacterJsonExportButton {actor} />
+			<CharacterPdfExportButton {actor} />
 		</div>
 		<div class="nimble-field">
-			<CharacterPdfExportButton {actor} />
+			<CharacterJsonExportButton {actor} />
 		</div>
 	</section>
 </section>
