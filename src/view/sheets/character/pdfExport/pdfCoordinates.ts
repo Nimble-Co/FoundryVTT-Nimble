@@ -8,7 +8,7 @@
  * All coordinates are in PDF points.
  */
 
-import type { LinedTextAreaConfig, PdfCoordinates, TextPosition } from './pdfExport.types.ts';
+import type { PdfCoordinates } from './pdfExport.types.ts';
 
 /** Template width in pixels */
 const TEMPLATE_WIDTH = 4960;

@@ -6,12 +6,7 @@ import { SYSTEM_PATH } from '#system';
 import { drawStyledText } from './drawStyledText.ts';
 import { parseHtmlToStyledSegments } from './parseHtmlToStyledSegments.ts';
 import { pdfCoordinates } from './pdfCoordinates.ts';
-import type {
-	ExportOptions,
-	LinedTextAreaConfig,
-	TemplateType,
-	TextPosition,
-} from './pdfExport.types.ts';
+import type { ExportOptions, LinedTextAreaConfig, TextPosition } from './pdfExport.types.ts';
 
 /** PDF page dimensions in points (letter size) */
 const PAGE_WIDTH = 612;
