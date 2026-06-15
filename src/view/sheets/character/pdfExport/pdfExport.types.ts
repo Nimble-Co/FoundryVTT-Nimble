@@ -31,15 +31,7 @@ export interface SaveArrowPosition {
 }
 
 export interface AdditionalSheetConfig {
-	headerTop: number;
-	headerHeight: number;
-	dividerXs: [number, number, number];
-	characterName: TextPosition;
-	ancestryClassLevel: TextPosition;
-	heightWeightSpeed: TextPosition;
-	hitDice: TextPosition;
 	linedTextArea: LinedTextAreaConfig;
-	logoY: number;
 }
 
 export interface PdfCoordinates {

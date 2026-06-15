@@ -12,7 +12,7 @@ export function createCharacterPdfExportButtonState(
 		if (GenericDialog.isOpen(uniqueId)) return;
 
 		const dialog = GenericDialog.getOrCreate(
-			localize('NIMBLE.pdfExport.dialogTitle'),
+			localize('NIMBLE.pdfExport.dialogTitle', { name: actor.name }),
 			exportDialogComponent as ConstructorParameters<typeof GenericDialog>[1],
 			{ actor },
 			{

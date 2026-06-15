@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import type { PdfExportDialogProps } from '#types/components/PdfExportDialog.js';
 	import localize from '#utils/localize.ts';
 	import PdfPreviewDialog from './PdfPreviewDialog.svelte';
@@ -21,7 +22,10 @@
 		resetToDefault,
 		generatePdf,
 		openPreviewDialog,
+		closePreviewDialog,
 	} = state;
+
+	onDestroy(closePreviewDialog);
 </script>
 
 <article class="nimble-sheet__body pdf-export-dialog">
@@ -680,10 +684,11 @@
 			}
 
 			&--over-limit {
-				border-color: hsl(0, 65%, 50%);
+				border-color: hsla(30, 80%, 60%, 0.45);
 
 				&.pdf-export-dialog__tab--active {
-					background: hsl(0, 65%, 50%);
+					background: var(--nimble-accent-color, hsl(210, 70%, 50%));
+					border-color: var(--nimble-accent-color, hsl(210, 70%, 50%));
 				}
 			}
 		}
@@ -758,8 +763,7 @@
 			}
 
 			&--over-limit {
-				border-color: hsl(0, 65%, 50%);
-				background: hsla(0, 65%, 50%, 0.05);
+				border-color: hsla(30, 80%, 60%, 0.45);
 			}
 
 			// Bold and italic
@@ -818,8 +822,7 @@
 			color: var(--nimble-medium-text-color);
 
 			&--over-limit {
-				color: hsl(0, 65%, 50%);
-				font-weight: 600;
+				color: hsl(30, 70%, 50%);
 			}
 		}
 
@@ -867,11 +870,11 @@
 	:global(.theme-dark) {
 		.pdf-export-dialog {
 			&__rich-editor--over-limit {
-				background: hsla(0, 65%, 50%, 0.1);
+				border-color: hsla(30, 80%, 65%, 0.4);
 			}
 
 			&__char-count--over-limit {
-				color: hsl(0, 60%, 65%);
+				color: hsl(30, 70%, 65%);
 			}
 		}
 	}

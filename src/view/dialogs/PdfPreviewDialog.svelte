@@ -12,6 +12,9 @@
 	const templateSrc = $derived(
 		`${SYSTEM_PATH}/assets/pdf/${previewState.template === 'noLines' ? 'CharacterSheet-Full-NoLines.png' : 'CharacterSheet-Full.png'}`,
 	);
+	const additionalTemplateSrc = $derived(
+		`${SYSTEM_PATH}/assets/pdf/${previewState.template === 'noLines' ? 'CharacterSheet-Additional-NoLines.png' : 'CharacterSheet-Additional.png'}`,
+	);
 
 	const ABILITY_KEYS = ['strength', 'dexterity', 'intelligence', 'will'] as const;
 	const SKILL_KEYS = [
@@ -28,10 +31,20 @@
 	] as const;
 
 	const col = c.linedTextArea;
+	const add = c.additionalSheet;
+
+	/** Page 2 only renders when at least one additional column has visible text */
+	const hasAdditionalContent = $derived(
+		previewState.additionalColumnContent.some((html) => html.replace(/<[^>]*>/g, '').trim() !== ''),
+	);
+
+	/** Additional column height: same bottom as main sheet columns, starting from add column startY */
+	const addColBaseHeight =
+		col.startY + col.linesPerColumn * col.lineHeight + 28 - add.linedTextArea.startY;
 
 	/** Convert PDF (x, y, fontSize) to an absolute CSS `style` string.
-	 *  For center-aligned text (no maxWidth): centers element at x via translateX(-50%).
-	 *  For left-aligned text (with maxWidth): anchors left edge at x. */
+	 *  Center-aligned (no maxWidth): centers element at x via translateX(-50%).
+	 *  Left-aligned (with maxWidth): anchors left edge at x. */
 	function ts(x: number, y: number, fs: number, bold = false, mw?: number): string {
 		const top = y - fs * 0.75;
 		const weight = bold ? 'font-weight:bold;' : '';
@@ -43,60 +56,9 @@
 </script>
 
 <article class="pdf-preview-dialog">
-	<div class="pdf-preview-wrapper" bind:clientWidth={wrapperWidth} style="height:{792 * scale}px">
-		{#if previewState.activeSheet === 'additional'}
-			<!-- Additional sheet preview (programmatic, no PNG) -->
-			<div
-				class="pdf-sheet pdf-additional-page"
-				style="transform:scale({scale});transform-origin:top left;"
-			>
-				<!-- Header -->
-				<div class="pdf-add-header">
-					<div class="pdf-add-header__cell pdf-add-header__cell--name">
-						<span class="pdf-add-header__label">Name</span>
-						<span class="pdf-add-header__value">{d.characterName}</span>
-					</div>
-					<div class="pdf-add-header__cell">
-						<span class="pdf-add-header__label">Ancestry / Class / Level</span>
-						<span class="pdf-add-header__value pdf-add-header__value--small"
-							>{d.ancestryClassLevel}</span
-						>
-					</div>
-					<div class="pdf-add-header__cell">
-						<span class="pdf-add-header__label">Height / Weight / Speed</span>
-						<span class="pdf-add-header__value pdf-add-header__value--small"
-							>{d.heightWeightSpeed}</span
-						>
-					</div>
-					<div class="pdf-add-header__cell pdf-add-header__cell--dice">
-						<span class="pdf-add-header__label">Hit Dice</span>
-						<span class="pdf-add-header__value">{d.hitDice}</span>
-					</div>
-				</div>
-				<!-- Columns -->
-				<div class="pdf-add-columns">
-					{#each [0, 1, 2] as i}
-						{@const colLineHeight = previewState.additionalLineHeights[i]}
-						{@const colHeight = Math.floor(705 / colLineHeight) * colLineHeight}
-						{@const isOverLimit = previewState.additionalOverLimit[i]}
-						<div
-							class="pdf-additional-column"
-							class:pdf-additional-column--lined={previewState.template === 'lined'}
-							style="line-height:{colLineHeight}px;height:{colHeight}px;--col-lh:{colLineHeight}px;"
-						>
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							{@html previewState.additionalColumnContent[i]}
-							{#if isOverLimit}
-								<span class="pdf-column__ellipsis">…</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
-				<!-- Logo -->
-				<div class="pdf-add-logo">NIMBLE</div>
-			</div>
-		{:else}
-			<!-- Main sheet preview -->
+	<div class="pdf-preview-scroll" bind:clientWidth={wrapperWidth}>
+		<!-- Page 1: Main Sheet -->
+		<div class="pdf-page-wrapper" style="height:{792 * scale}px">
 			<div class="pdf-sheet" style="transform:scale({scale});transform-origin:top left;">
 				<img src={templateSrc} class="pdf-sheet__bg" alt="" />
 
@@ -212,6 +174,73 @@
 					</div>
 				{/each}
 			</div>
+		</div>
+
+		<!-- Page 2: Additional Sheet — only rendered when content exists -->
+		{#if hasAdditionalContent}
+			<div class="pdf-page-separator"></div>
+			<div class="pdf-page-wrapper" style="height:{792 * scale}px">
+				<div class="pdf-sheet" style="transform:scale({scale});transform-origin:top left;">
+					<!-- Dedicated additional-sheet template (stats section removed in image editor) -->
+					<img src={additionalTemplateSrc} class="pdf-sheet__bg" alt="" />
+
+					<!-- Header — same positions as the main sheet -->
+					<span
+						class="pdf-text"
+						style={ts(
+							c.characterName.x,
+							c.characterName.y,
+							c.characterName.fontSize,
+							true,
+							c.characterName.maxWidth,
+						)}>{d.characterName}</span
+					>
+					<span
+						class="pdf-text"
+						style={ts(
+							c.ancestryClassLevel.x,
+							c.ancestryClassLevel.y,
+							c.ancestryClassLevel.fontSize,
+							false,
+							c.ancestryClassLevel.maxWidth,
+						)}>{d.ancestryClassLevel}</span
+					>
+					<span
+						class="pdf-text"
+						style={ts(
+							c.heightWeightSpeed.x,
+							c.heightWeightSpeed.y,
+							c.heightWeightSpeed.fontSize,
+							false,
+							c.heightWeightSpeed.maxWidth,
+						)}>{d.heightWeightSpeed}</span
+					>
+					<span class="pdf-text" style={ts(c.hitDice.x, c.hitDice.y, c.hitDice.fontSize)}
+						>{d.hitDice}</span
+					>
+
+					<!-- Additional sheet columns -->
+					{#each [0, 1, 2] as i}
+						{@const colLineHeight = previewState.additionalLineHeights[i]}
+						{@const colHeight = Math.floor(addColBaseHeight / colLineHeight) * colLineHeight}
+						{@const isOverLimit = previewState.additionalOverLimit[i]}
+						{@const colTop =
+							add.linedTextArea.startY - (colLineHeight - add.linedTextArea.fontSize) / 2}
+						<div
+							class="pdf-column"
+							style="left:{col.leftMargin +
+								i * (col.columnWidth + col.columnGap)}px;top:{colTop}px;width:{col.columnWidth -
+								4}px;line-height:{colLineHeight}px;height:{colHeight}px;"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html previewState.additionalColumnContent[i]}
+							{#if isOverLimit}
+								<span class="pdf-column__ellipsis">…</span>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			</div>
 		{/if}
 	</div>
 </article>
@@ -219,13 +248,27 @@
 <style lang="scss">
 	.pdf-preview-dialog {
 		padding: 0.5rem;
-		overflow: hidden;
+		overflow-y: auto;
+		max-height: 100%;
 	}
 
-	.pdf-preview-wrapper {
+	.pdf-preview-scroll {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.pdf-page-wrapper {
 		position: relative;
 		width: 100%;
 		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.pdf-page-separator {
+		height: 12px;
+		background: #888;
+		opacity: 0.3;
+		flex-shrink: 0;
 	}
 
 	.pdf-sheet {
@@ -244,9 +287,10 @@
 
 	.pdf-text {
 		position: absolute;
-		font-family: Helvetica, Arial, sans-serif;
-		color: black;
-		line-height: 1;
+		font-family: Helvetica, Arial, sans-serif !important;
+		color: black !important;
+		line-height: 1 !important;
+		z-index: 2;
 	}
 
 	.pdf-arrow {
@@ -257,19 +301,23 @@
 
 	.pdf-column {
 		position: absolute;
-		font-size: 6px;
-		font-family: Helvetica, Arial, sans-serif;
-		color: black;
+		font-size: 6px !important;
+		font-family: Helvetica, Arial, sans-serif !important;
+		color: black !important;
 		overflow: hidden;
+		z-index: 3;
 
-		&__ellipsis {
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			background: white;
-			padding: 0 1px;
-			line-height: 1.2;
-			pointer-events: none;
+		// Reset every descendant — FoundryVTT HTML contains links and content-link
+		// elements with their own explicit color, font-size, background, and decoration.
+		:global(*) {
+			color: black !important;
+			font-family: Helvetica, Arial, sans-serif !important;
+			font-size: inherit !important;
+			line-height: inherit !important;
+			background: transparent !important;
+			text-decoration: none !important;
+			margin: 0 !important;
+			padding: 0 !important;
 		}
 
 		:global(h1),
@@ -278,158 +326,17 @@
 		:global(h4),
 		:global(h5),
 		:global(h6) {
-			font-size: inherit;
-			font-weight: bold;
-			color: black;
-			margin: 0;
-			line-height: inherit;
-		}
-
-		:global(p),
-		:global(ul),
-		:global(ol),
-		:global(li) {
-			margin: 0;
-			padding: 0;
+			font-weight: bold !important;
 		}
 	}
 
-	.pdf-additional-page {
-		background: white;
-	}
-
-	.pdf-add-header {
+	.pdf-column__ellipsis {
 		position: absolute;
-		top: 8px;
-		left: 8px;
-		right: 8px;
-		height: 47px;
-		border: 0.5px solid black;
-		display: flex;
-
-		&__cell {
-			flex: 1;
-			padding: 3px 4px 2px;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-			border-right: 0.5px solid black;
-			overflow: hidden;
-
-			&:last-child {
-				border-right: none;
-			}
-
-			&--name {
-				flex: 0 0 174px;
-			}
-
-			&--dice {
-				flex: 0 0 80px;
-				align-items: center;
-				text-align: center;
-			}
-		}
-
-		&__label {
-			font-size: 4.5px;
-			color: #888;
-			font-family: Helvetica, Arial, sans-serif;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-
-		&__value {
-			font-size: 9px;
-			font-weight: bold;
-			font-family: Helvetica, Arial, sans-serif;
-			color: black;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-
-			&--small {
-				font-size: 7px;
-				font-weight: normal;
-			}
-		}
-	}
-
-	.pdf-add-columns {
-		position: absolute;
-		top: 58px;
-		left: 21px;
-		right: 21px;
-		bottom: 29px;
-		display: flex;
-		border: 0.3px solid #aaa;
-
-		.pdf-additional-column {
-			flex: 1;
-			font-size: 6px;
-			font-family: Helvetica, Arial, sans-serif;
-			color: black;
-			overflow: hidden;
-			position: relative;
-			border-right: 0.3px solid #aaa;
-
-			&:last-child {
-				border-right: none;
-			}
-
-			.pdf-column__ellipsis {
-				position: absolute;
-				bottom: 0;
-				right: 0;
-				background: white;
-				padding: 0 1px;
-				line-height: 1.2;
-				pointer-events: none;
-			}
-
-			&--lined {
-				background-image: repeating-linear-gradient(
-					to bottom,
-					transparent calc(var(--col-lh, 22px) - 0.5px),
-					#ccc calc(var(--col-lh, 22px) - 0.5px),
-					#ccc var(--col-lh, 22px)
-				);
-			}
-
-			:global(h1),
-			:global(h2),
-			:global(h3),
-			:global(h4),
-			:global(h5),
-			:global(h6) {
-				font-size: inherit;
-				font-weight: bold;
-				color: black;
-				margin: 0;
-				line-height: inherit;
-			}
-
-			:global(p),
-			:global(ul),
-			:global(ol),
-			:global(li) {
-				margin: 0;
-				padding: 0;
-			}
-		}
-	}
-
-	.pdf-add-logo {
-		position: absolute;
-		bottom: 8px;
-		left: 0;
+		bottom: 0;
 		right: 0;
-		text-align: center;
-		font-family: Helvetica, Arial, sans-serif;
-		font-size: 10px;
-		font-weight: bold;
-		color: black;
-		letter-spacing: 0.15em;
+		background: white !important;
+		padding: 0 1px;
+		line-height: 1.2;
+		pointer-events: none;
 	}
 </style>

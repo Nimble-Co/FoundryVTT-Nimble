@@ -221,16 +221,11 @@ const pdfCoordinates: PdfCoordinates = {
 		pageHeight: 792,
 	},
 
+	// Additional sheet uses its own PNG (CharacterSheet-Additional[NoLines].png)
+	// with the stats section already removed by the image editor.
 	additionalSheet: {
-		headerTop: 8,
-		headerHeight: 47,
-		dividerXs: [182, 374, 524],
-		characterName: { x: 12, y: 40, fontSize: 9, maxWidth: 168 },
-		ancestryClassLevel: { x: 186, y: 40, fontSize: 7, maxWidth: 186 },
-		heightWeightSpeed: { x: 378, y: 40, fontSize: 7, maxWidth: 144 },
-		hitDice: { x: 565, y: 40, fontSize: 10 },
 		linedTextArea: {
-			startY: 58,
+			startY: 53,
 			leftMargin: 21,
 			columnWidth: 190,
 			columnGap: 5,
@@ -241,7 +236,6 @@ const pdfCoordinates: PdfCoordinates = {
 			headerFontSize: 7,
 			pageHeight: 792,
 		},
-		logoY: 778,
 	} satisfies AdditionalSheetConfig,
 };
 

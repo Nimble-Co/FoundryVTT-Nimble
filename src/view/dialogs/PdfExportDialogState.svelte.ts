@@ -403,12 +403,19 @@ export function createPdfExportDialogState(
 		}
 
 		activePreviewDialog = new GenericDialog(
-			localize('NIMBLE.pdfExport.previewTitle'),
+			localize('NIMBLE.pdfExport.previewTitle', { name: getActor().name }),
 			previewDialogComponent as ConstructorParameters<typeof GenericDialog>[1],
 			{ actor: getActor(), previewState },
 			{ icon: 'fa-solid fa-eye', width: 700, height: 900 },
 		);
 		activePreviewDialog.render(true);
+	}
+
+	function closePreviewDialog() {
+		if (activePreviewDialog?.rendered) {
+			activePreviewDialog.close();
+		}
+		activePreviewDialog = null;
 	}
 
 	return {
@@ -542,5 +549,6 @@ export function createPdfExportDialogState(
 		resetToDefault,
 		generatePdf,
 		openPreviewDialog,
+		closePreviewDialog,
 	};
 }
