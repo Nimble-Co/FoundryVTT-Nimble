@@ -209,7 +209,7 @@ const pdfCoordinates: PdfCoordinates = {
 
 	// Lined text area for features, spells, and inventory (3 columns, 23 lines each)
 	linedTextArea: {
-		startY: 238,
+		startY: 223,
 		leftMargin: 21,
 		columnWidth: 190,
 		columnGap: 5,

@@ -3,7 +3,6 @@ import GenericDialog from '#documents/dialogs/GenericDialog.svelte.ts';
 import type { PreviewState } from '#types/components/PdfPreviewDialog.js';
 import localize from '#utils/localize.ts';
 import {
-	CHARS_PER_COLUMN,
 	generateInitialColumnContentHtml,
 	getSelectableItems,
 	type SelectableItem,
@@ -13,26 +12,32 @@ import type { TemplateType } from '../sheets/character/pdfExport/pdfExport.types
 
 export function createPdfExportDialogState(
 	getActor: () => NimbleCharacter,
-	getDialog: () => GenericDialog,
 	previewDialogComponent: unknown,
 ) {
 	const initialContent = generateInitialColumnContentHtml(getActor());
 
+	const DEFAULT_LINE_HEIGHT = 22;
+
 	let column1Html = $state(initialContent[0]);
 	let column2Html = $state(initialContent[1]);
 	let column3Html = $state(initialContent[2]);
+	let column1LineHeight = $state(DEFAULT_LINE_HEIGHT);
+	let column2LineHeight = $state(DEFAULT_LINE_HEIGHT);
+	let column3LineHeight = $state(DEFAULT_LINE_HEIGHT);
 	let selectedTemplate = $state<TemplateType>('lined');
 	const previewState = $state<PreviewState>({
 		columnContent: [initialContent[0], initialContent[1], initialContent[2]],
 		template: 'lined',
+		lineHeights: [DEFAULT_LINE_HEIGHT, DEFAULT_LINE_HEIGHT, DEFAULT_LINE_HEIGHT],
+		overLimit: [false, false, false],
 	});
-	let columnSyncTimer: number | null = null;
 	let activeColumnTab = $state(1);
 	let selectedItems = $state(new Set<string>());
 	let searchQuery = $state('');
 	let expandedCategories = $state(new Set<string>());
 	let editorElement = $state<HTMLDivElement | null>(null);
 	let lastActiveTab = $state(1);
+	let isExporting = $state(false);
 	let activePreviewDialog: GenericDialog | null = null;
 
 	$effect(() => {
@@ -40,20 +45,9 @@ export function createPdfExportDialogState(
 	});
 
 	$effect(() => {
-		const c1 = column1Html;
-		const c2 = column2Html;
-		const c3 = column3Html;
-		if (columnSyncTimer !== null) window.clearTimeout(columnSyncTimer);
-		columnSyncTimer = window.setTimeout(() => {
-			previewState.columnContent = [c1, c2, c3];
-			columnSyncTimer = null;
-		}, 800);
-		return () => {
-			if (columnSyncTimer !== null) {
-				window.clearTimeout(columnSyncTimer);
-				columnSyncTimer = null;
-			}
-		};
+		previewState.columnContent = [column1Html, column2Html, column3Html];
+		previewState.lineHeights = [column1LineHeight, column2LineHeight, column3LineHeight];
+		previewState.overLimit = [column1OverLimit, column2OverLimit, column3OverLimit];
 	});
 
 	$effect(() => {
@@ -84,12 +78,21 @@ export function createPdfExportDialogState(
 		return groups;
 	});
 
+	function columnCapacityAt(lh: number): number {
+		// Calibrated from observed rendering: lh=10→3237 chars, lh=13→2446 chars
+		// Derived via linear fit: A=34277, B=-191 where capacity = round(A/lh + B)
+		return Math.round(34277 / lh - 191);
+	}
+
 	const column1Count = $derived(getPlainTextFromHtml(column1Html).length);
 	const column2Count = $derived(getPlainTextFromHtml(column2Html).length);
 	const column3Count = $derived(getPlainTextFromHtml(column3Html).length);
-	const column1OverLimit = $derived(column1Count > CHARS_PER_COLUMN);
-	const column2OverLimit = $derived(column2Count > CHARS_PER_COLUMN);
-	const column3OverLimit = $derived(column3Count > CHARS_PER_COLUMN);
+	const column1Capacity = $derived(columnCapacityAt(column1LineHeight));
+	const column2Capacity = $derived(columnCapacityAt(column2LineHeight));
+	const column3Capacity = $derived(columnCapacityAt(column3LineHeight));
+	const column1OverLimit = $derived(column1Count > column1Capacity);
+	const column2OverLimit = $derived(column2Count > column2Capacity);
+	const column3OverLimit = $derived(column3Count > column3Capacity);
 
 	const columnTooltips = $derived.by(() => {
 		const tooltip = localize('NIMBLE.pdfExport.columnOverflow');
@@ -106,11 +109,30 @@ export function createPdfExportDialogState(
 		return column3Count;
 	});
 
+	const activeColumnCapacity = $derived.by(() => {
+		if (activeColumnTab === 1) return column1Capacity;
+		if (activeColumnTab === 2) return column2Capacity;
+		return column3Capacity;
+	});
+
+	const activeColumnLineHeight = $derived.by(() => {
+		if (activeColumnTab === 1) return column1LineHeight;
+		if (activeColumnTab === 2) return column2LineHeight;
+		return column3LineHeight;
+	});
+
 	const activeColumnOverLimit = $derived.by(() => {
 		if (activeColumnTab === 1) return column1OverLimit;
 		if (activeColumnTab === 2) return column2OverLimit;
 		return column3OverLimit;
 	});
+
+	function setActiveColumnLineHeight(value: number) {
+		const clamped = Math.max(10, Math.min(32, value));
+		if (activeColumnTab === 1) column1LineHeight = clamped;
+		else if (activeColumnTab === 2) column2LineHeight = clamped;
+		else column3LineHeight = clamped;
+	}
 
 	function getCategoryLabel(category: string): string {
 		const labels: Record<string, string> = {
@@ -220,6 +242,9 @@ export function createPdfExportDialogState(
 		column1Html = freshContent[0];
 		column2Html = freshContent[1];
 		column3Html = freshContent[2];
+		column1LineHeight = DEFAULT_LINE_HEIGHT;
+		column2LineHeight = DEFAULT_LINE_HEIGHT;
+		column3LineHeight = DEFAULT_LINE_HEIGHT;
 		// The $effect only refreshes the editor on tab changes, so update the active column directly
 		if (editorElement) {
 			let activeContent = freshContent[0];
@@ -230,20 +255,27 @@ export function createPdfExportDialogState(
 	}
 
 	async function generatePdf() {
-		getDialog().submit({
-			columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
-			template: selectedTemplate,
-		});
+		if (isExporting) return;
+		isExporting = true;
+		try {
+			const { exportCharacterPdf } = await import(
+				'../sheets/character/pdfExport/exportCharacterPdf.ts'
+			);
+			await exportCharacterPdf(getActor(), {
+				columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
+				template: selectedTemplate,
+				lineHeights: [column1LineHeight, column2LineHeight, column3LineHeight],
+			});
+			ui.notifications?.info(localize('NIMBLE.pdfExport.success'));
+		} catch (error) {
+			console.error('PDF export failed:', error);
+			ui.notifications?.error(localize('NIMBLE.pdfExport.error'));
+		} finally {
+			isExporting = false;
+		}
 	}
 
 	function openPreviewDialog() {
-		if (columnSyncTimer !== null) {
-			window.clearTimeout(columnSyncTimer);
-			columnSyncTimer = null;
-		}
-		previewState.template = selectedTemplate;
-		previewState.columnContent = [column1Html, column2Html, column3Html];
-
 		if (activePreviewDialog?.rendered) {
 			activePreviewDialog.bringToFront();
 			return;
@@ -259,6 +291,9 @@ export function createPdfExportDialogState(
 	}
 
 	return {
+		get isExporting() {
+			return isExporting;
+		},
 		get column1Html() {
 			return column1Html;
 		},
@@ -325,6 +360,14 @@ export function createPdfExportDialogState(
 		get activeColumnOverLimit() {
 			return activeColumnOverLimit;
 		},
+		get activeColumnCapacity() {
+			return activeColumnCapacity;
+		},
+		get activeColumnLineHeight() {
+			return activeColumnLineHeight;
+		},
+		setActiveColumnLineHeight,
+		columnCapacityAt,
 		get editorElement() {
 			return editorElement;
 		},

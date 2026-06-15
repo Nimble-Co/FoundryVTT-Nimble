@@ -1,17 +1,12 @@
 <script lang="ts">
 	import type { PdfExportDialogProps } from '#types/components/PdfExportDialog.js';
 	import localize from '#utils/localize.ts';
-	import { CHARS_PER_COLUMN } from '../sheets/character/pdfExport/generatePdfContent.ts';
 	import PdfPreviewDialog from './PdfPreviewDialog.svelte';
 	import { createPdfExportDialogState } from './PdfExportDialogState.svelte.ts';
 
-	let { actor, dialog }: PdfExportDialogProps = $props();
+	let { actor }: PdfExportDialogProps = $props();
 
-	const state = createPdfExportDialogState(
-		() => actor,
-		() => dialog,
-		PdfPreviewDialog,
-	);
+	const state = createPdfExportDialogState(() => actor, PdfPreviewDialog);
 	const {
 		toggleCategory,
 		areCategoryItemsAllSelected,
@@ -255,6 +250,33 @@
 				>
 					<i class="fa-solid fa-list-ol"></i>
 				</button>
+				<div
+					class="pdf-export-dialog__toolbar-divider pdf-export-dialog__toolbar-divider--push"
+				></div>
+				<span class="pdf-export-dialog__line-height-label"
+					>{localize('NIMBLE.pdfExport.lineSpacing')}</span
+				>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn"
+					title="Decrease line spacing ({state.activeColumnLineHeight} → {state.activeColumnLineHeight -
+						1}) — fits ~{state.columnCapacityAt(
+						state.activeColumnLineHeight - 1,
+					)} characters per column"
+					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight - 1)}
+					>−</button
+				>
+				<span class="pdf-export-dialog__line-height-value">{state.activeColumnLineHeight}</span>
+				<button
+					type="button"
+					class="pdf-export-dialog__toolbar-btn"
+					title="Increase line spacing ({state.activeColumnLineHeight} → {state.activeColumnLineHeight +
+						1}) — fits ~{state.columnCapacityAt(
+						state.activeColumnLineHeight + 1,
+					)} characters per column"
+					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight + 1)}
+					>+</button
+				>
 			</div>
 
 			<!-- Rich Text Editor -->
@@ -278,7 +300,7 @@
 				class="pdf-export-dialog__char-count"
 				class:pdf-export-dialog__char-count--over-limit={state.activeColumnOverLimit}
 			>
-				{state.activeColumnCount}/{CHARS_PER_COLUMN}
+				{state.activeColumnCount}/{state.activeColumnCapacity}
 			</div>
 		</section>
 	</div>
@@ -294,9 +316,19 @@
 		<i class="fa-solid fa-eye"></i>
 		{localize('NIMBLE.pdfExport.previewPdf')}
 	</button>
-	<button class="nimble-button" data-button-variant="basic" onclick={generatePdf}>
-		<i class="fa-solid fa-file-pdf"></i>
-		{localize('NIMBLE.pdfExport.generatePdf')}
+	<button
+		class="nimble-button"
+		data-button-variant="basic"
+		disabled={state.isExporting}
+		onclick={generatePdf}
+	>
+		{#if state.isExporting}
+			<i class="fa-solid fa-spinner fa-spin"></i>
+			{localize('NIMBLE.pdfExport.exporting')}
+		{:else}
+			<i class="fa-solid fa-file-arrow-down"></i>
+			{localize('NIMBLE.pdfExport.generatePdf')}
+		{/if}
 	</button>
 </footer>
 
@@ -561,6 +593,22 @@
 			gap: 0.25rem;
 		}
 
+		&__line-height-label {
+			font-size: var(--nimble-xs-text, 0.625rem);
+			color: var(--nimble-medium-text-color);
+			white-space: nowrap;
+			align-self: center;
+		}
+
+		&__line-height-value {
+			min-width: 1.5rem;
+			text-align: center;
+			font-size: var(--nimble-xs-text, 0.625rem);
+			font-variant-numeric: tabular-nums;
+			color: var(--nimble-dark-text-color);
+			align-self: center;
+		}
+
 		&__tab {
 			flex: 1;
 			padding: 0.5rem 1rem;
@@ -614,6 +662,11 @@
 			background: var(--nimble-card-border-color);
 			margin: 0.125rem 0.125rem;
 			align-self: stretch;
+
+			&--push {
+				margin-left: auto;
+				background: var(--nimble-card-border-color);
+			}
 		}
 
 		&__toolbar-btn {

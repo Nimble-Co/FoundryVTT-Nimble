@@ -102,5 +102,6 @@ export type TemplateType = 'lined' | 'noLines';
 export interface ExportOptions {
 	columnContent: [string, string, string];
 	template?: TemplateType;
+	lineHeights?: [number, number, number];
 	returnPdf?: boolean;
 }

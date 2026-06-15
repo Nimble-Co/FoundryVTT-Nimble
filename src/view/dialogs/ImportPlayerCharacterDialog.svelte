@@ -9,7 +9,7 @@
 
 	const { json } = CONFIG.NIMBLE.actorImport;
 
-	const state = createImportPlayerCharacterDialogState(dialog);
+	const state = createImportPlayerCharacterDialogState(() => dialog);
 	const { openPicker, onFileChange, onDrop, onDragOver, onDragLeave } = state;
 </script>
 

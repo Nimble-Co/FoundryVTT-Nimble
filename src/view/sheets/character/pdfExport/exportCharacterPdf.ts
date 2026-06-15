@@ -4,6 +4,7 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import { SYSTEM_PATH } from '#system';
 
 import { drawStyledText } from './drawStyledText.ts';
+import { extractCharacterData } from './extractCharacterData.ts';
 import { parseHtmlToStyledSegments } from './parseHtmlToStyledSegments.ts';
 import { pdfCoordinates } from './pdfCoordinates.ts';
 import type { ExportOptions, LinedTextAreaConfig, TextPosition } from './pdfExport.types.ts';
@@ -13,108 +14,17 @@ const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
 
 /**
- * Format a modifier value with a sign prefix.
- */
-function formatModifier(value: number): string {
-	if (value >= 0) return `+${value}`;
-	return `${value}`;
-}
-
-/**
- * Extract character data from a NimbleCharacter for PDF export.
- */
-function extractCharacterData(actor: NimbleCharacter) {
-	const system = actor.system;
-
-	// Get first class for display
-	const classEntries = Object.values(actor.classes ?? {});
-	const classItem = classEntries[0];
-	const className = classItem?.name ?? '';
-
-	// Build ancestry/class/level string
-	const ancestryName = actor.ancestry?.name ?? '';
-	const characterLevel = actor.levels.character;
-	const ancestryClassLevel = [ancestryName, className, `Lvl ${characterLevel}`]
-		.filter(Boolean)
-		.join(', ');
-
-	// Build height/weight/speed string
-	const height = system.details?.height ?? '';
-	const weight = system.details?.weight ?? '';
-	const walkSpeed = system.attributes.movement?.walk ?? 6;
-	const heightWeightSpeed = [height, weight, `${walkSpeed} spaces`].filter(Boolean).join(', ');
-
-	// Hit dice - only show max with die size (e.g., "5 d8")
-	const hitDiceMax = actor.HitDiceManager?.max ?? 0;
-	const hitDieSize = actor.HitDiceManager?.largest ?? 8;
-	const hitDice = `${hitDiceMax} d${hitDieSize}`;
-
-	// HP - only show max
-	const hpMax = system.attributes.hp.max;
-	const hitPoints = `${hpMax}`;
-
-	// Combat stats
-	const armor = system.attributes.armor.value.toString();
-	const initiative = formatModifier(system.attributes.initiative.mod);
-	// Wounds - only show max
-	const woundsMax = system.attributes.wounds.max;
-	const wounds = `${woundsMax}`;
-
-	// Ability modifiers
-	const abilities = {
-		strength: formatModifier(system.abilities.strength.mod),
-		dexterity: formatModifier(system.abilities.dexterity.mod),
-		intelligence: formatModifier(system.abilities.intelligence.mod),
-		will: formatModifier(system.abilities.will.mod),
-	};
-
-	// Saving throw advantage/disadvantage (positive = advantage, negative = disadvantage)
-	const saveRollModes = {
-		strength: system.savingThrows?.strength?.defaultRollMode ?? 0,
-		dexterity: system.savingThrows?.dexterity?.defaultRollMode ?? 0,
-		intelligence: system.savingThrows?.intelligence?.defaultRollMode ?? 0,
-		will: system.savingThrows?.will?.defaultRollMode ?? 0,
-	};
-
-	// Skill modifiers
-	const skills = {
-		arcana: formatModifier(system.skills.arcana.mod),
-		examination: formatModifier(system.skills.examination.mod),
-		finesse: formatModifier(system.skills.finesse.mod),
-		influence: formatModifier(system.skills.influence.mod),
-		insight: formatModifier(system.skills.insight.mod),
-		lore: formatModifier(system.skills.lore.mod),
-		might: formatModifier(system.skills.might.mod),
-		naturecraft: formatModifier(system.skills.naturecraft.mod),
-		perception: formatModifier(system.skills.perception.mod),
-		stealth: formatModifier(system.skills.stealth.mod),
-	};
-
-	return {
-		characterName: actor.name ?? 'Unknown',
-		ancestryClassLevel,
-		heightWeightSpeed,
-		hitDice,
-		hitPoints,
-		armor,
-		initiative,
-		wounds,
-		abilities,
-		saveRollModes,
-		skills,
-	};
-}
-
-/**
  * Draw styled column content with HTML formatting preserved.
  */
 function drawStyledColumnContent(
 	pdf: jsPDF,
 	columnContent: [string, string, string],
 	config: LinedTextAreaConfig,
+	lineHeights?: [number, number, number],
 ): void {
 	const { startY, leftMargin, columnWidth, columnGap, linesPerColumn, lineHeight, fontSize } =
 		config;
+	const defaultColumnHeight = linesPerColumn * lineHeight + 28;
 
 	function getColumnX(column: number): number {
 		return leftMargin + column * (columnWidth + columnGap);
@@ -126,19 +36,19 @@ function drawStyledColumnContent(
 		const html = columnContent[colIndex];
 		if (!html) continue;
 
-		// Parse HTML to styled segments
-		const styledLines = parseHtmlToStyledSegments(html);
+		const colLineHeight = lineHeights?.[colIndex] ?? lineHeight;
+		const colMaxLines = Math.floor(defaultColumnHeight / colLineHeight);
 
-		// Draw styled text
+		const styledLines = parseHtmlToStyledSegments(html);
 		drawStyledText({
 			pdf,
 			lines: styledLines,
 			startX: getColumnX(colIndex),
 			startY,
 			maxWidth,
-			lineHeight,
+			lineHeight: colLineHeight,
 			fontSize,
-			maxLines: linesPerColumn,
+			maxLines: colMaxLines,
 		});
 	}
 }
@@ -232,7 +142,7 @@ async function generateCharacterPdf(
 	) {
 		if (rollMode === 0) return;
 
-		const size = arrowPos.fontSize * 0.4;
+		const size = arrowPos.fontSize * 0.6;
 		pdf.setFillColor(0, 0, 0);
 
 		if (rollMode > 0) {
@@ -264,7 +174,7 @@ async function generateCharacterPdf(
 	drawText(data.skills.stealth, pdfCoordinates.skills.stealth);
 
 	// Draw styled column content
-	drawStyledColumnContent(pdf, columnContent, pdfCoordinates.linedTextArea);
+	drawStyledColumnContent(pdf, columnContent, pdfCoordinates.linedTextArea, options.lineHeights);
 
 	return pdf;
 }

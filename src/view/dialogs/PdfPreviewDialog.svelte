@@ -1,55 +1,238 @@
 <script lang="ts">
+	import { SYSTEM_PATH } from '#system';
 	import type { PdfPreviewDialogProps } from '#types/components/PdfPreviewDialog.js';
-	import localize from '#utils/localize.ts';
-	import { createPdfPreviewDialogState } from './PdfPreviewDialogState.svelte.ts';
+	import { extractCharacterData } from '../sheets/character/pdfExport/extractCharacterData.ts';
+	import { pdfCoordinates as c } from '../sheets/character/pdfExport/pdfCoordinates.ts';
 
 	let { actor, previewState }: PdfPreviewDialogProps = $props();
 
-	const state = createPdfPreviewDialogState(
-		() => actor,
-		() => previewState,
+	let wrapperWidth = $state(0);
+	const scale = $derived(wrapperWidth > 0 ? wrapperWidth / 612 : 1);
+	const d = $derived(extractCharacterData(actor));
+	const templateSrc = $derived(
+		`${SYSTEM_PATH}/assets/pdf/${previewState.template === 'noLines' ? 'CharacterSheet-Full-NoLines.png' : 'CharacterSheet-Full.png'}`,
 	);
+
+	const ABILITY_KEYS = ['strength', 'dexterity', 'intelligence', 'will'] as const;
+	const SKILL_KEYS = [
+		'arcana',
+		'examination',
+		'finesse',
+		'influence',
+		'insight',
+		'lore',
+		'might',
+		'naturecraft',
+		'perception',
+		'stealth',
+	] as const;
+
+	const col = c.linedTextArea;
+
+	/** Convert PDF (x, y, fontSize) to an absolute CSS `style` string.
+	 *  For center-aligned text (no maxWidth): centers element at x via translateX(-50%).
+	 *  For left-aligned text (with maxWidth): anchors left edge at x. */
+	function ts(x: number, y: number, fs: number, bold = false, mw?: number): string {
+		const top = y - fs * 0.75;
+		const weight = bold ? 'font-weight:bold;' : '';
+		if (mw) {
+			return `left:${x}px;top:${top}px;font-size:${fs}px;${weight}max-width:${mw}px;white-space:normal;`;
+		}
+		return `left:${x}px;top:${top}px;font-size:${fs}px;${weight}transform:translateX(-50%);white-space:nowrap;`;
+	}
 </script>
 
-<article class="nimble-sheet__body pdf-preview-dialog">
-	{#if state.isGenerating}
-		<div class="pdf-preview-dialog__loading">
-			<i class="fa-solid fa-spinner fa-spin"></i>
-			{localize('NIMBLE.pdfExport.generatingPreview')}
+<article class="pdf-preview-dialog">
+	<div class="pdf-preview-wrapper" bind:clientWidth={wrapperWidth} style="height:{792 * scale}px">
+		<div class="pdf-sheet" style="transform:scale({scale});transform-origin:top left;">
+			<img src={templateSrc} class="pdf-sheet__bg" alt="" />
+
+			<!-- Header row -->
+			<span
+				class="pdf-text"
+				style={ts(
+					c.characterName.x,
+					c.characterName.y,
+					c.characterName.fontSize,
+					true,
+					c.characterName.maxWidth,
+				)}>{d.characterName}</span
+			>
+			<span
+				class="pdf-text"
+				style={ts(
+					c.ancestryClassLevel.x,
+					c.ancestryClassLevel.y,
+					c.ancestryClassLevel.fontSize,
+					false,
+					c.ancestryClassLevel.maxWidth,
+				)}>{d.ancestryClassLevel}</span
+			>
+			<span
+				class="pdf-text"
+				style={ts(
+					c.heightWeightSpeed.x,
+					c.heightWeightSpeed.y,
+					c.heightWeightSpeed.fontSize,
+					false,
+					c.heightWeightSpeed.maxWidth,
+				)}>{d.heightWeightSpeed}</span
+			>
+			<span class="pdf-text" style={ts(c.hitDice.x, c.hitDice.y, c.hitDice.fontSize)}
+				>{d.hitDice}</span
+			>
+
+			<!-- Combat stats -->
+			<span class="pdf-text" style={ts(c.hitPoints.x, c.hitPoints.y, c.hitPoints.fontSize, true)}
+				>{d.hitPoints}</span
+			>
+			<span class="pdf-text" style={ts(c.armor.x, c.armor.y, c.armor.fontSize, true)}
+				>{d.armor}</span
+			>
+			<span class="pdf-text" style={ts(c.initiative.x, c.initiative.y, c.initiative.fontSize, true)}
+				>{d.initiative}</span
+			>
+			<span class="pdf-text" style={ts(c.wounds.x, c.wounds.y, c.wounds.fontSize, true)}
+				>{d.wounds}</span
+			>
+
+			<!-- Ability scores -->
+			{#each ABILITY_KEYS as key}
+				<span
+					class="pdf-text"
+					style={ts(c.abilities[key].x, c.abilities[key].y, c.abilities[key].fontSize, true)}
+					>{d.abilities[key]}</span
+				>
+			{/each}
+
+			<!-- Saving throw arrows -->
+			{#each ABILITY_KEYS as key}
+				{@const arrow = c.saveArrows[key]}
+				{@const mode = d.saveRollModes[key]}
+				{@const size = arrow.fontSize * 0.6}
+				{#if mode > 0}
+					<div
+						class="pdf-arrow"
+						style="left:{arrow.upX - size}px;top:{arrow.upY -
+							size}px;border-left:{size}px solid transparent;border-right:{size}px solid transparent;border-bottom:{size *
+							1.5}px solid black;"
+					></div>
+				{:else if mode < 0}
+					<div
+						class="pdf-arrow"
+						style="left:{arrow.downX - size}px;top:{arrow.downY -
+							size *
+								0.5}px;border-left:{size}px solid transparent;border-right:{size}px solid transparent;border-top:{size *
+							1.5}px solid black;"
+					></div>
+				{/if}
+			{/each}
+
+			<!-- Skills -->
+			{#each SKILL_KEYS as key}
+				<span class="pdf-text" style={ts(c.skills[key].x, c.skills[key].y, c.skills[key].fontSize)}
+					>{d.skills[key]}</span
+				>
+			{/each}
+
+			<!-- Column content -->
+			{#each [0, 1, 2] as i}
+				{@const colLineHeight = previewState.lineHeights[i]}
+				{@const colBaseHeight = col.linesPerColumn * col.lineHeight + 28}
+				{@const colHeight = Math.floor(colBaseHeight / colLineHeight) * colLineHeight}
+				{@const isOverLimit = previewState.overLimit[i]}
+				<div
+					class="pdf-column"
+					style="left:{col.leftMargin +
+						i * (col.columnWidth + col.columnGap)}px;top:{col.startY}px;width:{col.columnWidth -
+						4}px;line-height:{colLineHeight}px;height:{colHeight}px;"
+				>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+					{@html previewState.columnContent[i]}
+					{#if isOverLimit}
+						<span class="pdf-column__ellipsis">…</span>
+					{/if}
+				</div>
+			{/each}
 		</div>
-	{:else if state.hasError}
-		<div class="pdf-preview-dialog__loading">
-			{localize('NIMBLE.pdfExport.error')}
-		</div>
-	{:else if state.previewUrl}
-		<iframe src={state.previewUrl} class="pdf-preview-dialog__iframe" title="PDF Preview"></iframe>
-	{/if}
+	</div>
 </article>
 
 <style lang="scss">
 	.pdf-preview-dialog {
-		display: flex;
-		flex-direction: column;
-		height: 100%;
 		padding: 0.5rem;
+		overflow: hidden;
+	}
 
-		&__loading {
-			flex: 1;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 0.5rem;
-			color: var(--nimble-medium-text-color);
-			font-size: var(--nimble-sm-text);
+	.pdf-preview-wrapper {
+		position: relative;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.pdf-sheet {
+		position: relative;
+		width: 612px;
+		height: 792px;
+
+		&__bg {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 612px;
+			height: 792px;
+		}
+	}
+
+	.pdf-text {
+		position: absolute;
+		font-family: Helvetica, Arial, sans-serif;
+		color: black;
+		line-height: 1;
+	}
+
+	.pdf-arrow {
+		position: absolute;
+		width: 0;
+		height: 0;
+	}
+
+	.pdf-column {
+		position: absolute;
+		font-size: 6px;
+		font-family: Helvetica, Arial, sans-serif;
+		color: black;
+		overflow: hidden;
+
+		&__ellipsis {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			background: white;
+			padding: 0 1px;
+			line-height: 1.2;
+			pointer-events: none;
 		}
 
-		&__iframe {
-			flex: 1;
-			width: 100%;
-			height: 100%;
-			border: none;
-			border-radius: 4px;
-			background: white;
+		:global(h1),
+		:global(h2),
+		:global(h3),
+		:global(h4),
+		:global(h5),
+		:global(h6) {
+			font-size: inherit;
+			font-weight: bold;
+			color: black;
+			margin: 0;
+			line-height: inherit;
+		}
+
+		:global(p),
+		:global(ul),
+		:global(ol),
+		:global(li) {
+			margin: 0;
+			padding: 0;
 		}
 	}
 </style>

@@ -9,7 +9,7 @@ interface ImportDialog {
 	loadFile(file: File | null | undefined): Promise<void>;
 }
 
-export function createImportPlayerCharacterDialogState(dialog: ImportDialog) {
+export function createImportPlayerCharacterDialogState(getDialog: () => ImportDialog) {
 	let fileInput = $state<HTMLInputElement | null>(null);
 	let isDragging = $state(false);
 
@@ -19,7 +19,7 @@ export function createImportPlayerCharacterDialogState(dialog: ImportDialog) {
 
 	async function onFileChange(event: Event): Promise<void> {
 		const input = event.currentTarget as HTMLInputElement;
-		await dialog.loadFile(input.files?.[0]);
+		await getDialog().loadFile(input.files?.[0]);
 		// Reset so selecting the same file again still fires a change event.
 		input.value = '';
 	}
@@ -28,7 +28,7 @@ export function createImportPlayerCharacterDialogState(dialog: ImportDialog) {
 		event.preventDefault();
 		isDragging = false;
 		const file = event.dataTransfer?.files?.[0];
-		if (file) dialog.loadFile(file);
+		if (file) void getDialog().loadFile(file);
 	}
 
 	function onDragOver(event: DragEvent): void {
