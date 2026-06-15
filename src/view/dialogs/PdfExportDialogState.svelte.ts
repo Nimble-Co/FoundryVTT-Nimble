@@ -30,8 +30,22 @@ export function createPdfExportDialogState(
 		template: 'lined',
 		lineHeights: [DEFAULT_LINE_HEIGHT, DEFAULT_LINE_HEIGHT, DEFAULT_LINE_HEIGHT],
 		overLimit: [false, false, false],
+		activeSheet: 'main' as 'main' | 'additional',
+		additionalColumnContent: ['', '', ''],
+		additionalLineHeights: [DEFAULT_LINE_HEIGHT, DEFAULT_LINE_HEIGHT, DEFAULT_LINE_HEIGHT],
+		additionalOverLimit: [false, false, false],
 	});
 	let activeColumnTab = $state(1);
+	let activeSheetTab = $state<'main' | 'additional'>('main');
+	let activeAdditionalColumnTab = $state(1);
+	let lastActiveAdditionalTab = $state(1);
+	let lastActiveSheetTab = $state<'main' | 'additional'>('main');
+	let additionalCol1Html = $state('');
+	let additionalCol2Html = $state('');
+	let additionalCol3Html = $state('');
+	let additionalCol1LineHeight = $state(DEFAULT_LINE_HEIGHT);
+	let additionalCol2LineHeight = $state(DEFAULT_LINE_HEIGHT);
+	let additionalCol3LineHeight = $state(DEFAULT_LINE_HEIGHT);
 	let selectedItems = $state(new Set<string>());
 	let searchQuery = $state('');
 	let expandedCategories = $state(new Set<string>());
@@ -48,16 +62,49 @@ export function createPdfExportDialogState(
 		previewState.columnContent = [column1Html, column2Html, column3Html];
 		previewState.lineHeights = [column1LineHeight, column2LineHeight, column3LineHeight];
 		previewState.overLimit = [column1OverLimit, column2OverLimit, column3OverLimit];
+		previewState.activeSheet = activeSheetTab;
+		previewState.additionalColumnContent = [
+			additionalCol1Html,
+			additionalCol2Html,
+			additionalCol3Html,
+		];
+		previewState.additionalLineHeights = [
+			additionalCol1LineHeight,
+			additionalCol2LineHeight,
+			additionalCol3LineHeight,
+		];
+		previewState.additionalOverLimit = [
+			additionalCol1OverLimit,
+			additionalCol2OverLimit,
+			additionalCol3OverLimit,
+		];
 	});
 
 	$effect(() => {
 		if (!editorElement) return;
-		if (activeColumnTab !== lastActiveTab || editorElement.innerHTML === '') {
-			lastActiveTab = activeColumnTab;
-			let content = column1Html;
-			if (activeColumnTab === 2) content = column2Html;
-			if (activeColumnTab === 3) content = column3Html;
-			editorElement.innerHTML = content;
+		const curMainTab = activeColumnTab;
+		const curAdditTab = activeAdditionalColumnTab;
+		const curSheet = activeSheetTab;
+		const needsUpdate =
+			curSheet !== lastActiveSheetTab ||
+			curMainTab !== lastActiveTab ||
+			curAdditTab !== lastActiveAdditionalTab ||
+			editorElement.innerHTML === '';
+		if (needsUpdate) {
+			lastActiveSheetTab = curSheet;
+			lastActiveTab = curMainTab;
+			lastActiveAdditionalTab = curAdditTab;
+			if (curSheet === 'main') {
+				editorElement.innerHTML =
+					curMainTab === 1 ? column1Html : curMainTab === 2 ? column2Html : column3Html;
+			} else {
+				editorElement.innerHTML =
+					curAdditTab === 1
+						? additionalCol1Html
+						: curAdditTab === 2
+							? additionalCol2Html
+							: additionalCol3Html;
+			}
 		}
 	});
 
@@ -84,6 +131,17 @@ export function createPdfExportDialogState(
 		return Math.round(34277 / lh - 191);
 	}
 
+	function additionalColumnCapacityAt(lh: number): number {
+		// Additional sheet columns are ~705 pts tall vs 534 pts for main sheet
+		return Math.round((34277 / lh - 191) * (705 / 534));
+	}
+
+	function activeSheetCapacityAt(lh: number): number {
+		return activeSheetTab === 'additional'
+			? additionalColumnCapacityAt(lh)
+			: Math.round(34277 / lh - 191);
+	}
+
 	const column1Count = $derived(getPlainTextFromHtml(column1Html).length);
 	const column2Count = $derived(getPlainTextFromHtml(column2Html).length);
 	const column3Count = $derived(getPlainTextFromHtml(column3Html).length);
@@ -94,6 +152,16 @@ export function createPdfExportDialogState(
 	const column2OverLimit = $derived(column2Count > column2Capacity);
 	const column3OverLimit = $derived(column3Count > column3Capacity);
 
+	const additionalCol1Count = $derived(getPlainTextFromHtml(additionalCol1Html).length);
+	const additionalCol2Count = $derived(getPlainTextFromHtml(additionalCol2Html).length);
+	const additionalCol3Count = $derived(getPlainTextFromHtml(additionalCol3Html).length);
+	const additionalCol1Capacity = $derived(additionalColumnCapacityAt(additionalCol1LineHeight));
+	const additionalCol2Capacity = $derived(additionalColumnCapacityAt(additionalCol2LineHeight));
+	const additionalCol3Capacity = $derived(additionalColumnCapacityAt(additionalCol3LineHeight));
+	const additionalCol1OverLimit = $derived(additionalCol1Count > additionalCol1Capacity);
+	const additionalCol2OverLimit = $derived(additionalCol2Count > additionalCol2Capacity);
+	const additionalCol3OverLimit = $derived(additionalCol3Count > additionalCol3Capacity);
+
 	const columnTooltips = $derived.by(() => {
 		const tooltip = localize('NIMBLE.pdfExport.columnOverflow');
 		return [
@@ -103,25 +171,54 @@ export function createPdfExportDialogState(
 		];
 	});
 
+	const additionalColumnTooltips = $derived.by(() => {
+		const tooltip = localize('NIMBLE.pdfExport.columnOverflow');
+		return [
+			additionalCol1OverLimit ? tooltip : undefined,
+			additionalCol2OverLimit ? tooltip : undefined,
+			additionalCol3OverLimit ? tooltip : undefined,
+		];
+	});
+
 	const activeColumnCount = $derived.by(() => {
+		if (activeSheetTab === 'additional') {
+			if (activeAdditionalColumnTab === 1) return additionalCol1Count;
+			if (activeAdditionalColumnTab === 2) return additionalCol2Count;
+			return additionalCol3Count;
+		}
 		if (activeColumnTab === 1) return column1Count;
 		if (activeColumnTab === 2) return column2Count;
 		return column3Count;
 	});
 
 	const activeColumnCapacity = $derived.by(() => {
+		if (activeSheetTab === 'additional') {
+			if (activeAdditionalColumnTab === 1) return additionalCol1Capacity;
+			if (activeAdditionalColumnTab === 2) return additionalCol2Capacity;
+			return additionalCol3Capacity;
+		}
 		if (activeColumnTab === 1) return column1Capacity;
 		if (activeColumnTab === 2) return column2Capacity;
 		return column3Capacity;
 	});
 
 	const activeColumnLineHeight = $derived.by(() => {
+		if (activeSheetTab === 'additional') {
+			if (activeAdditionalColumnTab === 1) return additionalCol1LineHeight;
+			if (activeAdditionalColumnTab === 2) return additionalCol2LineHeight;
+			return additionalCol3LineHeight;
+		}
 		if (activeColumnTab === 1) return column1LineHeight;
 		if (activeColumnTab === 2) return column2LineHeight;
 		return column3LineHeight;
 	});
 
 	const activeColumnOverLimit = $derived.by(() => {
+		if (activeSheetTab === 'additional') {
+			if (activeAdditionalColumnTab === 1) return additionalCol1OverLimit;
+			if (activeAdditionalColumnTab === 2) return additionalCol2OverLimit;
+			return additionalCol3OverLimit;
+		}
 		if (activeColumnTab === 1) return column1OverLimit;
 		if (activeColumnTab === 2) return column2OverLimit;
 		return column3OverLimit;
@@ -129,9 +226,15 @@ export function createPdfExportDialogState(
 
 	function setActiveColumnLineHeight(value: number) {
 		const clamped = Math.max(10, Math.min(32, value));
-		if (activeColumnTab === 1) column1LineHeight = clamped;
-		else if (activeColumnTab === 2) column2LineHeight = clamped;
-		else column3LineHeight = clamped;
+		if (activeSheetTab === 'additional') {
+			if (activeAdditionalColumnTab === 1) additionalCol1LineHeight = clamped;
+			else if (activeAdditionalColumnTab === 2) additionalCol2LineHeight = clamped;
+			else additionalCol3LineHeight = clamped;
+		} else {
+			if (activeColumnTab === 1) column1LineHeight = clamped;
+			else if (activeColumnTab === 2) column2LineHeight = clamped;
+			else column3LineHeight = clamped;
+		}
 	}
 
 	function getCategoryLabel(category: string): string {
@@ -212,12 +315,14 @@ export function createPdfExportDialogState(
 	function handleEditorInput() {
 		if (!editorElement) return;
 		const html = editorElement.innerHTML;
-		if (activeColumnTab === 1) {
-			column1Html = html;
-		} else if (activeColumnTab === 2) {
-			column2Html = html;
+		if (activeSheetTab === 'additional') {
+			if (activeAdditionalColumnTab === 1) additionalCol1Html = html;
+			else if (activeAdditionalColumnTab === 2) additionalCol2Html = html;
+			else additionalCol3Html = html;
 		} else {
-			column3Html = html;
+			if (activeColumnTab === 1) column1Html = html;
+			else if (activeColumnTab === 2) column2Html = html;
+			else column3Html = html;
 		}
 	}
 
@@ -245,12 +350,22 @@ export function createPdfExportDialogState(
 		column1LineHeight = DEFAULT_LINE_HEIGHT;
 		column2LineHeight = DEFAULT_LINE_HEIGHT;
 		column3LineHeight = DEFAULT_LINE_HEIGHT;
+		additionalCol1Html = '';
+		additionalCol2Html = '';
+		additionalCol3Html = '';
+		additionalCol1LineHeight = DEFAULT_LINE_HEIGHT;
+		additionalCol2LineHeight = DEFAULT_LINE_HEIGHT;
+		additionalCol3LineHeight = DEFAULT_LINE_HEIGHT;
 		// The $effect only refreshes the editor on tab changes, so update the active column directly
 		if (editorElement) {
-			let activeContent = freshContent[0];
-			if (activeColumnTab === 2) activeContent = freshContent[1];
-			if (activeColumnTab === 3) activeContent = freshContent[2];
-			editorElement.innerHTML = activeContent;
+			if (activeSheetTab === 'main') {
+				let activeContent = freshContent[0];
+				if (activeColumnTab === 2) activeContent = freshContent[1];
+				if (activeColumnTab === 3) activeContent = freshContent[2];
+				editorElement.innerHTML = activeContent;
+			} else {
+				editorElement.innerHTML = '';
+			}
 		}
 	}
 
@@ -265,6 +380,12 @@ export function createPdfExportDialogState(
 				columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
 				template: selectedTemplate,
 				lineHeights: [column1LineHeight, column2LineHeight, column3LineHeight],
+				additionalColumnContent: [additionalCol1Html, additionalCol2Html, additionalCol3Html],
+				additionalLineHeights: [
+					additionalCol1LineHeight,
+					additionalCol2LineHeight,
+					additionalCol3LineHeight,
+				],
 			});
 			ui.notifications?.info(localize('NIMBLE.pdfExport.success'));
 		} catch (error) {
@@ -315,6 +436,18 @@ export function createPdfExportDialogState(
 		set activeColumnTab(v: number) {
 			activeColumnTab = v;
 		},
+		get activeSheetTab() {
+			return activeSheetTab;
+		},
+		set activeSheetTab(v: 'main' | 'additional') {
+			activeSheetTab = v;
+		},
+		get activeAdditionalColumnTab() {
+			return activeAdditionalColumnTab;
+		},
+		set activeAdditionalColumnTab(v: number) {
+			activeAdditionalColumnTab = v;
+		},
 		get selectedItems() {
 			return selectedItems;
 		},
@@ -354,6 +487,27 @@ export function createPdfExportDialogState(
 		get columnTooltips() {
 			return columnTooltips;
 		},
+		get additionalCol1Count() {
+			return additionalCol1Count;
+		},
+		get additionalCol2Count() {
+			return additionalCol2Count;
+		},
+		get additionalCol3Count() {
+			return additionalCol3Count;
+		},
+		get additionalCol1OverLimit() {
+			return additionalCol1OverLimit;
+		},
+		get additionalCol2OverLimit() {
+			return additionalCol2OverLimit;
+		},
+		get additionalCol3OverLimit() {
+			return additionalCol3OverLimit;
+		},
+		get additionalColumnTooltips() {
+			return additionalColumnTooltips;
+		},
 		get activeColumnCount() {
 			return activeColumnCount;
 		},
@@ -367,7 +521,8 @@ export function createPdfExportDialogState(
 			return activeColumnLineHeight;
 		},
 		setActiveColumnLineHeight,
-		columnCapacityAt,
+		activeSheetCapacityAt,
+		additionalColumnCapacityAt,
 		get editorElement() {
 			return editorElement;
 		},

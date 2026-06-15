@@ -7,7 +7,12 @@ import { drawStyledText } from './drawStyledText.ts';
 import { extractCharacterData } from './extractCharacterData.ts';
 import { parseHtmlToStyledSegments } from './parseHtmlToStyledSegments.ts';
 import { pdfCoordinates } from './pdfCoordinates.ts';
-import type { ExportOptions, LinedTextAreaConfig, TextPosition } from './pdfExport.types.ts';
+import type {
+	ExportOptions,
+	LinedTextAreaConfig,
+	TemplateType,
+	TextPosition,
+} from './pdfExport.types.ts';
 
 /** PDF page dimensions in points (letter size) */
 const PAGE_WIDTH = 612;
@@ -51,6 +56,115 @@ function drawStyledColumnContent(
 			maxLines: colMaxLines,
 		});
 	}
+}
+
+async function drawAdditionalPage(
+	pdf: jsPDF,
+	actor: NimbleCharacter,
+	additionalColumnContent: [string, string, string],
+	template: TemplateType,
+	lineHeights?: [number, number, number],
+): Promise<void> {
+	pdf.addPage();
+
+	const as = pdfCoordinates.additionalSheet;
+	const col = as.linedTextArea;
+	const data = extractCharacterData(actor);
+	const colBottom = as.logoY - 10;
+
+	// Header border
+	pdf.setDrawColor(0, 0, 0);
+	pdf.setLineWidth(0.5);
+	pdf.rect(8, as.headerTop, PAGE_WIDTH - 16, as.headerHeight, 'S');
+
+	// Header vertical dividers
+	for (const x of as.dividerXs) {
+		pdf.line(x, as.headerTop, x, as.headerTop + as.headerHeight);
+	}
+
+	// Header field labels
+	pdf.setFont('helvetica', 'normal');
+	pdf.setFontSize(4.5);
+	pdf.setTextColor(120, 120, 120);
+	const labelY = as.headerTop + 8;
+	pdf.text('Name', as.characterName.x, labelY);
+	pdf.text('Ancestry / Class / Level', as.ancestryClassLevel.x, labelY);
+	pdf.text('Height / Weight / Speed', as.heightWeightSpeed.x, labelY);
+	pdf.text('Hit Dice', as.hitDice.x, labelY, { align: 'center' });
+
+	// Header field values
+	pdf.setTextColor(0, 0, 0);
+	pdf.setFont('helvetica', 'bold');
+	pdf.setFontSize(as.characterName.fontSize);
+	pdf.text(data.characterName, as.characterName.x, as.characterName.y, {
+		maxWidth: as.characterName.maxWidth,
+	});
+
+	pdf.setFont('helvetica', 'normal');
+	pdf.setFontSize(as.ancestryClassLevel.fontSize);
+	pdf.text(data.ancestryClassLevel, as.ancestryClassLevel.x, as.ancestryClassLevel.y, {
+		maxWidth: as.ancestryClassLevel.maxWidth,
+	});
+
+	pdf.setFontSize(as.heightWeightSpeed.fontSize);
+	pdf.text(data.heightWeightSpeed, as.heightWeightSpeed.x, as.heightWeightSpeed.y, {
+		maxWidth: as.heightWeightSpeed.maxWidth,
+	});
+
+	pdf.setFontSize(as.hitDice.fontSize);
+	pdf.text(data.hitDice, as.hitDice.x, as.hitDice.y, { align: 'center' });
+
+	// Column area outer border
+	pdf.setDrawColor(0, 0, 0);
+	pdf.setLineWidth(0.3);
+	const colAreaLeft = col.leftMargin - 2;
+	const colAreaWidth = 3 * col.columnWidth + 2 * col.columnGap + 4;
+	pdf.rect(colAreaLeft, col.startY - 2, colAreaWidth, colBottom - col.startY + 2, 'S');
+
+	// Column vertical dividers
+	for (let i = 1; i < 3; i++) {
+		const x =
+			col.leftMargin + i * (col.columnWidth + col.columnGap) - Math.floor(col.columnGap / 2);
+		pdf.line(x, col.startY - 2, x, colBottom);
+	}
+
+	// Horizontal rules for lined template (drawn at 22pt spacing regardless of user line height)
+	if (template === 'lined') {
+		pdf.setDrawColor(200, 200, 200);
+		pdf.setLineWidth(0.15);
+		const maxY = colBottom;
+		for (let lineY = col.startY; lineY <= maxY; lineY += col.lineHeight) {
+			const rowLeft = col.leftMargin;
+			const rowRight = col.leftMargin + 3 * col.columnWidth + 2 * col.columnGap;
+			pdf.line(rowLeft, lineY, rowRight, lineY);
+		}
+	}
+
+	// Column content
+	const colHeight = colBottom - col.startY;
+	for (let colIndex = 0; colIndex < 3; colIndex++) {
+		const html = additionalColumnContent[colIndex];
+		if (!html) continue;
+		const colLineHeight = lineHeights?.[colIndex] ?? col.lineHeight;
+		const colMaxLines = Math.floor(colHeight / colLineHeight);
+		const styledLines = parseHtmlToStyledSegments(html);
+		drawStyledText({
+			pdf,
+			lines: styledLines,
+			startX: col.leftMargin + colIndex * (col.columnWidth + col.columnGap),
+			startY: col.startY,
+			maxWidth: col.columnWidth - 4,
+			lineHeight: colLineHeight,
+			fontSize: col.fontSize,
+			maxLines: colMaxLines,
+		});
+	}
+
+	// Logo
+	pdf.setFont('helvetica', 'bold');
+	pdf.setFontSize(10);
+	pdf.setTextColor(0, 0, 0);
+	pdf.text('NIMBLE', PAGE_WIDTH / 2, as.logoY, { align: 'center' });
 }
 
 /**
@@ -175,6 +289,17 @@ async function generateCharacterPdf(
 
 	// Draw styled column content
 	drawStyledColumnContent(pdf, columnContent, pdfCoordinates.linedTextArea, options.lineHeights);
+
+	// Draw additional page if content exists
+	if (options.additionalColumnContent?.some((c) => c.trim() !== '')) {
+		await drawAdditionalPage(
+			pdf,
+			actor,
+			options.additionalColumnContent as [string, string, string],
+			template,
+			options.additionalLineHeights,
+		);
+	}
 
 	return pdf;
 }

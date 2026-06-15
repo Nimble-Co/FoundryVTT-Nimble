@@ -30,6 +30,18 @@ export interface SaveArrowPosition {
 	fontSize: number;
 }
 
+export interface AdditionalSheetConfig {
+	headerTop: number;
+	headerHeight: number;
+	dividerXs: [number, number, number];
+	characterName: TextPosition;
+	ancestryClassLevel: TextPosition;
+	heightWeightSpeed: TextPosition;
+	hitDice: TextPosition;
+	linedTextArea: LinedTextAreaConfig;
+	logoY: number;
+}
+
 export interface PdfCoordinates {
 	characterName: TextPosition;
 	ancestryClassLevel: TextPosition;
@@ -64,6 +76,7 @@ export interface PdfCoordinates {
 		stealth: TextPosition;
 	};
 	linedTextArea: LinedTextAreaConfig;
+	additionalSheet: AdditionalSheetConfig;
 }
 
 // --- HTML parsing types ---
@@ -104,4 +117,6 @@ export interface ExportOptions {
 	template?: TemplateType;
 	lineHeights?: [number, number, number];
 	returnPdf?: boolean;
+	additionalColumnContent?: [string, string, string];
+	additionalLineHeights?: [number, number, number];
 }

@@ -2500,6 +2500,8 @@
 			"columnOverflow": "Content exceeds column capacity. Some text may be cut off.",
 			"search": "Search items...",
 			"resetToDefault": "Reset to Default",
+			"mainSheet": "Main Sheet",
+			"additionalSheet": "Additional Sheet",
 			"selectAll": "Select All",
 			"deselectAll": "Deselect All",
 			"categories": {

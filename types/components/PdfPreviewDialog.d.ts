@@ -6,6 +6,10 @@ export interface PreviewState {
 	template: TemplateType;
 	lineHeights: [number, number, number];
 	overLimit: [boolean, boolean, boolean];
+	activeSheet: 'main' | 'additional';
+	additionalColumnContent: [string, string, string];
+	additionalLineHeights: [number, number, number];
+	additionalOverLimit: [boolean, boolean, boolean];
 }
 
 export interface PdfPreviewDialogProps {

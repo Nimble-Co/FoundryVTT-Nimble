@@ -118,7 +118,12 @@
 				onclick={insertSelected}
 			>
 				<i class="fa-solid fa-plus"></i>
-				{localize('NIMBLE.pdfExport.insertToColumn', { column: state.activeColumnTab })}
+				{localize('NIMBLE.pdfExport.insertToColumn', {
+					column:
+						state.activeSheetTab === 'main'
+							? state.activeColumnTab
+							: state.activeAdditionalColumnTab,
+				})}
 			</button>
 			<!-- Invisible spacer mirrors the char-count row height so the button bottom aligns with the text box bottom -->
 			<div
@@ -147,6 +152,26 @@
 				</button>
 			</div>
 
+			<!-- Sheet Tabs -->
+			<div class="pdf-export-dialog__sheet-tabs">
+				<button
+					type="button"
+					class="pdf-export-dialog__sheet-tab"
+					class:pdf-export-dialog__sheet-tab--active={state.activeSheetTab === 'main'}
+					onclick={() => (state.activeSheetTab = 'main')}
+				>
+					{localize('NIMBLE.pdfExport.mainSheet')}
+				</button>
+				<button
+					type="button"
+					class="pdf-export-dialog__sheet-tab"
+					class:pdf-export-dialog__sheet-tab--active={state.activeSheetTab === 'additional'}
+					onclick={() => (state.activeSheetTab = 'additional')}
+				>
+					{localize('NIMBLE.pdfExport.additionalSheet')}
+				</button>
+			</div>
+
 			<!-- Template Selection -->
 			<div class="pdf-export-dialog__template-selection">
 				<span class="pdf-export-dialog__template-label"
@@ -171,27 +196,47 @@
 			<!-- Column Tabs -->
 			<nav class="pdf-export-dialog__tabs">
 				{#each [1, 2, 3] as num}
-					{@const isOverLimit =
-						(num === 1 && state.column1OverLimit) ||
-						(num === 2 && state.column2OverLimit) ||
-						(num === 3 && state.column3OverLimit)}
+					{@const isMain = state.activeSheetTab === 'main'}
+					{@const count = isMain
+						? num === 1
+							? state.column1Count
+							: num === 2
+								? state.column2Count
+								: state.column3Count
+						: num === 1
+							? state.additionalCol1Count
+							: num === 2
+								? state.additionalCol2Count
+								: state.additionalCol3Count}
+					{@const isOverLimit = isMain
+						? num === 1
+							? state.column1OverLimit
+							: num === 2
+								? state.column2OverLimit
+								: state.column3OverLimit
+						: num === 1
+							? state.additionalCol1OverLimit
+							: num === 2
+								? state.additionalCol2OverLimit
+								: state.additionalCol3OverLimit}
+					{@const activeTab = isMain ? state.activeColumnTab : state.activeAdditionalColumnTab}
+					{@const tooltip = isMain
+						? state.columnTooltips[num - 1]
+						: state.additionalColumnTooltips[num - 1]}
 					<button
 						type="button"
 						class="pdf-export-dialog__tab"
-						class:pdf-export-dialog__tab--active={state.activeColumnTab === num}
+						class:pdf-export-dialog__tab--active={activeTab === num}
 						class:pdf-export-dialog__tab--over-limit={isOverLimit}
-						data-tooltip={state.columnTooltips[num - 1]}
+						data-tooltip={tooltip}
 						data-tooltip-direction="UP"
-						onclick={() => (state.activeColumnTab = num)}
+						onclick={() => {
+							if (isMain) state.activeColumnTab = num;
+							else state.activeAdditionalColumnTab = num;
+						}}
 					>
 						{localize('NIMBLE.pdfExport.column', { number: num })}
-						{#if num === 1}
-							<span class="pdf-export-dialog__tab-count">({state.column1Count})</span>
-						{:else if num === 2}
-							<span class="pdf-export-dialog__tab-count">({state.column2Count})</span>
-						{:else}
-							<span class="pdf-export-dialog__tab-count">({state.column3Count})</span>
-						{/if}
+						<span class="pdf-export-dialog__tab-count">({count})</span>
 					</button>
 				{/each}
 			</nav>
@@ -260,7 +305,7 @@
 					type="button"
 					class="pdf-export-dialog__toolbar-btn"
 					title="Decrease line spacing ({state.activeColumnLineHeight} → {state.activeColumnLineHeight -
-						1}) — fits ~{state.columnCapacityAt(
+						1}) — fits ~{state.activeSheetCapacityAt(
 						state.activeColumnLineHeight - 1,
 					)} characters per column"
 					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight - 1)}
@@ -271,7 +316,7 @@
 					type="button"
 					class="pdf-export-dialog__toolbar-btn"
 					title="Increase line spacing ({state.activeColumnLineHeight} → {state.activeColumnLineHeight +
-						1}) — fits ~{state.columnCapacityAt(
+						1}) — fits ~{state.activeSheetCapacityAt(
 						state.activeColumnLineHeight + 1,
 					)} characters per column"
 					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight + 1)}
@@ -775,6 +820,35 @@
 			&--over-limit {
 				color: hsl(0, 65%, 50%);
 				font-weight: 600;
+			}
+		}
+
+		&__sheet-tabs {
+			display: flex;
+			gap: 0.25rem;
+			border-bottom: 2px solid var(--nimble-card-border-color);
+			margin-bottom: -0.5rem;
+		}
+
+		&__sheet-tab {
+			padding: 0.375rem 0.75rem;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-bottom: none;
+			border-radius: 4px 4px 0 0;
+			cursor: pointer;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+
+			&--active {
+				background: var(--nimble-accent-color, hsl(210, 70%, 50%));
+				color: white;
+				border-color: var(--nimble-accent-color, hsl(210, 70%, 50%));
+			}
+
+			&:hover:not(&--active) {
+				background: var(--nimble-box-background-hover-color, var(--nimble-box-background-color));
 			}
 		}
 	}
