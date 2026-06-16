@@ -1,0 +1,34 @@
+// Styling for FoundryVTT RollTableSheet and TableResultConfig Applications
+//
+// prose-mirror (display:flex; min-height:200px) gives .editor-container (flex:1)
+// zero height because min-height is not a definite size for the flex algorithm.
+// Switching to display:block with an explicit height and overflow:hidden fixes the
+// editor layout and prevents the positioned prose-mirror element from covering the
+// form footer button below it via stacking-context overflow.
+.system-nimble {
+  .application.table-result-config {
+    prose-mirror[name="description"] {
+      display: block;
+      height: 200px;
+      overflow: hidden;
+
+      .editor-container {
+        height: calc(100% - 68px);
+      }
+    }
+  }
+
+  .application.roll-table-sheet {
+    .tab[data-tab="summary"] {
+      prose-mirror[name="description"] {
+        display: block;
+        height: 200px;
+        overflow: hidden;
+
+        .editor-container {
+          height: calc(100% - 68px);
+        }
+      }
+    }
+  }
+}
