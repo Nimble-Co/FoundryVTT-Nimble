@@ -1,9 +1,9 @@
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-type MovementMode = 'fly' | 'climb' | 'swim' | 'burrow';
+type MovementMode = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
 
-const ALLOWED_MODES: ReadonlySet<string> = new Set(['fly', 'climb', 'swim', 'burrow']);
+const ALLOWED_MODES: ReadonlySet<string> = new Set(['walk', 'fly', 'climb', 'swim', 'burrow']);
 
 function schema() {
 	const { fields } = foundry.data;
@@ -15,7 +15,7 @@ function schema() {
 			initial: 'fly',
 			label: 'NIMBLE.rules.grantMovement.mode.label',
 			hint: 'NIMBLE.rules.grantMovement.mode.hint',
-			choices: ['fly', 'climb', 'swim', 'burrow'],
+			choices: ['walk', 'fly', 'climb', 'swim', 'burrow'],
 		}),
 		speed: new fields.StringField(
 			withWidget({
@@ -55,20 +55,20 @@ interface ActorSource {
 }
 
 /**
- * Rule that grants a base movement mode (fly, climb, swim, burrow).
+ * Rule that grants a base movement mode (walk, fly, climb, swim, burrow).
  *
  * Unlike speedBonus which adds to an existing speed, grantMovement sets a base
  * speed for a movement mode. Multiple grants use Math.max — the highest granted
  * base wins. speedBonus then stacks on top additively.
  *
  * The speed field supports formulas: '@attributes.movement.walk' gives "fly = walk speed",
- * while '12' gives a fixed fly speed of 12.
+ * while '12' gives a fixed speed of 12.
  *
- * Walk is intentionally excluded from mode choices — walk speed is always present
- * on every actor and is modified via speedBonus, not granted.
+ * Walk is supported: the final speed becomes max(grant, actor's source walk base),
+ * so a grant lower than the actor's native speed has no effect.
  *
  * Grants are accumulated in actor.system.movementGrants during both data prep phases.
- * The final movement value is computed as: max(all grants) + bonuses already applied.
+ * The final movement value is computed as: max(grant, sourceBase) + bonuses already applied.
  * This ensures speedBonus values stack on top of the granted base correctly.
  *
  * Uses two-phase processing (matching speedBonus):
@@ -143,8 +143,11 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 		const liveSpeed = actorSystem.system.attributes.movement[this.mode] ?? 0;
 		const appliedBonuses = liveSpeed - sourceBase - previousGrant;
 
-		// Final speed = highest grant + source base + bonuses from speedBonus
-		const finalSpeed = bestGrant + sourceBase + Math.max(0, appliedBonuses);
+		// Final speed = max(grant, sourceBase) + bonuses from speedBonus.
+		// Math.max here handles walk (sourceBase > 0): a grant lower than the
+		// actor's native speed has no effect, and the grant only wins when it's
+		// higher. For modes with sourceBase=0 this is equivalent to the old formula.
+		const finalSpeed = Math.max(bestGrant, sourceBase) + Math.max(0, appliedBonuses);
 		foundry.utils.setProperty(actor.system, `attributes.movement.${this.mode}`, finalSpeed);
 	}
 

@@ -800,7 +800,7 @@
 				}
 			},
 			"grantMovement": {
-				"description": "Grant a base movement mode (fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
+				"description": "Grant a base movement mode (walk, fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
 				"mode": {
 					"label": "Movement mode",
 					"hint": "Which movement mode to grant."
