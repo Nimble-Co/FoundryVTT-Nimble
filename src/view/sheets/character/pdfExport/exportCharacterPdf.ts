@@ -29,7 +29,9 @@ function drawStyledColumnContent(
 ): void {
 	const { startY, leftMargin, columnWidth, columnGap, linesPerColumn, lineHeight, fontSize } =
 		config;
-	const defaultColumnHeight = linesPerColumn * lineHeight + 28;
+	// Height of the ruled writing area. At the default line height this yields exactly
+	// `linesPerColumn` lines; a smaller per-column line height fits proportionally more.
+	const defaultColumnHeight = linesPerColumn * lineHeight;
 
 	function getColumnX(column: number): number {
 		return leftMargin + column * (columnWidth + columnGap);
@@ -42,7 +44,8 @@ function drawStyledColumnContent(
 		if (!html) continue;
 
 		const colLineHeight = lineHeights?.[colIndex] ?? lineHeight;
-		const colMaxLines = Math.floor(defaultColumnHeight / colLineHeight);
+		// +1e-6 guards against float error (e.g. 23*22.2/22.2 = 22.9999…) dropping a line.
+		const colMaxLines = Math.floor(defaultColumnHeight / colLineHeight + 1e-6);
 
 		const styledLines = parseHtmlToStyledSegments(html);
 		drawStyledText({
@@ -69,7 +72,6 @@ async function drawAdditionalPage(
 
 	const as = pdfCoordinates.additionalSheet;
 	const col = as.linedTextArea;
-	const mainCol = pdfCoordinates.linedTextArea;
 	const data = extractCharacterData(actor);
 
 	// Load the dedicated additional-sheet template (stats section already removed)
@@ -114,21 +116,21 @@ async function drawAdditionalPage(
 	pdf.setFontSize(pdfCoordinates.hitDice.fontSize);
 	pdf.text(data.hitDice, pdfCoordinates.hitDice.x, pdfCoordinates.hitDice.y, { align: 'center' });
 
-	// Column content
-	const colBottom = mainCol.startY + mainCol.linesPerColumn * mainCol.lineHeight + 28;
-	const colHeight = colBottom - col.startY;
+	// Column content. The ruled area is `linesPerColumn` lines tall at the default
+	// line height; `col.startY` is already the first baseline (see pdfCoordinates).
+	const colHeight = col.linesPerColumn * col.lineHeight;
 
 	for (let colIndex = 0; colIndex < 3; colIndex++) {
 		const html = additionalColumnContent[colIndex];
 		if (!html) continue;
 		const colLineHeight = lineHeights?.[colIndex] ?? col.lineHeight;
-		const colMaxLines = Math.floor(colHeight / colLineHeight);
+		const colMaxLines = Math.floor(colHeight / colLineHeight + 1e-6);
 		const styledLines = parseHtmlToStyledSegments(html);
 		drawStyledText({
 			pdf,
 			lines: styledLines,
 			startX: col.leftMargin + colIndex * (col.columnWidth + col.columnGap),
-			startY: col.startY + col.fontSize * 0.75,
+			startY: col.startY,
 			maxWidth: col.columnWidth - 4,
 			lineHeight: colLineHeight,
 			fontSize: col.fontSize,

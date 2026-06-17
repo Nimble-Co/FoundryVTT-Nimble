@@ -7,6 +7,7 @@
 		add,
 		addColBaseHeight,
 		col,
+		previewColumnTop,
 		ts,
 	} from './PdfPreviewDialog.utils.ts';
 	import { createPdfPreviewDialogState } from './PdfPreviewDialogState.svelte.ts';
@@ -126,13 +127,14 @@
 				<!-- Column content -->
 				{#each [0, 1, 2] as i}
 					{@const colLineHeight = previewState.lineHeights[i]}
-					{@const colBaseHeight = col.linesPerColumn * col.lineHeight + 28}
-					{@const colHeight = Math.floor(colBaseHeight / colLineHeight) * colLineHeight}
+					{@const colBaseHeight = col.linesPerColumn * col.lineHeight}
+					{@const colHeight = Math.floor(colBaseHeight / colLineHeight + 1e-6) * colLineHeight}
+					{@const colTop = previewColumnTop(col.startY, colLineHeight, col.fontSize)}
 					{@const isOverLimit = previewState.overLimit[i]}
 					<div
 						class="pdf-column"
 						style="left:{col.leftMargin +
-							i * (col.columnWidth + col.columnGap)}px;top:{col.startY}px;width:{col.columnWidth -
+							i * (col.columnWidth + col.columnGap)}px;top:{colTop}px;width:{col.columnWidth -
 							4}px;line-height:{colLineHeight}px;height:{colHeight}px;"
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -191,10 +193,13 @@
 					<!-- Additional sheet columns -->
 					{#each [0, 1, 2] as i}
 						{@const colLineHeight = previewState.additionalLineHeights[i]}
-						{@const colHeight = Math.floor(addColBaseHeight / colLineHeight) * colLineHeight}
+						{@const colHeight = Math.floor(addColBaseHeight / colLineHeight + 1e-6) * colLineHeight}
 						{@const isOverLimit = previewState.additionalOverLimit[i]}
-						{@const colTop =
-							add.linedTextArea.startY - (colLineHeight - add.linedTextArea.fontSize) / 2}
+						{@const colTop = previewColumnTop(
+							add.linedTextArea.startY,
+							colLineHeight,
+							add.linedTextArea.fontSize,
+						)}
 						<div
 							class="pdf-column"
 							style="left:{col.leftMargin +

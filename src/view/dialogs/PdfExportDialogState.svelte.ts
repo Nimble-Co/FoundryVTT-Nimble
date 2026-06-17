@@ -16,7 +16,8 @@ export function createPdfExportDialogState(
 ) {
 	const initialContent = generateInitialColumnContentHtml(getActor());
 
-	const DEFAULT_LINE_HEIGHT = 22;
+	// Matches the printed rule spacing on the sheet template (see pdfCoordinates).
+	const DEFAULT_LINE_HEIGHT = 22.2;
 
 	let column1Html = $state(initialContent[0]);
 	let column2Html = $state(initialContent[1]);

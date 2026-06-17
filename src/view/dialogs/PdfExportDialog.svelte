@@ -308,19 +308,23 @@
 				<button
 					type="button"
 					class="pdf-export-dialog__toolbar-btn"
-					title="Decrease line spacing ({state.activeColumnLineHeight} → {state.activeColumnLineHeight -
-						1}) — fits ~{state.activeSheetCapacityAt(
+					title="Decrease line spacing ({Math.round(state.activeColumnLineHeight)} → {Math.round(
+						state.activeColumnLineHeight - 1,
+					)}) — fits ~{state.activeSheetCapacityAt(
 						state.activeColumnLineHeight - 1,
 					)} characters per column"
 					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight - 1)}
 					>−</button
 				>
-				<span class="pdf-export-dialog__line-height-value">{state.activeColumnLineHeight}</span>
+				<span class="pdf-export-dialog__line-height-value"
+					>{Math.round(state.activeColumnLineHeight)}</span
+				>
 				<button
 					type="button"
 					class="pdf-export-dialog__toolbar-btn"
-					title="Increase line spacing ({state.activeColumnLineHeight} → {state.activeColumnLineHeight +
-						1}) — fits ~{state.activeSheetCapacityAt(
+					title="Increase line spacing ({Math.round(state.activeColumnLineHeight)} → {Math.round(
+						state.activeColumnLineHeight + 1,
+					)}) — fits ~{state.activeSheetCapacityAt(
 						state.activeColumnLineHeight + 1,
 					)} characters per column"
 					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight + 1)}

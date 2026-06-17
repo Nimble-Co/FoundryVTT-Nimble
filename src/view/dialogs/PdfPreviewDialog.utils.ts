@@ -23,9 +23,16 @@ export const col = pdfCoordinates.linedTextArea;
 /** Additional-sheet config. */
 export const add = pdfCoordinates.additionalSheet;
 
-/** Additional column height: same bottom as main sheet columns, starting from add column startY */
-export const addColBaseHeight =
-	col.startY + col.linesPerColumn * col.lineHeight + 28 - add.linedTextArea.startY;
+/** Additional column writing-area height: `linesPerColumn` lines at the default line height. */
+export const addColBaseHeight = add.linedTextArea.linesPerColumn * add.linedTextArea.lineHeight;
+
+/** CSS `top` for a column box so the first line's baseline lands at `startY` — which
+ *  in pdfCoordinates is the PDF baseline of the first line. Approximates the browser's
+ *  half-leading plus the Helvetica ascent so preview text rests just above each rule,
+ *  matching the deterministic PDF output as closely as CSS metrics allow. */
+export function previewColumnTop(startY: number, lineHeight: number, fontSize: number): number {
+	return startY - lineHeight / 2 - fontSize * 0.22;
+}
 
 /** Convert PDF (x, y, fontSize) to an absolute CSS `style` string.
  *  Center-aligned (no maxWidth): centers element at x via translateX(-50%).

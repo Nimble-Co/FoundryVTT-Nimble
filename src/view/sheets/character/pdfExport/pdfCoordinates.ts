@@ -207,15 +207,20 @@ const pdfCoordinates: PdfCoordinates = {
 		},
 	},
 
-	// Lined text area for features, spells, and inventory (3 columns, 23 lines each)
+	// Lined text area for features, spells, and inventory (3 columns, 23 lines each).
+	// Calibrated to the printed rules in CharacterSheet-Full.png: the first rule sits
+	// at y=241.2pt and rules are spaced 22.2pt apart. `startY` is the BASELINE of the
+	// first text line, placed 2pt above the first rule so text rests on the line
+	// without overlapping it; `lineHeight` matches the rule spacing so every line
+	// stays the same distance above its rule down the whole column.
 	linedTextArea: {
-		startY: 223,
+		startY: 239.2,
 		leftMargin: 21,
 		columnWidth: 190,
 		columnGap: 5,
 		columnCount: 3,
 		linesPerColumn: 23,
-		lineHeight: 22,
+		lineHeight: 22.2,
 		fontSize: 6,
 		headerFontSize: 7,
 		pageHeight: 792,
@@ -224,14 +229,17 @@ const pdfCoordinates: PdfCoordinates = {
 	// Additional sheet uses its own PNG (CharacterSheet-Additional[NoLines].png)
 	// with the stats section already removed by the image editor.
 	additionalSheet: {
+		// Calibrated to CharacterSheet-Additional.png: first rule at y=63.5pt, spacing
+		// 22.2pt, 31 rules. Same model as the main sheet — `startY` is the first
+		// baseline, 2pt above the first rule.
 		linedTextArea: {
-			startY: 53,
+			startY: 61.5,
 			leftMargin: 21,
 			columnWidth: 190,
 			columnGap: 5,
 			columnCount: 3,
 			linesPerColumn: 31,
-			lineHeight: 22,
+			lineHeight: 22.2,
 			fontSize: 6,
 			headerFontSize: 7,
 			pageHeight: 792,
