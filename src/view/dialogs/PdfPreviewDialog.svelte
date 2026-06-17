@@ -1,62 +1,31 @@
 <script lang="ts">
-	import { SYSTEM_PATH } from '#system';
 	import type { PdfPreviewDialogProps } from '#types/components/PdfPreviewDialog.js';
-	import { extractCharacterData } from '../sheets/character/pdfExport/extractCharacterData.ts';
 	import { pdfCoordinates as c } from '../sheets/character/pdfExport/pdfCoordinates.ts';
+	import {
+		ABILITY_KEYS,
+		SKILL_KEYS,
+		add,
+		addColBaseHeight,
+		col,
+		ts,
+	} from './PdfPreviewDialog.utils.ts';
+	import { createPdfPreviewDialogState } from './PdfPreviewDialogState.svelte.ts';
 
 	let { actor, previewState }: PdfPreviewDialogProps = $props();
 
-	let wrapperWidth = $state(0);
-	const scale = $derived(wrapperWidth > 0 ? wrapperWidth / 612 : 1);
-	const d = $derived(extractCharacterData(actor));
-	const templateSrc = $derived(
-		`${SYSTEM_PATH}/assets/pdf/${previewState.template === 'noLines' ? 'CharacterSheet-Full-NoLines.png' : 'CharacterSheet-Full.png'}`,
+	const state = createPdfPreviewDialogState(
+		() => actor,
+		() => previewState,
 	);
-	const additionalTemplateSrc = $derived(
-		`${SYSTEM_PATH}/assets/pdf/${previewState.template === 'noLines' ? 'CharacterSheet-Additional-NoLines.png' : 'CharacterSheet-Additional.png'}`,
-	);
-
-	const ABILITY_KEYS = ['strength', 'dexterity', 'intelligence', 'will'] as const;
-	const SKILL_KEYS = [
-		'arcana',
-		'examination',
-		'finesse',
-		'influence',
-		'insight',
-		'lore',
-		'might',
-		'naturecraft',
-		'perception',
-		'stealth',
-	] as const;
-
-	const col = c.linedTextArea;
-	const add = c.additionalSheet;
-
-	/** Page 2 only renders when at least one additional column has visible text */
-	const hasAdditionalContent = $derived(
-		previewState.additionalColumnContent.some((html) => html.replace(/<[^>]*>/g, '').trim() !== ''),
-	);
-
-	/** Additional column height: same bottom as main sheet columns, starting from add column startY */
-	const addColBaseHeight =
-		col.startY + col.linesPerColumn * col.lineHeight + 28 - add.linedTextArea.startY;
-
-	/** Convert PDF (x, y, fontSize) to an absolute CSS `style` string.
-	 *  Center-aligned (no maxWidth): centers element at x via translateX(-50%).
-	 *  Left-aligned (with maxWidth): anchors left edge at x. */
-	function ts(x: number, y: number, fs: number, bold = false, mw?: number): string {
-		const top = y - fs * 0.75;
-		const weight = bold ? 'font-weight:bold;' : '';
-		if (mw) {
-			return `left:${x}px;top:${top}px;font-size:${fs}px;${weight}max-width:${mw}px;white-space:normal;`;
-		}
-		return `left:${x}px;top:${top}px;font-size:${fs}px;${weight}transform:translateX(-50%);white-space:nowrap;`;
-	}
+	const d = $derived(state.characterData);
+	const scale = $derived(state.scale);
+	const templateSrc = $derived(state.templateSrc);
+	const additionalTemplateSrc = $derived(state.additionalTemplateSrc);
+	const hasAdditionalContent = $derived(state.hasAdditionalContent);
 </script>
 
 <article class="pdf-preview-dialog">
-	<div class="pdf-preview-scroll" bind:clientWidth={wrapperWidth}>
+	<div class="pdf-preview-scroll" bind:clientWidth={state.wrapperWidth}>
 		<!-- Page 1: Main Sheet -->
 		<div class="pdf-page-wrapper" style="height:{792 * scale}px">
 			<div class="pdf-sheet" style="transform:scale({scale});transform-origin:top left;">
