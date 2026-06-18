@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.7] - 2026-06-17
+
+### Added
+
+- [#531] Add PDF character sheet export. @trevlar
+- [#808] Add full-character JSON export and import with preview. @trevlar
+
+### Fixed
+
+- [#795] Fix AC not updating on item change and Iron Defense level 13 dead rule. @trevlar
+- [#797] Swap Yes/No button order in confirmation dialogs to match Foundry default. @trevlar
+- [#798] Restore scroll on monster conditions tab. @trevlar
+- [#802] Make quantity input interactive without triggering item roll. @trevlar
+- [#809] Remove tsx/jsx globs that crash format auto-commit. @trevlar
+- [#810] Allow walk mode in grantMovement and fix speed formula. @trevlar
+- [#811] Make prose-mirror description editors visible in roll table dialogs. @trevlar
+
+### Changed
+
+- [#796] Correct Giant Spider Bite damage to 2d8+4. @trevlar
+- [#799] Add per-group sub-folders and subclass folder wrappers to compendia. @trevlar
+
+---
+
+
 ## [0.8.6] - 2026-05-29
 
 ### Added
