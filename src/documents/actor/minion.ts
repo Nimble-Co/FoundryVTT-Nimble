@@ -3,6 +3,7 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
+import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefaults.js';
 
 export class NimbleMinion extends NimbleBaseActor {
 	declare system: NimbleMinionData;
@@ -22,6 +23,20 @@ export class NimbleMinion extends NimbleBaseActor {
 		super.prepareBaseData();
 
 		this.tags.add('minion');
+	}
+
+	protected override async _preCreate(
+		data: Actor.CreateData,
+		options: Actor.Database.PreCreateOptions,
+		user: User.Implementation,
+		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
+	): Promise<boolean | void> {
+		this.updateSource({ prototypeToken: buildMonsterPrototypeTokenDefaults() } as Record<
+			string,
+			unknown
+		>);
+
+		return super._preCreate(data, options, user);
 	}
 
 	override prepareDerivedData() {
