@@ -5,6 +5,9 @@
  * dropped token tracks its own HP. Sight is enabled to match the world's default
  * token configuration; Nimble has no darkvision, so range stays 0.
  *
+ * Solo monsters override `actorLink` to true (a single boss-tier creature is one
+ * tracked token) — see `soloMonster.ts`.
+ *
  * Disposition and actorLink already match Foundry's schema defaults, but they are
  * set explicitly here so a GM who customizes the global Default Token Configuration
  * (e.g. flips it to friendly or linked) does not accidentally change how monsters

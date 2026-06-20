@@ -33,10 +33,11 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		user: User.Implementation,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
-		this.updateSource({ prototypeToken: buildMonsterPrototypeTokenDefaults() } as Record<
-			string,
-			unknown
-		>);
+		// A solo monster is a single boss-tier creature, so its token is linked:
+		// it persists as one tracked actor whose HP updates live, unlike the
+		// unlinked NPC/minion tokens that each track their own HP.
+		const prototypeToken = { ...buildMonsterPrototypeTokenDefaults(), actorLink: true };
+		this.updateSource({ prototypeToken } as Record<string, unknown>);
 
 		return super._preCreate(data, options, user);
 	}
