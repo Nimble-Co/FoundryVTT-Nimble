@@ -27,12 +27,39 @@ describe('registerDyingActionLimitSync', () => {
 		globals().game.combats = { contents: [] };
 	});
 
-	it('clamps current actions to 1 and clears additional actions when an actor becomes Dying', async () => {
+	it('clamps current actions to the dying base limit when an actor becomes Dying', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const register = (await import('./dyingActionLimitSync.js')).default;
 		register();
 
 		const combatant = createMockCombatant({ id: 'c1', actorId: 'actor-1', actionsCurrent: 3 });
+		const combat = createMockCombat({
+			id: 'combat-1',
+			combatants: [combatant],
+			turns: [combatant],
+			activeCombatant: combatant,
+			round: 1,
+		});
+		globals().game.combats = { contents: [combat] };
+
+		const createActiveEffect = callbacks.get('createActiveEffect');
+		createActiveEffect?.(createDyingEffect('actor-1'));
+		await flushAsync();
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'c1',
+				'system.actions.base.current': 1,
+			},
+		]);
+	});
+
+	it('preserves additional actions, clamping current to 1 + additional', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const register = (await import('./dyingActionLimitSync.js')).default;
+		register();
+
+		const combatant = createMockCombatant({ id: 'c1', actorId: 'actor-1', actionsCurrent: 5 });
 		(
 			combatant.system as unknown as { actions: { base: { additional: number } } }
 		).actions.base.additional = 2;
@@ -52,8 +79,7 @@ describe('registerDyingActionLimitSync', () => {
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{
 				_id: 'c1',
-				'system.actions.base.current': 1,
-				'system.actions.base.additional': 0,
+				'system.actions.base.current': 3,
 			},
 		]);
 	});

@@ -41,10 +41,8 @@ export function getCombatantResetActions(combatant: Combatant.Implementation): n
 }
 
 export function getCombatantEffectiveMax(combatant: Combatant.Implementation): number {
-	if (isCombatantDying(combatant)) {
-		return Math.min(getCombatantBaseActionMax(combatant), DYING_MAX_ACTIONS);
-	}
-	return getCombatantBaseActionMax(combatant) + getCombatantAdditionalActions(combatant);
+	// While Dying the base action max is limited to 1, but additional actions still apply.
+	return getCombatantResetActions(combatant) + getCombatantAdditionalActions(combatant);
 }
 
 export function getCombatantBaseActionCurrent(combatant: Combatant.Implementation): number {

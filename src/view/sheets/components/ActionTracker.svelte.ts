@@ -24,7 +24,6 @@ interface ActionsData {
 	max: number;
 	additional: number;
 	effectiveMax: number;
-	isDying: boolean;
 }
 
 // ============================================================================
@@ -89,20 +88,19 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	function getActionsData(): ActionsData {
 		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3, isDying: false };
+		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3 };
 
 		const actions = getCombatantBaseActions(combatant);
 		const additional = getCombatantAdditionalActions(combatant);
-		const isDying = isCombatantDying(combatant);
-		// While Dying, actions are limited to 1 and additional actions do not apply.
-		const max = isDying ? Math.min(actions.max || 3, DYING_MAX_ACTIONS) : actions.max || 3;
-		const effectiveMax = isDying ? max : max + additional;
+		// While Dying the base action max is limited to 1, but additional actions still apply.
+		const max = isCombatantDying(combatant)
+			? Math.min(actions.max || 3, DYING_MAX_ACTIONS)
+			: actions.max || 3;
 		return {
 			current: actions.current,
 			max,
 			additional,
-			effectiveMax,
-			isDying,
+			effectiveMax: max + additional,
 		};
 	}
 

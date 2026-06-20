@@ -50,12 +50,17 @@ describe('getCombatantResetActions', () => {
 });
 
 describe('getCombatantEffectiveMax', () => {
-	it('caps the effective max at 1 when dying, ignoring additional actions', () => {
+	it('caps the base max at 1 when dying but still includes additional actions', () => {
 		const combatant = createCombatantFixture({ actionsMax: 3, actor: createDyingActor() });
-		// Simulate a stale additional action that should not raise the dying cap.
 		(
 			combatant.system as unknown as { actions: { base: { additional: number } } }
 		).actions.base.additional = 2;
+		// Dying base max (1) + additional (2) = 3.
+		expect(getCombatantEffectiveMax(combatant)).toBe(3);
+	});
+
+	it('returns the dying base max when there are no additional actions', () => {
+		const combatant = createCombatantFixture({ actionsMax: 3, actor: createDyingActor() });
 		expect(getCombatantEffectiveMax(combatant)).toBe(1);
 	});
 

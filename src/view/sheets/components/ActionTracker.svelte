@@ -61,7 +61,7 @@
 						</button>
 					{/each}
 
-					{#if !state.actionsData.isDying && state.actionsData.effectiveMax < 10}
+					{#if state.actionsData.effectiveMax < 10}
 						<button
 							class="action-tracker__add-additional"
 							type="button"
