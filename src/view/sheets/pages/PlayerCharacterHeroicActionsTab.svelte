@@ -12,6 +12,7 @@
 	import InterposeReactionPanel from '../components/InterposeReactionPanel.svelte';
 	import OpportunityAttackPanel from '../components/OpportunityAttackPanel.svelte';
 	import HelpReactionPanel from '../components/HelpReactionPanel.svelte';
+	import CustomReactionsPanel from '../components/CustomReactionsPanel.svelte';
 
 	// ============================================================================
 	// Context & State
@@ -154,6 +155,20 @@
 						<span class="heroic-action-tab__indicator"></span>
 					</button>
 				{/each}
+
+				{#if heroicState.hasCustomReactions}
+					<button
+						class="heroic-action-tab"
+						class:heroic-action-tab--active={heroicState.expandedReactionPanel === 'custom'}
+						type="button"
+						aria-label={localize('NIMBLE.ui.heroicActions.customReactions.tabLabel')}
+						data-tooltip={localize('NIMBLE.ui.heroicActions.customReactions.tabLabel')}
+						onclick={() => (heroicState.expandedReactionPanel = 'custom')}
+					>
+						<i class="fa-solid fa-bolt"></i>
+						<span class="heroic-action-tab__indicator"></span>
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</section>
@@ -250,6 +265,10 @@
 			isActiveTurn={heroicState.isReactionActiveTurnBlocked('help')}
 			onUseReaction={(options) => heroicState.useReaction('help', options)}
 		/>
+	{/if}
+
+	{#if heroicState.activeHeroicTab === 'reactions' && heroicState.expandedReactionPanel === 'custom'}
+		<CustomReactionsPanel showEmbeddedDocumentImages={heroicState.showEmbeddedDocumentImages} />
 	{/if}
 </section>
 

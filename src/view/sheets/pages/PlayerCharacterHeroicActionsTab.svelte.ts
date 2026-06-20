@@ -12,6 +12,7 @@ import localize from '#utils/localize.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 import HeroicActionsHelpDialog from '#view/dialogs/HeroicActionsHelpDialog.svelte';
+import { isCustomReaction } from '#view/sheets/components/CustomReactionsPanel.svelte.js';
 
 // ============================================================================
 // Types
@@ -316,12 +317,22 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 
 	const allSpells = $derived(
 		filterItems(getActor().reactive, ['spell'], '').filter((spell) => {
+			// Reaction spells live under Custom Reactions, not the Cast Spell action.
+			if (isCustomReaction(spell as unknown as Item)) return false;
 			const costType = (spell.system as unknown as { activation?: { cost?: { type?: string } } })
 				.activation?.cost?.type;
 			return costType !== 'minute' && costType !== 'hour';
 		}),
 	);
 	const hasSpells = $derived(allSpells.length > 0);
+
+	// ============================================================================
+	// Custom Reactions (items with "Is Reaction" checked under Activation > Core)
+	// ============================================================================
+
+	const hasCustomReactions = $derived(
+		getActor().reactive.items.some((item) => isCustomReaction(item as unknown as Item)),
+	);
 
 	// ============================================================================
 	// Derived State
@@ -409,6 +420,9 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		},
 		get hasSpells() {
 			return hasSpells;
+		},
+		get hasCustomReactions() {
+			return hasCustomReactions;
 		},
 		get showEmbeddedDocumentImages() {
 			return showEmbeddedDocumentImages;
