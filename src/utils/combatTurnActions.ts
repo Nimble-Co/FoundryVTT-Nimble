@@ -1,4 +1,4 @@
-import { DYING_MAX_ACTIONS, isActorDying } from './actorHealthState.js';
+import { getActorDyingActionLimit, isActorDying } from './actorHealthState.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 
 export const COMBATANT_ACTIONS_CURRENT_PATH = 'system.actions.base.current';
@@ -29,7 +29,9 @@ export function getCombatantMaxActions(combatant: Combatant.Implementation): num
 	const baseMax = toFiniteNonNegativeNumber(
 		foundry.utils.getProperty(combatant, COMBATANT_ACTIONS_MAX_PATH),
 	);
-	if (isActorDying(combatant.actor)) return Math.min(baseMax, DYING_MAX_ACTIONS);
+	if (isActorDying(combatant.actor)) {
+		return Math.min(baseMax, getActorDyingActionLimit(combatant.actor));
+	}
 	return baseMax;
 }
 

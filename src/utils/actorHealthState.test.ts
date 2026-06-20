@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createCombatActorFixture } from '../../tests/fixtures/combat.js';
-import { getActorHealthState, isActorAtOrBelowHalfHp, isActorDying } from './actorHealthState.js';
+import {
+	DYING_MAX_ACTIONS,
+	getActorDyingActionLimit,
+	getActorHealthState,
+	isActorAtOrBelowHalfHp,
+	isActorDying,
+} from './actorHealthState.js';
 
 describe('getActorHealthState', () => {
 	it('returns bloodied for non-solo actors at half HP or lower', () => {
@@ -147,5 +153,30 @@ describe('isActorDying', () => {
 	it('returns false for null/undefined actors', () => {
 		expect(isActorDying(null)).toBe(false);
 		expect(isActorDying(undefined)).toBe(false);
+	});
+});
+
+describe('getActorDyingActionLimit', () => {
+	it('falls back to the baseline when the attribute is absent (e.g. NPCs)', () => {
+		const actor = createCombatActorFixture({ type: 'npc' });
+		expect(getActorDyingActionLimit(actor)).toBe(DYING_MAX_ACTIONS);
+	});
+
+	it('reads a raised limit from the actor attribute (e.g. Enduring Rage)', () => {
+		const actor = createCombatActorFixture({ type: 'character', dyingActionLimit: 2 });
+		expect(getActorDyingActionLimit(actor)).toBe(2);
+	});
+
+	it('falls back to the baseline for null/undefined actors', () => {
+		expect(getActorDyingActionLimit(null)).toBe(DYING_MAX_ACTIONS);
+		expect(getActorDyingActionLimit(undefined)).toBe(DYING_MAX_ACTIONS);
+	});
+
+	it('falls back to the baseline when the attribute is non-numeric', () => {
+		const actor = createCombatActorFixture({ type: 'character' });
+		(
+			actor.system as unknown as { attributes: { dyingActionLimit: unknown } }
+		).attributes.dyingActionLimit = 'not-a-number';
+		expect(getActorDyingActionLimit(actor)).toBe(DYING_MAX_ACTIONS);
 	});
 });

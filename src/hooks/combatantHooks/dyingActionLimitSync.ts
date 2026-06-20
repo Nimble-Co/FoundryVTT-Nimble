@@ -1,6 +1,6 @@
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { getCombatantAdditionalActions } from '../../documents/combat/combatantSystem.js';
-import { DYING_MAX_ACTIONS } from '../../utils/actorHealthState.js';
+import { getActorDyingActionLimit } from '../../utils/actorHealthState.js';
 import { getCombatantCurrentActions } from '../../utils/combatTurnActions.js';
 
 let didRegisterDyingActionLimitSync = false;
@@ -23,26 +23,29 @@ function getCombatantsForActor(
 /**
  * When an actor gains the Dying condition mid-turn, its combatants may still have
  * more actions available — and additional actions carried over from before Dying —
- * than the Dying limit allows. Clamp `current` down to {@link DYING_MAX_ACTIONS} and
- * clear those carried-over additional actions so the action tracker and any
- * action-spend checks immediately reflect the rule. The player can still add fresh
- * additional actions afterward while Dying.
+ * than the Dying limit allows. Clamp `current` down to the actor's Dying action
+ * limit (baseline 1, raised by features such as Enduring Rage) and clear those
+ * carried-over additional actions so the action tracker and any action-spend checks
+ * immediately reflect the rule. The player can still add fresh additional actions
+ * afterward while Dying.
  */
 async function clampDyingActorActions(actor: Actor.Implementation): Promise<void> {
 	if (!game.user?.isGM) return;
 	if (!actor.id) return;
+
+	const dyingActionLimit = getActorDyingActionLimit(actor);
 
 	for (const { combat, combatant } of getCombatantsForActor(actor.id)) {
 		if (!combat.id || !combatant.id) continue;
 
 		const current = getCombatantCurrentActions(combatant);
 		const additional = getCombatantAdditionalActions(combatant);
-		if (current <= DYING_MAX_ACTIONS && additional === 0) continue;
+		if (current <= dyingActionLimit && additional === 0) continue;
 
 		await combat.updateEmbeddedDocuments('Combatant', [
 			{
 				_id: combatant.id,
-				'system.actions.base.current': Math.min(current, DYING_MAX_ACTIONS),
+				'system.actions.base.current': Math.min(current, dyingActionLimit),
 				'system.actions.base.additional': 0,
 			} as Record<string, unknown>,
 		]);

@@ -3,14 +3,10 @@ import {
 	createCombatActorFixture,
 	createCombatantFixture,
 } from '../../../tests/fixtures/combat.js';
-import {
-	getCombatantEffectiveMax,
-	getCombatantResetActions,
-	isCombatantDying,
-} from './combatantSystem.js';
+import { getCombatantResetActions, isCombatantDying } from './combatantSystem.js';
 
-function createDyingActor() {
-	return Object.assign(createCombatActorFixture({ type: 'character' }), {
+function createDyingActor(dyingActionLimit?: number) {
+	return Object.assign(createCombatActorFixture({ type: 'character', dyingActionLimit }), {
 		statuses: new Set(['dying']),
 	}) as Actor.Implementation;
 }
@@ -47,31 +43,14 @@ describe('getCombatantResetActions', () => {
 		const combatant = createCombatantFixture({ actionsMax: 3, actor: createDyingActor() });
 		expect(getCombatantResetActions(combatant)).toBe(1);
 	});
-});
 
-describe('getCombatantEffectiveMax', () => {
-	it('caps the base max at 1 when dying but still includes additional actions', () => {
-		const combatant = createCombatantFixture({ actionsMax: 3, actor: createDyingActor() });
-		(
-			combatant.system as unknown as { actions: { base: { additional: number } } }
-		).actions.base.additional = 2;
-		// Dying base max (1) + additional (2) = 3.
-		expect(getCombatantEffectiveMax(combatant)).toBe(3);
+	it('respects a raised dying action limit (e.g. Enduring Rage)', () => {
+		const combatant = createCombatantFixture({ actionsMax: 3, actor: createDyingActor(2) });
+		expect(getCombatantResetActions(combatant)).toBe(2);
 	});
 
-	it('returns the dying base max when there are no additional actions', () => {
-		const combatant = createCombatantFixture({ actionsMax: 3, actor: createDyingActor() });
-		expect(getCombatantEffectiveMax(combatant)).toBe(1);
-	});
-
-	it('includes additional actions when not dying', () => {
-		const combatant = createCombatantFixture({
-			actionsMax: 3,
-			actor: createCombatActorFixture({ type: 'character' }),
-		});
-		(
-			combatant.system as unknown as { actions: { base: { additional: number } } }
-		).actions.base.additional = 2;
-		expect(getCombatantEffectiveMax(combatant)).toBe(5);
+	it('never resets above the combatant base max even with a higher dying limit', () => {
+		const combatant = createCombatantFixture({ actionsMax: 1, actor: createDyingActor(2) });
+		expect(getCombatantResetActions(combatant)).toBe(1);
 	});
 });

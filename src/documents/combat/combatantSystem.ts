@@ -1,4 +1,4 @@
-import { DYING_MAX_ACTIONS, isActorDying } from '#utils/actorHealthState.js';
+import { getActorDyingActionLimit, isActorDying } from '#utils/actorHealthState.js';
 import type { CombatantBaseActions, NimbleCombatantSystem } from './combatTypes.js';
 
 function getCombatantSystem(combatant: Combatant.Implementation): NimbleCombatantSystem | null {
@@ -31,18 +31,16 @@ export function isCombatantDying(combatant: Combatant.Implementation): boolean {
 }
 
 /**
- * Base action max to reset `current` to at the start of a turn, capped at
- * {@link DYING_MAX_ACTIONS} while the combatant is Dying.
+ * Base action max to reset `current` to at the start of a turn, capped at the
+ * actor's Dying action limit (baseline 1, raised by features such as Enduring
+ * Rage) while the combatant is Dying.
  */
 export function getCombatantResetActions(combatant: Combatant.Implementation): number {
 	const baseMax = getCombatantBaseActionMax(combatant);
-	if (isCombatantDying(combatant)) return Math.min(baseMax, DYING_MAX_ACTIONS);
+	if (isCombatantDying(combatant)) {
+		return Math.min(baseMax, getActorDyingActionLimit(combatant.actor));
+	}
 	return baseMax;
-}
-
-export function getCombatantEffectiveMax(combatant: Combatant.Implementation): number {
-	// While Dying the base action max is limited to 1, but additional actions still apply.
-	return getCombatantResetActions(combatant) + getCombatantAdditionalActions(combatant);
 }
 
 export function getCombatantBaseActionCurrent(combatant: Combatant.Implementation): number {

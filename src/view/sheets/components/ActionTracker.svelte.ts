@@ -7,7 +7,7 @@ import {
 	isCombatantDying,
 } from '#documents/combat/combatantSystem.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import { DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
+import { getActorDyingActionLimit } from '#utils/actorHealthState.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
 import { getActiveCombatant } from '#utils/combatTurnSync.js';
@@ -92,9 +92,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 		const actions = getCombatantBaseActions(combatant);
 		const additional = getCombatantAdditionalActions(combatant);
-		// While Dying the base action max is limited to 1, but additional actions still apply.
+		// While Dying the base action max is capped at the actor's Dying action limit
+		// (baseline 1, raised by features such as Enduring Rage), but additional
+		// actions still apply.
 		const max = isCombatantDying(combatant)
-			? Math.min(actions.max || 3, DYING_MAX_ACTIONS)
+			? Math.min(actions.max || 3, getActorDyingActionLimit(combatant.actor))
 			: actions.max || 3;
 		return {
 			current: actions.current,
