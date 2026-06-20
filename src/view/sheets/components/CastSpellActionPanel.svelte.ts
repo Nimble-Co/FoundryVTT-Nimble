@@ -4,6 +4,7 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
+import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
 
 interface SpellEffect {
 	formula: string;
@@ -62,6 +63,8 @@ export function createSpellPanelState(
 
 	const spells = $derived(
 		filterItems(getActor().reactive, ['spell'], searchTerm).filter((spell) => {
+			// Reaction spells are surfaced under Heroic Reactions > Custom Reactions instead.
+			if (isCustomReaction(spell as unknown as Item)) return false;
 			const costType = getSystemData(spell).activation?.cost?.type;
 			return costType !== 'minute' && costType !== 'hour';
 		}),

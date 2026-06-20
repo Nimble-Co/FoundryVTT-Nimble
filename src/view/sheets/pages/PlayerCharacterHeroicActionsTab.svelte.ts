@@ -317,6 +317,8 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 
 	const allSpells = $derived(
 		filterItems(getActor().reactive, ['spell'], '').filter((spell) => {
+			// Reaction spells live under Custom Reactions, not the Cast Spell action.
+			if (isCustomReaction(spell as unknown as Item)) return false;
 			const costType = (spell.system as unknown as { activation?: { cost?: { type?: string } } })
 				.activation?.cost?.type;
 			return costType !== 'minute' && costType !== 'hour';

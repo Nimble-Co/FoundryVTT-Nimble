@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 
+import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
 import CustomReactionsPanelTestHarness from './CustomReactionsPanel.testHarness.svelte';
 
 interface ReactionItemOptions {
@@ -49,6 +50,20 @@ function createActor(items: ReturnType<typeof createItem>[]) {
 		},
 	};
 }
+
+describe('isCustomReaction', () => {
+	it('is true only when the activation cost has Is Reaction checked', () => {
+		const reaction = createItem({ id: 'r', name: 'Parry', isReaction: true });
+		const spell = createItem({ id: 's', name: 'Fireball', isReaction: false });
+
+		expect(isCustomReaction(reaction as unknown as Item)).toBe(true);
+		expect(isCustomReaction(spell as unknown as Item)).toBe(false);
+	});
+
+	it('is false when the item has no activation data', () => {
+		expect(isCustomReaction({ system: {} } as unknown as Item)).toBe(false);
+	});
+});
 
 describe('CustomReactionsPanel', () => {
 	it('lists only items with "Is Reaction" checked', () => {
