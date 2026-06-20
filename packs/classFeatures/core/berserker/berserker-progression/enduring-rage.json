@@ -6,7 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "dyingActionLimit",
+				"disabled": false,
+				"id": "EnduRageDyingAct",
+				"identifier": "",
+				"label": "Enduring Rage",
+				"predicate": {
+					"$and": [
+						"self:dying"
+					]
+				},
+				"priority": 1,
+				"value": "2"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

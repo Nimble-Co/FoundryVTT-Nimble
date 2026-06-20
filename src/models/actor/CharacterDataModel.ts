@@ -2,6 +2,7 @@ import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 
+import { DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
 import { RecordField } from '../fields/RecordField.js';
 import { abilities, savingThrows } from './common.js';
 
@@ -78,6 +79,16 @@ const characterSchema = () => ({
 			}),
 			{ required: true, nullable: false, initial: () => [] },
 		),
+		// Effective action cap while Dying. Defaults to the engine baseline and is
+		// raised in-place during data prep by the `dyingActionLimit` rule (e.g. the
+		// Berserker's Enduring Rage). Read via `getActorDyingActionLimit`.
+		dyingActionLimit: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: DYING_MAX_ACTIONS,
+			integer: true,
+			min: 0,
+		}),
 		armor: new fields.SchemaField({
 			baseValue: new fields.StringField({
 				required: true,

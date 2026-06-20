@@ -17,7 +17,7 @@ import { initiativeRollLock } from '#utils/initiativeRollLock.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
-import { getCombatantBaseActionMax, getCombatantManualSortValue } from './combatantSystem.js';
+import { getCombatantManualSortValue, getCombatantResetActions } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
 import { rollInitiativeForCombatant } from './combatInitiative.js';
 import { performMinionGroupAttack } from './combatMinionAttacks.js';
@@ -483,7 +483,7 @@ class NimbleCombat extends Combat {
 			const combatantId = targetCombatant.id ?? null;
 			if (!combatantId) return accumulator;
 
-			const nextActions = getCombatantBaseActionMax(targetCombatant);
+			const nextActions = getCombatantResetActions(targetCombatant);
 			if (getCombatantCurrentActions(targetCombatant) === nextActions) return accumulator;
 
 			accumulator.push({
@@ -573,7 +573,7 @@ class NimbleCombat extends Combat {
 			.map((combatant) => {
 				return {
 					_id: combatant.id,
-					'system.actions.base.current': getCombatantBaseActionMax(combatant),
+					'system.actions.base.current': getCombatantResetActions(combatant),
 				};
 			});
 		if (updates.length < 1) return;
@@ -696,7 +696,7 @@ class NimbleCombat extends Combat {
 
 		if (combatant.type === 'character') {
 			await combatant.update({
-				'system.actions.base.current': getCombatantBaseActionMax(combatant),
+				'system.actions.base.current': getCombatantResetActions(combatant),
 				'system.actions.base.additional': 0,
 				...this.#buildHeroicReactionAvailabilityUpdate(true),
 			} as Record<string, unknown>);

@@ -9,6 +9,7 @@ export type CombatActorFixtureOptions = {
 	woundsMax?: number;
 	manaValue?: number;
 	manaMax?: number;
+	dyingActionLimit?: number;
 };
 
 export type CombatantFixtureOptions = {
@@ -44,6 +45,7 @@ export function createCombatActorFixture({
 	woundsMax,
 	manaValue,
 	manaMax,
+	dyingActionLimit,
 }: CombatActorFixtureOptions = {}): Actor.Implementation {
 	const items =
 		typeof lastStandHp === 'number'
@@ -67,6 +69,7 @@ export function createCombatActorFixture({
 					max: hpMax ?? Math.max(hp, 1),
 				},
 				wounds: { value: woundsValue, max: woundsMax },
+				...(typeof dyingActionLimit === 'number' ? { dyingActionLimit } : {}),
 			},
 			resources: {
 				mana: {

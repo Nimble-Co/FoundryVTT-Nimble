@@ -632,6 +632,7 @@
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"dyingActionLimit": "Dying Action Limit",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -762,6 +763,13 @@
 				"targetCondition": {
 					"label": "Target condition",
 					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
+				}
+			},
+			"dyingActionLimit": {
+				"description": "Set the maximum number of actions the actor may take while Dying. The highest applicable limit wins, so it never lowers the baseline of 1.",
+				"value": {
+					"label": "Action limit",
+					"hint": "A flat number or formula (e.g. 2). Use a predicate such as { \"$and\": [\"self:dying\"] } to apply only while Dying."
 				}
 			},
 			"dicePool": {

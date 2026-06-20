@@ -7,10 +7,28 @@ import { createMockCombatant } from '../../tests/mocks/combat.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import {
 	consumeCombatantAction,
+	getCombatantMaxActions,
 	registerCombatTurnSocketListener,
 	requestAdvanceCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
 } from './combatTurnActions.js';
+
+describe('getCombatantMaxActions', () => {
+	it('returns the base max for a non-dying combatant', () => {
+		const combatant = createMockCombatant({ actionsMax: 3 });
+		expect(getCombatantMaxActions(combatant)).toBe(3);
+	});
+
+	it('caps the max at 1 when the combatant is Dying', () => {
+		const combatant = createMockCombatant({
+			actionsMax: 3,
+			actor: Object.assign(createCombatActorFixture({ type: 'character' }), {
+				statuses: new Set(['dying']),
+			}) as Actor.Implementation,
+		});
+		expect(getCombatantMaxActions(combatant)).toBe(1);
+	});
+});
 
 describe('resolveCombatantCurrentActionsAfterDelta', () => {
 	it('clamps increases at max actions', () => {
