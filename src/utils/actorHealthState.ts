@@ -3,9 +3,20 @@ import { getActorHpMaxValue, getActorHpValue } from './actorResources.js';
 
 export type ActorHealthState = 'normal' | 'bloodied' | 'lastStand' | 'unknown';
 
+/**
+ * Maximum number of actions a combatant may take while suffering the Dying condition.
+ * Per the Nimble rules, "while Dying, actions are limited to 1".
+ */
+export const DYING_MAX_ACTIONS = 1;
+
 export function hasLastStandStatus(actor: Actor.Implementation | null | undefined): boolean {
 	if (!actor) return false;
 	return actor.statuses instanceof Set && actor.statuses.has(STATUS_EFFECT_IDS.lastStand);
+}
+
+export function isActorDying(actor: Actor.Implementation | null | undefined): boolean {
+	if (!actor) return false;
+	return actor.statuses instanceof Set && actor.statuses.has(STATUS_EFFECT_IDS.dying);
 }
 
 /**

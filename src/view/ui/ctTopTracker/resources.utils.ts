@@ -3,7 +3,11 @@ import type {
 	CombatTrackerNonPlayerHpBarTextMode,
 	CombatTrackerPlayerHpBarTextMode,
 } from '../../../settings/combatTrackerSettings.js';
-import { type ActorHealthState, getActorHealthState } from '../../../utils/actorHealthState.js';
+import {
+	type ActorHealthState,
+	getActorHealthState,
+	isActorDying,
+} from '../../../utils/actorHealthState.js';
 import {
 	getActorHpMaxValue,
 	getActorHpValue,
@@ -451,11 +455,14 @@ export function getActionState(combatant: Combatant.Implementation): {
 	const normalizedCurrent = getCombatantCurrentActions(combatant);
 	const normalizedMax = getCombatantMaxActions(combatant);
 	const additional = getCombatantAdditionalActions(combatant);
+	// While Dying, total actions are capped at the (already dying-limited) base max;
+	// additional actions do not apply.
+	const effectiveMax = isActorDying(combatant.actor) ? normalizedMax : normalizedMax + additional;
 	return {
 		current: normalizedCurrent,
 		max: normalizedMax,
 		additional,
-		effectiveMax: normalizedMax + additional,
+		effectiveMax,
 	};
 }
 

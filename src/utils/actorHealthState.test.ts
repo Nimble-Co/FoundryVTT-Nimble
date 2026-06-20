@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createCombatActorFixture } from '../../tests/fixtures/combat.js';
-import { getActorHealthState, isActorAtOrBelowHalfHp } from './actorHealthState.js';
+import { getActorHealthState, isActorAtOrBelowHalfHp, isActorDying } from './actorHealthState.js';
 
 describe('getActorHealthState', () => {
 	it('returns bloodied for non-solo actors at half HP or lower', () => {
@@ -121,5 +121,31 @@ describe('isActorAtOrBelowHalfHp', () => {
 			{ statuses: new Set(['lastStand']) },
 		);
 		expect(isActorAtOrBelowHalfHp(actor as Actor.Implementation)).toBe(true);
+	});
+});
+
+describe('isActorDying', () => {
+	it('returns true when the actor has the dying status', () => {
+		const actor = Object.assign(createCombatActorFixture({ type: 'character', hp: 0 }), {
+			statuses: new Set(['dying']),
+		});
+		expect(isActorDying(actor as Actor.Implementation)).toBe(true);
+	});
+
+	it('returns false when the actor lacks the dying status', () => {
+		const actor = Object.assign(createCombatActorFixture({ type: 'character', hp: 10 }), {
+			statuses: new Set(['bloodied']),
+		});
+		expect(isActorDying(actor as Actor.Implementation)).toBe(false);
+	});
+
+	it('returns false when statuses are absent', () => {
+		const actor = createCombatActorFixture({ type: 'character', hp: 10 });
+		expect(isActorDying(actor)).toBe(false);
+	});
+
+	it('returns false for null/undefined actors', () => {
+		expect(isActorDying(null)).toBe(false);
+		expect(isActorDying(undefined)).toBe(false);
 	});
 });

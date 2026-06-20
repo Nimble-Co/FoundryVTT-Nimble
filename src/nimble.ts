@@ -8,6 +8,7 @@ import { registerWoundTriggerHooks } from './hooks/chargePoolTriggers/woundTrigg
 import registerChargeSystemHooks from './hooks/chargeSystem.js';
 import registerCombatantDefeatSync from './hooks/combatantHooks/combatantDefeatSync.js';
 import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHealthStateSync.js';
+import registerDyingActionLimitSync from './hooks/combatantHooks/dyingActionLimitSync.js';
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
@@ -111,6 +112,7 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerCombatantHealthStateSync();
+registerDyingActionLimitSync();
 registerChargeSystemHooks();
 registerDicePoolSystemHooks();
 registerWoundTriggerHooks();

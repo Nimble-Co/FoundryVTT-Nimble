@@ -4,8 +4,10 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import {
 	getCombatantAdditionalActions,
 	getCombatantBaseActions,
+	isCombatantDying,
 } from '#documents/combat/combatantSystem.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
+import { DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
 import { getActiveCombatant } from '#utils/combatTurnSync.js';
@@ -22,6 +24,7 @@ interface ActionsData {
 	max: number;
 	additional: number;
 	effectiveMax: number;
+	isDying: boolean;
 }
 
 // ============================================================================
@@ -86,16 +89,20 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	function getActionsData(): ActionsData {
 		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3 };
+		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3, isDying: false };
 
 		const actions = getCombatantBaseActions(combatant);
 		const additional = getCombatantAdditionalActions(combatant);
-		const max = actions.max || 3;
+		const isDying = isCombatantDying(combatant);
+		// While Dying, actions are limited to 1 and additional actions do not apply.
+		const max = isDying ? Math.min(actions.max || 3, DYING_MAX_ACTIONS) : actions.max || 3;
+		const effectiveMax = isDying ? max : max + additional;
 		return {
 			current: actions.current,
 			max,
 			additional,
-			effectiveMax: max + additional,
+			effectiveMax,
+			isDying,
 		};
 	}
 
