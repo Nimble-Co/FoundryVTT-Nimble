@@ -22,10 +22,11 @@ function getCombatantsForActor(
 
 /**
  * When an actor gains the Dying condition mid-turn, its combatants may still have
- * more actions available than the Dying limit allows. The base action max is limited
- * to {@link DYING_MAX_ACTIONS} while Dying, but already-granted additional actions
- * still apply — so clamp `current` down to `DYING_MAX_ACTIONS + additional` so the
- * action tracker and any action-spend checks immediately reflect the rule.
+ * more actions available — and additional actions carried over from before Dying —
+ * than the Dying limit allows. Clamp `current` down to {@link DYING_MAX_ACTIONS} and
+ * clear those carried-over additional actions so the action tracker and any
+ * action-spend checks immediately reflect the rule. The player can still add fresh
+ * additional actions afterward while Dying.
  */
 async function clampDyingActorActions(actor: Actor.Implementation): Promise<void> {
 	if (!game.user?.isGM) return;
@@ -36,13 +37,13 @@ async function clampDyingActorActions(actor: Actor.Implementation): Promise<void
 
 		const current = getCombatantCurrentActions(combatant);
 		const additional = getCombatantAdditionalActions(combatant);
-		const cappedActions = DYING_MAX_ACTIONS + additional;
-		if (current <= cappedActions) continue;
+		if (current <= DYING_MAX_ACTIONS && additional === 0) continue;
 
 		await combat.updateEmbeddedDocuments('Combatant', [
 			{
 				_id: combatant.id,
-				'system.actions.base.current': cappedActions,
+				'system.actions.base.current': Math.min(current, DYING_MAX_ACTIONS),
+				'system.actions.base.additional': 0,
 			} as Record<string, unknown>,
 		]);
 	}
