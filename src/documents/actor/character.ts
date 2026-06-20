@@ -1614,7 +1614,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const prototypeToken = {
 			sight: { enabled: true },
 			actorLink: true,
-			disposition: 1,
+			disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
 		};
 		this.updateSource({ prototypeToken } as Record<string, unknown>);
 
