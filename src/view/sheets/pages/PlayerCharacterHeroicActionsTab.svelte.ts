@@ -12,6 +12,7 @@ import localize from '#utils/localize.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 import HeroicActionsHelpDialog from '#view/dialogs/HeroicActionsHelpDialog.svelte';
+import { isCustomReaction } from '#view/sheets/components/CustomReactionsPanel.svelte.js';
 
 // ============================================================================
 // Types
@@ -324,6 +325,14 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	const hasSpells = $derived(allSpells.length > 0);
 
 	// ============================================================================
+	// Custom Reactions (items with "Is Reaction" checked under Activation > Core)
+	// ============================================================================
+
+	const hasCustomReactions = $derived(
+		getActor().reactive.items.some((item) => isCustomReaction(item as unknown as Item)),
+	);
+
+	// ============================================================================
 	// Derived State
 	// ============================================================================
 
@@ -409,6 +418,9 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		},
 		get hasSpells() {
 			return hasSpells;
+		},
+		get hasCustomReactions() {
+			return hasCustomReactions;
 		},
 		get showEmbeddedDocumentImages() {
 			return showEmbeddedDocumentImages;

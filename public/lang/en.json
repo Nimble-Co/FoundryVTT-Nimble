@@ -1204,6 +1204,11 @@
 				"title": "Heroic Actions",
 				"addAdditionalAction": "Add 1 action",
 				"reactionsTitle": "Heroic Reactions",
+				"customReactions": {
+					"tabLabel": "Custom Reactions",
+					"title": "Custom Reactions",
+					"empty": "No custom reactions. Check \"Is Reaction\" under a feature, spell, or item's Activation settings to show it here."
+				},
 				"reactions": {
 					"actionCost": "This will use 1 action (reaction)",
 					"cost": "1 Action",
