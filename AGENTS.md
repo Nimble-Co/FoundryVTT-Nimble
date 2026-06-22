@@ -39,6 +39,7 @@ For detailed technology stack, Foundry VTT integration patterns, and testing inf
 System internals (read before touching the area):
 - [docs/system/rules.md](docs/system/rules.md) — Rules system architecture, lifecycle hooks, and the requirements a new rule type must meet to render in the Rules Builder
 - [docs/system/dice-engine.md](docs/system/dice-engine.md) — Dice engine, primary-die mechanics, and extension points
+- [docs/system/compendium-translation.md](docs/system/compendium-translation.md) — Babele integration, where compendium translation skeletons live, and how to regenerate them
 
 ## Quick Reference
 

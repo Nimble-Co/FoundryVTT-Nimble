@@ -1,4 +1,5 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
+import registerBabeleHooks from './hooks/babeleInit.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
@@ -124,6 +125,7 @@ registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
 registerRuleEventDispatch();
+registerBabeleHooks();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

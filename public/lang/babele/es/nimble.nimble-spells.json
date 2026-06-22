@@ -1,0 +1,233 @@
+{
+	"label": "Nimble Spells",
+	"entries": {
+		"Vicious Mockery": {
+			"name": "Vicious Mockery"
+		},
+		"Updraft": {
+			"name": "Updraft"
+		},
+		"Thousand Cuts": {
+			"name": "Thousand Cuts"
+		},
+		"Razor Wind": {
+			"name": "Razor Wind"
+		},
+		"Fly": {
+			"name": "Fly"
+		},
+		"Eye of the Storm": {
+			"name": "Eye of the Storm"
+		},
+		"Breath of Life": {
+			"name": "Breath of Life"
+		},
+		"Boisterous Winds": {
+			"name": "Boisterous Winds"
+		},
+		"Blustery Gale": {
+			"name": "Blustery Gale"
+		},
+		"Barrier of Wind": {
+			"name": "Barrier of Wind"
+		},
+		"Wintry Scrying": {
+			"name": "Wintry Scrying"
+		},
+		"Wind Whisper": {
+			"name": "Wind Whisper"
+		},
+		"Thought Leech": {
+			"name": "Thought Leech"
+		},
+		"Tempest's Command": {
+			"name": "Tempest's Command"
+		},
+		"Spark Step": {
+			"name": "Spark Step"
+		},
+		"Spark Buddy": {
+			"name": "Spark Buddy"
+		},
+		"Light": {
+			"name": "Light"
+		},
+		"Kindle": {
+			"name": "Kindle"
+		},
+		"Ice Disk": {
+			"name": "Ice Disk"
+		},
+		"Helpful Gust": {
+			"name": "Helpful Gust"
+		},
+		"Gravecraft": {
+			"name": "Gravecraft"
+		},
+		"Firebrand": {
+			"name": "Firebrand"
+		},
+		"Fire Step": {
+			"name": "Fire Step"
+		},
+		"Feather Fall": {
+			"name": "Feather Fall"
+		},
+		"False Face": {
+			"name": "False Face"
+		},
+		"Chillcraft": {
+			"name": "Chillcraft"
+		},
+		"Bond of Peace": {
+			"name": "Bond of Peace"
+		},
+		"Beautify": {
+			"name": "Beautify"
+		},
+		"Warding Bond": {
+			"name": "Warding Bond"
+		},
+		"Vengeance": {
+			"name": "Vengeance"
+		},
+		"True Strike": {
+			"name": "True Strike"
+		},
+		"Shield of Justice": {
+			"name": "Shield of Justice"
+		},
+		"Sacrifice": {
+			"name": "Sacrifice"
+		},
+		"Redeem": {
+			"name": "Redeem"
+		},
+		"Rebuke": {
+			"name": "Rebuke"
+		},
+		"Lifebinding Spirit": {
+			"name": "Lifebinding Spirit"
+		},
+		"Heal": {
+			"name": "Heal"
+		},
+		"Condemn": {
+			"name": "Condemn"
+		},
+		"Withering Touch": {
+			"name": "Withering Touch"
+		},
+		"Vampiric Greed": {
+			"name": "Vampiric Greed"
+		},
+		"Unspeakable Word": {
+			"name": "Unspeakable Word"
+		},
+		"Summon Shadow": {
+			"name": "Summon Shadow"
+		},
+		"Shadow Trap": {
+			"name": "Shadow Trap"
+		},
+		"Shadow Blast": {
+			"name": "Shadow Blast"
+		},
+		"Greater Shadow": {
+			"name": "Greater Shadow"
+		},
+		"Gangrenous Burst": {
+			"name": "Gangrenous Burst"
+		},
+		"Entice": {
+			"name": "Entice"
+		},
+		"Dread Visage": {
+			"name": "Dread Visage"
+		},
+		"Creeping Death": {
+			"name": "Creeping Death"
+		},
+		"Zap": {
+			"name": "Zap"
+		},
+		"Stormlash": {
+			"name": "Stormlash"
+		},
+		"Seething Storm": {
+			"name": "Seething Storm"
+		},
+		"Ride the Lightning": {
+			"name": "Ride the Lightning"
+		},
+		"Overload": {
+			"name": "Overload"
+		},
+		"Electrocharge": {
+			"name": "Electrocharge"
+		},
+		"Electrickery": {
+			"name": "Electrickery"
+		},
+		"Arc Lightning": {
+			"name": "Arc Lightning"
+		},
+		"Alacrity": {
+			"name": "Alacrity"
+		},
+		"Snowblind": {
+			"name": "Snowblind"
+		},
+		"Shatter": {
+			"name": "Shatter"
+		},
+		"Rimeblades": {
+			"name": "Rimeblades"
+		},
+		"Ice Lance": {
+			"name": "Ice Lance"
+		},
+		"Glacier Strike": {
+			"name": "Glacier Strike"
+		},
+		"Frost Shield": {
+			"name": "Frost Shield"
+		},
+		"Cryosleep": {
+			"name": "Cryosleep"
+		},
+		"Arctic Blast": {
+			"name": "Arctic Blast"
+		},
+		"Arctic Annihilation": {
+			"name": "Arctic Annihilation"
+		},
+		"Pyroclasm": {
+			"name": "Pyroclasm"
+		},
+		"Living Inferno": {
+			"name": "Living Inferno"
+		},
+		"Ignite": {
+			"name": "Ignite"
+		},
+		"Heart's Fire": {
+			"name": "Heart's Fire"
+		},
+		"Flame Dart": {
+			"name": "Flame Dart"
+		},
+		"Flame Barrier": {
+			"name": "Flame Barrier"
+		},
+		"Fiery Embrace": {
+			"name": "Fiery Embrace"
+		},
+		"Enchant Weapon": {
+			"name": "Enchant Weapon"
+		},
+		"Dragonform": {
+			"name": "Dragonform"
+		}
+	}
+}

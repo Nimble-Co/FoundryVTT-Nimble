@@ -1,0 +1,25 @@
+{
+	"Item": {
+		"name": "name",
+		"description": "system.description"
+	},
+	"Actor": {
+		"name": "name",
+		"description": "system.description",
+		"creatureType": "system.details.creatureType",
+		"items": {
+			"path": "items",
+			"converter": "document",
+			"documentType": "Item",
+			"cardinality": "many"
+		}
+	},
+	"RollTable": {
+		"name": "name",
+		"description": "description",
+		"results": {
+			"path": "results",
+			"converter": "tableResults"
+		}
+	}
+}

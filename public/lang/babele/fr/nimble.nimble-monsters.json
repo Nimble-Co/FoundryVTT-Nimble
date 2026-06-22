@@ -1,0 +1,1334 @@
+{
+	"label": "Nimble Monsters",
+	"entries": {
+		"Wax Golem": {
+			"name": "Wax Golem",
+			"creatureType": "Underground",
+			"items": {
+				"Sticky.": {
+					"name": "Sticky.",
+					"description": "<p>Grapples target on hit. Can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>"
+				},
+				"Wax Grip.": {
+					"name": "Wax Grip.",
+					"description": "<p>1d4 (escape DC 10). OR</p>"
+				},
+				"Crush.": {
+					"name": "Crush.",
+					"description": "<p>(A Grappled creature) 1d12 damage.</p>"
+				}
+			}
+		},
+		"Umber Hulk": {
+			"name": "Umber Hulk",
+			"creatureType": "Underground",
+			"items": {
+				"Confounding Pheromones.": {
+					"name": "Confounding Pheromones.",
+					"description": "<p>Enemies make a DC 15 WIL save at the start of their turns or Confused this turn. Gain advantage 1 on the save for each failure this encounter. </p><p>(<strong>Confused.</strong> The GM Spends your next action)</p>"
+				},
+				"Mandible & Claws (2×).": {
+					"name": "Mandible & Claws (2×).",
+					"description": "<p>1d10+10 damage.</p>"
+				}
+			}
+		},
+		"Rat Swarm": {
+			"name": "Rat Swarm",
+			"creatureType": "Underground",
+			"items": {
+				"Swarm.": {
+					"name": "Swarm.",
+					"description": "<p>When damaged, decrement the damage die then summon 1 minion (small -&gt; d4, tiny -&gt; dead).</p>"
+				},
+				"Gnaw.": {
+					"name": "Gnaw.",
+					"description": "<p>1d8 (follows minion rules).</p>"
+				}
+			}
+		},
+		"Rat Prince": {
+			"name": "Rat Prince",
+			"creatureType": "Ratfolk",
+			"items": {
+				"Protect Master!": {
+					"name": "Protect Master!",
+					"description": "<p>Rat swarms can Interpose for him.</p>"
+				},
+				"Attack Sequence": {
+					"name": "Attack Sequence",
+					"description": "<p>After each hero's turn, choose 1:</p>"
+				},
+				"Filthblast.": {
+					"name": "Filthblast.",
+					"description": "<p>1d6+2 (Range 8). Then:</p>"
+				},
+				"Feeding time.": {
+					"name": "Feeding time.",
+					"description": "<p>Summon 1d4 rat minion.</p>"
+				}
+			}
+		},
+		"Nestweaver": {
+			"name": "Nestweaver",
+			"creatureType": "Underground",
+			"items": {
+				"Summon 2 spider minions (d8)": {
+					"name": "Summon 2 spider minions (d8)",
+					"description": "<p><strong>Then choose 1</strong></p>"
+				},
+				"Shoot Web.": {
+					"name": "Shoot Web.",
+					"description": "<p>(Range 6) 1d8+2. On hit: Restrained</p><p>(escape DC 12, or any slashing/fire damage). </p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(Hampered target) 3d8+6 and Poisoned (magical healing ends).</p>"
+				}
+			}
+		},
+		"Great Worm": {
+			"name": "Great Worm",
+			"creatureType": "Underground",
+			"items": {
+				"Tremor Sight.": {
+					"name": "Tremor Sight.",
+					"description": "<p>Advantage against creatures that moved since the worm's last turn.</p>"
+				},
+				"Crush.": {
+					"name": "Crush.",
+					"description": "<p>Creatures in a 2×6 area take 50 damage on a failed DC 18 DEX save. (Creatures who fail can spend 1 Action to dive out of the way instead of taking this damage. They move half their speed and land Prone.) OR</p>"
+				},
+				"Bite/Swallow.": {
+					"name": "Bite/Swallow.",
+					"description": "<p>1d4+40. On crit: Swallowed. (Swallowed. You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.)</p>"
+				}
+			}
+		},
+		"Giant Spider": {
+			"name": "Giant Spider",
+			"creatureType": "Underground",
+			"items": {
+				"Shoot Web.": {
+					"name": "Shoot Web.",
+					"description": "<p>(Range 6) 1d8+2. On hit: Restrained (escape DC 12, or any slashing/fire damage). OR</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(Hampered target) 2d8+4, Poisoned (magical</p><p>healing ends).</p>"
+				}
+			}
+		},
+		"Giant Slug Minion": {
+			"name": "Giant Slug Minion",
+			"creatureType": "Underground",
+			"items": {
+				"Discordant Song.": {
+					"name": "Discordant Song.",
+					"description": "<p>Enemies who can hear gain a cumulative +1 Dazed at the beginning of each round.</p>"
+				},
+				"Attack.": {
+					"name": "Attack.",
+					"description": "<p>1d4 (follows minion rules).</p>"
+				}
+			}
+		},
+		"Ettercap": {
+			"name": "Ettercap",
+			"creatureType": "Underground",
+			"items": {
+				"Web Garrote.": {
+					"name": "Web Garrote.",
+					"description": "<p>1d8+2. On hit: Grappled (escape DC 13), Silenced until target escapes. </p><p>(Silenced. Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).)</p>"
+				}
+			}
+		},
+		"Cloaker": {
+			"name": "Cloaker",
+			"creatureType": "Underground",
+			"items": {
+				"Ambusher.": {
+					"name": "Ambusher.",
+					"description": "<p>Cloakers always start first and heroes roll Initiative with disadvantage.</p>"
+				},
+				"Mutual Harm.": {
+					"name": "Mutual Harm.",
+					"description": "<p>You take half damage from attacks while grappling a creature (they take the other half).</p>"
+				},
+				"Wrap.": {
+					"name": "Wrap.",
+					"description": "<p>2d10+20. On Hit: Grappled (escape DC 16). OR</p>"
+				},
+				"Horrifying Wail.": {
+					"name": "Horrifying Wail.",
+					"description": "<p>DC 16 WIL save, or creatures within 6 spaces are Frightened and must spend 1 Action moving as far away as possible.</p>"
+				}
+			}
+		},
+		"Zombie": {
+			"name": "Zombie",
+			"creatureType": "Undead",
+			"items": {
+				"Crunch.": {
+					"name": "Crunch.",
+					"description": "<p>1d4+4. On damage: Grappled</p>"
+				},
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				}
+			}
+		},
+		"Wraith": {
+			"name": "Wraith",
+			"creatureType": "Undead",
+			"items": {
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				},
+				"Soul Rend (2×).": {
+					"name": "Soul Rend (2×).",
+					"description": "<p>(Range 8) 1d4+10. On damage: deal 1 Wound.</p>"
+				}
+			}
+		},
+		"Specter": {
+			"name": "Specter",
+			"creatureType": "Undead",
+			"items": {
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				},
+				"Deathly Touch.": {
+					"name": "Deathly Touch.",
+					"description": "<p>1d4. On damage: set HP to 0.</p>"
+				}
+			}
+		},
+		"Skeleton": {
+			"name": "Skeleton",
+			"creatureType": "Undead",
+			"items": {
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead  (excluding minions).</p>"
+				},
+				"Grave Arrow.": {
+					"name": "Grave Arrow.",
+					"description": "<p>(Range 8) 1d4+3 </p>"
+				}
+			}
+		},
+		"Scarab Minions": {
+			"name": "Scarab Minions",
+			"creatureType": "Undead",
+			"items": {
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>1d6 (Follows Minion Rules)</p>"
+				}
+			}
+		},
+		"Ogre Zombie": {
+			"name": "Ogre Zombie",
+			"creatureType": "Undead",
+			"items": {
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				},
+				"Greatclub (2×).": {
+					"name": "Greatclub (2×).",
+					"description": "<p>1d4+8. On crit: Prone.</p>"
+				}
+			}
+		},
+		"Mummy": {
+			"name": "Mummy",
+			"creatureType": "Undead",
+			"items": {
+				"Slam (2×).": {
+					"name": "Slam (2×).",
+					"description": "<p>1d4+8. On damage: Dazed.</p>"
+				},
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				}
+			}
+		},
+		"Mummy Lord": {
+			"name": "Mummy Lord",
+			"creatureType": "Undead",
+			"items": {
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				},
+				"Scarab Swarm.": {
+					"name": "Scarab Swarm.",
+					"description": "<p> Summon 10 scarab minions (d6) within 6 spaces. Then:</p>"
+				},
+				"Slam (2×).": {
+					"name": "Slam (2×).",
+					"description": "<p>1d4+20. On damage: Dazed.</p>"
+				},
+				"Cursed Gaze.": {
+					"name": "Cursed Gaze.",
+					"description": "<p>When crit: DC 20 INT save, or suffer 1 Wound.</p>"
+				}
+			}
+		},
+		"Giant Zombie": {
+			"name": "Giant Zombie",
+			"creatureType": "Undead",
+			"items": {
+				"Decaying Swipe (2×).": {
+					"name": "Decaying Swipe (2×).",
+					"description": "<p>1d4+10. On damage: knockback Primary Die spaces.</p>"
+				},
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				}
+			}
+		},
+		"Ghoul": {
+			"name": "Ghoul",
+			"creatureType": "Undead",
+			"items": {
+				"Unliving, Undying.": {
+					"name": "Unliving, Undying.",
+					"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				},
+				"Sickening Claw.": {
+					"name": "Sickening Claw.",
+					"description": "<p>1d4+8. On damage: Dazed.</p>"
+				}
+			}
+		},
+		"Stirge": {
+			"name": "Stirge",
+			"creatureType": "Stirges",
+			"items": {
+				"Latch On.": {
+					"name": "Latch On.",
+					"description": "<p>1d4+2. On hit: Latched On.</p>"
+				},
+				"Evasive Flier.": {
+					"name": "Evasive Flier.",
+					"description": "<p>Attacks against stirges are made with disadvantage.</p>"
+				},
+				"Latched On.": {
+					"name": "Latched On.",
+					"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
+				}
+			}
+		},
+		"Greater Stirge": {
+			"name": "Greater Stirge",
+			"creatureType": "Stirges",
+			"items": {
+				"Evasive Flier.": {
+					"name": "Evasive Flier.",
+					"description": "<p>Attacks against stirges are made with disadvantage.</p>"
+				},
+				"Latched On.": {
+					"name": "Latched On.",
+					"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
+				},
+				"Latch On.": {
+					"name": "Latch On.",
+					"description": "<p>1d12+10. On hit: Latched On.</p>"
+				}
+			}
+		},
+		"Snakeman": {
+			"name": "Snakeman",
+			"creatureType": "Snakemen",
+			"items": {
+				"Coiling strike.": {
+					"name": "Coiling strike.",
+					"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				},
+				"Slash.": {
+					"name": "Slash.",
+					"description": "<p>1d6+6</p>"
+				},
+				"Spit.": {
+					"name": "Spit.",
+					"description": "<p>(Range 8) 1d6+6 </p>"
+				}
+			}
+		},
+		"Snakeman Minion": {
+			"name": "Snakeman Minion",
+			"creatureType": "Snakemen",
+			"items": {
+				"Strike.": {
+					"name": "Strike.",
+					"description": "<p>1d6 melee/ranged (follows minion rules).</p><p></p>"
+				},
+				"Coiling Strike": {
+					"name": "Coiling Strike",
+					"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				}
+			}
+		},
+		"Giant Cobra": {
+			"name": "Giant Cobra",
+			"creatureType": "Snakemen",
+			"items": {
+				"Coiling Strike.": {
+					"name": "Coiling Strike.",
+					"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				},
+				"Crush.": {
+					"name": "Crush.",
+					"description": "<p>2d6+20. Advantage vs. smaller creatures.</p>"
+				}
+			}
+		},
+		"Cobra Captain": {
+			"name": "Cobra Captain",
+			"creatureType": "Snakemen",
+			"items": {
+				"Slash (2×).": {
+					"name": "Slash (2×).",
+					"description": "<p>1d6+6</p>"
+				},
+				"Spit (2x).": {
+					"name": "Spit (2x).",
+					"description": "<p>(Range 8) 1d6+6</p>"
+				},
+				"Coiling Strike.": {
+					"name": "Coiling Strike.",
+					"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				}
+			}
+		},
+		"Ooze Minion": {
+			"name": "Ooze Minion",
+			"creatureType": "Oozes",
+			"items": {
+				"Digestive Touch.": {
+					"name": "Digestive Touch.",
+					"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
+				},
+				"Acidic Touch.": {
+					"name": "Acidic Touch.",
+					"description": "<p>1d6 (Follows minion rules)</p>"
+				}
+			}
+		},
+		"Ochre Jelly": {
+			"name": "Ochre Jelly",
+			"creatureType": "Oozes",
+			"items": {
+				"Digestive Touch.": {
+					"name": "Digestive Touch.",
+					"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
+				},
+				"Goopy.": {
+					"name": "Goopy.",
+					"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>"
+				},
+				"Acidic Touch (2×).": {
+					"name": "Acidic Touch (2×).",
+					"description": "<p>1d6+3.</p>"
+				}
+			}
+		},
+		"Gray Ooze": {
+			"name": "Gray Ooze",
+			"creatureType": "Oozes",
+			"items": {
+				"Digestive Touch.": {
+					"name": "Digestive Touch.",
+					"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
+				},
+				"Goopy.": {
+					"name": "Goopy.",
+					"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>"
+				},
+				"Acidic Touch (2×).": {
+					"name": "Acidic Touch (2×).",
+					"description": "<p>1d6+2.</p>"
+				}
+			}
+		},
+		"Elder Ooze": {
+			"name": "Elder Ooze",
+			"creatureType": "Oozes",
+			"items": {
+				"Digestive Touch.": {
+					"name": "Digestive Touch.",
+					"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
+				},
+				"Goopy.": {
+					"name": "Goopy.",
+					"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>"
+				},
+				"Acidic Touch (3×).": {
+					"name": "Acidic Touch (3×).",
+					"description": "<p>(Reach 3) 1d6+6.</p>"
+				}
+			}
+		},
+		"Black Pudding": {
+			"name": "Black Pudding",
+			"creatureType": "Oozes",
+			"items": {
+				"Digestive Touch.": {
+					"name": "Digestive Touch.",
+					"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
+				},
+				"Goopy.": {
+					"name": "Goopy.",
+					"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>"
+				},
+				"Acidic Touch (2×).": {
+					"name": "Acidic Touch (2×).",
+					"description": "<p>(Reach 2) 1d6+5.</p>"
+				}
+			}
+		},
+		"Tiny Mimic": {
+			"name": "Tiny Mimic",
+			"description": "<p>(Cup, Shoe, Apple, Candlestick, Potion, Pebble)</p>",
+			"creatureType": "Mimics",
+			"items": {
+				"Ambusher.": {
+					"name": "Ambusher.",
+					"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>"
+				},
+				"Pseudopod.": {
+					"name": "Pseudopod.",
+					"description": "<p>1d4 (escape DC 9), OR</p>"
+				},
+				"Sticky.": {
+					"name": "Sticky.",
+					"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(a Grappled creature) 1d12.</p>"
+				}
+			}
+		},
+		"Small Mimic": {
+			"name": "Small Mimic",
+			"description": "<p>(Backpack, Shield/Weapon, Chair, Crate, Tree Stump)</p>",
+			"creatureType": "Mimics",
+			"items": {
+				"Ambusher.": {
+					"name": "Ambusher.",
+					"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>"
+				},
+				"Sticky.": {
+					"name": "Sticky.",
+					"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>"
+				},
+				"Pseudopod.": {
+					"name": "Pseudopod.",
+					"description": "<p>1d6 (escape DC 11), OR</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(a Grappled creature) 1d20</p>"
+				}
+			}
+		},
+		"Medium Mimic": {
+			"name": "Medium Mimic",
+			"description": "<p>(Table, Treasure Chest, Barrel, Bookshelf, Door, Bed)</p>",
+			"creatureType": "Mimics",
+			"items": {
+				"Ambusher.": {
+					"name": "Ambusher.",
+					"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>"
+				},
+				"Sticky.": {
+					"name": "Sticky.",
+					"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>"
+				},
+				"Pseudopod.": {
+					"name": "Pseudopod.",
+					"description": "<p>1d8 (escape DC 13), OR</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(a Grappled creature) 2d20.</p>"
+				}
+			}
+		},
+		"Kobold": {
+			"name": "Kobold",
+			"creatureType": "Kobolds",
+			"items": {
+				"Nooooo!": {
+					"name": "Nooooo!",
+					"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">When an ally within 2 spaces dies, attack once for free.</span></p>"
+				},
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p>1d4+2</p>"
+				},
+				"Sling": {
+					"name": "Sling",
+					"description": "<p>(Range 8) 1d4+2.</p>"
+				}
+			}
+		},
+		"Kobold Trapper": {
+			"name": "Kobold Trapper",
+			"creatureType": "Kobolds",
+			"items": {
+				"Nooooo!": {
+					"name": "Nooooo!",
+					"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				},
+				"Trap!": {
+					"name": "Trap!",
+					"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>"
+				},
+				"Throw Scorpion (2×).": {
+					"name": "Throw Scorpion (2×).",
+					"description": "<p>(Range 8) 1d4+2.</p>"
+				},
+				"[Trap] - BEEES!": {
+					"name": "[Trap] - BEEES!",
+					"description": "<p>Deal 5d4 damage (doesn't miss). Half as</p><p>much to ALL adjacent creatures.</p>"
+				},
+				"[Trap] - HIDDEN NET!": {
+					"name": "[Trap] - HIDDEN NET!",
+					"description": "<p>Restrained! (Escape DC 10)</p>"
+				}
+			}
+		},
+		"Kobold Sneak": {
+			"name": "Kobold Sneak",
+			"creatureType": "Kobolds",
+			"items": {
+				"Nooooo!": {
+					"name": "Nooooo!",
+					"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				},
+				"Revenge!": {
+					"name": "Revenge!",
+					"description": "<p>When an ally dies, you may move up to 6 spaces before using your Nooooo! ability.</p>"
+				},
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">1d4+2</span></p>"
+				},
+				"Sling.": {
+					"name": "Sling.",
+					"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">(Range 8) 1d4+2.</span></p>"
+				}
+			}
+		},
+		"Kobold Minion": {
+			"name": "Kobold Minion",
+			"creatureType": "Kobolds",
+			"items": {
+				"Nooooo!": {
+					"name": "Nooooo!",
+					"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				},
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p>1d4 (follows minion rules).</p>"
+				}
+			}
+		},
+		"Kobold Denwarden": {
+			"name": "Kobold Denwarden",
+			"creatureType": "Kobolds",
+			"items": {
+				"Nooooo!": {
+					"name": "Nooooo!",
+					"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				},
+				"Hold!": {
+					"name": "Hold!",
+					"description": "<p>Adjacent allies gain Medium Armor.</p>"
+				},
+				"Stab (2×).": {
+					"name": "Stab (2×).",
+					"description": "<p> 1d4+2</p>"
+				},
+				"Sling (2x).": {
+					"name": "Sling (2x).",
+					"description": "<p>(Range 8) 1d4+2.</p>"
+				}
+			}
+		},
+		"Kobold Clanger": {
+			"name": "Kobold Clanger",
+			"creatureType": "Kobolds",
+			"items": {
+				"CLANG!": {
+					"name": "CLANG!",
+					"description": "<p>Allies who hear your clanging, roll 1 additional die whenever they attack.</p>"
+				}
+			}
+		},
+		"Stenchling": {
+			"name": "Stenchling",
+			"creatureType": "Horrors",
+			"items": {
+				"Putrid Cloud.": {
+					"name": "Putrid Cloud.",
+					"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>2d6.</p>"
+				}
+			}
+		},
+		"Spiny Fiend": {
+			"name": "Spiny Fiend",
+			"creatureType": "Horrors",
+			"items": {
+				"Spines.": {
+					"name": "Spines.",
+					"description": "<p>Melee attackers take 3 damage.</p>"
+				},
+				"Claws (2×).": {
+					"name": "Claws (2×).",
+					"description": "<p>1d6+6. OR</p>"
+				},
+				"Shoot Spine.": {
+					"name": "Shoot Spine.",
+					"description": "<p>(Range 12) 1d6+6.</p>"
+				}
+			}
+		},
+		"Incubus/Succubus": {
+			"name": "Incubus/Succubus",
+			"creatureType": "Horrors",
+			"items": {
+				"Infernal Allure.": {
+					"name": "Infernal Allure.",
+					"description": "<p>At the start of their turn, heroes make a DC 15 WIL save or become Allured (GM spends 1 of your Actions). Gain advantage for each failure this encounter.</p>"
+				},
+				"Claws & Whip (2x).": {
+					"name": "Claws & Whip (2x).",
+					"description": "<p>1d8+5 damage.</p>"
+				}
+			}
+		},
+		"Glabrezu": {
+			"name": "Glabrezu",
+			"creatureType": "Horrors",
+			"items": {
+				"Doomclaw (2×).": {
+					"name": "Doomclaw (2×).",
+					"description": "<p>(Reach 2) 3d6+10. On damage: Grappled (escape DC 17). If the same creature is Grappled by both of the glabrezu's claws, it must escape from each of them separately. OR</p>"
+				},
+				"Tear Asunder.": {
+					"name": "Tear Asunder.",
+					"description": "<p>(A creature Grappled by both of the glabrezu's claws) 50 unpreventable damage. If the target is at 0 HP: DC 17 STR save or be torn in two, dying instantly.</p>"
+				}
+			}
+		},
+		"Worg": {
+			"name": "Worg",
+			"creatureType": "Hill And Field",
+			"items": {
+				"Savage.": {
+					"name": "Savage.",
+					"description": "<p>Always crits when attacking a Grappled creature.</p>"
+				},
+				"Rip Apart (2×).": {
+					"name": "Rip Apart (2×).",
+					"description": "<p>1d6+2. On hit: Grappled (escape DC 10).</p>"
+				}
+			}
+		},
+		"Troll": {
+			"name": "Troll",
+			"creatureType": "Hill And Field",
+			"items": {
+				"Regenerate.": {
+					"name": "Regenerate.",
+					"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>"
+				},
+				"Choose twice:": {
+					"name": "Choose twice:"
+				},
+				"Claws.": {
+					"name": "Claws.",
+					"description": "<p>(Reach 2) 1d4+10. On crit: Prone.</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(A Prone creature) 1d4+20.</p>"
+				}
+			}
+		},
+		"Roc": {
+			"name": "Roc",
+			"creatureType": "Hill And Field",
+			"items": {
+				"Pluck Up.": {
+					"name": "Pluck Up.",
+					"description": "<p>(Reach 4, target up to 2 creatures) 3d12+20. On hit: Grappled (escape DC 18), OR</p>"
+				},
+				"Crush & Drop.": {
+					"name": "Crush & Drop.",
+					"description": "<p>Fly upward 20 spaces, deal 20 damage to Grappled creatures, then release (10d6 fall damage).</p>"
+				}
+			}
+		},
+		"Hill Giant": {
+			"name": "Hill Giant",
+			"creatureType": "Hill And Field",
+			"items": {
+				"Smash (2×).": {
+					"name": "Smash (2×).",
+					"description": "<p>(Reach 2) 1d6+15. OR</p>"
+				},
+				"Brute.": {
+					"name": "Brute.",
+					"description": "<p>On hit: Knockback Primary Die spaces.</p>"
+				},
+				"Boulder!": {
+					"name": "Boulder!",
+					"description": "<p>(Range 12) 1d6+20</p>"
+				}
+			}
+		},
+		"Griffon": {
+			"name": "Griffon",
+			"creatureType": "Hill And Field",
+			"items": {
+				"Talons.": {
+					"name": "Talons.",
+					"description": "<p>2d6+10, on hit: Grappled (escape DC 14), OR</p>"
+				},
+				"Fly & Drop.": {
+					"name": "Fly & Drop.",
+					"description": "<p>(if grappling) Fly upward 12 and release (6d6 fall damage).</p>"
+				}
+			}
+		},
+		"Bulette": {
+			"name": "Bulette",
+			"creatureType": "Hill And Field",
+			"items": {
+				"Burst Forth!": {
+					"name": "Burst Forth!",
+					"description": "<p>Combat with a Bulette starts with the heaviest character making a DC 14 DEX save or they are Grappled (escape DC 14) and take 1d12+20 damage (half on save).</p>"
+				},
+				"Drag Below.": {
+					"name": "Drag Below.",
+					"description": "<p>(A Grappled creature) 2d12 then drag below and burrow away. OR</p>"
+				},
+				"Leap & Bite.": {
+					"name": "Leap & Bite.",
+					"description": "<p>(If not grappling) leap 6, and attack for 1d12+20. On hit: Grappled.</p>"
+				}
+			}
+		},
+		"Blue Drake": {
+			"name": "Blue Drake",
+			"creatureType": "Hill And Field",
+			"items": {
+				"On Death.": {
+					"name": "On Death.",
+					"description": "<p>Deal 1d12 damage back (ignores metal armor) .</p>"
+				},
+				"Shocking Bite.": {
+					"name": "Shocking Bite.",
+					"description": "<p>1d12+5 (ignores metal armor).</p>"
+				}
+			}
+		},
+		"Pinky": {
+			"name": "Pinky",
+			"creatureType": "Goblins",
+			"items": {
+				"Panic.": {
+					"name": "Panic.",
+					"description": "<p>Attacks are made against Pinky with disadvantage.</p>"
+				},
+				"Protect Me!": {
+					"name": "Protect Me!",
+					"description": "<p>Command a Rootbreaker to attack.</p>"
+				},
+				"Escape.": {
+					"name": "Escape.",
+					"description": "<p>(Reaction: when Bloodied) Use Cloak of Lesser Windform to turn Invisible and run away.</p>"
+				}
+			}
+		},
+		"Goblin": {
+			"name": "Goblin",
+			"creatureType": "Goblins",
+			"items": {
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p>1d6+2.</p>"
+				},
+				"Haha, Missed Me!": {
+					"name": "Haha, Missed Me!",
+					"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
+				},
+				"Shoot.": {
+					"name": "Shoot.",
+					"description": "<p>(Range 8) 1d6+2.</p>"
+				}
+			}
+		},
+		"Goblin Taskmaster": {
+			"name": "Goblin Taskmaster",
+			"creatureType": "Goblins",
+			"items": {
+				"Haha, Missed Me!": {
+					"name": "Haha, Missed Me!",
+					"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
+				},
+				"Meat Shield.": {
+					"name": "Meat Shield.",
+					"description": "<p>Can force other goblins to Interpose for him.</p>"
+				},
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p>1d6+2. Then use Get in Here</p>"
+				},
+				"Shoot.": {
+					"name": "Shoot.",
+					"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>"
+				},
+				"Get in here!": {
+					"name": "Get in here!",
+					"description": "<p>Call a goblin minion to the fight.</p>"
+				}
+			}
+		},
+		"Goblin Ratrider": {
+			"name": "Goblin Ratrider",
+			"creatureType": "Goblins",
+			"items": {
+				"Haha, Missed Me!": {
+					"name": "Haha, Missed Me!",
+					"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
+				},
+				"CHAAARGE!": {
+					"name": "CHAAARGE!",
+					"description": "<p>If you move at least 4 spaces in a straight line, attack with advantage once.</p>"
+				},
+				"Bite & Stab (2×).": {
+					"name": "Bite & Stab (2×).",
+					"description": "<p>1d6+2. On crit: Prone.</p>"
+				}
+			}
+		},
+		"Goblin Minion": {
+			"name": "Goblin Minion",
+			"creatureType": "Goblins",
+			"items": {
+				"Haha, Missed Me!": {
+					"name": "Haha, Missed Me!",
+					"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
+				},
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p>1d6 (follows minion rules).</p>"
+				}
+			}
+		},
+		"Bugbear": {
+			"name": "Bugbear",
+			"creatureType": "Goblins",
+			"items": {
+				"Haha, Missed": {
+					"name": "Haha, Missed",
+					"description": "<p>Me! Whenever an attack misses you, deal 1 psychic damage in return.</p>"
+				},
+				"Cleave.": {
+					"name": "Cleave.",
+					"description": "<p>2d6+4. OR</p>"
+				},
+				"Javelins.": {
+					"name": "Javelins.",
+					"description": "<p>(Range 8) 1d6+2.</p>"
+				}
+			}
+		},
+		"Gnoll": {
+			"name": "Gnoll",
+			"creatureType": "Gnolls",
+			"items": {
+				"Ravage (2×).": {
+					"name": "Ravage (2×).",
+					"description": "<p>1d10, OR</p>"
+				},
+				"Shoot.": {
+					"name": "Shoot.",
+					"description": "<p>(Range 12) 1d10</p>"
+				},
+				"Frenzy.": {
+					"name": "Frenzy.",
+					"description": "<p>Advantage against Bloodied creatures. </p>"
+				}
+			}
+		},
+		"Gnoll Packleader": {
+			"name": "Gnoll Packleader",
+			"creatureType": "Gnolls",
+			"items": {
+				"Frenzy.": {
+					"name": "Frenzy.",
+					"description": "<p>Advantage against Bloodied creatures.</p>"
+				},
+				"Bark Orders.": {
+					"name": "Bark Orders.",
+					"description": "<p>2 allies can move. Then:</p>"
+				},
+				"Ravage (3×).": {
+					"name": "Ravage (3×).",
+					"description": "<p>1d10</p>"
+				}
+			}
+		},
+		"Duskprowler": {
+			"name": "Duskprowler",
+			"creatureType": "Forest Denizens",
+			"items": {
+				"Illusory Aura.": {
+					"name": "Illusory Aura.",
+					"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage suppresses this effect until the end of the next hero's turn.</p>"
+				},
+				"Ravage (2×).": {
+					"name": "Ravage (2×).",
+					"description": "<p>2d8+2.</p>"
+				}
+			}
+		},
+		"Druid": {
+			"name": "Druid",
+			"creatureType": "Forest Denizens",
+			"items": {
+				"Beastshift.": {
+					"name": "Beastshift.",
+					"description": "<p>+4 speed, gain Medium armor this round. 4d4+10, OR</p>"
+				},
+				"Hurricane.": {
+					"name": "Hurricane.",
+					"description": "<p> (Reach 3) 4d4+10 to all enemies within reach. On damage: move targets anywhere else in Reach.</p>"
+				}
+			}
+		},
+		"Basilisk": {
+			"name": "Basilisk",
+			"creatureType": "Forest Denizens",
+			"items": {
+				"Flesh to Stone.": {
+					"name": "Flesh to Stone.",
+					"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>"
+				},
+				"Stone Gaze.": {
+					"name": "Stone Gaze.",
+					"description": "<p>Daze 1 creature within sight, then</p>"
+				},
+				"Envenom.": {
+					"name": "Envenom.",
+					"description": "<p>1d8+10, advantage vs Dazed targets.</p>"
+				}
+			}
+		},
+		"Fanatic": {
+			"name": "Fanatic",
+			"creatureType": "Cultists",
+			"items": {
+				"Fanatical Zeal.": {
+					"name": "Fanatical Zeal.",
+					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
+				},
+				"Despair.": {
+					"name": "Despair.",
+					"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
+				},
+				"Oblation of Blood!": {
+					"name": "Oblation of Blood!",
+					"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>"
+				},
+				"Whispers of Madness.": {
+					"name": "Whispers of Madness.",
+					"description": "<p>Contested STR check or Grappled (reroll to escape, or any radiant damage); if successful, deal 3d6+6 psychic damage (cannot be Defended or Interposed against).</p>"
+				}
+			}
+		},
+		"Doomsayer": {
+			"name": "Doomsayer",
+			"creatureType": "Cultists",
+			"items": {
+				"Fanatical Zeal.": {
+					"name": "Fanatical Zeal.",
+					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
+				},
+				"Despair.": {
+					"name": "Despair.",
+					"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
+				},
+				"Feverish Chant.": {
+					"name": "Feverish Chant.",
+					"description": "<p>(Concentration) Reduce all damage done to allies who can hear you to 1. OR</p>"
+				},
+				"Ecstatic Ravings.": {
+					"name": "Ecstatic Ravings.",
+					"description": "<p>2d6 psychic damage to all enemies who can hear you.</p>"
+				}
+			}
+		},
+		"Cultist": {
+			"name": "Cultist",
+			"creatureType": "Cultists",
+			"items": {
+				"Fanatical Zeal.": {
+					"name": "Fanatical Zeal.",
+					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
+				},
+				"Oblation of Blood!": {
+					"name": "Oblation of Blood!",
+					"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>"
+				},
+				"Dreadful Blade.": {
+					"name": "Dreadful Blade.",
+					"description": "<p>1d6+6. OR</p>"
+				},
+				"Blood Boil.": {
+					"name": "Blood Boil.",
+					"description": "<p>(Range 12, Bloodied creature) 3d6+6.</p>"
+				},
+				"Despair.": {
+					"name": "Despair.",
+					"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
+				}
+			}
+		},
+		"Giant Venus Flytrap": {
+			"name": "Giant Venus Flytrap",
+			"creatureType": "Briarbanes",
+			"items": {
+				"Blind.": {
+					"name": "Blind.",
+					"description": "<p>Always attacks with disadvantage.</p><p>HP scales as 20 per hero.</p>"
+				},
+				"Tangle (2x).": {
+					"name": "Tangle (2x).",
+					"description": "<p>(Reach 12) 1d6+2, Grappled (escape DC 12, or any fire or slashing damage).</p>"
+				},
+				"Reel In.": {
+					"name": "Reel In.",
+					"description": "<p>If any creature is Grappled, pull them adjacent, then Bite.</p>"
+				},
+				"Bite.": {
+					"name": "Bite.",
+					"description": "<p>(Reach 3) 1d6+15 damage.</p>"
+				}
+			}
+		},
+		"Briarbane Treant": {
+			"name": "Briarbane Treant",
+			"creatureType": "Briarbanes",
+			"items": {
+				"Choose twice:": {
+					"name": "Choose twice:"
+				},
+				"Peeling Bark.": {
+					"name": "Peeling Bark.",
+					"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				},
+				"Slam.": {
+					"name": "Slam.",
+					"description": "<p>(Reach 3) 2d6+10. On damage: Prone.</p>"
+				},
+				"Stomp.": {
+					"name": "Stomp.",
+					"description": "<p>(Hampered target) 2d6+20.</p>"
+				}
+			}
+		},
+		"Briarbane Tangler": {
+			"name": "Briarbane Tangler",
+			"creatureType": "Briarbanes",
+			"items": {
+				"Tangle (2×).": {
+					"name": "Tangle (2×).",
+					"description": "<p>(Reach 6) 1d6+2. On hit: Grappled (escape DC 12, or any fire or slashing damage).</p>"
+				},
+				"Peeling Bark.": {
+					"name": "Peeling Bark.",
+					"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				}
+			}
+		},
+		"Briarbane Seedling": {
+			"name": "Briarbane Seedling",
+			"creatureType": "Briarbanes",
+			"items": {
+				"Peeling Bark.": {
+					"name": "Peeling Bark.",
+					"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				},
+				"Thorn Seed.": {
+					"name": "Thorn Seed.",
+					"description": "<p>(Range 6) 2d6+2</p>"
+				}
+			}
+		},
+		"Briarbane Rootbreaker": {
+			"name": "Briarbane Rootbreaker",
+			"creatureType": "Briarbanes",
+			"items": {
+				"Peeling Bark.": {
+					"name": "Peeling Bark.",
+					"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				},
+				"Slam.": {
+					"name": "Slam.",
+					"description": "<p>3d6+6. On crit: knockback 2.</p>"
+				}
+			}
+		},
+		"Briarbane Acidpod": {
+			"name": "Briarbane Acidpod",
+			"creatureType": "Briarbanes",
+			"items": {
+				"Peeling Bark.": {
+					"name": "Peeling Bark.",
+					"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				},
+				"Caustic Eruption.": {
+					"name": "Caustic Eruption.",
+					"description": "<p>On death: 4d6 acid damage to ALL adjacent creatures.</p>"
+				},
+				"Grab.": {
+					"name": "Grab.",
+					"description": "<p>DC 12 DEX save or Grappled.</p>"
+				}
+			}
+		},
+		"Bandit": {
+			"name": "Bandit",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Stab.": {
+					"name": "Stab.",
+					"description": "<p>1d8+1.</p>"
+				},
+				"Shoot.": {
+					"name": "Shoot.",
+					"description": "<p>(Range 8) 1d8+1</p>"
+				}
+			}
+		},
+		"Bandit Minion": {
+			"name": "Bandit Minion",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Stab": {
+					"name": "Stab",
+					"description": "<p>1d8 (follows minion rules).</p>"
+				}
+			}
+		},
+		"Bandit Mage": {
+			"name": "Bandit Mage",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Spark Step.": {
+					"name": "Spark Step.",
+					"description": "<p>When damaged, teleport up to 4 spaces.</p>"
+				},
+				"Arc Lightning.": {
+					"name": "Arc Lightning.",
+					"description": "<p>(Range 12) 3d8. Also strikes the next closest creature. On miss: damage self instead.</p>"
+				}
+			}
+		},
+		"Bandit Hunter": {
+			"name": "Bandit Hunter",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Battlebow.": {
+					"name": "Battlebow.",
+					"description": "<p>2d8+2 (Range 12)</p>"
+				}
+			}
+		},
+		"Bandit Captain": {
+			"name": "Bandit Captain",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Slice (3x).": {
+					"name": "Slice (3x).",
+					"description": "<p>1d8+1</p>"
+				},
+				"Shoot (3x)": {
+					"name": "Shoot (3x)",
+					"description": "<p>(Range 8) 1d8+1</p>"
+				}
+			}
+		},
+		"Bandit Bruiser": {
+			"name": "Bandit Bruiser",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Bash.": {
+					"name": "Bash.",
+					"description": "<p>2d8+4</p>"
+				}
+			}
+		},
+		"Bandit Assassin": {
+			"name": "Bandit Assassin",
+			"creatureType": "Bandits",
+			"items": {
+				"Parry.": {
+					"name": "Parry.",
+					"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				},
+				"Sneak.": {
+					"name": "Sneak.",
+					"description": "<p>You are invisible until you attack.</p>"
+				},
+				"Poison Blade (2×).": {
+					"name": "Poison Blade (2×).",
+					"description": "<p>1d8+2. On damage: Dazed.</p>"
+				}
+			}
+		}
+	}
+}
