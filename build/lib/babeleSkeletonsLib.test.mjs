@@ -1,7 +1,14 @@
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
 	buildEmbeddedItemEntries,
+	buildPackSkeleton,
 	buildTableResultEntries,
+	deriveBoonFolders,
+	deriveClassFeatureFolders,
+	deriveFoldersForPack,
+	deriveMonsterFolders,
+	deriveSubclassFolders,
 	extractActivationFields,
 	extractEntryFields,
 	extractRuleEntries,
@@ -11,6 +18,11 @@ import {
 	sortObjectKeys,
 	toTitleCase,
 } from './babeleSkeletonsLib.mjs';
+
+// Tests touch path-derived logic; use `path.join` so separators match the
+// host platform's `path.sep` (the derivation code splits on `path.sep`).
+const PACK_ROOT = path.join('packs', 'pack');
+const join = (...parts) => path.join(PACK_ROOT, ...parts);
 
 describe('nonEmptyString', () => {
 	it('accepts strings with non-whitespace content', () => {
@@ -314,5 +326,375 @@ describe('sortObjectKeys', () => {
 		expect(sortObjectKeys('hi')).toBe('hi');
 		expect(sortObjectKeys(null)).toBe(null);
 		expect(sortObjectKeys(5)).toBe(5);
+	});
+});
+
+describe('deriveMonsterFolders', () => {
+	it('returns the empty list when all sources sit at the pack root', () => {
+		expect(deriveMonsterFolders(PACK_ROOT, [{ file: join('dragon.json') }])).toEqual([]);
+	});
+
+	it('title-cases the top-level subdirectory', () => {
+		expect(
+			deriveMonsterFolders(PACK_ROOT, [
+				{ file: join('aberrations', 'mind-flayer.json') },
+				{ file: join('humanoids', 'orc.json') },
+			]),
+		).toEqual(['Aberrations', 'Humanoids']);
+	});
+
+	it('uses the second segment when the first is "core"', () => {
+		expect(
+			deriveMonsterFolders(PACK_ROOT, [{ file: join('core', 'beasts', 'wolf.json') }]),
+		).toEqual(['Beasts']);
+	});
+
+	it('skips a "core" entry with no second segment', () => {
+		expect(deriveMonsterFolders(PACK_ROOT, [{ file: join('core', 'wolf.json') }])).toEqual([]);
+	});
+
+	it('dedupes entries that share a folder', () => {
+		expect(
+			deriveMonsterFolders(PACK_ROOT, [
+				{ file: join('beasts', 'wolf.json') },
+				{ file: join('beasts', 'bear.json') },
+			]),
+		).toEqual(['Beasts']);
+	});
+
+	it('title-cases hyphenated and snake_case folder names', () => {
+		expect(
+			deriveMonsterFolders(PACK_ROOT, [
+				{ file: join('great-old-ones', 'cthulhu.json') },
+				{ file: join('cosmic_horrors', 'shoggoth.json') },
+			]),
+		).toEqual(['Great Old Ones', 'Cosmic Horrors']);
+	});
+});
+
+describe('deriveBoonFolders', () => {
+	it('maps the well-known boon tiers to their canonical labels', () => {
+		expect(
+			deriveBoonFolders([
+				{ data: { system: { boonType: 'minor' } } },
+				{ data: { system: { boonType: 'major' } } },
+				{ data: { system: { boonType: 'epic' } } },
+			]),
+		).toEqual(['Minor Boons', 'Major Boons', 'Epic Boons']);
+	});
+
+	it('title-cases unrecognised boon types', () => {
+		expect(deriveBoonFolders([{ data: { system: { boonType: 'legendary' } } }])).toEqual([
+			'Legendary Boons',
+		]);
+	});
+
+	it('normalises case and surrounding whitespace before grouping', () => {
+		expect(
+			deriveBoonFolders([
+				{ data: { system: { boonType: '  MINOR  ' } } },
+				{ data: { system: { boonType: 'Minor' } } },
+			]),
+		).toEqual(['Minor Boons']);
+	});
+
+	it('skips entries with no boonType', () => {
+		expect(
+			deriveBoonFolders([
+				{ data: { system: {} } },
+				{ data: { system: { boonType: '' } } },
+				{ data: {} },
+			]),
+		).toEqual([]);
+	});
+});
+
+describe('deriveSubclassFolders', () => {
+	it('title-cases each unique parentClass', () => {
+		expect(
+			deriveSubclassFolders([
+				{ data: { system: { parentClass: 'fighter' } } },
+				{ data: { system: { parentClass: 'wizard' } } },
+			]),
+		).toEqual(['Fighter', 'Wizard']);
+	});
+
+	it('dedupes after normalising case and whitespace', () => {
+		expect(
+			deriveSubclassFolders([
+				{ data: { system: { parentClass: '  FIGHTER  ' } } },
+				{ data: { system: { parentClass: 'fighter' } } },
+			]),
+		).toEqual(['Fighter']);
+	});
+
+	it('ignores entries without a parentClass', () => {
+		expect(
+			deriveSubclassFolders([{ data: { system: {} } }, { data: { system: { parentClass: '' } } }]),
+		).toEqual([]);
+	});
+});
+
+describe('deriveClassFeatureFolders', () => {
+	it('emits a Class and Class Progression folder for every class seen', () => {
+		expect(
+			deriveClassFeatureFolders(PACK_ROOT, [
+				{ file: join('classes', 'fighter', 'second-wind.json'), data: {} },
+			]),
+		).toEqual(['Fighter', 'Fighter Progression']);
+	});
+
+	it('detects subclasses from a "*-subclasses" path segment and adds a plural folder', () => {
+		const folders = deriveClassFeatureFolders(PACK_ROOT, [
+			{
+				file: join('classes', 'fighter', 'fighter-subclasses', 'champion', 'critical.json'),
+				data: {},
+			},
+		]);
+		expect(folders).toContain('Fighter');
+		expect(folders).toContain('Fighter Progression');
+		expect(folders).toContain('Fighter Subclasses');
+		expect(folders).toContain('Champion');
+	});
+
+	it('detects subclasses from system.subclass when the path lacks a marker', () => {
+		const folders = deriveClassFeatureFolders(PACK_ROOT, [
+			{
+				file: join('classes', 'wizard', 'evocation-overload.json'),
+				data: { system: { subclass: 'Evoker' } },
+			},
+		]);
+		expect(folders).toContain('Wizard Subclasses');
+		expect(folders).toContain('Evoker');
+	});
+
+	it('groups features under system.group using groupLabel when present', () => {
+		const folders = deriveClassFeatureFolders(PACK_ROOT, [
+			{
+				file: join('classes', 'wizard', 'arcane-tradition.json'),
+				data: { system: { group: 'arcane-tradition', groupLabel: 'Arcane Tradition' } },
+			},
+		]);
+		expect(folders).toContain('Arcane Tradition');
+	});
+
+	it('title-cases the group slug when no groupLabel is provided', () => {
+		const folders = deriveClassFeatureFolders(PACK_ROOT, [
+			{
+				file: join('classes', 'wizard', 'arcane-tradition.json'),
+				data: { system: { group: 'arcane-tradition' } },
+			},
+		]);
+		expect(folders).toContain('Arcane Tradition');
+	});
+
+	it('does not emit a group folder for a "-progression" slug', () => {
+		const folders = deriveClassFeatureFolders(PACK_ROOT, [
+			{
+				file: join('classes', 'fighter', 'level-up.json'),
+				data: { system: { group: 'fighter-progression' } },
+			},
+		]);
+		expect(folders).toEqual(['Fighter', 'Fighter Progression']);
+	});
+
+	it('falls back to system.class when the path is too shallow to derive a class id', () => {
+		const folders = deriveClassFeatureFolders(PACK_ROOT, [
+			{ file: join('orphan.json'), data: { system: { class: 'Sorcerer' } } },
+		]);
+		expect(folders).toContain('Sorcerer');
+		expect(folders).toContain('Sorcerer Progression');
+	});
+
+	it('skips entries with neither a path-derived class nor system.class', () => {
+		expect(
+			deriveClassFeatureFolders(PACK_ROOT, [{ file: join('orphan.json'), data: {} }]),
+		).toEqual([]);
+	});
+});
+
+describe('deriveFoldersForPack', () => {
+	it('dispatches monsters and legendaryMonsters through deriveMonsterFolders', () => {
+		const sources = [{ file: join('beasts', 'wolf.json') }];
+		expect(deriveFoldersForPack('monsters', PACK_ROOT, sources)).toEqual(['Beasts']);
+		expect(deriveFoldersForPack('legendaryMonsters', PACK_ROOT, sources)).toEqual(['Beasts']);
+	});
+
+	it('dispatches boons, subclasses, and classFeatures to their respective derivers', () => {
+		expect(
+			deriveFoldersForPack('boons', PACK_ROOT, [{ data: { system: { boonType: 'minor' } } }]),
+		).toEqual(['Minor Boons']);
+		expect(
+			deriveFoldersForPack('subclasses', PACK_ROOT, [
+				{ data: { system: { parentClass: 'rogue' } } },
+			]),
+		).toEqual(['Rogue']);
+		expect(
+			deriveFoldersForPack('classFeatures', PACK_ROOT, [
+				{ file: join('classes', 'rogue', 'sneak-attack.json'), data: {} },
+			]),
+		).toEqual(['Rogue', 'Rogue Progression']);
+	});
+
+	it('returns the empty list for pack types with no folder structure', () => {
+		expect(deriveFoldersForPack('ancestries', PACK_ROOT, [])).toEqual([]);
+		expect(deriveFoldersForPack('items', PACK_ROOT, [])).toEqual([]);
+	});
+});
+
+describe('buildPackSkeleton', () => {
+	const itemPackMeta = { name: 'nimble-items', label: 'Nimble Items', type: 'Item' };
+	const monsterPackMeta = { name: 'nimble-monsters', label: 'Nimble Monsters', type: 'Actor' };
+	const tablePackMeta = { name: 'nimble-tables', label: 'Nimble Tables', type: 'RollTable' };
+
+	it('builds entries from each named source and reports them as added when none existed', () => {
+		const sources = [
+			{ data: { name: 'Dagger', type: 'object', system: { description: 'small blade' } } },
+			{ data: { name: 'Sword', type: 'object', system: { description: 'long blade' } } },
+		];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, null);
+		expect(result.skeleton.label).toBe('Nimble Items');
+		expect(result.skeleton.entries).toEqual({
+			Dagger: { name: 'Dagger', description: 'small blade' },
+			Sword: { name: 'Sword', description: 'long blade' },
+		});
+		expect(result.added).toEqual(['Dagger', 'Sword']);
+		expect(result.stale).toEqual([]);
+		expect(result.foldersAdded).toBe(0);
+		expect(result.collisions).toEqual([]);
+		expect(result.skeleton.folders).toBeUndefined();
+	});
+
+	it('sorts entries and folders alphabetically (case-insensitive)', () => {
+		const sources = [
+			{ data: { name: 'zebra', type: 'object', system: { description: 'z' } } },
+			{ data: { name: 'Apple', type: 'object', system: { description: 'a' } } },
+		];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, null);
+		expect(Object.keys(result.skeleton.entries)).toEqual(['Apple', 'zebra']);
+	});
+
+	it('skips sources with no name or no extractable fields', () => {
+		const sources = [
+			{ data: { name: '', type: 'object', system: { description: 'x' } } },
+			{ data: { name: 'Blank', type: 'object' } },
+		];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, null);
+		expect(result.skeleton.entries).toEqual({ Blank: { name: 'Blank' } });
+	});
+
+	it('preserves translator edits while adding newly-discovered entries', () => {
+		const existing = {
+			label: 'Custom Label',
+			entries: {
+				Dagger: { name: 'Daga' },
+			},
+		};
+		const sources = [
+			{ data: { name: 'Dagger', type: 'object', system: { description: 'small blade' } } },
+			{ data: { name: 'Sword', type: 'object', system: { description: 'long blade' } } },
+		];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, existing);
+		// Existing translation is kept, new entry is added.
+		expect(result.skeleton.entries.Dagger).toEqual({ name: 'Daga', description: 'small blade' });
+		expect(result.skeleton.entries.Sword).toEqual({ name: 'Sword', description: 'long blade' });
+		// Existing label and mapping are preserved.
+		expect(result.skeleton.label).toBe('Custom Label');
+		expect(result.added).toEqual(['Sword']);
+	});
+
+	it('reports — but retains — entries no longer in the source pack', () => {
+		const existing = {
+			entries: { OldName: { name: 'Antiguo' } },
+		};
+		const sources = [{ data: { name: 'NewName', type: 'object', system: { description: 'n' } } }];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, existing);
+		expect(result.stale).toEqual(['OldName']);
+		expect(result.skeleton.entries.OldName).toEqual({ name: 'Antiguo' });
+		expect(result.skeleton.entries.NewName).toEqual({ name: 'NewName', description: 'n' });
+	});
+
+	it('carries an existing mapping block through to the regenerated skeleton', () => {
+		const existing = {
+			entries: {},
+			mapping: { foo: 'system.foo' },
+		};
+		const sources = [{ data: { name: 'X', type: 'object', system: { description: 'x' } } }];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, existing);
+		expect(result.skeleton.mapping).toEqual({ foo: 'system.foo' });
+	});
+
+	it('attaches embedded actor items keyed by item name and reports collisions', () => {
+		const sources = [
+			{
+				file: join('humanoids', 'goblin.json'),
+				data: {
+					name: 'Goblin',
+					type: 'npc',
+					system: { description: 'mean and green' },
+					items: [
+						{ name: 'Bite', type: 'feature', system: { description: 'chomp' } },
+						{ name: 'Bite', type: 'feature', system: { description: 'second chomp' } },
+					],
+				},
+			},
+		];
+		const result = buildPackSkeleton(monsterPackMeta, 'monsters', PACK_ROOT, sources, null);
+		expect(result.skeleton.entries.Goblin.items).toEqual({
+			Bite: { name: 'Bite', description: 'second chomp' },
+		});
+		expect(result.collisions).toEqual(['Goblin → Bite']);
+	});
+
+	it('attaches RollTable results keyed by _id', () => {
+		const sources = [
+			{
+				data: {
+					name: 'Loot Table',
+					description: 'roll for loot',
+					results: [
+						{ _id: 'r1', name: 'Coin', description: 'gold' },
+						{ _id: 'r2', name: 'Gem' },
+					],
+				},
+			},
+		];
+		const result = buildPackSkeleton(tablePackMeta, 'tables', PACK_ROOT, sources, null);
+		expect(result.skeleton.entries['Loot Table'].results).toEqual({
+			r1: { name: 'Coin', description: 'gold' },
+			r2: { name: 'Gem' },
+		});
+	});
+
+	it('emits folder names for derivable pack types and counts only newly added folders', () => {
+		const sources = [
+			{
+				file: join('beasts', 'wolf.json'),
+				data: {
+					name: 'Wolf',
+					type: 'npc',
+					system: { description: 'howls' },
+				},
+			},
+			{
+				file: join('humanoids', 'orc.json'),
+				data: {
+					name: 'Orc',
+					type: 'npc',
+					system: { description: 'roars' },
+				},
+			},
+		];
+		const existing = { entries: {}, folders: { Beasts: 'Beasts' } };
+		const result = buildPackSkeleton(monsterPackMeta, 'monsters', PACK_ROOT, sources, existing);
+		expect(result.skeleton.folders).toEqual({ Beasts: 'Beasts', Humanoids: 'Humanoids' });
+		// Beasts already existed; only Humanoids is newly added.
+		expect(result.foldersAdded).toBe(1);
+	});
+
+	it('omits the folders block when the pack type has no folder structure', () => {
+		const sources = [{ data: { name: 'A', type: 'object', system: { description: 'a' } } }];
+		const result = buildPackSkeleton(itemPackMeta, 'items', PACK_ROOT, sources, null);
+		expect(result.skeleton.folders).toBeUndefined();
 	});
 });
