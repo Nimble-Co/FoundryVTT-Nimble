@@ -53,6 +53,7 @@
 		},
 		"Chaos Table": {
 			"name": "Chaos Table",
+			"description": "<h6><strong>Unless otherwise noted, ongoing effects last for up to 1 minute or until Chaos is triggered again.</strong></h6>",
 			"results": {
 				"4pclmXhEjiw0PblN": {
 					"name": "Elemental Eruption",

@@ -112,11 +112,12 @@ function extractActivationFields(activation) {
 	return Object.keys(out).length > 0 ? out : null;
 }
 
-function extractEntryFields(source) {
+function extractEntryFields(source, { isRollTable = false } = {}) {
 	const fields = {};
 	if (nonEmptyString(source.name)) fields.name = source.name;
 
-	const description = source.system?.description;
+	// RollTables store description at top-level; actors and items use system.description.
+	const description = isRollTable ? source.description : source.system?.description;
 	if (nonEmptyString(description)) fields.description = description;
 
 	if (ACTOR_TYPES.has(source.type)) {
@@ -162,11 +163,15 @@ function buildTableResultEntries(tableSource) {
 	return Object.keys(entries).length > 0 ? entries : null;
 }
 
+function isPlainObject(value) {
+	return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 function mergeEntry(existing, source) {
 	const merged = {};
 	for (const [key, sourceValue] of Object.entries(source)) {
 		const existingValue = existing?.[key];
-		if (existingValue && typeof existingValue === 'object' && typeof sourceValue === 'object') {
+		if (isPlainObject(existingValue) && isPlainObject(sourceValue)) {
 			merged[key] = mergeEntry(existingValue, sourceValue);
 			continue;
 		}
@@ -320,10 +325,11 @@ function deriveFoldersForPack(dirBaseName, packDir, sources) {
 }
 
 function buildPackSkeleton(packMeta, dirBaseName, packDir, sources, existing) {
+	const isRollTable = packMeta.type === 'RollTable';
 	const sourceEntries = {};
 	for (const { data } of sources) {
 		if (!nonEmptyString(data?.name)) continue;
-		const fields = extractEntryFields(data);
+		const fields = extractEntryFields(data, { isRollTable });
 		if (Object.keys(fields).length === 0) continue;
 
 		if (ACTOR_TYPES.has(data.type)) {
@@ -331,7 +337,7 @@ function buildPackSkeleton(packMeta, dirBaseName, packDir, sources, existing) {
 			if (embedded) fields.items = embedded;
 		}
 
-		if (data.type === 'table' || packMeta.type === 'RollTable') {
+		if (isRollTable) {
 			const results = buildTableResultEntries(data);
 			if (results) fields.results = results;
 		}
