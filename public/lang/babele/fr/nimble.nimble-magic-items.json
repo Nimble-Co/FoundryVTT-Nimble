@@ -1,0 +1,353 @@
+{
+	"label": "Nimble Magic Items",
+	"entries": {
+		"Aerolith Crystal": {
+			"name": "Aerolith Crystal"
+		},
+		"Ashen Harp": {
+			"name": "Ashen Harp"
+		},
+		"Ball of Spiders": {
+			"name": "Ball of Spiders"
+		},
+		"Belt of Hill Giant Strength": {
+			"name": "Belt of Hill Giant Strength"
+		},
+		"Bloodstained Quill": {
+			"name": "Bloodstained Quill"
+		},
+		"Button of Protection": {
+			"name": "Button of Protection"
+		},
+		"Cloak of Lesser Windform": {
+			"durationDetails": "Up to 10 minutes",
+			"name": "Cloak of Lesser Windform"
+		},
+		"Cloudstrider's Tome": {
+			"name": "Cloudstrider's Tome"
+		},
+		"Crablord's Crown": {
+			"name": "Crablord's Crown"
+		},
+		"Cursed Stash": {
+			"name": "Cursed Stash"
+		},
+		"Deepstone Charm": {
+			"durationDetails": "As long as you can hold your breath",
+			"name": "Deepstone Charm"
+		},
+		"Doomcaller's Horn": {
+			"name": "Doomcaller's Horn"
+		},
+		"Dwarven Compass": {
+			"name": "Dwarven Compass"
+		},
+		"Elderwyrm's Majesty": {
+			"name": "Elderwyrm's Majesty"
+		},
+		"Endless Cask": {
+			"name": "Endless Cask"
+		},
+		"Eyes of the Street": {
+			"name": "Eyes of the Street"
+		},
+		"Fiendish Runeblade": {
+			"name": "Fiendish Runeblade"
+		},
+		"Flying Carpet": {
+			"name": "Flying Carpet"
+		},
+		"Forgefather's Crown": {
+			"name": "Forgefather's Crown"
+		},
+		"Frostwarden's Shield": {
+			"name": "Frostwarden's Shield"
+		},
+		"Gem of Escape": {
+			"name": "Gem of Escape"
+		},
+		"Glacier in a Bottle": {
+			"name": "Glacier in a Bottle"
+		},
+		"Glowing Grass": {
+			"name": "Glowing Grass"
+		},
+		"Gnatbane Weapon": {
+			"name": "Gnatbane Weapon"
+		},
+		"Golden Urn": {
+			"name": "Golden Urn"
+		},
+		"Grim Coronet": {
+			"name": "Grim Coronet"
+		},
+		"Grimbeard's Warhammer": {
+			"name": "Grimbeard's Warhammer"
+		},
+		"Grimskull Helm": {
+			"name": "Grimskull Helm"
+		},
+		"Handwraps of Force": {
+			"name": "Handwraps of Force"
+		},
+		"Harbinger & Sovereign, Abyssal's Claim": {
+			"name": "Harbinger & Sovereign, Abyssal's Claim"
+		},
+		"Hear-ring": {
+			"name": "Hear-ring"
+		},
+		"Heart of the Sky": {
+			"name": "Heart of the Sky"
+		},
+		"Heartwood, Splinter of the Tree of Life": {
+			"name": "Heartwood, Splinter of the Tree of Life"
+		},
+		"Hex Hand": {
+			"name": "Hex Hand"
+		},
+		"Homunculus Dough": {
+			"costDetails": "Spill blood on it",
+			"durationDetails": "1 week",
+			"name": "Homunculus Dough"
+		},
+		"Key of Doors": {
+			"name": "Key of Doors"
+		},
+		"Lientern": {
+			"name": "Lientern"
+		},
+		"Lumina, Living Sunbeam": {
+			"name": "Lumina, Living Sunbeam"
+		},
+		"Lung of the Mire": {
+			"name": "Lung of the Mire"
+		},
+		"Manglemaul": {
+			"name": "Manglemaul"
+		},
+		"Mindlink Daggers": {
+			"name": "Mindlink Daggers"
+		},
+		"Moonshadow Cloak": {
+			"name": "Moonshadow Cloak"
+		},
+		"Mourning Heart": {
+			"name": "Mourning Heart"
+		},
+		"Obsidian Gauntlets": {
+			"name": "Obsidian Gauntlets"
+		},
+		"Phoenix Helm": {
+			"name": "Phoenix Helm"
+		},
+		"Pipecrawler's Charm": {
+			"name": "Pipecrawler's Charm"
+		},
+		"Pocket Cauldron": {
+			"name": "Pocket Cauldron"
+		},
+		"Prismatic Frog": {
+			"name": "Prismatic Frog"
+		},
+		"Purple Berries": {
+			"durationDetails": "1 day",
+			"name": "Purple Berries"
+		},
+		"Red Sap": {
+			"name": "Red Sap"
+		},
+		"Reed Flute": {
+			"name": "Reed Flute"
+		},
+		"Resolute Fangs, Golden Bastion": {
+			"name": "Resolute Fangs, Golden Bastion",
+			"rules": {
+				"qHsP9wQbBc9Fz2Gr": {
+					"label": "Resolute fangs"
+				}
+			}
+		},
+		"Skitter Shoes": {
+			"name": "Skitter Shoes"
+		},
+		"Sky Scourge Crown": {
+			"costDetails": "Night only",
+			"durationDetails": "Until sunrise",
+			"name": "Sky Scourge Crown"
+		},
+		"Soulshard Amulet": {
+			"name": "Soulshard Amulet"
+		},
+		"Spell Scroll - Cantrip": {
+			"name": "Spell Scroll - Cantrip"
+		},
+		"Spell Scroll - Tier 1": {
+			"name": "Spell Scroll - Tier 1"
+		},
+		"Spell Scroll - Tier 2": {
+			"name": "Spell Scroll - Tier 2"
+		},
+		"Spell Scroll - Tier 3": {
+			"name": "Spell Scroll - Tier 3"
+		},
+		"Spell Scroll - Tier 4": {
+			"name": "Spell Scroll - Tier 4"
+		},
+		"Spell Scroll - Tier 5": {
+			"name": "Spell Scroll - Tier 5"
+		},
+		"Spell Scroll - Tier 6": {
+			"name": "Spell Scroll - Tier 6"
+		},
+		"Spell Scroll - Tier 7": {
+			"name": "Spell Scroll - Tier 7"
+		},
+		"Spell Scroll - Tier 8": {
+			"name": "Spell Scroll - Tier 8"
+		},
+		"Spell Scroll - Tier 9": {
+			"name": "Spell Scroll - Tier 9"
+		},
+		"Stormcaller": {
+			"durationDetails": "Short period",
+			"name": "Stormcaller"
+		},
+		"The Grimoire of Truths": {
+			"name": "The Grimoire of Truths"
+		},
+		"Trainer's Whistle": {
+			"name": "Trainer's Whistle"
+		},
+		"Trinket of Ill Omen": {
+			"name": "Trinket of Ill Omen",
+			"rules": {
+				"index:0": {
+					"label": "Trinket of Ill Omen"
+				}
+			}
+		},
+		"Trueflame": {
+			"name": "Trueflame"
+		},
+		"Venomfang Dagger": {
+			"name": "Venomfang Dagger"
+		},
+		"Vindication": {
+			"name": "Vindication"
+		},
+		"Vortex Sigil": {
+			"name": "Vortex Sigil"
+		},
+		"Wand - Cantrip": {
+			"name": "Wand - Cantrip"
+		},
+		"Wand - Tier 1": {
+			"name": "Wand - Tier 1"
+		},
+		"Wand - Tier 2": {
+			"name": "Wand - Tier 2"
+		},
+		"Wand - Tier 3": {
+			"name": "Wand - Tier 3"
+		},
+		"Wand - Tier 4": {
+			"name": "Wand - Tier 4"
+		},
+		"Wand - Tier 5": {
+			"name": "Wand - Tier 5"
+		},
+		"Wand - Tier 6": {
+			"name": "Wand - Tier 6"
+		},
+		"Wand - Tier 7": {
+			"name": "Wand - Tier 7"
+		},
+		"Wand - Tier 8": {
+			"name": "Wand - Tier 8"
+		},
+		"Wand - Tier 9": {
+			"name": "Wand - Tier 9"
+		},
+		"Wand of Barrier of Wind": {
+			"costDetails": "When attacked at range",
+			"name": "Wand of Barrier of Wind"
+		},
+		"Wand of Dread Visage": {
+			"costDetails": "When attacked",
+			"name": "Wand of Dread Visage"
+		},
+		"Wand of Firestep": {
+			"name": "Wand of Firestep"
+		},
+		"Wand of Fly": {
+			"name": "Wand of Fly"
+		},
+		"Wand of Glacier Strike": {
+			"name": "Wand of Glacier Strike"
+		},
+		"Wand of Rat": {
+			"durationDetails": "1 evening",
+			"name": "Wand of Rat"
+		},
+		"Wand of Ride the Lightning": {
+			"name": "Wand of Ride the Lightning"
+		},
+		"Wand of Sacrifice": {
+			"name": "Wand of Sacrifice"
+		},
+		"Weapon of Animosity - Legendary": {
+			"name": "Weapon of Animosity - Legendary"
+		},
+		"Weapon of Animosity - Rare": {
+			"name": "Weapon of Animosity - Rare"
+		},
+		"Weapon of Animosity - Uncommon": {
+			"name": "Weapon of Animosity - Uncommon"
+		},
+		"Weapon of Animosity - Very Rare": {
+			"name": "Weapon of Animosity - Very Rare"
+		},
+		"Weapon of Many Hands - Legendary": {
+			"name": "Weapon of Many Hands - Legendary"
+		},
+		"Weapon of Many Hands - Rare": {
+			"name": "Weapon of Many Hands - Rare"
+		},
+		"Weapon of Many Hands - Uncommon": {
+			"name": "Weapon of Many Hands - Uncommon"
+		},
+		"Weapon of Many Hands -Very Rare": {
+			"name": "Weapon of Many Hands -Very Rare"
+		},
+		"Weapon of Slaying - Legendary": {
+			"name": "Weapon of Slaying - Legendary"
+		},
+		"Weapon of Slaying - Rare": {
+			"name": "Weapon of Slaying - Rare"
+		},
+		"Weapon of Slaying - Uncommon": {
+			"name": "Weapon of Slaying - Uncommon"
+		},
+		"Weapon of Slaying - Very Rare": {
+			"name": "Weapon of Slaying - Very Rare"
+		},
+		"Weapon of Wounding": {
+			"name": "Weapon of Wounding"
+		},
+		"Windcloak": {
+			"name": "Windcloak"
+		},
+		"Windforged Mail": {
+			"name": "Windforged Mail"
+		},
+		"Witch's Eye": {
+			"name": "Witch's Eye"
+		},
+		"Yellow Mushroom": {
+			"name": "Yellow Mushroom"
+		},
+		"Zephyr Boots": {
+			"name": "Zephyr Boots"
+		}
+	}
+}

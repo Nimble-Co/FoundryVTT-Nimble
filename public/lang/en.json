@@ -191,6 +191,9 @@
 			"shield": "Shield",
 			"shieldPlural": "Shields"
 		},
+		"babele": {
+			"notInstalled": "Nimble ships compendium translations for language \"{lang}\", but the Babele module is not installed or enabled. Install Babele from the Add-on Modules browser to see translated compendium content."
+		},
 		"boonTypes": {
 			"minor": "Minor",
 			"major": "Major",

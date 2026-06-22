@@ -1,0 +1,1798 @@
+{
+	"label": "Nimble Class Features",
+	"entries": {
+		"\"Creative\" Accounting": {
+			"description": "<p>Steal up to INT actions from your next turn (Gain up to INT actions now. The next time you would gain actions, subtract the number stolen). You cannot use this 2 turns in a row.</p>",
+			"name": "\"Creative\" Accounting"
+		},
+		"Abhorrent Speech": {
+			"description": "<p>You can communicate with horrible creatures (aberrations, undead, etc.).</p>",
+			"name": "Abhorrent Speech"
+		},
+		"Addling Arrow": {
+			"description": "<p>Action: Attack with a ranged weapon. The next attack the target makes must be against the closest other creature, chosen at random.</p>",
+			"name": "Addling Arrow"
+		},
+		"Advance!": {
+			"description": "<p>(1/round) After you move toward an enemy, gain advantage on the first melee attack you make against it. When you use your Coordinated Strike, you and all allies within 12 spaces can first move up to half their speed for free.</p>",
+			"name": "Advance!"
+		},
+		"Airshift": {
+			"description": "<p>You cannot be Grappled while conscious. While moving, you may travel across all terrain as normal ground, ignoring all ill effects (e.g., walls/ceilings, water, treetops, lava, spikes, clouds).</p>",
+			"name": "Airshift"
+		},
+		"Ambusher": {
+			"description": "<p>When you roll Initiative, you may use Hunter's Mark for free. Gain advantage on the first attack you make each encounter.</p>",
+			"name": "Ambusher"
+		},
+		"Amidst All This Commotion": {
+			"description": "<p>If a creature dies while you Sneak Attack them, you may turn Invisible until you attack again or until the beginning of your next turn.</p>",
+			"name": "Amidst All This Commotion"
+		},
+		"Apex Predator": {
+			"description": "<p>You may use your Primal Predator ability twice each encounter. Gain 1 Thrill of the Hunt charge when you roll Initiative.</p>",
+			"name": "Apex Predator"
+		},
+		"Arcane Command": {
+			"description": "<p>Your focus on the arcane causes you to lose access to Weapon Mastery and Combat Tactics, but you now gain INT mana when you roll Initiative (this mana is lost if unspent when combat ends). Whenever you could choose a Combat Tactic or Weapon Mastery, instead choose another Commander's Order or a tier 1 (or lower) spell from any spell school. Your Commander's Orders are also empowered with magical power:</p>",
+			"name": "Arcane Command"
+		},
+		"Archdruid": {
+			"description": "<p>+1 to any 2 of your stats. (1/encounter) Cast a spell up to tier 4 for free when you enter or leave a Beastshift form.</p>",
+			"name": "Archdruid"
+		},
+		"Archmage": {
+			"description": "<p>+1 to any 2 of your stats. The first tiered spell you cast each encounter costs 1 action less and 5 fewer mana.</p>",
+			"name": "Archmage"
+		},
+		"Armor Master": {
+			"description": "<p>You are proficient with plate armor.</p>",
+			"name": "Armor Master",
+			"rules": {
+				"CriQJQqO6jniI62G": {
+					"label": "Armor master"
+				}
+			}
+		},
+		"Armor of Shadows": {
+			"description": "<p>Reduce all damage you receive by an amount equal to the number of minions you have.</p>",
+			"name": "Armor of Shadows"
+		},
+		"As One!": {
+			"description": "<p>Attacks made with your Coordinated Strike also grant advantage and ignore all disadvantage. Your chosen allies gain 1 additional action to use on their next turn.</p>",
+			"name": "As One!"
+		},
+		"Assist Me, My Friend!": {
+			"description": "<p>Whenever you make your first melee attack each round, you may add your Lifebinding Spirit's damage to the attack.</p>",
+			"name": "Assist Me, My Friend!"
+		},
+		"At Any Cost": {
+			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Necrotic school.</p>",
+			"name": "At Any Cost",
+			"rules": {
+				"at-any-cost-cantrip": {
+					"label": "Choose a Necrotic Cantrip"
+				},
+				"at-any-cost-tier1": {
+					"label": "Choose a Tier 1-3 Necrotic Spell"
+				}
+			}
+		},
+		"Attuned to Nature": {
+			"description": "<p>(1/day) Add LVL to any skill check related to nature or weather.</p>",
+			"name": "Attuned to Nature"
+		},
+		"Aura of Refuge": {
+			"description": "<p>Your shields gain +WIL armor and count as your spellcasting focus. Gain an aura with a Reach of 4; you can Interpose for an ally anywhere within your aura.</p>",
+			"name": "Aura of Refuge"
+		},
+		"Aura of Suffering": {
+			"description": "<p>You gain an aura with a Reach of 4 and can Interpose for an ally anywhere within your aura; however, your Radiant Judgment ability no longer triggers when attacked. Instead, it triggers whenever you could Interpose but don't.</p>",
+			"name": "Aura of Suffering"
+		},
+		"Aura of Zeal": {
+			"description": "<p>Whenever you roll Judgment Dice, roll 1 more. Gain an aura with a Reach of 4. Your Radiant Judgment also triggers when an ally within your aura is attacked while you have no Judgment Dice.</p>",
+			"name": "Aura of Zeal"
+		},
+		"Avenger": {
+			"description": "<p>Whenever you or an ally within your aura gain any Wounds, change up to that many Judgment Dice to their max. Then, move up to half your speed for free.</p>",
+			"name": "Avenger"
+		},
+		"Beast of Nightmares": {
+			"description": "<p><strong>(Tiny)</strong>. Transform into any Tiny beast or insect (provided it is horrible). Gain the Sting attack and Silent But Deadly. </p><p><strong>Sting</strong>. (1/round) Action: Reach: 0. 1d4 piercing + 3×LVL acid damage (ignoring armor), on crit: 4×LVL damage instead. </p><p><strong>Silent But Deadly</strong>. Speed: 2. You cannot Defend or Interpose. Attackers cannot target you until you become conspicuous (e.g., being seen transforming or attacking).</p>",
+			"name": "Beast of Nightmares"
+		},
+		"Beast of the Pack": {
+			"description": "<p><strong>(Medium)</strong>. Transform into a Medium beast. Gain +DEX speed, Supercharge, and the Thunderfang attack. Whenever you crit or kill one or more enemies, Thunderfang gains a cumulative +1d4 lightning damage until combat ends. </p><p><strong>Thunderfang</strong>. Action: 1d4+LVL piercing damage.</p><p><strong>Supercharge</strong>. Spend up to WIL mana, and your next Thunderfang attack deals an additional 1d8 lightning damage per mana spent (you take this damage on a miss).</p>",
+			"name": "Beast of the Pack"
+		},
+		"Beast of the Sea": {
+			"description": "<p>Can move, breathe, and fight underwater without penalty.</p>",
+			"name": "Beast of the Sea"
+		},
+		"Beastmaster": {
+			"description": "<p>Choose a Small, Medium, or Large animal as your companion. Instead of your first 2 Thrill of the Hunt (TotH) abilities, you can select Go for the Throat! and Protect Me! to use with your companion.</p>",
+			"name": "Beastmaster"
+		},
+		"Beastshift": {
+			"description": "<p>Action: You can transform into a harmless beast (squirrel, pigeon, etc.). While transformed, you can speak with animals. This form lasts until you drop to 0 HP, cast a spell, or if you end it on your turn for free. You have DEX Beastshift charges; they reset on a Safe Rest.</p>",
+			"name": "Beastshift"
+		},
+		"Beguiling Influence": {
+			"description": "<p>(1/day) You may reroll an Influence check.</p>",
+			"name": "Beguiling Influence"
+		},
+		"Blazing Speed": {
+			"description": "<p>Gain +2 speed while using Windstep. After you cease movement with Windstep, enemies you passed through take STR+DEX fire damage. You may have Smoldering enemies take double, ending the condition.</p>",
+			"name": "Blazing Speed"
+		},
+		"Blinding Aura": {
+			"description": "<p>(1/Safe Rest) Action: Enemies in your aura are Blinded until the end of their next turn.</p>",
+			"name": "Blinding Aura"
+		},
+		"Blood Frenzy": {
+			"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p>",
+			"name": "Blood Frenzy"
+		},
+		"Blood Sight": {
+			"description": "<p>(1/day) You may reroll an Examination check. Additionally, you can detect traces of blood on a surface, even after it has been cleaned.</p>",
+			"name": "Blood Sight"
+		},
+		"Bloodlust": {
+			"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p>",
+			"name": "Bloodlust"
+		},
+		"Bloody Terror": {
+			"description": "<p>Attacks against you gain 1 instance of disadvantage for each Wound you have (max 3).</p>",
+			"name": "Bloody Terror"
+		},
+		"Bludgeoning": {
+			"description": "<p>When your primary die rolls a 7 or higher with a bludgeoning weapon, ignore Heavy Armor.</p>",
+			"name": "Bludgeoning"
+		},
+		"Blur": {
+			"description": "<p>(1/encounter) When you Defend, you may first move up to half your speed away, taking no damage if you are now out of range or have Full Cover.</p>",
+			"name": "Blur"
+		},
+		"Bodily Discipline": {
+			"description": "<p>You may spend 1 action to end any non-Wound condition on yourself.</p>",
+			"name": "Bodily Discipline"
+		},
+		"Bonescythe": {
+			"description": "<p>Action: Summon a magical Bonescythe, a melee weapon: 2d12 slashing+DEX necrotic damage to each die (Reach: 2). It shatters after you hit with it (or when combat ends). Any Invocations affecting Shadow Blast affect your Bonescythe Instead.</p><p>High Levels. Every 5 levels, add 1 extra damage die (Level 5: 3d12, Level 10: 4d12, etc.).</p>",
+			"name": "Bonescythe"
+		},
+		"Borne Upon the Wind": {
+			"description": "<p>(Replaces: Move it! Move it!)</p><p>When you roll Initiative, you may give yourself and an ally advantage on the roll, +3 speed, and the ability to fly for 1 round. Then, you both can also move for free.</p>",
+			"name": "Borne Upon the Wind"
+		},
+		"BOUNDLESS RAGE": {
+			"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p>",
+			"name": "BOUNDLESS RAGE"
+		},
+		"Bring Me Your Pain": {
+			"costDetails": "When a willing ally within your aura would drop to 0 HP",
+			"description": "<p><strong>Reaction</strong> (When a willing ally within your aura would drop to 0 HP): Switch HP with them (if your current HP is higher than their max HP, they gain Temp HP equal to the difference), dropping to 0 hp and gaining the Wound instead.</p>",
+			"name": "Bring Me Your Pain"
+		},
+		"Bring the Pain": {
+			"description": "<p>(1/round) You may turn any melee attack against you into a crit. Whenever you are crit, reduce the damage by half. The attacker takes the same amount of damage you took (ignoring armor). You may suffer 1 Wound to double the damage the enemy takes.</p>",
+			"name": "Bring the Pain"
+		},
+		"Burning Soul": {
+			"description": "<p>Double any fire damage you deal.</p>",
+			"name": "Burning Soul"
+		},
+		"Burst of Speed": {
+			"description": "<p>When you roll Initiative, gain DEX Bursts of Speed to use during that encounter.</p><p>(1/turn) You may spend 1 Burst of Speed to use any of the following maneuvers for free:</p><p>• <strong>Slipstream</strong>. Defend, and the attack misses.</p><p>• <strong>Whirling Defense</strong>. Defend and apply your armor to every attack this round.</p><p>• <strong>Swiftstrike</strong>. Attack on your turn, and ignore disadvantage from Rushed Attacks.</p><p>• <strong>Windstep</strong>. Move on your turn, ignoring difficult terrain.</p>",
+			"name": "Burst of Speed"
+		},
+		"Captain of Legions": {
+			"description": "<p>+1 to any 2 of your stats.</p><p>The first time each encounter you use Coordinated Strike, EVERY ally within 12 spaces gains +1 action (replaces Unparalleled Tactics).</p>",
+			"name": "Captain of Legions"
+		},
+		"Chain Reaction": {
+			"description": "<p>(1/turn) When you crit, deal fire damage equal to your STR+Wounds to creatures of your choice within 2 spaces of your target. Repeat any number of times, targeting creatures not yet damaged by this effect within 2 spaces of any already damaged.</p>",
+			"name": "Chain Reaction"
+		},
+		"Chaos Lash": {
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
+			"name": "Chaos Lash"
+		},
+		"Cheat!": {
+			"description": "<p>You're a well–rounded cheater. Gain the following abilities:</p><p>• <em>(1/round)</em> You may either Move or Hide for free. </p><p>• (1/day) You may change any skill check to 10+INT. </p><p>• If you roll less than 10 on Initiative, you may change it to 10 instead.</p><p>• You may gain advantage on skill checks while playing any games, competitions, or placing wagers. If you're caught though… </p>",
+			"name": "Cheat!"
+		},
+		"Chord of Chaos": {
+			"description": "<p>(1/encounter) Action: You may move ALL creatures within hearing of your song up to 3 spaces as long as they do not move into an obviously dangerous place.</p>",
+			"name": "Chord of Chaos"
+		},
+		"Chorus of Champions": {
+			"description": "<p><em>(1/encounter)</em> <strong>Free Reaction</strong>: Give all party members 1 action.</p>",
+			"name": "Chorus of Champions"
+		},
+		"Climber": {
+			"description": "<p>Can walk across walls and ceilings; ignores difficult terrain.</p>",
+			"name": "Climber"
+		},
+		"Combat Tactics": {
+			"description": "<p>Your Combat Dice are now d8s.</p><hr><p>Level 5: Your Combat Dice are now d8s</p><p>Level 9: Your Combat Dice are now d10s</p><p>Level 13: Your Combat Dice are now d12s</p><p>Level 17: Your Combat Dice are now d20s</p>",
+			"name": "Combat Tactics"
+		},
+		"Come Get Some!": {
+			"description": "<p>Action: Attack a target. It is Taunted by you until the end of their next turn.</p>",
+			"name": "Come Get Some!"
+		},
+		"Commanding Presence": {
+			"description": "<p><strong>Action:</strong> Shout a command up to 2 words long at an enemy. On a failed WIL save (DC 10+STR), they must spend their entire next turn obeying it to the best of their ability, provided it is not obviously harmful to themselves. They then become immune to this effect for 1 day.</p>",
+			"name": "Commanding Presence"
+		},
+		"Conduit of Death": {
+			"description": "<p>Your Veilwalker's Blessing ability recharges when you roll Initiative. This charge is lost if unspent at the end of combat.</p>",
+			"name": "Conduit of Death"
+		},
+		"Conduit of Light": {
+			"description": "<p>When an effect caused by you would heal HP, you may expend 1 use of Searing Light to heal (or damage, ignoring armor) another target within 6 spaces of yourself for the same amount.</p>",
+			"name": "Conduit of Light"
+		},
+		"Conduit of Shadow": {
+			"description": "<p>Your Patron grants you knowledge of:</p><p>@UUID[Compendium.nimble.nimble-spells.Item.9TNPdOXlCcGgxw6r]{Shadow Blast}</p><p>@UUID[Compendium.nimble.nimble-spells.Item.ho2KADcmQWWTeYR0]{Summon Shadow}</p>",
+			"name": "Conduit of Shadow"
+		},
+		"Coordinated Strike!": {
+			"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",
+			"name": "Coordinated Strike!"
+		},
+		"Courage!": {
+			"description": "<p>(1/encounter) When you or an ally in your aura would drop to 0 HP, set their HP to 1 instead.</p>",
+			"name": "Courage!"
+		},
+		"Creature of the Fey": {
+			"description": "<p>You may cast spells while Beastshifted.</p>",
+			"name": "Creature of the Fey"
+		},
+		"Cryomancer's Reprisal": {
+			"description": "<p>Pay half your max HP to cast ANY Ice spell. After casting an Ice spell in this way, you gain an invisible aura: the next creature that hits you with a melee attack this encounter takes cold damage equal to half the HP you spent on this casting.</p>",
+			"name": "Cryomancer's Reprisal"
+		},
+		"Crystalline Armor": {
+			"costDetails": "when an ally drops to 0 HP",
+			"description": "<p>(Replaces: Hold the Line!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>",
+			"name": "Crystalline Armor"
+		},
+		"Cunning Strike": {
+			"costDetails": "1 Use",
+			"description": "<p><em>(2/encounter)</em> When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use). </p>",
+			"name": "Cunning Strike"
+		},
+		"Dark Benediction": {
+			"description": "<p>Fallen from the light, but not entirely. You lose access to the following Radiant spells: True Strike, Heal, and Warding Bond; and gain access to the following Necrotic spells: Entice, Shadowtrap, and Dread Visage. Whenever you can choose a Utility Spell, you may choose a Radiant or Necrotic one.</p>",
+			"name": "Dark Benediction"
+		},
+		"Death Blow": {
+			"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage</p>",
+			"name": "Death Blow"
+		},
+		"Deathbringer's Touch": {
+			"description": "<p>Your first melee attack each round against a Bloodied creature is an automatic critical hit. Your Lifebinding Spirit deals additional damage equal to your STR.</p>",
+			"name": "Deathbringer's Touch"
+		},
+		"Deathless Rage": {
+			"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p>",
+			"name": "Deathless Rage"
+		},
+		"Decoy": {
+			"description": "<p>When you Defend: The attack misses instead, and you can move up to half your speed away (where you really were all along!).</p>",
+			"name": "Decoy"
+		},
+		"Deep Knowledge": {
+			"description": "<p>Choose any tier 1 (or lower) spell and any Utility Spell.</p><hr><p>Level 7: Tier 2 or lower spell + any utility spell</p><p>Level 11: Tier 3 or lower spell + any utility spell</p><p>Level 15: Tier 4 or lower spell + any utility spell</p>",
+			"name": "Deep Knowledge"
+		},
+		"DEEP RAGE": {
+			"description": "<p>Dropping to 0 HP does not cause your Rage to end.</p>",
+			"name": "DEEP RAGE"
+		},
+		"Deepening Study": {
+			"description": "<p>Choose the Ice or Radiant school to learn.</p>",
+			"name": "Deepening Study"
+		},
+		"Deny Fate": {
+			"description": "<p>Whenever you miss with a spell or an effect you cause is saved against, you MUST Demand Control.</p>",
+			"name": "Deny Fate"
+		},
+		"Devoted Acolyte": {
+			"description": "<p>Learn 2 of the following languages: Celestial, Draconic, Deep Speak, Infernal, or Primordial. Advantage on Lore checks related to those 2 languages.</p>",
+			"name": "Devoted Acolyte"
+		},
+		"Dimensional Compression": {
+			"description": "<p>(1 or more mana) +4 range to a spell for each additional mana spent.</p>",
+			"name": "Dimensional Compression"
+		},
+		"Dire Shadows": {
+			"description": "<p>Attacks against your shadow minions are made with disadvantage. They take no damage from successful saves.</p>",
+			"name": "Dire Shadows"
+		},
+		"Direbeast Form": {
+			"description": "<p>You can Beastshift into a Fearsome Beast.</p><hr><p>Level 3: You can Beastshift into a Beast of the Pack.</p><p>Level 5: You can Beastshift into a Beast of Nightmares.</p>",
+			"name": "Direbeast Form"
+		},
+		"Divine Grace": {
+			"description": "<p>You are resistant to all damage while Interposing.</p>",
+			"name": "Divine Grace"
+		},
+		"Draconic Crimson Rite": {
+			"description": "<p>Your Patron grants you knowledge of Fire spells. Your shadow minions become flaming dragon wyrmling shadows. Your Shadow Blast and minions can deal fire or necrotic damage and inflict Smoldering whenever they would crit.</p>",
+			"name": "Draconic Crimson Rite"
+		},
+		"Eager for Battle": {
+			"description": "<p>Gain advantage on Initiative. Move 2×DEX spaces for free on your first turn each encounter.</p>",
+			"name": "Eager for Battle",
+			"rules": {
+				"index:0": {
+					"label": "Eager for Battle (Advantage on Initiative)"
+				},
+				"index:1": {
+					"label": "Eager for Battle"
+				}
+			}
+		},
+		"Earthwalker": {
+			"description": "<p>+2 armor. Can burrow through dirt and unworked rock at half speed (leaving a tunnel behind). Advantage against the Prone condition.</p>",
+			"name": "Earthwalker"
+		},
+		"Echo Casting": {
+			"description": "<p>(2×mana, min. 1 mana) When you cast a tiered, single-target spell, you may cast a copy of that spell on a 2nd target for free.</p>",
+			"name": "Echo Casting"
+		},
+		"Echoed Agony": {
+			"description": "<p>Your Swiftstrike can also target a 3rd creature within Reach 4.</p>",
+			"name": "Echoed Agony"
+		},
+		"Eldritch Sense": {
+			"description": "<p>You can sense the presence of any shapechanger or creature concealed by magic while within 6 spaces of them.</p>",
+			"name": "Eldritch Sense"
+		},
+		"Eldritch Usurper": {
+			"description": "<p>+1 to any 2 of your stats. Whenever you summon a single shadow minion, summon 2 instead. They die only when they receive 12 or more damage at one time.</p>",
+			"name": "Eldritch Usurper"
+		},
+		"Elemental Destruction": {
+			"description": "<p>(1 or more mana) After you hit with a spell, you may spend 1 or more mana (up to your WIL) to reroll 1 die per mana spent.</p>",
+			"name": "Elemental Destruction"
+		},
+		"Elemental Mastery": {
+			"description": "<p>Learn the Utility Spells from 1 spell school you know.</p><hr><p>Level 6: Learn the Utility Spells from a 2nd spell school you know.</p><p>Level 14: Learn the Utility Spells from a 3rd spell school you know.</p>",
+			"name": "Elemental Mastery"
+		},
+		"Elemental Spellcasting": {
+			"description": "<p>You know Fire, Ice, and Lightning cantrips.</p>",
+			"name": "Elemental Spellcasting"
+		},
+		"Elemental Surge": {
+			"description": "<p>A surge of adrenaline and your attunement with the elements grants you additional power as combat begins. When you roll Initiative, regain WIL mana (this expires at the end of combat if unused).</p><hr><p>Level 10: WIL+1d4 mana</p><p>Level 17: WIL+2d4 mana</p>",
+			"name": "Elemental Surge"
+		},
+		"Elemental Transmutation": {
+			"description": "<p>(1 mana) Change the damage type of a spell to: Fire, Ice, Lightning, Necrotic, or Radiant.</p>",
+			"name": "Elemental Transmutation"
+		},
+		"Empowered Companion": {
+			"description": "<p>Whenever you spend mana to call forth your Lifebinding Spirit, you cast it as if you spent 1 additional mana (ignoring the typical spell tier restrictions). The maximum die size is now a d20.</p>",
+			"name": "Empowered Companion"
+		},
+		"Empowered Conduit": {
+			"description": "<p>Your Conduit of Light may target 1 additional creature. Regain 1 charge of Searing Light when you roll Initiative (this expires if unspent at the end of combat).</p>",
+			"name": "Empowered Conduit"
+		},
+		"Enduring Rage": {
+			"description": "<p>While Dying, you Rage automatically for free at the beginning of your turn, have a max of 2 actions instead of 1, and ignore the STR saves to make attacks.</p>",
+			"name": "Enduring Rage"
+		},
+		"Enduring Soul": {
+			"description": "<p>Each time you roll Initiative, gain Hit Dice equal to the actions you get on your first turn. These Hit Dice expire at the end of combat if unused.</p>",
+			"name": "Enduring Soul"
+		},
+		"Enveloped by the Master": {
+			"description": "<p>Gain [[/r 1d4]] Wounds to cast Dragonform.</p>",
+			"name": "Enveloped by the Master",
+			"rules": {
+				"NRuKjNvofPWzKu5v": {
+					"label": "Enveloped by the Master"
+				}
+			}
+		},
+		"Escape Plan": {
+			"costDetails": "1 Use, (1/ Safe Rest)",
+			"description": "<p><em>(1/Safe Rest)</em> When you would drop to 0 HP or gain a Wound, you don't. Instead, you turn Invisible for 1 minute or until you attack. </p>",
+			"name": "Escape Plan"
+		},
+		"Ethereal Projection": {
+			"description": "<p>(1/day) By meditating for at least 10 minutes, you can project an ethereal version of yourself up to 30 ft. away, passing through solid objects or barriers. You see through your projection's eyes, and it is visible to other creatures as a translucent version of yourself. It cannot interact physically with the environment but can move freely within the distance limit and lasts for up to 10 minutes.</p>",
+			"name": "Ethereal Projection"
+		},
+		"Experienced Commander.": {
+			"description": "<p>Your Coordinated Strike may target 1 additional ally. Gain +1 use of Coordinated Strike/Safe Rest.</p>",
+			"name": "Experienced Commander."
+		},
+		"Expert Shifter": {
+			"description": "<p>Gain 1 additional use of Beastshift per Safe Rest.</p><hr><p>Level 9: +1 Beastshift per Safe Rest</p><p>Level 12: +1 Beastshift per Safe Rest</p>",
+			"name": "Expert Shifter"
+		},
+		"Exploding Soul": {
+			"description": "<p>(1/round) On your turn, you may suffer a Wound. Whenever you gain a Wound, deal STR+Wounds damage to any creatures you choose within 2 spaces (ignoring armor) and give them the Smoldering condition.</p>",
+			"name": "Exploding Soul"
+		},
+		"Exploit": {
+			"costDetails": "whenever an ally within your aura Defends",
+			"description": "<p><strong>Reaction</strong> (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your Aura to Interpose (a creature cannot interpose against its own attack).</p>",
+			"name": "Exploit"
+		},
+		"Exploit Weakness": {
+			"description": "<p>Action: Make a contested INT check against an enemy. If you win, you can use Vicious Opportunist against them, even if they are not Distracted. This lasts for 1 minute or until you use this ability against another target. </p>",
+			"name": "Exploit Weakness"
+		},
+		"Explorer of the Wilds": {
+			"description": "<p>+2 speed; gain a climbing speed.</p>",
+			"name": "Explorer of the Wilds",
+			"rules": {
+				"index:0": {
+					"label": "Explorer of the Wilds"
+				},
+				"index:1": {
+					"label": "Explorer of the Wilds"
+				}
+			}
+		},
+		"Explosive Judgment": {
+			"description": "<p>(1/encounter) 2 actions: Expend your Judgment Dice, deal that much radiant damage to all enemies in your aura.</p>",
+			"name": "Explosive Judgment"
+		},
+		"Extra-Dimensional Vision": {
+			"description": "<p>(2 mana) You may ignore the line of sight requirement of a spell. Your spell will phase through barriers and obstacles to reach a target you know of within range.</p>",
+			"name": "Extra-Dimensional Vision"
+		},
+		"Face Me, Foul Creature!": {
+			"description": "<p>When you Interpose, the attacking enemy is also Taunted by you until the end of their next turn.</p>",
+			"name": "Face Me, Foul Creature!"
+		},
+		"Face Me!": {
+			"costDetails": "ally is crit within 12 spaces",
+			"description": "<p><strong>Reaction</strong> (after an ally is crit within 12 spaces): Taunt that enemy until you drop to 0 HP.</p>",
+			"durationDetails": "until you drop to 0 HP",
+			"name": "Face Me!"
+		},
+		"Fearsome Beast": {
+			"description": "<p><strong>(Large)</strong>. Transform into any Large beast. Gain DEX+LVL temp HP (until Beastshift ends), the Gore attack, and Fearsome. </p><p><strong>Gore</strong>. Action: 1d6+LVL damage, on hit: Gain LVL temp HP.</p><p><strong>Fearsome</strong>. Whenever you Interpose or Defend, you may spend 1 mana to force them to reroll the attack (you must choose either result).</p>",
+			"name": "Fearsome Beast"
+		},
+		"Feinting Attack": {
+			"description": "<p>If you miss for the 2nd time in a single round, you may change the primary die roll to any result instead. </p>",
+			"name": "Feinting Attack"
+		},
+		"Field Medic": {
+			"description": "<p><strong>Field Medic.</strong> Roll 1 additional die for any health potion you administer.</p><p>Whenever you or an ally spends any number of Hit Dice to recover HP, if you spent at least ten minutes examining their wounds, they can add your Examination bonus to the HP recovered.</p>",
+			"name": "Field Medic",
+			"rules": {
+				"fieldMedicHealingPotionBonus": {
+					"label": "Field Medic"
+				}
+			}
+		},
+		"Fiendish Boon": {
+			"description": "<p>Increase your DEX or INT by 1. You have 1 fewer maximum Hit Dice.</p>",
+			"name": "Fiendish Boon"
+		},
+		"Fight Picker": {
+			"description": "<p>(1/turn) When an enemy is damaged by your Vicious Mockery, you may have one of your allies Taunt them until the end of the enemy's turn instead.</p>",
+			"name": "Fight Picker"
+		},
+		"Final Takedown": {
+			"description": "<p>Action: Spend 1 Thrill of the Hunt charge to make a melee attack against your Bloodied quarry. Turn it into a crit and double the damage of your Hunter's Mark. If they survive, they crit you back.</p>",
+			"name": "Final Takedown"
+		},
+		"Fire in my Bones": {
+			"description": "<p>Your Songweaver's Inspiration also grants your target 1 additional action.</p>",
+			"name": "Fire in my Bones"
+		},
+		"Firebrand": {
+			"description": "<p>When you roll Initiative you may cast Enchant Weapon for free (can be upcast as normal by spending additional mana).</p>",
+			"name": "Firebrand"
+		},
+		"Fit for Any Battlefield": {
+			"description": "<p>Choose a Combat Tactic. When you roll Initiative, gain STR Combat Dice, each a d6. <em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels 6, 8, 10, 12, 16:</p><p>Choose another Combat Ability or gain +1 max Combat Dice</p>",
+			"name": "Fit for Any Battlefield",
+			"rules": {
+				"combat-dice-d10-l9": {
+					"label": "Combat Dice → d10"
+				},
+				"combat-dice-d12-l13": {
+					"label": "Combat Dice → d12"
+				},
+				"combat-dice-d20-l17": {
+					"label": "Combat Dice → d20"
+				},
+				"combat-dice-d8-l5": {
+					"label": "Combat Dice → d8"
+				},
+				"combat-dice-pool": {
+					"label": "Combat Dice"
+				},
+				"OCPNZWXtQjoVmJsW": {
+					"label": "Choose a Combat Tactic"
+				}
+			}
+		},
+		"Flashstep": {
+			"description": "<p>(Replaces: Reposition!)</p><p><strong>Action/Reaction</strong> (on an ally's turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free. You may exchange places with one of them.</p>",
+			"name": "Flashstep"
+		},
+		"Fleet Feet": {
+			"description": "<p>Move up to your speed for free, ignoring difficult terrain.</p>",
+			"name": "Fleet Feet"
+		},
+		"Fleet Footed": {
+			"description": "<p>+2 speed. Advantage on Stealth checks and against the Grappled condition.</p>",
+			"name": "Fleet Footed",
+			"rules": {
+				"index:0": {
+					"label": "Fleet Footed"
+				}
+			}
+		},
+		"Forager": {
+			"description": "<p>Gain advantage on skill checks to find food and water in the wild.</p>",
+			"name": "Forager"
+		},
+		"Force of Chaos": {
+			"description": "<p>Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p>",
+			"name": "Force of Chaos"
+		},
+		"Force of Will": {
+			"description": "<p>(1/round) On your turn, you may Demand Control: Choose 1 option from the Control Table which you haven't chosen yet; resets when you roll Initiative, or when you have chosen all options once.</p>",
+			"name": "Force of Will"
+		},
+		"Friend of Beasts": {
+			"description": "<p>Beasts will not attack you until you first harm them. You may transform into harmless beasts without spending a Beastshift charge.</p>",
+			"name": "Friend of Beasts"
+		},
+		"Gaze of Two Minds": {
+			"description": "<p>Touch a willing creature and perceive through its senses instead of your own for as long as you hold concentration.</p>",
+			"name": "Gaze of Two Minds"
+		},
+		"Glacial Resilience": {
+			"description": "<p><em>(1/Safe Rest)</em> <strong>Reaction</strong> (whenever you are attacked or would gain a condition), gain 10×LVL temp HP and end ALL negative conditions on yourself. At the end of your next turn, any remaining temp HP are lost.</p>",
+			"name": "Glacial Resilience"
+		},
+		"Glimmering Decree": {
+			"description": "<p>(Replaces: Face Me!)</p><p><strong>Reaction</strong> (after an ally within 12 spaces is crit): That enemy takes STR d8 radiant damage (ignoring armor), is pulled up to 4 spaces toward you, and is Taunted by you until you drop to 0 HP.</p>",
+			"name": "Glimmering Decree"
+		},
+		"Glorious Paragon": {
+			"description": "<p>+1 to any 2 of your stats. Defend for free whenever you Interpose.</p>",
+			"name": "Glorious Paragon"
+		},
+		"Glorious Reprieve": {
+			"description": "<p>You and allies in your aura cannot drop below 1 HP. Whenever this triggers, they gain 1 Wound instead (heroes still die at max Wounds).</p>",
+			"name": "Glorious Reprieve"
+		},
+		"Gran Gran (NOT a hag)": {
+			"description": "<p>When resting, you may summon her for 1 hour to soothe your wounds (and hassle you for not eating enough). She bakes and hands out pastries equal to your WIL+INT. Eating one recovers one mana, Hit Die, or Wound. Eat them while they're warm! They expire in 10 minutes.</p>",
+			"name": "Gran Gran (NOT a hag)"
+		},
+		"Grease Trap": {
+			"costDetails": "Enemy moves adjacent to you",
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Target falls Prone, is vulnerable to the next fire damage it takes, and is treated as if it is Smoldering.</p>",
+			"name": "Grease Trap"
+		},
+		"Greedy pact": {
+			"description": "<p>When you would take damage from Pilfer Power, make a STR save:</p><ul><li><p>1–9: Suffer damage as normal.</p></li><li><p>10–19: Suffer only 10 HP of damage. </p></li><li><p>20+: Suffer no damage and cast the spell as if it were 1 tier higher</p></li></ul>",
+			"name": "Greedy pact"
+		},
+		"Grim Harrow": {
+			"description": "<p>When you strike with your Bonescythe, you may divide the dice as you choose amongst any number of adjacent targets within Reach.</p>",
+			"name": "Grim Harrow"
+		},
+		"Guiding Spirit": {
+			"description": "<p>When your Lifebinding Spirit rolls a 6 or higher on its damage die, the target begins to glow with radiant light. The next attack against that target has advantage.</p>",
+			"name": "Guiding Spirit"
+		},
+		"Ha! I'm Over Here!": {
+			"description": "<p>(1/Safe Rest) If an attack would cause you to drop to 0 HP, you instead move up to your speed away and take no damage.</p>",
+			"name": "Ha! I'm Over Here!"
+		},
+		"Hail of Arrows": {
+			"description": "<p><em>(Half range)</em> 2 actions: Shoot all creatures within a 3×3 area. Their speed is halved until the end of their next turn.</p>",
+			"name": "Hail of Arrows"
+		},
+		"Harbinger of Decay": {
+			"description": "<p>Vibrant colors and lovely smells are suppressed near you. Foods spoil more rapidly in your presence, and you frequently awaken to flies wherever you lodge. You may have your Lifebinding Spirit shift into a deathly version of itself (a zombie dog, a devious imp, etc.) and have its damage type become necrotic.</p>",
+			"name": "Harbinger of Decay"
+		},
+		"Hasty Companion": {
+			"description": "<p>+4 Reach for your Lifebinding Spirit. It can also act for free when summoned.</p>",
+			"name": "Hasty Companion"
+		},
+		"Heads I Win, Tails You Lose": {
+			"costDetails": "1 Use",
+			"description": "<p><em>(1/encounter)</em> Attacks you make this round don't miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>",
+			"name": "Heads I Win, Tails You Lose"
+		},
+		"Healing Salve": {
+			"description": "<p>Action: Heal yourself or an adjacent creature WIL d6 HP. Only you or another experienced Herbalist may administer these, and they expire whenever you Safe Rest.</p>",
+			"name": "Healing Salve"
+		},
+		"Heart of Burning Fire": {
+			"description": "<p>Regain 1 use of Pilfered Power each time you roll Initiative. This expires at the end of combat if unused.</p>",
+			"name": "Heart of Burning Fire"
+		},
+		"Heavy Shot": {
+			"description": "<p><em>(Half range)</em> Action: Attack with a ranged weapon and push your target: 4 spaces for a small creature, 2 for a medium creature, 1 for a large creature.</p>",
+			"name": "Heavy Shot"
+		},
+		"Heavy Strike": {
+			"description": "<p>When you hit, push a Medium creature STR spaces and deal extra damage equal to a roll of your Combat Die. A Small creature is pushed twice as far; Large, pushed half as far (round down).</p>",
+			"name": "Heavy Strike"
+		},
+		"Heroic Ballad": {
+			"description": "<p>+2 max Songweaver's Inspiration charges. When used to reroll an ally's attack, your Songweaver's Inspiration also grants them +WIL damage on the attack.</p>",
+			"name": "Heroic Ballad"
+		},
+		"Hold the Line!": {
+			"costDetails": "when an ally drops to 0 HP",
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>",
+			"name": "Hold the Line!"
+		},
+		"Hollow One": {
+			"description": "<p>Cut off from your patron, you can no longer cast Shadow Blast and you can no longer cast tiered spells using Pilfered Power. However, as a parting token, you have stolen a secret from your patron: The magical Bonescythe, a weapon of sinew and bone, infused with shadowy magic.</p>",
+			"name": "Hollow One"
+		},
+		"How'd YOU get here?!": {
+			"description": "<p>2 actions: “Teleport” up to 4 spaces away, adjacent to a Distracted target, and make a melee attack against them. If you crit, you may \"teleport\" again. </p>",
+			"name": "How'd YOU get here?!"
+		},
+		"Hungering Shadows": {
+			"description": "<p>Whenever one of your shadows would crit, the next tiered spell you cast this encounter does not cost a use of Pilfered Power.</p>",
+			"name": "Hungering Shadows"
+		},
+		"Hunter's Mark": {
+			"description": "<p><strong>Action:</strong> A creature you can see is marked as your quarry for 1 day (or until you mark another creature). It can't be hidden from you, and your attacks against it gain your choice of advantage OR +LVL damage (choose before each attack).</p>",
+			"name": "Hunter's Mark"
+		},
+		"Hunter's Resolve": {
+			"description": "<p>Whenever you have no Thrill of the Hunt charges, gain Hunter's Resolve until the end of your turn: treat all creatures as your quarry for the purposes of movement and melee attacks.</p>",
+			"name": "Hunter's Resolve"
+		},
+		"I Can Do This ALL DAY!": {
+			"costDetails": "when you would drop to 0 HP",
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>",
+			"name": "I Can Do This ALL DAY!"
+		},
+		"I Have the High Ground": {
+			"description": "<p>When you roll Initiative or gain one or more Thrill of the Hunt charges, move up to half your speed for free, ignoring difficult terrain.</p>",
+			"name": "I Have the High Ground"
+		},
+		"I Jump On His Back!": {
+			"description": "<p>While moving with your Windstep, if you move into the space of a creature your size or larger, you may jump onto its back. While on a creature this way, gain advantage on melee attacks against it, and any damage you avoid is dealt to it instead.</p>",
+			"name": "I Jump On His Back!"
+		},
+		"I'm Outta Here!": {
+			"description": "<p>When an ally within 4 spaces is crit, you may turn invisible until the end of your next turn and then move up to half your speed for free. </p>",
+			"name": "I'm Outta Here!"
+		},
+		"I'm So Famous!": {
+			"costDetails": "An ally makes a roll",
+			"description": "<p>+1 to any 2 of your stats. Your Songweaver's Inspiration cannot fail (your target succeeds).</p>",
+			"name": "I'm So Famous!"
+		},
+		"I'm the Patron Now!": {
+			"description": "<p>Summon 2 shadow minions for free when you roll Initiative.</p>",
+			"name": "I'm the Patron Now!"
+		},
+		"Illuminate Soul": {
+			"description": "<p>Action: A creature within 6 spaces begins to glow with radiant light. For 1 Round, attacks against them are made with your choice of advantage or disadvantage. You may do this WIL times per Safe Rest.</p>",
+			"name": "Illuminate Soul"
+		},
+		"Impressive Form": {
+			"description": "<p>+5 max HP. Upgrade your Hit Dice to d10s</p>",
+			"name": "Impressive Form",
+			"rules": {
+				"impressive-form-hd": {
+					"label": "Impressive Form"
+				},
+				"impressive-form-hp": {
+					"label": "Impressive Form"
+				}
+			}
+		},
+		"Improved Aura": {
+			"description": "<p>+2 aura Reach.</p>",
+			"name": "Improved Aura"
+		},
+		"Incendiary Shot": {
+			"description": "<p><em>(Half range)</em> Action: Attack with a ranged weapon, add WIL d8 fire damage.</p>",
+			"name": "Incendiary Shot"
+		},
+		"Inerrant Strike.": {
+			"description": "<p>Reroll a missed attack, add 1 to the Primary Die, and deal extra damage equal to a roll of your Combat Die.</p>",
+			"name": "Inerrant Strike."
+		},
+		"Infuse Strength": {
+			"description": "<p>Action: Make an unarmed strike against an ally and infuse them with a portion of your own strength instead of harming them. Expend any number of Hit Dice and heal them as you would heal yourself during a Field Rest (roll them and add your STR to each).</p>",
+			"name": "Infuse Strength"
+		},
+		"Inspiring Anthem": {
+			"description": "<p>(1/encounter) Action: Grant all friendly Dying creatures who can hear you 1 HP and 1 action.</p>",
+			"name": "Inspiring Anthem"
+		},
+		"Inspiring Presence": {
+			"description": "<p>Whenever you use Songweaver's Inspiration, your allies within 12 spaces who can hear you gain WIL temp HP.</p>",
+			"name": "Inspiring Presence"
+		},
+		"Intensifying Fury": {
+			"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Your Fury Dice are now d6s</p><p>Level 9: Your Fury Dice are now d8s</p><p>Level 13: Your Fury Dice are now d10s</p><p>Level 17: Your Fury Dice are now d12s</p>",
+			"name": "Intensifying Fury",
+			"rules": {
+				"fury-d10-l13": {
+					"label": "Fury Dice → d10"
+				},
+				"fury-d12-l17": {
+					"label": "Fury Dice → d12"
+				},
+				"fury-d6-l6": {
+					"label": "Fury Dice → d6"
+				},
+				"fury-d8-l9": {
+					"label": "Fury Dice → d8"
+				}
+			}
+		},
+		"Into the Fray": {
+			"description": "<p>Action: Leap up to 2×DEX spaces toward an enemy. If you land adjacent to at least 2 enemies, make an attack against 1 of them for free.</p>",
+			"name": "Into the Fray"
+		},
+		"Iron Defense": {
+			"description": "<p>Your armor equals DEX+STR as long as you are unarmored.</p><hr><p>Level 13: Your armor is doubled while unarmored.</p>",
+			"name": "Iron Defense",
+			"rules": {
+				"iron-defense-l1": {
+					"label": "Iron Defense"
+				},
+				"iron-defense-l13": {
+					"label": "Iron Defense (2)"
+				}
+			}
+		},
+		"Jack of All Trades": {
+			"costDetails": "An ally makes a roll",
+			"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
+			"name": "Jack of All Trades"
+		},
+		"Juggernaut": {
+			"description": "<p>When you use Coordinated Strike, you deal extra damage equal to your armor, and you can <strong>add 1 to your primary die.</strong></p>",
+			"name": "Juggernaut"
+		},
+		"Keen Eye, Steady Hand": {
+			"description": "<p>Add WIL to your ranged weapon damage.</p>",
+			"name": "Keen Eye, Steady Hand",
+			"rules": {
+				"keen-eye-ranged-weapon-damage": {
+					"label": "Keen Eye, Steady Hand"
+				}
+			}
+		},
+		"Keen Senses": {
+			"description": "<p>Advantage on Perception and Assess checks. Unaffected by Blinded.</p>",
+			"name": "Keen Senses"
+		},
+		"Keen Sight": {
+			"description": "<p>Advantage on Perception checks.</p>",
+			"name": "Keen Sight"
+		},
+		"Keeper of Life & Death": {
+			"description": "<p>You know Radiant and Necrotic cantrips.</p>",
+			"name": "Keeper of Life & Death"
+		},
+		"KILL": {
+			"description": "<p>When you crit an enemy with fewer max HP than you, it dies. </p>",
+			"name": "KILL"
+		},
+		"Kinetic Barrage": {
+			"description": "<p>Whenever you miss an attack, gain a cumulative +STR bonus to all damage you do for the rest of this encounter (a disciplined martial artist does not miss on purpose).</p>",
+			"name": "Kinetic Barrage"
+		},
+		"Kinetic Momentum": {
+			"description": "<p>Whenever you gain a Wound, gain a Burst of Speed.</p>",
+			"name": "Kinetic Momentum"
+		},
+		"Knowledge from Beyond": {
+			"description": "<p>Whenever you fail an Insight or Arcana check, you may suffer 1 Wound to succeed instead.</p>",
+			"name": "Knowledge from Beyond"
+		},
+		"Large - Alpha Protector": {
+			"description": "<p>Damage from the first attack against you each round is halved.</p>",
+			"name": "Large - Alpha Protector"
+		},
+		"Large - Go for the Throat!": {
+			"description": "<p>(1/encounter) Costs 2 TotH charges, 2 actions: Your companion attacks your quarry for 1d12+(4×LVL) damage (ignoring armor). If that creature dies, you may deal half as much to another creature within Reach 4. </p><hr><p>Level 11: 2/encounter.</p>",
+			"name": "Large - Go for the Throat!"
+		},
+		"Large - Protect Me!": {
+			"description": "<p>(1/encounter) After you gain a Wound, your companion can whisk you away to safety up to 12 spaces. </p><hr><p>Level 7: You are whisked away before gaining the Wound. </p><p>Level 15: 2/encounter.</p>",
+			"name": "Large - Protect Me!"
+		},
+		"Lay on Hands": {
+			"description": "<p>Gain a magical pool of healing power. This pool's maximum is always equal to 5×LVL and recharges on a Safe Rest. Action: Touch a target and spend any amount of remaining healing power to restore that many HP.</p>",
+			"name": "Lay on Hands"
+		},
+		"Leader of the Pack": {
+			"description": "<p>Advantage against fear and charm effects for yourself and allies within 6 spaces.</p>",
+			"name": "Leader of the Pack"
+		},
+		"Leave No Trace": {
+			"description": "<p>Advantage on Stealth checks when you are at full health. </p>",
+			"name": "Leave No Trace"
+		},
+		"Life is Beautiful": {
+			"description": "<p>Harmless and lovely creatures such as butterflies and humming birds are attracted to your presence and often follow you. Flowers bloom more vibrantly in your presence.</p>",
+			"name": "Life is Beautiful"
+		},
+		"Lifebinding Spirit": {
+			"description": "<p>Action: Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it.</p><p>Action: It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount.</p><p><strong>Upcasting:</strong> Increment its die size by 1 (max d12), +1 healing use.</p>",
+			"name": "Lifebinding Spirit"
+		},
+		"Light Bearer": {
+			"description": "<p>Regain 1 use of Searing Light when you roll Initiative (this expires if unspent at the end of combat).</p>",
+			"name": "Light Bearer"
+		},
+		"Linos, the Everfriendly": {
+			"description": "<p>Summon a legendary flying (but friendly) creature to take you and your party wherever you need to go. He may request a very large amount of food as payment.</p>",
+			"name": "Linos, the Everfriendly"
+		},
+		"Low Blow": {
+			"description": "<p>When you Sneak Attack, you may spend 2 additional actions to Incapacitate your target for their next turn on a failed STR save (DC 10+INT). Save or fail, they are Taunted by you until you drop to 0 HP. </p>",
+			"name": "Low Blow"
+		},
+		"Lunging Strike": {
+			"description": "<p>Gain +1 Reach on an attack and deal extra damage equal to 2× a roll of your Combat Die.</p>",
+			"name": "Lunging Strike"
+		},
+		"Mal, the Malevolent Imp": {
+			"description": "<p>Summon a tiny fiend for 1 night. He can find out dangerous information you have no right to know! Or “take care” of a problem with only the slightest chance of things going wrong. Make an Influence check to convince him to help you (advantage if you ask him to do something he would find mischievous or fun; with disadvantage if it is something he would find good or menial).</p>",
+			"name": "Mal, the Malevolent Imp"
+		},
+		"Mana and Radiant Spellcasting": {
+			"description": "<p>You know Radiant cantrips, tier 1 Radiant spells, and gain a mana pool. Your mana pool is equal to WIL + LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2 Spells. You may now cast tier 2 spells and upcast spells at tier 2.</p><p>Level 6: Tier 3 Spells. You may now cast tier 3 spells and upcast spells at tier 3.</p><p>Level 8: Tier 4 Spells. You may now cast tier 4 spells and upcast spells at tier 4.</p><p>Level 10: Tier 5 Spells. You may now cast tier 5 spells and upcast spells at tier 5.</p><p>Level 13: Tier 6 Spells. You may now cast tier 6 spells and upcast spells at tier 6.</p><p>Level 17: Tier 7 Spells. You may now cast tier 7 spells and upcast spells at tier 7.</p>",
+			"name": "Mana and Radiant Spellcasting"
+		},
+		"Mana and Unlock Tier 1 Spells": {
+			"description": "<p>You unlock tier 1 Fire, Ice, and Lightning spells and gain a mana pool to cast these spells. This mana pool's maximum is always equal to (INT×3)+LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2 Spells. You may now cast tier 2 spells and upcast spells at tier 2.</p><p>Level 6: Tier 3 Spells. You may now cast tier 3 spells and upcast spells at tier 3.</p><p>Level 8: Tier 4 Spells. You may now cast tier 4 spells and upcast spells at tier 4.</p><p>Level 10: Tier 5 Spells. You may now cast tier 5 spells and upcast spells at tier 5.</p><p>Level 12: Tier 6 Spells. You may now cast tier 6 spells and upcast spells at tier 6.</p><p>Level 14: Tier 7 Spells. You may now cast tier 7 spells and upcast spells at tier 7.</p><p>Level 16: Tier 8 Spells. You may now cast tier 8 spells and upcast spells at tier 8.</p><p>Level 18: Tier 9 Spells. You may now cast tier 9 spells and upcast spells at tier 9.</p>",
+			"name": "Mana and Unlock Tier 1 Spells"
+		},
+		"Martyr Spawn": {
+			"description": "<p>Whenever you Defend, you can sacrifice a shadow minion to take no damage.</p>",
+			"name": "Martyr Spawn"
+		},
+		"Master Commander": {
+			"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 5, 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
+			"name": "Master Commander"
+		},
+		"Master of Chaos": {
+			"description": "<p>Whenever you Invoke Chaos, roll with advantage.</p>",
+			"name": "Master of Chaos"
+		},
+		"Master of Darkness": {
+			"description": "<p>Your Patron grants you knowledge of Necrotic cantrips and tier 1 spells.</p><hr><p>Level 5: Tier 2 Spells: You may now cast tier 2 spells all of your spells are cast at this tier.</p><p>Level 7: Tier 3 Spells. You may now cast tier 3 spells; all of your spells are cast at this tier.</p><p>Level 10: Tier 4 Spells. You may now cast tier 4 spells; all of your spells are cast at this tier.</p><p>Level 13: Tier 5 Spells. You may now cast tier 5 spells; all of your spells are cast at this tier.</p><p>Level 16: Tier 6 Spells. You may now cast tier 6 spells; all of your spells are cast at this tier.</p><p>Level 19: Tier 7 Spells. You may now cast tier 7 spells; all of your spells are cast at this tier.</p>",
+			"name": "Master of Darkness"
+		},
+		"Master of Forms": {
+			"description": "<p>Your shapeshift forms can have 2 Chimeric Boons at a time.</p>",
+			"name": "Master of Forms"
+		},
+		"Master of Forms (2)": {
+			"description": "<p>You can Beastshift 2 additional times per Safe Rest. Choose 2 additional Chimeric Boons. Your Direbeast forms can have 3 at a time.</p>",
+			"name": "Master of Forms (2)"
+		},
+		"Master of Nightfrost": {
+			"description": "<p>Your Patron grants you knowledge of Ice spells. Gain the ability to breathe underwater. Your shadow minions become beings of nightfrost. Your shadow blast and minions can deal cold or necrotic damage, and whenever they would crit, you gain INT+LVL temp HP.</p>",
+			"name": "Master of Nightfrost"
+		},
+		"Master of Radiance": {
+			"description": "<p>Choose 1 Radiant Utility Spell.</p><hr><p>Level 11: Choose a 2nd Radiant Utility Spell</p>",
+			"name": "Master of Radiance"
+		},
+		"Master of Storm": {
+			"description": "<p>You can concentrate on 1 lightning spell and 1 wind spell at the same time. (1/Safe Rest) You can cast Ride the Lightning for 0 mana.</p>",
+			"name": "Master of Storm"
+		},
+		"Master of Storms": {
+			"description": "<p>You know cantrips from the Lightning and Wind schools.</p>",
+			"name": "Master of Storms"
+		},
+		"Master of Twilight": {
+			"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd Necrotic and 2nd Radiant Utility Spell.</p><p>Level 11: Choose a 3rd Necrotic and 3rd Radiant Utility Spell.</p>",
+			"name": "Master of Twilight",
+			"rules": {
+				"master-twilight-necrotic-l11": {
+					"label": "Master of Twilight (3): All Necrotic Utility Spells"
+				},
+				"master-twilight-necrotic-l3": {
+					"label": "Master of Twilight: Necrotic Utility Spell"
+				},
+				"master-twilight-necrotic-l6": {
+					"label": "Master of Twilight (2): Necrotic Utility Spell"
+				},
+				"master-twilight-radiant-l11": {
+					"label": "Master of Twilight (3): All Radiant Utility Spells"
+				},
+				"master-twilight-radiant-l3": {
+					"label": "Master of Twilight: Radiant Utility Spell"
+				},
+				"master-twilight-radiant-l6": {
+					"label": "Master of Twilight (2): Radiant Utility Spell"
+				}
+			}
+		},
+		"Maximum Judgment": {
+			"description": "<p>Whenever you are attacked, set a Judgment Die to its max.</p>",
+			"name": "Maximum Judgment"
+		},
+		"Medium - Ferocious": {
+			"description": "<p>Whenever you or your companion crit your quarry, your companion attacks again for LVL damage (ignoring armor), and you can move up to 2 spaces for free. </p><hr><p>Level 7: 4 spaces. </p><p>Level 15: 6 spaces.</p>",
+			"name": "Medium - Ferocious"
+		},
+		"Medium - Go for the Throat!": {
+			"description": "<p>(1/encounter) Costs 1 TotH charge, action: Your companion attacks your quarry, for 1d8+(3×LVL) damage (ignoring armor). </p><hr><p>Level 11: 2/encounter.</p>",
+			"name": "Medium - Go for the Throat!"
+		},
+		"Medium - Protect Me!": {
+			"description": "<p>When you Defend, your companion may first attack that creature for 1d4+LVL damage.</p>",
+			"name": "Medium - Protect Me!"
+		},
+		"Merciful Healing": {
+			"description": "<p>When an effect caused by you heals a Dying creature, they are healed for twice as much. (1/round) Your Lifebinding Spirit can act for free while you are Dying.</p>",
+			"name": "Merciful Healing"
+		},
+		"Methodical Spellweaver": {
+			"description": "<p>(–2 mana) Spend 1 additional action to reduce the mana cost of a spell by 2 (min 1).</p>",
+			"name": "Methodical Spellweaver"
+		},
+		"Mighty Endurance": {
+			"description": "<p>You can now survive an additional 4 Wounds before death.</p>",
+			"name": "Mighty Endurance"
+		},
+		"Mighty Soul": {
+			"description": "<p>You cannot be moved against your will. Whenever you would fail a saving throw, you may gain a Wound in order to add your STR to the result you rolled. You may repeat this any number of times.</p>",
+			"name": "Mighty Soul"
+		},
+		"Misdirection": {
+			"description": "<p>Gain INT armor. </p><p>Whenever you Defend, you may halve the damage instead. </p>",
+			"name": "Misdirection"
+		},
+		"MORE BLOOD!": {
+			"description": "<p>Whenever an enemy crits you, gain 1 Fury Die.</p>",
+			"name": "MORE BLOOD!"
+		},
+		"Mountain's Endurance": {
+			"description": "<p>While Dying, if an attack against you would be a crit, the attack is rerolled instead (when-crit abilities, such as Titan's Fury, still trigger).</p>",
+			"name": "Mountain's Endurance"
+		},
+		"Mountainous Tenacity": {
+			"description": "<p>Whenever you expend your Hit Dice to recover HP, for every 10 HP you would recover, you may heal 1 Wound instead.</p>",
+			"name": "Mountainous Tenacity"
+		},
+		"Move it! Move it!": {
+			"costDetails": "When you roll Initiative",
+			"description": "<p>When you roll Initiative you may give yourself and an ally advantage on the roll and +3 speed for 1 round. </p>",
+			"name": "Move it! Move it!"
+		},
+		"Multishot": {
+			"description": "<p><em>(Half range)</em> Action: Attack your quarry with a ranged weapon and load an extra projectile. Select a 2nd target within 2 spaces of them to take the same amount of damage.</p>",
+			"name": "Multishot"
+		},
+		"My Blood, My Power": {
+			"description": "<p>You may take 1 Wound to cast a tiered spell you know at the highest tier you have unlocked.</p>",
+			"name": "My Blood, My Power"
+		},
+		"My Favored Pet": {
+			"description": "<p>One shadow minion can begrudgingly tolerate you outside of combat. It can (very creepily) do any menial task a below average commoner could.</p>",
+			"name": "My Favored Pet"
+		},
+		"My Life, for My Friends": {
+			"description": "<p>You can Interpose for free.</p>",
+			"name": "My Life, for My Friends"
+		},
+		"Nemesis": {
+			"description": "<p>+1 to any 2 of your stats. Your Hunter's Mark can target any number of creatures simultaneously.</p>",
+			"name": "Nemesis"
+		},
+		"No Escape": {
+			"description": "<p>Whenever you see one or more allies make an opportunity attack, you may also make a ranged opportunity attack against the same target.</p>",
+			"name": "No Escape"
+		},
+		"Not Beyond MY Reach": {
+			"description": "<p>You may target creatures who have been dead less than 1 round for healing. For every 10 HP a dead creature is healed this way, you may have them recover 1 Wound instead (you must heal at least 1 Wound to revive them).</p>",
+			"name": "Not Beyond MY Reach"
+		},
+		"Not My Beautiful Faaace!": {
+			"description": "<p>(1/encounter) When you Defend, force the attacker to choose another target within range on a failed WIL save (if there is none, the attack fails). If they fail by 5 or more, they attack themselves as punishment for even thinking they could harm you! On save, they attack you with disadvantage.</p>",
+			"name": "Not My Beautiful Faaace!"
+		},
+		"Nullify": {
+			"description": "<p>(1/encounter) Ignore all disadvantage and other negative effects on your next action this turn, then Demand Control.</p>",
+			"name": "Nullify"
+		},
+		"One with Shadows": {
+			"description": "<p>Action: When you are in an area of dim light or darkness, you may become Invisible until you move or attack.</p>",
+			"name": "One with Shadows"
+		},
+		"One with the Ancients": {
+			"description": "<p>(1/Safe Rest) When faced with a decision about which direction or course of action to take, you can call upon your ancestors to guide you toward the most dangerous or challenging path.</p>",
+			"name": "One with the Ancients"
+		},
+		"Onslaught": {
+			"description": "<p>While Raging, gain +2 speed.<br><em>(1/round)</em> you may move for free.</p>",
+			"name": "Onslaught"
+		},
+		"Opportunistic Frenzy": {
+			"description": "<p>While Raging, you can make opportunity attacks without disadvantage, and you may make them whenever an enemy enters your melee weapon's reach.</p>",
+			"name": "Opportunistic Frenzy"
+		},
+		"Opportunistic Snark": {
+			"costDetails": "when an enemy within Range 12 misses an attack",
+			"description": "<p><strong>Reaction</strong> (when an enemy within Range 12 misses an attack): You may cast Vicious Mockery at them; it deals double damage when cast this way.</p>",
+			"name": "Opportunistic Snark"
+		},
+		"Otherworldly Might": {
+			"description": "<p>Advantage on concentration checks if you have any shadow minions.</p>",
+			"name": "Otherworldly Might"
+		},
+		"Pack Hunter": {
+			"description": "<p>Whenever you mark a creature, you may also mark another creature within 6 spaces of them for free.</p>",
+			"name": "Pack Hunter"
+		},
+		"Pain Sharpens the Mind": {
+			"description": "<p>While you are Bloodied, gain advantage on the first attack you make each turn, and on all saves.</p>",
+			"name": "Pain Sharpens the Mind"
+		},
+		"Paragon of Power": {
+			"description": "<p>(Replaces Paragon of Virtue) Advantage on Might checks when attempting to intimidate others.</p>",
+			"name": "Paragon of Power"
+		},
+		"Paragon of Virtue": {
+			"description": "<p>Advantage on Influence checks to convince someone when you are forthrightly telling the truth, disadvantage when misleading.</p>",
+			"name": "Paragon of Virtue"
+		},
+		"Peerless Hunter": {
+			"description": "<p>You can Defend against your quarry for free.</p>",
+			"name": "Peerless Hunter"
+		},
+		"Phasebeast": {
+			"description": "<p>Whenever you shift between this form and your normal form (and vice versa), you may teleport up to 6 spaces away to a place you can see.</p>",
+			"name": "Phasebeast"
+		},
+		"Piercing": {
+			"description": "<p> Your attacks with piercing weapons ignore Medium Armor.</p>",
+			"name": "Piercing"
+		},
+		"Pilfered Power": {
+			"description": "<p>You may steal power from your patron to cast tiered spells, always casting them at the highest tier you have unlocked. You can do this DEX times before your patron takes notice. Each time you exceed this limit, your patron damages you for half your max HP as recompense. This limit resets when you commune with your patron during a Safe Rest.</p>",
+			"name": "Pilfered Power"
+		},
+		"Pinning Shot": {
+			"description": "<p>Spend 3 actions shooting your quarry. They are Restrained until they can escape (DC 10+WIL).</p>",
+			"name": "Pinning Shot"
+		},
+		"Pocket Sand": {
+			"costDetails": "1 Use",
+			"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
+			"name": "Pocket Sand"
+		},
+		"Powerful Healer": {
+			"description": "<p>(WIL times/Safe Rest) Whenever you would roll dice to heal damage, you may instead heal the max amount you could roll, or give that many temp HP.</p>",
+			"name": "Powerful Healer"
+		},
+		"Precise Casting": {
+			"description": "<p>(1+ mana) Choose 1 creature per mana spent to be unaffected by a spell you cast.</p>",
+			"name": "Precise Casting"
+		},
+		"Prehensile Tail": {
+			"description": "<p>Creatures you hit in melee that are your size or smaller are Grappled. If you hit a larger creature, you may move with it when it moves.</p>",
+			"name": "Prehensile Tail"
+		},
+		"Primal Predator": {
+			"description": "<p><em>(1/encounter)</em> Your weapon attacks ignore cover and armor this turn.</p>",
+			"name": "Primal Predator"
+		},
+		"Primordial Force": {
+			"description": "<p>Spending 2+ mana on a spell grants an additional effect:</p><p>• <strong>Ice</strong>. Gain WIL temp HP.</p><p>• <strong>Lightning</strong>. Deal additional damage equal to your WIL.</p><p>• <strong>Radiant</strong>. You may heal a creature within 6 spaces WIL HP.</p><p>• <strong>Wind</strong>. Gain a flying speed this turn. Move up to 6 spaces for free.</p>",
+			"name": "Primordial Force"
+		},
+		"Professional Skulker": {
+			"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>",
+			"name": "Professional Skulker",
+			"rules": {
+				"index:0": {
+					"label": "Professional Skulker"
+				}
+			}
+		},
+		"Quick Read": {
+			"description": "<p>• <em>(1/encounter)</em> Gain advantage on an Assess check. </p><p>• <em>(1/day)</em> Gain advantage on an Examination check. </p>",
+			"name": "Quick Read"
+		},
+		"Quick Wit": {
+			"costDetails": "An ally makes a roll",
+			"description": "<p>When you roll Initiative, you may regain 2 spent uses of your Songweaver's Inspiration (these expire at the end of combat if left unused).</p>",
+			"name": "Quick Wit"
+		},
+		"Quickstrike": {
+			"description": "<p>When you Interpose, you may first make an unarmed strike against the enemy for free.</p>",
+			"name": "Quickstrike"
+		},
+		"Radiant Aura": {
+			"description": "<p>Action: End any single harmful condition or effect on yourself or another willing creature within your aura. You may use this ability WIL times/Safe Rest.</p>",
+			"name": "Radiant Aura"
+		},
+		"Radiant Judgement": {
+			"description": "<p>Whenever an enemy attacks you, if you have no Judgment Dice, roll your Judgment dice (2d6). On your next melee attack this encounter, if you hit, deal that much additional radiant damage. The dice are expended whether you hit or miss.</p><hr><p>Level 3: Your Judgement Dice are d8s</p><p>Level 5: Your Judgement Dice are d10s</p><p>Level 8: Your Judgement Dice are d12s</p><p>Level 10: Your Judgement Dice are d20s</p><p>Level 14: Whenever you roll Judgement Dice, roll 1 more</p>",
+			"name": "Radiant Judgement",
+			"rules": {
+				"judgment-d10-l5": {
+					"label": "Judgment Dice → d10"
+				},
+				"judgment-d12-l8": {
+					"label": "Judgment Dice → d12"
+				},
+				"judgment-d20-l10": {
+					"label": "Judgment Dice → d20"
+				},
+				"judgment-d8-l3": {
+					"label": "Judgment Dice → d8"
+				},
+				"judgment-plus1-l14": {
+					"label": "Judgment Dice: roll 1 more"
+				},
+				"judgment-pool-base": {
+					"label": "Judgment Dice"
+				}
+			}
+		},
+		"Rage": {
+			"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Whenever you Rage, gain 2 Fury Dice instead.</p>",
+			"durationDetails": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
+			"name": "Rage",
+			"rules": {
+				"fury-pool-autobonus": {
+					"label": "Fury Dice — STR auto-bonus"
+				},
+				"fury-pool-base": {
+					"label": "Fury Dice"
+				}
+			}
+		},
+		"Raging Tempest": {
+			"description": "<p>Whenever you crit with a tiered spell, you may cast a cantrip for free from a school you know and haven't cast any spells from this turn (at the same level of dis/advantage).</p>",
+			"name": "Raging Tempest"
+		},
+		"Rampage": {
+			"description": "<p>(1/ turn) After you land a hit, you may treat your next attack this turn as if you rolled that same amount instead of rolling again.</p>",
+			"name": "Rampage"
+		},
+		"Reap": {
+			"description": "<p>When your Bonescythe crits, or kills a creature, summon a shadow minion for free.</p>",
+			"name": "Reap"
+		},
+		"Reliable Justice": {
+			"description": "<p>Whenever you roll Judgment Dice, roll with advantage (roll one extra and drop the lowest).</p>",
+			"name": "Reliable Justice"
+		},
+		"Repelling Blast": {
+			"description": "<p>When you hit a Medium or smaller creature with Shadow Blast, you can push the creature up to 2 spaces away from yourself.</p>",
+			"name": "Repelling Blast"
+		},
+		"Reposition!": {
+			"costDetails": "on an ally's turn",
+			"description": "<p><strong>Action/Reaction</strong> (on an ally's turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free.</p>",
+			"name": "Reposition!"
+		},
+		"Resourceful Herbalist": {
+			"description": "<p>Whenever you Safe Rest in a location near where plants or fungi can grow, you may spend a day collecting healing herbs to craft a number of Healing Salves equal to your WIL.</p>",
+			"name": "Resourceful Herbalist"
+		},
+		"Reverberating Strikes": {
+			"description": "<p>You learn to focus your energy and transfer it as an additional concussive force into your foes. Add LVL bludgeoning damage to all of your melee attacks.</p>",
+			"name": "Reverberating Strikes",
+			"rules": {
+				"reverberating-strikes-melee-damage": {
+					"label": "Reverberating Strikes"
+				}
+			}
+		},
+		"Revitalizing Blessing": {
+			"description": "<p>(1/round) Whenever you roll a 6 or higher on one or more healing die, the target may recover one Wound.</p>",
+			"name": "Revitalizing Blessing"
+		},
+		"Rhapsody of the Normal": {
+			"description": "<p>When you roll 4 or more on your Vicious Mockery, you may spend a Songweaver's Inspiration charge to temporarily suppress any special abilities they have until the end of their next turn. They can do only what an untrained average villager can do, attack once for 1d4 damage and move up to 6 spaces (no armor, spellcasting, flying, regeneration, other inherent or trained features).</p>",
+			"name": "Rhapsody of the Normal"
+		},
+		"Rising Phoenix": {
+			"costDetails": "when you would drop to 0 HP",
+			"description": "<p>(Replaces: I Can Do This ALL DAY!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice, set your HP to the sum rolled instead, and deal that much fire damage to each enemy within 2 spaces of you. They gain the Smoldering condition.</p>",
+			"name": "Rising Phoenix"
+		},
+		"Roll & Strike": {
+			"description": "<p>Action: If you have no Thrill of the Hunt charges, move up to your speed toward your quarry. If you end adjacent to them, make a melee attack against them for free.</p>",
+			"name": "Roll & Strike"
+		},
+		"Savage Awareness": {
+			"description": "<p>Advantage on Perception checks to notice or track down blood. Blindsight 2 while Raging: you ignore the Blinded condition and can see through darkness and Invisibility within that Range.</p>",
+			"name": "Savage Awareness"
+		},
+		"Searing Light": {
+			"description": "<p>(WIL times/Safe Rest) Action: Heal or Inflict grievous injuries:</p><p>• Heal WIL d8 HP to a Dying creature within Reach 6. OR:</p><p>• Inflict WIL d8 radiant damage to an undead or Bloodied enemy within Reach 6.</p>",
+			"name": "Searing Light"
+		},
+		"Shadow Exploit": {
+			"description": "<p>Sacrifice a shadow minion to cast a spell at the highest tier you have unlocked. Each subsequent spell you cast in this encounter costs 1 additional minion.</p>",
+			"name": "Shadow Exploit"
+		},
+		"Shadow Magus": {
+			"description": "<p>Your minions gain +4 Reach and deal d10 damage instead.</p>",
+			"name": "Shadow Magus"
+		},
+		"Shadow Rush": {
+			"description": "<p>When your shadow minions attack, instead of rolling damage, you may have any of them deal the max amount, then die.</p>",
+			"name": "Shadow Rush"
+		},
+		"Shadow Spear": {
+			"description": "<p>Your Shadow Blast can target creatures twice as far away, it ignores cover, and you may attack Prone targets with advantage with it (instead of disadvantage).</p>",
+			"name": "Shadow Spear"
+		},
+		"Shadow Warp": {
+			"description": "<p>Action: Switch places with a creature within 12 spaces that has been dealt necrotic damage this turn.</p>",
+			"name": "Shadow Warp"
+		},
+		"Shadowfrost": {
+			"description": "<p>Your Shadow Blast also Slows. You can cast Cryosleep or Rimeblades without Pilfering Power by expending 10 temp HP. Choose 1 Ice Utility Spell.</p>",
+			"name": "Shadowfrost"
+		},
+		"Shadowmastery": {
+			"description": "<p>Choose 1 Necrotic Utility Spell.</p><hr><p>Level 8: Choose 1 more Necrotic Utility Spell</p><p>Level 14: You know all Necrotic Utility Spells.</p>",
+			"name": "Shadowmastery",
+			"rules": {
+				"shadowmastery-l14": {
+					"label": "Shadowmastery (3): All Necrotic Utility Spells"
+				},
+				"shadowmastery-l6": {
+					"label": "Shadowmastery: Necrotic Utility Spell"
+				},
+				"shadowmastery-l8": {
+					"label": "Shadowmastery (2): Necrotic Utility Spell"
+				}
+			}
+		},
+		"Share My Pain": {
+			"description": "<p>Your Swiftstrike can also target a 2nd creature within Reach 2.</p>",
+			"name": "Share My Pain"
+		},
+		"Sharpshooter": {
+			"description": "<p>Action: If you have not moved this turn and your quarry is 4 or more spaces away, attack them for double damage.</p>",
+			"name": "Sharpshooter"
+		},
+		"Shield Expert": {
+			"description": "<p>While wearing a shield, you may Defend 2× each round. The first time each round you block all of the damage from an attack, you may make an opportunity attack against the attacker for free.</p>",
+			"name": "Shield Expert"
+		},
+		"Shield Wall": {
+			"description": "<p> Allies within 2 spaces gain ALL the benefits of the shield you have equipped.</p>",
+			"name": "Shield Wall"
+		},
+		"Shining Mandate": {
+			"description": "<p>The first time each round you are attacked while you already have Judgment Dice, select an ally within your aura to roll one and apply it to their next attack. You have advantage on skill checks to see through illusions.</p>",
+			"name": "Shining Mandate"
+		},
+		"Skilled Navigator": {
+			"description": "<p>You cannot become lost by nonmagical means.</p>",
+			"name": "Skilled Navigator"
+		},
+		"Skilled Tracker": {
+			"description": "<p>You have advantage on skill checks to track creatures</p>",
+			"name": "Skilled Tracker"
+		},
+		"Slashing": {
+			"description": "<p>Your attacks with slashing weapons cannot miss unarmored enemies. </p>",
+			"name": "Slashing"
+		},
+		"Small - Go for the Throat!": {
+			"description": "<p>(1/encounter) Costs 1 TotH charge: Your companion attacks your quarry for 1d4+LVL damage for free (ignoring armor). </p><hr><p>Level 11: 2/encounter, 1/round. </p><p>Level 15: 3/encounter, 1/round.</p>",
+			"name": "Small - Go for the Throat!"
+		},
+		"Small - Keen Eyes": {
+			"description": "<p>(1/encounter) Mark a target for free. </p><hr><p>Level 7: 2/encounter</p><p>Level 11: 3/encounter.</p>",
+			"name": "Small - Keen Eyes"
+		},
+		"Small - Protect Me!": {
+			"description": "<p>(1/encounter) Whenever you Defend, your companion distracts the attacker, causing the attack to miss, and you move up to half your speed away. </p><hr><p>Level 7: 2/encounter.</p>",
+			"name": "Small - Protect Me!"
+		},
+		"Snare Trap": {
+			"costDetails": "Enemy moves adjacent to you",
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Move them back 1 space, they are Restrained until they can escape (DC 10+WIL).</p>",
+			"name": "Snare Trap"
+		},
+		"Sneak Attack": {
+			"description": "<p><em>(1/turn)</em> When you crit, deal additional damage.</p><hr><p>Level 1: 1d6</p><p>Level 3: 1d8</p><p>Level 7: 2d8</p><p>Level 9: 2d10</p><p>Level 11: 2d12</p><p>Level 15: 2d20</p><p>Level 17: 3d20 </p>",
+			"name": "Sneak Attack"
+		},
+		"Song of Domination": {
+			"description": "<p>(1/encounter) 2 actions: Play a bewitching tune, and all enemies within 6 spaces who hear it must make a WIL save. If they fail, you move them up to 6 spaces in any direction, and they cannot move on their next turn.</p>",
+			"name": "Song of Domination"
+		},
+		"Song of Rest": {
+			"costDetails": "An ally makes a roll",
+			"description": "<p>(1/ day) Whenever you Field Rest, you may play a song and allow anyone who spends Hit Dice to heal additional HP equal to your WIL.</p>",
+			"name": "Song of Rest"
+		},
+		"Songweaver's Inspiration": {
+			"costDetails": "An ally makes a roll",
+			"description": "<p><em>(2×WIL times/Safe Rest)</em> <strong>Free Reaction</strong>: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>",
+			"name": "Songweaver's Inspiration"
+		},
+		"Soul Reaper": {
+			"description": "<p>When you use Searing Light to harm an enemy, make a 2nd enemy within range take the same amount of damage (ignoring armor).</p>",
+			"name": "Soul Reaper"
+		},
+		"Stand Fast, Friends!": {
+			"description": "<p>When you roll Initiative, grant allies temp HP equal to your STR+WIL. You and allies within your aura have advantage against fear and effects that would move or knock Prone.</p>",
+			"name": "Stand Fast, Friends!"
+		},
+		"Steal Tempo": {
+			"description": "<p>When you land a critical hit for the second time on a turn, your target loses 1 action and you gain 1 action.</p>",
+			"name": "Steal Tempo"
+		},
+		"Steel Will": {
+			"description": "<p>(1/Safe Rest) Whenever you would fail a save, you may succeed instead. Whenever you roll a 1 on an Elemental Surge die, you may reroll it once.</p>",
+			"name": "Steel Will"
+		},
+		"Stompy": {
+			"description": "<p>3 actions: Summon a huge hill giant for 1 round. As he enters the battlefield adjacent to you, use</p><p><strong>Stompy's Stomp</strong>: Make a DC 10 Influence check. On a success, he moves 6 spaces in a direction you choose; on a failure, he moves towards YOU instead (\"YOU NOT FRIEND!\"). He deals everything in his path damage equal to LVL+Influence check. ANY creature within 6 spaces of Stompy can use this ability once instead of an attack.</p>",
+			"name": "Stompy"
+		},
+		"Stone's Resilience": {
+			"description": "<p>Whenever you expend Fury Dice to reduce incoming damage, add the value of the die to the amount reduced.</p>",
+			"name": "Stone's Resilience"
+		},
+		"Storm Wake": {
+			"description": "<p>(1/encounter) Action: Spend 3 mana to shift into a Beast of the Pack, then teleport in a straight line up to 12 spaces away, unerringly dealing WIL d8 lightning damage to any creatures you choose adjacent to your path.</p>",
+			"name": "Storm Wake"
+		},
+		"Stormborn (1)": {
+			"description": "<p>Gain resistance to lightning damage. (1/day) You may gain advantage on a Naturecraft check or Concentration check.</p>",
+			"name": "Stormborn (1)"
+		},
+		"Stormborn (2)": {
+			"description": "<p>Instead of rolling dice, deal the max damage of a Wind spell by spending a charge of your Beastshift feature. Whenever you end Beastshift, you may cast a cantrip for free.</p>",
+			"name": "Stormborn (2)"
+		},
+		"Stormcaller": {
+			"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Learn a 2nd Utility Spell from each spell school you know.</p>",
+			"name": "Stormcaller",
+			"rules": {
+				"stormcaller-utility-1": {
+					"label": "Choose a Utility Spell"
+				},
+				"stormcaller-utility-2": {
+					"label": "Choose a 2nd Utility Spell"
+				}
+			}
+		},
+		"Stretch Time": {
+			"description": "<p>(2 mana) Reduce the action cost of a spell by 1 (min 1).</p>",
+			"name": "Stretch Time"
+		},
+		"Sunder Armor (Heavy)": {
+			"description": "<p><em>Req. Sunder Armor (Medium).</em> Your Sunder Armor ability now also applies to enemies wearing heavy armor. </p>",
+			"name": "Sunder Armor (Heavy)"
+		},
+		"Sunder Armor (Medium)": {
+			"description": "<p>Action: When you crit an enemy with medium armor, sunder their armor. Until the start of your next turn, ALL melee attacks against that target ignore its armor. </p>",
+			"name": "Sunder Armor (Medium)"
+		},
+		"Supreme Control": {
+			"description": "<p>Whenever you Demand Control, you may choose to trigger the selected option twice. You may Demand Control as a Reaction.</p>",
+			"name": "Supreme Control"
+		},
+		"Supreme Execution": {
+			"description": "<p>When you attack with a blade, you do not require targets to be Distracted to trigger Vicious Opportunist.</p><hr><p>+1 to any 2 of your stats. </p>",
+			"name": "Supreme Execution"
+		},
+		"Survey the Battlefield.": {
+			"description": "<p>When you roll Initiative, regain 1 use of Coordinated Strike. +1 max Combat Dice.</p>",
+			"name": "Survey the Battlefield."
+		},
+		"Swarming Shadows": {
+			"description": "<p>Whenever one of your shadows would crit, summon another shadow minion adjacent to the target.</p>",
+			"name": "Swarming Shadows"
+		},
+		"Sweeping Strike": {
+			"description": "<p><strong>2 actions:</strong> Select any contiguous area within your weapon's Reach and damage ALL targets there. This attack does not miss on a 1. </p>",
+			"name": "Sweeping Strike"
+		},
+		"Sweet Talk": {
+			"description": "<p>You may gain advantage on all Influence checks with NPCs you've just met for the first time. This lasts until you fail an Influence check with them or until you meet a 2nd time. You have disadvantage on Influence checks with them after you use this ability (until you get back on their good side). </p>",
+			"name": "Sweet Talk"
+		},
+		"Swift Feet": {
+			"description": "<p>While unarmored, gain +2 speed and +LVL Initiative.</p><hr><p>Level 9: +2 additional speed while unarmored.</p>",
+			"name": "Swift Feet",
+			"rules": {
+				"index:0": {
+					"label": "Swift Feet (2)"
+				},
+				"index:1": {
+					"label": "Swift Feet Initiative Bonus"
+				},
+				"index:2": {
+					"label": "Swift Feet (9)"
+				}
+			}
+		},
+		"Swift Fists": {
+			"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules).</p>",
+			"name": "Swift Fists"
+		},
+		"Swift Fury": {
+			"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p>",
+			"name": "Swift Fury"
+		},
+		"Swiftshift": {
+			"description": "<p>When you roll Initiative, you may Beastshift or move for free. While transformed, you may shift between different Direbeast forms for free (and as a reaction by spending 1 mana); however, Beastshifting for free does not grant any temp HP.</p>",
+			"name": "Swiftshift"
+		},
+		"Talented Researcher": {
+			"description": "<p>Gain advantage on Arcana or Lore checks when you have access to a large amount of books and time to study them.</p>",
+			"name": "Talented Researcher"
+		},
+		"Taunting Strike": {
+			"description": "<p>(1/turn) You may Taunt a creature you hit until the end of their next turn.</p>",
+			"name": "Taunting Strike"
+		},
+		"Tempest Mage": {
+			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Wind school.</p>",
+			"name": "Tempest Mage",
+			"rules": {
+				"tempest-mage-cantrip": {
+					"label": "Choose a Wind Cantrip"
+				},
+				"tempest-mage-tier1": {
+					"label": "Choose a Tier 1-3 Wind Spell"
+				}
+			}
+		},
+		"That all you got?!": {
+			"costDetails": "when you are attacked",
+			"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset, it will roll (STR+DEX) × N for you.</em></p>",
+			"name": "That all you got?!",
+			"rules": {
+				"tayg-fury-consumer": {
+					"label": "That all you got?!"
+				}
+			}
+		},
+		"THAT'S Not What Happened!": {
+			"description": "<p><em>(1/Safe Rest)</em> Action: After a Distracted enemy attacks you, you may change the Primary Die roll to whatever you like (changing the die to the minimum value counts as a miss).</p>",
+			"name": "THAT'S Not What Happened!"
+		},
+		"Thieves' Cant": {
+			"description": "<p>You learn the secret language of rogues and scoundrels. </p>",
+			"name": "Thieves' Cant"
+		},
+		"Thrill of the Hunt": {
+			"description": "<p>Choose 2 Thrill of the Hunt abilities. Gain a charge to use these abilities during that encounter whenever:</p><ul><li><p>Your quarry dies.</p></li><li><p>You hit your quarry in melee or crit your quarry at range</p><hr><p>Choose an additional Thrill of the Hunt ability at levels 4, 6, 8, 12, and 14.</p></li></ul>",
+			"name": "Thrill of the Hunt"
+		},
+		"Thrive in Chaos": {
+			"description": "<p>Whenever you Invoke Chaos, you may roll twice and cause both effects. (1/Safe Rest) You may choose which roll to use instead.</p>",
+			"name": "Thrive in Chaos"
+		},
+		"Thunderous Steps": {
+			"description": "<p>After moving at least 4 spaces while Raging, you may deal STR Bludgeoning damage to all adjacent creatures where you stop.</p>",
+			"name": "Thunderous Steps"
+		},
+		"Titan's Fury": {
+			"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p>",
+			"durationDetails": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
+			"name": "Titan's Fury"
+		},
+		"Torment": {
+			"description": "<p>Your Lay on Hands heals you for twice as much, and others for half as much. When you deal damage, you can expend healing power from your Lay on Hands pool to increase the damage dealt by an amount equal to the points spent (ignoring armor).</p>",
+			"name": "Torment"
+		},
+		"Tracker's Intuition": {
+			"description": "<p>You can discern the events of a past encounter by studying tracks and other subtle environmental clues, accurately determining the kind and amount of creatures, their direction, key actions, and passage of time.</p>",
+			"name": "Tracker's Intuition"
+		},
+		"Trickshot": {
+			"description": "<p>When you throw a dagger, it returns back to your hand at the end of your turn. On a hit, it ricochets to another creature within 2 spaces, dealing half as much damage to them. </p>",
+			"name": "Trickshot"
+		},
+		"Twilight Sage": {
+			"description": "<p>+1 to any 2 of your stats. Your Lifebinding Spirit rolls twice as many dice.</p>",
+			"name": "Twilight Sage"
+		},
+		"Twist the Blade (1)": {
+			"description": "<p>Action: Change one of your Sneak Attack dice to whatever you like.</p>",
+			"name": "Twist the Blade (1)"
+		},
+		"Twist the Blade (2)": {
+			"description": "<p>(1/turn) Change one of your Sneak Attack dice to whatever you like, for free</p>",
+			"name": "Twist the Blade (2)"
+		},
+		"Unbreakable": {
+			"description": "<p><em>(1/encounter)</em> While Raging, if you would suffer your last Wound or other negative condition of your choice, you don't.</p>",
+			"name": "Unbreakable"
+		},
+		"Unending Judgment": {
+			"description": "<p>While you have no Judgment Dice, gain +5 damage to melee attacks.</p>",
+			"name": "Unending Judgment",
+			"rules": {
+				"unending-judgment-l18": {
+					"label": "Unending Judgment"
+				}
+			}
+		},
+		"Unerring Judgment": {
+			"description": "<p>Increase your primary die rolls on melee attacks by 1 whenever you have Judgment Dice.</p>",
+			"name": "Unerring Judgment"
+		},
+		"Unfailing Courage": {
+			"description": "<p>Your presence inspires others to feats of heroism and courage heard of only in legend. Your Songweaver's Inspiration allows your target to roll with advantage.</p>",
+			"name": "Unfailing Courage"
+		},
+		"Unleash the Beast": {
+			"description": "<p>(1/encounter) When you miss, you can crit instead.</p>",
+			"name": "Unleash the Beast"
+		},
+		"Unparalleled Survivalist": {
+			"description": "<p>Gain +WIL armor. When you attack with a ranged weapon, you may first move half your speed for free.</p>",
+			"name": "Unparalleled Survivalist"
+		},
+		"Unparalleled Tactics": {
+			"description": "<p>The first time each encounter you use Coordinated Strike, an ally who can hear you also gains 1 action to use on their next turn.</p>",
+			"name": "Unparalleled Tactics"
+		},
+		"Unstoppable Brutality": {
+			"description": "<p>While Raging, you may gain 1 Wound to reroll any attack or save.</p>",
+			"name": "Unstoppable Brutality"
+		},
+		"Unstoppable Force": {
+			"description": "<p>While Dying and Raging, taking damage causes 1 Wound (instead of 2) and critical hits inflict 2 Wounds (instead of 3).</p>",
+			"name": "Unstoppable Force"
+		},
+		"Unstoppable Protector": {
+			"description": "<p>Gain +1 speed. You may Interpose even if you are restrained, stunned, or otherwise incapacitated. If you Interpose for a noncombatant NPC, you may Interpose again this round.</p>",
+			"name": "Unstoppable Protector",
+			"rules": {
+				"index:0": {
+					"label": "Unstoppable Protector"
+				}
+			}
+		},
+		"Unyielding Resolve": {
+			"description": "<p>Ignore the first Wound you would suffer each encounter (when-Wounded abilities, such as Kinetic Momentum, still trigger).</p><hr><p>Level 10: First 2 wounds per encounter</p><p>Level 17: First 3 wounds per encounter, and you have advantage on STR saves while Dying.</p>",
+			"name": "Unyielding Resolve"
+		},
+		"Use Momentum": {
+			"description": "<p>Whenever you avoid all of the damage of a melee attack (whether it misses or you Defend), you may swap places with the attacker and then choose another target that is now within the attack's reach, and they are hit instead.</p>",
+			"name": "Use Momentum"
+		},
+		"Veilwalker's Blessing": {
+			"description": "<p><em>(1/Safe Rest)</em> <strong>Reaction</strong> (when you would drop to 0 HP): Drop to 1 HP instead and force an enemy within 6 spaces to make a STR save. On a failure, they become Bloodied, or if they are already Bloodied, they drop to 0 HP.</p>",
+			"name": "Veilwalker's Blessing"
+		},
+		"Vengeful Blast": {
+			"description": "<p>Whenever a minion dies, you may cast Shadow Blast as a reaction (even if you already cast it this turn).</p>",
+			"name": "Vengeful Blast"
+		},
+		"Vengeful Spirit": {
+			"description": "<p>Action: Your Lifebinding Spirit sacrifices itself to transform into a swirling vortex of radiant light. At the end of your turn, it damages all enemies within 3 spaces of you, ignoring armor and cover. This lasts for a number of rounds equal to the healing charges left on the Lifebinding Spirit. This effect ends early if you summon your spirit again.</p>",
+			"name": "Vengeful Spirit"
+		},
+		"Venomous Gaze": {
+			"description": "<p>(1/encounter) Action: Spend 2 mana to shift into a Beast of Nightmares. Then entice a creature within 12 spaces to move 2×WIL spaces closer to you on a failed WIL save (they roll with disadvantage and must repeat until they save or can move no further). If they end up in the same space as you, you may Sting them for free.</p>",
+			"name": "Venomous Gaze"
+		},
+		"Versatile Bowmaster": {
+			"description": "<p>Whenever you attack with a Longbow, you may roll 2d4 instead of 1d8; or with a Crossbow, 2d8 instead of 4d4.</p>",
+			"name": "Versatile Bowmaster"
+		},
+		"Veteran Stalker": {
+			"description": "<p>Gain a Thrill of the Hunt charge whenever you are first Bloodied in an encounter and for every Wound you gain.</p>",
+			"name": "Veteran Stalker"
+		},
+		"Vicious Opportunist": {
+			"description": "<p><em>(1/turn)</em> When you hit a Distracted target with a melee attack, you may change the Primary Die roll to whatever you like (changing it to the max value counts as a crit). </p><hr><p>Distracted. A target is Distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</p>",
+			"name": "Vicious Opportunist"
+		},
+		"Vital Rejuvenation": {
+			"description": "<p>When you receive healing for the first time on a turn, you may heal another target within 6 spaces HP equal to your STR.</p>",
+			"name": "Vital Rejuvenation"
+		},
+		"Vital Shot": {
+			"description": "<p><em>(Half Range)</em> Action: Attack your Hampered quarry with a ranged weapon, ignoring their armor or doubling your Hunter's Mark damage bonus if they have none.</p>",
+			"name": "Vital Shot"
+		},
+		"Voice of the Dark": {
+			"description": "<p>You can communicate telepathically with a humanoid within 6 spaces</p>",
+			"name": "Voice of the Dark"
+		},
+		"We All Suffer": {
+			"description": "<p>Gain +2 max Wounds. When an ally within your aura would gain any Wounds or fail a save, you may suffer the effect instead and trigger your Radiant Judgment ability.</p>",
+			"name": "We All Suffer"
+		},
+		"We'll ALL Burn!": {
+			"description": "<p>You may cast Pyroclasm without Pilfering Power by including yourself in the damage. You have advantage on the save.</p><p>Choose 1 Fire Utility Spell.</p>",
+			"name": "We'll ALL Burn!"
+		},
+		"Weapon Mastery": {
+			"description": "<p>You may sheathe a weapon and draw a different one 2x/round for free.<br>Choose a weapon type to specialize in.</p><hr><p>Level 6: Choose a weapon type to specialize in.</p><p>Level 10: Choose a 2nd weapon type to specialize in.</p><p>Level 14: You have complete mastery of all weapon types.</p>",
+			"name": "Weapon Mastery"
+		},
+		"Well Armored": {
+			"description": "<p>Whenever you Interpose, gain temp HP equal to your STR.</p>",
+			"name": "Well Armored"
+		},
+		"Whirlwind": {
+			"description": "<p>2 actions: Attack ALL targets within your melee weapon's reach.</p>",
+			"name": "Whirlwind"
+		},
+		"Whispers of the Grave": {
+			"description": "<p><em>(1/day)</em> You can ask a dead creature 3 yes/no questions. It can never be questioned this way again.</p>",
+			"name": "Whispers of the Grave"
+		},
+		"Wild Endurance": {
+			"description": "<p>Gain 1 Thrill of the Hunt charge at the start of your turns.</p>",
+			"name": "Wild Endurance"
+		},
+		"Wild Instinct": {
+			"description": "<p><em>(1/round, costs 0 TotH charges if you have none.)</em> Assess for free, with advantage.</p>",
+			"name": "Wild Instinct"
+		},
+		"Wind Spellcasting and...": {
+			"description": "<p>You know cantrips from the Wind school and 1 other school of your choice. You also know the cantrip Vicious Mockery:</p><p><strong>Vicious Mockery.</strong> (Wind cantrip) Action: Range: 12. Damage: 1d4+INT psychic (ignoring armor). On hit: the target is Taunted during their next turn. High Levels: +2 damage every 5 levels.</p>",
+			"name": "Wind Spellcasting and...",
+			"rules": {
+				"songweaver-bonus-school": {
+					"label": "Choose One Additional School"
+				}
+			}
+		},
+		"Windbag": {
+			"costDetails": "An ally makes a roll",
+			"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd Utility Spell from each spell school you know.</p><p>Level 14: You know all Utility Spells from the spell schools you know.</p>",
+			"name": "Windbag",
+			"rules": {
+				"windbag-l14-all-utility": {
+					"label": "Windbag (3): All Utility Spells from Known Schools"
+				}
+			}
+		},
+		"Windborne": {
+			"description": "<p>+1 to any 2 of your stats. +1 additional burst of speed when you roll Initiative. Permanently gain 1 action (while Dying, you have a max of 2 actions).</p>",
+			"name": "Windborne"
+		},
+		"Windborne Protector": {
+			"costDetails": "when an enemy attacks, spend 2 mana to shift into a Fearsome Beast",
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong>: when an enemy attacks, spend 2 mana to shift into a Fearsome Beast. Then you may Interpose from up to 12 spaces away and Defend for free (if you have not yet done so this round).</p>",
+			"name": "Windborne Protector"
+		},
+		"Windstrider": {
+			"description": "<p>If you move through the space of a willing creature while using Windstep, they can move with you and choose any space adjacent to your path of movement to end in.</p>",
+			"name": "Windstrider"
+		},
+		"Winged": {
+			"description": "<p>Gain a flying speed. Forced movement moves you twice as far while flying.</p>",
+			"name": "Winged",
+			"rules": {
+				"index:0": {
+					"label": "Winged"
+				}
+			}
+		},
+		"Withering Strike": {
+			"description": "<p>(Replaces: Coordinated Strike!)</p><p>Any attacks made this way deal additional Necrotic damage equal to the max value of your Combat Die. An enemy damaged this way is considered undead for 1 round.</p>",
+			"name": "Withering Strike"
+		},
+		"Words Like Swords": {
+			"description": "<p>Your Vicious Mockery damage becomes 1d6+INT+ WIL.</p>",
+			"name": "Words Like Swords"
+		},
+		"You're Next!": {
+			"description": "<p>Action: While Raging, you can make a Might skill check to demoralize an enemy within Reach 12 (DC: their current HP). On a success, they immediately flee the battle.</p>",
+			"name": "You're Next!"
+		},
+		"Zealot": {
+			"description": "<p>Whenever you attack with a melee weapon, you may spend mana (up to your highest unlocked spell tier) to choose one for each mana spent:</p><p>• <strong>Condemning Strike.</strong> Deal +5 radiant damage.</p><p>• <strong>Blessed Aim.</strong> Decrease your target's armor by 1 step for this attack.</p>",
+			"name": "Zealot"
+		}
+	},
+	"folders": {
+		"A People Person": "A People Person",
+		"Beastmaster": "Beastmaster",
+		"Berserker": "Berserker",
+		"Berserker Progression": "Berserker Progression",
+		"Berserker Subclasses": "Berserker Subclasses",
+		"Champion Of The Bulwark": "Champion Of The Bulwark",
+		"Champion Of The Vanguard": "Champion Of The Vanguard",
+		"Chimeric Boon": "Chimeric Boon",
+		"Circle Of Fang And Claw": "Circle Of Fang And Claw",
+		"Circle Of Sky And Storm": "Circle Of Sky And Storm",
+		"Combat Tactics": "Combat Tactics",
+		"Commander": "Commander",
+		"Commander Progression": "Commander Progression",
+		"Commander Subclasses": "Commander Subclasses",
+		"Commander's Orders": "Commander's Orders",
+		"Direbeast Form": "Direbeast Form",
+		"Greater Invocations": "Greater Invocations",
+		"Herald Of Courage": "Herald Of Courage",
+		"Herald Of Snark": "Herald Of Snark",
+		"Hunter": "Hunter",
+		"Hunter Progression": "Hunter Progression",
+		"Hunter Subclasses": "Hunter Subclasses",
+		"Invoker Of Chaos": "Invoker Of Chaos",
+		"Invoker Of Control": "Invoker Of Control",
+		"Keeper Of The Shadowpath": "Keeper Of The Shadowpath",
+		"Keeper Of The Wildheart": "Keeper Of The Wildheart",
+		"Lesser Invocations": "Lesser Invocations",
+		"Luminary Of Malice": "Luminary Of Malice",
+		"Luminary Of Mercy": "Luminary Of Mercy",
+		"Lyrical Weaponry": "Lyrical Weaponry",
+		"Mage": "Mage",
+		"Mage Progression": "Mage Progression",
+		"Mage Subclasses": "Mage Subclasses",
+		"Martial Arts Ability": "Martial Arts Ability",
+		"Oath Of Refuge": "Oath Of Refuge",
+		"Oath Of Vengeance": "Oath Of Vengeance",
+		"Oathbreaker": "Oathbreaker",
+		"Oathsworn": "Oathsworn",
+		"Oathsworn Progression": "Oathsworn Progression",
+		"Oathsworn Subclasses": "Oathsworn Subclasses",
+		"Pact Of The Abyssal Depths": "Pact Of The Abyssal Depths",
+		"Pact Of The Red Dragon": "Pact Of The Red Dragon",
+		"Path Of The Mountainheart": "Path Of The Mountainheart",
+		"Path Of The Red Mist": "Path Of The Red Mist",
+		"Reaver": "Reaver",
+		"Sacred Decree": "Sacred Decree",
+		"Sacred Grace": "Sacred Grace",
+		"Savage Arsenal": "Savage Arsenal",
+		"Shadowmancer": "Shadowmancer",
+		"Shadowmancer Progression": "Shadowmancer Progression",
+		"Shadowmancer Subclasses": "Shadowmancer Subclasses",
+		"Shepherd": "Shepherd",
+		"Shepherd Progression": "Shepherd Progression",
+		"Shepherd Subclasses": "Shepherd Subclasses",
+		"Songweaver": "Songweaver",
+		"Songweaver Progression": "Songweaver Progression",
+		"Songweaver Subclasses": "Songweaver Subclasses",
+		"Spellblade": "Spellblade",
+		"Spellshaper": "Spellshaper",
+		"Stormshifter": "Stormshifter",
+		"Stormshifter Progression": "Stormshifter Progression",
+		"Stormshifter Subclasses": "Stormshifter Subclasses",
+		"The Cheat": "The Cheat",
+		"The Cheat Progression": "The Cheat Progression",
+		"The Cheat Subclasses": "The Cheat Subclasses",
+		"Thrill Of The Hunt": "Thrill Of The Hunt",
+		"Tools Of The Scoundrel": "Tools Of The Scoundrel",
+		"Tools Of The Silent Blade": "Tools Of The Silent Blade",
+		"Underhanded Abilities": "Underhanded Abilities",
+		"Way Of Flame": "Way Of Flame",
+		"Way Of Pain": "Way Of Pain",
+		"Weapon Mastery": "Weapon Mastery",
+		"Zephyr": "Zephyr",
+		"Zephyr Progression": "Zephyr Progression",
+		"Zephyr Subclasses": "Zephyr Subclasses"
+	}
+}

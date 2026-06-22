@@ -1,0 +1,256 @@
+{
+	"label": "Nimble Spells",
+	"entries": {
+		"Alacrity": {
+			"name": "Alacrity"
+		},
+		"Arc Lightning": {
+			"name": "Arc Lightning"
+		},
+		"Arctic Annihilation": {
+			"name": "Arctic Annihilation"
+		},
+		"Arctic Blast": {
+			"name": "Arctic Blast"
+		},
+		"Barrier of Wind": {
+			"costDetails": "When attacked at Range.",
+			"name": "Barrier of Wind"
+		},
+		"Beautify": {
+			"name": "Beautify"
+		},
+		"Blustery Gale": {
+			"name": "Blustery Gale"
+		},
+		"Boisterous Winds": {
+			"name": "Boisterous Winds"
+		},
+		"Bond of Peace": {
+			"name": "Bond of Peace"
+		},
+		"Breath of Life": {
+			"name": "Breath of Life"
+		},
+		"Chillcraft": {
+			"name": "Chillcraft"
+		},
+		"Condemn": {
+			"costDetails": "Attacked",
+			"name": "Condemn"
+		},
+		"Creeping Death": {
+			"costDetails": "Attacked",
+			"name": "Creeping Death"
+		},
+		"Cryosleep": {
+			"name": "Cryosleep"
+		},
+		"Dragonform": {
+			"costDetails": "Attacked",
+			"name": "Dragonform"
+		},
+		"Dread Visage": {
+			"costDetails": "Attacked",
+			"name": "Dread Visage"
+		},
+		"Electrickery": {
+			"costDetails": "When an ally is attacked.",
+			"name": "Electrickery"
+		},
+		"Electrocharge": {
+			"name": "Electrocharge"
+		},
+		"Enchant Weapon": {
+			"name": "Enchant Weapon"
+		},
+		"Entice": {
+			"name": "Entice"
+		},
+		"Eye of the Storm": {
+			"name": "Eye of the Storm"
+		},
+		"False Face": {
+			"name": "False Face"
+		},
+		"Feather Fall": {
+			"costDetails": "When a creature falls",
+			"name": "Feather Fall"
+		},
+		"Fiery Embrace": {
+			"name": "Fiery Embrace"
+		},
+		"Fire Step": {
+			"name": "Fire Step"
+		},
+		"Firebrand": {
+			"name": "Firebrand"
+		},
+		"Flame Barrier": {
+			"costDetails": "Attacked",
+			"name": "Flame Barrier"
+		},
+		"Flame Dart": {
+			"name": "Flame Dart"
+		},
+		"Fly": {
+			"costDetails": "When attacked at Range.",
+			"name": "Fly"
+		},
+		"Frost Shield": {
+			"costDetails": "When attacked",
+			"name": "Frost Shield"
+		},
+		"Gangrenous Burst": {
+			"costDetails": "Attacked",
+			"name": "Gangrenous Burst"
+		},
+		"Glacier Strike": {
+			"name": "Glacier Strike"
+		},
+		"Gravecraft": {
+			"name": "Gravecraft"
+		},
+		"Greater Shadow": {
+			"costDetails": "Attacked",
+			"name": "Greater Shadow"
+		},
+		"Heal": {
+			"name": "Heal"
+		},
+		"Heart's Fire": {
+			"name": "Heart's Fire"
+		},
+		"Helpful Gust": {
+			"name": "Helpful Gust"
+		},
+		"Ice Disk": {
+			"name": "Ice Disk"
+		},
+		"Ice Lance": {
+			"name": "Ice Lance"
+		},
+		"Ignite": {
+			"name": "Ignite"
+		},
+		"Kindle": {
+			"name": "Kindle"
+		},
+		"Lifebinding Spirit": {
+			"costDetails": "A diamond  worth at least 10,000 gp",
+			"name": "Lifebinding Spirit"
+		},
+		"Light": {
+			"name": "Light"
+		},
+		"Living Inferno": {
+			"costDetails": "Attacked",
+			"name": "Living Inferno"
+		},
+		"Overload": {
+			"name": "Overload"
+		},
+		"Pyroclasm": {
+			"costDetails": "Attacked",
+			"name": "Pyroclasm"
+		},
+		"Razor Wind": {
+			"name": "Razor Wind"
+		},
+		"Rebuke": {
+			"name": "Rebuke"
+		},
+		"Redeem": {
+			"costDetails": "A diamond  worth at least 10,000 gp",
+			"name": "Redeem"
+		},
+		"Ride the Lightning": {
+			"costDetails": "When an ally is attacked.",
+			"name": "Ride the Lightning"
+		},
+		"Rimeblades": {
+			"name": "Rimeblades"
+		},
+		"Sacrifice": {
+			"costDetails": "Attacked",
+			"name": "Sacrifice"
+		},
+		"Seething Storm": {
+			"name": "Seething Storm"
+		},
+		"Shadow Blast": {
+			"name": "Shadow Blast"
+		},
+		"Shadow Trap": {
+			"name": "Shadow Trap"
+		},
+		"Shatter": {
+			"name": "Shatter"
+		},
+		"Shield of Justice": {
+			"costDetails": "Attacked",
+			"name": "Shield of Justice"
+		},
+		"Snowblind": {
+			"name": "Snowblind"
+		},
+		"Spark Buddy": {
+			"name": "Spark Buddy"
+		},
+		"Spark Step": {
+			"name": "Spark Step"
+		},
+		"Stormlash": {
+			"name": "Stormlash"
+		},
+		"Summon Shadow": {
+			"costDetails": "Attacked",
+			"name": "Summon Shadow"
+		},
+		"Tempest's Command": {
+			"name": "Tempest's Command"
+		},
+		"Thought Leech": {
+			"name": "Thought Leech"
+		},
+		"Thousand Cuts": {
+			"name": "Thousand Cuts"
+		},
+		"True Strike": {
+			"name": "True Strike"
+		},
+		"Unspeakable Word": {
+			"costDetails": "Attacked",
+			"name": "Unspeakable Word"
+		},
+		"Updraft": {
+			"name": "Updraft"
+		},
+		"Vampiric Greed": {
+			"costDetails": "Attacked",
+			"name": "Vampiric Greed"
+		},
+		"Vengeance": {
+			"costDetails": "Attacked",
+			"name": "Vengeance"
+		},
+		"Vicious Mockery": {
+			"name": "Vicious Mockery"
+		},
+		"Warding Bond": {
+			"name": "Warding Bond"
+		},
+		"Wind Whisper": {
+			"name": "Wind Whisper"
+		},
+		"Wintry Scrying": {
+			"name": "Wintry Scrying"
+		},
+		"Withering Touch": {
+			"name": "Withering Touch"
+		},
+		"Zap": {
+			"name": "Zap"
+		}
+	}
+}

@@ -1,0 +1,333 @@
+{
+	"label": "Nimble Items",
+	"entries": {
+		"Adventurer's Garb": {
+			"name": "Adventurer's Garb",
+			"rules": {
+				"qwe123rtyuio4567": {
+					"label": "Adventurer's Garb"
+				}
+			}
+		},
+		"Battleaxe": {
+			"name": "Battleaxe"
+		},
+		"Bell": {
+			"name": "Bell"
+		},
+		"Blanket": {
+			"name": "Blanket"
+		},
+		"Bucket": {
+			"name": "Bucket"
+		},
+		"Camping Supplies": {
+			"name": "Camping Supplies"
+		},
+		"Chain (10 ft.)": {
+			"name": "Chain (10 ft.)"
+		},
+		"Chain Shirt": {
+			"name": "Chain Shirt",
+			"rules": {
+				"fqXiyRmKl8S4FLrn": {
+					"label": "Chain Shirt"
+				}
+			}
+		},
+		"Chalk": {
+			"name": "Chalk"
+		},
+		"Cheap Hides": {
+			"name": "Cheap Hides",
+			"rules": {
+				"9UwAqjHxEZNZbcLq": {
+					"label": "Cheap Hides"
+				}
+			}
+		},
+		"Cloth (Epic Enchantment)": {
+			"name": "Cloth (Epic Enchantment)",
+			"rules": {
+				"GAWW7juZtOccYsST": {
+					"label": "Cloth Epic Enchantment"
+				}
+			}
+		},
+		"Cloth (Major Enchantment)": {
+			"name": "Cloth (Major Enchantment)",
+			"rules": {
+				"IICiNcZKN2rv1j3r": {
+					"label": "Cloth Major Enchantment"
+				}
+			}
+		},
+		"Cloth (Minor Enchantment)": {
+			"name": "Cloth (Minor Enchantment)",
+			"rules": {
+				"UnqQxTyc7SP6UgaZ": {
+					"label": "Minor Enchantment"
+				}
+			}
+		},
+		"Club/Mace": {
+			"name": "Club/Mace"
+		},
+		"Crossbow": {
+			"name": "Crossbow"
+		},
+		"Crowbar": {
+			"name": "Crowbar"
+		},
+		"Dagger": {
+			"name": "Dagger"
+		},
+		"Dice": {
+			"name": "Dice"
+		},
+		"Dragon Shield": {
+			"name": "Dragon Shield",
+			"rules": {
+				"HYfhoddJiW3DqLn4": {
+					"label": "Dragon Shield"
+				}
+			}
+		},
+		"Dragonscale": {
+			"name": "Dragonscale",
+			"rules": {
+				"aBxD6FcGcVlxwLxM": {
+					"label": "Dragonscale"
+				}
+			}
+		},
+		"Full Plate": {
+			"name": "Full Plate",
+			"rules": {
+				"GBm9NcLVqqOXarAJ": {
+					"label": "Full Plate"
+				}
+			}
+		},
+		"Glaive": {
+			"name": "Glaive"
+		},
+		"Grappling Hook": {
+			"name": "Grappling Hook"
+		},
+		"Greataxe": {
+			"name": "Greataxe"
+		},
+		"Greater Healing Potion": {
+			"name": "Greater Healing Potion"
+		},
+		"Greatmaul": {
+			"name": "Greatmaul"
+		},
+		"Greatsword": {
+			"name": "Greatsword"
+		},
+		"Half Plate": {
+			"name": "Half Plate",
+			"rules": {
+				"ZGXP0jTYJ8rdaCjz": {
+					"label": "Half Plate"
+				}
+			}
+		},
+		"Hand Axe": {
+			"name": "Hand Axe"
+		},
+		"Handheld Ballista": {
+			"name": "Handheld Ballista"
+		},
+		"Hard Leather": {
+			"name": "Hard Leather",
+			"rules": {
+				"PIJbZESi8nc7lUoR": {
+					"label": "Hard Leather"
+				}
+			}
+		},
+		"Healing Potion": {
+			"name": "Healing Potion"
+		},
+		"Hunting Trap": {
+			"name": "Hunting Trap"
+		},
+		"Instrument": {
+			"name": "Instrument"
+		},
+		"Iron Shield": {
+			"name": "Iron Shield",
+			"rules": {
+				"0HIt7IHHSVwQ2qNY": {
+					"label": "Iron Shield"
+				}
+			}
+		},
+		"Javelins": {
+			"name": "Javelins"
+		},
+		"Lantern & Oil": {
+			"name": "Lantern & Oil"
+		},
+		"Large Sack": {
+			"name": "Large Sack"
+		},
+		"Lock Pick": {
+			"name": "Lock Pick"
+		},
+		"Longbow": {
+			"name": "Longbow"
+		},
+		"Longsword": {
+			"name": "Longsword"
+		},
+		"Magnifying Glass": {
+			"name": "Magnifying Glass"
+		},
+		"Manacles": {
+			"name": "Manacles"
+		},
+		"Mirror": {
+			"name": "Mirror"
+		},
+		"Mithril Plate": {
+			"name": "Mithril Plate",
+			"rules": {
+				"IdSDT7GzMvrvvvFK": {
+					"label": "Mithril Plate"
+				}
+			}
+		},
+		"Ox Hide": {
+			"name": "Ox Hide",
+			"rules": {
+				"sBs5aSWol6uB5dSR": {
+					"label": "Ox Hide"
+				}
+			}
+		},
+		"Padlock & Key": {
+			"name": "Padlock & Key"
+		},
+		"Pitons": {
+			"name": "Pitons"
+		},
+		"Pole Hammer": {
+			"name": "Pole Hammer"
+		},
+		"Pulley": {
+			"name": "Pulley"
+		},
+		"Quiver & Ammo": {
+			"name": "Quiver & Ammo"
+		},
+		"Rapier": {
+			"name": "Rapier"
+		},
+		"Rope (50ft.)": {
+			"name": "Rope (50ft.)"
+		},
+		"Rusty Mail": {
+			"name": "Rusty Mail",
+			"rules": {
+				"DagJ4pt9yZy89l1O": {
+					"label": "Rusty Mail"
+				}
+			}
+		},
+		"Rusty Plate": {
+			"name": "Rusty Plate",
+			"rules": {
+				"u4HuepXfNZFCXBcX": {
+					"label": "Rusty Plate"
+				}
+			}
+		},
+		"Saw": {
+			"name": "Saw"
+		},
+		"Scale Mail": {
+			"name": "Scale Mail",
+			"rules": {
+				"CPrfmg0dJGu6Zxuo": {
+					"label": "Scale Mail"
+				}
+			}
+		},
+		"Shiny Object": {
+			"name": "Shiny Object"
+		},
+		"Short Sword": {
+			"name": "Short Sword"
+		},
+		"Shortbow": {
+			"name": "Shortbow"
+		},
+		"Shovel": {
+			"name": "Shovel"
+		},
+		"Sickle": {
+			"name": "Sickle"
+		},
+		"Sling": {
+			"name": "Sling"
+		},
+		"Soap": {
+			"name": "Soap"
+		},
+		"Spear": {
+			"name": "Spear"
+		},
+		"Staff": {
+			"name": "Staff"
+		},
+		"Strange Plant": {
+			"name": "Strange Plant"
+		},
+		"Supreme Healing Potion": {
+			"name": "Supreme Healing Potion"
+		},
+		"Telescope": {
+			"name": "Telescope"
+		},
+		"Throwing Hammers": {
+			"name": "Throwing Hammers"
+		},
+		"Torch (Stack of 2)": {
+			"name": "Torch (Stack of 2)"
+		},
+		"Tower Shield": {
+			"name": "Tower Shield",
+			"rules": {
+				"i1RPPvLq6mYr203D": {
+					"label": "Tower Shield"
+				}
+			}
+		},
+		"Traveling Robes & Sandals": {
+			"name": "Traveling Robes & Sandals"
+		},
+		"Vial of Pitch": {
+			"name": "Vial of Pitch"
+		},
+		"Wooden Buckler": {
+			"name": "Wooden Buckler",
+			"rules": {
+				"D7CLN0XbOATBOTWN": {
+					"label": "Wooden Buckler"
+				}
+			}
+		},
+		"Wyrmhide": {
+			"name": "Wyrmhide",
+			"rules": {
+				"ltzVPH06wA0vT2T5": {
+					"label": "Wyrmhide"
+				}
+			}
+		}
+	}
+}
