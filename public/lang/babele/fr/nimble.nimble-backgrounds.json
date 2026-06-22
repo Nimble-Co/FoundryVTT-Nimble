@@ -7,7 +7,12 @@
 		},
 		"Wild One": {
 			"name": "Wild One",
-			"description": "<p>Whether it is the sticks or flowers in your hair, your smell, or the way you carry yourself, wild creatures are less frightened of you and more willing to aid you. +1 Naturecraft. While Field Resting, roll your Hit Dice with advantage while in the wild.</p><hr><p>+1 Naturecraft [A]</p>"
+			"description": "<p>Whether it is the sticks or flowers in your hair, your smell, or the way you carry yourself, wild creatures are less frightened of you and more willing to aid you. +1 Naturecraft. While Field Resting, roll your Hit Dice with advantage while in the wild.</p><hr><p>+1 Naturecraft [A]</p>",
+			"rules": {
+				"index:1": {
+					"label": "Wild One"
+				}
+			}
 		},
 		"What? I've Been Around": {
 			"name": "What? I've Been Around",
@@ -23,7 +28,12 @@
 		},
 		"Survivalist": {
 			"name": "Survivalist",
-			"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>"
+			"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>",
+			"rules": {
+				"index:0": {
+					"label": "Survivalist"
+				}
+			}
 		},
 		"So Dumb I'm Smart Sometimes": {
 			"name": "So Dumb I'm Smart Sometimes",
@@ -63,7 +73,12 @@
 		},
 		"Fearless": {
 			"name": "Fearless",
-			"description": "<p>You are immune to the Frightened condition. +1 Initiative. –1 Armor.</p><hr><p>+1 Initiative [A]</p><p>-1 Armor [A]</p>"
+			"description": "<p>You are immune to the Frightened condition. +1 Initiative. –1 Armor.</p><hr><p>+1 Initiative [A]</p><p>-1 Armor [A]</p>",
+			"rules": {
+				"fearless-frightened-immunity": {
+					"label": "Fearless"
+				}
+			}
 		},
 		"Ear to the Ground": {
 			"name": "Ear to the Ground",
@@ -71,7 +86,12 @@
 		},
 		"Devoted Protector": {
 			"name": "Devoted Protector",
-			"description": "<p>Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</p><hr><p>+3 Max Wounds [A]</p>"
+			"description": "<p>Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</p><hr><p>+3 Max Wounds [A]</p>",
+			"rules": {
+				"SjzXlgusu0bgvTmU": {
+					"label": "Devoted Protector"
+				}
+			}
 		},
 		"Bumblewise": {
 			"name": "Bumblewise",
@@ -79,7 +99,12 @@
 		},
 		"Back Out of Retirement": {
 			"name": "Back Out of Retirement",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">You've forgotten more than most adventurers these days know! Talk with your GM, what made you come out of retirement?</span></p><ul><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>Let's see if I remember how to do this...</strong>You may gain 1 Wound to use an ability or cast a spell as if you were 1 level higher.</span></p></li><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>These old bones.</strong> Your age has long since started to show. –1 max Wounds.</span></p></li></ul><hr><p>Max Wounds -1 [A]</p>"
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">You've forgotten more than most adventurers these days know! Talk with your GM, what made you come out of retirement?</span></p><ul><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>Let's see if I remember how to do this...</strong>You may gain 1 Wound to use an ability or cast a spell as if you were 1 level higher.</span></p></li><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>These old bones.</strong> Your age has long since started to show. –1 max Wounds.</span></p></li></ul><hr><p>Max Wounds -1 [A]</p>",
+			"rules": {
+				"WFInD4PHMq5LSi0E": {
+					"label": "These Old Bones"
+				}
+			}
 		},
 		"At Home Underground": {
 			"name": "At Home Underground",
@@ -95,7 +120,12 @@
 		},
 		"Academy Dropout": {
 			"name": "Academy Dropout",
-			"description": "<p>School just isn't for everyone! You learn by experience in the real world (or at least that's what you tell yourself). Learn any 1 Utility Spell.</p>"
+			"description": "<p>School just isn't for everyone! You learn by experience in the real world (or at least that's what you tell yourself). Learn any 1 Utility Spell.</p>",
+			"rules": {
+				"academyDropoutUtilitySpell": {
+					"label": "Choose a Utility Spell"
+				}
+			}
 		}
 	}
 }

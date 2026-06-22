@@ -167,67 +167,167 @@
 			"name": "Greater Healing Potion"
 		},
 		"Wyrmhide": {
-			"name": "Wyrmhide"
+			"name": "Wyrmhide",
+			"rules": {
+				"ltzVPH06wA0vT2T5": {
+					"label": "Wyrmhide"
+				}
+			}
 		},
 		"Wooden Buckler": {
-			"name": "Wooden Buckler"
+			"name": "Wooden Buckler",
+			"rules": {
+				"D7CLN0XbOATBOTWN": {
+					"label": "Wooden Buckler"
+				}
+			}
 		},
 		"Traveling Robes & Sandals": {
 			"name": "Traveling Robes & Sandals"
 		},
 		"Tower Shield": {
-			"name": "Tower Shield"
+			"name": "Tower Shield",
+			"rules": {
+				"i1RPPvLq6mYr203D": {
+					"label": "Tower Shield"
+				}
+			}
 		},
 		"Scale Mail": {
-			"name": "Scale Mail"
+			"name": "Scale Mail",
+			"rules": {
+				"CPrfmg0dJGu6Zxuo": {
+					"label": "Scale Mail"
+				}
+			}
 		},
 		"Rusty Plate": {
-			"name": "Rusty Plate"
+			"name": "Rusty Plate",
+			"rules": {
+				"u4HuepXfNZFCXBcX": {
+					"label": "Rusty Plate"
+				}
+			}
 		},
 		"Rusty Mail": {
-			"name": "Rusty Mail"
+			"name": "Rusty Mail",
+			"rules": {
+				"DagJ4pt9yZy89l1O": {
+					"label": "Rusty Mail"
+				}
+			}
 		},
 		"Ox Hide": {
-			"name": "Ox Hide"
+			"name": "Ox Hide",
+			"rules": {
+				"sBs5aSWol6uB5dSR": {
+					"label": "Ox Hide"
+				}
+			}
 		},
 		"Mithril Plate": {
-			"name": "Mithril Plate"
+			"name": "Mithril Plate",
+			"rules": {
+				"IdSDT7GzMvrvvvFK": {
+					"label": "Mithril Plate"
+				}
+			}
 		},
 		"Iron Shield": {
-			"name": "Iron Shield"
+			"name": "Iron Shield",
+			"rules": {
+				"0HIt7IHHSVwQ2qNY": {
+					"label": "Iron Shield"
+				}
+			}
 		},
 		"Hard Leather": {
-			"name": "Hard Leather"
+			"name": "Hard Leather",
+			"rules": {
+				"PIJbZESi8nc7lUoR": {
+					"label": "Hard Leather"
+				}
+			}
 		},
 		"Half Plate": {
-			"name": "Half Plate"
+			"name": "Half Plate",
+			"rules": {
+				"ZGXP0jTYJ8rdaCjz": {
+					"label": "Half Plate"
+				}
+			}
 		},
 		"Full Plate": {
-			"name": "Full Plate"
+			"name": "Full Plate",
+			"rules": {
+				"GBm9NcLVqqOXarAJ": {
+					"label": "Full Plate"
+				}
+			}
 		},
 		"Dragonscale": {
-			"name": "Dragonscale"
+			"name": "Dragonscale",
+			"rules": {
+				"aBxD6FcGcVlxwLxM": {
+					"label": "Dragonscale"
+				}
+			}
 		},
 		"Dragon Shield": {
-			"name": "Dragon Shield"
+			"name": "Dragon Shield",
+			"rules": {
+				"HYfhoddJiW3DqLn4": {
+					"label": "Dragon Shield"
+				}
+			}
 		},
 		"Cloth (Minor Enchantment)": {
-			"name": "Cloth (Minor Enchantment)"
+			"name": "Cloth (Minor Enchantment)",
+			"rules": {
+				"UnqQxTyc7SP6UgaZ": {
+					"label": "Minor Enchantment"
+				}
+			}
 		},
 		"Cloth (Major Enchantment)": {
-			"name": "Cloth (Major Enchantment)"
+			"name": "Cloth (Major Enchantment)",
+			"rules": {
+				"IICiNcZKN2rv1j3r": {
+					"label": "Cloth Major Enchantment"
+				}
+			}
 		},
 		"Cloth (Epic Enchantment)": {
-			"name": "Cloth (Epic Enchantment)"
+			"name": "Cloth (Epic Enchantment)",
+			"rules": {
+				"GAWW7juZtOccYsST": {
+					"label": "Cloth Epic Enchantment"
+				}
+			}
 		},
 		"Cheap Hides": {
-			"name": "Cheap Hides"
+			"name": "Cheap Hides",
+			"rules": {
+				"9UwAqjHxEZNZbcLq": {
+					"label": "Cheap Hides"
+				}
+			}
 		},
 		"Chain Shirt": {
-			"name": "Chain Shirt"
+			"name": "Chain Shirt",
+			"rules": {
+				"fqXiyRmKl8S4FLrn": {
+					"label": "Chain Shirt"
+				}
+			}
 		},
 		"Adventurer's Garb": {
-			"name": "Adventurer's Garb"
+			"name": "Adventurer's Garb",
+			"rules": {
+				"qwe123rtyuio4567": {
+					"label": "Adventurer's Garb"
+				}
+			}
 		}
 	}
 }

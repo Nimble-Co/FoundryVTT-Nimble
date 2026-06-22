@@ -47,11 +47,27 @@
 		},
 		"Swift Feet": {
 			"name": "Swift Feet",
-			"description": "<p>While unarmored, gain +2 speed and +LVL Initiative.</p><hr><p>Level 9: +2 additional speed while unarmored.</p>"
+			"description": "<p>While unarmored, gain +2 speed and +LVL Initiative.</p><hr><p>Level 9: +2 additional speed while unarmored.</p>",
+			"rules": {
+				"index:0": {
+					"label": "Swift Feet (2)"
+				},
+				"index:1": {
+					"label": "Swift Feet Initiative Bonus"
+				},
+				"index:2": {
+					"label": "Swift Feet (9)"
+				}
+			}
 		},
 		"Reverberating Strikes": {
 			"name": "Reverberating Strikes",
-			"description": "<p>You learn to focus your energy and transfer it as an additional concussive force into your foes. Add LVL bludgeoning damage to all of your melee attacks.</p>"
+			"description": "<p>You learn to focus your energy and transfer it as an additional concussive force into your foes. Add LVL bludgeoning damage to all of your melee attacks.</p>",
+			"rules": {
+				"reverberating-strikes-melee-damage": {
+					"label": "Reverberating Strikes"
+				}
+			}
 		},
 		"Kinetic Momentum": {
 			"name": "Kinetic Momentum",
@@ -59,7 +75,15 @@
 		},
 		"Iron Defense": {
 			"name": "Iron Defense",
-			"description": "<p>Your armor equals DEX+STR as long as you are unarmored.</p><hr><p>Level 13: Your armor is doubled while unarmored.</p>"
+			"description": "<p>Your armor equals DEX+STR as long as you are unarmored.</p><hr><p>Level 13: Your armor is doubled while unarmored.</p>",
+			"rules": {
+				"iron-defense-l1": {
+					"label": "Iron Defense"
+				},
+				"iron-defense-l13": {
+					"label": "Iron Defense (2)"
+				}
+			}
 		},
 		"Infuse Strength": {
 			"name": "Infuse Strength",
@@ -159,7 +183,12 @@
 		},
 		"Professional Skulker": {
 			"name": "Professional Skulker",
-			"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>"
+			"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>",
+			"rules": {
+				"index:0": {
+					"label": "Professional Skulker"
+				}
+			}
 		},
 		"Leave No Trace": {
 			"name": "Leave No Trace",
@@ -171,7 +200,8 @@
 		},
 		"Cunning Strike": {
 			"name": "Cunning Strike",
-			"description": "<p><em>(2/encounter)</em> When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use). </p>"
+			"description": "<p><em>(2/encounter)</em> When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use). </p>",
+			"costDetails": "1 Use"
 		},
 		"Amidst All This Commotion": {
 			"name": "Amidst All This Commotion",
@@ -183,7 +213,8 @@
 		},
 		"Pocket Sand": {
 			"name": "Pocket Sand",
-			"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>"
+			"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
+			"costDetails": "1 Use"
 		},
 		"Low Blow": {
 			"name": "Low Blow",
@@ -191,11 +222,13 @@
 		},
 		"Heads I Win, Tails You Lose": {
 			"name": "Heads I Win, Tails You Lose",
-			"description": "<p><em>(1/encounter)</em> Attacks you make this round don't miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>"
+			"description": "<p><em>(1/encounter)</em> Attacks you make this round don't miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>",
+			"costDetails": "1 Use"
 		},
 		"Escape Plan": {
 			"name": "Escape Plan",
-			"description": "<p><em>(1/Safe Rest)</em> When you would drop to 0 HP or gain a Wound, you don't. Instead, you turn Invisible for 1 minute or until you attack. </p>"
+			"description": "<p><em>(1/Safe Rest)</em> When you would drop to 0 HP or gain a Wound, you don't. Instead, you turn Invisible for 1 minute or until you attack. </p>",
+			"costDetails": "1 Use, (1/ Safe Rest)"
 		},
 		"Vicious Opportunist": {
 			"name": "Vicious Opportunist",
@@ -259,7 +292,8 @@
 		},
 		"Windborne Protector": {
 			"name": "Windborne Protector",
-			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong>: when an enemy attacks, spend 2 mana to shift into a Fearsome Beast. Then you may Interpose from up to 12 spaces away and Defend for free (if you have not yet done so this round).</p>"
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong>: when an enemy attacks, spend 2 mana to shift into a Fearsome Beast. Then you may Interpose from up to 12 spaces away and Defend for free (if you have not yet done so this round).</p>",
+			"costDetails": "when an enemy attacks, spend 2 mana to shift into a Fearsome Beast"
 		},
 		"Venomous Gaze": {
 			"name": "Venomous Gaze",
@@ -291,7 +325,15 @@
 		},
 		"Stormcaller": {
 			"name": "Stormcaller",
-			"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Learn a 2nd Utility Spell from each spell school you know.</p>"
+			"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Learn a 2nd Utility Spell from each spell school you know.</p>",
+			"rules": {
+				"stormcaller-utility-1": {
+					"label": "Choose a Utility Spell"
+				},
+				"stormcaller-utility-2": {
+					"label": "Choose a 2nd Utility Spell"
+				}
+			}
 		},
 		"Stormborn (2)": {
 			"name": "Stormborn (2)",
@@ -339,7 +381,12 @@
 		},
 		"Winged": {
 			"name": "Winged",
-			"description": "<p>Gain a flying speed. Forced movement moves you twice as far while flying.</p>"
+			"description": "<p>Gain a flying speed. Forced movement moves you twice as far while flying.</p>",
+			"rules": {
+				"index:0": {
+					"label": "Winged"
+				}
+			}
 		},
 		"Prehensile Tail": {
 			"name": "Prehensile Tail",
@@ -359,7 +406,12 @@
 		},
 		"Fleet Footed": {
 			"name": "Fleet Footed",
-			"description": "<p>+2 speed. Advantage on Stealth checks and against the Grappled condition.</p>"
+			"description": "<p>+2 speed. Advantage on Stealth checks and against the Grappled condition.</p>",
+			"rules": {
+				"index:0": {
+					"label": "Fleet Footed"
+				}
+			}
 		},
 		"Earthwalker": {
 			"name": "Earthwalker",
@@ -379,7 +431,8 @@
 		},
 		"Opportunistic Snark": {
 			"name": "Opportunistic Snark",
-			"description": "<p><strong>Reaction</strong> (when an enemy within Range 12 misses an attack): You may cast Vicious Mockery at them; it deals double damage when cast this way.</p>"
+			"description": "<p><strong>Reaction</strong> (when an enemy within Range 12 misses an attack): You may cast Vicious Mockery at them; it deals double damage when cast this way.</p>",
+			"costDetails": "when an enemy within Range 12 misses an attack"
 		},
 		"Fight Picker": {
 			"name": "Fight Picker",
@@ -407,31 +460,47 @@
 		},
 		"Windbag": {
 			"name": "Windbag",
-			"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd Utility Spell from each spell school you know.</p><p>Level 14: You know all Utility Spells from the spell schools you know.</p>"
+			"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd Utility Spell from each spell school you know.</p><p>Level 14: You know all Utility Spells from the spell schools you know.</p>",
+			"costDetails": "An ally makes a roll",
+			"rules": {
+				"windbag-l14-all-utility": {
+					"label": "Windbag (3): All Utility Spells from Known Schools"
+				}
+			}
 		},
 		"Wind Spellcasting and...": {
 			"name": "Wind Spellcasting and...",
-			"description": "<p>You know cantrips from the Wind school and 1 other school of your choice. You also know the cantrip Vicious Mockery:</p><p><strong>Vicious Mockery.</strong> (Wind cantrip) Action: Range: 12. Damage: 1d4+INT psychic (ignoring armor). On hit: the target is Taunted during their next turn. High Levels: +2 damage every 5 levels.</p>"
+			"description": "<p>You know cantrips from the Wind school and 1 other school of your choice. You also know the cantrip Vicious Mockery:</p><p><strong>Vicious Mockery.</strong> (Wind cantrip) Action: Range: 12. Damage: 1d4+INT psychic (ignoring armor). On hit: the target is Taunted during their next turn. High Levels: +2 damage every 5 levels.</p>",
+			"rules": {
+				"songweaver-bonus-school": {
+					"label": "Choose One Additional School"
+				}
+			}
 		},
 		"Songweaver's Inspiration": {
 			"name": "Songweaver's Inspiration",
-			"description": "<p><em>(2×WIL times/Safe Rest)</em> <strong>Free Reaction</strong>: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>"
+			"description": "<p><em>(2×WIL times/Safe Rest)</em> <strong>Free Reaction</strong>: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>",
+			"costDetails": "An ally makes a roll"
 		},
 		"Song of Rest": {
 			"name": "Song of Rest",
-			"description": "<p>(1/ day) Whenever you Field Rest, you may play a song and allow anyone who spends Hit Dice to heal additional HP equal to your WIL.</p>"
+			"description": "<p>(1/ day) Whenever you Field Rest, you may play a song and allow anyone who spends Hit Dice to heal additional HP equal to your WIL.</p>",
+			"costDetails": "An ally makes a roll"
 		},
 		"Quick Wit": {
 			"name": "Quick Wit",
-			"description": "<p>When you roll Initiative, you may regain 2 spent uses of your Songweaver's Inspiration (these expire at the end of combat if left unused).</p>"
+			"description": "<p>When you roll Initiative, you may regain 2 spent uses of your Songweaver's Inspiration (these expire at the end of combat if left unused).</p>",
+			"costDetails": "An ally makes a roll"
 		},
 		"Jack of All Trades": {
 			"name": "Jack of All Trades",
-			"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>"
+			"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
+			"costDetails": "An ally makes a roll"
 		},
 		"I'm So Famous!": {
 			"name": "I'm So Famous!",
-			"description": "<p>+1 to any 2 of your stats. Your Songweaver's Inspiration cannot fail (your target succeeds).</p>"
+			"description": "<p>+1 to any 2 of your stats. Your Songweaver's Inspiration cannot fail (your target succeeds).</p>",
+			"costDetails": "An ally makes a roll"
 		},
 		"Song of Domination": {
 			"name": "Song of Domination",
@@ -523,7 +592,27 @@
 		},
 		"Master of Twilight": {
 			"name": "Master of Twilight",
-			"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd Necrotic and 2nd Radiant Utility Spell.</p><p>Level 11: Choose a 3rd Necrotic and 3rd Radiant Utility Spell.</p>"
+			"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd Necrotic and 2nd Radiant Utility Spell.</p><p>Level 11: Choose a 3rd Necrotic and 3rd Radiant Utility Spell.</p>",
+			"rules": {
+				"master-twilight-radiant-l3": {
+					"label": "Master of Twilight: Radiant Utility Spell"
+				},
+				"master-twilight-necrotic-l3": {
+					"label": "Master of Twilight: Necrotic Utility Spell"
+				},
+				"master-twilight-radiant-l6": {
+					"label": "Master of Twilight (2): Radiant Utility Spell"
+				},
+				"master-twilight-necrotic-l6": {
+					"label": "Master of Twilight (2): Necrotic Utility Spell"
+				},
+				"master-twilight-radiant-l11": {
+					"label": "Master of Twilight (3): All Radiant Utility Spells"
+				},
+				"master-twilight-necrotic-l11": {
+					"label": "Master of Twilight (3): All Necrotic Utility Spells"
+				}
+			}
 		},
 		"Lifebinding Spirit": {
 			"name": "Lifebinding Spirit",
@@ -611,7 +700,12 @@
 		},
 		"Enveloped by the Master": {
 			"name": "Enveloped by the Master",
-			"description": "<p>Gain [[/r 1d4]] Wounds to cast Dragonform.</p>"
+			"description": "<p>Gain [[/r 1d4]] Wounds to cast Dragonform.</p>",
+			"rules": {
+				"NRuKjNvofPWzKu5v": {
+					"label": "Enveloped by the Master"
+				}
+			}
 		},
 		"Draconic Crimson Rite": {
 			"name": "Draconic Crimson Rite",
@@ -635,7 +729,18 @@
 		},
 		"Shadowmastery": {
 			"name": "Shadowmastery",
-			"description": "<p>Choose 1 Necrotic Utility Spell.</p><hr><p>Level 8: Choose 1 more Necrotic Utility Spell</p><p>Level 14: You know all Necrotic Utility Spells.</p>"
+			"description": "<p>Choose 1 Necrotic Utility Spell.</p><hr><p>Level 8: Choose 1 more Necrotic Utility Spell</p><p>Level 14: You know all Necrotic Utility Spells.</p>",
+			"rules": {
+				"shadowmastery-l6": {
+					"label": "Shadowmastery: Necrotic Utility Spell"
+				},
+				"shadowmastery-l8": {
+					"label": "Shadowmastery (2): Necrotic Utility Spell"
+				},
+				"shadowmastery-l14": {
+					"label": "Shadowmastery (3): All Necrotic Utility Spells"
+				}
+			}
 		},
 		"Pilfered Power": {
 			"name": "Pilfered Power",
@@ -751,7 +856,12 @@
 		},
 		"Unstoppable Protector": {
 			"name": "Unstoppable Protector",
-			"description": "<p>Gain +1 speed. You may Interpose even if you are restrained, stunned, or otherwise incapacitated. If you Interpose for a noncombatant NPC, you may Interpose again this round.</p>"
+			"description": "<p>Gain +1 speed. You may Interpose even if you are restrained, stunned, or otherwise incapacitated. If you Interpose for a noncombatant NPC, you may Interpose again this round.</p>",
+			"rules": {
+				"index:0": {
+					"label": "Unstoppable Protector"
+				}
+			}
 		},
 		"Stand Fast, Friends!": {
 			"name": "Stand Fast, Friends!",
@@ -799,7 +909,8 @@
 		},
 		"Exploit": {
 			"name": "Exploit",
-			"description": "<p><strong>Reaction</strong> (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your Aura to Interpose (a creature cannot interpose against its own attack).</p>"
+			"description": "<p><strong>Reaction</strong> (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your Aura to Interpose (a creature cannot interpose against its own attack).</p>",
+			"costDetails": "whenever an ally within your aura Defends"
 		},
 		"Dark Benediction": {
 			"name": "Dark Benediction",
@@ -807,7 +918,8 @@
 		},
 		"Bring Me Your Pain": {
 			"name": "Bring Me Your Pain",
-			"description": "<p><strong>Reaction</strong> (When a willing ally within your aura would drop to 0 HP): Switch HP with them (if your current HP is higher than their max HP, they gain Temp HP equal to the difference), dropping to 0 hp and gaining the Wound instead.</p>"
+			"description": "<p><strong>Reaction</strong> (When a willing ally within your aura would drop to 0 HP): Switch HP with them (if your current HP is higher than their max HP, they gain Temp HP equal to the difference), dropping to 0 hp and gaining the Wound instead.</p>",
+			"costDetails": "When a willing ally within your aura would drop to 0 HP"
 		},
 		"Bloody Terror": {
 			"name": "Bloody Terror",
@@ -855,11 +967,36 @@
 		},
 		"Unending Judgment": {
 			"name": "Unending Judgment",
-			"description": "<p>While you have no Judgment Dice, gain +5 damage to melee attacks.</p>"
+			"description": "<p>While you have no Judgment Dice, gain +5 damage to melee attacks.</p>",
+			"rules": {
+				"unending-judgment-l18": {
+					"label": "Unending Judgment"
+				}
+			}
 		},
 		"Radiant Judgement": {
 			"name": "Radiant Judgement",
-			"description": "<p>Whenever an enemy attacks you, if you have no Judgment Dice, roll your Judgment dice (2d6). On your next melee attack this encounter, if you hit, deal that much additional radiant damage. The dice are expended whether you hit or miss.</p><hr><p>Level 3: Your Judgement Dice are d8s</p><p>Level 5: Your Judgement Dice are d10s</p><p>Level 8: Your Judgement Dice are d12s</p><p>Level 10: Your Judgement Dice are d20s</p><p>Level 14: Whenever you roll Judgement Dice, roll 1 more</p>"
+			"description": "<p>Whenever an enemy attacks you, if you have no Judgment Dice, roll your Judgment dice (2d6). On your next melee attack this encounter, if you hit, deal that much additional radiant damage. The dice are expended whether you hit or miss.</p><hr><p>Level 3: Your Judgement Dice are d8s</p><p>Level 5: Your Judgement Dice are d10s</p><p>Level 8: Your Judgement Dice are d12s</p><p>Level 10: Your Judgement Dice are d20s</p><p>Level 14: Whenever you roll Judgement Dice, roll 1 more</p>",
+			"rules": {
+				"judgment-pool-base": {
+					"label": "Judgment Dice"
+				},
+				"judgment-d8-l3": {
+					"label": "Judgment Dice → d8"
+				},
+				"judgment-d10-l5": {
+					"label": "Judgment Dice → d10"
+				},
+				"judgment-d12-l8": {
+					"label": "Judgment Dice → d12"
+				},
+				"judgment-d20-l10": {
+					"label": "Judgment Dice → d20"
+				},
+				"judgment-plus1-l14": {
+					"label": "Judgment Dice: roll 1 more"
+				}
+			}
 		},
 		"Paragon of Virtue": {
 			"name": "Paragon of Virtue",
@@ -939,7 +1076,15 @@
 		},
 		"At Any Cost": {
 			"name": "At Any Cost",
-			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Necrotic school.</p>"
+			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Necrotic school.</p>",
+			"rules": {
+				"at-any-cost-cantrip": {
+					"label": "Choose a Necrotic Cantrip"
+				},
+				"at-any-cost-tier1": {
+					"label": "Choose a Tier 1-3 Necrotic Spell"
+				}
+			}
 		},
 		"Thrive in Chaos": {
 			"name": "Thrive in Chaos",
@@ -947,7 +1092,15 @@
 		},
 		"Tempest Mage": {
 			"name": "Tempest Mage",
-			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Wind school.</p>"
+			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Wind school.</p>",
+			"rules": {
+				"tempest-mage-cantrip": {
+					"label": "Choose a Wind Cantrip"
+				},
+				"tempest-mage-tier1": {
+					"label": "Choose a Tier 1-3 Wind Spell"
+				}
+			}
 		},
 		"Master of Chaos": {
 			"name": "Master of Chaos",
@@ -991,7 +1144,8 @@
 		},
 		"Snare Trap": {
 			"name": "Snare Trap",
-			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Move them back 1 space, they are Restrained until they can escape (DC 10+WIL).</p>"
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Move them back 1 space, they are Restrained until they can escape (DC 10+WIL).</p>",
+			"costDetails": "Enemy moves adjacent to you"
 		},
 		"Sharpshooter": {
 			"name": "Sharpshooter",
@@ -1019,7 +1173,8 @@
 		},
 		"Grease Trap": {
 			"name": "Grease Trap",
-			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Target falls Prone, is vulnerable to the next fire damage it takes, and is treated as if it is Smoldering.</p>"
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Target falls Prone, is vulnerable to the next fire damage it takes, and is treated as if it is Smoldering.</p>",
+			"costDetails": "Enemy moves adjacent to you"
 		},
 		"Fleet Feet": {
 			"name": "Fleet Feet",
@@ -1047,7 +1202,15 @@
 		},
 		"Impressive Form": {
 			"name": "Impressive Form",
-			"description": "<p>+5 max HP. Upgrade your Hit Dice to d10s</p>"
+			"description": "<p>+5 max HP. Upgrade your Hit Dice to d10s</p>",
+			"rules": {
+				"impressive-form-hp": {
+					"label": "Impressive Form"
+				},
+				"impressive-form-hd": {
+					"label": "Impressive Form"
+				}
+			}
 		},
 		"I Have the High Ground": {
 			"name": "I Have the High Ground",
@@ -1167,7 +1330,12 @@
 		},
 		"Keen Eye, Steady Hand": {
 			"name": "Keen Eye, Steady Hand",
-			"description": "<p>Add WIL to your ranged weapon damage.</p>"
+			"description": "<p>Add WIL to your ranged weapon damage.</p>",
+			"rules": {
+				"keen-eye-ranged-weapon-damage": {
+					"label": "Keen Eye, Steady Hand"
+				}
+			}
 		},
 		"Hunter's Resolve": {
 			"name": "Hunter's Resolve",
@@ -1187,7 +1355,15 @@
 		},
 		"Explorer of the Wilds": {
 			"name": "Explorer of the Wilds",
-			"description": "<p>+2 speed; gain a climbing speed.</p>"
+			"description": "<p>+2 speed; gain a climbing speed.</p>",
+			"rules": {
+				"index:0": {
+					"label": "Explorer of the Wilds"
+				},
+				"index:1": {
+					"label": "Explorer of the Wilds"
+				}
+			}
 		},
 		"Weapon Mastery": {
 			"name": "Weapon Mastery",
@@ -1207,23 +1383,29 @@
 		},
 		"Reposition!": {
 			"name": "Reposition!",
-			"description": "<p><strong>Action/Reaction</strong> (on an ally's turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free.</p>"
+			"description": "<p><strong>Action/Reaction</strong> (on an ally's turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free.</p>",
+			"costDetails": "on an ally's turn"
 		},
 		"Move it! Move it!": {
 			"name": "Move it! Move it!",
-			"description": "<p>When you roll Initiative you may give yourself and an ally advantage on the roll and +3 speed for 1 round. </p>"
+			"description": "<p>When you roll Initiative you may give yourself and an ally advantage on the roll and +3 speed for 1 round. </p>",
+			"costDetails": "When you roll Initiative"
 		},
 		"I Can Do This ALL DAY!": {
 			"name": "I Can Do This ALL DAY!",
-			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>"
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>",
+			"costDetails": "when you would drop to 0 HP"
 		},
 		"Hold the Line!": {
 			"name": "Hold the Line!",
-			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>"
+			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>",
+			"costDetails": "when an ally drops to 0 HP"
 		},
 		"Face Me!": {
 			"name": "Face Me!",
-			"description": "<p><strong>Reaction</strong> (after an ally is crit within 12 spaces): Taunt that enemy until you drop to 0 HP.</p>"
+			"description": "<p><strong>Reaction</strong> (after an ally is crit within 12 spaces): Taunt that enemy until you drop to 0 HP.</p>",
+			"costDetails": "ally is crit within 12 spaces",
+			"durationDetails": "until you drop to 0 HP"
 		},
 		"Coordinated Strike!": {
 			"name": "Coordinated Strike!",
@@ -1235,7 +1417,8 @@
 		},
 		"Rising Phoenix": {
 			"name": "Rising Phoenix",
-			"description": "<p>(Replaces: I Can Do This ALL DAY!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice, set your HP to the sum rolled instead, and deal that much fire damage to each enemy within 2 spaces of you. They gain the Smoldering condition.</p>"
+			"description": "<p>(Replaces: I Can Do This ALL DAY!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice, set your HP to the sum rolled instead, and deal that much fire damage to each enemy within 2 spaces of you. They gain the Smoldering condition.</p>",
+			"costDetails": "when you would drop to 0 HP"
 		},
 		"Glimmering Decree": {
 			"name": "Glimmering Decree",
@@ -1255,7 +1438,8 @@
 		},
 		"Crystalline Armor": {
 			"name": "Crystalline Armor",
-			"description": "<p>(Replaces: Hold the Line!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>"
+			"description": "<p>(Replaces: Hold the Line!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>",
+			"costDetails": "when an ally drops to 0 HP"
 		},
 		"Borne Upon the Wind": {
 			"name": "Borne Upon the Wind",
@@ -1299,7 +1483,12 @@
 		},
 		"Armor Master": {
 			"name": "Armor Master",
-			"description": "<p>You are proficient with plate armor.</p>"
+			"description": "<p>You are proficient with plate armor.</p>",
+			"rules": {
+				"CriQJQqO6jniI62G": {
+					"label": "Armor master"
+				}
+			}
 		},
 		"Unparalleled Tactics": {
 			"name": "Unparalleled Tactics",
@@ -1311,11 +1500,36 @@
 		},
 		"Fit for Any Battlefield": {
 			"name": "Fit for Any Battlefield",
-			"description": "<p>Choose a Combat Tactic. When you roll Initiative, gain STR Combat Dice, each a d6. <em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels 6, 8, 10, 12, 16:</p><p>Choose another Combat Ability or gain +1 max Combat Dice</p>"
+			"description": "<p>Choose a Combat Tactic. When you roll Initiative, gain STR Combat Dice, each a d6. <em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels 6, 8, 10, 12, 16:</p><p>Choose another Combat Ability or gain +1 max Combat Dice</p>",
+			"rules": {
+				"OCPNZWXtQjoVmJsW": {
+					"label": "Choose a Combat Tactic"
+				},
+				"combat-dice-pool": {
+					"label": "Combat Dice"
+				},
+				"combat-dice-d8-l5": {
+					"label": "Combat Dice → d8"
+				},
+				"combat-dice-d10-l9": {
+					"label": "Combat Dice → d10"
+				},
+				"combat-dice-d12-l13": {
+					"label": "Combat Dice → d12"
+				},
+				"combat-dice-d20-l17": {
+					"label": "Combat Dice → d20"
+				}
+			}
 		},
 		"Field Medic": {
 			"name": "Field Medic",
-			"description": "<p><strong>Field Medic.</strong> Roll 1 additional die for any health potion you administer.</p><p>Whenever you or an ally spends any number of Hit Dice to recover HP, if you spent at least ten minutes examining their wounds, they can add your Examination bonus to the HP recovered.</p>"
+			"description": "<p><strong>Field Medic.</strong> Roll 1 additional die for any health potion you administer.</p><p>Whenever you or an ally spends any number of Hit Dice to recover HP, if you spent at least ten minutes examining their wounds, they can add your Examination bonus to the HP recovered.</p>",
+			"rules": {
+				"fieldMedicHealingPotionBonus": {
+					"label": "Field Medic"
+				}
+			}
 		},
 		"Combat Tactics": {
 			"name": "Combat Tactics",
@@ -1383,7 +1597,15 @@
 		},
 		"Eager for Battle": {
 			"name": "Eager for Battle",
-			"description": "<p>Gain advantage on Initiative. Move 2×DEX spaces for free on your first turn each encounter.</p>"
+			"description": "<p>Gain advantage on Initiative. Move 2×DEX spaces for free on your first turn each encounter.</p>",
+			"rules": {
+				"index:0": {
+					"label": "Eager for Battle (Advantage on Initiative)"
+				},
+				"index:1": {
+					"label": "Eager for Battle"
+				}
+			}
 		},
 		"Deathless Rage": {
 			"name": "Deathless Rage",
@@ -1419,7 +1641,8 @@
 		},
 		"Titan's Fury": {
 			"name": "Titan's Fury",
-			"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p>"
+			"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p>",
+			"durationDetails": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging."
 		},
 		"Stone's Resilience": {
 			"name": "Stone's Resilience",
@@ -1435,11 +1658,26 @@
 		},
 		"That all you got?!": {
 			"name": "That all you got?!",
-			"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset, it will roll (STR+DEX) × N for you.</em></p>"
+			"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset, it will roll (STR+DEX) × N for you.</em></p>",
+			"costDetails": "when you are attacked",
+			"rules": {
+				"tayg-fury-consumer": {
+					"label": "That all you got?!"
+				}
+			}
 		},
 		"Rage": {
 			"name": "Rage",
-			"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Whenever you Rage, gain 2 Fury Dice instead.</p>"
+			"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Whenever you Rage, gain 2 Fury Dice instead.</p>",
+			"durationDetails": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
+			"rules": {
+				"fury-pool-base": {
+					"label": "Fury Dice"
+				},
+				"fury-pool-autobonus": {
+					"label": "Fury Dice — STR auto-bonus"
+				}
+			}
 		},
 		"One with the Ancients": {
 			"name": "One with the Ancients",
@@ -1447,7 +1685,21 @@
 		},
 		"Intensifying Fury": {
 			"name": "Intensifying Fury",
-			"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Your Fury Dice are now d6s</p><p>Level 9: Your Fury Dice are now d8s</p><p>Level 13: Your Fury Dice are now d10s</p><p>Level 17: Your Fury Dice are now d12s</p>"
+			"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Your Fury Dice are now d6s</p><p>Level 9: Your Fury Dice are now d8s</p><p>Level 13: Your Fury Dice are now d10s</p><p>Level 17: Your Fury Dice are now d12s</p>",
+			"rules": {
+				"fury-d6-l6": {
+					"label": "Fury Dice → d6"
+				},
+				"fury-d8-l9": {
+					"label": "Fury Dice → d8"
+				},
+				"fury-d10-l13": {
+					"label": "Fury Dice → d10"
+				},
+				"fury-d12-l17": {
+					"label": "Fury Dice → d12"
+				}
+			}
 		},
 		"Enduring Rage": {
 			"name": "Enduring Rage",
@@ -1465,5 +1717,82 @@
 			"name": "Bloodlust",
 			"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p>"
 		}
+	},
+	"folders": {
+		"Zephyr": "Zephyr",
+		"Zephyr Progression": "Zephyr Progression",
+		"Zephyr Subclasses": "Zephyr Subclasses",
+		"Way Of Pain": "Way Of Pain",
+		"Way Of Flame": "Way Of Flame",
+		"Martial Arts Ability": "Martial Arts Ability",
+		"The Cheat": "The Cheat",
+		"The Cheat Progression": "The Cheat Progression",
+		"The Cheat Subclasses": "The Cheat Subclasses",
+		"Tools Of The Silent Blade": "Tools Of The Silent Blade",
+		"Tools Of The Scoundrel": "Tools Of The Scoundrel",
+		"Underhanded Abilities": "Underhanded Abilities",
+		"Stormshifter": "Stormshifter",
+		"Stormshifter Progression": "Stormshifter Progression",
+		"Stormshifter Subclasses": "Stormshifter Subclasses",
+		"Circle Of Sky And Storm": "Circle Of Sky And Storm",
+		"Circle Of Fang And Claw": "Circle Of Fang And Claw",
+		"Direbeast Form": "Direbeast Form",
+		"Chimeric Boon": "Chimeric Boon",
+		"Songweaver": "Songweaver",
+		"Songweaver Progression": "Songweaver Progression",
+		"Songweaver Subclasses": "Songweaver Subclasses",
+		"Herald Of Snark": "Herald Of Snark",
+		"Herald Of Courage": "Herald Of Courage",
+		"Lyrical Weaponry": "Lyrical Weaponry",
+		"A People Person": "A People Person",
+		"Shepherd": "Shepherd",
+		"Shepherd Progression": "Shepherd Progression",
+		"Shepherd Subclasses": "Shepherd Subclasses",
+		"Luminary Of Mercy": "Luminary Of Mercy",
+		"Luminary Of Malice": "Luminary Of Malice",
+		"Sacred Grace": "Sacred Grace",
+		"Shadowmancer": "Shadowmancer",
+		"Shadowmancer Progression": "Shadowmancer Progression",
+		"Shadowmancer Subclasses": "Shadowmancer Subclasses",
+		"Reaver": "Reaver",
+		"Pact Of The Red Dragon": "Pact Of The Red Dragon",
+		"Pact Of The Abyssal Depths": "Pact Of The Abyssal Depths",
+		"Lesser Invocations": "Lesser Invocations",
+		"Greater Invocations": "Greater Invocations",
+		"Oathsworn": "Oathsworn",
+		"Oathsworn Progression": "Oathsworn Progression",
+		"Oathsworn Subclasses": "Oathsworn Subclasses",
+		"Oathbreaker": "Oathbreaker",
+		"Oath Of Vengeance": "Oath Of Vengeance",
+		"Oath Of Refuge": "Oath Of Refuge",
+		"Sacred Decree": "Sacred Decree",
+		"Mage": "Mage",
+		"Mage Progression": "Mage Progression",
+		"Mage Subclasses": "Mage Subclasses",
+		"Invoker Of Control": "Invoker Of Control",
+		"Invoker Of Chaos": "Invoker Of Chaos",
+		"Spellshaper": "Spellshaper",
+		"Hunter": "Hunter",
+		"Hunter Progression": "Hunter Progression",
+		"Hunter Subclasses": "Hunter Subclasses",
+		"Keeper Of The Wildheart": "Keeper Of The Wildheart",
+		"Keeper Of The Shadowpath": "Keeper Of The Shadowpath",
+		"Beastmaster": "Beastmaster",
+		"Thrill Of The Hunt": "Thrill Of The Hunt",
+		"Commander": "Commander",
+		"Commander Progression": "Commander Progression",
+		"Commander Subclasses": "Commander Subclasses",
+		"Spellblade": "Spellblade",
+		"Champion Of The Vanguard": "Champion Of The Vanguard",
+		"Champion Of The Bulwark": "Champion Of The Bulwark",
+		"Weapon Mastery": "Weapon Mastery",
+		"Commander's Orders": "Commander's Orders",
+		"Combat Tactics": "Combat Tactics",
+		"Berserker": "Berserker",
+		"Berserker Progression": "Berserker Progression",
+		"Berserker Subclasses": "Berserker Subclasses",
+		"Path Of The Red Mist": "Path Of The Red Mist",
+		"Path Of The Mountainheart": "Path Of The Mountainheart",
+		"Savage Arsenal": "Savage Arsenal"
 	}
 }

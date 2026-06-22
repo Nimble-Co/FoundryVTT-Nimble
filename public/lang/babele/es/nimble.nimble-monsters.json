@@ -863,7 +863,8 @@
 				},
 				"Escape.": {
 					"name": "Escape.",
-					"description": "<p>(Reaction: when Bloodied) Use Cloak of Lesser Windform to turn Invisible and run away.</p>"
+					"description": "<p>(Reaction: when Bloodied) Use Cloak of Lesser Windform to turn Invisible and run away.</p>",
+					"costDetails": "when Bloodied"
 				}
 			}
 		},
@@ -964,6 +965,7 @@
 		"Gnoll": {
 			"name": "Gnoll",
 			"creatureType": "Gnolls",
+			"tokenName": "Gnolls",
 			"items": {
 				"Ravage (2×).": {
 					"name": "Ravage (2×).",
@@ -1071,7 +1073,12 @@
 			"items": {
 				"Fanatical Zeal.": {
 					"name": "Fanatical Zeal.",
-					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
+					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
+					"rules": {
+						"index:0": {
+							"label": "Fanatical Zeal: Despair on crit"
+						}
+					}
 				},
 				"Despair.": {
 					"name": "Despair.",
@@ -1330,5 +1337,22 @@
 				}
 			}
 		}
+	},
+	"folders": {
+		"Underground": "Underground",
+		"Undead": "Undead",
+		"Stirges": "Stirges",
+		"Snakemen": "Snakemen",
+		"Oozes": "Oozes",
+		"Mimics": "Mimics",
+		"Kobolds": "Kobolds",
+		"Horrors": "Horrors",
+		"Hill And Field": "Hill And Field",
+		"Goblins": "Goblins",
+		"Gnolls": "Gnolls",
+		"Forest Denizens": "Forest Denizens",
+		"Cultists": "Cultists",
+		"Briarbanes": "Briarbanes",
+		"Bandits": "Bandits"
 	}
 }

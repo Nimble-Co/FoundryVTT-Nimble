@@ -19,19 +19,39 @@
 		},
 		"Intrepid": {
 			"name": "Intrepid",
-			"description": "<p>+1 Speed. [M]</p>"
+			"description": "<p>+1 Speed. [M]</p>",
+			"rules": {
+				"index:0": {
+					"label": "Intrepid"
+				}
+			}
 		},
 		"Fiery": {
 			"name": "Fiery",
-			"description": "<p>+1 fire damage. [M]</p>"
+			"description": "<p>+1 fire damage. [M]</p>",
+			"rules": {
+				"fiery-boon-fire-damage": {
+					"label": "Fiery"
+				}
+			}
 		},
 		"Feisty": {
 			"name": "Feisty",
-			"description": "<p>+1 max Hit Die. [M]</p>"
+			"description": "<p>+1 max Hit Die. [M]</p>",
+			"rules": {
+				"index:0": {
+					"label": "Feisty"
+				}
+			}
 		},
 		"Experienced": {
 			"name": "Experienced",
-			"description": "<p>+4 HP. [M]</p>"
+			"description": "<p>+4 HP. [M]</p>",
+			"rules": {
+				"Hoih5pGNkt7JYgDz": {
+					"label": "experienced-hp"
+				}
+			}
 		},
 		"Bright": {
 			"name": "Bright",
@@ -39,11 +59,21 @@
 		},
 		"Alert": {
 			"name": "Alert",
-			"description": "<p>+1 to Initiative. [A]</p>"
+			"description": "<p>+1 to Initiative. [A]</p>",
+			"rules": {
+				"NUla18vRAxqegmI2": {
+					"label": "Alert"
+				}
+			}
 		},
 		"Veteran": {
 			"name": "Veteran",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+10 HP. [M]</span></p>"
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+10 HP. [M]</span></p>",
+			"rules": {
+				"Hk1se3zIMUWVKrjr": {
+					"label": "veteran-hp"
+				}
+			}
 		},
 		"Unnatural Talent": {
 			"name": "Unnatural Talent",
@@ -59,11 +89,21 @@
 		},
 		"Tenacious": {
 			"name": "Tenacious",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 max Hit Dice. [M]</span></p>"
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 max Hit Dice. [M]</span></p>",
+			"rules": {
+				"index:0": {
+					"label": "Tenacious"
+				}
+			}
 		},
 		"Stalwart": {
 			"name": "Stalwart",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+1 max Hit Die. [M]</span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Might. [A]</span></p>"
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+1 max Hit Die. [M]</span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Might. [A]</span></p>",
+			"rules": {
+				"index:1": {
+					"label": "Stalwart"
+				}
+			}
 		},
 		"Sniper": {
 			"name": "Sniper",
@@ -87,7 +127,12 @@
 		},
 		"Lionhearted": {
 			"name": "Lionhearted",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Armor while you have the most enemies adjacent to you. [M]</span></p>"
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Armor while you have the most enemies adjacent to you. [M]</span></p>",
+			"rules": {
+				"io7K8HETN3dgovbH": {
+					"label": "Lionhearted"
+				}
+			}
 		},
 		"Honorable Protector": {
 			"name": "Honorable Protector",
@@ -131,7 +176,12 @@
 		},
 		"+1 Speed": {
 			"name": "+1 Speed",
-			"description": "<p>+1 Speed.</p>"
+			"description": "<p>+1 Speed.</p>",
+			"rules": {
+				"index:0": {
+					"label": "+1 Speed"
+				}
+			}
 		},
 		"Learn an important rumor": {
 			"name": "Learn an important rumor",
@@ -163,7 +213,12 @@
 		},
 		"Epic Speed": {
 			"name": "Epic Speed",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 Speed [M]<br>+4 Initiative [A]</span></p>"
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 Speed [M]<br>+4 Initiative [A]</span></p>",
+			"rules": {
+				"index:1": {
+					"label": "Epic Speed"
+				}
+			}
 		},
 		"Epic Senses": {
 			"name": "Epic Senses",
@@ -201,5 +256,11 @@
 			"name": "Epic Agility",
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain 1 action. 1/encounter. [M]</span></p>"
 		}
+	},
+	"folders": {
+		"Lodging Boons": "Lodging Boons",
+		"Minor Boons": "Minor Boons",
+		"Major Boons": "Major Boons",
+		"Epic Boons": "Epic Boons"
 	}
 }

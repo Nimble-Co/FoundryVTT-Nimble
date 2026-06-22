@@ -1,12 +1,20 @@
 {
 	"Item": {
 		"name": "name",
-		"description": "system.description"
+		"description": "system.description",
+		"costDetails": "system.activation.cost.details",
+		"durationDetails": "system.activation.duration.details",
+		"targetsRestrictions": "system.activation.targets.restrictions",
+		"rules": {
+			"path": "system.rules",
+			"converter": "nimbleRules"
+		}
 	},
 	"Actor": {
 		"name": "name",
 		"description": "system.description",
 		"creatureType": "system.details.creatureType",
+		"tokenName": "prototypeToken.name",
 		"items": {
 			"path": "items",
 			"converter": "document",
@@ -19,7 +27,7 @@
 		"description": "description",
 		"results": {
 			"path": "results",
-			"converter": "tableResults"
+			"converter": "nimbleTableResults"
 		}
 	}
 }

@@ -75,6 +75,7 @@
 		},
 		"Titan's Skeleton Minion": {
 			"name": "Titan's Skeleton Minion",
+			"tokenName": "New Actor",
 			"items": {
 				"Attack": {
 					"name": "Attack",
@@ -215,6 +216,7 @@
 		},
 		"Queen Aranya's Spiderling Minion": {
 			"name": "Queen Aranya's Spiderling Minion",
+			"tokenName": "Spiderling Minion",
 			"items": {
 				"Bite": {
 					"name": "Bite",
@@ -463,7 +465,8 @@
 				},
 				"Root.": {
 					"name": "Root.",
-					"description": "<p>Choose half of the heroes to make a DC 11 DEX save or take 2d4 piercing damage and be Restrained by thorny vines (escape DC 11 STR or DEX save, or any slashing or fire damage).</p>"
+					"description": "<p>Choose half of the heroes to make a DC 11 DEX save or take 2d4 piercing damage and be Restrained by thorny vines (escape DC 11 STR or DEX save, or any slashing or fire damage).</p>",
+					"targetsRestrictions": "Half of heroes"
 				},
 				"Thorn Shot.": {
 					"name": "Thorn Shot.",
@@ -759,6 +762,7 @@
 		},
 		"Alaric Draegoth's Blood Bat": {
 			"name": "Alaric Draegoth's Blood Bat",
+			"tokenName": "New Actor",
 			"items": {
 				"Bite": {
 					"name": "Bite",

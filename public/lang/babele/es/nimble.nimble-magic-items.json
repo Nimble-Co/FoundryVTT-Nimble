@@ -47,10 +47,12 @@
 			"name": "Wand of Firestep"
 		},
 		"Wand of Dread Visage": {
-			"name": "Wand of Dread Visage"
+			"name": "Wand of Dread Visage",
+			"costDetails": "When attacked"
 		},
 		"Wand of Barrier of Wind": {
-			"name": "Wand of Barrier of Wind"
+			"name": "Wand of Barrier of Wind",
+			"costDetails": "When attacked at range"
 		},
 		"Heartwood, Splinter of the Tree of Life": {
 			"name": "Heartwood, Splinter of the Tree of Life"
@@ -104,7 +106,8 @@
 			"name": "Windcloak"
 		},
 		"Wand of Rat": {
-			"name": "Wand of Rat"
+			"name": "Wand of Rat",
+			"durationDetails": "1 evening"
 		},
 		"Vortex Sigil": {
 			"name": "Vortex Sigil"
@@ -122,13 +125,16 @@
 			"name": "The Grimoire of Truths"
 		},
 		"Stormcaller": {
-			"name": "Stormcaller"
+			"name": "Stormcaller",
+			"durationDetails": "Short period"
 		},
 		"Soulshard Amulet": {
 			"name": "Soulshard Amulet"
 		},
 		"Sky Scourge Crown": {
-			"name": "Sky Scourge Crown"
+			"name": "Sky Scourge Crown",
+			"costDetails": "Night only",
+			"durationDetails": "Until sunrise"
 		},
 		"Reed Flute": {
 			"name": "Reed Flute"
@@ -137,7 +143,8 @@
 			"name": "Red Sap"
 		},
 		"Purple Berries": {
-			"name": "Purple Berries"
+			"name": "Purple Berries",
+			"durationDetails": "1 day"
 		},
 		"Prismatic Frog": {
 			"name": "Prismatic Frog"
@@ -170,7 +177,9 @@
 			"name": "Lientern"
 		},
 		"Homunculus Dough": {
-			"name": "Homunculus Dough"
+			"name": "Homunculus Dough",
+			"costDetails": "Spill blood on it",
+			"durationDetails": "1 week"
 		},
 		"Hex Hand": {
 			"name": "Hex Hand"
@@ -221,7 +230,8 @@
 			"name": "Doomcaller's Horn"
 		},
 		"Deepstone Charm": {
-			"name": "Deepstone Charm"
+			"name": "Deepstone Charm",
+			"durationDetails": "As long as you can hold your breath"
 		},
 		"Cursed Stash": {
 			"name": "Cursed Stash"
@@ -233,7 +243,8 @@
 			"name": "Cloudstrider's Tome"
 		},
 		"Cloak of Lesser Windform": {
-			"name": "Cloak of Lesser Windform"
+			"name": "Cloak of Lesser Windform",
+			"durationDetails": "Up to 10 minutes"
 		},
 		"Belt of Hill Giant Strength": {
 			"name": "Belt of Hill Giant Strength"
@@ -287,13 +298,23 @@
 			"name": "Vindication"
 		},
 		"Trinket of Ill Omen": {
-			"name": "Trinket of Ill Omen"
+			"name": "Trinket of Ill Omen",
+			"rules": {
+				"index:0": {
+					"label": "Trinket of Ill Omen"
+				}
+			}
 		},
 		"Skitter Shoes": {
 			"name": "Skitter Shoes"
 		},
 		"Resolute Fangs, Golden Bastion": {
-			"name": "Resolute Fangs, Golden Bastion"
+			"name": "Resolute Fangs, Golden Bastion",
+			"rules": {
+				"qHsP9wQbBc9Fz2Gr": {
+					"label": "Resolute fangs"
+				}
+			}
 		},
 		"Phoenix Helm": {
 			"name": "Phoenix Helm"
