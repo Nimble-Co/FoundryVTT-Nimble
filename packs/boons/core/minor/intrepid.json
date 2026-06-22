@@ -9,7 +9,8 @@
 			{
 				"type": "speedBonus",
 				"value": "1",
-				"label": "Intrepid"
+				"label": "Intrepid",
+				"id": "lApcrxi3FeR92dow"
 			}
 		],
 		"description": "<p>+1 Speed. [M]</p>",

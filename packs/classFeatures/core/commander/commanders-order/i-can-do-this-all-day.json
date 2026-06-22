@@ -8,7 +8,8 @@
 		"rules": [
 			{
 				"type": "maxHitDice",
-				"name": "New Rule 1"
+				"name": "New Rule 1",
+				"id": "75GQq1kNmfQR1JzG"
 			}
 		],
 		"activation": {
