@@ -1,198 +1,429 @@
 {
-	"TYPES": {
-		"Actor": {
-			"character": "Personaje",
-			"minion": "Esbirro",
-			"npc": "PNJ",
-			"soloMonster": "Monstruo en solitario"
-		},
-		"Item": {
-			"background": "Trasfondo",
-			"boon": "Don",
-			"class": "Clase",
-			"feature": "Rasgo",
-			"monsterFeature": "Rasgo de monstruo",
-			"object": "Objeto",
-			"ancestry": "Origen",
-			"spell": "Conjuro",
-			"subclass": "Subclase"
-		}
-	},
 	"NIMBLE": {
-		"abilityScores": {
-			"strength": "Fuerza",
-			"dexterity": "Destreza",
-			"constitution": "Constitución",
-			"intelligence": "Inteligencia",
-			"will": "Voluntad"
-		},
 		"abilityScoreAbbreviations": {
-			"strength": "Fue",
-			"dexterity": "Des",
 			"constitution": "Con",
+			"dexterity": "Des",
 			"intelligence": "Int",
+			"strength": "Fue",
 			"will": "Vol"
-		},
-		"abilityScoreTooltips": {
-			"advantageOnSave": "Salvación con ventaja",
-			"disadvantageOnSave": "Salvación con desventaja",
-			"keyStat": "Atributo Clave",
-			"editStats": "Editar atributos"
 		},
 		"abilityScoreControls": {
 			"confirmStatAssignments": "Confirmar asignación de atributos"
 		},
-		"statConfig": {
-			"baseStats": "Atributos base",
-			"baseStatsSubtitle": "Atributos iniciales de creación de personaje",
-			"selectArray": "Seleccionar conjunto",
-			"currentArray": "Conjunto actual",
-			"bonusTotal": "Bono total",
-			"asiTotal": "ASI total",
-			"keyStat": "Atributo Clave",
-			"keyStats": "Atributos Clave",
-			"advOnSaves": "Vent. salvaciones",
-			"disOnSaves": "Desv. salvaciones",
-			"primary": "Primario",
-			"secondary": "Secundario",
-			"capstone": "Límite",
-			"dropHere": "Soltar aquí",
-			"noStatIncreasesYet": "Mejoras de atributo aún no disponibles",
-			"statIncreaseHint": "Las mejores de atributo se obtienen a niveles 4, 5, 8, 9, 12, 13, 16, 17 y 20",
-			"baseScoresWarning": "Tus puntuaciones base no coinciden con ningún conjunto de atributos de Nimble.",
-			"bonuses": "Bonos",
-			"bonusesSubtitle": "Modificadores de dotes, objetos y otras fuentes",
-			"noBonuses": "Sin bonos de dotes u objetos",
-			"statIncreases": "Mejoras de atributo",
-			"statIncreasesSubtitle": "Mejoras obtenidas a niveles de clase concretos",
-			"finalModifier": "Modificador final",
-			"editBaseStats": "Editar atributos base",
-			"cancel": "Cancelar",
-			"applyChanges": "Aplicar cambios",
-			"toggleStatIncrease": "Alternar mejoras de atributo",
-			"primaryTooltip": "+1 a uno de tus Atributos Clave",
-			"secondaryTooltip": "+1 a uno de tus Atributos Secundarios",
-			"capstoneTooltip": "+1 a cualquiera 2 de tus atributos",
-			"specialBoonAvailable": "Don especial disponible",
-			"boon": "Don"
+		"abilityScoreTooltips": {
+			"advantageOnSave": "Salvación con ventaja",
+			"disadvantageOnSave": "Salvación con desventaja",
+			"editStats": "Editar atributos",
+			"keyStat": "Atributo Clave"
 		},
-		"chat": {
-			"applyDamage": "Aplicar daño",
-			"applyHealing": "Aplicar curación",
-			"healing": "Curación",
-			"healingApplied": "Curación aplicada",
-			"undoHealing": "Cancelar curación",
-			"undo": "Cancelar",
-			"noTargetsSelected": "No hay objetivos seleccionados",
-			"noDamageToApply": "Sin daño que aplicar.",
-			"targetSkippedZeroDamage": "{tokenName} excluido porque el resultado es 0.",
-			"healingAlreadyApplied": "Curación ya aplicada",
-			"healingUndone": "Curación cancelada",
-			"noHealingRecord": "No se ha encontrado registro de curación para cancelar"
-		},
-		"characterCreationStages": {
-			"stepFourStartingEquipment": "Paso 4. Equipo inicial",
-			"stepFiveStats": "Paso 5. Asignar atributos",
-			"stepSixSkills": "Paso 6. Asignar puntos de habilidad"
-		},
-		"startingEquipment": {
-			"editSelection": "Editar selección de equipo inicial",
-			"hint": "Los héroes empiezan con el equipo listado para su clase y trasfondo, o bien, 50 po para comprar su equipo",
-			"equipmentTitle": "Equipo inicial",
-			"equipmentDescription": "Recibes los siguientes objetos:",
-			"unknownItem": "Objeto desconocido",
-			"noEquipmentDefined": "Equipo inicial no definido",
-			"goldTitle": "Oro inicial",
-			"goldDescription": "Recibes 50 po para comprar tu propio equipo",
-			"equipmentSelected": "Equipo inicial seleccionado",
-			"goldSelected": "Oro inicial (50 po) seleccionado"
-		},
-		"characterCreation": {
-			"characterName": "Nombre del personaje",
-			"newCharacterPlaceholder": "Nuevo personaje",
-			"incompleteStepsWarning": "Algunos pasos de la creación de personajes no han sido completados.",
-			"createCharacter": "Crear personaje",
-			"incompleteCharacterTitle": "Personaje inacabado",
-			"incompleteCharacterMessage": "Este personaje no está terminado. ¿Crear de todos modos?",
-			"incompleteCharacterProceed": "Crear de todos modos",
-			"incompleteCharacterReturn": "Atrás"
-		},
-		"ancestryOptions": {
-			"header": "Opciones de Origen",
-			"sizeCategory": "Categoría de tamaño",
-			"sizeCategoryHint": "Elige la categoría de tamaño de tu personaje de las opciones disponibles de tu origen.",
-			"enhancedSave": "Salvación mejorada",
-			"enhancedSaveHint": "Elige una salvación neutra para mejorar con ventaja."
-		},
-		"backgroundOptionsSelection": {
-			"header": "Paso 2b. Elige Linaje de Origen",
-			"editSelection": "Editar selección de Linaje",
-			"hint": "Tu trasfondo determina qué Origen tienes. Obtienes su lengua nativa.",
-			"raisedBy": "Criado por",
-			"speaks": "Habla {language}",
-			"confirmSelection": "Confirmar selección",
-			"raisedByLabel": "Criado por:"
-		},
-		"bonusLanguageSelection": {
-			"header": "Paso 7. Elige idiomas adicionales",
-			"editSelection": "Editar selección de idiomas adicionales",
-			"hint": "Todos los héroes hablan Común por defecto. Algunos trasfondos otorgan un idioma adicional. Además, por cada punto de INT, el héroe aprende un idioma extra.",
-			"granted": "Otorgado",
-			"choose": "Elige {count}",
-			"confirmSelection": "Confirmar selección de idiomas adicionales"
-		},
-		"saveConfig": {
-			"abilityModifier": "Modificador de característica",
-			"abilityModifierSubtitle": "Modificador base vinculado a la puntuación de característica",
-			"bonusPenalty": "Bonificador/Penalizador",
-			"bonusPenaltySubtitle": "Modificadores fijos a las salvaciones",
-			"defaultRollMode": "Modo de tirada por defecto",
-			"defaultRollModeSubtitle": "Salvaciones con ventaja o desventaja",
-			"ancestryTraits": "Rasgos de Origen",
-			"ancestryTraitsSubtitle": "Rasgos que mejoran una salvación de tu elección",
-			"abilityMod": "Mod de característica",
-			"flatBonus": "Bono fijo",
-			"rollMode": "Modo de tirada",
-			"totalModifier": "Modificador total",
-			"resetToClassDefaults": "Restablecer a valores predeterminados de clase",
-			"legendDisadvantage": "Desventaja (tira dados adicionales, escoge el más bajo)",
-			"legendNormal": "Tirada estándar",
-			"legendAdvantage": "Ventaja (tira dados adicionales, escoge el más alto)"
+		"abilityScores": {
+			"constitution": "Constitución",
+			"dexterity": "Destreza",
+			"intelligence": "Inteligencia",
+			"strength": "Fuerza",
+			"will": "Voluntad"
 		},
 		"activationCosts": {
 			"action": "Acción",
-			"minute": "Minuto",
 			"hour": "Hora",
+			"minute": "Minuto",
 			"none": "Ninguno",
 			"special": "Especial",
 			"turn": "Turno"
 		},
 		"activationCostsPlural": {
 			"action": "Acciones",
-			"minute": "Minutos",
 			"hour": "Horas",
+			"minute": "Minutos",
 			"turn": "Turnos"
 		},
+		"activationDialog": {
+			"spendCharge": {
+				"decrement": "Spend one less",
+				"increment": "Spend one more"
+			},
+			"spendPoolDice": "Spend Pool Dice"
+		},
+		"activationEffects": {
+			"addChild": "Add child node",
+			"addEffect": "Añadir efecto",
+			"addOnFail": "Add on-fail effect",
+			"addOnSave": "Add on-save effect",
+			"addSharedRoll": "Add shared damage roll",
+			"canCrit": "Puede ser crítico",
+			"canMiss": "Puede fallar",
+			"condition": "Estado",
+			"customSaveDC": "Custom Save DC",
+			"damage": "Daño",
+			"damageOutcome": "Resultado del daño",
+			"damageType": "Damage Type",
+			"deleteCondition": "Delete condition",
+			"deleteDamage": "Delete damage roll",
+			"deleteDamageOutcome": "Delete Damage Outcome",
+			"deleteHealing": "Delete healing roll",
+			"deleteNote": "Delete Note",
+			"effects": "Efectos",
+			"flavor": "Descripción",
+			"fullDamage": "Daño completo",
+			"general": "General",
+			"halfDamage": "Daño mitad",
+			"healing": "Curación",
+			"healingType": "Healing Type",
+			"ignoreArmor": "Ignore Armor",
+			"noAdditionalEffects": "Sin efectos adicionales",
+			"none": "None",
+			"note": "Nota",
+			"noteType": "Note Type",
+			"onCriticalHit": "Con un golpe crítico",
+			"onFailedSave": "Al fallar la salvación",
+			"onHit": "Al impactar",
+			"onMiss": "Al fallar",
+			"onPassedSave": "Al superar la salvación",
+			"onlyDamageHostile": "Only Damage Hostile Actors",
+			"pool": "Pool",
+			"poolNode": {
+				"actions": {
+					"clear": "Cleared",
+					"fillCount": "Gained",
+					"rollDie": "Rolled",
+					"rollPool": "Rolled fresh"
+				},
+				"config": {
+					"actionClear": "Clear",
+					"actionFillCount": "Fill Count",
+					"actionLabel": "Action",
+					"actionRollDie": "Roll Die",
+					"actionRollPool": "Roll Pool",
+					"deleteLabel": "Delete Pool",
+					"identifierLabel": "Pool Identifier",
+					"poolTypeCharge": "Charge Pool",
+					"poolTypeDice": "Dice Pool",
+					"poolTypeLabel": "Pool Type",
+					"predicateInvalid": "Predicate must be valid JSON",
+					"predicateLabel": "Predicate (JSON)",
+					"valueLabel": "Value"
+				},
+				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
+				"defaultLabel": "Pool",
+				"noChange": "— no change",
+				"skipReasons": {
+					"invalidAction": "Skipped (invalid action for pool type)",
+					"noActor": "Skipped (no actor)",
+					"predicate": "Skipped (predicate not met)",
+					"unknownPool": "Skipped (pool not found)"
+				}
+			},
+			"reminder": "Recordatorio",
+			"rollFormula": "Roll Formula",
+			"sharedRolls": "Shared Rolls",
+			"statusCondition": "Status Condition",
+			"warning": "Advertencia"
+		},
+		"actorImport": {
+			"buttonLabel": "Importar Actor",
+			"createFolder": "Crear carpeta para archivos importados",
+			"deselectAll": "Deseleccionar todo",
+			"dialogTitle": "Importar de Nimble Nexus",
+			"filters": {
+				"allLevels": "Todos los niveles",
+				"allRoles": "Todos los roles",
+				"allTypes": "Todos los tipos",
+				"clearFilters": "Borrar todos los filtros",
+				"level": "Nivel",
+				"levelFraction": {
+					"half": "1/2",
+					"quarter": "1/4",
+					"third": "1/3"
+				},
+				"monsterTypes": {
+					"legendary": "Legendario",
+					"minion": "Esbirro",
+					"standard": "Estándar"
+				},
+				"role": "Rol",
+				"roles": {
+					"ambusher": "Acechador",
+					"aoe": "AdE",
+					"controller": "Controlador",
+					"defender": "Defensor",
+					"melee": "Cuerpo a cuerpo",
+					"ranged": "A distancia",
+					"skirmisher": "Hostigador",
+					"striker": "Atacante",
+					"summoner": "Invocador",
+					"support": "Apoyo"
+				},
+				"type": "Tipo"
+			},
+			"importSelected": "Importar selección",
+			"json": {
+				"chooseDifferent": "Choose a different file",
+				"confirm": "Import Character",
+				"contentsHeader": "What will be imported",
+				"dialogTitle": "Import Player Character from JSON",
+				"importError": "Failed to import the character. Please try again.",
+				"importing": "Importing...",
+				"levelTag": "Lvl {level}",
+				"noItems": "This character has no embedded items.",
+				"notACharacterError": "That file isn't a player character export. Only player characters can be imported here.",
+				"parseError": "Could not read that file. Make sure it's a character exported as JSON.",
+				"selectHint": "Click to browse, or drag a file here",
+				"selectPrompt": "Select a character JSON file",
+				"statHp": "Max HP",
+				"statItems": "Items",
+				"statLevel": "Level",
+				"success": "Player character imported successfully",
+				"unnamed": "Unnamed Character",
+				"unnamedItem": "Unnamed Item",
+				"wrongSystemError": "That file was exported from a different game system. Only Nimble character exports can be imported."
+			},
+			"jsonButtonLabel": "Import Player Character",
+			"loadMore": "Cargar más",
+			"loading": "Cargando...",
+			"noFolder": "Sin carpeta (raíz)",
+			"noResults": "No se han encontrado monstruos",
+			"partialSuccessMessage": "{successful} monstruo(s) importados, {failed} no importados",
+			"searchPlaceholder": "Buscar monstruos...",
+			"selectAll": "Seleccionar todo",
+			"successMessage": "{count} monstruo(s) correctamente importados"
+		},
+		"ancestryOptions": {
+			"enhancedSave": "Salvación mejorada",
+			"enhancedSaveHint": "Elige una salvación neutra para mejorar con ventaja.",
+			"header": "Opciones de Origen",
+			"sizeCategory": "Categoría de tamaño",
+			"sizeCategoryHint": "Elige la categoría de tamaño de tu personaje de las opciones disponibles de tu origen."
+		},
 		"armorEffects": {
-			"none": "<p>Ninguno</p>",
+			"heavy": "<p>Los monstruos con armadura pesada ignoran los modificadores de daño y reciben la mitad de los dados (redondeando para arriba).</p>",
 			"medium": "<p>Los monstruos con armadura intermedia ignoran todos los modificadores de daño de atributos y otros efectos, recibiendo daño sólo de la suma de los dados.</p>",
-			"heavy": "<p>Los monstruos con armadura pesada ignoran los modificadores de daño y reciben la mitad de los dados (redondeando para arriba).</p>"
+			"none": "<p>Ninguno</p>"
 		},
 		"armorTypes": {
+			"cloth": "Tela",
 			"heavy": "Pesada",
 			"leather": "Cuero",
-			"none": "Ninguno",
 			"mail": "Malla",
 			"medium": "Intermedia",
+			"none": "Ninguno",
 			"plate": "Placas",
-			"cloth": "Tela",
 			"shield": "Escudo",
 			"shieldPlural": "Escudos"
 		},
+		"backgroundOptionsSelection": {
+			"confirmSelection": "Confirmar selección",
+			"editSelection": "Editar selección de Linaje",
+			"header": "Paso 2b. Elige Linaje de Origen",
+			"hint": "Tu trasfondo determina qué Origen tienes. Obtienes su lengua nativa.",
+			"raisedBy": "Criado por",
+			"raisedByLabel": "Criado por:",
+			"speaks": "Habla {language}"
+		},
+		"bonusLanguageSelection": {
+			"choose": "Elige {count}",
+			"confirmSelection": "Confirmar selección de idiomas adicionales",
+			"editSelection": "Editar selección de idiomas adicionales",
+			"granted": "Otorgado",
+			"header": "Paso 7. Elige idiomas adicionales",
+			"hint": "Todos los héroes hablan Común por defecto. Algunos trasfondos otorgan un idioma adicional. Además, por cada punto de INT, el héroe aprende un idioma extra."
+		},
 		"boonTypes": {
-			"minor": "Menor",
+			"epic": "Épico",
 			"major": "Mayor",
-			"epic": "Épico"
+			"minor": "Menor"
+		},
+		"characterCreation": {
+			"characterName": "Nombre del personaje",
+			"createCharacter": "Crear personaje",
+			"incompleteCharacterMessage": "Este personaje no está terminado. ¿Crear de todos modos?",
+			"incompleteCharacterProceed": "Crear de todos modos",
+			"incompleteCharacterReturn": "Atrás",
+			"incompleteCharacterTitle": "Personaje inacabado",
+			"incompleteStepsWarning": "Algunos pasos de la creación de personajes no han sido completados.",
+			"missingCharacterName": "Please enter a name for your character before creating.",
+			"newCharacterPlaceholder": "Nuevo personaje"
+		},
+		"characterCreationStages": {
+			"stepFiveStats": "Paso 5. Asignar atributos",
+			"stepFourStartingEquipment": "Paso 4. Equipo inicial",
+			"stepSixSkills": "Paso 6. Asignar puntos de habilidad"
+		},
+		"characterSettings": {
+			"actorImageSettings": "Ajustes de imagen de actor",
+			"bonusInventorySlots": "Bonificador de espacios de inventario",
+			"decrementBonusInventorySlots": "Reducir bonificador de espacios de inventario",
+			"decrementHighestUnlockedSpellTier": "Reducir nivel más alto de conjuro desbloqueado",
+			"embeddedDocumentSettings": "Ajustes de documento integrado",
+			"executeItemMacros": "Ejecutar macros de objeto al activar objeto",
+			"highestUnlockedSpellTier": "Nivel más alto de conjuro desbloqueado",
+			"includeCurrencyBulk": "Incluir automáticamente el total de moneda",
+			"incrementBonusInventorySlots": "Aumentar bonificador de espacios de inventario",
+			"incrementHighestUnlockedSpellTier": "Aumentar nivel más alto de conjuro desbloqueado",
+			"inventorySettings": "Ajustes de inventario",
+			"resetHighestUnlockedSpellTier": "Reiniciar nivel más alto de conjuro desbloqueado",
+			"resetSpellTier": "Reiniciar nivel de conjuro",
+			"scale": "Escala (%)",
+			"showEmbeddedDocumentImages": "Mostrar imágenes de documento integrado",
+			"showPassiveSkillScores": "Mostrar puntuaciones pasivas de habilidades",
+			"skillSettings": "Ajustes de habilidades",
+			"spellSettings": "Ajustes de conjuros",
+			"trackInventorySlots": "Rastrear espacios de inventario",
+			"useTwoColumnSkillsView": "Visualización en dos columnas",
+			"xOffset": "X-Offset (px)",
+			"yOffset": "Y-Offset (px)"
+		},
+		"charges": {
+			"addOne": "Add +1",
+			"allFull": "All charges full.",
+			"configure": "Configure Charges",
+			"current": "Current",
+			"decreaseOne": "Decrease by 1",
+			"editCurrent": "Edit current charges for {pool}",
+			"empty": "No charge pools configured.",
+			"header": "Charges",
+			"increaseOne": "Increase by 1",
+			"manuallyAdjusted": "Manually Adjusted Charges",
+			"max": "Max",
+			"noPoolsForItem": "No charge pools for this item.",
+			"noRecoveryConfigured": "No recovery configured",
+			"notifications": {
+				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available.",
+				"poolMissing": "{item} requires the charge pool \"{pool}\", but it is not available."
+			},
+			"recharge": "Recharge",
+			"rechargePrompt": "Enter how many charges to add to {pool}.",
+			"recoveryMethods": "Recovery Methods",
+			"recoveryMode": {
+				"add": "Add {value}",
+				"refresh": "Refill to max",
+				"set": "Set to {value}"
+			},
+			"recoveryTrigger": {
+				"encounterEnd": "Encounter End",
+				"encounterStart": "Encounter Start"
+			},
+			"saveChanges": "Save Changes",
+			"set": "Set",
+			"setEmpty": "Set Empty",
+			"setMax": "Set Max",
+			"setPrompt": "Set current charges for {pool}.",
+			"setToEmptyForPool": "Set {pool} to empty",
+			"setToMaxForPool": "Set {pool} to max",
+			"source": "Source",
+			"unknownItem": "Unknown Item"
+		},
+		"chat": {
+			"applyDamage": "Aplicar daño",
+			"applyHealing": "Aplicar curación",
+			"healing": "Curación",
+			"healingAlreadyApplied": "Curación ya aplicada",
+			"healingApplied": "Curación aplicada",
+			"healingUndone": "Curación cancelada",
+			"noDamageToApply": "Sin daño que aplicar.",
+			"noHealingRecord": "No se ha encontrado registro de curación para cancelar",
+			"noTargetsSelected": "No hay objetivos seleccionados",
+			"targetSkippedZeroDamage": "{tokenName} excluido porque el resultado es 0.",
+			"undo": "Cancelar",
+			"undoHealing": "Cancelar curación"
+		},
+		"chatEffects": {
+			"noEffect": "Sin efecto"
+		},
+		"chatTargets": {
+			"addSelectedTokensAsTargets": "Añade los tokens seleccionados como objetivos",
+			"addTargetedTokensAsTargets": "Añade los tokens señalados como objetivos",
+			"noTargetsSelected": "Objetivos no seleccionados",
+			"removeTarget": "Deseleccionar objetivo",
+			"targets": "Objetivos"
+		},
+		"classFeatureSelection": {
+			"chooseN": "(Choose {count})",
+			"chooseOne": "(Elige uno)",
+			"confirmSelection": "Confirmar selección",
+			"deselectFeature": "Deselect this feature",
+			"deselectFeatureAriaLabel": "Deselect {featureName}",
+			"editSelection": "Editar selección de rasgos de clase",
+			"header": "Rasgos de clase",
+			"hint": "Los siguientes rasgos están disponibles a nivel 1 para tu clase. Algunos se consiguen automáticamente, pero otros debes elegirlos.",
+			"levelUpHint": "The following features become available at level {level}. Some are automatically granted; others require you to choose.",
+			"nOfMSelected": "{current} of {required} selected",
+			"noDescriptionAvailable": "Sin descripción disponible.",
+			"selectFeature": "Select this feature",
+			"selectFeatureAriaLabel": "Select {featureName}",
+			"selected": "Seleccionado"
+		},
+		"classSelection": {
+			"classComplexity": "Complejidad de la clase:",
+			"editClassSelection": "Modificar selección de clase",
+			"noClassesAvailable": "No hay clases disponibles en los compendios de este mundo.",
+			"noDescriptionAvailable": "Sin descripción disponible",
+			"stepSelectClass": "Paso 1: Elige una clase",
+			"unknown": "Desconocido"
+		},
+		"classSheet": {
+			"addFeatureGroup": "Añadir grupo de rasgos",
+			"addWeaponProficiency": "Añadir competencia con armas",
+			"armorProficiencies": "Competencias con armaduras",
+			"classComplexity": "Complejidad de la clase",
+			"config": "Config",
+			"deleteFeatureGroup": "Eliminar grupo de rasgos",
+			"deleteWeaponProficiency": "Eliminar competencia con armas",
+			"description": "Descripción",
+			"featureGroups": "Grupos de rasgos",
+			"hitDieSize": "Tamaño de Dado de Golpe",
+			"identifier": "Identificador",
+			"keyStats": "Atributos Clave",
+			"manaFormula": "Fórmula de maná",
+			"manaRecovery": "Recuperación de maná",
+			"none": "Ninguno",
+			"progression": "Progression",
+			"progressionAbilityScoreIncrease": "Ability Score Increase",
+			"progressionAddFeatureAtLevel": "Add feature at level {level}",
+			"progressionAddFeatureToGroup": "Add feature to {groupName}",
+			"progressionAddNewFeatureChoiceGroup": "Add new feature choice group",
+			"progressionAddNewSubclass": "Add new subclass",
+			"progressionAutoGrant": "Features",
+			"progressionAvailableSubclasses": "Available Subclasses",
+			"progressionCapstone": "Capstone",
+			"progressionCapstoneIncrease": "<strong>Capstone.</strong> +1 to any two stats",
+			"progressionChooseFrom": "Choose from",
+			"progressionChooseFromBelow": "Choose one from the Feature Choices section below.",
+			"progressionChooseSubclass": "<strong>Subclass.</strong> Choose a {className} subclass.",
+			"progressionDeleteWorldItemCancel": "Cancel",
+			"progressionDeleteWorldItemConfirm": "Delete",
+			"progressionDeleteWorldItemContent": "Delete <strong>{name}</strong>? This will permanently remove this locally created item from your world.",
+			"progressionDeleteWorldItemTitle": "Delete World Item",
+			"progressionDeleteWorldItemTooltip": "Delete this world item",
+			"progressionEpicBoon": "<strong>Epic Boon.</strong> Choose an Epic Boon.",
+			"progressionEpicBoonLabel": "Epic Boon",
+			"progressionFeatureChoices": "Feature Choices",
+			"progressionGainSubclassFeature": "<strong>Subclass.</strong> Gain your {className} subclass feature.",
+			"progressionKeyStatIncrease": "<strong>Key Stat Increase.</strong> +1 {stats}",
+			"progressionLevel": "Level {level}",
+			"progressionLoading": "Loading progression data...",
+			"progressionNewFeatureChoiceName": "New Feature Choice",
+			"progressionNewFeatureName": "New Feature (Level {level})",
+			"progressionNewGroupFeatureName": "New {groupName} Feature",
+			"progressionNewSubclassFeatureName": "New {subclassName} Feature (Level {level})",
+			"progressionNewSubclassName": "New {className} Subclass",
+			"progressionNoDescription": "No description",
+			"progressionNoFeatureChoices": "No feature choices available. Click the + button to create one.",
+			"progressionNoFeatures": "No features at this level",
+			"progressionNoSubclasses": "No subclasses available. Click the + button to create one.",
+			"progressionOpenSheet": "Open {name} sheet",
+			"progressionPrimary": "+1 Primary",
+			"progressionSecondary": "+1 Secondary",
+			"progressionSecondaryStatIncrease": "<strong>Secondary Stat Increase.</strong> +1 {stats}",
+			"progressionSelections": "Choices",
+			"progressionSourceTagPackLabel": "Pack",
+			"progressionSourceTagPackTooltip": "Compendium Pack: from a published compendium pack",
+			"progressionSourceTagWorldLabel": "World",
+			"progressionSourceTagWorldTooltip": "World Item: created or modified locally in this world",
+			"progressionSubclassFeature": "Subclass Feature",
+			"progressionSubclassFeatureAndAsi": "Subclass Feature, Ability Score Increase",
+			"progressionSubclassLevel": "Subclass",
+			"rules": "Reglas",
+			"weaponProficiencies": "Competencias con armas"
 		},
 		"classes": {
 			"berserker": "Bersérker",
@@ -207,36 +438,51 @@
 			"stormshifter": "Tempestario",
 			"zephyr": "Zéfiro"
 		},
-		"conditions": {
-			"blinded": "Cegado",
-			"bloodied": "Maltrecho",
-			"concentration": "Concentración",
-			"charged": "Cargado",
-			"charmed": "Hechizado",
-			"confused": "Confudido",
-			"dazed": "Atontado",
-			"dead": "Muerto",
-			"despair": "Desesperado",
-			"distracted": "Distraído",
-			"dying": "Moribundo",
-			"frightened": "Asustado",
-			"grappled": "Apresado",
-			"hampered": "Entorpecido",
-			"incapacitated": "Incapacitado",
-			"invisible": "Invisible",
-			"paralyzed": "Paralizado",
-			"petrified": "Petrificado",
-			"poisoned": "Envenenado",
-			"prone": "Derribado",
-			"restrained": "Retenido",
-			"riding": "Montado",
-			"silenced": "Silenciado",
-			"slowed": "Ralentizado",
-			"smoldering": "Ardiente",
-			"stunned": "Aturdido",
-			"taunted": "Provocado",
-			"unconscious": "Inconsciente",
-			"wounded": "Herido"
+		"combatControls": {
+			"continueCombat": "Continuar combate",
+			"endCombat": "Finalizar combate",
+			"endCombatContent": "¿Finalizar este encuentro de combate?",
+			"endCombatTitle": "¿Finalizar combate?",
+			"nextRound": "Asalto siguiente",
+			"nextTurn": "Turno siguiente",
+			"previousRound": "Asalto anterior",
+			"previousTurn": "Turno anterior"
+		},
+		"combatTrackerSettings": {
+			"allowPlayersToMoveCards": "Permitir que otros jugadores muevan la ficha de otro jugador",
+			"borderGlow": "Brillo del borde",
+			"close": "Cerrar",
+			"combatTrackerLocation": "Localización del Gestor de Combate",
+			"combatTrackerLocationLabel": "Ubicación del Gestor de Combate",
+			"currentRolePreview": "Vista previa del rol activo:",
+			"currentTurnAnimations": "Animaciones actuales del turno",
+			"currentTurnAnimationsLabel": "Animaciones de turno activas",
+			"edgeCrawler": "Recorrido del borde",
+			"extensibility": "Extensibilidad",
+			"extensibilityHint": "Con el tiempo se podrán agregar más configuraciones del rastreador de combate a esta ventana.",
+			"gm": "DJ",
+			"gmModify": "Modificar DJ",
+			"gmView": "Vista de DJ",
+			"introText": "Los controles de animación del turno actual están activos. Todas las demás secciones permanecen solo en vista previa.",
+			"layoutHint": "Elige dónde ubicar el gestor en la pantalla.",
+			"layoutPosition": "Posición de la interfaz",
+			"player": "Jugador",
+			"playerModify": "Modificar jugador",
+			"playerPermissions": "Permisos de jugadores",
+			"playerView": "Vista de jugador",
+			"playersCanMoveCards": "Los jugadores pueden mover las fichas de otros jugadores",
+			"pulseAnimation": "Animación pulsante",
+			"roleBasedControls": "Controles según rol (Vista previa)",
+			"roleBasedControlsHint": "La matriz de permisos mostrada a continuación solo funciona como interfaz; aún no controla nada.",
+			"setting": "Ajuste",
+			"title": "Ajustes de Gestor de Combate",
+			"turnManagementSafety": "Seguridad de gestión de turnos",
+			"warnOnEndTurn": "Advertir a los jugadores al pulsar \"Finalizar turno\" con las acciones restantes",
+			"warnOnEndTurnLabel": "Advierte al finalizar turno con las acciones restantes"
+		},
+		"compendium": {
+			"filterAll": "Todos",
+			"filterSpells": "Filtrar conjuros"
 		},
 		"conditionDescriptions": {
 			"blinded": "<p>No puedes ver. Los ataques contra ti tienen ventaja, y tus ataques, desventaja.</p>",
@@ -255,6 +501,7 @@
 			"hampered": "<p>Cualquier criatura con sus acciones o movimiento reducidos (ej. Atontado, Apresado, Derribado, Terreno difícil).</p>",
 			"incapacitated": "<p>No puedes hacer nada. Los ataques contra ti tienen ventaja, y si un ataque cuerpo a cuerpo te impacta, es crítico.</p>",
 			"invisible": "<p>No pueden verte. Tienes ventaja en tus ataques, y los ataques contra ti, desventaja.</p>",
+			"lastStand": "<p>At 0 HP, the legendary monster is dying and gains dangerous new capabilities. They finally die after a small amount of additional damage.</p>",
 			"paralyzed": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"petrified": "<p>Incapacitado. Tienes todas las ventajas y desventajas de una piedra. Eres inmune a la mayoría de los daños, excepto a explosiones violentas, picos u otras herramientas similares.</p>",
 			"poisoned": "<p>Desventaja en todas las tiradas.</p>",
@@ -269,15 +516,53 @@
 			"unconscious": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"wounded": "<p>Tienes al menos 1 Herida (por lo general, un héroe muere al acumular 6 Heridas).</p>"
 		},
+		"conditions": {
+			"blinded": "Cegado",
+			"bloodied": "Maltrecho",
+			"charged": "Cargado",
+			"charmed": "Hechizado",
+			"concentration": "Concentración",
+			"confused": "Confudido",
+			"dazed": "Atontado",
+			"dead": "Muerto",
+			"despair": "Desesperado",
+			"distracted": "Distraído",
+			"dying": "Moribundo",
+			"frightened": "Asustado",
+			"grappled": "Apresado",
+			"hampered": "Entorpecido",
+			"incapacitated": "Incapacitado",
+			"invisible": "Invisible",
+			"lastStand": "Last Stand",
+			"paralyzed": "Paralizado",
+			"petrified": "Petrificado",
+			"poisoned": "Envenenado",
+			"prone": "Derribado",
+			"restrained": "Retenido",
+			"riding": "Montado",
+			"silenced": "Silenciado",
+			"slowed": "Ralentizado",
+			"smoldering": "Ardiente",
+			"stunned": "Aturdido",
+			"taunted": "Provocado",
+			"unconscious": "Inconsciente",
+			"wounded": "Herido"
+		},
+		"creatureFeatures": {
+			"actionSequence": "Tras el turno de cada héroe, elige uno.",
+			"collapse": "Colapsar",
+			"expand": "Expandir",
+			"noFeatures": "Sin rasgos aún."
+		},
 		"currency": {
 			"cp": "Cobre",
-			"sp": "Plata",
-			"gp": "Oro"
+			"gp": "Oro",
+			"sp": "Plata"
 		},
 		"currencyAbbreviations": {
 			"cp": "pc",
-			"sp": "pp",
-			"gp": "po"
+			"gp": "po",
+			"sp": "pp"
 		},
 		"damageTypes": {
 			"acid": "Ácido",
@@ -295,10 +580,158 @@
 			"thunder": "Trueno",
 			"unknown": "Tipo desconocido"
 		},
+		"data": {
+			"total": "Total"
+		},
+		"devRebrand": {
+			"dialog": {
+				"body": "Click <strong>Continue</strong> to copy all existing Nimble flags and settings on this world into the Dev namespace so your characters, items, and settings work in the Dev build. This runs once per world.",
+				"cancel": "Cancel",
+				"confirm": "Continue",
+				"intro": "This world was originally created under the stable Nimble system. The Dev build installs under a separate system id (\"nimble-dev\"), so Foundry stores its flags and settings in a different namespace from the stable install.",
+				"title": "Nimble (Dev) — One-time Migration",
+				"warning": "After this runs, the original Nimble data is removed from this world. If you want to keep using the stable Nimble system with this world, cancel now and use a separate world for the Dev build instead."
+			},
+			"notifications": {
+				"completed": "Nimble (Dev): world data rebrand complete.",
+				"failed": "Nimble (Dev): world data rebrand failed. Check the browser console (F12) for details.",
+				"starting": "Nimble (Dev): rebranding world data from nimble → nimble-dev..."
+			}
+		},
+		"dicePoolTracker": {
+			"clickToRoll": "Click to roll & spend",
+			"countTooltip": "{label} ({current}/{max})",
+			"discardAllAria": "Discard all {label} ({total})",
+			"discardDieAria": "Discard {label} die (value: {value})",
+			"emptyTooltip": "{label} (0/{max})",
+			"panel": {
+				"ariaLabel": "{label} actions",
+				"close": "Close",
+				"countMeta": "{current}/{max}",
+				"editCharge": {
+					"heading": "Edit current",
+					"label": "Current (max {max})"
+				},
+				"editDice": {
+					"decrement": "Decrement",
+					"discard": "Discard die",
+					"heading": "Edit dice",
+					"increment": "Increment"
+				},
+				"rolledMeta": "{count}/{max} · sum {total}",
+				"useFeature": {
+					"effectPreview": "Effect: {total}",
+					"heading": "Use a feature",
+					"pickDice": "Pick dice to spend",
+					"spend": "Spend",
+					"spendWithCount": "Spend ({count})",
+					"summary": "Selected {count} · sum {total}",
+					"toggleDie": "Toggle die (value: {value})"
+				}
+			},
+			"rightClickToDiscard": "Rolled {value} – Right-click to discard",
+			"rightClickToDiscardAll": "Right-click to discard all – total {total}",
+			"rollAndSpendOne": "Roll and spend 1 {label}",
+			"rollOneIntoPool": "Roll one die into this pool",
+			"rolledTooltip": "{label} ({count}/{max}) – Total: {total}",
+			"spent": "{label} spent",
+			"togglePanel": "Toggle {label} actions"
+		},
+		"diceTestbench": {
+			"results": {
+				"basePool": "Base pool (kept)",
+				"bonusDice": "Bonus dice",
+				"crit": "Critical Hit",
+				"critRerolls": "Crit explosion rerolls",
+				"dropped": "Dropped",
+				"exploded": "exploded",
+				"flatBonuses": "Flat bonuses",
+				"hit": "Hit",
+				"miss": "Miss",
+				"placeholder": "(rolled dice and outcome will go here)",
+				"primaryPool": "Primary pool",
+				"showRawJson": "Show raw JSON",
+				"stagedRemaining": "{count} staged value(s) unused",
+				"title": "Results",
+				"totalLabel": "Total: {total}",
+				"traceIsCritical": "trace.isCritical: {state}",
+				"traceIsMiss": "trace.isMiss: {state}",
+				"viciousBonus": "Vicious bonus (right, extra die)",
+				"viciousChain": "Vicious chain (left, can re-explode)"
+			},
+			"rollBuilder": {
+				"actions": {
+					"forceCrit": "Force Crit",
+					"forceMiss": "Force Miss",
+					"forceSpecific": "Force Specific Values",
+					"roll": "Roll"
+				},
+				"actorContextHint": "The selected actor's roll data is passed to the formula (so @abilities.strength.mod etc. resolve), and the actor's type and proficiency list determine whether canCrit gets suppressed.",
+				"actorLabel": "Actor",
+				"critSuppressedLine": "Crit will be suppressed for non-proficiency: {state}",
+				"errors": {
+					"noPrimaryDie": "No primary die found in formula."
+				},
+				"flags": {
+					"canCrit": "canCrit",
+					"canMiss": "canMiss",
+					"isVicious": "isVicious",
+					"overriddenByAoe": "forced off by AoE template",
+					"primaryDieAsDamage": "primaryDieAsDamage"
+				},
+				"formulaLabel": "Formula",
+				"placeholder": "(formula, flags, roll buttons will go here)",
+				"proficiency": {
+					"na": "N/A",
+					"no": "no",
+					"yes": "yes"
+				},
+				"proficiencyLine": "Proficient with '{weaponType}': {state}",
+				"resolved": {
+					"title": "Resolved engine flags"
+				},
+				"rollModeSources": {
+					"advLabel": "Advantage sources",
+					"disLabel": "Disadvantage sources",
+					"hint": "Count how many advantage and disadvantage sources apply. The engine sums them into a net rollMode: advantage and disadvantage cancel 1-for-1. Use this to test how multiple sources combine on a single roll.",
+					"net": "Net rollMode: {sum}",
+					"title": "Advantage / disadvantage sources"
+				},
+				"selectedLabel": "Selected",
+				"specific": {
+					"hint": "Enter exact values for each die. Blank = random.",
+					"rollWith": "Roll with these values"
+				},
+				"suppressionReason": {
+					"aoe": "AoE template forces it off",
+					"flagOff": "checkbox is off",
+					"minion": "actor is a minion",
+					"nonProficient": "actor is not proficient with this weapon type"
+				},
+				"templateShape": {
+					"circle": "Circle",
+					"cone": "Cone",
+					"emanation": "Emanation",
+					"line": "Line",
+					"none": "(none)",
+					"square": "Square"
+				},
+				"templateShapeLabel": "AoE template shape",
+				"title": "Roll Builder",
+				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies — non-proficient wielders cannot crit. Pick from the suggestions or type your own to test edge cases.",
+				"weaponTypeLabel": "Weapon type"
+			},
+			"scenarios": {
+				"hint": "Click a preset to populate the Roll Builder with that scenario's configuration, then click Roll (or toggle Force Crit/Miss) to see how the engine handles it.",
+				"placeholder": "(presets will go here)",
+				"title": "Scenarios"
+			},
+			"title": "Dice Testbench"
+		},
 		"durations": {
 			"action": "Acción",
-			"minute": "Minuto",
 			"hour": "Hora",
+			"minute": "Minuto",
 			"none": "Ninguno",
 			"round": "Asalto",
 			"special": "Especial",
@@ -306,16 +739,27 @@
 		},
 		"durationsPlural": {
 			"action": "Acciones",
-			"minute": "Minutos",
 			"hour": "Horas",
+			"minute": "Minutos",
 			"round": "Asaltos",
 			"turn": "Turnos"
 		},
+		"editCurrentHitDiceDialog": {
+			"addOneDie": "Añade un d{die}",
+			"currentHitDice": "Dados de Golpe actuales",
+			"empty": "Vacío",
+			"max": "Máximo",
+			"removeOneDie": "Elimina un d{die}",
+			"restoreAll": "Recuperar todos",
+			"save": "Guardar",
+			"setToMax": "Establece d{die} al máximo",
+			"total": "Total"
+		},
 		"effectApplications": {
 			"always": "Siempre",
+			"failedSave": "Salvación fallida",
 			"hit": "Impacto",
 			"miss": "Fallo",
-			"failedSave": "Salvación fallida",
 			"successfulSave": "Salvación exitosa"
 		},
 		"effectTypes": {
@@ -323,11 +767,18 @@
 			"damage": "Daño",
 			"healing": "Curación"
 		},
-		"featureTypes": {
-			"ancestry": "Origen",
-			"background": "Trasfondo",
-			"boon": "Don",
-			"class": "Clase"
+		"epicBoonSelection": {
+			"deselectBoon": "Deselect this boon",
+			"deselectBoonAriaLabel": "Deselect {boonName}",
+			"header": "Epic Boon",
+			"hint": "At level 19, choose an epic boon to enhance your character.",
+			"noBoons": "No epic boons available. You may need to create or import boon items.",
+			"selectBoon": "Select this boon",
+			"selectBoonAriaLabel": "Select {boonName}"
+		},
+		"featureSheet": {
+			"selectionCountByLevel": "Selection Count By Level",
+			"selectionCountByLevelPlaceholder": "e.g. 2: 2  (overrides default of 1)"
 		},
 		"featureTypeHeadings": {
 			"ancestry": "Origen",
@@ -335,57 +786,236 @@
 			"boon": "Don",
 			"feature": "Rasgos de clase"
 		},
+		"featureTypes": {
+			"ancestry": "Origen",
+			"background": "Trasfondo",
+			"boon": "Don",
+			"class": "Clase"
+		},
+		"fieldRest": {
+			"advantage": "Ventaja",
+			"advantageWhen": "Tira con ventaja cuando {condition}",
+			"cardHeading": "Descanso al Raso: {restType}",
+			"catchBreath": "Recuperar aliento",
+			"catchBreathDescription": "10 min de descanso. Tira para curar por Dado de Golpe + FUE.",
+			"decreaseDie": "Disminuir d{size}",
+			"healing": "Curación",
+			"hitDice": "Dado de Golpe",
+			"hitDiceToSpend": "Dados de Golpe a utilizar",
+			"increaseDie": "Incrementar d{size}",
+			"makeCamp": "Acampar",
+			"makeCampDescription": "8 horas de descanso. Recibe el valor máximo de Dado de Golpe + FUE.",
+			"manaRestored": "Maná recuperado",
+			"max": "Máx",
+			"maxDie": "Máx d{size}",
+			"maximizeHitDice": "Siempre maximiza los Dados de Golpe",
+			"maximized": "Maximizado",
+			"modifiers": "Modificadores",
+			"noHitDiceAvailable": "Sin Dados de Golpe disponibles para gastar",
+			"noModifiers": "Sin modificadores especiales",
+			"restAndSpendHitDice": "Descanar y gastar {count} Dados de Golpe",
+			"restAndSpendHitDie": "Descansar y gastar {count} Dados de Golpe",
+			"restType": "Tipo de descanso",
+			"restWithoutSpending": "Descansar sin gastar Dados de Golpe",
+			"restedWithoutSpending": "Descanso sin gastar Dados de Golpe",
+			"rolled": "Tirada",
+			"withAdvantage": "Con ventaja"
+		},
+		"forms": {
+			"submit": "Confirmar"
+		},
 		"healingTypes": {
 			"healing": "Curación",
 			"tempHealing": "Curación temporal"
 		},
-		"languages": {
-			"common": "Común",
-			"celestial": "Celestial",
-			"deepSpeak": "Habla Profunda",
-			"draconic": "Dracónico",
-			"dwarvish": "Enano",
-			"elvish": "Élfico",
-			"goblin": "Goblin",
-			"infernal": "Infernal",
-			"thievesCant": "Jerga de ladrones",
-			"primordial": "Primigenio"
+		"hints": {
+			"characterCreationSkillPointAssignment": "Puedes asignar ahora 4 puntos de habilidad para aumentar los modificadores de tus habilidades.",
+			"hideRollsFromPlayersByDefault": "Ocultar tiradas por defecto",
+			"hideRollsFromPlayersByDefaultHint": "Si está activado, los cuadros de diálogo de pruebas de habilidad y tiradas de ataque con arma ocultarán por defecto la tirada a los demás jugadores.",
+			"skillPointAssignment": "Puedes asignar un único punto de habilidad a una habilidad de tu elección. Además, puedes transferir uno de tus puntos de habilidad asignados a otra habilidad de tu elección.",
+			"statAssignment": "Debajo encontrarás los bonificadores de características otorgados por la fila seleccionada. Arrastra y suelta cada uno de estos valores sobre una de las casillas de atributos para asignar tus estadísticas."
+		},
+		"hitDice": {
+			"addBonusDie": "Añadir bono de dado",
+			"addDie": "Añade un d{size}",
+			"addStrBonus": "Suma el bono de FUE ({bonus} por dado)",
+			"applyHealingToHP": "Aplicar curación a PG",
+			"bonusDieName": "Nombre",
+			"bonusHitDice": "Bono de Dado de Golpe",
+			"bonusHitDiceHint": "Bonos de Dados de Golpe procedentes de mejoras, ancenstros u otros rasgos",
+			"configureHitDice": "Configurar Dados de Golpe",
+			"currentHitDice": "Dados de Golpe actuales",
+			"currentHitDiceValue": "Valor actual de Dado de Golpe",
+			"decreaseBonusDie": "Disminuye bono en d{size}",
+			"depleted": "Gastados",
+			"editCurrentHitDice": "Editar Dados de Golpe actuales",
+			"fromSource": "de {source}",
+			"heading": "Dado de Golpe",
+			"hitDiceSizeIncreased": "Todos los tamaños de los Dados de Golpe incrementan {steps} paso(s).",
+			"increaseBonusDie": "Incrementa bono en d{size}",
+			"max": "Máx",
+			"maxHitDice": "Dado de Golpe máximo",
+			"noBonusDice": "Sin bono de dado",
+			"noHitDiceYet": "Aún no hay Dados de Golpe.",
+			"primaryDieModifier": "Modificador del Dado Primario",
+			"primaryDieValue": "Valor del Dado Primario",
+			"removeDie": "Elimina un d{size}",
+			"rollHitDice": "Tirar {count} {dieWord} de Golpe",
+			"rollHitDiceButton": "Tirar Dados de Golpe",
+			"saveChanges": "Guardar cambios",
+			"selectAll": "Seleccionar todo",
+			"selectAllDie": "Elegir todos d{size}",
+			"selectToRoll": "Selecciona Dados de Golpe para tirar",
+			"setPrimaryDie": "Establecer Dado Primario",
+			"setPrimaryDieModifier": "Establecer modificador de Dado Primario",
+			"situationalModifiers": "Modificadores circunstanciales",
+			"totalHitDice": "Total de Dados de Golpe"
+		},
+		"hitPoints": {
+			"bonusHp": "Bono de PG",
+			"bonusHpHint": "Bonificador fijo de mejoras, objetos y otras fuentes",
+			"classTotal": "Total de clase",
+			"fromRules": "De objetos y reglas",
+			"level": "Niv {level}",
+			"levelUpHpGains": "Obtención de PG por subida de nivel",
+			"saveChanges": "Guardar cambios",
+			"startingHp": "PG iniciales",
+			"totalFromRules": "Total de las reglas",
+			"totalMaxHp": "Máximo total de PG"
+		},
+		"itemConfig": {
+			"acquireTargetsFromTemplate": "Adquirir objetivos de plantilla",
+			"areaSize": "Tamaño de área",
+			"attackType": "Tipo de ataque",
+			"attackTypes": {
+				"melee": "Cuerpo a cuerpo",
+				"none": "Ninguno",
+				"range": "Distancia",
+				"reach": "Alcance"
+			},
+			"distance": "Distancia",
+			"duration": "Duración",
+			"target": "Objetivo",
+			"targetCount": "Cantidad de objetivos",
+			"targetRestrictions": "Restricciones de objetivos",
+			"targets": "Objetivos"
+		},
+		"itemMacro": {
+			"command": "Comando"
+		},
+		"jsonExport": {
+			"error": "Failed to export character",
+			"exportButton": "Export Character Sheet (JSON)",
+			"sectionHeader": "Export",
+			"success": "Character exported successfully"
 		},
 		"languageHints": {
-			"common": "La mayoría de criaturas lo habla algo.",
 			"celestial": "Normalmente hablado por seres celestiales.",
+			"common": "La mayoría de criaturas lo habla algo.",
 			"deepSpeak": "Hablado por habitantes del inframundo.",
 			"draconic": "Normalmente hablado por dragones, dracónidos y kóbolds.",
 			"dwarvish": "Normalmente hablado por enanos, gnomos y gigantes.",
 			"elvish": "Normalmente hablado por elfos, hadas y silvanos.",
 			"goblin": "Normalmente hablado por goblins y orcos.",
 			"infernal": "Normalmente hablado por infernales.",
-			"thievesCant": "Normalmente conocido por granujas.",
-			"primordial": "Hablado por elementales y seres antiguos."
+			"primordial": "Hablado por elementales y seres antiguos.",
+			"thievesCant": "Normalmente conocido por granujas."
+		},
+		"languages": {
+			"celestial": "Celestial",
+			"common": "Común",
+			"deepSpeak": "Habla Profunda",
+			"draconic": "Dracónico",
+			"dwarvish": "Enano",
+			"elvish": "Élfico",
+			"goblin": "Goblin",
+			"infernal": "Infernal",
+			"primordial": "Primigenio",
+			"thievesCant": "Jerga de ladrones"
+		},
+		"levelDownDialog": {
+			"changesToRevert": "Cambios a revertir",
+			"confirmLevelDown": "Confirmar descenso de nivel",
+			"feature": "Feature",
+			"featuresRemoved": "Features Removed",
+			"hitDie": "Dado de Golpe",
+			"hitPoints": "Puntos de golpe",
+			"hp": "PG",
+			"level": "Nivel",
+			"levelUpInProgress": "No es posible revertir el nivel con una subida de nivel en curso.",
+			"point": "punto",
+			"points": "puntos",
+			"removed": "eliminado",
+			"spell": "Spell",
+			"spellsRemoved": "Spells Removed",
+			"subclass": "Subclase",
+			"warningMessage": "Esta acción revertirá de forma permanente la última subida de nivel. No se puede deshacer."
+		},
+		"levelUpDialog": {
+			"completeAllSelections": "Completa todas las selecciones antes de continuar.",
+			"completeAllSelectionsTooltip": "Completa todas las selecciones antes de continuar",
+			"featuresHint": "The following features are available at this level for your class.",
+			"hitDiceLabel": "Dados de Golpe:",
+			"hpIncrease": "Aumento de PG",
+			"loadingFeatures": "Loading features...",
+			"rollHitDice": "Tira Dados de Golpe",
+			"rollHitDiceTooltip": "Tira tu Dado de Golpe con ventaja y aumenta tus PG máximos en esa cantidad.",
+			"skillPointsOverMax": "Alguna habilidad supera el límite máximo de 12 puntos. Por favor, reasigna los puntos de habilidad antes de continuar.",
+			"skillPointsOverMaxTooltip": "Una habilidad supera el límite máximo de 12 puntos",
+			"takeAverage": "Elegir valor medio ({average})"
+		},
+		"manaConfig": {
+			"baseMana": "Maná base",
+			"baseManaHint": "Maná fijo antes de las contribuciones de fórmula por clase",
+			"classContributions": "Contribuciones de maná por clase",
+			"classContributionsHint": "Maná obtenido según fórmula basada en tus clases",
+			"configureMana": "Configurar maná",
+			"formulaLabel": "Fórmula",
+			"initiativeInfo": "La recuperación de iniciativa es actualmente solo informativa.",
+			"noClassContributions": "Sin contribuciones a la fórmula de maná por clases.",
+			"recoveryProfile": "Perfil de recuperación",
+			"saveChanges": "Guardar cambios",
+			"totalMaxMana": "Maná máximo total"
+		},
+		"manaRecoveryTypes": {
+			"fieldRest": "Descanso al Raso",
+			"initiative": "Iniciativa",
+			"safeRest": "Descanso Seguro"
+		},
+		"migration": {
+			"compendium": {
+				"finished": "Migración de compendio finalizada: {packName}.",
+				"starting": "Migrando compendio: {packName}..."
+			},
+			"world": {
+				"completed": "Migración de mundo finalizada.",
+				"completedWithErrors": "Migración del mundo finalizada con {count} error(es). Comprueba la consola del navegador (F12) para detalles adicionales.",
+				"starting": "Migrando datos del mundo a Nimble v{version}."
+			}
 		},
 		"modifiers": {
 			"abilityCheck": "Mod {ability}",
 			"savingThrow": "Mod {saveType}",
 			"skillCheck": "Mod {skill}"
 		},
-		"manaRecoveryTypes": {
-			"fieldRest": "Descanso al Raso",
-			"safeRest": "Descanso Seguro",
-			"initiative": "Iniciativa"
-		},
-		"monsterFeatureTypes": {
-			"feature": "Rasgo",
-			"action": "Acciones",
-			"attackSequence": "Secuencia de ataque",
-			"bloodied": "Maltrecho",
-			"lastStand": "Último Aliento"
-		},
 		"monsterFeatureSubtypes": {
-			"feature": "Rasgo",
 			"action": "Acción",
 			"attackSequence": "Secuencia de ataque",
 			"bloodied": "Maltrecho",
+			"feature": "Rasgo",
 			"lastStand": "Último Aliento"
+		},
+		"monsterFeatureTypes": {
+			"action": "Acciones",
+			"attackSequence": "Secuencia de ataque",
+			"bloodied": "Maltrecho",
+			"feature": "Rasgo",
+			"lastStand": "Último Aliento"
+		},
+		"movementConfig": {
+			"gridSpacesNote": "Todas las medidas están en casillas.",
+			"spaces": "casillas",
+			"total": "Total"
 		},
 		"movementTypes": {
 			"burrow": "Excavar",
@@ -394,27 +1024,173 @@
 			"swim": "Nadar",
 			"walk": "Caminar"
 		},
-		"objectSizeTypes": {
-			"slots": "Casillas requeridas",
-			"stackable": "Apilables",
-			"smallSized": "Pequeño"
+		"nimbleCombatSystemWindow": {
+			"actions": {
+				"noActionsLeft": "No quedan acciones",
+				"selectAction": "Elige una acción"
+			},
+			"buttons": {
+				"close": "Cerrar",
+				"roll": "Tirar",
+				"rollEndTurn": "Tirar + Fin turno"
+			},
+			"chat": {
+				"actionFallback": "Acción",
+				"applyDamage": "Aplicar daño",
+				"heading": "Grupo de esbirros",
+				"memberFallback": "Esbirro",
+				"outcomeHit": "Acierto",
+				"outcomeMiss": "Fallo",
+				"subheading": "Grupo de esbirros {groupLabel}",
+				"totalDamageLabel": "Daño total"
+			},
+			"logo": {
+				"alt": "Nimble"
+			},
+			"notifications": {
+				"actionUnavailableForMonster": "Acción no disponible para {name}.",
+				"couldNotOpenPanel": "No se pudo abrir el panel de ataque en grupo. Revisa la consola para más información.",
+				"groupAttackFailed": "Ataque en grupo fallido. Revisa la consola para más información.",
+				"monsterAttackFailed": "Ataque de monstruo fallido. Revisa la consola para más información.",
+				"monsterCannotActivateActions": "{name} no puede activar acciones.",
+				"monsterDefeatedCannotAct": "{name} ha sido derrotado y no puede actuar.",
+				"monsterNoActionsLeft": "{name} sin acciones.",
+				"monsterNoLongerInCombat": "{name} ya no está en combate.",
+				"noActiveCombatForGroupAttack": "No hay combate activo para ataque en grupo.",
+				"noActiveCombatForMonsterAttack": "No hay combate activo para el ataque del monstruo.",
+				"noGroupAttacksRolled": "No se realizaron ataques en grupo.",
+				"selectActionBeforeRoll": "Selecciona una acción para {name} antes de tirar.",
+				"selectTargetBeforeGroupAttack": "Selecciona un token objetivo antes del ataque en grupo.",
+				"selectedGroupHasNoAliveMinions": "Grupo seleccionado sin esbirros vivos para atacar."
+			},
+			"sections": {
+				"minions": "Esbirros",
+				"monsters": "Monstruos"
+			},
+			"targets": {
+				"hint": "Elige los token que no sean monstruos",
+				"label": "Objetivos:",
+				"playerFallback": "Jugador",
+				"selectTargetTooltip": "Elige un objetivo",
+				"targetAria": "Seleccionar objetivo {name}",
+				"untargetAria": "Deseleccionar objetivo {name}"
+			},
+			"title": "Sistema de combate",
+			"tooltips": {
+				"dragToMove": "Arrastrar para mover"
+			},
+			"warnings": {
+				"endTurnNotApplied": "No se aplicó fin de turno porque este grupo no está activo.",
+				"memberReason": "{memberCombatantId}: {reason}",
+				"reasons": {
+					"actionNotFound": "Acción seleccionada inexistente",
+					"activationFailed": "Activación fallida",
+					"actorCannotActivate": "El actor no puede activar el objeto",
+					"noActionSelected": "Ninguna acción seleccionada",
+					"noActionsRemaining": "Sin acciones disponibles"
+				}
+			}
 		},
-		"objectTypes": {
-			"armor": "Armadura",
-			"shield": "Escudo",
-			"weapon": "Arma",
-			"consumable": "Consumible",
-			"misc": "Misceláneo"
+		"npcConfig": {
+			"creatureType": "Tipo de criatura",
+			"flunky": "Lacayo",
+			"level": "Nivel",
+			"sizeCategory": "Categoría de tamaño"
 		},
-		"objectTypeHeadings": {
+		"npcSheet": {
 			"armor": "Armadura",
-			"shield": "Escudos",
-			"weapon": "Armas",
-			"consumable": "Consumibles",
-			"misc": "Misceláneo"
+			"collapseAllDescriptions": "Contraer todas las descripciones",
+			"collapseDescription": "Contraer descripción para {name}",
+			"configureItem": "Configurar {name}",
+			"createFeature": "Crear rasgo",
+			"decreaseArmor": "Disminuir Armadura",
+			"deleteItem": "Eliminar {name}",
+			"dropError": "No se pudo procesar el objeto soltado. Por favor, informa de este problema.",
+			"editAttackSequence": "Editar secuencia de ataque",
+			"expandAllDescriptions": "Expandir todas las descripciones",
+			"features": "Rasgos",
+			"increaseArmor": "Incrementar Armadura",
+			"lastStandHeading": "Last Stand",
+			"lastStandHpHint": "0 disables Last Stand. When the monster hits 0 HP they're healed to this value and gain the Last Stand condition. Rulebook suggests level × 10.",
+			"lastStandHpLabel": "Last Stand HP",
+			"melee": "Cuerpo a cuerpo",
+			"range": "Distancia {distance}",
+			"reach": "Alcance {distance}",
+			"revealDescription": "Mostrar descripción para {name}"
 		},
 		"objectSheet": {
 			"price": "Precio"
+		},
+		"objectSizeTypes": {
+			"slots": "Casillas requeridas",
+			"smallSized": "Pequeño",
+			"stackable": "Apilables"
+		},
+		"objectTypeHeadings": {
+			"armor": "Armadura",
+			"consumable": "Consumibles",
+			"misc": "Misceláneo",
+			"shield": "Escudos",
+			"weapon": "Armas"
+		},
+		"objectTypes": {
+			"armor": "Armadura",
+			"consumable": "Consumible",
+			"misc": "Misceláneo",
+			"shield": "Escudo",
+			"weapon": "Arma"
+		},
+		"pdfExport": {
+			"additionalSheet": "Additional Sheet",
+			"bold": "Bold",
+			"bulletList": "Bulleted List",
+			"categories": {
+				"ancestry": "Ancestry",
+				"background": "Background",
+				"character": "Character",
+				"features": "Class Features",
+				"inventory": "Inventory",
+				"spells": "Spells",
+				"subclassFeatures": "Subclass Features"
+			},
+			"column": "Column {number}",
+			"columnEditor": "Column Editor",
+			"columnOverflow": "Content exceeds estimated column capacity. Some text may be cut off.",
+			"contentPicker": "Content Picker",
+			"deselectAll": "Deselect All",
+			"dialogTitle": "{name}: Export Character Sheet",
+			"error": "Failed to export character sheet",
+			"exportButton": "Export Character Sheet (PDF)",
+			"exporting": "Exporting...",
+			"generatePdf": "Download PDF",
+			"generatingPreview": "Generating preview...",
+			"heading1": "Heading 1",
+			"heading2": "Heading 2",
+			"heading3": "Heading 3",
+			"insertAtCursor": "Inserts selected items at your cursor's position",
+			"insertToColumn": "Add to Column {column}",
+			"italic": "Italic",
+			"lineSpacing": "Line Spacing",
+			"mainSheet": "Main Sheet",
+			"numberedList": "Numbered List",
+			"previewPdf": "Preview PDF",
+			"previewTitle": "{name}: Export Preview",
+			"resetToDefault": "Reset to Default",
+			"search": "Search items...",
+			"sectionHeader": "Export",
+			"selectAll": "Select All",
+			"success": "Character sheet exported successfully",
+			"template": "Template",
+			"templateLined": "With Lines",
+			"templateNoLines": "Without Lines"
+		},
+		"proficiencyConfig": {
+			"addWeaponProficiency": "Añadir competencia con arma",
+			"armorProficiencies": "Competencias con armaduras",
+			"deleteWeaponProficiency": "Elimiinar competencia con arma",
+			"languageProficiencies": "Competencias con idiomas",
+			"none": "Ninguno",
+			"weaponProficiencies": "Competencias con armas"
 		},
 		"prompts": {
 			"changeActorImage": "Modificar imagen de actor",
@@ -431,10 +1207,11 @@
 			"configureSavingThrows": "Configurar salvaciones",
 			"configureSkills": "Configurar habilidades",
 			"configureWeaponProficiencies": "Configurar competencia con armas",
-			"toggleEquipment": "Alternar estado del {name} equipado",
 			"editRoll": "Editar tirada",
+			"equippedTooltip": "Equipped",
+			"fieldRest": "Descanso al Raso",
+			"hideRoll": "¿Ocultar tirada a los jugadores?",
 			"levelUp": "Subir de nivel",
-			"safeRest": "Descanso Seguro",
 			"rollAbilityCheck": "Tirada de característica",
 			"rollAbilityCheckSpecific": "Tirada de {ability}",
 			"rollInitiative": "Tirada de iniciativa",
@@ -442,78 +1219,16 @@
 			"rollSavingThrowSpecific": "Tirada de salvación de {save}",
 			"rollSkillCheck": "Tirada de habilidad",
 			"rollSkillCheckSpecific": "Tirada de habilidad de {skill}",
-			"fieldRest": "Descanso al Raso",
-			"hideRoll": "¿Ocultar tirada a los jugadores?"
-		},
-		"hints": {
-			"skillPointAssignment": "Puedes asignar un único punto de habilidad a una habilidad de tu elección. Además, puedes transferir uno de tus puntos de habilidad asignados a otra habilidad de tu elección.",
-			"characterCreationSkillPointAssignment": "Puedes asignar ahora 4 puntos de habilidad para aumentar los modificadores de tus habilidades.",
-			"statAssignment": "Debajo encontrarás los bonificadores de características otorgados por la fila seleccionada. Arrastra y suelta cada uno de estos valores sobre una de las casillas de atributos para asignar tus estadísticas.",
-			"hideRollsFromPlayersByDefaultHint": "Si está activado, los cuadros de diálogo de pruebas de habilidad y tiradas de ataque con arma ocultarán por defecto la tirada a los demás jugadores.",
-			"hideRollsFromPlayersByDefault": "Ocultar tiradas por defecto"
-		},
-		"statIncrease": {
-			"header": "Mejora de atributo",
-			"capstoneDescription": "Selecciona 2 atributos para aumentar en +1 cada uno"
-		},
-		"sectionHeaders": {
-			"stats": "Atributos"
-		},
-		"levelUpDialog": {
-			"skillPointsOverMax": "Alguna habilidad supera el límite máximo de 12 puntos. Por favor, reasigna los puntos de habilidad antes de continuar.",
-			"completeAllSelections": "Completa todas las selecciones antes de continuar.",
-			"skillPointsOverMaxTooltip": "Una habilidad supera el límite máximo de 12 puntos",
-			"completeAllSelectionsTooltip": "Completa todas las selecciones antes de continuar",
-			"hpIncrease": "Aumento de PG",
-			"hitDiceLabel": "Dados de Golpe:",
-			"rollHitDice": "Tira Dados de Golpe",
-			"rollHitDiceTooltip": "Tira tu Dado de Golpe con ventaja y aumenta tus PG máximos en esa cantidad.",
-			"takeAverage": "Elegir valor medio ({average})"
-		},
-		"levelDownDialog": {
-			"level": "Nivel",
-			"changesToRevert": "Cambios a revertir",
-			"hitPoints": "Puntos de golpe",
-			"hp": "PG",
-			"hitDie": "Dado de Golpe",
-			"point": "punto",
-			"points": "puntos",
-			"subclass": "Subclase",
-			"removed": "eliminado",
-			"warningMessage": "Esta acción revertirá de forma permanente la última subida de nivel. No se puede deshacer.",
-			"confirmLevelDown": "Confirmar descenso de nivel",
-			"levelUpInProgress": "No es posible revertir el nivel con una subida de nivel en curso."
-		},
-		"skillPointAssignment": {
-			"decrementSkillPoints": "Disminuir puntos de habilidad",
-			"incrementSkillPoints": "Incrementar puntos de habilidad",
-			"skill": "Habilidad",
-			"abilityMod": "Mod de atributo",
-			"skillBonus": "Bono de habilidad",
-			"skillPoints": "Puntos de habilidad",
-			"editSkillPoints": "Editar puntos de habilidad",
-			"confirmSkillPointAssignments": "Confirmar asignación de puntos de habilidad",
-			"pointsRemaining": "({remainingSkillPoints} puntos restantes)",
-			"maxSkillBonus": "El bono máx de habilidad es +12.",
-			"onlyOneNewPointAndOneTransferAllowed": "Sólo se permite 1 nuevo punto y 1 transferencia por subida de nivel.",
-			"reduceAnotherSkillFirstToAddSkillPoint": "Disminuye otra habilidad primero para poder añadir un punto de habilidad.",
-			"limitReached": "Límite alcanzado: sólo 1 punto nuevo y 1 transferencia permitida por subida de nivel.",
-			"skillPointsCantGoBelowZero": "Los puntos de habilidad no pueden ser menores a 0.",
-			"alreadyMarkedToTransferOnePoint": "Ya marcado para transferir 1 punto.",
-			"onlyOneTransferPerLevelUp": "Sólo una transferencia por subida de nivel."
-		},
-		"forms": {
-			"submit": "Confirmar"
-		},
-		"data": {
-			"total": "Total"
+			"safeRest": "Descanso Seguro",
+			"toggleEquipment": "Alternar estado del {name} equipado",
+			"unequippedTooltip": "Not Equipped"
 		},
 		"properties": {
 			"concentration": "Concentración",
 			"light": "Ligera",
-			"reach": "Alcance",
-			"range": "Distancia",
 			"load": "Recarga",
+			"range": "Distancia",
+			"reach": "Alcance",
 			"secretSpell": "Conjuro secreto",
 			"thrown": "Arrojadiza",
 			"twoHanded": "A dos manos",
@@ -521,15 +1236,25 @@
 			"vicious": "Cruel"
 		},
 		"restTypes": {
-			"safeRest": "Descanso Seguro",
-			"fieldRest": "Descanso al Raso"
+			"fieldRest": "Descanso al Raso",
+			"safeRest": "Descanso Seguro"
 		},
 		"ruleTypes": {
 			"abilityBonus": "Bono de Atributo",
+			"applyCondition": "Apply Condition",
 			"armorClass": "Clase de armadura",
+			"chargeConsumer": "Charge Consumer",
+			"chargePool": "Charge Pool",
 			"combatMana": "Maná de combate",
+			"conditionImmunity": "Condition Immunity",
+			"damageBonus": "Damage Bonus",
+			"diceConsumer": "Dice Consumer",
+			"dicePool": "Dice Pool",
+			"dyingActionLimit": "Dying Action Limit",
 			"grantItem": "Objeto",
+			"grantMovement": "Grant Movement",
 			"grantProficiency": "Competencia",
+			"grantSpells": "Spells",
 			"healingPotionBonus": "Bono de poción de curación",
 			"hitDiceAdvantage": "Ventaja en Dados de Golpe",
 			"incrementHitDice": "Incrementar Dado de Golpe",
@@ -538,9 +1263,10 @@
 			"initiativeRollMode": "Modo de tirada de iniciativa",
 			"maxHitDice": "Dado de Golpe",
 			"maxHpBonus": "Puntos de golpe",
-			"maximizeHitDice": "Maximizar Dado de Golpe",
 			"maxWounds": "Heridas",
+			"maximizeHitDice": "Maximizar Dado de Golpe",
 			"meleeDamageBonus": "Bono de daño cuerpo a cuerpo",
+			"modifyPool": "Modify Pool",
 			"note": "Nota",
 			"savingThrowBonus": "Bono de salvación",
 			"savingThrowRollMode": "Modo de tirada de salvación",
@@ -548,35 +1274,653 @@
 			"speedBonus": "Bono de velocidad",
 			"unarmedDamage": "Daño sin armas"
 		},
-		"creatureFeatures": {
-			"noFeatures": "Sin rasgos aún.",
-			"actionSequence": "Tras el turno de cada héroe, elige uno.",
-			"expand": "Expandir",
-			"collapse": "Colapsar"
+		"rules": {
+			"abilityBonus": {
+				"abilities": {
+					"hint": "Pick one or more abilities. Use \"all\" to apply to every ability.",
+					"label": "Apply to"
+				},
+				"description": "Add a flat or formula-based bonus to one or more ability scores. Use ‘all’ to apply to every ability.",
+				"value": {
+					"hint": "A flat number, formula (e.g. @level), or dice expression.",
+					"label": "Bonus"
+				}
+			},
+			"applyCondition": {
+				"condition": {
+					"hint": "The condition to apply.",
+					"label": "Condition"
+				},
+				"description": "Apply a status condition to a target (or self) when a trigger fires — on a hit, crit, miss, save fail, turn start, etc.",
+				"trigger": {
+					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc.",
+					"label": "Trigger"
+				}
+			},
+			"armorClass": {
+				"description": "Add, multiply, or override the character’s armor class with a formula.",
+				"formula": {
+					"hint": "A flat number or formula. Combined per the mode below.",
+					"label": "Formula"
+				},
+				"mode": {
+					"hint": "Add: stack on top of current AC. Multiply: scale current AC. Override: replace current AC.",
+					"label": "How to apply"
+				}
+			},
+			"chargeConsumer": {
+				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
+			},
+			"chargePool": {
+				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers.",
+				"dieSize": {
+					"hint": "Optional. Set when charges are spent by rolling a die (e.g. Combat Dice). Leave blank for plain counters.",
+					"label": "Die size"
+				},
+				"initial": {
+					"hint": "Whether the pool starts full or empty when first granted.",
+					"label": "Initial"
+				},
+				"max": {
+					"hint": "Capacity formula. Flat (3), formula (@key), or actor data (@strength).",
+					"label": "Max charges"
+				},
+				"recoveries": {
+					"hint": "When and how charges are restored. Add an entry per trigger.",
+					"label": "Recoveries",
+					"mode": {
+						"hint": "How the value applies: \"add\" (gain N), \"set\" (set to N), or \"refresh\" (fill to max).",
+						"label": "Mode"
+					},
+					"trigger": {
+						"hint": "Event that drives this recovery (rest type, encounter event, hit, etc.).",
+						"label": "Trigger"
+					},
+					"value": {
+						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\".",
+						"label": "Value"
+					}
+				},
+				"scope": {
+					"hint": "Where the pool lives. \"Item\" pools live on this item; \"Actor\" pools live on the actor and can be shared by features that reference the same identifier.",
+					"label": "Scope"
+				}
+			},
+			"combatMana": {
+				"description": "Grant a mana resource on a combat trigger and clear it on a configurable event."
+			},
+			"conditionImmunity": {
+				"conditions": {
+					"hint": "The actor is fully immune to these conditions and cannot be affected by them.",
+					"label": "Immune to"
+				},
+				"description": "Make the actor immune to one or more named conditions."
+			},
+			"damageBonus": {
+				"damageType": {
+					"hint": "Restrict to attacks of this type. Leave blank to match all.",
+					"label": "Damage type"
+				},
+				"delivery": {
+					"hint": "Restrict to melee or ranged attacks. \"Any\" matches both.",
+					"label": "Delivery"
+				},
+				"description": "Add a flat, formula, or dice-expression bonus to damage dealt by attacks of a given delivery (melee/ranged) and source (weapon/spell).",
+				"source": {
+					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both.",
+					"label": "Source"
+				},
+				"targetCondition": {
+					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }.",
+					"label": "Target condition"
+				},
+				"value": {
+					"hint": "Flat (5), formula (@level), or dice (1d6+2).",
+					"label": "Bonus"
+				}
+			},
+			"diceConsumer": {
+				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool."
+			},
+			"dicePool": {
+				"description": "Define a refillable pool of rolled dice (each die stores its rolled face). Used for snowballing damage pools (Fury Dice) and rolled resources (Judgment Dice).",
+				"dieSize": {
+					"hint": "Size of each die stored in the pool.",
+					"label": "Die size"
+				},
+				"initial": {
+					"hint": "Whether the pool starts full (pre-rolled to max) or empty when first granted.",
+					"label": "Initial"
+				},
+				"max": {
+					"hint": "Maximum number of dice the pool can hold. Flat (3), formula (@key), or actor data (@strength).",
+					"label": "Max dice"
+				},
+				"refills": {
+					"hint": "When and how dice are added back to the pool. Add an entry per trigger.",
+					"label": "Refills",
+					"mode": {
+						"hint": "How the value applies: \"add\" (roll N new dice), \"set\" (rebuild pool to N), or \"refresh\" (fill to max).",
+						"label": "Mode"
+					},
+					"trigger": {
+						"hint": "Event that drives this refill (rest type, encounter event, taken damage, etc.).",
+						"label": "Trigger"
+					},
+					"value": {
+						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\".",
+						"label": "Value"
+					}
+				},
+				"scope": {
+					"hint": "Where the pool lives. \"Item\" pools live on this item; \"Actor\" pools live on the actor and can be shared by features that reference the same identifier.",
+					"label": "Scope"
+				}
+			},
+			"dyingActionLimit": {
+				"description": "Set the maximum number of actions the actor may take while Dying. The highest applicable limit wins, so it never lowers the baseline of 1.",
+				"value": {
+					"hint": "A flat number or formula (e.g. 2). Use a predicate such as { \"$and\": [\"self:dying\"] } to apply only while Dying.",
+					"label": "Action limit"
+				}
+			},
+			"grantItem": {
+				"allowDuplicate": {
+					"label": "Allow duplicates on the actor"
+				},
+				"description": "Grant an item by UUID when this rule’s owner is created on an actor. Optional duplicate gating and quantity override.",
+				"inMemoryOnly": {
+					"label": "Don’t persist to actor inventory"
+				},
+				"quantity": {
+					"label": "Quantity (blank = item default)"
+				},
+				"uuid": {
+					"label": "Item"
+				}
+			},
+			"grantMovement": {
+				"description": "Grant a base movement mode (walk, fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
+				"mode": {
+					"hint": "Which movement mode to grant.",
+					"label": "Movement mode"
+				},
+				"speed": {
+					"hint": "Base speed for this mode. Use a formula like @attributes.movement.walk to match walk speed, or a number like 12.",
+					"label": "Speed"
+				}
+			},
+			"grantProficiency": {
+				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type."
+			},
+			"grantSpells": {
+				"count": {
+					"label": "How many to choose"
+				},
+				"description": "Grant spells by school + tier filter, by UUID, or by user choice.",
+				"mode": {
+					"label": "Selection mode"
+				},
+				"schools": {
+					"label": "Schools"
+				},
+				"tiers": {
+					"label": "Tiers"
+				},
+				"utilityOnly": {
+					"label": "Utility spells only"
+				},
+				"uuids": {
+					"hint": "Drag spells from a compendium or sidebar onto each slot to grant them directly.",
+					"label": "Specific spells"
+				}
+			},
+			"healingPotionBonus": {
+				"description": "Add a flat or formula-based bonus to healing received from potions.",
+				"value": {
+					"label": "Bonus"
+				}
+			},
+			"hitDiceAdvantage": {
+				"description": "Grant advantage on hit-dice rolls under a specific narrative condition (e.g., ‘in the wild’)."
+			},
+			"incrementHitDice": {
+				"description": "Increase the size of the actor’s hit dice (e.g. d8 → d10) by a flat or formula amount.",
+				"value": {
+					"label": "Die size bonus"
+				}
+			},
+			"initiativeBonus": {
+				"description": "Add a flat or formula-based bonus to the actor’s initiative roll.",
+				"value": {
+					"label": "Bonus"
+				}
+			},
+			"initiativeMessage": {
+				"description": "Display a message at initiative roll time. Supports `{value}` interpolation from a formula."
+			},
+			"initiativeRollMode": {
+				"description": "Set or adjust the actor’s default initiative roll mode (advantage/disadvantage).",
+				"mode": {
+					"label": "How to apply"
+				},
+				"value": {
+					"label": "Roll mode value"
+				}
+			},
+			"maxHitDice": {
+				"description": "Add to the actor’s maximum hit dice. Optionally targets a specific die size.",
+				"dieSize": {
+					"label": "Die size (0 = class default)"
+				},
+				"value": {
+					"label": "Bonus"
+				}
+			},
+			"maxHpBonus": {
+				"description": "Add a flat bonus to the actor’s maximum HP. With `perLevel`, the bonus scales with character level.",
+				"perLevel": {
+					"hint": "When on, the bonus is applied per level (e.g. +2 per level → +20 at level 10).",
+					"label": "Multiply by character level"
+				},
+				"value": {
+					"hint": "Bonus HP added to maximum.",
+					"label": "Bonus"
+				}
+			},
+			"maxWounds": {
+				"description": "Add to the actor’s maximum wounds before death.",
+				"value": {
+					"label": "Bonus"
+				}
+			},
+			"maximizeHitDice": {
+				"description": "Causes hit-dice rolls to take their maximum value instead of rolling."
+			},
+			"modifyPool": {
+				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",
+				"dieSize": {
+					"hint": "Replace the target pool's die size. Leave blank to keep it unchanged.",
+					"label": "Die size override"
+				},
+				"maxDelta": {
+					"hint": "Signed amount added to the target pool's max (e.g. \"+1\", \"-1\", \"+@level\"). Leave blank to keep max unchanged.",
+					"label": "Max delta"
+				},
+				"poolIdentifier": {
+					"hint": "The `identifier` of the pool to modify (e.g. `fury`, `judgment`, `combat-dice`).",
+					"label": "Pool identifier"
+				},
+				"poolType": {
+					"hint": "Which subsystem to target: dice pools (rolled faces) or charge pools (counters).",
+					"label": "Pool type"
+				}
+			},
+			"note": {
+				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
+			},
+			"savingThrowBonus": {
+				"description": "Add a flat or formula-based bonus to one or more saving throws. Use ‘all’ to apply to every save.",
+				"savingThrows": {
+					"hint": "Pick one or more saves. Use \"all\" to apply to every save.",
+					"label": "Apply to"
+				},
+				"value": {
+					"hint": "A flat number, formula, or dice expression added to the save.",
+					"label": "Bonus"
+				}
+			},
+			"savingThrowRollMode": {
+				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use.",
+				"mode": {
+					"label": "How to apply"
+				},
+				"requiresChoice": {
+					"label": "Player chooses save at use"
+				},
+				"selectedSave": {
+					"label": "Selected save"
+				},
+				"target": {
+					"label": "Target save"
+				},
+				"value": {
+					"label": "Roll mode value"
+				}
+			},
+			"skillBonus": {
+				"description": "Add a flat or formula-based bonus to one or more skills. Use ‘all’ to apply to every skill.",
+				"skills": {
+					"hint": "Pick one or more skills. Use \"all\" to apply to every skill.",
+					"label": "Apply to"
+				},
+				"value": {
+					"hint": "A flat number, formula, or dice expression added to the skill check.",
+					"label": "Bonus"
+				}
+			},
+			"speedBonus": {
+				"description": "Add a bonus to the actor’s speed. Without an explicit movement type, applies to walk; otherwise scoped to fly/swim/climb/burrow.",
+				"movementType": {
+					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it.",
+					"label": "Movement type (blank = walk)"
+				},
+				"value": {
+					"hint": "Bonus to speed in tiles. Negative numbers reduce speed.",
+					"label": "Bonus"
+				}
+			},
+			"unarmedDamage": {
+				"description": "Override the actor’s unarmed-strike damage formula."
+			}
+		},
+		"rulesBuilder": {
+			"addEntry": "Add entry",
+			"addRule": "Add Rule",
+			"addValue": "Add value",
+			"advanced": "Advanced",
+			"appliesWhen": "Applies when",
+			"cancel": "Cancel",
+			"chargePoolPicker": {
+				"empty": "No charge pools defined on this actor",
+				"notFound": "⚠ {identifier} (not found)"
+			},
+			"clear": "Clear",
+			"clearDocument": "Clear document",
+			"closeJsonEditor": "Close JSON editor",
+			"collapse": "Collapse",
+			"collapseAll": "Collapse all",
+			"collapseRule": "Collapse rule",
+			"deleteRule": "Delete rule",
+			"dicePoolPicker": {
+				"empty": "No dice pools defined on this actor",
+				"notFound": "⚠ {identifier} (not found)"
+			},
+			"disableAll": "Disable all",
+			"disableRule": "Disable rule",
+			"disabled": "Disabled",
+			"dragDocumentHere": "Drag a document here",
+			"dragToCopy": "Drag onto another rules list to copy",
+			"editRawJson": "Edit raw JSON",
+			"emptyHint": "No rules yet. Click {addRule} to pick a type.",
+			"enableAll": "Enable all",
+			"enableRule": "Enable rule",
+			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
+			"errorSchemaLoadBefore": "Could not load schema for rule type",
+			"expand": "Expand",
+			"expandAll": "Expand all",
+			"expandRule": "Expand rule",
+			"formulaPlaceholderDice": "e.g. 1d6 + @level",
+			"formulaPlaceholderFlat": "e.g. 2 or 1d6 or @level",
+			"noFurtherConfig": "No further configuration needed.",
+			"noRulesDefined": "No rules defined. Open the builder to add one.",
+			"openRulesBuilder": "Open Rules Builder",
+			"pickerMissingMetaTooltip": "Description missing — flag for review.",
+			"predicateAddCondition": "Add condition",
+			"predicateDeleteCondition": "Delete condition",
+			"predicateIntro": "Restrict when this rule fires. Every row below must match the actor's tags for the rule to apply. Leave empty to always apply.",
+			"predicateKeyPlaceholder": "pick or type a tag key",
+			"predicateKeyPlaceholderEmpty": "tag key (e.g. level)",
+			"predicateMaxPlaceholder": "max",
+			"predicateMinPlaceholder": "min",
+			"predicateOperatorHints": {
+				"is": "Actor must be tagged with this exact value.",
+				"isAtLeast": "The numeric value associated with this key must be at least this.",
+				"isAtMost": "The numeric value associated with this key must be at most this.",
+				"isBetween": "The numeric value associated with this key must be within this range.",
+				"isExactly": "The numeric value associated with this key must equal this.",
+				"isOneOf": "Actor must be tagged with any one of these values."
+			},
+			"predicateOperators": {
+				"is": "is",
+				"isAtLeast": "is at least",
+				"isAtMost": "is at most",
+				"isBetween": "is between",
+				"isExactly": "is exactly",
+				"isOneOf": "is one of"
+			},
+			"predicatePreviewAlways": "No conditions — always applies.",
+			"predicatePreviewError": "Evaluation failed.",
+			"predicatePreviewIncomplete": "Conditions are incomplete.",
+			"predicatePreviewMatches": "Currently matches the parent actor.",
+			"predicatePreviewNoMatch": "Currently does not match the parent actor.",
+			"predicateRangeAnd": "and",
+			"predicateRemoveValue": "Remove value",
+			"predicateValuePlaceholder": "value",
+			"priority": "Priority",
+			"priorityApplicationOrder": "Priority (application order)",
+			"priorityTooltip": "Application order during data prep. Lower numbers run first.",
+			"remove": "Remove",
+			"ruleDisabled": "This rule is disabled",
+			"rulePlural": "rules",
+			"ruleSingular": "rule",
+			"save": "Save",
+			"saveJson": "Save JSON",
+			"switchToBuilder": "Switch to builder",
+			"templateValueHintAfter": "to insert the formula result.",
+			"templateValueHintBefore": "Use",
+			"unknownRuleType": "Unknown rule type: {type}"
+		},
+		"safeRest": {
+			"allResourcesFull": "Todos los recursos están a capacidad máxima.",
+			"alreadyFull": "Ya al tope",
+			"alreadyFullyRested": "Ya completamente descansado",
+			"cardHeading": "Descanso Seguro",
+			"cardSubheading": "Recuperación total",
+			"dialogTitle": "{name}: Descanso Seguro",
+			"hitDice": "Dado de Golpe",
+			"hitDiceRecovered": "Dados de Golpe recuperados",
+			"hitDieRecovery": "+{amount} d{size}",
+			"hitPoints": "Puntos de golpe",
+			"hpRecovery": "+{amount} PG ({current} → {max})",
+			"hpRestored": "PG restaurados",
+			"mana": "Maná",
+			"manaRecovery": "+{amount} ({current} → {max})",
+			"manaRestored": "Maná recuperado",
+			"noWounds": "Sin heridas",
+			"recoveryPreview": "Vista previa de recuperación",
+			"removed": "-{amount} eliminados",
+			"safeRestButton": "Descanso Seguro",
+			"tempHp": "PG temporales",
+			"tempHpRemoved": "PG temporales eliminados",
+			"wound": "-1 herida ({current} → {next})",
+			"wounds": "Heridas",
+			"woundsHealed": "Heridas curadas"
+		},
+		"saveConfig": {
+			"abilityMod": "Mod de característica",
+			"abilityModifier": "Modificador de característica",
+			"abilityModifierSubtitle": "Modificador base vinculado a la puntuación de característica",
+			"ancestryTraits": "Rasgos de Origen",
+			"ancestryTraitsSubtitle": "Rasgos que mejoran una salvación de tu elección",
+			"bonusPenalty": "Bonificador/Penalizador",
+			"bonusPenaltySubtitle": "Modificadores fijos a las salvaciones",
+			"defaultRollMode": "Modo de tirada por defecto",
+			"defaultRollModeSubtitle": "Salvaciones con ventaja o desventaja",
+			"flatBonus": "Bono fijo",
+			"legendAdvantage": "Ventaja (tira dados adicionales, escoge el más alto)",
+			"legendDisadvantage": "Desventaja (tira dados adicionales, escoge el más bajo)",
+			"legendNormal": "Tirada estándar",
+			"resetToClassDefaults": "Restablecer a valores predeterminados de clase",
+			"rollMode": "Modo de tirada",
+			"totalModifier": "Modificador total"
 		},
 		"saves": {
-			"save": "Salvación",
-			"saves": "Salvaciones",
-			"saveType": "Tipo de salvación",
 			"advantageSave": "Salvación con ventaja",
-			"disadvantageSave": "Salvación con desventaja",
 			"deleteSavePrompt": "Confirmación para eliminar salvación",
-			"strengthSave": "Salvación de Fuerza",
 			"dexteritySave": "Salvación de Destreza",
+			"disadvantageSave": "Salvación con desventaja",
 			"intelligenceSave": "Salvación de Inteligencia",
+			"save": "Salvación",
+			"saveType": "Tipo de salvación",
+			"saves": "Salvaciones",
+			"strengthSave": "Salvación de Fuerza",
 			"willSave": "Salvación de Voluntad"
 		},
-		"savingThrows": {
-			"strength": "Fuerza",
-			"dexterity": "Destreza",
-			"intelligence": "Inteligencia",
-			"will": "Voluntad"
-		},
 		"savingThrowAbbreviations": {
-			"strength": "Fue",
 			"dexterity": "Des",
 			"intelligence": "Int",
+			"strength": "Fue",
 			"will": "Vol"
+		},
+		"savingThrowConfig": {
+			"adv": "Ventaja",
+			"advMultiplied": "Ventaja ×{count}",
+			"currentSelection": "Selección actual",
+			"dis": "Desventaja",
+			"disMultiplied": "Desventaja ×{count}",
+			"normal": "Normal",
+			"select": "Seleccionar {save}"
+		},
+		"savingThrows": {
+			"dexterity": "Destreza",
+			"intelligence": "Inteligencia",
+			"strength": "Fuerza",
+			"will": "Voluntad"
+		},
+		"scalingDialog": {
+			"formula": "Fórmula",
+			"level": "Nivel",
+			"scaleByLevel": "Escalado por nivel",
+			"scaleBySpellLevel": "Escalado por nivel de conjuro",
+			"scalingByCharacterLevel": "Escalado por nivel de personaje"
+		},
+		"sectionHeaders": {
+			"stats": "Atributos"
+		},
+		"settings": {
+			"adjacencyIncludesDiagonals": {
+				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only).",
+				"name": "Adjacency Includes Diagonals"
+			},
+			"autoAddCharacterToCombatOnInitiativeRoll": {
+				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat.",
+				"name": "Auto-Add Character To Combat On Initiative Roll"
+			},
+			"autoApplyConditions": {
+				"hint": "Automatically apply conditions from feature rules when their trigger fires. When off, rules still surface on the chat card for manual GM application.",
+				"name": "Auto-Apply Conditions from Rules"
+			},
+			"autoExpandRolls": {
+				"hint": "Al activarse, los detalles de la tirada de dados se muestran directamente debajo de cada tirada en los mensajes del chat, sin necesidad de pasar el cursor",
+				"name": "Expandir tiradas automáticamente"
+			},
+			"autoTrackTokenAdjacency": {
+				"hint": "When enabled, the system automatically tracks the adjacency status of combatants.",
+				"name": "Auto-Track Token Adjacency"
+			},
+			"combatTrackerActionDiceColor": {
+				"hint": "Choose your personal action color for Combat Tracker",
+				"name": "Combat Tracker Action Color"
+			},
+			"combatTrackerCardSizeLevel": {
+				"hint": "Controls how large Combat Tracker combatant cards appear",
+				"name": "Combat Tracker Card Size Level"
+			},
+			"combatTrackerCurrentTurnBorderGlow": {
+				"hint": "Enable border glow for the active combatant card",
+				"name": "Combat Tracker Current Turn Border Glow"
+			},
+			"combatTrackerCurrentTurnBorderGlowColor": {
+				"hint": "Color used by the border glow for the active combatant card",
+				"name": "Combat Tracker Border Glow Color"
+			},
+			"combatTrackerCurrentTurnBorderGlowSize": {
+				"hint": "Adjust the glow size for the active combatant card border",
+				"name": "Combat Tracker Border Glow Size"
+			},
+			"combatTrackerCurrentTurnColorLegacy": {
+				"hint": "Legacy current turn color setting used before per-animation colors",
+				"name": "Combat Tracker Current Turn Color (Legacy)"
+			},
+			"combatTrackerCurrentTurnEdgeCrawler": {
+				"hint": "Enable edge crawler effect for the active combatant card",
+				"name": "Combat Tracker Current Turn Edge Crawler"
+			},
+			"combatTrackerCurrentTurnEdgeCrawlerColor": {
+				"hint": "Color used by the edge crawler for the active combatant card",
+				"name": "Combat Tracker Edge Crawler Color"
+			},
+			"combatTrackerCurrentTurnEdgeCrawlerSize": {
+				"hint": "Adjust capsule size for the active combatant edge crawler effect",
+				"name": "Combat Tracker Edge Crawler Size"
+			},
+			"combatTrackerCurrentTurnPulseAnimation": {
+				"hint": "Enable pulse animation for the active combatant card",
+				"name": "Combat Tracker Current Turn Pulse Animation"
+			},
+			"combatTrackerCurrentTurnPulseSpeed": {
+				"hint": "Adjust pulse animation speed for the active combatant card",
+				"name": "Combat Tracker Current Turn Pulse Speed"
+			},
+			"combatTrackerEnabled": {
+				"hint": "Show the Combat Tracker at the top of the screen",
+				"name": "Enable Combat Tracker"
+			},
+			"combatTrackerHoverColor": {
+				"hint": "Choose your personal token hover highlight color",
+				"name": "Combat Tracker Hover Color"
+			},
+			"combatTrackerLeftToRightOrdering": {
+				"hint": "Display combatants in fixed left-to-right order instead of centering the active combatant",
+				"name": "Combat Tracker Left-to-Right Ordering"
+			},
+			"combatTrackerNonPlayerHpBarEnabled": {
+				"hint": "Show a hit point bar below individual non-player combatant cards",
+				"name": "Combat Tracker Non-Player HP Bar"
+			},
+			"combatTrackerNonPlayerHpBarTextMode": {
+				"hint": "Choose whether centered text in the non-player HP bar shows nothing, health state, or HP percentage",
+				"name": "Combat Tracker Non-Player HP Bar Center Text"
+			},
+			"combatTrackerPlayerHpBarTextMode": {
+				"hint": "Choose whether player HP bars show nothing, health state, or HP percentage",
+				"name": "Combat Tracker Player HP Bar Center Text"
+			},
+			"combatTrackerPlayersCanExpandMonsterCards": {
+				"hint": "Allow players to view individual monster and minion cards when the GM expands them",
+				"name": "Combat Tracker Monster Card Visibility"
+			},
+			"combatTrackerReactionColor": {
+				"hint": "Choose your personal reaction color for Combat Tracker",
+				"name": "Combat Tracker Reaction Color"
+			},
+			"combatTrackerResourceDrawerHover": {
+				"hint": "When enabled, player resource drawers open only on hover",
+				"name": "Combat Tracker Resource Drawer Hover"
+			},
+			"combatTrackerWidthLevel": {
+				"hint": "Controls how wide Combat Tracker can be in the top tracker",
+				"name": "Combat Tracker Width Level"
+			},
+			"debugMode": {
+				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
+				"name": "Debug Mode",
+				"openTestbench": "Open Dice Testbench"
+			},
+			"hpBarTextMode": {
+				"hpState": "Health State",
+				"none": "None",
+				"percentage": "HP %"
+			},
+			"ncswEnabled": {
+				"hint": "Mostrar panel de sistema de combate durante el combate. Ayuda a los DJ asignar a los héroes como objetivos y hacer tiradas de ataque de lacayos, monstruos y monstruos legendarios.",
+				"name": "Habilitar sistema de combate"
+			}
+		},
+		"sheets": {
+			"ancestry": "Hoja de orígenes de Nimble",
+			"background": "Hoja de trasfondos de Nimble",
+			"boon": "Hoja de dones de Nimble",
+			"class": "Hoja de clase de Nimble",
+			"feature": "Hoja de rasgos de Nimble",
+			"monsterFeature": "Hoja de rasgos de monstruo de Nimble",
+			"npc": "Hoja de PNJ de Nimble",
+			"object": "Hoja de objetos de Nimble",
+			"playerCharacter": "Hoja de personaje jugador de Nimble",
+			"soloMonster": "Hoja de monstruo en solitario de Nimble",
+			"spell": "Hoja de conjuros de Nimble",
+			"subclass": "Hoja de subclases de Nimble"
 		},
 		"sizeCategories": {
 			"gargantuan": "Gargantuesco",
@@ -585,6 +1929,24 @@
 			"medium": "Mediano",
 			"small": "Pequeño",
 			"tiny": "Diminuto"
+		},
+		"skillPointAssignment": {
+			"abilityMod": "Mod de atributo",
+			"alreadyMarkedToTransferOnePoint": "Ya marcado para transferir 1 punto.",
+			"confirmSkillPointAssignments": "Confirmar asignación de puntos de habilidad",
+			"decrementSkillPoints": "Disminuir puntos de habilidad",
+			"editSkillPoints": "Editar puntos de habilidad",
+			"incrementSkillPoints": "Incrementar puntos de habilidad",
+			"limitReached": "Límite alcanzado: sólo 1 punto nuevo y 1 transferencia permitida por subida de nivel.",
+			"maxSkillBonus": "El bono máx de habilidad es +12.",
+			"onlyOneNewPointAndOneTransferAllowed": "Sólo se permite 1 nuevo punto y 1 transferencia por subida de nivel.",
+			"onlyOneTransferPerLevelUp": "Sólo una transferencia por subida de nivel.",
+			"pointsRemaining": "({remainingSkillPoints} puntos restantes)",
+			"reduceAnotherSkillFirstToAddSkillPoint": "Disminuye otra habilidad primero para poder añadir un punto de habilidad.",
+			"skill": "Habilidad",
+			"skillBonus": "Bono de habilidad",
+			"skillPoints": "Puntos de habilidad",
+			"skillPointsCantGoBelowZero": "Los puntos de habilidad no pueden ser menores a 0."
 		},
 		"skills": {
 			"arcana": "Arcanos",
@@ -598,6 +1960,113 @@
 			"perception": "Percepción",
 			"stealth": "Sigilo"
 		},
+		"skillsConfig": {
+			"abilityModifier": "Modificador de habilidad",
+			"cancel": "Cancel",
+			"change": "Change",
+			"decrementSkillPoints": "Reducir puntos de habilidad",
+			"edit": "Edit",
+			"editingLevel": "Editing Level {level}",
+			"incrementSkillPoints": "Aumentar puntos de habilidad",
+			"levelLabel": "Level {level}",
+			"levelUpHistory": "Level-Up History",
+			"levelUpHistorySubtitle": "Points allocated through leveling",
+			"remainingPoints": "{remaining} of {total} remaining",
+			"save": "Save",
+			"skill": "Habilidad",
+			"skillBonus": "Bono de habilidad",
+			"skillPoints": "Puntos de habilidad",
+			"total": "Total"
+		},
+		"spellConfig": {
+			"description": {
+				"baseEffect": "Efecto de conjuro base",
+				"higherLevelEffect": "Efecto de nivel superior",
+				"upcastEffect": "Efecto potenciado"
+			},
+			"identifier": "Identificador",
+			"jsonEditor": {
+				"heading": "Datos de conjuro (JSON)",
+				"invalidJson": "JSON no válido",
+				"switchToJson": "Cambiar al editor JSON",
+				"switchToVisual": "Cambiar al editor visual"
+			},
+			"scaling": {
+				"addChoice": "Añadir opción",
+				"addDelta": "Añadir incremento",
+				"choiceLabel": "Elección de etiqueta",
+				"choiceLabelPlaceholder": "e.g. Daño adicional",
+				"condition": "Estado",
+				"conditionPlaceholder": "e.g. ardiente",
+				"count": "Total",
+				"deltas": "Incrementos",
+				"die": "Dado",
+				"heading": "Potenciación de conjuro",
+				"modes": {
+					"none": "Ninguno",
+					"upcast": "Potenciado",
+					"upcastChoice": "Elección de potenciado"
+				},
+				"noChoices": "No hay opciones configuradas.",
+				"noDeltas": "No se han configurado incrementos de potenciación.",
+				"operation": "Operación",
+				"operations": {
+					"addAreaSize": "Tamaño del área",
+					"addArmor": "Armadura",
+					"addCondition": "Estado",
+					"addDC": "CD",
+					"addDice": "Dados",
+					"addDuration": "Duración",
+					"addFlatDamage": "Daño fijo",
+					"addRange": "Distancia",
+					"addReach": "Alcance",
+					"addTargets": "Objetivos"
+				},
+				"perUpcastStep": "Por paso potenciado",
+				"removeChoice": "Quitar opción",
+				"removeDelta": "Quitar incremento",
+				"targetEffect": "Objetivo del efecto",
+				"targetEffectAuto": "Auto (primera coincidencia)",
+				"targetEffectHint": "Añadir efectos en el panel de Activación para elegir allí los objetivos.",
+				"targetEffectPlaceholder": "ID de efecto",
+				"upcastChoices": "Elecciones potenciadas",
+				"value": "Valor"
+			},
+			"spellProperties": "Propiedades de conjuro",
+			"spellSchool": "Escuela de magia",
+			"spellTier": "Nivel de conjuro"
+		},
+		"spellGrants": {
+			"backgroundHeader": "Background Spells",
+			"changeSelection": "Change",
+			"chooseSchools": "Choose {count} school(s):",
+			"chooseSchoolsFallback": "Choose Schools",
+			"chooseSpells": "Choose {count} spell(s):",
+			"chooseSpellsFallback": "Choose Spells",
+			"confirmSelection": "Confirm",
+			"deselectSpell": "Deselect spell",
+			"deselectSpellAriaLabel": "Deselect {spellName}",
+			"editSelection": "Edit Spell Selection",
+			"grantedSchoolLabel": "Granted School",
+			"grantedSpells": "Granted Spells",
+			"header": "Starting Spells",
+			"hideOptions": "Hide Options",
+			"hintAncestry": "Your ancestry grants you these spells.",
+			"hintBackground": "Your background grants you these spells.",
+			"hintClass": "Your class grants you these spells.",
+			"levelUpHeader": "Granted Spells",
+			"levelUpHint": "You gain the following spells at this level.",
+			"schoolsLabel": "Schools",
+			"schoolsSelected": "Selected: {schools}",
+			"selectSpell": "Select spell",
+			"selectSpellAriaLabel": "Select {spellName}",
+			"selectedCount": "{selected} of {total} selected",
+			"selectedSchoolLabel": "Selected School",
+			"selectedSpellLabel": "Selected Spell",
+			"spellsFromSelection": "Spells from Selected School(s)",
+			"spellsLabel": "Spells",
+			"spellsSelected": "Selected: {spells}"
+		},
 		"spells": {
 			"schools": {
 				"fire": "Fuego",
@@ -606,6 +2075,22 @@
 				"necrotic": "Necrótico",
 				"radiant": "Radiante",
 				"wind": "Viento"
+			},
+			"spellUpcastDialog": {
+				"appliedEffect": "Efecto aplicado",
+				"castSpell": "Lanzar conjuro",
+				"chooseEnhancement": "Elige potenciación",
+				"manaInfo": {
+					"currentManaCost": "Costo de maná actual {currentCost}",
+					"upcastManaCost": "Costo de maná potenciado: {upcastCost} (Total)"
+				},
+				"maxTier": "Nivel máx",
+				"slider": {
+					"level": "Nivel potenciado",
+					"max": "Nivel Máx {tier}",
+					"min": "Nivel Mín {tier}"
+				},
+				"upcastHeading": "{spellName} potenciado"
 			},
 			"tierHeadings": {
 				"tier0": "Trucos y Conjuros de Utilidad",
@@ -630,42 +2115,71 @@
 				"tier7": "Nivel 7",
 				"tier8": "Nivel 8",
 				"tier9": "Nivel 9"
-			},
-			"spellUpcastDialog": {
-				"upcastHeading": "{spellName} potenciado",
-				"castSpell": "Lanzar conjuro",
-				"manaInfo": {
-					"currentManaCost": "Costo de maná actual {currentCost}",
-					"upcastManaCost": "Costo de maná potenciado: {upcastCost} (Total)"
-				},
-				"slider": {
-					"level": "Nivel potenciado",
-					"min": "Nivel Mín {tier}",
-					"max": "Nivel Máx {tier}"
-				},
-				"chooseEnhancement": "Elige potenciación",
-				"appliedEffect": "Efecto aplicado",
-				"maxTier": "Nivel máx"
 			}
+		},
+		"startingEquipment": {
+			"editSelection": "Editar selección de equipo inicial",
+			"equipmentDescription": "Recibes los siguientes objetos:",
+			"equipmentSelected": "Equipo inicial seleccionado",
+			"equipmentTitle": "Equipo inicial",
+			"goldDescription": "Recibes 50 po para comprar tu propio equipo",
+			"goldSelected": "Oro inicial (50 po) seleccionado",
+			"goldTitle": "Oro inicial",
+			"hint": "Los héroes empiezan con el equipo listado para su clase y trasfondo, o bien, 50 po para comprar su equipo",
+			"noEquipmentDefined": "Equipo inicial no definido",
+			"unknownItem": "Objeto desconocido"
 		},
 		"statArrays": {
 			"balanced": "Equilibrado",
 			"minMax": "Mín-Máx",
 			"standard": "Estándar"
 		},
-		"sheets": {
-			"background": "Hoja de trasfondos de Nimble",
-			"boon": "Hoja de dones de Nimble",
-			"class": "Hoja de clase de Nimble",
-			"feature": "Hoja de rasgos de Nimble",
-			"monsterFeature": "Hoja de rasgos de monstruo de Nimble",
-			"npc": "Hoja de PNJ de Nimble",
-			"object": "Hoja de objetos de Nimble",
-			"playerCharacter": "Hoja de personaje jugador de Nimble",
-			"ancestry": "Hoja de orígenes de Nimble",
-			"soloMonster": "Hoja de monstruo en solitario de Nimble",
-			"spell": "Hoja de conjuros de Nimble",
-			"subclass": "Hoja de subclases de Nimble"
+		"statConfig": {
+			"advOnSaves": "Vent. salvaciones",
+			"applyChanges": "Aplicar cambios",
+			"asiTotal": "ASI total",
+			"baseScoresWarning": "Tus puntuaciones base no coinciden con ningún conjunto de atributos de Nimble.",
+			"baseStats": "Atributos base",
+			"baseStatsSubtitle": "Atributos iniciales de creación de personaje",
+			"bonusTotal": "Bono total",
+			"bonuses": "Bonos",
+			"bonusesSubtitle": "Modificadores de dotes, objetos y otras fuentes",
+			"boon": "Don",
+			"cancel": "Cancelar",
+			"capstone": "Límite",
+			"capstoneTooltip": "+1 a cualquiera 2 de tus atributos",
+			"currentArray": "Conjunto actual",
+			"disOnSaves": "Desv. salvaciones",
+			"dropHere": "Soltar aquí",
+			"editBaseStats": "Editar atributos base",
+			"finalModifier": "Modificador final",
+			"keyStat": "Atributo Clave",
+			"keyStats": "Atributos Clave",
+			"noBonuses": "Sin bonos de dotes u objetos",
+			"noStatIncreasesYet": "Mejoras de atributo aún no disponibles",
+			"primary": "Primario",
+			"primaryTooltip": "+1 a uno de tus Atributos Clave",
+			"secondary": "Secundario",
+			"secondaryTooltip": "+1 a uno de tus Atributos Secundarios",
+			"selectArray": "Seleccionar conjunto",
+			"specialBoonAvailable": "Don especial disponible",
+			"statAtMax": "Stat is at its maximum (+5 from increases)",
+			"statIncreaseHint": "Las mejores de atributo se obtienen a niveles 4, 5, 8, 9, 12, 13, 16, 17 y 20",
+			"statIncreases": "Mejoras de atributo",
+			"statIncreasesSubtitle": "Mejoras obtenidas a niveles de clase concretos",
+			"toggleStatIncrease": "Alternar mejoras de atributo"
+		},
+		"statIncrease": {
+			"capstoneDescription": "Selecciona 2 atributos para aumentar en +1 cada uno",
+			"header": "Mejora de atributo"
+		},
+		"subclassSelection": {
+			"deselectSubclass": "Deselect this subclass",
+			"deselectSubclassAriaLabel": "Deselect {subclassName}",
+			"header": "Subclass",
+			"noSubclasses": "No subclasses available for this class. You may need to create or import subclass items.",
+			"selectSubclass": "Select this subclass",
+			"selectSubclassAriaLabel": "Select {subclassName}"
 		},
 		"templateShapes": {
 			"circle": "Círculo",
@@ -683,868 +2197,374 @@
 			"turn": "turno"
 		},
 		"ui": {
+			"applyCondition": "Aplicar estado",
+			"bio": "Biografía",
 			"cancel": "Cancelar",
+			"clearAll": "Borrar todo",
 			"combatTracker": {
-				"scrollbar": "Barra de desplazamiento de orden de turnos en combate",
 				"hitPoints": "Puntos de golpe",
 				"hitPointsHidden": "Puntos de golpe ocultos",
 				"mana": "Maná",
+				"removeFromCombat": "Eliminar del combate",
+				"scrollbar": "Barra de desplazamiento de orden de turnos en combate",
 				"wounds": "Heridas",
 				"woundsHidden": "Heridas ocultas",
-				"woundsValue": "Heridas {current}/{max}",
-				"removeFromCombat": "Eliminar del combate"
+				"woundsValue": "Heridas {current}/{max}"
 			},
+			"condition": "Estado",
+			"conditionDescriptionUnavailable": "<p>Sin descripción disponible.</p>",
+			"conditions": "Estados",
+			"conditionsFor": "Estados: {name}",
+			"core": "Principal",
 			"ctSettings": {
-				"sizeSection": "Tamaño",
-				"width": "Ancho",
+				"actionColor": "Color de acción",
+				"allowPlayersViewExpandedMonsters": "Permitir a los jugadores vizualizar monstruos expandidos",
 				"cardSize": "Tamaño de tarjeta",
+				"colorBlue": "Azul",
+				"colorGreen": "Verde",
+				"colorOrange": "Naranja",
+				"colorPurple": "Púrpura",
+				"colorRed": "Rojo",
+				"colorWhite": "Blanco",
+				"colorYellow": "Amarillo",
+				"colorsSection": "Colores",
+				"drawersAndBarsSection": "Cajones y barras",
+				"hoverColor": "Hover Color",
+				"hpBarTextHealthState": "Estado de salud",
+				"hpBarTextNone": "Ninguno",
+				"hpBarTextPercentage": "PG %",
 				"layoutSection": "Disposición",
 				"leftToRightOrdering": "Orden de izquierda a derecha",
-				"permissionsSection": "Permisos",
-				"allowPlayersViewExpandedMonsters": "Permitir a los jugadores vizualizar monstruos expandidos",
-				"drawersAndBarsSection": "Cajones y barras",
-				"resourceDrawerOpensOnHover": "Cajón de recursos se abre al pasar por encima",
-				"playerHpBarText": "Barra de texto de PG de jugador",
-				"showNonPlayerHpBar": "Mostrar barra de PG de PNJ",
 				"nonPlayerHpBarText": "Texto de barra de PG de PNJ",
-				"colorsSection": "Colores",
-				"actionColor": "Color de acción",
+				"permissionsSection": "Permisos",
+				"playerHpBarText": "Barra de texto de PG de jugador",
 				"reactionColor": "Color de reacción",
-				"colorWhite": "Blanco",
-				"colorGreen": "Verde",
-				"colorRed": "Rojo",
-				"colorOrange": "Naranja",
-				"colorYellow": "Amarillo",
-				"colorBlue": "Azul",
-				"colorPurple": "Púrpura",
-				"hpBarTextNone": "Ninguno",
-				"hpBarTextHealthState": "Estado de salud",
-				"hpBarTextPercentage": "PG %"
+				"resourceDrawerOpensOnHover": "Cajón de recursos se abre al pasar por encima",
+				"showNonPlayerHpBar": "Mostrar barra de PG de PNJ",
+				"sizeSection": "Tamaño",
+				"width": "Ancho"
 			},
+			"duration": "Duración",
+			"failedToRemoveCondition": "No ha sido posible quitar el estado.",
+			"failedToRemoveEffect": "No ha sido posible quitar el efecto.",
+			"failedToUpdateCondition": "No ha sido posible actualizar el estado.",
+			"features": "Rasgos",
 			"heroicActions": {
-				"title": "Acciones heroicas",
-				"reactionsTitle": "Reacciones heroicas",
+				"actions": {
+					"assess": {
+						"description": "Analiza tu entorno",
+						"label": "Evaluar"
+					},
+					"attack": {
+						"description": "Ataca con un arma",
+						"label": "Ataque"
+					},
+					"move": {
+						"description": "Reubícate en el campo de batalla",
+						"label": "Mover"
+					},
+					"spell": {
+						"description": "Canaliza energía mágica",
+						"label": "Lanzar un conjuro"
+					}
+				},
+				"actionsHeader": "Acciones",
+				"addAdditionalAction": "Add 1 action",
+				"assess": {
+					"anticipateDanger": {
+						"chatTitle": "Evaluar: Anticipar el peligro",
+						"description": "Todos los dados primarios contra ti se reducen en 1 este asalto.",
+						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar pero falló en anticipar el peligro.</p>",
+						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar y anticipar el peligro. Todos los dados primarios contra él <strong>se reducen en 1</strong> este asalto.</p>",
+						"title": "Anticipar el peligro"
+					},
+					"askQuestion": {
+						"chatTitle": "Evaluar: Haz una pregunta",
+						"description": "Pregúntale al DJ sobre la situación. Debe contestarte con sinceridad en función de lo que perciba tu personaje.",
+						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar pero no logró obtener ninguna información útil.</p>",
+						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar y puede hacerle una pregunta al DJ. El DJ responderá con sinceridad.</p>",
+						"title": "Haz una pregunta"
+					},
+					"cannotTargetSelf": "No puedes apuntarte a ti mismo. Elige a otra criatura del escenario.",
+					"checkVsDC": "Prueba de {skill} contra una CD {dc}",
+					"createOpening": {
+						"chatTitle": "Evaluar: Crear una apertura",
+						"description": "Tu siguiente ataque contra el objetivo obtiene un +1 al Dado primario este asalto.",
+						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar a <strong>{target}</strong> pero falló en crear una apertura.</p>",
+						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar a <strong>{target}</strong> y crear una apertura. Su siguiente ataque contra <strong>{target}</strong> obtiene <strong>+1 al Dado primario </strong>.</p>",
+						"title": "Crear una apertura"
+					},
+					"dialogTitle": "Acción de Evaluar",
+					"failure": "Fallo",
+					"header": "Evaluar",
+					"noTargetsHint": "Apunta a un token en el escenario para seleccionarlo",
+					"rollToAssess": "Tirar {skill}",
+					"selectOption": "Selecciona una opción",
+					"selectSkill": "Selecciona una habilidad",
+					"selectSkillPlaceholder": "Selecciona una habilidad...",
+					"selectTarget": "Objetivo",
+					"success": "Éxito",
+					"tooManyTargetsHint": "Esta acción solo puede tener un objetivo a la vez."
+				},
+				"baseEffect": "Efecto",
+				"cantrip": "Truco",
+				"collapse": "Colapsar",
+				"confirmAttack": {
+					"confirm": "Attack",
+					"confirmQuestion": "Do you still want to attack?"
+				},
+				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
+				"confirmEndTurnEarlyTitle": "End Turn Early?",
+				"confirmMove": {
+					"cancel": "Cancel",
+					"confirm": "Move",
+					"confirmQuestion": "Do you still want to move?",
+					"noActionsMessage": "You've used all your actions this round.",
+					"title": "Move?"
+				},
+				"confirmReaction": {
+					"activeTurnMessage": "Reactions are performed when it is not your turn.",
+					"cancel": "Cancel",
+					"confirm": "Use Reaction",
+					"confirmQuestion": "Do you still want to use the {reaction} reaction?",
+					"noActionsMessage": "Reactions cost 1 action and you have none remaining.",
+					"spentMessage": "Each reaction can be performed no more than 1/round, and you've already used {reaction} this round.",
+					"title": "Use Reaction?"
+				},
+				"customReactions": {
+					"empty": "No custom reactions. Check \"Is Reaction\" under a feature, spell, or item's Activation settings to show it here.",
+					"tabLabel": "Custom Reactions",
+					"title": "Custom Reactions"
+				},
+				"endTurn": "End Turn",
+				"enterCombat": "Entra en combate para usar acciones",
+				"expand": "Expandir",
+				"feature": "Rasgo",
+				"help": {
+					"actions": {
+						"assess": {
+							"description": "Haz una prueba de habilidad CD 12 para: hacer una pregunta (el DJ responde con sinceridad), crear una apertura (+1 al Dado primario contra el objetivo), o anticipar el peligro (-1 al Dado primario contra ti). ¡No puedes volver a utilizar la misma habilidad en un encuentro!",
+							"title": "Evaluar"
+						},
+						"attack": {
+							"description": "Tira el dado indicado en tu arma o habilidad. Sacar un 1 es un fallo. Sacar el máximo en el Dado Primario es un golpe crítico: tira de nuevo y ¡súmalo! Los críticos ignoran la armadura.",
+							"title": "Atacar"
+						},
+						"footer": "Ataques apresurados: ataques adicionales después del primero tienen desventaja acumulativa.",
+						"free": {
+							"description": "Cosas sencillas como abrir una puerta sin llave, gritar algo, soltar un objeto, o terminar concentración. Limitadas a una vez por turno.",
+							"title": "Acciones gratuitas"
+						},
+						"intro": "En tu turno, tienes 3 acciones. Las recuperas al final de tu turno, ¡así que úsalas todas! En general, cada cosa cuesta 1 acción.",
+						"move": {
+							"description": "Mueve hasta tu velocidad (por defecto 6 casillas). Puedes dividir el movimiento e intercalarlo con otras acciones y Mover varias veces por turno. El terreno difícil reduce la velocidad a mitad.",
+							"title": "Mover"
+						},
+						"spell": {
+							"description": "Requiere de una mano libre (o foco) y la capacidad de hablar. Cuesta una cantidad de maná igual al nivel del conjuro (los trucos son gratis). Puedes potenciar conjuros para efectos mayores.",
+							"title": "Lanzar un conjuro"
+						}
+					},
+					"dialogTitle": "Referencia de combate",
+					"reactions": {
+						"defend": {
+							"description": "Reduce el daño de un único ataque en una cantidad igual a tu Armadura. A discreción del DJ, algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
+							"title": "Defender"
+						},
+						"footer": "Puedes combinar reacciones (como Interponer o Defender) si tienes suficientes acciones disponibles.",
+						"help": {
+							"description": "Concede ventaja a un aliado en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada.",
+							"title": "Ayudar"
+						},
+						"interpose": {
+							"description": "Si una criatura que se encuentra como máximo a 2 casillas fuera golpeada por un ataque, podrías empujarla fuera de la trayectoria y convertirte en el nuevo objetivo del ataque. Para hacerlo, ocupas su espacio y la mueves a una casilla adyacente a tu elección.",
+							"title": "Interponer"
+						},
+						"intro": "Las reacciones cuestan 1 acción y se utilizan cuando no es tu turno. Cada reacción sólo puede usarse una vez por asalto, con lo que empezarás tu siguiente turno con menos acciones.",
+						"opportunity": {
+							"description": "Haz un ataque cuerpo a cuerpo con desventaja contra un enemigo adyacente cuando éste se aleja voluntariamente. Los monstruos no pueden realizar ataques de oportunidad, sólo los héroes pueden.",
+							"title": "Ataque de oportunidad"
+						}
+					},
+					"tabs": {
+						"actions": "Acciones",
+						"reactions": "Reacciones"
+					},
+					"tooltip": "¿Qué puedo hacer en combate?"
+				},
+				"higherLevelEffect": "A niveles altos",
+				"initiativeAlreadyRolled": "Ya se ha tirado la iniciativa para este combatiente.",
+				"macroWarnings": {
+					"mustBeInCombat": "You must be in combat to use {action}",
+					"selectCharacterToken": "Select a character token to use this action"
+				},
+				"mana": "{cost} de maná",
+				"move": {
+					"actionCost": "Esto costará 1 acción",
+					"cancel": "Cancelar",
+					"chatMessage": "<p><strong>{name}</strong> utilizó una acción para <strong>Mover</strong>, desplazándose {speed} casillas.</p>",
+					"confirm": "Usar acción para mover",
+					"confirmDescription": "Confirma que has reubicado a tu personaje en el campo de batalla.",
+					"confirmMove": "Confirmar Mover",
+					"confirmTitle": "¿Moviste?",
+					"cost": "1 acción",
+					"dialogTitle": "Acción de Mover",
+					"noMovement": "Sin velocidad de movimiento disponible",
+					"panelDescription": "Mueve hasta tu velocidad. Puedes divir el movimiento entre otras acciones.",
+					"spaces": "casillas",
+					"speed": "Velocidad",
+					"speedBadge": "Velocidad {speed}",
+					"title": "Mover",
+					"yourMovement": "Tu movimiento"
+				},
+				"moveAction": "<p><strong>{name}</strong> usó una acción para mover.</p>",
+				"noActions": "No te quedan acciones",
+				"noPermissionEndTurn": "Sin permiso para finalizar turnos.",
+				"noPermissionRollInitiative": "Sin permiso para tirar iniciativa.",
+				"noSpells": "No te quedan conjuros",
+				"noSpellsFound": "No se han encontrado conjuros.",
+				"noWeapons": "No se han encontrado armas ni rasgos de ataque.",
+				"outsideCombat": "No estás en combate",
+				"pip": {
+					"clickToRestore": "Presiona para recuperar acción",
+					"clickToSpend": "Presiona para utilizar acción",
+					"restoreAction": "Recuperar acción {number}",
+					"spendAction": "Utilizar acción {number}"
+				},
+				"rangeDistance": "Distancia: {distance}",
+				"reachDistance": "Alcance: {distance}",
+				"reactionAvailability": {
+					"available": "{label} disponible",
+					"spent": "{label} utilizado"
+				},
+				"reactionLabels": {
+					"defend": "Defender",
+					"help": "Ayudar",
+					"interpose": "Interponer",
+					"opportunityAttack": "Ataque de oportunidad"
+				},
 				"reactions": {
 					"actionCost": "Esto requerirá 1 acción (reacción)",
-					"cost": "1 acción",
-					"armor": "Armadura",
 					"advantage": "Ventaja",
+					"armor": "Armadura",
+					"cost": "1 acción",
+					"defend": {
+						"armorBadge": "Armadura {armor}",
+						"armorValue": "Tu armadura",
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Defender</strong>, reduciendo el daño por un valor igual a Armadura ({armor}).</p>",
+						"confirm": "Defender",
+						"description": "Reduce el daño de un único ataque en una cantidad igual a tu Armadura. A discreción del DJ, algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
+						"label": "Defender",
+						"panelDescription": "Reduce el daño de un únio ataque en <strong> Armadura ({armor})</strong>. Algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
+						"title": "Defender"
+					},
 					"disadvantage": "Desventaja",
-					"weapon": "Arma",
+					"help": {
+						"advantageBadge": "Ventaja",
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Ayudar</strong> a <strong>{target}</strong>, dándole ventaja en su tirada.</p>",
+						"confirm": "Ayudar a un aliado",
+						"description": "Concede ventaja a un aliado en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada.",
+						"effect": "Concede ventaja a un aliado en su tirada.",
+						"helping": "Ayudando",
+						"label": "Ayudar",
+						"panelDescription": "Concede <strong>ventaja</strong> a un aliado en una tirada explicando cómo ayudas. El DJ puede pedir una prueba de habilidad. Limitada a una reacción de Ayudar por tirada.",
+						"tip": "¡Piensa rápido cuando un aliado falle! Una explicación creativa puede convertir un fracaso en un éxito.",
+						"title": "Ayudar"
+					},
+					"interpose": {
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Interponer</strong>, poniéndose delante de <strong>{target}</strong> para convertirse en el objetivo del ataque.</p>",
+						"confirm": "Interponer",
+						"description": "Cuando una criatura a 2 casillas sea alcanzada por un ataque, puedes apartarla a un lado para convertirte en el nuevo objetivo. Ocupas su casillas y la mueves a una casilla adyacente de tu elección.",
+						"label": "Interponer",
+						"panelDescription": "Cuando un aliado a <strong>2 casillas</strong> sea golpeado, empújales a un lado para convertirte en el nuevo objetivo. Ocupas su casilla y le mueves a una adyacente.",
+						"protecting": "Protegiendo",
+						"range": "Alcance: 2 casillas",
+						"rangeBadge": "2 casillas",
+						"tip": "¡Combínala con <strong>Defender</strong> para reducir el daño que recibas!",
+						"title": "Interponer"
+					},
+					"interposeAndDefend": {
+						"chatMessage": "<p><strong>{name}</strong> utiliza <strong>2 reacciones</strong> para <strong>Interponer</strong> </strong> y <strong>Defender</strong> a <strong>{target}, reduciendo el daño por el valor de su armadura ({armor}).</p>",
+						"confirm": "Interponer y defender",
+						"cost": "2 acciones"
+					},
+					"multipleTargets": "Varios objetivos seleccionados",
+					"opportunity": {
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para hacer un <strong>ataque de oportunidad</strong> con su {weapon}.</p>",
+						"confirm": "Haz un ataque de oportunidad",
+						"description": "Haz un ataque cuerpo a cuerpo contra un enemigo adyacente si se aleja por su propia voluntad. Los monstruos no pueden hacer ataques de oportunidad, sólo los héroes pueden.",
+						"disadvantage": "Este ataque se realiza con desventaja",
+						"disadvantageBadge": "Desventaja",
+						"label": "Ataque de oportunidad",
+						"noMeleeWeapons": "No hay armas cuerpo a cuerpo disponibles",
+						"panelDescription": "Ataca a un enemigo adyacente que se aleja voluntariamente. Sólo los héroes pueden hacer ataques de oportunidad.",
+						"selectWeapon": "Selecciona un arma cuerpo a cuerpo",
+						"title": "Ataque de oportunidad",
+						"unarmedOpportunity": "Ataque de oportunidad (desarmado)"
+					},
+					"selectOneTarget": "Selecciona un único objetivo",
 					"spaces": "{count} casillas",
 					"target": "Asignar objetivo",
 					"targetAlly": "Asignar token aliado como objetivo",
 					"targetAllyOptional": "Asignar token aliado como objetivo (opcional)",
 					"targetEnemy": "Asignar token enemigo como objetivo (opcional)",
-					"selectOneTarget": "Selecciona un único objetivo",
-					"multipleTargets": "Varios objetivos seleccionados",
-					"defend": {
-						"label": "Defender",
-						"description": "Reduce el daño de un único ataque en una cantidad igual a tu Armadura. A discreción del DJ, algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
-						"panelDescription": "Reduce el daño de un únio ataque en <strong> Armadura ({armor})</strong>. Algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
-						"title": "Defender",
-						"armorValue": "Tu armadura",
-						"armorBadge": "Armadura {armor}",
-						"confirm": "Defender",
-						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Defender</strong>, reduciendo el daño por un valor igual a Armadura ({armor}).</p>"
-					},
-					"interpose": {
-						"label": "Interponer",
-						"description": "Cuando una criatura a 2 casillas sea alcanzada por un ataque, puedes apartarla a un lado para convertirte en el nuevo objetivo. Ocupas su casillas y la mueves a una casilla adyacente de tu elección.",
-						"panelDescription": "Cuando un aliado a <strong>2 casillas</strong> sea golpeado, empújales a un lado para convertirte en el nuevo objetivo. Ocupas su casilla y le mueves a una adyacente.",
-						"title": "Interponer",
-						"range": "Alcance: 2 casillas",
-						"rangeBadge": "2 casillas",
-						"tip": "¡Combínala con <strong>Defender</strong> para reducir el daño que recibas!",
-						"confirm": "Interponer",
-						"protecting": "Protegiendo",
-						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Interponer</strong>, poniéndose delante de <strong>{target}</strong> para convertirse en el objetivo del ataque.</p>"
-					},
-					"interposeAndDefend": {
-						"confirm": "Interponer y defender",
-						"cost": "2 acciones",
-						"chatMessage": "<p><strong>{name}</strong> utiliza <strong>2 reacciones</strong> para <strong>Interponer</strong> </strong> y <strong>Defender</strong> a <strong>{target}, reduciendo el daño por el valor de su armadura ({armor}).</p>"
-					},
-					"opportunity": {
-						"label": "Ataque de oportunidad",
-						"description": "Haz un ataque cuerpo a cuerpo contra un enemigo adyacente si se aleja por su propia voluntad. Los monstruos no pueden hacer ataques de oportunidad, sólo los héroes pueden.",
-						"panelDescription": "Ataca a un enemigo adyacente que se aleja voluntariamente. Sólo los héroes pueden hacer ataques de oportunidad.",
-						"title": "Ataque de oportunidad",
-						"disadvantage": "Este ataque se realiza con desventaja",
-						"disadvantageBadge": "Desventaja",
-						"selectWeapon": "Selecciona un arma cuerpo a cuerpo",
-						"noMeleeWeapons": "No hay armas cuerpo a cuerpo disponibles",
-						"unarmedOpportunity": "Ataque de oportunidad (desarmado)",
-						"confirm": "Haz un ataque de oportunidad",
-						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para hacer un <strong>ataque de oportunidad</strong> con su {weapon}.</p>"
-					},
-					"help": {
-						"label": "Ayudar",
-						"description": "Concede ventaja a un aliado en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada.",
-						"panelDescription": "Concede <strong>ventaja</strong> a un aliado en una tirada explicando cómo ayudas. El DJ puede pedir una prueba de habilidad. Limitada a una reacción de Ayudar por tirada.",
-						"title": "Ayudar",
-						"effect": "Concede ventaja a un aliado en su tirada.",
-						"advantageBadge": "Ventaja",
-						"tip": "¡Piensa rápido cuando un aliado falle! Una explicación creativa puede convertir un fracaso en un éxito.",
-						"confirm": "Ayudar a un aliado",
-						"helping": "Ayudando",
-						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Ayudar</strong> a <strong>{target}</strong>, dándole ventaja en su tirada.</p>"
-					}
+					"weapon": "Arma"
 				},
-				"move": {
-					"title": "Mover",
-					"cost": "1 acción",
-					"speed": "Velocidad",
-					"panelDescription": "Mueve hasta tu velocidad. Puedes divir el movimiento entre otras acciones.",
-					"spaces": "casillas",
-					"confirmMove": "Confirmar movimiento"
-				},
-				"enterCombat": "Entra en combate para usar acciones",
-				"outsideCombat": "No estás en combate",
-				"noActions": "No te quedan acciones",
-				"noSpells": "No te quedan conjuros",
-				"endTurn": "End Turn",
+				"reactionsTitle": "Reacciones heroicas",
 				"rollInitiative": "Tirar iniciativa",
-				"useActionsFirst": "Utiliza tus acciones primero",
-				"noPermissionEndTurn": "Sin permiso para finalizar turnos.",
-				"noPermissionRollInitiative": "Sin permiso para tirar iniciativa.",
-				"initiativeAlreadyRolled": "Ya se ha tirado la iniciativa para este combatiente.",
 				"selectAttack": "Ataque",
 				"selectSpell": "Lanzar conjuro",
-				"noWeapons": "No se han encontrado armas ni rasgos de ataque.",
-				"noSpellsFound": "No se han encontrado conjuros.",
-				"unarmedStrike": "Ataque sin armas",
-				"feature": "Rasgo",
-				"mana": "{cost} de maná",
-				"thrown": "Lanzado: {distance}",
-				"baseEffect": "Efecto",
-				"higherLevelEffect": "A niveles altos",
-				"cantrip": "Truco",
 				"spellTier": "Nivel {tier}",
-				"rangeDistance": "Distancia: {distance}",
-				"reachDistance": "Alcance: {distance}",
+				"targetLabel": "Objetivo:",
 				"targetTypes": {
+					"aoe": "AdE",
+					"multiTarget": "{count} objetivos",
 					"self": "A uno mismo",
 					"singleTarget": "Objetivo único",
-					"twoTargets": "2 objetivos",
-					"multiTarget": "{count} objetivos",
-					"aoe": "AdE"
+					"twoTargets": "2 objetivos"
 				},
-				"pip": {
-					"spendAction": "Utilizar acción {number}",
-					"restoreAction": "Recuperar acción {number}",
-					"clickToSpend": "Presiona para utilizar acción",
-					"clickToRestore": "Presiona para recuperar acción"
-				},
-				"actionsHeader": "Acciones",
-				"moveAction": "<p><strong>{name}</strong> usó una acción para mover.</p>",
-				"reactionLabels": {
-					"defend": "Defender",
-					"interpose": "Interponer",
-					"opportunityAttack": "Ataque de oportunidad",
-					"help": "Ayudar"
-				},
-				"reactionAvailability": {
-					"available": "{label} disponible",
-					"spent": "{label} utilizado"
-				},
-				"actions": {
-					"attack": {
-						"label": "Ataque",
-						"description": "Ataca con un arma"
-					},
-					"spell": {
-						"label": "Lanzar un conjuro",
-						"description": "Canaliza energía mágica"
-					},
-					"move": {
-						"label": "Mover",
-						"description": "Reubícate en el campo de batalla"
-					},
-					"assess": {
-						"label": "Evaluar",
-						"description": "Analiza tu entorno"
-					}
-				},
-				"help": {
-					"dialogTitle": "Referencia de combate",
-					"tooltip": "¿Qué puedo hacer en combate?",
-					"tabs": {
-						"actions": "Acciones",
-						"reactions": "Reacciones"
-					},
-					"actions": {
-						"intro": "En tu turno, tienes 3 acciones. Las recuperas al final de tu turno, ¡así que úsalas todas! En general, cada cosa cuesta 1 acción.",
-						"footer": "Ataques apresurados: ataques adicionales después del primero tienen desventaja acumulativa.",
-						"attack": {
-							"title": "Atacar",
-							"description": "Tira el dado indicado en tu arma o habilidad. Sacar un 1 es un fallo. Sacar el máximo en el Dado Primario es un golpe crítico: tira de nuevo y ¡súmalo! Los críticos ignoran la armadura."
-						},
-						"spell": {
-							"title": "Lanzar un conjuro",
-							"description": "Requiere de una mano libre (o foco) y la capacidad de hablar. Cuesta una cantidad de maná igual al nivel del conjuro (los trucos son gratis). Puedes potenciar conjuros para efectos mayores."
-						},
-						"move": {
-							"title": "Mover",
-							"description": "Mueve hasta tu velocidad (por defecto 6 casillas). Puedes dividir el movimiento e intercalarlo con otras acciones y Mover varias veces por turno. El terreno difícil reduce la velocidad a mitad."
-						},
-						"assess": {
-							"title": "Evaluar",
-							"description": "Haz una prueba de habilidad CD 12 para: hacer una pregunta (el DJ responde con sinceridad), crear una apertura (+1 al Dado primario contra el objetivo), o anticipar el peligro (-1 al Dado primario contra ti). ¡No puedes volver a utilizar la misma habilidad en un encuentro!"
-						},
-						"free": {
-							"title": "Acciones gratuitas",
-							"description": "Cosas sencillas como abrir una puerta sin llave, gritar algo, soltar un objeto, o terminar concentración. Limitadas a una vez por turno."
-						}
-					},
-					"reactions": {
-						"intro": "Las reacciones cuestan 1 acción y se utilizan cuando no es tu turno. Cada reacción sólo puede usarse una vez por asalto, con lo que empezarás tu siguiente turno con menos acciones.",
-						"footer": "Puedes combinar reacciones (como Interponer o Defender) si tienes suficientes acciones disponibles.",
-						"defend": {
-							"title": "Defender",
-							"description": "Reduce el daño de un único ataque en una cantidad igual a tu Armadura. A discreción del DJ, algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto)."
-						},
-						"interpose": {
-							"title": "Interponer",
-							"description": "Si una criatura que se encuentra como máximo a 2 casillas fuera golpeada por un ataque, podrías empujarla fuera de la trayectoria y convertirte en el nuevo objetivo del ataque. Para hacerlo, ocupas su espacio y la mueves a una casilla adyacente a tu elección."
-						},
-						"opportunity": {
-							"title": "Ataque de oportunidad",
-							"description": "Haz un ataque cuerpo a cuerpo con desventaja contra un enemigo adyacente cuando éste se aleja voluntariamente. Los monstruos no pueden realizar ataques de oportunidad, sólo los héroes pueden."
-						},
-						"help": {
-							"title": "Ayudar",
-							"description": "Concede ventaja a un aliado en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada."
-						}
-					}
-				},
-				"collapse": "Colapsar",
-				"expand": "Expandir",
+				"thrown": "Lanzado: {distance}",
+				"title": "Acciones heroicas",
+				"unarmedStrike": "Ataque sin armas",
 				"unknown": "Desconocido",
-				"targetLabel": "Objetivo:",
-				"assess": {
-					"dialogTitle": "Acción de Evaluar",
-					"header": "Evaluar",
-					"selectOption": "Selecciona una opción",
-					"selectSkill": "Selecciona una habilidad",
-					"selectSkillPlaceholder": "Selecciona una habilidad...",
-					"selectTarget": "Objetivo",
-					"noTargetsHint": "Apunta a un token en el escenario para seleccionarlo",
-					"tooManyTargetsHint": "Esta acción solo puede tener un objetivo a la vez.",
-					"cannotTargetSelf": "No puedes apuntarte a ti mismo. Elige a otra criatura del escenario.",
-					"rollToAssess": "Tirar {skill}",
-					"checkVsDC": "Prueba de {skill} contra una CD {dc}",
-					"success": "Éxito",
-					"failure": "Fallo",
-					"askQuestion": {
-						"title": "Haz una pregunta",
-						"chatTitle": "Evaluar: Haz una pregunta",
-						"description": "Pregúntale al DJ sobre la situación. Debe contestarte con sinceridad en función de lo que perciba tu personaje.",
-						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar y puede hacerle una pregunta al DJ. El DJ responderá con sinceridad.</p>",
-						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar pero no logró obtener ninguna información útil.</p>"
-					},
-					"createOpening": {
-						"title": "Crear una apertura",
-						"chatTitle": "Evaluar: Crear una apertura",
-						"description": "Tu siguiente ataque contra el objetivo obtiene un +1 al Dado primario este asalto.",
-						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar a <strong>{target}</strong> y crear una apertura. Su siguiente ataque contra <strong>{target}</strong> obtiene <strong>+1 al Dado primario </strong>.</p>",
-						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar a <strong>{target}</strong> pero falló en crear una apertura.</p>"
-					},
-					"anticipateDanger": {
-						"title": "Anticipar el peligro",
-						"chatTitle": "Evaluar: Anticipar el peligro",
-						"description": "Todos los dados primarios contra ti se reducen en 1 este asalto.",
-						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar y anticipar el peligro. Todos los dados primarios contra él <strong>se reducen en 1</strong> este asalto.</p>",
-						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar pero falló en anticipar el peligro.</p>"
-					}
-				},
-				"move": {
-					"title": "Mover",
-					"cost": "1 acción",
-					"speed": "Velocidad",
-					"panelDescription": "Mueve hasta tu velocidad. Puedes divir el movimiento entre otras acciones.",
-					"confirmMove": "Confirmar Mover",
-					"dialogTitle": "Acción de Mover",
-					"confirmTitle": "¿Moviste?",
-					"confirmDescription": "Confirma que has reubicado a tu personaje en el campo de batalla.",
-					"yourMovement": "Tu movimiento",
-					"spaces": "casillas",
-					"noMovement": "Sin velocidad de movimiento disponible",
-					"actionCost": "Esto costará 1 acción",
-					"confirm": "Usar acción para mover",
-					"cancel": "Cancelar",
-					"speedBadge": "Velocidad {speed}",
-					"chatMessage": "<p><strong>{name}</strong> utilizó una acción para <strong>Mover</strong>, desplazándose {speed} casillas.</p>"
-				}
+				"useActionsFirst": "Utiliza tus acciones primero"
 			},
-			"clearAll": "Borrar todo",
-			"core": "Principal",
-			"conditions": "Estados",
-			"condition": "Estado",
 			"inventory": "Inventario",
-			"features": "Rasgos",
-			"spells": "Hechizos",
-			"bio": "Biografía",
-			"settings": "Configuración",
-			"duration": "Duración",
-			"unlimited": "Sin límite",
-			"source": "Origen",
-			"sourceNone": "Ninguna",
+			"loading": "Loading...",
 			"noConditions": "Sin estados",
 			"noEffects": "Sin efectos",
-			"temporaryEffects": "Efectos temporales",
 			"passiveEffects": "Efectos pasivos",
-			"searchConditions": "Buscar estados",
-			"showActiveOnly": "Mostrar activos",
-			"showAllConditions": "Mostrar todos",
 			"removeCondition": "Quitar estado",
 			"removeEffect": "Quitar efecto",
-			"failedToRemoveCondition": "No ha sido posible quitar el estado.",
-			"failedToUpdateCondition": "No ha sido posible actualizar el estado.",
-			"failedToRemoveEffect": "No ha sido posible quitar el efecto.",
-			"applyCondition": "Aplicar estado",
-			"conditionsFor": "Estados: {name}",
-			"conditionDescriptionUnavailable": "<p>Sin descripción disponible.</p>"
+			"searchConditions": "Buscar estados",
+			"settings": "Configuración",
+			"showActiveOnly": "Mostrar activos",
+			"showAllConditions": "Mostrar todos",
+			"source": "Origen",
+			"sourceNone": "Ninguna",
+			"spells": "Hechizos",
+			"temporaryEffects": "Efectos temporales",
+			"unlimited": "Sin límite",
+			"viewDetails": "View Details"
+		}
+	},
+	"TYPES": {
+		"Actor": {
+			"character": "Personaje",
+			"minion": "Esbirro",
+			"npc": "PNJ",
+			"soloMonster": "Monstruo en solitario"
 		},
-		"hitDice": {
-			"selectToRoll": "Selecciona Dados de Golpe para tirar",
-			"depleted": "Gastados",
-			"removeDie": "Elimina un d{size}",
-			"addDie": "Añade un d{size}",
-			"selectAllDie": "Elegir todos d{size}",
-			"currentHitDice": "Dados de Golpe actuales",
-			"currentHitDiceValue": "Valor actual de Dado de Golpe",
-			"maxHitDice": "Dado de Golpe máximo",
-			"editCurrentHitDice": "Editar Dados de Golpe actuales",
-			"rollHitDiceButton": "Tirar Dados de Golpe",
-			"bonusHitDice": "Bono de Dado de Golpe",
-			"bonusHitDiceHint": "Bonos de Dados de Golpe procedentes de mejoras, ancenstros u otros rasgos",
-			"bonusDieName": "Nombre",
-			"noBonusDice": "Sin bono de dado",
-			"addBonusDie": "Añadir bono de dado",
-			"decreaseBonusDie": "Disminuye bono en d{size}",
-			"increaseBonusDie": "Incrementa bono en d{size}",
-			"totalHitDice": "Total de Dados de Golpe",
-			"saveChanges": "Guardar cambios",
-			"noHitDiceYet": "Aún no hay Dados de Golpe.",
-			"hitDiceSizeIncreased": "Todos los tamaños de los Dados de Golpe incrementan {steps} paso(s).",
-			"fromSource": "de {source}",
-			"addStrBonus": "Suma el bono de FUE ({bonus} por dado)",
-			"applyHealingToHP": "Aplicar curación a PG",
-			"rollHitDice": "Tirar {count} {dieWord} de Golpe",
-			"max": "Máx",
-			"selectAll": "Seleccionar todo",
-			"heading": "Dado de Golpe",
-			"configureHitDice": "Configurar Dados de Golpe",
-			"primaryDieValue": "Valor del Dado Primario",
-			"primaryDieModifier": "Modificador del Dado Primario",
-			"setPrimaryDie": "Establecer Dado Primario",
-			"setPrimaryDieModifier": "Establecer modificador de Dado Primario",
-			"situationalModifiers": "Modificadores circunstanciales"
-		},
-		"hitPoints": {
-			"startingHp": "PG iniciales",
-			"classTotal": "Total de clase",
-			"levelUpHpGains": "Obtención de PG por subida de nivel",
-			"level": "Niv {level}",
-			"bonusHp": "Bono de PG",
-			"bonusHpHint": "Bonificador fijo de mejoras, objetos y otras fuentes",
-			"fromRules": "De objetos y reglas",
-			"totalFromRules": "Total de las reglas",
-			"totalMaxHp": "Máximo total de PG",
-			"saveChanges": "Guardar cambios"
-		},
-		"manaConfig": {
-			"configureMana": "Configurar maná",
-			"classContributions": "Contribuciones de maná por clase",
-			"classContributionsHint": "Maná obtenido según fórmula basada en tus clases",
-			"noClassContributions": "Sin contribuciones a la fórmula de maná por clases.",
-			"formulaLabel": "Fórmula",
-			"baseMana": "Maná base",
-			"baseManaHint": "Maná fijo antes de las contribuciones de fórmula por clase",
-			"recoveryProfile": "Perfil de recuperación",
-			"initiativeInfo": "La recuperación de iniciativa es actualmente solo informativa.",
-			"totalMaxMana": "Maná máximo total",
-			"saveChanges": "Guardar cambios"
-		},
-		"safeRest": {
-			"dialogTitle": "{name}: Descanso Seguro",
-			"recoveryPreview": "Vista previa de recuperación",
-			"hitPoints": "Puntos de golpe",
-			"hpRecovery": "+{amount} PG ({current} → {max})",
-			"alreadyFull": "Ya al tope",
-			"tempHp": "PG temporales",
-			"removed": "-{amount} eliminados",
-			"hitDice": "Dado de Golpe",
-			"hitDieRecovery": "+{amount} d{size}",
-			"mana": "Maná",
-			"manaRecovery": "+{amount} ({current} → {max})",
-			"wounds": "Heridas",
-			"noWounds": "Sin heridas",
-			"wound": "-1 herida ({current} → {next})",
-			"safeRestButton": "Descanso Seguro",
-			"allResourcesFull": "Todos los recursos están a capacidad máxima.",
-			"cardHeading": "Descanso Seguro",
-			"cardSubheading": "Recuperación total",
-			"hpRestored": "PG restaurados",
-			"tempHpRemoved": "PG temporales eliminados",
-			"manaRestored": "Maná recuperado",
-			"hitDiceRecovered": "Dados de Golpe recuperados",
-			"woundsHealed": "Heridas curadas",
-			"alreadyFullyRested": "Ya completamente descansado"
-		},
-		"fieldRest": {
-			"restType": "Tipo de descanso",
-			"catchBreath": "Recuperar aliento",
-			"catchBreathDescription": "10 min de descanso. Tira para curar por Dado de Golpe + FUE.",
-			"makeCamp": "Acampar",
-			"makeCampDescription": "8 horas de descanso. Recibe el valor máximo de Dado de Golpe + FUE.",
-			"hitDiceToSpend": "Dados de Golpe a utilizar",
-			"decreaseDie": "Disminuir d{size}",
-			"increaseDie": "Incrementar d{size}",
-			"maxDie": "Máx d{size}",
-			"max": "Máx",
-			"restAndSpendHitDie": "Descansar y gastar {count} Dados de Golpe",
-			"restAndSpendHitDice": "Descanar y gastar {count} Dados de Golpe",
-			"restWithoutSpending": "Descansar sin gastar Dados de Golpe",
-			"modifiers": "Modificadores",
-			"advantageWhen": "Tira con ventaja cuando {condition}",
-			"maximizeHitDice": "Siempre maximiza los Dados de Golpe",
-			"noModifiers": "Sin modificadores especiales",
-			"maximized": "Maximizado",
-			"withAdvantage": "Con ventaja",
-			"noHitDiceAvailable": "Sin Dados de Golpe disponibles para gastar",
-			"cardHeading": "Descanso al Raso: {restType}",
-			"hitDice": "Dado de Golpe",
-			"healing": "Curación",
-			"rolled": "Tirada",
-			"advantage": "Ventaja",
-			"restedWithoutSpending": "Descanso sin gastar Dados de Golpe",
-			"manaRestored": "Maná recuperado"
-		},
-		"npcSheet": {
-			"armor": "Armadura",
-			"decreaseArmor": "Disminuir Armadura",
-			"increaseArmor": "Incrementar Armadura",
-			"features": "Rasgos",
-			"createFeature": "Crear rasgo",
-			"expandAllDescriptions": "Expandir todas las descripciones",
-			"collapseAllDescriptions": "Contraer todas las descripciones",
-			"editAttackSequence": "Editar secuencia de ataque",
-			"configureItem": "Configurar {name}",
-			"deleteItem": "Eliminar {name}",
-			"collapseDescription": "Contraer descripción para {name}",
-			"revealDescription": "Mostrar descripción para {name}",
-			"melee": "Cuerpo a cuerpo",
-			"reach": "Alcance {distance}",
-			"range": "Distancia {distance}",
-			"dropError": "No se pudo procesar el objeto soltado. Por favor, informa de este problema."
-		},
-		"npcConfig": {
-			"level": "Nivel",
-			"creatureType": "Tipo de criatura",
-			"sizeCategory": "Categoría de tamaño",
-			"flunky": "Lacayo"
-		},
-		"classSheet": {
-			"identifier": "Identificador",
-			"classComplexity": "Complejidad de la clase",
-			"keyStats": "Atributos Clave",
-			"hitDieSize": "Tamaño de Dado de Golpe",
-			"manaFormula": "Fórmula de maná",
-			"manaRecovery": "Recuperación de maná",
-			"armorProficiencies": "Competencias con armaduras",
-			"weaponProficiencies": "Competencias con armas",
-			"featureGroups": "Grupos de rasgos",
-			"none": "Ninguno",
-			"addWeaponProficiency": "Añadir competencia con armas",
-			"deleteWeaponProficiency": "Eliminar competencia con armas",
-			"addFeatureGroup": "Añadir grupo de rasgos",
-			"deleteFeatureGroup": "Eliminar grupo de rasgos",
-			"description": "Descripción",
-			"config": "Config",
-			"rules": "Reglas"
-		},
-		"skillsConfig": {
-			"skill": "Habilidad",
-			"abilityModifier": "Modificador de habilidad",
-			"skillBonus": "Bono de habilidad",
-			"skillPoints": "Puntos de habilidad",
-			"total": "Total",
-			"decrementSkillPoints": "Reducir puntos de habilidad",
-			"incrementSkillPoints": "Aumentar puntos de habilidad"
-		},
-		"movementConfig": {
-			"gridSpacesNote": "Todas las medidas están en casillas.",
-			"total": "Total",
-			"spaces": "casillas"
-		},
-		"proficiencyConfig": {
-			"armorProficiencies": "Competencias con armaduras",
-			"languageProficiencies": "Competencias con idiomas",
-			"weaponProficiencies": "Competencias con armas",
-			"addWeaponProficiency": "Añadir competencia con arma",
-			"deleteWeaponProficiency": "Elimiinar competencia con arma",
-			"none": "Ninguno"
-		},
-		"scalingDialog": {
-			"level": "Nivel",
-			"formula": "Fórmula",
-			"scalingByCharacterLevel": "Escalado por nivel de personaje",
-			"scaleByLevel": "Escalado por nivel",
-			"scaleBySpellLevel": "Escalado por nivel de conjuro"
-		},
-		"editCurrentHitDiceDialog": {
-			"currentHitDice": "Dados de Golpe actuales",
-			"empty": "Vacío",
-			"max": "Máximo",
-			"restoreAll": "Recuperar todos",
-			"total": "Total",
-			"save": "Guardar",
-			"removeOneDie": "Elimina un d{die}",
-			"addOneDie": "Añade un d{die}",
-			"setToMax": "Establece d{die} al máximo"
-		},
-		"itemMacro": {
-			"command": "Comando"
-		},
-		"chatTargets": {
-			"targets": "Objetivos",
-			"noTargetsSelected": "Objetivos no seleccionados",
-			"addSelectedTokensAsTargets": "Añade los tokens seleccionados como objetivos",
-			"addTargetedTokensAsTargets": "Añade los tokens señalados como objetivos",
-			"removeTarget": "Deseleccionar objetivo"
-		},
-		"chatEffects": {
-			"noEffect": "Sin efecto"
-		},
-		"activationEffects": {
-			"effects": "Efectos",
-			"addEffect": "Añadir efecto",
-			"condition": "Estado",
-			"damage": "Daño",
-			"damageOutcome": "Resultado del daño",
-			"healing": "Curación",
-			"note": "Nota",
-			"onFailedSave": "Al fallar la salvación",
-			"onPassedSave": "Al superar la salvación",
-			"onCriticalHit": "Con un golpe crítico",
-			"onHit": "Al impactar",
-			"onMiss": "Al fallar",
-			"fullDamage": "Daño completo",
-			"halfDamage": "Daño mitad",
-			"general": "General",
-			"flavor": "Descripción",
-			"reminder": "Recordatorio",
-			"warning": "Advertencia",
-			"canMiss": "Puede fallar",
-			"canCrit": "Puede ser crítico",
-			"noAdditionalEffects": "Sin efectos adicionales"
-		},
-		"characterSettings": {
-			"actorImageSettings": "Ajustes de imagen de actor",
-			"xOffset": "X-Offset (px)",
-			"yOffset": "Y-Offset (px)",
-			"scale": "Escala (%)",
-			"embeddedDocumentSettings": "Ajustes de documento integrado",
-			"executeItemMacros": "Ejecutar macros de objeto al activar objeto",
-			"showEmbeddedDocumentImages": "Mostrar imágenes de documento integrado",
-			"inventorySettings": "Ajustes de inventario",
-			"trackInventorySlots": "Rastrear espacios de inventario",
-			"includeCurrencyBulk": "Incluir automáticamente el total de moneda",
-			"bonusInventorySlots": "Bonificador de espacios de inventario",
-			"decrementBonusInventorySlots": "Reducir bonificador de espacios de inventario",
-			"incrementBonusInventorySlots": "Aumentar bonificador de espacios de inventario",
-			"skillSettings": "Ajustes de habilidades",
-			"useTwoColumnSkillsView": "Visualización en dos columnas",
-			"showPassiveSkillScores": "Mostrar puntuaciones pasivas de habilidades",
-			"spellSettings": "Ajustes de conjuros",
-			"highestUnlockedSpellTier": "Nivel más alto de conjuro desbloqueado",
-			"decrementHighestUnlockedSpellTier": "Reducir nivel más alto de conjuro desbloqueado",
-			"incrementHighestUnlockedSpellTier": "Aumentar nivel más alto de conjuro desbloqueado",
-			"resetSpellTier": "Reiniciar nivel de conjuro",
-			"resetHighestUnlockedSpellTier": "Reiniciar nivel más alto de conjuro desbloqueado"
-		},
-		"classFeatureSelection": {
-			"header": "Rasgos de clase",
-			"editSelection": "Editar selección de rasgos de clase",
-			"hint": "Los siguientes rasgos están disponibles a nivel 1 para tu clase. Algunos se consiguen automáticamente, pero otros debes elegirlos.",
-			"chooseOne": "(Elige uno)",
-			"noDescriptionAvailable": "Sin descripción disponible.",
-			"selected": "Seleccionado",
-			"confirmSelection": "Confirmar selección"
-		},
-		"classSelection": {
-			"stepSelectClass": "Paso 1: Elige una clase",
-			"noDescriptionAvailable": "Sin descripción disponible",
-			"classComplexity": "Complejidad de la clase:",
-			"editClassSelection": "Modificar selección de clase",
-			"unknown": "Desconocido",
-			"noClassesAvailable": "No hay clases disponibles en los compendios de este mundo."
-		},
-		"savingThrowConfig": {
-			"dis": "Desventaja",
-			"normal": "Normal",
-			"adv": "Ventaja",
-			"advMultiplied": "Ventaja ×{count}",
-			"disMultiplied": "Desventaja ×{count}",
-			"currentSelection": "Selección actual",
-			"select": "Seleccionar {save}"
-		},
-		"combatControls": {
-			"endCombatTitle": "¿Finalizar combate?",
-			"endCombatContent": "¿Finalizar este encuentro de combate?",
-			"endCombat": "Finalizar combate",
-			"continueCombat": "Continuar combate",
-			"previousRound": "Asalto anterior",
-			"previousTurn": "Turno anterior",
-			"nextTurn": "Turno siguiente",
-			"nextRound": "Asalto siguiente"
-		},
-		"itemConfig": {
-			"areaSize": "Tamaño de área",
-			"targets": "Objetivos",
-			"target": "Objetivo",
-			"duration": "Duración",
-			"acquireTargetsFromTemplate": "Adquirir objetivos de plantilla",
-			"targetCount": "Cantidad de objetivos",
-			"targetRestrictions": "Restricciones de objetivos",
-			"attackType": "Tipo de ataque",
-			"distance": "Distancia",
-			"attackTypes": {
-				"none": "Ninguno",
-				"melee": "Cuerpo a cuerpo",
-				"reach": "Alcance",
-				"range": "Distancia"
-			}
-		},
-		"spellConfig": {
-			"identifier": "Identificador",
-			"spellProperties": "Propiedades de conjuro",
-			"spellTier": "Nivel de conjuro",
-			"spellSchool": "Escuela de magia",
-			"description": {
-				"baseEffect": "Efecto de conjuro base",
-				"higherLevelEffect": "Efecto de nivel superior",
-				"upcastEffect": "Efecto potenciado"
-			},
-			"jsonEditor": {
-				"switchToVisual": "Cambiar al editor visual",
-				"switchToJson": "Cambiar al editor JSON",
-				"heading": "Datos de conjuro (JSON)",
-				"invalidJson": "JSON no válido"
-			},
-			"scaling": {
-				"heading": "Potenciación de conjuro",
-				"modes": {
-					"none": "Ninguno",
-					"upcast": "Potenciado",
-					"upcastChoice": "Elección de potenciado"
-				},
-				"perUpcastStep": "Por paso potenciado",
-				"upcastChoices": "Elecciones potenciadas",
-				"noDeltas": "No se han configurado incrementos de potenciación.",
-				"noChoices": "No hay opciones configuradas.",
-				"addDelta": "Añadir incremento",
-				"removeDelta": "Quitar incremento",
-				"addChoice": "Añadir opción",
-				"removeChoice": "Quitar opción",
-				"choiceLabel": "Elección de etiqueta",
-				"choiceLabelPlaceholder": "e.g. Daño adicional",
-				"deltas": "Incrementos",
-				"operation": "Operación",
-				"value": "Valor",
-				"count": "Total",
-				"die": "Dado",
-				"condition": "Estado",
-				"conditionPlaceholder": "e.g. ardiente",
-				"targetEffect": "Objetivo del efecto",
-				"targetEffectAuto": "Auto (primera coincidencia)",
-				"targetEffectPlaceholder": "ID de efecto",
-				"targetEffectHint": "Añadir efectos en el panel de Activación para elegir allí los objetivos.",
-				"operations": {
-					"addFlatDamage": "Daño fijo",
-					"addDice": "Dados",
-					"addReach": "Alcance",
-					"addRange": "Distancia",
-					"addTargets": "Objetivos",
-					"addAreaSize": "Tamaño del área",
-					"addDC": "CD",
-					"addArmor": "Armadura",
-					"addDuration": "Duración",
-					"addCondition": "Estado"
-				}
-			}
-		},
-		"compendium": {
-			"filterSpells": "Filtrar conjuros",
-			"filterAll": "Todos"
-		},
-		"settings": {
-			"autoExpandRolls": {
-				"name": "Expandir tiradas automáticamente",
-				"hint": "Al activarse, los detalles de la tirada de dados se muestran directamente debajo de cada tirada en los mensajes del chat, sin necesidad de pasar el cursor"
-			},
-			"ncswEnabled": {
-				"name": "Habilitar sistema de combate",
-				"hint": "Mostrar panel de sistema de combate durante el combate. Ayuda a los DJ asignar a los héroes como objetivos y hacer tiradas de ataque de lacayos, monstruos y monstruos legendarios."
-			}
-		},
-		"combatTrackerSettings": {
-			"title": "Ajustes de Gestor de Combate",
-			"introText": "Los controles de animación del turno actual están activos. Todas las demás secciones permanecen solo en vista previa.",
-			"currentRolePreview": "Vista previa del rol activo:",
-			"gm": "DJ",
-			"player": "Jugador",
-			"currentTurnAnimations": "Animaciones actuales del turno",
-			"pulseAnimation": "Animación pulsante",
-			"borderGlow": "Brillo del borde",
-			"edgeCrawler": "Recorrido del borde",
-			"combatTrackerLocation": "Localización del Gestor de Combate",
-			"layoutPosition": "Posición de la interfaz",
-			"layoutHint": "Elige dónde ubicar el gestor en la pantalla.",
-			"playerPermissions": "Permisos de jugadores",
-			"allowPlayersToMoveCards": "Permitir que otros jugadores muevan la ficha de otro jugador",
-			"turnManagementSafety": "Seguridad de gestión de turnos",
-			"warnOnEndTurn": "Advertir a los jugadores al pulsar \"Finalizar turno\" con las acciones restantes",
-			"roleBasedControls": "Controles según rol (Vista previa)",
-			"roleBasedControlsHint": "La matriz de permisos mostrada a continuación solo funciona como interfaz; aún no controla nada.",
-			"setting": "Ajuste",
-			"gmView": "Vista de DJ",
-			"gmModify": "Modificar DJ",
-			"playerView": "Vista de jugador",
-			"playerModify": "Modificar jugador",
-			"extensibility": "Extensibilidad",
-			"extensibilityHint": "Con el tiempo se podrán agregar más configuraciones del rastreador de combate a esta ventana.",
-			"close": "Cerrar",
-			"currentTurnAnimationsLabel": "Animaciones de turno activas",
-			"combatTrackerLocationLabel": "Ubicación del Gestor de Combate",
-			"playersCanMoveCards": "Los jugadores pueden mover las fichas de otros jugadores",
-			"warnOnEndTurnLabel": "Advierte al finalizar turno con las acciones restantes"
-		},
-		"nimbleCombatSystemWindow": {
-			"title": "Sistema de combate",
-			"logo": {
-				"alt": "Nimble"
-			},
-			"tooltips": {
-				"dragToMove": "Arrastrar para mover"
-			},
-			"targets": {
-				"label": "Objetivos:",
-				"hint": "Elige los token que no sean monstruos",
-				"targetAria": "Seleccionar objetivo {name}",
-				"untargetAria": "Deseleccionar objetivo {name}",
-				"selectTargetTooltip": "Elige un objetivo",
-				"playerFallback": "Jugador"
-			},
-			"sections": {
-				"monsters": "Monstruos",
-				"minions": "Esbirros"
-			},
-			"actions": {
-				"selectAction": "Elige una acción",
-				"noActionsLeft": "No quedan acciones"
-			},
-			"buttons": {
-				"roll": "Tirar",
-				"rollEndTurn": "Tirar + Fin turno",
-				"close": "Cerrar"
-			},
-			"chat": {
-				"heading": "Grupo de esbirros",
-				"subheading": "Grupo de esbirros {groupLabel}",
-				"outcomeHit": "Acierto",
-				"outcomeMiss": "Fallo",
-				"memberFallback": "Esbirro",
-				"actionFallback": "Acción",
-				"totalDamageLabel": "Daño total",
-				"applyDamage": "Aplicar daño"
-			},
-			"warnings": {
-				"endTurnNotApplied": "No se aplicó fin de turno porque este grupo no está activo.",
-				"memberReason": "{memberCombatantId}: {reason}",
-				"reasons": {
-					"noActionSelected": "Ninguna acción seleccionada",
-					"noActionsRemaining": "Sin acciones disponibles",
-					"actionNotFound": "Acción seleccionada inexistente",
-					"actorCannotActivate": "El actor no puede activar el objeto",
-					"activationFailed": "Activación fallida"
-				}
-			},
-			"notifications": {
-				"noActiveCombatForGroupAttack": "No hay combate activo para ataque en grupo.",
-				"selectTargetBeforeGroupAttack": "Selecciona un token objetivo antes del ataque en grupo.",
-				"noGroupAttacksRolled": "No se realizaron ataques en grupo.",
-				"groupAttackFailed": "Ataque en grupo fallido. Revisa la consola para más información.",
-				"noActiveCombatForMonsterAttack": "No hay combate activo para el ataque del monstruo.",
-				"selectActionBeforeRoll": "Selecciona una acción para {name} antes de tirar.",
-				"actionUnavailableForMonster": "Acción no disponible para {name}.",
-				"monsterNoLongerInCombat": "{name} ya no está en combate.",
-				"monsterDefeatedCannotAct": "{name} ha sido derrotado y no puede actuar.",
-				"monsterNoActionsLeft": "{name} sin acciones.",
-				"monsterCannotActivateActions": "{name} no puede activar acciones.",
-				"monsterAttackFailed": "Ataque de monstruo fallido. Revisa la consola para más información.",
-				"selectedGroupHasNoAliveMinions": "Grupo seleccionado sin esbirros vivos para atacar.",
-				"couldNotOpenPanel": "No se pudo abrir el panel de ataque en grupo. Revisa la consola para más información."
-			}
-		},
-		"migration": {
-			"world": {
-				"starting": "Migrando datos del mundo a Nimble v{version}.",
-				"completed": "Migración de mundo finalizada.",
-				"completedWithErrors": "Migración del mundo finalizada con {count} error(es). Comprueba la consola del navegador (F12) para detalles adicionales."
-			},
-			"compendium": {
-				"starting": "Migrando compendio: {packName}...",
-				"finished": "Migración de compendio finalizada: {packName}."
-			}
-		},
-		"actorImport": {
-			"buttonLabel": "Importar Actor",
-			"dialogTitle": "Importar de Nimble Nexus",
-			"searchPlaceholder": "Buscar monstruos...",
-			"selectAll": "Seleccionar todo",
-			"deselectAll": "Deseleccionar todo",
-			"importSelected": "Importar selección",
-			"createFolder": "Crear carpeta para archivos importados",
-			"noFolder": "Sin carpeta (raíz)",
-			"noResults": "No se han encontrado monstruos",
-			"loading": "Cargando...",
-			"loadMore": "Cargar más",
-			"successMessage": "{count} monstruo(s) correctamente importados",
-			"partialSuccessMessage": "{successful} monstruo(s) importados, {failed} no importados",
-			"filters": {
-				"level": "Nivel",
-				"type": "Tipo",
-				"role": "Rol",
-				"clearFilters": "Borrar todos los filtros",
-				"allLevels": "Todos los niveles",
-				"allTypes": "Todos los tipos",
-				"allRoles": "Todos los roles",
-				"levelFraction": {
-					"quarter": "1/4",
-					"third": "1/3",
-					"half": "1/2"
-				},
-				"monsterTypes": {
-					"standard": "Estándar",
-					"legendary": "Legendario",
-					"minion": "Esbirro"
-				},
-				"roles": {
-					"ambusher": "Acechador",
-					"aoe": "AdE",
-					"controller": "Controlador",
-					"defender": "Defensor",
-					"melee": "Cuerpo a cuerpo",
-					"ranged": "A distancia",
-					"skirmisher": "Hostigador",
-					"striker": "Atacante",
-					"summoner": "Invocador",
-					"support": "Apoyo"
-				}
-			}
+		"Item": {
+			"ancestry": "Origen",
+			"background": "Trasfondo",
+			"boon": "Don",
+			"class": "Clase",
+			"feature": "Rasgo",
+			"monsterFeature": "Rasgo de monstruo",
+			"object": "Objeto",
+			"spell": "Conjuro",
+			"subclass": "Subclase"
 		}
 	}
 }
