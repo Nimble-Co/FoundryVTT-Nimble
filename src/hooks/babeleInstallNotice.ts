@@ -19,6 +19,6 @@ export default function registerBabeleInstallNotice(): void {
 		const lang = game.i18n?.lang;
 		if (isEnglish(lang)) return;
 		if (isBabeleActive()) return;
-		showInstallNotice(lang ?? '');
+		showInstallNotice(lang!);
 	});
 }

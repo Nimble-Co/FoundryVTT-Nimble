@@ -1,131 +1,131 @@
 {
 	"label": "Nimble Backgrounds",
 	"entries": {
-		"Wily Underdog": {
-			"name": "Wily Underdog",
-			"description": "<p>(Req. 0 or negative STR at character creation.) Reroll a failed STR-related roll (e.g., STR attack, STR save, Might check) and use another stat instead, 1/day.</p>"
-		},
-		"Wild One": {
-			"name": "Wild One",
-			"description": "<p>Whether it is the sticks or flowers in your hair, your smell, or the way you carry yourself, wild creatures are less frightened of you and more willing to aid you. +1 Naturecraft. While Field Resting, roll your Hit Dice with advantage while in the wild.</p><hr><p>+1 Naturecraft [A]</p>",
-			"rules": {
-				"index:1": {
-					"label": "Wild One"
-				}
-			}
-		},
-		"What? I've Been Around": {
-			"name": "What? I've Been Around",
-			"description": "<p>1/per location (or at the GM's discretion). You happen to know JUST the person who has the information you're looking for, or could get you out of a jam, and… Roll [[/r 1d20]]:</p><ul><li><p>1–5. They want you DEAD.</p></li><li><p>6–12. You owe them money.</p></li><li><p>13–19. They can be convinced to help you..</p></li><li><p>20. They are your biggest fan/are madly in love with you.</p></li></ul>"
-		},
-		"Tradesman/Artisan": {
-			"name": "Tradesman/Artisan",
-			"description": "<p>Choose a profession (Baker/Cook, Smith, Stonemason, Weaver, Leatherworker, etc.). Checks you make related to that profession are made with advantage. You also retain special knowledge related to your profession.</p>"
-		},
-		"Taste for the Finer Things": {
-			"name": "Taste for the Finer Things",
-			"description": "<p>You always have up-to-date knowledge of the customs and dress of the upper classes and may even know many of their secrets. Advantage on Influence checks with the upper class.</p>"
-		},
-		"Survivalist": {
-			"name": "Survivalist",
-			"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Survivalist"
-				}
-			}
-		},
-		"So Dumb I'm Smart Sometimes": {
-			"name": "So Dumb I'm Smart Sometimes",
-			"description": "<p>(Req. 0 or negative INT at character creation.) </p><p>Reroll an INT-related skill check, 1/day. </p><p>Reroll a failed INT save with advantage, 1/Safe Rest.</p>"
+		"(Former) Con Artist": {
+			"description": "<p>You can forge most documents or mimic voices flawlessly. You have a criminal contact in most major cities. However, your reputation often precedes you—until you prove yourself to be trustworthy.</p>",
+			"name": "(Former) Con Artist"
 		},
 		"(Secretly) Undead": {
-			"name": "(Secretly) Undead",
-			"description": "<p>Unnatural Resilience: You are immune to disease and do not need to eat, drink, or breathe. Children, animals, and Celestials are uneasy in your presence; many will be horrified to discover your true nature.</p>"
+			"description": "<p>Unnatural Resilience: You are immune to disease and do not need to eat, drink, or breathe. Children, animals, and Celestials are uneasy in your presence; many will be horrified to discover your true nature.</p>",
+			"name": "(Secretly) Undead"
 		},
-		"Raised by Goblins": {
-			"name": "Raised by Goblins",
-			"description": "<p>You speak Goblin natively (much better than one who has learned it later in life). You automatically notice and can avoid crudely- made traps and have advantage to notice and disarm more sophisticated traps.</p><hr><p>You speak Goblin [A]</p>"
-		},
-		"Made a BAD Choice": {
-			"name": "Made a BAD Choice",
-			"description": "<p>Start with 500 or 1000 extra gold, or an uncommon/rare magical item (that your GM allows). Gain an equally powerful curse or enemy who wants it back. If you choose this background, your GM may allow you to choose another.</p>"
-		},
-		"Home at Sea": {
-			"name": "Home at Sea",
-			"description": "<p>Recover twice as many Wounds and HP while resting on a ship or near water. You can fill in for a first mate or captain in a pinch. Advantage on water-related skill checks.</p>"
-		},
-		"History Buff": {
-			"name": "History Buff",
-			"description": "<p>Advantage on all Lore checks related to knowledge about items, facts, or events that happened more than 100 years ago.</p>"
-		},
-		"Haunted Past": {
-			"name": "Haunted Past",
-			"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p>"
-		},
-		"(Former) Con Artist": {
-			"name": "(Former) Con Artist",
-			"description": "<p>You can forge most documents or mimic voices flawlessly. You have a criminal contact in most major cities. However, your reputation often precedes you—until you prove yourself to be trustworthy.</p>"
-		},
-		"Fey Touched": {
-			"name": "Fey Touched",
-			"description": "<p>You take half damage from all magical effects, double from weapons made of metal (before armor is applied).</p>"
-		},
-		"Fearless": {
-			"name": "Fearless",
-			"description": "<p>You are immune to the Frightened condition. +1 Initiative. –1 Armor.</p><hr><p>+1 Initiative [A]</p><p>-1 Armor [A]</p>",
+		"Academy Dropout": {
+			"description": "<p>School just isn't for everyone! You learn by experience in the real world (or at least that's what you tell yourself). Learn any 1 Utility Spell.</p>",
+			"name": "Academy Dropout",
 			"rules": {
-				"fearless-frightened-immunity": {
-					"label": "Fearless"
+				"academyDropoutUtilitySpell": {
+					"label": "Choose a Utility Spell"
 				}
 			}
 		},
-		"Ear to the Ground": {
-			"name": "Ear to the Ground",
-			"description": "<p>Advantage on checks to know or obtain gossip for events that will soon happen or have happened less than 1 year ago.</p>"
+		"Accidental Acrobat": {
+			"description": "<p>(Req. 0 or negative DEX at character creation.) Whenever you fail a DEX-related roll (e.g., DEX attack, DEX save, Stealth check, Finesse check), you may roll again. If you still fail, the consequences are BAD.</p>",
+			"name": "Accidental Acrobat"
 		},
-		"Devoted Protector": {
-			"name": "Devoted Protector",
-			"description": "<p>Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</p><hr><p>+3 Max Wounds [A]</p>",
-			"rules": {
-				"SjzXlgusu0bgvTmU": {
-					"label": "Devoted Protector"
-				}
-			}
+		"Acrobat": {
+			"description": "<p>Can be thrown by a larger ally, REALLY far. Half damage from falling and forced movement.</p>",
+			"name": "Acrobat"
 		},
-		"Bumblewise": {
-			"name": "Bumblewise",
-			"description": "<p>(Req. 0 or negative WIL at character creation.) A result of 1 or less on any WIL-related roll counts as a natural 20 (WIL save, Naturecraft, Perception, Influence, or Insight check).</p>"
+		"At Home Underground": {
+			"description": "<p>You can dig twice as fast as others. Safe resting locations underground always count as Lavish lodging for you. You struggle to rest (INT save) while it's raining. “Water… from the SKY?!“</p>",
+			"name": "At Home Underground"
 		},
 		"Back Out of Retirement": {
-			"name": "Back Out of Retirement",
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">You've forgotten more than most adventurers these days know! Talk with your GM, what made you come out of retirement?</span></p><ul><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>Let's see if I remember how to do this...</strong>You may gain 1 Wound to use an ability or cast a spell as if you were 1 level higher.</span></p></li><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>These old bones.</strong> Your age has long since started to show. –1 max Wounds.</span></p></li></ul><hr><p>Max Wounds -1 [A]</p>",
+			"name": "Back Out of Retirement",
 			"rules": {
 				"WFInD4PHMq5LSi0E": {
 					"label": "These Old Bones"
 				}
 			}
 		},
-		"At Home Underground": {
-			"name": "At Home Underground",
-			"description": "<p>You can dig twice as fast as others. Safe resting locations underground always count as Lavish lodging for you. You struggle to rest (INT save) while it's raining. “Water… from the SKY?!“</p>"
+		"Bumblewise": {
+			"description": "<p>(Req. 0 or negative WIL at character creation.) A result of 1 or less on any WIL-related roll counts as a natural 20 (WIL save, Naturecraft, Perception, Influence, or Insight check).</p>",
+			"name": "Bumblewise"
 		},
-		"Acrobat": {
-			"name": "Acrobat",
-			"description": "<p>Can be thrown by a larger ally, REALLY far. Half damage from falling and forced movement.</p>"
-		},
-		"Accidental Acrobat": {
-			"name": "Accidental Acrobat",
-			"description": "<p>(Req. 0 or negative DEX at character creation.) Whenever you fail a DEX-related roll (e.g., DEX attack, DEX save, Stealth check, Finesse check), you may roll again. If you still fail, the consequences are BAD.</p>"
-		},
-		"Academy Dropout": {
-			"name": "Academy Dropout",
-			"description": "<p>School just isn't for everyone! You learn by experience in the real world (or at least that's what you tell yourself). Learn any 1 Utility Spell.</p>",
+		"Devoted Protector": {
+			"description": "<p>Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</p><hr><p>+3 Max Wounds [A]</p>",
+			"name": "Devoted Protector",
 			"rules": {
-				"academyDropoutUtilitySpell": {
-					"label": "Choose a Utility Spell"
+				"SjzXlgusu0bgvTmU": {
+					"label": "Devoted Protector"
 				}
 			}
+		},
+		"Ear to the Ground": {
+			"description": "<p>Advantage on checks to know or obtain gossip for events that will soon happen or have happened less than 1 year ago.</p>",
+			"name": "Ear to the Ground"
+		},
+		"Fearless": {
+			"description": "<p>You are immune to the Frightened condition. +1 Initiative. –1 Armor.</p><hr><p>+1 Initiative [A]</p><p>-1 Armor [A]</p>",
+			"name": "Fearless",
+			"rules": {
+				"fearless-frightened-immunity": {
+					"label": "Fearless"
+				}
+			}
+		},
+		"Fey Touched": {
+			"description": "<p>You take half damage from all magical effects, double from weapons made of metal (before armor is applied).</p>",
+			"name": "Fey Touched"
+		},
+		"Haunted Past": {
+			"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p>",
+			"name": "Haunted Past"
+		},
+		"History Buff": {
+			"description": "<p>Advantage on all Lore checks related to knowledge about items, facts, or events that happened more than 100 years ago.</p>",
+			"name": "History Buff"
+		},
+		"Home at Sea": {
+			"description": "<p>Recover twice as many Wounds and HP while resting on a ship or near water. You can fill in for a first mate or captain in a pinch. Advantage on water-related skill checks.</p>",
+			"name": "Home at Sea"
+		},
+		"Made a BAD Choice": {
+			"description": "<p>Start with 500 or 1000 extra gold, or an uncommon/rare magical item (that your GM allows). Gain an equally powerful curse or enemy who wants it back. If you choose this background, your GM may allow you to choose another.</p>",
+			"name": "Made a BAD Choice"
+		},
+		"Raised by Goblins": {
+			"description": "<p>You speak Goblin natively (much better than one who has learned it later in life). You automatically notice and can avoid crudely- made traps and have advantage to notice and disarm more sophisticated traps.</p><hr><p>You speak Goblin [A]</p>",
+			"name": "Raised by Goblins"
+		},
+		"So Dumb I'm Smart Sometimes": {
+			"description": "<p>(Req. 0 or negative INT at character creation.) </p><p>Reroll an INT-related skill check, 1/day. </p><p>Reroll a failed INT save with advantage, 1/Safe Rest.</p>",
+			"name": "So Dumb I'm Smart Sometimes"
+		},
+		"Survivalist": {
+			"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>",
+			"name": "Survivalist",
+			"rules": {
+				"index:0": {
+					"label": "Survivalist"
+				}
+			}
+		},
+		"Taste for the Finer Things": {
+			"description": "<p>You always have up-to-date knowledge of the customs and dress of the upper classes and may even know many of their secrets. Advantage on Influence checks with the upper class.</p>",
+			"name": "Taste for the Finer Things"
+		},
+		"Tradesman/Artisan": {
+			"description": "<p>Choose a profession (Baker/Cook, Smith, Stonemason, Weaver, Leatherworker, etc.). Checks you make related to that profession are made with advantage. You also retain special knowledge related to your profession.</p>",
+			"name": "Tradesman/Artisan"
+		},
+		"What? I've Been Around": {
+			"description": "<p>1/per location (or at the GM's discretion). You happen to know JUST the person who has the information you're looking for, or could get you out of a jam, and… Roll [[/r 1d20]]:</p><ul><li><p>1–5. They want you DEAD.</p></li><li><p>6–12. You owe them money.</p></li><li><p>13–19. They can be convinced to help you..</p></li><li><p>20. They are your biggest fan/are madly in love with you.</p></li></ul>",
+			"name": "What? I've Been Around"
+		},
+		"Wild One": {
+			"description": "<p>Whether it is the sticks or flowers in your hair, your smell, or the way you carry yourself, wild creatures are less frightened of you and more willing to aid you. +1 Naturecraft. While Field Resting, roll your Hit Dice with advantage while in the wild.</p><hr><p>+1 Naturecraft [A]</p>",
+			"name": "Wild One",
+			"rules": {
+				"index:1": {
+					"label": "Wild One"
+				}
+			}
+		},
+		"Wily Underdog": {
+			"description": "<p>(Req. 0 or negative STR at character creation.) Reroll a failed STR-related roll (e.g., STR attack, STR save, Might check) and use another stat instead, 1/day.</p>",
+			"name": "Wily Underdog"
 		}
 	}
 }

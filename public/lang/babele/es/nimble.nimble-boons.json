@@ -1,266 +1,266 @@
 {
 	"label": "Nimble Boons",
 	"entries": {
-		"Lodging Boons": {
-			"name": "Lodging Boons",
-			"description": "<p>Spending extra gold on lavish accommodations can provide valuable temporary benefits. These perks might include quicker recovery, valuable contacts, additional resources, or unique opportunities. The specific benefits depend on the quality of the lodging and the amount spent. You can roll from the table, or award a Minor, Major, or even EPIC Boon based on how much the heroes pay and where they rest:</p><ul><li>A Minor Boon: Typically costs around 10 gp.</li><li>A Major Boon: Typically costs around 100 gp.</li><li>An EPIC Boon: Typically costs around 1,000 gp.</li></ul><p>These Boons are temporary and last only until the heroes take another Safe Rest. Adjust the cost and impact to suit your campaign and the party's level of wealth.</p><table style=\"table-layout: fixed; width: 100%;\"><colgroup><col style=\"width: 3rem;\"/><col/></colgroup><thead><tr><th style=\"width: 3rem;\"><em>1d8</em></th><th><em>Temporary Boon</em></th></tr></thead><tbody><tr><td style=\"width: 3rem;\">1</td><td>Recover 2 additional Wounds</td></tr><tr><td style=\"width: 3rem;\">2</td><td>Gain LVL temp HP</td></tr><tr><td style=\"width: 3rem;\">3</td><td>Gain KEY temp Hit Dice</td></tr><tr><td style=\"width: 3rem;\">4</td><td>+1 Speed</td></tr><tr><td style=\"width: 3rem;\">5</td><td>Inspired (reroll any die, once)</td></tr><tr><td style=\"width: 3rem;\">6</td><td>Advantage vs. Fear/Charm/Etc.</td></tr><tr><td style=\"width: 3rem;\">7</td><td>Learn an important rumor</td></tr><tr><td style=\"width: 3rem;\">8</td><td>+KEY mana</td></tr></tbody></table>"
-		},
-		"Stand Tall": {
-			"name": "Stand Tall",
-			"description": "<p>+Height (slightly). [M]</p>"
-		},
-		"Skilled": {
-			"name": "Skilled",
-			"description": "<p>+1 skill point. [M]</p>"
-		},
-		"Simple": {
-			"name": "Simple",
-			"description": "<p>+1 VS Charm effects. [M]</p>"
-		},
-		"Intrepid": {
-			"name": "Intrepid",
-			"description": "<p>+1 Speed. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Intrepid"
-				}
-			}
-		},
-		"Fiery": {
-			"name": "Fiery",
-			"description": "<p>+1 fire damage. [M]</p>",
-			"rules": {
-				"fiery-boon-fire-damage": {
-					"label": "Fiery"
-				}
-			}
-		},
-		"Feisty": {
-			"name": "Feisty",
-			"description": "<p>+1 max Hit Die. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Feisty"
-				}
-			}
-		},
-		"Experienced": {
-			"name": "Experienced",
-			"description": "<p>+4 HP. [M]</p>",
-			"rules": {
-				"Hoih5pGNkt7JYgDz": {
-					"label": "experienced-hp"
-				}
-			}
-		},
-		"Bright": {
-			"name": "Bright",
-			"description": "<p>+1 max mana. [M]</p>"
-		},
-		"Alert": {
-			"name": "Alert",
-			"description": "<p>+1 to Initiative. [A]</p>",
-			"rules": {
-				"NUla18vRAxqegmI2": {
-					"label": "Alert"
-				}
-			}
-		},
-		"Veteran": {
-			"name": "Veteran",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+10 HP. [M]</span></p>",
-			"rules": {
-				"Hk1se3zIMUWVKrjr": {
-					"label": "veteran-hp"
-				}
-			}
-		},
-		"Unnatural Talent": {
-			"name": "Unnatural Talent",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Learn any 1 Utility Spell. [M]</span></p>"
-		},
-		"Unflinching": {
-			"name": "Unflinching",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your focus is unbroken even in the face of danger. Advantage on Concentration checks. [M]</span></p>"
-		},
-		"Tough": {
-			"name": "Tough",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you gain temp HP, gain 5 more. [M]</span></p>"
-		},
-		"Tenacious": {
-			"name": "Tenacious",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 max Hit Dice. [M]</span></p>",
-			"rules": {
-				"index:0": {
-					"label": "Tenacious"
-				}
-			}
-		},
-		"Stalwart": {
-			"name": "Stalwart",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+1 max Hit Die. [M]</span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Might. [A]</span></p>",
-			"rules": {
-				"index:1": {
-					"label": "Stalwart"
-				}
-			}
-		},
-		"Sniper": {
-			"name": "Sniper",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Advantage on attacks when no enemy is adjacent to you; disadvantage otherwise. [M]</span></p>"
-		},
-		"Smart, Not Book Smart": {
-			"name": "Smart, Not Book Smart",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">–KEY max mana. Gain 1d4 mana whenever you roll Initiative; this expires if unused at the end of combat. [M]</span></p>"
-		},
-		"Resolute": {
-			"name": "Resolute",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">When pushed, you are pushed 1 space less. Whenever you would be knocked Prone, you can instead be moved back 1 space. 1/turn. [M]</span></p>"
-		},
-		"Resilient": {
-			"name": "Resilient",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">If you would take any Wounds, you may become immune to them this turn instead. 1/Safe Rest. [M]</span></p>"
-		},
-		"Natural Talent": {
-			"name": "Natural Talent",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Learn 1 Cantrip in a school you don't know. [M]</span></p>"
-		},
-		"Lionhearted": {
-			"name": "Lionhearted",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Armor while you have the most enemies adjacent to you. [M]</span></p>",
-			"rules": {
-				"io7K8HETN3dgovbH": {
-					"label": "Lionhearted"
-				}
-			}
-		},
-		"Honorable Protector": {
-			"name": "Honorable Protector",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain LVL temp HP whenever you Interpose. Suffer LVL psychic damage whenever an ally within 2 spaces is attacked and you don't Interpose. [M]</span></p>"
-		},
-		"Hardy": {
-			"name": "Hardy",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you would roll your Hit Dice to increase your max HP, roll with advantage 2 instead. [M]</span></p>"
-		},
-		"Good Patient": {
-			"name": "Good Patient",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you would receive healing, you heal an additional KEY HP. [M]</span></p>"
-		},
-		"Expansive Mind": {
-			"name": "Expansive Mind",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 max mana. [M]</span></p>"
-		},
-		"Brave": {
-			"name": "Brave",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 to damage while you have the most enemies adjacent to you. [M]</span></p>"
-		},
-		"Battle Hardened": {
-			"name": "Battle Hardened",
-			"description": "<p>+2 Armor. [A]</p>"
-		},
-		"Ancestry Trait": {
-			"name": "Ancestry Trait",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Selecting another Ancestry trait (if it makes sense) can make for a great Major Boon. [M]</span></p>"
-		},
-		"Aggressive": {
-			"name": "Aggressive",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">On your first round of combat you can spend 1 Action from your next turn. [M]</span></p>"
-		},
-		"Recover 2 additional Wounds": {
-			"name": "Recover 2 additional Wounds",
-			"description": "<p>Recover 2 additional Wounds.</p>"
-		},
-		"+KEY mana": {
-			"name": "+KEY mana",
-			"description": "<p>+KEY mana.</p>"
-		},
 		"+1 Speed": {
-			"name": "+1 Speed",
 			"description": "<p>+1 Speed.</p>",
+			"name": "+1 Speed",
 			"rules": {
 				"index:0": {
 					"label": "+1 Speed"
 				}
 			}
 		},
-		"Learn an important rumor": {
-			"name": "Learn an important rumor",
-			"description": "<p>Learn an important rumor.</p>"
-		},
-		"Inspired (reroll any die, once)": {
-			"name": "Inspired (reroll any die, once)",
-			"description": "<p>Inspired (reroll any die, once).</p>"
-		},
-		"Gain LVL temp HP": {
-			"name": "Gain LVL temp HP",
-			"description": "<p>Gain LVL temp HP.</p>"
-		},
-		"Gain KEY temp Hit Dice": {
-			"name": "Gain KEY temp Hit Dice",
-			"description": "<p>Gain KEY temp Hit Dice.</p>"
+		"+KEY mana": {
+			"description": "<p>+KEY mana.</p>",
+			"name": "+KEY mana"
 		},
 		"Advantage vs. Fear/Charm/Etc.": {
-			"name": "Advantage vs. Fear/Charm/Etc.",
-			"description": "<p>Advantage vs. Fear/Charm/Etc.</p>"
+			"description": "<p>Advantage vs. Fear/Charm/Etc.</p>",
+			"name": "Advantage vs. Fear/Charm/Etc."
 		},
-		"Epic Stats": {
-			"name": "Epic Stats",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Increase 3 different stats by 1. [M]</span></p>"
+		"Aggressive": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">On your first round of combat you can spend 1 Action from your next turn. [M]</span></p>",
+			"name": "Aggressive"
 		},
-		"Epic Stamina": {
-			"name": "Epic Stamina",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Rolling 4 or higher on a Hit Die during a Field Rest heals 1 Wound. [M]</span></p>"
+		"Alert": {
+			"description": "<p>+1 to Initiative. [A]</p>",
+			"name": "Alert",
+			"rules": {
+				"NUla18vRAxqegmI2": {
+					"label": "Alert"
+				}
+			}
+		},
+		"Ancestry Trait": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Selecting another Ancestry trait (if it makes sense) can make for a great Major Boon. [M]</span></p>",
+			"name": "Ancestry Trait"
+		},
+		"Battle Hardened": {
+			"description": "<p>+2 Armor. [A]</p>",
+			"name": "Battle Hardened"
+		},
+		"Brave": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 to damage while you have the most enemies adjacent to you. [M]</span></p>",
+			"name": "Brave"
+		},
+		"Bright": {
+			"description": "<p>+1 max mana. [M]</p>",
+			"name": "Bright"
+		},
+		"Epic Agility": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain 1 action. 1/encounter. [M]</span></p>",
+			"name": "Epic Agility"
+		},
+		"Epic Criticals": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you roll for critical hit damage, you may replace one die with a d20. [M]</span></p>",
+			"name": "Epic Criticals"
+		},
+		"Epic Defense": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your shields gain +3 Armor. [M]</span></p>",
+			"name": "Epic Defense"
+		},
+		"Epic Foresight": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain +5 to Initiative rolls [A] </span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">and advantage on your first attack each encounter. [M]</span></p>",
+			"name": "Epic Foresight"
+		},
+		"Epic Knowledge": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">1/day, you can call upon a moment of profound insight to gain hidden knowledge about a legendary person or object. [M]</span></p>",
+			"name": "Epic Knowledge"
+		},
+		"Epic Mana": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you are healed, you may instead recover 1 mana for every 5 HP you would have been healed. [M]</span></p>",
+			"name": "Epic Mana"
+		},
+		"Epic Mind": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+8 mana. [M]</span></p>",
+			"name": "Epic Mind"
+		},
+		"Epic Resistance": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">1/encounter. Whenever you would suffer damage or fail a save you can choose not to instead. [M]</span></p>",
+			"name": "Epic Resistance"
+		},
+		"Epic Senses": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain Blindsight 6 or Darkvision 16. [M]</span></p>",
+			"name": "Epic Senses"
 		},
 		"Epic Speed": {
-			"name": "Epic Speed",
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 Speed [M]<br>+4 Initiative [A]</span></p>",
+			"name": "Epic Speed",
 			"rules": {
 				"index:1": {
 					"label": "Epic Speed"
 				}
 			}
 		},
-		"Epic Senses": {
-			"name": "Epic Senses",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain Blindsight 6 or Darkvision 16. [M]</span></p>"
+		"Epic Stamina": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Rolling 4 or higher on a Hit Die during a Field Rest heals 1 Wound. [M]</span></p>",
+			"name": "Epic Stamina"
 		},
-		"Epic Resistance": {
-			"name": "Epic Resistance",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">1/encounter. Whenever you would suffer damage or fail a save you can choose not to instead. [M]</span></p>"
+		"Epic Stats": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Increase 3 different stats by 1. [M]</span></p>",
+			"name": "Epic Stats"
 		},
-		"Epic Mind": {
-			"name": "Epic Mind",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+8 mana. [M]</span></p>"
+		"Expansive Mind": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 max mana. [M]</span></p>",
+			"name": "Expansive Mind"
 		},
-		"Epic Mana": {
-			"name": "Epic Mana",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you are healed, you may instead recover 1 mana for every 5 HP you would have been healed. [M]</span></p>"
+		"Experienced": {
+			"description": "<p>+4 HP. [M]</p>",
+			"name": "Experienced",
+			"rules": {
+				"Hoih5pGNkt7JYgDz": {
+					"label": "experienced-hp"
+				}
+			}
 		},
-		"Epic Knowledge": {
-			"name": "Epic Knowledge",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">1/day, you can call upon a moment of profound insight to gain hidden knowledge about a legendary person or object. [M]</span></p>"
+		"Feisty": {
+			"description": "<p>+1 max Hit Die. [M]</p>",
+			"name": "Feisty",
+			"rules": {
+				"index:0": {
+					"label": "Feisty"
+				}
+			}
 		},
-		"Epic Foresight": {
-			"name": "Epic Foresight",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain +5 to Initiative rolls [A] </span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">and advantage on your first attack each encounter. [M]</span></p>"
+		"Fiery": {
+			"description": "<p>+1 fire damage. [M]</p>",
+			"name": "Fiery",
+			"rules": {
+				"fiery-boon-fire-damage": {
+					"label": "Fiery"
+				}
+			}
 		},
-		"Epic Defense": {
-			"name": "Epic Defense",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your shields gain +3 Armor. [M]</span></p>"
+		"Gain KEY temp Hit Dice": {
+			"description": "<p>Gain KEY temp Hit Dice.</p>",
+			"name": "Gain KEY temp Hit Dice"
 		},
-		"Epic Criticals": {
-			"name": "Epic Criticals",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you roll for critical hit damage, you may replace one die with a d20. [M]</span></p>"
+		"Gain LVL temp HP": {
+			"description": "<p>Gain LVL temp HP.</p>",
+			"name": "Gain LVL temp HP"
 		},
-		"Epic Agility": {
-			"name": "Epic Agility",
-			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain 1 action. 1/encounter. [M]</span></p>"
+		"Good Patient": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you would receive healing, you heal an additional KEY HP. [M]</span></p>",
+			"name": "Good Patient"
+		},
+		"Hardy": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you would roll your Hit Dice to increase your max HP, roll with advantage 2 instead. [M]</span></p>",
+			"name": "Hardy"
+		},
+		"Honorable Protector": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain LVL temp HP whenever you Interpose. Suffer LVL psychic damage whenever an ally within 2 spaces is attacked and you don't Interpose. [M]</span></p>",
+			"name": "Honorable Protector"
+		},
+		"Inspired (reroll any die, once)": {
+			"description": "<p>Inspired (reroll any die, once).</p>",
+			"name": "Inspired (reroll any die, once)"
+		},
+		"Intrepid": {
+			"description": "<p>+1 Speed. [M]</p>",
+			"name": "Intrepid",
+			"rules": {
+				"index:0": {
+					"label": "Intrepid"
+				}
+			}
+		},
+		"Learn an important rumor": {
+			"description": "<p>Learn an important rumor.</p>",
+			"name": "Learn an important rumor"
+		},
+		"Lionhearted": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Armor while you have the most enemies adjacent to you. [M]</span></p>",
+			"name": "Lionhearted",
+			"rules": {
+				"io7K8HETN3dgovbH": {
+					"label": "Lionhearted"
+				}
+			}
+		},
+		"Lodging Boons": {
+			"description": "<p>Spending extra gold on lavish accommodations can provide valuable temporary benefits. These perks might include quicker recovery, valuable contacts, additional resources, or unique opportunities. The specific benefits depend on the quality of the lodging and the amount spent. You can roll from the table, or award a Minor, Major, or even EPIC Boon based on how much the heroes pay and where they rest:</p><ul><li>A Minor Boon: Typically costs around 10 gp.</li><li>A Major Boon: Typically costs around 100 gp.</li><li>An EPIC Boon: Typically costs around 1,000 gp.</li></ul><p>These Boons are temporary and last only until the heroes take another Safe Rest. Adjust the cost and impact to suit your campaign and the party's level of wealth.</p><table style=\"table-layout: fixed; width: 100%;\"><colgroup><col style=\"width: 3rem;\"/><col/></colgroup><thead><tr><th style=\"width: 3rem;\"><em>1d8</em></th><th><em>Temporary Boon</em></th></tr></thead><tbody><tr><td style=\"width: 3rem;\">1</td><td>Recover 2 additional Wounds</td></tr><tr><td style=\"width: 3rem;\">2</td><td>Gain LVL temp HP</td></tr><tr><td style=\"width: 3rem;\">3</td><td>Gain KEY temp Hit Dice</td></tr><tr><td style=\"width: 3rem;\">4</td><td>+1 Speed</td></tr><tr><td style=\"width: 3rem;\">5</td><td>Inspired (reroll any die, once)</td></tr><tr><td style=\"width: 3rem;\">6</td><td>Advantage vs. Fear/Charm/Etc.</td></tr><tr><td style=\"width: 3rem;\">7</td><td>Learn an important rumor</td></tr><tr><td style=\"width: 3rem;\">8</td><td>+KEY mana</td></tr></tbody></table>",
+			"name": "Lodging Boons"
+		},
+		"Natural Talent": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Learn 1 Cantrip in a school you don't know. [M]</span></p>",
+			"name": "Natural Talent"
+		},
+		"Recover 2 additional Wounds": {
+			"description": "<p>Recover 2 additional Wounds.</p>",
+			"name": "Recover 2 additional Wounds"
+		},
+		"Resilient": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">If you would take any Wounds, you may become immune to them this turn instead. 1/Safe Rest. [M]</span></p>",
+			"name": "Resilient"
+		},
+		"Resolute": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">When pushed, you are pushed 1 space less. Whenever you would be knocked Prone, you can instead be moved back 1 space. 1/turn. [M]</span></p>",
+			"name": "Resolute"
+		},
+		"Simple": {
+			"description": "<p>+1 VS Charm effects. [M]</p>",
+			"name": "Simple"
+		},
+		"Skilled": {
+			"description": "<p>+1 skill point. [M]</p>",
+			"name": "Skilled"
+		},
+		"Smart, Not Book Smart": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">–KEY max mana. Gain 1d4 mana whenever you roll Initiative; this expires if unused at the end of combat. [M]</span></p>",
+			"name": "Smart, Not Book Smart"
+		},
+		"Sniper": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Advantage on attacks when no enemy is adjacent to you; disadvantage otherwise. [M]</span></p>",
+			"name": "Sniper"
+		},
+		"Stalwart": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+1 max Hit Die. [M]</span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Might. [A]</span></p>",
+			"name": "Stalwart",
+			"rules": {
+				"index:1": {
+					"label": "Stalwart"
+				}
+			}
+		},
+		"Stand Tall": {
+			"description": "<p>+Height (slightly). [M]</p>",
+			"name": "Stand Tall"
+		},
+		"Tenacious": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 max Hit Dice. [M]</span></p>",
+			"name": "Tenacious",
+			"rules": {
+				"index:0": {
+					"label": "Tenacious"
+				}
+			}
+		},
+		"Tough": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you gain temp HP, gain 5 more. [M]</span></p>",
+			"name": "Tough"
+		},
+		"Unflinching": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your focus is unbroken even in the face of danger. Advantage on Concentration checks. [M]</span></p>",
+			"name": "Unflinching"
+		},
+		"Unnatural Talent": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Learn any 1 Utility Spell. [M]</span></p>",
+			"name": "Unnatural Talent"
+		},
+		"Veteran": {
+			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+10 HP. [M]</span></p>",
+			"name": "Veteran",
+			"rules": {
+				"Hk1se3zIMUWVKrjr": {
+					"label": "veteran-hp"
+				}
+			}
 		}
 	},
 	"folders": {
+		"Epic Boons": "Epic Boons",
 		"Lodging Boons": "Lodging Boons",
-		"Minor Boons": "Minor Boons",
 		"Major Boons": "Major Boons",
-		"Epic Boons": "Epic Boons"
+		"Minor Boons": "Minor Boons"
 	}
 }

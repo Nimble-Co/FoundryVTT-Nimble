@@ -171,7 +171,7 @@ const config = defineConfig({
 	test: {
 		globals: true,
 		environment: 'happy-dom',
-		include: ['src/**/*.{test,spec}.{js,ts}'],
+		include: ['src/**/*.{test,spec}.{js,ts}', 'build/**/*.{test,spec}.{js,mjs,ts}'],
 		root: '.',
 		setupFiles: ['./tests/setup.ts'],
 		server: {

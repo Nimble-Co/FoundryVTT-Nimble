@@ -1,820 +1,820 @@
 {
 	"label": "Nimble Legendary Monsters",
 	"entries": {
-		"Vael, Undying Necromancer": {
-			"name": "Vael, Undying Necromancer",
-			"creatureType": "Luminary of Malice",
+		"Alaric Draegoth, the Crimson Count": {
+			"creatureType": "Vampire Lord",
 			"items": {
-				"Protect Master!": {
-					"name": "Protect Master!",
-					"description": "<p>Whenever Vael would fail a save or take 20 or more damage, he may sacrifice his Lifebinding Spirit, Bane, instead. He spends his next turn moving up to 6 spaces and summoning Bane.</p>"
-				},
 				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, Bane attacks for [[/r 1d12+6]] then Vael chooses one:</p>"
+					"description": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>",
+					"name": "Attack Sequence"
 				},
-				"DOOM.": {
-					"name": "DOOM.",
-					"description": "<p>(Range 12, undamaged target) DC 14 WIL save or 5d12 damage. Half on save.</p>"
+				"Beckon & Bite": {
+					"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>",
+					"name": "Beckon & Bite"
 				},
-				"Veilwalker's Rebuke.": {
-					"name": "Veilwalker's Rebuke.",
-					"description": "<p>(Range 8) 2d12+6. Double damage against those behind cover. 1/round you may swap places with them.</p>"
+				"Beguile": {
+					"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>",
+					"name": "Beguile"
 				},
-				"Cruelty's Edge.": {
-					"name": "Cruelty's Edge.",
-					"description": "<p>1d4+2. On hit: DC 14 WIL save or Dazed and Frightened. Then move 6.</p>"
+				"Blood Bat": {
+					"description": "<p>After each hero's turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
+					"name": "Blood Bat"
 				},
 				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 125 HP, Vael gains the reaction Shield of Cruelty. (1 time use) If Vael would be damaged, instead he may reflect that much radiant damage back at the attacker</p>"
+					"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>",
+					"name": "Bloodied"
+				},
+				"Ebonfang": {
+					"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>",
+					"name": "Ebonfang"
 				},
 				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Vael is dying! 90 more damage and he dies. Until then, he gains Heavy Armor, the hero that most recently damaged him is reduced to 0 HP, and Bane is sacrificed into a Vengeful Spirit. It deals 1d12+6 necrotic damage to creatures within reach 3 at the end of each of his turns.</p>"
+					"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>",
+					"name": "Last Stand"
+				},
+				"Sanguine Cloak": {
+					"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>",
+					"name": "Sanguine Cloak"
+				},
+				"Sunscorn": {
+					"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>",
+					"name": "Sunscorn"
 				}
-			}
+			},
+			"name": "Alaric Draegoth, the Crimson Count"
 		},
-		"Ul'vek, Psionic Despot": {
-			"name": "Ul'vek, Psionic Despot",
-			"creatureType": "Brain-Eating Aberration",
+		"Alaric Draegoth's Blood Bat": {
 			"items": {
-				"Mind Shield.": {
-					"name": "Mind Shield.",
-					"description": "<p>Whenever Ul' would fail a save or take more than 30 damage while he has a creature Dominated, he may avoid the attack instead, but all Dominated creatures come to their senses.</p>"
+				"Bite": {
+					"description": "<p>1d10, follow minion rules</p>",
+					"name": "Bite"
 				},
+				"Bite - Last Stand": {
+					"description": "<p>1d20, follow minion rules</p>",
+					"name": "Bite - Last Stand"
+				}
+			},
+			"name": "Alaric Draegoth's Blood Bat",
+			"tokenName": "New Actor"
+		},
+		"Azriel, Lord of Pain & Flame": {
+			"creatureType": "Balor Feeling Hot & Spicy",
+			"items": {
 				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
-				},
-				"Dominate.": {
-					"name": "Dominate.",
-					"description": "<p>(If no creatures are Dominated) Choose half of the heroes to suffer 2d12 psychic damage (ignoring armor). DC 15 WIL save or Dominated as well.</p>"
-				},
-				"Dominated": {
-					"name": "Dominated",
-					"description": "<p>Rolls are made with disadvantage while Dominated. Ul' spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.</p>"
-				},
-				"Consume.": {
-					"name": "Consume.",
-					"description": "<p>(Dominated creature) Contested DEX or STR check, on success: Grappled and 6d12. Cannot be Defended or Interposed against.</p>"
-				},
-				"Control.": {
-					"name": "Control.",
-					"description": "<p>Teleport 8. (Reach 8) DC 15 WIL save, force an enemy to spend one Action to make a weapon attack or cast a cantrip. On save, they attack with disadvantage.</p>"
+					"description": "<p>After each hero's turn, choose 1:</p>",
+					"name": "Attack Sequence"
 				},
 				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 150 HP gain Illusory Shift. Reaction, when attacked (1 use): Swap places with a Dominated creature, making them the new target of the attack</p>"
+					"description": "<p>At 160 HP, Azriel can use Crackling Whip twice each turn.</p>",
+					"name": "Bloodied"
+				},
+				"Crackling Whip.": {
+					"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>",
+					"name": "Crackling Whip."
+				},
+				"Doom Sword.": {
+					"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>",
+					"name": "Doom Sword."
 				},
 				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Ul' is dying! 110 more damage and he dies. Until then, Dominated no longer ends on taking damage. Every hero makes a WIL save or become Dominated.</p>"
+					"description": "<p><strong>YES, MORE PAIN!</strong> Azriel is dying! 180 more damage and he dies. Until then, EVERY hit against him is a crit.</p>",
+					"name": "Last Stand"
+				},
+				"PAIN!": {
+					"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>",
+					"name": "PAIN!"
 				}
-			}
+			},
+			"name": "Azriel, Lord of Pain & Flame"
 		},
-		"Titan's Skeleton Minion": {
-			"name": "Titan's Skeleton Minion",
-			"tokenName": "New Actor",
+		"Caerys, the Hollow Star": {
+			"creatureType": "World-Ending Cataclysm",
 			"items": {
-				"Attack": {
-					"name": "Attack",
-					"description": "<p>1d10, follows minion rules</p>"
+				"Almighty Push & Pull": {
+					"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>",
+					"name": "Almighty Push & Pull"
+				},
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose 1 not yet chosen (reset when all have been chosen):</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 310 HP, Gravitational Mastery. Move ALL objects and creatures within 16 spaces anywhere else within the area. Gravitational Lensing. The hero with the most HP is marked by Caerys. She takes half damage from all sources, her mark takes the other half. This lasts until the mark drops to 0 HP.</p>",
+					"name": "Bloodied"
+				},
+				"Glimpse Your End": {
+					"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>",
+					"name": "Glimpse Your End"
+				},
+				"Immensity": {
+					"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>",
+					"name": "Immensity"
+				},
+				"Last Stand": {
+					"description": "<p>Use Gravitational Mastery, then Caerys is dying! 200 more damage and she dies. Until then she chooses twice each turn. If still alive after 1 round: Reset Time: she resets back to full HP.</p>",
+					"name": "Last Stand"
+				},
+				"Plasma Storm": {
+					"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>",
+					"name": "Plasma Storm"
+				},
+				"Ravages of Time": {
+					"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>",
+					"name": "Ravages of Time"
+				},
+				"Singularity": {
+					"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>",
+					"name": "Singularity"
+				},
+				"Slipstream": {
+					"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>",
+					"name": "Slipstream"
+				},
+				"Wormhole": {
+					"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>",
+					"name": "Wormhole"
 				}
-			}
+			},
+			"name": "Caerys, the Hollow Star"
+		},
+		"Dravok, All-Seeing Tyrant": {
+			"creatureType": "Aberration, all TEETH & EYES",
+			"items": {
+				"1. Warping Ray": {
+					"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>",
+					"name": "1. Warping Ray"
+				},
+				"2. Petrification Ray": {
+					"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>",
+					"name": "2. Petrification Ray"
+				},
+				"3. Terror Ray": {
+					"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>",
+					"name": "3. Terror Ray"
+				},
+				"4. Gravitation Ray": {
+					"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>",
+					"name": "4. Gravitation Ray"
+				},
+				"5. Charm Ray": {
+					"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>",
+					"name": "5. Charm Ray"
+				},
+				"6. Death Ray": {
+					"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>",
+					"name": "6. Death Ray"
+				},
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>",
+					"name": "Bloodied"
+				},
+				"Last Stand": {
+					"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>",
+					"name": "Last Stand"
+				},
+				"My plans, flawless!": {
+					"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>",
+					"name": "My plans, flawless!"
+				},
+				"Terrible Maw": {
+					"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>",
+					"name": "Terrible Maw"
+				},
+				"Weakness": {
+					"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>",
+					"name": "Weakness"
+				}
+			},
+			"name": "Dravok, All-Seeing Tyrant"
+		},
+		"Dregatha, Thrice-Chinned": {
+			"creatureType": "Hag",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose 1:</p><p><strong>Opening Attack:</strong> Heh, I didn't even like Malphara, but blood runs thicker than mud!</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>No fair, I deserve my turn!</p>",
+					"name": "Bloodied"
+				},
+				"Bug Swarm.": {
+					"description": "<p>Summon 1 minion/hero (d4), then choose 1 action.</p>",
+					"name": "Bug Swarm."
+				},
+				"Claw (2x).": {
+					"description": "<p>1d4+8. On damage: Dazed. On crit: DC 12 INT save or 1 Wound.</p><p><strong>Gaining the Upper Hand:</strong> Sing, little toads, silling!</p>",
+					"name": "Claw (2x)."
+				},
+				"Last Stand": {
+					"description": "<p>Your future is dark, worm... <em>*occult mum-bling*</em></p><p>Whoever landed the killing blow: WIL save or become cursed; half as tall until cured.</p>",
+					"name": "Last Stand"
+				},
+				"Spit Curse.": {
+					"description": "<p>When Dregatha crits: DC 12 INT save or suffer 1 Wound.</p><p><strong>On Crit:</strong> He-he-he! Squirrm like a maggot!</p>",
+					"name": "Spit Curse."
+				}
+			},
+			"name": "Dregatha, Thrice-Chinned"
+		},
+		"Florindris, Bane of the Forest": {
+			"creatureType": "Floral Dragon",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Aura of Wind.": {
+					"description": "<p>Ranged attacks against you have disadvantage. End of turn: push adjacent creatures 2 spaces away.</p>",
+					"name": "Aura of Wind."
+				},
+				"Bloodied": {
+					"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>",
+					"name": "Bloodied"
+				},
+				"Gust.": {
+					"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>",
+					"name": "Gust."
+				},
+				"Last Stand": {
+					"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>",
+					"name": "Last Stand"
+				},
+				"Petal Storm. (1 use)": {
+					"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>",
+					"name": "Petal Storm. (1 use)"
+				},
+				"Rend.": {
+					"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>",
+					"name": "Rend."
+				},
+				"Wither": {
+					"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>",
+					"name": "Wither"
+				}
+			},
+			"name": "Florindris, Bane of the Forest"
+		},
+		"General Flameheart": {
+			"creatureType": "Flame Titan",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each Hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 87 HP, on his next turn, he uses Molten Fury a number of times equal to half the number of heroes (rounded up).</p>",
+					"name": "Bloodied"
+				},
+				"Cinder Armor.": {
+					"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>",
+					"name": "Cinder Armor."
+				},
+				"Extinguish Flame.": {
+					"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>",
+					"name": "Extinguish Flame."
+				},
+				"Inferno Cleave.": {
+					"description": "<p>Move 8 then strike a 2??2 square area for 2d10+10 fire damage.</p>",
+					"name": "Inferno Cleave."
+				},
+				"Last Stand": {
+					"description": "<p>Flameheart is dying! 80 more damage and he dies. Until then, the area of his attacks increase to a 3??3 square.</p>",
+					"name": "Last Stand"
+				},
+				"Molten Fury.": {
+					"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2??2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
+					"name": "Molten Fury."
+				}
+			},
+			"name": "General Flameheart"
+		},
+		"Gloomwing the Cruel": {
+			"creatureType": "Rot Dragon",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Aura of Rot": {
+					"description": "<p>Creatures within 6 spaces take 5 necrotic damage at the end of their turns.</p>",
+					"name": "Aura of Rot"
+				},
+				"Bite": {
+					"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty's Gift.</p><p><strong>(Cruelty's Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>",
+					"name": "Bite"
+				},
+				"Bloodied": {
+					"description": "<p>At 160 HP Gloomwing's Rot Breath recharges.</p>",
+					"name": "Bloodied"
+				},
+				"Claws": {
+					"description": "<p>(Reach 2) 3d10 slashing +10 necrotic.</p>",
+					"name": "Claws"
+				},
+				"Last Stand": {
+					"description": "<p>Gloomwing is dying! 150 more damage and he dies. Until then, the damage and range of His Aura of Rot is doubled.</p>",
+					"name": "Last Stand"
+				},
+				"Light Sensitivity": {
+					"description": "<p>Radiant damage suppresses Aura of Rot until the end of the next hero's turn.</p>",
+					"name": "Light Sensitivity"
+				},
+				"Rot Breath (1 use)": {
+					"description": "<p>Fly 10, then (Cone 8) DC 17 DEX save or 8d10 necrotic, half on save.</p>",
+					"name": "Rot Breath (1 use)"
+				},
+				"Tail": {
+					"description": "<p>(Reach 4) 1d10, and knocked back that many spaces.</p>",
+					"name": "Tail"
+				}
+			},
+			"name": "Gloomwing the Cruel"
+		},
+		"Greenthumb, Lichling": {
+			"creatureType": "Botanical Wizard",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, move 6 and then choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 50 HP, Greenthumb gains magical bark, giving himself Heavy Armor.</p>",
+					"name": "Bloodied"
+				},
+				"Last Stand": {
+					"description": "<p>Greenthumb is dying! 30 more damage and he dies. Until then, he chooses twice each turn.</p>",
+					"name": "Last Stand"
+				},
+				"Root.": {
+					"description": "<p>Choose half of the heroes to make a DC 11 DEX save or take 2d4 piercing damage and be Restrained by thorny vines (escape DC 11 STR or DEX save, or any slashing or fire damage).</p>",
+					"name": "Root.",
+					"targetsRestrictions": "Half of heroes"
+				},
+				"Summon Briarbanes.": {
+					"description": "<p>Summon 1 minion/hero (size: 1d4).</p>",
+					"name": "Summon Briarbanes."
+				},
+				"Thorn Shot.": {
+					"description": "<p>(Range 10) 5d4+5.</p>",
+					"name": "Thorn Shot."
+				}
+			},
+			"name": "Greenthumb, Lichling"
+		},
+		"Grimbeak, the Unyielding": {
+			"creatureType": "Owlbear",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each Hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Beak.": {
+					"description": "<p>Move 8. Attack for 2d6 damage.</p>",
+					"name": "Beak."
+				},
+				"Bloodied": {
+					"description": "<p>At 50 HP, Savage Screech recharges.</p>",
+					"name": "Bloodied"
+				},
+				"Brutal.": {
+					"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>",
+					"name": "Brutal."
+				},
+				"Last Stand": {
+					"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>",
+					"name": "Last Stand"
+				},
+				"Rend & Tear.": {
+					"description": "<p>Attack for 2d6+10 damage.</p>",
+					"name": "Rend & Tear."
+				},
+				"Savage Screech. (1 use)": {
+					"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>",
+					"name": "Savage Screech. (1 use)"
+				}
+			},
+			"name": "Grimbeak, the Unyielding"
+		},
+		"Kelebek, Entomancer": {
+			"creatureType": "Bug Druid",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him.</p>",
+					"name": "Bloodied"
+				},
+				"Last Stand": {
+					"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>",
+					"name": "Last Stand"
+				},
+				"Vinelash.": {
+					"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>",
+					"name": "Vinelash."
+				}
+			},
+			"name": "Kelebek, Entomancer"
+		},
+		"Krogg, Goblin King": {
+			"creatureType": "Angry Bugbear",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 35 HP, Krogg's damage increases to 2d8+3.</p>",
+					"name": "Bloodied"
+				},
+				"Crack Skulls.": {
+					"description": "<p>Move 6. Swing a Grappled creature at another creature. Both take 2d6+3 damage, ending the Grapple.</p>",
+					"name": "Crack Skulls."
+				},
+				"Last Stand": {
+					"description": "<p>Krogg is dying! If he takes 20 more damage he dies. Until then, he has Heavy armor.</p>",
+					"name": "Last Stand"
+				},
+				"Manglemaul.": {
+					"description": "<p>Move 6. 2d6+3 damage, Grappled (escape DC 10). OR:</p>",
+					"name": "Manglemaul."
+				}
+			},
+			"name": "Krogg, Goblin King"
+		},
+		"Lind Worm": {
+			"creatureType": "Huge Serpent",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose 1:</p>",
+					"name": "Attack Sequence"
+				},
+				"Constrict.": {
+					"description": "<p>Move up to 8, attack for 1d6+10. On damage: Grappled (escape DC 10).</p>",
+					"name": "Constrict."
+				},
+				"Desperate Purge.": {
+					"description": "<p>When crit, Grappled, or Bloodied: regurgitates its most recent meal.</p>",
+					"name": "Desperate Purge."
+				},
+				"Fiercely Jealous.": {
+					"description": "<p>Attacks those nearest the Golden Egg.</p>",
+					"name": "Fiercely Jealous."
+				},
+				"Squeeze & Spit Acid.": {
+					"description": "<p>Squeeze a Grappled creature for 1d6+10 damage. Move up to 4, then attack for 1d6+10 (range 8). On crit: Poisoned until healed.</p>",
+					"name": "Squeeze & Spit Acid."
+				}
+			},
+			"name": "Lind Worm"
+		},
+		"Nalzar, Apex Predator": {
+			"creatureType": "Grey Drake",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each Hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 90 HP, her Wing Buffet Range and DC increase by 2.</p>",
+					"name": "Bloodied"
+				},
+				"Devour.": {
+					"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>",
+					"name": "Devour."
+				},
+				"Last Stand": {
+					"description": "<p>Nalzar is dying! 60 more damage and she dies. Until then, each turn, she moves 6, then uses Devour (ignoring the Prone requirement).</p>",
+					"name": "Last Stand"
+				},
+				"Tail Swipe.": {
+					"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>",
+					"name": "Tail Swipe."
+				},
+				"Torn Wings.": {
+					"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>",
+					"name": "Torn Wings."
+				},
+				"Wing Buffet.": {
+					"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>",
+					"name": "Wing Buffet."
+				}
+			},
+			"name": "Nalzar, Apex Predator"
+		},
+		"Poppy, Giant Stinkbug": {
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him</p>",
+					"name": "Bloodied"
+				},
+				"Crushing Mandibles.": {
+					"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>",
+					"name": "Crushing Mandibles."
+				},
+				"Last Stand": {
+					"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>",
+					"name": "Last Stand"
+				},
+				"Stink Cloud.": {
+					"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>",
+					"name": "Stink Cloud."
+				}
+			},
+			"name": "Poppy, Giant Stinkbug"
+		},
+		"Pudge the Blunderer": {
+			"creatureType": "Dumb Ogre",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 37 HP, Pudge's damage increases to 1d12+2.</p>",
+					"name": "Bloodied"
+				},
+				"Grab & Throw.": {
+					"description": "<p>1d8+2, on damage: they are thrown at another hero within 6 spaces. Both make a DC 12 DEX save or take 1d8+2 damage and are knocked Prone, half damage on save.</p>",
+					"name": "Grab & Throw."
+				},
+				"Last Stand": {
+					"description": "<p>Pudge is dying! 20 more damage and he dies. Until then, Pudge can move 6 spaces, and use Grab & Throw each turn.</p>",
+					"name": "Last Stand"
+				},
+				"Move & Smack.": {
+					"description": "<p>Move 8, attack for 1d8+2. On damage: Prone.</p>",
+					"name": "Move & Smack."
+				}
+			},
+			"name": "Pudge the Blunderer"
+		},
+		"Queen Aranya, Broodmother": {
+			"creatureType": "Matriarch of Spiders",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p><strong>\"Avenge Your Queen, My Brood!\"</strong> At 80 HP, summon 3 spiderling minions/hero anywhere within Reach 8.</p>",
+					"name": "Bloodied"
+				},
+				"Dinner Time!": {
+					"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>",
+					"name": "Dinner Time!"
+				},
+				"Hatch Brood.": {
+					"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>",
+					"name": "Hatch Brood."
+				},
+				"Impale.": {
+					"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>",
+					"name": "Impale."
+				},
+				"Last Stand": {
+					"description": "<p>Aranya is dying! 40 more damage and she dies. Until then, Hatch Brood after each of her turns.</p>",
+					"name": "Last Stand"
+				},
+				"Weave Web.": {
+					"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother's Weave Web for 1 turn.</p>",
+					"name": "Weave Web."
+				}
+			},
+			"name": "Queen Aranya, Broodmother"
+		},
+		"Queen Aranya's Spiderling Minion": {
+			"items": {
+				"Bite": {
+					"description": "<p>1d8, follow minion rules</p>",
+					"name": "Bite"
+				}
+			},
+			"name": "Queen Aranya's Spiderling Minion",
+			"tokenName": "Spiderling Minion"
+		},
+		"Ravager of the Lowlands": {
+			"creatureType": "Manticore",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>",
+					"name": "Bloodied"
+				},
+				"Claw.": {
+					"description": "<p>Fly 10, attack for 1d12+6 damage.</p>",
+					"name": "Claw."
+				},
+				"Feral Instinct.": {
+					"description": "<p>Whenever Ravager is crit, he can fly 10.</p>",
+					"name": "Feral Instinct."
+				},
+				"Last Stand": {
+					"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>",
+					"name": "Last Stand"
+				},
+				"Ravage.": {
+					"description": "<p>Attack for 1d12+20 damage.</p>",
+					"name": "Ravage."
+				},
+				"Venomous Stinger. (1 use)": {
+					"description": "<p>Reach 3, 5d12 damage.</p>",
+					"name": "Venomous Stinger. (1 use)"
+				}
+			},
+			"name": "Ravager of the Lowlands"
+		},
+		"Scorpion Queen": {
+			"creatureType": "Large Scorpion",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, move 6 then choose 1:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p>At 58 HP, she drips acid blood, dealing 1d6 damage to any creature she walks over.</p>",
+					"name": "Bloodied"
+				},
+				"Claw.": {
+					"description": "<p>3d6. On damage: Grappled (escape DC 12).</p>",
+					"name": "Claw."
+				},
+				"Trampling Movement.": {
+					"description": "<p>She can move through the space of any creature smaller than her, knocking them Prone.</p>",
+					"name": "Trampling Movement."
+				},
+				"Venom Stinger.": {
+					"description": "<p>(Reach 3, a creature she has advantage against) 1d6+20.</p>",
+					"name": "Venom Stinger."
+				},
+				"Vulnerable Underbelly.": {
+					"description": "<p>Hits from Prone melee attackers auto crit on her.</p>",
+					"name": "Vulnerable Underbelly."
+				}
+			},
+			"name": "Scorpion Queen"
+		},
+		"Thorn Quickblade": {
+			"creatureType": "Human Criminal",
+			"items": {
+				"Attack Sequence": {
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
+				},
+				"Bloodied": {
+					"description": "<p><strong>Smoke Bomb.</strong> At 62 HP, Thorn immediately becomes invisible (until the end of his next turn), then moves 8, ignoring opportunity attacks.</p>",
+					"name": "Bloodied"
+				},
+				"Heart Piercer (Rapier).": {
+					"description": "<p>Move 8, 2d4+3 damage. On crit: Dazed.</p>",
+					"name": "Heart Piercer (Rapier)."
+				},
+				"Last Stand": {
+					"description": "<p><strong>Mortal Panic!</strong> Thorn is dying! 30 more damage and he's dead! Until then he'll Strike Back EVERY time he's hit (1/turn).</p>",
+					"name": "Last Stand"
+				},
+				"Stormquill (Crossbow).": {
+					"description": "<p>Move 4, 4d4+10 damage (Range 8).</p>",
+					"name": "Stormquill (Crossbow)."
+				},
+				"Strike Back.": {
+					"description": "<p>When crit, make a Heart Piercer or Stormquill attack in return.</p>",
+					"name": "Strike Back."
+				}
+			},
+			"name": "Thorn Quickblade"
 		},
 		"Titan of the Deep Woods": {
-			"name": "Titan of the Deep Woods",
 			"creatureType": "Skeleton",
 			"items": {
-				"Splintering Legions.": {
-					"name": "Splintering Legions.",
-					"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>"
-				},
-				"Brittle Bones.": {
-					"name": "Brittle Bones.",
-					"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>"
-				},
 				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose 1:</p>"
-				},
-				"Devastating Strike.": {
-					"name": "Devastating Strike.",
-					"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>"
-				},
-				"Crushing Stomp.": {
-					"name": "Crushing Stomp.",
-					"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>"
+					"description": "<p>After each hero's turn, choose 1:</p>",
+					"name": "Attack Sequence"
 				},
 				"Beckoning Doom.": {
-					"name": "Beckoning Doom.",
-					"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>"
+					"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>",
+					"name": "Beckoning Doom."
 				},
 				"Bloodied": {
 					"name": "Bloodied"
 				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p><strong>Shattered Legion.</strong> At 0 HP Titan collapses into 4 skeleton minions/hero (d10 sized). If any remain, they reassemble into the Titan the next evening.</p>"
-				}
-			}
-		},
-		"Thorn Quickblade": {
-			"name": "Thorn Quickblade",
-			"creatureType": "Human Criminal",
-			"items": {
-				"Strike Back.": {
-					"name": "Strike Back.",
-					"description": "<p>When crit, make a Heart Piercer or Stormquill attack in return.</p>"
+				"Brittle Bones.": {
+					"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>",
+					"name": "Brittle Bones."
 				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
+				"Crushing Stomp.": {
+					"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>",
+					"name": "Crushing Stomp."
 				},
-				"Stormquill (Crossbow).": {
-					"name": "Stormquill (Crossbow).",
-					"description": "<p>Move 4, 4d4+10 damage (Range 8).</p>"
-				},
-				"Heart Piercer (Rapier).": {
-					"name": "Heart Piercer (Rapier).",
-					"description": "<p>Move 8, 2d4+3 damage. On crit: Dazed.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p><strong>Smoke Bomb.</strong> At 62 HP, Thorn immediately becomes invisible (until the end of his next turn), then moves 8, ignoring opportunity attacks.</p>"
+				"Devastating Strike.": {
+					"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>",
+					"name": "Devastating Strike."
 				},
 				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p><strong>Mortal Panic!</strong> Thorn is dying! 30 more damage and he's dead! Until then he'll Strike Back EVERY time he's hit (1/turn).</p>"
+					"description": "<p><strong>Shattered Legion.</strong> At 0 HP Titan collapses into 4 skeleton minions/hero (d10 sized). If any remain, they reassemble into the Titan the next evening.</p>",
+					"name": "Last Stand"
+				},
+				"Splintering Legions.": {
+					"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>",
+					"name": "Splintering Legions."
 				}
-			}
+			},
+			"name": "Titan of the Deep Woods"
 		},
-		"Scorpion Queen": {
-			"name": "Scorpion Queen",
-			"creatureType": "Large Scorpion",
+		"Titan's Skeleton Minion": {
 			"items": {
-				"Trampling Movement.": {
-					"name": "Trampling Movement.",
-					"description": "<p>She can move through the space of any creature smaller than her, knocking them Prone.</p>"
-				},
-				"Vulnerable Underbelly.": {
-					"name": "Vulnerable Underbelly.",
-					"description": "<p>Hits from Prone melee attackers auto crit on her.</p>"
-				},
+				"Attack": {
+					"description": "<p>1d10, follows minion rules</p>",
+					"name": "Attack"
+				}
+			},
+			"name": "Titan's Skeleton Minion",
+			"tokenName": "New Actor"
+		},
+		"Ul'vek, Psionic Despot": {
+			"creatureType": "Brain-Eating Aberration",
+			"items": {
 				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, move 6 then choose 1:</p>"
-				},
-				"Claw.": {
-					"name": "Claw.",
-					"description": "<p>3d6. On damage: Grappled (escape DC 12).</p>"
-				},
-				"Venom Stinger.": {
-					"name": "Venom Stinger.",
-					"description": "<p>(Reach 3, a creature she has advantage against) 1d6+20.</p>"
+					"description": "<p>After each hero's turn, choose one:</p>",
+					"name": "Attack Sequence"
 				},
 				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 58 HP, she drips acid blood, dealing 1d6 damage to any creature she walks over.</p>"
-				}
-			}
-		},
-		"Ravager of the Lowlands": {
-			"name": "Ravager of the Lowlands",
-			"creatureType": "Manticore",
-			"items": {
-				"Feral Instinct.": {
-					"name": "Feral Instinct.",
-					"description": "<p>Whenever Ravager is crit, he can fly 10.</p>"
+					"description": "<p>At 150 HP gain Illusory Shift. Reaction, when attacked (1 use): Swap places with a Dominated creature, making them the new target of the attack</p>",
+					"name": "Bloodied"
 				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
+				"Consume.": {
+					"description": "<p>(Dominated creature) Contested DEX or STR check, on success: Grappled and 6d12. Cannot be Defended or Interposed against.</p>",
+					"name": "Consume."
 				},
-				"Venomous Stinger. (1 use)": {
-					"name": "Venomous Stinger. (1 use)",
-					"description": "<p>Reach 3, 5d12 damage.</p>"
+				"Control.": {
+					"description": "<p>Teleport 8. (Reach 8) DC 15 WIL save, force an enemy to spend one Action to make a weapon attack or cast a cantrip. On save, they attack with disadvantage.</p>",
+					"name": "Control."
 				},
-				"Ravage.": {
-					"name": "Ravage.",
-					"description": "<p>Attack for 1d12+20 damage.</p>"
+				"Dominate.": {
+					"description": "<p>(If no creatures are Dominated) Choose half of the heroes to suffer 2d12 psychic damage (ignoring armor). DC 15 WIL save or Dominated as well.</p>",
+					"name": "Dominate."
 				},
-				"Claw.": {
-					"name": "Claw.",
-					"description": "<p>Fly 10, attack for 1d12+6 damage.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>"
+				"Dominated": {
+					"description": "<p>Rolls are made with disadvantage while Dominated. Ul' spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.</p>",
+					"name": "Dominated"
 				},
 				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>"
-				}
-			}
-		},
-		"Queen Aranya's Spiderling Minion": {
-			"name": "Queen Aranya's Spiderling Minion",
-			"tokenName": "Spiderling Minion",
-			"items": {
-				"Bite": {
-					"name": "Bite",
-					"description": "<p>1d8, follow minion rules</p>"
-				}
-			}
-		},
-		"Queen Aranya, Broodmother": {
-			"name": "Queen Aranya, Broodmother",
-			"creatureType": "Matriarch of Spiders",
-			"items": {
-				"Weave Web.": {
-					"name": "Weave Web.",
-					"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother's Weave Web for 1 turn.</p>"
+					"description": "<p>Ul' is dying! 110 more damage and he dies. Until then, Dominated no longer ends on taking damage. Every hero makes a WIL save or become Dominated.</p>",
+					"name": "Last Stand"
 				},
+				"Mind Shield.": {
+					"description": "<p>Whenever Ul' would fail a save or take more than 30 damage while he has a creature Dominated, he may avoid the attack instead, but all Dominated creatures come to their senses.</p>",
+					"name": "Mind Shield."
+				}
+			},
+			"name": "Ul'vek, Psionic Despot"
+		},
+		"Vael, Undying Necromancer": {
+			"creatureType": "Luminary of Malice",
+			"items": {
 				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
-				},
-				"Impale.": {
-					"name": "Impale.",
-					"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>"
-				},
-				"Hatch Brood.": {
-					"name": "Hatch Brood.",
-					"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>"
-				},
-				"Dinner Time!": {
-					"name": "Dinner Time!",
-					"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>"
+					"description": "<p>After each hero's turn, Bane attacks for [[/r 1d12+6]] then Vael chooses one:</p>",
+					"name": "Attack Sequence"
 				},
 				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p><strong>\"Avenge Your Queen, My Brood!\"</strong> At 80 HP, summon 3 spiderling minions/hero anywhere within Reach 8.</p>"
+					"description": "<p>At 125 HP, Vael gains the reaction Shield of Cruelty. (1 time use) If Vael would be damaged, instead he may reflect that much radiant damage back at the attacker</p>",
+					"name": "Bloodied"
+				},
+				"Cruelty's Edge.": {
+					"description": "<p>1d4+2. On hit: DC 14 WIL save or Dazed and Frightened. Then move 6.</p>",
+					"name": "Cruelty's Edge."
+				},
+				"DOOM.": {
+					"description": "<p>(Range 12, undamaged target) DC 14 WIL save or 5d12 damage. Half on save.</p>",
+					"name": "DOOM."
 				},
 				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Aranya is dying! 40 more damage and she dies. Until then, Hatch Brood after each of her turns.</p>"
+					"description": "<p>Vael is dying! 90 more damage and he dies. Until then, he gains Heavy Armor, the hero that most recently damaged him is reduced to 0 HP, and Bane is sacrificed into a Vengeful Spirit. It deals 1d12+6 necrotic damage to creatures within reach 3 at the end of each of his turns.</p>",
+					"name": "Last Stand"
+				},
+				"Protect Master!": {
+					"description": "<p>Whenever Vael would fail a save or take 20 or more damage, he may sacrifice his Lifebinding Spirit, Bane, instead. He spends his next turn moving up to 6 spaces and summoning Bane.</p>",
+					"name": "Protect Master!"
+				},
+				"Veilwalker's Rebuke.": {
+					"description": "<p>(Range 8) 2d12+6. Double damage against those behind cover. 1/round you may swap places with them.</p>",
+					"name": "Veilwalker's Rebuke."
 				}
-			}
-		},
-		"Pudge the Blunderer": {
-			"name": "Pudge the Blunderer",
-			"creatureType": "Dumb Ogre",
-			"items": {
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
-				},
-				"Move & Smack.": {
-					"name": "Move & Smack.",
-					"description": "<p>Move 8, attack for 1d8+2. On damage: Prone.</p>"
-				},
-				"Grab & Throw.": {
-					"name": "Grab & Throw.",
-					"description": "<p>1d8+2, on damage: they are thrown at another hero within 6 spaces. Both make a DC 12 DEX save or take 1d8+2 damage and are knocked Prone, half damage on save.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 37 HP, Pudge's damage increases to 1d12+2.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Pudge is dying! 20 more damage and he dies. Until then, Pudge can move 6 spaces, and use Grab & Throw each turn.</p>"
-				}
-			}
-		},
-		"Poppy, Giant Stinkbug": {
-			"name": "Poppy, Giant Stinkbug",
-			"items": {
-				"Stink Cloud.": {
-					"name": "Stink Cloud.",
-					"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>"
-				},
-				"Crushing Mandibles.": {
-					"name": "Crushing Mandibles.",
-					"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>"
-				}
-			}
-		},
-		"Nalzar, Apex Predator": {
-			"name": "Nalzar, Apex Predator",
-			"creatureType": "Grey Drake",
-			"items": {
-				"Tail Swipe.": {
-					"name": "Tail Swipe.",
-					"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>"
-				},
-				"Torn Wings.": {
-					"name": "Torn Wings.",
-					"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each Hero's turn, choose one:</p>"
-				},
-				"Devour.": {
-					"name": "Devour.",
-					"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>"
-				},
-				"Wing Buffet.": {
-					"name": "Wing Buffet.",
-					"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 90 HP, her Wing Buffet Range and DC increase by 2.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Nalzar is dying! 60 more damage and she dies. Until then, each turn, she moves 6, then uses Devour (ignoring the Prone requirement).</p>"
-				}
-			}
-		},
-		"Lind Worm": {
-			"name": "Lind Worm",
-			"creatureType": "Huge Serpent",
-			"items": {
-				"Fiercely Jealous.": {
-					"name": "Fiercely Jealous.",
-					"description": "<p>Attacks those nearest the Golden Egg.</p>"
-				},
-				"Desperate Purge.": {
-					"name": "Desperate Purge.",
-					"description": "<p>When crit, Grappled, or Bloodied: regurgitates its most recent meal.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose 1:</p>"
-				},
-				"Constrict.": {
-					"name": "Constrict.",
-					"description": "<p>Move up to 8, attack for 1d6+10. On damage: Grappled (escape DC 10).</p>"
-				},
-				"Squeeze & Spit Acid.": {
-					"name": "Squeeze & Spit Acid.",
-					"description": "<p>Squeeze a Grappled creature for 1d6+10 damage. Move up to 4, then attack for 1d6+10 (range 8). On crit: Poisoned until healed.</p>"
-				}
-			}
-		},
-		"Krogg, Goblin King": {
-			"name": "Krogg, Goblin King",
-			"creatureType": "Angry Bugbear",
-			"items": {
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
-				},
-				"Manglemaul.": {
-					"name": "Manglemaul.",
-					"description": "<p>Move 6. 2d6+3 damage, Grappled (escape DC 10). OR:</p>"
-				},
-				"Crack Skulls.": {
-					"name": "Crack Skulls.",
-					"description": "<p>Move 6. Swing a Grappled creature at another creature. Both take 2d6+3 damage, ending the Grapple.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 35 HP, Krogg's damage increases to 2d8+3.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Krogg is dying! If he takes 20 more damage he dies. Until then, he has Heavy armor.</p>"
-				}
-			}
-		},
-		"Kelebek, Entomancer": {
-			"name": "Kelebek, Entomancer",
-			"creatureType": "Bug Druid",
-			"items": {
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>"
-				},
-				"Vinelash.": {
-					"name": "Vinelash.",
-					"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>"
-				}
-			}
-		},
-		"Grimbeak, the Unyielding": {
-			"name": "Grimbeak, the Unyielding",
-			"creatureType": "Owlbear",
-			"items": {
-				"Brutal.": {
-					"name": "Brutal.",
-					"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each Hero's turn, choose one:</p>"
-				},
-				"Savage Screech. (1 use)": {
-					"name": "Savage Screech. (1 use)",
-					"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>"
-				},
-				"Rend & Tear.": {
-					"name": "Rend & Tear.",
-					"description": "<p>Attack for 2d6+10 damage.</p>"
-				},
-				"Beak.": {
-					"name": "Beak.",
-					"description": "<p>Move 8. Attack for 2d6 damage.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 50 HP, Savage Screech recharges.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>"
-				}
-			}
-		},
-		"Greenthumb, Lichling": {
-			"name": "Greenthumb, Lichling",
-			"creatureType": "Botanical Wizard",
-			"items": {
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, move 6 and then choose one:</p>"
-				},
-				"Summon Briarbanes.": {
-					"name": "Summon Briarbanes.",
-					"description": "<p>Summon 1 minion/hero (size: 1d4).</p>"
-				},
-				"Root.": {
-					"name": "Root.",
-					"description": "<p>Choose half of the heroes to make a DC 11 DEX save or take 2d4 piercing damage and be Restrained by thorny vines (escape DC 11 STR or DEX save, or any slashing or fire damage).</p>",
-					"targetsRestrictions": "Half of heroes"
-				},
-				"Thorn Shot.": {
-					"name": "Thorn Shot.",
-					"description": "<p>(Range 10) 5d4+5.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 50 HP, Greenthumb gains magical bark, giving himself Heavy Armor.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Greenthumb is dying! 30 more damage and he dies. Until then, he chooses twice each turn.</p>"
-				}
-			}
-		},
-		"Gloomwing the Cruel": {
-			"name": "Gloomwing the Cruel",
-			"creatureType": "Rot Dragon",
-			"items": {
-				"Aura of Rot": {
-					"name": "Aura of Rot",
-					"description": "<p>Creatures within 6 spaces take 5 necrotic damage at the end of their turns.</p>"
-				},
-				"Light Sensitivity": {
-					"name": "Light Sensitivity",
-					"description": "<p>Radiant damage suppresses Aura of Rot until the end of the next hero's turn.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
-				},
-				"Rot Breath (1 use)": {
-					"name": "Rot Breath (1 use)",
-					"description": "<p>Fly 10, then (Cone 8) DC 17 DEX save or 8d10 necrotic, half on save.</p>"
-				},
-				"Bite": {
-					"name": "Bite",
-					"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty's Gift.</p><p><strong>(Cruelty's Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>"
-				},
-				"Claws": {
-					"name": "Claws",
-					"description": "<p>(Reach 2) 3d10 slashing +10 necrotic.</p>"
-				},
-				"Tail": {
-					"name": "Tail",
-					"description": "<p>(Reach 4) 1d10, and knocked back that many spaces.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 160 HP Gloomwing's Rot Breath recharges.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Gloomwing is dying! 150 more damage and he dies. Until then, the damage and range of His Aura of Rot is doubled.</p>"
-				}
-			}
-		},
-		"General Flameheart": {
-			"name": "General Flameheart",
-			"creatureType": "Flame Titan",
-			"items": {
-				"Cinder Armor.": {
-					"name": "Cinder Armor.",
-					"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>"
-				},
-				"Extinguish Flame.": {
-					"name": "Extinguish Flame.",
-					"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each Hero's turn, choose one:</p>"
-				},
-				"Inferno Cleave.": {
-					"name": "Inferno Cleave.",
-					"description": "<p>Move 8 then strike a 2??2 square area for 2d10+10 fire damage.</p>"
-				},
-				"Molten Fury.": {
-					"name": "Molten Fury.",
-					"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2??2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 87 HP, on his next turn, he uses Molten Fury a number of times equal to half the number of heroes (rounded up).</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Flameheart is dying! 80 more damage and he dies. Until then, the area of his attacks increase to a 3??3 square.</p>"
-				}
-			}
-		},
-		"Florindris, Bane of the Forest": {
-			"name": "Florindris, Bane of the Forest",
-			"creatureType": "Floral Dragon",
-			"items": {
-				"Aura of Wind.": {
-					"name": "Aura of Wind.",
-					"description": "<p>Ranged attacks against you have disadvantage. End of turn: push adjacent creatures 2 spaces away.</p>"
-				},
-				"Wither": {
-					"name": "Wither",
-					"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose one:</p>"
-				},
-				"Petal Storm. (1 use)": {
-					"name": "Petal Storm. (1 use)",
-					"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>"
-				},
-				"Rend.": {
-					"name": "Rend.",
-					"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>"
-				},
-				"Gust.": {
-					"name": "Gust.",
-					"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>"
-				}
-			}
-		},
-		"Dregatha, Thrice-Chinned": {
-			"name": "Dregatha, Thrice-Chinned",
-			"creatureType": "Hag",
-			"items": {
-				"Spit Curse.": {
-					"name": "Spit Curse.",
-					"description": "<p>When Dregatha crits: DC 12 INT save or suffer 1 Wound.</p><p><strong>On Crit:</strong> He-he-he! Squirrm like a maggot!</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose 1:</p><p><strong>Opening Attack:</strong> Heh, I didn't even like Malphara, but blood runs thicker than mud!</p>"
-				},
-				"Bug Swarm.": {
-					"name": "Bug Swarm.",
-					"description": "<p>Summon 1 minion/hero (d4), then choose 1 action.</p>"
-				},
-				"Claw (2x).": {
-					"name": "Claw (2x).",
-					"description": "<p>1d4+8. On damage: Dazed. On crit: DC 12 INT save or 1 Wound.</p><p><strong>Gaining the Upper Hand:</strong> Sing, little toads, silling!</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>No fair, I deserve my turn!</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Your future is dark, worm... <em>*occult mum-bling*</em></p><p>Whoever landed the killing blow: WIL save or become cursed; half as tall until cured.</p>"
-				}
-			}
-		},
-		"Dravok, All-Seeing Tyrant": {
-			"name": "Dravok, All-Seeing Tyrant",
-			"creatureType": "Aberration, all TEETH & EYES",
-			"items": {
-				"My plans, flawless!": {
-					"name": "My plans, flawless!",
-					"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>"
-				},
-				"Weakness": {
-					"name": "Weakness",
-					"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>"
-				},
-				"1. Warping Ray": {
-					"name": "1. Warping Ray",
-					"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>"
-				},
-				"2. Petrification Ray": {
-					"name": "2. Petrification Ray",
-					"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>"
-				},
-				"3. Terror Ray": {
-					"name": "3. Terror Ray",
-					"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>"
-				},
-				"4. Gravitation Ray": {
-					"name": "4. Gravitation Ray",
-					"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>"
-				},
-				"5. Charm Ray": {
-					"name": "5. Charm Ray",
-					"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>"
-				},
-				"6. Death Ray": {
-					"name": "6. Death Ray",
-					"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>"
-				},
-				"Terrible Maw": {
-					"name": "Terrible Maw",
-					"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>"
-				}
-			}
-		},
-		"Caerys, the Hollow Star": {
-			"name": "Caerys, the Hollow Star",
-			"creatureType": "World-Ending Cataclysm",
-			"items": {
-				"Ravages of Time": {
-					"name": "Ravages of Time",
-					"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>"
-				},
-				"Slipstream": {
-					"name": "Slipstream",
-					"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose 1 not yet chosen (reset when all have been chosen):</p>"
-				},
-				"Wormhole": {
-					"name": "Wormhole",
-					"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>"
-				},
-				"Immensity": {
-					"name": "Immensity",
-					"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>"
-				},
-				"Glimpse Your End": {
-					"name": "Glimpse Your End",
-					"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>"
-				},
-				"Plasma Storm": {
-					"name": "Plasma Storm",
-					"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>"
-				},
-				"Singularity": {
-					"name": "Singularity",
-					"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>"
-				},
-				"Almighty Push & Pull": {
-					"name": "Almighty Push & Pull",
-					"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 310 HP, Gravitational Mastery. Move ALL objects and creatures within 16 spaces anywhere else within the area. Gravitational Lensing. The hero with the most HP is marked by Caerys. She takes half damage from all sources, her mark takes the other half. This lasts until the mark drops to 0 HP.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Use Gravitational Mastery, then Caerys is dying! 200 more damage and she dies. Until then she chooses twice each turn. If still alive after 1 round: Reset Time: she resets back to full HP.</p>"
-				}
-			}
-		},
-		"Azriel, Lord of Pain & Flame": {
-			"name": "Azriel, Lord of Pain & Flame",
-			"creatureType": "Balor Feeling Hot & Spicy",
-			"items": {
-				"PAIN!": {
-					"name": "PAIN!",
-					"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, choose 1:</p>"
-				},
-				"Crackling Whip.": {
-					"name": "Crackling Whip.",
-					"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>"
-				},
-				"Doom Sword.": {
-					"name": "Doom Sword.",
-					"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 160 HP, Azriel can use Crackling Whip twice each turn.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p><strong>YES, MORE PAIN!</strong> Azriel is dying! 180 more damage and he dies. Until then, EVERY hit against him is a crit.</p>"
-				}
-			}
-		},
-		"Alaric Draegoth's Blood Bat": {
-			"name": "Alaric Draegoth's Blood Bat",
-			"tokenName": "New Actor",
-			"items": {
-				"Bite": {
-					"name": "Bite",
-					"description": "<p>1d10, follow minion rules</p>"
-				},
-				"Bite - Last Stand": {
-					"name": "Bite - Last Stand",
-					"description": "<p>1d20, follow minion rules</p>"
-				}
-			}
-		},
-		"Alaric Draegoth, the Crimson Count": {
-			"name": "Alaric Draegoth, the Crimson Count",
-			"creatureType": "Vampire Lord",
-			"items": {
-				"Sanguine Cloak": {
-					"name": "Sanguine Cloak",
-					"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>"
-				},
-				"Sunscorn": {
-					"name": "Sunscorn",
-					"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>"
-				},
-				"Blood Bat": {
-					"name": "Blood Bat",
-					"description": "<p>After each hero's turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>"
-				},
-				"Attack Sequence": {
-					"name": "Attack Sequence",
-					"description": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>"
-				},
-				"Ebonfang": {
-					"name": "Ebonfang",
-					"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>"
-				},
-				"Beguile": {
-					"name": "Beguile",
-					"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>"
-				},
-				"Beckon & Bite": {
-					"name": "Beckon & Bite",
-					"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>"
-				},
-				"Bloodied": {
-					"name": "Bloodied",
-					"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>"
-				},
-				"Last Stand": {
-					"name": "Last Stand",
-					"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>"
-				}
-			}
+			},
+			"name": "Vael, Undying Necromancer"
 		}
 	}
 }

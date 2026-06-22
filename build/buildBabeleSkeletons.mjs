@@ -17,7 +17,7 @@
  *   - `system.activation.cost.details`, `duration.details`, `targets.restrictions` (items)
  *   - `system.rules[]` → map keyed by `rule.id`, capturing `label`
  *   - For roll tables: `results[]` → map keyed by `_id`, capturing `name` + `description`
- *   - Embedded actor items, recursively
+ *   - Embedded actor items, recursively (keyed by `name` per Babele convention)
  *   - Folder labels per pack (monsters by directory, boons/subclasses/classFeatures
  *     by Pack.mjs derivation logic)
  *
@@ -35,6 +35,16 @@ import path from 'node:path';
 import url from 'node:url';
 import { globSync } from 'glob';
 import systemJSON from '../public/system.json' with { type: 'json' };
+import {
+	ACTOR_TYPES,
+	buildEmbeddedItemEntries,
+	buildTableResultEntries,
+	extractEntryFields,
+	nonEmptyString,
+	reconcileEntries,
+	sortObjectKeys,
+	toTitleCase,
+} from './lib/babeleSkeletonsLib.mjs';
 
 const dirName = url.fileURLToPath(new URL('.', import.meta.url));
 const projectRoot = path.resolve(dirName, '..');
@@ -42,7 +52,6 @@ const packsRoot = path.resolve(projectRoot, 'packs');
 const babeleRoot = path.resolve(projectRoot, 'public/lang/babele');
 
 const SYSTEM_ID = systemJSON.id;
-const ACTOR_TYPES = new Set(['character', 'minion', 'npc', 'soloMonster']);
 
 function getDeclaredLanguages() {
 	const cliLangs = process.argv.slice(2).filter(Boolean);
@@ -84,137 +93,6 @@ function loadPackSources(dirPath) {
 			}
 		})
 		.filter(Boolean);
-}
-
-function nonEmptyString(value) {
-	return typeof value === 'string' && value.trim().length > 0;
-}
-
-function extractRuleEntries(rules) {
-	if (!Array.isArray(rules)) return null;
-	const entries = {};
-	rules.forEach((rule, index) => {
-		if (!nonEmptyString(rule?.label)) return;
-		const key = nonEmptyString(rule.id) ? rule.id : `index:${index}`;
-		entries[key] = { label: rule.label };
-	});
-	return Object.keys(entries).length > 0 ? entries : null;
-}
-
-function extractActivationFields(activation) {
-	if (!activation || typeof activation !== 'object') return null;
-	const out = {};
-	if (nonEmptyString(activation.cost?.details)) out.costDetails = activation.cost.details;
-	if (nonEmptyString(activation.duration?.details))
-		out.durationDetails = activation.duration.details;
-	if (nonEmptyString(activation.targets?.restrictions))
-		out.targetsRestrictions = activation.targets.restrictions;
-	return Object.keys(out).length > 0 ? out : null;
-}
-
-function extractEntryFields(source, { isRollTable = false } = {}) {
-	const fields = {};
-	if (nonEmptyString(source.name)) fields.name = source.name;
-
-	// RollTables store description at top-level; actors and items use system.description.
-	const description = isRollTable ? source.description : source.system?.description;
-	if (nonEmptyString(description)) fields.description = description;
-
-	if (ACTOR_TYPES.has(source.type)) {
-		const creatureType = source.system?.details?.creatureType;
-		if (nonEmptyString(creatureType)) fields.creatureType = creatureType;
-
-		const tokenName = source.prototypeToken?.name;
-		if (nonEmptyString(tokenName) && tokenName !== source.name) fields.tokenName = tokenName;
-	}
-
-	const activation = extractActivationFields(source.system?.activation);
-	if (activation) Object.assign(fields, activation);
-
-	const rules = extractRuleEntries(source.system?.rules);
-	if (rules) fields.rules = rules;
-
-	return fields;
-}
-
-function buildEmbeddedItemEntries(actorSource) {
-	if (!Array.isArray(actorSource.items)) return null;
-	const entries = {};
-	for (const item of actorSource.items) {
-		if (!nonEmptyString(item?.name)) continue;
-		const fields = extractEntryFields(item);
-		if (Object.keys(fields).length === 0) continue;
-		entries[item.name] = fields;
-	}
-	return Object.keys(entries).length > 0 ? entries : null;
-}
-
-function buildTableResultEntries(tableSource) {
-	if (!Array.isArray(tableSource.results)) return null;
-	const entries = {};
-	for (const result of tableSource.results) {
-		if (!nonEmptyString(result?._id)) continue;
-		const fields = {};
-		if (nonEmptyString(result.name)) fields.name = result.name;
-		if (nonEmptyString(result.description)) fields.description = result.description;
-		if (Object.keys(fields).length === 0) continue;
-		entries[result._id] = fields;
-	}
-	return Object.keys(entries).length > 0 ? entries : null;
-}
-
-function isPlainObject(value) {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function mergeEntry(existing, source) {
-	const merged = {};
-	for (const [key, sourceValue] of Object.entries(source)) {
-		const existingValue = existing?.[key];
-		if (isPlainObject(existingValue) && isPlainObject(sourceValue)) {
-			merged[key] = mergeEntry(existingValue, sourceValue);
-			continue;
-		}
-		if (existingValue !== undefined && existingValue !== sourceValue && existingValue !== '') {
-			merged[key] = existingValue;
-		} else {
-			merged[key] = sourceValue;
-		}
-	}
-	for (const [key, value] of Object.entries(existing ?? {})) {
-		if (!(key in merged)) merged[key] = value;
-	}
-	return merged;
-}
-
-function reconcileEntries(existingEntries, sourceEntries) {
-	const merged = {};
-	const added = [];
-	const stale = [];
-
-	for (const [name, sourceFields] of Object.entries(sourceEntries)) {
-		const prior = existingEntries?.[name];
-		merged[name] = mergeEntry(prior, sourceFields);
-		if (!prior) added.push(name);
-	}
-
-	for (const [name, value] of Object.entries(existingEntries ?? {})) {
-		if (!(name in merged)) {
-			merged[name] = value;
-			stale.push(name);
-		}
-	}
-
-	return { merged, added, stale };
-}
-
-function toTitleCase(slug) {
-	return slug
-		.replace(/[-_]+/g, ' ')
-		.split(' ')
-		.filter(Boolean)
-		.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-		.join(' ');
 }
 
 function deriveMonsterFolders(packDir, sources) {
@@ -283,7 +161,7 @@ function deriveClassFeatureFolders(packDir, sources) {
 			cd.subclasses.add(toTitleCase(pathSubclass));
 			continue;
 		}
-		if (nonEmptyString(data?.system?.subclass) && data.system.subclass !== false) {
+		if (nonEmptyString(data?.system?.subclass)) {
 			cd.subclasses.add(data.system.subclass);
 			continue;
 		}
@@ -327,13 +205,15 @@ function deriveFoldersForPack(dirBaseName, packDir, sources) {
 function buildPackSkeleton(packMeta, dirBaseName, packDir, sources, existing) {
 	const isRollTable = packMeta.type === 'RollTable';
 	const sourceEntries = {};
+	const collisions = [];
+
 	for (const { data } of sources) {
 		if (!nonEmptyString(data?.name)) continue;
 		const fields = extractEntryFields(data, { isRollTable });
 		if (Object.keys(fields).length === 0) continue;
 
 		if (ACTOR_TYPES.has(data.type)) {
-			const embedded = buildEmbeddedItemEntries(data);
+			const embedded = buildEmbeddedItemEntries(data, collisions);
 			if (embedded) fields.items = embedded;
 		}
 
@@ -357,11 +237,13 @@ function buildPackSkeleton(packMeta, dirBaseName, packDir, sources, existing) {
 		}
 	}
 
+	// Sort entries/folders alphabetically (recursively) so regenerations produce
+	// stable diffs regardless of source-pack iteration order on disk.
 	const skeleton = {
 		label: existing?.label ?? packMeta.label,
-		entries: reconciled.merged,
+		entries: sortObjectKeys(reconciled.merged),
 	};
-	if (Object.keys(folders).length > 0) skeleton.folders = folders;
+	if (Object.keys(folders).length > 0) skeleton.folders = sortObjectKeys(folders);
 	if (existing?.mapping) skeleton.mapping = existing.mapping;
 
 	return {
@@ -369,6 +251,7 @@ function buildPackSkeleton(packMeta, dirBaseName, packDir, sources, existing) {
 		added: reconciled.added,
 		stale: reconciled.stale,
 		foldersAdded,
+		collisions,
 	};
 }
 
@@ -397,6 +280,7 @@ function buildAllForLanguage(lang, packMetaMap) {
 	let addedCount = 0;
 	let staleCount = 0;
 	let foldersAddedCount = 0;
+	let collisionCount = 0;
 
 	for (const packDir of sourcePackDirs) {
 		const dirBaseName = path.basename(packDir);
@@ -413,7 +297,7 @@ function buildAllForLanguage(lang, packMetaMap) {
 		const filePath = path.join(langDir, fileName);
 		const existing = readExisting(filePath);
 
-		const { skeleton, added, stale, foldersAdded } = buildPackSkeleton(
+		const { skeleton, added, stale, foldersAdded, collisions } = buildPackSkeleton(
 			meta,
 			dirBaseName,
 			packDir,
@@ -426,6 +310,7 @@ function buildAllForLanguage(lang, packMetaMap) {
 		addedCount += added.length;
 		staleCount += stale.length;
 		foldersAddedCount += foldersAdded;
+		collisionCount += collisions.length;
 
 		const parts = [];
 		if (added.length > 0) parts.push(`+${added.length} entries`);
@@ -435,9 +320,13 @@ function buildAllForLanguage(lang, packMetaMap) {
 			console.log(
 				`[WARN] - ${lang}/${fileName}: ${stale.length} entries no longer present in source — kept for manual review`,
 			);
+		if (collisions.length > 0)
+			console.log(
+				`[WARN] - ${lang}/${fileName}: embedded item name collisions — second occurrence overwrites first:\n    ${collisions.join('\n    ')}`,
+			);
 	}
 
-	return { touched, addedCount, staleCount, foldersAddedCount };
+	return { touched, addedCount, staleCount, foldersAddedCount, collisionCount };
 }
 
 console.log('[INFO] - Building Babele translation skeletons.');
@@ -447,7 +336,7 @@ const languages = getDeclaredLanguages();
 for (const lang of languages) {
 	const summary = buildAllForLanguage(lang, packMetaMap);
 	console.log(
-		`[INFO] - ${lang}: ${summary.touched} files updated (${summary.addedCount} new entries, ${summary.foldersAddedCount} new folders, ${summary.staleCount} stale)`,
+		`[INFO] - ${lang}: ${summary.touched} files updated (${summary.addedCount} new entries, ${summary.foldersAddedCount} new folders, ${summary.staleCount} stale, ${summary.collisionCount} embedded-name collisions)`,
 	);
 }
 

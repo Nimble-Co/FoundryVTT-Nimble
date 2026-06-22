@@ -1,32 +1,89 @@
 {
 	"label": "Nimble Tables",
 	"entries": {
-		"Lodging Boons": {
-			"name": "Lodging Boons",
+		"Chaos Table": {
+			"description": "<h6><strong>Unless otherwise noted, ongoing effects last for up to 1 minute or until Chaos is triggered again.</strong></h6>",
+			"name": "Chaos Table",
 			"results": {
-				"IMlxO1m8mUPYSMnr": {
-					"name": "Recover 2 additional Wounds"
+				"4pclmXhEjiw0PblN": {
+					"description": "<p>Creatures within 6 spaces of you must make a DEX save or take INT d10 fire damage on a failure, half on save. You fail the save.</p>",
+					"name": "Elemental Eruption"
 				},
-				"tQI0aNZ9lzyWEZAY": {
-					"name": "Gain LVL temp HP"
+				"54ODa7XWGrOgcU3t": {
+					"description": "<p>You polymorph into a cute squirrel until you take damage. Your TOP priority is to find acorns (squirrels can't cast spells).</p>",
+					"name": "Aww, Nuts!"
 				},
-				"sSsIvfSNkmNyaLOD": {
-					"name": "Gain KEY temp Hit Dice"
+				"7lQcYnM3HOtUFARe": {
+					"description": "<p>You are enveloped in a magical cocoon until the end of your next turn. You fall Prone, are unable to move or speak, and are immune to damage. You must spend all of your Actions casting cantrips at the nearest creature.</p>",
+					"name": "Ethereal Cocoon"
 				},
-				"KcKq1nzQmhXJE8gF": {
-					"name": "+1 Speed"
+				"7VRNZ7u1jTndWBl8": {
+					"description": "<p>Enemies within 12 spaces of you take INT d8 lightning damage. You regain INT mana at the end of your turns (this mana expires at the end of combat if unused).</p>",
+					"name": "Elemental Overload"
 				},
-				"tLSIioewyWZm5fWa": {
-					"name": "Inspired (reroll any die, once)"
+				"BuzXATnqFCFrx2Ut": {
+					"description": "<p>A 3rd eye appears on your fore head. Gain advantage on the Assess action and all attacks.</p>",
+					"name": "Awakening"
 				},
-				"FaKCBXJW0jkwSC0G": {
-					"name": "Advantage vs. Fear/Charm/Etc."
+				"CmulzbXuhXjKiJoy": {
+					"description": "<p>Everywhere around you within 6 spaces is difficult terrain.</p>",
+					"name": "Reality Warp"
 				},
-				"CqxgwJX2RD8o6qDZ": {
-					"name": "Learn an important rumor"
+				"ddrC2Zb6tCBEu9kT": {
+					"description": "<p>You sprout butterfly wings from your back; gain a flying speed.</p>",
+					"name": "Emerge Beautiful"
 				},
-				"4yWZ6hbGpYl5Nok1": {
-					"name": "+KEY mana"
+				"DNrUW9tq11q4iQga": {
+					"description": "<p>Swap places with any creature you can see.</p>",
+					"name": "Chaos Step"
+				},
+				"dTqMvbKw83q4wmya": {
+					"description": "<p>Your spells (including the one that triggered this effect) are empowered and are cast as if you spent 2 additional mana on them (ignoring your natural max).</p>",
+					"name": "Mighty Mana"
+				},
+				"IPgASrUp5X3ub10P": {
+					"description": "<p>Your size is halved. Gain advantage on Stealth checks, and attacks against you are made with disadvantage.</p>",
+					"name": "Unbiggen"
+				},
+				"JqDvl32ryloMqXYW": {
+					"description": "<p>An enemy controls 1 Action for you at the start of each of your turns.</p>",
+					"name": "Elemental Entanglement"
+				},
+				"js3uyAs0CP5zDHJK": {
+					"description": "<p>Suffer 1 Wound. The spell you just cast also targets you (or an enemy if it was a beneficial spell).</p>",
+					"name": "Backfire"
+				},
+				"KhUhJYt0kMHOA8rI": {
+					"description": "<p>You fall Prone, cannot stand, and your speed becomes 0 while out of water.</p>",
+					"name": "Liquefy Legs"
+				},
+				"MOnvOMk3UXY82isZ": {
+					"description": "<p>A random enemy is pulled adjacent to you at the end of each of your turns.</p>",
+					"name": "Graviturgical Grace"
+				},
+				"MVJnwMvbp3vlSrKC": {
+					"description": "<p>Teleport. [[/r 1d4]]:</p><ol><li><p>The worst place! (GM's choice)</p></li><li><p>UP! 6 spaces (3d6 falling damage)</p></li><li><p>Player's choice, 6 spaces</p></li><li><p>Player's choice, 12 spaces</p></li></ol>",
+					"name": "Displacement"
+				},
+				"nij3W2UjjjPUIKLa": {
+					"description": "<p>At the end of each of your turns, summon INT hostile aetherling minions adjacent to you that act immediately after you (size: d6).</p>",
+					"name": "Summon Aetherlings"
+				},
+				"QZUrzh6DIPDsKojb": {
+					"description": "<p>The dumbest enemy within 16 spaces takes INT d6 psychic damage (ignoring armor), and gains the Smoldering condition.</p>",
+					"name": "Mindfire"
+				},
+				"rnxCUdgId5d8upRt": {
+					"description": "<p>Multiply your Armor by INT; you can Defend for free each round.</p>",
+					"name": "Diamond Skin"
+				},
+				"S84omYE48ojDBYoY": {
+					"description": "<p>The last spell you cast is cast again for free, against a random target.</p>",
+					"name": "Manastorm"
+				},
+				"tSLvOGbLasWBpPvp": {
+					"description": "<p>Your size is doubled. Gain INT d10 Temp HP and advantage on STR saves instead of disadvantage.</p>",
+					"name": "Embiggen"
 				}
 			}
 		},
@@ -34,106 +91,49 @@
 			"name": "Control Table",
 			"results": {
 				"4lmNM49YEJXPRNso": {
-					"name": "I INSIST",
-					"description": "<p>Cast a cantrip for free, ignoring all disadvantage; it cannot miss.</p>"
-				},
-				"xKVtXKzsEgq9KmMI": {
-					"name": "ELEMENTAL AFFLICTION",
-					"description": "<p>A creature of your choice within 12 spaces gains the Charged, Smoldering, or Slowed condition.</p>"
-				},
-				"WNMnMtSVJEqNpB5m": {
-					"name": "NO",
-					"description": "<p>Choose a creature; it cannot harm a creature of your choice during its next turn.</p>"
+					"description": "<p>Cast a cantrip for free, ignoring all disadvantage; it cannot miss.</p>",
+					"name": "I INSIST"
 				},
 				"KwKENKzXKHJqoUHe": {
-					"name": "LOSE CONTROL",
-					"description": "<p>Do ALL of the above, but the GM chooses each time.</p>"
+					"description": "<p>Do ALL of the above, but the GM chooses each time.</p>",
+					"name": "LOSE CONTROL"
+				},
+				"WNMnMtSVJEqNpB5m": {
+					"description": "<p>Choose a creature; it cannot harm a creature of your choice during its next turn.</p>",
+					"name": "NO"
+				},
+				"xKVtXKzsEgq9KmMI": {
+					"description": "<p>A creature of your choice within 12 spaces gains the Charged, Smoldering, or Slowed condition.</p>",
+					"name": "ELEMENTAL AFFLICTION"
 				}
 			}
 		},
-		"Chaos Table": {
-			"name": "Chaos Table",
-			"description": "<h6><strong>Unless otherwise noted, ongoing effects last for up to 1 minute or until Chaos is triggered again.</strong></h6>",
+		"Lodging Boons": {
+			"name": "Lodging Boons",
 			"results": {
-				"4pclmXhEjiw0PblN": {
-					"name": "Elemental Eruption",
-					"description": "<p>Creatures within 6 spaces of you must make a DEX save or take INT d10 fire damage on a failure, half on save. You fail the save.</p>"
+				"4yWZ6hbGpYl5Nok1": {
+					"name": "+KEY mana"
 				},
-				"js3uyAs0CP5zDHJK": {
-					"name": "Backfire",
-					"description": "<p>Suffer 1 Wound. The spell you just cast also targets you (or an enemy if it was a beneficial spell).</p>"
+				"CqxgwJX2RD8o6qDZ": {
+					"name": "Learn an important rumor"
 				},
-				"54ODa7XWGrOgcU3t": {
-					"name": "Aww, Nuts!",
-					"description": "<p>You polymorph into a cute squirrel until you take damage. Your TOP priority is to find acorns (squirrels can't cast spells).</p>"
+				"FaKCBXJW0jkwSC0G": {
+					"name": "Advantage vs. Fear/Charm/Etc."
 				},
-				"nij3W2UjjjPUIKLa": {
-					"name": "Summon Aetherlings",
-					"description": "<p>At the end of each of your turns, summon INT hostile aetherling minions adjacent to you that act immediately after you (size: d6).</p>"
+				"IMlxO1m8mUPYSMnr": {
+					"name": "Recover 2 additional Wounds"
 				},
-				"MOnvOMk3UXY82isZ": {
-					"name": "Graviturgical Grace",
-					"description": "<p>A random enemy is pulled adjacent to you at the end of each of your turns.</p>"
+				"KcKq1nzQmhXJE8gF": {
+					"name": "+1 Speed"
 				},
-				"KhUhJYt0kMHOA8rI": {
-					"name": "Liquefy Legs",
-					"description": "<p>You fall Prone, cannot stand, and your speed becomes 0 while out of water.</p>"
+				"sSsIvfSNkmNyaLOD": {
+					"name": "Gain KEY temp Hit Dice"
 				},
-				"JqDvl32ryloMqXYW": {
-					"name": "Elemental Entanglement",
-					"description": "<p>An enemy controls 1 Action for you at the start of each of your turns.</p>"
+				"tLSIioewyWZm5fWa": {
+					"name": "Inspired (reroll any die, once)"
 				},
-				"7lQcYnM3HOtUFARe": {
-					"name": "Ethereal Cocoon",
-					"description": "<p>You are enveloped in a magical cocoon until the end of your next turn. You fall Prone, are unable to move or speak, and are immune to damage. You must spend all of your Actions casting cantrips at the nearest creature.</p>"
-				},
-				"S84omYE48ojDBYoY": {
-					"name": "Manastorm",
-					"description": "<p>The last spell you cast is cast again for free, against a random target.</p>"
-				},
-				"CmulzbXuhXjKiJoy": {
-					"name": "Reality Warp",
-					"description": "<p>Everywhere around you within 6 spaces is difficult terrain.</p>"
-				},
-				"MVJnwMvbp3vlSrKC": {
-					"name": "Displacement",
-					"description": "<p>Teleport. [[/r 1d4]]:</p><ol><li><p>The worst place! (GM's choice)</p></li><li><p>UP! 6 spaces (3d6 falling damage)</p></li><li><p>Player's choice, 6 spaces</p></li><li><p>Player's choice, 12 spaces</p></li></ol>"
-				},
-				"DNrUW9tq11q4iQga": {
-					"name": "Chaos Step",
-					"description": "<p>Swap places with any creature you can see.</p>"
-				},
-				"QZUrzh6DIPDsKojb": {
-					"name": "Mindfire",
-					"description": "<p>The dumbest enemy within 16 spaces takes INT d6 psychic damage (ignoring armor), and gains the Smoldering condition.</p>"
-				},
-				"ddrC2Zb6tCBEu9kT": {
-					"name": "Emerge Beautiful",
-					"description": "<p>You sprout butterfly wings from your back; gain a flying speed.</p>"
-				},
-				"IPgASrUp5X3ub10P": {
-					"name": "Unbiggen",
-					"description": "<p>Your size is halved. Gain advantage on Stealth checks, and attacks against you are made with disadvantage.</p>"
-				},
-				"tSLvOGbLasWBpPvp": {
-					"name": "Embiggen",
-					"description": "<p>Your size is doubled. Gain INT d10 Temp HP and advantage on STR saves instead of disadvantage.</p>"
-				},
-				"BuzXATnqFCFrx2Ut": {
-					"name": "Awakening",
-					"description": "<p>A 3rd eye appears on your fore head. Gain advantage on the Assess action and all attacks.</p>"
-				},
-				"rnxCUdgId5d8upRt": {
-					"name": "Diamond Skin",
-					"description": "<p>Multiply your Armor by INT; you can Defend for free each round.</p>"
-				},
-				"dTqMvbKw83q4wmya": {
-					"name": "Mighty Mana",
-					"description": "<p>Your spells (including the one that triggered this effect) are empowered and are cast as if you spent 2 additional mana on them (ignoring your natural max).</p>"
-				},
-				"7VRNZ7u1jTndWBl8": {
-					"name": "Elemental Overload",
-					"description": "<p>Enemies within 12 spaces of you take INT d8 lightning damage. You regain INT mana at the end of your turns (this mana expires at the end of combat if unused).</p>"
+				"tQI0aNZ9lzyWEZAY": {
+					"name": "Gain LVL temp HP"
 				}
 			}
 		}

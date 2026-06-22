@@ -1,194 +1,81 @@
 {
 	"label": "Nimble Ancestries",
 	"entries": {
-		"Wyrdling": {
-			"name": "Wyrdling",
-			"description": "<p>Unpredictable and chaotic, Wyrdlings are the result of magic gone awry. Their bodies pulse with raw arcane energy, and their mere presence often disturbs the balance of magic around them.</p><hr><p><strong>Chaotic Surge</strong> </p><p>Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.</p>"
-		},
-		"Turtlefolk": {
-			"name": "Turtlefolk",
-			"description": "<p>Turtlefolk take their time in everything they do; they are patient, sturdy, and slow to anger. They rely on their thick shells for protection, making them difficult to harm, but their cautious movements come at the cost of speed.</p><hr><p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>",
-			"rules": {
-				"ODF6VnVsmfBrfFtp": {
-					"label": "Slow & Steady"
-				},
-				"Xk9mNpQ2rLsYvWtH": {
-					"label": "Slow & Steady"
-				}
-			}
-		},
-		"Stoatling": {
-			"name": "Stoatling",
-			"description": "<p>Stoatlings may be small, but they're far from weak. With fierce determination and warrior hearts, they can take down foes many times their size. Their agility and tenacity let them exploit larger enemies' weaknesses, turning their size into a lethal advantage.</p><hr><p><strong>Small But Ferocious</strong> </p><p>Whenever you make a single-target attack against a creature larger than you, roll 1 additional d6 for each size category it is larger. They do the same.</p>"
-		},
-		"Ratfolk": {
-			"name": "Ratfolk",
-			"description": "<p>Ratfolk are survivors, thriving in the shadows of society where others fear to tread. Agile, resourceful, and fiercely loyal to their own, they have a knack for turning scraps into solutions.</p><hr><p><strong>Scurry</strong> </p><p>Gain +2 armor if you moved on your last turn. [M]</p>"
-		},
-		"Planarbeing": {
-			"name": "Planarbeing",
-			"description": "<p>You are not from this plane of existence—your soul is not as strongly tethered to it as others. But with this vulnerability comes power, the ability to temporarily shift from one plane to another in times of dire need.</p><hr><p><strong>Planeshift</strong> </p><p>Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. </p><p>–2 max Wounds. [A]</p>",
-			"rules": {
-				"fbhC9ohclITGwSq3": {
-					"label": "Planeshift"
-				}
-			}
-		},
-		"Orc": {
-			"name": "Orc",
-			"description": "<p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death's approach, Orcs boldly defy its grasp.</p><hr><p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
-			"rules": {
-				"FDQIIE9eJorL65lg": {
-					"label": "Relentless"
-				},
-				"index:1": {
-					"label": "Relentless"
-				}
-			}
-		},
-		"Oozeling/Construct": {
-			"name": "Oozeling/Construct",
-			"description": "<p>What even is a “PeOpLe“ anyway? So what if your heart pumps oil instead of blood, so what if you don't even have a heart!? If you can squish yourself into a pair of pants, or swing a sword like everyone else, who's to say you can't be a pEOpLe, too?!</p><hr><p><strong>Odd Constitution</strong> </p><p>Increment your Hit Dice one step (d6 » d8 » d10 » d12 » d20); they always heal you for the maximum amount. Magical healing always heals you for the minimum amount.</p>",
-			"rules": {
-				"index:0": {
-					"label": "Odd Constitution"
-				},
-				"index:1": {
-					"label": "Odd Constitution"
-				}
-			}
-		},
-		"Minotaur/Beastfolk": {
-			"name": "Minotaur/Beastfolk",
-			"description": "<p>Minotaur and other Beastfolk embody a primal connection to The Wild, combining strength with natural agility. Their powerful build allows them to move swiftly, whether repositioning to outflank foes or charging in with unstoppable force.</p><hr><p><strong>Charge</strong> </p><p>When you move at least 4 spaces, you can push a creature in your path. Medium: 1 space; Small/Tiny: up to 2 spaces. 1/turn.</p>"
-		},
-		"Kobold": {
-			"name": "Kobold",
-			"description": "<p>Small, often maniacal, and dragon–obsessed. Kobolds thrive in the shadows, finding ingenious ways to survive despite their diminutive size. Underestimated by many, Kobolds prove time and again that even the smallest among us can wield great power.</p><hr><p><strong>Wily</strong> </p><p>Force an enemy to reroll a non-critical attack against you, 1/encounter. </p><p>+3 to Influence friendly characters. [M]</p><p>Advantage on skill checks related to dragons. [M]</p><p> You know Draconic if your INT is not negative. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Wily"
-				}
-			}
-		},
-		"Half-Giant": {
-			"name": "Half-Giant",
-			"description": "<p>Towering beings whose strength is as immovable as the mountains they call home. Their sheer size and resilience make them fearsome opponents, capable of surviving even devastating blows.</p><hr><p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p><p>You know Dwarvish if your INT is not negative. [M]</p>",
-			"rules": {
-				"eJoTbJqZZAqwHrZ2": {
-					"label": "Strength of Stone"
-				},
-				"index:1": {
-					"label": "Strength of Stone"
-				}
-			}
-		},
-		"Goblin": {
-			"name": "Goblin",
-			"description": "<p>Green, cunning, and perpetually vilified, Goblins thrive on the edge of chaos. For a Goblin, vanishing into the shadows is not just a skill—it's an identity. After all, what kind of Goblin would you be if you couldn't slip away unnoticed?</p><hr><p><strong>Skedaddle</strong> </p><p>Can move 2 spaces for free after you become the target of an attack or negative effect (after damage, ignoring difficult terrain). </p><p>You know Goblin if your INT is not negative. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Skedaddle"
-				}
-			}
-		},
-		"Fiendkin": {
-			"name": "Fiendkin",
-			"description": "<p>Said to have been born from the union of man and fiend, or from a cursed bloodline, Fiendkin often find themselves outcasts in society. Yet, they embody determination in the face of adversity. Their ancestors didn't emerge from the depths of the Everflame to succumb to minor setbacks!</p><hr><p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p><p>You know Infernal if your INT is not negative. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Flameborn"
-				},
-				"index:1": {
-					"label": "Flameborn"
-				}
-			}
-		},
-		"Dryad/Shroomling": {
-			"name": "Dryad/Shroomling",
-			"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against those who dare to harm them.</p><hr><p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p><p>You know Elvish if your INT is not negative. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Danger Pollen/Spores"
-				}
-			}
-		},
-		"Dragonborn": {
-			"name": "Dragonborn",
-			"description": "<p>The soul of a dragon burns within you, the scales of your body are like forged steel. You are a kiln and your heritage the coals that stoke your flames. Call upon your wrath, to speak in the tongue of your ancestors and imbue unbridled fury into your attacks.</p><hr><p><strong>Draconic Heritage</strong></p><p>+1 Armor. [A]</p><p>When you attack: deal an additional LVL+KEY damage (ignoring armor) divided as you choose among any of your targets; recharges whenever you Safe Rest or gain a Wound.</p><p>You know Draconic if your INT is not negative. [M]</p>",
-			"rules": {
-				"io7K8HETN3dgovbH": {
-					"label": "Draconic heritage"
-				},
-				"index:1": {
-					"label": "Draconic Heritage"
-				}
-			}
-		},
-		"Crystalborn": {
-			"name": "Crystalborn",
-			"description": "<p>Formed from living crystal, the Crystalborn are beings of dazzling beauty and otherworldly toughness. Their translucent bodies refract light and sound, granting them unique abilities in combat.</p><hr><p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>"
-		},
-		"Changeling": {
-			"name": "Changeling",
-			"description": "<p>Often hunted for their silver blood, Changelings are natural survivors, slipping into new identities with ease. Changelings that shift too often typically aren't long for the world—they can struggle to remember who they once were, becoming little more than reflections of the faces they wear.</p><hr><p><strong>New Place, New Face</strong> </p><p>+2 shifting skill points. You may take on the appearance of any ancestry. When you do, you may place your 2 shifting skill points into any 1 skill. 1/day.</p>"
-		},
-		"Celestial": {
-			"name": "Celestial",
-			"description": "<p>Descendants of divine beings, Celestials carry an aura of nobility and grace. Their innate connection to the higher planes allows them to resist the effects of misfortune, standing strong where others may falter.</p><hr><p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p><p>You know Celestial if your INT isn't negative. [M]</p>",
-			"rules": {
-				"index:0": {
-					"label": "Highborn"
-				},
-				"index:1": {
-					"label": "Highborn"
-				}
-			}
-		},
-		"Bunbun": {
-			"name": "Bunbun",
-			"description": "<p>Bunbun are agile and unpredictable, using their powerful legs to leap great distances and catch foes off guard. Facing a Bunbun means contending with an opponent who can strike from unexpected angles and swiftly reposition themselves in the heat of battle.</p><hr><p><strong>Bunny Legs</strong> </p><p>Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p>"
-		},
 		"Birdfolk": {
-			"name": "Birdfolk",
 			"description": "<p>Birdfolk find sanctuary not in stone or chains, but within the boundless expanse of the sky. However, the gift of flight comes at a cost—hollow bones, and commensurate frailty.</p><hr><p><strong>Hollow Bones</strong></p><p>You have a fly Speed as long as you are wearing armor no heavier than Leather. </p><p>Crits against you are Vicious (the attacker rolls 1 additional die). </p><p>Forced movement moves you twice as far.</p>",
+			"name": "Birdfolk",
 			"rules": {
 				"index:0": {
 					"label": "Hollow Bones"
 				}
 			}
 		},
-		"Human": {
-			"name": "Human",
-			"description": "<p>Found in every terrain and environment, their curiosity and ambition drive them to explore</p><p>every corner of the world, making them a ubiquitous and versatile race.</p><hr><p><strong>Tenacious</strong></p><p>+1 to all skills and initiative [A]</p>",
+		"Bunbun": {
+			"description": "<p>Bunbun are agile and unpredictable, using their powerful legs to leap great distances and catch foes off guard. Facing a Bunbun means contending with an opponent who can strike from unexpected angles and swiftly reposition themselves in the heat of battle.</p><hr><p><strong>Bunny Legs</strong> </p><p>Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p>",
+			"name": "Bunbun"
+		},
+		"Celestial": {
+			"description": "<p>Descendants of divine beings, Celestials carry an aura of nobility and grace. Their innate connection to the higher planes allows them to resist the effects of misfortune, standing strong where others may falter.</p><hr><p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p><p>You know Celestial if your INT isn't negative. [M]</p>",
+			"name": "Celestial",
 			"rules": {
-				"gMJvC5XPYlun1NT3": {
-					"label": "Skill Bonus for Human"
+				"index:0": {
+					"label": "Highborn"
 				},
-				"AuTpcB2psoXIJESI": {
-					"label": "Human Initiative bonus"
+				"index:1": {
+					"label": "Highborn"
 				}
 			}
 		},
-		"Halfling": {
-			"name": "Halfling",
-			"description": "<p>Kind of like a human, but smaller (except for the feet). Where does our luck come from? Well…you know what they say about rabbit feet? Well, we've got feet for days compared to them. Imagine the amount of luck you could fit into these bad boys!</p><hr><p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>"
+		"Changeling": {
+			"description": "<p>Often hunted for their silver blood, Changelings are natural survivors, slipping into new identities with ease. Changelings that shift too often typically aren't long for the world—they can struggle to remember who they once were, becoming little more than reflections of the faces they wear.</p><hr><p><strong>New Place, New Face</strong> </p><p>+2 shifting skill points. You may take on the appearance of any ancestry. When you do, you may place your 2 shifting skill points into any 1 skill. 1/day.</p>",
+			"name": "Changeling"
 		},
-		"Gnome": {
-			"name": "Gnome",
-			"description": "<p>Eccentric, curious, and perpetually optimistic, gnomes are cheerful—especially when compared to their typically grumpier and larger kin, the dwarves. Known for their tinkering, spreading cheer, and playful antics, gnomes pursue their passions with a scatterbrained enthusiasm.</p><hr><p><strong>Optimistic</strong></p><p>Allow an ally within Reach 6 to reroll any single die. Resets when healed to your max HP. </p><p>-1 Speed [M]</p><p>You know Dwarvish if your INT is not negative (but you call it Gnomish, of course) [M]</p>",
+		"Crystalborn": {
+			"description": "<p>Formed from living crystal, the Crystalborn are beings of dazzling beauty and otherworldly toughness. Their translucent bodies refract light and sound, granting them unique abilities in combat.</p><hr><p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>",
+			"name": "Crystalborn"
+		},
+		"Dragonborn": {
+			"description": "<p>The soul of a dragon burns within you, the scales of your body are like forged steel. You are a kiln and your heritage the coals that stoke your flames. Call upon your wrath, to speak in the tongue of your ancestors and imbue unbridled fury into your attacks.</p><hr><p><strong>Draconic Heritage</strong></p><p>+1 Armor. [A]</p><p>When you attack: deal an additional LVL+KEY damage (ignoring armor) divided as you choose among any of your targets; recharges whenever you Safe Rest or gain a Wound.</p><p>You know Draconic if your INT is not negative. [M]</p>",
+			"name": "Dragonborn",
+			"rules": {
+				"index:1": {
+					"label": "Draconic Heritage"
+				},
+				"io7K8HETN3dgovbH": {
+					"label": "Draconic heritage"
+				}
+			}
+		},
+		"Dryad/Shroomling": {
+			"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against those who dare to harm them.</p><hr><p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p><p>You know Elvish if your INT is not negative. [M]</p>",
+			"name": "Dryad/Shroomling",
 			"rules": {
 				"index:0": {
-					"label": "Optimistic"
-				},
+					"label": "Danger Pollen/Spores"
+				}
+			}
+		},
+		"Dwarf": {
+			"description": "<p>Dwarf, in the old language, means “stone.” You are resilient, solid, stout. Even when driven to exhaustion, you will not falter. Forgoing speed, you are gifted with physical vitality and a belly that can handle the finest (and worst) consumables this world has to offer.</p><hr><p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p><p>You know Dwarvish if your INT is not negative [M]</p>",
+			"name": "Dwarf",
+			"rules": {
 				"index:1": {
-					"label": "Optimistic"
+					"label": "Stout"
+				},
+				"index:2": {
+					"label": "Stout"
+				},
+				"index:3": {
+					"label": "Stout"
+				},
+				"v5rARnVgo5eGgtcJ": {
+					"label": "Stout"
 				}
 			}
 		},
 		"Elf": {
-			"name": "Elf",
 			"description": "<p>Elves epitomize swiftness and grace. Their tall, slender forms belie their innate speed, grace, and wit. Formidable in both diplomacy and combat, elves strike swiftly, often preventing the worst by acting first.</p><hr><p><strong>Lithe</strong></p><p>Advantage on Initiative</p><p>+1 Speed [M]</p><p>You know Elvish if your INT is not negative</p>",
+			"name": "Elf",
 			"rules": {
 				"index:0": {
 					"label": "Lithe"
@@ -201,23 +88,136 @@
 				}
 			}
 		},
-		"Dwarf": {
-			"name": "Dwarf",
-			"description": "<p>Dwarf, in the old language, means “stone.” You are resilient, solid, stout. Even when driven to exhaustion, you will not falter. Forgoing speed, you are gifted with physical vitality and a belly that can handle the finest (and worst) consumables this world has to offer.</p><hr><p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p><p>You know Dwarvish if your INT is not negative [M]</p>",
+		"Fiendkin": {
+			"description": "<p>Said to have been born from the union of man and fiend, or from a cursed bloodline, Fiendkin often find themselves outcasts in society. Yet, they embody determination in the face of adversity. Their ancestors didn't emerge from the depths of the Everflame to succumb to minor setbacks!</p><hr><p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p><p>You know Infernal if your INT is not negative. [M]</p>",
+			"name": "Fiendkin",
 			"rules": {
-				"v5rARnVgo5eGgtcJ": {
-					"label": "Stout"
+				"index:0": {
+					"label": "Flameborn"
 				},
 				"index:1": {
-					"label": "Stout"
-				},
-				"index:2": {
-					"label": "Stout"
-				},
-				"index:3": {
-					"label": "Stout"
+					"label": "Flameborn"
 				}
 			}
+		},
+		"Gnome": {
+			"description": "<p>Eccentric, curious, and perpetually optimistic, gnomes are cheerful—especially when compared to their typically grumpier and larger kin, the dwarves. Known for their tinkering, spreading cheer, and playful antics, gnomes pursue their passions with a scatterbrained enthusiasm.</p><hr><p><strong>Optimistic</strong></p><p>Allow an ally within Reach 6 to reroll any single die. Resets when healed to your max HP. </p><p>-1 Speed [M]</p><p>You know Dwarvish if your INT is not negative (but you call it Gnomish, of course) [M]</p>",
+			"name": "Gnome",
+			"rules": {
+				"index:0": {
+					"label": "Optimistic"
+				},
+				"index:1": {
+					"label": "Optimistic"
+				}
+			}
+		},
+		"Goblin": {
+			"description": "<p>Green, cunning, and perpetually vilified, Goblins thrive on the edge of chaos. For a Goblin, vanishing into the shadows is not just a skill—it's an identity. After all, what kind of Goblin would you be if you couldn't slip away unnoticed?</p><hr><p><strong>Skedaddle</strong> </p><p>Can move 2 spaces for free after you become the target of an attack or negative effect (after damage, ignoring difficult terrain). </p><p>You know Goblin if your INT is not negative. [M]</p>",
+			"name": "Goblin",
+			"rules": {
+				"index:0": {
+					"label": "Skedaddle"
+				}
+			}
+		},
+		"Half-Giant": {
+			"description": "<p>Towering beings whose strength is as immovable as the mountains they call home. Their sheer size and resilience make them fearsome opponents, capable of surviving even devastating blows.</p><hr><p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p><p>You know Dwarvish if your INT is not negative. [M]</p>",
+			"name": "Half-Giant",
+			"rules": {
+				"eJoTbJqZZAqwHrZ2": {
+					"label": "Strength of Stone"
+				},
+				"index:1": {
+					"label": "Strength of Stone"
+				}
+			}
+		},
+		"Halfling": {
+			"description": "<p>Kind of like a human, but smaller (except for the feet). Where does our luck come from? Well…you know what they say about rabbit feet? Well, we've got feet for days compared to them. Imagine the amount of luck you could fit into these bad boys!</p><hr><p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>",
+			"name": "Halfling"
+		},
+		"Human": {
+			"description": "<p>Found in every terrain and environment, their curiosity and ambition drive them to explore</p><p>every corner of the world, making them a ubiquitous and versatile race.</p><hr><p><strong>Tenacious</strong></p><p>+1 to all skills and initiative [A]</p>",
+			"name": "Human",
+			"rules": {
+				"AuTpcB2psoXIJESI": {
+					"label": "Human Initiative bonus"
+				},
+				"gMJvC5XPYlun1NT3": {
+					"label": "Skill Bonus for Human"
+				}
+			}
+		},
+		"Kobold": {
+			"description": "<p>Small, often maniacal, and dragon–obsessed. Kobolds thrive in the shadows, finding ingenious ways to survive despite their diminutive size. Underestimated by many, Kobolds prove time and again that even the smallest among us can wield great power.</p><hr><p><strong>Wily</strong> </p><p>Force an enemy to reroll a non-critical attack against you, 1/encounter. </p><p>+3 to Influence friendly characters. [M]</p><p>Advantage on skill checks related to dragons. [M]</p><p> You know Draconic if your INT is not negative. [M]</p>",
+			"name": "Kobold",
+			"rules": {
+				"index:0": {
+					"label": "Wily"
+				}
+			}
+		},
+		"Minotaur/Beastfolk": {
+			"description": "<p>Minotaur and other Beastfolk embody a primal connection to The Wild, combining strength with natural agility. Their powerful build allows them to move swiftly, whether repositioning to outflank foes or charging in with unstoppable force.</p><hr><p><strong>Charge</strong> </p><p>When you move at least 4 spaces, you can push a creature in your path. Medium: 1 space; Small/Tiny: up to 2 spaces. 1/turn.</p>",
+			"name": "Minotaur/Beastfolk"
+		},
+		"Oozeling/Construct": {
+			"description": "<p>What even is a “PeOpLe“ anyway? So what if your heart pumps oil instead of blood, so what if you don't even have a heart!? If you can squish yourself into a pair of pants, or swing a sword like everyone else, who's to say you can't be a pEOpLe, too?!</p><hr><p><strong>Odd Constitution</strong> </p><p>Increment your Hit Dice one step (d6 » d8 » d10 » d12 » d20); they always heal you for the maximum amount. Magical healing always heals you for the minimum amount.</p>",
+			"name": "Oozeling/Construct",
+			"rules": {
+				"index:0": {
+					"label": "Odd Constitution"
+				},
+				"index:1": {
+					"label": "Odd Constitution"
+				}
+			}
+		},
+		"Orc": {
+			"description": "<p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death's approach, Orcs boldly defy its grasp.</p><hr><p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
+			"name": "Orc",
+			"rules": {
+				"FDQIIE9eJorL65lg": {
+					"label": "Relentless"
+				},
+				"index:1": {
+					"label": "Relentless"
+				}
+			}
+		},
+		"Planarbeing": {
+			"description": "<p>You are not from this plane of existence—your soul is not as strongly tethered to it as others. But with this vulnerability comes power, the ability to temporarily shift from one plane to another in times of dire need.</p><hr><p><strong>Planeshift</strong> </p><p>Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. </p><p>–2 max Wounds. [A]</p>",
+			"name": "Planarbeing",
+			"rules": {
+				"fbhC9ohclITGwSq3": {
+					"label": "Planeshift"
+				}
+			}
+		},
+		"Ratfolk": {
+			"description": "<p>Ratfolk are survivors, thriving in the shadows of society where others fear to tread. Agile, resourceful, and fiercely loyal to their own, they have a knack for turning scraps into solutions.</p><hr><p><strong>Scurry</strong> </p><p>Gain +2 armor if you moved on your last turn. [M]</p>",
+			"name": "Ratfolk"
+		},
+		"Stoatling": {
+			"description": "<p>Stoatlings may be small, but they're far from weak. With fierce determination and warrior hearts, they can take down foes many times their size. Their agility and tenacity let them exploit larger enemies' weaknesses, turning their size into a lethal advantage.</p><hr><p><strong>Small But Ferocious</strong> </p><p>Whenever you make a single-target attack against a creature larger than you, roll 1 additional d6 for each size category it is larger. They do the same.</p>",
+			"name": "Stoatling"
+		},
+		"Turtlefolk": {
+			"description": "<p>Turtlefolk take their time in everything they do; they are patient, sturdy, and slow to anger. They rely on their thick shells for protection, making them difficult to harm, but their cautious movements come at the cost of speed.</p><hr><p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>",
+			"name": "Turtlefolk",
+			"rules": {
+				"ODF6VnVsmfBrfFtp": {
+					"label": "Slow & Steady"
+				},
+				"Xk9mNpQ2rLsYvWtH": {
+					"label": "Slow & Steady"
+				}
+			}
+		},
+		"Wyrdling": {
+			"description": "<p>Unpredictable and chaotic, Wyrdlings are the result of magic gone awry. Their bodies pulse with raw arcane energy, and their mere presence often disturbs the balance of magic around them.</p><hr><p><strong>Chaotic Surge</strong> </p><p>Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.</p>",
+			"name": "Wyrdling"
 		}
 	}
 }
