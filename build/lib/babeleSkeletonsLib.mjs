@@ -112,9 +112,7 @@ export function buildTableResultEntries(tableSource) {
  *
  * Notes:
  *   - Empty string in `existing` is treated as "not yet translated" and falls
- *     through to the source placeholder. A translator who intentionally wants
- *     a blank value should leave the placeholder in place and the runtime
- *     converter should ignore the unchanged-from-source case if needed.
+ *     through to the source placeholder.
  *   - When `existing` and `source` disagree on shape (object vs primitive),
  *     the existing translation no longer fits the source schema, so we fall
  *     back to `source` rather than carry a stale value forward.

@@ -14,10 +14,7 @@ type MappingSpec = string | { path: string; converter?: string };
 type Mappings = Record<string, Record<string, MappingSpec>>;
 
 function loadMappings(): Mappings {
-	const raw = readFileSync(
-		join(process.cwd(), 'public/lang/babele/mappings.json'),
-		'utf8',
-	);
+	const raw = readFileSync(join(process.cwd(), 'public/lang/babele/mappings.json'), 'utf8');
 	return JSON.parse(raw) as Mappings;
 }
 

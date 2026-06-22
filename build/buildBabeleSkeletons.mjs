@@ -150,7 +150,7 @@ function deriveClassFeatureFolders(packDir, sources) {
 	function classDataFor(classId) {
 		if (!classes.has(classId)) {
 			classes.set(classId, {
-				name: toTitleCase(classId === 'the-cheat' ? 'The Cheat' : classId),
+				name: toTitleCase(classId),
 				subclasses: new Set(),
 				groups: new Map(),
 			});
