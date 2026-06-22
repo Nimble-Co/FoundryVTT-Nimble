@@ -53,6 +53,12 @@ const babeleRoot = path.resolve(projectRoot, 'public/lang/babele');
 
 const SYSTEM_ID = systemJSON.id;
 
+function getNonEnglishDeclaredLanguages() {
+	return systemJSON.languages
+		.map((entry) => entry.lang)
+		.filter((lang) => lang && lang !== 'en' && !lang.startsWith('en-'));
+}
+
 function getDeclaredLanguages() {
 	const cliLangs = process.argv.slice(2).filter(Boolean);
 	if (cliLangs.length > 0) return cliLangs;
@@ -63,7 +69,14 @@ function getDeclaredLanguages() {
 			.map((d) => d.name);
 		if (dirs.length > 0) return dirs;
 	}
-	return ['es', 'fr'];
+	const declared = getNonEnglishDeclaredLanguages();
+	if (declared.length === 0) {
+		console.error(
+			'[ERROR] - No languages to build. Pass <lang> on the command line, or declare a non-English language in public/system.json and create public/lang/babele/<lang>/.',
+		);
+		process.exit(1);
+	}
+	return declared;
 }
 
 function packMetaByDirName() {

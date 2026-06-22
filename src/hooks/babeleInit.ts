@@ -19,6 +19,9 @@ function translateRules(rules: unknown, translation: unknown): unknown {
 	if (!Array.isArray(rules) || !translation || typeof translation !== 'object') return rules;
 	const map = translation as RuleTranslationMap;
 	return (rules as RawRule[]).map((rule, index) => {
+		// `index:N` fallback assumes Foundry preserves source-pack rule order between
+		// pack load and converter invocation. If a rule has no stable `id`, reordering
+		// would shift its translation onto a neighbour — prefer id-keyed entries.
 		const byId = rule?.id ? map[rule.id] : undefined;
 		const byIndex = map[`index:${index}`];
 		const override = byId ?? byIndex;
