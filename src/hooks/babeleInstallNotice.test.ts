@@ -72,4 +72,9 @@ describe('babeleInstallNotice', () => {
 		expect(notificationsWarn).toHaveBeenCalledTimes(1);
 		expect(notificationsWarn.mock.calls[0][0]).toContain('"lang":"es"');
 	});
+
+	it('does not warn when game.i18n.lang is undefined (treated as English fallback)', () => {
+		runReadyHandler({ lang: undefined, babeleActive: undefined });
+		expect(notificationsWarn).not.toHaveBeenCalled();
+	});
 });
