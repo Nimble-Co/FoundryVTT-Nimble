@@ -11,7 +11,8 @@
 				"type": "maxHitDice",
 				"label": "Survivalist",
 				"value": "1",
-				"dieSize": 0
+				"dieSize": 0,
+				"id": "1C7GnDgBamsrGvjI"
 			}
 		],
 		"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>"

@@ -10,13 +10,15 @@
 			{
 				"type": "speedBonus",
 				"value": "2",
-				"label": "Explorer of the Wilds"
+				"label": "Explorer of the Wilds",
+				"id": "t78A5cp7E9AcmEoD"
 			},
 			{
 				"type": "grantMovement",
 				"mode": "climb",
 				"speed": "@attributes.movement.walk",
-				"label": "Explorer of the Wilds"
+				"label": "Explorer of the Wilds",
+				"id": "J3Y32rSs9EXuKrin"
 			}
 		],
 		"activation": {

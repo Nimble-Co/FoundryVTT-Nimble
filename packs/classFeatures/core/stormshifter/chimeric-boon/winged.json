@@ -11,7 +11,8 @@
 				"type": "speedBonus",
 				"value": "@attributes.movement.walk",
 				"movementType": "fly",
-				"label": "Winged"
+				"label": "Winged",
+				"id": "RivdlU4xcZIxnZQt"
 			}
 		],
 		"activation": {

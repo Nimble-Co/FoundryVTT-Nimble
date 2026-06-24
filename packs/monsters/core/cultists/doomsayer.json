@@ -149,7 +149,8 @@
 						"type": "applyCondition",
 						"condition": "despair",
 						"trigger": "onCrit",
-						"label": "Fanatical Zeal: Despair on crit"
+						"label": "Fanatical Zeal: Despair on crit",
+						"id": "wLc3rqnZrrkHI1FC"
 					}
 				],
 				"activation": {

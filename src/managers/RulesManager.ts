@@ -186,18 +186,22 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 
 		// TODO: Add validation for new data
 
+		// Assign a stable id at creation so the rule has the same identity in
+		// persisted JSON, in-memory data model, and Babele translation skeletons.
+		const ruleData =
+			typeof data.id === 'string' && data.id ? data : { ...data, id: foundry.utils.randomID() };
+
 		if (options.update) {
 			await item.update({
-				'system.rules': [...existingRules, data],
+				'system.rules': [...existingRules, ruleData],
 			} as Record<string, unknown>);
 
-			const existingIds = existingRules.map((r) => r.id);
 			const updatedSystem = getSystemWithRules(item);
-			return updatedSystem.rules.filter((r) => !existingIds.includes(r.id))?.[0];
+			return updatedSystem.rules.find((r) => r.id === ruleData.id);
 		}
 
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
-		const type = data.type;
+		const type = ruleData.type;
 		if (!type || typeof type !== 'string') {
 			// eslint-disable-next-line no-console
 			console.error('Nimble | Rule does not have a type.');
@@ -211,7 +215,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			return undefined;
 		}
 
-		const rule = new Cls(data, { parent: item });
+		const rule = new Cls(ruleData, { parent: item });
 		return rule;
 	}
 }

@@ -11,7 +11,8 @@
 				"type": "grantMovement",
 				"mode": "climb",
 				"speed": "@attributes.movement.walk",
-				"label": "Professional Skulker"
+				"label": "Professional Skulker",
+				"id": "CbCCuwJX0Tt1vxPk"
 			}
 		],
 		"activation": {

@@ -562,6 +562,18 @@ export default class Pack {
 
 		// TODO: Update migration data
 
+		// Backfill stable ids on system.rules entries. Babele compendium
+		// skeletons key rule translations on `id`; without one, the runtime
+		// converter falls back to `index:N`, which silently shifts translations
+		// if a rule is ever reordered, inserted, or removed.
+		if (Array.isArray(source?.system?.rules)) {
+			for (const rule of source.system.rules) {
+				if (rule && typeof rule === 'object' && typeof rule.id !== 'string') {
+					rule.id = Pack.#generateRuleId();
+				}
+			}
+		}
+
 		// Recurse for sub documents
 		if (Array.isArray(source?.effects)) {
 			for (const e of source.effects) this.#cleanDocument(e);
@@ -569,6 +581,19 @@ export default class Pack {
 		if (Array.isArray(source?.items)) {
 			for (const i of source.items) this.#cleanDocument(i);
 		}
+	}
+
+	static #RULE_ID_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+	// Mirrors `foundry.utils.randomID()` — 16-char base62 string.
+	static #generateRuleId() {
+		const alphabet = Pack.#RULE_ID_ALPHABET;
+		const bytes = crypto.randomBytes(16);
+		let id = '';
+		for (let i = 0; i < 16; i++) {
+			id += alphabet[bytes[i] % alphabet.length];
+		}
+		return id;
 	}
 
 	async saveAsPack() {
