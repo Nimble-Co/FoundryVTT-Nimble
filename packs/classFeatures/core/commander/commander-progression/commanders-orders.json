@@ -5,7 +5,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "grant-coordinated-strike",
+				"identifier": "commander-lvl1-coordinated-strike",
+				"label": "Coordinated Strike",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": false,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-class-features.Item.6xpILHYt5KTSnTtd"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -39,25 +52,10 @@
 		"gainedAtLevel": 1,
 		"subclass": false,
 		"gainedAtLevels": [
-			1,
-			2
+			1
 		],
 		"selectionCountByLevel": {},
-		"levelUpOptions": [
-			{
-				"id": "commanders-order",
-				"label": "Choose a Commander's Order",
-				"applyAtLevels": [
-					1,
-					2
-				],
-				"rules": [],
-				"selectionGroups": [
-					"commanders-orders"
-				],
-				"selectionCount": 1
-			}
-		]
+		"levelUpOptions": []
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",
@@ -70,5 +68,5 @@
 		"modifiedTime": 1761500000000,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "Fj7LW7ErjktCtHWg"
+	"_id": "P5vNjcwfkM6NEQlr"
 }

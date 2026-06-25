@@ -60,19 +60,10 @@
 		"class": "commander",
 		"group": "commanders-orders",
 		"groupLabel": "Commander's Orders",
-		"gainedAtLevel": 1,
+		"gainedAtLevel": null,
 		"subclass": false,
-		"gainedAtLevels": [
-			1,
-			6,
-			8,
-			10,
-			12,
-			16
-		],
-		"selectionCountByLevel": {
-			"2": 2
-		}
+		"gainedAtLevels": [],
+		"selectionCountByLevel": {}
 	},
 	"effects": [],
 	"folder": "6a51bc6ac831498c",

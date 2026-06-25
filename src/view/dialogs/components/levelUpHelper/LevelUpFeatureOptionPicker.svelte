@@ -85,6 +85,20 @@
 	const selectedSubItems = $derived(
 		loadedSubItems.filter((i) => selectedSubItemUuids.includes(i.uuid)),
 	);
+
+	// Auto-select the sub-item(s) when the number of available choices exactly matches the
+	// required count — e.g. the last remaining Weapon Mastery at level 14. The player shouldn't
+	// have to click the only option left. Mirrors the auto-select behaviour of fixed selection
+	// groups (createClassFeatureSelectionState), and the guard against already-selected uuids
+	// prevents the effect from looping once the selection has been applied.
+	$effect(() => {
+		if (subItemsLoading) return;
+		if (loadedSubItems.length === 0) return;
+		if (loadedSubItems.length !== subSelectionCount) return;
+		for (const item of loadedSubItems) {
+			if (!selectedSubItemUuids.includes(item.uuid)) onSubItemSelect(item.uuid);
+		}
+	});
 </script>
 
 <div class="feature-option-picker">

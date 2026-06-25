@@ -1002,38 +1002,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		data.level = this.levels.character ?? 1;
 
-		// Expose pool max bonuses from level-up selections as roll data variables so class feature
-		// formulas can reference them (e.g. "combat-dice" pool → @combatDiceBonus).
-		// Pre-initialise to 0 for every pool referenced in any current item's levelUpOptions so
-		// formulas like "@strength + @combatDiceBonus" always resolve cleanly even before any
-		// selections are made.
-		const poolBonusTotals: Record<string, number> = {};
-		for (const item of this.items.contents) {
-			const levelUpOptions =
-				(
-					item as {
-						system?: {
-							levelUpOptions?: { rules?: { type?: string; poolIdentifier?: string }[] }[];
-						};
-					}
-				).system?.levelUpOptions ?? [];
-			for (const option of levelUpOptions) {
-				for (const rule of option.rules ?? []) {
-					if (rule.type === 'poolMaxBonus' && typeof rule.poolIdentifier === 'string') {
-						poolBonusTotals[rule.poolIdentifier] ??= 0;
-					}
-				}
-			}
-		}
-		for (const entry of this.system.levelUpHistory) {
-			for (const [poolId, bonus] of Object.entries(entry.poolMaxBonuses ?? {})) {
-				poolBonusTotals[poolId] = (poolBonusTotals[poolId] ?? 0) + bonus;
-			}
-		}
-		for (const [poolId, total] of Object.entries(poolBonusTotals)) {
-			const key = `${poolId.replace(/-([a-z])/g, (_match, char: string) => char.toUpperCase())}Bonus`;
-			data[key] = total;
-		}
+		// NOTE: Pool max bonuses from level-up selections (e.g. "+1 Max Combat Die") are applied
+		// directly in the charge-pool max computation (see getChargePoolDefinitions), reading the
+		// cumulative total from levelUpHistory. They are intentionally NOT exposed as roll-data
+		// variables here: doing so required every embedded pool formula to reference @<pool>Bonus,
+		// which silently dropped the bonus whenever an actor carried a stale formula. Applying the
+		// bonus in code makes it robust regardless of the embedded chargePool formula.
 
 		return data;
 	}

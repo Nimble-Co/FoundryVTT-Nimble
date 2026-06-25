@@ -132,6 +132,7 @@
 					"intensifying-fury": "eedQA69WSnBTEC2y",
 					"one-with-the-ancients": "Ymmp3NQ0ZiVEscta",
 					"rage": "GjPt8evcIoVuQ6zg",
+					"savage-arsenal": "w447xgf3Asi22Ein",
 					"that-all-you-got": "4oQQtqOhqe9KO5g9"
 				},
 				"berserker-subclasses": {
@@ -176,6 +177,7 @@
 				"commander-progression": {
 					"captain-of-legions": "6AU1FinuUY8l1JKj",
 					"combat-tactics": "te8CRDUXu5xLkna4",
+					"commanders-orders": "P5vNjcwfkM6NEQlr",
 					"field-medic": "KyQivlTfzYYudgsT",
 					"fit-for-any-battlefield": "JiNcaklfRjgJ7e5W",
 					"master-commander": "qbrHOGpSY2thczfu",
@@ -296,6 +298,7 @@
 					"elemental-spellcasting": "OjTkXa6W6xFvNYHr",
 					"elemental-surge": "F8GZjiNa1xhcDSlg",
 					"mana-and-unlock-tier-1-spells": "vwK2lSHq2xi7woIU",
+					"spell-shaper": "l0Mia2jNotcVWVv7",
 					"talented-researcher": "WN4gldrDqbvGcNOl"
 				},
 				"mage-subclasses": {
@@ -335,6 +338,7 @@
 					"my-life-for-my-friends": "9FM9njluCPi9ccvo",
 					"paragon-of-virtue": "TIiGVGorAAIwq6sV",
 					"radiant-judgement": "qiQeJrIxla9y6XY0",
+					"sacred-decree": "So6ET6oQ6cEBQaji",
 					"unending-judgment": "XgudS8RAy0dVKBat",
 					"zealot": "LWMKXWTmnX3uHNol"
 				},
@@ -405,10 +409,12 @@
 					"conduit-of-shadow": "WXoGNl27TocLhXcK",
 					"dire-shadows": "cEeqXZHwdlwH0kpm",
 					"eldritch-usurper": "Twcpy8q42pjXZNDI",
+					"gift-from-the-master": "JMOrhp9RnJkNL5U8",
 					"greedy-pact": "eX8zZ1EnqDssqGuD",
 					"master-of-darkness": "wGYBR7ZmNd0V6Ka4",
 					"pilfered-power": "Af4hwQ1ngzl3ukN3",
-					"shadowmastery": "6nAimxYeKDOthVnI"
+					"shadowmastery": "6nAimxYeKDOthVnI",
+					"the-pact-is-sealed": "raag8F4HZP9Tign4"
 				},
 				"shadowmancer-subclasses": {
 					"pact-of-the-abyssal-depths": {
@@ -453,6 +459,7 @@
 					"mana-and-unlock-tier-1-spells": "keNIkcRhQZju0G7O",
 					"master-of-twilight": "4qOCmaI3PyIwtcnp",
 					"revitalizing-blessing": "LkqJsA3O4gN2YZop",
+					"sacred-graces": "Bb4zZPJ2xwEgUUcN",
 					"searing-light": "KQiBYDr1BBTE0iJq",
 					"twilight-sage": "ZSFvaWiYKtk0M42X"
 				},
@@ -488,8 +495,10 @@
 					"song-of-domination": "5mrzrxva3pgBMguc"
 				},
 				"songweaver-progression": {
+					"a-people-person": "YeG09ogHG3RD6tIc",
 					"im-so-famous": "idoDoUQuz13FFyJS",
 					"jack-of-all-trades": "H6rFmCzodKZYW3ye",
+					"lyrical-weaponry": "Jc93iQWqr6fUEjHX",
 					"mana-and-unlock-tier-1-spells": "XMMHIW0DsNFGqe1G",
 					"quick-wit": "jBfbkX4fDvOKsoFD",
 					"song-of-rest": "Sg4biAyJcsTtWGEr",
@@ -571,6 +580,7 @@
 					"thieves-cant": "9TLfF6HHO2c6KYzl",
 					"twist-the-blade-1": "AUYr4Rjlu60zO6mU",
 					"twist-the-blade-2": "xq83RVH7CABiSpkR",
+					"underhanded-abilities": "BIr5jOM9XZvZpshv",
 					"vicious-opportunist": "kHjJhTZEQcdbUMbb"
 				},
 				"the-cheat-subclasses": {
@@ -622,6 +632,7 @@
 					"infuse-strength": "5rvEvFTcLsZnp6Uq",
 					"iron-defense": "oVsLH6KL5Wd3rbpz",
 					"kinetic-momentum": "aTT5T3bYQNXCxT4O",
+					"martial-arts-ability": "hzPmX5UlMRWJukc3",
 					"reverberating-strikes": "2gSHmIA0PE65YleM",
 					"swift-feet": "idKzxuxGapLyV4sP",
 					"swift-fists": "kHJVcWe64VhHsOFu",

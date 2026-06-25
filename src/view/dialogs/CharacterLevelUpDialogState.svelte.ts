@@ -471,6 +471,7 @@ export function createLevelUpState(
 
 	// Actions
 	function submit() {
+		const poolMaxBonuses = computePoolMaxBonuses();
 		getDialog().submit({
 			selectedAbilityScore: selectedAbilityScores,
 			selectedSubclass,
@@ -482,7 +483,7 @@ export function createLevelUpState(
 						autoGrant: classFeatures.autoGrant.map((f) => f.uuid),
 						selected: selectedClassFeatures,
 						grantedOptionItems: computeGrantedOptionItems(),
-						poolMaxBonuses: computePoolMaxBonuses(),
+						poolMaxBonuses,
 					}
 				: undefined,
 			spellUuids: getGrantedSpellUuids(),
