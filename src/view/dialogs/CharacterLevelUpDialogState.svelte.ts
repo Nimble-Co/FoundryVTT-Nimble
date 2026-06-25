@@ -428,6 +428,13 @@ export function createLevelUpState(
 				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
 				.find((o) => o.id === selectedOptionId);
 			if (!option) continue;
+			// Grant the parent "header" feature itself (e.g. "Savage Arsenal") alongside the
+			// chosen option, so it appears on the sheet as the container for the pick. Option
+			// features reappear at every eligible level (4, 6, 8…), so only grant the parent the
+			// first time — otherwise leveling up repeatedly would stack duplicate parent items.
+			if (!ownedFeatureUuids.has(feature.uuid)) {
+				result.push(feature.uuid);
+			}
 			if (option.selectionGroups?.length) {
 				const subItemUuids = selectedOptionSubItems.get(feature.uuid) ?? [];
 				result.push(...subItemUuids);

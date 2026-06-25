@@ -28,6 +28,11 @@ export interface FeatureCardProps {
 	isSelected?: boolean;
 	isDisabled?: boolean;
 	onSelect?: () => void;
+	/**
+	 * Render as a bare header row — no card border, background, or radius — so the card can
+	 * act as the heading of a containing section instead of a nested box.
+	 */
+	asHeader?: boolean;
 }
 
 export interface FeatureGroupSelectionProps {
@@ -36,6 +41,12 @@ export interface FeatureGroupSelectionProps {
 	selectionCount: number;
 	selectedFeatures: NimbleFeatureItem[];
 	onSelect: (feature: NimbleFeatureItem) => void;
+	/**
+	 * Hide the group-name heading (but keep the hint/progress). Used when the group is
+	 * nested under a parent feature card that already names the group, to avoid a
+	 * duplicate title.
+	 */
+	hideGroupName?: boolean;
 }
 
 export interface LevelUpFeatureOptionPickerProps {

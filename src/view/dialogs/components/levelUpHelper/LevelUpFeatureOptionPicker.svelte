@@ -2,6 +2,7 @@
 	import type { LevelUpFeatureOptionPickerProps } from '#types/components/ClassFeatureSelection.d.ts';
 	import type { NimbleFeatureItem } from '#documents/item/feature.js';
 
+	import FeatureCard from '../characterCreator/FeatureCard.svelte';
 	import FeatureGroupSelection from '../characterCreator/FeatureGroupSelection.svelte';
 	import localize from '#utils/localize.js';
 
@@ -24,10 +25,6 @@
 	const selectedOption = $derived(options.find((o) => o.id === selectedOptionId) ?? null);
 	const subSelectionCount = $derived(selectedOption?.selectionCount ?? 1);
 	const hasSubSelection = $derived((selectedOption?.selectionGroups?.length ?? 0) > 0);
-	const isSelectionComplete = $derived(
-		selectedOptionId !== null &&
-			(!hasSubSelection || selectedSubItemUuids.length >= subSelectionCount),
-	);
 
 	$effect(() => {
 		if (isSingleOption && selectedOptionId !== options[0].id) {
@@ -91,89 +88,97 @@
 </script>
 
 <div class="feature-option-picker">
-	<header class="feature-option-picker__header">
-		<img
-			class="feature-option-picker__img"
-			src={feature.img || 'icons/svg/item-bag.svg'}
-			alt={feature.name}
-		/>
-		<h4 class="nimble-heading feature-option-picker__name" data-heading-variant="section">
-			{feature.name}
-		</h4>
-		{#if !isSingleOption && !isSelectionComplete}
+	<ul class="feature-option-picker__parent">
+		<FeatureCard {feature} asHeader />
+	</ul>
+
+	<div class="feature-option-picker__body">
+		{#if !isSingleOption}
 			<span class="feature-option-picker__hint">
 				{localize('NIMBLE.classFeatureSelection.chooseOne')}
 			</span>
+			<ul class="feature-option-picker__list">
+				{#each options as option (option.id)}
+					{@const isSelected = selectedOptionId === option.id}
+					<li class="option-item" class:selected={isSelected}>
+						<button
+							class="option-item__button"
+							type="button"
+							aria-pressed={isSelected}
+							aria-label={isSelected
+								? localize('NIMBLE.levelUpDialog.deselectOption')
+								: localize('NIMBLE.levelUpDialog.selectOption')}
+							onclick={() => onSelect(option.id)}
+						>
+							<span class="option-item__indicator">
+								{#if isSelected}
+									<i class="fa-solid fa-circle-check"></i>
+								{:else}
+									<i class="fa-regular fa-circle"></i>
+								{/if}
+							</span>
+							<span class="option-item__label">{option.label}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
 		{/if}
-	</header>
 
-	{#if !isSingleOption}
-		<ul class="feature-option-picker__list">
-			{#each options as option (option.id)}
-				{@const isSelected = selectedOptionId === option.id}
-				<li class="option-item" class:selected={isSelected}>
-					<button
-						class="option-item__button"
-						type="button"
-						aria-pressed={isSelected}
-						aria-label={isSelected
-							? localize('NIMBLE.levelUpDialog.deselectOption')
-							: localize('NIMBLE.levelUpDialog.selectOption')}
-						onclick={() => onSelect(option.id)}
-					>
-						<span class="option-item__indicator">
-							{#if isSelected}
-								<i class="fa-solid fa-circle-check"></i>
-							{:else}
-								<i class="fa-regular fa-circle"></i>
-							{/if}
-						</span>
-						<span class="option-item__label">{option.label}</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{/if}
-
-	{#if hasSubSelection && selectedOptionId}
-		{#if subItemsLoading}
-			<p class="nimble-hint sub-items-loading">
-				{localize('NIMBLE.levelUpDialog.loadingFeatures')}
-			</p>
-		{:else if loadedSubItems.length > 0}
-			<FeatureGroupSelection
-				groupName={selectedOption?.selectionGroups?.join('-') ?? 'selection'}
-				features={loadedSubItems}
-				selectionCount={subSelectionCount}
-				selectedFeatures={selectedSubItems}
-				onSelect={(item) => onSubItemSelect(item.uuid)}
-			/>
+		{#if hasSubSelection && selectedOptionId}
+			{#if subItemsLoading}
+				<p class="nimble-hint sub-items-loading">
+					{localize('NIMBLE.levelUpDialog.loadingFeatures')}
+				</p>
+			{:else if loadedSubItems.length > 0}
+				<FeatureGroupSelection
+					groupName={selectedOption?.selectionGroups?.join('-') ?? 'selection'}
+					features={loadedSubItems}
+					selectionCount={subSelectionCount}
+					selectedFeatures={selectedSubItems}
+					hideGroupName
+					onSelect={(item) => onSubItemSelect(item.uuid)}
+				/>
+			{/if}
 		{/if}
-	{/if}
+	</div>
 </div>
 
 <style lang="scss">
 	.feature-option-picker {
 		margin-top: 1rem;
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 6px;
+		padding: 0.5rem 0.75rem;
+		background: color-mix(in srgb, var(--nimble-box-background-color) 50%, transparent);
 
-		&__header {
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-			margin-bottom: 0.5rem;
-		}
-
-		&__img {
-			width: 32px;
-			height: 32px;
-			border-radius: 4px;
-			object-fit: cover;
-			flex-shrink: 0;
-		}
-
-		&__name {
-			flex: 1;
+		// Parent renders as a bare header row, divided from the choices below.
+		&__parent {
 			margin: 0;
+			padding: 0;
+			list-style: none;
+			border-bottom: 1px solid var(--nimble-card-border-color);
+			padding-bottom: 0.5rem;
+		}
+
+		&__body {
+			// Choices align flush with the header and the box's right edge (even gutters).
+			margin-top: 0.5rem;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
+		// The nested group already sits under the body's spacing, so trim its own top gap
+		// (the shared component ships a larger margin meant for stacked groups elsewhere).
+		:global(.feature-group) {
+			margin-top: 0.25rem;
+		}
+
+		// Give the "Choose one" hint and the "0 of 1 selected" count a little breathing room
+		// from the box gutters.
+		:global(.feature-group__hint),
+		:global(.feature-group__progress) {
+			padding-inline: 0.5rem;
 		}
 
 		&__hint {
@@ -192,7 +197,7 @@
 	}
 
 	.sub-items-loading {
-		margin-top: 0.5rem;
+		margin: 0;
 	}
 
 	.option-item {
