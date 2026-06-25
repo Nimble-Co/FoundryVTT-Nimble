@@ -40,30 +40,33 @@
 		"subclass": false,
 		"gainedAtLevels": [
 			1,
-			6,
-			8,
-			10,
-			12,
-			16
+			2
 		],
 		"selectionCountByLevel": {},
 		"levelUpOptions": [
 			{
-				"id": "commanders-order",
+				"id": "coordinated-strike",
 				"label": "Choose a Commander's Order",
 				"applyAtLevels": [
-					1,
-					6,
-					8,
-					10,
-					12,
-					16
+					1
 				],
 				"rules": [],
 				"selectionGroups": [
 					"commanders-orders"
 				],
 				"selectionCount": 1
+			},
+			{
+				"id": "commanders-orders",
+				"label": "Choose 2 Commander's Orders",
+				"applyAtLevels": [
+					2
+				],
+				"rules": [],
+				"selectionGroups": [
+					"commanders-orders"
+				],
+				"selectionCount": 2
 			}
 		]
 	},

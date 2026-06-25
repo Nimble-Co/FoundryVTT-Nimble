@@ -45,10 +45,10 @@
 		"class": "commander",
 		"group": "commanders-orders",
 		"groupLabel": "Commander's Orders",
-		"gainedAtLevel": 1,
+		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
-			1,
+			2,
 			6,
 			8,
 			10,
