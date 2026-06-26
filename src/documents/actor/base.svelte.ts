@@ -72,6 +72,10 @@ interface InitiativeRollData {
 
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
 
+/** Actor subtypes that share the monster sheet and can be converted between each other. */
+const MONSTER_ACTOR_TYPES = ['npc', 'minion', 'soloMonster'] as const;
+type MonsterActorType = (typeof MONSTER_ACTOR_TYPES)[number];
+
 function toFiniteInteger(value: unknown): number {
 	const numericValue = Number(value);
 	if (!Number.isFinite(numericValue)) return 0;
@@ -180,6 +184,22 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	/** ------------------------------------------------------ */
 	isType<TypeName extends SystemActorTypes>(type: TypeName): this is NimbleBaseActor<TypeName> {
 		return type === (this.type as SystemActorTypes);
+	}
+
+	/**
+	 * Convert this monster between the standard (`npc`), `minion`, and `soloMonster`
+	 * subtypes, preserving its name, items, and shared system data. Fields that don't
+	 * exist on the target subtype (e.g. an NPC's flunky flag) are dropped by the data
+	 * model when the type changes.
+	 */
+	async convertMonsterType(targetType: MonsterActorType): Promise<this | undefined> {
+		if (!MONSTER_ACTOR_TYPES.includes(this.type as MonsterActorType)) {
+			throw new Error(`Cannot convert actor of type "${this.type}" to a monster subtype.`);
+		}
+
+		if (this.type === targetType) return this;
+
+		return this.update({ type: targetType }) as Promise<this | undefined>;
 	}
 
 	/** ------------------------------------------------------ */

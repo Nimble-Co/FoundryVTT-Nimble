@@ -1653,6 +1653,7 @@
 			"level": "Level",
 			"creatureType": "Creature Type",
 			"sizeCategory": "Size Category",
+			"monsterType": "Monster Type",
 			"flunky": "Flunky"
 		},
 		"featureSheet": {
