@@ -2137,6 +2137,27 @@
 				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
 				"openTestbench": "Open Dice Testbench"
 			},
+			"customSpellSchools": {
+				"name": "Custom Spell Schools",
+				"hint": "Define additional spell schools (e.g. a Hexbinder school) that appear in the spell editor, character creation, and spell compendium filters alongside the built-in schools.",
+				"title": "Custom Spell Schools",
+				"manageButton": "Manage Spell Schools",
+				"intro": "Add spell schools for your world. The key is stored on each spell and cannot match a built-in school; the label and icon are shown in the UI.",
+				"empty": "No custom spell schools yet. Add one to get started.",
+				"columnIcon": "Icon",
+				"columnKey": "Key",
+				"columnLabel": "Label",
+				"keyPlaceholder": "e.g. hexbinder",
+				"labelPlaceholder": "e.g. Hexbinder",
+				"iconPlaceholder": "Font Awesome class, e.g. fa-solid fa-hand-sparkles",
+				"addSchool": "Add Spell School",
+				"remove": "Remove school",
+				"save": "Save Spell Schools",
+				"saved": "Custom spell schools saved.",
+				"errorEmptyKey": "Key is required.",
+				"errorReservedKey": "That key is reserved by a built-in school.",
+				"errorDuplicateKey": "Duplicate key."
+			},
 			"combatTrackerHoverColor": {
 				"name": "Combat Tracker Hover Color",
 				"hint": "Choose your personal token hover highlight color"
