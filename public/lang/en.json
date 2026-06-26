@@ -451,6 +451,7 @@
 			"rollSavingThrowSpecific": "Roll {save} Save",
 			"rollSkillCheck": "Roll Skill Check",
 			"rollSkillCheckSpecific": "Roll {skill} Check",
+			"rollSkillCheckSpecificWithAbility": "Roll {skill} Check (Uses {ability})",
 			"fieldRest": "Field Rest",
 			"hideRoll": "Hide From Players?"
 		},

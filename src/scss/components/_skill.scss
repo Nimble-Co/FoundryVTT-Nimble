@@ -27,7 +27,8 @@
   }
 
   &--compact {
-    grid-template-columns: 1fr 4ch;
+    gap: 0.5rem;
+    grid-template-columns: 3ch 1fr 4ch;
   }
 
   &--show-passive {
@@ -36,7 +37,7 @@
 
   &--compact.nimble-skill--show-passive {
     gap: 0.25rem;
-    grid-template-columns: 1fr 3ch 3ch;
+    grid-template-columns: 3ch 1fr 3ch 3ch;
     padding-inline: 0.25rem;
   }
 
@@ -57,7 +58,24 @@
   &__ability {
     text-transform: uppercase;
     font-weight: 900;
-    color: var(--nimble-medium-text-color);
+    text-align: start;
+    color: var(--nimble-skill-ability-color, var(--nimble-medium-text-color));
+
+    &[data-ability="strength"] {
+      --nimble-skill-ability-color: var(--nimble-ability-strength-color);
+    }
+
+    &[data-ability="dexterity"] {
+      --nimble-skill-ability-color: var(--nimble-ability-dexterity-color);
+    }
+
+    &[data-ability="intelligence"] {
+      --nimble-skill-ability-color: var(--nimble-ability-intelligence-color);
+    }
+
+    &[data-ability="will"] {
+      --nimble-skill-ability-color: var(--nimble-ability-will-color);
+    }
   }
 
   &__name {

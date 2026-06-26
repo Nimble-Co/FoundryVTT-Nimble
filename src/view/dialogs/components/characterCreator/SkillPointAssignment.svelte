@@ -107,7 +107,7 @@
 
 	<li class="nimble-skills__item nimble-skills__item--compact">
 		<div class="nimble-skill nimble-skill--character-creator">
-			<span class="nimble-skill__ability">{abilityLabel}</span>
+			<span class="nimble-skill__ability" data-ability={abilityKey}>{abilityLabel}</span>
 			<span class="nimble-skill__name">{skillLabel}</span>
 
 			<ol class="nimble-skill-point-assignment-list">
