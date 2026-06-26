@@ -32,3 +32,4 @@ export { Migration031ModifyIncomingAttackFeatures } from './Migration031ModifyIn
 export { Migration032LifebindingSpiritDieSize } from './Migration032LifebindingSpiritDieSize.js';
 export { Migration033BerserkerAutomation } from './Migration033BerserkerAutomation.js';
 export { Migration034DeathBlowCardOffer } from './Migration034DeathBlowCardOffer.js';
+export { Migration032AncestryBonusSplit } from './Migration032AncestryBonusSplit.js';

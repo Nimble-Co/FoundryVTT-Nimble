@@ -10,6 +10,7 @@ import { NimbleChatMessage } from '../documents/chatMessage.js';
 import { NimbleCombat } from '../documents/combat/combat.svelte.js';
 import { NimbleCombatant } from '../documents/combatant/combatant.svelte.js';
 import { NimbleAncestryItem } from '../documents/item/ancestry.js';
+import { NimbleAncestryBonusItem } from '../documents/item/ancestryBonus.js';
 // Items
 import { NimbleBackgroundItem } from '../documents/item/background.js';
 import { NimbleBaseItem } from '../documents/item/base.svelte.js';
@@ -50,13 +51,14 @@ export default function registerDocumentConfig() {
 		Item: {
 			documentClasses: {
 				base: NimbleBaseItem,
+				ancestry: NimbleAncestryItem,
+				ancestryBonus: NimbleAncestryBonusItem,
 				background: NimbleBackgroundItem,
 				boon: NimbleBoonItem,
 				class: NimbleClassItem,
 				feature: NimbleFeatureItem,
 				monsterFeature: NimbleMonsterFeatureItem,
 				object: NimbleObjectItem,
-				ancestry: NimbleAncestryItem,
 				spell: NimbleSpellItem,
 				subclass: NimbleSubclassItem,
 			},

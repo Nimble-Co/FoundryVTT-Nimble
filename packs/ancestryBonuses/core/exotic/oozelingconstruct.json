@@ -1,0 +1,33 @@
+{
+	"name": "Odd Constitution",
+	"type": "ancestryBonus",
+	"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "incrementHitDice",
+				"label": "Odd Constitution",
+				"value": "1"
+			},
+			{
+				"type": "maximizeHitDice",
+				"label": "Odd Constitution"
+			}
+		],
+		"description": "<p><strong>Odd Constitution</strong> </p><p>Increment your Hit Dice one step (d6 » d8 » d10 » d12 » d20); they always heal you for the maximum amount. Magical healing always heals you for the minimum amount.</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756508033890,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "K1sViOESSiQ6VEeV"
+}

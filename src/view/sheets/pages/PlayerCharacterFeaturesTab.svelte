@@ -56,6 +56,9 @@
 					categories['feature'] ??= [];
 					categories['feature'].push(item);
 				}
+			} else if (itemType === 'ancestryBonus') {
+				// Ancestry bonuses are rendered nested under the ancestry card, not as their
+				// own top-level section.
 			} else {
 				categories[itemType] ??= [];
 				categories[itemType].push(item);
@@ -120,7 +123,15 @@
 	}
 
 	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = ['class', 'subclass', 'feature', 'ancestry', 'background', 'boon'];
+	const validTypes = [
+		'class',
+		'subclass',
+		'feature',
+		'ancestry',
+		'ancestryBonus',
+		'background',
+		'boon',
+	];
 	const { featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
@@ -152,6 +163,9 @@
 			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
 		),
 	);
+
+	// Ancestry bonuses — rendered nested under the ancestry card
+	let ancestryBonusItems = $derived(items.filter((item) => item.reactive.type === 'ancestryBonus'));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -317,6 +331,14 @@
 			{#if categoryName === 'subclass' && subclassFeatureItems.length}
 				<ul class="nimble-item-list nimble-item-list--sublist">
 					{#each subclassFeatureItems as item (item.reactive._id)}
+						{@render featureCard(item)}
+					{/each}
+				</ul>
+			{/if}
+
+			{#if categoryName === 'ancestry' && ancestryBonusItems.length}
+				<ul class="nimble-item-list nimble-item-list--sublist">
+					{#each ancestryBonusItems as item (item.reactive._id)}
 						{@render featureCard(item)}
 					{/each}
 				</ul>
