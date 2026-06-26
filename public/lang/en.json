@@ -2077,6 +2077,25 @@
 			"filterAll": "All"
 		},
 		"settings": {
+			"languageCustomization": {
+				"name": "In-Game Languages",
+				"hint": "Rename built-in languages, give them alternate names, and add your own custom languages.",
+				"button": "Configure Languages",
+				"title": "Configure In-Game Languages",
+				"intro": "Rename built-in languages or add alternate names, and create custom languages. Leave a field blank to keep the built-in default.",
+				"builtinSection": "Built-In Languages",
+				"customSection": "Custom Languages",
+				"label": "Name",
+				"aliases": "Alternate Names",
+				"aliasesPlaceholder": "Comma-separated, e.g. Orcish, Goblin Tongue",
+				"tooltip": "Tooltip",
+				"icon": "Icon Path",
+				"reset": "Reset to default",
+				"remove": "Remove language",
+				"newLanguage": "New Language",
+				"addLanguage": "Add Custom Language",
+				"save": "Save Changes"
+			},
 			"autoExpandRolls": {
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."

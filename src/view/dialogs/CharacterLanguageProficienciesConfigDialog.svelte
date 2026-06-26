@@ -14,7 +14,7 @@
 		});
 	}
 
-	const { languages } = CONFIG.NIMBLE;
+	const { languages, languageAliases } = CONFIG.NIMBLE;
 	const languageOptions = prepareLanguageOptions();
 
 	let { document } = $props();
@@ -35,7 +35,20 @@
 				onclick={() => toggleLanguageProficiency(key)}
 			/>
 
-			<span class="nimble-field__label">{label}</span>
+			<span class="nimble-field__label">
+				{label}
+				{#if languageAliases?.[key]?.length}
+					<span class="nimble-field__aliases">({languageAliases[key].join(', ')})</span>
+				{/if}
+			</span>
 		</label>
 	{/each}
 </section>
+
+<style lang="scss">
+	.nimble-field__aliases {
+		margin-inline-start: 0.25rem;
+		font-style: italic;
+		opacity: 0.7;
+	}
+</style>

@@ -410,6 +410,10 @@ const languageImages = {
 	deepSpeak: 'icons/creatures/slimes/slime-giant-face-eyes.webp',
 };
 
+// Alternate display names for languages, keyed by language key. Empty by
+// default; populated at runtime from the GM's language customizations setting.
+const languageAliases: Record<string, string[]> = {};
+
 const manaRecoveryTypes = {
 	fieldRest: 'NIMBLE.manaRecoveryTypes.fieldRest',
 	safeRest: 'NIMBLE.manaRecoveryTypes.safeRest',
@@ -937,6 +941,7 @@ const NIMBLE = {
 	hitDice,
 	hitPoints,
 	jsonExport,
+	languageAliases,
 	languageHints,
 	languageImages,
 	languages,
