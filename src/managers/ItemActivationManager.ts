@@ -19,6 +19,7 @@ import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import { getToggledTargetTags } from '../utils/toggledEffects.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -698,10 +699,21 @@ class ItemActivationManager {
 
 		const firstTarget = targets.values().next().value as Token | undefined;
 		const targetActor = firstTarget?.actor as
-			| { getTargetDomain?: () => Set<string> }
+			| ({ getTargetDomain?: () => Set<string> } & { uuid?: string })
 			| null
 			| undefined;
-		return targetActor?.getTargetDomain?.();
+		if (!targetActor) return undefined;
+
+		const domain = new Set<string>(targetActor.getTargetDomain?.() ?? []);
+		// Inject relational `target:<flagKey>` tags (e.g. `target:quarry`) that this
+		// attacker has placed on the target, so toggle-effect predicates resolve only
+		// for the marking actor.
+		const attacker = this.actor as object as
+			| { getFlag(scope: string, key: string): unknown }
+			| null
+			| undefined;
+		for (const tag of getToggledTargetTags(attacker, targetActor)) domain.add(tag);
+		return domain;
 	}
 
 	/**

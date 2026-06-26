@@ -44,7 +44,9 @@
 			.filter(([, count]) => count > 0)
 			.map(([poolId, count]) => ({ poolId, count }));
 		dialog.submitActivation({
-			rollMode: state.selectedRollMode,
+			// Fold any "advantage" conditional-bonus choices into the roll mode; "damage"
+			// choices are already baked into the modified formula below.
+			rollMode: state.selectedRollMode + state.conditionalAdvantageTotal,
 			rollFormula: state.modifiedFormulas[0]?.formula || '0',
 			situationalModifiers: state.situationalModifiers,
 			primaryDieValue: state.primaryDieValue,
@@ -58,6 +60,61 @@
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode={state.selectedRollMode} />
+
+	{#if state.hasConditionalBonuses}
+		<div class="nimble-roll-modifiers-container">
+			<div class="nimble-conditional-bonus">
+				<h5 class="nimble-conditional-bonus__heading">
+					{localize('NIMBLE.activationDialog.conditionalBonus.heading')}
+				</h5>
+
+				{#each state.conditionalBonusOptions as option (option.ruleId)}
+					{@const choice = state.conditionalChoices[option.ruleId]}
+					{@const damageLabel = option.damageFormula ?? `${option.damageValue ?? 0}`}
+					<div class="nimble-conditional-bonus__row">
+						<span class="nimble-conditional-bonus__label">{option.label}</span>
+						<div class="nimble-conditional-bonus__choices">
+							{#if option.advantage > 0}
+								<button
+									type="button"
+									class="nimble-conditional-bonus__choice"
+									class:nimble-conditional-bonus__choice--selected={choice === 'advantage'}
+									aria-pressed={choice === 'advantage'}
+									onclick={() => state.setConditionalChoice(option.ruleId, 'advantage')}
+								>
+									{localize('NIMBLE.activationDialog.conditionalBonus.advantage', {
+										count: option.advantage,
+									})}
+								</button>
+							{/if}
+							{#if option.damageValue !== null || option.damageFormula !== null}
+								<button
+									type="button"
+									class="nimble-conditional-bonus__choice"
+									class:nimble-conditional-bonus__choice--selected={choice === 'damage'}
+									aria-pressed={choice === 'damage'}
+									onclick={() => state.setConditionalChoice(option.ruleId, 'damage')}
+								>
+									{localize('NIMBLE.activationDialog.conditionalBonus.damage', {
+										value: damageLabel,
+									})}
+								</button>
+							{/if}
+							<button
+								type="button"
+								class="nimble-conditional-bonus__choice"
+								class:nimble-conditional-bonus__choice--selected={choice === 'none'}
+								aria-pressed={choice === 'none'}
+								onclick={() => state.setConditionalChoice(option.ruleId, 'none')}
+							>
+								{localize('NIMBLE.activationDialog.conditionalBonus.none')}
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<div class="nimble-roll-modifiers-container">
 		<div class="nimble-roll-modifiers">
@@ -235,6 +292,44 @@
 		display: flex;
 		gap: 1rem;
 		margin-top: 1rem;
+	}
+
+	.nimble-conditional-bonus {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		flex: 1;
+
+		&__heading {
+			margin: 0;
+			font-size: var(--nimble-sm-text, 0.875rem);
+		}
+
+		&__row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.5rem;
+		}
+
+		&__choices {
+			display: flex;
+			gap: 0.25rem;
+		}
+
+		&__choice {
+			padding: 0.25rem 0.5rem;
+			border: 1px solid var(--nimble-border-color);
+			border-radius: var(--nimble-border-radius);
+			cursor: pointer;
+			background: transparent;
+
+			&--selected {
+				background: var(--nimble-accent-color);
+				color: var(--nimble-light-text-color);
+				border-color: var(--nimble-accent-color);
+			}
+		}
 	}
 
 	.nimble-roll-modifiers {

@@ -7,6 +7,10 @@ import type {
 	SpendablePool,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
 import {
+	type ConditionalBonusOption,
+	getActiveConditionalBonuses,
+} from '#utils/conditionalBonuses.js';
+import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,
 	extractDamageEffectsFromItem,
@@ -15,6 +19,8 @@ import {
 	getAttackDeliveryFromActivation,
 	matchesAttackDelivery,
 } from './itemActivationConfigDialogHelpers.js';
+
+type ConditionalChoice = 'advantage' | 'damage' | 'none';
 
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
@@ -48,7 +54,35 @@ export function createItemActivationConfigDialogState(
 	const autoBonusSummaries: AutoBonusSummary[] = buildAutoBonusSummaries(autoBonusPools);
 	const autoBonusFormula: string = buildAutoBonusFormula(autoBonusPools);
 
+	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
+	// advantage and bonus damage. Snapshot what applies against the current first
+	// target at dialog-open time.
+	const firstTargetActor = (() => {
+		const targets = (globalThis as { game?: { user?: { targets?: Set<{ actor?: unknown }> } } })
+			.game?.user?.targets;
+		if (!targets || targets.size === 0) return undefined;
+		return targets.values().next().value?.actor as
+			| { uuid?: string; getTargetDomain?: () => Set<string> }
+			| undefined;
+	})();
+	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
+		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
+		item as unknown as {
+			type?: string;
+			system?: { activation?: { targets?: { attackType?: string } } };
+		},
+		firstTargetActor,
+	);
+	const defaultConditionalChoice = (option: ConditionalBonusOption): ConditionalChoice => {
+		if (option.advantage > 0) return 'advantage';
+		if (option.damageValue !== null || option.damageFormula !== null) return 'damage';
+		return 'none';
+	};
+
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
+	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
+		Object.fromEntries(conditionalBonusOptions.map((o) => [o.ruleId, defaultConditionalChoice(o)])),
+	);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state<number | null | undefined>();
 	let primaryDieModifier = $state<number | null | undefined>();
@@ -127,6 +161,31 @@ export function createItemActivationConfigDialogState(
 		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
 	);
 
+	function setConditionalChoice(ruleId: string, choice: ConditionalChoice) {
+		conditionalChoices = { ...conditionalChoices, [ruleId]: choice };
+	}
+
+	const hasConditionalBonuses = $derived(conditionalBonusOptions.length > 0);
+
+	// Net advantage stacks contributed by choices set to "advantage".
+	const conditionalAdvantageTotal = $derived(
+		conditionalBonusOptions.reduce(
+			(sum, o) => (conditionalChoices[o.ruleId] === 'advantage' ? sum + o.advantage : sum),
+			0,
+		),
+	);
+
+	// Damage fragments contributed by choices set to "damage", credited to their source.
+	const conditionalDamageFormula = $derived(
+		conditionalBonusOptions
+			.filter((o) => conditionalChoices[o.ruleId] === 'damage')
+			.map((o) => {
+				const term = o.damageFormula ?? `${o.damageValue ?? 0}`;
+				return `+${term}[${o.label}]`;
+			})
+			.join(''),
+	);
+
 	const damageEffects = $derived.by(() => extractDamageEffectsFromItem(options.item()));
 
 	const damageFormula = $derived(damageEffects[0]?.formula || '0');
@@ -141,6 +200,9 @@ export function createItemActivationConfigDialogState(
 			}
 			if (index === 0 && poolBonusFormula) {
 				formula += poolBonusFormula;
+			}
+			if (index === 0 && conditionalDamageFormula) {
+				formula += conditionalDamageFormula;
 			}
 			return {
 				formula,
@@ -186,6 +248,22 @@ export function createItemActivationConfigDialogState(
 		spendablePools,
 		spendableChargePools,
 		autoBonusSummaries,
+		conditionalBonusOptions,
+
+		// Conditional-bonus choices.
+		get conditionalChoices() {
+			return conditionalChoices;
+		},
+		get hasConditionalBonuses() {
+			return hasConditionalBonuses;
+		},
+		get conditionalAdvantageTotal() {
+			return conditionalAdvantageTotal;
+		},
+		get conditionalDamageFormula() {
+			return conditionalDamageFormula;
+		},
+		setConditionalChoice,
 
 		// Selection getters.
 		get chargeSpendCounts() {
