@@ -7,6 +7,14 @@ describe('HitDiceAdvantageRule', () => {
 			const schema = HitDiceAdvantageRule.defineSchema();
 			expect(schema).toHaveProperty('type');
 			expect(schema).toHaveProperty('condition');
+			expect(schema).toHaveProperty('amount');
+			expect(schema).toHaveProperty('rollContext');
+		});
+
+		it('defaults amount to 1 and rollContext to fieldRest', () => {
+			const schema = HitDiceAdvantageRule.defineSchema();
+			expect(schema.amount.initial).toBe(1);
+			expect(schema.rollContext.initial).toBe('fieldRest');
 		});
 	});
 

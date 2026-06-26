@@ -13,7 +13,14 @@
 	const actorType = $derived(system.actorType);
 	const currentClassLevel = $derived(system.currentClassLevel);
 	const takeAverageHp = $derived(system.takeAverageHp);
+	const hitDiceAdvantageSource = $derived(system.hitDiceAdvantageSource);
 	const permissions = $derived(system.permissions);
+
+	const hitPointsSubheading = $derived.by(() => {
+		if (takeAverageHp) return 'Chose Average';
+		if (hitDiceAdvantageSource) return `Rolled with advantage (${hitDiceAdvantageSource})`;
+		return 'Rolled';
+	});
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -35,7 +42,7 @@
 		{#if rolls.length}
 			<RollSummary
 				label="Hit Points"
-				subheading={takeAverageHp ? 'Chose Average' : 'Rolled'}
+				subheading={hitPointsSubheading}
 				tooltip={prepareRollTooltip(actorType, permissions, rolls[0])}
 				total={rolls[0].total}
 			/>

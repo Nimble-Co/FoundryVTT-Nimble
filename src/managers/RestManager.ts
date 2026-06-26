@@ -212,8 +212,22 @@ class RestManager {
 			(this.#actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
 		const shouldMaximize = makeCamp || maximizeFromRules;
 
-		// Check if any advantage rules are active
-		const hasAdvantage = activeAdvantageRuleIds.length > 0;
+		// Determine the advantage level from active field-rest advantage rules.
+		// 0 = no advantage; multiple active rules use the highest amount.
+		const advantageRules =
+			(
+				this.#actor.system.attributes as {
+					hitDiceAdvantageRules?: Array<{ id: string; amount: number; rollContext: string }>;
+				}
+			).hitDiceAdvantageRules ?? [];
+
+		const advantageAmount = advantageRules
+			.filter(
+				(rule) =>
+					(rule.rollContext ?? 'fieldRest') === 'fieldRest' &&
+					activeAdvantageRuleIds.includes(rule.id),
+			)
+			.reduce((highest, rule) => Math.max(highest, rule.amount ?? 1), 0);
 
 		const rolls: Roll[] = [];
 		let totalHealing = 0;
@@ -227,7 +241,7 @@ class RestManager {
 					Number(size),
 					quantity,
 					shouldMaximize,
-					hasAdvantage,
+					advantageAmount,
 					true, // skipChatMessage
 				);
 				if (result) {
