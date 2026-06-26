@@ -2,6 +2,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { systemHookName } from '#system';
+import { requestSetActiveCombatTurn } from '#utils/combatTurnActions.js';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
@@ -1086,6 +1087,25 @@ class NimbleCombat extends Combat {
 		return expandLegendaryTurns(minionNormalizedTurns);
 	}
 
+	/**
+	 * Repoint the active turn to a specific combatant within the current round, without advancing
+	 * the round or running turn-end cleanup. Backs the "take the turn" controls and drag-to-front
+	 * reordering, where a combatant is moved ahead of the active combatant and becomes active.
+	 *
+	 * Returns whether the active turn actually changed.
+	 */
+	async setActiveTurnToCombatant(combatantId: string): Promise<boolean> {
+		if (!combatantId || !this.started) return false;
+		this.#syncTurnIndexWithAliveTurns();
+		const targetIndex = this.turns.findIndex((turn) => (turn?.id ?? '') === combatantId);
+		if (targetIndex < 0) return false;
+		const targetIdentity = this.#resolveTurnIdentityAtIndex(this.turns, targetIndex);
+		if (!targetIdentity) return false;
+		const previousTurnIndex = Number.isInteger(this.turn) ? Number(this.turn) : -1;
+		await this.#syncTurnToCombatant(targetIdentity);
+		return this.turn !== previousTurnIndex;
+	}
+
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
@@ -1197,6 +1217,9 @@ class NimbleCombat extends Combat {
 			dropResolution,
 			syncTurnToCombatant: (combatantIdOrIdentity, options) =>
 				this.#syncTurnToCombatant(combatantIdOrIdentity, options),
+			requestSetActiveTurn: async (combatantId) => {
+				await requestSetActiveCombatTurn({ combat: this, targetCombatantId: combatantId });
+			},
 		});
 	}
 }

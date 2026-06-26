@@ -1181,7 +1181,9 @@
 				"wounds": "Wounds",
 				"woundsHidden": "Wounds hidden",
 				"woundsValue": "Wounds {current}/{max}",
-				"removeFromCombat": "Remove from Combat"
+				"removeFromCombat": "Remove from Combat",
+				"takeTurn": "Take the Turn",
+				"pingToken": "Ping Token"
 			},
 			"ctSettings": {
 				"sizeSection": "Size",
