@@ -1,0 +1,23 @@
+{
+	"name": "New Place, New Face",
+	"type": "ancestryBonus",
+	"img": "icons/magic/control/silhouette-hold-change-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><strong>New Place, New Face</strong> </p><p>+2 shifting skill points. You may take on the appearance of any ancestry. When you do, you may place your 2 shifting skill points into any 1 skill. 1/day.</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504809086,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "QIR3oWX6wPzjRsTu"
+}

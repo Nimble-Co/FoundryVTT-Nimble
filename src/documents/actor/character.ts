@@ -1,4 +1,5 @@
 import type { NimbleAncestryItem } from '#documents/item/ancestry.js';
+import type { NimbleAncestryBonusItem } from '#documents/item/ancestryBonus.js';
 import type { NimbleBackgroundItem } from '#documents/item/background.js';
 import type { NimbleBoonItem } from '#documents/item/boon.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
@@ -91,6 +92,8 @@ interface LevelUpDialogData {
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	declare _ancestry: NimbleAncestryItem | undefined;
 
+	declare _ancestryBonus: NimbleAncestryBonusItem | undefined;
+
 	declare _background: NimbleBackgroundItem | undefined;
 
 	declare _classes: Record<string, NimbleClassItem> | undefined;
@@ -114,6 +117,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		this._ancestry = this.items.find((i) => i.isType('ancestry')) as NimbleAncestryItem | undefined;
 		return this._ancestry;
+	}
+
+	get ancestryBonus() {
+		if (this._ancestryBonus !== undefined) return this._ancestryBonus;
+
+		this._ancestryBonus = this.items.find((i) => i.isType('ancestryBonus')) as
+			| NimbleAncestryBonusItem
+			| undefined;
+		return this._ancestryBonus;
 	}
 
 	get background() {
@@ -147,6 +159,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** ------------------------------------------------------ */
 	override prepareData(): void {
 		this._ancestry = undefined;
+		this._ancestryBonus = undefined;
 		this._background = undefined;
 		this._classes = undefined;
 		this.HitDiceManager = null!;

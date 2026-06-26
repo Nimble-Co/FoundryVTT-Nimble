@@ -14,6 +14,7 @@
 			"monsterFeature": "Monster Feature",
 			"object": "Object",
 			"ancestry": "Ancestry",
+			"ancestryBonus": "Ancestry Bonus",
 			"spell": "Spell",
 			"subclass": "Subclass"
 		}
@@ -338,6 +339,7 @@
 		},
 		"featureTypeHeadings": {
 			"ancestry": "Ancestry",
+			"ancestryBonus": "Ancestry Bonus",
 			"background": "Background",
 			"boon": "Boons",
 			"feature": "Class Features"
@@ -1225,6 +1227,7 @@
 			"object": "Nimble Object Sheet",
 			"playerCharacter": "Nimble Player Character Sheet",
 			"ancestry": "Nimble Ancestry Sheet",
+			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
 			"spell": "Nimble Spell Sheet",
 			"subclass": "Nimble Subclass Sheet"

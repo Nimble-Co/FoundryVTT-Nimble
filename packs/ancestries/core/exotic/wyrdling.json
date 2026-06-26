@@ -6,11 +6,12 @@
 		"macro": "",
 		"identifier": "",
 		"rules": [],
-		"description": "<p>Unpredictable and chaotic, Wyrdlings are the result of magic gone awry. Their bodies pulse with raw arcane energy, and their mere presence often disturbs the balance of magic around them.</p><hr><p><strong>Chaotic Surge</strong> </p><p>Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.</p>",
+		"description": "<p>Unpredictable and chaotic, Wyrdlings are the result of magic gone awry. Their bodies pulse with raw arcane energy, and their mere presence often disturbs the balance of magic around them.</p>",
 		"exotic": true,
 		"size": [
 			"small"
-		]
+		],
+		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.bp8h61eI7HaKUEPW"
 	},
 	"effects": [],
 	"folder": null,

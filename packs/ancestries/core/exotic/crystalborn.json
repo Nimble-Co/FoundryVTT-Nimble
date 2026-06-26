@@ -6,11 +6,12 @@
 		"macro": "",
 		"identifier": "",
 		"rules": [],
-		"description": "<p>Formed from living crystal, the Crystalborn are beings of dazzling beauty and otherworldly toughness. Their translucent bodies refract light and sound, granting them unique abilities in combat.</p><hr><p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>",
+		"description": "<p>Formed from living crystal, the Crystalborn are beings of dazzling beauty and otherworldly toughness. Their translucent bodies refract light and sound, granting them unique abilities in combat.</p>",
 		"exotic": true,
 		"size": [
 			"medium"
-		]
+		],
+		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.1YtCep32COT7uAYP"
 	},
 	"effects": [],
 	"folder": null,

@@ -1,0 +1,37 @@
+{
+	"name": "Elusive",
+	"type": "ancestryBonus",
+	"img": "icons/sundries/gaming/dice-runed-tan.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "skillBonus",
+				"disabled": false,
+				"id": "8tjF62d2Ji6suGUb",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "+1",
+				"skills": [
+					"stealth"
+				]
+			}
+		],
+		"description": "<p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448231080,
+		"modifiedTime": 1756513469595,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Z2TN2RVAcb53Oysu"
+}

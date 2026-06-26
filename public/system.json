@@ -114,6 +114,7 @@
 			"monsterFeature": {},
 			"object": {},
 			"ancestry": {},
+			"ancestryBonus": {},
 			"spell": {},
 			"subclass": {}
 		}
@@ -123,6 +124,13 @@
 			"name": "nimble-ancestries",
 			"label": "Nimble Ancestries",
 			"path": "packs/ancestries.db",
+			"type": "Item",
+			"system": "nimble"
+		},
+		{
+			"name": "nimble-ancestry-bonuses",
+			"label": "Nimble Ancestry Bonuses",
+			"path": "packs/ancestryBonuses.db",
 			"type": "Item",
 			"system": "nimble"
 		},

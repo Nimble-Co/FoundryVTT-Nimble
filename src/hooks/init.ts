@@ -12,6 +12,7 @@ import { NimbleCombat } from '../documents/combat/combat.svelte.js';
 import { NimbleCombatant } from '../documents/combatant/combatant.svelte.js';
 import ItemProxy from '../documents/item/itemProxy.js';
 import { NimbleScene } from '../documents/scene/scene.js';
+import AncestryBonusSheet from '../documents/sheets/AncestryBonusSheet.svelte.js';
 import AncestrySheet from '../documents/sheets/AncestrySheet.svelte.js';
 import BackgroundSheet from '../documents/sheets/BackgroundSheet.svelte.js';
 import BoonSheet from '../documents/sheets/BoonSheet.svelte.js';
@@ -212,6 +213,16 @@ export default function init() {
 			types: ['ancestry'],
 			makeDefault: true,
 			label: 'NIMBLE.sheets.ancestry',
+		},
+	);
+
+	foundry.documents.collections.Items.registerSheet(
+		SYSTEM_ID,
+		AncestryBonusSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['ancestryBonus'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.ancestryBonus',
 		},
 	);
 

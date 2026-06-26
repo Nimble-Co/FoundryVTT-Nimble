@@ -5,40 +5,13 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [
-			{
-				"type": "grantProficiency",
-				"proficiencyType": "languages",
-				"values": [
-					"elvish"
-				],
-				"label": "Lithe",
-				"predicate": {
-					"intelligence": {
-						"min": 0
-					}
-				},
-				"id": "wwJMcxgBUNmFaf6X"
-			},
-			{
-				"type": "speedBonus",
-				"value": "1",
-				"label": "Lithe",
-				"id": "Jz7OOTWRVvFo1dTC"
-			},
-			{
-				"type": "initiativeRollMode",
-				"value": 1,
-				"mode": "adjust",
-				"label": "Lithe (Advantage on Initiative)",
-				"id": "xDUbWHBMslNIkMiL"
-			}
-		],
-		"description": "<p>Elves epitomize swiftness and grace. Their tall, slender forms belie their innate speed, grace, and wit. Formidable in both diplomacy and combat, elves strike swiftly, often preventing the worst by acting first.</p><hr><p><strong>Lithe</strong></p><p>Advantage on Initiative</p><p>+1 Speed [M]</p><p>You know Elvish if your INT is not negative</p>",
+		"rules": [],
+		"description": "<p>Elves epitomize swiftness and grace. Their tall, slender forms belie their innate speed, grace, and wit. Formidable in both diplomacy and combat, elves strike swiftly, often preventing the worst by acting first.</p>",
 		"exotic": false,
 		"size": [
 			"medium"
-		]
+		],
+		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.YJpImt9S1WiwdC8r"
 	},
 	"effects": [],
 	"folder": null,

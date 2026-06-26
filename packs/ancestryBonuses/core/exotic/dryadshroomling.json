@@ -1,0 +1,37 @@
+{
+	"name": "Danger Pollen/Spores",
+	"type": "ancestryBonus",
+	"img": "icons/commodities/flowers/flowers-cherry-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"proficiencyType": "languages",
+				"values": [
+					"elvish"
+				],
+				"label": "Danger Pollen/Spores",
+				"predicate": {
+					"intelligence": {
+						"min": 0
+					}
+				}
+			}
+		],
+		"description": "<p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p><p>You know Elvish if your INT is not negative. [M]</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756505822706,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "NKA98sDFntkqd4Im"
+}

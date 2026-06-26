@@ -74,6 +74,18 @@ declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 		description?: string;
 		exotic: boolean;
 		size?: string[];
+		defaultBonus?: string;
+		rules?: NimbleBaseRule[];
+	};
+}
+
+/**
+ * Ancestry bonus item - the swappable trait granted alongside an ancestry.
+ */
+declare interface NimbleAncestryBonusItem extends NimbleBaseItem<'ancestryBonus'> {
+	type: 'ancestryBonus';
+	system: {
+		description?: string;
 		rules?: NimbleBaseRule[];
 	};
 }
