@@ -397,22 +397,16 @@ const languageHints = {
 	deepSpeak: 'NIMBLE.languageHints.deepSpeak',
 };
 
-const languageImages = {
-	common: 'icons/environment/people/group.webp',
-	dwarvish: 'icons/tools/smithing/crucible.webp',
-	elvish: 'icons/weapons/swords/sword-hilt-steel-green.webp',
-	goblin: 'icons/creatures/magical/humanoid-silhouette-green.webp',
-	infernal: 'icons/creatures/unholy/demon-horned-winged-laughing.webp',
-	thievesCant: 'icons/magic/perception/shadow-stealth-eyes-purple.webp',
-	celestial: 'icons/magic/holy/angel-winged-humanoid-blue.webp',
-	draconic: 'icons/creatures/reptiles/dragon-horned-blue.webp',
-	primordial: 'icons/creatures/magical/spirit-fire-orange.webp',
-	deepSpeak: 'icons/creatures/slimes/slime-giant-face-eyes.webp',
-};
+// Ancestry-scoped alternate display names for languages, keyed by language key.
+// Empty by default; populated at runtime from the GM's language customizations
+// setting. Each entry binds an alternate name to the ancestry identifiers that
+// use it (e.g. a Gnome calls `dwarvish` "Gnomish").
+const languageAlternateNames: Record<string, { name: string; ancestries: string[] }[]> = {};
 
-// Alternate display names for languages, keyed by language key. Empty by
-// default; populated at runtime from the GM's language customizations setting.
-const languageAliases: Record<string, string[]> = {};
+// GM-added ancestry→language grants beyond the ancestry rules, keyed by language
+// key with the ancestry identifiers that gain it (if INT is not negative).
+// Empty by default; populated at runtime from the language customizations setting.
+const languageSpeakers: Record<string, string[]> = {};
 
 const manaRecoveryTypes = {
 	fieldRest: 'NIMBLE.manaRecoveryTypes.fieldRest',
@@ -941,9 +935,9 @@ const NIMBLE = {
 	hitDice,
 	hitPoints,
 	jsonExport,
-	languageAliases,
+	languageAlternateNames,
 	languageHints,
-	languageImages,
+	languageSpeakers,
 	languages,
 	skillCheckDialog,
 	levelDownDialog,

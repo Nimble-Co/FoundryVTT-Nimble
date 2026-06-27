@@ -829,7 +829,11 @@
 				"uuid": { "label": "Item" }
 			},
 			"grantProficiency": {
-				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type."
+				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type.",
+				"displayAs": {
+					"label": "Display As",
+					"hint": "Languages only: the name this item's ancestry uses for the granted language (e.g. a Gnome calls Dwarvish \"Gnomish\"). Leave blank to use the language's normal name."
+				}
 			},
 			"grantSpells": {
 				"description": "Grant spells by school + tier filter, by UUID, or by user choice.",
@@ -2079,17 +2083,23 @@
 		"settings": {
 			"languageCustomization": {
 				"name": "In-Game Languages",
-				"hint": "Rename built-in languages, give them alternate names, and add your own custom languages.",
+				"hint": "Rename built-in languages, give them ancestry-specific alternate names, and add your own custom languages.",
 				"button": "Configure Languages",
 				"title": "Configure In-Game Languages",
-				"intro": "Rename built-in languages or add alternate names, and create custom languages. Leave a field blank to keep the built-in default.",
+				"intro": "Rename a built-in language, change which ancestries speak it, or add your own languages. These start from the Nimble ancestry rules and override them at runtime — they never change the compendium itself, and Reset restores the rule defaults.",
 				"builtinSection": "Built-In Languages",
 				"customSection": "Custom Languages",
 				"label": "Name",
-				"aliases": "Alternate Names",
-				"aliasesPlaceholder": "Comma-separated, e.g. Orcish, Goblin Tongue",
+				"rename": "Rename",
 				"tooltip": "Tooltip",
-				"icon": "Icon Path",
+				"spokenBy": "Spoken by",
+				"spokenByHint": "Each ancestry below knows this language if its INT isn't negative. Add or remove ancestries to change who speaks it, and type what an ancestry calls it (leave blank to use the language's own name).",
+				"enableAlternateNames": "Show ancestry names for languages",
+				"alternateNamesHint": "When on, a language shows the name its ancestry uses for it (e.g. a Gnome sees \"Dwarvish (Gnomish)\"). Turn off to always show the plain language name.",
+				"selectAncestry": "Add an ancestry…",
+				"removeAncestry": "Remove ancestry",
+				"noAncestries": "No ancestry items found in your world or compendiums.",
+				"conflictError": "Two languages can't share the same name. Resolve the highlighted names before saving.",
 				"reset": "Reset to default",
 				"remove": "Remove language",
 				"newLanguage": "New Language",

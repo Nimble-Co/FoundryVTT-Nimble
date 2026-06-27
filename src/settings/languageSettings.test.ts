@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { LanguageCustomizations } from './languageSettings.js';
+import getLanguageName from '../utils/getLanguageName.js';
+import { findLanguageNameConflicts, type LanguageCustomizations } from './languageSettings.js';
 
 type LanguageSettingsModule = typeof import('./languageSettings.js');
 
@@ -7,15 +8,28 @@ type LanguageSettingsModule = typeof import('./languageSettings.js');
 // pristine built-in language maps before any customization is applied.
 const PRISTINE_LANGUAGES = { ...CONFIG.NIMBLE.languages };
 const PRISTINE_HINTS = { ...CONFIG.NIMBLE.languageHints };
-const PRISTINE_IMAGES = { ...CONFIG.NIMBLE.languageImages };
 
 let customizations: LanguageCustomizations;
 
+type NimbleConfig = {
+	languages: Record<string, string>;
+	languageHints: Record<string, string>;
+	languageAlternateNames: Record<string, unknown>;
+	languageSpeakers: Record<string, string[]>;
+	languageGrantsManaged?: boolean;
+};
+
+function nimble(): NimbleConfig {
+	return CONFIG.NIMBLE as unknown as NimbleConfig;
+}
+
 function restorePristineConfig(): void {
-	CONFIG.NIMBLE.languages = { ...PRISTINE_LANGUAGES } as typeof CONFIG.NIMBLE.languages;
-	CONFIG.NIMBLE.languageHints = { ...PRISTINE_HINTS } as typeof CONFIG.NIMBLE.languageHints;
-	CONFIG.NIMBLE.languageImages = { ...PRISTINE_IMAGES } as typeof CONFIG.NIMBLE.languageImages;
-	CONFIG.NIMBLE.languageAliases = {};
+	const config = nimble();
+	config.languages = { ...PRISTINE_LANGUAGES };
+	config.languageHints = { ...PRISTINE_HINTS };
+	config.languageAlternateNames = {};
+	config.languageSpeakers = {};
+	config.languageGrantsManaged = false;
 }
 
 async function loadModule(): Promise<LanguageSettingsModule> {
@@ -26,7 +40,7 @@ async function loadModule(): Promise<LanguageSettingsModule> {
 
 beforeEach(() => {
 	restorePristineConfig();
-	customizations = { overrides: {}, custom: [] };
+	customizations = { overrides: {}, custom: [], alternateNamesEnabled: true };
 	(game as unknown as { settings: Record<string, ReturnType<typeof vi.fn>> }).settings = {
 		get: vi.fn(() => customizations),
 		set: vi.fn().mockResolvedValue(undefined),
@@ -45,36 +59,56 @@ describe('applyLanguageCustomizations', () => {
 		expect(CONFIG.NIMBLE.languages.common).toBe(PRISTINE_LANGUAGES.common);
 	});
 
-	it('stores alternate names in languageAliases', async () => {
-		const { applyLanguageCustomizations } = await loadModule();
-		customizations.overrides = { common: { aliases: ['Trade Tongue', 'Lingua'] } };
-
-		applyLanguageCustomizations();
-
-		expect(CONFIG.NIMBLE.languageAliases.common).toEqual(['Trade Tongue', 'Lingua']);
-	});
-
-	it('overrides hint and image for a built-in language', async () => {
+	it('publishes ancestry aliases and speakers from a GM override', async () => {
 		const { applyLanguageCustomizations } = await loadModule();
 		customizations.overrides = {
-			elvish: { hint: 'Custom hint', image: 'icons/custom.webp' },
+			dwarvish: {
+				speakers: [
+					{ ancestry: 'dwarf', alias: '' },
+					{ ancestry: 'gnome', alias: 'Gnomish' },
+				],
+			},
 		};
 
 		applyLanguageCustomizations();
 
-		expect(CONFIG.NIMBLE.languageHints.elvish).toBe('Custom hint');
-		expect(CONFIG.NIMBLE.languageImages.elvish).toBe('icons/custom.webp');
+		expect(nimble().languageAlternateNames.dwarvish).toEqual([
+			{ name: 'Gnomish', ancestries: ['gnome'] },
+		]);
+		expect(nimble().languageSpeakers.dwarvish).toEqual(['dwarf', 'gnome']);
+		expect(nimble().languageGrantsManaged).toBe(true);
 	});
 
-	it('adds custom languages with their hint, image, and aliases', async () => {
+	it('omits aliases when alternate names are disabled (grants still publish)', async () => {
+		const { applyLanguageCustomizations } = await loadModule();
+		customizations.alternateNamesEnabled = false;
+		customizations.overrides = {
+			dwarvish: { speakers: [{ ancestry: 'gnome', alias: 'Gnomish' }] },
+		};
+
+		applyLanguageCustomizations();
+
+		expect(nimble().languageAlternateNames).toEqual({});
+		expect(nimble().languageSpeakers.dwarvish).toEqual(['gnome']);
+	});
+
+	it('overrides the hint for a built-in language', async () => {
+		const { applyLanguageCustomizations } = await loadModule();
+		customizations.overrides = { elvish: { hint: 'Custom hint' } };
+
+		applyLanguageCustomizations();
+
+		expect(CONFIG.NIMBLE.languageHints.elvish).toBe('Custom hint');
+	});
+
+	it('adds custom languages with their hint and speakers', async () => {
 		const { applyLanguageCustomizations } = await loadModule();
 		customizations.custom = [
 			{
 				key: 'sylvanCant',
 				label: 'Sylvan Cant',
-				aliases: ['Fey Speech'],
 				hint: 'Spoken by the fey.',
-				image: 'icons/sylvan.webp',
+				speakers: [{ ancestry: 'dryadshroomling', alias: 'Fey Speech' }],
 			},
 		];
 
@@ -82,11 +116,12 @@ describe('applyLanguageCustomizations', () => {
 
 		const languages = CONFIG.NIMBLE.languages as Record<string, string>;
 		const hints = CONFIG.NIMBLE.languageHints as Record<string, string>;
-		const images = CONFIG.NIMBLE.languageImages as Record<string, string>;
 		expect(languages.sylvanCant).toBe('Sylvan Cant');
 		expect(hints.sylvanCant).toBe('Spoken by the fey.');
-		expect(images.sylvanCant).toBe('icons/sylvan.webp');
-		expect(CONFIG.NIMBLE.languageAliases.sylvanCant).toEqual(['Fey Speech']);
+		expect(nimble().languageAlternateNames.sylvanCant).toEqual([
+			{ name: 'Fey Speech', ancestries: ['dryadshroomling'] },
+		]);
+		expect(nimble().languageSpeakers.sylvanCant).toEqual(['dryadshroomling']);
 	});
 
 	it('ignores overrides for unknown built-in keys', async () => {
@@ -108,20 +143,143 @@ describe('applyLanguageCustomizations', () => {
 		applyLanguageCustomizations();
 
 		expect(CONFIG.NIMBLE.languages.goblin).toBe(PRISTINE_LANGUAGES.goblin);
-		expect(CONFIG.NIMBLE.languageAliases).toEqual({});
 	});
 });
 
-describe('registerLanguageSettings', () => {
-	it('registers a world-scoped, non-config object setting', async () => {
-		const { registerLanguageSettings } = await loadModule();
-		const settingsMock = (game as unknown as { settings: { register: ReturnType<typeof vi.fn> } })
-			.settings;
+describe('findLanguageNameConflicts', () => {
+	it('flags entries that share a name (case-insensitive)', () => {
+		const conflicts = findLanguageNameConflicts([
+			{ id: 'builtin:dwarvish', name: 'Celestial' },
+			{ id: 'builtin:celestial', name: 'celestial' },
+			{ id: 'builtin:common', name: 'Common' },
+		]);
 
-		registerLanguageSettings();
+		expect(conflicts).toEqual(new Set(['builtin:dwarvish', 'builtin:celestial']));
+	});
 
-		const [, key, options] = settingsMock.register.mock.calls[0];
-		expect(key).toBe('languageCustomizations');
-		expect(options).toMatchObject({ scope: 'world', config: false });
+	it('returns an empty set when all names are unique', () => {
+		const conflicts = findLanguageNameConflicts([
+			{ id: 'a', name: 'Dwarvish' },
+			{ id: 'b', name: 'Elvish' },
+		]);
+
+		expect(conflicts.size).toBe(0);
+	});
+
+	it('ignores blank names', () => {
+		const conflicts = findLanguageNameConflicts([
+			{ id: 'a', name: '   ' },
+			{ id: 'b', name: '' },
+		]);
+
+		expect(conflicts.size).toBe(0);
+	});
+});
+
+describe('ancestry language defaults', () => {
+	const gnomeAncestry = {
+		type: 'ancestry',
+		name: 'Gnome',
+		identifier: 'gnome',
+		system: {
+			rules: [
+				{
+					type: 'grantProficiency',
+					proficiencyType: 'languages',
+					values: ['dwarvish'],
+					displayAs: 'Gnomish',
+				},
+			],
+		},
+	};
+
+	function mockAncestrySources(items: unknown[]): void {
+		(game as unknown as { items: unknown[]; packs: unknown[] }).items = items;
+		(game as unknown as { items: unknown[]; packs: unknown[] }).packs = [];
+	}
+
+	it('seeds aliases and speakers from ancestry rules with zero GM setup', async () => {
+		const { applyLanguageCustomizations, loadAncestryLanguageDefaults } = await loadModule();
+		mockAncestrySources([gnomeAncestry]);
+
+		await loadAncestryLanguageDefaults();
+		applyLanguageCustomizations();
+
+		expect(nimble().languageAlternateNames.dwarvish).toEqual([
+			{ name: 'Gnomish', ancestries: ['gnome'] },
+		]);
+		expect(nimble().languageSpeakers.dwarvish).toEqual(['gnome']);
+	});
+
+	it('exposes the defaults to the editor', async () => {
+		const { loadAncestryLanguageDefaults, getAncestryLanguageDefaults } = await loadModule();
+		mockAncestrySources([gnomeAncestry]);
+
+		await loadAncestryLanguageDefaults();
+
+		expect(getAncestryLanguageDefaults().dwarvish).toEqual([
+			{ ancestry: 'gnome', alias: 'Gnomish' },
+		]);
+	});
+
+	it('marks Common as spoken by every ancestry (even non-language ones)', async () => {
+		const {
+			applyLanguageCustomizations,
+			loadAncestryLanguageDefaults,
+			getAncestryLanguageDefaults,
+		} = await loadModule();
+		const human = { type: 'ancestry', name: 'Human', identifier: 'human', system: { rules: [] } };
+		mockAncestrySources([gnomeAncestry, human]);
+
+		await loadAncestryLanguageDefaults();
+		applyLanguageCustomizations();
+
+		expect(getAncestryLanguageDefaults().common).toEqual([
+			{ ancestry: 'gnome', alias: '' },
+			{ ancestry: 'human', alias: '' },
+		]);
+		expect(nimble().languageSpeakers.common).toEqual(['gnome', 'human']);
+	});
+
+	it('lets a GM override the rule defaults (and removals stick)', async () => {
+		const { applyLanguageCustomizations, loadAncestryLanguageDefaults } = await loadModule();
+		mockAncestrySources([gnomeAncestry]);
+		// GM removed the gnome speaker entirely.
+		customizations.overrides = { dwarvish: { speakers: [] } };
+
+		await loadAncestryLanguageDefaults();
+		applyLanguageCustomizations();
+
+		expect(nimble().languageSpeakers.dwarvish).toBeUndefined();
+		expect(nimble().languageAlternateNames.dwarvish).toBeUndefined();
+	});
+});
+
+describe('getLanguageName', () => {
+	beforeEach(() => {
+		nimble().languages = { ...PRISTINE_LANGUAGES };
+		nimble().languageAlternateNames = {
+			dwarvish: [{ name: 'Gnomish', ancestries: ['gnome'] }],
+		};
+	});
+
+	it('annotates the canonical label with the alternate name for a matching ancestry', () => {
+		expect(getLanguageName('dwarvish', { ancestryIdentifier: 'gnome' })).toBe(
+			`${PRISTINE_LANGUAGES.dwarvish} (Gnomish)`,
+		);
+	});
+
+	it('returns the canonical label for a non-matching ancestry', () => {
+		expect(getLanguageName('dwarvish', { ancestryIdentifier: 'dwarf' })).toBe(
+			PRISTINE_LANGUAGES.dwarvish,
+		);
+	});
+
+	it('returns the canonical label when no ancestry is provided', () => {
+		expect(getLanguageName('dwarvish')).toBe(PRISTINE_LANGUAGES.dwarvish);
+	});
+
+	it('falls back to the key for unknown languages', () => {
+		expect(getLanguageName('madeUpKey', { ancestryIdentifier: 'gnome' })).toBe('madeUpKey');
 	});
 });

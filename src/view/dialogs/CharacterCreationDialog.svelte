@@ -188,6 +188,7 @@
 
 	<BonusLanguageSelection
 		active={state.stage === CHARACTER_CREATION_STAGES.LANGUAGES}
+		ancestryIdentifier={state.selectedAncestry?.identifier ?? null}
 		bind:bonusLanguages={state.bonusLanguages}
 		{bonusLanguageOptions}
 		grantedLanguages={state.grantedLanguages}

@@ -223,7 +223,8 @@ export default function registerSystemSettings() {
 		wrapper.appendChild(fields);
 		wrapper.appendChild(hint);
 
-		systemTab.appendChild(wrapper);
+		// Surface the launcher at the top of the system tab so it's easy to find.
+		systemTab.prepend(wrapper);
 	});
 
 	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {

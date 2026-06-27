@@ -525,17 +525,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	}
 
 	prepareBonusLanguageOptions() {
-		const { languages, languageHints, languageAliases } = CONFIG.NIMBLE;
+		const { languages, languageHints } = CONFIG.NIMBLE;
 		const { common: _, ...languageOptions } = languages;
 
-		return Object.entries(languageOptions).map(([value, label]) => {
-			const aliases = languageAliases?.[value] ?? [];
-			return {
-				value,
-				label: aliases.length ? `${label} (${aliases.join(', ')})` : label,
-				tooltip: languageHints[value],
-			};
-		});
+		return Object.entries(languageOptions).map(([value, label]) => ({
+			value,
+			label,
+			tooltip: languageHints[value],
+		}));
 	}
 
 	async prepareClassOptions(): Promise<NimbleClassItem[]> {

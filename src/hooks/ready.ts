@@ -5,7 +5,10 @@ import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { getAdjacencySyncEnabled } from '../settings/adjacencySettings.js';
-import { applyLanguageCustomizations } from '../settings/languageSettings.js';
+import {
+	applyLanguageCustomizations,
+	loadAncestryLanguageDefaults,
+} from '../settings/languageSettings.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
@@ -45,7 +48,13 @@ export default async function ready() {
 	}
 
 	game.nimble.conditions.configureStatusEffects();
+	await loadAncestryLanguageDefaults();
 	applyLanguageCustomizations();
+	// Actors were prepared during world init before language grants became managed,
+	// so re-prepare characters once so any GM language overrides take effect.
+	for (const actor of game.actors ?? []) {
+		if (actor?.type === 'character') actor.prepareData?.();
+	}
 	registerCombatTurnSocketListener();
 
 	const target = document.body;

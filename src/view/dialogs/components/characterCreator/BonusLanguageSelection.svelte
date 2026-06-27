@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import localize from '../../../../utils/localize.js';
+	import getLanguageName from '../../../../utils/getLanguageName.js';
 
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
@@ -31,6 +31,7 @@
 
 	let {
 		active,
+		ancestryIdentifier = null,
 		bonusLanguages = $bindable(),
 		bonusLanguageOptions,
 		grantedLanguages = [],
@@ -42,7 +43,7 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { languages, languageHints, bonusLanguageSelection } = CONFIG.NIMBLE;
+	const { languageHints, bonusLanguageSelection } = CONFIG.NIMBLE;
 
 	let tempBonusLanguages = $state([]);
 
@@ -114,7 +115,7 @@
 								data-tooltip-direction="UP"
 							>
 								<span class="nimble-language-tag__name"
-									>{localize(languages[lang.key] ?? lang.key)}</span
+									>{getLanguageName(lang.key, { ancestryIdentifier })}</span
 								>
 								<span class="nimble-language-tag__source">({lang.source})</span>
 							</li>
@@ -154,7 +155,9 @@
 				data-tooltip={languageHints.common}
 				data-tooltip-direction="UP"
 			>
-				<span class="nimble-language-tag__name">{localize(languages.common)}</span>
+				<span class="nimble-language-tag__name"
+					>{getLanguageName('common', { ancestryIdentifier })}</span
+				>
 			</li>
 
 			{#each grantedLanguages as lang}
@@ -163,7 +166,9 @@
 					data-tooltip={languageHints[lang.key]}
 					data-tooltip-direction="UP"
 				>
-					<span class="nimble-language-tag__name">{localize(languages[lang.key] ?? lang.key)}</span>
+					<span class="nimble-language-tag__name"
+						>{getLanguageName(lang.key, { ancestryIdentifier })}</span
+					>
 					<span class="nimble-language-tag__source">({lang.source})</span>
 				</li>
 			{/each}
@@ -174,7 +179,9 @@
 					data-tooltip={languageHints[language]}
 					data-tooltip-direction="UP"
 				>
-					<span class="nimble-language-tag__name">{localize(languages[language] ?? language)}</span>
+					<span class="nimble-language-tag__name"
+						>{getLanguageName(language, { ancestryIdentifier })}</span
+					>
 				</li>
 			{/each}
 		</ul>

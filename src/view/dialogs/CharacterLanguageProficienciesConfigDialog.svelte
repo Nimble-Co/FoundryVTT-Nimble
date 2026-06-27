@@ -1,6 +1,11 @@
 <script>
+	import getLanguageName from '../../utils/getLanguageName.js';
+
 	function prepareLanguageOptions() {
-		return Object.entries(languages).sort((a, b) => a[1].localeCompare(b[1]));
+		const ancestryIdentifier = document.ancestry?.identifier ?? null;
+		return Object.keys(languages)
+			.map((key) => [key, getLanguageName(key, { ancestryIdentifier })])
+			.sort((a, b) => a[1].localeCompare(b[1]));
 	}
 
 	function toggleLanguageProficiency(language) {
@@ -14,10 +19,11 @@
 		});
 	}
 
-	const { languages, languageAliases } = CONFIG.NIMBLE;
-	const languageOptions = prepareLanguageOptions();
+	const { languages } = CONFIG.NIMBLE;
 
 	let { document } = $props();
+
+	const languageOptions = prepareLanguageOptions();
 
 	let knownLanguages = $derived(document.reactive?.system?.proficiencies?.languages);
 </script>
@@ -35,20 +41,7 @@
 				onclick={() => toggleLanguageProficiency(key)}
 			/>
 
-			<span class="nimble-field__label">
-				{label}
-				{#if languageAliases?.[key]?.length}
-					<span class="nimble-field__aliases">({languageAliases[key].join(', ')})</span>
-				{/if}
-			</span>
+			<span class="nimble-field__label">{label}</span>
 		</label>
 	{/each}
 </section>
-
-<style lang="scss">
-	.nimble-field__aliases {
-		margin-inline-start: 0.25rem;
-		font-style: italic;
-		opacity: 0.7;
-	}
-</style>
