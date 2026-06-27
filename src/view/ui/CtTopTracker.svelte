@@ -213,6 +213,15 @@
 	</div>
 {/snippet}
 
+{#snippet contextMenuItem(iconClass, labelKey, onSelect)}
+	<li>
+		<button type="button" class="nimble-ct__context-menu-item" onclick={onSelect}>
+			<i class={`fa-solid ${iconClass}`} aria-hidden="true"></i>
+			<span>{localize(labelKey)}</span>
+		</button>
+	</li>
+{/snippet}
+
 <svelte:window
 	onkeydown={(event) => {
 		if (combatantContextMenu && event.key === 'Escape') closeCombatantContextMenu();
@@ -847,39 +856,24 @@
 			transition:fade={{ duration: 80 }}
 		>
 			{#if combatantContextMenu.canSwapTurn}
-				<li>
-					<button
-						type="button"
-						class="nimble-ct__context-menu-item"
-						onclick={() => void handleSwapTurnFromContextMenu()}
-					>
-						<i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
-						<span>{localize('NIMBLE.ui.combatTracker.swapTurns')}</span>
-					</button>
-				</li>
+				{@render contextMenuItem(
+					'fa-arrow-right-arrow-left',
+					'NIMBLE.ui.combatTracker.swapTurns',
+					() => void handleSwapTurnFromContextMenu(),
+				)}
 			{/if}
 			{#if combatantContextMenu.canTakeTurn}
-				<li>
-					<button
-						type="button"
-						class="nimble-ct__context-menu-item"
-						onclick={() => void handleTakeTurnFromContextMenu()}
-					>
-						<i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
-						<span>{localize('NIMBLE.ui.combatTracker.takeTurn')}</span>
-					</button>
-				</li>
+				{@render contextMenuItem(
+					'fa-flag-checkered',
+					'NIMBLE.ui.combatTracker.takeTurn',
+					() => void handleTakeTurnFromContextMenu(),
+				)}
 			{/if}
-			<li>
-				<button
-					type="button"
-					class="nimble-ct__context-menu-item"
-					onclick={handlePingFromContextMenu}
-				>
-					<i class="fa-solid fa-bullseye" aria-hidden="true"></i>
-					<span>{localize('NIMBLE.ui.combatTracker.pingToken')}</span>
-				</button>
-			</li>
+			{@render contextMenuItem(
+				'fa-bullseye',
+				'NIMBLE.ui.combatTracker.pingToken',
+				handlePingFromContextMenu,
+			)}
 		</menu>
 	{/if}
 {/if}
