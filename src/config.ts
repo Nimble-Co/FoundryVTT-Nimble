@@ -41,6 +41,14 @@ const abilityScoreAbbreviations: Record<AbilityKeyType, string> = {
 	will: 'NIMBLE.abilityScoreAbbreviations.will',
 };
 
+// Used to color- and icon-code each skill by the ability score it is tied to.
+const abilityScoreIcons: Record<AbilityKeyType, string> = {
+	strength: 'fa-solid fa-dumbbell',
+	dexterity: 'fa-solid fa-bolt',
+	intelligence: 'fa-solid fa-scroll',
+	will: 'fa-solid fa-fire',
+};
+
 const abilityScoreTooltips = {
 	advantageOnSave: 'NIMBLE.abilityScoreTooltips.advantageOnSave',
 	disadvantageOnSave: 'NIMBLE.abilityScoreTooltips.disadvantageOnSave',
@@ -902,6 +910,7 @@ const NIMBLE = {
 	abilities,
 	abilityScoreAbbreviations,
 	abilityScoreControls,
+	abilityScoreIcons,
 	abilityScores,
 	abilityScoreTooltips,
 	activationCostTypes,

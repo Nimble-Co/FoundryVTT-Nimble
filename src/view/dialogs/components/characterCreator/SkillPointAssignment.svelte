@@ -42,7 +42,8 @@
 	}
 
 	const {
-		abilityScoreAbbreviations,
+		abilityScores,
+		abilityScoreIcons,
 		characterCreationStages,
 		defaultSkillAbilities,
 		hints,
@@ -98,7 +99,8 @@
 {/snippet}
 
 {#snippet skill(abilityKey, skillKey, skillLabel)}
-	{@const abilityLabel = abilityScoreAbbreviations[abilityKey]}
+	{@const abilityLabel = abilityScores[abilityKey]}
+	{@const abilityIcon = abilityScoreIcons[abilityKey]}
 	{@const abilityModifier = getAbilityModifier(abilityKey)}
 	{@const skillPoints = active ? tempAssignedSkillPoints : assignedSkillPoints}
 	{@const baseSkillScore = Number.parseInt(skillPoints[skillKey] ?? 0, 10)}
@@ -107,7 +109,14 @@
 
 	<li class="nimble-skills__item nimble-skills__item--compact">
 		<div class="nimble-skill nimble-skill--character-creator">
-			<span class="nimble-skill__ability" data-ability={abilityKey}>{abilityLabel}</span>
+			<span
+				class="nimble-skill__ability"
+				data-ability={abilityKey}
+				aria-label={abilityLabel}
+				data-tooltip={abilityLabel}
+			>
+				<i class={abilityIcon}></i>
+			</span>
 			<span class="nimble-skill__name">{skillLabel}</span>
 
 			<ol class="nimble-skill-point-assignment-list">

@@ -20,7 +20,7 @@
 
 	const {
 		abilityScores,
-		abilityScoreAbbreviations,
+		abilityScoreIcons,
 		defaultSkillAbilities,
 		skills: skillNames,
 	} = CONFIG.NIMBLE;
@@ -39,11 +39,12 @@
 	);
 </script>
 
-{#snippet skillSnippet(skill, skillKey, skillName, abilityKey, abilityAbbreviation, abilityName)}
+{#snippet skillSnippet(skill, skillKey, skillName, abilityKey, abilityName)}
 	{@const tooltip = localize('NIMBLE.prompts.rollSkillCheckSpecificWithAbility', {
 		skill: skillName,
 		ability: abilityName,
 	})}
+	{@const abilityIcon = abilityScoreIcons[abilityKey]}
 
 	<li
 		class="nimble-skills__item"
@@ -59,7 +60,14 @@
 			data-tooltip={tooltip}
 			onclick={() => actor.rollSkillCheckToChat(skillKey)}
 		>
-			<span class="nimble-skill__ability" data-ability={abilityKey}>{abilityAbbreviation}</span>
+			<span
+				class="nimble-skill__ability"
+				data-ability={abilityKey}
+				aria-label={abilityName}
+				data-tooltip={abilityName}
+			>
+				<i class={abilityIcon}></i>
+			</span>
 
 			<span class="nimble-skill__name">{skillName}</span>
 			<span class="nimble-skill__value">{getSkillValueLabel(skill.mod)}</span>
@@ -93,17 +101,9 @@
 		{#each sortedSkills as [skillKey, skill]}
 			{@const skillName = skillNames[skillKey]}
 			{@const defaultAbilityKey = defaultSkillAbilities[skillKey]}
-			{@const abilityScoreAbbreviation = abilityScoreAbbreviations[defaultAbilityKey]}
 			{@const abilityName = abilityScores[defaultAbilityKey]}
 
-			{@render skillSnippet(
-				skill,
-				skillKey,
-				skillName,
-				defaultAbilityKey,
-				abilityScoreAbbreviation,
-				abilityName,
-			)}
+			{@render skillSnippet(skill, skillKey, skillName, defaultAbilityKey, abilityName)}
 		{/each}
 	</ul>
 </section>
