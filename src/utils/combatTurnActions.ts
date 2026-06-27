@@ -7,6 +7,7 @@ export const COMBATANT_ACTIONS_MAX_PATH = 'system.actions.base.max';
 const COMBAT_TURN_SOCKET_NAME = 'system.nimble';
 const ADVANCE_COMBAT_TURN_REQUEST_TYPE = 'advanceCombatTurn';
 const SET_ACTIVE_COMBAT_TURN_REQUEST_TYPE = 'setActiveCombatTurn';
+const SWAP_COMBAT_TURN_REQUEST_TYPE = 'swapCombatTurn';
 
 type AdvanceCombatTurnRequest = {
 	type: typeof ADVANCE_COMBAT_TURN_REQUEST_TYPE;
@@ -23,8 +24,17 @@ type SetActiveCombatTurnRequest = {
 	expectedActiveCombatantId: string | null;
 };
 
+type SwapCombatTurnRequest = {
+	type: typeof SWAP_COMBAT_TURN_REQUEST_TYPE;
+	combatId: string;
+	userId: string;
+	targetCombatantId: string;
+	expectedActiveCombatantId: string | null;
+};
+
 type CombatWithSetActiveTurn = Combat & {
 	setActiveTurnToCombatant?: (combatantId: string) => Promise<boolean>;
+	swapTurnWithActiveCombatant?: (combatantId: string) => Promise<boolean>;
 };
 
 function toFiniteNonNegativeNumber(value: unknown): number {
@@ -189,6 +199,30 @@ async function handleSetActiveCombatTurnRequest(payload: unknown): Promise<void>
 	await (combat as CombatWithSetActiveTurn).setActiveTurnToCombatant?.(request.targetCombatantId);
 }
 
+async function handleSwapCombatTurnRequest(payload: unknown): Promise<void> {
+	if (!game.user?.isGM) return;
+	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	if (!payload || typeof payload !== 'object') return;
+
+	const request = payload as Partial<SwapCombatTurnRequest>;
+	if (request.type !== SWAP_COMBAT_TURN_REQUEST_TYPE) return;
+	if (!request.targetCombatantId) return;
+
+	const combat = getCombatById(request.combatId);
+	if (!combat?.started) return;
+	// Guard against races: only honor the request if the active combatant is still what the
+	// requester saw when they initiated the swap.
+	if ((combat.combatant?.id ?? null) !== (request.expectedActiveCombatantId ?? null)) return;
+
+	const targetCombatant = combat.combatants.get(request.targetCombatantId) ?? null;
+	const requestingUser = getUserById(request.userId);
+	if (!canUserTakeCombatTurn(combat, targetCombatant, requestingUser)) return;
+
+	await (combat as CombatWithSetActiveTurn).swapTurnWithActiveCombatant?.(
+		request.targetCombatantId,
+	);
+}
+
 let hasRegisteredCombatTurnSocketListener = false;
 
 export function registerCombatTurnSocketListener(): void {
@@ -203,6 +237,7 @@ export function registerCombatTurnSocketListener(): void {
 	socket?.on?.(COMBAT_TURN_SOCKET_NAME, (payload) => {
 		void handleAdvanceCombatTurnRequest(payload);
 		void handleSetActiveCombatTurnRequest(payload);
+		void handleSwapCombatTurnRequest(payload);
 	});
 	Hooks.on('deleteCombat', (combat: Combat) => {
 		combatantActionMutationQueue.clearForCombat(combat.id ?? combat._id ?? null);
@@ -285,6 +320,52 @@ export async function requestSetActiveCombatTurn(params: {
 		userId: game.user.id,
 		targetCombatantId,
 		expectedActiveCombatantId: combat.combatant?.id ?? null,
+	});
+	return true;
+}
+
+/**
+ * Swap the active turn with a specific combatant within the current round, exchanging their
+ * positions in the turn order. GMs apply it directly; eligible players relay the request to the
+ * primary active GM (mirroring {@link requestSetActiveCombatTurn}).
+ *
+ * Returns whether the change was applied (GM) or successfully relayed (player).
+ */
+export async function requestSwapCombatTurn(params: {
+	combat: Combat;
+	targetCombatantId: string;
+}): Promise<boolean> {
+	const { combat, targetCombatantId } = params;
+	if (!targetCombatantId) return false;
+
+	const activeCombatantId = combat.combatant?.id ?? null;
+	if (!activeCombatantId || activeCombatantId === targetCombatantId) return false;
+
+	const targetCombatant = combat.combatants.get(targetCombatantId) ?? null;
+	if (!canUserTakeCombatTurn(combat, targetCombatant, game.user)) return false;
+
+	if (game.user?.isGM) {
+		return Boolean(
+			await (combat as CombatWithSetActiveTurn).swapTurnWithActiveCombatant?.(targetCombatantId),
+		);
+	}
+
+	if (!game.user?.id) return false;
+	if (!getPrimaryActiveGmId()) return false;
+
+	const socket = game.socket as
+		| {
+				emit?: (eventName: string, payload: SwapCombatTurnRequest) => void;
+		  }
+		| undefined;
+	if (!socket?.emit) return false;
+
+	socket.emit(COMBAT_TURN_SOCKET_NAME, {
+		type: SWAP_COMBAT_TURN_REQUEST_TYPE,
+		combatId: combat.id ?? combat._id ?? '',
+		userId: game.user.id,
+		targetCombatantId,
+		expectedActiveCombatantId: activeCombatantId,
 	});
 	return true;
 }

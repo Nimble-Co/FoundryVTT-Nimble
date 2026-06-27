@@ -9,6 +9,7 @@ import {
 	getCombatantMaxActions,
 	requestAdvanceCombatTurn,
 	requestSetActiveCombatTurn,
+	requestSwapCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
 } from '#utils/combatTurnActions.js';
 import type { HeroicReactionKey } from '#utils/heroicActions.js';
@@ -501,17 +502,22 @@ export function createCtTopTrackerState() {
 		}
 
 		const combat = resolveActionCombat();
+		const activeCombatantId = combat?.combatant?.id ?? null;
 		const canTakeTurn = Boolean(
 			combat &&
-				(combat.combatant?.id ?? null) !== combatantId &&
+				activeCombatantId !== combatantId &&
 				canUserTakeCombatTurn(combat, combatant, game.user),
 		);
+		// A swap exchanges the target's slot with the active combatant's, so it additionally
+		// requires an active combatant to trade places with.
+		const canSwapTurn = Boolean(canTakeTurn && activeCombatantId);
 
 		combatantContextMenu = {
 			combatantId,
 			x: event.clientX,
 			y: event.clientY,
 			canTakeTurn,
+			canSwapTurn,
 		};
 	}
 
@@ -548,6 +554,28 @@ export function createCtTopTrackerState() {
 			if (changed) updateCurrentCombat(true);
 		} catch (error) {
 			console.error('[Nimble][CT] Failed to set active turn from context menu', {
+				combatantId: menu.combatantId,
+				error,
+			});
+		}
+	}
+
+	async function handleSwapTurnFromContextMenu(): Promise<void> {
+		const menu = combatantContextMenu;
+		closeCombatantContextMenu();
+		if (!menu) return;
+
+		const combat = resolveActionCombat();
+		if (!combat) return;
+
+		try {
+			const changed = await requestSwapCombatTurn({
+				combat,
+				targetCombatantId: menu.combatantId,
+			});
+			if (changed) updateCurrentCombat(true);
+		} catch (error) {
+			console.error('[Nimble][CT] Failed to swap turn from context menu', {
 				combatantId: menu.combatantId,
 				error,
 			});
@@ -1350,6 +1378,7 @@ export function createCtTopTrackerState() {
 		x: number;
 		y: number;
 		canTakeTurn: boolean;
+		canSwapTurn: boolean;
 	} | null>(null);
 	const currentCombat = $derived(trackerStore.currentCombat);
 	const playerHpBarTextMode = $derived(trackerStore.playerHpBarTextMode);
@@ -1686,6 +1715,7 @@ export function createCtTopTrackerState() {
 		closeCombatantContextMenu,
 		handlePingFromContextMenu,
 		handleTakeTurnFromContextMenu,
+		handleSwapTurnFromContextMenu,
 		handleCombatantCardClick,
 		handleCombatantCardContextMenu,
 		handleCombatantCardKeyDown,

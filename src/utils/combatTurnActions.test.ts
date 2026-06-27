@@ -12,6 +12,7 @@ import {
 	registerCombatTurnSocketListener,
 	requestAdvanceCombatTurn,
 	requestSetActiveCombatTurn,
+	requestSwapCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
 } from './combatTurnActions.js';
 
@@ -217,6 +218,67 @@ describe('requestAdvanceCombatTurn', () => {
 			userId: 'player-owner',
 			activeCombatantId: 'combatant-owner',
 		});
+	});
+});
+
+describe('requestSwapCombatTurn', () => {
+	it('swaps the active turn directly for a GM user', async () => {
+		const swapTurnWithActiveCombatant = vi.fn().mockResolvedValue(true);
+		const activeCombatant = createMockCombatant({
+			id: 'combatant-active',
+			type: 'character',
+			combatId: 'combat-gm-swap',
+		});
+		const targetCombatant = createMockCombatant({
+			id: 'combatant-target',
+			type: 'character',
+			combatId: 'combat-gm-swap',
+		});
+		const combat = {
+			id: 'combat-gm-swap',
+			started: true,
+			combatant: activeCombatant,
+			combatants: createCombatantsCollectionFixture([activeCombatant, targetCombatant]),
+			swapTurnWithActiveCombatant,
+		} as unknown as Combat;
+
+		(
+			globalThis as unknown as {
+				game: { user: { id: string; isGM: boolean } };
+			}
+		).game.user = { id: 'gm-user', isGM: true };
+
+		await expect(
+			requestSwapCombatTurn({ combat, targetCombatantId: 'combatant-target' }),
+		).resolves.toBe(true);
+		expect(swapTurnWithActiveCombatant).toHaveBeenCalledWith('combatant-target');
+	});
+
+	it('refuses to swap when the target is already the active combatant', async () => {
+		const swapTurnWithActiveCombatant = vi.fn().mockResolvedValue(true);
+		const activeCombatant = createMockCombatant({
+			id: 'combatant-active',
+			type: 'character',
+			combatId: 'combat-gm-swap-self',
+		});
+		const combat = {
+			id: 'combat-gm-swap-self',
+			started: true,
+			combatant: activeCombatant,
+			combatants: createCombatantsCollectionFixture([activeCombatant]),
+			swapTurnWithActiveCombatant,
+		} as unknown as Combat;
+
+		(
+			globalThis as unknown as {
+				game: { user: { id: string; isGM: boolean } };
+			}
+		).game.user = { id: 'gm-user', isGM: true };
+
+		await expect(
+			requestSwapCombatTurn({ combat, targetCombatantId: 'combatant-active' }),
+		).resolves.toBe(false);
+		expect(swapTurnWithActiveCombatant).not.toHaveBeenCalled();
 	});
 });
 
