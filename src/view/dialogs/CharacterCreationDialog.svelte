@@ -125,6 +125,7 @@
 				{ancestryBonuses}
 				selectedAncestry={state.selectedAncestry}
 				bind:selectedAncestryBonus={state.selectedAncestryBonus}
+				bind:ancestryBonusConfirmed={state.ancestryBonusConfirmed}
 			/>
 		{/await}
 	{/if}
