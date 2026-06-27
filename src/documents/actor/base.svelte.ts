@@ -199,7 +199,25 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		if (this.type === targetType) return this;
 
-		return this.update({ type: targetType }) as Promise<this | undefined>;
+		// Changing a Document's type requires force-replacing the system field —
+		// Foundry refuses to recursively diff system data across a schema change
+		// ("...can be changed only if the system field is force-replaced..."). Passing
+		// the current system source with diff/recursion disabled lets the target data
+		// model keep shared fields and drop any that don't exist on the new subtype.
+		const updateData = {
+			type: targetType,
+			system: (this.system as { toObject(): object }).toObject(),
+		} as unknown as Parameters<this['update']>[0];
+
+		const updated = (await this.update(updateData, { diff: false, recursive: false })) as
+			| this
+			| undefined;
+
+		// The monster sheet renders different markup per subtype, so close any open
+		// sheet to force a clean re-render the next time it's opened.
+		await this.sheet?.close();
+
+		return updated;
 	}
 
 	/** ------------------------------------------------------ */

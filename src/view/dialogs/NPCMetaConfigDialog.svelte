@@ -18,6 +18,24 @@
 		];
 	}
 
+	async function handleMonsterTypeChange(newValue: string) {
+		if (newValue === actor.type) return;
+
+		const confirmKey = 'NIMBLE.npcConfig.confirmMonsterTypeChange';
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize(`${confirmKey}.title`) },
+			content: `<p>${localize(`${confirmKey}.message`, {
+				current: localize(`TYPES.Actor.${actor.type}`),
+				target: localize(`TYPES.Actor.${newValue}`),
+			})}</p>`,
+			rejectClose: false,
+		});
+
+		if (confirmed !== true) return;
+
+		await actor.convertMonsterType(newValue);
+	}
+
 	const { sizeCategories } = CONFIG.NIMBLE;
 
 	let { actor } = $props();
@@ -68,7 +86,7 @@
 		<TagGroup
 			options={prepareMonsterTypeOptions()}
 			selectedOptions={[actor.reactive.type]}
-			toggleOption={(newValue) => actor.convertMonsterType(newValue)}
+			toggleOption={handleMonsterTypeChange}
 		/>
 	</div>
 
