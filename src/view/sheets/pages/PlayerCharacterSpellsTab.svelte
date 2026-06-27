@@ -6,6 +6,7 @@
 	import sortItems from '#utils/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import SecondaryNavigation from '#view/components/SecondaryNavigation.svelte';
+	import SpellSchoolIcon from '#view/components/SpellSchoolIcon.svelte';
 	import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 	import prepareSpellTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareSpellTooltip.js';
 	import { SYSTEM_ID } from '#system';
@@ -298,11 +299,11 @@
 
 								<div class="nimble-document-card__marker-group">
 									{#if !currentTab || currentTab?.name === 'all'}
-										<i
-											class="nimble-document-card__marker nimble-document-card__marker--spell-school {spellSchoolIcons[
-												spell.reactive.system.school
-											]}"
-										></i>
+										<SpellSchoolIcon
+											icon={spellSchoolIcons[spell.reactive.system.school]}
+											class="nimble-document-card__marker nimble-document-card__marker--spell-school"
+											alt={spellSchools[spell.reactive.system.school] ?? ''}
+										/>
 									{/if}
 
 									{#if requiresConcentration}

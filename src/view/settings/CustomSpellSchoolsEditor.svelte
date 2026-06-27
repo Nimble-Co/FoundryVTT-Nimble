@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import localize from '#utils/localize.js';
+	import SpellSchoolIcon from '#view/components/SpellSchoolIcon.svelte';
 	import {
 		DEFAULT_CUSTOM_SCHOOL_ICON,
 		getBuiltInSpellSchoolKeys,
@@ -17,6 +18,8 @@
 		key: string;
 		label: string;
 		icon: string;
+		// Once the GM edits the key by hand we stop deriving it from the label.
+		keyEdited: boolean;
 	}
 
 	let { dialog }: Props = $props();
@@ -25,7 +28,7 @@
 	const builtInKeys = getBuiltInSpellSchoolKeys();
 
 	let rows = $state<EditorRow[]>(
-		getCustomSpellSchools().map(({ key, label, icon }) => ({ key, label, icon })),
+		getCustomSpellSchools().map(({ key, label, icon }) => ({ key, label, icon, keyEdited: true })),
 	);
 
 	let rowErrors = $derived.by(() => {
@@ -47,11 +50,29 @@
 	let hasErrors = $derived(rowErrors.some((error) => error !== ''));
 
 	function addRow() {
-		rows.push({ key: '', label: '', icon: DEFAULT_CUSTOM_SCHOOL_ICON });
+		rows.push({ key: '', label: '', icon: DEFAULT_CUSTOM_SCHOOL_ICON, keyEdited: false });
 	}
 
 	function removeRow(index: number) {
 		rows.splice(index, 1);
+	}
+
+	function onLabelInput(row: EditorRow, value: string) {
+		row.label = value;
+		// Auto-fill the key from the label until the GM customizes it themselves.
+		if (!row.keyEdited) row.key = sanitizeSpellSchoolKey(value);
+	}
+
+	function pickIcon(row: EditorRow) {
+		// eslint-disable-next-line no-undef -- FilePicker is a Foundry global
+		const picker = new FilePicker({
+			type: 'image',
+			current: row.icon,
+			callback: (path: string) => {
+				row.icon = path;
+			},
+		});
+		picker.browse();
 	}
 
 	async function save() {
@@ -79,65 +100,71 @@
 		<p class="nimble-custom-spell-schools__empty">{t('empty')}</p>
 	{:else}
 		<div class="nimble-custom-spell-schools__list">
-			<div class="nimble-custom-spell-schools__row nimble-custom-spell-schools__row--head">
-				<span>{t('columnIcon')}</span>
-				<span>{t('columnKey')}</span>
-				<span>{t('columnLabel')}</span>
-				<span></span>
-			</div>
-
 			{#each rows as row, index (index)}
-				<div class="nimble-custom-spell-schools__row">
-					<span class="nimble-custom-spell-schools__icon-preview">
-						<i class={row.icon.trim() || DEFAULT_CUSTOM_SCHOOL_ICON}></i>
-					</span>
+				<section class="school-card" class:school-card--invalid={rowErrors[index]}>
+					<header class="school-card__header">
+						<button
+							type="button"
+							class="school-card__icon"
+							data-tooltip={t('chooseIcon')}
+							aria-label={t('chooseIcon')}
+							onclick={() => pickIcon(row)}
+						>
+							<SpellSchoolIcon icon={row.icon || DEFAULT_CUSTOM_SCHOOL_ICON} alt="" />
+							<span class="school-card__icon-overlay"><i class="fa-solid fa-pen"></i></span>
+						</button>
 
-					<input
-						type="text"
-						class="nimble-custom-spell-schools__input"
-						placeholder={t('keyPlaceholder')}
-						value={row.key}
-						oninput={({ target }) => {
-							row.key = (target as HTMLInputElement).value;
-						}}
-						onchange={({ target }) => {
-							row.key = sanitizeSpellSchoolKey((target as HTMLInputElement).value);
-						}}
-					/>
+						<label class="school-card__field school-card__field--label">
+							<span class="school-card__field-label">{t('columnLabel')}</span>
+							<input
+								type="text"
+								class="school-card__input"
+								placeholder={t('labelPlaceholder')}
+								value={row.label}
+								oninput={({ target }) => onLabelInput(row, (target as HTMLInputElement).value)}
+							/>
+						</label>
 
-					<input
-						type="text"
-						class="nimble-custom-spell-schools__input"
-						placeholder={t('labelPlaceholder')}
-						bind:value={row.label}
-					/>
+						<button
+							type="button"
+							class="school-card__remove"
+							aria-label={t('remove')}
+							data-tooltip={t('remove')}
+							onclick={() => removeRow(index)}
+						>
+							<i class="fa-solid fa-trash"></i>
+						</button>
+					</header>
 
-					<button
-						type="button"
-						class="nimble-custom-spell-schools__remove"
-						aria-label={t('remove')}
-						data-tooltip={t('remove')}
-						onclick={() => removeRow(index)}
-					>
-						<i class="fa-solid fa-trash"></i>
-					</button>
-
-					<input
-						type="text"
-						class="nimble-custom-spell-schools__input nimble-custom-spell-schools__input--icon"
-						placeholder={t('iconPlaceholder')}
-						bind:value={row.icon}
-					/>
+					<label class="school-card__field">
+						<span class="school-card__field-label">{t('columnKey')}</span>
+						<input
+							type="text"
+							class="school-card__input school-card__input--mono"
+							placeholder={t('keyPlaceholder')}
+							value={row.key}
+							oninput={({ target }) => {
+								row.keyEdited = true;
+								row.key = (target as HTMLInputElement).value;
+							}}
+							onchange={({ target }) => {
+								row.key = sanitizeSpellSchoolKey((target as HTMLInputElement).value);
+							}}
+						/>
+					</label>
 
 					{#if rowErrors[index]}
-						<p class="nimble-custom-spell-schools__error">{rowErrors[index]}</p>
+						<p class="school-card__error">
+							<i class="fa-solid fa-circle-exclamation"></i>
+							{rowErrors[index]}
+						</p>
 					{/if}
-				</div>
+				</section>
 			{/each}
 		</div>
 	{/if}
 
-	<button type="button" class="nimble-button nimble-custom-spell-schools__add" onclick={addRow}>
+	<button type="button" class="nimble-custom-spell-schools__add" onclick={addRow}>
 		<i class="fa-solid fa-plus"></i>
 		{t('addSchool')}
 	</button>
@@ -157,6 +184,7 @@
 
 <style lang="scss">
 	.nimble-custom-spell-schools {
+		--nimble-sheet-body-padding-block-start: 0.5rem;
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
@@ -164,12 +192,13 @@
 		&__intro {
 			margin: 0;
 			font-size: var(--nimble-sm-text);
+			line-height: 1.4;
 			color: var(--nimble-medium-text-color);
 		}
 
 		&__empty {
 			margin: 0;
-			padding: 0.75rem;
+			padding: 1.25rem 0.75rem;
 			text-align: center;
 			font-style: italic;
 			font-size: var(--nimble-sm-text);
@@ -182,42 +211,128 @@
 		&__list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.5rem;
+			gap: 0.625rem;
 		}
 
-		&__row {
-			display: grid;
-			grid-template-columns: 2rem minmax(0, 1fr) minmax(0, 1.4fr) 2rem;
-			align-items: center;
-			gap: 0.5rem;
-
-			&--head {
-				font-size: var(--nimble-xs-text);
-				font-weight: 700;
-				text-transform: uppercase;
-				letter-spacing: 0.03em;
-				color: var(--nimble-medium-text-color);
-			}
-		}
-
-		&__icon-preview {
+		&__add {
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			gap: 0.375rem;
+			width: 100%;
+			padding: 0.5rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+			background: var(--nimble-box-background-color);
+			border: 1px dashed var(--nimble-card-border-color);
+			border-radius: 6px;
+			cursor: pointer;
+			transition:
+				border-color 0.15s ease,
+				color 0.15s ease;
+
+			&:hover {
+				color: var(--nimble-dark-text-color);
+				border-color: var(--nimble-medium-text-color);
+			}
+		}
+	}
+
+	.school-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.625rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 6px;
+
+		&--invalid {
+			border-color: hsl(0deg 65% 55%);
+		}
+
+		&__header {
+			display: flex;
+			align-items: flex-end;
+			gap: 0.5rem;
+		}
+
+		&__icon {
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex: 0 0 auto;
+			width: 2.5rem;
+			height: 2.5rem;
+			padding: 0;
+			font-size: 1.25rem;
 			color: var(--nimble-dark-text-color);
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 6px;
+			cursor: pointer;
+			overflow: hidden;
+			transition: border-color 0.15s ease;
+
+			&:hover {
+				border-color: var(--nimble-accent-color);
+
+				.school-card__icon-overlay {
+					opacity: 1;
+				}
+			}
+		}
+
+		&__icon-overlay {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.75rem;
+			color: #fff;
+			background: rgba(0, 0, 0, 0.55);
+			opacity: 0;
+			transition: opacity 0.15s ease;
+		}
+
+		&__field {
+			display: flex;
+			flex-direction: column;
+			gap: 0.1875rem;
+			min-width: 0;
+
+			&--label {
+				flex: 1 1 auto;
+			}
+		}
+
+		&__field-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__input {
 			width: 100%;
-			padding: 0.375rem;
+			padding: 0.375rem 0.5rem;
 			font-size: var(--nimble-sm-text);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
 			background: var(--nimble-input-background-color);
 			color: var(--nimble-dark-text-color);
 
-			&--icon {
-				grid-column: 2 / 4;
+			&:focus {
+				outline: 2px solid hsl(212deg 60% 48%);
+				outline-offset: -1px;
+				border-color: hsl(212deg 60% 48%);
+			}
+
+			&--mono {
 				font-family: var(--nimble-monospace-font, monospace);
 				font-size: var(--nimble-xs-text);
 			}
@@ -227,27 +342,32 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			padding: 0.375rem;
-			border: none;
-			background: transparent;
+			flex: 0 0 auto;
+			width: 2.5rem;
+			height: 2.5rem;
+			padding: 0;
 			color: var(--nimble-medium-text-color);
+			background: transparent;
+			border: 1px solid transparent;
+			border-radius: 6px;
 			cursor: pointer;
+			transition:
+				color 0.15s ease,
+				background 0.15s ease;
 
 			&:hover {
 				color: hsl(0deg 65% 50%);
+				background: hsl(0deg 65% 50% / 0.1);
 			}
 		}
 
 		&__error {
-			grid-column: 1 / -1;
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
 			margin: 0;
 			font-size: var(--nimble-xs-text);
 			color: hsl(0deg 65% 45%);
-		}
-
-		&__add {
-			--nimble-button-width: 100%;
-			align-self: stretch;
 		}
 	}
 

@@ -1,4 +1,5 @@
 <script>
+	import isImageIcon from '#utils/isImageIcon.js';
 	import localize from '../../utils/localize.js';
 
 	function isCurrentTab() {
@@ -21,7 +22,11 @@
 		aria-label={localize(tab.tooltip)}
 		onclick={() => (currentTab = tab)}
 	>
-		<i class={tab.icon}></i>
+		{#if isImageIcon(tab.icon)}
+			<img class="nimble-secondary-navigation-list__icon" src={tab.icon} alt="" />
+		{:else}
+			<i class={tab.icon}></i>
+		{/if}
 		{localize(tab.label ?? '')}
 	</button>
 </li>

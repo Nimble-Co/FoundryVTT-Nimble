@@ -3,6 +3,8 @@
  * Adds clickable icon buttons and groups spells by tier and school.
  */
 
+import isImageIcon from '#utils/isImageIcon.js';
+
 const SPELL_COMPENDIUM_COLLECTIONS = [
 	'nimble.nimble-spells',
 	'nimble.nimble-secret-spells',
@@ -28,6 +30,16 @@ function getSpellSchoolLabel(school: string): string {
 
 function getSpellSchoolIcon(school: string): string | undefined {
 	return (CONFIG.NIMBLE?.spellSchoolIcons as Record<string, string> | undefined)?.[school];
+}
+
+/**
+ * Build the inline markup for a school icon, handling both Font Awesome classes
+ * (built-in schools) and image paths (GM-defined custom schools).
+ */
+function buildSpellSchoolIconMarkup(icon: string): string {
+	return isImageIcon(icon)
+		? `<img class="nimble-spell-school-icon-img" src="${icon}" alt="" />`
+		: `<i class="${icon}"></i>`;
 }
 
 const SPELL_LIST_ITEM_SELECTOR =
@@ -233,6 +245,20 @@ function ensureSchoolFilterStyles(): void {
 }
 .nimble-spell-school-icon i {
 	opacity: 0.7;
+}
+.nimble-spell-school-icon-img {
+	width: 1em;
+	height: 1em;
+	object-fit: contain;
+	vertical-align: middle;
+	border: none;
+}
+.nimble-spell-school-icon .nimble-spell-school-icon-img {
+	opacity: 0.7;
+}
+.header-button.nimble-spell-school .nimble-spell-school-icon-img {
+	width: 1em;
+	height: 1em;
 }
 .nimble-spell-tier-badge {
 	margin-left: auto;
@@ -537,7 +563,7 @@ function addSchoolIconToItem(item: HTMLElement, school: string): void {
 		// Create and append icon element
 		const iconSpan = document.createElement('span');
 		iconSpan.className = 'nimble-spell-school-icon';
-		iconSpan.innerHTML = `<i class="${iconClass}"></i>`;
+		iconSpan.innerHTML = buildSpellSchoolIconMarkup(iconClass);
 
 		nameLink.appendChild(iconSpan);
 	} catch (error) {
@@ -1033,7 +1059,7 @@ function initializeSchoolButtons(
 					btn.removeAttribute('title');
 					btn.dataset.tooltipText = schoolLabel;
 					btn.setAttribute('aria-label', schoolLabel);
-					btn.innerHTML = `<i class="${schoolIcon}"></i>`;
+					btn.innerHTML = buildSpellSchoolIconMarkup(schoolIcon);
 					btn.addEventListener('click', (e: Event) => {
 						e.preventDefault();
 						e.stopPropagation();

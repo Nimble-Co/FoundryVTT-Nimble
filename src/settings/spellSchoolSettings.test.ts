@@ -35,10 +35,10 @@ describe('spellSchoolSettings', () => {
 	});
 
 	describe('sanitizeSpellSchoolKey', () => {
-		it('lowercases and hyphenates', () => {
+		it('lowercases and converts to snake_case', () => {
 			expect(sanitizeSpellSchoolKey('Hexbinder')).toBe('hexbinder');
-			expect(sanitizeSpellSchoolKey('Holy Fire!')).toBe('holy-fire');
-			expect(sanitizeSpellSchoolKey('  Blood   Magic  ')).toBe('blood-magic');
+			expect(sanitizeSpellSchoolKey('Holy Fire!')).toBe('holy_fire');
+			expect(sanitizeSpellSchoolKey('  Blood   Magic  ')).toBe('blood_magic');
 		});
 
 		it('returns empty string for blank or non-string input', () => {

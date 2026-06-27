@@ -4,16 +4,16 @@ export const CUSTOM_SPELL_SCHOOLS_SETTING_KEY = 'customSpellSchools';
 
 /** A GM-defined spell school that is merged into CONFIG.NIMBLE alongside the built-in schools. */
 export interface CustomSpellSchool {
-	/** Stable lowercase identifier stored on `spell.system.school`. */
+	/** Stable lowercase snake_case identifier stored on `spell.system.school`. */
 	key: string;
 	/** Human-readable label shown in pickers and headers. */
 	label: string;
-	/** Font Awesome icon class (e.g. `fa-solid fa-hand-sparkles`). */
+	/** Image path chosen from Foundry's file picker (e.g. `icons/svg/book.svg`). */
 	icon: string;
 }
 
-/** Fallback icon for a custom school that does not specify one. */
-export const DEFAULT_CUSTOM_SCHOOL_ICON = 'fa-solid fa-wand-magic-sparkles';
+/** Fallback icon (a Foundry core image) for a custom school that does not specify one. */
+export const DEFAULT_CUSTOM_SCHOOL_ICON = 'icons/svg/book.svg';
 
 /**
  * Snapshots of the built-in schools, captured before any custom schools are merged in.
@@ -39,14 +39,14 @@ export function getBuiltInSpellSchoolKeys(): string[] {
 	return Object.keys(builtInSpellSchools ?? {});
 }
 
-/** Normalize a raw school key into a safe, lowercase, hyphenated identifier. */
+/** Normalize a raw school key into a safe, lowercase, snake_case identifier. */
 export function sanitizeSpellSchoolKey(raw: unknown): string {
 	if (typeof raw !== 'string') return '';
 	return raw
 		.trim()
 		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '');
+		.replace(/[^a-z0-9]+/g, '_')
+		.replace(/^_+|_+$/g, '');
 }
 
 /**

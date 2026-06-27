@@ -7,60 +7,34 @@ import {
 	mergeCustomSpellSchoolsIntoConfig,
 } from './spellSchoolSettings.js';
 
-/** Open (or focus) the GM-only editor for managing custom spell schools. */
-function openCustomSpellSchoolsEditor(): void {
-	const dialog = GenericDialog.getOrCreate(
-		game.i18n.localize('NIMBLE.settings.customSpellSchools.title'),
-		CustomSpellSchoolsEditor as unknown as Component<Record<string, never>>,
-		{},
-		{
-			uniqueId: 'nimble-custom-spell-schools',
-			icon: 'fa-solid fa-hat-wizard',
-			width: 520,
-			resizable: true,
-		},
-	);
-	dialog.render(true);
-}
+const EDITOR_ICON = 'fa-solid fa-hat-wizard';
 
-function injectEditorLaunchButton(element: HTMLElement): void {
-	if (!game.user?.isGM) return;
+/** Tracks the open editor so repeated submenu clicks focus it instead of stacking copies. */
+let openEditor: CustomSpellSchoolsMenu | null = null;
 
-	const systemTab =
-		element.querySelector('section[data-tab="system"]') ||
-		element.querySelector('section[data-category="system"]');
-	if (!systemTab) return;
-	if (systemTab.querySelector('.nimble-custom-spell-schools-launch')) return;
+/**
+ * No-argument ApplicationV2 wrapper so the Svelte editor can be registered as a
+ * Foundry settings submenu, which renders the native title + button + hint row
+ * and instantiates the menu via `new type()`.
+ */
+class CustomSpellSchoolsMenu extends GenericDialog {
+	constructor() {
+		super(
+			game.i18n.localize('NIMBLE.settings.customSpellSchools.title'),
+			CustomSpellSchoolsEditor as unknown as Component<Record<string, never>>,
+			{},
+			{ uniqueId: 'nimble-custom-spell-schools', icon: EDITOR_ICON, width: 520, resizable: true },
+		);
+	}
 
-	const wrapper = document.createElement('div');
-	wrapper.className = 'form-group nimble-custom-spell-schools-launch';
-
-	const label = document.createElement('label');
-	label.textContent = game.i18n.localize('NIMBLE.settings.customSpellSchools.name');
-
-	const fields = document.createElement('div');
-	fields.className = 'form-fields';
-
-	const button = document.createElement('button');
-	button.type = 'button';
-	button.innerHTML = `<i class="fa-solid fa-hat-wizard"></i> ${game.i18n.localize(
-		'NIMBLE.settings.customSpellSchools.manageButton',
-	)}`;
-	button.addEventListener('click', (event) => {
-		event.preventDefault();
-		openCustomSpellSchoolsEditor();
-	});
-
-	const hint = document.createElement('p');
-	hint.className = 'notes';
-	hint.textContent = game.i18n.localize('NIMBLE.settings.customSpellSchools.hint');
-
-	fields.appendChild(button);
-	wrapper.appendChild(label);
-	wrapper.appendChild(fields);
-	wrapper.appendChild(hint);
-
-	systemTab.appendChild(wrapper);
+	override async render(...args: Parameters<GenericDialog['render']>): Promise<this> {
+		if (openEditor?.rendered && openEditor !== this) {
+			openEditor.bringToFront();
+			return openEditor as this;
+		}
+		openEditor = this;
+		return super.render(...args);
+	}
 }
 
 export function registerSpellSchoolSettings(): void {
@@ -80,12 +54,16 @@ export function registerSpellSchoolSettings(): void {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
+	// GM-only submenu button shown in the system settings tab.
+	game.settings.registerMenu(SYSTEM_ID, 'customSpellSchoolsMenu', {
+		name: 'NIMBLE.settings.customSpellSchools.name',
+		label: 'NIMBLE.settings.customSpellSchools.manageButton',
+		hint: 'NIMBLE.settings.customSpellSchools.hint',
+		icon: EDITOR_ICON,
+		type: CustomSpellSchoolsMenu as unknown as new () => foundry.applications.api.ApplicationV2.Any,
+		restricted: true,
+	});
+
 	// Snapshot built-ins and apply any stored custom schools now that the setting exists.
 	mergeCustomSpellSchoolsIntoConfig();
-
-	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {
-		const element = html instanceof HTMLElement ? html : html[0];
-		if (!element) return;
-		injectEditorLaunchButton(element);
-	});
 }

@@ -43,7 +43,19 @@
       transform-origin: center;
       transition: transform 120ms ease;
     }
+  }
 
+  &__icon {
+    width: 1em;
+    height: 1em;
+    object-fit: contain;
+    vertical-align: middle;
+    border: none;
+    transform-origin: center;
+    transition: transform 120ms ease;
+  }
+
+  &__button {
     &:focus,
     &:hover {
       color: var(--nimble-secondary-navigation-active-text-color);
@@ -54,7 +66,9 @@
     }
 
     &:focus i,
-    &:hover i {
+    &:hover i,
+    &:focus .nimble-secondary-navigation-list__icon,
+    &:hover .nimble-secondary-navigation-list__icon {
       transform: scale(1.15);
     }
 
