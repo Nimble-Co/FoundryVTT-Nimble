@@ -408,12 +408,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// (authoritative, seeded from the ancestry rules) so custom or GM-edited ancestry
 	// languages appear here too — same INT rule: known if Intelligence isn't negative.
 	const ancestryGrantedLanguages = $derived.by((): GrantedLanguage[] => {
-		if (!selectedAncestryBonus || !selectedArray || selectedAbilityScores.intelligence === null)
+		if (!selectedAncestry || !selectedArray || selectedAbilityScores.intelligence === null)
 			return [];
 		const intMod = selectedArray.array?.[selectedAbilityScores.intelligence] ?? 0;
 		if (intMod < 0) return [];
 
-		const rules = [...(selectedAncestryBonus?.system?.rules ?? [])];
+		// Languages are inherent to the ancestry, not the swappable bonus trait.
+		const rules = [...(selectedAncestry?.system?.rules ?? [])];
 		return getLanguageGrantsFromRules(rules, intMod, 'ancestry');
 	});
 

@@ -5,8 +5,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
-		"description": "<p>Small, often maniacal, and dragon–obsessed. Kobolds thrive in the shadows, finding ingenious ways to survive despite their diminutive size. Underestimated by many, Kobolds prove time and again that even the smallest among us can wield great power.</p>",
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"proficiencyType": "languages",
+				"values": [
+					"draconic"
+				],
+				"label": "Wily",
+				"predicate": {
+					"intelligence": {
+						"min": 0
+					}
+				}
+			}
+		],
+		"description": "<p>Small, often maniacal, and dragon\u2013obsessed. Kobolds thrive in the shadows, finding ingenious ways to survive despite their diminutive size. Underestimated by many, Kobolds prove time and again that even the smallest among us can wield great power.</p><p> You know Draconic if your INT is not negative. [M]</p>",
 		"exotic": true,
 		"size": [
 			"small"

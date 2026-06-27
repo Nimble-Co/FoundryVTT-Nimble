@@ -5,8 +5,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
-		"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against those who dare to harm them.</p>",
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"proficiencyType": "languages",
+				"values": [
+					"elvish"
+				],
+				"label": "Danger Pollen/Spores",
+				"predicate": {
+					"intelligence": {
+						"min": 0
+					}
+				}
+			}
+		],
+		"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against those who dare to harm them.</p><p>You know Elvish if your INT is not negative. [M]</p>",
 		"exotic": true,
 		"size": [
 			"small",

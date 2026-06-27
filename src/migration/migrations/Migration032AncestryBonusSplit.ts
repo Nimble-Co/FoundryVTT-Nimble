@@ -24,8 +24,10 @@ function generateId(): string {
  * independently of the ancestry.
  *
  * For each character with an ancestry but no ancestry bonus, this migration:
- * 1. Creates an `ancestryBonus` item carrying the trait's rules and description.
- * 2. Strips the trait out of the ancestry (flavor-only description, no rules).
+ * 1. Creates an `ancestryBonus` item carrying the trait's (non-language) rules and description.
+ * 2. Strips the trait out of the ancestry (flavor-only description), but keeps any
+ *    language-granting rules on the ancestry — languages are inherent to the ancestry,
+ *    not the swappable bonus trait.
  */
 class Migration032AncestryBonusSplit extends MigrationBase {
 	static override readonly version = 32;
@@ -48,8 +50,15 @@ class Migration032AncestryBonusSplit extends MigrationBase {
 		const hrMatch = description.match(/<hr\s*\/?>/i);
 		const hrIndex = hrMatch?.index ?? -1;
 
+		// Languages are inherent to the ancestry, so those rules stay put. Only the rest of
+		// the trait's rules move onto the swappable bonus item.
+		const isLanguageRule = (rule: any) =>
+			rule?.type === 'grantProficiency' && rule?.proficiencyType === 'languages';
+		const languageRules = rules.filter(isLanguageRule);
+		const bonusRules = rules.filter((rule) => !isLanguageRule(rule));
+
 		// Nothing to extract — the ancestry is already trait-free (post-redesign content).
-		if (hrIndex < 0 && rules.length === 0) return;
+		if (hrIndex < 0 && bonusRules.length === 0) return;
 
 		const flavor = hrIndex >= 0 ? description.slice(0, hrIndex).trim() : description;
 		const traitHtml =
@@ -66,7 +75,7 @@ class Migration032AncestryBonusSplit extends MigrationBase {
 			system: {
 				macro: '',
 				identifier: '',
-				rules,
+				rules: bonusRules,
 				description: traitHtml,
 			},
 			effects: [],
@@ -77,7 +86,7 @@ class Migration032AncestryBonusSplit extends MigrationBase {
 		items.push(bonus);
 
 		ancestry.system.description = flavor;
-		ancestry.system.rules = [];
+		ancestry.system.rules = languageRules;
 
 		console.log(`Nimble Migration | ${source.name}: extracted ancestry bonus "${traitName}"`);
 	}

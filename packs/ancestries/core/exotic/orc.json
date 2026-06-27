@@ -5,8 +5,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
-		"description": "<p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death's approach, Orcs boldly defy its grasp.</p>",
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"proficiencyType": "languages",
+				"values": [
+					"goblin"
+				],
+				"label": "Relentless",
+				"predicate": {
+					"intelligence": {
+						"min": 0
+					}
+				}
+			}
+		],
+		"description": "<p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death's approach, Orcs boldly defy its grasp.</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
 		"exotic": true,
 		"size": [
 			"medium"
