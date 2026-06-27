@@ -31,52 +31,58 @@
 			{localize('NIMBLE.settings.languageCustomization.spokenBy')}
 		</span>
 
-		{#if row.speakers.length}
-			<ul class="nimble-language-customization__speaker-list">
-				{#each row.speakers as speaker (speaker.ancestry)}
-					<li class="nimble-language-customization__speaker">
-						<span class="nimble-language-customization__speaker-name"
-							>{state.ancestryLabel(speaker.ancestry)}</span
-						>
-						<input
-							type="text"
-							class="nimble-language-customization__speaker-alias"
-							placeholder={languageName}
-							bind:value={speaker.alias}
-						/>
-						<button
-							type="button"
-							class="nimble-language-customization__icon-button"
-							data-tooltip={localize('NIMBLE.settings.languageCustomization.removeAncestry')}
-							aria-label={localize('NIMBLE.settings.languageCustomization.removeAncestry')}
-							onclick={() => state.removeSpeaker(row, speaker.ancestry)}
-						>
-							<i class="fa-solid fa-xmark"></i>
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		{#if row.key === 'common'}
+			<p class="hint nimble-language-customization__speakers-hint">
+				{localize('NIMBLE.settings.languageCustomization.spokenByEveryone')}
+			</p>
+		{:else}
+			{#if row.speakers.length}
+				<ul class="nimble-language-customization__speaker-list">
+					{#each row.speakers as speaker (speaker.ancestry)}
+						<li class="nimble-language-customization__speaker">
+							<span class="nimble-language-customization__speaker-name"
+								>{state.ancestryLabel(speaker.ancestry)}</span
+							>
+							<input
+								type="text"
+								class="nimble-language-customization__speaker-alias"
+								placeholder={languageName}
+								bind:value={speaker.alias}
+							/>
+							<button
+								type="button"
+								class="nimble-language-customization__icon-button"
+								data-tooltip={localize('NIMBLE.settings.languageCustomization.removeAncestry')}
+								aria-label={localize('NIMBLE.settings.languageCustomization.removeAncestry')}
+								onclick={() => state.removeSpeaker(row, speaker.ancestry)}
+							>
+								<i class="fa-solid fa-xmark"></i>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 
-		{#if available.length}
-			<select
-				class="nimble-language-customization__ancestry-select"
-				value=""
-				onchange={(event) => {
-					const select = event.currentTarget;
-					if (select.value) state.addSpeaker(row, select.value);
-					select.value = '';
-				}}
-			>
-				<option value="" disabled selected>
-					{localize('NIMBLE.settings.languageCustomization.selectAncestry')}
-				</option>
-				{#each available as option (option.value)}
-					<option value={option.value}>{option.label}</option>
-				{/each}
-			</select>
-		{:else if !state.ancestryOptions.length}
-			<p class="hint">{localize('NIMBLE.settings.languageCustomization.noAncestries')}</p>
+			{#if available.length}
+				<select
+					class="nimble-language-customization__ancestry-select"
+					value=""
+					onchange={(event) => {
+						const select = event.currentTarget;
+						if (select.value) state.addSpeaker(row, select.value);
+						select.value = '';
+					}}
+				>
+					<option value="" disabled selected>
+						{localize('NIMBLE.settings.languageCustomization.selectAncestry')}
+					</option>
+					{#each available as option (option.value)}
+						<option value={option.value}>{option.label}</option>
+					{/each}
+				</select>
+			{:else if !state.ancestryOptions.length}
+				<p class="hint">{localize('NIMBLE.settings.languageCustomization.noAncestries')}</p>
+			{/if}
 		{/if}
 	</div>
 {/snippet}

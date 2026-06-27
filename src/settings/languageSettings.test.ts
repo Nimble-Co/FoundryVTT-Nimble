@@ -222,7 +222,7 @@ describe('ancestry language defaults', () => {
 		]);
 	});
 
-	it('marks Common as spoken by every ancestry (even non-language ones)', async () => {
+	it('does not enumerate ancestries for Common (it is universal, granted on the actor)', async () => {
 		const {
 			applyLanguageCustomizations,
 			loadAncestryLanguageDefaults,
@@ -234,11 +234,8 @@ describe('ancestry language defaults', () => {
 		await loadAncestryLanguageDefaults();
 		applyLanguageCustomizations();
 
-		expect(getAncestryLanguageDefaults().common).toEqual([
-			{ ancestry: 'gnome', alias: '' },
-			{ ancestry: 'human', alias: '' },
-		]);
-		expect(nimble().languageSpeakers.common).toEqual(['gnome', 'human']);
+		expect(getAncestryLanguageDefaults().common).toBeUndefined();
+		expect(nimble().languageSpeakers.common).toBeUndefined();
 	});
 
 	it('lets a GM override the rule defaults (and removals stick)', async () => {

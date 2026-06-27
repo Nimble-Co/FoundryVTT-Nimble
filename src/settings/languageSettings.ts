@@ -163,15 +163,12 @@ function groupBindingsByName(byAncestry: Map<string, string>): LanguageAlternate
 export async function loadAncestryLanguageDefaults(): Promise<void> {
 	// language key -> (ancestry identifier -> alias)
 	const byKey = new Map<string, Map<string, string>>();
-	// Every ancestry seen — Common is spoken by all of them.
-	const allAncestries = new Set<string>();
 
 	const collect = (items: Iterable<AncestryLike>): void => {
 		for (const item of items) {
 			if (item?.type !== 'ancestry') continue;
 			const identifier = ancestryIdentifierOf(item);
 			if (!identifier) continue;
-			allAncestries.add(identifier);
 
 			for (const rule of item.system?.rules ?? []) {
 				if (rule.type !== 'grantProficiency' || rule.proficiencyType !== 'languages') continue;
@@ -203,15 +200,6 @@ export async function loadAncestryLanguageDefaults(): Promise<void> {
 			.catch(() => pack.getDocuments())
 			.catch(() => []);
 		collect(docs as Iterable<AncestryLike>);
-	}
-
-	// Common is spoken by every ancestry (preserve any alias an ancestry sets).
-	if ('common' in CONFIG.NIMBLE.languages && allAncestries.size) {
-		const commonByAncestry = byKey.get('common') ?? new Map<string, string>();
-		for (const identifier of allAncestries) {
-			if (!commonByAncestry.has(identifier)) commonByAncestry.set(identifier, '');
-		}
-		byKey.set('common', commonByAncestry);
 	}
 
 	const defaults: Record<string, LanguageSpeaker[]> = {};
