@@ -156,26 +156,6 @@ function hasClassFeatures(features: ClassFeatureResult | null): boolean {
 	return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
 }
 
-function getLanguageGrantsFromRules(
-	rules: NimbleBaseRule[],
-	intMod: number,
-	source: 'ancestry' | 'background',
-): GrantedLanguage[] {
-	if (!rules?.length) return [];
-
-	const grantRules = rules.filter(
-		(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
-	);
-
-	return grantRules.flatMap((r) => {
-		const intPredicate = r.predicate?.intelligence;
-		if (intPredicate?.min !== undefined && intMod < intPredicate.min) {
-			return [];
-		}
-		return (r.values ?? []).map((v) => ({ key: v.toLowerCase(), source }));
-	});
-}
-
 interface GetCurrentStageParams {
 	selectedClass: NimbleClassItem | null;
 	selectedAncestry: NimbleAncestryItem | null;
@@ -383,14 +363,23 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		Object.values(selectedAbilityScores).every((mod) => mod !== null),
 	);
 
-	// Languages granted by ancestry (based on rules with INT predicate)
+	// Languages granted by ancestry. Sourced from the In-Game Languages settings
+	// (authoritative, seeded from the ancestry rules) so custom or GM-edited ancestry
+	// languages appear here too — same INT rule: known if Intelligence isn't negative.
 	const ancestryGrantedLanguages = $derived.by((): GrantedLanguage[] => {
 		if (!selectedAncestry || !selectedArray || selectedAbilityScores.intelligence === null)
 			return [];
 		const intMod = selectedArray.array?.[selectedAbilityScores.intelligence] ?? 0;
+		if (intMod < 0) return [];
 
-		const rules = [...(selectedAncestry?.system?.rules ?? [])];
-		return getLanguageGrantsFromRules(rules, intMod, 'ancestry');
+		const identifier = selectedAncestry.identifier;
+		const speakers =
+			(CONFIG.NIMBLE as unknown as { languageSpeakers?: Record<string, string[]> })
+				.languageSpeakers ?? {};
+
+		return Object.entries(speakers)
+			.filter(([, ancestries]) => ancestries.includes(identifier))
+			.map(([key]) => ({ key, source: 'ancestry' as const }));
 	});
 
 	// Languages granted by background
