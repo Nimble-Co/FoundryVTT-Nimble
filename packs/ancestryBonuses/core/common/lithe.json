@@ -7,19 +7,6 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "grantProficiency",
-				"proficiencyType": "languages",
-				"values": [
-					"elvish"
-				],
-				"label": "Lithe",
-				"predicate": {
-					"intelligence": {
-						"min": 0
-					}
-				}
-			},
-			{
 				"type": "speedBonus",
 				"value": "1",
 				"label": "Lithe"
@@ -31,7 +18,7 @@
 				"label": "Lithe (Advantage on Initiative)"
 			}
 		],
-		"description": "<p><strong>Lithe</strong></p><p>Advantage on Initiative</p><p>+1 Speed [M]</p><p>You know Elvish if your INT is not negative</p>"
+		"description": "<p><strong>Lithe</strong></p><p>Advantage on Initiative</p><p>+1 Speed [M]</p>"
 	},
 	"effects": [],
 	"folder": null,

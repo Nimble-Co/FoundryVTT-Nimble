@@ -13,22 +13,9 @@
 				"target": "neutral",
 				"mode": "set",
 				"requiresChoice": true
-			},
-			{
-				"type": "grantProficiency",
-				"proficiencyType": "languages",
-				"values": [
-					"infernal"
-				],
-				"label": "Flameborn",
-				"predicate": {
-					"intelligence": {
-						"min": 0
-					}
-				}
 			}
 		],
-		"description": "<p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p><p>You know Infernal if your INT is not negative. [M]</p>"
+		"description": "<p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p>"
 	},
 	"effects": [],
 	"folder": null,

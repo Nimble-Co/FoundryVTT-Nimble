@@ -34,32 +34,32 @@
 	"ancestryBonuses": {
 		"core": {
 			"common": {
-				"dwarf": "PwCzys1zJwz79alF",
-				"elf": "YJpImt9S1WiwdC8r",
-				"gnome": "bK2KkZ5MbXeKoriS",
-				"halfling": "Z2TN2RVAcb53Oysu",
-				"human": "FzHdMlir2ftuHf4B"
+				"elusive": "Z2TN2RVAcb53Oysu",
+				"lithe": "YJpImt9S1WiwdC8r",
+				"optimistic": "bK2KkZ5MbXeKoriS",
+				"stout": "PwCzys1zJwz79alF",
+				"tenacious": "FzHdMlir2ftuHf4B"
 			},
 			"exotic": {
-				"birdfolk": "PTYU9MJcVsRo5eVT",
-				"bunbun": "1cSW678NQBiWN5m4",
-				"celestial": "QywcDHwdcVvogu2G",
-				"changeling": "QIR3oWX6wPzjRsTu",
-				"crystalborn": "1YtCep32COT7uAYP",
-				"dragonborn": "P5t4e28z4BHXAhAZ",
-				"dryadshroomling": "NKA98sDFntkqd4Im",
-				"fiendkin": "enR5YZLbGlVPjIuu",
-				"goblin": "4CvyglRIWdfIJvdr",
-				"half-giant": "BNt1EadnOGvzAHsC",
-				"kobold": "A33WjART8CQdkmeY",
-				"minotaurbeastfolk": "zjUGAh5QLbCbI4V9",
-				"oozelingconstruct": "K1sViOESSiQ6VEeV",
-				"orc": "24eEwpL0nGbTRGlK",
-				"planarbeing": "5Gf1lv0piL0PkYBF",
-				"ratfolk": "Xv7uz6l6F8Z0sQ3O",
-				"stoatling": "eySxKgtWLbHJBK2W",
-				"turtlefolk": "YVtbIbWYzKD33sEA",
-				"wyrdling": "bp8h61eI7HaKUEPW"
+				"bunny-legs": "1cSW678NQBiWN5m4",
+				"chaotic-surge": "bp8h61eI7HaKUEPW",
+				"charge": "zjUGAh5QLbCbI4V9",
+				"danger-pollen-spores": "NKA98sDFntkqd4Im",
+				"draconic-heritage": "P5t4e28z4BHXAhAZ",
+				"flameborn": "enR5YZLbGlVPjIuu",
+				"highborn": "QywcDHwdcVvogu2G",
+				"hollow-bones": "PTYU9MJcVsRo5eVT",
+				"new-place-new-face": "QIR3oWX6wPzjRsTu",
+				"odd-constitution": "K1sViOESSiQ6VEeV",
+				"planeshift": "5Gf1lv0piL0PkYBF",
+				"reflective-aura": "1YtCep32COT7uAYP",
+				"relentless": "24eEwpL0nGbTRGlK",
+				"scurry": "Xv7uz6l6F8Z0sQ3O",
+				"skedaddle": "4CvyglRIWdfIJvdr",
+				"slow-and-steady": "YVtbIbWYzKD33sEA",
+				"small-but-ferocious": "eySxKgtWLbHJBK2W",
+				"strength-of-stone": "BNt1EadnOGvzAHsC",
+				"wily": "A33WjART8CQdkmeY"
 			}
 		}
 	},

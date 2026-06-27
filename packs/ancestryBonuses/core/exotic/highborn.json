@@ -12,22 +12,9 @@
 				"value": 0,
 				"target": "disadvantaged",
 				"mode": "set"
-			},
-			{
-				"type": "grantProficiency",
-				"proficiencyType": "languages",
-				"values": [
-					"celestial"
-				],
-				"label": "Highborn",
-				"predicate": {
-					"intelligence": {
-						"min": 0
-					}
-				}
 			}
 		],
-		"description": "<p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p><p>You know Celestial if your INT isn't negative. [M]</p>"
+		"description": "<p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p>"
 	},
 	"effects": [],
 	"folder": null,
