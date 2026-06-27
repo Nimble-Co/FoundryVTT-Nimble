@@ -364,12 +364,6 @@
 <footer class="nimble-sheet__footer nimble-sheet__footer--spells"></footer>
 
 <style lang="scss">
-	.nimble-items-section {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
 	.nimble-item-list {
 		display: flex;
 		flex-direction: column;
