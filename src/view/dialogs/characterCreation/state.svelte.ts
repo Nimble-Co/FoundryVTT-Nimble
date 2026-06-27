@@ -184,6 +184,7 @@ interface GetCurrentStageParams {
 	selectedClass: NimbleClassItem | null;
 	selectedAncestry: NimbleAncestryItem | null;
 	selectedAncestryBonus: NimbleAncestryBonusItem | null;
+	ancestryBonusConfirmed: boolean;
 	selectedAncestrySize: string | null;
 	selectedAncestrySave: string | null;
 	selectedBackground: NimbleBackgroundItem | null;
@@ -209,6 +210,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		selectedClass,
 		selectedAncestry,
 		selectedAncestryBonus,
+		ancestryBonusConfirmed,
 		selectedAncestrySize,
 		selectedAncestrySave,
 		selectedBackground,
@@ -256,10 +258,13 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		return CHARACTER_CREATION_STAGES.ANCESTRY;
 	}
 
-	// The bonus auto-defaults to the ancestry's default when an ancestry is chosen, so this
-	// stage is only "active" when the player clears the selection to swap it. Ancestries with
-	// no configured default bonus don't gate here.
-	if (selectedAncestry?.system?.defaultBonus && !selectedAncestryBonus) {
+	// The bonus auto-defaults to the ancestry's default, but the player still has to confirm
+	// it (or swap it) before moving on. Stay on this stage until they confirm, or whenever
+	// the selection has been cleared. Ancestries with no configured default bonus don't gate.
+	if (
+		selectedAncestry?.system?.defaultBonus &&
+		(!selectedAncestryBonus || !ancestryBonusConfirmed)
+	) {
 		return CHARACTER_CREATION_STAGES.ANCESTRY_BONUS;
 	}
 
@@ -356,6 +361,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	let selectedClass = $state<NimbleClassItem | null>(null);
 	let selectedAncestry = $state<NimbleAncestryItem | null>(null);
 	let selectedAncestryBonus = $state<NimbleAncestryBonusItem | null>(null);
+	let ancestryBonusConfirmed = $state<boolean>(false);
 	let previousAncestryForBonus = $state<NimbleAncestryItem | null>(null);
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
@@ -404,9 +410,8 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		Object.values(selectedAbilityScores).every((mod) => mod !== null),
 	);
 
-	// Languages granted by ancestry. Sourced from the In-Game Languages settings
-	// (authoritative, seeded from the ancestry rules) so custom or GM-edited ancestry
-	// languages appear here too — same INT rule: known if Intelligence isn't negative.
+	// Languages granted by ancestry (based on the ancestry's grantProficiency
+	// rules with INT predicate: known if Intelligence isn't negative).
 	const ancestryGrantedLanguages = $derived.by((): GrantedLanguage[] => {
 		if (!selectedAncestry || !selectedArray || selectedAbilityScores.intelligence === null)
 			return [];
@@ -475,6 +480,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selectedClass,
 			selectedAncestry,
 			selectedAncestryBonus,
+			ancestryBonusConfirmed,
 			selectedAncestrySize,
 			selectedAncestrySave,
 			selectedBackground,
@@ -653,6 +659,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		const ancestry = selectedAncestry;
 		if (previousAncestryForBonus === ancestry) return;
 		previousAncestryForBonus = ancestry;
+
+		// A fresh ancestry means the player hasn't confirmed its bonus yet.
+		ancestryBonusConfirmed = false;
 
 		if (!ancestry) {
 			selectedAncestryBonus = null;
@@ -834,6 +843,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		set selectedAncestryBonus(value: NimbleAncestryBonusItem | null) {
 			selectedAncestryBonus = value;
+		},
+		get ancestryBonusConfirmed() {
+			return ancestryBonusConfirmed;
+		},
+		set ancestryBonusConfirmed(value: boolean) {
+			ancestryBonusConfirmed = value;
 		},
 		get selectedAncestrySize() {
 			return selectedAncestrySize;

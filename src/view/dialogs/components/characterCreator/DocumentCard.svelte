@@ -29,7 +29,7 @@
 
 	{#if metadata || sourceLabel}
 		<span class="nimble-card__meta">
-			{#if metadata}{metadata}{/if}
+			{#if metadata}<span class="nimble-card__metadata">{metadata}</span>{/if}
 			{#if sourceLabel}
 				<span class="nimble-card__source-label">{sourceLabel}</span>
 			{/if}
