@@ -1,96 +1,26 @@
 <script lang="ts">
-	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-	import localize from '#utils/localize.js';
 	import SpellSchoolIcon from '#view/components/SpellSchoolIcon.svelte';
-	import {
-		DEFAULT_CUSTOM_SCHOOL_ICON,
-		getBuiltInSpellSchoolKeys,
-		getCustomSpellSchools,
-		sanitizeSpellSchoolKey,
-		setCustomSpellSchools,
-	} from '../../settings/spellSchoolSettings.js';
+	import { createCustomSpellSchoolsEditorState } from './CustomSpellSchoolsEditorState.svelte.ts';
+	import type { CustomSpellSchoolsEditorProps } from './CustomSpellSchoolsEditor.types.ts';
 
-	interface Props {
-		dialog: GenericDialog;
-	}
+	let { dialog }: CustomSpellSchoolsEditorProps = $props();
 
-	interface EditorRow {
-		key: string;
-		label: string;
-		icon: string;
-		// Once the GM edits the key by hand we stop deriving it from the label.
-		keyEdited: boolean;
-	}
+	const state = createCustomSpellSchoolsEditorState(() => dialog);
 
-	let { dialog }: Props = $props();
-
-	const t = (key: string) => localize(`NIMBLE.settings.customSpellSchools.${key}`);
-	const builtInKeys = getBuiltInSpellSchoolKeys();
-
-	let rows = $state<EditorRow[]>(
-		getCustomSpellSchools().map(({ key, label, icon }) => ({ key, label, icon, keyEdited: true })),
-	);
-
-	let rowErrors = $derived.by(() => {
-		const seen = new Map<string, number>();
-		return rows.map((row) => {
-			const key = sanitizeSpellSchoolKey(row.key);
-			if (!key) return t('errorEmptyKey');
-			if (builtInKeys.includes(key)) return t('errorReservedKey');
-
-			const firstIndex = seen.get(key);
-			if (firstIndex === undefined) {
-				seen.set(key, 1);
-				return '';
-			}
-			return t('errorDuplicateKey');
-		});
-	});
-
-	let hasErrors = $derived(rowErrors.some((error) => error !== ''));
-
-	function addRow() {
-		rows.push({ key: '', label: '', icon: DEFAULT_CUSTOM_SCHOOL_ICON, keyEdited: false });
-	}
-
-	function removeRow(index: number) {
-		rows.splice(index, 1);
-	}
-
-	function onLabelInput(row: EditorRow, value: string) {
-		row.label = value;
-		// Auto-fill the key from the label until the GM customizes it themselves.
-		if (!row.keyEdited) row.key = sanitizeSpellSchoolKey(value);
-	}
-
-	function pickIcon(row: EditorRow) {
-		// eslint-disable-next-line no-undef -- FilePicker is a Foundry global
-		const picker = new FilePicker({
-			type: 'image',
-			current: row.icon,
-			callback: (path: string) => {
-				row.icon = path;
-			},
-		});
-		picker.browse();
-	}
-
-	async function save() {
-		if (hasErrors) return;
-
-		const cleaned = rows
-			.map((row) => {
-				const key = sanitizeSpellSchoolKey(row.key);
-				const label = row.label.trim() || key.charAt(0).toUpperCase() + key.slice(1);
-				const icon = row.icon.trim() || DEFAULT_CUSTOM_SCHOOL_ICON;
-				return { key, label, icon };
-			})
-			.filter((row) => row.key);
-
-		await setCustomSpellSchools(cleaned);
-		ui.notifications?.info(t('saved'));
-		dialog.close();
-	}
+	const {
+		t,
+		defaultIcon,
+		addRow,
+		removeRow,
+		onLabelInput,
+		onKeyInput,
+		normalizeKey,
+		pickIcon,
+		save,
+	} = state;
+	const rows = $derived(state.rows);
+	const rowErrors = $derived(state.rowErrors);
+	const hasErrors = $derived(state.hasErrors);
 </script>
 
 <article class="nimble-sheet__body nimble-custom-spell-schools">
@@ -110,7 +40,7 @@
 							aria-label={t('chooseIcon')}
 							onclick={() => pickIcon(row)}
 						>
-							<SpellSchoolIcon icon={row.icon || DEFAULT_CUSTOM_SCHOOL_ICON} alt="" />
+							<SpellSchoolIcon icon={row.icon || defaultIcon} alt="" />
 							<span class="school-card__icon-overlay"><i class="fa-solid fa-pen"></i></span>
 						</button>
 
@@ -143,13 +73,8 @@
 							class="school-card__input school-card__input--mono"
 							placeholder={t('keyPlaceholder')}
 							value={row.key}
-							oninput={({ target }) => {
-								row.keyEdited = true;
-								row.key = (target as HTMLInputElement).value;
-							}}
-							onchange={({ target }) => {
-								row.key = sanitizeSpellSchoolKey((target as HTMLInputElement).value);
-							}}
+							oninput={({ target }) => onKeyInput(row, (target as HTMLInputElement).value)}
+							onchange={() => normalizeKey(row)}
 						/>
 					</label>
 
