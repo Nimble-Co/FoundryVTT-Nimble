@@ -2094,7 +2094,7 @@
 				"tooltip": "Tooltip",
 				"spokenBy": "Spoken by",
 				"spokenByEveryone": "Spoken by every ancestry — Common is always known.",
-				"spokenByHint": "Each ancestry below knows this language if its INT isn't negative. Add or remove ancestries to change who speaks it, and type what an ancestry calls it (leave blank to use the language's own name).",
+				"spokenByHint": "Each ancestry selected for a language learns that language if its Intelligence isn't negative.",
 				"enableAlternateNames": "Show ancestry names for languages",
 				"alternateNamesHint": "When on, a language shows the name its ancestry uses for it (e.g. a Gnome sees \"Dwarvish (Gnomish)\"). Turn off to always show the plain language name.",
 				"selectAncestry": "Add an ancestry…",
