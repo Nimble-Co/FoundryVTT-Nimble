@@ -1,33 +1,10 @@
-<script>
+<script lang="ts">
 	import { getContext } from 'svelte';
-	import getLanguageName from '../../../../utils/getLanguageName.js';
-
+	import getLanguageName from '#utils/getLanguageName.js';
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
-
-	function lockInBonusLanguages() {
-		bonusLanguages = tempBonusLanguages;
-	}
-
-	function toggleBonusLanguages(selection) {
-		const index = tempBonusLanguages.indexOf(selection);
-
-		if (index === -1) {
-			if (remainingLanguagePicks > 0) {
-				tempBonusLanguages.push(selection);
-			}
-		} else {
-			tempBonusLanguages.splice(index, 1);
-		}
-
-		setTimeout(() => {
-			const element = dialog.element.querySelector(
-				`#${dialog.id}-stage-${CHARACTER_CREATION_STAGES.LANGUAGES}`,
-			);
-
-			element.scrollIntoView({ behavior: 'smooth' });
-		}, 0);
-	}
+	import { createBonusLanguageSelectionState } from './BonusLanguageSelection.svelte.js';
+	import type { BonusLanguageSelectionProps } from './BonusLanguageSelection.types.js';
 
 	let {
 		active,
@@ -38,41 +15,43 @@
 		remainingSkillPoints,
 		selectedAbilityScores,
 		selectedArray,
-	} = $props();
+	}: BonusLanguageSelectionProps = $props();
 
-	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
-	const dialog = getContext('dialog');
+	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES') as Record<
+		string,
+		number | string
+	>;
+	const dialog = getContext('dialog') as { id: string; element: HTMLElement };
 
 	const { languageHints, bonusLanguageSelection } = CONFIG.NIMBLE;
 
-	let tempBonusLanguages = $state([]);
+	function scrollToLanguagesStage(): void {
+		setTimeout(() => {
+			dialog.element
+				.querySelector(`#${dialog.id}-stage-${CHARACTER_CREATION_STAGES.LANGUAGES}`)
+				?.scrollIntoView({ behavior: 'smooth' });
+		}, 0);
+	}
 
-	let hasUnassignedAbilityScores = $derived(
-		Object.values(selectedAbilityScores).some((mod) => mod === null),
-	);
-
-	let intelligenceModifier = $derived(
-		selectedArray?.array?.[selectedAbilityScores.intelligence] ?? 0,
-	);
-
-	let remainingLanguagePicks = $derived(intelligenceModifier - bonusLanguages.length);
-
-	let remainingTempLanguagePicks = $derived(intelligenceModifier - tempBonusLanguages.length);
-
-	let grantedLanguageKeys = $derived(grantedLanguages.map((l) => l.key));
-
-	let selectableOptions = $derived(
-		bonusLanguageOptions.filter((opt) => !grantedLanguageKeys.includes(opt.value)),
-	);
-
-	// Reset temp selections when INT drops below current temp selection count
-	// Only run after ability scores are fully assigned (not during drag operations)
-	$effect(() => {
-		if (hasUnassignedAbilityScores) return;
-		if (tempBonusLanguages.length > 0 && intelligenceModifier < tempBonusLanguages.length) {
-			tempBonusLanguages = [];
-		}
+	const state = createBonusLanguageSelectionState({
+		getBonusLanguages: () => bonusLanguages,
+		setBonusLanguages: (languages) => {
+			bonusLanguages = languages;
+		},
+		getBonusLanguageOptions: () => bonusLanguageOptions,
+		getGrantedLanguages: () => grantedLanguages,
+		getSelectedAbilityScores: () => selectedAbilityScores,
+		getSelectedArray: () => selectedArray,
+		scrollToLanguagesStage,
 	});
+
+	const hasUnassignedAbilityScores = $derived(state.hasUnassignedAbilityScores);
+	const intelligenceModifier = $derived(state.intelligenceModifier);
+	const remainingLanguagePicks = $derived(state.remainingLanguagePicks);
+	const remainingTempLanguagePicks = $derived(state.remainingTempLanguagePicks);
+	const selectableOptions = $derived(state.selectableOptions);
+	const tempBonusLanguages = $derived(state.tempBonusLanguages);
+	const { toggleBonusLanguages, lockInBonusLanguages } = state;
 </script>
 
 <section
@@ -129,14 +108,14 @@
 				<div class="nimble-language-group">
 					<span class="nimble-language-group__label"
 						>{game.i18n.format(bonusLanguageSelection.choose, {
-							count: intelligenceModifier,
+							count: String(intelligenceModifier),
 						})}</span
 					>
 					<TagGroup
 						disabled={remainingTempLanguagePicks < 1}
 						options={selectableOptions}
 						selectedOptions={tempBonusLanguages}
-						toggleOption={toggleBonusLanguages}
+						toggleOption={async (value) => toggleBonusLanguages(value)}
 					/>
 				</div>
 
