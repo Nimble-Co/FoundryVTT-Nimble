@@ -197,6 +197,10 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			throw new Error(`Cannot convert actor of type "${this.type}" to a monster subtype.`);
 		}
 
+		if (!MONSTER_ACTOR_TYPES.includes(targetType)) {
+			throw new Error(`Cannot convert a monster to invalid target type "${targetType}".`);
+		}
+
 		if (this.type === targetType) return this;
 
 		// Changing a Document's type requires force-replacing the system field —
