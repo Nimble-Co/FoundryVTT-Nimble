@@ -2,10 +2,12 @@ import type { Component } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
 import DiceTestbench from '#view/debug/DiceTestbench.svelte';
+import LanguageCustomizationDialog from '#view/dialogs/LanguageCustomizationDialog.svelte';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerAdjacencySettings } from './adjacencySettings.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
+import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
@@ -98,6 +100,7 @@ export default function registerSystemSettings() {
 
 	registerCombatTrackerSettings();
 	registerNcswSettings();
+	registerLanguageSettings();
 
 	game.settings.register(
 		SYSTEM_ID as 'core',
@@ -165,6 +168,63 @@ export default function registerSystemSettings() {
 		if (systemTab.querySelector('.nimble-attribution')) return;
 
 		systemTab.appendChild(createAttributionElement());
+	});
+
+	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {
+		if (!game.user?.isGM) return;
+
+		const element = html instanceof HTMLElement ? html : html[0];
+		if (!element) return;
+
+		const systemTab =
+			element.querySelector('section[data-tab="system"]') ||
+			element.querySelector('section[data-category="system"]');
+		if (!systemTab) return;
+
+		if (systemTab.querySelector('.nimble-language-customization-launch')) return;
+
+		const wrapper = document.createElement('div');
+		wrapper.className = 'form-group nimble-language-customization-launch';
+
+		const label = document.createElement('label');
+		label.textContent = game.i18n.localize('NIMBLE.settings.languageCustomization.name');
+
+		const fields = document.createElement('div');
+		fields.className = 'form-fields';
+
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.innerHTML = `<i class="fa-solid fa-language"></i> ${game.i18n.localize(
+			'NIMBLE.settings.languageCustomization.button',
+		)}`;
+		button.addEventListener('click', (ev) => {
+			ev.preventDefault();
+			const dialog = GenericDialog.getOrCreate(
+				game.i18n.localize('NIMBLE.settings.languageCustomization.title'),
+				LanguageCustomizationDialog as unknown as Component<Record<string, never>>,
+				{},
+				{
+					uniqueId: 'nimble-language-customization',
+					icon: 'fa-solid fa-language',
+					width: 640,
+					resizable: true,
+				},
+			);
+			dialog.render(true);
+		});
+
+		fields.appendChild(button);
+
+		const hint = document.createElement('p');
+		hint.className = 'hint';
+		hint.textContent = game.i18n.localize('NIMBLE.settings.languageCustomization.hint');
+
+		wrapper.appendChild(label);
+		wrapper.appendChild(fields);
+		wrapper.appendChild(hint);
+
+		// Surface the launcher at the top of the system tab so it's easy to find.
+		systemTab.prepend(wrapper);
 	});
 
 	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {

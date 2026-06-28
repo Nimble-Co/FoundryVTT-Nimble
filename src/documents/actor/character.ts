@@ -145,7 +145,33 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		super.prepareData();
 
+		this._applyConfiguredLanguageGrants();
 		this._prepareArmorClass();
+	}
+
+	/**
+	 * Apply language grants beyond the items on the actor:
+	 *  - Common is universal — every character speaks it, regardless of ancestry or INT.
+	 *  - GM-configured ancestry→language grants from the language-customization setting,
+	 *    mirroring the ancestry rule: "You know {Language} if your INT is not negative."
+	 */
+	private _applyConfiguredLanguageGrants(): void {
+		const known = this.system.proficiencies.languages;
+		if ('common' in CONFIG.NIMBLE.languages) known.add('common');
+
+		const speakers = (CONFIG.NIMBLE as unknown as { languageSpeakers?: Record<string, string[]> })
+			.languageSpeakers;
+		if (!speakers) return;
+
+		const ancestryIdentifier = this.ancestry?.identifier;
+		if (!ancestryIdentifier) return;
+
+		// "...if your INT is not negative."
+		if ((this.system.abilities?.intelligence?.mod ?? 0) < 0) return;
+
+		for (const [languageKey, ancestries] of Object.entries(speakers)) {
+			if (ancestries.includes(ancestryIdentifier)) known.add(languageKey);
+		}
 	}
 
 	override prepareBaseData(): void {
