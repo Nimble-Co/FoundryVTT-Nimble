@@ -120,17 +120,13 @@ class HitDiceManager {
 		dieSize?: number,
 		quantity?: number,
 		maximize?: boolean,
-		advantageAmount?: number,
+		advantage?: boolean,
 		skipChatMessage?: boolean,
 	): Promise<{ roll: Roll; healing: number } | null> {
 		const dSize = dieSize ?? this.largest;
 		const dQuantity = quantity ?? 0;
 		const maximizeDie = maximize ?? false;
-		// Advantage level: 0 = no advantage, 1 = roll 2 keep highest, 2 = roll 3 keep
-		// highest (advantage 2), etc. The number of dice rolled per hit die is
-		// `advantage + 1`.
-		const advantage = Math.max(0, advantageAmount ?? 0);
-		const hasAdvantage = advantage > 0;
+		const hasAdvantage = advantage ?? false;
 		const skipChat = skipChatMessage ?? false;
 
 		// Skip rolling if no dice selected
@@ -145,14 +141,12 @@ class HitDiceManager {
 		// Format: (1d8 + STR) + (1d8 + STR) + ... to show each die gets the STR bonus
 		let formula: string;
 		if (hasAdvantage && !maximizeDie) {
-			// Advantage: roll `advantage + 1` dice per hit die and keep the highest,
-			// plus STR per die. Uses Nimble's `khn` (leftmost-on-tie keep highest)
-			// instead of Foundry's bare `kh`. Advantage 1 → "(2d8khn1 + 2)"; advantage 2
-			// → "(3d8khn1 + 2)". Build one such group per spent hit die.
-			const diceToRoll = advantage + 1;
+			// Advantage: roll each die twice and keep the higher, plus STR per die.
+			// Uses Nimble's `khn` (leftmost-on-tie keep highest) instead of Foundry's bare `kh`.
+			// Build formula like "(2d8khn1 + 2) + (2d8khn1 + 2) + (2d8khn1 + 2)" for 3 dice with advantage
 			const advantageParts = Array(dQuantity)
 				.fill(null)
-				.map(() => `(${diceToRoll}d${dSize}khn1 + ${strMod})`);
+				.map(() => `(2d${dSize}khn1 + ${strMod})`);
 			formula = advantageParts.join(' + ');
 		} else {
 			// Normal roll or maximized: show each die with STR bonus
