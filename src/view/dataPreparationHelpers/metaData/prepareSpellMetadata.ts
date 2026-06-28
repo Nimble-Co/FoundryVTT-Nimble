@@ -1,3 +1,4 @@
+import isImageIcon from '#utils/isImageIcon.js';
 import type { NimbleSpellItem } from '../../../documents/item/spell.js';
 
 export default function prepareSpellMetadata(spell: NimbleSpellItem, includeIcon = false): string {
@@ -5,8 +6,11 @@ export default function prepareSpellMetadata(spell: NimbleSpellItem, includeIcon
 	const components: string[] = [];
 
 	if (includeIcon && spell.system.school) {
+		const icon = spellSchoolIcons[spell.system.school];
 		components.push(
-			`<i class="nimble-tooltip__item-metadata-icon ${spellSchoolIcons[spell.system.school]}"></i>`,
+			isImageIcon(icon)
+				? `<img class="nimble-tooltip__item-metadata-icon" src="${icon}" alt="" />`
+				: `<i class="nimble-tooltip__item-metadata-icon ${icon}"></i>`,
 		);
 	}
 

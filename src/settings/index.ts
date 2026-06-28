@@ -9,6 +9,7 @@ import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
+import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
 
@@ -101,6 +102,7 @@ export default function registerSystemSettings() {
 	registerCombatTrackerSettings();
 	registerNcswSettings();
 	registerLanguageSettings();
+	registerSpellSchoolSettings();
 
 	game.settings.register(
 		SYSTEM_ID as 'core',

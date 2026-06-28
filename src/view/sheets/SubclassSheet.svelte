@@ -32,7 +32,6 @@
 	];
 
 	let currentTab = $state(navigation[0]);
-	let parentClass = $derived(item.system.parentClass);
 
 	setContext(
 		'document',
@@ -65,7 +64,7 @@
 
 			<input
 				type="text"
-				value={parentClass}
+				value={item.reactive.system.parentClass || ''}
 				onchange={({ target }) => item.update({ 'system.parentClass': target.value })}
 			/>
 		</div>
