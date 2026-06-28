@@ -2,6 +2,7 @@ import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
+import { canUserTakeCombatTurn } from '../../utils/combatTurnActions.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import { getCombatantManualSortValue } from './combatantSystem.js';
 import { getSourceSortValueForDrop } from './combatCommon.js';
@@ -399,7 +400,14 @@ export async function applyOwnerSort(params: {
 	} as Record<string, unknown>);
 	params.combat.turns = params.combat.setupTurns();
 
-	if (shouldSourceTakeActiveTurn(params.combat, params.dropResolution)) {
+	// Only take the active turn when the GM relay would actually accept it. Otherwise the optimistic
+	// local sync below would repoint this client's turn pointer to a target the GM rejects (e.g. a
+	// monster holds the turn), leaving the owner's tracker desynced until the next combat update.
+	const sourceCanTakeActiveTurn =
+		shouldSourceTakeActiveTurn(params.combat, params.dropResolution) &&
+		canUserTakeCombatTurn(params.combat, params.dropResolution.source, game.user);
+
+	if (sourceCanTakeActiveTurn) {
 		// Owners cannot persist combat.turn directly; relay the active-turn change to the GM.
 		const sourceId = getCombatantId(params.dropResolution.source);
 		await params.syncTurnToCombatant(sourceId, { persist: false });
