@@ -107,8 +107,15 @@ export function mergeCustomSpellSchoolsIntoConfig(): void {
 		spellSchools: Record<string, string>;
 		spellSchoolIcons: Record<string, string>;
 	};
-	config.spellSchools = schools;
-	config.spellSchoolIcons = icons;
+
+	// Mutate the existing objects in place rather than reassigning, so components that
+	// captured a reference to CONFIG.NIMBLE.spellSchools / spellSchoolIcons at init reflect
+	// added or removed schools live without needing to be reopened.
+	for (const key of Object.keys(config.spellSchools)) delete config.spellSchools[key];
+	Object.assign(config.spellSchools, schools);
+
+	for (const key of Object.keys(config.spellSchoolIcons)) delete config.spellSchoolIcons[key];
+	Object.assign(config.spellSchoolIcons, icons);
 }
 
 /** Persist a new list of custom spell schools, triggering the merge via the setting's onChange. */
