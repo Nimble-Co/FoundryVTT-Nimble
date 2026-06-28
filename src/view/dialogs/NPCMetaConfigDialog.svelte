@@ -10,6 +10,32 @@
 		}));
 	}
 
+	function prepareMonsterTypeOptions() {
+		return [
+			{ label: localize('TYPES.Actor.npc'), value: 'npc' },
+			{ label: localize('TYPES.Actor.minion'), value: 'minion' },
+			{ label: localize('TYPES.Actor.soloMonster'), value: 'soloMonster' },
+		];
+	}
+
+	async function handleMonsterTypeChange(newValue: string) {
+		if (newValue === actor.type) return;
+
+		const confirmKey = 'NIMBLE.npcConfig.confirmMonsterTypeChange';
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize(`${confirmKey}.title`) },
+			content: `<p>${localize(`${confirmKey}.message`, {
+				current: localize(`TYPES.Actor.${actor.type}`),
+				target: localize(`TYPES.Actor.${newValue}`),
+			})}</p>`,
+			rejectClose: false,
+		});
+
+		if (confirmed !== true) return;
+
+		await actor.convertMonsterType(newValue);
+	}
+
 	const { sizeCategories } = CONFIG.NIMBLE;
 
 	let { actor } = $props();
@@ -52,7 +78,19 @@
 		/>
 	</div>
 
-	{#if actor.type === 'npc'}
+	<div class="nimble-field" data-field-variant="stacked">
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.monsterType')}
+		</h3>
+
+		<TagGroup
+			options={prepareMonsterTypeOptions()}
+			selectedOptions={[actor.reactive.type]}
+			toggleOption={handleMonsterTypeChange}
+		/>
+	</div>
+
+	{#if actor.reactive.type === 'npc'}
 		<label class="nimble-field">
 			<input
 				type="checkbox"

@@ -1677,6 +1677,11 @@
 			"level": "Level",
 			"creatureType": "Creature Type",
 			"sizeCategory": "Size Category",
+			"monsterType": "Monster Type",
+			"confirmMonsterTypeChange": {
+				"title": "Change Monster Type",
+				"message": "Convert this monster from {current} to {target}? Fields that don't exist on the new type will be discarded, and the open sheet will be closed."
+			},
 			"flunky": "Flunky"
 		},
 		"featureSheet": {
