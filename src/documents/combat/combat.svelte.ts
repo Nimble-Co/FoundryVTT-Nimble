@@ -2,6 +2,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { systemHookName } from '#system';
+import { requestSetActiveCombatTurn } from '#utils/combatTurnActions.js';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
@@ -1086,6 +1087,104 @@ class NimbleCombat extends Combat {
 		return expandLegendaryTurns(minionNormalizedTurns);
 	}
 
+	/**
+	 * Repoint the active turn to a specific combatant within the current round, without advancing
+	 * the round or running turn-end cleanup. Backs the "take the turn" controls and drag-to-front
+	 * reordering, where a combatant is moved ahead of the active combatant and becomes active.
+	 *
+	 * Returns whether the active turn actually changed.
+	 */
+	async setActiveTurnToCombatant(
+		combatantId: string,
+		options: { previousActiveCombatant?: Combatant.Implementation | null } = {},
+	): Promise<boolean> {
+		if (!combatantId || !this.started) return false;
+		const previousActiveCombatant =
+			options.previousActiveCombatant !== undefined
+				? options.previousActiveCombatant
+				: (this.combatant ?? null);
+		this.#syncTurnIndexWithAliveTurns();
+		const targetIndex = this.turns.findIndex((turn) => (turn?.id ?? '') === combatantId);
+		if (targetIndex < 0) return false;
+		const targetIdentity = this.#resolveTurnIdentityAtIndex(this.turns, targetIndex);
+		if (!targetIdentity) return false;
+		const previousTurnIndex = Number.isInteger(this.turn) ? Number(this.turn) : -1;
+		await this.#syncTurnToCombatant(targetIdentity);
+		const changed = this.turn !== previousTurnIndex;
+		if (changed) {
+			await this.#endHandedOffCombatantTurnIfDepleted(previousActiveCombatant, combatantId);
+		}
+		return changed;
+	}
+
+	/**
+	 * When the active turn is handed to a different combatant, the combatant losing the turn ends
+	 * theirs as if it had run to completion — but only if they had already spent all of their
+	 * actions. This refills their actions, clears additional actions, restores heroic reactions,
+	 * and fires the Nimble end-of-turn hook (charge-pool recovery, etc.). A combatant who still has
+	 * actions left is simply interrupted and keeps their remaining actions for when play returns.
+	 */
+	async #endHandedOffCombatantTurnIfDepleted(
+		combatant: Combatant.Implementation | null | undefined,
+		nextActiveCombatantId: string,
+	): Promise<void> {
+		if (!combatant || combatant.type !== 'character') return;
+		const combatantId = combatant.id ?? null;
+		if (!combatantId || combatantId === nextActiveCombatantId) return;
+		if (getCombatantCurrentActions(combatant) !== 0) return;
+
+		// @ts-expect-error Custom hook
+		Hooks.call('nimbleCombatTurnEnd', combatant);
+
+		await this.updateEmbeddedDocuments('Combatant', [
+			{
+				_id: combatantId,
+				'system.actions.base.current': getCombatantResetActions(combatant),
+				'system.actions.base.additional': 0,
+				...this.#buildHeroicReactionAvailabilityUpdate(true),
+			} as Record<string, unknown>,
+		]);
+	}
+
+	/**
+	 * Swap the active turn with another combatant: exchange the two combatants' positions in the
+	 * turn order and hand the active turn to the target. Unlike {@link setActiveTurnToCombatant} —
+	 * which leaves the order untouched and simply repoints the active turn — this trades the
+	 * target's slot with the active combatant's slot, so the previously active combatant lands
+	 * where the target used to be. Backs the "swap turns" control.
+	 *
+	 * Returns whether anything changed.
+	 */
+	async swapTurnWithActiveCombatant(combatantId: string): Promise<boolean> {
+		if (!combatantId || !this.started) return false;
+		this.#syncTurnIndexWithAliveTurns();
+
+		const activeCombatant = this.combatant ?? null;
+		const targetCombatant = this.combatants.get(combatantId) ?? null;
+		if (!activeCombatant || !targetCombatant) return false;
+
+		const activeCombatantId = activeCombatant.id ?? null;
+		if (!activeCombatantId || activeCombatantId === combatantId) return false;
+		if (isCombatantDead(activeCombatant) || isCombatantDead(targetCombatant)) return false;
+
+		const activeSort = getCombatantManualSortValue(activeCombatant);
+		const targetSort = getCombatantManualSortValue(targetCombatant);
+		const sortChanged = activeSort !== targetSort;
+
+		if (sortChanged) {
+			await this.updateEmbeddedDocuments('Combatant', [
+				{ _id: activeCombatantId, 'system.sort': targetSort } as Record<string, unknown>,
+				{ _id: combatantId, 'system.sort': activeSort } as Record<string, unknown>,
+			]);
+			this.turns = this.setupTurns();
+		}
+
+		const turnChanged = await this.setActiveTurnToCombatant(combatantId, {
+			previousActiveCombatant: activeCombatant,
+		});
+		return sortChanged || turnChanged;
+	}
+
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
@@ -1197,6 +1296,9 @@ class NimbleCombat extends Combat {
 			dropResolution,
 			syncTurnToCombatant: (combatantIdOrIdentity, options) =>
 				this.#syncTurnToCombatant(combatantIdOrIdentity, options),
+			requestSetActiveTurn: async (combatantId) => {
+				await requestSetActiveCombatTurn({ combat: this, targetCombatantId: combatantId });
+			},
 		});
 	}
 }

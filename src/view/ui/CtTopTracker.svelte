@@ -75,6 +75,11 @@
 	const handleHeroicReactionToggle = trackerViewState.handleHeroicReactionToggle;
 	const handleCombatantCardClick = trackerViewState.handleCombatantCardClick;
 	const handleCombatantCardContextMenu = trackerViewState.handleCombatantCardContextMenu;
+	const closeCombatantContextMenu = trackerViewState.closeCombatantContextMenu;
+	const handlePingFromContextMenu = trackerViewState.handlePingFromContextMenu;
+	const handleTakeTurnFromContextMenu = trackerViewState.handleTakeTurnFromContextMenu;
+	const handleSwapTurnFromContextMenu = trackerViewState.handleSwapTurnFromContextMenu;
+	let combatantContextMenu = $derived(trackerViewState.combatantContextMenu);
 	const handleCombatantCardKeyDown = trackerViewState.handleCombatantCardKeyDown;
 	const handleCombatantCardMouseEnter = trackerViewState.handleCombatantCardMouseEnter;
 	const handleCombatantCardMouseLeave = trackerViewState.handleCombatantCardMouseLeave;
@@ -207,6 +212,21 @@
 		{@render renderNameDrawer(cardName)}
 	</div>
 {/snippet}
+
+{#snippet contextMenuItem(iconClass, labelKey, onSelect)}
+	<li>
+		<button type="button" class="nimble-ct__context-menu-item" onclick={onSelect}>
+			<i class={`fa-solid ${iconClass}`} aria-hidden="true"></i>
+			<span>{localize(labelKey)}</span>
+		</button>
+	</li>
+{/snippet}
+
+<svelte:window
+	onkeydown={(event) => {
+		if (combatantContextMenu && event.key === 'Escape') closeCombatantContextMenu();
+	}}
+/>
 
 {#if ctEnabled && currentCombat}
 	<section
@@ -819,6 +839,43 @@
 			{/if}
 		</div>
 	</section>
+
+	{#if combatantContextMenu}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="nimble-ct__context-menu-backdrop"
+			onpointerdown={closeCombatantContextMenu}
+			oncontextmenu={(event) => {
+				event.preventDefault();
+				closeCombatantContextMenu();
+			}}
+		></div>
+		<menu
+			class="nimble-ct__context-menu faded-ui"
+			style={`--nimble-ct-context-menu-x: ${combatantContextMenu.x}px; --nimble-ct-context-menu-y: ${combatantContextMenu.y}px;`}
+			transition:fade={{ duration: 80 }}
+		>
+			{#if combatantContextMenu.canSwapTurn}
+				{@render contextMenuItem(
+					'fa-arrow-right-arrow-left',
+					'NIMBLE.ui.combatTracker.swapTurns',
+					() => void handleSwapTurnFromContextMenu(),
+				)}
+			{/if}
+			{#if combatantContextMenu.canTakeTurn}
+				{@render contextMenuItem(
+					'fa-flag-checkered',
+					'NIMBLE.ui.combatTracker.takeTurn',
+					() => void handleTakeTurnFromContextMenu(),
+				)}
+			{/if}
+			{@render contextMenuItem(
+				'fa-bullseye',
+				'NIMBLE.ui.combatTracker.pingToken',
+				handlePingFromContextMenu,
+			)}
+		</menu>
+	{/if}
 {/if}
 
 <style lang="scss">
@@ -827,6 +884,63 @@
 	}
 	:global(body.nimble-ct--track-hover canvas) {
 		cursor: grab !important;
+	}
+
+	.nimble-ct__context-menu-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 100;
+	}
+
+	.nimble-ct__context-menu {
+		position: fixed;
+		top: var(--nimble-ct-context-menu-y, 0);
+		left: var(--nimble-ct-context-menu-x, 0);
+		z-index: 101;
+		margin: 0;
+		padding: 0.25rem;
+		min-width: 11rem;
+		max-width: min(16rem, 90vw);
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		border: 1px solid var(--nimble-ct-action-box-border, rgba(255, 255, 255, 0.25));
+		border-radius: 0.375rem;
+		background: var(--nimble-ct-action-box-bg, hsl(225 27% 9%));
+		box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.45);
+
+		li {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+	}
+
+	.nimble-ct__context-menu-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.375rem 0.5rem;
+		border: none;
+		border-radius: 0.25rem;
+		background: transparent;
+		color: inherit;
+		font-size: var(--font-size-13, 0.8125rem);
+		text-align: left;
+		cursor: pointer;
+
+		i {
+			width: 1rem;
+			text-align: center;
+			opacity: 0.85;
+		}
+
+		&:hover,
+		&:focus-visible {
+			background: color-mix(in srgb, currentColor 16%, transparent);
+		}
 	}
 
 	.nimble-ct-shell {

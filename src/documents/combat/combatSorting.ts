@@ -2,6 +2,7 @@ import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
+import { canUserTakeCombatTurn } from '../../utils/combatTurnActions.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import { getCombatantManualSortValue } from './combatantSystem.js';
 import { getSourceSortValueForDrop } from './combatCommon.js';
@@ -266,6 +267,31 @@ function shouldUseBlockSort(dropResolution: DropResolution): boolean {
 	return dropResolution.sourceCombatants.length > 1 || dropResolution.targetCombatantIds.length > 1;
 }
 
+/**
+ * After a reorder, decide whether the dragged source should take over the active turn. The source
+ * becomes active only when it has been moved ahead of (before) the previously active combatant in
+ * the new turn order — i.e. dropped toward the front. Otherwise the previously active combatant
+ * keeps the turn, preserving the reorder-does-not-change-active behavior for everything else.
+ */
+function shouldSourceTakeActiveTurn(combat: Combat, dropResolution: DropResolution): boolean {
+	const previousActiveCombatantId = dropResolution.previousActiveTurnIdentity?.combatantId ?? '';
+	if (!previousActiveCombatantId) return false;
+
+	const sourceId = getCombatantId(dropResolution.source);
+	if (!sourceId || sourceId === previousActiveCombatantId) return false;
+
+	const turns = combat.turns;
+	const sourceIndex = turns.findIndex((combatant) => getCombatantId(combatant) === sourceId);
+	if (sourceIndex < 0) return false;
+
+	const activeIndex = turns.findIndex(
+		(combatant) => getCombatantId(combatant) === previousActiveCombatantId,
+	);
+	if (activeIndex < 0) return false;
+
+	return sourceIndex < activeIndex;
+}
+
 function buildBlockSortUpdateData(
 	dropResolution: DropResolution,
 ): Array<Record<string, unknown>> | null {
@@ -306,7 +332,9 @@ export async function applyGmSort(params: {
 
 		const updates = await params.combat.updateEmbeddedDocuments('Combatant', updateData);
 		params.combat.turns = params.combat.setupTurns();
-		await params.syncTurnToCombatant(params.dropResolution.previousActiveTurnIdentity);
+		await params.syncTurnToCombatant(
+			resolveTurnSyncTargetAfterSort(params.combat, params.dropResolution),
+		);
 		return updates;
 	}
 
@@ -332,14 +360,31 @@ export async function applyGmSort(params: {
 
 	const updates = await params.combat.updateEmbeddedDocuments('Combatant', updateData);
 	params.combat.turns = params.combat.setupTurns();
-	await params.syncTurnToCombatant(params.dropResolution.previousActiveTurnIdentity);
+	await params.syncTurnToCombatant(
+		resolveTurnSyncTargetAfterSort(params.combat, params.dropResolution),
+	);
 	return updates;
+}
+
+/**
+ * Resolve the combatant the active turn should point at after a GM reorder: the dragged source
+ * when it was moved to the front, otherwise the previously active combatant.
+ */
+function resolveTurnSyncTargetAfterSort(
+	combat: Combat,
+	dropResolution: DropResolution,
+): string | TurnIdentity | null {
+	if (shouldSourceTakeActiveTurn(combat, dropResolution)) {
+		return getCombatantId(dropResolution.source);
+	}
+	return dropResolution.previousActiveTurnIdentity;
 }
 
 export async function applyOwnerSort(params: {
 	combat: Combat;
 	dropResolution: DropResolution;
 	syncTurnToCombatant: SyncTurnToCombatant;
+	requestSetActiveTurn: (combatantId: string) => Promise<void>;
 }) {
 	// Non-GM owners can reorder their own character card by updating only their card's sort value.
 	const newSortValue = getSourceSortValueForDrop(
@@ -354,8 +399,23 @@ export async function applyOwnerSort(params: {
 		'system.sort': newSortValue,
 	} as Record<string, unknown>);
 	params.combat.turns = params.combat.setupTurns();
-	await params.syncTurnToCombatant(params.dropResolution.previousActiveTurnIdentity, {
-		persist: false,
-	});
+
+	// Only take the active turn when the GM relay would actually accept it. Otherwise the optimistic
+	// local sync below would repoint this client's turn pointer to a target the GM rejects (e.g. a
+	// monster holds the turn), leaving the owner's tracker desynced until the next combat update.
+	const sourceCanTakeActiveTurn =
+		shouldSourceTakeActiveTurn(params.combat, params.dropResolution) &&
+		canUserTakeCombatTurn(params.combat, params.dropResolution.source, game.user);
+
+	if (sourceCanTakeActiveTurn) {
+		// Owners cannot persist combat.turn directly; relay the active-turn change to the GM.
+		const sourceId = getCombatantId(params.dropResolution.source);
+		await params.syncTurnToCombatant(sourceId, { persist: false });
+		await params.requestSetActiveTurn(sourceId);
+	} else {
+		await params.syncTurnToCombatant(params.dropResolution.previousActiveTurnIdentity, {
+			persist: false,
+		});
+	}
 	return updated ? [updated] : [];
 }

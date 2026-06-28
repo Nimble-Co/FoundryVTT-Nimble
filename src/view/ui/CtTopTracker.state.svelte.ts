@@ -4,9 +4,12 @@ import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { canCurrentUserReorderCombatant } from '#utils/combatantOrdering.js';
 import {
 	COMBATANT_ACTIONS_CURRENT_PATH,
+	canUserTakeCombatTurn,
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
 	requestAdvanceCombatTurn,
+	requestSetActiveCombatTurn,
+	requestSwapCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
 } from '#utils/combatTurnActions.js';
 import type { HeroicReactionKey } from '#utils/heroicActions.js';
@@ -491,7 +494,92 @@ export function createCtTopTrackerState() {
 	): void {
 		event.preventDefault();
 		event.stopPropagation();
-		void pingCombatantToken(combatant);
+
+		const combatantId = getCombatantId(combatant);
+		if (!combatantId) {
+			void pingCombatantToken(combatant);
+			return;
+		}
+
+		const combat = resolveActionCombat();
+		const activeCombatantId = combat?.combatant?.id ?? null;
+		const canTakeTurn = Boolean(
+			combat &&
+				activeCombatantId !== combatantId &&
+				canUserTakeCombatTurn(combat, combatant, game.user),
+		);
+		// A swap exchanges the target's slot with the active combatant's, so it additionally
+		// requires an active combatant to trade places with.
+		const canSwapTurn = Boolean(canTakeTurn && activeCombatantId);
+
+		combatantContextMenu = {
+			combatantId,
+			x: event.clientX,
+			y: event.clientY,
+			canTakeTurn,
+			canSwapTurn,
+		};
+	}
+
+	function closeCombatantContextMenu(): void {
+		combatantContextMenu = null;
+	}
+
+	function resolveContextMenuCombatant(): Combatant.Implementation | null {
+		const menu = combatantContextMenu;
+		if (!menu) return null;
+		const combat = resolveActionCombat();
+		return combat?.combatants.get(menu.combatantId) ?? null;
+	}
+
+	function handlePingFromContextMenu(): void {
+		const combatant = resolveContextMenuCombatant();
+		closeCombatantContextMenu();
+		if (combatant) void pingCombatantToken(combatant);
+	}
+
+	async function handleTakeTurnFromContextMenu(): Promise<void> {
+		const menu = combatantContextMenu;
+		closeCombatantContextMenu();
+		if (!menu) return;
+
+		const combat = resolveActionCombat();
+		if (!combat) return;
+
+		try {
+			const changed = await requestSetActiveCombatTurn({
+				combat,
+				targetCombatantId: menu.combatantId,
+			});
+			if (changed) updateCurrentCombat(true);
+		} catch (error) {
+			console.error('[Nimble][CT] Failed to set active turn from context menu', {
+				combatantId: menu.combatantId,
+				error,
+			});
+		}
+	}
+
+	async function handleSwapTurnFromContextMenu(): Promise<void> {
+		const menu = combatantContextMenu;
+		closeCombatantContextMenu();
+		if (!menu) return;
+
+		const combat = resolveActionCombat();
+		if (!combat) return;
+
+		try {
+			const changed = await requestSwapCombatTurn({
+				combat,
+				targetCombatantId: menu.combatantId,
+			});
+			if (changed) updateCurrentCombat(true);
+		} catch (error) {
+			console.error('[Nimble][CT] Failed to swap turn from context menu', {
+				combatantId: menu.combatantId,
+				error,
+			});
+		}
 	}
 
 	function handleCombatantCardKeyDown(
@@ -1285,6 +1373,13 @@ export function createCtTopTrackerState() {
 	let scrollbarDragOffsetPx = $state(0);
 	let pendingDropPreview: CombatantDropPreview | null = null;
 	let expandedMonsterGroupBars = $state<ExpandedMonsterGroupBar[]>([]);
+	let combatantContextMenu = $state<{
+		combatantId: string;
+		x: number;
+		y: number;
+		canTakeTurn: boolean;
+		canSwapTurn: boolean;
+	} | null>(null);
 	const currentCombat = $derived(trackerStore.currentCombat);
 	const playerHpBarTextMode = $derived(trackerStore.playerHpBarTextMode);
 	const nonPlayerHpBarEnabled = $derived(trackerStore.nonPlayerHpBarEnabled);
@@ -1614,6 +1709,13 @@ export function createCtTopTrackerState() {
 		handleActionDeltaClick,
 		canToggleHeroicReactionFromDrawer,
 		handleHeroicReactionToggle,
+		get combatantContextMenu() {
+			return combatantContextMenu;
+		},
+		closeCombatantContextMenu,
+		handlePingFromContextMenu,
+		handleTakeTurnFromContextMenu,
+		handleSwapTurnFromContextMenu,
 		handleCombatantCardClick,
 		handleCombatantCardContextMenu,
 		handleCombatantCardKeyDown,
