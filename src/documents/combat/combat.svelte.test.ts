@@ -1049,6 +1049,69 @@ describe('NimbleCombat', () => {
 		expect(foundry.utils.getProperty(monster, 'system.actions.base.current')).toBe(3);
 	});
 
+	it('refills the outgoing hero on turn-end even when Foundry reports the wrong combatant', async () => {
+		const combatId = 'combat-end-turn-wrong-combatant';
+		const outgoingHero = createMockCombatant({
+			id: 'outgoing-hero',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 8,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const monster = createMockCombatant({
+			id: 'solo-monster',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 1,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+		) {
+			// Foundry fires the turn-end event during the advance, but resolves the ending
+			// combatant from its stale `previous` snapshot — here, the wrong one (the monster).
+			await (this as unknown as NimbleCombat)._onEndTurn(monster, {} as Combat.TurnEventContext);
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([outgoingHero, monster]),
+			turns: [outgoingHero, monster],
+			turn: 0,
+			combatant: outgoingHero,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextTurn();
+
+		// The hero whose turn actually ended is refilled to max, despite Foundry naming the monster.
+		expect(outgoingHero.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				'system.actions.base.current': 3,
+				'system.actions.base.additional': 0,
+			}),
+		);
+		// The monster never receives the character-style turn-end refill.
+		expect(monster.update).not.toHaveBeenCalled();
+	});
+
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {
 		const combatId = 'combat-rewind-restore-minion-group-actions';
 		const leaderActor = {

@@ -114,6 +114,10 @@ class NimbleCombat extends Combat {
 	#expandedTurnIdentity: TurnIdentity | null = null;
 	#pendingAtomicTurnIdentity: TurnIdentity | null = null;
 	#didInterceptAtomicTurnStateUpdate = false;
+	// The combatant that was active immediately before a forward advance, captured so
+	// `_onEndTurn` can refill the correct combatant even when Foundry's own `previous`
+	// turn snapshot is stale under the expanded solo-monster turn order.
+	#endingTurnCombatantId: string | null = null;
 	#initiativeRollRequests = new Map<string, Promise<LockedInitiativeRollOutcome | null>>();
 
 	#findActorCombatantInScene(actorId: string, sceneId: string): Combatant.Implementation | null {
@@ -690,14 +694,24 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
+		// Under the expanded solo-monster turn order, Foundry derives `combatant` from its
+		// own `previous` turn snapshot, which our direct turn-index resync can leave pointing
+		// at the wrong combatant — so a hero ending their turn might not get refilled, or a
+		// hero who hasn't acted yet might be refilled early. Prefer the combatant we captured
+		// as active immediately before advancing; fall back to Foundry's value when we have no
+		// capture (e.g. drag-drop or a direct `_onEndTurn` call).
+		const endingCombatant =
+			(this.#endingTurnCombatantId ? this.combatants.get(this.#endingTurnCombatantId) : null) ??
+			combatant;
+
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnEnd', combatant);
+		Hooks.call('nimbleCombatTurnEnd', endingCombatant);
 
 		await super._onEndTurn(combatant, context);
 
-		if (combatant.type === 'character') {
-			await combatant.update({
-				'system.actions.base.current': getCombatantResetActions(combatant),
+		if (endingCombatant.type === 'character') {
+			await endingCombatant.update({
+				'system.actions.base.current': getCombatantResetActions(endingCombatant),
 				'system.actions.base.additional': 0,
 				...this.#buildHeroicReactionAvailabilityUpdate(true),
 			} as Record<string, unknown>);
@@ -1188,10 +1202,19 @@ class NimbleCombat extends Combat {
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
-			preferredNextTurnIdentity,
-			async () => (await super.nextTurn()) as this,
-		);
+		// Capture the outgoing combatant before advancing so `_onEndTurn` (fired inside
+		// `super.nextTurn`) refills the right one. Cleared in `finally` so it never leaks.
+		this.#endingTurnCombatantId = this.combatant?.id ?? null;
+		let intercepted: boolean;
+		let result: this;
+		try {
+			({ intercepted, result } = await this.#runAtomicTurnStateOperation(
+				preferredNextTurnIdentity,
+				async () => (await super.nextTurn()) as this,
+			));
+		} finally {
+			this.#endingTurnCombatantId = null;
+		}
 		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
@@ -1206,10 +1229,19 @@ class NimbleCombat extends Combat {
 	override async nextRound(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredFirstTurnIdentity = this.#resolveTurnIdentityAtIndex(this.turns, 0);
-		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
-			preferredFirstTurnIdentity,
-			async () => (await super.nextRound()) as this,
-		);
+		// Capture the outgoing combatant before advancing so the turn-end refill in
+		// `_onEndTurn` targets the right one. Cleared in `finally` so it never leaks.
+		this.#endingTurnCombatantId = this.combatant?.id ?? null;
+		let intercepted: boolean;
+		let result: this;
+		try {
+			({ intercepted, result } = await this.#runAtomicTurnStateOperation(
+				preferredFirstTurnIdentity,
+				async () => (await super.nextRound()) as this,
+			));
+		} finally {
+			this.#endingTurnCombatantId = null;
+		}
 		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredFirstTurnIdentity });
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
