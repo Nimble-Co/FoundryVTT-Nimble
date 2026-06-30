@@ -6,36 +6,38 @@ function createCharacter() {
 }
 
 describe('applyCharacterInitiativeActionUpdate', () => {
-	it('sets both current and max to 3 for an initiative roll of 20 or more', () => {
+	// The initiative roll only seeds a character's starting actions for the first
+	// round. `max` is always 3 (reduced only by Dying at restore time), so the
+	// update must set `current` and never touch `max`.
+	it('seeds current to 3 for an initiative roll of 20 or more without setting max', () => {
 		const updates: Record<string, unknown> = {};
 		applyCharacterInitiativeActionUpdate(createCharacter(), updates, 22);
 
 		expect(updates['system.actions.base.current']).toBe(3);
-		expect(updates['system.actions.base.max']).toBe(3);
+		expect(updates['system.actions.base.max']).toBeUndefined();
 	});
 
-	it('sets both current and max to 2 for an initiative roll between 10 and 19', () => {
+	it('seeds current to 2 for an initiative roll between 10 and 19 without setting max', () => {
 		const updates: Record<string, unknown> = {};
 		applyCharacterInitiativeActionUpdate(createCharacter(), updates, 14);
 
 		expect(updates['system.actions.base.current']).toBe(2);
-		expect(updates['system.actions.base.max']).toBe(2);
+		expect(updates['system.actions.base.max']).toBeUndefined();
 	});
 
-	it('sets both current and max to 1 for an initiative roll below 10', () => {
+	it('seeds current to 1 for an initiative roll below 10 without setting max', () => {
 		const updates: Record<string, unknown> = {};
 		applyCharacterInitiativeActionUpdate(createCharacter(), updates, 7);
 
 		expect(updates['system.actions.base.current']).toBe(1);
-		expect(updates['system.actions.base.max']).toBe(1);
+		expect(updates['system.actions.base.max']).toBeUndefined();
 	});
 
-	it('leaves the boundary roll of exactly 20 at 3 actions', () => {
+	it('treats the boundary roll of exactly 20 as 3 starting actions', () => {
 		const updates: Record<string, unknown> = {};
 		applyCharacterInitiativeActionUpdate(createCharacter(), updates, 20);
 
 		expect(updates['system.actions.base.current']).toBe(3);
-		expect(updates['system.actions.base.max']).toBe(3);
 	});
 
 	it('does not modify actions for non-character combatants', () => {

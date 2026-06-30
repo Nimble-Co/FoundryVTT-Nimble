@@ -8,13 +8,20 @@ export function applyCharacterInitiativeActionUpdate(
 ): void {
 	if (combatant.type !== 'character') return;
 
-	// The initiative roll determines how many actions the character gets each
-	// round. Set both `current` and `max` so that per-turn restoration (which
-	// resets `current` back up to `max`) honors the initiative-assigned amount
-	// rather than snapping every character to the default max of 3.
-	const actions = rollTotal >= 20 ? 3 : rollTotal >= 10 ? 2 : 1;
-	combatantUpdates['system.actions.base.current'] = actions;
-	combatantUpdates['system.actions.base.max'] = actions;
+	// The initiative roll only sets the character's starting actions for the
+	// first round. Their max stays at 3 — per-turn restoration always refills
+	// to max (reduced only by the Dying condition), so we must not touch max
+	// here or low-initiative heroes would be permanently capped below 3.
+	const actionPath = 'system.actions.base.current';
+	if (rollTotal >= 20) {
+		combatantUpdates[actionPath] = 3;
+		return;
+	}
+	if (rollTotal >= 10) {
+		combatantUpdates[actionPath] = 2;
+		return;
+	}
+	combatantUpdates[actionPath] = 1;
 }
 
 export async function buildInitiativeChatData(params: {
