@@ -212,8 +212,21 @@ class RestManager {
 			(this.#actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
 		const shouldMaximize = makeCamp || maximizeFromRules;
 
-		// Check if any advantage rules are active
-		const hasAdvantage = activeAdvantageRuleIds.length > 0;
+		// Check if any active advantage rules apply to field-rest healing. Rules
+		// scoped to other contexts (e.g., the Hardy boon's max-HP increase) are
+		// excluded so they never grant advantage here.
+		const advantageRules =
+			(
+				this.#actor.system.attributes as {
+					hitDiceAdvantageRules?: Array<{ id: string; rollContext: string }>;
+				}
+			).hitDiceAdvantageRules ?? [];
+
+		const hasAdvantage = advantageRules.some(
+			(rule) =>
+				(rule.rollContext ?? 'fieldRest') === 'fieldRest' &&
+				activeAdvantageRuleIds.includes(rule.id),
+		);
 
 		const rolls: Roll[] = [];
 		let totalHealing = 0;

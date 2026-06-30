@@ -853,7 +853,19 @@
 				"value": { "label": "Bonus" }
 			},
 			"hitDiceAdvantage": {
-				"description": "Grant advantage on hit-dice rolls under a specific narrative condition (e.g., ‘in the wild’)."
+				"description": "Grant advantage on hit-dice rolls. Raise the amount to roll with greater advantage (e.g. advantage 2), and choose whether it applies to field-rest healing or the max-HP increase when leveling up.",
+				"condition": {
+					"label": "Condition",
+					"hint": "Optional narrative condition shown to the player (e.g. ‘in the wild’). Field-rest rules appear as a toggle during a rest."
+				},
+				"amount": {
+					"label": "Advantage Level",
+					"hint": "1 = normal advantage (roll 2, keep highest). 2 = advantage 2 (roll 3, keep highest)."
+				},
+				"rollContext": {
+					"label": "Applies To",
+					"hint": "Which hit-dice roll the advantage modifies: field-rest healing or the max-HP increase when leveling up."
+				}
 			},
 			"incrementHitDice": {
 				"description": "Increase the size of the actor’s hit dice (e.g. d8 → d10) by a flat or formula amount.",

@@ -6,6 +6,13 @@ const { fields } = foundry.data;
 const levelUpSummaryCardSchema = () => ({
 	currentClassLevel: new fields.NumberField({ required: true, initial: 1, nullable: false }),
 	takeAverageHp: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+	// Label of the boon (e.g., Hardy) that raised the advantage level on the
+	// max-HP-increase roll, or null when the baseline advantage was used.
+	hitDiceAdvantageSource: new fields.StringField({
+		required: false,
+		initial: null,
+		nullable: true,
+	}),
 });
 
 declare namespace NimbleLevelUpSummaryCardData {
