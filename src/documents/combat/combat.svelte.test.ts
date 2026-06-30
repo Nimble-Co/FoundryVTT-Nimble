@@ -512,6 +512,9 @@ describe('NimbleCombat', () => {
 		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = vi
 			.fn()
 			.mockResolvedValue(combat);
+		(
+			combat as NimbleCombat & { updateEmbeddedDocuments: ReturnType<typeof vi.fn> }
+		).updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 
 		await combat.nextTurn();
 
@@ -963,6 +966,83 @@ describe('NimbleCombat', () => {
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{
 				_id: 'monster-rewind',
+				'system.actions.base.current': 3,
+			},
+		]);
+		expect(foundry.utils.getProperty(monster, 'system.actions.base.current')).toBe(3);
+	});
+
+	it('restores a solo monster’s actions to max when advancing forward into its turn', async () => {
+		const combatId = 'combat-advance-restore-monster-actions';
+		const monster = createMockCombatant({
+			id: 'monster-advance',
+			type: 'soloMonster',
+			sort: 1,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+		const player = createMockCombatant({
+			id: 'player-acting',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 10,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & {
+				turn?: number;
+				combatant?: Combatant.Implementation | null;
+			},
+		) {
+			// Advance from the player to the interleaved solo-monster turn.
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([player, monster]),
+			turns: [player, monster],
+			turn: 0,
+			combatant: player,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+						const nextActions = update['system.actions.base.current'];
+						if (typeof nextActions === 'number') {
+							foundry.utils.setProperty(target, 'system.actions.base.current', nextActions);
+						}
+					}
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+
+		await combat.nextTurn();
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'monster-advance',
 				'system.actions.base.current': 3,
 			},
 		]);
@@ -3710,9 +3790,11 @@ describe('NimbleCombat', () => {
 			combatant: character,
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 		};
 
 		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 
 		await combat.nextTurn();
 

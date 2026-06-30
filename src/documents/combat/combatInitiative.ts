@@ -8,16 +8,13 @@ export function applyCharacterInitiativeActionUpdate(
 ): void {
 	if (combatant.type !== 'character') return;
 
-	const actionPath = 'system.actions.base.current';
-	if (rollTotal >= 20) {
-		combatantUpdates[actionPath] = 3;
-		return;
-	}
-	if (rollTotal >= 10) {
-		combatantUpdates[actionPath] = 2;
-		return;
-	}
-	combatantUpdates[actionPath] = 1;
+	// The initiative roll determines how many actions the character gets each
+	// round. Set both `current` and `max` so that per-turn restoration (which
+	// resets `current` back up to `max`) honors the initiative-assigned amount
+	// rather than snapping every character to the default max of 3.
+	const actions = rollTotal >= 20 ? 3 : rollTotal >= 10 ? 2 : 1;
+	combatantUpdates['system.actions.base.current'] = actions;
+	combatantUpdates['system.actions.base.max'] = actions;
 }
 
 export async function buildInitiativeChatData(params: {

@@ -1196,6 +1196,10 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		// Solo monsters take a turn after each character, but their actions are only reset
+		// at end of round. Restore the incoming non-character's actions so they start each
+		// of their interleaved turns with a full action pool (mirrors `previousTurn`).
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
@@ -1210,6 +1214,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
