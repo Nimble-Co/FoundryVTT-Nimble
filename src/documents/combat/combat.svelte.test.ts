@@ -1112,6 +1112,137 @@ describe('NimbleCombat', () => {
 		expect(monster.update).not.toHaveBeenCalled();
 	});
 
+	it('refills the outgoing hero on turn-end even when Foundry never fires _onEndTurn', async () => {
+		// Regression: under the expanded solo-monster turn order, Foundry's cached turn history
+		// can desync from our directly-resynced turn index, so its turn-event dispatcher computes
+		// an empty interval and skips the outgoing hero's `_onEndTurn` entirely. The last hero
+		// before the solo-monster's trailing turn was left at 0 actions. `nextTurn` must backstop
+		// the refill even though `_onEndTurn` was never called.
+		const combatId = 'combat-end-turn-no-event';
+		const outgoingHero = createMockCombatant({
+			id: 'outgoing-hero',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 8,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const monster = createMockCombatant({
+			id: 'solo-monster',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 1,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+		) {
+			// Advance the turn WITHOUT firing `_onEndTurn` — reproducing Foundry skipping the
+			// outgoing hero's end-of-turn event.
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([outgoingHero, monster]),
+			turns: [outgoingHero, monster],
+			turn: 0,
+			combatant: outgoingHero,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextTurn();
+
+		// The hero whose turn ended is refilled to max via the backstop.
+		expect(outgoingHero.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				'system.actions.base.current': 3,
+				'system.actions.base.additional': 0,
+			}),
+		);
+		// The backstop fires exactly once — one hook call, one refill update.
+		expect(outgoingHero.update).toHaveBeenCalledTimes(1);
+		expect(monster.update).not.toHaveBeenCalled();
+	});
+
+	it('does not double-refill the outgoing hero when both _onEndTurn and the backstop run', async () => {
+		// When Foundry DOES fire `_onEndTurn` for the correct outgoing hero, the post-advance
+		// backstop must recognize the refill already happened and not run it (or the turn-end
+		// hook) a second time.
+		const combatId = 'combat-end-turn-no-double';
+		const outgoingHero = createMockCombatant({
+			id: 'outgoing-hero',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 8,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const monster = createMockCombatant({
+			id: 'solo-monster',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 1,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+		) {
+			await (this as unknown as NimbleCombat)._onEndTurn(
+				outgoingHero,
+				{} as Combat.TurnEventContext,
+			);
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([outgoingHero, monster]),
+			turns: [outgoingHero, monster],
+			turn: 0,
+			combatant: outgoingHero,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextTurn();
+
+		// Refilled exactly once — the backstop is a no-op because `_onEndTurn` already refilled.
+		expect(outgoingHero.update).toHaveBeenCalledTimes(1);
+		expect(outgoingHero.update).toHaveBeenCalledWith(
+			expect.objectContaining({ 'system.actions.base.current': 3 }),
+		);
+	});
+
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {
 		const combatId = 'combat-rewind-restore-minion-group-actions';
 		const leaderActor = {

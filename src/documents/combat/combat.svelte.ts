@@ -118,6 +118,12 @@ class NimbleCombat extends Combat {
 	// `_onEndTurn` can refill the correct combatant even when Foundry's own `previous`
 	// turn snapshot is stale under the expanded solo-monster turn order.
 	#endingTurnCombatantId: string | null = null;
+	// The character combatant id already refilled by `_onEndTurn` during the current
+	// forward advance. Reset at the start of each `nextTurn`/`nextRound` so the post-advance
+	// fallback (`#ensureOutgoingCharacterRefilled`) can tell whether Foundry actually fired
+	// the turn-end event for the outgoing hero — Foundry skips it when its cached turn history
+	// desyncs from our expanded (duplicate solo-monster) turn order.
+	#endingTurnRefilledCharacterId: string | null = null;
 	#initiativeRollRequests = new Map<string, Promise<LockedInitiativeRollOutcome | null>>();
 
 	#findActorCombatantInScene(actorId: string, sceneId: string): Combatant.Implementation | null {
@@ -700,22 +706,57 @@ class NimbleCombat extends Combat {
 		// hero who hasn't acted yet might be refilled early. Prefer the combatant we captured
 		// as active immediately before advancing; fall back to Foundry's value when we have no
 		// capture (e.g. drag-drop or a direct `_onEndTurn` call).
-		const endingCombatant =
-			(this.#endingTurnCombatantId ? this.combatants.get(this.#endingTurnCombatantId) : null) ??
-			combatant;
-
-		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnEnd', endingCombatant);
+		const capturedCombatant = this.#endingTurnCombatantId
+			? this.combatants.get(this.#endingTurnCombatantId)
+			: null;
+		const endingCombatant = capturedCombatant ?? combatant;
 
 		await super._onEndTurn(combatant, context);
 
 		if (endingCombatant.type === 'character') {
-			await endingCombatant.update({
-				'system.actions.base.current': getCombatantResetActions(endingCombatant),
-				'system.actions.base.additional': 0,
-				...this.#buildHeroicReactionAvailabilityUpdate(true),
-			} as Record<string, unknown>);
+			await this.#applyCharacterTurnEndRefill(endingCombatant);
+		} else {
+			// @ts-expect-error Custom hook
+			Hooks.call('nimbleCombatTurnEnd', endingCombatant);
 		}
+	}
+
+	/**
+	 * Refill an outgoing character's turn-end state: fire the Nimble end-of-turn hook (charge-pool
+	 * recovery, etc.), reset base actions to max (capped by Dying), clear additional actions, and
+	 * restore heroic reactions. Records the id so a single forward advance never refills — or
+	 * fires the hook for — the same hero twice.
+	 */
+	async #applyCharacterTurnEndRefill(combatant: Combatant.Implementation): Promise<void> {
+		if (combatant.type !== 'character') return;
+		const combatantId = combatant.id ?? null;
+
+		// @ts-expect-error Custom hook
+		Hooks.call('nimbleCombatTurnEnd', combatant);
+
+		await combatant.update({
+			'system.actions.base.current': getCombatantResetActions(combatant),
+			'system.actions.base.additional': 0,
+			...this.#buildHeroicReactionAvailabilityUpdate(true),
+		} as Record<string, unknown>);
+
+		if (combatantId) this.#endingTurnRefilledCharacterId = combatantId;
+	}
+
+	/**
+	 * Guarantee the hero whose turn just ended is refilled even when Foundry never fired
+	 * `_onEndTurn` for them. Under the expanded solo-monster turn order, Foundry's cached turn
+	 * history can desync from our directly-resynced turn index, so its turn-event dispatcher
+	 * computes an empty interval and skips the outgoing hero's end-of-turn entirely — leaving that
+	 * hero at 0 actions. This backstops that case; it is a no-op when `_onEndTurn` already ran.
+	 */
+	async #ensureOutgoingCharacterRefilled(outgoingCombatantId: string | null): Promise<void> {
+		if (!outgoingCombatantId) return;
+		if (this.#endingTurnRefilledCharacterId === outgoingCombatantId) return;
+		const combatant = this.combatants.get(outgoingCombatantId);
+		if (!combatant || combatant.type !== 'character') return;
+
+		await this.#applyCharacterTurnEndRefill(combatant);
 	}
 
 	override async _onEndRound() {
@@ -1205,6 +1246,8 @@ class NimbleCombat extends Combat {
 		// Capture the outgoing combatant before advancing so `_onEndTurn` (fired inside
 		// `super.nextTurn`) refills the right one. Cleared in `finally` so it never leaks.
 		this.#endingTurnCombatantId = this.combatant?.id ?? null;
+		const outgoingCombatantId = this.#endingTurnCombatantId;
+		this.#endingTurnRefilledCharacterId = null;
 		let intercepted: boolean;
 		let result: this;
 		try {
@@ -1223,6 +1266,10 @@ class NimbleCombat extends Combat {
 		// at end of round. Restore the incoming non-character's actions so they start each
 		// of their interleaved turns with a full action pool (mirrors `previousTurn`).
 		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
+		// Backstop: Foundry can skip `_onEndTurn` for the outgoing hero when its cached turn
+		// history desyncs from our expanded turn order (e.g. the last hero before a solo-monster
+		// wrap), leaving them at 0 actions. Refill them here if that happened.
+		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
 		return result;
 	}
 
@@ -1232,6 +1279,8 @@ class NimbleCombat extends Combat {
 		// Capture the outgoing combatant before advancing so the turn-end refill in
 		// `_onEndTurn` targets the right one. Cleared in `finally` so it never leaks.
 		this.#endingTurnCombatantId = this.combatant?.id ?? null;
+		const outgoingCombatantId = this.#endingTurnCombatantId;
+		this.#endingTurnRefilledCharacterId = null;
 		let intercepted: boolean;
 		let result: this;
 		try {
@@ -1247,6 +1296,9 @@ class NimbleCombat extends Combat {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
 		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
+		// Backstop the outgoing hero's refill in case Foundry skipped `_onEndTurn` for them
+		// (see `nextTurn`); no-op when `_onEndTurn` already handled it.
+		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
 		return result;
 	}
 
