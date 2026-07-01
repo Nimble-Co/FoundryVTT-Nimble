@@ -1,7 +1,6 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
-// @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import PlayerCharacterInventoryTabHarness from '../../../../tests/harnesses/PlayerCharacterInventoryTabHarness.svelte';
 
 function renderInventory(
