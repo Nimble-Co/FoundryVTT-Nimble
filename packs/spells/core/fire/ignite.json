@@ -7,7 +7,7 @@
 		"identifier": "",
 		"rules": [],
 		"activation": {
-			"acquireTargetsFromTemplate": true,
+			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
 				"quantity": 2,
@@ -49,8 +49,8 @@
 			},
 			"template": {
 				"length": 1,
-				"radius": 3,
-				"shape": "circle",
+				"radius": 1,
+				"shape": "",
 				"width": 1
 			}
 		},
