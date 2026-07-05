@@ -109,7 +109,7 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 			// Only Nimble exports are supported. The stable and dev builds install
 			// under different system ids (`nimble` / `nimble-dev`), so compare with
 			// the dev suffix normalized to keep exports portable between them.
-			// v13 exports record the system under _stats; pre-v13 used flags.
+			// v13+ exports record the system under _stats; pre-v13 used flags.
 			const sourceSystem = data._stats?.exportSource?.systemId ?? data.flags?.exportSource?.system;
 			if (
 				typeof sourceSystem === 'string' &&

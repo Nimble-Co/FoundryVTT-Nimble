@@ -10,6 +10,7 @@ import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
+import toMessageMode from '../../utils/toMessageMode.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
@@ -694,10 +695,7 @@ class NimbleBaseActor<
 			rollMode,
 		});
 
-		ChatMessage.applyRollMode(
-			chatData as Record<string, unknown>,
-			visibilityMode ?? game.settings.get('core', 'rollMode'),
-		);
+		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;
@@ -784,10 +782,7 @@ class NimbleBaseActor<
 			rollMode,
 		});
 
-		ChatMessage.applyRollMode(
-			chatData as Record<string, unknown>,
-			visibilityMode ?? game.settings.get('core', 'rollMode'),
-		);
+		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;
@@ -808,10 +803,10 @@ class NimbleBaseActor<
 			},
 			{ create: false },
 		)) as ChatMessage.CreateData;
-		const visibilityMode = (rollData.visibilityMode ??
-			(game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES)) as CONST.DICE_ROLL_MODES;
-
-		ChatMessage.applyRollMode(chatData as Record<string, unknown>, visibilityMode);
+		ChatMessage.applyMode(
+			chatData as Record<string, unknown>,
+			toMessageMode(rollData.visibilityMode),
+		);
 
 		const message = (await ChatMessage.create(chatData)) ?? null;
 

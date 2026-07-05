@@ -16,6 +16,7 @@ import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { consumeCombatantAction } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
@@ -916,10 +917,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 		};
 
-		ChatMessage.applyRollMode(
-			chatData as unknown as ChatMessage.CreateData,
-			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
-		);
+		ChatMessage.applyMode(chatData as unknown as ChatMessage.CreateData);
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	}
@@ -1020,9 +1018,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			rollMode,
 		});
 
-		ChatMessage.applyRollMode(
+		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
-			visibilityMode ?? game.settings.get('core', 'rollMode'),
+			toMessageMode(visibilityMode),
 		);
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
@@ -1573,10 +1571,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			},
 		};
 
-		ChatMessage.applyRollMode(
-			chatData as unknown as ChatMessage.CreateData,
-			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
-		);
+		ChatMessage.applyMode(chatData as unknown as ChatMessage.CreateData);
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;

@@ -1,4 +1,5 @@
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
+import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -79,7 +80,6 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rolls: [] as Roll[],
-			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
 				description: this.#getPhaseDescription('bloodied'),
@@ -90,10 +90,9 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 			type: 'feature',
 		};
 
-		ChatMessage.applyRollMode(
+		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
-			(options.visibilityMode ??
-				game.settings.get('core', 'rollMode')) as foundry.CONST.DICE_ROLL_MODES,
+			toMessageMode(options.visibilityMode ?? 'gmroll'),
 		);
 
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
@@ -101,14 +100,12 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 	}
 
 	async activateLastStandFeature(options: { visibilityMode?: string } = {}) {
-		const rollMode = (options.visibilityMode ?? 'gmroll') as foundry.CONST.DICE_ROLL_MODES;
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
 			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			rolls: [] as Roll[],
-			rollMode,
 			whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id) as string[],
 			system: {
 				actorName: this.name,
@@ -120,7 +117,10 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 			type: 'feature',
 		};
 
-		ChatMessage.applyRollMode(chatData as unknown as ChatMessage.CreateData, rollMode);
+		ChatMessage.applyMode(
+			chatData as unknown as ChatMessage.CreateData,
+			toMessageMode(options.visibilityMode ?? 'gmroll'),
+		);
 
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		return chatCard ?? null;

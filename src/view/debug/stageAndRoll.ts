@@ -5,7 +5,7 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
  * desired integer face value and the face count of the die that will consume
  * the next `randomUniform()` call.
  *
- * Foundry v13's `Die.mapRandomFace(rv)` is `Math.ceil((1 - rv) * faces)`, so
+ * Foundry v14's `Die.mapRandomFace(rv)` is `Math.ceil((1 - rv) * faces)`, so
  * to produce `value` we return `(faces - value + 0.5) / faces`. The 0.5 lands
  * the value safely in the middle of its bucket regardless of `value`.
  */
@@ -54,7 +54,7 @@ export async function stageAndRoll(
 	dice.randomUniform = () => {
 		const next = queue.shift();
 		if (next === undefined) return originalRandomUniform();
-		// Foundry v13 maps via `Math.ceil((1 - rv) * faces)`, so we return
+		// Foundry v14 maps via `Math.ceil((1 - rv) * faces)`, so we return
 		// `(faces - value + 0.5) / faces` to land on `value`.
 		return (next.faces - next.value + 0.5) / next.faces;
 	};

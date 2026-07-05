@@ -910,7 +910,6 @@ class NimbleCombat extends Combat {
 		combatantId: string;
 		formula: string | null;
 		messageOptions: ChatMessage.CreateData;
-		chatRollMode: string | null;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
 		promptRollDialog: boolean;
@@ -948,7 +947,6 @@ class NimbleCombat extends Combat {
 				combatantId: params.combatantId,
 				formula: promptedRollData?.rollFormula ?? params.formula,
 				messageOptions: resolvedMessageOptions,
-				chatRollMode: params.chatRollMode,
 				rollIndex: params.rollIndex,
 				combatManaUpdates: params.combatManaUpdates,
 			});
@@ -973,7 +971,6 @@ class NimbleCombat extends Combat {
 		combatantId: string;
 		formula: string | null;
 		messageOptions: ChatMessage.CreateData;
-		chatRollMode: string | null;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
 		promptRollDialog: boolean;
@@ -1006,14 +1003,20 @@ class NimbleCombat extends Combat {
 		const {
 			formula = null,
 			messageOptions = {},
+			messageMode,
 			promptRollDialog = false,
 			updateTurn = true,
-		} = options ?? {};
+		} = (options ?? {}) as NonNullable<typeof options> & { messageMode?: string };
+
+		// An explicit visibility mode travels via the messageOptions rollMode
+		// entry, which buildInitiativeChatData extracts and maps for V14.
+		if (messageMode) {
+			(messageOptions as ChatMessage.CreateData & { rollMode?: string }).rollMode = messageMode;
+		}
 
 		// Structure Input data
 		const combatantIds = [...new Set((typeof ids === 'string' ? [ids] : ids).filter(Boolean))];
 		const currentId = this.combatant?.id;
-		const chatRollMode = game.settings.get('core', 'rollMode');
 		const shouldPromptRollDialog = promptRollDialog && combatantIds.length === 1;
 
 		// Iterate over Combatants, performing an initiative roll for each
@@ -1027,7 +1030,6 @@ class NimbleCombat extends Combat {
 				combatantId: id,
 				formula,
 				messageOptions,
-				chatRollMode,
 				rollIndex: messages.length,
 				combatManaUpdates,
 				promptRollDialog: shouldPromptRollDialog,

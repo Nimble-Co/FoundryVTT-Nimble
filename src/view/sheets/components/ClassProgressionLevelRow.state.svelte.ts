@@ -55,7 +55,10 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 						feature.system?.gainedAtLevel ?? level,
 					);
 					if (!raw) return;
-					result.set(feature.uuid ?? '', await TextEditor.enrichHTML(raw));
+					result.set(
+						feature.uuid ?? '',
+						await foundry.applications.ux.TextEditor.implementation.enrichHTML(raw),
+					);
 				}),
 			);
 			if (!cancelled) levelDescriptions = result;

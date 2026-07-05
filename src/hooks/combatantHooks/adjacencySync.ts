@@ -150,7 +150,8 @@ export default function registerAdjacencySync() {
 
 	Hooks.on('canvasReady', scheduleSync);
 
-	// In Foundry v13, canvasReady fires before ready, so the hook above won't catch the
-	// initial load. Sync immediately if the canvas is already ready when this runs.
+	// Game#setupGame kicks off canvas initialization without awaiting it, so canvasReady
+	// races the ready hook and may already have fired when this runs on initial load.
+	// Sync immediately if the canvas is already ready.
 	if (canvas?.ready) scheduleSync();
 }

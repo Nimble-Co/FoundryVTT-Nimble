@@ -720,7 +720,7 @@ namespace ItemActivationManager {
 		 */
 		rollModeSources?: number[];
 		/** How the roll should be displayed (public, private, blind, self). */
-		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
+		visibilityMode?: string;
 		/** Override formula for the damage roll. */
 		rollFormula?: string;
 		/** Predetermined value for the primary damage die. */

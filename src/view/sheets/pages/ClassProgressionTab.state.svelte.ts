@@ -133,7 +133,10 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 				featuresToEnrich.map(async (feature) => {
 					const desc = feature.system?.description ?? '';
 					if (!desc) return;
-					result.set(feature.uuid ?? '', await TextEditor.enrichHTML(desc));
+					result.set(
+						feature.uuid ?? '',
+						await foundry.applications.ux.TextEditor.implementation.enrichHTML(desc),
+					);
 				}),
 			);
 			if (!cancelled) enrichedFeatureDescriptions = result;

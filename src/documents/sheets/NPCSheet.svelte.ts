@@ -66,7 +66,7 @@ export default class NPCSheet extends SvelteApplicationMixin(
 	// `_onDropItem(event, item: Item)`. Nimble never uses that core dispatch: its Svelte sheet
 	// components (NPCCoreTab.svelte) call this method directly with raw drop *data*, so the override
 	// resolves the Item itself via fromDropData. The signature intentionally diverges from the base.
-	// @ts-expect-error TS2416: deliberate v13/v14 signature divergence (see comment above).
+	// @ts-expect-error TS2416: deliberate divergence from the v14 base signature (see comment above).
 	override async _onDropItem(
 		event: DragEvent,
 		dropArg: Record<string, unknown> | Item.Implementation,

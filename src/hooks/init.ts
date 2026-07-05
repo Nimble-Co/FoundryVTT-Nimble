@@ -59,7 +59,7 @@ export default function init() {
 	CONFIG.Dice.types.push(PrimaryDie);
 
 	// Override Roll.create so /r formulas with Nimble modifiers route to DamageRoll.
-	// Foundry v13's default Roll.create just instantiates CONFIG.Dice.rolls[0] (the
+	// Foundry v14's default Roll.create just instantiates CONFIG.Dice.rolls[0] (the
 	// base Roll), so Nimble-modifier formulas would never reach DamageRoll without this.
 	if (typeof foundry.dice.Roll.create === 'function') {
 		const originalRollCreate = foundry.dice.Roll.create.bind(foundry.dice.Roll);
