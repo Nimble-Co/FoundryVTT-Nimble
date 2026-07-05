@@ -1,4 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
@@ -136,6 +137,10 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				targets: Array.from(game.user?.targets ?? []),
 				upcast: manager.upcastResult,
 			});
+
+			// Begin AoE placement immediately; the card's place button remains as
+			// the retry path.
+			void placeAoEForMessage(chatCard as unknown as ChatMessage);
 		}
 
 		return chatCard || null;

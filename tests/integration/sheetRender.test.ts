@@ -9,8 +9,14 @@ const TEST_ACTOR_NAME = 'V14 Sheet Render Test Actor';
 
 describe('ApplicationV2 rendering', () => {
 	afterAll(async () => {
+		// Only close apps this suite opened: foundry.applications.instances also
+		// holds the core UI applications (sidebar, chat log, …), and closing
+		// those tears down the game UI for subsequent suites.
 		for (const app of foundry.applications.instances.values()) {
-			await app.close().catch(() => {});
+			const doc = (app as { document?: { name?: string } }).document;
+			const isTestSheet = doc?.name === TEST_ACTOR_NAME;
+			const isCreationDialog = app.constructor.name === 'ActorCreationDialog';
+			if (isTestSheet || isCreationDialog) await app.close().catch(() => {});
 		}
 		const leftovers = game.actors.filter((actor) => actor.name === TEST_ACTOR_NAME);
 		for (const leftover of leftovers) {

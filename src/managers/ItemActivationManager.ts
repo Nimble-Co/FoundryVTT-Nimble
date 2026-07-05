@@ -286,7 +286,9 @@ class ItemActivationManager {
 					// normally — targets.count alone is NOT a signal here.
 					const activation = (this.#item.system as any)?.activation;
 					const templateShape: string = activation?.template?.shape ?? '';
-					const isAoE = templateShape !== '';
+					// The acquireTargetsFromTemplate flag marks intentional AoE items;
+					// a bare template shape can be a stale leftover in item data.
+					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);

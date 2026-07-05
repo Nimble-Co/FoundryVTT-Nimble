@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
@@ -264,6 +265,10 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				isMiss,
 				targets: Array.from(game.user?.targets ?? []),
 			});
+
+			// Begin AoE placement immediately; the card's place button remains as
+			// the retry path.
+			void placeAoEForMessage(chatCard as ChatMessage);
 		}
 
 		return chatCard ?? null;

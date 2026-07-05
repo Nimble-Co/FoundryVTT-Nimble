@@ -57,8 +57,12 @@ async function editRoundTrip(document: Actor | Item, subtype: string) {
 
 describe('sheet edit round-trips', () => {
 	afterAll(async () => {
+		// Only close sheets belonging to test documents: foundry.applications
+		// .instances also holds the core UI applications (sidebar, chat log, …),
+		// and closing those tears down the game UI for subsequent suites.
 		for (const app of foundry.applications.instances.values()) {
-			await app.close().catch(() => {});
+			const doc = (app as { document?: { name?: string } }).document;
+			if (doc?.name?.startsWith(NAME_PREFIX)) await app.close().catch(() => {});
 		}
 		for (const actor of game.actors.filter((a) => a.name?.startsWith(NAME_PREFIX))) {
 			await actor.delete().catch((error) => console.error(error));

@@ -20,10 +20,11 @@ interface PreviewListeners {
 /**
  * Interactively place an area of effect on the current scene as a Region.
  *
- * Shows a pointer-following preview of the configured shape (left-click to
- * place, right-click to cancel, mouse wheel to rotate cones and lines,
- * shift+move for free positioning), then creates a Region document with a
- * grid-conforming V14 region shape.
+ * Shows a pointer-following preview of the exact grid-conformed area the
+ * Region will cover (left-click to place, right-click to cancel, mouse wheel
+ * to rotate cones and lines in grid-direction steps — hold shift for fine
+ * rotation, shift+move for free positioning), then creates a Region document
+ * with a grid-conforming V14 region shape.
  *
  * Resolves with the created RegionDocument, or null when cancelled or when
  * the template configuration has no shape.
@@ -49,57 +50,26 @@ export async function placeAoERegion(
 	let position = snapOrigin({ ...canvas.mousePosition });
 	let rotation = 0;
 
+	// The preview renders the same grid-conformed polygons the placed Region
+	// will have, computed by core through an unsaved RegionDocument, so what
+	// you see is exactly the area that will be covered.
 	const drawPreview = () => {
 		preview.clear();
+
+		const shape = buildAoERegionShape(template, { origin: position, rotation, gridSize });
+		if (!shape) return;
+
 		preview.lineStyle(3, 0x000000, 0.75);
-		preview.beginFill(0xffffff, 0.2);
+		preview.beginFill(0xffffff, 0.25);
 
-		const { x, y } = position;
-		const radians = Math.toRadians(rotation);
+		const RegionClass = getDocumentClass('Region');
+		const previewRegion = new RegionClass(
+			{ name: 'AoE Preview', shapes: [shape] } as unknown as RegionDocument.CreateData,
+			{ parent: scene },
+		) as RegionDocument & { polygons: PIXI.Polygon[] };
 
-		switch (template.shape) {
-			case 'circle':
-			case 'emanation': {
-				const bonus = template.shape === 'emanation' ? 0.5 : 0;
-				preview.drawCircle(x, y, (template.radius + bonus) * gridSize);
-				break;
-			}
-			case 'cone': {
-				const length = template.length * gridSize;
-				const halfAngle = Math.toRadians(45);
-				const left = radians - halfAngle;
-				const right = radians + halfAngle;
-				preview.moveTo(x, y);
-				preview.lineTo(x + Math.cos(left) * length, y + Math.sin(left) * length);
-				preview.lineTo(x + Math.cos(right) * length, y + Math.sin(right) * length);
-				preview.closePath();
-				break;
-			}
-			case 'line': {
-				const length = template.length * gridSize;
-				const halfWidth = (template.width * gridSize) / 2;
-				const dx = Math.cos(radians);
-				const dy = Math.sin(radians);
-				// Perpendicular unit vector for the line's width.
-				const px = -dy;
-				const py = dx;
-				preview.drawPolygon([
-					x + px * halfWidth,
-					y + py * halfWidth,
-					x + dx * length + px * halfWidth,
-					y + dy * length + py * halfWidth,
-					x + dx * length - px * halfWidth,
-					y + dy * length - py * halfWidth,
-					x - px * halfWidth,
-					y - py * halfWidth,
-				]);
-				break;
-			}
-			case 'square': {
-				const width = template.width * gridSize;
-				preview.drawRect(x - width / 2, y - width / 2, width, width);
-				break;
-			}
+		for (const polygon of previewRegion.polygons) {
+			preview.drawPolygon(polygon.points as unknown as number[]);
 		}
 
 		preview.endFill();
@@ -138,7 +108,8 @@ export async function placeAoERegion(
 				event.preventDefault(); // Avoid zooming the browser
 				event.stopPropagation();
 
-				const snap = event.shiftKey ? 45 : 15;
+				// Grid directions by default; shift for fine rotation.
+				const snap = event.shiftKey ? 15 : 45;
 				rotation += snap * Math.sign(event.deltaY);
 				drawPreview();
 			},
@@ -167,9 +138,35 @@ export async function placeAoERegion(
 		});
 	});
 
+	// Where a shape's origin must sit for its grid-conformed area to cover
+	// whole cells: circles span an even number of cells around a vertex,
+	// emanations radiate from an occupied cell's center, squares alternate by
+	// parity, and cones/lines emanate from a cell edge (its midpoint or a
+	// vertex).
 	function snapOrigin(point: { x: number; y: number }): { x: number; y: number } {
+		if (canvas.grid!.isGridless) return point;
 		const M = CONST.GRID_SNAPPING_MODES;
-		return canvas.grid!.getSnappedPoint(point, { mode: M.CENTER | M.VERTEX });
+
+		let mode: number;
+		switch (template.shape) {
+			case 'circle':
+				mode = M.VERTEX;
+				break;
+			case 'emanation':
+				mode = M.CENTER;
+				break;
+			case 'square':
+				mode = template.width % 2 === 0 ? M.VERTEX : M.CENTER;
+				break;
+			case 'cone':
+			case 'line':
+				mode = M.VERTEX | M.EDGE_MIDPOINT;
+				break;
+			default:
+				mode = M.CENTER | M.VERTEX;
+		}
+
+		return canvas.grid!.getSnappedPoint(point, { mode });
 	}
 
 	async function createRegion(): Promise<RegionDocument | null> {

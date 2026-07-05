@@ -28,7 +28,10 @@
 	let placing = $state(false);
 
 	let template = $derived(messageDocument.reactive.system.activation?.template);
-	let shape = $derived(template?.shape ?? '');
+	// Only intentional AoE items (flag + shape): a bare template shape can be a
+	// stale leftover in item data.
+	let isAoE = $derived(!!messageDocument.reactive.system.activation?.acquireTargetsFromTemplate);
+	let shape = $derived(isAoE ? (template?.shape ?? '') : '');
 	let size = $derived(
 		shape === 'circle' || shape === 'emanation' ? template.radius : template.length,
 	);
@@ -51,5 +54,22 @@
 		justify-content: center;
 		gap: 0.5rem;
 		width: 100%;
+		height: 2.25rem;
+		padding: 0 0.625rem;
+		font-size: var(--nimble-sm-text);
+		font-weight: 900;
+		line-height: 1;
+		color: inherit;
+		background-color: transparent;
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		cursor: pointer;
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background-color: color-mix(in srgb, currentColor 8%, transparent);
+		}
 	}
 </style>

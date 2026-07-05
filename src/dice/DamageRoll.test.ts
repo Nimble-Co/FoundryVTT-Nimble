@@ -107,6 +107,7 @@ function makeAoEItem(actor: any, overrides: Record<string, unknown> = {}) {
 			properties: { selected: [] },
 			activation: {
 				effects: [],
+				acquireTargetsFromTemplate: true,
 				template: { shape: 'circle', length: 3, radius: 2, width: 1 },
 				targets: { count: 1, attackType: '' },
 			},

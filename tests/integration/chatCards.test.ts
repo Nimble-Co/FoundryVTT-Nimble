@@ -96,7 +96,13 @@ describe('chat message cards', () => {
 	}, 60_000);
 
 	test('activation cards: spell, object, feature', async () => {
-		const spell = await importPackItem(actor, 'nimble-spells', (e) => e.type === 'spell');
+		// A non-AoE spell: activating an AoE spell auto-starts interactive
+		// placement, which would leave a dangling canvas session in headless runs.
+		const spell = await importPackItem(
+			actor,
+			'nimble-spells',
+			(e) => e.type === 'spell' && !e.system?.activation?.template?.shape,
+		);
 		await expectCardRendered(
 			await messageFromFlow('spell', () => (spell as any).activate({ fastForward: true })),
 			'spell',
