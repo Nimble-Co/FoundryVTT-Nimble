@@ -54,6 +54,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.46.2
         version: 8.56.0(eslint@9.39.2)(typescript@5.9.3)
+      '@vitest/runner':
+        specifier: 4.0.8
+        version: 4.0.8
       '@vitest/ui':
         specifier: ^4.0.8
         version: 4.0.8(vitest@4.0.8)

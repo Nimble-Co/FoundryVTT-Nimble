@@ -5,6 +5,7 @@
 
 # Local dev config (machine-specific overrides, not for the repo)
 vite.config.local.mts
+.env.local
 
 # Claude Code local files
 CLAUDE.local.md
