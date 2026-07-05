@@ -159,8 +159,7 @@ export default class ImportPlayerCharacterDialog extends SvelteApplicationMixin(
 			};
 
 			// loadFile guarantees type === 'character'.
-			const documentClass = (CONFIG.NIMBLE.Actor.documentClasses as Record<string, typeof Actor>)
-				.character;
+			const documentClass = CONFIG.NIMBLE.Actor.documentClasses.character;
 
 			await documentClass.create(
 				data as object as Actor.CreateData,

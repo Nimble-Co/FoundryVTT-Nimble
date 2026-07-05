@@ -30,7 +30,7 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 	protected override async _preCreate(
 		data: Actor.CreateData,
 		options: Actor.Database.PreCreateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
 		// A solo monster is a single boss-tier creature, so its token is linked:

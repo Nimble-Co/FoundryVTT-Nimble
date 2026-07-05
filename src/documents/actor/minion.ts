@@ -28,7 +28,7 @@ export class NimbleMinion extends NimbleBaseActor<'minion'> {
 	protected override async _preCreate(
 		data: Actor.CreateData,
 		options: Actor.Database.PreCreateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
 		this.updateSource({ prototypeToken: buildMonsterPrototypeTokenDefaults() } as Record<
