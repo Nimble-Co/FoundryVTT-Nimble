@@ -1663,15 +1663,18 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
-		// Player character configuration. In Foundry v13 token sight is keyed on
-		// `sight.enabled` (the old top-level `vision` boolean no longer exists), and
-		// `enabled` only auto-defaults to true when `sight.range > 0` — which it is
-		// not — so enable it explicitly. Range stays at the default 0: Nimble has no
-		// darkvision, so the token sees illuminated areas rather than a fixed radius.
+		// Player character configuration. Token sight is keyed on `sight.enabled`,
+		// and `enabled` only auto-defaults to true when `sight.range > 0` — which it
+		// is not — so enable it explicitly. Range stays at the default 0: Nimble has
+		// no darkvision, so the token sees illuminated areas rather than a fixed
+		// radius. `displayBars` is seeded here because V14 removed the world-level
+		// default token configuration (`core.defaultToken`); the schema default is
+		// NONE, which would hide the HP/mana bar mappings entirely.
 		const prototypeToken = {
 			sight: { enabled: true },
 			actorLink: true,
 			disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+			displayBars: CONST.TOKEN_DISPLAY_MODES.OWNER_HOVER,
 		};
 		this.updateSource({ prototypeToken } as Record<string, unknown>);
 

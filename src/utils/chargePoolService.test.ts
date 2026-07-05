@@ -64,8 +64,8 @@ function applyChargePoolUpdatePayload(
 
 	const nextPools = { ...existingPools };
 	for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
-		if (key.startsWith('-=')) {
-			delete nextPools[key.slice(2)];
+		if (value instanceof foundry.data.operators.ForcedDeletion) {
+			delete nextPools[key];
 			continue;
 		}
 		nextPools[key] = value;

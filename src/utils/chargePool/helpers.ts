@@ -483,7 +483,7 @@ function buildPoolUpdatePayload(
 
 	for (const existingPoolId of Object.keys(existingPools)) {
 		if (existingPoolId in nextPools) continue;
-		payload[`-=${existingPoolId}`] = null;
+		payload[existingPoolId] = new foundry.data.operators.ForcedDeletion();
 	}
 
 	return payload;

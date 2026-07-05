@@ -276,7 +276,7 @@ function rebrandSettingsInMemory(stats: RebrandStats): RawSetting[] {
  * Build the update payload that copies `flags.nimble` → `flags.nimble-dev`
  * (merging) and deletes `flags.nimble` from the persisted document. We use
  * the document's CURRENT (already in-memory rebranded) flags as the source of
- * truth for the dev-side data, and only target the `-=nimble` deletion plus
+ * truth for the dev-side data, and only target the `flags.nimble` deletion plus
  * the dev-side reinforcement. Returns null if nothing to persist.
  */
 function buildPersistentUpdate(
@@ -288,7 +288,7 @@ function buildPersistentUpdate(
 	const devData = flags[DEV_SYSTEM_ID];
 	return {
 		[`flags.${DEV_SYSTEM_ID}`]: devData ?? {},
-		[`flags.-=${STABLE_SYSTEM_ID}`]: null,
+		[`flags.${STABLE_SYSTEM_ID}`]: new foundry.data.operators.ForcedDeletion(),
 	};
 }
 

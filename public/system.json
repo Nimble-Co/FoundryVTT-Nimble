@@ -55,7 +55,7 @@
 		"type": 1
 	},
 	"primaryTokenAttribute": "attributes.hp",
-	"secondaryTokenAttribute": null,
+	"secondaryTokenAttribute": "resources.mana",
 	"compatibility": {
 		"minimum": "14",
 		"verified": "14"

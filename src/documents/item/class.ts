@@ -302,7 +302,8 @@ export class NimbleClassItem extends NimbleBaseItem<'class'> {
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
 					existingHitDice.origin.filter((id: string) => this.identifier !== id);
 			} else {
-				actorUpdates[`system.attributes.hitDice.-=${this.system.hitDieSize}`] = null;
+				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}`] =
+					new foundry.data.operators.ForcedDeletion();
 			}
 
 			// Remove Levels information

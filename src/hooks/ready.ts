@@ -88,33 +88,12 @@ export default async function ready() {
 	combatTrackerConfig.skipDefeated ??= true;
 	game.settings.set('core', 'combatTrackerConfig', combatTrackerConfig);
 
-	// Seed Foundry's Default Token Configuration so newly created tokens are usable
-	// without per-token setup:
-	//  - sight enabled — Nimble has no darkvision, so range stays 0 and the token
-	//    sees illuminated areas.
-	//  - HP on bar 1.
-	//  - Mana on bar 2 — `resources.mana` exists only on characters, so monsters and
-	//    NPCs resolve no attribute and draw no second bar ("mana bar only if they
-	//    have it").
-	//  - Bars shown on owner hover, otherwise the bar mappings would be invisible.
-	// `??=` only fills unset values, so a GM who has deliberately configured token
-	// defaults is never overridden. World-scoped, so only the GM may write it.
-	if (game.user?.isGM) {
-		const defaultToken = (game.settings.get('core', 'defaultToken') ?? {}) as {
-			sight?: { enabled?: boolean };
-			bar1?: { attribute?: string | null };
-			bar2?: { attribute?: string | null };
-			displayBars?: number;
-		};
-		defaultToken.sight ??= {};
-		defaultToken.sight.enabled ??= true;
-		defaultToken.bar1 ??= {};
-		defaultToken.bar1.attribute ??= 'attributes.hp';
-		defaultToken.bar2 ??= {};
-		defaultToken.bar2.attribute ??= 'resources.mana';
-		defaultToken.displayBars ??= CONST.TOKEN_DISPLAY_MODES.OWNER_HOVER;
-		game.settings.set('core', 'defaultToken', defaultToken);
-	}
+	// V14 removed the world-level Default Token Configuration (`core.defaultToken`).
+	// Its former responsibilities are now covered elsewhere:
+	//  - HP on bar 1 / mana on bar 2: `primaryTokenAttribute` / `secondaryTokenAttribute`
+	//    in system.json seed the prototype token schema defaults.
+	//  - sight + displayBars: seeded per actor subtype in `_preCreate`
+	//    (character.ts and monsterPrototypeTokenDefaults.ts).
 
 	registerCombatSidebarToggle();
 }

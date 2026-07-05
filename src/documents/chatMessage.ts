@@ -637,7 +637,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		// Remove the healing record from the message using Foundry's delete syntax
 		await this.update({
-			[`system.appliedHealing.-=${effectId}`]: null,
+			[`system.appliedHealing.${effectId}`]: new foundry.data.operators.ForcedDeletion(),
 		} as Record<string, unknown>);
 
 		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));
