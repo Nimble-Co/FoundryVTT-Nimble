@@ -1,5 +1,4 @@
 import { SYSTEM_ID } from '#system';
-import { NimbleTemplateLayer } from '../canvas/layers/templateLayer.js';
 import { NIMBLE } from '../config.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
@@ -86,9 +85,6 @@ export default function init() {
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;
-
-	// Add/Update Layers
-	CONFIG.Canvas.layers.templates.layerClass = NimbleTemplateLayer;
 
 	game.nimble = NIMBLE_GAME;
 
