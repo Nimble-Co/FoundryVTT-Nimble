@@ -90,12 +90,19 @@ describe('V14 data operations', () => {
 		const entry = index.contents[0];
 		expect(entry).toBeDefined();
 
-		const imported = (await game.items.importFromCompendium(
+		// Use the data-level import path (WorldCollection#fromCompendium stamps
+		// _stats.compendiumSource); importFromCompendium additionally activates
+		// the sidebar UI, which is irrelevant here and flaky headless.
+		const sourceDocument = await pack!.getDocument(entry!._id);
+		const data = game.items.fromCompendium(
 			// @ts-expect-error - the pack's generic document type is unknown at compile time.
-			pack!,
-			entry!._id,
-			{ name: `V14 Import Test: ${entry!.name}` },
-		)) as Item & { _stats: { compendiumSource: string | null } };
+			sourceDocument!,
+		) as { name: string; _stats: { compendiumSource: string | null } };
+		data.name = `V14 Import Test: ${entry!.name}`;
+
+		const imported = (await Item.create(data as object as Item.CreateData)) as Item & {
+			_stats: { compendiumSource: string | null };
+		};
 
 		expect(imported._stats.compendiumSource).toBe(
 			`Compendium.${pack!.collection}.Item.${entry!._id}`,

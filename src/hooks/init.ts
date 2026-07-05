@@ -44,9 +44,11 @@ export default function init() {
 	CONFIG.Scene.documentClass = NimbleScene as typeof CONFIG.Scene.documentClass;
 	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;
 
-	// Add data models
-	CONFIG.ActiveEffect.dataModels =
-		activeEffectDataModels as object as typeof CONFIG.ActiveEffect.dataModels;
+	// Add data models. ActiveEffect must MERGE, not replace: V14 registers a core
+	// `base` model (foundry.data.ActiveEffectTypeDataModel) that owns the AE V2
+	// `changes` schema — wiping it breaks every base-type effect, including all
+	// status effects created by Actor#toggleStatusEffect.
+	Object.assign(CONFIG.ActiveEffect.dataModels, activeEffectDataModels);
 	CONFIG.Actor.dataModels = actorDataModels as object as typeof CONFIG.Actor.dataModels;
 	CONFIG.ChatMessage.dataModels = chatDataModels as object as typeof CONFIG.ChatMessage.dataModels;
 	CONFIG.Combatant.dataModels = combatantDataModels as object as typeof CONFIG.Combatant.dataModels;
