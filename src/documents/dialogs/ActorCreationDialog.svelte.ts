@@ -9,7 +9,9 @@ const { ApplicationV2 } = foundry.applications.api;
 export default class ActorCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
 	declare data: Record<string, unknown>;
 
-	declare parent: unknown;
+	// V14's ApplicationV2 defines a getter-only `parent` (child applications),
+	// so the target Document parent must live under a different name.
+	declare parentDocument: unknown;
 
 	declare pack: unknown;
 
@@ -30,7 +32,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		this.root = ActorCreationDialogComponent;
 
 		this.data = data;
-		this.parent = parent;
+		this.parentDocument = parent;
 		this.pack = pack;
 		this.props = { dialog: this };
 	}
@@ -67,7 +69,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		} else {
 			(documentClasses as unknown as Record<string, typeof Actor>)[actorType].create(
 				{ name: 'New Actor', type: actorType, ...this.data } as object as Actor.CreateData,
-				{ pack: this.pack, parent: this.parent, renderSheet: true } as object,
+				{ pack: this.pack, parent: this.parentDocument, renderSheet: true } as object,
 			);
 		}
 
@@ -88,7 +90,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		const folder = (this.data.folder as string | null | undefined) ?? null;
 		const dialog = new ImportPlayerCharacterDialog({
 			folder,
-			parent: this.parent,
+			parent: this.parentDocument,
 			pack: this.pack,
 		});
 		dialog.render(true);

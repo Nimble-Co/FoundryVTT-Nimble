@@ -13,7 +13,7 @@ export default async function updateDocumentImage(
 		}
 	}
 
-	const filePicker = new FilePicker({
+	const filePicker = new foundry.applications.apps.FilePicker.implementation({
 		type: 'image',
 		current: document.img ?? undefined,
 		callback: async (path) => {

@@ -101,8 +101,6 @@ function resolveSavingThrowRollModes({
 
 export default class CharacterCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
 	data: Record<string, any>;
-	parent: any;
-	pack: any;
 	folder: string | null;
 	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
 	spellIndex: Promise<SpellIndex> | null = null;
@@ -111,7 +109,10 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 	constructor(
 		data = {},
-		{ parent = null, pack = null, folder = null as string | null, ...options } = {},
+		// `parent`/`pack` are accepted (callers may pass them) but unused: character
+		// creation only targets the world collection. V14's ApplicationV2 owns the
+		// `parent` property, so they must not be assigned onto the application.
+		{ parent: _parent = null, pack: _pack = null, folder = null as string | null, ...options } = {},
 	) {
 		const width = 608;
 		super(
@@ -127,8 +128,6 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		this.root = CharacterCreationDialogComponent;
 
 		this.data = data;
-		this.parent = parent;
-		this.pack = pack;
 		this.folder = folder;
 	}
 
