@@ -649,6 +649,7 @@
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
 			"modifyPool": "Modify Pool",
+			"modifyToggle": "Modify Toggle",
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
@@ -898,6 +899,17 @@
 					"hint": "Signed amount added to the target pool's max (e.g. \"+1\", \"-1\", \"+@level\"). Leave blank to keep max unchanged."
 				}
 			},
+			"modifyToggle": {
+				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
+				"toggleIdentifier": {
+					"label": "Toggle identifier",
+					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
+				},
+				"suppressTurnOff": {
+					"label": "Suppress turn-off on",
+					"hint": "Turn-off events the target toggle should ignore. The toggle no longer ends automatically when these events fire."
+				}
+			},
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
 			},
@@ -958,12 +970,16 @@
 					"hint": "Events that automatically toggle the effect off."
 				},
 				"confirmEndPrompt": {
-					"label": "End confirm prompt (i18n key)",
-					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Provide an i18n key whose value is the dialog body. Leave empty to disable the prompt."
+					"label": "End confirm prompt",
+					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Accepts plain text or a localization key as the dialog body. Leave empty to disable the prompt."
 				},
 				"clearPoolsOnEnd": {
 					"label": "Clear pools on end",
 					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
+				},
+				"endAfterInactiveRounds": {
+					"label": "End after inactive rounds",
+					"hint": "Rounds of combat inactivity after which the toggle ends at the actor's turn end. Activity means re-activating this item or activating any item with a damage effect (an attack). Leave blank to disable."
 				},
 				"confirmDialogTitle": "End {name}?",
 				"confirmDialogConfirm": "End",
@@ -1542,6 +1558,8 @@
 			"noEffects": "No effects",
 			"temporaryEffects": "Temporary Effects",
 			"passiveEffects": "Passive Effects",
+			"endToggledEffect": "Turn off {name}",
+			"endToggledEffectTooltip": "Turn off",
 			"searchConditions": "Search conditions",
 			"showActiveOnly": "Show Active",
 			"showAllConditions": "Show All",

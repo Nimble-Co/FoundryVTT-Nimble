@@ -203,4 +203,132 @@ describe('ActorConditionsList', () => {
 
 		expect(screen.queryByRole('button', { name: 'Toggle Blinded' })).not.toBeInTheDocument();
 	});
+
+	describe('active toggles section', () => {
+		function createToggleAE({
+			id = 'ae-rage',
+			name = 'Rage',
+			ruleId = 'rage-toggle',
+			itemId = 'rage-item',
+		} = {}) {
+			return {
+				id,
+				name,
+				img: 'icons/svg/aura.svg',
+				statuses: new Set<string>(),
+				getFlag: (scope: string, key: string): unknown => {
+					if (scope !== 'nimble') return undefined;
+					if (key === 'toggleEffectRuleId') return ruleId;
+					if (key === 'toggleEffectItemId') return itemId;
+					return undefined;
+				},
+			};
+		}
+
+		function withToggleItem(actor: Actor.Implementation, ruleId = 'rage-toggle') {
+			(actor as unknown as Record<string, unknown>).items = {
+				get: (id: string) =>
+					id === 'rage-item'
+						? {
+								id: 'rage-item',
+								name: 'Rage',
+								rules: new Map([['0', { type: 'toggleEffect', id: ruleId }]]),
+							}
+						: undefined,
+			};
+			return actor;
+		}
+
+		it('renders toggle-backed AEs in the Temporary Effects section, not the passive bucket', () => {
+			const actor = createActor({
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			const temporarySection = screen
+				.getByText('Temporary Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(temporarySection).toHaveTextContent('Rage');
+
+			const passiveSection = screen
+				.getByText('Passive Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(passiveSection).not.toHaveTextContent('Rage');
+			expect(passiveSection).toHaveTextContent('No effects');
+		});
+
+		it('shows the off switch instead of the trash button for toggle-backed AEs', () => {
+			const actor = createActor({
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			expect(screen.getByRole('button', { name: 'Turn off Rage' })).toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: 'Remove effect' })).not.toBeInTheDocument();
+		});
+
+		it('renders toggle-backed AEs as canvas icons and ends them on right click', async () => {
+			const actor = withToggleItem(
+				createActor({
+					statuses: [],
+					effects: [createToggleAE()] as unknown as ActiveEffect[],
+				}),
+			);
+
+			render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+
+			const iconButton = screen.getByRole('button', { name: 'Rage' });
+			await fireEvent.contextMenu(iconButton);
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
+		});
+
+		it('ends the toggle through the rule path when the off switch is clicked', async () => {
+			const actor = withToggleItem(
+				createActor({
+					statuses: [],
+					effects: [createToggleAE()] as unknown as ActiveEffect[],
+				}),
+			);
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			const offSwitch = screen.getByRole('button', { name: 'Turn off Rage' });
+			await fireEvent.click(offSwitch);
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
+		});
+
+		it('falls back to deleting the AE when the owning item no longer exists', async () => {
+			const actor = createActor({
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+			(actor as unknown as Record<string, unknown>).items = { get: () => undefined };
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Turn off Rage' }));
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
+		});
+
+		it('hides the off switch when the actor is not editable', () => {
+			const actor = createActor({
+				owner: false,
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			const temporarySection = screen
+				.getByText('Temporary Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(temporarySection).toHaveTextContent('Rage');
+			expect(screen.queryByRole('button', { name: 'Turn off Rage' })).not.toBeInTheDocument();
+		});
+	});
 });

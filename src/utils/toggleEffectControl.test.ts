@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.stubGlobal('Hooks', { call: vi.fn().mockReturnValue(true), callAll: vi.fn() });
-
-const { mockSetPoolFaces, mockBuildEffectiveDicePoolMap, mockDialogConfirm } = vi.hoisted(() => ({
+const { mockSetPoolFaces, mockBuildEffectiveDicePoolMap } = vi.hoisted(() => ({
 	mockSetPoolFaces: vi.fn().mockResolvedValue(true),
 	mockBuildEffectiveDicePoolMap: vi.fn(() => ({}) as Record<string, { faces: number[] }>),
-	mockDialogConfirm: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
@@ -20,26 +18,46 @@ vi.mock('#utils/localize.js', () => ({
 	default: (key: string) => key,
 }));
 
-vi.stubGlobal('foundry', {
-	applications: {
-		api: {
-			DialogV2: { confirm: mockDialogConfirm },
-		},
-	},
-	utils: {
-		getProperty: (_obj: unknown, _path: string) => undefined,
-	},
+// tests/setup.ts boots the system init hook, which eagerly imports the real
+// dicePool modules before any per-file vi.mock can register. A static import
+// of the module under test would therefore bind to those already-cached real
+// modules and bypass the mocks above. Resetting the module registry and
+// importing dynamically forces a fresh graph that resolves through the mocks.
+let findToggleEffectRule: typeof import('./toggleEffectControl.js').findToggleEffectRule;
+let findToggleEffectRuleById: typeof import('./toggleEffectControl.js').findToggleEffectRuleById;
+let findToggleEffectAE: typeof import('./toggleEffectControl.js').findToggleEffectAE;
+let isToggleEffectAE: typeof import('./toggleEffectControl.js').isToggleEffectAE;
+let toggleEffectAE: typeof import('./toggleEffectControl.js').toggleEffectAE;
+let endToggleEffectFromAE: typeof import('./toggleEffectControl.js').endToggleEffectFromAE;
+
+beforeAll(async () => {
+	vi.resetModules();
+	({
+		findToggleEffectRule,
+		findToggleEffectRuleById,
+		findToggleEffectAE,
+		isToggleEffectAE,
+		toggleEffectAE,
+		endToggleEffectFromAE,
+	} = await import('./toggleEffectControl.js'));
 });
 
-import { findToggleEffectAE, findToggleEffectRule, toggleEffectAE } from './toggleEffectControl.js';
+function getDialogConfirmMock(): Mock {
+	const globalFoundry = (
+		globalThis as unknown as {
+			foundry: { applications: { api: { DialogV2: { confirm: Mock } } } };
+		}
+	).foundry;
+	return globalFoundry.applications.api.DialogV2.confirm;
+}
 
 describe('toggleEffectControl', () => {
 	beforeEach(() => {
 		mockSetPoolFaces.mockClear();
 		mockBuildEffectiveDicePoolMap.mockClear();
 		mockBuildEffectiveDicePoolMap.mockReturnValue({});
-		mockDialogConfirm.mockClear();
-		mockDialogConfirm.mockResolvedValue(true);
+		getDialogConfirmMock().mockReset();
+		getDialogConfirmMock().mockResolvedValue(true);
 	});
 
 	describe('findToggleEffectRule', () => {
@@ -136,10 +154,303 @@ describe('toggleEffectControl', () => {
 				},
 			});
 		});
+
+		it('names the AE after the rule label when one is set', async () => {
+			const createSpy = vi.fn().mockResolvedValue([]);
+			const actor = {
+				effects: [],
+				createEmbeddedDocuments: createSpy,
+				deleteEmbeddedDocuments: vi.fn(),
+			};
+			const item = { id: 'rage-item', name: 'Rage Feature', img: 'rage.webp' };
+			const rule = { type: 'toggleEffect', id: 'rage-toggle', label: 'Raging' };
+
+			await toggleEffectAE(actor, item, rule);
+
+			expect(createSpy.mock.calls[0][1][0]).toMatchObject({ name: 'Raging' });
+		});
 	});
 
-	// TODO(follow-up): unit tests for toggleEffectAE disable path:
-	// confirmEndPrompt skip when pool empty, prompt + confirm/cancel branches.
-	// Requires mocking buildEffectiveDicePoolMap which doesn't intercept
-	// cleanly in the current vi.mock setup. Integration-verified manually.
+	describe('toggleEffectAE: disable path', () => {
+		function mkActorWithAE(ruleId: string) {
+			const effect = {
+				id: 'ae-active',
+				disabled: false,
+				getFlag: (scope: string, key: string): unknown => {
+					if (scope === 'nimble' && key === 'toggleEffectRuleId') return ruleId;
+					return undefined;
+				},
+			};
+			return {
+				effects: [effect],
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+		}
+
+		const item = { id: 'rage-item', name: 'Rage', img: 'rage.webp', uuid: 'Actor.X.Item.Rage' };
+
+		it('deletes the AE without prompting when the rule has no confirmEndPrompt', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = { type: 'toggleEffect', id: 'rage-toggle', clearPoolsOnEnd: ['fury'] };
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4, 2] } });
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(true);
+			expect(getDialogConfirmMock()).not.toHaveBeenCalled();
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('skips the prompt when every linked pool is empty (nothing to lose)', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				confirmEndPrompt: 'NIMBLE.confirmKey',
+				clearPoolsOnEnd: ['fury'],
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [] } });
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(true);
+			expect(getDialogConfirmMock()).not.toHaveBeenCalled();
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('prompts and proceeds on confirm: clears pools, then deletes the AE', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				label: 'Rage',
+				confirmEndPrompt: 'NIMBLE.confirmKey',
+				clearPoolsOnEnd: ['fury'],
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4] } });
+			getDialogConfirmMock().mockResolvedValue(true);
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(true);
+			expect(getDialogConfirmMock()).toHaveBeenCalledTimes(1);
+			expect(mockSetPoolFaces).toHaveBeenCalledWith(actor, 'fury', []);
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('cancelling the prompt keeps the AE and the pools untouched', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				confirmEndPrompt: 'NIMBLE.confirmKey',
+				clearPoolsOnEnd: ['fury'],
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4] } });
+			getDialogConfirmMock().mockResolvedValue(false);
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(false);
+			expect(mockSetPoolFaces).not.toHaveBeenCalled();
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('treats a dismissed dialog (null) as cancel', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				confirmEndPrompt: 'NIMBLE.confirmKey',
+				clearPoolsOnEnd: ['fury'],
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4] } });
+			getDialogConfirmMock().mockResolvedValue(null);
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(false);
+			expect(mockSetPoolFaces).not.toHaveBeenCalled();
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('renders a plain-text confirmEndPrompt directly in the dialog (homebrew)', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				confirmEndPrompt: 'You will lose all your Fury Dice. End it?',
+				clearPoolsOnEnd: ['fury'],
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4] } });
+			getDialogConfirmMock().mockResolvedValue(true);
+
+			await toggleEffectAE(actor, item, rule);
+
+			const dialogArgs = getDialogConfirmMock().mock.calls[0][0] as { content: string };
+			expect(dialogArgs.content).toContain('You will lose all your Fury Dice. End it?');
+		});
+
+		it('clears every listed pool before deleting the AE, skipping blank ids', async () => {
+			const actor = mkActorWithAE('rage-toggle');
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				clearPoolsOnEnd: ['fury', '  ', '', 'focus'],
+			};
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(true);
+			expect(mockSetPoolFaces).toHaveBeenCalledTimes(2);
+			expect(mockSetPoolFaces).toHaveBeenNthCalledWith(1, actor, 'fury', []);
+			expect(mockSetPoolFaces).toHaveBeenNthCalledWith(2, actor, 'focus', []);
+
+			const lastPoolClearOrder = Math.max(...mockSetPoolFaces.mock.invocationCallOrder);
+			const deleteOrder = actor.deleteEmbeddedDocuments.mock.invocationCallOrder[0];
+			expect(lastPoolClearOrder).toBeLessThan(deleteOrder);
+		});
+
+		it('flips ON (creates) rather than entering the disable path when no AE exists', async () => {
+			const actor = {
+				effects: [],
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+			const rule = { type: 'toggleEffect', id: 'rage-toggle', clearPoolsOnEnd: ['fury'] };
+
+			const ok = await toggleEffectAE(actor, item, rule);
+
+			expect(ok).toBe(true);
+			expect(actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+			expect(mockSetPoolFaces).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('isToggleEffectAE', () => {
+		it('identifies AEs carrying the toggleEffectRuleId flag', () => {
+			const toggleAE = {
+				getFlag: (scope: string, key: string) =>
+					scope === 'nimble' && key === 'toggleEffectRuleId' ? 'rage-toggle' : undefined,
+			};
+			const plainAE = { getFlag: () => undefined };
+			expect(isToggleEffectAE(toggleAE)).toBe(true);
+			expect(isToggleEffectAE(plainAE)).toBe(false);
+			expect(isToggleEffectAE({} as never)).toBe(false);
+		});
+	});
+
+	describe('findToggleEffectRuleById', () => {
+		it('matches by rule id, including disabled rules', () => {
+			const item = {
+				rules: new Map([
+					['0', { type: 'toggleEffect', id: 'other', disabled: false }],
+					['1', { type: 'toggleEffect', id: 'rage-toggle', disabled: true }],
+				]),
+			};
+			expect(findToggleEffectRuleById(item, 'rage-toggle')?.id).toBe('rage-toggle');
+			expect(findToggleEffectRuleById(item, 'missing')).toBeNull();
+			expect(findToggleEffectRuleById({}, 'rage-toggle')).toBeNull();
+		});
+	});
+
+	describe('endToggleEffectFromAE', () => {
+		function mkToggleAE(id = 'ae-active', ruleId = 'rage-toggle', itemId = 'rage-item') {
+			return {
+				id,
+				disabled: false,
+				getFlag: (scope: string, key: string): unknown => {
+					if (scope !== 'nimble') return undefined;
+					if (key === 'toggleEffectRuleId') return ruleId;
+					if (key === 'toggleEffectItemId') return itemId;
+					return undefined;
+				},
+			};
+		}
+
+		it('routes through the rule disable path when item and rule resolve', async () => {
+			const effect = mkToggleAE();
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				clearPoolsOnEnd: ['fury'],
+			};
+			const actor = {
+				effects: [effect],
+				items: {
+					get: (id: string) =>
+						id === 'rage-item'
+							? { id: 'rage-item', name: 'Rage', rules: new Map([['0', rule]]) }
+							: undefined,
+				},
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+
+			const ok = await endToggleEffectFromAE(actor, effect);
+
+			expect(ok).toBe(true);
+			expect(mockSetPoolFaces).toHaveBeenCalledWith(actor, 'fury', []);
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('deletes the AE directly when the owning item is gone', async () => {
+			const effect = mkToggleAE();
+			const actor = {
+				effects: [effect],
+				items: { get: () => undefined },
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+
+			const ok = await endToggleEffectFromAE(actor, effect);
+
+			expect(ok).toBe(true);
+			expect(mockSetPoolFaces).not.toHaveBeenCalled();
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('deletes the AE directly when the rule no longer exists on the item', async () => {
+			const effect = mkToggleAE();
+			const actor = {
+				effects: [effect],
+				items: {
+					get: () => ({ id: 'rage-item', name: 'Rage', rules: new Map() }),
+				},
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+
+			const ok = await endToggleEffectFromAE(actor, effect);
+
+			expect(ok).toBe(true);
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('propagates a user cancel from the confirm prompt', async () => {
+			const effect = mkToggleAE();
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				confirmEndPrompt: 'NIMBLE.confirmKey',
+				clearPoolsOnEnd: ['fury'],
+			};
+			const actor = {
+				effects: [effect],
+				items: {
+					get: () => ({ id: 'rage-item', name: 'Rage', rules: new Map([['0', rule]]) }),
+				},
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4] } });
+			getDialogConfirmMock().mockResolvedValue(false);
+
+			const ok = await endToggleEffectFromAE(actor, effect);
+
+			expect(ok).toBe(false);
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+	});
 });

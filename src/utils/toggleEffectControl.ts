@@ -2,6 +2,11 @@ import { SYSTEM_ID } from '#system';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { buildEffectiveDicePoolMap } from '#utils/dicePool/helpers.js';
 import localize from '#utils/localize.js';
+import {
+	buildToggleEffectAEData,
+	TOGGLE_EFFECT_ITEM_ID_FLAG,
+	TOGGLE_EFFECT_RULE_ID_FLAG,
+} from '../models/rules/toggleEffect.js';
 
 /**
  * Helpers for the UI affordances that drive `toggleEffect` rules from outside
@@ -17,7 +22,7 @@ interface ToggleEffectRuleLike {
 	type: string;
 	id: string;
 	disabled?: boolean;
-	/** i18n key for the confirm-end dialog content. Empty = no prompt. */
+	/** Confirm-end dialog content: plain text or an i18n key. Empty = no prompt. */
 	confirmEndPrompt?: string;
 	/** Pool identifiers to clear when this toggle ends. */
 	clearPoolsOnEnd?: string[];
@@ -42,6 +47,36 @@ interface ActorWithEffects {
 	}>;
 }
 
+/**
+ * True when the AE is the backing effect of a toggleEffect rule. Used by the
+ * conditions list to pull these out of the generic passive/temporary buckets
+ * and into the active-toggles section, whose off switch routes through the
+ * rule-owned toggle lifecycle instead of raw AE deletion.
+ */
+export function isToggleEffectAE(effect: {
+	getFlag?: (scope: string, key: string) => unknown;
+}): boolean {
+	return Boolean(effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_RULE_ID_FLAG));
+}
+
+/**
+ * Find the toggleEffect rule with the given id on the item. Unlike
+ * findToggleEffectRule this matches disabled rules too: an AE left behind by
+ * a since-disabled rule must still be endable through the normal path.
+ */
+export function findToggleEffectRuleById(
+	item: ItemWithRules,
+	ruleId: string,
+): ToggleEffectRuleLike | null {
+	const rules = item?.rules;
+	if (!rules || typeof (rules as { values?: () => unknown }).values !== 'function') return null;
+	for (const rule of (rules as { values: () => Iterable<unknown> }).values()) {
+		const r = rule as ToggleEffectRuleLike;
+		if (r?.type === 'toggleEffect' && r.id === ruleId) return r;
+	}
+	return null;
+}
+
 export function findToggleEffectRule(item: ItemWithRules): ToggleEffectRuleLike | null {
 	const rules = item?.rules;
 	if (!rules || typeof (rules as { values?: () => unknown }).values !== 'function') return null;
@@ -59,7 +94,7 @@ export function findToggleEffectAE(
 	const effects = actor?.effects;
 	if (!effects) return null;
 	for (const effect of effects) {
-		if (effect.getFlag?.(SYSTEM_ID, 'toggleEffectRuleId') === ruleId) return effect;
+		if (effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_RULE_ID_FLAG) === ruleId) return effect;
 	}
 	return null;
 }
@@ -79,21 +114,10 @@ interface ActorForToggle extends ActorWithEffects {
 async function createToggleEffectAE(
 	actor: ActorForToggle,
 	item: ItemForToggle,
-	ruleId: string,
+	rule: ToggleEffectRuleLike,
 ): Promise<void> {
 	await actor.createEmbeddedDocuments('ActiveEffect', [
-		{
-			name: item.name,
-			img: item.img,
-			disabled: false,
-			origin: item.uuid,
-			flags: {
-				[SYSTEM_ID]: {
-					toggleEffectRuleId: ruleId,
-					toggleEffectItemId: item.id,
-				},
-			},
-		},
+		buildToggleEffectAEData(item, rule.id, rule.label),
 	]);
 }
 
@@ -133,16 +157,19 @@ async function disableToggleEffect(
 	const existing = findToggleEffectAE(actor, rule.id);
 	if (!existing) return true;
 
-	const promptKey = rule.confirmEndPrompt?.trim() ?? '';
-	const shouldPrompt = promptKey.length > 0 && hasPoolContentToLose(actor, rule.clearPoolsOnEnd);
+	const prompt = rule.confirmEndPrompt?.trim() ?? '';
+	const shouldPrompt = prompt.length > 0 && hasPoolContentToLose(actor, rule.clearPoolsOnEnd);
 	if (shouldPrompt) {
+		// The prompt accepts either a localization key or plain text, so
+		// homebrew items can set one without shipping translation files.
+		const promptText = game.i18n?.has?.(prompt) ? localize(prompt) : prompt;
 		const confirmed = await foundry.applications.api.DialogV2.confirm({
 			window: {
 				title: localize('NIMBLE.rules.toggleEffect.confirmDialogTitle', {
 					name: rule.label || item.name,
 				}),
 			},
-			content: `<p>${localize(promptKey)}</p>`,
+			content: `<p>${promptText}</p>`,
 			yes: { label: localize('NIMBLE.rules.toggleEffect.confirmDialogConfirm') },
 			no: { label: localize('NIMBLE.rules.toggleEffect.confirmDialogCancel') },
 			rejectClose: false,
@@ -172,8 +199,39 @@ export async function toggleEffectAE(
 ): Promise<boolean> {
 	const existing = findToggleEffectAE(actor, rule.id);
 	if (!existing) {
-		await createToggleEffectAE(actor, item, rule.id);
+		await createToggleEffectAE(actor, item, rule);
 		return true;
 	}
 	return disableToggleEffect(actor, item, rule);
+}
+
+interface ActorWithItems extends ActorForToggle {
+	items?: { get: (id: string) => (ItemForToggle & ItemWithRules) | null | undefined };
+}
+
+/**
+ * End a toggle starting from its backing AE (the conditions-list off switch).
+ * Resolves the owning item and rule from the AE's flags and routes through
+ * toggleEffectAE so the confirm prompt and clearPoolsOnEnd behave exactly
+ * like the action-row switch. When the owning item or rule no longer exists,
+ * falls back to deleting the AE directly; there is no pool cleanup left to
+ * run in that case.
+ *
+ * Returns true if the toggle was ended, false if the user cancelled.
+ */
+export async function endToggleEffectFromAE(
+	actor: ActorWithItems,
+	effect: { id: string; getFlag?: (scope: string, key: string) => unknown },
+): Promise<boolean> {
+	const ruleId = effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_RULE_ID_FLAG);
+	const itemId = effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_ITEM_ID_FLAG);
+	const item = typeof itemId === 'string' ? actor.items?.get(itemId) : null;
+	const rule = item && typeof ruleId === 'string' ? findToggleEffectRuleById(item, ruleId) : null;
+
+	if (!item || !rule) {
+		await actor.deleteEmbeddedDocuments('ActiveEffect', [effect.id]);
+		return true;
+	}
+
+	return toggleEffectAE(actor, item, rule);
 }
