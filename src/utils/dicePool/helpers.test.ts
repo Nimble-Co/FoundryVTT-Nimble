@@ -487,6 +487,68 @@ describe('getDicePoolModifiers', () => {
 	});
 });
 
+describe('Fury Die size breakpoints (Intensifying Fury regression)', () => {
+	// Mirrors the shipped data: rage.json's base dicePool rule (d4) plus
+	// intensifying-fury.json's four level-predicated modifyPool upgrades.
+	// Pins the RAW progression (d4 base, d6 at 6, d8 at 9, d10 at 13, d12 at
+	// 17) so a change to either pack file or the modifier pipeline that
+	// breaks the scaling fails here.
+	function buildBerserkerActor(level: number): MockActor {
+		const rageItem = createMockItem('rage-item', 'Rage', [
+			{
+				type: 'dicePool',
+				id: 'fury-pool-base',
+				identifier: 'fury',
+				scope: 'item',
+				dieSize: 'd4',
+				max: '2',
+				initial: 'zero',
+				refills: [],
+			},
+		]);
+
+		const upgrade = (min: number, dieSize: string, priority: number): MockRule =>
+			({
+				type: 'modifyPool',
+				id: `fury-${dieSize}-l${min}`,
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				dieSize,
+				priority,
+				appliesTo: () => level >= min,
+			}) as MockRule;
+
+		const intensifyingFury = createMockItem('int-fury-item', 'Intensifying Fury', [
+			upgrade(6, 'd6', 2),
+			upgrade(9, 'd8', 3),
+			upgrade(13, 'd10', 4),
+			upgrade(17, 'd12', 5),
+		]);
+
+		return createMockActor([rageItem, intensifyingFury], { level });
+	}
+
+	const breakpoints: Array<[number, DieSize]> = [
+		[1, 'd4'],
+		[5, 'd4'],
+		[6, 'd6'],
+		[8, 'd6'],
+		[9, 'd8'],
+		[12, 'd8'],
+		[13, 'd10'],
+		[16, 'd10'],
+		[17, 'd12'],
+		[20, 'd12'],
+	];
+
+	for (const [level, expected] of breakpoints) {
+		it(`yields ${expected} Fury Dice at level ${level}`, () => {
+			const pools = buildEffectiveDicePoolMap(buildBerserkerActor(level));
+			expect(pools.fury?.dieSize).toBe(expected);
+		});
+	}
+});
+
 describe('applyModifiersToDefinition', () => {
 	const baseDefinition: DicePoolDefinition = {
 		id: 'fury',
