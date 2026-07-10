@@ -165,7 +165,7 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		await setPoolFaces(getActor(), poolId, next);
 	}
 
-	/** Roll one die into a rolled pool (GM tool). Delegates to dicePoolRefill. */
+	/** Roll one die into a rolled pool (owner action). Delegates to dicePoolRefill. */
 	async function rollOneIntoPool(poolId: string): Promise<void> {
 		const pool = pools.find((p) => p.id === poolId);
 		if (!pool || pool.kind !== 'rolled') return;
@@ -203,9 +203,6 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		},
 		get isOwner() {
 			return getActor().isOwner === true;
-		},
-		get isGM() {
-			return (game?.user?.isGM ?? false) === true;
 		},
 		discardRolledDie,
 		discardAllRolled,
