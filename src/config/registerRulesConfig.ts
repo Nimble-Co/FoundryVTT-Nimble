@@ -23,6 +23,7 @@ import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
+import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -58,6 +59,7 @@ export default function registerRulesConfig() {
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
+		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		note: 'NIMBLE.ruleTypes.note',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
@@ -93,6 +95,7 @@ export default function registerRulesConfig() {
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
 		modifyPool: ModifyPoolRule,
+		modifyToggle: ModifyToggleRule,
 		note: NoteRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
