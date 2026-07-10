@@ -11,7 +11,7 @@
 				"type": "toggleEffect",
 				"disabled": false,
 				"id": "rage-toggle",
-				"identifier": "",
+				"identifier": "rage",
 				"label": "Rage",
 				"predicate": {},
 				"priority": 1,
@@ -20,13 +20,15 @@
 				],
 				"turnOff": [
 					"onActorKilled",
+					"onUnconscious",
 					"onEncounterEnd",
 					"onRest"
 				],
 				"confirmEndPrompt": "NIMBLE.rules.featureMessages.berserker.rageEndConfirm",
 				"clearPoolsOnEnd": [
 					"fury"
-				]
+				],
+				"endAfterInactiveRounds": 1
 			},
 			{
 				"type": "dicePool",

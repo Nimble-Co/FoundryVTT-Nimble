@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyToggle",
+				"disabled": false,
+				"id": "deep-rage-suppress-0hp",
+				"identifier": "",
+				"label": "Deep Rage",
+				"predicate": {},
+				"priority": 1,
+				"toggleIdentifier": "rage",
+				"suppressTurnOff": [
+					"onUnconscious"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
