@@ -967,7 +967,19 @@
 				},
 				"confirmDialogTitle": "End {name}?",
 				"confirmDialogConfirm": "End",
-				"confirmDialogCancel": "Cancel"
+				"confirmDialogCancel": "Cancel",
+				"inactivityPrompt": "{actor} has gone {rounds} round(s) without attacking or re-activating {name}. End it?",
+				"endedMessage": "{name} ended: {reason}.",
+				"endReasons": {
+					"onActorKilled": "died",
+					"onActorWounded": "took a wound",
+					"onRest": "completed a rest",
+					"onTurnStart": "turn started",
+					"onTurnEnd": "turn ended",
+					"onEncounterEnd": "combat ended",
+					"onUnconscious": "fell unconscious",
+					"inactivity": "went {rounds} round(s) without attacking or re-activating"
+				}
 			},
 			"unarmedDamage": {
 				"description": "Override the actor’s unarmed-strike damage formula."

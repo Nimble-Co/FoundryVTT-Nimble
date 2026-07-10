@@ -328,8 +328,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	}
 
 	override _onDelete(options, userId: string): void {
-		// Call afterDelete on all rules
-		if (this.rules) {
+		// Call afterDelete on all rules. _onDelete fires on every connected
+		// client; only the initiating user runs the cleanup so side effects
+		// (actor updates, AE deletion) happen exactly once and never from a
+		// client lacking owner permission.
+		if (this.rules && game.user?.id === userId) {
 			for (const rule of this.rules.values()) {
 				const ruleWithAfterDelete = rule as object as {
 					afterDelete?: () => Promise<void>;

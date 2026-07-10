@@ -119,6 +119,17 @@ interface UnconsciousContext {
 	source: NimbleBaseItem | null;
 }
 
+// Context passed to onRoundChanged. Fires once per combatant whenever the
+// combat's round counter changes, in either direction (turn advance across a
+// round boundary, round buttons, or a manual tracker edit). `round` is the
+// new value. Lets rules with round-stamped state react to rewinds, which
+// turn events alone cannot surface.
+interface RoundChangedContext {
+	combat: Combat;
+	actor: NimbleBaseActor;
+	round: number;
+}
+
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
@@ -342,6 +353,11 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/** Hook called once per combatant when the combat's round counter changes. */
+	async onRoundChanged(_context: RoundChangedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
@@ -372,4 +388,5 @@ export {
 	type ItemActivatedContext,
 	type EncounterEndContext,
 	type UnconsciousContext,
+	type RoundChangedContext,
 };
