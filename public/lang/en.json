@@ -1820,7 +1820,8 @@
 			"noTargetsSelected": "No targets selected",
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
-			"removeTarget": "Remove Target"
+			"removeTarget": "Remove Target",
+			"damagePreview": "Damage this target will take (after armor)"
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"

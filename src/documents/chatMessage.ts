@@ -84,6 +84,22 @@ function getSerializedDamageRolls(
 	return serializedRolls;
 }
 
+/**
+ * Read a roll term's flavor from either the live term (`term.flavor` getter) or
+ * its serialized shape (`term.options.flavor`). Flavored numeric terms in a
+ * damage roll are banked dice-pool contributions (e.g. Berserker Fury Dice, or
+ * manually-spent pool faces). Pack-authored formulas never flavor a flat
+ * constant; static/situational modifiers are always added unflavored.
+ */
+function getTermFlavor(term: unknown): string {
+	const serializedTerm = term as { flavor?: unknown; options?: { flavor?: unknown } };
+	if (typeof serializedTerm.flavor === 'string' && serializedTerm.flavor.trim().length > 0) {
+		return serializedTerm.flavor;
+	}
+	const optionsFlavor = serializedTerm.options?.flavor;
+	return typeof optionsFlavor === 'string' ? optionsFlavor : '';
+}
+
 function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number | null {
 	let diceDamage = 0;
 	let hasDiceTerm = false;
@@ -91,9 +107,21 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 	if (!Array.isArray(serializedRoll.terms)) return null;
 
 	for (const term of serializedRoll.terms) {
-		const serializedTerm = term as { faces?: unknown; results?: unknown };
+		const serializedTerm = term as { faces?: unknown; results?: unknown; number?: unknown };
 		const faces = Number(serializedTerm.faces);
-		if (!Number.isFinite(faces) || faces <= 0) continue;
+
+		if (!Number.isFinite(faces) || faces <= 0) {
+			// Banked dice-pool faces (Fury Dice etc.) ship as flavored numeric
+			// terms. Per Nimble rules "your Fury Dice are dice when calculating
+			// damage for monster armor", so they belong in the dice total, not
+			// among the armor-ignored modifiers.
+			if (getTermFlavor(term).length < 1) continue;
+			const numericValue = Number(serializedTerm.number);
+			if (!Number.isFinite(numericValue)) continue;
+			hasDiceTerm = true;
+			diceDamage += numericValue;
+			continue;
+		}
 
 		hasDiceTerm = true;
 
@@ -138,6 +166,14 @@ function getNegativeModifierTotal(serializedRoll: DamageRoll.SerializedData): nu
 
 		const faces = Number(serializedTerm.faces);
 		if (Number.isFinite(faces) && faces > 0) {
+			pendingOperator = '+';
+			continue;
+		}
+
+		// Flavored numeric terms are dice-pool contributions counted as dice by
+		// getDiceDamageTotal, not modifiers, so skip them here to avoid
+		// double-counting.
+		if (getTermFlavor(term).length > 0) {
 			pendingOperator = '+';
 			continue;
 		}
@@ -534,6 +570,78 @@ class NimbleChatMessage extends ChatMessage {
 		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
 		if (!damageApplicationPlan.hasTargets) return true;
 		return damageApplicationPlan.applicableTargets.length > 0;
+	}
+
+	/**
+	 * Collect the damage rolls currently surfaced on this card that carry an
+	 * Apply Damage action: the top-level `damage` / `damageOutcome` nodes for the
+	 * resolved hit/miss/crit context. Save-gated damage is intentionally excluded
+	 * its per-target outcome is unknown until each target rolls its save.
+	 *
+	 * Each entry mirrors what `RollSummary` forwards to `applyDamage`: the
+	 * outcome-scaled value plus the options needed for armor adjustment.
+	 */
+	#collectApplicableDamageRolls(): Array<{ value: number; options: DamageApplyOptions }> {
+		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
+		const isMiss = (this.system as unknown as ActivationCardSystemData).isMiss === true;
+
+		for (const group of this.effectNodes) {
+			for (const node of group) {
+				if (node.type !== 'damage' && node.type !== 'damageOutcome') continue;
+
+				const roll = (node as { roll?: Record<string, unknown> }).roll;
+				if (!roll || typeof roll.class !== 'string') continue;
+
+				const outcome: DamageApplyOutcome =
+					node.type === 'damageOutcome'
+						? (node as DamageOutcomeNode).outcome
+						: isMiss
+							? 'noDamage'
+							: 'fullDamage';
+
+				const multiplier = outcome === 'halfDamage' ? 0.5 : 1;
+				const rollTotal = Number(roll.total ?? 0);
+				const value = Math.ceil((Number.isFinite(rollTotal) ? rollTotal : 0) * multiplier);
+
+				entries.push({
+					value,
+					options: {
+						ignoreArmor: (node as { ignoreArmor?: boolean }).ignoreArmor,
+						outcome,
+						roll: roll as unknown as DamageRoll.SerializedData,
+						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
+					},
+				});
+			}
+		}
+
+		return entries;
+	}
+
+	/**
+	 * Total damage a single target would take from every Apply Damage action on
+	 * this card, accounting for that target's armor. Returns null when the card
+	 * has no applicable damage rolls (healing / condition / save-gated cards), so
+	 * the target list can omit the preview.
+	 */
+	getDamagePreviewForTarget(targetUuid: string): number | null {
+		if (!this.isActivationCard()) return null;
+
+		const damageRolls = this.#collectApplicableDamageRolls();
+		if (damageRolls.length < 1) return null;
+
+		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
+		const actor = tokenDocument?.actor as Actor.Implementation | null;
+		if (!actor) return null;
+
+		let total = 0;
+		for (const { value, options } of damageRolls) {
+			if (options.outcome === 'noDamage') continue;
+			const adjusted = calculateArmorAdjustedDamage({ actor, damage: value, options });
+			if (Number.isFinite(adjusted) && adjusted > 0) total += Math.floor(adjusted);
+		}
+
+		return total;
 	}
 
 	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {
