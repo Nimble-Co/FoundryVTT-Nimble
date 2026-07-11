@@ -23,4 +23,4 @@ export { Migration022CelestialSavingThrow } from './Migration022CelestialSavingT
 export { Migration023SpellClasses } from './Migration023SpellClasses.js';
 export { Migration024OathswornRefillMode } from './Migration024OathswornRefillMode.js';
 export { Migration025DiceConsumerSplit } from './Migration025DiceConsumerSplit.js';
-export { Migration026RageToggleEffect } from './Migration026RageToggleEffect.js';
+export { Migration027RageToggleEffect } from './Migration027RageToggleEffect.js';

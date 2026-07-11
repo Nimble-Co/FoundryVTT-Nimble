@@ -58,10 +58,10 @@ type RuleSource = { type?: unknown; id?: unknown; [key: string]: unknown };
  * name for copies without one. Idempotent: every step checks current state
  * before mutating.
  */
-class Migration026RageToggleEffect extends MigrationBase {
-	static override readonly version = 26;
+class Migration027RageToggleEffect extends MigrationBase {
+	static override readonly version = 27;
 
-	override readonly version = Migration026RageToggleEffect.version;
+	override readonly version = Migration027RageToggleEffect.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
@@ -158,4 +158,4 @@ class Migration026RageToggleEffect extends MigrationBase {
 	}
 }
 
-export { Migration026RageToggleEffect };
+export { Migration027RageToggleEffect };
