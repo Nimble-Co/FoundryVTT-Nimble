@@ -208,13 +208,13 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 
 | Value | Fires from |
 |---|---|
-| `onActorKilled` | `updateActor` when HP drops to 0 |
+| `onActorKilled` | `updateActor` when HP drops to 0 with a full wound track (or no wound track, e.g. monsters) |
 | `onActorWounded` | `updateActor` on bloodied / lastStand transition |
 | `onRest` | `nimble.rest` hook |
 | `onTurnStart` | `combatTurn` start of owner's turn |
 | `onTurnEnd` | `combatTurn` end of owner's turn |
 | `onEncounterEnd` | `updateCombat(started:false)` or `deleteCombat` (dedup'd) |
-| `onUnconscious` | `nimble.conditionApplied` with `condition: 'unconscious'` |
+| `onActorDying` | `updateActor` when HP drops to 0 with the wound track below max, or `nimble.conditionApplied` with `condition: 'dying'` |
 
 ### Worked example: Rage
 

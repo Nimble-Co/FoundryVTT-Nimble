@@ -104,7 +104,7 @@ describe('ModifyToggleRule', () => {
 			expect(choices).toContain('onTurnStart');
 			expect(choices).toContain('onTurnEnd');
 			expect(choices).toContain('onEncounterEnd');
-			expect(choices).toContain('onUnconscious');
+			expect(choices).toContain('onActorDying');
 		});
 	});
 

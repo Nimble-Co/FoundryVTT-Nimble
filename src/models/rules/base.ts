@@ -111,10 +111,11 @@ interface EncounterEndContext {
 	actor: NimbleBaseActor;
 }
 
-// Context passed to onUnconscious. Fires when the unconscious condition is
-// applied to an actor. Distinct from onActorKilled (HP ≤ 0), which can fire
-// for other reasons (dying for PCs, instant-kill effects for monsters).
-interface UnconsciousContext {
+// Context passed to onActorDying. Fires when an actor enters the Dying state:
+// dropped to 0 HP with an unfilled wound track, or the Dying condition applied
+// directly. Distinct from onActorKilled (0 HP with a full wound track, or a
+// monster with no wound track), which represents death rather than dying.
+interface ActorDyingContext {
 	actor: NimbleBaseActor;
 	source: NimbleBaseItem | null;
 }
@@ -348,8 +349,8 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
-	/** Hook called when the unconscious condition is applied to an actor. */
-	async onUnconscious(_context: UnconsciousContext): Promise<void> {
+	/** Hook called when an actor enters the Dying state (0 HP, wounds below max). */
+	async onActorDying(_context: ActorDyingContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
@@ -387,6 +388,6 @@ export {
 	type ActivationCardContext,
 	type ItemActivatedContext,
 	type EncounterEndContext,
-	type UnconsciousContext,
+	type ActorDyingContext,
 	type RoundChangedContext,
 };

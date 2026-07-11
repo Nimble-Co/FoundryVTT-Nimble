@@ -1,5 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type {
+	ActorDyingContext,
 	ActorHealthContext,
 	EncounterEndContext,
 	InitiativeRolledContext,
@@ -10,7 +11,6 @@ import type {
 	RoundChangedContext,
 	SaveResolvedContext,
 	TurnContext,
-	UnconsciousContext,
 } from '../models/rules/base.js';
 import { getActorHealthState } from '../utils/actorHealthState.js';
 import {
@@ -21,7 +21,7 @@ import {
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
 
 const AUTO_APPLY_CONDITIONS_SETTING = 'automation.autoApplyConditions';
-const UNCONSCIOUS_STATUS_ID = 'unconscious';
+const DYING_STATUS_ID = 'dying';
 
 interface ActorWithRules {
 	rules?: NimbleBaseRule[];
@@ -166,21 +166,21 @@ function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, 
 	};
 
 	if (currentHp <= 0) {
-		// Dropping to 0 HP alone means dying/unconscious, not dead. An actor
-		// is killed only at 0 HP with a full wound track; actors without a
-		// wound track (NPCs) die at 0 HP outright.
+		// Dropping to 0 HP alone means dying, not dead. An actor is killed only
+		// at 0 HP with a full wound track; actors without a wound track (NPCs)
+		// die at 0 HP outright.
 		const wounds = getActorWoundsValueAndMax(actor);
 		const isDead = !wounds || wounds.value >= wounds.max;
 		if (isDead) {
 			void dispatch(actorWithRules, 'onActorKilled', healthContext);
 		} else if (hpChanged) {
-			// Only an HP drop signals falling unconscious; a wound gained
+			// Only an HP drop signals entering the Dying state; a wound gained
 			// while already dying must not re-fire it.
-			const unconsciousContext: UnconsciousContext = {
-				actor: actor as unknown as UnconsciousContext['actor'],
+			const dyingContext: ActorDyingContext = {
+				actor: actor as unknown as ActorDyingContext['actor'],
 				source: null,
 			};
-			void dispatch(actorWithRules, 'onUnconscious', unconsciousContext);
+			void dispatch(actorWithRules, 'onActorDying', dyingContext);
 		}
 		return;
 	}
@@ -308,14 +308,14 @@ function handleDeleteCombat(combat: CombatWithCombatants): void {
 
 function handleConditionApplied(payload: NimbleConditionAppliedPayload): void {
 	if (!isAutoApplyEnabled()) return;
-	if (payload.condition !== UNCONSCIOUS_STATUS_ID) return;
+	if (payload.condition !== DYING_STATUS_ID) return;
 	const targetActor = payload.target;
 	if (!targetActor) return;
-	const ctx: UnconsciousContext = {
-		actor: targetActor as unknown as UnconsciousContext['actor'],
-		source: payload.source as UnconsciousContext['source'],
+	const ctx: ActorDyingContext = {
+		actor: targetActor as unknown as ActorDyingContext['actor'],
+		source: payload.source as ActorDyingContext['source'],
 	};
-	void dispatch(targetActor, 'onUnconscious', ctx);
+	void dispatch(targetActor, 'onActorDying', ctx);
 }
 
 let didRegister = false;

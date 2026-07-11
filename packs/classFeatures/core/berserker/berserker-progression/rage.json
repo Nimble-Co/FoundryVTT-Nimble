@@ -20,7 +20,7 @@
 				],
 				"turnOff": [
 					"onActorKilled",
-					"onUnconscious",
+					"onActorDying",
 					"onEncounterEnd",
 					"onRest"
 				],

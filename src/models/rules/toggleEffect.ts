@@ -2,6 +2,7 @@ import { SYSTEM_ID } from '#system';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import localize from '#utils/localize.js';
 import {
+	type ActorDyingContext,
 	type ActorHealthContext,
 	type EncounterEndContext,
 	type ItemActivatedContext,
@@ -9,7 +10,6 @@ import {
 	type RestContext,
 	type RoundChangedContext,
 	type TurnContext,
-	type UnconsciousContext,
 } from './base.js';
 
 const TURN_OFF_CHOICES = [
@@ -19,7 +19,7 @@ const TURN_OFF_CHOICES = [
 	'onTurnStart',
 	'onTurnEnd',
 	'onEncounterEnd',
-	'onUnconscious',
+	'onActorDying',
 ] as const;
 
 type TurnOffEvent = (typeof TURN_OFF_CHOICES)[number];
@@ -269,8 +269,8 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		await this.#maybeTurnOff('onEncounterEnd', context.actor);
 	}
 
-	override async onUnconscious(context: UnconsciousContext): Promise<void> {
-		await this.#maybeTurnOff('onUnconscious', context.actor);
+	override async onActorDying(context: ActorDyingContext): Promise<void> {
+		await this.#maybeTurnOff('onActorDying', context.actor);
 	}
 
 	/**

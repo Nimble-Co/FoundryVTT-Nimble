@@ -54,7 +54,7 @@ interface RuleLike {
 	onInitiativeRolled: Mock;
 	onItemActivated: Mock;
 	onEncounterEnd: Mock;
-	onUnconscious: Mock;
+	onActorDying: Mock;
 	onRoundChanged: Mock;
 }
 
@@ -70,7 +70,7 @@ function createMockRule(): RuleLike {
 		onInitiativeRolled: vi.fn().mockResolvedValue(undefined),
 		onItemActivated: vi.fn().mockResolvedValue(undefined),
 		onEncounterEnd: vi.fn().mockResolvedValue(undefined),
-		onUnconscious: vi.fn().mockResolvedValue(undefined),
+		onActorDying: vi.fn().mockResolvedValue(undefined),
 		onRoundChanged: vi.fn().mockResolvedValue(undefined),
 	};
 }
@@ -268,11 +268,11 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onActorKilled).toHaveBeenCalledTimes(1);
-			expect(rule.onUnconscious).not.toHaveBeenCalled();
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 			expect(rule.onActorWounded).not.toHaveBeenCalled();
 		});
 
-		it('fires onUnconscious at 0 HP when the wound track is not full (dying PC)', async () => {
+		it('fires onActorDying at 0 HP when the wound track is not full (dying PC)', async () => {
 			const rule = createMockRule();
 			const actor = {
 				rules: [rule],
@@ -287,7 +287,7 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 			await Promise.resolve();
 
-			expect(rule.onUnconscious).toHaveBeenCalledTimes(1);
+			expect(rule.onActorDying).toHaveBeenCalledTimes(1);
 			expect(rule.onActorKilled).not.toHaveBeenCalled();
 		});
 
@@ -307,7 +307,7 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onActorKilled).toHaveBeenCalledTimes(1);
-			expect(rule.onUnconscious).not.toHaveBeenCalled();
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 		});
 
 		it('fires onActorWounded when HP changed and state is bloodied', async () => {
@@ -344,10 +344,10 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onActorKilled).toHaveBeenCalledTimes(1);
-			expect(rule.onUnconscious).not.toHaveBeenCalled();
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 		});
 
-		it('does not re-fire onUnconscious for a wounds-only update below max at 0 HP', async () => {
+		it('does not re-fire onActorDying for a wounds-only update below max at 0 HP', async () => {
 			const rule = createMockRule();
 			const actor = {
 				rules: [rule],
@@ -362,7 +362,7 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 			await Promise.resolve();
 
-			expect(rule.onUnconscious).not.toHaveBeenCalled();
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 			expect(rule.onActorKilled).not.toHaveBeenCalled();
 		});
 
@@ -601,8 +601,8 @@ describe('ruleEventDispatch', () => {
 		});
 	});
 
-	describe('nimble.conditionApplied → onUnconscious', () => {
-		it('fires onUnconscious on the target actor’s rules when condition === "unconscious"', async () => {
+	describe('nimble.conditionApplied → onActorDying', () => {
+		it('fires onActorDying on the target actor’s rules when condition === "dying"', async () => {
 			const rule = createMockRule();
 			const targetActor = { rules: [rule] };
 
@@ -610,15 +610,15 @@ describe('ruleEventDispatch', () => {
 			expect(handler).toBeDefined();
 			handler?.({
 				target: targetActor,
-				condition: 'unconscious',
+				condition: 'dying',
 				effect: null,
-				source: { name: 'Sleep' },
+				source: { name: 'Grievous Wound' },
 				rule: null,
 			});
 			await Promise.resolve();
 			await Promise.resolve();
 
-			expect(rule.onUnconscious).toHaveBeenCalledTimes(1);
+			expect(rule.onActorDying).toHaveBeenCalledTimes(1);
 		});
 
 		it('does not fire for other conditions', async () => {
@@ -634,7 +634,7 @@ describe('ruleEventDispatch', () => {
 			});
 			await Promise.resolve();
 
-			expect(rule.onUnconscious).not.toHaveBeenCalled();
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 		});
 
 		it('skips dispatch when the auto-apply setting is disabled', async () => {
@@ -644,14 +644,14 @@ describe('ruleEventDispatch', () => {
 
 			handlers.get('nimble.conditionApplied')?.({
 				target: targetActor,
-				condition: 'unconscious',
+				condition: 'dying',
 				effect: null,
 				source: null,
 				rule: null,
 			});
 			await Promise.resolve();
 
-			expect(rule.onUnconscious).not.toHaveBeenCalled();
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 		});
 	});
 });

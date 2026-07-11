@@ -16,7 +16,7 @@ const RAGE_TOGGLE_RULE = {
 	predicate: {},
 	priority: 1,
 	tags: ['self:raging'],
-	turnOff: ['onActorKilled', 'onUnconscious', 'onEncounterEnd', 'onRest'],
+	turnOff: ['onActorKilled', 'onActorDying', 'onEncounterEnd', 'onRest'],
 	confirmEndPrompt: 'NIMBLE.rules.featureMessages.berserker.rageEndConfirm',
 	clearPoolsOnEnd: ['fury'],
 	endAfterInactiveRounds: 1,
@@ -31,7 +31,7 @@ const DEEP_RAGE_MODIFY_TOGGLE_RULE = {
 	predicate: {},
 	priority: 1,
 	toggleIdentifier: 'rage',
-	suppressTurnOff: ['onUnconscious'],
+	suppressTurnOff: ['onActorDying'],
 };
 
 const RAGE_POOL_NODE_IDS = new Set(['rage-fury-l1', 'rage-fury-l5']);
@@ -142,7 +142,7 @@ class Migration027RageToggleEffect extends MigrationBase {
 		const rules = system.rules as RuleSource[];
 
 		// Replace-or-insert with the canonical shape. Earlier iterations of
-		// this rule suppressed onActorKilled instead of onUnconscious; a
+		// this rule suppressed onActorKilled instead of onActorDying; a
 		// presence-only check would leave those stale copies in place.
 		const index = rules.findIndex((rule) => rule?.id === DEEP_RAGE_MODIFY_TOGGLE_RULE.id);
 		if (index >= 0) {

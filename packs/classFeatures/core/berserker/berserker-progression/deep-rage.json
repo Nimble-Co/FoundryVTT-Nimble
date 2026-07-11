@@ -17,7 +17,7 @@
 				"priority": 1,
 				"toggleIdentifier": "rage",
 				"suppressTurnOff": [
-					"onUnconscious"
+					"onActorDying"
 				]
 			}
 		],

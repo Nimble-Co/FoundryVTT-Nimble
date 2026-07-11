@@ -226,7 +226,7 @@ describe('ToggleEffectRule', () => {
 			expect(choices).toContain('onTurnStart');
 			expect(choices).toContain('onTurnEnd');
 			expect(choices).toContain('onEncounterEnd');
-			expect(choices).toContain('onUnconscious');
+			expect(choices).toContain('onActorDying');
 		});
 	});
 
@@ -571,16 +571,16 @@ describe('ToggleEffectRule', () => {
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
 		});
 
-		it('onUnconscious deletes the AE when listed in turnOff', async () => {
+		it('onActorDying deletes the AE when listed in turnOff', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule(
-				{ tags: ['self:raging'], turnOff: ['onUnconscious'] },
+				{ tags: ['self:raging'], turnOff: ['onActorDying'] },
 				actor,
 			);
 			pushAE(actor, rule.id, rule.item.id);
 
-			type Ctx = Parameters<ToggleEffectRule['onUnconscious']>[0];
-			await rule.onUnconscious({
+			type Ctx = Parameters<ToggleEffectRule['onActorDying']>[0];
+			await rule.onActorDying({
 				actor: actor as unknown as Ctx['actor'],
 				source: null,
 			});

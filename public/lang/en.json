@@ -1021,7 +1021,7 @@
 					"onTurnStart": "turn started",
 					"onTurnEnd": "turn ended",
 					"onEncounterEnd": "combat ended",
-					"onUnconscious": "fell unconscious",
+					"onActorDying": "started dying",
 					"inactivity": "went {rounds} round(s) without attacking or re-activating"
 				}
 			},
