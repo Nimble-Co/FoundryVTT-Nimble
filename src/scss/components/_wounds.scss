@@ -8,9 +8,6 @@
   flex-wrap: wrap;
   margin: 0;
   padding: 0;
-  // Wrap threshold: exactly six 1.75rem pips per column (see the button's
-  // line-height below). Wound tracks above six (Mighty Endurance, Dwarf,
-  // etc.) wrap into further columns; the overlay must not clip them.
   height: 10.5rem;
   width: fit-content;
   max-width: calc(100% - 1.25rem);
@@ -32,14 +29,8 @@
     padding: 0.375rem;
     width: fit-content;
     font-size: var(--nimble-md-text);
-    // Keep each pip at exactly 1.75rem (1rem icon + 2 * 0.375rem padding)
-    // so six per column always fills the list height with no rounding
-    // drift; without this the browser line-height decides how many fit.
     line-height: 1;
-    // Unwounded pips only show during the hover reveal; they need enough
-    // contrast to be findable against dark sheet backgrounds.
     color: #5a5a5a;
-    // Firefox fallback: use text-shadow to simulate text-stroke
     text-shadow:
       -1px -1px 0 #d6d6d6,
       1px -1px 0 #d6d6d6,
@@ -73,7 +64,6 @@
       --nimble-wound-button-opacity: 1;
       --nimble-wound-button-point-events: all;
       color: #b01b19;
-      // Firefox fallback: white stroke simulation
       text-shadow:
         -1px -1px 0 #fff,
         1px -1px 0 #fff,
