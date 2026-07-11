@@ -72,6 +72,10 @@ interface InitiativeRollData {
 
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
 
+/** Actor subtypes that share the monster sheet and can be converted between each other. */
+const MONSTER_ACTOR_TYPES = ['npc', 'minion', 'soloMonster'] as const;
+type MonsterActorType = (typeof MONSTER_ACTOR_TYPES)[number];
+
 function toFiniteInteger(value: unknown): number {
 	const numericValue = Number(value);
 	if (!Number.isFinite(numericValue)) return 0;
@@ -180,6 +184,44 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	/** ------------------------------------------------------ */
 	isType<TypeName extends SystemActorTypes>(type: TypeName): this is NimbleBaseActor<TypeName> {
 		return type === (this.type as SystemActorTypes);
+	}
+
+	/**
+	 * Convert this monster between the standard (`npc`), `minion`, and `soloMonster`
+	 * subtypes, preserving its name, items, and shared system data. Fields that don't
+	 * exist on the target subtype (e.g. an NPC's flunky flag) are dropped by the data
+	 * model when the type changes.
+	 */
+	async convertMonsterType(targetType: MonsterActorType): Promise<this | undefined> {
+		if (!MONSTER_ACTOR_TYPES.includes(this.type as MonsterActorType)) {
+			throw new Error(`Cannot convert actor of type "${this.type}" to a monster subtype.`);
+		}
+
+		if (!MONSTER_ACTOR_TYPES.includes(targetType)) {
+			throw new Error(`Cannot convert a monster to invalid target type "${targetType}".`);
+		}
+
+		if (this.type === targetType) return this;
+
+		// Changing a Document's type requires force-replacing the system field —
+		// Foundry refuses to recursively diff system data across a schema change
+		// ("...can be changed only if the system field is force-replaced..."). Passing
+		// the current system source with diff/recursion disabled lets the target data
+		// model keep shared fields and drop any that don't exist on the new subtype.
+		const updateData = {
+			type: targetType,
+			system: (this.system as { toObject(): object }).toObject(),
+		} as unknown as Parameters<this['update']>[0];
+
+		const updated = (await this.update(updateData, { diff: false, recursive: false })) as
+			| this
+			| undefined;
+
+		// The monster sheet renders different markup per subtype, so close any open
+		// sheet to force a clean re-render the next time it's opened.
+		await this.sheet?.close();
+
+		return updated;
 	}
 
 	/** ------------------------------------------------------ */

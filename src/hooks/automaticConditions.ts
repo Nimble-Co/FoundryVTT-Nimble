@@ -8,6 +8,25 @@ interface AutomaticConditionContext {
 	automaticConditionsActor?: NimbleBaseActor; // Actor reference for postDelete operations
 }
 
+/**
+ * Applying/removing automatic conditions (e.g. Hampered) mutates the actor's
+ * effects, but Foundry fires create/deleteActiveEffect hooks on *every*
+ * connected client. Without a guard, each client runs the follow-up write:
+ * players hit "User lacks permission to create/delete effect on actor" errors,
+ * and one duplicate effect is created per connected user with permission.
+ *
+ * Restrict execution to the single designated active GM so the write happens
+ * exactly once.
+ */
+function isActiveGM(): boolean {
+	const users = game.users as unknown as { activeGM?: { id?: string | null } | null };
+	const activeGmId = users?.activeGM?.id ?? null;
+	// If an active GM is designated, only that user proceeds.
+	if (activeGmId) return activeGmId === game.user?.id;
+	// Fallback (no active GM designated): allow any connected GM.
+	return Boolean(game.user?.isGM);
+}
+
 export const handleAutomaticConditionApplication = {
 	/**
 	 * Before creating an ActiveEffect, check if it should trigger automatic conditions
@@ -46,6 +65,7 @@ export const handleAutomaticConditionApplication = {
 		_userId: string,
 	): Promise<void> => {
 		if (!options.automaticConditionsToApply) return;
+		if (!isActiveGM()) return;
 
 		try {
 			const actor = document.parent as NimbleBaseActor;
@@ -83,6 +103,8 @@ export const handleAutomaticConditionApplication = {
 		_options: ActiveEffect.Database.DeleteOptions & AutomaticConditionContext,
 		_userId: string,
 	): Promise<void> => {
+		if (!isActiveGM()) return;
+
 		try {
 			const actor = document.parent as NimbleBaseActor;
 			const conditionIds = Array.from(document.statuses);

@@ -7,6 +7,7 @@
 	import { createSubscriber } from 'svelte/reactivity';
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import { registerCombatStateHooks } from '../../../utils/combatState.js';
+	import getLanguageName from '../../../utils/getLanguageName.js';
 	import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 	import localize from '../../../utils/localize.js';
 	import { SYSTEM_ID } from '#system';
@@ -32,8 +33,9 @@
 	}
 
 	function getLanguageProficiencies(proficiencies: Iterable<string>) {
+		const ancestryIdentifier = actor.ancestry?.identifier ?? null;
 		return [...proficiencies]
-			.map((key): string => languages[key] ?? key)
+			.map((key): string => getLanguageName(key, { ancestryIdentifier }))
 			.sort((a, b) => a.localeCompare(b));
 	}
 
@@ -94,7 +96,7 @@
 		}
 	}
 
-	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
+	const { armorTypesPlural } = CONFIG.NIMBLE;
 	let actor: NimbleCharacter = getContext('actor');
 	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 	let initiativeRequestPending = $state(false);

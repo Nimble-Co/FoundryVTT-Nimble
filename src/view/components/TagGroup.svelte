@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TagGroupOption } from '#types/tagGroupOption.js';
+	import isImageIcon from '#utils/isImageIcon.js';
 
 	interface props {
 		disabled?: boolean;
@@ -29,7 +30,11 @@
 			onclick={(event) => toggleOption(option.value, event)}
 		>
 			{#if option.icon}
-				<i class={option.icon}></i>
+				{#if isImageIcon(option.icon)}
+					<img class="nimble-tag-group__option-image" src={option.icon} alt="" />
+				{:else}
+					<i class={option.icon}></i>
+				{/if}
 			{/if}
 
 			{option.label}
@@ -62,6 +67,14 @@
 
 		&__option {
 			display: contents;
+		}
+
+		&__option-image {
+			width: 1em;
+			height: 1em;
+			object-fit: contain;
+			border: none;
+			flex: 0 0 auto;
 		}
 
 		&__option-button {

@@ -1,4 +1,6 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
+import registerBabeleHooks from './hooks/babeleInit.js';
+import registerBabeleInstallNotice from './hooks/babeleInstallNotice.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
@@ -8,6 +10,7 @@ import { registerWoundTriggerHooks } from './hooks/chargePoolTriggers/woundTrigg
 import registerChargeSystemHooks from './hooks/chargeSystem.js';
 import registerCombatantDefeatSync from './hooks/combatantHooks/combatantDefeatSync.js';
 import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHealthStateSync.js';
+import registerDyingActionLimitSync from './hooks/combatantHooks/dyingActionLimitSync.js';
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
@@ -111,6 +114,7 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerCombatantHealthStateSync();
+registerDyingActionLimitSync();
 registerChargeSystemHooks();
 registerDicePoolSystemHooks();
 registerWoundTriggerHooks();
@@ -124,6 +128,8 @@ registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
 registerRuleEventDispatch();
+registerBabeleHooks();
+registerBabeleInstallNotice();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

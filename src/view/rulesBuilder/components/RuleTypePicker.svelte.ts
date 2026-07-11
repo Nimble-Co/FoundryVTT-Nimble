@@ -18,6 +18,7 @@ const RULE_ICONS: Record<string, string> = {
 	combatMana: 'fa-solid fa-droplet',
 	conditionImmunity: 'fa-solid fa-shield-virus',
 	damageBonus: 'fa-solid fa-explosion',
+	dyingActionLimit: 'fa-solid fa-skull',
 	grantItem: 'fa-solid fa-gift',
 	grantProficiency: 'fa-solid fa-graduation-cap',
 	grantSpells: 'fa-solid fa-wand-magic-sparkles',

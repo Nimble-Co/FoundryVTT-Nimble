@@ -10,7 +10,8 @@
 				"type": "maxHitDice",
 				"label": "Feisty",
 				"value": "1",
-				"dieSize": 0
+				"dieSize": 0,
+				"id": "2lMztAia47L6iT1s"
 			}
 		],
 		"description": "<p>+1 max Hit Die. [M]</p>",

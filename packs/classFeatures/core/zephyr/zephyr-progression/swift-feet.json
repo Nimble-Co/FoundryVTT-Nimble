@@ -13,7 +13,8 @@
 				"label": "Swift Feet (2)",
 				"predicate": {
 					"armor": "unarmored"
-				}
+				},
+				"id": "N6AjtypNnAog0Yxe"
 			},
 			{
 				"type": "initiativeBonus",
@@ -21,7 +22,8 @@
 				"label": "Swift Feet Initiative Bonus",
 				"predicate": {
 					"armor": "unarmored"
-				}
+				},
+				"id": "lax2tm9WANtF27kW"
 			},
 			{
 				"type": "speedBonus",
@@ -32,7 +34,8 @@
 					"level": {
 						"min": 9
 					}
-				}
+				},
+				"id": "JflZ8p8jDbfUKhtr"
 			}
 		],
 		"activation": {

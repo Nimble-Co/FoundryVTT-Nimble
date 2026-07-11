@@ -1,43 +1,20 @@
-<script>
-	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
-	import { SYSTEM_ID } from '#system';
+<script lang="ts">
 	import { getContext } from 'svelte';
-	let actor = getContext('actor');
-	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
+	import { SYSTEM_ID } from '#system';
+	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
+	import localize from '#utils/localize.ts';
+	import CharacterJsonExportButton from '#view/sheets/components/CharacterJsonExportButton.svelte';
+	import CharacterPdfExportButton from '#view/sheets/character/pdfExport/CharacterPdfExportButton.svelte';
+	import { createPlayerCharacterSettingsTabState } from './PlayerCharacterSettingsTabState.svelte.ts';
 
+	const actor = getContext('actor');
 	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 
-	function updateBonusInventorySlots(newValue) {
-		if (newValue < 0) return;
-
-		actor.update({ 'system.inventory.bonusSlots': newValue });
-	}
-
-	async function updateHighestUnlockedSpellTier(newValue) {
-		if (newValue < 0) return;
-		await actor.update({ 'system.resources.highestUnlockedSpellTier': newValue });
-	}
-
-	let automaticallyExecuteAvailableMacros = $derived(
-		flags?.automaticallyExecuteAvailableMacros ?? true,
+	const state = createPlayerCharacterSettingsTabState(
+		() => actor,
+		() => $editingEnabledStore ?? true,
 	);
-
-	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
-	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
-	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
-
-	let bonusInventorySlots = $derived(actor.reactive?.system?.inventory?.bonusSlots ?? 0);
-
-	let compactSkillsView = $derived(flags?.compactSkillsView ?? true);
-	let includeCurrencyBulk = $derived(flags?.includeCurrencyBulk ?? true);
-	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
-	let showPassiveSkillScores = $derived(flags?.showPassiveSkillScores ?? false);
-	let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
-
-	let highestUnlockedSpellTier = $derived(
-		actor.reactive?.system?.resources?.highestUnlockedSpellTier ?? 0,
-	);
+	const { updateBonusInventorySlots, updateHighestUnlockedSpellTier } = state;
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -54,9 +31,9 @@
 
 				<input
 					type="number"
-					value={actorImageXOffset}
+					value={state.actorImageXOffset}
 					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageXOffset', target.value)}
-					disabled={!editingEnabled}
+					disabled={!state.editingEnabled}
 				/>
 			</label>
 
@@ -67,9 +44,9 @@
 
 				<input
 					type="number"
-					value={actorImageYOffset}
+					value={state.actorImageYOffset}
 					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageYOffset', target.value)}
-					disabled={!editingEnabled}
+					disabled={!state.editingEnabled}
 				/>
 			</label>
 
@@ -80,9 +57,9 @@
 
 				<input
 					type="number"
-					value={actorImageScale}
+					value={state.actorImageScale}
 					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageScale', target.value)}
-					disabled={!editingEnabled}
+					disabled={!state.editingEnabled}
 				/>
 			</label>
 		</div>
@@ -96,10 +73,10 @@
 		<label class="nimble-field">
 			<input
 				type="checkbox"
-				checked={automaticallyExecuteAvailableMacros}
+				checked={state.automaticallyExecuteAvailableMacros}
 				onchange={({ target }) =>
 					actor.setFlag(SYSTEM_ID, 'automaticallyExecuteAvailableMacros', target.checked)}
-				disabled={!editingEnabled}
+				disabled={!state.editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Execute Item Macros on Item Activation </span>
@@ -108,10 +85,10 @@
 		<label class="nimble-field">
 			<input
 				type="checkbox"
-				checked={showEmbeddedDocumentImages}
+				checked={state.showEmbeddedDocumentImages}
 				onchange={({ target }) =>
 					actor.setFlag(SYSTEM_ID, 'showEmbeddedDocumentImages', target.checked)}
-				disabled={!editingEnabled}
+				disabled={!state.editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Show Embedded Document Images </span>
@@ -126,21 +103,21 @@
 		<label class="nimble-field">
 			<input
 				type="checkbox"
-				checked={trackInventorySlots}
+				checked={state.trackInventorySlots}
 				onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'trackInventorySlots', target.checked)}
-				disabled={!editingEnabled}
+				disabled={!state.editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Track Inventory Slots </span>
 		</label>
 
-		{#if trackInventorySlots}
+		{#if state.trackInventorySlots}
 			<label class="nimble-field">
 				<input
 					type="checkbox"
-					checked={includeCurrencyBulk}
+					checked={state.includeCurrencyBulk}
 					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'includeCurrencyBulk', target.checked)}
-					disabled={!editingEnabled}
+					disabled={!state.editingEnabled}
 				/>
 
 				<span class="nimble-field__label"> Automatically Include Currency Bulk </span>
@@ -153,14 +130,14 @@
 						data-button-variant="basic"
 						type="button"
 						aria-label="Decrement Bonus Inventory Slots"
-						onclick={() => updateBonusInventorySlots(bonusInventorySlots - 1)}
-						disabled={!editingEnabled}
+						onclick={() => updateBonusInventorySlots(state.bonusInventorySlots - 1)}
+						disabled={!state.editingEnabled}
 					>
 						<i class="fa-solid fa-minus"></i>
 					</button>
 
 					<span class="nimble-editable-numeric-field__value">
-						{bonusInventorySlots}
+						{state.bonusInventorySlots}
 					</span>
 
 					<button
@@ -168,8 +145,8 @@
 						data-button-variant="basic"
 						type="button"
 						aria-label="Increment Bonus Inventory Slots"
-						onclick={() => updateBonusInventorySlots(bonusInventorySlots + 1)}
-						disabled={!editingEnabled}
+						onclick={() => updateBonusInventorySlots(state.bonusInventorySlots + 1)}
+						disabled={!state.editingEnabled}
 					>
 						<i class="fa-solid fa-plus"></i>
 					</button>
@@ -188,9 +165,9 @@
 		<label class="nimble-field">
 			<input
 				type="checkbox"
-				checked={compactSkillsView}
+				checked={state.compactSkillsView}
 				onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'compactSkillsView', target.checked)}
-				disabled={!editingEnabled}
+				disabled={!state.editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Use Two-Column Skills View </span>
@@ -199,10 +176,10 @@
 		<label class="nimble-field">
 			<input
 				type="checkbox"
-				checked={showPassiveSkillScores}
+				checked={state.showPassiveSkillScores}
 				onchange={({ target }) =>
 					actor.setFlag(SYSTEM_ID, 'showPassiveSkillScores', target.checked)}
-				disabled={!editingEnabled}
+				disabled={!state.editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Show Passive Skill Scores </span>
@@ -221,23 +198,23 @@
 					data-button-variant="basic"
 					type="button"
 					aria-label="Decrement Highest Unlocked Spell Tier"
-					disabled={!editingEnabled}
-					onclick={() => updateHighestUnlockedSpellTier(highestUnlockedSpellTier - 1)}
+					disabled={!state.editingEnabled}
+					onclick={() => updateHighestUnlockedSpellTier(state.highestUnlockedSpellTier - 1)}
 				>
 					<i class="fa-solid fa-minus"></i>
 				</button>
 
 				<span class="nimble-editable-numeric-field__value">
-					{highestUnlockedSpellTier}
+					{state.highestUnlockedSpellTier}
 				</span>
 
 				<button
 					class="nimble-button"
 					data-button-variant="basic"
 					type="button"
-					disabled={!editingEnabled}
+					disabled={!state.editingEnabled}
 					aria-label="Increment Highest Unlocked Spell Tier"
-					onclick={() => updateHighestUnlockedSpellTier(highestUnlockedSpellTier + 1)}
+					onclick={() => updateHighestUnlockedSpellTier(state.highestUnlockedSpellTier + 1)}
 				>
 					<i class="fa-solid fa-plus"></i>
 				</button>
@@ -250,12 +227,27 @@
 				class="nimble-button"
 				data-button-variant="full-width"
 				type="button"
-				disabled={!editingEnabled}
+				disabled={!state.editingEnabled}
 				aria-label="Reset Highest Unlocked Spell Tier"
 				onclick={() => updateHighestUnlockedSpellTier(getHighestSpellTier(actor))}
 			>
 				Reset spell tier
 			</button>
+		</div>
+	</section>
+
+	<section>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize(CONFIG.NIMBLE.jsonExport.sectionHeader)}
+			</h3>
+		</header>
+
+		<div class="nimble-field">
+			<CharacterPdfExportButton {actor} />
+		</div>
+		<div class="nimble-field">
+			<CharacterJsonExportButton {actor} />
 		</div>
 	</section>
 </section>

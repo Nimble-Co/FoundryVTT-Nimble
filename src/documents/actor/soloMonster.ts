@@ -3,6 +3,7 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
+import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefaults.js';
 
 type MonsterFeatureSubtype = 'bloodied' | 'lastStand';
 
@@ -24,6 +25,21 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		super.prepareBaseData();
 
 		this.tags.add('solo-monster');
+	}
+
+	protected override async _preCreate(
+		data: Actor.CreateData,
+		options: Actor.Database.PreCreateOptions,
+		user: User.Implementation,
+		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
+	): Promise<boolean | void> {
+		// A solo monster is a single boss-tier creature, so its token is linked:
+		// it persists as one tracked actor whose HP updates live, unlike the
+		// unlinked NPC/minion tokens that each track their own HP.
+		const prototypeToken = { ...buildMonsterPrototypeTokenDefaults(), actorLink: true };
+		this.updateSource({ prototypeToken } as Record<string, unknown>);
+
+		return super._preCreate(data, options, user);
 	}
 
 	override prepareDerivedData() {

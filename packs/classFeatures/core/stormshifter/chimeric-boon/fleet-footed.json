@@ -10,7 +10,8 @@
 			{
 				"type": "speedBonus",
 				"value": "2",
-				"label": "Fleet Footed"
+				"label": "Fleet Footed",
+				"id": "EcMJKDIwbT3q5cP3"
 			}
 		],
 		"activation": {

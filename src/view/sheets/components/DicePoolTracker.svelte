@@ -105,7 +105,7 @@
 							</button>
 						{/each}
 
-						{#if pool.kind === 'rolled' && pool.faces.length < pool.max && tracker.isGM}
+						{#if pool.kind === 'rolled' && pool.faces.length < pool.max && tracker.isOwner}
 							<button
 								class="dice-pool-tracker__die-chip dice-pool-tracker__add-die"
 								type="button"
@@ -173,7 +173,7 @@
 							<i class="fa-solid {getDieFaceIcon(pool.dieSize)}"></i>
 						</div>
 
-						{#if pool.kind === 'rolled' && pool.faces.length < pool.max && tracker.isGM}
+						{#if pool.kind === 'rolled' && pool.faces.length < pool.max && tracker.isOwner}
 							<button
 								class="dice-pool-tracker__die-chip dice-pool-tracker__add-die"
 								type="button"

@@ -32,6 +32,9 @@ describe('NimbleCombat', () => {
 		clearExpandedTurnIdentityHint('combat-legendary-previous-turn-occurrence');
 		clearExpandedTurnIdentityHint('combat-start-top-player');
 		clearExpandedTurnIdentityHint('combat-start-local-combatant-sync');
+		clearExpandedTurnIdentityHint('combat-set-active-turn');
+		clearExpandedTurnIdentityHint('combat-drop-take-turn');
+		clearExpandedTurnIdentityHint('combat-drop-keep-active');
 
 		globals().game.user = { isGM: true, role: 4 };
 		(
@@ -509,6 +512,9 @@ describe('NimbleCombat', () => {
 		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = vi
 			.fn()
 			.mockResolvedValue(combat);
+		(
+			combat as NimbleCombat & { updateEmbeddedDocuments: ReturnType<typeof vi.fn> }
+		).updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 
 		await combat.nextTurn();
 
@@ -595,6 +601,301 @@ describe('NimbleCombat', () => {
 		});
 	});
 
+	it('moves the active turn to the chosen combatant without advancing the round', async () => {
+		const combatId = 'combat-set-active-turn';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			started: true,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo]),
+			turns: [playerOne, playerTwo],
+			turn: 0,
+			combatant: playerOne,
+		} as unknown as Combat.CreateData);
+		const update = vi.fn().mockResolvedValue(combat);
+		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = update;
+
+		const changed = await combat.setActiveTurnToCombatant('player-two');
+
+		expect(changed).toBe(true);
+		expect(combat.turn).toBe(1);
+		expect(update).toHaveBeenCalledWith({
+			turn: 1,
+			'flags.nimble.expandedTurnIdentity': {
+				combatantId: 'player-two',
+				occurrence: 0,
+			},
+		});
+		// Round is never part of the persisted update.
+		expect(update).not.toHaveBeenCalledWith(expect.objectContaining({ round: expect.anything() }));
+	});
+
+	it('does not change the turn when the target is already active', async () => {
+		const combatId = 'combat-set-active-turn';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			started: true,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo]),
+			turns: [playerOne, playerTwo],
+			turn: 0,
+			combatant: playerOne,
+		} as unknown as Combat.CreateData);
+		const update = vi.fn().mockResolvedValue(combat);
+		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = update;
+
+		const changed = await combat.setActiveTurnToCombatant('player-one');
+
+		expect(changed).toBe(false);
+		expect(combat.turn).toBe(0);
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('refuses to set the active turn before combat has started', async () => {
+		const combatId = 'combat-set-active-turn';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			started: false,
+			round: 0,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo]),
+			turns: [playerOne, playerTwo],
+			turn: 0,
+			combatant: playerOne,
+		} as unknown as Combat.CreateData);
+		const update = vi.fn().mockResolvedValue(combat);
+		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = update;
+
+		const changed = await combat.setActiveTurnToCombatant('player-two');
+
+		expect(changed).toBe(false);
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('swaps the active combatant and the target combatant in the turn order', async () => {
+		const combatId = 'combat-swap-turn';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actionsCurrent: 2,
+			actionsMax: 2,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actionsCurrent: 2,
+			actionsMax: 2,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			started: true,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo]),
+			turns: [playerOne, playerTwo],
+			turn: 0,
+			combatant: playerOne,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+						const nextSort = update['system.sort'];
+						if (typeof nextSort === 'number') {
+							foundry.utils.setProperty(target, 'system.sort', nextSort);
+						}
+					}
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+		// Reflect the sort exchange in the turn order, mirroring the real setupTurns sort.
+		combat.setupTurns = vi.fn(() =>
+			[...combat.combatants.contents].sort(
+				(a, b) =>
+					(foundry.utils.getProperty(a, 'system.sort') as number) -
+					(foundry.utils.getProperty(b, 'system.sort') as number),
+			),
+		);
+
+		const changed = await combat.swapTurnWithActiveCombatant('player-two');
+
+		expect(changed).toBe(true);
+		// The two combatants exchanged positions in the order.
+		expect(foundry.utils.getProperty(playerOne, 'system.sort')).toBe(2);
+		expect(foundry.utils.getProperty(playerTwo, 'system.sort')).toBe(1);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{ _id: 'player-one', 'system.sort': 2 },
+			{ _id: 'player-two', 'system.sort': 1 },
+		]);
+		// The target now holds the active turn at the front of the order.
+		expect(combat.turns[combat.turn ?? -1]?.id).toBe('player-two');
+	});
+
+	it('ends the handed-off turn and refills actions when the active combatant is out of actions', async () => {
+		const combatId = 'combat-handoff-end-turn';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			started: true,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo]),
+			turns: [playerOne, playerTwo],
+			turn: 0,
+			combatant: playerOne,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.setActiveTurnToCombatant('player-two');
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			expect.objectContaining({
+				_id: 'player-one',
+				'system.actions.base.current': 3,
+				'system.actions.base.additional': 0,
+				'system.actions.heroic.defendAvailable': true,
+				'system.actions.heroic.interposeAvailable': true,
+				'system.actions.heroic.opportunityAttackAvailable': true,
+				'system.actions.heroic.helpAvailable': true,
+			}),
+		]);
+	});
+
+	it('does not refill the handed-off combatant when they still have actions left', async () => {
+		const combatId = 'combat-handoff-keep-actions';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			started: true,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo]),
+			turns: [playerOne, playerTwo],
+			turn: 0,
+			combatant: playerOne,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.setActiveTurnToCombatant('player-two');
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
 	it('restores non-player actions to max when rewinding to a previous monster turn', async () => {
 		const combatId = 'combat-rewind-restore-monster-actions';
 		const monster = createMockCombatant({
@@ -669,6 +970,277 @@ describe('NimbleCombat', () => {
 			},
 		]);
 		expect(foundry.utils.getProperty(monster, 'system.actions.base.current')).toBe(3);
+	});
+
+	it('restores a solo monster’s actions to max when advancing forward into its turn', async () => {
+		const combatId = 'combat-advance-restore-monster-actions';
+		const monster = createMockCombatant({
+			id: 'monster-advance',
+			type: 'soloMonster',
+			sort: 1,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+		const player = createMockCombatant({
+			id: 'player-acting',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 10,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & {
+				turn?: number;
+				combatant?: Combatant.Implementation | null;
+			},
+		) {
+			// Advance from the player to the interleaved solo-monster turn.
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([player, monster]),
+			turns: [player, monster],
+			turn: 0,
+			combatant: player,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+						const nextActions = update['system.actions.base.current'];
+						if (typeof nextActions === 'number') {
+							foundry.utils.setProperty(target, 'system.actions.base.current', nextActions);
+						}
+					}
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+
+		await combat.nextTurn();
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'monster-advance',
+				'system.actions.base.current': 3,
+			},
+		]);
+		expect(foundry.utils.getProperty(monster, 'system.actions.base.current')).toBe(3);
+	});
+
+	it('refills the outgoing hero on turn-end even when Foundry reports the wrong combatant', async () => {
+		const combatId = 'combat-end-turn-wrong-combatant';
+		const outgoingHero = createMockCombatant({
+			id: 'outgoing-hero',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 8,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const monster = createMockCombatant({
+			id: 'solo-monster',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 1,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+		) {
+			// Foundry fires the turn-end event during the advance, but resolves the ending
+			// combatant from its stale `previous` snapshot — here, the wrong one (the monster).
+			await (this as unknown as NimbleCombat)._onEndTurn(monster, {} as Combat.TurnEventContext);
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([outgoingHero, monster]),
+			turns: [outgoingHero, monster],
+			turn: 0,
+			combatant: outgoingHero,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextTurn();
+
+		// The hero whose turn actually ended is refilled to max, despite Foundry naming the monster.
+		expect(outgoingHero.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				'system.actions.base.current': 3,
+				'system.actions.base.additional': 0,
+			}),
+		);
+		// The monster never receives the character-style turn-end refill.
+		expect(monster.update).not.toHaveBeenCalled();
+	});
+
+	it('refills the outgoing hero on turn-end even when Foundry never fires _onEndTurn', async () => {
+		// Regression: under the expanded solo-monster turn order, Foundry's cached turn history
+		// can desync from our directly-resynced turn index, so its turn-event dispatcher computes
+		// an empty interval and skips the outgoing hero's `_onEndTurn` entirely. The last hero
+		// before the solo-monster's trailing turn was left at 0 actions. `nextTurn` must backstop
+		// the refill even though `_onEndTurn` was never called.
+		const combatId = 'combat-end-turn-no-event';
+		const outgoingHero = createMockCombatant({
+			id: 'outgoing-hero',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 8,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const monster = createMockCombatant({
+			id: 'solo-monster',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 1,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+		) {
+			// Advance the turn WITHOUT firing `_onEndTurn` — reproducing Foundry skipping the
+			// outgoing hero's end-of-turn event.
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([outgoingHero, monster]),
+			turns: [outgoingHero, monster],
+			turn: 0,
+			combatant: outgoingHero,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextTurn();
+
+		// The hero whose turn ended is refilled to max via the backstop.
+		expect(outgoingHero.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				'system.actions.base.current': 3,
+				'system.actions.base.additional': 0,
+			}),
+		);
+		// The backstop fires exactly once — one hook call, one refill update.
+		expect(outgoingHero.update).toHaveBeenCalledTimes(1);
+		expect(monster.update).not.toHaveBeenCalled();
+	});
+
+	it('does not double-refill the outgoing hero when both _onEndTurn and the backstop run', async () => {
+		// When Foundry DOES fire `_onEndTurn` for the correct outgoing hero, the post-advance
+		// backstop must recognize the refill already happened and not run it (or the turn-end
+		// hook) a second time.
+		const combatId = 'combat-end-turn-no-double';
+		const outgoingHero = createMockCombatant({
+			id: 'outgoing-hero',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 8,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const monster = createMockCombatant({
+			id: 'solo-monster',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 1,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+		) {
+			await (this as unknown as NimbleCombat)._onEndTurn(
+				outgoingHero,
+				{} as Combat.TurnEventContext,
+			);
+			this.turn = 1;
+			this.combatant = monster;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([outgoingHero, monster]),
+			turns: [outgoingHero, monster],
+			turn: 0,
+			combatant: outgoingHero,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextTurn();
+
+		// Refilled exactly once — the backstop is a no-op because `_onEndTurn` already refilled.
+		expect(outgoingHero.update).toHaveBeenCalledTimes(1);
+		expect(outgoingHero.update).toHaveBeenCalledWith(
+			expect.objectContaining({ 'system.actions.base.current': 3 }),
+		);
 	});
 
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {
@@ -3412,9 +3984,11 @@ describe('NimbleCombat', () => {
 			combatant: character,
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 		};
 
 		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 
 		await combat.nextTurn();
 
@@ -3476,6 +4050,112 @@ describe('NimbleCombat', () => {
 				'system.sort': 4,
 			},
 		]);
+	});
+
+	it('hands the active turn to a combatant dragged ahead of the active combatant', async () => {
+		globals().game.user.isGM = true;
+		const combatId = 'combat-drop-take-turn';
+		const source = createMockCombatant({
+			id: 'player-source',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const active = createMockCombatant({
+			id: 'player-active',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		// Turn order after the reorder: source is now ahead of the previously active combatant.
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([source, active]),
+			turns: [source, active],
+			turn: 1,
+			combatant: active,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		foundryUtils().performIntegerSort.mockReturnValue([
+			{ target: source, update: { 'system.sort': 1 } },
+			{ target: active, update: { 'system.sort': 2 } },
+		]);
+
+		const dropEvent = createCombatDropEvent({
+			sourceId: 'player-source',
+			targetId: 'player-active',
+			before: true,
+		});
+
+		await combat._onDrop(dropEvent);
+
+		expect(combat.turn).toBe(0);
+		expect(combat.update).toHaveBeenCalledWith({
+			turn: 0,
+			'flags.nimble.expandedTurnIdentity': {
+				combatantId: 'player-source',
+				occurrence: 0,
+			},
+		});
+	});
+
+	it('keeps the active combatant when a reorder does not move ahead of it', async () => {
+		globals().game.user.isGM = true;
+		const combatId = 'combat-drop-keep-active';
+		const active = createMockCombatant({
+			id: 'player-active',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const source = createMockCombatant({
+			id: 'player-source',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		// Turn order after the reorder: source remains behind the active combatant.
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([active, source]),
+			turns: [active, source],
+			turn: 0,
+			combatant: active,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		foundryUtils().performIntegerSort.mockReturnValue([
+			{ target: source, update: { 'system.sort': 2 } },
+			{ target: active, update: { 'system.sort': 1 } },
+		]);
+
+		const dropEvent = createCombatDropEvent({
+			sourceId: 'player-source',
+			targetId: 'player-active',
+			before: false,
+		});
+
+		await combat._onDrop(dropEvent);
+
+		expect(combat.turn).toBe(0);
+		expect(combat.update).not.toHaveBeenCalled();
 	});
 
 	it('uses distinct visible turn siblings for GM reorder sorting', async () => {

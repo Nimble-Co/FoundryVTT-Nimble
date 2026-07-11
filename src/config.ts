@@ -41,6 +41,14 @@ const abilityScoreAbbreviations: Record<AbilityKeyType, string> = {
 	will: 'NIMBLE.abilityScoreAbbreviations.will',
 };
 
+// Used to color- and icon-code each skill by the ability score it is tied to.
+const abilityScoreIcons: Record<AbilityKeyType, string> = {
+	strength: 'fa-solid fa-dumbbell',
+	dexterity: 'fa-solid fa-bolt',
+	intelligence: 'fa-solid fa-scroll',
+	will: 'fa-solid fa-fire',
+};
+
 const abilityScoreTooltips = {
 	advantageOnSave: 'NIMBLE.abilityScoreTooltips.advantageOnSave',
 	disadvantageOnSave: 'NIMBLE.abilityScoreTooltips.disadvantageOnSave',
@@ -131,6 +139,7 @@ const characterCreation = {
 
 const actorImport = {
 	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
+	jsonButtonLabel: 'NIMBLE.actorImport.jsonButtonLabel',
 	dialogTitle: 'NIMBLE.actorImport.dialogTitle',
 	searchPlaceholder: 'NIMBLE.actorImport.searchPlaceholder',
 	selectAll: 'NIMBLE.actorImport.selectAll',
@@ -143,6 +152,27 @@ const actorImport = {
 	loadMore: 'NIMBLE.actorImport.loadMore',
 	successMessage: 'NIMBLE.actorImport.successMessage',
 	partialSuccessMessage: 'NIMBLE.actorImport.partialSuccessMessage',
+	json: {
+		dialogTitle: 'NIMBLE.actorImport.json.dialogTitle',
+		selectPrompt: 'NIMBLE.actorImport.json.selectPrompt',
+		selectHint: 'NIMBLE.actorImport.json.selectHint',
+		parseError: 'NIMBLE.actorImport.json.parseError',
+		notACharacterError: 'NIMBLE.actorImport.json.notACharacterError',
+		wrongSystemError: 'NIMBLE.actorImport.json.wrongSystemError',
+		importError: 'NIMBLE.actorImport.json.importError',
+		success: 'NIMBLE.actorImport.json.success',
+		unnamed: 'NIMBLE.actorImport.json.unnamed',
+		unnamedItem: 'NIMBLE.actorImport.json.unnamedItem',
+		statLevel: 'NIMBLE.actorImport.json.statLevel',
+		statHp: 'NIMBLE.actorImport.json.statHp',
+		statItems: 'NIMBLE.actorImport.json.statItems',
+		contentsHeader: 'NIMBLE.actorImport.json.contentsHeader',
+		levelTag: 'NIMBLE.actorImport.json.levelTag',
+		noItems: 'NIMBLE.actorImport.json.noItems',
+		chooseDifferent: 'NIMBLE.actorImport.json.chooseDifferent',
+		confirm: 'NIMBLE.actorImport.json.confirm',
+		importing: 'NIMBLE.actorImport.json.importing',
+	},
 	filters: {
 		level: 'NIMBLE.actorImport.filters.level',
 		type: 'NIMBLE.actorImport.filters.type',
@@ -375,18 +405,16 @@ const languageHints = {
 	deepSpeak: 'NIMBLE.languageHints.deepSpeak',
 };
 
-const languageImages = {
-	common: 'icons/environment/people/group.webp',
-	dwarvish: 'icons/tools/smithing/crucible.webp',
-	elvish: 'icons/weapons/swords/sword-hilt-steel-green.webp',
-	goblin: 'icons/creatures/magical/humanoid-silhouette-green.webp',
-	infernal: 'icons/creatures/unholy/demon-horned-winged-laughing.webp',
-	thievesCant: 'icons/magic/perception/shadow-stealth-eyes-purple.webp',
-	celestial: 'icons/magic/holy/angel-winged-humanoid-blue.webp',
-	draconic: 'icons/creatures/reptiles/dragon-horned-blue.webp',
-	primordial: 'icons/creatures/magical/spirit-fire-orange.webp',
-	deepSpeak: 'icons/creatures/slimes/slime-giant-face-eyes.webp',
-};
+// Ancestry-scoped alternate display names for languages, keyed by language key.
+// Empty by default; populated at runtime from the GM's language customizations
+// setting. Each entry binds an alternate name to the ancestry identifiers that
+// use it (e.g. a Gnome calls `dwarvish` "Gnomish").
+const languageAlternateNames: Record<string, { name: string; ancestries: string[] }[]> = {};
+
+// GM-added ancestry→language grants beyond the ancestry rules, keyed by language
+// key with the ancestry identifiers that gain it (if INT is not negative).
+// Empty by default; populated at runtime from the language customizations setting.
+const languageSpeakers: Record<string, string[]> = {};
 
 const manaRecoveryTypes = {
 	fieldRest: 'NIMBLE.manaRecoveryTypes.fieldRest',
@@ -584,6 +612,13 @@ const spellTierHeadings = {
 	7: 'NIMBLE.spells.tierHeadings.tier7',
 	8: 'NIMBLE.spells.tierHeadings.tier8',
 	9: 'NIMBLE.spells.tierHeadings.tier9',
+};
+
+const jsonExport = {
+	sectionHeader: 'NIMBLE.jsonExport.sectionHeader',
+	exportButton: 'NIMBLE.jsonExport.exportButton',
+	success: 'NIMBLE.jsonExport.success',
+	error: 'NIMBLE.jsonExport.error',
 };
 
 const startingHpByHitDieSize = {
@@ -873,6 +908,7 @@ const NIMBLE = {
 	abilities,
 	abilityScoreAbbreviations,
 	abilityScoreControls,
+	abilityScoreIcons,
 	abilityScores,
 	abilityScoreTooltips,
 	activationCostTypes,
@@ -907,8 +943,10 @@ const NIMBLE = {
 	hints,
 	hitDice,
 	hitPoints,
+	jsonExport,
+	languageAlternateNames,
 	languageHints,
-	languageImages,
+	languageSpeakers,
 	languages,
 	skillCheckDialog,
 	levelDownDialog,

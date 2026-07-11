@@ -1,6 +1,6 @@
 {
 	"name": "nimble",
-	"version": "0.8.6",
+	"version": "0.8.8",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
@@ -12,6 +12,7 @@
 		"build:compendia": "node ./build/buildCompendia.mjs",
 		"worktree:setup": "node ./build/worktreeSetup.mjs",
 		"worktree:cleanup": "node ./build/worktreeCleanup.mjs",
+		"worktree:reset": "pnpm worktree:cleanup && pnpm worktree:setup",
 		"dev": "vite",
 		"format": "biome format --write ./src/ ./types/ ./lib/ && prettier --write \"src/**/*.svelte\"",
 		"format:biome": "biome format --write ./src/ ./types/ ./lib/",
@@ -34,6 +35,7 @@
 		"release": "node build/release.mjs",
 		"lang:reconcile": "node scripts/reconcile-languages.mjs",
 		"lang:detect-untranslated": "node scripts/detect-untranslated.mjs",
+		"lang:build-compendium-skeletons": "node build/buildBabeleSkeletons.mjs",
 		"audit:rules-choices": "node build/scripts/audit-rule-choices.mjs"
 	},
 	"imports": {
@@ -138,6 +140,7 @@
 		"vitest": "^4.0.8"
 	},
 	"dependencies": {
+		"jspdf": "^4.2.1",
 		"picomatch": "^4.0.3",
 		"svelte": "^5.42.2",
 		"svelte-preprocess": "^6.0.3",

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { SpellSelectionProps } from '#types/components/SpellGrantDisplay.d.ts';
 	import localize from '#utils/localize.js';
+	import SpellSchoolIcon from '#view/components/SpellSchoolIcon.svelte';
 	import SpellCard from './SpellCard.svelte';
 	import { createSpellSelectionState } from './SpellSelection.svelte.ts';
 
@@ -79,7 +80,7 @@
 					onclick={() =>
 						state.setActiveSchoolFilter(state.activeSchoolFilter === school ? null : school)}
 				>
-					<i class="spell-selection__school-icon {getSchoolIcon(school)}"></i>
+					<SpellSchoolIcon icon={getSchoolIcon(school)} alt={getSchoolLabel(school)} />
 					<span class="spell-selection__school-name">{getSchoolLabel(school)}</span>
 				</button>
 			{/each}
@@ -172,10 +173,6 @@
 				);
 				border-color: var(--nimble-accent-color);
 			}
-		}
-
-		&__school-icon {
-			font-size: 0.875rem;
 		}
 
 		&__school-name {

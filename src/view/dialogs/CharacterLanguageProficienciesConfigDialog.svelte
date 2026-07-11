@@ -1,6 +1,11 @@
 <script>
+	import getLanguageName from '../../utils/getLanguageName.js';
+
 	function prepareLanguageOptions() {
-		return Object.entries(languages).sort((a, b) => a[1].localeCompare(b[1]));
+		const ancestryIdentifier = document.ancestry?.identifier ?? null;
+		return Object.keys(languages)
+			.map((key) => [key, getLanguageName(key, { ancestryIdentifier })])
+			.sort((a, b) => a[1].localeCompare(b[1]));
 	}
 
 	function toggleLanguageProficiency(language) {
@@ -15,9 +20,10 @@
 	}
 
 	const { languages } = CONFIG.NIMBLE;
-	const languageOptions = prepareLanguageOptions();
 
 	let { document } = $props();
+
+	const languageOptions = prepareLanguageOptions();
 
 	let knownLanguages = $derived(document.reactive?.system?.proficiencies?.languages);
 </script>

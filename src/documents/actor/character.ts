@@ -145,7 +145,33 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		super.prepareData();
 
+		this._applyConfiguredLanguageGrants();
 		this._prepareArmorClass();
+	}
+
+	/**
+	 * Apply language grants beyond the items on the actor:
+	 *  - Common is universal — every character speaks it, regardless of ancestry or INT.
+	 *  - GM-configured ancestry→language grants from the language-customization setting,
+	 *    mirroring the ancestry rule: "You know {Language} if your INT is not negative."
+	 */
+	private _applyConfiguredLanguageGrants(): void {
+		const known = this.system.proficiencies.languages;
+		if ('common' in CONFIG.NIMBLE.languages) known.add('common');
+
+		const speakers = (CONFIG.NIMBLE as unknown as { languageSpeakers?: Record<string, string[]> })
+			.languageSpeakers;
+		if (!speakers) return;
+
+		const ancestryIdentifier = this.ancestry?.identifier;
+		if (!ancestryIdentifier) return;
+
+		// "...if your INT is not negative."
+		if ((this.system.abilities?.intelligence?.mod ?? 0) < 0) return;
+
+		for (const [languageKey, ancestries] of Object.entries(speakers)) {
+			if (ancestries.includes(ancestryIdentifier)) known.add(languageKey);
+		}
 	}
 
 	override prepareBaseData(): void {
@@ -1204,20 +1230,50 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			(this.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0;
 		const effectiveHitDieSize = incrementDieSize(classHitDieSize, hitDiceSizeBonus);
 
+		// Hit-dice advantage rules (e.g., the Hardy boon) can raise the advantage
+		// level on the max-HP-increase roll. The base level-up roll is already made
+		// with advantage (`2d{size}khn`), so the baseline advantage level is 1.
+		const maxHpAdvantageRules = (
+			(
+				this.system.attributes as {
+					hitDiceAdvantageRules?: Array<{ label: string; amount: number; rollContext: string }>;
+				}
+			).hitDiceAdvantageRules ?? []
+		).filter((rule) => (rule.rollContext ?? 'fieldRest') === 'maxHpIncrease');
+
+		const advantageLevel = maxHpAdvantageRules.reduce(
+			(highest, rule) => Math.max(highest, rule.amount ?? 1),
+			1,
+		);
+
+		// Surface the boon(s) that raised the advantage level above the baseline.
+		const hitDiceAdvantageSource =
+			advantageLevel > 1
+				? (maxHpAdvantageRules
+						.filter((rule) => (rule.amount ?? 1) >= advantageLevel)
+						.map((rule) => rule.label)
+						.find((label) => label) ?? null)
+				: null;
+
 		let formula: string;
 
 		if (typedDialogData.takeAverageHp) {
 			formula = Math.ceil((effectiveHitDieSize + 1) / 2).toString();
 		} else {
-			// Use Nimble's leftmost-on-tie keep modifier (`khn`) instead of Foundry's bare `kh`.
-			formula = `2d${effectiveHitDieSize}khn`;
+			// Roll one die per advantage level plus one, keeping the highest. Uses
+			// Nimble's leftmost-on-tie keep modifier (`khn`) instead of Foundry's bare
+			// `kh`. Advantage 1 → `2d{size}khn`; advantage 2 (Hardy) → `3d{size}khn`.
+			formula = `${advantageLevel + 1}d${effectiveHitDieSize}khn`;
 		}
 
 		const roll = new Roll(formula);
 		await roll.evaluate();
 		const hp = roll.total!;
 
-		this.outputLevelUpSummary({ currentClassLevel, ...typedDialogData }, roll);
+		this.outputLevelUpSummary(
+			{ currentClassLevel, ...typedDialogData, hitDiceAdvantageSource },
+			roll,
+		);
 
 		itemUpdates['system.hpData'] = [...characterClass.system.hpData, hp];
 
@@ -1500,7 +1556,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 	async outputLevelUpSummary(data, roll: Roll | undefined) {
 		const rolls = roll ? [roll] : [];
-		const { currentClassLevel, takeAverageHp } = data;
+		const { currentClassLevel, takeAverageHp, hitDiceAdvantageSource = null } = data;
 
 		const chatData = {
 			author: game.user?.id,
@@ -1512,6 +1568,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				actorType: this.type,
 				currentClassLevel,
 				takeAverageHp,
+				hitDiceAdvantageSource,
 				permissions: this.permission,
 			},
 		};
@@ -1606,8 +1663,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		user: User.Implementation,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
-		// Player character configuration
-		const prototypeToken = { vision: true, actorLink: true, disposition: 1 };
+		// Player character configuration. In Foundry v13 token sight is keyed on
+		// `sight.enabled` (the old top-level `vision` boolean no longer exists), and
+		// `enabled` only auto-defaults to true when `sight.range > 0` — which it is
+		// not — so enable it explicitly. Range stays at the default 0: Nimble has no
+		// darkvision, so the token sees illuminated areas rather than a fixed radius.
+		const prototypeToken = {
+			sight: { enabled: true },
+			actorLink: true,
+			disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+		};
 		this.updateSource({ prototypeToken } as Record<string, unknown>);
 
 		return super._preCreate(data, options, user);

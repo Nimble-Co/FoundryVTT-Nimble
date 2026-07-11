@@ -323,7 +323,6 @@
 										actor.updateItem(item._id, {
 											'system.quantity': currentTarget.value,
 										})}
-									disabled={item.system.objectSizeType === 'slots'}
 								/>
 							{/if}
 

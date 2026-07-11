@@ -6,6 +6,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.8] - 2026-07-10
+
+### Added
+
+- [#813] Ship GM-friendly default token settings. @trevlar
+- [#815] Limit actions to 1 while Dying. @trevlar
+- [#817] Show custom reactions on the heroic reactions tab. @trevlar
+- [#827] Show a color-coded associated stat for each skill. @trevlar
+- [#828] Convert monsters between standard, minion, and solo subtypes. @trevlar
+- [#829] Support custom and aliased in-game languages. @trevlar
+- [#831] Add hitDiceAdvantage advantage-level support for the Hardy boon. @trevlar
+- [#832] Add active turn handoff controls. @trevlar
+- [#826] Add custom spell schools. @trevlar
+
+### Fixed
+
+- [#825] Only the active GM applies automatic conditions (Hampered). @trevlar
+- [#826] Fix subclass parent-class reactivity. @trevlar
+- [#839] Allow all inventory item quantities to be modified. @trevlar
+- [#840] Let Ignite miss and crit; migrate existing copies. @trevlar
+- [#838] Restore per-turn actions for characters and solo monsters. @trevlar
+- [#846] Let players add dice to their own pool. @fronix
+
+---
+
+
+## [0.8.7] - 2026-06-17
+
+### Added
+
+- [#531] Add PDF character sheet export. @trevlar
+- [#808] Add full-character JSON export and import with preview. @trevlar
+
+### Fixed
+
+- [#795] Fix AC not updating on item change and Iron Defense level 13 dead rule. @trevlar
+- [#797] Swap Yes/No button order in confirmation dialogs to match Foundry default. @trevlar
+- [#798] Restore scroll on monster conditions tab. @trevlar
+- [#802] Make quantity input interactive without triggering item roll. @trevlar
+- [#809] Remove tsx/jsx globs that crash format auto-commit. @trevlar
+- [#810] Allow walk mode in grantMovement and fix speed formula. @trevlar
+- [#811] Make prose-mirror description editors visible in roll table dialogs. @trevlar
+
+### Changed
+
+- [#796] Correct Giant Spider Bite damage to 2d8+4. @trevlar
+- [#799] Add per-group sub-folders and subclass folder wrappers to compendia. @trevlar
+
+---
+
+
 ## [0.8.6] - 2026-05-29
 
 ### Added

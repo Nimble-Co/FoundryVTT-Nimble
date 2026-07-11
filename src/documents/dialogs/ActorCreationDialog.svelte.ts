@@ -80,6 +80,22 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		return super.close();
 	}
 
+	async importActorFromJson() {
+		const { default: ImportPlayerCharacterDialog } = await import(
+			'../../import/playerCharacter/ImportPlayerCharacterDialog.svelte.js'
+		);
+
+		const folder = (this.data.folder as string | null | undefined) ?? null;
+		const dialog = new ImportPlayerCharacterDialog({
+			folder,
+			parent: this.parent,
+			pack: this.pack,
+		});
+		dialog.render(true);
+
+		return super.close();
+	}
+
 	override async close(
 		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
 	) {

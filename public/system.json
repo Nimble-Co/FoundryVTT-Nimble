@@ -2,7 +2,7 @@
 	"id": "nimble",
 	"title": "Nimble",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
-	"version": "0.8.6",
+	"version": "0.8.8",
 	"authors": [
 		{
 			"name": "Trevor Carlston",
@@ -211,8 +211,18 @@
 			"system": "nimble"
 		}
 	],
+	"relationships": {
+		"recommends": [
+			{
+				"id": "babele",
+				"type": "module",
+				"reason": "Optional. Enables runtime translation of Nimble compendium packs into the active Foundry language using the translation skeletons shipped under systems/nimble/lang/babele/.",
+				"manifest": "https://gitlab.com/riccisi/foundryvtt-babele/-/raw/master/module.json"
+			}
+		]
+	},
 	"background": "systems/nimble/assets/banners/manticoreFight.webp",
 	"url": "https://github.com/Nimble-Co/FoundryVTT-Nimble",
 	"manifest": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/latest/download/system.json",
-	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.8.6/nimble.zip"
+	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.8.8/nimble.zip"
 }

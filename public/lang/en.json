@@ -191,6 +191,9 @@
 			"shield": "Shield",
 			"shieldPlural": "Shields"
 		},
+		"babele": {
+			"notInstalled": "Nimble ships compendium translations for language \"{lang}\", but the Babele module is not installed or enabled. Install Babele from the Add-on Modules browser to see translated compendium content."
+		},
 		"boonTypes": {
 			"minor": "Minor",
 			"major": "Major",
@@ -448,6 +451,7 @@
 			"rollSavingThrowSpecific": "Roll {save} Save",
 			"rollSkillCheck": "Roll Skill Check",
 			"rollSkillCheckSpecific": "Roll {skill} Check",
+			"rollSkillCheckSpecificWithAbility": "Roll {skill} Check ({ability})",
 			"fieldRest": "Field Rest",
 			"hideRoll": "Hide From Players?"
 		},
@@ -632,6 +636,7 @@
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"dyingActionLimit": "Dying Action Limit",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -766,6 +771,13 @@
 					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
 				}
 			},
+			"dyingActionLimit": {
+				"description": "Set the maximum number of actions the actor may take while Dying. The highest applicable limit wins, so it never lowers the baseline of 1.",
+				"value": {
+					"label": "Action limit",
+					"hint": "A flat number or formula (e.g. 2). Use a predicate such as { \"$and\": [\"self:dying\"] } to apply only while Dying."
+				}
+			},
 			"dicePool": {
 				"description": "Define a refillable pool of rolled dice (each die stores its rolled face). Used for snowballing damage pools (Fury Dice) and rolled resources (Judgment Dice).",
 				"scope": {
@@ -802,7 +814,7 @@
 				}
 			},
 			"grantMovement": {
-				"description": "Grant a base movement mode (fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
+				"description": "Grant a base movement mode (walk, fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
 				"mode": {
 					"label": "Movement mode",
 					"hint": "Which movement mode to grant."
@@ -820,7 +832,11 @@
 				"uuid": { "label": "Item" }
 			},
 			"grantProficiency": {
-				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type."
+				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type.",
+				"displayAs": {
+					"label": "Display As",
+					"hint": "Languages only: the name this item's ancestry uses for the granted language (e.g. a Gnome calls Dwarvish \"Gnomish\"). Leave blank to use the language's normal name."
+				}
 			},
 			"grantSpells": {
 				"description": "Grant spells by school + tier filter, by UUID, or by user choice.",
@@ -839,7 +855,19 @@
 				"value": { "label": "Bonus" }
 			},
 			"hitDiceAdvantage": {
-				"description": "Grant advantage on hit-dice rolls under a specific narrative condition (e.g., ‘in the wild’)."
+				"description": "Grant advantage on hit-dice rolls. Raise the amount to roll with greater advantage (e.g. advantage 2), and choose whether it applies to field-rest healing or the max-HP increase when leveling up.",
+				"condition": {
+					"label": "Condition",
+					"hint": "Optional narrative condition shown to the player (e.g. ‘in the wild’). Field-rest rules appear as a toggle during a rest."
+				},
+				"amount": {
+					"label": "Advantage Level",
+					"hint": "1 = normal advantage (roll 2, keep highest). 2 = advantage 2 (roll 3, keep highest)."
+				},
+				"rollContext": {
+					"label": "Applies To",
+					"hint": "Which hit-dice roll the advantage modifies: field-rest healing or the max-HP increase when leveling up."
+				}
 			},
 			"incrementHitDice": {
 				"description": "Increase the size of the actor’s hit dice (e.g. d8 → d10) by a flat or formula amount.",
@@ -1226,7 +1254,10 @@
 				"wounds": "Wounds",
 				"woundsHidden": "Wounds hidden",
 				"woundsValue": "Wounds {current}/{max}",
-				"removeFromCombat": "Remove from Combat"
+				"removeFromCombat": "Remove from Combat",
+				"takeTurn": "Take the Turn",
+				"swapTurns": "Swap Turns",
+				"pingToken": "Ping Token"
 			},
 			"ctSettings": {
 				"sizeSection": "Size",
@@ -1260,6 +1291,11 @@
 				"title": "Heroic Actions",
 				"addAdditionalAction": "Add 1 action",
 				"reactionsTitle": "Heroic Reactions",
+				"customReactions": {
+					"tabLabel": "Custom Reactions",
+					"title": "Custom Reactions",
+					"empty": "No custom reactions. Check \"Is Reaction\" under a feature, spell, or item's Activation settings to show it here."
+				},
 				"reactions": {
 					"actionCost": "This will use 1 action (reaction)",
 					"cost": "1 Action",
@@ -1713,6 +1749,11 @@
 			"level": "Level",
 			"creatureType": "Creature Type",
 			"sizeCategory": "Size Category",
+			"monsterType": "Monster Type",
+			"confirmMonsterTypeChange": {
+				"title": "Change Monster Type",
+				"message": "Convert this monster from {current} to {target}? Fields that don't exist on the new type will be discarded, and the open sheet will be closed."
+			},
 			"flunky": "Flunky"
 		},
 		"featureSheet": {
@@ -2124,6 +2165,32 @@
 			"filterAll": "All"
 		},
 		"settings": {
+			"languageCustomization": {
+				"name": "In-Game Languages",
+				"hint": "Rename built-in languages, give them ancestry-specific alternate names, and add your own custom languages.",
+				"button": "Configure Languages",
+				"title": "Configure In-Game Languages",
+				"intro": "Rename a built-in language, change which ancestries speak it, or add your own languages. These start from the Nimble ancestry rules and override them at runtime — they never change the compendium itself, and Reset restores the rule defaults.",
+				"builtinSection": "Built-In Languages",
+				"customSection": "Custom Languages",
+				"label": "Name",
+				"rename": "Rename",
+				"tooltip": "Tooltip",
+				"spokenBy": "Spoken by",
+				"spokenByEveryone": "Spoken by every ancestry — Common is always known.",
+				"spokenByHint": "Each ancestry selected for a language learns that language if its Intelligence isn't negative.",
+				"enableAlternateNames": "Show ancestry names for languages",
+				"alternateNamesHint": "When on, a language shows the name its ancestry uses for it (e.g. a Gnome sees \"Dwarvish (Gnomish)\"). Turn off to always show the plain language name.",
+				"selectAncestry": "Add an ancestry…",
+				"removeAncestry": "Remove ancestry",
+				"noAncestries": "No ancestry items found in your world or compendiums.",
+				"conflictError": "Two languages can't share the same name. Resolve the highlighted names before saving.",
+				"reset": "Reset to default",
+				"remove": "Remove language",
+				"newLanguage": "New Language",
+				"addLanguage": "Add Custom Language",
+				"save": "Save Changes"
+			},
 			"autoExpandRolls": {
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
@@ -2152,6 +2219,26 @@
 				"name": "Debug Mode",
 				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
 				"openTestbench": "Open Dice Testbench"
+			},
+			"customSpellSchools": {
+				"name": "Custom Spell Schools",
+				"hint": "Add your own spell schools alongside the built-in ones. They appear in the spell editor, character creation, and compendium filters.",
+				"title": "Custom Spell Schools",
+				"manageButton": "Manage Spell Schools",
+				"intro": "Create spell schools for your world. The label is what players see; the key is the identifier stored on each spell and is filled in for you. Pick an icon from your Foundry files.",
+				"empty": "No custom spell schools yet. Add one to get started.",
+				"columnKey": "Key",
+				"columnLabel": "Label",
+				"keyPlaceholder": "e.g. hexbinder",
+				"labelPlaceholder": "e.g. Hexbinder",
+				"chooseIcon": "Choose icon",
+				"addSchool": "Add Spell School",
+				"remove": "Remove school",
+				"save": "Save Spell Schools",
+				"saved": "Custom spell schools saved.",
+				"errorEmptyKey": "Key is required.",
+				"errorReservedKey": "That key is reserved by a built-in school.",
+				"errorDuplicateKey": "Duplicate key."
 			},
 			"combatTrackerHoverColor": {
 				"name": "Combat Tracker Hover Color",
@@ -2460,7 +2547,29 @@
 			}
 		},
 		"actorImport": {
-			"buttonLabel": "Import Actor",
+			"buttonLabel": "Import from Nimble Nexus",
+			"jsonButtonLabel": "Import Player Character",
+			"json": {
+				"dialogTitle": "Import Player Character from JSON",
+				"selectPrompt": "Select a character JSON file",
+				"selectHint": "Click to browse, or drag a file here",
+				"parseError": "Could not read that file. Make sure it's a character exported as JSON.",
+				"notACharacterError": "That file isn't a player character export. Only player characters can be imported here.",
+				"wrongSystemError": "That file was exported from a different game system. Only Nimble character exports can be imported.",
+				"importError": "Failed to import the character. Please try again.",
+				"success": "Player character imported successfully",
+				"unnamed": "Unnamed Character",
+				"unnamedItem": "Unnamed Item",
+				"statLevel": "Level",
+				"statHp": "Max HP",
+				"statItems": "Items",
+				"contentsHeader": "What will be imported",
+				"levelTag": "Lvl {level}",
+				"noItems": "This character has no embedded items.",
+				"chooseDifferent": "Choose a different file",
+				"confirm": "Import Character",
+				"importing": "Importing..."
+			},
 			"dialogTitle": "Import from Nimble Nexus",
 			"searchPlaceholder": "Search monsters...",
 			"selectAll": "Select All",
@@ -2503,6 +2612,56 @@
 					"summoner": "Summoner",
 					"support": "Support"
 				}
+			}
+		},
+		"jsonExport": {
+			"sectionHeader": "Export",
+			"exportButton": "Export Character Sheet (JSON)",
+			"success": "Character exported successfully",
+			"error": "Failed to export character"
+		},
+		"pdfExport": {
+			"sectionHeader": "Export",
+			"exportButton": "Export Character Sheet (PDF)",
+			"exporting": "Exporting...",
+			"success": "Character sheet exported successfully",
+			"error": "Failed to export character sheet",
+			"dialogTitle": "{name}: Export Character Sheet",
+			"contentPicker": "Content Picker",
+			"columnEditor": "Column Editor",
+			"column": "Column {number}",
+			"insertToColumn": "Add to Column {column}",
+			"insertAtCursor": "Inserts selected items at your cursor's position",
+			"generatePdf": "Download PDF",
+			"lineSpacing": "Line Spacing",
+			"previewPdf": "Preview PDF",
+			"previewTitle": "{name}: Export Preview",
+			"generatingPreview": "Generating preview...",
+			"bold": "Bold",
+			"italic": "Italic",
+			"heading1": "Heading 1",
+			"heading2": "Heading 2",
+			"heading3": "Heading 3",
+			"bulletList": "Bulleted List",
+			"numberedList": "Numbered List",
+			"template": "Template",
+			"templateLined": "With Lines",
+			"templateNoLines": "Without Lines",
+			"columnOverflow": "Content exceeds estimated column capacity. Some text may be cut off.",
+			"search": "Search items...",
+			"resetToDefault": "Reset to Default",
+			"mainSheet": "Main Sheet",
+			"additionalSheet": "Additional Sheet",
+			"selectAll": "Select All",
+			"deselectAll": "Deselect All",
+			"categories": {
+				"ancestry": "Ancestry",
+				"background": "Background",
+				"features": "Class Features",
+				"subclassFeatures": "Subclass Features",
+				"spells": "Spells",
+				"inventory": "Inventory",
+				"character": "Character"
 			}
 		}
 	}

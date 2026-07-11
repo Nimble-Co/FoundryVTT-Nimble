@@ -1,6 +1,6 @@
 import { NimbleCharacterData } from './CharacterDataModel.js';
-import { NimbleNPCData } from './NPCDataModel.js';
 import { NimbleMinionData } from './MinionDataModel.js';
+import { NimbleNPCData } from './NPCDataModel.js';
 import { NimbleSoloMonsterData } from './SoloMonsterDataModel.js';
 
 const actorDataModels = {
@@ -18,6 +18,7 @@ declare global {
 		Actor: {
 			character: NimbleCharacterData;
 			npc: NimbleNPCData;
+			minion: NimbleMinionData;
 			soloMonster: NimbleSoloMonsterData;
 		};
 	}

@@ -9,6 +9,8 @@
 		id: string;
 		label: string;
 		condition: string;
+		amount: number;
+		rollContext: string;
 		sourceId: string;
 	}
 
@@ -106,10 +108,14 @@
 		return clampHitDiceBySize(bySize);
 	});
 
-	// Get hit dice advantage rules from the actor
+	// Get hit dice advantage rules from the actor. Only rules that apply to
+	// field-rest healing are shown here; rules scoped to max-HP increases (e.g.,
+	// the Hardy boon) are handled during level up instead.
 	const advantageRules = $derived(
-		((actor.system.attributes as { hitDiceAdvantageRules?: HitDiceAdvantageRule[] })
-			.hitDiceAdvantageRules ?? []) as HitDiceAdvantageRule[],
+		(
+			((actor.system.attributes as { hitDiceAdvantageRules?: HitDiceAdvantageRule[] })
+				.hitDiceAdvantageRules ?? []) as HitDiceAdvantageRule[]
+		).filter((rule) => (rule.rollContext ?? 'fieldRest') === 'fieldRest'),
 	);
 
 	// Check if hit dice are always maximized (from rules like Oozeling's Odd Constitution)

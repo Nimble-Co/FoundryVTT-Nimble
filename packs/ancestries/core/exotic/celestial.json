@@ -11,7 +11,8 @@
 				"label": "Highborn",
 				"value": 0,
 				"target": "disadvantaged",
-				"mode": "set"
+				"mode": "set",
+				"id": "QwL4D7Zl3D1S1sbj"
 			},
 			{
 				"type": "grantProficiency",
@@ -24,7 +25,8 @@
 					"intelligence": {
 						"min": 0
 					}
-				}
+				},
+				"id": "mbCpzjDXY6k0ZZFV"
 			}
 		],
 		"description": "<p>Descendants of divine beings, Celestials carry an aura of nobility and grace. Their innate connection to the higher planes allows them to resist the effects of misfortune, standing strong where others may falter.</p><hr><p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p><p>You know Celestial if your INT isn't negative. [M]</p>",

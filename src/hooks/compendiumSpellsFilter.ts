@@ -3,6 +3,8 @@
  * Adds clickable icon buttons and groups spells by tier and school.
  */
 
+import isImageIcon from '#utils/isImageIcon.js';
+
 const SPELL_COMPENDIUM_COLLECTIONS = [
 	'nimble.nimble-spells',
 	'nimble.nimble-secret-spells',
@@ -10,16 +12,36 @@ const SPELL_COMPENDIUM_COLLECTIONS = [
 const DEFAULT_SPELL_COMPENDIUM_COLLECTION = SPELL_COMPENDIUM_COLLECTIONS[0];
 const SPELL_COMPENDIUM_COLLECTION_SET = new Set<string>(SPELL_COMPENDIUM_COLLECTIONS);
 
-const SCHOOL_KEYS = [
-	'fire',
-	'ice',
-	'lightning',
-	'necrotic',
-	'radiant',
-	'wind',
-	'secret',
-	'utility',
-];
+/**
+ * Spell schools are sourced from CONFIG.NIMBLE so there is a single source of truth shared
+ * with the spell sheet, character creation, and GM-defined custom schools. Note that
+ * "secret" and "utility" are deliberately NOT schools — secret spells are story-withheld
+ * spells (their own compendium) and utility spells are a tier-like classification handled by
+ * `mapTierForCompendiumDisplay`; both are spell properties layered on top of a real school.
+ */
+function getSpellSchoolKeys(): string[] {
+	return Object.keys((CONFIG.NIMBLE?.spellSchools ?? {}) as Record<string, string>);
+}
+
+function getSpellSchoolLabel(school: string): string {
+	const label = (CONFIG.NIMBLE?.spellSchools as Record<string, string> | undefined)?.[school];
+	return label || school.charAt(0).toUpperCase() + school.slice(1);
+}
+
+function getSpellSchoolIcon(school: string): string | undefined {
+	return (CONFIG.NIMBLE?.spellSchoolIcons as Record<string, string> | undefined)?.[school];
+}
+
+/**
+ * Build the inline markup for a school icon, handling both Font Awesome classes
+ * (built-in schools) and image paths (GM-defined custom schools).
+ */
+function buildSpellSchoolIconMarkup(icon: string): string {
+	return isImageIcon(icon)
+		? `<img class="nimble-spell-school-icon-img" src="${icon}" alt="" />`
+		: `<i class="${icon}"></i>`;
+}
+
 const SPELL_LIST_ITEM_SELECTOR =
 	'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item';
 const SPELL_HEADER_SELECTOR = '.nimble-spell-tier-header, .nimble-spell-school-header';
@@ -50,16 +72,6 @@ const COLLAPSE_BUTTON_SELECTORS = [
 ];
 const HEADER_ACTIONS_SELECTOR =
 	'.header-actions, .directory-header-actions, .compendium-header-actions';
-const SCHOOL_DISPLAY_NAMES: Record<string, string> = {
-	fire: 'Fire',
-	ice: 'Ice',
-	lightning: 'Lightning',
-	necrotic: 'Necrotic',
-	radiant: 'Radiant',
-	wind: 'Wind',
-	secret: 'Secret',
-	utility: 'Utility',
-};
 type SpellMetadata = { school: string; tier: number };
 type CompendiumFilterState = {
 	activeSchoolFilter: string;
@@ -185,14 +197,25 @@ async function loadSpellIndex(pack: any, collectionId: string): Promise<any[]> {
 }
 
 function ensureSchoolFilterStyles(): void {
-	if (document.getElementById('nimble-spell-school-filter-styles')) {
+	const schoolKeys = getSpellSchoolKeys();
+	const schoolSignature = schoolKeys.join(',');
+
+	const existing = document.getElementById(
+		'nimble-spell-school-filter-styles',
+	) as HTMLStyleElement | null;
+	// Rebuild if the set of schools changed (e.g. a GM added a custom school) so the
+	// per-school filter rules stay in sync.
+	if (existing && existing.dataset.nimbleSchoolSignature === schoolSignature) {
 		return;
 	}
+	existing?.remove();
 
 	const style = document.createElement('style');
 	style.id = 'nimble-spell-school-filter-styles';
-	const schoolFilterRules = SCHOOL_KEYS.map(
-		(school) => `
+	style.dataset.nimbleSchoolSignature = schoolSignature;
+	const schoolFilterRules = schoolKeys
+		.map(
+			(school) => `
 .nimble-school-filter-${school} li[data-document-id]:not([data-nimble-school="${school}"]),
 .nimble-school-filter-${school} li[data-entry-id]:not([data-nimble-school="${school}"]),
 .nimble-school-filter-${school} .compendium-entry:not([data-nimble-school="${school}"]),
@@ -208,7 +231,8 @@ function ensureSchoolFilterStyles(): void {
 	display: none !important;
 }
 `,
-	).join('');
+		)
+		.join('');
 	style.textContent = `${schoolFilterRules}
 .nimble-spell-name-flex {
 	display: flex;
@@ -221,6 +245,20 @@ function ensureSchoolFilterStyles(): void {
 }
 .nimble-spell-school-icon i {
 	opacity: 0.7;
+}
+.nimble-spell-school-icon-img {
+	width: 1em;
+	height: 1em;
+	object-fit: contain;
+	vertical-align: middle;
+	border: none;
+}
+.nimble-spell-school-icon .nimble-spell-school-icon-img {
+	opacity: 0.7;
+}
+.header-button.nimble-spell-school .nimble-spell-school-icon-img {
+	width: 1em;
+	height: 1em;
 }
 .nimble-spell-tier-badge {
 	margin-left: auto;
@@ -296,7 +334,7 @@ function findFirstButton(
 
 function applySchoolFilterClass(compendiumElement: HTMLElement | null, school: string): void {
 	if (!compendiumElement) return;
-	for (const key of SCHOOL_KEYS) {
+	for (const key of getSpellSchoolKeys()) {
 		compendiumElement.classList.remove(`nimble-school-filter-${key}`);
 	}
 	if (school) {
@@ -399,20 +437,6 @@ const TIER_LABELS: Record<string, string> = {
 	'8': 'Tier 7',
 	'9': 'Tier 8',
 	'10': 'Tier 9',
-};
-
-/**
- * Map of school values to Font Awesome icon classes
- */
-const SCHOOL_ICONS: { [key: string]: string } = {
-	fire: 'fa-solid fa-fire',
-	ice: 'fa-solid fa-snowflake',
-	lightning: 'fa-solid fa-bolt',
-	necrotic: 'fa-solid fa-skull',
-	radiant: 'fa-solid fa-sun',
-	wind: 'fa-solid fa-wind',
-	secret: 'fa-solid fa-eye-slash',
-	utility: 'fa-solid fa-wand-magic-sparkles',
 };
 
 /**
@@ -533,13 +557,13 @@ function addSchoolIconToItem(item: HTMLElement, school: string): void {
 			return;
 		}
 
-		const iconClass = SCHOOL_ICONS[school];
+		const iconClass = getSpellSchoolIcon(school);
 		if (!iconClass) return;
 
 		// Create and append icon element
 		const iconSpan = document.createElement('span');
 		iconSpan.className = 'nimble-spell-school-icon';
-		iconSpan.innerHTML = `<i class="${iconClass}"></i>`;
+		iconSpan.innerHTML = buildSpellSchoolIconMarkup(iconClass);
 
 		nameLink.appendChild(iconSpan);
 	} catch (error) {
@@ -848,7 +872,7 @@ async function applyFilter(
 				return aNum - bNum;
 			});
 
-			const schoolOrder = SCHOOL_KEYS;
+			const schoolOrder = getSpellSchoolKeys();
 
 			// Reorganize items with tier and school headers
 			const fragment = document.createDocumentFragment();
@@ -879,7 +903,7 @@ async function applyFilter(
 					if (schoolSpells && schoolSpells.length > 0) {
 						// Create and insert school header only for the 'All' view (no specific school filter)
 						if (school === '') {
-							const schoolDisplayName = SCHOOL_DISPLAY_NAMES[schoolKey] || schoolKey;
+							const schoolDisplayName = getSpellSchoolLabel(schoolKey);
 							const schoolHeaderDiv = document.createElement('li');
 							schoolHeaderDiv.className = 'nimble-spell-school-header';
 							const schoolHeaderColor =
@@ -992,16 +1016,6 @@ function initializeSchoolButtons(
 
 			const schools = Array.from(schoolsSet).sort();
 
-			// Define school icons mapping
-			const schoolIcons: { [key: string]: string } = {
-				fire: 'fa-solid fa-fire',
-				ice: 'fa-solid fa-snowflake',
-				lightning: 'fa-solid fa-bolt',
-				necrotic: 'fa-solid fa-skull',
-				radiant: 'fa-solid fa-sun',
-				wind: 'fa-solid fa-wind',
-			};
-
 			// Create or find button group container
 			let btnGroup = container.querySelector('.nimble-spell-school-buttons') as HTMLElement;
 			if (!btnGroup) {
@@ -1036,15 +1050,16 @@ function initializeSchoolButtons(
 
 			// Create buttons for each school
 			schools.forEach((school: string) => {
-				if (schoolIcons[school]) {
-					const schoolLabel = school.charAt(0).toUpperCase() + school.slice(1);
+				const schoolIcon = getSpellSchoolIcon(school);
+				if (schoolIcon) {
+					const schoolLabel = getSpellSchoolLabel(school);
 					const btn = document.createElement('button');
 					btn.className = 'header-button nimble-spell-school';
 					btn.setAttribute('data-school', school);
 					btn.removeAttribute('title');
 					btn.dataset.tooltipText = schoolLabel;
 					btn.setAttribute('aria-label', schoolLabel);
-					btn.innerHTML = `<i class="${schoolIcons[school]}"></i>`;
+					btn.innerHTML = buildSpellSchoolIconMarkup(schoolIcon);
 					btn.addEventListener('click', (e: Event) => {
 						e.preventDefault();
 						e.stopPropagation();

@@ -25,6 +25,17 @@ function schema() {
 			}),
 			{ required: true, nullable: false },
 		),
+		// For language grants only: the name the granting item's ancestry uses for
+		// the language (e.g. a Gnome "calls Dwarvish Gnomish"). Drives the
+		// ancestry-scoped alternate name shown on sheets. Empty = use the default.
+		displayAs: new fields.StringField({
+			required: false,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.grantProficiency.displayAs.label',
+			hint: 'NIMBLE.rules.grantProficiency.displayAs.hint',
+			showWhen: (data) => data.proficiencyType === 'languages',
+		} as unknown as never),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantProficiency' }),
 	};
 }
@@ -53,6 +64,7 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 			new Map([
 				['values', 'string[]'],
 				['propertyType', 'armor | languages | weapons'],
+				['displayAs', 'string'],
 			]),
 		);
 	}
@@ -64,6 +76,19 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 
 		const actor = item.actor as NimbleCharacter;
 		const { proficiencyType } = this;
+
+		// Ancestry language grants are governed by the In-Game Languages settings
+		// (seeded from these same rules, then editable and authoritative at runtime).
+		// Once that layer is active the character applies them itself, so skip here
+		// to honor GM edits/removals. Falls through normally until then (e.g. tests,
+		// initial load) so languages are never silently dropped.
+		if (
+			proficiencyType === 'languages' &&
+			item.type === 'ancestry' &&
+			(CONFIG.NIMBLE as unknown as { languageGrantsManaged?: boolean }).languageGrantsManaged
+		) {
+			return;
+		}
 		let { values } = this;
 		const property = foundry.utils.getProperty(
 			actor,

@@ -8,6 +8,10 @@ export function applyCharacterInitiativeActionUpdate(
 ): void {
 	if (combatant.type !== 'character') return;
 
+	// The initiative roll only sets the character's starting actions for the
+	// first round. Their max stays at 3 — per-turn restoration always refills
+	// to max (reduced only by the Dying condition), so we must not touch max
+	// here or low-initiative heroes would be permanently capped below 3.
 	const actionPath = 'system.actions.base.current';
 	if (rollTotal >= 20) {
 		combatantUpdates[actionPath] = 3;

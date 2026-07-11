@@ -119,7 +119,9 @@ export function createDicePoolPanelState(
 	$effect(() => {
 		const pool = livePool;
 		if (!pool || pool.kind !== 'rolled') {
-			if (selectedIndices.size > 0) selectedIndices = new Set();
+			if (selectedIndices.size > 0) {
+				selectedIndices = new Set();
+			}
 			return;
 		}
 		const next = new Set<number>();

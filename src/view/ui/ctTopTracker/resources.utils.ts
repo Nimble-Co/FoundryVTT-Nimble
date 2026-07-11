@@ -449,6 +449,7 @@ export function getActionState(combatant: Combatant.Implementation): {
 	effectiveMax: number;
 } {
 	const normalizedCurrent = getCombatantCurrentActions(combatant);
+	// `normalizedMax` is the base action max, already capped to the Dying limit when applicable.
 	const normalizedMax = getCombatantMaxActions(combatant);
 	const additional = getCombatantAdditionalActions(combatant);
 	return {

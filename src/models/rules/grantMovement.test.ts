@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GrantMovementRule } from './grantMovement.js';
 
-type MovementMode = 'fly' | 'climb' | 'swim' | 'burrow';
+type MovementMode = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
 
 interface MockMovement {
 	walk: number;
@@ -39,6 +39,7 @@ interface MockItem {
 function createMockActor(
 	movement: Partial<MockMovement> = {},
 	rollData: Record<string, unknown> = {},
+	sourceOverrides: Partial<MockMovement> = {},
 ): MockActor {
 	const mov: MockMovement = {
 		walk: 6,
@@ -55,6 +56,7 @@ function createMockActor(
 		climb: 0,
 		swim: 0,
 		burrow: 0,
+		...sourceOverrides,
 	};
 	return {
 		system: {
@@ -390,6 +392,38 @@ describe('GrantMovementRule', () => {
 			grant2.prePrepareData();
 			// grant(12) + bonus(2) = 14
 			expect(actor.system.attributes.movement.fly).toBe(14);
+		});
+	});
+
+	describe('walk mode', () => {
+		it('should set walk speed when grant exceeds native walk', () => {
+			// Turtlefolk native walk = 5, Boots of Striding grant walk = 6 → becomes 6
+			const actor = createMockActor({ walk: 5 }, {}, { walk: 5 });
+			const rule = createGrantMovementRule({ mode: 'walk', speed: '6' }, actor);
+
+			rule.prePrepareData();
+
+			expect(actor.system.attributes.movement.walk).toBe(6);
+		});
+
+		it('should not reduce walk when grant is lower than native walk', () => {
+			// Actor native walk = 8, grant walk = 6 → stays 8
+			const actor = createMockActor({ walk: 8 }, {}, { walk: 8 });
+			const rule = createGrantMovementRule({ mode: 'walk', speed: '6' }, actor);
+
+			rule.prePrepareData();
+
+			expect(actor.system.attributes.movement.walk).toBe(8);
+		});
+
+		it('should preserve speedBonus on top of walk grant', () => {
+			// Native walk = 5, speedBonus +2 already applied (live = 7), grant = 6 → 6 + 2 = 8
+			const actor = createMockActor({ walk: 7 }, {}, { walk: 5 });
+			const rule = createGrantMovementRule({ mode: 'walk', speed: '6' }, actor);
+
+			rule.prePrepareData();
+
+			expect(actor.system.attributes.movement.walk).toBe(8);
 		});
 	});
 
