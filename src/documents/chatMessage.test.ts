@@ -1225,14 +1225,52 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
 	});
 
-	it('returns 0 for a miss (no damage is applied)', () => {
+	it('returns null for a miss so the target list shows no preview', () => {
 		globals().fromUuidSync.mockReturnValue({
 			actor: { system: { attributes: { armor: 'none' } } },
 		});
 
 		const message = createDamageMessage({ roll: battleaxeRoll(), isMiss: true });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(0);
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+	});
+
+	it('counts a disposition-targeted damage node once when its outcome child is also surfaced', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d10',
+							damageType: 'slashing',
+							targetDisposition: 'hostile',
+							canCrit: true,
+							canMiss: true,
+							roll: battleaxeRoll(),
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
 	});
 
 	it('returns null when the card has no applicable damage rolls', () => {

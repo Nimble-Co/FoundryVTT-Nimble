@@ -576,7 +576,7 @@ class NimbleChatMessage extends ChatMessage {
 	 * Collect the damage rolls currently surfaced on this card that carry an
 	 * Apply Damage action: the top-level `damage` / `damageOutcome` nodes for the
 	 * resolved hit/miss/crit context. Save-gated damage is intentionally excluded
-	 * its per-target outcome is unknown until each target rolls its save.
+	 * because its per-target outcome is unknown until each target rolls its save.
 	 *
 	 * Each entry mirrors what `RollSummary` forwards to `applyDamage`: the
 	 * outcome-scaled value plus the options needed for armor adjustment.
@@ -585,9 +585,21 @@ class NimbleChatMessage extends ChatMessage {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
 		const isMiss = (this.system as unknown as ActivationCardSystemData).isMiss === true;
 
+		// Disposition-targeted damage nodes are surfaced alongside their own
+		// outcome children, which carry the same roll; count only the children.
+		const surfacedOutcomeParentIds = new Set<string>();
+		for (const group of this.effectNodes) {
+			for (const node of group) {
+				if (node.type === 'damageOutcome') {
+					surfacedOutcomeParentIds.add((node as DamageOutcomeNode).parentNode);
+				}
+			}
+		}
+
 		for (const group of this.effectNodes) {
 			for (const node of group) {
 				if (node.type !== 'damage' && node.type !== 'damageOutcome') continue;
+				if (node.type === 'damage' && surfacedOutcomeParentIds.has(node.id)) continue;
 
 				const roll = (node as { roll?: Record<string, unknown> }).roll;
 				if (!roll || typeof roll.class !== 'string') continue;
@@ -627,7 +639,9 @@ class NimbleChatMessage extends ChatMessage {
 	getDamagePreviewForTarget(targetUuid: string): number | null {
 		if (!this.isActivationCard()) return null;
 
-		const damageRolls = this.#collectApplicableDamageRolls();
+		const damageRolls = this.#collectApplicableDamageRolls().filter(
+			({ options }) => options.outcome !== 'noDamage',
+		);
 		if (damageRolls.length < 1) return null;
 
 		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
@@ -636,7 +650,6 @@ class NimbleChatMessage extends ChatMessage {
 
 		let total = 0;
 		for (const { value, options } of damageRolls) {
-			if (options.outcome === 'noDamage') continue;
 			const adjusted = calculateArmorAdjustedDamage({ actor, damage: value, options });
 			if (Number.isFinite(adjusted) && adjusted > 0) total += Math.floor(adjusted);
 		}
