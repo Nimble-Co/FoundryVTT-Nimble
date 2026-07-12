@@ -593,6 +593,141 @@ describe('NimbleChatMessage.applyDamage', () => {
 		expect(actor.applyDamage).toHaveBeenCalledWith(3);
 	});
 
+	it('counts banked dice-pool bonuses (Fury Dice) as dice, not modifiers, for medium armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'medium',
+					hp: {
+						value: 50,
+						temp: 0,
+						max: 50,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// Battleaxe hit: 1d10 (rolled 5) + 5 + 10[Fury Dice] + 4[Fury Dice] + 18 = 42.
+		// Medium armor keeps the dice (d10 5 + Fury 10 + Fury 4 = 19) and drops the
+		// flat +5 / +18 modifiers.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d10 + 5 + 10 + 4 + 18',
+			total: 42,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 10, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 5 },
+				{ operator: '+' },
+				{ number: 10, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 4, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 18 },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(42, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(19);
+	});
+
+	it('halves banked dice-pool bonuses (Fury Dice) with the dice for heavy armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 50,
+						temp: 0,
+						max: 50,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// Same Battleaxe hit against a heavy-armor target: dice total 19 is halved
+		// (Math.ceil(19 * 0.5) = 10); the flat +5 / +18 modifiers are ignored.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d10 + 5 + 10 + 4 + 18',
+			total: 42,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 10, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 5 },
+				{ operator: '+' },
+				{ number: 10, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 4, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 18 },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(42, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('counts other banked dice pools (e.g. Oathsworn Judgment Dice) as dice for armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'medium',
+					hp: {
+						value: 50,
+						temp: 0,
+						max: 50,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// Manually-spent Judgment Dice arrive on the roll the same way Fury Dice do
+		// (flavored numeric terms). 1d8 (6) + 3[Judgment Dice] + 5[Judgment Dice] + 4
+		// against medium armor keeps the dice (6 + 3 + 5 = 14), drops the flat +4.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d8 + 3 + 5 + 4',
+			total: 18,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 8, results: [{ result: 6, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 3, options: { flavor: 'Judgment Dice' } },
+				{ operator: '+' },
+				{ number: 5, options: { flavor: 'Judgment Dice' } },
+				{ operator: '+' },
+				{ number: 4 },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(18, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(14);
+	});
+
 	it('applies heavy armor by halving dice-only damage and rounding up on non-critical hits', async () => {
 		const actor = {
 			applyDamage: vi.fn().mockResolvedValue(undefined),
@@ -990,5 +1125,169 @@ describe('NimbleChatMessage.applyDamage', () => {
 		});
 
 		expect(actor.applyDamage).toHaveBeenCalledWith(11);
+	});
+});
+
+describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+	});
+
+	// Battleaxe hit: 1d10 (rolled 5) + 5 + 10[Fury Dice] + 4[Fury Dice] + 18 = 42.
+	function battleaxeRoll() {
+		return {
+			class: 'DamageRoll',
+			formula: '1d10 + 5 + 10 + 4 + 18',
+			total: 42,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 10, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 5 },
+				{ operator: '+' },
+				{ number: 10, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 4, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 18 },
+			],
+		};
+	}
+
+	// Mirrors the effects tree shape produced by the attack flow: a base damage
+	// node whose on-hit outcome node inherits its roll (see processNodes).
+	function createDamageMessage(params: {
+		roll: object;
+		isMiss?: boolean;
+		ignoreArmor?: boolean;
+		targets?: string[];
+	}) {
+		return new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: params.targets ?? ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: params.isMiss ?? false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d10',
+							damageType: 'slashing',
+							ignoreArmor: params.ignoreArmor ?? false,
+							canCrit: true,
+							canMiss: true,
+							roll: params.roll,
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('returns the full displayed total for an unarmored target', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+	});
+
+	it('returns the armor-reduced total for a heavy-armor target (Fury Dice count as dice)', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'heavy' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		// Dice = d10 5 + Fury 10 + 4 = 19; heavy halves to ceil(9.5) = 10; +5/+18 dropped.
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(10);
+	});
+
+	it('ignores armor for the preview when the damage ignores armor', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'heavy' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll(), ignoreArmor: true });
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+	});
+
+	it('returns null for a miss so the target list shows no preview', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll(), isMiss: true });
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+	});
+
+	it('counts a disposition-targeted damage node once when its outcome child is also surfaced', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d10',
+							damageType: 'slashing',
+							targetDisposition: 'hostile',
+							canCrit: true,
+							canMiss: true,
+							roll: battleaxeRoll(),
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+	});
+
+	it('returns null when the card has no applicable damage rolls', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createActivationMessage();
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+	});
+
+	it('returns null when the target token does not resolve to an actor', () => {
+		globals().fromUuidSync.mockReturnValue(null);
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
 	});
 });
