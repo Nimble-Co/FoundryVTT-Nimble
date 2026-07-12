@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import {
 	type ActorDyingContext,
@@ -307,6 +308,8 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		if (this.#isTurnOffSuppressed(event)) return;
 		const existing = this.#findActiveEffect();
 		if (!existing) return;
+		// Delete/pool-clear/announce must happen on exactly one client.
+		if (!isActiveGM()) return;
 		await this.#clearLinkedPools();
 		await this.#deleteActiveEffect(existing.id);
 		await this.#announceEnd(localize(`NIMBLE.rules.toggleEffect.endReasons.${event}`));

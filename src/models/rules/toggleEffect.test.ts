@@ -199,8 +199,19 @@ function createToggleEffectRule(
 }
 
 describe('ToggleEffectRule', () => {
+	const gameGlobal = globalThis as unknown as { game: { user?: unknown; users?: unknown } };
+	let savedUsers: unknown;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Designate this client as the active GM so the isActiveGM-gated turn-off
+		// path runs ('test-user-id' is the shared game.user mock).
+		savedUsers = gameGlobal.game.users;
+		gameGlobal.game.users = { activeGM: { id: 'test-user-id', isSelf: true } };
+	});
+
+	afterEach(() => {
+		gameGlobal.game.users = savedUsers;
 	});
 
 	describe('schema', () => {
@@ -614,6 +625,26 @@ describe('ToggleEffectRule', () => {
 			await rule.onRest({
 				actor: actor as unknown as Ctx['actor'],
 				restType: 'safe',
+			});
+
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('does NOT run the turn-off on clients that are not the active GM', async () => {
+			gameGlobal.game.users = { activeGM: { id: 'a-different-gm', isSelf: false } };
+
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: ['onActorKilled'] },
+				actor,
+			);
+			pushAE(actor, rule.id, rule.item.id);
+
+			type Ctx = Parameters<ToggleEffectRule['onActorKilled']>[0];
+			await rule.onActorKilled({
+				actor: actor as unknown as Ctx['actor'],
+				previousHp: 10,
+				currentHp: 0,
 			});
 
 			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();

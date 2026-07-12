@@ -239,10 +239,10 @@
 		}
 
 		&__toggle--on {
-			color: hsl(120, 45%, 40%);
+			color: var(--nimble-weapon-toggle-on-color);
 
 			&:hover {
-				color: hsl(120, 45%, 50%);
+				color: var(--nimble-weapon-toggle-on-color-hover);
 			}
 		}
 
