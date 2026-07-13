@@ -843,7 +843,7 @@ describe('ToggleEffectRule', () => {
 			originalCombat = gameGlobal.game.combat;
 			originalUsers = gameGlobal.game.users;
 			originalChatMessage = globalScope.ChatMessage;
-			gameGlobal.game.users = { activeGM: { isSelf: true } };
+			gameGlobal.game.users = { activeGM: { id: 'test-user-id', isSelf: true } };
 			getDialogConfirm().mockReset();
 			getDialogConfirm().mockResolvedValue(true);
 			chatCreate = vi.fn().mockResolvedValue(undefined);
@@ -985,7 +985,7 @@ describe('ToggleEffectRule', () => {
 		});
 
 		it('does nothing on clients other than the active GM', async () => {
-			gameGlobal.game.users = { activeGM: { isSelf: false } };
+			gameGlobal.game.users = { activeGM: { id: 'a-different-gm', isSelf: false } };
 			const actor = createMockActor();
 			const rule = createToggleEffectRule(
 				{ tags: ['self:raging'], turnOff: [], endAfterInactiveRounds: 1 },

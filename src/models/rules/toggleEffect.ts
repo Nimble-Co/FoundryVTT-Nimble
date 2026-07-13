@@ -285,7 +285,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	override async onRoundChanged(context: RoundChangedContext): Promise<void> {
 		if (context.actor !== this.actor) return;
 		if (!this.endAfterInactiveRounds) return;
-		if (!game.users?.activeGM?.isSelf) return;
+		if (!isActiveGM()) return;
 		const existing = this.#findActiveEffect();
 		if (!existing) return;
 
@@ -373,7 +373,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		const round = combat?.round ?? 0;
 		if (!combatId) return;
 
-		if (!game.users?.activeGM?.isSelf) return;
+		if (!isActiveGM()) return;
 
 		const recordedCombatId = existing.getFlag(SYSTEM_ID, TOGGLE_EFFECT_ACTIVITY_COMBAT_FLAG);
 		const recordedRound = existing.getFlag(SYSTEM_ID, TOGGLE_EFFECT_ACTIVITY_ROUND_FLAG);
