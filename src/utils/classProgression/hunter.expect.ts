@@ -1,0 +1,386 @@
+// Expected class-progression report for hunter, asserted by hunter.test.ts.
+
+export interface ReportPool {
+	group: string;
+	options: string[];
+}
+export interface ReportLevel {
+	level: number;
+	auto: string[];
+	pools: ReportPool[];
+	subclass: ReportPool[];
+	asi: string | null;
+}
+export interface Report {
+	name: string;
+	id: string;
+	hitDie: number;
+	startingHp: number;
+	keyAbilities: string[];
+	savingThrows: { adv: string; dis: string };
+	startingGear: string[];
+	caster: boolean;
+	manaFormula: string;
+	levels: ReportLevel[];
+	subclasses: string[];
+	subclassSelectLevel: number;
+}
+
+// Embedded copy of expectations/hunter.json (source of truth).
+export const report: Report = {
+	name: 'Hunter',
+	id: 'hunter',
+	hitDie: 8,
+	startingHp: 13,
+	keyAbilities: ['DEX', 'WILL'],
+	savingThrows: {
+		adv: 'DEX',
+		dis: 'INT',
+	},
+	startingGear: [
+		'Shortbow',
+		'Starting Item - Cheap Hides',
+		'Starting Item - Dagger',
+		'Starting Item - Hunting Trap',
+	],
+	caster: false,
+	manaFormula: '',
+	levels: [
+		{
+			level: 1,
+			auto: ['Forager', "Hunter's Mark"],
+			pools: [],
+			subclass: [
+				{
+					group: 'Beastmaster',
+					options: ['Beastmaster', 'Small - Go for the Throat!', 'Small - Keen Eyes'],
+				},
+			],
+			asi: null,
+		},
+		{
+			level: 2,
+			auto: ['Roll & Strike', 'Thrill of the Hunt'],
+			pools: [
+				{
+					group: 'Thrill Of The Hunt',
+					options: [
+						'Addling Arrow',
+						'Come Get Some!',
+						'Decoy',
+						'Fleet Feet',
+						'Grease Trap',
+						'Hail of Arrows',
+						'Heavy Shot',
+						'Incendiary Shot',
+						'Multishot',
+						'Pinning Shot',
+						'Sharpshooter',
+						'Snare Trap',
+						'Vital Shot',
+						'Wild Instinct',
+					],
+				},
+			],
+			subclass: [
+				{
+					group: 'Beastmaster',
+					options: ['Small - Protect Me!'],
+				},
+			],
+			asi: null,
+		},
+		{
+			level: 3,
+			auto: ["Tracker's Intuition"],
+			pools: [],
+			subclass: [
+				{
+					group: 'Beastmaster',
+					options: [
+						'Large - Alpha Protector',
+						'Large - Go for the Throat!',
+						'Large - Protect Me!',
+						'Medium - Ferocious',
+						'Medium - Go for the Throat!',
+						'Medium - Protect Me!',
+					],
+				},
+				{
+					group: 'Keeper Of The Shadowpath',
+					options: ['Ambusher', 'Skilled Navigator', 'Skilled Tracker'],
+				},
+				{
+					group: 'Keeper Of The Wildheart',
+					options: ['I Have the High Ground', 'Impressive Form'],
+				},
+			],
+			asi: null,
+		},
+		{
+			level: 4,
+			auto: ['Explorer of the Wilds', 'Thrill of the Hunt'],
+			pools: [
+				{
+					group: 'Thrill Of The Hunt',
+					options: [
+						'Addling Arrow',
+						'Come Get Some!',
+						'Decoy',
+						'Fleet Feet',
+						'Grease Trap',
+						'Hail of Arrows',
+						'Heavy Shot',
+						'Incendiary Shot',
+						'Multishot',
+						'Pinning Shot',
+						'Sharpshooter',
+						'Snare Trap',
+						'Vital Shot',
+						'Wild Instinct',
+					],
+				},
+			],
+			subclass: [],
+			asi: 'primary',
+		},
+		{
+			level: 5,
+			auto: ['Final Takedown', "Hunter's Resolve"],
+			pools: [],
+			subclass: [],
+			asi: 'secondary',
+		},
+		{
+			level: 6,
+			auto: ['Thrill of the Hunt', 'Versatile Bowmaster'],
+			pools: [
+				{
+					group: 'Thrill Of The Hunt',
+					options: [
+						'Addling Arrow',
+						'Come Get Some!',
+						'Decoy',
+						'Fleet Feet',
+						'Grease Trap',
+						'Hail of Arrows',
+						'Heavy Shot',
+						'Incendiary Shot',
+						'Multishot',
+						'Pinning Shot',
+						'Sharpshooter',
+						'Snare Trap',
+						'Vital Shot',
+						'Wild Instinct',
+					],
+				},
+			],
+			subclass: [],
+			asi: null,
+		},
+		{
+			level: 7,
+			auto: [],
+			pools: [],
+			subclass: [
+				{
+					group: 'Beastmaster',
+					options: ['Large - Protect Me!', 'Small - Keen Eyes', 'Small - Protect Me!'],
+				},
+				{
+					group: 'Keeper Of The Shadowpath',
+					options: ['Primal Predator'],
+				},
+				{
+					group: 'Keeper Of The Wildheart',
+					options: ['Healing Salve', 'Resourceful Herbalist'],
+				},
+			],
+			asi: null,
+		},
+		{
+			level: 8,
+			auto: ['Thrill of the Hunt'],
+			pools: [
+				{
+					group: 'Thrill Of The Hunt',
+					options: [
+						'Addling Arrow',
+						'Come Get Some!',
+						'Decoy',
+						'Fleet Feet',
+						'Grease Trap',
+						'Hail of Arrows',
+						'Heavy Shot',
+						'Incendiary Shot',
+						'Multishot',
+						'Pinning Shot',
+						'Sharpshooter',
+						'Snare Trap',
+						'Vital Shot',
+						'Wild Instinct',
+					],
+				},
+			],
+			subclass: [],
+			asi: 'primary',
+		},
+		{
+			level: 9,
+			auto: ['No Escape'],
+			pools: [],
+			subclass: [],
+			asi: 'secondary',
+		},
+		{
+			level: 10,
+			auto: ['Keen Eye, Steady Hand', 'Veteran Stalker'],
+			pools: [],
+			subclass: [],
+			asi: null,
+		},
+		{
+			level: 11,
+			auto: [],
+			pools: [],
+			subclass: [
+				{
+					group: 'Beastmaster',
+					options: [
+						'Large - Go for the Throat!',
+						'Medium - Go for the Throat!',
+						'Small - Go for the Throat!',
+						'Small - Keen Eyes',
+					],
+				},
+				{
+					group: 'Keeper Of The Shadowpath',
+					options: ['Pack Hunter'],
+				},
+				{
+					group: 'Keeper Of The Wildheart',
+					options: ["Ha! I'm Over Here!"],
+				},
+			],
+			asi: null,
+		},
+		{
+			level: 12,
+			auto: ['Thrill of the Hunt'],
+			pools: [
+				{
+					group: 'Thrill Of The Hunt',
+					options: [
+						'Addling Arrow',
+						'Come Get Some!',
+						'Decoy',
+						'Fleet Feet',
+						'Grease Trap',
+						'Hail of Arrows',
+						'Heavy Shot',
+						'Incendiary Shot',
+						'Multishot',
+						'Pinning Shot',
+						'Sharpshooter',
+						'Snare Trap',
+						'Vital Shot',
+						'Wild Instinct',
+					],
+				},
+			],
+			subclass: [],
+			asi: 'primary',
+		},
+		{
+			level: 13,
+			auto: ['Keen Sight'],
+			pools: [],
+			subclass: [],
+			asi: 'secondary',
+		},
+		{
+			level: 14,
+			auto: ['Thrill of the Hunt'],
+			pools: [
+				{
+					group: 'Thrill Of The Hunt',
+					options: [
+						'Addling Arrow',
+						'Come Get Some!',
+						'Decoy',
+						'Fleet Feet',
+						'Grease Trap',
+						'Hail of Arrows',
+						'Heavy Shot',
+						'Incendiary Shot',
+						'Multishot',
+						'Pinning Shot',
+						'Sharpshooter',
+						'Snare Trap',
+						'Vital Shot',
+						'Wild Instinct',
+					],
+				},
+			],
+			subclass: [],
+			asi: null,
+		},
+		{
+			level: 15,
+			auto: [],
+			pools: [],
+			subclass: [
+				{
+					group: 'Beastmaster',
+					options: ['Large - Protect Me!', 'Small - Go for the Throat!'],
+				},
+				{
+					group: 'Keeper Of The Shadowpath',
+					options: ['Apex Predator'],
+				},
+				{
+					group: 'Keeper Of The Wildheart',
+					options: ['Unparalleled Survivalist'],
+				},
+			],
+			asi: null,
+		},
+		{
+			level: 16,
+			auto: [],
+			pools: [],
+			subclass: [],
+			asi: 'primary',
+		},
+		{
+			level: 17,
+			auto: ['Peerless Hunter'],
+			pools: [],
+			subclass: [],
+			asi: 'secondary',
+		},
+		{
+			level: 18,
+			auto: ['Wild Endurance'],
+			pools: [],
+			subclass: [],
+			asi: null,
+		},
+		{
+			level: 19,
+			auto: [],
+			pools: [],
+			subclass: [],
+			asi: null,
+		},
+		{
+			level: 20,
+			auto: ['Nemesis'],
+			pools: [],
+			subclass: [],
+			asi: 'capstone',
+		},
+	],
+	subclasses: ['Beastmaster', 'Keeper Of The Shadowpath', 'Keeper Of The Wildheart'],
+	subclassSelectLevel: 1,
+};
