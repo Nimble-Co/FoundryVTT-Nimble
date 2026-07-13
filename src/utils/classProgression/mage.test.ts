@@ -9,7 +9,7 @@ import {
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { ClassFeatureIndex } from '../../getClassFeatures.ts';
+import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 
 /**
  * Integration test for the Mage class level-up progression.
