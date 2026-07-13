@@ -17,7 +17,9 @@ HP comes back easily. Wounds don't: a safe rest heals exactly one.
 
 Click the hourglass button in the sheet sidebar. The field rest window asks two things:
 
-<!-- TODO(screenshot): the field rest window showing the Catch Breath / Make Camp cards and the hit dice spend rows -->
+::: warning 📷 Screenshot needed
+The field rest window showing the Catch Breath / Make Camp cards and the hit dice spend rows.
+:::
 
 - **Rest type.** *Catch Breath* is a 10 minute rest where the hit dice you spend are rolled, adding your Strength modifier to each. *Make Camp* is an 8 hour rest where each spent hit die counts as its maximum value plus your Strength modifier instead of being rolled.
 - **Hit dice to spend.** One row per die size showing how many you have left; use the plus, minus, and Max buttons to choose how many to spend. You can also rest without spending any.
@@ -38,7 +40,9 @@ Click the moon button in the sheet sidebar. The safe rest window is a preview, n
 
 Anything already full is marked "Already full". Click the Safe Rest button to apply it all; a chat card summarizes what was recovered (no card is posted if there was nothing to recover).
 
-<!-- TODO(screenshot): the safe rest window showing the recovery preview cards -->
+::: warning 📷 Screenshot needed
+The safe rest window showing the recovery preview cards.
+:::
 
 ## Rolling hit dice from the sheet
 

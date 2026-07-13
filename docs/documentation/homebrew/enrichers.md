@@ -48,7 +48,9 @@ The full list of conditions and their descriptions is on the [conditions referen
 `lastStand` is the only condition id containing a capital letter. Since argument values are lowercased during parsing, `[[/condition condition=lastStand]]` will not resolve to it.
 :::
 
-<!-- TODO(screenshot): an item description containing a Frightened condition button, with its tooltip open showing the condition rules -->
+::: warning 📷 Screenshot needed
+An item description containing a Frightened condition button, with its tooltip open showing the condition rules.
+:::
 
 ## Check buttons: `[[/check]]`
 

@@ -10,7 +10,9 @@ When your character gains a level, the sheet does the bookkeeping for you. Your 
 
 Enable the sheet's editing toggle, then click the **Level Up** button in the sheet's sidebar (the rising arrow). The button is disabled if the character has no class or is already level 20.
 
-<!-- TODO(screenshot): the level up dialog showing the HP increase choice and skill point section -->
+::: warning 📷 Screenshot needed
+The level up dialog showing the HP increase choice and skill point section.
+:::
 
 ## What the dialog asks
 

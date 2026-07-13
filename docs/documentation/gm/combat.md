@@ -37,7 +37,9 @@ Items built with the Rules Builder can change how initiative behaves, and severa
 
 The Nimble combat tracker sits across the top of the screen and shows one card per combatant, in turn order. Hovering a card highlights its token on the canvas. Character cards show action pips, heroic reactions, and resources; monster cards can show hit point bars and be expanded for a closer look.
 
-<!-- TODO(screenshot): the combat tracker at the top of the screen during an active combat, with a character card's resource drawer open -->
+::: warning 📷 Screenshot needed
+The combat tracker at the top of the screen during an active combat, with a character card's resource drawer open.
+:::
 
 The tracker is heavily customizable: width, card size, colors, hit point bar display, what players are allowed to see, and more. Click the gear button on the tracker to open the **Combat Tracker Settings** window, and see the [Settings Reference](../reference/settings.md) for the full list of options rather than hunting for them here.
 
@@ -73,7 +75,9 @@ Rolling eight goblin attacks one at a time is nobody's idea of fun. The **Combat
 3. Target one or more character tokens (use targeting, not selection).
 4. Press **Roll**, or **Roll + End Turn** to advance the tracker afterwards.
 
-<!-- TODO(screenshot): the Combat System panel open with several minions selected, actions chosen, and a target picked -->
+::: warning 📷 Screenshot needed
+The Combat System panel open with several minions selected, actions chosen, and a target picked.
+:::
 
 The result is a single chat card: one row per minion showing hit or miss, the total damage at the bottom, and an **Apply Damage** button so the whole horde's damage lands in one click. Minions with no actions left, or with no action selected, are skipped and listed on the card so nothing silently disappears.
 

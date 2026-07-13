@@ -28,7 +28,9 @@ The simplest full homebrew loop is an ancestry with one trait. Build **Mirefolk*
 
 This is exactly how the compendium does it: the Dwarf ancestry's "Stout" trait is four rules: +1 max wounds, +2 max hit dice, −1 speed, and a Dwarvish language grant.
 
-<!-- TODO(screenshot): the Mirefolk ancestry's Rules tab showing the Maximum Wounds rule card -->
+::: warning 📷 Screenshot needed
+The Mirefolk ancestry's Rules tab showing the Maximum Wounds rule card.
+:::
 
 ## Backgrounds and boons
 
@@ -73,7 +75,9 @@ Class features are **not stored inside the class item**. Each one is a separate 
 
 When a player levels up, the level-up window automatically grants the features registered at the new level, prompts for any choice groups, offers subclasses at subclass levels, and processes spell grants; see [Advancement](../characters/advancement.md).
 
-<!-- TODO(screenshot): a class Progression tab showing level rows, an auto-granted feature, and a choice group -->
+::: warning 📷 Screenshot needed
+A class Progression tab showing level rows, an auto-granted feature, and a choice group.
+:::
 
 ::: tip Start from a copy, not from blank
 Strongly recommended: import an existing class from the **Classes** compendium and study or adapt it rather than starting empty. One important subtlety: because the progression is looked up by **identifier**, a duplicated class with the same identifier shows the *original* class's features. That is often exactly what you want ("the Berserker, but with my extra feature at level 3"): keep the identifier, and use the Progression tab's add buttons to layer your own world features on top of the compendium ones. If you want a genuinely new class, give it a new identifier and build its feature list fresh.

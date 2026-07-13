@@ -20,7 +20,9 @@ Use it for:
 
 Click **Create Actor** in the sidebar and choose **Import Player Character**. Pick the exported file (or drag it onto the window) and the dialog shows you a preview before anything is created: the character's name and portrait, level, max hit points, ancestry and class, and a full list of the items that will come along, grouped by type.
 
-<!-- TODO(screenshot): the Import Player Character window showing the preview of a loaded character file -->
+::: warning 📷 Screenshot needed
+The Import Player Character window showing the preview of a loaded character file.
+:::
 
 Press **Import Character** and the character is created as a brand-new actor, owned by you, with its sheet opened.
 
@@ -41,7 +43,9 @@ The dialog gives you control over the free-text area of the sheet:
 - An **additional page** with three more columns is added automatically when you put content on it.
 - Choose between the **lined** and **no-lines** versions of the sheet, and use the preview to check the layout before you press **Download PDF**.
 
-<!-- TODO(screenshot): the PDF export dialog with the content picker on the left and the column editor on the right -->
+::: warning 📷 Screenshot needed
+The PDF export dialog with the content picker on the left and the column editor on the right.
+:::
 
 ::: tip
 The picker and editor start pre-filled with a sensible selection of the character's content, so for most characters "open, glance, download" is the whole workflow.
@@ -51,7 +55,9 @@ The picker and editor start pre-filled with a sensible selection of the characte
 
 Click **Create Actor** and choose **Import from Nimble Nexus** (this button is GM-only). The window searches the monster library on [nimble.nexus](https://nimble.nexus). Browse, search by name, or filter by level, monster type, and role. Tick the monsters you want (or **select all**), optionally choose an actor folder or have a new one created, and import them in one batch.
 
-<!-- TODO(screenshot): the Nimble Nexus import window with search results and a few monsters selected -->
+::: warning 📷 Screenshot needed
+The Nimble Nexus import window with search results and a few monsters selected.
+:::
 
 Each monster arrives as the right actor type automatically (legendary monsters become solo monsters, minions become minions, everything else becomes an NPC), with hit points, armor, movement, saves, size, a portrait, and a hostile token already configured. Abilities and actions are converted into monster features, including attack sequences and the Bloodied and Last Stand phases of legendary monsters.
 

@@ -22,7 +22,9 @@ In the **Items** sidebar, click **Create Item**, name it *Emberlance*, and choos
 
 Spell sheets have no Rules tab. Passive bonuses belong on features and objects, not on spells.
 
-<!-- TODO(screenshot): a new spell item open on the Configuration tab -->
+::: warning 📷 Screenshot needed
+A new spell item open on the Configuration tab.
+:::
 
 ## Step 2: Tier, school, and properties
 
@@ -79,7 +81,9 @@ For Emberlance, add one delta: Operation **Dice**, count 1, die **d8**.
 
 With **Upcast Choice** selected, you instead click **Add Choice**, give each choice a label players will read (the compendium *Heal* uses "+1 target", "+4 reach", "+1d6 healing"), and fill in each choice's own deltas.
 
-<!-- TODO(screenshot): the Spell Scaling section with Upcast mode selected and a single +1d8 dice delta configured -->
+::: warning 📷 Screenshot needed
+The Spell Scaling section with Upcast mode selected and a single +1d8 dice delta configured.
+:::
 
 ## What the caster sees
 
@@ -91,7 +95,9 @@ Casting a spell opens the cast window. It contains the roll mode selector, situa
 
 A spell that cannot be upcast (or a caster without spare mana) just gets the normal roll controls. Holding **Alt** skips the window and casts at base tier. When the caster confirms, the upcast changes are baked into the rolls and the total mana is deducted.
 
-<!-- TODO(screenshot): the cast window for an upcastable spell, showing the mana slider and the Applied Effect preview -->
+::: warning 📷 Screenshot needed
+The cast window for an upcastable spell, showing the mana slider and the Applied Effect preview.
+:::
 
 ## Getting spells onto characters
 

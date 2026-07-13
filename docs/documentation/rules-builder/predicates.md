@@ -8,7 +8,9 @@ Every rule has a Condition box, found under **Advanced** on the rule card, label
 
 An empty Condition box means **always**. Fill it in and the rule only applies while the character matches every requirement you list. That's how you build things like "+2 Armor, but only while unarmored" or "this feature only kicks in from level 5".
 
-<!-- TODO(screenshot): a rule card with the Advanced section open, showing the "Applies when" Condition box with one row filled in -->
+::: warning 📷 Screenshot needed
+A rule card with the Advanced section open, showing the "Applies when" Condition box with one row filled in.
+:::
 
 ## How the system describes a character
 

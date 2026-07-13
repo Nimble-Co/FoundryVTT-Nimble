@@ -19,7 +19,9 @@ These appear in the **Actors** sidebar tab and can be placed on the map as token
 
 Everything in the **Nimble Monsters** pack is an NPC or a minion; everything in **Nimble Legendary Monsters** is a solo monster.
 
-<!-- TODO(screenshot): the Create Actor window showing the four actor kinds -->
+::: warning 📷 Screenshot needed
+The Create Actor window showing the four actor kinds.
+:::
 
 ## Things you drag onto them
 

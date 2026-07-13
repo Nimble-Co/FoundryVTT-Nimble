@@ -55,7 +55,9 @@ The exception is the **Damage Bonus** rule. Its **Bonus** field recognizes dice 
 
 - Rule: **Charge Pool** · **Max charges** → `@key + 1`
 
-<!-- TODO(screenshot): a Damage Bonus rule card with "1d6" in the Bonus field and Fire selected as damage type -->
+::: warning 📷 Screenshot needed
+A Damage Bonus rule card with "1d6" in the Bonus field and Fire selected as damage type.
+:::
 
 ## Debugging a formula
 

@@ -12,7 +12,9 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 2. **The sheet's Conditions tab.** Both the character sheet and the NPC sheet have a Conditions tab listing every condition with a search box and an "active only" filter. Toggle a condition there to apply or remove it. Other temporary and passive effects on the actor are listed on the same tab.
 3. **Chat card buttons.** When an attack, spell, or feature inflicts a condition, the condition appears as a button on its chat card. Select the affected tokens and click the button to apply the condition to all of them. Hover the button for the condition's description.
 
-<!-- TODO(screenshot): a chat card with a condition button, next to the token status panel showing named conditions -->
+::: warning 📷 Screenshot needed
+A chat card with a condition button, next to the token status panel showing named conditions.
+:::
 
 ## Linked conditions
 

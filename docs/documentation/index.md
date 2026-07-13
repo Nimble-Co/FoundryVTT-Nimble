@@ -6,7 +6,9 @@ title: "Welcome"
 
 Nimble for Foundry VTT is the official implementation of the Nimble 2 tabletop RPG for Foundry Virtual Tabletop. It takes the bookkeeping off your table so you can spend your time playing: the system rolls the dice, tracks the resources, applies the conditions, and keeps everyone's sheets up to date.
 
-<!-- TODO(screenshot): a filled-out character sheet, front page, showing stats, hit points, and inventory -->
+::: warning 📷 Screenshot needed
+A filled-out character sheet, front page, showing stats, hit points, and inventory.
+:::
 
 ## What the system does for you
 
@@ -17,9 +19,13 @@ Nimble for Foundry VTT is the official implementation of the Nimble 2 tabletop R
 - **A guided character creator and level-up flow.** New players are walked through every choice, and leveling up delivers the right features to the sheet automatically.
 - **A combat tracker built for Nimble.** Initiative, turns, and minion groups are handled the Nimble way, with a tracker that sits right at the top of your screen.
 
-<!-- TODO(screenshot): the combat tracker at the top of the screen during an active combat -->
+::: warning 📷 Screenshot needed
+The combat tracker at the top of the screen during an active combat.
+:::
 
-<!-- TODO(screenshot): an attack roll chat card in the chat log -->
+::: warning 📷 Screenshot needed
+An attack roll chat card in the chat log.
+:::
 
 ::: warning The system is not a rulebook
 This software automates Nimble; it does not teach it or replace it. You will want a copy of the Nimble rulebook at the table for the actual rules, and this documentation will point you there whenever a question is about the game rather than the software.
@@ -31,7 +37,9 @@ This software automates Nimble; it does not teach it or replace it. You will wan
 
 **GMs:** read the player pages too, then continue with the *Running the Game* section (starting with [Combat](gm/combat.md)) and the *Homebrewing* section, which shows how far you can customize the system without writing any code. The [Rules Builder](rules-builder/index.md) is where that customization gets really interesting.
 
-<!-- TODO(screenshot): the Rules Builder open on an item, showing a rule being configured -->
+::: warning 📷 Screenshot needed
+The Rules Builder open on an item, showing a rule being configured.
+:::
 
 If you have not installed the system yet, [Installation & First Steps](installation.md) walks you through it, and [Core Concepts](core-concepts.md) explains the handful of ideas everything else builds on.
 
