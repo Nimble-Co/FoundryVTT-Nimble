@@ -66,6 +66,13 @@ function readJson(path: string): Record<string, any> {
 	return JSON.parse(readFileSync(path, 'utf-8'));
 }
 
+/** Levels at which a feature is gained, normalizing the singular/plural fields. */
+function featureLevels(system: Record<string, any>): number[] {
+	if (system.gainedAtLevels?.length) return system.gainedAtLevels;
+	if (system.gainedAtLevel) return [system.gainedAtLevel];
+	return [];
+}
+
 let cachedFeatures: FeatureDoc[] | null = null;
 
 /** All class-feature documents from `packs/classFeatures`, as Foundry-shaped docs. */
@@ -104,12 +111,7 @@ export function loadAllClasses(): ClassMeta[] {
 				if (f.system.class !== id) continue;
 				if (!f.system.subclass) continue;
 				subclassGroups.add(f.system.group);
-				const levels = f.system.gainedAtLevels?.length
-					? f.system.gainedAtLevels
-					: f.system.gainedAtLevel
-						? [f.system.gainedAtLevel]
-						: [];
-				for (const lvl of levels) {
+				for (const lvl of featureLevels(f.system)) {
 					if (subclassSelectLevel === null || lvl < subclassSelectLevel) subclassSelectLevel = lvl;
 				}
 			}
@@ -286,12 +288,7 @@ function groupFeatureIndex(): Map<string, Map<number, FeatureDoc[]>> {
 		if (f.system.subclass) continue;
 		const group = f.system.group;
 		if (!group) continue;
-		const levels: number[] = f.system.gainedAtLevels?.length
-			? f.system.gainedAtLevels
-			: f.system.gainedAtLevel
-				? [f.system.gainedAtLevel]
-				: [];
-		for (const lvl of levels) {
+		for (const lvl of featureLevels(f.system)) {
 			if (!idx.has(group)) idx.set(group, new Map());
 			const lvlMap = idx.get(group)!;
 			if (!lvlMap.has(lvl)) lvlMap.set(lvl, []);
@@ -300,6 +297,31 @@ function groupFeatureIndex(): Map<string, Map<number, FeatureDoc[]>> {
 	}
 	cachedGroupIndex = idx;
 	return idx;
+}
+
+/**
+ * The combined, deduplicated pool of not-yet-owned features that `groups` offer at
+ * `level` — the union a #708 option draws its picks from. When `groups` names more
+ * than one group, their features form ONE pool, so picks are measured against the
+ * union rather than each group in isolation.
+ */
+function unionOfGroups(
+	groups: readonly string[],
+	level: number,
+	owned: ReadonlySet<string>,
+): FeatureDoc[] {
+	const gIndex = groupFeatureIndex();
+	const seen = new Set<string>();
+	const union: FeatureDoc[] = [];
+	for (const group of groups) {
+		for (const f of gIndex.get(group)?.get(level) ?? []) {
+			if (!owned.has(f.uuid) && !seen.has(f.uuid)) {
+				seen.add(f.uuid);
+				union.push(f);
+			}
+		}
+	}
+	return union;
 }
 
 /**
@@ -317,7 +339,6 @@ export async function simulateProgression(
 	identifier: string,
 ): Promise<LevelSummary[]> {
 	const meta = getClassMeta(identifier);
-	const gIndex = groupFeatureIndex();
 	const owned = new Set<string>();
 	const summaries: LevelSummary[] = [];
 
@@ -375,18 +396,11 @@ export async function simulateProgression(
 					hasRules: (opt.rules ?? []).length > 0,
 				});
 				if (groups.length === 0) continue;
-				const seen = new Set<string>();
-				const unionNames: string[] = [];
-				for (const group of groups) {
-					for (const f of gIndex.get(group)?.get(level) ?? []) {
-						if (!owned.has(f.uuid) && !seen.has(f.uuid)) {
-							seen.add(f.uuid);
-							unionNames.push(f.name);
-						}
-					}
-				}
 				const key = groups.length === 1 ? groups[0] : groups.join('+');
-				offeredGroups[key] = { selectionCount: count, options: unionNames };
+				offeredGroups[key] = {
+					selectionCount: count,
+					options: unionOfGroups(groups, level, owned).map((f) => f.name),
+				};
 			}
 
 			// Simulate the player picking ONE alternative — prefer one that draws from a
@@ -395,16 +409,7 @@ export async function simulateProgression(
 				applicable.find((opt) => (opt.selectionGroups ?? []).length > 0) ?? applicable[0];
 			if (chosen) {
 				const count = typeof chosen.selectionCount === 'number' ? chosen.selectionCount : 1;
-				const seen = new Set<string>();
-				const unionPool: FeatureDoc[] = [];
-				for (const group of chosen.selectionGroups ?? []) {
-					for (const f of gIndex.get(group)?.get(level) ?? []) {
-						if (!owned.has(f.uuid) && !seen.has(f.uuid)) {
-							seen.add(f.uuid);
-							unionPool.push(f);
-						}
-					}
-				}
+				const unionPool = unionOfGroups(chosen.selectionGroups ?? [], level, owned);
 				for (let i = 0; i < count && i < unionPool.length; i++) owned.add(unionPool[i].uuid);
 			}
 		}
