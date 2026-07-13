@@ -1491,6 +1491,8 @@ export const myStore = writable<MyStoreState>(initialState);
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
 | `countAdjacentEnemies()`, `ADJACENCY_QUALIFIER` | `src/utils/tokenAdjacency.ts` | Count enemy tokens adjacent to a given token; respects the `adjacencyIncludesDiagonals` world setting; accepts position overrides for pre-commit token moves |
 | `tokenHoverIn()`, `tokenGroupHoverIn()`, `tokenHoverOut()` | `src/utils/tokenHoverHighlight.ts` | Draw/remove a PIXI ring on canvas tokens on hover; `tokenGroupHoverIn` highlights multiple tokens simultaneously (used for monster stacks) |
+| `readToggledEffects()`, `computeNextToggledList()`, `getToggledTargetTags()`, `isEntryExpired()`, `getCurrentWorldTime()`, `TOGGLED_EFFECTS_FLAG_KEY` | `src/utils/toggledEffects.ts` | Relational "toggled effect" tracking for the `toggleEffect` rule — read/update the marking actor's flag list, compute capacity-bounded eviction, and emit `target:<flagKey>` domain tags (e.g. `target:quarry`) only for the marking actor |
+| `getActiveConditionalBonuses()`, `buildTargetDomain()` | `src/utils/conditionalBonuses.ts` | Discovery + target-domain helpers for the `conditionalBonus` rule — surface the per-attack advantage/damage choice for the activation dialog and build the target domain (own `target:*` tags plus relational toggled-effect tags) shared by the dialog and `ItemActivationManager` |
 
 ### Shared Stores
 

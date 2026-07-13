@@ -1,4 +1,5 @@
 import type { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
+import localize from './localize.js';
 import { getToggledTargetTags } from './toggledEffects.js';
 
 /**
@@ -87,7 +88,7 @@ function getActiveConditionalBonuses(
 		const damage = rule.resolveDamage();
 		options.push({
 			ruleId: rule.id,
-			label: rule.label || rule.item?.name || 'Conditional Bonus',
+			label: rule.label || rule.item?.name || localize('NIMBLE.ruleTypes.conditionalBonus'),
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
 			damageValue: damage.value,
 			damageFormula: damage.formula,

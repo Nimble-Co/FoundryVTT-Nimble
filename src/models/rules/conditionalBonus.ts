@@ -6,7 +6,11 @@ import { NimbleBaseRule } from './base.js';
 type ConditionalBonusDelivery = 'melee' | 'ranged' | 'any';
 type ConditionalBonusSource = 'weapon' | 'spell' | 'any';
 
-/** Matches dice notation: 1d6, 2d8, 3d20+5. Shared with damageBonus's detection. */
+/**
+ * Matches dice notation: 1d6, 2d8, 3d20+5. A deliberate local copy of the identical
+ * pattern in damageBonus.ts — two call sites is below the Rule-of-Three threshold, so
+ * it is not yet extracted to a shared helper.
+ */
 const DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
 
 interface ResolvedConditionalDamage {
@@ -144,10 +148,10 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 
 	/** Evaluates the targetCondition predicate against a target domain. Empty = always. */
 	matchesTarget(targetDomain: Set<string> | undefined): boolean {
-		const tc = this._targetCondition;
-		if (!tc || tc.size === 0) return true;
+		const targetCondition = this._targetCondition;
+		if (!targetCondition || targetCondition.size === 0) return true;
 		if (!targetDomain) return false;
-		return tc.test(targetDomain);
+		return targetCondition.test(targetDomain);
 	}
 
 	/** Resolves the offered damage to a number (numeric formula) or raw dice formula. */

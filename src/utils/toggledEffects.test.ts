@@ -75,10 +75,17 @@ describe('toggledEffects', () => {
 			expect(evicted).toHaveLength(0);
 		});
 
-		it('drops expired entries when computing the next list', () => {
+		it('drops expired entries when computing the next list and reports them as evicted', () => {
 			const current = [entry({ actorUuid: 'Actor.a', markedAt: 0, durationDays: 1 })];
-			const { list } = computeNextToggledList(current, entry({ actorUuid: 'Actor.b' }), 0, 100_000);
+			const { list, evicted } = computeNextToggledList(
+				current,
+				entry({ actorUuid: 'Actor.b' }),
+				0,
+				100_000,
+			);
 			expect(list.map((e) => e.actorUuid)).toEqual(['Actor.b']);
+			// Callers rely on `evicted` to clear each expired target's visible status condition.
+			expect(evicted.map((e) => e.actorUuid)).toEqual(['Actor.a']);
 		});
 	});
 
@@ -107,6 +114,12 @@ describe('toggledEffects', () => {
 		it('returns an empty set when attacker or target is missing', () => {
 			expect(getToggledTargetTags(null, { uuid: 'Actor.target' }).size).toBe(0);
 			expect(getToggledTargetTags(attacker, null).size).toBe(0);
+		});
+
+		it('skips flag keys whose value is not an array (corrupt/legacy flag)', () => {
+			const corruptAttacker = { getFlag: () => ({ quarry: 'not-an-array' }) };
+			const tags = getToggledTargetTags(corruptAttacker, { uuid: 'Actor.target' }, 100);
+			expect(tags.size).toBe(0);
 		});
 	});
 });

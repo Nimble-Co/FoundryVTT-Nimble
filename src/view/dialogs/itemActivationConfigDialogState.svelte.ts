@@ -58,12 +58,10 @@ export function createItemActivationConfigDialogState(
 	// advantage and bonus damage. Snapshot what applies against the current first
 	// target at dialog-open time.
 	const firstTargetActor = (() => {
-		const targets = (globalThis as { game?: { user?: { targets?: Set<{ actor?: unknown }> } } })
-			.game?.user?.targets;
+		const targets = game.user?.targets;
 		if (!targets || targets.size === 0) return undefined;
-		return targets.values().next().value?.actor as
-			| { uuid?: string; getTargetDomain?: () => Set<string> }
-			| undefined;
+		const firstTarget = targets.values().next().value as Token | undefined;
+		return firstTarget?.actor as { uuid?: string; getTargetDomain?: () => Set<string> } | undefined;
 	})();
 	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
 		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
@@ -259,9 +257,6 @@ export function createItemActivationConfigDialogState(
 		},
 		get conditionalAdvantageTotal() {
 			return conditionalAdvantageTotal;
-		},
-		get conditionalDamageFormula() {
-			return conditionalDamageFormula;
 		},
 		setConditionalChoice,
 

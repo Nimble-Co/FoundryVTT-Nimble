@@ -14,12 +14,12 @@ import {
 } from '../utils/attackUtils.js';
 import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
+import { buildTargetDomain } from '../utils/conditionalBonuses.js';
 import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
-import { getToggledTargetTags } from '../utils/toggledEffects.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -704,16 +704,15 @@ class ItemActivationManager {
 			| undefined;
 		if (!targetActor) return undefined;
 
-		const domain = new Set<string>(targetActor.getTargetDomain?.() ?? []);
-		// Inject relational `target:<flagKey>` tags (e.g. `target:quarry`) that this
-		// attacker has placed on the target, so toggle-effect predicates resolve only
-		// for the marking actor.
+		// Combines the target's own `target:*` tags with the relational
+		// `target:<flagKey>` tags (e.g. `target:quarry`) this attacker has placed on it,
+		// so toggle-effect predicates resolve only for the marking actor. Shared with the
+		// activation dialog's dialog-open snapshot via buildTargetDomain.
 		const attacker = this.actor as object as
 			| { getFlag(scope: string, key: string): unknown }
 			| null
 			| undefined;
-		for (const tag of getToggledTargetTags(attacker, targetActor)) domain.add(tag);
-		return domain;
+		return buildTargetDomain(attacker, targetActor);
 	}
 
 	/**
