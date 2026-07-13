@@ -45,7 +45,7 @@
 		"levelUpOptions": [
 			{
 				"id": "a-people-person",
-				"label": "Choose a People Person Companion",
+				"label": "Choose 2 People Person Companions",
 				"applyAtLevels": [
 					5
 				],
@@ -53,7 +53,7 @@
 				"selectionGroups": [
 					"a-people-person"
 				],
-				"selectionCount": 1
+				"selectionCount": 2
 			}
 		]
 	},
