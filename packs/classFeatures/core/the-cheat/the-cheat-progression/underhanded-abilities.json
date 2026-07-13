@@ -1,7 +1,7 @@
 {
 	"name": "Underhanded Abilities",
 	"type": "feature",
-	"img": "icons/skills/stealth/shadow-cloak-dagger.webp",
+	"img": "icons/magic/perception/silhouette-stealth-shadow.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
