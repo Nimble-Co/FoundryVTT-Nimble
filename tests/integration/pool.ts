@@ -446,9 +446,14 @@ class FoundryBrowserWorker implements PoolWorker {
 	}
 
 	send(request: WorkerRequest): void {
-		void this.doRequest(request).then((response) => {
-			this.events.emit('message', response);
-		});
+		void this.doRequest(request).then(
+			(response) => {
+				this.events.emit('message', response);
+			},
+			(error) => {
+				this.events.emit('error', error);
+			},
+		);
 	}
 
 	async doRequest(request: WorkerRequest): Promise<WorkerResponse> {
@@ -463,7 +468,11 @@ class FoundryBrowserWorker implements PoolWorker {
 				};
 			}
 
-			const viteUrl = browserData?.viteUrl;
+			// Setup was kicked off (not awaited) in `start`; block the first
+			// request on it instead so vitest's hard 5s runner-start cap
+			// doesn't kill the browser launch + world join.
+			const data = await _browserData?.catch(() => undefined);
+			const viteUrl = data?.viteUrl;
 			if (viteUrl == null) {
 				throw new Error('No Vite URL! The browser setup did not complete.');
 			}
@@ -562,16 +571,13 @@ class FoundryBrowserWorker implements PoolWorker {
 			return;
 		}
 
-		try {
-			const data = await setupBrowser(this.options.project.vitest);
-			if (!data) {
-				return; // Another worker errored; return with no additional error.
-			}
-		} catch (e) {
+		// Vitest hard-caps runner start at 5s (WORKER_START_TIMEOUT), far less
+		// than browser launch + world join. Don't await setup here; the first
+		// request awaits it in `doRequest` instead.
+		void setupBrowser(this.options.project.vitest).catch((e) => {
 			// Workaround for https://github.com/vitest-dev/vitest/issues/9207
 			console.error(e);
-			throw e;
-		}
+		});
 	}
 
 	async stop() {}
