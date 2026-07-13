@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "toggleEffect",
+				"type": "markTarget",
 				"disabled": false,
 				"id": "hunters-mark-toggle",
 				"identifier": "",
@@ -17,8 +17,7 @@
 				"priority": 1,
 				"flagKey": "quarry",
 				"statusCondition": "marked",
-				"maxTargets": 1,
-				"durationDays": 1
+				"maxTargets": 1
 			},
 			{
 				"type": "conditionalBonus",

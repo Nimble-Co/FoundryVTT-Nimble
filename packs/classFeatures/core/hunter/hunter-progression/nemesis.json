@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "toggleEffect",
+				"type": "markTarget",
 				"disabled": false,
 				"id": "nemesis-unlimited-quarry",
 				"identifier": "",
@@ -17,8 +17,7 @@
 				"priority": 1,
 				"flagKey": "quarry",
 				"statusCondition": "marked",
-				"maxTargets": 0,
-				"durationDays": 1
+				"maxTargets": 0
 			}
 		],
 		"activation": {

@@ -21,6 +21,7 @@ import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
+import { MarkTargetRule } from '../models/rules/markTarget.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
@@ -63,6 +64,7 @@ export default function registerRulesConfig() {
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
+		markTarget: 'NIMBLE.ruleTypes.markTarget',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
@@ -103,6 +105,7 @@ export default function registerRulesConfig() {
 		initiativeRollMode: InitiativeRollModeRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
+		markTarget: MarkTargetRule,
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
 		modifyPool: ModifyPoolRule,

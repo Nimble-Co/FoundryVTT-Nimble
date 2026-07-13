@@ -263,7 +263,7 @@
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
 			"lastStand": "<p>At 0 HP, the legendary monster is dying and gains dangerous new capabilities. They finally die after a small amount of additional damage.</p>",
-			"marked": "<p>Marked as a hunter's quarry. The marking hunter's attacks against this creature gain advantage or bonus damage, and it can't be hidden from them.</p>",
+			"marked": "<p>Marked as a quarry by another creature. That creature treats this one as a tracked target; any resulting bonuses come from the marker's own features, not this condition.</p>",
 			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
@@ -661,6 +661,7 @@
 			"initiativeBonus": "Initiative Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
+			"markTarget": "Mark Target",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -1062,7 +1063,7 @@
 				}
 			},
 			"toggleEffect": {
-				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active, and/or an on-activation marker that records the targeted creature(s) relationally on this actor (e.g. a Hunter's quarry) so the matching target:<key> predicate resolves only for this actor. Sibling rules predicate on those tags to deliver the actual bonuses.",
+				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
 				"tags": {
 					"label": "Tags",
 					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
@@ -1097,7 +1098,10 @@
 					"onEncounterEnd": "combat ended",
 					"onActorDying": "started dying",
 					"inactivity": "went {rounds} round(s) without attacking or re-activating"
-				},
+				}
+			},
+			"markTarget": {
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest; there is no time-based expiry.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
@@ -1109,10 +1113,6 @@
 				"maxTargets": {
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
-				},
-				"durationDays": {
-					"label": "Duration (days)",
-					"hint": "Days the mark lasts before expiring. Leave blank to persist until replaced or cleared."
 				}
 			},
 			"unarmedDamage": {
@@ -2087,7 +2087,7 @@
 				"decrement": "Spend one less"
 			},
 			"conditionalBonus": {
-				"heading": "Quarry Bonus",
+				"heading": "Conditional Bonuses",
 				"advantage": "Advantage × {count}",
 				"damage": "+{value} damage",
 				"none": "None"

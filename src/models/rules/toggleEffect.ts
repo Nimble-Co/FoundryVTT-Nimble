@@ -3,13 +3,6 @@ import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import {
-	computeNextToggledList,
-	getCurrentWorldTime,
-	readToggledEffects,
-	TOGGLED_EFFECTS_FLAG_KEY,
-	type ToggledTargetEntry,
-} from '#utils/toggledEffects.js';
-import {
 	type ActorDyingContext,
 	type ActorHealthContext,
 	type EncounterEndContext,
@@ -139,46 +132,6 @@ function schema() {
 			label: 'NIMBLE.rules.toggleEffect.endAfterInactiveRounds.label',
 			hint: 'NIMBLE.rules.toggleEffect.endAfterInactiveRounds.hint',
 		}),
-		// --- Target-marking extension ---------------------------------------
-		// When `flagKey` is non-empty, activating the owning item records the
-		// activation's target(s) relationally on this actor (e.g. a Hunter's
-		// quarry), exposing a `target:<flagKey>` predicate tag that resolves
-		// only for this actor. Independent of the self-effect toggle above; a
-		// rule may do either or both.
-		flagKey: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			label: 'NIMBLE.rules.toggleEffect.flagKey.label',
-			hint: 'NIMBLE.rules.toggleEffect.flagKey.hint',
-		}),
-		statusCondition: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			label: 'NIMBLE.rules.toggleEffect.statusCondition.label',
-			hint: 'NIMBLE.rules.toggleEffect.statusCondition.hint',
-			choices: () => CONFIG.NIMBLE.conditions,
-		}),
-		maxTargets: new fields.NumberField({
-			required: true,
-			nullable: false,
-			integer: true,
-			min: 0,
-			initial: 1,
-			label: 'NIMBLE.rules.toggleEffect.maxTargets.label',
-			hint: 'NIMBLE.rules.toggleEffect.maxTargets.hint',
-		}),
-		durationDays: new fields.NumberField({
-			required: false,
-			nullable: true,
-			min: 0,
-			initial: null,
-			label: 'NIMBLE.rules.toggleEffect.durationDays.label',
-			hint: 'NIMBLE.rules.toggleEffect.durationDays.hint',
-		}),
 	};
 }
 
@@ -203,20 +156,6 @@ interface ActorWithEffects {
 	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
 }
 
-interface StatusEffectActor {
-	toggleStatusEffect(
-		statusId: string,
-		options?: { active?: boolean; overlay?: boolean },
-	): Promise<unknown>;
-}
-
-interface MarkingActor {
-	uuid: string;
-	getFlag(scope: string, key: string): unknown;
-	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
-	rules?: NimbleBaseRule[];
-}
-
 class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.toggleEffect.description';
@@ -226,12 +165,6 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	declare confirmEndPrompt: string;
 	declare clearPoolsOnEnd: string[];
 	declare endAfterInactiveRounds: number | null;
-	declare flagKey: string;
-	// `statusCondition` is intentionally not re-declared: its type is inferred
-	// from the schema's `choices` (condition keys plus the blank sentinel), and
-	// widening it to `string` here would clash with that inferred type.
-	declare maxTargets: number;
-	declare durationDays: number | null;
 
 	static override defineSchema(): ToggleEffectRule.Schema {
 		return {
@@ -251,10 +184,6 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 					),
 				],
 				['endAfterInactiveRounds', 'number | null'],
-				['flagKey', 'string'],
-				['statusCondition', 'string'],
-				['maxTargets', 'number'],
-				['durationDays', 'number | null'],
 			]),
 		);
 	}
@@ -300,17 +229,6 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 			return;
 		}
 		if (!this.test()) return;
-
-		// Target-marking extension: record the activation's target(s)
-		// relationally (e.g. a Hunter's quarry) so `target:<flagKey>` predicates
-		// resolve for this actor. Runs independently of the self-effect toggle.
-		if (this.flagKey) await this.#markTargets(context);
-
-		// The backing ActiveEffect only applies when this rule is configured as a
-		// self toggle (tags / turn-off / linked pools / inactivity / end prompt).
-		// A pure marking rule leaves those empty and creates no backing effect.
-		if (!this.#hasSelfToggle()) return;
-
 		const existing = this.#findActiveEffect();
 		if (!existing) {
 			await this.#createActiveEffect();
@@ -602,110 +520,6 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	async #deleteActiveEffect(id: string): Promise<void> {
 		const actor = this.actor as unknown as ActorWithEffects;
 		await actor.deleteEmbeddedDocuments('ActiveEffect', [id]);
-	}
-
-	/** True when this rule is configured as a self-effect toggle (vs. pure target-marking). */
-	#hasSelfToggle(): boolean {
-		return (
-			this.tags.length > 0 ||
-			this.turnOff.length > 0 ||
-			this.clearPoolsOnEnd.length > 0 ||
-			this.endAfterInactiveRounds !== null ||
-			this.confirmEndPrompt.trim().length > 0
-		);
-	}
-
-	/**
-	 * Capacity for this flag key: the largest `maxTargets` among this actor's
-	 * enabled toggleEffect rules sharing the key whose predicate currently
-	 * passes. A 0 on any contributor means unlimited (returned as 0). Lets an
-	 * upgrade feature raise the cap (e.g. the Hunter's level-20 Nemesis) without
-	 * the base rule knowing about it.
-	 */
-	#resolveCapacity(): number {
-		const rules = (this.actor as object as MarkingActor).rules ?? [];
-		let capacity = this.maxTargets;
-		for (const rule of rules) {
-			if (rule.type !== 'toggleEffect') continue;
-			const other = rule as unknown as ToggleEffectRule;
-			if (other.flagKey !== this.flagKey) continue;
-			if (!other.appliesTo()) continue;
-			if (other.maxTargets === 0) return 0;
-			capacity = Math.max(capacity, other.maxTargets);
-		}
-		return capacity;
-	}
-
-	/**
-	 * Record the activation's target(s) on this actor's toggled-effects flag,
-	 * enforcing capacity (oldest evicted) and applying the optional status
-	 * condition to each marked target.
-	 */
-	async #markTargets(context: ItemActivatedContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
-
-		// Pair each target token with its actor; tokenless targets keep a null token uuid.
-		const targets: Array<{
-			actor: { uuid: string; name?: string } & StatusEffectActor;
-			tokenUuid: string | null;
-		}> = [];
-		for (const tokenDoc of context.targetTokens ?? []) {
-			const actor = (tokenDoc as { actor?: unknown }).actor as
-				| ({ uuid: string; name?: string } & StatusEffectActor)
-				| null
-				| undefined;
-			if (!actor?.uuid) continue;
-			targets.push({ actor, tokenUuid: (tokenDoc as { uuid?: string }).uuid ?? null });
-		}
-		if (targets.length === 0) return;
-
-		const owner = this.actor as object as MarkingActor;
-		const capacity = this.#resolveCapacity();
-		const now = getCurrentWorldTime();
-
-		const flag = { ...readToggledEffects(owner) };
-		let list = Array.isArray(flag[this.flagKey]) ? [...flag[this.flagKey]] : [];
-		const evicted: ToggledTargetEntry[] = [];
-
-		for (const { actor, tokenUuid } of targets) {
-			const entry: ToggledTargetEntry = {
-				actorUuid: actor.uuid,
-				tokenUuid,
-				name: actor.name ?? '',
-				markedAt: now,
-				durationDays: this.durationDays,
-			};
-			const next = computeNextToggledList(list, entry, capacity, now);
-			list = next.list;
-			evicted.push(...next.evicted);
-		}
-
-		flag[this.flagKey] = list;
-		await owner.setFlag(SYSTEM_ID, TOGGLED_EFFECTS_FLAG_KEY, flag);
-
-		await this.#applyMarkStatus(targets, evicted);
-	}
-
-	/** Applies the visible status to freshly marked targets and clears it from evicted ones. */
-	async #applyMarkStatus(
-		targets: Array<{ actor: StatusEffectActor }>,
-		evicted: ToggledTargetEntry[],
-	): Promise<void> {
-		if (!this.statusCondition) return;
-
-		for (const { actor } of targets) {
-			await actor.toggleStatusEffect(this.statusCondition, { active: true });
-		}
-
-		for (const entry of evicted) {
-			if (!entry.tokenUuid) continue;
-			const tokenDoc = (await fromUuid(entry.tokenUuid as Parameters<typeof fromUuid>[0])) as {
-				actor?: StatusEffectActor;
-			} | null;
-			const actor = tokenDoc?.actor;
-			if (!actor) continue;
-			await actor.toggleStatusEffect(this.statusCondition, { active: false });
-		}
 	}
 
 	/**
