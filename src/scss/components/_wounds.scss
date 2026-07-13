@@ -15,7 +15,6 @@
   transform: translateY(-55%);
   z-index: 2;
   pointer-events: none;
-  overflow: hidden;
 
   &--centered {
     justify-content: center;
@@ -30,15 +29,15 @@
     padding: 0.375rem;
     width: fit-content;
     font-size: var(--nimble-md-text);
-    color: #303030;
-    // Firefox fallback: use text-shadow to simulate text-stroke
+    line-height: 1;
+    color: #5a5a5a;
     text-shadow:
-      -1px -1px 0 #acacac,
-      1px -1px 0 #acacac,
-      -1px 1px 0 #acacac,
-      1px 1px 0 #acacac,
+      -1px -1px 0 #d6d6d6,
+      1px -1px 0 #d6d6d6,
+      -1px 1px 0 #d6d6d6,
+      1px 1px 0 #d6d6d6,
       0 0 4px #000;
-    -webkit-text-stroke: 1px #acacac;
+    -webkit-text-stroke: 1px #d6d6d6;
     border: 0;
     background: transparent;
     transition: var(--nimble-standard-transition);
@@ -47,14 +46,14 @@
 
     &:focus,
     &:hover {
-      color: #303030;
+      color: #5a5a5a;
       text-shadow:
-        -1px -1px 0 #acacac,
-        1px -1px 0 #acacac,
-        -1px 1px 0 #acacac,
-        1px 1px 0 #acacac,
+        -1px -1px 0 #d6d6d6,
+        1px -1px 0 #d6d6d6,
+        -1px 1px 0 #d6d6d6,
+        1px 1px 0 #d6d6d6,
         0 0 4px #000;
-      -webkit-text-stroke: 1px #acacac;
+      -webkit-text-stroke: 1px #d6d6d6;
       background: transparent;
       box-shadow: none;
       outline: none;
@@ -65,7 +64,6 @@
       --nimble-wound-button-opacity: 1;
       --nimble-wound-button-point-events: all;
       color: #b01b19;
-      // Firefox fallback: white stroke simulation
       text-shadow:
         -1px -1px 0 #fff,
         1px -1px 0 #fff,

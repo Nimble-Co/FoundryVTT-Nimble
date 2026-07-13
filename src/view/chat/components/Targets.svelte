@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
@@ -55,7 +57,7 @@
 
 	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
 
-	let messageDocument = getContext('messageDocument');
+	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
 </script>
 
@@ -91,6 +93,10 @@
 	<ul class="nimble-target-list">
 		{#await prepareTargets(targets) then tokens}
 			{#each tokens as token}
+				{@const damagePreview =
+					token && game.user?.isGM
+						? messageDocument?.reactive?.getDamagePreviewForTarget(token.uuid)
+						: null}
 				<li
 					class="nimble-card"
 					onmouseenter={() => tokenHoverIn(token.object)}
@@ -104,6 +110,14 @@
 
 					<span class="nimble-card__title">
 						{token?.actor?.name || token.name}
+						{#if damagePreview !== null && damagePreview !== undefined}
+							<span
+								class="nimble-target-damage"
+								data-tooltip={localize('NIMBLE.chatTargets.damagePreview')}
+							>
+								({damagePreview})
+							</span>
+						{/if}
 					</span>
 
 					{#if token?.actor?.type !== 'character'}
@@ -152,6 +166,12 @@
 		&:not(:last-of-type) {
 			border-bottom: 1px solid var(--nimble-card-border-color);
 		}
+	}
+
+	.nimble-target-damage {
+		margin-left: 0.25rem;
+		font-weight: 700;
+		color: var(--color-level-error, #7a1e1e);
 	}
 
 	.nimble-target-list {

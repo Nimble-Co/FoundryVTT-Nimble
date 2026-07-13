@@ -664,11 +664,13 @@
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
 			"modifyPool": "Modify Pool",
+			"modifyToggle": "Modify Toggle",
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
 			"speedBonus": "Speed Bonus",
+			"toggleEffect": "Toggle Effect",
 			"unarmedDamage": "Unarmed Damage"
 		},
 		"rules": {
@@ -935,6 +937,17 @@
 					"hint": "Signed amount added to the target pool's max (e.g. \"+1\", \"-1\", \"+@level\"). Leave blank to keep max unchanged."
 				}
 			},
+			"modifyToggle": {
+				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
+				"toggleIdentifier": {
+					"label": "Toggle identifier",
+					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
+				},
+				"suppressTurnOff": {
+					"label": "Suppress turn-off on",
+					"hint": "Turn-off events the target toggle should ignore. The toggle no longer ends automatically when these events fire."
+				}
+			},
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
 			},
@@ -977,6 +990,49 @@
 				"movementType": {
 					"label": "Movement type (blank = walk)",
 					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it."
+				}
+			},
+			"featureMessages": {
+				"berserker": {
+					"rageEndConfirm": "Are you sure you want to end Rage? Your Fury Dice will be lost."
+				}
+			},
+			"toggleEffect": {
+				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
+				"tags": {
+					"label": "Tags",
+					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
+				},
+				"turnOff": {
+					"label": "Turn off on",
+					"hint": "Events that automatically toggle the effect off."
+				},
+				"confirmEndPrompt": {
+					"label": "End confirm prompt",
+					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Accepts plain text or a localization key as the dialog body. Leave empty to disable the prompt."
+				},
+				"clearPoolsOnEnd": {
+					"label": "Clear pools on end",
+					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
+				},
+				"endAfterInactiveRounds": {
+					"label": "End after inactive rounds",
+					"hint": "Rounds of combat inactivity after which the toggle ends at the actor's turn end. Activity means re-activating this item or activating any item with a damage effect (an attack). Leave blank to disable."
+				},
+				"confirmDialogTitle": "End {name}?",
+				"confirmDialogConfirm": "End",
+				"confirmDialogCancel": "Cancel",
+				"inactivityPrompt": "{actor} has gone {rounds} round(s) without attacking or re-activating {name}. End it?",
+				"endedMessage": "{name} ended: {reason}.",
+				"endReasons": {
+					"onActorKilled": "died",
+					"onActorWounded": "took a wound",
+					"onRest": "completed a rest",
+					"onTurnStart": "turn started",
+					"onTurnEnd": "turn ended",
+					"onEncounterEnd": "combat ended",
+					"onActorDying": "started dying",
+					"inactivity": "went {rounds} round(s) without attacking or re-activating"
 				}
 			},
 			"unarmedDamage": {
@@ -1367,6 +1423,8 @@
 				"noSpellsFound": "No spells found.",
 				"unarmedStrike": "Unarmed Strike",
 				"feature": "Feature",
+				"toggleOn": "Activate {name}",
+				"toggleOff": "Deactivate {name}",
 				"mana": "{cost} Mana",
 				"thrown": "Thrown: {distance}",
 				"baseEffect": "Effect",
@@ -1546,6 +1604,8 @@
 			"noEffects": "No effects",
 			"temporaryEffects": "Temporary Effects",
 			"passiveEffects": "Passive Effects",
+			"endToggledEffect": "Turn off {name}",
+			"endToggledEffectTooltip": "Turn off",
 			"searchConditions": "Search conditions",
 			"showActiveOnly": "Show Active",
 			"showAllConditions": "Show All",
@@ -1830,7 +1890,8 @@
 			"noTargetsSelected": "No targets selected",
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
-			"removeTarget": "Remove Target"
+			"removeTarget": "Remove Target",
+			"damagePreview": "Damage this target will take (after armor)"
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"
@@ -1880,6 +1941,7 @@
 			"poolNode": {
 				"defaultLabel": "Pool",
 				"noChange": "— no change",
+				"atMax": "(pool at max)",
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
 					"rollDie": "Rolled",
@@ -1901,6 +1963,8 @@
 					"valueLabel": "Value",
 					"predicateLabel": "Predicate (JSON)",
 					"predicateInvalid": "Predicate must be valid JSON",
+					"suppressChatLabel": "Suppress roll chat card",
+					"suppressChatHint": "When enabled, the helper does not post a standalone roll card. Use when the feature's own activation card already shows the rolled faces.",
 					"poolTypeDice": "Dice Pool",
 					"poolTypeCharge": "Charge Pool",
 					"actionRollDie": "Roll Die",

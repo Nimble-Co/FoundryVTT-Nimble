@@ -548,13 +548,25 @@ class ItemActivationManager {
 				return { faces: [] };
 			};
 
+			// Authors opt in to suppressing the roll helper's own chat card per
+			// effect node: set when the feature's activation card already
+			// displays the rolled faces (e.g. Rage). Defaults to false so
+			// existing data keeps emitting the standalone roll card.
+			const suppressChat = node.suppressChat === true;
+
 			if (node.action === 'rollDie') {
 				const before = readPool();
 				let applied = false;
+				// Capture every face that came up, including rolls that didn't
+				// land in the pool because it was at max. RAW (Berserker Rage):
+				// "If you are already at your max, roll as normal and decide
+				// which ones to keep." The chat card displays these so the
+				// player can see what was rolled.
+				const rolledFaces: number[] = [];
 				for (let i = 0; i < count; i += 1) {
-					const ok = await rollDieIntoPool(actor, poolId);
-					if (!ok) break;
-					applied = true;
+					const result = await rollDieIntoPool(actor, poolId, { suppressChat });
+					if (result.face !== null) rolledFaces.push(result.face);
+					if (result.applied) applied = true;
 				}
 				const after = readPool();
 				node.result = {
@@ -562,13 +574,13 @@ class ItemActivationManager {
 					poolLabel: after.label ?? before.label,
 					previousCount: before.faces.length,
 					newCount: after.faces.length,
-					rolledFaces: after.faces.slice(before.faces.length),
+					rolledFaces,
 				};
 				return;
 			}
 			if (node.action === 'rollPool') {
 				const before = readPool();
-				const ok = await rollPoolFresh(actor, poolId);
+				const ok = await rollPoolFresh(actor, poolId, { suppressChat });
 				const after = readPool();
 				node.result = {
 					applied: ok,

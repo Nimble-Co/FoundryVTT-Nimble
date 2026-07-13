@@ -225,29 +225,42 @@ function emitRefillEvents(
  * activation-style "roll a die into the pool" (e.g. Berserker Rage adding a
  * Fury Die).
  */
+type RollDieIntoPoolResult = { applied: boolean; face: number | null };
+
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string } = {},
-): Promise<boolean> {
-	if (!isCharacterActor(actor)) return false;
-	if (typeof poolId !== 'string' || poolId.length < 1) return false;
+	options: { flavor?: string; suppressChat?: boolean } = {},
+): Promise<RollDieIntoPoolResult> {
+	if (!isCharacterActor(actor)) return { applied: false, face: null };
+	if (typeof poolId !== 'string' || poolId.length < 1) return { applied: false, face: null };
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const pool = currentPools[poolId];
-	if (!pool) return false;
-	if (pool.faces.length >= pool.max) return false;
+	if (!pool) return { applied: false, face: null };
 
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`1d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
-
 	const face = roll.total ?? 1;
+
+	if (!options.suppressChat) {
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		await roll.toMessage({
+			speaker: ChatMessageCls.getSpeaker({ actor }),
+			flavor: options.flavor ?? pool.label,
+		});
+	}
+
+	// At max: the die is rolled (RAW: "If you are already at your max, roll as
+	// normal and decide which ones to keep") but the pool is untouched. The
+	// caller (and the chat card) gets the face so the player can see what
+	// came up. Per-pool "decide which to keep" semantics layer on top of this.
+	if (pool.faces.length >= pool.max) {
+		return { applied: false, face };
+	}
+
 	const previousFaces = [...pool.faces];
 	pool.faces = [...pool.faces, face];
 
@@ -263,7 +276,7 @@ async function rollDieIntoPool(
 		trigger: 'manual',
 	});
 
-	return true;
+	return { applied: true, face };
 }
 
 /**
@@ -275,7 +288,7 @@ async function rollDieIntoPool(
 async function rollPoolFresh(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string } = {},
+	options: { flavor?: string; suppressChat?: boolean } = {},
 ): Promise<boolean> {
 	if (!isCharacterActor(actor)) return false;
 	if (typeof poolId !== 'string' || poolId.length < 1) return false;
@@ -288,11 +301,14 @@ async function rollPoolFresh(
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`${pool.max}d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
+	if (!options.suppressChat) {
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		await roll.toMessage({
+			speaker: ChatMessageCls.getSpeaker({ actor }),
+			flavor: options.flavor ?? pool.label,
+		});
+	}
 
 	const previousFaces = [...pool.faces];
 	const newFaces: number[] = [];

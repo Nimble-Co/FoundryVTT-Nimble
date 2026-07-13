@@ -24,4 +24,5 @@ export { Migration023SpellClasses } from './Migration023SpellClasses.js';
 export { Migration024OathswornRefillMode } from './Migration024OathswornRefillMode.js';
 export { Migration025DiceConsumerSplit } from './Migration025DiceConsumerSplit.js';
 export { Migration026IgniteSingleTarget } from './Migration026IgniteSingleTarget.js';
-export { Migration027AoETemplateFlags } from './Migration027AoETemplateFlags.js';
+export { Migration027RageToggleEffect } from './Migration027RageToggleEffect.js';
+export { Migration028AoETemplateFlags } from './Migration028AoETemplateFlags.js';

@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.8] - 2026-07-10
+
+### Added
+
+- [#813] Ship GM-friendly default token settings. @trevlar
+- [#815] Limit actions to 1 while Dying. @trevlar
+- [#817] Show custom reactions on the heroic reactions tab. @trevlar
+- [#827] Show a color-coded associated stat for each skill. @trevlar
+- [#828] Convert monsters between standard, minion, and solo subtypes. @trevlar
+- [#829] Support custom and aliased in-game languages. @trevlar
+- [#831] Add hitDiceAdvantage advantage-level support for the Hardy boon. @trevlar
+- [#832] Add active turn handoff controls. @trevlar
+- [#826] Add custom spell schools. @trevlar
+
+### Fixed
+
+- [#825] Only the active GM applies automatic conditions (Hampered). @trevlar
+- [#826] Fix subclass parent-class reactivity. @trevlar
+- [#839] Allow all inventory item quantities to be modified. @trevlar
+- [#840] Let Ignite miss and crit; migrate existing copies. @trevlar
+- [#838] Restore per-turn actions for characters and solo monsters. @trevlar
+- [#846] Let players add dice to their own pool. @fronix
+
+---
+
+
 ## [0.8.7] - 2026-06-17
 
 ### Added

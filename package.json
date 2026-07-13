@@ -1,6 +1,6 @@
 {
 	"name": "nimble",
-	"version": "0.8.7",
+	"version": "0.8.8",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
@@ -12,6 +12,7 @@
 		"build:compendia": "node ./build/buildCompendia.mjs",
 		"worktree:setup": "node ./build/worktreeSetup.mjs",
 		"worktree:cleanup": "node ./build/worktreeCleanup.mjs",
+		"worktree:reset": "pnpm worktree:cleanup && pnpm worktree:setup",
 		"dev": "vite",
 		"format": "biome format --write ./src/ ./types/ ./lib/ && prettier --write \"src/**/*.svelte\"",
 		"format:biome": "biome format --write ./src/ ./types/ ./lib/",

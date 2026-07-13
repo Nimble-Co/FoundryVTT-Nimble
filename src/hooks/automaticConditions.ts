@@ -1,4 +1,5 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
+import { isActiveGM } from '../utils/isActiveGM.js';
 import { isConditionImmune } from './conditionImmunityGuard.js';
 
 interface AutomaticConditionContext {
@@ -6,25 +7,6 @@ interface AutomaticConditionContext {
 	automaticConditionsToApply?: string[]; // Internal: conditions to apply after creation
 	automaticConditionsToRemove?: string[]; // Internal: conditions to remove after deletion
 	automaticConditionsActor?: NimbleBaseActor; // Actor reference for postDelete operations
-}
-
-/**
- * Applying/removing automatic conditions (e.g. Hampered) mutates the actor's
- * effects, but Foundry fires create/deleteActiveEffect hooks on *every*
- * connected client. Without a guard, each client runs the follow-up write:
- * players hit "User lacks permission to create/delete effect on actor" errors,
- * and one duplicate effect is created per connected user with permission.
- *
- * Restrict execution to the single designated active GM so the write happens
- * exactly once.
- */
-function isActiveGM(): boolean {
-	const users = game.users as unknown as { activeGM?: { id?: string | null } | null };
-	const activeGmId = users?.activeGM?.id ?? null;
-	// If an active GM is designated, only that user proceeds.
-	if (activeGmId) return activeGmId === game.user?.id;
-	// Fallback (no active GM designated): allow any connected GM.
-	return Boolean(game.user?.isGM);
 }
 
 export const handleAutomaticConditionApplication = {
