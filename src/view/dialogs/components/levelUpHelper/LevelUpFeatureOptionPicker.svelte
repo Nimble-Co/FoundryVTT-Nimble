@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { LevelUpFeatureOptionPickerProps } from '#types/components/ClassFeatureSelection.d.ts';
-	import type { NimbleFeatureItem } from '#documents/item/feature.js';
 
 	import FeatureCard from '../characterCreator/FeatureCard.svelte';
 	import FeatureGroupSelection from '../characterCreator/FeatureGroupSelection.svelte';
 	import localize from '#utils/localize.js';
+	import { createFeatureOptionPickerState } from './LevelUpFeatureOptionPicker.svelte.ts';
 
 	let {
 		feature,
@@ -16,89 +16,24 @@
 		onSubItemSelect,
 	}: LevelUpFeatureOptionPickerProps = $props();
 
-	const options = $derived(
-		(feature.system.levelUpOptions ?? []).filter(
-			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(levelingTo),
-		),
-	);
-	const isSingleOption = $derived(options.length === 1);
-	const selectedOption = $derived(options.find((o) => o.id === selectedOptionId) ?? null);
-	const subSelectionCount = $derived(selectedOption?.selectionCount ?? 1);
-	const hasSubSelection = $derived((selectedOption?.selectionGroups?.length ?? 0) > 0);
-
-	$effect(() => {
-		if (isSingleOption && selectedOptionId !== options[0].id) {
-			onSelect(options[0].id);
-		}
-	});
-
-	let loadedSubItems = $state<NimbleFeatureItem[]>([]);
-	let subItemsLoading = $state(false);
-
-	$effect(() => {
-		const option = selectedOption;
-		const owned = ownedItemUuids;
-		const classId = feature.system.class;
-
-		if (!option?.selectionGroups?.length) {
-			loadedSubItems = [];
-			subItemsLoading = false;
-			return;
-		}
-
-		const groupSet = new Set(option.selectionGroups);
-		subItemsLoading = true;
-
-		(async () => {
-			const results: NimbleFeatureItem[] = [];
-			const seenUuids = new Set<string>();
-			const indexFields = ['system.class', 'system.group', 'system.subclass'] as string[];
-
-			for (const pack of game.packs) {
-				if (pack.documentName !== 'Item') continue;
-				// @ts-expect-error - custom index fields
-				const packIndex = await pack.getIndex({ fields: indexFields });
-				for (const entry of packIndex) {
-					const e = entry as {
-						uuid: string;
-						type: string;
-						system?: { class?: string; group?: string; subclass?: boolean };
-					};
-					if (e.type !== 'feature') continue;
-					if (e.system?.class !== classId) continue;
-					if (e.system?.subclass) continue;
-					if (!groupSet.has(e.system?.group ?? '')) continue;
-					if (seenUuids.has(e.uuid)) continue;
-					seenUuids.add(e.uuid);
-					const item = await fromUuid(e.uuid as `Item.${string}`);
-					if (item) results.push(item as NimbleFeatureItem);
-				}
-			}
-
-			loadedSubItems = results.filter((item) => !owned.has(item.uuid));
-			subItemsLoading = false;
-		})().catch(() => {
-			subItemsLoading = false;
-		});
-	});
-
-	const selectedSubItems = $derived(
-		loadedSubItems.filter((i) => selectedSubItemUuids.includes(i.uuid)),
+	const state = createFeatureOptionPickerState(
+		() => feature,
+		() => levelingTo,
+		() => selectedOptionId,
+		() => selectedSubItemUuids,
+		() => ownedItemUuids,
+		(optionId) => onSelect(optionId),
+		(uuid) => onSubItemSelect(uuid),
 	);
 
-	// Auto-select the sub-item(s) when the number of available choices exactly matches the
-	// required count — e.g. the last remaining Weapon Mastery at level 14. The player shouldn't
-	// have to click the only option left. Mirrors the auto-select behaviour of fixed selection
-	// groups (createClassFeatureSelectionState), and the guard against already-selected uuids
-	// prevents the effect from looping once the selection has been applied.
-	$effect(() => {
-		if (subItemsLoading) return;
-		if (loadedSubItems.length === 0) return;
-		if (loadedSubItems.length !== subSelectionCount) return;
-		for (const item of loadedSubItems) {
-			if (!selectedSubItemUuids.includes(item.uuid)) onSubItemSelect(item.uuid);
-		}
-	});
+	const options = $derived(state.options);
+	const isSingleOption = $derived(state.isSingleOption);
+	const selectedOption = $derived(state.selectedOption);
+	const subSelectionCount = $derived(state.subSelectionCount);
+	const hasSubSelection = $derived(state.hasSubSelection);
+	const loadedSubItems = $derived(state.loadedSubItems);
+	const subItemsLoading = $derived(state.subItemsLoading);
+	const selectedSubItems = $derived(state.selectedSubItems);
 </script>
 
 <div class="feature-option-picker">
