@@ -43,7 +43,9 @@
 			2,
 			3,
 			5
-		]
+		],
+		"levelUpOptions": [],
+		"selectionCountByLevel": {}
 	},
 	"effects": [],
 	"flags": {},

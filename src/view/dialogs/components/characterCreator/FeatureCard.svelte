@@ -5,15 +5,24 @@
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
 	import localize from '#utils/localize.js';
 
-	let { feature, isSelected = false, isDisabled = false, onSelect }: FeatureCardProps = $props();
+	let {
+		feature,
+		isSelected = false,
+		isDisabled = false,
+		onSelect,
+		asHeader = false,
+	}: FeatureCardProps = $props();
 
 	const state = createFeatureCardState(() => feature);
 
 	// Whether this card is in selectable mode
 	const isSelectable = $derived(!!onSelect);
+	// Only expandable when there's actual description text to reveal
+	const isExpandable = $derived(state.hasDescription);
 
 	function handleRowClick() {
-		// Clicking the row always toggles expansion
+		// Clicking the row toggles expansion only when there's a description to show
+		if (!isExpandable) return;
 		state.toggleExpanded();
 	}
 
@@ -30,18 +39,27 @@
 	}
 </script>
 
-<li class="feature-item" class:expanded={state.isExpanded}>
+<li
+	class="feature-item"
+	class:expanded={state.isExpanded}
+	class:non-expandable={!isExpandable}
+	class:as-header={asHeader}
+>
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- role and tabindex are set together only when expandable; the ternaries are correlated -->
 	<div
 		class="feature-row"
 		class:selected={isSelected}
 		class:selectable={isSelectable}
 		class:disabled={isDisabled}
-		role="button"
-		tabindex="0"
+		role={isExpandable ? 'button' : undefined}
+		tabindex={isExpandable ? 0 : undefined}
 		onclick={handleRowClick}
 		onkeydown={handleKeydown}
 	>
-		<i class="fa-solid fa-chevron-down expand-arrow"></i>
+		{#if isExpandable}
+			<i class="fa-solid fa-chevron-down expand-arrow"></i>
+		{/if}
 
 		<img
 			class="feature-row__img"
@@ -73,9 +91,9 @@
 		{/if}
 	</div>
 
-	<div class="accordion-content">
-		<div class="description">
-			{#if state.descriptionParts.length > 0}
+	{#if isExpandable}
+		<div class="accordion-content">
+			<div class="description">
 				{#each state.descriptionParts as part}
 					{#if part.type === 'spell' && part.spell}
 						<SpellReferenceCard spell={part.spell} />
@@ -83,11 +101,9 @@
 						{@html part.content}
 					{/if}
 				{/each}
-			{:else}
-				<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
-			{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 </li>
 
 <style lang="scss">
@@ -116,6 +132,38 @@
 
 			.accordion-content {
 				opacity: 1;
+			}
+		}
+
+		&.non-expandable {
+			grid-template-rows: 50px;
+
+			.feature-row {
+				cursor: default;
+
+				// A plain header (no description, not selectable) shouldn't react to hover
+				&:not(.selectable):hover {
+					border-color: var(--nimble-card-border-color);
+				}
+			}
+		}
+
+		// Bare header mode: no card chrome, so the card reads as a section heading rather
+		// than a nested box.
+		&.as-header {
+			.feature-row {
+				background: transparent;
+				border-color: transparent;
+				border-radius: 0;
+				padding-left: 0;
+
+				// Never show a hover border on the header. The `:not(.selectable)` variant
+				// matches the specificity of the .non-expandable hover rule above so this one
+				// wins by source order (the header is also .non-expandable).
+				&:hover,
+				&:not(.selectable):hover {
+					border-color: transparent;
+				}
 			}
 		}
 	}

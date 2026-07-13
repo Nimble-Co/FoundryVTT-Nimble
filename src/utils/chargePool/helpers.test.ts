@@ -39,9 +39,11 @@ function createMockActor(
 	items: MockItem[],
 	rollData: Record<string, unknown> = {},
 	actorFlags: Record<string, Record<string, unknown>> = {},
+	levelUpHistory: Array<{ poolMaxBonuses?: Record<string, number> }> = [],
 ): MockActor {
 	return {
 		type: 'character',
+		system: { levelUpHistory },
 		items: {
 			contents: items,
 			get: (id: string) => items.find((i) => i.id === id),
@@ -178,5 +180,103 @@ describe('charge pool modifier predicate gating', () => {
 		const pool = Object.values(map)[0];
 		// 3 + 1 + 2 = 6
 		expect(pool.max).toBe(6);
+	});
+});
+
+describe('charge pool level-up max bonus (poolMaxBonus from history)', () => {
+	it('adds the cumulative pool bonus from level-up history to the resolved max', () => {
+		// Commander with STR 3 → base 3 combat dice; selected "+1 Max Combat Die" once.
+		const actor = createMockActor(
+			[
+				createMockItem('ffab', 'Fit for Any Battlefield', [
+					{
+						type: 'chargePool',
+						id: 'combat-dice-pool',
+						identifier: 'combat-dice',
+						scope: 'item',
+						max: '@strength + @combatDiceBonus',
+						initial: 'zero',
+					} as MockRule,
+				]),
+			],
+			{ strength: 3 },
+			{},
+			[{ poolMaxBonuses: { 'combat-dice': 1 } }],
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(4);
+	});
+
+	it('works even when the embedded formula is the stale "@strength" (ignores @combatDiceBonus)', () => {
+		// Reproduces the reported bug: an actor whose embedded chargePool formula predates the
+		// @combatDiceBonus change. The bonus must still apply because it is added in code.
+		const actor = createMockActor(
+			[
+				createMockItem('ffab', 'Fit for Any Battlefield', [
+					{
+						type: 'chargePool',
+						id: 'combat-dice-pool',
+						identifier: 'combat-dice',
+						scope: 'item',
+						max: '@strength',
+						initial: 'zero',
+					} as MockRule,
+				]),
+			],
+			{ strength: 3 },
+			{},
+			[{ poolMaxBonuses: { 'combat-dice': 1 } }],
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(4);
+	});
+
+	it('accumulates the bonus across multiple level-up selections', () => {
+		const actor = createMockActor(
+			[
+				createMockItem('ffab', 'Fit for Any Battlefield', [
+					{
+						type: 'chargePool',
+						id: 'combat-dice-pool',
+						identifier: 'combat-dice',
+						scope: 'item',
+						max: '@strength',
+						initial: 'zero',
+					} as MockRule,
+				]),
+			],
+			{ strength: 3 },
+			{},
+			[{ poolMaxBonuses: { 'combat-dice': 1 } }, { poolMaxBonuses: { 'combat-dice': 1 } }],
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(5);
+	});
+
+	it('drops the bonus when history no longer contains it (revert)', () => {
+		// After reverting the level-up that added the bonus, history has no poolMaxBonuses → base only.
+		const actor = createMockActor(
+			[
+				createMockItem('ffab', 'Fit for Any Battlefield', [
+					{
+						type: 'chargePool',
+						id: 'combat-dice-pool',
+						identifier: 'combat-dice',
+						scope: 'item',
+						max: '@strength',
+						initial: 'zero',
+					} as MockRule,
+				]),
+			],
+			{ strength: 3 },
+			{},
+			[],
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(3);
 	});
 });

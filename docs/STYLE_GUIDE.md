@@ -1484,6 +1484,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `manaRecovery` | `src/utils/manaRecovery.ts` | Mana recovery calculations |
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
+| `isLevelUpOptionApplicable()` | `src/utils/isLevelUpOptionApplicable.ts` | Whether a feature's level-up option applies at a given level (empty `applyAtLevels` ⇒ every level) |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
 | `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (defaults to 1) |
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |

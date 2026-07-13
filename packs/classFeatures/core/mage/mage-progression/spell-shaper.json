@@ -1,0 +1,87 @@
+{
+	"name": "Spell Shaper",
+	"type": "feature",
+	"img": "icons/magic/lightning/bolt-strike-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "",
+		"featureType": "class",
+		"class": "mage",
+		"group": "mage-progression",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13
+		],
+		"selectionCountByLevel": {},
+		"levelUpOptions": [
+			{
+				"id": "spell-shaper-initial",
+				"label": "Choose 2 Spell Shaper Abilities",
+				"applyAtLevels": [
+					4
+				],
+				"rules": [],
+				"selectionGroups": [
+					"spellshaper"
+				],
+				"selectionCount": 2
+			},
+			{
+				"id": "spell-shaper",
+				"label": "Choose a Spell Shaper Ability",
+				"applyAtLevels": [
+					9,
+					13
+				],
+				"rules": [],
+				"selectionGroups": [
+					"spellshaper"
+				],
+				"selectionCount": 1
+			}
+		]
+	},
+	"effects": [],
+	"folder": "a95d9a582c294f7c",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1761500000000,
+		"modifiedTime": 1761500000000,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "l0Mia2jNotcVWVv7"
+}

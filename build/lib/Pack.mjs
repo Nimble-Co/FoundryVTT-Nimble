@@ -22,6 +22,8 @@ export default class Pack {
 		['the-cheat', 1],
 	]);
 
+	static #GROUP_FOLDER_DISPLAY_NAME = new Map([['commanders-orders', "Commander's Orders"]]);
+
 	constructor(dirName, data) {
 		const metadata = Pack.#packsMetadata.find(
 			(p) => path.basename(p.path).split('.')[0] === path.basename(dirName),
@@ -275,8 +277,7 @@ export default class Pack {
 				!classData.abilityGroups.has(groupName)
 			) {
 				const displayName =
-					(typeof source?.system?.groupLabel === 'string' && source.system.groupLabel) ||
-					this.#toDisplayClassName(groupName);
+					Pack.#GROUP_FOLDER_DISPLAY_NAME.get(groupName) ?? this.#toDisplayClassName(groupName);
 				classData.abilityGroups.set(groupName, displayName);
 			}
 		}
