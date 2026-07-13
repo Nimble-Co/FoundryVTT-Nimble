@@ -1,34 +1,8 @@
 // Expected class-progression report for the-cheat, asserted by the-cheat.test.ts.
 
-export interface ReportPool {
-	group: string;
-	options: string[];
-}
-
-export interface ReportLevel {
-	level: number;
-	auto: string[];
-	pools: ReportPool[];
-	subclass: ReportPool[];
-	asi: string | null;
-}
-
-export interface Report {
-	name: string;
-	id: string;
-	hitDie: number;
-	startingHp: number;
-	keyAbilities: string[];
-	savingThrows: { adv: string; dis: string };
-	startingGear: string[];
-	caster: boolean;
-	manaFormula: string;
-	subclasses: string[];
-	subclassSelectLevel: number;
-	levels: ReportLevel[];
-}
-
 /** The full Underhanded Abilities option list, offered when first unlocked (L4). */
+import type { Report, ReportPool } from '../../../tests/fixtures/classProgression.types.ts';
+
 export function UNDERHANDED_ABILITIES_OPTIONS(): string[] {
 	return [
 		'"Creative" Accounting',

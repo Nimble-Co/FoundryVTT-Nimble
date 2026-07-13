@@ -1,5 +1,41 @@
 /** Types for the shared class-progression integration-test harness. */
 
+/** A pool of features a class report claims are offered for selection at a level. */
+export interface ReportPool {
+	group: string;
+	options: string[];
+}
+
+/** One level's worth of a class report's expected grants and choices. */
+export interface ReportLevel {
+	level: number;
+	auto: string[];
+	pools: ReportPool[];
+	subclass: ReportPool[];
+	asi: string | null;
+}
+
+/**
+ * The full human-facing progression report a class-progression test asserts against —
+ * what a character of this class looks like as it levels 1 -> 20. Each `*.expect.ts`
+ * exports a `REPORT` of this shape; the test drives the real resolver and checks it
+ * grants exactly what the report claims.
+ */
+export interface Report {
+	name: string;
+	id: string;
+	hitDie: number;
+	startingHp: number;
+	keyAbilities: string[];
+	savingThrows: { adv: string; dis: string };
+	startingGear: string[];
+	caster: boolean;
+	manaFormula: string;
+	subclasses: string[];
+	subclassSelectLevel: number;
+	levels: ReportLevel[];
+}
+
 export interface FeatureDoc {
 	uuid: string;
 	_id: string;

@@ -1,18 +1,8 @@
 // Expected class-progression report for shepherd, asserted by shepherd.test.ts.
 
-export interface ReportPool {
-	group: string;
-	options: string[];
-}
-export interface ReportLevel {
-	level: number;
-	auto: string[];
-	pools: ReportPool[];
-	subclass: unknown[];
-	asi: string | null;
-}
-
 // The eight sacred-grace options, per the expectation report.
+import type { ReportLevel } from '../../../tests/fixtures/classProgression.types.ts';
+
 export const SACRED_GRACE_OPTIONS = [
 	'Assist Me, My Friend!',
 	'Empowered Companion',
@@ -52,7 +42,16 @@ export const REPORT = {
 			subclass: [],
 			asi: null,
 		},
-		{ level: 3, auto: ['Master of Twilight'], pools: [], subclass: [{}, {}], asi: null },
+		{
+			level: 3,
+			auto: ['Master of Twilight'],
+			pools: [],
+			subclass: [
+				{ group: 'Luminary Of Malice', options: ['Harbinger of Decay', 'Soul Reaper'] },
+				{ group: 'Luminary Of Mercy', options: ['Life is Beautiful', 'Merciful Healing'] },
+			],
+			asi: null,
+		},
 		{ level: 4, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: 'primary' },
 		{
 			level: 5,
@@ -68,7 +67,16 @@ export const REPORT = {
 			subclass: [],
 			asi: null,
 		},
-		{ level: 7, auto: [], pools: [], subclass: [{}, {}], asi: null },
+		{
+			level: 7,
+			auto: [],
+			pools: [],
+			subclass: [
+				{ group: 'Luminary Of Malice', options: ["Veilwalker's Blessing"] },
+				{ group: 'Luminary Of Mercy', options: ['Conduit of Light'] },
+			],
+			asi: null,
+		},
 		{ level: 8, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: 'primary' },
 		{
 			level: 9,
@@ -78,7 +86,16 @@ export const REPORT = {
 			asi: 'secondary',
 		},
 		{ level: 10, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: null },
-		{ level: 11, auto: ['Master of Twilight'], pools: [], subclass: [{}, {}], asi: null },
+		{
+			level: 11,
+			auto: ['Master of Twilight'],
+			pools: [],
+			subclass: [
+				{ group: 'Luminary Of Malice', options: ["Deathbringer's Touch"] },
+				{ group: 'Luminary Of Mercy', options: ['Powerful Healer'] },
+			],
+			asi: null,
+		},
 		{ level: 12, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: 'primary' },
 		{
 			level: 13,
@@ -88,7 +105,16 @@ export const REPORT = {
 			asi: 'secondary',
 		},
 		{ level: 14, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: null },
-		{ level: 15, auto: [], pools: [], subclass: [{}, {}], asi: null },
+		{
+			level: 15,
+			auto: [],
+			pools: [],
+			subclass: [
+				{ group: 'Luminary Of Malice', options: ['Conduit of Death'] },
+				{ group: 'Luminary Of Mercy', options: ['Empowered Conduit'] },
+			],
+			asi: null,
+		},
 		{ level: 16, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: 'primary' },
 		{ level: 17, auto: ['Revitalizing Blessing'], pools: [], subclass: [], asi: 'secondary' },
 		{ level: 18, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: null },

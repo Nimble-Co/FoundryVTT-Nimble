@@ -5,9 +5,9 @@ import {
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type { LevelSummary, ReportLevel } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
-import { type ReportLevel, report } from './shadowmancer.expect.ts';
+import { report } from './shadowmancer.expect.ts';
 
 /**
  * Integration test for the Shadowmancer class level-up progression.

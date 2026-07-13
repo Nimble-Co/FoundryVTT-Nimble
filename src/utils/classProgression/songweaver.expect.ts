@@ -1,34 +1,8 @@
 // Expected class-progression report for songweaver, asserted by songweaver.test.ts.
 
-export interface ReportPool {
-	group: string;
-	options: string[];
-}
-
-export interface ReportLevel {
-	level: number;
-	auto: string[];
-	pools: ReportPool[];
-	subclass: ReportPool[];
-	asi: string | null;
-}
-
-export interface Report {
-	name: string;
-	id: string;
-	hitDie: number;
-	startingHp: number;
-	keyAbilities: string[];
-	savingThrows: { adv: string; dis: string };
-	startingGear: string[];
-	caster: boolean;
-	manaFormula: string;
-	subclasses: string[];
-	subclassSelectLevel: number;
-	levels: ReportLevel[];
-}
-
 // Embedded copy of expectations/songweaver.json (source of truth).
+import type { Report } from '../../../tests/fixtures/classProgression.types.ts';
+
 export const REPORT: Report = {
 	name: 'Songweaver',
 	id: 'songweaver',
