@@ -507,9 +507,9 @@ describe('deriveClassFeatureFolders', () => {
 	});
 
 	it('skips entries with neither a path-derived class nor system.class', () => {
-		expect(
-			deriveClassFeatureFolders(PACK_ROOT, [{ file: join('orphan.json'), data: {} }]),
-		).toEqual([]);
+		expect(deriveClassFeatureFolders(PACK_ROOT, [{ file: join('orphan.json'), data: {} }])).toEqual(
+			[],
+		);
 	});
 });
 

@@ -8,6 +8,29 @@
 		"identifier": "",
 		"rules": [
 			{
+				"type": "toggleEffect",
+				"disabled": false,
+				"id": "rage-toggle",
+				"identifier": "rage",
+				"label": "Rage",
+				"predicate": {},
+				"priority": 1,
+				"tags": [
+					"self:raging"
+				],
+				"turnOff": [
+					"onActorKilled",
+					"onActorDying",
+					"onEncounterEnd",
+					"onRest"
+				],
+				"confirmEndPrompt": "NIMBLE.rules.featureMessages.berserker.rageEndConfirm",
+				"clearPoolsOnEnd": [
+					"fury"
+				],
+				"endAfterInactiveRounds": 1
+			},
+			{
 				"type": "dicePool",
 				"disabled": false,
 				"id": "fury-pool-base",
@@ -27,7 +50,9 @@
 				"id": "fury-pool-autobonus",
 				"identifier": "",
 				"label": "Fury Dice — STR auto-bonus",
-				"predicate": {},
+				"predicate": {
+					"self": "raging"
+				},
 				"priority": 1,
 				"poolIdentifier": "fury",
 				"poolScope": "item",
@@ -62,6 +87,7 @@
 							"max": 4
 						}
 					},
+					"suppressChat": true,
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -77,6 +103,7 @@
 							"min": 5
 						}
 					},
+					"suppressChat": true,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -111,7 +138,7 @@
 		"systemId": "nimble",
 		"systemVersion": "0.1.8",
 		"createdTime": 1759180745583,
-		"modifiedTime": 1761434416421,
+		"modifiedTime": 1780675542986,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "GjPt8evcIoVuQ6zg"

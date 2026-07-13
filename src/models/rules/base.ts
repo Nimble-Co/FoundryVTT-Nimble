@@ -93,6 +93,44 @@ interface InitiativeRolledContext {
 	combatant: Combatant;
 }
 
+// Context passed to onItemActivated. Fires once per item activation, regardless
+// of whether the activation produced damage (unlike onItemUsed, which only fires
+// when damage is actually applied to a target). Use this for player-controlled
+// toggles and other rule-lifecycle work that should happen on every activation.
+interface ItemActivatedContext {
+	sourceItem: NimbleBaseItem;
+	sourceActor: NimbleBaseActor;
+	card: ChatMessage | null;
+}
+
+// Context passed to onEncounterEnd. Fires once per combatant when a combat
+// ends (either via updateCombat transitioning started: true → false, or via
+// deleteCombat as a fallback; the dispatcher dedup's the pair).
+interface EncounterEndContext {
+	combat: Combat;
+	actor: NimbleBaseActor;
+}
+
+// Context passed to onActorDying. Fires when an actor enters the Dying state:
+// dropped to 0 HP with an unfilled wound track, or the Dying condition applied
+// directly. Distinct from onActorKilled (0 HP with a full wound track, or a
+// monster with no wound track), which represents death rather than dying.
+interface ActorDyingContext {
+	actor: NimbleBaseActor;
+	source: NimbleBaseItem | null;
+}
+
+// Context passed to onRoundChanged. Fires once per combatant whenever the
+// combat's round counter changes, in either direction (turn advance across a
+// round boundary, round buttons, or a manual tracker edit). `round` is the
+// new value. Lets rules with round-stamped state react to rewinds, which
+// turn events alone cannot surface.
+interface RoundChangedContext {
+	combat: Combat;
+	actor: NimbleBaseActor;
+	round: number;
+}
+
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
@@ -297,6 +335,31 @@ abstract class NimbleBaseRule<
 	}
 
 	/**
+	 * Hook called once per item activation (post chat-card), regardless of whether
+	 * the activation produced damage. Use this for player-controlled toggles like
+	 * toggleEffect. Unlike onItemUsed, this fires on every activation, even for
+	 * items that don't roll damage.
+	 */
+	async onItemActivated(_context: ItemActivatedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called once per combatant when a combat ends. */
+	async onEncounterEnd(_context: EncounterEndContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when an actor enters the Dying state (0 HP, wounds below max). */
+	async onActorDying(_context: ActorDyingContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called once per combatant when the combat's round counter changes. */
+	async onRoundChanged(_context: RoundChangedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
 	 * into the card's render tree — surfaces rule-driven outcomes (e.g. a
@@ -323,4 +386,8 @@ export {
 	type RestContext,
 	type InitiativeRolledContext,
 	type ActivationCardContext,
+	type ItemActivatedContext,
+	type EncounterEndContext,
+	type ActorDyingContext,
+	type RoundChangedContext,
 };
