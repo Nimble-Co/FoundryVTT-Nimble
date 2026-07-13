@@ -11,9 +11,7 @@ An **activation** is everything that happens when a player clicks an item: what 
 
 The **Activation** tab appears on objects, spells, features, and monster features, and is split into three sub-tabs: **Core**, **Targets**, and **Effects**.
 
-::: warning 📷 Screenshot needed
-The Activation tab of an item with the Core / Targets / Effects sub-tab bar visible.
-:::
+![The Activation tab of an item with the Core / Targets / Effects sub-tab bar visible](/images/documentation/item-activation-and-effects.png)
 
 ## The Core sub-tab
 
@@ -82,9 +80,7 @@ An advanced entry that manipulates a dice pool or charge pool when the item acti
 
 The placement is the point: because the cold damage sits *under On Hit*, it only appears on the chat card when the attack hits. If you instead added it as a second top-level entry (like the Flaming Longsword on the [items page](items.md)), it would be rolled and shown regardless of the attack outcome.
 
-::: warning 📷 Screenshot needed
-The effect tree for the Frostbrand Dagger, showing the piercing damage node with a Damage Outcome and a cold damage node nested under On Hit.
-:::
+![The effect tree for the Frostbrand Dagger, showing the piercing damage node with a Damage Outcome and a cold damage node nested under On Hit](/images/documentation/frostbrand-dagger-effects.png)
 
 ## Build B: the Ghostwalk Draught
 
@@ -109,9 +105,7 @@ Because the item has a healing effect, drinking it with no target selected autom
 
 Holding **Alt** while clicking the item skips the window and rolls with defaults.
 
-::: warning 📷 Screenshot needed
-The activation roll window showing roll mode, situational modifiers, and the formula preview pills.
-:::
+![The activation roll window showing roll mode, situational modifiers, and the formula preview pills](/images/documentation/roll-dialog-simple-attack.png)
 
 **The chat card.** After rolling, a card is posted with:
 
@@ -123,9 +117,7 @@ The activation roll window showing roll mode, situational modifiers, and the for
 - each **condition** as a button that applies the condition to all selected tokens when clicked,
 - any **notes**, styled by their note type.
 
-::: warning 📷 Screenshot needed
-A chat card for the Ghostwalk Draught showing the healing roll with Apply Healing and the Invisible condition button.
-:::
+![A chat card for the Ghostwalk Draught showing the healing roll with Apply Healing and the Invisible condition button](/images/documentation/ghostwalk-draught-chat-card.png)
 
 ## The Macro tab
 

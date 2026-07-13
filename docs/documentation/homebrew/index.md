@@ -21,9 +21,7 @@ The golden rule of homebrewing in this system: **everything in this section is p
 
 All of the automatic behavior above is powered by **rules** that you attach to items with the Rules Builder, and each rule can carry **conditions (the Condition box)** so it only applies when you want it to: while bloodied, while the item is equipped, and so on.
 
-::: warning 📷 Screenshot needed
-The Rules Builder on a homebrew item, showing a couple of configured rules.
-:::
+![The Rules Builder on a homebrew item, showing a couple of configured rules](/images/documentation/rules-builder-example-item.png)
 
 ## You can't (without a module or code changes)
 

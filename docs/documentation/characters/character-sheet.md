@@ -6,9 +6,7 @@ title: "The Character Sheet"
 
 The player character sheet puts everything you touch during play (HP, hit dice, mana, rolls, items, spells) one click away. This page tours the sheet from top to bottom.
 
-::: warning 📷 Screenshot needed
-The full character sheet with the header, tab bar, and sidebar buttons visible.
-:::
+![The full character sheet with the header, tab bar, and sidebar buttons visible](/images/documentation/full-character-sheet.png)
 
 ## The header
 
@@ -64,9 +62,7 @@ Your class features, subclass features, ancestry, background, and boons, grouped
 
 Your known spells. When you know spells from two or more schools, a school filter appears. Click a spell's icon to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
-::: warning 📷 Screenshot needed
-The spells tab with the school filter and a spell card visible.
-:::
+![The spells tab with the school filter and a spell card visible](/images/documentation/character-sheet-spells-tab.png)
 
 ### Bio
 

@@ -20,9 +20,7 @@ The **Rules** tab appears on the sheets of these item types:
 
 Spell sheets and monster feature sheets do not have a Rules tab. The tab shows a summary list of the item's rules; click **Open Rules Builder** to edit them.
 
-::: warning 📷 Screenshot needed
-The Rules tab on an object sheet, showing the rule list and the "Open Rules Builder" button.
-:::
+![The Rules tab on an object sheet, showing the rule list and the "Open Rules Builder" button](/images/documentation/chain-shirt-item.png)
 
 ## A tour of the builder window
 
@@ -37,9 +35,7 @@ Click **Add Rule** to open the rule picker. Rule types are organized into six gr
 
 Each entry shows a short description of what it does. Pick one and a new rule card appears.
 
-::: warning 📷 Screenshot needed
-The Add Rule picker open, showing the six groups.
-:::
+![The Add Rule picker open, showing the six groups](/images/documentation/rules-picker.png)
 
 On each rule card you can:
 
@@ -75,9 +71,7 @@ Let's build a magic belt that gives its wearer +2 Strength.
 
 Drag the belt onto a character, make sure it is equipped, and their Strength rises by 2 on the spot. Take the belt off and it drops again.
 
-::: warning 📷 Screenshot needed
-The completed Stat Bonus rule card for the Belt of Giant Strength.
-:::
+![The completed Stat Bonus rule card for the Belt of Giant Strength](/images/documentation/belt-of-giant-strength-rule.png)
 
 ::: tip
 The **Bonus** field also accepts formulas like `@level` instead of a plain number; see [Formulas & References](formulas.md).

@@ -27,9 +27,7 @@ The same Create Actor window links to the Nimble Nexus monster browser, which ca
 
 The monster sheet has four tabs (**Core**, **Conditions**, **Notes**, and **Settings**), and almost everything lives on **Core**.
 
-::: warning 📷 Screenshot needed
-A Standard monster sheet on the Core tab, with the metadata line, HP bar, armor icon, and saving throws visible.
-:::
+![A Standard monster sheet on the Core tab, with the metadata line, HP bar, armor icon, and saving throws visible](/images/documentation/standard-monster-sheet.png)
 
 **The metadata line.** Under the monster's name you will see something like "Level 1 Medium". Click the edit button next to it to open the configuration window where you set:
 
@@ -70,9 +68,7 @@ Give the Bog Howler three features:
 
 Activating features works like any item activation: click the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.
 
-::: warning 📷 Screenshot needed
-The Bog Howler's Core tab with the Bite and Terrifying Howl actions listed, and the chat card from activating Bite.
-:::
+![The Bog Howler's Core tab with the Bite and Terrifying Howl actions listed, and the chat card from activating Bite](/images/documentation/bog-howler-bite.png)
 
 ## Solo monster extras
 

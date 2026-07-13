@@ -8,17 +8,13 @@ There are three ways to get a playable character into your world: the guided cha
 
 To begin, create a new Actor from the sidebar and pick **Character** from the type list. This opens the Character Creation Helper.
 
-::: warning 📷 Screenshot needed
-The actor type selection window showing Character, NPC, Solo Monster, and Minion cards plus the import buttons.
-:::
+![The actor type selection window showing Character, NPC, Solo Monster, and Minion cards plus the import buttons](/images/documentation/create-actor-type.png)
 
 ## The guided character creator
 
 The creator is a single scrolling window with a progress bar. Each choice you make reveals the next step and scrolls you to it. Give your character a name at the top, then work through the steps below. Some steps only appear when your earlier choices call for them.
 
-::: warning 📷 Screenshot needed
-The character creation helper open on the class selection step.
-:::
+![The character creation helper open on the class selection step](/images/documentation/character-creation-helper.png)
 
 1. **Class.** Pick your class. This determines your hit die, saving throw tendencies, and everything that arrives on later steps.
 2. **Class features** *(only if your class grants features at level 1)*. Features your class always grants are listed automatically; if your class offers a choice (pick one of several options), you make that pick here.

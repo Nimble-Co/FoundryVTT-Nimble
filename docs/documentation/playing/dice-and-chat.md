@@ -24,9 +24,7 @@ Some special abilities roll pools where several dice can each crit independently
 
 Clicking an ability, skill, saving throw, or initiative on your sheet opens a roll window before anything hits chat:
 
-::: warning 📷 Screenshot needed
-The check roll window showing the advantage/disadvantage slider and formula preview.
-:::
+![The check roll window showing the advantage/disadvantage slider and formula preview](/images/documentation/roll-dialog-simple-attack.png)
 
 - **The advantage slider.** Drag from Disadvantage ×6 through Straight Roll up to Advantage ×6. The formula preview below updates live so you can see exactly what will be rolled.
 - **Hide roll** *(GMs only)*. Ticking this makes the roll a blind roll that other players can't see.
@@ -51,9 +49,7 @@ An attack or spell card is built from a few recurring pieces:
 - **Save prompts.** If the item forces a saving throw, the card shows the save with a d20 button: select the tokens that need to save and click it to roll the save for each of them. The card lists what happens on a failed and a successful save.
 - **Condition buttons.** Conditions the item inflicts appear as buttons. Click one to apply the condition to all selected tokens. See [Conditions](conditions.md).
 
-::: warning 📷 Screenshot needed
-An attack chat card showing a damage total, the Apply Damage button, a targets list, and a saving throw prompt.
-:::
+![An attack chat card showing a damage total, the Apply Damage button, a targets list, and a saving throw prompt](/images/documentation/condition-chatcard-with-button.png)
 
 ## Targeting
 

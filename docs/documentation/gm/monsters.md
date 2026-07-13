@@ -24,9 +24,7 @@ The **Nimble Legendary Monsters** compendium contains the legendary monsters fro
 
 All three types share the same sheet. The header shows the portrait (click it to change the image), the monster's name, and a metadata line such as *"Level 3 Medium Goblin"*. Click the edit button beside the metadata to change the level, creature type, and size. For NPCs it also covers whether the monster is a *flunky* (see the Nimble rulebook for what that means at the table). NPCs and solo monsters also get a hit point bar in the header, with fields for current, maximum, and temporary hit points; minion sheets skip the bar entirely (see the Nimble rulebook for how minions handle damage).
 
-::: warning 📷 Screenshot needed
-An NPC sheet showing the header (portrait, HP bar, metadata line) and the Core tab with a few features and actions.
-:::
+![An NPC sheet showing the header (portrait, HP bar, metadata line) and the Core tab with a few features and actions](/images/documentation/monster-sheet.png)
 
 The sheet has four tabs:
 

@@ -22,9 +22,7 @@ The item sheet opens with five tabs:
 - **Rules**: passive effects the item applies just by being carried and equipped. See [Rules Builder Basics](../rules-builder/index.md).
 - **Macro**: an advanced scripting slot; see [Macros](../gm/macros.md).
 
-::: warning 📷 Screenshot needed
-A freshly created Object item, with the five tab icons visible on the sheet edge.
-:::
+![A freshly created Object item, with the five tab icons visible on the sheet edge](/images/documentation/fresh-object-item.png)
 
 ## Step 2: Choose the kind of object
 
@@ -60,9 +58,7 @@ With **Weapon** selected, a **Weapon Configuration** section appears with a row 
 
 For the Flaming Longsword, toggle **2-Handed**, set the Strength Requirement to 2, and tick the override box, matching the ordinary longsword from the compendium.
 
-::: warning 📷 Screenshot needed
-The Config tab of a weapon with the Weapon Configuration section expanded, 2-Handed selected, and the Strength Requirement fields visible.
-:::
+![The Config tab of a weapon with the Weapon Configuration section expanded, 2-Handed selected, and the Strength Requirement fields visible](/images/documentation/weapon-config-tab.png)
 
 ## Step 4: Damage (the Activation tab)
 
@@ -100,9 +96,7 @@ To build your own armor:
 
 Equipping matters: the equip toggle in the character's inventory switches all of an item's rules on or off. Unequipped armor protects no one.
 
-::: warning 📷 Screenshot needed
-The Rules tab of the Chain Shirt compendium item, showing the Armor Class rule card.
-:::
+![The Rules tab of the Chain Shirt compendium item, showing the Armor Class rule card](/images/documentation/chain-shirt-item.png)
 
 ## Consumables and charges
 
@@ -120,9 +114,7 @@ For items with limited uses that recharge, such as wands and once-per-rest trink
 
 Both rule types are documented in the [resources reference](../reference/rules-resource.md). Once an item has a charge pool, its owner can open a charge window from the character sheet showing each pool as a card with plus/minus buttons, a click-to-edit current value, and **Max** / **Empty** shortcuts. Saving the changes posts a chat message recording the adjustment, so the table can see the wand tick down.
 
-::: warning 📷 Screenshot needed
-The charge configuration window showing a pool card with plus/minus buttons and Max/Empty shortcuts.
-:::
+![The charge configuration window showing a pool card with plus/minus buttons and Max/Empty shortcuts](/images/documentation/charge-window.png)
 
 ## Descriptions
 
