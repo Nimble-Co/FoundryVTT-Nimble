@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
 import loadOptionSubItems from './LevelUpFeatureOptionPicker.utils.ts';
 
@@ -19,8 +20,8 @@ export function createFeatureOptionPickerState(
 	onSubItemSelect: (uuid: string) => void,
 ) {
 	const options = $derived(
-		(getFeature().system.levelUpOptions ?? []).filter(
-			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(getLevelingTo()),
+		(getFeature().system.levelUpOptions ?? []).filter((opt) =>
+			isLevelUpOptionApplicable(opt, getLevelingTo()),
 		),
 	);
 	const isSingleOption = $derived(options.length === 1);

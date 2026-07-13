@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
 /**
  * Lightweight entry stored in the class feature index.
@@ -275,8 +276,8 @@ export default async function getClassFeaturesFromIndex(
 		const groupName = allEntries[i].group;
 
 		// Option features bypass ownership — they appear at every listed level
-		const applicableOptions = (featureItem.system.levelUpOptions ?? []).filter(
-			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(level),
+		const applicableOptions = (featureItem.system.levelUpOptions ?? []).filter((opt) =>
+			isLevelUpOptionApplicable(opt, level),
 		);
 		if (groupName.endsWith('-progression') && applicableOptions.length > 0) {
 			result.optionFeatures.push(featureItem);
@@ -301,7 +302,7 @@ export default async function getClassFeaturesFromIndex(
 	const groupsCoveredByOptions = new Set<string>();
 	for (const optionFeature of result.optionFeatures) {
 		for (const opt of optionFeature.system.levelUpOptions ?? []) {
-			if (opt.applyAtLevels.length > 0 && !opt.applyAtLevels.includes(level)) continue;
+			if (!isLevelUpOptionApplicable(opt, level)) continue;
 			for (const g of opt.selectionGroups ?? []) {
 				groupsCoveredByOptions.add(g);
 			}

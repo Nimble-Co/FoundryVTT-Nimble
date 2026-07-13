@@ -12,6 +12,7 @@ import { buildSpellIndex } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
+import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
@@ -351,7 +352,7 @@ export function createLevelUpState(
 			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
 			if (!selectedOptionId) return false;
 			const selectedOption = (feature.system.levelUpOptions ?? [])
-				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.filter((o) => isLevelUpOptionApplicable(o, levelingTo))
 				.find((o) => o.id === selectedOptionId);
 			if ((selectedOption?.selectionGroups?.length ?? 0) > 0) {
 				const required = selectedOption?.selectionCount ?? 1;
@@ -425,7 +426,7 @@ export function createLevelUpState(
 			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
 			if (!selectedOptionId) continue;
 			const option = (feature.system.levelUpOptions ?? [])
-				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.filter((o) => isLevelUpOptionApplicable(o, levelingTo))
 				.find((o) => o.id === selectedOptionId);
 			if (!option) continue;
 			// Grant the parent "header" feature itself (e.g. "Savage Arsenal") alongside the
@@ -440,7 +441,7 @@ export function createLevelUpState(
 				result.push(...subItemUuids);
 			} else {
 				for (const rule of option.rules) {
-					if ((rule.type as string) === 'grantItem' && rule.uuid) result.push(rule.uuid as string);
+					if (rule.type === 'grantItem' && rule.uuid) result.push(rule.uuid as string);
 				}
 			}
 		}
@@ -454,11 +455,11 @@ export function createLevelUpState(
 			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
 			if (!selectedOptionId) continue;
 			const option = (feature.system.levelUpOptions ?? [])
-				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.filter((o) => isLevelUpOptionApplicable(o, levelingTo))
 				.find((o) => o.id === selectedOptionId);
 			if (!option) continue;
 			for (const rule of option.rules) {
-				if ((rule.type as string) !== 'poolMaxBonus') continue;
+				if (rule.type !== 'poolMaxBonus') continue;
 				const poolId = rule.poolIdentifier as string | undefined;
 				const amount = rule.amount as number | undefined;
 				if (poolId && typeof amount === 'number') {

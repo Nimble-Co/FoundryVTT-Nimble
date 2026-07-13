@@ -15,7 +15,7 @@ export default async function loadOptionSubItems(
 	const groupSet = new Set(selectionGroups);
 	const results: NimbleFeatureItem[] = [];
 	const seenUuids = new Set<string>();
-	const indexFields = ['system.class', 'system.group', 'system.subclass'] as string[];
+	const indexFields = ['system.class', 'system.group', 'system.subclass'];
 
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
