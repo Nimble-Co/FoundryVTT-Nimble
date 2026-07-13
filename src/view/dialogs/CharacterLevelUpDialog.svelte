@@ -70,6 +70,7 @@
 		bind:selectedOptionIds={state.selectedFeatureOptions}
 		bind:selectedOptionSubItems={state.selectedOptionSubItems}
 		ownedItemUuids={state.ownedFeatureUuids}
+		classFeatureIndex={state.classFeatureIndex}
 		loading={featuresLoading}
 	/>
 

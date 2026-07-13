@@ -110,14 +110,19 @@ class Migration028CombatDiceMaxFormula extends MigrationBase {
 		);
 
 		if (hasGrantItem && !hasPoolMaxBonus) {
-			maxCombatDieOption.rules = [
-				{
-					type: 'poolMaxBonus',
-					poolIdentifier: 'combat-dice',
-					amount: 1,
-					grantItemUuid: `Compendium.nimble.nimble-class-features.Item.${MAX_COMBAT_DIE_ITEM_ID}`,
-				},
-			];
+			// Replace the grantItem rule in place, preserving any sibling rules the option carries.
+			maxCombatDieOption.rules = optionRules.map((r: Record<string, unknown>) =>
+				r.type === 'grantItem' &&
+				typeof r.uuid === 'string' &&
+				r.uuid.includes(MAX_COMBAT_DIE_ITEM_ID)
+					? {
+							type: 'poolMaxBonus',
+							poolIdentifier: 'combat-dice',
+							amount: 1,
+							grantItemUuid: `Compendium.nimble.nimble-class-features.Item.${MAX_COMBAT_DIE_ITEM_ID}`,
+						}
+					: r,
+			);
 			console.log(
 				`Nimble Migration | ${source.name ?? 'feature'}: replaced grantItem with poolMaxBonus in max-combat-die levelUpOption`,
 			);

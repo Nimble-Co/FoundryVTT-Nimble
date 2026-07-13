@@ -15,6 +15,7 @@
 		selectedOptionIds = $bindable(),
 		selectedOptionSubItems = $bindable(),
 		ownedItemUuids,
+		classFeatureIndex,
 		loading = false,
 	}: LevelUpClassFeatureSelectionProps = $props();
 
@@ -76,6 +77,7 @@
 					selectedOptionId={selectedOptionIds.get(feature.uuid) ?? null}
 					selectedSubItemUuids={selectedOptionSubItems.get(feature.uuid) ?? []}
 					{ownedItemUuids}
+					{classFeatureIndex}
 					onSelect={(optionId) => handleOptionSelect(feature.uuid, optionId)}
 					onSubItemSelect={(uuid) => handleSubItemSelect(feature.uuid, uuid)}
 				/>

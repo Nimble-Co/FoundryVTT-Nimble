@@ -12,6 +12,7 @@
 		selectedOptionId,
 		selectedSubItemUuids,
 		ownedItemUuids,
+		classFeatureIndex,
 		onSelect,
 		onSubItemSelect,
 	}: LevelUpFeatureOptionPickerProps = $props();
@@ -22,6 +23,7 @@
 		() => selectedOptionId,
 		() => selectedSubItemUuids,
 		() => ownedItemUuids,
+		() => classFeatureIndex,
 		(optionId) => onSelect(optionId),
 		(uuid) => onSubItemSelect(uuid),
 	);

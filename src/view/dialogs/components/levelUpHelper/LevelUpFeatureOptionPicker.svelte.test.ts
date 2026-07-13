@@ -2,6 +2,7 @@ import { render, waitFor } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import FeatureOptionPickerStateHarness from '../../../../../tests/harnesses/FeatureOptionPickerStateHarness.svelte';
 
 interface LevelUpOptionInput {
@@ -39,37 +40,34 @@ interface PoolEntry {
 }
 
 /**
- * Back the real `loadOptionSubItems` pack scan with an in-memory pack, the same way
- * the class-progression fixtures do. Returns a restore function.
+ * Build the pre-built class-feature index the picker now consumes, and back `fromUuid`
+ * with the matching in-memory documents. Returns the index plus a restore function.
  */
-function installPack(entries: PoolEntry[], classId = 'berserker'): () => void {
-	const g = globalThis as unknown as {
-		game: { packs: unknown };
-		fromUuid?: (uuid: string) => Promise<unknown>;
-	};
-	const packIndex = entries.map((e) => ({
-		uuid: e.uuid,
-		type: 'feature',
-		system: { class: classId, group: e.group, subclass: false },
-	}));
+function setupPool(
+	entries: PoolEntry[],
+	classId = 'berserker',
+): { index: ClassFeatureIndex; restore: () => void } {
+	const g = globalThis as unknown as { fromUuid?: (uuid: string) => Promise<unknown> };
 	const docsByUuid = new Map(
 		entries.map((e) => [e.uuid, { uuid: e.uuid, name: e.name, system: {} }]),
 	);
-	const originalPacks = g.game.packs;
 	const originalFromUuid = g.fromUuid;
-	g.game.packs = [
-		{
-			documentName: 'Item',
-			async getIndex() {
-				return packIndex;
-			},
-		},
-	];
 	g.fromUuid = async (uuid: string) => docsByUuid.get(uuid) ?? null;
 
-	return () => {
-		g.game.packs = originalPacks;
-		g.fromUuid = originalFromUuid;
+	// Class features are indexed under the class key; a single level suffices since the
+	// picker collects pool members across every level the class offers them.
+	const indexEntries = entries.map((e) => ({
+		uuid: e.uuid,
+		group: e.group,
+		selectionCountByLevel: {},
+	}));
+	const index: ClassFeatureIndex = new Map([[classId, new Map([[1, indexEntries]])]]);
+
+	return {
+		index,
+		restore: () => {
+			g.fromUuid = originalFromUuid;
+		},
 	};
 }
 
@@ -134,7 +132,10 @@ describe('createFeatureOptionPickerState', () => {
 	});
 
 	it('auto-selects the sub-item when the available pool exactly matches the required count', async () => {
-		restore = installPack([{ uuid: 'Item.sole-pick', name: 'Sole Pick', group: 'weapon-mastery' }]);
+		const { index, restore: r } = setupPool([
+			{ uuid: 'Item.sole-pick', name: 'Sole Pick', group: 'weapon-mastery' },
+		]);
+		restore = r;
 		const onSubItemSelect = vi.fn();
 
 		render(FeatureOptionPickerStateHarness, {
@@ -145,6 +146,7 @@ describe('createFeatureOptionPickerState', () => {
 				levelingTo: 14,
 				selectedOptionId: 'opt',
 				selectedSubItemUuids: [],
+				classFeatureIndex: index,
 				onSelect: vi.fn(),
 				onSubItemSelect,
 			},
@@ -154,10 +156,11 @@ describe('createFeatureOptionPickerState', () => {
 	});
 
 	it('does not auto-select sub-items when the pool is larger than the required count', async () => {
-		restore = installPack([
+		const { index, restore: r } = setupPool([
 			{ uuid: 'Item.pick-a', name: 'Pick A', group: 'weapon-mastery' },
 			{ uuid: 'Item.pick-b', name: 'Pick B', group: 'weapon-mastery' },
 		]);
+		restore = r;
 		const onSubItemSelect = vi.fn();
 
 		const { getByTestId } = render(FeatureOptionPickerStateHarness, {
@@ -168,6 +171,7 @@ describe('createFeatureOptionPickerState', () => {
 				levelingTo: 6,
 				selectedOptionId: 'opt',
 				selectedSubItemUuids: [],
+				classFeatureIndex: index,
 				onSelect: vi.fn(),
 				onSubItemSelect,
 			},

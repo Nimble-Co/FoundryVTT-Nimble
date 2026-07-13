@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
 import loadOptionSubItems from './LevelUpFeatureOptionPicker.utils.ts';
@@ -16,6 +17,7 @@ export function createFeatureOptionPickerState(
 	getSelectedOptionId: () => string | null,
 	getSelectedSubItemUuids: () => string[],
 	getOwnedItemUuids: () => ReadonlySet<string>,
+	getClassFeatureIndex: () => ClassFeatureIndex | null,
 	onSelect: (optionId: string) => void,
 	onSubItemSelect: (uuid: string) => void,
 ) {
@@ -42,6 +44,7 @@ export function createFeatureOptionPickerState(
 		const option = selectedOption;
 		const owned = getOwnedItemUuids();
 		const classId = getFeature().system.class;
+		const index = getClassFeatureIndex();
 
 		if (!option?.selectionGroups?.length) {
 			loadedSubItems = [];
@@ -50,7 +53,7 @@ export function createFeatureOptionPickerState(
 		}
 
 		subItemsLoading = true;
-		loadOptionSubItems(classId, option.selectionGroups, owned)
+		loadOptionSubItems(index, classId, option.selectionGroups, owned)
 			.then((items) => {
 				loadedSubItems = items;
 				subItemsLoading = false;

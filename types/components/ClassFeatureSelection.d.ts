@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /**
  * A selection group offered at a given level, with the number of features
@@ -55,6 +56,8 @@ export interface LevelUpFeatureOptionPickerProps {
 	selectedOptionId: string | null;
 	selectedSubItemUuids: string[];
 	ownedItemUuids: Set<string>;
+	/** Pre-built class-feature index, reused to resolve the option's sub-item pool. */
+	classFeatureIndex: ClassFeatureIndex | null;
 	onSelect: (optionId: string) => void;
 	onSubItemSelect: (uuid: string) => void;
 }
@@ -66,6 +69,8 @@ export interface LevelUpClassFeatureSelectionProps {
 	selectedOptionIds: Map<string, string>;
 	selectedOptionSubItems: Map<string, string[]>;
 	ownedItemUuids: Set<string>;
+	/** Pre-built class-feature index, forwarded to each option picker for sub-item lookups. */
+	classFeatureIndex: ClassFeatureIndex | null;
 	loading?: boolean;
 }
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NimbleFeatureItem } from '#documents/item/feature.js';
+	import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 	import { createFeatureOptionPickerState } from '../../src/view/dialogs/components/levelUpHelper/LevelUpFeatureOptionPicker.svelte.ts';
 
@@ -9,6 +10,7 @@
 		selectedOptionId = null,
 		selectedSubItemUuids = [],
 		ownedItemUuids = new Set<string>(),
+		classFeatureIndex = null,
 		onSelect,
 		onSubItemSelect,
 	}: {
@@ -17,6 +19,7 @@
 		selectedOptionId?: string | null;
 		selectedSubItemUuids?: string[];
 		ownedItemUuids?: Set<string>;
+		classFeatureIndex?: ClassFeatureIndex | null;
 		onSelect: (optionId: string) => void;
 		onSubItemSelect: (uuid: string) => void;
 	} = $props();
@@ -27,6 +30,7 @@
 		() => selectedOptionId,
 		() => selectedSubItemUuids,
 		() => ownedItemUuids,
+		() => classFeatureIndex,
 		(optionId) => onSelect(optionId),
 		(uuid) => onSubItemSelect(uuid),
 	);

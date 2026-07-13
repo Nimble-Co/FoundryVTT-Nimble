@@ -38,6 +38,12 @@ import { NimbleBaseActor } from './base.svelte.js';
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
 
+/**
+ * Shape of a `poolMaxBonus` rule carried by a feature's `levelUpOptions`. The model types
+ * option rules as `Record<string, unknown>`, so this narrows the fields we read off them.
+ */
+type PoolMaxBonusRule = { type?: string; poolIdentifier?: string; grantItemUuid?: string };
+
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
 	classUpdates: Array<{ id: string; hpData: number[] }>;
@@ -1462,14 +1468,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 * embedded on the actor.
 	 */
 	#resolvePoolBonusGrantUuids(poolMaxBonuses: Record<string, number>): string[] {
-		type RuleShape = { type?: string; poolIdentifier?: string; grantItemUuid?: string };
-		type ItemShape = { system?: { levelUpOptions?: { rules?: RuleShape[] }[] } };
-
 		const uuids: string[] = [];
 		for (const item of this.items.contents) {
-			const levelUpOptions = (item as unknown as ItemShape).system?.levelUpOptions ?? [];
+			if (!item.isType('feature')) continue;
+			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
 			for (const option of levelUpOptions) {
-				for (const rule of option.rules ?? []) {
+				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
 					if (
 						rule.type !== 'poolMaxBonus' ||
 						typeof rule.poolIdentifier !== 'string' ||
@@ -1479,15 +1483,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 						continue;
 
 					const grantUuid = rule.grantItemUuid;
-					const itemId = grantUuid.split('.').pop();
-					const alreadyOwned =
-						itemId != null &&
-						this.items.some((owned) =>
-							(
-								(owned as unknown as { _stats?: { compendiumSource?: string } })._stats
-									?.compendiumSource ?? ''
-							).includes(itemId),
-						);
+					// Match the full compendium UUID exactly — a bare id substring can false-match.
+					const alreadyOwned = this.items.some(
+						(owned) =>
+							((owned as unknown as { _stats?: { compendiumSource?: string } })._stats
+								?.compendiumSource ?? '') === grantUuid,
+					);
 
 					if (!alreadyOwned && !uuids.includes(grantUuid)) uuids.push(grantUuid);
 				}
@@ -1501,9 +1502,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 * the cumulative bonus totals stored in levelUpHistory. Called after every level-up and revert.
 	 */
 	async #syncPoolBonusItemDescriptions(): Promise<void> {
-		type RuleShape = { type?: string; poolIdentifier?: string; grantItemUuid?: string };
-		type ItemShape = { system?: { levelUpOptions?: { rules?: RuleShape[] }[] } };
-
 		const totals: Record<string, number> = {};
 		for (const entry of this.system.levelUpHistory) {
 			for (const [poolId, bonus] of Object.entries(entry.poolMaxBonuses ?? {})) {
@@ -1513,9 +1511,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		const poolToGrantUuid: Record<string, string> = {};
 		for (const item of this.items.contents) {
-			const levelUpOptions = (item as unknown as ItemShape).system?.levelUpOptions ?? [];
+			if (!item.isType('feature')) continue;
+			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
 			for (const option of levelUpOptions) {
-				for (const rule of option.rules ?? []) {
+				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
 					if (
 						rule.type === 'poolMaxBonus' &&
 						typeof rule.poolIdentifier === 'string' &&
@@ -1533,15 +1532,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const total = totals[poolId] ?? 0;
 			if (total <= 0) continue;
 
-			const itemId = grantUuid.split('.').pop();
-			const ownedItem = itemId
-				? this.items.find((i) =>
-						(
-							(i as unknown as { _stats?: { compendiumSource?: string } })._stats
-								?.compendiumSource ?? ''
-						).includes(itemId),
-					)
-				: undefined;
+			// Match the full compendium UUID exactly — a bare id substring can false-match.
+			const ownedItem = this.items.find(
+				(i) =>
+					((i as unknown as { _stats?: { compendiumSource?: string } })._stats?.compendiumSource ??
+						'') === grantUuid,
+			);
 
 			if (!ownedItem || ownedItem.id === null) continue;
 

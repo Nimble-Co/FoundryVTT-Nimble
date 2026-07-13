@@ -5,7 +5,10 @@ import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpCh
 import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.ts';
 import generateBlankSkillSet from '#utils/generateBlankSkillSet.ts';
 import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
-import getClassFeaturesFromIndex, { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import getClassFeaturesFromIndex, {
+	buildClassFeatureIndex,
+	type ClassFeatureIndex,
+} from '#utils/getClassFeatures.ts';
 import getEpicBoons from '#utils/getEpicBoons.ts';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import { buildSpellIndex } from '#utils/getSpells.ts';
@@ -111,6 +114,9 @@ export function createLevelUpState(
 
 	// Class features state
 	let classFeatures: ClassFeatureResult | null = $state(null);
+	// Retained so option pickers can resolve their sub-item pools from the same index
+	// rather than re-scanning the compendium packs.
+	let classFeatureIndex: ClassFeatureIndex | null = $state(null);
 	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
 	let selectedFeatureOptions: Map<string, string> = $state(new Map());
 	let selectedOptionSubItems: Map<string, string[]> = $state(new Map());
@@ -208,6 +214,7 @@ export function createLevelUpState(
 					selectionGroups: rawFeatures.selectionGroups,
 					optionFeatures: rawFeatures.optionFeatures,
 				};
+				classFeatureIndex = classIndex;
 				featuresLoading = false;
 			})
 			.catch((err) => {
@@ -534,6 +541,9 @@ export function createLevelUpState(
 		},
 		get hasEpicBoonSelection() {
 			return hasEpicBoonSelection;
+		},
+		get classFeatureIndex() {
+			return classFeatureIndex;
 		},
 		get classFeatures() {
 			return classFeatures;
