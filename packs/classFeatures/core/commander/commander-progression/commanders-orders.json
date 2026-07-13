@@ -1,11 +1,24 @@
 {
 	"name": "Commander's Orders",
 	"type": "feature",
-	"img": "icons/skills/melee/unarmed-punch-fist-white.webp",
+	"img": "icons/commodities/treasure/medal-ribbon-gold-red.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "grant-coordinated-strike",
+				"identifier": "commander-lvl1-coordinated-strike",
+				"label": "Coordinated Strike",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": false,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-class-features.Item.6xpILHYt5KTSnTtd"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -39,36 +52,10 @@
 		"gainedAtLevel": 1,
 		"subclass": false,
 		"gainedAtLevels": [
-			1,
-			2
+			1
 		],
 		"selectionCountByLevel": {},
-		"levelUpOptions": [
-			{
-				"id": "coordinated-strike",
-				"label": "Choose a Commander's Order",
-				"applyAtLevels": [
-					1
-				],
-				"rules": [],
-				"selectionGroups": [
-					"commanders-orders"
-				],
-				"selectionCount": 1
-			},
-			{
-				"id": "commanders-orders",
-				"label": "Choose 2 Commander's Orders",
-				"applyAtLevels": [
-					2
-				],
-				"rules": [],
-				"selectionGroups": [
-					"commanders-orders"
-				],
-				"selectionCount": 2
-			}
-		]
+		"levelUpOptions": []
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",

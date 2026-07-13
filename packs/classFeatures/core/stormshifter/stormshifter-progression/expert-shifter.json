@@ -42,26 +42,9 @@
 		"gainedAtLevels": [
 			6,
 			9,
-			12,
-			17
+			12
 		],
-		"levelUpOptions": [
-			{
-				"id": "chimeric-boon",
-				"label": "Choose a Chimeric Boon",
-				"applyAtLevels": [
-					6,
-					9,
-					12,
-					17
-				],
-				"rules": [],
-				"selectionGroups": [
-					"chimeric-boon"
-				],
-				"selectionCount": 1
-			}
-		],
+		"levelUpOptions": [],
 		"selectionCountByLevel": {}
 	},
 	"effects": [],

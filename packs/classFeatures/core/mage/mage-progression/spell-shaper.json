@@ -1,5 +1,5 @@
 {
-	"name": "Spellshaper",
+	"name": "Spell Shaper",
 	"type": "feature",
 	"img": "icons/magic/movement/trail-streak-impact-blue.webp",
 	"system": {
@@ -47,7 +47,7 @@
 		"levelUpOptions": [
 			{
 				"id": "spell-shaper-initial",
-				"label": "Choose 2 Spellshaper Abilities",
+				"label": "Choose 2 Spell Shaper Abilities",
 				"applyAtLevels": [
 					4
 				],
