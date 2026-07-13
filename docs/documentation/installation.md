@@ -24,10 +24,6 @@ That's it. The system and all of its content packs download together. There are 
 2. Give your world a title and choose **Nimble** as the game system.
 3. Launch the world and log in as the Gamemaster.
 
-::: warning 📷 Screenshot needed
-The Create World window with Nimble selected as the game system.
-:::
-
 ## What's in the box: the compendium packs
 
 Open the **Compendium Packs** tab in the sidebar and you'll find the full Nimble content library, ready to drag into your world:
@@ -47,10 +43,6 @@ Open the **Compendium Packs** tab in the sidebar and you'll find the full Nimble
 | **Nimble Monsters** | The standard bestiary, including minions. |
 | **Nimble Legendary Monsters** | Solo boss monsters, built on their own sheet type. |
 | **Nimble Tables** | Roll tables used by certain features and boons, such as the chaos table. |
-
-::: warning 📷 Screenshot needed
-The Compendium Packs sidebar tab showing the Nimble packs.
-:::
 
 ::: tip Copy before you customize
 Compendium content is refreshed whenever the system updates. If you want to tweak something (a spell, a monster, a weapon), drag it into your world (or duplicate it there) and edit the copy. Edits made to your world's copies are never touched by updates. See [Core Concepts](core-concepts.md) for more on this habit.

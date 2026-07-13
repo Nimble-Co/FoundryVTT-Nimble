@@ -67,10 +67,6 @@ The system ships with everything from the rulebook, ready to drag onto a scene:
 
 Drag a monster from a compendium into the sidebar or straight onto a scene. Imported monsters are regular actors: edit them freely without affecting the compendium copy.
 
-::: warning 📷 Screenshot needed
-The Nimble Monsters compendium open, showing the family folders.
-:::
-
 Want to build your own, or tweak a stat block beyond a few numbers? [Homebrew Monsters](../homebrew/monsters.md) covers creating monsters and their features from scratch, and [Importing & Exporting](import-export.md) shows how to pull monsters in from Nimble Nexus.
 
 ## Related pages

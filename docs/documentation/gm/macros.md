@@ -10,10 +10,6 @@ Nimble's macro story is deliberately simple: drag things to the hotbar, get one-
 
 Drag a weapon, spell, feature, or inventory item from a character or monster sheet down to the hotbar. The system creates a button with the item's name and icon: no writing, no configuration.
 
-::: warning 📷 Screenshot needed
-Dragging a weapon from the character sheet to the hotbar, with the created button visible.
-:::
-
 Clicking the button activates the item for whichever token you currently have selected (or your assigned character if none is selected), exactly as if you'd clicked it on the sheet: the roll window opens if the item asks questions, the result posts to chat as a card, and, if you're in combat, the item's action cost is deducted from your action pips automatically.
 
 Heroic actions and reactions work the same way: drag one from the **Actions** tab of the character sheet to get a hotbar button for it. Simple ones like *Move*, *Unarmed Strike*, *Defend*, *Interpose*, and *Help* resolve directly (spending the reaction and posting the chat card, with a confirmation prompt if you're bending the usual limits); ones that need a decision, like *Attack* or *Opportunity Attack*, open your sheet at the right panel so you can pick a weapon.
