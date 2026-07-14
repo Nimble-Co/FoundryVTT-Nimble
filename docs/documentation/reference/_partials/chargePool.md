@@ -6,4 +6,4 @@
 - **Initial** → `max`
 - **Recoveries** → one entry: **Trigger** → `safeRest`, **Mode** → `refresh`
 
-The Label names the pool wherever it is shown. Pair the pool with a Charge Consumer rule (or the item's activation) to spend charges when the wand is used. **Max charges** takes formulas too: `@key + 1` scales with the character's key stat.
+The Label names the pool wherever it is shown. A pool by itself never spends charges automatically; pair it with a Charge Consumer rule (or a Pool effect on the item's activation) to spend charges when the wand is used. **Max charges** takes formulas too: `@key + 1` scales with the character's key stat.

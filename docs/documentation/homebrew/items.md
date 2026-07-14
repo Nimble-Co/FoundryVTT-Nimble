@@ -112,6 +112,8 @@ For items with limited uses that recharge, such as wands and once-per-rest trink
 - A **Charge Consumer** rule makes every activation of the item automatically spend charges from a pool.
 - Alternatively, a **Pool** effect on the Activation tab can spend, fill, or clear a pool only when the item is used in a particular way.
 
+A Charge Pool on its own never spends anything: activating an item that only has a pool leaves its charges untouched. If the item should pay a charge each time it is used, add a Charge Consumer rule (or a Pool effect) alongside the pool.
+
 Both rule types are documented in the [resources reference](../reference/rules-resource.md). Once an item has a charge pool, its owner can open a charge window from the character sheet showing each pool as a card with plus/minus buttons, a click-to-edit current value, and **Max** / **Empty** shortcuts. Saving the changes posts a chat message recording the adjustment, so the table can see the wand tick down.
 
 ![The charge configuration window showing a pool card with plus/minus buttons and Max/Empty shortcuts](/images/documentation/charge-window.png)
