@@ -50,7 +50,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset. The reduction is banked and applied automatically to the next damage you take.</em></p>",
+		"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click this feature to use it.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",
