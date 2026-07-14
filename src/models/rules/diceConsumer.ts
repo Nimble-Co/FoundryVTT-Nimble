@@ -1,5 +1,7 @@
+import { systemHookName } from '#system';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import { withWidget } from './_widgetOption.js';
+import type { ItemActivatedContext } from './base.js';
 import { NimbleBaseRule } from './base.js';
 
 const DICE_CONSUMER_SCOPES = [...DicePoolRuleConfig.scopes];
@@ -110,6 +112,30 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 				['effectType', '"generic" | "damageReduction"'],
 			]),
 		);
+	}
+
+	/**
+	 * Activating an item whose manual consumer has an effect formula requests
+	 * the dice-spend UI for the target pool, pre-selected to this consumer.
+	 * The activation card alone is a dead end (nothing on it spends dice), so
+	 * the sheet's pool tracker listens for this hook and opens its spend panel.
+	 * Hooks.callAll is client-local, so the panel opens only for the activating
+	 * player.
+	 */
+	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
+		if (context.sourceItem !== (this.item as unknown)) return;
+		if (this.mode !== 'manual') return;
+		if (!this.effectFormula || this.effectFormula.trim().length < 1) return;
+		if (!this.test()) return;
+
+		// @ts-expect-error - dicePool.requestSpend is a custom Nimble hook
+		Hooks.callAll(systemHookName('dicePool.requestSpend'), {
+			actorUuid: this.item.actor.uuid,
+			itemId: this.item.id,
+			ruleId: this.id,
+			poolIdentifier: this.poolIdentifier,
+			poolScope: this.poolScope,
+		});
 	}
 }
 

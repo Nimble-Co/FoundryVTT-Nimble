@@ -1100,6 +1100,7 @@
 			"rightClickToDiscardAll": "Right-click to discard all – total {total}",
 			"togglePanel": "Toggle {label} actions",
 			"rollOneIntoPool": "Roll one die into this pool",
+			"spendRequestEmptyPool": "No {label} available to spend.",
 			"panel": {
 				"ariaLabel": "{label} actions",
 				"rolledMeta": "{count}/{max} · sum {total}",

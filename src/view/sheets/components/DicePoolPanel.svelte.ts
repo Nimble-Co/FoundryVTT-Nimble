@@ -182,6 +182,14 @@ export function createDicePoolPanelState(
 		selectedConsumerKey = selectedConsumerKey === key ? null : key;
 	}
 
+	/** Select a consumer by its key (itemId:ruleId). Returns false when the
+	 *  consumer is not (yet) in this pool's list. */
+	function selectConsumerByKey(key: string): boolean {
+		if (!consumers.some((c) => consumerKey(c) === key)) return false;
+		selectedConsumerKey = key;
+		return true;
+	}
+
 	async function setDieValue(index: number, value: number): Promise<void> {
 		const pool = livePool;
 		if (!pool || pool.kind !== 'rolled') return;
@@ -290,6 +298,7 @@ export function createDicePoolPanelState(
 		consumerKey,
 		toggleDie,
 		selectConsumer,
+		selectConsumerByKey,
 		setDieValue,
 		discardDie,
 		setChargeCurrent,

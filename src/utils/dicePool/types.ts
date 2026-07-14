@@ -64,6 +64,16 @@ type DiceConsumerRuleLike = {
 	effectType?: string;
 };
 
+/** Payload of the `<system>.dicePool.requestSpend` hook, emitted when an item
+ *  with a manual diceConsumer is activated so the sheet can open the spend UI. */
+type DicePoolSpendRequestPayload = {
+	actorUuid: string;
+	itemId: string;
+	ruleId: string;
+	poolIdentifier: string;
+	poolScope: string;
+};
+
 type ModifyPoolRuleLike = {
 	type?: string;
 	disabled?: boolean;
@@ -97,6 +107,7 @@ export type {
 	DicePoolRuleAny,
 	DicePoolRuleLike,
 	DicePoolScope,
+	DicePoolSpendRequestPayload,
 	DicePoolState,
 	DieSize,
 	DiceRefillEntry,
