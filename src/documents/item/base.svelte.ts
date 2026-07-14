@@ -210,7 +210,8 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				flavor: `${this.actor?.name}: ${this.name}`,
 				speaker: ChatMessage.getSpeaker({ actor: this.actor }),
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-				sound: CONFIG.sounds.dice,
+				// Roll-less activations (descriptive features) post a card without dice audio
+				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
 				rolls,
 				flags: {
 					[SYSTEM_ID]: {
