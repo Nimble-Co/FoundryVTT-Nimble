@@ -6,6 +6,7 @@ import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import type { DamageRoll } from '../dice/DamageRoll.js';
+import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -45,6 +46,7 @@ type HpMutableActor = Actor.Implementation &
 type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
 
 type DamageApplyOptions = {
+	damageType?: string;
 	ignoreArmor?: boolean;
 	outcome?: DamageApplyOutcome;
 	roll?: DamageRoll.SerializedData | null;
@@ -242,6 +244,43 @@ function calculateArmorAdjustedDamage(params: {
 	return Math.max(0, Math.floor(totalAdjustedDamage));
 }
 
+/**
+ * Sum the target's damageReduction rule entries that match the incoming damage
+ * type. Untyped entries (empty damageTypes) always apply; typed entries apply
+ * only when the incoming damage type is known and included — an unknown type
+ * (e.g. the minion group attack card, which carries no roll metadata) must not
+ * match type-scoped reductions.
+ */
+function getDamageReductionTotal(actor: Actor.Implementation, damageType?: string): number {
+	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
+		| DamageReductionEntry[]
+		| undefined;
+	if (!Array.isArray(reductions)) return 0;
+
+	let total = 0;
+	for (const reduction of reductions) {
+		const value = Number(reduction?.value);
+		if (!Number.isFinite(value) || value <= 0) continue;
+
+		const damageTypes = Array.isArray(reduction.damageTypes) ? reduction.damageTypes : [];
+		if (damageTypes.length > 0 && (!damageType || !damageTypes.includes(damageType))) continue;
+
+		total += value;
+	}
+
+	return Math.floor(total);
+}
+
+function calculateAdjustedDamage(params: {
+	actor: Actor.Implementation;
+	damage: number;
+	options?: DamageApplyOptions;
+}): number {
+	const armorAdjustedDamage = calculateArmorAdjustedDamage(params);
+	const reduction = getDamageReductionTotal(params.actor, params.options?.damageType);
+	return Math.max(0, armorAdjustedDamage - reduction);
+}
+
 function buildDamageApplicationPlan(params: {
 	targets: string[];
 	damage: number;
@@ -254,7 +293,7 @@ function buildDamageApplicationPlan(params: {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
-		const adjustedDamage = calculateArmorAdjustedDamage({
+		const adjustedDamage = calculateAdjustedDamage({
 			actor,
 			damage: params.damage,
 			options: params.options,
@@ -618,6 +657,7 @@ class NimbleChatMessage extends ChatMessage {
 				entries.push({
 					value,
 					options: {
+						damageType: (node as { damageType?: string }).damageType,
 						ignoreArmor: (node as { ignoreArmor?: boolean }).ignoreArmor,
 						outcome,
 						roll: roll as unknown as DamageRoll.SerializedData,
@@ -650,7 +690,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		let total = 0;
 		for (const { value, options } of damageRolls) {
-			const adjusted = calculateArmorAdjustedDamage({ actor, damage: value, options });
+			const adjusted = calculateAdjustedDamage({ actor, damage: value, options });
 			if (Number.isFinite(adjusted) && adjusted > 0) total += Math.floor(adjusted);
 		}
 

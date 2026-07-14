@@ -638,6 +638,7 @@
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
@@ -771,6 +772,17 @@
 				"targetCondition": {
 					"label": "Target condition",
 					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
+				}
+			},
+			"damageReduction": {
+				"description": "Reduce incoming damage by a flat or formula-based amount, optionally scoped to specific damage types. Applied after armor, before temporary hit points.",
+				"value": {
+					"label": "Reduction",
+					"hint": "A flat number (5) or formula (@abilities.str.mod). Dice expressions are not supported."
+				},
+				"damageTypes": {
+					"label": "Damage types",
+					"hint": "Restrict to these damage types. Leave empty to reduce all incoming damage."
 				}
 			},
 			"dyingActionLimit": {
