@@ -5,6 +5,7 @@ import { NimbleBaseRule } from './base.js';
 const DICE_CONSUMER_SCOPES = [...DicePoolRuleConfig.scopes];
 const DICE_CONSUMER_MODES = [...DicePoolRuleConfig.consumptionModes];
 const DICE_ATTACK_DELIVERY_FILTERS = [...DicePoolRuleConfig.attackDeliveryFilters];
+const DICE_CONSUMER_EFFECT_TYPES = [...DicePoolRuleConfig.effectTypes];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -52,6 +53,14 @@ function schema() {
 				widget: 'formula',
 			}),
 		),
+		effectType: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'generic',
+			label: 'NIMBLE.rules.diceConsumer.effectType.label',
+			hint: 'NIMBLE.rules.diceConsumer.effectType.hint',
+			choices: DICE_CONSUMER_EFFECT_TYPES,
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -80,6 +89,8 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	declare effectFormula: string | null;
 
+	declare effectType: (typeof DicePoolRuleConfig.effectTypes)[number];
+
 	static override defineSchema(): DiceConsumerRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -96,6 +107,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 				['cost', 'string'],
 				['bonusOnAttackDelivery', '"melee" | "ranged" | "any" | null'],
 				['effectFormula', 'string | null'],
+				['effectType', '"generic" | "damageReduction"'],
 			]),
 		);
 	}

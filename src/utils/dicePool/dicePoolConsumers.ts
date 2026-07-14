@@ -16,6 +16,7 @@ type DicePoolConsumer = {
 	ruleLabel: string;
 	cost: string;
 	effectFormula: string | null;
+	effectType: string;
 };
 
 function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
@@ -82,6 +83,10 @@ function getDicePoolConsumers(
 						: '',
 				cost: typeof consumer.cost === 'string' ? consumer.cost : '1',
 				effectFormula,
+				effectType:
+					typeof consumer.effectType === 'string' && consumer.effectType.length > 0
+						? consumer.effectType
+						: 'generic',
 			});
 		}
 	}

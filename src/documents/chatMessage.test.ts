@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { NimbleChatMessage } from './chatMessage.js';
 
 type TestGlobals = {
@@ -1460,6 +1461,56 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith(
 			expect.stringContaining('Raging Berserker'),
 		);
+	});
+
+	it('subtracts a banked one-shot reduction and clears it after application', async () => {
+		const actor = createReductionActor([]);
+		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 6 } };
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+		expect(actor.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.bankedDamageReduction`]: 0,
+		});
+	});
+
+	it('combines banked reduction with damageReduction rule entries', async () => {
+		const actor = createReductionActor([{ value: 2, damageTypes: [] }]);
+		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 3 } };
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('consumes the banked reduction even when it absorbs the damage entirely', async () => {
+		const actor = createReductionActor([]);
+		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 20 } };
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(actor.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.bankedDamageReduction`]: 0,
+		});
+	});
+
+	it('does not consume the banked reduction when only previewing or checking applicability', () => {
+		const actor = createReductionActor([]);
+		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 6 } };
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		message.canApplyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.update).not.toHaveBeenCalled();
 	});
 
 	it('ignores malformed reduction entries', async () => {

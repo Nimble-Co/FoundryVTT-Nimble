@@ -20,7 +20,8 @@
 				"mode": "manual",
 				"cost": "1",
 				"bonusOnAttackDelivery": null,
-				"effectFormula": "(@strength + @dexterity) * @n"
+				"effectFormula": "(@strength + @dexterity) * @n",
+				"effectType": "damageReduction"
 			}
 		],
 		"activation": {
@@ -49,7 +50,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset, it will roll (STR+DEX) × N for you.</em></p>",
+		"description": "<p><strong>Reaction</strong> (when you are attacked): expend 1 or more Fury Dice to reduce the damage taken by (STR+DEX) for each die spent.</p><p><em>Click your Fury Dice pool icon on the sheet to open the spend dialog, then pick this feature as the preset. The reduction is banked and applied automatically to the next damage you take.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

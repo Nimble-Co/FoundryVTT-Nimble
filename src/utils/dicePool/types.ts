@@ -61,6 +61,7 @@ type DiceConsumerRuleLike = {
 	mode?: string;
 	cost?: string;
 	bonusOnAttackDelivery?: string | null;
+	effectType?: string;
 };
 
 type ModifyPoolRuleLike = {

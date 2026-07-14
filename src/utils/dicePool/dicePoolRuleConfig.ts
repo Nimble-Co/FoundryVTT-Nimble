@@ -26,6 +26,11 @@ const DicePoolRuleConfig = {
 	// the pool does NOT decrement. Used for snowballing damage pools like
 	// Berserker Fury Dice.
 	consumptionModes: ['manual', 'autoBonus'] as const,
+	// What a manual spend's effect roll produces. 'generic' just posts the total
+	// to chat; 'damageReduction' additionally banks the total as a one-shot
+	// reduction applied to the next damage the actor takes (e.g. Berserker's
+	// "That all you got?!").
+	effectTypes: ['generic', 'damageReduction'] as const,
 	// Optional delivery filter for autoBonus pools. When set, the pool's faces
 	// auto-add only to attacks of the matching delivery.
 	attackDeliveryFilters: ['melee', 'ranged', 'any'] as const,

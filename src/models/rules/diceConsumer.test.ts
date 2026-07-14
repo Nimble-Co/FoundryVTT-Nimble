@@ -12,12 +12,20 @@ describe('DiceConsumerRule', () => {
 			expect(schema).toHaveProperty('cost');
 			expect(schema).toHaveProperty('bonusOnAttackDelivery');
 			expect(schema).toHaveProperty('effectFormula');
+			expect(schema).toHaveProperty('effectType');
 		});
 
 		it('defaults effectFormula to null', () => {
 			const schema = DiceConsumerRule.defineSchema();
 			const effectFormula = schema.effectFormula as unknown as { initial: unknown };
 			expect(effectFormula.initial).toBeNull();
+		});
+
+		it('defaults effectType to generic with the expected choices', () => {
+			const schema = DiceConsumerRule.defineSchema();
+			const effectType = schema.effectType as unknown as { initial: unknown; choices: string[] };
+			expect(effectType.initial).toBe('generic');
+			expect(effectType.choices).toEqual(['generic', 'damageReduction']);
 		});
 	});
 

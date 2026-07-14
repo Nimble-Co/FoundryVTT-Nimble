@@ -1,12 +1,14 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { systemHookName } from '#system';
+import { addBankedDamageReduction } from '#utils/bankedDamageReduction.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
+import localize from '#utils/localize.ts';
 import type { LivePoolView } from './DicePoolTracker.svelte.ts';
 
 // Reactive subscription so the panel reflects pool mutations made by other
@@ -233,13 +235,20 @@ export function createDicePoolPanelState(
 		const effectRoll = new RollCls(substituted, getActor().getRollData());
 		await effectRoll.evaluate();
 
+		if (consumer.effectType === 'damageReduction') {
+			await addBankedDamageReduction(getActor(), effectRoll.total ?? 0);
+		}
+
 		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
 			.ChatMessage;
 		const speaker = ChatMessageCls.getSpeaker({ actor: getActor() });
 		const headerLine = `<strong>${foundry.utils.escapeHTML(consumer.itemName)}</strong>`;
-		const subLine = foundry.utils.escapeHTML(
+		let subLine = foundry.utils.escapeHTML(
 			`Spent ${spentFaces.length} ${pool.label} (${spentFaces.join(', ')})`,
 		);
+		if (consumer.effectType === 'damageReduction') {
+			subLine += `<br />${foundry.utils.escapeHTML(localize('NIMBLE.dicePoolTracker.panel.useFeature.bankedReductionNote'))}`;
+		}
 		const flavor = `${headerLine}<div class="nimble-dice-pool-spend-flavor">${subLine}</div>`;
 
 		await effectRoll.toMessage({

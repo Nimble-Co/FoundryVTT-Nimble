@@ -7,6 +7,10 @@ import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import type { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
+import {
+	clearBankedDamageReduction,
+	getBankedDamageReduction,
+} from '../utils/bankedDamageReduction.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -63,6 +67,8 @@ interface DamageApplicationPlan {
 	hasTargets: boolean;
 	applicableTargets: DamageApplicationTarget[];
 	zeroDamageTargetNames: string[];
+	/** Targets whose banked one-shot reduction is consumed by this application */
+	bankedReductionActors: HpMutableActor[];
 }
 
 function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'heavy' {
@@ -277,7 +283,9 @@ function calculateAdjustedDamage(params: {
 	options?: DamageApplyOptions;
 }): number {
 	const armorAdjustedDamage = calculateArmorAdjustedDamage(params);
-	const reduction = getDamageReductionTotal(params.actor, params.options?.damageType);
+	const reduction =
+		getDamageReductionTotal(params.actor, params.options?.damageType) +
+		getBankedDamageReduction(params.actor);
 	return Math.max(0, armorAdjustedDamage - reduction);
 }
 
@@ -288,6 +296,7 @@ function buildDamageApplicationPlan(params: {
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
+	const bankedReductionActors = new Set<HpMutableActor>();
 
 	for (const uuid of params.targets) {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
@@ -298,6 +307,8 @@ function buildDamageApplicationPlan(params: {
 			damage: params.damage,
 			options: params.options,
 		});
+
+		if (getBankedDamageReduction(actor) > 0) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) {
 			zeroDamageTargetNames.add(
@@ -316,6 +327,7 @@ function buildDamageApplicationPlan(params: {
 		hasTargets: params.targets.length > 0,
 		applicableTargets,
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
+		bankedReductionActors: [...bankedReductionActors],
 	};
 }
 
@@ -545,6 +557,12 @@ class NimbleChatMessage extends ChatMessage {
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
 			return;
+		}
+
+		// Banked one-shot reductions are spent by this application even when they
+		// absorb the damage entirely, so consume them before the zero-damage exit.
+		for (const bankedActor of damageApplicationPlan.bankedReductionActors) {
+			await clearBankedDamageReduction(bankedActor);
 		}
 
 		if (damageApplicationPlan.applicableTargets.length < 1) {
