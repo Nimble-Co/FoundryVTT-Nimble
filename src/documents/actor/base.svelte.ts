@@ -251,7 +251,11 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	 * effect (a toggle, a banked reduction, a granted buff) is present.
 	 */
 	override get temporaryEffects(): ActiveEffect.Implementation[] {
-		return this.effects.contents.filter((effect) => effect.active);
+		const effects: ActiveEffect.Implementation[] = [];
+		for (const effect of this.allApplicableEffects()) {
+			if (effect.active) effects.push(effect);
+		}
+		return effects;
 	}
 
 	/** ------------------------------------------------------ */
