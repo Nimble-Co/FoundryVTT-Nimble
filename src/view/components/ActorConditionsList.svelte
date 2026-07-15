@@ -37,11 +37,28 @@
 			includeEffectStatuses: mode === 'canvas',
 		});
 	});
+	// Item-granted effects live on their item (Foundry applies them via
+	// allApplicableEffects), so iterating actor.effects alone would hide them
+	// from this panel.
 	let actorEffects = $derived.by(() => {
 		void effectVersion;
 
+		if (typeof actor?.allApplicableEffects === 'function') {
+			return Array.from(actor.allApplicableEffects());
+		}
 		return Array.from(actor?.effects ?? []);
 	});
+
+	// Effects owned by an item (or stamped with an item origin) vanish with
+	// their item and are not recoverable by re-toggling; ad-hoc effects
+	// (banked reductions, GM-created states) are freely disposable.
+	function isItemGranted(effect: unknown): boolean {
+		const typedEffect = effect as {
+			origin?: string | null;
+			parent?: { documentName?: string } | null;
+		};
+		return typedEffect.parent?.documentName === 'Item' || Boolean(typedEffect.origin);
+	}
 	// Backing AEs of toggleEffect rules render in the Temporary Effects
 	// bucket (they end via triggers, the switch, or inactivity) but with an
 	// off switch that runs the rule-owned toggle lifecycle (confirm prompt,
@@ -70,9 +87,8 @@
 	});
 	let temporaryEffects = $derived.by(() => {
 		const timed = nonConditionEffects.filter((effect) => {
-			// Ad-hoc effects (no item origin — banked reductions, GM-created
-			// states) are transient; item-granted effects are passive.
-			if (!(effect as { origin?: string | null }).origin) return true;
+			// Ad-hoc effects are transient; item-granted effects are passive.
+			if (!isItemGranted(effect)) return true;
 			const typedEffect = effect as EffectWithTemporary;
 			if (typeof typedEffect.isTemporary === 'boolean') return typedEffect.isTemporary;
 			const duration = (effect as EffectWithDuration).duration;
@@ -148,15 +164,12 @@
 		}
 	}
 
-	async function removeEffect(effectId: string | null | undefined) {
-		if (!actor || !canRemoveConditions || !effectId) return;
+	async function removeEffect(effect: (typeof actorEffects)[number] | null | undefined) {
+		if (!actor || !canRemoveConditions || !effect?.id) return;
 
-		// Item-granted effects (origin set) are not recoverable short of
-		// re-adding the item, so unlike ad-hoc effects they need confirmation.
-		const effect = Array.from(actor.effects ?? []).find((e) => e.id === effectId) as
-			| { origin?: string | null; name?: string | null }
-			| undefined;
-		if (effect?.origin) {
+		// Item-granted effects are not recoverable short of re-adding the
+		// item, so unlike ad-hoc effects they need confirmation.
+		if (isItemGranted(effect)) {
 			const confirmed = await foundry.applications.api.DialogV2.confirm({
 				window: { title: localize('NIMBLE.ui.removeEffect') },
 				content: `<p>${localize('NIMBLE.ui.removeEffectConfirmation', { name: effect.name ?? '' })}</p>`,
@@ -166,7 +179,9 @@
 		}
 
 		try {
-			await actor.deleteEmbeddedDocuments('ActiveEffect', [effectId]);
+			// delete() routes to the owning document: item-granted effects are
+			// embedded in their item, not the actor.
+			await effect.delete();
 		} catch (_error) {
 			ui.notifications.error(localize('NIMBLE.ui.failedToRemoveEffect'));
 		}
@@ -251,19 +266,24 @@
 		await endActiveToggle(effect);
 	}
 
-	async function handleEffectContextMenu(event: MouseEvent, effectId: string | null | undefined) {
+	async function handleEffectContextMenu(event: MouseEvent, effect: (typeof actorEffects)[number]) {
 		if (mode !== 'canvas') return;
 
 		event.preventDefault();
 		event.stopPropagation();
-		await removeEffect(effectId);
+		await removeEffect(effect);
 	}
 
 	onMount(() => {
-		const refreshFromEffect = (effect: { parent?: { documentName?: string; id?: string } }) => {
-			if (!actor || effect.parent?.documentName !== 'Actor') return;
-			if (effect.parent?.id !== actor.id) return;
-			effectVersion += 1;
+		const refreshFromEffect = (effect: {
+			parent?: { documentName?: string; id?: string; parent?: { id?: string } | null } | null;
+		}) => {
+			if (!actor) return;
+			const parent = effect.parent;
+			const isOwnActorEffect = parent?.documentName === 'Actor' && parent.id === actor.id;
+			// Item-granted effects parent to the item, which parents to the actor.
+			const isOwnItemEffect = parent?.documentName === 'Item' && parent.parent?.id === actor.id;
+			if (isOwnActorEffect || isOwnItemEffect) effectVersion += 1;
 		};
 
 		const createHook = Hooks.on('createActiveEffect', (effect) => {
@@ -340,7 +360,7 @@
 							aria-label={effect.name ?? effect.id}
 							data-tooltip={effect.name ?? effect.id}
 							data-tooltip-direction="LEFT"
-							oncontextmenu={(event) => handleEffectContextMenu(event, effect.id)}
+							oncontextmenu={(event) => handleEffectContextMenu(event, effect)}
 						>
 							<img
 								class="nimble-actor-conditions__icon"
@@ -395,7 +415,7 @@
 										style="grid-area: deleteButton"
 										aria-label={localize('NIMBLE.ui.removeEffect')}
 										data-tooltip="NIMBLE.ui.removeEffect"
-										onclick={() => removeEffect(effect.id)}
+										onclick={() => removeEffect(effect)}
 									>
 										<i class="fa-solid fa-trash-can"></i>
 									</button>
@@ -435,7 +455,7 @@
 									style="grid-area: deleteButton"
 									aria-label={localize('NIMBLE.ui.removeEffect')}
 									data-tooltip="NIMBLE.ui.removeEffect"
-									onclick={() => removeEffect(effect.id)}
+									onclick={() => removeEffect(effect)}
 								>
 									<i class="fa-solid fa-trash-can"></i>
 								</button>
