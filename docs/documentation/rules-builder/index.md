@@ -44,6 +44,8 @@ On each rule card you can:
 - **Edit raw JSON** with the code button, a plain-text view of the rule for power users. You can switch back to the builder at any time.
 - **Delete** the rule with the trash button.
 
+![The Rules Builder window open on an item, with a rule card expanded for editing](/images/documentation/rules-builder-example-item.png)
+
 Rules are listed in the order they apply. To reorder a rule, change its **Priority** number. Dragging cards does not reorder them. Dragging a rule onto another item's rule list **copies** it there, which is handy when several items share the same effect.
 
 ## Fields every rule has
