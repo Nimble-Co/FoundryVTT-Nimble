@@ -35,8 +35,6 @@ The system implements the officially released Nimble rules, and only those. Play
 
 **GMs:** read the player pages too, then continue with the *Running the Game* section (starting with [Combat](gm/combat.md)) and the *Homebrewing* section, which shows how far you can customize the system without writing any code. The [Rules Builder](rules-builder/index.md) is where that customization gets really interesting.
 
-![The Rules Builder open on an item, showing a rule being configured](/images/documentation/rules-builder-example-item.png)
-
 If you have not installed the system yet, [Installation & First Steps](installation.md) walks you through it, and [Core Concepts](core-concepts.md) explains the handful of ideas everything else builds on.
 
 ## Getting help
