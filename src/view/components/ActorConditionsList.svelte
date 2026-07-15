@@ -49,6 +49,16 @@
 	let activeToggleEffects = $derived.by(() =>
 		actorEffects.filter((effect) => isToggleEffectAE(effect)),
 	);
+	// Enabled effects with no statuses at all. Status-bearing effects surface
+	// through the conditions path; toggles have their own row. This row exists
+	// so no Active Effect is ever invisible on the canvas panel, whatever
+	// created it.
+	let statuslessEffects = $derived.by(() =>
+		actorEffects.filter((effect) => {
+			if (effect.disabled || isToggleEffectAE(effect)) return false;
+			return Array.from(effect.statuses ?? []).length === 0;
+		}),
+	);
 	let nonConditionEffects = $derived.by(() => {
 		const standardConditionIds = new Set(Object.keys(CONFIG.NIMBLE.conditions ?? {}));
 
@@ -60,6 +70,9 @@
 	});
 	let temporaryEffects = $derived.by(() => {
 		const timed = nonConditionEffects.filter((effect) => {
+			// Ad-hoc effects (no item origin — banked reductions, GM-created
+			// states) are transient; item-granted effects are passive.
+			if (!(effect as { origin?: string | null }).origin) return true;
 			const typedEffect = effect as EffectWithTemporary;
 			if (typeof typedEffect.isTemporary === 'boolean') return typedEffect.isTemporary;
 			const duration = (effect as EffectWithDuration).duration;
@@ -224,6 +237,14 @@
 		await endActiveToggle(effect);
 	}
 
+	async function handleEffectContextMenu(event: MouseEvent, effectId: string | null | undefined) {
+		if (mode !== 'canvas') return;
+
+		event.preventDefault();
+		event.stopPropagation();
+		await removeEffect(effectId);
+	}
+
 	onMount(() => {
 		const refreshFromEffect = (effect: { parent?: { documentName?: string; id?: string } }) => {
 			if (!actor || effect.parent?.documentName !== 'Actor') return;
@@ -251,7 +272,7 @@
 
 <section class="nimble-actor-conditions" data-mode={mode}>
 	{#if mode === 'canvas'}
-		{#if actorConditions.filter((condition) => condition.active).length > 0 || activeToggleEffects.length > 0}
+		{#if actorConditions.filter((condition) => condition.active).length > 0 || activeToggleEffects.length > 0 || statuslessEffects.length > 0}
 			<ul class="nimble-actor-conditions__icons">
 				{#each actorConditions.filter((condition) => condition.active) as condition}
 					<li>
@@ -293,6 +314,27 @@
 							/>
 							<span class="nimble-actor-conditions__duration-badge">
 								<i class="fa-solid fa-toggle-on" aria-hidden="true"></i>
+							</span>
+						</button>
+					</li>
+				{/each}
+				{#each statuslessEffects as effect}
+					<li>
+						<button
+							class="nimble-actor-conditions__icon-button"
+							type="button"
+							aria-label={effect.name ?? effect.id}
+							data-tooltip={effect.name ?? effect.id}
+							data-tooltip-direction="LEFT"
+							oncontextmenu={(event) => handleEffectContextMenu(event, effect.id)}
+						>
+							<img
+								class="nimble-actor-conditions__icon"
+								src={effect.img}
+								alt={effect.name ?? effect.id}
+							/>
+							<span class="nimble-actor-conditions__duration-badge">
+								<i class="fa-solid fa-infinity" aria-hidden="true"></i>
 							</span>
 						</button>
 					</li>
@@ -371,6 +413,19 @@
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
 								{effect.name ?? effect.id}
 							</h4>
+							{#if canRemoveConditions}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									style="grid-area: deleteButton"
+									aria-label={localize('NIMBLE.ui.removeEffect')}
+									data-tooltip="NIMBLE.ui.removeEffect"
+									onclick={() => removeEffect(effect.id)}
+								>
+									<i class="fa-solid fa-trash-can"></i>
+								</button>
+							{/if}
 						</li>
 					{/each}
 				</ul>
