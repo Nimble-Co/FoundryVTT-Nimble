@@ -1463,23 +1463,37 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 		);
 	});
 
-	it('subtracts a banked one-shot reduction and clears it after application', async () => {
+	function withBankedReduction(actor: object, value: number) {
+		const target = actor as {
+			effects?: object[];
+			deleteEmbeddedDocuments?: ReturnType<typeof vi.fn>;
+		};
+		target.effects = [
+			{
+				id: 'banked-effect',
+				disabled: false,
+				flags: { [SYSTEM_ID]: { bankedDamageReduction: value } },
+			},
+		];
+		target.deleteEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		return target.deleteEmbeddedDocuments;
+	}
+
+	it('subtracts a banked one-shot reduction and clears its effect after application', async () => {
 		const actor = createReductionActor([]);
-		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 6 } };
+		const deleteEffects = withBankedReduction(actor, 6);
 		globals().fromUuidSync.mockReturnValue({ actor });
 
 		const message = createActivationMessage();
 		await message.applyDamage(10, { outcome: 'fullDamage' });
 
 		expect(actor.applyDamage).toHaveBeenCalledWith(4);
-		expect(actor.update).toHaveBeenCalledWith({
-			[`flags.${SYSTEM_ID}.bankedDamageReduction`]: 0,
-		});
+		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
 	});
 
 	it('combines banked reduction with damageReduction rule entries', async () => {
 		const actor = createReductionActor([{ value: 2, damageTypes: [] }]);
-		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 3 } };
+		withBankedReduction(actor, 3);
 		globals().fromUuidSync.mockReturnValue({ actor });
 
 		const message = createActivationMessage();
@@ -1490,26 +1504,25 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 
 	it('consumes the banked reduction even when it absorbs the damage entirely', async () => {
 		const actor = createReductionActor([]);
-		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 20 } };
+		const deleteEffects = withBankedReduction(actor, 20);
 		globals().fromUuidSync.mockReturnValue({ actor });
 
 		const message = createActivationMessage();
 		await message.applyDamage(8, { outcome: 'fullDamage' });
 
 		expect(actor.applyDamage).not.toHaveBeenCalled();
-		expect(actor.update).toHaveBeenCalledWith({
-			[`flags.${SYSTEM_ID}.bankedDamageReduction`]: 0,
-		});
+		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
 	});
 
 	it('does not consume the banked reduction when only previewing or checking applicability', () => {
 		const actor = createReductionActor([]);
-		(actor as { flags?: object }).flags = { [SYSTEM_ID]: { bankedDamageReduction: 6 } };
+		const deleteEffects = withBankedReduction(actor, 6);
 		globals().fromUuidSync.mockReturnValue({ actor });
 
 		const message = createActivationMessage();
 		message.canApplyDamage(10, { outcome: 'fullDamage' });
 
+		expect(deleteEffects).not.toHaveBeenCalled();
 		expect(actor.update).not.toHaveBeenCalled();
 	});
 

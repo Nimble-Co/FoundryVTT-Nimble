@@ -244,7 +244,7 @@ export function createDicePoolPanelState(
 		await effectRoll.evaluate();
 
 		if (consumer.effectType === 'damageReduction') {
-			await addBankedDamageReduction(getActor(), effectRoll.total ?? 0);
+			await addBankedDamageReduction(getActor(), effectRoll.total ?? 0, consumer.itemImg);
 		}
 
 		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
