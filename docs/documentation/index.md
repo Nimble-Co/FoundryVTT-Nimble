@@ -26,7 +26,11 @@ This software automates Nimble; it does not teach it or replace it. You will wan
 :::
 
 ::: info Officially released rules only
-The system implements the officially released Nimble rules, and only those. Playtest material, previews, and other unreleased content will not be added: it is not final, it can change at any time, and the system is built by volunteers who cannot reliably keep up with rules that are still moving. Once something is officially released, it becomes fair game. In the meantime, the [Homebrewing](homebrew/index.md) tools and the [Rules Builder](rules-builder/index.md) let you build unreleased content for your own table.
+The system implements the officially released Nimble rules, and only those. Playtest material, previews, and other unreleased content will not be added: it is not final, it can change at any time, and the system is built by volunteers who cannot reliably keep up with rules that are still moving.
+
+Once something is officially released, it becomes fair game. In the meantime, the [Homebrewing](homebrew/index.md) tools and the [Rules Builder](rules-builder/index.md) let you build unreleased *content* for your own table: items, spells, monsters, classes, and the like.
+
+Unreleased *mechanics* are a different story. The core of the system (how dice are rolled, how armor works, how conditions behave) is fixed in code and cannot be changed through homebrew features. See [What You Can (and Can't) Change](homebrew/index.md) for where that line runs.
 :::
 
 ## Where to start
