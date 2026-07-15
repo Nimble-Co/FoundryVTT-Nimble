@@ -1623,6 +1623,7 @@
 			"showAllConditions": "Show All",
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
+			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",
 			"failedToRemoveEffect": "Failed to remove effect.",

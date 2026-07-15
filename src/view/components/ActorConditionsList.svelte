@@ -151,6 +151,20 @@
 	async function removeEffect(effectId: string | null | undefined) {
 		if (!actor || !canRemoveConditions || !effectId) return;
 
+		// Item-granted effects (origin set) are not recoverable short of
+		// re-adding the item, so unlike ad-hoc effects they need confirmation.
+		const effect = Array.from(actor.effects ?? []).find((e) => e.id === effectId) as
+			| { origin?: string | null; name?: string | null }
+			| undefined;
+		if (effect?.origin) {
+			const confirmed = await foundry.applications.api.DialogV2.confirm({
+				window: { title: localize('NIMBLE.ui.removeEffect') },
+				content: `<p>${localize('NIMBLE.ui.removeEffectConfirmation', { name: effect.name ?? '' })}</p>`,
+				rejectClose: false,
+			});
+			if (confirmed !== true) return;
+		}
+
 		try {
 			await actor.deleteEmbeddedDocuments('ActiveEffect', [effectId]);
 		} catch (_error) {
