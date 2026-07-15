@@ -281,11 +281,12 @@ function calculateAdjustedDamage(params: {
 	actor: Actor.Implementation;
 	damage: number;
 	options?: DamageApplyOptions;
+	bankedReduction?: number;
 }): number {
 	const armorAdjustedDamage = calculateArmorAdjustedDamage(params);
 	const reduction =
 		getDamageReductionTotal(params.actor, params.options?.damageType) +
-		getBankedDamageReduction(params.actor);
+		(params.bankedReduction ?? 0);
 	return Math.max(0, armorAdjustedDamage - reduction);
 }
 
@@ -302,13 +303,18 @@ function buildDamageApplicationPlan(params: {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
+
+		// A banked reduction is one-shot: when the same actor is targeted through
+		// multiple tokens, only its first application entry gets the bank.
+		const bankedReduction = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
+		if (bankedReduction > 0) bankedReductionActors.add(actor);
+
 		const adjustedDamage = calculateAdjustedDamage({
 			actor,
 			damage: params.damage,
 			options: params.options,
+			bankedReduction,
 		});
-
-		if (getBankedDamageReduction(actor) > 0) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) {
 			zeroDamageTargetNames.add(
@@ -707,8 +713,12 @@ class NimbleChatMessage extends ChatMessage {
 		if (!actor) return null;
 
 		let total = 0;
+		// The banked one-shot reduction is consumed by the first application, so
+		// credit it against the first roll only — mirroring the apply flow.
+		let bankedReduction = getBankedDamageReduction(actor);
 		for (const { value, options } of damageRolls) {
-			const adjusted = calculateAdjustedDamage({ actor, damage: value, options });
+			const adjusted = calculateAdjustedDamage({ actor, damage: value, options, bankedReduction });
+			bankedReduction = 0;
 			if (Number.isFinite(adjusted) && adjusted > 0) total += Math.floor(adjusted);
 		}
 

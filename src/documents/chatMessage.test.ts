@@ -1308,6 +1308,51 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(7);
 	});
 
+	it('credits the banked one-shot reduction against the first damage roll only', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: { attributes: { armor: 'none' } },
+				effects: [
+					{
+						id: 'banked-effect',
+						disabled: false,
+						flags: { [SYSTEM_ID]: { bankedDamageReduction: 6 } },
+					},
+				],
+			},
+		});
+
+		const damageNode = (id: string) => ({
+			id,
+			type: 'damage',
+			formula: '2d6',
+			damageType: 'slashing',
+			ignoreArmor: false,
+			canCrit: true,
+			canMiss: true,
+			roll: createSerializedDamageRoll({ diceResults: [4, 6] }),
+			parentNode: null,
+			parentContext: null,
+			on: {
+				hit: [{ id: `${id}-hit`, type: 'damageOutcome', parentNode: id, parentContext: 'hit' }],
+			},
+		});
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: { effects: [damageNode('dmg-a'), damageNode('dmg-b')] },
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		// Each roll totals 10; the 6-point bank is consumed by the first apply,
+		// so the preview must show (10 - 6) + 10 = 14 rather than 4 + 4 = 8.
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(14);
+	});
+
 	it('applies type-scoped reductions to the preview using the damage node type', () => {
 		globals().fromUuidSync.mockReturnValue({
 			actor: {
@@ -1512,6 +1557,20 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 
 		expect(actor.applyDamage).not.toHaveBeenCalled();
 		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
+	});
+
+	it('applies the banked reduction to only the first entry when one actor is targeted via two tokens', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockImplementation(() => ({ actor }));
+
+		const message = createActivationMessage(['Scene.scene.Token.a', 'Scene.scene.Token.b']);
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// The one-shot bank absorbs a single application, not one per token.
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 4);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+		expect(deleteEffects).toHaveBeenCalledTimes(1);
 	});
 
 	it('does not consume the banked reduction when only previewing or checking applicability', () => {
