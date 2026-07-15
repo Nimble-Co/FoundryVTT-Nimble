@@ -632,7 +632,12 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = (this.system as ActivationCardSystemData).targets || [];
 		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
 		if (!damageApplicationPlan.hasTargets) return true;
-		return damageApplicationPlan.applicableTargets.length > 0;
+		// A pending banked reduction is spent by clicking Apply even when it
+		// absorbs the hit entirely, so the button must stay live for it.
+		return (
+			damageApplicationPlan.applicableTargets.length > 0 ||
+			damageApplicationPlan.bankedReductionActors.length > 0
+		);
 	}
 
 	/**

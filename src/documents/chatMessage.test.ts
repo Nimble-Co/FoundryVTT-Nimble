@@ -1573,6 +1573,18 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 		expect(deleteEffects).toHaveBeenCalledTimes(1);
 	});
 
+	it('keeps Apply Damage available when the bank absorbs the damage entirely', () => {
+		const actor = createReductionActor([]);
+		withBankedReduction(actor, 20);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+
+		// The bank is spent by the Apply click even on full absorption, so the
+		// button must stay live; otherwise the one-shot bank survives forever.
+		expect(message.canApplyDamage(8, { outcome: 'fullDamage' })).toBe(true);
+	});
+
 	it('does not consume the banked reduction when only previewing or checking applicability', () => {
 		const actor = createReductionActor([]);
 		const deleteEffects = withBankedReduction(actor, 6);
