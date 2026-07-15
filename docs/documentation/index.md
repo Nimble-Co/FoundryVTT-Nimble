@@ -25,6 +25,10 @@ Nimble for Foundry VTT is the official implementation of the Nimble 2 tabletop R
 This software automates Nimble; it does not teach it or replace it. You will want a copy of the Nimble rulebook at the table for the actual rules, and this documentation will point you there whenever a question is about the game rather than the software.
 :::
 
+::: info Officially released rules only
+The system implements the officially released Nimble rules, and only those. Playtest material, previews, and other unreleased content will not be added: it is not final, it can change at any time, and the system is built by volunteers who cannot reliably keep up with rules that are still moving. Once something is officially released, it becomes fair game. In the meantime, the [Homebrewing](homebrew/index.md) tools and the [Rules Builder](rules-builder/index.md) let you build unreleased content for your own table.
+:::
+
 ## Where to start
 
 **Players:** begin with [Creating a Character](characters/creation.md), then skim the pages under *Playing the Game*: [Dice & Chat](playing/dice-and-chat.md), [Conditions](playing/conditions.md), and [Rest & Recovery](playing/rest-and-recovery.md). That covers everything you touch in a normal session.
