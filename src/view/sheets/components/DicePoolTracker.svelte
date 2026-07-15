@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { systemHookName } from '#system';
 	import type { DicePoolTrackerProps } from '#types/components/DicePoolTracker.d.ts';
+	import { pendingSpendRequests } from '#utils/dicePool/pendingSpendRequests.js';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
 	import localize from '../../../utils/localize.js';
 	import DicePoolPanel from './DicePoolPanel.svelte';
@@ -12,7 +13,9 @@
 
 	// Item activations with a manual dice consumer request the spend UI here
 	// (see DiceConsumerRule.onItemActivated). Registered for the tracker's
-	// lifetime so the panel opens even while it is not rendered.
+	// lifetime so the panel opens even while it is not rendered. Requests fired
+	// while the sheet was closed are parked by the ready-hook router
+	// (dicePoolSpendRequestRouter) and consumed on mount.
 	$effect(() => {
 		const hookName = systemHookName('dicePool.requestSpend');
 		const hooksApi = Hooks as unknown as {
@@ -22,6 +25,10 @@
 		const hookId = hooksApi.on(hookName, (payload) =>
 			tracker.handleSpendRequest(payload as Parameters<typeof tracker.handleSpendRequest>[0]),
 		);
+
+		const pending = pendingSpendRequests.take(actor.uuid);
+		if (pending) tracker.handleSpendRequest(pending);
+
 		return () => hooksApi.off(hookName, hookId);
 	});
 </script>
