@@ -26,3 +26,4 @@ export { Migration025DiceConsumerSplit } from './Migration025DiceConsumerSplit.j
 export { Migration026IgniteSingleTarget } from './Migration026IgniteSingleTarget.js';
 export { Migration027RageToggleEffect } from './Migration027RageToggleEffect.js';
 export { Migration028CombatDiceMaxFormula } from './Migration028CombatDiceMaxFormula.js';
+export { Migration029ThatAllYouGotDamageReduction } from './Migration029ThatAllYouGotDamageReduction.js';
