@@ -8,10 +8,6 @@ interface DamageReductionEntry {
 	damageTypes: string[];
 }
 
-/** Matches dice notation: 1d6, 2d8, 3d20+5, 1d4+@level, etc. Uses negative lookbehind
- *  to avoid matching identifiers like "id6" while still matching "1d6" and bare "d20". */
-const DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
-
 function schema() {
 	const { fields } = foundry.data;
 
@@ -51,12 +47,6 @@ declare namespace DamageReductionRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface ActorSystem {
-	system: {
-		damageReductions?: DamageReductionEntry[];
-	};
-}
-
 /**
  * Rule that reduces incoming damage by a flat or formula-based amount,
  * optionally scoped to specific damage types.
@@ -88,25 +78,12 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 		);
 	}
 
-	/**
-	 * Push a reduction entry to the actor's damageReductions array,
-	 * initializing the array if it doesn't exist.
-	 */
-	private pushReduction(entry: DamageReductionEntry): void {
-		const { actor } = this.item;
-		const actorSystem = actor as object as ActorSystem;
-		if (!actorSystem.system.damageReductions) {
-			foundry.utils.setProperty(actor.system, 'damageReductions', []);
-		}
-		actorSystem.system.damageReductions!.push(entry);
-	}
-
 	override afterPrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
 
-		if (DICE_PATTERN.test(this.value)) {
+		if (this.isDiceExpression(this.value)) {
 			console.warn(
 				`Nimble | damageReduction rule "${this.label}" on "${item.name}" has a dice-expression value ("${this.value}"); only deterministic formulas are supported. Skipping.`,
 			);
@@ -116,7 +93,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 		const resolvedValue = this.resolveFormula(this.value);
 		if (resolvedValue === null || resolvedValue <= 0) return;
 
-		this.pushReduction({
+		this.pushToActorSystemArray<DamageReductionEntry>('damageReductions', {
 			value: resolvedValue,
 			damageTypes: [...this.damageTypes],
 		});
