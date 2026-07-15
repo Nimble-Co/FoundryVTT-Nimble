@@ -171,6 +171,42 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		);
 	}
 
+	/**
+	 * Create the activation chat card unless a rule suppresses it, then fire
+	 * the `useItem` hook. Shared tail of every activate() implementation.
+	 */
+	protected async _createActivationCard(
+		chatData: unknown,
+		rolls: unknown[],
+		activation: { effects?: unknown[] } | null,
+		hookContext: Record<string, unknown>,
+	): Promise<ChatMessage | null> {
+		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+		const chatCard = suppressCard
+			? null
+			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
+
+		if (chatCard || suppressCard) {
+			/**
+			 * A hook event that fires after an item has been used.
+			 * @function nimble.useItem
+			 * @memberof hookEvents
+			 * @param {Item} item                The item that was used
+			 * @param {ChatMessage|null} chatMessage The chat message created by the item use,
+			 *                                       or null when a rule suppressed the card
+			 * @param {Object} context            Additional context about the item use
+			 * @param {Roll[]} context.rolls      The rolls associated with the item use
+			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
+			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
+			 * @param {Token[]} context.targets   The targets of the item use
+			 */
+			// @ts-expect-error - nimble.useItem is custom
+			Hooks.callAll(systemHookName('useItem'), this, chatCard, hookContext);
+		}
+
+		return chatCard;
+	}
+
 	async activate(
 		options: ItemActivationManager.ActivationOptions = {},
 	): Promise<ChatMessage | null> {
@@ -262,35 +298,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
-		const chatCard = suppressCard
-			? null
-			: ((await ChatMessage.create(chatData as unknown as ChatMessage.CreateData)) ?? null);
-
-		if (chatCard || suppressCard) {
-			/**
-			 * A hook event that fires after an item has been used.
-			 * @function nimble.useItem
-			 * @memberof hookEvents
-			 * @param {Item} item                The item that was used
-			 * @param {ChatMessage|null} chatMessage The chat message created by the item use,
-			 *                                       or null when a rule suppressed the card
-			 * @param {Object} context            Additional context about the item use
-			 * @param {Roll[]} context.rolls      The rolls associated with the item use
-			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
-			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
-			 * @param {Token[]} context.targets   The targets of the item use
-			 */
-			// @ts-expect-error - nimble.useItem is custom
-			Hooks.callAll(systemHookName('useItem'), this, chatCard, {
-				rolls,
-				isCritical,
-				isMiss,
-				targets: Array.from(game.user?.targets ?? []),
-			});
-		}
-
-		return chatCard;
+		return this._createActivationCard(chatData, rolls, activation, {
+			rolls,
+			isCritical,
+			isMiss,
+			targets: Array.from(game.user?.targets ?? []),
+		});
 	}
 
 	/** Override in subclasses to add custom chat card data */

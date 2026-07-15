@@ -115,34 +115,13 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
-		const chatCard = suppressCard
-			? null
-			: ((await ChatMessage.create(chatData as unknown as ChatMessage.CreateData)) ?? null);
-
-		if (chatCard || suppressCard) {
-			/**
-			 * A hook event that fires after an item has been used.
-			 * @function nimble.useItem
-			 * @memberof hookEvents
-			 * @param {Item} item                The item that was used
-			 * @param {ChatMessage} chatMessage   The chat message created by the item use
-			 * @param {Object} context            Additional context about the item use
-			 * @param {Roll[]} context.rolls      The rolls associated with the item use
-			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
-			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
-			 * @param {Token[]} context.targets   The targets of the item use
-			 */
-			Hooks.callAll(systemHookName('useItem') as any, this, chatCard, {
-				rolls,
-				isCritical,
-				isMiss,
-				targets: Array.from(game.user?.targets ?? []),
-				upcast: manager.upcastResult,
-			});
-		}
-
-		return chatCard || null;
+		return this._createActivationCard(chatData, rolls, activation, {
+			rolls,
+			isCritical,
+			isMiss,
+			targets: Array.from(game.user?.targets ?? []),
+			upcast: manager.upcastResult,
+		});
 	}
 
 	override async prepareChatCardData() {
