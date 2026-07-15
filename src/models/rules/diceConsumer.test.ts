@@ -92,6 +92,28 @@ describe('DiceConsumerRule', () => {
 		});
 	});
 
+	describe('suppressesActivationCard', () => {
+		it('suppresses the card for manual consumers with an effect formula', () => {
+			const { rule } = createDiceConsumerRule({});
+			expect(rule.suppressesActivationCard()).toBe(true);
+		});
+
+		it('does not suppress for autoBonus consumers', () => {
+			const { rule } = createDiceConsumerRule({ mode: 'autoBonus' });
+			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+
+		it('does not suppress without an effect formula', () => {
+			const { rule } = createDiceConsumerRule({ effectFormula: null });
+			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+
+		it('does not suppress when the rule is disabled', () => {
+			const { rule } = createDiceConsumerRule({ disabled: true });
+			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+	});
+
 	describe('onItemActivated', () => {
 		beforeEach(() => {
 			vi.clearAllMocks();

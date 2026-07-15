@@ -115,9 +115,12 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+		const chatCard = suppressCard
+			? null
+			: ((await ChatMessage.create(chatData as unknown as ChatMessage.CreateData)) ?? null);
 
-		if (chatCard) {
+		if (chatCard || suppressCard) {
 			/**
 			 * A hook event that fires after an item has been used.
 			 * @function nimble.useItem

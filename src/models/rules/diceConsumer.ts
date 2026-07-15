@@ -114,6 +114,20 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 		);
 	}
 
+	/** Whether this consumer drives an interactive spend flow on activation:
+	 *  manual mode with an effect formula, and the predicate passes. */
+	#providesSpendFlow(): boolean {
+		if (this.mode !== 'manual') return false;
+		if (!this.effectFormula || this.effectFormula.trim().length < 1) return false;
+		return this.test();
+	}
+
+	/** The spend flow posts its own chat card, so the default activation card
+	 *  is redundant noise. */
+	override suppressesActivationCard(): boolean {
+		return this.#providesSpendFlow();
+	}
+
 	/**
 	 * Activating an item whose manual consumer has an effect formula requests
 	 * the dice-spend UI for the target pool, pre-selected to this consumer.
@@ -124,9 +138,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 	 */
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
 		if (context.sourceItem !== (this.item as unknown)) return;
-		if (this.mode !== 'manual') return;
-		if (!this.effectFormula || this.effectFormula.trim().length < 1) return;
-		if (!this.test()) return;
+		if (!this.#providesSpendFlow()) return;
 
 		// @ts-expect-error - dicePool.requestSpend is a custom Nimble hook
 		Hooks.callAll(systemHookName('dicePool.requestSpend'), {

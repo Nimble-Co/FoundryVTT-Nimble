@@ -152,6 +152,25 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	/** ------------------------------------------------------ */
 	/**                      Item Activation                   */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * A rule can take over its item's chat output (see
+	 * NimbleBaseRule#suppressesActivationCard, e.g. a manual dice spend that
+	 * posts its own card). The default activation card is suppressed only
+	 * when the activation itself has nothing to show: no rolls and no effect
+	 * nodes.
+	 */
+	protected _shouldSuppressActivationCard(
+		rolls: unknown[],
+		activation: { effects?: unknown[] } | null,
+	): boolean {
+		if (rolls.length > 0) return false;
+		if ((activation?.effects?.length ?? 0) > 0) return false;
+		return [...this.rules.values()].some(
+			(rule) => !rule.disabled && rule.suppressesActivationCard(),
+		);
+	}
+
 	async activate(
 		options: ItemActivationManager.ActivationOptions = {},
 	): Promise<ChatMessage | null> {
@@ -243,15 +262,19 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+		const chatCard = suppressCard
+			? null
+			: ((await ChatMessage.create(chatData as unknown as ChatMessage.CreateData)) ?? null);
 
-		if (chatCard) {
+		if (chatCard || suppressCard) {
 			/**
 			 * A hook event that fires after an item has been used.
 			 * @function nimble.useItem
 			 * @memberof hookEvents
 			 * @param {Item} item                The item that was used
-			 * @param {ChatMessage} chatMessage   The chat message created by the item use
+			 * @param {ChatMessage|null} chatMessage The chat message created by the item use,
+			 *                                       or null when a rule suppressed the card
 			 * @param {Object} context            Additional context about the item use
 			 * @param {Roll[]} context.rolls      The rolls associated with the item use
 			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
@@ -267,7 +290,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			});
 		}
 
-		return chatCard ?? null;
+		return chatCard;
 	}
 
 	/** Override in subclasses to add custom chat card data */

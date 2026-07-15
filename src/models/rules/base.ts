@@ -370,6 +370,16 @@ abstract class NimbleBaseRule<
 		return [];
 	}
 
+	/**
+	 * A rule returns `true` when its activation flow posts its own chat
+	 * message (e.g. a manual dice spend), making the default activation card
+	 * redundant. The card is only suppressed when the activation itself has
+	 * nothing to show — no rolls and no effect nodes.
+	 */
+	suppressesActivationCard(): boolean {
+		return false;
+	}
+
 	override toString() {
 		const data = this.toJSON();
 		return JSON.stringify(data, null, 2);
