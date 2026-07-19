@@ -1,0 +1,45 @@
+{
+	"name": "Stout",
+	"type": "ancestryBonus",
+	"img": "icons/commodities/stone/boulder-grey-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxWounds",
+				"disabled": false,
+				"id": "v5rARnVgo5eGgtcJ",
+				"identifier": "",
+				"label": "Stout",
+				"predicate": {},
+				"priority": 1,
+				"value": "1"
+			},
+			{
+				"type": "maxHitDice",
+				"label": "Stout",
+				"value": "2",
+				"dieSize": 0
+			},
+			{
+				"type": "speedBonus",
+				"value": "-1",
+				"label": "Stout"
+			}
+		],
+		"description": "<p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448231080,
+		"modifiedTime": 1756512827623,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "PwCzys1zJwz79alF"
+}

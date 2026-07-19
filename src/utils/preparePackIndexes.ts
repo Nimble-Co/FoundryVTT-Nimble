@@ -23,6 +23,10 @@ const PACK_DATA_CONFIG = {
 		packs: ['nimble.nimble-ancestries'],
 		applyFunc: createAncestryIndex,
 	},
+	ancestryBonus: {
+		packs: ['nimble.nimble-ancestry-bonuses'],
+		applyFunc: createAncestryBonusIndex,
+	},
 	spell: {
 		packs: [],
 		applyFunc: null,
@@ -64,6 +68,12 @@ type Pack = CompendiumCollection;
 export function createAncestryIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description', 'system.exotic', 'system.size'],
+	});
+}
+
+export function createAncestryBonusIndex(pack: Pack, _options: Record<string, any>) {
+	pack.getIndex({
+		fields: ['system.description'],
 	});
 }
 

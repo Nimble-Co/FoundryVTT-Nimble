@@ -32,6 +32,12 @@
 	let currentTab = $state(navigation[0]);
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
+	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
+	let defaultBonus = $derived(defaultBonusUuid ? fromUuidSync(defaultBonusUuid) : null);
+
+	function openDefaultBonus() {
+		defaultBonus?.sheet?.render(true);
+	}
 
 	setContext(
 		'document',
@@ -87,6 +93,31 @@
 
 				<span class="nimble-field__label"> Exotic Ancestry </span>
 			</label>
+		</div>
+
+		<div>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">Default Bonus</h3>
+			</header>
+
+			<input
+				type="text"
+				placeholder="Ancestry bonus UUID (Compendium…Item.&lt;id&gt;)"
+				value={defaultBonusUuid}
+				onchange={({ target }) => item.update({ 'system.defaultBonus': target.value.trim() })}
+			/>
+
+			{#if defaultBonus}
+				<button
+					class="nimble-button"
+					data-button-variant="basic"
+					type="button"
+					onclick={openDefaultBonus}
+				>
+					<i class="fa-solid fa-star"></i>
+					{defaultBonus.name}
+				</button>
+			{/if}
 		</div>
 	</section>
 {/snippet}

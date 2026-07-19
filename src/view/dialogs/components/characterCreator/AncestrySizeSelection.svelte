@@ -11,8 +11,8 @@
 		}));
 	}
 
-	function ancestryRequiresSaveChoice(ancestry) {
-		const rules = [...(ancestry?.rules?.values() ?? [])];
+	function ancestryRequiresSaveChoice(ancestryBonus) {
+		const rules = [...(ancestryBonus?.rules?.values() ?? [])];
 		if (!rules.length) return false;
 
 		for (const rule of rules) {
@@ -52,13 +52,14 @@
 	let {
 		active,
 		selectedAncestry,
+		selectedAncestryBonus,
 		selectedClass,
 		selectedAncestrySize = $bindable(),
 		selectedAncestrySave = $bindable(),
 	} = $props();
 
 	let hasSizeChoice = $derived(selectedAncestry?.system?.size?.length > 1);
-	let hasSaveChoice = $derived(ancestryRequiresSaveChoice(selectedAncestry));
+	let hasSaveChoice = $derived(ancestryRequiresSaveChoice(selectedAncestryBonus));
 	let hasAnyChoice = $derived(hasSizeChoice || hasSaveChoice);
 </script>
 

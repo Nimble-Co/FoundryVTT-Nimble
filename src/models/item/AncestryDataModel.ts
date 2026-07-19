@@ -9,6 +9,9 @@ const schema = {
 		new fields.StringField({ required: true, initial: 'medium', nullable: false }),
 		{ required: true, nullable: false, initial: () => [] },
 	),
+	// Compendium UUID of the ancestry's default bonus trait. Players may swap this for
+	// any other ancestry bonus during character creation.
+	defaultBonus: new fields.StringField({ required: true, initial: '', nullable: false }),
 };
 
 declare namespace NimbleAncestryData {
@@ -27,6 +30,8 @@ class NimbleAncestryData extends NimbleBaseItemData<
 	declare exotic: boolean;
 
 	declare size: string[];
+
+	declare defaultBonus: string;
 
 	/** @inheritDoc */
 	static override defineSchema(): NimbleAncestryData.Schema {

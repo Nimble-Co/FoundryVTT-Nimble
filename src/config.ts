@@ -357,6 +357,7 @@ const effectTypes = {
 
 const featureTypeHeadings = {
 	ancestry: 'NIMBLE.featureTypeHeadings.ancestry',
+	ancestryBonus: 'NIMBLE.featureTypeHeadings.ancestryBonus',
 	background: 'NIMBLE.featureTypeHeadings.background',
 	boon: 'NIMBLE.featureTypeHeadings.boon',
 	feature: 'NIMBLE.featureTypeHeadings.feature',

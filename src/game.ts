@@ -1,4 +1,5 @@
 import { NIMBLE } from './config.js';
+import AncestryBonusSheet from './documents/sheets/AncestryBonusSheet.svelte.js';
 import AncestrySheet from './documents/sheets/AncestrySheet.svelte.js';
 // Sheets
 import BackgroundSheet from './documents/sheets/BackgroundSheet.svelte.js';
@@ -37,6 +38,7 @@ const NIMBLE_GAME = {
 		MonsterFeatureSheet,
 		PlayerCharacterSheet,
 		AncestrySheet,
+		AncestryBonusSheet,
 		SpellSheet,
 		SubclassSheet,
 	},

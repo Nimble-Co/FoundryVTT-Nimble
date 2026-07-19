@@ -7,19 +7,6 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "skillBonus",
-				"disabled": false,
-				"id": "eJoTbJqZZAqwHrZ2",
-				"identifier": "",
-				"label": "Strength of Stone",
-				"predicate": {},
-				"priority": 1,
-				"value": "2",
-				"skills": [
-					"might"
-				]
-			},
-			{
 				"type": "grantProficiency",
 				"proficiencyType": "languages",
 				"values": [
@@ -30,15 +17,15 @@
 					"intelligence": {
 						"min": 0
 					}
-				},
-				"id": "AvwGjGVx5mDqgBHu"
+				}
 			}
 		],
-		"description": "<p>Towering beings whose strength is as immovable as the mountains they call home. Their sheer size and resilience make them fearsome opponents, capable of surviving even devastating blows.</p><hr><p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p><p>You know Dwarvish if your INT is not negative. [M]</p>",
+		"description": "<p>Towering beings whose strength is as immovable as the mountains they call home. Their sheer size and resilience make them fearsome opponents, capable of surviving even devastating blows.</p><p>You know Dwarvish if your INT is not negative. [M]</p>",
 		"exotic": true,
 		"size": [
 			"large"
-		]
+		],
+		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.BNt1EadnOGvzAHsC"
 	},
 	"effects": [],
 	"folder": null,

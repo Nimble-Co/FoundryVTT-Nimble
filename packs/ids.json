@@ -31,6 +31,38 @@
 			}
 		}
 	},
+	"ancestryBonuses": {
+		"core": {
+			"common": {
+				"elusive": "Z2TN2RVAcb53Oysu",
+				"lithe": "YJpImt9S1WiwdC8r",
+				"optimistic": "bK2KkZ5MbXeKoriS",
+				"stout": "PwCzys1zJwz79alF",
+				"tenacious": "FzHdMlir2ftuHf4B"
+			},
+			"exotic": {
+				"bunny-legs": "1cSW678NQBiWN5m4",
+				"chaotic-surge": "bp8h61eI7HaKUEPW",
+				"charge": "zjUGAh5QLbCbI4V9",
+				"danger-pollen-spores": "NKA98sDFntkqd4Im",
+				"draconic-heritage": "P5t4e28z4BHXAhAZ",
+				"flameborn": "enR5YZLbGlVPjIuu",
+				"highborn": "QywcDHwdcVvogu2G",
+				"hollow-bones": "PTYU9MJcVsRo5eVT",
+				"new-place-new-face": "QIR3oWX6wPzjRsTu",
+				"odd-constitution": "K1sViOESSiQ6VEeV",
+				"planeshift": "5Gf1lv0piL0PkYBF",
+				"reflective-aura": "1YtCep32COT7uAYP",
+				"relentless": "24eEwpL0nGbTRGlK",
+				"scurry": "Xv7uz6l6F8Z0sQ3O",
+				"skedaddle": "4CvyglRIWdfIJvdr",
+				"slow-and-steady": "YVtbIbWYzKD33sEA",
+				"small-but-ferocious": "eySxKgtWLbHJBK2W",
+				"strength-of-stone": "BNt1EadnOGvzAHsC",
+				"wily": "A33WjART8CQdkmeY"
+			}
+		}
+	},
 	"backgrounds": {
 		"core": {
 			"academy-dropout": "clmBGzCc3KMXgEdU",

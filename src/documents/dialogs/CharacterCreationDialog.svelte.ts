@@ -47,11 +47,13 @@ function resolveTargetSaves(
 function resolveSavingThrowRollModes({
 	classDocument,
 	ancestryDocument,
+	ancestryBonusDocument,
 	backgroundDocument,
 	selectedAncestrySave,
 }: {
 	classDocument: NimbleClassItem | null;
 	ancestryDocument: NimbleAncestryItem | null;
+	ancestryBonusDocument: NimbleAncestryBonusItem | null;
 	backgroundDocument: NimbleBackgroundItem | null;
 	selectedAncestrySave: string | null;
 }): Record<string, number> {
@@ -65,7 +67,7 @@ function resolveSavingThrowRollModes({
 		rollModes[classDocument.system.savingThrows.disadvantage] = -1;
 	}
 
-	const rollModeRules = [classDocument, ancestryDocument, backgroundDocument]
+	const rollModeRules = [classDocument, ancestryDocument, ancestryBonusDocument, backgroundDocument]
 		.flatMap((doc) => {
 			if (!doc) return [];
 			const source = doc.toObject() as { system?: { rules?: SavingThrowRollModeRuleData[] } };
@@ -152,6 +154,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		_options: Parameters<foundry.applications.api.ApplicationV2['_prepareContext']>[0],
 	): ReturnType<foundry.applications.api.ApplicationV2['_prepareContext']> {
 		const ancestryOptions = this.prepareAncestryOptions();
+		const ancestryBonusOptions = this.prepareAncestryBonusOptions();
 		const backgroundOptions = this.prepareBackgroundOptions();
 		const bonusLanguageOptions = this.prepareBonusLanguageOptions();
 		const classOptions = this.prepareClassOptions();
@@ -161,6 +164,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		return {
 			ancestryOptions,
+			ancestryBonusOptions,
 			backgroundOptions,
 			bonusLanguageOptions,
 			classOptions,
@@ -188,6 +192,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			background?: { uuid?: string };
 			characterClass?: { uuid?: string };
 			ancestry?: { uuid?: string };
+			ancestryBonus?: { uuid?: string };
 		};
 		classFeatures?: {
 			autoGrant: string[];
@@ -205,7 +210,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			{ renderSheet: true },
 		);
 
-		const { background, characterClass, ancestry } = results?.origins ?? {};
+		const { background, characterClass, ancestry, ancestryBonus } = results?.origins ?? {};
 		const startingEquipmentChoice = results?.startingEquipmentChoice;
 
 		const backgroundDocument = background?.uuid
@@ -217,14 +222,22 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const ancestryDocument = ancestry?.uuid
 			? ((await fromUuid(ancestry.uuid as `Item.${string}`)) as NimbleAncestryItem | null)
 			: null;
+		const ancestryBonusDocument = ancestryBonus?.uuid
+			? ((await fromUuid(ancestryBonus.uuid as `Item.${string}`)) as NimbleAncestryBonusItem | null)
+			: null;
 
 		const originDocumentSources: Item.CreateData[] = [];
 
 		// Helper to process origin document sources
 		const processOriginSource = (
-			doc: NimbleBackgroundItem | NimbleClassItem | NimbleAncestryItem | null,
+			doc:
+				| NimbleBackgroundItem
+				| NimbleClassItem
+				| NimbleAncestryItem
+				| NimbleAncestryBonusItem
+				| null,
 			uuid: string | undefined,
-			options: { isAncestry?: boolean; isBackground?: boolean } = {},
+			options: { isAncestry?: boolean; isAncestryBonus?: boolean; isBackground?: boolean } = {},
 		) => {
 			if (!doc || !uuid) return;
 
@@ -246,8 +259,8 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				}
 			}
 
-			// If this is an ancestry with a save choice, set the selectedSave on the rule
-			if (options.isAncestry && results.selectedAncestrySave) {
+			// If this is an ancestry bonus with a save choice, set the selectedSave on the rule
+			if (options.isAncestryBonus && results.selectedAncestrySave) {
 				const systemWithRules = source.system as {
 					rules?: Array<{
 						type: string;
@@ -324,6 +337,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		processOriginSource(backgroundDocument, background?.uuid, { isBackground: true });
 		processOriginSource(classDocument, characterClass?.uuid);
 		processOriginSource(ancestryDocument, ancestry?.uuid, { isAncestry: true });
+		processOriginSource(ancestryBonusDocument, ancestryBonus?.uuid, { isAncestryBonus: true });
 
 		// When origin documents are added, the system automatically processes grantItem rules
 		// If equipment was chosen, items will be granted automatically
@@ -440,6 +454,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const savingThrowsUpdate = resolveSavingThrowRollModes({
 			classDocument,
 			ancestryDocument,
+			ancestryBonusDocument,
 			backgroundDocument,
 			selectedAncestrySave: results.selectedAncestrySave ?? null,
 		});
@@ -498,6 +513,18 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				exoticAncestries as ({ name?: string } | null)[],
 			) as NimbleAncestryItem[],
 		};
+	}
+
+	async prepareAncestryBonusOptions(): Promise<NimbleAncestryBonusItem[]> {
+		const compendiumChoices = getChoicesFromCompendium('ancestryBonus');
+
+		const documents = await Promise.all(
+			compendiumChoices.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+		);
+
+		return sortDocumentsByName(
+			documents as ({ name?: string } | null)[],
+		) as NimbleAncestryBonusItem[];
 	}
 
 	prepareArrayOptions() {

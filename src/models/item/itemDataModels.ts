@@ -1,3 +1,4 @@
+import { NimbleAncestryBonusData } from './AncestryBonusDataModel.js';
 import { NimbleBackgroundData } from './BackgroundDataModel.js';
 import { NimbleBoonData } from './BoonDataModel.js';
 import { NimbleClassData } from './ClassDataModel.js';
@@ -9,13 +10,14 @@ import { NimbleSpellData } from './SpellDataModel.js';
 import { NimbleSubclassData } from './SubclassDataModel.js';
 
 const itemDataModels = {
+	ancestry: NimbleAncestryData,
+	ancestryBonus: NimbleAncestryBonusData,
 	background: NimbleBackgroundData,
 	boon: NimbleBoonData,
 	class: NimbleClassData,
 	feature: NimbleFeatureData,
 	monsterFeature: NimbleMonsterFeatureData,
 	object: NimbleObjectData,
-	ancestry: NimbleAncestryData,
 	spell: NimbleSpellData,
 	subclass: NimbleSubclassData,
 };
@@ -26,13 +28,14 @@ export default itemDataModels;
 declare global {
 	interface DataModelConfig {
 		Item: {
+			ancestry: NimbleAncestryData;
+			ancestryBonus: NimbleAncestryBonusData;
 			background: NimbleBackgroundData;
 			boon: NimbleBoonData;
 			class: NimbleClassData;
 			feature: NimbleFeatureData;
 			monsterFeature: NimbleMonsterFeatureData;
 			object: NimbleObjectData;
-			ancestry: NimbleAncestryData;
 			spell: NimbleSpellData;
 			subclass: NimbleSubclassData;
 		};

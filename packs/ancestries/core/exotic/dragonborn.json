@@ -7,17 +7,6 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "armorClass",
-				"disabled": false,
-				"id": "io7K8HETN3dgovbH",
-				"identifier": "",
-				"label": "Draconic heritage",
-				"predicate": {},
-				"priority": 1,
-				"formula": "1",
-				"mode": "add"
-			},
-			{
 				"type": "grantProficiency",
 				"proficiencyType": "languages",
 				"values": [
@@ -28,15 +17,15 @@
 					"intelligence": {
 						"min": 0
 					}
-				},
-				"id": "ONMVoM2545DOr6Ib"
+				}
 			}
 		],
-		"description": "<p>The soul of a dragon burns within you, the scales of your body are like forged steel. You are a kiln and your heritage the coals that stoke your flames. Call upon your wrath, to speak in the tongue of your ancestors and imbue unbridled fury into your attacks.</p><hr><p><strong>Draconic Heritage</strong></p><p>+1 Armor. [A]</p><p>When you attack: deal an additional LVL+KEY damage (ignoring armor) divided as you choose among any of your targets; recharges whenever you Safe Rest or gain a Wound.</p><p>You know Draconic if your INT is not negative. [M]</p>",
+		"description": "<p>The soul of a dragon burns within you, the scales of your body are like forged steel. You are a kiln and your heritage the coals that stoke your flames. Call upon your wrath, to speak in the tongue of your ancestors and imbue unbridled fury into your attacks.</p><p>You know Draconic if your INT is not negative. [M]</p>",
 		"exotic": true,
 		"size": [
 			"medium"
-		]
+		],
+		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.P5t4e28z4BHXAhAZ"
 	},
 	"effects": [],
 	"folder": null,
