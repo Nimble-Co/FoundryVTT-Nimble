@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import localize from '#utils/localize.js';
 import {
 	computeNextToggledList,
 	readToggledEffects,
@@ -6,6 +7,14 @@ import {
 	type ToggledTargetEntry,
 } from '#utils/toggledEffects.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
+
+/**
+ * Flag stamped on each visible marker ActiveEffect, recording the uuid of the marking
+ * item that created it. Eviction deletes only the effects carrying *this* item's uuid,
+ * so one hunter clearing a quarry never removes another hunter's marker on the same
+ * target.
+ */
+const MARK_TARGET_ITEM_FLAG = 'markTargetItemUuid';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -44,11 +53,20 @@ declare namespace MarkTargetRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface StatusEffectActor {
-	toggleStatusEffect(
-		statusId: string,
-		options?: { active?: boolean; overlay?: boolean },
+interface MarkEffect {
+	id: string;
+	getFlag(scope: string, key: string): unknown;
+}
+
+interface MarkableActor {
+	uuid: string;
+	name?: string;
+	effects: Iterable<MarkEffect>;
+	createEmbeddedDocuments(
+		type: 'ActiveEffect',
+		data: Array<Record<string, unknown>>,
 	): Promise<unknown>;
+	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
 }
 
 interface FlaggedActor {
@@ -65,7 +83,8 @@ interface FlaggedActor {
  * tag resolves only for that actor when it attacks.
  *
  * An optional `statusCondition` is applied to each marked target as a visible token
- * marker. Capacity is the largest `maxTargets` among the actor's enabled markTarget rules
+ * marker — one ActiveEffect per marker, so concurrent marks from different hunters stay
+ * independent. Capacity is the largest `maxTargets` among the actor's enabled markTarget rules
  * sharing this `flagKey` (a value of 0 means unlimited) — this lets a separate upgrade
  * feature raise the cap (e.g. the Hunter's level-20 Nemesis) without the primary rule
  * knowing about it. Marking beyond capacity evicts the oldest mark. There is no time-based
@@ -122,15 +141,9 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		if (!this.test()) return;
 
 		// Pair each target token with its actor; tokenless targets keep a null token uuid.
-		const targets: Array<{
-			actor: { uuid: string; name?: string } & StatusEffectActor;
-			tokenUuid: string | null;
-		}> = [];
+		const targets: Array<{ actor: MarkableActor; tokenUuid: string | null }> = [];
 		for (const tokenDoc of context.targetTokens ?? []) {
-			const actor = (tokenDoc as { actor?: unknown }).actor as
-				| ({ uuid: string; name?: string } & StatusEffectActor)
-				| null
-				| undefined;
+			const actor = (tokenDoc as { actor?: unknown }).actor as MarkableActor | null | undefined;
 			if (!actor?.uuid) continue;
 			targets.push({ actor, tokenUuid: (tokenDoc as { uuid?: string }).uuid ?? null });
 		}
@@ -160,26 +173,66 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		await this.#applyStatusEffects(targets, evicted);
 	}
 
-	/** Applies the visible status to freshly marked targets and clears it from evicted ones. */
+	/**
+	 * Applies the visible marker to freshly marked targets and clears it from evicted ones.
+	 *
+	 * The marker is a per-marker ActiveEffect rather than a shared status toggle: each
+	 * carries the marked status plus this item's uuid (see {@link MARK_TARGET_ITEM_FLAG}),
+	 * so two hunters marking the same creature get one effect each. Foundry keeps the
+	 * token's marked icon lit while any effect with that status remains, and eviction
+	 * deletes only the effects this item created — one hunter dropping a quarry never
+	 * clears another hunter's marker.
+	 */
 	async #applyStatusEffects(
-		targets: Array<{ actor: StatusEffectActor }>,
+		targets: Array<{ actor: MarkableActor }>,
 		evicted: ToggledTargetEntry[],
 	): Promise<void> {
 		if (!this.statusCondition) return;
 
+		const markData = this.#buildMarkEffectData();
 		for (const { actor } of targets) {
-			await actor.toggleStatusEffect(this.statusCondition, { active: true });
+			// Re-marking a creature this item already marks would stack duplicate effects.
+			if (this.#findMarkEffectIds(actor).length > 0) continue;
+			await actor.createEmbeddedDocuments('ActiveEffect', [foundry.utils.deepClone(markData)]);
 		}
 
 		for (const entry of evicted) {
 			if (!entry.tokenUuid) continue;
 			const tokenDoc = (await fromUuid(entry.tokenUuid as Parameters<typeof fromUuid>[0])) as {
-				actor?: StatusEffectActor;
+				actor?: MarkableActor;
 			} | null;
 			const actor = tokenDoc?.actor;
 			if (!actor) continue;
-			await actor.toggleStatusEffect(this.statusCondition, { active: false });
+			const ids = this.#findMarkEffectIds(actor);
+			if (ids.length > 0) await actor.deleteEmbeddedDocuments('ActiveEffect', ids);
 		}
+	}
+
+	/** Creation payload for a marker ActiveEffect, named for the marking actor. */
+	#buildMarkEffectData(): Record<string, unknown> {
+		const conditions = CONFIG.NIMBLE.conditions as Record<string, string>;
+		const images = CONFIG.NIMBLE.conditionDefaultImages as Record<string, string>;
+		const conditionName = localize(conditions[this.statusCondition] ?? this.statusCondition);
+		const markerName = (this.actor as object as { name?: string })?.name ?? '';
+
+		return {
+			name: markerName ? `${conditionName} (${markerName})` : conditionName,
+			img: images[this.statusCondition],
+			statuses: [this.statusCondition],
+			// Origin surfaces the source item in the effects panel; the flag is what
+			// eviction matches on so it never touches another marker's effect.
+			origin: this.item.uuid,
+			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: this.item.uuid } },
+		};
+	}
+
+	/** Ids of the marker ActiveEffects on `actor` created by this rule's item. */
+	#findMarkEffectIds(actor: MarkableActor): string[] {
+		const ids: string[] = [];
+		for (const effect of actor.effects) {
+			if (effect.getFlag(SYSTEM_ID, MARK_TARGET_ITEM_FLAG) === this.item.uuid) ids.push(effect.id);
+		}
+		return ids;
 	}
 }
 

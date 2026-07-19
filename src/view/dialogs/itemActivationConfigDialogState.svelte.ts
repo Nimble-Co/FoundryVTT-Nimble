@@ -79,7 +79,7 @@ export function createItemActivationConfigDialogState(
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
-		Object.fromEntries(conditionalBonusOptions.map((o) => [o.ruleId, defaultConditionalChoice(o)])),
+		Object.fromEntries(conditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)])),
 	);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state<number | null | undefined>();
@@ -168,20 +168,39 @@ export function createItemActivationConfigDialogState(
 	// Net advantage stacks contributed by choices set to "advantage".
 	const conditionalAdvantageTotal = $derived(
 		conditionalBonusOptions.reduce(
-			(sum, o) => (conditionalChoices[o.ruleId] === 'advantage' ? sum + o.advantage : sum),
+			(sum, o) => (conditionalChoices[o.key] === 'advantage' ? sum + o.advantage : sum),
 			0,
 		),
 	);
 
-	// Damage fragments contributed by choices set to "damage", credited to their source.
+	const chosenDamageOptions = $derived(
+		conditionalBonusOptions.filter((o) => conditionalChoices[o.key] === 'damage'),
+	);
+
+	// Untyped damage choices fold into the primary damage roll (inheriting the
+	// weapon/spell's own damage type) — the common case, e.g. Hunter's +LVL.
+	// Credited to their source via `[label]` flavor.
 	const conditionalDamageFormula = $derived(
-		conditionalBonusOptions
-			.filter((o) => conditionalChoices[o.ruleId] === 'damage')
+		chosenDamageOptions
+			.filter((o) => o.damageType === '')
 			.map((o) => {
 				const term = o.damageFormula ?? `${o.damageValue ?? 0}`;
 				return `+${term}[${o.label}]`;
 			})
 			.join(''),
+	);
+
+	// Choices whose rule specifies a damage type are emitted as their own typed
+	// damage effects (see the manager's #getRolls) so the chosen type actually
+	// applies instead of being absorbed into the primary roll's type.
+	const conditionalTypedDamages = $derived(
+		chosenDamageOptions
+			.filter((o) => o.damageType !== '')
+			.map((o) => ({
+				formula: o.damageFormula ?? `${o.damageValue ?? 0}`,
+				damageType: o.damageType,
+				label: o.label,
+			})),
 	);
 
 	const damageEffects = $derived.by(() => extractDamageEffectsFromItem(options.item()));
@@ -208,6 +227,14 @@ export function createItemActivationConfigDialogState(
 			};
 		}),
 	);
+
+	// Preview rows for the dialog: the item's (modified) damage effects plus a
+	// row per typed conditional damage, so the player sees the chosen typed
+	// bonus that #getRolls will roll as its own effect.
+	const damagePreviews = $derived([
+		...modifiedFormulas,
+		...conditionalTypedDamages.map((d) => ({ formula: d.formula, damageType: d.damageType })),
+	]);
 
 	return {
 		// Form fields (read/write through getter/setter so Svelte tracks writes).
@@ -283,6 +310,12 @@ export function createItemActivationConfigDialogState(
 		},
 		get modifiedFormulas() {
 			return modifiedFormulas;
+		},
+		get damagePreviews() {
+			return damagePreviews;
+		},
+		get conditionalTypedDamages() {
+			return conditionalTypedDamages;
 		},
 
 		// Actions.

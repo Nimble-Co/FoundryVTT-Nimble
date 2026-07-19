@@ -9,7 +9,13 @@ import { getToggledTargetTags } from './toggledEffects.js';
  */
 
 interface ConditionalBonusOption {
-	ruleId: string;
+	/**
+	 * Stable per-attack key for the dialog's choice map and `{#each}`. Rule ids are only
+	 * unique within an item, so two copies of the same item (or copy-pasted homebrew)
+	 * would collide on `rule.id` alone; scoping by the owning item's uuid keeps them
+	 * distinct.
+	 */
+	key: string;
 	label: string;
 	advantage: number;
 	/** Resolved numeric damage (null when dice-based or no damage offered). */
@@ -87,13 +93,12 @@ function getActiveConditionalBonuses(
 
 		const damage = rule.resolveDamage();
 		options.push({
-			ruleId: rule.id,
+			key: `${rule.item?.uuid ?? ''}:${rule.id}`,
 			label: rule.label || rule.item?.name || localize('NIMBLE.ruleTypes.conditionalBonus'),
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
 			damageValue: damage.value,
 			damageFormula: damage.formula,
-			// `damageType` is inferred (no explicit declare on the rule); read defensively.
-			damageType: (rule as unknown as { damageType?: string }).damageType ?? '',
+			damageType: rule.damageType ?? '',
 		});
 	}
 

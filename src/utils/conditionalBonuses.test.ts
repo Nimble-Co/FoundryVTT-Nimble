@@ -9,7 +9,7 @@ function createRule(overrides: Record<string, unknown> = {}) {
 		type: 'conditionalBonus',
 		id: 'rule-id',
 		label: 'Quarry',
-		item: { name: "Hunter's Mark" },
+		item: { name: "Hunter's Mark", uuid: 'Item.hm1' },
 		advantage: 1,
 		damageType: '',
 		appliesTo: vi.fn(() => true),
@@ -114,7 +114,7 @@ describe('conditionalBonuses', () => {
 				undefined,
 			);
 			expect(option).toEqual({
-				ruleId: 'rule-id',
+				key: 'Item.hm1:rule-id',
 				label: 'Quarry',
 				advantage: 1,
 				damageValue: 7,
@@ -169,6 +169,24 @@ describe('conditionalBonuses', () => {
 				undefined,
 			);
 			expect(option.label).toBe('Conditional Bonus');
+		});
+	});
+
+	describe('getActiveConditionalBonuses — option keys', () => {
+		it('scopes the option key by the owning item uuid so same-id rules on different items stay distinct', () => {
+			// Rule ids are only unique within an item, so two copies of the same feature
+			// share `rule.id`; the item uuid keeps their dialog keys apart.
+			const ruleA = createRule({ id: 'hunters-mark-bonus', item: { name: 'A', uuid: 'Item.a' } });
+			const ruleB = createRule({ id: 'hunters-mark-bonus', item: { name: 'B', uuid: 'Item.b' } });
+			const options = getActiveConditionalBonuses(
+				createAttacker([ruleA, ruleB]) as never,
+				weaponItem,
+				undefined,
+			);
+			expect(options.map((o) => o.key)).toEqual([
+				'Item.a:hunters-mark-bonus',
+				'Item.b:hunters-mark-bonus',
+			]);
 		});
 	});
 

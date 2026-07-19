@@ -54,6 +54,9 @@
 			rollHidden: state.shouldRollBeHidden,
 			consumedPoolDice,
 			consumedChargePools,
+			// Typed conditional-bonus damage rolls as its own damage effect so the
+			// chosen type applies; untyped choices are already folded into rollFormula.
+			conditionalDamages: state.conditionalTypedDamages,
 		});
 	}
 </script>
@@ -68,8 +71,8 @@
 					{localize('NIMBLE.activationDialog.conditionalBonus.heading')}
 				</h5>
 
-				{#each state.conditionalBonusOptions as option (option.ruleId)}
-					{@const choice = state.conditionalChoices[option.ruleId]}
+				{#each state.conditionalBonusOptions as option (option.key)}
+					{@const choice = state.conditionalChoices[option.key]}
 					{@const damageLabel = option.damageFormula ?? `${option.damageValue ?? 0}`}
 					<div class="nimble-conditional-bonus__row">
 						<span class="nimble-conditional-bonus__label">{option.label}</span>
@@ -80,7 +83,7 @@
 									class="nimble-conditional-bonus__choice"
 									class:nimble-conditional-bonus__choice--selected={choice === 'advantage'}
 									aria-pressed={choice === 'advantage'}
-									onclick={() => state.setConditionalChoice(option.ruleId, 'advantage')}
+									onclick={() => state.setConditionalChoice(option.key, 'advantage')}
 								>
 									{localize('NIMBLE.activationDialog.conditionalBonus.advantage', {
 										count: option.advantage,
@@ -93,7 +96,7 @@
 									class="nimble-conditional-bonus__choice"
 									class:nimble-conditional-bonus__choice--selected={choice === 'damage'}
 									aria-pressed={choice === 'damage'}
-									onclick={() => state.setConditionalChoice(option.ruleId, 'damage')}
+									onclick={() => state.setConditionalChoice(option.key, 'damage')}
 								>
 									{localize('NIMBLE.activationDialog.conditionalBonus.damage', {
 										value: damageLabel,
@@ -105,7 +108,7 @@
 								class="nimble-conditional-bonus__choice"
 								class:nimble-conditional-bonus__choice--selected={choice === 'none'}
 								aria-pressed={choice === 'none'}
-								onclick={() => state.setConditionalChoice(option.ruleId, 'none')}
+								onclick={() => state.setConditionalChoice(option.key, 'none')}
 							>
 								{localize('NIMBLE.activationDialog.conditionalBonus.none')}
 							</button>
@@ -248,7 +251,7 @@
 	{/if}
 
 	<div class="nimble-roll-formulas">
-		{#each state.modifiedFormulas as damageEffect}
+		{#each state.damagePreviews as damageEffect}
 			<div class="nimble-roll-formula">
 				{#if damageEffect.damageType}
 					<span class="nimble-roll-formula__type">

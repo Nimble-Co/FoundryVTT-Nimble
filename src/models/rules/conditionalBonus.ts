@@ -99,6 +99,8 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 
 	declare advantage: number;
 	declare damageBonus: string;
+	// `damageType` is inferred from the schema's `choices` (damage-type keys plus the
+	// blank sentinel); re-declaring it as the wider `string` clashes with that type.
 	declare delivery: ConditionalBonusDelivery;
 	declare source: ConditionalBonusSource;
 

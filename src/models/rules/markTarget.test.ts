@@ -2,17 +2,46 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { MarkTargetRule } from './markTarget.js';
 
+interface MockMarkEffect {
+	id: string;
+	getFlag: (scope: string, key: string) => unknown;
+}
+
 interface MockTargetActor {
 	uuid: string;
 	name: string;
-	toggleStatusEffect: ReturnType<typeof vi.fn>;
+	effects: MockMarkEffect[];
+	createEmbeddedDocuments: ReturnType<typeof vi.fn>;
+	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
 }
 
 function createTargetToken(uuid: string, name: string) {
+	const effects: MockMarkEffect[] = [];
 	const actor: MockTargetActor = {
 		uuid: `Actor.${uuid}`,
 		name,
-		toggleStatusEffect: vi.fn(async () => true),
+		effects,
+		// Mirror Foundry: creating a marker effect adds it to the actor's effects,
+		// stamped with the marking item's uuid so eviction/dedup can find it.
+		createEmbeddedDocuments: vi.fn(async (_type: string, data: Array<Record<string, unknown>>) => {
+			for (const entry of data) {
+				const itemUuid = (entry.flags as Record<string, Record<string, unknown>>)?.[SYSTEM_ID]
+					?.markTargetItemUuid;
+				effects.push({
+					id: `Effect.${effects.length}`,
+					getFlag: (_scope: string, key: string) =>
+						key === 'markTargetItemUuid' ? itemUuid : undefined,
+				});
+			}
+			return data;
+		}),
+		deleteEmbeddedDocuments: vi.fn(async (_type: string, ids: string[]) => {
+			for (const id of ids) {
+				const index = effects.findIndex((e) => e.id === id);
+				if (index >= 0) effects.splice(index, 1);
+			}
+			return ids;
+		}),
 	};
 	return { uuid: `Token.${uuid}`, actor };
 }
@@ -87,7 +116,7 @@ describe('MarkTargetRule', () => {
 		(globalThis as { fromUuid?: unknown }).fromUuid = vi.fn(async () => null);
 	});
 
-	it('marks a target: stores the flag entry and applies the status condition', async () => {
+	it('marks a target: stores the flag entry and creates a per-marker status effect', async () => {
 		const owner = createOwner();
 		const { rule, item } = createRule({}, owner);
 		owner.rules = [rule];
@@ -102,7 +131,14 @@ describe('MarkTargetRule', () => {
 		expect((value as { quarry: { actorUuid: string }[] }).quarry.map((e) => e.actorUuid)).toEqual([
 			'Actor.goblin',
 		]);
-		expect(token.actor.toggleStatusEffect).toHaveBeenCalledWith('marked', { active: true });
+		expect(token.actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		const [aeType, aeData] = token.actor.createEmbeddedDocuments.mock.calls[0];
+		expect(aeType).toBe('ActiveEffect');
+		expect(aeData[0]).toMatchObject({
+			statuses: ['marked'],
+			origin: 'item-uuid',
+			flags: { [SYSTEM_ID]: { markTargetItemUuid: 'item-uuid' } },
+		});
 	});
 
 	it('ignores activation of a different item', async () => {
@@ -114,7 +150,7 @@ describe('MarkTargetRule', () => {
 		await rule.onItemActivated(activation({ uuid: 'some-other-item' }, [token]));
 
 		expect(owner.setFlag).not.toHaveBeenCalled();
-		expect(token.actor.toggleStatusEffect).not.toHaveBeenCalled();
+		expect(token.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	it('replaces the prior quarry at capacity 1 (until you mark another creature)', async () => {
@@ -132,13 +168,24 @@ describe('MarkTargetRule', () => {
 		expect(value.quarry.map((e) => e.actorUuid)).toEqual(['Actor.new']);
 	});
 
-	it('clears the status condition off an evicted quarry that has a token', async () => {
+	it('deletes only this item’s marker effect off an evicted quarry that has a token', async () => {
 		const owner = createOwner();
 		owner.getFlag = vi.fn(() => ({
 			quarry: [{ actorUuid: 'Actor.old', tokenUuid: 'Token.old', name: 'Old' }],
 		}));
-		const evictedActor = { toggleStatusEffect: vi.fn(async () => true) };
-		(globalThis as { fromUuid?: unknown }).fromUuid = vi.fn(async () => ({ actor: evictedActor }));
+		// The evicted target already carries this item's marker plus another hunter's.
+		const evicted = createTargetToken('old', 'Old');
+		evicted.actor.effects.push(
+			{
+				id: 'Effect.mine',
+				getFlag: (_s, k) => (k === 'markTargetItemUuid' ? 'item-uuid' : undefined),
+			},
+			{
+				id: 'Effect.other',
+				getFlag: (_s, k) => (k === 'markTargetItemUuid' ? 'other-item' : undefined),
+			},
+		);
+		(globalThis as { fromUuid?: unknown }).fromUuid = vi.fn(async () => ({ actor: evicted.actor }));
 
 		const { rule, item } = createRule({ maxTargets: 1 }, owner);
 		owner.rules = [rule];
@@ -146,8 +193,26 @@ describe('MarkTargetRule', () => {
 
 		await rule.onItemActivated(activation(item, [token]));
 
-		expect(token.actor.toggleStatusEffect).toHaveBeenCalledWith('marked', { active: true });
-		expect(evictedActor.toggleStatusEffect).toHaveBeenCalledWith('marked', { active: false });
+		expect(token.actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		// Only this item's marker is removed; the other hunter's stays.
+		expect(evicted.actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			'Effect.mine',
+		]);
+	});
+
+	it('does not stack a second marker when this item already marks the target', async () => {
+		const owner = createOwner();
+		const { rule, item } = createRule({}, owner);
+		owner.rules = [rule];
+		const token = createTargetToken('goblin', 'Goblin');
+		token.actor.effects.push({
+			id: 'Effect.existing',
+			getFlag: (_s, k) => (k === 'markTargetItemUuid' ? 'item-uuid' : undefined),
+		});
+
+		await rule.onItemActivated(activation(item, [token]));
+
+		expect(token.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	it('raises capacity to the largest sibling maxTargets (finite Nemesis upgrade)', async () => {
@@ -208,7 +273,7 @@ describe('MarkTargetRule', () => {
 		await rule.onItemActivated(activation(item, [token]));
 
 		expect(owner.setFlag).toHaveBeenCalledTimes(1);
-		expect(token.actor.toggleStatusEffect).not.toHaveBeenCalled();
+		expect(token.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	it('exposes the picker group and description key', () => {
