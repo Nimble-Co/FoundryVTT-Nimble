@@ -389,3 +389,11 @@ Both pool kinds (`dicePool`, `chargePool`) are **pure storage rules** — they d
 A `dicePool` rule with no paired `diceConsumer` defaults to `manual` spending — the dialog prompts the player at activation time. To make a pool snowball as a damage bonus (Berserker Fury Dice), add a sibling `diceConsumer` with `mode: 'autoBonus'` and the desired `bonusOnAttackDelivery` filter (`'melee'`, `'ranged'`, `'any'`, or `null`).
 
 Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` consumer for outgoing damage and a `manual` consumer that a reaction effect spends from. This is how features like Berserker's "That all you got?!" reaction share the Fury Dice pool with the auto-bonus damage path.
+
+Activating an item with a manual consumer opens the pool's spend panel, opening the character sheet first if it is closed. Because the spend flow posts its own chat card, the item's default activation card is suppressed — but only while the rule automation setting ("Auto-Apply Conditions from Rules") is enabled, since that setting gates the activation dispatch that opens the panel. With automation off, activation posts the normal card instead.
+
+A manual consumer's `effectType` controls what its effect roll produces. The default, `generic`, posts the rolled total to chat. `damageReduction` additionally banks the total on the actor as a one-shot incoming-damage reduction: the next time damage is applied to the actor, the banked amount is subtracted (after armor, alongside any `damageReduction` rule entries) and then cleared, even when it absorbs the damage entirely. This is how "That all you got?!" applies its reduction automatically: the player spends Fury Dice when attacked, and the GM's Apply Damage click consumes the banked amount.
+
+The bank is stored as an Active Effect on the actor named for the pending amount ("Damage Reduction (8)"). Repeated spends accumulate onto the same effect. Deleting the effect drops the banked reduction; disabling it suspends it (a disabled bank neither applies nor gets consumed).
+
+The system never hides Active Effects: every enabled AE on an actor renders on the token, on the canvas conditions panel, and in the sheet's effects lists, regardless of what created it. New rules that back their state with an AE get this visibility for free.

@@ -10,16 +10,27 @@
 		actor,
 		pool,
 		onClose,
+		preselectConsumerKey = null,
+		onPreselectHandled,
 	}: {
 		actor: NimbleCharacter;
 		pool: LivePoolView;
 		onClose: () => void;
+		preselectConsumerKey?: string | null;
+		onPreselectHandled?: () => void;
 	} = $props();
 
 	const panel = createDicePoolPanelState(
 		() => actor,
 		() => pool,
 	);
+
+	// Apply a pending spend request from an item activation: pre-select the
+	// requested consumer once it appears in this pool's consumer list.
+	$effect(() => {
+		if (!preselectConsumerKey) return;
+		if (panel.selectConsumerByKey(preselectConsumerKey)) onPreselectHandled?.();
+	});
 
 	// Local controlled values for the per-die number inputs. Synced to the live
 	// pool whenever its faces change (so external edits flow into the inputs).

@@ -638,6 +638,7 @@
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
@@ -703,7 +704,11 @@
 				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
 			},
 			"diceConsumer": {
-				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool."
+				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool.",
+				"effectType": {
+					"label": "Effect type",
+					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
+				}
 			},
 			"chargePool": {
 				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers.",
@@ -771,6 +776,17 @@
 				"targetCondition": {
 					"label": "Target condition",
 					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
+				}
+			},
+			"damageReduction": {
+				"description": "Reduce incoming damage by a flat or formula-based amount, optionally scoped to specific damage types. Applied after armor, before temporary hit points.",
+				"value": {
+					"label": "Reduction",
+					"hint": "A flat number (5) or formula (@abilities.str.mod). Dice expressions are not supported."
+				},
+				"damageTypes": {
+					"label": "Damage types",
+					"hint": "Restrict to these damage types. Leave empty to reduce all incoming damage."
 				}
 			},
 			"dyingActionLimit": {
@@ -1084,6 +1100,7 @@
 			"rightClickToDiscardAll": "Right-click to discard all – total {total}",
 			"togglePanel": "Toggle {label} actions",
 			"rollOneIntoPool": "Roll one die into this pool",
+			"spendRequestEmptyPool": "No {label} available to spend.",
 			"panel": {
 				"ariaLabel": "{label} actions",
 				"rolledMeta": "{count}/{max} · sum {total}",
@@ -1106,7 +1123,8 @@
 					"summary": "Selected {count} · sum {total}",
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
-					"spendWithCount": "Spend ({count})"
+					"spendWithCount": "Spend ({count})",
+					"bankedReductionNote": "Banked as damage reduction. It is applied automatically to the next damage taken."
 				}
 			}
 		},
@@ -1245,6 +1263,8 @@
 			"turn": "turn"
 		},
 		"ui": {
+			"bankedDamageReduction": "Damage Reduction ({value})",
+			"bankedDamageReductionDescription": "<p>The next hit to the character will reduce the incoming damage by {value}.</p>",
 			"cancel": "Cancel",
 			"loading": "Loading...",
 			"viewDetails": "View Details",
@@ -1603,6 +1623,7 @@
 			"showAllConditions": "Show All",
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
+			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",
 			"failedToRemoveEffect": "Failed to remove effect.",

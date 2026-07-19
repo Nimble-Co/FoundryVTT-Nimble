@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { NimbleChatMessage } from './chatMessage.js';
 
 type TestGlobals = {
@@ -1289,5 +1290,327 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
 		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+	});
+
+	it('subtracts the target damage reductions so the preview matches applied damage', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: {
+					attributes: { armor: 'heavy' },
+					damageReductions: [{ value: 3, damageTypes: [] }],
+				},
+			},
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		// Heavy armor total is 10 (see above); untyped reduction of 3 leaves 7.
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(7);
+	});
+
+	it('credits the banked one-shot reduction against the first damage roll only', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: { attributes: { armor: 'none' } },
+				effects: [
+					{
+						id: 'banked-effect',
+						disabled: false,
+						flags: { [SYSTEM_ID]: { bankedDamageReduction: 6 } },
+					},
+				],
+			},
+		});
+
+		const damageNode = (id: string) => ({
+			id,
+			type: 'damage',
+			formula: '2d6',
+			damageType: 'slashing',
+			ignoreArmor: false,
+			canCrit: true,
+			canMiss: true,
+			roll: createSerializedDamageRoll({ diceResults: [4, 6] }),
+			parentNode: null,
+			parentContext: null,
+			on: {
+				hit: [{ id: `${id}-hit`, type: 'damageOutcome', parentNode: id, parentContext: 'hit' }],
+			},
+		});
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: { effects: [damageNode('dmg-a'), damageNode('dmg-b')] },
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		// Each roll totals 10; the 6-point bank is consumed by the first apply,
+		// so the preview must show (10 - 6) + 10 = 14 rather than 4 + 4 = 8.
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(14);
+	});
+
+	it('applies type-scoped reductions to the preview using the damage node type', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: {
+					attributes: { armor: 'none' },
+					damageReductions: [
+						{ value: 5, damageTypes: ['slashing'] },
+						{ value: 2, damageTypes: ['fire'] },
+					],
+				},
+			},
+		});
+
+		// createDamageMessage's damage node is slashing: only the slashing entry applies.
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(37);
+	});
+});
+
+describe('NimbleChatMessage.applyDamage — damage reduction', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+	});
+
+	function createReductionActor(damageReductions: object[]) {
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'none',
+					hp: { value: 10, temp: 0, max: 10 },
+				},
+				damageReductions,
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+	}
+
+	it('subtracts untyped reductions from the applied damage', async () => {
+		const actor = createReductionActor([{ value: 3, damageTypes: [] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('sums multiple matching reductions', async () => {
+		const actor = createReductionActor([
+			{ value: 3, damageTypes: [] },
+			{ value: 2, damageTypes: ['fire'] },
+		]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('applies type-scoped reductions only when the damage type matches', async () => {
+		const actor = createReductionActor([{ value: 4, damageTypes: ['lightning'] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('does not apply type-scoped reductions when the damage type is unknown', async () => {
+		const actor = createReductionActor([{ value: 4, damageTypes: ['lightning'] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('applies untyped reductions even when the damage type is unknown', async () => {
+		const actor = createReductionActor([{ value: 4, damageTypes: [] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+	});
+
+	it('still applies reductions when armor is ignored', async () => {
+		const actor = createReductionActor([{ value: 3, damageTypes: [] }]);
+		actor.system.attributes.armor = 'heavy';
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', ignoreArmor: true });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('subtracts the reduction after armor halving', async () => {
+		const actor = createReductionActor([{ value: 3, damageTypes: [] }]);
+		actor.system.attributes.armor = 'heavy';
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6, 6] });
+
+		const message = createActivationMessage();
+		await message.applyDamage(12, { outcome: 'fullDamage', roll });
+
+		// Heavy armor halves the dice total (12 -> 6), then the reduction applies.
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
+	});
+
+	it('shows no-damage feedback when the reduction absorbs everything', async () => {
+		const actor = createReductionActor([{ value: 10, damageTypes: [] }]);
+		globals().fromUuidSync.mockReturnValue({
+			actor,
+			name: 'Raging Berserker',
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
+	});
+
+	it('notifies the GM when only one of two targets is fully absorbed by reduction', async () => {
+		const protectedActor = createReductionActor([{ value: 10, damageTypes: [] }]);
+		const exposedActor = createReductionActor([]);
+
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid.endsWith('protected')
+				? { actor: protectedActor, name: 'Raging Berserker' }
+				: { actor: exposedActor, name: 'Bystander' },
+		);
+
+		const message = createActivationMessage([
+			'Scene.scene.Token.protected',
+			'Scene.scene.Token.exposed',
+		]);
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(protectedActor.applyDamage).not.toHaveBeenCalled();
+		expect(exposedActor.applyDamage).toHaveBeenCalledWith(8);
+		expect(globals().ui.notifications.info).toHaveBeenCalledWith(
+			expect.stringContaining('Raging Berserker'),
+		);
+	});
+
+	function withBankedReduction(actor: object, value: number) {
+		const target = actor as {
+			effects?: object[];
+			deleteEmbeddedDocuments?: ReturnType<typeof vi.fn>;
+		};
+		target.effects = [
+			{
+				id: 'banked-effect',
+				disabled: false,
+				flags: { [SYSTEM_ID]: { bankedDamageReduction: value } },
+			},
+		];
+		target.deleteEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		return target.deleteEmbeddedDocuments;
+	}
+
+	it('subtracts a banked one-shot reduction and clears its effect after application', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
+	});
+
+	it('combines banked reduction with damageReduction rule entries', async () => {
+		const actor = createReductionActor([{ value: 2, damageTypes: [] }]);
+		withBankedReduction(actor, 3);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('consumes the banked reduction even when it absorbs the damage entirely', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 20);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
+	});
+
+	it('applies the banked reduction to only the first entry when one actor is targeted via two tokens', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockImplementation(() => ({ actor }));
+
+		const message = createActivationMessage(['Scene.scene.Token.a', 'Scene.scene.Token.b']);
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// The one-shot bank absorbs a single application, not one per token.
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 4);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+		expect(deleteEffects).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps Apply Damage available when the bank absorbs the damage entirely', () => {
+		const actor = createReductionActor([]);
+		withBankedReduction(actor, 20);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+
+		// The bank is spent by the Apply click even on full absorption, so the
+		// button must stay live; otherwise the one-shot bank survives forever.
+		expect(message.canApplyDamage(8, { outcome: 'fullDamage' })).toBe(true);
+	});
+
+	it('does not consume the banked reduction when only previewing or checking applicability', () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		message.canApplyDamage(10, { outcome: 'fullDamage' });
+
+		expect(deleteEffects).not.toHaveBeenCalled();
+		expect(actor.update).not.toHaveBeenCalled();
+	});
+
+	it('ignores malformed reduction entries', async () => {
+		const actor = createReductionActor([
+			{ value: Number.NaN, damageTypes: [] },
+			{ value: -2, damageTypes: [] },
+			{ value: 'nonsense', damageTypes: [] },
+			{ value: 2, damageTypes: 'notAnArray' },
+			{ value: 3, damageTypes: [] },
+		]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// Only the well-formed entries apply: 2 (invalid damageTypes treated as untyped) + 3.
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 });

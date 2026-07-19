@@ -244,6 +244,20 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		);
 	}
 
+	/**
+	 * Every enabled Active Effect renders on the token, not only the
+	 * duration/status-bearing ones core considers temporary. Hidden effects
+	 * are a trap: the player and GM must always be able to see that an
+	 * effect (a toggle, a banked reduction, a granted buff) is present.
+	 */
+	override get temporaryEffects(): ActiveEffect.Implementation[] {
+		const effects: ActiveEffect.Implementation[] = [];
+		for (const effect of this.allApplicableEffects()) {
+			if (effect.active) effects.push(effect);
+		}
+		return effects;
+	}
+
 	/** ------------------------------------------------------ */
 	/**                   Data Preparation                     */
 	/** ------------------------------------------------------ */

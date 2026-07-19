@@ -6,6 +6,7 @@ import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
@@ -43,6 +44,7 @@ export default function registerRulesConfig() {
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
+		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
@@ -80,6 +82,7 @@ export default function registerRulesConfig() {
 		combatMana: CombatManaRule,
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
+		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
 		grantMovement: GrantMovementRule,
 		diceConsumer: DiceConsumerRule,

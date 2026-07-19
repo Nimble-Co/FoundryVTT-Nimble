@@ -6,6 +6,11 @@ import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import type { DamageRoll } from '../dice/DamageRoll.js';
+import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
+import {
+	clearBankedDamageReduction,
+	getBankedDamageReduction,
+} from '../utils/bankedDamageReduction.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -45,6 +50,7 @@ type HpMutableActor = Actor.Implementation &
 type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
 
 type DamageApplyOptions = {
+	damageType?: string;
 	ignoreArmor?: boolean;
 	outcome?: DamageApplyOutcome;
 	roll?: DamageRoll.SerializedData | null;
@@ -61,6 +67,8 @@ interface DamageApplicationPlan {
 	hasTargets: boolean;
 	applicableTargets: DamageApplicationTarget[];
 	zeroDamageTargetNames: string[];
+	/** Targets whose banked one-shot reduction is consumed by this application */
+	bankedReductionActors: HpMutableActor[];
 }
 
 function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'heavy' {
@@ -242,6 +250,46 @@ function calculateArmorAdjustedDamage(params: {
 	return Math.max(0, Math.floor(totalAdjustedDamage));
 }
 
+/**
+ * Sum the target's damageReduction rule entries that match the incoming damage
+ * type. Untyped entries (empty damageTypes) always apply; typed entries apply
+ * only when the incoming damage type is known and included — an unknown type
+ * (e.g. the minion group attack card, which carries no roll metadata) must not
+ * match type-scoped reductions.
+ */
+function getDamageReductionTotal(actor: Actor.Implementation, damageType?: string): number {
+	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
+		| DamageReductionEntry[]
+		| undefined;
+	if (!Array.isArray(reductions)) return 0;
+
+	let total = 0;
+	for (const reduction of reductions) {
+		const value = Number(reduction?.value);
+		if (!Number.isFinite(value) || value <= 0) continue;
+
+		const damageTypes = Array.isArray(reduction.damageTypes) ? reduction.damageTypes : [];
+		if (damageTypes.length > 0 && (!damageType || !damageTypes.includes(damageType))) continue;
+
+		total += value;
+	}
+
+	return Math.floor(total);
+}
+
+function calculateAdjustedDamage(params: {
+	actor: Actor.Implementation;
+	damage: number;
+	options?: DamageApplyOptions;
+	bankedReduction?: number;
+}): number {
+	const armorAdjustedDamage = calculateArmorAdjustedDamage(params);
+	const reduction =
+		getDamageReductionTotal(params.actor, params.options?.damageType) +
+		(params.bankedReduction ?? 0);
+	return Math.max(0, armorAdjustedDamage - reduction);
+}
+
 function buildDamageApplicationPlan(params: {
 	targets: string[];
 	damage: number;
@@ -249,15 +297,23 @@ function buildDamageApplicationPlan(params: {
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
+	const bankedReductionActors = new Set<HpMutableActor>();
 
 	for (const uuid of params.targets) {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
-		const adjustedDamage = calculateArmorAdjustedDamage({
+
+		// A banked reduction is one-shot: when the same actor is targeted through
+		// multiple tokens, only its first application entry gets the bank.
+		const bankedReduction = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
+		if (bankedReduction > 0) bankedReductionActors.add(actor);
+
+		const adjustedDamage = calculateAdjustedDamage({
 			actor,
 			damage: params.damage,
 			options: params.options,
+			bankedReduction,
 		});
 
 		if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) {
@@ -277,6 +333,7 @@ function buildDamageApplicationPlan(params: {
 		hasTargets: params.targets.length > 0,
 		applicableTargets,
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
+		bankedReductionActors: [...bankedReductionActors],
 	};
 }
 
@@ -508,6 +565,12 @@ class NimbleChatMessage extends ChatMessage {
 			return;
 		}
 
+		// Banked one-shot reductions are spent by this application even when they
+		// absorb the damage entirely, so consume them before the zero-damage exit.
+		for (const bankedActor of damageApplicationPlan.bankedReductionActors) {
+			await clearBankedDamageReduction(bankedActor);
+		}
+
 		if (damageApplicationPlan.applicableTargets.length < 1) {
 			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
 			return;
@@ -569,7 +632,12 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = (this.system as ActivationCardSystemData).targets || [];
 		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
 		if (!damageApplicationPlan.hasTargets) return true;
-		return damageApplicationPlan.applicableTargets.length > 0;
+		// A pending banked reduction is spent by clicking Apply even when it
+		// absorbs the hit entirely, so the button must stay live for it.
+		return (
+			damageApplicationPlan.applicableTargets.length > 0 ||
+			damageApplicationPlan.bankedReductionActors.length > 0
+		);
 	}
 
 	/**
@@ -618,6 +686,7 @@ class NimbleChatMessage extends ChatMessage {
 				entries.push({
 					value,
 					options: {
+						damageType: (node as { damageType?: string }).damageType,
 						ignoreArmor: (node as { ignoreArmor?: boolean }).ignoreArmor,
 						outcome,
 						roll: roll as unknown as DamageRoll.SerializedData,
@@ -649,8 +718,12 @@ class NimbleChatMessage extends ChatMessage {
 		if (!actor) return null;
 
 		let total = 0;
+		// The banked one-shot reduction is consumed by the first application, so
+		// credit it against the first roll only — mirroring the apply flow.
+		let bankedReduction = getBankedDamageReduction(actor);
 		for (const { value, options } of damageRolls) {
-			const adjusted = calculateArmorAdjustedDamage({ actor, damage: value, options });
+			const adjusted = calculateAdjustedDamage({ actor, damage: value, options, bankedReduction });
+			bankedReduction = 0;
 			if (Number.isFinite(adjusted) && adjusted > 0) total += Math.floor(adjusted);
 		}
 
