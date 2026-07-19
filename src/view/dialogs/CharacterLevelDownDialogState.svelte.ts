@@ -5,6 +5,19 @@ interface ClassItemShape {
 	system?: { classLevel?: number; hitDieSize?: number };
 }
 
+/** Structural type for an item as accessed by the level-down dialog. */
+interface LevelDownItem {
+	type: string;
+	name: string;
+	img?: string;
+	system?: {
+		levelUpOptions?: Array<{
+			label?: string;
+			rules?: Array<{ type?: string; poolIdentifier?: string }>;
+		}>;
+	};
+}
+
 /** Structural type for what the factory accesses on the actor document */
 interface LevelDownActor {
 	system: {
@@ -17,6 +30,7 @@ interface LevelDownActor {
 			abilityIncreases: Record<string, number>;
 			grantedFeatureIds: string[];
 			grantedSpellIds?: string[];
+			poolMaxBonuses?: Record<string, number>;
 		}>;
 	};
 	classes: Record<string, ClassItemShape | undefined>;
@@ -87,6 +101,40 @@ export function createLevelDownState(
 			.filter((item): item is NonNullable<typeof item> => item !== undefined),
 	);
 
+	// Get pool max bonuses (e.g. "+1 Max Combat Die") that will be reverted. These are stored on
+	// the history entry rather than as a distinct granted item on repeat selections, so they would
+	// otherwise be invisible in the revert preview. Labels are sourced from the feature option that
+	// defines the bonus (stripping its leading "+N"), falling back to a humanized pool identifier.
+	const poolBonusChanges = $derived.by(() => {
+		const bonuses = lastHistory?.poolMaxBonuses ?? {};
+		const entries = Object.entries(bonuses).filter(([, amount]) => amount > 0);
+		if (entries.length === 0) return [];
+
+		const labelByPool = new Map<string, string>();
+		const items = getActor().items.filter(() => true) as unknown as LevelDownItem[];
+		for (const item of items) {
+			for (const option of item.system?.levelUpOptions ?? []) {
+				for (const rule of option.rules ?? []) {
+					if (rule.type !== 'poolMaxBonus' || typeof rule.poolIdentifier !== 'string') continue;
+					if (labelByPool.has(rule.poolIdentifier)) continue;
+					const raw = option.label ?? rule.poolIdentifier;
+					labelByPool.set(rule.poolIdentifier, raw.replace(/^\+\d+\s*/, ''));
+				}
+			}
+		}
+
+		const humanize = (poolId: string) =>
+			poolId
+				.split('-')
+				.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+				.join(' ');
+
+		return entries.map(([poolId, amount]) => ({
+			name: labelByPool.get(poolId) ?? humanize(poolId),
+			amount,
+		}));
+	});
+
 	function submit() {
 		getDialog().submit({
 			confirmed: true,
@@ -126,6 +174,9 @@ export function createLevelDownState(
 		},
 		get grantedSpells() {
 			return grantedSpells;
+		},
+		get poolBonusChanges() {
+			return poolBonusChanges;
 		},
 		submit,
 	};

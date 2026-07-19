@@ -403,6 +403,11 @@ const characterSchema = () => ({
 				new fields.StringField({ required: true, nullable: false, initial: '' }),
 				{ required: true, nullable: false, initial: () => [] },
 			),
+			poolMaxBonuses: new RecordField(
+				new fields.StringField({ required: true, nullable: false, initial: '' }),
+				new fields.NumberField({ required: true, initial: 0, integer: true, nullable: false }),
+				{ required: true, nullable: false, initial: () => ({}) },
+			),
 		}),
 		{ required: true, nullable: false, initial: () => [] },
 	),
@@ -502,6 +507,8 @@ interface LevelUpHistoryEntry {
 	/** Item ids of class features granted during this level-up (auto + selected). */
 	grantedFeatureIds: string[];
 	grantedSpellIds: string[];
+	/** Pool max bonuses chosen at this level (e.g. { 'combat-dice': 1 }). */
+	poolMaxBonuses: Record<string, number>;
 }
 
 declare namespace NimbleCharacterData {

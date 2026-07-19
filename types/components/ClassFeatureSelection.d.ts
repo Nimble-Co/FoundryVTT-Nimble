@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /**
  * A selection group offered at a given level, with the number of features
@@ -12,6 +13,7 @@ export interface SelectionGroup {
 export interface ClassFeatureResult {
 	autoGrant: NimbleFeatureItem[];
 	selectionGroups: Map<string, SelectionGroup>;
+	optionFeatures: NimbleFeatureItem[];
 }
 
 export interface ClassFeatureSelectionProps {
@@ -27,6 +29,11 @@ export interface FeatureCardProps {
 	isSelected?: boolean;
 	isDisabled?: boolean;
 	onSelect?: () => void;
+	/**
+	 * Render as a bare header row — no card border, background, or radius — so the card can
+	 * act as the heading of a containing section instead of a nested box.
+	 */
+	asHeader?: boolean;
 }
 
 export interface FeatureGroupSelectionProps {
@@ -35,11 +42,35 @@ export interface FeatureGroupSelectionProps {
 	selectionCount: number;
 	selectedFeatures: NimbleFeatureItem[];
 	onSelect: (feature: NimbleFeatureItem) => void;
+	/**
+	 * Hide the group-name heading (but keep the hint/progress). Used when the group is
+	 * nested under a parent feature card that already names the group, to avoid a
+	 * duplicate title.
+	 */
+	hideGroupName?: boolean;
+}
+
+export interface LevelUpFeatureOptionPickerProps {
+	feature: NimbleFeatureItem;
+	levelingTo: number;
+	selectedOptionId: string | null;
+	selectedSubItemUuids: string[];
+	ownedItemUuids: Set<string>;
+	/** Pre-built class-feature index, reused to resolve the option's sub-item pool. */
+	classFeatureIndex: ClassFeatureIndex | null;
+	onSelect: (optionId: string) => void;
+	onSubItemSelect: (uuid: string) => void;
 }
 
 export interface LevelUpClassFeatureSelectionProps {
 	classFeatures: ClassFeatureResult | null;
+	levelingTo: number;
 	selectedFeatures: Map<string, NimbleFeatureItem[]>;
+	selectedOptionIds: Map<string, string>;
+	selectedOptionSubItems: Map<string, string[]>;
+	ownedItemUuids: Set<string>;
+	/** Pre-built class-feature index, forwarded to each option picker for sub-item lookups. */
+	classFeatureIndex: ClassFeatureIndex | null;
 	loading?: boolean;
 }
 

@@ -6,10 +6,16 @@
 	import Hint from '../../../components/Hint.svelte';
 	import localize from '#utils/localize.js';
 	import { createClassFeatureSelectionState } from './LevelUpClassFeatureSelection.svelte.ts';
+	import LevelUpFeatureOptionPicker from './LevelUpFeatureOptionPicker.svelte';
 
 	let {
 		classFeatures,
+		levelingTo,
 		selectedFeatures = $bindable(),
+		selectedOptionIds = $bindable(),
+		selectedOptionSubItems = $bindable(),
+		ownedItemUuids,
+		classFeatureIndex,
 		loading = false,
 	}: LevelUpClassFeatureSelectionProps = $props();
 
@@ -19,12 +25,21 @@
 		(features) => {
 			selectedFeatures = features;
 		},
+		() => selectedOptionIds,
+		(ids) => {
+			selectedOptionIds = ids;
+		},
+		() => selectedOptionSubItems,
+		(items) => {
+			selectedOptionSubItems = items;
+		},
 	);
 
-	const { handleFeatureSelect } = state;
+	const { handleFeatureSelect, handleOptionSelect, handleSubItemSelect } = state;
 	const hasAnyFeatures = $derived(state.hasAnyFeatures);
 	const hasAutoGrant = $derived(state.hasAutoGrant);
 	const hasSelectionGroups = $derived(state.hasSelectionGroups);
+	const hasOptionFeatures = $derived(state.hasOptionFeatures);
 </script>
 
 {#if loading}
@@ -52,6 +67,21 @@
 					<FeatureCard {feature} />
 				{/each}
 			</ul>
+		{/if}
+
+		{#if hasOptionFeatures}
+			{#each classFeatures?.optionFeatures ?? [] as feature (feature.uuid)}
+				<LevelUpFeatureOptionPicker
+					{feature}
+					{levelingTo}
+					selectedOptionId={selectedOptionIds.get(feature.uuid) ?? null}
+					selectedSubItemUuids={selectedOptionSubItems.get(feature.uuid) ?? []}
+					{ownedItemUuids}
+					{classFeatureIndex}
+					onSelect={(optionId) => handleOptionSelect(feature.uuid, optionId)}
+					onSubItemSelect={(uuid) => handleSubItemSelect(feature.uuid, uuid)}
+				/>
+			{/each}
 		{/if}
 
 		{#if hasSelectionGroups}

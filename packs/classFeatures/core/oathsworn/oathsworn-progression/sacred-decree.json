@@ -1,0 +1,82 @@
+{
+	"name": "Sacred Decree",
+	"type": "feature",
+	"img": "icons/magic/light/beam-strike-orange-gold.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "",
+		"featureType": "class",
+		"class": "oathsworn",
+		"group": "oathsworn-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		],
+		"selectionCountByLevel": {},
+		"levelUpOptions": [
+			{
+				"id": "sacred-decree",
+				"label": "Choose a Sacred Decree",
+				"applyAtLevels": [
+					3,
+					6,
+					9,
+					12,
+					14,
+					16
+				],
+				"rules": [],
+				"selectionGroups": [
+					"sacred-decree"
+				],
+				"selectionCount": 1
+			}
+		]
+	},
+	"effects": [],
+	"folder": "c5f324248b31dabc",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1761500000000,
+		"modifiedTime": 1761500000000,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "So6ET6oQ6cEBQaji"
+}

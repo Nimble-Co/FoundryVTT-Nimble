@@ -11,6 +11,7 @@
 		selectionCount,
 		selectedFeatures,
 		onSelect,
+		hideGroupName = false,
 	}: FeatureGroupSelectionProps = $props();
 
 	const state = createFeatureGroupSelectionState(() => ({
@@ -44,9 +45,11 @@
 
 <div class="feature-group">
 	<header class="feature-group__header">
-		<h4 class="nimble-heading" data-heading-variant="section">
-			{state.formattedGroupName}
-		</h4>
+		{#if !hideGroupName}
+			<h4 class="nimble-heading" data-heading-variant="section">
+				{state.formattedGroupName}
+			</h4>
+		{/if}
 		{#if !state.isFixed}
 			<span class="feature-group__hint">{getHintText()}</span>
 			<span

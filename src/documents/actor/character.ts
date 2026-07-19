@@ -38,6 +38,12 @@ import { NimbleBaseActor } from './base.svelte.js';
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
 
+/**
+ * Shape of a `poolMaxBonus` rule carried by a feature's `levelUpOptions`. The model types
+ * option rules as `Record<string, unknown>`, so this narrows the fields we read off them.
+ */
+type PoolMaxBonusRule = { type?: string; poolIdentifier?: string; grantItemUuid?: string };
+
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
 	classUpdates: Array<{ id: string; hpData: number[] }>;
@@ -76,6 +82,8 @@ interface LevelUpDialogData {
 	classFeatures?: {
 		autoGrant: string[];
 		selected: Map<string, NimbleFeatureItem[]>;
+		grantedOptionItems?: string[];
+		poolMaxBonuses?: Record<string, number>;
 	};
 	spellUuids: string[];
 }
@@ -1000,6 +1008,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		data.level = this.levels.character ?? 1;
 
+		// NOTE: Pool max bonuses from level-up selections (e.g. "+1 Max Combat Die") are applied
+		// directly in the charge-pool max computation (see getChargePoolDefinitions), reading the
+		// cumulative total from levelUpHistory. They are intentionally NOT exposed as roll-data
+		// variables here: doing so required every embedded pool formula to reference @<pool>Bonus,
+		// which silently dropped the bonus whenever an actor carried a stale formula. Applying the
+		// bonus in code makes it robust regardless of the embedded chargePool formula.
+
 		return data;
 	}
 
@@ -1336,6 +1351,17 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				.filter((id): id is string => id !== null);
 		}
 
+		// Conditionally grant pool-bonus items (e.g. "+1 Max Combat Die") not yet on the actor
+		const poolBonusGrantUuids = this.#resolvePoolBonusGrantUuids(
+			typedDialogData.classFeatures?.poolMaxBonuses ?? {},
+		);
+		if (typedDialogData.classFeatures && poolBonusGrantUuids.length > 0) {
+			typedDialogData.classFeatures.grantedOptionItems = [
+				...(typedDialogData.classFeatures.grantedOptionItems ?? []),
+				...poolBonusGrantUuids,
+			];
+		}
+
 		// Grant any class features gained at this level (auto + selected)
 		const classFeatureIds = await this.grantLevelUpFeatures(typedDialogData.classFeatures);
 
@@ -1379,12 +1405,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			classIdentifier: characterClass.identifier,
 			grantedFeatureIds,
 			grantedSpellIds,
+			poolMaxBonuses: typedDialogData.classFeatures?.poolMaxBonuses ?? {},
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+		await this.#syncPoolBonusItemDescriptions();
 		this.sheet?.render(true);
 	}
 
@@ -1435,6 +1463,108 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/**
+	 * Returns compendium UUIDs for pool-bonus items (e.g. "+1 Max Combat Die") referenced by
+	 * poolMaxBonus rules on the actor's items that should be granted this level but aren't yet
+	 * embedded on the actor.
+	 */
+	#resolvePoolBonusGrantUuids(poolMaxBonuses: Record<string, number>): string[] {
+		const uuids: string[] = [];
+		for (const item of this.items.contents) {
+			if (!item.isType('feature')) continue;
+			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
+			for (const option of levelUpOptions) {
+				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
+					if (
+						rule.type !== 'poolMaxBonus' ||
+						typeof rule.poolIdentifier !== 'string' ||
+						typeof rule.grantItemUuid !== 'string' ||
+						(poolMaxBonuses[rule.poolIdentifier] ?? 0) <= 0
+					)
+						continue;
+
+					const grantUuid = rule.grantItemUuid;
+					// Match the full compendium UUID exactly — a bare id substring can false-match.
+					const alreadyOwned = this.items.some(
+						(owned) =>
+							((owned as unknown as { _stats?: { compendiumSource?: string } })._stats
+								?.compendiumSource ?? '') === grantUuid,
+					);
+
+					if (!alreadyOwned && !uuids.includes(grantUuid)) uuids.push(grantUuid);
+				}
+			}
+		}
+		return uuids;
+	}
+
+	/**
+	 * Updates the name and description of pool-bonus items embedded on this actor to reflect
+	 * the cumulative bonus totals stored in levelUpHistory. Called after every level-up and revert.
+	 */
+	async #syncPoolBonusItemDescriptions(): Promise<void> {
+		const totals: Record<string, number> = {};
+		for (const entry of this.system.levelUpHistory) {
+			for (const [poolId, bonus] of Object.entries(entry.poolMaxBonuses ?? {})) {
+				totals[poolId] = (totals[poolId] ?? 0) + bonus;
+			}
+		}
+
+		const poolToGrantUuid: Record<string, string> = {};
+		for (const item of this.items.contents) {
+			if (!item.isType('feature')) continue;
+			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
+			for (const option of levelUpOptions) {
+				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
+					if (
+						rule.type === 'poolMaxBonus' &&
+						typeof rule.poolIdentifier === 'string' &&
+						typeof rule.grantItemUuid === 'string'
+					) {
+						poolToGrantUuid[rule.poolIdentifier] ??= rule.grantItemUuid;
+					}
+				}
+			}
+		}
+
+		const embeddedUpdates: { _id: string; name: string; 'system.description': string }[] = [];
+
+		for (const [poolId, grantUuid] of Object.entries(poolToGrantUuid)) {
+			const total = totals[poolId] ?? 0;
+			if (total <= 0) continue;
+
+			// Match the full compendium UUID exactly — a bare id substring can false-match.
+			const ownedItem = this.items.find(
+				(i) =>
+					((i as unknown as { _stats?: { compendiumSource?: string } })._stats?.compendiumSource ??
+						'') === grantUuid,
+			);
+
+			if (!ownedItem || ownedItem.id === null) continue;
+
+			const currentName = ownedItem.name ?? '';
+			const currentDescription =
+				(ownedItem as unknown as { system?: { description?: string } }).system?.description ?? '';
+
+			const newName = currentName
+				.replace(/\+\d+/, `+${total}`)
+				.replace(/\b(?:Die|Dice)\b/, total === 1 ? 'Die' : 'Dice');
+			const newDescription = currentDescription.replace(/\+\d+/g, `+${total}`);
+
+			if (newName !== currentName || newDescription !== currentDescription) {
+				embeddedUpdates.push({
+					_id: ownedItem.id,
+					name: newName,
+					'system.description': newDescription,
+				});
+			}
+		}
+
+		if (embeddedUpdates.length > 0) {
+			await this.updateEmbeddedDocuments('Item', embeddedUpdates);
+		}
+	}
+
+	/**
 	 * Creates embedded feature documents for features gained on level-up (both
 	 * auto-grant groups and user-selected groups) and returns the newly created
 	 * item ids so they can be tracked in the level-up history for later reversal.
@@ -1458,6 +1588,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				source._stats.compendiumSource = feature.uuid;
 				featureDocumentSources.push(source as object as Item.CreateData);
 			}
+		}
+
+		for (const uuid of classFeatures.grantedOptionItems ?? []) {
+			const feature = await fromUuid(uuid as `Item.${string}`);
+			if (!feature) continue;
+			const source = (feature as NimbleFeatureItem).toObject();
+			source._stats.compendiumSource = uuid;
+			featureDocumentSources.push(source as object as Item.CreateData);
 		}
 
 		if (featureDocumentSources.length === 0) return [];
@@ -1552,6 +1690,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+		await this.#syncPoolBonusItemDescriptions();
 	}
 
 	async outputLevelUpSummary(data, roll: Roll | undefined) {

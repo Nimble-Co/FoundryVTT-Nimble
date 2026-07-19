@@ -25,3 +25,4 @@ export { Migration024OathswornRefillMode } from './Migration024OathswornRefillMo
 export { Migration025DiceConsumerSplit } from './Migration025DiceConsumerSplit.js';
 export { Migration026IgniteSingleTarget } from './Migration026IgniteSingleTarget.js';
 export { Migration027RageToggleEffect } from './Migration027RageToggleEffect.js';
+export { Migration028CombatDiceMaxFormula } from './Migration028CombatDiceMaxFormula.js';

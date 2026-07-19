@@ -480,7 +480,9 @@
 			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
 			"takeAverage": "Take Average ({average})",
 			"featuresHint": "The following features are available at this level for your class.",
-			"loadingFeatures": "Loading features..."
+			"loadingFeatures": "Loading features...",
+			"selectOption": "Select this option",
+			"deselectOption": "Deselect this option"
 		},
 		"levelDownDialog": {
 			"level": "Level",
