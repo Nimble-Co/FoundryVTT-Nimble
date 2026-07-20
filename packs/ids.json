@@ -316,6 +316,15 @@
 						"nullify": "alpqbmQnF94N1KFw",
 						"steel-will": "u7UhIHOiXrAv6DEY",
 						"supreme-control": "cCqrZ6XZBRiMhwdh"
+					},
+					"invoker-of-flame": {
+						"fiery-dedication": "MLQWERLDATsHh8DE"
+					},
+					"invoker-of-frost": {
+						"crown-of-ice": "evQTlTP6JuIzKzt1"
+					},
+					"invoker-of-surges": {
+						"electrical-dedication": "Vij67KihB4IEf4E6"
 					}
 				},
 				"spellshaper": {
@@ -1214,7 +1223,10 @@
 			},
 			"mage": {
 				"invoker-of-chaos": "58r5iO7h0lyo6DfE",
-				"invoker-of-control": "z9e6kfg68COw9TM3"
+				"invoker-of-control": "z9e6kfg68COw9TM3",
+				"invoker-of-flame": "eb0XDzWIbAKuA2Di",
+				"invoker-of-frost": "bEWmxrpD4wHsSzQ8",
+				"invoker-of-surges": "eKn9R6LmAOoKqNDK"
 			},
 			"oathsworn": {
 				"oath-of-refuge": "DN0a2Kd6zthckU1n",
