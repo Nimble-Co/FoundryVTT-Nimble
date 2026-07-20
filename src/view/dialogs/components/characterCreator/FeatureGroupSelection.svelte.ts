@@ -17,6 +17,7 @@ interface FeatureGroupSelectionStateProps {
 	features: NimbleFeatureItem[];
 	selectionCount: number;
 	selectedFeatures: NimbleFeatureItem[];
+	selectionMax?: number;
 }
 
 /**
@@ -40,6 +41,15 @@ export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSel
 			const { features, selectionCount } = getProps();
 			return features.length === selectionCount;
 		},
+		/** Upper bound on selections; defaults to the required count (an exact choice). */
+		get maxSelectionCount() {
+			const { selectionCount, selectionMax } = getProps();
+			return selectionMax ?? selectionCount;
+		},
+		/** True when more selections are allowed than required (e.g. a duplicate-source choice). */
+		get isRange() {
+			return this.maxSelectionCount > getProps().selectionCount;
+		},
 		get selectedCount() {
 			return getProps().selectedFeatures.length;
 		},
@@ -50,7 +60,9 @@ export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSel
 		get displayedFeatures() {
 			const { features, selectedFeatures } = getProps();
 
-			if (this.isFixed || !this.isComplete) {
+			// Range groups keep every candidate visible so the player can still add or swap
+			// copies after reaching the minimum; exact groups collapse to the final picks.
+			if (this.isFixed || this.isRange || !this.isComplete) {
 				return sortDocumentsByName(features);
 			}
 

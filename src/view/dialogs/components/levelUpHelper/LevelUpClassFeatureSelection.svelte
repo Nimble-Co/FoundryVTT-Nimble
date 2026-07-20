@@ -90,6 +90,10 @@
 					{groupName}
 					features={group.features}
 					selectionCount={group.selectionCount}
+					selectionMax={group.selectionMax}
+					isDuplicateChoice={group.isDuplicateChoice}
+					showSourceLabel={group.showSourceLabel}
+					displayName={group.displayName}
 					selectedFeatures={selectedFeatures.get(groupName) ?? []}
 					onSelect={(feature) => handleFeatureSelect(groupName, feature)}
 				/>

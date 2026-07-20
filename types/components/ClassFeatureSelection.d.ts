@@ -7,7 +7,24 @@ import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
  */
 export interface SelectionGroup {
 	features: NimbleFeatureItem[];
+	/** Minimum number of features that must be selected from the group. */
 	selectionCount: number;
+	/**
+	 * Maximum number of features that may be selected. Defaults to `selectionCount` (an
+	 * exact choice). When greater than `selectionCount` the group is a range — used by
+	 * duplicate-source groups so the player can pick a single source or keep every copy.
+	 */
+	selectionMax?: number;
+	/**
+	 * True when the group represents the same class feature offered from more than one source
+	 * (a customized World Item plus its Compendium original). Drives the "choose one or keep
+	 * both" hint and shows a source badge on each candidate.
+	 */
+	isDuplicateChoice?: boolean;
+	/** Show a source badge on each candidate without changing the group's selection hint. */
+	showSourceLabel?: boolean;
+	/** Heading to display verbatim instead of formatting the group key (e.g. a feature name). */
+	displayName?: string;
 }
 
 export interface ClassFeatureResult {
@@ -34,6 +51,8 @@ export interface FeatureCardProps {
 	 * act as the heading of a containing section instead of a nested box.
 	 */
 	asHeader?: boolean;
+	/** Show a "World Item" / "Compendium" badge indicating where this feature is sourced from. */
+	showSourceLabel?: boolean;
 }
 
 export interface FeatureGroupSelectionProps {
@@ -48,6 +67,14 @@ export interface FeatureGroupSelectionProps {
 	 * duplicate title.
 	 */
 	hideGroupName?: boolean;
+	/** Maximum selectable features; defaults to `selectionCount`. */
+	selectionMax?: number;
+	/** Present the group as a same-feature multiple-source choice ("choose one or keep both"). */
+	isDuplicateChoice?: boolean;
+	/** Show a source badge on each candidate without changing the selection hint. */
+	showSourceLabel?: boolean;
+	/** Heading to display verbatim instead of formatting the group key. */
+	displayName?: string;
 }
 
 export interface LevelUpFeatureOptionPickerProps {
