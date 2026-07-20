@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { prelocalize } from './prelocalize.js';
 
 // A minimal translation table: keys map to their English strings, some of
