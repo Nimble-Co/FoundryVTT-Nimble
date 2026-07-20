@@ -427,6 +427,7 @@
 		},
 		"prompts": {
 			"changeActorImage": "Change Actor Image",
+			"changeAncestryBonusImage": "Change Ancestry Bonus Image",
 			"changeBoonImage": "Change Boon Image",
 			"changeClassImage": "Change Class Image",
 			"changeFeatureImage": "Change Feature Image",
