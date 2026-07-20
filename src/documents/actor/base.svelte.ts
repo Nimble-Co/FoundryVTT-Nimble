@@ -5,6 +5,7 @@ import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
+import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
@@ -270,6 +271,15 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	override prepareData(): void {
 		this.initialized = true;
 		super.prepareData();
+
+		// Foundry sometimes calls prepareData() directly without re-initializing
+		// the document, reusing the same system object; reset rule accumulator
+		// arrays so the afterPrepareData pushes below never duplicate.
+		for (const path of actorAccumulatorPaths) {
+			if (foundry.utils.getProperty(this.system, path) !== undefined) {
+				foundry.utils.setProperty(this.system, path, []);
+			}
+		}
 
 		// Call Rule Hooks
 		this.rules.forEach((rule) => {

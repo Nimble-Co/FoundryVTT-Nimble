@@ -1834,8 +1834,31 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 				'Stone Skin (half damage)',
 				'Frost Ward (-3)',
 				'damage reduction (-2)',
-				'banked damage reduction (-6)',
+				'damage reduction (-6)',
 			]);
+		});
+
+		it('names the banking feature when the banked effect carries a source', () => {
+			const actor = createResistanceActor({});
+			const target = actor as unknown as { effects?: object[] };
+			target.effects = [
+				{
+					id: 'banked-effect',
+					disabled: false,
+					flags: {
+						[SYSTEM_ID]: {
+							bankedDamageReduction: 8,
+							bankedDamageReductionSource: 'That all you got?!',
+						},
+					},
+				},
+			];
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const modifiers =
+				createModifierMessage().getDamageModifiersForTarget('Scene.scene.Token.token');
+
+			expect(modifiers).toEqual(['That all you got?! (-8)']);
 		});
 
 		it('excludes reductions scoped to damage types the card does not deal', () => {

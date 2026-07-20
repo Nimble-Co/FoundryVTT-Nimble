@@ -1128,7 +1128,7 @@
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
 					"spendWithCount": "Spend ({count})",
-					"bankedReductionNote": "Banked as damage reduction. It is applied automatically to the next damage taken."
+					"bankedReductionNote": "Applied automatically as damage reduction against the next damage taken."
 				}
 			}
 		},
@@ -1927,7 +1927,8 @@
 			"resistanceGeneric": "resistance (half damage)",
 			"flat": "{label} (-{value})",
 			"flatGeneric": "damage reduction (-{value})",
-			"banked": "banked damage reduction (-{value})"
+			"banked": "damage reduction (-{value})",
+			"bankedSource": "{source} (-{value})"
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"

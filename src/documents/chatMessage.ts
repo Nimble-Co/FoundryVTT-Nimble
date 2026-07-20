@@ -10,6 +10,7 @@ import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
+	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
 
 /** Types for activation cards that have targets and effects */
@@ -863,9 +864,15 @@ class NimbleChatMessage extends ChatMessage {
 			}
 		}
 
-		const bankedReduction = getBankedDamageReduction(actor);
-		if (bankedReduction > 0) {
-			modifiers.push(localize('NIMBLE.damageModifiers.banked', { value: String(bankedReduction) }));
+		for (const banked of getBankedDamageReductionEntries(actor)) {
+			modifiers.push(
+				banked.source
+					? localize('NIMBLE.damageModifiers.bankedSource', {
+							source: banked.source,
+							value: String(banked.value),
+						})
+					: localize('NIMBLE.damageModifiers.banked', { value: String(banked.value) }),
+			);
 		}
 
 		return modifiers;

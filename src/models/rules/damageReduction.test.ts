@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 import { type DamageReductionEntry, DamageReductionRule } from './damageReduction.js';
 
 interface MockActor {
@@ -93,7 +94,18 @@ describe('DamageReductionRule', () => {
 
 			rule.afterPrepareData();
 
-			expect(actor.system.damageReductions).toEqual([{ value: 3, damageTypes: [] }]);
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 3, damageTypes: [], label: 'Test Item' },
+			]);
+		});
+
+		it('registers the accumulator path so the actor can reset it each prepare cycle', () => {
+			const actor = createMockActor();
+			const rule = createDamageReductionRule({ value: '3' }, actor);
+
+			rule.afterPrepareData();
+
+			expect(actorAccumulatorPaths.has('damageReductions')).toBe(true);
 		});
 
 		it('should resolve formula values against actor roll data', () => {
@@ -102,7 +114,9 @@ describe('DamageReductionRule', () => {
 
 			rule.afterPrepareData();
 
-			expect(actor.system.damageReductions).toEqual([{ value: 10, damageTypes: [] }]);
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 10, damageTypes: [], label: 'Test Item' },
+			]);
 		});
 
 		it('should stack multiple reductions in the array', () => {
@@ -115,8 +129,8 @@ describe('DamageReductionRule', () => {
 			rule2.afterPrepareData();
 
 			expect(actor.system.damageReductions).toEqual([
-				{ value: 2, damageTypes: [] },
-				{ value: 5, damageTypes: ['fire'] },
+				{ value: 2, damageTypes: [], label: 'Test Item' },
+				{ value: 5, damageTypes: ['fire'], label: 'Test Item' },
 			]);
 		});
 
@@ -126,7 +140,9 @@ describe('DamageReductionRule', () => {
 
 			rule.afterPrepareData();
 
-			expect(actor.system.damageReductions).toEqual([{ value: 4, damageTypes: ['fire', 'cold'] }]);
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 4, damageTypes: ['fire', 'cold'], label: 'Test Item' },
+			]);
 		});
 
 		it('should copy the damageTypes array rather than sharing the rule field', () => {
@@ -235,7 +251,7 @@ describe('DamageReductionRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageReductions).toEqual([
-				{ value: 0, damageTypes: ['fire'], mode: 'half' },
+				{ value: 0, damageTypes: ['fire'], mode: 'half', label: 'Test Item' },
 			]);
 			expect(actor.getRollData).not.toHaveBeenCalled();
 		});

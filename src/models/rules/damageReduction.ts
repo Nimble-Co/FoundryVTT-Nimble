@@ -103,7 +103,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 				value: 0,
 				damageTypes: [...this.damageTypes],
 				mode: 'half',
-				label: this.label,
+				label: this.label || item.name,
 			});
 			return;
 		}
@@ -121,7 +121,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 		this.pushToActorSystemArray<DamageReductionEntry>('damageReductions', {
 			value: resolvedValue,
 			damageTypes: [...this.damageTypes],
-			label: this.label,
+			label: this.label || item.name,
 		});
 	}
 }
