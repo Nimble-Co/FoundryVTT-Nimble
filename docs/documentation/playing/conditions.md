@@ -12,6 +12,8 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 2. **The sheet's Conditions tab.** Both the character sheet and the NPC sheet have a Conditions tab listing every condition with a search box and an "active only" filter. Toggle a condition there to apply or remove it. Other temporary and passive effects on the actor are listed on the same tab.
 3. **Chat card buttons.** When an attack, spell, or feature inflicts a condition, the condition appears as a button on its chat card. Select the affected tokens and click the button to apply the condition to all of them. Hover the button for the condition's description.
 
+Conditions are not the only markers you will see in these places. Any other active effect on the actor (for example a one-shot damage reduction banked by a feature like the Berserker's "That all you got?!") shows up on the token, the status panel, and the sheet the same way, so nothing affecting an actor is ever invisible. Removing an effect that was granted by an item asks for confirmation first.
+
 ![A chat card with a condition button, next to the token status panel showing named conditions](/images/documentation/condition-chatcard-with-button.png)
 
 ## Linked conditions

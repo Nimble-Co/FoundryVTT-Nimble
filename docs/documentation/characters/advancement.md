@@ -20,7 +20,7 @@ The dialog title shows the jump you're making (for example, "Level Up (2 → 3)"
 - **Ability score increase.** At levels where your class grants a stat increase, pick the ability (or abilities, when the class offers two) to raise.
 - **Skill points.** Assign exactly one new skill point. You may also move one existing point from one skill to another at the same time. No skill can go above 12 points.
 - **Subclass.** When leveling to 3, choose your subclass. Its features arrive along with the level.
-- **Class features.** Features your class grants at the new level are listed and added automatically; if the class offers a choice at this level, pick from the options shown.
+- **Class features.** Features your class grants at the new level are listed and added automatically; if the class offers a choice at this level, pick from the options shown. Some features come as an either-or choice between alternative upgrades; the dialog presents the alternatives and only lets you keep one.
 - **Spells.** New spells arrive automatically, or you pick spell schools or individual spells, depending on what your class grants at this level.
 - **Epic boon.** When leveling to 19, choose an epic boon.
 
