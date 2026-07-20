@@ -198,6 +198,63 @@ function resolveSelectionCount(entries: ClassFeatureIndexEntry[], level: number)
 	return count;
 }
 
+/** Prefix for the synthetic group key of a promoted duplicate-source selection. */
+const DUPLICATE_SOURCE_GROUP_PREFIX = 'nimble-duplicate-source:';
+
+/** Reads a feature's compendium-source link, if any, without assuming Foundry's `_stats` typing. */
+function getCompendiumSource(feature: NimbleFeatureItem): string | undefined {
+	const source = (feature as { _stats?: { compendiumSource?: string } })._stats?.compendiumSource;
+	return typeof source === 'string' && source.length > 0 ? source : undefined;
+}
+
+/**
+ * Groups features that represent the same class feature sourced from more than one place
+ * (a customized World Item alongside its Compendium original). Two features are treated as the
+ * same when they are linked by compendium source, or — absent a link — share a name. Returns one
+ * cluster per distinct feature; the common case is a single-entry cluster per feature.
+ */
+function clusterFeaturesBySource(features: NimbleFeatureItem[]): NimbleFeatureItem[][] {
+	const parent = features.map((_, index) => index);
+
+	function find(index: number): number {
+		let root = index;
+		while (parent[root] !== root) {
+			parent[root] = parent[parent[root]];
+			root = parent[root];
+		}
+		return root;
+	}
+
+	function union(a: number, b: number): void {
+		parent[find(a)] = find(b);
+	}
+
+	const normalizedName = (feature: NimbleFeatureItem) => (feature.name ?? '').trim().toLowerCase();
+
+	for (let i = 0; i < features.length; i++) {
+		for (let j = i + 1; j < features.length; j++) {
+			const a = features[i];
+			const b = features[j];
+			const sourceA = getCompendiumSource(a);
+			const sourceB = getCompendiumSource(b);
+			const linked =
+				sourceA === b.uuid || sourceB === a.uuid || (sourceA !== undefined && sourceA === sourceB);
+			const nameA = normalizedName(a);
+			const sameName = nameA !== '' && nameA === normalizedName(b);
+			if (linked || sameName) union(i, j);
+		}
+	}
+
+	const clusters = new Map<number, NimbleFeatureItem[]>();
+	for (let i = 0; i < features.length; i++) {
+		const root = find(i);
+		if (!clusters.has(root)) clusters.set(root, []);
+		clusters.get(root)!.push(features[i]);
+	}
+
+	return [...clusters.values()];
+}
+
 /**
  * Gets class features using a pre-built index for instant lookups.
  * Use this after building the index with buildClassFeatureIndex().
@@ -315,13 +372,36 @@ export default async function getClassFeaturesFromIndex(
 	// - Groups already covered by an optionFeature's picker are excluded to avoid duplication
 	for (const [groupName, groupFeatures] of featuresByGroup) {
 		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
-			result.autoGrant.push(...groupFeatures);
+			// Auto-grant features normally apply without a choice. But when the same feature is
+			// available from more than one source (a customized World Item plus its Compendium
+			// original), granting all copies would silently add duplicates. Present each such set
+			// as a "choose one or keep both" selection, leaving true singletons auto-granted.
+			for (const cluster of clusterFeaturesBySource(groupFeatures)) {
+				if (cluster.length === 1) {
+					result.autoGrant.push(cluster[0]);
+					continue;
+				}
+
+				result.selectionGroups.set(`${DUPLICATE_SOURCE_GROUP_PREFIX}${cluster[0].uuid}`, {
+					features: cluster,
+					selectionCount: 1,
+					selectionMax: cluster.length,
+					isDuplicateChoice: true,
+					displayName: cluster[0].name ?? '',
+				});
+			}
 		} else if (!groupsCoveredByOptions.has(groupName)) {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];
 			const selectionCount = resolveSelectionCount(groupEntries, level);
+			// Surface source badges when a class-defined group lists the same feature from more
+			// than one source, so the player can tell the candidates apart before choosing.
+			const hasDuplicateSources = clusterFeaturesBySource(groupFeatures).some(
+				(cluster) => cluster.length > 1,
+			);
 			result.selectionGroups.set(groupName, {
 				features: groupFeatures,
 				selectionCount,
+				...(hasDuplicateSources ? { showSourceLabel: true } : {}),
 			});
 		}
 	}

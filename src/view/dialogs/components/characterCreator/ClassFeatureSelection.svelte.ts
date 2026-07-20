@@ -53,7 +53,7 @@ export function createClassFeatureSelectionState(
 		if (alreadySelectedIndex !== -1) {
 			// Toggle off
 			nextSelections = currentSelections.filter((_, i) => i !== alreadySelectedIndex);
-		} else if (currentSelections.length >= group.selectionCount) {
+		} else if (currentSelections.length >= (group.selectionMax ?? group.selectionCount)) {
 			// Already at cap — ignore the click
 			return;
 		} else {
