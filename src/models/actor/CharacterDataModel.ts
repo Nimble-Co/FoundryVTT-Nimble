@@ -408,6 +408,24 @@ const characterSchema = () => ({
 				new fields.NumberField({ required: true, initial: 0, integer: true, nullable: false }),
 				{ required: true, nullable: false, initial: () => ({}) },
 			),
+			removedSpells: new fields.ArrayField(
+				new fields.SchemaField({
+					uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					img: new fields.StringField({ required: true, nullable: false, initial: '' }),
+				}),
+				{ required: true, nullable: false, initial: () => [] },
+			),
+			// Spells retagged to a new school by a restrictSpellSchools exception, so a
+			// level-down can restore their original school and elemental damage type.
+			convertedSpells: new fields.ArrayField(
+				new fields.SchemaField({
+					uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					fromSchool: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					toSchool: new fields.StringField({ required: true, nullable: false, initial: '' }),
+				}),
+				{ required: true, nullable: false, initial: () => [] },
+			),
 		}),
 		{ required: true, nullable: false, initial: () => [] },
 	),
@@ -509,6 +527,9 @@ interface LevelUpHistoryEntry {
 	grantedSpellIds: string[];
 	/** Pool max bonuses chosen at this level (e.g. { 'combat-dice': 1 }). */
 	poolMaxBonuses: Record<string, number>;
+	removedSpells: Array<{ uuid: string; name: string; img: string }>;
+	/** Spells retagged to a new school this level (for restoring on level-down). */
+	convertedSpells: Array<{ uuid: string; fromSchool: string; toSchool: string }>;
 }
 
 declare namespace NimbleCharacterData {

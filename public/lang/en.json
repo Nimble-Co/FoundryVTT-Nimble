@@ -497,6 +497,8 @@
 			"spell": "Spell",
 			"featuresRemoved": "Features Removed",
 			"spellsRemoved": "Spells Removed",
+			"spellsRestored": "Spells Restored",
+			"spellsReverted": "Spells Reverted to Original School",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
@@ -646,6 +648,8 @@
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
 			"grantSpells": "Spells",
+			"removeSpells": "Remove Spells",
+			"restrictSpellSchools": "Restrict Spell Schools",
 			"healingPotionBonus": "Healing Potion Bonus",
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
@@ -867,6 +871,18 @@
 				},
 				"mode": { "label": "Selection mode" },
 				"count": { "label": "How many to choose" }
+			},
+			"restrictSpellSchools": {
+				"description": "Restrict which spell schools the actor may cast (‘you can only cast fire spells from now on’). Removes owned automation-granted spells from other schools and stops them being auto-granted at later levels. Optionally lets the player keep one spell from a removed school and retag it to an allowed school.",
+				"allowedSchools": {
+					"label": "Allowed schools",
+					"hint": "Schools the actor may still cast. Spells from every other school are removed and no longer auto-granted."
+				},
+				"exceptionFromSchools": {
+					"label": "Keep-one from schools",
+					"hint": "Schools the player may pick one spell from to keep and retag to the first allowed school. Leave empty to allow no exception."
+				},
+				"exceptionCount": { "label": "How many to keep" }
 			},
 			"healingPotionBonus": {
 				"description": "Add a flat or formula-based bonus to healing received from potions.",
@@ -2080,7 +2096,12 @@
 			"selectSpellAriaLabel": "Select {spellName}",
 			"deselectSpellAriaLabel": "Deselect {spellName}",
 			"levelUpHeader": "Granted Spells",
-			"levelUpHint": "You gain the following spells at this level."
+			"levelUpHint": "You gain the following spells at this level.",
+			"levelUpRemovalHeader": "Spells Removed by Subclass",
+			"levelUpRemovalHint": "Your subclass removes the following spells from your spell list.",
+			"levelUpExceptionHeader": "Keep and Convert a Spell",
+			"levelUpExceptionHint": "Your subclass lets you keep one spell from a removed school. It will be retagged to your new school.",
+			"convertedSpellLabel": "Converted to {school}"
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

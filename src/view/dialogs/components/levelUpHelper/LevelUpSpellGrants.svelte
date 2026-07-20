@@ -16,8 +16,12 @@
 		selectedSchools,
 		selectedSpells,
 		confirmedSchools,
+		spellsToRemove,
+		exceptionSelections,
+		selectedExceptions,
 		onSchoolsChange,
 		onSpellsChange,
+		onExceptionsChange,
 		onConfirmedChange,
 	}: LevelUpSpellGrantsProps = $props();
 
@@ -29,11 +33,21 @@
 		selectedSchools,
 		selectedSpells,
 		confirmedSchools,
+		spellsToRemove,
+		exceptionSelections,
+		selectedExceptions,
 		onSchoolsChange,
 		onSpellsChange,
+		onExceptionsChange,
 		onConfirmedChange,
 	}));
-	const { handleSchoolSelect, handleSchoolConfirm, handleSchoolEdit, handleSpellSelect } = state;
+	const {
+		handleSchoolSelect,
+		handleSchoolConfirm,
+		handleSchoolEdit,
+		handleSpellSelect,
+		handleExceptionSelect,
+	} = state;
 	const hasAnyGrants = $derived(state.hasAnyGrants);
 	const spellsBySchool = $derived(state.spellsBySchool);
 </script>
@@ -120,6 +134,44 @@
 				/>
 			{/each}
 		{/if}
+
+		{#if exceptionSelections.length > 0}
+			<div class="level-up-spell-grants__exception-group">
+				<h4
+					class="level-up-spell-grants__exception-label nimble-heading"
+					data-heading-variant="subsection"
+				>
+					{localize('NIMBLE.spellGrants.levelUpExceptionHeader')}
+				</h4>
+				<Hint hintText={localize('NIMBLE.spellGrants.levelUpExceptionHint')} />
+				{#each exceptionSelections as group (group.ruleId)}
+					<SpellSelection
+						{group}
+						selected={selectedExceptions.get(group.ruleId) ?? []}
+						onSelect={(spellUuids) => handleExceptionSelect(group.ruleId, spellUuids)}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if spellsToRemove.length > 0}
+			<div class="level-up-spell-grants__removal-group">
+				<h4
+					class="level-up-spell-grants__removal-label nimble-heading"
+					data-heading-variant="subsection"
+				>
+					{localize('NIMBLE.spellGrants.levelUpRemovalHeader')}
+				</h4>
+				<Hint hintText={localize('NIMBLE.spellGrants.levelUpRemovalHint')} />
+				<ul class="level-up-spell-grants__spell-list">
+					{#each spellsToRemove as spell (spell.uuid)}
+						<LevelUpSpellCard
+							spell={{ ...spell, school: '', tier: 0, isUtility: false, classes: [] }}
+						/>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 	</section>
 {/if}
 
@@ -140,6 +192,30 @@
 		}
 
 		&__school-label {
+			margin: 0 0 0.5rem 0;
+		}
+
+		&__removal-group {
+			margin-bottom: 1rem;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+
+		&__removal-label {
+			margin: 0 0 0.5rem 0;
+		}
+
+		&__exception-group {
+			margin-bottom: 1rem;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+
+		&__exception-label {
 			margin: 0 0 0.5rem 0;
 		}
 

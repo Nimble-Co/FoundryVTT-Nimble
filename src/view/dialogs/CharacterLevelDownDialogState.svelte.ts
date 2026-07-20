@@ -31,11 +31,15 @@ interface LevelDownActor {
 			grantedFeatureIds: string[];
 			grantedSpellIds?: string[];
 			poolMaxBonuses?: Record<string, number>;
+			removedSpells?: Array<{ uuid: string; name: string; img: string }>;
+			convertedSpells?: Array<{ uuid: string; fromSchool: string; toSchool: string }>;
 		}>;
 	};
 	classes: Record<string, ClassItemShape | undefined>;
 	items: {
-		filter(fn: (i: { type: string }) => boolean): Array<{ name: string; img?: string }>;
+		filter(
+			fn: (i: { type: string }) => boolean,
+		): Array<{ name: string; img?: string; _stats?: { compendiumSource?: string } }>;
 		get(id: string): { name: string; img?: string } | undefined;
 	};
 }
@@ -135,6 +139,26 @@ export function createLevelDownState(
 		}));
 	});
 
+	// Get spells that were removed during subclass selection and will be restored
+	const removedSpells = $derived(lastHistory?.removedSpells ?? []);
+
+	// Get spells retagged by a restrictSpellSchools exception that will be reverted
+	// to their original school. Names/images come from the owned spell items.
+	const revertedSpells = $derived.by(() => {
+		const converted = lastHistory?.convertedSpells ?? [];
+		if (converted.length === 0) return [];
+
+		const ownedSpells = getActor().items.filter((i) => i.type === 'spell');
+		return converted.map((entry) => {
+			const owned = ownedSpells.find((s) => s._stats?.compendiumSource === entry.uuid);
+			return {
+				uuid: entry.uuid,
+				name: owned?.name ?? '',
+				img: owned?.img ?? 'icons/svg/item-bag.svg',
+			};
+		});
+	});
+
 	function submit() {
 		getDialog().submit({
 			confirmed: true,
@@ -177,6 +201,12 @@ export function createLevelDownState(
 		},
 		get poolBonusChanges() {
 			return poolBonusChanges;
+		},
+		get removedSpells() {
+			return removedSpells;
+		},
+		get revertedSpells() {
+			return revertedSpells;
 		},
 		submit,
 	};

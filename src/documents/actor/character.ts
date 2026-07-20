@@ -8,6 +8,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
+import { retagEffectsDamageType, SCHOOL_TO_DAMAGE_TYPE } from '#view/dialogs/spellGrantUtils.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
@@ -86,6 +87,9 @@ interface LevelUpDialogData {
 		poolMaxBonuses?: Record<string, number>;
 	};
 	spellUuids: string[];
+	removedSpellUuids?: string[];
+	/** Owned spells to keep and retag to a new school (restrictSpellSchools exception). */
+	convertedSpells?: Array<{ uuid: string; toSchool: string; toDamageType: string | null }>;
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -1367,6 +1371,88 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		const grantedFeatureIds = [...epicBoonIds, ...classFeatureIds];
 
+		// Retag "keep and convert" exception spells (restrictSpellSchools) to their
+		// new school before removal, so the survivor now reads as an allowed-school
+		// spell and won't be swept. The original school/effects are recorded for a
+		// clean level-down restore.
+		const convertedSpells: Array<{ uuid: string; fromSchool: string; toSchool: string }> = [];
+		const conversionInputs = typedDialogData.convertedSpells ?? [];
+
+		if (conversionInputs.length > 0) {
+			const spellUpdates: Array<Record<string, unknown>> = [];
+			for (const conversion of conversionInputs) {
+				const spell = this.items.find((item) => {
+					if (item.type !== 'spell') return false;
+					const source = (item as unknown as { _stats?: { compendiumSource?: string } })._stats
+						?.compendiumSource;
+					return source === conversion.uuid;
+				});
+				if (!spell) continue;
+
+				const system = (
+					spell as unknown as {
+						system?: { school?: string; activation?: { effects?: unknown[] } };
+					}
+				).system;
+				const fromSchool = system?.school ?? '';
+
+				const update: Record<string, unknown> = {
+					_id: spell.id,
+					'system.school': conversion.toSchool,
+				};
+				if (conversion.toDamageType) {
+					update['system.activation.effects'] = retagEffectsDamageType(
+						system?.activation?.effects,
+						conversion.toDamageType,
+					);
+				}
+				spellUpdates.push(update);
+				convertedSpells.push({
+					uuid: conversion.uuid,
+					fromSchool,
+					toSchool: conversion.toSchool,
+				});
+			}
+
+			if (spellUpdates.length > 0) {
+				await this.updateEmbeddedDocuments('Item', spellUpdates);
+			}
+		}
+
+		// Remove spells declared by removeSpells rules on granted features.
+		// Removal happens before grants so that a replacement scenario (remove X, grant X)
+		// does not accidentally delete the newly-granted copy.
+		const removedSpells: Array<{ uuid: string; name: string; img: string }> = [];
+		const removedSpellUuids = typedDialogData.removedSpellUuids ?? [];
+
+		if (removedSpellUuids.length > 0) {
+			const spellsToDelete = this.items.filter((item) => {
+				if (item.type !== 'spell') return false;
+				const source = (item as unknown as { _stats?: { compendiumSource?: string } })._stats
+					?.compendiumSource;
+				return !!source && removedSpellUuids.includes(source);
+			});
+
+			if (spellsToDelete.length > 0) {
+				for (const spell of spellsToDelete) {
+					removedSpells.push({
+						uuid: (spell as unknown as { _stats: { compendiumSource: string } })._stats
+							.compendiumSource,
+						name: spell.name ?? '',
+						img: spell.img ?? 'icons/svg/item-bag.svg',
+					});
+				}
+
+				const idsToDelete = spellsToDelete
+					.map((s) => s.id)
+					.filter((id): id is string => id !== null);
+
+				if (idsToDelete.length > 0) {
+					await this.deleteEmbeddedDocuments('Item', idsToDelete);
+				}
+			}
+		}
+
 		// Create spell documents
 		let grantedSpellIds: string[] = [];
 		const spellUuids = typedDialogData.spellUuids ?? [];
@@ -1406,6 +1492,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			grantedFeatureIds,
 			grantedSpellIds,
 			poolMaxBonuses: typedDialogData.classFeatures?.poolMaxBonuses ?? {},
+			removedSpells,
+			convertedSpells,
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
@@ -1673,6 +1761,63 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const validSpellIds = lastHistory.grantedSpellIds.filter((id) => this.items.get(id));
 			if (validSpellIds.length > 0) {
 				await this.deleteEmbeddedDocuments('Item', validSpellIds);
+			}
+		}
+
+		// Restore spells that were removed during subclass selection
+		const removedSpells = lastHistory.removedSpells;
+
+		if (removedSpells && removedSpells.length > 0) {
+			const spellDocumentSources: Item.CreateData[] = [];
+
+			for (const removedSpell of removedSpells) {
+				const spell = await fromUuid(removedSpell.uuid as `Item.${string}`);
+				if (spell) {
+					const source = (spell as Item).toObject();
+					(source as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
+						removedSpell.uuid;
+					spellDocumentSources.push(source as object as Item.CreateData);
+				}
+			}
+
+			if (spellDocumentSources.length > 0) {
+				await this.createEmbeddedDocuments('Item', spellDocumentSources);
+			}
+		}
+
+		// Revert spells retagged by a restrictSpellSchools exception this level,
+		// restoring their original school and elemental damage type.
+		const convertedSpells = lastHistory.convertedSpells;
+
+		if (convertedSpells && convertedSpells.length > 0) {
+			const spellUpdates: Array<Record<string, unknown>> = [];
+			for (const converted of convertedSpells) {
+				const spell = this.items.find((item) => {
+					if (item.type !== 'spell') return false;
+					const source = (item as unknown as { _stats?: { compendiumSource?: string } })._stats
+						?.compendiumSource;
+					return source === converted.uuid;
+				});
+				if (!spell) continue;
+
+				const system = (spell as unknown as { system?: { activation?: { effects?: unknown[] } } })
+					.system;
+				const update: Record<string, unknown> = {
+					_id: spell.id,
+					'system.school': converted.fromSchool,
+				};
+				const fromDamageType = SCHOOL_TO_DAMAGE_TYPE[converted.fromSchool];
+				if (fromDamageType) {
+					update['system.activation.effects'] = retagEffectsDamageType(
+						system?.activation?.effects,
+						fromDamageType,
+					);
+				}
+				spellUpdates.push(update);
+			}
+
+			if (spellUpdates.length > 0) {
+				await this.updateEmbeddedDocuments('Item', spellUpdates);
 			}
 		}
 

@@ -16,10 +16,28 @@ import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
 import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
+import localize from '#utils/localize.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
-import { collectKnownSchools, collectSpellGrants, type RulesArray } from './spellGrantUtils.ts';
+import {
+	collectKnownSchools,
+	collectSchoolRemovals,
+	collectSpellGrants,
+	collectSpellRemovals,
+	collectSpellRestrictions,
+	type RulesArray,
+	type SpellRemovalEntry,
+	type SpellRestriction,
+	schoolToDamageType,
+} from './spellGrantUtils.ts';
+
+/** A player-chosen exception spell to keep and retag to a new school. */
+interface ConvertedSpell {
+	uuid: string;
+	toSchool: string;
+	toDamageType: string | null;
+}
 
 /** Structural type for what the factory accesses on a class item */
 interface ClassItemShape {
@@ -34,9 +52,11 @@ interface LevelUpDocument {
 		type: string;
 		uuid?: string;
 		name?: string;
+		img?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
 			school?: string;
+			tier?: number;
 			parentClass?: string;
 		};
 		_stats?: { compendiumSource?: string };
@@ -131,6 +151,11 @@ export function createLevelUpState(
 	let selectedSpells = $state<Map<string, string[]>>(new Map());
 	let confirmedSchools = $state<Set<string>>(new Set());
 
+	// The player's chosen "keep and convert a spell" exceptions, per picker group.
+	// The restriction, exception picker, and removal set are all pure computations
+	// derived below, so they never form an effect read/write cycle.
+	let selectedExceptions = $state<Map<string, string[]>>(new Map());
+
 	// Load spell index
 	buildSpellIndex()
 		.then((index) => {
@@ -223,6 +248,123 @@ export function createLevelUpState(
 			});
 	});
 
+	// Helper: collect rule arrays from the features being granted this level.
+	function collectNewFeatureRules(): RulesArray[] {
+		const arrays: RulesArray[] = [];
+		if (!classFeatures) return arrays;
+		for (const feature of classFeatures.autoGrant) {
+			const featureItem = feature as unknown as { system?: { rules?: unknown[] } };
+			const rules = (featureItem.system?.rules ?? []) as unknown as RulesArray;
+			if (rules.length > 0) arrays.push(rules);
+		}
+		return arrays;
+	}
+
+	// Helper: collect rule arrays from features already on the character.
+	function collectExistingFeatureRules(): RulesArray[] {
+		const arrays: RulesArray[] = [];
+		for (const item of getDocument().items ?? []) {
+			if (item.type !== 'feature') continue;
+			const rules = (item.system?.rules ?? []) as unknown as RulesArray;
+			if (rules.length > 0) arrays.push(rules);
+		}
+		return arrays;
+	}
+
+	// The persistent spell-school restriction, unioned from restrictSpellSchools
+	// rules on both new and existing features. Because it is derived (not written
+	// in an effect), it re-computes lazily and keeps filtering grants at every
+	// future level without any read/write cycle.
+	const spellRestriction = $derived.by<SpellRestriction>(() => {
+		if (featuresLoading || !classFeatures) {
+			return {
+				active: false,
+				allowedSchools: new Set(),
+				exceptionFromSchools: [],
+				exceptionCount: 0,
+			};
+		}
+		return collectSpellRestrictions([
+			...collectNewFeatureRules(),
+			...collectExistingFeatureRules(),
+		]);
+	});
+
+	// The one-time "keep and convert a spell" picker, offered only when a
+	// restriction is applied THIS level (a new feature), so the player isn't
+	// re-prompted on later level-ups. The pool is the owned spells from the
+	// removed schools — the player keeps one and it is retagged to the new school.
+	const exceptionSelections = $derived.by<SpellSelectionGroup[]>(() => {
+		if (featuresLoading || !classFeatures) return [];
+
+		const newRestriction = collectSpellRestrictions(collectNewFeatureRules());
+		const exceptionSchools = new Set(newRestriction.exceptionFromSchools);
+		if (newRestriction.exceptionCount <= 0 || exceptionSchools.size === 0) return [];
+
+		const ownedSpellItems = (getDocument().items ?? []).filter((i) => i.type === 'spell');
+		const availableSpells: SpellIndexEntry[] = [];
+		const seen = new Set<string>();
+		for (const item of ownedSpellItems) {
+			const source = item._stats?.compendiumSource;
+			const school = item.system?.school ?? '';
+			if (!source || seen.has(source) || !exceptionSchools.has(school)) continue;
+			seen.add(source);
+			availableSpells.push({
+				uuid: source,
+				name: item.name ?? '',
+				img: item.img ?? 'icons/svg/item-bag.svg',
+				school,
+				tier: item.system?.tier ?? 0,
+				isUtility: false,
+				classes: [],
+			});
+		}
+
+		if (availableSpells.length === 0) return [];
+		return [
+			{
+				ruleId: 'restrict-spell-exception',
+				label: localize('NIMBLE.spellGrants.levelUpExceptionHeader'),
+				availableSpells,
+				count: newRestriction.exceptionCount,
+				utilityOnly: false,
+				forClass: characterClass?.identifier ?? '',
+				source: 'class',
+			},
+		];
+	});
+
+	// Spells to remove: UUID-based removeSpells rules on new features, plus
+	// school-based removal from an active restriction (excluding the player's
+	// chosen keep-and-convert exceptions). Derived so it stays in sync with the
+	// exception picks without an effect.
+	const spellsToRemove = $derived.by<SpellRemovalEntry[]>(() => {
+		if (featuresLoading || !classFeatures) return [];
+
+		const ownedSpellItems = (getDocument().items ?? []).filter((i) => i.type === 'spell');
+		const uuidRemovals = collectSpellRemovals(collectNewFeatureRules(), ownedSpellItems);
+
+		const keepUuids = new Set<string>();
+		for (const uuids of selectedExceptions.values()) {
+			for (const uuid of uuids) keepUuids.add(uuid);
+		}
+		const schoolRemovals = collectSchoolRemovals(
+			ownedSpellItems,
+			spellRestriction.allowedSchools,
+			keepUuids,
+		);
+
+		// Merge, de-duplicating by UUID.
+		const merged: SpellRemovalEntry[] = [];
+		const seen = new Set<string>();
+		for (const entry of [...uuidRemovals, ...schoolRemovals]) {
+			if (seen.has(entry.uuid)) continue;
+			seen.add(entry.uuid);
+			merged.push(entry);
+		}
+		return merged;
+	});
+
 	// Process spell grants when class features and spell index are ready
 	$effect(() => {
 		if (!resolvedSpellIndex || featuresLoading) {
@@ -280,6 +422,7 @@ export function createLevelUpState(
 			levelingTo,
 			ownedSpellUuids,
 			knownSchools,
+			spellRestriction.allowedSchools,
 		);
 
 		autoGrantedSpells = result.autoGrant;
@@ -381,6 +524,10 @@ export function createLevelUpState(
 			const selected = selectedSpells.get(group.ruleId) ?? [];
 			if (selected.length < group.count) return false;
 		}
+		for (const group of exceptionSelections) {
+			const selected = selectedExceptions.get(group.ruleId) ?? [];
+			if (selected.length < group.count) return false;
+		}
 		return true;
 	});
 
@@ -477,9 +624,29 @@ export function createLevelUpState(
 		return bonuses;
 	}
 
+	// Build the list of chosen exception spells to retain and retag to the new
+	// school. Each converts to the restriction's first allowed school (e.g. fire).
+	function computeConvertedSpells(): ConvertedSpell[] {
+		const toSchool = [...spellRestriction.allowedSchools][0];
+		if (!toSchool) return [];
+
+		const converted: ConvertedSpell[] = [];
+		const seen = new Set<string>();
+		for (const uuids of selectedExceptions.values()) {
+			for (const uuid of uuids) {
+				if (seen.has(uuid)) continue;
+				seen.add(uuid);
+				converted.push({ uuid, toSchool, toDamageType: schoolToDamageType(toSchool) });
+			}
+		}
+		return converted;
+	}
+
 	// Actions
 	function submit() {
 		const poolMaxBonuses = computePoolMaxBonuses();
+		const convertedSpells = computeConvertedSpells();
+		const convertedUuids = new Set(convertedSpells.map((c) => c.uuid));
 		getDialog().submit({
 			selectedAbilityScore: selectedAbilityScores,
 			selectedSubclass,
@@ -495,6 +662,12 @@ export function createLevelUpState(
 					}
 				: undefined,
 			spellUuids: getGrantedSpellUuids(),
+			// A converted spell is kept and retagged, never removed — guard against a
+			// stale removal entry deleting the spell we mean to retain.
+			removedSpellUuids: spellsToRemove
+				.map((s) => s.uuid)
+				.filter((uuid) => !convertedUuids.has(uuid)),
+			convertedSpells,
 		});
 	}
 
@@ -553,6 +726,18 @@ export function createLevelUpState(
 		},
 		get autoGrantedSpells() {
 			return autoGrantedSpells;
+		},
+		get spellsToRemove() {
+			return spellsToRemove;
+		},
+		get exceptionSelections() {
+			return exceptionSelections;
+		},
+		get selectedExceptions() {
+			return selectedExceptions;
+		},
+		set selectedExceptions(v: Map<string, string[]>) {
+			selectedExceptions = v;
 		},
 		get schoolSelections() {
 			return schoolSelections;
