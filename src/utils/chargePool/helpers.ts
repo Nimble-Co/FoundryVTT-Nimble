@@ -173,6 +173,24 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 	return normalizedRecord;
 }
 
+/**
+ * Sums the cumulative level-up pool bonus for a pool identifier from the actor's level-up history
+ * (e.g. each level a Commander selected "+1 Max Combat Die" contributes +1 to "combat-dice").
+ * Returns 0 when the actor has no matching history entries.
+ */
+function getPoolMaxBonusTotal(actor: CharacterActorLike, identifier: string): number {
+	const history =
+		(actor as { system?: { levelUpHistory?: Array<{ poolMaxBonuses?: Record<string, number> }> } })
+			.system?.levelUpHistory ?? [];
+
+	let total = 0;
+	for (const entry of history) {
+		const bonus = entry.poolMaxBonuses?.[identifier];
+		if (typeof bonus === 'number' && Number.isFinite(bonus)) total += bonus;
+	}
+	return total;
+}
+
 function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
 	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
@@ -294,7 +312,12 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			if (identifier.length < 1) continue;
 
 			const scope = toChargePoolScope(poolRule.scope);
-			const max = resolveFormulaToInteger(actor, poolRule.max);
+			// The pool max is the resolved formula PLUS any cumulative level-up pool bonus
+			// (e.g. "+1 Max Combat Die") recorded in levelUpHistory. Applying the bonus here —
+			// rather than requiring the formula to reference @<pool>Bonus — keeps it correct even
+			// when an actor carries a stale embedded formula.
+			const max =
+				resolveFormulaToInteger(actor, poolRule.max) + getPoolMaxBonusTotal(actor, identifier);
 			const id = buildChargePoolId(scope, identifier, sourceItemId);
 			const initial: ChargePoolInitialMode = poolRule.initial === 'zero' ? 'zero' : 'max';
 			const recoveries = normalizeRecoveries(poolRule.recoveries);
@@ -361,10 +384,8 @@ function getChargeConsumers(
 	if (sourceItemId.length < 1) return [];
 
 	const consumers: ChargeConsumerState[] = [];
-	let hasExplicitConsumer = false;
 	for (const rule of rules.values()) {
 		if (rule.type !== 'chargeConsumer' || rule.disabled) continue;
-		hasExplicitConsumer = true;
 		const consumerRule = rule as ChargeConsumerRuleLike;
 		const poolIdentifier = normalizeIdentifier(
 			consumerRule.poolIdentifier || consumerRule.identifier || consumerRule.id,
@@ -378,31 +399,6 @@ function getChargeConsumers(
 			poolId,
 			poolIdentifier,
 			cost,
-		});
-	}
-
-	if (hasExplicitConsumer) return consumers;
-
-	if (item.flags == null || typeof item.flags !== 'object') return [];
-	const nimbleFlags = (item.flags as Record<string, unknown>)[SYSTEM_ID] as
-		| Record<string, unknown>
-		| undefined;
-	if (nimbleFlags == null || typeof nimbleFlags !== 'object') return [];
-	const chargePoolsOnItem = nimbleFlags.chargePools;
-	if (
-		!chargePoolsOnItem ||
-		typeof chargePoolsOnItem !== 'object' ||
-		Array.isArray(chargePoolsOnItem)
-	)
-		return [];
-
-	for (const poolIdentifier of Object.keys(chargePoolsOnItem)) {
-		const normalizedPoolId = normalizeIdentifier(poolIdentifier);
-		if (normalizedPoolId.length < 1) continue;
-		consumers.push({
-			poolId: normalizedPoolId,
-			poolIdentifier: normalizedPoolId,
-			cost: 1,
 		});
 	}
 

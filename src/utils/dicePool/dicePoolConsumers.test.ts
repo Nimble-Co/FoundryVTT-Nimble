@@ -94,6 +94,33 @@ describe('getDicePoolConsumers', () => {
 		expect(result[0].itemDescription).toBe('That all you got?! description');
 	});
 
+	it('defaults effectType to generic and passes an explicit effectType through', () => {
+		const consumerRule = (id: string, effectType?: string): MockRule =>
+			({
+				type: 'diceConsumer',
+				id,
+				poolIdentifier: 'fury',
+				poolScope: 'item',
+				mode: 'manual',
+				cost: '1',
+				bonusOnAttackDelivery: null,
+				effectFormula: '@n',
+				effectType,
+			}) as MockRule;
+
+		const actor = createMockActor([
+			createMockItem('plain', 'Plain Spend', [consumerRule('plain-consumer')]),
+			createMockItem('tayg', 'That all you got?!', [
+				consumerRule('tayg-consumer', 'damageReduction'),
+			]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result).toHaveLength(2);
+		expect(result.find((c) => c.itemId === 'plain')?.effectType).toBe('generic');
+		expect(result.find((c) => c.itemId === 'tayg')?.effectType).toBe('damageReduction');
+	});
+
 	it('excludes autoBonus consumers (the Rage feature itself)', () => {
 		const actor = createMockActor([
 			createMockItem('rage', 'Rage', [

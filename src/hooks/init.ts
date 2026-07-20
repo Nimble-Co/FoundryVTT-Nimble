@@ -4,6 +4,7 @@ import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import { registerNimbleDieModifiers } from '../dice/nimbleDieModifiers.js';
 import { PrimaryDie } from '../dice/terms/PrimaryDie.js';
+import { NimbleActiveEffect } from '../documents/activeEffect/activeEffect.js';
 import ActorProxy from '../documents/actor/actorProxy.js';
 import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
 import { NimbleChatMessage } from '../documents/chatMessage.js';
@@ -33,6 +34,8 @@ import itemDataModels from '../models/item/itemDataModels.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
+	CONFIG.ActiveEffect.documentClass =
+		NimbleActiveEffect as unknown as typeof CONFIG.ActiveEffect.documentClass;
 	CONFIG.Actor.documentClass = ActorProxy as typeof CONFIG.Actor.documentClass;
 	CONFIG.Combat.documentClass = NimbleCombat as typeof CONFIG.Combat.documentClass;
 	CONFIG.Combatant.documentClass =

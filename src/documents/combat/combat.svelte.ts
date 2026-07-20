@@ -1075,7 +1075,6 @@ class NimbleCombat extends Combat {
 			messageOptions = {},
 			messageMode,
 			promptRollDialog = false,
-			updateTurn = true,
 		} = (options ?? {}) as NonNullable<typeof options> & { messageMode?: string };
 
 		// An explicit visibility mode travels via the messageOptions rollMode
@@ -1086,7 +1085,6 @@ class NimbleCombat extends Combat {
 
 		// Structure Input data
 		const combatantIds = [...new Set((typeof ids === 'string' ? [ids] : ids).filter(Boolean))];
-		const currentId = this.combatant?.id;
 		const shouldPromptRollDialog = promptRollDialog && combatantIds.length === 1;
 
 		// Iterate over Combatants, performing an initiative roll for each
@@ -1135,10 +1133,12 @@ class NimbleCombat extends Combat {
 			await Promise.all(combatManaUpdates);
 		}
 
-		// Ensure the turn order remains with the same combatant
-		if (updateTurn && currentId && updates.length > 0) {
-			await this.update({ turn: this.turns.findIndex((t) => t.id === currentId) });
-		}
+		// In Nimble, initiative sets a combatant's starting number of actions — it does not
+		// determine turn order (turn order follows the manual combatant sort). Rolling initiative
+		// never reorders the turn list, so there is no active-turn index to reconcile afterwards.
+		// Foundry core updates `Combat#turn` here because it assumes initiative-based ordering;
+		// that assumption doesn't hold, and performing the update would also fail for players, who
+		// may set their own initiative but cannot write to the (GM-owned) Combat document.
 
 		// Create multiple chat messages
 		if (messages.length > 0) {

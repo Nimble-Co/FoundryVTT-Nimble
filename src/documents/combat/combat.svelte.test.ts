@@ -1883,6 +1883,155 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('lets a non-GM roll initiative without writing to the Combat document', async () => {
+		// Regression: a non-GM may set their own initiative but cannot update the (GM-owned) Combat
+		// document. Because initiative doesn't affect turn order in Nimble, rolling it must not touch
+		// `Combat#turn` — otherwise a player rolling from their sheet hits a "lacks permission to
+		// update Combat" error.
+		globals().game.user = { isGM: false, role: 1 };
+
+		const combatId = 'combat-initiative-non-gm-turn-guard';
+		const actor = createCombatActorFixture({
+			id: 'actor-initiative-non-gm',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		});
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-non-gm',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+
+		const initiativeRoll = {
+			total: 15,
+			evaluate: vi.fn().mockResolvedValue(null),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
+		};
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue(initiativeRoll);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			// An active combatant makes `currentId` truthy so the turn-update branch is reachable.
+			combatant,
+			turns: [combatant],
+			turn: 0,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		await combat.rollInitiative([combatant.id ?? '']);
+
+		expect(combatant.initiative).toBe(15);
+		expect(combat.update).not.toHaveBeenCalled();
+	});
+
+	it('does not change turn order when rolling initiative (initiative is decoupled from turn order)', async () => {
+		globals().game.user = { isGM: true, role: 4 };
+
+		const combatId = 'combat-initiative-gm-turn-guard';
+		const actor = createCombatActorFixture({
+			id: 'actor-initiative-gm',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		});
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-gm',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+
+		const initiativeRoll = {
+			total: 19,
+			evaluate: vi.fn().mockResolvedValue(null),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
+		};
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue(initiativeRoll);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			combatant,
+			turns: [combatant],
+			turn: 0,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		await combat.rollInitiative([combatant.id ?? '']);
+
+		expect(combatant.initiative).toBe(19);
+		expect(combat.update).not.toHaveBeenCalled();
+	});
+
 	it('uses prompted initiative roll data for single-combatant initiative rolls', async () => {
 		const combatId = 'combat-initiative-prompted-roll';
 		const actor = Object.assign(

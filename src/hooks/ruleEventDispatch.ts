@@ -1,4 +1,4 @@
-import { SYSTEM_ID, systemHookName } from '#system';
+import { systemHookName } from '#system';
 import type {
 	ActorDyingContext,
 	ActorHealthContext,
@@ -19,8 +19,8 @@ import {
 	hasAnyActorChangeAt,
 } from '../utils/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
+import { AUTO_APPLY_CONDITIONS_SETTING, isAutoApplyEnabled } from '../utils/isAutoApplyEnabled.js';
 
-const AUTO_APPLY_CONDITIONS_SETTING = 'automation.autoApplyConditions';
 const DYING_STATUS_ID = 'dying';
 
 interface ActorWithRules {
@@ -62,16 +62,6 @@ interface NimbleConditionAppliedPayload {
 	effect: unknown;
 	source: unknown;
 	rule: unknown;
-}
-
-function isAutoApplyEnabled(): boolean {
-	try {
-		return Boolean(
-			game.settings?.get(SYSTEM_ID as 'core', AUTO_APPLY_CONDITIONS_SETTING as 'rollMode'),
-		);
-	} catch {
-		return false;
-	}
 }
 
 async function dispatch<TContext>(

@@ -15,6 +15,7 @@ import CtTopTracker from '../view/ui/CtTopTracker.svelte';
 import registerAdjacencySync from './combatantHooks/adjacencySync.js';
 import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
+import registerDicePoolSpendRequestRouter from './dicePoolSpendRequestRouter.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 
 let canvasConditionsPanelComponent: object | null = null;
@@ -83,6 +84,7 @@ export default async function ready() {
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
 	registerMinionGroupTokenActions();
+	registerDicePoolSpendRequestRouter();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;

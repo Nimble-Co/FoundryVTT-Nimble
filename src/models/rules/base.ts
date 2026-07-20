@@ -277,6 +277,29 @@ abstract class NimbleBaseRule<
 		return value;
 	}
 
+	/** Matches dice notation: 1d6, 2d8+5, bare d20 — but not identifiers like "id6". */
+	static #DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
+
+	/** Whether the formula contains dice notation (e.g. 1d6, 2d8+5). */
+	protected isDiceExpression(formula: string): boolean {
+		return NimbleBaseRule.#DICE_PATTERN.test(formula);
+	}
+
+	/**
+	 * Push an entry onto an accumulator array on the actor's system data,
+	 * initializing the array on first use. For rules that stack entries during
+	 * data prep (damageBonuses, damageReductions).
+	 */
+	protected pushToActorSystemArray<T>(path: string, entry: T): void {
+		const { actor } = this.item;
+		const existing = foundry.utils.getProperty(actor.system, path) as T[] | undefined;
+		if (Array.isArray(existing)) {
+			existing.push(entry);
+			return;
+		}
+		foundry.utils.setProperty(actor.system, path, [entry]);
+	}
+
 	/**
 	 * Hook called during item pre-creation. Override in subclasses to implement rule-specific logic.
 	 */
@@ -368,6 +391,16 @@ abstract class NimbleBaseRule<
 	getActivationCardNodes(_context: ActivationCardContext): EffectNode[] {
 		// Default implementation contributes no nodes
 		return [];
+	}
+
+	/**
+	 * A rule returns `true` when its activation flow posts its own chat
+	 * message (e.g. a manual dice spend), making the default activation card
+	 * redundant. The card is only suppressed when the activation itself has
+	 * nothing to show — no rolls and no effect nodes.
+	 */
+	suppressesActivationCard(): boolean {
+		return false;
 	}
 
 	override toString() {

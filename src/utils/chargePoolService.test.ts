@@ -240,6 +240,54 @@ describe('ChargePoolService', () => {
 		expect(validation.failure?.required).toBe(3);
 	});
 
+	it('does not consume charges when the item has a chargePool rule but no chargeConsumer rule', async () => {
+		const actor = createMockActor({
+			items: [
+				{
+					id: 'item-1',
+					name: 'Wand',
+					rules: [
+						{
+							type: 'chargePool',
+							id: 'pool-rule',
+							identifier: 'wand',
+							scope: 'item',
+							max: '3',
+							initial: 'max',
+						},
+					],
+					itemFlags: {
+						nimble: {
+							chargePools: {
+								wand: {
+									current: 3,
+									max: 3,
+									recoveries: [],
+								},
+							},
+						},
+					},
+				},
+			],
+		});
+
+		const item = actor.items.contents[0];
+		const validation = validateItemChargeConsumption(item as unknown as Item.Implementation);
+		expect(validation.ok).toBe(true);
+
+		const result = await consumeOnResolvedItemUse(item as unknown as Item.Implementation, {
+			isMiss: false,
+			isCritical: false,
+		});
+
+		expect(result.ok).toBe(true);
+		expect(result.consumption).toEqual([]);
+		expect(
+			((item.flags.nimble.chargePools as Record<string, unknown>).wand as Record<string, unknown>)
+				.current,
+		).toBe(3);
+	});
+
 	it('spends charges on resolved use and applies onHit/onCriticalHit recoveries', async () => {
 		const actor = createMockActor({
 			items: [

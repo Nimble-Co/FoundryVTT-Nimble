@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import { isAutoApplyEnabled } from '#utils/isAutoApplyEnabled.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
@@ -153,6 +154,71 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	/** ------------------------------------------------------ */
 	/**                      Item Activation                   */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * A rule can take over its item's chat output (see
+	 * NimbleBaseRule#suppressesActivationCard, e.g. a manual dice spend that
+	 * posts its own card). The default activation card is suppressed only
+	 * when the activation itself has nothing to show: no rolls and no effect
+	 * nodes.
+	 */
+	protected _shouldSuppressActivationCard(
+		rolls: unknown[],
+		activation: { effects?: unknown[] } | null,
+	): boolean {
+		if (rolls.length > 0) return false;
+		if ((activation?.effects?.length ?? 0) > 0) return false;
+		// A suppressing rule's replacement output is produced by its activation
+		// flow, which ruleEventDispatch only runs when automation is enabled.
+		// With automation off, the card is the sole record of the activation.
+		if (!isAutoApplyEnabled()) return false;
+		return [...this.rules.values()].some(
+			(rule) => !rule.disabled && rule.suppressesActivationCard(),
+		);
+	}
+
+	/**
+	 * Create the activation chat card unless a rule suppresses it, then fire
+	 * the `useItem` hook. Shared tail of every activate() implementation.
+	 */
+	protected async _createActivationCard(
+		chatData: unknown,
+		rolls: unknown[],
+		activation: { effects?: unknown[] } | null,
+		hookContext: Record<string, unknown>,
+	): Promise<ChatMessage | null> {
+		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+		const chatCard = suppressCard
+			? null
+			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
+
+		if (chatCard || suppressCard) {
+			/**
+			 * A hook event that fires after an item has been used.
+			 * @function nimble.useItem
+			 * @memberof hookEvents
+			 * @param {Item} item                The item that was used
+			 * @param {ChatMessage|null} chatMessage The chat message created by the item use,
+			 *                                       or null when a rule suppressed the card
+			 * @param {Object} context            Additional context about the item use
+			 * @param {Roll[]} context.rolls      The rolls associated with the item use
+			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
+			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
+			 * @param {Token[]} context.targets   The targets of the item use
+			 */
+			// @ts-expect-error - nimble.useItem is custom
+			Hooks.callAll(systemHookName('useItem'), this, chatCard, hookContext);
+		}
+
+		if (chatCard) {
+			// Begin AoE placement immediately; the card's place button remains as
+			// the retry path.
+			void placeAoEForMessage(chatCard);
+		}
+
+		return chatCard;
+	}
+
 	async activate(
 		options: ItemActivationManager.ActivationOptions = {},
 	): Promise<ChatMessage | null> {
@@ -211,7 +277,8 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				flavor: `${this.actor?.name}: ${this.name}`,
 				speaker: ChatMessage.getSpeaker({ actor: this.actor }),
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-				sound: CONFIG.sounds.dice,
+				// Roll-less activations (descriptive features) post a card without dice audio
+				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
 				rolls,
 				flags: {
 					[SYSTEM_ID]: {
@@ -243,35 +310,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		if (chatCard) {
-			/**
-			 * A hook event that fires after an item has been used.
-			 * @function nimble.useItem
-			 * @memberof hookEvents
-			 * @param {Item} item                The item that was used
-			 * @param {ChatMessage} chatMessage   The chat message created by the item use
-			 * @param {Object} context            Additional context about the item use
-			 * @param {Roll[]} context.rolls      The rolls associated with the item use
-			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
-			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
-			 * @param {Token[]} context.targets   The targets of the item use
-			 */
-			// @ts-expect-error - nimble.useItem is custom
-			Hooks.callAll(systemHookName('useItem'), this, chatCard, {
-				rolls,
-				isCritical,
-				isMiss,
-				targets: Array.from(game.user?.targets ?? []),
-			});
-
-			// Begin AoE placement immediately; the card's place button remains as
-			// the retry path.
-			void placeAoEForMessage(chatCard as ChatMessage);
-		}
-
-		return chatCard ?? null;
+		return this._createActivationCard(chatData, rolls, activation, {
+			rolls,
+			isCritical,
+			isMiss,
+			targets: Array.from(game.user?.targets ?? []),
+		});
 	}
 
 	/** Override in subclasses to add custom chat card data */

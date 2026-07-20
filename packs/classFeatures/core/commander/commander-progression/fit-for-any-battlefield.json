@@ -27,7 +27,7 @@
 				"predicate": {},
 				"priority": 2,
 				"scope": "item",
-				"max": "@strength",
+				"max": "@strength + @combatDiceBonus",
 				"dieSize": "d6",
 				"initial": "zero",
 				"recoveries": [
@@ -146,6 +146,55 @@
 			10,
 			12,
 			16
+		],
+		"levelUpOptions": [
+			{
+				"id": "combat-tactic",
+				"label": "Choose a Combat Tactic",
+				"applyAtLevels": [
+					4
+				],
+				"rules": [],
+				"selectionGroups": [
+					"combat-tactics"
+				]
+			},
+			{
+				"id": "max-combat-die",
+				"label": "+1 Max Combat Die",
+				"applyAtLevels": [
+					6,
+					8,
+					10,
+					12,
+					16
+				],
+				"rules": [
+					{
+						"type": "poolMaxBonus",
+						"poolIdentifier": "combat-dice",
+						"amount": 1,
+						"grantItemUuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt"
+					}
+				],
+				"selectionGroups": []
+			},
+			{
+				"id": "combat-ability",
+				"label": "Choose a Combat Ability",
+				"applyAtLevels": [
+					6,
+					8,
+					10,
+					12,
+					16
+				],
+				"rules": [],
+				"selectionGroups": [
+					"combat-tactics",
+					"commanders-orders"
+				]
+			}
 		]
 	},
 	"effects": [],

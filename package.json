@@ -14,6 +14,7 @@
 		"worktree:cleanup": "node ./build/worktreeCleanup.mjs",
 		"worktree:reset": "pnpm worktree:cleanup && pnpm worktree:setup",
 		"dev": "vite",
+		"docs:generate": "vitest run --config vitest.docsGen.config.mts",
 		"format": "biome format --write ./src/ ./types/ ./lib/ && prettier --write \"src/**/*.svelte\"",
 		"format:biome": "biome format --write ./src/ ./types/ ./lib/",
 		"format:svelte": "prettier --write \"src/**/*.svelte\"",

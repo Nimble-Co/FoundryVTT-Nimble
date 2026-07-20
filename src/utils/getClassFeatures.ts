@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
 /**
  * Lightweight entry stored in the class feature index.
@@ -216,6 +217,7 @@ export default async function getClassFeaturesFromIndex(
 	const result: ClassFeatureResult = {
 		autoGrant: [],
 		selectionGroups: new Map(),
+		optionFeatures: [],
 	};
 
 	if (!classIdentifier || level < 1) {
@@ -269,10 +271,21 @@ export default async function getClassFeaturesFromIndex(
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
 		if (!feature) continue;
-		if (ownedUuids.has(allEntries[i].uuid)) continue;
 
 		const featureItem = feature as NimbleFeatureItem;
 		const groupName = allEntries[i].group;
+
+		// Option features bypass ownership — they appear at every listed level
+		const applicableOptions = (featureItem.system.levelUpOptions ?? []).filter((opt) =>
+			isLevelUpOptionApplicable(opt, level),
+		);
+		if (groupName.endsWith('-progression') && applicableOptions.length > 0) {
+			result.optionFeatures.push(featureItem);
+			continue;
+		}
+
+		// All other features: skip if already owned
+		if (ownedUuids.has(allEntries[i].uuid)) continue;
 
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
@@ -283,13 +296,27 @@ export default async function getClassFeaturesFromIndex(
 		entriesByGroup.get(groupName)!.push(allEntries[i]);
 	}
 
+	// Collect every selectionGroup already claimed by an optionFeature's applicable options.
+	// Those groups are presented inside the option picker and must not also appear as direct
+	// selection groups, which would create a duplicate list.
+	const groupsCoveredByOptions = new Set<string>();
+	for (const optionFeature of result.optionFeatures) {
+		for (const opt of optionFeature.system.levelUpOptions ?? []) {
+			if (!isLevelUpOptionApplicable(opt, level)) continue;
+			for (const g of opt.selectionGroups ?? []) {
+				groupsCoveredByOptions.add(g);
+			}
+		}
+	}
+
 	// Categorize groups:
 	// - Features with no group ('ungrouped') or a -progression group are auto-grant
 	// - Features with an explicit named group (e.g. 'savage-arsenal') are selection groups
+	// - Groups already covered by an optionFeature's picker are excluded to avoid duplication
 	for (const [groupName, groupFeatures] of featuresByGroup) {
 		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
 			result.autoGrant.push(...groupFeatures);
-		} else {
+		} else if (!groupsCoveredByOptions.has(groupName)) {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];
 			const selectionCount = resolveSelectionCount(groupEntries, level);
 			result.selectionGroups.set(groupName, {

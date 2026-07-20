@@ -46,7 +46,38 @@
 			8,
 			12,
 			14
-		]
+		],
+		"levelUpOptions": [
+			{
+				"id": "thrill-of-the-hunt-initial",
+				"label": "Choose 2 Thrill of the Hunt Abilities",
+				"applyAtLevels": [
+					2
+				],
+				"rules": [],
+				"selectionGroups": [
+					"thrill-of-the-hunt"
+				],
+				"selectionCount": 2
+			},
+			{
+				"id": "thrill-of-the-hunt",
+				"label": "Choose a Thrill of the Hunt Ability",
+				"applyAtLevels": [
+					4,
+					6,
+					8,
+					12,
+					14
+				],
+				"rules": [],
+				"selectionGroups": [
+					"thrill-of-the-hunt"
+				],
+				"selectionCount": 1
+			}
+		],
+		"selectionCountByLevel": {}
 	},
 	"effects": [],
 	"flags": {},

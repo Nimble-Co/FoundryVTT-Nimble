@@ -1,5 +1,4 @@
 import { SYSTEM_ID, systemHookName } from '#system';
-import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
@@ -81,7 +80,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				flavor: `${this.actor?.name}: ${this.name}`,
 				speaker: ChatMessage.getSpeaker({ actor: this.actor }),
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-				sound: CONFIG.sounds.dice,
+				// Roll-less activations (descriptive spells) post a card without dice audio
+				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
 				rolls,
 				flags: {
 					[SYSTEM_ID]: {
@@ -115,35 +115,13 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		if (chatCard) {
-			/**
-			 * A hook event that fires after an item has been used.
-			 * @function nimble.useItem
-			 * @memberof hookEvents
-			 * @param {Item} item                The item that was used
-			 * @param {ChatMessage} chatMessage   The chat message created by the item use
-			 * @param {Object} context            Additional context about the item use
-			 * @param {Roll[]} context.rolls      The rolls associated with the item use
-			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
-			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
-			 * @param {Token[]} context.targets   The targets of the item use
-			 */
-			Hooks.callAll(systemHookName('useItem') as any, this, chatCard, {
-				rolls,
-				isCritical,
-				isMiss,
-				targets: Array.from(game.user?.targets ?? []),
-				upcast: manager.upcastResult,
-			});
-
-			// Begin AoE placement immediately; the card's place button remains as
-			// the retry path.
-			void placeAoEForMessage(chatCard as unknown as ChatMessage);
-		}
-
-		return chatCard || null;
+		return this._createActivationCard(chatData, rolls, activation, {
+			rolls,
+			isCritical,
+			isMiss,
+			targets: Array.from(game.user?.targets ?? []),
+			upcast: manager.upcastResult,
+		});
 	}
 
 	override async prepareChatCardData() {

@@ -7,8 +7,9 @@ import type { ChargePoolState } from '#utils/chargePool/types.js';
 import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
-import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
+import { dieSizeToMaxFace, normalizeIdentifier } from '#utils/dicePool/helpers.js';
+import type { DicePoolSpendRequestPayload, DicePoolState, DieSize } from '#utils/dicePool/types.js';
+import localize from '#utils/localize.ts';
 
 const POOL_STATE_HOOK_NAMES = [
 	systemHookName('dicePool.changed'),
@@ -194,6 +195,54 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		openPanelIds = next;
 	}
 
+	// Pending spend requests from item activations (dicePool.requestSpend hook):
+	// pool id → consumer key to pre-select in that pool's panel. The panel clears
+	// its entry once the selection lands.
+	let spendRequests = $state<Map<string, string>>(new Map());
+
+	function handleSpendRequest(payload: DicePoolSpendRequestPayload): void {
+		if (!payload || payload.actorUuid !== getActor().uuid) return;
+
+		const poolIdentifier = normalizeIdentifier(payload.poolIdentifier);
+		if (poolIdentifier.length < 1) return;
+
+		// Same matching as getDicePoolConsumers: identifier + scope. The consumer
+		// rule may live on a different item than the pool (e.g. "That all you
+		// got?!" spending the Rage item's Fury Dice).
+		const pool = getDicePools(getActor()).find(
+			(p) => normalizeIdentifier(p.identifier) === poolIdentifier && p.scope === payload.poolScope,
+		);
+		if (!pool) return;
+
+		if (pool.faces.length < 1) {
+			ui.notifications?.info(
+				localize('NIMBLE.dicePoolTracker.spendRequestEmptyPool', { label: pool.label }),
+			);
+			return;
+		}
+
+		const nextRequests = new Map(spendRequests);
+		nextRequests.set(pool.id, `${payload.itemId}:${payload.ruleId}`);
+		spendRequests = nextRequests;
+
+		if (!openPanelIds.has(pool.id)) {
+			const nextOpen = new Set(openPanelIds);
+			nextOpen.add(pool.id);
+			openPanelIds = nextOpen;
+		}
+	}
+
+	function getSpendRequest(poolId: string): string | null {
+		return spendRequests.get(poolId) ?? null;
+	}
+
+	function clearSpendRequest(poolId: string): void {
+		if (!spendRequests.has(poolId)) return;
+		const next = new Map(spendRequests);
+		next.delete(poolId);
+		spendRequests = next;
+	}
+
 	return {
 		get pools() {
 			return pools;
@@ -212,5 +261,8 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		isPanelOpen,
 		togglePanel,
 		closePanel,
+		handleSpendRequest,
+		getSpendRequest,
+		clearSpendRequest,
 	};
 }
