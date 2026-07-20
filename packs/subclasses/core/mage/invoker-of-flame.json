@@ -1,0 +1,25 @@
+{
+	"folder": "5b9d52290963bc16",
+	"name": "Invoker of Flame",
+	"type": "subclass",
+	"img": "icons/magic/fire/flame-burning-fist-strike.webp",
+	"system": {
+		"macro": "",
+		"identifier": "flame",
+		"rules": [],
+		"description": "<p><em>You dedicate yourself to the art of Pyromancy; choosing to relinquish control over the other elements so that your flames may burn brighter and hotter than any who has come before you.</em></p><p>LEVEL 3</p><p><strong>Fiery Dedication.</strong> You can only cast fire spells from now on. Choose an Ice or Lightning spell and treat it as a fire spell.</p><p><strong>Embers.</strong> Whenever you cast a fire spell, gain a number of Embers equal to the Mana spent on it. Embers can be spent to power up your spells (and expire when an encounter ends):</p><ul><li><strong>Kindle Blaze.</strong> (2 Embers) Heart's Fire on an ally with fewer than 3 actions for free.</li><li><strong>Consuming Fire.</strong> (4 Embers) When you target a single Smoldering creature, damage creatures adjacent to them as well.</li><li><strong>Overheat.</strong> (6 Embers) Creatures damaged by this spell are considered Vulnerable to it.</li></ul><p>LEVEL 7</p><p><strong>Thy Embers' Keeper.</strong> When initiative is rolled, gain WIL Embers.</p><p><strong>Flame Weaver.</strong> You may use Embers in place of Mana for Spellshaper abilities.</p><p><strong>Fireshaper.</strong> Choose 1 additional Lightning or Ice spell and treat it as a fire spell.</p><p>LEVEL 11</p><p><strong>Flash Fire.</strong> When you roll initiative choose WIL enemies to gain Smoldering.</p><p><strong>Wildfire.</strong> Choose 1 additional Lightning or Ice spell and treat it as a fire spell.</p><p>LEVEL 15</p><p><strong>The Phoenix.</strong> (1/Safe Rest) Reaction, (when you drop to 0 hp) Gain the effects of the Dragonform spell; when it ends gain 1 wound.</p><p><strong>Wildfire.</strong> Choose 1 additional Lightning or Ice spell and treat it as a fire spell.</p>",
+		"parentClass": "mage",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.8.8",
+		"createdTime": 1761527184804,
+		"modifiedTime": 1761527184804,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "eb0XDzWIbAKuA2Di"
+}

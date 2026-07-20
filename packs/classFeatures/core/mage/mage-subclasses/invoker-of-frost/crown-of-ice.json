@@ -1,0 +1,70 @@
+{
+	"folder": "b16e22d84ef5f116",
+	"name": "Crown of Ice",
+	"type": "feature",
+	"img": "icons/magic/water/snowflake-ice-blue-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "RIrwGETV63SGveKU",
+				"type": "restrictSpellSchools",
+				"allowedSchools": [
+					"ice"
+				],
+				"exceptionFromSchools": [
+					"fire",
+					"lightning"
+				],
+				"exceptionCount": 1
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You can only cast Ice spells from now on. Choose 1 Fire or Lightning spell and treat it as an Ice spell.</p><p><strong>Aura of Cold.</strong> Adjacent enemies are Slowed. Your unused Frost Shield Temp HP last until the end of the encounter and can accumulate.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "invoker-of-frost",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.8.8",
+		"createdTime": 1761540819964,
+		"modifiedTime": 1761540819964,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "evQTlTP6JuIzKzt1"
+}
