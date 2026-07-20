@@ -33,6 +33,12 @@ function schema() {
 		label: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		predicate: new PredicateField(),
 		priority: new fields.NumberField({ required: true, nullable: false, initial: 1 }),
+		suppressActivationCard: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'auto',
+			choices: ['auto', 'always', 'never'],
+		}),
 	};
 }
 
@@ -153,6 +159,8 @@ abstract class NimbleBaseRule<
 	declare label: string;
 
 	declare priority: number;
+
+	declare suppressActivationCard: 'auto' | 'always' | 'never';
 
 	constructor(
 		source: foundry.data.fields.SchemaField.CreateData<Schema>,
@@ -394,12 +402,25 @@ abstract class NimbleBaseRule<
 	}
 
 	/**
-	 * A rule returns `true` when its activation flow posts its own chat
-	 * message (e.g. a manual dice spend), making the default activation card
-	 * redundant. The card is only suppressed when the activation itself has
-	 * nothing to show — no rolls and no effect nodes.
+	 * A rule returns `true` when the item's default activation card is
+	 * redundant (e.g. a manual dice spend posts its own chat message). The
+	 * builder-editable `suppressActivationCard` envelope field takes
+	 * precedence; `auto` defers to the rule class's own behavior via
+	 * `_autoSuppressesActivationCard()`. Each rule resolves independently —
+	 * the card is suppressed when any enabled rule resolves `true`. The card
+	 * is only ever suppressed when the activation itself has nothing to show —
+	 * no rolls and no effect nodes.
 	 */
 	suppressesActivationCard(): boolean {
+		if (this.suppressActivationCard === 'always') return true;
+		if (this.suppressActivationCard === 'never') return false;
+		return this._autoSuppressesActivationCard();
+	}
+
+	/** The `auto` branch of `suppressesActivationCard()`. Subclasses whose
+	 *  activation flow posts its own chat output override this, not the
+	 *  public method. */
+	protected _autoSuppressesActivationCard(): boolean {
 		return false;
 	}
 

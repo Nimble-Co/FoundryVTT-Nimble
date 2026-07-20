@@ -112,6 +112,7 @@ const BASE_RULE_FIELDS = new Set([
 	'label',
 	'predicate',
 	'priority',
+	'suppressActivationCard',
 	'type',
 ]);
 
