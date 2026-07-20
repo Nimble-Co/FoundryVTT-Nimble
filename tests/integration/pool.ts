@@ -440,6 +440,7 @@ let isSetup = false;
 class FoundryBrowserWorker implements PoolWorker {
 	name = 'foundry-browser-worker';
 	options: PoolOptions;
+	startConfig: SerializedConfig | undefined;
 
 	constructor(options: PoolOptions) {
 		this.options = options;
@@ -461,37 +462,12 @@ class FoundryBrowserWorker implements PoolWorker {
 		const { vitest } = this.options.project;
 
 		if (requestType === 'start') {
-			if (isSetup) {
-				return {
-					__vitest_worker_response__: true,
-					type: 'started',
-				};
-			}
-
-			// Setup was kicked off (not awaited) in `start`; block the first
-			// request on it instead so vitest's hard 5s runner-start cap
-			// doesn't kill the browser launch + world join.
-			const data = await _browserData?.catch(() => undefined);
-			const viteUrl = data?.viteUrl;
-			if (viteUrl == null) {
-				throw new Error('No Vite URL! The browser setup did not complete.');
-			}
-
-			// `/@fs/` requires posix-style absolute paths, even on Windows.
-			const testerPath = path.join(testsDir, 'tester.ts').replaceAll('\\', '/');
-			const testerUrl = `${viteUrl.replace(/\/$/, '')}/@fs/${testerPath}`;
-
-			const page = this.getPage();
-			await page.evaluate(
-				async ([url, config]) => {
-					await import(/* @vite-ignore */ url);
-
-					window.__foundry_vitest__.setup(config);
-				},
-				[testerUrl, request.context.config] as const,
-			);
-
-			isSetup = true;
+			// Respond immediately: vitest's hard 5s runner-start cap
+			// (WORKER_START_TIMEOUT) covers the whole start round-trip,
+			// including this response, and can never fit the Playwright
+			// launch + world join. Stash the config and defer the real
+			// setup to the first run/collect request, which has no cap.
+			this.startConfig = request.context.config;
 
 			return {
 				__vitest_worker_response__: true,
@@ -500,7 +476,7 @@ class FoundryBrowserWorker implements PoolWorker {
 		}
 
 		if (requestType === 'run') {
-			const page = this.getPage();
+			const page = await this.ensurePageSetup();
 
 			const files = await page.evaluate(async (context) => {
 				return await window.__foundry_vitest__.run(context);
@@ -517,7 +493,7 @@ class FoundryBrowserWorker implements PoolWorker {
 		}
 
 		if (requestType === 'collect') {
-			const page = this.getPage();
+			const page = await this.ensurePageSetup();
 			const files = await page.evaluate(async (context) => {
 				return await window.__foundry_vitest__.collect(context);
 			}, request.context);
@@ -564,6 +540,39 @@ class FoundryBrowserWorker implements PoolWorker {
 		}
 
 		return browserData.page;
+	}
+
+	/** Complete the deferred browser setup and tester injection. */
+	async ensurePageSetup(): Promise<Page> {
+		if (isSetup) return this.getPage();
+
+		if (this.startConfig == null) {
+			throw new Error('No start config! The start request has not arrived yet.');
+		}
+		const startConfig = this.startConfig;
+
+		const data = await _browserData?.catch(() => undefined);
+		const viteUrl = data?.viteUrl;
+		if (viteUrl == null) {
+			throw new Error('No Vite URL! The browser setup did not complete.');
+		}
+
+		// `/@fs/` requires posix-style absolute paths, even on Windows.
+		const testerPath = path.join(testsDir, 'tester.ts').replaceAll('\\', '/');
+		const testerUrl = `${viteUrl.replace(/\/$/, '')}/@fs/${testerPath}`;
+
+		const page = this.getPage();
+		await page.evaluate(
+			async ([url, config]) => {
+				await import(/* @vite-ignore */ url);
+
+				window.__foundry_vitest__.setup(config);
+			},
+			[testerUrl, startConfig] as const,
+		);
+
+		isSetup = true;
+		return page;
 	}
 
 	async start() {
