@@ -79,6 +79,7 @@ import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { RemoveSpellsRule } from '../models/rules/removeSpells.js';
 import { ResourceCostRule } from '../models/rules/resourceCost.js';
+import { RestrictSpellSchoolsRule } from '../models/rules/restrictSpellSchools.js';
 import { RicochetRule } from '../models/rules/ricochet.js';
 import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
@@ -185,6 +186,7 @@ export const RULE_CLASSES = {
 	primaryDieBonus: PrimaryDieBonusRule,
 	reroll: RerollRule,
 	removeSpells: RemoveSpellsRule,
+	restrictSpellSchools: RestrictSpellSchoolsRule,
 	savingThrowBonus: SavingThrowBonusRule,
 	savingThrowRollMode: SavingThrowRollModeRule,
 	situationalRollMode: SituationalRollModeRule,
