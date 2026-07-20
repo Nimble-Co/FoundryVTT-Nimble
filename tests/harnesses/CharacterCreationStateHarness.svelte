@@ -5,6 +5,7 @@
 
 	let {
 		ancestryOptions,
+		ancestryBonusOptions = [],
 		backgroundOptions,
 		classDocument,
 		classOptions,
@@ -14,6 +15,7 @@
 		spellIndex,
 	}: {
 		ancestryOptions: Record<'core' | 'exotic', NimbleAncestryItem[]>;
+		ancestryBonusOptions?: NimbleAncestryBonusItem[];
 		backgroundOptions: NimbleBackgroundItem[];
 		classDocument: NimbleClassItem | null;
 		classOptions: NimbleClassItem[];
@@ -25,6 +27,7 @@
 
 	const state = createCharacterCreationState({
 		ancestryOptions: Promise.resolve(untrack(() => ancestryOptions)),
+		ancestryBonusOptions: Promise.resolve(untrack(() => ancestryBonusOptions)),
 		backgroundOptions: Promise.resolve(untrack(() => backgroundOptions)),
 		classFeatureIndex: Promise.resolve(new Map()),
 		classOptions: Promise.resolve(untrack(() => classOptions)),
@@ -89,6 +92,14 @@
 		state.selectedSpells = nextSpells;
 	}
 
+	function confirmAncestryBonus() {
+		state.ancestryBonusConfirmed = true;
+	}
+
+	function clearAncestryBonus() {
+		state.selectedAncestryBonus = null;
+	}
+
 	function completeBackgroundSchoolSelection() {
 		const group = state.spellGrants?.schoolSelections.find(
 			(entry) => entry.source === 'background',
@@ -110,6 +121,8 @@
 
 <button type="button" onclick={selectClass}>Select Class</button>
 <button type="button" onclick={selectAncestry}>Select Ancestry</button>
+<button type="button" onclick={confirmAncestryBonus}>Confirm Ancestry Bonus</button>
+<button type="button" onclick={clearAncestryBonus}>Clear Ancestry Bonus</button>
 <button type="button" onclick={selectBackground}>Select Background</button>
 <button type="button" onclick={selectAlternateBackground}>Select Alternate Background</button>
 <button type="button" onclick={completeClassSchoolSelection}>Complete Class School Selection</button
@@ -122,6 +135,9 @@
 </button>
 
 <div data-testid="stage">{String(state.stage)}</div>
+<div data-testid="selected-ancestry-bonus">{String(state.selectedAncestryBonus?.uuid ?? null)}</div>
+<div data-testid="ancestry-bonus-confirmed">{String(state.ancestryBonusConfirmed)}</div>
+<div data-testid="granted-languages">{JSON.stringify(state.grantedLanguages)}</div>
 <div data-testid="active-spell-selection-source">{String(state.activeSpellSelectionSource)}</div>
 <div data-testid="spell-grants">{JSON.stringify(state.spellGrants)}</div>
 <div data-testid="selected-schools">{JSON.stringify([...state.selectedSchools.entries()])}</div>

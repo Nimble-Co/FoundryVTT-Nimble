@@ -74,23 +74,31 @@
 		{#if browsing}
 			<Hint hintText="Choose an ancestry bonus. You'll return here to confirm your pick." />
 
-			<ul class="nimble-document-list">
-				{#each ancestryBonuses as bonus}
-					{@const sourceLabel = getDocumentSourceLabel(bonus.uuid)}
-					{@const isDefault = bonus.uuid === defaultBonusUuid}
+			{#if !ancestryBonuses.length}
+				<Hint
+					hintIcon="fa-solid fa-circle-exclamation"
+					hintText="There are no ancestry bonuses available in this world's compendium packs."
+					hintType="warning"
+				/>
+			{:else}
+				<ul class="nimble-document-list">
+					{#each ancestryBonuses as bonus}
+						{@const sourceLabel = getDocumentSourceLabel(bonus.uuid)}
+						{@const isDefault = bonus.uuid === defaultBonusUuid}
 
-					<li class="u-semantic-only">
-						<DocumentCard
-							document={bonus}
-							handler={handleBonusSelection}
-							data-card-selected={bonus.uuid === selectedAncestryBonus?.uuid ? '' : null}
-							metadata={isDefault ? 'Default' : null}
-							{sourceLabel}
-							getTooltip={prepareAncestryBonusTooltip}
-						/>
-					</li>
-				{/each}
-			</ul>
+						<li class="u-semantic-only">
+							<DocumentCard
+								document={bonus}
+								handler={handleBonusSelection}
+								data-card-selected={bonus.uuid === selectedAncestryBonus?.uuid ? '' : null}
+								metadata={isDefault ? 'Default' : null}
+								{sourceLabel}
+								getTooltip={prepareAncestryBonusTooltip}
+							/>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		{:else if selectedAncestryBonus}
 			{@const sourceLabel = getDocumentSourceLabel(selectedAncestryBonus.uuid)}
 
@@ -216,6 +224,7 @@
 
 			flex: 1 1 0;
 			min-width: fit-content;
+			// `basic` variant buttons don't consume --nimble-button-border-radius, so round explicitly.
 			border-radius: 4px;
 		}
 

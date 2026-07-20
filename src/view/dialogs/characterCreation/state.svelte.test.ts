@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
@@ -668,6 +668,199 @@ describe('createCharacterCreationState spell grants', () => {
 			);
 			expect(screen.getByTestId('confirmed-schools')).toHaveTextContent('["class-school"]');
 			expect(screen.getByTestId('selected-spells')).toHaveTextContent('[]');
+		});
+	});
+});
+
+type GlobalWithFromUuid = { fromUuid: unknown };
+
+describe('createCharacterCreationState ancestry bonus stage', () => {
+	let originalFromUuid: unknown;
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.mocked(getClassFeaturesFromIndex).mockResolvedValue(createClassFeaturesResult([]));
+		(
+			globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame }
+		).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+			callback(0);
+			return 1;
+		});
+		originalFromUuid = (globalThis as unknown as GlobalWithFromUuid).fromUuid;
+	});
+
+	afterEach(() => {
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = originalFromUuid;
+	});
+
+	function createAncestryWithDefaultBonus(defaultBonus: string) {
+		return {
+			uuid: 'Compendium.nimble.nimble-ancestries.Item.test-ancestry',
+			system: {
+				size: ['medium'],
+				rules: [],
+				defaultBonus,
+			},
+		} as unknown as NimbleAncestryItem;
+	}
+
+	function renderWithAncestry(
+		classDocument: NimbleClassItem,
+		ancestryDocument: NimbleAncestryItem,
+	) {
+		render(CharacterCreationStateHarness, {
+			props: {
+				ancestryOptions: {
+					core: [ancestryDocument],
+					exotic: [],
+				},
+				backgroundOptions: [createBackground()],
+				classDocument,
+				classOptions: [classDocument],
+				backgroundDocument: createBackground(),
+				ancestryDocument,
+				spellIndex: createSpellIndex([]),
+			},
+		});
+	}
+
+	it('gates on ANCESTRY_BONUS until the auto-defaulted bonus is confirmed', async () => {
+		const bonusUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.test-bonus';
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi
+			.fn()
+			.mockResolvedValue({ uuid: bonusUuid, system: { rules: [] } });
+
+		renderWithAncestry(createClass('mage'), createAncestryWithDefaultBonus(bonusUuid));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		// The ancestry's default bonus auto-resolves but stays unconfirmed, holding the bonus stage.
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-bonus')).toHaveTextContent(bonusUuid);
+			expect(screen.getByTestId('ancestry-bonus-confirmed')).toHaveTextContent('false');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.ANCESTRY_BONUS),
+			);
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Confirm Ancestry Bonus' }));
+
+		// Confirming releases the gate; single size + no save choice advances straight to background.
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('ancestry-bonus-confirmed')).toHaveTextContent('true');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('skips ANCESTRY_BONUS when the ancestry has no default bonus', async () => {
+		renderWithAncestry(createClass('mage'), createAncestry());
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-bonus')).toHaveTextContent('null');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('re-opens ANCESTRY_BONUS when a confirmed bonus is cleared', async () => {
+		const bonusUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.test-bonus';
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi
+			.fn()
+			.mockResolvedValue({ uuid: bonusUuid, system: { rules: [] } });
+
+		renderWithAncestry(createClass('mage'), createAncestryWithDefaultBonus(bonusUuid));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Confirm Ancestry Bonus' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear Ancestry Bonus' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-bonus')).toHaveTextContent('null');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.ANCESTRY_BONUS),
+			);
+		});
+	});
+});
+
+describe('createCharacterCreationState granted languages', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.mocked(getClassFeaturesFromIndex).mockResolvedValue(createClassFeaturesResult([]));
+		(
+			globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame }
+		).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+			callback(0);
+			return 1;
+		});
+	});
+
+	it('lowercases and tags background language grants without gating on Intelligence', async () => {
+		const background = createBackground([
+			{
+				id: 'lang-basic',
+				type: 'grantProficiency',
+				proficiencyType: 'languages',
+				values: ['Common', 'Elvish'],
+			},
+			{
+				// An INT-predicated rule must still be granted: background language grants,
+				// unlike ancestry grants, are not gated on the Intelligence modifier.
+				id: 'lang-gated',
+				type: 'grantProficiency',
+				proficiencyType: 'languages',
+				values: ['Draconic'],
+				predicate: { intelligence: { min: 5 } },
+			},
+			{
+				// Non-language proficiency grants are ignored.
+				id: 'armor',
+				type: 'grantProficiency',
+				proficiencyType: 'armor',
+				values: ['plate'],
+			},
+		]);
+
+		render(CharacterCreationStateHarness, {
+			props: {
+				ancestryOptions: {
+					core: [],
+					exotic: [],
+				},
+				backgroundOptions: [background],
+				classDocument: null,
+				classOptions: [],
+				backgroundDocument: background,
+				spellIndex: createSpellIndex([]),
+			},
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Background' }));
+
+		await vi.waitFor(() => {
+			const granted = JSON.parse(
+				screen.getByTestId('granted-languages').textContent ?? '[]',
+			) as Array<{ key: string; source: string }>;
+			expect(granted).toEqual([
+				{ key: 'common', source: 'background' },
+				{ key: 'elvish', source: 'background' },
+				{ key: 'draconic', source: 'background' },
+			]);
 		});
 	});
 });

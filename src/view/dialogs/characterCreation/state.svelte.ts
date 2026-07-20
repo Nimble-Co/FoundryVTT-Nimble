@@ -433,17 +433,10 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			return [{ key: selectedRaisedByAncestry.language, source: 'background' }];
 		}
 
-		// For other backgrounds with grantProficiency rules
+		// For other backgrounds with grantProficiency rules. Background language grants aren't
+		// gated on Intelligence, so pass an unbounded intMod to bypass the helper's INT predicate.
 		const rules = [...(selectedBackground?.system?.rules ?? [])];
-		const grantRules = rules.filter(
-			(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
-		);
-		return grantRules.flatMap((r) =>
-			(r.values ?? []).map((v) => ({
-				key: v.toLowerCase(),
-				source: 'background' as const,
-			})),
-		);
+		return getLanguageGrantsFromRules(rules, Number.POSITIVE_INFINITY, 'background');
 	});
 
 	// Combined granted languages (deduplicated by key)
