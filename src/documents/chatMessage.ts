@@ -265,11 +265,11 @@ function getDamageReductionTotal(actor: Actor.Implementation, damageType?: strin
 
 	let total = 0;
 	for (const reduction of reductions) {
+		if (reduction?.mode === 'half') continue;
 		const value = Number(reduction?.value);
 		if (!Number.isFinite(value) || value <= 0) continue;
 
-		const damageTypes = Array.isArray(reduction.damageTypes) ? reduction.damageTypes : [];
-		if (damageTypes.length > 0 && (!damageType || !damageTypes.includes(damageType))) continue;
+		if (!matchesDamageType(reduction.damageTypes, damageType)) continue;
 
 		total += value;
 	}
@@ -277,6 +277,46 @@ function getDamageReductionTotal(actor: Actor.Implementation, damageType?: strin
 	return Math.floor(total);
 }
 
+/** Typed scopes only match a known, included damage type; empty = all. */
+function matchesDamageType(damageTypes: unknown, damageType?: string): boolean {
+	const types = Array.isArray(damageTypes) ? damageTypes : [];
+	if (types.length === 0) return true;
+	return Boolean(damageType && types.includes(damageType));
+}
+
+/**
+ * Resistance check: `half`-mode damageReduction rule entries and the actor's
+ * `attributes.damageResistances` both mean "take half as much damage" (Core
+ * Rules glossary). Halving applies once — multiple matching sources do not
+ * stack into quarters.
+ */
+function actorResistsDamage(actor: Actor.Implementation, damageType?: string): boolean {
+	const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
+	if (Array.isArray(resistances) && damageType && resistances.includes(damageType)) return true;
+
+	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
+		| DamageReductionEntry[]
+		| undefined;
+	if (!Array.isArray(reductions)) return false;
+	return reductions.some(
+		(reduction) =>
+			reduction?.mode === 'half' && matchesDamageType(reduction.damageTypes, damageType),
+	);
+}
+
+function actorIsImmuneToDamage(actor: Actor.Implementation, damageType?: string): boolean {
+	const immunities = foundry.utils.getProperty(actor, 'system.attributes.damageImmunities');
+	return Array.isArray(immunities) && Boolean(damageType && immunities.includes(damageType));
+}
+
+/**
+ * Order: outcome/armor halving → immunity (zero) → resistance halving →
+ * flat rule reductions + banked one-shot reduction → clamp at zero. Temp HP
+ * absorption happens later, inside `actor.applyDamage`. The books don't
+ * specify resistance-vs-reduction ordering; halving first keeps flat
+ * reductions (Fury spends) fully effective. Halving rounds up, matching the
+ * heavy-armor convention.
+ */
 function calculateAdjustedDamage(params: {
 	actor: Actor.Implementation;
 	damage: number;
@@ -284,10 +324,16 @@ function calculateAdjustedDamage(params: {
 	bankedReduction?: number;
 }): number {
 	const armorAdjustedDamage = calculateArmorAdjustedDamage(params);
+	const damageType = params.options?.damageType;
+	if (actorIsImmuneToDamage(params.actor, damageType)) return 0;
+
+	const resistanceAdjustedDamage = actorResistsDamage(params.actor, damageType)
+		? Math.ceil(armorAdjustedDamage * 0.5)
+		: armorAdjustedDamage;
+
 	const reduction =
-		getDamageReductionTotal(params.actor, params.options?.damageType) +
-		(params.bankedReduction ?? 0);
-	return Math.max(0, armorAdjustedDamage - reduction);
+		getDamageReductionTotal(params.actor, damageType) + (params.bankedReduction ?? 0);
+	return Math.max(0, resistanceAdjustedDamage - reduction);
 }
 
 function buildDamageApplicationPlan(params: {
@@ -305,16 +351,19 @@ function buildDamageApplicationPlan(params: {
 		if (!actor) continue;
 
 		// A banked reduction is one-shot: when the same actor is targeted through
-		// multiple tokens, only its first application entry gets the bank.
-		const bankedReduction = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
-		if (bankedReduction > 0) bankedReductionActors.add(actor);
-
-		const adjustedDamage = calculateAdjustedDamage({
+		// multiple tokens, only its first application entry gets the bank. It is
+		// only consumed when the hit would otherwise deal damage — immunity or
+		// armor zeroing the hit leaves the bank in place.
+		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
+		const unbankedDamage = calculateAdjustedDamage({
 			actor,
 			damage: params.damage,
 			options: params.options,
-			bankedReduction,
 		});
+		const bankedReduction = unbankedDamage > 0 ? availableBank : 0;
+		if (bankedReduction > 0) bankedReductionActors.add(actor);
+
+		const adjustedDamage = Math.max(0, unbankedDamage - bankedReduction);
 
 		if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) {
 			zeroDamageTargetNames.add(

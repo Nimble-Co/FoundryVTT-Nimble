@@ -36,7 +36,21 @@
 		await actor.convertMonsterType(newValue);
 	}
 
-	const { sizeCategories } = CONFIG.NIMBLE;
+	function prepareDamageTypeOptions() {
+		return Object.entries(damageTypes).map(([key, value]) => ({
+			label: localize(value),
+			value: key,
+		}));
+	}
+
+	function toggleDamageTypeEntry(field: string, current: string[], value: string) {
+		const next = current.includes(value)
+			? current.filter((entry) => entry !== value)
+			: [...current, value];
+		actor.update({ [`system.attributes.${field}`]: next });
+	}
+
+	const { damageTypes, sizeCategories } = CONFIG.NIMBLE;
 
 	let { actor } = $props();
 </script>
@@ -88,6 +102,61 @@
 			selectedOptions={[actor.reactive.type]}
 			toggleOption={handleMonsterTypeChange}
 		/>
+	</div>
+
+	<div class="nimble-field" data-field-variant="stacked">
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.damageResistances')}
+		</h3>
+
+		<TagGroup
+			options={prepareDamageTypeOptions()}
+			selectedOptions={actor.reactive.system.attributes.damageResistances}
+			toggleOption={(value) =>
+				toggleDamageTypeEntry(
+					'damageResistances',
+					actor.reactive.system.attributes.damageResistances,
+					value,
+				)}
+		/>
+	</div>
+
+	<div class="nimble-field" data-field-variant="stacked">
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.damageImmunities')}
+		</h3>
+
+		<TagGroup
+			options={prepareDamageTypeOptions()}
+			selectedOptions={actor.reactive.system.attributes.damageImmunities}
+			toggleOption={(value) =>
+				toggleDamageTypeEntry(
+					'damageImmunities',
+					actor.reactive.system.attributes.damageImmunities,
+					value,
+				)}
+		/>
+	</div>
+
+	<div class="nimble-field" data-field-variant="stacked">
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.damageVulnerabilities')}
+		</h3>
+
+		<TagGroup
+			options={prepareDamageTypeOptions()}
+			selectedOptions={actor.reactive.system.attributes.damageVulnerabilities}
+			toggleOption={(value) =>
+				toggleDamageTypeEntry(
+					'damageVulnerabilities',
+					actor.reactive.system.attributes.damageVulnerabilities,
+					value,
+				)}
+		/>
+
+		<small class="nimble-field__hint">
+			{localize('NIMBLE.npcConfig.damageVulnerabilitiesHint')}
+		</small>
 	</div>
 
 	{#if actor.reactive.type === 'npc'}

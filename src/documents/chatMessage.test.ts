@@ -1614,3 +1614,141 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 });
+
+describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+	});
+
+	function createResistanceActor(config: {
+		damageReductions?: object[];
+		damageResistances?: string[];
+		damageImmunities?: string[];
+	}) {
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'none',
+					hp: { value: 10, temp: 0, max: 10 },
+					damageResistances: config.damageResistances ?? [],
+					damageImmunities: config.damageImmunities ?? [],
+				},
+				damageReductions: config.damageReductions ?? [],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+	}
+
+	function withBankedReduction(actor: object, value: number) {
+		const target = actor as {
+			effects?: object[];
+			deleteEmbeddedDocuments?: ReturnType<typeof vi.fn>;
+		};
+		target.effects = [
+			{
+				id: 'banked-effect',
+				disabled: false,
+				flags: { [SYSTEM_ID]: { bankedDamageReduction: value } },
+			},
+		];
+		target.deleteEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		return target.deleteEmbeddedDocuments;
+	}
+
+	it('halves damage for a half-mode reduction entry, rounding up', async () => {
+		const actor = createResistanceActor({
+			damageReductions: [{ value: 0, damageTypes: [], mode: 'half' }],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('halves before subtracting flat reductions', async () => {
+		const actor = createResistanceActor({
+			damageReductions: [
+				{ value: 0, damageTypes: [], mode: 'half' },
+				{ value: 2, damageTypes: [] },
+			],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// 10 -> 5 (half) -> 3 (flat reduction).
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
+	});
+
+	it('halves damage for a matching attributes.damageResistances entry', async () => {
+		const actor = createResistanceActor({ damageResistances: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('does not apply typed resistance when the damage type is unknown or different', async () => {
+		const actor = createResistanceActor({ damageResistances: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'cold' });
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 10);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+	});
+
+	it('halves only once when multiple resistance sources match', async () => {
+		const actor = createResistanceActor({
+			damageReductions: [{ value: 0, damageTypes: ['fire'], mode: 'half' }],
+			damageResistances: ['fire'],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('applies no damage to an actor immune to the damage type', async () => {
+		const actor = createResistanceActor({ damageImmunities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor, name: 'Cinder Elemental' });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('does not apply immunity when the damage type is unknown', async () => {
+		const actor = createResistanceActor({ damageImmunities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('does not consume a banked reduction when immunity already zeroes the hit', async () => {
+		const actor = createResistanceActor({ damageImmunities: ['fire'] });
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockReturnValue({ actor, name: 'Cinder Elemental' });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(deleteEffects).not.toHaveBeenCalled();
+	});
+});

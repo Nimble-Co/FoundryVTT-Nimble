@@ -2,16 +2,26 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 interface DamageReductionEntry {
-	/** Resolved numeric value, always > 0 */
+	/** Resolved numeric value, always > 0; 0 for `half` entries */
 	value: number;
 	/** Damage types the reduction applies to; empty = all damage types */
 	damageTypes: string[];
+	/** `flat` subtracts `value`; `half` halves the damage instead (resistance) */
+	mode?: 'flat' | 'half';
 }
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
+		mode: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'flat',
+			choices: ['flat', 'half'],
+			label: 'NIMBLE.rules.damageReduction.mode.label',
+			hint: 'NIMBLE.rules.damageReduction.mode.hint',
+		}),
 		// Deterministic formulas only — reductions are applied when the GM clicks
 		// Apply Damage, where there is no roll to append dice to.
 		value: new fields.StringField(
@@ -22,6 +32,7 @@ function schema() {
 				label: 'NIMBLE.rules.damageReduction.value.label',
 				hint: 'NIMBLE.rules.damageReduction.value.hint',
 				widget: 'formula',
+				showWhen: (data: Record<string, unknown>) => data.mode !== 'half',
 			}),
 		),
 		damageTypes: new fields.ArrayField(
@@ -59,6 +70,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.damageReduction.description';
 
+	declare mode: 'flat' | 'half';
 	declare value: string;
 	declare damageTypes: string[];
 
@@ -72,6 +84,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
+				['mode', 'string'],
 				['value', 'string'],
 				['damageTypes', 'string[]'],
 			]),
@@ -82,6 +95,15 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
+
+		if (this.mode === 'half') {
+			this.pushToActorSystemArray<DamageReductionEntry>('damageReductions', {
+				value: 0,
+				damageTypes: [...this.damageTypes],
+				mode: 'half',
+			});
+			return;
+		}
 
 		if (this.isDiceExpression(this.value)) {
 			console.warn(
