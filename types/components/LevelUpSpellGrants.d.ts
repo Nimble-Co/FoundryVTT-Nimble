@@ -14,7 +14,10 @@ export interface LevelUpSpellGrantsProps {
 	selectedSpells: Map<string, string[]>;
 	confirmedSchools: Set<string>;
 	spellsToRemove: SpellRemovalEntry[];
+	exceptionSelections: SpellSelectionGroup[];
+	selectedExceptions: Map<string, string[]>;
 	onSchoolsChange: (schools: Map<string, string[]>) => void;
 	onSpellsChange: (spells: Map<string, string[]>) => void;
+	onExceptionsChange: (spells: Map<string, string[]>) => void;
 	onConfirmedChange: (confirmed: Set<string>) => void;
 }

@@ -12,7 +12,8 @@ export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrants
 		getProps().spells.length > 0 ||
 			getProps().schoolSelections.length > 0 ||
 			getProps().spellSelections.length > 0 ||
-			getProps().spellsToRemove.length > 0,
+			getProps().spellsToRemove.length > 0 ||
+			getProps().exceptionSelections.length > 0,
 	);
 
 	const spellsBySchool = $derived.by(() => {
@@ -51,6 +52,13 @@ export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrants
 		props.onSpellsChange(newMap);
 	}
 
+	function handleExceptionSelect(ruleId: string, spellUuids: string[]) {
+		const props = getProps();
+		const newMap = new Map(props.selectedExceptions);
+		newMap.set(ruleId, spellUuids);
+		props.onExceptionsChange(newMap);
+	}
+
 	return {
 		get hasAnyGrants() {
 			return hasAnyGrants;
@@ -62,5 +70,6 @@ export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrants
 		handleSchoolConfirm,
 		handleSchoolEdit,
 		handleSpellSelect,
+		handleExceptionSelect,
 	};
 }

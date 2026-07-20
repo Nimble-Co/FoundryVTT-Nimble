@@ -84,8 +84,11 @@
 		selectedSpells={state.selectedSpells}
 		confirmedSchools={state.confirmedSchools}
 		{spellsToRemove}
+		exceptionSelections={state.exceptionSelections}
+		selectedExceptions={state.selectedExceptions}
 		onSchoolsChange={(schools) => (state.selectedSchools = schools)}
 		onSpellsChange={(spells) => (state.selectedSpells = spells)}
+		onExceptionsChange={(spells) => (state.selectedExceptions = spells)}
 		onConfirmedChange={(confirmed) => (state.confirmedSchools = confirmed)}
 	/>
 </section>

@@ -1,0 +1,25 @@
+{
+	"folder": "5b9d52290963bc16",
+	"name": "Invoker of Surges",
+	"type": "subclass",
+	"img": "icons/magic/lightning/bolt-strike-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "surges",
+		"rules": [],
+		"description": "<p><em>Dangerous. Fast.</em></p><p>LEVEL 3</p><p><strong>Electrical Dedication.</strong> You give up Spellshaper abilities and you can only cast lightning spells from now on. Choose 1 Ice or Fire spell and treat it as a Lightning spell.</p><p><strong>Power Surge.</strong> After you cast a damaging spell, you may take 4 lightning damage to add 1d8 to the damage. While Charged, if you would become Charged again, gain <em>Supercharged</em>.</p><p><strong>Supercharged Abilities.</strong> When Supercharged you may end the condition to use one of these abilities for free at any time.</p><ul><li><strong>Blur.</strong> Reduce ALL non-lightning damage you take by KEY this round.</li><li><strong>Overload.</strong> When an enemy is damaged, add 1 maximized Power Surge Die.</li><li><strong>Warp.</strong> Teleport up to 8 spaces away; you may swap places with a willing ally.</li></ul><p>LEVEL 7</p><p><strong>Jumpstart.</strong> Gain +INT Initiative. When you roll initiative, become Charged; on a result of 20+, become Supercharged instead.</p><p><strong>Power Surge (2).</strong> Your Power Surge die becomes a d12.</p><p>LEVEL 11</p><p><strong>Lingering Charge.</strong> (1/encounter) Use a Supercharged ability even if you are not Supercharged, then become Supercharged.</p><p><strong>Conduit of Power.</strong> Whenever you would move while Charged, you may teleport instead.</p><p>LEVEL 15</p><p><strong>Power Surge (3).</strong> Your Power Surge die becomes a d20.</p><p><strong>Haywire.</strong> Whenever you use Power Surge, you may take 8 damage instead to become Supercharged.</p>",
+		"parentClass": "mage",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.8.8",
+		"createdTime": 1761527184804,
+		"modifiedTime": 1761527184804,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "eKn9R6LmAOoKqNDK"
+}
