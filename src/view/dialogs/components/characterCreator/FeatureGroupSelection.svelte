@@ -12,6 +12,10 @@
 		selectedFeatures,
 		onSelect,
 		hideGroupName = false,
+		selectionMax,
+		isDuplicateChoice = false,
+		showSourceLabel = false,
+		displayName,
 	}: FeatureGroupSelectionProps = $props();
 
 	const state = createFeatureGroupSelectionState(() => ({
@@ -19,10 +23,19 @@
 		features,
 		selectionCount,
 		selectedFeatures,
+		selectionMax,
 	}));
+
+	// Duplicate-source groups always badge their candidates; named groups do so only when
+	// they were flagged as containing matches from more than one source.
+	const showBadges = $derived(isDuplicateChoice || showSourceLabel);
 
 	function getHintText() {
 		if (state.isFixed) return null;
+
+		if (isDuplicateChoice) {
+			return localize('NIMBLE.classFeatureSelection.duplicateSourceHint');
+		}
 
 		if (selectionCount === 1) {
 			return localize('NIMBLE.classFeatureSelection.chooseOne');
@@ -38,8 +51,17 @@
 
 		return game.i18n.format('NIMBLE.classFeatureSelection.nOfMSelected', {
 			current: state.selectedCount,
-			required: selectionCount,
+			required: state.maxSelectionCount,
 		});
+	}
+
+	function isCandidateDisabled(feature: (typeof features)[number]) {
+		// Once the maximum is reached, unselected candidates can't be added until one is freed.
+		return (
+			state.isRange &&
+			state.selectedCount >= state.maxSelectionCount &&
+			!state.isFeatureSelected(feature)
+		);
 	}
 </script>
 
@@ -47,7 +69,7 @@
 	<header class="feature-group__header">
 		{#if !hideGroupName}
 			<h4 class="nimble-heading" data-heading-variant="section">
-				{state.formattedGroupName}
+				{displayName ?? state.formattedGroupName}
 			</h4>
 		{/if}
 		{#if !state.isFixed}
@@ -67,6 +89,8 @@
 			<FeatureCard
 				{feature}
 				isSelected={state.isFixed ? false : isSelected}
+				isDisabled={isCandidateDisabled(feature)}
+				showSourceLabel={showBadges}
 				onSelect={state.isFixed ? undefined : () => onSelect(feature)}
 			/>
 		{/each}
