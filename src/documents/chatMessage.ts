@@ -779,6 +779,98 @@ class NimbleChatMessage extends ChatMessage {
 		return total;
 	}
 
+	/**
+	 * Human-readable reasons a target will take less than the rolled damage
+	 * from this card: immunities, resistances (attribute or half-mode rule),
+	 * flat damageReduction rules, and a pending banked one-shot reduction.
+	 * Armor is excluded — the target list already shows it as an icon. Returns
+	 * an empty array when nothing applies, so the card can omit the section.
+	 */
+	getDamageModifiersForTarget(targetUuid: string): string[] {
+		if (!this.isActivationCard()) return [];
+
+		const damageRolls = this.#collectApplicableDamageRolls().filter(
+			({ options }) => options.outcome !== 'noDamage',
+		);
+		if (damageRolls.length < 1) return [];
+
+		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
+		const actor = tokenDocument?.actor as Actor.Implementation | null;
+		if (!actor) return [];
+
+		const incomingTypes = new Set<string>();
+		for (const { options } of damageRolls) {
+			if (options.damageType) incomingTypes.add(options.damageType);
+		}
+
+		const typeLabel = (type: string): string => {
+			const key = (CONFIG.NIMBLE.damageTypes as Record<string, string>)[type];
+			return key ? localize(key) : type;
+		};
+
+		const appliesToIncoming = (damageTypes: unknown): boolean => {
+			const types = Array.isArray(damageTypes) ? damageTypes : [];
+			if (types.length === 0) return true;
+			return types.some((type) => incomingTypes.has(type));
+		};
+
+		const modifiers: string[] = [];
+
+		const immunities = foundry.utils.getProperty(actor, 'system.attributes.damageImmunities');
+		if (Array.isArray(immunities)) {
+			for (const type of incomingTypes) {
+				if (immunities.includes(type))
+					modifiers.push(localize('NIMBLE.damageModifiers.immune', { type: typeLabel(type) }));
+			}
+		}
+
+		const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
+		if (Array.isArray(resistances)) {
+			for (const type of incomingTypes) {
+				if (resistances.includes(type))
+					modifiers.push(localize('NIMBLE.damageModifiers.resistant', { type: typeLabel(type) }));
+			}
+		}
+
+		const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
+			| DamageReductionEntry[]
+			| undefined;
+		if (Array.isArray(reductions)) {
+			for (const reduction of reductions) {
+				if (!appliesToIncoming(reduction?.damageTypes)) continue;
+
+				if (reduction?.mode === 'half') {
+					modifiers.push(
+						reduction.label
+							? localize('NIMBLE.damageModifiers.resistanceSource', { label: reduction.label })
+							: localize('NIMBLE.damageModifiers.resistanceGeneric'),
+					);
+					continue;
+				}
+
+				const value = Number(reduction?.value);
+				if (!Number.isFinite(value) || value <= 0) continue;
+				modifiers.push(
+					reduction.label
+						? localize('NIMBLE.damageModifiers.flat', {
+								label: reduction.label,
+								value: String(Math.floor(value)),
+							})
+						: localize('NIMBLE.damageModifiers.flatGeneric', {
+								value: String(Math.floor(value)),
+							}),
+				);
+			}
+		}
+
+		const bankedReduction = getBankedDamageReduction(actor);
+		if (bankedReduction > 0) {
+			modifiers.push(localize('NIMBLE.damageModifiers.banked', { value: String(bankedReduction) }));
+		}
+
+		return modifiers;
+	}
+
 	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {
 		if (!this.isActivationCard()) return;
 

@@ -1751,4 +1751,103 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 		expect(actor.applyDamage).not.toHaveBeenCalled();
 		expect(deleteEffects).not.toHaveBeenCalled();
 	});
+
+	describe('getDamageModifiersForTarget', () => {
+		function createModifierMessage(damageType = 'fire') {
+			return new NimbleChatMessage({
+				type: 'spell',
+				system: {
+					targets: ['Scene.scene.Token.token'],
+					isCritical: false,
+					isMiss: false,
+					activation: {
+						effects: [
+							{
+								id: 'dmg',
+								type: 'damage',
+								formula: '1d6',
+								damageType,
+								ignoreArmor: false,
+								canCrit: true,
+								canMiss: true,
+								roll: {
+									class: 'DamageRoll',
+									formula: '1d6',
+									total: 6,
+									isCritical: false,
+									excludedPrimaryDieValue: 0,
+									terms: [
+										{
+											number: 1,
+											faces: 6,
+											results: [{ result: 6, active: true, discarded: false }],
+										},
+									],
+								},
+								parentNode: null,
+								parentContext: null,
+								on: {
+									hit: [
+										{
+											id: 'dmg-hit',
+											type: 'damageOutcome',
+											parentNode: 'dmg',
+											parentContext: 'hit',
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+			} as unknown as ChatMessage.CreateData);
+		}
+
+		it('returns nothing for a target with no applicable modifiers', () => {
+			const actor = createResistanceActor({});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(
+				createModifierMessage().getDamageModifiersForTarget('Scene.scene.Token.token'),
+			).toEqual([]);
+		});
+
+		it('describes immunity, resistance, labeled reductions, and banked reduction', () => {
+			const actor = createResistanceActor({
+				damageImmunities: ['fire'],
+				damageResistances: ['fire'],
+				damageReductions: [
+					{ value: 0, damageTypes: [], mode: 'half', label: 'Stone Skin' },
+					{ value: 3, damageTypes: ['fire'], label: 'Frost Ward' },
+					{ value: 2, damageTypes: [] },
+				],
+			});
+			withBankedReduction(actor, 6);
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const modifiers =
+				createModifierMessage().getDamageModifiersForTarget('Scene.scene.Token.token');
+
+			expect(modifiers).toEqual([
+				'immune to Fire (no damage)',
+				'resistant to Fire (half damage)',
+				'Stone Skin (half damage)',
+				'Frost Ward (-3)',
+				'damage reduction (-2)',
+				'banked damage reduction (-6)',
+			]);
+		});
+
+		it('excludes reductions scoped to damage types the card does not deal', () => {
+			const actor = createResistanceActor({
+				damageResistances: ['cold'],
+				damageReductions: [{ value: 3, damageTypes: ['cold'], label: 'Frost Ward' }],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(
+				createModifierMessage('fire').getDamageModifiersForTarget('Scene.scene.Token.token'),
+			).toEqual([]);
+		});
+	});
 });

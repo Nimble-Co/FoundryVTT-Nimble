@@ -8,6 +8,8 @@ interface DamageReductionEntry {
 	damageTypes: string[];
 	/** `flat` subtracts `value`; `half` halves the damage instead (resistance) */
 	mode?: 'flat' | 'half';
+	/** Rule label, surfaced in the chat card's damage-modifier breakdown */
+	label?: string;
 }
 
 function schema() {
@@ -101,6 +103,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 				value: 0,
 				damageTypes: [...this.damageTypes],
 				mode: 'half',
+				label: this.label,
 			});
 			return;
 		}
@@ -118,6 +121,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 		this.pushToActorSystemArray<DamageReductionEntry>('damageReductions', {
 			value: resolvedValue,
 			damageTypes: [...this.damageTypes],
+			label: this.label,
 		});
 	}
 }

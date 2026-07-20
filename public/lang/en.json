@@ -1787,6 +1787,11 @@
 			"damageVulnerabilities": "Damage Vulnerabilities",
 			"damageVulnerabilitiesHint": "Not yet automated: vulnerabilities are recorded here but the vulnerability rule (ignore armor, or double damage if unarmored) is not applied automatically."
 		},
+		"npcDefenses": {
+			"resistant": "Resistant",
+			"immune": "Immune",
+			"vulnerable": "Vulnerable"
+		},
 		"featureSheet": {
 			"selectionCountByLevel": "Selection Count By Level",
 			"selectionCountByLevelPlaceholder": "e.g. 2: 2  (overrides default of 1)"
@@ -1912,7 +1917,17 @@
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
 			"removeTarget": "Remove Target",
-			"damagePreview": "Damage this target will take (after armor)"
+			"damagePreview": "Damage this target will take (after armor and reductions)"
+		},
+		"damageModifiers": {
+			"heading": "Reduced Damage",
+			"immune": "immune to {type} (no damage)",
+			"resistant": "resistant to {type} (half damage)",
+			"resistanceSource": "{label} (half damage)",
+			"resistanceGeneric": "resistance (half damage)",
+			"flat": "{label} (-{value})",
+			"flatGeneric": "damage reduction (-{value})",
+			"banked": "banked damage reduction (-{value})"
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"
