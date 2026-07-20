@@ -42,5 +42,5 @@ export default async function loadOptionSubItems(
 		if (doc) results.push(doc as NimbleFeatureItem);
 	}
 
-	return results.filter((item) => !ownedItemUuids.has(item.uuid));
+	return results.filter((item) => !ownedItemUuids.has(item.uuid ?? ''));
 }

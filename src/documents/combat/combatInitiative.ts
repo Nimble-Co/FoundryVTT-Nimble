@@ -1,3 +1,4 @@
+import toMessageMode from '../../utils/toMessageMode.js';
 import type { InitiativeRollOutcome } from './combatTypes.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
 
@@ -28,9 +29,12 @@ export async function buildInitiativeChatData(params: {
 	combatant: Combatant.Implementation;
 	roll: Roll;
 	messageOptions: ChatMessage.CreateData;
-	chatRollMode: string | null;
 	rollIndex: number;
 }): Promise<ChatMessage.CreateData> {
+	// A rollMode entry in messageOptions is a visibility request, not message
+	// data: pull it out so it doesn't leak into the created message.
+	const { rollMode: requestedRollMode, ...messageOptions } =
+		params.messageOptions as ChatMessage.CreateData & { rollMode?: string | null };
 	const messageData = foundry.utils.mergeObject(
 		{
 			speaker: ChatMessage.getSpeaker({
@@ -41,20 +45,22 @@ export async function buildInitiativeChatData(params: {
 			flavor: game.i18n.format('COMBAT.RollsInitiative', { name: params.combatant.name ?? '' }),
 			flags: { 'core.initiativeRoll': true },
 		},
-		params.messageOptions,
+		messageOptions,
 	) as ChatMessage.CreateData;
-	const chatData = (await params.roll.toMessage(messageData, {
-		create: false,
-	})) as ChatMessage.CreateData & { rollMode?: string | null; sound?: string | null };
 
-	// If the combatant is hidden, use a private roll unless an alternative rollMode was requested.
-	const msgOpts = params.messageOptions as ChatMessage.CreateData & { rollMode?: string };
-	chatData.rollMode =
-		'rollMode' in msgOpts
-			? (msgOpts.rollMode ?? undefined)
+	// Private rolls for hidden combatants unless an alternative mode was
+	// requested; otherwise defer to the user's core.messageMode setting.
+	const messageMode =
+		'rollMode' in (params.messageOptions as object)
+			? toMessageMode(requestedRollMode)
 			: params.combatant.hidden
-				? CONST.DICE_ROLL_MODES.PRIVATE
-				: params.chatRollMode;
+				? 'gm'
+				: undefined;
+
+	const chatData = (await params.roll.toMessage(messageData, {
+		messageMode,
+		create: false,
+	})) as ChatMessage.CreateData & { sound?: string | null };
 
 	// Play 1 sound for the whole rolled set.
 	if (params.rollIndex > 0) chatData.sound = null;
@@ -66,7 +72,6 @@ export async function rollInitiativeForCombatant(params: {
 	combatantId: string;
 	formula: string | null;
 	messageOptions: ChatMessage.CreateData;
-	chatRollMode: string | null;
 	rollIndex: number;
 	combatManaUpdates: Promise<unknown>[];
 }): Promise<InitiativeRollOutcome | null> {
@@ -91,7 +96,6 @@ export async function rollInitiativeForCombatant(params: {
 		combatant,
 		roll,
 		messageOptions: params.messageOptions,
-		chatRollMode: params.chatRollMode,
 		rollIndex: params.rollIndex,
 	});
 

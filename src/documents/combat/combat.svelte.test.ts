@@ -92,7 +92,7 @@ describe('NimbleCombat', () => {
 						create: ReturnType<typeof vi.fn>;
 					};
 					getSpeaker: ReturnType<typeof vi.fn>;
-					applyRollMode: ReturnType<typeof vi.fn>;
+					applyMode: ReturnType<typeof vi.fn>;
 				};
 			}
 		).ChatMessage = {
@@ -101,7 +101,7 @@ describe('NimbleCombat', () => {
 				create: vi.fn().mockResolvedValue([{ id: 'chat-message' }]),
 			},
 			getSpeaker: vi.fn().mockReturnValue({}),
-			applyRollMode: vi.fn(),
+			applyMode: vi.fn(),
 		};
 		(
 			globalThis as unknown as {
@@ -2123,11 +2123,12 @@ describe('NimbleCombat', () => {
 		expect(actor.resolveInitiativeRollData).toHaveBeenCalledTimes(1);
 		expect(combatant.getInitiativeRoll).toHaveBeenCalledWith('2d20kh + 5');
 		expect(combatant.initiative).toBe(18);
+		expect(initiativeRoll.toMessage).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({ messageMode: 'blind', create: false }),
+		);
 		expect(chatMessageCreate).toHaveBeenCalledWith([
-			expect.objectContaining({
-				id: 'initiative-chat-data',
-				rollMode: 'blindroll',
-			}),
+			expect.objectContaining({ id: 'initiative-chat-data' }),
 		]);
 	});
 
@@ -3931,7 +3932,7 @@ describe('NimbleCombat', () => {
 				ChatMessage: {
 					create: ReturnType<typeof vi.fn>;
 					getSpeaker: ReturnType<typeof vi.fn>;
-					applyRollMode: ReturnType<typeof vi.fn>;
+					applyMode: ReturnType<typeof vi.fn>;
 				};
 			}
 		).ChatMessage.create = chatCreate;
@@ -3942,9 +3943,9 @@ describe('NimbleCombat', () => {
 		).ChatMessage.getSpeaker = vi.fn().mockReturnValue({});
 		(
 			globalThis as unknown as {
-				ChatMessage: { applyRollMode: ReturnType<typeof vi.fn> };
+				ChatMessage: { applyMode: ReturnType<typeof vi.fn> };
 			}
-		).ChatMessage.applyRollMode = vi.fn();
+		).ChatMessage.applyMode = vi.fn();
 		(
 			globalThis as unknown as {
 				CONST: { CHAT_MESSAGE_STYLES: { OTHER: number } };

@@ -58,7 +58,7 @@ export function createCustomSpellSchoolsEditorState(dialog: () => GenericDialog)
 	}
 
 	function pickIcon(row: SpellSchoolEditorRow) {
-		const picker = new FilePicker({
+		const picker = new foundry.applications.apps.FilePicker.implementation({
 			type: 'image',
 			current: row.icon,
 			callback: (path: string) => {

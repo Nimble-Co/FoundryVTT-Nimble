@@ -206,7 +206,7 @@ export function createLevelUpState(
 				// Subclass features are resolved separately, so filter already-owned
 				// entries here before merging them into the current level grants.
 				const filteredAutoGrant = [...rawFeatures.autoGrant, ...subclassFeatures].filter(
-					(feature) => !ownedFeatureUuids.has(feature.uuid),
+					(feature) => !ownedFeatureUuids.has(feature.uuid ?? ''),
 				);
 
 				classFeatures = {
@@ -356,14 +356,14 @@ export function createLevelUpState(
 		}
 
 		for (const feature of classFeatures.optionFeatures) {
-			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid ?? '');
 			if (!selectedOptionId) return false;
 			const selectedOption = (feature.system.levelUpOptions ?? [])
 				.filter((o) => isLevelUpOptionApplicable(o, levelingTo))
 				.find((o) => o.id === selectedOptionId);
 			if ((selectedOption?.selectionGroups?.length ?? 0) > 0) {
 				const required = selectedOption?.selectionCount ?? 1;
-				const picks = selectedOptionSubItems.get(feature.uuid) ?? [];
+				const picks = selectedOptionSubItems.get(feature.uuid ?? '') ?? [];
 				if (picks.length < required) return false;
 			}
 		}
@@ -430,7 +430,7 @@ export function createLevelUpState(
 		if (!classFeatures) return [];
 		const result: string[] = [];
 		for (const feature of classFeatures.optionFeatures) {
-			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid ?? '');
 			if (!selectedOptionId) continue;
 			const option = (feature.system.levelUpOptions ?? [])
 				.filter((o) => isLevelUpOptionApplicable(o, levelingTo))
@@ -440,11 +440,11 @@ export function createLevelUpState(
 			// chosen option, so it appears on the sheet as the container for the pick. Option
 			// features reappear at every eligible level (4, 6, 8…), so only grant the parent the
 			// first time — otherwise leveling up repeatedly would stack duplicate parent items.
-			if (!ownedFeatureUuids.has(feature.uuid)) {
-				result.push(feature.uuid);
+			if (!ownedFeatureUuids.has(feature.uuid ?? '')) {
+				result.push(feature.uuid ?? '');
 			}
 			if (option.selectionGroups?.length) {
-				const subItemUuids = selectedOptionSubItems.get(feature.uuid) ?? [];
+				const subItemUuids = selectedOptionSubItems.get(feature.uuid ?? '') ?? [];
 				result.push(...subItemUuids);
 			} else {
 				for (const rule of option.rules) {
@@ -459,7 +459,7 @@ export function createLevelUpState(
 		if (!classFeatures) return {};
 		const bonuses: Record<string, number> = {};
 		for (const feature of classFeatures.optionFeatures) {
-			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
+			const selectedOptionId = selectedFeatureOptions.get(feature.uuid ?? '');
 			if (!selectedOptionId) continue;
 			const option = (feature.system.levelUpOptions ?? [])
 				.filter((o) => isLevelUpOptionApplicable(o, levelingTo))

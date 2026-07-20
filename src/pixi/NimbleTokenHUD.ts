@@ -3,7 +3,7 @@ import { unmount } from 'svelte';
 export class NimbleTokenHUD extends foundry.applications.hud.TokenHUD {
 	declare _svelteComponent: object | null;
 
-	clear() {
+	override clear() {
 		const baseClass = Object.getPrototypeOf(Object.getPrototypeOf(this));
 		if (baseClass.clear) baseClass.clear.call(this);
 

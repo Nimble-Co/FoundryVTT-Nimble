@@ -1,10 +1,10 @@
 import { SYSTEM_ID } from '#system';
-import { NimbleTemplateLayer } from '../canvas/layers/templateLayer.js';
 import { NIMBLE } from '../config.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import { registerNimbleDieModifiers } from '../dice/nimbleDieModifiers.js';
 import { PrimaryDie } from '../dice/terms/PrimaryDie.js';
+import { NimbleActiveEffect } from '../documents/activeEffect/activeEffect.js';
 import ActorProxy from '../documents/actor/actorProxy.js';
 import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
 import { NimbleChatMessage } from '../documents/chatMessage.js';
@@ -34,17 +34,23 @@ import itemDataModels from '../models/item/itemDataModels.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
+	CONFIG.ActiveEffect.documentClass =
+		NimbleActiveEffect as unknown as typeof CONFIG.ActiveEffect.documentClass;
 	CONFIG.Actor.documentClass = ActorProxy as typeof CONFIG.Actor.documentClass;
 	CONFIG.Combat.documentClass = NimbleCombat as typeof CONFIG.Combat.documentClass;
-	CONFIG.Combatant.documentClass = NimbleCombatant as typeof CONFIG.Combatant.documentClass;
-	CONFIG.ChatMessage.documentClass = NimbleChatMessage as typeof CONFIG.ChatMessage.documentClass;
+	CONFIG.Combatant.documentClass =
+		NimbleCombatant as unknown as typeof CONFIG.Combatant.documentClass;
+	CONFIG.ChatMessage.documentClass =
+		NimbleChatMessage as unknown as typeof CONFIG.ChatMessage.documentClass;
 	CONFIG.Item.documentClass = ItemProxy as typeof CONFIG.Item.documentClass;
 	CONFIG.Scene.documentClass = NimbleScene as typeof CONFIG.Scene.documentClass;
 	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;
 
-	// Add data models
-	CONFIG.ActiveEffect.dataModels =
-		activeEffectDataModels as object as typeof CONFIG.ActiveEffect.dataModels;
+	// Add data models. ActiveEffect must MERGE, not replace: V14 registers a core
+	// `base` model (foundry.data.ActiveEffectTypeDataModel) that owns the AE V2
+	// `changes` schema — wiping it breaks every base-type effect, including all
+	// status effects created by Actor#toggleStatusEffect.
+	Object.assign(CONFIG.ActiveEffect.dataModels, activeEffectDataModels);
 	CONFIG.Actor.dataModels = actorDataModels as object as typeof CONFIG.Actor.dataModels;
 	CONFIG.ChatMessage.dataModels = chatDataModels as object as typeof CONFIG.ChatMessage.dataModels;
 	CONFIG.Combatant.dataModels = combatantDataModels as object as typeof CONFIG.Combatant.dataModels;
@@ -56,7 +62,7 @@ export default function init() {
 	CONFIG.Dice.types.push(PrimaryDie);
 
 	// Override Roll.create so /r formulas with Nimble modifiers route to DamageRoll.
-	// Foundry v13's default Roll.create just instantiates CONFIG.Dice.rolls[0] (the
+	// Foundry v14's default Roll.create just instantiates CONFIG.Dice.rolls[0] (the
 	// base Roll), so Nimble-modifier formulas would never reach DamageRoll without this.
 	if (typeof foundry.dice.Roll.create === 'function') {
 		const originalRollCreate = foundry.dice.Roll.create.bind(foundry.dice.Roll);
@@ -82,9 +88,6 @@ export default function init() {
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;
-
-	// Add/Update Layers
-	CONFIG.Canvas.layers.templates.layerClass = NimbleTemplateLayer;
 
 	game.nimble = NIMBLE_GAME;
 

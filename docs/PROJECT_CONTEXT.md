@@ -13,7 +13,7 @@ Exact versions in `package.json`. Formatting rules in `biome.json` and `.prettie
 
 - **Svelte 5 runes** — Globally enabled. Node modules opted out in vite config.
 - **TypeScript** — Strict, `verbatimModuleSyntax`, `noImplicitOverride`. `noImplicitAny: false`.
-- **Foundry VTT v13** — `game`, `CONFIG`, `Hooks`, `Roll`, `Actor`, `Item`, etc. are **globals** — never import them.
+- **Foundry VTT v14** — `game`, `CONFIG`, `Hooks`, `Roll`, `Actor`, `Item`, etc. are **globals** — never import them. Namespaced APIs (`foundry.applications.ux.TextEditor.implementation`, `foundry.applications.apps.FilePicker.implementation`, etc.) must be accessed via the `foundry.*` path — the bare globals are deprecated shims.
 - **Vite library mode** — Single entry `src/nimble.ts` → `nimble.mjs`. `esbuild.keepNames: true` (Foundry uses class names at runtime). Icon paths (`/icons/...`) are external.
 - **Base path** — Runtime assets at `/systems/nimble/`. Dev proxy handles redirect to Foundry at localhost:30000.
 - **SCSS** — `svelte-preprocess` auto-prepends `_functions.scss` to all Svelte SCSS blocks.
@@ -69,6 +69,7 @@ Testing conventions in `STYLE_GUIDE.md`. Non-obvious setup details:
 - **Roll mock reset** — `globalThis.__MockRollConstructor` is available for tests that need to reset or customize Roll behavior.
 - **Automatic cleanup** — `vi.clearAllMocks()` and `@testing-library/svelte` `cleanup()` run in `afterEach` via setup. Don't duplicate this in test files.
 - **Co-located tests** — Place `.test.ts` files next to the source file they test.
+- **Live integration suite** — `tests/integration/` runs Vitest inside a real Foundry v14 world via Playwright (`pnpm test:integration`). Local-only: requires a local Foundry install and QA world — see `tests/integration/README.md`. The mocked unit suite does NOT certify v14 runtime behavior; write an integration test for anything that depends on real Foundry APIs.
 
 ## Code Quality & Style Rules
 
@@ -76,7 +77,7 @@ Comprehensive style guide at `STYLE_GUIDE.md`. Read it before writing code. Key 
 
 - **Check before creating** — Consult the Shared Code Inventory in the style guide before creating new utilities, components, or stores. Duplicating existing code is the most common agent mistake.
 - **Directory structure** — `STYLE_GUIDE.md` documents where every type of new code goes. Follow it exactly.
-- **`npm run check`** — Must pass before any PR. Runs: format, lint, circular-deps check, type-check, and tests.
+- **`pnpm check`** — Must pass before any PR. Runs: format, lint, circular-deps check, type-check, and tests.
 - **Circular dependency check** — `dependency-cruiser` is configured (`.dependency-cruiser.cjs`). New imports can introduce cycles — the pre-push hook will catch them.
 - **CSS custom properties** — Use `--nimble-*` variables for colors and spacing. Never hardcode colors — they must work in both light and dark mode (`[data-theme="dark"]`).
 - **Scoped styles default** — Component styles are scoped via `<style lang="scss">`. Global styles only in `src/scss/`.
@@ -87,7 +88,7 @@ Comprehensive style guide at `STYLE_GUIDE.md`. Read it before writing code. Key 
 - **Branch strategy** — `main` is the release branch. `dev` is the working branch. Feature branches merge into `dev` via PR.
 - **PR references** — Include issue/PR numbers in commit messages (e.g., `(#361)`).
 - **Pre-push validation** — Lefthook runs biome check, type-check, and vitest on push. Fix issues before pushing — don't bypass with `--no-verify`.
-- **Worktree support** — `npm run worktree:setup` and `npm run worktree:cleanup` scripts are available for parallel development in git worktrees.
+- **Worktree support** — `pnpm worktree:setup` and `pnpm worktree:cleanup` scripts are available for parallel development in git worktrees.
 
 ## Critical Don't-Miss Rules
 

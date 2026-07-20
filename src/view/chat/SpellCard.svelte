@@ -7,6 +7,7 @@
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
+	import TemplateSection from './components/TemplateSection.svelte';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
@@ -77,6 +78,8 @@
 	/>
 
 	<Targets />
+
+	<TemplateSection {messageDocument} name={spellName} />
 
 	{#if description.baseEffect || higherLevelContent || upcastContent}
 		<section class="nimble-card-section nimble-card-section--description">

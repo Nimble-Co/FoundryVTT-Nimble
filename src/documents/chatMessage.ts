@@ -527,6 +527,25 @@ class NimbleChatMessage extends ChatMessage {
 		return this.#addTargets(targetedTokens);
 	}
 
+	/**
+	 * Add tokens contained within a placed AoE Region to this card's targets.
+	 * Tokens are contained when their center point lies inside the region.
+	 */
+	async addTokensInRegionAsTargets(region: RegionDocument): Promise<ChatMessage | undefined> {
+		if (!this.isActivationCard()) return;
+
+		const containedTokens = (canvas.tokens?.placeables ?? []).filter((token) =>
+			region.testPoint({
+				x: token.center.x,
+				y: token.center.y,
+				elevation: token.document.elevation,
+			}),
+		);
+
+		if (!containedTokens.length) return;
+		return this.#addTargets(containedTokens);
+	}
+
 	async #addTargets(newTargets: Token[]): Promise<ChatMessage | undefined> {
 		if (!this.isActivationCard()) return;
 
@@ -831,7 +850,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		// Remove the healing record from the message using Foundry's delete syntax
 		await this.update({
-			[`system.appliedHealing.-=${effectId}`]: null,
+			[`system.appliedHealing.${effectId}`]: new foundry.data.operators.ForcedDeletion(),
 		} as Record<string, unknown>);
 
 		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));

@@ -672,9 +672,9 @@ class NimbleCombat extends Combat {
 
 	override async createEmbeddedDocuments<EmbeddedName extends Combat.Embedded.Name>(
 		embeddedName: EmbeddedName,
-		data: foundry.abstract.Document.CreateDataForName<EmbeddedName>[] | undefined,
-		operation?: object,
-	): Promise<foundry.abstract.Document.StoredForName<EmbeddedName>[] | undefined> {
+		data: foundry.abstract.Document.CreateDataForName<EmbeddedName>[],
+		operation?: foundry.abstract.Document.Database.CreateDocumentsOperationForName<EmbeddedName>,
+	): Promise<foundry.abstract.Document.StoredForName<EmbeddedName>[]> {
 		let normalizedData = data;
 
 		if (embeddedName === 'Combatant' && Array.isArray(data)) {
@@ -779,7 +779,7 @@ class NimbleCombat extends Combat {
 		await this.#applyNpcActionResetUpdates();
 
 		await dissolveRoundBoundaryMinionGroups({
-			combat: this,
+			combat: this as Combat,
 			resolveCurrentTurnIdentity: () => this.#resolveCurrentTurnIdentity(),
 			syncTurnToCombatant: (combatantIdOrIdentity, options) =>
 				this.#syncTurnToCombatant(combatantIdOrIdentity, options),
@@ -811,14 +811,14 @@ class NimbleCombat extends Combat {
 
 		const changed =
 			(await queueCombatantMutationWithFreshDocument({
-				combat: this,
+				combat: this as Combat,
 				combatantId,
 				mutation: async (combatant) => {
 					if (combatant.parent?.id !== this.id) return false;
 					if (combatant.type !== 'character') return false;
 
 					const usageState = getHeroicReactionUsageState({
-						combat: this,
+						combat: this as Combat,
 						combatant,
 						reactionKeys,
 					});
@@ -861,7 +861,7 @@ class NimbleCombat extends Combat {
 
 		const changed =
 			(await queueCombatantMutationWithFreshDocument({
-				combat: this,
+				combat: this as Combat,
 				combatantId,
 				mutation: async (combatant) => {
 					if (combatant.parent?.id !== this.id) return false;
@@ -915,11 +915,11 @@ class NimbleCombat extends Combat {
 		params: MinionGroupAttackParams,
 	): Promise<MinionGroupAttackResult> {
 		return performMinionGroupAttack({
-			combat: this,
+			combat: this as Combat,
 			attackParams: params,
 			assignNcsTemporaryGroupFromAttackMembers: (memberCombatantIds) =>
 				assignNcsTemporaryGroupFromAttackMembers({
-					combat: this,
+					combat: this as Combat,
 					turns: this.turns,
 					memberCombatantIds,
 					resolveCurrentTurnIdentity: () => this.#resolveCurrentTurnIdentity(),
@@ -980,7 +980,6 @@ class NimbleCombat extends Combat {
 		combatantId: string;
 		formula: string | null;
 		messageOptions: ChatMessage.CreateData;
-		chatRollMode: string | null;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
 		promptRollDialog: boolean;
@@ -1014,11 +1013,10 @@ class NimbleCombat extends Combat {
 			}
 
 			const rollOutcome = await rollInitiativeForCombatant({
-				combat: this,
+				combat: this as Combat,
 				combatantId: params.combatantId,
 				formula: promptedRollData?.rollFormula ?? params.formula,
 				messageOptions: resolvedMessageOptions,
-				chatRollMode: params.chatRollMode,
 				rollIndex: params.rollIndex,
 				combatManaUpdates: params.combatManaUpdates,
 			});
@@ -1043,7 +1041,6 @@ class NimbleCombat extends Combat {
 		combatantId: string;
 		formula: string | null;
 		messageOptions: ChatMessage.CreateData;
-		chatRollMode: string | null;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
 		promptRollDialog: boolean;
@@ -1073,11 +1070,21 @@ class NimbleCombat extends Combat {
 			rollOptions?: Record<string, unknown>;
 		},
 	): Promise<this> {
-		const { formula = null, messageOptions = {}, promptRollDialog = false } = options ?? {};
+		const {
+			formula = null,
+			messageOptions = {},
+			messageMode,
+			promptRollDialog = false,
+		} = (options ?? {}) as NonNullable<typeof options> & { messageMode?: string };
+
+		// An explicit visibility mode travels via the messageOptions rollMode
+		// entry, which buildInitiativeChatData extracts and maps for V14.
+		if (messageMode) {
+			(messageOptions as ChatMessage.CreateData & { rollMode?: string }).rollMode = messageMode;
+		}
 
 		// Structure Input data
 		const combatantIds = [...new Set((typeof ids === 'string' ? [ids] : ids).filter(Boolean))];
-		const chatRollMode = game.settings.get('core', 'rollMode');
 		const shouldPromptRollDialog = promptRollDialog && combatantIds.length === 1;
 
 		// Iterate over Combatants, performing an initiative roll for each
@@ -1091,7 +1098,6 @@ class NimbleCombat extends Combat {
 				combatantId: id,
 				formula,
 				messageOptions,
-				chatRollMode,
 				rollIndex: messages.length,
 				combatManaUpdates,
 				promptRollDialog: shouldPromptRollDialog,
@@ -1383,7 +1389,7 @@ class NimbleCombat extends Combat {
 		event.preventDefault();
 
 		const dropResolution = resolveDropContext({
-			combat: this,
+			combat: this as Combat,
 			turns: this.turns,
 			event,
 			previousActiveTurnIdentity: this.#resolveCurrentTurnIdentity(),
@@ -1392,7 +1398,7 @@ class NimbleCombat extends Combat {
 
 		if (game.user?.isGM) {
 			return applyGmSort({
-				combat: this,
+				combat: this as Combat,
 				dropResolution,
 				syncTurnToCombatant: (combatantIdOrIdentity, options) =>
 					this.#syncTurnToCombatant(combatantIdOrIdentity, options),
@@ -1400,7 +1406,7 @@ class NimbleCombat extends Combat {
 		}
 
 		return applyOwnerSort({
-			combat: this,
+			combat: this as Combat,
 			dropResolution,
 			syncTurnToCombatant: (combatantIdOrIdentity, options) =>
 				this.#syncTurnToCombatant(combatantIdOrIdentity, options),

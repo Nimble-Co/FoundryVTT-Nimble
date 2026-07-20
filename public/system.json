@@ -55,11 +55,10 @@
 		"type": 1
 	},
 	"primaryTokenAttribute": "attributes.hp",
-	"secondaryTokenAttribute": null,
+	"secondaryTokenAttribute": "resources.mana",
 	"compatibility": {
-		"minimum": "13",
-		"verified": "13",
-		"maximum": "13"
+		"minimum": "14",
+		"verified": "14"
 	},
 	"documentTypes": {
 		"ActiveEffect": {

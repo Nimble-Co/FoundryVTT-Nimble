@@ -64,43 +64,51 @@ declare namespace RecordField {
 	>;
 }
 
+/**
+ * A record-shaped field with validated keys and a uniform value field.
+ *
+ * Extends V14's TypedObjectField, which natively provides per-entry cleaning,
+ * validation, initialization, and — critically — per-key update semantics
+ * (`ForcedDeletion` removes an entry; plain ObjectField treats the record as
+ * one opaque blob and silently mishandles entry deletion).
+ */
 class RecordField<
 	const IKeyField extends foundry.data.fields.DataField.Any,
 	const IValueField extends foundry.data.fields.DataField.Any,
 	const AssignmentElementType = RecordField.AssignmentElementType<IValueField>,
-	const InitializedElementType = RecordField.InitializedElementType<IValueField>,
+	const _InitializedElementType = RecordField.InitializedElementType<IValueField>,
 	const PersistedElementType = RecordField.PersistedElementType<IValueField>,
 	const Options extends
 		RecordField.Options<AssignmentElementType> = RecordField.DefaultOptions<AssignmentElementType>,
 	const AssignmentType = RecordField.AssignmentType<AssignmentElementType, Options>,
 	const InitializedType = RecordField.InitializedType<
 		AssignmentElementType,
-		InitializedElementType,
+		_InitializedElementType,
 		Options
 	>,
 	const PersistedType extends
 		| Record<string, PersistedElementType>
 		| null
 		| undefined = RecordField.PersistedType<AssignmentElementType, PersistedElementType, Options>,
-> extends foundry.data.fields.ObjectField<Options, AssignmentType, InitializedType, PersistedType> {
+> extends foundry.data.fields.TypedObjectField<
+	IValueField,
+	foundry.data.fields.TypedObjectField.DefaultOptions,
+	AssignmentType,
+	InitializedType,
+	PersistedType
+> {
 	keyField: IKeyField;
 
-	valueField: IValueField;
-
-	static override recursive = true;
-
-	// TODO: Add unknown keys
-
 	constructor(keyField: IKeyField, valueField: IValueField, options?: Options) {
-		super(options);
+		super(valueField, {
+			...options,
+			// TypedObjectField strips keys for which this returns exactly `false`.
+			validateKey: (key: string) => keyField.validate(key) === undefined,
+		} as unknown as foundry.data.fields.TypedObjectField.DefaultOptions);
 
 		if (!this._isValidKeyFieldType(keyField))
 			throw new Error('key field must be a StringField or a NumberField');
 		this.keyField = keyField;
-
-		if (!(valueField instanceof foundry.data.fields.DataField))
-			throw new Error(`${this.name} must have a DataField as its contained field`);
-		this.valueField = valueField;
 	}
 
 	_isValidKeyFieldType(keyField: IKeyField): boolean {
@@ -114,80 +122,6 @@ class RecordField<
 			return true;
 		}
 		return false;
-	}
-
-	_validateValues(
-		values: Record<string, PersistedElementType>,
-		options: foundry.data.fields.DataField.ValidationOptions & { partial?: boolean } = {},
-	): foundry.data.validation.DataModelValidationFailure | undefined {
-		const ValidationFailure = foundry.data.validation.DataModelValidationFailure;
-		const failures = new ValidationFailure();
-
-		for (const [key, value] of Object.entries(values)) {
-			// If this is a deletion key for a partial update, skip
-			if (key.startsWith('-=') && options.partial) continue;
-
-			const keyFailure = this.keyField.validate(key, options);
-			if (keyFailure) {
-				failures.elements.push({ id: key, failure: keyFailure });
-			}
-
-			const valueFailure = this.valueField.validate(value, options);
-			if (valueFailure) {
-				failures.elements.push({ id: `${key}-value`, failure: valueFailure });
-			}
-		}
-
-		if (failures.elements.length) {
-			return failures;
-		}
-
-		return undefined;
-	}
-
-	override _cleanType(
-		values: InitializedType,
-		options?: foundry.data.fields.DataField.CleanOptions,
-	): InitializedType {
-		const mutableValues = values as Record<string, InitializedElementType>;
-		for (const [key, value] of Object.entries(mutableValues)) {
-			if (key.startsWith('-=')) continue;
-			mutableValues[key] = this.valueField.clean(value, options);
-		}
-
-		return values;
-	}
-
-	override _validateType(
-		values: InitializedType,
-		options: foundry.data.fields.DataField.ValidationOptions & { partial?: boolean } = {},
-	): void {
-		if (!(values instanceof Object)) {
-			throw new foundry.data.validation.DataModelValidationFailure({
-				message: 'must be an Object',
-			});
-		}
-
-		const failure = this._validateValues(
-			values as object as Record<string, PersistedElementType>,
-			options,
-		);
-		if (failure) throw failure;
-	}
-
-	override initialize(
-		values: PersistedType,
-		model: foundry.abstract.DataModel<any, any>,
-		options?: Record<string, unknown>,
-	): InitializedType | (() => InitializedType | null) {
-		if (!values) return {} as InitializedType;
-		const data = {};
-
-		for (const [key, value] of Object.entries(values)) {
-			data[key] = this.valueField.initialize(value, model, options);
-		}
-
-		return data as InitializedType;
 	}
 }
 

@@ -1,6 +1,7 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import { isAutoApplyEnabled } from '#utils/isAutoApplyEnabled.js';
+import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
@@ -26,7 +27,7 @@ interface BaseItemSystemData {
  * Override and extend the basic Item implementation.
  * @extends {Item}
  */
-class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends Item {
+class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends Item<ItemType> {
 	declare type: ItemType;
 
 	declare parent: NimbleBaseActor | null;
@@ -42,7 +43,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 	#subscribe: ReturnType<typeof createSubscriber>;
 
-	constructor(data: Item.CreateData, context?: Item.ConstructionContext) {
+	constructor(data: Item.CreateData<ItemType>, context?: Item.ConstructionContext) {
 		super(data, context);
 
 		this.#subscribe = createSubscriber((update) => {
@@ -209,6 +210,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			Hooks.callAll(systemHookName('useItem'), this, chatCard, hookContext);
 		}
 
+		if (chatCard) {
+			// Begin AoE placement immediately; the card's place button remains as
+			// the retry path.
+			void placeAoEForMessage(chatCard);
+		}
+
 		return chatCard;
 	}
 
@@ -354,7 +361,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	protected override async _preUpdate(
 		changed: Record<string, unknown>,
 		options: Item.Database.UpdateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 	): Promise<boolean | undefined> {
 		// Call preUpdate on all rules
 		if (this.rules) {
@@ -390,9 +397,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	/** ------------------------------------------------------ */
 	/**                    Document CRUD                       */
 	/** ------------------------------------------------------ */
-	static override async createDocuments<Temporary extends boolean | undefined = undefined>(
+	static override async createDocuments(
 		data: Array<Item | Item.CreateData> | undefined,
-		operation?: Item.Database.CreateDocumentsOperation<Temporary>,
+		operation?: Item.Database.CreateDocumentsOperation,
 	): Promise<Item.Stored[]> {
 		if (!data) return [] as Item.Stored[];
 		const itemSources = data.map((d) => (d instanceof NimbleBaseItem ? d.toObject() : d)) as Array<

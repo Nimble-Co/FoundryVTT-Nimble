@@ -1,4 +1,5 @@
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
+import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -7,7 +8,7 @@ import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefau
 
 type MonsterFeatureSubtype = 'bloodied' | 'lastStand';
 
-export class NimbleSoloMonster extends NimbleBaseActor {
+export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 	declare system: NimbleSoloMonsterData;
 
 	#dialogs: Record<string, any>;
@@ -30,7 +31,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	protected override async _preCreate(
 		data: Actor.CreateData,
 		options: Actor.Database.PreCreateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
 		// A solo monster is a single boss-tier creature, so its token is linked:
@@ -75,11 +76,10 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Bloodied`,
-			speaker: ChatMessage.getSpeaker({ actor: this }),
+			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rolls: [] as Roll[],
-			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
 				description: this.#getPhaseDescription('bloodied'),
@@ -90,10 +90,9 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			type: 'feature',
 		};
 
-		ChatMessage.applyRollMode(
+		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
-			(options.visibilityMode ??
-				game.settings.get('core', 'rollMode')) as foundry.CONST.DICE_ROLL_MODES,
+			toMessageMode(options.visibilityMode ?? 'gmroll'),
 		);
 
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
@@ -101,14 +100,12 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	}
 
 	async activateLastStandFeature(options: { visibilityMode?: string } = {}) {
-		const rollMode = (options.visibilityMode ?? 'gmroll') as foundry.CONST.DICE_ROLL_MODES;
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
-			speaker: ChatMessage.getSpeaker({ actor: this }),
+			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			rolls: [] as Roll[],
-			rollMode,
 			whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id) as string[],
 			system: {
 				actorName: this.name,
@@ -120,7 +117,10 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			type: 'feature',
 		};
 
-		ChatMessage.applyRollMode(chatData as unknown as ChatMessage.CreateData, rollMode);
+		ChatMessage.applyMode(
+			chatData as unknown as ChatMessage.CreateData,
+			toMessageMode(options.visibilityMode ?? 'gmroll'),
+		);
 
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		return chatCard ?? null;

@@ -29,7 +29,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	let enrichedFeatureDescriptions = $state<Map<string, string>>(new Map());
 
 	const identifier = $derived(getItem().reactive.system.identifier);
-	const classSource = $derived(getItemSource(getItem().uuid));
+	const classSource = $derived(getItemSource(getItem().uuid ?? ''));
 	const groupIdentifiers = $derived(getItem().reactive.system.groupIdentifiers || []);
 	const abilityScoreData = $derived(getItem().reactive.system.abilityScoreData);
 	const keyAbilityScores = $derived(getItem().reactive.system.keyAbilityScores || []);
@@ -133,7 +133,10 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 				featuresToEnrich.map(async (feature) => {
 					const desc = feature.system?.description ?? '';
 					if (!desc) return;
-					result.set(feature.uuid, await TextEditor.enrichHTML(desc));
+					result.set(
+						feature.uuid ?? '',
+						await foundry.applications.ux.TextEditor.implementation.enrichHTML(desc),
+					);
 				}),
 			);
 			if (!cancelled) enrichedFeatureDescriptions = result;
@@ -176,7 +179,6 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	}
 
 	function handleSubclassClick(uuid: string): void {
-		// @ts-expect-error — Foundry's fromUuid accepts any string at runtime
 		fromUuid(uuid).then((subclass) => {
 			if (subclass) {
 				(subclass as Item).sheet?.render(true);

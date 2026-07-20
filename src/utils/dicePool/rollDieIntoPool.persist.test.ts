@@ -63,11 +63,11 @@ function deepEqual(a: unknown, b: unknown): boolean {
 	return JSON.stringify(a) === JSON.stringify(b);
 }
 
-/** Recursive merge with diff=true: skip deep-equal leaves, honor `-=` deletes. */
+/** Recursive merge with diff=true: skip deep-equal leaves, honor ForcedDeletion deletes. */
 function mergeDiff(target: Record<string, any>, source: Record<string, any>): void {
 	for (const [key, value] of Object.entries(source)) {
-		if (key.startsWith('-=')) {
-			delete target[key.slice(2)];
+		if (value instanceof foundry.data.operators.ForcedDeletion) {
+			delete target[key];
 			continue;
 		}
 		if (isPlain(value)) {

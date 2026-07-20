@@ -19,7 +19,7 @@ export interface ParsedActor {
 	img?: string;
 	system?: Record<string, unknown>;
 	items?: ParsedActorItem[];
-	/** v13 exports record their source system here. */
+	/** v13+ exports record their source system here. */
 	_stats?: { exportSource?: { systemId?: string } | null };
 	/** Pre-v13 exports recorded it under flags instead. */
 	flags?: { exportSource?: { system?: string } } & Record<string, unknown>;

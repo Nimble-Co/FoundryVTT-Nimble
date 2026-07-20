@@ -7,7 +7,7 @@
 		"identifier": "",
 		"rules": [],
 		"activation": {
-			"acquireTargetsFromTemplate": false,
+			"acquireTargetsFromTemplate": true,
 			"cost": {
 				"details": "Attacked",
 				"quantity": 2,

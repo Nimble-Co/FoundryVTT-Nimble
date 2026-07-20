@@ -77,6 +77,16 @@
 			"specialBoonAvailable": "Special Boon Available",
 			"boon": "Boon"
 		},
+		"aoe": {
+			"noScene": "An active scene is required to place an area of effect.",
+			"place": {
+				"circle": "Place {size}-square circle",
+				"cone": "Place {size}-square cone",
+				"emanation": "Place {size}-square emanation",
+				"line": "Place {size}-square line",
+				"square": "Place {size}-square square"
+			}
+		},
 		"chat": {
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",

@@ -120,9 +120,10 @@ export default function registerAdjacencySync() {
 				foundry.utils.hasProperty(changes, 'x') || foundry.utils.hasProperty(changes, 'y');
 			if (!hasPos) return;
 			if (_tokenDoc.id) {
+				const changeData = changes as Record<string, unknown>;
 				pendingPositions.set(_tokenDoc.id, {
-					x: typeof changes.x === 'number' ? changes.x : _tokenDoc.x,
-					y: typeof changes.y === 'number' ? changes.y : _tokenDoc.y,
+					x: typeof changeData.x === 'number' ? changeData.x : _tokenDoc.x,
+					y: typeof changeData.y === 'number' ? changeData.y : _tokenDoc.y,
 				});
 			}
 			scheduleSync();
@@ -149,7 +150,8 @@ export default function registerAdjacencySync() {
 
 	Hooks.on('canvasReady', scheduleSync);
 
-	// In Foundry v13, canvasReady fires before ready, so the hook above won't catch the
-	// initial load. Sync immediately if the canvas is already ready when this runs.
+	// Game#setupGame kicks off canvas initialization without awaiting it, so canvasReady
+	// races the ready hook and may already have fired when this runs on initial load.
+	// Sync immediately if the canvas is already ready.
 	if (canvas?.ready) scheduleSync();
 }

@@ -72,7 +72,7 @@ function createItemDocument({
 		sheet: {
 			render: vi.fn(),
 		},
-	} as unknown as Item;
+	} as unknown as Item & { uuid: string };
 }
 
 describe('CharacterCreationDialog.submitCharacterCreation saving throw resolution', () => {

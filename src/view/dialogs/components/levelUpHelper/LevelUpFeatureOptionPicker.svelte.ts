@@ -64,7 +64,7 @@ export function createFeatureOptionPickerState(
 	});
 
 	const selectedSubItems = $derived(
-		loadedSubItems.filter((i) => getSelectedSubItemUuids().includes(i.uuid)),
+		loadedSubItems.filter((i) => getSelectedSubItemUuids().includes(i.uuid ?? '')),
 	);
 
 	// Auto-select the sub-item(s) when the number of available choices exactly matches the
@@ -78,7 +78,7 @@ export function createFeatureOptionPickerState(
 		if (loadedSubItems.length !== subSelectionCount) return;
 		const selected = getSelectedSubItemUuids();
 		for (const item of loadedSubItems) {
-			if (!selected.includes(item.uuid)) onSubItemSelect(item.uuid);
+			if (!selected.includes(item.uuid ?? '')) onSubItemSelect(item.uuid ?? '');
 		}
 	});
 

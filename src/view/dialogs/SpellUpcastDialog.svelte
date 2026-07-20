@@ -8,6 +8,9 @@
 
 	let { actor, dialog, spell, ...data } = $props();
 
+	// `spell` is the item's system DataModel; its `parent` is the item document.
+	const spellName = $derived(spell?.parent?.name ?? dialog?.item?.name ?? '');
+
 	// Initialize state
 	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
 	let situationalModifiers = $state('');
@@ -128,9 +131,7 @@
 		<hr />
 		<div class="nimble-upcast-section">
 			<h3 class="nimble-upcast-heading">
-				{format(spellUpcastDialog.upcastHeading, {
-					spellName: spell.parent.name,
-				})}
+				{format(spellUpcastDialog.upcastHeading, { spellName })}
 			</h3>
 			<div class="nimble-mana-slider">
 				<div class="nimble-upcast-meta">

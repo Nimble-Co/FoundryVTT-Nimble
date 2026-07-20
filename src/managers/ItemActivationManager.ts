@@ -211,9 +211,6 @@ class ItemActivationManager {
 		await this.#consumePoolDice(dialogData);
 		await this.#consumeChargePools(dialogData);
 
-		// Get template data
-		const _templateData = this.#getTemplateData();
-
 		return { rolls, activation: this.activationData, rollHidden: dialogData.rollHidden ?? false };
 	}
 
@@ -289,7 +286,9 @@ class ItemActivationManager {
 					// normally — targets.count alone is NOT a signal here.
 					const activation = (this.#item.system as any)?.activation;
 					const templateShape: string = activation?.template?.shape ?? '';
-					const isAoE = templateShape !== '';
+					// The acquireTargetsFromTemplate flag marks intentional AoE items;
+					// a bare template shape can be a stale leftover in item data.
+					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
@@ -714,97 +713,6 @@ class ItemActivationManager {
 
 		return domain;
 	}
-
-	/**
-	 * Gets measured template configuration data based on the item's area of effect.
-	 *
-	 * Creates template configuration for various shape types:
-	 * - circle: Standard circular area
-	 * - cone: Cone-shaped area with configurable angle
-	 * - emanation: Circular area that scales with token size
-	 * - line: Ray/line area with width
-	 * - square: Square area (rendered as rotated rectangle)
-	 *
-	 * @returns Template configuration object, or undefined if no template shape is defined.
-	 */
-	#getTemplateData() {
-		const item = this.#item;
-		interface TemplateShape {
-			shape?: string;
-			radius?: number;
-			length?: number;
-			width?: number;
-		}
-		const { activation } = (item.system as { activation?: { template?: TemplateShape } }) ?? {};
-		const template = activation?.template;
-		const { shape } = template ?? {};
-
-		if (!shape) return undefined;
-
-		const templateData = {
-			fillColor: game.user?.color,
-			user: game.user?.id,
-			x: 0,
-			y: 0,
-		};
-
-		if (shape === 'circle') {
-			return {
-				...templateData,
-				direction: 0,
-				distance: template?.radius || 1,
-				t: 'circle',
-			};
-		}
-
-		if (shape === 'cone') {
-			return {
-				...templateData,
-				angle: CONFIG.MeasuredTemplate.defaults.angle,
-				direction: 0,
-				distance: template?.length || 1,
-				t: 'cone',
-			};
-		}
-
-		if (shape === 'emanation') {
-			const templateRadius = template?.radius || 1;
-			const radiusFunc = (t: Token) => {
-				const tokenSize = Math.max(t.document.width as number, t.document.height as number);
-				const scaleBy = tokenSize / 2;
-				return templateRadius + scaleBy;
-			};
-
-			return {
-				...templateData,
-				direction: 0,
-				distance: radiusFunc,
-				t: 'circle',
-			};
-		}
-
-		if (shape === 'line') {
-			return {
-				...templateData,
-				direction: 0,
-				distance: template?.length || 1,
-				t: 'ray',
-				width: template?.width || 1,
-			};
-		}
-
-		if (shape === 'square') {
-			const width = template?.width || 1;
-			return {
-				...templateData,
-				direction: 45,
-				distance: Math.hypot(width, width),
-				t: 'rect',
-			};
-		}
-
-		return undefined;
-	}
 }
 
 namespace ItemActivationManager {
@@ -826,7 +734,7 @@ namespace ItemActivationManager {
 		 */
 		rollModeSources?: number[];
 		/** How the roll should be displayed (public, private, blind, self). */
-		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
+		visibilityMode?: string;
 		/** Override formula for the damage roll. */
 		rollFormula?: string;
 		/** Predetermined value for the primary damage die. */

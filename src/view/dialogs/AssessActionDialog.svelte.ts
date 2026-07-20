@@ -137,7 +137,7 @@ export function createAssessDialogState(
 			option: selectedOption,
 			skill: selectedSkill,
 			isSuccess,
-			target: selectedTarget?.document.uuid,
+			target: selectedTarget?.document.uuid ?? undefined,
 		});
 	}
 
