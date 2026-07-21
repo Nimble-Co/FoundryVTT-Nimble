@@ -312,8 +312,10 @@ function actorIsImmuneToDamage(actor: Actor.Implementation, damageType?: string)
 
 /**
  * Order: outcome/armor halving → immunity (zero) → resistance halving →
- * flat rule reductions + banked one-shot reduction → clamp at zero. Temp HP
- * absorption happens later, inside `actor.applyDamage`. The books don't
+ * flat rule reductions → clamp at zero. The banked one-shot reduction is
+ * subtracted by the caller, since it is only consumed when the hit would
+ * otherwise deal damage. Temp HP absorption happens later, inside
+ * `actor.applyDamage`. The books don't
  * specify resistance-vs-reduction ordering; halving first keeps flat
  * reductions (Fury spends) fully effective. Halving rounds up, matching the
  * heavy-armor convention.
@@ -322,7 +324,6 @@ function calculateAdjustedDamage(params: {
 	actor: Actor.Implementation;
 	damage: number;
 	options?: DamageApplyOptions;
-	bankedReduction?: number;
 }): number {
 	const armorAdjustedDamage = calculateArmorAdjustedDamage(params);
 	const damageType = params.options?.damageType;
@@ -332,9 +333,7 @@ function calculateAdjustedDamage(params: {
 		? Math.ceil(armorAdjustedDamage * 0.5)
 		: armorAdjustedDamage;
 
-	const reduction =
-		getDamageReductionTotal(params.actor, damageType) + (params.bankedReduction ?? 0);
-	return Math.max(0, resistanceAdjustedDamage - reduction);
+	return Math.max(0, resistanceAdjustedDamage - getDamageReductionTotal(params.actor, damageType));
 }
 
 function buildDamageApplicationPlan(params: {
@@ -768,13 +767,17 @@ class NimbleChatMessage extends ChatMessage {
 		if (!actor) return null;
 
 		let total = 0;
-		// The banked one-shot reduction is consumed by the first application, so
-		// credit it against the first roll only — mirroring the apply flow.
-		let bankedReduction = getBankedDamageReduction(actor);
+		// The banked one-shot reduction is consumed by the first application that
+		// would otherwise deal damage, so credit it against that roll only —
+		// mirroring `buildDamageApplicationPlan`.
+		let availableBank = getBankedDamageReduction(actor);
 		for (const { value, options } of damageRolls) {
-			const adjusted = calculateAdjustedDamage({ actor, damage: value, options, bankedReduction });
-			bankedReduction = 0;
-			if (Number.isFinite(adjusted) && adjusted > 0) total += Math.floor(adjusted);
+			const unbankedDamage = calculateAdjustedDamage({ actor, damage: value, options });
+			if (!Number.isFinite(unbankedDamage) || unbankedDamage <= 0) continue;
+
+			const adjusted = Math.max(0, unbankedDamage - availableBank);
+			availableBank = 0;
+			if (adjusted > 0) total += Math.floor(adjusted);
 		}
 
 		return total;

@@ -1755,6 +1755,7 @@
 			"armor": "Armor",
 			"decreaseArmor": "Decrease Armor",
 			"increaseArmor": "Increase Armor",
+			"editDamageDefenses": "Edit Damage Defenses",
 			"features": "Features",
 			"createFeature": "Create Feature",
 			"expandAllDescriptions": "Expand all descriptions",

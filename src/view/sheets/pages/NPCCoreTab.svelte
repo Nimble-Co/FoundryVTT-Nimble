@@ -516,7 +516,8 @@
 			<button
 				class="nimble-damage-defenses"
 				type="button"
-				data-tooltip="Edit"
+				aria-label={game.i18n.localize('NIMBLE.npcSheet.editDamageDefenses')}
+				data-tooltip={game.i18n.localize('NIMBLE.npcSheet.editDamageDefenses')}
 				onclick={() => actor.editMetadata()}
 			>
 				{#each damageDefenses as group}
