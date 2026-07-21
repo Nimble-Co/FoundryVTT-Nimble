@@ -60,6 +60,13 @@ describe('NimbleBaseRule', () => {
 			expect(createRule(AutoFalseRule, 'auto').suppressesActivationCard()).toBe(false);
 			expect(createRule(AutoTrueRule, 'auto').suppressesActivationCard()).toBe(true);
 		});
+
+		it('gates only the `auto` branch on automation being enabled', () => {
+			const context = { automationEnabled: false };
+
+			expect(createRule(AutoTrueRule, 'auto').suppressesActivationCard(context)).toBe(false);
+			expect(createRule(AutoFalseRule, 'always').suppressesActivationCard(context)).toBe(true);
+		});
 	});
 
 	describe('class-level metadata', () => {

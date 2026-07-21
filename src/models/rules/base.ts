@@ -410,11 +410,20 @@ abstract class NimbleBaseRule<
 	 * the card is suppressed when any enabled rule resolves `true`. The card
 	 * is only ever suppressed when the activation itself has nothing to show —
 	 * no rolls and no effect nodes.
+	 *
+	 * The `auto` branch only suppresses because the rule's activation flow
+	 * posts replacement output, and ruleEventDispatch only runs that flow when
+	 * automation is enabled — hence `automationEnabled`. An explicit `always`
+	 * has no replacement flow to wait on, so it ignores that gate.
 	 */
-	suppressesActivationCard(): boolean {
+	suppressesActivationCard({
+		automationEnabled = true,
+	}: {
+		automationEnabled?: boolean;
+	} = {}): boolean {
 		if (this.suppressActivationCard === 'always') return true;
 		if (this.suppressActivationCard === 'never') return false;
-		return this._autoSuppressesActivationCard();
+		return automationEnabled && this._autoSuppressesActivationCard();
 	}
 
 	/** The `auto` branch of `suppressesActivationCard()`. Subclasses whose

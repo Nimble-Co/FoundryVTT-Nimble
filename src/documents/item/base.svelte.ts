@@ -167,12 +167,10 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	): boolean {
 		if (rolls.length > 0) return false;
 		if ((activation?.effects?.length ?? 0) > 0) return false;
-		// A suppressing rule's replacement output is produced by its activation
-		// flow, which ruleEventDispatch only runs when automation is enabled.
-		// With automation off, the card is the sole record of the activation.
-		if (!isAutoApplyEnabled()) return false;
+		// Gates the rules' `auto` branch only — see suppressesActivationCard().
+		const automationEnabled = isAutoApplyEnabled();
 		return [...this.rules.values()].some(
-			(rule) => !rule.disabled && rule.suppressesActivationCard(),
+			(rule) => !rule.disabled && rule.suppressesActivationCard({ automationEnabled }),
 		);
 	}
 

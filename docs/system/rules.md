@@ -375,6 +375,8 @@ Adding a new `ArrayField<X>` element type requires extending `SchemaFieldRendere
 
 `suppressActivationCard` is a tri-state (`auto` / `always` / `never`) select in the advanced section. `always` and `never` force the resolution of `suppressesActivationCard()`; `auto` (the default) defers to the rule class's `_autoSuppressesActivationCard()` — `false` on the base class, overridden by `diceConsumer` for manual spend flows. Subclasses override the protected `_auto` hook, never the public method. Each rule resolves independently and the item suppresses the card when any enabled rule resolves `true`; a rule set to `never` only stops that rule from suppressing, it does not veto others. The item-side guard is unchanged: a card that carries rolls or effect nodes is never suppressed.
 
+The `auto` branch only fires when the rule automation setting ("Auto-Apply Conditions from Rules") is enabled, because the replacement output it defers to comes from the activation dispatch that setting gates. The item passes that state to `suppressesActivationCard({ automationEnabled })`. `always` has no replacement flow to wait on, so it suppresses regardless of the setting.
+
 ### Coverage test
 
 `src/view/rulesBuilder/components/RuleCard.allRules.test.ts` instantiates every registered rule type with default values and fails on any inline-error block or "no widget" warning. It runs automatically — your new rule is covered as soon as it's registered.
