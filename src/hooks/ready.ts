@@ -10,6 +10,7 @@ import {
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
+import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
 import registerAdjacencySync from './combatantHooks/adjacencySync.js';
@@ -57,6 +58,7 @@ export default async function ready() {
 		if (actor?.type === 'character') actor.prepareData?.();
 	}
 	registerCombatTurnSocketListener();
+	registerMarkTargetSocketListener();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');

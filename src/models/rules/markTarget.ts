@@ -1,20 +1,17 @@
 import { SYSTEM_ID } from '#system';
 import localize from '#utils/localize.js';
 import {
+	applyMarkEffect,
+	MARK_TARGET_ITEM_FLAG,
+	removeMarkEffect,
+} from '#utils/markTargetEffects.js';
+import {
 	computeNextToggledList,
 	readToggledEffects,
 	TOGGLED_EFFECTS_FLAG_KEY,
 	type ToggledTargetEntry,
 } from '#utils/toggledEffects.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
-
-/**
- * Flag stamped on each visible marker ActiveEffect, recording the uuid of the marking
- * item that created it. Eviction deletes only the effects carrying *this* item's uuid,
- * so one hunter clearing a quarry never removes another hunter's marker on the same
- * target.
- */
-const MARK_TARGET_ITEM_FLAG = 'markTargetItemUuid';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -182,6 +179,12 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 	 * token's marked icon lit while any effect with that status remains, and eviction
 	 * deletes only the effects this item created — one hunter dropping a quarry never
 	 * clears another hunter's marker.
+	 *
+	 * The create/delete are routed through {@link applyMarkEffect} / {@link removeMarkEffect}:
+	 * `onItemActivated` runs on the activating client, which owns the marking item but usually
+	 * not the target NPC, so writing ActiveEffects to the target directly would fail with a
+	 * permissions error. GMs/target owners write directly; everyone else relays to the active
+	 * GM. The relay also handles dedup, so re-marking never stacks a second marker.
 	 */
 	async #applyStatusEffects(
 		targets: Array<{ actor: MarkableActor }>,
@@ -190,10 +193,9 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		if (!this.statusCondition) return;
 
 		const markData = this.#buildMarkEffectData();
+		const sourceItemUuid = this.item.uuid;
 		for (const { actor } of targets) {
-			// Re-marking a creature this item already marks would stack duplicate effects.
-			if (this.#findMarkEffectIds(actor).length > 0) continue;
-			await actor.createEmbeddedDocuments('ActiveEffect', [foundry.utils.deepClone(markData)]);
+			await applyMarkEffect({ target: actor, sourceItemUuid, effectData: markData });
 		}
 
 		for (const entry of evicted) {
@@ -203,8 +205,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 			} | null;
 			const actor = tokenDoc?.actor;
 			if (!actor) continue;
-			const ids = this.#findMarkEffectIds(actor);
-			if (ids.length > 0) await actor.deleteEmbeddedDocuments('ActiveEffect', ids);
+			await removeMarkEffect({ target: actor, sourceItemUuid });
 		}
 	}
 
@@ -224,15 +225,6 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 			origin: this.item.uuid,
 			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: this.item.uuid } },
 		};
-	}
-
-	/** Ids of the marker ActiveEffects on `actor` created by this rule's item. */
-	#findMarkEffectIds(actor: MarkableActor): string[] {
-		const ids: string[] = [];
-		for (const effect of actor.effects) {
-			if (effect.getFlag(SYSTEM_ID, MARK_TARGET_ITEM_FLAG) === this.item.uuid) ids.push(effect.id);
-		}
-		return ids;
 	}
 }
 

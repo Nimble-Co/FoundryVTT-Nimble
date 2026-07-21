@@ -10,6 +10,9 @@ interface MockMarkEffect {
 interface MockTargetActor {
 	uuid: string;
 	name: string;
+	// The relay writes directly when this client owns the target; owning it keeps these
+	// tests on the direct path (the GM-relay path is covered in markTargetEffects.test.ts).
+	isOwner: boolean;
 	effects: MockMarkEffect[];
 	createEmbeddedDocuments: ReturnType<typeof vi.fn>;
 	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
@@ -20,6 +23,7 @@ function createTargetToken(uuid: string, name: string) {
 	const actor: MockTargetActor = {
 		uuid: `Actor.${uuid}`,
 		name,
+		isOwner: true,
 		effects,
 		// Mirror Foundry: creating a marker effect adds it to the actor's effects,
 		// stamped with the marking item's uuid so eviction/dedup can find it.
