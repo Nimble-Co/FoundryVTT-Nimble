@@ -56,6 +56,7 @@ class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
+		if (!this.test()) return;
 
 		const { actor } = item;
 		if (actor.type !== 'character') return;

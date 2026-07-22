@@ -56,6 +56,7 @@ class InitiativeRollModeRule extends NimbleBaseRule<InitiativeRollModeRule.Schem
 	override afterPrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
+		if (!this.test()) return;
 
 		const { actor } = item;
 

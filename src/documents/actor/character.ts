@@ -247,6 +247,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 			// Cap skill modifiers at 12
 			skill.mod = Math.min(abilityMod + skillPoints + skillBonus, 12);
+
+			// Reset defaultRollMode to 0 before rules apply their modifiers
+			// This prevents accumulation when rules use 'adjust' mode
+			skill.defaultRollMode = 0;
 		});
 
 		// Prepare Initiative Data

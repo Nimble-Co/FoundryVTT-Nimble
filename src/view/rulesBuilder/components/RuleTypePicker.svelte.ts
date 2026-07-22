@@ -36,6 +36,7 @@ const RULE_ICONS: Record<string, string> = {
 	savingThrowBonus: 'fa-solid fa-shield',
 	savingThrowRollMode: 'fa-solid fa-dice-five',
 	skillBonus: 'fa-solid fa-screwdriver-wrench',
+	skillRollMode: 'fa-solid fa-dice-d20',
 	speedBonus: 'fa-solid fa-person-running',
 	unarmedDamage: 'fa-solid fa-hand-fist',
 };

@@ -61,6 +61,7 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
+		if (!this.test()) return;
 
 		const actor = item.actor as NimbleCharacter;
 		const value = this.resolveFormula(this.value);
