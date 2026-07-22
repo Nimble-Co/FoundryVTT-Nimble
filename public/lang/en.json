@@ -781,7 +781,11 @@
 				}
 			},
 			"damageReduction": {
-				"description": "Reduce incoming damage by a flat or formula-based amount, optionally scoped to specific damage types. Applied after armor, before temporary hit points.",
+				"description": "Reduce incoming damage by a flat or formula-based amount, or halve it (resistance), optionally scoped to specific damage types. Applied after armor, before temporary hit points.",
+				"mode": {
+					"label": "Mode",
+					"hint": "Flat subtracts the reduction value. Half halves the damage instead (resistance); halving applies once no matter how many matching sources the actor has."
+				},
 				"value": {
 					"label": "Reduction",
 					"hint": "A flat number (5) or formula (@abilities.str.mod). Dice expressions are not supported."
@@ -1141,7 +1145,7 @@
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
 					"spendWithCount": "Spend ({count})",
-					"bankedReductionNote": "Banked as damage reduction. It is applied automatically to the next damage taken."
+					"bankedReductionNote": "Applied automatically as damage reduction against the next damage taken."
 				}
 			}
 		},
@@ -1768,6 +1772,7 @@
 			"armor": "Armor",
 			"decreaseArmor": "Decrease Armor",
 			"increaseArmor": "Increase Armor",
+			"editDamageDefenses": "Edit Damage Defenses",
 			"features": "Features",
 			"createFeature": "Create Feature",
 			"expandAllDescriptions": "Expand all descriptions",
@@ -1794,7 +1799,16 @@
 				"title": "Change Monster Type",
 				"message": "Convert this monster from {current} to {target}? Fields that don't exist on the new type will be discarded, and the open sheet will be closed."
 			},
-			"flunky": "Flunky"
+			"flunky": "Flunky",
+			"damageResistances": "Damage Resistances (half damage)",
+			"damageImmunities": "Damage Immunities (no damage)",
+			"damageVulnerabilities": "Damage Vulnerabilities",
+			"damageVulnerabilitiesHint": "Not yet automated: vulnerabilities are recorded here but the vulnerability rule (ignore armor, or double damage if unarmored) is not applied automatically."
+		},
+		"npcDefenses": {
+			"resistant": "Resistant",
+			"immune": "Immune",
+			"vulnerable": "Vulnerable"
 		},
 		"featureSheet": {
 			"selectionCountByLevel": "Selection Count By Level",
@@ -1921,7 +1935,18 @@
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
 			"removeTarget": "Remove Target",
-			"damagePreview": "Damage this target will take (after armor)"
+			"damagePreview": "Damage this target will take (after armor and reductions)"
+		},
+		"damageModifiers": {
+			"heading": "Reduced Damage",
+			"immune": "immune to {type} (no damage)",
+			"resistant": "resistant to {type} (half damage)",
+			"resistanceSource": "{label} (half damage)",
+			"resistanceGeneric": "resistance (half damage)",
+			"flat": "{label} (-{value})",
+			"flatGeneric": "damage reduction (-{value})",
+			"banked": "damage reduction (-{value})",
+			"bankedSource": "{source} (-{value})"
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"

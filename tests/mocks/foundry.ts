@@ -20,6 +20,8 @@ export const globalFoundryMocks = {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
 		}
+
+		prepareData() {}
 	},
 	Item: class Item {
 		constructor(data?: any, _context?: any) {

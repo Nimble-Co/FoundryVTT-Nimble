@@ -3,6 +3,7 @@ import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 
 // Rules are re-instantiated on every data-prep cycle; dedupe the late-predicate
 // warning by stable content so it fires once per session. Checked at predicate
@@ -351,9 +352,11 @@ abstract class NimbleBaseRule<
 	/**
 	 * Push an entry onto an accumulator array on the actor's system data,
 	 * initializing the array on first use. For rules that stack entries during
-	 * data prep (damageBonuses, damageReductions).
+	 * data prep (damageBonuses, damageReductions). Registers the path so the
+	 * actor can reset the array at the start of each prepare cycle.
 	 */
 	protected pushToActorSystemArray<T>(path: string, entry: T): void {
+		actorAccumulatorPaths.add(path);
 		const { actor } = this.item;
 		const existing = foundry.utils.getProperty(actor.system, path) as T[] | undefined;
 		if (Array.isArray(existing)) {

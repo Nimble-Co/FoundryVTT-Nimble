@@ -4,6 +4,7 @@ import {
 	addBankedDamageReduction,
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
+	getBankedDamageReductionEntries,
 } from './bankedDamageReduction.js';
 
 function createBankedEffect(value: unknown, options: { id?: string; disabled?: boolean } = {}) {
@@ -79,6 +80,36 @@ describe('addBankedDamageReduction', () => {
 
 		expect(actor.createEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
 			expect.objectContaining({ img: 'icons/skills/melee/tayg.webp' }),
+		]);
+	});
+
+	it('records the source feature name when provided', async () => {
+		const actor = createMockActor();
+
+		await addBankedDamageReduction(actor, 8, null, 'That all you got?!');
+
+		expect(actor.createEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			expect.objectContaining({
+				flags: {
+					[SYSTEM_ID]: {
+						bankedDamageReduction: 8,
+						bankedDamageReductionSource: 'That all you got?!',
+					},
+				},
+			}),
+		]);
+	});
+
+	it('lists banked entries with their source via getBankedDamageReductionEntries', async () => {
+		const sourced = createBankedEffect(8);
+		(sourced.flags[SYSTEM_ID] as Record<string, unknown>).bankedDamageReductionSource =
+			'That all you got?!';
+		const unsourced = createBankedEffect(3, { id: 'other-effect' });
+		const actor = createMockActor([sourced, unsourced]);
+
+		expect(getBankedDamageReductionEntries(actor)).toEqual([
+			{ value: 8, source: 'That all you got?!' },
+			{ value: 3, source: null },
 		]);
 	});
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 import { type DamageReductionEntry, DamageReductionRule } from './damageReduction.js';
 
 interface MockActor {
@@ -36,6 +37,7 @@ function createDamageReductionRule(
 		value?: string;
 		damageTypes?: string[];
 		disabled?: boolean;
+		mode?: 'flat' | 'half';
 	},
 	actor: MockActor,
 	itemOptions?: { isEmbedded?: boolean },
@@ -43,6 +45,7 @@ function createDamageReductionRule(
 	const item = createMockItem(actor, itemOptions?.isEmbedded ?? true);
 
 	const sourceData = {
+		mode: config.mode ?? 'flat',
 		value: config.value ?? '1',
 		damageTypes: config.damageTypes ?? [],
 		disabled: config.disabled ?? false,
@@ -61,6 +64,7 @@ function createDamageReductionRule(
 		{ parent: item as unknown as foundry.abstract.DataModel.Any, strict: false },
 	);
 
+	(rule as any).mode = config.mode ?? 'flat';
 	(rule as any).value = config.value ?? '1';
 	(rule as any).damageTypes = config.damageTypes ?? [];
 	(rule as any).disabled = config.disabled ?? false;
@@ -90,7 +94,18 @@ describe('DamageReductionRule', () => {
 
 			rule.afterPrepareData();
 
-			expect(actor.system.damageReductions).toEqual([{ value: 3, damageTypes: [] }]);
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 3, damageTypes: [], label: 'Test Item' },
+			]);
+		});
+
+		it('registers the accumulator path so the actor can reset it each prepare cycle', () => {
+			const actor = createMockActor();
+			const rule = createDamageReductionRule({ value: '3' }, actor);
+
+			rule.afterPrepareData();
+
+			expect(actorAccumulatorPaths.has('damageReductions')).toBe(true);
 		});
 
 		it('should resolve formula values against actor roll data', () => {
@@ -99,7 +114,9 @@ describe('DamageReductionRule', () => {
 
 			rule.afterPrepareData();
 
-			expect(actor.system.damageReductions).toEqual([{ value: 10, damageTypes: [] }]);
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 10, damageTypes: [], label: 'Test Item' },
+			]);
 		});
 
 		it('should stack multiple reductions in the array', () => {
@@ -112,8 +129,8 @@ describe('DamageReductionRule', () => {
 			rule2.afterPrepareData();
 
 			expect(actor.system.damageReductions).toEqual([
-				{ value: 2, damageTypes: [] },
-				{ value: 5, damageTypes: ['fire'] },
+				{ value: 2, damageTypes: [], label: 'Test Item' },
+				{ value: 5, damageTypes: ['fire'], label: 'Test Item' },
 			]);
 		});
 
@@ -123,7 +140,9 @@ describe('DamageReductionRule', () => {
 
 			rule.afterPrepareData();
 
-			expect(actor.system.damageReductions).toEqual([{ value: 4, damageTypes: ['fire', 'cold'] }]);
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 4, damageTypes: ['fire', 'cold'], label: 'Test Item' },
+			]);
 		});
 
 		it('should copy the damageTypes array rather than sharing the rule field', () => {
@@ -210,6 +229,40 @@ describe('DamageReductionRule', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(DamageReductionRule.group).toBe('bonuses');
 			expect(DamageReductionRule.description).toBe('NIMBLE.rules.damageReduction.description');
+		});
+	});
+
+	describe('half mode', () => {
+		it('defaults mode to flat with flat/half choices', () => {
+			const schema = DamageReductionRule.defineSchema();
+			const mode = schema.mode as unknown as { initial: unknown; choices: string[] };
+
+			expect(mode.initial).toBe('flat');
+			expect(mode.choices).toEqual(['flat', 'half']);
+		});
+
+		it('pushes a half entry without resolving the value formula', () => {
+			const actor = createMockActor();
+			const rule = createDamageReductionRule(
+				{ mode: 'half', value: '1d6', damageTypes: ['fire'] },
+				actor,
+			);
+
+			rule.afterPrepareData();
+
+			expect(actor.system.damageReductions).toEqual([
+				{ value: 0, damageTypes: ['fire'], mode: 'half', label: 'Test Item' },
+			]);
+			expect(actor.getRollData).not.toHaveBeenCalled();
+		});
+
+		it('does not push a half entry when the predicate fails', () => {
+			const actor = createMockActor();
+			const rule = createDamageReductionRule({ mode: 'half', disabled: true }, actor);
+
+			rule.afterPrepareData();
+
+			expect(actor.system.damageReductions).toBeUndefined();
 		});
 	});
 });
