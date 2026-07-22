@@ -121,6 +121,35 @@ describe('_populateDerivedTags — self / target state tags', () => {
 		});
 	});
 
+	describe('fullHp', () => {
+		it('adds self:fullHp when HP equals max', () => {
+			const tags = runPopulate(makeStub({ hp: 10, hpMax: 10 }));
+			expect(tags.has('self:fullHp')).toBe(true);
+		});
+
+		it('adds self:fullHp when HP exceeds max', () => {
+			const tags = runPopulate(makeStub({ hp: 12, hpMax: 10 }));
+			expect(tags.has('self:fullHp')).toBe(true);
+		});
+
+		it('does not add self:fullHp below max HP', () => {
+			const tags = runPopulate(makeStub({ hp: 9, hpMax: 10 }));
+			expect(tags.has('self:fullHp')).toBe(false);
+		});
+
+		it('does not add self:fullHp when max HP is 0', () => {
+			const tags = runPopulate(makeStub({ hp: 0, hpMax: 0 }));
+			expect(tags.has('self:fullHp')).toBe(false);
+		});
+
+		it('adds self:fullHp even when statuses is undefined', () => {
+			const stub = makeStub({ hp: 10, hpMax: 10 });
+			(stub as { statuses?: Set<string> }).statuses = undefined;
+			const tags = runPopulate(stub);
+			expect(tags.has('self:fullHp')).toBe(true);
+		});
+	});
+
 	describe('combined states', () => {
 		it('a bloodied + concentrating actor gets all four tags', () => {
 			const tags = runPopulate(
