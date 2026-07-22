@@ -228,6 +228,33 @@
 							appliesInPrePrepareData={state.appliesInPrePrepareData}
 						/>
 					</div>
+
+					<div class="nimble-field-row">
+						<span class="nimble-field-row__label"
+							>{localize('NIMBLE.rulesBuilder.suppressActivationCard')}</span
+						>
+						<select
+							value={(rule.suppressActivationCard as string) ?? 'auto'}
+							onchange={(e) =>
+								state.emitFieldChange(
+									'suppressActivationCard',
+									(e.target as HTMLSelectElement).value,
+								)}
+						>
+							<option value="auto">
+								{localize('NIMBLE.rulesBuilder.suppressActivationCardAuto')}
+							</option>
+							<option value="always">
+								{localize('NIMBLE.rulesBuilder.suppressActivationCardAlways')}
+							</option>
+							<option value="never">
+								{localize('NIMBLE.rulesBuilder.suppressActivationCardNever')}
+							</option>
+						</select>
+						<small class="nimble-field-row__hint"
+							>{localize('NIMBLE.rulesBuilder.suppressActivationCardHint')}</small
+						>
+					</div>
 				</div>
 			</details>
 		{/if}

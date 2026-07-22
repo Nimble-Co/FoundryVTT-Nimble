@@ -57,6 +57,7 @@ Whatever the type, every rule shares a few fields:
 - **The Condition box**: found under **Advanced** as "Applies when". It controls *when* the rule applies; leave it empty and the rule always applies. See [The Condition Box](predicates.md).
 - **Priority**: the application order. Lower numbers apply first. Leave it at the default (1) unless two rules interact and you need one to win. For example, an Armor Class rule set to "override" should have a higher priority number than the rules it is meant to replace.
 - **Disabled**: the on/off toggle described above.
+- **Suppress activation card**: found under **Advanced**. Controls whether using the item skips its descriptive chat card. **Automatic** (the default) lets the rule decide; most rules never suppress, but a manual dice spend does, because the spend flow posts its own card. Pick **Always** for a silent feature whose activation has nothing to say, or **Never** to keep the card even when the rule would normally suppress it. A card that carries rolls or effects is never skipped, whatever this is set to.
 
 ## Worked example: Belt of Giant Strength
 
