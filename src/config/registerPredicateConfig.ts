@@ -1,4 +1,4 @@
-export default function registerPredicateConfig() {
+export default function registerPredicateConfig(abilityScores: Record<string, string>) {
 	const PREDICATE_KEY_CONFIG_MAPPING = {
 		size: {
 			tiny: 0,
@@ -10,5 +10,9 @@ export default function registerPredicateConfig() {
 		},
 	} as const;
 
-	return { PREDICATE_KEY_CONFIG_MAPPING };
+	// Domain-tag keys populated after the prePrepareData dispatch. Predicates on
+	// these keys never match for rules that apply in prePrepareData.
+	const LATE_PREDICATE_KEYS = Object.freeze(Object.keys(abilityScores));
+
+	return { PREDICATE_KEY_CONFIG_MAPPING, LATE_PREDICATE_KEYS };
 }

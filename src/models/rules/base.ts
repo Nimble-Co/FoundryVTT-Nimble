@@ -1,8 +1,13 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-import type { Predicate } from '../../etc/Predicate.js';
+import { Predicate } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
+
+// Rules are re-instantiated on every data-prep cycle; dedupe the late-predicate
+// warning by stable content so it fires once per session. Checked at predicate
+// evaluation (not construction) so transient pre-creation instances stay silent.
+const warnedLatePredicateRules = new Set<string>();
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseActor extends Actor {
@@ -142,6 +147,12 @@ abstract class NimbleBaseRule<
 
 	static description: string = '';
 
+	/** True when this rule class implements the prePrepareData lifecycle hook. */
+	static get appliesInPrePrepareData(): boolean {
+		// biome-ignore lint/complexity/noThisInStatic: must introspect the calling subclass's prototype, not the base class
+		return 'prePrepareData' in this.prototype;
+	}
+
 	declare type: string;
 
 	declare disabled: boolean;
@@ -166,6 +177,42 @@ abstract class NimbleBaseRule<
 		if (this.invalid) {
 			this.disabled = true;
 		}
+	}
+
+	#latePredicateChecked = false;
+
+	protected _warnOnLatePredicateKeys(): void {
+		if (this.#latePredicateChecked) return;
+		this.#latePredicateChecked = true;
+
+		const Cls = this.constructor as typeof NimbleBaseRule;
+		if (!Cls.appliesInPrePrepareData) return;
+
+		// Unembedded rules (compendium/world items, pending creations) are the
+		// Rules Builder's domain; its banner covers them.
+		const item = this.parent as object as NimbleBaseItem | null;
+		if (!item?.isEmbedded) return;
+
+		const lateKeys = (CONFIG.NIMBLE as { LATE_PREDICATE_KEYS?: readonly string[] } | undefined)
+			?.LATE_PREDICATE_KEYS;
+		const predicate = this._predicate as Predicate | undefined;
+		if (!lateKeys?.length || !predicate?.size) return;
+
+		const referenced = Predicate.extractReferencedKeys(predicate._source);
+		const hits = lateKeys.filter((key) => referenced.has(key));
+		if (!hits.length) return;
+
+		// Keyed on stable content, not this.id — id-less rule sources regenerate
+		// a random id on every re-instantiation.
+		const dedupeKey = `${item.uuid}:${this.type}:${hits.join(',')}`;
+		if (warnedLatePredicateRules.has(dedupeKey)) return;
+		warnedLatePredicateRules.add(dedupeKey);
+
+		// eslint-disable-next-line no-console
+		console.warn(
+			`Nimble | Rule "${this.type}" (${this.label || this.id}) predicates on [${hits.join(', ')}], ` +
+				'which are computed after prePrepareData — the predicate will never match in that phase.',
+		);
 	}
 
 	static override defineSchema(): NimbleBaseRule.Schema {
@@ -263,6 +310,8 @@ abstract class NimbleBaseRule<
 		if (this.disabled) return false;
 		// Empty predicate means "no conditions" = always pass
 		if (this._predicate.size === 0) return true;
+
+		this._warnOnLatePredicateKeys();
 
 		const domain = new Set<string>([
 			...(passedDomain ?? this.actor?.getDomain() ?? []),

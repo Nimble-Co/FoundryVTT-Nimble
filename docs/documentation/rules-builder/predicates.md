@@ -26,7 +26,7 @@ These are the tag families that exist:
 | `background:soldier` | The character's background, by identifier. |
 | `armor:equipped` / `armor:unarmored` | Whether the character is wearing anything that actually provides armor. Exactly one of these is always present. |
 | `self:shield` / `self:noShield` | Whether the character carries a shield. |
-| `strength:3`, `dexterity:1`, `constitution:2`, `intelligence:0`, `will:4` | The character's current stat modifiers. |
+| `strength:3`, `dexterity:1`, `intelligence:0`, `will:4` | The character's current stat modifiers. Some rule types apply before stat modifiers are computed; the builder shows a warning when a condition on these tags cannot work for the chosen rule type. |
 | `proficiency:armor:...`, `proficiency:weapon:...`, `proficiency:language:...` | Each proficiency the character has. |
 
 **All characters, NPCs, and monsters:**

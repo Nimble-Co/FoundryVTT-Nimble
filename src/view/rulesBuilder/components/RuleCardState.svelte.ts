@@ -18,6 +18,11 @@ export function createRuleCardState(
 ) {
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[getRule().type as string]);
+	const appliesInPrePrepareData = $derived(
+		Boolean(
+			(RuleClass as { appliesInPrePrepareData?: boolean } | undefined)?.appliesInPrePrepareData,
+		),
+	);
 	const ruleLabel = $derived(
 		(getRule().label as string) ||
 			localize(ruleTypes[getRule().type as string] ?? (getRule().type as string)),
@@ -130,6 +135,9 @@ export function createRuleCardState(
 		ruleTypes,
 		get RuleClass() {
 			return RuleClass;
+		},
+		get appliesInPrePrepareData() {
+			return appliesInPrePrepareData;
 		},
 		get ruleLabel() {
 			return ruleLabel;

@@ -612,6 +612,7 @@
 			"predicatePreviewMatches": "Currently matches the parent actor.",
 			"predicatePreviewNoMatch": "Currently does not match the parent actor.",
 			"predicatePreviewError": "Evaluation failed.",
+			"predicateLateKeyWarning": "This condition checks {keys}, which is only computed after this rule type has already applied, the condition will never match. Use a different tag, or a rule type that applies after preparation.",
 			"predicateOperators": {
 				"is": "is",
 				"isOneOf": "is one of",

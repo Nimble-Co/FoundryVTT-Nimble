@@ -225,6 +225,7 @@
 							value={(rule.predicate as RawPredicate) ?? {}}
 							onChange={(v) => state.emitFieldChange('predicate', v)}
 							{previewDomain}
+							appliesInPrePrepareData={state.appliesInPrePrepareData}
 						/>
 					</div>
 				</div>
