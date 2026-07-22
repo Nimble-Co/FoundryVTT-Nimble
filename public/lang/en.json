@@ -1002,7 +1002,7 @@
 				},
 				"mode": {
 					"label": "How to apply",
-					"hint": "Adjust stacks with other sources; set overrides them."
+					"hint": "Adjust stacks with other sources; set overrides them. When mixing modes on one skill, order matters: a set that runs after an adjust discards it, so use priority to control which wins."
 				}
 			},
 			"speedBonus": {
