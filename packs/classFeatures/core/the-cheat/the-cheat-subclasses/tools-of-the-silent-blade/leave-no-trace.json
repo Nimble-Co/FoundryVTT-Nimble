@@ -6,7 +6,19 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "skillRollMode",
+				"label": "Leave No Trace",
+				"skills": ["stealth"],
+				"value": 1,
+				"mode": "adjust",
+				"predicate": {
+					"self": "fullHp"
+				},
+				"id": "lyHWwQGcbooGei1a"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

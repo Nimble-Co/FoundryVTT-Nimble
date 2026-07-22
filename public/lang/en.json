@@ -662,6 +662,7 @@
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
+			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
 			"unarmedDamage": "Unarmed Damage"
@@ -987,6 +988,21 @@
 				"skills": {
 					"label": "Apply to",
 					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				}
+			},
+			"skillRollMode": {
+				"description": "Set or adjust the roll mode (advantage/disadvantage) for one or more skill checks. Use ‘all’ to apply to every skill.",
+				"value": {
+					"label": "Roll mode value",
+					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
+				},
+				"skills": {
+					"label": "Apply to",
+					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				},
+				"mode": {
+					"label": "How to apply",
+					"hint": "Adjust stacks with other sources; set overrides them."
 				}
 			},
 			"speedBonus": {
