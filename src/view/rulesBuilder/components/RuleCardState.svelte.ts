@@ -18,9 +18,16 @@ export function createRuleCardState(
 ) {
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[getRule().type as string]);
+	// Data-aware: dual-phase rules (e.g. speedBonus with a formula value) only
+	// evaluate their predicate in prePrepareData for some values, so pass the rule
+	// data rather than reading the class-level flag.
 	const appliesInPrePrepareData = $derived(
 		Boolean(
-			(RuleClass as { appliesInPrePrepareData?: boolean } | undefined)?.appliesInPrePrepareData,
+			(
+				RuleClass as
+					| { appliesInPrePrepareDataFor?: (data: Record<string, unknown>) => boolean }
+					| undefined
+			)?.appliesInPrePrepareDataFor?.(getRule() as unknown as Record<string, unknown>),
 		),
 	);
 	const ruleLabel = $derived(

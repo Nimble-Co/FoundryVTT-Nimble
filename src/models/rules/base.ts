@@ -7,6 +7,8 @@ import { PredicateField } from '../fields/PredicateField.js';
 // Rules are re-instantiated on every data-prep cycle; dedupe the late-predicate
 // warning by stable content so it fires once per session. Checked at predicate
 // evaluation (not construction) so transient pre-creation instances stay silent.
+// Intentionally session-lifetime and never cleared: it only ever holds one entry
+// per distinct misconfigured rule, so it stays bounded by authored content.
 const warnedLatePredicateRules = new Set<string>();
 
 // Forward declarations to avoid circular dependencies
@@ -153,6 +155,18 @@ abstract class NimbleBaseRule<
 		return 'prePrepareData' in this.prototype;
 	}
 
+	/**
+	 * Whether a rule with the given source data evaluates its predicate during
+	 * prePrepareData (before late domain tags exist). Defaults to the class-level
+	 * answer. Dual-phase rules whose active phase depends on their configured
+	 * value (e.g. numeric vs formula speeds) override this to inspect the data,
+	 * so a formula rule that only applies in afterPrepareData is not warned about.
+	 */
+	static appliesInPrePrepareDataFor(_data: Record<string, unknown>): boolean {
+		// biome-ignore lint/complexity/noThisInStatic: must resolve against the calling subclass, not the base class
+		return this.appliesInPrePrepareData;
+	}
+
 	declare type: string;
 
 	declare disabled: boolean;
@@ -186,7 +200,7 @@ abstract class NimbleBaseRule<
 		this.#latePredicateChecked = true;
 
 		const Cls = this.constructor as typeof NimbleBaseRule;
-		if (!Cls.appliesInPrePrepareData) return;
+		if (!Cls.appliesInPrePrepareDataFor(this as unknown as Record<string, unknown>)) return;
 
 		// Unembedded rules (compendium/world items, pending creations) are the
 		// Rules Builder's domain; its banner covers them.

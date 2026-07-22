@@ -37,18 +37,46 @@ describe('NimbleBaseRule', () => {
 		});
 	});
 
+	describe('appliesInPrePrepareDataFor', () => {
+		it('defaults to the class-level answer for rules with no data-level override', () => {
+			expect(AbilityBonusRule.appliesInPrePrepareDataFor({})).toBe(true);
+			expect(DamageBonusRule.appliesInPrePrepareDataFor({})).toBe(false);
+		});
+
+		it('reports true only for numeric speedBonus values (formula applies after prep)', () => {
+			expect(SpeedBonusRule.appliesInPrePrepareDataFor({ value: '2' })).toBe(true);
+			expect(SpeedBonusRule.appliesInPrePrepareDataFor({ value: '-3' })).toBe(true);
+			expect(SpeedBonusRule.appliesInPrePrepareDataFor({ value: '@abilities.dexterity.mod' })).toBe(
+				false,
+			);
+			expect(SpeedBonusRule.appliesInPrePrepareDataFor({ value: '' })).toBe(false);
+		});
+
+		it('reports true only for numeric grantMovement speeds', () => {
+			expect(GrantMovementRule.appliesInPrePrepareDataFor({ speed: '12' })).toBe(true);
+			expect(
+				GrantMovementRule.appliesInPrePrepareDataFor({ speed: '@attributes.movement.walk' }),
+			).toBe(false);
+		});
+	});
+
 	describe('late-predicate-key construction warning', () => {
 		afterEach(() => {
 			vi.restoreAllMocks();
 		});
 
 		function createRuleForWarning(
-			RuleClass: typeof AbilityBonusRule | typeof DamageBonusRule,
+			RuleClass:
+				| typeof AbilityBonusRule
+				| typeof DamageBonusRule
+				| typeof SpeedBonusRule
+				| typeof GrantMovementRule,
 			predicate: Record<string, unknown>,
 			ruleId: string,
+			source: Record<string, unknown> = {},
 		) {
 			const item = { uuid: `Item.${ruleId}`, name: 'Test Item', isEmbedded: true };
-			const rule = new RuleClass({} as never, {
+			const rule = new RuleClass(source as never, {
 				parent: item as unknown as foundry.abstract.DataModel.Any,
 				strict: false,
 			}) as InstanceType<typeof RuleClass> & { id: string; type: string; label: string };
@@ -56,6 +84,9 @@ describe('NimbleBaseRule', () => {
 			rule.id = ruleId;
 			rule.type = 'test';
 			rule.label = 'Test Rule';
+			// The mock DataModel constructor does not hydrate schema fields from the
+			// source, so copy them on for the data-aware phase resolver to read.
+			Object.assign(rule, source);
 
 			Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 			Object.defineProperty(rule, '_predicate', {
@@ -105,6 +136,34 @@ describe('NimbleBaseRule', () => {
 		it('does not warn for an early-phase rule predicated on early keys', () => {
 			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const rule = createRuleForWarning(AbilityBonusRule, { self: 'fullHp' }, 'warn-3');
+
+			rule._warnOnLatePredicateKeys();
+
+			expect(warnSpy).not.toHaveBeenCalled();
+		});
+
+		it('warns for a numeric speedBonus predicated on a late key', () => {
+			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const rule = createRuleForWarning(
+				SpeedBonusRule,
+				{ strength: { min: 2 } },
+				'warn-speed-numeric',
+				{ value: '2' },
+			);
+
+			rule._warnOnLatePredicateKeys();
+
+			expect(warnSpy).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not warn for a formula speedBonus predicated on a late key (applies after prep)', () => {
+			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const rule = createRuleForWarning(
+				SpeedBonusRule,
+				{ strength: { min: 2 } },
+				'warn-speed-formula',
+				{ value: '@abilities.dexterity.mod' },
+			);
 
 			rule._warnOnLatePredicateKeys();
 
