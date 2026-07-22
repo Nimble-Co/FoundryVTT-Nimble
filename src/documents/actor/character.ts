@@ -262,15 +262,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Prepare Class Data
 		this.prepareClassData(actorData);
 
-		// self:fullHp — computed here (not in base _populateDerivedTags) because
-		// character hp.max is derived from class data, not stored.
-		if (
-			actorData.attributes.hp.max > 0 &&
-			actorData.attributes.hp.value >= actorData.attributes.hp.max
-		) {
-			this.tags.add('self:fullHp');
-		}
-
 		// Prepare max Mana
 		actorData.resources.mana.value = actorData.resources.mana.current;
 		actorData.resources.mana.max = this._prepareMaxMana(actorData);
@@ -403,10 +394,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return slotsRequiredSum;
 	}
 
-	prepareClassData(actorData: NimbleCharacterData): void {
-		// Prepare Max Hp
-		this._prepareHitPoints(actorData);
+	protected override _prepareEarlyDerivedData(): void {
+		this._prepareHitPoints(this.system);
+	}
 
+	prepareClassData(actorData: NimbleCharacterData): void {
 		// Prepare Proficiencies
 		const classes = Object.values(this.classes ?? {});
 

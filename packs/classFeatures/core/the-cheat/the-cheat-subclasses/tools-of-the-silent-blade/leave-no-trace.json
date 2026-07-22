@@ -10,7 +10,9 @@
 			{
 				"type": "skillRollMode",
 				"label": "Leave No Trace",
-				"skills": ["stealth"],
+				"skills": [
+					"stealth"
+				],
 				"value": 1,
 				"mode": "adjust",
 				"predicate": {

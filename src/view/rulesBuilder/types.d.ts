@@ -77,6 +77,12 @@ export interface PredicateBuilderProps {
 	 * parent actor — e.g. unowned compendium item).
 	 */
 	previewDomain?: Set<string>;
+	/**
+	 * Whether the owning rule applies during prePrepareData. Late domain tags
+	 * (CONFIG.NIMBLE.LATE_PREDICATE_KEYS) never match in that phase, so the
+	 * builder warns instead of showing a false preview.
+	 */
+	appliesInPrePrepareData?: boolean;
 }
 
 export interface RuleCardProps {

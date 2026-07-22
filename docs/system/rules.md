@@ -109,10 +109,10 @@ Tags are populated during `_populateDerivedTags()` in actor data prep, before ru
 Not every tag exists at every lifecycle phase. Three populating points, in order:
 
 1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
-2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`. Runs *just before* `prePrepareData` hooks fire, so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
-3. **Late in `prepareDerivedData()`** (after abilities and HP are finalized) — emits `self:fullHp` and character `<ability>:<mod>` tags. These run *after* `prePrepareData` has already fired, so they are visible **only in `afterPrepareData` and later hooks**.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`. The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+3. **Late in `prepareDerivedData()`** (after ability mods are finalized) — emits the character `<ability>:<mod>` tags. Ability mods can't exist earlier: `abilityBonus` rules contribute to them *during* `prePrepareData`, so these tags are visible **only in `afterPrepareData` and later hooks**.
 
-If your rule's `predicate` gates on `self:fullHp` or an `<ability>:<mod>` tag and the rule's effect runs in `prePrepareData`, the predicate will fail at the wrong time. Either move the effect to `afterPrepareData` (the default for bonus-style rules like `damageBonus`) or gate on a tag from pool 1 / 2 instead.
+A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<ability>:<mod>` tag — the predicate would never match. This is enforced by guardrails rather than left silent: the Rules Builder's predicate editor shows a warning banner (instead of the match preview) when an early-phase rule references a key in `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, and rule construction emits a once-per-rule `console.warn` for the same condition. Whether a rule class is early-phase is introspected automatically via `NimbleBaseRule.appliesInPrePrepareData` (true when the class implements a `prePrepareData` method) — never add a no-op `prePrepareData` for documentation purposes, as it would falsely mark the rule early.
 
 #### Tags on all actors
 
@@ -143,7 +143,7 @@ If your rule's `predicate` gates on `self:fullHp` or an `<ability>:<mod>` tag an
 | `proficiency:armor:<type>` | Proficiencies | Per armor proficiency |
 | `proficiency:weapon:<type>` | Proficiencies | Per weapon proficiency |
 | `proficiency:language:<type>` | Proficiencies | Per language |
-| `<ability>:<mod>` | Ability scores | After ability mods computed |
+| `<ability>:<mod>` | Ability scores | After ability mods computed (visible in `afterPrepareData` only) |
 
 #### Actor type tags
 
