@@ -1,5 +1,5 @@
 import { activation } from '../item/common.js';
-import { appliedHealing, metadata, targets } from './common.js';
+import { appliedHealing, incomingReactions, metadata, targets } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -31,6 +31,7 @@ declare namespace NimbleSpellCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof activation> &
 		ReturnType<typeof appliedHealing> &
+		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
 		ReturnType<typeof targets>;
@@ -48,6 +49,7 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 		return {
 			...activation(),
 			...appliedHealing(),
+			...incomingReactions(),
 			...spellCardSchema(),
 			...metadata(),
 			...targets(),

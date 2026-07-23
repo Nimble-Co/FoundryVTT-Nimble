@@ -5,6 +5,7 @@
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
+	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 
@@ -61,6 +62,8 @@
 	{/if}
 
 	<ItemCardEffects />
+
+	<IncomingReactionPrompts />
 
 	<ChargeConsumptionNode />
 </article>

@@ -9,6 +9,10 @@ import {
 	hasUnarmedProficiency,
 } from '../../../utils/attackUtils.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
+import {
+	applyPostRollIncomingBehavior,
+	computeIncomingAttackPlan,
+} from '../../../utils/incomingAttackModifiers.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
@@ -226,7 +230,11 @@ export function createAttackPanelState(
 
 		if (!result) return;
 
-		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
+		const firstTargetToken =
+			(game.user?.targets?.values().next().value as Token.Implementation | undefined) ?? null;
+		const incomingAttackPlan = computeIncomingAttackPlan(firstTargetToken);
+
+		const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 			canCrit,
 			canMiss: true,
 			rollMode: result.rollMode ?? 0,
@@ -234,9 +242,38 @@ export function createAttackPanelState(
 			primaryDieModifier: Number(result.primaryDieModifier) || 0,
 			damageType: 'bludgeoning',
 			primaryDieAsDamage: true,
-		});
+		};
+
+		if (incomingAttackPlan.disadvantageCount > 0) {
+			rollOptions.rollModeSources = [
+				result.rollMode ?? 0,
+				...Array.from({ length: incomingAttackPlan.disadvantageCount }, () => -1),
+			];
+		}
+		if (incomingAttackPlan.forceMiss) rollOptions.forceMiss = true;
+		if (incomingAttackPlan.appliedEntries.length > 0) {
+			(rollOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
+				incomingAttackPlan.appliedEntries;
+		}
+
+		let roll = new DamageRoll(rollFormula, getActor().getRollData(), rollOptions);
 
 		await roll.evaluate();
+
+		let discardedRoll: object | null = null;
+		let reactionEntries = incomingAttackPlan.reactionEntries;
+		const postRoll = await applyPostRollIncomingBehavior(
+			roll,
+			incomingAttackPlan,
+			async (formula, options) => {
+				const rerolled = new DamageRoll(formula, getActor().getRollData(), options as never);
+				await rerolled.evaluate();
+				return rerolled;
+			},
+		);
+		roll = postRoll.roll;
+		discardedRoll = postRoll.discardedRoll;
+		reactionEntries = postRoll.stampEntries;
 
 		const rollData = roll.toJSON();
 
@@ -249,6 +286,7 @@ export function createAttackPanelState(
 				canCrit,
 				canMiss: true,
 				roll: rollData,
+				...(discardedRoll ? { discardedRoll } : {}),
 				parentNode: null,
 				parentContext: null,
 				on: {
@@ -292,6 +330,7 @@ export function createAttackPanelState(
 					targets: { count: 1 },
 				},
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
+				incomingReactions: reactionEntries,
 			},
 			type: 'feature',
 		};

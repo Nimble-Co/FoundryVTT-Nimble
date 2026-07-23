@@ -5,13 +5,19 @@ import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
-import type { DamageRoll } from '../dice/DamageRoll.js';
+import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
+import {
+	type IncomingReactionEntry,
+	withRerollDisadvantage,
+} from '../utils/incomingAttackModifiers.js';
+import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -1007,6 +1013,174 @@ class NimbleChatMessage extends ChatMessage {
 		return this.update({
 			system: { targets },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+	}
+
+	/** ------------------------------------------------------ */
+	/**              Incoming Attack Reactions                 */
+	/** ------------------------------------------------------ */
+
+	/**
+	 * Validate a pending incoming-attack reaction entry. Eligibility was
+	 * snapshotted at card creation; this is a light revalidation only: the
+	 * entry must be unused and of the expected kind, the requesting user must
+	 * be a GM or own the reacting actor, and a rule-granted entry's rule must
+	 * still exist and be enabled.
+	 */
+	#validateIncomingReaction(
+		entryId: string,
+		kind: IncomingReactionEntry['kind'],
+		requestingUserId: string,
+	): { entries: IncomingReactionEntry[]; entry: IncomingReactionEntry } | null {
+		const systemData = this.system as unknown as ActivationCardSystemData & {
+			incomingReactions?: IncomingReactionEntry[];
+		};
+		const entries = systemData.incomingReactions ?? [];
+		const entry = entries.find((e) => e.id === entryId);
+		if (!entry || entry.used || entry.kind !== kind) return null;
+
+		const requestingUser = game.users?.get(requestingUserId) ?? null;
+		if (!requestingUser) return null;
+		if (!requestingUser.isGM) {
+			const reactingActor = fromUuidSync(entry.actorUuid) as Actor.Implementation | null;
+			const isOwner = reactingActor?.testUserPermission?.(
+				requestingUser,
+				CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
+			);
+			if (!isOwner) return null;
+		}
+
+		if (entry.source === 'rule' && entry.itemUuid) {
+			const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
+				rules?: Map<string, { id?: string; disabled?: boolean }>;
+			} | null;
+			const rule = item?.rules ? [...item.rules.values()].find((r) => r.id === entry.ruleId) : null;
+			if (!rule || rule.disabled) return null;
+		}
+
+		return { entries, entry };
+	}
+
+	#markIncomingReactionsUsed(
+		entries: IncomingReactionEntry[],
+		predicate: (entry: IncomingReactionEntry) => boolean,
+	): IncomingReactionEntry[] {
+		return entries.map((e) => (predicate(e) ? { ...e, used: true } : e));
+	}
+
+	/**
+	 * Discard the attack's primary damage roll and roll once more; the second
+	 * result stands. Executes on the primary GM's client (players reach it via
+	 * the incoming-attack reaction socket).
+	 */
+	async resolveForceRerollReaction(entryId: string, requestingUserId: string): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!this.isActivationCard()) return;
+
+		const found = this.#validateIncomingReaction(entryId, 'forceReroll', requestingUserId);
+		if (!found) return;
+		const { entries, entry } = found;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const activation = foundry.utils.deepClone(systemData.activation ?? { effects: [] });
+		const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
+		const damageNode = nodes.find(
+			(n) =>
+				n.type === 'damage' && (n as { roll?: { class?: string } }).roll?.class === 'DamageRoll',
+		) as (EffectNode & { roll?: Record<string, unknown>; discardedRoll?: unknown }) | undefined;
+		if (!damageNode?.roll) return;
+
+		const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
+		const formula = serialized.originalFormula ?? serialized.formula;
+		// netRollMode is computed from rollModeSources; carrying the stale value
+		// into the fresh roll would double-apply it.
+		let options = { ...(serialized.options ?? {}) } as Record<string, unknown>;
+		delete options.netRollMode;
+		if (entry.rerollWithDisadvantage) options = withRerollDisadvantage(options);
+
+		const newRoll = new DamageRoll(
+			formula,
+			(serialized.data ?? {}) as DamageRoll.Data,
+			options as unknown as DamageRoll.Options,
+		);
+		await newRoll.evaluate();
+
+		const newRollJson = newRoll.toJSON() as Record<string, unknown>;
+		damageNode.discardedRoll = serialized;
+		damageNode.roll = newRollJson;
+		activation.effects = reconstructEffectsTree(nodes) as unknown[];
+
+		const rollsSource = [...(((this._source as { rolls?: string[] }).rolls ?? []) as string[])];
+		const rollIndex = rollsSource.findIndex((r) => {
+			try {
+				return (JSON.parse(r) as { class?: string })?.class === 'DamageRoll';
+			} catch {
+				return false;
+			}
+		});
+		const stringifiedRoll = JSON.stringify(newRollJson);
+		if (rollIndex >= 0) rollsSource[rollIndex] = stringifiedRoll;
+		else rollsSource.push(stringifiedRoll);
+
+		await this.update({
+			rolls: rollsSource,
+			system: {
+				activation,
+				isCritical: newRoll.isCritical,
+				isMiss: newRoll.isMiss,
+				incomingReactions: this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+			},
+		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Swap the attack's target for the reacting protector (Interpose-style
+	 * redirect). Damage, armor, and reductions resolve against the new target
+	 * when the GM applies damage; token movement stays manual. Executes on the
+	 * primary GM's client.
+	 */
+	async resolveRedirectReaction(entryId: string, requestingUserId: string): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!this.isActivationCard()) return;
+
+		const found = this.#validateIncomingReaction(entryId, 'redirectToSelf', requestingUserId);
+		if (!found) return;
+		const { entries, entry } = found;
+		if (!entry.tokenUuid) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const targets = (systemData.targets || []).filter((t) => t !== entry.targetTokenUuid);
+		if (!targets.includes(entry.tokenUuid)) targets.push(entry.tokenUuid);
+
+		// The ally is no longer the target, so every other offer tied to them
+		// is stale: other redirect offers, and their own forceReroll offers.
+		const updatedEntries = this.#markIncomingReactionsUsed(
+			entries,
+			(e) => e.id === entry.id || e.targetTokenUuid === entry.targetTokenUuid,
+		);
+
+		await this.update({
+			system: { targets, incomingReactions: updatedEntries },
+		} as Record<string, unknown>);
+
+		const tokenDoc = fromUuidSync(entry.tokenUuid) as TokenDocument | null;
+		const protector = (tokenDoc?.actor ??
+			fromUuidSync(entry.actorUuid)) as Actor.Implementation | null;
+		if (!protector) return;
+
+		await ChatMessage.create({
+			author: game.user?.id,
+			speaker: ChatMessage.getSpeaker({ actor: protector }),
+			type: 'reaction',
+			system: {
+				actorName: protector.name,
+				actorType: protector.type,
+				image: protector.img,
+				permissions: protector.permission,
+				rollMode: 0,
+				reactionType: 'interpose',
+				targets: entry.targetTokenUuid ? [entry.targetTokenUuid] : [],
+			},
+		} as unknown as ChatMessage.CreateData);
 	}
 }
 

@@ -32,6 +32,7 @@ const RULE_ICONS: Record<string, string> = {
 	maxHpBonus: 'fa-solid fa-heart',
 	maximizeHitDice: 'fa-solid fa-arrow-up-from-bracket',
 	maxWounds: 'fa-solid fa-droplet-slash',
+	modifyIncomingAttack: 'fa-solid fa-shield-slash',
 	note: 'fa-solid fa-note-sticky',
 	savingThrowBonus: 'fa-solid fa-shield',
 	savingThrowRollMode: 'fa-solid fa-dice-five',

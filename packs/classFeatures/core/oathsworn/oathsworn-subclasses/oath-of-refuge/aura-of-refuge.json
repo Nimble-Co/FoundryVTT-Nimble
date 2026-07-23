@@ -6,7 +6,32 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "8UnnMpfPiHgPnPla",
+				"identifier": "",
+				"label": "",
+				"predicate": {
+					"self": "shield"
+				},
+				"priority": 1,
+				"formula": "@willpower",
+				"mode": "add"
+			},
+			{
+				"type": "modifyIncomingAttack",
+				"disabled": false,
+				"id": "ePC8z2QmXucSUUbm",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"modifier": "redirectToSelf",
+				"range": 4
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

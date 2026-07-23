@@ -395,11 +395,21 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		if (getAdjacencySyncEnabled()) {
 			const adjacency = this.getFlag(SYSTEM_ID, 'adjacency') as
-				| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
+				| {
+						enemiesAdjacentCount?: number;
+						hasMostAdjacentEnemies?: boolean;
+						alliesAdjacentCount?: number;
+						hasMostAdjacentAllies?: boolean;
+				  }
 				| undefined;
 
 			if (adjacency) {
-				const { enemiesAdjacentCount: count, hasMostAdjacentEnemies: hasMost } = adjacency;
+				const {
+					enemiesAdjacentCount: count,
+					hasMostAdjacentEnemies: hasMost,
+					alliesAdjacentCount: allyCount,
+					hasMostAdjacentAllies: hasMostAllies,
+				} = adjacency;
 
 				if (typeof count === 'number' && count > 0) {
 					this.tags.add(`enemiesAdjacent:${count}`);
@@ -407,6 +417,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 				if (hasMost) {
 					this.tags.add(`enemiesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
+				}
+
+				if (typeof allyCount === 'number' && allyCount > 0) {
+					this.tags.add(`alliesAdjacent:${allyCount}`);
+				}
+
+				if (hasMostAllies) {
+					this.tags.add(`alliesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
 				}
 			}
 		}
