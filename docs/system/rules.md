@@ -60,6 +60,8 @@ Every rule has a `predicate` field (a `PredicateField`) that gates whether the r
 { "level": { "min": 5 } }          // any "level:N" in domain where N >= 5
 ```
 
+A `min`/`max` binary op requires the keyed tag to be **present** in the domain: if no `key:N` tag matches, the op fails (it does not vacuously pass). This is what makes `{ "alliesAdjacent": { "min": 1 } }` correctly fail when no allies are adjacent. Note this applies to `max` too — a count-style tag that is simply absent at zero (e.g. `enemiesAdjacent`, which is only emitted for counts above zero in combat) makes `{ "enemiesAdjacent": { "max": 2 } }` fail rather than treating the absent tag as "0 enemies". Gate such rules on presence explicitly (e.g. combine with an in-combat atom) if you need the zero case to pass.
+
 #### Composition with `$and` / `$or`
 
 For tags whose value is already part of the key (e.g. `self:bloodied`, `target:concentrating`) or for combining tags across namespaces, use the `$and` / `$or` operators. Their value is an array — each element is either an **atom string** (presence-checked against the full tag) or a **sub-predicate object** for nesting.
@@ -431,7 +433,7 @@ These rules are not consulted during data preparation. The attacker's activation
 
 Interpose offers come from two sources. Every living allied character within 2 spaces of the target gets the baseline heroic Interpose offer without needing any rule; using it spends the standard combined reaction through the combat tracker (with the usual already-spent confirmation). A `redirectToSelf` rule adds feature-granted offers that can bend the baseline rules (longer range, non-character protectors such as a Beastmaster companion); those do not auto-spend a reaction, since the granting feature governs the cost. When the same token qualifies both ways, the rule-granted offer wins.
 
-Using an Interpose offer swaps the attack card's target for the protector and posts the standard Interpose reaction announcement. Damage, armor, and reductions then resolve against the new target when the GM applies damage. Token movement (the protector entering the ally's space) stays manual. A forced reroll rebuilds the damage roll from its serialized options on the GM client (dice animation happens there) and records the discarded roll on the damage node; rerolling after damage was already applied is not blocked, so apply damage last.
+Using an Interpose offer swaps the attack card's target for the protector and posts the standard Interpose reaction announcement. Damage, armor, and reductions then resolve against the new target when the GM applies damage. Token movement (the protector entering the ally's space) stays manual. A forced reroll rebuilds the damage roll from its serialized options on the GM client (dice animation happens there) and records the discarded roll on the damage node; rerolling after damage was already applied is not blocked, so apply damage last. Only the primary damage node (the first `DamageRoll` in the effect tree) is rerolled, and the card's hit/crit outcome mirrors that node — attacks that fan out into multiple independent damage rolls are outside this scope.
 
 ### Reroll options
 

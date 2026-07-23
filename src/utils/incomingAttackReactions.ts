@@ -11,8 +11,16 @@ type IncomingReactionRequest = {
 };
 
 interface ReactionCapableMessage {
-	resolveForceRerollReaction?: (entryId: string, requestingUserId: string) => Promise<void>;
-	resolveRedirectReaction?: (entryId: string, requestingUserId: string) => Promise<void>;
+	resolveForceRerollReaction?: (
+		entryId: string,
+		requestingUserId: string,
+		viaSocket?: boolean,
+	) => Promise<void>;
+	resolveRedirectReaction?: (
+		entryId: string,
+		requestingUserId: string,
+		viaSocket?: boolean,
+	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
 }
 
@@ -37,6 +45,7 @@ async function executeIncomingReaction(
 	messageId: string,
 	entryId: string,
 	requestingUserId: string,
+	viaSocket: boolean,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -44,11 +53,13 @@ async function executeIncomingReaction(
 	const entry = message.system?.incomingReactions?.find((e) => e.id === entryId);
 	if (!entry) return;
 
-	// The executors revalidate (unused entry, ownership, rule still enabled).
+	// The executors revalidate (unused entry, ownership, rule still enabled, and
+	// — for socket-relayed requests — that the unauthenticated userId is not
+	// claiming GM identity).
 	if (entry.kind === 'forceReroll') {
-		await message.resolveForceRerollReaction?.(entryId, requestingUserId);
+		await message.resolveForceRerollReaction?.(entryId, requestingUserId, viaSocket);
 	} else if (entry.kind === 'redirectToSelf') {
-		await message.resolveRedirectReaction?.(entryId, requestingUserId);
+		await message.resolveRedirectReaction?.(entryId, requestingUserId, viaSocket);
 	}
 }
 
@@ -61,7 +72,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 	if (request.type !== INCOMING_REACTION_REQUEST_TYPE) return;
 	if (!request.messageId || !request.entryId || !request.userId) return;
 
-	await executeIncomingReaction(request.messageId, request.entryId, request.userId);
+	await executeIncomingReaction(request.messageId, request.entryId, request.userId, true);
 }
 
 let hasRegisteredIncomingReactionSocketListener = false;
@@ -92,7 +103,7 @@ export async function requestIncomingAttackReaction(params: {
 	if (!game.user?.id) return false;
 
 	if (game.user.isGM) {
-		await executeIncomingReaction(params.messageId, params.entryId, game.user.id);
+		await executeIncomingReaction(params.messageId, params.entryId, game.user.id, false);
 		return true;
 	}
 

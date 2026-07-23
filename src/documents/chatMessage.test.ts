@@ -2090,6 +2090,17 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 		expect(message.update).toHaveBeenCalledTimes(1);
 	});
 
+	it('rejects a socket-relayed request that claims GM identity (spoof guard)', async () => {
+		// A genuine GM executes on their own client (viaSocket false); a relayed
+		// request whose unauthenticated userId points at a GM is a spoof.
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: true }));
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user', true);
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
 	it('does nothing when an unknown user requests the reaction', async () => {
 		reactionGlobals().game.users.get = vi.fn(() => null);
 		const message = createReactionMessage({ entries: [createReactionEntry()] });

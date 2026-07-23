@@ -74,7 +74,7 @@ describe('requestIncomingAttackReaction', () => {
 			requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' }),
 		).resolves.toBe(true);
 
-		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user');
+		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
 
@@ -86,7 +86,7 @@ describe('requestIncomingAttackReaction', () => {
 
 		await requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' });
 
-		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'gm-user');
+		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false);
 		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
 	});
 
@@ -159,7 +159,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1');
+		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true);
 	});
 
 	it('routes redirectToSelf entries to resolveRedirectReaction', async () => {
@@ -176,7 +176,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'player-1');
+		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'player-1', true);
 		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
 	});
 

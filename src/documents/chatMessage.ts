@@ -1025,11 +1025,19 @@ class NimbleChatMessage extends ChatMessage {
 	 * entry must be unused and of the expected kind, the requesting user must
 	 * be a GM or own the reacting actor, and a rule-granted entry's rule must
 	 * still exist and be enabled.
+	 *
+	 * `viaSocket` marks a player-relayed request, whose `requestingUserId` is
+	 * client-supplied and therefore unauthenticated over the base socket. A
+	 * genuine GM always executes on their own client (the direct path), so a
+	 * relayed request that claims GM identity is a spoof and is rejected — this
+	 * keeps a player from escalating past the ownership check by borrowing a
+	 * GM's id.
 	 */
 	#validateIncomingReaction(
 		entryId: string,
 		kind: IncomingReactionEntry['kind'],
 		requestingUserId: string,
+		viaSocket: boolean,
 	): { entries: IncomingReactionEntry[]; entry: IncomingReactionEntry } | null {
 		const systemData = this.system as unknown as ActivationCardSystemData & {
 			incomingReactions?: IncomingReactionEntry[];
@@ -1040,6 +1048,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		const requestingUser = game.users?.get(requestingUserId) ?? null;
 		if (!requestingUser) return null;
+		if (viaSocket && requestingUser.isGM) return null;
 		if (!requestingUser.isGM) {
 			const reactingActor = fromUuidSync(entry.actorUuid) as Actor.Implementation | null;
 			const isOwner = reactingActor?.testUserPermission?.(
@@ -1072,11 +1081,20 @@ class NimbleChatMessage extends ChatMessage {
 	 * result stands. Executes on the primary GM's client (players reach it via
 	 * the incoming-attack reaction socket).
 	 */
-	async resolveForceRerollReaction(entryId: string, requestingUserId: string): Promise<void> {
+	async resolveForceRerollReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const found = this.#validateIncomingReaction(entryId, 'forceReroll', requestingUserId);
+		const found = this.#validateIncomingReaction(
+			entryId,
+			'forceReroll',
+			requestingUserId,
+			viaSocket,
+		);
 		if (!found) return;
 		const { entries, entry } = found;
 
@@ -1138,11 +1156,20 @@ class NimbleChatMessage extends ChatMessage {
 	 * when the GM applies damage; token movement stays manual. Executes on the
 	 * primary GM's client.
 	 */
-	async resolveRedirectReaction(entryId: string, requestingUserId: string): Promise<void> {
+	async resolveRedirectReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const found = this.#validateIncomingReaction(entryId, 'redirectToSelf', requestingUserId);
+		const found = this.#validateIncomingReaction(
+			entryId,
+			'redirectToSelf',
+			requestingUserId,
+			viaSocket,
+		);
 		if (!found) return;
 		const { entries, entry } = found;
 		if (!entry.tokenUuid) return;
