@@ -80,6 +80,10 @@ function getActiveConditionalBonuses(
 
 	const rules = (attacker.rules ?? []) as ConditionalBonusRule[];
 	const delivery = getDelivery(item);
+	// Anything that isn't a spell is treated as a weapon source, so feature and
+	// monster-attack activations also satisfy a `source: "weapon"` restriction. Fine
+	// for the current rules; a future author wanting to distinguish them will need a
+	// finer source mapping here.
 	const source = item.type === 'spell' ? 'spell' : 'weapon';
 	const targetDomain = buildTargetDomain(attacker, targetActor);
 

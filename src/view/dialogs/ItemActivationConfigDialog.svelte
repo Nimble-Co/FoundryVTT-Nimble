@@ -45,8 +45,9 @@
 			.map(([poolId, count]) => ({ poolId, count }));
 		dialog.submitActivation({
 			// Fold any "advantage" conditional-bonus choices into the roll mode; "damage"
-			// choices are already baked into the modified formula below.
-			rollMode: state.selectedRollMode + state.conditionalAdvantageTotal,
+			// choices are already baked into the modified formula below. Clamp the sum to
+			// the ±6 convention so stacked advantage can't push past what the UI allows.
+			rollMode: Math.clamp(state.selectedRollMode + state.conditionalAdvantageTotal, -6, 6),
 			rollFormula: state.modifiedFormulas[0]?.formula || '0',
 			situationalModifiers: state.situationalModifiers,
 			primaryDieValue: state.primaryDieValue,

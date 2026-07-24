@@ -56,7 +56,10 @@ export function createItemActivationConfigDialogState(
 
 	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
 	// advantage and bonus damage. Snapshot what applies against the current first
-	// target at dialog-open time.
+	// target at dialog-open time. Two known limitations, acceptable while these rules
+	// are single-target in practice (e.g. Hunter's Mark): a quarry that is only the
+	// *second* target of a multi-target attack is never offered the bonus, and if the
+	// player retargets while the dialog is open the choice is not re-validated at submit.
 	const firstTargetActor = (() => {
 		const targets = game.user?.targets;
 		if (!targets || targets.size === 0) return undefined;
@@ -159,8 +162,10 @@ export function createItemActivationConfigDialogState(
 		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
 	);
 
-	function setConditionalChoice(ruleId: string, choice: ConditionalChoice) {
-		conditionalChoices = { ...conditionalChoices, [ruleId]: choice };
+	// `key` is the composite `${itemUuid}:${ruleId}` from getActiveConditionalBonuses,
+	// not a bare rule id — rule ids are only unique within an item.
+	function setConditionalChoice(key: string, choice: ConditionalChoice) {
+		conditionalChoices = { ...conditionalChoices, [key]: choice };
 	}
 
 	const hasConditionalBonuses = $derived(conditionalBonusOptions.length > 0);
