@@ -321,6 +321,10 @@ class NimbleBaseActor<
 	override prepareDerivedData(): void {
 		super.prepareDerivedData();
 
+		// Derived values that domain tags depend on (e.g. character hp.max) must be
+		// final before _populateDerivedTags() runs.
+		this._prepareEarlyDerivedData();
+
 		// Populate derived tags before rules run so predicates can evaluate against them
 		this._populateDerivedTags();
 
@@ -330,15 +334,19 @@ class NimbleBaseActor<
 		});
 	}
 
+	/** Compute derived values that _populateDerivedTags() reads. Subclass hook. */
+	protected _prepareEarlyDerivedData(): void {}
+
 	_populateDerivedTags(): void {
+		const sysData = this.system as unknown as BaseActorSystemData;
+		const hpVal = sysData.attributes.hp.value;
+		const hpMax = sysData.attributes.hp.max;
+
 		// Self-state and target-state tags — derived from status effects.
 		// actor.statuses is the canonical source: Foundry syncs it with ActiveEffects,
 		// and the system's condition toggle (registerConditionsConfig) round-trips through it.
 		const statuses = this.statuses as Set<string> | undefined;
 		if (statuses) {
-			const sysData = this.system as unknown as BaseActorSystemData;
-			const hpVal = sysData.attributes.hp.value;
-			const hpMax = sysData.attributes.hp.max;
 			const isDying = statuses.has(STATUS_EFFECT_IDS.dying);
 
 			// self:dying = PC/Hero at 0 HP with wounds remaining (the dying condition)
@@ -370,9 +378,9 @@ class NimbleBaseActor<
 			}
 		}
 
-		// self:fullHp is NOT set here — hp.max is derived (not stored) for characters,
-		// so it would be stale at this point. Each actor subclass adds it in their
-		// prepareDerivedData() after HP is finalized.
+		if (hpMax > 0 && hpVal >= hpMax) {
+			this.tags.add('self:fullHp');
+		}
 
 		if (getAdjacencySyncEnabled()) {
 			const adjacency = this.getFlag(SYSTEM_ID, 'adjacency') as

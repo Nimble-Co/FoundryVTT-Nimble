@@ -61,12 +61,25 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 		return super.tooltipInfo(new Map([['value', 'string']]));
 	}
 
+	// A numeric value is just digits, optional minus sign, no @ or other formula chars.
+	static #isNumericSpeed(value: unknown): boolean {
+		return typeof value === 'string' && /^-?\d+$/.test(value.trim());
+	}
+
+	/**
+	 * Numeric speeds apply in prePrepareData; formula speeds apply in
+	 * afterPrepareData, where late domain tags already exist. Reflecting that here
+	 * keeps the late-predicate guard from warning about a valid formula rule.
+	 */
+	static override appliesInPrePrepareDataFor(data: Record<string, unknown>): boolean {
+		return SpeedBonusRule.#isNumericSpeed(data.value);
+	}
+
 	/**
 	 * Check if the value is a simple number (not a formula)
 	 */
 	private isNumericValue(): boolean {
-		// A numeric value is just digits, optional minus sign, no @ or other formula chars
-		return /^-?\d+$/.test(this.value.trim());
+		return SpeedBonusRule.#isNumericSpeed(this.value);
 	}
 
 	/**

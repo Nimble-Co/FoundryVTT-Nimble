@@ -187,6 +187,35 @@ class Predicate extends Map<string, Statement> {
 		return new Predicate(this.toObject());
 	}
 
+	/**
+	 * Collect every tag key a raw predicate references: top-level leaf keys plus,
+	 * inside $and/$or arrays, atom prefixes (text before the first ':') and keys
+	 * from nested sub-predicates. Atoms without a colon yield themselves.
+	 */
+	static extractReferencedKeys(raw: RawPredicate): Set<string> {
+		const keys = new Set<string>();
+		if (!isPlainObject(raw)) return keys;
+
+		for (const [key, value] of Object.entries(raw)) {
+			if (Predicate.isLogicalKey(key)) {
+				if (!Array.isArray(value)) continue;
+
+				for (const item of value as LogicalArrayItem[]) {
+					if (typeof item === 'string') {
+						const atomKey = item.split(':', 1)[0];
+						if (atomKey) keys.add(atomKey);
+					} else if (isPlainObject(item)) {
+						for (const nested of Predicate.extractReferencedKeys(item)) keys.add(nested);
+					}
+				}
+			} else {
+				keys.add(key);
+			}
+		}
+
+		return keys;
+	}
+
 	/** ---------------------------------------------- */
 	/** Validators                                     */
 	/** ---------------------------------------------- */

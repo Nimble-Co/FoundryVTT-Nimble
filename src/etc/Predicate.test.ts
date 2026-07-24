@@ -1,6 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import { Predicate } from './Predicate.js';
 
+describe('Predicate.extractReferencedKeys', () => {
+	it('collects top-level leaf keys of every statement form', () => {
+		const keys = Predicate.extractReferencedKeys({
+			self: 'bloodied',
+			size: { min: 'small' },
+			class: ['berserker', 'hunter'],
+		});
+		expect(keys).toEqual(new Set(['self', 'size', 'class']));
+	});
+
+	it('collects atom prefixes inside $and arrays', () => {
+		const keys = Predicate.extractReferencedKeys({ $and: ['self:bloodied', 'strength:4'] });
+		expect(keys).toEqual(new Set(['self', 'strength']));
+	});
+
+	it('recurses into nested sub-predicates inside $or arrays', () => {
+		const keys = Predicate.extractReferencedKeys({
+			$or: ['minion', { dexterity: { min: 2 } }],
+		});
+		expect(keys).toEqual(new Set(['minion', 'dexterity']));
+	});
+
+	it('mixes top-level leaves with logical operators', () => {
+		const keys = Predicate.extractReferencedKeys({
+			self: 'fullHp',
+			$and: ['intelligence:3'],
+		});
+		expect(keys).toEqual(new Set(['self', 'intelligence']));
+	});
+
+	it('returns an empty set for an empty predicate', () => {
+		expect(Predicate.extractReferencedKeys({})).toEqual(new Set());
+	});
+
+	it('tolerates a malformed non-array logical value', () => {
+		const keys = Predicate.extractReferencedKeys({
+			$and: 'self:bloodied' as unknown as [],
+			self: 'dying',
+		});
+		expect(keys).toEqual(new Set(['self']));
+	});
+});
+
 describe('Predicate', () => {
 	describe('empty predicate', () => {
 		it('should always pass with an empty source', () => {

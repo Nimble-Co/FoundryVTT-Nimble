@@ -995,7 +995,7 @@ const NIMBLE = {
 	...registerDocumentConfig(),
 	...registerConditionsConfig(),
 	...registerRulesConfig(),
-	...registerPredicateConfig(),
+	...registerPredicateConfig(abilityScores),
 };
 
 export { NIMBLE };

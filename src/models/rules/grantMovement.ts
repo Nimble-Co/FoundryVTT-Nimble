@@ -99,11 +99,24 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 		);
 	}
 
+	static #isNumericSpeed(speed: unknown): boolean {
+		return typeof speed === 'string' && /^-?\d+$/.test(speed.trim());
+	}
+
+	/**
+	 * Numeric speeds apply in prePrepareData; formula speeds apply in
+	 * afterPrepareData, where late domain tags already exist. Reflecting that here
+	 * keeps the late-predicate guard from warning about a valid formula rule.
+	 */
+	static override appliesInPrePrepareDataFor(data: Record<string, unknown>): boolean {
+		return GrantMovementRule.#isNumericSpeed(data.speed);
+	}
+
 	/**
 	 * Check if the speed value is a simple number (not a formula).
 	 */
 	private isNumericValue(): boolean {
-		return /^-?\d+$/.test(this.speed.trim());
+		return GrantMovementRule.#isNumericSpeed(this.speed);
 	}
 
 	/**
