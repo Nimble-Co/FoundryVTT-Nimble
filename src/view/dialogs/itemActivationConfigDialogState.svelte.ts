@@ -7,6 +7,10 @@ import type {
 	SpendablePool,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
 import {
+	type ConditionalBonusOption,
+	getActiveConditionalBonuses,
+} from '#utils/conditionalBonuses.js';
+import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,
 	extractDamageEffectsFromItem,
@@ -15,6 +19,8 @@ import {
 	getAttackDeliveryFromActivation,
 	matchesAttackDelivery,
 } from './itemActivationConfigDialogHelpers.js';
+
+type ConditionalChoice = 'advantage' | 'damage' | 'none';
 
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
@@ -48,7 +54,36 @@ export function createItemActivationConfigDialogState(
 	const autoBonusSummaries: AutoBonusSummary[] = buildAutoBonusSummaries(autoBonusPools);
 	const autoBonusFormula: string = buildAutoBonusFormula(autoBonusPools);
 
+	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
+	// advantage and bonus damage. Snapshot what applies against the current first
+	// target at dialog-open time. Two known limitations, acceptable while these rules
+	// are single-target in practice (e.g. Hunter's Mark): a quarry that is only the
+	// *second* target of a multi-target attack is never offered the bonus, and if the
+	// player retargets while the dialog is open the choice is not re-validated at submit.
+	const firstTargetActor = (() => {
+		const targets = game.user?.targets;
+		if (!targets || targets.size === 0) return undefined;
+		const firstTarget = targets.values().next().value as Token | undefined;
+		return firstTarget?.actor as { uuid?: string; getTargetDomain?: () => Set<string> } | undefined;
+	})();
+	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
+		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
+		item as unknown as {
+			type?: string;
+			system?: { activation?: { targets?: { attackType?: string } } };
+		},
+		firstTargetActor,
+	);
+	const defaultConditionalChoice = (option: ConditionalBonusOption): ConditionalChoice => {
+		if (option.advantage > 0) return 'advantage';
+		if (option.damageValue !== null || option.damageFormula !== null) return 'damage';
+		return 'none';
+	};
+
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
+	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
+		Object.fromEntries(conditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)])),
+	);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state<number | null | undefined>();
 	let primaryDieModifier = $state<number | null | undefined>();
@@ -127,6 +162,52 @@ export function createItemActivationConfigDialogState(
 		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
 	);
 
+	// `key` is the composite `${itemUuid}:${ruleId}` from getActiveConditionalBonuses,
+	// not a bare rule id — rule ids are only unique within an item.
+	function setConditionalChoice(key: string, choice: ConditionalChoice) {
+		conditionalChoices = { ...conditionalChoices, [key]: choice };
+	}
+
+	const hasConditionalBonuses = $derived(conditionalBonusOptions.length > 0);
+
+	// Net advantage stacks contributed by choices set to "advantage".
+	const conditionalAdvantageTotal = $derived(
+		conditionalBonusOptions.reduce(
+			(sum, o) => (conditionalChoices[o.key] === 'advantage' ? sum + o.advantage : sum),
+			0,
+		),
+	);
+
+	const chosenDamageOptions = $derived(
+		conditionalBonusOptions.filter((o) => conditionalChoices[o.key] === 'damage'),
+	);
+
+	// Untyped damage choices fold into the primary damage roll (inheriting the
+	// weapon/spell's own damage type) — the common case, e.g. Hunter's +LVL.
+	// Credited to their source via `[label]` flavor.
+	const conditionalDamageFormula = $derived(
+		chosenDamageOptions
+			.filter((o) => o.damageType === '')
+			.map((o) => {
+				const term = o.damageFormula ?? `${o.damageValue ?? 0}`;
+				return `+${term}[${o.label}]`;
+			})
+			.join(''),
+	);
+
+	// Choices whose rule specifies a damage type are emitted as their own typed
+	// damage effects (see the manager's #getRolls) so the chosen type actually
+	// applies instead of being absorbed into the primary roll's type.
+	const conditionalTypedDamages = $derived(
+		chosenDamageOptions
+			.filter((o) => o.damageType !== '')
+			.map((o) => ({
+				formula: o.damageFormula ?? `${o.damageValue ?? 0}`,
+				damageType: o.damageType,
+				label: o.label,
+			})),
+	);
+
 	const damageEffects = $derived.by(() => extractDamageEffectsFromItem(options.item()));
 
 	const damageFormula = $derived(damageEffects[0]?.formula || '0');
@@ -142,12 +223,23 @@ export function createItemActivationConfigDialogState(
 			if (index === 0 && poolBonusFormula) {
 				formula += poolBonusFormula;
 			}
+			if (index === 0 && conditionalDamageFormula) {
+				formula += conditionalDamageFormula;
+			}
 			return {
 				formula,
 				damageType: effect.damageType,
 			};
 		}),
 	);
+
+	// Preview rows for the dialog: the item's (modified) damage effects plus a
+	// row per typed conditional damage, so the player sees the chosen typed
+	// bonus that #getRolls will roll as its own effect.
+	const damagePreviews = $derived([
+		...modifiedFormulas,
+		...conditionalTypedDamages.map((d) => ({ formula: d.formula, damageType: d.damageType })),
+	]);
 
 	return {
 		// Form fields (read/write through getter/setter so Svelte tracks writes).
@@ -186,6 +278,19 @@ export function createItemActivationConfigDialogState(
 		spendablePools,
 		spendableChargePools,
 		autoBonusSummaries,
+		conditionalBonusOptions,
+
+		// Conditional-bonus choices.
+		get conditionalChoices() {
+			return conditionalChoices;
+		},
+		get hasConditionalBonuses() {
+			return hasConditionalBonuses;
+		},
+		get conditionalAdvantageTotal() {
+			return conditionalAdvantageTotal;
+		},
+		setConditionalChoice,
 
 		// Selection getters.
 		get chargeSpendCounts() {
@@ -210,6 +315,12 @@ export function createItemActivationConfigDialogState(
 		},
 		get modifiedFormulas() {
 			return modifiedFormulas;
+		},
+		get damagePreviews() {
+			return damagePreviews;
+		},
+		get conditionalTypedDamages() {
+			return conditionalTypedDamages;
 		},
 
 		// Actions.
