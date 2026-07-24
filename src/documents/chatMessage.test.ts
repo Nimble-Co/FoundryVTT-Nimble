@@ -1874,3 +1874,406 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 		});
 	});
 });
+
+/** ------------------------------------------------------ */
+/**              Incoming Attack Reactions                 */
+/** ------------------------------------------------------ */
+
+interface ReactionEntryFixture {
+	id: string;
+	kind: 'forceReroll' | 'redirectToSelf';
+	source: 'baseline' | 'rule';
+	actorUuid: string;
+	tokenUuid: string | null;
+	targetTokenUuid: string | null;
+	label: string;
+	ruleId: string;
+	itemUuid: string;
+	used: boolean;
+}
+
+function createReactionEntry(overrides: Partial<ReactionEntryFixture> = {}): ReactionEntryFixture {
+	return {
+		id: 'entry-1',
+		kind: 'forceReroll',
+		source: 'rule',
+		actorUuid: 'Actor.reactor',
+		tokenUuid: null,
+		targetTokenUuid: 'Scene.scene.Token.victim',
+		label: 'Fate Twist',
+		ruleId: 'rule-1',
+		// Empty itemUuid skips the rule-still-enabled revalidation
+		itemUuid: '',
+		used: false,
+		...overrides,
+	};
+}
+
+function createSerializedReactionRoll() {
+	return {
+		class: 'DamageRoll',
+		formula: '1d6 + 2',
+		originalFormula: '1d6 + 2',
+		total: 8,
+		isCritical: false,
+		isMiss: false,
+		options: { canCrit: false, canMiss: false, rollMode: 0, netRollMode: 0 },
+		data: {},
+	};
+}
+
+function createReactionMessage(params: {
+	entries: ReactionEntryFixture[];
+	targets?: string[];
+	roll?: Record<string, unknown> | null;
+}): NimbleChatMessage & {
+	update: ReturnType<typeof vi.fn>;
+	system: Record<string, unknown>;
+} {
+	const roll = params.roll === undefined ? createSerializedReactionRoll() : params.roll;
+	const effects = roll
+		? [
+				{
+					id: 'damage-node',
+					type: 'damage',
+					parentNode: null,
+					parentContext: null,
+					roll,
+				},
+			]
+		: [];
+
+	const message = new NimbleChatMessage({
+		type: 'spell',
+		system: {
+			targets: params.targets ?? ['Scene.scene.Token.victim'],
+			isCritical: false,
+			isMiss: false,
+			activation: { effects },
+			incomingReactions: params.entries,
+		},
+	} as unknown as ChatMessage.CreateData) as NimbleChatMessage & {
+		update: ReturnType<typeof vi.fn>;
+		system: Record<string, unknown>;
+	};
+
+	message.update = vi.fn().mockResolvedValue(undefined);
+	(message as unknown as { _source: { rolls: string[] } })._source = {
+		rolls: roll ? [JSON.stringify(roll)] : [],
+	};
+
+	return message;
+}
+
+type ReactionTestGlobals = TestGlobals & {
+	game: TestGlobals['game'] & {
+		user: { isGM: boolean; id?: string };
+		users: { get: ReturnType<typeof vi.fn> };
+	};
+	ChatMessage: {
+		create: ReturnType<typeof vi.fn>;
+		getSpeaker: ReturnType<typeof vi.fn>;
+	};
+};
+
+function reactionGlobals(): ReactionTestGlobals {
+	return globalThis as unknown as ReactionTestGlobals;
+}
+
+function setupReactionGlobals(): void {
+	reactionGlobals().fromUuidSync = vi.fn();
+	reactionGlobals().game.user.isGM = true;
+	reactionGlobals().game.users = {
+		get: vi.fn((id: string) => (id === 'gm-user' ? { isGM: true } : null)),
+	};
+	reactionGlobals().ChatMessage.create = vi.fn().mockResolvedValue(undefined);
+	reactionGlobals().ChatMessage.getSpeaker = vi.fn(() => ({ alias: 'Protector' }));
+}
+
+describe('NimbleChatMessage.resolveForceRerollReaction', () => {
+	beforeEach(() => {
+		setupReactionGlobals();
+	});
+
+	it('rerolls the primary damage roll, replaces it, and marks the entry used', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		const updatePayload = message.update.mock.calls[0][0] as {
+			rolls: string[];
+			system: {
+				activation: { effects: Array<Record<string, unknown>> };
+				isCritical: boolean;
+				isMiss: boolean;
+				incomingReactions: ReactionEntryFixture[];
+			};
+		};
+
+		// The fresh roll replaces the serialized DamageRoll in the rolls source
+		expect(updatePayload.rolls).toHaveLength(1);
+		const replacedRoll = JSON.parse(updatePayload.rolls[0]) as Record<string, unknown>;
+		expect(replacedRoll.originalFormula).toBe('1d6 + 2');
+		expect(replacedRoll.isMiss).toBe(false);
+		expect(replacedRoll.isCritical).toBe(false);
+
+		// The damage node keeps the discarded roll for display and gets the new one
+		const damageNode = updatePayload.system.activation.effects[0];
+		expect(damageNode.discardedRoll).toEqual(createSerializedReactionRoll());
+		expect((damageNode.roll as Record<string, unknown>).originalFormula).toBe('1d6 + 2');
+
+		// The card outcome mirrors the new roll and the entry is spent
+		expect(updatePayload.system.isCritical).toBe(false);
+		expect(updatePayload.system.isMiss).toBe(false);
+		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('does nothing on non-GM clients', async () => {
+		reactionGlobals().game.user.isGM = false;
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing for an unknown entry id', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('missing-entry', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing for an already-used entry', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry({ used: true })] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the entry is of a different kind', async () => {
+		const message = createReactionMessage({
+			entries: [
+				createReactionEntry({ kind: 'redirectToSelf', tokenUuid: 'Scene.scene.Token.protector' }),
+			],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the requesting user is neither GM nor owner of the reacting actor', async () => {
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: false }));
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Actor.reactor' ? { testUserPermission: vi.fn(() => false) } : null,
+		);
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'player-1');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('allows a non-GM owner of the reacting actor to use the entry', async () => {
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: false }));
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Actor.reactor' ? { testUserPermission: vi.fn(() => true) } : null,
+		);
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'player-1');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('rejects a socket-relayed request that claims GM identity (spoof guard)', async () => {
+		// A genuine GM executes on their own client (viaSocket false); a relayed
+		// request whose unauthenticated userId points at a GM is a spoof.
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: true }));
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user', true);
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when an unknown user requests the reaction', async () => {
+		reactionGlobals().game.users.get = vi.fn(() => null);
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'ghost-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the granting rule no longer exists or is disabled', async () => {
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Item.fate' ? { rules: new Map([['0', { id: 'rule-1', disabled: true }]]) } : null,
+		);
+		const message = createReactionMessage({
+			entries: [createReactionEntry({ itemUuid: 'Item.fate' })],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the card has no serialized damage roll', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry()], roll: null });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleChatMessage.resolveRedirectReaction', () => {
+	const protectorActor = {
+		name: 'Protector',
+		type: 'character',
+		img: 'icons/protector.png',
+		permission: {},
+	};
+
+	function createRedirectEntry(
+		overrides: Partial<ReactionEntryFixture> = {},
+	): ReactionEntryFixture {
+		return createReactionEntry({
+			id: 'redirect-1',
+			kind: 'redirectToSelf',
+			source: 'baseline',
+			actorUuid: 'Actor.protector',
+			tokenUuid: 'Scene.scene.Token.protector',
+			targetTokenUuid: 'Scene.scene.Token.victim',
+			label: '',
+			ruleId: '',
+			...overrides,
+		});
+	}
+
+	beforeEach(() => {
+		setupReactionGlobals();
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.scene.Token.protector' ? { actor: protectorActor } : null,
+		);
+	});
+
+	it('swaps the target for the protector in a single system update', async () => {
+		const message = createReactionMessage({
+			entries: [createRedirectEntry()],
+			targets: ['Scene.scene.Token.victim', 'Scene.scene.Token.other'],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { targets: string[]; incomingReactions: ReactionEntryFixture[] };
+		};
+
+		expect(updatePayload.system.targets).toEqual([
+			'Scene.scene.Token.other',
+			'Scene.scene.Token.protector',
+		]);
+		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('marks every entry tied to the original target as used, leaving other targets live', async () => {
+		const message = createReactionMessage({
+			entries: [
+				createRedirectEntry(),
+				createRedirectEntry({
+					id: 'redirect-2',
+					actorUuid: 'Actor.other-protector',
+					tokenUuid: 'Scene.scene.Token.other-protector',
+				}),
+				// The original target's own reroll offer is moot once the attack
+				// no longer targets them.
+				createReactionEntry({ id: 'reroll-1', kind: 'forceReroll' }),
+				createReactionEntry({
+					id: 'reroll-other-target',
+					kind: 'forceReroll',
+					targetTokenUuid: 'Scene.scene.Token.bystander',
+				}),
+			],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { incomingReactions: ReactionEntryFixture[] };
+		};
+		const entriesById = new Map(
+			updatePayload.system.incomingReactions.map((entry) => [entry.id, entry]),
+		);
+
+		expect(entriesById.get('redirect-1')?.used).toBe(true);
+		expect(entriesById.get('redirect-2')?.used).toBe(true);
+		expect(entriesById.get('reroll-1')?.used).toBe(true);
+		expect(entriesById.get('reroll-other-target')?.used).toBe(false);
+	});
+
+	it('posts an interpose reaction announcement card for the protector', async () => {
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledTimes(1);
+		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: 'reaction',
+				system: expect.objectContaining({
+					actorName: 'Protector',
+					reactionType: 'interpose',
+					targets: ['Scene.scene.Token.victim'],
+				}),
+			}),
+		);
+	});
+
+	it('does nothing on non-GM clients', async () => {
+		reactionGlobals().game.user.isGM = false;
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+	});
+
+	it('does nothing for an unknown or already-used entry', async () => {
+		const message = createReactionMessage({
+			entries: [createRedirectEntry({ used: true })],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		await message.resolveRedirectReaction('missing-entry', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the entry has no protector token', async () => {
+		const message = createReactionMessage({
+			entries: [createRedirectEntry({ tokenUuid: null })],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('still applies the target swap when the protector cannot be resolved for the announcement', async () => {
+		reactionGlobals().fromUuidSync.mockReturnValue(null);
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+	});
+});

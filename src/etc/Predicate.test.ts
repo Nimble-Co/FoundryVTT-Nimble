@@ -65,6 +65,120 @@ describe('Predicate', () => {
 		});
 	});
 
+	describe('binary operation (min / max / equal)', () => {
+		describe('numeric min', () => {
+			it('should pass when the matched value meets the minimum', () => {
+				const predicate = new Predicate({ foo: { min: 2 } });
+				expect(predicate.test(new Set(['foo:3']))).toBe(true);
+			});
+
+			it('should fail when the matched value is below the minimum', () => {
+				const predicate = new Predicate({ foo: { min: 2 } });
+				expect(predicate.test(new Set(['foo:1']))).toBe(false);
+			});
+
+			it('should fail when no matching tag exists in the domain', () => {
+				// Regression: an absent tag must not vacuously satisfy min.
+				const predicate = new Predicate({ alliesAdjacent: { min: 1 } });
+				expect(predicate.test(new Set(['self:bloodied']))).toBe(false);
+				expect(predicate.test(new Set([]))).toBe(false);
+			});
+		});
+
+		describe('numeric max', () => {
+			it('should pass when the matched value is within the maximum', () => {
+				const predicate = new Predicate({ foo: { max: 2 } });
+				expect(predicate.test(new Set(['foo:2']))).toBe(true);
+			});
+
+			it('should fail when the matched value exceeds the maximum', () => {
+				const predicate = new Predicate({ foo: { max: 2 } });
+				expect(predicate.test(new Set(['foo:3']))).toBe(false);
+			});
+
+			it('should fail when no matching tag exists in the domain', () => {
+				const predicate = new Predicate({ foo: { max: 2 } });
+				expect(predicate.test(new Set(['bar:1']))).toBe(false);
+			});
+		});
+
+		describe('combined min and max', () => {
+			it('should pass when the matched value is within both bounds', () => {
+				const predicate = new Predicate({ foo: { min: 1, max: 3 } });
+				expect(predicate.test(new Set(['foo:2']))).toBe(true);
+			});
+
+			it('should fail when the matched value is outside either bound', () => {
+				const predicate = new Predicate({ foo: { min: 1, max: 3 } });
+				expect(predicate.test(new Set(['foo:0']))).toBe(false);
+				expect(predicate.test(new Set(['foo:4']))).toBe(false);
+			});
+
+			it('should fail when no matching tag exists in the domain', () => {
+				const predicate = new Predicate({ foo: { min: 1, max: 3 } });
+				expect(predicate.test(new Set([]))).toBe(false);
+			});
+		});
+
+		describe('equal', () => {
+			it('should pass when the exact key:value exists in the domain', () => {
+				const predicate = new Predicate({ foo: { equal: 2 } });
+				expect(predicate.test(new Set(['foo:2']))).toBe(true);
+			});
+
+			it('should fail when the exact key:value is absent', () => {
+				const predicate = new Predicate({ foo: { equal: 2 } });
+				expect(predicate.test(new Set(['foo:3']))).toBe(false);
+				expect(predicate.test(new Set([]))).toBe(false);
+			});
+		});
+
+		describe('non-numeric qualifier tags alongside numeric tags', () => {
+			it('should ignore a non-numeric qualifier when checking min', () => {
+				const predicate = new Predicate({ enemiesAdjacent: { min: 2 } });
+				expect(predicate.test(new Set(['enemiesAdjacent:2', 'enemiesAdjacent:most']))).toBe(true);
+			});
+
+			it('should ignore a non-numeric qualifier when checking max', () => {
+				const predicate = new Predicate({ enemiesAdjacent: { max: 1 } });
+				expect(predicate.test(new Set(['enemiesAdjacent:2', 'enemiesAdjacent:most']))).toBe(false);
+				expect(predicate.test(new Set(['enemiesAdjacent:1', 'enemiesAdjacent:most']))).toBe(true);
+			});
+
+			it('should fail min when only non-numeric qualifier tags match the key', () => {
+				const predicate = new Predicate({ enemiesAdjacent: { min: 1 } });
+				expect(predicate.test(new Set(['enemiesAdjacent:most']))).toBe(false);
+			});
+		});
+
+		describe('string min/max via config mapping (size)', () => {
+			it('should pass when the mapped domain value meets the string minimum', () => {
+				const predicate = new Predicate({ size: { min: 'small' } });
+				expect(predicate.test(new Set(['size:medium']))).toBe(true);
+			});
+
+			it('should fail when the mapped domain value is below the string minimum', () => {
+				const predicate = new Predicate({ size: { min: 'large' } });
+				expect(predicate.test(new Set(['size:medium']))).toBe(false);
+			});
+
+			it('should pass when the mapped domain value is within the string maximum', () => {
+				const predicate = new Predicate({ size: { max: 'large' } });
+				expect(predicate.test(new Set(['size:medium']))).toBe(true);
+			});
+
+			it('should fail when the mapped domain value exceeds the string maximum', () => {
+				const predicate = new Predicate({ size: { max: 'small' } });
+				expect(predicate.test(new Set(['size:huge']))).toBe(false);
+			});
+
+			it('should fail string min when no size tag exists in the domain', () => {
+				const predicate = new Predicate({ size: { min: 'small' } });
+				expect(predicate.test(new Set(['self:bloodied']))).toBe(false);
+			});
+		});
+	});
+
 	describe('logical composition ($and / $or)', () => {
 		describe('$and with atom strings', () => {
 			it('should pass when every atom is present in the domain', () => {

@@ -10,6 +10,7 @@ import {
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
+import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
 import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
@@ -58,6 +59,7 @@ export default async function ready() {
 		if (actor?.type === 'character') actor.prepareData?.();
 	}
 	registerCombatTurnSocketListener();
+	registerIncomingReactionSocketListener();
 	registerMarkTargetSocketListener();
 
 	const target = document.body;

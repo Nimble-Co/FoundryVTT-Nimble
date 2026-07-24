@@ -33,6 +33,12 @@ declare namespace DamageRoll {
 		rollModeSources?: number[];
 		/** Net rollMode after summing rollModeSources (computed; do not set manually). */
 		netRollMode?: number;
+		/**
+		 * Force the roll to resolve as a miss regardless of the primary die,
+		 * overriding `canMiss: false`. Set by target-side incoming-attack rules
+		 * ("the attack misses" beats attacker-side "cannot miss").
+		 */
+		forceMiss?: boolean;
 		/** A predetermined value for the primary die result. */
 		primaryDieValue: number;
 		/** A modifier to add to the primary die result. */
@@ -521,6 +527,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				}
 				this._finalizeOutcome(primaryTerm);
 			}
+		}
+
+		if (this.options.forceMiss) {
+			this.isMiss = true;
+			this.isCritical = false;
+			this.critCount = 0;
 		}
 
 		return this as DamageRoll.Evaluated<this>;

@@ -43,19 +43,21 @@ class Predicate extends Map<string, Statement> {
 		const escapedKey = String(key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 		const pattern = new RegExp(`^${escapedKey}:([^:]+)$`);
 
+		// Non-finite extractions (e.g. a qualifier tag like `enemiesAdjacent:most`, or a
+		// string value with no config mapping) are dropped rather than kept as NaN: NaN
+		// comparisons are always false, which would make min/max checks vacuously pass.
 		const values = domainArray.reduce((acc, s) => {
 			const value = pattern.exec(s)?.[1];
 			if (value === undefined) return acc;
 
-			if (type === 'number') acc.push(Number(value));
-			else {
-				acc.push(this.#getConfigValue(key as string, value));
-			}
+			const numValue =
+				type === 'number' ? Number(value) : this.#getConfigValue(key as string, value);
+			if (Number.isFinite(numValue)) acc.push(numValue);
 
 			return acc;
 		}, [] as number[]);
 
-		return values.length > 0 ? values : [Number.NaN];
+		return values;
 	}
 
 	#getDomainValues(key: string, domain: Set<string>) {
@@ -138,14 +140,18 @@ class Predicate extends Map<string, Statement> {
 		const domainNumValues = this.#getNumValues(key, 'number', domain);
 		const domainStringValues = this.#getNumValues(key, 'string', domain);
 
+		// min/max require at least one finite matched value; an absent tag must fail,
+		// not vacuously pass (e.g. { alliesAdjacent: { min: 1 } } with no allies).
 		// Check min
 		if (statement.min !== null && statement.min !== undefined) {
 			const { min } = statement;
 			if (typeof min === 'number') {
-				if (domainNumValues.some((v) => v < min)) return false;
+				if (domainNumValues.length === 0 || domainNumValues.some((v) => v < min)) return false;
 			} else {
 				const minAsNumber = this.#getConfigValue(key, min);
-				if (domainStringValues.some((v) => v < minAsNumber)) return false;
+				if (domainStringValues.length === 0 || domainStringValues.some((v) => v < minAsNumber)) {
+					return false;
+				}
 			}
 		}
 
@@ -153,10 +159,12 @@ class Predicate extends Map<string, Statement> {
 		if (statement.max !== null && statement.max !== undefined) {
 			const { max } = statement;
 			if (typeof max === 'number') {
-				if (domainNumValues.some((v) => v > max)) return false;
+				if (domainNumValues.length === 0 || domainNumValues.some((v) => v > max)) return false;
 			} else {
 				const maxAsNumber = this.#getConfigValue(key, max);
-				if (domainStringValues.some((v) => v > maxAsNumber)) return false;
+				if (domainStringValues.length === 0 || domainStringValues.some((v) => v > maxAsNumber)) {
+					return false;
+				}
 			}
 		}
 

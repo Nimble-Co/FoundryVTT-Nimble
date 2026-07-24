@@ -60,6 +60,8 @@ Every rule has a `predicate` field (a `PredicateField`) that gates whether the r
 { "level": { "min": 5 } }          // any "level:N" in domain where N >= 5
 ```
 
+A `min`/`max` binary op requires the keyed tag to be **present** in the domain: if no `key:N` tag matches, the op fails (it does not vacuously pass). This is what makes `{ "alliesAdjacent": { "min": 1 } }` correctly fail when no allies are adjacent. Note this applies to `max` too — a count-style tag that is simply absent at zero (e.g. `enemiesAdjacent`, which is only emitted for counts above zero in combat) makes `{ "enemiesAdjacent": { "max": 2 } }` fail rather than treating the absent tag as "0 enemies". Gate such rules on presence explicitly (e.g. combine with an in-combat atom) if you need the zero case to pass.
+
 #### Composition with `$and` / `$or`
 
 For tags whose value is already part of the key (e.g. `self:bloodied`, `target:concentrating`) or for combining tags across namespaces, use the `$and` / `$or` operators. Their value is an array — each element is either an **atom string** (presence-checked against the full tag) or a **sub-predicate object** for nesting.
@@ -122,6 +124,8 @@ A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<abili
 | `disposition:<type>` | Token disposition | Always |
 | `enemiesAdjacent:<count>` | Adjacency sync | In combat |
 | `enemiesAdjacent:most` | Adjacency sync | Has most adjacent enemies |
+| `alliesAdjacent:<count>` | Adjacency sync | In combat |
+| `alliesAdjacent:most` | Adjacency sync | Has most adjacent allies |
 | `self:bloodied` | `actor.statuses` | Bloodied status active |
 | `self:dying` | `actor.statuses` (dying) | PC/Hero at 0 HP with wounds remaining |
 | `self:lastStand` | `actor.statuses` (lastStand) | Solo/Legendary monster phase change at 0 HP |
@@ -407,3 +411,34 @@ The bank is stored as an Active Effect on the actor named for the pending amount
 Application order in `calculateAdjustedDamage` (`src/documents/chatMessage.ts`): outcome/armor halving → immunity (zero) → resistance halving (applies **once**, no matter how many sources match — no quartering) → flat rule reductions + banked reduction → clamp at zero → temp HP (inside `actor.applyDamage`). Halving rounds up, matching the heavy-armor convention. The books don't specify resistance-vs-reduction ordering; halving first keeps flat reductions fully effective. `attributes.damageVulnerabilities` is stored and editable but **not yet automated** (the vulnerability rule interacts with armor and needs its own pass).
 
 The system never hides Active Effects: every enabled AE on an actor renders on the token, on the canvas conditions panel, and in the sheet's effects lists, regardless of what created it. New rules that back their state with an AE get this visibility for free.
+
+## Modifying incoming attacks (`modifyIncomingAttack`)
+
+`modifyIncomingAttack` rules modify attacks made against an actor. The `modifier` field picks the effect:
+
+| Modifier | Applies | Effect |
+| --- | --- | --- |
+| `disadvantage` | Automatic, pre-roll | One disadvantage level per matching rule, pushed into the attack roll's `rollModeSources` (cancels 1-for-1 with advantage) |
+| `autoMiss` | Automatic, pre-roll | The attack roll is forced to a miss (`forceMiss` on `DamageRoll`), even against attacker-side "cannot miss" effects |
+| `forceReroll` | Interactive or automatic | Discard the roll and roll once more; the second result stands. See the reroll options below |
+| `redirectToSelf` | Interactive | An Interpose offer: when an ally within `range` spaces is targeted, the rule's owner may swap in as the target |
+
+`disadvantage`, `forceReroll`, and `autoMiss` fire when the rule's owner is the attack's target; the predicate is tested against the owner's own domain at attack time (positional tags such as `alliesAdjacent` are fresh). `redirectToSelf` is protector-side: it fires when an ally within `range` spaces (default 2) is targeted, with the predicate tested against the protector's own domain.
+
+These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and minion group attack cards are not covered.
+
+### Interactive reactions
+
+`forceReroll` and `redirectToSelf` offers are stamped onto the attack card at creation (`incomingReactions` in `src/models/chat/common.ts`) and rendered as buttons visible to the reacting actor's owner and the GM, labeled with the granting feature and actor. Clicks route through a GM proxy socket (`src/utils/incomingAttackReactions.ts`, same pattern as `combatTurnActions.ts`); the primary active GM's client mutates the message. A forced miss makes the offers moot, so none are stamped alongside it.
+
+Interpose offers come from two sources. Every living allied character within 2 spaces of the target gets the baseline heroic Interpose offer without needing any rule; using it spends the standard combined reaction through the combat tracker (with the usual already-spent confirmation). A `redirectToSelf` rule adds feature-granted offers that can bend the baseline rules (longer range, non-character protectors such as a Beastmaster companion); those do not auto-spend a reaction, since the granting feature governs the cost. When the same token qualifies both ways, the rule-granted offer wins.
+
+Using an Interpose offer swaps the attack card's target for the protector and posts the standard Interpose reaction announcement. Damage, armor, and reductions then resolve against the new target when the GM applies damage. Token movement (the protector entering the ally's space) stays manual. A forced reroll rebuilds the damage roll from its serialized options on the GM client (dice animation happens there) and records the discarded roll on the damage node; rerolling after damage was already applied is not blocked, so apply damage last. Only the primary damage node (the first `DamageRoll` in the effect tree) is rerolled, and the card's hit/crit outcome mirrors that node — attacks that fan out into multiple independent damage rolls are outside this scope.
+
+### Reroll options
+
+`forceReroll` rules carry three extra fields:
+
+- `automatic`: when true, the reroll fires at roll time with no button (for mandatory rerolls such as Mountain's Endurance rerolling an incoming crit). When false, an interactive button is offered instead.
+- `rerollTrigger`: `always` (any attack), `hit` (only when the attack is not a miss), or `criticalHit` (only on a crit). This gates when an automatic reroll fires and, for interactive offers, whether the button is shown for the rolled outcome.
+- `rerollWithDisadvantage`: when true, the reroll is made at disadvantage rather than a straight reroll (for example Pocket Sand, whose blinded attacker rerolls at disadvantage, or FAST). One disadvantage level is appended to the reroll's roll-mode sources.
