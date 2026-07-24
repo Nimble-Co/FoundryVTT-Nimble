@@ -55,10 +55,10 @@ describe('registerBankedDamageReductionExpiryHooks', () => {
 		).foundry = {
 			utils: {
 				getProperty,
-				hasProperty: (object: unknown, path: string) =>
+				hasProperty: ((object: unknown, path: string) =>
 					typeof object === 'object' && object !== null
 						? getProperty(object, path) !== undefined
-						: false,
+						: false) as unknown as typeof foundry.utils.hasProperty,
 			},
 		};
 	});
