@@ -357,6 +357,28 @@
 	let actor = getContext('actor');
 	let sheet = getContext('application');
 
+	let damageDefenses = $derived.by(() => {
+		const actorAttributes = actor.reactive.system.attributes;
+		const damageTypeLabel = (type) => {
+			const key = CONFIG.NIMBLE.damageTypes[type];
+			return key ? game.i18n.localize(key) : type;
+		};
+
+		return [
+			{ label: 'NIMBLE.npcDefenses.resistant', types: actorAttributes.damageResistances ?? [] },
+			{ label: 'NIMBLE.npcDefenses.immune', types: actorAttributes.damageImmunities ?? [] },
+			{
+				label: 'NIMBLE.npcDefenses.vulnerable',
+				types: actorAttributes.damageVulnerabilities ?? [],
+			},
+		]
+			.filter((group) => group.types.length > 0)
+			.map((group) => ({
+				label: game.i18n.localize(group.label),
+				types: group.types.map(damageTypeLabel).join(', '),
+			}));
+	});
+
 	// Local state for collapsed items - always use for immediate UI response
 	let localCollapsedState = new SvelteMap();
 
@@ -489,6 +511,23 @@
 				+
 			</button>
 		</section>
+
+		{#if damageDefenses.length > 0}
+			<button
+				class="nimble-damage-defenses"
+				type="button"
+				aria-label={game.i18n.localize('NIMBLE.npcSheet.editDamageDefenses')}
+				data-tooltip={game.i18n.localize('NIMBLE.npcSheet.editDamageDefenses')}
+				onclick={() => actor.editMetadata()}
+			>
+				{#each damageDefenses as group}
+					<span class="nimble-damage-defenses__row">
+						<strong>{group.label}:</strong>
+						{group.types}
+					</span>
+				{/each}
+			</button>
+		{/if}
 	</section>
 
 	<header class="nimble-sheet__static nimble-sheet__static--npc-features">
@@ -1452,6 +1491,10 @@
 	}
 
 	.nimble-monster-sheet-section {
+		// The tab body is a flex column; without this, sections compress to fit
+		// the window instead of letting the body scroll, and their grid rows
+		// overlap.
+		flex-shrink: 0;
 		padding: 0.25rem 0.5rem 0.25rem;
 
 		&:first-of-type {
@@ -1469,8 +1512,44 @@
 			grid-template-columns: 1fr 4.2rem;
 			grid-template-areas:
 				'savingThrows armor'
-				'speed armor';
+				'speed armor'
+				'damageDefenses damageDefenses';
 			row-gap: 0.25rem;
+		}
+	}
+
+	.nimble-damage-defenses {
+		grid-area: damageDefenses;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.125rem;
+		// Foundry core fixes button heights to --input-height; without this the
+		// rows get crushed into that fixed box and bleed over the saves.
+		height: auto;
+		margin: 0;
+		padding: 0.25rem 0 0 0;
+		font-size: var(--nimble-xs-text);
+		font-weight: 500;
+		font-synthesis: none;
+		text-align: left;
+		line-height: 1.4;
+		border: 0;
+		background: transparent;
+		color: var(--nimble-medium-text-color);
+		text-shadow: none;
+		cursor: pointer;
+
+		&:hover {
+			color: var(--nimble-dark-text-color, inherit);
+		}
+
+		&__row {
+			display: block;
+
+			strong {
+				color: var(--nimble-dark-text-color, inherit);
+			}
 		}
 	}
 

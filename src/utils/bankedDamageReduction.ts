@@ -2,7 +2,9 @@ import { SYSTEM_ID } from '#system';
 import localize from '#utils/localize.ts';
 
 const BANKED_DAMAGE_REDUCTION_FLAG = 'bankedDamageReduction';
+const BANKED_DAMAGE_REDUCTION_SOURCE_FLAG = 'bankedDamageReductionSource';
 const FLAG_PATH = `flags.${SYSTEM_ID}.${BANKED_DAMAGE_REDUCTION_FLAG}`;
+const SOURCE_FLAG_PATH = `flags.${SYSTEM_ID}.${BANKED_DAMAGE_REDUCTION_SOURCE_FLAG}`;
 
 interface BankedReductionEffect {
 	id: string;
@@ -53,10 +55,30 @@ function getBankedDamageReduction(actor: Actor.Implementation): number {
 		.reduce((total, effect) => total + effectValue(effect), 0);
 }
 
+/** Active banked reductions with the name of the feature that banked them,
+ *  for the chat card's damage-modifier breakdown. */
+function getBankedDamageReductionEntries(
+	actor: Actor.Implementation,
+): Array<{ value: number; source: string | null }> {
+	const effects = (actor as unknown as ActorWithEffects).effects;
+	if (!effects?.filter) return [];
+
+	return effects
+		.filter((effect) => !effect.disabled && effectValue(effect) > 0)
+		.map((effect) => {
+			const source = foundry.utils.getProperty(effect, SOURCE_FLAG_PATH);
+			return {
+				value: effectValue(effect),
+				source: typeof source === 'string' && source.length > 0 ? source : null,
+			};
+		});
+}
+
 async function addBankedDamageReduction(
 	actor: Actor.Implementation,
 	amount: number,
 	img?: string | null,
+	sourceName?: string | null,
 ): Promise<void> {
 	const addition = Math.floor(Number(amount));
 	if (!Number.isFinite(addition) || addition <= 0) return;
@@ -68,11 +90,16 @@ async function addBankedDamageReduction(
 
 	if (existing) {
 		const total = effectValue(existing) + addition;
-		await existing.update({
+		const changes: Record<string, unknown> = {
 			name: effectName(total),
 			description: effectDescription(total),
 			[FLAG_PATH]: total,
-		});
+		};
+		// Repeated spends accumulate onto one effect; the first source wins.
+		if (sourceName && !foundry.utils.getProperty(existing, SOURCE_FLAG_PATH)) {
+			changes[SOURCE_FLAG_PATH] = sourceName;
+		}
+		await existing.update(changes);
 		return;
 	}
 
@@ -85,6 +112,7 @@ async function addBankedDamageReduction(
 			flags: {
 				[SYSTEM_ID]: {
 					[BANKED_DAMAGE_REDUCTION_FLAG]: addition,
+					...(sourceName ? { [BANKED_DAMAGE_REDUCTION_SOURCE_FLAG]: sourceName } : {}),
 				},
 			},
 		},
@@ -104,4 +132,9 @@ async function clearBankedDamageReduction(actor: Actor.Implementation): Promise<
 	);
 }
 
-export { addBankedDamageReduction, clearBankedDamageReduction, getBankedDamageReduction };
+export {
+	addBankedDamageReduction,
+	clearBankedDamageReduction,
+	getBankedDamageReduction,
+	getBankedDamageReductionEntries,
+};

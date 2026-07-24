@@ -90,8 +90,8 @@
 		</button>
 	</header>
 
-	<ul class="nimble-target-list">
-		{#await prepareTargets(targets) then tokens}
+	{#await prepareTargets(targets) then tokens}
+		<ul class="nimble-target-list">
 			{#each tokens as token}
 				{@const damagePreview =
 					token && game.user?.isGM
@@ -140,8 +140,35 @@
 					{localize('NIMBLE.chatTargets.noTargetsSelected')}
 				</li>
 			{/each}
-		{/await}
-	</ul>
+		</ul>
+
+		{#if game.user?.isGM}
+			{@const modifierRows = tokens
+				.map((token) => ({
+					name: token?.actor?.name || token.name,
+					modifiers: messageDocument?.reactive?.getDamageModifiersForTarget(token.uuid) ?? [],
+				}))
+				.filter((row) => row.modifiers.length > 0)}
+
+			{#if modifierRows.length > 0}
+				<div class="nimble-damage-modifiers">
+					<h4 class="nimble-damage-modifiers__heading">
+						<i class="fa-solid fa-shield-halved"></i>
+						{localize('NIMBLE.damageModifiers.heading')}
+					</h4>
+
+					<ul class="nimble-damage-modifiers__list">
+						{#each modifierRows as row}
+							<li>
+								<strong>{row.name}:</strong>
+								{row.modifiers.join(', ')}
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
+		{/if}
+	{/await}
 </section>
 
 <style lang="scss">
@@ -172,6 +199,32 @@
 		margin-left: 0.25rem;
 		font-weight: 700;
 		color: var(--color-level-error, #7a1e1e);
+	}
+
+	.nimble-damage-modifiers {
+		margin-top: 0.5rem;
+		padding: 0.375rem 0.5rem;
+		font-size: var(--nimble-sm-text);
+		color: var(--nimble-medium-text-color);
+		background: var(--nimble-box-background-color);
+		border-radius: 4px;
+
+		&__heading {
+			margin: 0 0 0.25rem 0;
+			font-size: var(--nimble-xs-text);
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		&__list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
 	}
 
 	.nimble-target-list {

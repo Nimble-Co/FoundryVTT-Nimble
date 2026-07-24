@@ -34,7 +34,12 @@ The monster sheet has four tabs (**Core**, **Conditions**, **Notes**, and **Sett
 - **Level**: free text, so fractional levels like `1/3` and `1/4` work (the compendium Goblin is Level 1/3).
 - **Creature Type**: free text, such as "Beast" or "Goblins".
 - **Size Category**: Tiny through Gargantuan.
+- **Damage Resistances**: damage types the monster takes half damage from. Applied automatically when the GM clicks Apply Damage, and the button's preview shows the halved number.
+- **Damage Immunities**: damage types the monster takes no damage from at all.
+- **Damage Vulnerabilities**: recorded on the sheet for reference, but not yet automated; apply the vulnerability rule from the rulebook by hand.
 - **Flunky**: a checkbox on Standard monsters. Flunkies can still miss, but never crit.
+
+Resistances and immunities only kick in when the incoming damage has a known type; a roll with no damage type is applied in full.
 
 For the Bog Howler: Level 3, Creature Type "Beast", Medium.
 

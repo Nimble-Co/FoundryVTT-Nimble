@@ -1,6 +1,7 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import registerBabeleHooks from './hooks/babeleInit.js';
 import registerBabeleInstallNotice from './hooks/babeleInstallNotice.js';
+import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
@@ -124,6 +125,7 @@ registerBloodiedTriggerHooks();
 registerInitiativeTriggerHooks();
 registerAttackedTriggerHooks();
 registerEncounterEndTriggerHooks();
+registerBankedDamageReductionExpiryHooks();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
