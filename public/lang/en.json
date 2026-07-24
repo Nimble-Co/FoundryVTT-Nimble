@@ -229,6 +229,7 @@
 			"hampered": "Hampered",
 			"incapacitated": "Incapacitated",
 			"invisible": "Invisible",
+			"marked": "Marked",
 			"paralyzed": "Paralyzed",
 			"petrified": "Petrified",
 			"poisoned": "Poisoned",
@@ -262,6 +263,7 @@
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
 			"lastStand": "<p>At 0 HP, the legendary monster is dying and gains dangerous new capabilities. They finally die after a small amount of additional damage.</p>",
+			"marked": "<p>Marked as a quarry by another creature. That creature treats this one as a tracked target; any resulting bonuses come from the marker's own features, not this condition.</p>",
 			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
@@ -642,6 +644,7 @@
 			"chargeConsumer": "Charge Consumer",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
+			"conditionalBonus": "Conditional Bonus",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
 			"damageReduction": "Damage Reduction",
@@ -658,6 +661,7 @@
 			"initiativeBonus": "Initiative Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
+			"markTarget": "Mark Target",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -760,6 +764,33 @@
 				"conditions": {
 					"label": "Immune to",
 					"hint": "The actor is fully immune to these conditions and cannot be affected by them."
+				}
+			},
+			"conditionalBonus": {
+				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically — the activation dialog surfaces the choice.",
+				"advantage": {
+					"label": "Advantage stacks",
+					"hint": "Stacks of advantage offered as one option. 0 means advantage is not offered."
+				},
+				"damageBonus": {
+					"label": "Damage bonus",
+					"hint": "Damage offered as the other option. Flat (5), formula (@level), or dice (1d6). Leave blank to not offer damage."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "Damage type applied when the damage option is chosen. Leave blank to match the attack."
+				},
+				"delivery": {
+					"label": "Delivery",
+					"hint": "Restrict to melee or ranged attacks. \"Any\" matches both."
+				},
+				"source": {
+					"label": "Source",
+					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				},
+				"targetCondition": {
+					"label": "Target condition",
+					"hint": "Predicate evaluated against the target's state at activation. The choice is only offered when the target matches, e.g. { \"$and\": [\"target:quarry\"] }."
 				}
 			},
 			"damageBonus": {
@@ -1067,6 +1098,21 @@
 					"onEncounterEnd": "combat ended",
 					"onActorDying": "started dying",
 					"inactivity": "went {rounds} round(s) without attacking or re-activating"
+				}
+			},
+			"markTarget": {
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest; there is no time-based expiry.",
+				"flagKey": {
+					"label": "Flag key",
+					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
+				},
+				"statusCondition": {
+					"label": "Status condition",
+					"hint": "Optional condition applied to each marked target as a visible marker. Leave blank for an invisible mark."
+				},
+				"maxTargets": {
+					"label": "Max targets",
+					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
 				}
 			},
 			"unarmedDamage": {
@@ -2039,6 +2085,12 @@
 			"spendCharge": {
 				"increment": "Spend one more",
 				"decrement": "Spend one less"
+			},
+			"conditionalBonus": {
+				"heading": "Conditional Bonuses",
+				"advantage": "Advantage × {count}",
+				"damage": "+{value} damage",
+				"none": "None"
 			}
 		},
 		"characterSettings": {
