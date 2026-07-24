@@ -59,6 +59,19 @@ function cell(value: string): string {
 	return value.replace(/\|/g, '\\|').replace(/\n+/g, ' ').trim();
 }
 
+// Rule and settings strings are authored as plain text, but VitePress compiles
+// pages through Vue so we need to escape some stuff.
+const VUE_TEXT_ESCAPES: Array<[RegExp, string]> = [
+	[/</g, '&lt;'],
+	[/>/g, '&gt;'],
+	[/\{/g, '&#123;'],
+	[/\}/g, '&#125;'],
+];
+
+function escapeVueText(value: string): string {
+	return VUE_TEXT_ESCAPES.reduce((acc, [pattern, entity]) => acc.replace(pattern, entity), value);
+}
+
 /* -------------------------------------------------- */
 /*  Rules reference                                   */
 /* -------------------------------------------------- */
@@ -205,7 +218,7 @@ function describeRuleField(name: string, field: any): FieldRow | null {
 	if (opts.widget === 'hidden') return null;
 
 	const kind = widgetKindLabel(opts.widget, field?.constructor?.name ?? '');
-	const hint = opts.hint ? localize(opts.hint) : '';
+	const hint = opts.hint ? escapeVueText(localize(opts.hint)) : '';
 	const shownConditionally = typeof opts.showWhen === 'function';
 
 	const choiceText = resolveChoices(opts.choices);
@@ -218,7 +231,7 @@ function describeRuleField(name: string, field: any): FieldRow | null {
 
 	return {
 		name,
-		label: opts.label ? localize(opts.label) : name,
+		label: opts.label ? escapeVueText(localize(opts.label)) : name,
 		description,
 		options: choiceText ? options : kind,
 		defaultValue: resolveInitial(opts.initial),
@@ -290,7 +303,7 @@ function generateRulePages(): string[] {
 		);
 
 		const sections = entries.map(({ key, displayName, cls }) => {
-			const description = cls.description ? localize(cls.description) : '';
+			const description = cls.description ? escapeVueText(localize(cls.description)) : '';
 			const schema = cls.defineSchema();
 			const rows = collectFieldRows(schema);
 
@@ -471,8 +484,8 @@ function generateSettingsPage(): void {
 			if (settings.length === 0) return null;
 
 			const rows = settings.map((setting) => {
-				const settingName = setting.name ? localize(setting.name) : setting.key;
-				const hint = setting.hint ? localize(setting.hint) : '';
+				const settingName = setting.name ? escapeVueText(localize(setting.name)) : setting.key;
+				const hint = setting.hint ? escapeVueText(localize(setting.hint)) : '';
 				const scope =
 					setting.scope === 'world' ? 'Whole table (GM sets it)' : 'Each player individually';
 				return `| **${cell(settingName)}** | ${cell(hint)} | ${cell(describeSettingDefault(setting))} | ${scope} |`;
