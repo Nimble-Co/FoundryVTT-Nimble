@@ -305,4 +305,11 @@ type Statement = AtomicOperation | BinaryOperation | ArrayOperation | LogicalArr
 type PredicateStatement = [string, Statement];
 type RawPredicate = Record<string, Statement>;
 
-export { Predicate, type RawPredicate };
+/**
+ * Predicate's public surface as a structural type. Schema fields initialize to
+ * this rather than the class itself: Predicate's #-private members would make
+ * the type nominal, poisoning comparability of every data model that embeds it.
+ */
+type PredicateLike = Pick<Predicate, keyof Predicate>;
+
+export { Predicate, type PredicateLike, type RawPredicate };

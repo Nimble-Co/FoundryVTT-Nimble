@@ -89,7 +89,7 @@ describe('NimbleBaseRule', () => {
 			Object.assign(rule, source);
 
 			Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
-			Object.defineProperty(rule, '_predicate', {
+			Object.defineProperty(rule, 'predicate', {
 				get: () => new Predicate(predicate as never),
 				configurable: true,
 			});

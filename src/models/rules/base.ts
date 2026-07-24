@@ -1,7 +1,7 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-import { Predicate } from '../../etc/Predicate.js';
+import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 
@@ -221,7 +221,7 @@ abstract class NimbleBaseRule<
 
 		const lateKeys = (CONFIG.NIMBLE as { LATE_PREDICATE_KEYS?: readonly string[] } | undefined)
 			?.LATE_PREDICATE_KEYS;
-		const predicate = this._predicate as Predicate | undefined;
+		const predicate = this.predicate as PredicateLike | undefined;
 		if (!lateKeys?.length || !predicate?.size) return;
 
 		const referenced = Predicate.extractReferencedKeys(predicate._source);
@@ -317,15 +317,11 @@ abstract class NimbleBaseRule<
 		}
 	}
 
-	protected get _predicate(): Predicate {
-		return (this as object as { predicate: Predicate }).predicate;
-	}
-
 	/**
 	 * Public predicate-check entry point for callers outside the rule class.
 	 * Returns `true` when the rule's predicate matches the actor's current
 	 * domain (and the rule is enabled). Wraps the protected `test()` so the
-	 * shape of `_predicate.test()` and the disabled/predicate handling stays
+	 * shape of `predicate.test()` and the disabled/predicate handling stays
 	 * encapsulated.
 	 */
 	appliesTo(passedDomain?: string[] | Set<string>): boolean {
@@ -335,7 +331,7 @@ abstract class NimbleBaseRule<
 	protected test(passedDomain?: string[] | Set<string>): boolean {
 		if (this.disabled) return false;
 		// Empty predicate means "no conditions" = always pass
-		if (this._predicate.size === 0) return true;
+		if (this.predicate.size === 0) return true;
 
 		this._warnOnLatePredicateKeys();
 
@@ -344,7 +340,7 @@ abstract class NimbleBaseRule<
 			...(this.item.getDomain() ?? []),
 		]);
 
-		return this._predicate.test(domain);
+		return this.predicate.test(domain);
 	}
 
 	protected resolveFormula(formula: string) {

@@ -97,7 +97,7 @@ function createRule(
 	rule.maxTargets = config.maxTargets ?? 1;
 
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
-	Object.defineProperty(rule, '_predicate', { get: () => ({ size: 0 }), configurable: true });
+	Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
 
 	return { rule, item };
 }

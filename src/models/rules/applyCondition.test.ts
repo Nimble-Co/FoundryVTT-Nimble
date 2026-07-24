@@ -103,7 +103,7 @@ function createApplyConditionRule(
 	rule.label = config.label ?? 'Test Apply Condition';
 
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0 }),
 		configurable: true,
 	});

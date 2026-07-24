@@ -136,7 +136,7 @@ function createSpeedBonusRule(
 	});
 
 	// Mock the _predicate property with an empty Predicate-like object that always passes
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0 }),
 		configurable: true,
 	});

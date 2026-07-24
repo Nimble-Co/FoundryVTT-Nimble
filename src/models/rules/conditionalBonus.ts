@@ -1,4 +1,3 @@
-import type { Predicate } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -69,12 +68,10 @@ function schema() {
 			hint: 'NIMBLE.rules.conditionalBonus.source.hint',
 			choices: ['weapon', 'spell', 'any'],
 		}),
-		// Cast: PredicateField extends ObjectField whose constructor typing doesn't
-		// accept label/hint. The renderer reads them off the instance correctly.
 		targetCondition: new PredicateField({
 			label: 'NIMBLE.rules.conditionalBonus.targetCondition.label',
 			hint: 'NIMBLE.rules.conditionalBonus.targetCondition.hint',
-		} as unknown as never),
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'conditionalBonus' }),
 	};
 }
@@ -103,10 +100,6 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	// blank sentinel); re-declaring it as the wider `string` clashes with that type.
 	declare delivery: ConditionalBonusDelivery;
 	declare source: ConditionalBonusSource;
-
-	private get _targetCondition(): Predicate | undefined {
-		return (this as object as { targetCondition?: Predicate }).targetCondition;
-	}
 
 	static override defineSchema(): ConditionalBonusRule.Schema {
 		return {
@@ -150,7 +143,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 
 	/** Evaluates the targetCondition predicate against a target domain. Empty = always. */
 	matchesTarget(targetDomain: Set<string> | undefined): boolean {
-		const targetCondition = this._targetCondition;
+		const targetCondition = this.targetCondition;
 		if (!targetCondition || targetCondition.size === 0) return true;
 		if (!targetDomain) return false;
 		return targetCondition.test(targetDomain);
