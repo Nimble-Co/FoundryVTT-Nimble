@@ -1,12 +1,18 @@
 import { SYSTEM_ID } from '#system';
 import { getAdjacencyIncludesDiagonals } from '../../settings/adjacencySettings.js';
-import { countAdjacentEnemies, type PositionOverrides } from '../../utils/tokenAdjacency.js';
+import {
+	countAdjacentAllies,
+	countAdjacentEnemies,
+	type PositionOverrides,
+} from '../../utils/tokenAdjacency.js';
 
 const ADJACENCY_FLAG_PATH = `flags.${SYSTEM_ID}.adjacency`;
 
 interface AdjacencyFlagData {
 	enemiesAdjacentCount: number;
 	hasMostAdjacentEnemies: boolean;
+	alliesAdjacentCount: number;
+	hasMostAdjacentAllies: boolean;
 }
 
 let didRegisterAdjacencySync = false;
@@ -35,6 +41,11 @@ async function syncAdjacency(overrides?: PositionOverrides): Promise<void> {
 	);
 	const maxCount = Math.max(...counts, 0);
 
+	const allyCounts = tokens.map((token) =>
+		countAdjacentAllies(token, tokens, overrides, includeDiagonals),
+	);
+	const maxAllyCount = Math.max(...allyCounts, 0);
+
 	const updates = activeCombatants
 		.map((combatant, i) => {
 			const actor = combatant.actor;
@@ -42,27 +53,41 @@ async function syncAdjacency(overrides?: PositionOverrides): Promise<void> {
 
 			const count = counts[i];
 			const hasMost = count > 0 && count === maxCount;
+			const allyCount = allyCounts[i];
+			const hasMostAllies = allyCount > 0 && allyCount === maxAllyCount;
 
 			const currentFlag = actor.getFlag(SYSTEM_ID, 'adjacency') as AdjacencyFlagData | undefined;
 			if (
 				currentFlag?.enemiesAdjacentCount === count &&
-				currentFlag?.hasMostAdjacentEnemies === hasMost
+				currentFlag?.hasMostAdjacentEnemies === hasMost &&
+				currentFlag?.alliesAdjacentCount === allyCount &&
+				currentFlag?.hasMostAdjacentAllies === hasMostAllies
 			) {
 				return null;
 			}
 
-			return { actor, count, hasMost };
+			return { actor, count, hasMost, allyCount, hasMostAllies };
 		})
 		.filter(
-			(u): u is { actor: Actor.Implementation; count: number; hasMost: boolean } => u != null,
+			(
+				u,
+			): u is {
+				actor: Actor.Implementation;
+				count: number;
+				hasMost: boolean;
+				allyCount: number;
+				hasMostAllies: boolean;
+			} => u != null,
 		);
 
 	await Promise.all(
-		updates.map(({ actor, count, hasMost }) =>
+		updates.map(({ actor, count, hasMost, allyCount, hasMostAllies }) =>
 			actor.update({
 				[ADJACENCY_FLAG_PATH]: {
 					enemiesAdjacentCount: count,
 					hasMostAdjacentEnemies: hasMost,
+					alliesAdjacentCount: allyCount,
+					hasMostAdjacentAllies: hasMostAllies,
 				},
 			} as Record<string, unknown>),
 		),
@@ -77,7 +102,12 @@ async function clearAdjacencyForCombat(combat: Combat.Implementation): Promise<v
 		.filter((actor): actor is Actor.Implementation => {
 			if (!actor) return false;
 			const flag = actor.getFlag(SYSTEM_ID, 'adjacency') as AdjacencyFlagData | undefined;
-			return (flag?.enemiesAdjacentCount ?? 0) > 0 || (flag?.hasMostAdjacentEnemies ?? false);
+			return (
+				(flag?.enemiesAdjacentCount ?? 0) > 0 ||
+				(flag?.hasMostAdjacentEnemies ?? false) ||
+				(flag?.alliesAdjacentCount ?? 0) > 0 ||
+				(flag?.hasMostAdjacentAllies ?? false)
+			);
 		});
 
 	await Promise.all(
@@ -86,6 +116,8 @@ async function clearAdjacencyForCombat(combat: Combat.Implementation): Promise<v
 				[ADJACENCY_FLAG_PATH]: {
 					enemiesAdjacentCount: 0,
 					hasMostAdjacentEnemies: false,
+					alliesAdjacentCount: 0,
+					hasMostAdjacentAllies: false,
 				},
 			} as Record<string, unknown>),
 		),

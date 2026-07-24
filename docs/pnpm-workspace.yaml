@@ -1,0 +1,15 @@
+# Makes docs a self-contained pnpm project (its own workspace root) so a
+# `pnpm install` here targets this package instead of resolving up to the
+# system repo's workspace and no-opping.
+#
+# vite is pinned to 5.4.19 (the last release published via a trusted
+# publisher). 5.4.20+ switched to provenance attestation, which pnpm's
+# no-downgrade trust policy rejects as a possible takeover. 5.4.19 satisfies
+# vitepress's ^5.4.14 range.
+overrides:
+  vite: 5.4.19
+
+# ~/.npmrc sets ignore-scripts, so esbuild (pulled by vite) will not fetch its
+# native binary unless its build is allowed explicitly.
+allowBuilds:
+  esbuild: true

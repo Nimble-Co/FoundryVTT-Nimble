@@ -6,7 +6,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyIncomingAttack",
+				"disabled": false,
+				"id": "2t2MTnfR7EJBX5LP",
+				"identifier": "",
+				"label": "",
+				"predicate": {
+					"self": "dying"
+				},
+				"priority": 1,
+				"modifier": "forceReroll",
+				"range": 2,
+				"automatic": true,
+				"rerollTrigger": "criticalHit"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

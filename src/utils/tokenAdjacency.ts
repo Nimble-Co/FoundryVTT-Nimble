@@ -10,12 +10,12 @@ export type AdjacencyQualifier = (typeof ADJACENCY_QUALIFIER)[keyof typeof ADJAC
 // Used to pass the NEW position from an updateToken change before document.x/y is committed.
 export type PositionOverrides = Map<string, { x: number; y: number }>;
 
-// Orthogonal adjacency: centers exactly 1 grid square apart (N/S/E/W).
-const ORTHOGONAL_THRESHOLD_SQUARES = 1.0;
+// Orthogonal range: centers up to 1 grid square apart per space (N/S/E/W).
+const ORTHOGONAL_THRESHOLD_SQUARES_PER_SPACE = 1.0;
 
-// Diagonal adjacency: centers up to ≈1.41 grid squares apart (corners).
+// Diagonal range: centers up to ≈1.41 grid squares apart per space (corners).
 // 1.5 gives a small margin above √2 to avoid floating-point misses.
-const DIAGONAL_THRESHOLD_SQUARES = 1.5;
+const DIAGONAL_THRESHOLD_SQUARES_PER_SPACE = 1.5;
 
 function tokenCenter(
 	token: Token.Implementation,
@@ -31,17 +31,20 @@ function tokenCenter(
 	};
 }
 
-function areAdjacentOnGrid(
+function areWithinSpaces(
 	tokenA: Token.Implementation,
 	tokenB: Token.Implementation,
+	spaces: number,
 	overrides?: PositionOverrides,
 	includeDiagonals = getAdjacencyIncludesDiagonals(),
 ): boolean {
 	if (!canvas?.grid) return false;
 
-	const thresholdSquares = includeDiagonals
-		? DIAGONAL_THRESHOLD_SQUARES
-		: ORTHOGONAL_THRESHOLD_SQUARES;
+	const thresholdSquares =
+		spaces *
+		(includeDiagonals
+			? DIAGONAL_THRESHOLD_SQUARES_PER_SPACE
+			: ORTHOGONAL_THRESHOLD_SQUARES_PER_SPACE);
 	const threshold = thresholdSquares * canvas.grid.size;
 	const a = tokenCenter(tokenA, overrides);
 	const b = tokenCenter(tokenB, overrides);
@@ -51,6 +54,15 @@ function areAdjacentOnGrid(
 	return Math.sqrt(dx * dx + dy * dy) <= threshold;
 }
 
+function areAdjacentOnGrid(
+	tokenA: Token.Implementation,
+	tokenB: Token.Implementation,
+	overrides?: PositionOverrides,
+	includeDiagonals = getAdjacencyIncludesDiagonals(),
+): boolean {
+	return areWithinSpaces(tokenA, tokenB, 1, overrides, includeDiagonals);
+}
+
 function areEnemies(tokenA: Token.Implementation, tokenB: Token.Implementation): boolean {
 	const dispA = tokenA.document.disposition;
 	const dispB = tokenB.document.disposition;
@@ -58,6 +70,17 @@ function areEnemies(tokenA: Token.Implementation, tokenB: Token.Implementation):
 	return (
 		(dispA === CONST.TOKEN_DISPOSITIONS.HOSTILE && dispB !== CONST.TOKEN_DISPOSITIONS.HOSTILE) ||
 		(dispB === CONST.TOKEN_DISPOSITIONS.HOSTILE && dispA !== CONST.TOKEN_DISPOSITIONS.HOSTILE)
+	);
+}
+
+// FRIENDLY, NEUTRAL, and SECRET all count as the non-HOSTILE side.
+// Self-exclusion is handled by callers' t !== token filters.
+function areAllies(tokenA: Token.Implementation, tokenB: Token.Implementation): boolean {
+	const dispA = tokenA.document.disposition;
+	const dispB = tokenB.document.disposition;
+
+	return (
+		(dispA === CONST.TOKEN_DISPOSITIONS.HOSTILE) === (dispB === CONST.TOKEN_DISPOSITIONS.HOSTILE)
 	);
 }
 
@@ -73,4 +96,16 @@ function countAdjacentEnemies(
 		.length;
 }
 
-export { countAdjacentEnemies };
+function countAdjacentAllies(
+	token: Token.Implementation,
+	allTokens: Token.Implementation[],
+	overrides?: PositionOverrides,
+	includeDiagonals = getAdjacencyIncludesDiagonals(),
+): number {
+	return allTokens
+		.filter((t) => t !== token)
+		.filter((t) => areAllies(token, t) && areAdjacentOnGrid(token, t, overrides, includeDiagonals))
+		.length;
+}
+
+export { areAdjacentOnGrid, areAllies, areWithinSpaces, countAdjacentAllies, countAdjacentEnemies };

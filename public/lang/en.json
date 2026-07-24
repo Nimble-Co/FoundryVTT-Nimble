@@ -89,7 +89,16 @@
 			"targetSkippedZeroDamage": "Ignored {tokenName} because the result is 0.",
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
-			"noHealingRecord": "No healing record found to undo"
+			"noHealingRecord": "No healing record found to undo",
+			"incomingReactions": {
+				"heading": "Reactions",
+				"forceReroll": "Force Reroll",
+				"interpose": "Interpose",
+				"baselineInterpose": "Interpose (Heroic Reaction)",
+				"rerolledBy": "Attack rerolled by {label}",
+				"redirectedTo": "Attack redirected to {name}",
+				"redirectedToVia": "Attack redirected to {name} via {label}"
+			}
 		},
 		"characterCreationStages": {
 			"stepFourStartingEquipment": "Step 4. Starting Equipment",
@@ -666,6 +675,7 @@
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
+			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
 			"note": "Note",
@@ -967,6 +977,29 @@
 			"maxWounds": {
 				"description": "Add to the actor’s maximum wounds before death.",
 				"value": { "label": "Bonus" }
+			},
+			"modifyIncomingAttack": {
+				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"modifier": {
+					"label": "Modifier",
+					"hint": "Disadvantage and Auto Miss apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card."
+				},
+				"range": {
+					"label": "Range (spaces)",
+					"hint": "How far away a targeted ally can be for this actor to redirect the attack to themselves. The baseline heroic Interpose reaction covers 2 spaces."
+				},
+				"automatic": {
+					"label": "Automatic",
+					"hint": "Reroll happens automatically when the attack resolves instead of offering a button. Use when you want a reroll to be mandatory."
+				},
+				"rerollTrigger": {
+					"label": "Reroll when",
+					"hint": "Always, only when the attack hits (not a miss), or only when it is a critical hit."
+				},
+				"rerollWithDisadvantage": {
+					"label": "Reroll at disadvantage",
+					"hint": "The forced reroll is made at disadvantage instead of a straight reroll (e.g. FAST)."
+				}
 			},
 			"modifyPool": {
 				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",

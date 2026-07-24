@@ -18,6 +18,12 @@ import { buildTargetDomain } from '../utils/conditionalBonuses.js';
 import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
+import {
+	applyPostRollIncomingBehavior,
+	computeIncomingAttackPlan,
+	type IncomingAttackPlan,
+	type IncomingReactionEntry,
+} from '../utils/incomingAttackModifiers.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
@@ -63,6 +69,9 @@ class ItemActivationManager {
 
 	/** Result of spell upcasting, if applicable. */
 	upcastResult: UpcastResult | null = null;
+
+	/** Interactive incoming-attack reactions to stamp onto the chat card. */
+	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
 	/**
 	 * Creates a new ItemActivationManager.
@@ -204,9 +213,10 @@ class ItemActivationManager {
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 		const targetDomain = this.#getFirstTargetDomain();
+		const incomingAttackPlan = computeIncomingAttackPlan(this.#getFirstTargetToken());
 
 		let rolls: (Roll | DamageRoll)[] = [];
-		rolls = await this.#getRolls(dialogData, targetDomain);
+		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
 		// Persist consumption of pool dice the player spent in the dialog.
 		// The dialog already included their face value in rollFormula above.
@@ -216,7 +226,12 @@ class ItemActivationManager {
 		// Get template data
 		const _templateData = this.#getTemplateData();
 
-		return { rolls, activation: this.activationData, rollHidden: dialogData.rollHidden ?? false };
+		return {
+			rolls,
+			activation: this.activationData,
+			rollHidden: dialogData.rollHidden ?? false,
+			incomingReactions: this.#appliedIncomingReactions,
+		};
 	}
 
 	/**
@@ -237,6 +252,7 @@ class ItemActivationManager {
 	async #getRolls(
 		dialogData: ItemActivationManager.DialogData,
 		targetDomain?: Set<string>,
+		incomingAttackPlan?: IncomingAttackPlan,
 	): Promise<(Roll | DamageRoll)[]> {
 		if (['ancestry', 'background', 'boon', 'class', 'subclass'].includes(this.#item.type))
 			return [];
@@ -245,6 +261,10 @@ class ItemActivationManager {
 		const updatedEffects: EffectNode[] = [];
 		const rolls: (Roll | DamageRoll)[] = [];
 		let foundDamageRoll = false;
+		// The primary damage node and its incoming-attack plan, resolved after the
+		// roll evaluates (automatic rerolls need the outcome).
+		let primaryDamageNode: EffectNode | null = null;
+		let primaryDamagePlan: IncomingAttackPlan | null = null;
 
 		// Check if item is a consumable (healing bonuses only apply to healing nodes, gated below)
 		const itemSystem = this.#item.system as { objectType?: string };
@@ -350,6 +370,29 @@ class ItemActivationManager {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}
 
+					// The target's incoming-attack rules only apply to actual attacks
+					// with a resolvable single target; an AoE roll is shared by every
+					// target, so one target's defensive rules must not modify it.
+					const incomingApplies = !isAoE && incomingAttackPlan != null;
+					if (incomingApplies) {
+						if (incomingAttackPlan.disadvantageCount > 0) {
+							const sources = Array.isArray(damageOptions.rollModeSources)
+								? [...damageOptions.rollModeSources]
+								: [damageOptions.rollMode];
+							for (let i = 0; i < incomingAttackPlan.disadvantageCount; i += 1) {
+								sources.push(-1);
+							}
+							damageOptions.rollModeSources = sources;
+						}
+						if (incomingAttackPlan.forceMiss) damageOptions.forceMiss = true;
+						if (incomingAttackPlan.appliedEntries.length > 0) {
+							(damageOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
+								incomingAttackPlan.appliedEntries;
+						}
+						primaryDamageNode = node;
+						primaryDamagePlan = incomingAttackPlan;
+					}
+
 					roll = new dependencies.DamageRoll(
 						formula,
 						this.actor!.getRollData() as DamageRoll.Data,
@@ -369,6 +412,32 @@ class ItemActivationManager {
 				}
 
 				await roll.evaluate();
+
+				// Resolve outcome-dependent incoming behavior for the primary damage
+				// roll: run any automatic reroll (e.g. "reroll incoming crits") and
+				// filter interactive offers whose trigger the outcome does not meet.
+				if (node === primaryDamageNode && primaryDamagePlan) {
+					const rollData = this.actor!.getRollData() as DamageRoll.Data;
+					const result = await applyPostRollIncomingBehavior(
+						roll as DamageRoll,
+						primaryDamagePlan,
+						async (formula, options) => {
+							const rerolled = new dependencies.DamageRoll(
+								formula,
+								rollData,
+								options as unknown as DamageRoll.Options,
+							);
+							await rerolled.evaluate();
+							return rerolled;
+						},
+					);
+					roll = result.roll;
+					if (result.discardedRoll) {
+						(node as { discardedRoll?: unknown }).discardedRoll = result.discardedRoll;
+					}
+					this.#appliedIncomingReactions = result.stampEntries;
+				}
+
 				node.roll = roll.toJSON() as Record<string, unknown>;
 				rolls.push(roll);
 			}
@@ -719,11 +788,7 @@ class ItemActivationManager {
 	 * Hexbinder) are the intended use case per #579.
 	 */
 	#getFirstTargetDomain(): Set<string> | undefined {
-		const targets = game.user?.targets;
-		if (!targets || targets.size === 0) return undefined;
-
-		const firstTarget = targets.values().next().value as Token | undefined;
-		const targetActor = firstTarget?.actor as
+		const targetActor = this.#getFirstTargetToken()?.actor as
 			| ({ getTargetDomain?: () => Set<string> } & { uuid?: string })
 			| null
 			| undefined;
@@ -738,6 +803,14 @@ class ItemActivationManager {
 			| null
 			| undefined;
 		return buildTargetDomain(attacker, targetActor);
+	}
+
+	/** Insertion-order first targeted token, matching #getFirstTargetDomain semantics. */
+	#getFirstTargetToken(): Token.Implementation | null {
+		const targets = game.user?.targets;
+		if (!targets || targets.size === 0) return null;
+
+		return (targets.values().next().value as Token.Implementation | undefined) ?? null;
 	}
 
 	/**
