@@ -101,10 +101,10 @@ function ruleSignature(rule: RuleSource): string {
  * copies without one. Idempotent: only rules whose signature is not already
  * present are appended, so hand-added or previously-migrated rules are kept.
  */
-class Migration030ModifyIncomingAttackFeatures extends MigrationBase {
-	static override readonly version = 30;
+class Migration031ModifyIncomingAttackFeatures extends MigrationBase {
+	static override readonly version = 31;
 
-	override readonly version = Migration030ModifyIncomingAttackFeatures.version;
+	override readonly version = Migration031ModifyIncomingAttackFeatures.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
@@ -143,4 +143,4 @@ class Migration030ModifyIncomingAttackFeatures extends MigrationBase {
 	}
 }
 
-export { Migration030ModifyIncomingAttackFeatures };
+export { Migration031ModifyIncomingAttackFeatures };

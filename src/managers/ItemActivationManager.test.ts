@@ -247,6 +247,90 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 	});
 
+	describe('Typed conditional-bonus damage', () => {
+		it('rolls typed conditional damage as its own damage effect with the chosen type', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{
+					fastForward: true,
+					conditionalDamages: [{ formula: '2', damageType: 'fire', label: 'Quarry' }],
+				},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+
+			// Primary node → DamageRoll; conditional damage → plain Roll. Give both a
+			// concrete instance (the default MockRoll impl recurses on `new Roll`).
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+			MockRoll.mockImplementation(function conditionalRoll(this: unknown) {
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn(() => ({ total: 2 })),
+				};
+			});
+
+			const result = await manager.getData();
+
+			// One roll for the primary damage node, one for the typed conditional damage.
+			expect(result.rolls).toHaveLength(2);
+			const effects = result.activation?.effects as EffectNode[];
+			const added = effects.find((n) => n.type === 'damage' && n.damageType === 'fire') as
+				| { formula: string; roll?: unknown }
+				| undefined;
+			expect(added).toBeDefined();
+			expect(added?.formula).toBe('2');
+			expect(added?.roll).toBeDefined();
+		});
+
+		it('adds no extra effect when no typed conditional damage is supplied', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+
+			const result = await manager.getData();
+
+			expect(result.rolls).toHaveLength(1);
+			expect((result.activation?.effects as EffectNode[]).length).toBe(1);
+		});
+	});
+
 	describe('Roll options', () => {
 		it('should use rollMode from dialogData', async () => {
 			manager = new ItemActivationManager(

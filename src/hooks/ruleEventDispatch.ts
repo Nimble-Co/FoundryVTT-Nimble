@@ -210,17 +210,34 @@ function handleInitiativeRolled(payload: NimbleInitiativePayload): void {
 	void dispatch(payload.actor, 'onInitiativeRolled', context);
 }
 
+interface UseItemContext {
+	targets?: Array<{ actor?: ActorWithRules | null; document?: TokenDocument } | null>;
+}
+
 function handleUseItem(
 	item: ItemWithActor | null,
 	card: ChatMessage | null,
-	_context: unknown,
+	context: UseItemContext,
 ): void {
 	if (!isAutoApplyEnabled()) return;
 	const sourceActor = item?.actor ?? null;
 	if (!sourceActor) return;
+
+	// Resolve the activation's targets so target-marking rules (e.g. a Hunter's
+	// quarry) can act on them. Self-toggle rules simply ignore these fields.
+	const targetTokens: TokenDocument[] = [];
+	const targetActors: ActorWithRules[] = [];
+	for (const target of context?.targets ?? []) {
+		if (!target) continue;
+		if (target.document) targetTokens.push(target.document);
+		if (target.actor) targetActors.push(target.actor);
+	}
+
 	const activatedContext: ItemActivatedContext = {
 		sourceItem: item as unknown as ItemActivatedContext['sourceItem'],
 		sourceActor: sourceActor as unknown as ItemActivatedContext['sourceActor'],
+		targetActors: targetActors as unknown as ItemActivatedContext['targetActors'],
+		targetTokens,
 		card,
 	};
 	void dispatch(sourceActor, 'onItemActivated', activatedContext);
@@ -319,13 +336,13 @@ export default function registerRuleEventDispatch(): void {
 	didRegister = true;
 
 	onHook(systemHookName('damageApplied'), handleDamageApplied as HookFn);
+	onHook(systemHookName('useItem'), handleUseItem as HookFn);
 	onHook('combatTurn', handleCombatTurn as HookFn);
 	onHook('combatRound', handleCombatTurn as HookFn);
 	onHook('updateActor', handleActorUpdate as HookFn);
 	onHook(systemHookName('saveResolved'), handleSaveResolved as HookFn);
 	onHook(systemHookName('rest'), handleRest as HookFn);
 	onHook(systemHookName('initiativeRolled'), handleInitiativeRolled as HookFn);
-	onHook(systemHookName('useItem'), handleUseItem as HookFn);
 	onHook('updateCombat', handleUpdateCombat as HookFn);
 	onHook('deleteCombat', handleDeleteCombat as HookFn);
 	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);

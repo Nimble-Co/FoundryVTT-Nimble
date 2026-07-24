@@ -27,4 +27,5 @@ export { Migration026IgniteSingleTarget } from './Migration026IgniteSingleTarget
 export { Migration027RageToggleEffect } from './Migration027RageToggleEffect.js';
 export { Migration028CombatDiceMaxFormula } from './Migration028CombatDiceMaxFormula.js';
 export { Migration029ThatAllYouGotDamageReduction } from './Migration029ThatAllYouGotDamageReduction.js';
-export { Migration030ModifyIncomingAttackFeatures } from './Migration030ModifyIncomingAttackFeatures.js';
+export { Migration030HuntersMarkRules } from './Migration030HuntersMarkRules.js';
+export { Migration031ModifyIncomingAttackFeatures } from './Migration031ModifyIncomingAttackFeatures.js';

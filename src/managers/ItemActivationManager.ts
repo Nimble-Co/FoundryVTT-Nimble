@@ -14,6 +14,7 @@ import {
 } from '../utils/attackUtils.js';
 import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
+import { buildTargetDomain } from '../utils/conditionalBonuses.js';
 import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
@@ -126,6 +127,7 @@ class ItemActivationManager {
 				primaryDieValue: options.primaryDieValue,
 				primaryDieModifier: options.primaryDieModifier,
 				rollHidden: options.rollHidden,
+				conditionalDamages: options.conditionalDamages,
 			};
 		} else {
 			// Check if there are damage or healing effects that require rolling
@@ -447,6 +449,30 @@ class ItemActivationManager {
 			updatedEffects.push(node);
 		}
 
+		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
+		// specific type) rolls as its own damage effect: the primary roll carries
+		// a single damage type, so folding a differently-typed bonus into it would
+		// mislabel the bonus. Like the item's secondary damage nodes, these are
+		// plain Rolls (no crit/miss doubling). Untyped conditional damage is
+		// already folded into the first node via `rollFormula`.
+		for (const conditional of dialogData.conditionalDamages ?? []) {
+			const formula = conditional.formula?.trim();
+			if (!formula) continue;
+			const roll = new Roll(formula, this.actor!.getRollData()) as Roll;
+			await roll.evaluate();
+			const node: EffectNode = {
+				id: foundry.utils.randomID(),
+				type: 'damage',
+				damageType: conditional.damageType,
+				formula,
+				parentContext: null,
+				parentNode: null,
+				roll: roll.toJSON() as Record<string, unknown>,
+			};
+			updatedEffects.push(node);
+			rolls.push(roll);
+		}
+
 		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
@@ -763,10 +789,20 @@ class ItemActivationManager {
 	 */
 	#getFirstTargetDomain(): Set<string> | undefined {
 		const targetActor = this.#getFirstTargetToken()?.actor as
-			| { getTargetDomain?: () => Set<string> }
+			| ({ getTargetDomain?: () => Set<string> } & { uuid?: string })
 			| null
 			| undefined;
-		return targetActor?.getTargetDomain?.();
+		if (!targetActor) return undefined;
+
+		// Combines the target's own `target:*` tags with the relational
+		// `target:<flagKey>` tags (e.g. `target:quarry`) this attacker has placed on it,
+		// so toggle-effect predicates resolve only for the marking actor. Shared with the
+		// activation dialog's dialog-open snapshot via buildTargetDomain.
+		const attacker = this.actor as object as
+			| { getFlag(scope: string, key: string): unknown }
+			| null
+			| undefined;
+		return buildTargetDomain(attacker, targetActor);
 	}
 
 	/** Insertion-order first targeted token, matching #getFirstTargetDomain semantics. */
@@ -908,6 +944,8 @@ namespace ItemActivationManager {
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
+		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
+		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
 	}
 
 	/**
@@ -944,6 +982,13 @@ namespace ItemActivationManager {
 		 * pool's current count after the roll succeeds.
 		 */
 		consumedChargePools?: Array<{ poolId: string; count: number }>;
+		/**
+		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
+		 * grants a specific damage type). Each becomes its own damage effect so the
+		 * chosen type applies, rather than being folded into the primary roll's type.
+		 * Untyped conditional damage is already baked into `rollFormula`.
+		 */
+		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
 	}
 }
 

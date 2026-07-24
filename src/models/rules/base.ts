@@ -79,6 +79,19 @@ interface ActivationCardContext {
 	isMiss: boolean;
 }
 
+// Context passed to onItemActivated — fires once when an item is used, regardless of
+// whether it deals damage or hits. Carries the resolved target actors so rules can act
+// on the activation itself (e.g. marking a quarry) rather than on an attack outcome.
+interface ItemActivatedContext {
+	sourceItem: NimbleBaseItem;
+	sourceActor: NimbleBaseActor;
+	// Optional: self-toggle rules ignore targets; target-marking rules read them.
+	// The dispatcher always populates both from the useItem hook.
+	targetActors?: NimbleBaseActor[];
+	targetTokens?: TokenDocument[];
+	card: ChatMessage | null;
+}
+
 interface TurnContext {
 	combat: Combat;
 	combatant: Combatant;
@@ -105,16 +118,6 @@ interface RestContext {
 interface InitiativeRolledContext {
 	actor: NimbleBaseActor;
 	combatant: Combatant;
-}
-
-// Context passed to onItemActivated. Fires once per item activation, regardless
-// of whether the activation produced damage (unlike onItemUsed, which only fires
-// when damage is actually applied to a target). Use this for player-controlled
-// toggles and other rule-lifecycle work that should happen on every activation.
-interface ItemActivatedContext {
-	sourceItem: NimbleBaseItem;
-	sourceActor: NimbleBaseActor;
-	card: ChatMessage | null;
 }
 
 // Context passed to onEncounterEnd. Fires once per combatant when a combat
@@ -396,6 +399,15 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/**
+	 * Hook called once when an item is activated/used, before attack outcomes are known.
+	 * Fires regardless of whether the item deals damage. Use for activation-time effects
+	 * such as marking a target. Dispatched from the `useItem` hook.
+	 */
+	async onItemActivated(_context: ItemActivatedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/** Hook called at the start of a combatant's turn. */
 	async onTurnStart(_context: TurnContext): Promise<void> {
 		// Default implementation does nothing
@@ -428,16 +440,6 @@ abstract class NimbleBaseRule<
 
 	/** Hook called when an actor rolls initiative. */
 	async onInitiativeRolled(_context: InitiativeRolledContext): Promise<void> {
-		// Default implementation does nothing
-	}
-
-	/**
-	 * Hook called once per item activation (post chat-card), regardless of whether
-	 * the activation produced damage. Use this for player-controlled toggles like
-	 * toggleEffect. Unlike onItemUsed, this fires on every activation, even for
-	 * items that don't roll damage.
-	 */
-	async onItemActivated(_context: ItemActivatedContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
@@ -509,13 +511,13 @@ export {
 	NimbleBaseRule,
 	type PreCreateArgs,
 	type ItemUsedContext,
+	type ItemActivatedContext,
 	type TurnContext,
 	type ActorHealthContext,
 	type SaveResolvedContext,
 	type RestContext,
 	type InitiativeRolledContext,
 	type ActivationCardContext,
-	type ItemActivatedContext,
 	type EncounterEndContext,
 	type ActorDyingContext,
 	type RoundChangedContext,

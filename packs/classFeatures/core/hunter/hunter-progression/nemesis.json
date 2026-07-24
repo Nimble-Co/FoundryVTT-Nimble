@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "markTarget",
+				"disabled": false,
+				"id": "nemesis-unlimited-quarry",
+				"identifier": "",
+				"label": "Nemesis",
+				"predicate": {},
+				"priority": 1,
+				"flagKey": "quarry",
+				"statusCondition": "marked",
+				"maxTargets": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
