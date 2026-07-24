@@ -124,7 +124,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	/** The spend flow posts its own chat card, so the default activation card
 	 *  is redundant noise. */
-	override suppressesActivationCard(): boolean {
+	protected override _autoSuppressesActivationCard(): boolean {
 		return this.#providesSpendFlow();
 	}
 

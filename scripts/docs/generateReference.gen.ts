@@ -112,6 +112,7 @@ const BASE_RULE_FIELDS = new Set([
 	'label',
 	'predicate',
 	'priority',
+	'suppressActivationCard',
 	'type',
 ]);
 
@@ -323,7 +324,7 @@ ${BANNER}
 ${group.intro}
 
 ::: tip Shared fields
-Every rule also has a **Label**, **Identifier**, **Condition**, **Priority**, and **Disabled** toggle. Those are explained once in [Rules Builder Basics](../rules-builder/index.md).
+Every rule also has a **Label**, **Identifier**, **Condition**, **Priority**, a **Disabled** toggle, and a **Suppress activation card** setting. Those are explained once in [Rules Builder Basics](../rules-builder/index.md).
 :::
 
 ${sections.join('\n')}`;

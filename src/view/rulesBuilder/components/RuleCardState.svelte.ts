@@ -10,6 +10,7 @@ export const FIXED_FIELDS = new Set([
 	'label',
 	'priority',
 	'predicate',
+	'suppressActivationCard',
 ]);
 
 export function createRuleCardState(

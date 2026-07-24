@@ -112,6 +112,18 @@ describe('DiceConsumerRule', () => {
 			const { rule } = createDiceConsumerRule({ disabled: true });
 			expect(rule.suppressesActivationCard()).toBe(false);
 		});
+
+		it('honors an explicit `never` over the automatic spend-flow suppression', () => {
+			const { rule } = createDiceConsumerRule({});
+			(rule as any).suppressActivationCard = 'never';
+			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+
+		it('honors an explicit `always` even without a spend flow', () => {
+			const { rule } = createDiceConsumerRule({ mode: 'autoBonus' });
+			(rule as any).suppressActivationCard = 'always';
+			expect(rule.suppressesActivationCard()).toBe(true);
+		});
 	});
 
 	describe('onItemActivated', () => {
