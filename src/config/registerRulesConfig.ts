@@ -30,6 +30,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
+import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
@@ -68,6 +69,7 @@ export default function registerRulesConfig() {
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
+		skillRollMode: 'NIMBLE.ruleTypes.skillRollMode',
 		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
 		toggleEffect: 'NIMBLE.ruleTypes.toggleEffect',
 		unarmedDamage: 'NIMBLE.ruleTypes.unarmedDamage',
@@ -106,6 +108,7 @@ export default function registerRulesConfig() {
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,
+		skillRollMode: SkillRollModeRule,
 		speedBonus: SpeedBonusRule,
 		toggleEffect: ToggleEffectRule,
 		unarmedDamage: UnarmedDamageRule,
