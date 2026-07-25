@@ -11,19 +11,19 @@
 		{
 			component: descriptionTab,
 			icon: 'fa-solid fa-file-lines',
-			tooltip: 'Description',
+			tooltip: 'NIMBLE.ancestryBonusSheet.descriptionTab',
 			name: 'description',
 		},
 		{
 			component: configTab,
 			icon: 'fa-solid fa-gears',
-			tooltip: 'Config',
+			tooltip: 'NIMBLE.ancestryBonusSheet.configTab',
 			name: 'config',
 		},
 		{
 			component: ItemRulesTab,
 			icon: 'fa-solid fa-bolt',
-			tooltip: 'Rules',
+			tooltip: 'NIMBLE.ancestryBonusSheet.rulesTab',
 			name: 'rules',
 		},
 	];
@@ -63,7 +63,9 @@
 	<section class="nimble-sheet__body nimble-sheet__body--item">
 		<div>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Identifier</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ancestryBonusSheet.identifier')}
+				</h3>
 			</header>
 
 			<input

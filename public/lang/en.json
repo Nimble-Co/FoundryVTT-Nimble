@@ -167,7 +167,11 @@
 			"noDescriptionAvailable": "No description available."
 		},
 		"ancestryBonusSheet": {
+			"descriptionTab": "Description",
+			"configTab": "Config",
+			"rulesTab": "Rules",
 			"description": "Ancestry Bonus Description",
+			"identifier": "Identifier",
 			"namePlaceholder": "Ancestry Bonus Name"
 		},
 		"ancestrySheet": {
