@@ -154,6 +154,26 @@
 			"enhancedSave": "Enhanced Save",
 			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
 		},
+		"ancestryBonusSelection": {
+			"header": "Step 2b. Select an Ancestry Bonus",
+			"editSelection": "Edit Ancestry Bonus Selection",
+			"hint": "Every ancestry comes with a default bonus trait. Confirm it, or change it for any other ancestry bonus that fits your character concept.",
+			"chooseHint": "Choose an ancestry bonus. You'll return here to confirm your pick.",
+			"noneAvailable": "There are no ancestry bonuses available in this world's compendium packs.",
+			"defaultMetadata": "Default",
+			"confirmSelection": "Confirm Ancestry Bonus",
+			"changeSelection": "Change Ancestry Bonus",
+			"tooltipHeading": "Ancestry Bonus",
+			"noDescriptionAvailable": "No description available."
+		},
+		"ancestryBonusSheet": {
+			"description": "Ancestry Bonus Description",
+			"namePlaceholder": "Ancestry Bonus Name"
+		},
+		"ancestrySheet": {
+			"defaultBonus": "Default Bonus",
+			"defaultBonusPlaceholder": "Ancestry bonus UUID (Compendium…Item.<id>)"
+		},
 		"backgroundOptionsSelection": {
 			"header": "Step 2b. Choose Heritage Ancestry",
 			"editSelection": "Edit Heritage Selection",

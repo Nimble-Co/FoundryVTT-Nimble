@@ -1,5 +1,6 @@
 import type { NimbleAncestryBonusItem } from '../../../documents/item/ancestryBonus.js';
 
+import localize from '../../../utils/localize.js';
 import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
 import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
 
@@ -9,8 +10,8 @@ export default async function prepareAncestryBonusTooltip(
 	const components = [
 		prepareEmbeddedDocumentTooltipHeader(bonus, ''),
 		await prepareEmbeddedDocumentTooltipDescription(
-			bonus.system?.description || 'No description available.',
-			'Ancestry Bonus',
+			bonus.system?.description || localize('NIMBLE.ancestryBonusSelection.noDescriptionAvailable'),
+			localize('NIMBLE.ancestryBonusSelection.tooltipHeading'),
 			bonus,
 		),
 	];

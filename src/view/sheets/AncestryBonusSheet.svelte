@@ -45,7 +45,9 @@
 	<section class="nimble-sheet__body nimble-sheet__body--item">
 		{#key item.reactive.system.description}
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Ancestry Bonus Description</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ancestryBonusSheet.description')}
+				</h3>
 			</header>
 
 			<Editor
@@ -86,7 +88,7 @@
 		</button>
 	</section>
 
-	<ItemHeader {item} placeholder="Ancestry Bonus Name" />
+	<ItemHeader {item} placeholder={localize('NIMBLE.ancestryBonusSheet.namePlaceholder')} />
 </header>
 
 <PrimaryNavigation bind:currentTab {navigation} />

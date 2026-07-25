@@ -3,6 +3,7 @@
 	import Hint from '../../../components/Hint.svelte';
 	import prepareAncestryBonusTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryBonusTooltip.js';
 	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
+	import localize from '../../../../utils/localize.js';
 	import DocumentCard from './DocumentCard.svelte';
 
 	let {
@@ -44,8 +45,8 @@
 		browsing = false;
 	}
 
-	const hintText =
-		'Every ancestry comes with a default bonus trait. Confirm it, or change it for any other ancestry bonus that fits your character concept.';
+	const hintText = localize('NIMBLE.ancestryBonusSelection.hint');
+	const defaultMetadata = localize('NIMBLE.ancestryBonusSelection.defaultMetadata');
 </script>
 
 <section
@@ -54,14 +55,14 @@
 >
 	<header class="nimble-section-header" data-header-variant="character-creator">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			Step 2b. Select an Ancestry Bonus
+			{localize('NIMBLE.ancestryBonusSelection.header')}
 
 			{#if !active && selectedAncestryBonus}
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Edit Ancestry Bonus Selection"
-					data-tooltip="Edit Ancestry Bonus Selection"
+					aria-label={localize('NIMBLE.ancestryBonusSelection.editSelection')}
+					data-tooltip={localize('NIMBLE.ancestryBonusSelection.editSelection')}
 					onclick={editSelection}
 				>
 					<i class="fa-solid fa-edit"></i>
@@ -72,12 +73,12 @@
 
 	{#if active}
 		{#if browsing}
-			<Hint hintText="Choose an ancestry bonus. You'll return here to confirm your pick." />
+			<Hint hintText={localize('NIMBLE.ancestryBonusSelection.chooseHint')} />
 
 			{#if !ancestryBonuses.length}
 				<Hint
 					hintIcon="fa-solid fa-circle-exclamation"
-					hintText="There are no ancestry bonuses available in this world's compendium packs."
+					hintText={localize('NIMBLE.ancestryBonusSelection.noneAvailable')}
 					hintType="warning"
 				/>
 			{:else}
@@ -91,7 +92,7 @@
 								document={bonus}
 								handler={handleBonusSelection}
 								data-card-selected={bonus.uuid === selectedAncestryBonus?.uuid ? '' : null}
-								metadata={isDefault ? 'Default' : null}
+								metadata={isDefault ? defaultMetadata : null}
 								{sourceLabel}
 								getTooltip={prepareAncestryBonusTooltip}
 							/>
@@ -108,14 +109,14 @@
 				document={selectedAncestryBonus}
 				handler={null}
 				data-card-option="non-clickable"
-				metadata={selectedAncestryBonus.uuid === defaultBonusUuid ? 'Default' : null}
+				metadata={selectedAncestryBonus.uuid === defaultBonusUuid ? defaultMetadata : null}
 				{sourceLabel}
 				getTooltip={prepareAncestryBonusTooltip}
 			/>
 
 			<div class="nimble-ancestry-bonus-actions">
 				<button class="nimble-button" data-button-variant="basic" onclick={confirmSelection}>
-					Confirm Ancestry Bonus
+					{localize('NIMBLE.ancestryBonusSelection.confirmSelection')}
 				</button>
 				<button
 					class="nimble-button"
@@ -123,7 +124,7 @@
 					data-button-style="secondary"
 					onclick={() => (browsing = true)}
 				>
-					Change Ancestry Bonus
+					{localize('NIMBLE.ancestryBonusSelection.changeSelection')}
 				</button>
 			</div>
 		{/if}

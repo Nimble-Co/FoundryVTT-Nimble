@@ -97,12 +97,14 @@
 
 		<div>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Default Bonus</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ancestrySheet.defaultBonus')}
+				</h3>
 			</header>
 
 			<input
 				type="text"
-				placeholder="Ancestry bonus UUID (Compendium…Item.&lt;id&gt;)"
+				placeholder={localize('NIMBLE.ancestrySheet.defaultBonusPlaceholder')}
 				value={defaultBonusUuid}
 				onchange={({ target }) => item.update({ 'system.defaultBonus': target.value.trim() })}
 			/>
