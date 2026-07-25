@@ -184,6 +184,28 @@ async function clickReactionButton(messageId: string, labelIncludes?: string): P
 	await settle(800);
 }
 
+/**
+ * Create a Combat with one combatant per member. Combatant `type` must match
+ * the actor's subtype ('character' combatants keep `initiative: null`;
+ * everything else is zeroed by NimbleCombatant's preCreate). Callers own
+ * deletion — track the returned combat's id for cleanup.
+ */
+async function createCombatWith(
+	members: Array<{ actor: { id: string | null; type?: string } }>,
+	{ start = true }: { start?: boolean } = {},
+): Promise<Combat> {
+	const combat = (await Combat.create({ active: true } as Combat.CreateData))!;
+	await combat.createEmbeddedDocuments(
+		'Combatant',
+		members.map((member) => ({
+			actorId: member.actor.id!,
+			type: member.actor.type ?? 'character',
+		})) as Combatant.CreateData[],
+	);
+	if (start) await combat.startCombat();
+	return combat;
+}
+
 const AUTO_APPLY_SETTING = 'automation.autoApplyConditions';
 
 /**
@@ -235,6 +257,7 @@ export {
 	attackFeatureData,
 	clearTargets,
 	clickReactionButton,
+	createCombatWith,
 	createViewedTestScene,
 	getAutoApplyConditions,
 	GRID_SIZE,
