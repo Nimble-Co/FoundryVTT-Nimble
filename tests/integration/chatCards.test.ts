@@ -23,13 +23,12 @@
 
 import { afterAll, describe, expect, test } from 'vitest';
 import { RestManager } from '../../src/managers/RestManager.ts';
+import { importPackItem, messageFromFlow, settle } from './liveHelpers.ts';
 
 const TEST_ACTOR_NAME = 'V14 Chat Card Test Actor';
 
 const testedTypes = new Set<string>();
 const createdMessageIds = new Set<string>();
-
-const settle = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function expectCardRendered(message: ChatMessage | null | undefined, type: string) {
 	expect(message, `a ${type} message should be created`).toBeTruthy();
@@ -45,24 +44,6 @@ async function expectCardRendered(message: ChatMessage | null | undefined, type:
 		node!.querySelector('[class*="nimble"]'),
 		`the ${type} card should mount its Svelte component`,
 	).toBeTruthy();
-}
-
-/** Run a flow that posts to chat and return the first new message of `type`. */
-async function messageFromFlow(type: string, flow: () => Promise<unknown>) {
-	const before = new Set(game.messages.contents.map((message) => message.id));
-	await flow();
-	await settle(800);
-	return game.messages.contents.find((message) => !before.has(message.id) && message.type === type);
-}
-
-async function importPackItem(actor: Actor, packName: string, predicate: (entry: any) => boolean) {
-	const pack = game.packs.get(`${game.system.id}.${packName}`)!;
-	const index = await pack.getIndex({ fields: ['system.activation.template'] });
-	const entry = index.contents.find(predicate);
-	expect(entry, `${packName} should contain a matching document`).toBeTruthy();
-	const doc = (await pack.getDocument(entry!._id))!;
-	const [item] = await actor.createEmbeddedDocuments('Item', [doc.toObject() as Item.CreateData]);
-	return item!;
 }
 
 describe('chat message cards', () => {

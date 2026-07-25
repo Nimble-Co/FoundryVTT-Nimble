@@ -43,7 +43,8 @@ Set environment variables in `.env.local` at the repo root (loaded automatically
 - [pool.ts](./pool.ts) is a custom Vitest pool: it launches Playwright Chromium, joins the Foundry world, and starts a throwaway Vite dev server that serves this repo's files to the page via `/@fs/`.
 - [tester.ts](./tester.ts) is imported into the Foundry page and exposes `window.__foundry_vitest__` — an in-page Vitest runner. Test files execute **in the page**, with the live Foundry globals, and results stream back to the terminal.
 - Test files live here as `*.test.ts`. Import test APIs from `vitest` explicitly (no globals). Use the live `game`/`CONFIG`/document classes — do **not** import modules from `src/` (the system already runs from its built bundle; importing source would create parallel module instances). Small shared constants like `#system` are fine.
-- Clean up world documents your test creates (`afterAll` + delete), so repeated runs stay deterministic.
+- [liveHelpers.ts](./liveHelpers.ts) holds the shared primitives: `settle`/`waitFor`, `messageFromFlow`, `importPackItem`, scene/token staging (`createViewedTestScene`, `placeToken`, `targetToken`), synthetic item factories, chat-card DOM helpers, and `purgeTestDocuments` for prefix-based cleanup.
+- Clean up world documents your test creates (`afterAll` + delete), so repeated runs stay deterministic. Prefix every created document's name with your file's test prefix and run `purgeTestDocuments(prefix)` in both `beforeAll` (stale leftovers from crashed runs) and `afterAll`.
 
 ## Provenance and adaptations
 
