@@ -408,3 +408,76 @@ describe('Oathsworn Radiant Judgement (post-Task-4 pack shape)', () => {
 		expect(entries[0].trigger).toBe('encounterEnd');
 	});
 });
+
+describe('applyRefillTriggersToPools — entry predicates', () => {
+	function makeActorWithDomain(tags: string[]): CharacterActorLike {
+		return {
+			type: 'character',
+			getRollData: vi.fn(() => ({})),
+			getDomain: vi.fn(() => new Set(tags)),
+		} as unknown as CharacterActorLike;
+	}
+
+	it('applies an entry whose predicate matches the actor domain', async () => {
+		const actor = makeActorWithDomain(['self:raging']);
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				refills: [refill({ trigger: 'onTurnStart', predicate: { self: 'raging' } })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(1);
+	});
+
+	it('skips an entry whose predicate fails against the actor domain', async () => {
+		const actor = makeActorWithDomain([]);
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				refills: [refill({ trigger: 'onTurnStart', predicate: { self: 'raging' } })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(0);
+		expect(entries).toHaveLength(0);
+	});
+
+	it('applies entries without a predicate regardless of domain', async () => {
+		const actor = makeActorWithDomain([]);
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				refills: [refill({ trigger: 'onTurnStart' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(1);
+	});
+
+	it('treats a predicate as failing when the actor exposes no domain', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				refills: [refill({ trigger: 'onTurnStart', predicate: { self: 'raging' } })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(0);
+	});
+});

@@ -1,3 +1,4 @@
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
 	areDicePoolMapsEqual,
@@ -27,6 +28,23 @@ type RefilledEntry = {
 
 const POOL_MAX_TOKEN_PATTERN = /@poolMax\b/g;
 const POOL_CURRENT_TOKEN_PATTERN = /@poolCurrent\b/g;
+
+/**
+ * Test a refill entry's optional predicate against the actor's live domain.
+ * Entries without a predicate (or with an empty one) always apply. A non-empty
+ * predicate is evaluated the same way rule predicates are: against the set of
+ * domain tags at the moment the trigger fires.
+ */
+function refillPredicatePasses(
+	actor: CharacterActorLike,
+	predicate: Record<string, unknown> | undefined,
+): boolean {
+	if (!predicate || Object.keys(predicate).length < 1) return true;
+
+	const actorWithDomain = actor as unknown as { getDomain?: () => Set<string> };
+	const domain = actorWithDomain.getDomain?.() ?? new Set<string>();
+	return new Predicate(predicate as RawPredicate).test(domain);
+}
 
 // Pool-context tokens (@poolMax, @poolCurrent) can't live in actor rollData
 // because the same actor can own multiple pools with different values. Inline
@@ -66,6 +84,7 @@ async function applyRefillTriggersToPools(
 
 		for (const refill of pool.refills) {
 			if (!triggerSet.has(refill.trigger)) continue;
+			if (!refillPredicatePasses(actor, refill.predicate)) continue;
 			matchingTrigger = refill.trigger;
 
 			if (refill.mode === 'clear') {

@@ -701,6 +701,20 @@ class NimbleCombat extends Combat {
 		return super.createEmbeddedDocuments(embeddedName, normalizedData, operation);
 	}
 
+	override async _onStartTurn(
+		combatant: Combatant.Implementation,
+		context: Combat.TurnEventContext,
+	) {
+		await super._onStartTurn(combatant, context);
+
+		// Foundry dispatches turn events on the active GM's client only, so this
+		// custom hook fires exactly once per turn start across all connected
+		// clients — the turn-start counterpart of `nimbleCombatTurnEnd`. Consumed
+		// by the dice/charge pool turn triggers.
+		// @ts-expect-error Custom hook
+		Hooks.call('nimbleCombatTurnStart', combatant);
+	}
+
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
 		// Under the expanded solo-monster turn order, Foundry derives `combatant` from its
 		// own `previous` turn snapshot, which our direct turn-index resync can leave pointing

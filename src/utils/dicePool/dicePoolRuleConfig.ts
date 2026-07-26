@@ -17,6 +17,7 @@ const DicePoolRuleConfig = {
 		'onKill',
 		'onBloodied',
 		'onAttacked',
+		'onCritReceived',
 	],
 	refillModes: ['add', 'set', 'refresh', 'setIfEmpty', 'clear'],
 	restTypes: ['safe', 'field'],

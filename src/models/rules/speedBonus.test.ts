@@ -141,7 +141,7 @@ function createSpeedBonusRule(
 	});
 
 	// Mock the _predicate property: size 0 always passes; a non-empty stub
-	// exercises the predicate-gated path (e.g. Onslaught's self:raging bonus)
+	// exercises the predicate-gated path
 	const predicatePasses = config.predicatePasses ?? true;
 	Object.defineProperty(rule, '_predicate', {
 		get: () => ({ size: predicatePasses ? 0 : 1, test: () => predicatePasses }),

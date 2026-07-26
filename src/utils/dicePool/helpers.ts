@@ -140,11 +140,23 @@ function normalizeRefills(value: unknown): DiceRefillEntry[] {
 			: 'add';
 		const formula = typeof sourceEntry.value === 'string' ? sourceEntry.value : '1';
 
-		refills.push({
+		const normalized: DiceRefillEntry = {
 			trigger: trigger as DiceRefillTrigger,
 			mode,
 			value: formula,
-		});
+		};
+
+		const predicate = sourceEntry.predicate;
+		if (
+			predicate &&
+			typeof predicate === 'object' &&
+			!Array.isArray(predicate) &&
+			Object.keys(predicate).length > 0
+		) {
+			normalized.predicate = predicate as Record<string, unknown>;
+		}
+
+		refills.push(normalized);
 	}
 
 	return refills;
@@ -291,6 +303,7 @@ function applyModifiersToDefinition(
 
 	let dieSize = definition.dieSize;
 	let max = definition.max;
+	let refills = definition.refills;
 
 	for (const modifier of modifiers) {
 		if (typeof modifier.dieSize === 'string' && modifier.dieSize.trim().length > 0) {
@@ -299,9 +312,17 @@ function applyModifiersToDefinition(
 		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
 			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
 		}
+		// Contributed refill entries append after the base pool's own. The
+		// modifier's rule-level predicate already gated inclusion (via
+		// getDicePoolModifiers → appliesTo), so entries land unconditionally;
+		// entry-level predicates are evaluated when the trigger fires.
+		const contributedRefills = normalizeRefills(modifier.addRefills);
+		if (contributedRefills.length > 0) {
+			refills = [...refills, ...contributedRefills];
+		}
 	}
 
-	return { ...definition, dieSize, max };
+	return { ...definition, dieSize, max, refills };
 }
 
 /**
@@ -589,7 +610,8 @@ function areRefillEntriesEqual(left: DiceRefillEntry[], right: DiceRefillEntry[]
 		if (
 			leftEntry.trigger !== rightEntry.trigger ||
 			leftEntry.mode !== rightEntry.mode ||
-			leftEntry.value !== rightEntry.value
+			leftEntry.value !== rightEntry.value ||
+			JSON.stringify(leftEntry.predicate ?? {}) !== JSON.stringify(rightEntry.predicate ?? {})
 		) {
 			return false;
 		}

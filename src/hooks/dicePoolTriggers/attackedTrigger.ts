@@ -16,15 +16,23 @@ export function registerAttackedTriggerHooks(): void {
 	if (registered) return;
 	registered = true;
 
-	// @ts-expect-error nimble.damageApplied is a custom Nimble hook not in
-	// Foundry's typed Hooks union; emitted by the damage application pipeline
-	// once per affected target, consumed here to drive onAttacked refill.
-	Hooks.on(systemHookName('damageApplied'), (payload: { targetActor?: unknown }) => {
+	const handleDamageApplied = (payload: { targetActor?: unknown; isCritical?: boolean }) => {
 		const target = payload?.targetActor;
 		if (!target || typeof target !== 'object') return;
 		const actor = target as Actor.Implementation;
 		if (actor.type !== 'character') return;
 
 		void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onAttacked');
-	});
+
+		// Only crits that reach damage application register — an attack that
+		// never applies damage does not fire this trigger.
+		if (payload?.isCritical === true) {
+			void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onCritReceived');
+		}
+	};
+
+	// @ts-expect-error nimble.damageApplied is a custom Nimble hook not in
+	// Foundry's typed Hooks union; emitted by the damage application pipeline
+	// once per affected target, consumed here to drive onAttacked refill.
+	Hooks.on(systemHookName('damageApplied'), handleDamageApplied);
 }
