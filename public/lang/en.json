@@ -675,6 +675,7 @@
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
+			"modifyConsumer": "Modify Consumer",
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
@@ -981,6 +982,21 @@
 			"maxWounds": {
 				"description": "Add to the actor’s maximum wounds before death.",
 				"value": { "label": "Bonus" }
+			},
+			"modifyConsumer": {
+				"description": "Augment the effect formula of dice-spend consumers targeting a pool (by identifier). Typically attached to a feature that improves how another feature spends its dice.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the pool whose consumers to modify (e.g. fury)."
+				},
+				"effectTypeFilter": {
+					"label": "Effect type filter",
+					"hint": "Only modify consumers with this effect type. Leave blank to modify every consumer on the pool."
+				},
+				"appendFormula": {
+					"label": "Append formula",
+					"hint": "Appended to matching consumers' effect formula as \"+ (...)\". Spend tokens @n (dice spent) and @sum (sum of spent faces) are available."
+				}
 			},
 			"modifyIncomingAttack": {
 				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",

@@ -249,3 +249,113 @@ describe('getDicePoolConsumers', () => {
 		expect(result.map((c) => c.itemName)).toEqual(['Alpha Strike', 'Zeta Strike']);
 	});
 });
+
+describe('modifyConsumer integration', () => {
+	function taygConsumer(): MockRule {
+		return {
+			type: 'diceConsumer',
+			id: 'tayg-consumer',
+			label: 'TAYG',
+			poolIdentifier: 'fury',
+			poolScope: 'item',
+			mode: 'manual',
+			cost: '1',
+			bonusOnAttackDelivery: null,
+			effectFormula: '(@str + @dex) * @n',
+			effectType: 'damageReduction',
+		} as MockRule;
+	}
+
+	function modifier(overrides: Record<string, unknown> = {}): MockRule {
+		return {
+			type: 'modifyConsumer',
+			id: 'boost',
+			poolIdentifier: 'fury',
+			effectTypeFilter: 'damageReduction',
+			appendFormula: '@sum',
+			...overrides,
+		} as MockRule;
+	}
+
+	it('appends the modifier formula to matching consumers', () => {
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),
+			createMockItem('booster', 'Booster Feature', [modifier()]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result).toHaveLength(1);
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n + (@sum)');
+	});
+
+	it('skips consumers whose effect type does not match the filter', () => {
+		const actor = createMockActor([
+			createMockItem('generic-spend', 'Generic Spend', [
+				{
+					type: 'diceConsumer',
+					id: 'generic-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: '@dexterity * @n',
+					effectType: 'generic',
+				} as MockRule,
+			]),
+			createMockItem('booster', 'Booster Feature', [modifier()]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result[0].effectFormula).toBe('@dexterity * @n');
+	});
+
+	it('modifies every consumer on the pool when the filter is blank', () => {
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),
+			createMockItem('booster', 'Booster Feature', [modifier({ effectTypeFilter: '' })]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n + (@sum)');
+	});
+
+	it('ignores disabled modifiers and modifiers for other pools', () => {
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),
+			createMockItem('booster', 'Booster Feature', [
+				modifier({ id: 'disabled-boost', disabled: true }),
+				modifier({ id: 'other-pool-boost', poolIdentifier: 'judgment' }),
+			]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n');
+	});
+
+	it('respects the modifier rule predicate via appliesTo', () => {
+		const gated = modifier() as MockRule & { appliesTo: () => boolean };
+		gated.appliesTo = () => false;
+
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),
+			createMockItem('booster', 'Booster Feature', [gated]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n');
+	});
+
+	it('composes multiple modifiers in priority order', () => {
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),
+			createMockItem('booster', 'Booster Feature', [
+				modifier({ id: 'second', appendFormula: '@n', priority: 2 }),
+				modifier({ id: 'first', appendFormula: '@sum', priority: 1 }),
+			]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n + (@sum) + (@n)');
+	});
+});
