@@ -1039,6 +1039,10 @@
 					"label": "Max delta",
 					"hint": "Signed amount added to the target pool's max (e.g. \"+1\", \"-1\", \"+@level\"). Leave blank to keep max unchanged."
 				},
+				"minFace": {
+					"label": "Minimum face",
+					"hint": "Dice rolled into the target pool below this value are raised to it. Leave blank for no floor. Ignored for charge pools."
+				},
 				"addRefills": {
 					"label": "Additional refills",
 					"hint": "Refill entries this modifier contributes to the target dice pool, on top of the pool's own refills. Ignored for charge pools."

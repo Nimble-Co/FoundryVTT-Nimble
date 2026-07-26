@@ -59,6 +59,18 @@ function schema() {
 				widget: 'formula',
 			}),
 		),
+		// Minimum face value for dice rolled into the target pool (dice pools
+		// only). Rolls below the floor are raised to it. The highest floor
+		// among contributing modifiers wins.
+		minFace: new fields.NumberField({
+			required: false,
+			nullable: true,
+			initial: null,
+			integer: true,
+			min: 1,
+			label: 'NIMBLE.rules.modifyPool.minFace.label',
+			hint: 'NIMBLE.rules.modifyPool.minFace.hint',
+		}),
 		// Refill entries this modifier contributes to the target pool (dice pools
 		// only). Lets a granting feature add its own refill trigger without
 		// editing the base pool rule.
@@ -129,6 +141,8 @@ class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
 
 	declare maxDelta: string | null;
 
+	declare minFace: number | null;
+
 	// `addRefills` is intentionally not re-declared: the schema-inferred type
 	// (with its exact choice unions) is used as-is, mirroring dicePool.refills.
 
@@ -146,6 +160,7 @@ class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
 				['poolIdentifier', 'string'],
 				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20" | null'],
 				['maxDelta', 'string | null'],
+				['minFace', 'number | null'],
 				[
 					'addRefills',
 					'Array<{ trigger: string; mode: string; value: string; predicate: object }>',

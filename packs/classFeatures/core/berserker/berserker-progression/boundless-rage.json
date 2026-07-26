@@ -6,7 +6,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "boundless-rage-fury-floor",
+				"identifier": "",
+				"label": "Boundless Rage: Fury Dice floor of 6",
+				"predicate": {},
+				"priority": 6,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": null,
+				"maxDelta": null,
+				"minFace": 6,
+				"addRefills": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -30,6 +30,9 @@ type DicePoolState = {
 	max: number;
 	faces: number[];
 	icon?: string;
+	/** Minimum face value for dice rolled into this pool; rolls below it are
+	 *  raised to the floor. Absent or null = no floor. */
+	minFace?: number | null;
 	refills: DiceRefillEntry[];
 	consumption: DiceConsumptionMode;
 	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
@@ -85,6 +88,7 @@ type ModifyPoolRuleLike = {
 	poolIdentifier?: string;
 	dieSize?: string | null;
 	maxDelta?: string | null;
+	minFace?: number | null;
 	addRefills?: unknown;
 };
 

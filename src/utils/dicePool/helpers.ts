@@ -76,6 +76,13 @@ function normalizeIdentifier(identifier: unknown): string {
 	return identifier.trim();
 }
 
+function normalizeMinFace(value: unknown): number | null {
+	const numericValue = typeof value === 'number' ? value : Number(value);
+	if (!Number.isFinite(numericValue)) return null;
+	const floored = Math.floor(numericValue);
+	return floored >= 1 ? floored : null;
+}
+
 function normalizeIcon(icon: unknown): string | undefined {
 	if (typeof icon !== 'string') return undefined;
 	const trimmed = icon.trim();
@@ -209,6 +216,7 @@ function getDicePoolMapFromActor(actor: CharacterActorLike): DicePoolMap {
 				max,
 				faces,
 				icon: normalizeIcon(sourcePool.icon),
+				minFace: normalizeMinFace(sourcePool.minFace),
 				refills,
 				consumption: toConsumptionMode(sourcePool.consumption),
 				bonusOnAttackDelivery: toAttackDeliveryFilter(sourcePool.bonusOnAttackDelivery),
@@ -249,6 +257,7 @@ function getDicePoolMapFromActor(actor: CharacterActorLike): DicePoolMap {
 				max,
 				faces,
 				icon: normalizeIcon(sourcePool.icon),
+				minFace: normalizeMinFace(sourcePool.minFace),
 				refills,
 				consumption: toConsumptionMode(sourcePool.consumption),
 				bonusOnAttackDelivery: toAttackDeliveryFilter(sourcePool.bonusOnAttackDelivery),
@@ -304,6 +313,7 @@ function applyModifiersToDefinition(
 	let dieSize = definition.dieSize;
 	let max = definition.max;
 	let refills = definition.refills;
+	let minFace = definition.minFace ?? null;
 
 	for (const modifier of modifiers) {
 		if (typeof modifier.dieSize === 'string' && modifier.dieSize.trim().length > 0) {
@@ -311,6 +321,11 @@ function applyModifiersToDefinition(
 		}
 		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
 			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
+		}
+		// The highest floor among contributing modifiers wins.
+		if (typeof modifier.minFace === 'number' && Number.isFinite(modifier.minFace)) {
+			const candidate = Math.max(1, Math.floor(modifier.minFace));
+			minFace = minFace === null ? candidate : Math.max(minFace, candidate);
 		}
 		// Contributed refill entries append after the base pool's own. The
 		// modifier's rule-level predicate already gated inclusion (via
@@ -322,7 +337,7 @@ function applyModifiersToDefinition(
 		}
 	}
 
-	return { ...definition, dieSize, max, refills };
+	return { ...definition, dieSize, max, refills, minFace };
 }
 
 /**
@@ -429,11 +444,16 @@ async function rollSingleDieFace(dieSize: DieSize): Promise<number> {
  * Build a fresh DicePoolState for a definition (used for initial seeding).
  * If initial === 'max', pre-rolls `max` dice. If 'zero', leaves faces empty.
  */
+function applyFaceFloor(face: number, minFace: number | null | undefined): number {
+	if (typeof minFace !== 'number' || !Number.isFinite(minFace)) return face;
+	return Math.max(face, Math.floor(minFace));
+}
+
 async function buildInitialDicePoolState(definition: DicePoolDefinition): Promise<DicePoolState> {
 	const faces: number[] = [];
 	if (definition.initial === 'max') {
 		for (let index = 0; index < definition.max; index += 1) {
-			faces.push(await rollSingleDieFace(definition.dieSize));
+			faces.push(applyFaceFloor(await rollSingleDieFace(definition.dieSize), definition.minFace));
 		}
 	}
 
@@ -448,6 +468,7 @@ async function buildInitialDicePoolState(definition: DicePoolDefinition): Promis
 		max: definition.max,
 		faces,
 		icon: definition.icon,
+		minFace: definition.minFace ?? null,
 		refills: definition.refills,
 		consumption: definition.consumption,
 		bonusOnAttackDelivery: definition.bonusOnAttackDelivery,
@@ -485,6 +506,7 @@ function reconcileDicePoolState(
 		max: definition.max,
 		faces: [...clampedFaces],
 		icon: existing?.icon ?? definition.icon,
+		minFace: definition.minFace ?? null,
 		refills: definition.refills,
 		consumption: definition.consumption,
 		bonusOnAttackDelivery: definition.bonusOnAttackDelivery,
@@ -639,6 +661,7 @@ function areDicePoolStatesEqual(left: DicePoolState, right: DicePoolState): bool
 		left.dieSize === right.dieSize &&
 		left.max === right.max &&
 		left.icon === right.icon &&
+		(left.minFace ?? null) === (right.minFace ?? null) &&
 		areFaceArraysEqual(left.faces, right.faces) &&
 		areRefillEntriesEqual(left.refills, right.refills)
 	);
@@ -666,6 +689,7 @@ export {
 	VALID_DIE_SIZES,
 	VALID_REFILL_MODES,
 	VALID_REFILL_TRIGGERS,
+	applyFaceFloor,
 	applyModifiersToDefinition,
 	areDicePoolMapsEqual,
 	areDicePoolStatesEqual,

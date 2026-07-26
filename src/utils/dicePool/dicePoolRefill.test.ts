@@ -481,3 +481,58 @@ describe('applyRefillTriggersToPools — entry predicates', () => {
 		expect(nextPools.fury.faces).toHaveLength(0);
 	});
 });
+
+describe('applyRefillTriggersToPools — minFace floor', () => {
+	it('raises rolled faces below the floor', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				minFace: 6,
+				refills: [refill({ trigger: 'onTurnStart', mode: 'add', value: '2' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		// The deterministic test die always rolls its max face (4 on a d4),
+		// which is below the floor of 6 and must be raised.
+		expect(nextPools.fury.faces).toEqual([6, 6]);
+	});
+
+	it('leaves faces at or above the floor untouched', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd12',
+				max: 2,
+				minFace: 6,
+				refills: [refill({ trigger: 'onTurnStart', mode: 'add', value: '1' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		// Deterministic die rolls 12, already above the floor.
+		expect(nextPools.fury.faces).toEqual([12]);
+	});
+
+	it('applies no floor when minFace is absent', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 1,
+				refills: [refill({ trigger: 'onTurnStart', mode: 'add', value: '1' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toEqual([4]);
+	});
+});

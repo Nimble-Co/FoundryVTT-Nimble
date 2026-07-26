@@ -1,6 +1,7 @@
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
+	applyFaceFloor,
 	areDicePoolMapsEqual,
 	buildEffectiveDicePoolMap,
 	dieSizeToMaxFace,
@@ -99,7 +100,7 @@ async function applyRefillTriggersToPools(
 			if (refill.mode === 'refresh') {
 				const needed = pool.max - pool.faces.length;
 				for (let index = 0; index < needed; index += 1) {
-					const face = await rollSingleDieFace(pool.dieSize);
+					const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 					pool.faces.push(face);
 					rolledFaces.push(face);
 				}
@@ -112,7 +113,7 @@ async function applyRefillTriggersToPools(
 				// 'set' rebuilds the pool to exactly `target` freshly-rolled dice.
 				pool.faces.length = 0;
 				for (let index = 0; index < target; index += 1) {
-					const face = await rollSingleDieFace(pool.dieSize);
+					const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 					pool.faces.push(face);
 					rolledFaces.push(face);
 				}
@@ -127,7 +128,7 @@ async function applyRefillTriggersToPools(
 				if (pool.faces.length > 0) continue;
 				const target = Math.min(amount, pool.max);
 				for (let index = 0; index < target; index += 1) {
-					const face = await rollSingleDieFace(pool.dieSize);
+					const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 					pool.faces.push(face);
 					rolledFaces.push(face);
 				}
@@ -138,7 +139,7 @@ async function applyRefillTriggersToPools(
 			const room = pool.max - pool.faces.length;
 			const toAdd = Math.max(0, Math.min(amount, room));
 			for (let index = 0; index < toAdd; index += 1) {
-				const face = await rollSingleDieFace(pool.dieSize);
+				const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 				pool.faces.push(face);
 				rolledFaces.push(face);
 			}
@@ -261,14 +262,18 @@ async function rollDieIntoPool(
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`1d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const face = roll.total ?? 1;
+	const rolledFace = roll.total ?? 1;
+	const face = applyFaceFloor(rolledFace, pool.minFace);
 
 	if (!options.suppressChat) {
 		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
 			.ChatMessage;
+		const baseFlavor = options.flavor ?? pool.label;
+		const flavor =
+			face !== rolledFace ? `${baseFlavor} (rolled ${rolledFace}, raised to ${face})` : baseFlavor;
 		await roll.toMessage({
 			speaker: ChatMessageCls.getSpeaker({ actor }),
-			flavor: options.flavor ?? pool.label,
+			flavor,
 		});
 	}
 
@@ -333,7 +338,7 @@ async function rollPoolFresh(
 	const newFaces: number[] = [];
 	for (const die of roll.dice) {
 		for (const result of die.results) {
-			newFaces.push(result.result);
+			newFaces.push(applyFaceFloor(result.result, pool.minFace));
 		}
 	}
 	pool.faces = newFaces.slice(0, pool.max);

@@ -899,3 +899,46 @@ describe('areDicePoolMapsEqual', () => {
 		).toBe(false);
 	});
 });
+
+describe('applyModifiersToDefinition minFace', () => {
+	const floorBase: DicePoolDefinition = {
+		id: 'fury',
+		identifier: 'fury',
+		scope: 'item',
+		sourceItemId: 'item-1',
+		sourceItemName: 'Rage',
+		label: 'Fury Dice',
+		dieSize: 'd4',
+		max: 3,
+		initial: 'zero',
+		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
+	};
+
+	it('applies a modifier minFace to the definition', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 6 },
+		]);
+		expect(result.minFace).toBe(6);
+	});
+
+	it('keeps the highest floor when multiple modifiers contribute', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 3 },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 6 },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 2 },
+		]);
+		expect(result.minFace).toBe(6);
+	});
+
+	it('leaves minFace null when no modifier sets one', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', dieSize: 'd6' },
+		]);
+		expect(result.minFace).toBeNull();
+	});
+});
