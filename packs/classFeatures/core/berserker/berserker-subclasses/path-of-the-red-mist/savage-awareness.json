@@ -12,7 +12,7 @@
 				"disabled": false,
 				"id": "savage-awareness-perception",
 				"identifier": "",
-				"label": "Savage Awareness (Perception — blood only)",
+				"label": "Savage Awareness (Perception, blood only)",
 				"predicate": {},
 				"priority": 1,
 				"value": 1,
@@ -48,7 +48,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Advantage on Perception checks to notice or track down blood. Blindsight 2 while Raging: you ignore the Blinded condition and can see through darkness and Invisibility within that Range.</p><p><em>The Perception advantage is pre-set on the roll dialog for blood-related checks — dial it back for other Perception checks. Blindsight is not automated.</em></p>",
+		"description": "<p>Advantage on Perception checks to notice or track down blood. Blindsight 2 while Raging: you ignore the Blinded condition and can see through darkness and Invisibility within that Range.</p><p><em>The Perception advantage is pre-set on the roll dialog for blood-related checks; dial it back for other Perception checks. Blindsight is not automated.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "path-of-the-red-mist",

@@ -12,7 +12,7 @@
 				"disabled": false,
 				"id": "bloodlust-fury-consumer",
 				"identifier": "",
-				"label": "Bloodlust — free movement",
+				"label": "Bloodlust: free movement",
 				"predicate": {},
 				"priority": 1,
 				"poolIdentifier": "fury",

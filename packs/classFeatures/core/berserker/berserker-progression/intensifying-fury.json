@@ -12,7 +12,7 @@
 				"disabled": false,
 				"id": "intensifying-fury-turn-refill",
 				"identifier": "",
-				"label": "Intensifying Fury — free Fury Die at turn start",
+				"label": "Intensifying Fury: free Fury Die at turn start",
 				"predicate": {},
 				"priority": 1,
 				"poolType": "dice",

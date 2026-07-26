@@ -13,7 +13,7 @@
 				"disabled": false,
 				"id": "death-blow-fury-consumer",
 				"identifier": "",
-				"label": "Death Blow — bonus damage",
+				"label": "Death Blow: bonus damage",
 				"predicate": {},
 				"priority": 1,
 				"poolIdentifier": "fury",

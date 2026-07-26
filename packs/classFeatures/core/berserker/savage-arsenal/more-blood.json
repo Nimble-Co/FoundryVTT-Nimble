@@ -13,7 +13,7 @@
 				"disabled": false,
 				"id": "more-blood-crit-refill",
 				"identifier": "",
-				"label": "MORE BLOOD! — gain a Fury Die when crit",
+				"label": "MORE BLOOD! (gain a Fury Die when crit)",
 				"predicate": {},
 				"priority": 1,
 				"poolType": "dice",
