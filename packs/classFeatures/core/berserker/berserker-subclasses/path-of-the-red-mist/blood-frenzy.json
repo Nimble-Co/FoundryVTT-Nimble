@@ -38,6 +38,23 @@
 				"poolIdentifier": "bloodFrenzyUse",
 				"poolScope": "item",
 				"cost": "1"
+			},
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "blood-frenzy-fury-maximize",
+				"identifier": "",
+				"label": "Blood Frenzy: change a Fury Die to its maximum",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"poolScope": "item",
+				"mode": "manual",
+				"cost": "1",
+				"bonusOnAttackDelivery": null,
+				"effectFormula": null,
+				"effectType": "generic",
+				"selectionOutcome": "maximize"
 			}
 		],
 		"activation": {
@@ -53,28 +70,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "bfReminderNote0001",
-					"type": "note",
-					"noteType": "reminder",
-					"text": "Trigger: you crit or kill an enemy while Raging.",
-					"parentContext": null,
-					"parentNode": null
-				},
-				{
-					"id": "bfMaximizeDie0001",
-					"type": "pool",
-					"poolType": "dice",
-					"action": "maximizeDie",
-					"poolIdentifier": "fury",
-					"value": 1,
-					"predicate": {},
-					"suppressChat": false,
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -87,7 +83,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p><p><em>Click this feature after a qualifying crit or kill: your lowest Fury Die is raised to its maximum. Limited to once per turn.</em></p>",
+		"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p><p><em>Click this feature after a qualifying crit or kill, then pick which Fury Die to raise. Limited to once per turn.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "path-of-the-red-mist",

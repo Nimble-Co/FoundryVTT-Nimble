@@ -17,6 +17,7 @@ type DicePoolConsumer = {
 	cost: string;
 	effectFormula: string | null;
 	effectType: string;
+	selectionOutcome: string;
 };
 
 function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
@@ -102,8 +103,10 @@ function applyConsumerModifiers(
  *   - rule.mode === 'manual'
  *   - rule.poolIdentifier matches pool.identifier
  *   - rule.poolScope matches pool.scope
- *   - effectFormula is present (consumers with no effect have no UX hook to
- *     advertise — they spend silently via the sheet's per-die click)
+ *   - the consumer has something for the panel to do: an effectFormula to
+ *     evaluate, or a selection outcome that transforms the picked dice.
+ *     Formula-less consumers that only spend have no UX hook to advertise —
+ *     they spend silently via the sheet's per-die click.
  */
 function getDicePoolConsumers(
 	actor: Actor | null | undefined,
@@ -131,18 +134,23 @@ function getDicePoolConsumers(
 			if (normalizeIdentifier(consumer.poolIdentifier) !== poolIdentifier) continue;
 			if ((consumer.poolScope ?? 'item') !== pool.scope) continue;
 
+			const selectionOutcome =
+				typeof (consumer as { selectionOutcome?: unknown }).selectionOutcome === 'string' &&
+				(consumer as { selectionOutcome: string }).selectionOutcome.length > 0
+					? (consumer as { selectionOutcome: string }).selectionOutcome
+					: 'consume';
+
 			const baseEffectFormula = readEffectFormula(consumer);
-			if (baseEffectFormula === null) continue;
+			if (baseEffectFormula === null && selectionOutcome === 'consume') continue;
 
 			const effectType =
 				typeof consumer.effectType === 'string' && consumer.effectType.length > 0
 					? consumer.effectType
 					: 'generic';
-			const effectFormula = applyConsumerModifiers(
-				baseEffectFormula,
-				effectType,
-				consumerModifiers,
-			);
+			const effectFormula =
+				baseEffectFormula === null
+					? null
+					: applyConsumerModifiers(baseEffectFormula, effectType, consumerModifiers);
 
 			consumers.push({
 				itemId: String(item.id),
@@ -161,6 +169,7 @@ function getDicePoolConsumers(
 				cost: typeof consumer.cost === 'string' ? consumer.cost : '1',
 				effectFormula,
 				effectType,
+				selectionOutcome,
 			});
 		}
 	}

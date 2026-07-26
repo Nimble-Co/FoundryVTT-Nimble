@@ -731,6 +731,10 @@
 				"effectType": {
 					"label": "Effect type",
 					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
+				},
+				"selectionOutcome": {
+					"label": "Selection outcome",
+					"hint": "What happens to the dice the player picks. \"Consume\" removes them from the pool; \"Maximize\" leaves them in place and raises each to the die's highest face, limited to the cost."
 				}
 			},
 			"chargePool": {
@@ -1278,11 +1282,15 @@
 				"useFeature": {
 					"heading": "Use a feature",
 					"pickDice": "Pick dice to spend",
+					"pickDiceToMaximize": "Pick a die to raise to its maximum",
+					"dieAlreadyMax": "Already at its maximum",
 					"toggleDie": "Toggle die (value: {value})",
 					"summary": "Selected {count} · sum {total}",
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
 					"spendWithCount": "Spend ({count})",
+					"maximize": "Maximize",
+					"maximizedNote": "Maximized {count} {label} ({changes})",
 					"bankedReductionNote": "Applied automatically as damage reduction against the next damage taken."
 				}
 			}

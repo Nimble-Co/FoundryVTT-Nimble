@@ -359,3 +359,80 @@ describe('modifyConsumer integration', () => {
 		expect(result[0].effectFormula).toBe('(@str + @dex) * @n + (@sum) + (@n)');
 	});
 });
+
+describe('selectionOutcome', () => {
+	it('defaults to consume and passes an explicit outcome through', () => {
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [
+				{
+					type: 'diceConsumer',
+					id: 'tayg-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: '@n',
+				} as MockRule,
+			]),
+			createMockItem('bf', 'Blood Frenzy', [
+				{
+					type: 'diceConsumer',
+					id: 'bf-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: null,
+					selectionOutcome: 'maximize',
+				} as MockRule,
+			]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result.find((c) => c.itemId === 'tayg')?.selectionOutcome).toBe('consume');
+		expect(result.find((c) => c.itemId === 'bf')?.selectionOutcome).toBe('maximize');
+	});
+
+	it('lists formula-less consumers when they transform the picked dice', () => {
+		const actor = createMockActor([
+			createMockItem('bf', 'Blood Frenzy', [
+				{
+					type: 'diceConsumer',
+					id: 'bf-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: null,
+					selectionOutcome: 'maximize',
+				} as MockRule,
+			]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result).toHaveLength(1);
+		expect(result[0].effectFormula).toBeNull();
+	});
+
+	it('still skips formula-less consumers that only spend', () => {
+		const actor = createMockActor([
+			createMockItem('silent', 'Silent Spender', [
+				{
+					type: 'diceConsumer',
+					id: 'silent-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: null,
+				} as MockRule,
+			]),
+		]);
+
+		expect(getDicePoolConsumers(actor, createFuryPool())).toHaveLength(0);
+	});
+});
