@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p>",
+		"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p><p><em>Apply the two +1 stat increases manually on your sheet. The Fury Die floor is automated.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

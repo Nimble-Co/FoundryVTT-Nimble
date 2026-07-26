@@ -48,7 +48,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>While Dying, you Rage automatically for free at the beginning of your turn, have a max of 2 actions instead of 1, and ignore the STR saves to make attacks.</p>",
+		"description": "<p>While Dying, you Rage automatically for free at the beginning of your turn, have a max of 2 actions instead of 1, and ignore the STR saves to make attacks.</p><p><em>The action limit is automated. The STR-save bypass is narrative — the system never rolls that save for you.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

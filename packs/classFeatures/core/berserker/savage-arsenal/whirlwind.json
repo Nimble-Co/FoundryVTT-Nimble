@@ -21,7 +21,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "wwReminderNote001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Attack ALL targets within your melee weapon's reach.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

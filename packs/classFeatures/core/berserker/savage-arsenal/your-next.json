@@ -21,7 +21,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "ynReminderNote001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "While Raging: make a Might check, DC = the target's current HP. On a success, the enemy immediately flees the battle.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
