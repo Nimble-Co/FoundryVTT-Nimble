@@ -680,6 +680,7 @@
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
 			"note": "Note",
+			"poolGainMessage": "Pool Gain Message",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
@@ -1065,6 +1066,21 @@
 			},
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
+			},
+			"poolGainMessage": {
+				"description": "Post a chat reminder whenever a dice pool gains dice. Supports `{value}` interpolation from a formula.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the dice pool whose gains trigger the message (e.g. fury)."
+				},
+				"formula": {
+					"label": "Formula",
+					"hint": "Resolved against actor data and inserted into the message wherever {value} appears."
+				},
+				"message": {
+					"label": "Message",
+					"hint": "Chat text posted when the pool gains dice. Use {value} to insert the formula result."
+				}
 			},
 			"savingThrowBonus": {
 				"description": "Add a flat or formula-based bonus to one or more saving throws. Use ‘all’ to apply to every save.",

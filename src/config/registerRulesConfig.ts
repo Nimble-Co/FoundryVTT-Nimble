@@ -31,6 +31,7 @@ import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.j
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
+import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
@@ -74,6 +75,7 @@ export default function registerRulesConfig() {
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		note: 'NIMBLE.ruleTypes.note',
+		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
@@ -117,6 +119,7 @@ export default function registerRulesConfig() {
 		modifyPool: ModifyPoolRule,
 		modifyToggle: ModifyToggleRule,
 		note: NoteRule,
+		poolGainMessage: PoolGainMessageRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,
