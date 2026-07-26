@@ -359,6 +359,58 @@ async function rollPoolFresh(
 }
 
 /**
+ * Set the lowest `count` faces in a pool to the die's maximum face value
+ * (always the optimal choice for the player). Returns whether any face
+ * changed. Driven by the `maximizeDie` pool-node action.
+ */
+async function maximizePoolDie(
+	actor: Actor | null | undefined,
+	poolId: string,
+	count = 1,
+): Promise<boolean> {
+	if (!isCharacterActor(actor)) return false;
+	if (typeof poolId !== 'string' || poolId.length < 1) return false;
+	const toMaximize = Math.max(0, Math.floor(count));
+	if (toMaximize < 1) return false;
+
+	const currentPools = buildEffectiveDicePoolMap(actor);
+	const pool = currentPools[poolId];
+	if (!pool) return false;
+	if (pool.faces.length < 1) return false;
+
+	const maxFace = dieSizeToMaxFace(pool.dieSize);
+	const previousFaces = [...pool.faces];
+
+	// Raise the lowest faces first; leave faces already at max untouched.
+	const sortedIndices = pool.faces
+		.map((face, index) => ({ face, index }))
+		.sort((a, b) => a.face - b.face)
+		.slice(0, toMaximize)
+		.filter(({ face }) => face < maxFace)
+		.map(({ index }) => index);
+
+	if (sortedIndices.length < 1) return false;
+
+	const newFaces = [...pool.faces];
+	for (const index of sortedIndices) newFaces[index] = maxFace;
+	pool.faces = newFaces;
+
+	await persistDicePoolMap(actor, currentPools);
+
+	emitForCharacter(actor, 'changed', {
+		actor,
+		poolId,
+		poolLabel: pool.label,
+		previousFaces,
+		newFaces: [...pool.faces],
+		reason: 'manual',
+		trigger: 'manual',
+	});
+
+	return true;
+}
+
+/**
  * Manually adjust a pool's faces (GM tool or sheet UI). Operates on a single pool by id.
  * Pass an explicit `faces` array to overwrite, or null to clear.
  */
@@ -404,6 +456,7 @@ export {
 	applyRefillToActorIfEligible,
 	applyRefillTriggersToPools,
 	applyRestRefill,
+	maximizePoolDie,
 	rollDieIntoPool,
 	rollPoolFresh,
 	setPoolFaces,

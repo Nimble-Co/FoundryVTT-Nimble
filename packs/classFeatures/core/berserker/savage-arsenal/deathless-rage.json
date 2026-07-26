@@ -7,7 +7,40 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "deathless-rage-use-pool",
+				"identifier": "deathlessRageUse",
+				"label": "Deathless Rage use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "deathless-rage-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "deathlessRageUse",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -21,7 +54,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "dlReminderNote0001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "While Dying: mark 1 Wound on your sheet and gain 1 action.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -34,7 +76,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p>",
+		"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p><p><em>Click this feature to use it (limited to once per turn). Mark the Wound and the extra action manually.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"gainedAtLevel": 4,

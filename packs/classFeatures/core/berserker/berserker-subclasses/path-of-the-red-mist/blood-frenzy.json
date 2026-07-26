@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "blood-frenzy-use-pool",
+				"identifier": "bloodFrenzyUse",
+				"label": "Blood Frenzy use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "blood-frenzy-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "bloodFrenzyUse",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +53,28 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "bfReminderNote0001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Trigger: you crit or kill an enemy while Raging.",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "bfMaximizeDie0001",
+					"type": "pool",
+					"poolType": "dice",
+					"action": "maximizeDie",
+					"poolIdentifier": "fury",
+					"value": 1,
+					"predicate": {},
+					"suppressChat": false,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -33,7 +87,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p>",
+		"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p><p><em>Click this feature after a qualifying crit or kill: your lowest Fury Die is raised to its maximum. Limited to once per turn.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "path-of-the-red-mist",

@@ -15,7 +15,12 @@ import {
 import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
 import { buildTargetDomain } from '../utils/conditionalBonuses.js';
-import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
+import {
+	maximizePoolDie,
+	rollDieIntoPool,
+	rollPoolFresh,
+	setPoolFaces,
+} from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import {
@@ -582,6 +587,7 @@ class ItemActivationManager {
 	 *   dice  + rollDie   -> roll `value` dice into the pool (one at a time)
 	 *   dice  + rollPool  -> roll the full pool fresh (max dice)
 	 *   dice  + clear     -> empty the pool
+	 *   dice  + maximizeDie -> raise the lowest `value` faces to the die max
 	 *   charge + fillCount -> add `value` charges (clamped to max)
 	 *   charge + clear     -> set current to 0
 	 *
@@ -695,6 +701,18 @@ class ItemActivationManager {
 					poolLabel: before.label,
 					previousCount: before.faces.length,
 					newCount: 0,
+				};
+				return;
+			}
+			if (node.action === 'maximizeDie') {
+				const before = readPool();
+				const ok = await maximizePoolDie(actor, poolId, count > 0 ? count : 1);
+				const after = readPool();
+				node.result = {
+					applied: ok,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
 				};
 				return;
 			}

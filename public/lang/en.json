@@ -2124,7 +2124,8 @@
 					"rollDie": "Rolled",
 					"rollPool": "Rolled fresh",
 					"fillCount": "Gained",
-					"clear": "Cleared"
+					"clear": "Cleared",
+					"maximizeDie": "Maximized"
 				},
 				"skipReasons": {
 					"predicate": "Skipped (predicate not met)",
@@ -2147,7 +2148,8 @@
 					"actionRollDie": "Roll Die",
 					"actionRollPool": "Roll Pool",
 					"actionFillCount": "Fill Count",
-					"actionClear": "Clear"
+					"actionClear": "Clear",
+					"actionMaximizeDie": "Maximize lowest die"
 				}
 			}
 		},

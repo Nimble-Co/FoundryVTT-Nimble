@@ -212,3 +212,70 @@ describe('rollDieIntoPool — item-scoped pool persistence (Judgment Dice)', () 
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([5, 4]);
 	});
 });
+
+describe('maximizePoolDie — raise lowest faces to the die max', () => {
+	function seedPool(item: Record<string, any>, faces: number[]): void {
+		item.flags = {
+			nimble: {
+				dicePools: {
+					judgment: {
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						sourceItemId: 'qiQeJrIxla9y6XY0',
+						sourceItemName: 'Radiant Judgement',
+						label: 'Judgment Dice',
+						dieSize: 'd6',
+						max: 2,
+						faces,
+						refills: [
+							{ trigger: 'onAttacked', mode: 'setIfEmpty', value: '@poolMax' },
+							{ trigger: 'encounterEnd', mode: 'clear', value: '0' },
+						],
+						consumption: 'manual',
+						bonusOnAttackDelivery: null,
+					},
+				},
+			},
+		};
+	}
+
+	it('raises the lowest face to the die maximum and persists it', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 5]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const changed = await maximizePoolDie(actor, 'judgment', 1);
+
+		expect(changed).toBe(true);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 5]);
+	});
+
+	it('returns false when the pool is empty', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, []);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		expect(await maximizePoolDie(actor, 'judgment', 1)).toBe(false);
+	});
+
+	it('returns false when every face is already at the maximum', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [6, 6]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		expect(await maximizePoolDie(actor, 'judgment', 1)).toBe(false);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+
+	it('raises multiple faces when count is greater than one', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 3]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const changed = await maximizePoolDie(actor, 'judgment', 2);
+
+		expect(changed).toBe(true);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+});

@@ -11,7 +11,7 @@ export type PoolNode = {
 	id: string;
 	type: 'pool';
 	poolType: 'dice' | 'charge';
-	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear';
+	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear' | 'maximizeDie';
 	poolIdentifier: string;
 	value: number;
 	predicate?: Record<string, unknown>;
