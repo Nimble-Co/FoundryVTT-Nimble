@@ -158,6 +158,25 @@ describe('normalizeRefills', () => {
 		expect(refills[0].predicate).toBeUndefined();
 		expect(refills[1].predicate).toBeUndefined();
 	});
+
+	it('unwraps Predicate-instance shapes to the raw predicate object', () => {
+		const refills = normalizeRefills([
+			{
+				trigger: 'onTurnStart',
+				mode: 'add',
+				value: '1',
+				predicate: { isValid: true, _source: { self: 'raging' } },
+			},
+			{
+				trigger: 'onTurnEnd',
+				mode: 'add',
+				value: '1',
+				predicate: { isValid: true, _source: {} },
+			},
+		]);
+		expect(refills[0].predicate).toEqual({ self: 'raging' });
+		expect(refills[1].predicate).toBeUndefined();
+	});
 });
 
 describe('getDicePoolDefinitions', () => {

@@ -98,11 +98,31 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 	async function runAndGetNode(actor: PoolMockActor | null, original: PoolNode): Promise<PoolNode> {
 		const manager = buildManager(actor, [original]);
 		const result = await manager.getData();
+		// Pool side effects are deferred until the preUseItem gate clears;
+		// the activate() flows call this after the gate allows the use.
+		await manager.applyDeferredPoolNodes();
 		const dispatched = (result.activation?.effects ?? []).find(
 			(n: EffectNode) => n.id === original.id,
 		);
 		return dispatched as PoolNode;
 	}
+
+	it('defers pool side effects until applyDeferredPoolNodes is called (blocked uses stay side-effect free)', async () => {
+		const actor = makeActor(3);
+		const manager = buildManager(actor, [
+			poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }),
+		]);
+		await manager.getData();
+
+		expect(mockRollDieIntoPool).not.toHaveBeenCalled();
+
+		await manager.applyDeferredPoolNodes();
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+
+		// Idempotent: a second call must not re-apply the same nodes.
+		await manager.applyDeferredPoolNodes();
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+	});
 
 	describe('dice pools', () => {
 		it('rollDie: invokes rollDieIntoPool once per value', async () => {

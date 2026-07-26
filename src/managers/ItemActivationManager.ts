@@ -78,6 +78,8 @@ class ItemActivationManager {
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
+	#deferredPoolNodes: PoolNode[] = [];
+
 	/**
 	 * Creates a new ItemActivationManager.
 	 *
@@ -448,7 +450,10 @@ class ItemActivationManager {
 			}
 
 			if (node.type === 'pool') {
-				await this.#applyPoolNode(node as PoolNode);
+				// Pool nodes mutate actor state, so their application is deferred
+				// until the caller confirms the use is allowed (the preUseItem
+				// gate fires after getData). See applyDeferredPoolNodes().
+				this.#deferredPoolNodes.push(node as PoolNode);
 			}
 
 			updatedEffects.push(node);
@@ -575,6 +580,21 @@ class ItemActivationManager {
 			}
 			const next = Math.max(0, currentValue - count);
 			await adjustPool(actor, entry.poolId, 'set', next);
+		}
+	}
+
+	/**
+	 * Apply the pool effect nodes collected during getData. Pool nodes carry
+	 * actor-state side effects, so they must not run until the caller has
+	 * cleared the preUseItem gate (which fires after getData); results are
+	 * recorded on the same node objects the activation data references, so
+	 * the chat card still renders them. Safe to call once per activation.
+	 */
+	async applyDeferredPoolNodes(): Promise<void> {
+		const nodes = this.#deferredPoolNodes;
+		this.#deferredPoolNodes = [];
+		for (const node of nodes) {
+			await this.#applyPoolNode(node);
 		}
 	}
 

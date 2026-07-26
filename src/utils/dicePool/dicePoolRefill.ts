@@ -40,11 +40,17 @@ function refillPredicatePasses(
 	actor: CharacterActorLike,
 	predicate: Record<string, unknown> | undefined,
 ): boolean {
-	if (!predicate || Object.keys(predicate).length < 1) return true;
+	// Tolerate serialized Predicate-instance shapes from older stored state.
+	const raw = (
+		predicate && typeof predicate === 'object' && '_source' in predicate
+			? (predicate as { _source?: unknown })._source
+			: predicate
+	) as Record<string, unknown> | undefined;
+	if (!raw || Object.keys(raw).length < 1) return true;
 
 	const actorWithDomain = actor as unknown as { getDomain?: () => Set<string> };
 	const domain = actorWithDomain.getDomain?.() ?? new Set<string>();
-	return new Predicate(predicate as RawPredicate).test(domain);
+	return new Predicate(raw as RawPredicate).test(domain);
 }
 
 // Pool-context tokens (@poolMax, @poolCurrent) can't live in actor rollData

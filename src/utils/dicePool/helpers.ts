@@ -153,7 +153,13 @@ function normalizeRefills(value: unknown): DiceRefillEntry[] {
 			value: formula,
 		};
 
-		const predicate = sourceEntry.predicate;
+		// Initialized rule data carries Predicate instances (whose enumerable
+		// shape is { isValid, _source }); persisted flag state may carry that
+		// serialized shape. Unwrap to the raw predicate object in both cases.
+		let predicate = sourceEntry.predicate;
+		if (predicate && typeof predicate === 'object' && '_source' in predicate) {
+			predicate = (predicate as { _source?: unknown })._source;
+		}
 		if (
 			predicate &&
 			typeof predicate === 'object' &&
