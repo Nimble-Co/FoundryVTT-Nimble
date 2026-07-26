@@ -364,25 +364,33 @@ async function rollPoolFresh(
 	return true;
 }
 
+type MaximizePoolDieResult = {
+	changed: boolean;
+	/** Why nothing changed, for the chat card's skip label. */
+	reason?: 'unknownPool' | 'poolEmpty' | 'allAtMax';
+};
+
 /**
  * Set the lowest `count` faces in a pool to the die's maximum face value
- * (always the optimal choice for the player). Returns whether any face
- * changed. Driven by the `maximizeDie` pool-node action.
+ * (always the optimal choice for the player). Reports whether any face
+ * changed and, if not, why. Driven by the `maximizeDie` pool-node action.
  */
 async function maximizePoolDie(
 	actor: Actor | null | undefined,
 	poolId: string,
 	count = 1,
-): Promise<boolean> {
-	if (!isCharacterActor(actor)) return false;
-	if (typeof poolId !== 'string' || poolId.length < 1) return false;
+): Promise<MaximizePoolDieResult> {
+	if (!isCharacterActor(actor)) return { changed: false, reason: 'unknownPool' };
+	if (typeof poolId !== 'string' || poolId.length < 1) {
+		return { changed: false, reason: 'unknownPool' };
+	}
 	const toMaximize = Math.max(0, Math.floor(count));
-	if (toMaximize < 1) return false;
+	if (toMaximize < 1) return { changed: false, reason: 'poolEmpty' };
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const pool = currentPools[poolId];
-	if (!pool) return false;
-	if (pool.faces.length < 1) return false;
+	if (!pool) return { changed: false, reason: 'unknownPool' };
+	if (pool.faces.length < 1) return { changed: false, reason: 'poolEmpty' };
 
 	const maxFace = dieSizeToMaxFace(pool.dieSize);
 	const previousFaces = [...pool.faces];
@@ -395,7 +403,7 @@ async function maximizePoolDie(
 		.filter(({ face }) => face < maxFace)
 		.map(({ index }) => index);
 
-	if (sortedIndices.length < 1) return false;
+	if (sortedIndices.length < 1) return { changed: false, reason: 'allAtMax' };
 
 	const newFaces = [...pool.faces];
 	for (const index of sortedIndices) newFaces[index] = maxFace;
@@ -413,7 +421,7 @@ async function maximizePoolDie(
 		trigger: 'manual',
 	});
 
-	return true;
+	return { changed: true };
 }
 
 /**

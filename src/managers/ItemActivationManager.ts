@@ -449,13 +449,6 @@ class ItemActivationManager {
 				rolls.push(roll);
 			}
 
-			if (node.type === 'pool') {
-				// Pool nodes mutate actor state, so their application is deferred
-				// until the caller confirms the use is allowed (the preUseItem
-				// gate fires after getData). See applyDeferredPoolNodes().
-				this.#deferredPoolNodes.push(node as PoolNode);
-			}
-
 			updatedEffects.push(node);
 		}
 
@@ -486,7 +479,35 @@ class ItemActivationManager {
 		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
+		// Pool nodes mutate actor state, so their application is deferred until
+		// the caller confirms the use is allowed (the preUseItem gate fires
+		// after getData). Collect them from the RECONSTRUCTED tree: it deep
+		// clones every node, and results must land on the objects the chat card
+		// serializes. See applyDeferredPoolNodes().
+		this.#deferredPoolNodes = ItemActivationManager.#collectPoolNodes(
+			this.activationData.effects as EffectNode[],
+		);
+
 		return rolls;
+	}
+
+	/** Depth-first walk of an effects tree, returning every pool node. */
+	static #collectPoolNodes(nodes: EffectNode[] | undefined): PoolNode[] {
+		const found: PoolNode[] = [];
+		const walk = (node: EffectNode | null | undefined): void => {
+			if (!node) return;
+			if (node.type === 'pool') found.push(node as PoolNode);
+			const branching = node as {
+				on?: Record<string, EffectNode[] | undefined>;
+				sharedRolls?: EffectNode[];
+			};
+			for (const children of Object.values(branching.on ?? {})) {
+				for (const child of children ?? []) walk(child);
+			}
+			for (const child of branching.sharedRolls ?? []) walk(child);
+		};
+		for (const node of nodes ?? []) walk(node);
+		return found;
 	}
 
 	/**
@@ -726,10 +747,11 @@ class ItemActivationManager {
 			}
 			if (node.action === 'maximizeDie') {
 				const before = readPool();
-				const ok = await maximizePoolDie(actor, poolId, count > 0 ? count : 1);
+				const res = await maximizePoolDie(actor, poolId, count > 0 ? count : 1);
 				const after = readPool();
 				node.result = {
-					applied: ok,
+					applied: res.changed,
+					...(res.changed ? {} : { skipReason: res.reason }),
 					poolLabel: after.label ?? before.label,
 					previousCount: before.faces.length,
 					newCount: after.faces.length,

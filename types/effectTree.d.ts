@@ -27,7 +27,13 @@ export type PoolNode = {
 	parentNode: string | null;
 	result?: {
 		applied: boolean;
-		skipReason?: 'predicate' | 'invalidAction' | 'unknownPool' | 'noActor';
+		skipReason?:
+			| 'predicate'
+			| 'invalidAction'
+			| 'unknownPool'
+			| 'noActor'
+			| 'poolEmpty'
+			| 'allAtMax';
 		poolLabel?: string;
 		previousCount?: number;
 		newCount?: number;

@@ -83,8 +83,11 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			game: { user: { targets?: unknown[] } };
 		};
 		gameGlobal.game.user.targets = [];
-		// reconstructEffectsTree just returns its input so we can read mutated nodes back.
-		testDependencies.reconstructEffectsTree = ((effects: EffectNode[]) => effects) as never;
+		// Clone nodes like the real reconstructEffectsTree does: pool results
+		// must land on the reconstructed (cloned) nodes the chat card
+		// serializes, not on the pre-reconstruction originals.
+		testDependencies.reconstructEffectsTree = ((effects: EffectNode[]) =>
+			effects.map((node) => structuredClone(node))) as never;
 	});
 
 	function buildManager(actor: PoolMockActor | null, effects: EffectNode[]) {

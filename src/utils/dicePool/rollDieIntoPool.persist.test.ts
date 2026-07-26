@@ -245,9 +245,9 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		seedPool(item, [2, 5]);
 
 		const { maximizePoolDie } = await import('./dicePoolRefill.js');
-		const changed = await maximizePoolDie(actor, 'judgment', 1);
+		const result = await maximizePoolDie(actor, 'judgment', 1);
 
-		expect(changed).toBe(true);
+		expect(result.changed).toBe(true);
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 5]);
 	});
 
@@ -256,7 +256,10 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		seedPool(item, []);
 
 		const { maximizePoolDie } = await import('./dicePoolRefill.js');
-		expect(await maximizePoolDie(actor, 'judgment', 1)).toBe(false);
+		expect(await maximizePoolDie(actor, 'judgment', 1)).toEqual({
+			changed: false,
+			reason: 'poolEmpty',
+		});
 	});
 
 	it('returns false when every face is already at the maximum', async () => {
@@ -264,7 +267,10 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		seedPool(item, [6, 6]);
 
 		const { maximizePoolDie } = await import('./dicePoolRefill.js');
-		expect(await maximizePoolDie(actor, 'judgment', 1)).toBe(false);
+		expect(await maximizePoolDie(actor, 'judgment', 1)).toEqual({
+			changed: false,
+			reason: 'allAtMax',
+		});
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
 	});
 
@@ -273,9 +279,9 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		seedPool(item, [2, 3]);
 
 		const { maximizePoolDie } = await import('./dicePoolRefill.js');
-		const changed = await maximizePoolDie(actor, 'judgment', 2);
+		const result = await maximizePoolDie(actor, 'judgment', 2);
 
-		expect(changed).toBe(true);
+		expect(result.changed).toBe(true);
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
 	});
 });

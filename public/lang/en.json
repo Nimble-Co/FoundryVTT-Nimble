@@ -2133,7 +2133,7 @@
 			"addOnSave": "Add on-save effect",
 			"poolNode": {
 				"defaultLabel": "Pool",
-				"noChange": "— no change",
+				"noChange": "- no change",
 				"atMax": "(pool at max)",
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
@@ -2147,7 +2147,9 @@
 					"predicate": "Skipped (predicate not met)",
 					"invalidAction": "Skipped (invalid action for pool type)",
 					"unknownPool": "Skipped (pool not found)",
-					"noActor": "Skipped (no actor)"
+					"noActor": "Skipped (no actor)",
+					"poolEmpty": "No dice in the pool",
+					"allAtMax": "All dice already at maximum"
 				},
 				"config": {
 					"deleteLabel": "Delete Pool",
