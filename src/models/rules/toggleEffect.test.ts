@@ -788,6 +788,161 @@ describe('ToggleEffectRule', () => {
 		});
 	});
 
+	describe('modifyToggle auto turn-on', () => {
+		function attachModifier(
+			actor: MockActor,
+			modifier: Record<string, unknown>,
+		): Record<string, unknown> {
+			actor.items = {
+				contents: [{ rules: { values: () => [modifier] } }],
+			};
+			return modifier;
+		}
+
+		function turnContext(actor: MockActor) {
+			type Ctx = Parameters<ToggleEffectRule['onTurnStart']>[0];
+			return {
+				actor: actor as unknown as Ctx['actor'],
+				combat: {} as Ctx['combat'],
+				combatant: {} as Ctx['combatant'],
+			};
+		}
+
+		function attackContext(actor: MockActor, isCritical: boolean) {
+			type Ctx = Parameters<ToggleEffectRule['onAttackReceived']>[0];
+			return {
+				sourceItem: {} as Ctx['sourceItem'],
+				sourceActor: {} as Ctx['sourceActor'],
+				targetActor: actor as unknown as Ctx['targetActor'],
+				card: null,
+				isCritical,
+				isMiss: false,
+			};
+		}
+
+		it('creates the backing AE at turn start when a matching rule requests it', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onTurnStart'],
+			});
+
+			await rule.onTurnStart(turnContext(actor));
+
+			expect(actor.createEmbeddedDocuments).toHaveBeenCalled();
+		});
+
+		it('re-enables a disabled backing AE instead of creating a duplicate', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			const ae = createMockActiveEffect(
+				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: 'item-id' } },
+				{ id: 'ae-off', disabled: true },
+			);
+			actor.effects.push(ae);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onTurnStart'],
+			});
+
+			await rule.onTurnStart(turnContext(actor));
+
+			expect(ae.update).toHaveBeenCalledWith({ disabled: false });
+			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('is a no-op when the toggle is already on', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			const ae = createMockActiveEffect(
+				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: 'item-id' } },
+				{ id: 'ae-on', disabled: false },
+			);
+			actor.effects.push(ae);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onTurnStart'],
+			});
+
+			await rule.onTurnStart(turnContext(actor));
+
+			expect(ae.update).not.toHaveBeenCalled();
+			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('respects the requesting rule predicate via appliesTo', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onTurnStart'],
+				appliesTo: () => false,
+			});
+
+			await rule.onTurnStart(turnContext(actor));
+
+			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('turns on from a received critical hit but not a normal hit', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onCritReceived'],
+			});
+
+			await rule.onAttackReceived(attackContext(actor, false));
+			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+
+			await rule.onAttackReceived(attackContext(actor, true));
+			expect(actor.createEmbeddedDocuments).toHaveBeenCalled();
+		});
+
+		it('does nothing when this client is not the active GM', async () => {
+			const gameGlobal = globalThis as unknown as {
+				game: { users?: { activeGM?: { id: string; isSelf: boolean } } };
+			};
+			gameGlobal.game.users = { activeGM: { id: 'a-different-gm', isSelf: false } };
+
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onTurnStart'],
+			});
+
+			await rule.onTurnStart(turnContext(actor));
+
+			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('endAfterInactiveRounds: inactivity tracking', () => {
 		const gameGlobal = globalThis as unknown as {
 			game: { combat?: unknown; users?: unknown };

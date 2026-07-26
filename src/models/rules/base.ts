@@ -408,6 +408,15 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/**
+	 * Hook dispatched to the TARGET actor's rules when damage from an attack is
+	 * applied to them (the defender-side counterpart of onItemUsed). Fires from
+	 * the damage-application pipeline, so voided hits never trigger it.
+	 */
+	async onAttackReceived(_context: ItemUsedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/** Hook called at the start of a combatant's turn. */
 	async onTurnStart(_context: TurnContext): Promise<void> {
 		// Default implementation does nothing

@@ -1057,6 +1057,10 @@
 				"suppressTurnOff": {
 					"label": "Suppress turn-off on",
 					"hint": "Turn-off events the target toggle should ignore. The toggle no longer ends automatically when these events fire."
+				},
+				"turnOn": {
+					"label": "Turn on automatically on",
+					"hint": "Events on which the target toggle switches on automatically. This rule's condition gates the turn-on, so add one to restrict when it applies."
 				}
 			},
 			"note": {
@@ -1159,6 +1163,12 @@
 					"onEncounterEnd": "combat ended",
 					"onActorDying": "started dying",
 					"inactivity": "went {rounds} round(s) without attacking or re-activating"
+				},
+				"startedMessage": "{name} activated automatically: {reason}.",
+				"startReasons": {
+					"onTurnStart": "turn started",
+					"onActorDying": "started dying",
+					"onCritReceived": "was critically hit"
 				}
 			},
 			"markTarget": {

@@ -91,6 +91,18 @@ describe('ModifyToggleRule', () => {
 			expect(typeField.initial).toBe('modifyToggle');
 		});
 
+		it('offers the toggleEffect turn-on vocabulary for turnOn choices', () => {
+			const schema = ModifyToggleRule.defineSchema();
+			const turnOnField = schema.turnOn as unknown as {
+				element: { choices: readonly string[] };
+			};
+			expect([...turnOnField.element.choices]).toEqual([
+				'onTurnStart',
+				'onActorDying',
+				'onCritReceived',
+			]);
+		});
+
 		it('shares the toggleEffect turn-off vocabulary for suppressTurnOff choices', () => {
 			const schema = ModifyToggleRule.defineSchema();
 			const suppressField = schema.suppressTurnOff as unknown as {

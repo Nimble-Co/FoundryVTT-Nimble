@@ -45,6 +45,7 @@ import registerRuleEventDispatch from './ruleEventDispatch.js';
 
 interface RuleLike {
 	onItemUsed: Mock;
+	onAttackReceived: Mock;
 	onTurnStart: Mock;
 	onTurnEnd: Mock;
 	onActorKilled: Mock;
@@ -61,6 +62,7 @@ interface RuleLike {
 function createMockRule(): RuleLike {
 	return {
 		onItemUsed: vi.fn().mockResolvedValue(undefined),
+		onAttackReceived: vi.fn().mockResolvedValue(undefined),
 		onTurnStart: vi.fn().mockResolvedValue(undefined),
 		onTurnEnd: vi.fn().mockResolvedValue(undefined),
 		onActorKilled: vi.fn().mockResolvedValue(undefined),
@@ -154,6 +156,31 @@ describe('ruleEventDispatch', () => {
 				sourceActor,
 				targetActor,
 			});
+		});
+
+		it('calls onAttackReceived on each rule of the target actor', async () => {
+			const sourceRule = createMockRule();
+			const targetRule = createMockRule();
+			const sourceActor = { rules: [sourceRule] };
+			const targetActor = { rules: [targetRule] };
+
+			const handler = handlers.get('nimble.damageApplied');
+			handler?.({
+				sourceItem: { name: 'Shadow Blast' },
+				sourceActor,
+				targetActor,
+				card: null,
+				isCritical: true,
+				isMiss: false,
+			});
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
+			expect(targetRule.onItemUsed).not.toHaveBeenCalled();
+			expect(sourceRule.onAttackReceived).not.toHaveBeenCalled();
+			const ctx = targetRule.onAttackReceived.mock.calls[0]?.[0];
+			expect(ctx).toMatchObject({ isCritical: true, sourceActor, targetActor });
 		});
 
 		it('no-ops when sourceActor or targetActor is missing', async () => {
