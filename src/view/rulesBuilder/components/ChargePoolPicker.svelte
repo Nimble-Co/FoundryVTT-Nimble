@@ -27,21 +27,25 @@
 	);
 
 	function handleChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
+		const target = event.target as HTMLSelectElement | HTMLInputElement;
 		onChange(target.value);
 	}
 </script>
 
 {#if !hasPools}
-	<select class="nimble-field-input nimble-pool-picker nimble-pool-picker--charge" {value} disabled>
-		{#if isStaleValue}
-			<option {value}
-				>{localize('NIMBLE.rulesBuilder.chargePoolPicker.notFound', { identifier: value })}</option
-			>
-		{:else}
-			<option value="">{localize('NIMBLE.rulesBuilder.chargePoolPicker.empty')}</option>
-		{/if}
-	</select>
+	<!-- No actor to enumerate pools from (a compendium or world item). Fall back
+	     to free text so pack authors can still write an identifier by hand. -->
+	<input
+		class="nimble-field-input nimble-pool-picker nimble-pool-picker--charge"
+		type="text"
+		{value}
+		{disabled}
+		placeholder={localize('NIMBLE.rulesBuilder.poolIdentifierPlaceholder')}
+		onchange={handleChange}
+	/>
+	<small class="nimble-field-hint">
+		{localize('NIMBLE.rulesBuilder.chargePoolPicker.empty')}
+	</small>
 {:else}
 	<select
 		class="nimble-field-input nimble-pool-picker nimble-pool-picker--charge"
@@ -72,5 +76,12 @@
 		color: inherit;
 		border: var(--nimble-input-border, 1px solid var(--nimble-accent-color));
 		border-radius: 4px;
+	}
+
+	.nimble-field-hint {
+		display: block;
+		margin-top: 0.125rem;
+		color: var(--color-text-dark-secondary);
+		font-size: var(--nimble-xs-text);
 	}
 </style>

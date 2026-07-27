@@ -124,6 +124,32 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(container.querySelector('.nimble-pool-picker--charge')).toBeFalsy();
 	});
 
+	it.each([
+		['dicePoolPicker', 'nimble-pool-picker--dice'],
+		['chargePoolPicker', 'nimble-pool-picker--charge'],
+	])('widget=%s with no parent actor → editable free-text input', (widget, marker) => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget,
+		} as never);
+		// No `document` prop, so the picker can't resolve an actor — the
+		// compendium/world-item authoring path.
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'combat-dice',
+			parentData: {},
+			name: 'poolIdentifier',
+			onChange: noop,
+		});
+
+		const input = container.querySelector<HTMLInputElement>(`input[type="text"].${marker}`);
+		expect(input).toBeTruthy();
+		expect(input?.disabled).toBe(false);
+		expect(input?.value).toBe('combat-dice');
+	});
+
 	it('widget resolver returning hidden → renders nothing', () => {
 		const field = new fields.StringField({
 			required: true,

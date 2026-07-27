@@ -35,9 +35,9 @@ function schema() {
 				// The picker follows `poolType`: dice pools and charge pools are
 				// separate subsystems with separate identifier namespaces, so the
 				// wrong picker lists nothing and flags the stored value as missing.
-				widget: (data) => (data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker'),
+				widget: (data: Record<string, unknown>) =>
+					data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker',
 			}),
-			'modifyPool.poolIdentifier',
 		),
 		dieSize: new fields.StringField({
 			required: false,
