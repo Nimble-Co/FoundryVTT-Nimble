@@ -9,13 +9,15 @@
 			{
 				"type": "speedBonus",
 				"value": "1",
-				"label": "Lithe"
+				"label": "Lithe",
+				"id": "UmOBE9raL48gsFf2"
 			},
 			{
 				"type": "initiativeRollMode",
 				"value": 1,
 				"mode": "adjust",
-				"label": "Lithe (Advantage on Initiative)"
+				"label": "Lithe (Advantage on Initiative)",
+				"id": "rmmZhQr43z2K1ZbX"
 			}
 		],
 		"description": "<p><strong>Lithe</strong></p><p>Advantage on Initiative</p><p>+1 Speed [M]</p>"

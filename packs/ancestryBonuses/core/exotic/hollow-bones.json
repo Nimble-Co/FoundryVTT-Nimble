@@ -10,7 +10,8 @@
 				"type": "speedBonus",
 				"value": "@attributes.movement.walk",
 				"movementType": "fly",
-				"label": "Hollow Bones"
+				"label": "Hollow Bones",
+				"id": "BPzhktMl6SwQDpFh"
 			}
 		],
 		"description": "<p><strong>Hollow Bones</strong></p><p>You have a fly Speed as long as you are wearing armor no heavier than Leather. </p><p>Crits against you are Vicious (the attacker rolls 1 additional die). </p><p>Forced movement moves you twice as far.</p>"

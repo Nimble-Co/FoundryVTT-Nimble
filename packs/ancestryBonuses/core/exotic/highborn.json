@@ -11,7 +11,8 @@
 				"label": "Highborn",
 				"value": 0,
 				"target": "disadvantaged",
-				"mode": "set"
+				"mode": "set",
+				"id": "K53FHrPJ0fe8tb2M"
 			}
 		],
 		"description": "<p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p>"

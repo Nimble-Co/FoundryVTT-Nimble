@@ -12,7 +12,8 @@
 				"value": 1,
 				"target": "neutral",
 				"mode": "set",
-				"requiresChoice": true
+				"requiresChoice": true,
+				"id": "HERj27dQYr9lQZfU"
 			}
 		],
 		"description": "<p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p>"

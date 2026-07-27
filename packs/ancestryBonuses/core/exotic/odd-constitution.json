@@ -9,11 +9,13 @@
 			{
 				"type": "incrementHitDice",
 				"label": "Odd Constitution",
-				"value": "1"
+				"value": "1",
+				"id": "iiHBXF1tAd4NOrdc"
 			},
 			{
 				"type": "maximizeHitDice",
-				"label": "Odd Constitution"
+				"label": "Odd Constitution",
+				"id": "gAZ2ItIyoqNUZsXz"
 			}
 		],
 		"description": "<p><strong>Odd Constitution</strong> </p><p>Increment your Hit Dice one step (d6 » d8 » d10 » d12 » d20); they always heal you for the maximum amount. Magical healing always heals you for the minimum amount.</p>"

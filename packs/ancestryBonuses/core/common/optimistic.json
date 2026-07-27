@@ -9,7 +9,8 @@
 			{
 				"type": "speedBonus",
 				"value": "-1",
-				"label": "Optimistic"
+				"label": "Optimistic",
+				"id": "0D1hVScZx3q0b9Nr"
 			}
 		],
 		"description": "<p><strong>Optimistic</strong></p><p>Allow an ally within Reach 6 to reroll any single die. Resets when healed to your max HP. </p><p>-1 Speed [M]</p>"
