@@ -5,7 +5,7 @@ import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
 // stores the same options on `.options` (see tests/mocks/foundry.ts) so
 // `.options` is the canonical read site in both worlds.
 interface FieldExtras {
-	widget?: string;
+	widget?: string | ((data: Record<string, unknown>) => string);
 	showWhen?: (data: Record<string, unknown>) => boolean;
 	documentTypes?: string[];
 }
@@ -17,7 +17,14 @@ export function createSchemaFieldRendererState(
 	getOnChange: () => (next: unknown) => void,
 	getName: () => string,
 ) {
-	const widget = $derived((getField() as unknown as FieldWithOptions).options?.widget);
+	// A field may pick its widget from sibling values (see `WidgetResolver`),
+	// so resolve against the same data `showWhen` reads. Everything downstream
+	// — the dispatch table, `isHidden`, the unknown-hint warning — sees a
+	// plain string either way.
+	const widget = $derived.by(() => {
+		const raw = (getField() as unknown as FieldWithOptions).options?.widget;
+		return typeof raw === 'function' ? raw(getParentData()) : raw;
+	});
 	const documentTypes = $derived(
 		(getField() as unknown as FieldWithOptions).options?.documentTypes,
 	);

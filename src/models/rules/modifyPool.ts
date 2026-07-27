@@ -32,13 +32,12 @@ function schema() {
 				initial: '',
 				label: 'NIMBLE.rules.modifyPool.poolIdentifier.label',
 				hint: 'NIMBLE.rules.modifyPool.poolIdentifier.hint',
-				// modifyPool can target either a dice or charge pool (`poolType`
-				// switches between them). The widget catalog has no conditional-
-				// widget primitive yet, so default to the dice picker — the more
-				// common case — and let authors fall back to typing for charge
-				// pools (the stored value is a plain string regardless).
-				widget: 'dicePoolPicker',
+				// The picker follows `poolType`: dice pools and charge pools are
+				// separate subsystems with separate identifier namespaces, so the
+				// wrong picker lists nothing and flags the stored value as missing.
+				widget: (data) => (data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker'),
 			}),
+			'modifyPool.poolIdentifier',
 		),
 		dieSize: new fields.StringField({
 			required: false,

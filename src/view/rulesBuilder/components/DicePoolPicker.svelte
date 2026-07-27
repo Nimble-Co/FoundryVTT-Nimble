@@ -33,7 +33,7 @@
 </script>
 
 {#if !hasPools}
-	<select class="nimble-field-input" {value} disabled>
+	<select class="nimble-field-input nimble-pool-picker nimble-pool-picker--dice" {value} disabled>
 		{#if isStaleValue}
 			<option {value}
 				>{localize('NIMBLE.rulesBuilder.dicePoolPicker.notFound', { identifier: value })}</option
@@ -43,7 +43,12 @@
 		{/if}
 	</select>
 {:else}
-	<select class="nimble-field-input" {value} {disabled} onchange={handleChange}>
+	<select
+		class="nimble-field-input nimble-pool-picker nimble-pool-picker--dice"
+		{value}
+		{disabled}
+		onchange={handleChange}
+	>
 		{#if isStaleValue}
 			<option {value}
 				>{localize('NIMBLE.rulesBuilder.dicePoolPicker.notFound', { identifier: value })}</option

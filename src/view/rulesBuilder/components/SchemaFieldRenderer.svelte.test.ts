@@ -86,6 +86,62 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(container.querySelector('.nimble-template-string-input')).toBeTruthy();
 	});
 
+	it('widget as a resolver → picks the charge pool picker from parentData', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: (data: Record<string, unknown>) =>
+				data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker',
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'combat-dice',
+			parentData: { poolType: 'charge' },
+			name: 'poolIdentifier',
+			onChange: noop,
+		});
+		expect(container.querySelector('.nimble-pool-picker--charge')).toBeTruthy();
+		expect(container.querySelector('.nimble-pool-picker--dice')).toBeFalsy();
+	});
+
+	it('widget as a resolver → picks the dice pool picker from parentData', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: (data: Record<string, unknown>) =>
+				data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker',
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'fury',
+			parentData: { poolType: 'dice' },
+			name: 'poolIdentifier',
+			onChange: noop,
+		});
+		expect(container.querySelector('.nimble-pool-picker--dice')).toBeTruthy();
+		expect(container.querySelector('.nimble-pool-picker--charge')).toBeFalsy();
+	});
+
+	it('widget resolver returning hidden → renders nothing', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: (data: Record<string, unknown>) => (data.mode === 'auto' ? 'hidden' : 'formula'),
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: '1',
+			parentData: { mode: 'auto' },
+			name: 'count',
+			onChange: noop,
+		});
+		expect(container.querySelector('.nimble-formula-input')).toBeFalsy();
+		expect(container.textContent?.trim()).toBe('');
+	});
+
 	it('PredicateField → mounts <PredicateBuilder>', () => {
 		const field = new PredicateField();
 		const { container } = render(SchemaFieldRenderer, {
