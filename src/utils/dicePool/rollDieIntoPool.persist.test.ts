@@ -259,6 +259,7 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		expect(await maximizePoolDie(actor, 'judgment', 1)).toEqual({
 			changed: false,
 			reason: 'poolEmpty',
+			changes: [],
 		});
 	});
 
@@ -270,6 +271,7 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		expect(await maximizePoolDie(actor, 'judgment', 1)).toEqual({
 			changed: false,
 			reason: 'allAtMax',
+			changes: [],
 		});
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
 	});
@@ -283,5 +285,52 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 
 		expect(result.changed).toBe(true);
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+
+	it('reports which faces it raised', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 5]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 1);
+
+		expect(result.changes).toEqual([{ from: 2, to: 6 }]);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 5]);
+	});
+
+	it('raises the caller-chosen faces instead of the lowest when indices are given', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 5]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 1, { indices: [1] });
+
+		expect(result.changes).toEqual([{ from: 5, to: 6 }]);
+		// The lower face is untouched: the caller picked the other one.
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([2, 6]);
+	});
+
+	it('ignores chosen indices that are out of range or already at the maximum', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [6, 3]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 3, { indices: [0, 1, 7, -1] });
+
+		expect(result.changes).toEqual([{ from: 3, to: 6 }]);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+
+	it('reports allAtMax when every chosen index is already at the maximum', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [6, 3]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		expect(await maximizePoolDie(actor, 'judgment', 1, { indices: [0] })).toEqual({
+			changed: false,
+			reason: 'allAtMax',
+			changes: [],
+		});
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 3]);
 	});
 });

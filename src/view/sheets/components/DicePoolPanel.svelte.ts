@@ -4,7 +4,7 @@ import { systemHookName } from '#system';
 import { addBankedDamageReduction } from '#utils/bankedDamageReduction.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
-import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { dieSizeToMaxFace, resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
@@ -274,21 +274,20 @@ export function createDicePoolPanelState(
 	}
 
 	/** Raise every picked die to the pool's highest face, leaving the pool size
-	 *  untouched, and report the before/after faces to chat. */
+	 *  untouched, and report the before/after faces to chat. The raising itself is
+	 *  `maximizePoolDie`, shared with the activation-driven pool node, so both entry
+	 *  points stay in step. */
 	async function applyMaximizeOutcome(
 		pool: Extract<LivePoolView, { kind: 'rolled' }>,
 		consumer: DicePoolConsumer,
 	): Promise<void> {
-		const maxFace = dieSizeToMaxFace(pool.dieSize as DieSize);
-		const changes: string[] = [];
-		const nextFaces = pool.faces.map((face, i) => {
-			if (!selectedIndices.has(i) || face >= maxFace) return face;
-			changes.push(`${face} → ${maxFace}`);
-			return maxFace;
+		const picked = [...selectedIndices];
+		const result = await maximizePoolDie(getActor(), pool.id, picked.length, {
+			indices: picked,
 		});
-		if (changes.length < 1) return;
+		if (!result.changed) return;
 
-		await setPoolFaces(getActor(), pool.id, nextFaces);
+		const changes = result.changes.map(({ from, to }) => `${from} → ${to}`);
 
 		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
 			.ChatMessage;
