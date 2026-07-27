@@ -320,6 +320,37 @@ describe('modifyConsumer integration', () => {
 		expect(result[0].effectFormula).toBe('(@str + @dex) * @n + (@sum)');
 	});
 
+	it('ignores modifiers scoped to a different pool scope', () => {
+		// Identifiers are only unique within a scope, so an actor-scoped modifier must not
+		// reach an item-scoped pool that happens to share the identifier.
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),
+			createMockItem('booster', 'Booster Feature', [
+				modifier({ id: 'actor-scoped-boost', poolScope: 'actor' }),
+			]),
+		]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool());
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n');
+	});
+
+	it('applies an actor-scoped modifier to an actor-scoped pool', () => {
+		const actor = createMockActor([
+			createMockItem('tayg', 'That all you got?!', [
+				{ ...taygConsumer(), poolScope: 'actor' } as MockRule,
+			]),
+			createMockItem('booster', 'Booster Feature', [
+				modifier({ id: 'actor-scoped-boost', poolScope: 'actor' }),
+			]),
+		]);
+
+		const result = getDicePoolConsumers(
+			actor,
+			createFuryPool({ id: 'actor:fury', scope: 'actor' }),
+		);
+		expect(result[0].effectFormula).toBe('(@str + @dex) * @n + (@sum)');
+	});
+
 	it('ignores disabled modifiers and modifiers for other pools', () => {
 		const actor = createMockActor([
 			createMockItem('tayg', 'That all you got?!', [taygConsumer()]),

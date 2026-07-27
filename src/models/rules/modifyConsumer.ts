@@ -3,6 +3,7 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const EFFECT_TYPE_FILTERS = ['', ...DicePoolRuleConfig.effectTypes] as const;
+const MODIFY_CONSUMER_SCOPES = [...DicePoolRuleConfig.scopes];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -21,6 +22,17 @@ function schema() {
 				widget: 'dicePoolPicker',
 			}),
 		),
+		// Identifiers are only unique within a scope, so this must match the
+		// target pool's scope as well or an item-scoped and an actor-scoped pool
+		// sharing an identifier would cross-contaminate.
+		poolScope: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'item',
+			label: 'NIMBLE.rules.modifyConsumer.poolScope.label',
+			hint: 'NIMBLE.rules.modifyConsumer.poolScope.hint',
+			choices: MODIFY_CONSUMER_SCOPES,
+		}),
 		// Restrict the modification to consumers with a specific effect type.
 		// Blank matches every consumer on the pool.
 		effectTypeFilter: new fields.StringField({
@@ -71,6 +83,8 @@ class ModifyConsumerRule extends NimbleBaseRule<ModifyConsumerRule.Schema> {
 
 	declare poolIdentifier: string;
 
+	declare poolScope: (typeof DicePoolRuleConfig.scopes)[number];
+
 	declare effectTypeFilter: string;
 
 	declare appendFormula: string;
@@ -86,6 +100,7 @@ class ModifyConsumerRule extends NimbleBaseRule<ModifyConsumerRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['poolIdentifier', 'string'],
+				['poolScope', '"item" | "actor"'],
 				['effectTypeFilter', '"" | "generic" | "damageReduction"'],
 				['appendFormula', 'string'],
 			]),

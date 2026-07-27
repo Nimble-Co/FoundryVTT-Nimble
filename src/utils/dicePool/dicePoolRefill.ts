@@ -1,4 +1,5 @@
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
+import localize from '../localize.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
 	applyFaceFloor,
@@ -276,7 +277,13 @@ async function rollDieIntoPool(
 			.ChatMessage;
 		const baseFlavor = options.flavor ?? pool.label;
 		const flavor =
-			face !== rolledFace ? `${baseFlavor} (rolled ${rolledFace}, raised to ${face})` : baseFlavor;
+			face !== rolledFace
+				? localize('NIMBLE.dicePoolTracker.raisedToFloor', {
+						flavor: baseFlavor,
+						rolled: String(rolledFace),
+						face: String(face),
+					})
+				: baseFlavor;
 		await roll.toMessage({
 			speaker: ChatMessageCls.getSpeaker({ actor }),
 			flavor,
@@ -368,45 +375,62 @@ type MaximizePoolDieResult = {
 	changed: boolean;
 	/** Why nothing changed, for the chat card's skip label. */
 	reason?: 'unknownPool' | 'poolEmpty' | 'allAtMax';
+	/** Faces that were raised, in pool order, for callers that report the change. */
+	changes: Array<{ from: number; to: number }>;
 };
 
 /**
- * Set the lowest `count` faces in a pool to the die's maximum face value
- * (always the optimal choice for the player). Reports whether any face
- * changed and, if not, why. Driven by the `maximizeDie` pool-node action.
+ * Raise faces in a pool to the die's maximum face value, leaving the pool size
+ * untouched. Reports whether any face changed and, if not, why.
+ *
+ * By default the lowest `count` faces are chosen, which is always the optimal
+ * pick when nothing is choosing for the player. Pass `options.indices` to
+ * maximize an explicit set of faces instead, for flows where the player picks.
+ * Faces already at the maximum are never counted as a change.
  */
 async function maximizePoolDie(
 	actor: Actor | null | undefined,
 	poolId: string,
 	count = 1,
+	options: { indices?: number[] } = {},
 ): Promise<MaximizePoolDieResult> {
-	if (!isCharacterActor(actor)) return { changed: false, reason: 'unknownPool' };
+	if (!isCharacterActor(actor)) return { changed: false, reason: 'unknownPool', changes: [] };
 	if (typeof poolId !== 'string' || poolId.length < 1) {
-		return { changed: false, reason: 'unknownPool' };
+		return { changed: false, reason: 'unknownPool', changes: [] };
 	}
+	const explicitIndices = options.indices;
 	const toMaximize = Math.max(0, Math.floor(count));
-	if (toMaximize < 1) return { changed: false, reason: 'poolEmpty' };
+	if (!explicitIndices && toMaximize < 1) {
+		return { changed: false, reason: 'poolEmpty', changes: [] };
+	}
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const pool = currentPools[poolId];
-	if (!pool) return { changed: false, reason: 'unknownPool' };
-	if (pool.faces.length < 1) return { changed: false, reason: 'poolEmpty' };
+	if (!pool) return { changed: false, reason: 'unknownPool', changes: [] };
+	if (pool.faces.length < 1) return { changed: false, reason: 'poolEmpty', changes: [] };
 
 	const maxFace = dieSizeToMaxFace(pool.dieSize);
 	const previousFaces = [...pool.faces];
 
-	// Raise the lowest faces first; leave faces already at max untouched.
-	const sortedIndices = pool.faces
-		.map((face, index) => ({ face, index }))
-		.sort((a, b) => a.face - b.face)
-		.slice(0, toMaximize)
-		.filter(({ face }) => face < maxFace)
-		.map(({ index }) => index);
+	const targetIndices = explicitIndices
+		? // Caller-chosen faces: keep only real, raisable indices, in pool order.
+			[...new Set(explicitIndices)]
+				.filter((index) => Number.isInteger(index) && index >= 0 && index < pool.faces.length)
+				.filter((index) => pool.faces[index] < maxFace)
+				.sort((a, b) => a - b)
+		: // Raise the lowest faces first; leave faces already at max untouched.
+			pool.faces
+				.map((face, index) => ({ face, index }))
+				.sort((a, b) => a.face - b.face)
+				.slice(0, toMaximize)
+				.filter(({ face }) => face < maxFace)
+				.map(({ index }) => index)
+				.sort((a, b) => a - b);
 
-	if (sortedIndices.length < 1) return { changed: false, reason: 'allAtMax' };
+	if (targetIndices.length < 1) return { changed: false, reason: 'allAtMax', changes: [] };
 
 	const newFaces = [...pool.faces];
-	for (const index of sortedIndices) newFaces[index] = maxFace;
+	for (const index of targetIndices) newFaces[index] = maxFace;
 	pool.faces = newFaces;
 
 	await persistDicePoolMap(actor, currentPools);
@@ -421,7 +445,10 @@ async function maximizePoolDie(
 		trigger: 'manual',
 	});
 
-	return { changed: true };
+	return {
+		changed: true,
+		changes: targetIndices.map((index) => ({ from: previousFaces[index], to: maxFace })),
+	};
 }
 
 /**

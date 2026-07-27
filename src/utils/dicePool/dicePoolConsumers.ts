@@ -34,12 +34,15 @@ type ConsumerModifier = {
 
 /**
  * Collect enabled `modifyConsumer` rules across the actor that target the
- * given pool identifier. Rule predicates are respected via `appliesTo()`.
- * Sorted by rule priority so appended formulas compose in a stable order.
+ * given pool. Identifiers are only unique within a scope, so both the
+ * identifier and the scope must match, exactly as consumer matching does.
+ * Rule predicates are respected via `appliesTo()`. Sorted by rule priority so
+ * appended formulas compose in a stable order.
  */
 function getConsumerModifiers(
 	actor: CharacterActorLike,
 	poolIdentifier: string,
+	poolScope: string,
 ): ConsumerModifier[] {
 	const modifiers: Array<ConsumerModifier & { priority: number }> = [];
 
@@ -53,6 +56,7 @@ function getConsumerModifiers(
 				type?: string;
 				disabled?: boolean;
 				poolIdentifier?: string;
+				poolScope?: string;
 				effectTypeFilter?: string;
 				appendFormula?: string;
 				priority?: number;
@@ -60,6 +64,7 @@ function getConsumerModifiers(
 			};
 			if (rule.type !== 'modifyConsumer' || rule.disabled) continue;
 			if (normalizeIdentifier(rule.poolIdentifier) !== poolIdentifier) continue;
+			if ((rule.poolScope ?? 'item') !== poolScope) continue;
 			if (typeof rule.appliesTo === 'function' && !rule.appliesTo()) continue;
 
 			const appendFormula = typeof rule.appendFormula === 'string' ? rule.appendFormula.trim() : '';
@@ -119,7 +124,7 @@ function getDicePoolConsumers(
 	if (poolIdentifier.length < 1) return [];
 
 	const consumers: DicePoolConsumer[] = [];
-	const consumerModifiers = getConsumerModifiers(characterActor, poolIdentifier);
+	const consumerModifiers = getConsumerModifiers(characterActor, poolIdentifier, pool.scope);
 
 	for (const item of characterActor.items.contents) {
 		const ruleBackedItem = item as RuleBackedItem;
