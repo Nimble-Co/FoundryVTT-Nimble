@@ -608,6 +608,8 @@
 				"empty": "No charge pools defined on this actor",
 				"notFound": "⚠ {identifier} (not found)"
 			},
+			"poolIdentifierPlaceholder": "Type a pool identifier",
+			"poolPickerNoActor": "This item is not on an actor, so its pools cannot be listed",
 			"templateValueHintBefore": "Use",
 			"templateValueHintAfter": "to insert the formula result.",
 			"pickerMissingMetaTooltip": "Description missing — flag for review.",

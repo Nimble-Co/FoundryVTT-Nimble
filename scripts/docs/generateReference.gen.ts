@@ -213,13 +213,54 @@ function resolveInitial(rawInitial: unknown): string {
 	return String(initial);
 }
 
-function describeRuleField(name: string, field: any): FieldRow | null {
-	const opts = field?.options ?? {};
-	if (opts.widget === 'hidden') return null;
+/** Raw `initial` value, for feeding widget resolvers. Unlike `resolveInitial`,
+ *  this keeps the value as-is rather than formatting it for display. */
+function rawInitialValue(rawInitial: unknown): unknown {
+	if (typeof rawInitial !== 'function') return rawInitial;
+	try {
+		return (rawInitial as () => unknown)();
+	} catch {
+		return undefined;
+	}
+}
 
-	const kind = widgetKindLabel(opts.widget, field?.constructor?.name ?? '');
+/** Collect each field's raw `initial`, so a widget resolver can be evaluated
+ *  against the state a freshly added rule starts in. */
+function collectSiblingInitials(schema: Record<string, any>): Record<string, unknown> {
+	const initials: Record<string, unknown> = {};
+	for (const [name, field] of Object.entries(schema)) {
+		initials[name] = rawInitialValue(field?.options?.initial);
+	}
+	return initials;
+}
+
+/** `widget` may be a function of sibling values (see `WidgetResolver`). Docs are
+ *  static, so describe the default state and flag that the input varies. */
+function resolveWidget(
+	rawWidget: unknown,
+	siblingInitials: Record<string, unknown>,
+): string | undefined {
+	if (typeof rawWidget !== 'function') return rawWidget as string | undefined;
+	try {
+		return (rawWidget as (data: Record<string, unknown>) => string)(siblingInitials);
+	} catch {
+		return undefined;
+	}
+}
+
+function describeRuleField(
+	name: string,
+	field: any,
+	siblingInitials: Record<string, unknown> = {},
+): FieldRow | null {
+	const opts = field?.options ?? {};
+	const widget = resolveWidget(opts.widget, siblingInitials);
+	if (widget === 'hidden') return null;
+
+	const kind = widgetKindLabel(widget, field?.constructor?.name ?? '');
 	const hint = opts.hint ? escapeVueText(localize(opts.hint)) : '';
 	const shownConditionally = typeof opts.showWhen === 'function';
+	const widgetVaries = typeof opts.widget === 'function';
 
 	const choiceText = resolveChoices(opts.choices);
 	let options = choiceText ?? kind;
@@ -228,6 +269,7 @@ function describeRuleField(name: string, field: any): FieldRow | null {
 	let description = hint || kind;
 	if (hint && !choiceText) description = hint;
 	if (shownConditionally) description += ' (Only shown when relevant.)';
+	if (widgetVaries) description += ' (The input changes with the other field values.)';
 
 	return {
 		name,
@@ -241,6 +283,7 @@ function describeRuleField(name: string, field: any): FieldRow | null {
 /** Flatten a rule schema into display rows, descending one level into groups/lists. */
 function collectFieldRows(schema: Record<string, any>, prefix = '', skipBase = true): FieldRow[] {
 	const rows: FieldRow[] = [];
+	const siblingInitials = collectSiblingInitials(schema);
 
 	for (const [name, field] of Object.entries(schema)) {
 		if (skipBase && !prefix && BASE_RULE_FIELDS.has(name)) continue;
@@ -248,7 +291,7 @@ function collectFieldRows(schema: Record<string, any>, prefix = '', skipBase = t
 		const constructorName = field?.constructor?.name ?? '';
 
 		if (constructorName === 'SchemaField' && field.fields) {
-			const parent = describeRuleField(name, field);
+			const parent = describeRuleField(name, field, siblingInitials);
 			if (!parent) continue;
 			rows.push(...collectFieldRows(field.fields, `${parent.label} → `, false));
 			continue;
@@ -259,13 +302,13 @@ function collectFieldRows(schema: Record<string, any>, prefix = '', skipBase = t
 			field.element?.constructor?.name === 'SchemaField' &&
 			field.element.fields
 		) {
-			const parent = describeRuleField(name, field);
+			const parent = describeRuleField(name, field, siblingInitials);
 			if (!parent) continue;
 			rows.push(...collectFieldRows(field.element.fields, `${parent.label} → `, false));
 			continue;
 		}
 
-		const row = describeRuleField(name, field);
+		const row = describeRuleField(name, field, siblingInitials);
 		if (!row) continue;
 		row.label = `${prefix}${row.label}`;
 		rows.push(row);

@@ -86,6 +86,93 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(container.querySelector('.nimble-template-string-input')).toBeTruthy();
 	});
 
+	it('widget as a resolver → picks the charge pool picker from parentData', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: (data: Record<string, unknown>) =>
+				data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker',
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'combat-dice',
+			parentData: { poolType: 'charge' },
+			name: 'poolIdentifier',
+			onChange: noop,
+		});
+		expect(container.querySelector('.nimble-pool-picker--charge')).toBeTruthy();
+		expect(container.querySelector('.nimble-pool-picker--dice')).toBeFalsy();
+	});
+
+	it('widget as a resolver → picks the dice pool picker from parentData', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: (data: Record<string, unknown>) =>
+				data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker',
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'fury',
+			parentData: { poolType: 'dice' },
+			name: 'poolIdentifier',
+			onChange: noop,
+		});
+		expect(container.querySelector('.nimble-pool-picker--dice')).toBeTruthy();
+		expect(container.querySelector('.nimble-pool-picker--charge')).toBeFalsy();
+	});
+
+	it.each([
+		['dicePoolPicker', 'nimble-pool-picker--dice'],
+		['chargePoolPicker', 'nimble-pool-picker--charge'],
+	])('widget=%s with no parent actor → editable free-text input', (widget, marker) => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget,
+		} as never);
+		// No `document` prop, so the picker can't resolve an actor — the
+		// compendium/world-item authoring path.
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'combat-dice',
+			parentData: {},
+			name: 'poolIdentifier',
+			onChange: noop,
+		});
+
+		const input = container.querySelector<HTMLInputElement>(`input[type="text"].${marker}`);
+		expect(input).toBeTruthy();
+		expect(input?.disabled).toBe(false);
+		expect(input?.value).toBe('combat-dice');
+
+		// The hint must not claim the actor has no pools — there is no actor.
+		const hint = container.querySelector('.nimble-field-hint')?.textContent ?? '';
+		expect(hint).toContain('not on an actor');
+		expect(hint).not.toContain('defined on this actor');
+	});
+
+	it('widget resolver returning hidden → renders nothing', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: (data: Record<string, unknown>) => (data.mode === 'auto' ? 'hidden' : 'formula'),
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: '1',
+			parentData: { mode: 'auto' },
+			name: 'count',
+			onChange: noop,
+		});
+		expect(container.querySelector('.nimble-formula-input')).toBeFalsy();
+		expect(container.textContent?.trim()).toBe('');
+	});
+
 	it('PredicateField → mounts <PredicateBuilder>', () => {
 		const field = new PredicateField();
 		const { container } = render(SchemaFieldRenderer, {

@@ -51,6 +51,19 @@ describe('withWidget validation', () => {
 		expect(warnSpy.mock.calls[0]?.[0]).toContain('item.spell');
 	});
 
+	it('does not warn for a function-valued widget hint', () => {
+		withWidget({ widget: () => 'formula' }, 'value');
+		expect(warnSpy).not.toHaveBeenCalled();
+	});
+
+	it('does not invoke a function-valued widget hint during validation', () => {
+		// defineSchema() runs at system init, where the rule's data doesn't
+		// exist yet — the resolver must only run at render time.
+		const resolver = vi.fn(() => 'formula' as const);
+		withWidget({ widget: resolver }, 'value');
+		expect(resolver).not.toHaveBeenCalled();
+	});
+
 	it('accepts well-formed documentTypes entries', () => {
 		withWidget({ documentTypes: ['Item', 'Item.spell', 'Actor'] }, 'uuid');
 		expect(warnSpy).not.toHaveBeenCalled();
