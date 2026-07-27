@@ -476,27 +476,37 @@ class ItemActivationManager {
 			rolls.push(roll);
 		}
 
-		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
-		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
-
 		// Pool nodes mutate actor state, so their application is deferred until
 		// the caller confirms the use is allowed (the preUseItem gate fires
-		// after getData). Collect them from the RECONSTRUCTED tree: it deep
-		// clones every node, and results must land on the objects the chat card
-		// serializes. See applyDeferredPoolNodes().
-		this.#deferredPoolNodes = ItemActivationManager.#collectPoolNodes(
+		// after getData). See applyDeferredPoolNodes().
+		//
+		// Enumerate from the FLAT list so no node can be missed: the tree
+		// reconstruction only re-parents children of damage/savingThrow nodes and
+		// silently drops the rest, so a pool node authored under any other parent
+		// would never be applied. Prefer the reconstructed clone whenever the tree
+		// kept it, because results must land on the objects the chat card
+		// serializes; nodes the tree dropped fall back to the flat node, which
+		// still applies even though it has nowhere to render.
+		//
+		// Rebuilding the tree here is also what reflects every roll added above
+		// back into the activation data.
+		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
+		const renderedNodesById = ItemActivationManager.#indexNodesById(
 			this.activationData.effects as EffectNode[],
 		);
+		this.#deferredPoolNodes = updatedEffects
+			.filter((node): node is PoolNode => node?.type === 'pool')
+			.map((node) => (renderedNodesById.get(node.id) as PoolNode | undefined) ?? node);
 
 		return rolls;
 	}
 
-	/** Depth-first walk of an effects tree, returning every pool node. */
-	static #collectPoolNodes(nodes: EffectNode[] | undefined): PoolNode[] {
-		const found: PoolNode[] = [];
+	/** Depth-first walk of an effects tree, indexing every node by its id. */
+	static #indexNodesById(nodes: EffectNode[] | undefined): Map<string, EffectNode> {
+		const found = new Map<string, EffectNode>();
 		const walk = (node: EffectNode | null | undefined): void => {
 			if (!node) return;
-			if (node.type === 'pool') found.push(node as PoolNode);
+			if (node.id) found.set(node.id, node);
 			const branching = node as {
 				on?: Record<string, EffectNode[] | undefined>;
 				sharedRolls?: EffectNode[];
