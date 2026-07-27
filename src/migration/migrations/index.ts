@@ -29,3 +29,4 @@ export { Migration028CombatDiceMaxFormula } from './Migration028CombatDiceMaxFor
 export { Migration029ThatAllYouGotDamageReduction } from './Migration029ThatAllYouGotDamageReduction.js';
 export { Migration030HuntersMarkRules } from './Migration030HuntersMarkRules.js';
 export { Migration031ModifyIncomingAttackFeatures } from './Migration031ModifyIncomingAttackFeatures.js';
+export { Migration032LifebindingSpiritDieSize } from './Migration032LifebindingSpiritDieSize.js';
