@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { WidgetResolver } from './_widgetOption.js';
 import { ModifyPoolRule } from './modifyPool.js';
-
-type WidgetResolver = (data: Record<string, unknown>) => string;
 
 function poolIdentifierWidget(): WidgetResolver {
 	const schema = ModifyPoolRule.defineSchema();
