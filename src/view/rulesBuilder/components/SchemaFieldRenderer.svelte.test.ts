@@ -148,6 +148,11 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(input).toBeTruthy();
 		expect(input?.disabled).toBe(false);
 		expect(input?.value).toBe('combat-dice');
+
+		// The hint must not claim the actor has no pools — there is no actor.
+		const hint = container.querySelector('.nimble-field-hint')?.textContent ?? '';
+		expect(hint).toContain('not on an actor');
+		expect(hint).not.toContain('defined on this actor');
 	});
 
 	it('widget resolver returning hidden → renders nothing', () => {

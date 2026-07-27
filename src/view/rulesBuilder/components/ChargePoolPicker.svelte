@@ -22,6 +22,7 @@
 
 	const options = $derived(state.options);
 	const hasPools = $derived(options.length > 0);
+	const hasActor = $derived(state.hasActor);
 	const isStaleValue = $derived(
 		value.length > 0 && !options.some((option) => option.identifier === value),
 	);
@@ -33,8 +34,9 @@
 </script>
 
 {#if !hasPools}
-	<!-- No actor to enumerate pools from (a compendium or world item). Fall back
-	     to free text so pack authors can still write an identifier by hand. -->
+	<!-- Nothing to list: either the item is unowned (compendium or world
+	     directory) or its actor has no pools yet. Fall back to free text so
+	     pack authors can still write an identifier by hand. -->
 	<input
 		class="nimble-field-input nimble-pool-picker nimble-pool-picker--charge"
 		type="text"
@@ -44,7 +46,9 @@
 		onchange={handleChange}
 	/>
 	<small class="nimble-field-hint">
-		{localize('NIMBLE.rulesBuilder.chargePoolPicker.empty')}
+		{hasActor
+			? localize('NIMBLE.rulesBuilder.chargePoolPicker.empty')
+			: localize('NIMBLE.rulesBuilder.poolPickerNoActor')}
 	</small>
 {:else}
 	<select
