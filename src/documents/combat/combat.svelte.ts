@@ -126,6 +126,12 @@ class NimbleCombat extends Combat {
 	// `previousTurn`, `previousRound`, `setActiveTurnToCombatant`) so a stale claim never
 	// suppresses a later legitimate refill.
 	#endingTurnRefilledCharacterId: string | null = null;
+	// The combatant id whose turn-start hook has been claimed during the current turn change,
+	// following the same interleaving contract as `#endingTurnRefilledCharacterId`: `_onStartTurn`
+	// and the post-advance backstop (`#ensureIncomingTurnStarted`) both claim synchronously, and
+	// only the winner emits. Reset at the start of every turn-changing entry point so a stale
+	// claim never suppresses a later legitimate emission.
+	#turnStartedCombatantId: string | null = null;
 	#initiativeRollRequests = new Map<string, Promise<LockedInitiativeRollOutcome | null>>();
 
 	#findActorCombatantInScene(actorId: string, sceneId: string): Combatant.Implementation | null {
@@ -705,14 +711,52 @@ class NimbleCombat extends Combat {
 		combatant: Combatant.Implementation,
 		context: Combat.TurnEventContext,
 	) {
+		// Claim synchronously — before any await — because Foundry dispatches turn events
+		// fire-and-forget, so `nextTurn`'s backstop can run interleaved with this method.
+		// Whoever claims the id first emits the hook; the other becomes a no-op.
+		const claimed = this.#claimTurnStart(combatant);
+
 		await super._onStartTurn(combatant, context);
 
-		// Foundry dispatches turn events on the active GM's client only, so this
-		// custom hook fires exactly once per turn start across all connected
-		// clients — the turn-start counterpart of `nimbleCombatTurnEnd`. Consumed
-		// by the dice/charge pool turn triggers.
+		if (claimed) this.#emitTurnStart(combatant);
+	}
+
+	/**
+	 * Take ownership of the turn-start emission for a combatant, returning false when it has
+	 * already been claimed during the current turn change. Callers must invoke this before
+	 * awaiting anything so the two emission paths can never both fire.
+	 */
+	#claimTurnStart(combatant: Combatant.Implementation | null): boolean {
+		const combatantId = combatant?.id ?? null;
+		if (combatantId === null) return true;
+		if (this.#turnStartedCombatantId === combatantId) return false;
+		this.#turnStartedCombatantId = combatantId;
+		return true;
+	}
+
+	/**
+	 * Emit the Nimble turn-start hook. Foundry dispatches turn events on the active GM's
+	 * client only, so this fires exactly once per turn start across all connected clients:
+	 * the turn-start counterpart of `nimbleCombatTurnEnd`. Consumed by the dice/charge pool
+	 * turn triggers.
+	 */
+	#emitTurnStart(combatant: Combatant.Implementation): void {
 		// @ts-expect-error Custom hook
 		Hooks.call('nimbleCombatTurnStart', combatant);
+	}
+
+	/**
+	 * Guarantee the incoming combatant's turn-start hook fires even when Foundry never called
+	 * `_onStartTurn` for them. Under the expanded solo-monster turn order, Foundry's cached turn
+	 * history can desync from our directly-resynced turn index, so its turn-event dispatcher
+	 * computes an empty interval and skips the turn events for that boundary entirely — which
+	 * would silently drop every `onTurnStart` pool refill and charge recovery. This backstops
+	 * that case; it is a no-op when `_onStartTurn` already ran.
+	 */
+	#ensureIncomingTurnStarted(combatant: Combatant.Implementation | null): void {
+		if (!combatant) return;
+		if (!this.#claimTurnStart(combatant)) return;
+		this.#emitTurnStart(combatant);
 	}
 
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
@@ -1192,6 +1236,7 @@ class NimbleCombat extends Combat {
 		// Clear any claim from a prior forward advance so a turn-end Foundry fires for the
 		// outgoing combatant on this direct turn hand-off is never mistaken for a duplicate.
 		this.#endingTurnRefilledCharacterId = null;
+		this.#turnStartedCombatantId = null;
 		await this.#syncTurnToCombatant(targetIdentity);
 		const changed = this.turn !== previousTurnIndex;
 		if (changed) {
@@ -1276,6 +1321,7 @@ class NimbleCombat extends Combat {
 		this.#endingTurnCombatantId = this.combatant?.id ?? null;
 		const outgoingCombatantId = this.#endingTurnCombatantId;
 		this.#endingTurnRefilledCharacterId = null;
+		this.#turnStartedCombatantId = null;
 		let intercepted: boolean;
 		let result: this;
 		try {
@@ -1298,6 +1344,10 @@ class NimbleCombat extends Combat {
 		// history desyncs from our expanded turn order (e.g. the last hero before a solo-monster
 		// wrap), leaving them at 0 actions. Refill them here if that happened.
 		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
+		// The same desync skips `_onStartTurn` for the incoming combatant. Emit the turn-start
+		// hook here if that happened, after the outgoing turn-end so the ordering matches a
+		// normal advance.
+		this.#ensureIncomingTurnStarted(this.combatant ?? null);
 		return result;
 	}
 
@@ -1309,6 +1359,7 @@ class NimbleCombat extends Combat {
 		this.#endingTurnCombatantId = this.combatant?.id ?? null;
 		const outgoingCombatantId = this.#endingTurnCombatantId;
 		this.#endingTurnRefilledCharacterId = null;
+		this.#turnStartedCombatantId = null;
 		let intercepted: boolean;
 		let result: this;
 		try {
@@ -1327,6 +1378,8 @@ class NimbleCombat extends Combat {
 		// Backstop the outgoing hero's refill in case Foundry skipped `_onEndTurn` for them
 		// (see `nextTurn`); no-op when `_onEndTurn` already handled it.
 		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
+		// Same for the incoming combatant's turn-start hook when `_onStartTurn` was skipped.
+		this.#ensureIncomingTurnStarted(this.combatant ?? null);
 		return result;
 	}
 
@@ -1335,6 +1388,7 @@ class NimbleCombat extends Combat {
 		// Clear any claim from a prior forward advance so a turn-end fired for this hero
 		// later (e.g. after navigating back to them) is never mistaken for a duplicate.
 		this.#endingTurnRefilledCharacterId = null;
+		this.#turnStartedCombatantId = null;
 		const preferredPreviousTurnIdentity = this.#resolvePreviousTurnIdentity();
 		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
 			preferredPreviousTurnIdentity,
@@ -1354,6 +1408,7 @@ class NimbleCombat extends Combat {
 		this.#syncTurnIndexWithAliveTurns();
 		// Clear any claim from a prior forward advance (see `previousTurn`).
 		this.#endingTurnRefilledCharacterId = null;
+		this.#turnStartedCombatantId = null;
 		const preferredLastTurnIdentity = this.#resolveTurnIdentityAtIndex(
 			this.turns,
 			Math.max(this.turns.length - 1, 0),

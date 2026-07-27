@@ -41,6 +41,10 @@ type NimbleCombatDocumentTestGlobals = {
 		};
 	};
 	fromUuidSync: ReturnType<typeof vi.fn>;
+	Hooks: {
+		call: ReturnType<typeof vi.fn>;
+		on: ReturnType<typeof vi.fn>;
+	};
 	SortingHelpers: {
 		performIntegerSort: ReturnType<typeof vi.fn>;
 	};
