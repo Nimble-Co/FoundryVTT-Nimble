@@ -51,6 +51,7 @@ export interface ImportPreview {
 /** Display order for grouped item types in the preview. */
 const ITEM_TYPE_ORDER = [
 	'ancestry',
+	'ancestryBonus',
 	'background',
 	'class',
 	'subclass',

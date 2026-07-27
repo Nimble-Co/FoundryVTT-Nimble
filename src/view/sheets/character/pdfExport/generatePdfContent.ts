@@ -605,8 +605,16 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 	// Ancestry
 	const ancestry = actor.ancestry;
 	if (ancestry) {
-		const abilities = extractMechanicalAbilities(ancestry.system.description);
-		const abilitiesHtml = extractMechanicalAbilitiesHtml(ancestry.system.description);
+		// The trait lives on the separate ancestryBonus item, not the ancestry description,
+		// so read both or the exported sheet loses the ancestry's mechanics entirely.
+		const ancestryDescriptions = [
+			ancestry.system.description,
+			actor.ancestryBonus?.system.description,
+		]
+			.filter(Boolean)
+			.join('');
+		const abilities = extractMechanicalAbilities(ancestryDescriptions);
+		const abilitiesHtml = extractMechanicalAbilitiesHtml(ancestryDescriptions);
 		const content = abilities
 			? `ANCESTRY: ${ancestry.name} - ${abilities}`
 			: `ANCESTRY: ${ancestry.name}`;

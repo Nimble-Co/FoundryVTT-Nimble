@@ -125,7 +125,9 @@
 	// Fix any corrupted rules arrays by restoring from compendium
 	async function fixCorruptedRulesArrays() {
 		for (const item of document.items) {
-			if (item.type !== 'ancestry') continue;
+			// The neutral-save rules this dialog repairs moved onto the ancestry bonus when
+			// ancestries and their traits were split, so both types have to be covered.
+			if (item.type !== 'ancestry' && item.type !== 'ancestryBonus') continue;
 
 			const rulesArray = item.system?.rules;
 			if (!Array.isArray(rulesArray)) continue;

@@ -53,6 +53,26 @@ describe('buildImportPreview', () => {
 		]);
 	});
 
+	it('groups an ancestry bonus directly after its ancestry', () => {
+		// Ancestries and their trait are separate items; the bonus is a known type and must
+		// not fall into the unknown-type bucket at the end.
+		const preview = buildImportPreview(
+			characterExport({
+				items: [
+					{ name: 'Greataxe', type: 'object', system: {} },
+					{ name: 'Stout', type: 'ancestryBonus', system: {} },
+					{ name: 'Dwarf', type: 'ancestry', system: {} },
+				],
+			}),
+		);
+
+		expect(preview.itemGroups.map((group) => group.type)).toEqual([
+			'ancestry',
+			'ancestryBonus',
+			'object',
+		]);
+	});
+
 	it('sorts unknown item types after known ones', () => {
 		const preview = buildImportPreview(
 			characterExport({
