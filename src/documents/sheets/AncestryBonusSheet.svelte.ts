@@ -18,11 +18,6 @@ export default class AncestryBonusSheet extends SvelteApplicationMixin(
 		);
 
 		this.root = AncestryBonusSheetComponent;
-
-		(this as object as { props: Record<string, unknown> }).props = {
-			item: this.document,
-			sheet: this,
-		};
 	}
 
 	static override DEFAULT_OPTIONS = {

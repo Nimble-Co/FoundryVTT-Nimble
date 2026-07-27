@@ -1,4 +1,6 @@
-<script>
+<script lang="ts">
+	import type { AncestryBonusSheetProps } from '#types/components/AncestryBonusSheet.d.ts';
+
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
@@ -28,7 +30,7 @@
 		},
 	];
 
-	let { item, sheet } = $props();
+	let { item, sheet }: AncestryBonusSheetProps = $props();
 	let currentTab = $state(navigation[0]);
 
 	setContext(

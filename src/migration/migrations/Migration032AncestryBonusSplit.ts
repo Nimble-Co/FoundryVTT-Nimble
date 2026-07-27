@@ -1,21 +1,6 @@
 import { MigrationBase } from '../MigrationBase.js';
 
 /**
- * Generate a Foundry-compatible 16-character random ID.
- */
-function generateId(): string {
-	if (typeof foundry !== 'undefined' && foundry?.utils?.randomID) {
-		return foundry.utils.randomID();
-	}
-	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	let result = '';
-	for (let i = 0; i < 16; i += 1) {
-		result += chars.charAt(Math.floor(Math.random() * chars.length));
-	}
-	return result;
-}
-
-/**
  * Splits an existing actor's ancestry trait into a separate `ancestryBonus` item.
  *
  * Ancestries used to bake their bonus trait directly into the ancestry item's
@@ -68,7 +53,7 @@ class Migration032AncestryBonusSplit extends MigrationBase {
 		const traitName = strongMatch ? strongMatch[1].trim() : `${ancestry.name} Trait`;
 
 		const bonus = {
-			_id: generateId(),
+			_id: foundry.utils.randomID(),
 			name: traitName,
 			type: 'ancestryBonus',
 			img: ancestry.img,

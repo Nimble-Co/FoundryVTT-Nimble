@@ -1,5 +1,6 @@
 import type { NimbleAncestryBonusData } from '../../models/item/AncestryBonusDataModel.js';
 
+import localize from '../../utils/localize.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleAncestryBonusItem extends NimbleBaseItem {
@@ -15,7 +16,8 @@ export class NimbleAncestryBonusItem extends NimbleBaseItem {
 			flavor: `${this.actor?.name}: ${this.name}`,
 			type: 'feature',
 			system: {
-				description: description || 'No description available.',
+				description:
+					description || localize('NIMBLE.ancestryBonusSelection.noDescriptionAvailable'),
 				featureType: this.type,
 				name: this.name,
 			},

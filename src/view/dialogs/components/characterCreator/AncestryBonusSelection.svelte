@@ -1,10 +1,20 @@
-<script>
+<script lang="ts">
+	import type { AncestryBonusSelectionProps } from './AncestryBonusSelection.types.js';
+
 	import { getContext } from 'svelte';
+
 	import Hint from '../../../components/Hint.svelte';
+	import DocumentCard from './DocumentCard.svelte';
 	import prepareAncestryBonusTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryBonusTooltip.js';
 	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
 	import localize from '../../../../utils/localize.js';
-	import DocumentCard from './DocumentCard.svelte';
+	import { createAncestryBonusSelectionState } from './AncestryBonusSelection.svelte.js';
+
+	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES') as Record<
+		string,
+		number | string
+	>;
+	const dialog = getContext('dialog') as { id: string };
 
 	let {
 		active,
@@ -12,131 +22,128 @@
 		selectedAncestry,
 		selectedAncestryBonus = $bindable(),
 		ancestryBonusConfirmed = $bindable(),
-	} = $props();
+	}: AncestryBonusSelectionProps = $props();
 
-	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
-	const dialog = getContext('dialog');
-
-	const defaultBonusUuid = $derived(selectedAncestry?.system?.defaultBonus ?? '');
-
-	// Local UI mode: false = confirm the default/current bonus, true = browse the full list.
-	let browsing = $state(false);
-
-	// Picking a new ancestry sends us back to the confirm view for that ancestry's default.
-	$effect(() => {
-		void selectedAncestry;
-		browsing = false;
+	const state = createAncestryBonusSelectionState({
+		getSelectedAncestry: () => selectedAncestry,
+		setSelectedAncestryBonus: (bonus) => {
+			selectedAncestryBonus = bonus;
+		},
+		setAncestryBonusConfirmed: (confirmed) => {
+			ancestryBonusConfirmed = confirmed;
+		},
 	});
 
-	async function handleBonusSelection(bonus) {
-		// Resolve the full document so its rules are available, then drop back to the confirm
-		// view so the player lands on the same Confirm / Change buttons with their new pick.
-		selectedAncestryBonus = await fromUuid(bonus.uuid);
-		browsing = false;
-	}
-
-	function confirmSelection() {
-		ancestryBonusConfirmed = true;
-		browsing = false;
-	}
-
-	function editSelection() {
-		ancestryBonusConfirmed = false;
-		browsing = false;
-	}
+	const { handleBonusSelection, confirmSelection, editSelection, startBrowsing } = state;
+	const browsing = $derived(state.browsing);
+	const defaultBonusUuid = $derived(state.defaultBonusUuid);
 
 	const hintText = localize('NIMBLE.ancestryBonusSelection.hint');
 	const defaultMetadata = localize('NIMBLE.ancestryBonusSelection.defaultMetadata');
 </script>
 
-<section
-	class="nimble-character-creation-section"
-	id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_BONUS}"
->
-	<header class="nimble-section-header" data-header-variant="character-creator">
-		<h3 class="nimble-heading" data-heading-variant="section">
-			{localize('NIMBLE.ancestryBonusSelection.header')}
+<!-- An ancestry with no configured default bonus never gates this stage, so showing the
+     step at all would leave a titled, permanently empty section on the page. -->
+{#if selectedAncestry?.system?.defaultBonus || selectedAncestryBonus}
+	<section
+		class="nimble-character-creation-section"
+		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_BONUS}"
+	>
+		<header class="nimble-section-header" data-header-variant="character-creator">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.ancestryBonusSelection.header')}
 
-			{#if !active && selectedAncestryBonus}
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					aria-label={localize('NIMBLE.ancestryBonusSelection.editSelection')}
-					data-tooltip={localize('NIMBLE.ancestryBonusSelection.editSelection')}
-					onclick={editSelection}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
-			{/if}
-		</h3>
-	</header>
+				{#if !active && selectedAncestryBonus}
+					<button
+						class="nimble-button"
+						data-button-variant="icon"
+						aria-label={localize('NIMBLE.ancestryBonusSelection.editSelection')}
+						data-tooltip={localize('NIMBLE.ancestryBonusSelection.editSelection')}
+						onclick={editSelection}
+					>
+						<i class="fa-solid fa-edit"></i>
+					</button>
+				{/if}
+			</h3>
+		</header>
 
-	{#if active}
-		{#if browsing}
-			<Hint hintText={localize('NIMBLE.ancestryBonusSelection.chooseHint')} />
+		{#if active}
+			{#if browsing}
+				<Hint hintText={localize('NIMBLE.ancestryBonusSelection.chooseHint')} />
 
-			{#if !ancestryBonuses.length}
+				{#if !ancestryBonuses.length}
+					<Hint
+						hintIcon="fa-solid fa-circle-exclamation"
+						hintText={localize('NIMBLE.ancestryBonusSelection.noneAvailable')}
+						hintType="warning"
+					/>
+				{:else}
+					<ul class="nimble-document-list">
+						{#each ancestryBonuses as bonus}
+							{@const sourceLabel = getDocumentSourceLabel(bonus.uuid)}
+							{@const isDefault = bonus.uuid === defaultBonusUuid}
+
+							<li class="u-semantic-only">
+								<DocumentCard
+									document={bonus}
+									handler={handleBonusSelection}
+									data-card-selected={bonus.uuid === selectedAncestryBonus?.uuid ? '' : null}
+									metadata={isDefault ? defaultMetadata : null}
+									{sourceLabel}
+									getTooltip={prepareAncestryBonusTooltip}
+								/>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			{:else if selectedAncestryBonus}
+				{@const sourceLabel = getDocumentSourceLabel(selectedAncestryBonus.uuid)}
+
+				<Hint {hintText} />
+
+				<DocumentCard
+					document={selectedAncestryBonus}
+					handler={null}
+					data-card-option="non-clickable"
+					metadata={selectedAncestryBonus.uuid === defaultBonusUuid ? defaultMetadata : null}
+					{sourceLabel}
+					getTooltip={prepareAncestryBonusTooltip}
+				/>
+
+				<div class="nimble-ancestry-bonus-actions">
+					<button class="nimble-button" data-button-variant="basic" onclick={confirmSelection}>
+						{localize('NIMBLE.ancestryBonusSelection.confirmSelection')}
+					</button>
+					<button class="nimble-button" data-button-variant="secondary" onclick={startBrowsing}>
+						{localize('NIMBLE.ancestryBonusSelection.changeSelection')}
+					</button>
+				</div>
+			{:else}
+				<!-- The ancestry's default bonus is still resolving, or its UUID didn't resolve at
+			     all (missing pack). Either way the player must be able to reach the list — this
+			     stage gates the rest of character creation. -->
 				<Hint
 					hintIcon="fa-solid fa-circle-exclamation"
-					hintText={localize('NIMBLE.ancestryBonusSelection.noneAvailable')}
+					hintText={localize('NIMBLE.ancestryBonusSelection.noSelection')}
 					hintType="warning"
 				/>
-			{:else}
-				<ul class="nimble-document-list">
-					{#each ancestryBonuses as bonus}
-						{@const sourceLabel = getDocumentSourceLabel(bonus.uuid)}
-						{@const isDefault = bonus.uuid === defaultBonusUuid}
 
-						<li class="u-semantic-only">
-							<DocumentCard
-								document={bonus}
-								handler={handleBonusSelection}
-								data-card-selected={bonus.uuid === selectedAncestryBonus?.uuid ? '' : null}
-								metadata={isDefault ? defaultMetadata : null}
-								{sourceLabel}
-								getTooltip={prepareAncestryBonusTooltip}
-							/>
-						</li>
-					{/each}
-				</ul>
+				<div class="nimble-ancestry-bonus-actions">
+					<button class="nimble-button" data-button-variant="basic" onclick={startBrowsing}>
+						{localize('NIMBLE.ancestryBonusSelection.chooseSelection')}
+					</button>
+				</div>
 			{/if}
 		{:else if selectedAncestryBonus}
-			{@const sourceLabel = getDocumentSourceLabel(selectedAncestryBonus.uuid)}
-
-			<Hint {hintText} />
-
 			<DocumentCard
 				document={selectedAncestryBonus}
 				handler={null}
 				data-card-option="non-clickable"
-				metadata={selectedAncestryBonus.uuid === defaultBonusUuid ? defaultMetadata : null}
-				{sourceLabel}
 				getTooltip={prepareAncestryBonusTooltip}
 			/>
-
-			<div class="nimble-ancestry-bonus-actions">
-				<button class="nimble-button" data-button-variant="basic" onclick={confirmSelection}>
-					{localize('NIMBLE.ancestryBonusSelection.confirmSelection')}
-				</button>
-				<button
-					class="nimble-button"
-					data-button-variant="basic"
-					data-button-style="secondary"
-					onclick={() => (browsing = true)}
-				>
-					{localize('NIMBLE.ancestryBonusSelection.changeSelection')}
-				</button>
-			</div>
 		{/if}
-	{:else if selectedAncestryBonus}
-		<DocumentCard
-			document={selectedAncestryBonus}
-			handler={null}
-			data-card-option="non-clickable"
-			getTooltip={prepareAncestryBonusTooltip}
-		/>
-	{/if}
-</section>
+	</section>
+{/if}
 
 <style lang="scss">
 	.nimble-character-creation-section {
@@ -179,38 +186,40 @@
 		}
 
 		:global(.nimble-card__source-label) {
-			margin-inline-start: auto;
 			max-width: 100%;
 			white-space: normal;
 			text-align: right;
 		}
 
-		// "Default" badge pinned to the top-right corner, independent of the title.
+		// Pin the "Default" badge to the top-right corner, independent of the title. The
+		// badge's own appearance is owned by DocumentCard; only placement is step-specific.
 		:global(.nimble-card__metadata) {
 			position: absolute;
 			top: 0.25rem;
 			inset-inline-end: 0.25rem;
-			padding: 0.0625rem 0.25rem;
-			font-size: var(--nimble-xxs-text);
-			font-weight: 700;
-			line-height: 1.2;
-			color: var(--nimble-light-text-color);
-			background: var(--nimble-accent-color);
-			border-radius: 2px;
 		}
 
 		// Clear selected state while browsing the list.
 		:global(.nimble-card[data-card-selected]) {
 			--nimble-card-image-filter: none;
+			// The title is `.nimble-heading`, which _heading.scss colours by a directly
+			// matching rule — an inherited `color` would never reach it.
+			--nimble-heading-color: var(--nimble-selected-tag-text-color);
 
 			border-color: var(--nimble-accent-color);
-			background: hsla(var(--nimble-accent-color-values), 0.85);
-			color: var(--nimble-light-text-color);
+			background: var(--nimble-accent-color);
+			color: var(--nimble-selected-tag-text-color);
 		}
 
 		:global(.nimble-card[data-card-selected] .nimble-card__source-label) {
-			color: var(--nimble-light-text-color);
-			border-color: var(--nimble-light-text-color);
+			color: var(--nimble-selected-tag-text-color);
+			border-color: var(--nimble-selected-tag-text-color);
+		}
+
+		// The badge shares the accent background with the selected card, so give it its
+		// own surface there or it disappears into the card.
+		:global(.nimble-card[data-card-selected] .nimble-card__metadata) {
+			background: var(--nimble-selected-tag-background-color);
 		}
 	}
 
@@ -227,13 +236,6 @@
 			min-width: fit-content;
 			// `basic` variant buttons don't consume --nimble-button-border-radius, so round explicitly.
 			border-radius: 4px;
-		}
-
-		// Secondary ("Change") button reads as an outline so the primary action stands out.
-		:global(.nimble-button[data-button-style='secondary']) {
-			background: transparent;
-			border: 1px solid var(--nimble-card-border-color);
-			color: var(--nimble-dark-text-color);
 		}
 	}
 </style>

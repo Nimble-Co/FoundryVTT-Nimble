@@ -3,25 +3,13 @@
 
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
+	import { ancestryBonusRequiresSaveChoice } from '../../characterCreation/utils/ancestryBonusRequiresSaveChoice.js';
 
 	function prepareAncestrySizeOptions(ancestry) {
 		return ancestry?.system?.size?.map((sizeCategory) => ({
 			value: sizeCategory,
 			label: sizeCategories[sizeCategory] ?? sizeCategory,
 		}));
-	}
-
-	function ancestryRequiresSaveChoice(ancestryBonus) {
-		const rules = [...(ancestryBonus?.rules?.values() ?? [])];
-		if (!rules.length) return false;
-
-		for (const rule of rules) {
-			if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && rule.target === 'neutral') {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	function getNeutralSaves(selectedClass) {
@@ -59,7 +47,7 @@
 	} = $props();
 
 	let hasSizeChoice = $derived(selectedAncestry?.system?.size?.length > 1);
-	let hasSaveChoice = $derived(ancestryRequiresSaveChoice(selectedAncestryBonus));
+	let hasSaveChoice = $derived(ancestryBonusRequiresSaveChoice(selectedAncestryBonus));
 	let hasAnyChoice = $derived(hasSizeChoice || hasSaveChoice);
 </script>
 

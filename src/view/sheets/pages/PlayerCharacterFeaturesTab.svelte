@@ -49,6 +49,10 @@
 		return items.reduce((categories, item) => {
 			const { type: itemType } = item.reactive;
 
+			// Ancestry bonuses are rendered nested under the ancestry card, not as their
+			// own top-level section.
+			if (itemType === 'ancestryBonus') return categories;
+
 			if (itemType === 'feature') {
 				// Grouped class features and subclass features are rendered nested under their
 				// parent card — only ungrouped features get their own top-level section here.
@@ -56,9 +60,6 @@
 					categories['feature'] ??= [];
 					categories['feature'].push(item);
 				}
-			} else if (itemType === 'ancestryBonus') {
-				// Ancestry bonuses are rendered nested under the ancestry card, not as their
-				// own top-level section.
 			} else {
 				categories[itemType] ??= [];
 				categories[itemType].push(item);

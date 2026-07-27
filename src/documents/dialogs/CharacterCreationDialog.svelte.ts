@@ -237,7 +237,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				| NimbleAncestryBonusItem
 				| null,
 			uuid: string | undefined,
-			options: { isAncestry?: boolean; isAncestryBonus?: boolean; isBackground?: boolean } = {},
+			options: { isAncestryBonus?: boolean; isBackground?: boolean } = {},
 		) => {
 			if (!doc || !uuid) return;
 
@@ -336,7 +336,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		processOriginSource(backgroundDocument, background?.uuid, { isBackground: true });
 		processOriginSource(classDocument, characterClass?.uuid);
-		processOriginSource(ancestryDocument, ancestry?.uuid, { isAncestry: true });
+		processOriginSource(ancestryDocument, ancestry?.uuid);
 		processOriginSource(ancestryBonusDocument, ancestryBonus?.uuid, { isAncestryBonus: true });
 
 		// When origin documents are added, the system automatically processes grantItem rules

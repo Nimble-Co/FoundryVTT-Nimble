@@ -20,6 +20,7 @@ import type {
 	StageValue,
 	StatArrayOption,
 } from './types.js';
+import { ancestryBonusRequiresSaveChoice } from './utils/ancestryBonusRequiresSaveChoice.js';
 import { isRaisedByBackground } from './utils/backgroundChecks.js';
 import getGrantSpellSelectionRuleIds from './utils/getGrantSpellSelectionRuleIds.js';
 import hasSpellGrants from './utils/hasSpellGrants.js';
@@ -102,25 +103,12 @@ function getSkillBonuses(
 	return bonuses;
 }
 
-function ancestryRequiresSaveChoice(ancestryBonus: NimbleAncestryBonusItem | null): boolean {
-	const rules = [...(ancestryBonus?.rules?.values() ?? [])];
-	if (!rules.length) return false;
-
-	for (const rule of rules) {
-		if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && rule.target === 'neutral') {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 function hasAncestryOptions(
 	ancestry: NimbleAncestryItem | null,
 	ancestryBonus: NimbleAncestryBonusItem | null,
 ): boolean {
 	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
-	const hasSaveChoice = ancestryRequiresSaveChoice(ancestryBonus);
+	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
 	return hasSizeChoice || hasSaveChoice;
 }
 
@@ -131,7 +119,7 @@ function ancestryOptionsComplete(
 	selectedAncestrySave: string | null,
 ): boolean {
 	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
-	const hasSaveChoice = ancestryRequiresSaveChoice(ancestryBonus);
+	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
 
 	if (hasSizeChoice && !selectedAncestrySize) return false;
 	if (hasSaveChoice && !selectedAncestrySave) return false;
@@ -160,24 +148,19 @@ function hasClassFeatures(features: ClassFeatureResult | null): boolean {
 	return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
 }
 
-function getLanguageGrantsFromRules(
-	rules: NimbleBaseRule[],
-	intMod: number,
-	source: 'ancestry' | 'background',
-): GrantedLanguage[] {
+/**
+ * Collects language grants from a background's `grantProficiency` rules. Unlike ancestry
+ * grants — which the GM owns via the In-Game Languages settings — background grants come
+ * straight from the item and aren't gated on Intelligence.
+ */
+function getBackgroundLanguageGrants(rules: NimbleBaseRule[]): GrantedLanguage[] {
 	if (!rules?.length) return [];
 
-	const grantRules = rules.filter(
-		(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
-	);
-
-	return grantRules.flatMap((r) => {
-		const intPredicate = r.predicate?.intelligence;
-		if (intPredicate?.min !== undefined && intMod < intPredicate.min) {
-			return [];
-		}
-		return (r.values ?? []).map((v) => ({ key: v.toLowerCase(), source }));
-	});
+	return rules
+		.filter((r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages')
+		.flatMap((r) =>
+			(r.values ?? []).map((v) => ({ key: v.toLowerCase(), source: 'background' as const })),
+		);
 }
 
 interface GetCurrentStageParams {
@@ -341,7 +324,6 @@ function getStageNumber(stage: StageValue): string {
  */
 export interface CharacterCreationStateParams {
 	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
-	ancestryBonusOptions: Promise<NimbleAncestryBonusItem[]>;
 	backgroundOptions: Promise<NimbleBackgroundItem[]>;
 	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
@@ -362,7 +344,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	let selectedAncestry = $state<NimbleAncestryItem | null>(null);
 	let selectedAncestryBonus = $state<NimbleAncestryBonusItem | null>(null);
 	let ancestryBonusConfirmed = $state<boolean>(false);
-	let previousAncestryForBonus = $state<NimbleAncestryItem | null>(null);
+	// Effect-local memo, deliberately not `$state` — it exists only to detect a change of
+	// ancestry, and making it reactive would re-trigger the effect that writes it.
+	let previousAncestryForBonus: NimbleAncestryItem | null = null;
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
 	let selectedBackground = $state<NimbleBackgroundItem | null>(null);
@@ -410,17 +394,26 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		Object.values(selectedAbilityScores).every((mod) => mod !== null),
 	);
 
-	// Languages granted by ancestry (based on the ancestry's grantProficiency
-	// rules with INT predicate: known if Intelligence isn't negative).
+	// Languages granted by ancestry. Sourced from the In-Game Languages settings, which the
+	// GM owns — a world may define a different set of ancestry language grants than the base
+	// rules, and `_applyConfiguredLanguageGrants` gives the created character that set. Reading
+	// the ancestry's own rules here would preview the base rules instead of the world's.
+	// Languages stay keyed by ancestry identifier, not the swappable bonus trait.
+	// INT predicate: known if Intelligence isn't negative.
 	const ancestryGrantedLanguages = $derived.by((): GrantedLanguage[] => {
 		if (!selectedAncestry || !selectedArray || selectedAbilityScores.intelligence === null)
 			return [];
 		const intMod = selectedArray.array?.[selectedAbilityScores.intelligence] ?? 0;
 		if (intMod < 0) return [];
 
-		// Languages are inherent to the ancestry, not the swappable bonus trait.
-		const rules = [...(selectedAncestry?.system?.rules ?? [])];
-		return getLanguageGrantsFromRules(rules, intMod, 'ancestry');
+		const identifier = selectedAncestry.identifier;
+		const speakers =
+			(CONFIG.NIMBLE as unknown as { languageSpeakers?: Record<string, string[]> })
+				.languageSpeakers ?? {};
+
+		return Object.entries(speakers)
+			.filter(([, ancestries]) => ancestries.includes(identifier))
+			.map(([key]) => ({ key, source: 'ancestry' as const }));
 	});
 
 	// Languages granted by background
@@ -433,10 +426,8 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			return [{ key: selectedRaisedByAncestry.language, source: 'background' }];
 		}
 
-		// For other backgrounds with grantProficiency rules. Background language grants aren't
-		// gated on Intelligence, so pass an unbounded intMod to bypass the helper's INT predicate.
 		const rules = [...(selectedBackground?.system?.rules ?? [])];
-		return getLanguageGrantsFromRules(rules, Number.POSITIVE_INFINITY, 'background');
+		return getBackgroundLanguageGrants(rules);
 	});
 
 	// Combined granted languages (deduplicated by key)
@@ -667,6 +658,11 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			return;
 		}
 
+		// Drop the previous ancestry's bonus synchronously. Leaving it in place across the
+		// await would render the old bonus with a live Confirm button, letting the player
+		// confirm a bonus that then gets swapped out from under them when this resolves.
+		selectedAncestryBonus = null;
+
 		fromUuid(defaultBonusUuid as `Item.${string}`)
 			.then((doc) => {
 				// Guard against races if the ancestry changed again before this resolved.
@@ -676,6 +672,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			})
 			.catch((error) => {
 				console.error('Failed to resolve default ancestry bonus:', error);
+				if (selectedAncestry === ancestry) selectedAncestryBonus = null;
 			});
 	});
 
