@@ -105,7 +105,7 @@
 				},
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"defaultLabel": "Pool",
-				"noChange": "- no change",
+				"noChange": "— no change",
 				"skipReasons": {
 					"invalidAction": "Skipped (invalid action for pool type)",
 					"noActor": "Skipped (no actor)",

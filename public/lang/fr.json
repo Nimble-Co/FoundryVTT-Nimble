@@ -588,7 +588,7 @@
 			},
 			"templateValueHintBefore": "Utilisez",
 			"templateValueHintAfter": "Pour insérer le résultat de la formule.",
-			"pickerMissingMetaTooltip": "Description manquante - Marquer pour révision.",
+			"pickerMissingMetaTooltip": "Description manquante — Marquer pour révision.",
 			"formulaPlaceholderDice": "ex. 1d6 + @level",
 			"formulaPlaceholderFlat": "ex. 2 or 1d6 or @level",
 			"predicateKeyPlaceholder": "Choisissez ou tapez une clé de tag",
@@ -601,7 +601,7 @@
 			"predicateRangeAnd": "et",
 			"predicateIntro": "Restreindre quand cette règle s'active. Chaque ligne ci-dessous doit correspondre aux tags de l'acteur pour que la règle s'applique. Laisser vide pour toujours appliquer.",
 			"predicateAddCondition": "Ajouter une condition",
-			"predicatePreviewAlways": "Aucune condition - s'applique toujours.",
+			"predicatePreviewAlways": "Aucune condition — s'applique toujours.",
 			"predicatePreviewIncomplete": "Les conditions sont incomplètes.",
 			"predicatePreviewMatches": "Correspond actuellement à l'acteur parent.",
 			"predicatePreviewNoMatch": "Ne correspond pas actuellement à l'acteur parent.",
@@ -669,14 +669,14 @@
 				}
 			},
 			"applyCondition": {
-				"description": "Appliquer une condition de statut à une cible (ou à soi-même) lors d'un déclencheur - sur un coup, une critique, un échec, une sauvegarde ratée, le début du tour, etc.",
+				"description": "Appliquer une condition de statut à une cible (ou à soi-même) lors d'un déclencheur — sur un coup, une critique, un échec, une sauvegarde ratée, le début du tour, etc.",
 				"condition": {
 					"label": "Condition",
 					"hint": "La condition à appliquer."
 				},
 				"trigger": {
 					"label": "Déclencheur",
-					"hint": "'Lorsque cette condition est appliquée - sur un coup, une critique, un échec, une sauvegarde ratée, le début du tour, etc."
+					"hint": "'Lorsque cette condition est appliquée — sur un coup, une critique, un échec, une sauvegarde ratée, le début du tour, etc."
 				}
 			},
 			"armorClass": {
@@ -913,7 +913,7 @@
 				}
 			},
 			"modifyPool": {
-				"description": "Remplacer ou mettre à l'échelle un pool de dés ou de charges existant (par identifiant) - généralement attaché à une fonctionnalité d'évolution de niveau pour mettre à jour la taille des dés ou élargir le maximum.",
+				"description": "Remplacer ou mettre à l'échelle un pool de dés ou de charges existant (par identifiant) — généralement attaché à une fonctionnalité d'évolution de niveau pour mettre à jour la taille des dés ou élargir le maximum.",
 				"poolType": {
 					"label": "Type de pool",
 					"hint": "Quel sous-système cibler: pools de dés (faces rouler) ou pools de charges (compteurs)."
@@ -1864,7 +1864,7 @@
 			"addOnSave": "Ajouter un effet sur succès",
 			"poolNode": {
 				"defaultLabel": "Pool",
-				"noChange": "- aucun changement",
+				"noChange": "— aucun changement",
 				"debugPredicateSkipped": "{item}: noeud de pool pour \"{pool}\" passé (prérequis {predicate} non rempli)",
 				"actions": {
 					"rollDie": "Lancé",
@@ -2241,7 +2241,7 @@
 				"formulaLabel": "Formule",
 				"templateShapeLabel": "Forme du template AoE",
 				"weaponTypeLabel": "Type d'arme",
-				"weaponTypeHint": "Laissez vide pour une arme permissive (n'importe qui peut critiquer). Définissez un type d'arme comme 'Épée longue' pour exiger que l'attaquant ait cette entrée dans ses compétences - les porteurs non-proficients ne peuvent pas critiquer. Choisissez parmi les suggestions ou tapez la vôtre pour tester les cas limites.",
+				"weaponTypeHint": "Laissez vide pour une arme permissive (n'importe qui peut critiquer). Définissez un type d'arme comme 'Épée longue' pour exiger que l'attaquant ait cette entrée dans ses compétences — les porteurs non-proficients ne peuvent pas critiquer. Choisissez parmi les suggestions ou tapez la vôtre pour tester les cas limites.",
 				"proficiencyLine": "Maitrise de '{weaponType}': {state}",
 				"critSuppressedLine": "Les critiques seront supprimées pour non-maitrise: {state}",
 				"proficiency": {
@@ -2419,7 +2419,7 @@
 		},
 		"devRebrand": {
 			"dialog": {
-				"title": "Nimble (Dev) - Migration unitaire",
+				"title": "Nimble (Dev) — Migration unitaire",
 				"intro": "Ce monde a été créé sous le système stable Nimble. La version Dev s'installe sous un identifiant de système différent (\"nimble-dev\"), donc Foundry stocke ses drapeaux et paramètres dans un espace de noms différent de celui de l'installation stable.",
 				"body": "Cliquez sur <strong>Continuer</strong> pour copier tous les drapeaux et paramètres Nimble existants sur ce monde vers l'espace de noms Dev afin que vos personnages, objets et paramètres fonctionnent dans la version Dev. Cela ne s'exécute qu'une fois par monde.",
 				"warning": "Après l'exécution, les données Nimble originales sont supprimées de ce monde. Si vous souhaitez continuer à utiliser le système stable Nimble avec ce monde, annulez maintenant et utilisez un monde séparé pour la version Dev.",
