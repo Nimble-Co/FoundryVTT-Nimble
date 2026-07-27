@@ -29,12 +29,13 @@
 		{ label: t('operations.addArmor'), value: 'addArmor' },
 		{ label: t('operations.addDuration'), value: 'addDuration' },
 		{ label: t('operations.addCondition'), value: 'addCondition' },
+		{ label: t('operations.increaseDieSize'), value: 'increaseDieSize' },
 	];
 
 	const diceFaceOptions = [4, 6, 8, 10, 12, 20];
 
 	// Operations that can target a specific effect node
-	const targetableOperations = new Set(['addFlatDamage', 'addDice', 'addDC']);
+	const targetableOperations = new Set(['addFlatDamage', 'addDice', 'addDC', 'increaseDieSize']);
 
 	// Build a list of targetable effect nodes from the spell's activation effects
 	let targetableEffects = $derived.by(() => {
@@ -65,7 +66,35 @@
 			condition: null,
 			targetEffectId: null,
 			durationType: null,
+			maxDieFaces: null,
 		};
+	}
+
+	// Reshape a delta's payload fields so only the ones the new operation uses stay populated
+	function applyOperationDefaults(delta, operation) {
+		delta.operation = operation;
+
+		if (operation === 'addDice') {
+			delta.dice = delta.dice ?? { count: 1, faces: 6 };
+			delta.value = null;
+			delta.condition = null;
+			delta.maxDieFaces = null;
+		} else if (operation === 'addCondition') {
+			delta.condition = delta.condition ?? '';
+			delta.value = null;
+			delta.dice = null;
+			delta.maxDieFaces = null;
+		} else if (operation === 'increaseDieSize') {
+			delta.value = delta.value ?? 1;
+			delta.maxDieFaces = delta.maxDieFaces ?? 12;
+			delta.dice = null;
+			delta.condition = null;
+		} else {
+			delta.value = delta.value ?? 1;
+			delta.dice = null;
+			delta.condition = null;
+			delta.maxDieFaces = null;
+		}
 	}
 
 	async function toggleScalingMode(mode) {
@@ -91,20 +120,7 @@
 	async function updateDelta(index, field, value) {
 		const deltas = foundry.utils.deepClone(scalingDeltas);
 		if (field === 'operation') {
-			deltas[index].operation = value;
-			if (value === 'addDice') {
-				deltas[index].dice = deltas[index].dice ?? { count: 1, faces: 6 };
-				deltas[index].value = null;
-				deltas[index].condition = null;
-			} else if (value === 'addCondition') {
-				deltas[index].condition = deltas[index].condition ?? '';
-				deltas[index].value = null;
-				deltas[index].dice = null;
-			} else {
-				deltas[index].value = deltas[index].value ?? 1;
-				deltas[index].dice = null;
-				deltas[index].condition = null;
-			}
+			applyOperationDefaults(deltas[index], value);
 		} else if (field === 'dice') {
 			deltas[index].dice = value;
 		} else {
@@ -147,20 +163,7 @@
 		const choices = foundry.utils.deepClone(scalingChoices ?? []);
 		const delta = choices[choiceIndex].deltas[deltaIndex];
 		if (field === 'operation') {
-			delta.operation = value;
-			if (value === 'addDice') {
-				delta.dice = delta.dice ?? { count: 1, faces: 6 };
-				delta.value = null;
-				delta.condition = null;
-			} else if (value === 'addCondition') {
-				delta.condition = delta.condition ?? '';
-				delta.value = null;
-				delta.dice = null;
-			} else {
-				delta.value = delta.value ?? 1;
-				delta.dice = null;
-				delta.condition = null;
-			}
+			applyOperationDefaults(delta, value);
 		} else if (field === 'dice') {
 			delta.dice = value;
 		} else {
@@ -211,6 +214,29 @@
 					>
 						{#each diceFaceOptions as faces}
 							<option value={faces} selected={faces === (delta.dice?.faces ?? 6)}>d{faces}</option>
+						{/each}
+					</select>
+				</label>
+			{:else if delta.operation === 'increaseDieSize'}
+				<label class="nimble-field" data-field-variant="stacked">
+					<span class="nimble-heading" data-heading-variant="field">{t('steps')}</span>
+					<input
+						type="number"
+						min="1"
+						value={delta.value ?? 1}
+						onchange={({ target }) => onUpdate(index, 'value', Number(target.value))}
+					/>
+				</label>
+				<label class="nimble-field" data-field-variant="stacked">
+					<span class="nimble-heading" data-heading-variant="field">{t('maxDie')}</span>
+					<select
+						value={delta.maxDieFaces ?? ''}
+						onchange={({ target }) =>
+							onUpdate(index, 'maxDieFaces', target.value ? Number(target.value) : null)}
+					>
+						<option value="" selected={delta.maxDieFaces == null}>{t('maxDieNone')}</option>
+						{#each diceFaceOptions as faces}
+							<option value={faces} selected={faces === delta.maxDieFaces}>d{faces}</option>
 						{/each}
 					</select>
 				</label>

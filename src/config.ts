@@ -559,6 +559,8 @@ const spellUpcastDialog = {
 		maxTier: 'NIMBLE.spells.spellUpcastDialog.slider.maxTier',
 	},
 	chooseEnhancement: 'NIMBLE.spells.spellUpcastDialog.chooseEnhancement',
+	increaseDieSize: 'NIMBLE.spells.spellUpcastDialog.increaseDieSize',
+	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
 };
