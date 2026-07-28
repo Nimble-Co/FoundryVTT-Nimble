@@ -22,28 +22,41 @@
 
 	const options = $derived(state.options);
 	const hasPools = $derived(options.length > 0);
+	const hasActor = $derived(state.hasActor);
 	const isStaleValue = $derived(
 		value.length > 0 && !options.some((option) => option.identifier === value),
 	);
 
 	function handleChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
+		const target = event.target as HTMLSelectElement | HTMLInputElement;
 		onChange(target.value);
 	}
 </script>
 
 {#if !hasPools}
-	<select class="nimble-field-input" {value} disabled>
-		{#if isStaleValue}
-			<option {value}
-				>{localize('NIMBLE.rulesBuilder.dicePoolPicker.notFound', { identifier: value })}</option
-			>
-		{:else}
-			<option value="">{localize('NIMBLE.rulesBuilder.dicePoolPicker.empty')}</option>
-		{/if}
-	</select>
+	<!-- Nothing to list: either the item is unowned (compendium or world
+	     directory) or its actor has no pools yet. Fall back to free text so
+	     pack authors can still write an identifier by hand. -->
+	<input
+		class="nimble-field-input nimble-pool-picker nimble-pool-picker--dice"
+		type="text"
+		{value}
+		{disabled}
+		placeholder={localize('NIMBLE.rulesBuilder.poolIdentifierPlaceholder')}
+		onchange={handleChange}
+	/>
+	<small class="nimble-field-hint">
+		{hasActor
+			? localize('NIMBLE.rulesBuilder.dicePoolPicker.empty')
+			: localize('NIMBLE.rulesBuilder.poolPickerNoActor')}
+	</small>
 {:else}
-	<select class="nimble-field-input" {value} {disabled} onchange={handleChange}>
+	<select
+		class="nimble-field-input nimble-pool-picker nimble-pool-picker--dice"
+		{value}
+		{disabled}
+		onchange={handleChange}
+	>
 		{#if isStaleValue}
 			<option {value}
 				>{localize('NIMBLE.rulesBuilder.dicePoolPicker.notFound', { identifier: value })}</option
@@ -67,5 +80,12 @@
 		color: inherit;
 		border: var(--nimble-input-border, 1px solid var(--nimble-accent-color));
 		border-radius: 4px;
+	}
+
+	.nimble-field-hint {
+		display: block;
+		margin-top: 0.125rem;
+		color: var(--color-text-dark-secondary);
+		font-size: var(--nimble-xs-text);
 	}
 </style>

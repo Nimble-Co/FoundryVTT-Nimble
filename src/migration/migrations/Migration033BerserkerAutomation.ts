@@ -556,10 +556,10 @@ function ruleSignature(rule: RuleSource): string {
  * the same signature is present, and nodes only when no node with the same id
  * is present.
  */
-class Migration032BerserkerAutomation extends MigrationBase {
-	static override readonly version = 32;
+class Migration033BerserkerAutomation extends MigrationBase {
+	static override readonly version = 33;
 
-	override readonly version = Migration032BerserkerAutomation.version;
+	override readonly version = Migration033BerserkerAutomation.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
@@ -624,4 +624,4 @@ class Migration032BerserkerAutomation extends MigrationBase {
 	}
 }
 
-export { Migration032BerserkerAutomation };
+export { Migration033BerserkerAutomation };

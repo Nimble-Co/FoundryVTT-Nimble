@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ScalingDelta, SpellScaling } from '#types/spellScaling.js';
 import type { ConditionNode, DamageNode, HealingNode, SavingThrowNode } from '#types/effectTree.js';
+import type { ScalingDelta, SpellScaling } from '#types/spellScaling.js';
 import type { UpcastContext } from './applyUpcastDeltas.js';
 import { applyUpcastDeltas, validateAndComputeUpcast } from './applyUpcastDeltas.js';
 
@@ -23,6 +23,7 @@ function createDelta(
 		condition: partial.condition ?? null,
 		targetEffectId: partial.targetEffectId ?? null,
 		durationType: partial.durationType ?? null,
+		maxDieFaces: partial.maxDieFaces ?? null,
 	};
 }
 
@@ -283,7 +284,188 @@ describe('applyUpcastDeltas', () => {
 		});
 	});
 
+	describe('Lifebinding Spirit Scenario - increaseDieSize', () => {
+		function createDieSizeContext(manaToSpend: number, formula = '1d6+@abilities.wil.mod') {
+			return {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'increaseDieSize', value: 1, maxDieFaces: 12 }),
+					]),
+				},
+				actor: { resources: { mana: { current: 20 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'radiant',
+							formula,
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				manaToSpend,
+			} as UpcastContext;
+		}
+
+		it('should enlarge the existing die instead of appending a new term', () => {
+			const result = applyUpcastDeltas(createDieSizeContext(2));
+
+			expect(result.upcastResult.upcastSteps).toBe(1);
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe(
+				'1d8+@abilities.wil.mod',
+			);
+		});
+
+		it('should step once per point of mana above the base tier', () => {
+			const result = applyUpcastDeltas(createDieSizeContext(4));
+
+			expect(result.upcastResult.upcastSteps).toBe(3);
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe(
+				'1d12+@abilities.wil.mod',
+			);
+		});
+
+		it('should stop at the configured maximum die size', () => {
+			const result = applyUpcastDeltas(createDieSizeContext(9));
+
+			expect(result.upcastResult.upcastSteps).toBe(8);
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe(
+				'1d12+@abilities.wil.mod',
+			);
+		});
+
+		it('should leave the formula unchanged when cast at base tier', () => {
+			const result = applyUpcastDeltas(createDieSizeContext(1));
+
+			expect(result.upcastResult.upcastSteps).toBe(0);
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe(
+				'1d6+@abilities.wil.mod',
+			);
+		});
+	});
+
 	describe('Delta Application - Various Operations', () => {
+		it('should increase the die size of a healing effect', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'increaseDieSize', value: 1, maxDieFaces: 12 }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [
+						{
+							id: 'heal1',
+							type: 'healing',
+							healingType: 'healing',
+							formula: '2d4',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				manaToSpend: 3,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect((result.activationData.effects[0] as HealingNode).formula).toBe('2d8');
+		});
+
+		it('should increase the die size of the targeted effect only', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({
+							operation: 'increaseDieSize',
+							value: 1,
+							maxDieFaces: 12,
+							targetEffectId: 'dmg2',
+						}),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'fire',
+							formula: '1d6',
+							parentContext: null,
+							parentNode: null,
+						},
+						{
+							id: 'dmg2',
+							type: 'damage',
+							damageType: 'radiant',
+							formula: '1d6',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				manaToSpend: 2,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('1d6');
+			expect((result.activationData.effects[1] as DamageNode).formula).toBe('1d8');
+		});
+
+		it('should apply multiple die-size steps per upcast level', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'increaseDieSize', value: 2, maxDieFaces: 20 }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'fire',
+							formula: '1d4',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				manaToSpend: 3,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			// 2 upcast steps x 2 die steps each: d4 -> d6 -> d8 -> d10 -> d12
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('1d12');
+		});
+
+		it('should not throw when increaseDieSize finds no damage or healing effect', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'increaseDieSize', value: 1, maxDieFaces: 12 }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: { effects: [] },
+				manaToSpend: 3,
+			};
+
+			expect(() => applyUpcastDeltas(context)).not.toThrow();
+		});
+
 		it('should add dice correctly', () => {
 			const context: UpcastContext = {
 				spell: {
