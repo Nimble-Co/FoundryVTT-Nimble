@@ -224,7 +224,8 @@
 						type="number"
 						min="1"
 						value={delta.value ?? 1}
-						onchange={({ target }) => onUpdate(index, 'value', Number(target.value))}
+						onchange={({ target }) =>
+							onUpdate(index, 'value', Math.max(1, Number(target.value) || 1))}
 					/>
 				</label>
 				<label class="nimble-field" data-field-variant="stacked">

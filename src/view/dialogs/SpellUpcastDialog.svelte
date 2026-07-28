@@ -138,11 +138,15 @@
 			formula?: string;
 		}>;
 
-		return nodes.find(
-			(node) =>
-				(node.type === 'damage' || node.type === 'healing') &&
-				(targetEffectId ? node.id === targetEffectId : Boolean(node.formula)),
-		);
+		// Damage before healing, mirroring the search order applyDelta uses when casting
+		const findByType = (type: string) =>
+			nodes.find(
+				(node) =>
+					node.type === type &&
+					(targetEffectId ? node.id === targetEffectId : Boolean(node.formula)),
+			);
+
+		return findByType('damage') ?? findByType('healing');
 	}
 
 	function formatDeltaPreview(
@@ -163,7 +167,6 @@
 			addCondition: `+${amount} ${effectTypes.condition}`,
 			addArmor: `+${amount} ${objectTypes.armor}`,
 		};
-		// `increaseDieSize` is rendered by formatDieSizePreview and never reaches this map
 		return operations[delta.operation as keyof typeof operations] || delta.operation;
 	}
 </script>

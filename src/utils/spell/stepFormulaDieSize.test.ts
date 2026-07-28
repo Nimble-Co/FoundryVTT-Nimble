@@ -33,6 +33,10 @@ describe('stepFormulaDieSize', () => {
 		it('should step every die term in the formula', () => {
 			expect(stepFormulaDieSize('1d6+2d8', 1, null)).toBe('1d8+2d10');
 		});
+
+		it('should match an uppercase die term', () => {
+			expect(stepFormulaDieSize('1D6', 1, null)).toBe('1d8');
+		});
 	});
 
 	describe('Maximum die size', () => {
@@ -54,6 +58,16 @@ describe('stepFormulaDieSize', () => {
 
 		it('should honour a raised cap', () => {
 			expect(stepFormulaDieSize('1d12', 1, 20)).toBe('1d20');
+		});
+
+		it('should clamp an off-chain cap down to the nearest chain die', () => {
+			expect(stepFormulaDieSize('1d6', 5, 14)).toBe('1d12');
+			expect(stepFormulaDieSize('1d6', 1, 7)).toBe('1d6');
+		});
+
+		it('should never step when the cap is below the whole chain', () => {
+			expect(stepFormulaDieSize('1d4', 3, 2)).toBe('1d4');
+			expect(stepFormulaDieSize('1d6', 3, 3)).toBe('1d6');
 		});
 	});
 
