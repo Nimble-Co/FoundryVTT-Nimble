@@ -711,10 +711,15 @@ class NimbleCombat extends Combat {
 		combatant: Combatant.Implementation,
 		context: Combat.TurnEventContext,
 	) {
+		// Foundry dispatches turn events for every turn in the advanced interval, including
+		// combatants who were merely jumped over (`context.skipped`). Only the actual incoming
+		// turn may claim and emit; the boundary combatant arrives in the same interval with
+		// `skipped: false`.
+		//
 		// Claim synchronously — before any await — because Foundry dispatches turn events
 		// fire-and-forget, so `nextTurn`'s backstop can run interleaved with this method.
 		// Whoever claims the id first emits the hook; the other becomes a no-op.
-		const claimed = this.#claimTurnStart(combatant);
+		const claimed = !context.skipped && this.#claimTurnStart(combatant);
 
 		await super._onStartTurn(combatant, context);
 
@@ -760,6 +765,15 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
+		// Foundry dispatches turn events for every turn in the advanced interval, including
+		// combatants who were merely jumped over (`context.skipped`). Skipped turns never took
+		// place, so they must not trigger refills or the end-of-turn hook; the actual outgoing
+		// combatant arrives in the same interval with `skipped: false`.
+		if (context.skipped) {
+			await super._onEndTurn(combatant, context);
+			return;
+		}
+
 		// Under the expanded solo-monster turn order, Foundry derives `combatant` from its
 		// own `previous` turn snapshot, which our direct turn-index resync can leave pointing
 		// at the wrong combatant — so a hero ending their turn might not get refilled, or a

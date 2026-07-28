@@ -1391,6 +1391,31 @@ describe('NimbleCombat', () => {
 
 			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
 		});
+
+		it('neither emits nor claims for skipped turn-start dispatches', async () => {
+			// Foundry dispatches turn events for every turn in the advanced interval; jumped-over
+			// combatants arrive with `skipped: true`, must not emit, and must not consume the
+			// claim — the same combatant's real dispatch afterwards still emits.
+			const combatId = 'combat-start-turn-skipped';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat._onStartTurn(incomingHero, {
+				round: 1,
+				turn: 1,
+				skipped: true,
+			} as Combat.TurnEventContext);
+
+			expect(turnStartCalls()).toEqual([]);
+
+			await combat._onStartTurn(incomingHero, {
+				round: 2,
+				turn: 1,
+				skipped: false,
+			} as Combat.TurnEventContext);
+
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
 	});
 
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {
@@ -3659,6 +3684,34 @@ describe('NimbleCombat', () => {
 			'system.actions.heroic.helpAvailable': true,
 		});
 		expect(defendingActor.toggleStatusEffect).not.toHaveBeenCalled();
+	});
+
+	it('does not refill or fire the end-of-turn hook for skipped turn-end dispatches', async () => {
+		// Foundry dispatches turn events for every turn in the advanced interval; a combatant
+		// whose turn was jumped over (`skipped: true`) never acted, so no refill and no hook.
+		const combatant = createMockCombatant({
+			id: 'character-skipped-turn',
+			type: 'character',
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+		});
+		const combat = new NimbleCombat({
+			id: 'combat-end-turn-skipped',
+			combatants: createCombatantsCollectionFixture([combatant]),
+		} as unknown as Combat.CreateData);
+
+		await combat._onEndTurn(combatant, {
+			round: 1,
+			turn: 0,
+			skipped: true,
+		} as Combat.TurnEventContext);
+
+		expect(combatant.update).not.toHaveBeenCalled();
+		const turnEndCalls = (
+			globals().Hooks.call as unknown as ReturnType<typeof vi.fn>
+		).mock.calls.filter(([hook]) => hook === 'nimbleCombatTurnEnd');
+		expect(turnEndCalls).toEqual([]);
 	});
 
 	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {
