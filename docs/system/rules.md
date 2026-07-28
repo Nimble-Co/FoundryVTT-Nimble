@@ -333,9 +333,27 @@ value: new fields.StringField(
 ),
 ```
 
-The closed widget catalog is **`formula | diceFormula | documentUuid | predicate | templateString | richText | hidden`**. `withWidget()` validates the hint in dev and warns on typos.
+The closed widget catalog is **`formula | diceFormula | documentUuid | predicate | templateString | richText | dicePoolPicker | chargePoolPicker | hidden`**. `withWidget()` validates the hint in dev and warns on typos.
 
 For `widget: 'documentUuid'`, set `documentTypes: ['Item.spell']` (or `['Item']`, `['Actor']`) to gate accepted drops.
+
+### Conditional widgets
+
+When the right input depends on a sibling field, pass a function instead of a hint. It receives the same data object as `showWhen`:
+
+```typescript
+poolIdentifier: new fields.StringField(
+  withWidget({
+    required: true,
+    label: 'Pool',
+    widget: (data) => (data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker'),
+  }),
+),
+```
+
+The resolved value must still be in the catalog — `withWidget()` cannot check a resolver's return value, so `<SchemaFieldRenderer>` warns at render time if it isn't. `'hidden'` works here too, giving conditional visibility that depends on which widget applies.
+
+Write the fallback branch to match the sibling field's `initial` value: the generated reference docs resolve the function against schema initials, so that branch is what gets documented (the field's description then notes that the input varies).
 
 ### Conditional fields with `showWhen`
 
