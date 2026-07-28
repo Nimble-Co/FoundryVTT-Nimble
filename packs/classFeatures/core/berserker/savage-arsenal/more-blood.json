@@ -7,7 +7,29 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "more-blood-crit-refill",
+				"identifier": "",
+				"label": "MORE BLOOD! (gain a Fury Die when crit)",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "onCritReceived",
+						"mode": "add",
+						"value": "1",
+						"predicate": {}
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

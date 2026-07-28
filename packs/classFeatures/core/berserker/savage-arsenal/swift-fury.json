@@ -7,7 +7,20 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "poolGainMessage",
+				"disabled": false,
+				"id": "swift-fury-gain-message",
+				"identifier": "",
+				"label": "Swift Fury",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"formula": "@dexterity",
+				"message": "Swift Fury: move up to {value} spaces for free, ignoring difficult terrain."
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -34,7 +47,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p>",
+		"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p><p><em>A chat reminder with your movement distance posts whenever you gain Fury Dice.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"gainedAtLevel": 4,

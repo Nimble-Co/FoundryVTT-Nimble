@@ -60,6 +60,9 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		});
 		if (!allowed) return null;
 
+		// Pool-node side effects run only after the gate allowed the use.
+		await manager.applyDeferredPoolNodes();
+
 		// Deduct mana for tiered spells (cantrips are free)
 		if (this.system.tier > 0 && this.actor) {
 			// Use upcast amount if available, otherwise use base tier cost

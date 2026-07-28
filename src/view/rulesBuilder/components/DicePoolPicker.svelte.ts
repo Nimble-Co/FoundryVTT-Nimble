@@ -65,6 +65,11 @@ function dedupeAndSort(pools: DicePoolState[]): DicePoolOption[] {
 export function createDicePoolPickerState(getDocument: () => unknown) {
 	const subscribePoolState = createSubscriber(registerPoolHooks);
 
+	// An unowned item (compendium or world directory) has no actor to enumerate
+	// pools from. That is a different situation from an actor that simply has no
+	// pools yet, and the two need different messaging.
+	const hasActor = $derived(resolveActor(getDocument()) !== null);
+
 	const options = $derived.by((): DicePoolOption[] => {
 		subscribePoolState();
 		const actor = resolveActor(getDocument());
@@ -73,6 +78,9 @@ export function createDicePoolPickerState(getDocument: () => unknown) {
 	});
 
 	return {
+		get hasActor() {
+			return hasActor;
+		},
 		get options() {
 			return options;
 		},

@@ -142,6 +142,41 @@ describe('normalizeRefills', () => {
 	it('returns empty array for non-array input', () => {
 		expect(normalizeRefills(null)).toEqual([]);
 	});
+
+	it('keeps a non-empty predicate on the entry', () => {
+		const refills = normalizeRefills([
+			{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: { self: 'raging' } },
+		]);
+		expect(refills[0].predicate).toEqual({ self: 'raging' });
+	});
+
+	it('omits empty or invalid predicates', () => {
+		const refills = normalizeRefills([
+			{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: {} },
+			{ trigger: 'onTurnEnd', mode: 'add', value: '1', predicate: ['self:raging'] },
+		]);
+		expect(refills[0].predicate).toBeUndefined();
+		expect(refills[1].predicate).toBeUndefined();
+	});
+
+	it('unwraps Predicate-instance shapes to the raw predicate object', () => {
+		const refills = normalizeRefills([
+			{
+				trigger: 'onTurnStart',
+				mode: 'add',
+				value: '1',
+				predicate: { isValid: true, _source: { self: 'raging' } },
+			},
+			{
+				trigger: 'onTurnEnd',
+				mode: 'add',
+				value: '1',
+				predicate: { isValid: true, _source: {} },
+			},
+		]);
+		expect(refills[0].predicate).toEqual({ self: 'raging' });
+		expect(refills[1].predicate).toBeUndefined();
+	});
 });
 
 describe('getDicePoolDefinitions', () => {
@@ -626,6 +661,42 @@ describe('applyModifiersToDefinition', () => {
 		expect(result.dieSize).toBe('d4');
 		expect(result.max).toBe(3);
 	});
+
+	it('appends addRefills entries after the pool’s own refills', () => {
+		const actor = createMockActor([]);
+		const withBaseRefill: DicePoolDefinition = {
+			...baseDefinition,
+			refills: [{ trigger: 'encounterEnd', mode: 'clear', value: '0' }],
+		};
+		const result = applyModifiersToDefinition(actor, withBaseRefill, [
+			{
+				type: 'modifyPool',
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				addRefills: [
+					{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: { self: 'raging' } },
+				],
+			},
+		]);
+
+		expect(result.refills).toEqual([
+			{ trigger: 'encounterEnd', mode: 'clear', value: '0' },
+			{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: { self: 'raging' } },
+		]);
+	});
+
+	it('drops invalid addRefills entries during normalization', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, baseDefinition, [
+			{
+				type: 'modifyPool',
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				addRefills: [{ trigger: 'bogusTrigger', mode: 'add', value: '1' }],
+			},
+		]);
+		expect(result.refills).toEqual([]);
+	});
 });
 
 describe('reconcileDicePoolState', () => {
@@ -845,5 +916,48 @@ describe('areDicePoolMapsEqual', () => {
 		expect(
 			areDicePoolMapsEqual({ fury: stateA }, { fury: stateA, judgment: { ...stateA, id: 'j' } }),
 		).toBe(false);
+	});
+});
+
+describe('applyModifiersToDefinition minFace', () => {
+	const floorBase: DicePoolDefinition = {
+		id: 'fury',
+		identifier: 'fury',
+		scope: 'item',
+		sourceItemId: 'item-1',
+		sourceItemName: 'Rage',
+		label: 'Fury Dice',
+		dieSize: 'd4',
+		max: 3,
+		initial: 'zero',
+		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
+	};
+
+	it('applies a modifier minFace to the definition', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 6 },
+		]);
+		expect(result.minFace).toBe(6);
+	});
+
+	it('keeps the highest floor when multiple modifiers contribute', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 3 },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 6 },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 2 },
+		]);
+		expect(result.minFace).toBe(6);
+	});
+
+	it('leaves minFace null when no modifier sets one', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', dieSize: 'd6' },
+		]);
+		expect(result.minFace).toBeNull();
 	});
 });

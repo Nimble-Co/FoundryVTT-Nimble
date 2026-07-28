@@ -64,6 +64,11 @@ function dedupeAndSort(pools: ChargePoolState[]): ChargePoolOption[] {
 export function createChargePoolPickerState(getDocument: () => unknown) {
 	const subscribePoolState = createSubscriber(registerPoolHooks);
 
+	// An unowned item (compendium or world directory) has no actor to enumerate
+	// pools from. That is a different situation from an actor that simply has no
+	// pools yet, and the two need different messaging.
+	const hasActor = $derived(resolveActor(getDocument()) !== null);
+
 	const options = $derived.by((): ChargePoolOption[] => {
 		subscribePoolState();
 		const actor = resolveActor(getDocument());
@@ -72,6 +77,9 @@ export function createChargePoolPickerState(getDocument: () => unknown) {
 	});
 
 	return {
+		get hasActor() {
+			return hasActor;
+		},
 		get options() {
 			return options;
 		},

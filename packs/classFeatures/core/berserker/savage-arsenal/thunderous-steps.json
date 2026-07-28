@@ -23,6 +23,14 @@
 			},
 			"effects": [
 				{
+					"id": "tsReminderNote001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Requires: you moved at least 4 spaces while Raging. Damage applies to all adjacent creatures where you stop.",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
 					"id": "U8uA8afkQkT2RPQ7",
 					"type": "damage",
 					"damageType": "bludgeoning",

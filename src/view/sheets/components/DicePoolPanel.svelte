@@ -204,16 +204,25 @@
 										class="dice-pool-panel__feature-body"
 									>
 										<h5 class="dice-pool-panel__section-subheading">
-											{localize('NIMBLE.dicePoolTracker.panel.useFeature.pickDice')}
+											{localize(
+												panel.isMaximizeOutcome
+													? 'NIMBLE.dicePoolTracker.panel.useFeature.pickDiceToMaximize'
+													: 'NIMBLE.dicePoolTracker.panel.useFeature.pickDice',
+											)}
 										</h5>
 										<div class="dice-pool-panel__chips">
 											{#each livePool.faces as value, i (i)}
 												{@const chipSelected = panel.selectedIndices.has(i)}
+												{@const chipDisabled = !chipSelected && !panel.canSelectDie(i)}
 												<button
 													type="button"
 													class="dice-pool-panel__chip"
 													class:dice-pool-panel__chip--selected={chipSelected}
 													aria-pressed={chipSelected}
+													disabled={chipDisabled}
+													data-tooltip={chipDisabled
+														? localize('NIMBLE.dicePoolTracker.panel.useFeature.dieAlreadyMax')
+														: null}
 													aria-label={localize(
 														'NIMBLE.dicePoolTracker.panel.useFeature.toggleDie',
 														{ value: String(value) },
@@ -248,7 +257,9 @@
 											onclick={() => panel.spend()}
 										>
 											<i class="fa-solid fa-dice"></i>
-											{#if panel.selectedCount > 0}
+											{#if panel.isMaximizeOutcome}
+												{localize('NIMBLE.dicePoolTracker.panel.useFeature.maximize')}
+											{:else if panel.selectedCount > 0}
 												{localize('NIMBLE.dicePoolTracker.panel.useFeature.spendWithCount', {
 													count: String(panel.selectedCount),
 												})}

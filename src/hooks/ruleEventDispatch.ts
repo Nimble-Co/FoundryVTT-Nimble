@@ -94,6 +94,7 @@ function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
 		isMiss: payload.isMiss,
 	};
 	void dispatch(payload.sourceActor, 'onItemUsed', context);
+	void dispatch(payload.targetActor, 'onAttackReceived', context);
 }
 
 // Registered for BOTH the combatTurn and combatRound workflow hooks: a turn

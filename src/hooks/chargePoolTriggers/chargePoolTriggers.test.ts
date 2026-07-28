@@ -108,13 +108,13 @@ describe('registerTurnTriggerHooks', () => {
 		globals().game.combat = null;
 	});
 
-	it('registers combatTurn hook for turn start detection', async () => {
+	it('registers both turn-boundary custom hooks for recovery detection', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const { registerTurnTriggerHooks } = await import('./turnTrigger.js');
 		registerTurnTriggerHooks();
 
-		const combatTurnHook = callbacks.get('combatTurn');
-		expect(combatTurnHook).toBeDefined();
+		expect(callbacks.get('nimbleCombatTurnStart')).toBeDefined();
+		expect(callbacks.get('nimbleCombatTurnEnd')).toBeDefined();
 	});
 
 	it('does not throw when called with non-character combatant', async () => {
@@ -135,12 +135,10 @@ describe('registerTurnTriggerHooks', () => {
 			actor: npcActor,
 		} as unknown as Combatant.Implementation;
 
-		const combat = createMockCombat('combat-2', [npcCombatant], true, 1);
-
-		const combatTurnHook = callbacks.get('combatTurn');
 		let threw = false;
 		try {
-			combatTurnHook?.(combat, { round: 1, turn: 0 }, { advanceTime: 6, direction: 1 });
+			callbacks.get('nimbleCombatTurnStart')?.(npcCombatant);
+			callbacks.get('nimbleCombatTurnEnd')?.(npcCombatant);
 		} catch {
 			threw = true;
 		}

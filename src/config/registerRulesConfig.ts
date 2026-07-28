@@ -26,10 +26,12 @@ import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
+import { ModifyConsumerRule } from '../models/rules/modifyConsumer.js';
 import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
+import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
@@ -69,9 +71,11 @@ export default function registerRulesConfig() {
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
 		modifyIncomingAttack: 'NIMBLE.ruleTypes.modifyIncomingAttack',
+		modifyConsumer: 'NIMBLE.ruleTypes.modifyConsumer',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		note: 'NIMBLE.ruleTypes.note',
+		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
@@ -111,9 +115,11 @@ export default function registerRulesConfig() {
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
 		modifyIncomingAttack: ModifyIncomingAttackRule,
+		modifyConsumer: ModifyConsumerRule,
 		modifyPool: ModifyPoolRule,
 		modifyToggle: ModifyToggleRule,
 		note: NoteRule,
+		poolGainMessage: PoolGainMessageRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,

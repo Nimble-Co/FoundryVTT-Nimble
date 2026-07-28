@@ -25,7 +25,7 @@ A column of buttons overhangs the left edge of the sheet:
 - **Editing toggle.** The sheet opens locked. Flip this pen/padlock switch to enable editing. This reveals the configure buttons (for HP, hit dice, mana, proficiencies, saving throws, and so on) and the level up and level down buttons.
 - **Level Up** and **Revert Last Level Up.** Only visible while editing is enabled. See [Leveling Up](advancement.md).
 - **Field Rest** (hourglass) and **Safe Rest** (moon). See [Rest & Recovery](../playing/rest-and-recovery.md).
-- **Action tracker.** During combat, once you've rolled initiative, a column of pips appears showing your remaining actions. Click a pip to spend or recover an action. Characters with dice pools (from certain features) get a matching tracker below it.
+- **Action tracker.** During combat, once you've rolled initiative, a column of pips appears showing your remaining actions. Click a pip to spend or recover an action. Characters with dice pools or charges (from certain features) get a matching tracker below it. See [Dice pools and charges](#dice-pools-and-charges).
 
 ## Tabs
 
@@ -71,6 +71,21 @@ Freeform character details: age, height, weight, gender, and notes.
 ### Settings
 
 Per-character sheet options: portrait positioning and scale, whether item macros run when you use an item, whether item images are shown, and inventory slot tracking.
+
+## Dice pools and charges
+
+Some features give you a resource that lives on the sheet rather than on a chat card. Both kinds appear as a tracker under the action tracker.
+
+**Charges** are a simple count, like 1 use per turn or 3 per safe rest. The pip shows what you have left and refills on whatever the feature says. Using a feature that costs a charge spends it for you, and if you have none left the use is blocked with a message explaining why.
+
+**Dice pools** hold rolled dice, and each die remembers the number it came up with. A Berserker's Fury Dice are the clearest example: you Rage, dice go into the pool, and they add to your attacks until the Rage ends.
+
+Clicking the pool opens its panel, which does two jobs:
+
+- **Editing.** Adjust a die's value, or discard one, when something at the table needs to be corrected by hand.
+- **Using features.** Any feature that draws on this pool is listed. Expand one, pick the dice you want, and confirm. What confirming does depends on the feature: most **spend** the dice you picked and post the result (damage reduced, spaces you may move), while a few **change** a die instead, raising it to its highest value and leaving it in the pool. For those, dice already at their maximum are greyed out, and you only get as many picks as the feature allows, so choosing another die swaps your selection.
+
+Features that open this panel do so when you use them: click the feature on the Features tab and the panel opens with that feature already selected. If your sheet is closed, it opens for you.
 
 ## Drag to the hotbar
 

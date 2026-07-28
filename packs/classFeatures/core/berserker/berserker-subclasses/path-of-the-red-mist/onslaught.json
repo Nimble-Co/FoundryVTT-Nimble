@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "speedBonus",
+				"disabled": false,
+				"id": "onslaught-raging-speed",
+				"identifier": "",
+				"label": "Onslaught (+2 speed while Raging)",
+				"predicate": {
+					"self": "raging"
+				},
+				"priority": 2,
+				"value": "2",
+				"movementType": "walk"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

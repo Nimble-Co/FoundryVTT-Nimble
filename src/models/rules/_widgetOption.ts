@@ -2,7 +2,8 @@
  * Per-field UI metadata for the rules-builder `<SchemaFieldRenderer>`:
  *
  * - `widget` — picks a specific input widget when the field's type alone
- *   isn't enough to dispatch.
+ *   isn't enough to dispatch. May be a function of the rule's source data
+ *   when the right widget depends on a sibling field's value.
  * - `showWhen` — visibility predicate evaluated against the current rule's
  *   source data; returning `false` hides the field.
  *
@@ -32,8 +33,22 @@ export type WidgetHint = (typeof WIDGET_HINTS)[number];
 
 export const VALID_WIDGETS: ReadonlySet<string> = new Set(WIDGET_HINTS);
 
+/**
+ * Picks a widget from the rule's current source data — the same object
+ * `showWhen` receives. Write the fallback branch to match the sibling field's
+ * `initial` value: the generated reference docs resolve the function against
+ * schema initials, so that branch is what gets documented.
+ */
+export type WidgetResolver = (data: Record<string, unknown>) => WidgetHint;
+
 export interface WidgetExtras {
-	widget?: WidgetHint;
+	/**
+	 * A hint from the catalog, or a resolver picking one from sibling values.
+	 * A resolver's return value can't be checked here (it depends on data
+	 * that doesn't exist at schema-construction time) — `<SchemaFieldRenderer>`
+	 * validates the resolved hint on every render instead.
+	 */
+	widget?: WidgetHint | WidgetResolver;
 	showWhen?: (data: Record<string, unknown>) => boolean;
 	/**
 	 * Restrict accepted drops on `widget: 'documentUuid'` fields. Each entry
@@ -54,7 +69,13 @@ function isDev(): boolean {
 }
 
 function validateWidgetExtras(opts: WidgetExtras, label: string): void {
-	if (opts.widget !== undefined && !VALID_WIDGETS.has(opts.widget)) {
+	// A resolver is deliberately not invoked here: `defineSchema()` runs at
+	// system init, and a resolver is free to assume populated data.
+	if (
+		opts.widget !== undefined &&
+		typeof opts.widget !== 'function' &&
+		!VALID_WIDGETS.has(opts.widget)
+	) {
 		console.warn(
 			`Nimble | ${label}: unknown widget hint "${opts.widget}". ` +
 				`Valid: ${WIDGET_HINTS.join(', ')}.`,

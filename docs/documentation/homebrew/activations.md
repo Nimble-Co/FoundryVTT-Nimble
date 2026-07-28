@@ -68,7 +68,11 @@ A condition entry picks one status condition from the system's list (Frightened,
 
 ### Pool
 
-An advanced entry that manipulates a dice pool or charge pool when the item activates: pick the **Pool Type** (Dice Pool or Charge Pool) and an **Action** (Roll Die, Roll Pool, Fill Count, or Clear), plus the pool's identifier and a value. The **Predicate (JSON)** field lets the entry apply only when a condition test passes, using the same syntax as [the Condition box](../rules-builder/predicates.md), for example `{ "level": { "min": 5 } }`. Pools themselves are created with rules; see the [resources reference](../reference/rules-resource.md).
+An advanced entry that manipulates a dice pool or charge pool when the item activates: pick the **Pool Type** (Dice Pool or Charge Pool) and an **Action** (Roll Die, Roll Pool, Fill Count, Clear, or Maximize Lowest Die), plus the pool's identifier and a value. The **Predicate (JSON)** field lets the entry apply only when a condition test passes, using the same syntax as [the Condition box](../rules-builder/predicates.md), for example `{ "level": { "min": 5 } }`. Pools themselves are created with rules; see the [resources reference](../reference/rules-resource.md).
+
+**Maximize Lowest Die** raises the lowest **Value** dice in a dice pool to the die's highest face, and reports on the card when there was nothing to raise (an empty pool, or every die already at maximum). It acts on its own with no player input, which suits a feature that always maximizes. When the rules text lets the player choose *which* die, use a Dice Consumer rule with its selection outcome set to `maximize` instead: that opens the dice panel and lets them pick. See the [resources reference](../reference/rules-resource.md).
+
+Pool entries only take effect once the activation is allowed to proceed, so an item gated by a charge that has run out changes nothing.
 
 ## Build A: the Frostbrand Dagger
 

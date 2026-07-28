@@ -72,7 +72,13 @@ jobs:
         tag: ${{ github.event.release.tag_name }}
         body: ${{ github.event.release.body }}
 
-    # Publish the module to the FoundryVTT Website
+  # Stable releases only. Pre-releases still get GitHub assets from `build`.
+  publish:
+    needs: build
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Publish to FoundryVTT Website
       id: publish_to_fvtt
       uses: cs96and/FoundryVTT-release-package@v1

@@ -8,6 +8,7 @@ function createDiceConsumerRule(config: {
 	mode?: string;
 	effectFormula?: string | null;
 	disabled?: boolean;
+	selectionOutcome?: string;
 }) {
 	const item = {
 		id: 'item-tayg',
@@ -26,6 +27,7 @@ function createDiceConsumerRule(config: {
 			bonusOnAttackDelivery: null,
 			effectFormula: config.effectFormula === undefined ? '@n' : config.effectFormula,
 			effectType: 'damageReduction',
+			selectionOutcome: config.selectionOutcome ?? 'consume',
 			disabled: config.disabled ?? false,
 			label: 'Test Consumer',
 			id: 'test-consumer-id',
@@ -42,6 +44,7 @@ function createDiceConsumerRule(config: {
 	(rule as any).disabled = config.disabled ?? false;
 	(rule as any).poolIdentifier = 'fury';
 	(rule as any).poolScope = 'item';
+	(rule as any).selectionOutcome = config.selectionOutcome ?? 'consume';
 	(rule as any).id = 'test-consumer-id';
 
 	Object.defineProperty(rule, 'item', {
@@ -77,6 +80,16 @@ describe('DiceConsumerRule', () => {
 			expect(effectFormula.initial).toBeNull();
 		});
 
+		it('defaults selectionOutcome to consume with the expected choices', () => {
+			const schema = DiceConsumerRule.defineSchema();
+			const field = schema.selectionOutcome as unknown as {
+				initial: string;
+				choices: readonly string[];
+			};
+			expect(field.initial).toBe('consume');
+			expect([...field.choices]).toEqual(['consume', 'maximize']);
+		});
+
 		it('defaults effectType to generic with the expected choices', () => {
 			const schema = DiceConsumerRule.defineSchema();
 			const effectType = schema.effectType as unknown as { initial: unknown; choices: string[] };
@@ -101,6 +114,14 @@ describe('DiceConsumerRule', () => {
 		it('does not suppress for autoBonus consumers', () => {
 			const { rule } = createDiceConsumerRule({ mode: 'autoBonus' });
 			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+
+		it('suppresses the card for a transforming outcome even without a formula', () => {
+			const { rule } = createDiceConsumerRule({
+				effectFormula: null,
+				selectionOutcome: 'maximize',
+			});
+			expect(rule.suppressesActivationCard({ automationEnabled: true })).toBe(true);
 		});
 
 		it('does not suppress without an effect formula', () => {
@@ -164,6 +185,18 @@ describe('DiceConsumerRule', () => {
 			await rule.onItemActivated(activationContext(item));
 
 			expect(Hooks.callAll).not.toHaveBeenCalled();
+		});
+
+		it('requests the spend UI for a transforming outcome without a formula', async () => {
+			const { rule, item } = createDiceConsumerRule({
+				effectFormula: null,
+				selectionOutcome: 'maximize',
+			});
+			await rule.onItemActivated({ sourceItem: item } as never);
+			expect(Hooks.callAll).toHaveBeenCalledWith(
+				`${SYSTEM_ID}.dicePool.requestSpend`,
+				expect.objectContaining({ poolIdentifier: 'fury', ruleId: 'test-consumer-id' }),
+			);
 		});
 
 		it('does not request the spend UI without an effect formula', async () => {

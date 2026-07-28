@@ -29,4 +29,6 @@ export { Migration028CombatDiceMaxFormula } from './Migration028CombatDiceMaxFor
 export { Migration029ThatAllYouGotDamageReduction } from './Migration029ThatAllYouGotDamageReduction.js';
 export { Migration030HuntersMarkRules } from './Migration030HuntersMarkRules.js';
 export { Migration031ModifyIncomingAttackFeatures } from './Migration031ModifyIncomingAttackFeatures.js';
-export { Migration032AoETemplateFlags } from './Migration032AoETemplateFlags.js';
+export { Migration032LifebindingSpiritDieSize } from './Migration032LifebindingSpiritDieSize.js';
+export { Migration033BerserkerAutomation } from './Migration033BerserkerAutomation.js';
+export { Migration034AoETemplateFlags } from './Migration034AoETemplateFlags.js';

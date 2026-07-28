@@ -11,7 +11,7 @@ export type PoolNode = {
 	id: string;
 	type: 'pool';
 	poolType: 'dice' | 'charge';
-	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear';
+	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear' | 'maximizeDie';
 	poolIdentifier: string;
 	value: number;
 	predicate?: Record<string, unknown>;
@@ -27,7 +27,13 @@ export type PoolNode = {
 	parentNode: string | null;
 	result?: {
 		applied: boolean;
-		skipReason?: 'predicate' | 'invalidAction' | 'unknownPool' | 'noActor';
+		skipReason?:
+			| 'predicate'
+			| 'invalidAction'
+			| 'unknownPool'
+			| 'noActor'
+			| 'poolEmpty'
+			| 'allAtMax';
 		poolLabel?: string;
 		previousCount?: number;
 		newCount?: number;

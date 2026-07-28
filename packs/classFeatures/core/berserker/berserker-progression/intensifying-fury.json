@@ -10,6 +10,29 @@
 			{
 				"type": "modifyPool",
 				"disabled": false,
+				"id": "intensifying-fury-turn-refill",
+				"identifier": "",
+				"label": "Intensifying Fury: free Fury Die at turn start",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "add",
+						"value": "1",
+						"predicate": {
+							"self": "raging"
+						}
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
 				"id": "fury-d6-l6",
 				"identifier": "",
 				"label": "Fury Dice → d6",

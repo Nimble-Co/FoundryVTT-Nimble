@@ -8,6 +8,7 @@ const DICE_CONSUMER_SCOPES = [...DicePoolRuleConfig.scopes];
 const DICE_CONSUMER_MODES = [...DicePoolRuleConfig.consumptionModes];
 const DICE_ATTACK_DELIVERY_FILTERS = [...DicePoolRuleConfig.attackDeliveryFilters];
 const DICE_CONSUMER_EFFECT_TYPES = [...DicePoolRuleConfig.effectTypes];
+const DICE_SELECTION_OUTCOMES = [...DicePoolRuleConfig.selectionOutcomes];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -63,6 +64,14 @@ function schema() {
 			hint: 'NIMBLE.rules.diceConsumer.effectType.hint',
 			choices: DICE_CONSUMER_EFFECT_TYPES,
 		}),
+		selectionOutcome: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'consume',
+			label: 'NIMBLE.rules.diceConsumer.selectionOutcome.label',
+			hint: 'NIMBLE.rules.diceConsumer.selectionOutcome.hint',
+			choices: DICE_SELECTION_OUTCOMES,
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -93,6 +102,8 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	declare effectType: (typeof DicePoolRuleConfig.effectTypes)[number];
 
+	declare selectionOutcome: (typeof DicePoolRuleConfig.selectionOutcomes)[number];
+
 	static override defineSchema(): DiceConsumerRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -110,16 +121,22 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 				['bonusOnAttackDelivery', '"melee" | "ranged" | "any" | null'],
 				['effectFormula', 'string | null'],
 				['effectType', '"generic" | "damageReduction"'],
+				['selectionOutcome', '"consume" | "maximize"'],
 			]),
 		);
 	}
 
-	/** Whether this consumer drives an interactive spend flow on activation:
-	 *  manual mode with an effect formula, and the predicate passes. */
+	/**
+	 * Whether this consumer drives an interactive spend flow on activation:
+	 * manual mode and the predicate passes, plus something for the panel to do
+	 * — either an effect formula to evaluate, or a selection outcome that
+	 * transforms the picked dice rather than spending them for an effect.
+	 */
 	#providesSpendFlow(): boolean {
 		if (this.mode !== 'manual') return false;
-		if (!this.effectFormula || this.effectFormula.trim().length < 1) return false;
-		return this.test();
+		if (!this.test()) return false;
+		if (this.selectionOutcome !== 'consume') return true;
+		return Boolean(this.effectFormula && this.effectFormula.trim().length > 0);
 	}
 
 	/** The spend flow posts its own chat card, so the default activation card

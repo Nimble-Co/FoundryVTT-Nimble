@@ -1,5 +1,6 @@
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -32,12 +33,11 @@ function schema() {
 				initial: '',
 				label: 'NIMBLE.rules.modifyPool.poolIdentifier.label',
 				hint: 'NIMBLE.rules.modifyPool.poolIdentifier.hint',
-				// modifyPool can target either a dice or charge pool (`poolType`
-				// switches between them). The widget catalog has no conditional-
-				// widget primitive yet, so default to the dice picker — the more
-				// common case — and let authors fall back to typing for charge
-				// pools (the stored value is a plain string regardless).
-				widget: 'dicePoolPicker',
+				// The picker follows `poolType`: dice pools and charge pools are
+				// separate subsystems with separate identifier namespaces, so the
+				// wrong picker lists nothing and flags the stored value as missing.
+				widget: (data: Record<string, unknown>) =>
+					data.poolType === 'charge' ? 'chargePoolPicker' : 'dicePoolPicker',
 			}),
 		),
 		dieSize: new fields.StringField({
@@ -57,6 +57,64 @@ function schema() {
 				hint: 'NIMBLE.rules.modifyPool.maxDelta.hint',
 				widget: 'formula',
 			}),
+		),
+		// Minimum face value for dice rolled into the target pool (dice pools
+		// only). Rolls below the floor are raised to it. The highest floor
+		// among contributing modifiers wins.
+		minFace: new fields.NumberField({
+			required: false,
+			nullable: true,
+			initial: null,
+			integer: true,
+			min: 1,
+			label: 'NIMBLE.rules.modifyPool.minFace.label',
+			hint: 'NIMBLE.rules.modifyPool.minFace.hint',
+		}),
+		// Refill entries this modifier contributes to the target pool (dice pools
+		// only). Lets a granting feature add its own refill trigger without
+		// editing the base pool rule.
+		addRefills: new fields.ArrayField(
+			new fields.SchemaField({
+				trigger: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: 'safeRest',
+					label: 'NIMBLE.rules.dicePool.refills.trigger.label',
+					hint: 'NIMBLE.rules.dicePool.refills.trigger.hint',
+					choices: [...DicePoolRuleConfig.refillTriggers],
+				}),
+				mode: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: 'add',
+					label: 'NIMBLE.rules.dicePool.refills.mode.label',
+					hint: 'NIMBLE.rules.dicePool.refills.mode.hint',
+					choices: [...DicePoolRuleConfig.refillModes],
+				}),
+				value: new fields.StringField(
+					withWidget({
+						required: true,
+						nullable: false,
+						initial: '1',
+						label: 'NIMBLE.rules.dicePool.refills.value.label',
+						hint: 'NIMBLE.rules.dicePool.refills.value.hint',
+						widget: 'formula',
+					}),
+				),
+				// Cast: PredicateField extends ObjectField whose constructor typing
+				// doesn't accept label/hint. The renderer reads them off the instance.
+				predicate: new PredicateField({
+					label: 'NIMBLE.rules.dicePool.refills.predicate.label',
+					hint: 'NIMBLE.rules.dicePool.refills.predicate.hint',
+				} as unknown as never),
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.modifyPool.addRefills.label',
+				hint: 'NIMBLE.rules.modifyPool.addRefills.hint',
+			} as unknown as never,
 		),
 		type: new fields.StringField({
 			required: true,
@@ -82,6 +140,11 @@ class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
 
 	declare maxDelta: string | null;
 
+	declare minFace: number | null;
+
+	// `addRefills` is intentionally not re-declared: the schema-inferred type
+	// (with its exact choice unions) is used as-is, mirroring dicePool.refills.
+
 	static override defineSchema(): ModifyPoolRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -96,6 +159,11 @@ class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
 				['poolIdentifier', 'string'],
 				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20" | null'],
 				['maxDelta', 'string | null'],
+				['minFace', 'number | null'],
+				[
+					'addRefills',
+					'Array<{ trigger: string; mode: string; value: string; predicate: object }>',
+				],
 			]),
 		);
 	}

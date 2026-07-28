@@ -36,10 +36,10 @@ const BOISTEROUS_WINDS_NAME = 'Boisterous Winds';
  * In both cases the fix is only applied when the spell still carries the exact
  * shipped broken state, so intentional GM edits are left untouched.
  */
-class Migration032AoETemplateFlags extends MigrationBase {
-	static override readonly version = 32;
+class Migration034AoETemplateFlags extends MigrationBase {
+	static override readonly version = 34;
 
-	override readonly version = Migration032AoETemplateFlags.version;
+	override readonly version = Migration034AoETemplateFlags.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;
@@ -70,4 +70,4 @@ class Migration032AoETemplateFlags extends MigrationBase {
 	}
 }
 
-export { Migration032AoETemplateFlags };
+export { Migration034AoETemplateFlags };
