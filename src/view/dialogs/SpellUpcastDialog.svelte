@@ -3,6 +3,8 @@
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
+	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
+	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
 
@@ -53,7 +55,7 @@
 	// let remainingMana = $derived(currentMana - manaToSpend);
 
 	// Compute preview of upcast effects
-	const damageOrHealingOps = new Set(['addFlatDamage', 'addDice']);
+	const damageOrHealingOps = new Set(['addFlatDamage', 'addDice', 'increaseDieSize']);
 
 	let upcastPreview = $derived(() => {
 		if (!canUpcast || upcastSteps === 0) return [];
@@ -63,6 +65,8 @@
 			: spell.scaling.deltas;
 
 		const preview = deltas.map((delta: ScalingDelta) => {
+			if (delta.operation === 'increaseDieSize') return formatDieSizePreview(delta, upcastSteps);
+
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
 		});
@@ -99,6 +103,52 @@
 		return delta.condition || '';
 	}
 
+	// Show the upgraded die when there is a formula to step, otherwise describe the step itself
+	function formatDieSizePreview(delta: ScalingDelta, steps: number) {
+		const scaledSteps = (delta.value ?? 1) * steps;
+		const targetEffect = findDieSizeTargetEffect(delta.targetEffectId);
+
+		if (targetEffect?.formula) {
+			const steppedFormula = stepFormulaDieSize(
+				targetEffect.formula,
+				scaledSteps,
+				delta.maxDieFaces ?? null,
+			);
+			const label =
+				targetEffect.type === 'healing'
+					? effectTypes.healing
+					: `${spell.school} ${effectTypes.damage}`;
+			return `${new NimbleRoll(steppedFormula, actor.getRollData()).formula} ${label}`;
+		}
+
+		if (delta.maxDieFaces) {
+			return format(spellUpcastDialog.increaseDieSizeCapped, {
+				steps: String(scaledSteps),
+				maxFaces: String(delta.maxDieFaces),
+			});
+		}
+
+		return format(spellUpcastDialog.increaseDieSize, { steps: String(scaledSteps) });
+	}
+
+	function findDieSizeTargetEffect(targetEffectId: string | null) {
+		const nodes = flattenEffectsTree(spell.activation?.effects ?? []) as Array<{
+			id: string;
+			type: string;
+			formula?: string;
+		}>;
+
+		// Damage before healing, mirroring the search order applyDelta uses when casting
+		const findByType = (type: string) =>
+			nodes.find(
+				(node) =>
+					node.type === type &&
+					(targetEffectId ? node.id === targetEffectId : Boolean(node.formula)),
+			);
+
+		return findByType('damage') ?? findByType('healing');
+	}
+
 	function formatDeltaPreview(
 		delta: ScalingDelta,
 		amount: ReturnType<typeof getScaledAmount>,
@@ -117,7 +167,7 @@
 			addCondition: `+${amount} ${effectTypes.condition}`,
 			addArmor: `+${amount} ${objectTypes.armor}`,
 		};
-		return operations[delta.operation] || delta.operation;
+		return operations[delta.operation as keyof typeof operations] || delta.operation;
 	}
 </script>
 

@@ -1331,6 +1331,8 @@
 					"max": "Max Tier {tier}"
 				},
 				"chooseEnhancement": "Choose Enhancement",
+				"increaseDieSize": "Die size +{steps}",
+				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier"
 			}
@@ -2304,6 +2306,9 @@
 				"targetEffectAuto": "Auto (first match)",
 				"targetEffectPlaceholder": "Effect ID",
 				"targetEffectHint": "Add effects in the Activation tab to select targets here.",
+				"steps": "Steps",
+				"maxDie": "Max Die",
+				"maxDieNone": "No maximum",
 				"operations": {
 					"addFlatDamage": "Flat Damage",
 					"addDice": "Dice",
@@ -2314,7 +2319,8 @@
 					"addDC": "DC",
 					"addArmor": "Armor",
 					"addDuration": "Duration",
-					"addCondition": "Condition"
+					"addCondition": "Condition",
+					"increaseDieSize": "Increase Die Size"
 				}
 			}
 		},
