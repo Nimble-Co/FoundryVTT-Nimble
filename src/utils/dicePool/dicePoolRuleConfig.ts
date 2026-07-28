@@ -17,6 +17,7 @@ const DicePoolRuleConfig = {
 		'onKill',
 		'onBloodied',
 		'onAttacked',
+		'onCritReceived',
 	],
 	refillModes: ['add', 'set', 'refresh', 'setIfEmpty', 'clear'],
 	restTypes: ['safe', 'field'],
@@ -31,6 +32,11 @@ const DicePoolRuleConfig = {
 	// reduction applied to the next damage the actor takes (e.g. Berserker's
 	// "That all you got?!").
 	effectTypes: ['generic', 'damageReduction'] as const,
+	// What happens to the dice the player picks in the spend panel. 'consume'
+	// removes them from the pool; 'maximize' leaves them in place and raises
+	// each to the die's highest face. Selection for 'maximize' is capped at the
+	// consumer's cost, so a "change 1 die" feature offers a single pick.
+	selectionOutcomes: ['consume', 'maximize'] as const,
 	// Optional delivery filter for autoBonus pools. When set, the pool's faces
 	// auto-add only to attacks of the matching delivery.
 	attackDeliveryFilters: ['melee', 'ranged', 'any'] as const,

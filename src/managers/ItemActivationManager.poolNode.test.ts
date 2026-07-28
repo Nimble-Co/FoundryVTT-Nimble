@@ -83,8 +83,11 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			game: { user: { targets?: unknown[] } };
 		};
 		gameGlobal.game.user.targets = [];
-		// reconstructEffectsTree just returns its input so we can read mutated nodes back.
-		testDependencies.reconstructEffectsTree = ((effects: EffectNode[]) => effects) as never;
+		// Clone nodes like the real reconstructEffectsTree does: pool results
+		// must land on the reconstructed (cloned) nodes the chat card
+		// serializes, not on the pre-reconstruction originals.
+		testDependencies.reconstructEffectsTree = ((effects: EffectNode[]) =>
+			effects.map((node) => structuredClone(node))) as never;
 	});
 
 	function buildManager(actor: PoolMockActor | null, effects: EffectNode[]) {
@@ -98,11 +101,62 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 	async function runAndGetNode(actor: PoolMockActor | null, original: PoolNode): Promise<PoolNode> {
 		const manager = buildManager(actor, [original]);
 		const result = await manager.getData();
+		// Pool side effects are deferred until the preUseItem gate clears;
+		// the activate() flows call this after the gate allows the use.
+		await manager.applyDeferredPoolNodes();
 		const dispatched = (result.activation?.effects ?? []).find(
 			(n: EffectNode) => n.id === original.id,
 		);
 		return dispatched as PoolNode;
 	}
+
+	it('defers pool side effects until applyDeferredPoolNodes is called (blocked uses stay side-effect free)', async () => {
+		const actor = makeActor(3);
+		const manager = buildManager(actor, [
+			poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }),
+		]);
+		await manager.getData();
+
+		expect(mockRollDieIntoPool).not.toHaveBeenCalled();
+
+		await manager.applyDeferredPoolNodes();
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+
+		// Idempotent: a second call must not re-apply the same nodes.
+		await manager.applyDeferredPoolNodes();
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+	});
+
+	it('applies a pool node whose stored parent is not a damage or saving-throw node', async () => {
+		// `reconstructEffectsTree` only re-parents children of damage/savingThrow nodes, so
+		// collecting deferred pool nodes from the reconstructed tree alone could lose one
+		// parented elsewhere. Collection reads the flat list instead, which keeps this case
+		// working regardless of what the tree does with the node.
+		const { reconstructEffectsTree } = await import(
+			'../utils/treeManipulation/reconstructEffectsTree.js'
+		);
+		testDependencies.reconstructEffectsTree = reconstructEffectsTree as never;
+
+		const healing: EffectNode = {
+			id: 'healing-node',
+			type: 'healing',
+			formula: '1d4',
+			healingType: 'healing',
+			parentContext: null,
+			parentNode: null,
+		} as unknown as EffectNode;
+		const poolNodeUnderHealing: PoolNode = {
+			...poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }),
+			parentNode: 'healing-node',
+			parentContext: 'hit',
+		};
+
+		const manager = buildManager(makeActor(3), [healing, poolNodeUnderHealing]);
+		await manager.getData();
+		await manager.applyDeferredPoolNodes();
+
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+	});
 
 	describe('dice pools', () => {
 		it('rollDie: invokes rollDieIntoPool once per value', async () => {

@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyConsumer",
+				"disabled": false,
+				"id": "stones-resilience-dr-boost",
+				"identifier": "",
+				"label": "Stone's Resilience: add die value to reduction",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"effectTypeFilter": "damageReduction",
+				"appendFormula": "@sum"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +46,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Whenever you expend Fury Dice to reduce incoming damage, add the value of the die to the amount reduced.</p>",
+		"description": "<p>Whenever you expend Fury Dice to reduce incoming damage, add the value of the die to the amount reduced.</p><p><em>Applied automatically when you spend Fury Dice for damage reduction.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "path-of-the-mountainheart",

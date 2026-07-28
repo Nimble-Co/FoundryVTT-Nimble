@@ -49,7 +49,7 @@
 				"disabled": false,
 				"id": "fury-pool-autobonus",
 				"identifier": "",
-				"label": "Fury Dice — STR auto-bonus",
+				"label": "Fury Dice: STR auto-bonus",
 				"predicate": {
 					"self": "raging"
 				},

@@ -7,6 +7,7 @@ import {
 	type ActorHealthContext,
 	type EncounterEndContext,
 	type ItemActivatedContext,
+	type ItemUsedContext,
 	NimbleBaseRule,
 	type RestContext,
 	type RoundChangedContext,
@@ -24,6 +25,12 @@ const TURN_OFF_CHOICES = [
 ] as const;
 
 type TurnOffEvent = (typeof TURN_OFF_CHOICES)[number];
+
+// Events on which a modifyToggle rule can automatically switch the target
+// toggle ON (the counterpart of turnOff, carried by the granting feature).
+const TURN_ON_CHOICES = ['onTurnStart', 'onActorDying', 'onCritReceived'] as const;
+
+type TurnOnEvent = (typeof TURN_ON_CHOICES)[number];
 
 const TOGGLE_EFFECT_RULE_ID_FLAG = 'toggleEffectRuleId';
 const TOGGLE_EFFECT_ITEM_ID_FLAG = 'toggleEffectItemId';
@@ -259,6 +266,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 	override async onTurnStart(context: TurnContext): Promise<void> {
 		await this.#maybeTurnOff('onTurnStart', context.actor);
+		await this.#maybeAutoTurnOn('onTurnStart', context.actor);
 	}
 
 	override async onTurnEnd(context: TurnContext): Promise<void> {
@@ -272,6 +280,12 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 	override async onActorDying(context: ActorDyingContext): Promise<void> {
 		await this.#maybeTurnOff('onActorDying', context.actor);
+		await this.#maybeAutoTurnOn('onActorDying', context.actor);
+	}
+
+	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
+		if (context.isCritical !== true) return;
+		await this.#maybeAutoTurnOn('onCritReceived', context.targetActor);
 	}
 
 	/**
@@ -313,6 +327,86 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		await this.#clearLinkedPools();
 		await this.#deleteActiveEffect(existing.id);
 		await this.#announceEnd(localize(`NIMBLE.rules.toggleEffect.endReasons.${event}`));
+	}
+
+	/**
+	 * Switch the toggle ON when a sibling modifyToggle rule requests it for
+	 * the given event (respecting that rule's predicate against the live
+	 * domain). The mirror of #maybeTurnOff: create the backing AE if missing,
+	 * re-enable it if disabled, no-op if already on. GM-gated so the flip and
+	 * its announcement happen on exactly one client. Auto-turn-on restores the
+	 * toggle's state only; it does not run the owning item's activation
+	 * effects.
+	 */
+	async #maybeAutoTurnOn(event: TurnOnEvent, actor: unknown): Promise<void> {
+		if (actor !== this.actor) return;
+		if (this.disabled) return;
+		if (!this.#hasTurnOnRequest(event)) return;
+		if (!isActiveGM()) return;
+
+		const existing = this.#findActiveEffect();
+		if (existing && !existing.disabled) return;
+
+		if (existing) {
+			await existing.update({ disabled: false });
+		} else {
+			await this.#createActiveEffect();
+		}
+		await this.#announceStart(localize(`NIMBLE.rules.toggleEffect.startReasons.${event}`));
+	}
+
+	/**
+	 * True when a sibling modifyToggle rule (on any of the actor's items)
+	 * requests automatic turn-on for the given event and its predicate passes.
+	 */
+	#hasTurnOnRequest(event: TurnOnEvent): boolean {
+		const actor = this.actor as unknown as {
+			items?: { contents?: Array<{ rules?: { values: () => Iterable<unknown> } }> };
+		} | null;
+		const items = actor?.items?.contents ?? [];
+		const targetIds = new Set([this.identifier, this.id].filter((v) => v && v.length > 0));
+
+		for (const item of items) {
+			const rules = item.rules;
+			if (!rules || typeof rules.values !== 'function') continue;
+			for (const rule of rules.values()) {
+				const modifier = rule as {
+					type?: string;
+					disabled?: boolean;
+					toggleIdentifier?: string;
+					turnOn?: string[];
+					appliesTo?: () => boolean;
+				};
+				if (modifier.type !== 'modifyToggle' || modifier.disabled) continue;
+				const toggleIdentifier = modifier.toggleIdentifier?.trim() ?? '';
+				if (!targetIds.has(toggleIdentifier)) continue;
+				if (!(modifier.turnOn ?? []).includes(event)) continue;
+				if (typeof modifier.appliesTo === 'function' && !modifier.appliesTo()) continue;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Post a chat message explaining an automatic toggle start. Mirrors
+	 * #announceEnd: runs only after the AE flip succeeded and chat failure
+	 * must not break the turn-on itself.
+	 */
+	async #announceStart(reason: string): Promise<void> {
+		const actor = this.actor as unknown as Actor | null;
+		if (!actor) return;
+		const name = this.label || (this.item as unknown as { name: string }).name;
+		try {
+			await ChatMessage.create({
+				speaker: ChatMessage.getSpeaker({ actor }),
+				content: `<p>${localize('NIMBLE.rules.toggleEffect.startedMessage', { name, reason })}</p>`,
+			} as unknown as ChatMessage.CreateData);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.warn('Nimble | toggleEffect start announcement failed', error);
+		}
 	}
 
 	/**
@@ -539,8 +633,10 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 export {
 	ToggleEffectRule,
 	TURN_OFF_CHOICES,
+	TURN_ON_CHOICES,
 	TOGGLE_EFFECT_RULE_ID_FLAG,
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
 	buildToggleEffectAEData,
 	type TurnOffEvent,
+	type TurnOnEvent,
 };

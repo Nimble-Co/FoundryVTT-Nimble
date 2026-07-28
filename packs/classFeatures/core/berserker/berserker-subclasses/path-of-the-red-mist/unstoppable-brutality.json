@@ -20,7 +20,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "ubReminderNote001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Gain 1 Wound (mark it on your sheet), then reroll the attack or save.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

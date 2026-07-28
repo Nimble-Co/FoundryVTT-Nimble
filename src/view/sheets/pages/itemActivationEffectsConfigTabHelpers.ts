@@ -124,5 +124,9 @@ export function getPoolActions(): LabeledOption[] {
 			label: localize('NIMBLE.activationEffects.poolNode.config.actionFillCount'),
 		},
 		{ value: 'clear', label: localize('NIMBLE.activationEffects.poolNode.config.actionClear') },
+		{
+			value: 'maximizeDie',
+			label: localize('NIMBLE.activationEffects.poolNode.config.actionMaximizeDie'),
+		},
 	];
 }

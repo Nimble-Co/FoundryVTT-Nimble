@@ -30,3 +30,4 @@ export { Migration029ThatAllYouGotDamageReduction } from './Migration029ThatAllY
 export { Migration030HuntersMarkRules } from './Migration030HuntersMarkRules.js';
 export { Migration031ModifyIncomingAttackFeatures } from './Migration031ModifyIncomingAttackFeatures.js';
 export { Migration032LifebindingSpiritDieSize } from './Migration032LifebindingSpiritDieSize.js';
+export { Migration033BerserkerAutomation } from './Migration033BerserkerAutomation.js';

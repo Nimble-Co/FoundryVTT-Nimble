@@ -55,6 +55,7 @@ describe('NimbleCombat', () => {
 			return this;
 		});
 		combatPrototype._onEndTurn = vi.fn(async () => undefined);
+		combatPrototype._onStartTurn = vi.fn(async () => undefined);
 		combatPrototype.setupTurns = vi.fn(function (this: {
 			combatants?: { contents?: Combatant.Implementation[] };
 		}) {
@@ -1241,6 +1242,155 @@ describe('NimbleCombat', () => {
 		expect(outgoingHero.update).toHaveBeenCalledWith(
 			expect.objectContaining({ 'system.actions.base.current': 3 }),
 		);
+	});
+
+	describe('turn-start hook emission', () => {
+		function createTurnStartFixture(combatId: string) {
+			const monster = createMockCombatant({
+				id: 'solo-monster',
+				type: 'soloMonster',
+				sort: 1,
+				isOwner: false,
+				initiative: 12,
+				actionsCurrent: 0,
+				actionsMax: 1,
+				actor: createCombatActorFixture({ hp: 40 }),
+				combatId,
+			});
+			const incomingHero = createMockCombatant({
+				id: 'incoming-hero',
+				type: 'character',
+				sort: 2,
+				isOwner: true,
+				initiative: 8,
+				actionsCurrent: 3,
+				actionsMax: 3,
+				actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+				combatId,
+			});
+			return { monster, incomingHero };
+		}
+
+		function buildCombat(
+			combatId: string,
+			combatants: Combatant.Implementation[],
+			active: Combatant.Implementation,
+		) {
+			const combat = new NimbleCombat({
+				id: combatId,
+				combatants: createCombatantsCollectionFixture(combatants),
+				turns: combatants,
+				turn: 0,
+				combatant: active,
+			} as unknown as Combat.CreateData) as NimbleCombat & {
+				update: ReturnType<typeof vi.fn>;
+				updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			};
+			combat.update = vi.fn().mockResolvedValue(combat);
+			combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+			return combat;
+		}
+
+		function turnStartCalls(): unknown[][] {
+			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
+			return call.mock.calls.filter(([hook]) => hook === 'nimbleCombatTurnStart');
+		}
+
+		it('emits the turn-start hook for the incoming combatant when Foundry never fires _onStartTurn', async () => {
+			// Regression: under the expanded solo-monster turn order, Foundry's cached turn history
+			// can desync from our directly-resynced turn index, so its turn-event dispatcher computes
+			// an empty interval and skips the boundary's turn events entirely. Without a backstop,
+			// every `onTurnStart` dice-pool refill and charge recovery would silently be dropped.
+			const combatId = 'combat-start-turn-no-event';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				// Advance WITHOUT firing `_onStartTurn` for the incoming hero.
+				this.turn = 1;
+				this.combatant = incomingHero;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
+
+		it('does not emit the turn-start hook twice when _onStartTurn also runs', async () => {
+			const combatId = 'combat-start-turn-no-double';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				this.turn = 1;
+				this.combatant = incomingHero;
+				await (this as unknown as NimbleCombat)._onStartTurn(
+					incomingHero,
+					{} as Combat.TurnEventContext,
+				);
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+
+			// The backstop recognizes `_onStartTurn` already claimed this combatant.
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
+
+		it('emits the turn-start hook again when the same combatant starts a later turn', async () => {
+			// The claim is per turn change, not per combat: a solo monster taking interleaved turns
+			// must get a turn-start for each of them.
+			const combatId = 'combat-start-turn-repeat';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const order = [incomingHero, monster];
+			let advances = 0;
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				const incoming = order[advances % order.length];
+				advances += 1;
+				this.turn = incoming === incomingHero ? 1 : 0;
+				this.combatant = incoming;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+			await combat.nextTurn();
+
+			expect(turnStartCalls()).toEqual([
+				['nimbleCombatTurnStart', incomingHero],
+				['nimbleCombatTurnStart', monster],
+			]);
+		});
+
+		it('backstops the turn-start hook on nextRound as well', async () => {
+			const combatId = 'combat-start-turn-next-round';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const superNextRound = globals().Combat.prototype.nextRound as ReturnType<typeof vi.fn>;
+			superNextRound.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				this.turn = 1;
+				this.combatant = incomingHero;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextRound();
+
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
 	});
 
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {

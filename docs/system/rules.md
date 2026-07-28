@@ -220,6 +220,13 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 | `onEncounterEnd` | `updateCombat(started:false)` or `deleteCombat` (dedup'd) |
 | `onActorDying` | `updateActor` when HP drops to 0 with the wound track below max, or `nimble.conditionApplied` with `condition: 'dying'` |
 
+### Modifying a toggle from another feature: `modifyToggle`
+
+A `modifyToggle` rule (matched to the target toggle by `toggleIdentifier`, falling back to the toggle rule's `id`) can adjust the toggle's lifecycle from any of the actor's items:
+
+- `suppressTurnOff`: turn-off events the target toggle should ignore while the modifier's predicate passes.
+- `turnOn` (`onTurnStart` | `onActorDying` | `onCritReceived`): events on which the target toggle switches **on** automatically. The modifier's own predicate gates the turn-on, so the granting feature carries its condition (e.g. `{ "self": "dying" }` for a while-Dying auto-activation). Auto-turn-on restores the toggle's state only — it creates or re-enables the backing AE (GM-side, with a chat announcement) but does not run the owning item's activation effects. `onCritReceived` is driven by the defender-side `onAttackReceived` dispatch, which fires when damage from a critical hit is applied to the actor.
+
 ### Worked example: Rage
 
 The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "while raging" features (Intensifying Fury, etc.) live on their own items and just predicate on `self:raging`:
@@ -415,6 +422,16 @@ Both pool kinds (`dicePool`, `chargePool`) are **pure storage rules** — they d
 A `dicePool` rule with no paired `diceConsumer` defaults to `manual` spending — the dialog prompts the player at activation time. To make a pool snowball as a damage bonus (Berserker Fury Dice), add a sibling `diceConsumer` with `mode: 'autoBonus'` and the desired `bonusOnAttackDelivery` filter (`'melee'`, `'ranged'`, `'any'`, or `null`).
 
 Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` consumer for outgoing damage and a `manual` consumer that a reaction effect spends from. This is how features like Berserker's "That all you got?!" reaction share the Fury Dice pool with the auto-bonus damage path.
+
+### Pool modifiers and refill gating
+
+- **Refill predicates**: each `dicePool.refills` entry accepts an optional `predicate`, evaluated against the actor's live domain when the trigger fires (e.g. `{ "self": "raging" }` to gate a turn-start refill on an active toggle). Entries without a predicate always apply.
+- **`modifyPool.addRefills`**: a modifier can contribute refill entries to the target pool without editing the base pool rule — the granting feature carries its own trigger. The modifier's rule-level predicate gates whether the entries are included at all; entry-level predicates are evaluated at trigger time (prefer these for state that flips mid-combat, since rule-level gating churns the stored pool definition).
+- **`modifyPool.minFace`**: a minimum face value for dice rolled into the target pool. Rolls below the floor are raised to it at every roll point (refills, activation rolls, initial seeding); manual face edits stay unclamped. The highest floor among contributing modifiers wins.
+- **`modifyConsumer`**: augments the effect formula of `diceConsumer` rules targeting a pool. Matching consumers' `effectFormula` gains `+ (appendFormula)`, with an optional `effectTypeFilter` to restrict the change to e.g. `damageReduction` spends. Applied at consumer enumeration time, so both the spend panel and its preview reflect the change.
+- **`poolGainMessage`**: posts a chat reminder whenever the targeted dice pool gains dice. `formula` is resolved against actor data and interpolated into `message` via `{value}`.
+- **Dice refill triggers wired to dispatchers**: `onAttacked` and `onCritReceived` (damage-application pipeline), `onTurnStart` / `onTurnEnd` (turn-boundary custom hooks, GM-side), and `encounterEnd`. Other declared triggers have no dispatcher yet.
+- **`maximizeDie` pool node action**: an activation effect node that raises the lowest N faces of a dice pool to the die's maximum.
 
 Activating an item with a manual consumer opens the pool's spend panel, opening the character sheet first if it is closed. Because the spend flow posts its own chat card, the item's default activation card is suppressed — but only while the rule automation setting ("Auto-Apply Conditions from Rules") is enabled, since that setting gates the activation dispatch that opens the panel. With automation off, activation posts the normal card instead. This automatic suppression is the consumer rule's `auto` behavior for the `suppressActivationCard` envelope field (see the envelope-fields section); set the field to `never` on the consumer to keep the card, or to `always` on any rule to silence a card-less activation outright.
 

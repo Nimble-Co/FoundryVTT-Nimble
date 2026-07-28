@@ -1,5 +1,10 @@
 import { NimbleBaseRule } from './base.js';
-import { TURN_OFF_CHOICES, type TurnOffEvent } from './toggleEffect.js';
+import {
+	TURN_OFF_CHOICES,
+	TURN_ON_CHOICES,
+	type TurnOffEvent,
+	type TurnOnEvent,
+} from './toggleEffect.js';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -33,6 +38,24 @@ function schema() {
 				hint: 'NIMBLE.rules.modifyToggle.suppressTurnOff.hint',
 			},
 		),
+		// Events on which the target toggle switches ON automatically. This
+		// rule's predicate gates the turn-on, so the granting feature carries
+		// its own condition.
+		turnOn: new fields.ArrayField(
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'onTurnStart',
+				choices: TURN_ON_CHOICES as unknown as string[],
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.modifyToggle.turnOn.label',
+				hint: 'NIMBLE.rules.modifyToggle.turnOn.hint',
+			} as unknown as never,
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -59,6 +82,8 @@ class ModifyToggleRule extends NimbleBaseRule<ModifyToggleRule.Schema> {
 
 	declare suppressTurnOff: TurnOffEvent[];
 
+	declare turnOn: TurnOnEvent[];
+
 	static override defineSchema(): ModifyToggleRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -73,6 +98,12 @@ class ModifyToggleRule extends NimbleBaseRule<ModifyToggleRule.Schema> {
 				[
 					'suppressTurnOff',
 					TURN_OFF_CHOICES.map((t) => `'${t}'`).join(
+						' <span class="nimble-type-summary__operator">|</span> ',
+					),
+				],
+				[
+					'turnOn',
+					TURN_ON_CHOICES.map((t) => `'${t}'`).join(
 						' <span class="nimble-type-summary__operator">|</span> ',
 					),
 				],

@@ -7,7 +7,24 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "death-blow-fury-consumer",
+				"identifier": "",
+				"label": "Death Blow: bonus damage",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"poolScope": "item",
+				"mode": "manual",
+				"cost": "1",
+				"bonusOnAttackDelivery": null,
+				"effectFormula": "2 * @sum",
+				"effectType": "generic"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -34,7 +51,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage</p>",
+		"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage.</p><p><em>Click this feature after dealing crit damage to spend Fury Dice. The chat card shows the bonus damage to apply.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"gainedAtLevel": 4,

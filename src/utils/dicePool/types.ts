@@ -14,6 +14,9 @@ type DiceRefillEntry = {
 	trigger: DiceRefillTrigger;
 	mode: DiceRefillMode;
 	value: string;
+	/** Optional predicate tested against the actor's domain when the trigger
+	 *  fires (e.g. { self: 'raging' }). Absent or empty = always applies. */
+	predicate?: Record<string, unknown>;
 };
 
 type DicePoolState = {
@@ -27,6 +30,9 @@ type DicePoolState = {
 	max: number;
 	faces: number[];
 	icon?: string;
+	/** Minimum face value for dice rolled into this pool; rolls below it are
+	 *  raised to the floor. Absent or null = no floor. */
+	minFace?: number | null;
 	refills: DiceRefillEntry[];
 	consumption: DiceConsumptionMode;
 	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
@@ -82,6 +88,8 @@ type ModifyPoolRuleLike = {
 	poolIdentifier?: string;
 	dieSize?: string | null;
 	maxDelta?: string | null;
+	minFace?: number | null;
+	addRefills?: unknown;
 };
 
 type DicePoolRuleAny = DicePoolRuleLike & DiceConsumerRuleLike & ModifyPoolRuleLike;

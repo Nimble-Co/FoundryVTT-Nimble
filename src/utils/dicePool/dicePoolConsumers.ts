@@ -17,6 +17,7 @@ type DicePoolConsumer = {
 	cost: string;
 	effectFormula: string | null;
 	effectType: string;
+	selectionOutcome: string;
 };
 
 function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
@@ -24,6 +25,77 @@ function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
 	if (typeof value !== 'string') return null;
 	const trimmed = value.trim();
 	return trimmed.length > 0 ? trimmed : null;
+}
+
+type ConsumerModifier = {
+	effectTypeFilter: string;
+	appendFormula: string;
+};
+
+/**
+ * Collect enabled `modifyConsumer` rules across the actor that target the
+ * given pool. Identifiers are only unique within a scope, so both the
+ * identifier and the scope must match, exactly as consumer matching does.
+ * Rule predicates are respected via `appliesTo()`. Sorted by rule priority so
+ * appended formulas compose in a stable order.
+ */
+function getConsumerModifiers(
+	actor: CharacterActorLike,
+	poolIdentifier: string,
+	poolScope: string,
+): ConsumerModifier[] {
+	const modifiers: Array<ConsumerModifier & { priority: number }> = [];
+
+	for (const item of actor.items.contents) {
+		const ruleBackedItem = item as RuleBackedItem;
+		const rules = ruleBackedItem.rules;
+		if (!rules) continue;
+
+		for (const rawRule of rules.values()) {
+			const rule = rawRule as {
+				type?: string;
+				disabled?: boolean;
+				poolIdentifier?: string;
+				poolScope?: string;
+				effectTypeFilter?: string;
+				appendFormula?: string;
+				priority?: number;
+				appliesTo?: () => boolean;
+			};
+			if (rule.type !== 'modifyConsumer' || rule.disabled) continue;
+			if (normalizeIdentifier(rule.poolIdentifier) !== poolIdentifier) continue;
+			if ((rule.poolScope ?? 'item') !== poolScope) continue;
+			if (typeof rule.appliesTo === 'function' && !rule.appliesTo()) continue;
+
+			const appendFormula = typeof rule.appendFormula === 'string' ? rule.appendFormula.trim() : '';
+			if (appendFormula.length < 1) continue;
+
+			modifiers.push({
+				effectTypeFilter: typeof rule.effectTypeFilter === 'string' ? rule.effectTypeFilter : '',
+				appendFormula,
+				priority: rule.priority ?? 0,
+			});
+		}
+	}
+
+	return modifiers.sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Append matching modifier formulas to a consumer's effect formula. Each
+ * matching modifier contributes `+ (<appendFormula>)`.
+ */
+function applyConsumerModifiers(
+	effectFormula: string,
+	effectType: string,
+	modifiers: ConsumerModifier[],
+): string {
+	let formula = effectFormula;
+	for (const modifier of modifiers) {
+		if (modifier.effectTypeFilter.length > 0 && modifier.effectTypeFilter !== effectType) continue;
+		formula = `${formula} + (${modifier.appendFormula})`;
+	}
+	return formula;
 }
 
 /**
@@ -36,8 +108,10 @@ function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
  *   - rule.mode === 'manual'
  *   - rule.poolIdentifier matches pool.identifier
  *   - rule.poolScope matches pool.scope
- *   - effectFormula is present (consumers with no effect have no UX hook to
- *     advertise — they spend silently via the sheet's per-die click)
+ *   - the consumer has something for the panel to do: an effectFormula to
+ *     evaluate, or a selection outcome that transforms the picked dice.
+ *     Formula-less consumers that only spend have no UX hook to advertise —
+ *     they spend silently via the sheet's per-die click.
  */
 function getDicePoolConsumers(
 	actor: Actor | null | undefined,
@@ -50,6 +124,7 @@ function getDicePoolConsumers(
 	if (poolIdentifier.length < 1) return [];
 
 	const consumers: DicePoolConsumer[] = [];
+	const consumerModifiers = getConsumerModifiers(characterActor, poolIdentifier, pool.scope);
 
 	for (const item of characterActor.items.contents) {
 		const ruleBackedItem = item as RuleBackedItem;
@@ -64,8 +139,23 @@ function getDicePoolConsumers(
 			if (normalizeIdentifier(consumer.poolIdentifier) !== poolIdentifier) continue;
 			if ((consumer.poolScope ?? 'item') !== pool.scope) continue;
 
-			const effectFormula = readEffectFormula(consumer);
-			if (effectFormula === null) continue;
+			const selectionOutcome =
+				typeof (consumer as { selectionOutcome?: unknown }).selectionOutcome === 'string' &&
+				(consumer as { selectionOutcome: string }).selectionOutcome.length > 0
+					? (consumer as { selectionOutcome: string }).selectionOutcome
+					: 'consume';
+
+			const baseEffectFormula = readEffectFormula(consumer);
+			if (baseEffectFormula === null && selectionOutcome === 'consume') continue;
+
+			const effectType =
+				typeof consumer.effectType === 'string' && consumer.effectType.length > 0
+					? consumer.effectType
+					: 'generic';
+			const effectFormula =
+				baseEffectFormula === null
+					? null
+					: applyConsumerModifiers(baseEffectFormula, effectType, consumerModifiers);
 
 			consumers.push({
 				itemId: String(item.id),
@@ -83,10 +173,8 @@ function getDicePoolConsumers(
 						: '',
 				cost: typeof consumer.cost === 'string' ? consumer.cost : '1',
 				effectFormula,
-				effectType:
-					typeof consumer.effectType === 'string' && consumer.effectType.length > 0
-						? consumer.effectType
-						: 'generic',
+				effectType,
+				selectionOutcome,
 			});
 		}
 	}

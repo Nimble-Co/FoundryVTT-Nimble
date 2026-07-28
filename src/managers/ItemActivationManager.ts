@@ -15,7 +15,12 @@ import {
 import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
 import { buildTargetDomain } from '../utils/conditionalBonuses.js';
-import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
+import {
+	maximizePoolDie,
+	rollDieIntoPool,
+	rollPoolFresh,
+	setPoolFaces,
+} from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import {
@@ -72,6 +77,8 @@ class ItemActivationManager {
 
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
+
+	#deferredPoolNodes: PoolNode[] = [];
 
 	/**
 	 * Creates a new ItemActivationManager.
@@ -442,10 +449,6 @@ class ItemActivationManager {
 				rolls.push(roll);
 			}
 
-			if (node.type === 'pool') {
-				await this.#applyPoolNode(node as PoolNode);
-			}
-
 			updatedEffects.push(node);
 		}
 
@@ -473,10 +476,48 @@ class ItemActivationManager {
 			rolls.push(roll);
 		}
 
-		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
+		// Pool nodes mutate actor state, so their application is deferred until
+		// the caller confirms the use is allowed (the preUseItem gate fires
+		// after getData). See applyDeferredPoolNodes().
+		//
+		// Enumerate from the FLAT list so no node can be missed: the tree
+		// reconstruction only re-parents children of damage/savingThrow nodes and
+		// silently drops the rest, so a pool node authored under any other parent
+		// would never be applied. Prefer the reconstructed clone whenever the tree
+		// kept it, because results must land on the objects the chat card
+		// serializes; nodes the tree dropped fall back to the flat node, which
+		// still applies even though it has nowhere to render.
+		//
+		// Rebuilding the tree here is also what reflects every roll added above
+		// back into the activation data.
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
+		const renderedNodesById = ItemActivationManager.#indexNodesById(
+			this.activationData.effects as EffectNode[],
+		);
+		this.#deferredPoolNodes = updatedEffects
+			.filter((node): node is PoolNode => node?.type === 'pool')
+			.map((node) => (renderedNodesById.get(node.id) as PoolNode | undefined) ?? node);
 
 		return rolls;
+	}
+
+	/** Depth-first walk of an effects tree, indexing every node by its id. */
+	static #indexNodesById(nodes: EffectNode[] | undefined): Map<string, EffectNode> {
+		const found = new Map<string, EffectNode>();
+		const walk = (node: EffectNode | null | undefined): void => {
+			if (!node) return;
+			if (node.id) found.set(node.id, node);
+			const branching = node as {
+				on?: Record<string, EffectNode[] | undefined>;
+				sharedRolls?: EffectNode[];
+			};
+			for (const children of Object.values(branching.on ?? {})) {
+				for (const child of children ?? []) walk(child);
+			}
+			for (const child of branching.sharedRolls ?? []) walk(child);
+		};
+		for (const node of nodes ?? []) walk(node);
+		return found;
 	}
 
 	/**
@@ -574,6 +615,21 @@ class ItemActivationManager {
 	}
 
 	/**
+	 * Apply the pool effect nodes collected during getData. Pool nodes carry
+	 * actor-state side effects, so they must not run until the caller has
+	 * cleared the preUseItem gate (which fires after getData); results are
+	 * recorded on the same node objects the activation data references, so
+	 * the chat card still renders them. Safe to call once per activation.
+	 */
+	async applyDeferredPoolNodes(): Promise<void> {
+		const nodes = this.#deferredPoolNodes;
+		this.#deferredPoolNodes = [];
+		for (const node of nodes) {
+			await this.#applyPoolNode(node);
+		}
+	}
+
+	/**
 	 * Apply a `pool` effect node: mutate a dice or charge pool on the source
 	 * actor as a side effect of item activation. Records the outcome on the
 	 * node itself so the chat-card renderer can display what happened.
@@ -582,6 +638,7 @@ class ItemActivationManager {
 	 *   dice  + rollDie   -> roll `value` dice into the pool (one at a time)
 	 *   dice  + rollPool  -> roll the full pool fresh (max dice)
 	 *   dice  + clear     -> empty the pool
+	 *   dice  + maximizeDie -> raise the lowest `value` faces to the die max
 	 *   charge + fillCount -> add `value` charges (clamped to max)
 	 *   charge + clear     -> set current to 0
 	 *
@@ -695,6 +752,19 @@ class ItemActivationManager {
 					poolLabel: before.label,
 					previousCount: before.faces.length,
 					newCount: 0,
+				};
+				return;
+			}
+			if (node.action === 'maximizeDie') {
+				const before = readPool();
+				const res = await maximizePoolDie(actor, poolId, count > 0 ? count : 1);
+				const after = readPool();
+				node.result = {
+					applied: res.changed,
+					...(res.changed ? {} : { skipReason: res.reason }),
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
 				};
 				return;
 			}

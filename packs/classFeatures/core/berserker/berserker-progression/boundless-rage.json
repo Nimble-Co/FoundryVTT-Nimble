@@ -6,7 +6,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "boundless-rage-fury-floor",
+				"identifier": "",
+				"label": "Boundless Rage: Fury Dice floor of 6",
+				"predicate": {},
+				"priority": 6,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": null,
+				"maxDelta": null,
+				"minFace": 6,
+				"addRefills": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +49,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p>",
+		"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p><p><em>Apply the two +1 stat increases manually on your sheet. The Fury Die floor is automated.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",
