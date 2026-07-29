@@ -70,6 +70,24 @@ interface DamageApplicationTarget {
 	adjustedDamage: number;
 }
 
+/** One damage component of a card, resolved against a single target. */
+export interface TargetDamageComponent {
+	damageType?: string;
+	/** Localized damage type name, or null for untyped damage */
+	typeLabel: string | null;
+	rolledDamage: number;
+	adjustedDamage: number;
+	/** Localized reasons the resolved damage differs from the rolled damage */
+	modifiers: string[];
+}
+
+export interface TargetDamageBreakdown {
+	components: TargetDamageComponent[];
+	total: number;
+	/** True when the target's defenses changed any component of the damage */
+	hasAdjustments: boolean;
+}
+
 interface DamageApplicationPlan {
 	hasTargets: boolean;
 	applicableTargets: DamageApplicationTarget[];
@@ -214,9 +232,19 @@ function calculateArmorAdjustedDamage(params: {
 	options?: DamageApplyOptions;
 }): number {
 	const armorType = getActorArmorType(params.actor);
-	if (armorType === 'none') return params.damage;
-
 	const damageOptions = params.options;
+
+	// Vulnerability is defined in terms of armor rather than as a multiplier:
+	// "that kind of damage ignores its armor; if unarmored, they take double the
+	// damage instead" (Core Rules glossary), echoing "crits and damage
+	// vulnerabilities ignore monster armor". The incoming value has already been
+	// scaled by the outcome, so doubling it here keeps half-damage outcomes
+	// halved before the vulnerability applies.
+	const isVulnerable = actorIsVulnerableToDamage(params.actor, damageOptions?.damageType);
+
+	if (armorType === 'none') return isVulnerable ? params.damage * 2 : params.damage;
+	if (isVulnerable) return params.damage;
+
 	if (damageOptions?.ignoreArmor === true) return params.damage;
 	const serializedRolls = getSerializedDamageRolls(damageOptions);
 	const applyOutcomeHalfDamage = damageOptions?.outcome === 'halfDamage';
@@ -316,9 +344,98 @@ function actorIsImmuneToDamage(actor: Actor.Implementation, damageType?: string)
 	return Array.isArray(immunities) && Boolean(damageType && immunities.includes(damageType));
 }
 
+function actorIsVulnerableToDamage(actor: Actor.Implementation, damageType?: string): boolean {
+	const vulnerabilities = foundry.utils.getProperty(
+		actor,
+		'system.attributes.damageVulnerabilities',
+	);
+	return (
+		Array.isArray(vulnerabilities) && Boolean(damageType && vulnerabilities.includes(damageType))
+	);
+}
+
+/** Localized damage type name, falling back to the raw key for unknown types. */
+function getDamageTypeLabel(damageType: string): string {
+	const key = (CONFIG.NIMBLE.damageTypes as Record<string, string>)[damageType];
+	return key ? localize(key) : damageType;
+}
+
+function describeBankedReduction(banked: { source: string | null; value: number }): string {
+	return banked.source
+		? localize('NIMBLE.damageModifiers.bankedSource', {
+				source: banked.source,
+				value: String(banked.value),
+			})
+		: localize('NIMBLE.damageModifiers.banked', { value: String(banked.value) });
+}
+
 /**
- * Order: outcome/armor halving → immunity (zero) → resistance halving →
- * flat rule reductions → clamp at zero. The banked one-shot reduction is
+ * Human-readable reasons one damage component resolves to something other than
+ * the rolled total: immunity, vulnerability, resistance (attribute or half-mode
+ * rule), and flat damageReduction rules. Armor is excluded — the target list
+ * already shows it as an icon. The banked one-shot reduction is appended by the
+ * caller, since only the component that consumes it should name it.
+ */
+function describeDamageModifiers(actor: Actor.Implementation, damageType?: string): string[] {
+	const modifiers: string[] = [];
+	const typeLabel = damageType ? getDamageTypeLabel(damageType) : '';
+
+	if (actorIsImmuneToDamage(actor, damageType)) {
+		modifiers.push(localize('NIMBLE.damageModifiers.immune', { type: typeLabel }));
+	}
+
+	if (actorIsVulnerableToDamage(actor, damageType)) {
+		modifiers.push(
+			getActorArmorType(actor) === 'none'
+				? localize('NIMBLE.damageModifiers.vulnerableUnarmored', { type: typeLabel })
+				: localize('NIMBLE.damageModifiers.vulnerable', { type: typeLabel }),
+		);
+	}
+
+	const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
+	if (Array.isArray(resistances) && damageType && resistances.includes(damageType)) {
+		modifiers.push(localize('NIMBLE.damageModifiers.resistant', { type: typeLabel }));
+	}
+
+	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
+		| DamageReductionEntry[]
+		| undefined;
+	if (!Array.isArray(reductions)) return modifiers;
+
+	for (const reduction of reductions) {
+		if (!matchesDamageType(reduction?.damageTypes, damageType)) continue;
+
+		if (reduction?.mode === 'half') {
+			modifiers.push(
+				reduction.label
+					? localize('NIMBLE.damageModifiers.resistanceSource', { label: reduction.label })
+					: localize('NIMBLE.damageModifiers.resistanceGeneric'),
+			);
+			continue;
+		}
+
+		const value = Number(reduction?.value);
+		if (!Number.isFinite(value) || value <= 0) continue;
+		modifiers.push(
+			reduction.label
+				? localize('NIMBLE.damageModifiers.flat', {
+						label: reduction.label,
+						value: String(Math.floor(value)),
+					})
+				: localize('NIMBLE.damageModifiers.flatGeneric', {
+						value: String(Math.floor(value)),
+					}),
+		);
+	}
+
+	return modifiers;
+}
+
+/**
+ * Order: outcome/armor halving (where vulnerability bypasses armor or doubles
+ * an unarmored target) → immunity (zero) → resistance halving →
+ * flat rule reductions → clamp at zero. Immunity outranks vulnerability, so a
+ * target listed under both takes nothing. The banked one-shot reduction is
  * subtracted by the caller, since it is only consumed when the hit would
  * otherwise deal damage. Temp HP absorption happens later, inside
  * `actor.applyDamage`. The books don't
@@ -755,12 +872,13 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
-	 * Total damage a single target would take from every Apply Damage action on
-	 * this card, accounting for that target's armor. Returns null when the card
-	 * has no applicable damage rolls (healing / condition / save-gated cards), so
-	 * the target list can omit the preview.
+	 * Per damage component, what a single target actually takes and why: the
+	 * rolled damage, the resolved damage after that target's armor, immunities,
+	 * vulnerabilities, resistances and reductions, and the localized reasons for
+	 * the difference. Returns null when the card has no applicable damage rolls
+	 * (healing / condition / save-gated cards) or the target has no actor.
 	 */
-	getDamagePreviewForTarget(targetUuid: string): number | null {
+	getDamageBreakdownForTarget(targetUuid: string): TargetDamageBreakdown | null {
 		if (!this.isActivationCard()) return null;
 
 		const damageRolls = this.#collectApplicableDamageRolls().filter(
@@ -772,119 +890,55 @@ class NimbleChatMessage extends ChatMessage {
 		const actor = tokenDocument?.actor as Actor.Implementation | null;
 		if (!actor) return null;
 
-		let total = 0;
 		// The banked one-shot reduction is consumed by the first application that
-		// would otherwise deal damage, so credit it against that roll only —
+		// would otherwise deal damage, so credit it against that component only —
 		// mirroring `buildDamageApplicationPlan`.
 		let availableBank = getBankedDamageReduction(actor);
+		const bankedEntries = getBankedDamageReductionEntries(actor);
+
+		const components: TargetDamageComponent[] = [];
+		let total = 0;
+
 		for (const { value, options } of damageRolls) {
 			const unbankedDamage = calculateAdjustedDamage({ actor, damage: value, options });
-			if (!Number.isFinite(unbankedDamage) || unbankedDamage <= 0) continue;
+			const damageBeforeBank = Number.isFinite(unbankedDamage) ? Math.max(0, unbankedDamage) : 0;
 
-			const adjusted = Math.max(0, unbankedDamage - availableBank);
-			availableBank = 0;
-			if (adjusted > 0) total += Math.floor(adjusted);
+			const consumesBank = damageBeforeBank > 0 && availableBank > 0;
+			const adjustedDamage = Math.floor(Math.max(0, damageBeforeBank - availableBank));
+			if (damageBeforeBank > 0) availableBank = 0;
+
+			total += adjustedDamage;
+
+			const modifiers = describeDamageModifiers(actor, options.damageType);
+			if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
+
+			components.push({
+				damageType: options.damageType,
+				typeLabel: options.damageType ? getDamageTypeLabel(options.damageType) : null,
+				rolledDamage: Math.max(0, Math.floor(value)),
+				adjustedDamage,
+				modifiers,
+			});
 		}
 
-		return total;
+		return {
+			components,
+			total,
+			hasAdjustments: components.some(
+				(component) =>
+					component.modifiers.length > 0 || component.adjustedDamage !== component.rolledDamage,
+			),
+		};
 	}
 
 	/**
-	 * Human-readable reasons a target will take less than the rolled damage
-	 * from this card: immunities, resistances (attribute or half-mode rule),
-	 * flat damageReduction rules, and a pending banked one-shot reduction.
-	 * Armor is excluded — the target list already shows it as an icon. Returns
-	 * an empty array when nothing applies, so the card can omit the section.
+	 * Total damage a single target would take from every Apply Damage action on
+	 * this card, accounting for that target's armor. Returns null when the card
+	 * has no applicable damage rolls (healing / condition / save-gated cards), so
+	 * the target list can omit the preview.
 	 */
-	getDamageModifiersForTarget(targetUuid: string): string[] {
-		if (!this.isActivationCard()) return [];
-
-		const damageRolls = this.#collectApplicableDamageRolls().filter(
-			({ options }) => options.outcome !== 'noDamage',
-		);
-		if (damageRolls.length < 1) return [];
-
-		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
-		const actor = tokenDocument?.actor as Actor.Implementation | null;
-		if (!actor) return [];
-
-		const incomingTypes = new Set<string>();
-		for (const { options } of damageRolls) {
-			if (options.damageType) incomingTypes.add(options.damageType);
-		}
-
-		const typeLabel = (type: string): string => {
-			const key = (CONFIG.NIMBLE.damageTypes as Record<string, string>)[type];
-			return key ? localize(key) : type;
-		};
-
-		const appliesToIncoming = (damageTypes: unknown): boolean => {
-			const types = Array.isArray(damageTypes) ? damageTypes : [];
-			if (types.length === 0) return true;
-			return types.some((type) => incomingTypes.has(type));
-		};
-
-		const modifiers: string[] = [];
-
-		const immunities = foundry.utils.getProperty(actor, 'system.attributes.damageImmunities');
-		if (Array.isArray(immunities)) {
-			for (const type of incomingTypes) {
-				if (immunities.includes(type))
-					modifiers.push(localize('NIMBLE.damageModifiers.immune', { type: typeLabel(type) }));
-			}
-		}
-
-		const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
-		if (Array.isArray(resistances)) {
-			for (const type of incomingTypes) {
-				if (resistances.includes(type))
-					modifiers.push(localize('NIMBLE.damageModifiers.resistant', { type: typeLabel(type) }));
-			}
-		}
-
-		const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
-			| DamageReductionEntry[]
-			| undefined;
-		if (Array.isArray(reductions)) {
-			for (const reduction of reductions) {
-				if (!appliesToIncoming(reduction?.damageTypes)) continue;
-
-				if (reduction?.mode === 'half') {
-					modifiers.push(
-						reduction.label
-							? localize('NIMBLE.damageModifiers.resistanceSource', { label: reduction.label })
-							: localize('NIMBLE.damageModifiers.resistanceGeneric'),
-					);
-					continue;
-				}
-
-				const value = Number(reduction?.value);
-				if (!Number.isFinite(value) || value <= 0) continue;
-				modifiers.push(
-					reduction.label
-						? localize('NIMBLE.damageModifiers.flat', {
-								label: reduction.label,
-								value: String(Math.floor(value)),
-							})
-						: localize('NIMBLE.damageModifiers.flatGeneric', {
-								value: String(Math.floor(value)),
-							}),
-				);
-			}
-		}
-
-		for (const banked of getBankedDamageReductionEntries(actor)) {
-			modifiers.push(
-				banked.source
-					? localize('NIMBLE.damageModifiers.bankedSource', {
-							source: banked.source,
-							value: String(banked.value),
-						})
-					: localize('NIMBLE.damageModifiers.banked', { value: String(banked.value) }),
-			);
-		}
-
-		return modifiers;
+	getDamagePreviewForTarget(targetUuid: string): number | null {
+		return this.getDamageBreakdownForTarget(targetUuid)?.total ?? null;
 	}
 
 	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {

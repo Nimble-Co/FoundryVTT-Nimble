@@ -143,14 +143,14 @@
 		</ul>
 
 		{#if game.user?.isGM}
-			{@const modifierRows = tokens
+			{@const breakdownRows = tokens
 				.map((token) => ({
 					name: token?.actor?.name || token.name,
-					modifiers: messageDocument?.reactive?.getDamageModifiersForTarget(token.uuid) ?? [],
+					breakdown: messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid),
 				}))
-				.filter((row) => row.modifiers.length > 0)}
+				.filter((row) => row.breakdown?.hasAdjustments)}
 
-			{#if modifierRows.length > 0}
+			{#if breakdownRows.length > 0}
 				<div class="nimble-damage-modifiers">
 					<h4 class="nimble-damage-modifiers__heading">
 						<i class="fa-solid fa-shield-halved"></i>
@@ -158,10 +158,33 @@
 					</h4>
 
 					<ul class="nimble-damage-modifiers__list">
-						{#each modifierRows as row}
+						{#each breakdownRows as row}
+							{@const components = row.breakdown?.components ?? []}
+							{@const reasons = [
+								...new Set(components.flatMap((component) => component.modifiers)),
+							]}
 							<li>
 								<strong>{row.name}:</strong>
-								{row.modifiers.join(', ')}
+
+								{#each components as component, index}
+									<span
+										class="nimble-damage-modifiers__component"
+										data-tooltip={component.modifiers.join(', ') || null}
+									>
+										{#if component.typeLabel}{component.typeLabel}{/if}
+										{component.rolledDamage}&rarr;{component.adjustedDamage}
+									</span>{#if index < components.length - 1},{/if}
+								{/each}
+
+								<span class="nimble-damage-modifiers__total">
+									{localize('NIMBLE.damageModifiers.total', {
+										value: String(row.breakdown?.total ?? 0),
+									})}
+								</span>
+
+								{#if reasons.length > 0}
+									<span class="nimble-damage-modifiers__reasons">{reasons.join(', ')}</span>
+								{/if}
 							</li>
 						{/each}
 					</ul>
@@ -220,10 +243,25 @@
 		&__list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.125rem;
+			gap: 0.25rem;
 			margin: 0;
 			padding: 0;
 			list-style: none;
+		}
+
+		&__component {
+			white-space: nowrap;
+		}
+
+		&__total {
+			font-weight: 700;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__reasons {
+			display: block;
+			font-size: var(--nimble-xs-text);
+			font-style: italic;
 		}
 	}
 
