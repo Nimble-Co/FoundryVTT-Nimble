@@ -1352,7 +1352,7 @@
 					"spendWithCount": "Spend ({count})",
 					"maximize": "Maximize",
 					"maximizedNote": "Maximized {count} {label} ({changes})",
-					"bankedReductionNote": "Applied automatically as damage reduction against the next damage taken."
+					"bankedReductionNote": "Applied automatically as damage reduction against damage taken."
 				}
 			}
 		},

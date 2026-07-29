@@ -11,6 +11,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v4
 
@@ -59,18 +62,19 @@ jobs:
       working-directory: ./dist
       run: zip -r ./nimble.zip ./*
 
-    # Create a release for this specific version
+    # Attach files to the release that triggered this run.
     - name: Update Release with Files
       id: create_version_release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true # Set this to false if you want to prevent updating existing releases
-        name: ${{ github.event.release.name }}
-        draft: false
+        omitPrereleaseDuringUpdate: true
+        omitDraftDuringUpdate: true
+        omitNameDuringUpdate: true
+        omitBodyDuringUpdate: true
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: './dist/system.json, ./dist/nimble.zip'
         tag: ${{ github.event.release.tag_name }}
-        body: ${{ github.event.release.body }}
 
   # Stable releases only. Pre-releases still get GitHub assets from `build`.
   publish:
