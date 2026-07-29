@@ -1,7 +1,5 @@
 <script>
-	import localize from '../../utils/localize.js';
 	import TagGroup from '../components/TagGroup.svelte';
-	import DamageDefensesConfig from './components/DamageDefensesConfig.svelte';
 
 	const { sizeCategories } = CONFIG.NIMBLE;
 
@@ -46,12 +44,6 @@
 				actor.update({ 'system.attributes.sizeCategory': sizeCategory })}
 		/>
 	</label>
-
-	<h3 class="nimble-heading" data-heading-variant="section">
-		{localize('NIMBLE.damageDefenses.heading')}
-	</h3>
-
-	<DamageDefensesConfig {actor} />
 </section>
 
 <style>

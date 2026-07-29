@@ -26,6 +26,32 @@
 		) => Promise<Combatant | null>;
 	};
 
+	/**
+	 * Rows for the Damage Defenses section, skipping the categories this
+	 * character has nothing in. Mirrors how the monster sheet lists them.
+	 */
+	function getDamageDefenses(attributes: {
+		damageResistances?: string[];
+		damageImmunities?: string[];
+		damageVulnerabilities?: string[];
+	}) {
+		const damageTypeLabel = (type: string) => {
+			const key = (CONFIG.NIMBLE.damageTypes as Record<string, string>)[type];
+			return key ? localize(key) : type;
+		};
+
+		return [
+			{ label: 'NIMBLE.npcDefenses.resistant', types: attributes.damageResistances ?? [] },
+			{ label: 'NIMBLE.npcDefenses.immune', types: attributes.damageImmunities ?? [] },
+			{ label: 'NIMBLE.npcDefenses.vulnerable', types: attributes.damageVulnerabilities ?? [] },
+		]
+			.filter((group) => group.types.length > 0)
+			.map((group) => ({
+				label: localize(group.label),
+				types: group.types.map(damageTypeLabel).join(', '),
+			}));
+	}
+
 	function getArmorProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies]
 			.map((key): string => armorTypesPlural[key] ?? key)
@@ -128,6 +154,10 @@
 	let weaponProficiencies = $derived(
 		getWeaponProficiencies(actor.reactive.system.proficiencies.weapons),
 	);
+
+	let damageDefenses = $derived(getDamageDefenses(actor.reactive.system.attributes));
+
+	let damageDefensesTooltip = $derived(localize('NIMBLE.prompts.configureDamageDefenses'));
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -170,6 +200,38 @@
 	<Skills {skills} />
 
 	<MovementSpeed {actor} showDefaultSpeed={true} />
+
+	<section>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.damageDefenses.heading')}
+			</h3>
+
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				class:nimble-button--hidden={!editingEnabled}
+				type="button"
+				aria-label={editingEnabled ? damageDefensesTooltip : null}
+				data-tooltip={editingEnabled ? damageDefensesTooltip : null}
+				onclick={() => actor.configureDamageDefenses()}
+				disabled={!editingEnabled}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
+		</header>
+
+		<ul class="nimble-proficiency-list">
+			{#each damageDefenses as group}
+				<li class="nimble-proficiency-list__item">
+					<strong>{group.label}:</strong>
+					{group.types}
+				</li>
+			{:else}
+				<li class="nimble-proficiency-list__item">None</li>
+			{/each}
+		</ul>
+	</section>
 
 	{#each [{ heading: 'Language Proficiencies', configMethod: actor.configureLanguageProficiencies.bind(actor), content: languageProficiencies, prompt: 'configureLanguageProficiencies' }, { heading: 'Armor Proficiencies', configMethod: actor.configureArmorProficiencies.bind(actor), content: armorProficiencies, prompt: 'configureArmorProficiencies' }, { heading: 'Weapon Proficiencies', configMethod: actor.configureWeaponProficiencies.bind(actor), content: weaponProficiencies.filter((weapon) => weapon.trim().length > 0), prompt: 'configureWeaponProficiencies' }] as { heading, configMethod, content, prompt }}
 		{@const tooltip = localize(`NIMBLE.prompts.${prompt}`)}
