@@ -216,8 +216,7 @@
 			{
 				"id": "babele",
 				"type": "module",
-				"reason": "Optional. Enables runtime translation of Nimble compendium packs into the active Foundry language using the translation skeletons shipped under systems/nimble/lang/babele/.",
-				"manifest": "https://gitlab.com/riccisi/foundryvtt-babele/-/raw/master/module.json"
+				"reason": "Optional. Enables runtime translation of Nimble compendium packs into the active Foundry language using the translation skeletons shipped under systems/nimble/lang/babele/."
 			}
 		]
 	},
