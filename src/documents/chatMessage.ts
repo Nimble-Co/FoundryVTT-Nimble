@@ -70,6 +70,18 @@ interface DamageApplicationTarget {
 	adjustedDamage: number;
 }
 
+/**
+ * Why a damage component resolved to less (or more) than it rolled. `kind`
+ * drives the badge shown on the target row; `label` is the full rule text the
+ * badge carries as a tooltip.
+ */
+export type DamageModifierKind = 'immune' | 'vulnerable' | 'resistant' | 'reduction';
+
+export interface DamageModifier {
+	kind: DamageModifierKind;
+	label: string;
+}
+
 /** One damage component of a card, resolved against a single target. */
 export interface TargetDamageComponent {
 	damageType?: string;
@@ -77,15 +89,12 @@ export interface TargetDamageComponent {
 	typeLabel: string | null;
 	rolledDamage: number;
 	adjustedDamage: number;
-	/** Localized reasons the resolved damage differs from the rolled damage */
-	modifiers: string[];
+	modifiers: DamageModifier[];
 }
 
 export interface TargetDamageBreakdown {
 	components: TargetDamageComponent[];
 	total: number;
-	/** True when the target's defenses changed any component of the damage */
-	hasAdjustments: boolean;
 }
 
 interface DamageApplicationPlan {
@@ -360,13 +369,16 @@ function getDamageTypeLabel(damageType: string): string {
 	return key ? localize(key) : damageType;
 }
 
-function describeBankedReduction(banked: { source: string | null; value: number }): string {
-	return banked.source
-		? localize('NIMBLE.damageModifiers.bankedSource', {
-				source: banked.source,
-				value: String(banked.value),
-			})
-		: localize('NIMBLE.damageModifiers.banked', { value: String(banked.value) });
+function describeBankedReduction(banked: { source: string | null; value: number }): DamageModifier {
+	return {
+		kind: 'reduction',
+		label: banked.source
+			? localize('NIMBLE.damageModifiers.bankedSource', {
+					source: banked.source,
+					value: String(banked.value),
+				})
+			: localize('NIMBLE.damageModifiers.banked', { value: String(banked.value) }),
+	};
 }
 
 /**
@@ -376,25 +388,36 @@ function describeBankedReduction(banked: { source: string | null; value: number 
  * already shows it as an icon. The banked one-shot reduction is appended by the
  * caller, since only the component that consumes it should name it.
  */
-function describeDamageModifiers(actor: Actor.Implementation, damageType?: string): string[] {
-	const modifiers: string[] = [];
+function describeDamageModifiers(
+	actor: Actor.Implementation,
+	damageType?: string,
+): DamageModifier[] {
+	const modifiers: DamageModifier[] = [];
 	const typeLabel = damageType ? getDamageTypeLabel(damageType) : '';
 
 	if (actorIsImmuneToDamage(actor, damageType)) {
-		modifiers.push(localize('NIMBLE.damageModifiers.immune', { type: typeLabel }));
+		modifiers.push({
+			kind: 'immune',
+			label: localize('NIMBLE.damageModifiers.immune', { type: typeLabel }),
+		});
 	}
 
 	if (actorIsVulnerableToDamage(actor, damageType)) {
-		modifiers.push(
-			getActorArmorType(actor) === 'none'
-				? localize('NIMBLE.damageModifiers.vulnerableUnarmored', { type: typeLabel })
-				: localize('NIMBLE.damageModifiers.vulnerable', { type: typeLabel }),
-		);
+		modifiers.push({
+			kind: 'vulnerable',
+			label:
+				getActorArmorType(actor) === 'none'
+					? localize('NIMBLE.damageModifiers.vulnerableUnarmored', { type: typeLabel })
+					: localize('NIMBLE.damageModifiers.vulnerable', { type: typeLabel }),
+		});
 	}
 
 	const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
 	if (Array.isArray(resistances) && damageType && resistances.includes(damageType)) {
-		modifiers.push(localize('NIMBLE.damageModifiers.resistant', { type: typeLabel }));
+		modifiers.push({
+			kind: 'resistant',
+			label: localize('NIMBLE.damageModifiers.resistant', { type: typeLabel }),
+		});
 	}
 
 	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
@@ -406,18 +429,20 @@ function describeDamageModifiers(actor: Actor.Implementation, damageType?: strin
 		if (!matchesDamageType(reduction?.damageTypes, damageType)) continue;
 
 		if (reduction?.mode === 'half') {
-			modifiers.push(
-				reduction.label
+			modifiers.push({
+				kind: 'resistant',
+				label: reduction.label
 					? localize('NIMBLE.damageModifiers.resistanceSource', { label: reduction.label })
 					: localize('NIMBLE.damageModifiers.resistanceGeneric'),
-			);
+			});
 			continue;
 		}
 
 		const value = Number(reduction?.value);
 		if (!Number.isFinite(value) || value <= 0) continue;
-		modifiers.push(
-			reduction.label
+		modifiers.push({
+			kind: 'reduction',
+			label: reduction.label
 				? localize('NIMBLE.damageModifiers.flat', {
 						label: reduction.label,
 						value: String(Math.floor(value)),
@@ -425,7 +450,7 @@ function describeDamageModifiers(actor: Actor.Implementation, damageType?: strin
 				: localize('NIMBLE.damageModifiers.flatGeneric', {
 						value: String(Math.floor(value)),
 					}),
-		);
+		});
 	}
 
 	return modifiers;
@@ -921,24 +946,7 @@ class NimbleChatMessage extends ChatMessage {
 			});
 		}
 
-		return {
-			components,
-			total,
-			hasAdjustments: components.some(
-				(component) =>
-					component.modifiers.length > 0 || component.adjustedDamage !== component.rolledDamage,
-			),
-		};
-	}
-
-	/**
-	 * Total damage a single target would take from every Apply Damage action on
-	 * this card, accounting for that target's armor. Returns null when the card
-	 * has no applicable damage rolls (healing / condition / save-gated cards), so
-	 * the target list can omit the preview.
-	 */
-	getDamagePreviewForTarget(targetUuid: string): number | null {
-		return this.getDamageBreakdownForTarget(targetUuid)?.total ?? null;
+		return { components, total };
 	}
 
 	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {

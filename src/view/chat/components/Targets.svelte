@@ -1,5 +1,9 @@
 <script lang="ts">
-	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+	import type {
+		DamageModifierKind,
+		NimbleChatMessage,
+		TargetDamageBreakdown,
+	} from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
@@ -55,17 +59,60 @@
 		messageDocument.removeTarget(targetId);
 	}
 
+	/**
+	 * One badge per distinct reason this target takes different damage, in a
+	 * fixed order so the row reads the same way every time. Each badge carries
+	 * the full rule text of every modifier it stands for as its tooltip.
+	 */
+	function getDamageBadges(breakdown: TargetDamageBreakdown | null | undefined) {
+		const modifiers = breakdown?.components.flatMap((component) => component.modifiers) ?? [];
+
+		return badgeOrder
+			.filter((kind) => modifiers.some((modifier) => modifier.kind === kind))
+			.map((kind) => ({
+				kind,
+				abbreviation: localize(badgeLabels[kind]),
+				tooltip: [
+					...new Set(
+						modifiers.filter((modifier) => modifier.kind === kind).map(({ label }) => label),
+					),
+				].join(', '),
+			}));
+	}
+
+	/** Per damage type: what it resolved to, and what it rolled when they differ. */
+	function getDamageTooltip(breakdown: TargetDamageBreakdown | null | undefined) {
+		const components = breakdown?.components ?? [];
+		if (components.length < 1) return localize('NIMBLE.chatTargets.damagePreview');
+
+		return components
+			.map(({ typeLabel, rolledDamage, adjustedDamage }) => {
+				const unchanged = adjustedDamage === rolledDamage;
+				const key = typeLabel
+					? `NIMBLE.damageModifiers.${unchanged ? 'componentUnchanged' : 'component'}`
+					: `NIMBLE.damageModifiers.${unchanged ? 'untypedComponentUnchanged' : 'untypedComponent'}`;
+
+				return localize(key, {
+					type: typeLabel ?? '',
+					value: String(adjustedDamage),
+					rolled: String(rolledDamage),
+				});
+			})
+			.join(', ');
+	}
+
 	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
+
+	const badgeOrder: DamageModifierKind[] = ['immune', 'vulnerable', 'resistant', 'reduction'];
+	const badgeLabels: Record<DamageModifierKind, string> = {
+		immune: 'NIMBLE.damageModifiers.badgeImmune',
+		vulnerable: 'NIMBLE.damageModifiers.badgeVulnerable',
+		resistant: 'NIMBLE.damageModifiers.badgeResistant',
+		reduction: 'NIMBLE.damageModifiers.badgeReduction',
+	};
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
-
-	// The breakdown starts crowding the card past a couple of targets, so it
-	// collapses by default beyond this many.
-	const COLLAPSE_ADJUSTMENTS_THRESHOLD = 2;
-
-	// null = follow the default above; a boolean is an explicit user choice.
-	let damageAdjustmentsExpanded: boolean | null = $state(null);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
@@ -100,10 +147,11 @@
 	{#await prepareTargets(targets) then tokens}
 		<ul class="nimble-target-list">
 			{#each tokens as token}
-				{@const damagePreview =
+				{@const breakdown =
 					token && game.user?.isGM
-						? messageDocument?.reactive?.getDamagePreviewForTarget(token.uuid)
+						? messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid)
 						: null}
+				{@const damageBadges = getDamageBadges(breakdown)}
 				<li
 					class="nimble-card"
 					onmouseenter={() => tokenHoverIn(token.object)}
@@ -116,16 +164,31 @@
 					/>
 
 					<span class="nimble-card__title">
-						{token?.actor?.name || token.name}
-						{#if damagePreview !== null && damagePreview !== undefined}
-							<span
-								class="nimble-target-damage"
-								data-tooltip={localize('NIMBLE.chatTargets.damagePreview')}
-							>
-								({damagePreview})
+						<!-- Badges and the damage total win the row, so a long name ellipsizes
+						     and carries the full text as a tooltip. -->
+						<span class="nimble-target-name" data-tooltip={token?.actor?.name || token.name}>
+							{token?.actor?.name || token.name}
+						</span>
+						{#if breakdown}
+							<span class="nimble-target-damage" data-tooltip={getDamageTooltip(breakdown)}>
+								({breakdown.total})
 							</span>
 						{/if}
 					</span>
+
+					{#if damageBadges.length > 0}
+						<span class="nimble-target-badges">
+							{#each damageBadges as badge (badge.kind)}
+								<span
+									class="nimble-target-badge"
+									data-badge-kind={badge.kind}
+									data-tooltip={badge.tooltip}
+								>
+									{badge.abbreviation}
+								</span>
+							{/each}
+						</span>
+					{/if}
 
 					{#if token?.actor?.type !== 'character'}
 						{@html getArmorIcon(token)}
@@ -148,90 +211,6 @@
 				</li>
 			{/each}
 		</ul>
-
-		{#if game.user?.isGM}
-			{@const breakdownRows = tokens
-				.map((token) => ({
-					uuid: token.uuid,
-					name: token?.actor?.name || token.name,
-					breakdown: messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid),
-				}))
-				.filter((row) => row.breakdown?.hasAdjustments)}
-
-			{#if breakdownRows.length > 0}
-				{@const expanded =
-					damageAdjustmentsExpanded ?? tokens.length <= COLLAPSE_ADJUSTMENTS_THRESHOLD}
-				<div class="nimble-damage-modifiers">
-					<button
-						class="nimble-damage-modifiers__heading"
-						type="button"
-						aria-expanded={expanded}
-						data-tooltip={localize(
-							expanded ? 'NIMBLE.damageModifiers.collapse' : 'NIMBLE.damageModifiers.expand',
-						)}
-						onclick={() => (damageAdjustmentsExpanded = !expanded)}
-					>
-						<i class="fa-solid fa-shield-halved"></i>
-						{localize('NIMBLE.damageModifiers.heading')}
-						<span class="nimble-damage-modifiers__count">{breakdownRows.length}</span>
-						<i
-							class="nimble-damage-modifiers__chevron fa-solid {expanded
-								? 'fa-chevron-up'
-								: 'fa-chevron-down'}"
-						></i>
-					</button>
-
-					{#if expanded}
-						<ul class="nimble-damage-modifiers__list">
-							{#each breakdownRows as row (row.uuid)}
-								{@const components = row.breakdown?.components ?? []}
-								{@const reasons = [
-									...new Set(components.flatMap((component) => component.modifiers)),
-								]}
-								<li class="nimble-damage-modifiers__row">
-									<div class="nimble-damage-modifiers__row-header">
-										<span class="nimble-damage-modifiers__name" data-tooltip={row.name}>
-											{row.name}
-										</span>
-
-										<span class="nimble-damage-modifiers__total">
-											{localize('NIMBLE.damageModifiers.total', {
-												value: String(row.breakdown?.total ?? 0),
-											})}
-										</span>
-									</div>
-
-									<div class="nimble-damage-modifiers__components">
-										{#each components as component}
-											<span
-												class="nimble-damage-modifiers__component"
-												data-tooltip={component.modifiers.join(', ') || null}
-											>
-												{#if component.typeLabel}
-													<span class="nimble-damage-modifiers__type">{component.typeLabel}</span>
-												{/if}
-
-												{#if component.adjustedDamage !== component.rolledDamage}
-													<s class="nimble-damage-modifiers__rolled">{component.rolledDamage}</s>
-												{/if}
-
-												<span class="nimble-damage-modifiers__final">
-													{component.adjustedDamage}
-												</span>
-											</span>
-										{/each}
-									</div>
-
-									{#if reasons.length > 0}
-										<span class="nimble-damage-modifiers__reasons">{reasons.join(', ')}</span>
-									{/if}
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</div>
-			{/if}
-		{/if}
 	{/await}
 </section>
 
@@ -259,109 +238,70 @@
 		}
 	}
 
+	// Let a long target name ellipsize instead of pushing the damage total and
+	// badges out of the row.
+	.nimble-card__title {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+	}
+
+	.nimble-target-name {
+		min-width: 3rem;
+		overflow: hidden;
+		white-space: nowrap;
+		pointer-events: all;
+		text-overflow: ellipsis;
+	}
+
 	.nimble-target-damage {
+		flex: 0 0 auto;
 		margin-left: 0.25rem;
 		font-weight: 700;
 		color: var(--color-level-error, #7a1e1e);
 	}
 
-	.nimble-damage-modifiers {
-		margin-top: 0.5rem;
-		padding: 0.375rem 0.5rem;
-		font-size: var(--nimble-sm-text);
-		color: var(--nimble-medium-text-color);
-		background: var(--nimble-box-background-color);
-		border-radius: 4px;
+	.nimble-target-badges {
+		display: flex;
+		grid-area: badges;
+		align-self: center;
+		gap: 0.125rem;
+	}
 
-		&__heading {
-			display: flex;
-			align-items: center;
-			gap: 0.25rem;
-			width: 100%;
-			margin: 0;
-			padding: 0;
-			font-size: var(--nimble-xs-text);
-			font-weight: 700;
-			color: inherit;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			background: none;
-			border: none;
-			cursor: pointer;
-			pointer-events: all;
+	.nimble-target-badge {
+		padding: 0 0.25rem;
+		font-size: var(--nimble-xs-text);
+		font-weight: 700;
+		line-height: 1.4;
+		letter-spacing: 0.04em;
+		color: var(--nimble-light-text-color, #fff);
+		pointer-events: all;
+		border-radius: 3px;
+
+		// Immunity and vulnerability are the two that change what the GM should
+		// do next, so they get the loudest colours.
+		&[data-badge-kind='immune'] {
+			background: var(--nimble-badge-immune-color, #4a4a55);
 		}
 
-		&__count {
-			padding: 0 0.25rem;
-			font-size: var(--nimble-xs-text);
-			background: var(--nimble-card-border-color);
-			border-radius: 0.5rem;
+		&[data-badge-kind='vulnerable'] {
+			background: var(--nimble-badge-vulnerable-color, #a3421c);
 		}
 
-		&__chevron {
-			margin-left: auto;
+		&[data-badge-kind='resistant'] {
+			background: var(--nimble-badge-resistant-color, #2f5d7c);
 		}
 
-		&__list {
-			display: flex;
-			flex-direction: column;
-			gap: 0.375rem;
-			margin: 0.25rem 0 0 0;
-			padding: 0;
-			list-style: none;
-		}
-
-		&__row-header {
-			display: flex;
-			align-items: baseline;
-			gap: 0.5rem;
-		}
-
-		&__name {
-			flex: 1 1 auto;
-			min-width: 0;
-			overflow: hidden;
-			font-weight: 700;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
-
-		&__components {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 0 0.5rem;
-		}
-
-		&__component {
-			display: inline-flex;
-			align-items: baseline;
-			gap: 0.25rem;
-			white-space: nowrap;
-		}
-
-		&__rolled {
-			opacity: 0.6;
-		}
-
-		&__final,
-		&__total {
-			flex: 0 0 auto;
-			font-weight: 700;
-			color: var(--nimble-dark-text-color);
-		}
-
-		&__reasons {
-			display: block;
-			font-size: var(--nimble-xs-text);
-			font-style: italic;
+		&[data-badge-kind='reduction'] {
+			background: var(--nimble-badge-reduction-color, #4c5a3a);
 		}
 	}
 
 	.nimble-target-list {
 		--nimble-button-padding: 0;
 
-		--nimble-card-content-grid: 'img title armor button';
-		--nimble-card-column-dimensions: 1.75rem 1fr 1rem 2rem;
+		--nimble-card-content-grid: 'img title badges armor button';
+		--nimble-card-column-dimensions: 1.75rem 1fr auto 1rem 2rem;
 		--nimble-card-row-dimensions: 1.75rem;
 
 		--nimble-card-title-alignment: center;

@@ -1129,7 +1129,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 	});
 });
 
-describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
+describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();
 	});
@@ -1202,7 +1202,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
 	});
 
 	it('returns the armor-reduced total for a heavy-armor target (Fury Dice count as dice)', () => {
@@ -1213,7 +1213,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
 		// Dice = d10 5 + Fury 10 + 4 = 19; heavy halves to ceil(9.5) = 10; +5/+18 dropped.
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(10);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(10);
 	});
 
 	it('ignores armor for the preview when the damage ignores armor', () => {
@@ -1223,7 +1223,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll(), ignoreArmor: true });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
 	});
 
 	it('returns null for a miss so the target list shows no preview', () => {
@@ -1233,7 +1233,9 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll(), isMiss: true });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
 	});
 
 	it('counts a disposition-targeted damage node once when its outcome child is also surfaced', () => {
@@ -1271,7 +1273,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 			},
 		} as unknown as ChatMessage.CreateData);
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
 	});
 
 	it('returns null when the card has no applicable damage rolls', () => {
@@ -1281,7 +1283,9 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createActivationMessage();
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
 	});
 
 	it('returns null when the target token does not resolve to an actor', () => {
@@ -1289,7 +1293,9 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
 	});
 
 	it('subtracts the target damage reductions so the preview matches applied damage', () => {
@@ -1305,7 +1311,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
 		// Heavy armor total is 10 (see above); untyped reduction of 3 leaves 7.
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(7);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(7);
 	});
 
 	it('credits the banked one-shot reduction against the first damage roll only', () => {
@@ -1350,7 +1356,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		// Each roll totals 10; the 6-point bank is consumed by the first apply,
 		// so the preview must show (10 - 6) + 10 = 14 rather than 4 + 4 = 8.
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(14);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(14);
 	});
 
 	it('applies type-scoped reductions to the preview using the damage node type', () => {
@@ -1369,7 +1375,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		// createDamageMessage's damage node is slashing: only the slashing entry applies.
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(37);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(37);
 	});
 });
 
@@ -1927,7 +1933,11 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 
 		function getModifiers(message: NimbleChatMessage): string[] {
 			const breakdown = message.getDamageBreakdownForTarget('Scene.scene.Token.token');
-			return breakdown?.components.flatMap((component) => component.modifiers) ?? [];
+			return (
+				breakdown?.components.flatMap((component) =>
+					component.modifiers.map(({ label }) => label),
+				) ?? []
+			);
 		}
 
 		it('resolves each damage type separately on a multi-type attack', () => {
@@ -1948,14 +1958,14 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 					typeLabel: 'Fire',
 					rolledDamage: 10,
 					adjustedDamage: 0,
-					modifiers: ['immune to Fire (no damage)'],
+					modifiers: [{ kind: 'immune', label: 'immune to Fire (no damage)' }],
 				},
 				{
 					damageType: 'cold',
 					typeLabel: 'Cold',
 					rolledDamage: 6,
 					adjustedDamage: 3,
-					modifiers: ['resistant to Cold (half damage)'],
+					modifiers: [{ kind: 'resistant', label: 'resistant to Cold (half damage)' }],
 				},
 			]);
 			expect(breakdown?.total).toBe(3);
@@ -1978,7 +1988,6 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 				},
 			]);
 			expect(breakdown?.total).toBe(6);
-			expect(breakdown?.hasAdjustments).toBe(false);
 		});
 
 		it('reports the rolled and resolved damage per component', () => {
@@ -1994,7 +2003,6 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 				adjustedDamage: 3,
 			});
 			expect(breakdown?.total).toBe(3);
-			expect(breakdown?.hasAdjustments).toBe(true);
 		});
 
 		it('describes vulnerability against an unarmored target', () => {
@@ -2007,7 +2015,7 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 			expect(breakdown?.components[0]).toMatchObject({
 				rolledDamage: 6,
 				adjustedDamage: 12,
-				modifiers: ['vulnerable to Fire (double damage)'],
+				modifiers: [{ kind: 'vulnerable', label: 'vulnerable to Fire (double damage)' }],
 			});
 		});
 

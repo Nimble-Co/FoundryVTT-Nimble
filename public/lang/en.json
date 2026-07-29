@@ -2132,10 +2132,14 @@
 			"damagePreview": "Damage this target will take (after armor and reductions)"
 		},
 		"damageModifiers": {
-			"heading": "Damage Adjustments",
-			"total": "Total: {value}",
-			"expand": "Show damage adjustments",
-			"collapse": "Hide damage adjustments",
+			"badgeImmune": "IMM",
+			"badgeVulnerable": "VUL",
+			"badgeResistant": "RES",
+			"badgeReduction": "DR",
+			"component": "{type} {value} (rolled {rolled})",
+			"componentUnchanged": "{type} {value}",
+			"untypedComponent": "{value} (rolled {rolled})",
+			"untypedComponentUnchanged": "{value}",
 			"immune": "immune to {type} (no damage)",
 			"vulnerable": "vulnerable to {type} (ignores armor)",
 			"vulnerableUnarmored": "vulnerable to {type} (double damage)",
