@@ -274,26 +274,31 @@
 		font-weight: 700;
 		line-height: 1.4;
 		letter-spacing: 0.04em;
-		color: var(--nimble-light-text-color, #fff);
+		color: var(--nimble-damage-badge-color);
 		pointer-events: all;
+		background: var(--nimble-damage-badge-background-color);
 		border-radius: 3px;
 
-		// Immunity and vulnerability are the two that change what the GM should
-		// do next, so they get the loudest colours.
 		&[data-badge-kind='immune'] {
-			background: var(--nimble-badge-immune-color, #4a4a55);
+			--nimble-damage-badge-color: var(--nimble-damage-badge-immune-color);
+			--nimble-damage-badge-background-color: var(--nimble-damage-badge-immune-background-color);
 		}
 
 		&[data-badge-kind='vulnerable'] {
-			background: var(--nimble-badge-vulnerable-color, #a3421c);
+			--nimble-damage-badge-color: var(--nimble-damage-badge-vulnerable-color);
+			--nimble-damage-badge-background-color: var(
+				--nimble-damage-badge-vulnerable-background-color
+			);
 		}
 
 		&[data-badge-kind='resistant'] {
-			background: var(--nimble-badge-resistant-color, #2f5d7c);
+			--nimble-damage-badge-color: var(--nimble-damage-badge-resistant-color);
+			--nimble-damage-badge-background-color: var(--nimble-damage-badge-resistant-background-color);
 		}
 
 		&[data-badge-kind='reduction'] {
-			background: var(--nimble-badge-reduction-color, #4c5a3a);
+			--nimble-damage-badge-color: var(--nimble-damage-badge-reduction-color);
+			--nimble-damage-badge-background-color: var(--nimble-damage-badge-reduction-background-color);
 		}
 	}
 
