@@ -2134,6 +2134,8 @@
 		"damageModifiers": {
 			"heading": "Damage Adjustments",
 			"total": "Total: {value}",
+			"expand": "Show damage adjustments",
+			"collapse": "Hide damage adjustments",
 			"immune": "immune to {type} (no damage)",
 			"vulnerable": "vulnerable to {type} (ignores armor)",
 			"vulnerableUnarmored": "vulnerable to {type} (double damage)",

@@ -59,6 +59,13 @@
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
+
+	// The breakdown starts crowding the card past a couple of targets, so it
+	// collapses by default beyond this many.
+	const COLLAPSE_ADJUSTMENTS_THRESHOLD = 2;
+
+	// null = follow the default above; a boolean is an explicit user choice.
+	let damageAdjustmentsExpanded: boolean | null = $state(null);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
@@ -145,49 +152,83 @@
 		{#if game.user?.isGM}
 			{@const breakdownRows = tokens
 				.map((token) => ({
+					uuid: token.uuid,
 					name: token?.actor?.name || token.name,
 					breakdown: messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid),
 				}))
 				.filter((row) => row.breakdown?.hasAdjustments)}
 
 			{#if breakdownRows.length > 0}
+				{@const expanded =
+					damageAdjustmentsExpanded ?? tokens.length <= COLLAPSE_ADJUSTMENTS_THRESHOLD}
 				<div class="nimble-damage-modifiers">
-					<h4 class="nimble-damage-modifiers__heading">
+					<button
+						class="nimble-damage-modifiers__heading"
+						type="button"
+						aria-expanded={expanded}
+						data-tooltip={localize(
+							expanded ? 'NIMBLE.damageModifiers.collapse' : 'NIMBLE.damageModifiers.expand',
+						)}
+						onclick={() => (damageAdjustmentsExpanded = !expanded)}
+					>
 						<i class="fa-solid fa-shield-halved"></i>
 						{localize('NIMBLE.damageModifiers.heading')}
-					</h4>
+						<span class="nimble-damage-modifiers__count">{breakdownRows.length}</span>
+						<i
+							class="nimble-damage-modifiers__chevron fa-solid {expanded
+								? 'fa-chevron-up'
+								: 'fa-chevron-down'}"
+						></i>
+					</button>
 
-					<ul class="nimble-damage-modifiers__list">
-						{#each breakdownRows as row}
-							{@const components = row.breakdown?.components ?? []}
-							{@const reasons = [
-								...new Set(components.flatMap((component) => component.modifiers)),
-							]}
-							<li>
-								<strong>{row.name}:</strong>
+					{#if expanded}
+						<ul class="nimble-damage-modifiers__list">
+							{#each breakdownRows as row (row.uuid)}
+								{@const components = row.breakdown?.components ?? []}
+								{@const reasons = [
+									...new Set(components.flatMap((component) => component.modifiers)),
+								]}
+								<li class="nimble-damage-modifiers__row">
+									<div class="nimble-damage-modifiers__row-header">
+										<span class="nimble-damage-modifiers__name" data-tooltip={row.name}>
+											{row.name}
+										</span>
 
-								{#each components as component, index}
-									<span
-										class="nimble-damage-modifiers__component"
-										data-tooltip={component.modifiers.join(', ') || null}
-									>
-										{#if component.typeLabel}{component.typeLabel}{/if}
-										{component.rolledDamage}&rarr;{component.adjustedDamage}
-									</span>{#if index < components.length - 1},{/if}
-								{/each}
+										<span class="nimble-damage-modifiers__total">
+											{localize('NIMBLE.damageModifiers.total', {
+												value: String(row.breakdown?.total ?? 0),
+											})}
+										</span>
+									</div>
 
-								<span class="nimble-damage-modifiers__total">
-									{localize('NIMBLE.damageModifiers.total', {
-										value: String(row.breakdown?.total ?? 0),
-									})}
-								</span>
+									<div class="nimble-damage-modifiers__components">
+										{#each components as component}
+											<span
+												class="nimble-damage-modifiers__component"
+												data-tooltip={component.modifiers.join(', ') || null}
+											>
+												{#if component.typeLabel}
+													<span class="nimble-damage-modifiers__type">{component.typeLabel}</span>
+												{/if}
 
-								{#if reasons.length > 0}
-									<span class="nimble-damage-modifiers__reasons">{reasons.join(', ')}</span>
-								{/if}
-							</li>
-						{/each}
-					</ul>
+												{#if component.adjustedDamage !== component.rolledDamage}
+													<s class="nimble-damage-modifiers__rolled">{component.rolledDamage}</s>
+												{/if}
+
+												<span class="nimble-damage-modifiers__final">
+													{component.adjustedDamage}
+												</span>
+											</span>
+										{/each}
+									</div>
+
+									{#if reasons.length > 0}
+										<span class="nimble-damage-modifiers__reasons">{reasons.join(', ')}</span>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				</div>
 			{/if}
 		{/if}
@@ -233,27 +274,78 @@
 		border-radius: 4px;
 
 		&__heading {
-			margin: 0 0 0.25rem 0;
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+			width: 100%;
+			margin: 0;
+			padding: 0;
 			font-size: var(--nimble-xs-text);
 			font-weight: 700;
+			color: inherit;
 			text-transform: uppercase;
 			letter-spacing: 0.04em;
+			background: none;
+			border: none;
+			cursor: pointer;
+			pointer-events: all;
+		}
+
+		&__count {
+			padding: 0 0.25rem;
+			font-size: var(--nimble-xs-text);
+			background: var(--nimble-card-border-color);
+			border-radius: 0.5rem;
+		}
+
+		&__chevron {
+			margin-left: auto;
 		}
 
 		&__list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
-			margin: 0;
+			gap: 0.375rem;
+			margin: 0.25rem 0 0 0;
 			padding: 0;
 			list-style: none;
 		}
 
+		&__row-header {
+			display: flex;
+			align-items: baseline;
+			gap: 0.5rem;
+		}
+
+		&__name {
+			flex: 1 1 auto;
+			min-width: 0;
+			overflow: hidden;
+			font-weight: 700;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		&__components {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0 0.5rem;
+		}
+
 		&__component {
+			display: inline-flex;
+			align-items: baseline;
+			gap: 0.25rem;
 			white-space: nowrap;
 		}
 
+		&__rolled {
+			opacity: 0.6;
+		}
+
+		&__final,
 		&__total {
+			flex: 0 0 auto;
 			font-weight: 700;
 			color: var(--nimble-dark-text-color);
 		}
