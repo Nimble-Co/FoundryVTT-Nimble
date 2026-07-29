@@ -1,15 +1,19 @@
-<script>
+<script lang="ts">
 	import localize from '../../../utils/localize.js';
 	import TagGroup from '../../components/TagGroup.svelte';
 
 	function prepareDamageTypeOptions() {
-		return Object.entries(damageTypes).map(([key, value]) => ({
+		return Object.entries(damageTypes as Record<string, string>).map(([key, value]) => ({
 			label: localize(value),
 			value: key,
 		}));
 	}
 
-	async function toggleDamageTypeEntry(field, current, value) {
+	async function toggleDamageTypeEntry(
+		field: string,
+		current: string[],
+		value: string,
+	): Promise<void> {
 		const next = current.includes(value)
 			? current.filter((entry) => entry !== value)
 			: [...current, value];
@@ -33,7 +37,7 @@
 		options={prepareDamageTypeOptions()}
 		selectedOptions={attributes.damageResistances}
 		toggleOption={(value) =>
-			toggleDamageTypeEntry('damageResistances', attributes.damageResistances, value)}
+			toggleDamageTypeEntry('damageResistances', attributes.damageResistances, String(value))}
 	/>
 </div>
 
@@ -46,7 +50,7 @@
 		options={prepareDamageTypeOptions()}
 		selectedOptions={attributes.damageImmunities}
 		toggleOption={(value) =>
-			toggleDamageTypeEntry('damageImmunities', attributes.damageImmunities, value)}
+			toggleDamageTypeEntry('damageImmunities', attributes.damageImmunities, String(value))}
 	/>
 </div>
 
@@ -59,7 +63,11 @@
 		options={prepareDamageTypeOptions()}
 		selectedOptions={attributes.damageVulnerabilities}
 		toggleOption={(value) =>
-			toggleDamageTypeEntry('damageVulnerabilities', attributes.damageVulnerabilities, value)}
+			toggleDamageTypeEntry(
+				'damageVulnerabilities',
+				attributes.damageVulnerabilities,
+				String(value),
+			)}
 	/>
 
 	<small class="nimble-field__hint">

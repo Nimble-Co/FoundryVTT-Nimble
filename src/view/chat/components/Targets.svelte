@@ -9,6 +9,16 @@
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
 
+	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
+
+	const badgeOrder: DamageModifierKind[] = ['immune', 'vulnerable', 'resistant', 'reduction'];
+	const badgeLabels: Record<DamageModifierKind, string> = {
+		immune: 'NIMBLE.damageModifiers.badgeImmune',
+		vulnerable: 'NIMBLE.damageModifiers.badgeVulnerable',
+		resistant: 'NIMBLE.damageModifiers.badgeResistant',
+		reduction: 'NIMBLE.damageModifiers.badgeReduction',
+	};
+
 	function addSelectedTokensAsTargets() {
 		messageDocument.addSelectedTokensAsTargets();
 	}
@@ -86,8 +96,8 @@
 		if (components.length < 1) return localize('NIMBLE.chatTargets.damagePreview');
 
 		return components
-			.map(({ typeLabel, rolledDamage, adjustedDamage }) => {
-				const unchanged = adjustedDamage === rolledDamage;
+			.map(({ typeLabel, damageBeforeDefenses, adjustedDamage }) => {
+				const unchanged = adjustedDamage === damageBeforeDefenses;
 				const key = typeLabel
 					? `NIMBLE.damageModifiers.${unchanged ? 'componentUnchanged' : 'component'}`
 					: `NIMBLE.damageModifiers.${unchanged ? 'untypedComponentUnchanged' : 'untypedComponent'}`;
@@ -95,21 +105,11 @@
 				return localize(key, {
 					type: typeLabel ?? '',
 					value: String(adjustedDamage),
-					rolled: String(rolledDamage),
+					before: String(damageBeforeDefenses),
 				});
 			})
 			.join(', ');
 	}
-
-	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
-
-	const badgeOrder: DamageModifierKind[] = ['immune', 'vulnerable', 'resistant', 'reduction'];
-	const badgeLabels: Record<DamageModifierKind, string> = {
-		immune: 'NIMBLE.damageModifiers.badgeImmune',
-		vulnerable: 'NIMBLE.damageModifiers.badgeVulnerable',
-		resistant: 'NIMBLE.damageModifiers.badgeResistant',
-		reduction: 'NIMBLE.damageModifiers.badgeReduction',
-	};
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);

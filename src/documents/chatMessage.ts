@@ -87,7 +87,12 @@ export interface TargetDamageComponent {
 	damageType?: string;
 	/** Localized damage type name, or null for untyped damage */
 	typeLabel: string | null;
-	rolledDamage: number;
+	/**
+	 * What this component would deal before the target's defenses — the rolled
+	 * total already scaled by the card's outcome, so a half-damage outcome is
+	 * halved here. Not the raw roll.
+	 */
+	damageBeforeDefenses: number;
 	adjustedDamage: number;
 	modifiers: DamageModifier[];
 }
@@ -105,6 +110,14 @@ interface DamageApplicationPlan {
 	bankedReductionActors: HpMutableActor[];
 }
 
+/**
+ * Only monsters carry the medium/heavy armor that reduces incoming damage, and
+ * they store it as a string. A hero's `attributes.armor` is a schema object
+ * whose value feeds the Defend reaction — "Armor represents your hero's ability
+ * to dodge or block damage when you use the Defend reaction" — so it never
+ * reduces damage on its own and always reports 'none' here. Callers must treat
+ * that as a deliberate answer for heroes, not an absent one.
+ */
 function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'heavy' {
 	const armor = foundry.utils.getProperty(actor, 'system.attributes.armor');
 	if (armor === 'medium' || armor === 'heavy') return armor;
@@ -245,16 +258,17 @@ function calculateArmorAdjustedDamage(params: {
 
 	// Vulnerability is defined in terms of armor rather than as a multiplier:
 	// "that kind of damage ignores its armor; if unarmored, they take double the
-	// damage instead" (Core Rules glossary), echoing "crits and damage
-	// vulnerabilities ignore monster armor". The incoming value has already been
-	// scaled by the outcome, so doubling it here keeps half-damage outcomes
-	// halved before the vulnerability applies.
+	// damage instead" (Core Rules glossary), and the GM guide scopes the first
+	// half to monsters — "damage type vulnerabilities ignore monster armor".
+	// Heroes therefore always take the doubling branch: their Armor is a Defend
+	// value, so there is no armor for the damage to ignore. The incoming value
+	// has already been scaled by the outcome, so doubling it here keeps
+	// half-damage outcomes halved before the vulnerability applies.
 	const isVulnerable = actorIsVulnerableToDamage(params.actor, damageOptions?.damageType);
 
 	if (armorType === 'none') return isVulnerable ? params.damage * 2 : params.damage;
-	if (isVulnerable) return params.damage;
-
 	if (damageOptions?.ignoreArmor === true) return params.damage;
+	if (isVulnerable) return params.damage;
 	const serializedRolls = getSerializedDamageRolls(damageOptions);
 	const applyOutcomeHalfDamage = damageOptions?.outcome === 'halfDamage';
 	const applyHeavyArmor = armorType === 'heavy';
@@ -390,9 +404,10 @@ function describeBankedReduction(banked: { source: string | null; value: number 
  */
 function describeDamageModifiers(
 	actor: Actor.Implementation,
-	damageType?: string,
+	options?: DamageApplyOptions,
 ): DamageModifier[] {
 	const modifiers: DamageModifier[] = [];
+	const damageType = options?.damageType;
 	const typeLabel = damageType ? getDamageTypeLabel(damageType) : '';
 
 	if (actorIsImmuneToDamage(actor, damageType)) {
@@ -403,13 +418,18 @@ function describeDamageModifiers(
 	}
 
 	if (actorIsVulnerableToDamage(actor, damageType)) {
-		modifiers.push({
-			kind: 'vulnerable',
-			label:
-				getActorArmorType(actor) === 'none'
+		const unarmored = getActorArmorType(actor) === 'none';
+
+		// Against an armored target all vulnerability does is bypass the armor, so
+		// a card that already ignores armor gets no badge — nothing was changed.
+		if (unarmored || options?.ignoreArmor !== true) {
+			modifiers.push({
+				kind: 'vulnerable',
+				label: unarmored
 					? localize('NIMBLE.damageModifiers.vulnerableUnarmored', { type: typeLabel })
 					: localize('NIMBLE.damageModifiers.vulnerable', { type: typeLabel }),
-		});
+			});
+		}
 	}
 
 	const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
@@ -934,13 +954,13 @@ class NimbleChatMessage extends ChatMessage {
 
 			total += adjustedDamage;
 
-			const modifiers = describeDamageModifiers(actor, options.damageType);
+			const modifiers = describeDamageModifiers(actor, options);
 			if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
 
 			components.push({
 				damageType: options.damageType,
 				typeLabel: options.damageType ? getDamageTypeLabel(options.damageType) : null,
-				rolledDamage: Math.max(0, Math.floor(value)),
+				damageBeforeDefenses: Math.max(0, Math.floor(value)),
 				adjustedDamage,
 				modifiers,
 			});
