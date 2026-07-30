@@ -11,7 +11,7 @@ concurrency:
 
 env:
   node_version: 22
-  dev_tag: latest-dev
+  dev_tag: latest-dev-1
 
 jobs:
   build:
