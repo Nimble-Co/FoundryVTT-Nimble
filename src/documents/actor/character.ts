@@ -25,6 +25,7 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
+import DamageDefensesConfig from '../../view/dialogs/components/DamageDefensesConfig.svelte';
 import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialog.svelte';
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
@@ -528,6 +529,18 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Armor Proficiencies`,
 		);
 		await this.#dialogs.configureArmorProficiencies.render(true);
+	}
+
+	async configureDamageDefenses() {
+		this.#dialogs.configureDamageDefenses ??= new GenericDialog(
+			`${this.name}: Configure Damage Defenses`,
+			DamageDefensesConfig,
+			{ actor: this },
+			{ icon: 'fa-solid fa-shield-halved' },
+		);
+
+		this.#dialogs.configureDamageDefenses.setTitle(`${this.name}: Configure Damage Defenses`);
+		await this.#dialogs.configureDamageDefenses.render(true);
 	}
 
 	async configureLanguageProficiencies() {
