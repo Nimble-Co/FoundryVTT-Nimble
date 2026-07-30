@@ -2147,7 +2147,7 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 			});
 		});
 
-		it('describes immunity, resistance, labeled reductions, and banked reduction', () => {
+		it('describes immunity, resistance, and labeled reductions', () => {
 			const actor = createResistanceActor({
 				damageImmunities: ['fire'],
 				damageResistances: ['fire'],
@@ -2157,6 +2157,8 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 					{ value: 2, damageTypes: [] },
 				],
 			});
+			// The bank is not credited here: immunity zeroes the component, so
+			// nothing consumes the bank and it survives for a later hit.
 			withBankedReduction(actor, 6);
 			globals().fromUuidSync.mockReturnValue({ actor });
 
@@ -2167,6 +2169,14 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 				'Frost Ward (-3)',
 				'damage reduction (-2)',
 			]);
+		});
+
+		it('describes an unsourced banked reduction on the component that consumes it', () => {
+			const actor = createResistanceActor({});
+			withBankedReduction(actor, 6);
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual(['damage reduction (-6)']);
 		});
 
 		it('names the banking feature when the banked effect carries a source', () => {
