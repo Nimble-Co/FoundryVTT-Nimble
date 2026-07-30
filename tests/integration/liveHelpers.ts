@@ -77,6 +77,12 @@ interface PlaceTokenSpec {
 	gx: number;
 	gy: number;
 	disposition: number;
+	/**
+	 * Raw token creation defaults to `actorLink: false` (prototype defaults only
+	 * apply when dragging from the sidebar), so document writes hit a synthetic
+	 * token actor. Pass true when the test asserts against the base actor.
+	 */
+	actorLink?: boolean;
 }
 
 /** Place a token on the scene and wait for its canvas placeable to exist. */
@@ -88,6 +94,7 @@ async function placeToken(scene: Scene, spec: PlaceTokenSpec): Promise<TokenDocu
 			x: spec.gx * GRID_SIZE,
 			y: spec.gy * GRID_SIZE,
 			disposition: spec.disposition,
+			actorLink: spec.actorLink ?? false,
 		} as TokenDocument.CreateData,
 	]);
 	await waitFor(
