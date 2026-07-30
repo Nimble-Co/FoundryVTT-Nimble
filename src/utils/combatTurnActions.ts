@@ -2,6 +2,7 @@ import { isActionTrackingAutomationEnabled } from '../settings/automationSetting
 import { getActorDyingActionLimit, isActorDying } from './actorHealthState.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import { isCombatantDead } from './isCombatantDead.js';
+import { queueCombatantMutationWithFreshDocument } from './queueCombatantMutationWithFreshDocument.js';
 
 export const COMBATANT_ACTIONS_CURRENT_PATH = 'system.actions.base.current';
 export const COMBATANT_ACTIONS_MAX_PATH = 'system.actions.base.max';
@@ -390,13 +391,19 @@ export async function consumeCombatantAction(params: {
 	if (currentActions < 1) return 0;
 
 	const cost = Number(params.actionCost ?? 1);
-	const normalizedCost = Number.isFinite(cost) && cost >= 1 ? cost : 1;
+	const normalizedCost = Number.isFinite(cost) && cost >= 0 ? cost : 1;
+	if (normalizedCost === 0) return currentActions;
+
 	const nextActions = Math.max(0, currentActions - normalizedCost);
-	const actionUpdate: Record<string, unknown> = {
-		_id: params.combatantId,
-		[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
-	};
-	await params.combat.updateEmbeddedDocuments('Combatant', [actionUpdate]);
+	await queueCombatantMutationWithFreshDocument({
+		combat: params.combat,
+		combatantId: params.combatantId,
+		mutation: async (currentCombatant) => {
+			await currentCombatant.update({
+				[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
+			} as Record<string, unknown>);
+		},
+	});
 	return nextActions;
 }
 

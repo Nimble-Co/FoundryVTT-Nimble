@@ -172,6 +172,7 @@
 		},
 		"activationCosts": {
 			"action": "Action",
+			"free": "Free",
 			"minute": "Minute",
 			"hour": "Hour",
 			"none": "None",

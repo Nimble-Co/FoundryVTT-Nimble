@@ -400,17 +400,15 @@ describe('consumeCombatantAction', () => {
 			actionsMax: 3,
 		});
 		const combatants = createCombatantsCollectionFixture([combatant]);
-		const updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 		const combat = {
 			id: 'combat-action',
 			combatants,
-			updateEmbeddedDocuments,
 		} as unknown as Combat;
-		return { combat, combatant, updateEmbeddedDocuments };
+		return { combat, combatant };
 	}
 
 	it('deducts 2 actions when actionCost is 2', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -419,13 +417,13 @@ describe('consumeCombatantAction', () => {
 		});
 
 		expect(result).toBe(1);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 1 },
-		]);
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 1,
+		});
 	});
 
 	it('defaults to 1 action when actionCost is undefined', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -433,13 +431,13 @@ describe('consumeCombatantAction', () => {
 		});
 
 		expect(result).toBe(2);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 2 },
-		]);
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 2,
+		});
 	});
 
-	it('normalizes actionCost of 0 to 1', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+	it('deducts nothing when actionCost is 0', async () => {
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -447,14 +445,12 @@ describe('consumeCombatantAction', () => {
 			actionCost: 0,
 		});
 
-		expect(result).toBe(2);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 2 },
-		]);
+		expect(result).toBe(3);
+		expect(combatant.update).not.toHaveBeenCalled();
 	});
 
 	it('normalizes negative actionCost to 1', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -463,9 +459,9 @@ describe('consumeCombatantAction', () => {
 		});
 
 		expect(result).toBe(2);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 2 },
-		]);
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 2,
+		});
 	});
 
 	describe('action-tracking automation gate', () => {

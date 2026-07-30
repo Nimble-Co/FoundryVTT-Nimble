@@ -21,7 +21,7 @@ export const activation = () => ({
 				required: true,
 				initial: 1,
 				nullable: false,
-				min: 1,
+				min: 0,
 				integer: true,
 			}),
 			type: new fields.StringField({

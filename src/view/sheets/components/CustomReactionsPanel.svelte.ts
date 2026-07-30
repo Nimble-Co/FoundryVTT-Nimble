@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import type { NimbleBaseItem } from '../../../documents/item/base.svelte.js';
+import localize from '../../../utils/localize.js';
 
 /** A prepared embedded item always has a non-null `_id`. */
 export type ReactionItem = NimbleBaseItem & { _id: string };
@@ -38,13 +39,14 @@ export function createCustomReactionsPanelState(getActor: () => NimbleCharacter)
 
 	/**
 	 * The action cost label, shown only when the reaction costs more than a single
-	 * action (per the issue: "Action cost, if more than one").
+	 * action (per the issue: "Action cost, if more than one") or is explicitly free.
 	 */
 	function getActionCost(item: Item): string | null {
 		const cost = getActivation(item);
 		if (!cost || cost.type !== 'action') return null;
 
 		const quantity = cost.quantity ?? 1;
+		if (quantity === 0) return localize('NIMBLE.activationCosts.free');
 		if (quantity <= 1) return null;
 
 		return `${quantity} ${activationCostTypesPlural.action ?? activationCostTypes.action}`;
