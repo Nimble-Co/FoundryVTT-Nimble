@@ -1129,7 +1129,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 	});
 });
 
-describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
+describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();
 	});
@@ -1202,7 +1202,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
 	});
 
 	it('returns the armor-reduced total for a heavy-armor target (Fury Dice count as dice)', () => {
@@ -1213,7 +1213,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
 		// Dice = d10 5 + Fury 10 + 4 = 19; heavy halves to ceil(9.5) = 10; +5/+18 dropped.
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(10);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(10);
 	});
 
 	it('ignores armor for the preview when the damage ignores armor', () => {
@@ -1223,7 +1223,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll(), ignoreArmor: true });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
 	});
 
 	it('returns null for a miss so the target list shows no preview', () => {
@@ -1233,7 +1233,9 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll(), isMiss: true });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
 	});
 
 	it('counts a disposition-targeted damage node once when its outcome child is also surfaced', () => {
@@ -1271,7 +1273,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 			},
 		} as unknown as ChatMessage.CreateData);
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(42);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
 	});
 
 	it('returns null when the card has no applicable damage rolls', () => {
@@ -1281,7 +1283,9 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createActivationMessage();
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
 	});
 
 	it('returns null when the target token does not resolve to an actor', () => {
@@ -1289,7 +1293,9 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBeNull();
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
 	});
 
 	it('subtracts the target damage reductions so the preview matches applied damage', () => {
@@ -1305,7 +1311,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
 		// Heavy armor total is 10 (see above); untyped reduction of 3 leaves 7.
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(7);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(7);
 	});
 
 	it('credits the banked one-shot reduction against the first damage roll only', () => {
@@ -1350,7 +1356,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 
 		// Each roll totals 10; the 6-point bank is consumed by the first apply,
 		// so the preview must show (10 - 6) + 10 = 14 rather than 4 + 4 = 8.
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(14);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(14);
 	});
 
 	it('applies type-scoped reductions to the preview using the damage node type', () => {
@@ -1369,7 +1375,7 @@ describe('NimbleChatMessage.getDamagePreviewForTarget', () => {
 		// createDamageMessage's damage node is slashing: only the slashing entry applies.
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
-		expect(message.getDamagePreviewForTarget('Scene.scene.Token.token')).toBe(37);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(37);
 	});
 });
 
@@ -1615,27 +1621,57 @@ describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 	});
 });
 
-describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
+describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerability', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();
 		globals().game.user.isGM = true;
 	});
 
 	function createResistanceActor(config: {
+		armor?: 'none' | 'medium' | 'heavy';
 		damageReductions?: object[];
 		damageResistances?: string[];
 		damageImmunities?: string[];
+		damageVulnerabilities?: string[];
 	}) {
 		return {
 			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
-					armor: 'none',
+					armor: config.armor ?? 'none',
 					hp: { value: 10, temp: 0, max: 10 },
 					damageResistances: config.damageResistances ?? [],
 					damageImmunities: config.damageImmunities ?? [],
+					damageVulnerabilities: config.damageVulnerabilities ?? [],
 				},
 				damageReductions: config.damageReductions ?? [],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+	}
+
+	/**
+	 * A hero's `attributes.armor` is a schema object feeding the Defend reaction,
+	 * not the monster armor string. Heroes are therefore unarmored as far as the
+	 * damage pipeline is concerned.
+	 */
+	function createCharacterActor(config: {
+		damageResistances?: string[];
+		damageImmunities?: string[];
+		damageVulnerabilities?: string[];
+	}) {
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			type: 'character',
+			system: {
+				attributes: {
+					armor: { baseValue: '@dexterity', components: [], hint: '', value: 4 },
+					hp: { value: 10, temp: 0, max: 10 },
+					damageResistances: config.damageResistances ?? [],
+					damageImmunities: config.damageImmunities ?? [],
+					damageVulnerabilities: config.damageVulnerabilities ?? [],
+				},
+				damageReductions: [],
 			},
 			update: vi.fn().mockResolvedValue(undefined),
 		};
@@ -1740,6 +1776,135 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 		expect(actor.applyDamage).toHaveBeenCalledWith(10);
 	});
 
+	it('doubles damage against an unarmored actor vulnerable to the damage type', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(20);
+	});
+
+	it('doubles the already-halved damage on a halfDamage outcome', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(5, { outcome: 'halfDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('ignores heavy armor instead of doubling when the vulnerable target is armored', async () => {
+		const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		// Heavy armor would halve the dice and drop the +2; vulnerability bypasses both.
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('ignores medium armor when the vulnerable target is armored', async () => {
+		const actor = createResistanceActor({ armor: 'medium', damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		// Medium armor would drop the +2 modifier; vulnerability bypasses it.
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('doubles damage against a vulnerable character, whose Armor value is a Defend stat', async () => {
+		const actor = createCharacterActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		// The schema-object armor must not read as medium/heavy monster armor, so
+		// the hero takes the unarmored doubling rather than an armor bypass.
+		expect(actor.applyDamage).toHaveBeenCalledWith(16);
+	});
+
+	it('halves damage against a resistant character without touching its Armor value', async () => {
+		const actor = createCharacterActor({ damageResistances: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+	});
+
+	it('still doubles damage against an unarmored vulnerable target on an armor-ignoring card', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, {
+			outcome: 'fullDamage',
+			damageType: 'fire',
+			ignoreArmor: true,
+		});
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(20);
+	});
+
+	it('does not stack vulnerability onto an armor-ignoring card against an armored target', async () => {
+		const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, {
+			outcome: 'fullDamage',
+			damageType: 'fire',
+			ignoreArmor: true,
+			roll,
+		});
+
+		// The card already bypasses armor, so vulnerability adds nothing.
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('does not apply vulnerability when the damage type is unknown or different', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'cold' });
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 10);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+	});
+
+	it('zeroes damage when the target is both immune and vulnerable to the type', async () => {
+		const actor = createResistanceActor({
+			damageImmunities: ['fire'],
+			damageVulnerabilities: ['fire'],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor, name: 'Cinder Elemental' });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
 	it('does not consume a banked reduction when immunity already zeroes the hit', async () => {
 		const actor = createResistanceActor({ damageImmunities: ['fire'] });
 		const deleteEffects = withBankedReduction(actor, 6);
@@ -1752,8 +1917,11 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 		expect(deleteEffects).not.toHaveBeenCalled();
 	});
 
-	describe('getDamageModifiersForTarget', () => {
-		function createModifierMessage(damageType = 'fire') {
+	describe('getDamageBreakdownForTarget', () => {
+		function createModifierMessage(
+			damageType = 'fire',
+			options: { ignoreArmor?: boolean; outcome?: string } = {},
+		) {
 			return new NimbleChatMessage({
 				type: 'spell',
 				system: {
@@ -1767,7 +1935,7 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 								type: 'damage',
 								formula: '1d6',
 								damageType,
-								ignoreArmor: false,
+								ignoreArmor: options.ignoreArmor ?? false,
 								canCrit: true,
 								canMiss: true,
 								roll: {
@@ -1791,6 +1959,7 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 										{
 											id: 'dmg-hit',
 											type: 'damageOutcome',
+											outcome: options.outcome ?? 'fullDamage',
 											parentNode: 'dmg',
 											parentContext: 'hit',
 										},
@@ -1803,13 +1972,179 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 			} as unknown as ChatMessage.CreateData);
 		}
 
+		function createMultiTypeMessage(components: { damageType: string; total: number }[]) {
+			return new NimbleChatMessage({
+				type: 'spell',
+				system: {
+					targets: ['Scene.scene.Token.token'],
+					isCritical: false,
+					isMiss: false,
+					activation: {
+						effects: components.map(({ damageType, total }) => ({
+							id: `dmg-${damageType}`,
+							type: 'damage',
+							formula: `${total}`,
+							damageType,
+							ignoreArmor: false,
+							canCrit: true,
+							canMiss: true,
+							roll: {
+								class: 'DamageRoll',
+								formula: `${total}`,
+								total,
+								isCritical: false,
+								excludedPrimaryDieValue: 0,
+								terms: [
+									{
+										number: 1,
+										faces: total,
+										results: [{ result: total, active: true, discarded: false }],
+									},
+								],
+							},
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{
+										id: `dmg-${damageType}-hit`,
+										type: 'damageOutcome',
+										parentNode: `dmg-${damageType}`,
+										parentContext: 'hit',
+									},
+								],
+							},
+						})),
+					},
+				},
+			} as unknown as ChatMessage.CreateData);
+		}
+
+		function getModifiers(message: NimbleChatMessage): string[] {
+			const breakdown = message.getDamageBreakdownForTarget('Scene.scene.Token.token');
+			return (
+				breakdown?.components.flatMap((component) =>
+					component.modifiers.map(({ label }) => label),
+				) ?? []
+			);
+		}
+
+		it('resolves each damage type separately on a multi-type attack', () => {
+			const actor = createResistanceActor({
+				damageImmunities: ['fire'],
+				damageResistances: ['cold'],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown = createMultiTypeMessage([
+				{ damageType: 'fire', total: 10 },
+				{ damageType: 'cold', total: 6 },
+			]).getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components).toEqual([
+				{
+					damageType: 'fire',
+					typeLabel: 'Fire',
+					damageBeforeDefenses: 10,
+					adjustedDamage: 0,
+					modifiers: [{ kind: 'immune', label: 'immune to Fire (no damage)' }],
+				},
+				{
+					damageType: 'cold',
+					typeLabel: 'Cold',
+					damageBeforeDefenses: 6,
+					adjustedDamage: 3,
+					modifiers: [{ kind: 'resistant', label: 'resistant to Cold (half damage)' }],
+				},
+			]);
+			expect(breakdown?.total).toBe(3);
+		});
+
 		it('returns nothing for a target with no applicable modifiers', () => {
 			const actor = createResistanceActor({});
 			globals().fromUuidSync.mockReturnValue({ actor });
 
-			expect(
-				createModifierMessage().getDamageModifiersForTarget('Scene.scene.Token.token'),
-			).toEqual([]);
+			const breakdown =
+				createModifierMessage().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components).toEqual([
+				{
+					damageType: 'fire',
+					typeLabel: 'Fire',
+					damageBeforeDefenses: 6,
+					adjustedDamage: 6,
+					modifiers: [],
+				},
+			]);
+			expect(breakdown?.total).toBe(6);
+		});
+
+		it('reports the rolled and resolved damage per component', () => {
+			const actor = createResistanceActor({ damageResistances: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown =
+				createModifierMessage().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components[0]).toMatchObject({
+				typeLabel: 'Fire',
+				damageBeforeDefenses: 6,
+				adjustedDamage: 3,
+			});
+			expect(breakdown?.total).toBe(3);
+		});
+
+		it('describes vulnerability against an unarmored target', () => {
+			const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown =
+				createModifierMessage().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components[0]).toMatchObject({
+				damageBeforeDefenses: 6,
+				adjustedDamage: 12,
+				modifiers: [{ kind: 'vulnerable', label: 'vulnerable to Fire (double damage)' }],
+			});
+		});
+
+		it('describes vulnerability as armor-bypassing against an armored target', () => {
+			const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual(['vulnerable to Fire (ignores armor)']);
+		});
+
+		it('omits the vulnerability modifier when the card already ignores armor', () => {
+			const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			// Vulnerability changed nothing here, so it should not be credited.
+			expect(getModifiers(createModifierMessage('fire', { ignoreArmor: true }))).toEqual([]);
+		});
+
+		it('still credits vulnerability on an armor-ignoring card when the target is unarmored', () => {
+			const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage('fire', { ignoreArmor: true }))).toEqual([
+				'vulnerable to Fire (double damage)',
+			]);
+		});
+
+		it('reports damage before defenses after the outcome has already scaled it', () => {
+			const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown = createModifierMessage('fire', {
+				outcome: 'halfDamage',
+			}).getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			// The 6-point roll halves to 3 before defenses, then vulnerability doubles it.
+			expect(breakdown?.components[0]).toMatchObject({
+				damageBeforeDefenses: 3,
+				adjustedDamage: 6,
+			});
 		});
 
 		it('describes immunity, resistance, labeled reductions, and banked reduction', () => {
@@ -1825,16 +2160,12 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 			withBankedReduction(actor, 6);
 			globals().fromUuidSync.mockReturnValue({ actor });
 
-			const modifiers =
-				createModifierMessage().getDamageModifiersForTarget('Scene.scene.Token.token');
-
-			expect(modifiers).toEqual([
+			expect(getModifiers(createModifierMessage())).toEqual([
 				'immune to Fire (no damage)',
 				'resistant to Fire (half damage)',
 				'Stone Skin (half damage)',
 				'Frost Ward (-3)',
 				'damage reduction (-2)',
-				'damage reduction (-6)',
 			]);
 		});
 
@@ -1855,10 +2186,7 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 			];
 			globals().fromUuidSync.mockReturnValue({ actor });
 
-			const modifiers =
-				createModifierMessage().getDamageModifiersForTarget('Scene.scene.Token.token');
-
-			expect(modifiers).toEqual(['That all you got?! (-8)']);
+			expect(getModifiers(createModifierMessage())).toEqual(['That all you got?! (-8)']);
 		});
 
 		it('excludes reductions scoped to damage types the card does not deal', () => {
@@ -1868,9 +2196,7 @@ describe('NimbleChatMessage.applyDamage — resistance and immunity', () => {
 			});
 			globals().fromUuidSync.mockReturnValue({ actor });
 
-			expect(
-				createModifierMessage('fire').getDamageModifiersForTarget('Scene.scene.Token.token'),
-			).toEqual([]);
+			expect(getModifiers(createModifierMessage('fire'))).toEqual([]);
 		});
 	});
 });

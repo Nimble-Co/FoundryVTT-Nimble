@@ -1473,6 +1473,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `getActorWoundsValueAndMax()` | `src/utils/isCombatantDead.ts` | Get an actor's wounds value and max |
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |
 | `getRollFormula()` | `src/utils/getRollFormula.ts` | Build roll formula strings |
+| `getDamageTypeLabel()` | `src/utils/getDamageTypeLabel.ts` | Localized display name for a damage type key, falling back to the key itself |
 | `arraysAreEqual()` | `src/utils/arraysAreEqual.ts` | Compare two arrays for equality |
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |
 | `isValidDiceModifier()` | `src/utils/isValidDiceModifier.ts` | Validate dice modifier strings |

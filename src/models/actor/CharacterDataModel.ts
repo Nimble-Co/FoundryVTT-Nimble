@@ -79,6 +79,20 @@ const characterSchema = () => ({
 			}),
 			{ required: true, nullable: false, initial: () => [] },
 		),
+		// Damage type defenses, matching the shape monsters already use so the
+		// damage pipeline can read them off any actor without branching on type.
+		damageResistances: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false }),
+			{ required: true, nullable: false, initial: () => [] },
+		),
+		damageVulnerabilities: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false }),
+			{ required: true, nullable: false, initial: () => [] },
+		),
+		damageImmunities: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false }),
+			{ required: true, nullable: false, initial: () => [] },
+		),
 		// Effective action cap while Dying. Defaults to the engine baseline and is
 		// raised in-place during data prep by the `dyingActionLimit` rule (e.g. the
 		// Berserker's Enduring Rage). Read via `getActorDyingActionLimit`.

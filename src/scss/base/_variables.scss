@@ -69,6 +69,16 @@
 	--nimble-roll-failure-background-color: hsl(0, 66%, 83%);
 	--nimble-roll-failure-color: hsl(1, 100%, 33%);
 
+	/** DAMAGE DEFENSE BADGES **/
+	--nimble-damage-badge-immune-background-color: hsl(293, 12%, 82%);
+	--nimble-damage-badge-immune-color: hsl(293, 25%, 25%);
+	--nimble-damage-badge-vulnerable-background-color: hsl(14, 72%, 82%);
+	--nimble-damage-badge-vulnerable-color: hsl(14, 80%, 28%);
+	--nimble-damage-badge-resistant-background-color: hsl(210, 55%, 84%);
+	--nimble-damage-badge-resistant-color: hsl(210, 75%, 26%);
+	--nimble-damage-badge-reduction-background-color: hsl(105, 22%, 80%);
+	--nimble-damage-badge-reduction-color: hsl(109, 60%, 20%);
+
 	--nimble-condition-hud-disabled-color: hsl(130, 42%, 44%);
 	--nimble-condition-hud-selected-color: hsl(130, 60%, 36%);
 	--nimble-condition-hud-clear-all-color: hsl(0, 58%, 35%);
