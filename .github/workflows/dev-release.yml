@@ -84,6 +84,11 @@ jobs:
         MANIFEST_URL: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/system.json
       run: node ./build/generate-dev-changelog.mjs
 
+    - name: Move dev tag to current commit
+      run: |
+        git tag -f "${{ env.dev_tag }}" "${{ github.sha }}"
+        git push -f origin "refs/tags/${{ env.dev_tag }}"
+
     - name: Update Rolling Dev Release
       uses: ncipollo/release-action@v1
       with:
