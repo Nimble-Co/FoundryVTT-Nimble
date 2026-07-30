@@ -2,6 +2,8 @@
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
+	import getDamageTypeLabel from '#utils/getDamageTypeLabel.js';
+	import localize from '#utils/localize.js';
 	import sortItems from '#utils/sortItems.js';
 	import { SYSTEM_ID } from '#system';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
@@ -359,10 +361,6 @@
 
 	let damageDefenses = $derived.by(() => {
 		const actorAttributes = actor.reactive.system.attributes;
-		const damageTypeLabel = (type) => {
-			const key = CONFIG.NIMBLE.damageTypes[type];
-			return key ? game.i18n.localize(key) : type;
-		};
 
 		return [
 			{ label: 'NIMBLE.npcDefenses.resistant', types: actorAttributes.damageResistances ?? [] },
@@ -374,8 +372,8 @@
 		]
 			.filter((group) => group.types.length > 0)
 			.map((group) => ({
-				label: game.i18n.localize(group.label),
-				types: group.types.map(damageTypeLabel).join(', '),
+				label: localize(group.label),
+				types: group.types.map(getDamageTypeLabel).join(', '),
 			}));
 	});
 

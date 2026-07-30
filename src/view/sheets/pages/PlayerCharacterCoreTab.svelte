@@ -7,6 +7,7 @@
 	import { createSubscriber } from 'svelte/reactivity';
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import { registerCombatStateHooks } from '../../../utils/combatState.js';
+	import getDamageTypeLabel from '../../../utils/getDamageTypeLabel.js';
 	import getLanguageName from '../../../utils/getLanguageName.js';
 	import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 	import localize from '../../../utils/localize.js';
@@ -35,11 +36,6 @@
 		damageImmunities?: string[];
 		damageVulnerabilities?: string[];
 	}) {
-		const damageTypeLabel = (type: string) => {
-			const key = (CONFIG.NIMBLE.damageTypes as Record<string, string>)[type];
-			return key ? localize(key) : type;
-		};
-
 		return [
 			{ label: 'NIMBLE.npcDefenses.resistant', types: attributes.damageResistances ?? [] },
 			{ label: 'NIMBLE.npcDefenses.immune', types: attributes.damageImmunities ?? [] },
@@ -48,7 +44,7 @@
 			.filter((group) => group.types.length > 0)
 			.map((group) => ({
 				label: localize(group.label),
-				types: group.types.map(damageTypeLabel).join(', '),
+				types: group.types.map(getDamageTypeLabel).join(', '),
 			}));
 	}
 

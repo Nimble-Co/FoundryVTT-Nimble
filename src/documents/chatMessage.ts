@@ -3,6 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -375,12 +376,6 @@ function actorIsVulnerableToDamage(actor: Actor.Implementation, damageType?: str
 	return (
 		Array.isArray(vulnerabilities) && Boolean(damageType && vulnerabilities.includes(damageType))
 	);
-}
-
-/** Localized damage type name, falling back to the raw key for unknown types. */
-function getDamageTypeLabel(damageType: string): string {
-	const key = (CONFIG.NIMBLE.damageTypes as Record<string, string>)[damageType];
-	return key ? localize(key) : damageType;
 }
 
 function describeBankedReduction(banked: { source: string | null; value: number }): DamageModifier {

@@ -261,6 +261,14 @@
 		color: var(--color-level-error, #7a1e1e);
 	}
 
+	// The armor icon arrives through {@html}, so it needs a global selector to be
+	// styled at all — and it needs pinning: unplaced, it auto-flows into the first
+	// free cell, which is the badges column on any row without badges.
+	:global(.nimble-armor-icon) {
+		grid-area: armor;
+		align-self: center;
+	}
+
 	.nimble-target-badges {
 		display: flex;
 		grid-area: badges;
