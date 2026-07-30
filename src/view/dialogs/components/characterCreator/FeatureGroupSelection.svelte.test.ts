@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
 // @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import FeatureGroupSelection from './FeatureGroupSelection.svelte';
 
@@ -14,6 +15,13 @@ function createFeatureItem({ uuid, name }: { uuid: string; name: string }): Nimb
 			description: '',
 		},
 	} as NimbleFeatureItem;
+}
+
+interface GroupProps {
+	groupName: string;
+	group: SelectionGroup;
+	selectedFeatures: NimbleFeatureItem[];
+	onSelect: (feature: NimbleFeatureItem) => void;
 }
 
 describe('FeatureGroupSelection', () => {
@@ -32,18 +40,10 @@ describe('FeatureGroupSelection', () => {
 				name: 'Order Three',
 			}),
 		];
-		const selectionCount = 2;
+		const group: SelectionGroup = { features, selectionCount: 2 };
 
 		let selectedFeatures: NimbleFeatureItem[] = [];
-		let rerenderComponent:
-			| ((props: {
-					groupName: string;
-					features: NimbleFeatureItem[];
-					selectionCount: number;
-					selectedFeatures: NimbleFeatureItem[];
-					onSelect: (feature: NimbleFeatureItem) => void;
-			  }) => Promise<void>)
-			| null = null;
+		let rerenderComponent: ((props: GroupProps) => Promise<void>) | null = null;
 
 		const onSelect = vi.fn((feature: NimbleFeatureItem) => {
 			const alreadySelected = selectedFeatures.some(
@@ -54,14 +54,13 @@ describe('FeatureGroupSelection', () => {
 				selectedFeatures = selectedFeatures.filter(
 					(selectedFeature) => selectedFeature.uuid !== feature.uuid,
 				);
-			} else if (selectedFeatures.length < selectionCount) {
+			} else if (selectedFeatures.length < group.selectionCount) {
 				selectedFeatures = [...selectedFeatures, feature];
 			}
 
 			void rerenderComponent?.({
 				groupName: 'commander-orders',
-				features,
-				selectionCount,
+				group,
 				selectedFeatures,
 				onSelect,
 			});
@@ -70,8 +69,7 @@ describe('FeatureGroupSelection', () => {
 		const { rerender } = render(FeatureGroupSelection, {
 			props: {
 				groupName: 'commander-orders',
-				features,
-				selectionCount,
+				group,
 				selectedFeatures,
 				onSelect,
 			},
@@ -106,14 +104,12 @@ describe('FeatureGroupSelection', () => {
 				name: 'Style Two',
 			}),
 		];
-		const selectionCount = 2;
 		const onSelect = vi.fn();
 
 		render(FeatureGroupSelection, {
 			props: {
 				groupName: 'ranger-styles',
-				features,
-				selectionCount,
+				group: { features, selectionCount: 2 },
 				selectedFeatures: [],
 				onSelect,
 			},
@@ -122,5 +118,93 @@ describe('FeatureGroupSelection', () => {
 		expect(screen.getByText('Style One')).toBeInTheDocument();
 		expect(screen.getByText('Style Two')).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /Select/ })).not.toBeInTheDocument();
+	});
+
+	it('keeps every candidate selectable in a duplicate-source range group and names it after the feature', async () => {
+		const features = [
+			createFeatureItem({ uuid: 'Item.wild-shape-world', name: 'Wild Shape' }),
+			createFeatureItem({
+				uuid: 'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+				name: 'Wild Shape',
+			}),
+		];
+		const group: SelectionGroup = {
+			features,
+			selectionCount: 1,
+			selectionMax: 2,
+			showSourceLabel: true,
+			displayName: 'Wild Shape',
+		};
+
+		render(FeatureGroupSelection, {
+			props: {
+				groupName: 'duplicate-source:Item.wild-shape-world',
+				group,
+				// One copy already picked: the minimum is met, but the range allows keeping both.
+				selectedFeatures: [features[0]],
+				onSelect: vi.fn(),
+			},
+		});
+
+		// Scoped to the group heading — the cards carry the same name.
+		expect(
+			screen.getByText('Wild Shape', { selector: 'h4[data-heading-variant="section"]' }),
+		).toBeInTheDocument();
+		expect(screen.getByText('(Choose one, or keep all 2)')).toBeInTheDocument();
+		// "kept", not "of 2 selected" — the upper bound is optional, not required.
+		expect(screen.getByText('1 of 2 kept')).toBeInTheDocument();
+		// The unselected copy stays offered rather than collapsing away at the minimum.
+		expect(screen.getByRole('button', { name: 'Select Wild Shape' })).toBeEnabled();
+		expect(screen.getByRole('button', { name: 'Deselect Wild Shape' })).toBeInTheDocument();
+		// Both candidates are badged so the player can tell the two sources apart.
+		expect(screen.getByText('World')).toBeInTheDocument();
+		expect(screen.getByText('Pack')).toBeInTheDocument();
+	});
+
+	it('badges candidates of a named group without turning it into a range', async () => {
+		const features = [
+			createFeatureItem({ uuid: 'Item.cleave-world', name: 'Cleave' }),
+			createFeatureItem({
+				uuid: 'Compendium.nimble.nimble-class-features.Item.cleave-comp',
+				name: 'Cleave Variant',
+			}),
+			createFeatureItem({ uuid: 'Item.parry', name: 'Parry' }),
+		];
+
+		render(FeatureGroupSelection, {
+			props: {
+				groupName: 'combat-maneuvers',
+				group: { features, selectionCount: 1, showSourceLabel: true },
+				selectedFeatures: [],
+				onSelect: vi.fn(),
+			},
+		});
+
+		// Two of the three candidates are world items, one is from a pack.
+		expect(screen.getAllByText('World', { selector: 'span[data-source="world"]' })).toHaveLength(2);
+		expect(
+			screen.getByText('Pack', { selector: 'span[data-source="compendium"]' }),
+		).toBeInTheDocument();
+		// Badges only — the group stays an exact "choose one".
+		expect(screen.getByText('(Choose one)')).toBeInTheDocument();
+		expect(screen.getByText('0 of 1 selected')).toBeInTheDocument();
+	});
+
+	it('falls back to the formatted group key when a group has no display name', async () => {
+		const features = [
+			createFeatureItem({ uuid: 'Item.cleave', name: 'Cleave' }),
+			createFeatureItem({ uuid: 'Item.parry', name: 'Parry' }),
+		];
+
+		render(FeatureGroupSelection, {
+			props: {
+				groupName: 'combat-maneuvers',
+				group: { features, selectionCount: 1 },
+				selectedFeatures: [],
+				onSelect: vi.fn(),
+			},
+		});
+
+		expect(screen.getByRole('heading', { name: 'Combat Maneuvers' })).toBeInTheDocument();
 	});
 });

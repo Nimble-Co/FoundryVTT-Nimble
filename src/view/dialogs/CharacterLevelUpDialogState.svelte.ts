@@ -171,7 +171,7 @@ export function createLevelUpState(
 					classIndex,
 					parentClassIdentifier,
 					levelingTo,
-					{ ownedFeatureUuids },
+					{ ownedFeatureUuids, promoteDuplicateSources: true },
 				);
 
 				// Determine the subclass group key for feature lookup.

@@ -1,4 +1,9 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type {
+	FeatureGroupSelectionProps,
+	SelectionGroup,
+} from '#types/components/ClassFeatureSelection.d.ts';
+import getEffectiveSelectionMax from '#utils/getEffectiveSelectionMax.ts';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
 
 /**
@@ -12,12 +17,25 @@ export function formatGroupName(name: string): string {
 		.join(' ');
 }
 
-interface FeatureGroupSelectionStateProps {
-	groupName: string;
-	features: NimbleFeatureItem[];
-	selectionCount: number;
-	selectedFeatures: NimbleFeatureItem[];
-	selectionMax?: number;
+type FeatureGroupSelectionStateProps = Pick<
+	FeatureGroupSelectionProps,
+	'groupName' | 'group' | 'selectedFeatures'
+>;
+
+/**
+ * A group is "fixed" when the only available options exactly match the required count — nothing
+ * to choose, every card is granted.
+ */
+function isFixedGroup(group: SelectionGroup): boolean {
+	return group.features.length === group.selectionCount;
+}
+
+/**
+ * True when more selections are allowed than required — a duplicate-source group, where the
+ * player keeps at least one copy and may keep more.
+ */
+function isRangeGroup(group: SelectionGroup): boolean {
+	return getEffectiveSelectionMax(group) > group.selectionCount;
 }
 
 /**
@@ -28,42 +46,40 @@ interface FeatureGroupSelectionStateProps {
  */
 export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSelectionStateProps) {
 	return {
-		get formattedGroupName() {
-			return formatGroupName(getProps().groupName);
+		/** Heading for the group: the group's own display name, else the formatted key. */
+		get heading() {
+			const { groupName, group } = getProps();
+			return group.displayName || formatGroupName(groupName);
 		},
 		/**
-		 * A group is "fixed" when the only available options exactly match the required
-		 * count — nothing to choose, every card is granted. We still render the cards
-		 * (so players can read them), but we skip the selection hint and make each card
-		 * non-interactive since the outcome is predetermined.
+		 * Fixed groups still render their cards (so players can read them), but skip the
+		 * selection hint and are non-interactive since the outcome is predetermined.
 		 */
 		get isFixed() {
-			const { features, selectionCount } = getProps();
-			return features.length === selectionCount;
+			return isFixedGroup(getProps().group);
 		},
 		/** Upper bound on selections; defaults to the required count (an exact choice). */
 		get maxSelectionCount() {
-			const { selectionCount, selectionMax } = getProps();
-			return selectionMax ?? selectionCount;
+			return getEffectiveSelectionMax(getProps().group);
 		},
-		/** True when more selections are allowed than required (e.g. a duplicate-source choice). */
 		get isRange() {
-			return this.maxSelectionCount > getProps().selectionCount;
+			return isRangeGroup(getProps().group);
 		},
 		get selectedCount() {
 			return getProps().selectedFeatures.length;
 		},
 		get isComplete() {
-			const { selectionCount, selectedFeatures } = getProps();
-			return selectedFeatures.length >= selectionCount;
+			const { group, selectedFeatures } = getProps();
+			return selectedFeatures.length >= group.selectionCount;
 		},
 		get displayedFeatures() {
-			const { features, selectedFeatures } = getProps();
+			const { group, selectedFeatures } = getProps();
+			const isComplete = selectedFeatures.length >= group.selectionCount;
 
 			// Range groups keep every candidate visible so the player can still add or swap
 			// copies after reaching the minimum; exact groups collapse to the final picks.
-			if (this.isFixed || this.isRange || !this.isComplete) {
-				return sortDocumentsByName(features);
+			if (isFixedGroup(group) || isRangeGroup(group) || !isComplete) {
+				return sortDocumentsByName(group.features);
 			}
 
 			return sortDocumentsByName(selectedFeatures);

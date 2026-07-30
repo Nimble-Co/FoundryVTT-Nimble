@@ -46,6 +46,13 @@ export interface GetClassFeaturesOptions {
 	 * Any feature whose uuid appears here is filtered out of selection groups and auto-grants.
 	 */
 	ownedFeatureUuids?: ReadonlySet<string>;
+	/**
+	 * Offer auto-grant features that exist in more than one source (a customized World Item
+	 * plus its Compendium original) as a "choose one or keep all" selection instead of granting
+	 * every copy. Only the character-creation and level-up dialogs present that choice; the
+	 * class sheet's progression view describes what a class grants and leaves copies as-is.
+	 */
+	promoteDuplicateSources?: boolean;
 }
 
 /**
@@ -198,61 +205,68 @@ function resolveSelectionCount(entries: ClassFeatureIndexEntry[], level: number)
 	return count;
 }
 
-/** Prefix for the synthetic group key of a promoted duplicate-source selection. */
-const DUPLICATE_SOURCE_GROUP_PREFIX = 'nimble-duplicate-source:';
+/**
+ * Prefix for the synthetic group key of a promoted duplicate-source selection. Deliberately
+ * carries no system id: the key only lives in memory for one dialog session and must never be
+ * confused with a real, authorable `system.group` value.
+ */
+export const DUPLICATE_SOURCE_GROUP_PREFIX = 'duplicate-source:';
 
-/** Reads a feature's compendium-source link, if any, without assuming Foundry's `_stats` typing. */
-function getCompendiumSource(feature: NimbleFeatureItem): string | undefined {
-	const source = (feature as { _stats?: { compendiumSource?: string } })._stats?.compendiumSource;
-	return typeof source === 'string' && source.length > 0 ? source : undefined;
+/** Compares feature names case- and whitespace-insensitively; blank names never match. */
+function normalizeFeatureName(feature: NimbleFeatureItem): string {
+	return (feature.name ?? '').trim().toLowerCase();
+}
+
+/**
+ * Whether two features represent the same class feature offered from different places —
+ * either linked through a compendium source (one is the other's original, or both descend
+ * from the same original) or, absent any link, sharing a name.
+ */
+function isSameFeature(a: NimbleFeatureItem, b: NimbleFeatureItem): boolean {
+	// `sourceId` is the document's own compendium-source accessor; a blank link means "none",
+	// so normalize it to undefined before comparing (two unlinked features must not match).
+	const sourceA = a.sourceId || undefined;
+	const sourceB = b.sourceId || undefined;
+
+	if (sourceA === b.uuid || sourceB === a.uuid) return true;
+	if (sourceA !== undefined && sourceA === sourceB) return true;
+
+	const nameA = normalizeFeatureName(a);
+	return nameA !== '' && nameA === normalizeFeatureName(b);
 }
 
 /**
  * Groups features that represent the same class feature sourced from more than one place
- * (a customized World Item alongside its Compendium original). Two features are treated as the
- * same when they are linked by compendium source, or — absent a link — share a name. Returns one
- * cluster per distinct feature; the common case is a single-entry cluster per feature.
+ * (a customized World Item alongside its Compendium original). Returns one cluster per distinct
+ * feature; the common case is a single-entry cluster per feature.
+ *
+ * Each cluster starts with the earliest-supplied of its members, which is what names the group.
+ * Members added by a later merge trail the bridging feature rather than sitting in input order —
+ * harmless, since candidates are sorted by name for display.
  */
 function clusterFeaturesBySource(features: NimbleFeatureItem[]): NimbleFeatureItem[][] {
-	const parent = features.map((_, index) => index);
+	const clusters: NimbleFeatureItem[][] = [];
 
-	function find(index: number): number {
-		let root = index;
-		while (parent[root] !== root) {
-			parent[root] = parent[parent[root]];
-			root = parent[root];
+	for (const feature of features) {
+		const [primary, ...alsoMatched] = clusters.filter((cluster) =>
+			cluster.some((member) => isSameFeature(member, feature)),
+		);
+
+		if (!primary) {
+			clusters.push([feature]);
+			continue;
 		}
-		return root;
-	}
 
-	function union(a: number, b: number): void {
-		parent[find(a)] = find(b);
-	}
-
-	const normalizedName = (feature: NimbleFeatureItem) => (feature.name ?? '').trim().toLowerCase();
-
-	for (let i = 0; i < features.length; i++) {
-		for (let j = i + 1; j < features.length; j++) {
-			const a = features[i];
-			const b = features[j];
-			const sourceA = getCompendiumSource(a);
-			const sourceB = getCompendiumSource(b);
-			const linked =
-				sourceA === b.uuid || sourceB === a.uuid || (sourceA !== undefined && sourceA === sourceB);
-			const nameA = normalizedName(a);
-			const sameName = nameA !== '' && nameA === normalizedName(b);
-			if (linked || sameName) union(i, j);
+		// One feature can bridge clusters that don't match each other directly (same name as
+		// one, same compendium source as another), so fold every match into the first.
+		primary.push(feature);
+		for (const merged of alsoMatched) {
+			primary.push(...merged);
+			clusters.splice(clusters.indexOf(merged), 1);
 		}
 	}
 
-	const clusters = new Map<number, NimbleFeatureItem[]>();
-	for (let i = 0; i < features.length; i++) {
-		const root = find(i);
-		if (!clusters.has(root)) clusters.set(root, []);
-		clusters.get(root)!.push(features[i]);
-	}
-
-	return [...clusters.values()];
+	return clusters;
 }
 
 /**
@@ -372,32 +386,43 @@ export default async function getClassFeaturesFromIndex(
 	// - Groups already covered by an optionFeature's picker are excluded to avoid duplication
 	for (const [groupName, groupFeatures] of featuresByGroup) {
 		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
+			if (!options.promoteDuplicateSources) {
+				result.autoGrant.push(...groupFeatures);
+				continue;
+			}
+
 			// Auto-grant features normally apply without a choice. But when the same feature is
 			// available from more than one source (a customized World Item plus its Compendium
-			// original), granting all copies would silently add duplicates. Present each such set
-			// as a "choose one or keep both" selection, leaving true singletons auto-granted.
+			// original), granting every copy would silently add duplicates. Present each such set
+			// as a "choose one or keep all" selection, leaving true singletons auto-granted.
 			for (const cluster of clusterFeaturesBySource(groupFeatures)) {
 				if (cluster.length === 1) {
 					result.autoGrant.push(cluster[0]);
 					continue;
 				}
 
+				// Name the group after the first member that has a name — a copy can be unnamed,
+				// and an omitted displayName would leave the heading showing the synthetic key.
+				const clusterName = cluster.find((feature) => feature.name)?.name;
+
 				result.selectionGroups.set(`${DUPLICATE_SOURCE_GROUP_PREFIX}${cluster[0].uuid}`, {
 					features: cluster,
 					selectionCount: 1,
+					// A higher max than count is what makes this a range: keep one copy or all of them.
 					selectionMax: cluster.length,
-					isDuplicateChoice: true,
-					displayName: cluster[0].name ?? '',
+					showSourceLabel: true,
+					...(clusterName ? { displayName: clusterName } : {}),
 				});
 			}
 		} else if (!groupsCoveredByOptions.has(groupName)) {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];
 			const selectionCount = resolveSelectionCount(groupEntries, level);
 			// Surface source badges when a class-defined group lists the same feature from more
-			// than one source, so the player can tell the candidates apart before choosing.
-			const hasDuplicateSources = clusterFeaturesBySource(groupFeatures).some(
-				(cluster) => cluster.length > 1,
-			);
+			// than one source, so the player can tell the candidates apart before choosing. Only
+			// the dialogs render badges, so skip the clustering pass entirely when they're off.
+			const hasDuplicateSources =
+				options.promoteDuplicateSources === true &&
+				clusterFeaturesBySource(groupFeatures).some((cluster) => cluster.length > 1);
 			result.selectionGroups.set(groupName, {
 				features: groupFeatures,
 				selectionCount,

@@ -61,12 +61,7 @@
 			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, group] (groupName)}
 				<FeatureGroupSelection
 					{groupName}
-					features={group.features}
-					selectionCount={group.selectionCount}
-					selectionMax={group.selectionMax}
-					isDuplicateChoice={group.isDuplicateChoice}
-					showSourceLabel={group.showSourceLabel}
-					displayName={group.displayName}
+					{group}
 					selectedFeatures={selectedFeatures.get(groupName) ?? []}
 					onSelect={(feature) => state.handleFeatureSelect(groupName, feature)}
 				/>

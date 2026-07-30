@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import getEffectiveSelectionMax from '#utils/getEffectiveSelectionMax.ts';
 
 /**
  * Creates reactive state for the LevelUpClassFeatureSelection component.
@@ -52,7 +53,7 @@ export function createClassFeatureSelectionState(
 		if (alreadySelectedIndex !== -1) {
 			// Toggle off
 			nextSelections = currentSelections.filter((_, i) => i !== alreadySelectedIndex);
-		} else if (currentSelections.length >= (group.selectionMax ?? group.selectionCount)) {
+		} else if (currentSelections.length >= getEffectiveSelectionMax(group)) {
 			// Already at cap — ignore the click
 			return;
 		} else {

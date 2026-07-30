@@ -11,17 +11,14 @@ export interface SelectionGroup {
 	selectionCount: number;
 	/**
 	 * Maximum number of features that may be selected. Defaults to `selectionCount` (an
-	 * exact choice). When greater than `selectionCount` the group is a range — used by
-	 * duplicate-source groups so the player can pick a single source or keep every copy.
+	 * exact choice). When greater than `selectionCount` the group is a *range* — currently only
+	 * duplicate-source groups, where the player may pick one source or keep every copy. The
+	 * range is what drives the "choose one, or keep all" hint — whose wording assumes
+	 * `selectionCount` is 1, so revisit that string before shipping a range with a higher
+	 * minimum.
 	 */
 	selectionMax?: number;
-	/**
-	 * True when the group represents the same class feature offered from more than one source
-	 * (a customized World Item plus its Compendium original). Drives the "choose one or keep
-	 * both" hint and shows a source badge on each candidate.
-	 */
-	isDuplicateChoice?: boolean;
-	/** Show a source badge on each candidate without changing the group's selection hint. */
+	/** Show a "World" / "Pack" badge on each candidate, marking where it is sourced from. */
 	showSourceLabel?: boolean;
 	/** Heading to display verbatim instead of formatting the group key (e.g. a feature name). */
 	displayName?: string;
@@ -51,14 +48,15 @@ export interface FeatureCardProps {
 	 * act as the heading of a containing section instead of a nested box.
 	 */
 	asHeader?: boolean;
-	/** Show a "World Item" / "Compendium" badge indicating where this feature is sourced from. */
+	/** Show a "World" / "Pack" badge indicating where this feature is sourced from. */
 	showSourceLabel?: boolean;
 }
 
 export interface FeatureGroupSelectionProps {
+	/** Key the group is stored under, used as the heading when it has no `displayName`. */
 	groupName: string;
-	features: NimbleFeatureItem[];
-	selectionCount: number;
+	/** The group to render, carrying its candidates, selection bounds, and display options. */
+	group: SelectionGroup;
 	selectedFeatures: NimbleFeatureItem[];
 	onSelect: (feature: NimbleFeatureItem) => void;
 	/**
@@ -67,14 +65,6 @@ export interface FeatureGroupSelectionProps {
 	 * duplicate title.
 	 */
 	hideGroupName?: boolean;
-	/** Maximum selectable features; defaults to `selectionCount`. */
-	selectionMax?: number;
-	/** Present the group as a same-feature multiple-source choice ("choose one or keep both"). */
-	isDuplicateChoice?: boolean;
-	/** Show a source badge on each candidate without changing the selection hint. */
-	showSourceLabel?: boolean;
-	/** Heading to display verbatim instead of formatting the group key. */
-	displayName?: string;
 }
 
 export interface LevelUpFeatureOptionPickerProps {

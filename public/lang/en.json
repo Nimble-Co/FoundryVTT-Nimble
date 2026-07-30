@@ -2383,19 +2383,16 @@
 			"levelUpHint": "The following features become available at level {level}. Some are automatically granted; others require you to choose.",
 			"chooseOne": "(Choose one)",
 			"chooseN": "(Choose {count})",
-			"duplicateSourceHint": "(Choose one or keep both)",
+			"duplicateSourceHint": "(Choose one, or keep all {count})",
 			"nOfMSelected": "{current} of {required} selected",
+			"nOfMKept": "{current} of {max} kept",
 			"noDescriptionAvailable": "No description available.",
 			"selected": "Selected",
 			"confirmSelection": "Confirm Selection",
 			"selectFeature": "Select this feature",
 			"deselectFeature": "Deselect this feature",
 			"selectFeatureAriaLabel": "Select {featureName}",
-			"deselectFeatureAriaLabel": "Deselect {featureName}",
-			"sourceWorldItemLabel": "World Item",
-			"sourceWorldItemTooltip": "World Item: created or modified locally in this world",
-			"sourceCompendiumLabel": "Compendium",
-			"sourceCompendiumTooltip": "Compendium: from a published compendium pack"
+			"deselectFeatureAriaLabel": "Deselect {featureName}"
 		},
 		"subclassSelection": {
 			"header": "Subclass",

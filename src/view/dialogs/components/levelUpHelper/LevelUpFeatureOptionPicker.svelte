@@ -83,8 +83,7 @@
 			{:else if loadedSubItems.length > 0}
 				<FeatureGroupSelection
 					groupName={selectedOption?.selectionGroups?.join('-') ?? 'selection'}
-					features={loadedSubItems}
-					selectionCount={subSelectionCount}
+					group={{ features: loadedSubItems, selectionCount: subSelectionCount }}
 					selectedFeatures={selectedSubItems}
 					hideGroupName
 					onSelect={(item) => onSubItemSelect(item.uuid)}

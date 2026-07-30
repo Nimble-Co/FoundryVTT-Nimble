@@ -2,7 +2,9 @@
 	import type { FeatureCardProps } from '#types/components/ClassFeatureSelection.d.ts';
 	import { createFeatureCardState } from './FeatureCard.svelte.ts';
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
+	import SourceTag from '#view/components/SourceTag.svelte';
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
+	import getItemSource from '#utils/getItemSource.ts';
 	import localize from '#utils/localize.js';
 
 	let {
@@ -15,9 +17,6 @@
 	}: FeatureCardProps = $props();
 
 	const state = createFeatureCardState(() => feature);
-
-	// A compendium-backed feature has a `Compendium.` UUID; anything else lives in the world.
-	const isCompendiumSource = $derived(feature.uuid.startsWith('Compendium.'));
 
 	// Whether this card is in selectable mode
 	const isSelectable = $derived(!!onSelect);
@@ -76,17 +75,7 @@
 		</h4>
 
 		{#if showSourceLabel}
-			<span
-				class="feature-row__source-tag"
-				data-source={isCompendiumSource ? 'compendium' : 'world'}
-				data-tooltip={isCompendiumSource
-					? localize('NIMBLE.classFeatureSelection.sourceCompendiumTooltip')
-					: localize('NIMBLE.classFeatureSelection.sourceWorldItemTooltip')}
-			>
-				{isCompendiumSource
-					? localize('NIMBLE.classFeatureSelection.sourceCompendiumLabel')
-					: localize('NIMBLE.classFeatureSelection.sourceWorldItemLabel')}
-			</span>
+			<SourceTag source={getItemSource(feature.uuid)} />
 		{/if}
 
 		{#if isSelectable}
@@ -237,28 +226,6 @@
 			margin: 0;
 			padding: 0;
 			line-height: 1;
-		}
-
-		.feature-row__source-tag {
-			display: inline-flex;
-			align-items: center;
-			flex-shrink: 0;
-			padding: 0.0625rem 0.3125rem;
-			border-radius: 3px;
-			font-size: 0.5625rem;
-			font-weight: 700;
-			white-space: nowrap;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: white;
-
-			&[data-source='world'] {
-				background: var(--nimble-badge-world-bg);
-			}
-
-			&[data-source='compendium'] {
-				background: var(--nimble-badge-pack-bg);
-			}
 		}
 
 		.feature-row__actions {

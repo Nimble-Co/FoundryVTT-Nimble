@@ -7,61 +7,51 @@
 
 	let {
 		groupName,
-		features,
-		selectionCount,
+		group,
 		selectedFeatures,
 		onSelect,
 		hideGroupName = false,
-		selectionMax,
-		isDuplicateChoice = false,
-		showSourceLabel = false,
-		displayName,
 	}: FeatureGroupSelectionProps = $props();
 
 	const state = createFeatureGroupSelectionState(() => ({
 		groupName,
-		features,
-		selectionCount,
+		group,
 		selectedFeatures,
-		selectionMax,
 	}));
-
-	// Duplicate-source groups always badge their candidates; named groups do so only when
-	// they were flagged as containing matches from more than one source.
-	const showBadges = $derived(isDuplicateChoice || showSourceLabel);
 
 	function getHintText() {
 		if (state.isFixed) return null;
 
-		if (isDuplicateChoice) {
-			return localize('NIMBLE.classFeatureSelection.duplicateSourceHint');
+		if (state.isRange) {
+			return localize('NIMBLE.classFeatureSelection.duplicateSourceHint', {
+				count: String(state.maxSelectionCount),
+			});
 		}
 
-		if (selectionCount === 1) {
+		if (group.selectionCount === 1) {
 			return localize('NIMBLE.classFeatureSelection.chooseOne');
 		}
 
-		return game.i18n.format('NIMBLE.classFeatureSelection.chooseN', {
-			count: selectionCount,
+		return localize('NIMBLE.classFeatureSelection.chooseN', {
+			count: String(group.selectionCount),
 		});
 	}
 
 	function getProgressText() {
 		if (state.isFixed) return null;
 
-		return game.i18n.format('NIMBLE.classFeatureSelection.nOfMSelected', {
-			current: state.selectedCount,
-			required: state.maxSelectionCount,
-		});
-	}
+		// A range group's upper bound is optional, so "of N selected" would read as a requirement.
+		if (state.isRange) {
+			return localize('NIMBLE.classFeatureSelection.nOfMKept', {
+				current: String(state.selectedCount),
+				max: String(state.maxSelectionCount),
+			});
+		}
 
-	function isCandidateDisabled(feature: (typeof features)[number]) {
-		// Once the maximum is reached, unselected candidates can't be added until one is freed.
-		return (
-			state.isRange &&
-			state.selectedCount >= state.maxSelectionCount &&
-			!state.isFeatureSelected(feature)
-		);
+		return localize('NIMBLE.classFeatureSelection.nOfMSelected', {
+			current: String(state.selectedCount),
+			required: String(group.selectionCount),
+		});
 	}
 </script>
 
@@ -69,7 +59,7 @@
 	<header class="feature-group__header">
 		{#if !hideGroupName}
 			<h4 class="nimble-heading" data-heading-variant="section">
-				{displayName ?? state.formattedGroupName}
+				{state.heading}
 			</h4>
 		{/if}
 		{#if !state.isFixed}
@@ -89,8 +79,7 @@
 			<FeatureCard
 				{feature}
 				isSelected={state.isFixed ? false : isSelected}
-				isDisabled={isCandidateDisabled(feature)}
-				showSourceLabel={showBadges}
+				showSourceLabel={group.showSourceLabel ?? false}
 				onSelect={state.isFixed ? undefined : () => onSelect(feature)}
 			/>
 		{/each}
