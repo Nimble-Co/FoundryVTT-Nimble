@@ -48,7 +48,8 @@
   &--armor,
   &--hit-dice,
   &--hp,
-  &--mana {
+  &--mana,
+  &--wounds {
     text-transform: uppercase;
     // Use theme-aware color (--nimble-dark-text-color adapts to light/dark mode)
     color: var(--nimble-dark-text-color);

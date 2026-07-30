@@ -195,6 +195,15 @@
 	--nimble-pool-node-face-text-color: hsl(210, 80%, 80%);
 	--nimble-pool-node-delta-color: hsl(150, 55%, 55%);
 
+	/** WOUND TRACK **/
+	--nimble-wound-track-empty-background: hsl(293, 12%, 44%);
+	--nimble-wound-track-inset-shadow: inset 0 1px 2px hsla(0, 0%, 0%, 0.45);
+	--nimble-wound-track-filled-highlight-color: hsl(1, 58%, 50%);
+	--nimble-wound-track-filled-color: hsl(1, 62%, 42%);
+	--nimble-wound-track-filled-shade-color: hsl(1, 60%, 32%);
+	--nimble-wound-track-filled-glow: 0 0 3px hsla(1, 62%, 40%, 0.4);
+	--nimble-wound-track-count-color: hsl(1, 55%, 58%);
+
 	/** POOL SPEND (activation dialog) **/
 	--nimble-pool-spend-icon-color: hsl(210, 65%, 56%);
 	--nimble-pool-spend-die-border-color: hsl(210, 65%, 46%);
