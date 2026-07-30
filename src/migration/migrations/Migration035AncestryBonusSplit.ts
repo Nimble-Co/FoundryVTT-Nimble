@@ -14,10 +14,10 @@ import { MigrationBase } from '../MigrationBase.js';
  *    language-granting rules on the ancestry — languages are inherent to the ancestry,
  *    not the swappable bonus trait.
  */
-class Migration032AncestryBonusSplit extends MigrationBase {
-	static override readonly version = 32;
+class Migration035AncestryBonusSplit extends MigrationBase {
+	static override readonly version = 35;
 
-	override readonly version = Migration032AncestryBonusSplit.version;
+	override readonly version = Migration035AncestryBonusSplit.version;
 
 	override async updateActor(source: any): Promise<void> {
 		if (source.type !== 'character') return;
@@ -77,4 +77,4 @@ class Migration032AncestryBonusSplit extends MigrationBase {
 	}
 }
 
-export { Migration032AncestryBonusSplit };
+export { Migration035AncestryBonusSplit };
