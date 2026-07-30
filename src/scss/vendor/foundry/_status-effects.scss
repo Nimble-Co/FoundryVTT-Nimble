@@ -1,6 +1,12 @@
 #token-hud .status-effects {
   display: block;
   width: fit-content;
+
+  // Core sizes the palette for its own small icon grid and scrolls the
+  // overflow. The system replaces the palette content wholesale, so the cap
+  // only clips the panel and the clear-all button anchored above it.
+  max-height: none;
+  overflow: visible;
 }
 
 #board .token .token-effects {
