@@ -11,6 +11,14 @@ const RULES_ONLY_DESCRIPTION =
 	'<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage.</p>';
 
 /**
+ * The description this feature shipped with before the card offer existed. Only
+ * this exact text is replaced: matching it is what tells our copy apart from one
+ * a GM has since rewritten, which is theirs to keep.
+ */
+const SUPERSEDED_DESCRIPTION =
+	'<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage.</p><p><em>Click this feature after dealing crit damage to spend Fury Dice. The chat card shows the bonus damage to apply.</em></p>';
+
+/**
  * Offer Death Blow on the crit that triggers it.
  *
  * Its `diceConsumer` could only be spent through the sheet's dice pool panel,
@@ -28,6 +36,10 @@ const RULES_ONLY_DESCRIPTION =
  * already carry an explicit `null` and be skipped forever. Re-stamping an
  * explicit `null` is harmless — it is indistinguishable from never having been
  * migrated — while a GM who chose `hit` keeps their choice.
+ *
+ * Identification needs both the name-or-source-id match and our own rule id:
+ * the name alone would let an unrelated homebrew feature called "Death Blow"
+ * have its description rewritten.
  */
 class Migration034DeathBlowCardOffer extends MigrationBase {
 	static override readonly version = 34;
@@ -36,25 +48,29 @@ class Migration034DeathBlowCardOffer extends MigrationBase {
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
+		if (!source.system || typeof source.system !== 'object') return;
+
+		const rules = source.system.rules;
+		if (!Array.isArray(rules)) return;
+
+		const rule = rules.find((r) => r?.type === 'diceConsumer' && r?.id === DEATH_BLOW_RULE_ID);
+		if (!rule) return;
 
 		const sourceId = this.getSourceId(source);
 		const isDeathBlow =
 			(sourceId && DEATH_BLOW_SOURCE_IDS.has(sourceId)) || source.name === DEATH_BLOW_NAME;
 		if (!isDeathBlow) return;
 
-		source.system.description = RULES_ONLY_DESCRIPTION;
-
-		const rules = source.system?.rules;
-		if (!Array.isArray(rules)) return;
-
-		for (const rule of rules) {
-			if (rule?.type !== 'diceConsumer') continue;
-			if (rule.id !== DEATH_BLOW_RULE_ID) continue;
-			if (rule.cardOffer) continue;
-
+		if (!rule.cardOffer) {
 			rule.cardOffer = 'criticalHit';
 
 			console.log(`Nimble Migration | ${source.name}: offer the Fury spend on critical hits`);
+		}
+
+		// The old description told the player to click the feature on the sheet,
+		// which is no longer where the spend lives.
+		if (source.system.description === SUPERSEDED_DESCRIPTION) {
+			source.system.description = RULES_ONLY_DESCRIPTION;
 		}
 	}
 }
