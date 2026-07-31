@@ -708,10 +708,14 @@
 				}
 			},
 			"actionCost": {
-				"description": "Change how many actions it costs to activate matching items. Adjust adds to the printed cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0.",
+				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only — a free reaction is still limited to once per round.",
+				"applies": {
+					"label": "Applies to",
+					"hint": "item: price matching item activations. heroicReaction: price the selected heroic reactions instead."
+				},
 				"mode": {
 					"label": "How to apply",
-					"hint": "Adjust: add the value to the item's action cost (negative values reduce it). Set: replace the action cost with the value."
+					"hint": "Adjust: add the value to the base action cost (negative values reduce it). Set: replace the action cost with the value."
 				},
 				"value": {
 					"label": "Value",
@@ -724,6 +728,10 @@
 				"itemIdentifier": {
 					"label": "Item identifier",
 					"hint": "Only affect the item whose identifier matches this. Leave blank to affect all matching items."
+				},
+				"reactions": {
+					"label": "Heroic reactions",
+					"hint": "Only these heroic reactions are affected. Leave empty to affect every heroic reaction."
 				}
 			},
 			"applyCondition": {
@@ -1511,6 +1519,13 @@
 			"cancel": "Cancel",
 			"loading": "Loading...",
 			"viewDetails": "View Details",
+			"confirmInsufficientActions": {
+				"title": "Not Enough Actions",
+				"message": "This costs {cost} action(s), but you only have {current} remaining.",
+				"confirmQuestion": "Do you still want to use {name}?",
+				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			},
 			"combatTracker": {
 				"scrollbar": "Combat turn order scrollbar",
 				"hitPoints": "Hit Points",

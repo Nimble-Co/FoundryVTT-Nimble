@@ -18,6 +18,7 @@ import { initiativeRollLock } from '#utils/initiativeRollLock.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
+import resolveHeroicReactionActionCost from '#utils/resolveHeroicReactionActionCost.js';
 import { isCombatConvenienceAutomationEnabled } from '../../settings/automationSettings.js';
 import { getCombatantManualSortValue, getCombatantResetActions } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
@@ -945,10 +946,14 @@ class NimbleCombat extends Combat {
 
 					if (!canSpendAvailableReaction) return false;
 					const currentActions = getCombatantCurrentActions(combatant);
+					const reactionCost = resolveHeroicReactionActionCost(
+						combatant.actor as unknown as Parameters<typeof resolveHeroicReactionActionCost>[0],
+						[reactionKey],
+					);
 					if (!game.user?.isGM) {
 						if ((this.round ?? 0) < 1) return false;
 						if ((this.combatant?.id ?? null) === combatantId) return false;
-						if (currentActions < 1) return false;
+						if (currentActions < reactionCost) return false;
 					}
 
 					const reactionAvailabilityUpdate = {
@@ -958,7 +963,7 @@ class NimbleCombat extends Combat {
 					if (!game.user?.isGM) {
 						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
 							0,
-							currentActions - 1,
+							currentActions - reactionCost,
 						);
 					}
 

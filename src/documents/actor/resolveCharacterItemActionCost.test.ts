@@ -35,11 +35,13 @@ interface ActivationItem {
 // Type for test instances where we need to set internal properties directly.
 // `itemTypes` is omitted and re-added as `string[]` because the schema infers a
 // closed choice-union type that plain string literals don't satisfy.
-type ActionCostRuleTestInstance = Omit<ActionCostRule, 'itemTypes'> & {
+type ActionCostRuleTestInstance = Omit<ActionCostRule, 'itemTypes' | 'reactions'> & {
+	applies: 'item' | 'heroicReaction';
 	mode: 'delta' | 'set';
 	value: string;
 	itemTypes: string[];
 	itemIdentifier: string;
+	reactions: string[];
 	disabled: boolean;
 	priority: number;
 	type: string;
@@ -77,10 +79,12 @@ function createActivationItem(
 function addActionCostRule(
 	actor: MockActor,
 	config: {
+		applies?: 'item' | 'heroicReaction';
 		mode?: 'delta' | 'set';
 		value?: string;
 		itemTypes?: string[];
 		itemIdentifier?: string;
+		reactions?: string[];
 		disabled?: boolean;
 		priority?: number;
 		predicatePasses?: boolean;
@@ -95,10 +99,12 @@ function addActionCostRule(
 	};
 
 	const sourceData = {
+		applies: config.applies ?? 'item',
 		mode: config.mode ?? 'delta',
 		value: config.value ?? '1',
 		itemTypes: config.itemTypes ?? [],
 		itemIdentifier: config.itemIdentifier ?? '',
+		reactions: config.reactions ?? [],
 		disabled: config.disabled ?? false,
 		label: 'Test Rule',
 		id: 'test-rule-id',
@@ -114,10 +120,12 @@ function addActionCostRule(
 	) as ActionCostRuleTestInstance;
 
 	// Manually set properties since the mock DataModel doesn't do this automatically
+	rule.applies = config.applies ?? 'item';
 	rule.mode = config.mode ?? 'delta';
 	rule.value = config.value ?? '1';
 	rule.itemTypes = config.itemTypes ?? [];
 	rule.itemIdentifier = config.itemIdentifier ?? '';
+	rule.reactions = config.reactions ?? [];
 	rule.disabled = config.disabled ?? false;
 	rule.priority = config.priority ?? 1;
 	rule.type = 'actionCost';
@@ -347,6 +355,14 @@ describe('resolveCharacterItemActionCost', () => {
 			const item = createActivationItem({ quantity: 0 });
 
 			expect(resolveCharacterItemActionCost(actor, item)).toBe(1);
+		});
+
+		it('ignores rules that apply to heroic reactions', () => {
+			const actor = createMockActor();
+			addActionCostRule(actor, { applies: 'heroicReaction', mode: 'set', value: '0' });
+			const item = createActivationItem({ quantity: 2 });
+
+			expect(resolveCharacterItemActionCost(actor, item)).toBe(2);
 		});
 	});
 });
