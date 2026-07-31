@@ -17,7 +17,7 @@ A consumer is what makes a dice pool do something. The pool stores the dice; the
 
 Several consumers can share one pool. A Berserker's Fury Dice carry an `autoBonus` consumer for melee damage *and* separate `manual` consumers for the features that spend them, all pointing at the same `fury` identifier.
 
-**Effect formula** is evaluated when the player confirms, with two references filled in from their picks: `@n` is how many dice they chose and `@sum` is the total of those dice faces. **Effect type** decides what the result does: `generic` posts the total to chat and leaves the rest to the table, while `damageReduction` also banks the total so it is subtracted from the next damage the character takes.
+**Effect formula** is evaluated when the player confirms, with two references filled in from their picks: `@n` is how many dice they chose and `@sum` is the total of those dice faces. Both combine with the usual sheet references, so a spend can scale with the character as well as the dice. See [Formulas & References](../rules-builder/formulas.md) for the full vocabulary. **Effect type** decides what the result does: `generic` posts the total to chat and leaves the rest to the table, while `damageReduction` also banks the total so it is subtracted from the next damage the character takes.
 
 **Offer on attack card** moves the spend out of the sheet panel and onto the attack card it modifies, for features the rules tie to how an attack landed. Set it to `criticalHit` for a feature that only works on a crit (the Berserker's Death Blow), or `hit` for one that works on any hit. Leave it empty and the spend stays on the sheet, which is the right choice for anything that is not about a specific attack, such as a reaction that soaks damage.
 
