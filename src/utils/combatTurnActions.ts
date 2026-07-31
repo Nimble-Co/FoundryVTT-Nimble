@@ -1,3 +1,4 @@
+import { isActionTrackingAutomationEnabled } from '../settings/automationSettings.js';
 import { getActorDyingActionLimit, isActorDying } from './actorHealthState.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import { isCombatantDead } from './isCombatantDead.js';
@@ -379,6 +380,10 @@ export async function consumeCombatantAction(params: {
 	const combatant =
 		params.combat.combatants.get(params.combatantId) ?? params.fallbackCombatant ?? null;
 	if (!combatant) return 0;
+
+	// With action-tracking automation off, item use never deducts actions;
+	// report the untouched pool so callers proceed normally.
+	if (!isActionTrackingAutomationEnabled()) return getCombatantCurrentActions(combatant);
 
 	const currentActions = getCombatantCurrentActions(combatant);
 	if (currentActions < 1) return 0;

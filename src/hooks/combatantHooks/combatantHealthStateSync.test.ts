@@ -252,6 +252,42 @@ describe('registerCombatantHealthStateSync', () => {
 		});
 	});
 
+	it('skips the bloodied toggle but still enters Last Stand when health-state automation is off', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		(globals().game as { settings?: { get: () => boolean } }).settings = { get: () => false };
+		try {
+			const activateLastStandFeature = vi.fn().mockResolvedValue(null);
+			const actor = Object.assign(
+				createMockCombatActor({
+					type: 'soloMonster',
+					hp: 0,
+					hpMax: 320,
+					lastStandHp: 180,
+				}),
+				{ activateLastStandFeature },
+			);
+
+			const updateActor = callbacks.get('updateActor');
+			updateActor?.(actor, { system: { attributes: { hp: { value: 0 } } } });
+			await flushAsync();
+
+			// Last Stand entry is unconditional — it is a monster mechanic, not sync.
+			expect(actor.toggleStatusEffect).toHaveBeenCalledWith('lastStand', {
+				active: true,
+				overlay: false,
+			});
+			expect(activateLastStandFeature).toHaveBeenCalledWith({ visibilityMode: 'gmroll' });
+			// The bloodied status sync is gated off.
+			expect(actor.toggleStatusEffect).not.toHaveBeenCalledWith('bloodied', expect.anything());
+		} finally {
+			(globals().game as { settings?: unknown }).settings = undefined;
+		}
+	});
+
 	it('coalesces concurrent firings into a single bloodied toggle', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))

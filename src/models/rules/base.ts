@@ -159,6 +159,15 @@ abstract class NimbleBaseRule<
 
 	static description: string = '';
 
+	/**
+	 * Lifecycle event names this rule class must still receive when rule
+	 * automation is toggled off. Reserved for events that are core plumbing
+	 * with no manual fallback — flows a player cannot reproduce by hand when
+	 * automation is disabled. The dispatcher skips every other event for
+	 * every rule while the toggle is off.
+	 */
+	static alwaysDispatchedEvents: readonly string[] = [];
+
 	/** True when this rule class implements the prePrepareData lifecycle hook. */
 	static get appliesInPrePrepareData(): boolean {
 		// biome-ignore lint/complexity/noThisInStatic: must introspect the calling subclass's prototype, not the base class
@@ -489,9 +498,11 @@ abstract class NimbleBaseRule<
 	 * no rolls and no effect nodes.
 	 *
 	 * The `auto` branch only suppresses because the rule's activation flow
-	 * posts replacement output, and ruleEventDispatch only runs that flow when
-	 * automation is enabled — hence `automationEnabled`. An explicit `always`
-	 * has no replacement flow to wait on, so it ignores that gate.
+	 * posts replacement output, so the card may only be dropped when that flow
+	 * is guaranteed to run: either rule automation is enabled, or the class
+	 * declares `onItemActivated` in `alwaysDispatchedEvents` (dispatched
+	 * regardless of the toggle). An explicit `always` has no replacement flow
+	 * to wait on, so it ignores that gate.
 	 */
 	suppressesActivationCard({
 		automationEnabled = true,
@@ -500,7 +511,10 @@ abstract class NimbleBaseRule<
 	} = {}): boolean {
 		if (this.suppressActivationCard === 'always') return true;
 		if (this.suppressActivationCard === 'never') return false;
-		return automationEnabled && this._autoSuppressesActivationCard();
+		const Cls = this.constructor as typeof NimbleBaseRule;
+		const activationFlowRuns =
+			automationEnabled || Cls.alwaysDispatchedEvents.includes('onItemActivated');
+		return activationFlowRuns && this._autoSuppressesActivationCard();
 	}
 
 	/** The `auto` branch of `suppressesActivationCard()`. Subclasses whose

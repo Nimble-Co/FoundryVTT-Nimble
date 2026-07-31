@@ -2,6 +2,7 @@ import { SYSTEM_ID } from '#system';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
+import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type ActorDyingContext,
 	type ActorHealthContext,
@@ -166,6 +167,12 @@ interface ActorWithEffects {
 class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.toggleEffect.description';
+
+	// Turning the toggle ON via item activation has no manual fallback, so
+	// that dispatch survives the rule-automation toggle. The automatic
+	// turn-off / turn-on / inactivity paths run via other lifecycle events
+	// and stay gated.
+	static override alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
 
 	declare tags: string[];
 	declare turnOff: TurnOffEvent[];
@@ -395,6 +402,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 * must not break the turn-on itself.
 	 */
 	async #announceStart(reason: string): Promise<void> {
+		if (!isChatNotificationsAutomationEnabled()) return;
 		const actor = this.actor as unknown as Actor | null;
 		if (!actor) return;
 		const name = this.label || (this.item as unknown as { name: string }).name;
@@ -526,6 +534,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 * break the turn-off itself.
 	 */
 	async #announceEnd(reason: string): Promise<void> {
+		if (!isChatNotificationsAutomationEnabled()) return;
 		const actor = this.actor as unknown as Actor | null;
 		if (!actor) return;
 		const name = this.label || (this.item as unknown as { name: string }).name;

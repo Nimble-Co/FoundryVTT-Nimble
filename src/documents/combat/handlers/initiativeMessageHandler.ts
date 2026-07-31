@@ -1,4 +1,5 @@
 import { InitiativeMessageRule } from '../../../models/rules/initiativeMessage.js';
+import { isChatNotificationsAutomationEnabled } from '../../../settings/automationSettings.js';
 import { getRulesFromCompendiumSource } from '../../../utils/itemSourceRules.js';
 
 type ItemLike = {
@@ -26,6 +27,7 @@ export function getInitiativeMessageRuleSources(item: ItemLike): Record<string, 
 export default async function initiativeMessageHandler(
 	combatant: Combatant.Implementation,
 ): Promise<void> {
+	if (!isChatNotificationsAutomationEnabled()) return;
 	const actor = combatant.actor as ActorWithRules | null;
 
 	const shouldRun =

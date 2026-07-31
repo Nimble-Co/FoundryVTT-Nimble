@@ -88,6 +88,11 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.diceConsumer.description';
 
+	// The activation-time spend request is the only way to spend pool dice —
+	// there is no manual fallback — so it must fire even when rule automation
+	// is toggled off.
+	static override alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
+
 	declare poolIdentifier: string;
 
 	declare poolScope: (typeof DicePoolRuleConfig.scopes)[number];

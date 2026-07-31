@@ -1,4 +1,5 @@
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
+import { isResourceRecoveryAutomationEnabled } from '../../settings/automationSettings.js';
 import localize from '../localize.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
@@ -30,6 +31,19 @@ type RefilledEntry = {
 
 const POOL_MAX_TOKEN_PATTERN = /@poolMax\b/g;
 const POOL_CURRENT_TOKEN_PATTERN = /@poolCurrent\b/g;
+
+/**
+ * Shared eligibility gate for the automatic refill entry points: refill
+ * triggers only apply to character actors and only while resource-recovery
+ * automation is enabled. Manual and activation-driven pool operations
+ * (rollDieIntoPool, rollPoolFresh, maximizePoolDie, setPoolFaces) are not
+ * recovery automation and stay ungated, as does pool sync.
+ */
+function isEligibleForAutomaticRefill(
+	actor: Actor | null | undefined,
+): actor is CharacterActorLike {
+	return isCharacterActor(actor) && isResourceRecoveryAutomationEnabled();
+}
 
 /**
  * Test a refill entry's optional predicate against the actor's live domain.
@@ -178,7 +192,7 @@ async function applyRestRefill(
 	actor: Actor | null | undefined,
 	restType: DiceRestType,
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRefill(actor)) return;
 	const trigger: DiceRefillTrigger = restType === 'safe' ? 'safeRest' : 'fieldRest';
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
@@ -193,7 +207,7 @@ async function applyEncounterRefill(
 	actor: Actor | null | undefined,
 	encounterTrigger: 'encounterStart' | 'encounterEnd',
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRefill(actor)) return;
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const { nextPools, entries } = await applyRefillTriggersToPools(actor, currentPools, [
@@ -209,7 +223,7 @@ async function applyRefillToActorIfEligible(
 	actor: Actor | null | undefined,
 	trigger: DiceRefillTrigger,
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRefill(actor)) return;
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const { nextPools, entries } = await applyRefillTriggersToPools(actor, currentPools, [trigger]);

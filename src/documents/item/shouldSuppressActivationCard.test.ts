@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { NimbleBaseRule } from '../../models/rules/base.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
-// isAutoApplyEnabled() reads game.settings.get(); the default test mock has no
-// settings, so we install a stub whose return value each test controls.
+// isRuleAutomationEnabled() reads game.settings.get(); the default test mock
+// has no settings, so we install a stub whose return value each test controls.
 function setAutomation(enabled: boolean) {
 	const globalWithGame = globalThis as { game?: Record<string, unknown> };
 	globalWithGame.game ??= {};
@@ -21,8 +21,19 @@ class AutoSuppressingRule extends NimbleBaseRule {
 	}
 }
 
+// An auto-suppressor whose activation dispatch is exempt from the automation
+// toggle — its replacement flow runs regardless, so suppression is safe even
+// with automation off.
+class ExemptAutoSuppressingRule extends NimbleBaseRule {
+	static override alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
+
+	protected override _autoSuppressesActivationCard(): boolean {
+		return true;
+	}
+}
+
 function createRule(
-	RuleClass: typeof NimbleBaseRule | typeof AutoSuppressingRule,
+	RuleClass: typeof NimbleBaseRule | typeof AutoSuppressingRule | typeof ExemptAutoSuppressingRule,
 	{ suppressActivationCard = 'auto', disabled = false } = {},
 ): NimbleBaseRule {
 	const rule = new (RuleClass as any)(
@@ -63,6 +74,11 @@ describe('NimbleBaseItem#_shouldSuppressActivationCard', () => {
 	it('suppresses an auto-resolving rule with automation on', () => {
 		setAutomation(true);
 		expect(shouldSuppress([createRule(AutoSuppressingRule)])).toBe(true);
+	});
+
+	it('suppresses an exempt auto-resolving rule even with automation off', () => {
+		setAutomation(false);
+		expect(shouldSuppress([createRule(ExemptAutoSuppressingRule)])).toBe(true);
 	});
 
 	it('never suppresses when the activation carries rolls', () => {

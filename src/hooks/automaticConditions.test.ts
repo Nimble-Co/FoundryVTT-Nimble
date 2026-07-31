@@ -158,3 +158,51 @@ describe('handleAutomaticConditionApplication.postDelete', () => {
 		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 });
+
+describe('derived-conditions automation toggle', () => {
+	function disableDerivedConditionsAutomation(): {
+		getTriggeredConditions: ReturnType<typeof vi.fn>;
+	} {
+		const gameGlobal = (globalThis as { game?: Record<string, unknown> }).game as Record<
+			string,
+			unknown
+		>;
+		gameGlobal.settings = { get: () => false };
+		const getTriggeredConditions = vi.fn(() => ['hampered']);
+		(
+			gameGlobal.nimble as { conditions: Record<string, unknown> }
+		).conditions.getTriggeredConditions = getTriggeredConditions;
+		return { getTriggeredConditions };
+	}
+
+	it('preCreate skips condition triggering when the toggle is off', async () => {
+		stubGame({ currentUserId: 'gm-1', currentUserIsGM: true, activeGmId: 'gm-1' });
+		const { getTriggeredConditions } = disableDerivedConditionsAutomation();
+
+		const actor = createActor();
+		const document = createDocument(actor);
+		const options: { automaticConditionsToApply?: string[] } = {};
+
+		await handleAutomaticConditionApplication.preCreate(
+			document as never,
+			{} as never,
+			options as never,
+			'gm-1',
+		);
+
+		expect(getTriggeredConditions).not.toHaveBeenCalled();
+		expect(options.automaticConditionsToApply).toBeUndefined();
+	});
+
+	it('postDelete skips condition removal when the toggle is off', async () => {
+		stubGame({ currentUserId: 'gm-1', currentUserIsGM: true, activeGmId: 'gm-1' });
+		disableDerivedConditionsAutomation();
+
+		const actor = createActor();
+		const document = createDocument(actor);
+
+		await handleAutomaticConditionApplication.postDelete(document as never, {} as never, 'gm-1');
+
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
+	});
+});

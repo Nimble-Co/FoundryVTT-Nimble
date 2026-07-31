@@ -12,6 +12,7 @@ import type {
 	SaveResolvedContext,
 	TurnContext,
 } from '../models/rules/base.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { getActorHealthState } from '../utils/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
@@ -19,7 +20,6 @@ import {
 	hasAnyActorChangeAt,
 } from '../utils/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
-import { AUTO_APPLY_CONDITIONS_SETTING, isAutoApplyEnabled } from '../utils/isAutoApplyEnabled.js';
 
 const DYING_STATUS_ID = 'dying';
 
@@ -70,7 +70,17 @@ async function dispatch<TContext>(
 	context: TContext,
 ): Promise<void> {
 	if (!actor?.rules) return;
+	// With rule automation toggled off, only lifecycle events a rule class
+	// declares in `alwaysDispatchedEvents` (core plumbing with no manual
+	// fallback) still go through; everything else is skipped.
+	const automationEnabled = isRuleAutomationEnabled();
 	for (const rule of actor.rules) {
+		if (!automationEnabled) {
+			const alwaysDispatched = (
+				rule?.constructor as { alwaysDispatchedEvents?: readonly string[] } | undefined
+			)?.alwaysDispatchedEvents;
+			if (!alwaysDispatched?.includes(methodName as string)) continue;
+		}
 		const method = rule[methodName] as ((ctx: TContext) => Promise<void>) | undefined;
 		if (typeof method !== 'function') continue;
 		try {
@@ -83,7 +93,6 @@ async function dispatch<TContext>(
 }
 
 function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
-	if (!isAutoApplyEnabled()) return;
 	if (!payload.sourceActor || !payload.targetActor) return;
 	const context: ItemUsedContext = {
 		sourceItem: payload.sourceItem as unknown as ItemUsedContext['sourceItem'],
@@ -107,7 +116,6 @@ function handleCombatTurn(
 	updateData: { round: number; turn: number | null },
 	updateOptions: { direction?: number },
 ): void {
-	if (!isAutoApplyEnabled()) return;
 	if (!combat?.turns?.length) return;
 	// Backwards navigation undoes turns rather than ending them; core runs
 	// no turn lifecycle events for rewinds and neither do we.
@@ -137,7 +145,6 @@ function handleCombatTurn(
 }
 
 function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, unknown>): void {
-	if (!isAutoApplyEnabled()) return;
 	const hpChanged = hasAnyActorChangeAt(changes, [ACTOR_HP_PATHS.value]);
 	// Death can arrive via a wounds-only update: a dying PC at 0 HP gains
 	// their final wound without the HP value moving at all.
@@ -184,7 +191,6 @@ function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, 
 }
 
 function handleSaveResolved(payload: NimbleSavePayload): void {
-	if (!isAutoApplyEnabled()) return;
 	const context: SaveResolvedContext = {
 		actor: payload.actor as unknown as SaveResolvedContext['actor'],
 		saveType: payload.saveType,
@@ -194,7 +200,6 @@ function handleSaveResolved(payload: NimbleSavePayload): void {
 }
 
 function handleRest(payload: NimbleRestPayload): void {
-	if (!isAutoApplyEnabled()) return;
 	const context: RestContext = {
 		actor: payload.actor as unknown as RestContext['actor'],
 		restType: payload.restType,
@@ -203,7 +208,6 @@ function handleRest(payload: NimbleRestPayload): void {
 }
 
 function handleInitiativeRolled(payload: NimbleInitiativePayload): void {
-	if (!isAutoApplyEnabled()) return;
 	const context: InitiativeRolledContext = {
 		actor: payload.actor as unknown as InitiativeRolledContext['actor'],
 		combatant: payload.combatant,
@@ -220,7 +224,6 @@ function handleUseItem(
 	card: ChatMessage | null,
 	context: UseItemContext,
 ): void {
-	if (!isAutoApplyEnabled()) return;
 	const sourceActor = item?.actor ?? null;
 	if (!sourceActor) return;
 
@@ -277,8 +280,6 @@ function dispatchEncounterEnd(combat: CombatWithCombatants): void {
 }
 
 function handleUpdateCombat(combat: CombatWithCombatants, change: Record<string, unknown>): void {
-	if (!isAutoApplyEnabled()) return;
-
 	// Round counter changed (turn advance across a boundary, round buttons,
 	// or a manual tracker edit, forwards or backwards). Turn hooks do not
 	// cover every one of these transitions, so rules with round-stamped
@@ -305,7 +306,6 @@ function handleUpdateCombat(combat: CombatWithCombatants, change: Record<string,
 }
 
 function handleDeleteCombat(combat: CombatWithCombatants): void {
-	if (!isAutoApplyEnabled()) return;
 	const combatId = getCombatIdentifier(combat);
 	const alreadyHandled = combatId ? dispatchedEncounterEndIds.has(combatId) : false;
 	if (!alreadyHandled) {
@@ -315,7 +315,6 @@ function handleDeleteCombat(combat: CombatWithCombatants): void {
 }
 
 function handleConditionApplied(payload: NimbleConditionAppliedPayload): void {
-	if (!isAutoApplyEnabled()) return;
 	if (payload.condition !== DYING_STATUS_ID) return;
 	const targetActor = payload.target;
 	if (!targetActor) return;
@@ -349,9 +348,4 @@ export default function registerRuleEventDispatch(): void {
 	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);
 }
 
-export {
-	AUTO_APPLY_CONDITIONS_SETTING,
-	type NimbleSavePayload,
-	type NimbleRestPayload,
-	type NimbleInitiativePayload,
-};
+export type { NimbleSavePayload, NimbleRestPayload, NimbleInitiativePayload };
