@@ -258,8 +258,10 @@
 	--nimble-pool-spend-total-color: hsl(150, 55%, 35%);
 
 	/** WOUND TRACK **/
-	--nimble-wound-track-empty-background: hsl(293, 8%, 74%);
+	--nimble-wound-track-border-color: hsl(41, 22%, 44%);
+	--nimble-wound-track-empty-background: hsl(293, 8%, 84%);
 	--nimble-wound-track-inset-shadow: inset 0 1px 2px hsla(0, 0%, 0%, 0.3);
+	--nimble-wound-track-preview-background: hsl(1, 36%, 44%);
 	--nimble-wound-track-filled-highlight-color: hsl(1, 55%, 46%);
 	--nimble-wound-track-filled-color: hsl(1, 60%, 39%);
 	--nimble-wound-track-filled-shade-color: hsl(1, 62%, 30%);

@@ -30,7 +30,7 @@
 			{/each}
 		</div>
 
-		<div class="nimble-heading nimble-heading--wounds nimble-wound-track__label">
+		<div class="nimble-heading nimble-heading--wounds">
 			{localize('NIMBLE.wounds.heading')}
 			<i class="fa-solid fa-droplet"></i>
 			<span
@@ -58,6 +58,8 @@
 
 		&__segment {
 			--button-size: auto;
+			// Drawn as an inset ring rather than a real border so the 7px bar keeps its height.
+			--nimble-wound-track-segment-ring: inset 0 0 0 1px var(--nimble-wound-track-border-color);
 
 			position: relative;
 			flex: 1;
@@ -68,7 +70,7 @@
 			border: 0;
 			border-radius: 2px;
 			background: var(--nimble-wound-track-empty-background);
-			box-shadow: var(--nimble-wound-track-inset-shadow);
+			box-shadow: var(--nimble-wound-track-segment-ring), var(--nimble-wound-track-inset-shadow);
 			transition: var(--nimble-standard-transition);
 			cursor: pointer;
 
@@ -84,12 +86,8 @@
 			&:focus-visible,
 			&:has(~ .nimble-wound-track__segment:hover),
 			&:has(~ .nimble-wound-track__segment:focus-visible) {
-				background: color-mix(
-					in srgb,
-					var(--nimble-wound-track-filled-color) 55%,
-					var(--nimble-wound-track-empty-background)
-				);
-				box-shadow: var(--nimble-wound-track-inset-shadow);
+				background: var(--nimble-wound-track-preview-background);
+				box-shadow: var(--nimble-wound-track-segment-ring), var(--nimble-wound-track-inset-shadow);
 			}
 
 			// Pointer focus only: the keyboard ring is restored below.
@@ -114,13 +112,18 @@
 					var(--nimble-wound-track-filled-color) 55%,
 					var(--nimble-wound-track-filled-shade-color) 100%
 				);
-				box-shadow: var(--nimble-wound-track-filled-glow);
+				box-shadow: var(--nimble-wound-track-segment-ring), var(--nimble-wound-track-filled-glow);
 			}
-		}
 
-		// The shared heading modifier pads its underside; this label sits below its track.
-		&__label {
-			padding-block-end: 0;
+			// Clicking a filled segment heals down to N-1, so hovering one previews N and every
+			// filled segment after it emptying. Must stay after the filled rules it overrides.
+			&--filled:hover,
+			&--filled:focus-visible,
+			&--filled:hover ~ &--filled,
+			&--filled:focus-visible ~ &--filled {
+				background: var(--nimble-wound-track-empty-background);
+				box-shadow: var(--nimble-wound-track-segment-ring), var(--nimble-wound-track-inset-shadow);
+			}
 		}
 
 		&__count {
