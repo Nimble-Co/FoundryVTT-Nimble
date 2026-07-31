@@ -7,6 +7,7 @@ import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dic
 import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { dieSizeToMaxFace, resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
+import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
 import localize from '#utils/localize.ts';
 import type { LivePoolView } from './DicePoolTracker.svelte.ts';
@@ -37,10 +38,6 @@ function registerPanelHooks(listener: () => void): () => void {
 
 function consumerKey(consumer: DicePoolConsumer): string {
 	return `${consumer.itemId}:${consumer.ruleId}`;
-}
-
-function substituteFormula(formula: string, count: number, sum: number): string {
-	return formula.replace(/@n\b/g, String(count)).replace(/@sum\b/g, String(sum));
 }
 
 export function createDicePoolPanelState(
@@ -177,7 +174,7 @@ export function createDicePoolPanelState(
 	): Promise<number | null> {
 		if (count < 1) return null;
 		try {
-			const substituted = substituteFormula(formula, count, sum);
+			const substituted = substituteSpendFormula(formula, count, sum);
 			const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 			const roll = new RollCls(substituted, getActor().getRollData());
 			await roll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
@@ -323,7 +320,7 @@ export function createDicePoolPanelState(
 
 		await setPoolFaces(getActor(), pool.id, nextFaces);
 
-		const substituted = substituteFormula(
+		const substituted = substituteSpendFormula(
 			consumer.effectFormula ?? '0',
 			spentFaces.length,
 			spentFaces.reduce((a, b) => a + b, 0),

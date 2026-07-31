@@ -1477,6 +1477,9 @@ export const myStore = writable<MyStoreState>(initialState);
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |
 | `getRollFormula()` | `src/utils/getRollFormula.ts` | Build roll formula strings |
 | `getDamageTypeLabel()` | `src/utils/getDamageTypeLabel.ts` | Localized display name for a damage type key, falling back to the key itself |
+| `substituteSpendFormula()` | `src/utils/dicePool/substituteSpendFormula.ts` | Resolve the `@n` / `@sum` placeholders in a dice-consumer effect formula against the dice a player picked |
+| `foldBonusIntoPrimaryDamage()`, `replaceDamageRollInRollsSource()` | `src/utils/foldBonusIntoPrimaryDamage.ts` | Add a flat bonus to an activation card's primary damage roll, and keep the message `rolls` source in step with a patched damage roll |
+| `collectPoolSpendCardOffers()` | `src/utils/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |
 | `arraysAreEqual()` | `src/utils/arraysAreEqual.ts` | Compare two arrays for equality |
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |
 | `isValidDiceModifier()` | `src/utils/isValidDiceModifier.ts` | Validate dice modifier strings |

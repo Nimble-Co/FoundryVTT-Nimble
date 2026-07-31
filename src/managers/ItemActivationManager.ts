@@ -27,9 +27,10 @@ import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
 	type IncomingAttackPlan,
-	type IncomingReactionEntry,
 } from '../utils/incomingAttackModifiers.js';
+import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
+import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -220,7 +221,10 @@ class ItemActivationManager {
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 		const targetDomain = this.#getFirstTargetDomain();
-		const incomingAttackPlan = computeIncomingAttackPlan(this.#getFirstTargetToken());
+		const incomingAttackPlan = computeIncomingAttackPlan(
+			this.#getFirstTargetToken(),
+			this.actor as OfferingActor,
+		);
 
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);

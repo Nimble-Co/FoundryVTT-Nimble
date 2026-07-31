@@ -3,6 +3,14 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
+import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
+import {
+	foldBonusIntoPrimaryDamage,
+	replaceDamageRollInRollsSource,
+} from '#utils/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
@@ -13,10 +21,9 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
-import {
-	type IncomingReactionEntry,
-	withRerollDisadvantage,
-} from '../utils/incomingAttackModifiers.js';
+import { withRerollDisadvantage } from '../utils/incomingAttackModifiers.js';
+import type { PoolSpendSelection } from '../utils/incomingAttackReactions.js';
+import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -546,6 +553,36 @@ function buildDamageApplicationPlan(params: {
 		applicableTargets,
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
 		bankedReductionActors: [...bankedReductionActors],
+	};
+}
+
+/**
+ * Map a card picker's selection onto the pool as it stands now. Indices alone
+ * are not enough: the pool can change between opening the picker and
+ * confirming it (a refill trigger, another feature spending a die), so the
+ * faces the player was shown must still sit at the indices they chose.
+ * Returns null when the selection no longer describes the live pool.
+ */
+function resolvePoolSpendSelection(
+	faces: number[],
+	selection: PoolSpendSelection,
+): { spentFaces: number[]; remainingFaces: number[] } | null {
+	const pickedIndices = [...new Set(selection.faceIndices)];
+	if (pickedIndices.length < 1) return null;
+	if (pickedIndices.length !== selection.expectedFaces?.length) return null;
+
+	const spentFaces: number[] = [];
+	for (let position = 0; position < pickedIndices.length; position += 1) {
+		const index = pickedIndices[position];
+		if (!Number.isInteger(index) || index < 0 || index >= faces.length) return null;
+		if (faces[index] !== selection.expectedFaces[position]) return null;
+		spentFaces.push(faces[index]);
+	}
+
+	const picked = new Set(pickedIndices);
+	return {
+		spentFaces,
+		remainingFaces: faces.filter((_, index) => !picked.has(index)),
 	};
 }
 
@@ -1149,8 +1186,9 @@ class NimbleChatMessage extends ChatMessage {
 	#markIncomingReactionsUsed(
 		entries: IncomingReactionEntry[],
 		predicate: (entry: IncomingReactionEntry) => boolean,
+		patch: Partial<IncomingReactionEntry> = {},
 	): IncomingReactionEntry[] {
-		return entries.map((e) => (predicate(e) ? { ...e, used: true } : e));
+		return entries.map((e) => (predicate(e) ? { ...e, used: true, ...patch } : e));
 	}
 
 	/**
@@ -1204,17 +1242,10 @@ class NimbleChatMessage extends ChatMessage {
 		damageNode.roll = newRollJson;
 		activation.effects = reconstructEffectsTree(nodes) as unknown[];
 
-		const rollsSource = [...(((this._source as { rolls?: string[] }).rolls ?? []) as string[])];
-		const rollIndex = rollsSource.findIndex((r) => {
-			try {
-				return (JSON.parse(r) as { class?: string })?.class === 'DamageRoll';
-			} catch {
-				return false;
-			}
-		});
-		const stringifiedRoll = JSON.stringify(newRollJson);
-		if (rollIndex >= 0) rollsSource[rollIndex] = stringifiedRoll;
-		else rollsSource.push(stringifiedRoll);
+		const rollsSource = replaceDamageRollInRollsSource(
+			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			newRollJson,
+		);
 
 		await this.update({
 			rolls: rollsSource,
@@ -1223,6 +1254,112 @@ class NimbleChatMessage extends ChatMessage {
 				isCritical: newRoll.isCritical,
 				isMiss: newRoll.isMiss,
 				incomingReactions: this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+			},
+		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Fold a dice-pool spend into this card's primary damage roll: consume the
+	 * picked faces, evaluate the consumer's effect formula against them, and add
+	 * the result to the damage the GM will apply.
+	 *
+	 * Executes on the primary GM's client, like the other reaction resolvers.
+	 * Two reasons, neither optional: a chat message is updatable only by its
+	 * author or a GM (owning the acting actor does not imply either), and
+	 * funnelling every kind through one writer keeps a concurrent reaction from
+	 * clobbering `incomingReactions`.
+	 *
+	 * Adding to the existing roll rather than posting a second one is what keeps
+	 * the target's armor, resistances and flat reductions from being applied a
+	 * second time against the same attack.
+	 *
+	 * The bonus lands before the GM applies damage. Nothing enforces that
+	 * ordering — a spend confirmed after Apply Damage raises the card's total
+	 * without touching HP already removed — because the card keeps no
+	 * applied-damage record to reconcile against.
+	 */
+	async resolveSpendPoolForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		selection: PoolSpendSelection,
+		viaSocket = false,
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!this.isActivationCard()) return;
+		if (!selection?.faceIndices?.length) return;
+
+		const found = this.#validateIncomingReaction(
+			entryId,
+			'spendPoolForDamage',
+			requestingUserId,
+			viaSocket,
+		);
+		if (!found) return;
+		const { entries, entry } = found;
+
+		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		if (!actor) return;
+
+		const pool = getDicePools(actor).find((p) => p.id === selection.poolId);
+		if (!pool) return;
+
+		// Re-resolve the consumer from the live rule rather than trusting the
+		// snapshot: this picks up `modifyConsumer` rules that extend the formula,
+		// and confirms the rule still targets this pool. Rule ids are only unique
+		// within an item, so the owning item has to match too.
+		const sourceItem = entry.itemUuid
+			? (fromUuidSync(entry.itemUuid as `Item.${string}`) as Item.Implementation | null)
+			: null;
+		const consumer = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
+			(candidate) =>
+				candidate.ruleId === entry.ruleId &&
+				(!sourceItem || candidate.itemId === String(sourceItem.id)),
+		);
+		if (!consumer?.effectFormula) return;
+
+		const picked = resolvePoolSpendSelection(pool.faces, selection);
+		if (!picked) {
+			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendStale'));
+			return;
+		}
+
+		const effectRoll = new Roll(
+			substituteSpendFormula(
+				consumer.effectFormula,
+				picked.spentFaces.length,
+				picked.spentFaces.reduce((sum, face) => sum + face, 0),
+			),
+			(actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
+		);
+		await effectRoll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+
+		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
+		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const folded = foldBonusIntoPrimaryDamage(
+			(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
+			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			bonusDamage,
+			consumer.itemName,
+		);
+		if (!folded) return;
+
+		// Charge the pool only once the fold is known to be possible, and only
+		// if the pool actually accepted the write — otherwise the card would
+		// gain damage the player never paid for.
+		const spent = await setPoolFaces(actor, pool.id, picked.remainingFaces);
+		if (!spent) return;
+
+		await this.update({
+			rolls: folded.rolls,
+			system: {
+				activation: folded.activation,
+				incomingReactions: this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id, {
+					usedAmount: bonusDamage,
+					usedPoolLabel: pool.label,
+					usedFaces: picked.spentFaces,
+				}),
 			},
 		} as Record<string, unknown>);
 	}

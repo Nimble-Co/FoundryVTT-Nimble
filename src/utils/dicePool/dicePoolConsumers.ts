@@ -116,6 +116,7 @@ function applyConsumerModifiers(
 function getDicePoolConsumers(
 	actor: Actor | null | undefined,
 	pool: DicePoolState,
+	options: { includeCardOffers?: boolean } = {},
 ): DicePoolConsumer[] {
 	if (!isCharacterActor(actor)) return [];
 
@@ -138,6 +139,14 @@ function getDicePoolConsumers(
 			if (consumer.mode !== 'manual') continue;
 			if (normalizeIdentifier(consumer.poolIdentifier) !== poolIdentifier) continue;
 			if ((consumer.poolScope ?? 'item') !== pool.scope) continue;
+			// A consumer that opted into a chat-card offer is spent from the card
+			// the spend modifies, not from the sheet panel, where it would be
+			// ungated by the attack's outcome. The card executor asks for them
+			// explicitly.
+			if (!options.includeCardOffers && (consumer as { cardOffer?: unknown }).cardOffer) continue;
+			// Predicates gate availability the same way they do for modifiers; a
+			// consumer whose predicate fails must not be offered.
+			if (typeof rule.appliesTo === 'function' && !rule.appliesTo()) continue;
 
 			const selectionOutcome =
 				typeof (consumer as { selectionOutcome?: unknown }).selectionOutcome === 'string' &&

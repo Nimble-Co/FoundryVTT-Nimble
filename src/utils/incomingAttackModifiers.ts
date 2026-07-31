@@ -1,4 +1,6 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
+import type { IncomingReactionEntry, RerollTrigger } from './incomingReactionEntry.js';
+import { collectPoolSpendCardOffers, type OfferingActor } from './poolSpendCardOffers.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -6,8 +8,6 @@ import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 const BASELINE_INTERPOSE_RANGE = 2;
 
 const MODIFY_INCOMING_ATTACK_RULE_TYPE = 'modifyIncomingAttack';
-
-type RerollTrigger = 'always' | 'hit' | 'criticalHit';
 
 interface RuleLike {
 	type?: string;
@@ -38,32 +38,6 @@ interface IncomingAttackModifierEntry {
 	/** forceReroll only: execute at roll time instead of offering a button */
 	automatic?: boolean;
 	/** forceReroll only: when the reroll applies */
-	rerollTrigger?: RerollTrigger;
-	/** forceReroll only: roll the reroll at disadvantage */
-	rerollWithDisadvantage?: boolean;
-}
-
-/**
- * A pending interactive reaction stamped onto the attack chat card. Entries
- * are snapshotted on the attacker's client at card creation so every client
- * sees the same offer; executors revalidate lightly on use.
- */
-interface IncomingReactionEntry {
-	id: string;
-	kind: 'forceReroll' | 'redirectToSelf';
-	/** `baseline` = universal heroic Interpose; `rule` = granted by a modifyIncomingAttack rule */
-	source: 'baseline' | 'rule';
-	/** Reacting actor (token-actor uuid, so unlinked tokens resolve) */
-	actorUuid: string;
-	/** Protector's token (redirect only) */
-	tokenUuid: string | null;
-	/** Token whose targeting the redirect replaces (redirect only) */
-	targetTokenUuid: string | null;
-	label: string;
-	ruleId: string;
-	itemUuid: string;
-	used: boolean;
-	/** forceReroll only: gate the offer/execution on the roll's outcome */
 	rerollTrigger?: RerollTrigger;
 	/** forceReroll only: roll the reroll at disadvantage */
 	rerollWithDisadvantage?: boolean;
@@ -106,6 +80,18 @@ function rerollTriggerMatches(
 		default:
 			return true; // 'always'
 	}
+}
+
+/**
+ * Should a pending offer be stamped onto the card, given how the attack
+ * actually resolved? `forceReroll` keeps its own trigger field; every other
+ * kind uses the shared `outcomeTrigger`, and an offer with neither always
+ * survives (e.g. Interpose, which is outcome-independent).
+ */
+function offerSurvives(entry: IncomingReactionEntry, view: EvaluatedDamageRollLike): boolean {
+	if (entry.kind === 'forceReroll') return rerollTriggerMatches(entry.rerollTrigger, view);
+	if (!entry.outcomeTrigger) return true;
+	return rerollTriggerMatches(entry.outcomeTrigger, view);
 }
 
 /**
@@ -170,12 +156,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	}
 
 	const finalView = asView(finalRoll);
-	stampEntries.push(
-		...plan.reactionEntries.filter(
-			(entry) =>
-				entry.kind !== 'forceReroll' || rerollTriggerMatches(entry.rerollTrigger, finalView),
-		),
-	);
+	stampEntries.push(...plan.reactionEntries.filter((entry) => offerSurvives(entry, finalView)));
 
 	return { roll: finalRoll, discardedRoll, stampEntries };
 }
@@ -302,18 +283,24 @@ function collectRedirectCandidates(targetToken: Token.Implementation): IncomingR
 }
 
 /**
- * Compute everything the attack pipeline needs from the first target's
- * incoming-attack rules. A forced miss makes the reactions moot, so none are
- * offered alongside it.
+ * Compute everything the attack pipeline needs before the roll: the first
+ * target's incoming-attack rules, plus the attacker's own outcome-gated spend
+ * offers.
+ *
+ * A forced miss makes the defender's reactions moot, so none are offered
+ * alongside it. The attacker's offers are seeded before that early return but
+ * are filtered against the resolved outcome afterwards, so a hit- or
+ * crit-gated offer still drops out on a forced miss.
  */
 function computeIncomingAttackPlan(
 	firstTargetToken: Token.Implementation | null | undefined,
+	attackingActor?: OfferingActor,
 ): IncomingAttackPlan {
 	const plan: IncomingAttackPlan = {
 		disadvantageCount: 0,
 		forceMiss: false,
 		appliedEntries: [],
-		reactionEntries: [],
+		reactionEntries: [...collectPoolSpendCardOffers(attackingActor)],
 		autoRerollEntries: [],
 	};
 
@@ -369,6 +356,4 @@ export {
 	withRerollDisadvantage,
 	type IncomingAttackModifierEntry,
 	type IncomingAttackPlan,
-	type IncomingReactionEntry,
-	type RerollTrigger,
 };

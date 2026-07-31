@@ -1,14 +1,34 @@
+import { SYSTEM_ID } from '#system';
 import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
-import type { IncomingReactionEntry } from './incomingAttackModifiers.js';
+import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 
-const INCOMING_REACTION_SOCKET_NAME = 'system.nimble';
+/**
+ * Foundry system socket channel. Must be `system.<id>` to reach other clients,
+ * and derived from SYSTEM_ID so emitter and listener stay in lockstep across
+ * the stable (`nimble`) and dev (`nimble-dev`) installs.
+ */
+const INCOMING_REACTION_SOCKET_NAME = `system.${SYSTEM_ID}`;
 const INCOMING_REACTION_REQUEST_TYPE = 'incomingAttackReaction';
+
+/**
+ * The dice a player committed in the card-side spend picker. `expectedFaces`
+ * is what the picker showed them: the executor re-reads the live pool, so
+ * without it a pool that changed mid-dialog would silently spend whichever
+ * dice now sit at those indices.
+ */
+export interface PoolSpendSelection {
+	poolId: string;
+	faceIndices: number[];
+	expectedFaces: number[];
+}
 
 type IncomingReactionRequest = {
 	type: typeof INCOMING_REACTION_REQUEST_TYPE;
 	messageId: string;
 	entryId: string;
 	userId: string;
+	/** spendPoolForDamage only */
+	selection?: PoolSpendSelection;
 };
 
 interface ReactionCapableMessage {
@@ -20,6 +40,12 @@ interface ReactionCapableMessage {
 	resolveRedirectReaction?: (
 		entryId: string,
 		requestingUserId: string,
+		viaSocket?: boolean,
+	) => Promise<void>;
+	resolveSpendPoolForDamageOffer?: (
+		entryId: string,
+		requestingUserId: string,
+		selection: PoolSpendSelection,
 		viaSocket?: boolean,
 	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
@@ -35,6 +61,7 @@ async function executeIncomingReaction(
 	entryId: string,
 	requestingUserId: string,
 	viaSocket: boolean,
+	selection?: PoolSpendSelection,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -49,6 +76,9 @@ async function executeIncomingReaction(
 		await message.resolveForceRerollReaction?.(entryId, requestingUserId, viaSocket);
 	} else if (entry.kind === 'redirectToSelf') {
 		await message.resolveRedirectReaction?.(entryId, requestingUserId, viaSocket);
+	} else if (entry.kind === 'spendPoolForDamage') {
+		if (!selection) return;
+		await message.resolveSpendPoolForDamageOffer?.(entryId, requestingUserId, selection, viaSocket);
 	}
 }
 
@@ -61,7 +91,13 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 	if (request.type !== INCOMING_REACTION_REQUEST_TYPE) return;
 	if (!request.messageId || !request.entryId || !request.userId) return;
 
-	await executeIncomingReaction(request.messageId, request.entryId, request.userId, true);
+	await executeIncomingReaction(
+		request.messageId,
+		request.entryId,
+		request.userId,
+		true,
+		request.selection,
+	);
 }
 
 let hasRegisteredIncomingReactionSocketListener = false;
@@ -81,18 +117,29 @@ export function registerIncomingReactionSocketListener(): void {
 }
 
 /**
- * Use a pending incoming-attack reaction on an attack card. GMs execute
- * directly; players relay the request to the primary active GM, who owns the
- * message mutation.
+ * Use a pending offer on an attack card. GMs execute directly; everyone else
+ * relays to the primary active GM, who owns the message mutation.
+ *
+ * Routing every kind through the GM is what keeps `incomingReactions` to a
+ * single writer, and is also a permission requirement: a chat message is
+ * updatable only by its author or a GM, which owning the acting actor does not
+ * imply.
  */
 export async function requestIncomingAttackReaction(params: {
 	messageId: string;
 	entryId: string;
+	selection?: PoolSpendSelection;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
 
 	if (game.user.isGM) {
-		await executeIncomingReaction(params.messageId, params.entryId, game.user.id, false);
+		await executeIncomingReaction(
+			params.messageId,
+			params.entryId,
+			game.user.id,
+			false,
+			params.selection,
+		);
 		return true;
 	}
 
@@ -110,6 +157,7 @@ export async function requestIncomingAttackReaction(params: {
 		messageId: params.messageId,
 		entryId: params.entryId,
 		userId: game.user.id,
+		...(params.selection ? { selection: params.selection } : {}),
 	});
 	return true;
 }

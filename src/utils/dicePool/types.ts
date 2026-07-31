@@ -68,6 +68,10 @@ type DiceConsumerRuleLike = {
 	cost?: string;
 	bonusOnAttackDelivery?: string | null;
 	effectType?: string;
+	/** Set when the spend is offered on the attack card instead of the sheet */
+	cardOffer?: string | null;
+	/** Present on live rule instances; absent on raw source objects */
+	appliesTo?: () => boolean;
 };
 
 /** Payload of the `<system>.dicePool.requestSpend` hook, emitted when an item
