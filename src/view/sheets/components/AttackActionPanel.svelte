@@ -179,7 +179,6 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
-			max-height: 300px;
 			overflow-y: auto;
 		}
 
