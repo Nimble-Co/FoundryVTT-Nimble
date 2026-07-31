@@ -19,6 +19,25 @@ Several consumers can share one pool. A Berserker's Fury Dice carry an `autoBonu
 
 **Effect formula** is evaluated when the player confirms, with two references filled in from their picks: `@n` is how many dice they chose and `@sum` is the total of those dice faces. **Effect type** decides what the result does: `generic` posts the total to chat and leaves the rest to the table, while `damageReduction` also banks the total so it is subtracted from the next damage the character takes.
 
+**Offer on attack card** moves the spend out of the sheet panel and onto the attack card it modifies, for features the rules tie to how an attack landed. Set it to `criticalHit` for a feature that only works on a crit (the Berserker's Death Blow), or `hit` for one that works on any hit. Leave it empty and the spend stays on the sheet, which is the right choice for anything that is not about a specific attack, such as a reaction that soaks damage.
+
+**Example: Death Blow.** Spends any number of Fury Dice after a crit and deals double their total.
+
+- **Label** → `Death Blow: bonus damage`
+- **Pool identifier** → `fury`
+- **Mode** → `manual`
+- **Effect formula** → `2 * @sum`
+- **Effect type** → `generic`
+- **Offer on attack card** → `criticalHit`
+
+The result is added to that attack's own damage total, so the GM applies damage once and the target's armor, resistances and reductions are counted once. Posting it as a separate roll would count them twice.
+
+A consumer that opts in gives up its sheet flow entirely: it no longer opens the panel when the item is activated, and it is hidden from the pool panel's feature list. The panel cannot see how the attack turned out, so leaving it there would offer a crit-only spend on any activation.
+
+Opting in needs the rest of the rule to line up. It has to be a `manual` spend with `consume` as its outcome, a `generic` effect type, and an effect formula, on a player character. A `damageReduction` spend is banked against incoming damage rather than added to an attack, so it is not eligible.
+
+Two limits worth knowing before you author one. The bonus takes on the attack's own damage type, so a feature whose extra damage is a specific type (radiant, fire) cannot be expressed this way yet. And there is no melee or ranged filter on the offer, so a feature limited to one kind of attack will still offer itself on the other.
+
 **Selection outcome** decides what happens to the dice the player picked:
 
 - `consume` removes them from the pool. This is the normal case, and it needs an effect formula to be worth showing.
