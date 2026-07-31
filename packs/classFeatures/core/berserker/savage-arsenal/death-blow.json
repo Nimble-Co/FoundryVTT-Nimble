@@ -22,7 +22,8 @@
 				"cost": "1",
 				"bonusOnAttackDelivery": null,
 				"effectFormula": "2 * @sum",
-				"effectType": "generic"
+				"effectType": "generic",
+				"cardOffer": "criticalHit"
 			}
 		],
 		"activation": {
@@ -51,7 +52,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage.</p><p><em>Click this feature after dealing crit damage to spend Fury Dice. The chat card shows the bonus damage to apply.</em></p>",
+		"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage.</p>",
 		"featureType": "class",
 		"class": "berserker",
 		"gainedAtLevel": 4,
