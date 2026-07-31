@@ -98,7 +98,7 @@
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
 			"incomingReactions": {
-				"heading": "Reactions",
+				"heading": "Options",
 				"forceReroll": "Force Reroll",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
