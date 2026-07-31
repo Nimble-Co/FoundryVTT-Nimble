@@ -25,10 +25,14 @@ export default class PoolSpendOfferDialog extends SvelteApplicationMixin(Applica
 
 	ruleId: string;
 
+	/** Rule ids are only unique within an item, so the owner disambiguates. */
+	itemId: string | null;
+
 	constructor(
 		actor: Actor,
 		poolId: string,
 		ruleId: string,
+		itemId: string | null,
 		title: string,
 		options = {} as SvelteApplicationRenderContext,
 	) {
@@ -43,6 +47,7 @@ export default class PoolSpendOfferDialog extends SvelteApplicationMixin(Applica
 		this.actor = actor;
 		this.poolId = poolId;
 		this.ruleId = ruleId;
+		this.itemId = itemId;
 
 		this.promise = new Promise((resolve) => {
 			this.resolve = resolve;
@@ -68,6 +73,7 @@ export default class PoolSpendOfferDialog extends SvelteApplicationMixin(Applica
 			actor: this.actor,
 			poolId: this.poolId,
 			ruleId: this.ruleId,
+			itemId: this.itemId,
 			dialog: this,
 		} as object as ReturnType<
 			foundry.applications.api.ApplicationV2['_prepareContext']

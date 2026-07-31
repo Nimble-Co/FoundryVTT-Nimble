@@ -586,6 +586,17 @@ function resolvePoolSpendSelection(
 	};
 }
 
+/**
+ * Spend offers currently resolving, keyed `<messageId>:<entryId>`.
+ *
+ * `used` is only written at the end of a resolve, several awaits in. A second
+ * request arriving inside that window passes the unused-entry check and reads
+ * the same unspent pool, so the dice come out once and the damage goes on
+ * twice. Every request lands on the one primary GM's client, so an in-memory
+ * lock is enough to serialize them.
+ */
+const inFlightSpendOffers = new Set<string>();
+
 class NimbleChatMessage extends ChatMessage {
 	declare type: SystemChatMessageTypes;
 
@@ -1288,6 +1299,23 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return;
 		if (!selection?.faceIndices?.length) return;
 
+		const lockKey = `${this.id}:${entryId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+
+		try {
+			await this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	async #applySpendPoolForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		selection: PoolSpendSelection,
+		viaSocket: boolean,
+	): Promise<void> {
 		const found = this.#validateIncomingReaction(
 			entryId,
 			'spendPoolForDamage',
@@ -1336,7 +1364,9 @@ class NimbleChatMessage extends ChatMessage {
 		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
 		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) return;
 
-		const systemData = this.system as ActivationCardSystemData;
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		const folded = foldBonusIntoPrimaryDamage(
 			(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
 			((this._source as { rolls?: string[] }).rolls ?? []) as string[],

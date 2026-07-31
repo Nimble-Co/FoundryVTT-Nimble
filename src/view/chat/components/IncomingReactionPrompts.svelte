@@ -144,24 +144,24 @@
 	}
 
 	/**
-	 * Which pool does this offer's consumer draw from? Asked of the live rules
-	 * rather than stamped on the entry, so an author retargeting the consumer
-	 * does not strand offers on cards already posted.
+	 * Which pool and item does this offer's consumer belong to? Asked of the live
+	 * rules rather than stamped on the entry, so an author retargeting the
+	 * consumer does not strand offers on cards already posted.
 	 */
-	function findOfferPoolId(
+	function findOfferTarget(
 		actor: Actor.Implementation,
 		entry: IncomingReactionEntry,
-	): string | null {
+	): { poolId: string; itemId: string | null } | null {
 		const sourceItemId = entry.itemUuid
 			? ((fromUuidSync(entry.itemUuid) as { id?: string } | null)?.id ?? null)
 			: null;
 
 		for (const pool of getDicePools(actor)) {
-			const match = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).some(
+			const match = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
 				(consumer) =>
 					consumer.ruleId === entry.ruleId && (!sourceItemId || consumer.itemId === sourceItemId),
 			);
-			if (match) return pool.id;
+			if (match) return { poolId: pool.id, itemId: match.itemId };
 		}
 		return null;
 	}
@@ -177,17 +177,24 @@
 		const actor = getReactingActor(entry);
 		if (!actor) return;
 
-		const poolId = findOfferPoolId(actor, entry);
-		if (!poolId) {
+		const target = findOfferTarget(actor, entry);
+		if (!target) {
 			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendUnavailable'));
 			return;
 		}
 
-		const dialog = new PoolSpendOfferDialog(actor, poolId, entry.ruleId, getEntryLabel(entry));
+		const dialog = new PoolSpendOfferDialog(
+			actor,
+			target.poolId,
+			entry.ruleId,
+			target.itemId,
+			getEntryLabel(entry),
+		);
 		dialog.render(true);
 		const selection = await dialog.promise;
 		if (!selection) return;
 
+		holdEntry(entry.id);
 		await requestIncomingAttackReaction({
 			messageId: messageDocument?.id ?? '',
 			entryId: entry.id,
@@ -225,11 +232,35 @@
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let busy = $state(false);
 
+	/**
+	 * Offers whose request has been handed off but whose result has not come
+	 * back yet. For a player the request is a socket emit, so it returns long
+	 * before the GM writes `used: true`; leaving the offer clickable in that
+	 * window lets a second confirm read the same unspent pool and fold the
+	 * bonus twice for one set of dice.
+	 *
+	 * The hold lapses on its own so an offer the GM refused — a pick made stale
+	 * by the pool moving — becomes usable again instead of disappearing. The
+	 * executor holds its own lock for the correctness half of this.
+	 */
+	const SPEND_HOLD_DURATION = 10_000;
+	let heldEntryIds = $state(new Set<string>());
+
+	function holdEntry(entryId: string): void {
+		heldEntryIds = new Set(heldEntryIds).add(entryId);
+		setTimeout(() => {
+			const next = new Set(heldEntryIds);
+			if (next.delete(entryId)) heldEntryIds = next;
+		}, SPEND_HOLD_DURATION);
+	}
+
 	let entries = $derived(
 		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
 			?.incomingReactions ?? [],
 	);
-	let pendingEntries = $derived(entries.filter((entry) => !entry.used && canUseEntry(entry)));
+	let pendingEntries = $derived(
+		entries.filter((entry) => !entry.used && !heldEntryIds.has(entry.id) && canUseEntry(entry)),
+	);
 	let usedEntries = $derived(entries.filter((entry) => entry.used));
 </script>
 

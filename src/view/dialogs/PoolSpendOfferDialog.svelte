@@ -12,10 +12,11 @@
 		actor: Actor;
 		poolId: string;
 		ruleId: string;
+		itemId: string | null;
 		dialog: PoolSpendOfferDialog;
 	}
 
-	let { actor, poolId, ruleId, dialog }: Props = $props();
+	let { actor, poolId, ruleId, itemId, dialog }: Props = $props();
 
 	// The pool can move while the picker is open (a refill trigger, another
 	// feature spending a die). Track it rather than snapshotting, so what the
@@ -42,10 +43,14 @@
 		subscribePool();
 		return getDicePools(actor).find((p) => p.id === poolId) ?? null;
 	});
+	// Rule ids are only unique within an item, so the owning item disambiguates
+	// here the same way it does for the card button and the GM-side executor.
+	// Without it the preview could describe a different consumer than the one
+	// the executor resolves.
 	let consumer = $derived(
 		pool
 			? (getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
-					(c) => c.ruleId === ruleId,
+					(c) => c.ruleId === ruleId && (!itemId || c.itemId === itemId),
 				) ?? null)
 			: null,
 	);
