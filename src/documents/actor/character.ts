@@ -16,9 +16,6 @@ import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { consumeCombatantAction } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
-import resolveItemActionCost, {
-	type ItemWithActivationCost,
-} from '../../utils/resolveItemActionCost.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
@@ -38,6 +35,9 @@ import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import resolveCharacterItemActionCost, {
+	type ActivatableItem,
+} from './resolveCharacterItemActionCost.js';
 
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
@@ -1848,7 +1848,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const result = await super.activateItem(id, options);
 
 		if (result && item && !options.skipActionDeduction) {
-			const actionCost = resolveItemActionCost(item as ItemWithActivationCost);
+			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
 			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
 				const combatant =

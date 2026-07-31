@@ -1,4 +1,5 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
+import { ActionCostRule } from '../models/rules/actionCost.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
@@ -43,6 +44,7 @@ import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 export default function registerRulesConfig() {
 	const ruleTypes = {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
+		actionCost: 'NIMBLE.ruleTypes.actionCost',
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
@@ -87,6 +89,7 @@ export default function registerRulesConfig() {
 
 	const ruleDataModels = {
 		abilityBonus: AbilityBonusRule,
+		actionCost: ActionCostRule,
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
 		chargeConsumer: ChargeConsumerRule,
