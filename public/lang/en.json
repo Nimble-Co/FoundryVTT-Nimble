@@ -2556,6 +2556,20 @@
 				"errorReservedKey": "That key is reserved by a built-in school.",
 				"errorDuplicateKey": "Duplicate key."
 			},
+			"automationMenu": {
+				"name": "Automation",
+				"title": "Automation",
+				"manageButton": "Configure Automation",
+				"hint": "Choose which parts of the Nimble rules the system automates for your world. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"intro": "Choose which parts of the Nimble rules the system automates. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"sectionRulesEffects": "Rules & Effects",
+				"sectionResources": "Resources",
+				"sectionCombat": "Combat",
+				"sectionChat": "Chat",
+				"save": "Save Automation Settings",
+				"saved": "Automation settings saved.",
+				"gmOnly": "Only a GM can change automation settings."
+			},
 			"combatTrackerHoverColor": {
 				"name": "Combat Tracker Hover Color",
 				"hint": "Choose your personal token hover highlight color"
