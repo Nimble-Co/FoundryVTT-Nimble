@@ -654,6 +654,7 @@
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
 			"actionCost": "Action Cost",
+			"actionDelta": "Action Adjustment",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",
@@ -732,6 +733,25 @@
 				"reactions": {
 					"label": "Heroic reactions",
 					"hint": "Only these heroic reactions are affected. Leave empty to affect every heroic reaction."
+				}
+			},
+			"actionDelta": {
+				"description": "Grant or remove raw actions when this item is used — immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
+				"value": {
+					"label": "Actions",
+					"hint": "How many actions to grant. A flat number or formula (e.g. @level). Negative values remove actions."
+				},
+				"timing": {
+					"label": "Timing",
+					"hint": "now: adjust the current action pool immediately (may exceed the usual maximum). nextTurn: apply when the recipient's actions next refill."
+				},
+				"target": {
+					"label": "Target",
+					"hint": "self: the actor using the item. targeted: the currently targeted tokens. allAllies: every allied hero in the combat."
+				},
+				"borrowFromNextTurn": {
+					"label": "Borrow from next turn",
+					"hint": "Also start the next turn with that many fewer actions, applied together with the immediate gain as a single adjustment."
 				}
 			},
 			"applyCondition": {
@@ -1692,6 +1712,8 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
+				"pendingActionsGain": "Gains {count} additional actions at the next action refill",
+				"pendingActionsLoss": "Starts the next turn with {count} fewer actions",
 				"confirmEndTurnEarlyTitle": "End Turn Early?",
 				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
