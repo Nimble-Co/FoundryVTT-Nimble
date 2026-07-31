@@ -464,6 +464,28 @@ describe('consumeCombatantAction', () => {
 		});
 	});
 
+	it('returns the unchanged action count when the queued write is skipped', async () => {
+		const fallbackCombatant = createMockCombatant({
+			id: 'c1',
+			actionsCurrent: 3,
+			actionsMax: 3,
+		});
+		const combat = {
+			id: 'combat-action',
+			combatants: createCombatantsCollectionFixture([]),
+		} as unknown as Combat;
+
+		const result = await consumeCombatantAction({
+			combat,
+			combatantId: 'c1',
+			fallbackCombatant,
+			actionCost: 1,
+		});
+
+		expect(result).toBe(3);
+		expect(fallbackCombatant.update).not.toHaveBeenCalled();
+	});
+
 	describe('action-tracking automation gate', () => {
 		// The other tests in this suite exercise the enabled path via the
 		// fail-open default (no game.settings mock); this block installs an
@@ -489,7 +511,7 @@ describe('consumeCombatantAction', () => {
 		});
 
 		it('returns the untouched action pool without persisting when action tracking is off', async () => {
-			const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+			const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 			const result = await consumeCombatantAction({
 				combat,
@@ -498,7 +520,7 @@ describe('consumeCombatantAction', () => {
 			});
 
 			expect(result).toBe(3);
-			expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(combatant.update).not.toHaveBeenCalled();
 		});
 	});
 });

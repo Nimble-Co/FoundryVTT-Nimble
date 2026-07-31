@@ -26,7 +26,7 @@ import {
 	rememberMemberActionSelection,
 } from '../utils/minionGroupAttackSession.js';
 import { isMinionCombatant } from '../utils/minionGrouping.js';
-import resolveItemActionCost from '../utils/resolveItemActionCost.js';
+import resolveMinionAttackActionCost from '../utils/resolveMinionAttackActionCost.js';
 import { tokenHoverIn, tokenHoverOut } from '../utils/tokenHoverHighlight.js';
 
 const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
@@ -476,7 +476,7 @@ function buildGroupAttackActionOptions(
 				rollFormula: getActionRollFormulaLabel(item),
 				description: getActionDescriptionLabel(item),
 				unsupportedReasons,
-				actionCost: resolveItemActionCost(item),
+				actionCost: resolveMinionAttackActionCost(item),
 			};
 		})
 		.filter((option) => option.actionId.length > 0)

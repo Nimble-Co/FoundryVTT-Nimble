@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
+	import localize from '#utils/localize.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
@@ -48,6 +49,10 @@
 		if (!activationType || activationType === 'none') return null;
 
 		if (['action', 'minute', 'hour'].includes(activationType)) {
+			if (activationType === 'action' && activationCost === 0) {
+				return localize('NIMBLE.activationCosts.free');
+			}
+
 			const activationTypeLabel =
 				activationCost > 1
 					? activationCostTypesPlural[activationType]

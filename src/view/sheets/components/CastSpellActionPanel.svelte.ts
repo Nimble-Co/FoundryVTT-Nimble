@@ -103,6 +103,10 @@ export function createSpellPanelState(
 		if (!activationType || activationType === 'none') return null;
 
 		if (['action', 'minute', 'hour'].includes(activationType)) {
+			if (activationType === 'action' && activationCost === 0) {
+				return localize('NIMBLE.activationCosts.free');
+			}
+
 			const label =
 				activationCost > 1
 					? activationCostTypesPlural[activationType]

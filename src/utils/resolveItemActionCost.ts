@@ -1,6 +1,6 @@
 const DEFAULT_ACTION_COST = 1;
 
-interface ItemWithActivationCost {
+export interface ItemWithActivationCost {
 	system?: {
 		activation?: {
 			cost?: { type?: string; quantity?: number };

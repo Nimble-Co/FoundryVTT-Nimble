@@ -395,16 +395,20 @@ export async function consumeCombatantAction(params: {
 	if (normalizedCost === 0) return currentActions;
 
 	const nextActions = Math.max(0, currentActions - normalizedCost);
-	await queueCombatantMutationWithFreshDocument({
+	const appliedActions = await queueCombatantMutationWithFreshDocument({
 		combat: params.combat,
 		combatantId: params.combatantId,
 		mutation: async (currentCombatant) => {
 			await currentCombatant.update({
 				[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
 			} as Record<string, unknown>);
+			return nextActions;
 		},
 	});
-	return nextActions;
+	// A skipped write (the combatant vanished before the queued mutation ran)
+	// leaves the action count unchanged, so report the value that is actually
+	// persisted rather than the deduction we intended to make.
+	return appliedActions ?? currentActions;
 }
 
 export async function maybeAdvanceTurnForCombatant(params: {

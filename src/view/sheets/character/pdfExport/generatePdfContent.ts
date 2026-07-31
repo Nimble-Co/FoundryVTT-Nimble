@@ -311,7 +311,12 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 	const hasReach = properties?.selected?.includes('reach') && properties.reach?.min;
 
 	if (cost?.type && cost.type !== 'none' && cost.type !== 'mana') {
-		let castingTimeStr = cost.quantity > 1 ? `${cost.quantity} ${cost.type}s` : `1 ${cost.type}`;
+		let castingTimeStr: string;
+		if (cost.type === 'action' && cost.quantity === 0) {
+			castingTimeStr = 'Free';
+		} else {
+			castingTimeStr = cost.quantity > 1 ? `${cost.quantity} ${cost.type}s` : `1 ${cost.type}`;
+		}
 
 		// Add target type suffix
 		if (hasTemplate) {

@@ -16,7 +16,9 @@ import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { consumeCombatantAction } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
-import resolveItemActionCost from '../../utils/resolveItemActionCost.js';
+import resolveItemActionCost, {
+	type ItemWithActivationCost,
+} from '../../utils/resolveItemActionCost.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
@@ -1846,9 +1848,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const result = await super.activateItem(id, options);
 
 		if (result && item && !options.skipActionDeduction) {
-			const actionCost = resolveItemActionCost(
-				item as unknown as Parameters<typeof resolveItemActionCost>[0],
-			);
+			const actionCost = resolveItemActionCost(item as ItemWithActivationCost);
 			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
 				const combatant =

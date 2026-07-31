@@ -21,7 +21,9 @@ function extractDisplayData(system: SpellSystemDataWithMana): SpellDisplayData {
 	if (activation?.cost) {
 		const { type: activationType, quantity: activationCost } = activation.cost;
 		if (activationType && activationType !== 'none') {
-			if (['action', 'minute', 'hour'].includes(activationType)) {
+			if (activationType === 'action' && activationCost === 0) {
+				meta = localize('NIMBLE.activationCosts.free');
+			} else if (['action', 'minute', 'hour'].includes(activationType)) {
 				const label =
 					activationCost > 1
 						? activationCostTypesPlural[activationType]
