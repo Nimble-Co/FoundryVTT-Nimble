@@ -1,3 +1,4 @@
+import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
 import type { IncomingReactionEntry } from './incomingAttackModifiers.js';
 
 const INCOMING_REACTION_SOCKET_NAME = 'system.nimble';
@@ -22,18 +23,6 @@ interface ReactionCapableMessage {
 		viaSocket?: boolean,
 	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
-}
-
-function getPrimaryActiveGmId(): string | null {
-	const usersCollection = game.users as unknown as {
-		activeGM?: { id?: string | null } | null;
-		contents?: Array<{ active?: boolean; id?: string | null; isGM?: boolean }>;
-	};
-	const activeGmId = usersCollection.activeGM?.id ?? null;
-	if (activeGmId) return activeGmId;
-	return (
-		usersCollection.contents?.find((user) => user.isGM === true && user.active === true)?.id ?? null
-	);
 }
 
 function getMessageById(messageId: string | null | undefined): ReactionCapableMessage | null {

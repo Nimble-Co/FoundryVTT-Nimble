@@ -22,6 +22,33 @@ export const appliedHealing = () => ({
 });
 
 /**
+ * Pending granted-activation offers (e.g. "a targeted ally may immediately
+ * make a weapon attack"). Stamped onto the card by the activating client from
+ * the used item's grantActivation rules. Offers carry no expiry — like the
+ * incoming reactions below, they remain available until used.
+ */
+export const grantedActionOffers = () => ({
+	grantedActionOffers: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			targetActorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			activationType: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'weaponAttack',
+				choices: ['weaponAttack'],
+			}),
+			ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			sourceItemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
+});
+
+/**
  * Pending interactive incoming-attack reactions (force reroll, redirect to
  * self). Snapshotted at card creation by the attacker's client; `kind` is an
  * open extension point for future reaction types.

@@ -1,4 +1,5 @@
 import { systemHookName } from '#system';
+import { collectGrantedActionOffers } from '#utils/grantedActionOffers.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { requestCombatantActionDelta } from '#utils/requestCombatantActionDelta.js';
 import type { ActionDeltaApplication, ActionDeltaRule } from '../models/rules/actionDelta.js';
@@ -8,7 +9,7 @@ type HookFn = (...args: unknown[]) => unknown;
 interface UseItemTarget {
 	id?: string | null;
 	document?: { id?: string | null } | null;
-	actor?: { id?: string | null } | null;
+	actor?: { id?: string | null; uuid?: string } | null;
 }
 
 interface UseItemContext {
@@ -17,8 +18,9 @@ interface UseItemContext {
 
 interface RuleBearingItem {
 	uuid?: string;
+	name?: string;
 	isEmbedded?: boolean;
-	actor?: { id?: string | null } | null;
+	actor?: { id?: string | null; uuid?: string } | null;
 	rules?: Map<string, { type?: string }> | null;
 }
 
@@ -161,6 +163,37 @@ function handleUseItem(item: unknown, _chatMessage: unknown, context: unknown): 
 	}
 }
 
+/**
+ * Stamps the used item's granted-activation offers onto its chat card, where
+ * the recipients' owners (or a GM) can accept them. Runs on the activating
+ * client, which authored the message and may therefore update it. Unlike the
+ * action-delta handler, this does not require an active combat — an offered
+ * activation works anywhere, and any in-combat action cost is resolved by the
+ * recipient's normal activation flow.
+ */
+function handleUseItemGrantedOffers(item: unknown, chatMessage: unknown, context: unknown): void {
+	const typedItem = toRuleBearingItem(item);
+	if (!typedItem) return;
+
+	const message = chatMessage as {
+		system?: { grantedActionOffers?: unknown };
+		update?: (data: Record<string, unknown>) => Promise<unknown>;
+	} | null;
+	// Only card types whose schema carries the offers field can persist them.
+	if (!message?.update || !Array.isArray(message.system?.grantedActionOffers)) return;
+
+	const targets = ((context as UseItemContext | null)?.targets ?? []).filter(
+		(target): target is UseItemTarget => Boolean(target),
+	);
+	const offers = collectGrantedActionOffers(
+		typedItem as Parameters<typeof collectGrantedActionOffers>[0],
+		targets,
+	);
+	if (offers.length < 1) return;
+
+	void message.update({ system: { grantedActionOffers: offers } });
+}
+
 let didRegisterActionEconomySystemHooks = false;
 
 export default function registerActionEconomySystemHooks(): void {
@@ -168,4 +201,5 @@ export default function registerActionEconomySystemHooks(): void {
 	didRegisterActionEconomySystemHooks = true;
 
 	registerCustomHook(systemHookName('useItem'), handleUseItem as HookFn);
+	registerCustomHook(systemHookName('useItem'), handleUseItemGrantedOffers as HookFn);
 }

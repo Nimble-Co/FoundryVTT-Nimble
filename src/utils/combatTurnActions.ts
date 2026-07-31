@@ -1,6 +1,7 @@
 import { isActionTrackingAutomationEnabled } from '../settings/automationSettings.js';
 import { getActorDyingActionLimit, isActorDying } from './actorHealthState.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
+import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
 import { isCombatantDead } from './isCombatantDead.js';
 import { queueCombatantMutationWithFreshDocument } from './queueCombatantMutationWithFreshDocument.js';
 
@@ -110,18 +111,6 @@ export function canUserTakeCombatTurn(
 	const activeCombatant = combat.combatant ?? null;
 	if (!activeCombatant || activeCombatant.type !== 'character') return false;
 	return !isCombatantDead(activeCombatant);
-}
-
-function getPrimaryActiveGmId(): string | null {
-	const usersCollection = game.users as unknown as {
-		activeGM?: { id?: string | null } | null;
-		contents?: Array<{ active?: boolean; id?: string | null; isGM?: boolean }>;
-	};
-	const activeGmId = usersCollection.activeGM?.id ?? null;
-	if (activeGmId) return activeGmId;
-	return (
-		usersCollection.contents?.find((user) => user.isGM === true && user.active === true)?.id ?? null
-	);
 }
 
 function getUserById(userId: string | null | undefined): User.Implementation | null {

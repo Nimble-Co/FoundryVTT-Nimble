@@ -13,6 +13,7 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
@@ -57,6 +58,7 @@ export default function registerRulesConfig() {
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
+		grantActivation: 'NIMBLE.ruleTypes.grantActivation',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
 		dicePool: 'NIMBLE.ruleTypes.dicePool',
@@ -103,6 +105,7 @@ export default function registerRulesConfig() {
 		damageBonus: DamageBonusRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
+		grantActivation: GrantActivationRule,
 		grantMovement: GrantMovementRule,
 		diceConsumer: DiceConsumerRule,
 		dicePool: DicePoolRule,

@@ -21,6 +21,7 @@ const RULE_ICONS: Record<string, string> = {
 	conditionImmunity: 'fa-solid fa-shield-virus',
 	damageBonus: 'fa-solid fa-explosion',
 	dyingActionLimit: 'fa-solid fa-skull',
+	grantActivation: 'fa-solid fa-hand-point-right',
 	grantItem: 'fa-solid fa-gift',
 	grantProficiency: 'fa-solid fa-graduation-cap',
 	grantSpells: 'fa-solid fa-wand-magic-sparkles',
