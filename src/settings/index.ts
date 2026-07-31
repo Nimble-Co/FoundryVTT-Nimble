@@ -9,6 +9,7 @@ import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
+import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
@@ -85,19 +86,7 @@ export default function registerSystemSettings() {
 
 	registerAdjacencySettings();
 
-	game.settings.register(
-		SYSTEM_ID as 'core',
-		'automation.autoApplyConditions' as 'rollMode',
-		{
-			name: 'NIMBLE.settings.autoApplyConditions.name',
-			hint: 'NIMBLE.settings.autoApplyConditions.hint',
-			scope: 'world',
-			config: true,
-			type: Boolean,
-			default: false,
-			requiresReload: true,
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
+	registerAutomationSettings();
 
 	registerCombatTrackerSettings();
 	registerNcswSettings();
