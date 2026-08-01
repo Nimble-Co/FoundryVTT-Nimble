@@ -21,6 +21,8 @@ type DicePoolConsumer = {
 	effectFormula: string | null;
 	effectType: string;
 	selectionOutcome: string;
+	/** Damage type a card offer's bonus deals; '' inherits the attack's own */
+	damageType: string;
 	/** Set when the spend is offered on the attack card instead of the sheet */
 	cardOffer: DiceCardOfferTrigger | null;
 	/** Narrows a card offer to melee or ranged attacks; null = unrestricted */
@@ -198,6 +200,7 @@ function getDicePoolConsumers(
 				effectFormula,
 				effectType,
 				selectionOutcome,
+				damageType: typeof consumer.damageType === 'string' ? consumer.damageType : '',
 				cardOffer: toCardOfferTrigger(consumer.cardOffer),
 				bonusOnAttackDelivery:
 					typeof consumer.bonusOnAttackDelivery === 'string'

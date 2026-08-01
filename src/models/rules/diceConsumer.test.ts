@@ -80,6 +80,15 @@ describe('DiceConsumerRule', () => {
 			expect(schema).toHaveProperty('bonusOnAttackDelivery');
 			expect(schema).toHaveProperty('effectFormula');
 			expect(schema).toHaveProperty('effectType');
+			expect(schema).toHaveProperty('damageType');
+		});
+
+		it('defaults damageType to the inherit-the-attack sentinel', () => {
+			const schema = DiceConsumerRule.defineSchema();
+			const damageType = schema.damageType as unknown as { initial: unknown; blank: boolean };
+
+			expect(damageType.initial).toBe('');
+			expect(damageType.blank).toBe(true);
 		});
 
 		it('defaults effectFormula to null', () => {
