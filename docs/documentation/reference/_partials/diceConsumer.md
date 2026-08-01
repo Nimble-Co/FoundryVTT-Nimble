@@ -34,13 +34,15 @@ Two things to watch for. An activation with no attack type set counts as neither
 - **Effect type** → `generic`
 - **Offer on attack card** → `criticalHit`
 
-The result is added to that attack's own damage total, so the GM applies damage once and the target's armor, resistances and reductions are counted once. Posting it as a separate roll would count them twice.
+With **Bonus damage type** left empty the result is added to that attack's own damage total, so the GM applies damage once and the target's armor, resistances and reductions are counted once. Posting it as a separate roll would count them twice.
 
 A consumer that opts in gives up its sheet flow entirely: it no longer opens the panel when the item is activated, and it is hidden from the pool panel's feature list. The panel cannot see how the attack turned out, so leaving it there would offer a crit-only spend on any activation.
 
 Opting in needs the rest of the rule to line up. It has to be a `manual` spend with `consume` as its outcome, a `generic` effect type, and an effect formula, on a player character. A `damageReduction` spend is banked against incoming damage rather than added to an attack, so it is not eligible.
 
-One limit worth knowing before you author one: the bonus takes on the attack's own damage type, so a feature whose extra damage is a specific type (radiant, fire) cannot be expressed this way yet.
+**Bonus damage type** covers the features whose extra damage is a specific type (radiant, fire) rather than more of what the weapon deals. A damage node carries exactly one type, so a typed bonus cannot fold into the attack's roll: it lands on the card as its own damage packet, with its own Apply Damage button. Leave it empty and the bonus deals whatever the attack deals, which is the cheaper path in every way.
+
+Know what that costs before you set it. The target's flat damage reduction, their resistance and monster heavy armor all resolve against each packet separately, so a target with damage reduction 2 subtracts 2 from the attack and 2 more from the typed bonus. Flat reduction is meant to apply once per attack ("reduce damage from any single attack by your Armor"), so a typed bonus is currently generous to the defender. Resistance halving each packet on its own is the reasonable reading, though the rulebooks say only "take half as much damage" and never address an attack with more than one damage type.
 
 **Selection outcome** decides what happens to the dice the player picked:
 

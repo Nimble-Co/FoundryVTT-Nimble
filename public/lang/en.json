@@ -113,6 +113,7 @@
 				"poolSpendUnavailable": "That feature's dice pool is no longer available.",
 				"poolSpendStale": "Those dice are no longer in the pool. Nothing was spent.",
 				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
+				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
 				"useFailed": "That reaction could not be completed."
 			}
@@ -802,6 +803,11 @@
 				"effectType": {
 					"label": "Effect type",
 					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
+				},
+				"damageType": {
+					"inherit": "Inherit the attack's type",
+					"label": "Bonus damage type",
+					"hint": "The damage type a card offer's bonus deals. Leave empty to inherit the attack's own type, which folds the bonus into the attack's damage total. Setting a type adds the bonus as a separate damage packet with its own Apply Damage button, so the target's flat reduction and resistance resolve against it on their own. Ignored unless the spend is offered on an attack card."
 				},
 				"selectionOutcome": {
 					"label": "Selection outcome",
