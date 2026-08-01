@@ -42,7 +42,7 @@ Opting in needs the rest of the rule to line up. It has to be a `manual` spend w
 
 **Bonus damage type** covers the features whose extra damage is a specific type (radiant, fire) rather than more of what the weapon deals. A damage node carries exactly one type, so a typed bonus cannot fold into the attack's roll: it lands on the card as its own damage packet, with its own Apply Damage button. Leave it empty and the bonus deals whatever the attack deals, which is the cheaper path in every way.
 
-Know what that costs before you set it. The target's flat damage reduction, their resistance and monster heavy armor all resolve against each packet separately, so a target with damage reduction 2 subtracts 2 from the attack and 2 more from the typed bonus. Flat reduction is meant to apply once per attack ("reduce damage from any single attack by your Armor"), so a typed bonus is currently generous to the defender. Resistance halving each packet on its own is the reasonable reading, though the rulebooks say only "take half as much damage" and never address an attack with more than one damage type.
+Know what that costs before you set it. The GM still applies the card with one click and the target's flat damage reduction still comes off once, but their resistance is judged per packet, so a target resistant to the bonus type takes half of it and full damage from the attack itself. That is the reasonable reading of "take half as much damage" for an attack that deals two types, though the rulebooks never address one.
 
 **Selection outcome** decides what happens to the dice the player picked:
 

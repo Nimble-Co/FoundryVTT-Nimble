@@ -39,7 +39,7 @@
 	const messageDocument = getContext('messageDocument');
 	const { actorType, permissions } = messageDocument.system;
 
-	let { damageType, ignoreArmor = false, outcome, roll, targetDisposition = undefined } = $props();
+	let { damageType, ignoreArmor = false, outcome, roll } = $props();
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
 	let multiplier = $derived(getDamageMultiplier(outcome));
@@ -52,10 +52,8 @@
 		tooltip={prepareRollTooltip(actorType, permissions, Roll.fromData(roll))}
 		subheading={secondaryInfo}
 		total={Math.ceil(roll.total * multiplier)}
-		type="damage"
 		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
-		{targetDisposition}
 	/>
 {:else}
 	<RollSummary
@@ -63,9 +61,7 @@
 		tooltip={null}
 		subheading={secondaryInfo}
 		total={Math.ceil((roll?.total ?? 0) * multiplier)}
-		type="damage"
 		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={false}
-		{targetDisposition}
 	/>
 {/if}
