@@ -24,6 +24,27 @@ describe('resolveMinionAttackActionCost', () => {
 		).toBe(1);
 	});
 
+	it('defaults to 1 for any non-action cost type', () => {
+		expect(
+			resolveMinionAttackActionCost({
+				system: { activation: { cost: { type: 'minute', quantity: 10 } } },
+			}),
+		).toBe(1);
+		expect(
+			resolveMinionAttackActionCost({
+				system: { activation: { cost: { type: 'special', quantity: 0 } } },
+			}),
+		).toBe(1);
+	});
+
+	it('defaults the quantity to 1 for an action cost with no quantity', () => {
+		expect(
+			resolveMinionAttackActionCost({
+				system: { activation: { cost: { type: 'action' } } },
+			}),
+		).toBe(1);
+	});
+
 	it('returns 0 for an explicit zero action cost', () => {
 		expect(
 			resolveMinionAttackActionCost({

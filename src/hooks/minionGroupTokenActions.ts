@@ -2261,13 +2261,9 @@ async function executeNonMinionAttackActivation(
 
 	await validatedAttack.actor.activateItem(validatedAttack.selectedActionId, activationOptions);
 
-	const latestCombatant =
-		validatedAttack.combat.combatants.get(validatedAttack.memberCombatantId) ??
-		validatedAttack.combatant;
 	await consumeCombatantAction({
 		combat: validatedAttack.combat,
 		combatantId: validatedAttack.memberCombatantId,
-		fallbackCombatant: latestCombatant,
 		actionCost: validatedAttack.selectedAction.actionCost,
 	});
 

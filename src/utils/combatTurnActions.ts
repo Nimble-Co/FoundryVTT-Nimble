@@ -375,11 +375,9 @@ export async function requestSwapCombatTurn(params: {
 export async function consumeCombatantAction(params: {
 	combat: Combat;
 	combatantId: string;
-	fallbackCombatant?: Combatant.Implementation | null;
 	actionCost?: number;
 }): Promise<number> {
-	const combatant =
-		params.combat.combatants.get(params.combatantId) ?? params.fallbackCombatant ?? null;
+	const combatant = params.combat.combatants.get(params.combatantId) ?? null;
 	if (!combatant) return 0;
 
 	// With action-tracking automation off, item use never deducts actions. The
@@ -387,18 +385,26 @@ export async function consumeCombatantAction(params: {
 	// callers must not branch on it.
 	if (!isActionTrackingAutomationEnabled()) return getCombatantCurrentActions(combatant);
 
-	const currentActions = getCombatantCurrentActions(combatant);
-	if (currentActions < 1) return 0;
+	// Cheap early-out on a possibly stale snapshot. The queued mutation below
+	// recomputes from the fresh document before writing, so at worst a stale
+	// zero here skips a deduction; it can never cause an incorrect write.
+	const snapshotActions = getCombatantCurrentActions(combatant);
+	if (snapshotActions < 1) return 0;
 
 	const cost = Number(params.actionCost ?? 1);
 	const normalizedCost = Number.isFinite(cost) && cost >= 0 ? cost : 1;
-	if (normalizedCost === 0) return currentActions;
+	if (normalizedCost === 0) return snapshotActions;
 
-	const nextActions = Math.max(0, currentActions - normalizedCost);
 	const appliedActions = await queueCombatantMutationWithFreshDocument({
 		combat: params.combat,
 		combatantId: params.combatantId,
 		mutation: async (currentCombatant) => {
+			// Recompute from the fresh document so overlapping deductions each
+			// apply on top of the latest persisted value instead of a shared
+			// pre-queue snapshot clobbering one another.
+			const currentActions = getCombatantCurrentActions(currentCombatant);
+			const nextActions = Math.max(0, currentActions - normalizedCost);
+			if (nextActions === currentActions) return currentActions;
 			await currentCombatant.update({
 				[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
 			} as Record<string, unknown>);
@@ -408,7 +414,7 @@ export async function consumeCombatantAction(params: {
 	// A skipped write (the combatant vanished before the queued mutation ran)
 	// leaves the action count unchanged, so report the value that is actually
 	// persisted rather than the deduction we intended to make.
-	return appliedActions ?? currentActions;
+	return appliedActions ?? snapshotActions;
 }
 
 export async function maybeAdvanceTurnForCombatant(params: {

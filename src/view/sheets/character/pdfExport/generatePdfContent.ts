@@ -313,7 +313,7 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 	if (cost?.type && cost.type !== 'none' && cost.type !== 'mana') {
 		let castingTimeStr: string;
 		if (cost.type === 'action' && cost.quantity === 0) {
-			castingTimeStr = 'Free';
+			castingTimeStr = game.i18n.localize('NIMBLE.activationCosts.free');
 		} else {
 			castingTimeStr = cost.quantity > 1 ? `${cost.quantity} ${cost.type}s` : `1 ${cost.type}`;
 		}
