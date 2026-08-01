@@ -810,6 +810,10 @@
 				"cardOffer": {
 					"label": "Offer on attack card",
 					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend through the sheet's dice pool panel only. Requires a manual spend that consumes dice for a generic effect."
+				},
+				"bonusOnAttackDelivery": {
+					"label": "Attack delivery",
+					"hint": "Restrict this consumer to melee or ranged attacks. Applies to both an auto-bonus pool and a card offer. Leave empty (or pick \"any\") for no restriction. Beware: an activation with no attack type set counts as neither melee nor ranged, so most spells and utility features are excluded by any restriction here, with nothing shown to explain why."
 				}
 			},
 			"chargePool": {

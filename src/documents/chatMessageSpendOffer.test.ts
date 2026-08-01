@@ -121,7 +121,7 @@ type MockedMessage = NimbleChatMessage & { update: ReturnType<typeof vi.fn> };
 function createMessage(
 	entries: Array<Record<string, unknown>>,
 	roll: Record<string, unknown> | null = damageRoll(),
-	card: { isCritical?: boolean; isMiss?: boolean } = {},
+	card: { isCritical?: boolean; isMiss?: boolean; attackType?: string } = {},
 ) {
 	const message = new NimbleChatMessage({
 		type: 'spell',
@@ -133,6 +133,7 @@ function createMessage(
 				effects: roll
 					? [{ id: 'damage-node', type: 'damage', parentNode: null, parentContext: null, roll }]
 					: [],
+				targets: { count: 1, attackType: card.attackType ?? 'reach', distance: 1 },
 			},
 			incomingReactions: entries,
 		},
@@ -351,6 +352,33 @@ describe('resolveSpendPoolForDamageOffer', () => {
 
 		await message.resolveSpendPoolForDamageOffer('spend-1', 'player-2', selection([4, 3, 5], [0]));
 
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('applies a delivery-filtered consumer to a matching attack', async () => {
+		const actor = createActor(
+			[4, 3, 5],
+			[POOL_RULE, consumerRule({ bonusOnAttackDelivery: 'melee' })],
+		);
+		useActor(actor);
+		const message = createMessage([spendEntry()], damageRoll(), { attackType: 'reach' });
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(message.update).toHaveBeenCalled();
+	});
+
+	it('refuses a delivery-filtered consumer on a card delivered the other way', async () => {
+		const actor = createActor(
+			[4, 3, 5],
+			[POOL_RULE, consumerRule({ bonusOnAttackDelivery: 'melee' })],
+		);
+		useActor(actor);
+		const message = createMessage([spendEntry()], damageRoll(), { attackType: 'range' });
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(actor._item.update).not.toHaveBeenCalled();
 		expect(message.update).not.toHaveBeenCalled();
 	});
 
