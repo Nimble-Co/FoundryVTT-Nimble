@@ -2568,6 +2568,7 @@
 				"sectionChat": "Chat",
 				"save": "Save Automation Settings",
 				"saved": "Automation settings saved.",
+				"saveError": "Saving the automation settings failed and some toggles may not have been applied. Check the console for details.",
 				"gmOnly": "Only a GM can change automation settings."
 			},
 			"combatTrackerHoverColor": {

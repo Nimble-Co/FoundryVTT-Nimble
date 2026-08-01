@@ -51,10 +51,17 @@
 			return;
 		}
 
-		for (const shortKey of Object.keys(AUTOMATION_SETTING_KEYS) as AutomationShortKey[]) {
-			if (toggles[shortKey] !== initialValues[shortKey]) {
-				await setAutomationToggle(AUTOMATION_SETTING_KEYS[shortKey], toggles[shortKey]);
+		try {
+			for (const shortKey of Object.keys(AUTOMATION_SETTING_KEYS) as AutomationShortKey[]) {
+				if (toggles[shortKey] !== initialValues[shortKey]) {
+					await setAutomationToggle(AUTOMATION_SETTING_KEYS[shortKey], toggles[shortKey]);
+					initialValues[shortKey] = toggles[shortKey];
+				}
 			}
+		} catch (error) {
+			console.error(error);
+			ui.notifications?.error(t('saveError'));
+			return;
 		}
 
 		ui.notifications?.info(t('saved'));

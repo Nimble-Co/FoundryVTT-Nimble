@@ -381,8 +381,9 @@ export async function consumeCombatantAction(params: {
 		params.combat.combatants.get(params.combatantId) ?? params.fallbackCombatant ?? null;
 	if (!combatant) return 0;
 
-	// With action-tracking automation off, item use never deducts actions;
-	// report the untouched pool so callers proceed normally.
+	// With action-tracking automation off, item use never deducts actions. The
+	// returned pool value cannot be distinguished from the blocked-use 0 below;
+	// callers must not branch on it.
 	if (!isActionTrackingAutomationEnabled()) return getCombatantCurrentActions(combatant);
 
 	const currentActions = getCombatantCurrentActions(combatant);

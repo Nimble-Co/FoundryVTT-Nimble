@@ -13,7 +13,7 @@ How much the system does on its own is controlled from one place: the **Configur
 - **Apply Conditions and Effects from Rules.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and timed effects end on their own. When off, conditions still appear as one-click buttons on the chat card. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
 - **Derived Conditions.** Conditions implied by other conditions are applied and removed automatically, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
 - **Resource Recovery.** Charges and dice pools refill from their recovery triggers: turn start, rests, wounds, kills, and encounter end.
-- **Resource Spending.** Mana is deducted when casting, and charges are validated and consumed on use. When off, resource costs are not enforced and must be tracked by hand.
+- **Resource Spending.** Mana is deducted when casting, and charges are validated and consumed on use. When off, casting and item use no longer deduct or check costs, so they must be tracked by hand. One exception: the spell upcast dialog still caps upcasting at the mana currently shown on the sheet.
 - **Action Tracking.** Using an item during combat spends the combatant's actions.
 - **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
 - **Combat Convenience.** Player characters roll initiative automatically when combat starts.

@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	createCombatActorFixture,
 	createCombatantsCollectionFixture,
 } from '../../tests/fixtures/combat.js';
 import { createMockCombatant } from '../../tests/mocks/combat.js';
+import { AUTOMATION_SETTING_KEYS } from '../settings/automationSettings.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import {
 	canUserTakeCombatTurn,
@@ -465,6 +466,44 @@ describe('consumeCombatantAction', () => {
 		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{ _id: 'c1', 'system.actions.base.current': 2 },
 		]);
+	});
+
+	describe('action-tracking automation gate', () => {
+		// The other tests in this suite exercise the enabled path via the
+		// fail-open default (no game.settings mock); this block installs an
+		// explicit settings mock and removes it afterwards.
+		beforeEach(() => {
+			(
+				globalThis as unknown as {
+					game: { settings?: { get: ReturnType<typeof vi.fn> } };
+				}
+			).game.settings = {
+				get: vi.fn(
+					(_namespace: string, key: string) => key !== AUTOMATION_SETTING_KEYS.actionTracking,
+				),
+			};
+		});
+
+		afterEach(() => {
+			(
+				globalThis as unknown as {
+					game: { settings?: { get: ReturnType<typeof vi.fn> } };
+				}
+			).game.settings = undefined;
+		});
+
+		it('returns the untouched action pool without persisting when action tracking is off', async () => {
+			const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+
+			const result = await consumeCombatantAction({
+				combat,
+				combatantId: 'c1',
+				actionCost: 2,
+			});
+
+			expect(result).toBe(3);
+			expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+		});
 	});
 });
 

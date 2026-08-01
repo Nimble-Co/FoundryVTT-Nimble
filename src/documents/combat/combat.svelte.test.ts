@@ -9,6 +9,7 @@ import {
 	getTestGlobals,
 	type NimbleCombatDocumentTestGlobals,
 } from '../../../tests/mocks/combat.js';
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 import { initiativeRollLock } from '../../utils/initiativeRollLock.js';
 import { NimbleCombat } from './combat.svelte.js';
 import { clearExpandedTurnIdentityHint } from './expandedTurnIdentityStore.js';
@@ -1676,6 +1677,75 @@ describe('NimbleCombat', () => {
 		expect(combat.rollInitiative).toHaveBeenCalledWith(['unrolled-character'], {
 			updateTurn: false,
 		});
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
+		]);
+	});
+
+	it('skips auto-rolling character initiative at combat start when combat-convenience automation is off, while still resetting non-character actions', async () => {
+		const settingsGet = (
+			globals().game as unknown as {
+				settings: { get: ReturnType<typeof vi.fn> };
+			}
+		).settings.get;
+		settingsGet.mockImplementation((namespace: string, key: string) => {
+			if (namespace === 'core' && key === 'rollMode') return 'publicroll';
+			if (key === AUTOMATION_SETTING_KEYS.combatConvenience) return false;
+			return undefined;
+		});
+
+		const combatId = 'combat-start-action-initialization-convenience-off';
+		const unrolledCharacter = createMockCombatant({
+			id: 'unrolled-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const rolledCharacter = createMockCombatant({
+			id: 'rolled-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const npc = createMockCombatant({
+			id: 'npc-combatant',
+			type: 'npc',
+			sort: 3,
+			isOwner: false,
+			initiative: 10,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([unrolledCharacter, rolledCharacter, npc]),
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+			rollInitiative: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.rollInitiative = vi.fn().mockResolvedValue(combat);
+
+		await combat.startCombat();
+
+		expect(combat.rollInitiative).not.toHaveBeenCalled();
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
 		]);
