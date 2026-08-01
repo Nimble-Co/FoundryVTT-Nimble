@@ -556,6 +556,18 @@ describe('computeIncomingAttackPlan', () => {
 		expect(plan.autoRerollEntries).toHaveLength(1);
 		expect(plan.autoRerollEntries[0].rerollTrigger).toBe('criticalHit');
 	});
+
+	it('forwards the attack context to the attacker-side offer collector', () => {
+		const providesCardOffer = vi.fn(() => false);
+		const attacker = {
+			uuid: 'Actor.attacker',
+			rules: [{ type: 'diceConsumer', id: 'consumer', providesCardOffer }],
+		};
+
+		computeIncomingAttackPlan(null, attacker as never, { delivery: 'ranged' });
+
+		expect(providesCardOffer).toHaveBeenCalledWith({ delivery: 'ranged' });
+	});
 });
 
 describe('applyPostRollIncomingBehavior', () => {

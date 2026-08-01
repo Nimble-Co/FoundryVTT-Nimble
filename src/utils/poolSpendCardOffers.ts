@@ -1,6 +1,12 @@
+import type { AttackDelivery } from './attackDelivery.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 
 const DICE_CONSUMER_RULE_TYPE = 'diceConsumer';
+
+/** What the attack about to be posted looks like, for rules that filter on it. */
+export interface CardOfferContext {
+	delivery: AttackDelivery;
+}
 
 interface CardOfferRuleLike {
 	type?: string;
@@ -8,7 +14,7 @@ interface CardOfferRuleLike {
 	label?: string;
 	cardOffer?: 'hit' | 'criticalHit' | null;
 	item?: { name?: string; uuid?: string } | null;
-	providesCardOffer?: () => boolean;
+	providesCardOffer?: (context?: CardOfferContext) => boolean;
 }
 
 /** The minimum an actor must expose to be asked for spend offers. */
@@ -24,10 +30,12 @@ export interface OfferingActor {
  * These are stamped alongside the defender-side reaction entries and filtered
  * against the resolved outcome before they reach the card, so a `criticalHit`
  * offer never appears on a normal hit. Eligibility (predicate, mode, effect
- * type) is the rule's own call via `providesCardOffer`.
+ * type, attack delivery) is the rule's own call via `providesCardOffer`; the
+ * attack context is handed over untouched.
  */
 export function collectPoolSpendCardOffers(
 	actor: OfferingActor | null | undefined,
+	context?: CardOfferContext,
 ): IncomingReactionEntry[] {
 	const actorUuid = actor?.uuid ?? '';
 	if (!actorUuid || !Array.isArray(actor?.rules)) return [];
@@ -36,7 +44,7 @@ export function collectPoolSpendCardOffers(
 
 	for (const rule of actor.rules) {
 		if (rule?.type !== DICE_CONSUMER_RULE_TYPE) continue;
-		if (rule.providesCardOffer?.() !== true) continue;
+		if (rule.providesCardOffer?.(context) !== true) continue;
 
 		offers.push({
 			id: foundry.utils.randomID(),

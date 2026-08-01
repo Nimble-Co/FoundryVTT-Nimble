@@ -1,6 +1,10 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
 import type { IncomingReactionEntry, RerollTrigger } from './incomingReactionEntry.js';
-import { collectPoolSpendCardOffers, type OfferingActor } from './poolSpendCardOffers.js';
+import {
+	type CardOfferContext,
+	collectPoolSpendCardOffers,
+	type OfferingActor,
+} from './poolSpendCardOffers.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -305,12 +309,13 @@ function collectRedirectCandidates(targetToken: Token.Implementation): IncomingR
 function computeIncomingAttackPlan(
 	firstTargetToken: Token.Implementation | null | undefined,
 	attackingActor?: OfferingActor,
+	attackContext?: CardOfferContext,
 ): IncomingAttackPlan {
 	const plan: IncomingAttackPlan = {
 		disadvantageCount: 0,
 		forceMiss: false,
 		appliedEntries: [],
-		reactionEntries: [...collectPoolSpendCardOffers(attackingActor)],
+		reactionEntries: [...collectPoolSpendCardOffers(attackingActor, attackContext)],
 		autoRerollEntries: [],
 	};
 

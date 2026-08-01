@@ -56,6 +56,23 @@ describe('collectPoolSpendCardOffers', () => {
 		expect(offers).toEqual([]);
 	});
 
+	it('hands the attack context to the rule untouched', () => {
+		const providesCardOffer = vi.fn(() => true);
+		const context = { delivery: 'melee' } as const;
+
+		collectPoolSpendCardOffers(actorWith([consumerRule({ providesCardOffer })]), context);
+
+		expect(providesCardOffer).toHaveBeenCalledWith(context);
+	});
+
+	it('passes no context through when the caller supplies none', () => {
+		const providesCardOffer = vi.fn(() => true);
+
+		collectPoolSpendCardOffers(actorWith([consumerRule({ providesCardOffer })]));
+
+		expect(providesCardOffer).toHaveBeenCalledWith(undefined);
+	});
+
 	it('ignores rules of other types', () => {
 		const offers = collectPoolSpendCardOffers(actorWith([consumerRule({ type: 'dicePool' })]));
 

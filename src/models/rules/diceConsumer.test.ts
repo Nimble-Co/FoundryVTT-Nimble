@@ -12,6 +12,7 @@ function createDiceConsumerRule(config: {
 	effectType?: string;
 	cardOffer?: string | null;
 	actorType?: string;
+	bonusOnAttackDelivery?: string | null;
 }) {
 	const item = {
 		id: 'item-tayg',
@@ -27,7 +28,7 @@ function createDiceConsumerRule(config: {
 			poolScope: 'item',
 			mode: config.mode ?? 'manual',
 			cost: '1',
-			bonusOnAttackDelivery: null,
+			bonusOnAttackDelivery: config.bonusOnAttackDelivery ?? null,
 			effectFormula: config.effectFormula === undefined ? '@n' : config.effectFormula,
 			effectType: config.effectType ?? 'damageReduction',
 			cardOffer: config.cardOffer ?? null,
@@ -51,6 +52,7 @@ function createDiceConsumerRule(config: {
 	(rule as any).selectionOutcome = config.selectionOutcome ?? 'consume';
 	(rule as any).effectType = config.effectType ?? 'damageReduction';
 	(rule as any).cardOffer = config.cardOffer ?? null;
+	(rule as any).bonusOnAttackDelivery = config.bonusOnAttackDelivery ?? null;
 	(rule as any).id = 'test-consumer-id';
 
 	Object.defineProperty(rule, 'item', {
@@ -304,6 +306,79 @@ describe('DiceConsumerRule', () => {
 			});
 
 			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('offers a delivery-filtered spend on an attack that matches', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'melee' })).toBe(true);
+		});
+
+		it('withholds a delivery-filtered spend from an attack delivered the other way', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'ranged' })).toBe(false);
+		});
+
+		it('withholds a delivery-filtered spend from an activation with no attack type', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'ranged',
+			});
+
+			expect(rule.providesCardOffer({ delivery: null })).toBe(false);
+		});
+
+		it("offers an 'any' filter on every delivery, including none at all", () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'any',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'melee' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: 'ranged' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: null })).toBe(true);
+		});
+
+		it('fails closed when a filtered consumer is asked without an attack context', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('leaves an unfiltered consumer unaffected by the attack context', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'ranged' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: null })).toBe(true);
+		});
+
+		it('still short-circuits on the earlier gates before consulting delivery', () => {
+			const { rule } = createDiceConsumerRule({
+				mode: 'autoBonus',
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'melee' })).toBe(false);
 		});
 	});
 });

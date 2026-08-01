@@ -7,6 +7,7 @@ import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js'
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import { type AttackDelivery, attackDeliveryFromAttackType } from '../utils/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -224,6 +225,7 @@ class ItemActivationManager {
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getFirstTargetToken(),
 			this.actor as OfferingActor,
+			{ delivery: this.#getAttackDelivery() },
 		);
 
 		let rolls: (Roll | DamageRoll)[] = [];
@@ -243,6 +245,14 @@ class ItemActivationManager {
 			rollHidden: dialogData.rollHidden ?? false,
 			incomingReactions: this.#appliedIncomingReactions,
 		};
+	}
+
+	/**
+	 * How this activation reaches its target, read off `activationData` rather
+	 * than off the item so it reflects any upcast the manager already applied.
+	 */
+	#getAttackDelivery(): AttackDelivery {
+		return attackDeliveryFromAttackType(this.activationData?.targets?.attackType);
 	}
 
 	/**
@@ -293,8 +303,7 @@ class ItemActivationManager {
 		// When attackType is empty (item has no attack), delivery is null and damage bonuses
 		// are skipped entirely — non-attack items (consumables, utilities) should not receive
 		// attack damage bonuses.
-		const attackType = this.activationData?.targets?.attackType;
-		const delivery = attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
+		const delivery = this.#getAttackDelivery();
 		// Source classification: spells are 'spell', everything else (weapons, monster features,
 		// class features) is 'weapon'. Monster features are physical attacks, not spells.
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
