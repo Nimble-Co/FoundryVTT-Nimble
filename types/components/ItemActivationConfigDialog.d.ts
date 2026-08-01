@@ -1,4 +1,4 @@
-export type AttackDelivery = 'melee' | 'ranged' | null;
+export type { AttackDelivery } from '#utils/attackDelivery.js';
 
 export interface SpendablePool {
 	id: string;
