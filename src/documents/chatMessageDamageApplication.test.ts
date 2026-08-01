@@ -171,6 +171,35 @@ describe('NimbleChatMessage.applyAllDamage', () => {
 		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
 	});
 
+	it('carries the banked reduction into the next packet rather than wasting it', async () => {
+		const actor = createTarget({ bankedReduction: 9 });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await createCard([
+			{ damageType: 'slashing', total: 4 },
+			{ damageType: 'radiant', total: 8 },
+		]).applyAllDamage();
+
+		// 12 total minus 9. Spending the whole bank on the first packet would
+		// have left the 8 untouched.
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
+	});
+
+	it('spends a type-scoped reduction only against damage of that type', async () => {
+		const actor = createTarget({
+			damageReductions: [{ value: 5, damageTypes: ['radiant'], label: 'Sun Ward' }],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await createCard([
+			{ damageType: 'slashing', total: 10 },
+			{ damageType: 'radiant', total: 2 },
+		]).applyAllDamage();
+
+		// The ward absorbs the 2 radiant and nothing else; the slashing is whole.
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
 	it('fires damageApplied once per target, not once per packet', async () => {
 		const actor = createTarget();
 		globals().fromUuidSync.mockReturnValue({ actor });

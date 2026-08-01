@@ -1,6 +1,31 @@
 <script>
 	import { getContext } from 'svelte';
 	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
+	import ApplyDamageButton from './ApplyDamageButton.svelte';
+
+	/**
+	 * Save-gated damage keeps a control of its own. The card-level one applies
+	 * every packet at once, which needs the outcome to be settled, and a save is
+	 * only settled per target once that target rolls.
+	 */
+	function damagePacket(childNode) {
+		const roll = childNode.roll;
+		if (!roll?.class) return null;
+
+		const outcome = childNode.type === 'damageOutcome' ? childNode.outcome : 'fullDamage';
+		const total = Math.ceil(Number(roll.total ?? 0) * (outcome === 'halfDamage' ? 0.5 : 1));
+
+		return {
+			total,
+			options: {
+				damageType: childNode.damageType,
+				ignoreArmor: childNode.ignoreArmor,
+				outcome,
+				roll,
+				isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
+			},
+		};
+	}
 
 	// Get getNodeComponent from context to avoid circular dependency
 	// (getNodeComponent imports this component, so we can't import it directly)
@@ -86,12 +111,21 @@
 						{#each nodeGroup as childNode}
 							{#if childNode.type !== 'savingThrow'}
 								{@const Component = getNodeComponent(childNode.type)}
+								{@const packet =
+									game.user?.isGM &&
+									(childNode.type === 'damage' || childNode.type === 'damageOutcome')
+										? damagePacket(childNode)
+										: null}
 
 								<section
 									class="nimble-effect"
 									class:nimble-effect--conditions={childNode.type === 'condition'}
 								>
 									<Component node={childNode} />
+
+									{#if packet}
+										<ApplyDamageButton {packet} />
+									{/if}
 								</section>
 							{/if}
 						{/each}

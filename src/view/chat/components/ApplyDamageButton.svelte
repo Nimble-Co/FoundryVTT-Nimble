@@ -6,12 +6,15 @@
 	import localize from '#utils/localize.ts';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
-	const { nodes }: ApplyDamageButtonProps = $props();
+	const { nodes = [], packet }: ApplyDamageButtonProps = $props();
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 
-	// One click applies every damage packet on the card, so a disposition hint
-	// only says something when they all agree on one.
+	// Two scopes. Without a packet the button applies the whole card, which is
+	// what lets the target's per-attack reductions resolve once. With one it
+	// applies just that packet, for damage the card-level pass deliberately
+	// leaves out: save-gated damage, whose per-target outcome is not known until
+	// each target rolls.
 	const targetDisposition = $derived.by(() => {
 		const dispositions = new Set(
 			nodes.map((node) => node.targetDisposition).filter((disposition) => disposition != null),
@@ -20,11 +23,22 @@
 	});
 
 	const canApplyDamage = $derived.by(() => {
+		if (packet) {
+			const canApplyOne = messageDocument?.canApplyDamage;
+			if (typeof canApplyOne !== 'function') return true;
+			return canApplyOne.call(messageDocument, packet.total, packet.options);
+		}
+
 		const canApplyAllDamage = messageDocument?.canApplyAllDamage;
 		if (typeof canApplyAllDamage !== 'function') return true;
 
 		return canApplyAllDamage.call(messageDocument);
 	});
+
+	function applyDamage() {
+		if (packet) messageDocument?.applyDamage(packet.total, packet.options);
+		else messageDocument?.applyAllDamage();
+	}
 
 	const applyDamageLabel = $derived(localize('NIMBLE.chat.applyDamage'));
 	const applyDamageTooltip = $derived(
@@ -47,7 +61,7 @@
 	data-tooltip={applyDamageTooltip}
 	data-tooltip-direction="UP"
 	disabled={!canApplyDamage}
-	onclick={() => messageDocument?.applyAllDamage()}
+	onclick={applyDamage}
 >
 	{applyDamageLabel}
 </button>

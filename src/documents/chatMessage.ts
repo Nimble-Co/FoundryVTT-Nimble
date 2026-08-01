@@ -511,40 +511,67 @@ interface ResolvedDamageForActor {
 }
 
 /**
- * The flat reductions that apply to an attack, and how to describe them. An
- * entry applies when it matches the damage type of any packet in the attack;
- * untyped entries always match. Collected once for the whole attack because the
- * rules word every flat reduction as reducing "an attack": Defend ("reduce
- * damage from any single attack by your Armor"), Deflect, and the Berserker's
- * "That all you got?!" all read that way.
+ * One flat reduction the target has, with a running balance. Each entry is
+ * worth its value once for the whole attack, because the rules word every flat
+ * reduction as reducing "an attack": Defend ("reduce damage from any single
+ * attack by your Armor"), Deflect, and the Berserker's "That all you got?!" all
+ * read that way. It still only spends against damage of a type it is scoped to,
+ * so a fire ward never soaks a slashing packet.
  */
-function collectAttackFlatReductions(
-	actor: Actor.Implementation,
-	packets: DamagePacket[],
-): { total: number; modifiers: DamageModifier[] } {
-	const damageTypes = packets.map((packet) => packet.options?.damageType);
-	const applies = (reduction: DamageReductionEntry) =>
-		damageTypes.some((damageType) => matchesDamageType(reduction?.damageTypes, damageType));
+interface PendingFlatReduction {
+	damageTypes: unknown;
+	remaining: number;
+	modifier: DamageModifier;
+}
 
+function collectAttackFlatReductions(actor: Actor.Implementation): PendingFlatReduction[] {
 	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
 		| DamageReductionEntry[]
 		| undefined;
-	if (!Array.isArray(reductions)) return { total: 0, modifiers: [] };
+	if (!Array.isArray(reductions)) return [];
 
-	let total = 0;
-	const modifiers: DamageModifier[] = [];
+	const pending: PendingFlatReduction[] = [];
 
 	for (const reduction of reductions) {
 		if (reduction?.mode === 'half') continue;
 		const value = Number(reduction?.value);
 		if (!Number.isFinite(value) || value <= 0) continue;
-		if (!applies(reduction)) continue;
 
-		total += value;
-		modifiers.push(describeFlatReduction(reduction));
+		pending.push({
+			damageTypes: reduction.damageTypes,
+			remaining: Math.floor(value),
+			modifier: describeFlatReduction(reduction),
+		});
 	}
 
-	return { total: Math.floor(total), modifiers };
+	return pending;
+}
+
+/**
+ * Spend whatever of the attack's remaining flat reductions apply to one
+ * packet's damage type, in declaration order. Mutates the balances, so a
+ * reduction bigger than this packet carries into the next one.
+ */
+function spendFlatReductions(
+	pending: PendingFlatReduction[],
+	damage: number,
+	damageType: string | undefined,
+): { remainingDamage: number; spent: DamageModifier[] } {
+	let remainingDamage = damage;
+	const spent: DamageModifier[] = [];
+
+	for (const reduction of pending) {
+		if (remainingDamage <= 0) break;
+		if (reduction.remaining <= 0) continue;
+		if (!matchesDamageType(reduction.damageTypes, damageType)) continue;
+
+		const used = Math.min(remainingDamage, reduction.remaining);
+		reduction.remaining -= used;
+		remainingDamage -= used;
+		spent.push(reduction.modifier);
+	}
+
+	return { remainingDamage, spent };
 }
 
 /**
@@ -562,12 +589,10 @@ function resolveDamageForActor(
 	packets: DamagePacket[],
 	availableBank = getBankedDamageReduction(actor),
 ): ResolvedDamageForActor {
-	const flatReduction = collectAttackFlatReductions(actor, packets);
+	const pendingReductions = collectAttackFlatReductions(actor);
 	const bankedEntries = getBankedDamageReductionEntries(actor);
 
-	let remainingReduction = flatReduction.total;
 	let remainingBank = availableBank;
-	let reductionCredited = false;
 	let consumedBank = false;
 
 	const components: TargetDamageComponent[] = [];
@@ -577,16 +602,17 @@ function resolveDamageForActor(
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
 
-		const reductionUsed = Math.min(beforeReduction, remainingReduction);
-		remainingReduction -= reductionUsed;
-		let adjustedDamage = beforeReduction - reductionUsed;
+		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options.damageType);
+		let adjustedDamage = reduced.remainingDamage;
 
-		// The bank is one-shot: the first packet that would still deal damage
-		// spends all of it, even when that over-absorbs.
-		const consumesBank = adjustedDamage > 0 && remainingBank > 0;
+		// The bank reduces "the damage taken" from the attack, so like a flat
+		// reduction it carries across the packets. It stays one-shot: spending
+		// any of it clears the effect, and whatever it over-absorbs is forfeit.
+		const bankUsed = Math.min(adjustedDamage, remainingBank);
+		const consumesBank = bankUsed > 0;
 		if (consumesBank) {
-			adjustedDamage = Math.max(0, adjustedDamage - remainingBank);
-			remainingBank = 0;
+			adjustedDamage -= bankUsed;
+			remainingBank -= bankUsed;
 			consumedBank = true;
 		}
 
@@ -594,13 +620,9 @@ function resolveDamageForActor(
 		total += adjustedDamage;
 
 		const modifiers = describeDefenseModifiers(actor, options);
-		// Name the flat reductions once, on the packet that first spent any of
-		// them, since they were subtracted from the attack rather than from
-		// every packet.
-		if (reductionUsed > 0 && !reductionCredited) {
-			modifiers.push(...flatReduction.modifiers);
-			reductionCredited = true;
-		}
+		// Name a flat reduction on the packets it actually spent against, since
+		// it was subtracted from the attack rather than from every packet.
+		modifiers.push(...reduced.spent);
 		if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
 
 		components.push({
@@ -1157,9 +1179,7 @@ class NimbleChatMessage extends ChatMessage {
 	getDamageBreakdownForTarget(targetUuid: string): TargetDamageBreakdown | null {
 		if (!this.isActivationCard()) return null;
 
-		const damageRolls = this.#collectApplicableDamageRolls().filter(
-			({ options }) => options.outcome !== 'noDamage',
-		);
+		const damageRolls = this.#applicableDamagePackets();
 		if (damageRolls.length < 1) return null;
 
 		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;

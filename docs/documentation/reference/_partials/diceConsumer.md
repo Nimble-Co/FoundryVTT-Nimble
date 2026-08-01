@@ -40,9 +40,9 @@ A consumer that opts in gives up its sheet flow entirely: it no longer opens the
 
 Opting in needs the rest of the rule to line up. It has to be a `manual` spend with `consume` as its outcome, a `generic` effect type, and an effect formula, on a player character. A `damageReduction` spend is banked against incoming damage rather than added to an attack, so it is not eligible.
 
-**Bonus damage type** covers the features whose extra damage is a specific type (radiant, fire) rather than more of what the weapon deals. A damage node carries exactly one type, so a typed bonus cannot fold into the attack's roll: it lands on the card as its own damage packet, with its own Apply Damage button. Leave it empty and the bonus deals whatever the attack deals, which is the cheaper path in every way.
+**Bonus damage type** covers the features whose extra damage is a specific type (radiant, fire) rather than more of what the weapon deals. A damage node carries exactly one type, so a typed bonus cannot fold into the attack's roll: it lands on the card as its own damage packet. Leave it empty and the bonus deals whatever the attack deals, which is the simpler path.
 
-Know what that costs before you set it. The GM still applies the card with one click and the target's flat damage reduction still comes off once, but their resistance is judged per packet, so a target resistant to the bonus type takes half of it and full damage from the attack itself. That is the reasonable reading of "take half as much damage" for an attack that deals two types, though the rulebooks never address one.
+The GM still applies the card with one click and the target's flat damage reduction still comes off once. Two things do change. Resistance is judged per packet, so a target resistant to the bonus type takes half of it and full damage from the attack itself — the reasonable reading of "take half as much damage" for an attack dealing two types, though the rulebooks never address one. And a monster in heavy armor halves each packet separately and rounds each up, so a typed bonus gets slightly better through heavy armor than the same amount folded in would.
 
 **Selection outcome** decides what happens to the dice the player picked:
 
