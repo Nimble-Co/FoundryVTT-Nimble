@@ -112,6 +112,7 @@
 				"poolSpendEmpty": "No dice left in {label}.",
 				"poolSpendUnavailable": "That feature's dice pool is no longer available.",
 				"poolSpendStale": "Those dice are no longer in the pool. Nothing was spent.",
+				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
 				"useFailed": "That reaction could not be completed."
 			}

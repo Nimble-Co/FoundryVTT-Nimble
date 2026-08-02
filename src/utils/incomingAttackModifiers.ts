@@ -67,10 +67,20 @@ interface EvaluatedDamageRollLike {
 	toJSON: () => object;
 }
 
-/** Does the roll's outcome satisfy a forceReroll trigger? */
+/**
+ * The outcome fields a trigger is checked against. An evaluated DamageRoll
+ * satisfies this, and so does a posted card's own system data, which is what
+ * the GM-side executors re-check against.
+ */
+interface AttackOutcomeView {
+	isCritical?: boolean;
+	isMiss?: boolean;
+}
+
+/** Does the attack's outcome satisfy a trigger? */
 function rerollTriggerMatches(
 	trigger: RerollTrigger | undefined,
-	view: EvaluatedDamageRollLike,
+	view: AttackOutcomeView,
 ): boolean {
 	switch (trigger) {
 		case 'criticalHit':
@@ -88,7 +98,7 @@ function rerollTriggerMatches(
  * kind uses the shared `outcomeTrigger`, and an offer with neither always
  * survives (e.g. Interpose, which is outcome-independent).
  */
-function offerSurvives(entry: IncomingReactionEntry, view: EvaluatedDamageRollLike): boolean {
+function offerSurvives(entry: IncomingReactionEntry, view: AttackOutcomeView): boolean {
 	if (entry.kind === 'forceReroll') return rerollTriggerMatches(entry.rerollTrigger, view);
 	if (!entry.outcomeTrigger) return true;
 	return rerollTriggerMatches(entry.outcomeTrigger, view);
@@ -353,7 +363,10 @@ export {
 	collectRedirectCandidates,
 	collectTargetIncomingModifiers,
 	computeIncomingAttackPlan,
+	offerSurvives,
+	rerollTriggerMatches,
 	withRerollDisadvantage,
+	type AttackOutcomeView,
 	type IncomingAttackModifierEntry,
 	type IncomingAttackPlan,
 };

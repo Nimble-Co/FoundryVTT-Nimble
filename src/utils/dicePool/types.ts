@@ -8,6 +8,7 @@ type DiceRefillMode = (typeof DicePoolRuleConfig.refillModes)[number];
 type DiceRestType = (typeof DicePoolRuleConfig.restTypes)[number];
 type DiceConsumptionMode = (typeof DicePoolRuleConfig.consumptionModes)[number];
 type DiceAttackDeliveryFilter = (typeof DicePoolRuleConfig.attackDeliveryFilters)[number];
+type DiceCardOfferTrigger = (typeof DicePoolRuleConfig.cardOfferTriggers)[number];
 type NumericInput = number | string | null | undefined;
 
 type DiceRefillEntry = {
@@ -111,6 +112,7 @@ type CharacterActorLike = Actor.Implementation & {
 export type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
+	DiceCardOfferTrigger,
 	DiceConsumerRuleLike,
 	DiceConsumptionMode,
 	DicePoolDefinition,

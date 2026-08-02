@@ -121,13 +121,14 @@ type MockedMessage = NimbleChatMessage & { update: ReturnType<typeof vi.fn> };
 function createMessage(
 	entries: Array<Record<string, unknown>>,
 	roll: Record<string, unknown> | null = damageRoll(),
+	card: { isCritical?: boolean; isMiss?: boolean } = {},
 ) {
 	const message = new NimbleChatMessage({
 		type: 'spell',
 		system: {
 			targets: ['Scene.scene.Token.victim'],
-			isCritical: true,
-			isMiss: false,
+			isCritical: card.isCritical ?? true,
+			isMiss: card.isMiss ?? false,
 			activation: {
 				effects: roll
 					? [{ id: 'damage-node', type: 'damage', parentNode: null, parentContext: null, roll }]
@@ -348,6 +349,68 @@ describe('resolveSpendPoolForDamageOffer', () => {
 
 		await message.resolveSpendPoolForDamageOffer('spend-1', 'player-2', selection([4, 3, 5], [0]));
 
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses a crit-gated offer once the card is no longer a crit', async () => {
+		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule()]);
+		useActor(actor);
+		const message = createMessage([spendEntry()], damageRoll(), { isCritical: false });
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(actor._item.update).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses a hit-gated offer on a card that missed', async () => {
+		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule({ cardOffer: 'hit' })]);
+		useActor(actor);
+		const message = createMessage([spendEntry()], damageRoll(), {
+			isCritical: false,
+			isMiss: true,
+		});
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses a consumer the live rule no longer offers on the card', async () => {
+		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule({ cardOffer: null })]);
+		useActor(actor);
+		const message = createMessage([spendEntry()]);
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses a banked reduction, which is not damage on this attack', async () => {
+		const actor = createActor(
+			[4, 3, 5],
+			[POOL_RULE, consumerRule({ effectType: 'damageReduction' })],
+		);
+		useActor(actor);
+		const message = createMessage([spendEntry()]);
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(actor._item.update).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses a maximize outcome, which produces no damage to fold', async () => {
+		const actor = createActor(
+			[4, 3, 5],
+			[POOL_RULE, consumerRule({ selectionOutcome: 'maximize' })],
+		);
+		useActor(actor);
+		const message = createMessage([spendEntry()]);
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(actor._item.update).not.toHaveBeenCalled();
 		expect(message.update).not.toHaveBeenCalled();
 	});
 

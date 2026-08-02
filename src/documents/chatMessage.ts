@@ -21,7 +21,12 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
-import { withRerollDisadvantage } from '../utils/incomingAttackModifiers.js';
+import {
+	type AttackOutcomeView,
+	offerSurvives,
+	rerollTriggerMatches,
+	withRerollDisadvantage,
+} from '../utils/incomingAttackModifiers.js';
 import type { PoolSpendSelection } from '../utils/incomingAttackReactions.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
@@ -1264,9 +1269,26 @@ class NimbleChatMessage extends ChatMessage {
 				activation,
 				isCritical: newRoll.isCritical,
 				isMiss: newRoll.isMiss,
-				incomingReactions: this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+				incomingReactions: this.#dropStaleOutcomeOffers(
+					this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+					newRoll,
+				),
 			},
 		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Drop offers the card's new outcome no longer satisfies. Pending offers are
+	 * filtered against the outcome once, when the card is posted; a reroll
+	 * resolved afterwards can turn a crit into an ordinary hit and strand a
+	 * `criticalHit` offer on a card that no longer qualifies. Dropped rather
+	 * than marked used, because they never fired.
+	 */
+	#dropStaleOutcomeOffers(
+		entries: IncomingReactionEntry[],
+		view: AttackOutcomeView,
+	): IncomingReactionEntry[] {
+		return entries.filter((entry) => entry.used || offerSurvives(entry, view));
 	}
 
 	/**
@@ -1345,6 +1367,25 @@ class NimbleChatMessage extends ChatMessage {
 		);
 		if (!consumer?.effectFormula) return;
 
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
+
+		// Re-derive every gate from the live rule and this card, never from the
+		// stamped entry. A crafted socket payload can replay an offer the sheet
+		// would have suppressed, and the card's own outcome can change after the
+		// offer was stamped: a forced reroll turns a crit into an ordinary hit
+		// while a `criticalHit` offer is still sitting on it.
+		const stillOffered =
+			Boolean(consumer.cardOffer) &&
+			consumer.effectType === 'generic' &&
+			consumer.selectionOutcome === 'consume' &&
+			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData);
+		if (!stillOffered) {
+			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered'));
+			return;
+		}
+
 		const picked = resolvePoolSpendSelection(pool.faces, selection);
 		if (!picked) {
 			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendStale'));
@@ -1364,9 +1405,6 @@ class NimbleChatMessage extends ChatMessage {
 		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
 		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) return;
 
-		// The caller has already gated on `isActivationCard()`; that narrowing does
-		// not survive the hop into this method.
-		const systemData = this.system as unknown as ActivationCardSystemData;
 		const folded = foldBonusIntoPrimaryDamage(
 			(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
 			((this._source as { rolls?: string[] }).rolls ?? []) as string[],

@@ -34,9 +34,9 @@ export interface IncomingReactionEntry {
 	/** forceReroll only: roll the reroll at disadvantage */
 	rerollWithDisadvantage?: boolean;
 	/**
-	 * Gate on the attack's resolved outcome, checked once before stamping.
-	 * Unlike `rerollTrigger` this never drives execution, only whether the
-	 * offer is worth surfacing. Absent means always.
+	 * Gate on the attack's resolved outcome. Checked before stamping, again
+	 * whenever a reroll changes the card's outcome, and once more on the GM
+	 * client before the offer executes. Absent means always.
 	 */
 	outcomeTrigger?: RerollTrigger | null;
 	/**

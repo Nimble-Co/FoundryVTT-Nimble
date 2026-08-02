@@ -1,6 +1,8 @@
+import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
 import { isCharacterActor, normalizeIdentifier } from './helpers.js';
 import type {
 	CharacterActorLike,
+	DiceCardOfferTrigger,
 	DiceConsumerRuleLike,
 	DicePoolRuleAny,
 	DicePoolState,
@@ -18,7 +20,16 @@ type DicePoolConsumer = {
 	effectFormula: string | null;
 	effectType: string;
 	selectionOutcome: string;
+	/** Set when the spend is offered on the attack card instead of the sheet */
+	cardOffer: DiceCardOfferTrigger | null;
 };
+
+/** Narrow a stored `cardOffer` to a trigger the executor knows, else null. */
+function toCardOfferTrigger(value: unknown): DiceCardOfferTrigger | null {
+	return DicePoolRuleConfig.cardOfferTriggers.includes(value as DiceCardOfferTrigger)
+		? (value as DiceCardOfferTrigger)
+		: null;
+}
 
 function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
 	const value = (consumer as { effectFormula?: unknown }).effectFormula;
@@ -184,6 +195,7 @@ function getDicePoolConsumers(
 				effectFormula,
 				effectType,
 				selectionOutcome,
+				cardOffer: toCardOfferTrigger(consumer.cardOffer),
 			});
 		}
 	}
