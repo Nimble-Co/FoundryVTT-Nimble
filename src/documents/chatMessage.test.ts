@@ -2433,10 +2433,11 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 			entries: [createReactionEntry(), createReactionEntry({ id: 'entry-2' })],
 		});
 		Object.defineProperty(message, 'id', { value: 'message-1' });
-		message.update = vi.fn(async (payload: Record<string, unknown>) => {
+		message.update = vi.fn().mockImplementation(async (payload: Record<string, unknown>) => {
 			const next = (payload.system as { incomingReactions?: ReactionEntryFixture[] })
 				?.incomingReactions;
 			if (next) (message.system as Record<string, unknown>).incomingReactions = next;
+			return undefined;
 		});
 
 		await Promise.all([

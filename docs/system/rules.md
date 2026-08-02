@@ -429,14 +429,6 @@ Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` c
 - **`modifyPool.addRefills`**: a modifier can contribute refill entries to the target pool without editing the base pool rule — the granting feature carries its own trigger. The modifier's rule-level predicate gates whether the entries are included at all; entry-level predicates are evaluated at trigger time (prefer these for state that flips mid-combat, since rule-level gating churns the stored pool definition).
 - **`modifyPool.minFace`**: a minimum face value for dice rolled into the target pool. Rolls below the floor are raised to it at every roll point (refills, activation rolls, initial seeding); manual face edits stay unclamped. The highest floor among contributing modifiers wins.
 
-#### Card-side pool spends
-
-A `diceConsumer` can set `cardOffer` (`hit` or `criticalHit`) to be offered on the attacker's own attack card instead of through the sheet's spend panel — for a spend that the rules tie to how the attack landed, such as Berserker's Death Blow ("after you deal damage from a crit"). The panel cannot see the attack's outcome, so a consumer that opts in has no sheet flow at all: `#providesSpendFlow()` returns false, and `getDicePoolConsumers` hides it unless asked with `{ includeCardOffers: true }`.
-
-Opting in additionally requires a manual spend that consumes dice for a `generic` effect on a character actor (`providesCardOffer()`), because the result is folded into that card's damage total. Folding rather than posting a second damage packet is what keeps the target's armor, resistances and flat reductions from resolving twice against one attack; the bonus is appended as a flavored numeric term so `getDiceDamageTotal` counts it as dice.
-
-The dice are picked on the spending player's client (`PoolSpendOfferDialog`), which reports the faces it displayed so the GM-side executor can reject a selection whose pool moved mid-dialog. Nothing enforces that the spend happens before the GM applies damage — the card keeps no applied-damage record — so a spend confirmed afterwards raises the total without adjusting HP already removed.
-
 - **`modifyConsumer`**: augments the effect formula of `diceConsumer` rules targeting a pool. Matching consumers' `effectFormula` gains `+ (appendFormula)`, with an optional `effectTypeFilter` to restrict the change to e.g. `damageReduction` spends. Applied at consumer enumeration time, so both the spend panel and its preview reflect the change.
 - **`poolGainMessage`**: posts a chat reminder whenever the targeted dice pool gains dice. `formula` is resolved against actor data and interpolated into `message` via `{value}`.
 - **Dice refill triggers wired to dispatchers**: `onAttacked` and `onCritReceived` (damage-application pipeline), `onTurnStart` / `onTurnEnd` (turn-boundary custom hooks, GM-side), and `encounterEnd`. Other declared triggers have no dispatcher yet.
@@ -447,6 +439,18 @@ Activating an item with a manual consumer opens the pool's spend panel, opening 
 A manual consumer's `effectType` controls what its effect roll produces. The default, `generic`, posts the rolled total to chat. `damageReduction` additionally banks the total on the actor as a one-shot incoming-damage reduction: the next time damage is applied to the actor, the banked amount is subtracted (after armor, alongside any `damageReduction` rule entries) and then cleared, even when it absorbs the damage entirely. This is how "That all you got?!" applies its reduction automatically: the player spends Fury Dice when attacked, and the GM's Apply Damage click consumes the banked amount.
 
 The bank is stored as an Active Effect on the actor named for the pending amount ("Damage Reduction (8)"). Repeated spends accumulate onto the same effect. Deleting the effect drops the banked reduction; disabling it suspends it (a disabled bank neither applies nor gets consumed). Banks expire when the combat ends (`src/hooks/bankedDamageReductionExpiry.ts`, active-GM-gated, same end-of-combat dedup as the encounter-end dice trigger); banks created outside combat persist until consumed or removed. A bank is only consumed when the hit would otherwise deal damage — immunity or armor zeroing the hit leaves it in place.
+
+### Card-side pool spends
+
+A `diceConsumer` can set `cardOffer` (`hit` or `criticalHit`) to be offered on the attacker's own attack card instead of through the sheet's spend panel — for a spend that the rules tie to how the attack landed, such as Berserker's Death Blow ("after you deal damage from a crit"). The panel cannot see the attack's outcome, so a consumer that opts in has no sheet flow at all: `#providesSpendFlow()` returns false, and `getDicePoolConsumers` hides it unless asked with `{ includeCardOffers: true }`.
+
+Opting in additionally requires a manual spend that consumes dice for a `generic` effect on a character actor (`providesCardOffer()`), because the result is folded into that card's damage total. Folding rather than posting a second damage packet is what keeps the target's armor, resistances and flat reductions from resolving twice against one attack; the bonus is appended as a flavored numeric term so `getDiceDamageTotal` counts it as dice.
+
+The dice are picked on the spending player's client (`PoolSpendOfferDialog`), which reports the faces it displayed so the GM-side executor can reject a selection whose pool moved mid-dialog. Nothing enforces that the spend happens before the GM applies damage — the card keeps no applied-damage record — so a spend confirmed afterwards raises the total without adjusting HP already removed.
+
+The offer's outcome gate is checked three times, because the card it sits on can change under it: when the offer is stamped, again whenever a reroll rewrites the card's outcome (a `criticalHit` offer is dropped from an attack that no longer crits), and once more on the GM's client before the spend executes. That last check re-derives everything from the live rule rather than the stamped entry, since a crafted socket payload can replay an offer the client would have suppressed. A refusal reports back to the requesting player rather than notifying the GM who executed it.
+
+A reroll resolved after a spend has already folded rebuilds the roll from its original formula, which does not carry the folded term. `#carryFoldedSpendsAcrossReroll` re-applies a bonus the new outcome still earns and refunds the dice for one it does not. All of this runs one write at a time per card (`queueReactionWrite`), so two offers resolving together cannot overwrite each other's state.
 
 ## Damage reduction: flat, half (resistance), and immunity
 

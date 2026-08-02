@@ -1,6 +1,7 @@
 <script lang="ts">
+	import type { PoolSpendOfferDialogProps } from '#types/components/PoolSpendOfferDialog.d.ts';
+
 	import { createSubscriber } from 'svelte/reactivity';
-	import type PoolSpendOfferDialog from '#documents/dialogs/PoolSpendOfferDialog.svelte.ts';
 	import { systemHookName } from '#system';
 	import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 	import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -8,15 +9,7 @@
 	import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 	import localize from '#utils/localize.js';
 
-	interface Props {
-		actor: Actor;
-		poolId: string;
-		ruleId: string;
-		itemId: string | null;
-		dialog: PoolSpendOfferDialog;
-	}
-
-	let { actor, poolId, ruleId, itemId, dialog }: Props = $props();
+	let { actor, poolId, ruleId, itemId, dialog }: PoolSpendOfferDialogProps = $props();
 
 	// The pool can move while the picker is open (a refill trigger, another
 	// feature spending a die). Track it rather than snapshotting, so what the
