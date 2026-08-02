@@ -4,6 +4,7 @@ import type {
 	SpellSystemData,
 } from '#types/components/SpellReferenceCard.d.ts';
 import { flattenActivationEffects } from '#utils/activationEffects.js';
+import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import localize from '#utils/localize.js';
 import enrichSpellText from '#utils/spellDescription.js';
 
@@ -66,7 +67,7 @@ function getSpellEffect(system: SpellSystemData): SpellEffect | null {
  * Gets the activation cost metadata for a spell (e.g., "1 Action", "Reaction")
  */
 function getSpellMetadata(system: SpellSystemData): string | null {
-	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
+	const { activationCostTypes } = CONFIG.NIMBLE;
 	const activation = system.activation;
 	if (!activation?.cost) return null;
 
@@ -74,17 +75,11 @@ function getSpellMetadata(system: SpellSystemData): string | null {
 
 	if (!activationType || activationType === 'none') return null;
 
-	if (['action', 'minute', 'hour'].includes(activationType)) {
-		if (activationType === 'action' && activationCost === 0) {
-			return localize('NIMBLE.activationCosts.free');
-		}
-
-		const label =
-			activationCost > 1
-				? activationCostTypesPlural[activationType]
-				: activationCostTypes[activationType];
-		return `${activationCost || 1} ${label}`;
-	}
+	const quantifiedLabel = formatActivationCostLabel({
+		type: activationType,
+		quantity: activationCost,
+	});
+	if (quantifiedLabel) return quantifiedLabel;
 
 	if (activationType === 'reaction' || activationType === 'special') {
 		return activationCostTypes[activationType];

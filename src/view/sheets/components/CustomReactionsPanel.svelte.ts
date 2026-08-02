@@ -1,6 +1,6 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import type { NimbleBaseItem } from '../../../documents/item/base.svelte.js';
-import localize from '../../../utils/localize.js';
+import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 
 /** A prepared embedded item always has a non-null `_id`. */
 export type ReactionItem = NimbleBaseItem & { _id: string };
@@ -28,7 +28,6 @@ export function isCustomReaction(item: Item): boolean {
 }
 
 export function createCustomReactionsPanelState(getActor: () => NimbleCharacter) {
-	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
 	let expandedDescriptions = $state(new Set<string>());
 
 	const reactions = $derived(
@@ -45,11 +44,12 @@ export function createCustomReactionsPanelState(getActor: () => NimbleCharacter)
 		const cost = getActivation(item);
 		if (!cost || cost.type !== 'action') return null;
 
+		// A single action is the default and goes unlabelled; zero is not, so it
+		// falls through to the shared formatter and renders as "Free".
 		const quantity = cost.quantity ?? 1;
-		if (quantity === 0) return localize('NIMBLE.activationCosts.free');
-		if (quantity <= 1) return null;
+		if (quantity !== 0 && quantity <= 1) return null;
 
-		return `${quantity} ${activationCostTypesPlural.action ?? activationCostTypes.action}`;
+		return formatActivationCostLabel(cost);
 	}
 
 	/** The free-text reaction trigger configured under Activation > Core. */

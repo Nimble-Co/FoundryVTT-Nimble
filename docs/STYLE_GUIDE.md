@@ -1489,6 +1489,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
 | `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
 | `resolveMinionAttackActionCost()` | `src/utils/resolveMinionAttackActionCost.ts` | Action cost for group-attack activations; a missing or `none` cost defaults to 1 (legacy pack convention), an explicit zero stays free |
+| `formatActivationCostLabel()` | `src/utils/formatActivationCostLabel.ts` | Render an activation cost as "1 Action", "2 Actions", "10 Minutes" or "Free"; returns `null` for the types that carry no quantity so the caller can label them |
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
 | `countAdjacentEnemies()`, `ADJACENCY_QUALIFIER` | `src/utils/tokenAdjacency.ts` | Count enemy tokens adjacent to a given token; respects the `adjacencyIncludesDiagonals` world setting; accepts position overrides for pre-commit token moves |

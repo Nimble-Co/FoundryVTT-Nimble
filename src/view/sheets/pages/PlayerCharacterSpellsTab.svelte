@@ -2,7 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import localize from '#utils/localize.js';
+	import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
@@ -48,18 +48,11 @@
 
 		if (!activationType || activationType === 'none') return null;
 
-		if (['action', 'minute', 'hour'].includes(activationType)) {
-			if (activationType === 'action' && activationCost === 0) {
-				return localize('NIMBLE.activationCosts.free');
-			}
-
-			const activationTypeLabel =
-				activationCost > 1
-					? activationCostTypesPlural[activationType]
-					: activationCostTypes[activationType];
-
-			return `${activationCost || 1} ${activationTypeLabel}`;
-		}
+		const quantifiedLabel = formatActivationCostLabel({
+			type: activationType,
+			quantity: activationCost,
+		});
+		if (quantifiedLabel) return quantifiedLabel;
 
 		if (activationType === 'reaction') {
 			let label = activationCostTypes[activationType];
@@ -156,13 +149,7 @@
 		}, {});
 	}
 
-	const {
-		activationCostTypes,
-		activationCostTypesPlural,
-		spellSchools,
-		spellSchoolIcons,
-		spellTierHeadings,
-	} = CONFIG.NIMBLE;
+	const { activationCostTypes, spellSchools, spellSchoolIcons, spellTierHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
 	let sheet = getContext<PlayerCharacterSheet>('application');

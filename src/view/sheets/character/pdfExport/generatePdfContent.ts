@@ -4,6 +4,7 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import type { NimbleSpellItem } from '#documents/item/spell.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
+import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 
 /** Estimated characters per column based on PDF config */
 const CHARS_PER_COLUMN = 1150;
@@ -311,21 +312,21 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 	const hasReach = properties?.selected?.includes('reach') && properties.reach?.min;
 
 	if (cost?.type && cost.type !== 'none' && cost.type !== 'mana') {
-		let castingTimeStr: string;
-		if (cost.type === 'action' && cost.quantity === 0) {
-			castingTimeStr = game.i18n.localize('NIMBLE.activationCosts.free');
-		} else {
-			castingTimeStr = cost.quantity > 1 ? `${cost.quantity} ${cost.type}s` : `1 ${cost.type}`;
-		}
+		// `special` carries no quantity, so the formatter returns null and it prints
+		// as the bare type rather than the pluralised "1 special" this used to emit.
+		let castingTimeStr =
+			formatActivationCostLabel(cost) ?? CONFIG.NIMBLE.activationCostTypes[cost.type] ?? null;
 
-		// Add target type suffix
-		if (hasTemplate) {
-			castingTimeStr += ' AOE';
-		} else if (!hasRange && !hasReach) {
-			castingTimeStr += ' self';
-		}
+		if (castingTimeStr) {
+			// Add target type suffix
+			if (hasTemplate) {
+				castingTimeStr += ' AOE';
+			} else if (!hasRange && !hasReach) {
+				castingTimeStr += ' self';
+			}
 
-		parts.push(castingTimeStr);
+			parts.push(castingTimeStr);
+		}
 	}
 
 	// Mana cost

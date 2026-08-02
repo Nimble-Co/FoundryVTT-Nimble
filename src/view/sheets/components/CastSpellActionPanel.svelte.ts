@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { flattenActivationEffects } from '../../../utils/activationEffects.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
+import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
@@ -40,7 +41,7 @@ export function createSpellPanelState(
 	getActor: () => NimbleCharacter,
 	_getOnActivateItem: () => (cost: number) => Promise<void>,
 ) {
-	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
+	const { activationCostTypes } = CONFIG.NIMBLE;
 	let searchTerm = $state('');
 	let expandedDescriptions = $state(new Set<string>());
 
@@ -102,17 +103,11 @@ export function createSpellPanelState(
 
 		if (!activationType || activationType === 'none') return null;
 
-		if (['action', 'minute', 'hour'].includes(activationType)) {
-			if (activationType === 'action' && activationCost === 0) {
-				return localize('NIMBLE.activationCosts.free');
-			}
-
-			const label =
-				activationCost > 1
-					? activationCostTypesPlural[activationType]
-					: activationCostTypes[activationType];
-			return `${activationCost || 1} ${label}`;
-		}
+		const quantifiedLabel = formatActivationCostLabel({
+			type: activationType,
+			quantity: activationCost,
+		});
+		if (quantifiedLabel) return quantifiedLabel;
 
 		if (activationType === 'reaction' || activationType === 'special') {
 			return activationCostTypes[activationType];
