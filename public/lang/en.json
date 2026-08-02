@@ -90,6 +90,13 @@
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo",
+			"grantedActionOffers": {
+				"heading": "Granted Actions",
+				"weaponAttack": "Weapon Attack",
+				"noEligibleItems": "No eligible items to use.",
+				"usedBy": "Granted action used by {name}",
+				"usedByVia": "Granted action used by {name} via {label}"
+			},
 			"incomingReactions": {
 				"heading": "Reactions",
 				"forceReroll": "Force Reroll",
@@ -665,6 +672,7 @@
 			"damageBonus": "Damage Bonus",
 			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
+			"grantActivation": "Grant Activation",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -944,6 +952,13 @@
 						"label": "Condition",
 						"hint": "Optional condition tested when the trigger fires (e.g. self: raging). Leave empty to always apply."
 					}
+				}
+			},
+			"grantActivation": {
+				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
+				"activationType": {
+					"label": "Granted activation",
+					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
 				}
 			},
 			"grantMovement": {

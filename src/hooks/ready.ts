@@ -10,6 +10,7 @@ import {
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
+import { registerGrantedActionOfferSocketListener } from '../utils/grantedActionOffers.js';
 import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
 import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
@@ -60,6 +61,7 @@ export default async function ready() {
 		if (actor?.type === 'character') actor.prepareData?.();
 	}
 	registerCombatTurnSocketListener();
+	registerGrantedActionOfferSocketListener();
 	registerIncomingReactionSocketListener();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
