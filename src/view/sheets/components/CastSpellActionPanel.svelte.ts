@@ -99,18 +99,15 @@ export function createSpellPanelState(
 		const activation = getSystemData(spell).activation;
 		if (!activation?.cost) return null;
 
-		const { type: activationType, quantity: activationCost } = activation.cost;
+		const { type: activationType } = activation.cost;
 
 		if (!activationType || activationType === 'none') return null;
 
-		const quantifiedLabel = formatActivationCostLabel({
-			type: activationType,
-			quantity: activationCost,
-		});
-		if (quantifiedLabel) return quantifiedLabel;
+		const label = formatActivationCostLabel(activation.cost);
+		if (label) return label;
 
-		if (activationType === 'reaction' || activationType === 'special') {
-			return activationCostTypes[activationType];
+		if (activationType === 'special') {
+			return activationCostTypes.special;
 		}
 
 		return null;

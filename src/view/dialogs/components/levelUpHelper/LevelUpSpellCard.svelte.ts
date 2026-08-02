@@ -20,12 +20,12 @@ function extractDisplayData(system: SpellSystemDataWithMana): SpellDisplayData {
 	let meta: string | null = null;
 	const activation = system.activation;
 	if (activation?.cost) {
-		const { type: activationType, quantity: activationCost } = activation.cost;
+		const { type: activationType } = activation.cost;
 		if (activationType && activationType !== 'none') {
-			meta = formatActivationCostLabel({ type: activationType, quantity: activationCost });
+			meta = formatActivationCostLabel(activation.cost);
 
-			if (!meta && (activationType === 'reaction' || activationType === 'special')) {
-				meta = activationCostTypes[activationType];
+			if (!meta && activationType === 'special') {
+				meta = activationCostTypes.special;
 			}
 		}
 	}

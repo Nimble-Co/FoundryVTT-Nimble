@@ -49,7 +49,10 @@ export function createCustomReactionsPanelState(getActor: () => NimbleCharacter)
 		const quantity = cost.quantity ?? 1;
 		if (quantity !== 0 && quantity <= 1) return null;
 
-		return formatActivationCostLabel(cost);
+		// Everything in this panel is a reaction, so the reaction wording the
+		// formatter adds for `isReaction` would only repeat the heading. Ask it
+		// for the bare cost instead.
+		return formatActivationCostLabel({ type: cost.type, quantity });
 	}
 
 	/** The free-text reaction trigger configured under Activation > Core. */

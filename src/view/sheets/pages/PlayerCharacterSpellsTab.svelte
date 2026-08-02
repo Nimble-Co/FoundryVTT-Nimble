@@ -42,47 +42,34 @@
 	}
 
 	function getSpellMetadata(spell) {
-		const activationType = spell.reactive.system.activation.cost.type;
-		const activationCost = spell.reactive.system.activation.cost.quantity;
-		const activationCostDetails = spell.reactive.system.activation.cost.details;
+		const cost = spell.reactive.system.activation.cost;
+		const { type: activationType, details: activationCostDetails, isReaction } = cost;
 
 		if (!activationType || activationType === 'none') return null;
 
-		const quantifiedLabel = formatActivationCostLabel({
-			type: activationType,
-			quantity: activationCost,
-		});
-		if (quantifiedLabel) return quantifiedLabel;
+		// `special` is the one type carrying no quantity of its own to render.
+		const label =
+			formatActivationCostLabel(cost) ??
+			(activationType === 'special' ? activationCostTypes.special : null);
 
-		if (activationType === 'reaction') {
-			let label = activationCostTypes[activationType];
+		if (!label) return null;
 
-			if (activationCostDetails) {
-				label += ` <i
-                    class="nimble-document-card__meta-icon fa-solid fa-circle-info"
-                    data-tooltip="Reaction Trigger: ${activationCostDetails}"
-                    data-tooltip-direction="UP"
-                ></i>`;
-			}
-
+		// Reactions and Special costs are the two the config tab lets you annotate
+		// with a free-text trigger; surface it on hover.
+		const carriesTrigger = isReaction || activationType === 'reaction';
+		if (!activationCostDetails || !(carriesTrigger || activationType === 'special')) {
 			return label;
 		}
 
-		if (activationType === 'special') {
-			let label = activationCostTypes[activationType];
+		const tooltip = carriesTrigger
+			? `Reaction Trigger: ${activationCostDetails}`
+			: activationCostDetails;
 
-			if (activationCostDetails) {
-				label += ` <i
+		return `${label} <i
                     class="nimble-document-card__meta-icon fa-solid fa-circle-info"
-                    data-tooltip="${activationCostDetails}"
+                    data-tooltip="${tooltip}"
                     data-tooltip-direction="UP"
                 ></i>`;
-			}
-
-			return label;
-		}
-
-		return null;
 	}
 
 	function getSpellSchoolTabs(spells) {

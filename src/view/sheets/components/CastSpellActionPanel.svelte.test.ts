@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { createSpellPanelState } from './CastSpellActionPanel.svelte.js';
 
-function createSpellFixture(cost: { type: string; quantity?: number }): Item {
+function createSpellFixture(cost: { type: string; quantity?: number; isReaction?: boolean }): Item {
 	return {
 		system: {
 			activation: { cost },
@@ -39,6 +39,29 @@ describe('createSpellPanelState', () => {
 
 			expect(state.getSpellMetadata(createSpellFixture({ type: 'action', quantity: 2 }))).toBe(
 				'2 Actions',
+			);
+		});
+
+		it('names a reaction instead of counting its actions', () => {
+			const state = createPanelState();
+
+			expect(
+				state.getSpellMetadata(
+					createSpellFixture({ type: 'action', quantity: 1, isReaction: true }),
+				),
+			).toBe('Reaction');
+			expect(
+				state.getSpellMetadata(
+					createSpellFixture({ type: 'action', quantity: 2, isReaction: true }),
+				),
+			).toBe('Reaction (2 Actions)');
+		});
+
+		it('labels the legacy reaction cost type instead of rendering undefined', () => {
+			const state = createPanelState();
+
+			expect(state.getSpellMetadata(createSpellFixture({ type: 'reaction', quantity: 1 }))).toBe(
+				'Reaction',
 			);
 		});
 	});
