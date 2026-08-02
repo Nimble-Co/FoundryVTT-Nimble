@@ -3815,7 +3815,10 @@ describe('NimbleCombat', () => {
 					name: 'Stab',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
+						activation: {
+							cost: { type: 'action', quantity: 1 },
+							effects: [{ type: 'damage', formula: '1d6' }],
+						},
 					},
 				},
 			],
@@ -3831,7 +3834,10 @@ describe('NimbleCombat', () => {
 					name: 'Bite',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
+						activation: {
+							cost: { type: 'action', quantity: 1 },
+							effects: [{ type: 'damage', formula: '1d6' }],
+						},
 					},
 				},
 			],

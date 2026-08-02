@@ -92,6 +92,17 @@ describe('CustomReactionsPanel', () => {
 		expect(screen.queryByText('1 Action')).not.toBeInTheDocument();
 	});
 
+	it('shows the localized Free label for an explicit zero action cost', () => {
+		const actor = createActor([
+			createItem({ id: 'free-reaction', name: 'Sidestep', isReaction: true, quantity: 0 }),
+		]);
+		const application = { _onDragStart: vi.fn() };
+
+		render(CustomReactionsPanelTestHarness, { actor, application });
+
+		expect(screen.getByText('Free')).toBeInTheDocument();
+	});
+
 	it('shows the configured reaction trigger', () => {
 		const actor = createActor([
 			createItem({

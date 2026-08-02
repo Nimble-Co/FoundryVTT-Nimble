@@ -400,17 +400,15 @@ describe('consumeCombatantAction', () => {
 			actionsMax: 3,
 		});
 		const combatants = createCombatantsCollectionFixture([combatant]);
-		const updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 		const combat = {
 			id: 'combat-action',
 			combatants,
-			updateEmbeddedDocuments,
 		} as unknown as Combat;
-		return { combat, combatant, updateEmbeddedDocuments };
+		return { combat, combatant };
 	}
 
 	it('deducts 2 actions when actionCost is 2', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -419,13 +417,13 @@ describe('consumeCombatantAction', () => {
 		});
 
 		expect(result).toBe(1);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 1 },
-		]);
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 1,
+		});
 	});
 
 	it('defaults to 1 action when actionCost is undefined', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -433,13 +431,13 @@ describe('consumeCombatantAction', () => {
 		});
 
 		expect(result).toBe(2);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 2 },
-		]);
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 2,
+		});
 	});
 
-	it('normalizes actionCost of 0 to 1', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+	it('deducts nothing when actionCost is 0', async () => {
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -447,14 +445,12 @@ describe('consumeCombatantAction', () => {
 			actionCost: 0,
 		});
 
-		expect(result).toBe(2);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 2 },
-		]);
+		expect(result).toBe(3);
+		expect(combatant.update).not.toHaveBeenCalled();
 	});
 
 	it('normalizes negative actionCost to 1', async () => {
-		const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 		const result = await consumeCombatantAction({
 			combat,
@@ -463,9 +459,61 @@ describe('consumeCombatantAction', () => {
 		});
 
 		expect(result).toBe(2);
-		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'c1', 'system.actions.base.current': 2 },
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 2,
+		});
+	});
+
+	it('returns the unchanged action count when the queued write is skipped', async () => {
+		const combatant = createMockCombatant({
+			id: 'c1',
+			actionsCurrent: 3,
+			actionsMax: 3,
+		});
+		const combatants = createCombatantsCollectionFixture([combatant]);
+		// The pre-queue read finds the combatant, but by the time the queued
+		// mutation re-fetches a fresh document the combatant has been removed
+		// from the combat, so the write is skipped.
+		const originalGet = combatants.get;
+		let hasServedPreQueueRead = false;
+		combatants.get = (id: string) => {
+			if (hasServedPreQueueRead) return null;
+			hasServedPreQueueRead = true;
+			return originalGet(id);
+		};
+		const combat = {
+			id: 'combat-action',
+			combatants,
+		} as unknown as Combat;
+
+		const result = await consumeCombatantAction({
+			combat,
+			combatantId: 'c1',
+			actionCost: 1,
+		});
+
+		expect(result).toBe(3);
+		expect(combatant.update).not.toHaveBeenCalled();
+	});
+
+	it('recomputes overlapping deductions from the fresh combatant document', async () => {
+		const { combat, combatant } = createCombatWithCombatant('c1', 3);
+		combatant.update.mockImplementation(async (updates: Record<string, unknown>) => {
+			(
+				combatant.system as unknown as { actions: { base: { current: number } } }
+			).actions.base.current = updates['system.actions.base.current'] as number;
+			return { id: combatant.id };
+		});
+
+		const [firstResult, secondResult] = await Promise.all([
+			consumeCombatantAction({ combat, combatantId: 'c1', actionCost: 1 }),
+			consumeCombatantAction({ combat, combatantId: 'c1', actionCost: 1 }),
 		]);
+
+		expect(firstResult).toBe(2);
+		expect(secondResult).toBe(1);
+		expect(combatant.update).toHaveBeenNthCalledWith(1, { 'system.actions.base.current': 2 });
+		expect(combatant.update).toHaveBeenNthCalledWith(2, { 'system.actions.base.current': 1 });
 	});
 
 	describe('action-tracking automation gate', () => {
@@ -493,7 +541,7 @@ describe('consumeCombatantAction', () => {
 		});
 
 		it('returns the untouched action pool without persisting when action tracking is off', async () => {
-			const { combat, updateEmbeddedDocuments } = createCombatWithCombatant('c1', 3);
+			const { combat, combatant } = createCombatWithCombatant('c1', 3);
 
 			const result = await consumeCombatantAction({
 				combat,
@@ -502,7 +550,7 @@ describe('consumeCombatantAction', () => {
 			});
 
 			expect(result).toBe(3);
-			expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(combatant.update).not.toHaveBeenCalled();
 		});
 	});
 });

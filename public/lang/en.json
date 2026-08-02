@@ -172,17 +172,19 @@
 		},
 		"activationCosts": {
 			"action": "Action",
+			"free": "Free",
+			"reaction": "Reaction",
+			"freeReaction": "Free Reaction",
+			"reactionWithCost": "Reaction ({cost})",
 			"minute": "Minute",
 			"hour": "Hour",
 			"none": "None",
-			"special": "Special",
-			"turn": "Turn"
+			"special": "Special"
 		},
 		"activationCostsPlural": {
 			"action": "Actions",
 			"minute": "Minutes",
-			"hour": "Hours",
-			"turn": "Turns"
+			"hour": "Hours"
 		},
 		"armorEffects": {
 			"none": "<p>None</p>",

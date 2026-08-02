@@ -221,20 +221,23 @@ const sectionHeaders = {
 	stats: 'NIMBLE.sectionHeaders.stats',
 };
 
+/**
+ * The selectable activation cost types. `turn` is deliberately absent: "1/turn"
+ * is how often an ability may be used, not what it costs to use, so it belongs
+ * to a usage limit rather than to this list.
+ */
 const activationCostTypes = {
 	action: 'NIMBLE.activationCosts.action',
 	minute: 'NIMBLE.activationCosts.minute',
 	hour: 'NIMBLE.activationCosts.hour',
 	none: 'NIMBLE.activationCosts.none',
 	special: 'NIMBLE.activationCosts.special',
-	turn: 'NIMBLE.activationCosts.turn',
 };
 
 const activationCostTypesPlural = {
 	action: 'NIMBLE.activationCostsPlural.action',
 	minute: 'NIMBLE.activationCostsPlural.minute',
 	hour: 'NIMBLE.activationCostsPlural.hour',
-	turn: 'NIMBLE.activationCostsPlural.turn',
 };
 
 const actorTypeBanners = {

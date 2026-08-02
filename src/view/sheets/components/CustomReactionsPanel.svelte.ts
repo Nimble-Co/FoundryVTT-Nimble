@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import type { NimbleBaseItem } from '../../../documents/item/base.svelte.js';
+import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 
 /** A prepared embedded item always has a non-null `_id`. */
 export type ReactionItem = NimbleBaseItem & { _id: string };
@@ -27,7 +28,6 @@ export function isCustomReaction(item: Item): boolean {
 }
 
 export function createCustomReactionsPanelState(getActor: () => NimbleCharacter) {
-	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
 	let expandedDescriptions = $state(new Set<string>());
 
 	const reactions = $derived(
@@ -38,16 +38,21 @@ export function createCustomReactionsPanelState(getActor: () => NimbleCharacter)
 
 	/**
 	 * The action cost label, shown only when the reaction costs more than a single
-	 * action (per the issue: "Action cost, if more than one").
+	 * action (per the issue: "Action cost, if more than one") or is explicitly free.
 	 */
 	function getActionCost(item: Item): string | null {
 		const cost = getActivation(item);
 		if (!cost || cost.type !== 'action') return null;
 
+		// A single action is the default and goes unlabelled; zero is not, so it
+		// falls through to the shared formatter and renders as "Free".
 		const quantity = cost.quantity ?? 1;
-		if (quantity <= 1) return null;
+		if (quantity !== 0 && quantity <= 1) return null;
 
-		return `${quantity} ${activationCostTypesPlural.action ?? activationCostTypes.action}`;
+		// Everything in this panel is a reaction, so the reaction wording the
+		// formatter adds for `isReaction` would only repeat the heading. Ask it
+		// for the bare cost instead.
+		return formatActivationCostLabel({ type: cost.type, quantity });
 	}
 
 	/** The free-text reaction trigger configured under Activation > Core. */
