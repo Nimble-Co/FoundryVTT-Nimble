@@ -22,6 +22,8 @@ export const globalFoundryMocks = {
 		}
 
 		prepareData() {}
+
+		_onUpdate(_changed?: any, _options?: any, _userId?: string) {}
 	},
 	Item: class Item {
 		constructor(data?: any, _context?: any) {
@@ -98,6 +100,13 @@ export const globalFoundryMocks = {
 			LIMITED: 1,
 			OBSERVER: 2,
 			OWNER: 3,
+		},
+		TEXT_ANCHOR_POINTS: {
+			CENTER: 0,
+			BOTTOM: 1,
+			TOP: 2,
+			LEFT: 3,
+			RIGHT: 4,
 		},
 	},
 	localize: (key: string) => key,
