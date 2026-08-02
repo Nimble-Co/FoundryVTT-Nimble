@@ -653,6 +653,7 @@
 		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
+			"actionCost": "Action Cost",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",
@@ -704,6 +705,25 @@
 				"abilities": {
 					"label": "Apply to",
 					"hint": "Pick one or more abilities. Use \"all\" to apply to every ability."
+				}
+			},
+			"actionCost": {
+				"description": "Change how many actions it costs to activate matching items. Adjust adds to the printed cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0.",
+				"mode": {
+					"label": "How to apply",
+					"hint": "Adjust: add the value to the item's action cost (negative values reduce it). Set: replace the action cost with the value."
+				},
+				"value": {
+					"label": "Value",
+					"hint": "A flat number or formula (e.g. @level). Combined per the mode above."
+				},
+				"itemTypes": {
+					"label": "Item types",
+					"hint": "Only activations of these item types are affected. Leave empty to affect every item type."
+				},
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "Only affect the item whose identifier matches this. Leave blank to affect all matching items."
 				}
 			},
 			"applyCondition": {
