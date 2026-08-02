@@ -10,7 +10,11 @@
 		getHeroicReactionUsageState,
 		isSoftBlockedReason,
 	} from '#utils/getHeroicReactionUsageState.js';
-	import { requestIncomingAttackReaction } from '#utils/incomingAttackReactions.js';
+	import {
+		INCOMING_REACTION_REJECTED_HOOK,
+		type IncomingReactionRejection,
+		requestIncomingAttackReaction,
+	} from '#utils/incomingAttackReactions.js';
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 
@@ -239,20 +243,35 @@
 	 * window lets a second confirm read the same unspent pool and fold the
 	 * bonus twice for one set of dice.
 	 *
-	 * The hold lapses on its own so an offer the GM refused — a pick made stale
-	 * by the pool moving — becomes usable again instead of disappearing. The
+	 * A refusal releases the hold as soon as it reaches us, so the button comes
+	 * back with an explanation rather than in silence. The timer is the fallback
+	 * for a refusal that never arrives (the GM disconnecting mid-request). The
 	 * executor holds its own lock for the correctness half of this.
 	 */
 	const SPEND_HOLD_DURATION = 10_000;
 	let heldEntryIds = $state(new Set<string>());
 
+	function releaseEntry(entryId: string): void {
+		const next = new Set(heldEntryIds);
+		if (next.delete(entryId)) heldEntryIds = next;
+	}
+
 	function holdEntry(entryId: string): void {
 		heldEntryIds = new Set(heldEntryIds).add(entryId);
-		setTimeout(() => {
-			const next = new Set(heldEntryIds);
-			if (next.delete(entryId)) heldEntryIds = next;
-		}, SPEND_HOLD_DURATION);
+		setTimeout(() => releaseEntry(entryId), SPEND_HOLD_DURATION);
 	}
+
+	$effect(() => {
+		const hooksApi = Hooks as unknown as {
+			on: (hook: string, listener: (rejection: IncomingReactionRejection) => void) => number;
+			off: (hook: string, id: number) => void;
+		};
+		const hookId = hooksApi.on(INCOMING_REACTION_REJECTED_HOOK, (rejection) => {
+			if (rejection.messageId !== messageDocument?.id) return;
+			releaseEntry(rejection.entryId);
+		});
+		return () => hooksApi.off(INCOMING_REACTION_REJECTED_HOOK, hookId);
+	});
 
 	let entries = $derived(
 		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })

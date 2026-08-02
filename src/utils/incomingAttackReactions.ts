@@ -1,6 +1,7 @@
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
+import localize from './localize.js';
 
 /**
  * Foundry system socket channel. Must be `system.<id>` to reach other clients,
@@ -9,6 +10,14 @@ import type { IncomingReactionEntry } from './incomingReactionEntry.js';
  */
 const INCOMING_REACTION_SOCKET_NAME = `system.${SYSTEM_ID}`;
 const INCOMING_REACTION_REQUEST_TYPE = 'incomingAttackReaction';
+const INCOMING_REACTION_REJECTED_TYPE = 'incomingAttackReactionRejected';
+
+/**
+ * Hook announcing that the GM refused an offer this client asked to use, so
+ * the card's prompts can re-enable the button instead of waiting out the hold
+ * they took when the request was handed off.
+ */
+export const INCOMING_REACTION_REJECTED_HOOK = systemHookName('incomingReactionRejected');
 
 /**
  * The dice a player committed in the card-side spend picker. `expectedFaces`
@@ -29,6 +38,18 @@ type IncomingReactionRequest = {
 	userId: string;
 	/** spendPoolForDamage only */
 	selection?: PoolSpendSelection;
+};
+
+/** Why the GM refused, as a localization key the asking client renders. */
+export interface IncomingReactionRejection {
+	messageId: string;
+	entryId: string;
+	userId: string;
+	reasonKey: string;
+}
+
+type IncomingReactionRejectedMessage = IncomingReactionRejection & {
+	type: typeof INCOMING_REACTION_REJECTED_TYPE;
 };
 
 interface ReactionCapableMessage {
@@ -100,6 +121,50 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 	);
 }
 
+/**
+ * Surface a refusal on the client that asked for it: a notification saying why,
+ * and a hook so the card's prompts stop holding the button.
+ */
+function deliverIncomingReactionRejection(rejection: IncomingReactionRejection): void {
+	ui.notifications?.warn(localize(rejection.reasonKey));
+	// @ts-expect-error - nimble.incomingReactionRejected is a custom Nimble hook
+	Hooks.callAll(INCOMING_REACTION_REJECTED_HOOK, rejection);
+}
+
+function handleIncomingReactionRejected(payload: unknown): void {
+	if (!payload || typeof payload !== 'object') return;
+
+	const rejection = payload as Partial<IncomingReactionRejectedMessage>;
+	if (rejection.type !== INCOMING_REACTION_REJECTED_TYPE) return;
+	if (!rejection.messageId || !rejection.entryId || !rejection.reasonKey) return;
+	if (rejection.userId !== game.user?.id) return;
+
+	deliverIncomingReactionRejection(rejection as IncomingReactionRejection);
+}
+
+/**
+ * Tell the requesting client the GM did not carry out their offer. Executors
+ * run on the GM's client, so without this the notification lands on the GM's
+ * screen while the player who made the pick just watches the button come back
+ * unexplained once its hold lapses.
+ */
+export function rejectIncomingAttackReaction(rejection: IncomingReactionRejection): void {
+	if (rejection.userId === game.user?.id) {
+		deliverIncomingReactionRejection(rejection);
+		return;
+	}
+
+	const socket = game.socket as
+		| {
+				emit?: (eventName: string, payload: IncomingReactionRejectedMessage) => void;
+		  }
+		| undefined;
+	socket?.emit?.(INCOMING_REACTION_SOCKET_NAME, {
+		type: INCOMING_REACTION_REJECTED_TYPE,
+		...rejection,
+	});
+}
+
 let hasRegisteredIncomingReactionSocketListener = false;
 
 export function registerIncomingReactionSocketListener(): void {
@@ -112,7 +177,9 @@ export function registerIncomingReactionSocketListener(): void {
 		  }
 		| undefined;
 	socket?.on?.(INCOMING_REACTION_SOCKET_NAME, (payload) => {
-		void handleIncomingReactionRequest(payload);
+		const type = (payload as { type?: string } | null)?.type;
+		if (type === INCOMING_REACTION_REQUEST_TYPE) void handleIncomingReactionRequest(payload);
+		else if (type === INCOMING_REACTION_REJECTED_TYPE) handleIncomingReactionRejected(payload);
 	});
 }
 

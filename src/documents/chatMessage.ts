@@ -28,7 +28,10 @@ import {
 	rerollTriggerMatches,
 	withRerollDisadvantage,
 } from '../utils/incomingAttackModifiers.js';
-import type { PoolSpendSelection } from '../utils/incomingAttackReactions.js';
+import {
+	type PoolSpendSelection,
+	rejectIncomingAttackReaction,
+} from '../utils/incomingAttackReactions.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -1433,20 +1436,31 @@ class NimbleChatMessage extends ChatMessage {
 		selection: PoolSpendSelection,
 		viaSocket: boolean,
 	): Promise<void> {
+		// Every refusal below reports back to whoever asked. The executor runs on
+		// the GM's client, so a bare `return` would leave the spending player
+		// watching their button come back unexplained when its hold lapses.
+		const reject = (reasonKey: string) =>
+			rejectIncomingAttackReaction({
+				messageId: this.id ?? '',
+				entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+
 		const found = this.#validateIncomingReaction(
 			entryId,
 			'spendPoolForDamage',
 			requestingUserId,
 			viaSocket,
 		);
-		if (!found) return;
+		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		const { entries, entry } = found;
 
 		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-		if (!actor) return;
+		if (!actor) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
 
 		const pool = getDicePools(actor).find((p) => p.id === selection.poolId);
-		if (!pool) return;
+		if (!pool) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
 
 		// Re-resolve the consumer from the live rule rather than trusting the
 		// snapshot: this picks up `modifyConsumer` rules that extend the formula,
@@ -1460,7 +1474,8 @@ class NimbleChatMessage extends ChatMessage {
 				candidate.ruleId === entry.ruleId &&
 				(!sourceItem || candidate.itemId === String(sourceItem.id)),
 		);
-		if (!consumer?.effectFormula) return;
+		if (!consumer?.effectFormula)
+			return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
 
 		// The caller has already gated on `isActivationCard()`; that narrowing does
 		// not survive the hop into this method.
@@ -1476,16 +1491,10 @@ class NimbleChatMessage extends ChatMessage {
 			consumer.effectType === 'generic' &&
 			consumer.selectionOutcome === 'consume' &&
 			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData);
-		if (!stillOffered) {
-			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered'));
-			return;
-		}
+		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
 
 		const picked = resolvePoolSpendSelection(pool.faces, selection);
-		if (!picked) {
-			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendStale'));
-			return;
-		}
+		if (!picked) return reject('NIMBLE.chat.incomingReactions.poolSpendStale');
 
 		const effectRoll = new Roll(
 			substituteSpendFormula(
@@ -1498,7 +1507,9 @@ class NimbleChatMessage extends ChatMessage {
 		await effectRoll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
 
 		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
-		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) return;
+		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
 
 		const folded = foldBonusIntoPrimaryDamage(
 			(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
@@ -1506,13 +1517,13 @@ class NimbleChatMessage extends ChatMessage {
 			bonusDamage,
 			consumer.itemName,
 		);
-		if (!folded) return;
+		if (!folded) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		// Charge the pool only once the fold is known to be possible, and only
 		// if the pool actually accepted the write — otherwise the card would
 		// gain damage the player never paid for.
 		const spent = await setPoolFaces(actor, pool.id, picked.remainingFaces);
-		if (!spent) return;
+		if (!spent) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		await this.update({
 			rolls: folded.rolls,
