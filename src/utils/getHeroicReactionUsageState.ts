@@ -5,6 +5,7 @@ import {
 } from './heroicActions.js';
 import { isCombatantDead } from './isCombatantDead.js';
 import { isCombatStarted } from './isCombatStarted.js';
+import resolveHeroicReactionActionCost from './resolveHeroicReactionActionCost.js';
 
 export type HeroicReactionUsageBlockedReason =
 	| 'outsideCombat'
@@ -54,7 +55,13 @@ export function getHeroicReactionUsageState({
 	reactionKeys,
 }: GetHeroicReactionUsageStateParams) {
 	const normalizedReactionKeys = normalizeReactionKeys(reactionKeys);
-	const requiredActions = normalizedReactionKeys.length;
+	// Actor-dependent: the combatant's actor may carry `actionCost` rules that
+	// discount or reprice reactions. Cost only — the availability flags below
+	// stay authoritative for the once-per-round limit.
+	const requiredActions = resolveHeroicReactionActionCost(
+		combatant?.actor as unknown as Parameters<typeof resolveHeroicReactionActionCost>[0],
+		normalizedReactionKeys,
+	);
 	const currentActions = getCombatantCurrentActions(combatant);
 	const activeCombatantId = combat?.combatant?.id ?? combat?.combatant?._id ?? null;
 	const combatantId = getCombatantId(combatant);
