@@ -533,19 +533,33 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				hasDynamicRing?: boolean;
 				flashRing?: (ringType: string) => void;
 			};
-			if (ringToken.hasDynamicRing && ringToken.flashRing) {
-				ringToken.flashRing(effectType);
-			}
 
-			void canvasInterface.createScrollingText(
-				tokenObject.center,
-				toSignedIntegerString(effectValue),
-				{
-					anchor: CONST.TEXT_ANCHOR_POINTS.TOP,
-					jitter: 0.25,
-					fill,
-				},
-			);
+			// Ring flashes and scrolling text are purely cosmetic, and both canvas APIs
+			// are frequently wrapped by third-party code. This runs inside `_onUpdate`,
+			// so an error escaping here aborts the core update dispatch mid-flight and
+			// takes the `updateActor` hook down with it — leaving sheets, token bars and
+			// health-state syncs stale. Contain the failure to the token it happened on.
+			try {
+				if (ringToken.hasDynamicRing && ringToken.flashRing) {
+					ringToken.flashRing(effectType);
+				}
+
+				const scrollingText = canvasInterface.createScrollingText(
+					tokenObject.center,
+					toSignedIntegerString(effectValue),
+					{
+						anchor: CONST.TEXT_ANCHOR_POINTS.TOP,
+						jitter: 0.25,
+						fill,
+					},
+				);
+
+				void Promise.resolve(scrollingText).catch((error: unknown) => {
+					console.warn('Nimble | Failed to display HP change feedback', error);
+				});
+			} catch (error) {
+				console.warn('Nimble | Failed to display HP change feedback', error);
+			}
 		}
 	}
 
@@ -1097,11 +1111,18 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		const tempDelta = currentHp.temp - previousHp.temp;
 		if (hpDelta === 0 && tempDelta === 0) return;
 
-		this.#emitHpChangeScrollingText({
-			hp: hpDelta,
-			temp: tempDelta,
-			total: hpDelta + tempDelta,
-		});
+		// Belt and braces: the emitter guards each token individually, but everything
+		// around that loop (canvas lookups, token resolution) is patchable too, and
+		// nothing cosmetic is worth aborting the core update dispatch for.
+		try {
+			this.#emitHpChangeScrollingText({
+				hp: hpDelta,
+				temp: tempDelta,
+				total: hpDelta + tempDelta,
+			});
+		} catch (error) {
+			console.warn('Nimble | Failed to emit HP change feedback', error);
+		}
 	}
 }
 
