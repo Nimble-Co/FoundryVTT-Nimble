@@ -1,4 +1,5 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
+import { isDerivedConditionsAutomationEnabled } from '../settings/automationSettings.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { isConditionImmune } from './conditionImmunityGuard.js';
 
@@ -19,6 +20,7 @@ export const handleAutomaticConditionApplication = {
 		options: ActiveEffect.Database.PreCreateOptions & AutomaticConditionContext,
 		_userId: string,
 	): Promise<boolean | undefined> => {
+		if (!isDerivedConditionsAutomationEnabled()) return;
 		if (!document.parent || document.parent.documentName !== 'Actor') return;
 
 		try {
@@ -85,6 +87,7 @@ export const handleAutomaticConditionApplication = {
 		_options: ActiveEffect.Database.DeleteOptions & AutomaticConditionContext,
 		_userId: string,
 	): Promise<void> => {
+		if (!isDerivedConditionsAutomationEnabled()) return;
 		if (!isActiveGM()) return;
 
 		try {

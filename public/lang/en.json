@@ -2496,8 +2496,40 @@
 				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
 			},
 			"autoApplyConditions": {
-				"name": "Auto-Apply Conditions from Rules",
-				"hint": "Automatically apply conditions from feature rules when their trigger fires. When off, rules still surface on the chat card for manual GM application."
+				"name": "Auto-Apply Conditions from Rules (Legacy)",
+				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Apply Conditions and Effects from Rules toggle and has no other effect."
+			},
+			"applyRuleEffects": {
+				"name": "Apply Conditions and Effects from Rules",
+				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+			},
+			"derivedConditions": {
+				"name": "Derived Conditions",
+				"hint": "Automatically apply and remove conditions implied by other conditions, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained."
+			},
+			"resourceRecovery": {
+				"name": "Resource Recovery",
+				"hint": "Automatically refill charges and dice pools from their recovery triggers, such as turn start, rests, wounds, kills, and encounter end."
+			},
+			"resourceSpending": {
+				"name": "Resource Spending",
+				"hint": "Automatically deduct mana when casting spells and validate and consume charges when using items. When off, resource costs are not enforced and must be tracked manually."
+			},
+			"actionTracking": {
+				"name": "Action Tracking",
+				"hint": "Automatically spend combatant actions when items are used during combat."
+			},
+			"healthStateSync": {
+				"name": "Health-State Sync",
+				"hint": "Automatically apply and remove the Bloodied status when a combatant drops to or recovers above half hit points. Last Stand handling is always on."
+			},
+			"combatConvenience": {
+				"name": "Combat Convenience",
+				"hint": "Automatically roll initiative for player characters when combat starts."
+			},
+			"chatNotifications": {
+				"name": "Chat Notifications",
+				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
@@ -2527,6 +2559,21 @@
 				"errorEmptyKey": "Key is required.",
 				"errorReservedKey": "That key is reserved by a built-in school.",
 				"errorDuplicateKey": "Duplicate key."
+			},
+			"automationMenu": {
+				"name": "Automation",
+				"title": "Automation",
+				"manageButton": "Configure Automation",
+				"hint": "Choose which parts of the Nimble rules the system automates for your world. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"intro": "Choose which parts of the Nimble rules the system automates. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"sectionRulesEffects": "Rules & Effects",
+				"sectionResources": "Resources",
+				"sectionCombat": "Combat",
+				"sectionChat": "Chat",
+				"save": "Save Automation Settings",
+				"saved": "Automation settings saved.",
+				"saveError": "Saving the automation settings failed and some toggles may not have been applied. Check the console for details.",
+				"gmOnly": "Only a GM can change automation settings."
 			},
 			"combatTrackerHoverColor": {
 				"name": "Combat Tracker Hover Color",

@@ -18,6 +18,7 @@ import { initiativeRollLock } from '#utils/initiativeRollLock.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
+import { isCombatConvenienceAutomationEnabled } from '../../settings/automationSettings.js';
 import { getCombatantManualSortValue, getCombatantResetActions } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
 import { rollInitiativeForCombatant } from './combatInitiative.js';
@@ -657,7 +658,7 @@ class NimbleCombat extends Combat {
 						.map((combatant) => combatant.id)
 						.filter((combatantId): combatantId is string => combatantId != null);
 
-		if (unrolledCharacterIds.length > 0) {
+		if (unrolledCharacterIds.length > 0 && isCombatConvenienceAutomationEnabled()) {
 			await this.rollInitiative(unrolledCharacterIds, { updateTurn: false });
 		}
 

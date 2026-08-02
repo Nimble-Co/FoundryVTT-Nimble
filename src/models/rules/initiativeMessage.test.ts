@@ -1,5 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getInitiativeMessageRuleSources } from '../../documents/combat/handlers/initiativeMessageHandler.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import initiativeMessageHandler, {
+	getInitiativeMessageRuleSources,
+} from '../../documents/combat/handlers/initiativeMessageHandler.js';
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 import { InitiativeMessageRule } from './initiativeMessage.js';
 
 function createMockItem() {
@@ -136,5 +139,74 @@ describe('InitiativeMessageRule class metadata', () => {
 	it('exposes the picker group and i18n description key', () => {
 		expect(InitiativeMessageRule.group).toBe('notes');
 		expect(InitiativeMessageRule.description).toBe('NIMBLE.rules.initiativeMessage.description');
+	});
+});
+
+describe('initiativeMessageHandler', () => {
+	const gameGlobal = globalThis as unknown as {
+		game: { settings?: { get: ReturnType<typeof vi.fn> } };
+	};
+	const foundryGlobal = globalThis as unknown as {
+		foundry: { utils: { escapeHTML?: (value: string) => string } };
+	};
+	let chatCreate: ReturnType<typeof vi.fn>;
+	let hadEscapeHTML: boolean;
+
+	function createCombatant() {
+		const item = {
+			system: {
+				rules: [
+					{
+						type: 'initiativeMessage',
+						formula: '6',
+						message: 'Move {value} spaces!',
+						label: 'Test Reminder',
+						disabled: false,
+					},
+				],
+			},
+		};
+		const actor = { isOwner: true, items: [item] };
+		return {
+			type: 'character',
+			initiative: null,
+			actor,
+			token: {},
+		} as unknown as Combatant.Implementation;
+	}
+
+	beforeEach(() => {
+		chatCreate = vi.fn().mockResolvedValue(undefined);
+		vi.stubGlobal('ChatMessage', { create: chatCreate, getSpeaker: vi.fn(() => ({})) });
+		hadEscapeHTML = 'escapeHTML' in foundryGlobal.foundry.utils;
+		foundryGlobal.foundry.utils.escapeHTML = (value: string) => String(value);
+		// The mock DataModel does not hydrate rule fields from source data,
+		// so resolve the message via a prototype spy instead.
+		vi.spyOn(InitiativeMessageRule.prototype, 'resolveMessage').mockReturnValue('Move 6 spaces!');
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+		if (!hadEscapeHTML) delete foundryGlobal.foundry.utils.escapeHTML;
+		gameGlobal.game.settings = undefined;
+	});
+
+	it('posts the reminder chat message by default (fail-open, no stored setting)', async () => {
+		await initiativeMessageHandler(createCombatant());
+
+		expect(chatCreate).toHaveBeenCalledTimes(1);
+	});
+
+	it('posts no reminder when the chat notifications automation toggle is off', async () => {
+		gameGlobal.game.settings = {
+			get: vi.fn(
+				(_namespace: string, key: string) => key !== AUTOMATION_SETTING_KEYS.chatNotifications,
+			),
+		};
+
+		await initiativeMessageHandler(createCombatant());
+
+		expect(chatCreate).not.toHaveBeenCalled();
 	});
 });

@@ -11,6 +11,7 @@ vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
 	setPoolFaces: vi.fn().mockResolvedValue(true),
 }));
 
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 import { ToggleEffectRule, type TurnOffEvent } from './toggleEffect.js';
 
 interface MockActiveEffect {
@@ -245,6 +246,14 @@ describe('ToggleEffectRule', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ToggleEffectRule.group).toBe('triggers');
 			expect(ToggleEffectRule.description).toBe('NIMBLE.rules.toggleEffect.description');
+		});
+
+		it('declares onItemActivated as always dispatched', () => {
+			// This declaration is the only thing keeping the activation-time
+			// toggle-on flow alive when rule automation is toggled off; the
+			// dispatcher gate tests only exercise synthetic rule classes, so
+			// pin the real declaration here.
+			expect(ToggleEffectRule.alwaysDispatchedEvents).toContain('onItemActivated');
 		});
 	});
 
@@ -940,6 +949,126 @@ describe('ToggleEffectRule', () => {
 			await rule.onTurnStart(turnContext(actor));
 
 			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('chat notification announcements', () => {
+		const settingsGlobal = globalThis as unknown as {
+			game: { settings?: { get: ReturnType<typeof vi.fn> } };
+		};
+
+		function getChatCreate(): Mock {
+			return (globalThis as unknown as { ChatMessage: { create: Mock } }).ChatMessage.create;
+		}
+
+		function attachTurnOnModifier(actor: MockActor): void {
+			actor.items = {
+				contents: [
+					{
+						rules: {
+							values: () => [
+								{
+									type: 'modifyToggle',
+									toggleIdentifier: 'test-toggle',
+									turnOn: ['onTurnStart'],
+								},
+							],
+						},
+					},
+				],
+			};
+		}
+
+		function pushAE(actor: MockActor, ruleId: string): MockActiveEffect {
+			const ae = createMockActiveEffect(
+				{ nimble: { toggleEffectRuleId: ruleId, toggleEffectItemId: 'item-id' } },
+				{ id: 'ae-active', disabled: false },
+			);
+			actor.effects.push(ae);
+			return ae;
+		}
+
+		function turnStartContext(actor: MockActor) {
+			type Ctx = Parameters<ToggleEffectRule['onTurnStart']>[0];
+			return {
+				combat: {} as Ctx['combat'],
+				combatant: {} as Ctx['combatant'],
+				actor: actor as unknown as Ctx['actor'],
+			};
+		}
+
+		function restContext(actor: MockActor) {
+			type Ctx = Parameters<ToggleEffectRule['onRest']>[0];
+			return { actor: actor as unknown as Ctx['actor'], restType: 'safe' as const };
+		}
+
+		it('announces an automatic turn-on in chat by default (fail-open, no stored setting)', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:test'], turnOff: [], identifier: 'test-toggle' },
+				actor,
+			);
+			attachTurnOnModifier(actor);
+
+			await rule.onTurnStart(turnStartContext(actor));
+
+			expect(actor.createEmbeddedDocuments).toHaveBeenCalled();
+			expect(getChatCreate()).toHaveBeenCalledTimes(1);
+		});
+
+		it('announces an automatic turn-off in chat by default (fail-open, no stored setting)', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule({ tags: ['self:test'], turnOff: ['onRest'] }, actor);
+			pushAE(actor, rule.id);
+
+			await rule.onRest(restContext(actor));
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+			expect(getChatCreate()).toHaveBeenCalledTimes(1);
+		});
+
+		describe('with the chat notifications automation toggle off', () => {
+			// The rest of this file exercises the enabled path via the
+			// fail-open default (no game.settings mock); this block installs
+			// an explicit settings mock that disables only the chat
+			// notifications key and removes it afterwards so other tests stay
+			// on the fail-open path.
+			beforeEach(() => {
+				settingsGlobal.game.settings = {
+					get: vi.fn(
+						(_namespace: string, key: string) => key !== AUTOMATION_SETTING_KEYS.chatNotifications,
+					),
+				};
+			});
+
+			afterEach(() => {
+				settingsGlobal.game.settings = undefined;
+			});
+
+			it('still turns the toggle on but posts no start announcement', async () => {
+				const actor = createMockActor();
+				const rule = createToggleEffectRule(
+					{ tags: ['self:test'], turnOff: [], identifier: 'test-toggle' },
+					actor,
+				);
+				attachTurnOnModifier(actor);
+
+				await rule.onTurnStart(turnStartContext(actor));
+
+				expect(actor.createEmbeddedDocuments).toHaveBeenCalled();
+				expect(getChatCreate()).not.toHaveBeenCalled();
+			});
+
+			it('still ends the toggle but posts no end announcement', async () => {
+				const actor = createMockActor();
+				const rule = createToggleEffectRule({ tags: ['self:test'], turnOff: ['onRest'] }, actor);
+				pushAE(actor, rule.id);
+
+				await rule.onRest(restContext(actor));
+
+				expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+				expect(getChatCreate()).not.toHaveBeenCalled();
+			});
 		});
 	});
 
