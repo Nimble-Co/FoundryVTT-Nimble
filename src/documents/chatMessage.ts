@@ -606,6 +606,41 @@ function resolvePoolSpendSelection(
  */
 const inFlightSpendOffers = new Set<string>();
 
+/** In-flight reaction resolve per card, so the next one starts after it. */
+const reactionWriteQueues = new Map<string, Promise<void>>();
+
+/**
+ * Run a reaction resolver with at most one in flight per card.
+ *
+ * Every resolver reads the card's `incomingReactions`, awaits — a roll
+ * evaluation, a pool write — and then writes the whole array back. Two
+ * resolvers overlapping on one card each write their own stale copy, and
+ * whichever lands second drops the other's `used` flag. Routing every kind
+ * through the primary GM gives us a single writing client; this gives that
+ * client a single write in flight per card, which is what the routing was
+ * credited with on its own.
+ *
+ * Keyed by message id rather than by entry, because the array is shared: two
+ * *different* entries resolving at once is exactly the case an entry-level
+ * lock misses.
+ */
+function queueReactionWrite(messageId: string, task: () => Promise<void>): Promise<void> {
+	const previous = reactionWriteQueues.get(messageId) ?? Promise.resolve();
+	// Both paths run the task: a predecessor that threw must not wedge the card.
+	const result = previous.then(task, task);
+	const settled = result.then(
+		() => undefined,
+		() => undefined,
+	);
+
+	reactionWriteQueues.set(messageId, settled);
+	void settled.then(() => {
+		if (reactionWriteQueues.get(messageId) === settled) reactionWriteQueues.delete(messageId);
+	});
+
+	return result;
+}
+
 class NimbleChatMessage extends ChatMessage {
 	declare type: SystemChatMessageTypes;
 
@@ -1172,12 +1207,8 @@ class NimbleChatMessage extends ChatMessage {
 		kind: IncomingReactionEntry['kind'],
 		requestingUserId: string,
 		viaSocket: boolean,
-	): { entries: IncomingReactionEntry[]; entry: IncomingReactionEntry } | null {
-		const systemData = this.system as unknown as ActivationCardSystemData & {
-			incomingReactions?: IncomingReactionEntry[];
-		};
-		const entries = systemData.incomingReactions ?? [];
-		const entry = entries.find((e) => e.id === entryId);
+	): IncomingReactionEntry | null {
+		const entry = this.#incomingReactionEntries().find((e) => e.id === entryId);
 		if (!entry || entry.used || entry.kind !== kind) return null;
 
 		const requestingUser = game.users?.get(requestingUserId) ?? null;
@@ -1200,15 +1231,28 @@ class NimbleChatMessage extends ChatMessage {
 			if (!rule || rule.disabled) return null;
 		}
 
-		return { entries, entry };
+		return entry;
 	}
 
+	#incomingReactionEntries(): IncomingReactionEntry[] {
+		return (
+			(this.system as unknown as { incomingReactions?: IncomingReactionEntry[] })
+				.incomingReactions ?? []
+		);
+	}
+
+	/**
+	 * Read the card's current offers and mark the matching ones used. Read here
+	 * rather than reused from validation time so the array written back is the
+	 * one on the card now, not the one from before this resolver's awaits.
+	 */
 	#markIncomingReactionsUsed(
-		entries: IncomingReactionEntry[],
 		predicate: (entry: IncomingReactionEntry) => boolean,
 		patch: Partial<IncomingReactionEntry> = {},
 	): IncomingReactionEntry[] {
-		return entries.map((e) => (predicate(e) ? { ...e, used: true, ...patch } : e));
+		return this.#incomingReactionEntries().map((e) =>
+			predicate(e) ? { ...e, used: true, ...patch } : e,
+		);
 	}
 
 	/**
@@ -1224,16 +1268,27 @@ class NimbleChatMessage extends ChatMessage {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const found = this.#validateIncomingReaction(
+		return queueReactionWrite(this.id ?? '', () =>
+			this.#applyForceRerollReaction(entryId, requestingUserId, viaSocket),
+		);
+	}
+
+	async #applyForceRerollReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const entry = this.#validateIncomingReaction(
 			entryId,
 			'forceReroll',
 			requestingUserId,
 			viaSocket,
 		);
-		if (!found) return;
-		const { entries, entry } = found;
+		if (!entry) return;
 
-		const systemData = this.system as ActivationCardSystemData;
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		const activation = foundry.utils.deepClone(systemData.activation ?? { effects: [] });
 		const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
 		const damageNode = nodes.find(
@@ -1259,7 +1314,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		const carried = await this.#carryFoldedSpendsAcrossReroll(
 			newRoll.toJSON() as Record<string, unknown>,
-			this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+			this.#markIncomingReactionsUsed((e) => e.id === entry.id),
 			newRoll,
 		);
 
@@ -1394,11 +1449,11 @@ class NimbleChatMessage extends ChatMessage {
 	 * picked faces, evaluate the consumer's effect formula against them, and add
 	 * the result to the damage the GM will apply.
 	 *
-	 * Executes on the primary GM's client, like the other reaction resolvers.
-	 * Two reasons, neither optional: a chat message is updatable only by its
-	 * author or a GM (owning the acting actor does not imply either), and
-	 * funnelling every kind through one writer keeps a concurrent reaction from
-	 * clobbering `incomingReactions`.
+	 * Executes on the primary GM's client, like the other reaction resolvers,
+	 * because a chat message is updatable only by its author or a GM (owning the
+	 * acting actor does not imply either). That gives one writing client;
+	 * `queueReactionWrite` is what keeps a concurrent reaction on the same card
+	 * from clobbering `incomingReactions` on it.
 	 *
 	 * Adding to the existing roll rather than posting a second one is what keeps
 	 * the target's armor, resistances and flat reductions from being applied a
@@ -1424,7 +1479,9 @@ class NimbleChatMessage extends ChatMessage {
 		inFlightSpendOffers.add(lockKey);
 
 		try {
-			await this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket);
+			await queueReactionWrite(this.id ?? '', () =>
+				this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket),
+			);
 		} finally {
 			inFlightSpendOffers.delete(lockKey);
 		}
@@ -1447,14 +1504,13 @@ class NimbleChatMessage extends ChatMessage {
 				reasonKey,
 			});
 
-		const found = this.#validateIncomingReaction(
+		const entry = this.#validateIncomingReaction(
 			entryId,
 			'spendPoolForDamage',
 			requestingUserId,
 			viaSocket,
 		);
-		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
-		const { entries, entry } = found;
+		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
 		if (!actor) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
@@ -1529,7 +1585,7 @@ class NimbleChatMessage extends ChatMessage {
 			rolls: folded.rolls,
 			system: {
 				activation: folded.activation,
-				incomingReactions: this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id, {
+				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
 					usedAmount: bonusDamage,
 					usedPoolLabel: pool.label,
 					usedFaces: picked.spentFaces,
@@ -1552,24 +1608,34 @@ class NimbleChatMessage extends ChatMessage {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const found = this.#validateIncomingReaction(
+		return queueReactionWrite(this.id ?? '', () =>
+			this.#applyRedirectReaction(entryId, requestingUserId, viaSocket),
+		);
+	}
+
+	async #applyRedirectReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const entry = this.#validateIncomingReaction(
 			entryId,
 			'redirectToSelf',
 			requestingUserId,
 			viaSocket,
 		);
-		if (!found) return;
-		const { entries, entry } = found;
+		if (!entry) return;
 		if (!entry.tokenUuid) return;
 
-		const systemData = this.system as ActivationCardSystemData;
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		const targets = (systemData.targets || []).filter((t) => t !== entry.targetTokenUuid);
 		if (!targets.includes(entry.tokenUuid)) targets.push(entry.tokenUuid);
 
 		// The ally is no longer the target, so every other offer tied to them
 		// is stale: other redirect offers, and their own forceReroll offers.
 		const updatedEntries = this.#markIncomingReactionsUsed(
-			entries,
 			(e) => e.id === entry.id || e.targetTokenUuid === entry.targetTokenUuid,
 		);
 

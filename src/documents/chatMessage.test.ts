@@ -2425,6 +2425,34 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-crit']);
 	});
 
+	it('serializes two entries resolving at once, so neither used flag is lost', async () => {
+		// Both resolvers read `incomingReactions`, await a roll, then write the
+		// whole array back. Overlapping, the second would write a copy taken
+		// before the first landed and undo it.
+		const message = createReactionMessage({
+			entries: [createReactionEntry(), createReactionEntry({ id: 'entry-2' })],
+		});
+		Object.defineProperty(message, 'id', { value: 'message-1' });
+		message.update = vi.fn(async (payload: Record<string, unknown>) => {
+			const next = (payload.system as { incomingReactions?: ReactionEntryFixture[] })
+				?.incomingReactions;
+			if (next) (message.system as Record<string, unknown>).incomingReactions = next;
+		});
+
+		await Promise.all([
+			message.resolveForceRerollReaction('entry-1', 'gm-user'),
+			message.resolveForceRerollReaction('entry-2', 'gm-user'),
+		]);
+
+		expect(message.update).toHaveBeenCalledTimes(2);
+		const finalEntries = (
+			message.update.mock.calls[1][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+		expect(finalEntries.map((e) => e.used)).toEqual([true, true]);
+	});
+
 	it('does nothing on non-GM clients', async () => {
 		reactionGlobals().game.user.isGM = false;
 		const message = createReactionMessage({ entries: [createReactionEntry()] });

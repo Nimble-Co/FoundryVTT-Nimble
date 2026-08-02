@@ -187,10 +187,10 @@ export function registerIncomingReactionSocketListener(): void {
  * Use a pending offer on an attack card. GMs execute directly; everyone else
  * relays to the primary active GM, who owns the message mutation.
  *
- * Routing every kind through the GM is what keeps `incomingReactions` to a
- * single writer, and is also a permission requirement: a chat message is
+ * Routing every kind through the GM narrows `incomingReactions` to a single
+ * writing client, and is also a permission requirement: a chat message is
  * updatable only by its author or a GM, which owning the acting actor does not
- * imply.
+ * imply. Serializing the resolvers on that client is the executors' own job.
  */
 export async function requestIncomingAttackReaction(params: {
 	messageId: string;
