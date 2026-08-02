@@ -172,7 +172,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	// that dispatch survives the rule-automation toggle. The automatic
 	// turn-off / turn-on / inactivity paths run via other lifecycle events
 	// and stay gated.
-	static override alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
+	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onItemActivated'];
 
 	declare tags: string[];
 	declare turnOff: TurnOffEvent[];

@@ -103,6 +103,14 @@ describe('DiceConsumerRule', () => {
 			expect(DiceConsumerRule.group).toBe('resource');
 			expect(DiceConsumerRule.description).toBe('NIMBLE.rules.diceConsumer.description');
 		});
+
+		it('declares onItemActivated as always dispatched', () => {
+			// This declaration is the only thing keeping the activation-time
+			// spend flow alive when rule automation is toggled off; the
+			// dispatcher gate tests only exercise synthetic rule classes, so
+			// pin the real declaration here.
+			expect(DiceConsumerRule.alwaysDispatchedEvents).toContain('onItemActivated');
+		});
 	});
 
 	describe('suppressesActivationCard', () => {

@@ -25,7 +25,7 @@ class AutoSuppressingRule extends NimbleBaseRule {
 // toggle — its replacement flow runs regardless, so suppression is safe even
 // with automation off.
 class ExemptAutoSuppressingRule extends NimbleBaseRule {
-	static override alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
+	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onItemActivated'];
 
 	protected override _autoSuppressesActivationCard(): boolean {
 		return true;

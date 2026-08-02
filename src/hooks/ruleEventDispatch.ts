@@ -77,9 +77,11 @@ async function dispatch<TContext>(
 	for (const rule of actor.rules) {
 		if (!automationEnabled) {
 			const alwaysDispatched = (
-				rule?.constructor as { alwaysDispatchedEvents?: readonly string[] } | undefined
+				rule?.constructor as
+					| { alwaysDispatchedEvents?: readonly (keyof NimbleBaseRule)[] }
+					| undefined
 			)?.alwaysDispatchedEvents;
-			if (!alwaysDispatched?.includes(methodName as string)) continue;
+			if (!alwaysDispatched?.includes(methodName)) continue;
 		}
 		const method = rule[methodName] as ((ctx: TContext) => Promise<void>) | undefined;
 		if (typeof method !== 'function') continue;

@@ -148,6 +148,10 @@ interface RoundChangedContext {
 	round: number;
 }
 
+// Members of NimbleBaseRule, used to type `alwaysDispatchedEvents` (statics
+// inside the generic class body cannot reference the bare class name).
+type RuleLifecycleEvent = keyof NimbleBaseRule;
+
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
@@ -164,9 +168,10 @@ abstract class NimbleBaseRule<
 	 * automation is toggled off. Reserved for events that are core plumbing
 	 * with no manual fallback — flows a player cannot reproduce by hand when
 	 * automation is disabled. The dispatcher skips every other event for
-	 * every rule while the toggle is off.
+	 * every rule while the toggle is off. Typed against the rule's own
+	 * members so a renamed or misspelled lifecycle method fails to compile.
 	 */
-	static alwaysDispatchedEvents: readonly string[] = [];
+	static alwaysDispatchedEvents: readonly RuleLifecycleEvent[] = [];
 
 	/** True when this rule class implements the prePrepareData lifecycle hook. */
 	static get appliesInPrePrepareData(): boolean {
