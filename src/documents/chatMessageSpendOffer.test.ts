@@ -153,36 +153,38 @@ function selection(poolFaces: number[], faceIndices: number[], expectedFaces?: n
 	};
 }
 
+const globals = globalThis as unknown as Record<string, unknown>;
+
+// The shared Roll mock only resolves a formula in `evaluateSync`; the
+// executor evaluates asynchronously, so borrow the sync parser for it.
+const BaseRoll = globals.Roll as new (
+	formula: string,
+	data?: unknown,
+) => { evaluateSync: () => unknown };
+
+function setupSpendGlobals(): void {
+	vi.clearAllMocks();
+	globals.Roll = class FormulaRoll extends BaseRoll {
+		async evaluate() {
+			this.evaluateSync();
+			return this;
+		}
+	};
+	(globals.game as { user: { isGM: boolean; id: string } }).user = {
+		isGM: true,
+		id: 'gm-user',
+	};
+	(globals.game as { users: unknown }).users = {
+		get: vi.fn((id: string) => (id === 'gm-user' ? { isGM: true, id } : null)),
+	};
+}
+
+function useActor(actor: ReturnType<typeof createActor>) {
+	globals.fromUuidSync = vi.fn(() => actor);
+}
+
 describe('resolveSpendPoolForDamageOffer', () => {
-	const globals = globalThis as unknown as Record<string, unknown>;
-
-	// The shared Roll mock only resolves a formula in `evaluateSync`; the
-	// executor evaluates asynchronously, so borrow the sync parser for it.
-	const BaseRoll = globals.Roll as new (
-		formula: string,
-		data?: unknown,
-	) => { evaluateSync: () => unknown };
-
-	beforeEach(() => {
-		vi.clearAllMocks();
-		globals.Roll = class FormulaRoll extends BaseRoll {
-			async evaluate() {
-				this.evaluateSync();
-				return this;
-			}
-		};
-		(globals.game as { user: { isGM: boolean; id: string } }).user = {
-			isGM: true,
-			id: 'gm-user',
-		};
-		(globals.game as { users: unknown }).users = {
-			get: vi.fn((id: string) => (id === 'gm-user' ? { isGM: true, id } : null)),
-		};
-	});
-
-	function useActor(actor: ReturnType<typeof createActor>) {
-		globals.fromUuidSync = vi.fn(() => actor);
-	}
+	beforeEach(setupSpendGlobals);
 
 	it('spends the picked dice and folds the result into the damage total', async () => {
 		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule()]);
@@ -422,5 +424,116 @@ describe('resolveSpendPoolForDamageOffer', () => {
 		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], []));
 
 		expect(message.update).not.toHaveBeenCalled();
+	});
+});
+
+/**
+ * A reroll resolved on the card rebuilds the damage roll from its original
+ * formula, which never carries a spend already folded in. Either the bonus
+ * comes across to the new roll or the dice go back — the one thing that must
+ * not happen is the player paying for damage the card no longer shows.
+ */
+describe('resolveForceRerollReaction with a folded card-side spend', () => {
+	beforeEach(setupSpendGlobals);
+
+	function rerollEntry() {
+		return {
+			id: 'reroll-1',
+			kind: 'forceReroll',
+			source: 'rule',
+			actorUuid: 'Actor.cheat',
+			tokenUuid: null,
+			targetTokenUuid: 'Scene.scene.Token.victim',
+			label: 'Pocket Sand',
+			ruleId: 'pocket-sand',
+			// Empty itemUuid skips the rule-still-enabled revalidation
+			itemUuid: '',
+			used: false,
+			rerollTrigger: 'always',
+		};
+	}
+
+	function spentEntry(overrides: Record<string, unknown> = {}) {
+		return spendEntry({
+			used: true,
+			usedAmount: 18,
+			usedPoolLabel: 'Fury Dice',
+			usedFaces: [4, 5],
+			...overrides,
+		});
+	}
+
+	function rerolledRoll(message: MockedMessage) {
+		return (
+			message.update.mock.calls[0][0] as {
+				system: { activation: { effects: Array<{ roll: Record<string, unknown> }> } };
+			}
+		).system.activation.effects[0].roll;
+	}
+
+	function rerolledEntries(message: MockedMessage) {
+		return (
+			message.update.mock.calls[0][0] as {
+				system: { incomingReactions: Array<Record<string, unknown>> };
+			}
+		).system.incomingReactions;
+	}
+
+	it('re-applies a spend the new outcome still satisfies', async () => {
+		const actor = createActor([3], [POOL_RULE, consumerRule()]);
+		useActor(actor);
+		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'hit' })]);
+
+		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+
+		// The mock rebuild totals 0, so the whole total is the carried bonus
+		const roll = rerolledRoll(message);
+		expect(roll.total).toBe(18);
+		expect(roll.terms).toContainEqual({
+			class: 'NumericTerm',
+			number: 18,
+			evaluated: true,
+			options: { flavor: 'Death Blow: bonus damage' },
+		});
+
+		// The node's roll and the message rolls source have to move together
+		expect(
+			JSON.parse((message.update.mock.calls[0][0] as { rolls: string[] }).rolls[0]).total,
+		).toBe(18);
+
+		expect(rerolledEntries(message)[1]).toMatchObject({ used: true, usedAmount: 18 });
+		expect(actor._item.update).not.toHaveBeenCalled();
+	});
+
+	it('refunds the dice and drops a spend the new outcome no longer satisfies', async () => {
+		// The reroll comes back a non-crit, so the crit-only spend was never owed
+		const actor = createActor([3], [POOL_RULE, consumerRule()]);
+		useActor(actor);
+		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'criticalHit' })]);
+
+		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+
+		expect(rerolledRoll(message).total).toBe(0);
+
+		const written = actor._item.update.mock.calls[0][0] as Record<string, unknown>;
+		const pools = written[`flags.${SYSTEM_ID}.dicePools`] as Record<string, { faces: number[] }>;
+		expect(pools.fury.faces).toEqual([3, 4, 5]);
+
+		// Reverted to unused, so the stale-outcome filter takes it off the card
+		expect(rerolledEntries(message).map((e) => e.id)).toEqual(['reroll-1']);
+	});
+
+	it('keeps the bonus when the dice cannot be returned', async () => {
+		// No pool to refund into: charging the player and dropping the damage
+		// would be the worst of both, so the bonus rides on the new roll
+		const actor = createActor([3], [POOL_RULE]);
+		useActor(actor);
+		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'criticalHit' })]);
+
+		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+
+		expect(rerolledRoll(message).total).toBe(18);
+		expect(actor._item.update).not.toHaveBeenCalled();
+		expect(rerolledEntries(message)[1]).toMatchObject({ used: true, usedAmount: 18 });
 	});
 });

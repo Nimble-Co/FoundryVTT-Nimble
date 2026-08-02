@@ -31,13 +31,40 @@ export function replaceDamageRollInRollsSource(
 }
 
 /**
+ * Append a flat bonus to a serialized damage roll as a *flavored* numeric term,
+ * matching how banked dice-pool contributions already ship, so
+ * `getDiceDamageTotal` counts it as dice rather than as an armor-ignoring
+ * modifier.
+ *
+ * `total` is patched directly rather than recomputed from terms: the roll is
+ * already evaluated, and `DamageRoll.fromData` prefers the serialized total, so
+ * reconstruction keeps crit and primary-die state intact.
+ */
+export function appendFlavoredBonusToRoll(
+	serializedRoll: Record<string, unknown>,
+	amount: number,
+	flavor: string,
+): Record<string, unknown> {
+	const serialized = { ...serializedRoll };
+	const terms = Array.isArray(serialized.terms) ? [...(serialized.terms as unknown[])] : [];
+	terms.push(
+		{ class: 'OperatorTerm', operator: '+', evaluated: true, options: {} },
+		{ class: 'NumericTerm', number: amount, evaluated: true, options: { flavor } },
+	);
+	serialized.terms = terms;
+	serialized.total = Number(serialized.total ?? 0) + amount;
+	return serialized;
+}
+
+/**
  * Add a flat bonus to an activation card's primary damage roll, returning the
  * patched activation tree and message `rolls` source. Both are updated together
  * because a card's node roll and its `rolls` entry must stay in lockstep.
  *
- * The bonus is appended as a *flavored* numeric term, matching how banked
- * dice-pool contributions already ship, so `getDiceDamageTotal` counts it as
- * dice rather than as an armor-ignoring modifier.
+ * The bonus is appended as a *flavored* numeric term (see
+ * `appendFlavoredBonusToRoll`), matching how banked dice-pool contributions
+ * already ship, so `getDiceDamageTotal` counts it as dice rather than as an
+ * armor-ignoring modifier.
  *
  * Note this only bites for a non-crit offer against Medium/Heavy monster
  * armor: `calculateArmorAdjustedDamage` returns a crit's total before it ever
@@ -46,10 +73,6 @@ export function replaceDamageRollInRollsSource(
  * added to an attack, and they do not say how a *derived* amount such as Death
  * Blow's doubled sum should be treated. Counting it as dice is the consistent
  * reading, not a settled one.
- *
- * `total` is patched directly rather than recomputed from terms: the roll is
- * already evaluated, and `DamageRoll.fromData` prefers the serialized total, so
- * reconstruction keeps crit and primary-die state intact.
  *
  * Returns null when the card carries no primary damage roll to add to, letting
  * callers abort before charging the player for the spend.
@@ -68,14 +91,7 @@ export function foldBonusIntoPrimaryDamage(
 	) as (EffectNode & { roll?: Record<string, unknown> }) | undefined;
 	if (!damageNode?.roll) return null;
 
-	const serialized = { ...damageNode.roll } as Record<string, unknown>;
-	const terms = Array.isArray(serialized.terms) ? [...(serialized.terms as unknown[])] : [];
-	terms.push(
-		{ class: 'OperatorTerm', operator: '+', evaluated: true, options: {} },
-		{ class: 'NumericTerm', number: amount, evaluated: true, options: { flavor } },
-	);
-	serialized.terms = terms;
-	serialized.total = Number(serialized.total ?? 0) + amount;
+	const serialized = appendFlavoredBonusToRoll(damageNode.roll, amount, flavor);
 	damageNode.roll = serialized;
 
 	const patchedActivation = { ...activation, effects: reconstructEffectsTree(nodes) as unknown[] };

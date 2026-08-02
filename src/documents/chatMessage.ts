@@ -8,6 +8,7 @@ import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import {
+	appendFlavoredBonusToRoll,
 	foldBonusIntoPrimaryDamage,
 	replaceDamageRollInRollsSource,
 } from '#utils/foldBonusIntoPrimaryDamage.js';
@@ -1253,14 +1254,19 @@ class NimbleChatMessage extends ChatMessage {
 		);
 		await newRoll.evaluate();
 
-		const newRollJson = newRoll.toJSON() as Record<string, unknown>;
+		const carried = await this.#carryFoldedSpendsAcrossReroll(
+			newRoll.toJSON() as Record<string, unknown>,
+			this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+			newRoll,
+		);
+
 		damageNode.discardedRoll = serialized;
-		damageNode.roll = newRollJson;
+		damageNode.roll = carried.roll;
 		activation.effects = reconstructEffectsTree(nodes) as unknown[];
 
 		const rollsSource = replaceDamageRollInRollsSource(
 			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
-			newRollJson,
+			carried.roll,
 		);
 
 		await this.update({
@@ -1269,12 +1275,101 @@ class NimbleChatMessage extends ChatMessage {
 				activation,
 				isCritical: newRoll.isCritical,
 				isMiss: newRoll.isMiss,
-				incomingReactions: this.#dropStaleOutcomeOffers(
-					this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
-					newRoll,
-				),
+				incomingReactions: this.#dropStaleOutcomeOffers(carried.entries, newRoll),
 			},
 		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Carry already-folded card-side spends onto the roll a reroll produced.
+	 *
+	 * The rebuild starts from the discarded roll's `originalFormula`, so a bonus
+	 * folded into the old roll's terms is simply not in the new one. Left alone
+	 * the damage silently disappears while the dice stay spent and the card's
+	 * attribution line keeps claiming it. The bonus is re-appended to the fresh
+	 * roll before it reaches the damage node, so the node and the message's
+	 * `rolls` source pick it up together.
+	 *
+	 * A spend the new outcome still satisfies is folded in again. One it does
+	 * not — a crit-only spend on an attack that is no longer a crit — was never
+	 * owed, so the dice go back and the offer reverts to unused, which leaves it
+	 * for `#dropStaleOutcomeOffers` to remove. If the dice cannot be returned
+	 * (the pool or its item is gone), the bonus is re-folded instead: an
+	 * unearned bonus beats charging the player for damage the card never shows.
+	 */
+	async #carryFoldedSpendsAcrossReroll(
+		rollJson: Record<string, unknown>,
+		entries: IncomingReactionEntry[],
+		view: AttackOutcomeView,
+	): Promise<{ roll: Record<string, unknown>; entries: IncomingReactionEntry[] }> {
+		let roll = rollJson;
+
+		const refold = (entry: IncomingReactionEntry, amount: number) => {
+			const itemName = entry.itemUuid
+				? ((fromUuidSync(entry.itemUuid as `Item.${string}`) as { name?: string } | null)?.name ??
+					entry.label)
+				: entry.label;
+			roll = appendFlavoredBonusToRoll(roll, amount, itemName);
+		};
+
+		const carriedEntries: IncomingReactionEntry[] = [];
+		for (const entry of entries) {
+			const amount = entry.usedAmount;
+			if (entry.kind !== 'spendPoolForDamage' || !entry.used || typeof amount !== 'number') {
+				carriedEntries.push(entry);
+				continue;
+			}
+
+			if (offerSurvives(entry, view)) {
+				refold(entry, amount);
+				carriedEntries.push(entry);
+				continue;
+			}
+
+			if (await this.#refundSpentPoolFaces(entry)) {
+				carriedEntries.push({
+					...entry,
+					used: false,
+					usedAmount: null,
+					usedPoolLabel: '',
+					usedFaces: [],
+				});
+				continue;
+			}
+
+			refold(entry, amount);
+			carriedEntries.push(entry);
+		}
+
+		return { roll, entries: carriedEntries };
+	}
+
+	/**
+	 * Put a card-side spend's dice back in the pool they came from. The pool is
+	 * re-resolved from the live rules rather than stored on the entry, the same
+	 * way the offer's picker finds it, so a retargeted consumer does not strand
+	 * the refund. `setPoolFaces` clamps to the pool's maximum, so a pool refilled
+	 * since the spend never overflows.
+	 */
+	async #refundSpentPoolFaces(entry: IncomingReactionEntry): Promise<boolean> {
+		const faces = entry.usedFaces ?? [];
+		if (faces.length === 0) return false;
+
+		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		if (!actor) return false;
+
+		const itemId = entry.itemUuid
+			? ((fromUuidSync(entry.itemUuid as `Item.${string}`) as { id?: string } | null)?.id ?? null)
+			: null;
+
+		for (const pool of getDicePools(actor)) {
+			const match = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
+				(consumer) => consumer.ruleId === entry.ruleId && (!itemId || consumer.itemId === itemId),
+			);
+			if (match) return setPoolFaces(actor, pool.id, [...pool.faces, ...faces]);
+		}
+
+		return false;
 	}
 
 	/**
