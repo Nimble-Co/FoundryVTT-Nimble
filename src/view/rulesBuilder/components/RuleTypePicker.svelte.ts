@@ -12,6 +12,7 @@ interface PickerEntry {
 const RULE_ICONS: Record<string, string> = {
 	abilityBonus: 'fa-solid fa-dumbbell',
 	actionCost: 'fa-solid fa-stopwatch',
+	actionDelta: 'fa-solid fa-plus-minus',
 	applyCondition: 'fa-solid fa-bolt-lightning',
 	armorClass: 'fa-solid fa-shield-halved',
 	chargeConsumer: 'fa-solid fa-arrow-down-from-line',

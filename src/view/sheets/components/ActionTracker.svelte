@@ -35,9 +35,10 @@
 				</button>
 			{:else if state.hasInitiative}
 				<div class="action-tracker__pips">
-					{#each { length: state.actionsData.effectiveMax }, i}
+					{#each { length: state.actionsData.pipCount }, i}
 						{@const isAvailable = i < state.actionsData.current}
 						{@const isAdditional = i >= state.actionsData.max}
+						{@const isOverflow = i >= state.actionsData.effectiveMax}
 						{@const isJustSpent = state.justSpentPips.has(i)}
 						{@const diceIcon = getDiceIcon(i)}
 
@@ -46,6 +47,7 @@
 							class:action-tracker__pip--available={isAvailable}
 							class:action-tracker__pip--spent={!isAvailable}
 							class:action-tracker__pip--additional={isAdditional}
+							class:action-tracker__pip--overflow={isOverflow}
 							class:action-tracker__pip--just-spent={isJustSpent}
 							type="button"
 							aria-label={state.getPipAriaLabel(i, isAvailable)}
@@ -72,6 +74,18 @@
 						>
 							<i class="fa-solid fa-plus"></i>
 						</button>
+					{/if}
+
+					{#if state.pendingActionsBadge}
+						<span
+							class="action-tracker__pending"
+							class:action-tracker__pending--negative={state.pendingActionsBadge.isNegative}
+							aria-label={state.pendingActionsBadge.tooltip}
+							data-tooltip={state.pendingActionsBadge.tooltip}
+							data-tooltip-direction="RIGHT"
+						>
+							{state.pendingActionsBadge.text}
+						</span>
 					{/if}
 				</div>
 
@@ -211,6 +225,23 @@
 				}
 			}
 
+			// Overflow pips: granted actions beyond the effective max. Only ever
+			// rendered filled (there is no empty slot past the max to restore into).
+			&--overflow.action-tracker__pip--available {
+				border-color: hsl(45, 70%, 50%);
+
+				i,
+				.action-tracker__pip-number {
+					color: hsl(45, 70%, 50%);
+				}
+
+				&:hover i,
+				&:hover .action-tracker__pip-number {
+					color: hsl(45, 70%, 60%);
+					filter: drop-shadow(0 0 4px hsl(45, 70%, 50%));
+				}
+			}
+
 			&--just-spent {
 				animation: pip-spent 0.6s ease-out;
 
@@ -224,6 +255,25 @@
 			font-size: 0.75rem;
 			font-weight: 700;
 			line-height: 1;
+		}
+
+		&__pending {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.625rem;
+			height: 1rem;
+			font-size: 0.625rem;
+			font-weight: 700;
+			line-height: 1;
+			color: hsl(139, 47%, 44%);
+			border: 1px dashed currentcolor;
+			border-radius: 4px;
+			cursor: help;
+
+			&--negative {
+				color: hsl(0, 55%, 55%);
+			}
 		}
 
 		&__add-additional {

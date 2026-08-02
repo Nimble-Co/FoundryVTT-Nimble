@@ -1469,6 +1469,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
 | `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
 | `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
+| `requestCombatantActionDelta()` | `src/utils/requestCombatantActionDelta.ts` | Apply a combined current/pending action adjustment to a character combatant — direct for GMs/owners, relayed to the active GM over the system socket otherwise |
 | `getActorHpValue()` | `src/utils/isCombatantDead.ts` | Get an actor's current HP value |
 | `getActorWoundsValueAndMax()` | `src/utils/isCombatantDead.ts` | Get an actor's wounds value and max |
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |

@@ -78,6 +78,16 @@ export function getHeroicReactionAvailabilityUpdate(
 	};
 }
 
+export function getAllHeroicReactionAvailabilityUpdate(
+	available: boolean,
+): Record<string, unknown> {
+	const update: Record<string, unknown> = {};
+	for (const reactionKey of HEROIC_REACTIONS) {
+		Object.assign(update, getHeroicReactionAvailabilityUpdate(reactionKey, available));
+	}
+	return update;
+}
+
 export function getHeroicReactionAvailabilityTitle(
 	reactionKey: HeroicReactionKey,
 	available: boolean,

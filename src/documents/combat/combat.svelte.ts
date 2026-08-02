@@ -9,6 +9,7 @@ import {
 } from '#utils/getHeroicReactionUsageState.js';
 import {
 	canOwnerUseHeroicReaction,
+	getAllHeroicReactionAvailabilityUpdate,
 	getHeroicReactionAvailability,
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
@@ -20,7 +21,11 @@ import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import resolveHeroicReactionActionCost from '#utils/resolveHeroicReactionActionCost.js';
 import { isCombatConvenienceAutomationEnabled } from '../../settings/automationSettings.js';
-import { getCombatantManualSortValue, getCombatantResetActions } from './combatantSystem.js';
+import {
+	buildCharacterTurnRefillUpdate,
+	getCombatantManualSortValue,
+	getCombatantResetActions,
+} from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
 import { rollInitiativeForCombatant } from './combatInitiative.js';
 import { performMinionGroupAttack } from './combatMinionAttacks.js';
@@ -601,18 +606,6 @@ class NimbleCombat extends Combat {
 		await this.updateEmbeddedDocuments('Combatant', updates);
 	}
 
-	#buildHeroicReactionAvailabilityUpdate(available: boolean): Record<string, unknown> {
-		const update: Record<string, unknown> = {};
-		for (const reactionKey of HEROIC_REACTIONS) {
-			for (const [path, value] of Object.entries(
-				getHeroicReactionAvailabilityUpdate(reactionKey, available),
-			)) {
-				update[path] = value;
-			}
-		}
-		return update;
-	}
-
 	async #refreshCharacterHeroicReactions(): Promise<void> {
 		const updates = this.combatants.contents.reduce<Record<string, unknown>[]>((acc, combatant) => {
 			if (combatant.type !== 'character' || !combatant.id) return acc;
@@ -622,7 +615,7 @@ class NimbleCombat extends Combat {
 			if (!needsRefresh) return acc;
 			acc.push({
 				_id: combatant.id,
-				...this.#buildHeroicReactionAvailabilityUpdate(true),
+				...getAllHeroicReactionAvailabilityUpdate(true),
 			});
 			return acc;
 		}, []);
@@ -798,10 +791,10 @@ class NimbleCombat extends Combat {
 
 	/**
 	 * Refill an outgoing character's turn-end state: fire the Nimble end-of-turn hook (charge-pool
-	 * recovery, etc.), reset base actions to max (capped by Dying), clear additional actions, and
-	 * restore heroic reactions. Callers claim `#endingTurnRefilledCharacterId` synchronously
-	 * before invoking this so a single forward advance never refills — or fires the hook for —
-	 * the same hero twice.
+	 * recovery, etc.), reset base actions to max (capped by Dying, adjusted by any pending action
+	 * delta), clear additional actions, and restore heroic reactions. Callers claim
+	 * `#endingTurnRefilledCharacterId` synchronously before invoking this so a single forward
+	 * advance never refills — or fires the hook for — the same hero twice.
 	 */
 	async #applyCharacterTurnEndRefill(combatant: Combatant.Implementation): Promise<void> {
 		if (combatant.type !== 'character') return;
@@ -809,11 +802,7 @@ class NimbleCombat extends Combat {
 		// @ts-expect-error Custom hook
 		Hooks.call('nimbleCombatTurnEnd', combatant);
 
-		await combatant.update({
-			'system.actions.base.current': getCombatantResetActions(combatant),
-			'system.actions.base.additional': 0,
-			...this.#buildHeroicReactionAvailabilityUpdate(true),
-		} as Record<string, unknown>);
+		await combatant.update(buildCharacterTurnRefillUpdate(combatant));
 	}
 
 	/**
@@ -1273,9 +1262,7 @@ class NimbleCombat extends Combat {
 		await this.updateEmbeddedDocuments('Combatant', [
 			{
 				_id: combatantId,
-				'system.actions.base.current': getCombatantResetActions(combatant),
-				'system.actions.base.additional': 0,
-				...this.#buildHeroicReactionAvailabilityUpdate(true),
+				...buildCharacterTurnRefillUpdate(combatant),
 			} as Record<string, unknown>,
 		]);
 	}
