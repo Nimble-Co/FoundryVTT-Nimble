@@ -34,3 +34,4 @@ export { Migration033BerserkerAutomation } from './Migration033BerserkerAutomati
 export { Migration034DeathBlowCardOffer } from './Migration034DeathBlowCardOffer.js';
 export { Migration035AncestryBonusSplit } from './Migration035AncestryBonusSplit.js';
 export { Migration036CommanderCoordinatedStrike } from './Migration036CommanderCoordinatedStrike.js';
+export { Migration037CommanderPackRepair } from './Migration037CommanderPackRepair.js';
