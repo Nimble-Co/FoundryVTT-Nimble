@@ -6,6 +6,7 @@ import type {
 	ClassFeatureResult,
 	SelectionGroup,
 } from '#types/components/ClassFeatureSelection.d.ts';
+import { DUPLICATE_SOURCE_GROUP_PREFIX } from '#utils/getClassFeatures.ts';
 import ClassFeatureSelectionStateHarness from '../../../../../tests/harnesses/ClassFeatureSelectionStateHarness.svelte';
 import { createClassFeatureSelectionState as createLevelUpState } from '../levelUpHelper/LevelUpClassFeatureSelection.svelte.ts';
 import { createClassFeatureSelectionState as createCreatorState } from './ClassFeatureSelection.svelte.ts';
@@ -64,7 +65,7 @@ describe.each(VARIANTS)('createClassFeatureSelectionState (%s)', (_name, createS
 
 	function renderHarness(
 		group: SelectionGroup,
-		groupName = 'duplicate-source:Item.wild-shape-world',
+		groupName = `${DUPLICATE_SOURCE_GROUP_PREFIX}Item.wild-shape-world`,
 	) {
 		const { component, getByTestId } = render(ClassFeatureSelectionStateHarness, {
 			props: { classFeatures: createResult([[groupName, group]]), createState },
@@ -135,9 +136,12 @@ describe.each(VARIANTS)('createClassFeatureSelectionState (%s)', (_name, createS
 		});
 
 		select(packCopy);
+		// `waitFor` checks its callback once synchronously, before Svelte flushes, so a
+		// "nothing changed" claim has to be re-asserted after the await to mean anything.
 		await waitFor(() => {
 			expect(selections()).toBe(`${groupName}=Item.wild-shape-world`);
 		});
+		expect(selections()).toBe(`${groupName}=Item.wild-shape-world`);
 	});
 
 	it('drops the group entirely when the last selection is toggled off', async () => {

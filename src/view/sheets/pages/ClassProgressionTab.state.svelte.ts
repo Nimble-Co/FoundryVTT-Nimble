@@ -6,6 +6,7 @@ import type {
 } from '#types/components/ClassProgressionTab.d.ts';
 import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.js';
 import getClassProgressionData from '#utils/getClassProgressionData.js';
+import type { ItemSource } from '#utils/getItemSource.ts';
 import getItemSource from '#utils/getItemSource.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.js';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.js';
@@ -146,7 +147,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	});
 
 	/** The item's source, or null when it matches the class's own — nothing to distinguish. */
-	function getSourceTag(uuid: string): 'world' | 'compendium' | null {
+	function getSourceTag(uuid: string): ItemSource | null {
 		const itemSource = getItemSource(uuid);
 		return itemSource === classSource ? null : itemSource;
 	}

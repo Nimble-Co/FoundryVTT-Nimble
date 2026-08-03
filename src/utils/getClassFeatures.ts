@@ -212,7 +212,7 @@ function resolveSelectionCount(entries: ClassFeatureIndexEntry[], level: number)
  */
 export const DUPLICATE_SOURCE_GROUP_PREFIX = 'duplicate-source:';
 
-/** Compares feature names case- and whitespace-insensitively; blank names never match. */
+/** A feature's name, trimmed and lowercased for comparison; `''` when the feature is unnamed. */
 function normalizeFeatureName(feature: NimbleFeatureItem): string {
 	return (feature.name ?? '').trim().toLowerCase();
 }
@@ -220,7 +220,8 @@ function normalizeFeatureName(feature: NimbleFeatureItem): string {
 /**
  * Whether two features represent the same class feature offered from different places —
  * either linked through a compendium source (one is the other's original, or both descend
- * from the same original) or, absent any link, sharing a name.
+ * from the same original) or, when no such link establishes a match, sharing a non-blank
+ * name. Two copies customized out of different compendia still cluster on their shared name.
  */
 function isSameFeature(a: NimbleFeatureItem, b: NimbleFeatureItem): boolean {
 	// `sourceId` is the document's own compendium-source accessor; a blank link means "none",
@@ -240,7 +241,8 @@ function isSameFeature(a: NimbleFeatureItem, b: NimbleFeatureItem): boolean {
  * (a customized World Item alongside its Compendium original). Returns one cluster per distinct
  * feature; the common case is a single-entry cluster per feature.
  *
- * Each cluster starts with the earliest-supplied of its members, which is what names the group.
+ * Each cluster starts with the earliest-supplied of its members, whose uuid becomes the group's
+ * synthetic key (the heading instead comes from the first member that has a name).
  * Members added by a later merge trail the bridging feature rather than sitting in input order —
  * harmless, since candidates are sorted by name for display.
  */

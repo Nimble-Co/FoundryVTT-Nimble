@@ -1,6 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
-import getEffectiveSelectionMax from '#utils/getEffectiveSelectionMax.ts';
+import { getEffectiveSelectionMax, isFixedGroup } from '../../selectionGroupRules.ts';
 
 /**
  * Creates reactive state for the LevelUpClassFeatureSelection component.
@@ -29,7 +29,7 @@ export function createClassFeatureSelectionState(
 		for (const [groupName, group] of classFeatures.selectionGroups) {
 			if (newSelections.has(groupName)) continue;
 
-			if (group.features.length === group.selectionCount) {
+			if (isFixedGroup(group)) {
 				newSelections.set(groupName, [...group.features]);
 				hasChanges = true;
 			}

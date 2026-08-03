@@ -3,7 +3,6 @@
 
 	import { createFeatureGroupSelectionState } from './FeatureGroupSelection.svelte.ts';
 	import FeatureCard from './FeatureCard.svelte';
-	import localize from '#utils/localize.js';
 
 	let {
 		groupName,
@@ -18,41 +17,6 @@
 		group,
 		selectedFeatures,
 	}));
-
-	function getHintText() {
-		if (state.isFixed) return null;
-
-		if (state.isRange) {
-			return localize('NIMBLE.classFeatureSelection.duplicateSourceHint', {
-				count: String(state.maxSelectionCount),
-			});
-		}
-
-		if (group.selectionCount === 1) {
-			return localize('NIMBLE.classFeatureSelection.chooseOne');
-		}
-
-		return localize('NIMBLE.classFeatureSelection.chooseN', {
-			count: String(group.selectionCount),
-		});
-	}
-
-	function getProgressText() {
-		if (state.isFixed) return null;
-
-		// A range group's upper bound is optional, so "of N selected" would read as a requirement.
-		if (state.isRange) {
-			return localize('NIMBLE.classFeatureSelection.nOfMKept', {
-				current: String(state.selectedCount),
-				max: String(state.maxSelectionCount),
-			});
-		}
-
-		return localize('NIMBLE.classFeatureSelection.nOfMSelected', {
-			current: String(state.selectedCount),
-			required: String(group.selectionCount),
-		});
-	}
 </script>
 
 <div class="feature-group">
@@ -63,12 +27,12 @@
 			</h4>
 		{/if}
 		{#if !state.isFixed}
-			<span class="feature-group__hint">{getHintText()}</span>
+			<span class="feature-group__hint">{state.hintText}</span>
 			<span
 				class="feature-group__progress"
 				class:feature-group__progress--complete={state.isComplete}
 			>
-				{getProgressText()}
+				{state.progressText}
 			</span>
 		{/if}
 	</header>

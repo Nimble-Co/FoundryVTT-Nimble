@@ -1495,7 +1495,6 @@ export const myStore = writable<MyStoreState>(initialState);
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
 | `isLevelUpOptionApplicable()` | `src/utils/isLevelUpOptionApplicable.ts` | Whether a feature's level-up option applies at a given level (empty `applyAtLevels` ⇒ every level) |
 | `getItemSource()` | `src/utils/getItemSource.ts` | Whether a document lives in a compendium pack or the world, from its UUID |
-| `getEffectiveSelectionMax()` | `src/utils/getEffectiveSelectionMax.ts` | How many features a selection group allows; defaults to its required `selectionCount` |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
 | `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
 | `resolveMinionAttackActionCost()` | `src/utils/resolveMinionAttackActionCost.ts` | Action cost for group-attack activations; a missing or `none` cost defaults to 1 (legacy pack convention), an explicit zero stays free |

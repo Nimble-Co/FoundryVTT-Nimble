@@ -228,6 +228,33 @@ describe('getClassFeaturesFromIndex', () => {
 		]);
 	});
 
+	// NOTE: this pins current behavior, which may not be the desired behavior. `ownedFeatureUuids`
+	// suppresses a copy by its own uuid only, so owning one member of a duplicate cluster does not
+	// suppress its sibling — the sibling shrinks the cluster to a singleton and is auto-granted,
+	// which can hand the actor a second copy of a feature they already have. See the level-down /
+	// re-level path in CharacterLevelUpDialogState. Change this test if the rule changes.
+	it('auto-grants the surviving copy when the other is filtered out as already owned', async () => {
+		const index = indexFeaturesWithFromUuidMock('druid', 2, [
+			{ uuid: 'Item.wild-shape-world', name: 'Wild Shape', group: 'ungrouped' },
+			{
+				uuid: 'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+				name: 'Wild Shape',
+				group: 'ungrouped',
+			},
+		]);
+
+		// The level-up dialog is the only caller that passes both options together.
+		const result = await getClassFeaturesFromIndex(index, 'druid', 2, {
+			...PROMOTE,
+			ownedFeatureUuids: new Set(['Item.wild-shape-world']),
+		});
+
+		expect(result.selectionGroups.size).toBe(0);
+		expect(result.autoGrant.map((f) => f.uuid)).toEqual([
+			'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+		]);
+	});
+
 	it('leaves duplicates auto-granted when duplicate-source promotion is not requested', async () => {
 		const index = indexFeaturesWithFromUuidMock('druid', 2, [
 			{ uuid: 'Item.wild-shape-world', name: 'Wild Shape', group: 'ungrouped' },

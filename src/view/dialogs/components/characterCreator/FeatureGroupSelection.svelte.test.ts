@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
+import { DUPLICATE_SOURCE_GROUP_PREFIX } from '#utils/getClassFeatures.ts';
 // @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import FeatureGroupSelection from './FeatureGroupSelection.svelte';
 
@@ -76,6 +77,10 @@ describe('FeatureGroupSelection', () => {
 		});
 		rerenderComponent = rerender;
 
+		// A multi-pick exact group asks for a count and reports progress against it.
+		expect(screen.getByText('(Choose 2)')).toBeInTheDocument();
+		expect(screen.getByText('0 of 2 selected')).toBeInTheDocument();
+
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Order One' }));
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Order Two' }));
 
@@ -138,7 +143,7 @@ describe('FeatureGroupSelection', () => {
 
 		render(FeatureGroupSelection, {
 			props: {
-				groupName: 'duplicate-source:Item.wild-shape-world',
+				groupName: `${DUPLICATE_SOURCE_GROUP_PREFIX}Item.wild-shape-world`,
 				group,
 				// One copy already picked: the minimum is met, but the range allows keeping both.
 				selectedFeatures: [features[0]],
