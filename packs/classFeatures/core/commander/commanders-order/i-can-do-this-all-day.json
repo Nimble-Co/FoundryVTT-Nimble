@@ -5,13 +5,7 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [
-			{
-				"type": "maxHitDice",
-				"name": "New Rule 1",
-				"id": "75GQq1kNmfQR1JzG"
-			}
-		],
+		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -27,26 +21,12 @@
 			},
 			"effects": [
 				{
-					"id": "KhEc8kQgCffaPLYS",
-					"type": "damage",
-					"damageType": "acid",
-					"formula": "0",
+					"id": "O0SxGYEXguqDORKt",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "set HP = sum rolled Hit dice",
 					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": true,
-					"on": {
-						"hit": [
-							{
-								"id": "O0SxGYEXguqDORKt",
-								"type": "note",
-								"noteType": "reminder",
-								"text": "set HP = sum rolled Hit dice",
-								"parentContext": "hit",
-								"parentNode": "KhEc8kQgCffaPLYS"
-							}
-						]
-					}
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
