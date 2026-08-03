@@ -27,6 +27,9 @@
 		flex-shrink: 0;
 		padding: 0.0625rem 0.3125rem;
 		border-radius: 3px;
+		// The three copies this replaces each hardcoded 0.5625rem, predating the scale variable.
+		// Now that one badge serves the class sheet and both dialogs, it reads the shared token —
+		// which nudges the class-sheet badge up by a fraction of a pixel.
 		font-size: var(--nimble-xxs-text);
 		font-weight: 700;
 		white-space: nowrap;
