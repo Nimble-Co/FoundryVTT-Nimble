@@ -110,6 +110,59 @@
 				"timing": "now",
 				"target": "targeted",
 				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-as-one",
+				"identifier": "",
+				"label": "As One! (allies gain an action next turn)",
+				"predicate": {
+					"subclass": "champion-of-the-vanguard",
+					"level": {
+						"min": 15
+					}
+				},
+				"priority": 4,
+				"value": "1",
+				"timing": "nextTurn",
+				"target": "targeted",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-unparalleled-tactics",
+				"identifier": "",
+				"label": "Unparalleled Tactics (ally gains an action next turn)",
+				"predicate": {
+					"level": {
+						"min": 18,
+						"max": 19
+					}
+				},
+				"priority": 4,
+				"value": "1",
+				"timing": "nextTurn",
+				"target": "targeted",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-captain-of-legions",
+				"identifier": "",
+				"label": "Captain of Legions (all allies gain an action next turn)",
+				"predicate": {
+					"level": {
+						"min": 20
+					}
+				},
+				"priority": 4,
+				"value": "1",
+				"timing": "nextTurn",
+				"target": "allAllies",
+				"borrowFromNextTurn": false
 			}
 		],
 		"activation": {
