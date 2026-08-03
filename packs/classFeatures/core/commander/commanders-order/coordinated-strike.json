@@ -15,7 +15,7 @@
 				"predicate": {},
 				"priority": 1,
 				"scope": "item",
-				"max": "@intelligence",
+				"max": "max(@intelligence, 0)",
 				"dieSize": null,
 				"initial": "max",
 				"recoveries": [
@@ -41,6 +41,11 @@
 				"recoveries": [
 					{
 						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
 						"mode": "refresh",
 						"value": "1"
 					}
@@ -108,7 +113,7 @@
 			}
 		],
 		"activation": {
-			"acquireTargetsFromTemplate": true,
+			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
 				"quantity": 0,
@@ -122,26 +127,12 @@
 			},
 			"effects": [
 				{
-					"id": "YnNEXga2R6LAEvlb",
-					"type": "damage",
-					"damageType": "acid",
-					"formula": "0",
+					"id": "0gbDXjqJDZcUxjNB",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "You and the targeted ally each attack for free. The ally may cast a cantrip instead; only the weapon attack is offered on this card.",
 					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false,
-					"on": {
-						"hit": [
-							{
-								"id": "0gbDXjqJDZcUxjNB",
-								"type": "note",
-								"noteType": "reminder",
-								"text": "You can do this INT times/Safe Rest.",
-								"parentContext": "hit",
-								"parentNode": "YnNEXga2R6LAEvlb"
-							}
-						]
-					}
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -152,8 +143,8 @@
 			"template": {
 				"length": 1,
 				"radius": 1,
-				"shape": "square",
-				"width": 6
+				"shape": "",
+				"width": 1
 			}
 		},
 		"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",
