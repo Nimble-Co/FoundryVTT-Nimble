@@ -5,7 +5,72 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "coordinated-strike-uses-pool",
+				"identifier": "coordinated-strike-uses",
+				"label": "Coordinated Strike uses",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "@intelligence",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "coordinated-strike-round-pool",
+				"identifier": "coordinated-strike-round",
+				"label": "Coordinated Strike (1/round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "coordinated-strike-uses-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "coordinated-strike-uses",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "coordinated-strike-round-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "coordinated-strike-round",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": true,
 			"cost": {
