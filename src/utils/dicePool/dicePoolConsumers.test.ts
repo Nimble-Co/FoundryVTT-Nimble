@@ -391,6 +391,63 @@ describe('modifyConsumer integration', () => {
 	});
 });
 
+describe('cardOffer consumers', () => {
+	function deathBlowConsumer(overrides: Partial<MockRule> = {}): MockRule {
+		return {
+			type: 'diceConsumer',
+			id: 'death-blow-fury-consumer',
+			poolIdentifier: 'fury',
+			poolScope: 'item',
+			mode: 'manual',
+			cost: '1',
+			bonusOnAttackDelivery: null,
+			effectFormula: '2 * @sum',
+			effectType: 'generic',
+			cardOffer: 'criticalHit',
+			...overrides,
+		} as MockRule;
+	}
+
+	it('hides them from the sheet panel by default', () => {
+		const actor = createMockActor([createMockItem('db', 'Death Blow', [deathBlowConsumer()])]);
+
+		expect(getDicePoolConsumers(actor, createFuryPool())).toHaveLength(0);
+	});
+
+	it('returns them when the caller asks for them', () => {
+		const actor = createMockActor([createMockItem('db', 'Death Blow', [deathBlowConsumer()])]);
+
+		const result = getDicePoolConsumers(actor, createFuryPool(), { includeCardOffers: true });
+		expect(result).toHaveLength(1);
+		expect(result[0].ruleId).toBe('death-blow-fury-consumer');
+		expect(result[0].itemId).toBe('db');
+	});
+
+	it('leaves sheet-panel consumers on the same pool alone', () => {
+		const actor = createMockActor([
+			createMockItem('db', 'Death Blow', [deathBlowConsumer()]),
+			createMockItem('tayg', 'That all you got?!', [
+				{
+					type: 'diceConsumer',
+					id: 'tayg-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: '@sum',
+				} as MockRule,
+			]),
+		]);
+
+		const panelOnly = getDicePoolConsumers(actor, createFuryPool());
+		expect(panelOnly.map((c) => c.ruleId)).toEqual(['tayg-consumer']);
+		expect(getDicePoolConsumers(actor, createFuryPool(), { includeCardOffers: true })).toHaveLength(
+			2,
+		);
+	});
+});
+
 describe('selectionOutcome', () => {
 	it('defaults to consume and passes an explicit outcome through', () => {
 		const actor = createMockActor([
@@ -446,6 +503,42 @@ describe('selectionOutcome', () => {
 		const result = getDicePoolConsumers(actor, createFuryPool());
 		expect(result).toHaveLength(1);
 		expect(result[0].effectFormula).toBeNull();
+	});
+
+	it('drops consumers whose own predicate fails', () => {
+		const gated = {
+			type: 'diceConsumer',
+			id: 'gated-consumer',
+			poolIdentifier: 'fury',
+			poolScope: 'item',
+			mode: 'manual',
+			cost: '1',
+			bonusOnAttackDelivery: null,
+			effectFormula: '@sum',
+			appliesTo: () => false,
+		} as MockRule;
+
+		const actor = createMockActor([createMockItem('gated', 'Gated Feature', [gated])]);
+
+		expect(getDicePoolConsumers(actor, createFuryPool())).toHaveLength(0);
+	});
+
+	it('keeps consumers whose predicate passes', () => {
+		const allowed = {
+			type: 'diceConsumer',
+			id: 'allowed-consumer',
+			poolIdentifier: 'fury',
+			poolScope: 'item',
+			mode: 'manual',
+			cost: '1',
+			bonusOnAttackDelivery: null,
+			effectFormula: '@sum',
+			appliesTo: () => true,
+		} as MockRule;
+
+		const actor = createMockActor([createMockItem('allowed', 'Allowed Feature', [allowed])]);
+
+		expect(getDicePoolConsumers(actor, createFuryPool())).toHaveLength(1);
 	});
 
 	it('still skips formula-less consumers that only spend', () => {

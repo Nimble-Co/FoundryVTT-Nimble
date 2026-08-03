@@ -2217,7 +2217,7 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 
 interface ReactionEntryFixture {
 	id: string;
-	kind: 'forceReroll' | 'redirectToSelf';
+	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage';
 	source: 'baseline' | 'rule';
 	actorUuid: string;
 	tokenUuid: string | null;
@@ -2226,6 +2226,7 @@ interface ReactionEntryFixture {
 	ruleId: string;
 	itemUuid: string;
 	used: boolean;
+	outcomeTrigger?: 'always' | 'hit' | 'criticalHit';
 }
 
 function createReactionEntry(overrides: Partial<ReactionEntryFixture> = {}): ReactionEntryFixture {
@@ -2262,6 +2263,7 @@ function createReactionMessage(params: {
 	entries: ReactionEntryFixture[];
 	targets?: string[];
 	roll?: Record<string, unknown> | null;
+	isCritical?: boolean;
 }): NimbleChatMessage & {
 	update: ReturnType<typeof vi.fn>;
 	system: Record<string, unknown>;
@@ -2283,7 +2285,7 @@ function createReactionMessage(params: {
 		type: 'spell',
 		system: {
 			targets: params.targets ?? ['Scene.scene.Token.victim'],
-			isCritical: false,
+			isCritical: params.isCritical ?? false,
 			isMiss: false,
 			activation: { effects },
 			incomingReactions: params.entries,
@@ -2363,6 +2365,93 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 		expect(updatePayload.system.isCritical).toBe(false);
 		expect(updatePayload.system.isMiss).toBe(false);
 		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('drops offers the new outcome no longer satisfies', async () => {
+		// A crit card whose reroll comes back a plain hit: the crit-gated spend
+		// offer stamped on it is stranded and must go, while the hit-gated one
+		// still applies. Reading the card's own (now stale) outcome instead of the
+		// fresh roll would keep both.
+		const message = createReactionMessage({
+			isCritical: true,
+			entries: [
+				createReactionEntry(),
+				createReactionEntry({
+					id: 'spend-crit',
+					kind: 'spendPoolForDamage',
+					outcomeTrigger: 'criticalHit',
+				}),
+				createReactionEntry({
+					id: 'spend-hit',
+					kind: 'spendPoolForDamage',
+					outcomeTrigger: 'hit',
+				}),
+			],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const entries = (
+			message.update.mock.calls[0][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+
+		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-hit']);
+	});
+
+	it('keeps a spent entry whose outcome no longer matches, for its attribution', async () => {
+		const message = createReactionMessage({
+			isCritical: true,
+			entries: [
+				createReactionEntry(),
+				createReactionEntry({
+					id: 'spend-crit',
+					kind: 'spendPoolForDamage',
+					outcomeTrigger: 'criticalHit',
+					used: true,
+				}),
+			],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const entries = (
+			message.update.mock.calls[0][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+
+		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-crit']);
+	});
+
+	it('serializes two entries resolving at once, so neither used flag is lost', async () => {
+		// Both resolvers read `incomingReactions`, await a roll, then write the
+		// whole array back. Overlapping, the second would write a copy taken
+		// before the first landed and undo it.
+		const message = createReactionMessage({
+			entries: [createReactionEntry(), createReactionEntry({ id: 'entry-2' })],
+		});
+		Object.defineProperty(message, 'id', { value: 'message-1' });
+		message.update = vi.fn().mockImplementation(async (payload: Record<string, unknown>) => {
+			const next = (payload.system as { incomingReactions?: ReactionEntryFixture[] })
+				?.incomingReactions;
+			if (next) (message.system as Record<string, unknown>).incomingReactions = next;
+			return undefined;
+		});
+
+		await Promise.all([
+			message.resolveForceRerollReaction('entry-1', 'gm-user'),
+			message.resolveForceRerollReaction('entry-2', 'gm-user'),
+		]);
+
+		expect(message.update).toHaveBeenCalledTimes(2);
+		const finalEntries = (
+			message.update.mock.calls[1][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+		expect(finalEntries.map((e) => e.used)).toEqual([true, true]);
 	});
 
 	it('does nothing on non-GM clients', async () => {

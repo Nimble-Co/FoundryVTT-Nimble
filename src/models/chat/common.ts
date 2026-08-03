@@ -49,9 +49,10 @@ export const grantedActionOffers = () => ({
 });
 
 /**
- * Pending interactive incoming-attack reactions (force reroll, redirect to
- * self). Snapshotted at card creation by the attacker's client; `kind` is an
- * open extension point for future reaction types.
+ * Pending interactive offers stamped onto an attack card. Mostly defender-side
+ * reactions (force reroll, redirect to self), plus attacker-side spends such as
+ * `spendPoolForDamage`. Snapshotted at card creation by the attacker's client;
+ * `kind` is an open extension point for future offer types.
  */
 export const incomingReactions = () => ({
 	incomingReactions: new fields.ArrayField(
@@ -60,7 +61,7 @@ export const incomingReactions = () => ({
 			kind: new fields.StringField({
 				required: true,
 				nullable: false,
-				choices: ['forceReroll', 'redirectToSelf'],
+				choices: ['forceReroll', 'redirectToSelf', 'spendPoolForDamage'],
 			}),
 			source: new fields.StringField({
 				required: true,
@@ -88,6 +89,26 @@ export const incomingReactions = () => ({
 				nullable: false,
 				initial: false,
 			}),
+			// Gate on the attack's resolved outcome, applied before the offer is
+			// stamped. Distinct from `rerollTrigger`, which also governs whether an
+			// *automatic* reroll executes; this only decides whether an offer is
+			// worth showing.
+			outcomeTrigger: new fields.StringField({
+				required: false,
+				nullable: true,
+				initial: null,
+				choices: ['always', 'hit', 'criticalHit'],
+			}),
+			// What a spend offer did once used, as components rather than a
+			// sentence: the attribution line is localized at render time, so a
+			// note written by an English client must not render in English
+			// everywhere else.
+			usedAmount: new fields.NumberField({ required: false, nullable: true, initial: null }),
+			usedPoolLabel: new fields.StringField({ required: false, nullable: false, initial: '' }),
+			usedFaces: new fields.ArrayField(
+				new fields.NumberField({ required: true, nullable: false }),
+				{ required: false, nullable: false, initial: [] },
+			),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),

@@ -714,4 +714,79 @@ describe('applyPostRollIncomingBehavior', () => {
 
 		expect(result.stampEntries).toEqual([]);
 	});
+
+	describe('attacker-side spend offers', () => {
+		function spendOffer(outcomeTrigger: 'always' | 'hit' | 'criticalHit') {
+			return {
+				id: 'spend-1',
+				kind: 'spendPoolForDamage' as const,
+				source: 'rule' as const,
+				actorUuid: 'Actor.berserker',
+				tokenUuid: null,
+				targetTokenUuid: null,
+				label: 'Death Blow',
+				ruleId: 'death-blow-fury-consumer',
+				itemUuid: 'Item.death-blow',
+				used: false,
+				outcomeTrigger,
+			};
+		}
+
+		it('stamps a crit-gated spend offer when the attack crit', async () => {
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(true),
+				{ ...emptyPlan(), reactionEntries: [spendOffer('criticalHit')] },
+				vi.fn(async () => makeRoll(false)),
+			);
+
+			expect(result.stampEntries).toEqual([spendOffer('criticalHit')]);
+		});
+
+		it('drops a crit-gated spend offer on an ordinary hit', async () => {
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false),
+				{ ...emptyPlan(), reactionEntries: [spendOffer('criticalHit')] },
+				vi.fn(async () => makeRoll(false)),
+			);
+
+			expect(result.stampEntries).toEqual([]);
+		});
+
+		it('drops a hit-gated spend offer on a miss', async () => {
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false, false, true),
+				{ ...emptyPlan(), reactionEntries: [spendOffer('hit')] },
+				vi.fn(async () => makeRoll(false)),
+			);
+
+			expect(result.stampEntries).toEqual([]);
+		});
+
+		it('keeps an outcome-independent offer whatever the roll did', async () => {
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false, false, true),
+				{ ...emptyPlan(), reactionEntries: [spendOffer('always')] },
+				vi.fn(async () => makeRoll(false)),
+			);
+
+			expect(result.stampEntries).toHaveLength(1);
+		});
+
+		it('gates against the reroll result, not the discarded first roll', async () => {
+			// The auto-reroll turns a crit into a normal hit, so a crit-gated
+			// spend offer must not survive on the strength of the roll that was
+			// thrown away.
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(true),
+				{
+					...emptyPlan(),
+					autoRerollEntries: [autoEntry('criticalHit')],
+					reactionEntries: [spendOffer('criticalHit')],
+				},
+				vi.fn(async () => makeRoll(false)),
+			);
+
+			expect(result.stampEntries.map((e) => e.id)).toEqual(['auto-1']);
+		});
+	});
 });

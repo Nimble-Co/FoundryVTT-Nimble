@@ -98,13 +98,23 @@
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
 			"incomingReactions": {
-				"heading": "Reactions",
+				"heading": "Options",
 				"forceReroll": "Force Reroll",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
 				"rerolledBy": "Attack rerolled by {label}",
 				"redirectedTo": "Attack redirected to {name}",
-				"redirectedToVia": "Attack redirected to {name} via {label}"
+				"redirectedToVia": "Attack redirected to {name} via {label}",
+				"spendPoolForDamage": "Add Damage",
+				"poolSpendHint": "Choose the dice to spend for {label}. The result is added to this attack's damage.",
+				"poolSpendPreview": "Bonus damage: +{amount}",
+				"poolSpendConfirm": "Add to Damage",
+				"poolSpendEmpty": "No dice left in {label}.",
+				"poolSpendUnavailable": "That feature's dice pool is no longer available.",
+				"poolSpendStale": "Those dice are no longer in the pool. Nothing was spent.",
+				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
+				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
+				"useFailed": "That reaction could not be completed."
 			}
 		},
 		"characterCreationStages": {
@@ -796,6 +806,10 @@
 				"selectionOutcome": {
 					"label": "Selection outcome",
 					"hint": "What happens to the dice the player picks. \"Consume\" removes them from the pool; \"Maximize\" leaves them in place and raises each to the die's highest face, limited to the cost."
+				},
+				"cardOffer": {
+					"label": "Offer on attack card",
+					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend through the sheet's dice pool panel only. Requires a manual spend that consumes dice for a generic effect."
 				}
 			},
 			"chargePool": {

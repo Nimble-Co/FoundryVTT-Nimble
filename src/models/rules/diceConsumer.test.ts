@@ -9,13 +9,16 @@ function createDiceConsumerRule(config: {
 	effectFormula?: string | null;
 	disabled?: boolean;
 	selectionOutcome?: string;
+	effectType?: string;
+	cardOffer?: string | null;
+	actorType?: string;
 }) {
 	const item = {
 		id: 'item-tayg',
 		isEmbedded: true,
 		name: 'That all you got?!',
 		uuid: 'test-item-uuid',
-		actor: { uuid: 'Actor.test-actor' },
+		actor: { uuid: 'Actor.test-actor', type: config.actorType ?? 'character' },
 	};
 
 	const rule = new DiceConsumerRule(
@@ -26,7 +29,8 @@ function createDiceConsumerRule(config: {
 			cost: '1',
 			bonusOnAttackDelivery: null,
 			effectFormula: config.effectFormula === undefined ? '@n' : config.effectFormula,
-			effectType: 'damageReduction',
+			effectType: config.effectType ?? 'damageReduction',
+			cardOffer: config.cardOffer ?? null,
 			selectionOutcome: config.selectionOutcome ?? 'consume',
 			disabled: config.disabled ?? false,
 			label: 'Test Consumer',
@@ -45,6 +49,8 @@ function createDiceConsumerRule(config: {
 	(rule as any).poolIdentifier = 'fury';
 	(rule as any).poolScope = 'item';
 	(rule as any).selectionOutcome = config.selectionOutcome ?? 'consume';
+	(rule as any).effectType = config.effectType ?? 'damageReduction';
+	(rule as any).cardOffer = config.cardOffer ?? null;
 	(rule as any).id = 'test-consumer-id';
 
 	Object.defineProperty(rule, 'item', {
@@ -221,6 +227,83 @@ describe('DiceConsumerRule', () => {
 			await rule.onItemActivated(activationContext(item));
 
 			expect(Hooks.callAll).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('suppressesActivationCard with a card offer', () => {
+		it('gives up its sheet spend flow, which cannot see the attack outcome', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+	});
+
+	describe('providesCardOffer', () => {
+		it('opts in when an outcome trigger is set on a generic manual spend', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(true);
+		});
+
+		it('stays out of the card when no trigger is set', () => {
+			const { rule } = createDiceConsumerRule({ effectType: 'generic' });
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses an auto-bonus consumer, which never prompts the player', () => {
+			const { rule } = createDiceConsumerRule({
+				mode: 'autoBonus',
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses a banked reduction, which is not damage on this attack', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'damageReduction',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses a maximize outcome, which produces no damage to fold', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				selectionOutcome: 'maximize',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses an NPC, whose actor type has no pools to spend from', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				actorType: 'npc',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses a consumer with no effect formula to evaluate', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				effectFormula: null,
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
 		});
 	});
 });

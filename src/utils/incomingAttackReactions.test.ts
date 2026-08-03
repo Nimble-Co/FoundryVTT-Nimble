@@ -18,6 +18,8 @@ type TestGlobals = {
 		socket: { on?: ReturnType<typeof vi.fn>; emit?: ReturnType<typeof vi.fn> };
 		messages: { get: ReturnType<typeof vi.fn> };
 	};
+	ui: { notifications: { warn: ReturnType<typeof vi.fn> } };
+	Hooks: { callAll: ReturnType<typeof vi.fn> };
 };
 
 function globals(): TestGlobals {
@@ -61,6 +63,8 @@ beforeEach(() => {
 	setActiveGm('gm-user');
 	setMessages({});
 	globals().game.socket = { on: vi.fn(), emit: vi.fn() };
+	globals().ui = { notifications: { warn: vi.fn() } };
+	globals().Hooks = { callAll: vi.fn() };
 });
 
 describe('requestIncomingAttackReaction', () => {
@@ -253,5 +257,72 @@ describe('registerIncomingReactionSocketListener', () => {
 		registerIncomingReactionSocketListener();
 
 		expect(globals().game.socket.on).toHaveBeenCalledTimes(1);
+	});
+
+	it('delivers a rejection addressed to this client, GM or not', async () => {
+		setUser({ id: 'player-1', isGM: false });
+		const listener = await registerAndGetListener();
+
+		listener({
+			type: 'incomingAttackReactionRejected',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+			reasonKey: 'NIMBLE.chat.incomingReactions.poolSpendStale',
+		});
+
+		expect(globals().ui.notifications.warn).toHaveBeenCalledTimes(1);
+		expect(globals().Hooks.callAll).toHaveBeenCalledWith(
+			'nimble.incomingReactionRejected',
+			expect.objectContaining({ entryId: 'entry-1' }),
+		);
+	});
+
+	it('ignores a rejection addressed to someone else', async () => {
+		setUser({ id: 'player-2', isGM: false });
+		const listener = await registerAndGetListener();
+
+		listener({
+			type: 'incomingAttackReactionRejected',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+			reasonKey: 'NIMBLE.chat.incomingReactions.poolSpendStale',
+		});
+
+		expect(globals().ui.notifications.warn).not.toHaveBeenCalled();
+		expect(globals().Hooks.callAll).not.toHaveBeenCalled();
+	});
+});
+
+describe('rejectIncomingAttackReaction', () => {
+	const rejection = {
+		messageId: 'message-1',
+		entryId: 'entry-1',
+		userId: 'player-1',
+		reasonKey: 'NIMBLE.chat.incomingReactions.poolSpendStale',
+	};
+
+	it('relays to the requesting client when the refusal happened elsewhere', async () => {
+		const { rejectIncomingAttackReaction } = await loadModule();
+		setUser({ id: 'gm-user', isGM: true });
+
+		rejectIncomingAttackReaction(rejection);
+
+		expect(globals().game.socket.emit).toHaveBeenCalledWith('system.nimble', {
+			type: 'incomingAttackReactionRejected',
+			...rejection,
+		});
+		expect(globals().ui.notifications.warn).not.toHaveBeenCalled();
+	});
+
+	it('shows a GM their own refusal without a socket round trip', async () => {
+		const { rejectIncomingAttackReaction } = await loadModule();
+		setUser({ id: 'gm-user', isGM: true });
+
+		rejectIncomingAttackReaction({ ...rejection, userId: 'gm-user' });
+
+		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledTimes(1);
 	});
 });

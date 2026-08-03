@@ -3,6 +3,15 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
+import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
+import {
+	appendFlavoredBonusToRoll,
+	foldBonusIntoPrimaryDamage,
+	replaceDamageRollInRollsSource,
+} from '#utils/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
@@ -14,9 +23,16 @@ import {
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
 import {
-	type IncomingReactionEntry,
+	type AttackOutcomeView,
+	offerSurvives,
+	rerollTriggerMatches,
 	withRerollDisadvantage,
 } from '../utils/incomingAttackModifiers.js';
+import {
+	type PoolSpendSelection,
+	rejectIncomingAttackReaction,
+} from '../utils/incomingAttackReactions.js';
+import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -547,6 +563,82 @@ function buildDamageApplicationPlan(params: {
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
 		bankedReductionActors: [...bankedReductionActors],
 	};
+}
+
+/**
+ * Map a card picker's selection onto the pool as it stands now. Indices alone
+ * are not enough: the pool can change between opening the picker and
+ * confirming it (a refill trigger, another feature spending a die), so the
+ * faces the player was shown must still sit at the indices they chose.
+ * Returns null when the selection no longer describes the live pool.
+ */
+function resolvePoolSpendSelection(
+	faces: number[],
+	selection: PoolSpendSelection,
+): { spentFaces: number[]; remainingFaces: number[] } | null {
+	const pickedIndices = [...new Set(selection.faceIndices)];
+	if (pickedIndices.length < 1) return null;
+	if (pickedIndices.length !== selection.expectedFaces?.length) return null;
+
+	const spentFaces: number[] = [];
+	for (let position = 0; position < pickedIndices.length; position += 1) {
+		const index = pickedIndices[position];
+		if (!Number.isInteger(index) || index < 0 || index >= faces.length) return null;
+		if (faces[index] !== selection.expectedFaces[position]) return null;
+		spentFaces.push(faces[index]);
+	}
+
+	const picked = new Set(pickedIndices);
+	return {
+		spentFaces,
+		remainingFaces: faces.filter((_, index) => !picked.has(index)),
+	};
+}
+
+/**
+ * Spend offers currently resolving, keyed `<messageId>:<entryId>`.
+ *
+ * `used` is only written at the end of a resolve, several awaits in. A second
+ * request arriving inside that window passes the unused-entry check and reads
+ * the same unspent pool, so the dice come out once and the damage goes on
+ * twice. Every request lands on the one primary GM's client, so an in-memory
+ * lock is enough to serialize them.
+ */
+const inFlightSpendOffers = new Set<string>();
+
+/** In-flight reaction resolve per card, so the next one starts after it. */
+const reactionWriteQueues = new Map<string, Promise<void>>();
+
+/**
+ * Run a reaction resolver with at most one in flight per card.
+ *
+ * Every resolver reads the card's `incomingReactions`, awaits — a roll
+ * evaluation, a pool write — and then writes the whole array back. Two
+ * resolvers overlapping on one card each write their own stale copy, and
+ * whichever lands second drops the other's `used` flag. Routing every kind
+ * through the primary GM gives us a single writing client; this gives that
+ * client a single write in flight per card, which is what the routing was
+ * credited with on its own.
+ *
+ * Keyed by message id rather than by entry, because the array is shared: two
+ * *different* entries resolving at once is exactly the case an entry-level
+ * lock misses.
+ */
+function queueReactionWrite(messageId: string, task: () => Promise<void>): Promise<void> {
+	const previous = reactionWriteQueues.get(messageId) ?? Promise.resolve();
+	// Both paths run the task: a predecessor that threw must not wedge the card.
+	const result = previous.then(task, task);
+	const settled = result.then(
+		() => undefined,
+		() => undefined,
+	);
+
+	reactionWriteQueues.set(messageId, settled);
+	void settled.then(() => {
+		if (reactionWriteQueues.get(messageId) === settled) reactionWriteQueues.delete(messageId);
+	});
+
+	return result;
 }
 
 class NimbleChatMessage extends ChatMessage {
@@ -1115,12 +1207,8 @@ class NimbleChatMessage extends ChatMessage {
 		kind: IncomingReactionEntry['kind'],
 		requestingUserId: string,
 		viaSocket: boolean,
-	): { entries: IncomingReactionEntry[]; entry: IncomingReactionEntry } | null {
-		const systemData = this.system as unknown as ActivationCardSystemData & {
-			incomingReactions?: IncomingReactionEntry[];
-		};
-		const entries = systemData.incomingReactions ?? [];
-		const entry = entries.find((e) => e.id === entryId);
+	): IncomingReactionEntry | null {
+		const entry = this.#incomingReactionEntries().find((e) => e.id === entryId);
 		if (!entry || entry.used || entry.kind !== kind) return null;
 
 		const requestingUser = game.users?.get(requestingUserId) ?? null;
@@ -1143,14 +1231,28 @@ class NimbleChatMessage extends ChatMessage {
 			if (!rule || rule.disabled) return null;
 		}
 
-		return { entries, entry };
+		return entry;
 	}
 
+	#incomingReactionEntries(): IncomingReactionEntry[] {
+		return (
+			(this.system as unknown as { incomingReactions?: IncomingReactionEntry[] })
+				.incomingReactions ?? []
+		);
+	}
+
+	/**
+	 * Read the card's current offers and mark the matching ones used. Read here
+	 * rather than reused from validation time so the array written back is the
+	 * one on the card now, not the one from before this resolver's awaits.
+	 */
 	#markIncomingReactionsUsed(
-		entries: IncomingReactionEntry[],
 		predicate: (entry: IncomingReactionEntry) => boolean,
+		patch: Partial<IncomingReactionEntry> = {},
 	): IncomingReactionEntry[] {
-		return entries.map((e) => (predicate(e) ? { ...e, used: true } : e));
+		return this.#incomingReactionEntries().map((e) =>
+			predicate(e) ? { ...e, used: true, ...patch } : e,
+		);
 	}
 
 	/**
@@ -1166,16 +1268,27 @@ class NimbleChatMessage extends ChatMessage {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const found = this.#validateIncomingReaction(
+		return queueReactionWrite(this.id ?? '', () =>
+			this.#applyForceRerollReaction(entryId, requestingUserId, viaSocket),
+		);
+	}
+
+	async #applyForceRerollReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const entry = this.#validateIncomingReaction(
 			entryId,
 			'forceReroll',
 			requestingUserId,
 			viaSocket,
 		);
-		if (!found) return;
-		const { entries, entry } = found;
+		if (!entry) return;
 
-		const systemData = this.system as ActivationCardSystemData;
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		const activation = foundry.utils.deepClone(systemData.activation ?? { effects: [] });
 		const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
 		const damageNode = nodes.find(
@@ -1199,22 +1312,20 @@ class NimbleChatMessage extends ChatMessage {
 		);
 		await newRoll.evaluate();
 
-		const newRollJson = newRoll.toJSON() as Record<string, unknown>;
+		const carried = await this.#carryFoldedSpendsAcrossReroll(
+			newRoll.toJSON() as Record<string, unknown>,
+			this.#markIncomingReactionsUsed((e) => e.id === entry.id),
+			newRoll,
+		);
+
 		damageNode.discardedRoll = serialized;
-		damageNode.roll = newRollJson;
+		damageNode.roll = carried.roll;
 		activation.effects = reconstructEffectsTree(nodes) as unknown[];
 
-		const rollsSource = [...(((this._source as { rolls?: string[] }).rolls ?? []) as string[])];
-		const rollIndex = rollsSource.findIndex((r) => {
-			try {
-				return (JSON.parse(r) as { class?: string })?.class === 'DamageRoll';
-			} catch {
-				return false;
-			}
-		});
-		const stringifiedRoll = JSON.stringify(newRollJson);
-		if (rollIndex >= 0) rollsSource[rollIndex] = stringifiedRoll;
-		else rollsSource.push(stringifiedRoll);
+		const rollsSource = replaceDamageRollInRollsSource(
+			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			carried.roll,
+		);
 
 		await this.update({
 			rolls: rollsSource,
@@ -1222,7 +1333,263 @@ class NimbleChatMessage extends ChatMessage {
 				activation,
 				isCritical: newRoll.isCritical,
 				isMiss: newRoll.isMiss,
-				incomingReactions: this.#markIncomingReactionsUsed(entries, (e) => e.id === entry.id),
+				incomingReactions: this.#dropStaleOutcomeOffers(carried.entries, newRoll),
+			},
+		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Carry already-folded card-side spends onto the roll a reroll produced.
+	 *
+	 * The rebuild starts from the discarded roll's `originalFormula`, so a bonus
+	 * folded into the old roll's terms is simply not in the new one. Left alone
+	 * the damage silently disappears while the dice stay spent and the card's
+	 * attribution line keeps claiming it. The bonus is re-appended to the fresh
+	 * roll before it reaches the damage node, so the node and the message's
+	 * `rolls` source pick it up together.
+	 *
+	 * A spend the new outcome still satisfies is folded in again. One it does
+	 * not — a crit-only spend on an attack that is no longer a crit — was never
+	 * owed, so the dice go back and the offer reverts to unused, which leaves it
+	 * for `#dropStaleOutcomeOffers` to remove. If the dice cannot be returned
+	 * (the pool or its item is gone), the bonus is re-folded instead: an
+	 * unearned bonus beats charging the player for damage the card never shows.
+	 */
+	async #carryFoldedSpendsAcrossReroll(
+		rollJson: Record<string, unknown>,
+		entries: IncomingReactionEntry[],
+		view: AttackOutcomeView,
+	): Promise<{ roll: Record<string, unknown>; entries: IncomingReactionEntry[] }> {
+		let roll = rollJson;
+
+		const refold = (entry: IncomingReactionEntry, amount: number) => {
+			const itemName = entry.itemUuid
+				? ((fromUuidSync(entry.itemUuid as `Item.${string}`) as { name?: string } | null)?.name ??
+					entry.label)
+				: entry.label;
+			roll = appendFlavoredBonusToRoll(roll, amount, itemName);
+		};
+
+		const carriedEntries: IncomingReactionEntry[] = [];
+		for (const entry of entries) {
+			const amount = entry.usedAmount;
+			if (entry.kind !== 'spendPoolForDamage' || !entry.used || typeof amount !== 'number') {
+				carriedEntries.push(entry);
+				continue;
+			}
+
+			if (offerSurvives(entry, view)) {
+				refold(entry, amount);
+				carriedEntries.push(entry);
+				continue;
+			}
+
+			if (await this.#refundSpentPoolFaces(entry)) {
+				carriedEntries.push({
+					...entry,
+					used: false,
+					usedAmount: null,
+					usedPoolLabel: '',
+					usedFaces: [],
+				});
+				continue;
+			}
+
+			refold(entry, amount);
+			carriedEntries.push(entry);
+		}
+
+		return { roll, entries: carriedEntries };
+	}
+
+	/**
+	 * Put a card-side spend's dice back in the pool they came from. The pool is
+	 * re-resolved from the live rules rather than stored on the entry, the same
+	 * way the offer's picker finds it, so a retargeted consumer does not strand
+	 * the refund. `setPoolFaces` clamps to the pool's maximum, so a pool refilled
+	 * since the spend never overflows.
+	 */
+	async #refundSpentPoolFaces(entry: IncomingReactionEntry): Promise<boolean> {
+		const faces = entry.usedFaces ?? [];
+		if (faces.length === 0) return false;
+
+		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		if (!actor) return false;
+
+		const itemId = entry.itemUuid
+			? ((fromUuidSync(entry.itemUuid as `Item.${string}`) as { id?: string } | null)?.id ?? null)
+			: null;
+
+		for (const pool of getDicePools(actor)) {
+			const match = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
+				(consumer) => consumer.ruleId === entry.ruleId && (!itemId || consumer.itemId === itemId),
+			);
+			if (match) return setPoolFaces(actor, pool.id, [...pool.faces, ...faces]);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Drop offers the card's new outcome no longer satisfies. Pending offers are
+	 * filtered against the outcome once, when the card is posted; a reroll
+	 * resolved afterwards can turn a crit into an ordinary hit and strand a
+	 * `criticalHit` offer on a card that no longer qualifies. Dropped rather
+	 * than marked used, because they never fired.
+	 */
+	#dropStaleOutcomeOffers(
+		entries: IncomingReactionEntry[],
+		view: AttackOutcomeView,
+	): IncomingReactionEntry[] {
+		return entries.filter((entry) => entry.used || offerSurvives(entry, view));
+	}
+
+	/**
+	 * Fold a dice-pool spend into this card's primary damage roll: consume the
+	 * picked faces, evaluate the consumer's effect formula against them, and add
+	 * the result to the damage the GM will apply.
+	 *
+	 * Executes on the primary GM's client, like the other reaction resolvers,
+	 * because a chat message is updatable only by its author or a GM (owning the
+	 * acting actor does not imply either). That gives one writing client;
+	 * `queueReactionWrite` is what keeps a concurrent reaction on the same card
+	 * from clobbering `incomingReactions` on it.
+	 *
+	 * Adding to the existing roll rather than posting a second one is what keeps
+	 * the target's armor, resistances and flat reductions from being applied a
+	 * second time against the same attack.
+	 *
+	 * The bonus lands before the GM applies damage. Nothing enforces that
+	 * ordering — a spend confirmed after Apply Damage raises the card's total
+	 * without touching HP already removed — because the card keeps no
+	 * applied-damage record to reconcile against.
+	 */
+	async resolveSpendPoolForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		selection: PoolSpendSelection,
+		viaSocket = false,
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!this.isActivationCard()) return;
+		if (!selection?.faceIndices?.length) return;
+
+		const lockKey = `${this.id}:${entryId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+
+		try {
+			await queueReactionWrite(this.id ?? '', () =>
+				this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket),
+			);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	async #applySpendPoolForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		selection: PoolSpendSelection,
+		viaSocket: boolean,
+	): Promise<void> {
+		// Every refusal below reports back to whoever asked. The executor runs on
+		// the GM's client, so a bare `return` would leave the spending player
+		// watching their button come back unexplained when its hold lapses.
+		const reject = (reasonKey: string) =>
+			rejectIncomingAttackReaction({
+				messageId: this.id ?? '',
+				entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+
+		const entry = this.#validateIncomingReaction(
+			entryId,
+			'spendPoolForDamage',
+			requestingUserId,
+			viaSocket,
+		);
+		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		if (!actor) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
+
+		const pool = getDicePools(actor).find((p) => p.id === selection.poolId);
+		if (!pool) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
+
+		// Re-resolve the consumer from the live rule rather than trusting the
+		// snapshot: this picks up `modifyConsumer` rules that extend the formula,
+		// and confirms the rule still targets this pool. Rule ids are only unique
+		// within an item, so the owning item has to match too.
+		const sourceItem = entry.itemUuid
+			? (fromUuidSync(entry.itemUuid as `Item.${string}`) as Item.Implementation | null)
+			: null;
+		const consumer = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
+			(candidate) =>
+				candidate.ruleId === entry.ruleId &&
+				(!sourceItem || candidate.itemId === String(sourceItem.id)),
+		);
+		if (!consumer?.effectFormula)
+			return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
+
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
+
+		// Re-derive every gate from the live rule and this card, never from the
+		// stamped entry. A crafted socket payload can replay an offer the sheet
+		// would have suppressed, and the card's own outcome can change after the
+		// offer was stamped: a forced reroll turns a crit into an ordinary hit
+		// while a `criticalHit` offer is still sitting on it.
+		const stillOffered =
+			Boolean(consumer.cardOffer) &&
+			consumer.effectType === 'generic' &&
+			consumer.selectionOutcome === 'consume' &&
+			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData);
+		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
+
+		const picked = resolvePoolSpendSelection(pool.faces, selection);
+		if (!picked) return reject('NIMBLE.chat.incomingReactions.poolSpendStale');
+
+		const effectRoll = new Roll(
+			substituteSpendFormula(
+				consumer.effectFormula,
+				picked.spentFaces.length,
+				picked.spentFaces.reduce((sum, face) => sum + face, 0),
+			),
+			(actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
+		);
+		await effectRoll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+
+		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
+		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		const folded = foldBonusIntoPrimaryDamage(
+			(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
+			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			bonusDamage,
+			consumer.itemName,
+		);
+		if (!folded) return reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		// Charge the pool only once the fold is known to be possible, and only
+		// if the pool actually accepted the write — otherwise the card would
+		// gain damage the player never paid for.
+		const spent = await setPoolFaces(actor, pool.id, picked.remainingFaces);
+		if (!spent) return reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		await this.update({
+			rolls: folded.rolls,
+			system: {
+				activation: folded.activation,
+				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
+					usedAmount: bonusDamage,
+					usedPoolLabel: pool.label,
+					usedFaces: picked.spentFaces,
+				}),
 			},
 		} as Record<string, unknown>);
 	}
@@ -1241,24 +1608,34 @@ class NimbleChatMessage extends ChatMessage {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const found = this.#validateIncomingReaction(
+		return queueReactionWrite(this.id ?? '', () =>
+			this.#applyRedirectReaction(entryId, requestingUserId, viaSocket),
+		);
+	}
+
+	async #applyRedirectReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const entry = this.#validateIncomingReaction(
 			entryId,
 			'redirectToSelf',
 			requestingUserId,
 			viaSocket,
 		);
-		if (!found) return;
-		const { entries, entry } = found;
+		if (!entry) return;
 		if (!entry.tokenUuid) return;
 
-		const systemData = this.system as ActivationCardSystemData;
+		// The caller has already gated on `isActivationCard()`; that narrowing does
+		// not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		const targets = (systemData.targets || []).filter((t) => t !== entry.targetTokenUuid);
 		if (!targets.includes(entry.tokenUuid)) targets.push(entry.tokenUuid);
 
 		// The ally is no longer the target, so every other offer tied to them
 		// is stale: other redirect offers, and their own forceReroll offers.
 		const updatedEntries = this.#markIncomingReactionsUsed(
-			entries,
 			(e) => e.id === entry.id || e.targetTokenUuid === entry.targetTokenUuid,
 		);
 

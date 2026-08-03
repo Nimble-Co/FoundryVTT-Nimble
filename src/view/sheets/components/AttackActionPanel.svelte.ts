@@ -14,6 +14,7 @@ import {
 	computeIncomingAttackPlan,
 } from '../../../utils/incomingAttackModifiers.js';
 import localize from '../../../utils/localize.js';
+import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
 import sortItems from '../../../utils/sortItems.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
 
@@ -232,7 +233,10 @@ export function createAttackPanelState(
 
 		const firstTargetToken =
 			(game.user?.targets?.values().next().value as Token.Implementation | undefined) ?? null;
-		const incomingAttackPlan = computeIncomingAttackPlan(firstTargetToken);
+		const incomingAttackPlan = computeIncomingAttackPlan(
+			firstTargetToken,
+			getActor() as OfferingActor,
+		);
 
 		const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 			canCrit,
