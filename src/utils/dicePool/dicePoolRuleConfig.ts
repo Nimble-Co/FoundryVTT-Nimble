@@ -37,9 +37,16 @@ const DicePoolRuleConfig = {
 	// each to the die's highest face. Selection for 'maximize' is capped at the
 	// consumer's cost, so a "change 1 die" feature offers a single pick.
 	selectionOutcomes: ['consume', 'maximize'] as const,
-	// Optional delivery filter for autoBonus pools. When set, the pool's faces
-	// auto-add only to attacks of the matching delivery.
+	// Optional delivery filter. When set, an autoBonus pool's faces auto-add
+	// only to attacks of the matching delivery, and a card offer is only made
+	// on them.
 	attackDeliveryFilters: ['melee', 'ranged', 'any'] as const,
+	// Optional outcome gate for offering a manual spend on the attack card the
+	// spend would modify, instead of only through the sheet's pool panel. When
+	// set, the owner gets a button on their own cards whose outcome matches,
+	// and the spend folds into that card's damage total rather than posting a
+	// standalone roll the GM has to apply by hand.
+	cardOfferTriggers: ['hit', 'criticalHit'] as const,
 	flagScope: SYSTEM_ID,
 	flagKey: 'dicePools',
 	flagPath: `flags.${SYSTEM_ID}.dicePools`,

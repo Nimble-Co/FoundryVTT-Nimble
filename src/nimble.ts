@@ -1,3 +1,4 @@
+import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import registerBabeleHooks from './hooks/babeleInit.js';
 import registerBabeleInstallNotice from './hooks/babeleInstallNotice.js';
@@ -119,6 +120,7 @@ registerCombatantDefeatSync();
 registerCombatantHealthStateSync();
 registerDyingActionLimitSync();
 registerChargeSystemHooks();
+registerActionEconomySystemHooks();
 registerDicePoolSystemHooks();
 registerWoundTriggerHooks();
 registerTurnTriggerHooks();

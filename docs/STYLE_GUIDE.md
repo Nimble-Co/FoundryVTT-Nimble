@@ -1469,11 +1469,19 @@ export const myStore = writable<MyStoreState>(initialState);
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
 | `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
 | `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
+| `requestCombatantActionDelta()` | `src/utils/requestCombatantActionDelta.ts` | Apply a combined current/pending action adjustment to a character combatant — direct for GMs/owners, relayed to the active GM over the system socket otherwise |
+| `getPrimaryActiveGmId()` | `src/utils/getPrimaryActiveGmId.ts` | User id of the single GM client that executes relayed socket requests (designated active GM, falling back to any connected GM), or `null` when no GM is connected |
+| `collectGrantedActionOffers()`, `requestGrantedActionOfferUse()` | `src/utils/grantedActionOffers.ts` | Granted-activation offers on activation chat cards — build offers from an item's `grantActivation` rules at use time, and consume an offer (direct for GMs, relayed to the active GM over the system socket otherwise) |
 | `getActorHpValue()` | `src/utils/isCombatantDead.ts` | Get an actor's current HP value |
 | `getActorWoundsValueAndMax()` | `src/utils/isCombatantDead.ts` | Get an actor's wounds value and max |
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |
 | `getRollFormula()` | `src/utils/getRollFormula.ts` | Build roll formula strings |
 | `getDamageTypeLabel()` | `src/utils/getDamageTypeLabel.ts` | Localized display name for a damage type key, falling back to the key itself |
+| `attackDeliveryFromAttackType()`, `matchesAttackDelivery()` | `src/utils/attackDelivery.ts` | Map an activation's `attackType` to a melee/ranged delivery, and test a rule's `melee`/`ranged`/`any` filter against it. An activation with no attack type has no delivery, so any filter excludes it |
+| `substituteSpendFormula()` | `src/utils/dicePool/substituteSpendFormula.ts` | Resolve the `@n` / `@sum` placeholders in a dice-consumer effect formula against the dice a player picked |
+| `foldBonusIntoPrimaryDamage()`, `findPrimaryDamageNode()`, `replaceDamageRollInRollsSource()` | `src/utils/foldBonusIntoPrimaryDamage.ts` | Add a flat bonus to an activation card's primary damage roll, locate that roll's node, and keep the message `rolls` source in step with a patched damage roll |
+| `appendTypedBonusDamage()` | `src/utils/appendTypedBonusDamage.ts` | Add a differently-typed bonus to an activation card as its own damage packet, beside the damage it derives from |
+| `collectPoolSpendCardOffers()` | `src/utils/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |
 | `arraysAreEqual()` | `src/utils/arraysAreEqual.ts` | Compare two arrays for equality |
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |
 | `isValidDiceModifier()` | `src/utils/isValidDiceModifier.ts` | Validate dice modifier strings |
@@ -1487,7 +1495,9 @@ export const myStore = writable<MyStoreState>(initialState);
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
 | `isLevelUpOptionApplicable()` | `src/utils/isLevelUpOptionApplicable.ts` | Whether a feature's level-up option applies at a given level (empty `applyAtLevels` ⇒ every level) |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
-| `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (defaults to 1) |
+| `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
+| `resolveMinionAttackActionCost()` | `src/utils/resolveMinionAttackActionCost.ts` | Action cost for group-attack activations; a missing or `none` cost defaults to 1 (legacy pack convention), an explicit zero stays free |
+| `formatActivationCostLabel()` | `src/utils/formatActivationCostLabel.ts` | Render an activation cost as "1 Action", "2 Actions", "10 Minutes" or "Free"; returns `null` for the types that carry no quantity so the caller can label them |
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
 | `countAdjacentEnemies()`, `ADJACENCY_QUALIFIER` | `src/utils/tokenAdjacency.ts` | Count enemy tokens adjacent to a given token; respects the `adjacencyIncludesDiagonals` world setting; accepts position overrides for pre-commit token moves |

@@ -93,6 +93,23 @@ describe('registerPoolGainMessageHooks', () => {
 		expect(chat.create).toHaveBeenCalledTimes(1);
 	});
 
+	it('does not post when chat-notification automation is off', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const chat = stubChatMessage();
+		const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+		registerPoolGainMessageHooks();
+
+		(globals().game as { settings?: { get: () => boolean } }).settings = { get: () => false };
+		try {
+			const actor = makeActor([makeRule()]);
+			callbacks.get('nimble.dicePool.changed')?.(gainPayload(actor));
+
+			expect(chat.create).not.toHaveBeenCalled();
+		} finally {
+			(globals().game as { settings?: unknown }).settings = undefined;
+		}
+	});
+
 	it('skips disabled rules, other pools, and failed predicates', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const chat = stubChatMessage();

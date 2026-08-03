@@ -7,6 +7,7 @@ import { applyEncounterRecovery, applyRestRecovery } from '#utils/chargePool/cha
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import localize from '#utils/localize.js';
+import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 
 type HookFn = (...args: unknown[]) => unknown;
 type SupportedRestType = (typeof ChargePoolRuleConfig.restTypes)[number];
@@ -119,6 +120,9 @@ function registerActorSyncHooks(): void {
 
 function registerItemUseHooks(): void {
 	registerCustomHook(systemHookName('preUseItem'), (item) => {
+		// With spending automation off, charge costs are neither validated nor
+		// enforced — the use is always allowed.
+		if (!isResourceSpendingAutomationEnabled()) return true;
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return true;
 
@@ -132,6 +136,7 @@ function registerItemUseHooks(): void {
 	});
 
 	registerCustomHook(systemHookName('useItem'), (item, chatMessage, context) => {
+		if (!isResourceSpendingAutomationEnabled()) return;
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return;
 		const itemUseContext = toItemUseContext(context);

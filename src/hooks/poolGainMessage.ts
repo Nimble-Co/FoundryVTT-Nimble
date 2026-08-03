@@ -1,4 +1,5 @@
 import { systemHookName } from '#system';
+import { isChatNotificationsAutomationEnabled } from '../settings/automationSettings.js';
 
 let registered = false;
 
@@ -34,6 +35,7 @@ export function registerPoolGainMessageHooks(): void {
 
 	// @ts-expect-error Custom hook
 	Hooks.on(systemHookName('dicePool.changed'), (payload: PoolChangedPayload) => {
+		if (!isChatNotificationsAutomationEnabled()) return;
 		const previousCount = payload.previousFaces?.length ?? 0;
 		const newCount = payload.newFaces?.length ?? 0;
 		if (newCount <= previousCount) return;

@@ -1,6 +1,9 @@
+import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
 import { isCharacterActor, normalizeIdentifier } from './helpers.js';
 import type {
 	CharacterActorLike,
+	DiceAttackDeliveryFilter,
+	DiceCardOfferTrigger,
 	DiceConsumerRuleLike,
 	DicePoolRuleAny,
 	DicePoolState,
@@ -18,7 +21,20 @@ type DicePoolConsumer = {
 	effectFormula: string | null;
 	effectType: string;
 	selectionOutcome: string;
+	/** Damage type a card offer's bonus deals; '' inherits the attack's own */
+	damageType: string;
+	/** Set when the spend is offered on the attack card instead of the sheet */
+	cardOffer: DiceCardOfferTrigger | null;
+	/** Narrows a card offer to melee or ranged attacks; null = unrestricted */
+	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
 };
+
+/** Narrow a stored `cardOffer` to a trigger the executor knows, else null. */
+function toCardOfferTrigger(value: unknown): DiceCardOfferTrigger | null {
+	return DicePoolRuleConfig.cardOfferTriggers.includes(value as DiceCardOfferTrigger)
+		? (value as DiceCardOfferTrigger)
+		: null;
+}
 
 function readEffectFormula(consumer: DiceConsumerRuleLike): string | null {
 	const value = (consumer as { effectFormula?: unknown }).effectFormula;
@@ -116,6 +132,7 @@ function applyConsumerModifiers(
 function getDicePoolConsumers(
 	actor: Actor | null | undefined,
 	pool: DicePoolState,
+	options: { includeCardOffers?: boolean } = {},
 ): DicePoolConsumer[] {
 	if (!isCharacterActor(actor)) return [];
 
@@ -138,6 +155,14 @@ function getDicePoolConsumers(
 			if (consumer.mode !== 'manual') continue;
 			if (normalizeIdentifier(consumer.poolIdentifier) !== poolIdentifier) continue;
 			if ((consumer.poolScope ?? 'item') !== pool.scope) continue;
+			// A consumer that opted into a chat-card offer is spent from the card
+			// the spend modifies, not from the sheet panel, where it would be
+			// ungated by the attack's outcome. The card executor asks for them
+			// explicitly.
+			if (!options.includeCardOffers && (consumer as { cardOffer?: unknown }).cardOffer) continue;
+			// Predicates gate availability the same way they do for modifiers; a
+			// consumer whose predicate fails must not be offered.
+			if (typeof rule.appliesTo === 'function' && !rule.appliesTo()) continue;
 
 			const selectionOutcome =
 				typeof (consumer as { selectionOutcome?: unknown }).selectionOutcome === 'string' &&
@@ -175,6 +200,12 @@ function getDicePoolConsumers(
 				effectFormula,
 				effectType,
 				selectionOutcome,
+				damageType: typeof consumer.damageType === 'string' ? consumer.damageType : '',
+				cardOffer: toCardOfferTrigger(consumer.cardOffer),
+				bonusOnAttackDelivery:
+					typeof consumer.bonusOnAttackDelivery === 'string'
+						? (consumer.bonusOnAttackDelivery as DiceAttackDeliveryFilter)
+						: null,
 			});
 		}
 	}

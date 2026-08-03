@@ -27,6 +27,21 @@ You can also reach any value on the sheet by its full path, such as `@attributes
 
 Formulas support basic math (`+`, `-`, `*`, `/`, parentheses) and rounding helpers: `floor(@level / 2)` gives half the character's level, rounded down.
 
+## Context references
+
+A few references are not read off the character sheet. They are filled in at the moment the rule does its work, and they exist only in the field that provides them. Writing one anywhere else leaves it unresolved, so keep them to the fields listed here.
+
+| Reference | Available in | Value |
+| :--- | :--- | :--- |
+| `@n` | **Dice Consumer** → Effect formula, **Modify Consumer** → Append formula | How many dice the player picked. |
+| `@sum` | **Dice Consumer** → Effect formula, **Modify Consumer** → Append formula | The total of the faces they picked. |
+| `@poolMax` | **Dice Pool** → a refill's Value | The pool's maximum size. |
+| `@poolCurrent` | **Dice Pool** → a refill's Value | How many dice are in the pool right now. |
+
+These combine with the sheet references above, so a spend can scale with both the dice chosen and the character: `(@strength + @dexterity) * @n` reduces damage by STR+DEX for every die spent, and `2 * @sum` doubles the total rolled.
+
+The pool references make a refill relative rather than fixed. A refill with mode `set` and value `@poolMax` fills the pool to whatever its current maximum is, which keeps working when a later feature raises that maximum.
+
 ::: warning
 An empty formula counts as 0. A formula the system can't understand shows an "Invalid roll formula" warning and the rule contributes nothing. See the debugging tips below.
 :::

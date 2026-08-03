@@ -47,6 +47,7 @@
 				{#if ['action', 'minute', 'hour'].includes(activationCostType)}
 					<input
 						type="number"
+						min={activationCostType === 'action' ? 0 : 1}
 						value={activationCost}
 						onchange={({ target }) =>
 							document.update({

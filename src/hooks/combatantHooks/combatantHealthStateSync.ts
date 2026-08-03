@@ -1,4 +1,5 @@
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
+import { isHealthStateSyncAutomationEnabled } from '../../settings/automationSettings.js';
 import { hasLastStandStatus, isActorAtOrBelowHalfHp } from '../../utils/actorHealthState.js';
 import { ACTOR_HP_PATHS, hasAnyActorChangeAt } from '../../utils/actorHpChangePaths.js';
 import {
@@ -84,15 +85,19 @@ async function runSyncOnce(actor: Actor.Implementation): Promise<void> {
 	// We still fall through to the bloodied check so it reflects the post-heal HP.
 	await tryEnterLastStand(actor);
 
-	// Bloodied is independent of Last Stand — both can coexist.
-	const isBloodied = isActorAtOrBelowHalfHp(actor);
-	try {
-		await actor.toggleStatusEffect(STATUS_EFFECT_IDS.bloodied, {
-			active: isBloodied,
-			overlay: false,
-		});
-	} catch {
-		// Ignore errors from concurrent status effect modifications
+	// Bloodied is independent of Last Stand — both can coexist. Only the
+	// bloodied status sync is gated by the health-state automation toggle;
+	// Last Stand entry above is a hard monster mechanic, not bookkeeping.
+	if (isHealthStateSyncAutomationEnabled()) {
+		const isBloodied = isActorAtOrBelowHalfHp(actor);
+		try {
+			await actor.toggleStatusEffect(STATUS_EFFECT_IDS.bloodied, {
+				active: isBloodied,
+				overlay: false,
+			});
+		} catch {
+			// Ignore errors from concurrent status effect modifications
+		}
 	}
 
 	// Last Stand is one-way: entry is handled by tryEnterLastStand; never auto-cleared.

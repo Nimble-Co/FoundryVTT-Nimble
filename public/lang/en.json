@@ -100,14 +100,32 @@
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo",
+			"grantedActionOffers": {
+				"heading": "Granted Actions",
+				"weaponAttack": "Weapon Attack",
+				"noEligibleItems": "No eligible items to use.",
+				"usedBy": "Granted action used by {name}",
+				"usedByVia": "Granted action used by {name} via {label}"
+			},
 			"incomingReactions": {
-				"heading": "Reactions",
+				"heading": "Options",
 				"forceReroll": "Force Reroll",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
 				"rerolledBy": "Attack rerolled by {label}",
 				"redirectedTo": "Attack redirected to {name}",
-				"redirectedToVia": "Attack redirected to {name} via {label}"
+				"redirectedToVia": "Attack redirected to {name} via {label}",
+				"spendPoolForDamage": "Add Damage",
+				"poolSpendHint": "Choose the dice to spend for {label}. The result is added to this attack's damage.",
+				"poolSpendPreview": "Bonus damage: +{amount}",
+				"poolSpendConfirm": "Add to Damage",
+				"poolSpendEmpty": "No dice left in {label}.",
+				"poolSpendUnavailable": "That feature's dice pool is no longer available.",
+				"poolSpendStale": "Those dice are no longer in the pool. Nothing was spent.",
+				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
+				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
+				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
+				"useFailed": "That reaction could not be completed."
 			}
 		},
 		"characterCreationStages": {
@@ -182,17 +200,19 @@
 		},
 		"activationCosts": {
 			"action": "Action",
+			"free": "Free",
+			"reaction": "Reaction",
+			"freeReaction": "Free Reaction",
+			"reactionWithCost": "Reaction ({cost})",
 			"minute": "Minute",
 			"hour": "Hour",
 			"none": "None",
-			"special": "Special",
-			"turn": "Turn"
+			"special": "Special"
 		},
 		"activationCostsPlural": {
 			"action": "Actions",
 			"minute": "Minutes",
-			"hour": "Hours",
-			"turn": "Turns"
+			"hour": "Hours"
 		},
 		"armorEffects": {
 			"none": "<p>None</p>",
@@ -661,6 +681,8 @@
 		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
+			"actionCost": "Action Cost",
+			"actionDelta": "Action Adjustment",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",
@@ -671,6 +693,7 @@
 			"damageBonus": "Damage Bonus",
 			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
+			"grantActivation": "Grant Activation",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -714,6 +737,52 @@
 					"hint": "Pick one or more abilities. Use \"all\" to apply to every ability."
 				}
 			},
+			"actionCost": {
+				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only — a free reaction is still limited to once per round.",
+				"applies": {
+					"label": "Applies to",
+					"hint": "item: price matching item activations. heroicReaction: price the selected heroic reactions instead."
+				},
+				"mode": {
+					"label": "How to apply",
+					"hint": "Adjust: add the value to the base action cost (negative values reduce it). Set: replace the action cost with the value."
+				},
+				"value": {
+					"label": "Value",
+					"hint": "A flat number or formula (e.g. @level). Combined per the mode above."
+				},
+				"itemTypes": {
+					"label": "Item types",
+					"hint": "Only activations of these item types are affected. Leave empty to affect every item type."
+				},
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "Only affect the item whose identifier matches this. Leave blank to affect all matching items."
+				},
+				"reactions": {
+					"label": "Heroic reactions",
+					"hint": "Only these heroic reactions are affected. Leave empty to affect every heroic reaction."
+				}
+			},
+			"actionDelta": {
+				"description": "Grant or remove raw actions when this item is used — immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
+				"value": {
+					"label": "Actions",
+					"hint": "How many actions to grant. A flat number or formula (e.g. @level). Negative values remove actions."
+				},
+				"timing": {
+					"label": "Timing",
+					"hint": "now: adjust the current action pool immediately (may exceed the usual maximum). nextTurn: apply when the recipient's actions next refill."
+				},
+				"target": {
+					"label": "Target",
+					"hint": "self: the actor using the item. targeted: the currently targeted tokens. allAllies: every allied hero in the combat."
+				},
+				"borrowFromNextTurn": {
+					"label": "Borrow from next turn",
+					"hint": "Also start the next turn with that many fewer actions, applied together with the immediate gain as a single adjustment."
+				}
+			},
 			"applyCondition": {
 				"description": "Apply a status condition to a target (or self) when a trigger fires — on a hit, crit, miss, save fail, turn start, etc.",
 				"condition": {
@@ -745,9 +814,22 @@
 					"label": "Effect type",
 					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
 				},
+				"damageType": {
+					"inherit": "Inherit the attack's type",
+					"label": "Bonus damage type",
+					"hint": "The damage type a card offer's bonus deals. Leave empty to inherit the attack's own type, which folds the bonus into the attack's damage total. Setting a type adds the bonus as a separate damage packet with its own Apply Damage button, so the target's flat reduction and resistance resolve against it on their own. Ignored unless the spend is offered on an attack card."
+				},
 				"selectionOutcome": {
 					"label": "Selection outcome",
 					"hint": "What happens to the dice the player picks. \"Consume\" removes them from the pool; \"Maximize\" leaves them in place and raises each to the die's highest face, limited to the cost."
+				},
+				"cardOffer": {
+					"label": "Offer on attack card",
+					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend through the sheet's dice pool panel only. Requires a manual spend that consumes dice for a generic effect."
+				},
+				"bonusOnAttackDelivery": {
+					"label": "Attack delivery",
+					"hint": "Restrict this consumer to melee or ranged attacks. Applies to both an auto-bonus pool and a card offer. Leave empty (or pick \"any\") for no restriction. Beware: an activation with no attack type set counts as neither melee nor ranged, so most spells and utility features are excluded by any restriction here, with nothing shown to explain why."
 				}
 			},
 			"chargePool": {
@@ -904,6 +986,13 @@
 						"label": "Condition",
 						"hint": "Optional condition tested when the trigger fires (e.g. self: raging). Leave empty to always apply."
 					}
+				}
+			},
+			"grantActivation": {
+				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
+				"activationType": {
+					"label": "Granted activation",
+					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
 				}
 			},
 			"grantMovement": {
@@ -1499,6 +1588,13 @@
 			"cancel": "Cancel",
 			"loading": "Loading...",
 			"viewDetails": "View Details",
+			"confirmInsufficientActions": {
+				"title": "Not Enough Actions",
+				"message": "This costs {cost} action(s), but you only have {current} remaining.",
+				"confirmQuestion": "Do you still want to use {name}?",
+				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			},
 			"combatTracker": {
 				"scrollbar": "Combat turn order scrollbar",
 				"hitPoints": "Hit Points",
@@ -1665,6 +1761,8 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
+				"pendingActionsGain": "Gains {count} additional actions at the next action refill",
+				"pendingActionsLoss": "Starts the next turn with {count} fewer actions",
 				"confirmEndTurnEarlyTitle": "End Turn Early?",
 				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
@@ -1901,6 +1999,10 @@
 			"totalFromRules": "Total from Rules",
 			"totalMaxHp": "Total Maximum HP",
 			"saveChanges": "Save Changes"
+		},
+		"wounds": {
+			"heading": "Wounds",
+			"toggle": "Toggle wound {level}"
 		},
 		"manaConfig": {
 			"configureMana": "Configure Mana",
@@ -2502,8 +2604,40 @@
 				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
 			},
 			"autoApplyConditions": {
-				"name": "Auto-Apply Conditions from Rules",
-				"hint": "Automatically apply conditions from feature rules when their trigger fires. When off, rules still surface on the chat card for manual GM application."
+				"name": "Auto-Apply Conditions from Rules (Legacy)",
+				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Apply Conditions and Effects from Rules toggle and has no other effect."
+			},
+			"applyRuleEffects": {
+				"name": "Apply Conditions and Effects from Rules",
+				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+			},
+			"derivedConditions": {
+				"name": "Derived Conditions",
+				"hint": "Automatically apply and remove conditions implied by other conditions, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained."
+			},
+			"resourceRecovery": {
+				"name": "Resource Recovery",
+				"hint": "Automatically refill charges and dice pools from their recovery triggers, such as turn start, rests, wounds, kills, and encounter end."
+			},
+			"resourceSpending": {
+				"name": "Resource Spending",
+				"hint": "Automatically deduct mana when casting spells and validate and consume charges when using items. When off, resource costs are not enforced and must be tracked manually."
+			},
+			"actionTracking": {
+				"name": "Action Tracking",
+				"hint": "Automatically spend combatant actions when items are used during combat."
+			},
+			"healthStateSync": {
+				"name": "Health-State Sync",
+				"hint": "Automatically apply and remove the Bloodied status when a combatant drops to or recovers above half hit points. Last Stand handling is always on."
+			},
+			"combatConvenience": {
+				"name": "Combat Convenience",
+				"hint": "Automatically roll initiative for player characters when combat starts."
+			},
+			"chatNotifications": {
+				"name": "Chat Notifications",
+				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
@@ -2533,6 +2667,21 @@
 				"errorEmptyKey": "Key is required.",
 				"errorReservedKey": "That key is reserved by a built-in school.",
 				"errorDuplicateKey": "Duplicate key."
+			},
+			"automationMenu": {
+				"name": "Automation",
+				"title": "Automation",
+				"manageButton": "Configure Automation",
+				"hint": "Choose which parts of the Nimble rules the system automates for your world. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"intro": "Choose which parts of the Nimble rules the system automates. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"sectionRulesEffects": "Rules & Effects",
+				"sectionResources": "Resources",
+				"sectionCombat": "Combat",
+				"sectionChat": "Chat",
+				"save": "Save Automation Settings",
+				"saved": "Automation settings saved.",
+				"saveError": "Saving the automation settings failed and some toggles may not have been applied. Check the console for details.",
+				"gmOnly": "Only a GM can change automation settings."
 			},
 			"combatTrackerHoverColor": {
 				"name": "Combat Tracker Hover Color",

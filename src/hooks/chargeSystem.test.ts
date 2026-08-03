@@ -164,3 +164,49 @@ describe('registerChargeSystemHooks encounter recovery hooks', () => {
 		expect(applyEncounterRecoveryMock).toHaveBeenCalledWith(actor, 'encounterEnd');
 	});
 });
+
+describe('registerChargeSystemHooks resource-spending automation gate', () => {
+	beforeEach(() => {
+		vi.resetModules();
+		vi.clearAllMocks();
+		(globalThis as unknown as { game: Record<string, unknown> }).game = { combat: null };
+	});
+
+	function setSpendingAutomation(enabled: boolean): void {
+		(globalThis as unknown as { game: Record<string, unknown> }).game.settings = {
+			get: vi.fn(() => enabled),
+		};
+	}
+
+	function createCharacterItem(): unknown {
+		return { name: 'Wand of Charges', actor: { type: 'character' } };
+	}
+
+	it('validates and consumes charges when spending automation is on', async () => {
+		const hooks = captureHooks();
+		setSpendingAutomation(true);
+		const registerChargeSystemHooks = (await import('./chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const item = createCharacterItem();
+		expect(hooks.get('nimble.preUseItem')?.(item)).toBe(true);
+		expect(validateItemChargeConsumptionMock).toHaveBeenCalledTimes(1);
+
+		hooks.get('nimble.useItem')?.(item, null, {});
+		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('skips validation and consumption but allows the use when spending automation is off', async () => {
+		const hooks = captureHooks();
+		setSpendingAutomation(false);
+		const registerChargeSystemHooks = (await import('./chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const item = createCharacterItem();
+		expect(hooks.get('nimble.preUseItem')?.(item)).toBe(true);
+		expect(validateItemChargeConsumptionMock).not.toHaveBeenCalled();
+
+		hooks.get('nimble.useItem')?.(item, null, {});
+		expect(consumeOnResolvedItemUseMock).not.toHaveBeenCalled();
+	});
+});

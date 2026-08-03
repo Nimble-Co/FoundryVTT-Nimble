@@ -14,8 +14,12 @@ import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.
 import { RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
-import { consumeCombatantAction } from '../../utils/combatTurnActions.js';
+import {
+	consumeCombatantAction,
+	getCombatantCurrentActions,
+} from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import showInsufficientActionsConfirmation from '../../utils/showInsufficientActionsConfirmation.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
@@ -36,6 +40,9 @@ import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import resolveCharacterItemActionCost, {
+	type ActivatableItem,
+} from './resolveCharacterItemActionCost.js';
 
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
@@ -1840,13 +1847,37 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		options: Record<string, unknown> = {},
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
+
+		// Soft-block gate: when the activation costs more actions than the
+		// combatant has remaining, confirm before any activation side effects
+		// (dialogs, rolls, card creation) so a cancelled overspend leaves no
+		// trace. `force` bypasses the prompt; paths that manage the cost
+		// themselves pass `skipActionDeduction` and are never prompted.
+		if (item && !options.skipActionDeduction) {
+			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
+			if (actionCost > 0) {
+				const combat = game.combat as Combat | null;
+				const combatant =
+					combat?.combatants?.find(
+						(entry: Combatant.Implementation) => entry.actorId === this.id,
+					) ?? null;
+				if (combat?.started && combatant) {
+					const confirmed = await showInsufficientActionsConfirmation({
+						activityName: item.name ?? '',
+						requiredActions: actionCost,
+						currentActions: getCombatantCurrentActions(combatant),
+						force: options.force === true,
+					});
+					if (!confirmed) return null;
+				}
+			}
+		}
+
 		const result = await super.activateItem(id, options);
 
 		if (result && item && !options.skipActionDeduction) {
-			const activation = (
-				item.system as { activation?: { cost?: { type: string; quantity: number } } }
-			).activation;
-			if (activation?.cost?.type === 'action') {
+			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
+			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
 				const combatant =
 					combat?.combatants?.find(
@@ -1856,7 +1887,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 					await consumeCombatantAction({
 						combat,
 						combatantId: combatant.id,
-						actionCost: activation.cost.quantity ?? 1,
+						actionCost,
 					});
 				}
 			}

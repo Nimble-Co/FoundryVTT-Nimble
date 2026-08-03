@@ -107,7 +107,17 @@ describe('ruleEventDispatch', () => {
 		expect(handlers.has('nimble.conditionApplied')).toBe(true);
 	});
 
-	describe('automation.autoApplyConditions gating', () => {
+	describe('automation.applyRuleEffects gating', () => {
+		// A rule class that declares an always-dispatched lifecycle event, the
+		// way core-plumbing rule classes exempt themselves from the toggle.
+		class AlwaysActivatedRule {
+			static alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
+
+			onItemActivated = vi.fn().mockResolvedValue(undefined);
+
+			onTurnStart = vi.fn().mockResolvedValue(undefined);
+		}
+
 		it('skips dispatch when setting is disabled', async () => {
 			settingsGet.mockReturnValue(false);
 			const rule = createMockRule();
@@ -127,6 +137,35 @@ describe('ruleEventDispatch', () => {
 
 			await Promise.resolve();
 			expect(rule.onItemUsed).not.toHaveBeenCalled();
+		});
+
+		it('still dispatches always-dispatched events to exempt rule classes when disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = new AlwaysActivatedRule();
+			const sourceActor = { rules: [rule] };
+			const sourceItem = { actor: sourceActor, name: 'Focus' };
+
+			handlers.get('nimble.useItem')?.(sourceItem, null, { rolls: [], targets: [] });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onItemActivated).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not dispatch non-exempt events to exempt rule classes when disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = new AlwaysActivatedRule();
+			const nextCombatant = { actor: { rules: [rule] } } as unknown as Combatant;
+			const combat = {
+				combatant: null,
+				turns: [nextCombatant],
+			} as unknown as Combat;
+
+			handlers.get('combatTurn')?.(combat, { round: 1, turn: 0 }, { direction: 1 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onTurnStart).not.toHaveBeenCalled();
 		});
 	});
 

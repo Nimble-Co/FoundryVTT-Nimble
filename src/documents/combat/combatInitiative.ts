@@ -1,6 +1,13 @@
 import toMessageMode from '../../utils/toMessageMode.js';
+import { getCombatantPendingActionDelta } from './combatantSystem.js';
 import type { InitiativeRollOutcome } from './combatTypes.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
+
+function getInitiativeStartingActions(rollTotal: number): number {
+	if (rollTotal >= 20) return 3;
+	if (rollTotal >= 10) return 2;
+	return 1;
+}
 
 export function applyCharacterInitiativeActionUpdate(
 	combatant: Combatant.Implementation,
@@ -13,16 +20,19 @@ export function applyCharacterInitiativeActionUpdate(
 	// first round. Their max stays at 3 — per-turn restoration always refills
 	// to max (reduced only by the Dying condition), so we must not touch max
 	// here or low-initiative heroes would be permanently capped below 3.
+	//
+	// The round-1 seed is a `current`-reset site like the per-turn refill, so
+	// any pending action adjustment folds in here too (and is cleared) — else a
+	// pre-roll grant or debt would be silently eaten by the absolute set.
 	const actionPath = 'system.actions.base.current';
-	if (rollTotal >= 20) {
-		combatantUpdates[actionPath] = 3;
-		return;
+	const pendingDelta = getCombatantPendingActionDelta(combatant);
+	combatantUpdates[actionPath] = Math.max(
+		0,
+		getInitiativeStartingActions(rollTotal) + pendingDelta,
+	);
+	if (pendingDelta !== 0) {
+		combatantUpdates['system.actions.pendingDelta'] = 0;
 	}
-	if (rollTotal >= 10) {
-		combatantUpdates[actionPath] = 2;
-		return;
-	}
-	combatantUpdates[actionPath] = 1;
 }
 
 export async function buildInitiativeChatData(params: {

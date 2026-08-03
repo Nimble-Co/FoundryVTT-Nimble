@@ -9,13 +9,17 @@ function createDiceConsumerRule(config: {
 	effectFormula?: string | null;
 	disabled?: boolean;
 	selectionOutcome?: string;
+	effectType?: string;
+	cardOffer?: string | null;
+	actorType?: string;
+	bonusOnAttackDelivery?: string | null;
 }) {
 	const item = {
 		id: 'item-tayg',
 		isEmbedded: true,
 		name: 'That all you got?!',
 		uuid: 'test-item-uuid',
-		actor: { uuid: 'Actor.test-actor' },
+		actor: { uuid: 'Actor.test-actor', type: config.actorType ?? 'character' },
 	};
 
 	const rule = new DiceConsumerRule(
@@ -24,9 +28,10 @@ function createDiceConsumerRule(config: {
 			poolScope: 'item',
 			mode: config.mode ?? 'manual',
 			cost: '1',
-			bonusOnAttackDelivery: null,
+			bonusOnAttackDelivery: config.bonusOnAttackDelivery ?? null,
 			effectFormula: config.effectFormula === undefined ? '@n' : config.effectFormula,
-			effectType: 'damageReduction',
+			effectType: config.effectType ?? 'damageReduction',
+			cardOffer: config.cardOffer ?? null,
 			selectionOutcome: config.selectionOutcome ?? 'consume',
 			disabled: config.disabled ?? false,
 			label: 'Test Consumer',
@@ -45,6 +50,9 @@ function createDiceConsumerRule(config: {
 	(rule as any).poolIdentifier = 'fury';
 	(rule as any).poolScope = 'item';
 	(rule as any).selectionOutcome = config.selectionOutcome ?? 'consume';
+	(rule as any).effectType = config.effectType ?? 'damageReduction';
+	(rule as any).cardOffer = config.cardOffer ?? null;
+	(rule as any).bonusOnAttackDelivery = config.bonusOnAttackDelivery ?? null;
 	(rule as any).id = 'test-consumer-id';
 
 	Object.defineProperty(rule, 'item', {
@@ -72,6 +80,15 @@ describe('DiceConsumerRule', () => {
 			expect(schema).toHaveProperty('bonusOnAttackDelivery');
 			expect(schema).toHaveProperty('effectFormula');
 			expect(schema).toHaveProperty('effectType');
+			expect(schema).toHaveProperty('damageType');
+		});
+
+		it('defaults damageType to the inherit-the-attack sentinel', () => {
+			const schema = DiceConsumerRule.defineSchema();
+			const damageType = schema.damageType as unknown as { initial: unknown; blank: boolean };
+
+			expect(damageType.initial).toBe('');
+			expect(damageType.blank).toBe(true);
 		});
 
 		it('defaults effectFormula to null', () => {
@@ -102,6 +119,14 @@ describe('DiceConsumerRule', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(DiceConsumerRule.group).toBe('resource');
 			expect(DiceConsumerRule.description).toBe('NIMBLE.rules.diceConsumer.description');
+		});
+
+		it('declares onItemActivated as always dispatched', () => {
+			// This declaration is the only thing keeping the activation-time
+			// spend flow alive when rule automation is toggled off; the
+			// dispatcher gate tests only exercise synthetic rule classes, so
+			// pin the real declaration here.
+			expect(DiceConsumerRule.alwaysDispatchedEvents).toContain('onItemActivated');
 		});
 	});
 
@@ -213,6 +238,156 @@ describe('DiceConsumerRule', () => {
 			await rule.onItemActivated(activationContext(item));
 
 			expect(Hooks.callAll).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('suppressesActivationCard with a card offer', () => {
+		it('gives up its sheet spend flow, which cannot see the attack outcome', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.suppressesActivationCard()).toBe(false);
+		});
+	});
+
+	describe('providesCardOffer', () => {
+		it('opts in when an outcome trigger is set on a generic manual spend', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(true);
+		});
+
+		it('stays out of the card when no trigger is set', () => {
+			const { rule } = createDiceConsumerRule({ effectType: 'generic' });
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses an auto-bonus consumer, which never prompts the player', () => {
+			const { rule } = createDiceConsumerRule({
+				mode: 'autoBonus',
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses a banked reduction, which is not damage on this attack', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'damageReduction',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses a maximize outcome, which produces no damage to fold', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				selectionOutcome: 'maximize',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses an NPC, whose actor type has no pools to spend from', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				actorType: 'npc',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('refuses a consumer with no effect formula to evaluate', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				effectFormula: null,
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('offers a delivery-filtered spend on an attack that matches', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'melee' })).toBe(true);
+		});
+
+		it('withholds a delivery-filtered spend from an attack delivered the other way', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'ranged' })).toBe(false);
+		});
+
+		it('withholds a delivery-filtered spend from an activation with no attack type', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'ranged',
+			});
+
+			expect(rule.providesCardOffer({ delivery: null })).toBe(false);
+		});
+
+		it("offers an 'any' filter on every delivery, including none at all", () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'any',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'melee' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: 'ranged' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: null })).toBe(true);
+		});
+
+		it('fails closed when a filtered consumer is asked without an attack context', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
+		it('leaves an unfiltered consumer unaffected by the attack context', () => {
+			const { rule } = createDiceConsumerRule({
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'ranged' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: null })).toBe(true);
+		});
+
+		it('still short-circuits on the earlier gates before consulting delivery', () => {
+			const { rule } = createDiceConsumerRule({
+				mode: 'autoBonus',
+				effectType: 'generic',
+				cardOffer: 'criticalHit',
+				bonusOnAttackDelivery: 'melee',
+			});
+
+			expect(rule.providesCardOffer({ delivery: 'melee' })).toBe(false);
 		});
 	});
 });

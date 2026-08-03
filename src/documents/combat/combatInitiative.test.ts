@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createCombatantFixture } from '../../../tests/fixtures/combat.js';
 import { applyCharacterInitiativeActionUpdate } from './combatInitiative.js';
 
 function createCharacter() {
@@ -38,6 +39,32 @@ describe('applyCharacterInitiativeActionUpdate', () => {
 		applyCharacterInitiativeActionUpdate(createCharacter(), updates, 20);
 
 		expect(updates['system.actions.base.current']).toBe(3);
+	});
+
+	it('folds a positive pending grant into the round-1 seed and zeroes it', () => {
+		const combatant = createCombatantFixture({ type: 'character', actionsPendingDelta: 2 });
+		const updates: Record<string, unknown> = {};
+		applyCharacterInitiativeActionUpdate(combatant, updates, 14);
+
+		expect(updates['system.actions.base.current']).toBe(4);
+		expect(updates['system.actions.pendingDelta']).toBe(0);
+	});
+
+	it('folds a negative pending debt into the round-1 seed, clamping at 0', () => {
+		const combatant = createCombatantFixture({ type: 'character', actionsPendingDelta: -3 });
+		const updates: Record<string, unknown> = {};
+		applyCharacterInitiativeActionUpdate(combatant, updates, 7);
+
+		expect(updates['system.actions.base.current']).toBe(0);
+		expect(updates['system.actions.pendingDelta']).toBe(0);
+	});
+
+	it('does not write the pending delta path when no pending delta exists', () => {
+		const updates: Record<string, unknown> = {};
+		applyCharacterInitiativeActionUpdate(createCharacter(), updates, 14);
+
+		expect(updates['system.actions.base.current']).toBe(2);
+		expect(updates).not.toHaveProperty('system.actions.pendingDelta');
 	});
 
 	it('does not modify actions for non-character combatants', () => {

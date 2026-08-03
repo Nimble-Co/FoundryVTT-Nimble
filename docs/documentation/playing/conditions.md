@@ -27,18 +27,16 @@ Some conditions come bundled together, and the system tracks the relationships f
 
 Items can make a character immune to specific conditions through a condition immunity rule (see the Rules Builder pages). Attempts to apply a condition the actor is immune to are blocked, including the automatic applications described above.
 
-## The Auto-Apply Conditions setting
+## The condition automation toggles
 
-The world setting **Auto-Apply Conditions from Rules** controls what happens when a feature's rules say "on X, apply condition Y" (for example, a weapon that poisons on a hit):
+Two toggles in the GM's [Automation settings](../gm/settings.md#automation) govern conditions. Both are world settings, both default to **on**, and changes take effect immediately without a reload.
 
-- **On:** when the trigger fires (damage is applied, a save is failed, a turn starts), the condition is applied to the target automatically.
-- **Off (the default):** nothing happens automatically, but the condition still appears as a button on the chat card so the GM can apply it manually.
+**Apply Conditions and Effects from Rules** controls what happens when a feature's rules say "on X, apply condition Y" (for example, a weapon that poisons on a hit):
 
-The linked-condition behavior above (Hampered, Petrified, and stacking) is always active regardless of this setting. See the [Settings Reference](../reference/settings.md).
+- **On (the default):** when the trigger fires (damage is applied, a save is failed, a turn starts), the condition is applied to the target automatically.
+- **Off:** nothing happens automatically, but the condition still appears as a button on the chat card so the GM can apply it manually.
 
-::: info Reload required
-Changing Auto-Apply Conditions from Rules requires the world to reload before it takes effect.
-:::
+**Derived Conditions** controls the automatic Hampered behavior described above: whether applying Dazed, Grappled, Prone, Slowed, or Restrained automatically brings Hampered along, and whether Hampered leaves when they do. The counts-as implications, Petrified carrying Incapacitated, and Wounded stacking are always active regardless of these toggles.
 
 ## Related pages
 

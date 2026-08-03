@@ -1,10 +1,10 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
-import { isAutoApplyEnabled } from '#utils/isAutoApplyEnabled.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -169,7 +169,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		if (rolls.length > 0) return false;
 		if ((activation?.effects?.length ?? 0) > 0) return false;
 		// Gates the rules' `auto` branch only — see suppressesActivationCard().
-		const automationEnabled = isAutoApplyEnabled();
+		const automationEnabled = isRuleAutomationEnabled();
 		return [...this.rules.values()].some(
 			(rule) => !rule.disabled && rule.suppressesActivationCard({ automationEnabled }),
 		);

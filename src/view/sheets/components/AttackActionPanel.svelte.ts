@@ -2,6 +2,7 @@ import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
+import { attackDeliveryFromAttackType } from '../../../utils/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -14,8 +15,16 @@ import {
 	computeIncomingAttackPlan,
 } from '../../../utils/incomingAttackModifiers.js';
 import localize from '../../../utils/localize.js';
+import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
 import sortItems from '../../../utils/sortItems.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
+
+/**
+ * An unarmed strike is a melee attack at reach 1. The posted card declares it
+ * so anything reading the card back (the GM-side spend re-validation) agrees
+ * with the card's own top-level attack type.
+ */
+const UNARMED_STRIKE_ATTACK_TYPE = 'reach';
 
 /** System data for weapon items */
 interface WeaponSystemData {
@@ -232,7 +241,11 @@ export function createAttackPanelState(
 
 		const firstTargetToken =
 			(game.user?.targets?.values().next().value as Token.Implementation | undefined) ?? null;
-		const incomingAttackPlan = computeIncomingAttackPlan(firstTargetToken);
+		const incomingAttackPlan = computeIncomingAttackPlan(
+			firstTargetToken,
+			getActor() as OfferingActor,
+			{ delivery: attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE) },
+		);
 
 		const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 			canCrit,
@@ -319,7 +332,7 @@ export function createAttackPanelState(
 				description: '',
 				featureType: 'feature',
 				class: '',
-				attackType: 'reach',
+				attackType: UNARMED_STRIKE_ATTACK_TYPE,
 				attackDistance: 1,
 				isCritical: roll.isCritical,
 				isMiss: roll.isMiss,
@@ -327,7 +340,7 @@ export function createAttackPanelState(
 					effects: evaluatedEffects,
 					cost: { type: 'action', quantity: 1 },
 					duration: { type: 'none', quantity: 1 },
-					targets: { count: 1 },
+					targets: { count: 1, attackType: UNARMED_STRIKE_ATTACK_TYPE, distance: 1 },
 				},
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 				incomingReactions: reactionEntries,

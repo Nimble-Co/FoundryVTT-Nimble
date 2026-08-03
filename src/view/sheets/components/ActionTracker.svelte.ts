@@ -4,6 +4,7 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import {
 	getCombatantAdditionalActions,
 	getCombatantBaseActions,
+	getCombatantPendingActionDelta,
 	isCombatantDying,
 } from '#documents/combat/combatantSystem.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
@@ -24,6 +25,12 @@ interface ActionsData {
 	max: number;
 	additional: number;
 	effectiveMax: number;
+	/** How far `current` exceeds `effectiveMax` (granted actions beyond the usual pool). */
+	overflow: number;
+	/** How many pips to render: the effective max plus any overflow. */
+	pipCount: number;
+	/** Adjustment folded into `current` at the next action refill. May be negative. */
+	pendingDelta: number;
 }
 
 // ============================================================================
@@ -88,7 +95,17 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	function getActionsData(): ActionsData {
 		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3 };
+		if (!combatant) {
+			return {
+				current: 0,
+				max: 3,
+				additional: 0,
+				effectiveMax: 3,
+				overflow: 0,
+				pipCount: 3,
+				pendingDelta: 0,
+			};
+		}
 
 		const actions = getCombatantBaseActions(combatant);
 		const additional = getCombatantAdditionalActions(combatant);
@@ -98,11 +115,18 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const max = isCombatantDying(combatant)
 			? Math.min(actions.max || 3, getActorDyingActionLimit(combatant.actor))
 			: actions.max || 3;
+		const effectiveMax = max + additional;
+		// Granted actions may push `current` past the effective max; render the
+		// surplus as extra overflow pips rather than silently truncating it.
+		const overflow = Math.max(0, actions.current - effectiveMax);
 		return {
 			current: actions.current,
 			max,
 			additional,
-			effectiveMax: max + additional,
+			effectiveMax,
+			overflow,
+			pipCount: effectiveMax + overflow,
+			pendingDelta: getCombatantPendingActionDelta(combatant),
 		};
 	}
 
@@ -257,6 +281,22 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	const showCombatBar = $derived(hasInitiative || needsInitiative || initiativePending);
 
+	// Badge surfacing a pending action adjustment ("+2" / "−1") so players see
+	// at a glance that their next refill will differ from the usual maximum.
+	const pendingActionsBadge = $derived.by(() => {
+		const delta = actionsData.pendingDelta;
+		if (delta === 0) return null;
+		const isNegative = delta < 0;
+		const count = String(Math.abs(delta));
+		return {
+			text: `${isNegative ? '−' : '+'}${count}`,
+			tooltip: isNegative
+				? localize('NIMBLE.ui.heroicActions.pendingActionsLoss', { count })
+				: localize('NIMBLE.ui.heroicActions.pendingActionsGain', { count }),
+			isNegative,
+		};
+	});
+
 	// ============================================================================
 	// Pip Interaction
 	// ============================================================================
@@ -341,6 +381,9 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		},
 		get showCombatBar() {
 			return showCombatBar;
+		},
+		get pendingActionsBadge() {
+			return pendingActionsBadge;
 		},
 		get justSpentPips() {
 			return justSpentPips;

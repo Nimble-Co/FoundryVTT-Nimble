@@ -11,6 +11,8 @@ interface PickerEntry {
 
 const RULE_ICONS: Record<string, string> = {
 	abilityBonus: 'fa-solid fa-dumbbell',
+	actionCost: 'fa-solid fa-stopwatch',
+	actionDelta: 'fa-solid fa-plus-minus',
 	applyCondition: 'fa-solid fa-bolt-lightning',
 	armorClass: 'fa-solid fa-shield-halved',
 	chargeConsumer: 'fa-solid fa-arrow-down-from-line',
@@ -19,6 +21,7 @@ const RULE_ICONS: Record<string, string> = {
 	conditionImmunity: 'fa-solid fa-shield-virus',
 	damageBonus: 'fa-solid fa-explosion',
 	dyingActionLimit: 'fa-solid fa-skull',
+	grantActivation: 'fa-solid fa-hand-point-right',
 	grantItem: 'fa-solid fa-gift',
 	grantProficiency: 'fa-solid fa-graduation-cap',
 	grantSpells: 'fa-solid fa-wand-magic-sparkles',

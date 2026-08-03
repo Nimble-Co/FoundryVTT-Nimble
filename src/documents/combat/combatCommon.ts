@@ -1,5 +1,5 @@
 import { getCombatantImage } from '../../utils/combatantImage.js';
-import resolveItemActionCost from '../../utils/resolveItemActionCost.js';
+import resolveMinionAttackActionCost from '../../utils/resolveMinionAttackActionCost.js';
 import { getTargetTokenUuid } from '../../utils/tokenTargetLookup.js';
 import {
 	getCombatantBaseActionCurrent,
@@ -190,7 +190,7 @@ export function resolveMinionAttackSkipReason(params: {
 	actor: ActorWithActivateItem | null;
 	selectedAction: ItemLike | null;
 }): string | null {
-	const requiredActions = resolveItemActionCost(params.selectedAction);
+	const requiredActions = resolveMinionAttackActionCost(params.selectedAction);
 	const checks: Array<{ valid: boolean; reason: string }> = [
 		{ valid: params.selectedActionId.length > 0, reason: 'noActionSelected' },
 		{

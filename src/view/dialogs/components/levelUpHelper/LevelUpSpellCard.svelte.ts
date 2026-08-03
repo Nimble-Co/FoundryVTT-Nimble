@@ -1,6 +1,7 @@
 import type { SpellDisplayData } from '#types/components/LevelUpSpellCard.d.ts';
 import type { SpellSystemData } from '#types/components/SpellReferenceCard.d.ts';
 import { flattenActivationEffects } from '#utils/activationEffects.js';
+import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
 
@@ -13,22 +14,18 @@ interface SpellSystemDataWithMana extends SpellSystemData {
  * Extracts display data from a spell's system data for rendering in the card.
  */
 function extractDisplayData(system: SpellSystemDataWithMana): SpellDisplayData {
-	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
+	const { activationCostTypes } = CONFIG.NIMBLE;
 
 	// Action cost
 	let meta: string | null = null;
 	const activation = system.activation;
 	if (activation?.cost) {
-		const { type: activationType, quantity: activationCost } = activation.cost;
+		const { type: activationType } = activation.cost;
 		if (activationType && activationType !== 'none') {
-			if (['action', 'minute', 'hour'].includes(activationType)) {
-				const label =
-					activationCost > 1
-						? activationCostTypesPlural[activationType]
-						: activationCostTypes[activationType];
-				meta = `${activationCost || 1} ${label}`;
-			} else if (activationType === 'reaction' || activationType === 'special') {
-				meta = activationCostTypes[activationType];
+			meta = formatActivationCostLabel(activation.cost);
+
+			if (!meta && activationType === 'special') {
+				meta = activationCostTypes.special;
 			}
 		}
 	}

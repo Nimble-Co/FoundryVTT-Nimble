@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyRefillTriggersToPools } from './dicePoolRefill.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { applyRefillTriggersToPools, applyRestRefill } from './dicePoolRefill.js';
 import { buildEffectiveDicePoolMap } from './helpers.js';
 import type { CharacterActorLike, DicePoolMap, DicePoolState, DiceRefillEntry } from './types.js';
 
@@ -534,5 +534,63 @@ describe('applyRefillTriggersToPools — minFace floor', () => {
 
 		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
 		expect(nextPools.fury.faces).toEqual([4]);
+	});
+});
+
+describe('applyRestRefill — resource-recovery automation gate', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	// A character actor carrying a dicePool rule whose pool refreshes on a safe
+	// rest, so a rest refill would persist new faces to the owning item.
+	function makePoolActorWithRestRefill() {
+		const item = {
+			id: 'item-1',
+			name: 'Radiant Judgment',
+			flags: {},
+			rules: new Map([
+				[
+					'rule-1',
+					{
+						type: 'dicePool',
+						disabled: false,
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						dieSize: 'd6',
+						max: '2',
+						initial: 'zero',
+						refills: [{ trigger: 'safeRest', mode: 'refresh', value: '0' }],
+					},
+				],
+			]),
+			update: vi.fn(async () => undefined),
+		};
+		const actor = {
+			type: 'character',
+			getRollData: vi.fn(() => ({})),
+			items: { contents: [item] },
+			update: vi.fn(async () => undefined),
+		} as unknown as CharacterActorLike;
+		return { actor, item };
+	}
+
+	it('refills pools on rest when resource-recovery automation is on', async () => {
+		vi.stubGlobal('game', { settings: { get: () => true } });
+		const { actor, item } = makePoolActorWithRestRefill();
+
+		await applyRestRefill(actor as unknown as Actor, 'safe');
+
+		expect(item.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('does nothing on rest when resource-recovery automation is off', async () => {
+		vi.stubGlobal('game', { settings: { get: () => false } });
+		const { actor, item } = makePoolActorWithRestRefill();
+
+		await applyRestRefill(actor as unknown as Actor, 'safe');
+
+		expect(item.update).not.toHaveBeenCalled();
 	});
 });

@@ -1,4 +1,6 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
+import { ActionCostRule } from '../models/rules/actionCost.js';
+import { ActionDeltaRule } from '../models/rules/actionDelta.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
@@ -11,6 +13,7 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
@@ -43,6 +46,8 @@ import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 export default function registerRulesConfig() {
 	const ruleTypes = {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
+		actionCost: 'NIMBLE.ruleTypes.actionCost',
+		actionDelta: 'NIMBLE.ruleTypes.actionDelta',
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
@@ -53,6 +58,7 @@ export default function registerRulesConfig() {
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
+		grantActivation: 'NIMBLE.ruleTypes.grantActivation',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
 		dicePool: 'NIMBLE.ruleTypes.dicePool',
@@ -87,6 +93,8 @@ export default function registerRulesConfig() {
 
 	const ruleDataModels = {
 		abilityBonus: AbilityBonusRule,
+		actionCost: ActionCostRule,
+		actionDelta: ActionDeltaRule,
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
 		chargeConsumer: ChargeConsumerRule,
@@ -97,6 +105,7 @@ export default function registerRulesConfig() {
 		damageBonus: DamageBonusRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
+		grantActivation: GrantActivationRule,
 		grantMovement: GrantMovementRule,
 		diceConsumer: DiceConsumerRule,
 		dicePool: DicePoolRule,

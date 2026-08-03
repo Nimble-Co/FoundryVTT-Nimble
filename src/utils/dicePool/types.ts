@@ -8,6 +8,7 @@ type DiceRefillMode = (typeof DicePoolRuleConfig.refillModes)[number];
 type DiceRestType = (typeof DicePoolRuleConfig.restTypes)[number];
 type DiceConsumptionMode = (typeof DicePoolRuleConfig.consumptionModes)[number];
 type DiceAttackDeliveryFilter = (typeof DicePoolRuleConfig.attackDeliveryFilters)[number];
+type DiceCardOfferTrigger = (typeof DicePoolRuleConfig.cardOfferTriggers)[number];
 type NumericInput = number | string | null | undefined;
 
 type DiceRefillEntry = {
@@ -68,6 +69,11 @@ type DiceConsumerRuleLike = {
 	cost?: string;
 	bonusOnAttackDelivery?: string | null;
 	effectType?: string;
+	damageType?: string;
+	/** Set when the spend is offered on the attack card instead of the sheet */
+	cardOffer?: string | null;
+	/** Present on live rule instances; absent on raw source objects */
+	appliesTo?: () => boolean;
 };
 
 /** Payload of the `<system>.dicePool.requestSpend` hook, emitted when an item
@@ -107,6 +113,7 @@ type CharacterActorLike = Actor.Implementation & {
 export type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
+	DiceCardOfferTrigger,
 	DiceConsumerRuleLike,
 	DiceConsumptionMode,
 	DicePoolDefinition,

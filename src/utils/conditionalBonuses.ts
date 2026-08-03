@@ -1,4 +1,5 @@
 import type { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
+import { type AttackDelivery, attackDeliveryFromAttackType } from './attackDelivery.js';
 import localize from './localize.js';
 import { getToggledTargetTags } from './toggledEffects.js';
 
@@ -40,14 +41,9 @@ interface ActivationItem {
 	system?: { activation?: { targets?: { attackType?: string } } };
 }
 
-type Delivery = 'melee' | 'ranged' | null;
-
 /** Maps an item's attack type to a delivery channel. */
-function getDelivery(item: ActivationItem): Delivery {
-	const attackType = item.system?.activation?.targets?.attackType;
-	if (attackType === 'reach') return 'melee';
-	if (attackType === 'range') return 'ranged';
-	return null;
+function getDelivery(item: ActivationItem): AttackDelivery {
+	return attackDeliveryFromAttackType(item.system?.activation?.targets?.attackType);
 }
 
 /**

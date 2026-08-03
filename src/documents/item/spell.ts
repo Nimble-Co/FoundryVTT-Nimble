@@ -2,6 +2,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
+import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
@@ -64,7 +65,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		await manager.applyDeferredPoolNodes();
 
 		// Deduct mana for tiered spells (cantrips are free)
-		if (this.system.tier > 0 && this.actor) {
+		if (this.system.tier > 0 && this.actor && isResourceSpendingAutomationEnabled()) {
 			// Use upcast amount if available, otherwise use base tier cost
 			const manaSpent = manager.upcastResult?.manaSpent ?? this.system.tier;
 			const currentMana = (this.actor.system as any).resources?.mana?.current || 0;
