@@ -882,6 +882,48 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 		});
 	});
 
+	it('keeps a manual pick made while the default bonus is still resolving', async () => {
+		// The bonus list stays clickable across the lookup, so the player can pick and confirm
+		// before it lands. The late default must not overwrite that pick — there is no visual
+		// cue when it does, and it silently resets any neutral-save choice.
+		const defaultUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.default-bonus';
+		const manualUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.manual-bonus';
+
+		let resolveDefault: (doc: unknown) => void = () => undefined;
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi.fn(
+			() =>
+				new Promise((resolve) => {
+					resolveDefault = resolve;
+				}),
+		);
+
+		const manualBonus = {
+			uuid: manualUuid,
+			system: { rules: [] },
+		} as unknown as NimbleAncestryBonusItem;
+
+		renderWithAncestry(
+			createClass('mage'),
+			createAncestryWithDefaultBonus(defaultUuid),
+			null,
+			manualBonus,
+		);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Swap Ancestry Bonus' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Confirm Ancestry Bonus' }));
+
+		resolveDefault({ uuid: defaultUuid, system: { rules: [] } });
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(screen.getByTestId('selected-ancestry-bonus')).toHaveTextContent(manualUuid);
+		expect(screen.getByTestId('ancestry-bonus-confirmed')).toHaveTextContent('true');
+		expect(screen.getByTestId('stage')).toHaveTextContent(
+			String(CHARACTER_CREATION_STAGES.BACKGROUND),
+		);
+	});
+
 	it('leaves no stale bonus selected when resolving the default bonus rejects', async () => {
 		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi

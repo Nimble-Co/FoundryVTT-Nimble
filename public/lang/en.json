@@ -161,10 +161,12 @@
 			"chooseHint": "Choose an ancestry bonus. You'll return here to confirm your pick.",
 			"noneAvailable": "There are no ancestry bonuses available in this world's compendium packs.",
 			"noSelection": "This ancestry's default bonus couldn't be loaded. Choose one to continue.",
+			"optionalHint": "This ancestry doesn't come with a default bonus trait. You can choose one, or continue without.",
 			"defaultMetadata": "Default",
 			"confirmSelection": "Confirm Ancestry Bonus",
 			"changeSelection": "Change Ancestry Bonus",
 			"chooseSelection": "Choose Ancestry Bonus",
+			"cancelBrowsing": "Back",
 			"tooltipHeading": "Ancestry Bonus",
 			"noDescriptionAvailable": "No description available."
 		},
@@ -178,10 +180,10 @@
 		},
 		"ancestrySheet": {
 			"defaultBonus": "Default Bonus",
-			"defaultBonusPlaceholder": "Ancestry bonus UUID (Compendium…Item.<id>)"
+			"defaultBonusPlaceholder": "Drag an ancestry bonus here"
 		},
 		"backgroundOptionsSelection": {
-			"header": "Step 2b. Choose Heritage Ancestry",
+			"header": "Step 3b. Choose Heritage Ancestry",
 			"editSelection": "Edit Heritage Selection",
 			"hint": "Your background lets you choose which ancestry raised you. This grants you their native language.",
 			"raisedBy": "Raised By",

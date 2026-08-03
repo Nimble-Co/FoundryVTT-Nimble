@@ -3,7 +3,7 @@
 	import {
 		collectMovementGrants,
 		collectSpeedBonuses,
-	} from '../../utils/collectMovementAdjustments.js';
+	} from './CharacterMovementConfigDialog.utils.js';
 
 	let { document } = $props();
 

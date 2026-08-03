@@ -21,13 +21,13 @@
 				"label": "Stout",
 				"value": "2",
 				"dieSize": 0,
-				"id": "eDMbbN2ey9jeqE0M"
+				"id": "xWH270Re7449Dlb8"
 			},
 			{
 				"type": "speedBonus",
 				"value": "-1",
 				"label": "Stout",
-				"id": "m3luf1eTh5lMDmju"
+				"id": "TBlofXUDPL1zBvyu"
 			}
 		],
 		"description": "<p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p>"

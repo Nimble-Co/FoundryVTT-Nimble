@@ -23,7 +23,7 @@
 			name: 'config',
 		},
 		{
-			component: ItemRulesTab,
+			component: rulesTab,
 			icon: 'fa-solid fa-bolt',
 			tooltip: 'NIMBLE.ancestryBonusSheet.rulesTab',
 			name: 'rules',
@@ -73,10 +73,20 @@
 			<input
 				type="text"
 				value={item.reactive.identifier || ''}
-				onchange={({ target }) => item.update({ 'system.identifier': target.value })}
+				onchange={({ target }) =>
+					item.update({ 'system.identifier': (target as HTMLInputElement).value } as Record<
+						string,
+						unknown
+					>)}
 			/>
 		</div>
 	</section>
+{/snippet}
+
+<!-- Wrapped rather than listed as a component so every navigation entry is a Snippet;
+     a mixed array widens `component` to a union `{@render}` won't accept. -->
+{#snippet rulesTab()}
+	<ItemRulesTab />
 {/snippet}
 
 <header class="nimble-sheet__header nimble-sheet__header--item">
@@ -97,4 +107,4 @@
 
 <PrimaryNavigation bind:currentTab {navigation} />
 
-{@render currentTab?.component?.()}
+{@render currentTab.component()}

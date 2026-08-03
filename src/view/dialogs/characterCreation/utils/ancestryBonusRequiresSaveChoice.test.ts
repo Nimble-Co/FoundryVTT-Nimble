@@ -48,12 +48,14 @@ describe('ancestryBonusRequiresSaveChoice', () => {
 		expect(ancestryBonusRequiresSaveChoice(bonus)).toBe(false);
 	});
 
-	it('returns false when the save rule targets a specific save rather than neutral', () => {
+	it('returns true when a choice rule targets something other than neutral', () => {
+		// `resolveSavingThrowRollModes` skips every `requiresChoice` rule when no save has
+		// been picked, so not gating here would drop this homebrew rule at submit time.
 		const bonus = createBonusStub([
 			{ type: 'savingThrowRollMode', requiresChoice: true, target: 'strength' },
 		]);
 
-		expect(ancestryBonusRequiresSaveChoice(bonus)).toBe(false);
+		expect(ancestryBonusRequiresSaveChoice(bonus)).toBe(true);
 	});
 
 	it('returns false for a bonus whose rules are unrelated', () => {

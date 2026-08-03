@@ -136,8 +136,10 @@
 			const hasCorruption = rulesArray.some((r) => !r || !r.type);
 			if (!hasCorruption) continue;
 
-			// Try to restore from compendium
-			const sourceId = item.flags?.core?.sourceId;
+			// Try to restore from compendium. `sourceId` reads `_stats.compendiumSource` —
+			// nothing in the system ever writes `flags.core.sourceId`, so looking there
+			// always missed and dropped straight through to the destructive strip below.
+			const { sourceId } = item;
 			if (sourceId) {
 				const compendiumItem = await fromUuid(sourceId);
 				if (compendiumItem?.system?.rules) {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { collectMovementGrants, collectSpeedBonuses } from './collectMovementAdjustments.js';
+import {
+	collectMovementGrants,
+	collectSpeedBonuses,
+} from './CharacterMovementConfigDialog.utils.js';
 
 /** Mirrors an embedded rule: RulesManager is a Map, so `rules` exposes `values()`. */
 function item(name: string, rules: Record<string, unknown>[]) {

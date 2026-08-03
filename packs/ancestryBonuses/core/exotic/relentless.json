@@ -14,7 +14,7 @@
 				"label": "Relentless",
 				"predicate": {},
 				"priority": 1,
-				"value": "",
+				"value": "+1",
 				"skills": [
 					"might"
 				]

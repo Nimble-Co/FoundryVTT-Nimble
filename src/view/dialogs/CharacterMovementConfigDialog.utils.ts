@@ -1,6 +1,6 @@
 import type { NimbleRollData } from '#types/rollData.d.ts';
 
-import getDeterministicBonus from '../dice/getDeterministicBonus.js';
+import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 
 export interface MovementAdjustment {
 	itemName: string;
@@ -118,7 +118,9 @@ export function collectMovementGrants(
 			const value = getDeterministicBonus(rule.speed ?? '', rollData) ?? 0;
 			if (value <= 0) continue;
 
-			const mode = rule.mode ?? 'walk';
+			// `mode` is required and non-nullable, so an embedded rule always carries one. The
+			// fallback matches the schema's initial for the plain objects tests build.
+			const mode = rule.mode ?? 'fly';
 			if (value <= (bestByType[mode] ?? 0)) continue;
 
 			bestByType[mode] = value;

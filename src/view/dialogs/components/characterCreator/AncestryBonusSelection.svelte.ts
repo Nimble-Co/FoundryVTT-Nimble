@@ -9,8 +9,7 @@ interface AncestryBonusSelectionStateParams {
 
 /**
  * Reactive state for the ancestry-bonus step. Tracks whether the player is
- * confirming their current bonus or browsing the full list, and resolves a
- * browsed pick into a full document so its rules are available downstream.
+ * confirming their current bonus or browsing the full list.
  * Lives in `.svelte.ts` because it uses runes; called once during component init.
  */
 export function createAncestryBonusSelectionState(params: AncestryBonusSelectionStateParams) {
@@ -35,11 +34,11 @@ export function createAncestryBonusSelectionState(params: AncestryBonusSelection
 		browsing = false;
 	});
 
-	async function handleBonusSelection(bonus: NimbleAncestryBonusItem): Promise<void> {
-		// Resolve the full document so its rules are available, then drop back to the confirm
-		// view so the player lands on the same Confirm / Change buttons with their new pick.
-		const resolved = await fromUuid(bonus.uuid as `Item.${string}`);
-		setSelectedAncestryBonus(resolved as NimbleAncestryBonusItem | null);
+	function handleBonusSelection(bonus: NimbleAncestryBonusItem): void {
+		// The list is already built from resolved documents, so the pick carries its rules
+		// with it. Drop back to the confirm view so the player lands on the same
+		// Confirm / Change buttons with their new pick.
+		setSelectedAncestryBonus(bonus);
 		browsing = false;
 	}
 
@@ -57,6 +56,14 @@ export function createAncestryBonusSelectionState(params: AncestryBonusSelection
 		browsing = true;
 	}
 
+	/**
+	 * Leave the list without picking anything. Without this the list is the only exit from
+	 * browse mode, which strands the player when no bonuses are installed.
+	 */
+	function cancelBrowsing(): void {
+		browsing = false;
+	}
+
 	return {
 		get browsing() {
 			return browsing;
@@ -68,5 +75,6 @@ export function createAncestryBonusSelectionState(params: AncestryBonusSelection
 		confirmSelection,
 		editSelection,
 		startBrowsing,
+		cancelBrowsing,
 	};
 }

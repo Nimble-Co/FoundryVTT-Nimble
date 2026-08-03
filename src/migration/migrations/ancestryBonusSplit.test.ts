@@ -20,6 +20,14 @@ const LANGUAGE_RULE = {
 const SPEED_RULE = { type: 'speedBonus', value: '-1', label: 'Stout' };
 const HIT_DICE_RULE = { type: 'maxHitDice', value: '2', label: 'Stout' };
 
+const DWARF_SOURCE_ID = 'Compendium.nimble.nimble-ancestries.Item.hyVaEOLNSagYECwm';
+const STOUT_BONUS_UUID = 'Compendium.nimble.nimble-ancestry-bonuses.Item.PwCzys1zJwz79alF';
+
+// A text-only trait: no rules to move, only description to cut. Ten of the 24 core
+// ancestries are shaped this way.
+const BUNBUN_DESCRIPTION =
+	'<p>Bunbun flavor.</p><hr><p><strong>Bunny Legs</strong></p><p>You may jump [M]</p>';
+
 function createCharacter(ancestryOverrides: Record<string, unknown> = {}) {
 	const ancestry = {
 		_id: 'ancestry1',
@@ -250,6 +258,129 @@ describe('Migration035AncestryBonusSplit', () => {
 
 		expect(getBonus(source)).toBeUndefined();
 		expect(getAncestry(source).system.description).toBe('<p>Flavor only.</p>');
+	});
+
+	it('strips a text-only trait from an ancestry whose bonus already exists', async () => {
+		// No non-language rules means nothing to deduplicate, so the repair branch used to
+		// bail out before touching the description and the trait text stayed on both items.
+		const source = createCharacter({
+			name: 'Bunbun',
+			system: { description: BUNBUN_DESCRIPTION, rules: [] },
+		});
+		source.items.push({
+			_id: 'bonus1',
+			name: 'Bunny Legs',
+			type: 'ancestryBonus',
+			system: { rules: [], description: '<p><strong>Bunny Legs</strong></p>' },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.description).toBe('<p>Bunbun flavor.</p>');
+		expect(source.items.filter((item) => item.type === 'ancestryBonus')).toHaveLength(1);
+	});
+
+	it('is idempotent on a repaired text-only ancestry', async () => {
+		const source = createCharacter({
+			name: 'Bunbun',
+			system: { description: BUNBUN_DESCRIPTION, rules: [] },
+		});
+		source.items.push({
+			_id: 'bonus1',
+			name: 'Bunny Legs',
+			type: 'ancestryBonus',
+			system: { rules: [], description: '<p><strong>Bunny Legs</strong></p>' },
+		});
+
+		await migration.updateActor(source);
+		const afterFirst = JSON.stringify(source.items);
+		await migration.updateActor(source);
+
+		expect(JSON.stringify(source.items)).toBe(afterFirst);
+	});
+
+	it('backfills the ancestry default bonus from its compendium source', async () => {
+		const source = createCharacter({ _stats: { compendiumSource: DWARF_SOURCE_ID } });
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.defaultBonus).toBe(STOUT_BONUS_UUID);
+	});
+
+	it('backfills the default bonus even when the ancestry is already trait-free', async () => {
+		const source = createCharacter({
+			_stats: { compendiumSource: DWARF_SOURCE_ID },
+			system: { description: '<p>Flavor only.</p>', rules: [LANGUAGE_RULE] },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.defaultBonus).toBe(STOUT_BONUS_UUID);
+		expect(getBonus(source)).toBeUndefined();
+	});
+
+	it('leaves an existing default bonus pointer alone', async () => {
+		const source = createCharacter({
+			_stats: { compendiumSource: DWARF_SOURCE_ID },
+			system: { description: DWARF_DESCRIPTION, rules: [LANGUAGE_RULE], defaultBonus: 'Item.abc' },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.defaultBonus).toBe('Item.abc');
+	});
+
+	it('stamps the pack origin on a bonus that matches the ancestry default', async () => {
+		const source = createCharacter({ _stats: { compendiumSource: DWARF_SOURCE_ID } });
+
+		await migration.updateActor(source);
+
+		expect(getBonus(source)._stats?.compendiumSource).toBe(STOUT_BONUS_UUID);
+	});
+
+	it('leaves the pack origin off a trait that was renamed away from the default', async () => {
+		const source = createCharacter({
+			_stats: { compendiumSource: DWARF_SOURCE_ID },
+			system: {
+				description: '<p>Flavor.</p><hr><p><strong>Homebrewed</strong></p><p>+1 Speed [M]</p>',
+				rules: [SPEED_RULE],
+			},
+		});
+
+		await migration.updateActor(source);
+
+		expect(getBonus(source).name).toBe('Homebrewed');
+		expect(getBonus(source)._stats).toBeUndefined();
+	});
+
+	it('splits on an <hr> that carries attributes', async () => {
+		const source = createCharacter({
+			system: {
+				description: '<p>Flavor.</p><hr class="divider"><p><strong>Stout</strong></p>',
+				rules: [SPEED_RULE],
+			},
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.description).toBe('<p>Flavor.</p>');
+		expect(getBonus(source).name).toBe('Stout');
+	});
+
+	it('does not throw on a language name containing regex metacharacters', async () => {
+		const source = createCharacter({
+			system: {
+				description:
+					'<p>Flavor.</p><hr><p><strong>Fey Touched</strong></p>' +
+					'<p>You know Sylvan (Fey if your INT is not negative [M]</p>',
+				rules: [{ ...LANGUAGE_RULE, values: ['Sylvan (Fey'] }],
+			},
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.description).toContain('You know Sylvan (Fey');
+		expect(getBonus(source).system.description).not.toMatch(/You know/i);
 	});
 
 	it('ignores actors that are not characters', async () => {

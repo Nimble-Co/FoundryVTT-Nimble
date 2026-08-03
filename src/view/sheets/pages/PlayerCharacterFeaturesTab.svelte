@@ -46,12 +46,8 @@
 	}
 
 	function groupItemsByType(items) {
-		return items.reduce((categories, item) => {
+		const categories = items.reduce((categories, item) => {
 			const { type: itemType } = item.reactive;
-
-			// Ancestry bonuses are rendered nested under the ancestry card, not as their
-			// own top-level section.
-			if (itemType === 'ancestryBonus') return categories;
 
 			if (itemType === 'feature') {
 				// Grouped class features and subclass features are rendered nested under their
@@ -67,6 +63,14 @@
 
 			return categories;
 		}, {});
+
+		// Ancestry bonuses normally render nested under the ancestry card. Only suppress the
+		// top-level section when there is an ancestry to nest them under — otherwise deleting
+		// the ancestry, or searching for the bonus by name, hides an item whose rules are
+		// still applying, with no path left to edit or delete it.
+		if (categories.ancestry) delete categories.ancestryBonus;
+
+		return categories;
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {

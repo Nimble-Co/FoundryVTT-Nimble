@@ -1,6 +1,7 @@
 <script>
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
+	import DocumentPicker from '../components/DocumentPicker.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import Editor from './components/Editor.svelte';
@@ -33,11 +34,6 @@
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
-	let defaultBonus = $derived(defaultBonusUuid ? fromUuidSync(defaultBonusUuid) : null);
-
-	function openDefaultBonus() {
-		defaultBonus?.sheet?.render(true);
-	}
 
 	setContext(
 		'document',
@@ -102,24 +98,12 @@
 				</h3>
 			</header>
 
-			<input
-				type="text"
-				placeholder={localize('NIMBLE.ancestrySheet.defaultBonusPlaceholder')}
+			<DocumentPicker
 				value={defaultBonusUuid}
-				onchange={({ target }) => item.update({ 'system.defaultBonus': target.value.trim() })}
+				documentTypes={['Item.ancestryBonus']}
+				placeholder={localize('NIMBLE.ancestrySheet.defaultBonusPlaceholder')}
+				onChange={(next) => item.update({ 'system.defaultBonus': next })}
 			/>
-
-			{#if defaultBonus}
-				<button
-					class="nimble-button"
-					data-button-variant="basic"
-					type="button"
-					onclick={openDefaultBonus}
-				>
-					<i class="fa-solid fa-star"></i>
-					{defaultBonus.name}
-				</button>
-			{/if}
 		</div>
 	</section>
 {/snippet}

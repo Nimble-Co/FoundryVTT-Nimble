@@ -34,17 +34,22 @@
 		},
 	});
 
-	const { handleBonusSelection, confirmSelection, editSelection, startBrowsing } = state;
+	const { handleBonusSelection, confirmSelection, editSelection, startBrowsing, cancelBrowsing } =
+		state;
 	const browsing = $derived(state.browsing);
 	const defaultBonusUuid = $derived(state.defaultBonusUuid);
+
+	// An ancestry with no configured default bonus never gates the wizard, so this step is
+	// never the "active" stage for one. Keep it open instead of inert, or a homebrew or
+	// module ancestry silently builds a character with no bonus and no way to add one.
+	const optional = $derived(!selectedAncestry?.system?.defaultBonus);
+	const interactive = $derived(active || optional);
 
 	const hintText = localize('NIMBLE.ancestryBonusSelection.hint');
 	const defaultMetadata = localize('NIMBLE.ancestryBonusSelection.defaultMetadata');
 </script>
 
-<!-- An ancestry with no configured default bonus never gates this stage, so showing the
-     step at all would leave a titled, permanently empty section on the page. -->
-{#if selectedAncestry?.system?.defaultBonus || selectedAncestryBonus}
+{#if selectedAncestry}
 	<section
 		class="nimble-character-creation-section"
 		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_BONUS}"
@@ -53,7 +58,7 @@
 			<h3 class="nimble-heading" data-heading-variant="section">
 				{localize('NIMBLE.ancestryBonusSelection.header')}
 
-				{#if !active && selectedAncestryBonus}
+				{#if !interactive && selectedAncestryBonus}
 					<button
 						class="nimble-button"
 						data-button-variant="icon"
@@ -67,7 +72,7 @@
 			</h3>
 		</header>
 
-		{#if active}
+		{#if interactive}
 			{#if browsing}
 				<Hint hintText={localize('NIMBLE.ancestryBonusSelection.chooseHint')} />
 
@@ -79,7 +84,7 @@
 					/>
 				{:else}
 					<ul class="nimble-document-list">
-						{#each ancestryBonuses as bonus}
+						{#each ancestryBonuses as bonus (bonus.uuid)}
 							{@const sourceLabel = getDocumentSourceLabel(bonus.uuid)}
 							{@const isDefault = bonus.uuid === defaultBonusUuid}
 
@@ -96,6 +101,15 @@
 						{/each}
 					</ul>
 				{/if}
+
+				<!-- The list is otherwise the only exit from browse mode: with no bonuses
+				     installed there is nothing to click, and the Confirm / Change buttons
+				     aren't rendered here. -->
+				<div class="nimble-ancestry-bonus-actions">
+					<button class="nimble-button" data-button-variant="secondary" onclick={cancelBrowsing}>
+						{localize('NIMBLE.ancestryBonusSelection.cancelBrowsing')}
+					</button>
+				</div>
 			{:else if selectedAncestryBonus}
 				{@const sourceLabel = getDocumentSourceLabel(selectedAncestryBonus.uuid)}
 
@@ -116,6 +130,16 @@
 					</button>
 					<button class="nimble-button" data-button-variant="secondary" onclick={startBrowsing}>
 						{localize('NIMBLE.ancestryBonusSelection.changeSelection')}
+					</button>
+				</div>
+			{:else if optional}
+				<!-- This ancestry declares no default bonus, so nothing is pending and nothing is
+				     broken. The step stays available but never blocks progress. -->
+				<Hint hintText={localize('NIMBLE.ancestryBonusSelection.optionalHint')} />
+
+				<div class="nimble-ancestry-bonus-actions">
+					<button class="nimble-button" data-button-variant="basic" onclick={startBrowsing}>
+						{localize('NIMBLE.ancestryBonusSelection.chooseSelection')}
 					</button>
 				</div>
 			{:else}
@@ -139,6 +163,8 @@
 				document={selectedAncestryBonus}
 				handler={null}
 				data-card-option="non-clickable"
+				metadata={null}
+				sourceLabel={null}
 				getTooltip={prepareAncestryBonusTooltip}
 			/>
 		{/if}

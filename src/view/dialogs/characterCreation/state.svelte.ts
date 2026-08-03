@@ -347,6 +347,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Effect-local memo, deliberately not `$state` — it exists only to detect a change of
 	// ancestry, and making it reactive would re-trigger the effect that writes it.
 	let previousAncestryForBonus: NimbleAncestryItem | null = null;
+	// Sequence number for the in-flight default-bonus lookup. Every new lookup and every
+	// manual pick bumps it, so a resolution that lands after either one is discarded.
+	let defaultBonusRequestId = 0;
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
 	let selectedBackground = $state<NimbleBackgroundItem | null>(null);
@@ -647,6 +650,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		// A fresh ancestry means the player hasn't confirmed its bonus yet.
 		ancestryBonusConfirmed = false;
 
+		// Invalidate any lookup still in flight for the previous ancestry.
+		const requestId = ++defaultBonusRequestId;
+
 		if (!ancestry) {
 			selectedAncestryBonus = null;
 			return;
@@ -665,14 +671,15 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 		fromUuid(defaultBonusUuid as `Item.${string}`)
 			.then((doc) => {
-				// Guard against races if the ancestry changed again before this resolved.
-				if (selectedAncestry === ancestry) {
-					selectedAncestryBonus = doc as NimbleAncestryBonusItem | null;
-				}
+				// Stale if the ancestry changed again, or if the player picked a bonus by hand
+				// while this was in flight — the browse list stays reachable across the await,
+				// and a manual pick must not be silently replaced by the default.
+				if (requestId !== defaultBonusRequestId) return;
+				selectedAncestryBonus = doc as NimbleAncestryBonusItem | null;
 			})
 			.catch((error) => {
 				console.error('Failed to resolve default ancestry bonus:', error);
-				if (selectedAncestry === ancestry) selectedAncestryBonus = null;
+				if (requestId === defaultBonusRequestId) selectedAncestryBonus = null;
 			});
 	});
 
@@ -832,6 +839,10 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			return selectedAncestryBonus;
 		},
 		set selectedAncestryBonus(value: NimbleAncestryBonusItem | null) {
+			if (value === selectedAncestryBonus) return;
+			// A pick made here is the player's own, so it outranks any default-bonus lookup
+			// still in flight for the current ancestry.
+			defaultBonusRequestId += 1;
 			selectedAncestryBonus = value;
 		},
 		get ancestryBonusConfirmed() {
