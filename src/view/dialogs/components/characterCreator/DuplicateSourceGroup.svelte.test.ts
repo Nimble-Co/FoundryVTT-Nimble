@@ -88,6 +88,17 @@ describe('DuplicateSourceGroup', () => {
 		expect(screen.getByText('Recommended')).toBeInTheDocument();
 	});
 
+	it('uses the shared SelectionIndicator rather than a look-alike', () => {
+		renderGroup();
+
+		// A hand-rolled copy of this control missed SelectionIndicator's max-width/min-height/
+		// max-height, and Foundry's core button styles stretched it into an oval. Assert the
+		// shared component's own class so a re-implementation fails here instead of on screen.
+		for (const radio of screen.getAllByRole('radio')) {
+			expect(radio).toHaveClass('select-button');
+		}
+	});
+
 	it('replaces the selection rather than adding to it', async () => {
 		const alreadyPicked = createFeature(WORLD, { folder: 'Homebrew' });
 		const { onSetSelection } = renderGroup({}, [alreadyPicked]);

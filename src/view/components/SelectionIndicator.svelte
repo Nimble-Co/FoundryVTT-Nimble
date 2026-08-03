@@ -7,6 +7,8 @@
 		tooltip,
 		ariaLabel,
 		disabled = false,
+		role,
+		ariaChecked,
 	}: SelectionIndicatorProps = $props();
 </script>
 
@@ -16,6 +18,8 @@
 	class:selected
 	{onclick}
 	{disabled}
+	{role}
+	aria-checked={role ? ariaChecked : undefined}
 	data-tooltip={tooltip}
 	data-tooltip-direction="LEFT"
 	aria-label={ariaLabel}

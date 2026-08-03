@@ -2,6 +2,7 @@
 	import type { DuplicateSourceGroupProps } from '#types/components/DuplicateSourceGroup.d.ts';
 
 	import { createDuplicateSourceGroupState } from './DuplicateSourceGroup.svelte.ts';
+	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
 	import SourceTag from '#view/components/SourceTag.svelte';
 	import localize from '#utils/localize.js';
 
@@ -112,22 +113,20 @@
 					<SourceTag source={candidate.source} />
 
 					{#if !candidate.isOwned}
-						<button
-							type="button"
-							class="duplicate-row__pick"
-							class:selected
+						{@const useLabel = localize('NIMBLE.classFeatureSelection.duplicateUseCopy', {
+							name: candidate.origin,
+						})}
+						<SelectionIndicator
+							{selected}
 							role="radio"
-							aria-checked={selected}
-							aria-label={localize('NIMBLE.classFeatureSelection.duplicateUseCopy', {
-								name: candidate.origin,
-							})}
+							ariaChecked={selected}
+							tooltip={useLabel}
+							ariaLabel={useLabel}
 							onclick={(e) => {
 								e.stopPropagation();
 								onSetSelection([candidate.feature]);
 							}}
-						>
-							{#if selected}<i class="fa-solid fa-check"></i>{/if}
-						</button>
+						/>
 					{/if}
 				</div>
 
@@ -355,38 +354,6 @@
 
 		&__owned {
 			color: var(--nimble-medium-text-color);
-		}
-
-		&__pick {
-			width: 1.25rem;
-			min-width: 1.25rem;
-			height: 1.25rem;
-			padding: 0;
-			flex-shrink: 0;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: color-mix(in srgb, var(--nimble-medium-text-color) 15%, transparent);
-			border: 2px solid color-mix(in srgb, var(--nimble-medium-text-color) 60%, transparent);
-			border-radius: 50%;
-			box-sizing: border-box;
-			color: transparent;
-			cursor: pointer;
-			transition: all 0.2s ease;
-
-			&:hover {
-				border-color: color-mix(in srgb, var(--nimble-medium-text-color) 80%, transparent);
-			}
-
-			&.selected {
-				background: var(--nimble-accent-color);
-				border-color: var(--nimble-accent-color);
-				color: #fff;
-			}
-
-			i {
-				font-size: 0.625rem;
-			}
 		}
 
 		&__body {
