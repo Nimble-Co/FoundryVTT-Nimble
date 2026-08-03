@@ -3,6 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
 import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -1546,7 +1547,13 @@ class NimbleChatMessage extends ChatMessage {
 			Boolean(consumer.cardOffer) &&
 			consumer.effectType === 'generic' &&
 			consumer.selectionOutcome === 'consume' &&
-			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData);
+			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData) &&
+			matchesAttackDelivery(
+				consumer.bonusOnAttackDelivery,
+				attackDeliveryFromAttackType(
+					(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
+				),
+			);
 		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
 
 		const picked = resolvePoolSpendSelection(pool.faces, selection);

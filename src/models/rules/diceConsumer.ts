@@ -1,5 +1,7 @@
 import { systemHookName } from '#system';
+import { matchesAttackDelivery } from '#utils/attackDelivery.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
+import type { CardOfferContext } from '#utils/poolSpendCardOffers.js';
 import { withWidget } from './_widgetOption.js';
 import type { ItemActivatedContext } from './base.js';
 import { NimbleBaseRule } from './base.js';
@@ -47,6 +49,8 @@ function schema() {
 			required: false,
 			nullable: true,
 			initial: null,
+			label: 'NIMBLE.rules.diceConsumer.bonusOnAttackDelivery.label',
+			hint: 'NIMBLE.rules.diceConsumer.bonusOnAttackDelivery.hint',
 			choices: DICE_ATTACK_DELIVERY_FILTERS,
 		}),
 		effectFormula: new fields.StringField(
@@ -187,13 +191,19 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 	 * Restricted to character actors because the whole spend path (pools,
 	 * consumers, the picker) is character-only; an NPC would stamp an offer
 	 * that can only dead-end.
+	 *
+	 * `bonusOnAttackDelivery` narrows the offer to melee or ranged attacks. The
+	 * context is optional so unrelated callers need not build one, but a caller
+	 * that omits it supplies no delivery, and a rule that asks for one fails
+	 * closed rather than offering itself on an attack it cannot describe.
 	 */
-	providesCardOffer(): boolean {
+	providesCardOffer(context?: CardOfferContext): boolean {
 		if (!this.cardOffer) return false;
 		if (!this.#isEvaluatedManualSpend()) return false;
 		if (this.effectType !== 'generic') return false;
 		if (this.item.actor?.type !== 'character') return false;
-		return this.test();
+		if (!this.test()) return false;
+		return matchesAttackDelivery(this.bonusOnAttackDelivery, context?.delivery ?? null);
 	}
 
 	/**

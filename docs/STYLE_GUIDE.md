@@ -1477,6 +1477,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |
 | `getRollFormula()` | `src/utils/getRollFormula.ts` | Build roll formula strings |
 | `getDamageTypeLabel()` | `src/utils/getDamageTypeLabel.ts` | Localized display name for a damage type key, falling back to the key itself |
+| `attackDeliveryFromAttackType()`, `matchesAttackDelivery()` | `src/utils/attackDelivery.ts` | Map an activation's `attackType` to a melee/ranged delivery, and test a rule's `melee`/`ranged`/`any` filter against it. An activation with no attack type has no delivery, so any filter excludes it |
 | `substituteSpendFormula()` | `src/utils/dicePool/substituteSpendFormula.ts` | Resolve the `@n` / `@sum` placeholders in a dice-consumer effect formula against the dice a player picked |
 | `foldBonusIntoPrimaryDamage()`, `replaceDamageRollInRollsSource()` | `src/utils/foldBonusIntoPrimaryDamage.ts` | Add a flat bonus to an activation card's primary damage roll, and keep the message `rolls` source in step with a patched damage roll |
 | `collectPoolSpendCardOffers()` | `src/utils/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |

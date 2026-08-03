@@ -6,6 +6,7 @@ import type {
 	SpendableChargePool,
 	SpendablePool,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
+import { matchesAttackDelivery } from '#utils/attackDelivery.js';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
@@ -17,7 +18,6 @@ import {
 	extractRolledPools,
 	extractSpendableChargePools,
 	getAttackDeliveryFromActivation,
-	matchesAttackDelivery,
 } from './itemActivationConfigDialogHelpers.js';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';

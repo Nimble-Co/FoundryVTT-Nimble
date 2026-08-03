@@ -13,9 +13,13 @@ A consumer is what makes a dice pool do something. The pool stores the dice; the
 **Mode** picks between the two shapes:
 
 - `manual` puts the player in charge. Activating the item opens the dice panel on their sheet with this feature already selected, they pick which dice to use, and confirming applies the result. Use this for anything the rules text describes as a choice.
-- `autoBonus` is passive: every face in the pool is added to qualifying attacks automatically and nothing is spent. **Attack delivery** narrows it to `melee`, `ranged`, or `any`. This is how a pool that snowballs damage works.
+- `autoBonus` is passive: every face in the pool is added to qualifying attacks automatically and nothing is spent. This is how a pool that snowballs damage works.
 
 Several consumers can share one pool. A Berserker's Fury Dice carry an `autoBonus` consumer for melee damage *and* separate `manual` consumers for the features that spend them, all pointing at the same `fury` identifier.
+
+**Attack delivery** narrows a consumer to `melee` or `ranged` attacks and governs both shapes: an `autoBonus` pool only adds its faces to attacks of that kind, and a card offer only appears on them. Leave it empty (or pick `any`) for no restriction.
+
+Two things to watch for. An activation with no attack type set counts as neither melee nor ranged, so most spells and utility features are excluded by any restriction here, with nothing on screen to explain the absence. And the unarmed strike, opportunity strike and heroic-action buttons build their attack outside the normal activation flow: a card offer reads them as melee, but an `autoBonus` pool does not reach them at all, filtered or otherwise.
 
 **Effect formula** is evaluated when the player confirms, with two references filled in from their picks: `@n` is how many dice they chose and `@sum` is the total of those dice faces. Both combine with the usual sheet references, so a spend can scale with the character as well as the dice. See [Formulas & References](../rules-builder/formulas.md) for the full vocabulary. **Effect type** decides what the result does: `generic` posts the total to chat and leaves the rest to the table, while `damageReduction` also banks the total so it is subtracted from the next damage the character takes.
 
@@ -36,7 +40,7 @@ A consumer that opts in gives up its sheet flow entirely: it no longer opens the
 
 Opting in needs the rest of the rule to line up. It has to be a `manual` spend with `consume` as its outcome, a `generic` effect type, and an effect formula, on a player character. A `damageReduction` spend is banked against incoming damage rather than added to an attack, so it is not eligible.
 
-Two limits worth knowing before you author one. The bonus takes on the attack's own damage type, so a feature whose extra damage is a specific type (radiant, fire) cannot be expressed this way yet. And there is no melee or ranged filter on the offer, so a feature limited to one kind of attack will still offer itself on the other.
+One limit worth knowing before you author one: the bonus takes on the attack's own damage type, so a feature whose extra damage is a specific type (radiant, fire) cannot be expressed this way yet.
 
 **Selection outcome** decides what happens to the dice the player picked:
 

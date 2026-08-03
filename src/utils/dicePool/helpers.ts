@@ -347,16 +347,21 @@ function applyModifiersToDefinition(
 }
 
 /**
- * Find a `diceConsumer` rule on the same item that targets the given pool
- * identifier. Returns the first match (one consumer per pool is the supported
- * shape today — manual + autoBonus on the same pool would each ship as
- * separate consumer rules and the dialog already routes manual through the
- * spend flow, autoBonus through the bonus flow).
+ * Find the `diceConsumer` rule on the same item whose `mode` and
+ * `bonusOnAttackDelivery` describe the pool itself.
+ *
+ * Several consumers can share one pool, so an `autoBonus` consumer wins over
+ * any other: those two fields exist to say how the pool auto-applies, and a
+ * manual consumer listed first would otherwise flip the pool to `manual` and
+ * hand it that consumer's own delivery filter. With no `autoBonus` consumer
+ * the first match still stands.
  */
 function findDiceConsumerRule(
 	rules: Map<string, DicePoolRuleLike & DiceConsumerRuleLike & ModifyPoolRuleLike>,
 	poolIdentifier: string,
 ): DiceConsumerRuleLike | undefined {
+	let firstMatch: DiceConsumerRuleLike | undefined;
+
 	for (const rule of rules.values()) {
 		if (rule.type !== 'diceConsumer' || rule.disabled) continue;
 		const consumer = rule as DiceConsumerRuleLike;
@@ -365,9 +370,12 @@ function findDiceConsumerRule(
 		// Respect the rule's predicate (e.g. self:raging gating the auto-bonus).
 		const ruleWithApplies = rule as { appliesTo?: () => boolean };
 		if (typeof ruleWithApplies.appliesTo === 'function' && !ruleWithApplies.appliesTo()) continue;
-		return consumer;
+
+		if (consumer.mode === 'autoBonus') return consumer;
+		firstMatch ??= consumer;
 	}
-	return undefined;
+
+	return firstMatch;
 }
 
 function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[] {

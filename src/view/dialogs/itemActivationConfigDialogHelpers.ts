@@ -4,33 +4,21 @@ import type {
 	SpendableChargePool,
 	SpendablePool,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
+import { attackDeliveryFromAttackType } from '#utils/attackDelivery.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 
 /**
  * Read the activation's attack delivery (melee / ranged / null) from the
- * item's activation targets. Mirrors ItemActivationManager#getRolls.
+ * item's activation targets. The manager reads the same shape off its
+ * post-upcast activation data instead of off the item.
  */
 export function getAttackDeliveryFromActivation(item: Item): AttackDelivery {
-	const attackType = (
-		item.system as { activation?: { targets?: { attackType?: string } } } | undefined
-	)?.activation?.targets?.attackType;
-	if (attackType === 'reach') return 'melee';
-	if (attackType === 'range') return 'ranged';
-	return null;
-}
-
-/**
- * `bonusOnAttackDelivery: 'any'` (or absent/null) matches any delivery;
- * otherwise the filter must equal the activation's delivery.
- */
-export function matchesAttackDelivery(
-	filter: 'melee' | 'ranged' | 'any' | null | undefined,
-	delivery: AttackDelivery,
-): boolean {
-	if (filter === null || filter === undefined || filter === 'any') return true;
-	return filter === delivery;
+	return attackDeliveryFromAttackType(
+		(item.system as { activation?: { targets?: { attackType?: string } } } | undefined)?.activation
+			?.targets?.attackType,
+	);
 }
 
 /**

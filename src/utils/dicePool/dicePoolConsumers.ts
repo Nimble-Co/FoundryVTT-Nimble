@@ -2,6 +2,7 @@ import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
 import { isCharacterActor, normalizeIdentifier } from './helpers.js';
 import type {
 	CharacterActorLike,
+	DiceAttackDeliveryFilter,
 	DiceCardOfferTrigger,
 	DiceConsumerRuleLike,
 	DicePoolRuleAny,
@@ -22,6 +23,8 @@ type DicePoolConsumer = {
 	selectionOutcome: string;
 	/** Set when the spend is offered on the attack card instead of the sheet */
 	cardOffer: DiceCardOfferTrigger | null;
+	/** Narrows a card offer to melee or ranged attacks; null = unrestricted */
+	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
 };
 
 /** Narrow a stored `cardOffer` to a trigger the executor knows, else null. */
@@ -196,6 +199,10 @@ function getDicePoolConsumers(
 				effectType,
 				selectionOutcome,
 				cardOffer: toCardOfferTrigger(consumer.cardOffer),
+				bonusOnAttackDelivery:
+					typeof consumer.bonusOnAttackDelivery === 'string'
+						? (consumer.bonusOnAttackDelivery as DiceAttackDeliveryFilter)
+						: null,
 			});
 		}
 	}
