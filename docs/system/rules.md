@@ -140,6 +140,7 @@ A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<abili
 |-----|--------|------|
 | `level:<n>` | Class data | Always |
 | `class:<identifier>` | Class items | Per class |
+| `subclass:<identifier>` | Subclass items | Per subclass |
 | `ancestry:<identifier>` | Ancestry item | If present |
 | `background:<identifier>` | Background item | If present |
 | `armor:equipped` / `armor:unarmored` | Equipment scan | Has armor with armorClass rules |

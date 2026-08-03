@@ -319,6 +319,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			this.tags.add(`class:${cls.identifier}`);
 		}
 
+		// Add subclass tags, so rules can be gated on the specific option a
+		// character picked within a class rather than only on the class itself.
+		for (const item of this.items) {
+			if (!item.isType('subclass')) continue;
+			this.tags.add(`subclass:${item.identifier}`);
+		}
+
 		// Adds ancestry tags
 		if (this.ancestry) {
 			this.tags.add(`ancestry:${this.ancestry.identifier}`);
