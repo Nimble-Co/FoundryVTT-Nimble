@@ -212,6 +212,20 @@ describe('diffDescription', () => {
 		expect(toPlainText('<p>Cost&nbsp;&amp; effect</p>')).toBe('Cost & effect');
 	});
 
+	it('decodes an escaped entity once, not twice', () => {
+		// `&amp;lt;` is the text "&lt;". Decoding entity by entity would resolve the `&amp;` first
+		// and then resolve its own output into a "<".
+		expect(toPlainText('<p>&amp;lt;b&amp;gt;</p>')).toBe('&lt;b&gt;');
+	});
+
+	it('decodes numeric character references', () => {
+		expect(toPlainText('<p>Bear&#39;s&#x20;Might</p>')).toBe("Bear's Might");
+	});
+
+	it('leaves text that only looks like an entity alone', () => {
+		expect(toPlainText('<p>5 &notanentity; 6</p>')).toBe('5 &notanentity; 6');
+	});
+
 	it('gives up on pathologically long text rather than stalling the dialog', () => {
 		const long = 'word '.repeat(600);
 		const segments = diffDescription(long, `${long}extra`);

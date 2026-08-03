@@ -43,7 +43,7 @@
 			<FeatureCard
 				{feature}
 				isSelected={state.isFixed ? false : isSelected}
-				showSourceLabel={group.showSourceLabel ?? false}
+				showSourceLabel={group.duplicatedSourceUuids?.has(feature.uuid) ?? false}
 				onSelect={state.isFixed ? undefined : () => onSelect(feature)}
 			/>
 		{/each}

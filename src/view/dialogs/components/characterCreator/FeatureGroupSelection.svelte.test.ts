@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
-import { DUPLICATE_SOURCE_GROUP_PREFIX } from '#utils/getClassFeatures.ts';
 // @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import FeatureGroupSelection from './FeatureGroupSelection.svelte';
 
@@ -125,53 +124,12 @@ describe('FeatureGroupSelection', () => {
 		expect(screen.queryByRole('button', { name: /Select/ })).not.toBeInTheDocument();
 	});
 
-	it('keeps every candidate selectable in a duplicate-source range group and names it after the feature', async () => {
-		const features = [
-			createFeatureItem({ uuid: 'Item.wild-shape-world', name: 'Wild Shape' }),
-			createFeatureItem({
-				uuid: 'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
-				name: 'Wild Shape',
-			}),
-		];
-		const group: SelectionGroup = {
-			features,
-			selectionCount: 1,
-			selectionMax: 2,
-			showSourceLabel: true,
-			displayName: 'Wild Shape',
-		};
-
-		render(FeatureGroupSelection, {
-			props: {
-				groupName: `${DUPLICATE_SOURCE_GROUP_PREFIX}Item.wild-shape-world`,
-				group,
-				// One copy already picked: the minimum is met, but the range allows keeping both.
-				selectedFeatures: [features[0]],
-				onSelect: vi.fn(),
-			},
-		});
-
-		// Scoped to the group heading — the cards carry the same name.
-		expect(
-			screen.getByText('Wild Shape', { selector: 'h4[data-heading-variant="section"]' }),
-		).toBeInTheDocument();
-		expect(screen.getByText('(Choose one, or keep all 2)')).toBeInTheDocument();
-		// "kept", not "of 2 selected" — the upper bound is optional, not required.
-		expect(screen.getByText('1 of 2 kept')).toBeInTheDocument();
-		// The unselected copy stays offered rather than collapsing away at the minimum.
-		expect(screen.getByRole('button', { name: 'Select Wild Shape' })).toBeEnabled();
-		expect(screen.getByRole('button', { name: 'Deselect Wild Shape' })).toBeInTheDocument();
-		// Both candidates are badged so the player can tell the two sources apart.
-		expect(screen.getByText('World')).toBeInTheDocument();
-		expect(screen.getByText('Pack')).toBeInTheDocument();
-	});
-
-	it('badges candidates of a named group without turning it into a range', async () => {
+	it('badges the duplicated candidates of a named group and leaves the rest unbadged', async () => {
 		const features = [
 			createFeatureItem({ uuid: 'Item.cleave-world', name: 'Cleave' }),
 			createFeatureItem({
 				uuid: 'Compendium.nimble.nimble-class-features.Item.cleave-comp',
-				name: 'Cleave Variant',
+				name: 'Cleave',
 			}),
 			createFeatureItem({ uuid: 'Item.parry', name: 'Parry' }),
 		];
@@ -179,14 +137,23 @@ describe('FeatureGroupSelection', () => {
 		render(FeatureGroupSelection, {
 			props: {
 				groupName: 'combat-maneuvers',
-				group: { features, selectionCount: 1, showSourceLabel: true },
+				group: {
+					features,
+					selectionCount: 1,
+					duplicatedSourceUuids: new Set([
+						'Item.cleave-world',
+						'Compendium.nimble.nimble-class-features.Item.cleave-comp',
+					]),
+				},
 				selectedFeatures: [],
 				onSelect: vi.fn(),
 			},
 		});
 
-		// Two of the three candidates are world items, one is from a pack.
-		expect(screen.getAllByText('World', { selector: 'span[data-source="world"]' })).toHaveLength(2);
+		// Only the colliding pair is badged: Parry's source has no bearing on the choice.
+		expect(
+			screen.getByText('World', { selector: 'span[data-source="world"]' }),
+		).toBeInTheDocument();
 		expect(
 			screen.getByText('Pack', { selector: 'span[data-source="compendium"]' }),
 		).toBeInTheDocument();

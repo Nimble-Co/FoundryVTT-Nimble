@@ -1,6 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
-import { getEffectiveSelectionMax, isFixedGroup } from '../../selectionGroupRules.ts';
+import { isFixedGroup, pickPreselection } from '../../selectionGroupRules.ts';
 
 export interface ClassFeatureSelectionState {
 	classFeatures: ClassFeatureResult | null;
@@ -33,6 +33,13 @@ export function createClassFeatureSelectionState(
 			if (isFixedGroup(group)) {
 				newSelections.set(groupName, [...group.features]);
 				hasChanges = true;
+				continue;
+			}
+
+			const preselected = pickPreselection(group);
+			if (preselected) {
+				newSelections.set(groupName, [preselected]);
+				hasChanges = true;
 			}
 		}
 
@@ -54,7 +61,7 @@ export function createClassFeatureSelectionState(
 		if (alreadySelectedIndex !== -1) {
 			// Toggle off
 			nextSelections = currentSelections.filter((_, i) => i !== alreadySelectedIndex);
-		} else if (currentSelections.length >= getEffectiveSelectionMax(group)) {
+		} else if (currentSelections.length >= group.selectionCount) {
 			// Already at cap — ignore the click
 			return;
 		} else {

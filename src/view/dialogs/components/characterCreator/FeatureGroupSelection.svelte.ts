@@ -5,12 +5,7 @@ import type {
 } from '#types/components/ClassFeatureSelection.d.ts';
 import localize from '#utils/localize.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
-import {
-	getEffectiveSelectionMax,
-	isFixedGroup,
-	isGroupComplete,
-	isRangeGroup,
-} from '../../selectionGroupRules.ts';
+import { isFixedGroup, isGroupComplete } from '../../selectionGroupRules.ts';
 
 /**
  * Converts kebab-case to Title Case
@@ -31,15 +26,12 @@ type FeatureGroupSelectionStateProps = Pick<
 /**
  * The "what am I being asked for" line: how many picks this group wants. Fixed groups ask for
  * nothing, so they get no hint.
+ *
+ * Range groups never reach here — a duplicate-source cluster is rendered by
+ * `DuplicateSourceGroup`, which states its own bounds — so this only has to phrase exact counts.
  */
 function buildHintText(group: SelectionGroup): string | null {
 	if (isFixedGroup(group)) return null;
-
-	if (isRangeGroup(group)) {
-		return localize('NIMBLE.classFeatureSelection.duplicateSourceHint', {
-			count: String(getEffectiveSelectionMax(group)),
-		});
-	}
 
 	if (group.selectionCount === 1) {
 		return localize('NIMBLE.classFeatureSelection.chooseOne');
@@ -56,14 +48,6 @@ function buildProgressText(
 	selectedFeatures: NimbleFeatureItem[],
 ): string | null {
 	if (isFixedGroup(group)) return null;
-
-	// A range group's upper bound is optional, so "of N selected" would read as a requirement.
-	if (isRangeGroup(group)) {
-		return localize('NIMBLE.classFeatureSelection.nOfMKept', {
-			current: String(selectedFeatures.length),
-			max: String(getEffectiveSelectionMax(group)),
-		});
-	}
 
 	return localize('NIMBLE.classFeatureSelection.nOfMSelected', {
 		current: String(selectedFeatures.length),
@@ -107,10 +91,9 @@ export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSel
 		get displayedFeatures() {
 			const { group, selectedFeatures } = getProps();
 
-			// Fixed groups have nothing to collapse, and range groups keep every candidate
-			// visible so the player can still add or swap copies after reaching the minimum;
-			// exact groups collapse to the final picks once complete.
-			if (isFixedGroup(group) || isRangeGroup(group) || !isGroupComplete(group, selectedFeatures)) {
+			// Fixed groups have nothing to collapse; exact groups collapse to the final picks
+			// once complete.
+			if (isFixedGroup(group) || !isGroupComplete(group, selectedFeatures)) {
 				return sortDocumentsByName(group.features);
 			}
 

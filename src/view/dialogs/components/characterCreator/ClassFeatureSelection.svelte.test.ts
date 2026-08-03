@@ -81,50 +81,39 @@ describe.each(VARIANTS)('createClassFeatureSelectionState (%s)', (_name, createS
 		};
 	}
 
-	it('lets a range group keep more copies than it requires, up to selectionMax', async () => {
-		const { select, selections, groupName } = renderHarness({
+	it('starts a duplicate-source group on its recommended copy', async () => {
+		// The feature used to be granted outright, so the dialog opens on a working answer rather
+		// than demanding a click before level-up can proceed.
+		const { selections, groupName } = renderHarness({
 			features: [worldCopy, packCopy],
 			selectionCount: 1,
 			selectionMax: 2,
+			recommendedUuid: packCopy.uuid,
 		});
 
-		select(worldCopy);
 		await waitFor(() => {
-			expect(selections()).toBe(`${groupName}=Item.wild-shape-world`);
-		});
-
-		// The minimum is already met — the second copy must still be addable.
-		select(packCopy);
-		await waitFor(() => {
-			expect(selections()).toBe(
-				`${groupName}=Item.wild-shape-world,Compendium.nimble.nimble-class-features.Item.wild-shape-comp`,
-			);
+			expect(selections()).toBe(`${groupName}=${packCopy.uuid}`);
 		});
 	});
 
-	it('refuses a selection beyond selectionMax', async () => {
-		const { select, selections, groupName } = renderHarness({
-			features: [worldCopy, packCopy, thirdCopy],
-			selectionCount: 1,
-			selectionMax: 2,
+	it('leaves a duplicate-source group empty when a copy is already on the sheet', async () => {
+		// Keeping only the owned copy is a valid outcome here, so nothing may be chosen for the
+		// player — preselecting would make that outcome unreachable.
+		const { selections } = renderHarness({
+			features: [worldCopy, packCopy],
+			selectionCount: 0,
+			selectionMax: 1,
+			ownedUuids: new Set([worldCopy.uuid]),
+			recommendedUuid: packCopy.uuid,
 		});
 
-		select(worldCopy);
-		select(packCopy);
 		await waitFor(() => {
-			expect(selections()).toContain('wild-shape-comp');
+			expect(selections()).toBe('');
 		});
-
-		select(thirdCopy);
-		await waitFor(() => {
-			expect(selections()).not.toContain('Item.wild-shape-third');
-		});
-		expect(selections()).toBe(
-			`${groupName}=Item.wild-shape-world,Compendium.nimble.nimble-class-features.Item.wild-shape-comp`,
-		);
+		expect(selections()).toBe('');
 	});
 
-	it('still caps an exact group at its required count when no maximum is set', async () => {
+	it('caps a group at its required count', async () => {
 		const { select, selections, groupName } = renderHarness(
 			{ features: [worldCopy, packCopy, thirdCopy], selectionCount: 1 },
 			'combat-maneuvers',
@@ -145,11 +134,10 @@ describe.each(VARIANTS)('createClassFeatureSelectionState (%s)', (_name, createS
 	});
 
 	it('drops the group entirely when the last selection is toggled off', async () => {
-		const { select, selections } = renderHarness({
-			features: [worldCopy, packCopy],
-			selectionCount: 1,
-			selectionMax: 2,
-		});
+		const { select, selections } = renderHarness(
+			{ features: [worldCopy, packCopy], selectionCount: 1 },
+			'combat-maneuvers',
+		);
 
 		select(worldCopy);
 		await waitFor(() => {

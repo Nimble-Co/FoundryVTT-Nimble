@@ -2383,9 +2383,7 @@
 			"levelUpHint": "The following features become available at level {level}. Some are automatically granted; others require you to choose.",
 			"chooseOne": "(Choose one)",
 			"chooseN": "(Choose {count})",
-			"duplicateSourceHint": "(Choose one, or keep all {count})",
 			"nOfMSelected": "{current} of {required} selected",
-			"nOfMKept": "{current} of {max} kept",
 			"noDescriptionAvailable": "No description available.",
 			"selected": "Selected",
 			"confirmSelection": "Confirm Selection",
@@ -2410,6 +2408,7 @@
 			"duplicateDerivedFrom": "from {source}",
 			"duplicatePackagedDefault": "packaged default",
 			"duplicateOutcomeNone": "Keeps only the copy you already have.",
+			"duplicateOutcomePending": "Nothing selected yet — choose which copy to keep.",
 			"duplicateOutcomeOne": "Adds 1 feature — {name}.",
 			"duplicateOutcomeAll": "Adds {count} features. This feature will appear {count} times.",
 			"diffField": {

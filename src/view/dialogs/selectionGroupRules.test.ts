@@ -2,33 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import {
-	getEffectiveSelectionMax,
 	isFixedGroup,
 	isGroupComplete,
 	isRangeGroup,
+	pickPreselection,
 } from './selectionGroupRules.ts';
 
 function feature(uuid: string): NimbleFeatureItem {
 	return { uuid } as NimbleFeatureItem;
 }
-
-describe('getEffectiveSelectionMax', () => {
-	it('falls back to the required count when no maximum is set', () => {
-		expect(getEffectiveSelectionMax({ selectionCount: 2 })).toBe(2);
-	});
-
-	it('returns the maximum when it is higher than the required count', () => {
-		expect(getEffectiveSelectionMax({ selectionCount: 1, selectionMax: 3 })).toBe(3);
-	});
-
-	it('returns an explicit maximum even when it equals the required count', () => {
-		expect(getEffectiveSelectionMax({ selectionCount: 2, selectionMax: 2 })).toBe(2);
-	});
-
-	it('treats a zero maximum as set rather than missing', () => {
-		expect(getEffectiveSelectionMax({ selectionCount: 1, selectionMax: 0 })).toBe(0);
-	});
-});
 
 describe('isFixedGroup', () => {
 	it('is fixed when the options exactly match the required count', () => {
@@ -47,6 +29,47 @@ describe('isRangeGroup', () => {
 
 	it('is not a range for an exact choice', () => {
 		expect(isRangeGroup({ selectionCount: 1 })).toBe(false);
+	});
+
+	it('is not a range when the maximum merely restates the required count', () => {
+		expect(isRangeGroup({ selectionCount: 2, selectionMax: 2 })).toBe(false);
+	});
+});
+
+describe('pickPreselection', () => {
+	const cluster = [feature('Item.world-copy'), feature('Compendium.pack.Item.original')];
+
+	it('starts on the recommended copy when one copy has to be kept', () => {
+		expect(
+			pickPreselection({
+				features: cluster,
+				selectionCount: 1,
+				selectionMax: 2,
+				recommendedUuid: 'Compendium.pack.Item.original',
+			})?.uuid,
+		).toBe('Compendium.pack.Item.original');
+	});
+
+	it('starts empty when keeping nothing is allowed, so the owned copy can stand alone', () => {
+		expect(
+			pickPreselection({
+				features: cluster,
+				selectionCount: 0,
+				selectionMax: 1,
+				ownedUuids: new Set(['Item.world-copy']),
+				recommendedUuid: 'Compendium.pack.Item.original',
+			}),
+		).toBeUndefined();
+	});
+
+	it('preselects nothing for an ordinary group, which names no recommendation', () => {
+		expect(pickPreselection({ features: cluster, selectionCount: 1 })).toBeUndefined();
+	});
+
+	it('preselects nothing when the recommended copy is no longer among the candidates', () => {
+		expect(
+			pickPreselection({ features: cluster, selectionCount: 1, recommendedUuid: 'Item.gone' }),
+		).toBeUndefined();
 	});
 });
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NimbleFeatureItem } from '#documents/item/feature.js';
 	import type { DuplicateSourceGroupProps } from '#types/components/DuplicateSourceGroup.d.ts';
 
 	import {
@@ -11,15 +12,30 @@
 
 	let { groupName, group, selectedFeatures, onSetSelection }: DuplicateSourceGroupProps = $props();
 
-	const groupState = createDuplicateSourceGroupState(() => ({ group, selectedFeatures }));
+	const groupState = createDuplicateSourceGroupState(
+		() => group,
+		() => selectedFeatures,
+	);
 
 	// The synthetic key carries a uuid, so strip anything that can't sit in an id attribute.
 	const headingId = $derived(`duplicate-${groupName.replace(/[^a-zA-Z0-9]+/g, '-')}`);
 
 	let expanded = $state<Set<string>>(new Set());
+	let list = $state<HTMLElement | null>(null);
 
 	const allExpanded = $derived(
 		groupState.candidates.length > 0 && expanded.size === groupState.candidates.length,
+	);
+
+	/**
+	 * The radio that holds the group's single tab stop. A radiogroup is one stop in the tab order,
+	 * so focus lands on the chosen copy — or on the first choosable one when nothing is chosen yet.
+	 */
+	const focusedUuid = $derived(
+		(
+			groupState.offerable.find((feature) => groupState.isSelected(feature)) ??
+			groupState.offerable[0]
+		)?.uuid,
 	);
 
 	function toggleExpanded(uuid: string) {
@@ -30,6 +46,42 @@
 
 	function toggleAllExpanded() {
 		expanded = allExpanded ? new Set() : new Set(groupState.candidates.map((c) => c.feature.uuid));
+	}
+
+	/**
+	 * Choosing a copy replaces the selection. When the group allows keeping nothing, clicking the
+	 * chosen copy again gives the selection back — otherwise there is no route to that outcome,
+	 * since "Keep all" is hidden whenever only one copy is on offer.
+	 */
+	function chooseCopy(feature: NimbleFeatureItem) {
+		if (groupState.canKeepNone && groupState.isSelected(feature)) {
+			onSetSelection([]);
+			return;
+		}
+
+		onSetSelection([feature]);
+	}
+
+	const ARROW_STEPS: Record<string, number> = {
+		ArrowDown: 1,
+		ArrowRight: 1,
+		ArrowUp: -1,
+		ArrowLeft: -1,
+	};
+
+	/** Arrow keys move the choice between the radios of a radiogroup, wrapping at both ends. */
+	function handleRadioKeydown(event: KeyboardEvent, index: number) {
+		const step = ARROW_STEPS[event.key];
+		if (step === undefined) return;
+
+		const offerable = groupState.offerable;
+		if (offerable.length < 2) return;
+
+		event.preventDefault();
+		const next = (index + step + offerable.length) % offerable.length;
+		// In a radiogroup the arrows carry the selection with them, not just the focus.
+		onSetSelection([offerable[next]]);
+		list?.querySelectorAll<HTMLElement>('[role="radio"]')[next]?.focus();
 	}
 </script>
 
@@ -61,79 +113,83 @@
 		</button>
 	</div>
 
-	<ul class="duplicate-group__list" role="radiogroup" aria-labelledby={headingId}>
+	<!-- A radiogroup takes the radios as its own children, so the rows cannot be list items. -->
+	<div class="duplicate-group__list" role="radiogroup" aria-labelledby={headingId} bind:this={list}>
 		{#each groupState.candidates as candidate (candidate.feature.uuid)}
 			{@const isOpen = expanded.has(candidate.feature.uuid)}
 			{@const selected = groupState.isSelected(candidate.feature)}
-			<li class="duplicate-row" class:expanded={isOpen}>
-				<!-- The row is an expander; selecting is the radio's job alone. -->
-				<div
-					class="duplicate-row__main"
-					class:selected
-					class:owned={candidate.isOwned}
-					role="button"
-					tabindex="0"
-					aria-expanded={isOpen}
-					onclick={() => toggleExpanded(candidate.feature.uuid)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							toggleExpanded(candidate.feature.uuid);
-						}
-					}}
-				>
-					<i class="fa-solid fa-chevron-down duplicate-row__chevron"></i>
+			{@const bodyId = `${headingId}-body-${candidate.feature.uuid.replace(/[^a-zA-Z0-9]+/g, '-')}`}
+			<div class="duplicate-row" class:expanded={isOpen}>
+				<div class="duplicate-row__main" class:selected class:owned={candidate.isOwned}>
+					<!--
+						The expander and the radio are siblings, not nested: a control inside another
+						control is unreachable for assistive technology, and the row's only job is to
+						open the comparison.
+					-->
+					<button
+						type="button"
+						class="duplicate-row__expander"
+						aria-expanded={isOpen}
+						aria-controls={bodyId}
+						onclick={() => toggleExpanded(candidate.feature.uuid)}
+					>
+						<i class="fa-solid fa-chevron-down duplicate-row__chevron"></i>
 
-					<img
-						class="duplicate-row__img"
-						src={candidate.feature.img || 'icons/svg/item-bag.svg'}
-						alt=""
-					/>
+						<img
+							class="duplicate-row__img"
+							src={candidate.feature.img || 'icons/svg/item-bag.svg'}
+							alt=""
+						/>
 
-					<div class="duplicate-row__identity">
-						<span class="duplicate-row__origin" use:tooltipWhenClipped>{candidate.origin}</span>
-						<span class="duplicate-row__meta" use:tooltipWhenClipped>
-							{candidate.lineage}
-							{#if candidate.note}
-								<span class="duplicate-row__sep">·</span>
-								<span class="duplicate-row__note" class:same={candidate.isIdentical}>
-									{candidate.note}
-								</span>
-							{/if}
+						<span class="duplicate-row__identity">
+							<span class="duplicate-row__origin" use:tooltipWhenClipped>{candidate.origin}</span>
+							<span class="duplicate-row__meta" use:tooltipWhenClipped>
+								{candidate.lineage}
+								{#if candidate.note}
+									<span class="duplicate-row__sep">·</span>
+									<span class="duplicate-row__note" class:same={candidate.isIdentical}>
+										{candidate.note}
+									</span>
+								{/if}
+							</span>
 						</span>
-					</div>
 
-					{#if candidate.isOwned}
-						<span class="duplicate-row__owned">
-							{localize('NIMBLE.classFeatureSelection.duplicateAlreadyOwned')}
-						</span>
-					{:else if candidate.isRecommended}
-						<span class="duplicate-row__recommended">
-							{localize('NIMBLE.classFeatureSelection.duplicateRecommended')}
-						</span>
-					{/if}
+						{#if candidate.isOwned}
+							<span class="duplicate-row__owned">
+								{localize('NIMBLE.classFeatureSelection.duplicateAlreadyOwned')}
+							</span>
+						{:else if candidate.isRecommended}
+							<span class="duplicate-row__recommended">
+								{localize('NIMBLE.classFeatureSelection.duplicateRecommended')}
+							</span>
+						{/if}
 
-					<SourceTag source={candidate.source} />
+						<SourceTag source={candidate.source} />
+					</button>
 
 					{#if !candidate.isOwned}
 						{@const useLabel = localize('NIMBLE.classFeatureSelection.duplicateUseCopy', {
 							name: candidate.origin,
 						})}
+						{@const radioIndex = groupState.offerable.findIndex(
+							(feature) => feature.uuid === candidate.feature.uuid,
+						)}
 						<SelectionIndicator
 							{selected}
 							role="radio"
 							ariaChecked={selected}
+							tabIndex={candidate.feature.uuid === focusedUuid ? 0 : -1}
 							tooltip={useLabel}
 							ariaLabel={useLabel}
-							onclick={(e) => {
-								e.stopPropagation();
-								onSetSelection([candidate.feature]);
-							}}
+							onclick={() => chooseCopy(candidate.feature)}
+							onkeydown={(event) => handleRadioKeydown(event, radioIndex)}
 						/>
 					{/if}
 				</div>
 
-				<div class="duplicate-row__body">
+				<!-- A collapsed row is laid out at zero height but still rendered, so it has to be
+				made inert as well, or `aria-expanded="false"` would lie about what is reachable. -->
+				<div class="duplicate-row__body" id={bodyId} inert={!isOpen} aria-hidden={!isOpen}>
 					<p class="duplicate-row__description">
 						{#each candidate.segments as segment}
 							{#if segment.changed}
@@ -142,9 +198,9 @@
 						{/each}
 					</p>
 				</div>
-			</li>
+			</div>
 		{/each}
-	</ul>
+	</div>
 
 	{#if groupState.offerable.length > 1}
 		<div class="duplicate-group__keep-all">
@@ -210,9 +266,6 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
-			margin: 0;
-			padding: 0;
-			list-style: none;
 		}
 
 		&__outcome {
@@ -249,24 +302,18 @@
 		&__main {
 			display: flex;
 			align-items: center;
-			gap: 0.75rem;
+			gap: 0.5rem;
 			min-height: 54px;
-			padding: 0.5rem;
+			padding-right: 0.5rem;
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
-			cursor: pointer;
 			transition:
 				border-color 0.2s ease,
 				background 0.2s ease;
 
 			&:hover {
 				border-color: var(--nimble-accent-color);
-			}
-
-			&:focus-visible {
-				outline: 2px solid var(--nimble-accent-color);
-				outline-offset: 2px;
 			}
 
 			&.selected {
@@ -282,6 +329,40 @@
 			&.owned {
 				background: transparent;
 				border-style: dashed;
+			}
+		}
+
+		// The expander fills the row so clicking anywhere but the radio opens the comparison. It is
+		// stripped back to nothing visually: Foundry's core button styles would otherwise give the
+		// row a second border and background of its own.
+		&__expander {
+			display: flex;
+			flex: 1;
+			align-items: center;
+			gap: 0.75rem;
+			min-width: 0;
+			min-height: unset;
+			margin: 0;
+			padding: 0.5rem;
+			appearance: none;
+			background: none;
+			border: none;
+			border-radius: 4px 0 0 4px;
+			box-shadow: none;
+			color: inherit;
+			font: inherit;
+			line-height: inherit;
+			text-align: left;
+			cursor: pointer;
+
+			&:hover {
+				background: none;
+				box-shadow: none;
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-accent-color);
+				outline-offset: -2px;
 			}
 		}
 

@@ -25,6 +25,31 @@ export interface DuplicateCandidate {
 	segments: DescriptionSegment[];
 }
 
+interface FolderLike {
+	name?: string;
+	folder?: FolderLike | null;
+}
+
+/** Deepest folder path worth showing; beyond this the origin line is all path and no signal. */
+const MAX_FOLDER_PATH_DEPTH = 4;
+
+/**
+ * Folder path of a world item, outermost folder first.
+ *
+ * The leaf name alone is not enough: two copies can sit in identically named leaf folders under
+ * different parents, which is exactly the case the picker exists to disambiguate.
+ */
+function describeFolderPath(folder: FolderLike | null | undefined): string {
+	const names: string[] = [];
+
+	for (let current = folder; current; current = current.folder) {
+		if (names.length >= MAX_FOLDER_PATH_DEPTH) break;
+		if (current.name) names.unshift(current.name);
+	}
+
+	return names.join(' / ');
+}
+
 /** Human name for where a copy physically lives. */
 function describeOrigin(feature: NimbleFeatureItem): string {
 	if (getItemSource(feature.uuid) === 'compendium') {
@@ -33,8 +58,8 @@ function describeOrigin(feature: NimbleFeatureItem): string {
 
 	// World items are organized in folders; the folder is the only thing that reliably tells
 	// two world copies of one feature apart.
-	const folder = (feature as { folder?: { name?: string } | null }).folder;
-	return folder?.name || localize('NIMBLE.classFeatureSelection.duplicateWorldRoot');
+	const path = describeFolderPath((feature as { folder?: FolderLike | null }).folder);
+	return path || localize('NIMBLE.classFeatureSelection.duplicateWorldRoot');
 }
 
 /** Where a copy originally came from, which distinguishes an import from a hand-made item. */
@@ -67,6 +92,21 @@ function pickBaseline(group: StateProps['group']): NimbleFeatureItem | undefined
 	);
 }
 
+/**
+ * Localized name for a rule or activation-effect `type` discriminator.
+ *
+ * The diff reports raw schema identifiers (`damageBonus`, `diceConsumer`), which must never reach
+ * the player. `CONFIG.NIMBLE` already holds the labels the Rules Builder shows for exactly these
+ * types, so the picker names them the same way. Returns `null` for a type with no label, leaving
+ * the caller to fall back to the field it came from.
+ */
+function describeRuleType(type: string): string | null {
+	const ruleTypes = CONFIG.NIMBLE.ruleTypes as Record<string, string | undefined>;
+	const effectTypes = CONFIG.NIMBLE.effectTypes as Record<string, string | undefined>;
+
+	return ruleTypes[type] ?? effectTypes[type] ?? null;
+}
+
 function describeDifference(
 	feature: NimbleFeatureItem,
 	baseline: NimbleFeatureItem | undefined,
@@ -86,12 +126,13 @@ function describeDifference(
 		};
 	}
 
-	// Name the rule types behind an effects/rules change — "healing" says more than "effects".
+	// Name the rule types behind an effects/rules change — "Healing" says more than "effects".
 	const labels = changedFields.flatMap((field) => {
-		if ((field === 'effects' || field === 'rules') && changedRuleTypes.length > 0) {
-			return changedRuleTypes;
-		}
-		return localize(`NIMBLE.classFeatureSelection.diffField.${field}`);
+		const fieldLabel = localize(`NIMBLE.classFeatureSelection.diffField.${field}`);
+		if (field !== 'effects' && field !== 'rules') return fieldLabel;
+		if (changedRuleTypes.length === 0) return fieldLabel;
+
+		return changedRuleTypes.map((type) => describeRuleType(type) ?? fieldLabel);
 	});
 
 	return {
@@ -131,9 +172,19 @@ export function tooltipWhenClipped(node: HTMLElement) {
 	};
 }
 
-export function createDuplicateSourceGroupState(getProps: () => StateProps) {
+/**
+ * Reactive state for the duplicate-source picker.
+ *
+ * The cluster and the selection are taken as separate getters on purpose: building the candidate
+ * list diffs every copy against the baseline, and a single getter returning both would tie that
+ * work to the selection, re-running an LCS per candidate on every click.
+ */
+export function createDuplicateSourceGroupState(
+	getGroup: () => StateProps['group'],
+	getSelectedFeatures: () => StateProps['selectedFeatures'],
+) {
 	function buildCandidates(): DuplicateCandidate[] {
-		const { group } = getProps();
+		const group = getGroup();
 		const baseline = pickBaseline(group);
 		const baselineOrigin = baseline ? describeOrigin(baseline) : '';
 		const baselineDescription = baseline?.system?.description ?? '';
@@ -158,44 +209,52 @@ export function createDuplicateSourceGroupState(getProps: () => StateProps) {
 		});
 	}
 
+	const candidates = $derived.by(buildCandidates);
+	/** Copies that can actually be granted — everything except what is already owned. */
+	const offerable = $derived.by(() => {
+		const group = getGroup();
+		return group.features.filter((feature) => !group.ownedUuids?.has(feature.uuid));
+	});
+	const hasOwnedCopy = $derived((getGroup().ownedUuids?.size ?? 0) > 0);
+
 	return {
 		get candidates() {
-			return buildCandidates();
+			return candidates;
 		},
-		/** Copies that can actually be granted — everything except what is already owned. */
 		get offerable() {
-			const { group } = getProps();
-			return group.features.filter((feature) => !group.ownedUuids?.has(feature.uuid));
+			return offerable;
 		},
 		/** The copy "Keep recommended" falls back to; the first offerable if none is marked. */
 		get recommended() {
-			const { group } = getProps();
-			const offerable = group.features.filter((feature) => !group.ownedUuids?.has(feature.uuid));
-			return offerable.find((feature) => feature.uuid === group.recommendedUuid) ?? offerable[0];
+			const recommendedUuid = getGroup().recommendedUuid;
+			return offerable.find((feature) => feature.uuid === recommendedUuid) ?? offerable[0];
 		},
 		get heading() {
-			const { group } = getProps();
-			return group.displayName ?? '';
+			return getGroup().displayName ?? '';
 		},
-		get hasOwnedCopy() {
-			const { group } = getProps();
-			return (group.ownedUuids?.size ?? 0) > 0;
+		/**
+		 * Whether keeping nothing at all is a legal outcome. It is exactly when a copy is already
+		 * on the sheet, which is what drops the group's floor to zero — so the radios have to be
+		 * able to give the selection back, not just move it.
+		 */
+		get canKeepNone() {
+			return getGroup().selectionCount === 0;
 		},
 		isSelected(feature: NimbleFeatureItem) {
-			return getProps().selectedFeatures.some((f) => f.uuid === feature.uuid);
+			return getSelectedFeatures().some((f) => f.uuid === feature.uuid);
 		},
 		get allSelected() {
-			const { group, selectedFeatures } = getProps();
-			const offerableCount = group.features.filter(
-				(feature) => !group.ownedUuids?.has(feature.uuid),
-			).length;
-			return offerableCount > 1 && selectedFeatures.length === offerableCount;
+			return offerable.length > 1 && getSelectedFeatures().length === offerable.length;
 		},
 		/** One line stating exactly what pressing Confirm will do. */
 		get outcomeText() {
-			const { selectedFeatures } = getProps();
+			const selectedFeatures = getSelectedFeatures();
 			if (selectedFeatures.length === 0) {
-				return localize('NIMBLE.classFeatureSelection.duplicateOutcomeNone');
+				// Nothing selected means two different things: with a copy already on the sheet it is
+				// a complete, valid outcome; without one the player still has a choice to make.
+				return hasOwnedCopy
+					? localize('NIMBLE.classFeatureSelection.duplicateOutcomeNone')
+					: localize('NIMBLE.classFeatureSelection.duplicateOutcomePending');
 			}
 			if (selectedFeatures.length === 1) {
 				return localize('NIMBLE.classFeatureSelection.duplicateOutcomeOne', {

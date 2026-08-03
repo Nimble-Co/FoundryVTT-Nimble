@@ -467,7 +467,6 @@ export default async function getClassFeaturesFromIndex(
 					// A higher max than count is what makes this a range: keep one copy or all of
 					// them. Only copies not already owned can be granted.
 					selectionMax: offerable.length,
-					showSourceLabel: true,
 					...(ownedInCluster.length > 0
 						? { ownedUuids: new Set(ownedInCluster.map((feature) => feature.uuid)) }
 						: {}),
@@ -478,16 +477,22 @@ export default async function getClassFeaturesFromIndex(
 		} else if (!groupsCoveredByOptions.has(groupName)) {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];
 			const selectionCount = resolveSelectionCount(groupEntries, level);
-			// Surface source badges when a class-defined group lists the same feature from more
-			// than one source, so the player can tell the candidates apart before choosing. Only
-			// the dialogs render badges, so skip the clustering pass entirely when they're off.
-			const hasDuplicateSources =
-				options.promoteDuplicateSources === true &&
-				clusterFeaturesBySource(groupFeatures).some((cluster) => cluster.length > 1);
+			// Badge the candidates a class-defined group lists from more than one source, so the
+			// player can tell those apart before choosing. Candidates with no twin are left
+			// unbadged — their source is not what the choice turns on. Only the dialogs render
+			// badges, so skip the clustering pass entirely when they're off.
+			const duplicatedSourceUuids =
+				options.promoteDuplicateSources === true
+					? new Set(
+							clusterFeaturesBySource(groupFeatures)
+								.filter((cluster) => cluster.length > 1)
+								.flatMap((cluster) => cluster.map((feature) => feature.uuid)),
+						)
+					: new Set<string>();
 			result.selectionGroups.set(groupName, {
 				features: groupFeatures,
 				selectionCount,
-				...(hasDuplicateSources ? { showSourceLabel: true } : {}),
+				...(duplicatedSourceUuids.size > 0 ? { duplicatedSourceUuids } : {}),
 			});
 		}
 	}

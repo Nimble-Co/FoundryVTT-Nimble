@@ -143,25 +143,54 @@ export interface DescriptionSegment {
 	changed: boolean;
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+	nbsp: ' ',
+	amp: '&',
+	lt: '<',
+	gt: '>',
+	quot: '"',
+	apos: "'",
+};
+
+/**
+ * Decodes character references in one pass.
+ *
+ * Decoding entity by entity would decode its own output: `&amp;lt;` is the text "&lt;", but
+ * resolving `&amp;` first turns it into `&lt;` for the next pass to resolve again.
+ */
+function decodeEntities(text: string): string {
+	return text.replace(
+		/&(#\d{1,7}|#[xX][\da-fA-F]{1,6}|[a-zA-Z]+);/g,
+		(match, reference: string) => {
+			if (reference.startsWith('#')) {
+				const codePoint = Number.parseInt(
+					reference.slice(reference[1] === 'x' || reference[1] === 'X' ? 2 : 1),
+					reference[1] === 'x' || reference[1] === 'X' ? 16 : 10,
+				);
+				return codePoint > 0 && codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : match;
+			}
+
+			return NAMED_ENTITIES[reference.toLowerCase()] ?? match;
+		},
+	);
+}
+
 /**
  * Reduces description markup to readable text.
  *
  * The diff highlights runs of *words*, and a word boundary is not a tag boundary — marking a
  * changed run inside raw HTML would split tags across the highlight and emit broken nesting.
  * Comparing plain text sidesteps that, and means the segments can be rendered as text rather
- * than trusted as markup, which matters when the copy came from a world item.
+ * than trusted as markup, which matters when the copy came from a world item. Tags are stripped
+ * before any character reference is decoded, so a decoded `<` can never be read back as markup.
  */
 export function toPlainText(html: string): string {
-	return (html ?? '')
-		.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
-		.replace(/<br\s*\/?>|<\/(p|div|li|h[1-6])>/gi, ' ')
-		.replace(/<[^>]*>/g, '')
-		.replace(/&nbsp;/gi, ' ')
-		.replace(/&amp;/gi, '&')
-		.replace(/&lt;/gi, '<')
-		.replace(/&gt;/gi, '>')
-		.replace(/&quot;/gi, '"')
-		.replace(/&#39;/g, "'")
+	return decodeEntities(
+		(html ?? '')
+			.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+			.replace(/<br\s*\/?>|<\/(p|div|li|h[1-6])>/gi, ' ')
+			.replace(/<[^>]*>/g, ''),
+	)
 		.replace(/\s+/g, ' ')
 		.trim();
 }

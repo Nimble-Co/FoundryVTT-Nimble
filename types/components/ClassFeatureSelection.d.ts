@@ -18,8 +18,11 @@ export interface SelectionGroup {
 	 * minimum.
 	 */
 	selectionMax?: number;
-	/** Show a "World" / "Pack" badge on each candidate, marking where it is sourced from. */
-	showSourceLabel?: boolean;
+	/**
+	 * Candidates that share their identity with another candidate in the group, so each needs a
+	 * "World" / "Pack" badge to be told apart. Candidates with no twin are left unbadged.
+	 */
+	duplicatedSourceUuids?: ReadonlySet<string>;
 	/** Heading to display verbatim instead of formatting the group key (e.g. a feature name). */
 	displayName?: string;
 	/**
@@ -29,7 +32,10 @@ export interface SelectionGroup {
 	 * already have is a valid outcome.
 	 */
 	ownedUuids?: ReadonlySet<string>;
-	/** Candidate to preselect and mark as recommended. Never an owned copy. */
+	/**
+	 * Candidate to mark as recommended, and to start the group on when at least one copy has to
+	 * be kept. Never an owned copy.
+	 */
 	recommendedUuid?: string;
 }
 

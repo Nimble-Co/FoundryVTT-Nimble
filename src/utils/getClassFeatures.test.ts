@@ -220,7 +220,6 @@ describe('getClassFeaturesFromIndex', () => {
 		expect(groupKey).toBe(`${DUPLICATE_SOURCE_GROUP_PREFIX}Item.wild-shape-world`);
 		expect(group.selectionCount).toBe(1);
 		expect(group.selectionMax).toBe(2);
-		expect(group.showSourceLabel).toBe(true);
 		expect(group.displayName).toBe('Wild Shape');
 		expect(group.features.map((f) => f.uuid)).toEqual([
 			'Item.wild-shape-world',
@@ -375,7 +374,6 @@ describe('getClassFeaturesFromIndex', () => {
 		expect(result.selectionGroups.size).toBe(1);
 
 		const group = [...result.selectionGroups.values()][0];
-		expect(group.showSourceLabel).toBe(true);
 		expect(group.selectionMax).toBe(2);
 		// The heading follows the first-listed copy, which is the renamed world item here.
 		expect(group.displayName).toBe('Homebrew Rage');
@@ -502,7 +500,6 @@ describe('getClassFeaturesFromIndex', () => {
 		const result = await getClassFeaturesFromIndex(index, 'druid', 2, PROMOTE);
 
 		const group = [...result.selectionGroups.values()][0];
-		expect(group.showSourceLabel).toBe(true);
 		// Never fall through to formatting the synthetic key into a heading.
 		expect(group.displayName).toBe('Original');
 	});
@@ -519,7 +516,7 @@ describe('getClassFeaturesFromIndex', () => {
 		expect([...result.selectionGroups.values()][0].displayName).toBeUndefined();
 	});
 
-	it('flags named selection groups that contain duplicate-source candidates', async () => {
+	it('badges only the duplicated candidates of a named selection group', async () => {
 		const index = indexFeaturesWithFromUuidMock('fighter', 1, [
 			{ uuid: 'Item.cleave-world', name: 'Cleave', group: 'combat-maneuvers' },
 			{
@@ -533,7 +530,10 @@ describe('getClassFeaturesFromIndex', () => {
 		const result = await getClassFeaturesFromIndex(index, 'fighter', 1, PROMOTE);
 
 		const group = result.selectionGroups.get('combat-maneuvers');
-		expect(group?.showSourceLabel).toBe(true);
+		// Parry has no twin, so its source is not what the choice turns on — no badge.
+		expect(group?.duplicatedSourceUuids).toEqual(
+			new Set(['Item.cleave-world', 'Compendium.nimble.nimble-class-features.Item.cleave-comp']),
+		);
 		expect(group?.selectionCount).toBe(1);
 		expect(group?.selectionMax).toBeUndefined();
 		expect(group?.features).toHaveLength(3);
@@ -559,7 +559,7 @@ describe('getClassFeaturesFromIndex', () => {
 
 		const group = result.selectionGroups.get('combat-maneuvers');
 		expect(group?.selectionCount).toBe(2);
-		expect(group?.showSourceLabel).toBe(true);
+		expect(group?.duplicatedSourceUuids?.size).toBe(2);
 		// Named groups stay an exact choice — only duplicate-source groups become a range.
 		expect(group?.selectionMax).toBeUndefined();
 	});
@@ -572,6 +572,6 @@ describe('getClassFeaturesFromIndex', () => {
 
 		const result = await getClassFeaturesFromIndex(index, 'fighter', 1, PROMOTE);
 
-		expect(result.selectionGroups.get('combat-maneuvers')?.showSourceLabel).toBeUndefined();
+		expect(result.selectionGroups.get('combat-maneuvers')?.duplicatedSourceUuids).toBeUndefined();
 	});
 });

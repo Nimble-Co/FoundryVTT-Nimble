@@ -4,11 +4,13 @@
 	let {
 		selected,
 		onclick,
+		onkeydown,
 		tooltip,
 		ariaLabel,
 		disabled = false,
 		role,
-		ariaChecked,
+		ariaChecked = false,
+		tabIndex,
 	}: SelectionIndicatorProps = $props();
 </script>
 
@@ -17,9 +19,11 @@
 	class="select-button"
 	class:selected
 	{onclick}
+	{onkeydown}
 	{disabled}
 	{role}
 	aria-checked={role ? ariaChecked : undefined}
+	tabindex={tabIndex}
 	data-tooltip={tooltip}
 	data-tooltip-direction="LEFT"
 	aria-label={ariaLabel}
