@@ -69,6 +69,42 @@
 				"poolIdentifier": "coordinated-strike-round",
 				"poolScope": "item",
 				"cost": "1"
+			},
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "coordinated-strike-ally-attack",
+				"identifier": "",
+				"label": "Coordinated Strike",
+				"predicate": {},
+				"priority": 3,
+				"activationType": "weaponAttack"
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-self-free-attack",
+				"identifier": "",
+				"label": "Coordinated Strike (your attack is free)",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "self",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-ally-free-attack",
+				"identifier": "",
+				"label": "Coordinated Strike (ally attack is free)",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "targeted",
+				"borrowFromNextTurn": false
 			}
 		],
 		"activation": {
