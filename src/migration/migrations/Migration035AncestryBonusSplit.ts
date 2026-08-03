@@ -1,6 +1,22 @@
 import { MigrationBase } from '../MigrationBase.js';
 
 /**
+ * Identities for "the bonus already carries this ancestry rule".
+ *
+ * The original split moved the rule objects across wholesale, so a shared `id` is the
+ * strongest signal. The shape signature (id excluded, keys sorted) additionally catches a
+ * bonus reauthored from the packs, where the equivalent rule was minted with a fresh id.
+ * A rule counts as carried if either identity matches.
+ */
+function ruleSignatures(rule: any): string[] {
+	const { id, ...shape } = rule ?? {};
+	const sorted = Object.fromEntries(Object.entries(shape).sort(([a], [b]) => a.localeCompare(b)));
+	const signatures = [`shape:${JSON.stringify(sorted)}`];
+	if (id) signatures.push(`id:${id}`);
+	return signatures;
+}
+
+/**
  * Splits an existing actor's ancestry trait into a separate `ancestryBonus` item.
  *
  * Ancestries used to bake their bonus trait directly into the ancestry item's
@@ -8,11 +24,17 @@ import { MigrationBase } from '../MigrationBase.js';
  * Those now live on a dedicated `ancestryBonus` item so the bonus can be swapped
  * independently of the ancestry.
  *
- * For each character with an ancestry but no ancestry bonus, this migration:
- * 1. Creates an `ancestryBonus` item carrying the trait's (non-language) rules and description.
+ * For each character with an ancestry, this migration:
+ * 1. Creates an `ancestryBonus` item carrying the trait's (non-language) rules and description,
+ *    unless the character already has one.
  * 2. Strips the trait out of the ancestry, but keeps any language-granting rules — and the
  *    "You know <Language>..." sentence that documents them — on the ancestry. Languages are
  *    inherent to the ancestry, not the swappable bonus trait.
+ *
+ * Step 2 runs even when a bonus already exists. An earlier pass could create the bonus without
+ * the ancestry edit landing, which leaves both items carrying the trait's rules — a dwarf then
+ * takes Stout's -1 Speed twice. Stripping unconditionally is idempotent: on an ancestry that is
+ * already trait-free the guard above returns before any of this.
  */
 class Migration035AncestryBonusSplit extends MigrationBase {
 	static override readonly version = 35;
@@ -27,8 +49,10 @@ class Migration035AncestryBonusSplit extends MigrationBase {
 		const ancestry = items.find((item) => item?.type === 'ancestry');
 		if (!ancestry) return;
 
-		// Already migrated if a bonus exists.
-		if (items.some((item) => item?.type === 'ancestryBonus')) return;
+		// A bonus may already exist from an earlier pass that created it without stripping the
+		// ancestry. Don't create a second one, but do clean up the duplicates below — leftover
+		// trait rules apply a second time on top of the bonus's copies.
+		const existingBonus = items.find((item) => item?.type === 'ancestryBonus');
 
 		const rules: any[] = Array.isArray(ancestry.system?.rules) ? ancestry.system.rules : [];
 		const description: string = ancestry.system?.description ?? '';
@@ -68,28 +92,57 @@ class Migration035AncestryBonusSplit extends MigrationBase {
 		const strongMatch = traitHtml.match(/<strong>(.*?)<\/strong>/i);
 		const traitName = strongMatch ? strongMatch[1].trim() : `${ancestry.name} Trait`;
 
-		const bonus = {
-			_id: foundry.utils.randomID(),
-			name: traitName,
-			type: 'ancestryBonus',
-			img: ancestry.img,
-			system: {
-				macro: '',
-				identifier: '',
-				rules: bonusRules,
-				description: traitHtml,
-			},
-			effects: [],
-			folder: null,
-			flags: {},
-		};
+		if (!existingBonus) {
+			items.push({
+				_id: foundry.utils.randomID(),
+				name: traitName,
+				type: 'ancestryBonus',
+				img: ancestry.img,
+				system: {
+					macro: '',
+					identifier: '',
+					rules: bonusRules,
+					description: traitHtml,
+				},
+				effects: [],
+				folder: null,
+				flags: {},
+			});
 
-		items.push(bonus);
+			ancestry.system.description = `${flavor}${languageParagraphs.join('')}`;
+			ancestry.system.rules = languageRules;
 
-		ancestry.system.description = `${flavor}${languageParagraphs.join('')}`;
-		ancestry.system.rules = languageRules;
+			console.log(`Nimble Migration | ${source.name}: extracted ancestry bonus "${traitName}"`);
+			return;
+		}
 
-		console.log(`Nimble Migration | ${source.name}: extracted ancestry bonus "${traitName}"`);
+		// A bonus already exists. Only drop the ancestry rules the bonus demonstrably carries —
+		// anything it does not (a swapped bonus, a partial earlier pass) stays put rather than
+		// being silently deleted.
+		const carried = new Set<string>(
+			(Array.isArray(existingBonus.system?.rules) ? existingBonus.system.rules : []).flatMap(
+				ruleSignatures,
+			),
+		);
+		const isCarried = (rule: any) => ruleSignatures(rule).some((sig) => carried.has(sig));
+		const duplicated = bonusRules.filter(isCarried);
+		const orphaned = bonusRules.filter((rule) => !isCarried(rule));
+
+		if (duplicated.length === 0) return;
+
+		ancestry.system.rules = [...languageRules, ...orphaned];
+
+		// The trait description only comes off the ancestry once the bonus covers all of it;
+		// while rules remain, the text still describes what the ancestry itself applies.
+		if (orphaned.length === 0) {
+			ancestry.system.description = `${flavor}${languageParagraphs.join('')}`;
+		}
+
+		console.log(
+			`Nimble Migration | ${source.name}: dropped ${duplicated.length} ancestry rule(s) already carried by "${existingBonus.name}"${
+				orphaned.length > 0 ? `; kept ${orphaned.length} not found on it` : ''
+			}`,
+		);
 	}
 }
 

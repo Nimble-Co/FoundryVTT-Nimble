@@ -147,14 +147,98 @@ describe('Migration035AncestryBonusSplit', () => {
 		);
 	});
 
-	it('is a no-op when the character already has an ancestry bonus', async () => {
+	it('does not create a second bonus when the character already has one', async () => {
 		const source = createCharacter();
 		source.items.push({ _id: 'bonus1', name: 'Stout', type: 'ancestryBonus', system: {} });
 
 		await migration.updateActor(source);
 
 		expect(source.items.filter((item) => item.type === 'ancestryBonus')).toHaveLength(1);
+		expect(getBonus(source)._id).toBe('bonus1');
+	});
+
+	it('strips leftover trait rules from the ancestry when the bonus already carries them', async () => {
+		// An earlier pass created the bonus but left the ancestry untouched, so the speed
+		// penalty applied twice.
+		const source = createCharacter();
+		source.items.push({
+			_id: 'bonus1',
+			name: 'Stout',
+			type: 'ancestryBonus',
+			system: { rules: [SPEED_RULE, HIT_DICE_RULE], description: '<p>Stout</p>' },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.rules).toEqual([LANGUAGE_RULE]);
+		expect(getAncestry(source).system.description).toBe(
+			'<p>Dwarf, in the old language, means “stone.”</p>' +
+				'<p>You know Dwarvish if your INT is not negative [M]</p>',
+		);
+		// The bonus keeps the rules it already had — they are not duplicated back onto it.
+		expect(getBonus(source).system.rules).toEqual([SPEED_RULE, HIT_DICE_RULE]);
+	});
+
+	it('matches a carried rule that was reauthored with a different id', async () => {
+		const source = createCharacter({
+			system: {
+				description: DWARF_DESCRIPTION,
+				rules: [LANGUAGE_RULE, { ...SPEED_RULE, id: 'ancestryCopy' }],
+			},
+		});
+		source.items.push({
+			_id: 'bonus1',
+			name: 'Stout',
+			type: 'ancestryBonus',
+			system: { rules: [{ ...SPEED_RULE, id: 'bonusCopy' }], description: '<p>Stout</p>' },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.rules).toEqual([LANGUAGE_RULE]);
+	});
+
+	it('keeps ancestry rules the existing bonus does not carry', async () => {
+		// The player swapped to a different bonus; the ancestry's own trait rules are not
+		// duplicated anywhere, so deleting them would lose the rule outright.
+		const source = createCharacter();
+		source.items.push({
+			_id: 'bonus1',
+			name: 'Lithe',
+			type: 'ancestryBonus',
+			system: { rules: [{ type: 'initiativeBonus', value: '1' }], description: '<p>Lithe</p>' },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.rules).toEqual([LANGUAGE_RULE, SPEED_RULE, HIT_DICE_RULE]);
 		expect(getAncestry(source).system.description).toBe(DWARF_DESCRIPTION);
+	});
+
+	it('keeps only the uncarried rules on a partially migrated ancestry', async () => {
+		const source = createCharacter();
+		source.items.push({
+			_id: 'bonus1',
+			name: 'Stout',
+			type: 'ancestryBonus',
+			system: { rules: [SPEED_RULE], description: '<p>Stout</p>' },
+		});
+
+		await migration.updateActor(source);
+
+		expect(getAncestry(source).system.rules).toEqual([LANGUAGE_RULE, HIT_DICE_RULE]);
+		// Rules remain on the ancestry, so its description still describes what it applies.
+		expect(getAncestry(source).system.description).toBe(DWARF_DESCRIPTION);
+	});
+
+	it('is idempotent once the ancestry has been stripped', async () => {
+		const source = createCharacter();
+
+		await migration.updateActor(source);
+		const afterFirst = JSON.stringify(source.items);
+		await migration.updateActor(source);
+
+		expect(JSON.stringify(source.items)).toBe(afterFirst);
 	});
 
 	it('is a no-op for an already trait-free ancestry', async () => {
