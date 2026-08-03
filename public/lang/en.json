@@ -1150,6 +1150,13 @@
 					"label": "How many to choose"
 				}
 			},
+			"removeSpells": {
+				"description": "Remove specific spells from the actor when this feature is granted. Only spells that were automation-granted (with a matching compendium source) are removed.",
+				"uuids": {
+					"label": "Specific spells",
+					"hint": "Drag spells from a compendium or sidebar onto each slot to remove them."
+				}
+			},
 			"restrictSpellSchools": {
 				"description": "Restrict which spell schools the actor may cast (‘you can only cast fire spells from now on’). Removes owned automation-granted spells from other schools and stops them being auto-granted at later levels. Optionally lets the player keep one spell from a removed school and retag it to an allowed school.",
 				"allowedSchools": {
@@ -2639,8 +2646,7 @@
 			"levelUpRemovalHeader": "Spells Removed by Subclass",
 			"levelUpRemovalHint": "Your subclass removes the following spells from your spell list.",
 			"levelUpExceptionHeader": "Keep and Convert a Spell",
-			"levelUpExceptionHint": "Your subclass lets you keep one spell from a removed school. It will be retagged to your new school.",
-			"convertedSpellLabel": "Converted to {school}"
+			"levelUpExceptionHint": "Your subclass lets you keep one spell from a removed school. It will be retagged to your new school."
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

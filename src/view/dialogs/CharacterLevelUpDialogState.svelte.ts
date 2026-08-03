@@ -17,6 +17,7 @@ import getSubclassChoices from '#utils/getSubclassChoices.ts';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
 import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 import localize from '#utils/localize.ts';
+import { schoolToDamageType } from '#utils/spell/spellDamageType.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
@@ -29,7 +30,6 @@ import {
 	type RulesArray,
 	type SpellRemovalEntry,
 	type SpellRestriction,
-	schoolToDamageType,
 } from './spellGrantUtils.ts';
 
 /** A player-chosen exception spell to keep and retag to a new school. */
