@@ -2398,6 +2398,7 @@
 			"duplicateCompareAll": "Compare all",
 			"duplicateCollapseAll": "Collapse all",
 			"duplicateKeepAll": "Keep all {count}",
+			"duplicateKeepRecommended": "Keep recommended",
 			"duplicateRecommended": "Recommended",
 			"duplicateAlreadyOwned": "Already added",
 			"duplicateUseCopy": "Use the copy in {name}",

@@ -1,7 +1,10 @@
 <script lang="ts">
 	import type { DuplicateSourceGroupProps } from '#types/components/DuplicateSourceGroup.d.ts';
 
-	import { createDuplicateSourceGroupState } from './DuplicateSourceGroup.svelte.ts';
+	import {
+		createDuplicateSourceGroupState,
+		tooltipWhenClipped,
+	} from './DuplicateSourceGroup.svelte.ts';
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
 	import SourceTag from '#view/components/SourceTag.svelte';
 	import localize from '#utils/localize.js';
@@ -88,8 +91,8 @@
 					/>
 
 					<div class="duplicate-row__identity">
-						<span class="duplicate-row__origin">{candidate.origin}</span>
-						<span class="duplicate-row__meta">
+						<span class="duplicate-row__origin" use:tooltipWhenClipped>{candidate.origin}</span>
+						<span class="duplicate-row__meta" use:tooltipWhenClipped>
 							{candidate.lineage}
 							{#if candidate.note}
 								<span class="duplicate-row__sep">·</span>
@@ -146,16 +149,20 @@
 	{#if groupState.offerable.length > 1}
 		<div class="duplicate-group__keep-all">
 			<span class="duplicate-group__rule"></span>
+			<!-- One button, two states: take every copy, then step back to just the recommended one. -->
 			<button
 				type="button"
 				class="nimble-button"
 				data-button-variant="basic"
 				aria-pressed={groupState.allSelected}
-				onclick={() => onSetSelection(groupState.offerable)}
+				onclick={() =>
+					onSetSelection(groupState.allSelected ? [groupState.recommended] : groupState.offerable)}
 			>
-				{localize('NIMBLE.classFeatureSelection.duplicateKeepAll', {
-					count: String(groupState.offerable.length),
-				})}
+				{groupState.allSelected
+					? localize('NIMBLE.classFeatureSelection.duplicateKeepRecommended')
+					: localize('NIMBLE.classFeatureSelection.duplicateKeepAll', {
+							count: String(groupState.offerable.length),
+						})}
 			</button>
 		</div>
 	{/if}
@@ -304,6 +311,16 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.15rem;
+		}
+
+		// Both identity lines clip rather than wrap: a duplicate row must stay one row tall so
+		// the copies line up for comparison. `tooltipWhenClipped` restores the full text on
+		// hover, but only for the lines that actually lost something.
+		&__origin,
+		&__meta {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 
 		&__origin {

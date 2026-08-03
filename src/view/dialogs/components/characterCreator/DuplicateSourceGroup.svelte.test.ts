@@ -118,6 +118,27 @@ describe('DuplicateSourceGroup', () => {
 		expect(onSetSelection.mock.calls[0][0]).toHaveLength(2);
 	});
 
+	it('turns into Keep recommended once everything is selected', () => {
+		const group = {
+			features: [createFeature(WORLD, { folder: 'Homebrew' }), createFeature(PACK)],
+		};
+		renderGroup(group, group.features);
+
+		expect(screen.queryByRole('button', { name: /Keep all/ })).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Keep recommended' })).toBeInTheDocument();
+	});
+
+	it('steps back to just the recommended copy from Keep recommended', async () => {
+		const group = {
+			features: [createFeature(WORLD, { folder: 'Homebrew' }), createFeature(PACK)],
+		};
+		const { onSetSelection } = renderGroup(group, group.features);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Keep recommended' }));
+
+		expect(onSetSelection.mock.calls[0][0].map((f: NimbleFeatureItem) => f.uuid)).toEqual([WORLD]);
+	});
+
 	it('expands a row without changing the selection', async () => {
 		const { onSetSelection } = renderGroup();
 

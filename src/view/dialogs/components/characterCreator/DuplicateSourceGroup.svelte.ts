@@ -102,6 +102,35 @@ function describeDifference(
 	};
 }
 
+/**
+ * Gives an element a tooltip carrying its own text, but only while that text is clipped.
+ *
+ * The identity line can be long — "identical to Nimble Class Features" against a narrow
+ * dialog — so it truncates. A tooltip that repeats fully visible text is noise, so it is
+ * attached and removed as the element resizes.
+ */
+export function tooltipWhenClipped(node: HTMLElement) {
+	const sync = () => {
+		// +1 absorbs sub-pixel rounding, which otherwise reports untruncated text as clipped.
+		if (node.scrollWidth > node.clientWidth + 1) {
+			node.setAttribute('data-tooltip', node.textContent?.trim() ?? '');
+		} else {
+			node.removeAttribute('data-tooltip');
+		}
+	};
+
+	sync();
+
+	// Absent in some test environments; the initial sync still covers the common case.
+	const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(sync);
+	observer?.observe(node);
+
+	return {
+		update: sync,
+		destroy: () => observer?.disconnect(),
+	};
+}
+
 export function createDuplicateSourceGroupState(getProps: () => StateProps) {
 	function buildCandidates(): DuplicateCandidate[] {
 		const { group } = getProps();
@@ -137,6 +166,12 @@ export function createDuplicateSourceGroupState(getProps: () => StateProps) {
 		get offerable() {
 			const { group } = getProps();
 			return group.features.filter((feature) => !group.ownedUuids?.has(feature.uuid));
+		},
+		/** The copy "Keep recommended" falls back to; the first offerable if none is marked. */
+		get recommended() {
+			const { group } = getProps();
+			const offerable = group.features.filter((feature) => !group.ownedUuids?.has(feature.uuid));
+			return offerable.find((feature) => feature.uuid === group.recommendedUuid) ?? offerable[0];
 		},
 		get heading() {
 			const { group } = getProps();
