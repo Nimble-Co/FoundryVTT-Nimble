@@ -10,9 +10,9 @@ import { MigrationBase } from '../MigrationBase.js';
  *
  * For each character with an ancestry but no ancestry bonus, this migration:
  * 1. Creates an `ancestryBonus` item carrying the trait's (non-language) rules and description.
- * 2. Strips the trait out of the ancestry (flavor-only description), but keeps any
- *    language-granting rules on the ancestry — languages are inherent to the ancestry,
- *    not the swappable bonus trait.
+ * 2. Strips the trait out of the ancestry, but keeps any language-granting rules — and the
+ *    "You know <Language>..." sentence that documents them — on the ancestry. Languages are
+ *    inherent to the ancestry, not the swappable bonus trait.
  */
 class Migration035AncestryBonusSplit extends MigrationBase {
 	static override readonly version = 35;
@@ -46,8 +46,24 @@ class Migration035AncestryBonusSplit extends MigrationBase {
 		if (hrIndex < 0 && bonusRules.length === 0) return;
 
 		const flavor = hrIndex >= 0 ? description.slice(0, hrIndex).trim() : description;
-		const traitHtml =
+		const rawTrait =
 			hrIndex >= 0 ? description.slice(hrIndex + (hrMatch?.[0].length ?? 0)).trim() : '';
+
+		// The trait section also carries the "You know <Language>..." sentence. That belongs
+		// with the ancestry alongside its language rule, not on the swappable bonus.
+		const languages = languageRules.flatMap((rule: any) =>
+			Array.isArray(rule?.values) ? rule.values : [],
+		);
+		const isLanguageParagraph = (paragraph: string) =>
+			/you know/i.test(paragraph) &&
+			languages.some((language: string) => new RegExp(language, 'i').test(paragraph));
+
+		const languageParagraphs = (rawTrait.match(/<p>[\s\S]*?<\/p>/gi) ?? []).filter(
+			isLanguageParagraph,
+		);
+		const traitHtml = languageParagraphs
+			.reduce((html, paragraph) => html.replace(paragraph, ''), rawTrait)
+			.trim();
 
 		const strongMatch = traitHtml.match(/<strong>(.*?)<\/strong>/i);
 		const traitName = strongMatch ? strongMatch[1].trim() : `${ancestry.name} Trait`;
@@ -70,7 +86,7 @@ class Migration035AncestryBonusSplit extends MigrationBase {
 
 		items.push(bonus);
 
-		ancestry.system.description = flavor;
+		ancestry.system.description = `${flavor}${languageParagraphs.join('')}`;
 		ancestry.system.rules = languageRules;
 
 		console.log(`Nimble Migration | ${source.name}: extracted ancestry bonus "${traitName}"`);
