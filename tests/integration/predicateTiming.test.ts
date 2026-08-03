@@ -8,10 +8,10 @@
 
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import {
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	purgeTestDocuments,
 	ruleFeatureData,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	waitFor,
 } from './liveHelpers.ts';
@@ -38,8 +38,8 @@ describe('predicate timing', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 		// Keep rule automation out of the picture so hp swings don't fire
 		// condition/trigger side effects beyond the always-on health-state sync.
-		originalAutoApply = getAutoApplyConditions();
-		if (originalAutoApply) await setAutoApplyConditions(false);
+		originalAutoApply = getRuleAutomationEnabled();
+		if (originalAutoApply) await setRuleAutomationEnabled(false);
 		actor = (await Actor.create({
 			name: `${TEST_PREFIX} Actor`,
 			type: 'character',
@@ -51,8 +51,8 @@ describe('predicate timing', () => {
 	}, 60_000);
 
 	afterAll(async () => {
-		if (getAutoApplyConditions() !== originalAutoApply) {
-			await setAutoApplyConditions(originalAutoApply);
+		if (getRuleAutomationEnabled() !== originalAutoApply) {
+			await setRuleAutomationEnabled(originalAutoApply);
 		}
 		await purgeTestDocuments(TEST_PREFIX);
 	});

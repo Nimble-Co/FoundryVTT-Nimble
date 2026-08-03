@@ -213,23 +213,26 @@ async function createCombatWith(
 	return combat;
 }
 
-const AUTO_APPLY_SETTING = 'automation.autoApplyConditions';
+const RULE_AUTOMATION_SETTING = 'automation.applyRuleEffects';
 
 /**
  * The rule-automation world setting, read/written through the same casts the
- * system uses (see isAutoApplyEnabled) — it is not in fvtt-types' registered
- * settings map. Suites that depend on it either way must snapshot and
- * restore it. Note that the health-state sync (bloodied/dying status
- * mirroring) is always on and NOT gated by this setting.
+ * system uses (see isRuleAutomationEnabled) — it is not in fvtt-types'
+ * registered settings map. This is the toggle that gates ruleEventDispatch, so
+ * suites that depend on rule lifecycle events firing (or not) must snapshot and
+ * restore it. Note that the health-state sync (bloodied/dying status mirroring)
+ * has its own toggle and is NOT gated by this setting.
  */
-function getAutoApplyConditions(): boolean {
-	return Boolean(game.settings.get(game.system.id as 'core', AUTO_APPLY_SETTING as 'rollMode'));
+function getRuleAutomationEnabled(): boolean {
+	return Boolean(
+		game.settings.get(game.system.id as 'core', RULE_AUTOMATION_SETTING as 'rollMode'),
+	);
 }
 
-async function setAutoApplyConditions(value: boolean): Promise<void> {
+async function setRuleAutomationEnabled(value: boolean): Promise<void> {
 	await game.settings.set(
 		game.system.id as 'core',
-		AUTO_APPLY_SETTING as 'rollMode',
+		RULE_AUTOMATION_SETTING as 'rollMode',
 		value as never,
 	);
 }
@@ -266,7 +269,7 @@ export {
 	clickReactionButton,
 	createCombatWith,
 	createViewedTestScene,
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	GRID_SIZE,
 	importPackItem,
 	messageFromFlow,
@@ -275,7 +278,7 @@ export {
 	placeToken,
 	purgeTestDocuments,
 	ruleFeatureData,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	targetToken,
 	waitFor,

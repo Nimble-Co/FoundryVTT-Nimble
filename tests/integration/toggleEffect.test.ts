@@ -7,15 +7,15 @@
  * the owning item cleans up the stranded effect.
  *
  * Trigger dispatch runs through ruleEventDispatch, which is gated on the
- * `automation.autoApplyConditions` world setting — enabled for this suite.
+ * `automation.applyRuleEffects` world setting — enabled for this suite.
  */
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	purgeTestDocuments,
 	ruleFeatureData,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	waitFor,
 } from './liveHelpers.ts';
@@ -68,8 +68,8 @@ describe('toggleEffect rule', () => {
 
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
-		originalAutoApply = getAutoApplyConditions();
-		if (!originalAutoApply) await setAutoApplyConditions(true);
+		originalAutoApply = getRuleAutomationEnabled();
+		if (!originalAutoApply) await setRuleAutomationEnabled(true);
 
 		actor = (await Actor.create({
 			name: `${TEST_PREFIX} Actor`,
@@ -109,8 +109,8 @@ describe('toggleEffect rule', () => {
 	}, 60_000);
 
 	afterAll(async () => {
-		if (getAutoApplyConditions() !== originalAutoApply) {
-			await setAutoApplyConditions(originalAutoApply);
+		if (getRuleAutomationEnabled() !== originalAutoApply) {
+			await setRuleAutomationEnabled(originalAutoApply);
 		}
 		await purgeTestDocuments(TEST_PREFIX);
 	});

@@ -3,16 +3,16 @@
  * trigger-driven condition application through the real dispatch machinery —
  * an hp drop firing onWound (with an ActiveEffect duration patch), and real
  * combat turn advancement firing onTurnStart/onTurnEnd. All dispatch runs
- * through ruleEventDispatch, gated on `automation.autoApplyConditions`.
+ * through ruleEventDispatch, gated on `automation.applyRuleEffects`.
  */
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
 	createCombatWith,
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	purgeTestDocuments,
 	ruleFeatureData,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	waitFor,
 } from './liveHelpers.ts';
@@ -43,8 +43,8 @@ describe('applyCondition rule', () => {
 
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
-		originalAutoApply = getAutoApplyConditions();
-		if (!originalAutoApply) await setAutoApplyConditions(true);
+		originalAutoApply = getRuleAutomationEnabled();
+		if (!originalAutoApply) await setRuleAutomationEnabled(true);
 
 		actor = (await Actor.create({
 			name: `${TEST_PREFIX} Actor`,
@@ -63,8 +63,8 @@ describe('applyCondition rule', () => {
 				?.delete()
 				.catch((error) => console.error(error));
 		}
-		if (getAutoApplyConditions() !== originalAutoApply) {
-			await setAutoApplyConditions(originalAutoApply);
+		if (getRuleAutomationEnabled() !== originalAutoApply) {
+			await setRuleAutomationEnabled(originalAutoApply);
 		}
 		await purgeTestDocuments(TEST_PREFIX);
 	});

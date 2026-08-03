@@ -8,7 +8,7 @@
  * The choice is exercised through the real user path: the activation dialog
  * renders and the actual choice/Roll buttons are clicked in the DOM.
  *
- * markTarget dispatch is gated on the `automation.autoApplyConditions` world
+ * markTarget dispatch is gated on the `automation.applyRuleEffects` world
  * setting (read live per call), which this suite enables and restores.
  */
 
@@ -17,11 +17,11 @@ import {
 	attackFeatureData,
 	clearTargets,
 	createViewedTestScene,
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	importPackItem,
 	placeToken,
 	purgeTestDocuments,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	targetToken,
 	waitFor,
@@ -73,8 +73,8 @@ describe('mark target and conditional bonus', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 		originalSceneId = canvas.scene?.id ?? null;
 
-		originalAutoApply = getAutoApplyConditions();
-		if (!originalAutoApply) await setAutoApplyConditions(true);
+		originalAutoApply = getRuleAutomationEnabled();
+		if (!originalAutoApply) await setRuleAutomationEnabled(true);
 
 		hunter = (await Actor.create({
 			name: `${TEST_PREFIX} Hunter`,
@@ -126,8 +126,8 @@ describe('mark target and conditional bonus', () => {
 	afterAll(async () => {
 		await closeActivationDialogs();
 		await clearTargets();
-		if (getAutoApplyConditions() !== originalAutoApply) {
-			await setAutoApplyConditions(originalAutoApply);
+		if (getRuleAutomationEnabled() !== originalAutoApply) {
+			await setRuleAutomationEnabled(originalAutoApply);
 		}
 		if (originalSceneId) await game.scenes.get(originalSceneId)?.view();
 		await purgeTestDocuments(TEST_PREFIX);

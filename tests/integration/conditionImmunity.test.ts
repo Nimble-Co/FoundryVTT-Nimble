@@ -7,10 +7,10 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	purgeTestDocuments,
 	ruleFeatureData,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	waitFor,
 } from './liveHelpers.ts';
@@ -34,8 +34,8 @@ describe('conditionImmunity rule', () => {
 
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
-		originalAutoApply = getAutoApplyConditions();
-		if (!originalAutoApply) await setAutoApplyConditions(true);
+		originalAutoApply = getRuleAutomationEnabled();
+		if (!originalAutoApply) await setRuleAutomationEnabled(true);
 
 		immune = (await Actor.create({
 			name: `${TEST_PREFIX} Immune`,
@@ -60,8 +60,8 @@ describe('conditionImmunity rule', () => {
 	}, 60_000);
 
 	afterAll(async () => {
-		if (getAutoApplyConditions() !== originalAutoApply) {
-			await setAutoApplyConditions(originalAutoApply);
+		if (getRuleAutomationEnabled() !== originalAutoApply) {
+			await setRuleAutomationEnabled(originalAutoApply);
 		}
 		await purgeTestDocuments(TEST_PREFIX);
 	});

@@ -7,15 +7,15 @@
  * damage reduction (an ActiveEffect carrying the bankedDamageReduction flag).
  *
  * The consumer dispatch runs through ruleEventDispatch, gated on
- * `automation.autoApplyConditions`.
+ * `automation.applyRuleEffects`.
  */
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
-	getAutoApplyConditions,
+	getRuleAutomationEnabled,
 	importPackItem,
 	purgeTestDocuments,
-	setAutoApplyConditions,
+	setRuleAutomationEnabled,
 	settle,
 	waitFor,
 } from './liveHelpers.ts';
@@ -62,8 +62,8 @@ describe('dice pool rules', () => {
 
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
-		originalAutoApply = getAutoApplyConditions();
-		if (!originalAutoApply) await setAutoApplyConditions(true);
+		originalAutoApply = getRuleAutomationEnabled();
+		if (!originalAutoApply) await setRuleAutomationEnabled(true);
 
 		actor = (await Actor.create({
 			name: `${TEST_PREFIX} Rager`,
@@ -93,8 +93,8 @@ describe('dice pool rules', () => {
 
 	afterAll(async () => {
 		await actor.sheet.close().catch(() => {});
-		if (getAutoApplyConditions() !== originalAutoApply) {
-			await setAutoApplyConditions(originalAutoApply);
+		if (getRuleAutomationEnabled() !== originalAutoApply) {
+			await setRuleAutomationEnabled(originalAutoApply);
 		}
 		await purgeTestDocuments(TEST_PREFIX);
 	});
