@@ -3,11 +3,13 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
-import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
+import type { DicePoolState } from '#utils/dicePool/types.js';
 import {
 	appendFlavoredBonusToRoll,
 	foldBonusIntoPrimaryDamage,
@@ -1379,6 +1381,16 @@ class NimbleChatMessage extends ChatMessage {
 				continue;
 			}
 
+			// A typed spend was posted as its own damage packet, on a node the
+			// reroll never touches. It needs no carrying, and re-appending it here
+			// would pay the bonus twice. Only a folded — untyped — spend is at risk.
+			// A consumer that has since vanished is treated as folded, which risks
+			// an unearned bonus rather than silently eating a paid-for one.
+			if (this.#findOfferSource(entry)?.consumer.damageType) {
+				carriedEntries.push(entry);
+				continue;
+			}
+
 			if (offerSurvives(entry, view)) {
 				refold(entry, amount);
 				carriedEntries.push(entry);
@@ -1414,21 +1426,36 @@ class NimbleChatMessage extends ChatMessage {
 		const faces = entry.usedFaces ?? [];
 		if (faces.length === 0) return false;
 
+		const source = this.#findOfferSource(entry);
+		if (!source) return false;
+
+		return setPoolFaces(source.actor, source.pool.id, [...source.pool.faces, ...faces]);
+	}
+
+	/**
+	 * The live pool and consumer an offer's dice come from, re-resolved from the
+	 * rules rather than stored on the entry — the same lookup the offer's picker
+	 * makes — so a retargeted consumer does not strand the offer.
+	 */
+	#findOfferSource(
+		entry: IncomingReactionEntry,
+	): { actor: Actor.Implementation; pool: DicePoolState; consumer: DicePoolConsumer } | null {
 		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-		if (!actor) return false;
+		if (!actor) return null;
 
 		const itemId = entry.itemUuid
 			? ((fromUuidSync(entry.itemUuid as `Item.${string}`) as { id?: string } | null)?.id ?? null)
 			: null;
 
 		for (const pool of getDicePools(actor)) {
-			const match = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
-				(consumer) => consumer.ruleId === entry.ruleId && (!itemId || consumer.itemId === itemId),
+			const consumer = getDicePoolConsumers(actor, pool, { includeCardOffers: true }).find(
+				(candidate) =>
+					candidate.ruleId === entry.ruleId && (!itemId || candidate.itemId === itemId),
 			);
-			if (match) return setPoolFaces(actor, pool.id, [...pool.faces, ...faces]);
+			if (consumer) return { actor, pool, consumer };
 		}
 
-		return false;
+		return null;
 	}
 
 	/**
@@ -1446,9 +1473,10 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
-	 * Fold a dice-pool spend into this card's primary damage roll: consume the
-	 * picked faces, evaluate the consumer's effect formula against them, and add
-	 * the result to the damage the GM will apply.
+	 * Put a dice-pool spend onto this card: consume the picked faces, evaluate
+	 * the consumer's effect formula against them, and add the result to the
+	 * damage the GM will apply, either folded into the attack's own roll or as
+	 * its own typed packet (see `#buildSpendDamagePatch`).
 	 *
 	 * Executes on the primary GM's client, like the other reaction resolvers,
 	 * because a chat message is updatable only by its author or a GM (owning the
@@ -1456,9 +1484,10 @@ class NimbleChatMessage extends ChatMessage {
 	 * `queueReactionWrite` is what keeps a concurrent reaction on the same card
 	 * from clobbering `incomingReactions` on it.
 	 *
-	 * Adding to the existing roll rather than posting a second one is what keeps
-	 * the target's armor, resistances and flat reductions from being applied a
-	 * second time against the same attack.
+	 * A spend with no damage type of its own is added to the existing roll rather
+	 * than posted as a second one, which keeps the target's armor, resistances
+	 * and flat reductions from being applied a second time against the same
+	 * attack. A typed spend cannot share that roll and pays that cost knowingly.
 	 *
 	 * The bonus lands before the GM applies damage. Nothing enforces that
 	 * ordering — a spend confirmed after Apply Damage raises the card's total
@@ -1574,24 +1603,19 @@ class NimbleChatMessage extends ChatMessage {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 
-		const folded = foldBonusIntoPrimaryDamage(
-			(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
-			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
-			bonusDamage,
-			consumer.itemName,
-		);
-		if (!folded) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const patched = await this.#buildSpendDamagePatch(systemData, consumer, bonusDamage);
+		if (!patched) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
-		// Charge the pool only once the fold is known to be possible, and only
+		// Charge the pool only once the patch is known to be possible, and only
 		// if the pool actually accepted the write — otherwise the card would
 		// gain damage the player never paid for.
 		const spent = await setPoolFaces(actor, pool.id, picked.remainingFaces);
 		if (!spent) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		await this.update({
-			rolls: folded.rolls,
+			rolls: patched.rolls,
 			system: {
-				activation: folded.activation,
+				activation: patched.activation,
 				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
 					usedAmount: bonusDamage,
 					usedPoolLabel: pool.label,
@@ -1599,6 +1623,67 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			},
 		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Put a confirmed card-side spend onto the card, one of two ways.
+	 *
+	 * A blank `damageType` means the bonus deals whatever the attack deals, so
+	 * it folds into the attack's own damage roll: one Apply Damage click, and
+	 * armor, resistance and flat reduction resolve once.
+	 *
+	 * A set `damageType` cannot fold, because a damage node carries exactly one
+	 * type, so the bonus becomes its own damage packet. The trade is that the
+	 * target's flat reduction and resistance then resolve against each packet
+	 * separately; that is the answer the engine already gives wherever damage
+	 * arrives as more than one node.
+	 *
+	 * Returns null when the spend cannot land: the card carries no damage roll to
+	 * attach to, or the consumer names a damage type the system does not know.
+	 * Either way the caller aborts before charging the player for the spend.
+	 */
+	async #buildSpendDamagePatch(
+		systemData: ActivationCardSystemData,
+		consumer: DicePoolConsumer,
+		bonusDamage: number,
+	): Promise<{ activation: Record<string, unknown>; rolls: string[] } | null> {
+		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
+		const rollsSource = ((this._source as { rolls?: string[] }).rolls ?? []) as string[];
+		const damageType = consumer.damageType ?? '';
+
+		if (damageType.length < 1) {
+			return foldBonusIntoPrimaryDamage(activation, rollsSource, bonusDamage, consumer.itemName);
+		}
+
+		// An unrecognised type would land on a DamageNode and flow into
+		// resistance and immunity matching and the rendered label, so world data
+		// the system cannot interpret aborts rather than quietly falling back to
+		// the attack's own type.
+		if (!Object.hasOwn(CONFIG.NIMBLE.damageTypes, damageType)) {
+			ui.notifications?.warn(
+				localize('NIMBLE.chat.incomingReactions.poolSpendUnknownDamageType', {
+					damageType,
+				}),
+			);
+			return null;
+		}
+
+		// A plain Roll, never a DamageRoll: both `resolveForceRerollReaction` and
+		// `foldBonusIntoPrimaryDamage` find their target by `class === 'DamageRoll'`,
+		// and this packet is neither of their business.
+		const bonusRoll = new Roll(String(bonusDamage));
+		await bonusRoll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+
+		return appendTypedBonusDamage(
+			activation,
+			rollsSource,
+			bonusRoll.toJSON() as unknown as Record<string, unknown>,
+			{
+				damageType,
+				flavor: consumer.itemName,
+				isCritical: systemData.isCritical === true,
+			},
+		);
 	}
 
 	/**

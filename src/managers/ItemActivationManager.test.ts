@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../tests/mocks/foundry.js';
+import { findNodesByContexts } from '../utils/treeManipulation/findNodesByContexts.js';
 import { ItemActivationManager, testDependencies } from './ItemActivationManager.js';
 
 /** Mock roll instance interface */
@@ -296,6 +297,51 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(added).toBeDefined();
 			expect(added?.formula).toBe('2');
 			expect(added?.roll).toBeDefined();
+		});
+
+		it('surfaces the typed conditional damage on a hit card', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{
+					fastForward: true,
+					conditionalDamages: [{ formula: '2', damageType: 'fire', label: 'Quarry' }],
+				},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+			MockRoll.mockImplementation(function conditionalRoll(this: unknown) {
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn(() => ({ total: 2 })),
+				};
+			});
+
+			const result = await manager.getData();
+
+			const effects = result.activation?.effects as EffectNode[];
+			const added = effects.find((n) => n.type === 'damage' && n.damageType === 'fire');
+			const surfaced = findNodesByContexts([added as EffectNode], ['hit']);
+
+			expect(surfaced).toHaveLength(1);
+			expect(surfaced[0]).toMatchObject({ type: 'damageOutcome', parentNode: added?.id });
 		});
 
 		it('adds no extra effect when no typed conditional damage is supplied', async () => {

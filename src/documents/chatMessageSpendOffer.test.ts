@@ -444,6 +444,43 @@ describe('resolveSpendPoolForDamageOffer', () => {
 		expect(message.update).not.toHaveBeenCalled();
 	});
 
+	it('adds a typed bonus as its own damage packet, leaving the attack alone', async () => {
+		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule({ damageType: 'radiant' })]);
+		useActor(actor);
+		const message = createMessage([spendEntry()]);
+
+		await message.resolveSpendPoolForDamageOffer(
+			'spend-1',
+			'gm-user',
+			selection([4, 3, 5], [0, 2]),
+		);
+
+		const payload = message.update.mock.calls[0][0] as {
+			rolls: string[];
+			system: {
+				activation: { effects: Array<{ damageType: string; roll: { total: number } }> };
+			};
+		};
+
+		const effects = payload.system.activation.effects;
+		expect(effects).toHaveLength(2);
+		expect(effects[0].roll.total).toBe(8);
+		expect(effects[1]).toMatchObject({ damageType: 'radiant', canCrit: false, canMiss: false });
+		expect(effects[1].roll.total).toBe(18);
+		expect(payload.rolls).toHaveLength(2);
+	});
+
+	it('refuses a damage type the system does not recognise, leaving the pool full', async () => {
+		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule({ damageType: 'sonic' })]);
+		useActor(actor);
+		const message = createMessage([spendEntry()]);
+
+		await message.resolveSpendPoolForDamageOffer('spend-1', 'gm-user', selection([4, 3, 5], [0]));
+
+		expect(actor._item.update).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
 	it('does nothing when no dice were picked', async () => {
 		const actor = createActor([4, 3, 5], [POOL_RULE, consumerRule()]);
 		useActor(actor);
@@ -549,6 +586,19 @@ describe('resolveForceRerollReaction with a folded card-side spend', () => {
 
 		// Reverted to unused, so the stale-outcome filter takes it off the card
 		expect(rerolledEntries(message).map((e) => e.id)).toEqual(['reroll-1']);
+	});
+
+	it('leaves a typed spend alone, since its packet survives the reroll', async () => {
+		// A typed spend is its own damage node, which the reroll never rebuilds;
+		// re-appending it to the primary roll would pay the bonus twice
+		const actor = createActor([3], [POOL_RULE, consumerRule({ damageType: 'radiant' })]);
+		useActor(actor);
+		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'hit' })]);
+
+		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+
+		expect(rerolledRoll(message).total).toBe(0);
+		expect(rerolledEntries(message)[1]).toMatchObject({ used: true, usedAmount: 18 });
 	});
 
 	it('keeps the bonus when the dice cannot be returned', async () => {

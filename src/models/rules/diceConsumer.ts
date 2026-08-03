@@ -69,6 +69,24 @@ function schema() {
 			hint: 'NIMBLE.rules.diceConsumer.effectType.hint',
 			choices: DICE_CONSUMER_EFFECT_TYPES,
 		}),
+		damageType: new fields.StringField({
+			required: true,
+			nullable: false,
+			// `blank: true` is explicit because adding `choices` flips Foundry's
+			// blank default to false — but the empty string is the sentinel here,
+			// meaning "inherit the damage type of the attack this spend modifies".
+			// It is also listed among the choices: the builder's select only offers
+			// a blank option for optional fields, so leaving it out would let an
+			// author pick a type and never get back to the sentinel.
+			blank: true,
+			initial: '',
+			label: 'NIMBLE.rules.diceConsumer.damageType.label',
+			hint: 'NIMBLE.rules.diceConsumer.damageType.hint',
+			choices: () => ({
+				'': 'NIMBLE.rules.diceConsumer.damageType.inherit',
+				...CONFIG.NIMBLE.damageTypes,
+			}),
+		}),
 		selectionOutcome: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -120,6 +138,11 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	declare effectType: (typeof DicePoolRuleConfig.effectTypes)[number];
 
+	// `damageType` is inferred from the schema's `choices` (the keys of
+	// `CONFIG.NIMBLE.damageTypes`, plus `''` for the inherit-the-attack
+	// sentinel). No explicit declare — re-declaring as the wider `string`
+	// clashes with the narrower inferred initialized type.
+
 	declare selectionOutcome: (typeof DicePoolRuleConfig.selectionOutcomes)[number];
 
 	declare cardOffer: (typeof DicePoolRuleConfig.cardOfferTriggers)[number] | null;
@@ -141,6 +164,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 				['bonusOnAttackDelivery', '"melee" | "ranged" | "any" | null'],
 				['effectFormula', 'string | null'],
 				['effectType', '"generic" | "damageReduction"'],
+				['damageType', 'string'],
 				['selectionOutcome', '"consume" | "maximize"'],
 				['cardOffer', '"hit" | "criticalHit" | null'],
 			]),
@@ -181,8 +205,9 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	/**
 	 * Whether this consumer is also offered as a button on the owner's own
-	 * attack cards, folding its effect into that card's damage instead of
-	 * posting a standalone roll.
+	 * attack cards, adding its effect to that card's damage instead of posting a
+	 * standalone roll. With no `damageType` set it folds into the attack's own
+	 * roll; with one it lands as a second damage packet.
 	 *
 	 * Beyond an outcome trigger this needs an evaluated manual spend plus a
 	 * `generic` effect: the card offer adds its total to the attack's damage,

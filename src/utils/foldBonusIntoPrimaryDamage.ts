@@ -57,6 +57,21 @@ export function appendFlavoredBonusToRoll(
 }
 
 /**
+ * The card's primary damage node: the first one carrying an evaluated
+ * `DamageRoll`. Shared so the fold path and the typed-packet path cannot
+ * disagree about which node a spend attaches to.
+ */
+export function findPrimaryDamageNode(
+	nodes: EffectNode[],
+): (EffectNode & { roll?: Record<string, unknown> }) | undefined {
+	return nodes.find(
+		(node) =>
+			node.type === 'damage' &&
+			(node as { roll?: { class?: string } }).roll?.class === 'DamageRoll',
+	) as (EffectNode & { roll?: Record<string, unknown> }) | undefined;
+}
+
+/**
  * Add a flat bonus to an activation card's primary damage roll, returning the
  * patched activation tree and message `rolls` source. Both are updated together
  * because a card's node roll and its `rolls` entry must stay in lockstep.
@@ -84,11 +99,7 @@ export function foldBonusIntoPrimaryDamage(
 	flavor: string,
 ): FoldResult | null {
 	const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
-	const damageNode = nodes.find(
-		(node) =>
-			node.type === 'damage' &&
-			(node as { roll?: { class?: string } }).roll?.class === 'DamageRoll',
-	) as (EffectNode & { roll?: Record<string, unknown> }) | undefined;
+	const damageNode = findPrimaryDamageNode(nodes);
 	if (!damageNode?.roll) return null;
 
 	const serialized = appendFlavoredBonusToRoll(damageNode.roll, amount, flavor);

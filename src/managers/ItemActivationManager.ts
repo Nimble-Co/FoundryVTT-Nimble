@@ -33,6 +33,7 @@ import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -476,16 +477,13 @@ class ItemActivationManager {
 			if (!formula) continue;
 			const roll = new Roll(formula, this.actor!.getRollData()) as Roll;
 			await roll.evaluate();
-			const node: EffectNode = {
-				id: foundry.utils.randomID(),
-				type: 'damage',
-				damageType: conditional.damageType,
-				formula,
-				parentContext: null,
-				parentNode: null,
-				roll: roll.toJSON() as Record<string, unknown>,
-			};
-			updatedEffects.push(node);
+			updatedEffects.push(
+				createBonusDamageNode({
+					damageType: conditional.damageType,
+					formula,
+					roll: roll.toJSON() as Record<string, unknown>,
+				}),
+			);
 			rolls.push(roll);
 		}
 
