@@ -2147,7 +2147,7 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 			});
 		});
 
-		it('describes immunity, resistance, and labeled reductions', () => {
+		it('describes immunity and resistance, and credits no reduction it never spent', () => {
 			const actor = createResistanceActor({
 				damageImmunities: ['fire'],
 				damageResistances: ['fire'],
@@ -2157,8 +2157,9 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 					{ value: 2, damageTypes: [] },
 				],
 			});
-			// The bank is not credited here: immunity zeroes the component, so
-			// nothing consumes the bank and it survives for a later hit.
+			// Neither the flat reductions nor the bank are credited here: immunity
+			// zeroes the packet, so nothing is left for them to subtract and they
+			// survive for a later hit.
 			withBankedReduction(actor, 6);
 			globals().fromUuidSync.mockReturnValue({ actor });
 
@@ -2166,6 +2167,19 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 				'immune to Fire (no damage)',
 				'resistant to Fire (half damage)',
 				'Stone Skin (half damage)',
+			]);
+		});
+
+		it('describes the flat reductions the attack actually spent', () => {
+			const actor = createResistanceActor({
+				damageReductions: [
+					{ value: 3, damageTypes: ['fire'], label: 'Frost Ward' },
+					{ value: 2, damageTypes: [] },
+				],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual([
 				'Frost Ward (-3)',
 				'damage reduction (-2)',
 			]);

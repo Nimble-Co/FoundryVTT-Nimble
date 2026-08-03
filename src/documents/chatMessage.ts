@@ -335,26 +335,6 @@ function calculateArmorAdjustedDamage(params: {
  * (e.g. the minion group attack card, which carries no roll metadata) must not
  * match type-scoped reductions.
  */
-function getDamageReductionTotal(actor: Actor.Implementation, damageType?: string): number {
-	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
-		| DamageReductionEntry[]
-		| undefined;
-	if (!Array.isArray(reductions)) return 0;
-
-	let total = 0;
-	for (const reduction of reductions) {
-		if (reduction?.mode === 'half') continue;
-		const value = Number(reduction?.value);
-		if (!Number.isFinite(value) || value <= 0) continue;
-
-		if (!matchesDamageType(reduction.damageTypes, damageType)) continue;
-
-		total += value;
-	}
-
-	return Math.floor(total);
-}
-
 /** Typed scopes only match a known, included damage type; empty = all. */
 function matchesDamageType(damageTypes: unknown, damageType?: string): boolean {
 	const types = Array.isArray(damageTypes) ? damageTypes : [];
@@ -409,14 +389,29 @@ function describeBankedReduction(banked: { source: string | null; value: number 
 	};
 }
 
+/** Badge text for one flat `damageReduction` rule entry. */
+function describeFlatReduction(reduction: DamageReductionEntry): DamageModifier {
+	const value = Math.floor(Number(reduction?.value));
+	return {
+		kind: 'reduction',
+		label: reduction.label
+			? localize('NIMBLE.damageModifiers.flat', {
+					label: reduction.label,
+					value: String(value),
+				})
+			: localize('NIMBLE.damageModifiers.flatGeneric', { value: String(value) }),
+	};
+}
+
 /**
- * Human-readable reasons one damage component resolves to something other than
- * the rolled total: immunity, vulnerability, resistance (attribute or half-mode
- * rule), and flat damageReduction rules. Armor is excluded — the target list
- * already shows it as an icon. The banked one-shot reduction is appended by the
- * caller, since only the component that consumes it should name it.
+ * Human-readable reasons one damage packet resolves to something other than the
+ * rolled total, for the defenses that are scoped to its own damage type:
+ * immunity, vulnerability and resistance (attribute or half-mode rule). Armor is
+ * excluded — the target list already shows it as an icon. Flat reductions and
+ * the banked one-shot reduction are per attack, so `resolveDamageForActor`
+ * appends those to whichever packet actually spent them.
  */
-function describeDamageModifiers(
+function describeDefenseModifiers(
 	actor: Actor.Implementation,
 	options?: DamageApplyOptions,
 ): DamageModifier[] {
@@ -460,30 +455,14 @@ function describeDamageModifiers(
 	if (!Array.isArray(reductions)) return modifiers;
 
 	for (const reduction of reductions) {
+		if (reduction?.mode !== 'half') continue;
 		if (!matchesDamageType(reduction?.damageTypes, damageType)) continue;
 
-		if (reduction?.mode === 'half') {
-			modifiers.push({
-				kind: 'resistant',
-				label: reduction.label
-					? localize('NIMBLE.damageModifiers.resistanceSource', { label: reduction.label })
-					: localize('NIMBLE.damageModifiers.resistanceGeneric'),
-			});
-			continue;
-		}
-
-		const value = Number(reduction?.value);
-		if (!Number.isFinite(value) || value <= 0) continue;
 		modifiers.push({
-			kind: 'reduction',
+			kind: 'resistant',
 			label: reduction.label
-				? localize('NIMBLE.damageModifiers.flat', {
-						label: reduction.label,
-						value: String(Math.floor(value)),
-					})
-				: localize('NIMBLE.damageModifiers.flatGeneric', {
-						value: String(Math.floor(value)),
-					}),
+				? localize('NIMBLE.damageModifiers.resistanceSource', { label: reduction.label })
+				: localize('NIMBLE.damageModifiers.resistanceGeneric'),
 		});
 	}
 
@@ -491,18 +470,23 @@ function describeDamageModifiers(
 }
 
 /**
- * Order: outcome/armor halving (where vulnerability bypasses armor or doubles
- * an unarmored target) → immunity (zero) → resistance halving →
- * flat rule reductions → clamp at zero. Immunity outranks vulnerability, so a
- * target listed under both takes nothing. The banked one-shot reduction is
- * subtracted by the caller, since it is only consumed when the hit would
- * otherwise deal damage. Temp HP absorption happens later, inside
- * `actor.applyDamage`. The books don't
- * specify resistance-vs-reduction ordering; halving first keeps flat
- * reductions (Fury spends) fully effective. Halving rounds up, matching the
- * heavy-armor convention.
+ * Everything that scales a single damage packet by its own type: outcome/armor
+ * halving (where vulnerability bypasses armor or doubles an unarmored target),
+ * then immunity (zero), then resistance halving. Immunity outranks
+ * vulnerability, so a target listed under both takes nothing.
+ *
+ * These stay per packet because each is a property of a damage type: a target
+ * resistant to fire but not radiant must take the radiant in full. Flat
+ * reductions and the banked one-shot reduction are per *attack* and are applied
+ * by `resolveDamageForActor` over the packets together. Temp HP absorption
+ * happens later still, inside `actor.applyDamage`.
+ *
+ * Halving rounds up, matching the heavy-armor convention. The books give one
+ * data point on halving-vs-subtraction ordering, and it agrees with halving
+ * first: Fey Touched halves or doubles "before armor is applied"
+ * (CoreRules-2 "Fey Touched").
  */
-function calculateAdjustedDamage(params: {
+function calculateDefenseAdjustedDamage(params: {
 	actor: Actor.Implementation;
 	damage: number;
 	options?: DamageApplyOptions;
@@ -511,17 +495,151 @@ function calculateAdjustedDamage(params: {
 	const damageType = params.options?.damageType;
 	if (actorIsImmuneToDamage(params.actor, damageType)) return 0;
 
-	const resistanceAdjustedDamage = actorResistsDamage(params.actor, damageType)
+	return actorResistsDamage(params.actor, damageType)
 		? Math.ceil(armorAdjustedDamage * 0.5)
 		: armorAdjustedDamage;
+}
 
-	return Math.max(0, resistanceAdjustedDamage - getDamageReductionTotal(params.actor, damageType));
+/** One damage packet of a card, as `#collectApplicableDamageRolls` reports it. */
+type DamagePacket = { value: number; options: DamageApplyOptions };
+
+interface ResolvedDamageForActor {
+	total: number;
+	components: TargetDamageComponent[];
+	/** Whether the actor's banked one-shot reduction was spent by this attack */
+	consumedBank: boolean;
+}
+
+/**
+ * One flat reduction the target has, with a running balance. Each entry is
+ * worth its value once for the whole attack, because the rules word every flat
+ * reduction as reducing "an attack": Defend ("reduce damage from any single
+ * attack by your Armor"), Deflect, and the Berserker's "That all you got?!" all
+ * read that way. It still only spends against damage of a type it is scoped to,
+ * so a fire ward never soaks a slashing packet.
+ */
+interface PendingFlatReduction {
+	damageTypes: unknown;
+	remaining: number;
+	modifier: DamageModifier;
+}
+
+function collectAttackFlatReductions(actor: Actor.Implementation): PendingFlatReduction[] {
+	const reductions = foundry.utils.getProperty(actor, 'system.damageReductions') as
+		| DamageReductionEntry[]
+		| undefined;
+	if (!Array.isArray(reductions)) return [];
+
+	const pending: PendingFlatReduction[] = [];
+
+	for (const reduction of reductions) {
+		if (reduction?.mode === 'half') continue;
+		const value = Number(reduction?.value);
+		if (!Number.isFinite(value) || value <= 0) continue;
+
+		pending.push({
+			damageTypes: reduction.damageTypes,
+			remaining: Math.floor(value),
+			modifier: describeFlatReduction(reduction),
+		});
+	}
+
+	return pending;
+}
+
+/**
+ * Spend whatever of the attack's remaining flat reductions apply to one
+ * packet's damage type, in declaration order. Mutates the balances, so a
+ * reduction bigger than this packet carries into the next one.
+ */
+function spendFlatReductions(
+	pending: PendingFlatReduction[],
+	damage: number,
+	damageType: string | undefined,
+): { remainingDamage: number; spent: DamageModifier[] } {
+	let remainingDamage = damage;
+	const spent: DamageModifier[] = [];
+
+	for (const reduction of pending) {
+		if (remainingDamage <= 0) break;
+		if (reduction.remaining <= 0) continue;
+		if (!matchesDamageType(reduction.damageTypes, damageType)) continue;
+
+		const used = Math.min(remainingDamage, reduction.remaining);
+		reduction.remaining -= used;
+		remainingDamage -= used;
+		spent.push(reduction.modifier);
+	}
+
+	return { remainingDamage, spent };
+}
+
+/**
+ * Resolve every damage packet of one attack against one target: what each
+ * packet deals after that target's defenses, and what the attack removes in
+ * total.
+ *
+ * Armor, immunity and resistance resolve per packet; flat reductions and the
+ * banked one-shot reduction resolve once for the attack. The per-attack
+ * subtraction walks the packets in order, so a reduction larger than the first
+ * packet carries into the next rather than being wasted on it.
+ */
+function resolveDamageForActor(
+	actor: Actor.Implementation,
+	packets: DamagePacket[],
+	availableBank = getBankedDamageReduction(actor),
+): ResolvedDamageForActor {
+	const pendingReductions = collectAttackFlatReductions(actor);
+	const bankedEntries = getBankedDamageReductionEntries(actor);
+
+	let remainingBank = availableBank;
+	let consumedBank = false;
+
+	const components: TargetDamageComponent[] = [];
+	let total = 0;
+
+	for (const { value, options } of packets) {
+		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
+		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
+
+		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options.damageType);
+		let adjustedDamage = reduced.remainingDamage;
+
+		// The bank reduces "the damage taken" from the attack, so like a flat
+		// reduction it carries across the packets. It stays one-shot: spending
+		// any of it clears the effect, and whatever it over-absorbs is forfeit.
+		const bankUsed = Math.min(adjustedDamage, remainingBank);
+		const consumesBank = bankUsed > 0;
+		if (consumesBank) {
+			adjustedDamage -= bankUsed;
+			remainingBank -= bankUsed;
+			consumedBank = true;
+		}
+
+		adjustedDamage = Math.floor(adjustedDamage);
+		total += adjustedDamage;
+
+		const modifiers = describeDefenseModifiers(actor, options);
+		// Name a flat reduction on the packets it actually spent against, since
+		// it was subtracted from the attack rather than from every packet.
+		modifiers.push(...reduced.spent);
+		if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
+
+		components.push({
+			damageType: options.damageType,
+			typeLabel: options.damageType ? getDamageTypeLabel(options.damageType) : null,
+			damageBeforeDefenses: Math.max(0, Math.floor(value)),
+			adjustedDamage,
+			modifiers,
+		});
+	}
+
+	return { total, components, consumedBank };
 }
 
 function buildDamageApplicationPlan(params: {
 	targets: string[];
-	damage: number;
-	options?: DamageApplyOptions;
+	packets: DamagePacket[];
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
@@ -534,20 +652,13 @@ function buildDamageApplicationPlan(params: {
 
 		// A banked reduction is one-shot: when the same actor is targeted through
 		// multiple tokens, only its first application entry gets the bank. It is
-		// only consumed when the hit would otherwise deal damage — immunity or
-		// armor zeroing the hit leaves the bank in place.
+		// only consumed when the attack would otherwise deal damage — immunity or
+		// armor zeroing it leaves the bank in place.
 		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
-		const unbankedDamage = calculateAdjustedDamage({
-			actor,
-			damage: params.damage,
-			options: params.options,
-		});
-		const bankedReduction = unbankedDamage > 0 ? availableBank : 0;
-		if (bankedReduction > 0) bankedReductionActors.add(actor);
+		const resolved = resolveDamageForActor(actor, params.packets, availableBank);
+		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
-		const adjustedDamage = Math.max(0, unbankedDamage - bankedReduction);
-
-		if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) {
+		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
 			zeroDamageTargetNames.add(
 				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
 			);
@@ -556,7 +667,7 @@ function buildDamageApplicationPlan(params: {
 
 		applicableTargets.push({
 			actor,
-			adjustedDamage,
+			adjustedDamage: resolved.total,
 		});
 	}
 
@@ -849,6 +960,12 @@ class NimbleChatMessage extends ChatMessage {
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
+	/**
+	 * Apply one packet's worth of damage. Kept for the callers that own a single
+	 * node's damage (the minion group attack card), and routed through the same
+	 * path as `applyAllDamage` so a card's damage resolves by one set of rules
+	 * rather than two.
+	 */
 	async applyDamage(value: number, options?: DamageApplyOptions): Promise<void> {
 		if (!this.isActivationCard()) return;
 		if (!game.user?.isGM) return;
@@ -864,9 +981,41 @@ class NimbleChatMessage extends ChatMessage {
 			return;
 		}
 
-		const systemData = this.system as ActivationCardSystemData;
+		await this.#applyDamagePackets([{ value: damage, options: options ?? {} }]);
+	}
+
+	/**
+	 * Apply every damage packet the card currently surfaces, in one pass. The
+	 * target's flat reduction and banked one-shot reduction then resolve once for
+	 * the attack instead of once per packet, and `damageApplied` fires once per
+	 * target rather than once per target per packet.
+	 */
+	async applyAllDamage(): Promise<void> {
+		if (!this.isActivationCard()) return;
+		if (!game.user?.isGM) return;
+
+		const packets = this.#applicableDamagePackets();
+		if (packets.length < 1) {
+			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
+			return;
+		}
+
+		await this.#applyDamagePackets(packets);
+	}
+
+	/** The card's damage packets that would actually remove HP. */
+	#applicableDamagePackets(): DamagePacket[] {
+		return this.#collectApplicableDamageRolls().filter(
+			({ value, options }) => options.outcome !== 'noDamage' && Number.isFinite(value) && value > 0,
+		);
+	}
+
+	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
+		// The public entry points already gated on `isActivationCard()`; that
+		// narrowing does not survive the hop into this method.
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		const targets = systemData.targets || [];
-		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
+		const damageApplicationPlan = buildDamageApplicationPlan({ targets, packets });
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
 			return;
@@ -936,11 +1085,25 @@ class NimbleChatMessage extends ChatMessage {
 		const damage = Math.floor(Number(value));
 		if (!Number.isFinite(damage) || damage <= 0) return false;
 
-		const targets = (this.system as ActivationCardSystemData).targets || [];
-		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
+		return this.#canApplyPackets([{ value: damage, options: options ?? {} }]);
+	}
+
+	/** Whether the card's single Apply Damage control should be live. */
+	canApplyAllDamage(): boolean {
+		if (!this.isActivationCard()) return false;
+
+		const packets = this.#applicableDamagePackets();
+		if (packets.length < 1) return false;
+
+		return this.#canApplyPackets(packets);
+	}
+
+	#canApplyPackets(packets: DamagePacket[]): boolean {
+		const targets = (this.system as unknown as ActivationCardSystemData).targets || [];
+		const damageApplicationPlan = buildDamageApplicationPlan({ targets, packets });
 		if (!damageApplicationPlan.hasTargets) return true;
 		// A pending banked reduction is spent by clicking Apply even when it
-		// absorbs the hit entirely, so the button must stay live for it.
+		// absorbs the attack entirely, so the button must stay live for it.
 		return (
 			damageApplicationPlan.applicableTargets.length > 0 ||
 			damageApplicationPlan.bankedReductionActors.length > 0
@@ -1016,46 +1179,16 @@ class NimbleChatMessage extends ChatMessage {
 	getDamageBreakdownForTarget(targetUuid: string): TargetDamageBreakdown | null {
 		if (!this.isActivationCard()) return null;
 
-		const damageRolls = this.#collectApplicableDamageRolls().filter(
-			({ options }) => options.outcome !== 'noDamage',
-		);
+		const damageRolls = this.#applicableDamagePackets();
 		if (damageRolls.length < 1) return null;
 
 		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
 		const actor = tokenDocument?.actor as Actor.Implementation | null;
 		if (!actor) return null;
 
-		// The banked one-shot reduction is consumed by the first application that
-		// would otherwise deal damage, so credit it against that component only —
-		// mirroring `buildDamageApplicationPlan`.
-		let availableBank = getBankedDamageReduction(actor);
-		const bankedEntries = getBankedDamageReductionEntries(actor);
-
-		const components: TargetDamageComponent[] = [];
-		let total = 0;
-
-		for (const { value, options } of damageRolls) {
-			const unbankedDamage = calculateAdjustedDamage({ actor, damage: value, options });
-			const damageBeforeBank = Number.isFinite(unbankedDamage) ? Math.max(0, unbankedDamage) : 0;
-
-			const consumesBank = damageBeforeBank > 0 && availableBank > 0;
-			const adjustedDamage = Math.floor(Math.max(0, damageBeforeBank - availableBank));
-			if (damageBeforeBank > 0) availableBank = 0;
-
-			total += adjustedDamage;
-
-			const modifiers = describeDamageModifiers(actor, options);
-			if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
-
-			components.push({
-				damageType: options.damageType,
-				typeLabel: options.damageType ? getDamageTypeLabel(options.damageType) : null,
-				damageBeforeDefenses: Math.max(0, Math.floor(value)),
-				adjustedDamage,
-				modifiers,
-			});
-		}
-
+		// Deliberately the same resolver `applyAllDamage` runs, so the number this
+		// previews and the number the GM removes cannot drift apart.
+		const { components, total } = resolveDamageForActor(actor, damageRolls);
 		return { components, total };
 	}
 
