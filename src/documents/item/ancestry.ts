@@ -1,5 +1,6 @@
 import type { NimbleAncestryData } from '../../models/item/AncestryDataModel.js';
 
+import localize from '../../utils/localize.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 /** The slice of the parent character this item touches when it replaces an ancestry. */
@@ -7,6 +8,20 @@ interface AncestryHost {
 	ancestry?: { delete(): Promise<unknown> };
 	ancestryBonus?: { delete(): Promise<unknown> };
 	createEmbeddedDocuments(type: 'Item', data: Record<string, unknown>[]): Promise<unknown>;
+}
+
+/**
+ * Extra create-operation flags this item reads.
+ *
+ * Foundry forwards unknown keys on the operation straight through to `_preCreate`, so a caller
+ * that already knows which bonus the character should end up with can say so.
+ */
+export interface AncestryCreateOptions {
+	/**
+	 * The same create batch already carries the character's `ancestryBonus`, so the ancestry must
+	 * not create its default one. Set by `submitCharacterCreation`.
+	 */
+	nimbleAncestryBonusInBatch?: boolean;
 }
 
 /**
@@ -21,29 +36,27 @@ async function replaceAncestryBonus(
 ): Promise<void> {
 	const defaultBonusUuid = incomingAncestry.system.defaultBonus;
 
-	const dropExistingBonus = async () => {
-		if (actor.ancestryBonus) await actor.ancestryBonus.delete();
-	};
-
-	if (!defaultBonusUuid) {
-		await dropExistingBonus();
-		return;
-	}
+	// An ancestry with no default declares no opinion about the bonus — that's the homebrew and
+	// module case the selection UI treats as "choose any bonus". Deleting the character's pick
+	// there would throw away a deliberate choice, so leave it attached.
+	if (!defaultBonusUuid) return;
 
 	const defaultBonus = (await fromUuid(defaultBonusUuid as `Item.${string}`)) as {
-		toObject(): Record<string, unknown> & { _stats: { compendiumSource: string } };
+		toObject(): Record<string, unknown> & { _stats?: { compendiumSource?: string } };
 	} | null;
 
 	if (!defaultBonus) {
 		console.warn(
 			`Nimble | ${incomingAncestry.name}: default bonus "${defaultBonusUuid}" could not be resolved.`,
 		);
-		await dropExistingBonus();
+		if (actor.ancestryBonus) await actor.ancestryBonus.delete();
 		return;
 	}
 
+	// Real documents always carry `_stats`, but `toObject()` is typed loosely enough that a stub
+	// or a hand-built source can omit it — seed it rather than throwing on the assignment.
 	const source = defaultBonus.toObject();
-	source._stats.compendiumSource = defaultBonusUuid;
+	source._stats = { ...source._stats, compendiumSource: defaultBonusUuid };
 
 	// Creating the replacement is what removes the outgoing trait: an ancestry bonus's own
 	// `_preCreate` deletes whichever bonus the character already has.
@@ -63,7 +76,8 @@ export class NimbleAncestryItem extends NimbleBaseItem {
 			flavor: `${this.actor?.name}: ${this.name}`,
 			type: 'feature',
 			system: {
-				description: description || 'No description available.',
+				description:
+					description || localize('NIMBLE.ancestryBonusSelection.noDescriptionAvailable'),
 				featureType: this.type,
 				name: this.name,
 			},
@@ -86,7 +100,11 @@ export class NimbleAncestryItem extends NimbleBaseItem {
 
 			if (host.ancestry) await host.ancestry.delete();
 
-			await replaceAncestryBonus(this, host);
+			// Skip the default when the caller is already creating the bonus alongside us. Creating
+			// it here would only get deleted again by that bonus's own `_preCreate`, and any
+			// `grantItem` rule or active effect on it would run against a doomed document.
+			const { nimbleAncestryBonusInBatch } = options as typeof options & AncestryCreateOptions;
+			if (!nimbleAncestryBonusInBatch) await replaceAncestryBonus(this, host);
 		}
 
 		return super._preCreate(data, options, user);

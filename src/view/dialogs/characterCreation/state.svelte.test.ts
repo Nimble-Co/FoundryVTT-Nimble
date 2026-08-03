@@ -709,6 +709,7 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 		ancestryDocument: NimbleAncestryItem,
 		alternateAncestryDocument: NimbleAncestryItem | null = null,
 		alternateAncestryBonus: NimbleAncestryBonusItem | null = null,
+		ancestryBonusOptions: NimbleAncestryBonusItem[] | undefined = undefined,
 	) {
 		render(CharacterCreationStateHarness, {
 			props: {
@@ -718,6 +719,7 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 						: [ancestryDocument],
 					exotic: [],
 				},
+				...(ancestryBonusOptions ? { ancestryBonusOptions } : {}),
 				backgroundOptions: [createBackground()],
 				classDocument,
 				classOptions: [classDocument],
@@ -755,6 +757,29 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 		// Confirming releases the gate; single size + no save choice advances straight to background.
 		await vi.waitFor(() => {
 			expect(screen.getByTestId('ancestry-bonus-confirmed')).toHaveTextContent('true');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('skips ANCESTRY_BONUS when no bonuses are available at all', async () => {
+		// The bonus pack is missing or disabled, so the default resolves to nothing and there is
+		// nothing to pick. Gating here would dead-end the wizard: no way to complete a character.
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi.fn().mockResolvedValue(null);
+
+		renderWithAncestry(
+			createClass('mage'),
+			createAncestryWithDefaultBonus('Compendium.nimble.nimble-ancestry-bonuses.Item.test-bonus'),
+			null,
+			null,
+			[],
+		);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		await vi.waitFor(() => {
 			expect(screen.getByTestId('stage')).toHaveTextContent(
 				String(CHARACTER_CREATION_STAGES.BACKGROUND),
 			);

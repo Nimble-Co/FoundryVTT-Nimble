@@ -1,4 +1,5 @@
 import type { DeepPartial } from 'fvtt-types/utils';
+import type { AncestryCreateOptions } from '#documents/item/ancestry.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
@@ -259,23 +260,22 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				}
 			}
 
-			// If this is an ancestry bonus with a save choice, set the selectedSave on the rule
+			// If this is an ancestry bonus with a save choice, set the selectedSave on the rule.
+			// `target` is deliberately not narrowed to `neutral`: `ancestryBonusRequiresSaveChoice`
+			// makes the player choose for *any* `requiresChoice` rule, so stamping only the neutral
+			// ones would leave a homebrew rule with another target unresolved on the embedded item —
+			// applied once at creation, then resolved differently on the next prepare.
 			if (options.isAncestryBonus && results.selectedAncestrySave) {
 				const systemWithRules = source.system as {
 					rules?: Array<{
 						type: string;
 						requiresChoice?: boolean;
-						target?: string;
 						selectedSave?: string;
 					}>;
 				};
 				if (systemWithRules.rules) {
 					for (const rule of systemWithRules.rules) {
-						if (
-							rule.type === 'savingThrowRollMode' &&
-							rule.requiresChoice === true &&
-							rule.target === 'neutral'
-						) {
+						if (rule.type === 'savingThrowRollMode' && rule.requiresChoice === true) {
 							rule.selectedSave = results.selectedAncestrySave;
 						}
 					}
@@ -342,7 +342,12 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// When origin documents are added, the system automatically processes grantItem rules
 		// If equipment was chosen, items will be granted automatically
 		// If gold was chosen, grantItem rules were disabled above so no items are granted
-		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
+		//
+		// `nimbleAncestryBonusInBatch` tells the ancestry's `_preCreate` not to create its default
+		// bonus: the player's chosen one is in this same batch and would delete it right back.
+		await actor?.createEmbeddedDocuments('Item', originDocumentSources, {
+			nimbleAncestryBonusInBatch: ancestryBonusDocument !== null,
+		} satisfies AncestryCreateOptions as object as Item.Database.CreateOperation<false>);
 
 		// Auto-equip all object items granted as starting equipment
 		if (startingEquipmentChoice === 'equipment' && actor) {

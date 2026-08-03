@@ -37,6 +37,9 @@
 		get ancestryOptions() {
 			return ancestryOptions;
 		},
+		get ancestryBonusOptions() {
+			return ancestryBonusOptions;
+		},
 		get backgroundOptions() {
 			return backgroundOptions;
 		},

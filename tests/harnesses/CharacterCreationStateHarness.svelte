@@ -3,8 +3,15 @@
 
 	import { createCharacterCreationState } from '../../src/view/dialogs/characterCreation/state.svelte.js';
 
+	// Defaults to a one-entry list, i.e. the bonus pack is installed — the normal case, and the
+	// only one in which the bonus stage gates at all. Pass `[]` for a missing or disabled pack.
+	const INSTALLED_BONUS_PACK = [
+		{ uuid: 'Compendium.nimble.nimble-ancestry-bonuses.Item.harness-bonus' },
+	] as unknown as NimbleAncestryBonusItem[];
+
 	let {
 		ancestryOptions,
+		ancestryBonusOptions = INSTALLED_BONUS_PACK,
 		backgroundOptions,
 		classDocument,
 		classOptions,
@@ -18,6 +25,7 @@
 		spellIndex,
 	}: {
 		ancestryOptions: Record<'core' | 'exotic', NimbleAncestryItem[]>;
+		ancestryBonusOptions?: NimbleAncestryBonusItem[];
 		backgroundOptions: NimbleBackgroundItem[];
 		classDocument: NimbleClassItem | null;
 		classOptions: NimbleClassItem[];
@@ -33,6 +41,7 @@
 
 	const state = createCharacterCreationState({
 		ancestryOptions: Promise.resolve(untrack(() => ancestryOptions)),
+		ancestryBonusOptions: Promise.resolve(untrack(() => ancestryBonusOptions)),
 		backgroundOptions: Promise.resolve(untrack(() => backgroundOptions)),
 		classFeatureIndex: Promise.resolve(new Map()),
 		classOptions: Promise.resolve(untrack(() => classOptions)),

@@ -45,11 +45,11 @@ function createIncomingAncestry(actor: unknown, defaultBonus: string) {
 	};
 }
 
-async function runAncestryPreCreate(ancestry: unknown) {
+async function runAncestryPreCreate(ancestry: unknown, options: Record<string, unknown> = {}) {
 	return NimbleAncestryItem.prototype._preCreate.call(
 		ancestry as NimbleAncestryItem,
 		{} as never,
-		{} as never,
+		options as never,
 		{} as never,
 	);
 }
@@ -81,13 +81,34 @@ describe('NimbleAncestryItem._preCreate', () => {
 		expect(bonusSource._stats.compendiumSource).toBe(DEFAULT_BONUS_UUID);
 	});
 
-	it('deletes the stale bonus when the incoming ancestry declares no default', async () => {
+	it('keeps the existing bonus when the incoming ancestry declares no default', async () => {
+		// No default means the ancestry has no opinion about the bonus — the homebrew and module
+		// case the selection UI treats as "choose any bonus". Deleting the player's pick there
+		// would throw away a deliberate choice with no prompt.
 		const existingBonus = { delete: vi.fn(async () => undefined) };
 		const actor = createActor({ ancestryBonus: existingBonus });
 
 		await runAncestryPreCreate(createIncomingAncestry(actor, ''));
 
-		expect(existingBonus.delete).toHaveBeenCalled();
+		expect(existingBonus.delete).not.toHaveBeenCalled();
+		expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('skips the default bonus when the create batch already carries one', async () => {
+		// `submitCharacterCreation` creates ancestry and bonus together. Granting the default here
+		// would only be deleted again by that bonus's own `_preCreate`, running any `grantItem`
+		// rule or active effect on a document that is about to disappear.
+		const fromUuid = vi.fn();
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = fromUuid;
+
+		const actor = createActor({ ancestry: { delete: vi.fn(async () => undefined) } });
+		await runAncestryPreCreate(createIncomingAncestry(actor, DEFAULT_BONUS_UUID), {
+			nimbleAncestryBonusInBatch: true,
+		});
+
+		// The outgoing ancestry still goes; only the bonus grant is skipped.
+		expect(actor.ancestry?.delete).toHaveBeenCalled();
+		expect(fromUuid).not.toHaveBeenCalled();
 		expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 

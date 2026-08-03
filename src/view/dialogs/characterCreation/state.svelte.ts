@@ -185,6 +185,7 @@ interface GetCurrentStageParams {
 	confirmedSchools: Set<string>;
 	hasClasses: boolean;
 	hasAncestries: boolean;
+	hasAncestryBonuses: boolean;
 	hasBackgrounds: boolean;
 }
 
@@ -211,6 +212,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		confirmedSchools,
 		hasClasses,
 		hasAncestries,
+		hasAncestryBonuses,
 		hasBackgrounds,
 	} = params;
 
@@ -244,7 +246,12 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 	// The bonus auto-defaults to the ancestry's default, but the player still has to confirm
 	// it (or swap it) before moving on. Stay on this stage until they confirm, or whenever
 	// the selection has been cleared. Ancestries with no configured default bonus don't gate.
+	//
+	// `hasAncestryBonuses` keeps the gate from becoming a dead end: with the bonus pack missing
+	// or disabled there is nothing to select and nothing for the default to resolve to, so the
+	// stage could never be satisfied and character creation could never be completed.
 	if (
+		hasAncestryBonuses &&
 		selectedAncestry?.system?.defaultBonus &&
 		(!selectedAncestryBonus || !ancestryBonusConfirmed)
 	) {
@@ -324,6 +331,7 @@ function getStageNumber(stage: StageValue): string {
  */
 export interface CharacterCreationStateParams {
 	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
+	ancestryBonusOptions: Promise<NimbleAncestryBonusItem[]>;
 	backgroundOptions: Promise<NimbleBackgroundItem[]>;
 	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
@@ -448,6 +456,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// We'll track option counts separately
 	let hasClasses = $state(true);
 	let hasAncestries = $state(true);
+	// Starts `false`: the bonus stage must not gate before the pack has reported in, otherwise a
+	// world without the bonus pack would flash the stage and then have to unwind it.
+	let hasAncestryBonuses = $state(false);
 	let hasBackgrounds = $state(true);
 
 	// Initialize option counts asynchronously
@@ -457,6 +468,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	params.ancestryOptions.then((ancestries) => {
 		hasAncestries =
 			Object.values(ancestries).reduce((count, category) => count + category.length, 0) > 0;
+	});
+	params.ancestryBonusOptions.then((bonuses) => {
+		hasAncestryBonuses = bonuses.length > 0;
 	});
 	params.backgroundOptions.then((backgrounds) => {
 		hasBackgrounds = backgrounds.length > 0;
@@ -485,6 +499,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			confirmedSchools,
 			hasClasses,
 			hasAncestries,
+			hasAncestryBonuses,
 			hasBackgrounds,
 		}),
 	);
