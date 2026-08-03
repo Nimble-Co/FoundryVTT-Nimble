@@ -16,6 +16,7 @@ import {
 	replaceDamageRollInRollsSource,
 } from '#utils/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
+import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -948,17 +949,26 @@ class NimbleChatMessage extends ChatMessage {
 	/**
 	 * Add tokens contained within a placed AoE Region to this card's targets.
 	 * Tokens are contained when their center point lies inside the region.
+	 *
+	 * Unlike the selected/targeted variants, which record a deliberate user
+	 * pick, this one sweeps the canvas — so it must exclude what the user could
+	 * not have picked. Hidden tokens are the important case: their uuids would
+	 * otherwise be written into a public card's targets, disclosing creatures
+	 * the GM is keeping off the board. Defeated tokens are dropped as noise.
 	 */
 	async addTokensInRegionAsTargets(region: RegionDocument): Promise<ChatMessage | undefined> {
 		if (!this.isActivationCard()) return;
 
-		const containedTokens = (canvas.tokens?.placeables ?? []).filter((token) =>
-			region.testPoint({
+		const containedTokens = (canvas.tokens?.placeables ?? []).filter((token) => {
+			if (token.document.hidden) return false;
+			if (isTokenDefeated(token)) return false;
+
+			return region.testPoint({
 				x: token.center.x,
 				y: token.center.y,
 				elevation: token.document.elevation,
-			}),
-		);
+			});
+		});
 
 		if (!containedTokens.length) return;
 		return this.#addTargets(containedTokens);
