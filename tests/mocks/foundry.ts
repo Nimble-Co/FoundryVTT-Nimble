@@ -65,6 +65,8 @@ export const globalFoundryMocks = {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
 		}
+
+		prepareBaseData() {}
 	},
 	ROLL: class Roll {
 		formula: string;
@@ -115,6 +117,11 @@ export const globalFoundryMocks = {
 			TOP: 2,
 			LEFT: 3,
 			RIGHT: 4,
+		},
+		ACTIVE_EFFECT_SHOW_ICON: {
+			NEVER: 0,
+			CONDITIONAL: 1,
+			ALWAYS: 2,
 		},
 	},
 	localize: (key: string) => key,
