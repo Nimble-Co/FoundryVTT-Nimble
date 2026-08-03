@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { LevelUpClassFeatureSelectionProps } from '#types/components/ClassFeatureSelection.d.ts';
 
+	import DuplicateSourceGroup from '../characterCreator/DuplicateSourceGroup.svelte';
 	import FeatureCard from '../characterCreator/FeatureCard.svelte';
 	import FeatureGroupSelection from '../characterCreator/FeatureGroupSelection.svelte';
 	import Hint from '../../../components/Hint.svelte';
 	import localize from '#utils/localize.js';
+	import { isRangeGroup } from '../../selectionGroupRules.ts';
 	import { createClassFeatureSelectionState } from './LevelUpClassFeatureSelection.svelte.ts';
 	import LevelUpFeatureOptionPicker from './LevelUpFeatureOptionPicker.svelte';
 
@@ -35,7 +37,8 @@
 		},
 	);
 
-	const { handleFeatureSelect, handleOptionSelect, handleSubItemSelect } = state;
+	const { handleFeatureSelect, handleGroupSelectionSet, handleOptionSelect, handleSubItemSelect } =
+		state;
 	const hasAnyFeatures = $derived(state.hasAnyFeatures);
 	const hasAutoGrant = $derived(state.hasAutoGrant);
 	const hasSelectionGroups = $derived(state.hasSelectionGroups);
@@ -86,12 +89,22 @@
 
 		{#if hasSelectionGroups}
 			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, group] (groupName)}
-				<FeatureGroupSelection
-					{groupName}
-					{group}
-					selectedFeatures={selectedFeatures.get(groupName) ?? []}
-					onSelect={(feature) => handleFeatureSelect(groupName, feature)}
-				/>
+				<!-- A range group is a duplicate-source cluster: same feature, several places. -->
+				{#if isRangeGroup(group)}
+					<DuplicateSourceGroup
+						{groupName}
+						{group}
+						selectedFeatures={selectedFeatures.get(groupName) ?? []}
+						onSetSelection={(features) => handleGroupSelectionSet(groupName, features)}
+					/>
+				{:else}
+					<FeatureGroupSelection
+						{groupName}
+						{group}
+						selectedFeatures={selectedFeatures.get(groupName) ?? []}
+						onSelect={(feature) => handleFeatureSelect(groupName, feature)}
+					/>
+				{/if}
 			{/each}
 		{/if}
 	</section>

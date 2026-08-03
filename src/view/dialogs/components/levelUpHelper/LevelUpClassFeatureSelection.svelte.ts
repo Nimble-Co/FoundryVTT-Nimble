@@ -106,6 +106,19 @@ export function createClassFeatureSelectionState(
 		setSelectedOptionSubItems(newMap);
 	}
 
+	/**
+	 * Replaces a group's selection outright. The duplicate-source picker sets rather than
+	 * toggles: choosing a copy means "this one instead", not "this one as well".
+	 */
+	function handleGroupSelectionSet(groupName: string, features: NimbleFeatureItem[]) {
+		const newMap = new Map(getSelectedFeatures());
+
+		if (features.length === 0) newMap.delete(groupName);
+		else newMap.set(groupName, [...features]);
+
+		setSelectedFeatures(newMap);
+	}
+
 	const hasAutoGrant = $derived((getClassFeatures()?.autoGrant?.length ?? 0) > 0);
 	const hasSelectionGroups = $derived((getClassFeatures()?.selectionGroups?.size ?? 0) > 0);
 	const hasOptionFeatures = $derived((getClassFeatures()?.optionFeatures?.length ?? 0) > 0);
@@ -125,6 +138,7 @@ export function createClassFeatureSelectionState(
 			return hasAnyFeatures;
 		},
 		handleFeatureSelect,
+		handleGroupSelectionSet,
 		handleOptionSelect,
 		handleSubItemSelect,
 	};

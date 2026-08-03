@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import getItemSource from '#utils/getItemSource.ts';
 import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
 /**
@@ -271,6 +272,31 @@ function clusterFeaturesBySource(features: NimbleFeatureItem[]): NimbleFeatureIt
 	return clusters;
 }
 
+/** Groups whose features apply without a choice: the ungrouped bucket and level progressions. */
+function isAutoGrantGroup(groupName: string): boolean {
+	return groupName === 'ungrouped' || groupName.endsWith('-progression');
+}
+
+/**
+ * Picks which copy of a duplicated feature to offer as the default.
+ *
+ * A world copy wins: if a GM edited a feature into their world, that edit is the thing they
+ * meant to be used. Between two world copies — or when every copy is packaged — the most
+ * recently touched one wins, on the same reasoning applied to time instead of place.
+ */
+function pickRecommendedCopy(candidates: NimbleFeatureItem[]): string | undefined {
+	if (candidates.length === 0) return undefined;
+
+	const worldCopies = candidates.filter((feature) => getItemSource(feature.uuid) === 'world');
+	const pool = worldCopies.length > 0 ? worldCopies : candidates;
+
+	const modifiedAt = (feature: NimbleFeatureItem) =>
+		(feature._stats as { modifiedTime?: number } | undefined)?.modifiedTime ?? 0;
+
+	return pool.reduce((best, feature) => (modifiedAt(feature) > modifiedAt(best) ? feature : best))
+		.uuid;
+}
+
 /**
  * Gets class features using a pre-built index for instant lookups.
  * Use this after building the index with buildClassFeatureIndex().
@@ -340,6 +366,12 @@ export default async function getClassFeaturesFromIndex(
 	// world items with the same name each appear as separate entries.
 	const entriesByGroup = new Map<string, ClassFeatureIndexEntry[]>();
 	const featuresByGroup = new Map<string, NimbleFeatureItem[]>();
+	/**
+	 * Owned copies held back for the duplicate-source picker. A feature the character already
+	 * has is normally dropped, but when a *new* copy of the same feature turns up the player
+	 * needs to see the one they own to compare against — so those, and only those, are kept.
+	 */
+	const ownedByGroup = new Map<string, NimbleFeatureItem[]>();
 
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
@@ -357,8 +389,16 @@ export default async function getClassFeaturesFromIndex(
 			continue;
 		}
 
-		// All other features: skip if already owned
-		if (ownedUuids.has(allEntries[i].uuid)) continue;
+		// All other features: skip if already owned, except where an owned copy still has a job
+		// to do as the comparison baseline in a duplicate-source choice.
+		if (ownedUuids.has(allEntries[i].uuid)) {
+			if (options.promoteDuplicateSources && isAutoGrantGroup(groupName)) {
+				const owned = ownedByGroup.get(groupName) ?? [];
+				owned.push(featureItem);
+				ownedByGroup.set(groupName, owned);
+			}
+			continue;
+		}
 
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
@@ -387,7 +427,7 @@ export default async function getClassFeaturesFromIndex(
 	// - Features with an explicit named group (e.g. 'savage-arsenal') are selection groups
 	// - Groups already covered by an optionFeature's picker are excluded to avoid duplication
 	for (const [groupName, groupFeatures] of featuresByGroup) {
-		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
+		if (isAutoGrantGroup(groupName)) {
 			if (!options.promoteDuplicateSources) {
 				result.autoGrant.push(...groupFeatures);
 				continue;
@@ -397,22 +437,41 @@ export default async function getClassFeaturesFromIndex(
 			// available from more than one source (a customized World Item plus its Compendium
 			// original), granting every copy would silently add duplicates. Present each such set
 			// as a "choose one or keep all" selection, leaving true singletons auto-granted.
-			for (const cluster of clusterFeaturesBySource(groupFeatures)) {
+			// Owned copies join the cluster so the player can compare a new copy against the one
+			// they already have; they are never re-granted.
+			// Owned copies lead: the copy already on the sheet is the baseline every new copy is
+			// compared against, and seeding the cluster with it keeps the group key stable as
+			// candidates come and go.
+			const owned = ownedByGroup.get(groupName) ?? [];
+			for (const cluster of clusterFeaturesBySource([...owned, ...groupFeatures])) {
+				const offerable = cluster.filter((feature) => !ownedUuids.has(feature.uuid));
+				// Every copy is already on the sheet — there is nothing left to offer.
+				if (offerable.length === 0) continue;
+
 				if (cluster.length === 1) {
-					result.autoGrant.push(cluster[0]);
+					result.autoGrant.push(offerable[0]);
 					continue;
 				}
 
 				// Name the group after the first member that has a name — a copy can be unnamed,
 				// and an omitted displayName would leave the heading showing the synthetic key.
 				const clusterName = cluster.find((feature) => feature.name)?.name;
+				const ownedInCluster = cluster.filter((feature) => ownedUuids.has(feature.uuid));
+				const recommendedUuid = pickRecommendedCopy(offerable);
 
 				result.selectionGroups.set(`${DUPLICATE_SOURCE_GROUP_PREFIX}${cluster[0].uuid}`, {
 					features: cluster,
-					selectionCount: 1,
-					// A higher max than count is what makes this a range: keep one copy or all of them.
-					selectionMax: cluster.length,
+					// Already holding a copy? Then taking nothing is a valid outcome, and the
+					// floor drops to zero. Otherwise exactly one copy must be kept.
+					selectionCount: ownedInCluster.length > 0 ? 0 : 1,
+					// A higher max than count is what makes this a range: keep one copy or all of
+					// them. Only copies not already owned can be granted.
+					selectionMax: offerable.length,
 					showSourceLabel: true,
+					...(ownedInCluster.length > 0
+						? { ownedUuids: new Set(ownedInCluster.map((feature) => feature.uuid)) }
+						: {}),
+					...(recommendedUuid ? { recommendedUuid } : {}),
 					...(clusterName ? { displayName: clusterName } : {}),
 				});
 			}

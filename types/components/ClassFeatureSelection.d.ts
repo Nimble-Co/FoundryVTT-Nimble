@@ -22,6 +22,15 @@ export interface SelectionGroup {
 	showSourceLabel?: boolean;
 	/** Heading to display verbatim instead of formatting the group key (e.g. a feature name). */
 	displayName?: string;
+	/**
+	 * Candidates the character already owns. They appear in `features` so a new copy can be
+	 * compared against the one on the sheet, but they can never be selected — they are already
+	 * granted. Their presence is also what lets `selectionCount` be 0: keeping only what you
+	 * already have is a valid outcome.
+	 */
+	ownedUuids?: ReadonlySet<string>;
+	/** Candidate to preselect and mark as recommended. Never an owned copy. */
+	recommendedUuid?: string;
 }
 
 export interface ClassFeatureResult {

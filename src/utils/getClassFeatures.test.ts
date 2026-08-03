@@ -228,12 +228,7 @@ describe('getClassFeaturesFromIndex', () => {
 		]);
 	});
 
-	// NOTE: this pins current behavior, which may not be the desired behavior. `ownedFeatureUuids`
-	// suppresses a copy by its own uuid only, so owning one member of a duplicate cluster does not
-	// suppress its sibling — the sibling shrinks the cluster to a singleton and is auto-granted,
-	// which can hand the actor a second copy of a feature they already have. See the level-down /
-	// re-level path in CharacterLevelUpDialogState. Change this test if the rule changes.
-	it('auto-grants the surviving copy when the other is filtered out as already owned', async () => {
+	it('keeps an owned copy in the cluster so a new copy can be compared against it', async () => {
 		const index = indexFeaturesWithFromUuidMock('druid', 2, [
 			{ uuid: 'Item.wild-shape-world', name: 'Wild Shape', group: 'ungrouped' },
 			{
@@ -249,10 +244,62 @@ describe('getClassFeaturesFromIndex', () => {
 			ownedFeatureUuids: new Set(['Item.wild-shape-world']),
 		});
 
-		expect(result.selectionGroups.size).toBe(0);
-		expect(result.autoGrant.map((f) => f.uuid)).toEqual([
+		// Nothing is granted behind the player's back — the choice is theirs to make.
+		expect(result.autoGrant).toEqual([]);
+		expect(result.selectionGroups.size).toBe(1);
+
+		const group = [...result.selectionGroups.values()][0];
+		expect(group.features.map((f) => f.uuid)).toEqual([
+			'Item.wild-shape-world',
 			'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
 		]);
+		// Already holding a copy, so taking nothing is allowed...
+		expect(group.selectionCount).toBe(0);
+		// ...and only the copy they do not own can be granted.
+		expect(group.selectionMax).toBe(1);
+		expect([...(group.ownedUuids ?? [])]).toEqual(['Item.wild-shape-world']);
+		expect(group.recommendedUuid).toBe(
+			'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+		);
+	});
+
+	it('offers nothing when every copy in the cluster is already owned', async () => {
+		const index = indexFeaturesWithFromUuidMock('druid', 2, [
+			{ uuid: 'Item.wild-shape-world', name: 'Wild Shape', group: 'ungrouped' },
+			{
+				uuid: 'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+				name: 'Wild Shape',
+				group: 'ungrouped',
+			},
+		]);
+
+		const result = await getClassFeaturesFromIndex(index, 'druid', 2, {
+			...PROMOTE,
+			ownedFeatureUuids: new Set([
+				'Item.wild-shape-world',
+				'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+			]),
+		});
+
+		expect(result.autoGrant).toEqual([]);
+		expect(result.selectionGroups.size).toBe(0);
+	});
+
+	it('recommends the world copy over the packaged one', async () => {
+		const index = indexFeaturesWithFromUuidMock('druid', 2, [
+			{
+				uuid: 'Compendium.nimble.nimble-class-features.Item.wild-shape-comp',
+				name: 'Wild Shape',
+				group: 'ungrouped',
+			},
+			{ uuid: 'Item.wild-shape-world', name: 'Wild Shape', group: 'ungrouped' },
+		]);
+
+		const result = await getClassFeaturesFromIndex(index, 'druid', 2, PROMOTE);
+		const group = [...result.selectionGroups.values()][0];
+
+		// Listed second, but a GM's edit outranks the packaged default.
+		expect(group.recommendedUuid).toBe('Item.wild-shape-world');
 	});
 
 	it('leaves duplicates auto-granted when duplicate-source promotion is not requested', async () => {
