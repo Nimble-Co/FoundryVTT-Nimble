@@ -32,9 +32,15 @@
 	// stale leftover in item data.
 	let isAoE = $derived(!!messageDocument.reactive.system.activation?.acquireTargetsFromTemplate);
 	let shape = $derived(isAoE ? (template?.shape ?? '') : '');
-	let size = $derived(
-		shape === 'circle' || shape === 'emanation' ? template.radius : template.length,
-	);
+	// Mirrors the geometry: buildAoERegionShape sizes circles and emanations from
+	// `radius` and squares from `width`, and TemplateConfig only offers the
+	// matching input per shape, so reading `length` for a square would always
+	// report its unset default.
+	let size = $derived.by(() => {
+		if (shape === 'circle' || shape === 'emanation') return template.radius;
+		if (shape === 'square') return template.width;
+		return template.length;
+	});
 	let label = $derived(shape ? localize(`NIMBLE.aoe.place.${shape}`, { size: String(size) }) : '');
 </script>
 
