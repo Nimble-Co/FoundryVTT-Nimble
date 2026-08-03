@@ -210,8 +210,13 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 		if (chatCard) {
 			// Begin AoE placement immediately; the card's place button remains as
-			// the retry path.
-			void placeAoEForMessage(chatCard);
+			// the retry path. Reported rather than swallowed: Foundry installs no
+			// unhandled-rejection handler, so without this a failure here leaves
+			// nothing behind but a console entry nobody is looking at.
+			void placeAoEForMessage(chatCard).catch((error) => {
+				console.error(error);
+				ui.notifications?.error('NIMBLE.aoe.placementFailed', { localize: true });
+			});
 		}
 
 		return chatCard;

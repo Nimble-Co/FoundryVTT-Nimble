@@ -85,7 +85,8 @@
 				"emanation": "Place {size}-square emanation",
 				"line": "Place {size}-square line",
 				"square": "Place {size}-square square"
-			}
+			},
+			"placementFailed": "Could not place the area of effect. See the console for details."
 		},
 		"chat": {
 			"applyDamage": "Apply Damage",

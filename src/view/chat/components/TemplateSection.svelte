@@ -18,6 +18,9 @@
 			const region = await placeAoERegion(template, { name });
 
 			if (region) await messageDocument.addTokensInRegionAsTargets(region);
+		} catch (error) {
+			console.error(error);
+			ui.notifications?.error('NIMBLE.aoe.placementFailed', { localize: true });
 		} finally {
 			placing = false;
 		}
