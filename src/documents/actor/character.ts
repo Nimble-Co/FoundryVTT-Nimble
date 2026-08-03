@@ -29,8 +29,8 @@ import planOptionSwap, { type OptionSwapPlan } from '#utils/optionSwap/planOptio
 import resolveOptionSwapOffer from '#utils/optionSwap/resolveOptionSwapOffer.ts';
 import summarizeOptionSwap from '#utils/optionSwap/summarizeOptionSwap.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
+import { retagEffectsDamageType, SCHOOL_TO_DAMAGE_TYPE } from '#utils/spell/spellDamageType.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
-import { retagEffectsDamageType, SCHOOL_TO_DAMAGE_TYPE } from '#view/dialogs/spellGrantUtils.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';

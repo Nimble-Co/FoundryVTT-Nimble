@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -5,11 +6,24 @@ function schema() {
 
 	return {
 		type: new fields.StringField({ required: true, nullable: false, initial: 'removeSpells' }),
-		uuids: new fields.ArrayField(new fields.StringField(), {
-			required: false,
-			nullable: false,
-			initial: [],
-		}),
+		uuids: new fields.ArrayField(
+			new fields.StringField(
+				withWidget({
+					required: false,
+					nullable: false,
+					initial: '',
+					widget: 'documentUuid',
+					documentTypes: ['Item.spell'],
+				}),
+			),
+			{
+				required: false,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.removeSpells.uuids.label',
+				hint: 'NIMBLE.rules.removeSpells.uuids.hint',
+			},
+		),
 	};
 }
 
@@ -23,6 +37,10 @@ declare namespace RemoveSpellsRule {
  * Processed by the level-up flow, not during actor data preparation.
  */
 class RemoveSpellsRule extends NimbleBaseRule<RemoveSpellsRule.Schema> {
+	static override group = 'grants';
+
+	static override description = 'NIMBLE.rules.removeSpells.description';
+
 	declare uuids: string[];
 
 	static override defineSchema(): RemoveSpellsRule.Schema {
