@@ -15,6 +15,8 @@
 
 	// Collect speed bonuses from rules, grouped by movement type and item
 	let speedBonusesByType = $derived.by(() => {
+		// Access reactive to ensure this derived re-runs when items update
+		const _ = document.reactive.items;
 		const bonusesByType = {};
 		const rollData = document.getRollData?.() ?? {};
 
@@ -74,6 +76,8 @@
 
 	// Collect movement grants from grantMovement rules, grouped by movement type
 	let movementGrantsByType = $derived.by(() => {
+		// Access reactive to ensure this derived re-runs when items update
+		const _ = document.reactive.items;
 		const grantsByType = {};
 		const rollData = document.getRollData?.() ?? {};
 		const grantMaxByType = {};
