@@ -1404,6 +1404,20 @@ describe('ChargePoolService', () => {
 			expect(pools.map((pool) => pool.identifier)).toEqual(['budget']);
 		});
 
+		it('includes a hidden pool when asked, so it can still be adjusted by hand', async () => {
+			// The badge row is the readout; the adjust dialog is the management
+			// surface. A gate with no badge must still be reachable to correct.
+			const actor = createGatedFeatureActor(true);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1', undefined, {
+				includeHidden: true,
+			});
+
+			expect(pools.map((pool) => pool.identifier).sort()).toEqual(['budget', 'gate']);
+			expect(pools.find((pool) => pool.identifier === 'gate')?.hidden).toBe(true);
+		});
+
 		it('shows both pools when neither declares the field', async () => {
 			const actor = createGatedFeatureActor(undefined);
 			await syncActorPools(actor as unknown as Actor.Implementation);

@@ -1400,6 +1400,7 @@
 		},
 		"charges": {
 			"header": "Charges",
+			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
 			"unknownItem": "Unknown Item",

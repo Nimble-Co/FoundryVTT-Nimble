@@ -76,7 +76,10 @@
 
 		const item = actor.items.get(itemId);
 		const itemName = item?.name ?? localize(ChargeUiConfig.unknownItemLocalizationKey);
-		const poolsForItem = getPoolsForItem(actor, itemId);
+		// Hidden pools are listed here even though they contribute no badge: this
+		// is the surface for correcting a pool by hand, and a gate you cannot
+		// reach is a gate you cannot fix after a misplay.
+		const poolsForItem = getPoolsForItem(actor, itemId, undefined, { includeHidden: true });
 
 		const width = 360;
 		const margin = 8;
