@@ -75,7 +75,16 @@ function findCombatantForTarget(
 /**
  * The living character combatants a rule affects, per its `target` field:
  * the activating actor's combatant, the user's current targets, or every
- * character combatant sharing the source's token disposition.
+ * OTHER character combatant sharing the source's token disposition.
+ *
+ * The all-allies branch excludes the source: an ally is a friendly creature
+ * other than yourself (CoreRules-2), so a feature that benefits "every ally"
+ * must not also benefit the character using it. Use `self` alongside it when a
+ * rule is meant to cover both.
+ *
+ * That branch has no distance filter, so it reaches every allied combatant in
+ * the encounter regardless of range. Range-limited variants need token
+ * adjacency, which the platform does not give us yet.
  */
 function resolveTargetCombatants(params: {
 	combat: Combat;
@@ -95,6 +104,7 @@ function resolveTargetCombatants(params: {
 		candidates = combat.combatants.contents.filter(
 			(combatant) =>
 				combatant.type === 'character' &&
+				combatant.id !== sourceCombatant?.id &&
 				(sourceDisposition === null || getCombatantDisposition(combatant) === sourceDisposition),
 		);
 	}
@@ -195,6 +205,8 @@ function handleUseItemGrantedOffers(item: unknown, chatMessage: unknown, context
 }
 
 let didRegisterActionEconomySystemHooks = false;
+
+export { resolveTargetCombatants };
 
 export default function registerActionEconomySystemHooks(): void {
 	if (didRegisterActionEconomySystemHooks) return;
