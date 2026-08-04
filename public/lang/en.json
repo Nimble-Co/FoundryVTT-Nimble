@@ -91,6 +91,16 @@
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo",
+			"actionDeltaSummary": {
+				"gainActionNow": "{name} gains {count} action now",
+				"gainActionsNow": "{name} gains {count} actions now",
+				"loseActionNow": "{name} loses {count} action now",
+				"loseActionsNow": "{name} loses {count} actions now",
+				"gainActionNextTurn": "{name} gains {count} action at the start of their next turn",
+				"gainActionsNextTurn": "{name} gains {count} actions at the start of their next turn",
+				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
+				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
+			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
@@ -1786,7 +1796,9 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
-				"pendingActionsGain": "Gains {count} additional actions at the next action refill",
+				"pendingActionGain": "Gains {count} additional action at the start of the next turn",
+				"pendingActionsGain": "Gains {count} additional actions at the start of the next turn",
+				"pendingActionLoss": "Starts the next turn with {count} fewer action",
 				"pendingActionsLoss": "Starts the next turn with {count} fewer actions",
 				"confirmEndTurnEarlyTitle": "End Turn Early?",
 				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
