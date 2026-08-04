@@ -4,6 +4,8 @@
 	import localize from '../../../utils/localize.js';
 	import { createCustomReactionsPanelState } from './CustomReactionsPanel.svelte.ts';
 
+	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
+
 	let { showEmbeddedDocumentImages = true } = $props();
 
 	const actor = getContext<NimbleCharacter>('actor');
@@ -56,6 +58,8 @@
 									{#if actionCost}
 										<span class="reaction-card__action-cost">{actionCost}</span>
 									{/if}
+
+									<ChargeIndicator {actor} itemId={reaction._id} />
 								</div>
 
 								{#if trigger}

@@ -113,6 +113,7 @@
 				properties={getWeaponProperties(item)}
 				showImage={showEmbeddedDocumentImages}
 				itemId={item._id}
+				{actor}
 				onclick={() => handleItemClick(item._id)}
 				ondragstart={(event) => sheet._onDragStart(event)}
 			/>

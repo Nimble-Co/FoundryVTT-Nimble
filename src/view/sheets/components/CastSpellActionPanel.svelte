@@ -3,6 +3,7 @@
 	import localize from '../../../utils/localize.js';
 	import { createSpellPanelState } from './CastSpellActionPanel.svelte.ts';
 
+	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 	import SearchBar from './SearchBar.svelte';
 
 	const actor = getContext('actor');
@@ -75,6 +76,8 @@
 									{#if requiresConcentration}
 										<span class="spell-card__tag">C</span>
 									{/if}
+
+									<ChargeIndicator {actor} itemId={spell._id} />
 								</div>
 
 								<div class="spell-card__meta">

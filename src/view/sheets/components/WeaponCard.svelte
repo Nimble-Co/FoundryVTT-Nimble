@@ -2,8 +2,11 @@
 	import type { WeaponCardProps } from '../../../../types/components/WeaponCard.d.ts';
 	import localize from '../../../utils/localize.js';
 
+	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
+
 	let {
 		name,
+		actor = null,
 		image = null,
 		icon = 'fa-solid fa-sword',
 		damage = null,
@@ -50,7 +53,12 @@
 		{/if}
 
 		<div class="weapon-card__content">
-			<span class="weapon-card__name">{name}</span>
+			<div class="weapon-card__header">
+				<span class="weapon-card__name">{name}</span>
+				{#if actor && itemId}
+					<ChargeIndicator {actor} {itemId} />
+				{/if}
+			</div>
 			{#if properties.length > 0}
 				<div class="weapon-card__meta">
 					{#each properties as prop}
@@ -174,6 +182,13 @@
 			gap: 0.125rem;
 			flex: 1;
 			min-width: 0;
+		}
+
+		&__header {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 0.375rem;
 		}
 
 		&__name {

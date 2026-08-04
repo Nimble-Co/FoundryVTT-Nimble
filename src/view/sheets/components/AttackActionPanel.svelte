@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import {
@@ -11,7 +12,7 @@
 	import SearchBar from './SearchBar.svelte';
 	import WeaponCard from './WeaponCard.svelte';
 
-	const actor = getContext('actor');
+	const actor = getContext<NimbleCharacter>('actor');
 	const sheet = getContext('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
@@ -128,6 +129,7 @@
 			{#each state.sortItems(state.weapons) as item (item._id)}
 				<WeaponCard
 					name={item.reactive.name}
+					{actor}
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={state.getWeaponProperties(item)}
@@ -144,6 +146,7 @@
 			{#each state.sortItems(state.attackFeatures) as item (item._id)}
 				<WeaponCard
 					name={item.reactive.name}
+					{actor}
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={[localize('NIMBLE.ui.heroicActions.feature')]}
