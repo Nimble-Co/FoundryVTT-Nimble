@@ -10,17 +10,17 @@ function createToken(stub: TokenStub): Token {
 }
 
 describe('resolveGrantedOfferTargeting', () => {
-	it('blocks the offer when a targeted token belongs to the recipient', () => {
+	it('reports that the recipient is targeted when a targeted token belongs to them', () => {
 		const result = resolveGrantedOfferTargeting({
 			recipientActorId: 'ally',
 			targetedTokens: [createToken({ actor: { id: 'ally', name: 'Sir Brannon' } })],
 		});
 
-		expect(result.status).toBe('blocked');
+		expect(result.targetsRecipient).toBe(true);
 		expect(result.targetNames).toEqual(['Sir Brannon']);
 	});
 
-	it('blocks the offer when the recipient is one of several targets', () => {
+	it('reports that the recipient is targeted when they are one of several targets', () => {
 		const result = resolveGrantedOfferTargeting({
 			recipientActorId: 'ally',
 			targetedTokens: [
@@ -29,26 +29,27 @@ describe('resolveGrantedOfferTargeting', () => {
 			],
 		});
 
-		expect(result.status).toBe('blocked');
+		expect(result.targetsRecipient).toBe(true);
+		expect(result.targetNames).toEqual(['Goblin', 'Sir Brannon']);
 	});
 
-	it('stays ready with no targets, because untargeted activations are legal', () => {
+	it('reports no recipient target with no targets at all', () => {
 		const result = resolveGrantedOfferTargeting({
 			recipientActorId: 'ally',
 			targetedTokens: [],
 		});
 
-		expect(result.status).toBe('ready');
+		expect(result.targetsRecipient).toBe(false);
 		expect(result.targetNames).toEqual([]);
 	});
 
-	it('is ready and reports the name of a single other target', () => {
+	it('reports no recipient target and names a single other target', () => {
 		const result = resolveGrantedOfferTargeting({
 			recipientActorId: 'ally',
 			targetedTokens: [createToken({ actor: { id: 'goblin', name: 'Goblin Cutthroat' } })],
 		});
 
-		expect(result.status).toBe('ready');
+		expect(result.targetsRecipient).toBe(false);
 		expect(result.targetNames).toEqual(['Goblin Cutthroat']);
 	});
 
@@ -58,17 +59,18 @@ describe('resolveGrantedOfferTargeting', () => {
 			targetedTokens: [null, undefined],
 		});
 
-		expect(result.status).toBe('ready');
+		expect(result.targetsRecipient).toBe(false);
 		expect(result.targetNames).toEqual([]);
 	});
 
-	it('cannot block without a recipient id', () => {
+	it('reports no recipient target without a recipient id', () => {
 		const result = resolveGrantedOfferTargeting({
 			recipientActorId: '',
 			targetedTokens: [createToken({ actor: { id: '', name: 'Nameless' } })],
 		});
 
-		expect(result.status).toBe('ready');
+		expect(result.targetsRecipient).toBe(false);
+		expect(result.targetNames).toEqual(['Nameless']);
 	});
 
 	it('names targets by actor name, then token name, then the unknown fallback', () => {

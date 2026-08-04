@@ -79,9 +79,9 @@
 	}
 
 	/**
-	 * Whether the offer can be accepted with the targets the user currently has
-	 * selected. Reading `targetingVersion` re-runs this the moment the user
-	 * retargets, so the gate never sits on a stale answer.
+	 * What the offer is currently pointed at. Reading `targetingVersion` re-runs
+	 * this the moment the user retargets, so the display never sits on a stale
+	 * answer.
 	 */
 	function getOfferTargeting(offer: GrantedActionOffer) {
 		void targetingVersion;
@@ -96,11 +96,9 @@
 
 		const resolved = resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
 
-		// A target the gate allows can still be a poor choice, such as another
-		// ally. Flag an all friendly target set so the button reads as a warning
-		// without taking the activation away.
+		// Aiming at friendlies is legal and sometimes intended, so this only
+		// changes how the button reads. It never withholds the activation.
 		const isDiscouraged =
-			resolved.status === 'ready' &&
 			targetedTokens.length > 0 &&
 			targetedTokens.every(
 				(token) =>
@@ -116,13 +114,9 @@
 	 * activation resolves its own costs (including any adjustments the granting
 	 * feature's rules declared), so the offer itself carries none. A cancelled
 	 * activation returns null and leaves the offer available.
-	 *
-	 * The targeting gate is re-checked here, before any side effect, so a blocked
-	 * offer posts no card, spends no charge or action, and stays available.
 	 */
 	async function useOfferWithItem(offer: GrantedActionOffer, itemId: string | null) {
 		if (busy || !itemId) return;
-		if (getOfferTargeting(offer).status === 'blocked') return;
 		busy = true;
 
 		try {
@@ -192,9 +186,9 @@
 							{@const targeting = getOfferTargeting(offer)}
 
 							{#if eligibleItems.length > 0}
-								{#if targeting.status === 'blocked'}
+								{#if targeting.targetsRecipient}
 									<p class="nimble-granted-action-offer-notice">
-										{localize('NIMBLE.chat.grantedActionOffers.blockedByRecipientTarget', {
+										{localize('NIMBLE.chat.grantedActionOffers.targetingRecipient', {
 											name: targeting.targetNames.join(', '),
 										})}
 									</p>
@@ -215,7 +209,7 @@
 												class="nimble-button nimble-granted-action-offer-button"
 												class:nimble-button--discouraged={targeting.isDiscouraged}
 												type="button"
-												disabled={busy || targeting.status === 'blocked'}
+												disabled={busy}
 												onclick={() => useOfferWithItem(offer, item.id)}
 											>
 												<i class="nimble-button__icon fa-solid fa-dice-d20"></i>

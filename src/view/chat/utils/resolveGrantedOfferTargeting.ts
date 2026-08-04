@@ -1,14 +1,5 @@
 import { getTargetName } from '#utils/targeting.ts';
 
-/**
- * `blocked` means the recipient is standing in their own line of fire: one of
- * the currently targeted tokens belongs to them. That is what happens when the
- * offer is accepted without retargeting, because the target that produced the
- * offer is still selected. `ready` covers everything else, including no target
- * at all, which stays a legal activation.
- */
-type GrantedOfferTargetingStatus = 'blocked' | 'ready';
-
 interface GrantedOfferTargetingParams {
 	/** Actor the offer belongs to, i.e. the one about to activate an item. */
 	recipientActorId: string;
@@ -17,30 +8,39 @@ interface GrantedOfferTargetingParams {
 }
 
 interface GrantedOfferTargeting {
-	status: GrantedOfferTargetingStatus;
+	/**
+	 * Whether one of the current targets is the recipient themself. Offers are
+	 * created by targeting the recipient, so this is what a user sees when they
+	 * accept without retargeting. It is reported, never prevented.
+	 */
+	targetsRecipient: boolean;
 	/** Display names of the current targets, in target order. */
 	targetNames: string[];
 }
 
 /**
- * Decide whether a granted-activation offer can be accepted with the targets the
- * user currently has selected.
+ * Describe what a granted-activation offer is currently pointed at.
  *
- * Activation reads targets from the user's live target set, so an offer accepted
- * straight after it is granted would fire at whoever was targeted to create it.
- * This gate catches the case where that stale target is the recipient themself.
+ * An activation reads its targets from the accepting user's live target set, so
+ * an offer taken straight after it is granted fires at whoever was targeted to
+ * create it. That is easy to miss, so the accept UI names the current targets
+ * and calls out the case where they include the recipient.
+ *
+ * This only describes the situation. Who is a legal target is a table decision,
+ * not something to enforce here: attacking yourself or an ally is allowed, and
+ * having no target at all is a normal activation.
  */
 export function resolveGrantedOfferTargeting({
 	recipientActorId,
 	targetedTokens,
 }: GrantedOfferTargetingParams): GrantedOfferTargeting {
 	const tokens = targetedTokens.filter((token): token is Token => !!token);
-	const targetNames = tokens.map((token) => getTargetName(token));
 
-	const targetsRecipient =
-		!!recipientActorId && tokens.some((token) => token.actor?.id === recipientActorId);
-
-	return { status: targetsRecipient ? 'blocked' : 'ready', targetNames };
+	return {
+		targetsRecipient:
+			!!recipientActorId && tokens.some((token) => token.actor?.id === recipientActorId),
+		targetNames: tokens.map((token) => getTargetName(token)),
+	};
 }
 
-export type { GrantedOfferTargeting, GrantedOfferTargetingStatus };
+export type { GrantedOfferTargeting };
