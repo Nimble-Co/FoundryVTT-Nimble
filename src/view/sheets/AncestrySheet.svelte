@@ -7,6 +7,8 @@
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
+	import Hint from '../components/Hint.svelte';
+	import TagGroup from '../components/TagGroup.svelte';
 
 	const navigation = [
 		{
@@ -34,6 +36,27 @@
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
+
+	const { sizeCategories } = CONFIG.NIMBLE;
+
+	let selectedSizes = $derived(item.reactive.system.size ?? []);
+
+	const sizeOptions = Object.entries(sizeCategories).map(([value, label]) => ({
+		value,
+		label: localize(label),
+	}));
+
+	function toggleSize(sizeCategory) {
+		const current = new Set(item.system.size ?? []);
+
+		if (current.has(sizeCategory)) current.delete(sizeCategory);
+		else current.add(sizeCategory);
+
+		// Preserve the canonical ordering defined in CONFIG.NIMBLE.sizeCategories.
+		const updatedSizes = Object.keys(sizeCategories).filter((key) => current.has(key));
+
+		item.update({ 'system.size': updatedSizes });
+	}
 
 	setContext(
 		'document',
@@ -103,6 +126,22 @@
 				documentTypes={['Item.ancestryBonus']}
 				placeholder={localize('NIMBLE.ancestrySheet.defaultBonusPlaceholder')}
 				onChange={(next) => item.update({ 'system.defaultBonus': next })}
+			/>
+		</div>
+
+		<div>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">Size Options</h3>
+			</header>
+
+			<Hint
+				hintText="Select one or more sizes available to this ancestry. When more than one is selected, the player chooses during character creation."
+			/>
+
+			<TagGroup
+				options={sizeOptions}
+				selectedOptions={selectedSizes}
+				toggleOption={toggleSize}
 			/>
 		</div>
 	</section>
