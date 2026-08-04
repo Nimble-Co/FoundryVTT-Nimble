@@ -16,7 +16,13 @@ export interface ChargeIndicatorPoolState {
 }
 
 export interface ChargeIndicatorProps {
-	pools: ChargeIndicatorPoolState[];
+	/**
+	 * The pools to render. Omit this to let the component resolve the item's own
+	 * pools; supply it only where the caller already fetched every pool on the
+	 * actor once and is handing each row its slice, which keeps a long list from
+	 * re-resolving per row.
+	 */
+	pools?: ChargeIndicatorPoolState[];
 	actor: NimbleCharacter;
 	itemId: string;
 }
