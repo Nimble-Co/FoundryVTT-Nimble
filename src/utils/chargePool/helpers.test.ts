@@ -347,3 +347,41 @@ describe('charge consumer predicate gating', () => {
 		]);
 	});
 });
+
+describe('charge pool predicate gating', () => {
+	function createPoolItem(pool: MockRule): MockItem {
+		return createMockItem('item-1', 'Gated Feature', [pool]);
+	}
+
+	const basePool = {
+		type: 'chargePool',
+		id: 'pool-rule',
+		identifier: 'focus',
+		scope: 'item',
+		max: '1',
+		initial: 'max',
+	};
+
+	it('omits a pool whose appliesTo() returns false', () => {
+		// A pool only a later feature uses should not sit on the sheet showing a
+		// full badge that never changes until that feature is gained.
+		const item = createPoolItem({ ...basePool, appliesTo: () => false } as MockRule);
+		const actor = createMockActor([item]);
+
+		expect(buildEffectiveChargePoolMap(actor)).toEqual({});
+	});
+
+	it('keeps a pool whose appliesTo() returns true', () => {
+		const item = createPoolItem({ ...basePool, appliesTo: () => true } as MockRule);
+		const actor = createMockActor([item]);
+
+		expect(Object.keys(buildEffectiveChargePoolMap(actor))).toEqual(['focus']);
+	});
+
+	it('keeps a pool that carries no appliesTo at all', () => {
+		const item = createPoolItem({ ...basePool } as MockRule);
+		const actor = createMockActor([item]);
+
+		expect(Object.keys(buildEffectiveChargePoolMap(actor))).toEqual(['focus']);
+	});
+});

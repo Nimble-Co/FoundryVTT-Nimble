@@ -53,6 +53,8 @@ type ChargePoolRuleLike = {
 	initial?: string;
 	dieSize?: string | null;
 	recoveries?: unknown;
+	/** Optional because plain objects satisfy this structural type in tests. */
+	appliesTo?: () => boolean;
 };
 
 type ChargeConsumerRuleLike = {

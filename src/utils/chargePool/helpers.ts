@@ -308,6 +308,10 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 		for (const rule of rules.values()) {
 			if (rule.type !== 'chargePool' || rule.disabled) continue;
 			const poolRule = rule as ChargePoolRuleLike;
+			// A pool whose condition does not hold does not exist yet, so it is not
+			// tracked and not shown. This is what keeps a pool that only a later
+			// feature uses from sitting on the sheet doing nothing until then.
+			if (poolRule.appliesTo?.() === false) continue;
 			const identifier = normalizeIdentifier(poolRule.identifier || poolRule.id);
 			if (identifier.length < 1) continue;
 
