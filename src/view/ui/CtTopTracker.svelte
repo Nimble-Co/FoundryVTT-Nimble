@@ -515,7 +515,12 @@
 												>
 													{displayCurrentActions}/{#if hasAdditional}<span
 															class="nimble-ct__action-max--additional">{displayMaxActions}</span
-														>{:else}{displayMaxActions}{/if}
+														>{:else}{displayMaxActions}{/if}{#if pendingActionMarker}<span
+															class="nimble-ct__pending-action"
+															class:nimble-ct__pending-action--negative={pendingActionMarker.isNegative}
+															data-tooltip={pendingActionMarker.tooltip}
+															data-tooltip-direction="UP">{pendingActionMarker.text}</span
+														>{/if}
 												</span>
 												{#if canAdjustActions}
 													<button
@@ -532,16 +537,6 @@
 													>
 														<i class="fa-solid fa-plus"></i>
 													</button>
-												{/if}
-												{#if pendingActionMarker}
-													<span
-														class="nimble-ct__pending-action"
-														class:nimble-ct__pending-action--negative={pendingActionMarker.isNegative}
-														data-tooltip={pendingActionMarker.tooltip}
-														data-tooltip-direction="UP"
-													>
-														{pendingActionMarker.text}
-													</span>
 												{/if}
 											</div>
 										</div>
@@ -745,7 +740,12 @@
 												>
 													{displayCurrentActions}/{#if hasAdditional}<span
 															class="nimble-ct__action-max--additional">{displayMaxActions}</span
-														>{:else}{displayMaxActions}{/if}
+														>{:else}{displayMaxActions}{/if}{#if pendingActionMarker}<span
+															class="nimble-ct__pending-action"
+															class:nimble-ct__pending-action--negative={pendingActionMarker.isNegative}
+															data-tooltip={pendingActionMarker.tooltip}
+															data-tooltip-direction="UP">{pendingActionMarker.text}</span
+														>{/if}
 												</span>
 												{#if canAdjustActions}
 													<button
@@ -762,16 +762,6 @@
 													>
 														<i class="fa-solid fa-plus"></i>
 													</button>
-												{/if}
-												{#if pendingActionMarker}
-													<span
-														class="nimble-ct__pending-action"
-														class:nimble-ct__pending-action--negative={pendingActionMarker.isNegative}
-														data-tooltip={pendingActionMarker.tooltip}
-														data-tooltip-direction="UP"
-													>
-														{pendingActionMarker.text}
-													</span>
 												{/if}
 											</div>
 										</div>
@@ -2291,8 +2281,17 @@
 	.nimble-ct__action-max--additional {
 		color: hsl(45, 80%, 55%);
 	}
+	/**
+	 * Lives inside the action box rather than beside it. The box is min-width
+	 * driven and its digits never fill that width, so the marker rides along in
+	 * the slack the box already has: the action row keeps the width it was tuned
+	 * for and the marker cannot be pushed past the card, which clips its
+	 * contents. It also puts the marker on the box's own backing, so the number
+	 * stays legible whatever the portrait behind the card looks like.
+	 */
 	.nimble-ct__pending-action {
 		flex: 0 0 auto;
+		margin-inline-start: clamp(0.1rem, calc(0.16rem * var(--nimble-ct-card-scale, 1)), 0.16rem);
 		line-height: 1;
 		font-size: clamp(0.56rem, calc(0.7rem * var(--nimble-ct-card-scale, 1)), 0.7rem);
 		font-weight: 800;
