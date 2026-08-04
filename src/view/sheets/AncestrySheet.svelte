@@ -138,11 +138,7 @@
 				hintText="Select one or more sizes available to this ancestry. When more than one is selected, the player chooses during character creation."
 			/>
 
-			<TagGroup
-				options={sizeOptions}
-				selectedOptions={selectedSizes}
-				toggleOption={toggleSize}
-			/>
+			<TagGroup options={sizeOptions} selectedOptions={selectedSizes} toggleOption={toggleSize} />
 		</div>
 	</section>
 {/snippet}
