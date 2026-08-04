@@ -17,6 +17,13 @@ function isChargePoolFlagUpdate(options: unknown): boolean {
 	);
 }
 
+/**
+ * Every charge pool on the actor, including pools flagged `hidden`. This is the
+ * complete enumeration: it backs authoring UI (the pool picker has to offer a
+ * hidden pool so a consumer can target it) as well as the display paths, which
+ * drop hidden pools themselves. Rendering code should go through
+ * `getPoolsForItem` rather than filtering this list again.
+ */
 function getPools(actor: Actor | null | undefined): ChargePoolState[] {
 	if (!isCharacterActor(actor)) return [];
 
@@ -25,6 +32,13 @@ function getPools(actor: Actor | null | undefined): ChargePoolState[] {
 	);
 }
 
+/**
+ * The pools shown alongside an item: the ones it declares plus the ones it
+ * spends from. This is a display query, so pools flagged `hidden` are dropped
+ * here. Validation and consumption read the pool map directly and are unaffected,
+ * which is what lets a hidden pool keep gating the item while contributing no
+ * badge of its own.
+ */
 function getPoolsForItem(
 	actor: Actor | null | undefined,
 	itemId: string,
@@ -34,7 +48,7 @@ function getPoolsForItem(
 	const normalizedItemId = normalizeIdentifier(itemId);
 	if (normalizedItemId.length < 1) return [];
 
-	const availablePools = pools ?? getPools(actor);
+	const availablePools = (pools ?? getPools(actor)).filter((pool) => !pool.hidden);
 	const item = actor.items.get(normalizedItemId) as RuleBackedItem | undefined;
 	if (!item) {
 		return availablePools.filter((pool) => pool.sourceItemId === normalizedItemId);

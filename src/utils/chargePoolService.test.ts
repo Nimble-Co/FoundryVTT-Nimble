@@ -22,6 +22,7 @@ type MockRule = {
 	dieSize?: string | null;
 	maxDelta?: string | null;
 	initial?: string;
+	hidden?: boolean;
 	recoveries?: unknown;
 	poolIdentifier?: string;
 	poolType?: string;
@@ -1342,6 +1343,173 @@ describe('ChargePoolService', () => {
 
 			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
 			expect(pools[0]?.dieSize).toBe('d6');
+		});
+	});
+
+	describe('hidden pools', () => {
+		// An item that carries a player-facing budget alongside an internal gate:
+		// one use spends one charge from each, but only the budget should render.
+		function createGatedFeatureActor(gateHidden: boolean | undefined) {
+			return createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Gated Feature',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'budget-pool-rule',
+								identifier: 'budget',
+								label: 'Budget',
+								scope: 'item',
+								max: '3',
+								initial: 'max',
+							},
+							{
+								type: 'chargePool',
+								id: 'gate-pool-rule',
+								identifier: 'gate',
+								label: 'Gate',
+								scope: 'item',
+								max: '1',
+								initial: 'max',
+								...(gateHidden === undefined ? {} : { hidden: gateHidden }),
+							},
+							{
+								type: 'chargeConsumer',
+								id: 'budget-consumer-rule',
+								poolIdentifier: 'budget',
+								poolScope: 'item',
+								cost: '1',
+							},
+							{
+								type: 'chargeConsumer',
+								id: 'gate-consumer-rule',
+								poolIdentifier: 'gate',
+								poolScope: 'item',
+								cost: '1',
+							},
+						],
+					},
+				],
+			});
+		}
+
+		it('leaves a hidden pool out of the item display while keeping the visible one', async () => {
+			const actor = createGatedFeatureActor(true);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+
+			expect(pools.map((pool) => pool.identifier)).toEqual(['budget']);
+		});
+
+		it('shows both pools when neither declares the field', async () => {
+			const actor = createGatedFeatureActor(undefined);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+
+			expect(pools.map((pool) => pool.identifier).sort()).toEqual(['budget', 'gate']);
+			expect(pools.every((pool) => pool.hidden === false)).toBe(true);
+		});
+
+		it('shows a pool that declares the field as false', async () => {
+			const actor = createGatedFeatureActor(false);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+
+			expect(pools.map((pool) => pool.identifier).sort()).toEqual(['budget', 'gate']);
+		});
+
+		it('still spends a hidden pool on use', async () => {
+			const actor = createGatedFeatureActor(true);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const item = actor.items.contents[0];
+			const result = await consumeOnResolvedItemUse(item as unknown as Item.Implementation, {
+				isMiss: false,
+				isCritical: false,
+			});
+
+			expect(result.ok).toBe(true);
+			const storedPools = item.flags.nimble.chargePools as Record<string, Record<string, unknown>>;
+			expect(storedPools.budget.current).toBe(2);
+			expect(storedPools.gate.current).toBe(0);
+		});
+
+		it('still reports a hidden pool in the consumption detail used by the chat card', async () => {
+			const actor = createGatedFeatureActor(true);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const item = actor.items.contents[0];
+			const result = await consumeOnResolvedItemUse(item as unknown as Item.Implementation, {
+				isMiss: false,
+				isCritical: false,
+			});
+
+			expect(result.consumption?.map((entry) => entry.poolLabel).sort()).toEqual([
+				'Budget',
+				'Gate',
+			]);
+		});
+
+		it('still blocks activation when a hidden pool is empty', async () => {
+			const actor = createGatedFeatureActor(true);
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const item = actor.items.contents[0];
+			await consumeOnResolvedItemUse(item as unknown as Item.Implementation, {
+				isMiss: false,
+				isCritical: false,
+			});
+
+			const validation = validateItemChargeConsumption(item as unknown as Item.Implementation);
+
+			expect(validation.ok).toBe(false);
+			expect(validation.failure?.code).toBe('insufficientCharges');
+			expect(validation.failure?.poolIdentifier).toBe('gate');
+			expect(validation.failure?.available).toBe(0);
+		});
+
+		it('leaves a hidden pool out of the rest recovery preview but still recovers it', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Gated Feature',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'gate-pool-rule',
+								identifier: 'gate',
+								label: 'Gate',
+								scope: 'item',
+								max: '1',
+								initial: 'max',
+								hidden: true,
+								recoveries: [{ trigger: 'safeRest', mode: 'refresh', value: '1' }],
+							},
+						],
+						itemFlags: {
+							nimble: {
+								chargePools: {
+									gate: { current: 0, max: 1, recoveries: [] },
+								},
+							},
+						},
+					},
+				],
+			});
+
+			expect(previewRecovery(actor as unknown as Actor.Implementation, 'safeRest')).toEqual([]);
+
+			await applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
+
+			const item = actor.items.contents[0];
+			const storedPools = item.flags.nimble.chargePools as Record<string, Record<string, unknown>>;
+			expect(storedPools.gate.current).toBe(1);
 		});
 	});
 });

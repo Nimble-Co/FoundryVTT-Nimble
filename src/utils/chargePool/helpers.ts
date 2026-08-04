@@ -75,6 +75,14 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 	return value === 'actor' ? 'actor' : 'item';
 }
 
+/**
+ * Only an explicit `true` hides a pool, so stored state and rule data that
+ * predate the field keep rendering.
+ */
+function toHiddenFlag(value: unknown): boolean {
+	return value === true;
+}
+
 function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	if (typeof value !== 'string') return null;
 	const trimmed = value.trim() as ChargePoolDieSize;
@@ -118,6 +126,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
+				hidden: toHiddenFlag(sourcePool.hidden),
 				recoveries,
 			};
 		}
@@ -165,6 +174,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
+				hidden: toHiddenFlag(sourcePool.hidden),
 				recoveries,
 			};
 		}
@@ -337,6 +347,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
+				hidden: toHiddenFlag(poolRule.hidden),
 				initial,
 				recoveries,
 			};
@@ -371,6 +382,9 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			max: definition.max,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
+			// The rule is the source of truth for visibility: flipping the flag on the
+			// rule re-hides or re-reveals a pool that is already tracked in storage.
+			hidden: definition.hidden,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -604,6 +618,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.max === right.max &&
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
+		left.hidden === right.hidden &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

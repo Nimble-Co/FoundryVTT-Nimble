@@ -32,6 +32,14 @@ type ChargePoolState = {
 	 */
 	dieSize: ChargePoolDieSize | null;
 	icon?: string;
+	/**
+	 * Display opt-out. A hidden pool is built, tracked, recovered, validated and
+	 * spent exactly like a visible one; it is only left out of the readouts that
+	 * present pools as the player's resources. Pools that exist purely to gate or
+	 * rate-limit a feature set this so they do not read as a second budget next to
+	 * the pool the player actually manages.
+	 */
+	hidden: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
@@ -52,6 +60,7 @@ type ChargePoolRuleLike = {
 	icon?: string;
 	initial?: string;
 	dieSize?: string | null;
+	hidden?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;

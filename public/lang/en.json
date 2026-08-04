@@ -884,6 +884,10 @@
 					"label": "Initial",
 					"hint": "Whether the pool starts full or empty when first granted."
 				},
+				"hidden": {
+					"label": "Hide from sheet",
+					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
+				},
 				"recoveries": {
 					"label": "Recoveries",
 					"hint": "When and how charges are restored. Add an entry per trigger.",
