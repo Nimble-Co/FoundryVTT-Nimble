@@ -4,9 +4,12 @@
 
 	import { getContext } from 'svelte';
 	import { requestGrantedActionOfferUse } from '#utils/grantedActionOffers.js';
+	import { getInvalidTargets, getTargetedTokens } from '#utils/targeting.ts';
 	import localize from '../../../utils/localize.js';
+	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
 
 	interface OfferRecipientActor {
+		id?: string | null;
 		name?: string;
 		isOwner?: boolean;
 		items?: Iterable<OfferRecipientItem>;
@@ -76,13 +79,50 @@
 	}
 
 	/**
+	 * Whether the offer can be accepted with the targets the user currently has
+	 * selected. Reading `targetingVersion` re-runs this the moment the user
+	 * retargets, so the gate never sits on a stale answer.
+	 */
+	function getOfferTargeting(offer: GrantedActionOffer) {
+		void targetingVersion;
+
+		const recipientActorId = getRecipientActor(offer)?.id ?? '';
+		// getInvalidTargets returns the recipient's own targeted tokens and
+		// getTargetedTokens returns the rest, so together they are the full set.
+		const targetedTokens = [
+			...getInvalidTargets(recipientActorId),
+			...getTargetedTokens(recipientActorId),
+		];
+
+		const resolved = resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
+
+		// A target the gate allows can still be a poor choice, such as another
+		// ally. Flag an all friendly target set so the button reads as a warning
+		// without taking the activation away.
+		const isDiscouraged =
+			resolved.status === 'ready' &&
+			targetedTokens.length > 0 &&
+			targetedTokens.every(
+				(token) =>
+					(token.document as { disposition?: number } | undefined)?.disposition ===
+					CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+			);
+
+		return { ...resolved, isDiscouraged };
+	}
+
+	/**
 	 * Run the recipient's normal activation flow, then consume the offer. The
 	 * activation resolves its own costs (including any adjustments the granting
 	 * feature's rules declared), so the offer itself carries none. A cancelled
 	 * activation returns null and leaves the offer available.
+	 *
+	 * The targeting gate is re-checked here, before any side effect, so a blocked
+	 * offer posts no card, spends no charge or action, and stays available.
 	 */
 	async function useOfferWithItem(offer: GrantedActionOffer, itemId: string | null) {
 		if (busy || !itemId) return;
+		if (getOfferTargeting(offer).status === 'blocked') return;
 		busy = true;
 
 		try {
@@ -105,6 +145,16 @@
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let busy = $state(false);
 	let expandedOfferId = $state<string | null>(null);
+	let targetingVersion = $state(0);
+
+	$effect(() => {
+		const hookId = Hooks.on('targetToken', () => {
+			targetingVersion += 1;
+		});
+		return () => {
+			Hooks.off('targetToken', hookId);
+		};
+	});
 
 	let offers = $derived(
 		(messageDocument?.reactive?.system as { grantedActionOffers?: GrantedActionOffer[] })
@@ -139,8 +189,23 @@
 
 						{#if expandedOfferId === offer.id}
 							{@const eligibleItems = getEligibleItems(offer)}
+							{@const targeting = getOfferTargeting(offer)}
 
 							{#if eligibleItems.length > 0}
+								{#if targeting.status === 'blocked'}
+									<p class="nimble-granted-action-offer-notice">
+										{localize('NIMBLE.chat.grantedActionOffers.blockedByRecipientTarget', {
+											name: targeting.targetNames.join(', '),
+										})}
+									</p>
+								{:else if targeting.targetNames.length > 0}
+									<p class="nimble-granted-action-offer-notice">
+										{localize('NIMBLE.chat.grantedActionOffers.currentTarget', {
+											name: targeting.targetNames.join(', '),
+										})}
+									</p>
+								{/if}
+
 								<ul
 									class="nimble-granted-action-offer-list nimble-granted-action-offer-list--items"
 								>
@@ -148,8 +213,9 @@
 										<li>
 											<button
 												class="nimble-button nimble-granted-action-offer-button"
+												class:nimble-button--discouraged={targeting.isDiscouraged}
 												type="button"
-												disabled={busy}
+												disabled={busy || targeting.status === 'blocked'}
 												onclick={() => useOfferWithItem(offer, item.id)}
 											>
 												<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
@@ -209,6 +275,20 @@
 		padding: 0.25rem 0.5rem;
 		font-size: var(--nimble-sm-text);
 		text-align: left;
+	}
+
+	.nimble-granted-action-offer-notice {
+		margin: 0.25rem 0 0 1rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-medium-text-color);
+	}
+
+	.nimble-button--discouraged {
+		opacity: 0.45;
+
+		&:hover:not(:disabled) {
+			opacity: 0.65;
+		}
 	}
 
 	.nimble-granted-action-offer-empty {

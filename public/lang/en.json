@@ -95,6 +95,8 @@
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
 				"noEligibleItems": "No eligible items to use.",
+				"blockedByRecipientTarget": "You are targeting {name}, the actor taking this action. Pick a different target first.",
+				"currentTarget": "Target: {name}",
 				"usedBy": "Granted action used by {name}",
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
