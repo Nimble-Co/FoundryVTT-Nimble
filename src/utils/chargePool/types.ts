@@ -63,6 +63,11 @@ type ChargeConsumerRuleLike = {
 	poolIdentifier?: string;
 	poolScope?: string;
 	cost?: string;
+	/**
+	 * Optional because the structural type is also satisfied by plain objects in
+	 * tests; real rule instances always inherit it from the base rule class.
+	 */
+	appliesTo?: () => boolean;
 };
 
 type ModifyPoolRuleLike = {

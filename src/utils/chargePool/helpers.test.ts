@@ -1,8 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildEffectiveChargePoolMap } from './helpers.js';
-import type { CharacterActorLike, ChargePoolRuleLike, ModifyPoolRuleLike } from './types.js';
+import { buildEffectiveChargePoolMap, getChargeConsumers } from './helpers.js';
+import type {
+	CharacterActorLike,
+	ChargeConsumerRuleLike,
+	ChargePoolRuleLike,
+	ModifyPoolRuleLike,
+	RuleBackedItem,
+} from './types.js';
 
-type MockRule = (ChargePoolRuleLike | ModifyPoolRuleLike) & {
+type MockRule = (ChargePoolRuleLike | ChargeConsumerRuleLike | ModifyPoolRuleLike) & {
 	type: string;
 	id?: string;
 	disabled?: boolean;
@@ -278,5 +284,66 @@ describe('charge pool level-up max bonus (poolMaxBonus from history)', () => {
 
 		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
 		expect(pool.max).toBe(3);
+	});
+});
+
+describe('charge consumer predicate gating', () => {
+	function createConsumerItem(consumer: MockRule): MockItem {
+		return createMockItem('item-1', 'Charged Feature', [
+			{
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '1',
+				initial: 'max',
+			} as MockRule,
+			consumer,
+		]);
+	}
+
+	it('skips a consumer whose appliesTo() returns false', () => {
+		const item = createConsumerItem({
+			type: 'chargeConsumer',
+			id: 'consumer-rule',
+			poolIdentifier: 'focus',
+			poolScope: 'item',
+			cost: '1',
+			appliesTo: () => false,
+		} as MockRule);
+		const actor = createMockActor([item]);
+
+		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([]);
+	});
+
+	it('keeps a consumer whose appliesTo() returns true', () => {
+		const item = createConsumerItem({
+			type: 'chargeConsumer',
+			id: 'consumer-rule',
+			poolIdentifier: 'focus',
+			poolScope: 'item',
+			cost: '1',
+			appliesTo: () => true,
+		} as MockRule);
+		const actor = createMockActor([item]);
+
+		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
+			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+		]);
+	});
+
+	it('keeps a consumer that has no appliesTo at all', () => {
+		const item = createConsumerItem({
+			type: 'chargeConsumer',
+			id: 'consumer-rule',
+			poolIdentifier: 'focus',
+			poolScope: 'item',
+			cost: '1',
+		} as MockRule);
+		const actor = createMockActor([item]);
+
+		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
+			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+		]);
 	});
 });

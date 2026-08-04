@@ -387,6 +387,11 @@ function getChargeConsumers(
 	for (const rule of rules.values()) {
 		if (rule.type !== 'chargeConsumer' || rule.disabled) continue;
 		const consumerRule = rule as ChargeConsumerRuleLike;
+		// Respect the rule's predicate. A consumer that does not apply is skipped
+		// entirely, so it neither validates nor spends: that is what lets an
+		// activation keep working once its optional charge-gated rider is spent,
+		// instead of the empty pool blocking the whole use.
+		if (consumerRule.appliesTo?.() === false) continue;
 		const poolIdentifier = normalizeIdentifier(
 			consumerRule.poolIdentifier || consumerRule.identifier || consumerRule.id,
 		);
