@@ -1,4 +1,5 @@
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
+import { buildActionDeltaSummary } from '#utils/actionDeltaSummary.js';
 import { collectGrantedActionOffers } from '#utils/grantedActionOffers.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { requestCombatantActionDelta } from '#utils/requestCombatantActionDelta.js';
@@ -133,8 +134,11 @@ function accumulateApplication(
  * request so paired current/pending changes land as a single atomic update.
  * Like charge consumption, this runs regardless of the rule-automation setting
  * — it is resource bookkeeping, not condition automation.
+ *
+ * The requested adjustments are also stamped onto the activation's chat card so
+ * recipients learn what they were given without having their sheet open.
  */
-function handleUseItem(item: unknown, _chatMessage: unknown, context: unknown): void {
+function handleUseItem(item: unknown, chatMessage: unknown, context: unknown): void {
 	const typedItem = toRuleBearingItem(item);
 	if (!typedItem) return;
 
@@ -171,6 +175,38 @@ function handleUseItem(item: unknown, _chatMessage: unknown, context: unknown): 
 			deltas,
 		});
 	}
+
+	stampActionDeltaSummary(chatMessage, combat, applications);
+}
+
+/**
+ * Records the requested adjustments on the activation's chat card.
+ *
+ * These are the adjustments as REQUESTED: the combatant clamps them and permits
+ * overflow when they are written, and the write may be relayed to the active GM
+ * asynchronously, so the summary is a record of intent rather than a readback of
+ * the resulting pools. Runs on the activating client, which authored the message
+ * and may therefore update it.
+ */
+function stampActionDeltaSummary(
+	chatMessage: unknown,
+	combat: Combat,
+	applications: Map<string, ActionDeltaApplication>,
+): void {
+	const message = chatMessage as {
+		update?: (data: Record<string, unknown>) => Promise<unknown>;
+	} | null;
+	if (!message?.update) return;
+
+	const summary = buildActionDeltaSummary(
+		applications,
+		(combatantId) => combat.combatants.get(combatantId)?.name ?? null,
+	);
+	if (summary.length < 1) return;
+
+	void message.update({
+		[`flags.${SYSTEM_ID}.actionDeltaSummary`]: summary,
+	} as Record<string, unknown>);
 }
 
 /**

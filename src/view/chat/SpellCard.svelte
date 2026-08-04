@@ -2,6 +2,7 @@
 	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
+	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
@@ -113,6 +114,8 @@
 	<IncomingReactionPrompts />
 
 	<ChargeConsumptionNode />
+
+	<ActionDeltaSummaryNode />
 
 	{#if hasUpcast}
 		<section class="nimble-card-section nimble-upcast-indicator">

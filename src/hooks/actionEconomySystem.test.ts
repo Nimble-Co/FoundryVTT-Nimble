@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('#system', () => ({ systemHookName: (name: string) => `nimble.${name}` }));
+vi.mock('#system', () => ({
+	SYSTEM_ID: 'nimble',
+	systemHookName: (name: string) => `nimble.${name}`,
+}));
 vi.mock('#utils/grantedActionOffers.js', () => ({ collectGrantedActionOffers: vi.fn(() => []) }));
 vi.mock('#utils/requestCombatantActionDelta.js', () => ({
 	requestCombatantActionDelta: vi.fn(),
