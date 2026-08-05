@@ -80,7 +80,10 @@ export interface RuleCardProps {
 	/** The reactive rule source object — typed loosely so the card stays generic. */
 	rule: Record<string, unknown>;
 	/** RulesManager instance bound to the parent item. */
-	manager: { updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown> };
+	manager: {
+		updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown>;
+		failureFor?: (id: string) => string | undefined;
+	};
 	/** Parent actor's tag domain, used to surface typeahead suggestions and a live
 	 *  match preview in `<PredicateBuilder>`. Undefined for unowned items. */
 	previewDomain?: Set<string>;

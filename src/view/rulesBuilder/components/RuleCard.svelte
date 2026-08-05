@@ -145,6 +145,16 @@
 		</div>
 	</header>
 
+	{#if state.failure}
+		<p class="nimble-rule-card__failure" role="alert">
+			<i class="fa-solid fa-triangle-exclamation"></i>
+			<span>
+				{localize('NIMBLE.rulesBuilder.ruleNotRunning')}
+				{state.failure}
+			</span>
+		</p>
+	{/if}
+
 	{#if !collapsed}
 		{#if state.showJson}
 			<div class="nimble-rule-card__json">
@@ -406,6 +416,17 @@
 		&__json-error {
 			color: var(--color-level-error);
 			font-size: var(--nimble-xs-text);
+		}
+
+		&__failure {
+			display: flex;
+			gap: 0.375rem;
+			align-items: baseline;
+			margin: 0;
+			padding: 0.375rem 0.5rem;
+			color: var(--color-level-error);
+			font-size: var(--nimble-xs-text);
+			border-left: 2px solid var(--color-level-error);
 		}
 
 		&__help {

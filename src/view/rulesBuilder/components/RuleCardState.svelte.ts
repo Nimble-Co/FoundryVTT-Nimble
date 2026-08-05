@@ -31,6 +31,10 @@ export function createRuleCardState(
 			)?.appliesInPrePrepareDataFor?.(getRule() as unknown as Record<string, unknown>),
 		),
 	);
+	// A rule the manager could not build, or built with unresolved validation
+	// failures, is silently absent or force-disabled at runtime while its source
+	// still renders here. Surface the reason so the card explains itself.
+	const failure = $derived(getManager()?.failureFor?.(getRule().id as string));
 	const ruleLabel = $derived(
 		(getRule().label as string) ||
 			localize(ruleTypes[getRule().type as string] ?? (getRule().type as string)),
@@ -146,6 +150,9 @@ export function createRuleCardState(
 		},
 		get appliesInPrePrepareData() {
 			return appliesInPrePrepareData;
+		},
+		get failure() {
+			return failure;
 		},
 		get ruleLabel() {
 			return ruleLabel;

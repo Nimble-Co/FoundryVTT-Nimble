@@ -609,6 +609,7 @@
 		"rulesBuilder": {
 			"errorSchemaLoadBefore": "Could not load schema for rule type",
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
+			"ruleNotRunning": "This rule is not running:",
 			"addRule": "Add Rule",
 			"cancel": "Cancel",
 			"ruleSingular": "rule",
