@@ -1,7 +1,8 @@
 <script lang="ts">
+	import type { DocumentPickerProps } from '#types/components/DocumentPicker.d.ts';
+
 	import localize from '#utils/localize.js';
-	import { createDocumentPickerState } from '#view/rulesBuilder/components/DocumentPicker.svelte.js';
-	import type { DocumentPickerProps } from '#view/rulesBuilder/types.js';
+	import { createDocumentPickerState } from '#view/components/DocumentPicker.svelte.js';
 
 	let {
 		value,

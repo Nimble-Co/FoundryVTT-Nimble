@@ -7,6 +7,7 @@
 	import { createCharacterCreationState } from './characterCreation/state.svelte.js';
 	import { isRaisedByBackground } from './characterCreation/utils/backgroundChecks.js';
 
+	import AncestryBonusSelection from './components/characterCreator/AncestryBonusSelection.svelte';
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
 	import BackgroundOptionsSelection from './components/characterCreator/BackgroundOptionsSelection.svelte';
@@ -22,6 +23,7 @@
 
 	let {
 		ancestryOptions,
+		ancestryBonusOptions,
 		backgroundOptions,
 		bonusLanguageOptions,
 		classFeatureIndex,
@@ -34,6 +36,9 @@
 	const state = createCharacterCreationState({
 		get ancestryOptions() {
 			return ancestryOptions;
+		},
+		get ancestryBonusOptions() {
+			return ancestryBonusOptions;
 		},
 		get backgroundOptions() {
 			return backgroundOptions;
@@ -113,9 +118,22 @@
 		/>
 	{/await}
 
+	{#if state.selectedAncestry}
+		{#await ancestryBonusOptions then ancestryBonuses}
+			<AncestryBonusSelection
+				active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_BONUS}
+				{ancestryBonuses}
+				selectedAncestry={state.selectedAncestry}
+				bind:selectedAncestryBonus={state.selectedAncestryBonus}
+				bind:ancestryBonusConfirmed={state.ancestryBonusConfirmed}
+			/>
+		{/await}
+	{/if}
+
 	<AncestrySizeSelection
 		active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
 		selectedAncestry={state.selectedAncestry}
+		selectedAncestryBonus={state.selectedAncestryBonus}
 		selectedClass={state.selectedClass}
 		bind:selectedAncestrySize={state.selectedAncestrySize}
 		bind:selectedAncestrySave={state.selectedAncestrySave}
@@ -169,7 +187,7 @@
 	<StatAssignment
 		active={state.stage === CHARACTER_CREATION_STAGES.STATS}
 		bind:bonusLanguages={state.bonusLanguages}
-		selectedAncestry={state.selectedAncestry}
+		selectedAncestryBonus={state.selectedAncestryBonus}
 		selectedArray={state.selectedArray}
 		selectedAncestrySave={state.selectedAncestrySave}
 		selectedClass={state.selectedClass}

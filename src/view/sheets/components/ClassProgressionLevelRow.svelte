@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ClassProgressionLevelRowProps } from '#types/components/ClassProgressionTab.d.ts';
+	import SourceTag from '#view/components/SourceTag.svelte';
 	import localize from '#utils/localize.js';
 	import { createClassProgressionLevelRowState } from './ClassProgressionLevelRow.state.svelte.js';
 
@@ -184,19 +185,7 @@
 									<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
 								</button>
 								{#if sourceTag}
-									<span
-										class="class-progression-level-row__source-tag"
-										data-source={sourceTag}
-										data-tooltip={sourceTag === 'world'
-											? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
-											: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
-									>
-										{localize(
-											sourceTag === 'world'
-												? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
-												: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
-										)}
-									</span>
+									<SourceTag source={sourceTag} />
 								{/if}
 								{#if sourceTag === 'world'}
 									<button
@@ -405,7 +394,8 @@
 			}
 		}
 
-		&__feature-title-row &__source-tag {
+		// The badge is rendered by the shared SourceTag component, so it needs :global to reach.
+		&__feature-title-row :global(.nimble-source-tag) {
 			margin-left: auto;
 		}
 
@@ -448,28 +438,6 @@
 			color: var(--nimble-medium-text-color);
 			transition: color 0.15s ease;
 			margin-left: 0.25rem;
-		}
-
-		&__source-tag {
-			display: inline-flex;
-			align-items: center;
-			padding: 0.0625rem 0.3125rem;
-			border-radius: 3px;
-			font-size: 0.5625rem;
-			font-weight: 700;
-			white-space: nowrap;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: white;
-			flex-shrink: 0;
-
-			&[data-source='world'] {
-				background: var(--nimble-badge-world-bg);
-			}
-
-			&[data-source='pack'] {
-				background: var(--nimble-badge-pack-bg);
-			}
 		}
 
 		&__feature-desc {

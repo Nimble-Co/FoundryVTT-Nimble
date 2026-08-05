@@ -7,10 +7,6 @@ import { ABILITY_SCORE_LEVELS, SUBCLASS_LEVELS } from './ClassProgressionTabCons
 
 type AbilityScoreRecord = { [K in (typeof ABILITY_SCORE_LEVELS)[number]]: AbilityScoreDataEntry };
 
-export function getItemSource(uuid: string): 'world' | 'compendium' {
-	return uuid.startsWith('Compendium.') ? 'compendium' : 'world';
-}
-
 export function formatGroupName(groupName: string): string {
 	return groupName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }

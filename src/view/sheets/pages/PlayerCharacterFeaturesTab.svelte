@@ -46,7 +46,7 @@
 	}
 
 	function groupItemsByType(items) {
-		return items.reduce((categories, item) => {
+		const categories = items.reduce((categories, item) => {
 			const { type: itemType } = item.reactive;
 
 			if (itemType === 'feature') {
@@ -63,6 +63,14 @@
 
 			return categories;
 		}, {});
+
+		// Ancestry bonuses normally render nested under the ancestry card. Only suppress the
+		// top-level section when there is an ancestry to nest them under — otherwise deleting
+		// the ancestry, or searching for the bonus by name, hides an item whose rules are
+		// still applying, with no path left to edit or delete it.
+		if (categories.ancestry) delete categories.ancestryBonus;
+
+		return categories;
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
@@ -120,7 +128,15 @@
 	}
 
 	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = ['class', 'subclass', 'feature', 'ancestry', 'background', 'boon'];
+	const validTypes = [
+		'class',
+		'subclass',
+		'feature',
+		'ancestry',
+		'ancestryBonus',
+		'background',
+		'boon',
+	];
 	const { featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
@@ -152,6 +168,9 @@
 			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
 		),
 	);
+
+	// Ancestry bonuses — rendered nested under the ancestry card
+	let ancestryBonusItems = $derived(items.filter((item) => item.reactive.type === 'ancestryBonus'));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -317,6 +336,14 @@
 			{#if categoryName === 'subclass' && subclassFeatureItems.length}
 				<ul class="nimble-item-list nimble-item-list--sublist">
 					{#each subclassFeatureItems as item (item.reactive._id)}
+						{@render featureCard(item)}
+					{/each}
+				</ul>
+			{/if}
+
+			{#if categoryName === 'ancestry' && ancestryBonusItems.length}
+				<ul class="nimble-item-list nimble-item-list--sublist">
+					{#each ancestryBonusItems as item (item.reactive._id)}
 						{@render featureCard(item)}
 					{/each}
 				</ul>

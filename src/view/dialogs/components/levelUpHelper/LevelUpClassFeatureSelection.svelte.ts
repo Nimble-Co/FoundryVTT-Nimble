@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import { isFixedGroup, pickPreselection } from '../../selectionGroupRules.ts';
 
 /**
  * Creates reactive state for the LevelUpClassFeatureSelection component.
@@ -28,8 +29,15 @@ export function createClassFeatureSelectionState(
 		for (const [groupName, group] of classFeatures.selectionGroups) {
 			if (newSelections.has(groupName)) continue;
 
-			if (group.features.length === group.selectionCount) {
+			if (isFixedGroup(group)) {
 				newSelections.set(groupName, [...group.features]);
+				hasChanges = true;
+				continue;
+			}
+
+			const preselected = pickPreselection(group);
+			if (preselected) {
+				newSelections.set(groupName, [preselected]);
 				hasChanges = true;
 			}
 		}
@@ -105,6 +113,19 @@ export function createClassFeatureSelectionState(
 		setSelectedOptionSubItems(newMap);
 	}
 
+	/**
+	 * Replaces a group's selection outright. The duplicate-source picker sets rather than
+	 * toggles: choosing a copy means "this one instead", not "this one as well".
+	 */
+	function handleGroupSelectionSet(groupName: string, features: NimbleFeatureItem[]) {
+		const newMap = new Map(getSelectedFeatures());
+
+		if (features.length === 0) newMap.delete(groupName);
+		else newMap.set(groupName, [...features]);
+
+		setSelectedFeatures(newMap);
+	}
+
 	const hasAutoGrant = $derived((getClassFeatures()?.autoGrant?.length ?? 0) > 0);
 	const hasSelectionGroups = $derived((getClassFeatures()?.selectionGroups?.size ?? 0) > 0);
 	const hasOptionFeatures = $derived((getClassFeatures()?.optionFeatures?.length ?? 0) > 0);
@@ -124,6 +145,7 @@ export function createClassFeatureSelectionState(
 			return hasAnyFeatures;
 		},
 		handleFeatureSelect,
+		handleGroupSelectionSet,
 		handleOptionSelect,
 		handleSubItemSelect,
 	};

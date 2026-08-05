@@ -261,7 +261,8 @@ class ItemActivationManager {
 	 * - Standard Roll for subsequent damage effects and all healing effects
 	 *
 	 * Special handling:
-	 * - Skips rolling for certain item types (ancestry, background, boon, class, subclass)
+	 * - Skips rolling for certain item types (ancestry, ancestryBonus, background, boon,
+	 *   class, subclass)
 	 * - Applies healing potion bonuses to consumable healing effects
 	 * - Minions cannot score critical hits
 	 *
@@ -273,7 +274,11 @@ class ItemActivationManager {
 		targetDomain?: Set<string>,
 		incomingAttackPlan?: IncomingAttackPlan,
 	): Promise<(Roll | DamageRoll)[]> {
-		if (['ancestry', 'background', 'boon', 'class', 'subclass'].includes(this.#item.type))
+		if (
+			['ancestry', 'ancestryBonus', 'background', 'boon', 'class', 'subclass'].includes(
+				this.#item.type,
+			)
+		)
 			return [];
 
 		const effects = this.activationData?.effects ?? [];

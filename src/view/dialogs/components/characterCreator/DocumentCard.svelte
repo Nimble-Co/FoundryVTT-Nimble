@@ -29,7 +29,7 @@
 
 	{#if metadata || sourceLabel}
 		<span class="nimble-card__meta">
-			{#if metadata}{metadata}{/if}
+			{#if metadata}<span class="nimble-card__metadata">{metadata}</span>{/if}
 			{#if sourceLabel}
 				<span class="nimble-card__source-label">{sourceLabel}</span>
 			{/if}
@@ -45,6 +45,21 @@
 		flex-wrap: wrap;
 		gap: 0.125rem 0.375rem;
 		width: 100%;
+	}
+
+	// Badge for a short status word ("Default"). Consumers may reposition it, but the
+	// appearance lives here with the markup that emits it.
+	.nimble-card__metadata {
+		flex-shrink: 0;
+		padding: 0.0625rem 0.25rem;
+		font-size: var(--nimble-xxs-text);
+		font-weight: 700;
+		line-height: 1.2;
+		// `white` in both themes; --nimble-light-text-color inverts and drops to 3.02:1
+		// against the dark-theme accent.
+		color: var(--nimble-selected-tag-text-color);
+		background: var(--nimble-accent-color);
+		border-radius: 2px;
 	}
 
 	.nimble-card__source-label {

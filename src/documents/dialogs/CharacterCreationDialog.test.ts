@@ -257,6 +257,112 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});
+
+	describe('ancestry bonus handling', () => {
+		function createClassDocument() {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+				name: 'Warrior',
+				system: {
+					identifier: 'warrior',
+					savingThrows: { advantage: 'strength', disadvantage: 'dexterity' },
+				},
+			});
+		}
+
+		function createBonusDocument(rules: Array<Record<string, unknown>>) {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-ancestry-bonuses.Item.highborn',
+				name: 'Highborn',
+				system: { rules },
+			});
+		}
+
+		function stubUuids(documents: Item[]) {
+			const byUuid = new Map(documents.map((document) => [document.uuid, document]));
+			vi.stubGlobal(
+				'fromUuid',
+				vi.fn(async (uuid: string) => byUuid.get(uuid) ?? null),
+			);
+		}
+
+		function findSource(
+			actor: { createEmbeddedDocuments: ReturnType<typeof vi.fn> },
+			name: string,
+		) {
+			const sources = actor.createEmbeddedDocuments.mock.calls[0][1] as Array<{
+				name: string;
+				system: { rules?: Array<{ selectedSave?: string }> };
+			}>;
+			return sources.find((source) => source.name === name);
+		}
+
+		it('stamps the chosen save on a requiresChoice rule whatever its target', async () => {
+			// The stage gate fires for *any* `requiresChoice` rule, so the stamp has to cover the
+			// same set. Stamping only `neutral` left a homebrew rule applied at creation but
+			// unresolved on the embedded item, so a later re-prepare resolved it differently.
+			const actor = setupActorMock();
+			const classDocument = createClassDocument();
+			const ancestryDocument = createItemDocument({
+				uuid: 'Compendium.nimble.nimble-ancestries.Item.celestial',
+				name: 'Celestial',
+				system: { rules: [] },
+			});
+			const bonusDocument = createBonusDocument([
+				{ type: 'savingThrowRollMode', requiresChoice: true, target: 'strength', value: 1 },
+				{ type: 'savingThrowRollMode', requiresChoice: true, target: 'neutral', value: 1 },
+			]);
+
+			stubUuids([classDocument, ancestryDocument, bonusDocument]);
+
+			const dialog = new CharacterCreationDialog();
+			await dialog.submitCharacterCreation({
+				name: 'Test Character',
+				selectedAncestrySave: 'will',
+				origins: {
+					characterClass: { uuid: classDocument.uuid },
+					ancestry: { uuid: ancestryDocument.uuid },
+					ancestryBonus: { uuid: bonusDocument.uuid },
+				},
+				languages: [],
+				classFeatures: { autoGrant: [], selected: new Map() },
+				spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+			});
+
+			const bonusSource = findSource(actor, 'Highborn');
+			expect(bonusSource?.system.rules?.map((rule) => rule.selectedSave)).toEqual(['will', 'will']);
+		});
+
+		it('tells the ancestry not to grant its default when the bonus is in the same batch', async () => {
+			const actor = setupActorMock();
+			const classDocument = createClassDocument();
+			const ancestryDocument = createItemDocument({
+				uuid: 'Compendium.nimble.nimble-ancestries.Item.celestial',
+				name: 'Celestial',
+				system: { rules: [], defaultBonus: 'Compendium.nimble.nimble-ancestry-bonuses.Item.other' },
+			});
+			const bonusDocument = createBonusDocument([]);
+
+			stubUuids([classDocument, ancestryDocument, bonusDocument]);
+
+			const dialog = new CharacterCreationDialog();
+			await dialog.submitCharacterCreation({
+				name: 'Test Character',
+				origins: {
+					characterClass: { uuid: classDocument.uuid },
+					ancestry: { uuid: ancestryDocument.uuid },
+					ancestryBonus: { uuid: bonusDocument.uuid },
+				},
+				languages: [],
+				classFeatures: { autoGrant: [], selected: new Map() },
+				spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+			});
+
+			expect(actor.createEmbeddedDocuments).toHaveBeenNthCalledWith(1, 'Item', expect.any(Array), {
+				nimbleAncestryBonusInBatch: true,
+			});
+		});
+	});
 });
 
 describe('CharacterCreationDialog.submitCharacterCreation spell grants', () => {
@@ -401,6 +507,8 @@ describe('CharacterCreationDialog.submitCharacterCreation spell grants', () => {
 					}),
 				}),
 			]),
+			// No bonus was chosen here, so the ancestry is free to grant its own default.
+			{ nimbleAncestryBonusInBatch: false },
 		);
 
 		const spellSources = actor.createEmbeddedDocuments.mock.calls[1][1] as Array<{

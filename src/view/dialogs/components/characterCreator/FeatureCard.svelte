@@ -2,7 +2,9 @@
 	import type { FeatureCardProps } from '#types/components/ClassFeatureSelection.d.ts';
 	import { createFeatureCardState } from './FeatureCard.svelte.ts';
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
+	import SourceTag from '#view/components/SourceTag.svelte';
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
+	import getItemSource from '#utils/getItemSource.ts';
 	import localize from '#utils/localize.js';
 
 	let {
@@ -11,6 +13,7 @@
 		isDisabled = false,
 		onSelect,
 		asHeader = false,
+		showSourceLabel = false,
 	}: FeatureCardProps = $props();
 
 	const state = createFeatureCardState(() => feature);
@@ -70,6 +73,10 @@
 		<h4 class="feature-row__name nimble-heading" data-heading-variant="item">
 			{feature.name}
 		</h4>
+
+		{#if showSourceLabel}
+			<SourceTag source={getItemSource(feature.uuid)} />
+		{/if}
 
 		{#if isSelectable}
 			<div class="feature-row__actions">

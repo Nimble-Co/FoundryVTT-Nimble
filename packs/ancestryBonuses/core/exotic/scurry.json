@@ -1,0 +1,23 @@
+{
+	"name": "Scurry",
+	"type": "ancestryBonus",
+	"img": "icons/creatures/mammals/rodent-rat-diseaed-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><strong>Scurry</strong> </p><p>Gain +2 armor if you moved on your last turn. [M]</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756511270992,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Xv7uz6l6F8Z0sQ3O"
+}

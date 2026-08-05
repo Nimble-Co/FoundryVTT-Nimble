@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
 // @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import FeatureGroupSelection from './FeatureGroupSelection.svelte';
 
@@ -14,6 +15,13 @@ function createFeatureItem({ uuid, name }: { uuid: string; name: string }): Nimb
 			description: '',
 		},
 	} as NimbleFeatureItem;
+}
+
+interface GroupProps {
+	groupName: string;
+	group: SelectionGroup;
+	selectedFeatures: NimbleFeatureItem[];
+	onSelect: (feature: NimbleFeatureItem) => void;
 }
 
 describe('FeatureGroupSelection', () => {
@@ -32,18 +40,10 @@ describe('FeatureGroupSelection', () => {
 				name: 'Order Three',
 			}),
 		];
-		const selectionCount = 2;
+		const group: SelectionGroup = { features, selectionCount: 2 };
 
 		let selectedFeatures: NimbleFeatureItem[] = [];
-		let rerenderComponent:
-			| ((props: {
-					groupName: string;
-					features: NimbleFeatureItem[];
-					selectionCount: number;
-					selectedFeatures: NimbleFeatureItem[];
-					onSelect: (feature: NimbleFeatureItem) => void;
-			  }) => Promise<void>)
-			| null = null;
+		let rerenderComponent: ((props: GroupProps) => Promise<void>) | null = null;
 
 		const onSelect = vi.fn((feature: NimbleFeatureItem) => {
 			const alreadySelected = selectedFeatures.some(
@@ -54,14 +54,13 @@ describe('FeatureGroupSelection', () => {
 				selectedFeatures = selectedFeatures.filter(
 					(selectedFeature) => selectedFeature.uuid !== feature.uuid,
 				);
-			} else if (selectedFeatures.length < selectionCount) {
+			} else if (selectedFeatures.length < group.selectionCount) {
 				selectedFeatures = [...selectedFeatures, feature];
 			}
 
 			void rerenderComponent?.({
 				groupName: 'commander-orders',
-				features,
-				selectionCount,
+				group,
 				selectedFeatures,
 				onSelect,
 			});
@@ -70,13 +69,16 @@ describe('FeatureGroupSelection', () => {
 		const { rerender } = render(FeatureGroupSelection, {
 			props: {
 				groupName: 'commander-orders',
-				features,
-				selectionCount,
+				group,
 				selectedFeatures,
 				onSelect,
 			},
 		});
 		rerenderComponent = rerender;
+
+		// A multi-pick exact group asks for a count and reports progress against it.
+		expect(screen.getByText('(Choose 2)')).toBeInTheDocument();
+		expect(screen.getByText('0 of 2 selected')).toBeInTheDocument();
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Order One' }));
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Order Two' }));
@@ -106,14 +108,12 @@ describe('FeatureGroupSelection', () => {
 				name: 'Style Two',
 			}),
 		];
-		const selectionCount = 2;
 		const onSelect = vi.fn();
 
 		render(FeatureGroupSelection, {
 			props: {
 				groupName: 'ranger-styles',
-				features,
-				selectionCount,
+				group: { features, selectionCount: 2 },
 				selectedFeatures: [],
 				onSelect,
 			},
@@ -122,5 +122,61 @@ describe('FeatureGroupSelection', () => {
 		expect(screen.getByText('Style One')).toBeInTheDocument();
 		expect(screen.getByText('Style Two')).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /Select/ })).not.toBeInTheDocument();
+	});
+
+	it('badges the duplicated candidates of a named group and leaves the rest unbadged', async () => {
+		const features = [
+			createFeatureItem({ uuid: 'Item.cleave-world', name: 'Cleave' }),
+			createFeatureItem({
+				uuid: 'Compendium.nimble.nimble-class-features.Item.cleave-comp',
+				name: 'Cleave',
+			}),
+			createFeatureItem({ uuid: 'Item.parry', name: 'Parry' }),
+		];
+
+		render(FeatureGroupSelection, {
+			props: {
+				groupName: 'combat-maneuvers',
+				group: {
+					features,
+					selectionCount: 1,
+					duplicatedSourceUuids: new Set([
+						'Item.cleave-world',
+						'Compendium.nimble.nimble-class-features.Item.cleave-comp',
+					]),
+				},
+				selectedFeatures: [],
+				onSelect: vi.fn(),
+			},
+		});
+
+		// Only the colliding pair is badged: Parry's source has no bearing on the choice.
+		expect(
+			screen.getByText('World', { selector: 'span[data-source="world"]' }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText('Pack', { selector: 'span[data-source="compendium"]' }),
+		).toBeInTheDocument();
+		// Badges only — the group stays an exact "choose one".
+		expect(screen.getByText('(Choose one)')).toBeInTheDocument();
+		expect(screen.getByText('0 of 1 selected')).toBeInTheDocument();
+	});
+
+	it('falls back to the formatted group key when a group has no display name', async () => {
+		const features = [
+			createFeatureItem({ uuid: 'Item.cleave', name: 'Cleave' }),
+			createFeatureItem({ uuid: 'Item.parry', name: 'Parry' }),
+		];
+
+		render(FeatureGroupSelection, {
+			props: {
+				groupName: 'combat-maneuvers',
+				group: { features, selectionCount: 1 },
+				selectedFeatures: [],
+				onSelect: vi.fn(),
+			},
+		});
+
+		expect(screen.getByRole('heading', { name: 'Combat Maneuvers' })).toBeInTheDocument();
 	});
 });

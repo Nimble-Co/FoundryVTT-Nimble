@@ -1,0 +1,305 @@
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
+// @ts-expect-error - Svelte component default export is provided by the Svelte compiler
+import DuplicateSourceGroup from './DuplicateSourceGroup.svelte';
+
+const WORLD = 'Item.wild-shape-world';
+const PACK = 'Compendium.nimble.nimble-class-features.Item.wild-shape-comp';
+
+function createFeature(
+	uuid: string,
+	{
+		description = 'Transform for 1 hour.',
+		folder,
+		parentFolder,
+		rules = [],
+	}: {
+		description?: string;
+		folder?: string;
+		parentFolder?: string;
+		rules?: Array<Record<string, unknown>>;
+	} = {},
+): NimbleFeatureItem {
+	return {
+		uuid,
+		name: 'Wild Shape',
+		img: '',
+		sourceId: undefined,
+		folder: folder ? { name: folder, folder: parentFolder ? { name: parentFolder } : null } : null,
+		system: {
+			description,
+			activation: {},
+			rules,
+			levelUpOptions: [],
+			selectionCountByLevel: {},
+			macro: '',
+		},
+	} as unknown as NimbleFeatureItem;
+}
+
+function renderGroup(overrides: Partial<SelectionGroup> = {}, selected: NimbleFeatureItem[] = []) {
+	const group: SelectionGroup = {
+		features: [createFeature(WORLD, { folder: 'Homebrew' }), createFeature(PACK)],
+		selectionCount: 1,
+		selectionMax: 2,
+		displayName: 'Wild Shape',
+		recommendedUuid: WORLD,
+		...overrides,
+	};
+
+	const onSetSelection = vi.fn();
+	render(DuplicateSourceGroup, {
+		props: {
+			groupName: `duplicate-source:${WORLD}`,
+			group,
+			selectedFeatures: selected,
+			onSetSelection,
+		},
+	});
+
+	return { onSetSelection, group };
+}
+
+describe('DuplicateSourceGroup', () => {
+	// The shared foundry mock has no compendium registry; the picker asks it for pack labels.
+	const gameGlobal = globalThis as unknown as { game: { packs?: unknown } };
+	let originalPacks: unknown;
+
+	beforeEach(() => {
+		originalPacks = gameGlobal.game.packs;
+		gameGlobal.game.packs = { get: () => ({ metadata: { label: 'Nimble Core' } }) };
+	});
+
+	afterEach(() => {
+		gameGlobal.game.packs = originalPacks;
+	});
+
+	it('identifies two same-named copies by their folder rather than their name', () => {
+		renderGroup({
+			features: [
+				createFeature('Item.wild-shape-a', { folder: 'Homebrew' }),
+				createFeature('Item.wild-shape-b', { folder: 'Imported' }),
+			],
+		});
+
+		// Both are named "Wild Shape" and both carry a World badge, so the folder is the only
+		// thing distinguishing them — this is the case that broke every earlier design.
+		expect(screen.getByText('Homebrew')).toBeInTheDocument();
+		expect(screen.getByText('Imported')).toBeInTheDocument();
+	});
+
+	it('marks the recommended copy', () => {
+		renderGroup();
+
+		expect(screen.getByText('Recommended')).toBeInTheDocument();
+	});
+
+	it('uses the shared SelectionIndicator rather than a look-alike', () => {
+		renderGroup();
+
+		// A hand-rolled copy of this control missed SelectionIndicator's max-width/min-height/
+		// max-height, and Foundry's core button styles stretched it into an oval. Assert the
+		// shared component's own class so a re-implementation fails here instead of on screen.
+		for (const radio of screen.getAllByRole('radio')) {
+			expect(radio).toHaveClass('select-button');
+		}
+	});
+
+	it('replaces the selection rather than adding to it', async () => {
+		const alreadyPicked = createFeature(WORLD, { folder: 'Homebrew' });
+		const { onSetSelection } = renderGroup({}, [alreadyPicked]);
+
+		// Choosing the second copy means "this one instead", not "this one as well".
+		await fireEvent.click(screen.getAllByRole('radio')[1]);
+
+		expect(onSetSelection).toHaveBeenCalledTimes(1);
+		expect(onSetSelection.mock.calls[0][0].map((f: NimbleFeatureItem) => f.uuid)).toEqual([PACK]);
+	});
+
+	it('offers every copy at once through Keep all', async () => {
+		const { onSetSelection } = renderGroup();
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Keep all 2' }));
+
+		expect(onSetSelection.mock.calls[0][0]).toHaveLength(2);
+	});
+
+	it('turns into Keep recommended once everything is selected', () => {
+		const group = {
+			features: [createFeature(WORLD, { folder: 'Homebrew' }), createFeature(PACK)],
+		};
+		renderGroup(group, group.features);
+
+		expect(screen.queryByRole('button', { name: /Keep all/ })).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Keep recommended' })).toBeInTheDocument();
+	});
+
+	it('steps back to just the recommended copy from Keep recommended', async () => {
+		const group = {
+			features: [createFeature(WORLD, { folder: 'Homebrew' }), createFeature(PACK)],
+		};
+		const { onSetSelection } = renderGroup(group, group.features);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Keep recommended' }));
+
+		expect(onSetSelection.mock.calls[0][0].map((f: NimbleFeatureItem) => f.uuid)).toEqual([WORLD]);
+	});
+
+	it('expands a row without changing the selection', async () => {
+		const { onSetSelection } = renderGroup();
+
+		const rows = screen.getAllByRole('button', { expanded: false });
+		await fireEvent.click(rows[0]);
+
+		expect(rows[0].getAttribute('aria-expanded')).toBe('true');
+		expect(onSetSelection).not.toHaveBeenCalled();
+	});
+
+	it('says what differs instead of making the player read both', () => {
+		renderGroup({
+			features: [
+				createFeature(WORLD, { folder: 'Homebrew', description: 'Transform for 10 minutes.' }),
+				createFeature(PACK, { description: 'Transform for 1 hour.' }),
+			],
+		});
+
+		expect(screen.getByText(/differs:/)).toBeInTheDocument();
+	});
+
+	it('names the rule types behind a rules change instead of their schema identifiers', () => {
+		renderGroup({
+			features: [
+				createFeature(WORLD, {
+					folder: 'Homebrew',
+					rules: [{ type: 'damageBonus', bonus: '2' }],
+				}),
+				createFeature(PACK),
+			],
+		});
+
+		// The label the Rules Builder shows, never the raw `damageBonus` discriminator.
+		expect(screen.getByText(/differs: Damage Bonus/)).toBeInTheDocument();
+	});
+
+	it('falls back to the field when a changed rule type has no label', () => {
+		renderGroup({
+			features: [
+				createFeature(WORLD, { folder: 'Homebrew', rules: [{ type: 'notARuleType' }] }),
+				createFeature(PACK),
+			],
+		});
+
+		expect(screen.getByText(/differs: rules/)).toBeInTheDocument();
+	});
+
+	it('identifies a copy by its whole folder path, not just the leaf', () => {
+		renderGroup({
+			features: [
+				createFeature('Item.wild-shape-a', { folder: 'Druid', parentFolder: 'Homebrew' }),
+				createFeature('Item.wild-shape-b', { folder: 'Druid', parentFolder: 'Imported' }),
+			],
+		});
+
+		// Identically named leaf folders under different parents are the case a leaf name loses.
+		expect(screen.getByText('Homebrew / Druid')).toBeInTheDocument();
+		expect(screen.getByText('Imported / Druid')).toBeInTheDocument();
+	});
+
+	it('asks for a choice rather than claiming to keep a copy that is not there', () => {
+		// Zero selections is the opening state of a fresh cluster, where the player owns nothing —
+		// so it cannot be described as keeping what they already have.
+		renderGroup();
+
+		expect(
+			screen.getByText('Nothing selected yet — choose which copy to keep.'),
+		).toBeInTheDocument();
+	});
+
+	it('flags a copy whose every compared field matches, so it need not be opened', () => {
+		renderGroup({
+			features: [
+				createFeature(WORLD, { folder: 'Homebrew', description: 'Transform for 1 hour.' }),
+				createFeature(PACK, { description: 'Transform for 1 hour.' }),
+			],
+		});
+
+		expect(screen.getByText(/identical to/)).toBeInTheDocument();
+	});
+
+	describe('when a copy is already on the sheet', () => {
+		const ownedOverrides: Partial<SelectionGroup> = {
+			selectionCount: 0,
+			selectionMax: 1,
+			ownedUuids: new Set([WORLD]),
+			recommendedUuid: PACK,
+		};
+
+		it('shows the owned copy but gives it no radio', () => {
+			renderGroup(ownedOverrides);
+
+			expect(screen.getByText('Already added')).toBeInTheDocument();
+			// Two rows on screen, but only the unowned one can be chosen.
+			expect(screen.getAllByRole('radio')).toHaveLength(1);
+		});
+
+		it('states that taking nothing keeps what you already have', () => {
+			renderGroup(ownedOverrides);
+
+			expect(screen.getByText('Keeps only the copy you already have.')).toBeInTheDocument();
+		});
+
+		it('hides Keep all when there is only one copy left to take', () => {
+			renderGroup(ownedOverrides);
+
+			expect(screen.queryByRole('button', { name: /Keep all/ })).not.toBeInTheDocument();
+		});
+
+		it('gives the selection back when the chosen copy is clicked again', async () => {
+			// With Keep all hidden, the radio is the only control left — if it could not toggle,
+			// a player who clicked it to look around could never get back to keeping just the
+			// copy they own, which is the outcome this group's zero floor exists for.
+			const pack = createFeature(PACK);
+			const { onSetSelection } = renderGroup(
+				{ ...ownedOverrides, features: [createFeature(WORLD, { folder: 'Homebrew' }), pack] },
+				[pack],
+			);
+
+			await fireEvent.click(screen.getByRole('radio'));
+
+			expect(onSetSelection).toHaveBeenCalledWith([]);
+		});
+	});
+
+	it('keeps moving the selection when the group requires a copy', async () => {
+		// Only the owned case may drop to zero; here a copy must be kept, so a second click on the
+		// chosen copy is a no-op rather than a way to leave the group unanswered.
+		const world = createFeature(WORLD, { folder: 'Homebrew' });
+		const { onSetSelection } = renderGroup({ features: [world, createFeature(PACK)] }, [world]);
+
+		await fireEvent.click(screen.getAllByRole('radio')[0]);
+
+		expect(onSetSelection).toHaveBeenCalledWith([world]);
+	});
+
+	it('moves the choice with the arrow keys, as a radiogroup does', async () => {
+		const { onSetSelection } = renderGroup();
+
+		await fireEvent.keyDown(screen.getAllByRole('radio')[0], { key: 'ArrowDown' });
+
+		expect(onSetSelection.mock.calls[0][0].map((f: NimbleFeatureItem) => f.uuid)).toEqual([PACK]);
+	});
+
+	it('gives the radiogroup a single tab stop', () => {
+		const world = createFeature(WORLD, { folder: 'Homebrew' });
+		renderGroup({ features: [world, createFeature(PACK)] }, [world]);
+
+		// The chosen copy holds the tab stop; the rest are reachable by arrow key only.
+		expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('tabindex'))).toEqual([
+			'0',
+			'-1',
+		]);
+	});
+});
