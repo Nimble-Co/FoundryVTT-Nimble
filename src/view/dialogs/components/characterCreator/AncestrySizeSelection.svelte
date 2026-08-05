@@ -2,9 +2,9 @@
 	import { getContext } from 'svelte';
 
 	import localize from '../../../../utils/localize.js';
+	import { effectiveSizes } from '../../../../utils/sizeSelection.js';
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
-	import { effectiveSizes } from '../../../sheets/components/sizeSelection.js';
 	import { ancestryBonusRequiresSaveChoice } from '../../characterCreation/utils/ancestryBonusRequiresSaveChoice.js';
 
 	// Smallest to largest, so the list reads the same regardless of the order the sizes were authored
@@ -50,12 +50,39 @@
 		selectedAncestrySave = $bindable(),
 	} = $props();
 
+	let sizeList = $state(null);
+
 	let ancestrySizes = $derived(prepareAncestrySizes(selectedAncestry));
 	let hasSizeChoice = $derived(ancestrySizes.length > 1);
 	// A single size is stated rather than asked, so the player still learns what they are.
 	let hasFixedSize = $derived(ancestrySizes.length === 1);
 	let hasSaveChoice = $derived(ancestryBonusRequiresSaveChoice(selectedAncestryBonus));
 	let hasAnyChoice = $derived(hasSizeChoice || hasFixedSize || hasSaveChoice);
+
+	// A radiogroup is one stop in the tab order, so focus lands on the chosen size — or on the first
+	// one when nothing is chosen yet.
+	let focusedSize = $derived(
+		ancestrySizes.includes(selectedAncestrySize) ? selectedAncestrySize : ancestrySizes[0],
+	);
+
+	const ARROW_STEPS = {
+		ArrowDown: 1,
+		ArrowRight: 1,
+		ArrowUp: -1,
+		ArrowLeft: -1,
+	};
+
+	/** Arrow keys move the choice between the radios of a radiogroup, wrapping at both ends. */
+	function handleRadioKeydown(event, index) {
+		const step = ARROW_STEPS[event.key];
+		if (step === undefined) return;
+
+		event.preventDefault();
+		const next = (index + step + ancestrySizes.length) % ancestrySizes.length;
+		// In a radiogroup the arrows carry the selection with them, not just the focus.
+		selectedAncestrySize = ancestrySizes[next];
+		sizeList?.querySelectorAll('[role="radio"]')[next]?.focus();
+	}
 </script>
 
 {#if hasAnyChoice}
@@ -93,34 +120,37 @@
 							</span>
 						</p>
 					{:else}
-						<ul
+						<!-- A radiogroup takes the radios as its own children, so the options cannot be
+						list items. -->
+						<div
 							class="nimble-size-choice"
 							role="radiogroup"
 							aria-label={ancestryOptions.sizeCategory}
+							bind:this={sizeList}
 						>
-							{#each ancestrySizes as sizeCategory (sizeCategory)}
+							{#each ancestrySizes as sizeCategory, index (sizeCategory)}
 								{@const selected = sizeCategory === selectedAncestrySize}
 
-								<li>
-									<button
-										class="nimble-size-choice__option"
-										class:nimble-size-choice__option--selected={selected}
-										type="button"
-										role="radio"
-										aria-checked={selected}
-										onclick={() => (selectedAncestrySize = sizeCategory)}
-									>
-										<span class="nimble-size-choice__dot" aria-hidden="true"></span>
+								<button
+									class="nimble-size-choice__option"
+									class:nimble-size-choice__option--selected={selected}
+									type="button"
+									role="radio"
+									aria-checked={selected}
+									tabindex={sizeCategory === focusedSize ? 0 : -1}
+									onclick={() => (selectedAncestrySize = sizeCategory)}
+									onkeydown={(event) => handleRadioKeydown(event, index)}
+								>
+									<span class="nimble-size-choice__dot" aria-hidden="true"></span>
 
-										<span>{sizeCategories[sizeCategory] ?? sizeCategory}</span>
+									<span>{sizeCategories[sizeCategory] ?? sizeCategory}</span>
 
-										<span class="nimble-size-choice__description">
-											{sizeCategoryDescriptions[sizeCategory] ?? ''}
-										</span>
-									</button>
-								</li>
+									<span class="nimble-size-choice__description">
+										{sizeCategoryDescriptions[sizeCategory] ?? ''}
+									</span>
+								</button>
 							{/each}
-						</ul>
+						</div>
 
 						{#if active}
 							<p class="nimble-size-choice__note">
@@ -160,9 +190,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.125rem;
-		margin: 0;
-		padding: 0;
-		list-style: none;
 
 		&__option {
 			display: flex;

@@ -7,6 +7,7 @@ import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
+import { offersSizeChoice } from '../../../utils/sizeSelection.js';
 import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
 	AbilityScoreAssignment,
@@ -103,11 +104,16 @@ function getSkillBonuses(
 	return bonuses;
 }
 
+/** The size step only appears when the ancestry leaves the player something to pick. */
+function ancestryOffersSizeChoice(ancestry: NimbleAncestryItem | null): boolean {
+	return offersSizeChoice(ancestry?.system?.size, Object.keys(CONFIG.NIMBLE.sizeCategories));
+}
+
 function hasAncestryOptions(
 	ancestry: NimbleAncestryItem | null,
 	ancestryBonus: NimbleAncestryBonusItem | null,
 ): boolean {
-	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
+	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
 	return hasSizeChoice || hasSaveChoice;
 }
@@ -118,7 +124,7 @@ function ancestryOptionsComplete(
 	selectedAncestrySize: string | null,
 	selectedAncestrySave: string | null,
 ): boolean {
-	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
+	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
 
 	if (hasSizeChoice && !selectedAncestrySize) return false;

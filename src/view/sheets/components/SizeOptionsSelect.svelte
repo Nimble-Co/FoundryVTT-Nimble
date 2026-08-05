@@ -1,44 +1,64 @@
 <script lang="ts">
 	import localize from '#utils/localize.js';
-
-	import { effectiveSizes, toggleAllSizes, toggleSize } from './sizeSelection.js';
+	import { effectiveSizes, toggleAllSizes, toggleSize } from '#utils/sizeSelection.js';
 
 	interface Props {
 		selectedSizes: string[] | undefined;
+		/** Sizes the published ancestry this was copied from shipped with, if any. */
+		publishedSizes?: string[];
 		onChange: (nextSizes: string[]) => unknown;
 	}
 
-	let { selectedSizes, onChange }: Props = $props();
+	let { selectedSizes, publishedSizes, onChange }: Props = $props();
 
 	const sizeCategories: Record<string, string> = CONFIG.NIMBLE.sizeCategories;
 	const sizeCategoryDescriptions: Record<string, string> = CONFIG.NIMBLE.sizeCategoryDescriptions;
 	const sizeOrder = Object.keys(sizeCategories);
+	// Two ancestry sheets can be open at once, so the panel needs an id unique to this instance.
+	const instanceId = $props.id();
+	const panelId = `nimble-size-options-panel-${instanceId}`;
 
 	let expanded = $state(false);
-	/** Label of the size a removal bounced back to, shown until the next interaction. */
-	let revertedTo = $state('');
+	/** Sizes a removal bounced back to, shown until the next interaction. */
+	let restoredSizes = $state<string[]>([]);
 
-	// Legacy ancestries can still store an empty array; those present as the default size.
+	// Imported ancestries can still store an empty array or duplicates; reads normalize both.
 	let currentSizes = $derived(effectiveSizes(selectedSizes, sizeOrder));
 	let allSelected = $derived(sizeOrder.every((size) => currentSizes.includes(size)));
+	// A world copy of a published ancestry reverts to the size it shipped with rather than to the
+	// system default, so removing the last size can't quietly turn a Half-Giant Medium.
+	let fallbackSizes = $derived(effectiveSizes(publishedSizes, sizeOrder));
 
 	function sizeLabel(size: string): string {
 		return sizeCategories[size] ?? size;
 	}
 
-	function handleToggleSize(size: string) {
-		const removedTheLastSize = currentSizes.length === 1 && currentSizes.includes(size);
-		const nextSizes = toggleSize(currentSizes, size, sizeOrder);
+	function formatSizes(sizes: string[], type: 'conjunction' | 'disjunction'): string {
+		const formatter = new Intl.ListFormat(game.i18n?.lang ?? 'en', { style: 'long', type });
 
-		revertedTo = removedTheLastSize ? sizeLabel(nextSizes[0]) : '';
+		return formatter.format(sizes.map(sizeLabel));
+	}
+
+	/**
+	 * Write the new selection, noting any of the removed sizes it handed back — an ancestry needs one
+	 * size, so emptying the selection restores instead of clearing, and that has to be explained.
+	 */
+	function applyChange(nextSizes: string[], removedSizes: string[]) {
+		restoredSizes = removedSizes.filter((size) => nextSizes.includes(size));
 
 		onChange(nextSizes);
 	}
 
-	function handleToggleAll() {
-		revertedTo = '';
+	function handleToggleSize(size: string) {
+		const removedSizes = currentSizes.includes(size) ? [size] : [];
 
-		onChange(toggleAllSizes(currentSizes, sizeOrder));
+		applyChange(toggleSize(currentSizes, size, sizeOrder, fallbackSizes), removedSizes);
+	}
+
+	function handleToggleAll() {
+		const removedSizes = allSelected ? currentSizes : [];
+
+		applyChange(toggleAllSizes(currentSizes, sizeOrder, fallbackSizes), removedSizes);
 	}
 
 	/** What the GM's selection means for character creation. */
@@ -56,13 +76,8 @@
 			});
 		}
 
-		const formatter = new Intl.ListFormat(game.i18n?.lang ?? 'en', {
-			style: 'long',
-			type: 'disjunction',
-		});
-
 		return localize('NIMBLE.ancestrySheet.sizeSummaryChoice', {
-			sizes: formatter.format(currentSizes.map(sizeLabel)),
+			sizes: formatSizes(currentSizes, 'disjunction'),
 		});
 	});
 </script>
@@ -77,13 +92,11 @@
 		class:nimble-size-options__trigger--expanded={expanded}
 		type="button"
 		aria-expanded={expanded}
-		aria-label={expanded
-			? localize('NIMBLE.ancestrySheet.sizeOptionsCollapse')
-			: localize('NIMBLE.ancestrySheet.sizeOptionsExpand')}
+		aria-controls={panelId}
 		onclick={() => (expanded = !expanded)}
 	>
 		<span class="nimble-size-options__trigger-label">
-			{allSelected
+			{currentSizes.length > 1
 				? localize('NIMBLE.ancestrySheet.sizeOptionsEdit')
 				: localize('NIMBLE.ancestrySheet.sizeOptionsAdd')}
 		</span>
@@ -98,48 +111,48 @@
 		<i class="fa-solid {expanded ? 'fa-chevron-up' : 'fa-chevron-down'}" aria-hidden="true"></i>
 	</button>
 
-	{#if expanded}
-		<ul class="nimble-size-options__panel">
+	<!-- Always rendered so the trigger's `aria-controls` has something to point at; `hidden` keeps a
+	collapsed panel out of both the layout and the accessibility tree. -->
+	<ul class="nimble-size-options__panel" id={panelId} hidden={!expanded}>
+		<li>
+			<button
+				class="nimble-size-options__option nimble-size-options__option--all"
+				type="button"
+				aria-pressed={allSelected}
+				onclick={handleToggleAll}
+			>
+				<span>{localize('NIMBLE.ancestrySheet.sizeOptionsAll')}</span>
+
+				{#if allSelected}
+					<i class="fa-solid fa-check" aria-hidden="true"></i>
+				{/if}
+			</button>
+		</li>
+
+		{#each sizeOrder as size (size)}
+			{@const selected = currentSizes.includes(size)}
+
 			<li>
 				<button
-					class="nimble-size-options__option nimble-size-options__option--all"
+					class="nimble-size-options__option"
+					class:nimble-size-options__option--selected={selected}
 					type="button"
-					aria-pressed={allSelected}
-					onclick={handleToggleAll}
+					aria-pressed={selected}
+					onclick={() => handleToggleSize(size)}
 				>
-					<span>{localize('NIMBLE.ancestrySheet.sizeOptionsAll')}</span>
+					<span>{sizeLabel(size)}</span>
 
-					{#if allSelected}
+					<span class="nimble-size-options__description">
+						{sizeCategoryDescriptions[size] ?? ''}
+					</span>
+
+					{#if selected}
 						<i class="fa-solid fa-check" aria-hidden="true"></i>
 					{/if}
 				</button>
 			</li>
-
-			{#each sizeOrder as size (size)}
-				{@const selected = currentSizes.includes(size)}
-
-				<li>
-					<button
-						class="nimble-size-options__option"
-						class:nimble-size-options__option--selected={selected}
-						type="button"
-						aria-pressed={selected}
-						onclick={() => handleToggleSize(size)}
-					>
-						<span>{sizeLabel(size)}</span>
-
-						<span class="nimble-size-options__description">
-							{sizeCategoryDescriptions[size] ?? ''}
-						</span>
-
-						{#if selected}
-							<i class="fa-solid fa-check" aria-hidden="true"></i>
-						{/if}
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+		{/each}
+	</ul>
 
 	<ul class="nimble-size-options__badges">
 		{#if allSelected}
@@ -181,9 +194,11 @@
 		{/if}
 	</ul>
 
-	{#if revertedTo}
+	{#if restoredSizes.length}
 		<p class="nimble-size-options__notice" role="status">
-			{localize('NIMBLE.ancestrySheet.sizeOptionsReverted', { size: revertedTo })}
+			{localize('NIMBLE.ancestrySheet.sizeOptionsRestored', {
+				sizes: formatSizes(restoredSizes, 'conjunction'),
+			})}
 		</p>
 	{/if}
 
@@ -250,6 +265,11 @@
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-input-border-color);
 			border-radius: 0 0 2px 2px;
+
+			// The class sets `display`, so it would otherwise win against the UA rule for `hidden`.
+			&[hidden] {
+				display: none;
+			}
 		}
 
 		&__option {
@@ -344,14 +364,12 @@
 			padding: 0;
 			font-size: var(--nimble-xxs-text);
 			color: inherit;
-			background: rgba(255, 255, 255, 0.18);
+			// Tinted from the badge's own text color, so the light badge and the dark one both get a
+			// legible chip without either hardcoding a color.
+			background: color-mix(in srgb, currentColor 18%, transparent);
 			border: none;
 			border-radius: 50%;
 			transition: var(--nimble-standard-transition);
-
-			.nimble-size-options__badge--all & {
-				background: rgba(0, 0, 0, 0.12);
-			}
 
 			&:active,
 			&:focus,
@@ -361,7 +379,7 @@
 			}
 
 			&:hover {
-				background: rgba(255, 255, 255, 0.32);
+				background: color-mix(in srgb, currentColor 32%, transparent);
 			}
 		}
 

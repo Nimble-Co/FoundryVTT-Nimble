@@ -1,5 +1,6 @@
 <script>
 	import { setContext, untrack } from 'svelte';
+	import { getItemSourceId } from '../../utils/itemSourceRules.js';
 	import localize from '../../utils/localize.js';
 	import DocumentPicker from '../components/DocumentPicker.svelte';
 	import Hint from '../components/Hint.svelte';
@@ -37,6 +38,32 @@
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
 	let selectedSizes = $derived(item.reactive.system.size ?? []);
+
+	// Compendium ancestries are locked, so an editable one is a world copy. Its published sizes are
+	// what removing the last size reverts to — the system default only applies to ancestries written
+	// from scratch, which have no published version to go back to.
+	let publishedSizes = $state([]);
+
+	// The source never changes for an open sheet, so this reads the document rather than its reactive
+	// proxy — tracking `_stats` would refetch on every edit.
+	$effect(() => {
+		const sourceUuid = getItemSourceId(untrack(() => item));
+		if (!sourceUuid) return;
+
+		let current = true;
+
+		fromUuid(sourceUuid)
+			.then((source) => {
+				if (current) publishedSizes = source?.system?.size ?? [];
+			})
+			.catch(() => {
+				if (current) publishedSizes = [];
+			});
+
+		return () => {
+			current = false;
+		};
+	});
 
 	setContext(
 		'document',
@@ -120,6 +147,7 @@
 
 			<SizeOptionsSelect
 				{selectedSizes}
+				{publishedSizes}
 				onChange={(nextSizes) => item.update({ 'system.size': nextSizes })}
 			/>
 		</div>

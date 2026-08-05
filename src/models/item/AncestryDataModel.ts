@@ -1,3 +1,5 @@
+import { DEFAULT_SIZE } from '#utils/sizeSelection.js';
+
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 
 const { fields } = foundry.data;
@@ -5,9 +7,11 @@ const { fields } = foundry.data;
 const schema = {
 	description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
 	exotic: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+	// An ancestry always offers at least one size, so a new one starts at the default rather than
+	// empty — otherwise the sheet would show a size the ancestry card does not.
 	size: new fields.ArrayField(
-		new fields.StringField({ required: true, initial: 'medium', nullable: false }),
-		{ required: true, nullable: false, initial: () => [] },
+		new fields.StringField({ required: true, initial: DEFAULT_SIZE, nullable: false }),
+		{ required: true, nullable: false, initial: () => [DEFAULT_SIZE] },
 	),
 	// Compendium UUID of the ancestry's default bonus trait. Players may swap this for
 	// any other ancestry bonus during character creation.
