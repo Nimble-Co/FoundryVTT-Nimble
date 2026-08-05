@@ -24,6 +24,13 @@ interface ActivationTemplateSpec {
 	supersededTemplate: TemplateSource;
 }
 
+interface DescriptionSpec {
+	/** Description the pack now ships. */
+	description: string;
+	/** Description the pack shipped before, and the only one we may replace. */
+	supersededDescription: string;
+}
+
 interface ActivationNodeReplacement {
 	/** Node the pack now ships in the superseded node's place. */
 	node: NodeSource;
@@ -36,6 +43,7 @@ interface FeatureSpec {
 	class: string;
 	name: string;
 	rules: RuleSource[];
+	description?: DescriptionSpec;
 	activationCost?: ActivationCostSpec;
 	activationTemplate?: ActivationTemplateSpec;
 	activationNodeReplacements?: ActivationNodeReplacement[];
@@ -204,6 +212,14 @@ const FEATURES: FeatureSpec[] = [
 		sourceId: 'Compendium.nimble.nimble-class-features.Item.qbrHOGpSY2thczfu',
 		class: 'commander',
 		name: 'master commander',
+		// The level list on the trailing clause included a level that grants no
+		// extra use, which reads as one more than the rules below actually add.
+		description: {
+			description:
+				'<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>',
+			supersededDescription:
+				'<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 5, 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>',
+		},
 		rules: [
 			{
 				type: 'modifyPool',
@@ -354,10 +370,11 @@ function isSameJson(a: unknown, b: unknown): boolean {
  * Matches on compendium source id, falling back to class + item name for copies
  * without one. Idempotent, and deliberately conservative about overwriting:
  * rules are appended only when no rule with the same signature is present, and
- * each activation value is rewritten only while it still holds exactly what the
- * pack shipped before. A GM who reworded the reminder, changed the damage
- * formula, reshaped the template, or picked a different action cost keeps their
- * version, and nodes they added alongside ours survive in place.
+ * each activation value, and any description, is rewritten only while it still
+ * holds exactly what the pack shipped before. A GM who reworded the reminder or
+ * the description, changed the damage formula, reshaped the template, or picked
+ * a different action cost keeps their version, and nodes they added alongside
+ * ours survive in place.
  */
 class Migration036CommanderCoordinatedStrike extends MigrationBase {
 	static override readonly version = 36;
@@ -372,6 +389,7 @@ class Migration036CommanderCoordinatedStrike extends MigrationBase {
 
 		let changed = false;
 		if (spec.rules.length > 0) changed = this.#appendRules(source, spec) || changed;
+		if (spec.description) changed = this.#applyDescription(source, spec.description) || changed;
 		if (spec.activationCost) {
 			changed = this.#applyActivationCost(source, spec.activationCost) || changed;
 		}
@@ -402,6 +420,14 @@ class Migration036CommanderCoordinatedStrike extends MigrationBase {
 			changed = true;
 		}
 		return changed;
+	}
+
+	#applyDescription(source: any, { description, supersededDescription }: DescriptionSpec): boolean {
+		const system = (source.system ??= {} as Record<string, unknown>);
+		if (system.description !== supersededDescription) return false;
+
+		system.description = description;
+		return true;
 	}
 
 	#applyActivationCost(source: any, { cost, supersededCost }: ActivationCostSpec): boolean {

@@ -84,7 +84,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 5, 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
+		"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commander-progression",
