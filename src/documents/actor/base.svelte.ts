@@ -169,15 +169,17 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	/**
 	 * Whether an Active Effect contributes to this actor's data — either applied
 	 * to the actor itself, or granted by one of its owned items.
+	 *
+	 * Compared by document identity, not by id: an unlinked token's synthetic
+	 * actor carries the base actor's id, so an id check would fire this actor's
+	 * subscriber for effects belonging to any token derived from it. Identity
+	 * also removes the need to match on `documentName` string literals — only an
+	 * effect whose parent chain reaches this exact document can affect it.
 	 */
 	protected _ownsEffect(effect: unknown): boolean {
-		const parent = (
-			effect as { parent?: { documentName?: string; id?: string; parent?: { id?: string } } }
-		)?.parent;
+		const parent = (effect as { parent?: { parent?: unknown } | null } | null)?.parent;
 		if (!parent) return false;
-		if (parent.documentName === 'Actor') return parent.id === this.id;
-		if (parent.documentName === 'Item') return parent.parent?.id === this.id;
-		return false;
+		return parent === (this as unknown) || parent.parent === (this as unknown);
 	}
 
 	static override async createDialog(
