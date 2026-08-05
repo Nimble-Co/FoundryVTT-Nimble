@@ -165,15 +165,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** ------------------------------------------------------ */
 	/**                 Data Prep Functions                    */
 	/** ------------------------------------------------------ */
-	override prepareData(): void {
+	protected override _onBeforePrepareData(): void {
 		this._ancestry = undefined;
 		this._ancestryBonus = undefined;
 		this._background = undefined;
 		this._classes = undefined;
 		this.HitDiceManager = null!;
+	}
 
-		super.prepareData();
-
+	protected override _onAfterPrepareData(): void {
 		this._applyConfiguredLanguageGrants();
 		this._prepareArmorClass();
 	}

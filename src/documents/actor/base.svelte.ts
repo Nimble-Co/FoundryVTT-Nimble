@@ -268,13 +268,30 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		super._initialize(options);
 	}
 
+	/**
+	 * Template method — subclasses extend the prepare cycle through
+	 * `_onBeforePrepareData` / `_onAfterPrepareData` rather than overriding
+	 * `prepareData`, so the re-entry guard below can never be bypassed.
+	 */
 	override prepareData(): void {
+		// A bare prepareData() with no _initialize() in between reuses the same
+		// `system` object, so every rule hook would run a second time on top of
+		// already-derived values. Rules that read-modify-write their target
+		// (skill, ability and save bonuses, speeds, wounds, hit dice) would stack
+		// twice. Re-initialize instead: that restores `system` from source and
+		// drives exactly one clean cycle through this method.
+		if (this.initialized) {
+			this.reset();
+			return;
+		}
+
 		this.initialized = true;
+		this._onBeforePrepareData();
 		super.prepareData();
 
-		// Foundry sometimes calls prepareData() directly without re-initializing
-		// the document, reusing the same system object; reset rule accumulator
-		// arrays so the afterPrepareData pushes below never duplicate.
+		// Defence in depth for the guard above: rule accumulator arrays live on
+		// the `system` object, so a prepare cycle that somehow reused one would
+		// duplicate every afterPrepareData push below.
 		for (const path of actorAccumulatorPaths) {
 			if (foundry.utils.getProperty(this.system, path) !== undefined) {
 				foundry.utils.setProperty(this.system, path, []);
@@ -285,7 +302,15 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		this.rules.forEach((rule) => {
 			rule.afterPrepareData?.();
 		});
+
+		this._onAfterPrepareData();
 	}
+
+	/** Subclass hook, before core data preparation. Reset memoized state here. */
+	protected _onBeforePrepareData(): void {}
+
+	/** Subclass hook, after the `afterPrepareData` rule sweep has run. */
+	protected _onAfterPrepareData(): void {}
 
 	override prepareBaseData(): void {
 		super.prepareBaseData();
