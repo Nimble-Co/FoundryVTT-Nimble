@@ -1,24 +1,26 @@
-import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const hooksCall = vi.fn().mockReturnValue(true);
 const hooksCallAll = vi.fn();
 vi.stubGlobal('Hooks', { call: hooksCall, callAll: hooksCallAll });
 
+const fromStatusEffect = vi.fn();
+const createEffect = vi.fn();
+vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
+
 import { ApplyConditionRule, type ApplyConditionTrigger } from './applyCondition.js';
 
 interface MockActiveEffect {
-	update: Mock<(data: Record<string, unknown>) => Promise<unknown>>;
+	condition: string;
+	statuses: Set<string>;
+	/** What `updateSource` has folded in, standing for the effect's own source data. */
+	sourceData: Record<string, unknown>;
+	updateSource(data: Record<string, unknown>): void;
 }
 
 interface MockActor {
 	statuses: Set<string>;
-	toggleStatusEffect: Mock<
-		(
-			statusId: string,
-			options?: { active?: boolean },
-		) => Promise<MockActiveEffect | boolean | undefined>
-	>;
+	effects: MockActiveEffect[];
 }
 
 interface MockItem {
@@ -26,6 +28,19 @@ interface MockItem {
 	isEmbedded: boolean;
 	name: string;
 	uuid: string;
+}
+
+/** Every effect the rule managed to create, in order, with who it landed on. */
+const appliedEffects: Array<{ target: unknown; effect: MockActiveEffect }> = [];
+
+function conditionsAppliedTo(target: MockActor): string[] {
+	return appliedEffects
+		.filter((entry) => entry.target === target)
+		.map((entry) => entry.effect.condition);
+}
+
+function lastAppliedEffect(): MockActiveEffect | undefined {
+	return appliedEffects.at(-1)?.effect;
 }
 
 interface ApplyConditionSource {
@@ -50,17 +65,7 @@ interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 }
 
 function createMockActor(): MockActor {
-	return {
-		statuses: new Set<string>(),
-		toggleStatusEffect: vi.fn().mockResolvedValue(true),
-	};
-}
-
-function createMockActorWithAppliedEffect(effectUpdate: Mock): MockActor {
-	return {
-		statuses: new Set<string>(),
-		toggleStatusEffect: vi.fn().mockResolvedValue({ update: effectUpdate }),
-	};
+	return { statuses: new Set<string>(), effects: [] };
 }
 
 function createMockItem(actor: MockActor): MockItem {
@@ -135,6 +140,24 @@ describe('ApplyConditionRule', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		hooksCall.mockReturnValue(true);
+		appliedEffects.length = 0;
+
+		fromStatusEffect.mockImplementation(async (condition: string) => {
+			const sourceData: Record<string, unknown> = {};
+			return {
+				condition,
+				statuses: new Set([condition]),
+				sourceData,
+				updateSource: (data: Record<string, unknown>) => Object.assign(sourceData, data),
+			} satisfies MockActiveEffect;
+		});
+
+		createEffect.mockImplementation(
+			async (effect: MockActiveEffect, { parent }: { parent: unknown }) => {
+				appliedEffects.push({ target: parent, effect });
+				return effect;
+			},
+		);
 	});
 
 	describe('schema', () => {
@@ -170,10 +193,10 @@ describe('ApplyConditionRule', () => {
 			);
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
-			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
-			expect(targetActor.toggleStatusEffect).toHaveBeenCalledWith('smoldering', { active: true });
+			expect(conditionsAppliedTo(targetActor)).toEqual(['smoldering']);
 		});
 
 		it('fires onHit trigger only when not critical', async () => {
@@ -185,10 +208,10 @@ describe('ApplyConditionRule', () => {
 			);
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
-			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
-			expect(targetActor.toggleStatusEffect).toHaveBeenCalledWith('dazed', { active: true });
+			expect(conditionsAppliedTo(targetActor)).toEqual(['dazed']);
 		});
 
 		it('ignores events where the source actor is not the rule owner', async () => {
@@ -203,7 +226,7 @@ describe('ApplyConditionRule', () => {
 			// Event comes from a different actor's item — rule should not fire.
 			await rule.onItemUsed(buildItemUsedContext(otherActor, targetActor, { isCritical: true }));
 
-			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 
 		it('no-ops gracefully when targetActor is null', async () => {
@@ -233,14 +256,14 @@ describe('ApplyConditionRule', () => {
 				combatant: {} as Combatant,
 				actor: otherActor as unknown as Parameters<ApplyConditionRule['onTurnStart']>[0]['actor'],
 			});
-			expect(ownerActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 
 			await rule.onTurnStart({
 				combat: {} as Combat,
 				combatant: {} as Combatant,
 				actor: ownerActor as unknown as Parameters<ApplyConditionRule['onTurnStart']>[0]['actor'],
 			});
-			expect(ownerActor.toggleStatusEffect).toHaveBeenCalledWith('focused', { active: true });
+			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
 		});
 
 		it('does not fire onTurnStart for a rule with a different trigger', async () => {
@@ -256,7 +279,7 @@ describe('ApplyConditionRule', () => {
 				actor: ownerActor as unknown as Parameters<ApplyConditionRule['onTurnStart']>[0]['actor'],
 			});
 
-			expect(ownerActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 		});
 
 		it('fires onSaveFail only on failing outcome', async () => {
@@ -273,7 +296,7 @@ describe('ApplyConditionRule', () => {
 				saveType: 'strength',
 				outcome: 'pass',
 			});
-			expect(ownerActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 
 			await rule.onSaveResolved({
 				actor: ownerActor as unknown as Parameters<
@@ -282,15 +305,14 @@ describe('ApplyConditionRule', () => {
 				saveType: 'strength',
 				outcome: 'fail',
 			});
-			expect(ownerActor.toggleStatusEffect).toHaveBeenCalledWith('prone', { active: true });
+			expect(conditionsAppliedTo(ownerActor)).toEqual(['prone']);
 		});
 	});
 
 	describe('duration pass-through', () => {
-		it('patches the ActiveEffect returned by toggleStatusEffect when duration is configured', async () => {
+		it('stamps the configured duration on the applied effect', async () => {
 			const attackerActor = createMockActor();
-			const effectUpdate = vi.fn().mockResolvedValue(undefined);
-			const targetActor = createMockActorWithAppliedEffect(effectUpdate);
+			const targetActor = createMockActor();
 
 			const rule = createApplyConditionRule(
 				{
@@ -303,13 +325,12 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(effectUpdate).toHaveBeenCalledWith({ duration: { rounds: 2 } });
+			expect(lastAppliedEffect()?.sourceData.duration).toEqual({ rounds: 2 });
 		});
 
-		it('skips the update when no duration fields are set', async () => {
+		it('leaves the duration alone when no duration fields are set', async () => {
 			const attackerActor = createMockActor();
-			const effectUpdate = vi.fn().mockResolvedValue(undefined);
-			const targetActor = createMockActorWithAppliedEffect(effectUpdate);
+			const targetActor = createMockActor();
 
 			const rule = createApplyConditionRule(
 				{ condition: 'smoldering', trigger: 'onCrit' },
@@ -318,22 +339,23 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(effectUpdate).not.toHaveBeenCalled();
+			expect(lastAppliedEffect()?.sourceData).not.toHaveProperty('duration');
 		});
+	});
 
-		it('skips the update when toggleStatusEffect returns true (effect already existed)', async () => {
+	describe('source recording', () => {
+		it('records the owning item as the origin of the applied effect', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();
-			targetActor.toggleStatusEffect.mockResolvedValue(true);
 
 			const rule = createApplyConditionRule(
-				{ condition: 'smoldering', trigger: 'onCrit', duration: { rounds: 2 } },
+				{ condition: 'smoldering', trigger: 'onCrit' },
 				attackerActor,
 			);
 
-			await expect(
-				rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true })),
-			).resolves.not.toThrow();
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(lastAppliedEffect()?.sourceData.origin).toBe('test-item-uuid');
 		});
 	});
 
@@ -348,7 +370,7 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 	});
 
@@ -398,7 +420,7 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 	});
 
@@ -417,7 +439,7 @@ describe('ApplyConditionRule', () => {
 				'nimble.preApplyCondition',
 				expect.objectContaining({ target: targetActor, condition: 'dazed' }),
 			);
-			expect(targetActor.toggleStatusEffect).toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual(['dazed']);
 		});
 
 		it('skips application when a listener returns false', async () => {
@@ -435,15 +457,14 @@ describe('ApplyConditionRule', () => {
 				'nimble.preApplyCondition',
 				expect.objectContaining({ condition: 'dazed' }),
 			);
-			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 	});
 
 	describe('nimble.conditionApplied hook', () => {
 		it('fires Hooks.callAll after successfully applying a condition', async () => {
 			const attackerActor = createMockActor();
-			const effectUpdate = vi.fn().mockResolvedValue(undefined);
-			const targetActor = createMockActorWithAppliedEffect(effectUpdate);
+			const targetActor = createMockActor();
 			const rule = createApplyConditionRule(
 				{ condition: 'smoldering', trigger: 'onCrit' },
 				attackerActor,
@@ -456,15 +477,15 @@ describe('ApplyConditionRule', () => {
 				expect.objectContaining({
 					target: targetActor,
 					condition: 'smoldering',
-					effect: expect.objectContaining({ update: effectUpdate }),
+					effect: lastAppliedEffect(),
 				}),
 			);
 		});
 
-		it('passes null effect when toggleStatusEffect returns true', async () => {
+		it('passes a null effect when the effect could not be created', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();
-			targetActor.toggleStatusEffect.mockResolvedValue(true);
+			createEffect.mockResolvedValue(undefined);
 			const rule = createApplyConditionRule(
 				{ condition: 'dazed', trigger: 'onCrit' },
 				attackerActor,

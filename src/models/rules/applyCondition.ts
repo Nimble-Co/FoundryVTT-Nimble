@@ -1,5 +1,5 @@
-import { systemHookName } from '#system';
 import type { ConditionNode, EffectNode } from '#types/effectTree.js';
+import applyConditionToActor, { type ConditionTargetActor } from '#utils/applyConditionToActor.js';
 import {
 	type ActivationCardContext,
 	type ActorHealthContext,
@@ -71,18 +71,6 @@ declare namespace ApplyConditionRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface ActiveEffectLike {
-	update(data: Record<string, unknown>): Promise<unknown>;
-}
-
-interface ActorWithStatusEffect {
-	statuses?: Set<string>;
-	toggleStatusEffect(
-		statusId: string,
-		options?: { active?: boolean; overlay?: boolean },
-	): Promise<ActiveEffectLike | boolean | undefined>;
-}
-
 class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.applyCondition.description';
@@ -115,7 +103,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onItemUsed(context: ItemUsedContext): Promise<void> {
 		if (!this.#shouldFireOnItemUsed(context)) return;
-		const targetActor = context.targetActor as unknown as ActorWithStatusEffect | null;
+		const targetActor = context.targetActor as unknown as ConditionTargetActor | null;
 		if (!targetActor) return;
 		await this.#applyConditionTo(targetActor);
 	}
@@ -196,57 +184,20 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	async #applyConditionToSelf(): Promise<void> {
 		if (!this.test()) return;
-		const selfActor = this.item.actor as unknown as ActorWithStatusEffect | null;
+		const selfActor = this.item.actor as unknown as ConditionTargetActor | null;
 		if (!selfActor) return;
 		await this.#applyConditionTo(selfActor);
 	}
 
-	async #applyConditionTo(target: ActorWithStatusEffect): Promise<void> {
+	async #applyConditionTo(target: ConditionTargetActor): Promise<void> {
 		if (!this.condition) return;
-		// Short-circuit if the target already has the condition. Mirrors the pattern in
-		// src/view/chat/components/ConditionNode.svelte — Foundry's toggleStatusEffect
-		// dedupe only works for status effects with a static _id, which Nimble only
-		// assigns to conditions with linked statuses (see ConditionManager.ts).
-		if (target.statuses?.has(this.condition)) return;
 
-		// Blocking hook — listeners can return false to prevent condition application
-		// (e.g. condition immunity, resistance, or redirect).
-		// @ts-expect-error - nimble.preApplyCondition is a custom Nimble hook
-		const allowed = Hooks.call(systemHookName('preApplyCondition'), {
-			target,
-			condition: this.condition,
-			source: this.item,
+		await applyConditionToActor(target, this.condition, {
+			sourceItem: this.item as unknown as { uuid?: string },
+			sourceActor: this.item.actor as unknown as { uuid?: string } | null,
+			duration: this.duration,
 			rule: this,
 		});
-		if (allowed === false) return;
-
-		const result = await target.toggleStatusEffect(this.condition, { active: true });
-		await this.#maybePatchDuration(result);
-
-		// Notify listeners that a condition was successfully applied.
-		// @ts-expect-error - nimble.conditionApplied is a custom Nimble hook
-		Hooks.callAll(systemHookName('conditionApplied'), {
-			target,
-			condition: this.condition,
-			effect: typeof result === 'object' ? result : null,
-			source: this.item,
-			rule: this,
-		});
-	}
-
-	async #maybePatchDuration(result: ActiveEffectLike | boolean | undefined): Promise<void> {
-		const durationUpdate: Record<string, number | null> = {};
-		if (this.duration.rounds !== null) durationUpdate.rounds = this.duration.rounds;
-		if (this.duration.turns !== null) durationUpdate.turns = this.duration.turns;
-		if (this.duration.seconds !== null) durationUpdate.seconds = this.duration.seconds;
-		if (Object.keys(durationUpdate).length === 0) return;
-
-		// Foundry's toggleStatusEffect returns:
-		//   ActiveEffect — newly created effect (patch its duration)
-		//   true        — effect already existed (nothing to patch)
-		//   false / undefined — no-op
-		if (!result || typeof result !== 'object') return;
-		await result.update({ duration: durationUpdate });
 	}
 }
 
