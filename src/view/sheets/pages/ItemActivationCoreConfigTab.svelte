@@ -1,6 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
 
+	import localize from '#utils/localize.js';
+
 	const { activationCostTypes, durationTypes } = CONFIG.NIMBLE;
 
 	let document = getContext('document');
@@ -33,6 +35,31 @@
 		/>
 
 		<span class="nimble-field__label"> Output item description on activation </span>
+	</label>
+</section>
+
+<section>
+	<header class="nimble-section-header">
+		<h4 class="nimble-heading" data-heading-variant="section">Roll Dialog</h4>
+	</header>
+
+	<label class="nimble-field">
+		<input
+			type="checkbox"
+			checked={activationData.skipRollDialog}
+			onchange={({ target }) =>
+				document.update({
+					'system.activation.skipRollDialog': target.checked,
+				})}
+		/>
+
+		<span class="nimble-field__label"> {localize('NIMBLE.itemConfig.skipRollDialog')} </span>
+
+		<i
+			class="nimble-field__hint-icon fa-solid fa-circle-info"
+			data-tooltip={localize('NIMBLE.itemConfig.skipRollDialogHint')}
+			data-tooltip-direction="UP"
+		></i>
 	</label>
 </section>
 
