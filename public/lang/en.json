@@ -180,7 +180,9 @@
 		},
 		"ancestrySheet": {
 			"defaultBonus": "Default Bonus",
-			"defaultBonusPlaceholder": "Drag an ancestry bonus here"
+			"defaultBonusPlaceholder": "Drag an ancestry bonus here",
+			"sizeOptions": "Size Options",
+			"sizeOptionsHint": "Select one or more sizes available to this ancestry. When more than one is selected, the player chooses during character creation."
 		},
 		"backgroundOptionsSelection": {
 			"header": "Step 3b. Choose Heritage Ancestry",

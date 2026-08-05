@@ -2,13 +2,13 @@
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import DocumentPicker from '../components/DocumentPicker.svelte';
+	import Hint from '../components/Hint.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import TagGroup from '../components/TagGroup.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
-	import Hint from '../components/Hint.svelte';
-	import TagGroup from '../components/TagGroup.svelte';
 
 	const navigation = [
 		{
@@ -31,31 +31,32 @@
 		},
 	];
 
+	const { sizeCategories } = CONFIG.NIMBLE;
+
+	const sizeOptions = Object.entries(sizeCategories).map(([value, label]) => ({
+		value,
+		label,
+	}));
+
+	const sizeOrder = Object.keys(sizeCategories);
+
 	let { item, sheet } = $props();
 	let currentTab = $state(navigation[0]);
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
-
-	const { sizeCategories } = CONFIG.NIMBLE;
-
 	let selectedSizes = $derived(item.reactive.system.size ?? []);
 
-	const sizeOptions = Object.entries(sizeCategories).map(([value, label]) => ({
-		value,
-		label: localize(label),
-	}));
+	async function toggleSize(sizeCategory) {
+		// A newly selected size is inserted in the canonical CONFIG.NIMBLE.sizeCategories order.
+		// Sizes the config doesn't define (homebrew, imported) are kept rather than dropped.
+		const updatedSizes = selectedSizes.includes(sizeCategory)
+			? selectedSizes.filter((size) => size !== sizeCategory)
+			: [...selectedSizes, sizeCategory].sort(
+					(a, b) => sizeOrder.indexOf(a) - sizeOrder.indexOf(b),
+				);
 
-	function toggleSize(sizeCategory) {
-		const current = new Set(item.system.size ?? []);
-
-		if (current.has(sizeCategory)) current.delete(sizeCategory);
-		else current.add(sizeCategory);
-
-		// Preserve the canonical ordering defined in CONFIG.NIMBLE.sizeCategories.
-		const updatedSizes = Object.keys(sizeCategories).filter((key) => current.has(key));
-
-		item.update({ 'system.size': updatedSizes });
+		await item.update({ 'system.size': updatedSizes });
 	}
 
 	setContext(
@@ -131,12 +132,12 @@
 
 		<div>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Size Options</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ancestrySheet.sizeOptions')}
+				</h3>
 			</header>
 
-			<Hint
-				hintText="Select one or more sizes available to this ancestry. When more than one is selected, the player chooses during character creation."
-			/>
+			<Hint hintText={localize('NIMBLE.ancestrySheet.sizeOptionsHint')} />
 
 			<TagGroup options={sizeOptions} selectedOptions={selectedSizes} toggleOption={toggleSize} />
 		</div>
