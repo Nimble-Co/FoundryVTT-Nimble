@@ -25,6 +25,18 @@ export interface DuplicateCandidate {
 	segments: DescriptionSegment[];
 }
 
+/**
+ * The UUID this group identifies a copy by.
+ *
+ * `Document#uuid` is null for a document that was never stored. Every group reaching this
+ * component is built from stored copies, so the fallback is unreachable; it resolves to a value
+ * that matches no owned, recommended, or selected UUID, which is how an unidentifiable copy
+ * should behave here.
+ */
+function uuidOf(feature: NimbleFeatureItem): string {
+	return feature.uuid ?? '';
+}
+
 interface FolderLike {
 	name?: string;
 	folder?: FolderLike | null;
@@ -52,8 +64,8 @@ function describeFolderPath(folder: FolderLike | null | undefined): string {
 
 /** Human name for where a copy physically lives. */
 function describeOrigin(feature: NimbleFeatureItem): string {
-	if (getItemSource(feature.uuid) === 'compendium') {
-		return getDocumentSourceLabel(feature.uuid);
+	if (getItemSource(uuidOf(feature)) === 'compendium') {
+		return getDocumentSourceLabel(uuidOf(feature));
 	}
 
 	// World items are organized in folders; the folder is the only thing that reliably tells
@@ -64,7 +76,7 @@ function describeOrigin(feature: NimbleFeatureItem): string {
 
 /** Where a copy originally came from, which distinguishes an import from a hand-made item. */
 function describeLineage(feature: NimbleFeatureItem): string {
-	if (getItemSource(feature.uuid) === 'compendium') {
+	if (getItemSource(uuidOf(feature)) === 'compendium') {
 		return localize('NIMBLE.classFeatureSelection.duplicatePackagedDefault');
 	}
 
@@ -83,11 +95,11 @@ function describeLineage(feature: NimbleFeatureItem): string {
  * "differs" mean something to them.
  */
 function pickBaseline(group: StateProps['group']): NimbleFeatureItem | undefined {
-	const owned = group.features.find((feature) => group.ownedUuids?.has(feature.uuid));
+	const owned = group.features.find((feature) => group.ownedUuids?.has(uuidOf(feature)));
 	if (owned) return owned;
 
 	return (
-		group.features.find((feature) => getItemSource(feature.uuid) === 'compendium') ??
+		group.features.find((feature) => getItemSource(uuidOf(feature)) === 'compendium') ??
 		group.features[0]
 	);
 }
@@ -112,7 +124,7 @@ function describeDifference(
 	baseline: NimbleFeatureItem | undefined,
 	baselineOrigin: string,
 ): { note: string; isIdentical: boolean } {
-	if (!baseline || baseline.uuid === feature.uuid) {
+	if (!baseline || uuidOf(baseline) === uuidOf(feature)) {
 		return { note: localize('NIMBLE.classFeatureSelection.duplicateBaseline'), isIdentical: true };
 	}
 
@@ -198,11 +210,11 @@ export function createDuplicateSourceGroupState(
 				lineage: describeLineage(feature),
 				note,
 				isIdentical,
-				isOwned: group.ownedUuids?.has(feature.uuid) ?? false,
-				isRecommended: group.recommendedUuid === feature.uuid,
-				source: getItemSource(feature.uuid),
+				isOwned: group.ownedUuids?.has(uuidOf(feature)) ?? false,
+				isRecommended: group.recommendedUuid === uuidOf(feature),
+				source: getItemSource(uuidOf(feature)),
 				segments:
-					baseline && baseline.uuid !== feature.uuid
+					baseline && uuidOf(baseline) !== uuidOf(feature)
 						? diffDescription(baselineDescription, feature.system?.description ?? '')
 						: [{ text: toPlainText(feature.system?.description ?? ''), changed: false }],
 			};
@@ -213,7 +225,7 @@ export function createDuplicateSourceGroupState(
 	/** Copies that can actually be granted — everything except what is already owned. */
 	const offerable = $derived.by(() => {
 		const group = getGroup();
-		return group.features.filter((feature) => !group.ownedUuids?.has(feature.uuid));
+		return group.features.filter((feature) => !group.ownedUuids?.has(uuidOf(feature)));
 	});
 	const hasOwnedCopy = $derived((getGroup().ownedUuids?.size ?? 0) > 0);
 
@@ -227,7 +239,7 @@ export function createDuplicateSourceGroupState(
 		/** The copy "Keep recommended" falls back to; the first offerable if none is marked. */
 		get recommended() {
 			const recommendedUuid = getGroup().recommendedUuid;
-			return offerable.find((feature) => feature.uuid === recommendedUuid) ?? offerable[0];
+			return offerable.find((feature) => uuidOf(feature) === recommendedUuid) ?? offerable[0];
 		},
 		get heading() {
 			return getGroup().displayName ?? '';
@@ -241,7 +253,7 @@ export function createDuplicateSourceGroupState(
 			return getGroup().selectionCount === 0;
 		},
 		isSelected(feature: NimbleFeatureItem) {
-			return getSelectedFeatures().some((f) => f.uuid === feature.uuid);
+			return getSelectedFeatures().some((f) => uuidOf(f) === uuidOf(feature));
 		},
 		get allSelected() {
 			return offerable.length > 1 && getSelectedFeatures().length === offerable.length;
