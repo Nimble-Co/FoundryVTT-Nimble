@@ -128,63 +128,10 @@ class ItemActivationManager {
 			rollMode: options.rollMode ?? 0,
 		};
 
-		let dialogData: ItemActivationManager.DialogData;
+		const dialogData = await this.#resolveDialogData(rollOptions);
 
-		if (options.fastForward) {
-			dialogData = {
-				rollMode: options.rollMode ?? 0,
-				rollFormula: options.rollFormula,
-				primaryDieValue: options.primaryDieValue,
-				primaryDieModifier: options.primaryDieModifier,
-				rollHidden: options.rollHidden,
-				conditionalDamages: options.conditionalDamages,
-			};
-		} else {
-			// Check if there are damage or healing effects that require rolling
-			const effects = this.activationData?.effects ?? [];
-			const hasRolls = flattenEffectsTree(effects).some(
-				(node) => node.type === 'damage' || node.type === 'healing',
-			);
-
-			// Check if this is a spell (for upcast dialog)
-			const isSpell = this.#item.type === 'spell';
-
-			if (hasRolls || isSpell) {
-				// Check if Alt is pressed to skip dialog
-				let altPressed = false;
-				const unsubscribe = keyPressStore.subscribe((state) => {
-					altPressed = state.alt;
-				});
-
-				if (altPressed) {
-					// Skip dialog, use default
-					dialogData = this.#getDefaultDialogData(rollOptions);
-				} else {
-					// Use spell dialog for spells, regular dialog for others
-					const DialogClass = isSpell ? SpellUpcastDialog : ItemActivationConfigDialog;
-
-					const dialog = new DialogClass(
-						this.actor,
-						this.#item,
-						`Activate ${this.#item.name}`,
-						rollOptions,
-					);
-					await dialog.render(true);
-					const result = await dialog.promise;
-					if (result) {
-						dialogData = result;
-					} else {
-						// If dialog is cancelled, don't roll
-						return { activation: null, rolls: null };
-					}
-				}
-
-				unsubscribe();
-			} else {
-				// No rolls needed, use default
-				dialogData = this.#getDefaultDialogData(rollOptions);
-			}
-		}
+		// If dialog is cancelled, don't roll
+		if (!dialogData) return { activation: null, rolls: null };
 
 		// Apply upcast deltas if present
 		if (dialogData.upcast && this.#item.type === 'spell') {
@@ -850,6 +797,74 @@ class ItemActivationManager {
 		const newCount = currentCount + bonusDice;
 
 		return formula.replace(/(\d*)d(\d+)/, `${newCount}d${diceSize}`);
+	}
+
+	/**
+	 * Resolves the dialog data for the activation, showing a configuration
+	 * dialog when one is required.
+	 *
+	 * @param rollOptions - The roll options to use as dialog defaults.
+	 * @returns The resolved dialog data, or null if the dialog was cancelled.
+	 */
+	async #resolveDialogData(rollOptions): Promise<ItemActivationManager.DialogData | null> {
+		const options = this.#options;
+
+		if (options.fastForward) {
+			return {
+				rollMode: options.rollMode ?? 0,
+				rollFormula: options.rollFormula,
+				primaryDieValue: options.primaryDieValue,
+				primaryDieModifier: options.primaryDieModifier,
+				rollHidden: options.rollHidden,
+				conditionalDamages: options.conditionalDamages,
+			};
+		}
+
+		if (this.activationData?.skipRollDialog) {
+			return this.#getDefaultDialogData(rollOptions);
+		}
+
+		// Check if there are damage or healing effects that require rolling
+		const effects = this.activationData?.effects ?? [];
+		const hasRolls = flattenEffectsTree(effects).some(
+			(node) => node.type === 'damage' || node.type === 'healing',
+		);
+
+		// Check if this is a spell (for upcast dialog)
+		const isSpell = this.#item.type === 'spell';
+
+		if (!hasRolls && !isSpell) {
+			// No rolls needed, use default
+			return this.#getDefaultDialogData(rollOptions);
+		}
+
+		// Check if Alt is pressed to skip dialog
+		let altPressed = false;
+		const unsubscribe = keyPressStore.subscribe((state) => {
+			altPressed = state.alt;
+		});
+		unsubscribe();
+
+		if (altPressed) {
+			// Skip dialog, use default
+			return this.#getDefaultDialogData(rollOptions);
+		}
+
+		// Use spell dialog for spells, regular dialog for others
+		const DialogClass = isSpell ? SpellUpcastDialog : ItemActivationConfigDialog;
+
+		const dialog = new DialogClass(
+			this.actor,
+			this.#item,
+			`Activate ${this.#item.name}`,
+			rollOptions,
+		);
+		await dialog.render(true);
+		const result = await dialog.promise;
+		if (result) return result;
+
+		// If dialog is cancelled, don't roll
+		return null;
 	}
 
 	/**
