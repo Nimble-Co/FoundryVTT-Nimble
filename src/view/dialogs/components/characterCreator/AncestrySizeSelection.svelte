@@ -63,17 +63,13 @@
 		class="nimble-character-creation-section"
 		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}"
 	>
-		<header class="nimble-section-header" data-header-variant="character-creator">
-			<h3 class="nimble-heading" data-heading-variant="section">
-				{ancestryOptions.header}
-			</h3>
-		</header>
-
 		{#if hasSizeChoice || hasFixedSize}
 			<div class="nimble-character-creation-section__subsection">
-				<h4 class="nimble-heading" data-heading-variant="subsection">
-					{ancestryOptions.sizeCategory}
-				</h4>
+				<header class="nimble-section-header" data-header-variant="character-creator">
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{ancestryOptions.sizeCategoryHeader}
+					</h3>
+				</header>
 
 				{#if active && hasSizeChoice}
 					<Hint hintText={ancestryOptions.sizeCategoryHint} />
@@ -138,9 +134,12 @@
 
 		{#if hasSaveChoice && selectedClass}
 			<div class="nimble-character-creation-section__subsection">
-				<h4 class="nimble-heading" data-heading-variant="subsection">
-					{ancestryOptions.enhancedSave}
-				</h4>
+				<header class="nimble-section-header" data-header-variant="character-creator">
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{ancestryOptions.enhancedSaveHeader}
+					</h3>
+				</header>
+
 				{#if active}
 					<Hint hintText={ancestryOptions.enhancedSaveHint} />
 				{/if}

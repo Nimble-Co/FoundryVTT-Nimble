@@ -67,10 +67,11 @@ const characterCreationStages = {
 };
 
 const ancestryOptions = {
-	header: 'NIMBLE.ancestryOptions.header',
 	sizeCategory: 'NIMBLE.ancestryOptions.sizeCategory',
+	sizeCategoryHeader: 'NIMBLE.ancestryOptions.sizeCategoryHeader',
 	sizeCategoryHint: 'NIMBLE.ancestryOptions.sizeCategoryHint',
 	enhancedSave: 'NIMBLE.ancestryOptions.enhancedSave',
+	enhancedSaveHeader: 'NIMBLE.ancestryOptions.enhancedSaveHeader',
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
 };
 

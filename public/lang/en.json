@@ -148,8 +148,9 @@
 			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
-			"header": "Ancestry Options",
+			"enhancedSaveHeader": "Step 2d. Enhanced Save",
 			"sizeCategory": "Size Category",
+			"sizeCategoryHeader": "Step 2c. Size Category",
 			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
 			"sizeGrantedBy": "set by {ancestry}",
 			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
