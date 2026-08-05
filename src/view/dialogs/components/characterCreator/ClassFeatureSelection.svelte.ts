@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import { isFixedGroup, pickPreselection } from '../../selectionGroupRules.ts';
 
 export interface ClassFeatureSelectionState {
 	classFeatures: ClassFeatureResult | null;
@@ -29,8 +30,15 @@ export function createClassFeatureSelectionState(
 		for (const [groupName, group] of classFeatures.selectionGroups) {
 			if (newSelections.has(groupName)) continue;
 
-			if (group.features.length === group.selectionCount) {
+			if (isFixedGroup(group)) {
 				newSelections.set(groupName, [...group.features]);
+				hasChanges = true;
+				continue;
+			}
+
+			const preselected = pickPreselection(group);
+			if (preselected) {
+				newSelections.set(groupName, [preselected]);
 				hasChanges = true;
 			}
 		}
@@ -70,6 +78,20 @@ export function createClassFeatureSelectionState(
 		setSelectedFeatures(newMap);
 	}
 
+	/**
+	 * Replaces a group's selection outright. The duplicate-source picker sets rather than
+	 * toggles: choosing a copy means "this one instead", not "this one as well".
+	 */
+	function handleGroupSelectionSet(groupName: string, features: NimbleFeatureItem[]) {
+		const { selectedFeatures } = getState();
+		const newMap = new Map(selectedFeatures);
+
+		if (features.length === 0) newMap.delete(groupName);
+		else newMap.set(groupName, [...features]);
+
+		setSelectedFeatures(newMap);
+	}
+
 	return {
 		get hasAutoGrant() {
 			return (getState().classFeatures?.autoGrant?.length ?? 0) > 0;
@@ -84,5 +106,6 @@ export function createClassFeatureSelectionState(
 			return hasAuto || hasSelection;
 		},
 		handleFeatureSelect,
+		handleGroupSelectionSet,
 	};
 }

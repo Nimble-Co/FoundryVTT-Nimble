@@ -6,6 +6,8 @@ import type {
 } from '#types/components/ClassProgressionTab.d.ts';
 import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.js';
 import getClassProgressionData from '#utils/getClassProgressionData.js';
+import type { ItemSource } from '#utils/getItemSource.ts';
+import getItemSource from '#utils/getItemSource.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.js';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.js';
 import localize from '#utils/localize.js';
@@ -15,7 +17,6 @@ import {
 	formatGroupName,
 	getAbilityScoreEntry,
 	getGroupLevels,
-	getItemSource,
 	isSubclassLevel,
 } from './ClassProgressionTabUtils.js';
 
@@ -145,10 +146,10 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		};
 	});
 
-	function getSourceTag(uuid: string): 'world' | 'pack' | null {
+	/** The item's source, or null when it matches the class's own — nothing to distinguish. */
+	function getSourceTag(uuid: string): ItemSource | null {
 		const itemSource = getItemSource(uuid);
-		if (itemSource === classSource) return null;
-		return itemSource === 'world' ? 'world' : 'pack';
+		return itemSource === classSource ? null : itemSource;
 	}
 
 	function toggleGroup(groupName: string): void {

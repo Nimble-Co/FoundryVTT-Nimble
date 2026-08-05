@@ -224,6 +224,8 @@
 	--nimble-badge-subclass-bg: hsl(276, 30%, 33%);
 	--nimble-badge-world-bg: hsl(35, 80%, 22%);
 	--nimble-badge-pack-bg: hsl(195, 55%, 22%);
+	// Badge backgrounds stay dark in both themes, so the label stays light — no theme override.
+	--nimble-badge-text-color: white;
 
 	/** DICE POOL TRACKER **/
 	// Light: ~3.5:1 on white (WCAG AA non-text); spent at ~3:1; expend hover red.

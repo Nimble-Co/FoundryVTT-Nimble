@@ -1494,6 +1494,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
 | `isLevelUpOptionApplicable()` | `src/utils/isLevelUpOptionApplicable.ts` | Whether a feature's level-up option applies at a given level (empty `applyAtLevels` ⇒ every level) |
+| `getItemSource()` | `src/utils/getItemSource.ts` | Whether a document lives in a compendium pack or the world, from its UUID |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
 | `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
 | `resolveMinionAttackActionCost()` | `src/utils/resolveMinionAttackActionCost.ts` | Action cost for group-attack activations; a missing or `none` cost defaults to 1 (legacy pack convention), an explicit zero stays free |
@@ -1535,3 +1536,4 @@ export const myStore = writable<MyStoreState>(initialState);
 | `SecondaryNavigation` | `src/view/components/SecondaryNavigation.svelte` | Secondary navigation container |
 | `SecondaryNavigationItem` | `src/view/components/SecondaryNavigationItem.svelte` | Secondary navigation item |
 | `Hint` | `src/view/components/Hint.svelte` | Hint/tooltip text display |
+| `SourceTag` | `src/view/components/SourceTag.svelte` | "World"/"Pack" badge marking where a document is sourced from |

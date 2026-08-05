@@ -1,5 +1,11 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type {
+	FeatureGroupSelectionProps,
+	SelectionGroup,
+} from '#types/components/ClassFeatureSelection.d.ts';
+import localize from '#utils/localize.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
+import { isFixedGroup, isGroupComplete } from '../../selectionGroupRules.ts';
 
 /**
  * Converts kebab-case to Title Case
@@ -12,11 +18,41 @@ export function formatGroupName(name: string): string {
 		.join(' ');
 }
 
-interface FeatureGroupSelectionStateProps {
-	groupName: string;
-	features: NimbleFeatureItem[];
-	selectionCount: number;
-	selectedFeatures: NimbleFeatureItem[];
+type FeatureGroupSelectionStateProps = Pick<
+	FeatureGroupSelectionProps,
+	'groupName' | 'group' | 'selectedFeatures'
+>;
+
+/**
+ * The "what am I being asked for" line: how many picks this group wants. Fixed groups ask for
+ * nothing, so they get no hint.
+ *
+ * Range groups never reach here — a duplicate-source cluster is rendered by
+ * `DuplicateSourceGroup`, which states its own bounds — so this only has to phrase exact counts.
+ */
+function buildHintText(group: SelectionGroup): string | null {
+	if (isFixedGroup(group)) return null;
+
+	if (group.selectionCount === 1) {
+		return localize('NIMBLE.classFeatureSelection.chooseOne');
+	}
+
+	return localize('NIMBLE.classFeatureSelection.chooseN', {
+		count: String(group.selectionCount),
+	});
+}
+
+/** The "where am I up to" counter that pairs with {@link buildHintText}. */
+function buildProgressText(
+	group: SelectionGroup,
+	selectedFeatures: NimbleFeatureItem[],
+): string | null {
+	if (isFixedGroup(group)) return null;
+
+	return localize('NIMBLE.classFeatureSelection.nOfMSelected', {
+		current: String(selectedFeatures.length),
+		required: String(group.selectionCount),
+	});
 }
 
 /**
@@ -27,31 +63,38 @@ interface FeatureGroupSelectionStateProps {
  */
 export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSelectionStateProps) {
 	return {
-		get formattedGroupName() {
-			return formatGroupName(getProps().groupName);
+		/** Heading for the group: the group's own display name, else the formatted key. */
+		get heading() {
+			const { groupName, group } = getProps();
+			return group.displayName || formatGroupName(groupName);
 		},
 		/**
-		 * A group is "fixed" when the only available options exactly match the required
-		 * count — nothing to choose, every card is granted. We still render the cards
-		 * (so players can read them), but we skip the selection hint and make each card
-		 * non-interactive since the outcome is predetermined.
+		 * Fixed groups still render their cards (so players can read them), but skip the
+		 * selection hint and are non-interactive since the outcome is predetermined.
 		 */
 		get isFixed() {
-			const { features, selectionCount } = getProps();
-			return features.length === selectionCount;
-		},
-		get selectedCount() {
-			return getProps().selectedFeatures.length;
+			return isFixedGroup(getProps().group);
 		},
 		get isComplete() {
-			const { selectionCount, selectedFeatures } = getProps();
-			return selectedFeatures.length >= selectionCount;
+			const { group, selectedFeatures } = getProps();
+			return isGroupComplete(group, selectedFeatures);
+		},
+		/** How many picks this group asks for; `null` for fixed groups, which ask for none. */
+		get hintText() {
+			return buildHintText(getProps().group);
+		},
+		/** How many picks the player has made so far; `null` for fixed groups. */
+		get progressText() {
+			const { group, selectedFeatures } = getProps();
+			return buildProgressText(group, selectedFeatures);
 		},
 		get displayedFeatures() {
-			const { features, selectedFeatures } = getProps();
+			const { group, selectedFeatures } = getProps();
 
-			if (this.isFixed || !this.isComplete) {
-				return sortDocumentsByName(features);
+			// Fixed groups have nothing to collapse; exact groups collapse to the final picks
+			// once complete.
+			if (isFixedGroup(group) || !isGroupComplete(group, selectedFeatures)) {
+				return sortDocumentsByName(group.features);
 			}
 
 			return sortDocumentsByName(selectedFeatures);

@@ -553,7 +553,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		const classIdentifier = selectedClass?.system?.identifier;
 		if (classIdentifier) {
 			params.classFeatureIndex
-				.then((index) => getClassFeaturesFromIndex(index, classIdentifier, 1))
+				.then((index) =>
+					getClassFeaturesFromIndex(index, classIdentifier, 1, { promoteDuplicateSources: true }),
+				)
 				.then((result) => {
 					classFeatures = result;
 					// Scroll to class features after they're loaded, if there are any
