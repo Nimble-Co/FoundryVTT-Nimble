@@ -43,6 +43,8 @@ const dependencies = {
 	DamageRoll,
 	getRollFormula,
 	reconstructEffectsTree,
+	ItemActivationConfigDialog,
+	SpellUpcastDialog,
 };
 
 export const testDependencies = dependencies;
@@ -851,7 +853,9 @@ class ItemActivationManager {
 		}
 
 		// Use spell dialog for spells, regular dialog for others
-		const DialogClass = isSpell ? SpellUpcastDialog : ItemActivationConfigDialog;
+		const DialogClass = isSpell
+			? dependencies.SpellUpcastDialog
+			: dependencies.ItemActivationConfigDialog;
 
 		const dialog = new DialogClass(
 			this.actor,
