@@ -4,10 +4,10 @@
 	import localize from '#utils/localize.js';
 	import { createSchemaFieldRendererState } from '#view/rulesBuilder/components/SchemaFieldRendererState.svelte.js';
 	import type { SchemaFieldRendererProps } from '#view/rulesBuilder/types.js';
+	import DocumentPicker from '#view/components/DocumentPicker.svelte';
 	import TagGroup from '#view/components/TagGroup.svelte';
 	import ChargePoolPicker from './ChargePoolPicker.svelte';
 	import DicePoolPicker from './DicePoolPicker.svelte';
-	import DocumentPicker from './DocumentPicker.svelte';
 	import FormulaInput from './FormulaInput.svelte';
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import RichTextEditor from './RichTextEditor.svelte';

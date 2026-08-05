@@ -14,6 +14,7 @@
 			"monsterFeature": "Monster Feature",
 			"object": "Object",
 			"ancestry": "Ancestry",
+			"ancestryBonus": "Ancestry Bonus",
 			"spell": "Spell",
 			"subclass": "Subclass"
 		}
@@ -153,8 +154,36 @@
 			"enhancedSave": "Enhanced Save",
 			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
 		},
+		"ancestryBonusSelection": {
+			"header": "Step 2b. Select an Ancestry Bonus",
+			"editSelection": "Edit Ancestry Bonus Selection",
+			"hint": "Every ancestry comes with a default bonus trait. Confirm it, or change it for any other ancestry bonus that fits your character concept.",
+			"chooseHint": "Choose an ancestry bonus. You'll return here to confirm your pick.",
+			"noneAvailable": "There are no ancestry bonuses available in this world's compendium packs.",
+			"noSelection": "This ancestry's default bonus couldn't be loaded. Choose one to continue.",
+			"optionalHint": "This ancestry doesn't come with a default bonus trait. You can choose one, or continue without.",
+			"defaultMetadata": "Default",
+			"confirmSelection": "Confirm Ancestry Bonus",
+			"changeSelection": "Change Ancestry Bonus",
+			"chooseSelection": "Choose Ancestry Bonus",
+			"cancelBrowsing": "Back",
+			"tooltipHeading": "Ancestry Bonus",
+			"noDescriptionAvailable": "No description available."
+		},
+		"ancestryBonusSheet": {
+			"descriptionTab": "Description",
+			"configTab": "Config",
+			"rulesTab": "Rules",
+			"description": "Ancestry Bonus Description",
+			"identifier": "Identifier",
+			"namePlaceholder": "Ancestry Bonus Name"
+		},
+		"ancestrySheet": {
+			"defaultBonus": "Default Bonus",
+			"defaultBonusPlaceholder": "Drag an ancestry bonus here"
+		},
 		"backgroundOptionsSelection": {
-			"header": "Step 2b. Choose Heritage Ancestry",
+			"header": "Step 3b. Choose Heritage Ancestry",
 			"editSelection": "Edit Heritage Selection",
 			"hint": "Your background lets you choose which ancestry raised you. This grants you their native language.",
 			"raisedBy": "Raised By",
@@ -369,6 +398,7 @@
 		},
 		"featureTypeHeadings": {
 			"ancestry": "Ancestry",
+			"ancestryBonus": "Ancestry Bonus",
 			"background": "Background",
 			"boon": "Boons",
 			"feature": "Class Features"
@@ -456,6 +486,8 @@
 		},
 		"prompts": {
 			"changeActorImage": "Change Actor Image",
+			"changeAncestryBonusImage": "Change Ancestry Bonus Image",
+			"changeAncestryImage": "Change Ancestry Image",
 			"changeBoonImage": "Change Boon Image",
 			"changeClassImage": "Change Class Image",
 			"changeFeatureImage": "Change Feature Image",
@@ -1553,6 +1585,7 @@
 			"object": "Nimble Object Sheet",
 			"playerCharacter": "Nimble Player Character Sheet",
 			"ancestry": "Nimble Ancestry Sheet",
+			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
 			"spell": "Nimble Spell Sheet",
 			"subclass": "Nimble Subclass Sheet"

@@ -13,8 +13,10 @@ export const CHARACTER_CREATION_STAGES = {
 	SPELLS: '0c',
 	/** Select an ancestry */
 	ANCESTRY: '1a',
+	/** Select the ancestry's bonus trait (defaults to the ancestry's default, swappable) */
+	ANCESTRY_BONUS: '1b',
 	/** Ancestry-specific options like size or save selection (optional sub-stage) */
-	ANCESTRY_OPTIONS: '1b',
+	ANCESTRY_OPTIONS: '1c',
 	/** Select a background */
 	BACKGROUND: 2,
 	/** Background-specific options like "Raised by" ancestry choice (optional sub-stage) */

@@ -1,6 +1,9 @@
 <script>
 	import localize from '../../utils/localize.js';
-	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+	import {
+		collectMovementGrants,
+		collectSpeedBonuses,
+	} from './CharacterMovementConfigDialog.utils.js';
 
 	let { document } = $props();
 
@@ -14,99 +17,14 @@
 	let currentMovement = $derived(document.reactive?.system?.attributes?.movement ?? {});
 
 	// Collect speed bonuses from rules, grouped by movement type and item
-	let speedBonusesByType = $derived.by(() => {
-		const bonusesByType = {};
-		const rollData = document.getRollData?.() ?? {};
-
-		for (const item of document.items ?? []) {
-			if (!item.rules) continue;
-
-			// Group bonuses by movement type for this item
-			// Track value and unique labels that differ from item name
-			const itemBonusesByType = {};
-
-			for (const rule of item.rules.values()) {
-				if (rule.type !== 'speedBonus') continue;
-				if (rule.disabled) continue;
-
-				// Only include rules that pass their predicate
-				if (rule.test && !rule.test()) continue;
-
-				const value = getDeterministicBonus(rule.value, rollData) ?? 0;
-				if (value === 0) continue;
-
-				// Check if movementType was explicitly set in source data
-				const hasExplicitMovementType = rule._source?.movementType !== undefined;
-				const movementType = hasExplicitMovementType ? rule.movementType : 'walk';
-
-				// Initialize tracking for this movement type
-				itemBonusesByType[movementType] ??= { value: 0, labels: new Set() };
-				itemBonusesByType[movementType].value += value;
-
-				// Track label if it's meaningfully different from the item name
-				// (not just the item name with a suffix like "(2)" or "(9)")
-				const label = rule.label ?? '';
-				const isLabelDifferent = label && !label.startsWith(item.name);
-				if (isLabelDifferent) {
-					itemBonusesByType[movementType].labels.add(label);
-				}
-			}
-
-			// Add accumulated bonuses for this item to the main list
-			for (const [movementType, data] of Object.entries(itemBonusesByType)) {
-				if (data.value === 0) continue;
-				bonusesByType[movementType] ??= [];
-
-				// Build display name: "ItemName" or "ItemName — Label" if label differs
-				const uniqueLabels = [...data.labels];
-				const displayName =
-					uniqueLabels.length > 0 ? `${item.name} — ${uniqueLabels.join(', ')}` : item.name;
-
-				bonusesByType[movementType].push({
-					itemName: displayName,
-					value: data.value,
-				});
-			}
-		}
-
-		return bonusesByType;
-	});
+	let speedBonusesByType = $derived.by(() =>
+		collectSpeedBonuses(document.reactive.items, document.getRollData?.() ?? {}),
+	);
 
 	// Collect movement grants from grantMovement rules, grouped by movement type
-	let movementGrantsByType = $derived.by(() => {
-		const grantsByType = {};
-		const rollData = document.getRollData?.() ?? {};
-		const grantMaxByType = {};
-
-		for (const item of document.items ?? []) {
-			if (!item.rules) continue;
-
-			for (const rule of item.rules.values()) {
-				if (rule.type !== 'grantMovement') continue;
-				if (rule.disabled) continue;
-				if (rule.test && !rule.test()) continue;
-
-				const value = getDeterministicBonus(rule.speed, rollData) ?? 0;
-				if (value <= 0) continue;
-
-				const mode = rule.mode;
-				const bestGrant = grantMaxByType[mode] ?? 0;
-
-				// Only show the highest grant per mode
-				if (value > bestGrant) {
-					grantMaxByType[mode] = value;
-					grantsByType[mode] = [
-						{
-							itemName: rule.label || item.name,
-							value,
-						},
-					];
-				}
-			}
-		}
-
-		return grantsByType;
-	});
+	let movementGrantsByType = $derived.by(() =>
+		collectMovementGrants(document.reactive.items, document.getRollData?.() ?? {}),
+	);
 
 	// Get bonuses for a specific movement type
 	function getBonusesForType(type) {

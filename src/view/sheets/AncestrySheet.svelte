@@ -1,6 +1,7 @@
 <script>
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
+	import DocumentPicker from '../components/DocumentPicker.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import Editor from './components/Editor.svelte';
@@ -32,6 +33,7 @@
 	let currentTab = $state(navigation[0]);
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
+	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
 
 	setContext(
 		'document',
@@ -87,6 +89,21 @@
 
 				<span class="nimble-field__label"> Exotic Ancestry </span>
 			</label>
+		</div>
+
+		<div>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ancestrySheet.defaultBonus')}
+				</h3>
+			</header>
+
+			<DocumentPicker
+				value={defaultBonusUuid}
+				documentTypes={['Item.ancestryBonus']}
+				placeholder={localize('NIMBLE.ancestrySheet.defaultBonusPlaceholder')}
+				onChange={(next) => item.update({ 'system.defaultBonus': next })}
+			/>
 		</div>
 	</section>
 {/snippet}

@@ -5,6 +5,7 @@ import CharacterCreationDialog from './CharacterCreationDialog.svelte';
 function createProps(overrides: Record<string, unknown> = {}) {
 	return {
 		ancestryOptions: Promise.resolve({ core: [], exotic: [] }),
+		ancestryBonusOptions: Promise.resolve([]),
 		backgroundOptions: Promise.resolve([]),
 		bonusLanguageOptions: [],
 		classFeatureIndex: Promise.resolve(new Map()),

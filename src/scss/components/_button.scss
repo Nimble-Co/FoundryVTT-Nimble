@@ -42,6 +42,30 @@
 		}
 	}
 
+	// Outline counterpart to `basic`, for the lesser of two side-by-side actions.
+	&[data-button-variant="secondary"] {
+		gap: 0.5rem;
+		width: var(--nimble-button-width, fit-content);
+		min-width: var(--nimble-button-min-width);
+		height: var(--nimble-button-height, auto);
+		margin: var(--nimble-button-margin, 0);
+		padding: var(--nimble-button-padding, 0.125rem 0.25rem);
+		font-size: var(--nimble-button-font-size, var(--nimble-sm-text));
+		font-weight: 500;
+		color: var(--nimble-dark-text-color);
+		background-color: transparent;
+		// Opaque border token rather than the 25%-alpha card border. The border sits at
+		// ~2.8:1 on the sheet background, below the 3:1 graphics floor, so the visible
+		// text label — not the outline — is what identifies this control (WCAG 1.4.11).
+		border: 1px solid var(--nimble-input-border-color);
+		border-radius: 4px;
+
+		&:hover {
+			color: var(--nimble-dark-text-hover-color);
+			background-color: var(--nimble-basic-button-background-color);
+		}
+	}
+
 	&[data-button-variant="icon"] {
 		--button-size: fit-content;
 

@@ -63,6 +63,7 @@ export interface GrantedLanguage {
  */
 export interface CharacterCreationDialogProps {
 	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
+	ancestryBonusOptions: Promise<NimbleAncestryBonusItem[]>;
 	backgroundOptions: Promise<NimbleBackgroundItem[]>;
 	bonusLanguageOptions: Array<{ value: string; label: string; tooltip: string }>;
 	classFeatureIndex: Promise<ClassFeatureIndex>;
@@ -105,6 +106,7 @@ export interface CharacterCreationResults {
 		background?: NimbleBackgroundItem;
 		characterClass?: NimbleClassItem;
 		ancestry?: NimbleAncestryItem;
+		ancestryBonus?: NimbleAncestryBonusItem;
 	};
 	classFeatures?: {
 		autoGrant: string[];

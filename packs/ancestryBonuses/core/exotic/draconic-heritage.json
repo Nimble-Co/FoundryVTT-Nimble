@@ -1,0 +1,35 @@
+{
+	"name": "Draconic Heritage",
+	"type": "ancestryBonus",
+	"img": "icons/creatures/reptiles/dragon-horned-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "io7K8HETN3dgovbH",
+				"identifier": "",
+				"label": "Draconic heritage",
+				"predicate": {},
+				"priority": 1,
+				"formula": "1",
+				"mode": "add"
+			}
+		],
+		"description": "<p><strong>Draconic Heritage</strong></p><p>+1 Armor. [A]</p><p>When you attack: deal an additional LVL+KEY damage (ignoring armor) divided as you choose among any of your targets; recharges whenever you Safe Rest or gain a Wound.</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756505038905,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "P5t4e28z4BHXAhAZ"
+}

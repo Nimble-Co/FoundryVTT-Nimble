@@ -1529,6 +1529,7 @@ export const myStore = writable<MyStoreState>(initialState);
 |-----------|----------|---------|
 | `RadioGroup` | `src/view/components/RadioGroup.svelte` | Single-select radio button group |
 | `TagGroup` | `src/view/components/TagGroup.svelte` | Multi-select tag/chip group |
+| `DocumentPicker` | `src/view/components/DocumentPicker.svelte` | Drag-drop UUID field, optionally filtered by document type |
 | `PrimaryNavigation` | `src/view/components/PrimaryNavigation.svelte` | Main navigation tabs |
 | `PrimaryNavigationItem` | `src/view/components/PrimaryNavigationItem.svelte` | Individual navigation tab |
 | `SecondaryNavigation` | `src/view/components/SecondaryNavigation.svelte` | Secondary navigation container |

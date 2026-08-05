@@ -1,0 +1,45 @@
+{
+	"name": "Slow & Steady",
+	"type": "ancestryBonus",
+	"img": "icons/creatures/reptiles/turtle-shell-glowing-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "ODF6VnVsmfBrfFtp",
+				"identifier": "",
+				"label": "Slow & Steady",
+				"predicate": {},
+				"priority": 1,
+				"formula": "4",
+				"mode": "add"
+			},
+			{
+				"type": "speedBonus",
+				"disabled": false,
+				"id": "Xk9mNpQ2rLsYvWtH",
+				"identifier": "",
+				"label": "Slow & Steady",
+				"predicate": {},
+				"priority": 1,
+				"value": "-2"
+			}
+		],
+		"description": "<p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756513280565,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "YVtbIbWYzKD33sEA"
+}
