@@ -346,7 +346,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// bonus: the player's chosen one is in this same batch and would delete it right back.
 		await actor?.createEmbeddedDocuments('Item', originDocumentSources, {
 			nimbleAncestryBonusInBatch: ancestryBonusDocument !== null,
-		} satisfies AncestryCreateOptions as object as Item.Database.CreateOperation<false>);
+		} satisfies AncestryCreateOptions as object as Item.Database.CreateOperation);
 
 		// Auto-equip all object items granted as starting equipment
 		if (startingEquipmentChoice === 'equipment' && actor) {
