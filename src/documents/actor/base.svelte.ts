@@ -136,13 +136,48 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				}),
 			};
 
+			// Active Effects change derived data without touching the actor or any
+			// item: applying a condition re-runs data prep, and predicated rules
+			// (skill, damage and roll-mode bonuses gated on `self:` domain tags)
+			// resolve differently afterwards. Without these, the new numbers only
+			// appear once the sheet is reopened.
+			const effectHooks = {
+				create: Hooks.on('createActiveEffect', (doc) => {
+					if (this._ownsEffect(doc)) update();
+				}),
+				delete: Hooks.on('deleteActiveEffect', (doc) => {
+					if (this._ownsEffect(doc)) update();
+				}),
+				update: Hooks.on('updateActiveEffect', (doc, _change, { diff }) => {
+					if (diff === false) return;
+					if (this._ownsEffect(doc)) update();
+				}),
+			};
+
 			return () => {
 				Hooks.off('updateActor', updateActorHook);
 				Hooks.off('createItem', embeddedItemHooks.create);
 				Hooks.off('deleteItem', embeddedItemHooks.delete);
 				Hooks.off('updateItem', embeddedItemHooks.update);
+				Hooks.off('createActiveEffect', effectHooks.create);
+				Hooks.off('deleteActiveEffect', effectHooks.delete);
+				Hooks.off('updateActiveEffect', effectHooks.update);
 			};
 		});
+	}
+
+	/**
+	 * Whether an Active Effect contributes to this actor's data — either applied
+	 * to the actor itself, or granted by one of its owned items.
+	 */
+	protected _ownsEffect(effect: unknown): boolean {
+		const parent = (
+			effect as { parent?: { documentName?: string; id?: string; parent?: { id?: string } } }
+		)?.parent;
+		if (!parent) return false;
+		if (parent.documentName === 'Actor') return parent.id === this.id;
+		if (parent.documentName === 'Item') return parent.parent?.id === this.id;
+		return false;
 	}
 
 	static override async createDialog(
