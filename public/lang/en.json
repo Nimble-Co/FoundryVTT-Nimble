@@ -79,6 +79,8 @@
 			"boon": "Boon"
 		},
 		"chat": {
+			"applyConditionHint": "Left click to apply this condition to this card's targets.",
+			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"healing": "Healing",
