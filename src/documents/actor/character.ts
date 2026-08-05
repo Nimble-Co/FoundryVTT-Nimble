@@ -403,14 +403,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const abilityBonusesFromClasses = this.getClassAbilityBonuses();
 
 		// Prepare Ability Data
+		// Uncapped: the rules put a hero's stat at "typically +5", which is guidance
+		// for character building, not a ceiling the system gets to enforce.
 		Object.entries(actorData.abilities).forEach(([ablKey, ability]): void => {
 			const abilityBonus = ability.bonus;
 
-			// Cap ability score mods to 12
-			ability.mod = Math.min(
-				ability.baseValue + abilityBonus + (abilityBonusesFromClasses[ablKey] ?? 0),
-				12,
-			);
+			ability.mod = ability.baseValue + abilityBonus + (abilityBonusesFromClasses[ablKey] ?? 0);
 		});
 
 		// Prepare Saving Throw Data
@@ -427,8 +425,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const skillPoints = skill.points;
 			const skillBonus = skill.bonus;
 
-			// Cap skill modifiers at 12
-			skill.mod = Math.min(abilityMod + skillPoints + skillBonus, 12);
+			// The max according to the rules is +12 but we won't enforce that limit to avoid homebrew issues
+			skill.mod = abilityMod + skillPoints + skillBonus;
 
 			// Reset defaultRollMode to 0 before rules apply their modifiers
 			// This prevents accumulation when rules use 'adjust' mode
