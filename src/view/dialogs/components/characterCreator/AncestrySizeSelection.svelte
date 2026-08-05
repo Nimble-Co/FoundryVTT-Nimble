@@ -1,15 +1,19 @@
 <script>
 	import { getContext } from 'svelte';
 
+	import localize from '../../../../utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
+	import { effectiveSizes } from '../../../sheets/components/sizeSelection.js';
 	import { ancestryBonusRequiresSaveChoice } from '../../characterCreation/utils/ancestryBonusRequiresSaveChoice.js';
 
-	function prepareAncestrySizeOptions(ancestry) {
-		return ancestry?.system?.size?.map((sizeCategory) => ({
-			value: sizeCategory,
-			label: sizeCategories[sizeCategory] ?? sizeCategory,
-		}));
+	// Smallest to largest, so the list reads the same regardless of the order the sizes were authored
+	// in. An ancestry that predates the required-one rule resolves to the same default the character
+	// creation flow already falls back to, so the player is still told their size.
+	function prepareAncestrySizes(ancestry) {
+		if (!ancestry) return [];
+
+		return effectiveSizes(ancestry.system?.size, Object.keys(sizeCategories));
 	}
 
 	function getNeutralSaves(selectedClass) {
@@ -35,7 +39,7 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { sizeCategories, ancestryOptions } = CONFIG.NIMBLE;
+	const { sizeCategories, sizeCategoryDescriptions, ancestryOptions } = CONFIG.NIMBLE;
 
 	let {
 		active,
@@ -46,9 +50,12 @@
 		selectedAncestrySave = $bindable(),
 	} = $props();
 
-	let hasSizeChoice = $derived(selectedAncestry?.system?.size?.length > 1);
+	let ancestrySizes = $derived(prepareAncestrySizes(selectedAncestry));
+	let hasSizeChoice = $derived(ancestrySizes.length > 1);
+	// A single size is stated rather than asked, so the player still learns what they are.
+	let hasFixedSize = $derived(ancestrySizes.length === 1);
 	let hasSaveChoice = $derived(ancestryBonusRequiresSaveChoice(selectedAncestryBonus));
-	let hasAnyChoice = $derived(hasSizeChoice || hasSaveChoice);
+	let hasAnyChoice = $derived(hasSizeChoice || hasFixedSize || hasSaveChoice);
 </script>
 
 {#if hasAnyChoice}
@@ -62,20 +69,69 @@
 			</h3>
 		</header>
 
-		{#if hasSizeChoice}
+		{#if hasSizeChoice || hasFixedSize}
 			<div class="nimble-character-creation-section__subsection">
 				<h4 class="nimble-heading" data-heading-variant="subsection">
 					{ancestryOptions.sizeCategory}
 				</h4>
-				{#if active}
+
+				{#if active && hasSizeChoice}
 					<Hint hintText={ancestryOptions.sizeCategoryHint} />
 				{/if}
+
 				<div class="nimble-character-creation-section__body">
-					<TagGroup
-						options={prepareAncestrySizeOptions(selectedAncestry)}
-						selectedOptions={[selectedAncestrySize]}
-						toggleOption={(sizeCategory) => (selectedAncestrySize = sizeCategory)}
-					/>
+					{#if hasFixedSize}
+						{@const sizeCategory = ancestrySizes[0]}
+
+						<p class="nimble-size-choice__granted">
+							<strong>{sizeCategories[sizeCategory] ?? sizeCategory}</strong>
+
+							<span class="nimble-size-choice__description">
+								{sizeCategoryDescriptions[sizeCategory] ?? ''}
+							</span>
+
+							<span class="nimble-size-choice__source">
+								{localize('NIMBLE.ancestryOptions.sizeGrantedBy', {
+									ancestry: selectedAncestry?.name ?? '',
+								})}
+							</span>
+						</p>
+					{:else}
+						<ul
+							class="nimble-size-choice"
+							role="radiogroup"
+							aria-label={ancestryOptions.sizeCategory}
+						>
+							{#each ancestrySizes as sizeCategory (sizeCategory)}
+								{@const selected = sizeCategory === selectedAncestrySize}
+
+								<li>
+									<button
+										class="nimble-size-choice__option"
+										class:nimble-size-choice__option--selected={selected}
+										type="button"
+										role="radio"
+										aria-checked={selected}
+										onclick={() => (selectedAncestrySize = sizeCategory)}
+									>
+										<span class="nimble-size-choice__dot" aria-hidden="true"></span>
+
+										<span>{sizeCategories[sizeCategory] ?? sizeCategory}</span>
+
+										<span class="nimble-size-choice__description">
+											{sizeCategoryDescriptions[sizeCategory] ?? ''}
+										</span>
+									</button>
+								</li>
+							{/each}
+						</ul>
+
+						{#if active}
+							<p class="nimble-size-choice__note">
+								{localize('NIMBLE.ancestryOptions.sizeGrappleNote')}
+							</p>
+						{/if}
+					{/if}
 				</div>
 			</div>
 		{/if}
@@ -99,3 +155,114 @@
 		{/if}
 	</section>
 {/if}
+
+<style lang="scss">
+	.nimble-size-choice {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+
+		&__option {
+			display: flex;
+			align-items: center;
+			gap: 0.4375rem;
+			width: 100%;
+			margin: 0;
+			padding: 0.3125rem 0.4375rem;
+			font-family: inherit;
+			font-size: var(--nimble-sm-text);
+			line-height: 1.2;
+			text-align: start;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			transition: var(--nimble-standard-transition);
+
+			&--selected {
+				border-color: var(--nimble-accent-color);
+				background: color-mix(
+					in srgb,
+					var(--nimble-selected-tag-background-color) 12%,
+					transparent
+				);
+			}
+
+			&:active,
+			&:focus,
+			&:hover {
+				box-shadow: none;
+				outline: none;
+			}
+
+			&:hover {
+				border-color: var(--nimble-accent-color);
+			}
+
+			&:focus-visible {
+				border-color: var(--nimble-accent-color);
+				box-shadow: 0 0 0 1px var(--nimble-accent-color);
+			}
+		}
+
+		&__dot {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex: 0 0 auto;
+			width: 0.75rem;
+			height: 0.75rem;
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-input-border-color);
+			border-radius: 50%;
+
+			.nimble-size-choice__option--selected & {
+				border-color: var(--nimble-selected-tag-background-color);
+			}
+
+			.nimble-size-choice__option--selected &::after {
+				content: '';
+				width: 0.375rem;
+				height: 0.375rem;
+				background: var(--nimble-selected-tag-background-color);
+				border-radius: 50%;
+			}
+		}
+
+		&__description {
+			margin-inline-start: auto;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__granted {
+			display: flex;
+			align-items: baseline;
+			gap: 0.4375rem;
+			margin: 0;
+			padding: 0.3125rem 0.4375rem;
+			font-size: var(--nimble-sm-text);
+			line-height: 1.2;
+			color: var(--nimble-dark-text-color);
+			background: color-mix(in srgb, var(--nimble-accent-color) 8%, transparent);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+		}
+
+		&__source {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__note {
+			margin: 0.375rem 0 0;
+			font-size: var(--nimble-xs-text);
+			line-height: 1.35;
+			color: var(--nimble-medium-text-color);
+			text-wrap: pretty;
+		}
+	}
+</style>

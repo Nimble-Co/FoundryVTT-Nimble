@@ -4,10 +4,10 @@
 	import DocumentPicker from '../components/DocumentPicker.svelte';
 	import Hint from '../components/Hint.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-	import TagGroup from '../components/TagGroup.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
+	import SizeOptionsSelect from './components/SizeOptionsSelect.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 
 	const navigation = [
@@ -31,33 +31,12 @@
 		},
 	];
 
-	const { sizeCategories } = CONFIG.NIMBLE;
-
-	const sizeOptions = Object.entries(sizeCategories).map(([value, label]) => ({
-		value,
-		label,
-	}));
-
-	const sizeOrder = Object.keys(sizeCategories);
-
 	let { item, sheet } = $props();
 	let currentTab = $state(navigation[0]);
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
 	let selectedSizes = $derived(item.reactive.system.size ?? []);
-
-	async function toggleSize(sizeCategory) {
-		// A newly selected size is inserted in the canonical CONFIG.NIMBLE.sizeCategories order.
-		// Sizes the config doesn't define (homebrew, imported) are kept rather than dropped.
-		const updatedSizes = selectedSizes.includes(sizeCategory)
-			? selectedSizes.filter((size) => size !== sizeCategory)
-			: [...selectedSizes, sizeCategory].sort(
-					(a, b) => sizeOrder.indexOf(a) - sizeOrder.indexOf(b),
-				);
-
-		await item.update({ 'system.size': updatedSizes });
-	}
 
 	setContext(
 		'document',
@@ -139,7 +118,10 @@
 
 			<Hint hintText={localize('NIMBLE.ancestrySheet.sizeOptionsHint')} />
 
-			<TagGroup options={sizeOptions} selectedOptions={selectedSizes} toggleOption={toggleSize} />
+			<SizeOptionsSelect
+				{selectedSizes}
+				onChange={(nextSizes) => item.update({ 'system.size': nextSizes })}
+			/>
 		</div>
 	</section>
 {/snippet}

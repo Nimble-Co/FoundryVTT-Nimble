@@ -537,6 +537,17 @@ const sizeCategories = {
 	gargantuan: 'NIMBLE.sizeCategories.gargantuan',
 };
 
+// Short descriptions of each size, paraphrased from the Size rules: the comparison the rules
+// use, plus the grid footprint where it exceeds a single space.
+const sizeCategoryDescriptions = {
+	tiny: 'NIMBLE.sizeCategoryDescriptions.tiny',
+	small: 'NIMBLE.sizeCategoryDescriptions.small',
+	medium: 'NIMBLE.sizeCategoryDescriptions.medium',
+	large: 'NIMBLE.sizeCategoryDescriptions.large',
+	huge: 'NIMBLE.sizeCategoryDescriptions.huge',
+	gargantuan: 'NIMBLE.sizeCategoryDescriptions.gargantuan',
+};
+
 const skills: Record<SkillKeyType, string> = {
 	arcana: 'NIMBLE.skills.arcana',
 	examination: 'NIMBLE.skills.examination',
@@ -977,6 +988,7 @@ const NIMBLE = {
 	savingThrows,
 	sectionHeaders,
 	sizeCategories,
+	sizeCategoryDescriptions,
 	skillPointAssignment,
 	skills,
 	spellUpcastDialog,
