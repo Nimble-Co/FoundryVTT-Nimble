@@ -115,6 +115,7 @@ class NimbleObjectData extends NimbleBaseItemData<
 	// Schema-defined properties
 	declare activation: {
 		showDescription: boolean;
+		skipRollDialog: boolean;
 		acquireTargetsFromTemplate: boolean;
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };
