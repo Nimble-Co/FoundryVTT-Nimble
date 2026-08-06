@@ -128,6 +128,11 @@ function accumulateApplication(
 	});
 }
 
+interface CardMessage {
+	system?: { grantedActionOffers?: unknown };
+	update?: (data: Record<string, unknown>) => Promise<unknown>;
+}
+
 /**
  * Applies the action adjustments declared by the used item's rules. All of an
  * item's adjustments for the same combatant are merged into one combined
@@ -135,23 +140,21 @@ function accumulateApplication(
  * Like charge consumption, this runs regardless of the rule-automation setting
  * — it is resource bookkeeping, not condition automation.
  *
- * The requested adjustments are also stamped onto the activation's chat card so
- * recipients learn what they were given without having their sheet open.
+ * Returns the summary to record on the activation's chat card, so recipients
+ * learn what they were given without having their sheet open. These are the
+ * adjustments as REQUESTED: the combatant clamps them and permits overflow when
+ * they are written, and the write may be relayed to the active GM
+ * asynchronously, so the summary is a record of intent rather than a readback of
+ * the resulting pools.
  */
-function handleUseItem(item: unknown, chatMessage: unknown, context: unknown): void {
-	const typedItem = toRuleBearingItem(item);
-	if (!typedItem) return;
-
+function applyActionDeltas(item: RuleBearingItem, targets: UseItemTarget[]): unknown[] {
 	const combat = (game.combat as Combat | null) ?? null;
-	if (!combat?.started) return;
+	if (!combat?.started) return [];
 
-	const rules = getActionDeltaRules(typedItem);
-	if (rules.length < 1) return;
+	const rules = getActionDeltaRules(item);
+	if (rules.length < 1) return [];
 
-	const targets = ((context as UseItemContext | null)?.targets ?? []).filter(
-		(target): target is UseItemTarget => Boolean(target),
-	);
-	const sourceCombatant = findCombatantForActorId(combat, typedItem.actor?.id ?? null);
+	const sourceCombatant = findCombatantForActorId(combat, item.actor?.id ?? null);
 
 	const applications = new Map<string, ActionDeltaApplication>();
 	for (const rule of rules) {
@@ -171,83 +174,76 @@ function handleUseItem(item: unknown, chatMessage: unknown, context: unknown): v
 		void requestCombatantActionDelta({
 			combat,
 			combatantId,
-			sourceItemUuid: typedItem.uuid ?? '',
+			sourceItemUuid: item.uuid ?? '',
 			deltas,
 		});
 	}
 
-	stampActionDeltaSummary(chatMessage, combat, applications);
-}
-
-/**
- * Records the requested adjustments on the activation's chat card.
- *
- * These are the adjustments as REQUESTED: the combatant clamps them and permits
- * overflow when they are written, and the write may be relayed to the active GM
- * asynchronously, so the summary is a record of intent rather than a readback of
- * the resulting pools. Runs on the activating client, which authored the message
- * and may therefore update it.
- */
-function stampActionDeltaSummary(
-	chatMessage: unknown,
-	combat: Combat,
-	applications: Map<string, ActionDeltaApplication>,
-): void {
-	const message = chatMessage as {
-		update?: (data: Record<string, unknown>) => Promise<unknown>;
-	} | null;
-	if (!message?.update) return;
-
-	const summary = buildActionDeltaSummary(
+	return buildActionDeltaSummary(
 		applications,
 		(combatantId) => combat.combatants.get(combatantId)?.name ?? null,
 	);
-	if (summary.length < 1) return;
-
-	void message.update({
-		[`flags.${SYSTEM_ID}.actionDeltaSummary`]: summary,
-	} as Record<string, unknown>);
 }
 
 /**
- * Stamps the used item's granted-activation offers onto its chat card, where
- * the recipients' owners (or a GM) can accept them. Runs on the activating
- * client, which authored the message and may therefore update it. Unlike the
- * action-delta handler, this does not require an active combat — an offered
- * activation works anywhere, and any in-combat action cost is resolved by the
- * recipient's normal activation flow.
+ * The granted-activation offers to stamp onto the used item's chat card, where
+ * the recipients' owners (or a GM) can accept them. Unlike the action deltas,
+ * this does not require an active combat — an offered activation works
+ * anywhere, and any in-combat action cost is resolved by the recipient's normal
+ * activation flow.
  */
-function handleUseItemGrantedOffers(item: unknown, chatMessage: unknown, context: unknown): void {
+function collectOffersForCard(
+	item: RuleBearingItem,
+	targets: UseItemTarget[],
+	message: CardMessage | null,
+): unknown[] {
+	// Only card types whose schema carries the offers field can persist them.
+	if (!Array.isArray(message?.system?.grantedActionOffers)) return [];
+
+	return collectGrantedActionOffers(
+		item as Parameters<typeof collectGrantedActionOffers>[0],
+		targets,
+	);
+}
+
+/**
+ * Resolves an item's action-economy effects and records them on its chat card.
+ *
+ * Both halves write to the same message, so they share one update rather than
+ * racing two concurrent diffs on one document: an item can declare action
+ * adjustments and granted activations at once, which makes the overlap the
+ * ordinary case rather than a corner one. Runs on the activating client, which
+ * authored the message and may therefore update it.
+ */
+function handleUseItem(item: unknown, chatMessage: unknown, context: unknown): void {
 	const typedItem = toRuleBearingItem(item);
 	if (!typedItem) return;
 
-	const message = chatMessage as {
-		system?: { grantedActionOffers?: unknown };
-		update?: (data: Record<string, unknown>) => Promise<unknown>;
-	} | null;
-	// Only card types whose schema carries the offers field can persist them.
-	if (!message?.update || !Array.isArray(message.system?.grantedActionOffers)) return;
-
+	const message = (chatMessage ?? null) as CardMessage | null;
 	const targets = ((context as UseItemContext | null)?.targets ?? []).filter(
 		(target): target is UseItemTarget => Boolean(target),
 	);
-	const offers = collectGrantedActionOffers(
-		typedItem as Parameters<typeof collectGrantedActionOffers>[0],
-		targets,
-	);
-	if (offers.length < 1) return;
 
-	void message.update({ system: { grantedActionOffers: offers } });
+	const summary = applyActionDeltas(typedItem, targets);
+	const offers = collectOffersForCard(typedItem, targets, message);
+
+	if (!message?.update) return;
+
+	const cardUpdate: Record<string, unknown> = {};
+	if (summary.length > 0) cardUpdate[`flags.${SYSTEM_ID}.actionDeltaSummary`] = summary;
+	if (offers.length > 0) cardUpdate.system = { grantedActionOffers: offers };
+	if (Object.keys(cardUpdate).length < 1) return;
+
+	void message.update(cardUpdate);
 }
 
 let didRegisterActionEconomySystemHooks = false;
 
-export { resolveTargetCombatants };
+export { handleUseItem, resolveTargetCombatants };
 
 export default function registerActionEconomySystemHooks(): void {
 	if (didRegisterActionEconomySystemHooks) return;
 	didRegisterActionEconomySystemHooks = true;
 
 	registerCustomHook(systemHookName('useItem'), handleUseItem as HookFn);
-	registerCustomHook(systemHookName('useItem'), handleUseItemGrantedOffers as HookFn);
 }

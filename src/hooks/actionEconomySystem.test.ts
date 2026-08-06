@@ -12,7 +12,8 @@ vi.mock('#utils/isCombatantDead.js', () => ({
 	isCombatantDead: (combatant: { dead?: boolean }) => Boolean(combatant?.dead),
 }));
 
-import { resolveTargetCombatants } from './actionEconomySystem.js';
+import { collectGrantedActionOffers } from '#utils/grantedActionOffers.js';
+import { handleUseItem, resolveTargetCombatants } from './actionEconomySystem.js';
 
 const FRIENDLY = 1;
 const HOSTILE = -1;
@@ -87,5 +88,93 @@ describe('resolveTargetCombatants', () => {
 		it('still resolves to the source, so a rule can cover both', () => {
 			expect(resolve('self', roster, 'source')).toEqual(['source']);
 		});
+	});
+});
+
+describe('handleUseItem', () => {
+	function makeItem(deltaRules: unknown[]) {
+		return {
+			uuid: 'Item.granting',
+			isEmbedded: true,
+			actor: { id: 'actor-source' },
+			rules: new Map(deltaRules.map((rule, index) => [String(index), rule])),
+		};
+	}
+
+	function makeDeltaRule(target: string) {
+		return {
+			type: 'actionDelta',
+			target,
+			appliesTo: () => true,
+			resolveApplication: () => ({ currentDelta: 1, pendingDelta: 0 }),
+		};
+	}
+
+	beforeEach(() => {
+		vi.mocked(collectGrantedActionOffers).mockReturnValue([]);
+
+		// Named, because a summary entry whose combatant has no resolvable name
+		// is dropped rather than rendered pointing at nothing.
+		const combatants = [
+			{ ...makeCombatant({ id: 'source' }), name: 'Commander' },
+			{ ...makeCombatant({ id: 'allyA' }), name: 'Sir Brannon' },
+		] as unknown[];
+		(globalThis as Record<string, any>).game = {
+			combat: {
+				started: true,
+				combatants: {
+					contents: combatants,
+					find: (predicate: (c: unknown) => boolean) => combatants.find(predicate) ?? null,
+					get: (id: string) =>
+						(combatants as { id: string; name?: string }[]).find((c) => c.id === id) ?? null,
+				},
+			},
+		};
+	});
+
+	it('writes the summary and the offers in a single card update', () => {
+		// Both halves target the same document, and an item may declare action
+		// adjustments and granted activations together, so two updates in one tick
+		// would be two concurrent diffs on one message.
+		vi.mocked(collectGrantedActionOffers).mockReturnValue([{ id: 'offer' }] as never);
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+		const message = { system: { grantedActionOffers: [] }, update };
+
+		handleUseItem(makeItem([makeDeltaRule('allAllies')]), message, { targets: [] });
+
+		expect(update).toHaveBeenCalledTimes(1);
+		const payload = update.mock.calls[0][0] as Record<string, unknown>;
+		expect(payload['flags.nimble.actionDeltaSummary']).toBeTruthy();
+		expect(payload.system).toEqual({ grantedActionOffers: [{ id: 'offer' }] });
+	});
+
+	it('writes only the offers when no rule adjusts anyone', () => {
+		vi.mocked(collectGrantedActionOffers).mockReturnValue([{ id: 'offer' }] as never);
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+
+		handleUseItem(makeItem([]), { system: { grantedActionOffers: [] }, update }, { targets: [] });
+
+		expect(update).toHaveBeenCalledTimes(1);
+		expect(update.mock.calls[0][0]).toEqual({
+			system: { grantedActionOffers: [{ id: 'offer' }] },
+		});
+	});
+
+	it('writes only the summary on a card whose schema carries no offers', () => {
+		vi.mocked(collectGrantedActionOffers).mockReturnValue([{ id: 'offer' }] as never);
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+
+		handleUseItem(makeItem([makeDeltaRule('allAllies')]), { update }, { targets: [] });
+
+		expect(update).toHaveBeenCalledTimes(1);
+		expect(update.mock.calls[0][0]).not.toHaveProperty('system');
+	});
+
+	it('leaves the card alone when there is nothing to record', () => {
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+
+		handleUseItem(makeItem([]), { system: { grantedActionOffers: [] }, update }, { targets: [] });
+
+		expect(update).not.toHaveBeenCalled();
 	});
 });
