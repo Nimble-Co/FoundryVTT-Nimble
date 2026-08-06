@@ -21,7 +21,9 @@
 
 <section>
 	<header class="nimble-section-header">
-		<h4 class="nimble-heading" data-heading-variant="section">Description</h4>
+		<h4 class="nimble-heading" data-heading-variant="section">
+			{localize('NIMBLE.itemConfig.activationOptions')}
+		</h4>
 	</header>
 
 	<label class="nimble-field">
@@ -36,12 +38,6 @@
 
 		<span class="nimble-field__label"> Output item description on activation </span>
 	</label>
-</section>
-
-<section>
-	<header class="nimble-section-header">
-		<h4 class="nimble-heading" data-heading-variant="section">Roll Dialog</h4>
-	</header>
 
 	<label class="nimble-field">
 		<input

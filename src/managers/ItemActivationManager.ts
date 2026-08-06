@@ -808,7 +808,9 @@ class ItemActivationManager {
 	 * @param rollOptions - The roll options to use as dialog defaults.
 	 * @returns The resolved dialog data, or null if the dialog was cancelled.
 	 */
-	async #resolveDialogData(rollOptions): Promise<ItemActivationManager.DialogData | null> {
+	async #resolveDialogData(
+		rollOptions: ItemActivationManager.RollOptions,
+	): Promise<ItemActivationManager.DialogData | null> {
 		const options = this.#options;
 
 		if (options.fastForward) {
@@ -820,10 +822,6 @@ class ItemActivationManager {
 				rollHidden: options.rollHidden,
 				conditionalDamages: options.conditionalDamages,
 			};
-		}
-
-		if (this.activationData?.skipRollDialog) {
-			return this.#getDefaultDialogData(rollOptions);
 		}
 
 		// Check if there are damage or healing effects that require rolling
@@ -840,15 +838,16 @@ class ItemActivationManager {
 			return this.#getDefaultDialogData(rollOptions);
 		}
 
-		// Check if Alt is pressed to skip dialog
+		// Holding Alt inverts the item's default dialog behavior
 		let altPressed = false;
 		const unsubscribe = keyPressStore.subscribe((state) => {
 			altPressed = state.alt;
 		});
 		unsubscribe();
 
-		if (altPressed) {
-			// Skip dialog, use default
+		const skipDialog = this.activationData?.skipRollDialog ? !altPressed : altPressed;
+
+		if (skipDialog) {
 			return this.#getDefaultDialogData(rollOptions);
 		}
 
@@ -877,7 +876,9 @@ class ItemActivationManager {
 	 * @param options - The roll options to use as defaults.
 	 * @returns Default dialog data based on the provided options.
 	 */
-	#getDefaultDialogData(options): ItemActivationManager.DialogData {
+	#getDefaultDialogData(
+		options: ItemActivationManager.RollOptions,
+	): ItemActivationManager.DialogData {
 		return {
 			...options,
 		};
@@ -1051,6 +1052,18 @@ namespace ItemActivationManager {
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
 		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+	}
+
+	/**
+	 * Resolved roll options used as dialog defaults.
+	 */
+	export interface RollOptions {
+		/** Domain tags describing the item being activated. */
+		domain: Set<string>;
+		/** Whether to execute the item's custom macro after activation. */
+		executeMacro: boolean;
+		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
+		rollMode: number;
 	}
 
 	/**

@@ -2542,8 +2542,9 @@
 			"targetRestrictions": "Target Restrictions",
 			"attackType": "Attack Type",
 			"distance": "Distance",
+			"activationOptions": "Activation Options",
 			"skipRollDialog": "Skip the roll dialog (activate instantly)",
-			"skipRollDialogHint": "Always activate this item with default roll settings, without opening the roll or upcast dialog. Holding Alt while activating does the same for a single activation.",
+			"skipRollDialogHint": "Always activate this item with default roll settings instead of opening the roll or upcast dialog. Holding Alt while activating inverts this setting for that activation.",
 			"attackTypes": {
 				"none": "None",
 				"melee": "Melee",

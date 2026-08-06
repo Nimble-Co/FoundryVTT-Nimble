@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../tests/mocks/foundry.js';
+import { keyPressStore } from '../stores/keyPressStore.js';
 import { findNodesByContexts } from '../utils/treeManipulation/findNodesByContexts.js';
 import { ItemActivationManager, testDependencies } from './ItemActivationManager.js';
 
@@ -77,15 +78,6 @@ const MockDamageRoll = vi.fn(function DamageRollMock(
 const DamageRoll = MockDamageRoll;
 const NimbleRoll = MockNimbleRoll;
 const getRollFormula = mockGetRollFormula;
-
-vi.doMock('../stores/keyPressStore.js', () => ({
-	keyPressStore: {
-		subscribe: vi.fn(() => vi.fn()),
-	},
-}));
-vi.doMock('../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
-	default: vi.fn(),
-}));
 
 // Dialog constructor mocks, injected through testDependencies because module
 // mocks cannot intercept the manager's dialog imports (tests/setup.ts loads
@@ -1299,6 +1291,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 	describe('Dialog routing', () => {
 		beforeEach(() => {
 			dialogState.result = undefined;
+			keyPressStore.set({ ctrl: false, shift: false, alt: false });
 		});
 
 		it('should skip the config dialog and complete activation when skipRollDialog is set', async () => {
@@ -1410,6 +1403,73 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
 			expect(result).toEqual({ activation: null, rolls: null });
 			expect(DamageRoll).not.toHaveBeenCalled();
+		});
+
+		it('should open the config dialog when Alt is held and skipRollDialog is set', async () => {
+			keyPressStore.set({ ctrl: false, shift: false, alt: true });
+			dialogState.result = { rollMode: 0 };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '1d8',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			MockRoll.mockImplementation(function (this: unknown) {
+				return mockRoll;
+			});
+
+			const result = await manager.getData();
+
+			// Alt inverts the item's dialog default, forcing the dialog open.
+			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
+			expect(result.activation).not.toBeNull();
+		});
+
+		it('should skip the config dialog when Alt is held and skipRollDialog is unset', async () => {
+			keyPressStore.set({ ctrl: false, shift: false, alt: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 4 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			const result = await manager.getData();
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(result.activation).not.toBeNull();
+			expect(result.rolls).toHaveLength(1);
 		});
 
 		it('should prefer fastForward options over skipRollDialog defaults when both are set', async () => {
