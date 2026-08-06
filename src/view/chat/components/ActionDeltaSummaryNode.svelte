@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SYSTEM_ID } from '#system';
 	import localize from '#utils/localize.js';
+	import { getActionDeltaLocalizationKey } from '../utils/actionDeltaWording.ts';
 	import { getContext } from 'svelte';
 
 	const messageDocument = getContext('messageDocument');
@@ -16,35 +17,6 @@
 			? 'var(--nimble-roll-failure-color, hsl(1, 100%, 33%))'
 			: 'var(--nimble-roll-success-color, hsl(120, 45%, 55%))';
 	}
-
-	/**
-	 * The key for the sentence describing one adjustment. Singular and plural
-	 * wordings live in sibling keys because the localization layer has no plural
-	 * rules, and every key is spelled out so they stay greppable.
-	 */
-	function getAdjustmentLocalizationKey(delta: number, appliesNextTurn: boolean): string {
-		const isSingular = Math.abs(delta) === 1;
-
-		if (appliesNextTurn) {
-			if (delta < 0) {
-				return isSingular
-					? 'NIMBLE.chat.actionDeltaSummary.loseActionNextTurn'
-					: 'NIMBLE.chat.actionDeltaSummary.loseActionsNextTurn';
-			}
-			return isSingular
-				? 'NIMBLE.chat.actionDeltaSummary.gainActionNextTurn'
-				: 'NIMBLE.chat.actionDeltaSummary.gainActionsNextTurn';
-		}
-
-		if (delta < 0) {
-			return isSingular
-				? 'NIMBLE.chat.actionDeltaSummary.loseActionNow'
-				: 'NIMBLE.chat.actionDeltaSummary.loseActionsNow';
-		}
-		return isSingular
-			? 'NIMBLE.chat.actionDeltaSummary.gainActionNow'
-			: 'NIMBLE.chat.actionDeltaSummary.gainActionsNow';
-	}
 </script>
 
 {#if summary.length > 0}
@@ -55,7 +27,7 @@
 					class="nimble-action-delta-summary__entry"
 					style="color: {getChangeColor(entry.currentDelta)}"
 				>
-					{localize(getAdjustmentLocalizationKey(entry.currentDelta, false), {
+					{localize(getActionDeltaLocalizationKey(entry.currentDelta, false), {
 						name: entry.name,
 						count: String(Math.abs(entry.currentDelta)),
 					})}
@@ -66,7 +38,7 @@
 					class="nimble-action-delta-summary__entry"
 					style="color: {getChangeColor(entry.pendingDelta)}"
 				>
-					{localize(getAdjustmentLocalizationKey(entry.pendingDelta, true), {
+					{localize(getActionDeltaLocalizationKey(entry.pendingDelta, true), {
 						name: entry.name,
 						count: String(Math.abs(entry.pendingDelta)),
 					})}
