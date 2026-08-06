@@ -147,10 +147,10 @@ async function createConditionEffect(
 /**
  * Apply a single condition to a single actor, recording what caused it.
  *
- * Every automated path in the system goes through here so they share one set of
- * guarantees: no duplicate application, a blocking `preApplyCondition` hook that
- * condition immunity listens on, a recorded origin, an optional duration, and a
- * `conditionApplied` hook once the effect exists.
+ * Going through here gives a caller one set of guarantees: no duplicate
+ * application, a blocking `preApplyCondition` hook that condition immunity
+ * listens on, a recorded origin, an optional duration, and a `conditionApplied`
+ * hook once the effect exists.
  *
  * @returns the created effect, or `null` when nothing was applied.
  */
