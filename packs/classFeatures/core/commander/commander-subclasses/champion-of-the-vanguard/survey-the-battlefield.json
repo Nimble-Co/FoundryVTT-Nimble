@@ -9,6 +9,27 @@
 			{
 				"type": "modifyPool",
 				"disabled": false,
+				"id": "survey-the-battlefield-initiative-regain",
+				"identifier": "",
+				"label": "Survey the Battlefield: regain 1 use of Coordinated Strike on initiative",
+				"predicate": {},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "coordinated-strike-uses",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "onInitiativeRolled",
+						"mode": "add",
+						"value": "1",
+						"predicate": {}
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
 				"id": "survey-the-battlefield-combat-dice",
 				"identifier": "",
 				"label": "Survey the Battlefield: +1 max Combat Dice",
