@@ -77,11 +77,16 @@
 			resolveConditionSource(),
 		]);
 
-		for (const targetActor of targetActors) {
-			await applyConditionToActor(targetActor as never, node.condition, {
-				sourceItem,
-				sourceActor,
-			});
+		// Each target is applied independently, so one being refused cannot stop
+		// the conditions the remaining targets can still take.
+		const results = await Promise.allSettled(
+			targetActors.map((targetActor) =>
+				applyConditionToActor(targetActor as never, node.condition, { sourceItem, sourceActor }),
+			),
+		);
+
+		for (const result of results) {
+			if (result.status === 'rejected') console.error(result.reason);
 		}
 	}
 

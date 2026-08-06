@@ -113,6 +113,28 @@ describe('ConditionNode', () => {
 		expect(applyConditionToActor).not.toHaveBeenCalled();
 	});
 
+	it('keeps applying to the remaining targets when one target is refused', async () => {
+		createTokenWithActor('Scene.s.Token.a', 'First');
+		createTokenWithActor('Scene.s.Token.b', 'Second');
+		applyConditionToActor
+			.mockRejectedValueOnce(new Error('lacks permission'))
+			.mockResolvedValueOnce(null);
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		render(ConditionNodeTestHarness, {
+			props: {
+				messageDocument: createMessage(['Scene.s.Token.a', 'Scene.s.Token.b']),
+				node: conditionNode(),
+			},
+		});
+
+		await clickConditionButton();
+
+		await waitFor(() => expect(applyConditionToActor).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(consoleError).toHaveBeenCalledTimes(1));
+		consoleError.mockRestore();
+	});
+
 	it('renders an inert chip for players, with no way to apply the condition', async () => {
 		(game as { user?: unknown }).user = { id: 'player-user', isGM: false };
 		createTokenWithActor('Scene.s.Token.a', 'First');
