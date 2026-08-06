@@ -103,6 +103,11 @@ export function collectSpellGrants(
 	const schoolSelections: SchoolSelectionGroup[] = [];
 	const spellSelections: SpellSelectionGroup[] = [];
 	const seenUuids = new Set<string>();
+	// Selection groups are rendered in keyed each-blocks, so every emitted ruleId must be
+	// unique. Duplicate copies of a feature (a world item alongside its pack original, two
+	// customized copies, etc.) supply identical rules, and a repeated key would crash the
+	// dialog — collapse repeats into the first occurrence instead.
+	const seenSelectionKeys = new Set<string>();
 	const uuidLookup = buildUuidLookup(spellIndex);
 
 	for (const rules of rulesArrays) {
@@ -146,9 +151,11 @@ export function collectSpellGrants(
 					return schoolSpells.some((s) => !ownedSpellUuids.has(s.uuid));
 				});
 
-				if (availableSchools.length > 0) {
+				const schoolRuleId = (rule.id as string) ?? '';
+				if (availableSchools.length > 0 && !seenSelectionKeys.has(schoolRuleId)) {
+					seenSelectionKeys.add(schoolRuleId);
 					schoolSelections.push({
-						ruleId: (rule.id as string) ?? '',
+						ruleId: schoolRuleId,
 						label: (rule.label as string) || localize('NIMBLE.spellGrants.chooseSchoolsFallback'),
 						availableSchools,
 						tiers,
@@ -170,7 +177,8 @@ export function collectSpellGrants(
 						forClass: classIdentifier,
 					}).filter((s) => !ownedSpellUuids.has(s.uuid));
 
-					if (availableSpells.length > 0) {
+					if (availableSpells.length > 0 && !seenSelectionKeys.has(`${ruleId}-${school}`)) {
+						seenSelectionKeys.add(`${ruleId}-${school}`);
 						spellSelections.push({
 							ruleId: `${ruleId}-${school}`,
 							label,

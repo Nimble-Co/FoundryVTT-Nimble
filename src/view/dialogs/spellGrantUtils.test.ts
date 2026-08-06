@@ -629,4 +629,63 @@ describe('collectSpellGrants', () => {
 			expect(result.spellSelections[0].ruleId).toBe('spell-choice-1-ice');
 		});
 	});
+
+	describe('duplicate rule ids', () => {
+		it('collapses selectSpell groups from duplicate copies of the same rules', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire', 'ice'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			// The same feature present twice (e.g. a world copy alongside the pack
+			// original) supplies its rules array twice
+			const result = collectSpellGrants(
+				[rules, [...rules]],
+				index,
+				'mage',
+				4,
+				new Set(),
+				new Set(),
+			);
+
+			const ruleIds = result.spellSelections.map((s) => s.ruleId);
+			expect(ruleIds).toEqual(['spell-choice-1-fire', 'spell-choice-1-ice']);
+			expect(new Set(ruleIds).size).toBe(ruleIds.length);
+		});
+
+		it('collapses selectSchool groups from duplicate copies of the same rules', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'school-choice-1',
+					type: 'grantSpells',
+					schools: ['fire', 'ice'],
+					tiers: [0],
+					mode: 'selectSchool',
+					count: 1,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const result = collectSpellGrants(
+				[rules, [...rules]],
+				index,
+				'mage',
+				4,
+				new Set(),
+				new Set(),
+			);
+
+			expect(result.schoolSelections).toHaveLength(1);
+			expect(result.schoolSelections[0].ruleId).toBe('school-choice-1');
+		});
+	});
 });
