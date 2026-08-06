@@ -2,6 +2,7 @@ import { SYSTEM_ID } from '#system';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumerRuleLike,
@@ -297,17 +298,37 @@ function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 			continue;
 		}
 
+		// Drop rather than coerce. A modifier's mode vocabulary is the dice one,
+		// which is wider, so an entry can name a mode charge pools do not have.
+		// Falling back to a default would make it do something the author never
+		// asked for; dropping matches how an unknown trigger is treated.
 		const modeValue = sourceEntry.mode;
-		const mode = VALID_RECOVERY_MODES.has(modeValue as ChargeRecoveryMode)
-			? (modeValue as ChargeRecoveryMode)
-			: 'add';
+		if (!VALID_RECOVERY_MODES.has(modeValue as ChargeRecoveryMode)) continue;
 		const formula = typeof sourceEntry.value === 'string' ? sourceEntry.value : '1';
 
-		recoveries.push({
+		const normalized: ChargeRecoveryEntry = {
 			trigger: trigger as ChargeRecoveryTrigger,
-			mode,
+			mode: modeValue as ChargeRecoveryMode,
 			value: formula,
-		});
+		};
+
+		// Initialized rule data carries Predicate instances (whose enumerable
+		// shape is { isValid, _source }); persisted flag state may carry that
+		// serialized shape. Unwrap to the raw predicate object in both cases.
+		let predicate = sourceEntry.predicate;
+		if (predicate && typeof predicate === 'object' && '_source' in predicate) {
+			predicate = (predicate as { _source?: unknown })._source;
+		}
+		if (
+			predicate &&
+			typeof predicate === 'object' &&
+			!Array.isArray(predicate) &&
+			Object.keys(predicate).length > 0
+		) {
+			normalized.predicate = predicate as Record<string, unknown>;
+		}
+
+		recoveries.push(normalized);
 	}
 
 	return recoveries;
@@ -451,6 +472,20 @@ function getApplicableUsageTriggers(context: {
 	return triggers;
 }
 
+/**
+ * Test a recovery entry's optional predicate against the actor's live domain.
+ * Entries without a predicate (or with an empty one) always apply. Mirrors the
+ * dice pool refill path, so the same modifier behaves the same on either pool.
+ */
+function recoveryPredicateHolds(actor: CharacterActorLike, recovery: ChargeRecoveryEntry): boolean {
+	const raw = recovery.predicate;
+	if (!raw || Object.keys(raw).length < 1) return true;
+
+	const actorWithDomain = actor as unknown as { getDomain?: () => Set<string> };
+	const domain = actorWithDomain.getDomain?.() ?? new Set<string>();
+	return new Predicate(raw as RawPredicate).test(domain);
+}
+
 function applyRecoveryTriggersToPools(
 	actor: CharacterActorLike,
 	pools: ChargePoolMap,
@@ -464,6 +499,9 @@ function applyRecoveryTriggersToPools(
 	for (const pool of Object.values(nextPools)) {
 		for (const recovery of pool.recoveries) {
 			if (!triggerSet.has(recovery.trigger)) continue;
+			// Entry-level predicates are evaluated now, against live state, so a
+			// recovery can depend on something that flips mid-combat.
+			if (!recoveryPredicateHolds(actor, recovery)) continue;
 
 			if (recovery.mode === 'refresh') {
 				pool.current = pool.max;
