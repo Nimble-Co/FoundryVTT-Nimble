@@ -6,7 +6,8 @@ import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
  * so predicates evaluated by rule.test() can see these tags.
  *
  * Tags emitted per pool identifier <id>:
- *   - self:no<Id>Charges     when the pool is empty (camelCased)
+ *   - self:no<Id>Charges     when the pool is empty (identifier with its
+ *                            first character upper-cased)
  *   - self:<id>ChargesMax    when current === max
  *   - self:<id>ChargePool:N  where N is the current count
  *

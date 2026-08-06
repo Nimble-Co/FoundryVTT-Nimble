@@ -434,10 +434,12 @@ Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` c
 | Tag | When |
 |---|---|
 | `self:<id>ChargePool:<n>` | Always; `<n>` is the current count |
-| `self:no<Id>Charges` | Current count is zero |
+| `self:no<Id>Charges` | Current count is zero (`<Id>` is the identifier with its first character upper-cased, so a hyphenated identifier keeps its hyphens) |
 | `self:<id>ChargesMax` | Current count equals the pool max (max above zero) |
 
 State is read straight out of flag storage, so actor-scoped and item-scoped pools are both covered; the `actor:` prefix on an actor-scoped storage key is stripped from the tag name. A predicate tests the count with a binary op on the full tag key, e.g. `{ "self:<id>ChargePool": { "min": 1 } }` for "the pool still holds a charge".
+
+**Namespace pool identifiers per feature.** The tag key is built from the identifier alone, not from the item, so two item-scoped pools on the same actor sharing an identifier publish two values under one key. A binary op like `min` requires *every* matched value to pass, so an unrelated empty `uses` pool on another item falsifies a predicate meant for this item's `uses` pool. Give each pool an identifier that names its feature (`ember-uses`, not `uses`) and the collision cannot arise.
 
 Because the tags are produced at data preparation, they are a snapshot of the state *before* the activation currently being dispatched spends anything: the charge write happens in an awaited continuation after the use resolves, while rules are filtered synchronously during the dispatch. A rule gated on "the pool still holds a charge" therefore fires on the very use that empties the pool, and not on the next one. That is deliberate, and it is what makes the pattern below express "the first time each encounter".
 
@@ -457,6 +459,12 @@ Consumers therefore honour their own predicate. A consumer that does not apply i
 ```
 
 All three predicates read the same pre-spend snapshot during the triggering activation, so the rider resolves and the charge is consumed on that same use. On every later use in the encounter the pool reads zero, the consumer drops out instead of blocking, and the riders do not apply.
+
+::: warning A pool predicate that can go false again discards the pool's charges
+A `chargePool` rule also honours its own predicate, and a pool whose predicate does not hold is not merely hidden: it drops out of the pool definitions, and the next persist removes its stored state. Flipping the predicate back creates the pool afresh at its initial value.
+
+That is harmless for a one-way gate such as a level threshold, which is what the pattern above uses. It silently refunds the pool on every flip if you gate one on something reversible (a toggle, a worn item, a condition). Predicate the pool's *consumer* and its rider rules instead, and leave the pool itself ungated, unless you actually want the reset.
+:::
 
 ### Pool modifiers and refill gating
 

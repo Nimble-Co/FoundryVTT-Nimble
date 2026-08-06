@@ -90,6 +90,12 @@ Below the rows, a live preview tells you where you stand: a note that there are 
 
 The key suggestions only offer `self`, so type the full key yourself. This is how a "the first time each encounter" bonus is built: give the item a charge pool with a maximum of 1 that recovers at the start of an encounter, put this condition on the pool's consumer rule *and* on every rule that should only fire that first time. The first use sees the charge, applies the bonus, and spends it; later uses in the same encounter see an empty pool, so the bonus drops out and the item still works normally.
 
+::: warning Put the condition on the consumer, not on the pool
+A charge pool rule can carry a condition too, but a pool whose condition stops holding does not just hide: it is forgotten, and its current charges go with it. When the condition holds again the pool comes back full.
+
+For a condition that only ever turns on once, like reaching a level, that never shows. For anything that can turn off again, like a toggle or a worn item, every flip hands the charges back. Condition the consumer and the rules that read the pool, and leave the pool itself unconditional, unless resetting it is what you want.
+:::
+
 Add several rows to combine requirements: a row for `level` is at least `5` *and* a row for `armor` is `unarmored` means both must hold.
 
 ## Conditions about the target
