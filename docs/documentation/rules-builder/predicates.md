@@ -22,6 +22,7 @@ These are the tag families that exist:
 | :--- | :--- |
 | `level:5` | Character level. |
 | `class:berserker` | Each class, by its identifier (the item's name in lowercase with dashes, e.g. *The Cheat* → `the-cheat`). |
+| `subclass:path-of-the-mountainheart` | Each subclass the character has taken, by its identifier (same lowercase-with-dashes convention as `class:`). |
 | `ancestry:dwarf` | The character's ancestry, by identifier. |
 | `background:soldier` | The character's background, by identifier. |
 | `armor:equipped` / `armor:unarmored` | Whether the character is wearing anything that actually provides armor. Exactly one of these is always present. |

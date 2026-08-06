@@ -5,7 +5,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "survey-the-battlefield-combat-dice",
+				"identifier": "",
+				"label": "Survey the Battlefield: +1 max Combat Dice",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "combat-dice",
+				"dieSize": null,
+				"maxDelta": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

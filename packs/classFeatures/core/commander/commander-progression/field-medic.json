@@ -36,26 +36,12 @@
 					"parentNode": null
 				},
 				{
-					"id": "nf3Bq7Mu65OWbwuG",
-					"type": "damage",
-					"damageType": "acid",
-					"formula": "0",
+					"id": "A0krnEBgerU3KhXA",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Examination bonus",
 					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false,
-					"on": {
-						"hit": [
-							{
-								"id": "A0krnEBgerU3KhXA",
-								"type": "note",
-								"noteType": "reminder",
-								"text": "Examination bonus",
-								"parentContext": "hit",
-								"parentNode": "nf3Bq7Mu65OWbwuG"
-							}
-						]
-					}
+					"parentNode": null
 				}
 			],
 			"showDescription": true,

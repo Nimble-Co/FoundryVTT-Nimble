@@ -5,13 +5,46 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "taunting-strike-use-pool",
+				"identifier": "taunting-strike-use",
+				"label": "Taunting Strike use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "taunting-strike-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "taunting-strike-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 0,
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -19,7 +52,23 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "TsTauntCond01x9",
+					"type": "condition",
+					"condition": "taunted",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "TsTauntNote01x9",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Use after you hit a creature. It is Taunted by you until the end of its next turn.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
