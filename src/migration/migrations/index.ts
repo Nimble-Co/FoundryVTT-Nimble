@@ -33,4 +33,4 @@ export { Migration032LifebindingSpiritDieSize } from './Migration032LifebindingS
 export { Migration033BerserkerAutomation } from './Migration033BerserkerAutomation.js';
 export { Migration034DeathBlowCardOffer } from './Migration034DeathBlowCardOffer.js';
 export { Migration035AncestryBonusSplit } from './Migration035AncestryBonusSplit.js';
-export { Migration036AoETemplateFlags } from './Migration036AoETemplateFlags.js';
+export { Migration042AoETemplateFlags } from './Migration042AoETemplateFlags.js';
