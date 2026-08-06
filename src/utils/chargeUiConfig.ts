@@ -9,6 +9,12 @@ const ChargeUiConfig = {
 		onCriticalHit: 'NIMBLE.activationEffects.onCriticalHit',
 		encounterStart: 'NIMBLE.charges.recoveryTrigger.encounterStart',
 		encounterEnd: 'NIMBLE.charges.recoveryTrigger.encounterEnd',
+		onInitiativeRolled: 'NIMBLE.charges.recoveryTrigger.onInitiativeRolled',
+		onWound: 'NIMBLE.charges.recoveryTrigger.onWound',
+		onTurnStart: 'NIMBLE.charges.recoveryTrigger.onTurnStart',
+		onTurnEnd: 'NIMBLE.charges.recoveryTrigger.onTurnEnd',
+		onKill: 'NIMBLE.charges.recoveryTrigger.onKill',
+		onBloodied: 'NIMBLE.charges.recoveryTrigger.onBloodied',
 	},
 	recoveryModeLocalizationKeys: {
 		add: 'NIMBLE.charges.recoveryMode.add',

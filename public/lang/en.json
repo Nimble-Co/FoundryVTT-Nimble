@@ -1228,7 +1228,7 @@
 				},
 				"addRefills": {
 					"label": "Additional refills",
-					"hint": "Refill entries this modifier contributes to the target dice pool, on top of the pool's own refills. Ignored for charge pools."
+					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition."
 				}
 			},
 			"modifyToggle": {
@@ -1426,7 +1426,13 @@
 			},
 			"recoveryTrigger": {
 				"encounterStart": "Encounter Start",
-				"encounterEnd": "Encounter End"
+				"encounterEnd": "Encounter End",
+				"onInitiativeRolled": "Initiative Rolled",
+				"onWound": "Wounded",
+				"onTurnStart": "Turn Start",
+				"onTurnEnd": "Turn End",
+				"onKill": "Kill",
+				"onBloodied": "Bloodied"
 			},
 			"configure": "Configure Charges",
 			"noPoolsForItem": "No charge pools for this item.",
