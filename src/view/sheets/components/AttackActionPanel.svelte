@@ -8,6 +8,7 @@
 		toggleEffectAE,
 	} from '../../../utils/toggleEffectControl.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 
 	import SearchBar from './SearchBar.svelte';
 	import WeaponCard from './WeaponCard.svelte';
@@ -99,6 +100,10 @@
 		};
 		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 	}
+
+	// Every charge pool on the actor, resolved once. Each row is handed its own
+	// slice, so a long list does not rebuild the whole map per row.
+	let allPools = $derived(getPools(actor.reactive));
 </script>
 
 <section class="attack-panel">
@@ -137,6 +142,7 @@
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}
 					itemId={item._id}
+					pools={getPoolsForItem(actor.reactive, item._id, allPools)}
 					onclick={() => state.handleItemClick(item._id)}
 					ondragstart={(event) => sheet._onDragStart(event)}
 					onToggleDescription={(e) => state.toggleDescription(item._id, e)}
@@ -154,6 +160,7 @@
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}
 					itemId={item._id}
+					pools={getPoolsForItem(actor.reactive, item._id, allPools)}
 					toggle={buildToggleState(item)}
 					onclick={() => state.handleItemClick(item._id)}
 					ondragstart={(event) => sheet._onDragStart(event)}

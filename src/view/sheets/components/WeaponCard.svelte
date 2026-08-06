@@ -7,6 +7,7 @@
 	let {
 		name,
 		actor = null,
+		pools = undefined,
 		image = null,
 		icon = 'fa-solid fa-sword',
 		damage = null,
@@ -56,7 +57,7 @@
 			<div class="weapon-card__header">
 				<span class="weapon-card__name">{name}</span>
 				{#if actor && itemId}
-					<ChargeIndicator {actor} {itemId} />
+					<ChargeIndicator {actor} {itemId} {pools} />
 				{/if}
 			</div>
 			{#if properties.length > 0}

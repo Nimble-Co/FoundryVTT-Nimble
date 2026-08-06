@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createSpellPanelState } from './CastSpellActionPanel.svelte.ts';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 	import SearchBar from './SearchBar.svelte';
@@ -15,6 +16,10 @@
 		() => actor,
 		() => onActivateItem,
 	);
+
+	// Every charge pool on the actor, resolved once. Each row is handed its own
+	// slice, so a long list does not rebuild the whole map per row.
+	let allPools = $derived(getPools(actor.reactive));
 </script>
 
 <section class="spell-panel">
@@ -77,7 +82,11 @@
 										<span class="spell-card__tag">C</span>
 									{/if}
 
-									<ChargeIndicator {actor} itemId={spell._id} />
+									<ChargeIndicator
+										{actor}
+										itemId={spell._id}
+										pools={getPoolsForItem(actor.reactive, spell._id, allPools)}
+									/>
 								</div>
 
 								<div class="spell-card__meta">

@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createCustomReactionsPanelState } from './CustomReactionsPanel.svelte.ts';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 
@@ -13,6 +14,10 @@
 	const sheet = getContext('application') as { _onDragStart: (event: DragEvent) => void };
 
 	const state = createCustomReactionsPanelState(() => actor);
+
+	// Every charge pool on the actor, resolved once. Each row is handed its own
+	// slice, so a long list does not rebuild the whole map per row.
+	let allPools = $derived(getPools(actor.reactive));
 </script>
 
 <section class="custom-reactions-panel">
@@ -59,7 +64,11 @@
 										<span class="reaction-card__action-cost">{actionCost}</span>
 									{/if}
 
-									<ChargeIndicator {actor} itemId={reaction._id} />
+									<ChargeIndicator
+										{actor}
+										itemId={reaction._id}
+										pools={getPoolsForItem(actor.reactive, reaction._id, allPools)}
+									/>
 								</div>
 
 								{#if trigger}
