@@ -8,41 +8,46 @@ const actor: ActorStub = { id: 'actor-1' };
 const tokenActor: ActorStub = { id: 'actor-1' };
 const otherActor: ActorStub = { id: 'actor-2' };
 
-function ownsEffect(effect: unknown, self: ActorStub = actor): boolean {
-	const check = (NimbleBaseActor.prototype as unknown as { _ownsEffect(effect: unknown): boolean })
-		._ownsEffect;
-	return check.call(self as unknown as InstanceType<typeof NimbleBaseActor>, effect);
+function owns(doc: unknown, self: ActorStub = actor): boolean {
+	const check = (
+		NimbleBaseActor.prototype as unknown as { _ownsEmbeddedDocument(doc: unknown): boolean }
+	)._ownsEmbeddedDocument;
+	return check.call(self as unknown as InstanceType<typeof NimbleBaseActor>, doc);
 }
 
-describe('_ownsEffect', () => {
+describe('_ownsEmbeddedDocument', () => {
+	it('claims the actor’s own items', () => {
+		expect(owns({ parent: actor })).toBe(true);
+	});
+
 	it('claims effects applied directly to the actor', () => {
-		expect(ownsEffect({ parent: actor })).toBe(true);
+		expect(owns({ parent: actor })).toBe(true);
 	});
 
 	it('claims effects granted by one of the actor’s owned items', () => {
-		expect(ownsEffect({ parent: { id: 'item-1', parent: actor } })).toBe(true);
+		expect(owns({ parent: { id: 'item-1', parent: actor } })).toBe(true);
 	});
 
-	it('ignores effects on another actor', () => {
-		expect(ownsEffect({ parent: otherActor })).toBe(false);
+	it('ignores documents on another actor', () => {
+		expect(owns({ parent: otherActor })).toBe(false);
 	});
 
 	it('ignores effects on another actor’s item', () => {
-		expect(ownsEffect({ parent: { id: 'item-1', parent: otherActor } })).toBe(false);
+		expect(owns({ parent: { id: 'item-1', parent: otherActor } })).toBe(false);
 	});
 
 	it('does not cross-fire between a world actor and a token actor sharing its id', () => {
-		expect(ownsEffect({ parent: tokenActor })).toBe(false);
-		expect(ownsEffect({ parent: { id: 'item-1', parent: tokenActor } })).toBe(false);
+		expect(owns({ parent: tokenActor })).toBe(false);
+		expect(owns({ parent: { id: 'item-1', parent: tokenActor } })).toBe(false);
 		// ...and the token's own subscriber still claims them.
-		expect(ownsEffect({ parent: tokenActor }, tokenActor)).toBe(true);
-		expect(ownsEffect({ parent: { id: 'item-1', parent: tokenActor } }, tokenActor)).toBe(true);
+		expect(owns({ parent: tokenActor }, tokenActor)).toBe(true);
+		expect(owns({ parent: { id: 'item-1', parent: tokenActor } }, tokenActor)).toBe(true);
 	});
 
-	it('ignores unowned effects and malformed payloads', () => {
-		expect(ownsEffect({ parent: { id: 'item-1' } })).toBe(false);
-		expect(ownsEffect({ parent: null })).toBe(false);
-		expect(ownsEffect({})).toBe(false);
-		expect(ownsEffect(null)).toBe(false);
+	it('ignores unowned documents and malformed payloads', () => {
+		expect(owns({ parent: { id: 'item-1' } })).toBe(false);
+		expect(owns({ parent: null })).toBe(false);
+		expect(owns({})).toBe(false);
+		expect(owns(null)).toBe(false);
 	});
 });

@@ -119,20 +119,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 			const embeddedItemHooks = {
 				create: Hooks.on('createItem', (doc) => {
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				delete: Hooks.on('deleteItem', (doc) => {
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				update: Hooks.on('updateItem', (doc, _change, { diff }) => {
 					if (diff === false) return;
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 			};
 
@@ -143,14 +137,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			// appear once the sheet is reopened.
 			const effectHooks = {
 				create: Hooks.on('createActiveEffect', (doc) => {
-					if (this._ownsEffect(doc)) update();
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				delete: Hooks.on('deleteActiveEffect', (doc) => {
-					if (this._ownsEffect(doc)) update();
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				update: Hooks.on('updateActiveEffect', (doc, _change, { diff }) => {
 					if (diff === false) return;
-					if (this._ownsEffect(doc)) update();
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 			};
 
@@ -167,17 +161,18 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	/**
-	 * Whether an Active Effect contributes to this actor's data — either applied
-	 * to the actor itself, or granted by one of its owned items.
+	 * Whether an embedded document contributes to this actor's data — an owned
+	 * item, an effect applied to the actor itself, or an effect granted by one of
+	 * its items.
 	 *
 	 * Compared by document identity, not by id: an unlinked token's synthetic
 	 * actor carries the base actor's id, so an id check would fire this actor's
-	 * subscriber for effects belonging to any token derived from it. Identity
-	 * also removes the need to match on `documentName` string literals — only an
-	 * effect whose parent chain reaches this exact document can affect it.
+	 * subscriber for documents belonging to any token derived from it. Identity
+	 * also removes the need to match on `documentName` string literals — only a
+	 * document whose parent chain reaches this exact document can affect it.
 	 */
-	protected _ownsEffect(effect: unknown): boolean {
-		const parent = (effect as { parent?: { parent?: unknown } | null } | null)?.parent;
+	protected _ownsEmbeddedDocument(doc: unknown): boolean {
+		const parent = (doc as { parent?: { parent?: unknown } | null } | null)?.parent;
 		if (!parent) return false;
 		return parent === (this as unknown) || parent.parent === (this as unknown);
 	}
