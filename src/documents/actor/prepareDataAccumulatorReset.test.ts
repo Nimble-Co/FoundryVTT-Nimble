@@ -78,6 +78,24 @@ describe('prepareData — re-entry guard', () => {
 		expect(stub._onBeforePrepareData).toHaveBeenCalledTimes(1);
 		expect(stub._onAfterPrepareData).toHaveBeenCalledTimes(1);
 	});
+
+	it('does not reset before documents are ready', () => {
+		const gameMock = game as unknown as { _documentsReady: boolean };
+		const documentsReady = gameMock._documentsReady;
+		gameMock._documentsReady = false;
+
+		try {
+			const stub = makeStub();
+			runPrepareData(stub);
+
+			// `_initialize` skips data preparation entirely this early, so a reset here
+			// would strip `system` back to source with nothing to re-derive it.
+			runPrepareData(stub);
+			expect(stub.reset).not.toHaveBeenCalled();
+		} finally {
+			gameMock._documentsReady = documentsReady;
+		}
+	});
 });
 
 describe('prepareData — rule accumulator reset', () => {

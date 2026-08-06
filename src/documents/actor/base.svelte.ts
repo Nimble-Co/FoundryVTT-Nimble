@@ -313,7 +313,12 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		// twice. Re-initialize instead: that restores `system` from source and
 		// drives exactly one clean cycle through this method.
 		if (this.initialized) {
-			this.reset();
+			// Only once documents are ready, though: before that `_initialize` returns
+			// without calling `_safePrepareData` (client-document.mjs), so resetting
+			// during `init`/`setup` would strip `system` back to source and never
+			// re-derive it. Leaving the already-derived data alone is the safe answer.
+			// Cast: the flag is internal, so fvtt-types does not declare it.
+			if ((game as unknown as { _documentsReady?: boolean })._documentsReady) this.reset();
 			return;
 		}
 
