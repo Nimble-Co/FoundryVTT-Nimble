@@ -12,6 +12,20 @@ const DIE_SIZES = Array.from(
 	new Set<string>([...DicePoolRuleConfig.dieSizes, ...ChargePoolRuleConfig.dieSizes]),
 );
 
+// One modifier serves both pool types, so the contributed-entry vocabulary is
+// the union of both. The two subsystems do not offer the same triggers: only
+// dice pools refill on being attacked, and only charge pools recover on an
+// initiative roll. Each subsystem drops entries whose trigger it does not know
+// when it normalizes them, so a trigger picked for the wrong pool type yields
+// no entry rather than a broken one.
+const REFILL_TRIGGERS = Array.from(
+	new Set<string>([...DicePoolRuleConfig.refillTriggers, ...ChargePoolRuleConfig.recoveryTriggers]),
+);
+
+const REFILL_MODES = Array.from(
+	new Set<string>([...DicePoolRuleConfig.refillModes, ...ChargePoolRuleConfig.recoveryModes]),
+);
+
 type PoolType = (typeof POOL_TYPES)[number];
 
 function schema() {
@@ -81,7 +95,7 @@ function schema() {
 					initial: 'safeRest',
 					label: 'NIMBLE.rules.dicePool.refills.trigger.label',
 					hint: 'NIMBLE.rules.dicePool.refills.trigger.hint',
-					choices: [...DicePoolRuleConfig.refillTriggers],
+					choices: REFILL_TRIGGERS,
 				}),
 				mode: new fields.StringField({
 					required: true,
@@ -89,7 +103,7 @@ function schema() {
 					initial: 'add',
 					label: 'NIMBLE.rules.dicePool.refills.mode.label',
 					hint: 'NIMBLE.rules.dicePool.refills.mode.hint',
-					choices: [...DicePoolRuleConfig.refillModes],
+					choices: REFILL_MODES,
 				}),
 				value: new fields.StringField(
 					withWidget({

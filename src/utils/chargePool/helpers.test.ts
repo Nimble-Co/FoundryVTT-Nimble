@@ -385,3 +385,82 @@ describe('charge pool predicate gating', () => {
 		expect(Object.keys(buildEffectiveChargePoolMap(actor))).toEqual(['focus']);
 	});
 });
+
+describe('charge pool modifier contributed recoveries', () => {
+	function actorWithModifier(modifier: Partial<MockRule>) {
+		return createMockActor([
+			createMockItem('item-1', 'Signature Ability', [
+				{
+					type: 'chargePool',
+					id: 'uses-rule',
+					identifier: 'uses',
+					scope: 'item',
+					max: '3',
+					initial: 'max',
+					recoveries: [{ trigger: 'safeRest', mode: 'refresh', value: '1' }],
+				} as MockRule,
+			]),
+			createMockItem('feat-1', 'Granting Feature', [
+				{
+					type: 'modifyPool',
+					id: 'mod-1',
+					poolType: 'charge',
+					poolIdentifier: 'uses',
+					...modifier,
+				} as MockRule,
+			]),
+		]);
+	}
+
+	it('appends contributed recoveries after the pool own', () => {
+		// A feature can give an existing pool a new way to come back without the
+		// pool's own rule knowing about it, which is otherwise impossible: a
+		// recovery entry cannot be predicated and cannot be declared cross-item.
+		const actor = actorWithModifier({
+			addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1' }],
+			appliesTo: () => true,
+		});
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([
+			{ trigger: 'safeRest', mode: 'refresh', value: '1' },
+			{ trigger: 'onInitiativeRolled', mode: 'add', value: '1' },
+		]);
+	});
+
+	it('contributes nothing while the modifier predicate does not hold', () => {
+		const actor = actorWithModifier({
+			addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1' }],
+			appliesTo: () => false,
+		});
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+	});
+
+	it('drops a contributed entry whose trigger charge pools do not have', () => {
+		// The modifier vocabulary is the union of both pool types, so a trigger
+		// that only dice pools dispatch must not reach a charge pool.
+		const actor = actorWithModifier({
+			addRefills: [
+				{ trigger: 'onAttacked', mode: 'add', value: '1' },
+				{ trigger: 'onInitiativeRolled', mode: 'add', value: '1' },
+			],
+			appliesTo: () => true,
+		});
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([
+			{ trigger: 'safeRest', mode: 'refresh', value: '1' },
+			{ trigger: 'onInitiativeRolled', mode: 'add', value: '1' },
+		]);
+	});
+
+	it('leaves the pool alone when the modifier contributes no entries', () => {
+		const actor = actorWithModifier({ maxDelta: '+1', appliesTo: () => true });
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(4);
+		expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+	});
+});

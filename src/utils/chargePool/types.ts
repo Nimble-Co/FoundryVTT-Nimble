@@ -89,6 +89,7 @@ type ModifyPoolRuleLike = {
 	poolIdentifier?: string;
 	dieSize?: string | null;
 	maxDelta?: string | null;
+	addRefills?: unknown;
 };
 
 type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike & ModifyPoolRuleLike;

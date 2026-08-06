@@ -259,6 +259,7 @@ function applyModifiersToDefinition(
 
 	let dieSize = definition.dieSize;
 	let max = definition.max;
+	let recoveries = definition.recoveries;
 
 	for (const modifier of modifiers) {
 		if (typeof modifier.dieSize === 'string' && modifier.dieSize.trim().length > 0) {
@@ -268,9 +269,17 @@ function applyModifiersToDefinition(
 		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
 			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
 		}
+		// Contributed recovery entries append after the pool's own, so a feature
+		// can give an existing pool a new way to come back without the pool's own
+		// rule knowing about it. The modifier's rule-level predicate already gated
+		// inclusion, so entries land unconditionally once it applies.
+		const contributed = normalizeRecoveries(modifier.addRefills);
+		if (contributed.length > 0) {
+			recoveries = [...recoveries, ...contributed];
+		}
 	}
 
-	return { ...definition, dieSize, max };
+	return { ...definition, dieSize, max, recoveries };
 }
 
 function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
