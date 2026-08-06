@@ -40,10 +40,15 @@ let previousConditions: unknown;
 let previousDescriptions: unknown;
 let previousCanvas: unknown;
 let previousActors: unknown;
+let previousUser: unknown;
 
 beforeEach(() => {
 	applyConditionToActor.mockReset().mockResolvedValue(null);
 	documentsByUuid.clear();
+
+	// Application is GM-only, so the tests exercising it run as a GM.
+	previousUser = (game as { user?: unknown }).user;
+	(game as { user?: unknown }).user = { id: 'gm-user', isGM: true };
 
 	previousConditions = CONFIG.NIMBLE.conditions;
 	previousDescriptions = CONFIG.NIMBLE.conditionDescriptions;
@@ -70,6 +75,7 @@ afterEach(() => {
 		previousDescriptions as typeof CONFIG.NIMBLE.conditionDescriptions;
 	(globalThis as { canvas?: unknown }).canvas = previousCanvas;
 	(game as { actors?: unknown }).actors = previousActors;
+	(game as { user?: unknown }).user = previousUser;
 	vi.unstubAllGlobals();
 });
 
@@ -102,6 +108,25 @@ describe('ConditionNode', () => {
 		});
 
 		await clickConditionButton();
+		await Promise.resolve();
+
+		expect(applyConditionToActor).not.toHaveBeenCalled();
+	});
+
+	it('renders an inert chip for players, with no way to apply the condition', async () => {
+		(game as { user?: unknown }).user = { id: 'player-user', isGM: false };
+		createTokenWithActor('Scene.s.Token.a', 'First');
+
+		render(ConditionNodeTestHarness, {
+			props: {
+				messageDocument: createMessage(['Scene.s.Token.a']),
+				node: conditionNode(),
+			},
+		});
+
+		expect(screen.queryByRole('button', { name: /apply condition/i })).toBeNull();
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Dazed' }));
 		await Promise.resolve();
 
 		expect(applyConditionToActor).not.toHaveBeenCalled();

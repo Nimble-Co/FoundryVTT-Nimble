@@ -12,6 +12,13 @@
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 
+	/**
+	 * Application is GM-only, like the card's damage buttons: the card's targets
+	 * are rarely tokens a player owns, so a player's click could only be refused
+	 * on permissions. Players keep the chip and its description tooltip.
+	 */
+	const canApplyConditions = game.user?.isGM ?? false;
+
 	function getConditionTooltip(condition: string) {
 		const label = conditions[condition];
 		const description = conditionDescriptions[condition];
@@ -23,9 +30,13 @@
         </header>
    `;
 
-		const tooltipFooter = `<footer><small>${localize('NIMBLE.chat.applyConditionHint')}</small></footer>`;
+		const parts = [tooltipHeader, description];
 
-		return [tooltipHeader, description, tooltipFooter].join('');
+		if (canApplyConditions) {
+			parts.push(`<footer><small>${localize('NIMBLE.chat.applyConditionHint')}</small></footer>`);
+		}
+
+		return parts.join('');
 	}
 
 	/**
@@ -82,11 +93,11 @@
 	data-button-variant="enricher"
 	data-enricher-type="condition"
 	type="button"
-	aria-label={localize('NIMBLE.chat.applyConditionToTargets')}
+	aria-label={canApplyConditions ? localize('NIMBLE.chat.applyConditionToTargets') : undefined}
 	data-tooltip={tooltip}
 	data-tooltip-class="nimble-tooltip nimble-tooltip--rules"
 	data-tooltip-position="UP"
-	onclick={applyConditionToCardTargets}
+	onclick={canApplyConditions ? applyConditionToCardTargets : undefined}
 >
 	<i class="nimble-button__icon fa-solid fa-biohazard"></i>
 
