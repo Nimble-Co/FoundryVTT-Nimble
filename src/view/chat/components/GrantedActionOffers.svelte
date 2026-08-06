@@ -90,19 +90,7 @@
 		// targeted them. Partitioning it here instead would hoist one group.
 		const targetedTokens = Array.from(game.user?.targets ?? []);
 
-		const resolved = resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
-
-		// Aiming at friendlies is legal and sometimes intended, so this only
-		// changes how the button reads. It never withholds the activation.
-		const isDiscouraged =
-			targetedTokens.length > 0 &&
-			targetedTokens.every(
-				(token) =>
-					(token.document as { disposition?: number } | undefined)?.disposition ===
-					CONST.TOKEN_DISPOSITIONS.FRIENDLY,
-			);
-
-		return { ...resolved, isDiscouraged };
+		return resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
 	}
 
 	/**
@@ -206,7 +194,6 @@
 										<li>
 											<button
 												class="nimble-button nimble-granted-action-offer-button"
-												class:nimble-button--discouraged={targeting.isDiscouraged}
 												type="button"
 												disabled={busy}
 												onclick={() => useOfferWithItem(offer, item.id)}
@@ -274,14 +261,6 @@
 		margin: 0.25rem 0 0 1rem;
 		font-size: var(--nimble-xs-text);
 		color: var(--nimble-medium-text-color);
-	}
-
-	.nimble-button--discouraged {
-		opacity: 0.45;
-
-		&:hover:not(:disabled) {
-			opacity: 0.65;
-		}
 	}
 
 	.nimble-granted-action-offer-empty {

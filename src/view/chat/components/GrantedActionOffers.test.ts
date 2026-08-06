@@ -192,7 +192,7 @@ describe('GrantedActionOffers', () => {
 		expect(screen.getByText(/Target: Goblin Cutthroat/)).toBeTruthy();
 	});
 
-	it('reads as discouraged, but stays usable, when every target is friendly', async () => {
+	it('leaves every offer usable whoever is targeted, friendly included', async () => {
 		const g = globalThis as Record<string, any>;
 		const activateItem = vi.fn(async () => ({}));
 		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
@@ -204,9 +204,11 @@ describe('GrantedActionOffers', () => {
 
 		await fireEvent.click(screen.getByRole('button'));
 
+		// Who to aim at is the table's call. The card reports the target and
+		// nothing more: no disabling, and no styling that reads as disabled.
 		const itemButton = findItemButton('Longsword');
-		expect(itemButton?.classList.contains('nimble-button--discouraged')).toBe(true);
 		expect(itemButton?.disabled).toBe(false);
+		expect(itemButton?.className).not.toMatch(/discouraged/);
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
 		expect(activateItem).toHaveBeenCalledWith('sword');
