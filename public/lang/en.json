@@ -162,9 +162,12 @@
 			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
-			"header": "Ancestry Options",
+			"enhancedSaveHeader": "Step 2d. Enhanced Save",
 			"sizeCategory": "Size Category",
+			"sizeCategoryHeader": "Step 2c. Size Category",
 			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
+			"sizeGrantedBy": "set by {ancestry}",
+			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
 			"enhancedSave": "Enhanced Save",
 			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
 		},
@@ -194,7 +197,18 @@
 		},
 		"ancestrySheet": {
 			"defaultBonus": "Default Bonus",
-			"defaultBonusPlaceholder": "Drag an ancestry bonus here"
+			"defaultBonusPlaceholder": "Drag an ancestry bonus here",
+			"sizeOptions": "Size Options",
+			"sizeOptionsAdd": "Add a size…",
+			"sizeOptionsAll": "All sizes",
+			"sizeOptionsCount": "{selected} of {total}",
+			"sizeOptionsEdit": "Edit sizes…",
+			"sizeOptionsHint": "Choose every size this ancestry can be. Two or more becomes a player choice.",
+			"sizeOptionsRemove": "Remove {size}",
+			"sizeOptionsRestored": "An ancestry needs at least one size — restored to {sizes}.",
+			"sizeSummaryAll": "Players will choose any size, {first} through {last}.",
+			"sizeSummaryChoice": "Players will choose {sizes} during character creation.",
+			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation."
 		},
 		"backgroundOptionsSelection": {
 			"header": "Step 3b. Choose Heritage Ancestry",
@@ -1534,6 +1548,14 @@
 			"medium": "Medium",
 			"small": "Small",
 			"tiny": "Tiny"
+		},
+		"sizeCategoryDescriptions": {
+			"gargantuan": "a castle keep · 4×4 spaces",
+			"huge": "a small house · 3×3 spaces",
+			"large": "a bear · 2×2 spaces",
+			"medium": "average human size",
+			"small": "fits in a backpack",
+			"tiny": "fits in a pocket"
 		},
 		"skills": {
 			"arcana": "Arcana",
