@@ -33,6 +33,48 @@ describe('resolveGrantedOfferTargeting', () => {
 		expect(result.targetNames).toEqual(['Goblin', 'Sir Brannon']);
 	});
 
+	it('splits the recipient out from the other targets', () => {
+		const result = resolveGrantedOfferTargeting({
+			recipientActorId: 'ally',
+			targetedTokens: [
+				createToken({ actor: { id: 'ally', name: 'Sir Brannon' } }),
+				createToken({ actor: { id: 'goblin', name: 'Goblin Cutthroat' } }),
+				createToken({ actor: { id: 'ogre', name: 'Ogre' } }),
+			],
+		});
+
+		expect(result.recipientTargetNames).toEqual(['Sir Brannon']);
+		expect(result.otherTargetNames).toEqual(['Goblin Cutthroat', 'Ogre']);
+	});
+
+	it('keeps every list in the order the targets were given', () => {
+		const result = resolveGrantedOfferTargeting({
+			recipientActorId: 'ally',
+			targetedTokens: [
+				createToken({ actor: { id: 'goblin', name: 'Goblin Cutthroat' } }),
+				createToken({ actor: { id: 'ally', name: 'Sir Brannon' } }),
+				createToken({ actor: { id: 'ogre', name: 'Ogre' } }),
+			],
+		});
+
+		// The recipient is not hoisted ahead of targets picked before them.
+		expect(result.targetNames).toEqual(['Goblin Cutthroat', 'Sir Brannon', 'Ogre']);
+		expect(result.otherTargetNames).toEqual(['Goblin Cutthroat', 'Ogre']);
+	});
+
+	it('counts every one of the recipient tokens when several are targeted', () => {
+		const result = resolveGrantedOfferTargeting({
+			recipientActorId: 'ally',
+			targetedTokens: [
+				createToken({ actor: { id: 'ally', name: 'Sir Brannon' } }),
+				createToken({ actor: { id: 'ally', name: 'Sir Brannon' } }),
+			],
+		});
+
+		expect(result.recipientTargetNames).toEqual(['Sir Brannon', 'Sir Brannon']);
+		expect(result.otherTargetNames).toEqual([]);
+	});
+
 	it('reports no recipient target with no targets at all', () => {
 		const result = resolveGrantedOfferTargeting({
 			recipientActorId: 'ally',

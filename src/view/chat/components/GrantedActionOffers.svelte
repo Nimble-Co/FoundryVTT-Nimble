@@ -4,7 +4,6 @@
 
 	import { getContext } from 'svelte';
 	import { requestGrantedActionOfferUse } from '#utils/grantedActionOffers.js';
-	import { getInvalidTargets, getTargetedTokens } from '#utils/targeting.ts';
 	import localize from '../../../utils/localize.js';
 	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
 
@@ -87,12 +86,9 @@
 		void targetingVersion;
 
 		const recipientActorId = getRecipientActor(offer)?.id ?? '';
-		// getInvalidTargets returns the recipient's own targeted tokens and
-		// getTargetedTokens returns the rest, so together they are the full set.
-		const targetedTokens = [
-			...getInvalidTargets(recipientActorId),
-			...getTargetedTokens(recipientActorId),
-		];
+		// Read the target set directly so the names stay in the order the user
+		// targeted them. Partitioning it here instead would hoist one group.
+		const targetedTokens = Array.from(game.user?.targets ?? []);
 
 		const resolved = resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
 
@@ -188,14 +184,17 @@
 							{#if eligibleItems.length > 0}
 								{#if targeting.targetsRecipient}
 									<p class="nimble-granted-action-offer-notice">
+										<i class="fa-solid fa-circle-info"></i>
 										{localize('NIMBLE.chat.grantedActionOffers.targetingRecipient', {
-											name: targeting.targetNames.join(', '),
+											name: targeting.recipientTargetNames.join(', '),
 										})}
 									</p>
-								{:else if targeting.targetNames.length > 0}
+								{/if}
+
+								{#if targeting.otherTargetNames.length > 0}
 									<p class="nimble-granted-action-offer-notice">
 										{localize('NIMBLE.chat.grantedActionOffers.currentTarget', {
-											name: targeting.targetNames.join(', '),
+											name: targeting.otherTargetNames.join(', '),
 										})}
 									</p>
 								{/if}

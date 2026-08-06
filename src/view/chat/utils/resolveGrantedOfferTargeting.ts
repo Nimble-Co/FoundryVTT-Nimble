@@ -14,8 +14,15 @@ interface GrantedOfferTargeting {
 	 * accept without retargeting. It is reported, never prevented.
 	 */
 	targetsRecipient: boolean;
-	/** Display names of the current targets, in target order. */
+	/** Display names of the current targets, in the order given. */
 	targetNames: string[];
+	/**
+	 * The subset of `targetNames` belonging to the recipient, and the subset that
+	 * does not. Split because the two read differently: only the recipient is the
+	 * one taking the action, so a sentence saying so must name them alone.
+	 */
+	recipientTargetNames: string[];
+	otherTargetNames: string[];
 }
 
 /**
@@ -36,10 +43,24 @@ export function resolveGrantedOfferTargeting({
 }: GrantedOfferTargetingParams): GrantedOfferTargeting {
 	const tokens = targetedTokens.filter((token): token is Token => !!token);
 
+	const recipientTargetNames: string[] = [];
+	const otherTargetNames: string[] = [];
+	const targetNames: string[] = [];
+
+	for (const token of tokens) {
+		const name = getTargetName(token);
+		targetNames.push(name);
+
+		const isRecipient = !!recipientActorId && token.actor?.id === recipientActorId;
+		if (isRecipient) recipientTargetNames.push(name);
+		else otherTargetNames.push(name);
+	}
+
 	return {
-		targetsRecipient:
-			!!recipientActorId && tokens.some((token) => token.actor?.id === recipientActorId),
-		targetNames: tokens.map((token) => getTargetName(token)),
+		targetsRecipient: recipientTargetNames.length > 0,
+		targetNames,
+		recipientTargetNames,
+		otherTargetNames,
 	};
 }
 

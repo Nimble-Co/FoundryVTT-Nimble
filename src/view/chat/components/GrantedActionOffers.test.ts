@@ -169,6 +169,29 @@ describe('GrantedActionOffers', () => {
 		expect(activateItem).toHaveBeenCalledWith('sword');
 	});
 
+	it('names only the recipient as the one acting when other creatures are targeted too', async () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() => createRecipient());
+		g.game.user.targets = new Set([
+			createTargetToken('ally', 'Sir Brannon'),
+			createTargetToken('goblin', 'Goblin Cutthroat'),
+		]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+
+		// The clause claims its subject is the one acting, so naming anyone but
+		// the recipient in it states something false.
+		const notice = screen.getByText(
+			/Currently targeting Sir Brannon, who is the one taking this action/,
+		);
+		expect(notice.textContent).not.toContain('Goblin Cutthroat');
+		expect(screen.getByText(/Target: Goblin Cutthroat/)).toBeTruthy();
+	});
+
 	it('reads as discouraged, but stays usable, when every target is friendly', async () => {
 		const g = globalThis as Record<string, any>;
 		const activateItem = vi.fn(async () => ({}));
