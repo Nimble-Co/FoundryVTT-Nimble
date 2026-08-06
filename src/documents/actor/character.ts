@@ -165,15 +165,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** ------------------------------------------------------ */
 	/**                 Data Prep Functions                    */
 	/** ------------------------------------------------------ */
-	override prepareData(): void {
+	protected override _onBeforePrepareData(): void {
 		this._ancestry = undefined;
 		this._ancestryBonus = undefined;
 		this._background = undefined;
 		this._classes = undefined;
 		this.HitDiceManager = null!;
+	}
 
-		super.prepareData();
-
+	protected override _onAfterPrepareData(): void {
 		this._applyConfiguredLanguageGrants();
 		this._prepareArmorClass();
 	}
@@ -237,42 +237,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		this.HitDiceManager = new HitDiceManager(this as unknown as NimbleCharacterInterface);
 
 		const actorData = this.system;
-		const { defaultSkillAbilities } = CONFIG.NIMBLE;
 
-		const abilityBonusesFromClasses = this.getClassAbilityBonuses();
-
-		// Prepare Ability Data
-		Object.entries(actorData.abilities).forEach(([ablKey, ability]): void => {
-			const abilityBonus = ability.bonus;
-
-			// Cap ability score mods to 12
-			ability.mod = Math.min(
-				ability.baseValue + abilityBonus + (abilityBonusesFromClasses[ablKey] ?? 0),
-				12,
-			);
-		});
-
-		// Prepare Saving Throw Data
-		Object.entries(actorData.savingThrows).forEach(([saveKey, save]): void => {
-			const abilityMod = actorData.abilities[saveKey].mod;
-			const saveBonus = save.bonus ?? 0;
-			save.mod = abilityMod + saveBonus;
-		});
-
-		// Prepare Skill Data
-		Object.entries(actorData.skills).forEach(([skillKey, skill]): void => {
-			const defaultAbility = defaultSkillAbilities[skillKey];
-			const abilityMod = actorData.abilities[defaultAbility]?.mod;
-			const skillPoints = skill.points;
-			const skillBonus = skill.bonus;
-
-			// Cap skill modifiers at 12
-			skill.mod = Math.min(abilityMod + skillPoints + skillBonus, 12);
-
-			// Reset defaultRollMode to 0 before rules apply their modifiers
-			// This prevents accumulation when rules use 'adjust' mode
-			skill.defaultRollMode = 0;
-		});
+		this._prepareAbilitySaveAndSkillModifiers();
 
 		// Prepare Initiative Data
 		// Reset defaultRollMode to 0 before rules apply their modifiers
@@ -424,6 +390,55 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 	protected override _prepareEarlyDerivedData(): void {
 		this._prepareHitPoints(this.system);
+
+		// Rule formulas resolve against `getRollData()`, which reads ability, save
+		// and skill modifiers straight off `system`. Those are derived, not stored,
+		// so without this pass they are still at their source value (0) when the
+		// prePrepareData sweep runs and a bonus of `@strength` silently resolves to
+		// nothing. Computed again after the sweep so abilityBonus and skillBonus
+		// rules land in the final numbers.
+		this._prepareAbilitySaveAndSkillModifiers();
+	}
+
+	/**
+	 * Ability, saving-throw and skill modifiers, derived from their base values
+	 * plus whatever bonuses are on `system` at the time of the call.
+	 */
+	protected _prepareAbilitySaveAndSkillModifiers(): void {
+		const actorData = this.system;
+		const { defaultSkillAbilities } = CONFIG.NIMBLE;
+		const abilityBonusesFromClasses = this.getClassAbilityBonuses();
+
+		// Prepare Ability Data
+		// Uncapped: the rules put a hero's stat at "typically +5", which is guidance
+		// for character building, not a ceiling the system gets to enforce.
+		Object.entries(actorData.abilities).forEach(([ablKey, ability]): void => {
+			const abilityBonus = ability.bonus;
+
+			ability.mod = ability.baseValue + abilityBonus + (abilityBonusesFromClasses[ablKey] ?? 0);
+		});
+
+		// Prepare Saving Throw Data
+		Object.entries(actorData.savingThrows).forEach(([saveKey, save]): void => {
+			const abilityMod = actorData.abilities[saveKey].mod;
+			const saveBonus = save.bonus ?? 0;
+			save.mod = abilityMod + saveBonus;
+		});
+
+		// Prepare Skill Data
+		Object.entries(actorData.skills).forEach(([skillKey, skill]): void => {
+			const defaultAbility = defaultSkillAbilities[skillKey];
+			const abilityMod = actorData.abilities[defaultAbility]?.mod;
+			const skillPoints = skill.points;
+			const skillBonus = skill.bonus;
+
+			// The max according to the rules is +12 but we won't enforce that limit to avoid homebrew issues
+			skill.mod = abilityMod + skillPoints + skillBonus;
+
+			// Reset defaultRollMode to 0 before rules apply their modifiers
+			// This prevents accumulation when rules use 'adjust' mode
+			skill.defaultRollMode = 0;
+		});
 	}
 
 	prepareClassData(actorData: NimbleCharacterData): void {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { NimbleBaseRule } from '../../models/rules/base.js';
 import { NimbleBaseActor } from './base.svelte.js';
@@ -7,6 +7,21 @@ interface ActorStub {
 	initialized: boolean;
 	system: Record<string, unknown>;
 	rules: { afterPrepareData(): void }[];
+	reset(): void;
+	_onBeforePrepareData(): void;
+	_onAfterPrepareData(): void;
+}
+
+function makeStub(overrides: Partial<ActorStub> = {}): ActorStub {
+	return {
+		initialized: false,
+		system: {},
+		rules: [],
+		reset: vi.fn(),
+		_onBeforePrepareData: vi.fn(),
+		_onAfterPrepareData: vi.fn(),
+		...overrides,
+	};
 }
 
 /**
@@ -33,25 +48,77 @@ function runPrepareData(stub: ActorStub): void {
 	);
 }
 
+/** Stand in for what `_initialize` does before every real prepare cycle. */
+function reinitialize(stub: ActorStub): void {
+	stub.initialized = false;
+}
+
+describe('prepareData — re-entry guard', () => {
+	it('re-initializes instead of running the cycle again on an already-prepared actor', () => {
+		const stub = makeStub();
+		const rule = { afterPrepareData: vi.fn() };
+		stub.rules = [rule];
+
+		runPrepareData(stub);
+		expect(rule.afterPrepareData).toHaveBeenCalledTimes(1);
+		expect(stub.reset).not.toHaveBeenCalled();
+
+		// A bare second call must not re-run the rule hooks over the already-derived
+		// `system` object — read-modify-write bonuses would stack twice.
+		runPrepareData(stub);
+		expect(stub.reset).toHaveBeenCalledTimes(1);
+		expect(rule.afterPrepareData).toHaveBeenCalledTimes(1);
+	});
+
+	it('runs the subclass hooks around the cycle exactly once', () => {
+		const stub = makeStub();
+
+		runPrepareData(stub);
+
+		expect(stub._onBeforePrepareData).toHaveBeenCalledTimes(1);
+		expect(stub._onAfterPrepareData).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not reset before documents are ready', () => {
+		const gameMock = game as unknown as { _documentsReady: boolean };
+		const documentsReady = gameMock._documentsReady;
+		gameMock._documentsReady = false;
+
+		try {
+			const stub = makeStub();
+			runPrepareData(stub);
+
+			// `_initialize` skips data preparation entirely this early, so a reset here
+			// would strip `system` back to source with nothing to re-derive it.
+			runPrepareData(stub);
+			expect(stub.reset).not.toHaveBeenCalled();
+		} finally {
+			gameMock._documentsReady = documentsReady;
+		}
+	});
+});
+
 describe('prepareData — rule accumulator reset', () => {
-	it('does not duplicate accumulator entries when prepareData runs twice on the same system object', () => {
-		const stub: ActorStub = { initialized: false, system: {}, rules: [] };
+	it('does not duplicate accumulator entries across prepare cycles on the same system object', () => {
+		const stub = makeStub();
 		stub.rules = [makeAccumulatingRule(stub, 'damageReductions', { value: 3, damageTypes: [] })];
 
 		runPrepareData(stub);
+		reinitialize(stub);
 		runPrepareData(stub);
 
 		expect(stub.system.damageReductions).toEqual([{ value: 3, damageTypes: [] }]);
 	});
 
 	it('resets every registered accumulator path, not just the first', () => {
-		const stub: ActorStub = { initialized: false, system: {}, rules: [] };
+		const stub = makeStub();
 		stub.rules = [
 			makeAccumulatingRule(stub, 'damageReductions', { value: 3, damageTypes: [] }),
 			makeAccumulatingRule(stub, 'damageBonuses', { value: 2, damageTypes: [] }),
 		];
 
 		runPrepareData(stub);
+		reinitialize(stub);
 		runPrepareData(stub);
 
 		expect(stub.system.damageReductions).toHaveLength(1);
@@ -60,7 +127,7 @@ describe('prepareData — rule accumulator reset', () => {
 
 	it('leaves accumulator paths the actor never populated undefined', () => {
 		actorAccumulatorPaths.add('neverPopulated');
-		const stub: ActorStub = { initialized: false, system: {}, rules: [] };
+		const stub = makeStub();
 
 		runPrepareData(stub);
 

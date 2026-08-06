@@ -621,6 +621,10 @@
 		"rulesBuilder": {
 			"errorSchemaLoadBefore": "Could not load schema for rule type",
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
+			"ruleNotRunning": "This rule is not running:",
+			"ruleFailureUnknownType": "\"{type}\" is not a recognized rule type.",
+			"ruleFailureValidation": "The rule failed validation and has been disabled.",
+			"ruleFailureMalformed": "The rule source is malformed.",
 			"addRule": "Add Rule",
 			"cancel": "Cancel",
 			"ruleSingular": "rule",
