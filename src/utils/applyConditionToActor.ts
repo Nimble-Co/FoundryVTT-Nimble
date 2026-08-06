@@ -14,6 +14,8 @@ export interface AppliedConditionEffect {
 	id?: string;
 	statuses?: Set<string>;
 	updateSource(data: Record<string, unknown>): unknown;
+	/** The stored source, which is what gets written when the effect is created. */
+	toObject?(): Record<string, unknown>;
 }
 
 /**
@@ -113,6 +115,13 @@ function buildDurationPatch(duration: ConditionDuration | null | undefined) {
  * effect from the registered status entry, patch it at the source, then create
  * it with the same `keepId` semantics, which is what preserves the static `_id`
  * that linked-status conditions dedupe on.
+ *
+ * Creation takes `toObject()` rather than the effect itself, matching what V14's
+ * `toggleStatusEffect` does. The difference matters: `updateDuration` replaces the
+ * live `duration` field with a *derived* object carrying `label`, `remaining` and
+ * an `Infinity` default value, so handing over the document would clean that
+ * derived data into the stored source. `toObject()` returns `_source`, which is
+ * where `updateSource` wrote the patch above.
  */
 async function createConditionEffect(
 	target: ConditionTargetActor,
@@ -122,16 +131,19 @@ async function createConditionEffect(
 	const activeEffectClass = (
 		ActiveEffect as unknown as {
 			implementation: {
-				fromStatusEffect(statusId: string): Promise<AppliedConditionEffect>;
+				fromStatusEffect(
+					statusId: string,
+					options?: { parent: unknown },
+				): Promise<AppliedConditionEffect>;
 				create(
-					data: AppliedConditionEffect,
+					data: AppliedConditionEffect | Record<string, unknown>,
 					operation: { parent: unknown; keepId: boolean },
 				): Promise<AppliedConditionEffect | undefined>;
 			};
 		}
 	).implementation;
 
-	const effect = await activeEffectClass.fromStatusEffect(conditionId);
+	const effect = await activeEffectClass.fromStatusEffect(conditionId, { parent: target });
 
 	const patch: Record<string, unknown> = {};
 	const origin = resolveConditionOrigin(options);
@@ -140,7 +152,10 @@ async function createConditionEffect(
 	if (duration) patch.duration = duration;
 	if (Object.keys(patch).length > 0) effect.updateSource(patch);
 
-	const created = await activeEffectClass.create(effect, { parent: target, keepId: true });
+	const created = await activeEffectClass.create(effect.toObject?.() ?? effect, {
+		parent: target,
+		keepId: true,
+	});
 	return created ?? null;
 }
 
