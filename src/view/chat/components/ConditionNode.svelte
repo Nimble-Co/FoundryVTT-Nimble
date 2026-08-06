@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+	import type { ConditionTargetActor } from '#utils/applyConditionToActor.ts';
 
 	import { getContext } from 'svelte';
 	import { SYSTEM_ID } from '#system';
@@ -62,13 +63,13 @@
 	 * The card's own targets, not whatever the clicking user happens to have
 	 * selected on the canvas.
 	 */
-	async function resolveTargetActors() {
+	async function resolveTargetActors(): Promise<ConditionTargetActor[]> {
 		const targetUuids: string[] = messageDocument?.reactive?.system?.targets ?? [];
 		const tokenDocuments = await Promise.all(targetUuids.map((uuid) => fromUuid(uuid)));
 
 		return tokenDocuments
-			.map((tokenDocument) => (tokenDocument as { actor?: unknown } | null)?.actor)
-			.filter(Boolean);
+			.map((tokenDocument) => (tokenDocument as { actor?: ConditionTargetActor } | null)?.actor)
+			.filter((actor): actor is ConditionTargetActor => Boolean(actor));
 	}
 
 	async function applyConditionToCardTargets() {
@@ -81,7 +82,7 @@
 		// the conditions the remaining targets can still take.
 		const results = await Promise.allSettled(
 			targetActors.map((targetActor) =>
-				applyConditionToActor(targetActor as never, node.condition, { sourceItem, sourceActor }),
+				applyConditionToActor(targetActor, node.condition, { sourceItem, sourceActor }),
 			),
 		);
 
