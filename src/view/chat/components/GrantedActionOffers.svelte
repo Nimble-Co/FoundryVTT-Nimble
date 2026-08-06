@@ -5,8 +5,10 @@
 	import { getContext } from 'svelte';
 	import { requestGrantedActionOfferUse } from '#utils/grantedActionOffers.js';
 	import localize from '../../../utils/localize.js';
+	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
 
 	interface OfferRecipientActor {
+		id?: string | null;
 		name?: string;
 		isOwner?: boolean;
 		items?: Iterable<OfferRecipientItem>;
@@ -76,6 +78,22 @@
 	}
 
 	/**
+	 * What the offer is currently pointed at. Reading `targetingVersion` re-runs
+	 * this the moment the user retargets, so the display never sits on a stale
+	 * answer.
+	 */
+	function getOfferTargeting(offer: GrantedActionOffer) {
+		void targetingVersion;
+
+		const recipientActorId = getRecipientActor(offer)?.id ?? '';
+		// Read the target set directly so the names stay in the order the user
+		// targeted them. Partitioning it here instead would hoist one group.
+		const targetedTokens = Array.from(game.user?.targets ?? []);
+
+		return resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
+	}
+
+	/**
 	 * Run the recipient's normal activation flow, then consume the offer. The
 	 * activation resolves its own costs (including any adjustments the granting
 	 * feature's rules declared), so the offer itself carries none. A cancelled
@@ -105,6 +123,16 @@
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let busy = $state(false);
 	let expandedOfferId = $state<string | null>(null);
+	let targetingVersion = $state(0);
+
+	$effect(() => {
+		const hookId = Hooks.on('targetToken', () => {
+			targetingVersion += 1;
+		});
+		return () => {
+			Hooks.off('targetToken', hookId);
+		};
+	});
 
 	let offers = $derived(
 		(messageDocument?.reactive?.system as { grantedActionOffers?: GrantedActionOffer[] })
@@ -139,8 +167,26 @@
 
 						{#if expandedOfferId === offer.id}
 							{@const eligibleItems = getEligibleItems(offer)}
+							{@const targeting = getOfferTargeting(offer)}
 
 							{#if eligibleItems.length > 0}
+								{#if targeting.targetsRecipient}
+									<p class="nimble-granted-action-offer-notice">
+										<i class="fa-solid fa-circle-info"></i>
+										{localize('NIMBLE.chat.grantedActionOffers.targetingRecipient', {
+											name: targeting.recipientTargetNames.join(', '),
+										})}
+									</p>
+								{/if}
+
+								{#if targeting.otherTargetNames.length > 0}
+									<p class="nimble-granted-action-offer-notice">
+										{localize('NIMBLE.chat.grantedActionOffers.currentTarget', {
+											name: targeting.otherTargetNames.join(', '),
+										})}
+									</p>
+								{/if}
+
 								<ul
 									class="nimble-granted-action-offer-list nimble-granted-action-offer-list--items"
 								>
@@ -209,6 +255,12 @@
 		padding: 0.25rem 0.5rem;
 		font-size: var(--nimble-sm-text);
 		text-align: left;
+	}
+
+	.nimble-granted-action-offer-notice {
+		margin: 0.25rem 0 0 1rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-medium-text-color);
 	}
 
 	.nimble-granted-action-offer-empty {

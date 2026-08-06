@@ -1,4 +1,7 @@
-import { getCombatantAdditionalActions } from '../../../documents/combat/combatantSystem.js';
+import {
+	getCombatantAdditionalActions,
+	getCombatantPendingActionDelta,
+} from '../../../documents/combat/combatantSystem.js';
 import type {
 	CombatTrackerNonPlayerHpBarTextMode,
 	CombatTrackerPlayerHpBarTextMode,
@@ -447,6 +450,7 @@ export function getActionState(combatant: Combatant.Implementation): {
 	max: number;
 	additional: number;
 	effectiveMax: number;
+	pendingDelta: number;
 } {
 	const normalizedCurrent = getCombatantCurrentActions(combatant);
 	// `normalizedMax` is the base action max, already capped to the Dying limit when applicable.
@@ -457,6 +461,9 @@ export function getActionState(combatant: Combatant.Implementation): {
 		max: normalizedMax,
 		additional,
 		effectiveMax: normalizedMax + additional,
+		// Adjustment folded into `current` at the start of this combatant's next
+		// turn. Always 0 for non-character combatants, which have no pending pool.
+		pendingDelta: getCombatantPendingActionDelta(combatant),
 	};
 }
 

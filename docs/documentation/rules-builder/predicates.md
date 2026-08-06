@@ -29,6 +29,8 @@ These are the tag families that exist:
 | `self:shield` / `self:noShield` | Whether the character carries a shield. |
 | `strength:3`, `dexterity:1`, `intelligence:0`, `will:4` | The character's current stat modifiers. Some rule types apply before stat modifiers are computed; the builder shows a warning when a condition on these tags cannot work for the chosen rule type. |
 | `proficiency:armor:...`, `proficiency:weapon:...`, `proficiency:language:...` | Each proficiency the character has. |
+| `self:emberChargePool:2` | How many charges a charge pool currently holds, one tag per pool, named after the pool's identifier. |
+| `self:noEmberCharges` / `self:emberChargesMax` | Whether that pool is empty, and whether it is full. |
 
 **All characters, NPCs, and monsters:**
 
@@ -81,6 +83,18 @@ Below the rows, a live preview tells you where you stand: a note that there are 
 **Only for large-or-bigger creatures** (a monster trait):
 
 - Key `size` · **is at least** · `large`
+
+**Only while a charge pool still has a charge** (an item whose pool identifier is `ember`):
+
+- Key `self:emberChargePool` · **is at least** · `1`
+
+The key suggestions only offer `self`, so type the full key yourself. This is how a "the first time each encounter" bonus is built: give the item a charge pool with a maximum of 1 that recovers at the start of an encounter, put this condition on the pool's consumer rule *and* on every rule that should only fire that first time. The first use sees the charge, applies the bonus, and spends it; later uses in the same encounter see an empty pool, so the bonus drops out and the item still works normally.
+
+::: warning Put the condition on the consumer, not on the pool
+A charge pool rule can carry a condition too, but a pool whose condition stops holding does not just hide: it is forgotten, and its current charges go with it. When the condition holds again the pool comes back full.
+
+For a condition that only ever turns on once, like reaching a level, that never shows. For anything that can turn off again, like a toggle or a worn item, every flip hands the charges back. Condition the consumer and the rules that read the pool, and leave the pool itself unconditional, unless resetting it is what you want.
+:::
 
 Add several rows to combine requirements: a row for `level` is at least `5` *and* a row for `armor` is `unarmored` means both must hold.
 

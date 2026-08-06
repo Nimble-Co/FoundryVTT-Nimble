@@ -1470,6 +1470,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
 | `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
 | `requestCombatantActionDelta()` | `src/utils/requestCombatantActionDelta.ts` | Apply a combined current/pending action adjustment to a character combatant — direct for GMs/owners, relayed to the active GM over the system socket otherwise |
+| `getPendingActionsLocalizationKey()` | `src/utils/pendingActionWording.ts` | Pick the singular or plural localization key describing a combatant's pending action adjustment, so the character sheet and the combat tracker word it identically |
 | `getPrimaryActiveGmId()` | `src/utils/getPrimaryActiveGmId.ts` | User id of the single GM client that executes relayed socket requests (designated active GM, falling back to any connected GM), or `null` when no GM is connected |
 | `collectGrantedActionOffers()`, `requestGrantedActionOfferUse()` | `src/utils/grantedActionOffers.ts` | Granted-activation offers on activation chat cards — build offers from an item's `grantActivation` rules at use time, and consume an offer (direct for GMs, relayed to the active GM over the system socket otherwise) |
 | `getActorHpValue()` | `src/utils/isCombatantDead.ts` | Get an actor's current HP value |

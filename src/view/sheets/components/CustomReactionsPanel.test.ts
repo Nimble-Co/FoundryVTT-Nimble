@@ -12,14 +12,38 @@ interface ReactionItemOptions {
 	details?: string;
 	description?: unknown;
 	sort?: number;
+	chargePool?: { identifier: string; current: number; max: number };
 }
 
 function createItem(options: ReactionItemOptions) {
+	const chargePool = options.chargePool;
 	const item = {
 		_id: options.id,
 		id: options.id,
 		sort: options.sort ?? 0,
 		type: 'feature',
+		rules: new Map(
+			chargePool
+				? [
+						[
+							'0',
+							{
+								type: 'chargePool',
+								identifier: chargePool.identifier,
+								max: String(chargePool.max),
+								initial: 'max',
+							},
+						],
+					]
+				: [],
+		),
+		flags: {
+			nimble: {
+				chargePools: chargePool
+					? { [chargePool.identifier]: { current: chargePool.current, max: chargePool.max } }
+					: {},
+			},
+		},
 		system: {
 			activation: {
 				cost: {
@@ -42,13 +66,25 @@ function createItem(options: ReactionItemOptions) {
 }
 
 function createActor(items: ReturnType<typeof createItem>[]) {
-	return {
+	// The panel reads `items` as a list while the charge helpers read it as an
+	// embedded collection, so the fixture answers to both shapes.
+	const itemCollection = Object.assign(items, {
+		contents: items,
+		get: (id: string) => items.find((item) => item.id === id),
+	});
+
+	const actor = {
 		id: 'custom-reaction-actor',
+		type: 'character',
+		flags: { nimble: { chargePools: {} } },
+		items: itemCollection,
+		getRollData: () => ({}),
 		activateItem: vi.fn().mockResolvedValue({ ok: true }),
-		reactive: {
-			items,
-		},
-	};
+	} as Record<string, unknown>;
+
+	actor.reactive = actor;
+
+	return actor as typeof actor & { activateItem: ReturnType<typeof vi.fn> };
 }
 
 describe('isCustomReaction', () => {
@@ -130,6 +166,43 @@ describe('CustomReactionsPanel', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /counterspell/i }));
 
 		expect(actor.activateItem).toHaveBeenCalledWith('reaction-1');
+	});
+
+	describe('charge indicators', () => {
+		beforeAll(() => {
+			// The badge tooltip escapes every interpolated value; the shared Foundry
+			// mock has no escapeHTML, so stand one in for this suite only.
+			(foundry.utils as unknown as { escapeHTML: (value: string) => string }).escapeHTML = (
+				value: string,
+			) => value;
+		});
+
+		it('shows the remaining charges on a reaction that has a pool', () => {
+			const actor = createActor([
+				createItem({
+					id: 'reaction-1',
+					name: 'Counterspell',
+					isReaction: true,
+					chargePool: { identifier: 'counterspell-uses', current: 1, max: 2 },
+				}),
+			]);
+			const application = { _onDragStart: vi.fn() };
+
+			render(CustomReactionsPanelTestHarness, { actor, application });
+
+			expect(screen.getByText('1/2')).toBeInTheDocument();
+		});
+
+		it('leaves a reaction without pools untouched', () => {
+			const actor = createActor([
+				createItem({ id: 'reaction-1', name: 'Counterspell', isReaction: true }),
+			]);
+			const application = { _onDragStart: vi.fn() };
+
+			const { container } = render(CustomReactionsPanelTestHarness, { actor, application });
+
+			expect(container.querySelector('.charge-indicator')).not.toBeInTheDocument();
+		});
 	});
 
 	it('expands the description when the toggle is clicked', async () => {

@@ -75,6 +75,14 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 	return value === 'actor' ? 'actor' : 'item';
 }
 
+/**
+ * Only an explicit `true` hides a pool, so stored state and rule data that
+ * predate the field keep rendering.
+ */
+function toHiddenFlag(value: unknown): boolean {
+	return value === true;
+}
+
 function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	if (typeof value !== 'string') return null;
 	const trimmed = value.trim() as ChargePoolDieSize;
@@ -118,6 +126,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
+				hidden: toHiddenFlag(sourcePool.hidden),
 				recoveries,
 			};
 		}
@@ -165,6 +174,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
+				hidden: toHiddenFlag(sourcePool.hidden),
 				recoveries,
 			};
 		}
@@ -308,6 +318,10 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 		for (const rule of rules.values()) {
 			if (rule.type !== 'chargePool' || rule.disabled) continue;
 			const poolRule = rule as ChargePoolRuleLike;
+			// A pool whose condition does not hold does not exist yet, so it is not
+			// tracked and not shown. This is what keeps a pool that only a later
+			// feature uses from sitting on the sheet doing nothing until then.
+			if (poolRule.appliesTo?.() === false) continue;
 			const identifier = normalizeIdentifier(poolRule.identifier || poolRule.id);
 			if (identifier.length < 1) continue;
 
@@ -333,6 +347,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
+				hidden: toHiddenFlag(poolRule.hidden),
 				initial,
 				recoveries,
 			};
@@ -367,6 +382,9 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			max: definition.max,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
+			// The rule is the source of truth for visibility: flipping the flag on the
+			// rule re-hides or re-reveals a pool that is already tracked in storage.
+			hidden: definition.hidden,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -387,6 +405,11 @@ function getChargeConsumers(
 	for (const rule of rules.values()) {
 		if (rule.type !== 'chargeConsumer' || rule.disabled) continue;
 		const consumerRule = rule as ChargeConsumerRuleLike;
+		// Respect the rule's predicate. A consumer that does not apply is skipped
+		// entirely, so it neither validates nor spends: that is what lets an
+		// activation keep working once its optional charge-gated rider is spent,
+		// instead of the empty pool blocking the whole use.
+		if (consumerRule.appliesTo?.() === false) continue;
 		const poolIdentifier = normalizeIdentifier(
 			consumerRule.poolIdentifier || consumerRule.identifier || consumerRule.id,
 		);
@@ -595,6 +618,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.max === right.max &&
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
+		left.hidden === right.hidden &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

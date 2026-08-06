@@ -111,7 +111,7 @@ Tags are populated during `_populateDerivedTags()` in actor data prep, before ru
 Not every tag exists at every lifecycle phase. Three populating points, in order:
 
 1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
-2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`. The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`, and pool state (`self:*ChargePool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
 3. **Late in `prepareDerivedData()`** (after ability mods are finalized) — emits the character `<ability>:<mod>` tags. Ability mods can't exist earlier: `abilityBonus` rules contribute to them *during* `prePrepareData`, so these tags are visible **only in `afterPrepareData` and later hooks**.
 
 A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<ability>:<mod>` tag — the predicate would never match. This is enforced by guardrails rather than left silent: the Rules Builder's predicate editor shows a warning banner (instead of the match preview) when an early-phase rule references a key in `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, and rule construction emits a once-per-rule `console.warn` for the same condition. Whether a rule class is early-phase is introspected automatically via `NimbleBaseRule.appliesInPrePrepareData` (true when the class implements a `prePrepareData` method) — never add a no-op `prePrepareData` for documentation purposes, as it would falsely mark the rule early.
@@ -148,6 +148,9 @@ A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<abili
 | `proficiency:armor:<type>` | Proficiencies | Per armor proficiency |
 | `proficiency:weapon:<type>` | Proficiencies | Per weapon proficiency |
 | `proficiency:language:<type>` | Proficiencies | Per language |
+| `self:<id>ChargePool:<n>` | Charge pool flags | Per charge pool; `<n>` is the current count |
+| `self:no<Id>Charges` | Charge pool flags | Charge pool is empty |
+| `self:<id>ChargesMax` | Charge pool flags | Charge pool is at its max |
 | `<ability>:<mod>` | Ability scores | After ability mods computed (visible in `afterPrepareData` only) |
 
 #### Actor type tags
@@ -423,6 +426,45 @@ Both pool kinds (`dicePool`, `chargePool`) are **pure storage rules** — they d
 A `dicePool` rule with no paired `diceConsumer` defaults to `manual` spending — the dialog prompts the player at activation time. To make a pool snowball as a damage bonus (Berserker Fury Dice), add a sibling `diceConsumer` with `mode: 'autoBonus'` and the desired `bonusOnAttackDelivery` filter (`'melee'`, `'ranged'`, `'any'`, or `null`).
 
 Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` consumer for outgoing damage and a `manual` consumer that a reaction effect spends from. This is how features like Berserker's "That all you got?!" reaction share the Fury Dice pool with the auto-bonus damage path.
+
+### Charge pool state tags
+
+`_populateDerivedTags()` publishes the live state of every charge pool as domain tags (`src/utils/chargePool/chargePoolTags.ts`), the charge counterpart of the dice pool tags emitted alongside them. For a pool with identifier `<id>`:
+
+| Tag | When |
+|---|---|
+| `self:<id>ChargePool:<n>` | Always; `<n>` is the current count |
+| `self:no<Id>Charges` | Current count is zero (`<Id>` is the identifier with its first character upper-cased, so a hyphenated identifier keeps its hyphens) |
+| `self:<id>ChargesMax` | Current count equals the pool max (max above zero) |
+
+State is read straight out of flag storage, so actor-scoped and item-scoped pools are both covered; the `actor:` prefix on an actor-scoped storage key is stripped from the tag name. A predicate tests the count with a binary op on the full tag key, e.g. `{ "self:<id>ChargePool": { "min": 1 } }` for "the pool still holds a charge".
+
+**Namespace pool identifiers per feature.** The tag key is built from the identifier alone, not from the item, so two item-scoped pools on the same actor sharing an identifier publish two values under one key. A binary op like `min` requires *every* matched value to pass, so an unrelated empty `uses` pool on another item falsifies a predicate meant for this item's `uses` pool. Give each pool an identifier that names its feature (`ember-uses`, not `uses`) and the collision cannot arise.
+
+Because the tags are produced at data preparation, they are a snapshot of the state *before* the activation currently being dispatched spends anything: the charge write happens in an awaited continuation after the use resolves, while rules are filtered synchronously during the dispatch. A rule gated on "the pool still holds a charge" therefore fires on the very use that empties the pool, and not on the next one. That is deliberate, and it is what makes the pattern below express "the first time each encounter".
+
+### Optional riders gated on a charge pool
+
+A `chargeConsumer` whose pool cannot pay the cost blocks the whole activation: validation runs on `preUseItem` and vetoes the use. That is correct for an ability that cannot be used at all without the resource, and wrong for "the first time each encounter you do X, also do Y", where X has to keep working once Y is spent.
+
+Consumers therefore honour their own predicate. A consumer that does not apply is skipped during enumeration, before validation, so it neither blocks the activation nor spends anything. The rider is then three pieces on the same item:
+
+1. a `chargePool` with `max: 1` and a `recoveries` entry on the `encounterStart` trigger,
+2. a `chargeConsumer` for that pool, predicated on the pool holding a charge, so it stops gating the activation once the charge is gone,
+3. each rider rule (the "also do Y" part) carrying that same predicate.
+
+```jsonc
+// On the pool's own consumer and on every rider rule:
+{ "self:emberChargePool": { "min": 1 } }
+```
+
+All three predicates read the same pre-spend snapshot during the triggering activation, so the rider resolves and the charge is consumed on that same use. On every later use in the encounter the pool reads zero, the consumer drops out instead of blocking, and the riders do not apply.
+
+::: warning A pool predicate that can go false again discards the pool's charges
+A `chargePool` rule also honours its own predicate, and a pool whose predicate does not hold is not merely hidden: it drops out of the pool definitions, and the next persist removes its stored state. Flipping the predicate back creates the pool afresh at its initial value.
+
+That is harmless for a one-way gate such as a level threshold, which is what the pattern above uses. It silently refunds the pool on every flip if you gate one on something reversible (a toggle, a worn item, a condition). Predicate the pool's *consumer* and its rider rules instead, and leave the pool itself ungated, unless you actually want the reset.
+:::
 
 ### Pool modifiers and refill gating
 

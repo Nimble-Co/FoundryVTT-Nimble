@@ -41,12 +41,15 @@ export function extractRolledPools(actor: Actor): SpendablePool[] {
 
 /**
  * Snapshot the actor's charge pools that roll dice on spend (Combat Dice,
- * Mana Dice). Skips zero-current pools and pools without a die-size hint.
+ * Mana Dice). Skips zero-current pools, pools without a die-size hint, and
+ * pools flagged `hidden` (those are internal gates, not resources the player
+ * chooses to spend here).
  */
 export function extractSpendableChargePools(actor: Actor): SpendableChargePool[] {
 	return getChargePools(actor)
 		.filter(
-			(pool): pool is typeof pool & { dieSize: string } => pool.dieSize != null && pool.current > 0,
+			(pool): pool is typeof pool & { dieSize: string } =>
+				pool.dieSize != null && pool.current > 0 && !pool.hidden,
 		)
 		.map((pool) => ({
 			id: pool.id,

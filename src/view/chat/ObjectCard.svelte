@@ -2,6 +2,7 @@
 	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
+	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
@@ -69,6 +70,8 @@
 	<IncomingReactionPrompts />
 
 	<ChargeConsumptionNode />
+
+	<ActionDeltaSummaryNode />
 </article>
 
 <style>

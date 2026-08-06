@@ -24,14 +24,15 @@
 						"mode": "refresh",
 						"value": "1"
 					}
-				]
+				],
+				"hidden": false
 			},
 			{
 				"type": "chargePool",
 				"disabled": false,
 				"id": "coordinated-strike-round-pool",
 				"identifier": "coordinated-strike-round",
-				"label": "Coordinated Strike (1/round)",
+				"label": "Coordinated Strike (once per round)",
 				"predicate": {},
 				"priority": 1,
 				"scope": "item",
@@ -49,7 +50,33 @@
 						"mode": "refresh",
 						"value": "1"
 					}
-				]
+				],
+				"hidden": true
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "coordinated-strike-encounter-pool",
+				"identifier": "coordinated-strike-encounter",
+				"label": "Coordinated Strike (first use each encounter)",
+				"predicate": {
+					"level": {
+						"min": 18
+					}
+				},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				],
+				"hidden": true
 			},
 			{
 				"type": "chargeConsumer",
@@ -72,6 +99,25 @@
 				"predicate": {},
 				"priority": 2,
 				"poolIdentifier": "coordinated-strike-round",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "coordinated-strike-encounter-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {
+					"level": {
+						"min": 18
+					},
+					"self:coordinated-strike-encounterChargePool": {
+						"min": 1
+					}
+				},
+				"priority": 2,
+				"poolIdentifier": "coordinated-strike-encounter",
 				"poolScope": "item",
 				"cost": "1"
 			},
@@ -139,6 +185,9 @@
 					"level": {
 						"min": 18,
 						"max": 19
+					},
+					"self:coordinated-strike-encounterChargePool": {
+						"min": 1
 					}
 				},
 				"priority": 4,
@@ -156,6 +205,9 @@
 				"predicate": {
 					"level": {
 						"min": 20
+					},
+					"self:coordinated-strike-encounterChargePool": {
+						"min": 1
 					}
 				},
 				"priority": 4,

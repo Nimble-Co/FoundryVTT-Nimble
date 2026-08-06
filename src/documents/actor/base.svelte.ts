@@ -8,6 +8,7 @@ import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
@@ -430,6 +431,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		}
 
 		populateDicePoolTags(
+			this as unknown as {
+				flags?: unknown;
+				items?: { contents: Array<{ flags?: unknown }> };
+			},
+			this.tags,
+		);
+
+		populateChargePoolTags(
 			this as unknown as {
 				flags?: unknown;
 				items?: { contents: Array<{ flags?: unknown }> };

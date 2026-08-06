@@ -91,10 +91,22 @@
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo",
+			"actionDeltaSummary": {
+				"gainActionNow": "{name} gains {count} action now",
+				"gainActionsNow": "{name} gains {count} actions now",
+				"loseActionNow": "{name} loses {count} action now",
+				"loseActionsNow": "{name} loses {count} actions now",
+				"gainActionNextTurn": "{name} gains {count} action at the start of their next turn",
+				"gainActionsNextTurn": "{name} gains {count} actions at the start of their next turn",
+				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
+				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
+			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
 				"noEligibleItems": "No eligible items to use.",
+				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
+				"currentTarget": "Target: {name}",
 				"usedBy": "Granted action used by {name}",
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
@@ -872,6 +884,10 @@
 					"label": "Initial",
 					"hint": "Whether the pool starts full or empty when first granted."
 				},
+				"hidden": {
+					"label": "Hide from sheet",
+					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
+				},
 				"recoveries": {
 					"label": "Recoveries",
 					"hint": "When and how charges are restored. Add an entry per trigger.",
@@ -1384,6 +1400,7 @@
 		},
 		"charges": {
 			"header": "Charges",
+			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
 			"unknownItem": "Unknown Item",
@@ -1784,7 +1801,9 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
-				"pendingActionsGain": "Gains {count} additional actions at the next action refill",
+				"pendingActionGain": "Gains {count} additional action at the start of the next turn",
+				"pendingActionsGain": "Gains {count} additional actions at the start of the next turn",
+				"pendingActionLoss": "Starts the next turn with {count} fewer action",
 				"pendingActionsLoss": "Starts the next turn with {count} fewer actions",
 				"confirmEndTurnEarlyTitle": "End Turn Early?",
 				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
