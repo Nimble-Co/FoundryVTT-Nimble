@@ -1,3 +1,4 @@
+import localize from '#utils/localize.js';
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
 export namespace RulesManager {
@@ -23,9 +24,47 @@ function getSystemWithRules(item: NimbleBaseItem): ItemSystemWithRules {
 	return item.system as object as ItemSystemWithRules;
 }
 
+/**
+ * Why a rule is not running, left unresolved until something asks to display it.
+ * The manager is built during data preparation, which can run before `i18nInit`,
+ * and `game.i18n.localize` returns the raw key when called that early.
+ */
+type RuleFailure =
+	/** One of our own messages, resolved through `localize()` on read. */
+	| { key: string; data?: Record<string, string> }
+	/** Upstream English straight from Foundry validation or a thrown error. */
+	| { text: string };
+
+/** Flatten a data model's unresolved validation failures into one readable line. */
+function describeValidationFailures(rule: InstanceType<typeof NimbleBaseRule>): RuleFailure {
+	const { validationFailures } = rule as unknown as {
+		validationFailures?: Record<string, { toString(): string; unresolved?: boolean } | null>;
+	};
+
+	// `toString()` walks nested field and element failures; plain `.message` is
+	// only the header line ("SkillBonusRule validation errors:") and drops the
+	// part that actually names the offending field.
+	const messages = Object.values(validationFailures ?? {})
+		.filter((failure) => failure?.unresolved)
+		.map((failure) => failure?.toString().replace(/\s+/g, ' ').trim())
+		.filter((message): message is string => Boolean(message));
+
+	if (!messages.length) return { key: 'NIMBLE.rulesBuilder.ruleFailureValidation' };
+	return { text: messages.join(' ') };
+}
+
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	#item: NimbleBaseItem;
 	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
+
+	/**
+	 * Why a rule in `system.rules` is not running, keyed by rule id. A rule whose
+	 * source fails to build is dropped from this map entirely, and one that builds
+	 * with unresolved validation failures is force-disabled by the base rule — in
+	 * both cases the authored source still renders in the Rules Builder, so the
+	 * reason has to be recorded here for the card to surface it.
+	 */
+	readonly failures: Map<string, RuleFailure> = new Map();
 
 	constructor(item: NimbleBaseItem) {
 		super();
@@ -38,6 +77,10 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		system.rules.forEach((source) => {
 			const Cls = dataModels[source.type];
 			if (!Cls) {
+				this.failures.set(source.id, {
+					key: 'NIMBLE.rulesBuilder.ruleFailureUnknownType',
+					data: { type: source.type },
+				});
 				// eslint-disable-next-line no-console
 				console.warn(
 					`Nimble | Rule ${source.id} on ${item.name}(${item.uuid}) is not of a recognizable type.`,
@@ -49,13 +92,31 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 				const rule = new Cls(source, { parent: item, strict: true });
 				this.set(rule.id, rule);
 				this.rulesTypeMap.set(source.type, rule);
+
+				if (rule.invalid) {
+					this.failures.set(rule.id, describeValidationFailures(rule));
+				}
 			} catch (err) {
+				this.failures.set(
+					source.id,
+					err instanceof Error
+						? { text: err.message }
+						: { key: 'NIMBLE.rulesBuilder.ruleFailureMalformed' },
+				);
 				// eslint-disable-next-line no-console
 				console.warn(`Nimble | Rule ${source.id} on ${item.name}(${item.uuid}) is malformed.`);
 				// eslint-disable-next-line no-console
 				console.error(err);
 			}
 		});
+	}
+
+	/** The reason this rule is not running, or `undefined` when it is healthy. */
+	failureFor(id: string): string | undefined {
+		const failure = this.failures.get(id);
+		if (!failure) return undefined;
+
+		return 'text' in failure ? failure.text : localize(failure.key, failure.data);
 	}
 
 	/** ------------------------------------------------------ */

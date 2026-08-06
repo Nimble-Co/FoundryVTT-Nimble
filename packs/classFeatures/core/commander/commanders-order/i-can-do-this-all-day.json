@@ -7,9 +7,36 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "maxHitDice",
-				"name": "New Rule 1",
-				"id": "75GQq1kNmfQR1JzG"
+				"type": "chargePool",
+				"disabled": false,
+				"id": "i-can-do-this-all-day-use-pool",
+				"identifier": "i-can-do-this-all-day-use",
+				"label": "I Can Do This ALL DAY! use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "i-can-do-this-all-day-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "i-can-do-this-all-day-use",
+				"poolScope": "item",
+				"cost": "1"
 			}
 		],
 		"activation": {
@@ -27,26 +54,12 @@
 			},
 			"effects": [
 				{
-					"id": "KhEc8kQgCffaPLYS",
-					"type": "damage",
-					"damageType": "acid",
-					"formula": "0",
+					"id": "O0SxGYEXguqDORKt",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "set HP = sum rolled Hit dice",
 					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": true,
-					"on": {
-						"hit": [
-							{
-								"id": "O0SxGYEXguqDORKt",
-								"type": "note",
-								"noteType": "reminder",
-								"text": "set HP = sum rolled Hit dice",
-								"parentContext": "hit",
-								"parentNode": "KhEc8kQgCffaPLYS"
-							}
-						]
-					}
+					"parentNode": null
 				}
 			],
 			"showDescription": true,

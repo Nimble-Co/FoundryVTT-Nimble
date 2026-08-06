@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import {
@@ -7,11 +8,12 @@
 		toggleEffectAE,
 	} from '../../../utils/toggleEffectControl.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 
 	import SearchBar from './SearchBar.svelte';
 	import WeaponCard from './WeaponCard.svelte';
 
-	const actor = getContext('actor');
+	const actor = getContext<NimbleCharacter>('actor');
 	const sheet = getContext('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
@@ -98,6 +100,10 @@
 		};
 		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 	}
+
+	// Every charge pool on the actor, resolved once. Each row is handed its own
+	// slice, so a long list does not rebuild the whole map per row.
+	let allPools = $derived(getPools(actor.reactive));
 </script>
 
 <section class="attack-panel">
@@ -128,6 +134,7 @@
 			{#each state.sortItems(state.weapons) as item (item._id)}
 				<WeaponCard
 					name={item.reactive.name}
+					{actor}
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={state.getWeaponProperties(item)}
@@ -135,6 +142,7 @@
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}
 					itemId={item._id}
+					pools={getPoolsForItem(actor.reactive, item._id, allPools)}
 					onclick={() => state.handleItemClick(item._id)}
 					ondragstart={(event) => sheet._onDragStart(event)}
 					onToggleDescription={(e) => state.toggleDescription(item._id, e)}
@@ -144,6 +152,7 @@
 			{#each state.sortItems(state.attackFeatures) as item (item._id)}
 				<WeaponCard
 					name={item.reactive.name}
+					{actor}
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={[localize('NIMBLE.ui.heroicActions.feature')]}
@@ -151,6 +160,7 @@
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}
 					itemId={item._id}
+					pools={getPoolsForItem(actor.reactive, item._id, allPools)}
 					toggle={buildToggleState(item)}
 					onclick={() => state.handleItemClick(item._id)}
 					ondragstart={(event) => sheet._onDragStart(event)}

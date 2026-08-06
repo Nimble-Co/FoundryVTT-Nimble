@@ -148,6 +148,13 @@
 								></i>
 							{/if}
 							<span class="charge-pool-card__label">{pool.label}</span>
+							{#if pool.hidden}
+								<i
+									class="fa-solid fa-eye-slash charge-pool-card__hidden-marker"
+									data-tooltip={localize('NIMBLE.charges.hiddenPoolHint')}
+									aria-label={localize('NIMBLE.charges.hiddenPoolHint')}
+								></i>
+							{/if}
 						</div>
 
 						<div class="charge-pool-card__current" style="color: {getPoolColor(pool)}">
@@ -303,6 +310,12 @@
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
 			color: var(--nimble-dark-text-color);
+		}
+
+		&__hidden-marker {
+			font-size: var(--nimble-xs-text, 0.7rem);
+			color: var(--nimble-medium-text-color);
+			cursor: help;
 		}
 
 		&__current {

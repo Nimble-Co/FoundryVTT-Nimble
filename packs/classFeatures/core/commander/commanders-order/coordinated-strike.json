@@ -5,13 +5,224 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "coordinated-strike-uses-pool",
+				"identifier": "coordinated-strike-uses",
+				"label": "Coordinated Strike uses",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(@intelligence, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				],
+				"hidden": false
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "coordinated-strike-round-pool",
+				"identifier": "coordinated-strike-round",
+				"label": "Coordinated Strike (once per round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				],
+				"hidden": true
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "coordinated-strike-encounter-pool",
+				"identifier": "coordinated-strike-encounter",
+				"label": "Coordinated Strike (first use each encounter)",
+				"predicate": {
+					"level": {
+						"min": 18
+					}
+				},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				],
+				"hidden": true
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "coordinated-strike-uses-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "coordinated-strike-uses",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "coordinated-strike-round-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "coordinated-strike-round",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "coordinated-strike-encounter-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {
+					"level": {
+						"min": 18
+					},
+					"self:coordinated-strike-encounterChargePool": {
+						"min": 1
+					}
+				},
+				"priority": 2,
+				"poolIdentifier": "coordinated-strike-encounter",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "coordinated-strike-ally-attack",
+				"identifier": "",
+				"label": "Coordinated Strike",
+				"predicate": {},
+				"priority": 3,
+				"activationType": "weaponAttack"
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-self-free-attack",
+				"identifier": "",
+				"label": "Coordinated Strike (your attack is free)",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "self",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-ally-free-attack",
+				"identifier": "",
+				"label": "Coordinated Strike (ally attack is free)",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "targeted",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-as-one",
+				"identifier": "",
+				"label": "As One! (allies gain an action next turn)",
+				"predicate": {
+					"subclass": "champion-of-the-vanguard",
+					"level": {
+						"min": 15
+					}
+				},
+				"priority": 4,
+				"value": "1",
+				"timing": "nextTurn",
+				"target": "targeted",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-unparalleled-tactics",
+				"identifier": "",
+				"label": "Unparalleled Tactics (ally gains an action next turn)",
+				"predicate": {
+					"level": {
+						"min": 18,
+						"max": 19
+					},
+					"self:coordinated-strike-encounterChargePool": {
+						"min": 1
+					}
+				},
+				"priority": 4,
+				"value": "1",
+				"timing": "nextTurn",
+				"target": "targeted",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "coordinated-strike-captain-of-legions",
+				"identifier": "",
+				"label": "Captain of Legions (all allies gain an action next turn)",
+				"predicate": {
+					"level": {
+						"min": 20
+					},
+					"self:coordinated-strike-encounterChargePool": {
+						"min": 1
+					}
+				},
+				"priority": 4,
+				"value": "1",
+				"timing": "nextTurn",
+				"target": "allAllies",
+				"borrowFromNextTurn": false
+			}
+		],
 		"activation": {
-			"acquireTargetsFromTemplate": true,
+			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 0,
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -21,26 +232,12 @@
 			},
 			"effects": [
 				{
-					"id": "YnNEXga2R6LAEvlb",
-					"type": "damage",
-					"damageType": "acid",
-					"formula": "0",
+					"id": "0gbDXjqJDZcUxjNB",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "You and the targeted ally each attack for free. The ally may cast a cantrip instead; only the weapon attack is offered on this card.",
 					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false,
-					"on": {
-						"hit": [
-							{
-								"id": "0gbDXjqJDZcUxjNB",
-								"type": "note",
-								"noteType": "reminder",
-								"text": "You can do this INT times/Safe Rest.",
-								"parentContext": "hit",
-								"parentNode": "YnNEXga2R6LAEvlb"
-							}
-						]
-					}
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -51,8 +248,8 @@
 			"template": {
 				"length": 1,
 				"radius": 1,
-				"shape": "square",
-				"width": 6
+				"shape": "",
+				"width": 1
 			}
 		},
 		"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",

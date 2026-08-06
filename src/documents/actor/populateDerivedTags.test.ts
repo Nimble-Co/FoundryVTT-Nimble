@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleCharacter } from './character.js';
 
 // _populateDerivedTags calls getAdjacencySyncEnabled() which reads
 // game.settings.settings.has(...). The default test mock doesn't include
@@ -249,6 +250,46 @@ describe('_populateDerivedTags — self / target state tags', () => {
 				expect([...tags].some((t) => t.startsWith('enemiesAdjacent:'))).toBe(false);
 				expect([...tags].some((t) => t.startsWith('alliesAdjacent:'))).toBe(false);
 			});
+		});
+	});
+
+	describe('character subclass tags', () => {
+		interface ItemStub {
+			isType(type: string): boolean;
+			identifier: string;
+		}
+
+		function runCharacterPopulate(items: ItemStub[]): Set<string> {
+			const stub = {
+				...makeStub(),
+				levels: { character: 3, classes: {} },
+				classes: {},
+				ancestry: undefined,
+				background: undefined,
+				items,
+			};
+
+			const fn = NimbleCharacter.prototype._populateDerivedTags;
+			fn.call(stub as unknown as InstanceType<typeof NimbleCharacter>);
+			return stub.tags;
+		}
+
+		function makeItemStub(type: string, identifier: string): ItemStub {
+			return { isType: (t: string) => t === type, identifier };
+		}
+
+		it('adds subclass:<identifier> for each subclass item', () => {
+			const tags = runCharacterPopulate([
+				makeItemStub('subclass', 'path-of-the-mountainheart'),
+				makeItemStub('subclass', 'circle-of-sky-and-storm'),
+			]);
+			expect(tags.has('subclass:path-of-the-mountainheart')).toBe(true);
+			expect(tags.has('subclass:circle-of-sky-and-storm')).toBe(true);
+		});
+
+		it('does not add subclass tags for items of other types', () => {
+			const tags = runCharacterPopulate([makeItemStub('feature', 'some-feature')]);
+			expect([...tags].some((t) => t.startsWith('subclass:'))).toBe(false);
 		});
 	});
 

@@ -18,14 +18,7 @@ export default function enrichCondition(
     </header>
   `;
 
-	const tooltipFooter =
-		'<footer><small>Left click to apply this condition to all selected tokens.</small></footer>';
-
-	const tooltip = [
-		tooltipHeader,
-		localize(conditionDescriptions[conditionKey]),
-		tooltipFooter,
-	].join('');
+	const tooltip = [tooltipHeader, localize(conditionDescriptions[conditionKey])].join('');
 
 	return createEnricherButton(enricherType, { icon, label, tooltip });
 }

@@ -14,6 +14,7 @@ import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
 import { getActiveCombatant } from '#utils/combatTurnSync.js';
 import { initiativeRollLock } from '#utils/initiativeRollLock.js';
 import localize from '#utils/localize.js';
+import { getPendingActionsLocalizationKey } from '#utils/pendingActionWording.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 
 // ============================================================================
@@ -29,7 +30,7 @@ interface ActionsData {
 	overflow: number;
 	/** How many pips to render: the effective max plus any overflow. */
 	pipCount: number;
-	/** Adjustment folded into `current` at the next action refill. May be negative. */
+	/** Adjustment folded into `current` at the start of the next turn. May be negative. */
 	pendingDelta: number;
 }
 
@@ -282,7 +283,8 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	const showCombatBar = $derived(hasInitiative || needsInitiative || initiativePending);
 
 	// Badge surfacing a pending action adjustment ("+2" / "−1") so players see
-	// at a glance that their next refill will differ from the usual maximum.
+	// at a glance that their next turn will start with more or fewer actions
+	// than the usual maximum.
 	const pendingActionsBadge = $derived.by(() => {
 		const delta = actionsData.pendingDelta;
 		if (delta === 0) return null;
@@ -290,9 +292,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const count = String(Math.abs(delta));
 		return {
 			text: `${isNegative ? '−' : '+'}${count}`,
-			tooltip: isNegative
-				? localize('NIMBLE.ui.heroicActions.pendingActionsLoss', { count })
-				: localize('NIMBLE.ui.heroicActions.pendingActionsGain', { count }),
+			tooltip: localize(getPendingActionsLocalizationKey(delta), { count }),
 			isNegative,
 		};
 	});

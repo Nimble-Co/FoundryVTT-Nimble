@@ -57,8 +57,10 @@ export default async function ready() {
 	applyLanguageCustomizations();
 	// Actors were prepared during world init before language grants became managed,
 	// so re-prepare characters once so any GM language overrides take effect.
+	// `reset()`, not `prepareData()`: the latter would re-run every rule hook over
+	// the already-derived `system` object and stack read-modify-write bonuses twice.
 	for (const actor of game.actors ?? []) {
-		if (actor?.type === 'character') actor.prepareData?.();
+		if (actor?.type === 'character') actor.reset?.();
 	}
 	registerCombatTurnSocketListener();
 	registerGrantedActionOfferSocketListener();

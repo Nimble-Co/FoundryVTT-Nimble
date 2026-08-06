@@ -109,6 +109,7 @@ class NimbleFeatureData extends NimbleBaseItemData<
 
 	declare activation: {
 		showDescription: boolean;
+		skipRollDialog: boolean;
 		acquireTargetsFromTemplate: boolean;
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };

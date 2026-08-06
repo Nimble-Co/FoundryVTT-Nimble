@@ -5,7 +5,80 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "master-commander-initiative-regain",
+				"identifier": "",
+				"label": "Master Commander: regain 1 use of Coordinated Strike on initiative",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "coordinated-strike-uses",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "encounterStart",
+						"mode": "add",
+						"value": "1",
+						"predicate": {}
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "master-commander-uses-l9",
+				"identifier": "",
+				"label": "Master Commander (2): +1 use of Coordinated Strike",
+				"predicate": {
+					"level": {
+						"min": 9
+					}
+				},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "coordinated-strike-uses",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "master-commander-uses-l13",
+				"identifier": "",
+				"label": "Master Commander (3): +1 use of Coordinated Strike",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "coordinated-strike-uses",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "master-commander-uses-l17",
+				"identifier": "",
+				"label": "Master Commander (4): +1 use of Coordinated Strike",
+				"predicate": {
+					"level": {
+						"min": 17
+					}
+				},
+				"priority": 3,
+				"poolType": "charge",
+				"poolIdentifier": "coordinated-strike-uses",
+				"dieSize": null,
+				"maxDelta": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -32,7 +105,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 5, 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
+		"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commander-progression",

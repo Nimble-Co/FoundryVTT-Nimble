@@ -8,6 +8,7 @@ import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
@@ -132,20 +133,32 @@ class NimbleBaseActor<
 
 			const embeddedItemHooks = {
 				create: Hooks.on('createItem', (doc) => {
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				delete: Hooks.on('deleteItem', (doc) => {
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				update: Hooks.on('updateItem', (doc, _change, { diff }) => {
 					if (diff === false) return;
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
+				}),
+			};
+
+			// Active Effects change derived data without touching the actor or any
+			// item: applying a condition re-runs data prep, and predicated rules
+			// (skill, damage and roll-mode bonuses gated on `self:` domain tags)
+			// resolve differently afterwards. Without these, the new numbers only
+			// appear once the sheet is reopened.
+			const effectHooks = {
+				create: Hooks.on('createActiveEffect', (doc) => {
+					if (this._ownsEmbeddedDocument(doc)) update();
+				}),
+				delete: Hooks.on('deleteActiveEffect', (doc) => {
+					if (this._ownsEmbeddedDocument(doc)) update();
+				}),
+				update: Hooks.on('updateActiveEffect', (doc, _change, { diff }) => {
+					if (diff === false) return;
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 			};
 
@@ -154,8 +167,28 @@ class NimbleBaseActor<
 				Hooks.off('createItem', embeddedItemHooks.create);
 				Hooks.off('deleteItem', embeddedItemHooks.delete);
 				Hooks.off('updateItem', embeddedItemHooks.update);
+				Hooks.off('createActiveEffect', effectHooks.create);
+				Hooks.off('deleteActiveEffect', effectHooks.delete);
+				Hooks.off('updateActiveEffect', effectHooks.update);
 			};
 		});
+	}
+
+	/**
+	 * Whether an embedded document contributes to this actor's data — an owned
+	 * item, an effect applied to the actor itself, or an effect granted by one of
+	 * its items.
+	 *
+	 * Compared by document identity, not by id: an unlinked token's synthetic
+	 * actor carries the base actor's id, so an id check would fire this actor's
+	 * subscriber for documents belonging to any token derived from it. Identity
+	 * also removes the need to match on `documentName` string literals — only a
+	 * document whose parent chain reaches this exact document can affect it.
+	 */
+	protected _ownsEmbeddedDocument(doc: unknown): boolean {
+		const parent = (doc as { parent?: { parent?: unknown } | null } | null)?.parent;
+		if (!parent) return false;
+		return parent === (this as unknown) || parent.parent === (this as unknown);
 	}
 
 	static override async createDialog(
@@ -267,13 +300,35 @@ class NimbleBaseActor<
 		super._initialize(options);
 	}
 
+	/**
+	 * Template method — subclasses extend the prepare cycle through
+	 * `_onBeforePrepareData` / `_onAfterPrepareData` rather than overriding
+	 * `prepareData`, so the re-entry guard below can never be bypassed.
+	 */
 	override prepareData(): void {
+		// A bare prepareData() with no _initialize() in between reuses the same
+		// `system` object, so every rule hook would run a second time on top of
+		// already-derived values. Rules that read-modify-write their target
+		// (skill, ability and save bonuses, speeds, wounds, hit dice) would stack
+		// twice. Re-initialize instead: that restores `system` from source and
+		// drives exactly one clean cycle through this method.
+		if (this.initialized) {
+			// Only once documents are ready, though: before that `_initialize` returns
+			// without calling `_safePrepareData` (client-document.mjs), so resetting
+			// during `init`/`setup` would strip `system` back to source and never
+			// re-derive it. Leaving the already-derived data alone is the safe answer.
+			// Cast: the flag is internal, so fvtt-types does not declare it.
+			if ((game as unknown as { _documentsReady?: boolean })._documentsReady) this.reset();
+			return;
+		}
+
 		this.initialized = true;
+		this._onBeforePrepareData();
 		super.prepareData();
 
-		// Foundry sometimes calls prepareData() directly without re-initializing
-		// the document, reusing the same system object; reset rule accumulator
-		// arrays so the afterPrepareData pushes below never duplicate.
+		// Defence in depth for the guard above: rule accumulator arrays live on
+		// the `system` object, so a prepare cycle that somehow reused one would
+		// duplicate every afterPrepareData push below.
 		for (const path of actorAccumulatorPaths) {
 			if (foundry.utils.getProperty(this.system, path) !== undefined) {
 				foundry.utils.setProperty(this.system, path, []);
@@ -284,7 +339,15 @@ class NimbleBaseActor<
 		this.rules.forEach((rule) => {
 			rule.afterPrepareData?.();
 		});
+
+		this._onAfterPrepareData();
 	}
+
+	/** Subclass hook, before core data preparation. Reset memoized state here. */
+	protected _onBeforePrepareData(): void {}
+
+	/** Subclass hook, after the `afterPrepareData` rule sweep has run. */
+	protected _onAfterPrepareData(): void {}
 
 	override prepareBaseData(): void {
 		super.prepareBaseData();
@@ -429,6 +492,14 @@ class NimbleBaseActor<
 		}
 
 		populateDicePoolTags(
+			this as unknown as {
+				flags?: unknown;
+				items?: { contents: Array<{ flags?: unknown }> };
+			},
+			this.tags,
+		);
+
+		populateChargePoolTags(
 			this as unknown as {
 				flags?: unknown;
 				items?: { contents: Array<{ flags?: unknown }> };

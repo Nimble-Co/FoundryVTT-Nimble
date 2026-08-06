@@ -64,6 +64,11 @@ export const activation = () => ({
 			nullable: false,
 			initial: true,
 		}),
+		skipRollDialog: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+		}),
 		targets: new fields.SchemaField({
 			count: new fields.NumberField({
 				required: true,

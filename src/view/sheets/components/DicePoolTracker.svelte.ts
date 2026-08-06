@@ -112,9 +112,11 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 		// Charge pools without a `dieSize` are pure counters and are already
 		// rendered by ChargeIndicator elsewhere on the sheet. Only surface
 		// charge pools that have a die-size hint (roll-on-spend resources like
-		// Commander Combat Dice / Artificer Mana Dice).
+		// Commander Combat Dice / Artificer Mana Dice). Pools flagged `hidden`
+		// are internal gates rather than resources the player manages, so they
+		// stay out of the tracker even when they carry a die size.
 		const charge = getChargePools(actor)
-			.filter((p) => p.dieSize != null)
+			.filter((p) => p.dieSize != null && !p.hidden)
 			.map(countFromCharge);
 
 		return [...dice, ...charge];

@@ -2,6 +2,7 @@ import { SYSTEM_ID } from '#system';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumerRuleLike,
@@ -75,6 +76,14 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 	return value === 'actor' ? 'actor' : 'item';
 }
 
+/**
+ * Only an explicit `true` hides a pool, so stored state and rule data that
+ * predate the field keep rendering.
+ */
+function toHiddenFlag(value: unknown): boolean {
+	return value === true;
+}
+
 function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	if (typeof value !== 'string') return null;
 	const trimmed = value.trim() as ChargePoolDieSize;
@@ -118,6 +127,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
+				hidden: toHiddenFlag(sourcePool.hidden),
 				recoveries,
 			};
 		}
@@ -165,6 +175,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
+				hidden: toHiddenFlag(sourcePool.hidden),
 				recoveries,
 			};
 		}
@@ -249,6 +260,7 @@ function applyModifiersToDefinition(
 
 	let dieSize = definition.dieSize;
 	let max = definition.max;
+	let recoveries = definition.recoveries;
 
 	for (const modifier of modifiers) {
 		if (typeof modifier.dieSize === 'string' && modifier.dieSize.trim().length > 0) {
@@ -258,9 +270,17 @@ function applyModifiersToDefinition(
 		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
 			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
 		}
+		// Contributed recovery entries append after the pool's own, so a feature
+		// can give an existing pool a new way to come back without the pool's own
+		// rule knowing about it. The modifier's rule-level predicate already gated
+		// inclusion, so entries land unconditionally once it applies.
+		const contributed = normalizeRecoveries(modifier.addRefills);
+		if (contributed.length > 0) {
+			recoveries = [...recoveries, ...contributed];
+		}
 	}
 
-	return { ...definition, dieSize, max };
+	return { ...definition, dieSize, max, recoveries };
 }
 
 function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
@@ -278,17 +298,37 @@ function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 			continue;
 		}
 
+		// Drop rather than coerce. A modifier's mode vocabulary is the dice one,
+		// which is wider, so an entry can name a mode charge pools do not have.
+		// Falling back to a default would make it do something the author never
+		// asked for; dropping matches how an unknown trigger is treated.
 		const modeValue = sourceEntry.mode;
-		const mode = VALID_RECOVERY_MODES.has(modeValue as ChargeRecoveryMode)
-			? (modeValue as ChargeRecoveryMode)
-			: 'add';
+		if (!VALID_RECOVERY_MODES.has(modeValue as ChargeRecoveryMode)) continue;
 		const formula = typeof sourceEntry.value === 'string' ? sourceEntry.value : '1';
 
-		recoveries.push({
+		const normalized: ChargeRecoveryEntry = {
 			trigger: trigger as ChargeRecoveryTrigger,
-			mode,
+			mode: modeValue as ChargeRecoveryMode,
 			value: formula,
-		});
+		};
+
+		// Initialized rule data carries Predicate instances (whose enumerable
+		// shape is { isValid, _source }); persisted flag state may carry that
+		// serialized shape. Unwrap to the raw predicate object in both cases.
+		let predicate = sourceEntry.predicate;
+		if (predicate && typeof predicate === 'object' && '_source' in predicate) {
+			predicate = (predicate as { _source?: unknown })._source;
+		}
+		if (
+			predicate &&
+			typeof predicate === 'object' &&
+			!Array.isArray(predicate) &&
+			Object.keys(predicate).length > 0
+		) {
+			normalized.predicate = predicate as Record<string, unknown>;
+		}
+
+		recoveries.push(normalized);
 	}
 
 	return recoveries;
@@ -308,6 +348,10 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 		for (const rule of rules.values()) {
 			if (rule.type !== 'chargePool' || rule.disabled) continue;
 			const poolRule = rule as ChargePoolRuleLike;
+			// A pool whose condition does not hold does not exist yet, so it is not
+			// tracked and not shown. This is what keeps a pool that only a later
+			// feature uses from sitting on the sheet doing nothing until then.
+			if (poolRule.appliesTo?.() === false) continue;
 			const identifier = normalizeIdentifier(poolRule.identifier || poolRule.id);
 			if (identifier.length < 1) continue;
 
@@ -333,6 +377,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
+				hidden: toHiddenFlag(poolRule.hidden),
 				initial,
 				recoveries,
 			};
@@ -367,6 +412,9 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			max: definition.max,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
+			// The rule is the source of truth for visibility: flipping the flag on the
+			// rule re-hides or re-reveals a pool that is already tracked in storage.
+			hidden: definition.hidden,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -387,6 +435,11 @@ function getChargeConsumers(
 	for (const rule of rules.values()) {
 		if (rule.type !== 'chargeConsumer' || rule.disabled) continue;
 		const consumerRule = rule as ChargeConsumerRuleLike;
+		// Respect the rule's predicate. A consumer that does not apply is skipped
+		// entirely, so it neither validates nor spends: that is what lets an
+		// activation keep working once its optional charge-gated rider is spent,
+		// instead of the empty pool blocking the whole use.
+		if (consumerRule.appliesTo?.() === false) continue;
 		const poolIdentifier = normalizeIdentifier(
 			consumerRule.poolIdentifier || consumerRule.identifier || consumerRule.id,
 		);
@@ -419,6 +472,20 @@ function getApplicableUsageTriggers(context: {
 	return triggers;
 }
 
+/**
+ * Test a recovery entry's optional predicate against the actor's live domain.
+ * Entries without a predicate (or with an empty one) always apply. Mirrors the
+ * dice pool refill path, so the same modifier behaves the same on either pool.
+ */
+function recoveryPredicateHolds(actor: CharacterActorLike, recovery: ChargeRecoveryEntry): boolean {
+	const raw = recovery.predicate;
+	if (!raw || Object.keys(raw).length < 1) return true;
+
+	const actorWithDomain = actor as unknown as { getDomain?: () => Set<string> };
+	const domain = actorWithDomain.getDomain?.() ?? new Set<string>();
+	return new Predicate(raw as RawPredicate).test(domain);
+}
+
 function applyRecoveryTriggersToPools(
 	actor: CharacterActorLike,
 	pools: ChargePoolMap,
@@ -432,6 +499,9 @@ function applyRecoveryTriggersToPools(
 	for (const pool of Object.values(nextPools)) {
 		for (const recovery of pool.recoveries) {
 			if (!triggerSet.has(recovery.trigger)) continue;
+			// Entry-level predicates are evaluated now, against live state, so a
+			// recovery can depend on something that flips mid-combat.
+			if (!recoveryPredicateHolds(actor, recovery)) continue;
 
 			if (recovery.mode === 'refresh') {
 				pool.current = pool.max;
@@ -595,6 +665,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.max === right.max &&
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
+		left.hidden === right.hidden &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

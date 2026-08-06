@@ -90,6 +90,8 @@
 			"placementFailed": "Could not place the area of effect. See the console for details."
 		},
 		"chat": {
+			"applyConditionHint": "Left click to apply this condition to this card's targets.",
+			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"healing": "Healing",
@@ -102,10 +104,22 @@
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo",
+			"actionDeltaSummary": {
+				"gainActionNow": "{name} gains {count} action now",
+				"gainActionsNow": "{name} gains {count} actions now",
+				"loseActionNow": "{name} loses {count} action now",
+				"loseActionsNow": "{name} loses {count} actions now",
+				"gainActionNextTurn": "{name} gains {count} action at the start of their next turn",
+				"gainActionsNextTurn": "{name} gains {count} actions at the start of their next turn",
+				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
+				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
+			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
 				"noEligibleItems": "No eligible items to use.",
+				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
+				"currentTarget": "Target: {name}",
 				"usedBy": "Granted action used by {name}",
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
@@ -620,6 +634,10 @@
 		"rulesBuilder": {
 			"errorSchemaLoadBefore": "Could not load schema for rule type",
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
+			"ruleNotRunning": "This rule is not running:",
+			"ruleFailureUnknownType": "\"{type}\" is not a recognized rule type.",
+			"ruleFailureValidation": "The rule failed validation and has been disabled.",
+			"ruleFailureMalformed": "The rule source is malformed.",
 			"addRule": "Add Rule",
 			"cancel": "Cancel",
 			"ruleSingular": "rule",
@@ -882,6 +900,10 @@
 				"initial": {
 					"label": "Initial",
 					"hint": "Whether the pool starts full or empty when first granted."
+				},
+				"hidden": {
+					"label": "Hide from sheet",
+					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
 				},
 				"recoveries": {
 					"label": "Recoveries",
@@ -1223,7 +1245,7 @@
 				},
 				"addRefills": {
 					"label": "Additional refills",
-					"hint": "Refill entries this modifier contributes to the target dice pool, on top of the pool's own refills. Ignored for charge pools."
+					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition."
 				}
 			},
 			"modifyToggle": {
@@ -1395,6 +1417,7 @@
 		},
 		"charges": {
 			"header": "Charges",
+			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
 			"unknownItem": "Unknown Item",
@@ -1420,7 +1443,13 @@
 			},
 			"recoveryTrigger": {
 				"encounterStart": "Encounter Start",
-				"encounterEnd": "Encounter End"
+				"encounterEnd": "Encounter End",
+				"onInitiativeRolled": "Initiative Rolled",
+				"onWound": "Wounded",
+				"onTurnStart": "Turn Start",
+				"onTurnEnd": "Turn End",
+				"onKill": "Kill",
+				"onBloodied": "Bloodied"
 			},
 			"configure": "Configure Charges",
 			"noPoolsForItem": "No charge pools for this item.",
@@ -1795,7 +1824,9 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
-				"pendingActionsGain": "Gains {count} additional actions at the next action refill",
+				"pendingActionGain": "Gains {count} additional action at the start of the next turn",
+				"pendingActionsGain": "Gains {count} additional actions at the start of the next turn",
+				"pendingActionLoss": "Starts the next turn with {count} fewer action",
 				"pendingActionsLoss": "Starts the next turn with {count} fewer actions",
 				"confirmEndTurnEarlyTitle": "End Turn Early?",
 				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
@@ -2553,6 +2584,9 @@
 			"targetRestrictions": "Target Restrictions",
 			"attackType": "Attack Type",
 			"distance": "Distance",
+			"activationOptions": "Activation Options",
+			"skipRollDialog": "Skip the roll dialog (activate instantly)",
+			"skipRollDialogHint": "Always activate this item with default roll settings instead of opening the roll or upcast dialog. Holding Alt while activating inverts this setting for that activation.",
 			"attackTypes": {
 				"none": "None",
 				"melee": "Melee",

@@ -33,4 +33,10 @@ export { Migration032LifebindingSpiritDieSize } from './Migration032LifebindingS
 export { Migration033BerserkerAutomation } from './Migration033BerserkerAutomation.js';
 export { Migration034DeathBlowCardOffer } from './Migration034DeathBlowCardOffer.js';
 export { Migration035AncestryBonusSplit } from './Migration035AncestryBonusSplit.js';
+export { Migration036CommanderCoordinatedStrike } from './Migration036CommanderCoordinatedStrike.js';
+export { Migration037CommanderPackRepair } from './Migration037CommanderPackRepair.js';
+export { Migration038CommanderStrikeRiders } from './Migration038CommanderStrikeRiders.js';
+export { Migration039CommanderEncounterGate } from './Migration039CommanderEncounterGate.js';
+export { Migration040CommanderHiddenGatePools } from './Migration040CommanderHiddenGatePools.js';
+export { Migration041CommanderInitiativeRegain } from './Migration041CommanderInitiativeRegain.js';
 export { Migration042AoETemplateFlags } from './Migration042AoETemplateFlags.js';

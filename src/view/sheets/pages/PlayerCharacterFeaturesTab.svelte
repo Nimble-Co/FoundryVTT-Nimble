@@ -78,14 +78,24 @@
 		sheet.clearDroppedItemFlash(itemId);
 	}
 
+	/**
+	 * The level an item sorts at within its group. Items with no level sort last.
+	 *
+	 * Deliberately silent about a missing level. Most cards on this tab are types
+	 * that carry no level fields at all (a class or subclass card cannot have
+	 * one), and a feature that another feature's rule grants must have none:
+	 * level data is what makes the class progression surface an item, so adding
+	 * it there would offer a second copy alongside the granted one.
+	 *
+	 * Reporting either at runtime puts a message in every player's console about
+	 * pack data they cannot act on, once per sort. Which items should carry level
+	 * data is asserted by `featureLevelData.test.ts` instead, before it ships.
+	 */
 	function getEffectiveLevel(item): number {
 		const explicit = item.reactive.system?.gainedAtLevel;
 		if (explicit != null) return explicit;
 		const levels = item.reactive.system?.gainedAtLevels;
 		if (levels?.length) return Math.min(...levels);
-		console.warn(
-			`[Nimble] Feature "${item.reactive.name}" has no level data — gainedAtLevel: ${explicit}, gainedAtLevels: ${JSON.stringify(levels)}`,
-		);
 		return Infinity;
 	}
 

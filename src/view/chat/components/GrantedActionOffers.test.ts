@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import GrantedActionOffersTestHarness from './GrantedActionOffers.testHarness.svelte';
 
 interface OfferOptions {
@@ -30,6 +31,26 @@ function createMessage(offers: ReturnType<typeof createOffer>[]) {
 	return message;
 }
 
+function createRecipient(options: { activateItem?: (id: string) => Promise<unknown> } = {}) {
+	return {
+		id: 'ally',
+		name: 'Sir Brannon',
+		isOwner: true,
+		items: [{ id: 'sword', name: 'Longsword', type: 'object', system: { objectType: 'weapon' } }],
+		activateItem: options.activateItem,
+	};
+}
+
+function createTargetToken(actorId: string, actorName: string, disposition = -1) {
+	return { actor: { id: actorId, name: actorName }, document: { disposition } };
+}
+
+function findItemButton(itemName: string): HTMLButtonElement | undefined {
+	return screen.getAllByRole('button').find((button) => button.textContent?.includes(itemName)) as
+		| HTMLButtonElement
+		| undefined;
+}
+
 let previousFromUuidSync: unknown;
 let previousGameUser: unknown;
 
@@ -39,7 +60,7 @@ beforeEach(() => {
 	previousGameUser = g.game?.user;
 	g.fromUuidSync = vi.fn(() => ({ name: 'Sir Brannon', isOwner: true, items: [] }));
 	g.game = g.game ?? {};
-	g.game.user = { isGM: true, id: 'gm' };
+	g.game.user = { isGM: true, id: 'gm', targets: new Set() };
 });
 
 afterEach(() => {
@@ -110,6 +131,128 @@ describe('GrantedActionOffers', () => {
 		});
 
 		expect(container.querySelector('section')).toBeNull();
+	});
+
+	it('names the recipient in a notice while they are the current target', async () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() => createRecipient());
+		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+
+		expect(
+			screen.getByText(/Currently targeting Sir Brannon, who is the one taking this action/),
+		).toBeTruthy();
+		expect(findItemButton('Longsword')?.disabled).toBe(false);
+	});
+
+	it('still runs the activation while the recipient is the current target', async () => {
+		const g = globalThis as Record<string, any>;
+		const activateItem = vi.fn(async () => ({}));
+		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
+		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+
+		const itemButton = findItemButton('Longsword');
+		expect(itemButton).toBeTruthy();
+
+		await fireEvent.click(itemButton as HTMLButtonElement);
+		expect(activateItem).toHaveBeenCalledWith('sword');
+	});
+
+	it('names only the recipient as the one acting when other creatures are targeted too', async () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() => createRecipient());
+		g.game.user.targets = new Set([
+			createTargetToken('ally', 'Sir Brannon'),
+			createTargetToken('goblin', 'Goblin Cutthroat'),
+		]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+
+		// The clause claims its subject is the one acting, so naming anyone but
+		// the recipient in it states something false.
+		const notice = screen.getByText(
+			/Currently targeting Sir Brannon, who is the one taking this action/,
+		);
+		expect(notice.textContent).not.toContain('Goblin Cutthroat');
+		expect(screen.getByText(/Target: Goblin Cutthroat/)).toBeTruthy();
+	});
+
+	it('leaves every offer usable whoever is targeted, friendly included', async () => {
+		const g = globalThis as Record<string, any>;
+		const activateItem = vi.fn(async () => ({}));
+		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
+		g.game.user.targets = new Set([createTargetToken('cleric', 'Sister Mila', 1)]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+
+		// Who to aim at is the table's call. The card reports the target and
+		// nothing more: no disabling, and no styling that reads as disabled.
+		const itemButton = findItemButton('Longsword');
+		expect(itemButton?.disabled).toBe(false);
+		expect(itemButton?.className).not.toMatch(/discouraged/);
+
+		await fireEvent.click(itemButton as HTMLButtonElement);
+		expect(activateItem).toHaveBeenCalledWith('sword');
+	});
+
+	it('names the current target when it is not the recipient', async () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() => createRecipient());
+		g.game.user.targets = new Set([createTargetToken('goblin', 'Goblin Cutthroat')]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+
+		expect(findItemButton('Longsword')?.disabled).toBe(false);
+		expect(screen.getByText(/Goblin Cutthroat/)).toBeTruthy();
+	});
+
+	it('updates the notice as soon as the user retargets', async () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() => createRecipient());
+		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer()]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+		expect(screen.getByText(/Currently targeting Sir Brannon/)).toBeTruthy();
+
+		const targetTokenHook = (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls.findLast(
+			(call: unknown[]) => call[0] === 'targetToken',
+		);
+		expect(targetTokenHook).toBeTruthy();
+
+		g.game.user.targets = new Set([createTargetToken('goblin', 'Goblin Cutthroat')]);
+		(targetTokenHook?.[1] as () => void)();
+		await tick();
+
+		expect(screen.queryByText(/Currently targeting Sir Brannon/)).toBeNull();
+		expect(screen.getByText(/Goblin Cutthroat/)).toBeTruthy();
+		expect(findItemButton('Longsword')?.disabled).toBe(false);
 	});
 
 	it('hides pending offers from non-owners who are not GMs', () => {

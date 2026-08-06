@@ -353,8 +353,11 @@ export function registerLanguageSettings(): void {
 			onChange: () => {
 				applyLanguageCustomizations();
 				// Re-prepare characters so added/removed language grants take effect live.
+				// `reset()`, not `prepareData()`: the latter would re-run every rule hook
+				// over the already-derived `system` object and stack read-modify-write
+				// bonuses a second time on every settings change.
 				for (const actor of game.actors ?? []) {
-					if (actor?.type === 'character') actor.prepareData?.();
+					if (actor?.type === 'character') actor.reset?.();
 				}
 				rerenderLanguageConsumers();
 			},
