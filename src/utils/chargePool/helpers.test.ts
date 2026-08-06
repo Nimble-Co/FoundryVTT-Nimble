@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildEffectiveChargePoolMap, getChargeConsumers } from './helpers.js';
+import {
+	applyRecoveryTriggersToPools,
+	buildEffectiveChargePoolMap,
+	getChargeConsumers,
+} from './helpers.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumerRuleLike,
@@ -383,5 +387,139 @@ describe('charge pool predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(Object.keys(buildEffectiveChargePoolMap(actor))).toEqual(['focus']);
+	});
+});
+
+describe('charge pool modifier contributed recoveries', () => {
+	function actorWithModifiers(modifiers: Partial<MockRule>[], poolMax = '3') {
+		return createMockActor([
+			createMockItem('item-1', 'Signature Ability', [
+				{
+					type: 'chargePool',
+					id: 'uses-rule',
+					identifier: 'uses',
+					scope: 'item',
+					max: poolMax,
+					initial: 'max',
+					recoveries: [{ trigger: 'safeRest', mode: 'refresh', value: '1' }],
+				} as MockRule,
+			]),
+			...modifiers.map((modifier, index) =>
+				createMockItem(`feat-${index}`, `Granting Feature ${index}`, [
+					{
+						type: 'modifyPool',
+						id: `mod-${index}`,
+						poolType: 'charge',
+						poolIdentifier: 'uses',
+						...modifier,
+					} as MockRule,
+				]),
+			),
+		]);
+	}
+
+	const encounterStart = { trigger: 'encounterStart', mode: 'add', value: '1' };
+
+	it('appends contributed recoveries after the pool own', () => {
+		// A feature can give an existing pool a new way to come back without the
+		// pool's own rule knowing about it, which is otherwise impossible: a
+		// recovery entry cannot be declared cross-item.
+		const actor = actorWithModifiers([{ addRefills: [encounterStart], appliesTo: () => true }]);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([
+			{ trigger: 'safeRest', mode: 'refresh', value: '1' },
+			encounterStart,
+		]);
+	});
+
+	it('contributes nothing while the modifier predicate does not hold', () => {
+		const actor = actorWithModifiers([{ addRefills: [encounterStart], appliesTo: () => false }]);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+	});
+
+	it('drops a contributed entry whose trigger charge pools do not have', () => {
+		// The modifier trigger vocabulary is the union of both pool types, so one
+		// only dice pools dispatch must not reach a charge pool.
+		const actor = actorWithModifiers([
+			{
+				addRefills: [{ trigger: 'onAttacked', mode: 'add', value: '1' }, encounterStart],
+				appliesTo: () => true,
+			},
+		]);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([
+			{ trigger: 'safeRest', mode: 'refresh', value: '1' },
+			encounterStart,
+		]);
+	});
+
+	it('drops a contributed entry whose mode charge pools cannot perform', () => {
+		// The mode list is the dice one, which is wider. Coercing `clear` to the
+		// default would empty nothing and add instead, the opposite of the ask.
+		const actor = actorWithModifiers([
+			{
+				addRefills: [{ trigger: 'encounterStart', mode: 'clear', value: '1' }],
+				appliesTo: () => true,
+			},
+		]);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+	});
+
+	it('leaves the pool alone when the modifier contributes no entries', () => {
+		const actor = actorWithModifiers([{ maxDelta: '+1', appliesTo: () => true }]);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(4);
+		expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+	});
+
+	it('raises the pool when the contributed trigger fires, clamped at max', () => {
+		const actor = actorWithModifiers([{ addRefills: [encounterStart], appliesTo: () => true }]);
+		const pools = buildEffectiveChargePoolMap(actor);
+		const poolId = Object.keys(pools)[0];
+
+		pools[poolId].current = 1;
+		const raised = applyRecoveryTriggersToPools(actor, pools, ['encounterStart']);
+		expect(raised[poolId].current).toBe(2);
+
+		// A full pool gains nothing, which is what regaining a spent use means.
+		raised[poolId].current = 3;
+		expect(applyRecoveryTriggersToPools(actor, raised, ['encounterStart'])[poolId].current).toBe(3);
+	});
+
+	it('stacks two modifiers contributing to the same pool', () => {
+		const actor = actorWithModifiers(
+			[
+				{ addRefills: [encounterStart], appliesTo: () => true },
+				{ addRefills: [encounterStart], appliesTo: () => true },
+			],
+			'5',
+		);
+		const pools = buildEffectiveChargePoolMap(actor);
+		const poolId = Object.keys(pools)[0];
+
+		pools[poolId].current = 0;
+		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(2);
+	});
+
+	it('honours a contributed entry own predicate when the trigger fires', () => {
+		const gated = { ...encounterStart, predicate: { self: 'raging' } };
+		const actor = actorWithModifiers([{ addRefills: [gated], appliesTo: () => true }]);
+		const pools = buildEffectiveChargePoolMap(actor);
+		const poolId = Object.keys(pools)[0];
+		pools[poolId].current = 0;
+
+		// No domain, so the condition does not hold and the recovery is skipped.
+		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(0);
+
+		(actor as unknown as { getDomain: () => Set<string> }).getDomain = () =>
+			new Set(['self:raging']);
+		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(1);
 	});
 });

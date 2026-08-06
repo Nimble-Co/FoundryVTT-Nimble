@@ -9,6 +9,27 @@
 			{
 				"type": "modifyPool",
 				"disabled": false,
+				"id": "master-commander-initiative-regain",
+				"identifier": "",
+				"label": "Master Commander: regain 1 use of Coordinated Strike on initiative",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "coordinated-strike-uses",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "encounterStart",
+						"mode": "add",
+						"value": "1",
+						"predicate": {}
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
 				"id": "master-commander-uses-l9",
 				"identifier": "",
 				"label": "Master Commander (2): +1 use of Coordinated Strike",

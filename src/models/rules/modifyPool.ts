@@ -12,6 +12,20 @@ const DIE_SIZES = Array.from(
 	new Set<string>([...DicePoolRuleConfig.dieSizes, ...ChargePoolRuleConfig.dieSizes]),
 );
 
+// One modifier serves both pool types, so the contributed-entry trigger list is
+// the union of both. The two subsystems do not offer the same triggers: only
+// dice pools refill on being attacked, and only charge pools recover on an
+// initiative roll, which no modifier could reach before.
+//
+// Modes need no union: the charge modes are a subset of the dice ones. That
+// leaves two modes (`setIfEmpty`, `clear`) offered on a charge pool that charge
+// pools cannot perform. Both subsystems drop a contributed entry whose trigger
+// or mode they do not implement, so a mismatched pick contributes nothing
+// rather than doing something the author did not ask for.
+const REFILL_TRIGGERS = Array.from(
+	new Set<string>([...DicePoolRuleConfig.refillTriggers, ...ChargePoolRuleConfig.recoveryTriggers]),
+);
+
 type PoolType = (typeof POOL_TYPES)[number];
 
 function schema() {
@@ -70,9 +84,9 @@ function schema() {
 			label: 'NIMBLE.rules.modifyPool.minFace.label',
 			hint: 'NIMBLE.rules.modifyPool.minFace.hint',
 		}),
-		// Refill entries this modifier contributes to the target pool (dice pools
-		// only). Lets a granting feature add its own refill trigger without
-		// editing the base pool rule.
+		// Entries this modifier contributes to the target pool: refills on a dice
+		// pool, recoveries on a charge pool. Lets a granting feature add its own
+		// trigger without editing the base pool rule.
 		addRefills: new fields.ArrayField(
 			new fields.SchemaField({
 				trigger: new fields.StringField({
@@ -81,7 +95,7 @@ function schema() {
 					initial: 'safeRest',
 					label: 'NIMBLE.rules.dicePool.refills.trigger.label',
 					hint: 'NIMBLE.rules.dicePool.refills.trigger.hint',
-					choices: [...DicePoolRuleConfig.refillTriggers],
+					choices: REFILL_TRIGGERS,
 				}),
 				mode: new fields.StringField({
 					required: true,

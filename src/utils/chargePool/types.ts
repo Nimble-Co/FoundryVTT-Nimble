@@ -13,6 +13,9 @@ type ChargeRecoveryEntry = {
 	trigger: ChargeRecoveryTrigger;
 	mode: ChargeRecoveryMode;
 	value: string;
+	/** Optional predicate tested against the actor's domain when the trigger
+	 *  fires (e.g. { self: 'raging' }). Absent or empty = always applies. */
+	predicate?: Record<string, unknown>;
 };
 
 type ChargePoolState = {
@@ -89,6 +92,7 @@ type ModifyPoolRuleLike = {
 	poolIdentifier?: string;
 	dieSize?: string | null;
 	maxDelta?: string | null;
+	addRefills?: unknown;
 };
 
 type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike & ModifyPoolRuleLike;

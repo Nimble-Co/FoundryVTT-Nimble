@@ -38,3 +38,4 @@ export { Migration037CommanderPackRepair } from './Migration037CommanderPackRepa
 export { Migration038CommanderStrikeRiders } from './Migration038CommanderStrikeRiders.js';
 export { Migration039CommanderEncounterGate } from './Migration039CommanderEncounterGate.js';
 export { Migration040CommanderHiddenGatePools } from './Migration040CommanderHiddenGatePools.js';
+export { Migration041CommanderInitiativeRegain } from './Migration041CommanderInitiativeRegain.js';
