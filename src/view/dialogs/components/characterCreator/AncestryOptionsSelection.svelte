@@ -1,6 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 
+	import { effectiveVariants } from '../../../../utils/ancestryVariants.js';
 	import localize from '../../../../utils/localize.js';
 	import { effectiveSizes } from '../../../../utils/sizeSelection.js';
 	import Hint from '../../../components/Hint.svelte';
@@ -14,6 +15,26 @@
 		if (!ancestry) return [];
 
 		return effectiveSizes(ancestry.system?.size, Object.keys(sizeCategories));
+	}
+
+	// Kept in the order the ancestry authored them, which is the order its name reads in.
+	function prepareAncestryVariants(ancestry) {
+		if (!ancestry) return [];
+
+		return effectiveVariants(ancestry.system?.variants);
+	}
+
+	/** Sizes carry a short description from the Size rules; variant names stand on their own. */
+	function toSizeOptions(sizes) {
+		return sizes.map((size) => ({
+			value: size,
+			label: sizeCategories[size] ?? size,
+			description: sizeCategoryDescriptions[size] ?? '',
+		}));
+	}
+
+	function toVariantOptions(variants) {
+		return variants.map((variant) => ({ value: variant, label: variant, description: '' }));
 	}
 
 	function getNeutralSaves(selectedClass) {
@@ -46,24 +67,21 @@
 		selectedAncestry,
 		selectedAncestryBonus,
 		selectedClass,
+		selectedAncestryVariant = $bindable(),
 		selectedAncestrySize = $bindable(),
 		selectedAncestrySave = $bindable(),
 	} = $props();
 
-	let sizeList = $state(null);
+	let ancestryVariants = $derived(prepareAncestryVariants(selectedAncestry));
+	// A lone variant is the ancestry's own name, so there is nothing to ask about.
+	let hasVariantChoice = $derived(ancestryVariants.length > 1);
 
 	let ancestrySizes = $derived(prepareAncestrySizes(selectedAncestry));
 	let hasSizeChoice = $derived(ancestrySizes.length > 1);
 	// A single size is stated rather than asked, so the player still learns what they are.
 	let hasFixedSize = $derived(ancestrySizes.length === 1);
 	let hasSaveChoice = $derived(ancestryBonusRequiresSaveChoice(selectedAncestryBonus));
-	let hasAnyChoice = $derived(hasSizeChoice || hasFixedSize || hasSaveChoice);
-
-	// A radiogroup is one stop in the tab order, so focus lands on the chosen size — or on the first
-	// one when nothing is chosen yet.
-	let focusedSize = $derived(
-		ancestrySizes.includes(selectedAncestrySize) ? selectedAncestrySize : ancestrySizes[0],
-	);
+	let hasAnyChoice = $derived(hasVariantChoice || hasSizeChoice || hasFixedSize || hasSaveChoice);
 
 	const ARROW_STEPS = {
 		ArrowDown: 1,
@@ -72,24 +90,87 @@
 		ArrowLeft: -1,
 	};
 
+	// A radiogroup is one stop in the tab order, so focus lands on the chosen option — or on the
+	// first one when nothing is chosen yet.
+	function focusedValue(values, selected) {
+		return values.includes(selected) ? selected : values[0];
+	}
+
 	/** Arrow keys move the choice between the radios of a radiogroup, wrapping at both ends. */
-	function handleRadioKeydown(event, index) {
+	function handleRadioKeydown(event, index, values, select) {
 		const step = ARROW_STEPS[event.key];
 		if (step === undefined) return;
 
 		event.preventDefault();
-		const next = (index + step + ancestrySizes.length) % ancestrySizes.length;
+		const next = (index + step + values.length) % values.length;
 		// In a radiogroup the arrows carry the selection with them, not just the focus.
-		selectedAncestrySize = ancestrySizes[next];
-		sizeList?.querySelectorAll('[role="radio"]')[next]?.focus();
+		select(values[next]);
+		// The radios are the group's own children, so the group is the pressed radio's closest one.
+		const group = event.currentTarget.closest('[role="radiogroup"]');
+		group?.querySelectorAll('[role="radio"]')[next]?.focus();
 	}
 </script>
+
+<!-- Shared by every ancestry option that is a pick-exactly-one list, with nothing pre-selected. -->
+{#snippet radioChoice(groupLabel, options, selected, select)}
+	{@const values = options.map((option) => option.value)}
+	{@const focused = focusedValue(values, selected)}
+
+	<!-- A radiogroup takes the radios as its own children, so the options cannot be list items. -->
+	<div class="nimble-ancestry-choice" role="radiogroup" aria-label={groupLabel}>
+		{#each options as option, index (option.value)}
+			{@const isSelected = option.value === selected}
+
+			<button
+				class="nimble-ancestry-choice__option"
+				class:nimble-ancestry-choice__option--selected={isSelected}
+				type="button"
+				role="radio"
+				aria-checked={isSelected}
+				tabindex={option.value === focused ? 0 : -1}
+				onclick={() => select(option.value)}
+				onkeydown={(event) => handleRadioKeydown(event, index, values, select)}
+			>
+				<span class="nimble-ancestry-choice__dot" aria-hidden="true"></span>
+
+				<span>{option.label}</span>
+
+				{#if option.description}
+					<span class="nimble-ancestry-choice__description">{option.description}</span>
+				{/if}
+			</button>
+		{/each}
+	</div>
+{/snippet}
 
 {#if hasAnyChoice}
 	<section
 		class="nimble-character-creation-section"
 		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}"
 	>
+		{#if hasVariantChoice}
+			<div class="nimble-character-creation-section__subsection">
+				<header class="nimble-section-header" data-header-variant="character-creator">
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{ancestryOptions.variantHeader}
+					</h3>
+				</header>
+
+				{#if active}
+					<Hint hintText={ancestryOptions.variantHint} />
+				{/if}
+
+				<div class="nimble-character-creation-section__body">
+					{@render radioChoice(
+						ancestryOptions.variant,
+						toVariantOptions(ancestryVariants),
+						selectedAncestryVariant,
+						(variant) => (selectedAncestryVariant = variant),
+					)}
+				</div>
+			</div>
+		{/if}
+
 		{#if hasSizeChoice || hasFixedSize}
 			<div class="nimble-character-creation-section__subsection">
 				<header class="nimble-section-header" data-header-variant="character-creator">
@@ -106,54 +187,29 @@
 					{#if hasFixedSize}
 						{@const sizeCategory = ancestrySizes[0]}
 
-						<p class="nimble-size-choice__granted">
+						<p class="nimble-ancestry-choice__granted">
 							<strong>{sizeCategories[sizeCategory] ?? sizeCategory}</strong>
 
-							<span class="nimble-size-choice__description">
+							<span class="nimble-ancestry-choice__description">
 								{sizeCategoryDescriptions[sizeCategory] ?? ''}
 							</span>
 
-							<span class="nimble-size-choice__source">
+							<span class="nimble-ancestry-choice__source">
 								{localize('NIMBLE.ancestryOptions.sizeGrantedBy', {
 									ancestry: selectedAncestry?.name ?? '',
 								})}
 							</span>
 						</p>
 					{:else}
-						<!-- A radiogroup takes the radios as its own children, so the options cannot be
-						list items. -->
-						<div
-							class="nimble-size-choice"
-							role="radiogroup"
-							aria-label={ancestryOptions.sizeCategory}
-							bind:this={sizeList}
-						>
-							{#each ancestrySizes as sizeCategory, index (sizeCategory)}
-								{@const selected = sizeCategory === selectedAncestrySize}
-
-								<button
-									class="nimble-size-choice__option"
-									class:nimble-size-choice__option--selected={selected}
-									type="button"
-									role="radio"
-									aria-checked={selected}
-									tabindex={sizeCategory === focusedSize ? 0 : -1}
-									onclick={() => (selectedAncestrySize = sizeCategory)}
-									onkeydown={(event) => handleRadioKeydown(event, index)}
-								>
-									<span class="nimble-size-choice__dot" aria-hidden="true"></span>
-
-									<span>{sizeCategories[sizeCategory] ?? sizeCategory}</span>
-
-									<span class="nimble-size-choice__description">
-										{sizeCategoryDescriptions[sizeCategory] ?? ''}
-									</span>
-								</button>
-							{/each}
-						</div>
+						{@render radioChoice(
+							ancestryOptions.sizeCategory,
+							toSizeOptions(ancestrySizes),
+							selectedAncestrySize,
+							(sizeCategory) => (selectedAncestrySize = sizeCategory),
+						)}
 
 						{#if active}
-							<p class="nimble-size-choice__note">
+							<p class="nimble-ancestry-choice__note">
 								{localize('NIMBLE.ancestryOptions.sizeGrappleNote')}
 							</p>
 						{/if}
@@ -186,7 +242,7 @@
 {/if}
 
 <style lang="scss">
-	.nimble-size-choice {
+	.nimble-ancestry-choice {
 		display: flex;
 		flex-direction: column;
 		gap: 0.125rem;
@@ -245,11 +301,11 @@
 			border: 1px solid var(--nimble-input-border-color);
 			border-radius: 50%;
 
-			.nimble-size-choice__option--selected & {
+			.nimble-ancestry-choice__option--selected & {
 				border-color: var(--nimble-selected-tag-background-color);
 			}
 
-			.nimble-size-choice__option--selected &::after {
+			.nimble-ancestry-choice__option--selected &::after {
 				content: '';
 				width: 0.375rem;
 				height: 0.375rem;

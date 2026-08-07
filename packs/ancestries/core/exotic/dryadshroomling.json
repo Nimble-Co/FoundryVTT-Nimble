@@ -27,6 +27,10 @@
 			"small",
 			"medium"
 		],
+		"variants": [
+			"Dryad",
+			"Shroomling"
+		],
 		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.NKA98sDFntkqd4Im"
 	},
 	"effects": [],

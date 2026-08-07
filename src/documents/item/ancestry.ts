@@ -66,6 +66,23 @@ async function replaceAncestryBonus(
 export class NimbleAncestryItem extends NimbleBaseItem {
 	declare system: NimbleAncestryData;
 
+	/** ------------------------------------------------------ */
+	//                        Data Prep
+	/** ------------------------------------------------------ */
+	override prepareBaseData(): void {
+		// Read before the base class derives an identifier from the name.
+		const authoredIdentifier = (this._source.system as { identifier?: string }).identifier ?? '';
+
+		super.prepareBaseData();
+
+		// A character who chose a variant carries an ancestry renamed to it ("Dryad" out of
+		// "Dryad/Shroomling"), and the ancestry identifier is what keys the GM's language grants —
+		// so the identifier the ancestry declares outranks the one its name would produce.
+		if (authoredIdentifier) {
+			(this.system as object as { identifier: string }).identifier = authoredIdentifier;
+		}
+	}
+
 	override async prepareChatCardData() {
 		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			this.system.description,

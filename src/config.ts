@@ -67,6 +67,9 @@ const characterCreationStages = {
 };
 
 const ancestryOptions = {
+	variant: 'NIMBLE.ancestryOptions.variant',
+	variantHeader: 'NIMBLE.ancestryOptions.variantHeader',
+	variantHint: 'NIMBLE.ancestryOptions.variantHint',
 	sizeCategory: 'NIMBLE.ancestryOptions.sizeCategory',
 	sizeCategoryHeader: 'NIMBLE.ancestryOptions.sizeCategoryHeader',
 	sizeCategoryHint: 'NIMBLE.ancestryOptions.sizeCategoryHint',

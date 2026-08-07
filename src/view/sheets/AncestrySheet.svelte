@@ -9,6 +9,7 @@
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import SizeOptionsSelect from './components/SizeOptionsSelect.svelte';
+	import VariantOptionsInput from './components/VariantOptionsInput.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 
 	const navigation = [
@@ -38,6 +39,7 @@
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 	let defaultBonusUuid = $derived(item.reactive.system.defaultBonus ?? '');
 	let selectedSizes = $derived(item.reactive.system.size ?? []);
+	let selectedVariants = $derived(item.reactive.system.variants ?? []);
 
 	// Compendium ancestries are locked, so an editable one is a world copy. Its published sizes are
 	// what removing the last size reverts to — the system default only applies to ancestries written
@@ -149,6 +151,22 @@
 				{selectedSizes}
 				{publishedSizes}
 				onChange={(nextSizes) => item.update({ 'system.size': nextSizes })}
+			/>
+		</div>
+
+		<div>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ancestrySheet.variants')}
+				</h3>
+			</header>
+
+			<Hint hintText={localize('NIMBLE.ancestrySheet.variantsHint')} />
+
+			<VariantOptionsInput
+				{selectedVariants}
+				ancestryName={item.reactive.name}
+				onChange={(nextVariants) => item.update({ 'system.variants': nextVariants })}
 			/>
 		</div>
 	</section>
