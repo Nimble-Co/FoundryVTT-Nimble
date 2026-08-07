@@ -148,7 +148,7 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		// casts the spell. Its own dialog is shown rather than skipped, and closing
 		// that dialog leaves the scroll untouched.
 		if (needsArcanaCheck) {
-			const outcome = await this.#rollScrollArcanaCheck();
+			const outcome = await this.#rollScrollArcanaCheck(scroll.school);
 
 			if (outcome === 'cancelled') return null;
 			if (outcome === 'failed') {
@@ -199,7 +199,7 @@ export class NimbleObjectItem extends NimbleBaseItem {
 	 * Closing that dialog reports `cancelled`, and the caller leaves the scroll
 	 * alone — a check the player never agreed to must not spend anything.
 	 */
-	async #rollScrollArcanaCheck(): Promise<'passed' | 'failed' | 'cancelled'> {
+	async #rollScrollArcanaCheck(school: string): Promise<'passed' | 'failed' | 'cancelled'> {
 		const actor = this.actor as
 			| (Actor & {
 					rollSkillCheck?: (
@@ -212,7 +212,15 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		// Nothing to roll against, so the scroll simply works.
 		if (!actor?.rollSkillCheck) return 'passed';
 
-		const { roll } = await actor.rollSkillCheck('arcana');
+		const schoolLabel = CONFIG.NIMBLE.spellSchools[school];
+
+		const { roll } = await actor.rollSkillCheck('arcana', {
+			// States the cause and the stake, so the dialog does not appear out of
+			// nowhere with nothing said about what a failure costs.
+			checkHint: localize('NIMBLE.spellScroll.arcanaCheckHint', {
+				school: schoolLabel ? localize(schoolLabel) : school,
+			}),
+		});
 		if (!roll) return 'cancelled';
 
 		const succeeded = (roll.total ?? 0) >= SPELL_SCROLL_ARCANA_DC;

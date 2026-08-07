@@ -3268,7 +3268,8 @@
 				"arcanaFailure": "Arcana check failed — the scroll is wasted.",
 				"consumed": "{scroll} was consumed."
 			},
-			"confirmUse": "Use {scroll}? This will consume the scroll."
+			"confirmUse": "Use {scroll}? This will consume the scroll.",
+			"arcanaCheckHint": "You know no {school} spells, so reading this scroll needs a DC 10 Arcana check. On a failure the spell does not take effect and the scroll is wasted."
 		}
 	}
 }

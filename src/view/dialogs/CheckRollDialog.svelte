@@ -27,6 +27,18 @@
 </script>
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
+	{#if data.checkHint}
+		<!--
+			Says why the check was raised and what turns on it. Only set when something
+			other than the player asked for the roll, so an ordinary skill click is
+			unchanged.
+		-->
+		<div class="nimble-hint nimble-hint--warning">
+			<i class="nimble-hint__icon fa-solid fa-circle-exclamation"></i>
+			<span>{data.checkHint}</span>
+		</div>
+	{/if}
+
 	<RollModeConfig bind:selectedRollMode />
 	{#if game.user?.isGM}
 		<div class="nimble-roll-modifiers-container">
