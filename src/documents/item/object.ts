@@ -118,9 +118,11 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	 * A spell scroll casts the spell it carries, with three differences from
 	 * casting that spell off a spell list: it costs no mana, it cannot be upcast
 	 * (an object never reaches the upcast dialog, which is gated on
-	 * `type === 'spell'`), and it is consumed. When the wielder knows no spell of
-	 * the scroll's school, a DC 10 Arcana check decides whether it takes effect —
-	 * and the scroll is spent either way.
+	 * `type === 'spell'`), and it is consumed.
+	 *
+	 * Consumption is the last thing that happens, and only after the player has
+	 * committed: a completed roll, or a failed Arcana check that wastes the scroll
+	 * per the rules. Cancelling any dialog along the way leaves the scroll intact.
 	 */
 	override async activate(
 		options: ItemActivationManager.ActivationOptions = {},
