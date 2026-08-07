@@ -2790,6 +2790,28 @@
 				"errorReservedKey": "That key is reserved by a built-in school.",
 				"errorDuplicateKey": "Duplicate key."
 			},
+			"customConditions": {
+				"name": "Custom Conditions",
+				"hint": "Add your own conditions alongside the built-in ones. They appear in the token HUD, condition lists, and anywhere a condition can be applied.",
+				"title": "Custom Conditions",
+				"manageButton": "Manage Conditions",
+				"intro": "Create conditions for your world — useful for statuses from content the system does not ship with. The name is what players see; the id is stored on each effect and is filled in for you. Pick an icon from your Foundry files.",
+				"empty": "No custom conditions yet. Add one to get started.",
+				"columnId": "Id",
+				"columnName": "Name",
+				"columnDescription": "Description",
+				"idPlaceholder": "e.g. hexed",
+				"namePlaceholder": "e.g. Hexed",
+				"descriptionPlaceholder": "What this condition does. Shown in condition tooltips.",
+				"chooseIcon": "Choose icon",
+				"addCondition": "Add Condition",
+				"remove": "Remove condition",
+				"save": "Save Conditions",
+				"saved": "Custom conditions saved.",
+				"errorEmptyId": "Id is required.",
+				"errorReservedId": "That id is reserved by a built-in condition.",
+				"errorDuplicateId": "Duplicate id."
+			},
 			"automationMenu": {
 				"name": "Automation",
 				"title": "Automation",

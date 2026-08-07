@@ -10,6 +10,7 @@ import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './i
 import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
+import { registerCustomConditionSettings } from './registerCustomConditionSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
 import { registerSpellScrollSettings } from './spellScrollSettings.js';
 
@@ -94,6 +95,7 @@ export default function registerSystemSettings() {
 	registerLanguageSettings();
 	registerSpellSchoolSettings();
 	registerSpellScrollSettings();
+	registerCustomConditionSettings();
 
 	game.settings.register(
 		SYSTEM_ID as 'core',
