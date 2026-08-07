@@ -51,6 +51,7 @@
 		selectedArray,
 		selectedAbilityScores = $bindable(),
 		selectedAncestrySave,
+		selectedBackground,
 		selectedClass,
 	} = $props();
 
@@ -69,7 +70,7 @@
 	let savingThrowDisadvantage = $derived(selectedClass?.system?.savingThrows?.disadvantage ?? null);
 
 	// Check if the ancestry bonus has a rule that neutralizes the disadvantaged save
-	let ancestryNeutralizesDisadvantage = $derived(() => {
+	let ancestryNeutralizesDisadvantage = $derived.by(() => {
 		const rules = [...(selectedAncestryBonus?.rules?.values() ?? [])];
 		return rules.some(
 			(rule) =>
@@ -80,6 +81,20 @@
 		);
 	});
 
+	// Backgrounds carry savingThrowRollMode rules too (Haunted Past adjusts WIL).
+	// Only `adjust` rules naming a specific save are previewed here; the group
+	// targets, `set` mode, and `requiresChoice` rules (which land on the chosen
+	// save, not on `target`) are resolved for real on submit.
+	let backgroundSaveAdjustments = $derived.by(() => {
+		const adjustments = {};
+		for (const rule of selectedBackground?.rules?.values() ?? []) {
+			if (rule.disabled || rule.type !== 'savingThrowRollMode') continue;
+			if (rule.mode !== 'adjust' || !rule.target || rule.requiresChoice) continue;
+			adjustments[rule.target] = (adjustments[rule.target] ?? 0) + rule.value;
+		}
+		return adjustments;
+	});
+
 	function isKeyAbility(abilityKey) {
 		return keyAbilityScores.includes(abilityKey);
 	}
@@ -87,10 +102,16 @@
 	function getSavingThrowStatus(abilityKey) {
 		if (abilityKey === savingThrowAdvantage) return 'advantage';
 		if (abilityKey === selectedAncestrySave) return 'advantage';
-		// Don't show disadvantage if ancestry neutralizes it
-		if (abilityKey === savingThrowDisadvantage && !ancestryNeutralizesDisadvantage()) {
-			return 'disadvantage';
-		}
+
+		// On the disadvantage path, compare the resolved roll mode rather than the
+		// adjustment's sign, so a background rule that only partly offsets a class
+		// disadvantage still reads as disadvantage.
+		let rollMode = 0;
+		if (abilityKey === savingThrowDisadvantage && !ancestryNeutralizesDisadvantage) rollMode = -1;
+		rollMode += backgroundSaveAdjustments[abilityKey] ?? 0;
+
+		if (rollMode > 0) return 'advantage';
+		if (rollMode < 0) return 'disadvantage';
 		return null;
 	}
 
