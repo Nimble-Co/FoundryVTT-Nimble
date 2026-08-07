@@ -258,6 +258,67 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});
 
+	it('leaves the default roll modes alone for a situational savingThrowRollMode rule', async () => {
+		// Survivalist's "advantage against poison saves" only applies when poison comes up,
+		// so folding it into the persisted default would hand out blanket advantage.
+		const actor = setupActorMock();
+
+		const classDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+			name: 'Warrior',
+			system: {
+				identifier: 'warrior',
+				savingThrows: { advantage: 'strength', disadvantage: 'dexterity' },
+			},
+		});
+		const backgroundDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-backgrounds.Item.survivalist',
+			name: 'Survivalist',
+			system: {
+				rules: [
+					{
+						type: 'savingThrowRollMode',
+						label: 'Survivalist',
+						value: 1,
+						target: 'all',
+						mode: 'adjust',
+						situation: 'poison',
+					},
+				],
+			},
+		});
+
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => {
+				if (uuid === classDocument.uuid) return classDocument;
+				if (uuid === backgroundDocument.uuid) return backgroundDocument;
+				return null;
+			}),
+		);
+
+		const dialog = new CharacterCreationDialog();
+		await dialog.submitCharacterCreation({
+			name: 'Test Character',
+			origins: {
+				characterClass: { uuid: classDocument.uuid },
+				background: { uuid: backgroundDocument.uuid },
+			},
+			languages: [],
+			classFeatures: { autoGrant: [], selected: new Map() },
+			spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+		});
+
+		const updateCall = actor.update.mock.calls[0][0] as {
+			system: { savingThrows: Record<string, number> };
+		};
+		const savingThrows = updateCall.system.savingThrows;
+		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+		expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
+		expect(savingThrows['intelligence.defaultRollMode']).toBe(0);
+		expect(savingThrows['will.defaultRollMode']).toBe(0);
+	});
+
 	describe('ancestry bonus handling', () => {
 		function createClassDocument() {
 			return createItemDocument({

@@ -103,6 +103,8 @@ const saveConfig = {
 	defaultRollModeSubtitle: 'NIMBLE.saveConfig.defaultRollModeSubtitle',
 	ancestryTraits: 'NIMBLE.saveConfig.ancestryTraits',
 	ancestryTraitsSubtitle: 'NIMBLE.saveConfig.ancestryTraitsSubtitle',
+	situational: 'NIMBLE.saveConfig.situational',
+	situationalSubtitle: 'NIMBLE.saveConfig.situationalSubtitle',
 	abilityMod: 'NIMBLE.saveConfig.abilityMod',
 	flatBonus: 'NIMBLE.saveConfig.flatBonus',
 	rollMode: 'NIMBLE.saveConfig.rollMode',

@@ -236,6 +236,9 @@
 			"defaultRollModeSubtitle": "Advantage or disadvantage on saves",
 			"ancestryTraits": "Ancestry Traits",
 			"ancestryTraitsSubtitle": "Features that enhance a save of your choice",
+			"situational": "Situational",
+			"situationalSubtitle": "Applies only in the listed circumstance — apply it yourself when it comes up",
+			"situationalEffect": "{rollMode} against {situation}",
 			"abilityMod": "Ability Mod",
 			"flatBonus": "Flat Bonus",
 			"rollMode": "Roll Mode",
@@ -1311,6 +1314,10 @@
 				},
 				"requiresChoice": {
 					"label": "Player chooses save at use"
+				},
+				"situation": {
+					"label": "Only against",
+					"hint": "Leave blank to change the default roll mode. Naming a circumstance (e.g. \"poison\") instead lists the rule as a reminder on the saving throw config, since it only applies when that comes up."
 				}
 			},
 			"skillBonus": {

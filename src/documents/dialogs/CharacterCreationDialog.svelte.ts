@@ -21,6 +21,7 @@ type SavingThrowRollModeRuleData = {
 	target?: string;
 	mode?: string;
 	value?: number;
+	situation?: string;
 };
 
 function resolveTargetSaves(
@@ -78,6 +79,9 @@ function resolveSavingThrowRollModes({
 		.sort((a, b) => (a.priority ?? 1) - (b.priority ?? 1));
 
 	for (const rule of rollModeRules) {
+		// A situational rule ("advantage against poison saves") only applies when that
+		// circumstance comes up, so it must not move the persisted default roll mode.
+		if (rule.situation) continue;
 		if (rule.requiresChoice && !selectedAncestrySave) continue;
 
 		const effectiveSave = rule.requiresChoice ? selectedAncestrySave : (rule.selectedSave ?? null);

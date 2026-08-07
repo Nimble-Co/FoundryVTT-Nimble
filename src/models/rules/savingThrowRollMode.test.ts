@@ -11,6 +11,14 @@ describe('SavingThrowRollModeRule', () => {
 			expect(schema).toHaveProperty('selectedSave');
 			expect(schema).toHaveProperty('mode');
 			expect(schema).toHaveProperty('requiresChoice');
+			expect(schema).toHaveProperty('situation');
+		});
+
+		it('defaults situation to blank so ordinary rules stay non-situational', () => {
+			const schema = SavingThrowRollModeRule.defineSchema();
+			const situation = schema.situation as unknown as { initial: string; blank: boolean };
+			expect(situation.initial).toBe('');
+			expect(situation.blank).toBe(true);
 		});
 
 		it('declares the closed mode choice set', () => {
