@@ -1,10 +1,9 @@
 <script>
 	import localize from '#utils/localize.ts';
 	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
-	import {
-		calculateDefaultRollModes,
-		collectSituationalRules,
-	} from './ActorSavingThrowConfigDialog.utils.js';
+	import { calculateDefaultRollModes } from './ActorSavingThrowConfigDialog.utils.js';
+	import formatRollModeLabel from './formatRollModeLabel.js';
+	import { collectSituationalRules } from './situationalSaveRules.js';
 
 	function formatModifier(value) {
 		return replaceHyphenWithMinusSign(
@@ -12,16 +11,6 @@
 				signDisplay: 'always',
 			}).format(value),
 		);
-	}
-
-	function formatRollModeLabel(value) {
-		if (value > 0) return localize('NIMBLE.saveConfig.rollModeAdvantage', { count: String(value) });
-		if (value < 0) {
-			return localize('NIMBLE.saveConfig.rollModeDisadvantage', {
-				count: String(Math.abs(value)),
-			});
-		}
-		return localize('NIMBLE.saveConfig.rollModeNormal');
 	}
 
 	function toggleSavingThrowRollMode(savingThrow, rollMode) {

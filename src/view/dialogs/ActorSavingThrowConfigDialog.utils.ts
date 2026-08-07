@@ -25,15 +25,6 @@ interface ClassSavingThrowDefaults {
 	disadvantage?: string | null;
 }
 
-export interface SituationalRollModeRule {
-	/** The rule's own label, falling back to the item that carries it. */
-	label: string;
-	/** The circumstance the rule applies in, verbatim from the rule. */
-	situation: string;
-	/** The roll mode level the rule grants when that circumstance comes up. */
-	value: number;
-}
-
 function collectRollModeRules(items: Iterable<RuleBearingItem>): SavingThrowRollModeRuleData[] {
 	const rules: SavingThrowRollModeRuleData[] = [];
 
@@ -124,30 +115,4 @@ export function calculateDefaultRollModes(
 	}
 
 	return rollModes;
-}
-
-/**
- * The actor's situational roll-mode rules, in the order they should be listed as reminders.
- * These never move a stored default — see {@link calculateDefaultRollModes}.
- */
-export function collectSituationalRules(
-	items: Iterable<RuleBearingItem>,
-): SituationalRollModeRule[] {
-	const situational: SituationalRollModeRule[] = [];
-
-	for (const item of items) {
-		if (!item.rules) continue;
-		for (const rule of item.rules.values()) {
-			if (rule.type !== 'savingThrowRollMode' || rule.disabled || !rule.situation) continue;
-			// A zero-valued rule grants nothing, and would render as "Normal against poison".
-			if (!rule.value) continue;
-			situational.push({
-				label: rule.label || item.name || '',
-				situation: rule.situation,
-				value: rule.value,
-			});
-		}
-	}
-
-	return situational;
 }

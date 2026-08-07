@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-	calculateDefaultRollModes,
-	collectSituationalRules,
-} from './ActorSavingThrowConfigDialog.utils.js';
+import { calculateDefaultRollModes } from './ActorSavingThrowConfigDialog.utils.js';
 
 const SAVING_THROW_KEYS = ['strength', 'dexterity', 'intelligence', 'will'];
 
@@ -259,61 +256,5 @@ describe('calculateDefaultRollModes', () => {
 		];
 
 		expect(calculateDefaultRollModes(items, WARRIOR_SAVES, SAVING_THROW_KEYS).will).toBe(2);
-	});
-});
-
-describe('collectSituationalRules', () => {
-	it('returns only rules that name a situation', () => {
-		const items = [
-			createItem('Survivalist', [
-				{ type: 'savingThrowRollMode', label: 'Survivalist', value: 1, situation: 'poison' },
-				{ type: 'savingThrowRollMode', value: 1, mode: 'adjust' },
-				{ type: 'maxHitDice', situation: 'poison' },
-			]),
-		];
-
-		expect(collectSituationalRules(items)).toEqual([
-			{ label: 'Survivalist', situation: 'poison', value: 1 },
-		]);
-	});
-
-	it('skips disabled situational rules', () => {
-		const items = [
-			createItem('Survivalist', [
-				{ type: 'savingThrowRollMode', value: 1, situation: 'poison', disabled: true },
-			]),
-		];
-
-		expect(collectSituationalRules(items)).toEqual([]);
-	});
-
-	it('falls back to the item name when the rule carries no label', () => {
-		const items = [
-			createItem('Haunted Past', [{ type: 'savingThrowRollMode', value: 1, situation: 'fear' }]),
-		];
-
-		expect(collectSituationalRules(items)).toEqual([
-			{ label: 'Haunted Past', situation: 'fear', value: 1 },
-		]);
-	});
-
-	it('skips a zero-valued rule rather than listing a reminder that grants nothing', () => {
-		const items = [
-			createItem('Survivalist', [{ type: 'savingThrowRollMode', value: 0, situation: 'poison' }]),
-		];
-
-		expect(collectSituationalRules(items)).toEqual([]);
-	});
-
-	it('handles an item carrying no rules', () => {
-		expect(collectSituationalRules([{ name: 'Bare' }])).toEqual([]);
-	});
-
-	it('yields a blank label when neither the rule nor the item is named', () => {
-		const items = [
-			{ rules: new Map([['0', { type: 'savingThrowRollMode', value: 1, situation: 'fear' }]]) },
-		];
-
-		expect(collectSituationalRules(items)).toEqual([{ label: '', situation: 'fear', value: 1 }]);
 	});
 });

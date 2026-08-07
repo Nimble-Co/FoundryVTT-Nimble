@@ -4,14 +4,15 @@
 	import { untrack } from 'svelte';
 
 	import { SYSTEM_ID } from '#system';
+	import localize from '#utils/localize.ts';
 	import Hint from '#view/components/Hint.svelte';
 	import getRollFormula from '../../utils/getRollFormula.js';
-	import localize from '../../utils/localize.js';
 	import {
 		getSituationalRollModeOptions,
 		type SituationalRollModeOption,
 	} from './CheckRollDialog.utils.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
+	import { collectSituationalRules } from './situationalSaveRules.js';
 
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
@@ -21,14 +22,15 @@
 
 	// Rules are re-instantiated on every data-prep cycle, so the options are resolved
 	// once for the life of the dialog rather than tracked reactively.
-	const situationalOptions = untrack(() =>
-		getSituationalRollModeOptions(actor, {
+	const situationalOptions = untrack(() => [
+		...getSituationalRollModeOptions(actor, {
 			type,
 			abilityKey: data.abilityKey,
 			saveKey: data.saveKey,
 			skillKey: data.skillKey,
 		}),
-	);
+		...savingThrowSituationalOptions(),
+	]);
 
 	// Keyed by option, holding the adjustment actually applied to the slider rather
 	// than the option's own value: clamping at the slider's ends can swallow part of
@@ -46,6 +48,23 @@
 			type,
 		});
 	});
+
+	// A `savingThrowRollMode` rule that names a circumstance ("advantage against poison
+	// saves") never moves the stored default, so it is offered here instead. It carries no
+	// predicate or target of its own, which is why it is not a `situationalRollMode`.
+	function savingThrowSituationalOptions(): SituationalRollModeOption[] {
+		if (type !== 'savingThrow') return [];
+
+		return collectSituationalRules(actor.items ?? []).map((rule, index) => ({
+			key: `savingThrowRollMode:${index}`,
+			label: localize('NIMBLE.saveConfig.situationalToggle', {
+				label: rule.label,
+				situation: rule.situation,
+			}),
+			icon: '',
+			value: rule.value,
+		}));
+	}
 
 	function isSelected(option: SituationalRollModeOption): boolean {
 		return option.key in appliedAdjustments;
