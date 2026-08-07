@@ -20,19 +20,8 @@ const POISON_SAVE_RULE = {
 } as const;
 
 /**
- * The description the pack shipped before the rule was added. Only this exact string is
- * upgraded, so a hand-customized description is left alone.
- */
-const OLD_DESCRIPTION =
-	'<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>';
-
-/** The same description with the new rule listed in the `[M]` mechanics summary. */
-const NEW_DESCRIPTION = `${OLD_DESCRIPTION}<p>Advantage against poison saves [M]</p>`;
-
-/**
  * Backfills the Survivalist background's "Advantage against poison saves" rule,
- * which the pack gained after the background was already draggable, along with the
- * `[M]` summary line the pack description gained alongside it.
+ * which the pack gained after the background was already draggable.
  *
  * The rule is situational, so it changes no stored value on the actor — it only
  * needs to be present on the embedded item for the saving throw config dialog to
@@ -57,21 +46,11 @@ class Migration042SurvivalistPoisonSave extends MigrationBase {
 
 		const system = (source.system ??= {} as Record<string, unknown>);
 		const rules: RuleSource[] = Array.isArray(system.rules) ? system.rules : (system.rules = []);
-		let changed = false;
 
-		if (!rules.some((rule) => rule?.id === POISON_SAVE_RULE.id)) {
-			rules.push({ ...POISON_SAVE_RULE });
-			changed = true;
-		}
+		if (rules.some((rule) => rule?.id === POISON_SAVE_RULE.id)) return;
 
-		if (system.description === OLD_DESCRIPTION) {
-			system.description = NEW_DESCRIPTION;
-			changed = true;
-		}
-
-		if (changed) {
-			console.log(`Nimble Migration | ${source.name ?? 'Survivalist'}: added poison save reminder`);
-		}
+		rules.push({ ...POISON_SAVE_RULE });
+		console.log(`Nimble Migration | ${source.name ?? 'Survivalist'}: added poison save reminder`);
 	}
 
 	#isSurvivalist(source: any): boolean {

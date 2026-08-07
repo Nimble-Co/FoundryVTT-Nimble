@@ -239,6 +239,7 @@
 			"situational": "Situational",
 			"situationalSubtitle": "Applies only in the listed circumstance — apply it yourself when it comes up",
 			"situationalEffect": "{rollMode} against {situation}",
+			"situationalToggle": "{label} — against {situation}",
 			"rollModeAdvantage": "Adv ×{count}",
 			"rollModeDisadvantage": "Dis ×{count}",
 			"rollModeNormal": "Normal",
