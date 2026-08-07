@@ -18,7 +18,6 @@
 				"type": "savingThrowRollMode",
 				"label": "Survivalist",
 				"value": 1,
-				"target": "all",
 				"mode": "adjust",
 				"situation": "poison",
 				"id": "8pUORSgg0CfUHYPc"

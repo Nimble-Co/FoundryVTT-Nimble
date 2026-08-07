@@ -8,8 +8,8 @@ import { MigrationBase } from '../MigrationBase.js';
  *
  * A snapshot, deliberately: a migration has to describe the world as it was when the split
  * shipped. `dev-rebrand.mjs` only rewrites `packs/**` — not `src/**` — so on the `nimble-dev`
- * build an actor's stored source id reads `Compendium.nimble-dev.…`. `normalizePackSource`
- * below folds it back onto these stable keys.
+ * build an actor's stored source id reads `Compendium.nimble-dev.…`. `toSnapshotId`, imported
+ * from `../compendiumSourceId.js`, folds it back onto these stable keys.
  */
 const DEFAULT_BONUSES: Record<string, { bonus: string; trait: string }> = {
 	// Birdfolk

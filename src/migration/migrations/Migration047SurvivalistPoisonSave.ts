@@ -1,12 +1,10 @@
+import { toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
-/** Namespace the source id below is written under. */
-const SNAPSHOT_PREFIX = 'Compendium.nimble.';
-
-/** Every namespace a stored id could carry: the stable id, or the dev rebrand. */
-const STORED_PREFIXES = [SNAPSHOT_PREFIX, 'Compendium.nimble-dev.'];
-
 const SURVIVALIST_SOURCE_ID = 'Compendium.nimble.nimble-backgrounds.Item.qKknqLqzT7BReZul';
+
+/** The shape a stored rule entry is read back as. */
+type RuleSource = Record<string, unknown> & { id?: unknown };
 
 /**
  * The rule the pack now ships. The id matches the pack entry so a migrated copy
@@ -16,32 +14,37 @@ const POISON_SAVE_RULE = {
 	type: 'savingThrowRollMode',
 	label: 'Survivalist',
 	value: 1,
-	target: 'all',
 	mode: 'adjust',
 	situation: 'poison',
 	id: '8pUORSgg0CfUHYPc',
 } as const;
 
 /**
- * Folds a stored source id onto the namespace the spec uses. `dev-rebrand.mjs`
- * rewrites `packs/**` but not `src/**`, so on the dev build a character's stored
- * id reads `Compendium.nimble-dev.…` and would never match the literal above.
- * The document ids are identical across both installs, so the fold is exact.
+ * The description the pack shipped before the rule was added. Only this exact string is
+ * upgraded, so a hand-customized description is left alone.
  */
-function toSnapshotId(packSource: string | undefined): string | undefined {
-	if (!packSource) return packSource;
-	const prefix = STORED_PREFIXES.find((candidate) => packSource.startsWith(candidate));
-	return prefix ? `${SNAPSHOT_PREFIX}${packSource.slice(prefix.length)}` : packSource;
-}
+const OLD_DESCRIPTION =
+	'<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>';
+
+/** The same description with the new rule listed in the `[M]` mechanics summary. */
+const NEW_DESCRIPTION = `${OLD_DESCRIPTION}<p>Advantage against poison saves [M]</p>`;
 
 /**
  * Backfills the Survivalist background's "Advantage against poison saves" rule,
- * which the pack gained after the background was already draggable.
+ * which the pack gained after the background was already draggable, along with the
+ * `[M]` summary line the pack description gained alongside it.
  *
  * The rule is situational, so it changes no stored value on the actor — it only
  * needs to be present on the embedded item for the saving throw config dialog to
  * list it. Existing rules are left alone, so a hand-authored equivalent is kept
  * and only duplicated if it carries a different id.
+ *
+ * Note the limit of the name fallback. A background whose stored source id does not
+ * match the pack entry — missing, or pointing at a world or homebrew copy — is matched
+ * on its name alone, so a GM's own background called "Survivalist" also gains the rule.
+ * There is no better signal on a background: unlike a class feature it carries no
+ * `system.class` to narrow against, and skipping every unmatched copy would miss the
+ * imported characters this migration exists for.
  */
 class Migration047SurvivalistPoisonSave extends MigrationBase {
 	static override readonly version = 47;
@@ -53,12 +56,22 @@ class Migration047SurvivalistPoisonSave extends MigrationBase {
 		if (!this.#isSurvivalist(source)) return;
 
 		const system = (source.system ??= {} as Record<string, unknown>);
-		const rules: any[] = Array.isArray(system.rules) ? system.rules : (system.rules = []);
+		const rules: RuleSource[] = Array.isArray(system.rules) ? system.rules : (system.rules = []);
+		let changed = false;
 
-		if (rules.some((rule) => rule?.id === POISON_SAVE_RULE.id)) return;
+		if (!rules.some((rule) => rule?.id === POISON_SAVE_RULE.id)) {
+			rules.push({ ...POISON_SAVE_RULE });
+			changed = true;
+		}
 
-		rules.push({ ...POISON_SAVE_RULE });
-		console.log(`Nimble Migration | ${source.name ?? 'Survivalist'}: added poison save reminder`);
+		if (system.description === OLD_DESCRIPTION) {
+			system.description = NEW_DESCRIPTION;
+			changed = true;
+		}
+
+		if (changed) {
+			console.log(`Nimble Migration | ${source.name ?? 'Survivalist'}: added poison save reminder`);
+		}
 	}
 
 	#isSurvivalist(source: any): boolean {

@@ -76,7 +76,10 @@
 				rule.type === 'savingThrowRollMode' &&
 				rule.target === 'disadvantaged' &&
 				rule.value === 0 &&
-				rule.mode === 'set',
+				rule.mode === 'set' &&
+				// `resolveSavingThrowRollModes` skips situational rules, so the disadvantage is
+				// still persisted and must still be shown here.
+				!rule.situation,
 		);
 	});
 
