@@ -1,6 +1,10 @@
 <script>
 	import localize from '#utils/localize.ts';
 	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import {
+		calculateDefaultRollModes,
+		collectSituationalRules,
+	} from './ActorSavingThrowConfigDialog.utils.js';
 
 	function formatModifier(value) {
 		return replaceHyphenWithMinusSign(
@@ -11,9 +15,13 @@
 	}
 
 	function formatRollModeLabel(value) {
-		if (value > 0) return `Adv ×${value}`;
-		if (value < 0) return `Dis ×${Math.abs(value)}`;
-		return 'Normal';
+		if (value > 0) return localize('NIMBLE.saveConfig.rollModeAdvantage', { count: String(value) });
+		if (value < 0) {
+			return localize('NIMBLE.saveConfig.rollModeDisadvantage', {
+				count: String(Math.abs(value)),
+			});
+		}
+		return localize('NIMBLE.saveConfig.rollModeNormal');
 	}
 
 	function toggleSavingThrowRollMode(savingThrow, rollMode) {
@@ -28,88 +36,24 @@
 		});
 	}
 
+	/** The class defaults the calculated roll modes build on, or null for a classless actor. */
+	function primaryClassSavingThrows() {
+		const primaryClass = Object.values(document.classes ?? {})[0];
+		return primaryClass?.system?.savingThrows ?? null;
+	}
+
 	async function resetSavingThrowRollModes() {
-		const classes = document.classes ?? {};
-		const primaryClass = Object.values(classes)[0];
-		if (!primaryClass) return;
+		const classSavingThrows = primaryClassSavingThrows();
+		if (!classSavingThrows) return;
 
-		const savingThrowDefaults = primaryClass.system.savingThrows;
+		const rollModes = calculateDefaultRollModes(document.items, classSavingThrows, savingThrowKeys);
 
-		// Start with all saves at 0
-		const rollModes = Object.fromEntries(savingThrowKeys.map((key) => [key, 0]));
-
-		// Apply class defaults (+1 advantage, -1 disadvantage)
-		if (savingThrowDefaults.advantage) {
-			rollModes[savingThrowDefaults.advantage] = 1;
-		}
-		if (savingThrowDefaults.disadvantage) {
-			rollModes[savingThrowDefaults.disadvantage] = -1;
-		}
-
-		// Apply savingThrowRollMode rules from ancestry and items
-		// Process rules in priority order (same as prePrepareData)
-		const allRules = document.items.contents
-			.flatMap((item) => [...item.rules.values()])
-			.filter((rule) => !rule.disabled && rule.type === 'savingThrowRollMode')
-			.sort((a, b) => a.priority - b.priority);
-
-		for (const rule of allRules) {
-			// Situational rules are reminders, not defaults — see the situational section below
-			if (rule.situation) continue;
-			// Skip choice-based rules that haven't been configured
-			if (rule.requiresChoice && !rule.selectedSave) continue;
-
-			const targetSaves = getTargetSavesForRule(rule, rollModes);
-
-			for (const saveKey of targetSaves) {
-				if (rule.mode === 'set') {
-					rollModes[saveKey] = rule.value;
-				} else {
-					// adjust mode
-					rollModes[saveKey] = Math.max(-3, Math.min(3, rollModes[saveKey] + rule.value));
-				}
-			}
-		}
-
-		// Build update object
 		const updates = {};
 		for (const saveKey of savingThrowKeys) {
 			updates[`system.savingThrows.${saveKey}.defaultRollMode`] = rollModes[saveKey];
 		}
 
 		await document.update(updates);
-	}
-
-	function getTargetSavesForRule(rule, currentRollModes) {
-		const { target, selectedSave } = rule;
-
-		// If a specific save was selected (for choice-based rules like Fiendkin)
-		if (selectedSave && savingThrowKeys.includes(selectedSave)) {
-			return [selectedSave];
-		}
-
-		// Handle specific save key targets
-		if (savingThrowKeys.includes(target)) {
-			return [target];
-		}
-
-		// Handle special targets
-		switch (target) {
-			case 'all':
-				return savingThrowKeys;
-
-			case 'advantaged':
-				return savingThrowKeys.filter((key) => currentRollModes[key] > 0);
-
-			case 'disadvantaged':
-				return savingThrowKeys.filter((key) => currentRollModes[key] < 0);
-
-			case 'neutral':
-				return savingThrowKeys.filter((key) => currentRollModes[key] === 0);
-
-			default:
-				return [];
-		}
 	}
 
 	const { savingThrows, saveConfig } = CONFIG.NIMBLE;
@@ -171,7 +115,14 @@
 		for (const item of document.items) {
 			if (!item.rules) continue;
 			for (const [, rule] of item.rules) {
-				if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && !rule.disabled) {
+				// `!rule.situation`: a situational rule never reaches the roll-mode calculation,
+				// so offering its save picker would make the player choose a save nothing consumes.
+				if (
+					rule.type === 'savingThrowRollMode' &&
+					rule.requiresChoice &&
+					!rule.disabled &&
+					!rule.situation
+				) {
 					rules.push({
 						rule,
 						item,
@@ -188,27 +139,19 @@
 
 	// Rules that only apply in a named circumstance ("advantage against poison saves").
 	// A persisted default roll mode can't express that, so they're listed as reminders
-	// instead of being folded into the calculated defaults above.
+	// instead of being folded into the calculated defaults. `target` is deliberately not
+	// surfaced: nothing narrows a situational rule to a save, so naming one would imply a
+	// scope the system never applies.
 	let situationalRules = $derived.by(() => {
 		// Access reactive to ensure this derived re-runs when items update
 		const _ = document.reactive.items;
-		const rules = [];
-		for (const item of document.items) {
-			if (!item.rules) continue;
-			for (const [, rule] of item.rules) {
-				if (rule.type !== 'savingThrowRollMode' || rule.disabled || !rule.situation) continue;
-				// `target` is deliberately not surfaced: nothing narrows a situational rule to
-				// a save, so naming one would imply a scope the system never applies.
-				rules.push({
-					label: rule.label || item.name,
-					summary: localize('NIMBLE.saveConfig.situationalEffect', {
-						rollMode: formatRollModeLabel(rule.value),
-						situation: rule.situation,
-					}),
-				});
-			}
-		}
-		return rules;
+		return collectSituationalRules(document.items).map((rule) => ({
+			label: rule.label,
+			summary: localize('NIMBLE.saveConfig.situationalEffect', {
+				rollMode: formatRollModeLabel(rule.value),
+				situation: rule.situation,
+			}),
+		}));
 	});
 
 	// Get available save options for a choice-based rule based on its target
@@ -270,45 +213,14 @@
 		// NPCs don't have classes, so we can't check class defaults
 		if (!hasClasses) return false;
 
-		const classes = document.classes ?? {};
-		const primaryClass = Object.values(classes)[0];
-		if (!primaryClass) return false;
+		const classSavingThrows = primaryClassSavingThrows();
+		if (!classSavingThrows) return false;
 
-		const savingThrowDefaults = primaryClass.system.savingThrows;
-
-		// Calculate expected defaults (same logic as reset function)
-		const expectedRollModes = Object.fromEntries(savingThrowKeys.map((key) => [key, 0]));
-
-		if (savingThrowDefaults.advantage) {
-			expectedRollModes[savingThrowDefaults.advantage] = 1;
-		}
-		if (savingThrowDefaults.disadvantage) {
-			expectedRollModes[savingThrowDefaults.disadvantage] = -1;
-		}
-
-		// Apply savingThrowRollMode rules
-		const allRules = document.items.contents
-			.flatMap((item) => [...item.rules.values()])
-			.filter((rule) => !rule.disabled && rule.type === 'savingThrowRollMode')
-			.sort((a, b) => a.priority - b.priority);
-
-		for (const rule of allRules) {
-			if (rule.situation) continue;
-			if (rule.requiresChoice && !rule.selectedSave) continue;
-
-			const targetSaves = getTargetSavesForRule(rule, expectedRollModes);
-
-			for (const saveKey of targetSaves) {
-				if (rule.mode === 'set') {
-					expectedRollModes[saveKey] = rule.value;
-				} else {
-					expectedRollModes[saveKey] = Math.max(
-						-3,
-						Math.min(3, expectedRollModes[saveKey] + rule.value),
-					);
-				}
-			}
-		}
+		const expectedRollModes = calculateDefaultRollModes(
+			document.items,
+			classSavingThrows,
+			savingThrowKeys,
+		);
 
 		// Compare current values to expected defaults
 		for (const saveKey of savingThrowKeys) {

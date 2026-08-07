@@ -239,6 +239,9 @@
 			"situational": "Situational",
 			"situationalSubtitle": "Applies only in the listed circumstance — apply it yourself when it comes up",
 			"situationalEffect": "{rollMode} against {situation}",
+			"rollModeAdvantage": "Adv ×{count}",
+			"rollModeDisadvantage": "Dis ×{count}",
+			"rollModeNormal": "Normal",
 			"abilityMod": "Ability Mod",
 			"flatBonus": "Flat Bonus",
 			"rollMode": "Roll Mode",
@@ -1299,7 +1302,7 @@
 				}
 			},
 			"savingThrowRollMode": {
-				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use.",
+				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use. Naming a situation instead lists the rule as a reminder on the saving throw config and leaves the stored default roll mode alone.",
 				"value": {
 					"label": "Roll mode value"
 				},

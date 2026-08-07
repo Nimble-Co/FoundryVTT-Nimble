@@ -105,6 +105,11 @@ const saveConfig = {
 	ancestryTraitsSubtitle: 'NIMBLE.saveConfig.ancestryTraitsSubtitle',
 	situational: 'NIMBLE.saveConfig.situational',
 	situationalSubtitle: 'NIMBLE.saveConfig.situationalSubtitle',
+	// `NIMBLE.saveConfig.situationalEffect` and the `rollMode*` labels are deliberately absent:
+	// the dialog resolves them from literal keys — the `rollMode*` labels inside
+	// `formatRollModeLabel`, `situationalEffect` in the `situationalRules` derived — so a
+	// prelocalized copy here would never be read. Registering an interpolated template is fine
+	// when the consumer formats the CONFIG value instead — see `speaks` and `choose` above.
 	abilityMod: 'NIMBLE.saveConfig.abilityMod',
 	flatBonus: 'NIMBLE.saveConfig.flatBonus',
 	rollMode: 'NIMBLE.saveConfig.rollMode',
