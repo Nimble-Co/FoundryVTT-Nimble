@@ -3258,10 +3258,10 @@
 				"arcanaRequired": "DC 10 — {actor} knows no {school} spells",
 				"sharesSlot": "Shares a slot with small items",
 				"secretBadge": "Secret",
-				"add": "Add",
-				"inscribe": "Inscribe",
-				"cancel": "Cancel",
-				"noCandidates": "No {tier} spells are available to inscribe."
+				"inscribe": "Inscribe and add to inventory",
+				"noCandidates": "No {tier} spells are available to inscribe.",
+				"submitAddToSpellList": "Add to spell list",
+				"submitAddToInventory": "Add to inventory"
 			},
 			"chat": {
 				"arcanaSuccess": "Arcana check succeeded — the scroll takes effect.",
