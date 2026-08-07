@@ -14,8 +14,25 @@ export interface SpellIndexEntry {
 	school: string;
 	tier: number;
 	isUtility: boolean;
+	/**
+	 * Whether this spell is flagged `secretSpell`. Optional because it only
+	 * carries information when the index was built with `includeSecretSpells`;
+	 * without that opt-in no secret spell is indexed at all, so a caller cannot
+	 * surface one by accident.
+	 */
+	isSecret?: boolean;
 	/** Class restrictions - empty array means available to all classes */
 	classes: string[];
+}
+
+/** Options for {@link buildSpellIndex}. */
+export interface BuildSpellIndexOptions {
+	/**
+	 * Include spells flagged `secretSpell`. Defaults to false: secret spells are
+	 * never granted during character creation. Only the GM-facing spell scroll
+	 * picker opts in, because a GM may inscribe a secret spell onto a scroll.
+	 */
+	includeSecretSpells?: boolean;
 }
 
 /**
@@ -48,7 +65,8 @@ interface SpellPackIndexEntry {
  * Call this when opening the character creator, then use getSpellsFromIndex
  * for instant lookups.
  */
-export async function buildSpellIndex(): Promise<SpellIndex> {
+export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Promise<SpellIndex> {
+	const includeSecretSpells = options.includeSecretSpells ?? false;
 	const index: SpellIndex = new Map();
 
 	// Track seen UUIDs to avoid duplicates.
@@ -93,8 +111,10 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 
 		const selectedProperties = system.properties?.selected ?? [];
 
-		// Skip secret spells - they should never be granted during character creation
-		if (selectedProperties.includes('secretSpell')) continue;
+		// Secret spells are never granted during character creation; only the
+		// GM-facing scroll picker opts in.
+		const isSecret = selectedProperties.includes('secretSpell');
+		if (isSecret && !includeSecretSpells) continue;
 
 		const isUtility = selectedProperties.includes('utilitySpell');
 
@@ -105,6 +125,7 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			school: system.school,
 			tier: system.tier ?? 0,
 			isUtility,
+			isSecret,
 			classes: system.classes ?? [],
 		});
 
@@ -143,8 +164,10 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 
 			const selectedProperties = system.properties?.selected ?? [];
 
-			// Skip secret spells - they should never be granted during character creation
-			if (selectedProperties.includes('secretSpell')) continue;
+			// Secret spells are never granted during character creation; only the
+			// GM-facing scroll picker opts in.
+			const isSecret = selectedProperties.includes('secretSpell');
+			if (isSecret && !includeSecretSpells) continue;
 
 			const isUtility = selectedProperties.includes('utilitySpell');
 
@@ -155,6 +178,7 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 				school: system.school,
 				tier: system.tier ?? 0,
 				isUtility,
+				isSecret,
 				classes: system.classes ?? [],
 			});
 		}

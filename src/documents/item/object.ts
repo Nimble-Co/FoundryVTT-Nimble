@@ -1,6 +1,14 @@
+import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
+import getSpellScrollData from '#utils/getSpellScrollData.js';
+import knowsSpellSchool from '#utils/knowsSpellSchool.js';
+import localize from '#utils/localize.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
+import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 
 import { NimbleBaseItem } from './base.svelte.js';
+
+/** The check a scroll's wielder must pass when they know no spell of its school. */
+const SPELL_SCROLL_ARCANA_DC = 10;
 
 type RuleSourceLike = {
 	disabled?: boolean;
@@ -101,6 +109,92 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		}
 
 		return super._preCreate(data, options, user);
+	}
+
+	/**
+	 * Uses the object.
+	 *
+	 * A spell scroll casts the spell it carries, with three differences from
+	 * casting that spell off a spell list: it costs no mana, it cannot be upcast
+	 * (an object never reaches the upcast dialog, which is gated on
+	 * `type === 'spell'`), and it is consumed. When the wielder knows no spell of
+	 * the scroll's school, a DC 10 Arcana check decides whether it takes effect —
+	 * and the scroll is spent either way.
+	 */
+	override async activate(
+		options: ItemActivationManager.ActivationOptions = {},
+	): Promise<ChatMessage | null> {
+		const scroll = getSpellScrollData(this);
+		if (!scroll || options?.executeMacro) return super.activate(options);
+
+		const succeeded = await this.#rollScrollArcanaCheck(scroll.school);
+
+		// The scroll is consumed on a failure too: the rules waste it.
+		if (!succeeded) {
+			await this.#consumeScroll();
+			return null;
+		}
+
+		const chatCard = await super.activate(options);
+		await this.#consumeScroll();
+
+		return chatCard;
+	}
+
+	/**
+	 * Rolls the scroll's Arcana check when it is required, reporting the outcome
+	 * to chat. Returns whether the spell takes effect.
+	 */
+	async #rollScrollArcanaCheck(school: string): Promise<boolean> {
+		const actor = this.actor as
+			| (Actor & {
+					rollSkillCheck?: (
+						skillKey: 'arcana',
+						options: { skipRollDialog?: boolean },
+					) => Promise<{ roll: { total?: number | null } | null }>;
+			  })
+			| null;
+
+		// No actor to roll against, or the wielder already knows the school.
+		if (!actor?.rollSkillCheck) return true;
+		if (
+			knowsSpellSchool(actor as { items?: Iterable<{ type: string; system?: unknown }> }, school)
+		) {
+			return true;
+		}
+
+		const { roll } = await actor.rollSkillCheck('arcana', { skipRollDialog: true });
+		if (!roll) return false;
+
+		const succeeded = (roll.total ?? 0) >= SPELL_SCROLL_ARCANA_DC;
+
+		await ChatMessage.create({
+			speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+			flavor: this.name ?? '',
+			rolls: [roll as object as Roll],
+			content: localize(
+				succeeded
+					? 'NIMBLE.spellScroll.chat.arcanaSuccess'
+					: 'NIMBLE.spellScroll.chat.arcanaFailure',
+			),
+		} as ChatMessage.CreateData);
+
+		return succeeded;
+	}
+
+	/** Spends one use of the scroll, deleting it when the last one is gone. */
+	async #consumeScroll(): Promise<void> {
+		if (!this.isEmbedded) return;
+		if (!isResourceSpendingAutomationEnabled()) return;
+
+		const remaining = this.system.quantity - 1;
+
+		if (remaining > 0) {
+			await this.update({ 'system.quantity': remaining } as Record<string, unknown>);
+			return;
+		}
+
+		await this.delete();
 	}
 
 	/** ------------------------------------------------------ */
