@@ -16,10 +16,16 @@ export function ancestryBonusRequiresSaveChoice(
 	if (!rules.length) return false;
 
 	for (const rule of rules) {
-		// `disabled` is checked here to match `resolveSavingThrowRollModes`, which skips
-		// disabled rules at submit time. Without it a disabled rule would force the player
-		// through a save choice that is then thrown away.
-		if (!rule.disabled && rule.type === 'savingThrowRollMode' && rule.requiresChoice) {
+		// `disabled` and `situation` are checked here to match `resolveSavingThrowRollModes`,
+		// which skips both at submit time. Without them a disabled rule — or a situational one,
+		// which is only ever a reminder and never moves a save — would force the player through
+		// a save choice that is then thrown away.
+		if (
+			!rule.disabled &&
+			!rule.situation &&
+			rule.type === 'savingThrowRollMode' &&
+			rule.requiresChoice
+		) {
 			return true;
 		}
 	}
