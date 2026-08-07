@@ -6,8 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
-		"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p>"
+		"rules": [
+			{
+				"type": "savingThrowRollMode",
+				"disabled": false,
+				"id": "NWCRKRwheYMcCuFN",
+				"identifier": "",
+				"label": "Haunted Past",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"target": "will",
+				"mode": "adjust",
+				"requiresChoice": false
+			}
+		],
+		"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p><hr><p>+1 WIL save roll mode, since fear is resisted with WIL [A]</p>"
 	},
 	"effects": [],
 	"flags": {},

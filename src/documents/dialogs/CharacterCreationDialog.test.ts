@@ -258,6 +258,64 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});
 
+	it('adjusts the targeted save when a background has a savingThrowRollMode rule', async () => {
+		const actor = setupActorMock();
+
+		const classDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+			name: 'Warrior',
+			system: {
+				identifier: 'warrior',
+				savingThrows: { advantage: 'strength', disadvantage: 'will' },
+			},
+		});
+		// Mirrors the Haunted Past background: +1 roll mode on WIL, stacked on
+		// whatever the class already set rather than overwriting it.
+		const backgroundDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-backgrounds.Item.haunted-past',
+			name: 'Haunted Past',
+			system: {
+				rules: [
+					{
+						type: 'savingThrowRollMode',
+						label: 'Haunted Past',
+						value: 1,
+						target: 'will',
+						mode: 'adjust',
+					},
+				],
+			},
+		});
+
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => {
+				if (uuid === classDocument.uuid) return classDocument;
+				if (uuid === backgroundDocument.uuid) return backgroundDocument;
+				return null;
+			}),
+		);
+
+		const dialog = new CharacterCreationDialog();
+		await dialog.submitCharacterCreation({
+			name: 'Test Character',
+			origins: {
+				characterClass: { uuid: classDocument.uuid },
+				background: { uuid: backgroundDocument.uuid },
+			},
+			languages: [],
+			classFeatures: { autoGrant: [], selected: new Map() },
+			spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+		});
+
+		const updateCall = actor.update.mock.calls[0][0] as {
+			system: { savingThrows: Record<string, number> };
+		};
+		const savingThrows = updateCall.system.savingThrows;
+		expect(savingThrows['will.defaultRollMode']).toBe(0);
+		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+	});
+
 	describe('ancestry bonus handling', () => {
 		function createClassDocument() {
 			return createItemDocument({
