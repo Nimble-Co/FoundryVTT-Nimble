@@ -1,0 +1,23 @@
+{
+	"name": "Reflective Aura",
+	"type": "ancestryBonus",
+	"img": "icons/commodities/gems/gem-cluster-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504864999,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "1YtCep32COT7uAYP"
+}

@@ -1,0 +1,23 @@
+{
+	"name": "Small But Ferocious",
+	"type": "ancestryBonus",
+	"img": "icons/commodities/claws/claw-bear-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><strong>Small But Ferocious</strong> </p><p>Whenever you make a single-target attack against a creature larger than you, roll 1 additional d6 for each size category it is larger. They do the same.</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756513223725,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "eySxKgtWLbHJBK2W"
+}

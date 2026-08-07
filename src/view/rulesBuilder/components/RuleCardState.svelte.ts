@@ -10,6 +10,7 @@ export const FIXED_FIELDS = new Set([
 	'label',
 	'priority',
 	'predicate',
+	'suppressActivationCard',
 ]);
 
 export function createRuleCardState(
@@ -18,6 +19,22 @@ export function createRuleCardState(
 ) {
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[getRule().type as string]);
+	// Data-aware: dual-phase rules (e.g. speedBonus with a formula value) only
+	// evaluate their predicate in prePrepareData for some values, so pass the rule
+	// data rather than reading the class-level flag.
+	const appliesInPrePrepareData = $derived(
+		Boolean(
+			(
+				RuleClass as
+					| { appliesInPrePrepareDataFor?: (data: Record<string, unknown>) => boolean }
+					| undefined
+			)?.appliesInPrePrepareDataFor?.(getRule() as unknown as Record<string, unknown>),
+		),
+	);
+	// A rule the manager could not build, or built with unresolved validation
+	// failures, is silently absent or force-disabled at runtime while its source
+	// still renders here. Surface the reason so the card explains itself.
+	const failure = $derived(getManager()?.failureFor?.(getRule().id as string));
 	const ruleLabel = $derived(
 		(getRule().label as string) ||
 			localize(ruleTypes[getRule().type as string] ?? (getRule().type as string)),
@@ -130,6 +147,12 @@ export function createRuleCardState(
 		ruleTypes,
 		get RuleClass() {
 			return RuleClass;
+		},
+		get appliesInPrePrepareData() {
+			return appliesInPrePrepareData;
+		},
+		get failure() {
+			return failure;
 		},
 		get ruleLabel() {
 			return ruleLabel;

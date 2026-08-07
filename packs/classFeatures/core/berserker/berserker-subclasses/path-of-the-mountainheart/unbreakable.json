@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "unbreakable-use-pool",
+				"identifier": "unbreakableUse",
+				"label": "Unbreakable use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "unbreakable-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "unbreakableUse",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +53,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "ubkReminderNote001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "While Raging: negate the Wound or negative condition you would have suffered.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -33,7 +75,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/encounter)</em> While Raging, if you would suffer your last Wound or other negative condition of your choice, you don't.</p>",
+		"description": "<p><em>(1/encounter)</em> While Raging, if you would suffer your last Wound or other negative condition of your choice, you don't.</p><p><em>Click this feature to use it (limited to once per encounter). Negating the Wound or condition is handled manually.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "path-of-the-mountainheart",

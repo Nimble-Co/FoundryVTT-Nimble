@@ -125,7 +125,9 @@
 	// Fix any corrupted rules arrays by restoring from compendium
 	async function fixCorruptedRulesArrays() {
 		for (const item of document.items) {
-			if (item.type !== 'ancestry') continue;
+			// The neutral-save rules this dialog repairs moved onto the ancestry bonus when
+			// ancestries and their traits were split, so both types have to be covered.
+			if (item.type !== 'ancestry' && item.type !== 'ancestryBonus') continue;
 
 			const rulesArray = item.system?.rules;
 			if (!Array.isArray(rulesArray)) continue;
@@ -134,8 +136,10 @@
 			const hasCorruption = rulesArray.some((r) => !r || !r.type);
 			if (!hasCorruption) continue;
 
-			// Try to restore from compendium
-			const sourceId = item.flags?.core?.sourceId;
+			// Try to restore from compendium. `sourceId` reads `_stats.compendiumSource` —
+			// nothing in the system ever writes `flags.core.sourceId`, so looking there
+			// always missed and dropped straight through to the destructive strip below.
+			const { sourceId } = item;
 			if (sourceId) {
 				const compendiumItem = await fromUuid(sourceId);
 				if (compendiumItem?.system?.rules) {

@@ -20,6 +20,16 @@ export const globalFoundryMocks = {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
 		}
+
+		prepareData() {}
+
+		prepareDerivedData() {}
+
+		getRollData(): Record<string, any> {
+			return {};
+		}
+
+		_onUpdate(_changed?: any, _options?: any, _userId?: string) {}
 	},
 	Item: class Item {
 		constructor(data?: any, _context?: any) {
@@ -96,6 +106,13 @@ export const globalFoundryMocks = {
 			LIMITED: 1,
 			OBSERVER: 2,
 			OWNER: 3,
+		},
+		TEXT_ANCHOR_POINTS: {
+			CENTER: 0,
+			BOTTOM: 1,
+			TOP: 2,
+			LEFT: 3,
+			RIGHT: 4,
 		},
 	},
 	localize: (key: string) => key,
@@ -612,6 +629,10 @@ export function createGameMock(langData: any) {
 	}
 
 	return {
+		// Foundry sets this once the world's documents exist; `ClientDocument#_initialize`
+		// skips data preparation entirely while it is false. Tests run against a world
+		// that has finished loading, so mirror that.
+		_documentsReady: true,
 		i18n: {
 			localize: (key: string) => {
 				// Remove "NIMBLE." prefix if present

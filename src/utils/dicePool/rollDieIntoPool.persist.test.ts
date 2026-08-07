@@ -140,9 +140,43 @@ describe('rollDieIntoPool — item-scoped pool persistence (Judgment Dice)', () 
 
 		const result = await rollDieIntoPool(actor, 'judgment', { flavor: 'Judgment Dice' });
 
-		expect(result).toBe(true);
+		expect(result).toEqual({ applied: true, face: 4 });
 		expect(updateSpy).toHaveBeenCalledTimes(1);
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([4]);
+	});
+
+	it('at max: rolls a face but does not modify the pool. Returns applied: false with the face value', async () => {
+		// RAW (Berserker Rage): "If you are already at your max, roll as
+		// normal and decide which ones to keep." The helper must surface the
+		// face so the caller (chat card / activation manager / widget) can
+		// display the roll and let the player choose what to do.
+		const { actor, item, updateSpy } = makeOathswornActor();
+		item.flags = {
+			nimble: {
+				dicePools: {
+					judgment: {
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						sourceItemId: 'qiQeJrIxla9y6XY0',
+						sourceItemName: 'Radiant Judgement',
+						label: 'Judgment Dice',
+						dieSize: 'd6',
+						max: 2,
+						faces: [5, 6],
+						refills: [],
+						consumption: 'manual',
+						bonusOnAttackDelivery: null,
+					},
+				},
+			},
+		};
+
+		const result = await rollDieIntoPool(actor, 'judgment', { flavor: 'Judgment Dice' });
+
+		expect(result).toEqual({ applied: false, face: 4 });
+		expect(updateSpy).not.toHaveBeenCalled();
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([5, 6]);
 	});
 
 	it('adds a second face when the pool already has one (faces array grows)', async () => {
@@ -174,7 +208,129 @@ describe('rollDieIntoPool — item-scoped pool persistence (Judgment Dice)', () 
 
 		const result = await rollDieIntoPool(actor, 'judgment', { flavor: 'Judgment Dice' });
 
-		expect(result).toBe(true);
+		expect(result).toEqual({ applied: true, face: 4 });
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([5, 4]);
+	});
+});
+
+describe('maximizePoolDie — raise lowest faces to the die max', () => {
+	function seedPool(item: Record<string, any>, faces: number[]): void {
+		item.flags = {
+			nimble: {
+				dicePools: {
+					judgment: {
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						sourceItemId: 'qiQeJrIxla9y6XY0',
+						sourceItemName: 'Radiant Judgement',
+						label: 'Judgment Dice',
+						dieSize: 'd6',
+						max: 2,
+						faces,
+						refills: [
+							{ trigger: 'onAttacked', mode: 'setIfEmpty', value: '@poolMax' },
+							{ trigger: 'encounterEnd', mode: 'clear', value: '0' },
+						],
+						consumption: 'manual',
+						bonusOnAttackDelivery: null,
+					},
+				},
+			},
+		};
+	}
+
+	it('raises the lowest face to the die maximum and persists it', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 5]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 1);
+
+		expect(result.changed).toBe(true);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 5]);
+	});
+
+	it('returns false when the pool is empty', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, []);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		expect(await maximizePoolDie(actor, 'judgment', 1)).toEqual({
+			changed: false,
+			reason: 'poolEmpty',
+			changes: [],
+		});
+	});
+
+	it('returns false when every face is already at the maximum', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [6, 6]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		expect(await maximizePoolDie(actor, 'judgment', 1)).toEqual({
+			changed: false,
+			reason: 'allAtMax',
+			changes: [],
+		});
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+
+	it('raises multiple faces when count is greater than one', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 3]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 2);
+
+		expect(result.changed).toBe(true);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+
+	it('reports which faces it raised', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 5]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 1);
+
+		expect(result.changes).toEqual([{ from: 2, to: 6 }]);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 5]);
+	});
+
+	it('raises the caller-chosen faces instead of the lowest when indices are given', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [2, 5]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 1, { indices: [1] });
+
+		expect(result.changes).toEqual([{ from: 5, to: 6 }]);
+		// The lower face is untouched: the caller picked the other one.
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([2, 6]);
+	});
+
+	it('ignores chosen indices that are out of range or already at the maximum', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [6, 3]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		const result = await maximizePoolDie(actor, 'judgment', 3, { indices: [0, 1, 7, -1] });
+
+		expect(result.changes).toEqual([{ from: 3, to: 6 }]);
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 6]);
+	});
+
+	it('reports allAtMax when every chosen index is already at the maximum', async () => {
+		const { actor, item } = makeOathswornActor();
+		seedPool(item, [6, 3]);
+
+		const { maximizePoolDie } = await import('./dicePoolRefill.js');
+		expect(await maximizePoolDie(actor, 'judgment', 1, { indices: [0] })).toEqual({
+			changed: false,
+			reason: 'allAtMax',
+			changes: [],
+		});
+		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 3]);
 	});
 });

@@ -145,6 +145,16 @@
 		</div>
 	</header>
 
+	{#if state.failure}
+		<p class="nimble-rule-card__failure" role="alert">
+			<i class="fa-solid fa-triangle-exclamation"></i>
+			<span>
+				{localize('NIMBLE.rulesBuilder.ruleNotRunning')}
+				{state.failure}
+			</span>
+		</p>
+	{/if}
+
 	{#if !collapsed}
 		{#if state.showJson}
 			<div class="nimble-rule-card__json">
@@ -225,7 +235,35 @@
 							value={(rule.predicate as RawPredicate) ?? {}}
 							onChange={(v) => state.emitFieldChange('predicate', v)}
 							{previewDomain}
+							appliesInPrePrepareData={state.appliesInPrePrepareData}
 						/>
+					</div>
+
+					<div class="nimble-field-row">
+						<span class="nimble-field-row__label"
+							>{localize('NIMBLE.rulesBuilder.suppressActivationCard')}</span
+						>
+						<select
+							value={(rule.suppressActivationCard as string) ?? 'auto'}
+							onchange={(e) =>
+								state.emitFieldChange(
+									'suppressActivationCard',
+									(e.target as HTMLSelectElement).value,
+								)}
+						>
+							<option value="auto">
+								{localize('NIMBLE.rulesBuilder.suppressActivationCardAuto')}
+							</option>
+							<option value="always">
+								{localize('NIMBLE.rulesBuilder.suppressActivationCardAlways')}
+							</option>
+							<option value="never">
+								{localize('NIMBLE.rulesBuilder.suppressActivationCardNever')}
+							</option>
+						</select>
+						<small class="nimble-field-row__hint"
+							>{localize('NIMBLE.rulesBuilder.suppressActivationCardHint')}</small
+						>
 					</div>
 				</div>
 			</details>
@@ -378,6 +416,17 @@
 		&__json-error {
 			color: var(--color-level-error);
 			font-size: var(--nimble-xs-text);
+		}
+
+		&__failure {
+			display: flex;
+			gap: 0.375rem;
+			align-items: baseline;
+			margin: 0;
+			padding: 0.375rem 0.5rem;
+			color: var(--color-level-error);
+			font-size: var(--nimble-xs-text);
+			border-left: 2px solid var(--color-level-error);
 		}
 
 		&__help {

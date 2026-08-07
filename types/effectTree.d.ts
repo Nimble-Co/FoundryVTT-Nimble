@@ -11,15 +11,29 @@ export type PoolNode = {
 	id: string;
 	type: 'pool';
 	poolType: 'dice' | 'charge';
-	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear';
+	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear' | 'maximizeDie';
 	poolIdentifier: string;
 	value: number;
 	predicate?: Record<string, unknown>;
+	/**
+	 * When true, the underlying roll helper does NOT post a separate chat
+	 * card for the roll. Use when the feature's own activation card already
+	 * displays the rolled faces (e.g. Rage's Fury Dice), to avoid a duplicate
+	 * "<pool> 1dN -> N" message stacking on top of the feature card.
+	 * Only meaningful for `rollDie` / `rollPool` actions.
+	 */
+	suppressChat?: boolean;
 	parentContext: string | null;
 	parentNode: string | null;
 	result?: {
 		applied: boolean;
-		skipReason?: 'predicate' | 'invalidAction' | 'unknownPool' | 'noActor';
+		skipReason?:
+			| 'predicate'
+			| 'invalidAction'
+			| 'unknownPool'
+			| 'noActor'
+			| 'poolEmpty'
+			| 'allAtMax';
 		poolLabel?: string;
 		previousCount?: number;
 		newCount?: number;

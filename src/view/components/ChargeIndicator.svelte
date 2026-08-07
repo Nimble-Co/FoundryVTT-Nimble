@@ -1,5 +1,8 @@
 <script lang="ts">
-	import type { ChargeIndicatorProps } from '#types/components/ChargeIndicator.d.ts';
+	import type {
+		ChargeIndicatorPoolState,
+		ChargeIndicatorProps,
+	} from '#types/components/ChargeIndicator.d.ts';
 	import { getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
@@ -8,7 +11,14 @@
 
 	let { pools, actor, itemId }: ChargeIndicatorProps = $props();
 
-	function getPoolColor(pool: ChargeIndicatorProps['pools'][number]): string {
+	// Supplied means "render these", omitted means "work it out". Surfaces that
+	// list many rows fetch every pool on the actor once and hand each row its
+	// slice; everywhere else the badge resolves its own, so a surface cannot
+	// forget to fetch pools or resolve them differently. Reading through
+	// `reactive` keeps the badge in step with spends and recoveries.
+	let displayedPools = $derived(pools ?? getPoolsForItem(actor.reactive, itemId));
+
+	function getPoolColor(pool: ChargeIndicatorPoolState): string {
 		if (pool.current >= pool.max) return 'var(--nimble-charge-color-full)';
 		if (pool.current <= 0) return 'var(--nimble-charge-color-empty)';
 		return 'var(--nimble-charge-color-partial)';
@@ -41,7 +51,7 @@
 		return localize(localizationKey, { value: escapeHtml(value) });
 	}
 
-	function getPoolTooltip(pool: ChargeIndicatorProps['pools'][number]): string {
+	function getPoolTooltip(pool: ChargeIndicatorPoolState): string {
 		const escapedLabel = escapeHtml(pool.label);
 		const recoveries = pool.recoveries
 			.map((recovery) => {
@@ -76,7 +86,10 @@
 
 		const item = actor.items.get(itemId);
 		const itemName = item?.name ?? localize(ChargeUiConfig.unknownItemLocalizationKey);
-		const poolsForItem = getPoolsForItem(actor, itemId);
+		// Hidden pools are listed here even though they contribute no badge: this
+		// is the surface for correcting a pool by hand, and a gate you cannot
+		// reach is a gate you cannot fix after a misplay.
+		const poolsForItem = getPoolsForItem(actor, itemId, undefined, { includeHidden: true });
 
 		const width = 360;
 		const margin = 8;
@@ -107,9 +120,9 @@
 	}
 </script>
 
-{#if pools.length > 0}
+{#if displayedPools.length > 0}
 	<div class="charge-indicator">
-		{#each pools as pool (pool.id)}
+		{#each displayedPools as pool (pool.id)}
 			<button
 				type="button"
 				class="charge-indicator__pill"

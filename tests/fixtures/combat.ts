@@ -27,6 +27,7 @@ export type CombatantFixtureOptions = {
 	tokenId?: string;
 	actionsCurrent?: number;
 	actionsMax?: number;
+	actionsPendingDelta?: number;
 };
 
 type CombatantsCollectionFixture = Combatant.Implementation[] & {
@@ -96,6 +97,7 @@ export function createCombatantFixture({
 	tokenId = '',
 	actionsCurrent = 1,
 	actionsMax = 2,
+	actionsPendingDelta = 0,
 }: CombatantFixtureOptions = {}): Combatant.Implementation {
 	const resolvedActorId = actorId || actor?.id || '';
 
@@ -119,6 +121,7 @@ export function createCombatantFixture({
 					current: actionsCurrent,
 					max: actionsMax,
 				},
+				pendingDelta: actionsPendingDelta,
 				heroic: {
 					defendAvailable: true,
 					interposeAvailable: true,

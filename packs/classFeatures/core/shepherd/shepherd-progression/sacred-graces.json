@@ -1,0 +1,76 @@
+{
+	"name": "Sacred Graces",
+	"type": "feature",
+	"img": "icons/creatures/abilities/wolf-heads-swirl-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "",
+		"featureType": "class",
+		"class": "shepherd",
+		"group": "shepherd-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5,
+			9,
+			13
+		],
+		"selectionCountByLevel": {},
+		"levelUpOptions": [
+			{
+				"id": "sacred-grace",
+				"label": "Choose a Sacred Grace",
+				"applyAtLevels": [
+					5,
+					9,
+					13
+				],
+				"rules": [],
+				"selectionGroups": [
+					"sacred-grace"
+				],
+				"selectionCount": 1
+			}
+		]
+	},
+	"effects": [],
+	"folder": "c1face1ec4d1249a",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1761500000000,
+		"modifiedTime": 1761500000000,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Bb4zZPJ2xwEgUUcN"
+}

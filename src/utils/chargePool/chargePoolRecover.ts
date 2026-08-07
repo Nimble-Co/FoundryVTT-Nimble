@@ -1,3 +1,4 @@
+import { isResourceRecoveryAutomationEnabled } from '../../settings/automationSettings.js';
 import { emitForCharacter } from './chargePoolHooks.js';
 import {
 	applyRecoveryTriggersToPools,
@@ -9,6 +10,18 @@ import {
 	toFiniteNonNegativeInteger,
 } from './helpers.js';
 import type { CharacterActorLike, ChargeRestType, ManualAdjustMode } from './types.js';
+
+/**
+ * Shared eligibility gate for the automatic recovery entry points: recovery
+ * triggers only apply to character actors and only while resource-recovery
+ * automation is enabled. Manual adjustments (adjustPool) are not automation
+ * and stay ungated.
+ */
+function isEligibleForAutomaticRecovery(
+	actor: Actor | null | undefined,
+): actor is CharacterActorLike {
+	return isCharacterActor(actor) && isResourceRecoveryAutomationEnabled();
+}
 
 type CombatTrigger = 'encounterStart' | 'encounterEnd';
 type CombatEventTrigger =
@@ -24,7 +37,7 @@ async function applyRestRecovery(
 	actor: Actor | null | undefined,
 	restType: ChargeRestType,
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRecovery(actor)) return;
 	const trigger: 'safeRest' | 'fieldRest' = restType === 'safe' ? 'safeRest' : 'fieldRest';
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
@@ -79,7 +92,7 @@ async function applyEncounterRecovery(
 	actor: Actor | null | undefined,
 	encounterTrigger: 'encounterStart' | 'encounterEnd',
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRecovery(actor)) return;
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
 	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [encounterTrigger]);
@@ -188,7 +201,7 @@ async function applyRecoveryToActorIfEligible(
 	trigger: TriggerType,
 	_killTargetActor?: Actor.Implementation,
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRecovery(actor)) return;
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
 	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger]);

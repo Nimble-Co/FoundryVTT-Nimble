@@ -9,6 +9,7 @@ import {
 	getTestGlobals,
 	type NimbleCombatDocumentTestGlobals,
 } from '../../../tests/mocks/combat.js';
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 import { initiativeRollLock } from '../../utils/initiativeRollLock.js';
 import { NimbleCombat } from './combat.svelte.js';
 import { clearExpandedTurnIdentityHint } from './expandedTurnIdentityStore.js';
@@ -55,6 +56,7 @@ describe('NimbleCombat', () => {
 			return this;
 		});
 		combatPrototype._onEndTurn = vi.fn(async () => undefined);
+		combatPrototype._onStartTurn = vi.fn(async () => undefined);
 		combatPrototype.setupTurns = vi.fn(function (this: {
 			combatants?: { contents?: Combatant.Implementation[] };
 		}) {
@@ -1243,6 +1245,155 @@ describe('NimbleCombat', () => {
 		);
 	});
 
+	describe('turn-start hook emission', () => {
+		function createTurnStartFixture(combatId: string) {
+			const monster = createMockCombatant({
+				id: 'solo-monster',
+				type: 'soloMonster',
+				sort: 1,
+				isOwner: false,
+				initiative: 12,
+				actionsCurrent: 0,
+				actionsMax: 1,
+				actor: createCombatActorFixture({ hp: 40 }),
+				combatId,
+			});
+			const incomingHero = createMockCombatant({
+				id: 'incoming-hero',
+				type: 'character',
+				sort: 2,
+				isOwner: true,
+				initiative: 8,
+				actionsCurrent: 3,
+				actionsMax: 3,
+				actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+				combatId,
+			});
+			return { monster, incomingHero };
+		}
+
+		function buildCombat(
+			combatId: string,
+			combatants: Combatant.Implementation[],
+			active: Combatant.Implementation,
+		) {
+			const combat = new NimbleCombat({
+				id: combatId,
+				combatants: createCombatantsCollectionFixture(combatants),
+				turns: combatants,
+				turn: 0,
+				combatant: active,
+			} as unknown as Combat.CreateData) as NimbleCombat & {
+				update: ReturnType<typeof vi.fn>;
+				updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			};
+			combat.update = vi.fn().mockResolvedValue(combat);
+			combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+			return combat;
+		}
+
+		function turnStartCalls(): unknown[][] {
+			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
+			return call.mock.calls.filter(([hook]) => hook === 'nimbleCombatTurnStart');
+		}
+
+		it('emits the turn-start hook for the incoming combatant when Foundry never fires _onStartTurn', async () => {
+			// Regression: under the expanded solo-monster turn order, Foundry's cached turn history
+			// can desync from our directly-resynced turn index, so its turn-event dispatcher computes
+			// an empty interval and skips the boundary's turn events entirely. Without a backstop,
+			// every `onTurnStart` dice-pool refill and charge recovery would silently be dropped.
+			const combatId = 'combat-start-turn-no-event';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				// Advance WITHOUT firing `_onStartTurn` for the incoming hero.
+				this.turn = 1;
+				this.combatant = incomingHero;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
+
+		it('does not emit the turn-start hook twice when _onStartTurn also runs', async () => {
+			const combatId = 'combat-start-turn-no-double';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				this.turn = 1;
+				this.combatant = incomingHero;
+				await (this as unknown as NimbleCombat)._onStartTurn(
+					incomingHero,
+					{} as Combat.TurnEventContext,
+				);
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+
+			// The backstop recognizes `_onStartTurn` already claimed this combatant.
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
+
+		it('emits the turn-start hook again when the same combatant starts a later turn', async () => {
+			// The claim is per turn change, not per combat: a solo monster taking interleaved turns
+			// must get a turn-start for each of them.
+			const combatId = 'combat-start-turn-repeat';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const order = [incomingHero, monster];
+			let advances = 0;
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				const incoming = order[advances % order.length];
+				advances += 1;
+				this.turn = incoming === incomingHero ? 1 : 0;
+				this.combatant = incoming;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+			await combat.nextTurn();
+
+			expect(turnStartCalls()).toEqual([
+				['nimbleCombatTurnStart', incomingHero],
+				['nimbleCombatTurnStart', monster],
+			]);
+		});
+
+		it('backstops the turn-start hook on nextRound as well', async () => {
+			const combatId = 'combat-start-turn-next-round';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const superNextRound = globals().Combat.prototype.nextRound as ReturnType<typeof vi.fn>;
+			superNextRound.mockImplementation(async function (
+				this: Combat & { turn?: number; combatant?: Combatant.Implementation | null },
+			) {
+				this.turn = 1;
+				this.combatant = incomingHero;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextRound();
+
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
+	});
+
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {
 		const combatId = 'combat-rewind-restore-minion-group-actions';
 		const leaderActor = {
@@ -1526,6 +1677,75 @@ describe('NimbleCombat', () => {
 		expect(combat.rollInitiative).toHaveBeenCalledWith(['unrolled-character'], {
 			updateTurn: false,
 		});
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
+		]);
+	});
+
+	it('skips auto-rolling character initiative at combat start when combat-convenience automation is off, while still resetting non-character actions', async () => {
+		const settingsGet = (
+			globals().game as unknown as {
+				settings: { get: ReturnType<typeof vi.fn> };
+			}
+		).settings.get;
+		settingsGet.mockImplementation((namespace: string, key: string) => {
+			if (namespace === 'core' && key === 'rollMode') return 'publicroll';
+			if (key === AUTOMATION_SETTING_KEYS.combatConvenience) return false;
+			return undefined;
+		});
+
+		const combatId = 'combat-start-action-initialization-convenience-off';
+		const unrolledCharacter = createMockCombatant({
+			id: 'unrolled-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const rolledCharacter = createMockCombatant({
+			id: 'rolled-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const npc = createMockCombatant({
+			id: 'npc-combatant',
+			type: 'npc',
+			sort: 3,
+			isOwner: false,
+			initiative: 10,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([unrolledCharacter, rolledCharacter, npc]),
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+			rollInitiative: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.rollInitiative = vi.fn().mockResolvedValue(combat);
+
+		await combat.startCombat();
+
+		expect(combat.rollInitiative).not.toHaveBeenCalled();
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
 		]);
@@ -1881,6 +2101,155 @@ describe('NimbleCombat', () => {
 		expect(chatMessageCreate).toHaveBeenCalledWith([
 			expect.objectContaining({ id: 'initiative-chat-data' }),
 		]);
+	});
+
+	it('lets a non-GM roll initiative without writing to the Combat document', async () => {
+		// Regression: a non-GM may set their own initiative but cannot update the (GM-owned) Combat
+		// document. Because initiative doesn't affect turn order in Nimble, rolling it must not touch
+		// `Combat#turn` — otherwise a player rolling from their sheet hits a "lacks permission to
+		// update Combat" error.
+		globals().game.user = { isGM: false, role: 1 };
+
+		const combatId = 'combat-initiative-non-gm-turn-guard';
+		const actor = createCombatActorFixture({
+			id: 'actor-initiative-non-gm',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		});
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-non-gm',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+
+		const initiativeRoll = {
+			total: 15,
+			evaluate: vi.fn().mockResolvedValue(null),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
+		};
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue(initiativeRoll);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			// An active combatant makes `currentId` truthy so the turn-update branch is reachable.
+			combatant,
+			turns: [combatant],
+			turn: 0,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		await combat.rollInitiative([combatant.id ?? '']);
+
+		expect(combatant.initiative).toBe(15);
+		expect(combat.update).not.toHaveBeenCalled();
+	});
+
+	it('does not change turn order when rolling initiative (initiative is decoupled from turn order)', async () => {
+		globals().game.user = { isGM: true, role: 4 };
+
+		const combatId = 'combat-initiative-gm-turn-guard';
+		const actor = createCombatActorFixture({
+			id: 'actor-initiative-gm',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		});
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-gm',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+
+		const initiativeRoll = {
+			total: 19,
+			evaluate: vi.fn().mockResolvedValue(null),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
+		};
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue(initiativeRoll);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			combatant,
+			turns: [combatant],
+			turn: 0,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		await combat.rollInitiative([combatant.id ?? '']);
+
+		expect(combatant.initiative).toBe(19);
+		expect(combat.update).not.toHaveBeenCalled();
 	});
 
 	it('uses prompted initiative roll data for single-combatant initiative rolls', async () => {
@@ -3353,6 +3722,7 @@ describe('NimbleCombat', () => {
 		expect(combatant.update).toHaveBeenCalledWith({
 			'system.actions.base.current': 3,
 			'system.actions.base.additional': 0,
+			'system.actions.pendingDelta': 0,
 			'system.actions.heroic.defendAvailable': true,
 			'system.actions.heroic.interposeAvailable': true,
 			'system.actions.heroic.opportunityAttackAvailable': true,
@@ -3446,7 +3816,10 @@ describe('NimbleCombat', () => {
 					name: 'Stab',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
+						activation: {
+							cost: { type: 'action', quantity: 1 },
+							effects: [{ type: 'damage', formula: '1d6' }],
+						},
 					},
 				},
 			],
@@ -3462,7 +3835,10 @@ describe('NimbleCombat', () => {
 					name: 'Bite',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
+						activation: {
+							cost: { type: 'action', quantity: 1 },
+							effects: [{ type: 'damage', formula: '1d6' }],
+						},
 					},
 				},
 			],

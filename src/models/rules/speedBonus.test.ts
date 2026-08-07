@@ -28,6 +28,7 @@ interface MockActor {
 		};
 	};
 	getRollData: Mock<() => MockRollData>;
+	getDomain: Mock<() => Set<string>>;
 }
 
 interface MockItem {
@@ -35,6 +36,7 @@ interface MockItem {
 	actor: MockActor;
 	name: string;
 	uuid: string;
+	getDomain: Mock<() => Set<string>>;
 }
 
 interface SpeedBonusSourceData {
@@ -74,6 +76,7 @@ function createMockActor(
 				movement: { ...movement },
 			},
 		})),
+		getDomain: vi.fn(() => new Set<string>()),
 	};
 }
 
@@ -86,6 +89,7 @@ function createMockItem(actor: MockActor, isEmbedded = true): MockItem {
 		actor,
 		name: 'Test Item',
 		uuid: 'test-item-uuid',
+		getDomain: vi.fn(() => new Set<string>()),
 	};
 }
 
@@ -98,6 +102,7 @@ function createSpeedBonusRule(
 		movementType?: MovementType;
 		disabled?: boolean;
 		label?: string;
+		predicatePasses?: boolean;
 	},
 	actor: MockActor,
 	itemOptions?: { isEmbedded?: boolean },
@@ -135,9 +140,11 @@ function createSpeedBonusRule(
 		configurable: true,
 	});
 
-	// Mock the _predicate property with an empty Predicate-like object that always passes
+	// Mock the _predicate property: size 0 always passes; a non-empty stub
+	// exercises the predicate-gated path
+	const predicatePasses = config.predicatePasses ?? true;
 	Object.defineProperty(rule, '_predicate', {
-		get: () => ({ size: 0 }),
+		get: () => ({ size: predicatePasses ? 0 : 1, test: () => predicatePasses }),
 		configurable: true,
 	});
 
@@ -147,6 +154,35 @@ function createSpeedBonusRule(
 describe('SpeedBonusRule', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+	});
+
+	describe('predicate gating', () => {
+		it('should apply a numeric bonus when the predicate passes', () => {
+			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });
+			const rule = createSpeedBonusRule({ value: '2', predicatePasses: true }, actor);
+
+			rule.prePrepareData();
+
+			expect(actor.system.attributes.movement.walk).toBe(8);
+		});
+
+		it('should not apply a numeric bonus when the predicate fails', () => {
+			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });
+			const rule = createSpeedBonusRule({ value: '2', predicatePasses: false }, actor);
+
+			rule.prePrepareData();
+
+			expect(actor.system.attributes.movement.walk).toBe(6);
+		});
+
+		it('should not apply a formula bonus when the predicate fails', () => {
+			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });
+			const rule = createSpeedBonusRule({ value: '@level', predicatePasses: false }, actor);
+
+			rule.afterPrepareData();
+
+			expect(actor.system.attributes.movement.walk).toBe(6);
+		});
 	});
 
 	describe('prePrepareData (numeric bonuses)', () => {

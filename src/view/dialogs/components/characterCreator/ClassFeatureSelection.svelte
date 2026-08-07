@@ -4,10 +4,12 @@
 	import { getContext } from 'svelte';
 
 	import { createClassFeatureSelectionState } from './ClassFeatureSelection.svelte.ts';
+	import DuplicateSourceGroup from './DuplicateSourceGroup.svelte';
 	import FeatureCard from './FeatureCard.svelte';
 	import FeatureGroupSelection from './FeatureGroupSelection.svelte';
 	import Hint from '../../../components/Hint.svelte';
 	import localize from '#utils/localize.js';
+	import { isRangeGroup } from '../../selectionGroupRules.ts';
 
 	let {
 		active,
@@ -59,13 +61,22 @@
 
 		{#if state.hasSelectionGroups}
 			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, group] (groupName)}
-				<FeatureGroupSelection
-					{groupName}
-					features={group.features}
-					selectionCount={group.selectionCount}
-					selectedFeatures={selectedFeatures.get(groupName) ?? []}
-					onSelect={(feature) => state.handleFeatureSelect(groupName, feature)}
-				/>
+				<!-- A range group is a duplicate-source cluster: same feature, several places. -->
+				{#if isRangeGroup(group)}
+					<DuplicateSourceGroup
+						{groupName}
+						{group}
+						selectedFeatures={selectedFeatures.get(groupName) ?? []}
+						onSetSelection={(features) => state.handleGroupSelectionSet(groupName, features)}
+					/>
+				{:else}
+					<FeatureGroupSelection
+						{groupName}
+						{group}
+						selectedFeatures={selectedFeatures.get(groupName) ?? []}
+						onSelect={(feature) => state.handleFeatureSelect(groupName, feature)}
+					/>
+				{/if}
 			{/each}
 		{/if}
 	</section>

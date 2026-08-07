@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createOpportunityAttackPanelState } from './OpportunityAttackPanel.svelte.ts';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import TargetSelector from './TargetSelector.svelte';
 	import WeaponCard from './WeaponCard.svelte';
 
@@ -55,6 +56,10 @@
 		};
 		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 	}
+
+	// Every charge pool on the actor, resolved once. Each row is handed its own
+	// slice, so a long list does not rebuild the whole map per row.
+	let allPools = $derived(getPools(actor.reactive));
 </script>
 
 <section class="reaction-panel">
@@ -113,6 +118,8 @@
 				properties={getWeaponProperties(item)}
 				showImage={showEmbeddedDocumentImages}
 				itemId={item._id}
+				pools={getPoolsForItem(actor.reactive, item._id, allPools)}
+				{actor}
 				onclick={() => handleItemClick(item._id)}
 				ondragstart={(event) => sheet._onDragStart(event)}
 			/>

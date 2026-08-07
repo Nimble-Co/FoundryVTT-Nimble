@@ -10,7 +10,7 @@ import { ItemActivationManager, testDependencies } from './ItemActivationManager
 // vi.mock on relative imports.
 const mockRollDieIntoPool = vi
 	.spyOn(dicePoolRefillModule, 'rollDieIntoPool')
-	.mockResolvedValue(true);
+	.mockResolvedValue({ applied: true, face: 4 });
 const mockRollPoolFresh = vi.spyOn(dicePoolRefillModule, 'rollPoolFresh').mockResolvedValue(true);
 const mockSetPoolFaces = vi.spyOn(dicePoolRefillModule, 'setPoolFaces').mockResolvedValue(true);
 const mockAdjustPool = vi.spyOn(chargePoolRecoverModule, 'adjustPool').mockResolvedValue(true);
@@ -64,6 +64,7 @@ function poolNode(overrides: Partial<PoolNode>): PoolNode {
 		poolIdentifier: overrides.poolIdentifier ?? 'fury',
 		value: overrides.value ?? 1,
 		predicate: overrides.predicate ?? {},
+		suppressChat: overrides.suppressChat,
 		parentContext: null,
 		parentNode: null,
 		result: overrides.result ?? null,
@@ -73,7 +74,7 @@ function poolNode(overrides: Partial<PoolNode>): PoolNode {
 describe('ItemActivationManager: pool effect node dispatch', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockRollDieIntoPool.mockResolvedValue(true);
+		mockRollDieIntoPool.mockResolvedValue({ applied: true, face: 4 });
 		mockRollPoolFresh.mockResolvedValue(true);
 		mockSetPoolFaces.mockResolvedValue(true);
 		mockAdjustPool.mockResolvedValue(true);
@@ -82,8 +83,11 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			game: { user: { targets?: unknown[] } };
 		};
 		gameGlobal.game.user.targets = [];
-		// reconstructEffectsTree just returns its input so we can read mutated nodes back.
-		testDependencies.reconstructEffectsTree = ((effects: EffectNode[]) => effects) as never;
+		// Clone nodes like the real reconstructEffectsTree does: pool results
+		// must land on the reconstructed (cloned) nodes the chat card
+		// serializes, not on the pre-reconstruction originals.
+		testDependencies.reconstructEffectsTree = ((effects: EffectNode[]) =>
+			effects.map((node) => structuredClone(node))) as never;
 	});
 
 	function buildManager(actor: PoolMockActor | null, effects: EffectNode[]) {
@@ -97,11 +101,62 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 	async function runAndGetNode(actor: PoolMockActor | null, original: PoolNode): Promise<PoolNode> {
 		const manager = buildManager(actor, [original]);
 		const result = await manager.getData();
+		// Pool side effects are deferred until the preUseItem gate clears;
+		// the activate() flows call this after the gate allows the use.
+		await manager.applyDeferredPoolNodes();
 		const dispatched = (result.activation?.effects ?? []).find(
 			(n: EffectNode) => n.id === original.id,
 		);
 		return dispatched as PoolNode;
 	}
+
+	it('defers pool side effects until applyDeferredPoolNodes is called (blocked uses stay side-effect free)', async () => {
+		const actor = makeActor(3);
+		const manager = buildManager(actor, [
+			poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }),
+		]);
+		await manager.getData();
+
+		expect(mockRollDieIntoPool).not.toHaveBeenCalled();
+
+		await manager.applyDeferredPoolNodes();
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+
+		// Idempotent: a second call must not re-apply the same nodes.
+		await manager.applyDeferredPoolNodes();
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+	});
+
+	it('applies a pool node whose stored parent is not a damage or saving-throw node', async () => {
+		// `reconstructEffectsTree` only re-parents children of damage/savingThrow nodes, so
+		// collecting deferred pool nodes from the reconstructed tree alone could lose one
+		// parented elsewhere. Collection reads the flat list instead, which keeps this case
+		// working regardless of what the tree does with the node.
+		const { reconstructEffectsTree } = await import(
+			'../utils/treeManipulation/reconstructEffectsTree.js'
+		);
+		testDependencies.reconstructEffectsTree = reconstructEffectsTree as never;
+
+		const healing: EffectNode = {
+			id: 'healing-node',
+			type: 'healing',
+			formula: '1d4',
+			healingType: 'healing',
+			parentContext: null,
+			parentNode: null,
+		} as unknown as EffectNode;
+		const poolNodeUnderHealing: PoolNode = {
+			...poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }),
+			parentNode: 'healing-node',
+			parentContext: 'hit',
+		};
+
+		const manager = buildManager(makeActor(3), [healing, poolNodeUnderHealing]);
+		await manager.getData();
+		await manager.applyDeferredPoolNodes();
+
+		expect(mockRollDieIntoPool).toHaveBeenCalledTimes(1);
+	});
 
 	describe('dice pools', () => {
 		it('rollDie: invokes rollDieIntoPool once per value', async () => {
@@ -116,12 +171,37 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(out.result?.applied).toBe(true);
 		});
 
-		it('rollDie: stops short if helper returns false (pool at max)', async () => {
-			mockRollDieIntoPool.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+		it('rollDie: continues rolling even when the pool fills up so all rolls are surfaced (player decides what to keep)', async () => {
+			// Old behavior was to short-circuit on the first at-max return; that
+			// hid roll outcomes from the player. RAW: "roll as normal and
+			// decide which ones to keep" so every die must be rolled and
+			// every face surfaced in the result for the chat card to display.
+			mockRollDieIntoPool
+				.mockResolvedValueOnce({ applied: true, face: 3 })
+				.mockResolvedValueOnce({ applied: false, face: 2 })
+				.mockResolvedValueOnce({ applied: false, face: 4 });
 			const actor = makeActor(3);
-			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 5 }));
+			const out = await runAndGetNode(
+				actor,
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 3 }),
+			);
 
-			expect(mockRollDieIntoPool).toHaveBeenCalledTimes(2);
+			expect(mockRollDieIntoPool).toHaveBeenCalledTimes(3);
+			expect(out.result?.rolledFaces).toEqual([3, 2, 4]);
+		});
+
+		it('rollDie: at-max rolls are surfaced in rolledFaces so the chat card can show them (RAW Rage: "roll as normal and decide which ones to keep")', async () => {
+			mockRollDieIntoPool
+				.mockResolvedValueOnce({ applied: false, face: 3 })
+				.mockResolvedValueOnce({ applied: false, face: 1 });
+			const actor = makeActor(3);
+			const out = await runAndGetNode(
+				actor,
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 2 }),
+			);
+
+			expect(out.result?.applied).toBe(false);
+			expect(out.result?.rolledFaces).toEqual([3, 1]);
 		});
 
 		it('rollPool: invokes rollPoolFresh exactly once', async () => {
@@ -130,6 +210,52 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 
 			expect(mockRollPoolFresh).toHaveBeenCalledTimes(1);
 			expect(mockRollDieIntoPool).not.toHaveBeenCalled();
+		});
+
+		it('rollDie/rollPool: defaults suppressChat to false (helper posts chat unless opted out)', async () => {
+			// Effects without the opt-in keep posting a standalone roll card,
+			// so the existing behavior for non-Rage features is unchanged.
+			const actor = makeActor(3);
+
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 1 }));
+			expect(mockRollDieIntoPool).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				expect.objectContaining({ suppressChat: false }),
+			);
+
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollPool', value: 0 }));
+			expect(mockRollPoolFresh).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				expect.objectContaining({ suppressChat: false }),
+			);
+		});
+
+		it('rollDie/rollPool: forwards suppressChat=true when set on the node (Rage opts in)', async () => {
+			// Features whose activation card already shows rolledFaces set
+			// suppressChat on the effect node to avoid a duplicate roll card.
+			const actor = makeActor(3);
+
+			await runAndGetNode(
+				actor,
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 1, suppressChat: true }),
+			);
+			expect(mockRollDieIntoPool).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				expect.objectContaining({ suppressChat: true }),
+			);
+
+			await runAndGetNode(
+				actor,
+				poolNode({ poolType: 'dice', action: 'rollPool', value: 0, suppressChat: true }),
+			);
+			expect(mockRollPoolFresh).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				expect.objectContaining({ suppressChat: true }),
+			);
 		});
 
 		it('clear: invokes setPoolFaces with []', async () => {

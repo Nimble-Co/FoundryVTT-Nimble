@@ -4,6 +4,7 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import type { NimbleSpellItem } from '#documents/item/spell.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
+import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 
 /** Estimated characters per column based on PDF config */
 const CHARS_PER_COLUMN = 1150;
@@ -142,12 +143,23 @@ function isSpellProgressionFeature(name: string): boolean {
  */
 function extractAncestrySectionHtml(actor: NimbleCharacter): ContentSectionHtml | null {
 	const ancestry = actor.ancestry;
-	if (!ancestry) return null;
+	const ancestryBonus = actor.ancestryBonus;
+	if (!ancestry && !ancestryBonus) return null;
 
-	const abilities = extractMechanicalAbilitiesHtml(ancestry.system.description);
+	// Extracted per document, not from the two descriptions concatenated: the extractor
+	// keeps only what follows the first `<hr>`, so a bonus carrying a separator would
+	// discard the ancestry's text ahead of it.
+	const abilities = [ancestry?.system.description, ancestryBonus?.system.description]
+		.filter(Boolean)
+		.map((description) => extractMechanicalAbilitiesHtml(description as string))
+		.filter(Boolean)
+		.join(' ');
+
+	const originName = [ancestry?.name, ancestryBonus?.name].filter(Boolean).join(' — ');
+	const label = ancestry ? 'ANCESTRY' : 'ANCESTRY BONUS';
 	const header = abilities
-		? `<strong>ANCESTRY:</strong> ${ancestry.name} - ${abilities}`
-		: `<strong>ANCESTRY:</strong> ${ancestry.name}`;
+		? `<strong>${label}:</strong> ${originName} - ${abilities}`
+		: `<strong>${label}:</strong> ${originName}`;
 
 	return {
 		header,
@@ -311,16 +323,21 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 	const hasReach = properties?.selected?.includes('reach') && properties.reach?.min;
 
 	if (cost?.type && cost.type !== 'none' && cost.type !== 'mana') {
-		let castingTimeStr = cost.quantity > 1 ? `${cost.quantity} ${cost.type}s` : `1 ${cost.type}`;
+		// `special` carries no quantity, so the formatter returns null and it prints
+		// as the bare type rather than the pluralised "1 special" this used to emit.
+		let castingTimeStr =
+			formatActivationCostLabel(cost) ?? CONFIG.NIMBLE.activationCostTypes[cost.type] ?? null;
 
-		// Add target type suffix
-		if (hasTemplate) {
-			castingTimeStr += ' AOE';
-		} else if (!hasRange && !hasReach) {
-			castingTimeStr += ' self';
+		if (castingTimeStr) {
+			// Add target type suffix
+			if (hasTemplate) {
+				castingTimeStr += ' AOE';
+			} else if (!hasRange && !hasReach) {
+				castingTimeStr += ' self';
+			}
+
+			parts.push(castingTimeStr);
 		}
-
-		parts.push(castingTimeStr);
 	}
 
 	// Mana cost
@@ -596,26 +613,48 @@ function generateInitialColumnContentHtml(actor: NimbleCharacter): [string, stri
 function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 	const items: SelectableItem[] = [];
 
-	// Ancestry
+	// Ancestry. The trait lives on the separate ancestryBonus item, so both documents feed
+	// this entry — and the bonus alone still produces one, since deleting the ancestry
+	// doesn't take the bonus's rules with it.
 	const ancestry = actor.ancestry;
-	if (ancestry) {
-		const abilities = extractMechanicalAbilities(ancestry.system.description);
-		const abilitiesHtml = extractMechanicalAbilitiesHtml(ancestry.system.description);
+	const ancestryBonus = actor.ancestryBonus;
+	if (ancestry || ancestryBonus) {
+		// Extracted per document rather than from the two descriptions concatenated:
+		// `extractMechanicalAbilities` keeps only what follows the first `<hr>`, so a bonus
+		// carrying a separator would discard the ancestry's text ahead of it.
+		const descriptions = [ancestry?.system.description, ancestryBonus?.system.description].filter(
+			Boolean,
+		) as string[];
+		const abilities = descriptions
+			.map((description) => extractMechanicalAbilities(description))
+			.filter(Boolean)
+			.join(' | ');
+		const abilitiesHtml = descriptions
+			.map((description) => extractMechanicalAbilitiesHtml(description))
+			.filter(Boolean)
+			.join(' ');
+
+		// The bonus name is the trait's own name ("Stout"), which the ancestry name no
+		// longer implies now that the two can be mixed and matched.
+		const originName = [ancestry?.name, ancestryBonus?.name].filter(Boolean).join(' — ');
+		const heading = ancestry ? 'ANCESTRY' : 'ANCESTRY BONUS';
 		const content = abilities
-			? `ANCESTRY: ${ancestry.name} - ${abilities}`
-			: `ANCESTRY: ${ancestry.name}`;
+			? `${heading}: ${originName} - ${abilities}`
+			: `${heading}: ${originName}`;
 		const contentHtml = abilitiesHtml
-			? `<strong>ANCESTRY:</strong> ${ancestry.name} - ${abilitiesHtml}`
-			: `<strong>ANCESTRY:</strong> ${ancestry.name}`;
+			? `<strong>${heading}:</strong> ${originName} - ${abilitiesHtml}`
+			: `<strong>${heading}:</strong> ${originName}`;
 
 		// Get size category display name
 		const sizeCategory = actor.system.attributes.sizeCategory ?? 'medium';
 		const { sizeCategories } = CONFIG.NIMBLE;
 		const sizeLabel = game.i18n.localize(sizeCategories[sizeCategory] ?? sizeCategory);
-		const ancestryLabel = `${ancestry.name ?? 'Unknown Ancestry'} (${sizeLabel})`;
+		const ancestryLabel = ancestry
+			? `${ancestry.name ?? 'Unknown Ancestry'} (${sizeLabel})`
+			: (ancestryBonus?.name ?? 'Unknown Ancestry Bonus');
 
 		items.push({
-			id: `ancestry-${ancestry.id}`,
+			id: ancestry ? `ancestry-${ancestry.id}` : `ancestry-bonus-${ancestryBonus?.id}`,
 			category: 'ancestry',
 			label: ancestryLabel,
 			content,

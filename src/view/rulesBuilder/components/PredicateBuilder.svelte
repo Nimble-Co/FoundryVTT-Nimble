@@ -13,12 +13,13 @@
 	} from './PredicateBuilderState.svelte.js';
 	import { loadCompendiumKeys } from './predicateKeyCache.svelte.js';
 
-	let { value, onChange, previewDomain }: PredicateBuilderProps = $props();
+	let { value, onChange, previewDomain, appliesInPrePrepareData }: PredicateBuilderProps = $props();
 
 	const state = createPredicateBuilderState(
 		() => value,
 		() => onChange,
 		() => previewDomain,
+		() => appliesInPrePrepareData,
 	);
 
 	state.setupSyncEffect();
@@ -154,7 +155,16 @@
 		{localize('NIMBLE.rulesBuilder.predicateAddCondition')}
 	</button>
 
-	{#if state.preview}
+	{#if state.lateKeyWarning}
+		<div class="nimble-predicate-builder__preview nimble-predicate-builder__preview--warning">
+			<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+			<span>
+				{localize('NIMBLE.rulesBuilder.predicateLateKeyWarning', {
+					keys: state.lateKeyWarning.join(', '),
+				})}
+			</span>
+		</div>
+	{:else if state.preview}
 		<div
 			class="nimble-predicate-builder__preview"
 			class:nimble-predicate-builder__preview--match={state.preview.matches}
@@ -264,6 +274,11 @@
 			&--no-match {
 				background: var(--nimble-roll-failure-background-color);
 				color: var(--nimble-roll-failure-color);
+			}
+
+			&--warning {
+				background: var(--nimble-warning-background-color);
+				border: 1px solid var(--nimble-warning-border-color);
 			}
 		}
 	}

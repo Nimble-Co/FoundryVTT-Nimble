@@ -23,6 +23,7 @@ export function createPredicateBuilderState(
 	getValue: () => RawPredicate,
 	getOnChange: () => (next: RawPredicate) => void,
 	getPreviewDomain: () => Set<string> | undefined,
+	getAppliesEarly: () => boolean | undefined = () => false,
 ) {
 	let rows = $state<RowState[]>(untrack(() => rowsFromValue(getValue())));
 	let lastSerializedValue = $state('');
@@ -99,6 +100,20 @@ export function createPredicateBuilderState(
 	// Unique `<datalist>` id so multiple builders on the same page don't collide.
 	const datalistId = `nimble-predicate-keys-${Math.random().toString(36).slice(2)}`;
 
+	// Late tags never match for rules applying in prePrepareData — surface the
+	// authoring mistake instead of a false "matches" preview.
+	const lateKeyWarning = $derived.by(() => {
+		if (!getAppliesEarly()) return null;
+
+		const lateKeys = (CONFIG.NIMBLE as { LATE_PREDICATE_KEYS?: readonly string[] })
+			.LATE_PREDICATE_KEYS;
+		if (!lateKeys?.length) return null;
+
+		const referenced = Predicate.extractReferencedKeys(rowsToValue(rows));
+		const hits = lateKeys.filter((key) => referenced.has(key));
+		return hits.length ? hits : null;
+	});
+
 	const preview = $derived.by(() => {
 		const previewDomain = getPreviewDomain();
 		if (!previewDomain) return null;
@@ -133,6 +148,9 @@ export function createPredicateBuilderState(
 		},
 		get preview() {
 			return preview;
+		},
+		get lateKeyWarning() {
+			return lateKeyWarning;
 		},
 		datalistId,
 		setupSyncEffect,

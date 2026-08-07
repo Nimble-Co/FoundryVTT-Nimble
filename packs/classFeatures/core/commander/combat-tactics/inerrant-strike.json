@@ -21,26 +21,12 @@
 			},
 			"effects": [
 				{
-					"id": "QAVgiQieJEa3Z9kM",
-					"type": "damage",
-					"damageType": "acid",
-					"formula": "0",
+					"id": "tlIdRtb6mhnZuJG2",
+					"type": "note",
+					"noteType": "flavor",
+					"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
 					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false,
-					"on": {
-						"hit": [
-							{
-								"id": "tlIdRtb6mhnZuJG2",
-								"type": "note",
-								"noteType": "flavor",
-								"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
-								"parentContext": "hit",
-								"parentNode": "QAVgiQieJEa3Z9kM"
-							}
-						]
-					}
+					"parentNode": null
 				}
 			],
 			"showDescription": true,

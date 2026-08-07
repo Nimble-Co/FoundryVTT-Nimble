@@ -46,7 +46,7 @@
 	}
 
 	function groupItemsByType(items) {
-		return items.reduce((categories, item) => {
+		const categories = items.reduce((categories, item) => {
 			const { type: itemType } = item.reactive;
 
 			if (itemType === 'feature') {
@@ -63,6 +63,14 @@
 
 			return categories;
 		}, {});
+
+		// Ancestry bonuses normally render nested under the ancestry card. Only suppress the
+		// top-level section when there is an ancestry to nest them under — otherwise deleting
+		// the ancestry, or searching for the bonus by name, hides an item whose rules are
+		// still applying, with no path left to edit or delete it.
+		if (categories.ancestry) delete categories.ancestryBonus;
+
+		return categories;
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
@@ -70,14 +78,24 @@
 		sheet.clearDroppedItemFlash(itemId);
 	}
 
+	/**
+	 * The level an item sorts at within its group. Items with no level sort last.
+	 *
+	 * Deliberately silent about a missing level. Most cards on this tab are types
+	 * that carry no level fields at all (a class or subclass card cannot have
+	 * one), and a feature that another feature's rule grants must have none:
+	 * level data is what makes the class progression surface an item, so adding
+	 * it there would offer a second copy alongside the granted one.
+	 *
+	 * Reporting either at runtime puts a message in every player's console about
+	 * pack data they cannot act on, once per sort. Which items should carry level
+	 * data is asserted by `featureLevelData.test.ts` instead, before it ships.
+	 */
 	function getEffectiveLevel(item): number {
 		const explicit = item.reactive.system?.gainedAtLevel;
 		if (explicit != null) return explicit;
 		const levels = item.reactive.system?.gainedAtLevels;
 		if (levels?.length) return Math.min(...levels);
-		console.warn(
-			`[Nimble] Feature "${item.reactive.name}" has no level data — gainedAtLevel: ${explicit}, gainedAtLevels: ${JSON.stringify(levels)}`,
-		);
 		return Infinity;
 	}
 
@@ -120,7 +138,15 @@
 	}
 
 	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = ['class', 'subclass', 'feature', 'ancestry', 'background', 'boon'];
+	const validTypes = [
+		'class',
+		'subclass',
+		'feature',
+		'ancestry',
+		'ancestryBonus',
+		'background',
+		'boon',
+	];
 	const { featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
@@ -152,6 +178,9 @@
 			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
 		),
 	);
+
+	// Ancestry bonuses — rendered nested under the ancestry card
+	let ancestryBonusItems = $derived(items.filter((item) => item.reactive.type === 'ancestryBonus'));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -317,6 +346,14 @@
 			{#if categoryName === 'subclass' && subclassFeatureItems.length}
 				<ul class="nimble-item-list nimble-item-list--sublist">
 					{#each subclassFeatureItems as item (item.reactive._id)}
+						{@render featureCard(item)}
+					{/each}
+				</ul>
+			{/if}
+
+			{#if categoryName === 'ancestry' && ancestryBonusItems.length}
+				<ul class="nimble-item-list nimble-item-list--sublist">
+					{#each ancestryBonusItems as item (item.reactive._id)}
 						{@render featureCard(item)}
 					{/each}
 				</ul>

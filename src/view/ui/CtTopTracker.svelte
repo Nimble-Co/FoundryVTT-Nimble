@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import localize from '#utils/localize.js';
+	import { getPendingActionsLocalizationKey } from '#utils/pendingActionWording.js';
 	import { createCtTopTrackerState } from './CtTopTracker.state.svelte.js';
 	import { CT_SHELL_EXTRA_WIDTH_REM } from './ctTopTracker/constants.js';
 	import {
@@ -103,7 +105,27 @@
 	const handleTrackScrollbarPointerRelease = trackerViewState.handleTrackScrollbarPointerRelease;
 	const canDragCombatant = trackerViewState.canDragCombatant;
 	const canDragTrackEntry = trackerViewState.canDragTrackEntry;
-	const localize = game.i18n.localize.bind(game.i18n);
+
+	/**
+	 * The signed marker shown beside a combatant's action box while an action
+	 * adjustment is waiting to land, or `null` when nothing is pending. Both
+	 * combatant card layouts render the marker, so the wording lives here and has
+	 * one source of truth.
+	 */
+	function getPendingActionMarker(
+		pendingDelta: number,
+	): { text: string; tooltip: string; isNegative: boolean } | null {
+		if (pendingDelta === 0) return null;
+
+		const isNegative = pendingDelta < 0;
+		const count = String(Math.abs(pendingDelta));
+
+		return {
+			text: `${isNegative ? '−' : '+'}${count}`,
+			tooltip: localize(getPendingActionsLocalizationKey(pendingDelta), { count }),
+			isNegative,
+		};
+	}
 
 	function handleCombatantPortraitImageError(event: Event) {
 		const img = event.currentTarget;
@@ -464,6 +486,7 @@
 										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(
 											entry.combatant,
 										)}
+										{@const pendingActionMarker = getPendingActionMarker(actionState.pendingDelta)}
 										<div class="nimble-ct__pips">
 											<div
 												class="nimble-ct__action-box-shell"
@@ -492,7 +515,12 @@
 												>
 													{displayCurrentActions}/{#if hasAdditional}<span
 															class="nimble-ct__action-max--additional">{displayMaxActions}</span
-														>{:else}{displayMaxActions}{/if}
+														>{:else}{displayMaxActions}{/if}{#if pendingActionMarker}<span
+															class="nimble-ct__pending-action"
+															class:nimble-ct__pending-action--negative={pendingActionMarker.isNegative}
+															data-tooltip={pendingActionMarker.tooltip}
+															data-tooltip-direction="UP">{pendingActionMarker.text}</span
+														>{/if}
 												</span>
 												{#if canAdjustActions}
 													<button
@@ -683,6 +711,7 @@
 										{@const displayMaxActions = Math.max(0, Math.floor(actionState.effectiveMax))}
 										{@const hasAdditional = actionState.additional > 0}
 										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(combatant)}
+										{@const pendingActionMarker = getPendingActionMarker(actionState.pendingDelta)}
 										<div class="nimble-ct__pips">
 											<div
 												class="nimble-ct__action-box-shell"
@@ -711,7 +740,12 @@
 												>
 													{displayCurrentActions}/{#if hasAdditional}<span
 															class="nimble-ct__action-max--additional">{displayMaxActions}</span
-														>{:else}{displayMaxActions}{/if}
+														>{:else}{displayMaxActions}{/if}{#if pendingActionMarker}<span
+															class="nimble-ct__pending-action"
+															class:nimble-ct__pending-action--negative={pendingActionMarker.isNegative}
+															data-tooltip={pendingActionMarker.tooltip}
+															data-tooltip-direction="UP">{pendingActionMarker.text}</span
+														>{/if}
 												</span>
 												{#if canAdjustActions}
 													<button
@@ -2246,6 +2280,28 @@
 	}
 	.nimble-ct__action-max--additional {
 		color: hsl(45, 80%, 55%);
+	}
+	/**
+	 * Lives inside the action box rather than beside it. The box is min-width
+	 * driven and its digits never fill that width, so the marker rides along in
+	 * the slack the box already has: the action row keeps the width it was tuned
+	 * for and the marker cannot be pushed past the card, which clips its
+	 * contents. It also puts the marker on the box's own backing, so the number
+	 * stays legible whatever the portrait behind the card looks like.
+	 */
+	.nimble-ct__pending-action {
+		flex: 0 0 auto;
+		margin-inline-start: clamp(0.1rem, calc(0.16rem * var(--nimble-ct-card-scale, 1)), 0.16rem);
+		line-height: 1;
+		font-size: clamp(0.56rem, calc(0.7rem * var(--nimble-ct-card-scale, 1)), 0.7rem);
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		color: hsl(120, 45%, 62%);
+		text-shadow: var(--nimble-ct-action-text-shadow);
+		cursor: help;
+	}
+	.nimble-ct__pending-action--negative {
+		color: hsl(1, 70%, 62%);
 	}
 	.nimble-ct__action-adjust {
 		all: unset;

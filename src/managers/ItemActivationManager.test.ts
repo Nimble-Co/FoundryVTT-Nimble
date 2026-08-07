@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../tests/mocks/foundry.js';
+import { keyPressStore } from '../stores/keyPressStore.js';
+import { findNodesByContexts } from '../utils/treeManipulation/findNodesByContexts.js';
 import { ItemActivationManager, testDependencies } from './ItemActivationManager.js';
 
 /** Mock roll instance interface */
@@ -77,14 +79,28 @@ const DamageRoll = MockDamageRoll;
 const NimbleRoll = MockNimbleRoll;
 const getRollFormula = mockGetRollFormula;
 
-vi.doMock('../stores/keyPressStore.js', () => ({
-	keyPressStore: {
-		subscribe: vi.fn(() => vi.fn()),
-	},
-}));
-vi.doMock('../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
-	default: vi.fn(),
-}));
+// Dialog constructor mocks, injected through testDependencies because module
+// mocks cannot intercept the manager's dialog imports (tests/setup.ts loads
+// the real module graph before any test-file mocks register). The manager
+// awaits `dialog.render(true)` and then `dialog.promise`, so each mock
+// instance provides both; `dialogState.result` controls what the promise
+// resolves to (null/undefined simulates a cancelled dialog).
+const dialogState = { result: undefined as unknown };
+
+function createMockDialogInstance() {
+	return {
+		render: vi.fn().mockResolvedValue(undefined),
+		promise: Promise.resolve(dialogState.result),
+	};
+}
+
+const MockItemActivationConfigDialog = vi.fn(function ItemActivationConfigDialogMock() {
+	return createMockDialogInstance();
+});
+
+const MockSpellUpcastDialog = vi.fn(function SpellUpcastDialogMock() {
+	return createMockDialogInstance();
+});
 
 // Helper function to create a mock implementation that handles 'new' correctly
 // Returns the mockInstance directly since vitest doesn't properly bind 'this' for class mocks
@@ -124,6 +140,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			DamageRoll: MockDamageRoll,
 			getRollFormula: mockGetRollFormula,
 			reconstructEffectsTree: mockReconstructEffectsTree,
+			ItemActivationConfigDialog: MockItemActivationConfigDialog,
+			SpellUpcastDialog: MockSpellUpcastDialog,
 		});
 
 		// Create mock actor
@@ -244,6 +262,135 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			// so the chat card can display the save DC and button
 			expect(result.activation).not.toBeNull();
 			expect(mockReconstructEffectsTree).toHaveBeenCalled();
+		});
+	});
+
+	describe('Typed conditional-bonus damage', () => {
+		it('rolls typed conditional damage as its own damage effect with the chosen type', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{
+					fastForward: true,
+					conditionalDamages: [{ formula: '2', damageType: 'fire', label: 'Quarry' }],
+				},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+
+			// Primary node → DamageRoll; conditional damage → plain Roll. Give both a
+			// concrete instance (the default MockRoll impl recurses on `new Roll`).
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+			MockRoll.mockImplementation(function conditionalRoll(this: unknown) {
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn(() => ({ total: 2 })),
+				};
+			});
+
+			const result = await manager.getData();
+
+			// One roll for the primary damage node, one for the typed conditional damage.
+			expect(result.rolls).toHaveLength(2);
+			const effects = result.activation?.effects as EffectNode[];
+			const added = effects.find((n) => n.type === 'damage' && n.damageType === 'fire') as
+				| { formula: string; roll?: unknown }
+				| undefined;
+			expect(added).toBeDefined();
+			expect(added?.formula).toBe('2');
+			expect(added?.roll).toBeDefined();
+		});
+
+		it('surfaces the typed conditional damage on a hit card', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{
+					fastForward: true,
+					conditionalDamages: [{ formula: '2', damageType: 'fire', label: 'Quarry' }],
+				},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+			MockRoll.mockImplementation(function conditionalRoll(this: unknown) {
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn(() => ({ total: 2 })),
+				};
+			});
+
+			const result = await manager.getData();
+
+			const effects = result.activation?.effects as EffectNode[];
+			const added = effects.find((n) => n.type === 'damage' && n.damageType === 'fire');
+			const surfaced = findNodesByContexts([added as EffectNode], ['hit']);
+
+			expect(surfaced).toHaveLength(1);
+			expect(surfaced[0]).toMatchObject({ type: 'damageOutcome', parentNode: added?.id });
+		});
+
+		it('adds no extra effect when no typed conditional damage is supplied', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+
+			const result = await manager.getData();
+
+			expect(result.rolls).toHaveLength(1);
+			expect((result.activation?.effects as EffectNode[]).length).toBe(1);
 		});
 	});
 
@@ -1138,6 +1285,226 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					isVicious: false,
 				},
 			);
+		});
+	});
+
+	describe('Dialog routing', () => {
+		beforeEach(() => {
+			dialogState.result = undefined;
+			keyPressStore.set({ ctrl: false, shift: false, alt: false });
+		});
+
+		it('should skip the config dialog and complete activation when skipRollDialog is set', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '1d8',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			MockRoll.mockImplementation(function (this: unknown) {
+				return mockRoll;
+			});
+
+			const result = await manager.getData();
+
+			expect(result.activation).not.toBeNull();
+			expect(result.rolls).toHaveLength(1);
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+		});
+
+		it('should skip the upcast dialog and activate at base tier when skipRollDialog is set on a spell', async () => {
+			mockItem.type = 'spell';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+
+			manager.activationData = { effects: [], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([]);
+
+			const result = await manager.getData();
+
+			expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(result.activation).not.toBeNull();
+			// No upcast was applied, so the spell activated at its base tier.
+			expect(manager.upcastResult).toBeNull();
+		});
+
+		it('should open the config dialog when skipRollDialog is unset and the item has rolls', async () => {
+			dialogState.result = { rollMode: 0 };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 4 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			const result = await manager.getData();
+
+			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
+			expect(result.activation).not.toBeNull();
+			expect(result.rolls).toHaveLength(1);
+		});
+
+		it('should return null activation and rolls when the config dialog is cancelled', async () => {
+			dialogState.result = null;
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const result = await manager.getData();
+
+			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
+			expect(result).toEqual({ activation: null, rolls: null });
+			expect(DamageRoll).not.toHaveBeenCalled();
+		});
+
+		it('should open the config dialog when Alt is held and skipRollDialog is set', async () => {
+			keyPressStore.set({ ctrl: false, shift: false, alt: true });
+			dialogState.result = { rollMode: 0 };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '1d8',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			MockRoll.mockImplementation(function (this: unknown) {
+				return mockRoll;
+			});
+
+			const result = await manager.getData();
+
+			// Alt inverts the item's dialog default, forcing the dialog open.
+			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
+			expect(result.activation).not.toBeNull();
+		});
+
+		it('should skip the config dialog when Alt is held and skipRollDialog is unset', async () => {
+			keyPressStore.set({ ctrl: false, shift: false, alt: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 4 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			const result = await manager.getData();
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(result.activation).not.toBeNull();
+			expect(result.rolls).toHaveLength(1);
+		});
+
+		it('should prefer fastForward options over skipRollDialog defaults when both are set', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true, rollFormula: '3d12', rollHidden: true },
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 20 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			const result = await manager.getData();
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			// The fastForward rollFormula overrides the node formula; the
+			// skipRollDialog default dialog data would have used '1d6'.
+			expect(DamageRoll).toHaveBeenCalledWith('3d12', expect.anything(), expect.anything());
+			// rollHidden only flows through the fastForward dialog data build.
+			expect(result.rollHidden).toBe(true);
 		});
 	});
 });

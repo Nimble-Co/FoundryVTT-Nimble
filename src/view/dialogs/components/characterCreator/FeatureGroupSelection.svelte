@@ -3,57 +3,36 @@
 
 	import { createFeatureGroupSelectionState } from './FeatureGroupSelection.svelte.ts';
 	import FeatureCard from './FeatureCard.svelte';
-	import localize from '#utils/localize.js';
 
 	let {
 		groupName,
-		features,
-		selectionCount,
+		group,
 		selectedFeatures,
 		onSelect,
+		hideGroupName = false,
 	}: FeatureGroupSelectionProps = $props();
 
 	const state = createFeatureGroupSelectionState(() => ({
 		groupName,
-		features,
-		selectionCount,
+		group,
 		selectedFeatures,
 	}));
-
-	function getHintText() {
-		if (state.isFixed) return null;
-
-		if (selectionCount === 1) {
-			return localize('NIMBLE.classFeatureSelection.chooseOne');
-		}
-
-		return game.i18n.format('NIMBLE.classFeatureSelection.chooseN', {
-			count: selectionCount,
-		});
-	}
-
-	function getProgressText() {
-		if (state.isFixed) return null;
-
-		return game.i18n.format('NIMBLE.classFeatureSelection.nOfMSelected', {
-			current: state.selectedCount,
-			required: selectionCount,
-		});
-	}
 </script>
 
 <div class="feature-group">
 	<header class="feature-group__header">
-		<h4 class="nimble-heading" data-heading-variant="section">
-			{state.formattedGroupName}
-		</h4>
+		{#if !hideGroupName}
+			<h4 class="nimble-heading" data-heading-variant="section">
+				{state.heading}
+			</h4>
+		{/if}
 		{#if !state.isFixed}
-			<span class="feature-group__hint">{getHintText()}</span>
+			<span class="feature-group__hint">{state.hintText}</span>
 			<span
 				class="feature-group__progress"
 				class:feature-group__progress--complete={state.isComplete}
 			>
-				{getProgressText()}
+				{state.progressText}
 			</span>
 		{/if}
 	</header>
@@ -64,6 +43,7 @@
 			<FeatureCard
 				{feature}
 				isSelected={state.isFixed ? false : isSelected}
+				showSourceLabel={group.duplicatedSourceUuids?.has(feature.uuid) ?? false}
 				onSelect={state.isFixed ? undefined : () => onSelect(feature)}
 			/>
 		{/each}

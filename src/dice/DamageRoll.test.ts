@@ -2889,3 +2889,141 @@ describe('DamageRoll.matches', () => {
 		expect(DamageRoll.matches('4d6kh3 + 2d8 + 5')).toBe(false));
 	it('does not match 2d20kh + 1d6', () => expect(DamageRoll.matches('2d20kh + 1d6')).toBe(false));
 });
+
+describe('forceMiss option', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('forces a miss even when the primary die rolls a hit', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forceMiss: true,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+		expect(roll.isCritical).toBe(false);
+	});
+
+	it('overrides a primary die crit: isCritical false and critCount zeroed', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forceMiss: true,
+			},
+		);
+		stagePrimaryDieResults(
+			roll,
+			[
+				{ result: 8, active: true, exploded: true },
+				{ result: 3, active: true },
+			],
+			11,
+		);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+		expect(roll.isCritical).toBe(false);
+		expect(roll.critCount).toBe(0);
+	});
+
+	it('wins over canMiss: false', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: false,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forceMiss: true,
+			},
+		);
+		// canMiss: false pins isMiss to false at construction time
+		expect(roll.isMiss).toBe(false);
+
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+	});
+
+	it('applies in modifier-mode, overriding a per-die crit', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forceMiss: true,
+			},
+		);
+		expect(roll.modifierMode).toBe(true);
+
+		stageModifierModeRoll(roll, [[{ result: 8, active: true }]], 8);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+		expect(roll.isCritical).toBe(false);
+		expect(roll.critCount).toBe(0);
+	});
+
+	it('does not force a miss when the option is absent', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('serializes the forced miss and restores it through fromData', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forceMiss: true,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		const json = roll.toJSON() as any;
+		expect(json.isMiss).toBe(true);
+		expect(json.isCritical).toBe(false);
+		expect(json.critCount).toBe(0);
+
+		const restored = DamageRoll.fromData({ ...json, evaluated: true });
+		expect(restored.isMiss).toBe(true);
+		expect(restored.isCritical).toBe(false);
+	});
+});

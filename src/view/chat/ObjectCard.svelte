@@ -2,9 +2,12 @@
 	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
+	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
+	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
+	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 
@@ -62,7 +65,13 @@
 
 	<ItemCardEffects />
 
+	<GrantedActionOffers />
+
+	<IncomingReactionPrompts />
+
 	<ChargeConsumptionNode />
+
+	<ActionDeltaSummaryNode />
 </article>
 
 <style>

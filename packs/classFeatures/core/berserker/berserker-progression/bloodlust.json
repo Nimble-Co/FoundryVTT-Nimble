@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "bloodlust-fury-consumer",
+				"identifier": "",
+				"label": "Bloodlust: free movement",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "fury",
+				"poolScope": "item",
+				"mode": "manual",
+				"cost": "1",
+				"bonusOnAttackDelivery": null,
+				"effectFormula": "@dexterity * @n",
+				"effectType": "generic"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +50,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p>",
+		"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p><p><em>Click this feature to use it. The chat card shows how many spaces you may move.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

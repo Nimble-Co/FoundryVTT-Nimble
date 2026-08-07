@@ -1465,14 +1465,25 @@ export const myStore = writable<MyStoreState>(initialState);
 |---------|----------|---------|
 | `SYSTEM_ID`, `SYSTEM_PATH`, `systemHookName()` | `src/utils/systemId.ts` (alias: `#system`) | Build-time-baked system id from `public/system.json`, the `systems/<id>` path prefix, and a helper that namespaces custom hook names (`systemHookName('damageApplied')` → `<id>.damageApplied`). Use for every flag scope, flag-object key, settings namespace, sheet/keybinding registration, asset path, and custom hook name — never hardcode `'nimble'`. The dev rolling release rebuilds under a different id (`nimble-dev`). Enforced by `src/utils/systemId.test.ts` |
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
+| `applyConditionToActor()` | `src/utils/applyConditionToActor.ts` | The shared path for applying a condition from chat cards and condition rules: dedupes against a condition the target already has, fires the blocking `preApplyCondition` hook that condition immunity listens on, creates the effect with a recorded `origin` (the causing item, falling back to the causing actor) and an optional duration, then fires `conditionApplied`. `Actor#toggleStatusEffect` cannot record an origin, so this mirrors its internals instead. Not yet universal: `src/hooks/automaticConditions.ts` still applies derived conditions through `toggleStatusEffect` with its own immunity check |
 | `isCombatStarted()` | `src/utils/isCombatStarted.ts` | Determine whether a combat encounter has started |
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
 | `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
 | `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
+| `requestCombatantActionDelta()` | `src/utils/requestCombatantActionDelta.ts` | Apply a combined current/pending action adjustment to a character combatant — direct for GMs/owners, relayed to the active GM over the system socket otherwise |
+| `getPendingActionsLocalizationKey()` | `src/utils/pendingActionWording.ts` | Pick the singular or plural localization key describing a combatant's pending action adjustment, so the character sheet and the combat tracker word it identically |
+| `getPrimaryActiveGmId()` | `src/utils/getPrimaryActiveGmId.ts` | User id of the single GM client that executes relayed socket requests (designated active GM, falling back to any connected GM), or `null` when no GM is connected |
+| `collectGrantedActionOffers()`, `requestGrantedActionOfferUse()` | `src/utils/grantedActionOffers.ts` | Granted-activation offers on activation chat cards — build offers from an item's `grantActivation` rules at use time, and consume an offer (direct for GMs, relayed to the active GM over the system socket otherwise) |
 | `getActorHpValue()` | `src/utils/isCombatantDead.ts` | Get an actor's current HP value |
 | `getActorWoundsValueAndMax()` | `src/utils/isCombatantDead.ts` | Get an actor's wounds value and max |
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |
 | `getRollFormula()` | `src/utils/getRollFormula.ts` | Build roll formula strings |
+| `getDamageTypeLabel()` | `src/utils/getDamageTypeLabel.ts` | Localized display name for a damage type key, falling back to the key itself |
+| `attackDeliveryFromAttackType()`, `matchesAttackDelivery()` | `src/utils/attackDelivery.ts` | Map an activation's `attackType` to a melee/ranged delivery, and test a rule's `melee`/`ranged`/`any` filter against it. An activation with no attack type has no delivery, so any filter excludes it |
+| `substituteSpendFormula()` | `src/utils/dicePool/substituteSpendFormula.ts` | Resolve the `@n` / `@sum` placeholders in a dice-consumer effect formula against the dice a player picked |
+| `foldBonusIntoPrimaryDamage()`, `findPrimaryDamageNode()`, `replaceDamageRollInRollsSource()` | `src/utils/foldBonusIntoPrimaryDamage.ts` | Add a flat bonus to an activation card's primary damage roll, locate that roll's node, and keep the message `rolls` source in step with a patched damage roll |
+| `appendTypedBonusDamage()` | `src/utils/appendTypedBonusDamage.ts` | Add a differently-typed bonus to an activation card as its own damage packet, beside the damage it derives from |
+| `collectPoolSpendCardOffers()` | `src/utils/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |
 | `arraysAreEqual()` | `src/utils/arraysAreEqual.ts` | Compare two arrays for equality |
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |
 | `isValidDiceModifier()` | `src/utils/isValidDiceModifier.ts` | Validate dice modifier strings |
@@ -1484,12 +1495,18 @@ export const myStore = writable<MyStoreState>(initialState);
 | `manaRecovery` | `src/utils/manaRecovery.ts` | Mana recovery calculations |
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
+| `isLevelUpOptionApplicable()` | `src/utils/isLevelUpOptionApplicable.ts` | Whether a feature's level-up option applies at a given level (empty `applyAtLevels` ⇒ every level) |
+| `getItemSource()` | `src/utils/getItemSource.ts` | Whether a document lives in a compendium pack or the world, from its UUID |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
-| `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (defaults to 1) |
+| `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
+| `resolveMinionAttackActionCost()` | `src/utils/resolveMinionAttackActionCost.ts` | Action cost for group-attack activations; a missing or `none` cost defaults to 1 (legacy pack convention), an explicit zero stays free |
+| `formatActivationCostLabel()` | `src/utils/formatActivationCostLabel.ts` | Render an activation cost as "1 Action", "2 Actions", "10 Minutes" or "Free"; returns `null` for the types that carry no quantity so the caller can label them |
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
 | `countAdjacentEnemies()`, `ADJACENCY_QUALIFIER` | `src/utils/tokenAdjacency.ts` | Count enemy tokens adjacent to a given token; respects the `adjacencyIncludesDiagonals` world setting; accepts position overrides for pre-commit token moves |
 | `tokenHoverIn()`, `tokenGroupHoverIn()`, `tokenHoverOut()` | `src/utils/tokenHoverHighlight.ts` | Draw/remove a PIXI ring on canvas tokens on hover; `tokenGroupHoverIn` highlights multiple tokens simultaneously (used for monster stacks) |
+| `readToggledEffects()`, `computeNextToggledList()`, `getToggledTargetTags()`, `TOGGLED_EFFECTS_FLAG_KEY` | `src/utils/toggledEffects.ts` | Relational "marked target" tracking for the `markTarget` rule — read/update the marking actor's flag list, compute capacity-bounded eviction, and emit `target:<flagKey>` domain tags (e.g. `target:quarry`) only for the marking actor |
+| `getActiveConditionalBonuses()`, `buildTargetDomain()` | `src/utils/conditionalBonuses.ts` | Discovery + target-domain helpers for the `conditionalBonus` rule — surface the per-attack advantage/damage choice for the activation dialog and build the target domain (own `target:*` tags plus relational toggled-effect tags) shared by the dialog and `ItemActivationManager` |
 
 ### Shared Stores
 
@@ -1515,8 +1532,10 @@ export const myStore = writable<MyStoreState>(initialState);
 |-----------|----------|---------|
 | `RadioGroup` | `src/view/components/RadioGroup.svelte` | Single-select radio button group |
 | `TagGroup` | `src/view/components/TagGroup.svelte` | Multi-select tag/chip group |
+| `DocumentPicker` | `src/view/components/DocumentPicker.svelte` | Drag-drop UUID field, optionally filtered by document type |
 | `PrimaryNavigation` | `src/view/components/PrimaryNavigation.svelte` | Main navigation tabs |
 | `PrimaryNavigationItem` | `src/view/components/PrimaryNavigationItem.svelte` | Individual navigation tab |
 | `SecondaryNavigation` | `src/view/components/SecondaryNavigation.svelte` | Secondary navigation container |
 | `SecondaryNavigationItem` | `src/view/components/SecondaryNavigationItem.svelte` | Secondary navigation item |
 | `Hint` | `src/view/components/Hint.svelte` | Hint/tooltip text display |
+| `SourceTag` | `src/view/components/SourceTag.svelte` | "World"/"Pack" badge marking where a document is sourced from |

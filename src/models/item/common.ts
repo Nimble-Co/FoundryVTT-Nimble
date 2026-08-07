@@ -21,7 +21,7 @@ export const activation = () => ({
 				required: true,
 				initial: 1,
 				nullable: false,
-				min: 1,
+				min: 0,
 				integer: true,
 			}),
 			type: new fields.StringField({
@@ -63,6 +63,11 @@ export const activation = () => ({
 			required: true,
 			nullable: false,
 			initial: true,
+		}),
+		skipRollDialog: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
 		}),
 		targets: new fields.SchemaField({
 			count: new fields.NumberField({

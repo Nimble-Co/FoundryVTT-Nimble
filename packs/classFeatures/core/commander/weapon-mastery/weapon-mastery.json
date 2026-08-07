@@ -42,7 +42,24 @@
 			6,
 			10,
 			14
-		]
+		],
+		"levelUpOptions": [
+			{
+				"id": "weapon-mastery",
+				"label": "Choose a Weapon Mastery",
+				"applyAtLevels": [
+					6,
+					10,
+					14
+				],
+				"rules": [],
+				"selectionGroups": [
+					"weapon-mastery"
+				],
+				"selectionCount": 1
+			}
+		],
+		"selectionCountByLevel": {}
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",

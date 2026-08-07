@@ -46,6 +46,13 @@ function schema() {
 			hint: 'NIMBLE.rules.chargePool.initial.hint',
 			choices: CHARGE_POOL_INITIAL_VALUES,
 		}),
+		hidden: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.chargePool.hidden.label',
+			hint: 'NIMBLE.rules.chargePool.hidden.hint',
+		}),
 		recoveries: new fields.ArrayField(
 			new fields.SchemaField({
 				trigger: new fields.StringField({
@@ -103,6 +110,15 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 
 	declare initial: (typeof ChargePoolRuleConfig.initialModes)[number];
 
+	/**
+	 * A hidden pool is tracked, recovered, validated and spent exactly like a
+	 * visible one; it is only left out of the sheet readouts. Use it for a pool
+	 * that exists to rate-limit or gate a feature rather than to be managed by
+	 * the player, so it does not read as a second budget next to the pool the
+	 * player actually spends.
+	 */
+	declare hidden: boolean;
+
 	static override defineSchema(): ChargePoolRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -117,6 +133,7 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 				['max', 'string'],
 				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20" | null'],
 				['initial', '"max" | "zero"'],
+				['hidden', 'boolean'],
 				['recoveries', 'Array<{ trigger: string; mode: string; value: string }>'],
 			]),
 		);

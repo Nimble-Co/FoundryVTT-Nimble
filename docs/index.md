@@ -7,11 +7,14 @@ hero:
   tagline: The official Nimble RPG system for Foundry Virtual Tabletop, built with TypeScript and Svelte.
   actions:
     - theme: brand
-      text: Get Started
-      link: /contributing
+      text: Read the Documentation
+      link: /documentation/
     - theme: brand
       text: Join the Discord
       link: https://discord.gg/SxVmHpu34R
+    - theme: alt
+      text: Contribute
+      link: /contributing
     - theme: alt
       text: View on GitHub
       link: https://github.com/Nimble-Co/FoundryVTT-Nimble
@@ -27,5 +30,5 @@ features:
   - icon: 🤝
     title: Community Driven!
     details: Open source under MIT. Contributions welcome, check the contributing guide to get started.
-		link: https://discord.gg/SxVmHpu34R
+    link: https://discord.gg/SxVmHpu34R
 ---

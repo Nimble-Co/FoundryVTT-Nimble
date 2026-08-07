@@ -2,6 +2,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
+import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleSpellItem extends NimbleBaseItem {
@@ -31,7 +32,7 @@ export class NimbleSpellItem extends NimbleBaseItem {
 		}
 
 		const manager = new ItemActivationManager(this as any, options);
-		const { activation, rolls, rollHidden } = await manager.getData();
+		const { activation, rolls, rollHidden, incomingReactions } = await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
 		}
@@ -60,8 +61,11 @@ export class NimbleSpellItem extends NimbleBaseItem {
 		});
 		if (!allowed) return null;
 
+		// Pool-node side effects run only after the gate allowed the use.
+		await manager.applyDeferredPoolNodes();
+
 		// Deduct mana for tiered spells (cantrips are free)
-		if (this.system.tier > 0 && this.actor) {
+		if (this.system.tier > 0 && this.actor && isResourceSpendingAutomationEnabled()) {
 			// Use upcast amount if available, otherwise use base tier cost
 			const manaSpent = manager.upcastResult?.manaSpent ?? this.system.tier;
 			const currentMana = (this.actor.system as any).resources?.mana?.current || 0;
@@ -80,7 +84,8 @@ export class NimbleSpellItem extends NimbleBaseItem {
 				flavor: `${this.actor?.name}: ${this.name}`,
 				speaker: ChatMessage.getSpeaker({ actor: this.actor }),
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-				sound: CONFIG.sounds.dice,
+				// Roll-less activations (descriptive spells) post a card without dice audio
+				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
 				rolls,
 				flags: {
 					[SYSTEM_ID]: {
@@ -95,6 +100,7 @@ export class NimbleSpellItem extends NimbleBaseItem {
 					actorType: this.actor?.type ?? '',
 					activation,
 					image: this.img || 'icons/svg/item-bag.svg',
+					incomingReactions: incomingReactions ?? [],
 					isCritical,
 					isMiss,
 					permissions: this.permission,
@@ -114,31 +120,13 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		if (chatCard) {
-			/**
-			 * A hook event that fires after an item has been used.
-			 * @function nimble.useItem
-			 * @memberof hookEvents
-			 * @param {Item} item                The item that was used
-			 * @param {ChatMessage} chatMessage   The chat message created by the item use
-			 * @param {Object} context            Additional context about the item use
-			 * @param {Roll[]} context.rolls      The rolls associated with the item use
-			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
-			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
-			 * @param {Token[]} context.targets   The targets of the item use
-			 */
-			Hooks.callAll(systemHookName('useItem') as any, this, chatCard, {
-				rolls,
-				isCritical,
-				isMiss,
-				targets: Array.from(game.user?.targets ?? []),
-				upcast: manager.upcastResult,
-			});
-		}
-
-		return chatCard || null;
+		return this._createActivationCard(chatData, rolls, activation, {
+			rolls,
+			isCritical,
+			isMiss,
+			targets: Array.from(game.user?.targets ?? []),
+			upcast: manager.upcastResult,
+		});
 	}
 
 	override async prepareChatCardData() {

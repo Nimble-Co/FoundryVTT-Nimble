@@ -57,6 +57,7 @@ const schema = () => ({
 							'addArmor',
 							'addDuration',
 							'addCondition',
+							'increaseDieSize',
 						],
 					}),
 					value: new fields.NumberField({ required: false, nullable: true, initial: null }),
@@ -90,6 +91,13 @@ const schema = () => ({
 						nullable: true,
 						initial: null,
 					}),
+					maxDieFaces: new fields.NumberField({
+						required: false,
+						nullable: true,
+						initial: null,
+						integer: true,
+						min: 2,
+					}),
 				}),
 				{ required: true, nullable: false, initial: [] },
 			),
@@ -112,6 +120,7 @@ const schema = () => ({
 									'addArmor',
 									'addDuration',
 									'addCondition',
+									'increaseDieSize',
 								],
 							}),
 							value: new fields.NumberField({ required: false, nullable: true, initial: null }),
@@ -149,6 +158,13 @@ const schema = () => ({
 								nullable: true,
 								initial: null,
 							}),
+							maxDieFaces: new fields.NumberField({
+								required: false,
+								nullable: true,
+								initial: null,
+								integer: true,
+								min: 2,
+							}),
 						}),
 						{ required: true, nullable: false, initial: [] },
 					),
@@ -175,6 +191,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 > {
 	declare activation: {
 		showDescription: boolean;
+		skipRollDialog: boolean;
 		acquireTargetsFromTemplate: boolean;
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };

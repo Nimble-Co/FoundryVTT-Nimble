@@ -1,4 +1,5 @@
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -74,6 +75,12 @@ function schema() {
 						widget: 'formula',
 					}),
 				),
+				// Cast: PredicateField extends ObjectField whose constructor typing
+				// doesn't accept label/hint. The renderer reads them off the instance.
+				predicate: new PredicateField({
+					label: 'NIMBLE.rules.dicePool.refills.predicate.label',
+					hint: 'NIMBLE.rules.dicePool.refills.predicate.hint',
+				} as unknown as never),
 			}),
 			{
 				required: true,
@@ -117,7 +124,7 @@ class DicePoolRule extends NimbleBaseRule<DicePoolRule.Schema> {
 				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20"'],
 				['max', 'string'],
 				['initial', '"max" | "zero"'],
-				['refills', 'Array<{ trigger: string; mode: string; value: string }>'],
+				['refills', 'Array<{ trigger: string; mode: string; value: string; predicate: object }>'],
 			]),
 		);
 	}

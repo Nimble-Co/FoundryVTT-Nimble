@@ -232,3 +232,80 @@ describe('RulesManager add + reload round-trip', () => {
 		});
 	});
 });
+
+class ThrowingRuleDataModel {
+	constructor(_source: RuleSource, _options?: unknown) {
+		throw new Error('skills: 0: notaskill is not a valid choice');
+	}
+}
+
+class InvalidRuleDataModel extends MockRuleDataModel {
+	invalid = true;
+	validationFailures = {
+		fields: {
+			unresolved: true,
+			toString: () => 'SkillBonusRule validation errors:\n  skills:\n    0: bad choice',
+		},
+		joint: null,
+	};
+}
+
+describe('RulesManager failure reporting', () => {
+	beforeEach(() => {
+		const config = CONFIG as unknown as { NIMBLE: { ruleDataModels: Record<string, unknown> } };
+		config.NIMBLE.ruleDataModels = {
+			...config.NIMBLE.ruleDataModels,
+			throwing: ThrowingRuleDataModel,
+			invalidating: InvalidRuleDataModel,
+		};
+	});
+
+	it('records why a rule of an unregistered type was dropped', () => {
+		const item = createMockItem([
+			{ id: 'rule-1', type: 'notARuleType', label: '', disabled: false },
+		]);
+
+		const manager = new RulesManager(
+			item as unknown as ConstructorParameters<typeof RulesManager>[0],
+		);
+
+		expect(manager.get('rule-1')).toBeUndefined();
+		expect(manager.failureFor('rule-1')).toContain('not a recognized rule type');
+	});
+
+	it('records the construction error when a rule source is malformed', () => {
+		const item = createMockItem([{ id: 'rule-1', type: 'throwing', label: '', disabled: false }]);
+
+		const manager = new RulesManager(
+			item as unknown as ConstructorParameters<typeof RulesManager>[0],
+		);
+
+		expect(manager.get('rule-1')).toBeUndefined();
+		expect(manager.failureFor('rule-1')).toContain('notaskill is not a valid choice');
+	});
+
+	it('flattens nested validation failures for a rule that built but is invalid', () => {
+		const item = createMockItem([
+			{ id: 'rule-1', type: 'invalidating', label: '', disabled: false },
+		]);
+
+		const manager = new RulesManager(
+			item as unknown as ConstructorParameters<typeof RulesManager>[0],
+		);
+
+		expect(manager.get('rule-1')).toBeDefined();
+		expect(manager.failureFor('rule-1')).toBe(
+			'SkillBonusRule validation errors: skills: 0: bad choice',
+		);
+	});
+
+	it('reports no failure for a healthy rule', () => {
+		const item = createMockItem([{ id: 'rule-1', type: 'armorClass', label: '', disabled: false }]);
+
+		const manager = new RulesManager(
+			item as unknown as ConstructorParameters<typeof RulesManager>[0],
+		);
+
+		expect(manager.failureFor('rule-1')).toBeUndefined();
+	});
+});

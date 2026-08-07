@@ -49,6 +49,14 @@ declare namespace SavingThrowRollModeRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
+/**
+ * This rule intentionally has NO data-prep hook: defaultRollMode is a
+ * user-configurable persisted value. Rule contributions are calculated
+ * on-demand by the "Reset to Class Defaults" button in
+ * ActorSavingThrowConfigDialog.svelte and by the character creation flow,
+ * so users can customize their saving throw roll modes while still being
+ * able to reset to calculated defaults.
+ */
 class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.savingThrowRollMode.description';
@@ -70,18 +78,6 @@ class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Sch
 				['requiresChoice', 'boolean'],
 			]),
 		);
-	}
-
-	prePrepareData(): void {
-		// NOTE: This rule intentionally does NOT modify defaultRollMode during data prep.
-		// The defaultRollMode is a user-configurable value that should persist.
-		//
-		// Rule contributions to roll modes are calculated on-demand by:
-		// 1. The "Reset to Class Defaults" button in ActorSavingThrowConfigDialog.svelte
-		// 2. Character creation flow
-		//
-		// This allows users to customize their saving throw roll modes while still
-		// being able to reset to calculated defaults when needed.
 	}
 }
 

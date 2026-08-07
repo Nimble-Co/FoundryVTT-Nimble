@@ -1,4 +1,5 @@
 import type { NimbleAncestryItem } from '#documents/item/ancestry.js';
+import type { NimbleAncestryBonusItem } from '#documents/item/ancestryBonus.js';
 import type { NimbleBackgroundItem } from '#documents/item/background.js';
 import type { NimbleBoonItem } from '#documents/item/boon.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
@@ -14,8 +15,12 @@ import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.
 import { RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
-import { consumeCombatantAction } from '../../utils/combatTurnActions.js';
+import {
+	consumeCombatantAction,
+	getCombatantCurrentActions,
+} from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import showInsufficientActionsConfirmation from '../../utils/showInsufficientActionsConfirmation.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
@@ -24,6 +29,7 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
+import DamageDefensesConfig from '../../view/dialogs/components/DamageDefensesConfig.svelte';
 import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialog.svelte';
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
@@ -34,9 +40,18 @@ import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import resolveCharacterItemActionCost, {
+	type ActivatableItem,
+} from './resolveCharacterItemActionCost.js';
 
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
+
+/**
+ * Shape of a `poolMaxBonus` rule carried by a feature's `levelUpOptions`. The model types
+ * option rules as `Record<string, unknown>`, so this narrows the fields we read off them.
+ */
+type PoolMaxBonusRule = { type?: string; poolIdentifier?: string; grantItemUuid?: string };
 
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
@@ -76,12 +91,16 @@ interface LevelUpDialogData {
 	classFeatures?: {
 		autoGrant: string[];
 		selected: Map<string, NimbleFeatureItem[]>;
+		grantedOptionItems?: string[];
+		poolMaxBonuses?: Record<string, number>;
 	};
 	spellUuids: string[];
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	declare _ancestry: NimbleAncestryItem | undefined;
+
+	declare _ancestryBonus: NimbleAncestryBonusItem | undefined;
 
 	declare _background: NimbleBackgroundItem | undefined;
 
@@ -106,6 +125,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		this._ancestry = this.items.find((i) => i.isType('ancestry')) as NimbleAncestryItem | undefined;
 		return this._ancestry;
+	}
+
+	get ancestryBonus() {
+		if (this._ancestryBonus !== undefined) return this._ancestryBonus;
+
+		this._ancestryBonus = this.items.find((i) => i.isType('ancestryBonus')) as
+			| NimbleAncestryBonusItem
+			| undefined;
+		return this._ancestryBonus;
 	}
 
 	get background() {
@@ -137,14 +165,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** ------------------------------------------------------ */
 	/**                 Data Prep Functions                    */
 	/** ------------------------------------------------------ */
-	override prepareData(): void {
+	protected override _onBeforePrepareData(): void {
 		this._ancestry = undefined;
+		this._ancestryBonus = undefined;
 		this._background = undefined;
 		this._classes = undefined;
 		this.HitDiceManager = null!;
+	}
 
-		super.prepareData();
-
+	protected override _onAfterPrepareData(): void {
 		this._applyConfiguredLanguageGrants();
 		this._prepareArmorClass();
 	}
@@ -208,38 +237,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		this.HitDiceManager = new HitDiceManager(this as unknown as NimbleCharacterInterface);
 
 		const actorData = this.system;
-		const { defaultSkillAbilities } = CONFIG.NIMBLE;
 
-		const abilityBonusesFromClasses = this.getClassAbilityBonuses();
-
-		// Prepare Ability Data
-		Object.entries(actorData.abilities).forEach(([ablKey, ability]): void => {
-			const abilityBonus = ability.bonus;
-
-			// Cap ability score mods to 12
-			ability.mod = Math.min(
-				ability.baseValue + abilityBonus + (abilityBonusesFromClasses[ablKey] ?? 0),
-				12,
-			);
-		});
-
-		// Prepare Saving Throw Data
-		Object.entries(actorData.savingThrows).forEach(([saveKey, save]): void => {
-			const abilityMod = actorData.abilities[saveKey].mod;
-			const saveBonus = save.bonus ?? 0;
-			save.mod = abilityMod + saveBonus;
-		});
-
-		// Prepare Skill Data
-		Object.entries(actorData.skills).forEach(([skillKey, skill]): void => {
-			const defaultAbility = defaultSkillAbilities[skillKey];
-			const abilityMod = actorData.abilities[defaultAbility]?.mod;
-			const skillPoints = skill.points;
-			const skillBonus = skill.bonus;
-
-			// Cap skill modifiers at 12
-			skill.mod = Math.min(abilityMod + skillPoints + skillBonus, 12);
-		});
+		this._prepareAbilitySaveAndSkillModifiers();
 
 		// Prepare Initiative Data
 		// Reset defaultRollMode to 0 before rules apply their modifiers
@@ -249,15 +248,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Prepare Class Data
 		this.prepareClassData(actorData);
-
-		// self:fullHp — computed here (not in base _populateDerivedTags) because
-		// character hp.max is derived from class data, not stored.
-		if (
-			actorData.attributes.hp.max > 0 &&
-			actorData.attributes.hp.value >= actorData.attributes.hp.max
-		) {
-			this.tags.add('self:fullHp');
-		}
 
 		// Prepare max Mana
 		actorData.resources.mana.value = actorData.resources.mana.current;
@@ -293,6 +283,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Add class tags
 		for (const cls of Object.values(this.classes ?? {})) {
 			this.tags.add(`class:${cls.identifier}`);
+		}
+
+		// Add subclass tags, so rules can be gated on the specific option a
+		// character picked within a class rather than only on the class itself.
+		for (const item of this.items) {
+			if (!item.isType('subclass')) continue;
+			this.tags.add(`subclass:${item.identifier}`);
 		}
 
 		// Adds ancestry tags
@@ -391,10 +388,60 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return slotsRequiredSum;
 	}
 
-	prepareClassData(actorData: NimbleCharacterData): void {
-		// Prepare Max Hp
-		this._prepareHitPoints(actorData);
+	protected override _prepareEarlyDerivedData(): void {
+		this._prepareHitPoints(this.system);
 
+		// Rule formulas resolve against `getRollData()`, which reads ability, save
+		// and skill modifiers straight off `system`. Those are derived, not stored,
+		// so without this pass they are still at their source value (0) when the
+		// prePrepareData sweep runs and a bonus of `@strength` silently resolves to
+		// nothing. Computed again after the sweep so abilityBonus and skillBonus
+		// rules land in the final numbers.
+		this._prepareAbilitySaveAndSkillModifiers();
+	}
+
+	/**
+	 * Ability, saving-throw and skill modifiers, derived from their base values
+	 * plus whatever bonuses are on `system` at the time of the call.
+	 */
+	protected _prepareAbilitySaveAndSkillModifiers(): void {
+		const actorData = this.system;
+		const { defaultSkillAbilities } = CONFIG.NIMBLE;
+		const abilityBonusesFromClasses = this.getClassAbilityBonuses();
+
+		// Prepare Ability Data
+		// Uncapped: the rules put a hero's stat at "typically +5", which is guidance
+		// for character building, not a ceiling the system gets to enforce.
+		Object.entries(actorData.abilities).forEach(([ablKey, ability]): void => {
+			const abilityBonus = ability.bonus;
+
+			ability.mod = ability.baseValue + abilityBonus + (abilityBonusesFromClasses[ablKey] ?? 0);
+		});
+
+		// Prepare Saving Throw Data
+		Object.entries(actorData.savingThrows).forEach(([saveKey, save]): void => {
+			const abilityMod = actorData.abilities[saveKey].mod;
+			const saveBonus = save.bonus ?? 0;
+			save.mod = abilityMod + saveBonus;
+		});
+
+		// Prepare Skill Data
+		Object.entries(actorData.skills).forEach(([skillKey, skill]): void => {
+			const defaultAbility = defaultSkillAbilities[skillKey];
+			const abilityMod = actorData.abilities[defaultAbility]?.mod;
+			const skillPoints = skill.points;
+			const skillBonus = skill.bonus;
+
+			// The max according to the rules is +12 but we won't enforce that limit to avoid homebrew issues
+			skill.mod = abilityMod + skillPoints + skillBonus;
+
+			// Reset defaultRollMode to 0 before rules apply their modifiers
+			// This prevents accumulation when rules use 'adjust' mode
+			skill.defaultRollMode = 0;
+		});
+	}
+
+	prepareClassData(actorData: NimbleCharacterData): void {
 		// Prepare Proficiencies
 		const classes = Object.values(this.classes ?? {});
 
@@ -523,6 +570,18 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Armor Proficiencies`,
 		);
 		await this.#dialogs.configureArmorProficiencies.render(true);
+	}
+
+	async configureDamageDefenses() {
+		this.#dialogs.configureDamageDefenses ??= new GenericDialog(
+			`${this.name}: Configure Damage Defenses`,
+			DamageDefensesConfig,
+			{ actor: this },
+			{ icon: 'fa-solid fa-shield-halved' },
+		);
+
+		this.#dialogs.configureDamageDefenses.setTitle(`${this.name}: Configure Damage Defenses`);
+		await this.#dialogs.configureDamageDefenses.render(true);
 	}
 
 	async configureLanguageProficiencies() {
@@ -1000,6 +1059,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		data.level = this.levels.character ?? 1;
 
+		// NOTE: Pool max bonuses from level-up selections (e.g. "+1 Max Combat Die") are applied
+		// directly in the charge-pool max computation (see getChargePoolDefinitions), reading the
+		// cumulative total from levelUpHistory. They are intentionally NOT exposed as roll-data
+		// variables here: doing so required every embedded pool formula to reference @<pool>Bonus,
+		// which silently dropped the bonus whenever an actor carried a stale formula. Applying the
+		// bonus in code makes it robust regardless of the embedded chargePool formula.
+
 		return data;
 	}
 
@@ -1336,6 +1402,17 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				.filter((id): id is string => id !== null);
 		}
 
+		// Conditionally grant pool-bonus items (e.g. "+1 Max Combat Die") not yet on the actor
+		const poolBonusGrantUuids = this.#resolvePoolBonusGrantUuids(
+			typedDialogData.classFeatures?.poolMaxBonuses ?? {},
+		);
+		if (typedDialogData.classFeatures && poolBonusGrantUuids.length > 0) {
+			typedDialogData.classFeatures.grantedOptionItems = [
+				...(typedDialogData.classFeatures.grantedOptionItems ?? []),
+				...poolBonusGrantUuids,
+			];
+		}
+
 		// Grant any class features gained at this level (auto + selected)
 		const classFeatureIds = await this.grantLevelUpFeatures(typedDialogData.classFeatures);
 
@@ -1379,12 +1456,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			classIdentifier: characterClass.identifier,
 			grantedFeatureIds,
 			grantedSpellIds,
+			poolMaxBonuses: typedDialogData.classFeatures?.poolMaxBonuses ?? {},
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+		await this.#syncPoolBonusItemDescriptions();
 		this.sheet?.render(true);
 	}
 
@@ -1435,6 +1514,108 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/**
+	 * Returns compendium UUIDs for pool-bonus items (e.g. "+1 Max Combat Die") referenced by
+	 * poolMaxBonus rules on the actor's items that should be granted this level but aren't yet
+	 * embedded on the actor.
+	 */
+	#resolvePoolBonusGrantUuids(poolMaxBonuses: Record<string, number>): string[] {
+		const uuids: string[] = [];
+		for (const item of this.items.contents) {
+			if (!item.isType('feature')) continue;
+			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
+			for (const option of levelUpOptions) {
+				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
+					if (
+						rule.type !== 'poolMaxBonus' ||
+						typeof rule.poolIdentifier !== 'string' ||
+						typeof rule.grantItemUuid !== 'string' ||
+						(poolMaxBonuses[rule.poolIdentifier] ?? 0) <= 0
+					)
+						continue;
+
+					const grantUuid = rule.grantItemUuid;
+					// Match the full compendium UUID exactly — a bare id substring can false-match.
+					const alreadyOwned = this.items.some(
+						(owned) =>
+							((owned as unknown as { _stats?: { compendiumSource?: string } })._stats
+								?.compendiumSource ?? '') === grantUuid,
+					);
+
+					if (!alreadyOwned && !uuids.includes(grantUuid)) uuids.push(grantUuid);
+				}
+			}
+		}
+		return uuids;
+	}
+
+	/**
+	 * Updates the name and description of pool-bonus items embedded on this actor to reflect
+	 * the cumulative bonus totals stored in levelUpHistory. Called after every level-up and revert.
+	 */
+	async #syncPoolBonusItemDescriptions(): Promise<void> {
+		const totals: Record<string, number> = {};
+		for (const entry of this.system.levelUpHistory) {
+			for (const [poolId, bonus] of Object.entries(entry.poolMaxBonuses ?? {})) {
+				totals[poolId] = (totals[poolId] ?? 0) + bonus;
+			}
+		}
+
+		const poolToGrantUuid: Record<string, string> = {};
+		for (const item of this.items.contents) {
+			if (!item.isType('feature')) continue;
+			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
+			for (const option of levelUpOptions) {
+				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
+					if (
+						rule.type === 'poolMaxBonus' &&
+						typeof rule.poolIdentifier === 'string' &&
+						typeof rule.grantItemUuid === 'string'
+					) {
+						poolToGrantUuid[rule.poolIdentifier] ??= rule.grantItemUuid;
+					}
+				}
+			}
+		}
+
+		const embeddedUpdates: { _id: string; name: string; 'system.description': string }[] = [];
+
+		for (const [poolId, grantUuid] of Object.entries(poolToGrantUuid)) {
+			const total = totals[poolId] ?? 0;
+			if (total <= 0) continue;
+
+			// Match the full compendium UUID exactly — a bare id substring can false-match.
+			const ownedItem = this.items.find(
+				(i) =>
+					((i as unknown as { _stats?: { compendiumSource?: string } })._stats?.compendiumSource ??
+						'') === grantUuid,
+			);
+
+			if (!ownedItem || ownedItem.id === null) continue;
+
+			const currentName = ownedItem.name ?? '';
+			const currentDescription =
+				(ownedItem as unknown as { system?: { description?: string } }).system?.description ?? '';
+
+			const newName = currentName
+				.replace(/\+\d+/, `+${total}`)
+				.replace(/\b(?:Die|Dice)\b/, total === 1 ? 'Die' : 'Dice');
+			const newDescription = currentDescription.replace(/\+\d+/g, `+${total}`);
+
+			if (newName !== currentName || newDescription !== currentDescription) {
+				embeddedUpdates.push({
+					_id: ownedItem.id,
+					name: newName,
+					'system.description': newDescription,
+				});
+			}
+		}
+
+		if (embeddedUpdates.length > 0) {
+			await this.updateEmbeddedDocuments('Item', embeddedUpdates);
+		}
+	}
+
+	/**
 	 * Creates embedded feature documents for features gained on level-up (both
 	 * auto-grant groups and user-selected groups) and returns the newly created
 	 * item ids so they can be tracked in the level-up history for later reversal.
@@ -1458,6 +1639,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				source._stats.compendiumSource = feature.uuid;
 				featureDocumentSources.push(source as object as Item.CreateData);
 			}
+		}
+
+		for (const uuid of classFeatures.grantedOptionItems ?? []) {
+			const feature = await fromUuid(uuid as `Item.${string}`);
+			if (!feature) continue;
+			const source = (feature as NimbleFeatureItem).toObject();
+			source._stats.compendiumSource = uuid;
+			featureDocumentSources.push(source as object as Item.CreateData);
 		}
 
 		if (featureDocumentSources.length === 0) return [];
@@ -1552,6 +1741,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+		await this.#syncPoolBonusItemDescriptions();
 	}
 
 	async outputLevelUpSummary(data, roll: Roll | undefined) {
@@ -1694,13 +1884,37 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		options: Record<string, unknown> = {},
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
+
+		// Soft-block gate: when the activation costs more actions than the
+		// combatant has remaining, confirm before any activation side effects
+		// (dialogs, rolls, card creation) so a cancelled overspend leaves no
+		// trace. `force` bypasses the prompt; paths that manage the cost
+		// themselves pass `skipActionDeduction` and are never prompted.
+		if (item && !options.skipActionDeduction) {
+			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
+			if (actionCost > 0) {
+				const combat = game.combat as Combat | null;
+				const combatant =
+					combat?.combatants?.find(
+						(entry: Combatant.Implementation) => entry.actorId === this.id,
+					) ?? null;
+				if (combat?.started && combatant) {
+					const confirmed = await showInsufficientActionsConfirmation({
+						activityName: item.name ?? '',
+						requiredActions: actionCost,
+						currentActions: getCombatantCurrentActions(combatant),
+						force: options.force === true,
+					});
+					if (!confirmed) return null;
+				}
+			}
+		}
+
 		const result = await super.activateItem(id, options);
 
 		if (result && item && !options.skipActionDeduction) {
-			const activation = (
-				item.system as { activation?: { cost?: { type: string; quantity: number } } }
-			).activation;
-			if (activation?.cost?.type === 'action') {
+			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
+			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
 				const combatant =
 					combat?.combatants?.find(
@@ -1710,7 +1924,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 					await consumeCombatantAction({
 						combat,
 						combatantId: combatant.id,
-						actionCost: activation.cost.quantity ?? 1,
+						actionCost,
 					});
 				}
 			}

@@ -25,6 +25,14 @@ const nimbleCharacterCombatantSchema = () => ({
 				min: 0,
 			}),
 		}),
+		// Action adjustment folded into `current` at the next refill, then zeroed.
+		// May be negative (an action debt owed to the next turn), so no `min`.
+		pendingDelta: new fields.NumberField({
+			required: true,
+			initial: 0,
+			nullable: false,
+			integer: true,
+		}),
 		heroic: new fields.SchemaField({
 			interposeAvailable: new fields.BooleanField({
 				required: true,

@@ -1,5 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
+import type { ItemSource } from '#utils/getItemSource.ts';
 
 /**
  * Data for a single level in the class progression
@@ -32,7 +33,7 @@ export interface ClassProgressionLevelRowProps {
 	keyAbilityScores: string[];
 	onFeatureClick: (feature: NimbleFeatureItem) => void;
 	onAddFeature: (level: number, classIdentifier: string) => void;
-	getSourceTag: (uuid: string) => 'world' | 'pack' | null;
+	getSourceTag: (uuid: string) => ItemSource | null;
 	onDeleteWorldItem: (uuid: string, name: string) => void;
 }
 

@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleCharacter } from './character.js';
 
 // _populateDerivedTags calls getAdjacencySyncEnabled() which reads
 // game.settings.settings.has(...). The default test mock doesn't include
@@ -118,6 +120,176 @@ describe('_populateDerivedTags — self / target state tags', () => {
 			const tags = runPopulate(makeStub({ statuses: [], hp: 10, hpMax: 10 }));
 			expect(tags.has('self:concentrating')).toBe(false);
 			expect(tags.has('target:concentrating')).toBe(false);
+		});
+	});
+
+	describe('fullHp', () => {
+		it('adds self:fullHp when HP equals max', () => {
+			const tags = runPopulate(makeStub({ hp: 10, hpMax: 10 }));
+			expect(tags.has('self:fullHp')).toBe(true);
+		});
+
+		it('adds self:fullHp when HP exceeds max', () => {
+			const tags = runPopulate(makeStub({ hp: 12, hpMax: 10 }));
+			expect(tags.has('self:fullHp')).toBe(true);
+		});
+
+		it('does not add self:fullHp below max HP', () => {
+			const tags = runPopulate(makeStub({ hp: 9, hpMax: 10 }));
+			expect(tags.has('self:fullHp')).toBe(false);
+		});
+
+		it('does not add self:fullHp when max HP is 0', () => {
+			const tags = runPopulate(makeStub({ hp: 0, hpMax: 0 }));
+			expect(tags.has('self:fullHp')).toBe(false);
+		});
+
+		it('adds self:fullHp even when statuses is undefined', () => {
+			const stub = makeStub({ hp: 10, hpMax: 10 });
+			(stub as { statuses?: Set<string> }).statuses = undefined;
+			const tags = runPopulate(stub);
+			expect(tags.has('self:fullHp')).toBe(true);
+		});
+	});
+
+	describe('adjacency tags', () => {
+		interface AdjacencyFlag {
+			enemiesAdjacentCount?: number;
+			hasMostAdjacentEnemies?: boolean;
+			alliesAdjacentCount?: number;
+			hasMostAdjacentAllies?: boolean;
+		}
+
+		function makeAdjacencyStub(flag?: AdjacencyFlag): ActorStub {
+			const stub = makeStub();
+			(
+				stub as ActorStub & { getFlag(scope: string, key: string): AdjacencyFlag | undefined }
+			).getFlag = (scope, key) => (scope === SYSTEM_ID && key === 'adjacency' ? flag : undefined);
+			return stub;
+		}
+
+		describe('with adjacency sync enabled', () => {
+			let originalSettings: unknown;
+
+			beforeEach(() => {
+				const g = globalThis as object as { game: { settings?: unknown } };
+				originalSettings = g.game.settings;
+				g.game.settings = {
+					settings: new Map([[`${SYSTEM_ID}.autoTrackTokenAdjacency`, {}]]),
+					get: () => true,
+				};
+			});
+
+			afterEach(() => {
+				(globalThis as object as { game: { settings?: unknown } }).game.settings = originalSettings;
+			});
+
+			it('adds enemiesAdjacent:<count> and alliesAdjacent:<count> when counts are positive', () => {
+				const tags = runPopulate(
+					makeAdjacencyStub({ enemiesAdjacentCount: 2, alliesAdjacentCount: 3 }),
+				);
+				expect(tags.has('enemiesAdjacent:2')).toBe(true);
+				expect(tags.has('alliesAdjacent:3')).toBe(true);
+			});
+
+			it('omits alliesAdjacent tags when the count is 0', () => {
+				const tags = runPopulate(
+					makeAdjacencyStub({ alliesAdjacentCount: 0, hasMostAdjacentAllies: false }),
+				);
+				expect([...tags].some((t) => t.startsWith('alliesAdjacent:'))).toBe(false);
+			});
+
+			it('omits adjacency tags when the flag is absent', () => {
+				const tags = runPopulate(makeAdjacencyStub(undefined));
+				expect([...tags].some((t) => t.startsWith('enemiesAdjacent:'))).toBe(false);
+				expect([...tags].some((t) => t.startsWith('alliesAdjacent:'))).toBe(false);
+			});
+
+			it('adds alliesAdjacent:most when hasMostAdjacentAllies is set', () => {
+				const tags = runPopulate(
+					makeAdjacencyStub({ alliesAdjacentCount: 2, hasMostAdjacentAllies: true }),
+				);
+				expect(tags.has('alliesAdjacent:2')).toBe(true);
+				expect(tags.has('alliesAdjacent:most')).toBe(true);
+			});
+
+			it('does not add alliesAdjacent:most when hasMostAdjacentAllies is false', () => {
+				const tags = runPopulate(
+					makeAdjacencyStub({ alliesAdjacentCount: 1, hasMostAdjacentAllies: false }),
+				);
+				expect(tags.has('alliesAdjacent:1')).toBe(true);
+				expect(tags.has('alliesAdjacent:most')).toBe(false);
+			});
+
+			it('adds enemiesAdjacent:most alongside alliesAdjacent:most', () => {
+				const tags = runPopulate(
+					makeAdjacencyStub({
+						enemiesAdjacentCount: 1,
+						hasMostAdjacentEnemies: true,
+						alliesAdjacentCount: 1,
+						hasMostAdjacentAllies: true,
+					}),
+				);
+				expect(tags.has('enemiesAdjacent:most')).toBe(true);
+				expect(tags.has('alliesAdjacent:most')).toBe(true);
+			});
+		});
+
+		describe('with adjacency sync disabled', () => {
+			it('omits adjacency tags even when flag data is present', () => {
+				// The file-level beforeAll installs a settings stub without the
+				// autoTrackTokenAdjacency key, so getAdjacencySyncEnabled() is false.
+				const tags = runPopulate(
+					makeAdjacencyStub({
+						enemiesAdjacentCount: 2,
+						hasMostAdjacentEnemies: true,
+						alliesAdjacentCount: 2,
+						hasMostAdjacentAllies: true,
+					}),
+				);
+				expect([...tags].some((t) => t.startsWith('enemiesAdjacent:'))).toBe(false);
+				expect([...tags].some((t) => t.startsWith('alliesAdjacent:'))).toBe(false);
+			});
+		});
+	});
+
+	describe('character subclass tags', () => {
+		interface ItemStub {
+			isType(type: string): boolean;
+			identifier: string;
+		}
+
+		function runCharacterPopulate(items: ItemStub[]): Set<string> {
+			const stub = {
+				...makeStub(),
+				levels: { character: 3, classes: {} },
+				classes: {},
+				ancestry: undefined,
+				background: undefined,
+				items,
+			};
+
+			const fn = NimbleCharacter.prototype._populateDerivedTags;
+			fn.call(stub as unknown as InstanceType<typeof NimbleCharacter>);
+			return stub.tags;
+		}
+
+		function makeItemStub(type: string, identifier: string): ItemStub {
+			return { isType: (t: string) => t === type, identifier };
+		}
+
+		it('adds subclass:<identifier> for each subclass item', () => {
+			const tags = runCharacterPopulate([
+				makeItemStub('subclass', 'path-of-the-mountainheart'),
+				makeItemStub('subclass', 'circle-of-sky-and-storm'),
+			]);
+			expect(tags.has('subclass:path-of-the-mountainheart')).toBe(true);
+			expect(tags.has('subclass:circle-of-sky-and-storm')).toBe(true);
+		});
+
+		it('does not add subclass tags for items of other types', () => {
+			const tags = runCharacterPopulate([makeItemStub('feature', 'some-feature')]);
+			expect([...tags].some((t) => t.startsWith('subclass:'))).toBe(false);
 		});
 	});
 

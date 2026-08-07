@@ -69,6 +69,16 @@
 	--nimble-roll-failure-background-color: hsl(0, 66%, 83%);
 	--nimble-roll-failure-color: hsl(1, 100%, 33%);
 
+	/** DAMAGE DEFENSE BADGES **/
+	--nimble-damage-badge-immune-background-color: hsl(293, 12%, 82%);
+	--nimble-damage-badge-immune-color: hsl(293, 25%, 25%);
+	--nimble-damage-badge-vulnerable-background-color: hsl(14, 72%, 82%);
+	--nimble-damage-badge-vulnerable-color: hsl(14, 80%, 28%);
+	--nimble-damage-badge-resistant-background-color: hsl(210, 55%, 84%);
+	--nimble-damage-badge-resistant-color: hsl(210, 75%, 26%);
+	--nimble-damage-badge-reduction-background-color: hsl(105, 22%, 80%);
+	--nimble-damage-badge-reduction-color: hsl(109, 60%, 20%);
+
 	--nimble-condition-hud-disabled-color: hsl(130, 42%, 44%);
 	--nimble-condition-hud-selected-color: hsl(130, 60%, 36%);
 	--nimble-condition-hud-clear-all-color: hsl(0, 58%, 35%);
@@ -203,6 +213,10 @@
 	--nimble-chat-advantage-color: hsl(210, 70%, 40%);
 	--nimble-chat-advantage-border-color: hsla(210, 70%, 50%, 0.3);
 
+	/** WEAPON CARD COLORS **/
+	--nimble-weapon-toggle-on-color: hsl(120, 45%, 40%);
+	--nimble-weapon-toggle-on-color-hover: hsl(120, 45%, 50%);
+
 	/** CLASS PROGRESSION BADGE COLORS **/
 	--nimble-badge-primary-bg: hsl(120, 55%, 22%);
 	--nimble-badge-secondary-bg: hsl(210, 35%, 25%);
@@ -210,6 +224,8 @@
 	--nimble-badge-subclass-bg: hsl(276, 30%, 33%);
 	--nimble-badge-world-bg: hsl(35, 80%, 22%);
 	--nimble-badge-pack-bg: hsl(195, 55%, 22%);
+	// Badge backgrounds stay dark in both themes, so the label stays light — no theme override.
+	--nimble-badge-text-color: white;
 
 	/** DICE POOL TRACKER **/
 	// Light: ~3.5:1 on white (WCAG AA non-text); spent at ~3:1; expend hover red.
@@ -242,6 +258,18 @@
 	--nimble-pool-spend-auto-face-text-color: hsl(45, 70%, 30%);
 	--nimble-pool-spend-auto-total-color: hsl(45, 80%, 35%);
 	--nimble-pool-spend-total-color: hsl(150, 55%, 35%);
+
+	/** WOUND TRACK **/
+	--nimble-wound-track-border-color: hsl(41, 22%, 44%);
+	--nimble-wound-track-empty-background: hsl(293, 8%, 84%);
+	--nimble-wound-track-inset-shadow: inset 0 1px 2px hsla(0, 0%, 0%, 0.3);
+	--nimble-wound-track-preview-background: hsl(1, 36%, 44%);
+	--nimble-wound-track-filled-highlight-color: hsl(1, 55%, 46%);
+	--nimble-wound-track-filled-color: hsl(1, 60%, 39%);
+	--nimble-wound-track-filled-shade-color: hsl(1, 62%, 30%);
+	--nimble-wound-track-filled-glow: 0 0 3px hsla(1, 62%, 40%, 0.35);
+	--nimble-wound-track-count-color: hsl(1, 65%, 38%);
+	--nimble-wound-track-focus-outline-color: var(--nimble-dark-text-color);
 
 	/** ANIMATION **/
 	--nimble-standard-transition: all 0.15s ease-in-out;

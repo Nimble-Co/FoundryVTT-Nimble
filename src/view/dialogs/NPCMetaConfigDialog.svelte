@@ -2,6 +2,7 @@
 	import localize from '../../utils/localize.js';
 	import TagGroup from '../components/TagGroup.svelte';
 	import MovementSpeed from '../sheets/components/MovementSpeed.svelte';
+	import DamageDefensesConfig from './components/DamageDefensesConfig.svelte';
 
 	function prepareSizeCategoryOptions() {
 		return Object.entries(sizeCategories).map(([key, value]) => ({
@@ -89,6 +90,8 @@
 			toggleOption={handleMonsterTypeChange}
 		/>
 	</div>
+
+	<DamageDefensesConfig {actor} />
 
 	{#if actor.reactive.type === 'npc'}
 		<label class="nimble-field">

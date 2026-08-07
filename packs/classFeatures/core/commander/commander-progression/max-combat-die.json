@@ -1,0 +1,55 @@
+{
+	"name": "+1 Max Combat Die",
+	"type": "feature",
+	"img": "icons/sundries/gaming/dice-runed-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression",
+		"gainedAtLevel": null,
+		"subclass": false,
+		"gainedAtLevels": []
+	},
+	"effects": [],
+	"folder": "406c4e162069a4a8",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1761434361016,
+		"modifiedTime": 1761434361016,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "WnKpJ8RvCb4mX2Qt"
+}

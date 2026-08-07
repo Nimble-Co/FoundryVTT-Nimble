@@ -9,6 +9,7 @@
 	import HitDiceBar from './components/HitDiceBar.svelte';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import ManaBar from './components/ManaBar.svelte';
+	import WoundTrack from './components/WoundTrack.svelte';
 	import { createPlayerCharacterSheetState } from './PlayerCharacterSheet.state.svelte.js';
 	import {
 		DROP_ITEM_SCROLL_OBSERVER_TIMEOUT_MS,
@@ -190,27 +191,6 @@
 
 <header class="nimble-sheet__header">
 	<div class="nimble-icon nimble-icon--actor">
-		<ul
-			class="nimble-wounds-list"
-			class:nimble-wounds-list--centered={wounds.max > 9 && wounds.max % 6 >= 3}
-		>
-			{#each { length: wounds.max }, i}
-				<li class="nimble-wounds-list__item">
-					<button
-						class="nimble-wounds-list__button"
-						class:nimble-wounds-list__button--active={wounds.value > i}
-						type="button"
-						data-tooltip="Toggle Wound"
-						data-tooltip-direction="LEFT"
-						aria-label="Toggle wound"
-						onclick={() => toggleWounds(i + 1)}
-					>
-						<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
-					</button>
-				</li>
-			{/each}
-		</ul>
-
 		<button
 			class="nimble-icon__button nimble-icon__button--actor"
 			aria-label={editingEnabled ? localize('NIMBLE.prompts.changeActorImage') : ''}
@@ -246,15 +226,6 @@
 				{/if}
 			</span>
 
-			{#if wounds.value > 0}
-				<span
-					class="nimble-wounds-indicator"
-					data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
-				>
-					<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
-					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
-				</span>
-			{/if}
 			<button
 				class="nimble-button"
 				class:nimble-button--hidden={!editingEnabled}
@@ -278,6 +249,8 @@
 			{updateTempHP}
 			disableMaxHPEdit={!editingEnabled}
 		/>
+
+		<WoundTrack currentWounds={wounds.value} maxWounds={wounds.max} toggleWound={toggleWounds} />
 
 		<h3 class="nimble-heading nimble-heading--hit-dice">
 			{CONFIG.NIMBLE.hitDice.heading}
@@ -506,7 +479,7 @@
 		justify-content: center;
 		flex-grow: 1;
 		gap: 0.125rem;
-		padding: 0.75rem 0.5rem 0.375rem 0.5rem;
+		padding: 0rem 0.5rem 0.375rem 0.5rem;
 	}
 
 	.nimble-character-meta {
@@ -571,6 +544,7 @@
 			grid-template-areas:
 				'hpHeading hitDiceHeading'
 				'hpBar hitDiceBar'
+				'woundTrack .'
 				'manaHeading manaHeading'
 				'manaBar manaBar';
 			grid-gap: 0 0.125rem;
@@ -579,34 +553,14 @@
 		}
 	}
 
-	.nimble-wounds-indicator {
-		// Always use dark mode text color for icon stroke (light cream color)
-		--stroke-color: hsl(36, 53%, 80%);
-
-		display: inline-flex;
-		align-items: center;
-		gap: 0.1875rem;
-		margin-inline-start: 0.25rem;
-		cursor: default;
-
-		&__count {
-			font-weight: 700;
-			font-size: var(--nimble-sm-text);
-			line-height: 1;
-			// Use same color as heading for consistency
-			color: var(--nimble-dark-text-color);
-		}
-
-		i {
-			font-size: inherit;
-			color: #b01b19;
-			// Firefox fallback: text-shadow simulates stroke
-			text-shadow:
-				-0.5px -0.5px 0 var(--stroke-color),
-				0.5px -0.5px 0 var(--stroke-color),
-				-0.5px 0.5px 0 var(--stroke-color),
-				0.5px 0.5px 0 var(--stroke-color);
-			-webkit-text-stroke: 0.5px var(--stroke-color);
+	// Drops the 0.75rem indent from _heading.scss so every label and box in this
+	// block shares one left edge. Scoped here because --hp is shared with the NPC
+	// sheet. The extra .nimble-heading compound outranks the global rule: Svelte
+	// scopes ancestor selectors with a zero-specificity :where(), so nesting alone ties.
+	.nimble-character-sheet-section--defense {
+		.nimble-heading.nimble-heading--hp,
+		.nimble-heading.nimble-heading--mana {
+			padding-inline-start: 0;
 		}
 	}
 
@@ -614,7 +568,6 @@
 		--nimble-button-icon-y-nudge: 0;
 
 		grid-area: hpHeading;
-		// Prevent wounds label from expanding the heading beyond available space
 		overflow: hidden;
 		min-width: 0;
 

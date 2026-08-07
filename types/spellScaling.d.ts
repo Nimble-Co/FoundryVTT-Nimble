@@ -10,7 +10,8 @@ export type ScalingOperation =
 	| 'addDC'
 	| 'addArmor'
 	| 'addDuration'
-	| 'addCondition';
+	| 'addCondition'
+	| 'increaseDieSize';
 
 export interface DiceValue {
 	count: number;
@@ -24,6 +25,8 @@ export interface ScalingDelta {
 	condition: string | null;
 	targetEffectId: string | null;
 	durationType: string | null;
+	/** Largest die size `increaseDieSize` may step up to; `null` means uncapped. */
+	maxDieFaces: number | null;
 }
 
 export interface ScalingChoice {

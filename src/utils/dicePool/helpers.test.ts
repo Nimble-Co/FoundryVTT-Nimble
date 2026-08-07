@@ -142,6 +142,41 @@ describe('normalizeRefills', () => {
 	it('returns empty array for non-array input', () => {
 		expect(normalizeRefills(null)).toEqual([]);
 	});
+
+	it('keeps a non-empty predicate on the entry', () => {
+		const refills = normalizeRefills([
+			{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: { self: 'raging' } },
+		]);
+		expect(refills[0].predicate).toEqual({ self: 'raging' });
+	});
+
+	it('omits empty or invalid predicates', () => {
+		const refills = normalizeRefills([
+			{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: {} },
+			{ trigger: 'onTurnEnd', mode: 'add', value: '1', predicate: ['self:raging'] },
+		]);
+		expect(refills[0].predicate).toBeUndefined();
+		expect(refills[1].predicate).toBeUndefined();
+	});
+
+	it('unwraps Predicate-instance shapes to the raw predicate object', () => {
+		const refills = normalizeRefills([
+			{
+				trigger: 'onTurnStart',
+				mode: 'add',
+				value: '1',
+				predicate: { isValid: true, _source: { self: 'raging' } },
+			},
+			{
+				trigger: 'onTurnEnd',
+				mode: 'add',
+				value: '1',
+				predicate: { isValid: true, _source: {} },
+			},
+		]);
+		expect(refills[0].predicate).toEqual({ self: 'raging' });
+		expect(refills[1].predicate).toBeUndefined();
+	});
 });
 
 describe('getDicePoolDefinitions', () => {
@@ -256,6 +291,47 @@ describe('getDicePoolDefinitions', () => {
 		expect(defs[0].bonusOnAttackDelivery).toBe('melee');
 	});
 
+	it('prefers the autoBonus consumer when a manual one shares the pool and item', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+					dieSize: 'd4',
+					max: '3',
+					initial: 'zero',
+				},
+				// Listed first, so a naive "first match wins" would hand the pool this
+				// consumer's mode and filter.
+				{
+					type: 'diceConsumer',
+					id: 'fury-card-offer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					cardOffer: 'criticalHit',
+					bonusOnAttackDelivery: 'ranged',
+				} as MockRule,
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'autoBonus',
+					cost: '1',
+					bonusOnAttackDelivery: 'melee',
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('autoBonus');
+		expect(defs[0].bonusOnAttackDelivery).toBe('melee');
+	});
+
 	it('ignores diceConsumer rules that target a different pool identifier', () => {
 		const actor = createMockActor([
 			createMockItem('item-1', 'Mixed Pools', [
@@ -304,6 +380,59 @@ describe('getDicePoolDefinitions', () => {
 
 		const defs = getDicePoolDefinitions(actor);
 		expect(defs[0].consumption).toBe('manual');
+	});
+
+	it('skips diceConsumer rules whose appliesTo() predicate returns false (self:raging gating)', () => {
+		// Rage's auto-bonus is predicated on self:raging. When the toggle is off
+		// the predicate fails, and the pool must report manual consumption so
+		// the Fury Dice no longer auto-add to melee attacks.
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					mode: 'autoBonus',
+					bonusOnAttackDelivery: 'melee',
+					appliesTo: () => false,
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('manual');
+		expect(defs[0].bonusOnAttackDelivery).toBe(null);
+	});
+
+	it('honors diceConsumer rules whose appliesTo() predicate returns true', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Rage', [
+				{
+					type: 'dicePool',
+					id: 'fury-pool-base',
+					identifier: 'fury',
+					scope: 'item',
+				},
+				{
+					type: 'diceConsumer',
+					id: 'fury-autobonus',
+					poolIdentifier: 'fury',
+					mode: 'autoBonus',
+					bonusOnAttackDelivery: 'melee',
+					appliesTo: () => true,
+				} as MockRule,
+			]),
+		]);
+
+		const defs = getDicePoolDefinitions(actor);
+		expect(defs[0].consumption).toBe('autoBonus');
+		expect(defs[0].bonusOnAttackDelivery).toBe('melee');
 	});
 });
 
@@ -434,6 +563,68 @@ describe('getDicePoolModifiers', () => {
 	});
 });
 
+describe('Fury Die size breakpoints (Intensifying Fury regression)', () => {
+	// Mirrors the shipped data: rage.json's base dicePool rule (d4) plus
+	// intensifying-fury.json's four level-predicated modifyPool upgrades.
+	// Pins the RAW progression (d4 base, d6 at 6, d8 at 9, d10 at 13, d12 at
+	// 17) so a change to either pack file or the modifier pipeline that
+	// breaks the scaling fails here.
+	function buildBerserkerActor(level: number): MockActor {
+		const rageItem = createMockItem('rage-item', 'Rage', [
+			{
+				type: 'dicePool',
+				id: 'fury-pool-base',
+				identifier: 'fury',
+				scope: 'item',
+				dieSize: 'd4',
+				max: '2',
+				initial: 'zero',
+				refills: [],
+			},
+		]);
+
+		const upgrade = (min: number, dieSize: string, priority: number): MockRule =>
+			({
+				type: 'modifyPool',
+				id: `fury-${dieSize}-l${min}`,
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				dieSize,
+				priority,
+				appliesTo: () => level >= min,
+			}) as MockRule;
+
+		const intensifyingFury = createMockItem('int-fury-item', 'Intensifying Fury', [
+			upgrade(6, 'd6', 2),
+			upgrade(9, 'd8', 3),
+			upgrade(13, 'd10', 4),
+			upgrade(17, 'd12', 5),
+		]);
+
+		return createMockActor([rageItem, intensifyingFury], { level });
+	}
+
+	const breakpoints: Array<[number, DieSize]> = [
+		[1, 'd4'],
+		[5, 'd4'],
+		[6, 'd6'],
+		[8, 'd6'],
+		[9, 'd8'],
+		[12, 'd8'],
+		[13, 'd10'],
+		[16, 'd10'],
+		[17, 'd12'],
+		[20, 'd12'],
+	];
+
+	for (const [level, expected] of breakpoints) {
+		it(`yields ${expected} Fury Dice at level ${level}`, () => {
+			const pools = buildEffectiveDicePoolMap(buildBerserkerActor(level));
+			expect(pools.fury?.dieSize).toBe(expected);
+		});
+	}
+});
+
 describe('applyModifiersToDefinition', () => {
 	const baseDefinition: DicePoolDefinition = {
 		id: 'fury',
@@ -510,6 +701,42 @@ describe('applyModifiersToDefinition', () => {
 		]);
 		expect(result.dieSize).toBe('d4');
 		expect(result.max).toBe(3);
+	});
+
+	it('appends addRefills entries after the pool’s own refills', () => {
+		const actor = createMockActor([]);
+		const withBaseRefill: DicePoolDefinition = {
+			...baseDefinition,
+			refills: [{ trigger: 'encounterEnd', mode: 'clear', value: '0' }],
+		};
+		const result = applyModifiersToDefinition(actor, withBaseRefill, [
+			{
+				type: 'modifyPool',
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				addRefills: [
+					{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: { self: 'raging' } },
+				],
+			},
+		]);
+
+		expect(result.refills).toEqual([
+			{ trigger: 'encounterEnd', mode: 'clear', value: '0' },
+			{ trigger: 'onTurnStart', mode: 'add', value: '1', predicate: { self: 'raging' } },
+		]);
+	});
+
+	it('drops invalid addRefills entries during normalization', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, baseDefinition, [
+			{
+				type: 'modifyPool',
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				addRefills: [{ trigger: 'bogusTrigger', mode: 'add', value: '1' }],
+			},
+		]);
+		expect(result.refills).toEqual([]);
 	});
 });
 
@@ -730,5 +957,48 @@ describe('areDicePoolMapsEqual', () => {
 		expect(
 			areDicePoolMapsEqual({ fury: stateA }, { fury: stateA, judgment: { ...stateA, id: 'j' } }),
 		).toBe(false);
+	});
+});
+
+describe('applyModifiersToDefinition minFace', () => {
+	const floorBase: DicePoolDefinition = {
+		id: 'fury',
+		identifier: 'fury',
+		scope: 'item',
+		sourceItemId: 'item-1',
+		sourceItemName: 'Rage',
+		label: 'Fury Dice',
+		dieSize: 'd4',
+		max: 3,
+		initial: 'zero',
+		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
+	};
+
+	it('applies a modifier minFace to the definition', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 6 },
+		]);
+		expect(result.minFace).toBe(6);
+	});
+
+	it('keeps the highest floor when multiple modifiers contribute', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 3 },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 6 },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', minFace: 2 },
+		]);
+		expect(result.minFace).toBe(6);
+	});
+
+	it('leaves minFace null when no modifier sets one', () => {
+		const actor = createMockActor([]);
+		const result = applyModifiersToDefinition(actor, floorBase, [
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', dieSize: 'd6' },
+		]);
+		expect(result.minFace).toBeNull();
 	});
 });

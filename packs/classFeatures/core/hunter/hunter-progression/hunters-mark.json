@@ -6,7 +6,52 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "markTarget",
+				"disabled": false,
+				"id": "hunters-mark-toggle",
+				"identifier": "",
+				"label": "Mark Quarry",
+				"predicate": {},
+				"priority": 1,
+				"flagKey": "quarry",
+				"statusCondition": "marked",
+				"maxTargets": 1
+			},
+			{
+				"type": "conditionalBonus",
+				"disabled": false,
+				"id": "hunters-mark-bonus",
+				"identifier": "",
+				"label": "Hunter's Mark",
+				"predicate": {},
+				"priority": 1,
+				"advantage": 1,
+				"damageBonus": "@level",
+				"damageType": "",
+				"delivery": "any",
+				"source": "any",
+				"targetCondition": {
+					"$and": [
+						"target:quarry"
+					]
+				}
+			},
+			{
+				"type": "note",
+				"disabled": false,
+				"id": "hunters-mark-hidden",
+				"identifier": "",
+				"label": "Hunter's Mark",
+				"predicate": {},
+				"priority": 1,
+				"description": "<p>Your marked quarry can't be hidden from you.</p>",
+				"target": [],
+				"title": "Hunter's Mark",
+				"visibility": "all"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

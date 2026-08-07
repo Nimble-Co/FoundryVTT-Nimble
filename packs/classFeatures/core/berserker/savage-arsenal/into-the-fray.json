@@ -34,7 +34,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Action: Leap up to 2×DEX spaces toward an enemy. If you land adjacent to at least 2 enemies, make an attack against 1 of them for free.</p>",
+		"description": "<p>Action: Leap up to [[/r 2 * @dexterity]] spaces toward an enemy. If you land adjacent to at least 2 enemies, make an attack against 1 of them for free.</p>",
 		"featureType": "class",
 		"class": "berserker",
 		"gainedAtLevel": 4,

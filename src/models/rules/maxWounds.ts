@@ -40,6 +40,7 @@ class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
 	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
+		if (!this.test()) return;
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;

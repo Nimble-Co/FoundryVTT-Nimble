@@ -1,0 +1,72 @@
+{
+	"name": "A People Person",
+	"type": "feature",
+	"img": "icons/consumables/grains/donut-baked-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "songweaver-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		],
+		"selectionCountByLevel": {},
+		"levelUpOptions": [
+			{
+				"id": "a-people-person",
+				"label": "Choose 2 People Person Companions",
+				"applyAtLevels": [
+					5
+				],
+				"rules": [],
+				"selectionGroups": [
+					"a-people-person"
+				],
+				"selectionCount": 2
+			}
+		]
+	},
+	"effects": [],
+	"folder": "910213b07f81138f",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1761500000000,
+		"modifiedTime": 1761500000000,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "YeG09ogHG3RD6tIc"
+}

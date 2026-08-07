@@ -5,8 +5,10 @@ import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
+import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
@@ -118,20 +120,32 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 			const embeddedItemHooks = {
 				create: Hooks.on('createItem', (doc) => {
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				delete: Hooks.on('deleteItem', (doc) => {
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 				update: Hooks.on('updateItem', (doc, _change, { diff }) => {
 					if (diff === false) return;
-					if (doc?.actor?.id === this.id) {
-						update();
-					}
+					if (this._ownsEmbeddedDocument(doc)) update();
+				}),
+			};
+
+			// Active Effects change derived data without touching the actor or any
+			// item: applying a condition re-runs data prep, and predicated rules
+			// (skill, damage and roll-mode bonuses gated on `self:` domain tags)
+			// resolve differently afterwards. Without these, the new numbers only
+			// appear once the sheet is reopened.
+			const effectHooks = {
+				create: Hooks.on('createActiveEffect', (doc) => {
+					if (this._ownsEmbeddedDocument(doc)) update();
+				}),
+				delete: Hooks.on('deleteActiveEffect', (doc) => {
+					if (this._ownsEmbeddedDocument(doc)) update();
+				}),
+				update: Hooks.on('updateActiveEffect', (doc, _change, { diff }) => {
+					if (diff === false) return;
+					if (this._ownsEmbeddedDocument(doc)) update();
 				}),
 			};
 
@@ -140,8 +154,28 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				Hooks.off('createItem', embeddedItemHooks.create);
 				Hooks.off('deleteItem', embeddedItemHooks.delete);
 				Hooks.off('updateItem', embeddedItemHooks.update);
+				Hooks.off('createActiveEffect', effectHooks.create);
+				Hooks.off('deleteActiveEffect', effectHooks.delete);
+				Hooks.off('updateActiveEffect', effectHooks.update);
 			};
 		});
+	}
+
+	/**
+	 * Whether an embedded document contributes to this actor's data — an owned
+	 * item, an effect applied to the actor itself, or an effect granted by one of
+	 * its items.
+	 *
+	 * Compared by document identity, not by id: an unlinked token's synthetic
+	 * actor carries the base actor's id, so an id check would fire this actor's
+	 * subscriber for documents belonging to any token derived from it. Identity
+	 * also removes the need to match on `documentName` string literals — only a
+	 * document whose parent chain reaches this exact document can affect it.
+	 */
+	protected _ownsEmbeddedDocument(doc: unknown): boolean {
+		const parent = (doc as { parent?: { parent?: unknown } | null } | null)?.parent;
+		if (!parent) return false;
+		return parent === (this as unknown) || parent.parent === (this as unknown);
 	}
 
 	static override async createDialog(
@@ -244,6 +278,20 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		);
 	}
 
+	/**
+	 * Every enabled Active Effect renders on the token, not only the
+	 * duration/status-bearing ones core considers temporary. Hidden effects
+	 * are a trap: the player and GM must always be able to see that an
+	 * effect (a toggle, a banked reduction, a granted buff) is present.
+	 */
+	override get temporaryEffects(): ActiveEffect.Implementation[] {
+		const effects: ActiveEffect.Implementation[] = [];
+		for (const effect of this.allApplicableEffects()) {
+			if (effect.active) effects.push(effect);
+		}
+		return effects;
+	}
+
 	/** ------------------------------------------------------ */
 	/**                   Data Preparation                     */
 	/** ------------------------------------------------------ */
@@ -253,15 +301,54 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		super._initialize(options);
 	}
 
+	/**
+	 * Template method — subclasses extend the prepare cycle through
+	 * `_onBeforePrepareData` / `_onAfterPrepareData` rather than overriding
+	 * `prepareData`, so the re-entry guard below can never be bypassed.
+	 */
 	override prepareData(): void {
+		// A bare prepareData() with no _initialize() in between reuses the same
+		// `system` object, so every rule hook would run a second time on top of
+		// already-derived values. Rules that read-modify-write their target
+		// (skill, ability and save bonuses, speeds, wounds, hit dice) would stack
+		// twice. Re-initialize instead: that restores `system` from source and
+		// drives exactly one clean cycle through this method.
+		if (this.initialized) {
+			// Only once documents are ready, though: before that `_initialize` returns
+			// without calling `_safePrepareData` (client-document.mjs), so resetting
+			// during `init`/`setup` would strip `system` back to source and never
+			// re-derive it. Leaving the already-derived data alone is the safe answer.
+			// Cast: the flag is internal, so fvtt-types does not declare it.
+			if ((game as unknown as { _documentsReady?: boolean })._documentsReady) this.reset();
+			return;
+		}
+
 		this.initialized = true;
+		this._onBeforePrepareData();
 		super.prepareData();
+
+		// Defence in depth for the guard above: rule accumulator arrays live on
+		// the `system` object, so a prepare cycle that somehow reused one would
+		// duplicate every afterPrepareData push below.
+		for (const path of actorAccumulatorPaths) {
+			if (foundry.utils.getProperty(this.system, path) !== undefined) {
+				foundry.utils.setProperty(this.system, path, []);
+			}
+		}
 
 		// Call Rule Hooks
 		this.rules.forEach((rule) => {
 			rule.afterPrepareData?.();
 		});
+
+		this._onAfterPrepareData();
 	}
+
+	/** Subclass hook, before core data preparation. Reset memoized state here. */
+	protected _onBeforePrepareData(): void {}
+
+	/** Subclass hook, after the `afterPrepareData` rule sweep has run. */
+	protected _onAfterPrepareData(): void {}
 
 	override prepareBaseData(): void {
 		super.prepareBaseData();
@@ -308,6 +395,10 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	override prepareDerivedData(): void {
 		super.prepareDerivedData();
 
+		// Derived values that domain tags depend on (e.g. character hp.max) must be
+		// final before _populateDerivedTags() runs.
+		this._prepareEarlyDerivedData();
+
 		// Populate derived tags before rules run so predicates can evaluate against them
 		this._populateDerivedTags();
 
@@ -317,15 +408,19 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		});
 	}
 
+	/** Compute derived values that _populateDerivedTags() reads. Subclass hook. */
+	protected _prepareEarlyDerivedData(): void {}
+
 	_populateDerivedTags(): void {
+		const sysData = this.system as unknown as BaseActorSystemData;
+		const hpVal = sysData.attributes.hp.value;
+		const hpMax = sysData.attributes.hp.max;
+
 		// Self-state and target-state tags — derived from status effects.
 		// actor.statuses is the canonical source: Foundry syncs it with ActiveEffects,
 		// and the system's condition toggle (registerConditionsConfig) round-trips through it.
 		const statuses = this.statuses as Set<string> | undefined;
 		if (statuses) {
-			const sysData = this.system as unknown as BaseActorSystemData;
-			const hpVal = sysData.attributes.hp.value;
-			const hpMax = sysData.attributes.hp.max;
 			const isDying = statuses.has(STATUS_EFFECT_IDS.dying);
 
 			// self:dying = PC/Hero at 0 HP with wounds remaining (the dying condition)
@@ -357,17 +452,27 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			}
 		}
 
-		// self:fullHp is NOT set here — hp.max is derived (not stored) for characters,
-		// so it would be stale at this point. Each actor subclass adds it in their
-		// prepareDerivedData() after HP is finalized.
+		if (hpMax > 0 && hpVal >= hpMax) {
+			this.tags.add('self:fullHp');
+		}
 
 		if (getAdjacencySyncEnabled()) {
 			const adjacency = this.getFlag(SYSTEM_ID, 'adjacency') as
-				| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
+				| {
+						enemiesAdjacentCount?: number;
+						hasMostAdjacentEnemies?: boolean;
+						alliesAdjacentCount?: number;
+						hasMostAdjacentAllies?: boolean;
+				  }
 				| undefined;
 
 			if (adjacency) {
-				const { enemiesAdjacentCount: count, hasMostAdjacentEnemies: hasMost } = adjacency;
+				const {
+					enemiesAdjacentCount: count,
+					hasMostAdjacentEnemies: hasMost,
+					alliesAdjacentCount: allyCount,
+					hasMostAdjacentAllies: hasMostAllies,
+				} = adjacency;
 
 				if (typeof count === 'number' && count > 0) {
 					this.tags.add(`enemiesAdjacent:${count}`);
@@ -376,10 +481,26 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				if (hasMost) {
 					this.tags.add(`enemiesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
 				}
+
+				if (typeof allyCount === 'number' && allyCount > 0) {
+					this.tags.add(`alliesAdjacent:${allyCount}`);
+				}
+
+				if (hasMostAllies) {
+					this.tags.add(`alliesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
+				}
 			}
 		}
 
 		populateDicePoolTags(
+			this as unknown as {
+				flags?: unknown;
+				items?: { contents: Array<{ flags?: unknown }> };
+			},
+			this.tags,
+		);
+
+		populateChargePoolTags(
 			this as unknown as {
 				flags?: unknown;
 				items?: { contents: Array<{ flags?: unknown }> };
@@ -483,19 +604,33 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				hasDynamicRing?: boolean;
 				flashRing?: (ringType: string) => void;
 			};
-			if (ringToken.hasDynamicRing && ringToken.flashRing) {
-				ringToken.flashRing(effectType);
-			}
 
-			void canvasInterface.createScrollingText(
-				tokenObject.center,
-				toSignedIntegerString(effectValue),
-				{
-					anchor: CONST.TEXT_ANCHOR_POINTS.TOP,
-					jitter: 0.25,
-					fill,
-				},
-			);
+			// Ring flashes and scrolling text are purely cosmetic, and both canvas APIs
+			// are frequently wrapped by third-party code. This runs inside `_onUpdate`,
+			// so an error escaping here aborts the core update dispatch mid-flight and
+			// takes the `updateActor` hook down with it — leaving sheets, token bars and
+			// health-state syncs stale. Contain the failure to the token it happened on.
+			try {
+				if (ringToken.hasDynamicRing && ringToken.flashRing) {
+					ringToken.flashRing(effectType);
+				}
+
+				const scrollingText = canvasInterface.createScrollingText(
+					tokenObject.center,
+					toSignedIntegerString(effectValue),
+					{
+						anchor: CONST.TEXT_ANCHOR_POINTS.TOP,
+						jitter: 0.25,
+						fill,
+					},
+				);
+
+				void Promise.resolve(scrollingText).catch((error: unknown) => {
+					console.warn('Nimble | Failed to display HP change feedback', error);
+				});
+			} catch (error) {
+				console.warn('Nimble | Failed to display HP change feedback', error);
+			}
 		}
 	}
 
@@ -1047,11 +1182,18 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		const tempDelta = currentHp.temp - previousHp.temp;
 		if (hpDelta === 0 && tempDelta === 0) return;
 
-		this.#emitHpChangeScrollingText({
-			hp: hpDelta,
-			temp: tempDelta,
-			total: hpDelta + tempDelta,
-		});
+		// Belt and braces: the emitter guards each token individually, but everything
+		// around that loop (canvas lookups, token resolution) is patchable too, and
+		// nothing cosmetic is worth aborting the core update dispatch for.
+		try {
+			this.#emitHpChangeScrollingText({
+				hp: hpDelta,
+				temp: tempDelta,
+				total: hpDelta + tempDelta,
+			});
+		} catch (error) {
+			console.warn('Nimble | Failed to emit HP change feedback', error);
+		}
 	}
 }
 

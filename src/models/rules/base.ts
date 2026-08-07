@@ -1,8 +1,16 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-import type { Predicate } from '../../etc/Predicate.js';
+import { Predicate } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { actorAccumulatorPaths } from './accumulatorRegistry.js';
+
+// Rules are re-instantiated on every data-prep cycle; dedupe the late-predicate
+// warning by stable content so it fires once per session. Checked at predicate
+// evaluation (not construction) so transient pre-creation instances stay silent.
+// Intentionally session-lifetime and never cleared: it only ever holds one entry
+// per distinct misconfigured rule, so it stays bounded by authored content.
+const warnedLatePredicateRules = new Set<string>();
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseActor extends Actor {
@@ -33,6 +41,12 @@ function schema() {
 		label: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		predicate: new PredicateField(),
 		priority: new fields.NumberField({ required: true, nullable: false, initial: 1 }),
+		suppressActivationCard: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'auto',
+			choices: ['auto', 'always', 'never'],
+		}),
 	};
 }
 
@@ -65,6 +79,19 @@ interface ActivationCardContext {
 	isMiss: boolean;
 }
 
+// Context passed to onItemActivated — fires once when an item is used, regardless of
+// whether it deals damage or hits. Carries the resolved target actors so rules can act
+// on the activation itself (e.g. marking a quarry) rather than on an attack outcome.
+interface ItemActivatedContext {
+	sourceItem: NimbleBaseItem;
+	sourceActor: NimbleBaseActor;
+	// Optional: self-toggle rules ignore targets; target-marking rules read them.
+	// The dispatcher always populates both from the useItem hook.
+	targetActors?: NimbleBaseActor[];
+	targetTokens?: TokenDocument[];
+	card: ChatMessage | null;
+}
+
 interface TurnContext {
 	combat: Combat;
 	combatant: Combatant;
@@ -93,6 +120,38 @@ interface InitiativeRolledContext {
 	combatant: Combatant;
 }
 
+// Context passed to onEncounterEnd. Fires once per combatant when a combat
+// ends (either via updateCombat transitioning started: true → false, or via
+// deleteCombat as a fallback; the dispatcher dedup's the pair).
+interface EncounterEndContext {
+	combat: Combat;
+	actor: NimbleBaseActor;
+}
+
+// Context passed to onActorDying. Fires when an actor enters the Dying state:
+// dropped to 0 HP with an unfilled wound track, or the Dying condition applied
+// directly. Distinct from onActorKilled (0 HP with a full wound track, or a
+// monster with no wound track), which represents death rather than dying.
+interface ActorDyingContext {
+	actor: NimbleBaseActor;
+	source: NimbleBaseItem | null;
+}
+
+// Context passed to onRoundChanged. Fires once per combatant whenever the
+// combat's round counter changes, in either direction (turn advance across a
+// round boundary, round buttons, or a manual tracker edit). `round` is the
+// new value. Lets rules with round-stamped state react to rewinds, which
+// turn events alone cannot surface.
+interface RoundChangedContext {
+	combat: Combat;
+	actor: NimbleBaseActor;
+	round: number;
+}
+
+// Members of NimbleBaseRule, used to type `alwaysDispatchedEvents` (statics
+// inside the generic class body cannot reference the bare class name).
+type RuleLifecycleEvent = keyof NimbleBaseRule;
+
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
@@ -103,6 +162,34 @@ abstract class NimbleBaseRule<
 	static group: string = 'unsorted';
 
 	static description: string = '';
+
+	/**
+	 * Lifecycle event names this rule class must still receive when rule
+	 * automation is toggled off. Reserved for events that are core plumbing
+	 * with no manual fallback — flows a player cannot reproduce by hand when
+	 * automation is disabled. The dispatcher skips every other event for
+	 * every rule while the toggle is off. Typed against the rule's own
+	 * members so a renamed or misspelled lifecycle method fails to compile.
+	 */
+	static alwaysDispatchedEvents: readonly RuleLifecycleEvent[] = [];
+
+	/** True when this rule class implements the prePrepareData lifecycle hook. */
+	static get appliesInPrePrepareData(): boolean {
+		// biome-ignore lint/complexity/noThisInStatic: must introspect the calling subclass's prototype, not the base class
+		return 'prePrepareData' in this.prototype;
+	}
+
+	/**
+	 * Whether a rule with the given source data evaluates its predicate during
+	 * prePrepareData (before late domain tags exist). Defaults to the class-level
+	 * answer. Dual-phase rules whose active phase depends on their configured
+	 * value (e.g. numeric vs formula speeds) override this to inspect the data,
+	 * so a formula rule that only applies in afterPrepareData is not warned about.
+	 */
+	static appliesInPrePrepareDataFor(_data: Record<string, unknown>): boolean {
+		// biome-ignore lint/complexity/noThisInStatic: must resolve against the calling subclass, not the base class
+		return this.appliesInPrePrepareData;
+	}
 
 	declare type: string;
 
@@ -116,6 +203,8 @@ abstract class NimbleBaseRule<
 
 	declare priority: number;
 
+	declare suppressActivationCard: 'auto' | 'always' | 'never';
+
 	constructor(
 		source: foundry.data.fields.SchemaField.CreateData<Schema>,
 		options?: { parent?: Parent; strict?: boolean },
@@ -128,6 +217,42 @@ abstract class NimbleBaseRule<
 		if (this.invalid) {
 			this.disabled = true;
 		}
+	}
+
+	#latePredicateChecked = false;
+
+	protected _warnOnLatePredicateKeys(): void {
+		if (this.#latePredicateChecked) return;
+		this.#latePredicateChecked = true;
+
+		const Cls = this.constructor as typeof NimbleBaseRule;
+		if (!Cls.appliesInPrePrepareDataFor(this as unknown as Record<string, unknown>)) return;
+
+		// Unembedded rules (compendium/world items, pending creations) are the
+		// Rules Builder's domain; its banner covers them.
+		const item = this.parent as object as NimbleBaseItem | null;
+		if (!item?.isEmbedded) return;
+
+		const lateKeys = (CONFIG.NIMBLE as { LATE_PREDICATE_KEYS?: readonly string[] } | undefined)
+			?.LATE_PREDICATE_KEYS;
+		const predicate = this._predicate as Predicate | undefined;
+		if (!lateKeys?.length || !predicate?.size) return;
+
+		const referenced = Predicate.extractReferencedKeys(predicate._source);
+		const hits = lateKeys.filter((key) => referenced.has(key));
+		if (!hits.length) return;
+
+		// Keyed on stable content, not this.id — id-less rule sources regenerate
+		// a random id on every re-instantiation.
+		const dedupeKey = `${item.uuid}:${this.type}:${hits.join(',')}`;
+		if (warnedLatePredicateRules.has(dedupeKey)) return;
+		warnedLatePredicateRules.add(dedupeKey);
+
+		// eslint-disable-next-line no-console
+		console.warn(
+			`Nimble | Rule "${this.type}" (${this.label || this.id}) predicates on [${hits.join(', ')}], ` +
+				'which are computed after prePrepareData — the predicate will never match in that phase.',
+		);
 	}
 
 	static override defineSchema(): NimbleBaseRule.Schema {
@@ -226,6 +351,8 @@ abstract class NimbleBaseRule<
 		// Empty predicate means "no conditions" = always pass
 		if (this._predicate.size === 0) return true;
 
+		this._warnOnLatePredicateKeys();
+
 		const domain = new Set<string>([
 			...(passedDomain ?? this.actor?.getDomain() ?? []),
 			...(this.item.getDomain() ?? []),
@@ -237,6 +364,31 @@ abstract class NimbleBaseRule<
 	protected resolveFormula(formula: string) {
 		const value = getDeterministicBonus(formula, this.actor?.getRollData() ?? {});
 		return value;
+	}
+
+	/** Matches dice notation: 1d6, 2d8+5, bare d20 — but not identifiers like "id6". */
+	static #DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
+
+	/** Whether the formula contains dice notation (e.g. 1d6, 2d8+5). */
+	protected isDiceExpression(formula: string): boolean {
+		return NimbleBaseRule.#DICE_PATTERN.test(formula);
+	}
+
+	/**
+	 * Push an entry onto an accumulator array on the actor's system data,
+	 * initializing the array on first use. For rules that stack entries during
+	 * data prep (damageBonuses, damageReductions). Registers the path so the
+	 * actor can reset the array at the start of each prepare cycle.
+	 */
+	protected pushToActorSystemArray<T>(path: string, entry: T): void {
+		actorAccumulatorPaths.add(path);
+		const { actor } = this.item;
+		const existing = foundry.utils.getProperty(actor.system, path) as T[] | undefined;
+		if (Array.isArray(existing)) {
+			existing.push(entry);
+			return;
+		}
+		foundry.utils.setProperty(actor.system, path, [entry]);
 	}
 
 	/**
@@ -258,6 +410,24 @@ abstract class NimbleBaseRule<
 	 * Dispatched by ruleEventDispatch for attack-outcome triggers (onHit/onCrit/onMiss).
 	 */
 	async onItemUsed(_context: ItemUsedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
+	 * Hook called once when an item is activated/used, before attack outcomes are known.
+	 * Fires regardless of whether the item deals damage. Use for activation-time effects
+	 * such as marking a target. Dispatched from the `useItem` hook.
+	 */
+	async onItemActivated(_context: ItemActivatedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
+	 * Hook dispatched to the TARGET actor's rules when damage from an attack is
+	 * applied to them (the defender-side counterpart of onItemUsed). Fires from
+	 * the damage-application pipeline, so voided hits never trigger it.
+	 */
+	async onAttackReceived(_context: ItemUsedContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
@@ -296,6 +466,21 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/** Hook called once per combatant when a combat ends. */
+	async onEncounterEnd(_context: EncounterEndContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when an actor enters the Dying state (0 HP, wounds below max). */
+	async onActorDying(_context: ActorDyingContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called once per combatant when the combat's round counter changes. */
+	async onRoundChanged(_context: RoundChangedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
@@ -305,6 +490,43 @@ abstract class NimbleBaseRule<
 	getActivationCardNodes(_context: ActivationCardContext): EffectNode[] {
 		// Default implementation contributes no nodes
 		return [];
+	}
+
+	/**
+	 * A rule returns `true` when the item's default activation card is
+	 * redundant (e.g. a manual dice spend posts its own chat message). The
+	 * builder-editable `suppressActivationCard` envelope field takes
+	 * precedence; `auto` defers to the rule class's own behavior via
+	 * `_autoSuppressesActivationCard()`. Each rule resolves independently —
+	 * the card is suppressed when any enabled rule resolves `true`. The card
+	 * is only ever suppressed when the activation itself has nothing to show —
+	 * no rolls and no effect nodes.
+	 *
+	 * The `auto` branch only suppresses because the rule's activation flow
+	 * posts replacement output, so the card may only be dropped when that flow
+	 * is guaranteed to run: either rule automation is enabled, or the class
+	 * declares `onItemActivated` in `alwaysDispatchedEvents` (dispatched
+	 * regardless of the toggle). An explicit `always` has no replacement flow
+	 * to wait on, so it ignores that gate.
+	 */
+	suppressesActivationCard({
+		automationEnabled = true,
+	}: {
+		automationEnabled?: boolean;
+	} = {}): boolean {
+		if (this.suppressActivationCard === 'always') return true;
+		if (this.suppressActivationCard === 'never') return false;
+		const Cls = this.constructor as typeof NimbleBaseRule;
+		const activationFlowRuns =
+			automationEnabled || Cls.alwaysDispatchedEvents.includes('onItemActivated');
+		return activationFlowRuns && this._autoSuppressesActivationCard();
+	}
+
+	/** The `auto` branch of `suppressesActivationCard()`. Subclasses whose
+	 *  activation flow posts its own chat output override this, not the
+	 *  public method. */
+	protected _autoSuppressesActivationCard(): boolean {
+		return false;
 	}
 
 	override toString() {
@@ -317,10 +539,14 @@ export {
 	NimbleBaseRule,
 	type PreCreateArgs,
 	type ItemUsedContext,
+	type ItemActivatedContext,
 	type TurnContext,
 	type ActorHealthContext,
 	type SaveResolvedContext,
 	type RestContext,
 	type InitiativeRolledContext,
 	type ActivationCardContext,
+	type EncounterEndContext,
+	type ActorDyingContext,
+	type RoundChangedContext,
 };

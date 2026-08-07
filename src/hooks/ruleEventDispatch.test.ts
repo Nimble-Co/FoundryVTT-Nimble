@@ -45,6 +45,7 @@ import registerRuleEventDispatch from './ruleEventDispatch.js';
 
 interface RuleLike {
 	onItemUsed: Mock;
+	onAttackReceived: Mock;
 	onTurnStart: Mock;
 	onTurnEnd: Mock;
 	onActorKilled: Mock;
@@ -52,11 +53,16 @@ interface RuleLike {
 	onSaveResolved: Mock;
 	onRest: Mock;
 	onInitiativeRolled: Mock;
+	onItemActivated: Mock;
+	onEncounterEnd: Mock;
+	onActorDying: Mock;
+	onRoundChanged: Mock;
 }
 
 function createMockRule(): RuleLike {
 	return {
 		onItemUsed: vi.fn().mockResolvedValue(undefined),
+		onAttackReceived: vi.fn().mockResolvedValue(undefined),
 		onTurnStart: vi.fn().mockResolvedValue(undefined),
 		onTurnEnd: vi.fn().mockResolvedValue(undefined),
 		onActorKilled: vi.fn().mockResolvedValue(undefined),
@@ -64,6 +70,10 @@ function createMockRule(): RuleLike {
 		onSaveResolved: vi.fn().mockResolvedValue(undefined),
 		onRest: vi.fn().mockResolvedValue(undefined),
 		onInitiativeRolled: vi.fn().mockResolvedValue(undefined),
+		onItemActivated: vi.fn().mockResolvedValue(undefined),
+		onEncounterEnd: vi.fn().mockResolvedValue(undefined),
+		onActorDying: vi.fn().mockResolvedValue(undefined),
+		onRoundChanged: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -91,9 +101,23 @@ describe('ruleEventDispatch', () => {
 		expect(handlers.has('nimble.saveResolved')).toBe(true);
 		expect(handlers.has('nimble.rest')).toBe(true);
 		expect(handlers.has('nimble.initiativeRolled')).toBe(true);
+		expect(handlers.has('nimble.useItem')).toBe(true);
+		expect(handlers.has('updateCombat')).toBe(true);
+		expect(handlers.has('deleteCombat')).toBe(true);
+		expect(handlers.has('nimble.conditionApplied')).toBe(true);
 	});
 
-	describe('automation.autoApplyConditions gating', () => {
+	describe('automation.applyRuleEffects gating', () => {
+		// A rule class that declares an always-dispatched lifecycle event, the
+		// way core-plumbing rule classes exempt themselves from the toggle.
+		class AlwaysActivatedRule {
+			static alwaysDispatchedEvents: readonly string[] = ['onItemActivated'];
+
+			onItemActivated = vi.fn().mockResolvedValue(undefined);
+
+			onTurnStart = vi.fn().mockResolvedValue(undefined);
+		}
+
 		it('skips dispatch when setting is disabled', async () => {
 			settingsGet.mockReturnValue(false);
 			const rule = createMockRule();
@@ -113,6 +137,35 @@ describe('ruleEventDispatch', () => {
 
 			await Promise.resolve();
 			expect(rule.onItemUsed).not.toHaveBeenCalled();
+		});
+
+		it('still dispatches always-dispatched events to exempt rule classes when disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = new AlwaysActivatedRule();
+			const sourceActor = { rules: [rule] };
+			const sourceItem = { actor: sourceActor, name: 'Focus' };
+
+			handlers.get('nimble.useItem')?.(sourceItem, null, { rolls: [], targets: [] });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onItemActivated).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not dispatch non-exempt events to exempt rule classes when disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = new AlwaysActivatedRule();
+			const nextCombatant = { actor: { rules: [rule] } } as unknown as Combatant;
+			const combat = {
+				combatant: null,
+				turns: [nextCombatant],
+			} as unknown as Combat;
+
+			handlers.get('combatTurn')?.(combat, { round: 1, turn: 0 }, { direction: 1 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onTurnStart).not.toHaveBeenCalled();
 		});
 	});
 
@@ -142,6 +195,31 @@ describe('ruleEventDispatch', () => {
 				sourceActor,
 				targetActor,
 			});
+		});
+
+		it('calls onAttackReceived on each rule of the target actor', async () => {
+			const sourceRule = createMockRule();
+			const targetRule = createMockRule();
+			const sourceActor = { rules: [sourceRule] };
+			const targetActor = { rules: [targetRule] };
+
+			const handler = handlers.get('nimble.damageApplied');
+			handler?.({
+				sourceItem: { name: 'Shadow Blast' },
+				sourceActor,
+				targetActor,
+				card: null,
+				isCritical: true,
+				isMiss: false,
+			});
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
+			expect(targetRule.onItemUsed).not.toHaveBeenCalled();
+			expect(sourceRule.onAttackReceived).not.toHaveBeenCalled();
+			const ctx = targetRule.onAttackReceived.mock.calls[0]?.[0];
+			expect(ctx).toMatchObject({ isCritical: true, sourceActor, targetActor });
 		});
 
 		it('no-ops when sourceActor or targetActor is missing', async () => {
@@ -181,10 +259,68 @@ describe('ruleEventDispatch', () => {
 			expect(previousRule.onTurnEnd).toHaveBeenCalledTimes(1);
 			expect(nextRule.onTurnStart).toHaveBeenCalledTimes(1);
 		});
+
+		it('registers combatRound so round wraps dispatch turn events too', async () => {
+			// A wrap fires only combatRound in Foundry (nextTurn delegates to
+			// nextRound), so the last combatant's onTurnEnd arrives via this
+			// registration.
+			const previousRule = createMockRule();
+			const nextRule = createMockRule();
+			const previousCombatant = { actor: { rules: [previousRule] } } as unknown as Combatant;
+			const nextCombatant = { actor: { rules: [nextRule] } } as unknown as Combatant;
+			const combat = {
+				combatant: previousCombatant,
+				turns: [nextCombatant, previousCombatant],
+			} as unknown as Combat;
+
+			const handler = handlers.get('combatRound');
+			expect(handler).toBeDefined();
+			handler?.(combat, { round: 2, turn: 0 }, { direction: 1 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(previousRule.onTurnEnd).toHaveBeenCalledTimes(1);
+			expect(nextRule.onTurnStart).toHaveBeenCalledTimes(1);
+		});
+
+		it('dispatches no turn events for backwards navigation (rewind)', async () => {
+			const previousRule = createMockRule();
+			const nextRule = createMockRule();
+			const previousCombatant = { actor: { rules: [previousRule] } } as unknown as Combatant;
+			const nextCombatant = { actor: { rules: [nextRule] } } as unknown as Combatant;
+			const combat = {
+				combatant: previousCombatant,
+				turns: [nextCombatant, previousCombatant],
+			} as unknown as Combat;
+
+			handlers.get('combatTurn')?.(combat, { round: 2, turn: 0 }, { direction: -1 });
+			handlers.get('combatRound')?.(combat, { round: 1, turn: 1 }, { direction: -1 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(previousRule.onTurnEnd).not.toHaveBeenCalled();
+			expect(nextRule.onTurnStart).not.toHaveBeenCalled();
+		});
+
+		it('handles a null next turn on round wraps without dispatching onTurnStart', async () => {
+			const previousRule = createMockRule();
+			const previousCombatant = { actor: { rules: [previousRule] } } as unknown as Combatant;
+			const combat = {
+				combatant: previousCombatant,
+				turns: [previousCombatant],
+			} as unknown as Combat;
+
+			handlers.get('combatRound')?.(combat, { round: 2, turn: null }, { direction: 1 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(previousRule.onTurnEnd).toHaveBeenCalledTimes(1);
+			expect(previousRule.onTurnStart).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('updateActor → onActorKilled/onActorWounded', () => {
-		it('fires onActorKilled when HP changed and current HP ≤ 0', async () => {
+		it('fires onActorKilled at 0 HP for actors without a wound track (monsters)', async () => {
 			const rule = createMockRule();
 			const actor = {
 				rules: [rule],
@@ -198,7 +334,46 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onActorKilled).toHaveBeenCalledTimes(1);
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 			expect(rule.onActorWounded).not.toHaveBeenCalled();
+		});
+
+		it('fires onActorDying at 0 HP when the wound track is not full (dying PC)', async () => {
+			const rule = createMockRule();
+			const actor = {
+				rules: [rule],
+				system: {
+					attributes: { hp: { value: 0, max: 20 }, wounds: { value: 2, max: 6 } },
+				},
+			};
+			const changes = { system: { attributes: { hp: { value: 0 } } } };
+
+			const handler = handlers.get('updateActor');
+			handler?.(actor, changes);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorDying).toHaveBeenCalledTimes(1);
+			expect(rule.onActorKilled).not.toHaveBeenCalled();
+		});
+
+		it('fires onActorKilled at 0 HP when the wound track is full (dead PC)', async () => {
+			const rule = createMockRule();
+			const actor = {
+				rules: [rule],
+				system: {
+					attributes: { hp: { value: 0, max: 20 }, wounds: { value: 6, max: 6 } },
+				},
+			};
+			const changes = { system: { attributes: { hp: { value: 0 } } } };
+
+			const handler = handlers.get('updateActor');
+			handler?.(actor, changes);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorKilled).toHaveBeenCalledTimes(1);
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 		});
 
 		it('fires onActorWounded when HP changed and state is bloodied', async () => {
@@ -217,6 +392,63 @@ describe('ruleEventDispatch', () => {
 
 			expect(rule.onActorWounded).toHaveBeenCalledTimes(1);
 			expect(rule.onActorKilled).not.toHaveBeenCalled();
+		});
+
+		it('fires onActorKilled when the final wound lands via a wounds-only update at 0 HP', async () => {
+			const rule = createMockRule();
+			const actor = {
+				rules: [rule],
+				system: {
+					attributes: { hp: { value: 0, max: 20 }, wounds: { value: 6, max: 6 } },
+				},
+			};
+			const changes = { system: { attributes: { wounds: { value: 6 } } } };
+
+			const handler = handlers.get('updateActor');
+			handler?.(actor, changes);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorKilled).toHaveBeenCalledTimes(1);
+			expect(rule.onActorDying).not.toHaveBeenCalled();
+		});
+
+		it('does not re-fire onActorDying for a wounds-only update below max at 0 HP', async () => {
+			const rule = createMockRule();
+			const actor = {
+				rules: [rule],
+				system: {
+					attributes: { hp: { value: 0, max: 20 }, wounds: { value: 3, max: 6 } },
+				},
+			};
+			const changes = { system: { attributes: { wounds: { value: 3 } } } };
+
+			const handler = handlers.get('updateActor');
+			handler?.(actor, changes);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorDying).not.toHaveBeenCalled();
+			expect(rule.onActorKilled).not.toHaveBeenCalled();
+		});
+
+		it('ignores wounds-only updates while HP is above 0', async () => {
+			const rule = createMockRule();
+			const actor = {
+				rules: [rule],
+				system: {
+					attributes: { hp: { value: 10, max: 20 }, wounds: { value: 6, max: 6 } },
+				},
+			};
+			const changes = { system: { attributes: { wounds: { value: 6 } } } };
+
+			const handler = handlers.get('updateActor');
+			handler?.(actor, changes);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorKilled).not.toHaveBeenCalled();
+			expect(rule.onActorWounded).not.toHaveBeenCalled();
 		});
 
 		it('does nothing when HP was not part of the update', async () => {
@@ -271,6 +503,221 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe('nimble.useItem → onItemActivated', () => {
+		it('calls onItemActivated on each rule of the source actor', async () => {
+			const rule = createMockRule();
+			const sourceActor = { rules: [rule] };
+			const sourceItem = { actor: sourceActor, name: 'Rage' };
+
+			const handler = handlers.get('nimble.useItem');
+			expect(handler).toBeDefined();
+			handler?.(sourceItem, null, { rolls: [], targets: [] });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onItemActivated).toHaveBeenCalledTimes(1);
+			const ctx = rule.onItemActivated.mock.calls[0]?.[0];
+			expect(ctx).toMatchObject({ sourceItem, sourceActor });
+		});
+
+		it('no-ops gracefully when the item has no parent actor', async () => {
+			const handler = handlers.get('nimble.useItem');
+			expect(() =>
+				handler?.({ actor: null, name: 'Stray' }, null, { rolls: [], targets: [] }),
+			).not.toThrow();
+			await Promise.resolve();
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = createMockRule();
+			const sourceActor = { rules: [rule] };
+			const sourceItem = { actor: sourceActor, name: 'Rage' };
+
+			const handler = handlers.get('nimble.useItem');
+			handler?.(sourceItem, null, { rolls: [], targets: [] });
+			await Promise.resolve();
+
+			expect(rule.onItemActivated).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('updateCombat / deleteCombat → onEncounterEnd', () => {
+		function buildCombatWithCombatants(
+			actors: Array<{ rules: RuleLike[] }>,
+			id = `combat-${Math.random().toString(36).slice(2, 10)}`,
+		) {
+			return {
+				id,
+				combatants: { contents: actors.map((actor) => ({ actor })) },
+			} as unknown as Combat;
+		}
+
+		it('fires onRoundChanged on each combatant when the round counter changes', async () => {
+			const ruleA = createMockRule();
+			const ruleB = createMockRule();
+			const combat = buildCombatWithCombatants([{ rules: [ruleA] }, { rules: [ruleB] }]);
+
+			const handler = handlers.get('updateCombat');
+			handler?.(combat, { round: 1, turn: 0 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(ruleA.onRoundChanged).toHaveBeenCalledTimes(1);
+			expect(ruleA.onRoundChanged.mock.calls[0][0]).toMatchObject({ round: 1 });
+			expect(ruleB.onRoundChanged).toHaveBeenCalledTimes(1);
+			expect(ruleA.onEncounterEnd).not.toHaveBeenCalled();
+		});
+
+		it('does not fire onRoundChanged when the update has no round change', async () => {
+			const rule = createMockRule();
+			const combat = buildCombatWithCombatants([{ rules: [rule] }]);
+
+			handlers.get('updateCombat')?.(combat, { turn: 2 });
+			await Promise.resolve();
+
+			expect(rule.onRoundChanged).not.toHaveBeenCalled();
+		});
+
+		it('fires onEncounterEnd on each combatant when updateCombat indicates the combat ended', async () => {
+			const ruleA = createMockRule();
+			const ruleB = createMockRule();
+			const actorA = { rules: [ruleA] };
+			const actorB = { rules: [ruleB] };
+			const combat = buildCombatWithCombatants([actorA, actorB]);
+
+			const handler = handlers.get('updateCombat');
+			expect(handler).toBeDefined();
+			handler?.(combat, { started: false });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(ruleA.onEncounterEnd).toHaveBeenCalledTimes(1);
+			expect(ruleB.onEncounterEnd).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not double-fire when deleteCombat follows an updateCombat end transition', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combat = buildCombatWithCombatants([actor]);
+
+			handlers.get('updateCombat')?.(combat, { started: false });
+			handlers.get('deleteCombat')?.(combat);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onEncounterEnd).toHaveBeenCalledTimes(1);
+		});
+
+		it('fires onEncounterEnd from deleteCombat alone as fallback', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combat = buildCombatWithCombatants([actor]);
+
+			handlers.get('deleteCombat')?.(combat);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onEncounterEnd).toHaveBeenCalledTimes(1);
+		});
+
+		it('ignores updateCombat events that are not end transitions', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combat = buildCombatWithCombatants([actor]);
+
+			handlers.get('updateCombat')?.(combat, { round: 3 });
+			await Promise.resolve();
+
+			expect(rule.onEncounterEnd).not.toHaveBeenCalled();
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combat = buildCombatWithCombatants([actor]);
+
+			handlers.get('updateCombat')?.(combat, { started: false });
+			await Promise.resolve();
+
+			expect(rule.onEncounterEnd).not.toHaveBeenCalled();
+		});
+
+		it('does not pollute the dedup set when combat.id is missing', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combatA = {
+				id: undefined,
+				combatants: { contents: [{ actor }] },
+			} as unknown as Combat;
+			const combatB = buildCombatWithCombatants([actor]);
+
+			// First update with no id should not block a subsequent legit combat-end.
+			handlers.get('updateCombat')?.(combatA, { started: false });
+			handlers.get('updateCombat')?.(combatB, { started: false });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			// One fire from combatA (no-id dispatch still happens), one from combatB.
+			expect(rule.onEncounterEnd).toHaveBeenCalledTimes(2);
+		});
+	});
+
+	describe('nimble.conditionApplied → onActorDying', () => {
+		it('fires onActorDying on the target actor’s rules when condition === "dying"', async () => {
+			const rule = createMockRule();
+			const targetActor = { rules: [rule] };
+
+			const handler = handlers.get('nimble.conditionApplied');
+			expect(handler).toBeDefined();
+			handler?.({
+				target: targetActor,
+				condition: 'dying',
+				effect: null,
+				source: { name: 'Grievous Wound' },
+				rule: null,
+			});
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorDying).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not fire for other conditions', async () => {
+			const rule = createMockRule();
+			const targetActor = { rules: [rule] };
+
+			handlers.get('nimble.conditionApplied')?.({
+				target: targetActor,
+				condition: 'dazed',
+				effect: null,
+				source: null,
+				rule: null,
+			});
+			await Promise.resolve();
+
+			expect(rule.onActorDying).not.toHaveBeenCalled();
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = createMockRule();
+			const targetActor = { rules: [rule] };
+
+			handlers.get('nimble.conditionApplied')?.({
+				target: targetActor,
+				condition: 'dying',
+				effect: null,
+				source: null,
+				rule: null,
+			});
+			await Promise.resolve();
+
+			expect(rule.onActorDying).not.toHaveBeenCalled();
 		});
 	});
 });

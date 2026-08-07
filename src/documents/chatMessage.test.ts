@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { NimbleChatMessage } from './chatMessage.js';
 
 type TestGlobals = {
@@ -593,6 +594,141 @@ describe('NimbleChatMessage.applyDamage', () => {
 		expect(actor.applyDamage).toHaveBeenCalledWith(3);
 	});
 
+	it('counts banked dice-pool bonuses (Fury Dice) as dice, not modifiers, for medium armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'medium',
+					hp: {
+						value: 50,
+						temp: 0,
+						max: 50,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// Battleaxe hit: 1d10 (rolled 5) + 5 + 10[Fury Dice] + 4[Fury Dice] + 18 = 42.
+		// Medium armor keeps the dice (d10 5 + Fury 10 + Fury 4 = 19) and drops the
+		// flat +5 / +18 modifiers.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d10 + 5 + 10 + 4 + 18',
+			total: 42,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 10, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 5 },
+				{ operator: '+' },
+				{ number: 10, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 4, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 18 },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(42, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(19);
+	});
+
+	it('halves banked dice-pool bonuses (Fury Dice) with the dice for heavy armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 50,
+						temp: 0,
+						max: 50,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// Same Battleaxe hit against a heavy-armor target: dice total 19 is halved
+		// (Math.ceil(19 * 0.5) = 10); the flat +5 / +18 modifiers are ignored.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d10 + 5 + 10 + 4 + 18',
+			total: 42,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 10, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 5 },
+				{ operator: '+' },
+				{ number: 10, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 4, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 18 },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(42, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('counts other banked dice pools (e.g. Oathsworn Judgment Dice) as dice for armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'medium',
+					hp: {
+						value: 50,
+						temp: 0,
+						max: 50,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// Manually-spent Judgment Dice arrive on the roll the same way Fury Dice do
+		// (flavored numeric terms). 1d8 (6) + 3[Judgment Dice] + 5[Judgment Dice] + 4
+		// against medium armor keeps the dice (6 + 3 + 5 = 14), drops the flat +4.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d8 + 3 + 5 + 4',
+			total: 18,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 8, results: [{ result: 6, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 3, options: { flavor: 'Judgment Dice' } },
+				{ operator: '+' },
+				{ number: 5, options: { flavor: 'Judgment Dice' } },
+				{ operator: '+' },
+				{ number: 4 },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(18, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(14);
+	});
+
 	it('applies heavy armor by halving dice-only damage and rounding up on non-critical hits', async () => {
 		const actor = {
 			applyDamage: vi.fn().mockResolvedValue(undefined),
@@ -990,5 +1126,1593 @@ describe('NimbleChatMessage.applyDamage', () => {
 		});
 
 		expect(actor.applyDamage).toHaveBeenCalledWith(11);
+	});
+});
+
+describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+	});
+
+	// Battleaxe hit: 1d10 (rolled 5) + 5 + 10[Fury Dice] + 4[Fury Dice] + 18 = 42.
+	function battleaxeRoll() {
+		return {
+			class: 'DamageRoll',
+			formula: '1d10 + 5 + 10 + 4 + 18',
+			total: 42,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 10, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 5 },
+				{ operator: '+' },
+				{ number: 10, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 4, options: { flavor: 'Fury Dice' } },
+				{ operator: '+' },
+				{ number: 18 },
+			],
+		};
+	}
+
+	// Mirrors the effects tree shape produced by the attack flow: a base damage
+	// node whose on-hit outcome node inherits its roll (see processNodes).
+	function createDamageMessage(params: {
+		roll: object;
+		isMiss?: boolean;
+		ignoreArmor?: boolean;
+		targets?: string[];
+	}) {
+		return new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: params.targets ?? ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: params.isMiss ?? false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d10',
+							damageType: 'slashing',
+							ignoreArmor: params.ignoreArmor ?? false,
+							canCrit: true,
+							canMiss: true,
+							roll: params.roll,
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('returns the full displayed total for an unarmored target', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
+	});
+
+	it('returns the armor-reduced total for a heavy-armor target (Fury Dice count as dice)', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'heavy' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		// Dice = d10 5 + Fury 10 + 4 = 19; heavy halves to ceil(9.5) = 10; +5/+18 dropped.
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(10);
+	});
+
+	it('ignores armor for the preview when the damage ignores armor', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'heavy' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll(), ignoreArmor: true });
+
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
+	});
+
+	it('returns null for a miss so the target list shows no preview', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll(), isMiss: true });
+
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
+	});
+
+	it('counts a disposition-targeted damage node once when its outcome child is also surfaced', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d10',
+							damageType: 'slashing',
+							targetDisposition: 'hostile',
+							canCrit: true,
+							canMiss: true,
+							roll: battleaxeRoll(),
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
+	});
+
+	it('returns null when the card has no applicable damage rolls', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createActivationMessage();
+
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
+	});
+
+	it('returns null when the target token does not resolve to an actor', () => {
+		globals().fromUuidSync.mockReturnValue(null);
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		expect(
+			message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null,
+		).toBeNull();
+	});
+
+	it('subtracts the target damage reductions so the preview matches applied damage', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: {
+					attributes: { armor: 'heavy' },
+					damageReductions: [{ value: 3, damageTypes: [] }],
+				},
+			},
+		});
+
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		// Heavy armor total is 10 (see above); untyped reduction of 3 leaves 7.
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(7);
+	});
+
+	it('credits the banked one-shot reduction against the first damage roll only', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: { attributes: { armor: 'none' } },
+				effects: [
+					{
+						id: 'banked-effect',
+						disabled: false,
+						flags: { [SYSTEM_ID]: { bankedDamageReduction: 6 } },
+					},
+				],
+			},
+		});
+
+		const damageNode = (id: string) => ({
+			id,
+			type: 'damage',
+			formula: '2d6',
+			damageType: 'slashing',
+			ignoreArmor: false,
+			canCrit: true,
+			canMiss: true,
+			roll: createSerializedDamageRoll({ diceResults: [4, 6] }),
+			parentNode: null,
+			parentContext: null,
+			on: {
+				hit: [{ id: `${id}-hit`, type: 'damageOutcome', parentNode: id, parentContext: 'hit' }],
+			},
+		});
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: { effects: [damageNode('dmg-a'), damageNode('dmg-b')] },
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		// Each roll totals 10; the 6-point bank is consumed by the first apply,
+		// so the preview must show (10 - 6) + 10 = 14 rather than 4 + 4 = 8.
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(14);
+	});
+
+	it('applies type-scoped reductions to the preview using the damage node type', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: {
+				system: {
+					attributes: { armor: 'none' },
+					damageReductions: [
+						{ value: 5, damageTypes: ['slashing'] },
+						{ value: 2, damageTypes: ['fire'] },
+					],
+				},
+			},
+		});
+
+		// createDamageMessage's damage node is slashing: only the slashing entry applies.
+		const message = createDamageMessage({ roll: battleaxeRoll() });
+
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(37);
+	});
+});
+
+describe('NimbleChatMessage.applyDamage — damage reduction', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+	});
+
+	function createReductionActor(damageReductions: object[]) {
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: 'none',
+					hp: { value: 10, temp: 0, max: 10 },
+				},
+				damageReductions,
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+	}
+
+	it('subtracts untyped reductions from the applied damage', async () => {
+		const actor = createReductionActor([{ value: 3, damageTypes: [] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('sums multiple matching reductions', async () => {
+		const actor = createReductionActor([
+			{ value: 3, damageTypes: [] },
+			{ value: 2, damageTypes: ['fire'] },
+		]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('applies type-scoped reductions only when the damage type matches', async () => {
+		const actor = createReductionActor([{ value: 4, damageTypes: ['lightning'] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('does not apply type-scoped reductions when the damage type is unknown', async () => {
+		const actor = createReductionActor([{ value: 4, damageTypes: ['lightning'] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('applies untyped reductions even when the damage type is unknown', async () => {
+		const actor = createReductionActor([{ value: 4, damageTypes: [] }]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+	});
+
+	it('still applies reductions when armor is ignored', async () => {
+		const actor = createReductionActor([{ value: 3, damageTypes: [] }]);
+		actor.system.attributes.armor = 'heavy';
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', ignoreArmor: true });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('subtracts the reduction after armor halving', async () => {
+		const actor = createReductionActor([{ value: 3, damageTypes: [] }]);
+		actor.system.attributes.armor = 'heavy';
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6, 6] });
+
+		const message = createActivationMessage();
+		await message.applyDamage(12, { outcome: 'fullDamage', roll });
+
+		// Heavy armor halves the dice total (12 -> 6), then the reduction applies.
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
+	});
+
+	it('shows no-damage feedback when the reduction absorbs everything', async () => {
+		const actor = createReductionActor([{ value: 10, damageTypes: [] }]);
+		globals().fromUuidSync.mockReturnValue({
+			actor,
+			name: 'Raging Berserker',
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
+	});
+
+	it('notifies the GM when only one of two targets is fully absorbed by reduction', async () => {
+		const protectedActor = createReductionActor([{ value: 10, damageTypes: [] }]);
+		const exposedActor = createReductionActor([]);
+
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid.endsWith('protected')
+				? { actor: protectedActor, name: 'Raging Berserker' }
+				: { actor: exposedActor, name: 'Bystander' },
+		);
+
+		const message = createActivationMessage([
+			'Scene.scene.Token.protected',
+			'Scene.scene.Token.exposed',
+		]);
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(protectedActor.applyDamage).not.toHaveBeenCalled();
+		expect(exposedActor.applyDamage).toHaveBeenCalledWith(8);
+		expect(globals().ui.notifications.info).toHaveBeenCalledWith(
+			expect.stringContaining('Raging Berserker'),
+		);
+	});
+
+	function withBankedReduction(actor: object, value: number) {
+		const target = actor as {
+			effects?: object[];
+			deleteEmbeddedDocuments?: ReturnType<typeof vi.fn>;
+		};
+		target.effects = [
+			{
+				id: 'banked-effect',
+				disabled: false,
+				flags: { [SYSTEM_ID]: { bankedDamageReduction: value } },
+			},
+		];
+		target.deleteEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		return target.deleteEmbeddedDocuments;
+	}
+
+	it('subtracts a banked one-shot reduction and clears its effect after application', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
+	});
+
+	it('combines banked reduction with damageReduction rule entries', async () => {
+		const actor = createReductionActor([{ value: 2, damageTypes: [] }]);
+		withBankedReduction(actor, 3);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('consumes the banked reduction even when it absorbs the damage entirely', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 20);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(deleteEffects).toHaveBeenCalledWith('ActiveEffect', ['banked-effect']);
+	});
+
+	it('applies the banked reduction to only the first entry when one actor is targeted via two tokens', async () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockImplementation(() => ({ actor }));
+
+		const message = createActivationMessage(['Scene.scene.Token.a', 'Scene.scene.Token.b']);
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// The one-shot bank absorbs a single application, not one per token.
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 4);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+		expect(deleteEffects).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps Apply Damage available when the bank absorbs the damage entirely', () => {
+		const actor = createReductionActor([]);
+		withBankedReduction(actor, 20);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+
+		// The bank is spent by the Apply click even on full absorption, so the
+		// button must stay live; otherwise the one-shot bank survives forever.
+		expect(message.canApplyDamage(8, { outcome: 'fullDamage' })).toBe(true);
+	});
+
+	it('does not consume the banked reduction when only previewing or checking applicability', () => {
+		const actor = createReductionActor([]);
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		message.canApplyDamage(10, { outcome: 'fullDamage' });
+
+		expect(deleteEffects).not.toHaveBeenCalled();
+		expect(actor.update).not.toHaveBeenCalled();
+	});
+
+	it('ignores malformed reduction entries', async () => {
+		const actor = createReductionActor([
+			{ value: Number.NaN, damageTypes: [] },
+			{ value: -2, damageTypes: [] },
+			{ value: 'nonsense', damageTypes: [] },
+			{ value: 2, damageTypes: 'notAnArray' },
+			{ value: 3, damageTypes: [] },
+		]);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// Only the well-formed entries apply: 2 (invalid damageTypes treated as untyped) + 3.
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+});
+
+describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerability', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+	});
+
+	function createResistanceActor(config: {
+		armor?: 'none' | 'medium' | 'heavy';
+		damageReductions?: object[];
+		damageResistances?: string[];
+		damageImmunities?: string[];
+		damageVulnerabilities?: string[];
+	}) {
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					armor: config.armor ?? 'none',
+					hp: { value: 10, temp: 0, max: 10 },
+					damageResistances: config.damageResistances ?? [],
+					damageImmunities: config.damageImmunities ?? [],
+					damageVulnerabilities: config.damageVulnerabilities ?? [],
+				},
+				damageReductions: config.damageReductions ?? [],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+	}
+
+	/**
+	 * A hero's `attributes.armor` is a schema object feeding the Defend reaction,
+	 * not the monster armor string. Heroes are therefore unarmored as far as the
+	 * damage pipeline is concerned.
+	 */
+	function createCharacterActor(config: {
+		damageResistances?: string[];
+		damageImmunities?: string[];
+		damageVulnerabilities?: string[];
+	}) {
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			type: 'character',
+			system: {
+				attributes: {
+					armor: { baseValue: '@dexterity', components: [], hint: '', value: 4 },
+					hp: { value: 10, temp: 0, max: 10 },
+					damageResistances: config.damageResistances ?? [],
+					damageImmunities: config.damageImmunities ?? [],
+					damageVulnerabilities: config.damageVulnerabilities ?? [],
+				},
+				damageReductions: [],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+	}
+
+	function withBankedReduction(actor: object, value: number) {
+		const target = actor as {
+			effects?: object[];
+			deleteEmbeddedDocuments?: ReturnType<typeof vi.fn>;
+		};
+		target.effects = [
+			{
+				id: 'banked-effect',
+				disabled: false,
+				flags: { [SYSTEM_ID]: { bankedDamageReduction: value } },
+			},
+		];
+		target.deleteEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		return target.deleteEmbeddedDocuments;
+	}
+
+	it('halves damage for a half-mode reduction entry, rounding up', async () => {
+		const actor = createResistanceActor({
+			damageReductions: [{ value: 0, damageTypes: [], mode: 'half' }],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('halves before subtracting flat reductions', async () => {
+		const actor = createResistanceActor({
+			damageReductions: [
+				{ value: 0, damageTypes: [], mode: 'half' },
+				{ value: 2, damageTypes: [] },
+			],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		// 10 -> 5 (half) -> 3 (flat reduction).
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
+	});
+
+	it('halves damage for a matching attributes.damageResistances entry', async () => {
+		const actor = createResistanceActor({ damageResistances: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('does not apply typed resistance when the damage type is unknown or different', async () => {
+		const actor = createResistanceActor({ damageResistances: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'cold' });
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 10);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+	});
+
+	it('halves only once when multiple resistance sources match', async () => {
+		const actor = createResistanceActor({
+			damageReductions: [{ value: 0, damageTypes: ['fire'], mode: 'half' }],
+			damageResistances: ['fire'],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('applies no damage to an actor immune to the damage type', async () => {
+		const actor = createResistanceActor({ damageImmunities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor, name: 'Cinder Elemental' });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('does not apply immunity when the damage type is unknown', async () => {
+		const actor = createResistanceActor({ damageImmunities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('doubles damage against an unarmored actor vulnerable to the damage type', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(20);
+	});
+
+	it('doubles the already-halved damage on a halfDamage outcome', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(5, { outcome: 'halfDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('ignores heavy armor instead of doubling when the vulnerable target is armored', async () => {
+		const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		// Heavy armor would halve the dice and drop the +2; vulnerability bypasses both.
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('ignores medium armor when the vulnerable target is armored', async () => {
+		const actor = createResistanceActor({ armor: 'medium', damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		// Medium armor would drop the +2 modifier; vulnerability bypasses it.
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('doubles damage against a vulnerable character, whose Armor value is a Defend stat', async () => {
+		const actor = createCharacterActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		// The schema-object armor must not read as medium/heavy monster armor, so
+		// the hero takes the unarmored doubling rather than an armor bypass.
+		expect(actor.applyDamage).toHaveBeenCalledWith(16);
+	});
+
+	it('halves damage against a resistant character without touching its Armor value', async () => {
+		const actor = createCharacterActor({ damageResistances: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', damageType: 'fire', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+	});
+
+	it('still doubles damage against an unarmored vulnerable target on an armor-ignoring card', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, {
+			outcome: 'fullDamage',
+			damageType: 'fire',
+			ignoreArmor: true,
+		});
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(20);
+	});
+
+	it('does not stack vulnerability onto an armor-ignoring card against an armored target', async () => {
+		const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({ diceResults: [6], flatBonus: 2 });
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, {
+			outcome: 'fullDamage',
+			damageType: 'fire',
+			ignoreArmor: true,
+			roll,
+		});
+
+		// The card already bypasses armor, so vulnerability adds nothing.
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+	});
+
+	it('does not apply vulnerability when the damage type is unknown or different', async () => {
+		const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'cold' });
+		await message.applyDamage(10, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 10);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 10);
+	});
+
+	it('zeroes damage when the target is both immune and vulnerable to the type', async () => {
+		const actor = createResistanceActor({
+			damageImmunities: ['fire'],
+			damageVulnerabilities: ['fire'],
+		});
+		globals().fromUuidSync.mockReturnValue({ actor, name: 'Cinder Elemental' });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('does not consume a banked reduction when immunity already zeroes the hit', async () => {
+		const actor = createResistanceActor({ damageImmunities: ['fire'] });
+		const deleteEffects = withBankedReduction(actor, 6);
+		globals().fromUuidSync.mockReturnValue({ actor, name: 'Cinder Elemental' });
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', damageType: 'fire' });
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(deleteEffects).not.toHaveBeenCalled();
+	});
+
+	describe('getDamageBreakdownForTarget', () => {
+		function createModifierMessage(
+			damageType = 'fire',
+			options: { ignoreArmor?: boolean; outcome?: string } = {},
+		) {
+			return new NimbleChatMessage({
+				type: 'spell',
+				system: {
+					targets: ['Scene.scene.Token.token'],
+					isCritical: false,
+					isMiss: false,
+					activation: {
+						effects: [
+							{
+								id: 'dmg',
+								type: 'damage',
+								formula: '1d6',
+								damageType,
+								ignoreArmor: options.ignoreArmor ?? false,
+								canCrit: true,
+								canMiss: true,
+								roll: {
+									class: 'DamageRoll',
+									formula: '1d6',
+									total: 6,
+									isCritical: false,
+									excludedPrimaryDieValue: 0,
+									terms: [
+										{
+											number: 1,
+											faces: 6,
+											results: [{ result: 6, active: true, discarded: false }],
+										},
+									],
+								},
+								parentNode: null,
+								parentContext: null,
+								on: {
+									hit: [
+										{
+											id: 'dmg-hit',
+											type: 'damageOutcome',
+											outcome: options.outcome ?? 'fullDamage',
+											parentNode: 'dmg',
+											parentContext: 'hit',
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+			} as unknown as ChatMessage.CreateData);
+		}
+
+		function createMultiTypeMessage(components: { damageType: string; total: number }[]) {
+			return new NimbleChatMessage({
+				type: 'spell',
+				system: {
+					targets: ['Scene.scene.Token.token'],
+					isCritical: false,
+					isMiss: false,
+					activation: {
+						effects: components.map(({ damageType, total }) => ({
+							id: `dmg-${damageType}`,
+							type: 'damage',
+							formula: `${total}`,
+							damageType,
+							ignoreArmor: false,
+							canCrit: true,
+							canMiss: true,
+							roll: {
+								class: 'DamageRoll',
+								formula: `${total}`,
+								total,
+								isCritical: false,
+								excludedPrimaryDieValue: 0,
+								terms: [
+									{
+										number: 1,
+										faces: total,
+										results: [{ result: total, active: true, discarded: false }],
+									},
+								],
+							},
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{
+										id: `dmg-${damageType}-hit`,
+										type: 'damageOutcome',
+										parentNode: `dmg-${damageType}`,
+										parentContext: 'hit',
+									},
+								],
+							},
+						})),
+					},
+				},
+			} as unknown as ChatMessage.CreateData);
+		}
+
+		function getModifiers(message: NimbleChatMessage): string[] {
+			const breakdown = message.getDamageBreakdownForTarget('Scene.scene.Token.token');
+			return (
+				breakdown?.components.flatMap((component) =>
+					component.modifiers.map(({ label }) => label),
+				) ?? []
+			);
+		}
+
+		it('resolves each damage type separately on a multi-type attack', () => {
+			const actor = createResistanceActor({
+				damageImmunities: ['fire'],
+				damageResistances: ['cold'],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown = createMultiTypeMessage([
+				{ damageType: 'fire', total: 10 },
+				{ damageType: 'cold', total: 6 },
+			]).getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components).toEqual([
+				{
+					damageType: 'fire',
+					typeLabel: 'Fire',
+					damageBeforeDefenses: 10,
+					adjustedDamage: 0,
+					modifiers: [{ kind: 'immune', label: 'immune to Fire (no damage)' }],
+				},
+				{
+					damageType: 'cold',
+					typeLabel: 'Cold',
+					damageBeforeDefenses: 6,
+					adjustedDamage: 3,
+					modifiers: [{ kind: 'resistant', label: 'resistant to Cold (half damage)' }],
+				},
+			]);
+			expect(breakdown?.total).toBe(3);
+		});
+
+		it('returns nothing for a target with no applicable modifiers', () => {
+			const actor = createResistanceActor({});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown =
+				createModifierMessage().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components).toEqual([
+				{
+					damageType: 'fire',
+					typeLabel: 'Fire',
+					damageBeforeDefenses: 6,
+					adjustedDamage: 6,
+					modifiers: [],
+				},
+			]);
+			expect(breakdown?.total).toBe(6);
+		});
+
+		it('reports the rolled and resolved damage per component', () => {
+			const actor = createResistanceActor({ damageResistances: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown =
+				createModifierMessage().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components[0]).toMatchObject({
+				typeLabel: 'Fire',
+				damageBeforeDefenses: 6,
+				adjustedDamage: 3,
+			});
+			expect(breakdown?.total).toBe(3);
+		});
+
+		it('describes vulnerability against an unarmored target', () => {
+			const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown =
+				createModifierMessage().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			expect(breakdown?.components[0]).toMatchObject({
+				damageBeforeDefenses: 6,
+				adjustedDamage: 12,
+				modifiers: [{ kind: 'vulnerable', label: 'vulnerable to Fire (double damage)' }],
+			});
+		});
+
+		it('describes vulnerability as armor-bypassing against an armored target', () => {
+			const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual(['vulnerable to Fire (ignores armor)']);
+		});
+
+		it('omits the vulnerability modifier when the card already ignores armor', () => {
+			const actor = createResistanceActor({ armor: 'heavy', damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			// Vulnerability changed nothing here, so it should not be credited.
+			expect(getModifiers(createModifierMessage('fire', { ignoreArmor: true }))).toEqual([]);
+		});
+
+		it('still credits vulnerability on an armor-ignoring card when the target is unarmored', () => {
+			const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage('fire', { ignoreArmor: true }))).toEqual([
+				'vulnerable to Fire (double damage)',
+			]);
+		});
+
+		it('reports damage before defenses after the outcome has already scaled it', () => {
+			const actor = createResistanceActor({ damageVulnerabilities: ['fire'] });
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			const breakdown = createModifierMessage('fire', {
+				outcome: 'halfDamage',
+			}).getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+			// The 6-point roll halves to 3 before defenses, then vulnerability doubles it.
+			expect(breakdown?.components[0]).toMatchObject({
+				damageBeforeDefenses: 3,
+				adjustedDamage: 6,
+			});
+		});
+
+		it('describes immunity and resistance, and credits no reduction it never spent', () => {
+			const actor = createResistanceActor({
+				damageImmunities: ['fire'],
+				damageResistances: ['fire'],
+				damageReductions: [
+					{ value: 0, damageTypes: [], mode: 'half', label: 'Stone Skin' },
+					{ value: 3, damageTypes: ['fire'], label: 'Frost Ward' },
+					{ value: 2, damageTypes: [] },
+				],
+			});
+			// Neither the flat reductions nor the bank are credited here: immunity
+			// zeroes the packet, so nothing is left for them to subtract and they
+			// survive for a later hit.
+			withBankedReduction(actor, 6);
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual([
+				'immune to Fire (no damage)',
+				'resistant to Fire (half damage)',
+				'Stone Skin (half damage)',
+			]);
+		});
+
+		it('describes the flat reductions the attack actually spent', () => {
+			const actor = createResistanceActor({
+				damageReductions: [
+					{ value: 3, damageTypes: ['fire'], label: 'Frost Ward' },
+					{ value: 2, damageTypes: [] },
+				],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual([
+				'Frost Ward (-3)',
+				'damage reduction (-2)',
+			]);
+		});
+
+		it('describes an unsourced banked reduction on the component that consumes it', () => {
+			const actor = createResistanceActor({});
+			withBankedReduction(actor, 6);
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual(['damage reduction (-6)']);
+		});
+
+		it('names the banking feature when the banked effect carries a source', () => {
+			const actor = createResistanceActor({});
+			const target = actor as unknown as { effects?: object[] };
+			target.effects = [
+				{
+					id: 'banked-effect',
+					disabled: false,
+					flags: {
+						[SYSTEM_ID]: {
+							bankedDamageReduction: 8,
+							bankedDamageReductionSource: 'That all you got?!',
+						},
+					},
+				},
+			];
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage())).toEqual(['That all you got?! (-8)']);
+		});
+
+		it('excludes reductions scoped to damage types the card does not deal', () => {
+			const actor = createResistanceActor({
+				damageResistances: ['cold'],
+				damageReductions: [{ value: 3, damageTypes: ['cold'], label: 'Frost Ward' }],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			expect(getModifiers(createModifierMessage('fire'))).toEqual([]);
+		});
+	});
+});
+
+/** ------------------------------------------------------ */
+/**              Incoming Attack Reactions                 */
+/** ------------------------------------------------------ */
+
+interface ReactionEntryFixture {
+	id: string;
+	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage';
+	source: 'baseline' | 'rule';
+	actorUuid: string;
+	tokenUuid: string | null;
+	targetTokenUuid: string | null;
+	label: string;
+	ruleId: string;
+	itemUuid: string;
+	used: boolean;
+	outcomeTrigger?: 'always' | 'hit' | 'criticalHit';
+}
+
+function createReactionEntry(overrides: Partial<ReactionEntryFixture> = {}): ReactionEntryFixture {
+	return {
+		id: 'entry-1',
+		kind: 'forceReroll',
+		source: 'rule',
+		actorUuid: 'Actor.reactor',
+		tokenUuid: null,
+		targetTokenUuid: 'Scene.scene.Token.victim',
+		label: 'Fate Twist',
+		ruleId: 'rule-1',
+		// Empty itemUuid skips the rule-still-enabled revalidation
+		itemUuid: '',
+		used: false,
+		...overrides,
+	};
+}
+
+function createSerializedReactionRoll() {
+	return {
+		class: 'DamageRoll',
+		formula: '1d6 + 2',
+		originalFormula: '1d6 + 2',
+		total: 8,
+		isCritical: false,
+		isMiss: false,
+		options: { canCrit: false, canMiss: false, rollMode: 0, netRollMode: 0 },
+		data: {},
+	};
+}
+
+function createReactionMessage(params: {
+	entries: ReactionEntryFixture[];
+	targets?: string[];
+	roll?: Record<string, unknown> | null;
+	isCritical?: boolean;
+}): NimbleChatMessage & {
+	update: ReturnType<typeof vi.fn>;
+	system: Record<string, unknown>;
+} {
+	const roll = params.roll === undefined ? createSerializedReactionRoll() : params.roll;
+	const effects = roll
+		? [
+				{
+					id: 'damage-node',
+					type: 'damage',
+					parentNode: null,
+					parentContext: null,
+					roll,
+				},
+			]
+		: [];
+
+	const message = new NimbleChatMessage({
+		type: 'spell',
+		system: {
+			targets: params.targets ?? ['Scene.scene.Token.victim'],
+			isCritical: params.isCritical ?? false,
+			isMiss: false,
+			activation: { effects },
+			incomingReactions: params.entries,
+		},
+	} as unknown as ChatMessage.CreateData) as NimbleChatMessage & {
+		update: ReturnType<typeof vi.fn>;
+		system: Record<string, unknown>;
+	};
+
+	message.update = vi.fn().mockResolvedValue(undefined);
+	(message as unknown as { _source: { rolls: string[] } })._source = {
+		rolls: roll ? [JSON.stringify(roll)] : [],
+	};
+
+	return message;
+}
+
+type ReactionTestGlobals = TestGlobals & {
+	game: TestGlobals['game'] & {
+		user: { isGM: boolean; id?: string };
+		users: { get: ReturnType<typeof vi.fn> };
+	};
+	ChatMessage: {
+		create: ReturnType<typeof vi.fn>;
+		getSpeaker: ReturnType<typeof vi.fn>;
+	};
+};
+
+function reactionGlobals(): ReactionTestGlobals {
+	return globalThis as unknown as ReactionTestGlobals;
+}
+
+function setupReactionGlobals(): void {
+	reactionGlobals().fromUuidSync = vi.fn();
+	reactionGlobals().game.user.isGM = true;
+	reactionGlobals().game.users = {
+		get: vi.fn((id: string) => (id === 'gm-user' ? { isGM: true } : null)),
+	};
+	reactionGlobals().ChatMessage.create = vi.fn().mockResolvedValue(undefined);
+	reactionGlobals().ChatMessage.getSpeaker = vi.fn(() => ({ alias: 'Protector' }));
+}
+
+describe('NimbleChatMessage.resolveForceRerollReaction', () => {
+	beforeEach(() => {
+		setupReactionGlobals();
+	});
+
+	it('rerolls the primary damage roll, replaces it, and marks the entry used', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		const updatePayload = message.update.mock.calls[0][0] as {
+			rolls: string[];
+			system: {
+				activation: { effects: Array<Record<string, unknown>> };
+				isCritical: boolean;
+				isMiss: boolean;
+				incomingReactions: ReactionEntryFixture[];
+			};
+		};
+
+		// The fresh roll replaces the serialized DamageRoll in the rolls source
+		expect(updatePayload.rolls).toHaveLength(1);
+		const replacedRoll = JSON.parse(updatePayload.rolls[0]) as Record<string, unknown>;
+		expect(replacedRoll.originalFormula).toBe('1d6 + 2');
+		expect(replacedRoll.isMiss).toBe(false);
+		expect(replacedRoll.isCritical).toBe(false);
+
+		// The damage node keeps the discarded roll for display and gets the new one
+		const damageNode = updatePayload.system.activation.effects[0];
+		expect(damageNode.discardedRoll).toEqual(createSerializedReactionRoll());
+		expect((damageNode.roll as Record<string, unknown>).originalFormula).toBe('1d6 + 2');
+
+		// The card outcome mirrors the new roll and the entry is spent
+		expect(updatePayload.system.isCritical).toBe(false);
+		expect(updatePayload.system.isMiss).toBe(false);
+		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('drops offers the new outcome no longer satisfies', async () => {
+		// A crit card whose reroll comes back a plain hit: the crit-gated spend
+		// offer stamped on it is stranded and must go, while the hit-gated one
+		// still applies. Reading the card's own (now stale) outcome instead of the
+		// fresh roll would keep both.
+		const message = createReactionMessage({
+			isCritical: true,
+			entries: [
+				createReactionEntry(),
+				createReactionEntry({
+					id: 'spend-crit',
+					kind: 'spendPoolForDamage',
+					outcomeTrigger: 'criticalHit',
+				}),
+				createReactionEntry({
+					id: 'spend-hit',
+					kind: 'spendPoolForDamage',
+					outcomeTrigger: 'hit',
+				}),
+			],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const entries = (
+			message.update.mock.calls[0][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+
+		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-hit']);
+	});
+
+	it('keeps a spent entry whose outcome no longer matches, for its attribution', async () => {
+		const message = createReactionMessage({
+			isCritical: true,
+			entries: [
+				createReactionEntry(),
+				createReactionEntry({
+					id: 'spend-crit',
+					kind: 'spendPoolForDamage',
+					outcomeTrigger: 'criticalHit',
+					used: true,
+				}),
+			],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const entries = (
+			message.update.mock.calls[0][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+
+		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-crit']);
+	});
+
+	it('serializes two entries resolving at once, so neither used flag is lost', async () => {
+		// Both resolvers read `incomingReactions`, await a roll, then write the
+		// whole array back. Overlapping, the second would write a copy taken
+		// before the first landed and undo it.
+		const message = createReactionMessage({
+			entries: [createReactionEntry(), createReactionEntry({ id: 'entry-2' })],
+		});
+		Object.defineProperty(message, 'id', { value: 'message-1' });
+		message.update = vi.fn().mockImplementation(async (payload: Record<string, unknown>) => {
+			const next = (payload.system as { incomingReactions?: ReactionEntryFixture[] })
+				?.incomingReactions;
+			if (next) (message.system as Record<string, unknown>).incomingReactions = next;
+			return undefined;
+		});
+
+		await Promise.all([
+			message.resolveForceRerollReaction('entry-1', 'gm-user'),
+			message.resolveForceRerollReaction('entry-2', 'gm-user'),
+		]);
+
+		expect(message.update).toHaveBeenCalledTimes(2);
+		const finalEntries = (
+			message.update.mock.calls[1][0] as {
+				system: { incomingReactions: ReactionEntryFixture[] };
+			}
+		).system.incomingReactions;
+		expect(finalEntries.map((e) => e.used)).toEqual([true, true]);
+	});
+
+	it('does nothing on non-GM clients', async () => {
+		reactionGlobals().game.user.isGM = false;
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing for an unknown entry id', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('missing-entry', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing for an already-used entry', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry({ used: true })] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the entry is of a different kind', async () => {
+		const message = createReactionMessage({
+			entries: [
+				createReactionEntry({ kind: 'redirectToSelf', tokenUuid: 'Scene.scene.Token.protector' }),
+			],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the requesting user is neither GM nor owner of the reacting actor', async () => {
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: false }));
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Actor.reactor' ? { testUserPermission: vi.fn(() => false) } : null,
+		);
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'player-1');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('allows a non-GM owner of the reacting actor to use the entry', async () => {
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: false }));
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Actor.reactor' ? { testUserPermission: vi.fn(() => true) } : null,
+		);
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'player-1');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('rejects a socket-relayed request that claims GM identity (spoof guard)', async () => {
+		// A genuine GM executes on their own client (viaSocket false); a relayed
+		// request whose unauthenticated userId points at a GM is a spoof.
+		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: true }));
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user', true);
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when an unknown user requests the reaction', async () => {
+		reactionGlobals().game.users.get = vi.fn(() => null);
+		const message = createReactionMessage({ entries: [createReactionEntry()] });
+
+		await message.resolveForceRerollReaction('entry-1', 'ghost-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the granting rule no longer exists or is disabled', async () => {
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Item.fate' ? { rules: new Map([['0', { id: 'rule-1', disabled: true }]]) } : null,
+		);
+		const message = createReactionMessage({
+			entries: [createReactionEntry({ itemUuid: 'Item.fate' })],
+		});
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the card has no serialized damage roll', async () => {
+		const message = createReactionMessage({ entries: [createReactionEntry()], roll: null });
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleChatMessage.resolveRedirectReaction', () => {
+	const protectorActor = {
+		name: 'Protector',
+		type: 'character',
+		img: 'icons/protector.png',
+		permission: {},
+	};
+
+	function createRedirectEntry(
+		overrides: Partial<ReactionEntryFixture> = {},
+	): ReactionEntryFixture {
+		return createReactionEntry({
+			id: 'redirect-1',
+			kind: 'redirectToSelf',
+			source: 'baseline',
+			actorUuid: 'Actor.protector',
+			tokenUuid: 'Scene.scene.Token.protector',
+			targetTokenUuid: 'Scene.scene.Token.victim',
+			label: '',
+			ruleId: '',
+			...overrides,
+		});
+	}
+
+	beforeEach(() => {
+		setupReactionGlobals();
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.scene.Token.protector' ? { actor: protectorActor } : null,
+		);
+	});
+
+	it('swaps the target for the protector in a single system update', async () => {
+		const message = createReactionMessage({
+			entries: [createRedirectEntry()],
+			targets: ['Scene.scene.Token.victim', 'Scene.scene.Token.other'],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { targets: string[]; incomingReactions: ReactionEntryFixture[] };
+		};
+
+		expect(updatePayload.system.targets).toEqual([
+			'Scene.scene.Token.other',
+			'Scene.scene.Token.protector',
+		]);
+		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('marks every entry tied to the original target as used, leaving other targets live', async () => {
+		const message = createReactionMessage({
+			entries: [
+				createRedirectEntry(),
+				createRedirectEntry({
+					id: 'redirect-2',
+					actorUuid: 'Actor.other-protector',
+					tokenUuid: 'Scene.scene.Token.other-protector',
+				}),
+				// The original target's own reroll offer is moot once the attack
+				// no longer targets them.
+				createReactionEntry({ id: 'reroll-1', kind: 'forceReroll' }),
+				createReactionEntry({
+					id: 'reroll-other-target',
+					kind: 'forceReroll',
+					targetTokenUuid: 'Scene.scene.Token.bystander',
+				}),
+			],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { incomingReactions: ReactionEntryFixture[] };
+		};
+		const entriesById = new Map(
+			updatePayload.system.incomingReactions.map((entry) => [entry.id, entry]),
+		);
+
+		expect(entriesById.get('redirect-1')?.used).toBe(true);
+		expect(entriesById.get('redirect-2')?.used).toBe(true);
+		expect(entriesById.get('reroll-1')?.used).toBe(true);
+		expect(entriesById.get('reroll-other-target')?.used).toBe(false);
+	});
+
+	it('posts an interpose reaction announcement card for the protector', async () => {
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledTimes(1);
+		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: 'reaction',
+				system: expect.objectContaining({
+					actorName: 'Protector',
+					reactionType: 'interpose',
+					targets: ['Scene.scene.Token.victim'],
+				}),
+			}),
+		);
+	});
+
+	it('does nothing on non-GM clients', async () => {
+		reactionGlobals().game.user.isGM = false;
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+	});
+
+	it('does nothing for an unknown or already-used entry', async () => {
+		const message = createReactionMessage({
+			entries: [createRedirectEntry({ used: true })],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		await message.resolveRedirectReaction('missing-entry', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the entry has no protector token', async () => {
+		const message = createReactionMessage({
+			entries: [createRedirectEntry({ tokenUuid: null })],
+		});
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('still applies the target swap when the protector cannot be resolved for the announcement', async () => {
+		reactionGlobals().fromUuidSync.mockReturnValue(null);
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
 	});
 });

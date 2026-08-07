@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyRefillTriggersToPools } from './dicePoolRefill.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { applyRefillTriggersToPools, applyRestRefill } from './dicePoolRefill.js';
 import { buildEffectiveDicePoolMap } from './helpers.js';
 import type { CharacterActorLike, DicePoolMap, DicePoolState, DiceRefillEntry } from './types.js';
 
@@ -406,5 +406,191 @@ describe('Oathsworn Radiant Judgement (post-Task-4 pack shape)', () => {
 		expect(nextPools.judgment.faces).toEqual([]);
 		expect(entries).toHaveLength(1);
 		expect(entries[0].trigger).toBe('encounterEnd');
+	});
+});
+
+describe('applyRefillTriggersToPools — entry predicates', () => {
+	function makeActorWithDomain(tags: string[]): CharacterActorLike {
+		return {
+			type: 'character',
+			getRollData: vi.fn(() => ({})),
+			getDomain: vi.fn(() => new Set(tags)),
+		} as unknown as CharacterActorLike;
+	}
+
+	it('applies an entry whose predicate matches the actor domain', async () => {
+		const actor = makeActorWithDomain(['self:raging']);
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				refills: [refill({ trigger: 'onTurnStart', predicate: { self: 'raging' } })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(1);
+	});
+
+	it('skips an entry whose predicate fails against the actor domain', async () => {
+		const actor = makeActorWithDomain([]);
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				refills: [refill({ trigger: 'onTurnStart', predicate: { self: 'raging' } })],
+			}),
+		};
+
+		const { nextPools, entries } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(0);
+		expect(entries).toHaveLength(0);
+	});
+
+	it('applies entries without a predicate regardless of domain', async () => {
+		const actor = makeActorWithDomain([]);
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				refills: [refill({ trigger: 'onTurnStart' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(1);
+	});
+
+	it('treats a predicate as failing when the actor exposes no domain', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				refills: [refill({ trigger: 'onTurnStart', predicate: { self: 'raging' } })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toHaveLength(0);
+	});
+});
+
+describe('applyRefillTriggersToPools — minFace floor', () => {
+	it('raises rolled faces below the floor', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 3,
+				minFace: 6,
+				refills: [refill({ trigger: 'onTurnStart', mode: 'add', value: '2' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		// The deterministic test die always rolls its max face (4 on a d4),
+		// which is below the floor of 6 and must be raised.
+		expect(nextPools.fury.faces).toEqual([6, 6]);
+	});
+
+	it('leaves faces at or above the floor untouched', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd12',
+				max: 2,
+				minFace: 6,
+				refills: [refill({ trigger: 'onTurnStart', mode: 'add', value: '1' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		// Deterministic die rolls 12, already above the floor.
+		expect(nextPools.fury.faces).toEqual([12]);
+	});
+
+	it('applies no floor when minFace is absent', async () => {
+		const actor = makeActor();
+		const pools: DicePoolMap = {
+			fury: makePool({
+				id: 'fury',
+				identifier: 'fury',
+				dieSize: 'd4',
+				max: 1,
+				refills: [refill({ trigger: 'onTurnStart', mode: 'add', value: '1' })],
+			}),
+		};
+
+		const { nextPools } = await applyRefillTriggersToPools(actor, pools, ['onTurnStart']);
+		expect(nextPools.fury.faces).toEqual([4]);
+	});
+});
+
+describe('applyRestRefill — resource-recovery automation gate', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	// A character actor carrying a dicePool rule whose pool refreshes on a safe
+	// rest, so a rest refill would persist new faces to the owning item.
+	function makePoolActorWithRestRefill() {
+		const item = {
+			id: 'item-1',
+			name: 'Radiant Judgment',
+			flags: {},
+			rules: new Map([
+				[
+					'rule-1',
+					{
+						type: 'dicePool',
+						disabled: false,
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						dieSize: 'd6',
+						max: '2',
+						initial: 'zero',
+						refills: [{ trigger: 'safeRest', mode: 'refresh', value: '0' }],
+					},
+				],
+			]),
+			update: vi.fn(async () => undefined),
+		};
+		const actor = {
+			type: 'character',
+			getRollData: vi.fn(() => ({})),
+			items: { contents: [item] },
+			update: vi.fn(async () => undefined),
+		} as unknown as CharacterActorLike;
+		return { actor, item };
+	}
+
+	it('refills pools on rest when resource-recovery automation is on', async () => {
+		vi.stubGlobal('game', { settings: { get: () => true } });
+		const { actor, item } = makePoolActorWithRestRefill();
+
+		await applyRestRefill(actor as unknown as Actor, 'safe');
+
+		expect(item.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('does nothing on rest when resource-recovery automation is off', async () => {
+		vi.stubGlobal('game', { settings: { get: () => false } });
+		const { actor, item } = makePoolActorWithRestRefill();
+
+		await applyRestRefill(actor as unknown as Actor, 'safe');
+
+		expect(item.update).not.toHaveBeenCalled();
 	});
 });

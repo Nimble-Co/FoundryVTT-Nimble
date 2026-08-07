@@ -52,7 +52,22 @@
 		"tier": 1,
 		"classes": [
 			"shepherd"
-		]
+		],
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "increaseDieSize",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null,
+					"maxDieFaces": 12
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

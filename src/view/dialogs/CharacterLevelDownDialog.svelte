@@ -24,6 +24,7 @@
 	const hasSubclass = $derived(state.hasSubclass);
 	const grantedFeatures = $derived(state.grantedFeatures);
 	const grantedSpells = $derived(state.grantedSpells);
+	const poolBonusChanges = $derived(state.poolBonusChanges);
 </script>
 
 <article class="nimble-sheet__body">
@@ -72,6 +73,20 @@
 						-1 d{characterClass?.system?.hitDieSize ?? '?'}
 					</span>
 				</li>
+			{/if}
+
+			{#if poolBonusChanges.length > 0}
+				{#each poolBonusChanges as poolBonus}
+					<li class="nimble-level-down-preview__item">
+						<span class="nimble-level-down-preview__label">
+							<i class="fa-solid fa-dice-d6"></i>
+							{poolBonus.name}
+						</span>
+						<span class="nimble-level-down-preview__value">
+							-{poolBonus.amount}
+						</span>
+					</li>
+				{/each}
 			{/if}
 
 			{#if abilityChanges.length > 0}

@@ -267,7 +267,7 @@ export function createOpportunityAttackPanelState(
 					effects: evaluatedEffects,
 					cost: { type: 'action', quantity: 1 },
 					duration: { type: 'none', quantity: 1 },
-					targets: { count: 1 },
+					targets: { count: 1, attackType: 'reach', distance: 1 },
 				},
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 			},

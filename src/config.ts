@@ -67,10 +67,11 @@ const characterCreationStages = {
 };
 
 const ancestryOptions = {
-	header: 'NIMBLE.ancestryOptions.header',
 	sizeCategory: 'NIMBLE.ancestryOptions.sizeCategory',
+	sizeCategoryHeader: 'NIMBLE.ancestryOptions.sizeCategoryHeader',
 	sizeCategoryHint: 'NIMBLE.ancestryOptions.sizeCategoryHint',
 	enhancedSave: 'NIMBLE.ancestryOptions.enhancedSave',
+	enhancedSaveHeader: 'NIMBLE.ancestryOptions.enhancedSaveHeader',
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
 };
 
@@ -221,20 +222,23 @@ const sectionHeaders = {
 	stats: 'NIMBLE.sectionHeaders.stats',
 };
 
+/**
+ * The selectable activation cost types. `turn` is deliberately absent: "1/turn"
+ * is how often an ability may be used, not what it costs to use, so it belongs
+ * to a usage limit rather than to this list.
+ */
 const activationCostTypes = {
 	action: 'NIMBLE.activationCosts.action',
 	minute: 'NIMBLE.activationCosts.minute',
 	hour: 'NIMBLE.activationCosts.hour',
 	none: 'NIMBLE.activationCosts.none',
 	special: 'NIMBLE.activationCosts.special',
-	turn: 'NIMBLE.activationCosts.turn',
 };
 
 const activationCostTypesPlural = {
 	action: 'NIMBLE.activationCostsPlural.action',
 	minute: 'NIMBLE.activationCostsPlural.minute',
 	hour: 'NIMBLE.activationCostsPlural.hour',
-	turn: 'NIMBLE.activationCostsPlural.turn',
 };
 
 const actorTypeBanners = {
@@ -357,6 +361,7 @@ const effectTypes = {
 
 const featureTypeHeadings = {
 	ancestry: 'NIMBLE.featureTypeHeadings.ancestry',
+	ancestryBonus: 'NIMBLE.featureTypeHeadings.ancestryBonus',
 	background: 'NIMBLE.featureTypeHeadings.background',
 	boon: 'NIMBLE.featureTypeHeadings.boon',
 	feature: 'NIMBLE.featureTypeHeadings.feature',
@@ -533,6 +538,17 @@ const sizeCategories = {
 	gargantuan: 'NIMBLE.sizeCategories.gargantuan',
 };
 
+// Short descriptions of each size, paraphrased from the Size rules: the comparison the rules
+// use, plus the grid footprint where it exceeds a single space.
+const sizeCategoryDescriptions = {
+	tiny: 'NIMBLE.sizeCategoryDescriptions.tiny',
+	small: 'NIMBLE.sizeCategoryDescriptions.small',
+	medium: 'NIMBLE.sizeCategoryDescriptions.medium',
+	large: 'NIMBLE.sizeCategoryDescriptions.large',
+	huge: 'NIMBLE.sizeCategoryDescriptions.huge',
+	gargantuan: 'NIMBLE.sizeCategoryDescriptions.gargantuan',
+};
+
 const skills: Record<SkillKeyType, string> = {
 	arcana: 'NIMBLE.skills.arcana',
 	examination: 'NIMBLE.skills.examination',
@@ -559,6 +575,8 @@ const spellUpcastDialog = {
 		maxTier: 'NIMBLE.spells.spellUpcastDialog.slider.maxTier',
 	},
 	chooseEnhancement: 'NIMBLE.spells.spellUpcastDialog.chooseEnhancement',
+	increaseDieSize: 'NIMBLE.spells.spellUpcastDialog.increaseDieSize',
+	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
 };
@@ -971,6 +989,7 @@ const NIMBLE = {
 	savingThrows,
 	sectionHeaders,
 	sizeCategories,
+	sizeCategoryDescriptions,
 	skillPointAssignment,
 	skills,
 	spellUpcastDialog,
@@ -995,7 +1014,7 @@ const NIMBLE = {
 	...registerDocumentConfig(),
 	...registerConditionsConfig(),
 	...registerRulesConfig(),
-	...registerPredicateConfig(),
+	...registerPredicateConfig(abilityScores),
 };
 
 export { NIMBLE };

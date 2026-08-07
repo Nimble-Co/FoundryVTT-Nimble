@@ -10,11 +10,16 @@ import {
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
+import { registerGrantedActionOfferSocketListener } from '../utils/grantedActionOffers.js';
+import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
+import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
+import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
 import registerAdjacencySync from './combatantHooks/adjacencySync.js';
 import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
+import registerDicePoolSpendRequestRouter from './dicePoolSpendRequestRouter.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 
 let canvasConditionsPanelComponent: object | null = null;
@@ -52,10 +57,16 @@ export default async function ready() {
 	applyLanguageCustomizations();
 	// Actors were prepared during world init before language grants became managed,
 	// so re-prepare characters once so any GM language overrides take effect.
+	// `reset()`, not `prepareData()`: the latter would re-run every rule hook over
+	// the already-derived `system` object and stack read-modify-write bonuses twice.
 	for (const actor of game.actors ?? []) {
-		if (actor?.type === 'character') actor.prepareData?.();
+		if (actor?.type === 'character') actor.reset?.();
 	}
 	registerCombatTurnSocketListener();
+	registerGrantedActionOfferSocketListener();
+	registerIncomingReactionSocketListener();
+	registerMarkTargetSocketListener();
+	registerCombatantActionDeltaSocketListener();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');
@@ -83,6 +94,7 @@ export default async function ready() {
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
 	registerMinionGroupTokenActions();
+	registerDicePoolSpendRequestRouter();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;

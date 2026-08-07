@@ -1,5 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { ScalingDelta, UpcastResult } from '#types/spellScaling.js';
+import { stepFormulaDieSize } from './stepFormulaDieSize.js';
 
 export interface UpcastContext {
 	spell: {
@@ -195,6 +196,23 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 				const diceFaces = delta.dice.faces;
 				// Append dice notation
 				effectNode.formula = `${effectNode.formula}+${diceToAdd}d${diceFaces}`;
+			}
+			break;
+		}
+
+		case 'increaseDieSize': {
+			// Find damage or healing effect
+			const effectNode =
+				findEffectNode(activationData.effects, 'damage', delta.targetEffectId) ||
+				findEffectNode(activationData.effects, 'healing', delta.targetEffectId);
+			if (effectNode) {
+				// Enlarge the existing die instead of appending a new term
+				const stepsToApply = (delta.value ?? 1) * upcastSteps;
+				effectNode.formula = stepFormulaDieSize(
+					effectNode.formula,
+					stepsToApply,
+					delta.maxDieFaces ?? null,
+				);
 			}
 			break;
 		}

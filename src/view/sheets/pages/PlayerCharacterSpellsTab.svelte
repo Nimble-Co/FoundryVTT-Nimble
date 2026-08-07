@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
+	import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
@@ -41,50 +42,34 @@
 	}
 
 	function getSpellMetadata(spell) {
-		const activationType = spell.reactive.system.activation.cost.type;
-		const activationCost = spell.reactive.system.activation.cost.quantity;
-		const activationCostDetails = spell.reactive.system.activation.cost.details;
+		const cost = spell.reactive.system.activation.cost;
+		const { type: activationType, details: activationCostDetails, isReaction } = cost;
 
 		if (!activationType || activationType === 'none') return null;
 
-		if (['action', 'minute', 'hour'].includes(activationType)) {
-			const activationTypeLabel =
-				activationCost > 1
-					? activationCostTypesPlural[activationType]
-					: activationCostTypes[activationType];
+		// `special` is the one type carrying no quantity of its own to render.
+		const label =
+			formatActivationCostLabel(cost) ??
+			(activationType === 'special' ? activationCostTypes.special : null);
 
-			return `${activationCost || 1} ${activationTypeLabel}`;
-		}
+		if (!label) return null;
 
-		if (activationType === 'reaction') {
-			let label = activationCostTypes[activationType];
-
-			if (activationCostDetails) {
-				label += ` <i
-                    class="nimble-document-card__meta-icon fa-solid fa-circle-info"
-                    data-tooltip="Reaction Trigger: ${activationCostDetails}"
-                    data-tooltip-direction="UP"
-                ></i>`;
-			}
-
+		// Reactions and Special costs are the two the config tab lets you annotate
+		// with a free-text trigger; surface it on hover.
+		const carriesTrigger = isReaction || activationType === 'reaction';
+		if (!activationCostDetails || !(carriesTrigger || activationType === 'special')) {
 			return label;
 		}
 
-		if (activationType === 'special') {
-			let label = activationCostTypes[activationType];
+		const tooltip = carriesTrigger
+			? `Reaction Trigger: ${activationCostDetails}`
+			: activationCostDetails;
 
-			if (activationCostDetails) {
-				label += ` <i
+		return `${label} <i
                     class="nimble-document-card__meta-icon fa-solid fa-circle-info"
-                    data-tooltip="${activationCostDetails}"
+                    data-tooltip="${tooltip}"
                     data-tooltip-direction="UP"
                 ></i>`;
-			}
-
-			return label;
-		}
-
-		return null;
 	}
 
 	function getSpellSchoolTabs(spells) {
@@ -151,13 +136,7 @@
 		}, {});
 	}
 
-	const {
-		activationCostTypes,
-		activationCostTypesPlural,
-		spellSchools,
-		spellSchoolIcons,
-		spellTierHeadings,
-	} = CONFIG.NIMBLE;
+	const { activationCostTypes, spellSchools, spellSchoolIcons, spellTierHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
 	let sheet = getContext<PlayerCharacterSheet>('application');

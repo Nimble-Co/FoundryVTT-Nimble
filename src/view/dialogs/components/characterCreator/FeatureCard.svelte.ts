@@ -138,6 +138,17 @@ export function createFeatureCardState(getFeature: () => NimbleFeatureItem) {
 		get descriptionParts() {
 			return descriptionParts;
 		},
+		/**
+		 * Whether the feature has any real description text. Computed synchronously from the
+		 * raw source (stripping HTML so empty markup like `<p></p>` counts as no description)
+		 * so the card can decide up-front whether it should be expandable — features without a
+		 * description render as a plain header row with no accordion.
+		 */
+		get hasDescription() {
+			const description = getFeature()?.system?.description;
+			if (typeof description !== 'string') return false;
+			return description.replace(/<[^>]*>/g, '').trim().length > 0;
+		},
 		toggleExpanded,
 	};
 }

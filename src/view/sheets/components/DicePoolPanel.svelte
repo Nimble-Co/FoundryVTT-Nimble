@@ -10,16 +10,27 @@
 		actor,
 		pool,
 		onClose,
+		preselectConsumerKey = null,
+		onPreselectHandled,
 	}: {
 		actor: NimbleCharacter;
 		pool: LivePoolView;
 		onClose: () => void;
+		preselectConsumerKey?: string | null;
+		onPreselectHandled?: () => void;
 	} = $props();
 
 	const panel = createDicePoolPanelState(
 		() => actor,
 		() => pool,
 	);
+
+	// Apply a pending spend request from an item activation: pre-select the
+	// requested consumer once it appears in this pool's consumer list.
+	$effect(() => {
+		if (!preselectConsumerKey) return;
+		if (panel.selectConsumerByKey(preselectConsumerKey)) onPreselectHandled?.();
+	});
 
 	// Local controlled values for the per-die number inputs. Synced to the live
 	// pool whenever its faces change (so external edits flow into the inputs).
@@ -193,16 +204,25 @@
 										class="dice-pool-panel__feature-body"
 									>
 										<h5 class="dice-pool-panel__section-subheading">
-											{localize('NIMBLE.dicePoolTracker.panel.useFeature.pickDice')}
+											{localize(
+												panel.isMaximizeOutcome
+													? 'NIMBLE.dicePoolTracker.panel.useFeature.pickDiceToMaximize'
+													: 'NIMBLE.dicePoolTracker.panel.useFeature.pickDice',
+											)}
 										</h5>
 										<div class="dice-pool-panel__chips">
 											{#each livePool.faces as value, i (i)}
 												{@const chipSelected = panel.selectedIndices.has(i)}
+												{@const chipDisabled = !chipSelected && !panel.canSelectDie(i)}
 												<button
 													type="button"
 													class="dice-pool-panel__chip"
 													class:dice-pool-panel__chip--selected={chipSelected}
 													aria-pressed={chipSelected}
+													disabled={chipDisabled}
+													data-tooltip={chipDisabled
+														? localize('NIMBLE.dicePoolTracker.panel.useFeature.dieAlreadyMax')
+														: null}
 													aria-label={localize(
 														'NIMBLE.dicePoolTracker.panel.useFeature.toggleDie',
 														{ value: String(value) },
@@ -237,7 +257,9 @@
 											onclick={() => panel.spend()}
 										>
 											<i class="fa-solid fa-dice"></i>
-											{#if panel.selectedCount > 0}
+											{#if panel.isMaximizeOutcome}
+												{localize('NIMBLE.dicePoolTracker.panel.useFeature.maximize')}
+											{:else if panel.selectedCount > 0}
 												{localize('NIMBLE.dicePoolTracker.panel.useFeature.spendWithCount', {
 													count: String(panel.selectedCount),
 												})}

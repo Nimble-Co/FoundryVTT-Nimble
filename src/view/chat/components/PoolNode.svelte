@@ -50,6 +50,18 @@
 			{:else if delta !== null && delta < 0}
 				<span class="pool-node__delta">{delta}</span>
 			{/if}
+		{:else if rolledFaces.length > 0}
+			<!-- Rolled, but pool was at max. Show the face anyway so the
+			     player can decide whether to manually swap one out. -->
+			<span class="pool-node__action">{actionLabel}</span>
+			<span class="pool-node__faces pool-node__faces--unkept">
+				{#each rolledFaces as face, index (index)}
+					<span class="pool-node__face">{face}</span>
+				{/each}
+			</span>
+			<span class="pool-node__skip">
+				{localize('NIMBLE.activationEffects.poolNode.atMax')}
+			</span>
 		{:else}
 			<span class="pool-node__action">{actionLabel}</span>
 			<span class="pool-node__skip">
@@ -82,6 +94,10 @@
 		&__faces {
 			display: inline-flex;
 			gap: 0.25rem;
+
+			&--unkept {
+				opacity: 0.65;
+			}
 		}
 
 		&__face {

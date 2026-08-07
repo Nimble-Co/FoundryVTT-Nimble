@@ -1,0 +1,72 @@
+{
+	"name": "Commander's Orders",
+	"type": "feature",
+	"img": "icons/commodities/treasure/medal-ribbon-gold-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "grant-coordinated-strike",
+				"identifier": "commander-lvl1-coordinated-strike",
+				"label": "Coordinated Strike",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": false,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-class-features.Item.6xpILHYt5KTSnTtd"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression",
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		],
+		"selectionCountByLevel": {},
+		"levelUpOptions": []
+	},
+	"effects": [],
+	"folder": "406c4e162069a4a8",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1761500000000,
+		"modifiedTime": 1761500000000,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "P5vNjcwfkM6NEQlr"
+}

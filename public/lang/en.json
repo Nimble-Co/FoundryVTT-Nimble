@@ -14,6 +14,7 @@
 			"monsterFeature": "Monster Feature",
 			"object": "Object",
 			"ancestry": "Ancestry",
+			"ancestryBonus": "Ancestry Bonus",
 			"spell": "Spell",
 			"subclass": "Subclass"
 		}
@@ -78,6 +79,8 @@
 			"boon": "Boon"
 		},
 		"chat": {
+			"applyConditionHint": "Left click to apply this condition to this card's targets.",
+			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"healing": "Healing",
@@ -89,7 +92,46 @@
 			"targetSkippedZeroDamage": "Ignored {tokenName} because the result is 0.",
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
-			"noHealingRecord": "No healing record found to undo"
+			"noHealingRecord": "No healing record found to undo",
+			"actionDeltaSummary": {
+				"gainActionNow": "{name} gains {count} action now",
+				"gainActionsNow": "{name} gains {count} actions now",
+				"loseActionNow": "{name} loses {count} action now",
+				"loseActionsNow": "{name} loses {count} actions now",
+				"gainActionNextTurn": "{name} gains {count} action at the start of their next turn",
+				"gainActionsNextTurn": "{name} gains {count} actions at the start of their next turn",
+				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
+				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
+			},
+			"grantedActionOffers": {
+				"heading": "Granted Actions",
+				"weaponAttack": "Weapon Attack",
+				"noEligibleItems": "No eligible items to use.",
+				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
+				"currentTarget": "Target: {name}",
+				"usedBy": "Granted action used by {name}",
+				"usedByVia": "Granted action used by {name} via {label}"
+			},
+			"incomingReactions": {
+				"heading": "Options",
+				"forceReroll": "Force Reroll",
+				"interpose": "Interpose",
+				"baselineInterpose": "Interpose (Heroic Reaction)",
+				"rerolledBy": "Attack rerolled by {label}",
+				"redirectedTo": "Attack redirected to {name}",
+				"redirectedToVia": "Attack redirected to {name} via {label}",
+				"spendPoolForDamage": "Add Damage",
+				"poolSpendHint": "Choose the dice to spend for {label}. The result is added to this attack's damage.",
+				"poolSpendPreview": "Bonus damage: +{amount}",
+				"poolSpendConfirm": "Add to Damage",
+				"poolSpendEmpty": "No dice left in {label}.",
+				"poolSpendUnavailable": "That feature's dice pool is no longer available.",
+				"poolSpendStale": "Those dice are no longer in the pool. Nothing was spent.",
+				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
+				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
+				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
+				"useFailed": "That reaction could not be completed."
+			}
 		},
 		"characterCreationStages": {
 			"stepFourStartingEquipment": "Step 4. Starting Equipment",
@@ -120,14 +162,56 @@
 			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
-			"header": "Ancestry Options",
+			"enhancedSaveHeader": "Step 2d. Enhanced Save",
 			"sizeCategory": "Size Category",
+			"sizeCategoryHeader": "Step 2c. Size Category",
 			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
+			"sizeGrantedBy": "set by {ancestry}",
+			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
 			"enhancedSave": "Enhanced Save",
 			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
 		},
+		"ancestryBonusSelection": {
+			"header": "Step 2b. Select an Ancestry Bonus",
+			"editSelection": "Edit Ancestry Bonus Selection",
+			"hint": "Every ancestry comes with a default bonus trait. Confirm it, or change it for any other ancestry bonus that fits your character concept.",
+			"chooseHint": "Choose an ancestry bonus. You'll return here to confirm your pick.",
+			"noneAvailable": "There are no ancestry bonuses available in this world's compendium packs.",
+			"noSelection": "This ancestry's default bonus couldn't be loaded. Choose one to continue.",
+			"optionalHint": "This ancestry doesn't come with a default bonus trait. You can choose one, or continue without.",
+			"defaultMetadata": "Default",
+			"confirmSelection": "Confirm Ancestry Bonus",
+			"changeSelection": "Change Ancestry Bonus",
+			"chooseSelection": "Choose Ancestry Bonus",
+			"cancelBrowsing": "Back",
+			"tooltipHeading": "Ancestry Bonus",
+			"noDescriptionAvailable": "No description available."
+		},
+		"ancestryBonusSheet": {
+			"descriptionTab": "Description",
+			"configTab": "Config",
+			"rulesTab": "Rules",
+			"description": "Ancestry Bonus Description",
+			"identifier": "Identifier",
+			"namePlaceholder": "Ancestry Bonus Name"
+		},
+		"ancestrySheet": {
+			"defaultBonus": "Default Bonus",
+			"defaultBonusPlaceholder": "Drag an ancestry bonus here",
+			"sizeOptions": "Size Options",
+			"sizeOptionsAdd": "Add a size…",
+			"sizeOptionsAll": "All sizes",
+			"sizeOptionsCount": "{selected} of {total}",
+			"sizeOptionsEdit": "Edit sizes…",
+			"sizeOptionsHint": "Choose every size this ancestry can be. Two or more becomes a player choice.",
+			"sizeOptionsRemove": "Remove {size}",
+			"sizeOptionsRestored": "An ancestry needs at least one size — restored to {sizes}.",
+			"sizeSummaryAll": "Players will choose any size, {first} through {last}.",
+			"sizeSummaryChoice": "Players will choose {sizes} during character creation.",
+			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation."
+		},
 		"backgroundOptionsSelection": {
-			"header": "Step 2b. Choose Heritage Ancestry",
+			"header": "Step 3b. Choose Heritage Ancestry",
 			"editSelection": "Edit Heritage Selection",
 			"hint": "Your background lets you choose which ancestry raised you. This grants you their native language.",
 			"raisedBy": "Raised By",
@@ -163,17 +247,19 @@
 		},
 		"activationCosts": {
 			"action": "Action",
+			"free": "Free",
+			"reaction": "Reaction",
+			"freeReaction": "Free Reaction",
+			"reactionWithCost": "Reaction ({cost})",
 			"minute": "Minute",
 			"hour": "Hour",
 			"none": "None",
-			"special": "Special",
-			"turn": "Turn"
+			"special": "Special"
 		},
 		"activationCostsPlural": {
 			"action": "Actions",
 			"minute": "Minutes",
-			"hour": "Hours",
-			"turn": "Turns"
+			"hour": "Hours"
 		},
 		"armorEffects": {
 			"none": "<p>None</p>",
@@ -229,6 +315,7 @@
 			"hampered": "Hampered",
 			"incapacitated": "Incapacitated",
 			"invisible": "Invisible",
+			"marked": "Marked",
 			"paralyzed": "Paralyzed",
 			"petrified": "Petrified",
 			"poisoned": "Poisoned",
@@ -262,6 +349,7 @@
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
 			"lastStand": "<p>At 0 HP, the legendary monster is dying and gains dangerous new capabilities. They finally die after a small amount of additional damage.</p>",
+			"marked": "<p>Marked as a quarry by another creature. That creature treats this one as a tracked target; any resulting bonuses come from the marker's own features, not this condition.</p>",
 			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
@@ -338,6 +426,7 @@
 		},
 		"featureTypeHeadings": {
 			"ancestry": "Ancestry",
+			"ancestryBonus": "Ancestry Bonus",
 			"background": "Background",
 			"boon": "Boons",
 			"feature": "Class Features"
@@ -425,6 +514,8 @@
 		},
 		"prompts": {
 			"changeActorImage": "Change Actor Image",
+			"changeAncestryBonusImage": "Change Ancestry Bonus Image",
+			"changeAncestryImage": "Change Ancestry Image",
 			"changeBoonImage": "Change Boon Image",
 			"changeClassImage": "Change Class Image",
 			"changeFeatureImage": "Change Feature Image",
@@ -433,6 +524,7 @@
 			"changeSubclassImage": "Change Subclass Image",
 			"configureAbilityScores": "Configure Stats",
 			"configureArmorProficiencies": "Configure Armor Proficiencies",
+			"configureDamageDefenses": "Configure Damage Defenses",
 			"configureLanguageProficiencies": "Configure Language Proficiencies",
 			"configureMovement": "Configure Movement",
 			"configureSavingThrows": "Configure Saves",
@@ -480,7 +572,9 @@
 			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
 			"takeAverage": "Take Average ({average})",
 			"featuresHint": "The following features are available at this level for your class.",
-			"loadingFeatures": "Loading features..."
+			"loadingFeatures": "Loading features...",
+			"selectOption": "Select this option",
+			"deselectOption": "Deselect this option"
 		},
 		"levelDownDialog": {
 			"level": "Level",
@@ -543,6 +637,10 @@
 		"rulesBuilder": {
 			"errorSchemaLoadBefore": "Could not load schema for rule type",
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
+			"ruleNotRunning": "This rule is not running:",
+			"ruleFailureUnknownType": "\"{type}\" is not a recognized rule type.",
+			"ruleFailureValidation": "The rule failed validation and has been disabled.",
+			"ruleFailureMalformed": "The rule source is malformed.",
 			"addRule": "Add Rule",
 			"cancel": "Cancel",
 			"ruleSingular": "rule",
@@ -569,6 +667,11 @@
 			"noFurtherConfig": "No further configuration needed.",
 			"advanced": "Advanced",
 			"appliesWhen": "Applies when",
+			"suppressActivationCard": "Suppress activation card",
+			"suppressActivationCardHint": "Whether using the item should skip its descriptive chat card. Automatic lets the rule decide (most rules never suppress; a manual dice spend does). The card is never skipped when it carries rolls or effects.",
+			"suppressActivationCardAuto": "Automatic",
+			"suppressActivationCardAlways": "Always",
+			"suppressActivationCardNever": "Never",
 			"openRulesBuilder": "Open Rules Builder",
 			"noRulesDefined": "No rules defined. Open the builder to add one.",
 			"closeJsonEditor": "Close JSON editor",
@@ -590,6 +693,8 @@
 				"empty": "No charge pools defined on this actor",
 				"notFound": "⚠ {identifier} (not found)"
 			},
+			"poolIdentifierPlaceholder": "Type a pool identifier",
+			"poolPickerNoActor": "This item is not on an actor, so its pools cannot be listed",
 			"templateValueHintBefore": "Use",
 			"templateValueHintAfter": "to insert the formula result.",
 			"pickerMissingMetaTooltip": "Description missing — flag for review.",
@@ -610,6 +715,7 @@
 			"predicatePreviewMatches": "Currently matches the parent actor.",
 			"predicatePreviewNoMatch": "Currently does not match the parent actor.",
 			"predicatePreviewError": "Evaluation failed.",
+			"predicateLateKeyWarning": "This condition checks {keys}, which the system computes only after this rule type has already applied, so the condition will never match. Use a different tag, or a rule type that applies after preparation.",
 			"predicateOperators": {
 				"is": "is",
 				"isOneOf": "is one of",
@@ -629,14 +735,19 @@
 		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
+			"actionCost": "Action Cost",
+			"actionDelta": "Action Adjustment",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
+			"conditionalBonus": "Conditional Bonus",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
+			"grantActivation": "Grant Activation",
 			"grantMovement": "Grant Movement",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -649,16 +760,23 @@
 			"initiativeBonus": "Initiative Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
+			"markTarget": "Mark Target",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
+			"modifyConsumer": "Modify Consumer",
+			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
+			"modifyToggle": "Modify Toggle",
 			"note": "Note",
+			"poolGainMessage": "Pool Gain Message",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
+			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
+			"toggleEffect": "Toggle Effect",
 			"unarmedDamage": "Unarmed Damage"
 		},
 		"rules": {
@@ -671,6 +789,52 @@
 				"abilities": {
 					"label": "Apply to",
 					"hint": "Pick one or more abilities. Use \"all\" to apply to every ability."
+				}
+			},
+			"actionCost": {
+				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only — a free reaction is still limited to once per round.",
+				"applies": {
+					"label": "Applies to",
+					"hint": "item: price matching item activations. heroicReaction: price the selected heroic reactions instead."
+				},
+				"mode": {
+					"label": "How to apply",
+					"hint": "Adjust: add the value to the base action cost (negative values reduce it). Set: replace the action cost with the value."
+				},
+				"value": {
+					"label": "Value",
+					"hint": "A flat number or formula (e.g. @level). Combined per the mode above."
+				},
+				"itemTypes": {
+					"label": "Item types",
+					"hint": "Only activations of these item types are affected. Leave empty to affect every item type."
+				},
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "Only affect the item whose identifier matches this. Leave blank to affect all matching items."
+				},
+				"reactions": {
+					"label": "Heroic reactions",
+					"hint": "Only these heroic reactions are affected. Leave empty to affect every heroic reaction."
+				}
+			},
+			"actionDelta": {
+				"description": "Grant or remove raw actions when this item is used — immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
+				"value": {
+					"label": "Actions",
+					"hint": "How many actions to grant. A flat number or formula (e.g. @level). Negative values remove actions."
+				},
+				"timing": {
+					"label": "Timing",
+					"hint": "now: adjust the current action pool immediately (may exceed the usual maximum). nextTurn: apply when the recipient's actions next refill."
+				},
+				"target": {
+					"label": "Target",
+					"hint": "self: the actor using the item. targeted: the currently targeted tokens. allAllies: every allied hero in the combat."
+				},
+				"borrowFromNextTurn": {
+					"label": "Borrow from next turn",
+					"hint": "Also start the next turn with that many fewer actions, applied together with the immediate gain as a single adjustment."
 				}
 			},
 			"applyCondition": {
@@ -699,7 +863,28 @@
 				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
 			},
 			"diceConsumer": {
-				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool."
+				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool.",
+				"effectType": {
+					"label": "Effect type",
+					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
+				},
+				"damageType": {
+					"inherit": "Inherit the attack's type",
+					"label": "Bonus damage type",
+					"hint": "The damage type a card offer's bonus deals. Leave empty to inherit the attack's own type, which folds the bonus into the attack's damage total. Setting a type adds the bonus as a separate damage packet with its own Apply Damage button, so the target's flat reduction and resistance resolve against it on their own. Ignored unless the spend is offered on an attack card."
+				},
+				"selectionOutcome": {
+					"label": "Selection outcome",
+					"hint": "What happens to the dice the player picks. \"Consume\" removes them from the pool; \"Maximize\" leaves them in place and raises each to the die's highest face, limited to the cost."
+				},
+				"cardOffer": {
+					"label": "Offer on attack card",
+					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend through the sheet's dice pool panel only. Requires a manual spend that consumes dice for a generic effect."
+				},
+				"bonusOnAttackDelivery": {
+					"label": "Attack delivery",
+					"hint": "Restrict this consumer to melee or ranged attacks. Applies to both an auto-bonus pool and a card offer. Leave empty (or pick \"any\") for no restriction. Beware: an activation with no attack type set counts as neither melee nor ranged, so most spells and utility features are excluded by any restriction here, with nothing shown to explain why."
+				}
 			},
 			"chargePool": {
 				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers.",
@@ -718,6 +903,10 @@
 				"initial": {
 					"label": "Initial",
 					"hint": "Whether the pool starts full or empty when first granted."
+				},
+				"hidden": {
+					"label": "Hide from sheet",
+					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
 				},
 				"recoveries": {
 					"label": "Recoveries",
@@ -746,6 +935,33 @@
 					"hint": "The actor is fully immune to these conditions and cannot be affected by them."
 				}
 			},
+			"conditionalBonus": {
+				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically — the activation dialog surfaces the choice.",
+				"advantage": {
+					"label": "Advantage stacks",
+					"hint": "Stacks of advantage offered as one option. 0 means advantage is not offered."
+				},
+				"damageBonus": {
+					"label": "Damage bonus",
+					"hint": "Damage offered as the other option. Flat (5), formula (@level), or dice (1d6). Leave blank to not offer damage."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "Damage type applied when the damage option is chosen. Leave blank to match the attack."
+				},
+				"delivery": {
+					"label": "Delivery",
+					"hint": "Restrict to melee or ranged attacks. \"Any\" matches both."
+				},
+				"source": {
+					"label": "Source",
+					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				},
+				"targetCondition": {
+					"label": "Target condition",
+					"hint": "Predicate evaluated against the target's state at activation. The choice is only offered when the target matches, e.g. { \"$and\": [\"target:quarry\"] }."
+				}
+			},
 			"damageBonus": {
 				"description": "Add a flat, formula, or dice-expression bonus to damage dealt by attacks of a given delivery (melee/ranged) and source (weapon/spell).",
 				"value": {
@@ -767,6 +983,21 @@
 				"targetCondition": {
 					"label": "Target condition",
 					"hint": "Optional predicate evaluated against the target's state. Bonus only applies when the target matches. Use $and / $or with atom strings, e.g. { \"$or\": [\"target:bloodied\", \"target:concentrating\"] }."
+				}
+			},
+			"damageReduction": {
+				"description": "Reduce incoming damage by a flat or formula-based amount, or halve it (resistance), optionally scoped to specific damage types. Applied after armor, before temporary hit points.",
+				"mode": {
+					"label": "Mode",
+					"hint": "Flat subtracts the reduction value. Half halves the damage instead (resistance); halving applies once no matter how many matching sources the actor has."
+				},
+				"value": {
+					"label": "Reduction",
+					"hint": "A flat number (5) or formula (@abilities.str.mod). Dice expressions are not supported."
+				},
+				"damageTypes": {
+					"label": "Damage types",
+					"hint": "Restrict to these damage types. Leave empty to reduce all incoming damage."
 				}
 			},
 			"dyingActionLimit": {
@@ -808,7 +1039,18 @@
 					"value": {
 						"label": "Value",
 						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+					},
+					"predicate": {
+						"label": "Condition",
+						"hint": "Optional condition tested when the trigger fires (e.g. self: raging). Leave empty to always apply."
 					}
+				}
+			},
+			"grantActivation": {
+				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
+				"activationType": {
+					"label": "Granted activation",
+					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
 				}
 			},
 			"grantMovement": {
@@ -824,10 +1066,18 @@
 			},
 			"grantItem": {
 				"description": "Grant an item by UUID when this rule’s owner is created on an actor. Optional duplicate gating and quantity override.",
-				"allowDuplicate": { "label": "Allow duplicates on the actor" },
-				"inMemoryOnly": { "label": "Don’t persist to actor inventory" },
-				"quantity": { "label": "Quantity (blank = item default)" },
-				"uuid": { "label": "Item" }
+				"allowDuplicate": {
+					"label": "Allow duplicates on the actor"
+				},
+				"inMemoryOnly": {
+					"label": "Don’t persist to actor inventory"
+				},
+				"quantity": {
+					"label": "Quantity (blank = item default)"
+				},
+				"uuid": {
+					"label": "Item"
+				}
 			},
 			"grantProficiency": {
 				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type.",
@@ -838,19 +1088,31 @@
 			},
 			"grantSpells": {
 				"description": "Grant spells by school + tier filter, by UUID, or by user choice.",
-				"schools": { "label": "Schools" },
-				"tiers": { "label": "Tiers" },
-				"utilityOnly": { "label": "Utility spells only" },
+				"schools": {
+					"label": "Schools"
+				},
+				"tiers": {
+					"label": "Tiers"
+				},
+				"utilityOnly": {
+					"label": "Utility spells only"
+				},
 				"uuids": {
 					"label": "Specific spells",
 					"hint": "Drag spells from a compendium or sidebar onto each slot to grant them directly."
 				},
-				"mode": { "label": "Selection mode" },
-				"count": { "label": "How many to choose" }
+				"mode": {
+					"label": "Selection mode"
+				},
+				"count": {
+					"label": "How many to choose"
+				}
 			},
 			"healingPotionBonus": {
 				"description": "Add a flat or formula-based bonus to healing received from potions.",
-				"value": { "label": "Bonus" }
+				"value": {
+					"label": "Bonus"
+				}
 			},
 			"hitDiceAdvantage": {
 				"description": "Grant advantage on hit-dice rolls. Raise the amount to roll with greater advantage (e.g. advantage 2), and choose whether it applies to field-rest healing or the max-HP increase when leveling up.",
@@ -869,24 +1131,36 @@
 			},
 			"incrementHitDice": {
 				"description": "Increase the size of the actor’s hit dice (e.g. d8 → d10) by a flat or formula amount.",
-				"value": { "label": "Die size bonus" }
+				"value": {
+					"label": "Die size bonus"
+				}
 			},
 			"initiativeBonus": {
 				"description": "Add a flat or formula-based bonus to the actor’s initiative roll.",
-				"value": { "label": "Bonus" }
+				"value": {
+					"label": "Bonus"
+				}
 			},
 			"initiativeMessage": {
 				"description": "Display a message at initiative roll time. Supports `{value}` interpolation from a formula."
 			},
 			"initiativeRollMode": {
 				"description": "Set or adjust the actor’s default initiative roll mode (advantage/disadvantage).",
-				"value": { "label": "Roll mode value" },
-				"mode": { "label": "How to apply" }
+				"value": {
+					"label": "Roll mode value"
+				},
+				"mode": {
+					"label": "How to apply"
+				}
 			},
 			"maxHitDice": {
 				"description": "Add to the actor’s maximum hit dice. Optionally targets a specific die size.",
-				"value": { "label": "Bonus" },
-				"dieSize": { "label": "Die size (0 = class default)" }
+				"value": {
+					"label": "Bonus"
+				},
+				"dieSize": {
+					"label": "Die size (0 = class default)"
+				}
 			},
 			"maxHpBonus": {
 				"description": "Add a flat bonus to the actor’s maximum HP. With `perLevel`, the bonus scales with character level.",
@@ -904,7 +1178,51 @@
 			},
 			"maxWounds": {
 				"description": "Add to the actor’s maximum wounds before death.",
-				"value": { "label": "Bonus" }
+				"value": {
+					"label": "Bonus"
+				}
+			},
+			"modifyConsumer": {
+				"description": "Augment the effect formula of dice-spend consumers targeting a pool (by identifier). Typically attached to a feature that improves how another feature spends its dice.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the pool whose consumers to modify (e.g. fury)."
+				},
+				"poolScope": {
+					"label": "Pool scope",
+					"hint": "The scope of the pool whose consumers to modify. Must match the pool: identifiers are only unique within a scope."
+				},
+				"effectTypeFilter": {
+					"label": "Effect type filter",
+					"hint": "Only modify consumers with this effect type. Leave blank to modify every consumer on the pool."
+				},
+				"appendFormula": {
+					"label": "Append formula",
+					"hint": "Appended to matching consumers' effect formula as \"+ (...)\". Spend tokens @n (dice spent) and @sum (sum of spent faces) are available."
+				}
+			},
+			"modifyIncomingAttack": {
+				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"modifier": {
+					"label": "Modifier",
+					"hint": "Disadvantage and Auto Miss apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card."
+				},
+				"range": {
+					"label": "Range (spaces)",
+					"hint": "How far away a targeted ally can be for this actor to redirect the attack to themselves. The baseline heroic Interpose reaction covers 2 spaces."
+				},
+				"automatic": {
+					"label": "Automatic",
+					"hint": "Reroll happens automatically when the attack resolves instead of offering a button. Use when you want a reroll to be mandatory."
+				},
+				"rerollTrigger": {
+					"label": "Reroll when",
+					"hint": "Always, only when the attack hits (not a miss), or only when it is a critical hit."
+				},
+				"rerollWithDisadvantage": {
+					"label": "Reroll at disadvantage",
+					"hint": "The forced reroll is made at disadvantage instead of a straight reroll (e.g. FAST)."
+				}
 			},
 			"modifyPool": {
 				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",
@@ -923,10 +1241,48 @@
 				"maxDelta": {
 					"label": "Max delta",
 					"hint": "Signed amount added to the target pool's max (e.g. \"+1\", \"-1\", \"+@level\"). Leave blank to keep max unchanged."
+				},
+				"minFace": {
+					"label": "Minimum face",
+					"hint": "Dice rolled into the target pool below this value are raised to it. Leave blank for no floor. Ignored for charge pools."
+				},
+				"addRefills": {
+					"label": "Additional refills",
+					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition."
+				}
+			},
+			"modifyToggle": {
+				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
+				"toggleIdentifier": {
+					"label": "Toggle identifier",
+					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
+				},
+				"suppressTurnOff": {
+					"label": "Suppress turn-off on",
+					"hint": "Turn-off events the target toggle should ignore. The toggle no longer ends automatically when these events fire."
+				},
+				"turnOn": {
+					"label": "Turn on automatically on",
+					"hint": "Events on which the target toggle switches on automatically. This rule's condition gates the turn-on, so add one to restrict when it applies."
 				}
 			},
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
+			},
+			"poolGainMessage": {
+				"description": "Post a chat reminder whenever a dice pool gains dice. Supports `{value}` interpolation from a formula.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the dice pool whose gains trigger the message (e.g. fury)."
+				},
+				"formula": {
+					"label": "Formula",
+					"hint": "Resolved against actor data and inserted into the message wherever {value} appears."
+				},
+				"message": {
+					"label": "Message",
+					"hint": "Chat text posted when the pool gains dice. Use {value} to insert the formula result."
+				}
 			},
 			"savingThrowBonus": {
 				"description": "Add a flat or formula-based bonus to one or more saving throws. Use ‘all’ to apply to every save.",
@@ -941,11 +1297,21 @@
 			},
 			"savingThrowRollMode": {
 				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use.",
-				"value": { "label": "Roll mode value" },
-				"target": { "label": "Target save" },
-				"selectedSave": { "label": "Selected save" },
-				"mode": { "label": "How to apply" },
-				"requiresChoice": { "label": "Player chooses save at use" }
+				"value": {
+					"label": "Roll mode value"
+				},
+				"target": {
+					"label": "Target save"
+				},
+				"selectedSave": {
+					"label": "Selected save"
+				},
+				"mode": {
+					"label": "How to apply"
+				},
+				"requiresChoice": {
+					"label": "Player chooses save at use"
+				}
 			},
 			"skillBonus": {
 				"description": "Add a flat or formula-based bonus to one or more skills. Use ‘all’ to apply to every skill.",
@@ -956,6 +1322,21 @@
 				"skills": {
 					"label": "Apply to",
 					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				}
+			},
+			"skillRollMode": {
+				"description": "Set or adjust the roll mode (advantage/disadvantage) for one or more skill checks. Use ‘all’ to apply to every skill.",
+				"value": {
+					"label": "Roll mode value",
+					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
+				},
+				"skills": {
+					"label": "Apply to",
+					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				},
+				"mode": {
+					"label": "How to apply",
+					"hint": "Adjust stacks with other sources; set overrides them. When mixing modes on one skill, order matters: a set that runs after an adjust discards it, so use priority to control which wins."
 				}
 			},
 			"speedBonus": {
@@ -969,12 +1350,77 @@
 					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it."
 				}
 			},
+			"featureMessages": {
+				"berserker": {
+					"rageEndConfirm": "Are you sure you want to end Rage? Your Fury Dice will be lost."
+				}
+			},
+			"toggleEffect": {
+				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
+				"tags": {
+					"label": "Tags",
+					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
+				},
+				"turnOff": {
+					"label": "Turn off on",
+					"hint": "Events that automatically toggle the effect off."
+				},
+				"confirmEndPrompt": {
+					"label": "End confirm prompt",
+					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Accepts plain text or a localization key as the dialog body. Leave empty to disable the prompt."
+				},
+				"clearPoolsOnEnd": {
+					"label": "Clear pools on end",
+					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
+				},
+				"endAfterInactiveRounds": {
+					"label": "End after inactive rounds",
+					"hint": "Rounds of combat inactivity after which the toggle ends at the actor's turn end. Activity means re-activating this item or activating any item with a damage effect (an attack). Leave blank to disable."
+				},
+				"confirmDialogTitle": "End {name}?",
+				"confirmDialogConfirm": "End",
+				"confirmDialogCancel": "Cancel",
+				"inactivityPrompt": "{actor} has gone {rounds} round(s) without attacking or re-activating {name}. End it?",
+				"endedMessage": "{name} ended: {reason}.",
+				"endReasons": {
+					"onActorKilled": "died",
+					"onActorWounded": "took a wound",
+					"onRest": "completed a rest",
+					"onTurnStart": "turn started",
+					"onTurnEnd": "turn ended",
+					"onEncounterEnd": "combat ended",
+					"onActorDying": "started dying",
+					"inactivity": "went {rounds} round(s) without attacking or re-activating"
+				},
+				"startedMessage": "{name} activated automatically: {reason}.",
+				"startReasons": {
+					"onTurnStart": "turn started",
+					"onActorDying": "started dying",
+					"onCritReceived": "was critically hit"
+				}
+			},
+			"markTarget": {
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest; there is no time-based expiry.",
+				"flagKey": {
+					"label": "Flag key",
+					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
+				},
+				"statusCondition": {
+					"label": "Status condition",
+					"hint": "Optional condition applied to each marked target as a visible marker. Leave blank for an invisible mark."
+				},
+				"maxTargets": {
+					"label": "Max targets",
+					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
+				}
+			},
 			"unarmedDamage": {
 				"description": "Override the actor’s unarmed-strike damage formula."
 			}
 		},
 		"charges": {
 			"header": "Charges",
+			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
 			"unknownItem": "Unknown Item",
@@ -1000,7 +1446,13 @@
 			},
 			"recoveryTrigger": {
 				"encounterStart": "Encounter Start",
-				"encounterEnd": "Encounter End"
+				"encounterEnd": "Encounter End",
+				"onInitiativeRolled": "Initiative Rolled",
+				"onWound": "Wounded",
+				"onTurnStart": "Turn Start",
+				"onTurnEnd": "Turn End",
+				"onKill": "Kill",
+				"onBloodied": "Bloodied"
 			},
 			"configure": "Configure Charges",
 			"noPoolsForItem": "No charge pools for this item.",
@@ -1026,6 +1478,8 @@
 			"rightClickToDiscardAll": "Right-click to discard all – total {total}",
 			"togglePanel": "Toggle {label} actions",
 			"rollOneIntoPool": "Roll one die into this pool",
+			"spendRequestEmptyPool": "No {label} available to spend.",
+			"raisedToFloor": "{flavor} (rolled {rolled}, raised to {face})",
 			"panel": {
 				"ariaLabel": "{label} actions",
 				"rolledMeta": "{count}/{max} · sum {total}",
@@ -1044,11 +1498,16 @@
 				"useFeature": {
 					"heading": "Use a feature",
 					"pickDice": "Pick dice to spend",
+					"pickDiceToMaximize": "Pick a die to raise to its maximum",
+					"dieAlreadyMax": "Already at its maximum",
 					"toggleDie": "Toggle die (value: {value})",
 					"summary": "Selected {count} · sum {total}",
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
-					"spendWithCount": "Spend ({count})"
+					"spendWithCount": "Spend ({count})",
+					"maximize": "Maximize",
+					"maximizedNote": "Maximized {count} {label} ({changes})",
+					"bankedReductionNote": "Applied automatically as damage reduction against damage taken."
 				}
 			}
 		},
@@ -1089,6 +1548,14 @@
 			"medium": "Medium",
 			"small": "Small",
 			"tiny": "Tiny"
+		},
+		"sizeCategoryDescriptions": {
+			"gargantuan": "a castle keep · 4×4 spaces",
+			"huge": "a small house · 3×3 spaces",
+			"large": "a bear · 2×2 spaces",
+			"medium": "average human size",
+			"small": "fits in a backpack",
+			"tiny": "fits in a pocket"
 		},
 		"skills": {
 			"arcana": "Arcana",
@@ -1148,6 +1615,8 @@
 					"max": "Max Tier {tier}"
 				},
 				"chooseEnhancement": "Choose Enhancement",
+				"increaseDieSize": "Die size +{steps}",
+				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier"
 			}
@@ -1167,6 +1636,7 @@
 			"object": "Nimble Object Sheet",
 			"playerCharacter": "Nimble Player Character Sheet",
 			"ancestry": "Nimble Ancestry Sheet",
+			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
 			"spell": "Nimble Spell Sheet",
 			"subclass": "Nimble Subclass Sheet"
@@ -1187,9 +1657,18 @@
 			"turn": "turn"
 		},
 		"ui": {
+			"bankedDamageReduction": "Damage Reduction ({value})",
+			"bankedDamageReductionDescription": "<p>The next hit to the character will reduce the incoming damage by {value}.</p>",
 			"cancel": "Cancel",
 			"loading": "Loading...",
 			"viewDetails": "View Details",
+			"confirmInsufficientActions": {
+				"title": "Not Enough Actions",
+				"message": "This costs {cost} action(s), but you only have {current} remaining.",
+				"confirmQuestion": "Do you still want to use {name}?",
+				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			},
 			"combatTracker": {
 				"scrollbar": "Combat turn order scrollbar",
 				"hitPoints": "Hit Points",
@@ -1311,9 +1790,19 @@
 					"title": "Move",
 					"cost": "1 Action",
 					"speed": "Speed",
-					"panelDescription": "Move up to your speed. You can split movement around other actions.",
+					"panelDescription": "Move up to your speed. You can split movement around other actions and move multiple times per turn.",
+					"confirmMove": "Confirm Move",
+					"dialogTitle": "Move Action",
+					"confirmTitle": "Did you move?",
+					"confirmDescription": "Confirm that you've repositioned your character on the battlefield.",
+					"yourMovement": "Your Movement",
 					"spaces": "spaces",
-					"confirmMove": "Confirm Move"
+					"noMovement": "No movement speeds available",
+					"actionCost": "This will use 1 action",
+					"confirm": "Use Action to Move",
+					"cancel": "Cancel",
+					"speedBadge": "Speed {speed}",
+					"chatMessage": "<p><strong>{name}</strong> used an action to <strong>Move</strong>, with a speed of {speed} spaces.</p>"
 				},
 				"enterCombat": "Enter combat to use actions",
 				"outsideCombat": "You are outside of combat",
@@ -1346,6 +1835,10 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
+				"pendingActionGain": "Gains {count} additional action at the start of the next turn",
+				"pendingActionsGain": "Gains {count} additional actions at the start of the next turn",
+				"pendingActionLoss": "Starts the next turn with {count} fewer action",
+				"pendingActionsLoss": "Starts the next turn with {count} fewer actions",
 				"confirmEndTurnEarlyTitle": "End Turn Early?",
 				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
@@ -1357,6 +1850,8 @@
 				"noSpellsFound": "No spells found.",
 				"unarmedStrike": "Unarmed Strike",
 				"feature": "Feature",
+				"toggleOn": "Activate {name}",
+				"toggleOff": "Deactivate {name}",
 				"mana": "{cost} Mana",
 				"thrown": "Thrown: {distance}",
 				"baseEffect": "Effect",
@@ -1499,24 +1994,6 @@
 						"success": "<p><strong>{name}</strong> used an action to assess and anticipate danger. All Primary Dice rolled against them are <strong>reduced by 1</strong> this round.</p>",
 						"failure": "<p><strong>{name}</strong> used an action to assess but failed to anticipate danger.</p>"
 					}
-				},
-				"move": {
-					"title": "Move",
-					"cost": "1 Action",
-					"speed": "Speed",
-					"panelDescription": "Move up to your speed. You can split movement around other actions and move multiple times per turn.",
-					"confirmMove": "Confirm Move",
-					"dialogTitle": "Move Action",
-					"confirmTitle": "Did you move?",
-					"confirmDescription": "Confirm that you've repositioned your character on the battlefield.",
-					"yourMovement": "Your Movement",
-					"spaces": "spaces",
-					"noMovement": "No movement speeds available",
-					"actionCost": "This will use 1 action",
-					"confirm": "Use Action to Move",
-					"cancel": "Cancel",
-					"speedBadge": "Speed {speed}",
-					"chatMessage": "<p><strong>{name}</strong> used an action to <strong>Move</strong>, with a speed of {speed} spaces.</p>"
 				}
 			},
 			"clearAll": "Clear All",
@@ -1536,11 +2013,14 @@
 			"noEffects": "No effects",
 			"temporaryEffects": "Temporary Effects",
 			"passiveEffects": "Passive Effects",
+			"endToggledEffect": "Turn off {name}",
+			"endToggledEffectTooltip": "Turn off",
 			"searchConditions": "Search conditions",
 			"showActiveOnly": "Show Active",
 			"showAllConditions": "Show All",
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
+			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",
 			"failedToRemoveEffect": "Failed to remove effect.",
@@ -1595,6 +2075,10 @@
 			"totalFromRules": "Total from Rules",
 			"totalMaxHp": "Total Maximum HP",
 			"saveChanges": "Save Changes"
+		},
+		"wounds": {
+			"heading": "Wounds",
+			"toggle": "Toggle wound {level}"
 		},
 		"manaConfig": {
 			"configureMana": "Configure Mana",
@@ -1668,6 +2152,7 @@
 			"armor": "Armor",
 			"decreaseArmor": "Decrease Armor",
 			"increaseArmor": "Increase Armor",
+			"editDamageDefenses": "Edit Damage Defenses",
 			"features": "Features",
 			"createFeature": "Create Feature",
 			"expandAllDescriptions": "Expand all descriptions",
@@ -1695,6 +2180,18 @@
 				"message": "Convert this monster from {current} to {target}? Fields that don't exist on the new type will be discarded, and the open sheet will be closed."
 			},
 			"flunky": "Flunky"
+		},
+		"damageDefenses": {
+			"heading": "Damage Defenses",
+			"damageResistances": "Damage Resistances (half damage)",
+			"damageImmunities": "Damage Immunities (no damage)",
+			"damageVulnerabilities": "Damage Vulnerabilities",
+			"damageVulnerabilitiesHint": "Vulnerable damage ignores armor. An unarmored target takes double damage instead."
+		},
+		"npcDefenses": {
+			"resistant": "Resistant",
+			"immune": "Immune",
+			"vulnerable": "Vulnerable"
 		},
 		"featureSheet": {
 			"selectionCountByLevel": "Selection Count By Level",
@@ -1820,7 +2317,28 @@
 			"noTargetsSelected": "No targets selected",
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
-			"removeTarget": "Remove Target"
+			"removeTarget": "Remove Target",
+			"damagePreview": "Damage this target will take (after armor and reductions)"
+		},
+		"damageModifiers": {
+			"badgeImmune": "IMM",
+			"badgeVulnerable": "VUL",
+			"badgeResistant": "RES",
+			"badgeReduction": "DR",
+			"component": "{type} {value} (from {before})",
+			"componentUnchanged": "{type} {value}",
+			"untypedComponent": "{value} (from {before})",
+			"untypedComponentUnchanged": "{value}",
+			"immune": "immune to {type} (no damage)",
+			"vulnerable": "vulnerable to {type} (ignores armor)",
+			"vulnerableUnarmored": "vulnerable to {type} (double damage)",
+			"resistant": "resistant to {type} (half damage)",
+			"resistanceSource": "{label} (half damage)",
+			"resistanceGeneric": "resistance (half damage)",
+			"flat": "{label} (-{value})",
+			"flatGeneric": "damage reduction (-{value})",
+			"banked": "damage reduction (-{value})",
+			"bankedSource": "{source} (-{value})"
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"
@@ -1869,19 +2387,23 @@
 			"addOnSave": "Add on-save effect",
 			"poolNode": {
 				"defaultLabel": "Pool",
-				"noChange": "— no change",
+				"noChange": "- no change",
+				"atMax": "(pool at max)",
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
 					"rollDie": "Rolled",
 					"rollPool": "Rolled fresh",
 					"fillCount": "Gained",
-					"clear": "Cleared"
+					"clear": "Cleared",
+					"maximizeDie": "Maximized"
 				},
 				"skipReasons": {
 					"predicate": "Skipped (predicate not met)",
 					"invalidAction": "Skipped (invalid action for pool type)",
 					"unknownPool": "Skipped (pool not found)",
-					"noActor": "Skipped (no actor)"
+					"noActor": "Skipped (no actor)",
+					"poolEmpty": "No dice in the pool",
+					"allAtMax": "All dice already at maximum"
 				},
 				"config": {
 					"deleteLabel": "Delete Pool",
@@ -1891,12 +2413,15 @@
 					"valueLabel": "Value",
 					"predicateLabel": "Predicate (JSON)",
 					"predicateInvalid": "Predicate must be valid JSON",
+					"suppressChatLabel": "Suppress roll chat card",
+					"suppressChatHint": "When enabled, the helper does not post a standalone roll card. Use when the feature's own activation card already shows the rolled faces.",
 					"poolTypeDice": "Dice Pool",
 					"poolTypeCharge": "Charge Pool",
 					"actionRollDie": "Roll Die",
 					"actionRollPool": "Roll Pool",
 					"actionFillCount": "Fill Count",
-					"actionClear": "Clear"
+					"actionClear": "Clear",
+					"actionMaximizeDie": "Maximize lowest die"
 				}
 			}
 		},
@@ -1905,6 +2430,12 @@
 			"spendCharge": {
 				"increment": "Spend one more",
 				"decrement": "Spend one less"
+			},
+			"conditionalBonus": {
+				"heading": "Conditional Bonuses",
+				"advantage": "Advantage × {count}",
+				"damage": "+{value} damage",
+				"none": "None"
 			}
 		},
 		"characterSettings": {
@@ -1945,7 +2476,39 @@
 			"selectFeature": "Select this feature",
 			"deselectFeature": "Deselect this feature",
 			"selectFeatureAriaLabel": "Select {featureName}",
-			"deselectFeatureAriaLabel": "Deselect {featureName}"
+			"deselectFeatureAriaLabel": "Deselect {featureName}",
+			"duplicateHeading": "Duplicate feature",
+			"duplicateFoundIn": "{name} found in {count} places",
+			"duplicateCompareAll": "Compare all",
+			"duplicateCollapseAll": "Collapse all",
+			"duplicateKeepAll": "Keep all {count}",
+			"duplicateKeepRecommended": "Keep recommended",
+			"duplicateRecommended": "Recommended",
+			"duplicateAlreadyOwned": "Already added",
+			"duplicateUseCopy": "Use the copy in {name}",
+			"duplicateBaseline": "baseline",
+			"duplicateIdenticalTo": "identical to {source}",
+			"duplicateDiffers": "differs: {fields}",
+			"duplicateWorldRoot": "World items",
+			"duplicateCreatedHere": "created in this world",
+			"duplicateDerivedFrom": "from {source}",
+			"duplicatePackagedDefault": "packaged default",
+			"duplicateOutcomeNone": "Keeps only the copy you already have.",
+			"duplicateOutcomePending": "Nothing selected yet — choose which copy to keep.",
+			"duplicateOutcomeOne": "Adds 1 feature — {name}.",
+			"duplicateOutcomeAll": "Adds {count} features. This feature will appear {count} times.",
+			"diffField": {
+				"description": "description",
+				"actionCost": "action cost",
+				"duration": "duration",
+				"targets": "targets",
+				"template": "template",
+				"effects": "effects",
+				"rules": "rules",
+				"levelUpOptions": "level-up options",
+				"choices": "choices",
+				"macro": "macro"
+			}
 		},
 		"subclassSelection": {
 			"header": "Subclass",
@@ -2032,6 +2595,9 @@
 			"targetRestrictions": "Target Restrictions",
 			"attackType": "Attack Type",
 			"distance": "Distance",
+			"activationOptions": "Activation Options",
+			"skipRollDialog": "Skip the roll dialog (activate instantly)",
+			"skipRollDialogHint": "Always activate this item with default roll settings instead of opening the roll or upcast dialog. Holding Alt while activating inverts this setting for that activation.",
 			"attackTypes": {
 				"none": "None",
 				"melee": "Melee",
@@ -2083,6 +2649,9 @@
 				"targetEffectAuto": "Auto (first match)",
 				"targetEffectPlaceholder": "Effect ID",
 				"targetEffectHint": "Add effects in the Activation tab to select targets here.",
+				"steps": "Steps",
+				"maxDie": "Max Die",
+				"maxDieNone": "No maximum",
 				"operations": {
 					"addFlatDamage": "Flat Damage",
 					"addDice": "Dice",
@@ -2093,7 +2662,8 @@
 					"addDC": "DC",
 					"addArmor": "Armor",
 					"addDuration": "Duration",
-					"addCondition": "Condition"
+					"addCondition": "Condition",
+					"increaseDieSize": "Increase Die Size"
 				}
 			}
 		},
@@ -2145,8 +2715,40 @@
 				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
 			},
 			"autoApplyConditions": {
-				"name": "Auto-Apply Conditions from Rules",
-				"hint": "Automatically apply conditions from feature rules when their trigger fires. When off, rules still surface on the chat card for manual GM application."
+				"name": "Auto-Apply Conditions from Rules (Legacy)",
+				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Apply Conditions and Effects from Rules toggle and has no other effect."
+			},
+			"applyRuleEffects": {
+				"name": "Apply Conditions and Effects from Rules",
+				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+			},
+			"derivedConditions": {
+				"name": "Derived Conditions",
+				"hint": "Automatically apply and remove conditions implied by other conditions, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained."
+			},
+			"resourceRecovery": {
+				"name": "Resource Recovery",
+				"hint": "Automatically refill charges and dice pools from their recovery triggers, such as turn start, rests, wounds, kills, and encounter end."
+			},
+			"resourceSpending": {
+				"name": "Resource Spending",
+				"hint": "Automatically deduct mana when casting spells and validate and consume charges when using items. When off, resource costs are not enforced and must be tracked manually."
+			},
+			"actionTracking": {
+				"name": "Action Tracking",
+				"hint": "Automatically spend combatant actions when items are used during combat."
+			},
+			"healthStateSync": {
+				"name": "Health-State Sync",
+				"hint": "Automatically apply and remove the Bloodied status when a combatant drops to or recovers above half hit points. Last Stand handling is always on."
+			},
+			"combatConvenience": {
+				"name": "Combat Convenience",
+				"hint": "Automatically roll initiative for player characters when combat starts."
+			},
+			"chatNotifications": {
+				"name": "Chat Notifications",
+				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
@@ -2176,6 +2778,21 @@
 				"errorEmptyKey": "Key is required.",
 				"errorReservedKey": "That key is reserved by a built-in school.",
 				"errorDuplicateKey": "Duplicate key."
+			},
+			"automationMenu": {
+				"name": "Automation",
+				"title": "Automation",
+				"manageButton": "Configure Automation",
+				"hint": "Choose which parts of the Nimble rules the system automates for your world. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"intro": "Choose which parts of the Nimble rules the system automates. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
+				"sectionRulesEffects": "Rules & Effects",
+				"sectionResources": "Resources",
+				"sectionCombat": "Combat",
+				"sectionChat": "Chat",
+				"save": "Save Automation Settings",
+				"saved": "Automation settings saved.",
+				"saveError": "Saving the automation settings failed and some toggles may not have been applied. Check the console for details.",
+				"gmOnly": "Only a GM can change automation settings."
 			},
 			"combatTrackerHoverColor": {
 				"name": "Combat Tracker Hover Color",

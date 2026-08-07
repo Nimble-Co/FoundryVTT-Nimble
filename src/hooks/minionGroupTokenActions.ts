@@ -26,7 +26,7 @@ import {
 	rememberMemberActionSelection,
 } from '../utils/minionGroupAttackSession.js';
 import { isMinionCombatant } from '../utils/minionGrouping.js';
-import resolveItemActionCost from '../utils/resolveItemActionCost.js';
+import resolveMinionAttackActionCost from '../utils/resolveMinionAttackActionCost.js';
 import { tokenHoverIn, tokenHoverOut } from '../utils/tokenHoverHighlight.js';
 
 const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
@@ -476,7 +476,7 @@ function buildGroupAttackActionOptions(
 				rollFormula: getActionRollFormulaLabel(item),
 				description: getActionDescriptionLabel(item),
 				unsupportedReasons,
-				actionCost: resolveItemActionCost(item),
+				actionCost: resolveMinionAttackActionCost(item),
 			};
 		})
 		.filter((option) => option.actionId.length > 0)
@@ -2261,13 +2261,9 @@ async function executeNonMinionAttackActivation(
 
 	await validatedAttack.actor.activateItem(validatedAttack.selectedActionId, activationOptions);
 
-	const latestCombatant =
-		validatedAttack.combat.combatants.get(validatedAttack.memberCombatantId) ??
-		validatedAttack.combatant;
 	await consumeCombatantAction({
 		combat: validatedAttack.combat,
 		combatantId: validatedAttack.memberCombatantId,
-		fallbackCombatant: latestCombatant,
 		actionCost: validatedAttack.selectedAction.actionCost,
 	});
 

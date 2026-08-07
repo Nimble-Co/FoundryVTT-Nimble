@@ -743,6 +743,27 @@
 						}}
 					></textarea>
 				</label>
+
+				{#if node.action === 'rollDie' || node.action === 'rollPool'}
+					<label
+						class="nimble-field"
+						style="width: 100%; flex-direction: row; align-items: center; gap: 0.5rem;"
+					>
+						<input
+							type="checkbox"
+							checked={node.suppressChat === true}
+							onchange={({ target }) =>
+								updateEffectNode(document, effects, node, 'suppressChat', target.checked)}
+						/>
+						<span
+							class="nimble-field__label nimble-heading"
+							data-heading-variant="field"
+							data-tooltip={localize('NIMBLE.activationEffects.poolNode.config.suppressChatHint')}
+						>
+							{localize('NIMBLE.activationEffects.poolNode.config.suppressChatLabel')}
+						</span>
+					</label>
+				{/if}
 			</div>
 		</div>
 	</li>

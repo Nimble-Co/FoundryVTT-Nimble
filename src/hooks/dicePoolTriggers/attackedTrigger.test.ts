@@ -5,6 +5,12 @@ import {
 	createHookCapture,
 } from '../../../tests/mocks/combat.js';
 
+vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
+	applyRefillToActorIfEligible: vi.fn(async () => {}),
+}));
+
+import { applyRefillToActorIfEligible } from '#utils/dicePool/dicePoolRefill.js';
+
 function globals() {
 	return getTestGlobals<
 		CombatDefeatSyncTestGlobals & { game: { combat: Combat | null; user: { isGM: boolean } } }
@@ -46,6 +52,30 @@ describe('registerAttackedTriggerHooks', () => {
 			threw = true;
 		}
 		expect(threw).toBe(false);
+	});
+
+	it('fires onAttacked but not onCritReceived for a normal hit', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const { registerAttackedTriggerHooks } = await import('./attackedTrigger.js');
+		registerAttackedTriggerHooks();
+
+		const target = { id: 'hero', type: 'character' } as unknown as Actor.Implementation;
+		callbacks.get('nimble.damageApplied')?.({ targetActor: target, isCritical: false });
+
+		expect(applyRefillToActorIfEligible).toHaveBeenCalledWith(target, 'onAttacked');
+		expect(applyRefillToActorIfEligible).not.toHaveBeenCalledWith(target, 'onCritReceived');
+	});
+
+	it('fires onCritReceived in addition to onAttacked for a critical hit', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const { registerAttackedTriggerHooks } = await import('./attackedTrigger.js');
+		registerAttackedTriggerHooks();
+
+		const target = { id: 'hero', type: 'character' } as unknown as Actor.Implementation;
+		callbacks.get('nimble.damageApplied')?.({ targetActor: target, isCritical: true });
+
+		expect(applyRefillToActorIfEligible).toHaveBeenCalledWith(target, 'onAttacked');
+		expect(applyRefillToActorIfEligible).toHaveBeenCalledWith(target, 'onCritReceived');
 	});
 
 	it('does not throw when payload has no target', async () => {

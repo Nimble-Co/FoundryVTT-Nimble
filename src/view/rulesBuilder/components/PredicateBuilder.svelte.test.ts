@@ -152,4 +152,55 @@ describe('PredicateBuilder', () => {
 		});
 		expect(container.querySelector('.nimble-predicate-builder__preview')).toBeFalsy();
 	});
+
+	describe('late-key warning', () => {
+		it('warns for an early-phase rule and suppresses the match preview', () => {
+			const { container } = render(PredicateBuilder, {
+				value: { strength: { min: 2 } } as RawPredicate,
+				onChange: vi.fn(),
+				previewDomain: new Set(['strength:3']),
+				appliesInPrePrepareData: true,
+			});
+			expect(container.querySelector('.nimble-predicate-builder__preview--warning')).toBeTruthy();
+			expect(container.querySelector('.nimble-predicate-builder__preview--match')).toBeFalsy();
+		});
+
+		it('warns even without a preview domain', () => {
+			const { container } = render(PredicateBuilder, {
+				value: { strength: { min: 2 } } as RawPredicate,
+				onChange: vi.fn(),
+				appliesInPrePrepareData: true,
+			});
+			expect(container.querySelector('.nimble-predicate-builder__preview--warning')).toBeTruthy();
+		});
+
+		it('warns for late keys referenced via logical atoms', () => {
+			const { container } = render(PredicateBuilder, {
+				value: { $and: ['dexterity:4'] } as unknown as RawPredicate,
+				onChange: vi.fn(),
+				appliesInPrePrepareData: true,
+			});
+			expect(container.querySelector('.nimble-predicate-builder__preview--warning')).toBeTruthy();
+		});
+
+		it('shows the normal preview for an after-phase rule with the same predicate', () => {
+			const { container } = render(PredicateBuilder, {
+				value: { strength: { min: 2 } } as RawPredicate,
+				onChange: vi.fn(),
+				previewDomain: new Set(['strength:3']),
+				appliesInPrePrepareData: false,
+			});
+			expect(container.querySelector('.nimble-predicate-builder__preview--warning')).toBeFalsy();
+			expect(container.querySelector('.nimble-predicate-builder__preview--match')).toBeTruthy();
+		});
+
+		it('does not warn for early keys on an early-phase rule', () => {
+			const { container } = render(PredicateBuilder, {
+				value: { self: 'fullHp' } as RawPredicate,
+				onChange: vi.fn(),
+				appliesInPrePrepareData: true,
+			});
+			expect(container.querySelector('.nimble-predicate-builder__preview--warning')).toBeFalsy();
+		});
+	});
 });

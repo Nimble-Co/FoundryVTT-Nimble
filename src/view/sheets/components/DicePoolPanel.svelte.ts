@@ -1,12 +1,15 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { systemHookName } from '#system';
+import { addBankedDamageReduction } from '#utils/bankedDamageReduction.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
-import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
+import { dieSizeToMaxFace, resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
+import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
+import localize from '#utils/localize.ts';
 import type { LivePoolView } from './DicePoolTracker.svelte.ts';
 
 // Reactive subscription so the panel reflects pool mutations made by other
@@ -35,10 +38,6 @@ function registerPanelHooks(listener: () => void): () => void {
 
 function consumerKey(consumer: DicePoolConsumer): string {
 	return `${consumer.itemId}:${consumer.ruleId}`;
-}
-
-function substituteFormula(formula: string, count: number, sum: number): string {
-	return formula.replace(/@n\b/g, String(count)).replace(/@sum\b/g, String(sum));
 }
 
 export function createDicePoolPanelState(
@@ -103,6 +102,41 @@ export function createDicePoolPanelState(
 	const selectedCount = $derived(selectedFaces.length);
 	const selectedSum = $derived(selectedFaces.reduce((a, b) => a + b, 0));
 
+	/** True when the chosen dice are transformed in place rather than spent. */
+	const isMaximizeOutcome = $derived(selectedConsumer?.selectionOutcome === 'maximize');
+
+	/**
+	 * How many dice the chosen consumer may act on. Transforming outcomes are
+	 * capped at the consumer's cost so a "change 1 die" feature offers exactly
+	 * one pick; spending outcomes stay uncapped ("expend 1 or more").
+	 */
+	const selectionCap = $derived.by((): number | null => {
+		const consumer = selectedConsumer;
+		if (!consumer || consumer.selectionOutcome === 'consume') return null;
+		return Math.max(1, resolveFormulaToInteger(getActor(), consumer.cost));
+	});
+
+	/**
+	 * Dice already showing their highest face cannot be raised, so they are not
+	 * offered as targets for a transforming outcome.
+	 */
+	function canSelectDie(index: number): boolean {
+		const pool = livePool;
+		if (!pool || pool.kind !== 'rolled') return false;
+		if (!isMaximizeOutcome) return true;
+		const face = pool.faces[index];
+		if (face === undefined) return false;
+		return face < dieSizeToMaxFace(pool.dieSize as DieSize);
+	}
+
+	// Keep the selection within the cap when the player switches to a capped
+	// consumer with more dice already picked.
+	$effect(() => {
+		const cap = selectionCap;
+		if (cap === null || selectedIndices.size <= cap) return;
+		selectedIndices = new Set([...selectedIndices].slice(-cap));
+	});
+
 	// Drop stale consumer selection if the consumer list changes such that the
 	// chosen consumer disappears (e.g. its item is deleted mid-flow).
 	$effect(() => {
@@ -140,7 +174,7 @@ export function createDicePoolPanelState(
 	): Promise<number | null> {
 		if (count < 1) return null;
 		try {
-			const substituted = substituteFormula(formula, count, sum);
+			const substituted = substituteSpendFormula(formula, count, sum);
 			const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 			const roll = new RollCls(substituted, getActor().getRollData());
 			await roll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
@@ -170,14 +204,36 @@ export function createDicePoolPanelState(
 
 	function toggleDie(index: number): void {
 		const next = new Set(selectedIndices);
-		if (next.has(index)) next.delete(index);
-		else next.add(index);
+		if (next.has(index)) {
+			next.delete(index);
+			selectedIndices = next;
+			return;
+		}
+		if (!canSelectDie(index)) return;
+		// At the cap, the oldest pick makes way for the new one, so a cap of 1
+		// behaves like a radio group instead of dead-ending the player.
+		const cap = selectionCap;
+		if (cap !== null && next.size >= cap) {
+			for (const oldest of next) {
+				next.delete(oldest);
+				if (next.size < cap) break;
+			}
+		}
+		next.add(index);
 		selectedIndices = next;
 	}
 
 	function selectConsumer(consumer: DicePoolConsumer): void {
 		const key = consumerKey(consumer);
 		selectedConsumerKey = selectedConsumerKey === key ? null : key;
+	}
+
+	/** Select a consumer by its key (itemId:ruleId). Returns false when the
+	 *  consumer is not (yet) in this pool's list. */
+	function selectConsumerByKey(key: string): boolean {
+		if (!consumers.some((c) => consumerKey(c) === key)) return false;
+		selectedConsumerKey = key;
+		return true;
 	}
 
 	async function setDieValue(index: number, value: number): Promise<void> {
@@ -214,17 +270,57 @@ export function createDicePoolPanelState(
 		await adjustPool(getActor(), pool.id, 'set', clamped);
 	}
 
+	/** Raise every picked die to the pool's highest face, leaving the pool size
+	 *  untouched, and report the before/after faces to chat. The raising itself is
+	 *  `maximizePoolDie`, shared with the activation-driven pool node, so both entry
+	 *  points stay in step. */
+	async function applyMaximizeOutcome(
+		pool: Extract<LivePoolView, { kind: 'rolled' }>,
+		consumer: DicePoolConsumer,
+	): Promise<void> {
+		const picked = [...selectedIndices];
+		const result = await maximizePoolDie(getActor(), pool.id, picked.length, {
+			indices: picked,
+		});
+		if (!result.changed) return;
+
+		const changes = result.changes.map(({ from, to }) => `${from} → ${to}`);
+
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		const headerLine = `<strong>${foundry.utils.escapeHTML(consumer.itemName)}</strong>`;
+		const subLine = foundry.utils.escapeHTML(
+			localize('NIMBLE.dicePoolTracker.panel.useFeature.maximizedNote', {
+				count: String(changes.length),
+				label: pool.label,
+				changes: changes.join(', '),
+			}),
+		);
+		await ChatMessageCls.create({
+			speaker: ChatMessageCls.getSpeaker({ actor: getActor() }),
+			content: `${headerLine}<div class="nimble-dice-pool-spend-flavor">${subLine}</div>`,
+		} as ChatMessage.CreateData);
+	}
+
 	async function spend(): Promise<void> {
 		const pool = livePool;
 		const consumer = selectedConsumer;
 		if (!pool || pool.kind !== 'rolled' || !consumer || selectedCount < 1) return;
+
+		if (consumer.selectionOutcome === 'maximize') {
+			await applyMaximizeOutcome(pool, consumer);
+			selectedIndices = new Set();
+			selectedConsumerKey = null;
+			livePreviewTotal = null;
+			return;
+		}
 
 		const spentFaces = pool.faces.filter((_, i) => selectedIndices.has(i));
 		const nextFaces = pool.faces.filter((_, i) => !selectedIndices.has(i));
 
 		await setPoolFaces(getActor(), pool.id, nextFaces);
 
-		const substituted = substituteFormula(
+		const substituted = substituteSpendFormula(
 			consumer.effectFormula ?? '0',
 			spentFaces.length,
 			spentFaces.reduce((a, b) => a + b, 0),
@@ -233,13 +329,25 @@ export function createDicePoolPanelState(
 		const effectRoll = new RollCls(substituted, getActor().getRollData());
 		await effectRoll.evaluate();
 
+		if (consumer.effectType === 'damageReduction') {
+			await addBankedDamageReduction(
+				getActor(),
+				effectRoll.total ?? 0,
+				consumer.itemImg,
+				consumer.itemName,
+			);
+		}
+
 		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
 			.ChatMessage;
 		const speaker = ChatMessageCls.getSpeaker({ actor: getActor() });
 		const headerLine = `<strong>${foundry.utils.escapeHTML(consumer.itemName)}</strong>`;
-		const subLine = foundry.utils.escapeHTML(
+		let subLine = foundry.utils.escapeHTML(
 			`Spent ${spentFaces.length} ${pool.label} (${spentFaces.join(', ')})`,
 		);
+		if (consumer.effectType === 'damageReduction') {
+			subLine += `<br />${foundry.utils.escapeHTML(localize('NIMBLE.dicePoolTracker.panel.useFeature.bankedReductionNote'))}`;
+		}
 		const flavor = `${headerLine}<div class="nimble-dice-pool-spend-flavor">${subLine}</div>`;
 
 		await effectRoll.toMessage({
@@ -278,9 +386,14 @@ export function createDicePoolPanelState(
 		get livePreviewTotal() {
 			return livePreviewTotal;
 		},
+		get isMaximizeOutcome() {
+			return isMaximizeOutcome;
+		},
+		canSelectDie,
 		consumerKey,
 		toggleDie,
 		selectConsumer,
+		selectConsumerByKey,
 		setDieValue,
 		discardDie,
 		setChargeCurrent,

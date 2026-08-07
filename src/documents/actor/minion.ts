@@ -46,12 +46,6 @@ export class NimbleMinion extends NimbleBaseActor {
 		Object.entries(actorData.savingThrows).forEach(([_, save]) => {
 			save.mod = save.bonus ?? 0;
 		});
-
-		// self:fullHp — Minion hp.max is stored, so it's correct here
-		const { value: hpValue, max: hpMax } = actorData.attributes.hp;
-		if (hpMax > 0 && hpValue >= hpMax) {
-			this.tags.add('self:fullHp');
-		}
 	}
 
 	async editMetadata() {

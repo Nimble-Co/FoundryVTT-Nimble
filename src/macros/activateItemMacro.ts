@@ -1,15 +1,7 @@
 import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
-
-interface ActivationCost {
-	type: string;
-	quantity: number;
-}
-
-interface ItemActivationSystem {
-	activation?: {
-		cost?: ActivationCost;
-	};
-}
+import resolveItemActionCost, {
+	type ItemWithActivationCost,
+} from '../utils/resolveItemActionCost.js';
 
 /**
  * The function called by macros created by dragging an item to the macro hot bar.
@@ -40,10 +32,9 @@ export async function activateItemMacro(itemName: string) {
 
 	// If activation was successful and item has an action cost, deduct action pips
 	if (result) {
-		const itemSystem = item.system as unknown as ItemActivationSystem;
-		const activationCost = itemSystem?.activation?.cost;
-		if (activationCost?.type === 'action') {
-			await deductActionPips(actor!, activationCost.quantity ?? 1);
+		const actionCost = resolveItemActionCost(item as ItemWithActivationCost);
+		if (actionCost > 0) {
+			await deductActionPips(actor!, actionCost);
 		}
 	}
 

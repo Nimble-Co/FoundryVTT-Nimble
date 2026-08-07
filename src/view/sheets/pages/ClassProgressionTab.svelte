@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { NimbleClassItem } from '#documents/item/class.js';
 	import ClassProgressionLevelRow from '../components/ClassProgressionLevelRow.svelte';
+	import SourceTag from '#view/components/SourceTag.svelte';
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import { createClassProgressionTabState } from './ClassProgressionTab.state.svelte.js';
@@ -78,19 +79,7 @@
 							<img src={subclass.img} alt="" class="class-progression-tab__subclass-img" />
 							<span class="class-progression-tab__subclass-name">{subclass.name}</span>
 							{#if subclassTag}
-								<span
-									class="class-progression-tab__source-tag"
-									data-source={subclassTag}
-									data-tooltip={subclassTag === 'world'
-										? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
-										: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
-								>
-									{localize(
-										subclassTag === 'world'
-											? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
-											: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
-									)}
-								</span>
+								<SourceTag source={subclassTag} />
 							{/if}
 							{#if subclassTag === 'world'}
 								<button
@@ -180,19 +169,7 @@
 																></i>
 															</button>
 															{#if subclassFeatureTag}
-																<span
-																	class="class-progression-tab__source-tag"
-																	data-source={subclassFeatureTag}
-																	data-tooltip={subclassFeatureTag === 'world'
-																		? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
-																		: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
-																>
-																	{localize(
-																		subclassFeatureTag === 'world'
-																			? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
-																			: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
-																	)}
-																</span>
+																<SourceTag source={subclassFeatureTag} />
 															{/if}
 															{#if subclassFeatureTag === 'world'}
 																<button
@@ -318,19 +295,7 @@
 													<i class="fa-solid fa-external-link class-progression-tab__link-icon"></i>
 												</button>
 												{#if choiceTag}
-													<span
-														class="class-progression-tab__source-tag"
-														data-source={choiceTag}
-														data-tooltip={choiceTag === 'world'
-															? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
-															: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
-													>
-														{localize(
-															choiceTag === 'world'
-																? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
-																: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
-														)}
-													</span>
+													<SourceTag source={choiceTag} />
 												{/if}
 												{#if choiceTag === 'world'}
 													<button
@@ -582,7 +547,8 @@
 			}
 		}
 
-		&__feature-title-row &__source-tag {
+		// The badge is rendered by the shared SourceTag component, so it needs :global to reach.
+		&__feature-title-row :global(.nimble-source-tag) {
 			margin-left: auto;
 		}
 
@@ -734,28 +700,6 @@
 			font-size: var(--nimble-xxs-text);
 			color: var(--nimble-medium-text-color);
 			transition: color 0.15s ease;
-		}
-
-		&__source-tag {
-			display: inline-flex;
-			align-items: center;
-			padding: 0.0625rem 0.3125rem;
-			border-radius: 3px;
-			font-size: 0.5625rem;
-			font-weight: 700;
-			white-space: nowrap;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: white;
-			flex-shrink: 0;
-
-			&[data-source='world'] {
-				background: var(--nimble-badge-world-bg);
-			}
-
-			&[data-source='pack'] {
-				background: var(--nimble-badge-pack-bg);
-			}
 		}
 
 		&__feature-no-desc {

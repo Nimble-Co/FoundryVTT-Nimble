@@ -49,15 +49,6 @@ export interface FormulaInputProps {
 	dice?: boolean;
 }
 
-export interface DocumentPickerProps {
-	value: string;
-	onChange: (next: string) => void;
-	disabled?: boolean;
-	/** Restricts drop acceptance — e.g. `['Item']` or `['Item.spell']`. */
-	documentTypes?: string[];
-	placeholder?: string;
-}
-
 export interface RichTextEditorProps {
 	value: string;
 	onChange: (next: string) => void;
@@ -77,13 +68,22 @@ export interface PredicateBuilderProps {
 	 * parent actor — e.g. unowned compendium item).
 	 */
 	previewDomain?: Set<string>;
+	/**
+	 * Whether the owning rule applies during prePrepareData. Late domain tags
+	 * (CONFIG.NIMBLE.LATE_PREDICATE_KEYS) never match in that phase, so the
+	 * builder warns instead of showing a false preview.
+	 */
+	appliesInPrePrepareData?: boolean;
 }
 
 export interface RuleCardProps {
 	/** The reactive rule source object — typed loosely so the card stays generic. */
 	rule: Record<string, unknown>;
 	/** RulesManager instance bound to the parent item. */
-	manager: { updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown> };
+	manager: {
+		updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown>;
+		failureFor?: (id: string) => string | undefined;
+	};
 	/** Parent actor's tag domain, used to surface typeahead suggestions and a live
 	 *  match preview in `<PredicateBuilder>`. Undefined for unowned items. */
 	previewDomain?: Set<string>;

@@ -13,11 +13,7 @@ Documentation for the Nimble FoundryVTT system - covering gameplay mechanics, co
 
 ## For Users & GMs
 
-- How the character sheet works
-- Combat tracker and turn management
-- Chat cards and dice rolling
-- Rest and recovery
-- System settings and configuration
+User-facing documentation (how to play, run games, and homebrew content with the system) lives in the [Documentation section](../documentation/index.md).
 
 ## For Module Developers
 

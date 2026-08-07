@@ -1,0 +1,23 @@
+{
+	"name": "Bunny Legs",
+	"type": "ancestryBonus",
+	"img": "icons/creatures/mammals/rabbit-movement-glowing-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><strong>Bunny Legs</strong> </p><p>Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504596317,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "1cSW678NQBiWN5m4"
+}

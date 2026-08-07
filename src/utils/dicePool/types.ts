@@ -8,12 +8,16 @@ type DiceRefillMode = (typeof DicePoolRuleConfig.refillModes)[number];
 type DiceRestType = (typeof DicePoolRuleConfig.restTypes)[number];
 type DiceConsumptionMode = (typeof DicePoolRuleConfig.consumptionModes)[number];
 type DiceAttackDeliveryFilter = (typeof DicePoolRuleConfig.attackDeliveryFilters)[number];
+type DiceCardOfferTrigger = (typeof DicePoolRuleConfig.cardOfferTriggers)[number];
 type NumericInput = number | string | null | undefined;
 
 type DiceRefillEntry = {
 	trigger: DiceRefillTrigger;
 	mode: DiceRefillMode;
 	value: string;
+	/** Optional predicate tested against the actor's domain when the trigger
+	 *  fires (e.g. { self: 'raging' }). Absent or empty = always applies. */
+	predicate?: Record<string, unknown>;
 };
 
 type DicePoolState = {
@@ -27,6 +31,9 @@ type DicePoolState = {
 	max: number;
 	faces: number[];
 	icon?: string;
+	/** Minimum face value for dice rolled into this pool; rolls below it are
+	 *  raised to the floor. Absent or null = no floor. */
+	minFace?: number | null;
 	refills: DiceRefillEntry[];
 	consumption: DiceConsumptionMode;
 	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
@@ -61,6 +68,22 @@ type DiceConsumerRuleLike = {
 	mode?: string;
 	cost?: string;
 	bonusOnAttackDelivery?: string | null;
+	effectType?: string;
+	damageType?: string;
+	/** Set when the spend is offered on the attack card instead of the sheet */
+	cardOffer?: string | null;
+	/** Present on live rule instances; absent on raw source objects */
+	appliesTo?: () => boolean;
+};
+
+/** Payload of the `<system>.dicePool.requestSpend` hook, emitted when an item
+ *  with a manual diceConsumer is activated so the sheet can open the spend UI. */
+type DicePoolSpendRequestPayload = {
+	actorUuid: string;
+	itemId: string;
+	ruleId: string;
+	poolIdentifier: string;
+	poolScope: string;
 };
 
 type ModifyPoolRuleLike = {
@@ -71,6 +94,8 @@ type ModifyPoolRuleLike = {
 	poolIdentifier?: string;
 	dieSize?: string | null;
 	maxDelta?: string | null;
+	minFace?: number | null;
+	addRefills?: unknown;
 };
 
 type DicePoolRuleAny = DicePoolRuleLike & DiceConsumerRuleLike & ModifyPoolRuleLike;
@@ -88,6 +113,7 @@ type CharacterActorLike = Actor.Implementation & {
 export type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
+	DiceCardOfferTrigger,
 	DiceConsumerRuleLike,
 	DiceConsumptionMode,
 	DicePoolDefinition,
@@ -96,6 +122,7 @@ export type {
 	DicePoolRuleAny,
 	DicePoolRuleLike,
 	DicePoolScope,
+	DicePoolSpendRequestPayload,
 	DicePoolState,
 	DieSize,
 	DiceRefillEntry,

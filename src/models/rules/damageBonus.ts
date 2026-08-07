@@ -18,10 +18,6 @@ interface DamageBonusEntry {
 	targetCondition: RawPredicate | null;
 }
 
-/** Matches dice notation: 1d6, 2d8, 3d20+5, 1d4+@level, etc. Uses negative lookbehind
- *  to avoid matching identifiers like "id6" while still matching "1d6" and bare "d20". */
-const DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
-
 function schema() {
 	const { fields } = foundry.data;
 
@@ -81,12 +77,6 @@ declare namespace DamageBonusRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface ActorSystem {
-	system: {
-		damageBonuses?: DamageBonusEntry[];
-	};
-}
-
 /**
  * Rule that adds bonus damage to attacks, scoped by delivery method and source type.
  *
@@ -139,26 +129,6 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	}
 
 	/**
-	 * Check if the value contains dice notation (e.g. 1d6, 2d8+5).
-	 */
-	private isDiceFormula(): boolean {
-		return DICE_PATTERN.test(this.value);
-	}
-
-	/**
-	 * Push a bonus entry to the actor's damageBonuses array,
-	 * initializing the array if it doesn't exist.
-	 */
-	private pushBonus(entry: DamageBonusEntry): void {
-		const { actor } = this.item;
-		const actorSystem = actor as object as ActorSystem;
-		if (!actorSystem.system.damageBonuses) {
-			foundry.utils.setProperty(actor.system, 'damageBonuses', []);
-		}
-		actorSystem.system.damageBonuses!.push(entry);
-	}
-
-	/**
 	 * Apply the damage bonus to the actor.
 	 * Bonuses are pushed to an array so multiple rules stack correctly.
 	 * Dice-based values are stored as raw formulas; numeric values are resolved.
@@ -171,9 +141,9 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		const tc = this._targetCondition;
 		const targetConditionRaw = tc && tc.size > 0 ? tc.toObject() : null;
 
-		if (this.isDiceFormula()) {
+		if (this.isDiceExpression(this.value)) {
 			// Dice expression — store raw formula, don't resolve to a number
-			this.pushBonus({
+			this.pushToActorSystemArray<DamageBonusEntry>('damageBonuses', {
 				value: null,
 				formula: this.value,
 				damageType: this.damageType,
@@ -186,7 +156,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 			const resolvedValue = this.resolveFormula(this.value);
 			if (resolvedValue === null || resolvedValue <= 0) return;
 
-			this.pushBonus({
+			this.pushToActorSystemArray<DamageBonusEntry>('damageBonuses', {
 				value: resolvedValue,
 				formula: null,
 				damageType: this.damageType,

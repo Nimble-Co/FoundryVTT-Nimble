@@ -40,6 +40,33 @@ const schema = () => ({
 		nullable: false,
 		initial: {},
 	}),
+	levelUpOptions: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			rules: new fields.ArrayField(new fields.ObjectField({ required: true, nullable: false }), {
+				required: false,
+				nullable: false,
+				initial: () => [],
+			}),
+			selectionGroups: new fields.ArrayField(
+				new fields.StringField({ required: true, nullable: false }),
+				{ required: false, nullable: false, initial: () => [] },
+			),
+			selectionCount: new fields.NumberField({
+				required: false,
+				nullable: false,
+				initial: 1,
+				integer: true,
+				min: 1,
+			}),
+			applyAtLevels: new fields.ArrayField(
+				new fields.NumberField({ required: true, nullable: false, integer: true }),
+				{ required: false, nullable: false, initial: () => [] },
+			),
+		}),
+		{ required: false, nullable: false, initial: () => [] },
+	),
 });
 
 declare namespace NimbleFeatureData {
@@ -71,8 +98,18 @@ class NimbleFeatureData extends NimbleBaseItemData<
 
 	declare selectionCountByLevel: Record<string, number>;
 
+	declare levelUpOptions: Array<{
+		id: string;
+		label: string;
+		rules: Array<Record<string, unknown>>;
+		selectionGroups: string[];
+		selectionCount: number;
+		applyAtLevels: number[];
+	}>;
+
 	declare activation: {
 		showDescription: boolean;
+		skipRollDialog: boolean;
 		acquireTargetsFromTemplate: boolean;
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };

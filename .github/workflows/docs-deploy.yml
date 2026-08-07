@@ -5,6 +5,16 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      # Inputs to the generated reference pages (pnpm docs:generate)
+      - 'src/models/rules/**'
+      - 'src/settings/**'
+      - 'src/config.ts'
+      - 'src/config/**'
+      - 'src/hooks/init.ts'
+      - 'src/hooks/i18nInit.ts'
+      - 'public/lang/en.json'
+      - 'scripts/docs/**'
+      - 'vitest.docsGen.config.mts'
 
   workflow_dispatch:
 
@@ -33,7 +43,13 @@ jobs:
           cache: pnpm
           cache-dependency-path: docs/pnpm-lock.yaml
 
-      - name: Install dependencies
+      - name: Install system dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate reference pages
+        run: pnpm docs:generate
+
+      - name: Install docs dependencies
         run: pnpm install --frozen-lockfile
         working-directory: docs
 

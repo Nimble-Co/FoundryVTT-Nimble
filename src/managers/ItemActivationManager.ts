@@ -7,6 +7,7 @@ import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js'
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import { type AttackDelivery, attackDeliveryFromAttackType } from '../utils/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -14,11 +15,25 @@ import {
 } from '../utils/attackUtils.js';
 import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
-import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
+import { buildTargetDomain } from '../utils/conditionalBonuses.js';
+import {
+	maximizePoolDie,
+	rollDieIntoPool,
+	rollPoolFresh,
+	setPoolFaces,
+} from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import getRollFormula from '../utils/getRollFormula.js';
+import {
+	applyPostRollIncomingBehavior,
+	computeIncomingAttackPlan,
+	type IncomingAttackPlan,
+} from '../utils/incomingAttackModifiers.js';
+import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
+import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -28,6 +43,8 @@ const dependencies = {
 	DamageRoll,
 	getRollFormula,
 	reconstructEffectsTree,
+	ItemActivationConfigDialog,
+	SpellUpcastDialog,
 };
 
 export const testDependencies = dependencies;
@@ -62,6 +79,11 @@ class ItemActivationManager {
 
 	/** Result of spell upcasting, if applicable. */
 	upcastResult: UpcastResult | null = null;
+
+	/** Interactive incoming-attack reactions to stamp onto the chat card. */
+	#appliedIncomingReactions: IncomingReactionEntry[] = [];
+
+	#deferredPoolNodes: PoolNode[] = [];
 
 	/**
 	 * Creates a new ItemActivationManager.
@@ -108,62 +130,10 @@ class ItemActivationManager {
 			rollMode: options.rollMode ?? 0,
 		};
 
-		let dialogData: ItemActivationManager.DialogData;
+		const dialogData = await this.#resolveDialogData(rollOptions);
 
-		if (options.fastForward) {
-			dialogData = {
-				rollMode: options.rollMode ?? 0,
-				rollFormula: options.rollFormula,
-				primaryDieValue: options.primaryDieValue,
-				primaryDieModifier: options.primaryDieModifier,
-				rollHidden: options.rollHidden,
-			};
-		} else {
-			// Check if there are damage or healing effects that require rolling
-			const effects = this.activationData?.effects ?? [];
-			const hasRolls = flattenEffectsTree(effects).some(
-				(node) => node.type === 'damage' || node.type === 'healing',
-			);
-
-			// Check if this is a spell (for upcast dialog)
-			const isSpell = this.#item.type === 'spell';
-
-			if (hasRolls || isSpell) {
-				// Check if Alt is pressed to skip dialog
-				let altPressed = false;
-				const unsubscribe = keyPressStore.subscribe((state) => {
-					altPressed = state.alt;
-				});
-
-				if (altPressed) {
-					// Skip dialog, use default
-					dialogData = this.#getDefaultDialogData(rollOptions);
-				} else {
-					// Use spell dialog for spells, regular dialog for others
-					const DialogClass = isSpell ? SpellUpcastDialog : ItemActivationConfigDialog;
-
-					const dialog = new DialogClass(
-						this.actor,
-						this.#item,
-						`Activate ${this.#item.name}`,
-						rollOptions,
-					);
-					await dialog.render(true);
-					const result = await dialog.promise;
-					if (result) {
-						dialogData = result;
-					} else {
-						// If dialog is cancelled, don't roll
-						return { activation: null, rolls: null };
-					}
-				}
-
-				unsubscribe();
-			} else {
-				// No rolls needed, use default
-				dialogData = this.#getDefaultDialogData(rollOptions);
-			}
-		}
+		// If dialog is cancelled, don't roll
+		if (!dialogData) return { activation: null, rolls: null };
 
 		// Apply upcast deltas if present
 		if (dialogData.upcast && this.#item.type === 'spell') {
@@ -202,9 +172,14 @@ class ItemActivationManager {
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 		const targetDomain = this.#getFirstTargetDomain();
+		const incomingAttackPlan = computeIncomingAttackPlan(
+			this.#getFirstTargetToken(),
+			this.actor as OfferingActor,
+			{ delivery: this.#getAttackDelivery() },
+		);
 
 		let rolls: (Roll | DamageRoll)[] = [];
-		rolls = await this.#getRolls(dialogData, targetDomain);
+		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
 		// Persist consumption of pool dice the player spent in the dialog.
 		// The dialog already included their face value in rollFormula above.
@@ -214,7 +189,20 @@ class ItemActivationManager {
 		// Get template data
 		const _templateData = this.#getTemplateData();
 
-		return { rolls, activation: this.activationData, rollHidden: dialogData.rollHidden ?? false };
+		return {
+			rolls,
+			activation: this.activationData,
+			rollHidden: dialogData.rollHidden ?? false,
+			incomingReactions: this.#appliedIncomingReactions,
+		};
+	}
+
+	/**
+	 * How this activation reaches its target, read off `activationData` rather
+	 * than off the item so it reflects any upcast the manager already applied.
+	 */
+	#getAttackDelivery(): AttackDelivery {
+		return attackDeliveryFromAttackType(this.activationData?.targets?.attackType);
 	}
 
 	/**
@@ -225,7 +213,8 @@ class ItemActivationManager {
 	 * - Standard Roll for subsequent damage effects and all healing effects
 	 *
 	 * Special handling:
-	 * - Skips rolling for certain item types (ancestry, background, boon, class, subclass)
+	 * - Skips rolling for certain item types (ancestry, ancestryBonus, background, boon,
+	 *   class, subclass)
 	 * - Applies healing potion bonuses to consumable healing effects
 	 * - Minions cannot score critical hits
 	 *
@@ -235,14 +224,23 @@ class ItemActivationManager {
 	async #getRolls(
 		dialogData: ItemActivationManager.DialogData,
 		targetDomain?: Set<string>,
+		incomingAttackPlan?: IncomingAttackPlan,
 	): Promise<(Roll | DamageRoll)[]> {
-		if (['ancestry', 'background', 'boon', 'class', 'subclass'].includes(this.#item.type))
+		if (
+			['ancestry', 'ancestryBonus', 'background', 'boon', 'class', 'subclass'].includes(
+				this.#item.type,
+			)
+		)
 			return [];
 
 		const effects = this.activationData?.effects ?? [];
 		const updatedEffects: EffectNode[] = [];
 		const rolls: (Roll | DamageRoll)[] = [];
 		let foundDamageRoll = false;
+		// The primary damage node and its incoming-attack plan, resolved after the
+		// roll evaluates (automatic rerolls need the outcome).
+		let primaryDamageNode: EffectNode | null = null;
+		let primaryDamagePlan: IncomingAttackPlan | null = null;
 
 		// Check if item is a consumable (healing bonuses only apply to healing nodes, gated below)
 		const itemSystem = this.#item.system as { objectType?: string };
@@ -260,8 +258,7 @@ class ItemActivationManager {
 		// When attackType is empty (item has no attack), delivery is null and damage bonuses
 		// are skipped entirely — non-attack items (consumables, utilities) should not receive
 		// attack damage bonuses.
-		const attackType = this.activationData?.targets?.attackType;
-		const delivery = attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
+		const delivery = this.#getAttackDelivery();
 		// Source classification: spells are 'spell', everything else (weapons, monster features,
 		// class features) is 'weapon'. Monster features are physical attacks, not spells.
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
@@ -348,6 +345,29 @@ class ItemActivationManager {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}
 
+					// The target's incoming-attack rules only apply to actual attacks
+					// with a resolvable single target; an AoE roll is shared by every
+					// target, so one target's defensive rules must not modify it.
+					const incomingApplies = !isAoE && incomingAttackPlan != null;
+					if (incomingApplies) {
+						if (incomingAttackPlan.disadvantageCount > 0) {
+							const sources = Array.isArray(damageOptions.rollModeSources)
+								? [...damageOptions.rollModeSources]
+								: [damageOptions.rollMode];
+							for (let i = 0; i < incomingAttackPlan.disadvantageCount; i += 1) {
+								sources.push(-1);
+							}
+							damageOptions.rollModeSources = sources;
+						}
+						if (incomingAttackPlan.forceMiss) damageOptions.forceMiss = true;
+						if (incomingAttackPlan.appliedEntries.length > 0) {
+							(damageOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
+								incomingAttackPlan.appliedEntries;
+						}
+						primaryDamageNode = node;
+						primaryDamagePlan = incomingAttackPlan;
+					}
+
 					roll = new dependencies.DamageRoll(
 						formula,
 						this.actor!.getRollData() as DamageRoll.Data,
@@ -367,21 +387,102 @@ class ItemActivationManager {
 				}
 
 				await roll.evaluate();
+
+				// Resolve outcome-dependent incoming behavior for the primary damage
+				// roll: run any automatic reroll (e.g. "reroll incoming crits") and
+				// filter interactive offers whose trigger the outcome does not meet.
+				if (node === primaryDamageNode && primaryDamagePlan) {
+					const rollData = this.actor!.getRollData() as DamageRoll.Data;
+					const result = await applyPostRollIncomingBehavior(
+						roll as DamageRoll,
+						primaryDamagePlan,
+						async (formula, options) => {
+							const rerolled = new dependencies.DamageRoll(
+								formula,
+								rollData,
+								options as unknown as DamageRoll.Options,
+							);
+							await rerolled.evaluate();
+							return rerolled;
+						},
+					);
+					roll = result.roll;
+					if (result.discardedRoll) {
+						(node as { discardedRoll?: unknown }).discardedRoll = result.discardedRoll;
+					}
+					this.#appliedIncomingReactions = result.stampEntries;
+				}
+
 				node.roll = roll.toJSON() as Record<string, unknown>;
 				rolls.push(roll);
-			}
-
-			if (node.type === 'pool') {
-				await this.#applyPoolNode(node as PoolNode);
 			}
 
 			updatedEffects.push(node);
 		}
 
-		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
+		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
+		// specific type) rolls as its own damage effect: the primary roll carries
+		// a single damage type, so folding a differently-typed bonus into it would
+		// mislabel the bonus. Like the item's secondary damage nodes, these are
+		// plain Rolls (no crit/miss doubling). Untyped conditional damage is
+		// already folded into the first node via `rollFormula`.
+		for (const conditional of dialogData.conditionalDamages ?? []) {
+			const formula = conditional.formula?.trim();
+			if (!formula) continue;
+			const roll = new Roll(formula, this.actor!.getRollData()) as Roll;
+			await roll.evaluate();
+			updatedEffects.push(
+				createBonusDamageNode({
+					damageType: conditional.damageType,
+					formula,
+					roll: roll.toJSON() as Record<string, unknown>,
+				}),
+			);
+			rolls.push(roll);
+		}
+
+		// Pool nodes mutate actor state, so their application is deferred until
+		// the caller confirms the use is allowed (the preUseItem gate fires
+		// after getData). See applyDeferredPoolNodes().
+		//
+		// Enumerate from the FLAT list so no node can be missed: the tree
+		// reconstruction only re-parents children of damage/savingThrow nodes and
+		// silently drops the rest, so a pool node authored under any other parent
+		// would never be applied. Prefer the reconstructed clone whenever the tree
+		// kept it, because results must land on the objects the chat card
+		// serializes; nodes the tree dropped fall back to the flat node, which
+		// still applies even though it has nowhere to render.
+		//
+		// Rebuilding the tree here is also what reflects every roll added above
+		// back into the activation data.
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
+		const renderedNodesById = ItemActivationManager.#indexNodesById(
+			this.activationData.effects as EffectNode[],
+		);
+		this.#deferredPoolNodes = updatedEffects
+			.filter((node): node is PoolNode => node?.type === 'pool')
+			.map((node) => (renderedNodesById.get(node.id) as PoolNode | undefined) ?? node);
 
 		return rolls;
+	}
+
+	/** Depth-first walk of an effects tree, indexing every node by its id. */
+	static #indexNodesById(nodes: EffectNode[] | undefined): Map<string, EffectNode> {
+		const found = new Map<string, EffectNode>();
+		const walk = (node: EffectNode | null | undefined): void => {
+			if (!node) return;
+			if (node.id) found.set(node.id, node);
+			const branching = node as {
+				on?: Record<string, EffectNode[] | undefined>;
+				sharedRolls?: EffectNode[];
+			};
+			for (const children of Object.values(branching.on ?? {})) {
+				for (const child of children ?? []) walk(child);
+			}
+			for (const child of branching.sharedRolls ?? []) walk(child);
+		};
+		for (const node of nodes ?? []) walk(node);
+		return found;
 	}
 
 	/**
@@ -479,6 +580,21 @@ class ItemActivationManager {
 	}
 
 	/**
+	 * Apply the pool effect nodes collected during getData. Pool nodes carry
+	 * actor-state side effects, so they must not run until the caller has
+	 * cleared the preUseItem gate (which fires after getData); results are
+	 * recorded on the same node objects the activation data references, so
+	 * the chat card still renders them. Safe to call once per activation.
+	 */
+	async applyDeferredPoolNodes(): Promise<void> {
+		const nodes = this.#deferredPoolNodes;
+		this.#deferredPoolNodes = [];
+		for (const node of nodes) {
+			await this.#applyPoolNode(node);
+		}
+	}
+
+	/**
 	 * Apply a `pool` effect node: mutate a dice or charge pool on the source
 	 * actor as a side effect of item activation. Records the outcome on the
 	 * node itself so the chat-card renderer can display what happened.
@@ -487,6 +603,7 @@ class ItemActivationManager {
 	 *   dice  + rollDie   -> roll `value` dice into the pool (one at a time)
 	 *   dice  + rollPool  -> roll the full pool fresh (max dice)
 	 *   dice  + clear     -> empty the pool
+	 *   dice  + maximizeDie -> raise the lowest `value` faces to the die max
 	 *   charge + fillCount -> add `value` charges (clamped to max)
 	 *   charge + clear     -> set current to 0
 	 *
@@ -549,13 +666,25 @@ class ItemActivationManager {
 				return { faces: [] };
 			};
 
+			// Authors opt in to suppressing the roll helper's own chat card per
+			// effect node: set when the feature's activation card already
+			// displays the rolled faces (e.g. Rage). Defaults to false so
+			// existing data keeps emitting the standalone roll card.
+			const suppressChat = node.suppressChat === true;
+
 			if (node.action === 'rollDie') {
 				const before = readPool();
 				let applied = false;
+				// Capture every face that came up, including rolls that didn't
+				// land in the pool because it was at max. RAW (Berserker Rage):
+				// "If you are already at your max, roll as normal and decide
+				// which ones to keep." The chat card displays these so the
+				// player can see what was rolled.
+				const rolledFaces: number[] = [];
 				for (let i = 0; i < count; i += 1) {
-					const ok = await rollDieIntoPool(actor, poolId);
-					if (!ok) break;
-					applied = true;
+					const result = await rollDieIntoPool(actor, poolId, { suppressChat });
+					if (result.face !== null) rolledFaces.push(result.face);
+					if (result.applied) applied = true;
 				}
 				const after = readPool();
 				node.result = {
@@ -563,13 +692,13 @@ class ItemActivationManager {
 					poolLabel: after.label ?? before.label,
 					previousCount: before.faces.length,
 					newCount: after.faces.length,
-					rolledFaces: after.faces.slice(before.faces.length),
+					rolledFaces,
 				};
 				return;
 			}
 			if (node.action === 'rollPool') {
 				const before = readPool();
-				const ok = await rollPoolFresh(actor, poolId);
+				const ok = await rollPoolFresh(actor, poolId, { suppressChat });
 				const after = readPool();
 				node.result = {
 					applied: ok,
@@ -588,6 +717,19 @@ class ItemActivationManager {
 					poolLabel: before.label,
 					previousCount: before.faces.length,
 					newCount: 0,
+				};
+				return;
+			}
+			if (node.action === 'maximizeDie') {
+				const before = readPool();
+				const res = await maximizePoolDie(actor, poolId, count > 0 ? count : 1);
+				const after = readPool();
+				node.result = {
+					applied: res.changed,
+					...(res.changed ? {} : { skipReason: res.reason }),
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
 				};
 				return;
 			}
@@ -660,12 +802,83 @@ class ItemActivationManager {
 	}
 
 	/**
+	 * Resolves the dialog data for the activation, showing a configuration
+	 * dialog when one is required.
+	 *
+	 * @param rollOptions - The roll options to use as dialog defaults.
+	 * @returns The resolved dialog data, or null if the dialog was cancelled.
+	 */
+	async #resolveDialogData(
+		rollOptions: ItemActivationManager.RollOptions,
+	): Promise<ItemActivationManager.DialogData | null> {
+		const options = this.#options;
+
+		if (options.fastForward) {
+			return {
+				rollMode: options.rollMode ?? 0,
+				rollFormula: options.rollFormula,
+				primaryDieValue: options.primaryDieValue,
+				primaryDieModifier: options.primaryDieModifier,
+				rollHidden: options.rollHidden,
+				conditionalDamages: options.conditionalDamages,
+			};
+		}
+
+		// Check if there are damage or healing effects that require rolling
+		const effects = this.activationData?.effects ?? [];
+		const hasRolls = flattenEffectsTree(effects).some(
+			(node) => node.type === 'damage' || node.type === 'healing',
+		);
+
+		// Check if this is a spell (for upcast dialog)
+		const isSpell = this.#item.type === 'spell';
+
+		if (!hasRolls && !isSpell) {
+			// No rolls needed, use default
+			return this.#getDefaultDialogData(rollOptions);
+		}
+
+		// Holding Alt inverts the item's default dialog behavior
+		let altPressed = false;
+		const unsubscribe = keyPressStore.subscribe((state) => {
+			altPressed = state.alt;
+		});
+		unsubscribe();
+
+		const skipDialog = this.activationData?.skipRollDialog ? !altPressed : altPressed;
+
+		if (skipDialog) {
+			return this.#getDefaultDialogData(rollOptions);
+		}
+
+		// Use spell dialog for spells, regular dialog for others
+		const DialogClass = isSpell
+			? dependencies.SpellUpcastDialog
+			: dependencies.ItemActivationConfigDialog;
+
+		const dialog = new DialogClass(
+			this.actor,
+			this.#item,
+			`Activate ${this.#item.name}`,
+			rollOptions,
+		);
+		await dialog.render(true);
+		const result = await dialog.promise;
+		if (result) return result;
+
+		// If dialog is cancelled, don't roll
+		return null;
+	}
+
+	/**
 	 * Creates default dialog data when skipping the activation dialog.
 	 *
 	 * @param options - The roll options to use as defaults.
 	 * @returns Default dialog data based on the provided options.
 	 */
-	#getDefaultDialogData(options): ItemActivationManager.DialogData {
+	#getDefaultDialogData(
+		options: ItemActivationManager.RollOptions,
+	): ItemActivationManager.DialogData {
 		return {
 			...options,
 		};
@@ -681,15 +894,29 @@ class ItemActivationManager {
 	 * Hexbinder) are the intended use case per #579.
 	 */
 	#getFirstTargetDomain(): Set<string> | undefined {
-		const targets = game.user?.targets;
-		if (!targets || targets.size === 0) return undefined;
-
-		const firstTarget = targets.values().next().value as Token | undefined;
-		const targetActor = firstTarget?.actor as
-			| { getTargetDomain?: () => Set<string> }
+		const targetActor = this.#getFirstTargetToken()?.actor as
+			| ({ getTargetDomain?: () => Set<string> } & { uuid?: string })
 			| null
 			| undefined;
-		return targetActor?.getTargetDomain?.();
+		if (!targetActor) return undefined;
+
+		// Combines the target's own `target:*` tags with the relational
+		// `target:<flagKey>` tags (e.g. `target:quarry`) this attacker has placed on it,
+		// so toggle-effect predicates resolve only for the marking actor. Shared with the
+		// activation dialog's dialog-open snapshot via buildTargetDomain.
+		const attacker = this.actor as object as
+			| { getFlag(scope: string, key: string): unknown }
+			| null
+			| undefined;
+		return buildTargetDomain(attacker, targetActor);
+	}
+
+	/** Insertion-order first targeted token, matching #getFirstTargetDomain semantics. */
+	#getFirstTargetToken(): Token.Implementation | null {
+		const targets = game.user?.targets;
+		if (!targets || targets.size === 0) return null;
+
+		return (targets.values().next().value as Token.Implementation | undefined) ?? null;
 	}
 
 	/**
@@ -823,6 +1050,20 @@ namespace ItemActivationManager {
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
+		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
+		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+	}
+
+	/**
+	 * Resolved roll options used as dialog defaults.
+	 */
+	export interface RollOptions {
+		/** Domain tags describing the item being activated. */
+		domain: Set<string>;
+		/** Whether to execute the item's custom macro after activation. */
+		executeMacro: boolean;
+		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
+		rollMode: number;
 	}
 
 	/**
@@ -859,6 +1100,13 @@ namespace ItemActivationManager {
 		 * pool's current count after the roll succeeds.
 		 */
 		consumedChargePools?: Array<{ poolId: string; count: number }>;
+		/**
+		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
+		 * grants a specific damage type). Each becomes its own damage effect so the
+		 * chosen type applies, rather than being folded into the primary roll's type.
+		 * Untyped conditional damage is already baked into `rollFormula`.
+		 */
+		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
 	}
 }
 

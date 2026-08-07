@@ -2,6 +2,17 @@
 	import { getContext, setContext } from 'svelte';
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
 	import localize from '../../../utils/localize.js';
+	import ApplyDamageButton from './ApplyDamageButton.svelte';
+
+	/**
+	 * `groupNodes` collects every damage node of a card into one group, so a
+	 * group made up entirely of them is the card's damage. It gets a single
+	 * Apply Damage control: the GM applies the whole attack at once, which is
+	 * what lets the target's per-attack reductions resolve only once.
+	 */
+	function isDamageGroup(nodeGroup) {
+		return nodeGroup.every((node) => node.type === 'damage' || node.type === 'damageOutcome');
+	}
 
 	// Provide getNodeComponent via context to avoid circular dependencies
 	// (SavingThrowNode needs to render child nodes but can't import getNodeComponent directly)
@@ -29,6 +40,12 @@
 					</section>
 				{/if}
 			{/each}
+
+			{#if game.user?.isGM && isDamageGroup(nodeGroup)}
+				<section class="nimble-effect">
+					<ApplyDamageButton nodes={nodeGroup} />
+				</section>
+			{/if}
 		</section>
 	{/if}
 {:else}

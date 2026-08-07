@@ -2,8 +2,12 @@
 	import type { WeaponCardProps } from '../../../../types/components/WeaponCard.d.ts';
 	import localize from '../../../utils/localize.js';
 
+	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
+
 	let {
 		name,
+		actor = null,
+		pools = undefined,
 		image = null,
 		icon = 'fa-solid fa-sword',
 		damage = null,
@@ -13,6 +17,7 @@
 		disabled = false,
 		showImage = true,
 		itemId = null,
+		toggle = null,
 		onToggleDescription = null,
 		onclick,
 		ondragstart = null,
@@ -49,7 +54,12 @@
 		{/if}
 
 		<div class="weapon-card__content">
-			<span class="weapon-card__name">{name}</span>
+			<div class="weapon-card__header">
+				<span class="weapon-card__name">{name}</span>
+				{#if actor && itemId}
+					<ChargeIndicator {actor} {itemId} {pools} />
+				{/if}
+			</div>
 			{#if properties.length > 0}
 				<div class="weapon-card__meta">
 					{#each properties as prop}
@@ -64,6 +74,24 @@
 				<i class="fa-solid fa-burst"></i>
 				{damage}
 			</span>
+		{/if}
+
+		{#if toggle}
+			<button
+				type="button"
+				class="weapon-card__toggle"
+				class:weapon-card__toggle--on={toggle.enabled}
+				role="switch"
+				aria-checked={toggle.enabled}
+				aria-label={toggle.ariaLabel}
+				data-tooltip={toggle.ariaLabel}
+				onclick={(e) => {
+					e.stopPropagation();
+					void toggle.onClick(e);
+				}}
+			>
+				<i class={toggle.enabled ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off'}></i>
+			</button>
 		{/if}
 
 		{#if description && onToggleDescription}
@@ -157,6 +185,13 @@
 			min-width: 0;
 		}
 
+		&__header {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 0.375rem;
+		}
+
 		&__name {
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
@@ -195,6 +230,35 @@
 			i {
 				font-size: 0.875rem;
 				color: hsl(0, 60%, 50%);
+			}
+		}
+
+		&__toggle {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			background: transparent;
+			border: none;
+			cursor: pointer;
+			flex-shrink: 0;
+			color: var(--nimble-medium-text-color);
+			transition: color 0.15s ease;
+
+			i {
+				font-size: 1.25rem;
+			}
+
+			&:hover {
+				color: var(--nimble-dark-text-color);
+			}
+		}
+
+		&__toggle--on {
+			color: var(--nimble-weapon-toggle-on-color);
+
+			&:hover {
+				color: var(--nimble-weapon-toggle-on-color-hover);
 			}
 		}
 

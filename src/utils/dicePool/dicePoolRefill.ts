@@ -1,5 +1,9 @@
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
+import { isResourceRecoveryAutomationEnabled } from '../../settings/automationSettings.js';
+import localize from '../localize.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
+	applyFaceFloor,
 	areDicePoolMapsEqual,
 	buildEffectiveDicePoolMap,
 	dieSizeToMaxFace,
@@ -27,6 +31,42 @@ type RefilledEntry = {
 
 const POOL_MAX_TOKEN_PATTERN = /@poolMax\b/g;
 const POOL_CURRENT_TOKEN_PATTERN = /@poolCurrent\b/g;
+
+/**
+ * Shared eligibility gate for the automatic refill entry points: refill
+ * triggers only apply to character actors and only while resource-recovery
+ * automation is enabled. Manual and activation-driven pool operations
+ * (rollDieIntoPool, rollPoolFresh, maximizePoolDie, setPoolFaces) are not
+ * recovery automation and stay ungated, as does pool sync.
+ */
+function isEligibleForAutomaticRefill(
+	actor: Actor | null | undefined,
+): actor is CharacterActorLike {
+	return isCharacterActor(actor) && isResourceRecoveryAutomationEnabled();
+}
+
+/**
+ * Test a refill entry's optional predicate against the actor's live domain.
+ * Entries without a predicate (or with an empty one) always apply. A non-empty
+ * predicate is evaluated the same way rule predicates are: against the set of
+ * domain tags at the moment the trigger fires.
+ */
+function refillPredicatePasses(
+	actor: CharacterActorLike,
+	predicate: Record<string, unknown> | undefined,
+): boolean {
+	// Tolerate serialized Predicate-instance shapes from older stored state.
+	const raw = (
+		predicate && typeof predicate === 'object' && '_source' in predicate
+			? (predicate as { _source?: unknown })._source
+			: predicate
+	) as Record<string, unknown> | undefined;
+	if (!raw || Object.keys(raw).length < 1) return true;
+
+	const actorWithDomain = actor as unknown as { getDomain?: () => Set<string> };
+	const domain = actorWithDomain.getDomain?.() ?? new Set<string>();
+	return new Predicate(raw as RawPredicate).test(domain);
+}
 
 // Pool-context tokens (@poolMax, @poolCurrent) can't live in actor rollData
 // because the same actor can own multiple pools with different values. Inline
@@ -66,6 +106,7 @@ async function applyRefillTriggersToPools(
 
 		for (const refill of pool.refills) {
 			if (!triggerSet.has(refill.trigger)) continue;
+			if (!refillPredicatePasses(actor, refill.predicate)) continue;
 			matchingTrigger = refill.trigger;
 
 			if (refill.mode === 'clear') {
@@ -80,7 +121,7 @@ async function applyRefillTriggersToPools(
 			if (refill.mode === 'refresh') {
 				const needed = pool.max - pool.faces.length;
 				for (let index = 0; index < needed; index += 1) {
-					const face = await rollSingleDieFace(pool.dieSize);
+					const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 					pool.faces.push(face);
 					rolledFaces.push(face);
 				}
@@ -93,7 +134,7 @@ async function applyRefillTriggersToPools(
 				// 'set' rebuilds the pool to exactly `target` freshly-rolled dice.
 				pool.faces.length = 0;
 				for (let index = 0; index < target; index += 1) {
-					const face = await rollSingleDieFace(pool.dieSize);
+					const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 					pool.faces.push(face);
 					rolledFaces.push(face);
 				}
@@ -108,7 +149,7 @@ async function applyRefillTriggersToPools(
 				if (pool.faces.length > 0) continue;
 				const target = Math.min(amount, pool.max);
 				for (let index = 0; index < target; index += 1) {
-					const face = await rollSingleDieFace(pool.dieSize);
+					const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 					pool.faces.push(face);
 					rolledFaces.push(face);
 				}
@@ -119,7 +160,7 @@ async function applyRefillTriggersToPools(
 			const room = pool.max - pool.faces.length;
 			const toAdd = Math.max(0, Math.min(amount, room));
 			for (let index = 0; index < toAdd; index += 1) {
-				const face = await rollSingleDieFace(pool.dieSize);
+				const face = applyFaceFloor(await rollSingleDieFace(pool.dieSize), pool.minFace);
 				pool.faces.push(face);
 				rolledFaces.push(face);
 			}
@@ -151,7 +192,7 @@ async function applyRestRefill(
 	actor: Actor | null | undefined,
 	restType: DiceRestType,
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRefill(actor)) return;
 	const trigger: DiceRefillTrigger = restType === 'safe' ? 'safeRest' : 'fieldRest';
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
@@ -166,7 +207,7 @@ async function applyEncounterRefill(
 	actor: Actor | null | undefined,
 	encounterTrigger: 'encounterStart' | 'encounterEnd',
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRefill(actor)) return;
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const { nextPools, entries } = await applyRefillTriggersToPools(actor, currentPools, [
@@ -182,7 +223,7 @@ async function applyRefillToActorIfEligible(
 	actor: Actor | null | undefined,
 	trigger: DiceRefillTrigger,
 ): Promise<void> {
-	if (!isCharacterActor(actor)) return;
+	if (!isEligibleForAutomaticRefill(actor)) return;
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const { nextPools, entries } = await applyRefillTriggersToPools(actor, currentPools, [trigger]);
@@ -225,29 +266,52 @@ function emitRefillEvents(
  * activation-style "roll a die into the pool" (e.g. Berserker Rage adding a
  * Fury Die).
  */
+type RollDieIntoPoolResult = { applied: boolean; face: number | null };
+
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string } = {},
-): Promise<boolean> {
-	if (!isCharacterActor(actor)) return false;
-	if (typeof poolId !== 'string' || poolId.length < 1) return false;
+	options: { flavor?: string; suppressChat?: boolean } = {},
+): Promise<RollDieIntoPoolResult> {
+	if (!isCharacterActor(actor)) return { applied: false, face: null };
+	if (typeof poolId !== 'string' || poolId.length < 1) return { applied: false, face: null };
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const pool = currentPools[poolId];
-	if (!pool) return false;
-	if (pool.faces.length >= pool.max) return false;
+	if (!pool) return { applied: false, face: null };
 
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`1d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
+	const rolledFace = roll.total ?? 1;
+	const face = applyFaceFloor(rolledFace, pool.minFace);
 
-	const face = roll.total ?? 1;
+	if (!options.suppressChat) {
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		const baseFlavor = options.flavor ?? pool.label;
+		const flavor =
+			face !== rolledFace
+				? localize('NIMBLE.dicePoolTracker.raisedToFloor', {
+						flavor: baseFlavor,
+						rolled: String(rolledFace),
+						face: String(face),
+					})
+				: baseFlavor;
+		await roll.toMessage({
+			speaker: ChatMessageCls.getSpeaker({ actor }),
+			flavor,
+		});
+	}
+
+	// At max: the die is rolled (RAW: "If you are already at your max, roll as
+	// normal and decide which ones to keep") but the pool is untouched. The
+	// caller (and the chat card) gets the face so the player can see what
+	// came up. Per-pool "decide which to keep" semantics layer on top of this.
+	if (pool.faces.length >= pool.max) {
+		return { applied: false, face };
+	}
+
 	const previousFaces = [...pool.faces];
 	pool.faces = [...pool.faces, face];
 
@@ -263,7 +327,7 @@ async function rollDieIntoPool(
 		trigger: 'manual',
 	});
 
-	return true;
+	return { applied: true, face };
 }
 
 /**
@@ -275,7 +339,7 @@ async function rollDieIntoPool(
 async function rollPoolFresh(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string } = {},
+	options: { flavor?: string; suppressChat?: boolean } = {},
 ): Promise<boolean> {
 	if (!isCharacterActor(actor)) return false;
 	if (typeof poolId !== 'string' || poolId.length < 1) return false;
@@ -288,17 +352,20 @@ async function rollPoolFresh(
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`${pool.max}d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
+	if (!options.suppressChat) {
+		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
+			.ChatMessage;
+		await roll.toMessage({
+			speaker: ChatMessageCls.getSpeaker({ actor }),
+			flavor: options.flavor ?? pool.label,
+		});
+	}
 
 	const previousFaces = [...pool.faces];
 	const newFaces: number[] = [];
 	for (const die of roll.dice) {
 		for (const result of die.results) {
-			newFaces.push(result.result);
+			newFaces.push(applyFaceFloor(result.result, pool.minFace));
 		}
 	}
 	pool.faces = newFaces.slice(0, pool.max);
@@ -316,6 +383,86 @@ async function rollPoolFresh(
 	});
 
 	return true;
+}
+
+type MaximizePoolDieResult = {
+	changed: boolean;
+	/** Why nothing changed, for the chat card's skip label. */
+	reason?: 'unknownPool' | 'poolEmpty' | 'allAtMax';
+	/** Faces that were raised, in pool order, for callers that report the change. */
+	changes: Array<{ from: number; to: number }>;
+};
+
+/**
+ * Raise faces in a pool to the die's maximum face value, leaving the pool size
+ * untouched. Reports whether any face changed and, if not, why.
+ *
+ * By default the lowest `count` faces are chosen, which is always the optimal
+ * pick when nothing is choosing for the player. Pass `options.indices` to
+ * maximize an explicit set of faces instead, for flows where the player picks.
+ * Faces already at the maximum are never counted as a change.
+ */
+async function maximizePoolDie(
+	actor: Actor | null | undefined,
+	poolId: string,
+	count = 1,
+	options: { indices?: number[] } = {},
+): Promise<MaximizePoolDieResult> {
+	if (!isCharacterActor(actor)) return { changed: false, reason: 'unknownPool', changes: [] };
+	if (typeof poolId !== 'string' || poolId.length < 1) {
+		return { changed: false, reason: 'unknownPool', changes: [] };
+	}
+	const explicitIndices = options.indices;
+	const toMaximize = Math.max(0, Math.floor(count));
+	if (!explicitIndices && toMaximize < 1) {
+		return { changed: false, reason: 'poolEmpty', changes: [] };
+	}
+
+	const currentPools = buildEffectiveDicePoolMap(actor);
+	const pool = currentPools[poolId];
+	if (!pool) return { changed: false, reason: 'unknownPool', changes: [] };
+	if (pool.faces.length < 1) return { changed: false, reason: 'poolEmpty', changes: [] };
+
+	const maxFace = dieSizeToMaxFace(pool.dieSize);
+	const previousFaces = [...pool.faces];
+
+	const targetIndices = explicitIndices
+		? // Caller-chosen faces: keep only real, raisable indices, in pool order.
+			[...new Set(explicitIndices)]
+				.filter((index) => Number.isInteger(index) && index >= 0 && index < pool.faces.length)
+				.filter((index) => pool.faces[index] < maxFace)
+				.sort((a, b) => a - b)
+		: // Raise the lowest faces first; leave faces already at max untouched.
+			pool.faces
+				.map((face, index) => ({ face, index }))
+				.sort((a, b) => a.face - b.face)
+				.slice(0, toMaximize)
+				.filter(({ face }) => face < maxFace)
+				.map(({ index }) => index)
+				.sort((a, b) => a - b);
+
+	if (targetIndices.length < 1) return { changed: false, reason: 'allAtMax', changes: [] };
+
+	const newFaces = [...pool.faces];
+	for (const index of targetIndices) newFaces[index] = maxFace;
+	pool.faces = newFaces;
+
+	await persistDicePoolMap(actor, currentPools);
+
+	emitForCharacter(actor, 'changed', {
+		actor,
+		poolId,
+		poolLabel: pool.label,
+		previousFaces,
+		newFaces: [...pool.faces],
+		reason: 'manual',
+		trigger: 'manual',
+	});
+
+	return {
+		changed: true,
+		changes: targetIndices.map((index) => ({ from: previousFaces[index], to: maxFace })),
+	};
 }
 
 /**
@@ -364,6 +511,7 @@ export {
 	applyRefillToActorIfEligible,
 	applyRefillTriggersToPools,
 	applyRestRefill,
+	maximizePoolDie,
 	rollDieIntoPool,
 	rollPoolFresh,
 	setPoolFaces,
