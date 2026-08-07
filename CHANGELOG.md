@@ -6,6 +6,70 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.9] - 2026-08-06
+
+### Added
+
+- [#800] Choose between mutually exclusive class feature options at level up, with selection groups, fixed grants, and charge pool maximum bonuses. @trevlar
+- [#805] Add the toggleEffect foundation rule for features that switch an effect on and off. @tristin-albers @fronix
+- [#830] Automate Hunter's Mark with toggleEffect and conditionalBonus, including the marked condition and quarry targeting. @trevlar
+- [#833] Separate ancestry bonus traits into swappable ancestryBonus items, with their own compendium and a creation step to change them. @trevlar
+- [#848] Add a full user documentation section for GMs, players, and homebrewers, with auto-generated reference pages. @fronix
+- [#851] Add damage reduction rules and let manual dice consumers bank one-shot reduction, used by "That all you got?!". @fronix
+- [#854] Resolve duplicate class features with a comparison list instead of granting every copy. @trevlar
+- [#855] Add a half (resistance) damage reduction mode, honor monster resistances and immunities, and expire banked reduction. @fronix
+- [#856] Make suppressActivationCard editable per rule with auto, always, and never. @fronix
+- [#857] Add the skillRollMode rule type for skill check advantage and disadvantage. @fronix
+- [#859] Add the modifyIncomingAttack rule type, with automatic disadvantage and auto-miss plus interactive reroll and redirect offers. @fronix
+- [#861] Automate the Berserker: Fury Dice features, subclasses, and the supporting engine primitives. @fronix
+- [#864] Add the increaseDieSize upcast scaling operation for spells whose upcast steps the die size. @fronix
+- [#871] Apply resistances, vulnerabilities, and immunities in the damage pipeline, with a per-target breakdown. @fronix
+- [#875] Move wounds to an always-visible segmented track under the hit point bar. @fronix
+- [#876] Support zero-cost activations and show an activation cost label. @fronix
+- [#877] Add the actionCost rule to change what an activation costs. @fronix
+- [#878] Resolve heroic reaction costs through the actionCost rule, and confirm before activating with too few actions left. @fronix
+- [#879] Add the actionDelta rule to grant or dock actions, now or next turn. @fronix
+- [#880] Add the grantActivation rule so a feature can offer an immediate activation to allies from its chat card. @fronix
+- [#886] Add an automation settings group with per-family toggles. @fronix
+- [#887] Offer dice-consumer spends on the attack card and fold the result into that card's damage roll. @fronix
+- [#888] Filter card-side dice spends by attack delivery, melee or ranged. @fronix
+- [#889] Add a damage type to the dice-consumer card offer and surface typed bonus damage on hit cards. @fronix
+- [#890] Apply a card's damage in one pass, so flat and banked reductions resolve once per attack. @fronix
+- [#895] Automate the Commander's Coordinated Strike. @fronix
+- [#899] Add a size options control to the ancestry sheet and rework the player-facing size step. @trevlar
+- [#901] Add a per-item "Skip roll dialog" toggle. @fronix
+- [#904] Let a pool modifier contribute charge pool recoveries, so Coordinated Strike returns at encounter start. @fronix
+
+### Fixed
+
+- [#847] Apply banked dice-pool bonuses through monster armor, and preview per-target damage on the chat card. @fronix
+- [#850] Stop auto-consuming charges when an item has no chargeConsumer rule. @fronix
+- [#853] Let players roll initiative from their character sheet. @trevlar
+- [#858] Make self:fullHp an early tag and guard late-tag predicates. @fronix
+- [#860] Escape tags during the documentation build. @fronix
+- [#862] Resolve the modifyPool pool picker from poolType so charge pools appear in the dropdown. @fronix
+- [#866] Adjust the wording of the banked reduction note. @fronix
+- [#870] Resolve the Babele dependency from the package listing so it installs automatically. @fronix
+- [#872] Move the rolling dev release tag off the now-immutable latest-dev tag. @fronix
+- [#894] Stop cosmetic hit point feedback from aborting the update dispatch and freezing the sheet. @fronix
+- [#896] Fix action-economy defects found while live-testing the Commander, including all-allies grants that also fed the granter. @fronix
+- [#900] Apply conditions to the card's targets and record their source. @fronix
+- [#902] Make data-prep rules apply live and stop them applying twice. @fronix
+- [#905] Stop warning about level data the features tab cannot expect. @fronix
+
+### Changed
+
+- [#801] Update selection-group parent progression icons. @trevlar
+- [#824] Update the French system translation. @Eilirmwd
+- [#865] Skip the FoundryVTT registry publish for pre-releases. @fronix
+- [#867] Preserve release state when attaching build artifacts. @fronix
+- [#874] Cover the unsourced banked reduction label in tests. @fronix
+- [#895] Ship Coordinated Strike as a free action with its own use pools. @fronix
+- [#903] Add a release note generator command for contributors. @trevlar @fronix
+
+---
+
+
 ## [0.8.8] - 2026-07-10
 
 ### Added
