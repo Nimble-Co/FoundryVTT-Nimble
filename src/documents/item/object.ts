@@ -2,6 +2,7 @@ import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
 import getSpellScrollData from '#utils/getSpellScrollData.js';
 import knowsSpellSchool from '#utils/knowsSpellSchool.js';
 import localize from '#utils/localize.js';
+import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 
@@ -127,44 +128,90 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		const scroll = getSpellScrollData(this);
 		if (!scroll || options?.executeMacro) return super.activate(options);
 
-		const succeeded = await this.#rollScrollArcanaCheck(scroll.school);
+		const needsArcanaCheck = !knowsSpellSchool(
+			this.actor as { items?: Iterable<{ type: string; system?: unknown }> } | null,
+			scroll.school,
+		);
 
-		// The scroll is consumed on a failure too: the rules waste it.
-		if (!succeeded) {
-			await this.#consumeScroll();
-			return null;
+		// Nothing is spent until the player commits. When neither the Arcana check
+		// nor the spell's own rolls would raise a dialog there is nothing to
+		// confirm against, so ask outright — otherwise clicking the row would
+		// consume the scroll with no prompt at all.
+		if (!needsArcanaCheck && !this.#hasActivationRolls()) {
+			const confirmed = await this.#confirmScrollUse();
+			if (!confirmed) return null;
+		}
+
+		// The check gates the effect: a wielder who cannot read the scroll never
+		// casts the spell. Its own dialog is shown rather than skipped, and closing
+		// that dialog leaves the scroll untouched.
+		if (needsArcanaCheck) {
+			const outcome = await this.#rollScrollArcanaCheck();
+
+			if (outcome === 'cancelled') return null;
+			if (outcome === 'failed') {
+				await this.#consumeScroll();
+				return null;
+			}
 		}
 
 		const chatCard = await super.activate(options);
+
+		// Closing the activation dialog resolves to null. The scroll stays in the
+		// pack: it is spent on a roll or a failed check, never on a cancel.
+		if (!chatCard) return null;
+
 		await this.#consumeScroll();
 
 		return chatCard;
 	}
 
+	/** Whether the scroll's spell has anything to roll, and so raises a dialog. */
+	#hasActivationRolls(): boolean {
+		const effects = (this.system.activation?.effects ?? []) as Parameters<
+			typeof flattenEffectsTree
+		>[0];
+
+		return flattenEffectsTree(effects).some(
+			(node) => node.type === 'damage' || node.type === 'healing',
+		);
+	}
+
+	/** Asks before spending a scroll that would otherwise raise no dialog at all. */
+	async #confirmScrollUse(): Promise<boolean> {
+		return Boolean(
+			await foundry.applications.api.DialogV2.confirm({
+				window: { title: this.name ?? '' },
+				content: `<p>${localize('NIMBLE.spellScroll.confirmUse', { scroll: this.name ?? '' })}</p>`,
+				rejectClose: false,
+				modal: true,
+			}),
+		);
+	}
+
 	/**
-	 * Rolls the scroll's Arcana check when it is required, reporting the outcome
-	 * to chat. Returns whether the spell takes effect.
+	 * Rolls the scroll's DC 10 Arcana check through the normal skill-check flow, so
+	 * the wielder gets the Configure Arcana Skill Check dialog and can apply
+	 * situational modifiers rather than having a bare d20 thrown for them.
+	 *
+	 * Closing that dialog reports `cancelled`, and the caller leaves the scroll
+	 * alone — a check the player never agreed to must not spend anything.
 	 */
-	async #rollScrollArcanaCheck(school: string): Promise<boolean> {
+	async #rollScrollArcanaCheck(): Promise<'passed' | 'failed' | 'cancelled'> {
 		const actor = this.actor as
 			| (Actor & {
 					rollSkillCheck?: (
 						skillKey: 'arcana',
-						options: { skipRollDialog?: boolean },
+						options?: Record<string, unknown>,
 					) => Promise<{ roll: { total?: number | null } | null }>;
 			  })
 			| null;
 
-		// No actor to roll against, or the wielder already knows the school.
-		if (!actor?.rollSkillCheck) return true;
-		if (
-			knowsSpellSchool(actor as { items?: Iterable<{ type: string; system?: unknown }> }, school)
-		) {
-			return true;
-		}
+		// Nothing to roll against, so the scroll simply works.
+		if (!actor?.rollSkillCheck) return 'passed';
 
-		const { roll } = await actor.rollSkillCheck('arcana', { skipRollDialog: true });
-		if (!roll) return false;
+		const { roll } = await actor.rollSkillCheck('arcana');
+		if (!roll) return 'cancelled';
 
 		const succeeded = (roll.total ?? 0) >= SPELL_SCROLL_ARCANA_DC;
 
@@ -179,7 +226,7 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 			),
 		} as ChatMessage.CreateData);
 
-		return succeeded;
+		return succeeded ? 'passed' : 'failed';
 	}
 
 	/** Spends one use of the scroll, deleting it when the last one is gone. */

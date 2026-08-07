@@ -3278,7 +3278,8 @@
 				"arcanaSuccess": "Arcana check succeeded — the scroll takes effect.",
 				"arcanaFailure": "Arcana check failed — the scroll is wasted.",
 				"consumed": "{scroll} was consumed."
-			}
+			},
+			"confirmUse": "Use {scroll}? This will consume the scroll."
 		}
 	}
 }
