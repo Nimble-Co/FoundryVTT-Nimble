@@ -2,6 +2,7 @@
 	import type { SpellScrollDialogProps } from '#types/components/SpellScrollDialog.d.ts';
 
 	import localize from '#utils/localize.js';
+	import nextDialogId from '#utils/nextDialogId.js';
 
 	let {
 		dialog,
@@ -20,6 +21,10 @@
 	}: SpellScrollDialogProps = $props();
 
 	const { spellSchools, spellSchoolIcons } = CONFIG.NIMBLE;
+
+	// Radio groups need a name unique to this dialog instance, so two open copies
+	// cannot steal each other's selection.
+	const dialogId = `spell-scroll-${nextDialogId()}`;
 
 	// ── Chooser state ────────────────────────────────────────────────────────
 	// Defaults to the spell list so Enter reproduces the behaviour the sheet had
@@ -120,68 +125,91 @@
 
 		<label
 			class="nimble-spell-scroll-dialog__choice"
-			class:is-selected={destination === 'spellList'}
+			class:nimble-spell-scroll-dialog__choice--selected={destination === 'spellList'}
 		>
-			<input type="radio" name="destination" value="spellList" bind:group={destination} />
+			<input
+				class="nimble-spell-scroll-dialog__input"
+				type="radio"
+				name="{dialogId}-spell-scroll-destination"
+				value="spellList"
+				bind:group={destination}
+			/>
 
-			<span class="nimble-spell-scroll-dialog__choice-body">
+			<span class="nimble-spell-scroll-dialog__choice-header">
+				<i class="nimble-spell-scroll-dialog__choice-icon fa-solid fa-wand-sparkles"></i>
 				<span class="nimble-spell-scroll-dialog__choice-title">
 					{localize('NIMBLE.spellScroll.dialog.addToSpellList')}
 				</span>
-				<span class="nimble-spell-scroll-dialog__choice-hint">{manaCostLabel}</span>
-
-				<dl class="nimble-spell-scroll-dialog__facts">
-					<dt>{localize('NIMBLE.spellScroll.dialog.labelUpcasting')}</dt>
-					<dd>{upcastLabel}</dd>
-				</dl>
-
-				{#if !hasMana && tier > 0}
-					<span class="nimble-spell-scroll-dialog__warning">
-						<i class="fa-solid fa-triangle-exclamation"></i>
-						{localize('NIMBLE.spellScroll.dialog.noManaWarning', { actor: actorName })}
-					</span>
-				{/if}
 			</span>
+
+			<span class="nimble-spell-scroll-dialog__choice-hint">{manaCostLabel}</span>
+
+			<dl class="nimble-spell-scroll-dialog__facts">
+				<dt>{localize('NIMBLE.spellScroll.dialog.labelUpcasting')}</dt>
+				<dd>{upcastLabel}</dd>
+			</dl>
+
+			{#if !hasMana && tier > 0}
+				<span class="nimble-spell-scroll-dialog__warning">
+					<i class="fa-solid fa-triangle-exclamation"></i>
+					{localize('NIMBLE.spellScroll.dialog.noManaWarning', { actor: actorName })}
+				</span>
+			{/if}
+
+			<span class="nimble-spell-scroll-dialog__indicator"></span>
 		</label>
 
-		<label class="nimble-spell-scroll-dialog__choice" class:is-selected={destination === 'scroll'}>
-			<input type="radio" name="destination" value="scroll" bind:group={destination} />
+		<label
+			class="nimble-spell-scroll-dialog__choice"
+			class:nimble-spell-scroll-dialog__choice--selected={destination === 'scroll'}
+		>
+			<input
+				class="nimble-spell-scroll-dialog__input"
+				type="radio"
+				name="{dialogId}-spell-scroll-destination"
+				value="scroll"
+				bind:group={destination}
+			/>
 
-			<span class="nimble-spell-scroll-dialog__choice-body">
+			<span class="nimble-spell-scroll-dialog__choice-header">
+				<i class="nimble-spell-scroll-dialog__choice-icon fa-solid fa-scroll"></i>
 				<span class="nimble-spell-scroll-dialog__choice-title">
 					{localize('NIMBLE.spellScroll.dialog.addAsScroll')}
 				</span>
-				<span class="nimble-spell-scroll-dialog__choice-hint">
-					{localize('NIMBLE.spellScroll.dialog.addAsScrollHint')}
-				</span>
-
-				<dl class="nimble-spell-scroll-dialog__facts">
-					<dt>{localize('NIMBLE.spellScroll.dialog.labelTier')}</dt>
-					<dd>
-						{tierLabel}
-						{#if school}
-							· {schoolLabel(school)}
-						{/if}
-					</dd>
-
-					<dt>{localize('NIMBLE.spellScroll.dialog.labelValue')}</dt>
-					<dd>{scrollPrice} gp</dd>
-
-					{#if activationSummary}
-						<dt>{localize('NIMBLE.spellScroll.dialog.labelCasting')}</dt>
-						<dd>{activationSummary}</dd>
-					{/if}
-
-					<dt>{localize('NIMBLE.spellScroll.dialog.labelArcana')}</dt>
-					<dd>{arcanaLabel}</dd>
-
-					<dt>{localize('NIMBLE.spellScroll.dialog.labelUpcasting')}</dt>
-					<dd>{localize('NIMBLE.spellScroll.dialog.upcastFixed', { tier: String(tier) })}</dd>
-
-					<dt>{localize('NIMBLE.spellScroll.dialog.labelInventory')}</dt>
-					<dd>{localize('NIMBLE.spellScroll.dialog.sharesSlot')}</dd>
-				</dl>
 			</span>
+
+			<span class="nimble-spell-scroll-dialog__choice-hint">
+				{localize('NIMBLE.spellScroll.dialog.addAsScrollHint')}
+			</span>
+
+			<dl class="nimble-spell-scroll-dialog__facts">
+				<dt>{localize('NIMBLE.spellScroll.dialog.labelTier')}</dt>
+				<dd>
+					{tierLabel}
+					{#if school}
+						· {schoolLabel(school)}
+					{/if}
+				</dd>
+
+				<dt>{localize('NIMBLE.spellScroll.dialog.labelValue')}</dt>
+				<dd>{scrollPrice} gp</dd>
+
+				{#if activationSummary}
+					<dt>{localize('NIMBLE.spellScroll.dialog.labelCasting')}</dt>
+					<dd>{activationSummary}</dd>
+				{/if}
+
+				<dt>{localize('NIMBLE.spellScroll.dialog.labelArcana')}</dt>
+				<dd>{arcanaLabel}</dd>
+
+				<dt>{localize('NIMBLE.spellScroll.dialog.labelUpcasting')}</dt>
+				<dd>{localize('NIMBLE.spellScroll.dialog.upcastFixed', { tier: String(tier) })}</dd>
+
+				<dt>{localize('NIMBLE.spellScroll.dialog.labelInventory')}</dt>
+				<dd>{localize('NIMBLE.spellScroll.dialog.sharesSlot')}</dd>
+			</dl>
+
+			<span class="nimble-spell-scroll-dialog__indicator"></span>
 		</label>
 	{:else}
 		<p class="nimble-spell-scroll-dialog__prompt">
@@ -335,38 +363,97 @@
 			color: var(--nimble-medium-text-color);
 		}
 
+		// Mirrors .rest-type-card in FieldRestDialog.svelte, the house pattern for a
+		// binary choice in a dialog: the native radio is hidden, the whole label is
+		// the control, and a corner dot marks the selection.
+		//
+		// The accent comes from the --nimble-action-info-* tokens rather than the
+		// literal amber FieldRestDialog hardcodes, because those tokens carry proper
+		// .theme-dark values and the hardcoded ones do not.
 		&__choice {
-			display: grid;
-			grid-template-columns: auto 1fr;
-			gap: 0 0.625rem;
-			align-items: start;
-			padding: 0.625rem 0.75rem;
-			background: var(--nimble-card-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 3px;
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			min-width: 0;
+			padding: 0.75rem;
+			background: var(--nimble-box-background-color);
+			border: 2px solid var(--nimble-card-border-color);
+			border-radius: 6px;
 			cursor: pointer;
+			transition: var(--nimble-standard-transition);
 
-			&.is-selected {
-				border-color: var(--nimble-secondary-navigation-active-text-color);
-				box-shadow: 0 0 0 1px var(--nimble-secondary-navigation-active-text-color);
+			&:hover:not(&--selected) {
+				border-color: var(--nimble-accent-color);
+			}
+
+			&--selected {
+				background: var(--nimble-action-info-background);
+				border-color: var(--nimble-action-info-border-color);
+				box-shadow: inset 0 0 0 1px var(--nimble-action-info-border-color);
 			}
 		}
 
-		&__choice-body {
+		// Hidden, not removed: the label still needs a real radio behind it for
+		// keyboard traversal, arrow-key group navigation and form semantics.
+		&__input {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		&__indicator {
+			position: absolute;
+			top: 0.5rem;
+			right: 0.5rem;
+			width: 0.625rem;
+			height: 0.625rem;
+			background: transparent;
+			border: 2px solid transparent;
+			border-radius: 50%;
+			transition: var(--nimble-standard-transition);
+
+			.nimble-spell-scroll-dialog__choice--selected & {
+				background: var(--nimble-action-info-icon-color);
+				border-color: var(--nimble-action-info-border-color);
+			}
+		}
+
+		&__choice-header {
 			display: flex;
-			flex-direction: column;
-			gap: 0.125rem;
-			min-width: 0;
+			gap: 0.5rem;
+			align-items: center;
+			// Leave room for the indicator dot.
+			padding-inline-end: 1rem;
+		}
+
+		&__choice-icon {
+			flex-shrink: 0;
+			font-size: var(--nimble-md-text);
+			color: var(--nimble-medium-text-color);
+			transition: var(--nimble-standard-transition);
+
+			.nimble-spell-scroll-dialog__choice--selected & {
+				color: var(--nimble-action-info-icon-color);
+			}
 		}
 
 		&__choice-title {
-			font-size: var(--nimble-md-text);
-			font-weight: 700;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+			transition: var(--nimble-standard-transition);
+
+			.nimble-spell-scroll-dialog__choice--selected & {
+				color: var(--nimble-action-info-text-color);
+			}
 		}
 
 		&__choice-hint {
 			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
+			font-weight: 500;
+			line-height: 1.45;
+			color: var(--nimble-dark-text-color);
 		}
 
 		&__warning {
@@ -389,7 +476,8 @@
 			display: grid;
 			grid-template-columns: auto 1fr;
 			gap: 0.125rem 0.75rem;
-			margin: 0.375rem 0 0;
+			// The choice card supplies vertical rhythm through its own flex gap.
+			margin: 0;
 			padding-block-start: 0.5rem;
 			border-block-start: 1px solid var(--nimble-card-border-color);
 			font-size: var(--nimble-sm-text);
@@ -420,10 +508,9 @@
 			padding: 0.4375rem 0;
 			background: none;
 			border: 0;
-			border-inline-end: var(
-				--nimble-secondary-navigation-item-border,
-				1px solid rgba(120, 100, 82, 0.5)
-			);
+			// The shipped secondary nav hardcodes a warm tan divider with no dark
+			// variant; the card border token adapts to both themes.
+			border-inline-end: 1px solid var(--nimble-card-border-color);
 			border-radius: 0;
 			color: var(--nimble-secondary-navigation-text-color);
 			cursor: pointer;
@@ -461,8 +548,9 @@
 			border-radius: 3px;
 
 			&.is-selected {
-				border-color: var(--nimble-secondary-navigation-active-text-color);
-				box-shadow: 0 0 0 1px var(--nimble-secondary-navigation-active-text-color);
+				background: var(--nimble-action-info-background);
+				border-color: var(--nimble-action-info-border-color);
+				box-shadow: inset 0 0 0 1px var(--nimble-action-info-border-color);
 			}
 		}
 
