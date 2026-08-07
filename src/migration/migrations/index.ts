@@ -40,3 +40,4 @@ export { Migration039CommanderEncounterGate } from './Migration039CommanderEncou
 export { Migration040CommanderHiddenGatePools } from './Migration040CommanderHiddenGatePools.js';
 export { Migration041CommanderInitiativeRegain } from './Migration041CommanderInitiativeRegain.js';
 export { Migration042AoETemplateFlags } from './Migration042AoETemplateFlags.js';
+export { Migration043SpellScrollsShareASlot } from './Migration043SpellScrollsShareASlot.js';
