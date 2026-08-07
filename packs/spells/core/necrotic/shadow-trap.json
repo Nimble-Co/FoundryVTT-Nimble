@@ -27,6 +27,18 @@
 					"condition": "concentration",
 					"parentContext": null,
 					"parentNode": null
+				},
+				{
+					"id": "tMyTaEsCtivi63VN",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "3d12",
+					"deferredRoll": true,
+					"canCrit": false,
+					"canMiss": false,
+					"ignoreArmor": false,
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
