@@ -5,6 +5,7 @@ import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
+import { buildDeferredDamagePatch } from '#utils/buildDeferredDamagePatch.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -958,6 +959,57 @@ class NimbleChatMessage extends ChatMessage {
 		return this.update({
 			system: { targets: [...targets] },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+	}
+
+	/** Whether this client may press the card's Roll Damage button. */
+	canRollDeferredDamage(): boolean {
+		if (!this.isActivationCard()) return false;
+		return game.user?.isGM === true || this.author?.id === game.user?.id;
+	}
+
+	/**
+	 * Roll a damage node the activation deliberately left unrolled, and put the
+	 * result on the card so Apply Damage picks it up like any other packet.
+	 *
+	 * A plain Roll, never a DamageRoll: deferred damage is a trap going off, not
+	 * an attack, so it neither crits nor misses, and `foldBonusIntoPrimaryDamage`
+	 * and `resolveForceRerollReaction` both find their target by
+	 * `class === 'DamageRoll'` — this roll is neither of their business.
+	 *
+	 * Runs on the clicking client rather than being routed to the primary GM the
+	 * way the incoming-reaction resolvers are: a chat message is updatable by its
+	 * author or a GM, and the button is offered to nobody else. Two of them
+	 * clicking in the same instant can each append a roll to `rolls`, but the
+	 * node keeps whichever landed last and the node's roll is the only one the
+	 * card renders or applies.
+	 */
+	async rollDeferredDamage(nodeId: string): Promise<void> {
+		if (!this.canRollDeferredDamage()) return;
+
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
+		const node = flattenEffectsTree((activation.effects ?? []) as EffectNode[]).find(
+			(candidate) => candidate.id === nodeId,
+		);
+		if (node?.type !== 'damage' || !node.deferredRoll || node.roll?.class) return;
+
+		const speakerActorId = this.speaker?.actor;
+		const actor = speakerActorId ? (game.actors?.get(speakerActorId) ?? null) : null;
+		const roll = new Roll(node.formula || '0', actor?.getRollData() ?? {});
+		await roll.evaluate();
+
+		const patched = buildDeferredDamagePatch(
+			activation,
+			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			nodeId,
+			roll.toJSON() as unknown as Record<string, unknown>,
+		);
+		if (!patched) return;
+
+		await this.update({
+			rolls: patched.rolls,
+			system: { activation: patched.activation },
+		} as Record<string, unknown>);
 	}
 
 	/**
