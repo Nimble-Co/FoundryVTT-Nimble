@@ -2,6 +2,10 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import createScrollFromSpell from '#utils/createScrollFromSpell.js';
+import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
+import openSpellScrollDialog from '#view/dialogs/openSpellScrollDialog.js';
+import shouldIncludeSpellDescriptionOnScrolls from '../../settings/spellScrollSettings.js';
 import {
 	getDroppedItemFlashIds,
 	type SheetDropItemFlashState,
@@ -150,13 +154,118 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			return result;
 		}
 
+		// A dropped spell asks whether to learn it or inscribe it onto a scroll, and
+		// a dropped scroll template asks which spell it carries. Both are asked
+		// regardless of which tab is open.
+		const scrollItems = await this.#resolveSpellScrollDrop(items);
+		if (scrollItems === null) return false;
+
 		// Create regular items
-		const result = await this._actor.createEmbeddedDocuments('Item', items);
-		if (Array.isArray(result) && result.length > 0) {
-			this.#requestPrimaryTabForDroppedItems(items);
-			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
-		}
+		const itemsToCreate = scrollItems ?? items;
+		const result = await this._actor.createEmbeddedDocuments(
+			'Item',
+			itemsToCreate as unknown as ReturnType<Item.Implementation['toObject']>[],
+		);
+		this.#announceCreatedItems(itemsToCreate, result);
 		return result;
+	}
+
+	/**
+	 * Routes a dropped spell or scroll template through the spell scroll dialog.
+	 *
+	 * Returns the item data to create in place of the drop, `undefined` when the
+	 * drop is not scroll-related and should proceed untouched, or `null` when the
+	 * player cancelled and nothing should be created.
+	 */
+	async #resolveSpellScrollDrop(
+		items: Array<Record<string, unknown>>,
+	): Promise<Array<Record<string, unknown>> | undefined | null> {
+		const actor = this._actor as object as Parameters<typeof openSpellScrollDialog>[0]['actor'];
+
+		const template = items.length === 1 ? getSpellScrollTemplateTier(items[0]) : null;
+		if (template !== null) {
+			const result = await openSpellScrollDialog({
+				mode: 'picker',
+				actor,
+				tier: template,
+				scrollName: String(items[0].name ?? ''),
+			});
+			if (!result?.spellUuid) return null;
+
+			const spell = await fromUuid(result.spellUuid as Parameters<typeof fromUuid>[0]);
+			if (!spell) return null;
+
+			return [
+				createScrollFromSpell(spell as object, {
+					includeSpellDescription: shouldIncludeSpellDescriptionOnScrolls(),
+				}),
+			];
+		}
+
+		const spells = items.filter((item) => item.type === 'spell');
+		if (spells.length === 0) return undefined;
+		// A drop mixing spells with other item types keeps the untouched path
+		// rather than asking a question that only applies to part of it.
+		if (spells.length !== items.length) return undefined;
+
+		// A batch asks once and applies the answer to every spell in it; asking
+		// per item would be unusable for a GM dragging a folder onto an NPC.
+		const result = await openSpellScrollDialog({
+			mode: 'chooser',
+			actor,
+			spell: spells[0],
+			batchCount: spells.length,
+		});
+		if (!result) return null;
+		if (result.destination !== 'scroll') return undefined;
+
+		const includeSpellDescription = shouldIncludeSpellDescriptionOnScrolls();
+		return spells.map((spell) =>
+			createScrollFromSpell(spell as object, { includeSpellDescription }),
+		);
+	}
+
+	/**
+	 * Switches to the tab the created items landed on and flashes them.
+	 *
+	 * The tab comes from what was *created*, not what was dropped, so a spell
+	 * inscribed onto a scroll takes the player to the inventory rather than
+	 * yanking them to the spells tab.
+	 *
+	 * A `smallSized` object whose name matches one already carried is absorbed
+	 * into that stack by `NimbleObjectItem#_preCreate`, which creates no document.
+	 * Two identical scrolls hit that path, so the existing row is flashed instead
+	 * of nothing.
+	 */
+	#announceCreatedItems(requestedItems: Array<Record<string, unknown>>, result: unknown): void {
+		const created = Array.isArray(result) ? result : [];
+
+		if (created.length > 0) {
+			this.#requestPrimaryTabForDroppedItems(created as Array<{ type?: unknown }>);
+			this.#requestDroppedItemFlash(
+				this.#extractDroppedItemIds(created as Array<{ id?: unknown; _id?: unknown }>),
+			);
+			return;
+		}
+
+		const absorbedIds = requestedItems
+			.map((item) => this.#findStackedItemId(item))
+			.filter((itemId): itemId is string => itemId !== null);
+		if (absorbedIds.length === 0) return;
+
+		this.#requestPrimaryTabForDroppedItems(requestedItems as Array<{ type?: unknown }>);
+		this.#requestDroppedItemFlash(absorbedIds);
+	}
+
+	/** Id of the existing item a stacking create was folded into, if any. */
+	#findStackedItemId(item: Record<string, unknown>): string | null {
+		if (item.type !== 'object') return null;
+
+		const existing = this._actor.items.find(
+			(candidate) => candidate.type === 'object' && candidate.name === item.name,
+		);
+
+		return existing?.id ?? null;
 	}
 
 	async _onDropSubclassCreate(itemData: DroppedItemData | DroppedItemData[]) {

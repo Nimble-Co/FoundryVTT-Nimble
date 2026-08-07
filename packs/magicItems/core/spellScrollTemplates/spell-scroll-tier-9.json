@@ -42,8 +42,8 @@
 		"objectType": "consumable",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
-		"slotsRequired": 1,
+		"objectSizeType": "smallSized",
+		"slotsRequired": 0,
 		"stackSize": 2,
 		"properties": {
 			"range": {
