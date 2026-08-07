@@ -4,6 +4,7 @@ import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
+import { offersVariantChoice } from '../../../utils/ancestryVariants.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
@@ -109,24 +110,33 @@ function ancestryOffersSizeChoice(ancestry: NimbleAncestryItem | null): boolean 
 	return offersSizeChoice(ancestry?.system?.size, Object.keys(CONFIG.NIMBLE.sizeCategories));
 }
 
+/** Likewise the variant step: an ancestry covering a single kind of people lists no variants. */
+function ancestryOffersVariantChoice(ancestry: NimbleAncestryItem | null): boolean {
+	return offersVariantChoice(ancestry?.system?.variants);
+}
+
 function hasAncestryOptions(
 	ancestry: NimbleAncestryItem | null,
 	ancestryBonus: NimbleAncestryBonusItem | null,
 ): boolean {
+	const hasVariantChoice = ancestryOffersVariantChoice(ancestry);
 	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
-	return hasSizeChoice || hasSaveChoice;
+	return hasVariantChoice || hasSizeChoice || hasSaveChoice;
 }
 
 function ancestryOptionsComplete(
 	ancestry: NimbleAncestryItem | null,
 	ancestryBonus: NimbleAncestryBonusItem | null,
+	selectedAncestryVariant: string | null,
 	selectedAncestrySize: string | null,
 	selectedAncestrySave: string | null,
 ): boolean {
+	const hasVariantChoice = ancestryOffersVariantChoice(ancestry);
 	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
 
+	if (hasVariantChoice && !selectedAncestryVariant) return false;
 	if (hasSizeChoice && !selectedAncestrySize) return false;
 	if (hasSaveChoice && !selectedAncestrySave) return false;
 
@@ -174,6 +184,7 @@ interface GetCurrentStageParams {
 	selectedAncestry: NimbleAncestryItem | null;
 	selectedAncestryBonus: NimbleAncestryBonusItem | null;
 	ancestryBonusConfirmed: boolean;
+	selectedAncestryVariant: string | null;
 	selectedAncestrySize: string | null;
 	selectedAncestrySave: string | null;
 	selectedBackground: NimbleBackgroundItem | null;
@@ -201,6 +212,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		selectedAncestry,
 		selectedAncestryBonus,
 		ancestryBonusConfirmed,
+		selectedAncestryVariant,
 		selectedAncestrySize,
 		selectedAncestrySave,
 		selectedBackground,
@@ -269,6 +281,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		!ancestryOptionsComplete(
 			selectedAncestry,
 			selectedAncestryBonus,
+			selectedAncestryVariant,
 			selectedAncestrySize,
 			selectedAncestrySave,
 		)
@@ -364,6 +377,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Sequence number for the in-flight default-bonus lookup. Every new lookup and every
 	// manual pick bumps it, so a resolution that lands after either one is discarded.
 	let defaultBonusRequestId = 0;
+	// Which kind of people the character is, for an ancestry that covers more than one. Nothing is
+	// pre-selected: the player names their own, and the ancestry on the finished character takes it.
+	let selectedAncestryVariant = $state<string | null>(null);
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
 	let selectedBackground = $state<NimbleBackgroundItem | null>(null);
@@ -488,6 +504,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selectedAncestry,
 			selectedAncestryBonus,
 			ancestryBonusConfirmed,
+			selectedAncestryVariant,
 			selectedAncestrySize,
 			selectedAncestrySave,
 			selectedBackground,
@@ -672,6 +689,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 		// A fresh ancestry means the player hasn't confirmed its bonus yet.
 		ancestryBonusConfirmed = false;
+		// Variants are named by the ancestry that offers them, so the previous ancestry's pick can't
+		// carry over — not even when both ancestries happen to offer the same name.
+		selectedAncestryVariant = null;
 
 		// Invalidate any lookup still in flight for the previous ancestry.
 		const requestId = ++defaultBonusRequestId;
@@ -822,6 +842,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 				{} as Record<string, number>,
 			),
 			sizeCategory: selectedAncestrySize,
+			selectedAncestryVariant,
 			selectedAncestrySave,
 			selectedRaisedByAncestry,
 			skills: Object.entries(assignedSkillPoints).reduce(
@@ -873,6 +894,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		set ancestryBonusConfirmed(value: boolean) {
 			ancestryBonusConfirmed = value;
+		},
+		get selectedAncestryVariant() {
+			return selectedAncestryVariant;
+		},
+		set selectedAncestryVariant(value: string | null) {
+			selectedAncestryVariant = value;
 		},
 		get selectedAncestrySize() {
 			return selectedAncestrySize;

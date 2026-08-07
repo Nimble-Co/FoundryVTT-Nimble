@@ -74,6 +74,8 @@ declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 		description?: string;
 		exotic: boolean;
 		size?: string[];
+		/** Names for the kinds of people this ancestry covers ("Dryad", "Shroomling"). */
+		variants?: string[];
 		defaultBonus?: string;
 		rules?: NimbleBaseRule[];
 	};

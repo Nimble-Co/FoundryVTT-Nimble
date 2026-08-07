@@ -20,6 +20,7 @@
 		ancestryDocument = null,
 		alternateAncestryDocument = null,
 		alternateAncestryBonus = null,
+		ancestryVariant = null,
 		statArray = null,
 		abilityScoreAssignment = null,
 		spellIndex,
@@ -34,6 +35,7 @@
 		ancestryDocument?: NimbleAncestryItem | null;
 		alternateAncestryDocument?: NimbleAncestryItem | null;
 		alternateAncestryBonus?: NimbleAncestryBonusItem | null;
+		ancestryVariant?: string | null;
 		statArray?: import('#view/dialogs/characterCreation/types.js').StatArrayOption | null;
 		abilityScoreAssignment?: Record<string, number | null> | null;
 		spellIndex: import('#utils/getSpells.js').SpellIndex;
@@ -72,6 +74,12 @@
 
 	function clearAncestry() {
 		state.selectedAncestry = null;
+	}
+
+	function selectAncestryVariant() {
+		if (ancestryVariant) {
+			state.selectedAncestryVariant = ancestryVariant;
+		}
 	}
 
 	function swapAncestryBonus() {
@@ -158,6 +166,7 @@
 <button type="button" onclick={selectAncestry}>Select Ancestry</button>
 <button type="button" onclick={selectAlternateAncestry}>Select Alternate Ancestry</button>
 <button type="button" onclick={clearAncestry}>Clear Ancestry</button>
+<button type="button" onclick={selectAncestryVariant}>Select Ancestry Variant</button>
 <button type="button" onclick={confirmAncestryBonus}>Confirm Ancestry Bonus</button>
 <button type="button" onclick={clearAncestryBonus}>Clear Ancestry Bonus</button>
 <button type="button" onclick={swapAncestryBonus}>Swap Ancestry Bonus</button>
@@ -176,6 +185,7 @@
 <div data-testid="stage">{String(state.stage)}</div>
 <div data-testid="selected-ancestry-bonus">{String(state.selectedAncestryBonus?.uuid ?? null)}</div>
 <div data-testid="ancestry-bonus-confirmed">{String(state.ancestryBonusConfirmed)}</div>
+<div data-testid="selected-ancestry-variant">{String(state.selectedAncestryVariant)}</div>
 <div data-testid="selected-ancestry-save">{String(state.selectedAncestrySave)}</div>
 <!-- Both bonus maps seed every key at 0; only non-zero entries are interesting to assert. -->
 <div data-testid="ability-bonuses">

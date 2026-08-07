@@ -3,6 +3,7 @@ import type { AncestryCreateOptions } from '#documents/item/ancestry.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import { isVariantOf } from '#utils/ancestryVariants.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
@@ -182,6 +183,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async submitCharacterCreation(results: {
 		name?: string;
 		sizeCategory?: string;
+		selectedAncestryVariant?: string | null;
 		selectedAncestrySave?: string | null;
 		selectedRaisedByAncestry?: { language: string; label: string } | null;
 		abilityScores?: Record<string, number>;
@@ -237,7 +239,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				| NimbleAncestryBonusItem
 				| null,
 			uuid: string | undefined,
-			options: { isAncestryBonus?: boolean; isBackground?: boolean } = {},
+			options: { isAncestry?: boolean; isAncestryBonus?: boolean; isBackground?: boolean } = {},
 		) => {
 			if (!doc || !uuid) return;
 
@@ -256,6 +258,27 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 							rule.disabled = true;
 						}
 					}
+				}
+			}
+
+			// An ancestry that covers more than one kind of people takes the name the player chose, so
+			// the character reads as a Dryad rather than a Dryad/Shroomling everywhere the ancestry is
+			// named. Only a name the ancestry actually offers is honoured — a stale or hand-built
+			// submission must not be able to rename the item to anything it likes.
+			if (options.isAncestry && results.selectedAncestryVariant) {
+				const systemWithVariants = source.system as { identifier?: string; variants?: string[] };
+				const variant = results.selectedAncestryVariant.trim();
+
+				if (
+					source.name &&
+					source.name !== variant &&
+					isVariantOf(systemWithVariants.variants, variant)
+				) {
+					// `NimbleBaseItem` derives the identifier from the name, and the ancestry identifier is
+					// what keys the GM's language grants, so record the identifier this ancestry had
+					// before the rename. An ancestry that already declares one keeps it.
+					systemWithVariants.identifier ||= source.name.slugify({ strict: true });
+					source.name = variant;
 				}
 			}
 
@@ -335,7 +358,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		processOriginSource(backgroundDocument, background?.uuid, { isBackground: true });
 		processOriginSource(classDocument, characterClass?.uuid);
-		processOriginSource(ancestryDocument, ancestry?.uuid);
+		processOriginSource(ancestryDocument, ancestry?.uuid, { isAncestry: true });
 		processOriginSource(ancestryBonusDocument, ancestryBonus?.uuid, { isAncestryBonus: true });
 
 		// When origin documents are added, the system automatically processes grantItem rules

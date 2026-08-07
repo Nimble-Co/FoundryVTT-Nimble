@@ -1095,6 +1095,128 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 	});
 });
 
+describe('createCharacterCreationState ancestry variant stage', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.mocked(getClassFeaturesFromIndex).mockResolvedValue(createClassFeaturesResult([]));
+		(
+			globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame }
+		).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+			callback(0);
+			return 1;
+		});
+	});
+
+	function createAncestryWithVariants(variants: string[], uuid = 'dryadshroomling') {
+		return {
+			uuid: `Compendium.nimble.nimble-ancestries.Item.${uuid}`,
+			system: {
+				size: ['medium'],
+				rules: [],
+				variants,
+			},
+		} as unknown as NimbleAncestryItem;
+	}
+
+	function renderWithAncestries(
+		ancestryDocument: NimbleAncestryItem,
+		{
+			alternateAncestryDocument = null,
+			ancestryVariant = null,
+		}: {
+			alternateAncestryDocument?: NimbleAncestryItem | null;
+			ancestryVariant?: string | null;
+		} = {},
+	) {
+		render(CharacterCreationStateHarness, {
+			props: {
+				ancestryOptions: {
+					core: alternateAncestryDocument
+						? [ancestryDocument, alternateAncestryDocument]
+						: [ancestryDocument],
+					exotic: [],
+				},
+				backgroundOptions: [createBackground()],
+				classDocument: createClass('mage'),
+				classOptions: [createClass('mage')],
+				backgroundDocument: createBackground(),
+				ancestryDocument,
+				alternateAncestryDocument,
+				ancestryVariant,
+				spellIndex: createSpellIndex([]),
+			},
+		});
+	}
+
+	it('gates on ANCESTRY_OPTIONS until a variant is chosen', async () => {
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			ancestryVariant: 'Shroomling',
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		// One size and no save choice, so the variant is the only thing holding the stage.
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS),
+			);
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('skips ANCESTRY_OPTIONS for an ancestry that covers a single kind of people', async () => {
+		// One name is the ancestry's own, and none at all is the common case; neither is a choice.
+		renderWithAncestries(createAncestryWithVariants(['Dryad']));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('drops the chosen variant when the ancestry changes', async () => {
+		// Variants are named by the ancestry offering them, so a pick can't survive a new ancestry.
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			alternateAncestryDocument: createAncestryWithVariants(
+				['Oozeling', 'Construct'],
+				'oozelingconstruct',
+			),
+			ancestryVariant: 'Shroomling',
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Alternate Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS),
+			);
+		});
+	});
+});
+
 describe('createCharacterCreationState granted languages', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

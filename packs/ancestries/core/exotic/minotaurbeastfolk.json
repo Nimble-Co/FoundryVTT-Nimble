@@ -11,6 +11,10 @@
 		"size": [
 			"medium"
 		],
+		"variants": [
+			"Minotaur",
+			"Beastfolk"
+		],
 		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.zjUGAh5QLbCbI4V9"
 	},
 	"effects": [],

@@ -136,6 +136,49 @@ describe('NimbleAncestryItem._preCreate', () => {
 	});
 });
 
+describe('NimbleAncestryItem.prepareBaseData', () => {
+	// Same reason as `_preCreate` above: the base class ends in `super.prepareBaseData()`, and the
+	// shared `Item` mock has no such method.
+	beforeEach(() => {
+		itemPrototype.prepareBaseData = vi.fn();
+	});
+
+	afterEach(() => {
+		delete itemPrototype.prepareBaseData;
+	});
+
+	/**
+	 * Built on the real prototype so the base class's own data prep runs — it derives the identifier
+	 * from the name, populates tags, and builds a rules manager, all against these fields.
+	 */
+	function createPreparedAncestry(name: string, authoredIdentifier: string) {
+		const ancestry = Object.assign(Object.create(NimbleAncestryItem.prototype), {
+			name,
+			_source: { system: { identifier: authoredIdentifier } },
+			system: { identifier: '', rules: [] },
+			type: 'ancestry',
+		}) as NimbleAncestryItem & { system: { identifier: string } };
+
+		ancestry.prepareBaseData();
+
+		return ancestry;
+	}
+
+	it('keeps the identifier the ancestry declares, whatever the variant renamed it to', () => {
+		// A character who chose "Shroomling" carries an ancestry renamed to it, and the ancestry
+		// identifier is what keys the GM's language grants.
+		const ancestry = createPreparedAncestry('Shroomling', 'dryadshroomling');
+
+		expect(ancestry.system.identifier).toBe('dryadshroomling');
+	});
+
+	it('derives the identifier from the name when the ancestry declares none', () => {
+		const ancestry = createPreparedAncestry('Half-Giant', '');
+
+		expect(ancestry.system.identifier).toBe('half-giant');
+	});
+});
+
 describe('NimbleAncestryBonusItem._preCreate', () => {
 	async function runBonusPreCreate(bonus: unknown) {
 		return NimbleAncestryBonusItem.prototype._preCreate.call(

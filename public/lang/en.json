@@ -173,9 +173,12 @@
 			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
-			"enhancedSaveHeader": "Step 2d. Enhanced Save",
+			"enhancedSaveHeader": "Step 2e. Enhanced Save",
+			"variant": "Ancestry Variant",
+			"variantHeader": "Step 2c. Ancestry Variant",
+			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is — they are the same in play, and your sheet takes the name you pick.",
 			"sizeCategory": "Size Category",
-			"sizeCategoryHeader": "Step 2c. Size Category",
+			"sizeCategoryHeader": "Step 2d. Size Category",
 			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
 			"sizeGrantedBy": "set by {ancestry}",
 			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
@@ -219,7 +222,16 @@
 			"sizeOptionsRestored": "An ancestry needs at least one size — restored to {sizes}.",
 			"sizeSummaryAll": "Players will choose any size, {first} through {last}.",
 			"sizeSummaryChoice": "Players will choose {sizes} during character creation.",
-			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation."
+			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation.",
+			"variants": "Variant Names",
+			"variantsAdd": "Add",
+			"variantsDuplicate": "{variant} is already listed.",
+			"variantsHint": "Name each kind of people this ancestry covers, such as Dryad and Shroomling. Two or more becomes a player choice.",
+			"variantsPlaceholder": "Add a variant name…",
+			"variantsRemove": "Remove {variant}",
+			"variantsSummaryChoice": "Players will choose {variants} during character creation, and their ancestry takes that name.",
+			"variantsSummaryNone": "All characters will be {ancestry}. No variant step during character creation.",
+			"variantsSummaryOne": "One name is the ancestry's own. Add another for players to have a choice."
 		},
 		"backgroundOptionsSelection": {
 			"header": "Step 3b. Choose Heritage Ancestry",
