@@ -96,6 +96,20 @@
 
 	let isSubmitDisabled = $derived(mode === 'picker' && !selectedUuid);
 
+	// The action names its own outcome and follows the selection, so the button
+	// always says where the spell is about to land.
+	let submitLabel = $derived.by(() => {
+		if (mode === 'picker') return localize('NIMBLE.spellScroll.dialog.inscribe');
+
+		return destination === 'scroll'
+			? localize('NIMBLE.spellScroll.dialog.submitAddToInventory')
+			: localize('NIMBLE.spellScroll.dialog.submitAddToSpellList');
+	});
+
+	let submitIcon = $derived(
+		mode === 'picker' || destination === 'scroll' ? 'fa-scroll' : 'fa-wand-sparkles',
+	);
+
 	function toggleExpanded(uuid: string) {
 		expandedUuid = expandedUuid === uuid ? null : uuid;
 	}
@@ -330,24 +344,25 @@
 			</dl>
 		{/if}
 	{/if}
-
-	<footer class="nimble-spell-scroll-dialog__footer">
-		<button
-			class="nimble-button"
-			data-button-variant="basic"
-			type="button"
-			onclick={() => dialog.close()}
-		>
-			{localize('NIMBLE.spellScroll.dialog.cancel')}
-		</button>
-
-		<button class="nimble-button" type="button" disabled={isSubmitDisabled} onclick={onSubmit}>
-			{mode === 'picker'
-				? localize('NIMBLE.spellScroll.dialog.inscribe')
-				: localize('NIMBLE.spellScroll.dialog.add')}
-		</button>
-	</footer>
 </article>
+
+<!--
+	One full-width action, as Level Up, Field Rest and Safe Rest do. Closing the
+	window cancels: GenericDialog#close resolves the promise with null, and
+	_onDropItem already treats null as "create nothing".
+-->
+<footer class="nimble-sheet__footer">
+	<button
+		class="nimble-button"
+		data-button-variant="basic"
+		type="button"
+		disabled={isSubmitDisabled}
+		onclick={onSubmit}
+	>
+		<i class="fa-solid {submitIcon}"></i>
+		{submitLabel}
+	</button>
+</footer>
 
 <style lang="scss">
 	.nimble-spell-scroll-dialog {
@@ -630,11 +645,24 @@
 			border-block-start: 0;
 			border-radius: 0 0 3px 3px;
 		}
+	}
 
-		&__footer {
+	// Matches the single-action footer used by Level Up, Field Rest, Safe Rest,
+	// Roll Hit Dice and Edit Mana: one button spanning the dialog.
+	.nimble-sheet__footer {
+		--nimble-button-padding: 0.5rem 1rem;
+		--nimble-button-width: 100%;
+
+		.nimble-button {
 			display: flex;
-			gap: 0.375rem;
-			justify-content: flex-end;
+			gap: 0.5rem;
+			align-items: center;
+			justify-content: center;
+
+			&:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
 		}
 	}
 </style>
