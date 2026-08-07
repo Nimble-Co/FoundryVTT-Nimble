@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
@@ -256,6 +258,105 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		const savingThrows = updateCall.system.savingThrows;
 		expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+	});
+
+	describe('background savingThrowRollMode rules', () => {
+		/**
+		 * Drives the assertions from the shipped compendium data rather than a
+		 * hand-copied literal, so a typo in the pack (`willpower` for `will`,
+		 * `set` for `adjust`, `disabled: true`) fails here instead of silently
+		 * shipping a background that does nothing. Same approach as
+		 * `CharacterCreationDialog.commander.test.ts`.
+		 */
+		const HAUNTED_PAST = JSON.parse(
+			readFileSync(join(process.cwd(), 'packs/backgrounds/core/haunted-past.json'), 'utf-8'),
+		) as { system: { rules: Array<Record<string, unknown>> } };
+
+		function hauntedPastDocument() {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-backgrounds.Item.haunted-past',
+				name: 'Haunted Past',
+				system: { rules: HAUNTED_PAST.system.rules },
+			});
+		}
+
+		function warriorWithWillSave(disadvantage: string | null) {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+				name: 'Warrior',
+				system: {
+					identifier: 'warrior',
+					savingThrows: { advantage: 'strength', disadvantage },
+				},
+			});
+		}
+
+		async function createWith(classDocument: Item, backgroundDocument: Item) {
+			vi.stubGlobal(
+				'fromUuid',
+				vi.fn(async (uuid: string) => {
+					if (uuid === classDocument.uuid) return classDocument;
+					if (uuid === backgroundDocument.uuid) return backgroundDocument;
+					return null;
+				}),
+			);
+
+			const dialog = new CharacterCreationDialog();
+			await dialog.submitCharacterCreation({
+				name: 'Test Character',
+				origins: {
+					characterClass: { uuid: classDocument.uuid },
+					background: { uuid: backgroundDocument.uuid },
+				},
+				languages: [],
+				classFeatures: { autoGrant: [], selected: new Map() },
+				spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+			});
+		}
+
+		function savingThrowsFrom(actor: { update: { mock: { calls: unknown[][] } } }) {
+			const updateCall = actor.update.mock.calls[0][0] as {
+				system: { savingThrows: Record<string, number> };
+			};
+			return updateCall.system.savingThrows;
+		}
+
+		it('ships a WIL adjust rule in the Haunted Past pack data', () => {
+			expect(HAUNTED_PAST.system.rules).toContainEqual(
+				expect.objectContaining({
+					type: 'savingThrowRollMode',
+					target: 'will',
+					mode: 'adjust',
+					value: 1,
+					disabled: false,
+					// Must sort after the default-priority (1) ancestry-bonus rules —
+					// Highborn's `set 0 on disadvantaged` has to run first, or it stops
+					// matching WIL once this rule has already raised it.
+					priority: 2,
+				}),
+			);
+		});
+
+		it('grants advantage on WIL when the class leaves it neutral', async () => {
+			const actor = setupActorMock();
+			await createWith(warriorWithWillSave('dexterity'), hauntedPastDocument());
+
+			const savingThrows = savingThrowsFrom(actor);
+			expect(savingThrows['will.defaultRollMode']).toBe(1);
+			expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
+		});
+
+		// Paired with the neutral case above, this pins `mode: 'adjust'`: a `set`
+		// rule of any single value cannot produce both 1 (from neutral) and 0
+		// (from disadvantage).
+		it('only neutralizes WIL when the class disadvantages it', async () => {
+			const actor = setupActorMock();
+			await createWith(warriorWithWillSave('will'), hauntedPastDocument());
+
+			const savingThrows = savingThrowsFrom(actor);
+			expect(savingThrows['will.defaultRollMode']).toBe(0);
+			expect(savingThrows['strength.defaultRollMode']).toBe(1);
+		});
 	});
 
 	describe('ancestry bonus handling', () => {

@@ -190,6 +190,7 @@
 		selectedAncestryBonus={state.selectedAncestryBonus}
 		selectedArray={state.selectedArray}
 		selectedAncestrySave={state.selectedAncestrySave}
+		selectedBackground={state.selectedBackground}
 		selectedClass={state.selectedClass}
 		bind:selectedAbilityScores={state.selectedAbilityScores}
 	/>
