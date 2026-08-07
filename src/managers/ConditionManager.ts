@@ -19,6 +19,10 @@ export interface Condition {
 	enriched: string;
 }
 
+function enricherText(conditionId: string): string {
+	return `[[/condition condition=${conditionId}]]`;
+}
+
 export class ConditionManager {
 	#conditions: Map<string, Condition>;
 
@@ -29,51 +33,52 @@ export class ConditionManager {
 		this.#ready = false;
 	}
 
+	/**
+	 * Rebuild the condition records from CONFIG.NIMBLE. Safe to re-run after the config changes
+	 * (e.g. when a GM edits the custom conditions setting) — the previous records are discarded
+	 * so conditions that no longer exist in the config are dropped.
+	 */
 	initialize() {
-		const conditions = Object.keys(CONFIG.NIMBLE.conditions);
+		this.#conditions.clear();
 
-		conditions.forEach(async (c) => {
-			let _id: string | null = null;
-
-			const id = c;
-			const name = CONFIG.NIMBLE.conditions[id];
-			const img = CONFIG.NIMBLE.conditionDefaultImages[id];
+		for (const id of Object.keys(CONFIG.NIMBLE.conditions)) {
 			const aliases: string[] = CONFIG.NIMBLE.conditionAliasedConditions[id] ?? [];
 			const statuses: string[] = CONFIG.NIMBLE.conditionLinkedConditions[id] ?? [];
-			const stackable = CONFIG.NIMBLE.conditionStackableConditions.has(id);
 
 			const data = {
 				id,
-				name,
-				img,
-				stackable,
+				name: CONFIG.NIMBLE.conditions[id],
+				img: CONFIG.NIMBLE.conditionDefaultImages[id],
+				stackable: CONFIG.NIMBLE.conditionStackableConditions.has(id),
+				enriched: enricherText(id),
 			} as Condition;
 
 			if (aliases.length) data.aliases = new Set(aliases);
 
 			if (statuses.length) {
 				data.statuses = statuses;
-
-				_id = String(id).padEnd(16, '0');
-				data._id = _id;
+				data._id = String(id).padEnd(16, '0');
 			}
 
-			// Add an enriched version of the condition to the data
-			try {
-				data.enriched =
-					(await foundry.applications.ux?.TextEditor?.implementation?.enrichHTML?.(
-						`[[/condition condition=${id}]]`,
-					)) || `[[/condition condition=${id}]]`;
-			} catch (_error) {
-				data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-					`[[/condition condition=${id}]]`,
-				);
-			}
-
+			// Registered synchronously — with the raw enricher text as a placeholder — so that
+			// `configureStatusEffects()` can run immediately after `initialize()`.
 			this.#conditions.set(id, data);
-		});
+			this.#enrich(data);
+		}
 
 		this.#ready = true;
+	}
+
+	/** Upgrade a record's placeholder text to enriched markup once the text editor resolves. */
+	async #enrich(condition: Condition) {
+		try {
+			const enriched = await foundry.applications.ux?.TextEditor?.implementation?.enrichHTML?.(
+				enricherText(condition.id),
+			);
+			if (enriched) condition.enriched = enriched;
+		} catch (error) {
+			console.error(`Nimble | Failed to enrich the ${condition.id} condition:`, error);
+		}
 	}
 
 	configureStatusEffects() {
