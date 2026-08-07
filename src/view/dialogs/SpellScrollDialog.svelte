@@ -395,6 +395,10 @@
 			font-size: var(--nimble-sm-text);
 
 			dt {
+				// Foundry core sets `text-shadow: 1px 1px 0 #000` on dt for its dark
+				// chrome. On small condensed text over this light card it smears into
+				// what reads as a strikethrough.
+				text-shadow: none;
 				color: var(--nimble-medium-text-color);
 			}
 
@@ -476,6 +480,10 @@
 			flex: 1;
 			gap: 0.5rem;
 			align-items: center;
+			// Buttons centre their flex content by default, which left rows without a
+			// secret badge floating in the middle while badged rows were pulled left
+			// by the badge's auto margin.
+			justify-content: flex-start;
 			padding: 0.375rem 0.5rem 0.375rem 0;
 			background: none;
 			border: 0;
