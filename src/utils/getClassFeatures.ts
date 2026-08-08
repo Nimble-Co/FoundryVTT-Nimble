@@ -145,7 +145,8 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 	for (const item of game.items) {
 		if (item.type !== 'feature') continue;
 		const featureItem = item as NimbleFeatureItem;
-		processFeature(featureItem.uuid, featureItem.system);
+		// World items are stored, so `uuid` is always present.
+		processFeature(featureItem.uuid ?? '', featureItem.system);
 	}
 
 	// Process compendium packs
@@ -161,7 +162,6 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
 
-		// @ts-expect-error - Foundry types don't include custom index fields, but the API accepts them
 		const packIndex = await pack.getIndex({ fields: indexFields });
 		for (const indexEntry of packIndex) {
 			const packEntry = indexEntry as FeatureIndexEntry;
@@ -224,6 +224,21 @@ function normalizeFeatureName(feature: NimbleFeatureItem): string {
  * from the same original) or, when no such link establishes a match, sharing a non-blank
  * name. Two copies customized out of different compendia still cluster on their shared name.
  */
+/**
+ * A feature document that has been stored, and so carries the UUID that every grouping and
+ * comparison below is keyed on.
+ *
+ * `Document#uuid` is null for a document that was never stored — `buildUuid` needs an id to
+ * build one. Nothing here can produce such a document (every feature comes back from
+ * `fromUuid`, which only resolves stored documents), but the grouping treats a UUID as an
+ * identity, so the type records the requirement rather than assuming it.
+ */
+type StoredFeatureItem = NimbleFeatureItem & { readonly uuid: string };
+
+function isStoredFeature(feature: NimbleFeatureItem): feature is StoredFeatureItem {
+	return typeof feature.uuid === 'string';
+}
+
 function isSameFeature(a: NimbleFeatureItem, b: NimbleFeatureItem): boolean {
 	// `sourceId` is the document's own compendium-source accessor; a blank link means "none",
 	// so normalize it to undefined before comparing (two unlinked features must not match).
@@ -247,8 +262,8 @@ function isSameFeature(a: NimbleFeatureItem, b: NimbleFeatureItem): boolean {
  * Members added by a later merge trail the bridging feature rather than sitting in input order —
  * harmless, since candidates are sorted by name for display.
  */
-function clusterFeaturesBySource(features: NimbleFeatureItem[]): NimbleFeatureItem[][] {
-	const clusters: NimbleFeatureItem[][] = [];
+function clusterFeaturesBySource(features: StoredFeatureItem[]): StoredFeatureItem[][] {
+	const clusters: StoredFeatureItem[][] = [];
 
 	for (const feature of features) {
 		const [primary, ...alsoMatched] = clusters.filter((cluster) =>
@@ -284,7 +299,7 @@ function isAutoGrantGroup(groupName: string): boolean {
  * meant to be used. Between two world copies — or when every copy is packaged — the most
  * recently touched one wins, on the same reasoning applied to time instead of place.
  */
-function pickRecommendedCopy(candidates: NimbleFeatureItem[]): string | undefined {
+function pickRecommendedCopy(candidates: StoredFeatureItem[]): string | undefined {
 	if (candidates.length === 0) return undefined;
 
 	const worldCopies = candidates.filter((feature) => getItemSource(feature.uuid) === 'world');
@@ -365,19 +380,21 @@ export default async function getClassFeaturesFromIndex(
 	// Items are identified by UUID — no name-based deduplication so that distinct
 	// world items with the same name each appear as separate entries.
 	const entriesByGroup = new Map<string, ClassFeatureIndexEntry[]>();
-	const featuresByGroup = new Map<string, NimbleFeatureItem[]>();
+	const featuresByGroup = new Map<string, StoredFeatureItem[]>();
 	/**
 	 * Owned copies held back for the duplicate-source picker. A feature the character already
 	 * has is normally dropped, but when a *new* copy of the same feature turns up the player
 	 * needs to see the one they own to compare against — so those, and only those, are kept.
 	 */
-	const ownedByGroup = new Map<string, NimbleFeatureItem[]>();
+	const ownedByGroup = new Map<string, StoredFeatureItem[]>();
 
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
 		if (!feature) continue;
 
 		const featureItem = feature as NimbleFeatureItem;
+		if (!isStoredFeature(featureItem)) continue;
+
 		const groupName = allEntries[i].group;
 
 		// Option features bypass ownership — they appear at every listed level

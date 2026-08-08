@@ -55,10 +55,9 @@ export default async function buildSubclassFeatureIndex(): Promise<SubclassFeatu
 
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
-		// @ts-expect-error - Foundry types don't include custom index fields, but the API accepts them
 		const packIndex = await pack.getIndex({ fields: FEATURE_INDEX_FIELDS as unknown as string[] });
 		for (const indexEntry of packIndex) {
-			const packEntry = indexEntry as FeaturePackEntry;
+			const packEntry = indexEntry as unknown as FeaturePackEntry;
 			if (packEntry.type !== 'feature') continue;
 			indexFeature(index, packEntry.uuid, packEntry.system);
 		}

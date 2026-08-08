@@ -112,7 +112,11 @@ class SvelteActorSheet<
 	static #onShowPortraitArtwork(this: SvelteActorSheet, _event: PointerEvent) {
 		// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
 		const { img, name, uuid } = this.actor;
-		new ImagePopout({ src: img || '', uuid, window: { title: name } }).render(true);
+		new foundry.applications.apps.ImagePopout({
+			src: img || '',
+			uuid,
+			window: { title: name },
+		}).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -125,7 +129,7 @@ class SvelteActorSheet<
 	static #onShowTokenArtwork(this: SvelteActorSheet, _event: PointerEvent) {
 		// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
 		const { prototypeToken, name, uuid } = this.actor;
-		new ImagePopout({
+		new foundry.applications.apps.ImagePopout({
 			src: prototypeToken.texture.src || '',
 			uuid,
 			window: { title: name },
@@ -263,7 +267,7 @@ class SvelteActorSheet<
 		}
 
 		// Perform the sort
-		const sortUpdates = SortingHelpers.performIntegerSort(source as SortableItem, {
+		const sortUpdates = foundry.utils.performIntegerSort(source as SortableItem, {
 			target: target as SortableItem | null,
 			siblings,
 		});

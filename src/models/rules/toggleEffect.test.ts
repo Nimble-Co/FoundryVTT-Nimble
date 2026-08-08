@@ -191,7 +191,7 @@ function createToggleEffectRule(
 	});
 
 	Object.defineProperty(rule, 'item', { get: () => parentItem, configurable: true });
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0, test: () => true }),
 		configurable: true,
 	});
@@ -454,7 +454,7 @@ describe('ToggleEffectRule', () => {
 		it('does nothing when the rule predicate fails', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
-			Object.defineProperty(rule, '_predicate', {
+			Object.defineProperty(rule, 'predicate', {
 				get: () => ({ size: 1, test: () => false }),
 				configurable: true,
 			});

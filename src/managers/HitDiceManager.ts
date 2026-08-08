@@ -241,7 +241,7 @@ class HitDiceManager {
 		// Perform rule clean up
 		data.forEach(([die, { current, total }]) => {
 			if (current === 0 && total === 0) {
-				updates[`system.attributes.hitDice.-=${die}`] = null;
+				updates[`system.attributes.hitDice.${die}`] = new foundry.data.operators.ForcedDeletion();
 			}
 		});
 

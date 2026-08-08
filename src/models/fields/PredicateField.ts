@@ -1,51 +1,26 @@
-import type { AnyObject } from 'fvtt-types/utils';
+import type { AnyMutableObject } from 'fvtt-types/utils';
 
-import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
+import { Predicate, type PredicateLike, type RawPredicate } from '../../etc/Predicate.js';
 import { isPlainObject } from '../../utils/isPlainObject.js';
 
-// class PredicateField<
-//   const EFT extends PredicateStatementField = PredicateStatementField,
-//   const AET = foundry.data.fields.ArrayField.AssignmentElementType<EFT>,
-//   const IET = foundry.data.fields.ArrayField.InitializedElementType<EFT>,
-//   const PET = foundry.data.fields.ArrayField.PersistedElementType<EFT>,
-//   const Opts extends foundry.data.fields.ArrayField.Options<AET>
-//   = foundry.data.fields.ArrayField.DefaultOptions<AET>,
-//   const AssignmentType = foundry.data.fields.ArrayField.AssignmentType<AET, Opts>,
-//   const InitializedType = foundry.data.fields.ArrayField.InitializedType<AET, IET, Opts>,
-//   const PersistedType extends PET[] | null | undefined
-//   = foundry.data.fields.ArrayField.PersistedType<AET, PET, Opts>
-// > extends foundry.data.fields.ArrayField<EFT> {
-//   constructor(options = {}) {
-//     super(
-//       new PredicateStatementField(),
-//       {
-//         label: 'Nimble.RuleEditor.General.Predicate',
-//         ...options
-//       }
-//     );
-//   }
-
-//   /** Construct a `Predicate` from the initialized `PredicateStatement[]` */
-//   override initialize(
-//     value: PersistedType,
-//     model: foundry.abstract.DataModel.Any,
-//     options?: { readonly [K: string]: unknown; }
-//   ): InitializedType | (() => InitializedType | null) {
-//     const statements = super.initialize(value, model, options);
-//     return Array.isArray(statements) ? new Predicate(...statements) : statements;
-//   }
-// }
-
-class PredicateField extends foundry.data.fields.ObjectField {
+/**
+ * Persists a `RawPredicate` and initializes it as a `Predicate` instance, so
+ * `this.<field>` on rule models is typed (and behaves) as `Predicate` without
+ * per-consumer casts.
+ */
+class PredicateField<
+	const Options extends
+		foundry.data.fields.DataField.Options<AnyMutableObject> = foundry.data.fields.ObjectField.DefaultOptions,
+> extends foundry.data.fields.ObjectField<Options, RawPredicate, PredicateLike, RawPredicate> {
 	override initialize(
-		value: AnyObject,
+		value: RawPredicate,
 		model: foundry.abstract.DataModel.Any,
-		options?: AnyObject,
-	): AnyObject | (() => AnyObject | null) {
-		const pred = super.initialize(value, model, options);
+		options?: foundry.data.fields.DataField.InitializeOptions,
+	): PredicateLike | (() => PredicateLike | null) {
+		const pred = super.initialize(value, model, options) as unknown;
 		return isPlainObject(pred)
-			? (new Predicate(value as object as RawPredicate) as object as AnyObject)
-			: pred;
+			? new Predicate(value)
+			: (pred as PredicateLike | (() => PredicateLike | null));
 	}
 }
 

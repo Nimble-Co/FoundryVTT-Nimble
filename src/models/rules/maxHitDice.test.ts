@@ -51,7 +51,7 @@ describe('MaxHitDiceRule', () => {
 
 			Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
 			Object.defineProperty(rule, 'actor', { get: () => item.actor, configurable: true });
-			Object.defineProperty(rule, '_predicate', {
+			Object.defineProperty(rule, 'predicate', {
 				get: () => predicate ?? { size: 0 },
 				configurable: true,
 			});

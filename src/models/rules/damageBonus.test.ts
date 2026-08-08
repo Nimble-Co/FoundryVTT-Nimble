@@ -81,12 +81,12 @@ function createDamageBonusRule(
 		configurable: true,
 	});
 
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0 }),
 		configurable: true,
 	});
 
-	Object.defineProperty(rule, '_targetCondition', {
+	Object.defineProperty(rule, 'targetCondition', {
 		get: () => ({ size: 0 }),
 		configurable: true,
 	});
@@ -303,7 +303,7 @@ describe('DamageBonusRule', () => {
 				configurable: true,
 			});
 
-			Object.defineProperty(rule, '_predicate', {
+			Object.defineProperty(rule, 'predicate', {
 				get: () => ({ size: 0 }),
 				configurable: true,
 			});
@@ -322,7 +322,7 @@ describe('DamageBonusRule', () => {
 				size: 1,
 				toObject: () => ({ target: 'bloodied' }),
 			};
-			Object.defineProperty(rule, '_targetCondition', {
+			Object.defineProperty(rule, 'targetCondition', {
 				get: () => mockPredicate,
 				configurable: true,
 			});
@@ -990,7 +990,7 @@ describe('targetCondition filtering', () => {
 			const realPredicate = new Predicate({
 				$or: ['target:bloodied', 'target:concentrating'],
 			});
-			Object.defineProperty(rule, '_targetCondition', {
+			Object.defineProperty(rule, 'targetCondition', {
 				get: () => realPredicate,
 				configurable: true,
 			});

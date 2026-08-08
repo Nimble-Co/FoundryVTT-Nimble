@@ -2,7 +2,7 @@ import type { NimbleFeatureData } from '../../models/item/FeatureDataModel.js';
 
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleFeatureItem extends NimbleBaseItem {
+export class NimbleFeatureItem extends NimbleBaseItem<'feature'> {
 	declare system: NimbleFeatureData;
 
 	override _populateBaseTags(): void {

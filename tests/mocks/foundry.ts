@@ -71,6 +71,8 @@ export const globalFoundryMocks = {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
 		}
+
+		prepareBaseData() {}
 	},
 	ROLL: class Roll {
 		formula: string;
@@ -101,6 +103,14 @@ export const globalFoundryMocks = {
 			NEUTRAL: 0,
 			FRIENDLY: 1,
 		},
+		TOKEN_DISPLAY_MODES: {
+			NONE: 0,
+			CONTROL: 10,
+			OWNER_HOVER: 20,
+			HOVER: 30,
+			OWNER: 40,
+			ALWAYS: 50,
+		},
 		DOCUMENT_OWNERSHIP_LEVELS: {
 			NONE: 0,
 			LIMITED: 1,
@@ -113,6 +123,11 @@ export const globalFoundryMocks = {
 			TOP: 2,
 			LEFT: 3,
 			RIGHT: 4,
+		},
+		ACTIVE_EFFECT_SHOW_ICON: {
+			NEVER: 0,
+			CONDITIONAL: 1,
+			ALWAYS: 2,
 		},
 	},
 	localize: (key: string) => key,
@@ -414,6 +429,18 @@ const { MockRoll: trackableRollMock, MockRollConstructor: trackableRollConstruct
 export const MockRollConstructor = trackableRollConstructor;
 
 // Foundry API object mocks
+// Minimal mirror of foundry.data.operators (V14): update payloads mark field
+// deletions with ForcedDeletion instances instead of the legacy `-=key: null`.
+class MockDataFieldOperator {
+	value: unknown;
+
+	constructor(value?: unknown) {
+		this.value = value;
+	}
+}
+
+class MockForcedDeletion extends MockDataFieldOperator {}
+
 export const foundryApiMocks = {
 	dice: {
 		Roll: trackableRollMock,
@@ -550,6 +577,10 @@ export const foundryApiMocks = {
 		},
 	},
 	data: {
+		operators: {
+			DataFieldOperator: MockDataFieldOperator,
+			ForcedDeletion: MockForcedDeletion,
+		},
 		fields: (() => {
 			// Real Foundry keeps the original options on `field.options` and
 			// also lifts recognised keys onto the instance. The mock approximates
@@ -583,6 +614,13 @@ export const foundryApiMocks = {
 				},
 				ObjectField: class ObjectField {
 					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				TypedObjectField: class TypedObjectField {
+					constructor(element?: any, options?: any) {
+						// Real Foundry stores the per-entry value field as `.element`.
+						(this as unknown as { element: unknown }).element = element;
 						assignWithOptions(this, options);
 					}
 				},

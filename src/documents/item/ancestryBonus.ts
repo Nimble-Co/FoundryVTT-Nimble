@@ -30,7 +30,7 @@ export class NimbleAncestryBonusItem extends NimbleBaseItem {
 	override async _preCreate(
 		data: Item.CreateData,
 		options: Item.Database.PreCreateOptions,
-		user: User,
+		user: User.Stored,
 	) {
 		if (this.isEmbedded) {
 			const actor = this.parent;

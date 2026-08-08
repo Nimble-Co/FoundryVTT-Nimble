@@ -136,7 +136,7 @@ function addActionCostRule(
 	});
 
 	const predicatePasses = config.predicatePasses ?? true;
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: predicatePasses ? 0 : 1, test: () => predicatePasses }),
 		configurable: true,
 	});

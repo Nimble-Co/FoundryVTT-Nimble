@@ -79,14 +79,19 @@ export class ConditionManager {
 	configureStatusEffects() {
 		if (!this.#ready) throw Error('Conditions are not ready yet.');
 
-		const statusEffects = [...this.#conditions.values()];
-
-		CONFIG.statusEffects = statusEffects.sort((a, b) => {
+		const statusEffects = [...this.#conditions.values()].sort((a, b) => {
 			const aid = a.name !== undefined ? localize(a.name) : a.id || a;
 			const bid = b.name !== undefined ? localize(b.name) : b.id || b;
 
 			return aid > bid ? 1 : aid < bid ? -1 : 0;
 		});
+
+		// V14's CONFIG.statusEffects is a Proxy that mirrors entries under their
+		// ids (core looks conditions up as CONFIG.statusEffects[statusId]).
+		// Mutate it in place: direct array assignment only works through a
+		// setter shim that is deprecated since v14.
+		CONFIG.statusEffects.length = 0;
+		CONFIG.statusEffects.push(...(statusEffects as object[] as typeof CONFIG.statusEffects));
 	}
 
 	get(conditionId: string) {

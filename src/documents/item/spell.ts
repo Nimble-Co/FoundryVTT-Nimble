@@ -5,7 +5,7 @@ import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleSpellItem extends NimbleBaseItem {
+export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 	declare system: NimbleSpellData;
 
 	override _populateBaseTags() {

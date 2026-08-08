@@ -10,6 +10,7 @@
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
+	import TemplateSection from './components/TemplateSection.svelte';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
@@ -76,6 +77,8 @@
 	{#if featureType === 'feature' || featureType === 'monsterFeature'}
 		<Targets />
 	{/if}
+
+	<TemplateSection {messageDocument} {name} />
 
 	{#if description}
 		<section class="nimble-card-section nimble-card-section--description">

@@ -22,7 +22,7 @@ export function createReactionCardState(
 	getMessageDocument: () => ReactionCardProps['messageDocument'],
 ) {
 	const system = $derived(getMessageDocument().reactive.system as unknown as ReactionSystemData);
-	const headerBackgroundColor = $derived(getMessageDocument().reactive.author.color);
+	const headerBackgroundColor = $derived(getMessageDocument().reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	const reactionType = $derived(system.reactionType);

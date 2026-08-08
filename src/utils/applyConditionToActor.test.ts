@@ -217,3 +217,39 @@ describe('applyConditionToActor applied hook', () => {
 		);
 	});
 });
+
+describe('applyConditionToActor effect creation', () => {
+	// V14 replaces a prepared effect's `duration` with a derived object carrying `label`,
+	// `remaining` and an `Infinity` default. Creating from the document rather than its source
+	// would clean that derived data into storage, which is why core creates from `toObject()`.
+	it('creates the effect from its stored source, not its prepared state', async () => {
+		const sourceData: Record<string, unknown> = { _id: 'effect-1' };
+		const effect = {
+			id: 'effect-1',
+			statuses: new Set<string>(),
+			duration: { rounds: 1, label: '1 Round', remaining: Infinity, seconds: Infinity },
+			updateSource: (data: Record<string, unknown>) => Object.assign(sourceData, data),
+			toObject: () => ({ ...sourceData }),
+		};
+		fromStatusEffect.mockResolvedValue(effect);
+
+		await applyConditionToActor(createTargetActor(), 'dazed', {
+			sourceItem: { uuid: 'Item.feature' },
+			duration: { rounds: 1 },
+		});
+
+		const created = createEffect.mock.calls[0][0] as Record<string, unknown>;
+		expect(created).not.toBe(effect);
+		expect(created.origin).toBe('Item.feature');
+		expect(created.duration).toEqual({ rounds: 1 });
+	});
+
+	it('passes the target as the parent when building from the status entry', async () => {
+		const target = createTargetActor();
+		fromStatusEffect.mockResolvedValue(createFakeEffect());
+
+		await applyConditionToActor(target, 'dazed', {});
+
+		expect(fromStatusEffect).toHaveBeenCalledWith('dazed', { parent: target });
+	});
+});

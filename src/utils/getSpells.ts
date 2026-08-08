@@ -129,7 +129,6 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
 
-		// @ts-expect-error - Foundry types don't include custom index fields, but the API accepts them
 		const packIndex = await pack.getIndex({ fields: indexFields });
 		for (const indexEntry of packIndex) {
 			const packEntry = indexEntry as SpellPackIndexEntry;

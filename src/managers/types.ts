@@ -7,7 +7,7 @@ export namespace ItemActivationManager {
 		executeMacro?: boolean;
 		fastForward?: boolean;
 		rollMode?: number;
-		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
+		visibilityMode?: string;
 		rollFormula?: string;
 		primaryDieValue?: number;
 		primaryDieModifier?: string;

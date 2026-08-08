@@ -28,16 +28,16 @@ export default itemDataModels;
 declare global {
 	interface DataModelConfig {
 		Item: {
-			ancestry: NimbleAncestryData;
-			ancestryBonus: NimbleAncestryBonusData;
-			background: NimbleBackgroundData;
-			boon: NimbleBoonData;
-			class: NimbleClassData;
-			feature: NimbleFeatureData;
-			monsterFeature: NimbleMonsterFeatureData;
-			object: NimbleObjectData;
-			spell: NimbleSpellData;
-			subclass: NimbleSubclassData;
+			ancestry: typeof NimbleAncestryData;
+			ancestryBonus: typeof NimbleAncestryBonusData;
+			background: typeof NimbleBackgroundData;
+			boon: typeof NimbleBoonData;
+			class: typeof NimbleClassData;
+			feature: typeof NimbleFeatureData;
+			monsterFeature: typeof NimbleMonsterFeatureData;
+			object: typeof NimbleObjectData;
+			spell: typeof NimbleSpellData;
+			subclass: typeof NimbleSubclassData;
 		};
 	}
 }

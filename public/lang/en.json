@@ -78,6 +78,17 @@
 			"specialBoonAvailable": "Special Boon Available",
 			"boon": "Boon"
 		},
+		"aoe": {
+			"noScene": "An active scene is required to place an area of effect.",
+			"place": {
+				"circle": "Place {size}-square circle",
+				"cone": "Place {size}-square cone",
+				"emanation": "Place {size}-square emanation",
+				"line": "Place {size}-square line",
+				"square": "Place {size}-square square"
+			},
+			"placementFailed": "Could not place the area of effect. See the console for details."
+		},
 		"chat": {
 			"applyConditionHint": "Left click to apply this condition to this card's targets.",
 			"applyConditionToTargets": "Apply condition to this card's targets",

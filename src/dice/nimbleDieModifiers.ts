@@ -18,7 +18,7 @@
  * property (`NIMBLE_MODS`), which DamageRoll reads during outcome finalization
  * to perform per-die crit/miss dispatch.
  *
- * Registration uses Foundry v13's `Die.MODIFIERS` static map plus a method
+ * Registration uses Foundry v14's `Die.MODIFIERS` static map plus a method
  * attached to `Die.prototype`. The handler signature matches Foundry's other
  * keep/drop handlers: `(modifier: string) => boolean | void`, called with
  * `this` bound to the Die instance. The handler mutates each entry of
@@ -240,7 +240,7 @@ export function nimbleNeutral(this: DieLike, _modifier: string): boolean {
  * modifier matcher matches the longer prefix first, preventing `cv` from
  * being split into `c` + `v`.
  *
- * Foundry v13 maps modifier-name keys to method-name strings on
+ * Foundry v14 maps modifier-name keys to method-name strings on
  * `Die.MODIFIERS`. The actual handler function lives on `Die.prototype` under
  * that method name. We attach our handlers to the prototype and add the keys
  * so Foundry's regex-based modifier matcher recognises them.

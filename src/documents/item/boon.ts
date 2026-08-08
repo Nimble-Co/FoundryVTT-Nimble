@@ -2,7 +2,7 @@ import type { NimbleBoonData } from '../../models/item/BoonDataModel.js';
 
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleBoonItem extends NimbleBaseItem {
+export class NimbleBoonItem extends NimbleBaseItem<'boon'> {
 	declare system: NimbleBoonData;
 
 	override async prepareChatCardData() {
