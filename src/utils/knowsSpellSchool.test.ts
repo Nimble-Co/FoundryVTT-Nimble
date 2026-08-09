@@ -57,6 +57,15 @@ describe('knowsSpellSchool', () => {
 		expect(knowsSpellSchool(actor, '')).toBe(false);
 	});
 
+	// `SpellDataModel.school` initializes to '', so a schoolless spell is a real
+	// document. Without the empty-school guard the two blanks would match and the
+	// wielder would skip the DC 10 Arcana check the scroll owes.
+	it('is false for an empty school even when the actor holds a schoolless spell', () => {
+		const actor = { items: [{ type: 'spell', system: { school: '' } }] };
+
+		expect(knowsSpellSchool(actor, '')).toBe(false);
+	});
+
 	it('is false for a null actor', () => {
 		expect(knowsSpellSchool(null, 'fire')).toBe(false);
 	});

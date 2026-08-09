@@ -5,7 +5,6 @@ import { SYSTEM_ID } from '#system';
 import createScrollFromSpell, {
 	getSpellScrollData,
 	type ScrollSourceSpell,
-	SPELL_SCROLL_PRICE_BY_TIER,
 	type SpellScrollFlagData,
 } from './createScrollFromSpell.js';
 
@@ -104,7 +103,7 @@ describe('createScrollFromSpell', () => {
 				createScrollFromSpell(utilitySpell, { includeSpellDescription: true }),
 			);
 
-			expect(price.value).toBe(SPELL_SCROLL_PRICE_BY_TIER[0]);
+			expect(price.value).toBe(10);
 		});
 
 		it('falls back to the cantrip price for an out-of-range tier', () => {
