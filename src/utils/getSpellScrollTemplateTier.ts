@@ -1,3 +1,5 @@
+import { getItemSourceId } from './itemSourceRules.js';
+
 /**
  * Document ids of the generic `Spell Scroll - Tier N` blanks in the magic items
  * pack, mapped to the tier each one is fixed at.
@@ -14,7 +16,7 @@
  *
  * Document ids are identical across both builds, so this resolves on either.
  */
-export const TIER_BY_SPELL_SCROLL_TEMPLATE_ID: Readonly<Record<string, number>> = Object.freeze({
+const TIER_BY_SPELL_SCROLL_TEMPLATE_ID: Readonly<Record<string, number>> = Object.freeze({
 	'1UL6G7MDgUqtt4fN': 0,
 	FS6fnTIbAVk8CNSa: 1,
 	'2aE1qNnrjVjNlsMe': 2,
@@ -28,9 +30,8 @@ export const TIER_BY_SPELL_SCROLL_TEMPLATE_ID: Readonly<Record<string, number>> 
 });
 
 /** Trailing document id of a UUID such as `Compendium.<pack>.Item.<id>`. */
-export function documentIdFromUuid(uuid: string): string {
-	const segments = uuid.split('.');
-	return segments[segments.length - 1] ?? '';
+function documentIdFromUuid(uuid: string): string {
+	return uuid.split('.').at(-1) ?? '';
 }
 
 /**
@@ -44,16 +45,26 @@ export default function getSpellScrollTemplateTier(item: {
 	type?: unknown;
 	_id?: unknown;
 	uuid?: unknown;
+	sourceId?: string;
 	_stats?: { compendiumSource?: string | null } | null;
+	flags?: { core?: { source?: string } };
 }): number | null {
 	if (item.type !== 'object') return null;
+
+	// `getItemSourceId` covers the legacy `sourceId` and `flags.core.source`
+	// locations as well as `_stats.compendiumSource`, so a blank stamped by an
+	// older Foundry version still resolves. Documents carry `null` rather than
+	// `undefined` for an absent compendium source, so normalize on the way in.
+	const sourceId = getItemSourceId({
+		sourceId: item.sourceId,
+		_stats: { compendiumSource: item._stats?.compendiumSource ?? undefined },
+		flags: item.flags,
+	});
 
 	const candidateIds = [
 		typeof item._id === 'string' ? item._id : null,
 		typeof item.uuid === 'string' ? documentIdFromUuid(item.uuid) : null,
-		typeof item._stats?.compendiumSource === 'string'
-			? documentIdFromUuid(item._stats.compendiumSource)
-			: null,
+		sourceId ? documentIdFromUuid(sourceId) : null,
 	];
 
 	for (const candidateId of candidateIds) {

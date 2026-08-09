@@ -2,3 +2,10 @@
 ul li:last-child {
   margin-bottom: 0.25rem;
 }
+
+/* Foundry core sets `text-shadow: 1px 1px 0 #000` on dt for its own dark window
+   chrome. On Nimble's light surfaces that smears small condensed labels into what
+   reads as a strikethrough, so definition lists inside our sheets opt out. */
+.nimble-sheet dl dt {
+  text-shadow: none;
+}

@@ -11,7 +11,7 @@ import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
-import { INCLUDE_SPELL_DESCRIPTION_ON_SCROLLS_SETTING_KEY } from './spellScrollSettings.js';
+import { registerSpellScrollSettings } from './spellScrollSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
 
@@ -85,19 +85,6 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
-	game.settings.register(
-		SYSTEM_ID as 'core',
-		INCLUDE_SPELL_DESCRIPTION_ON_SCROLLS_SETTING_KEY as 'rollMode',
-		{
-			name: 'NIMBLE.settings.includeSpellDescriptionOnScrolls.name',
-			hint: 'NIMBLE.settings.includeSpellDescriptionOnScrolls.hint',
-			scope: 'world',
-			config: true,
-			type: Boolean,
-			default: true,
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
-
 	registerAdjacencySettings();
 
 	registerAutomationSettings();
@@ -106,6 +93,7 @@ export default function registerSystemSettings() {
 	registerNcswSettings();
 	registerLanguageSettings();
 	registerSpellSchoolSettings();
+	registerSpellScrollSettings();
 
 	game.settings.register(
 		SYSTEM_ID as 'core',

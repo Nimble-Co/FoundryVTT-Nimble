@@ -4,8 +4,10 @@ import {
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import createScrollFromSpell from '#utils/createScrollFromSpell.js';
 import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
-import openSpellScrollDialog from '#view/dialogs/openSpellScrollDialog.js';
-import shouldIncludeSpellDescriptionOnScrolls from '../../settings/spellScrollSettings.js';
+import openSpellScrollDialog, {
+	type ScrollDialogActor,
+} from '#view/dialogs/openSpellScrollDialog.js';
+import { shouldIncludeSpellDescriptionOnScrolls } from '../../settings/spellScrollSettings.js';
 import {
 	getDroppedItemFlashIds,
 	type SheetDropItemFlashState,
@@ -189,7 +191,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	async #resolveSpellScrollDrop(
 		items: Array<Record<string, unknown>>,
 	): Promise<Array<Record<string, unknown>> | undefined | null> {
-		const actor = this._actor as object as Parameters<typeof openSpellScrollDialog>[0]['actor'];
+		const actor = this._actor as object as ScrollDialogActor;
 
 		const template = items.length === 1 ? getSpellScrollTemplateTier(items[0]) : null;
 		if (template !== null) {

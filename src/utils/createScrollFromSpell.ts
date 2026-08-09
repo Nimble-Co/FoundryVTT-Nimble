@@ -23,7 +23,7 @@ export const SPELL_SCROLL_PRICE_BY_TIER: Readonly<Record<number, number>> = Obje
 });
 
 /** Image shared by every scroll template in the magic items pack. */
-export const SPELL_SCROLL_IMG = 'icons/sundries/scrolls/scroll-bound-black-tan.webp';
+const SPELL_SCROLL_IMG = 'icons/sundries/scrolls/scroll-bound-black-tan.webp';
 
 /** Flag bag written onto a created scroll, read back when the scroll is used. */
 export interface SpellScrollFlagData {
@@ -139,5 +139,36 @@ export default function createScrollFromSpell(
 				spellScroll: flagData,
 			},
 		},
+	};
+}
+
+/**
+ * The scroll data written onto an object by {@link createScrollFromSpell}, or null
+ * when the item is not an inscribed spell scroll.
+ *
+ * Lives beside the writer so the two halves of one flag format cannot drift.
+ * Reads through `SYSTEM_ID` so it resolves on the dev build too, where the scope
+ * key is `nimble-dev`; scrolls are created at runtime rather than shipped in a
+ * pack, so the flag is always written under the running system's id.
+ */
+export function getSpellScrollData(item: {
+	type?: unknown;
+	flags?: Record<string, unknown>;
+}): SpellScrollFlagData | null {
+	if (item.type !== 'object') return null;
+
+	const scope = item.flags?.[SYSTEM_ID] as
+		| { spellScroll?: Partial<SpellScrollFlagData> }
+		| undefined;
+	const scroll = scope?.spellScroll;
+
+	if (!scroll || typeof scroll.school !== 'string' || typeof scroll.tier !== 'number') {
+		return null;
+	}
+
+	return {
+		spellUuid: typeof scroll.spellUuid === 'string' ? scroll.spellUuid : '',
+		school: scroll.school,
+		tier: scroll.tier,
 	};
 }

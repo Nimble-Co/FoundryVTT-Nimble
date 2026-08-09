@@ -2895,7 +2895,7 @@
 				"hint": "Adjust capsule size for the active combatant edge crawler effect"
 			},
 			"includeSpellDescriptionOnScrolls": {
-				"name": "Include the spell's description on new scrolls",
+				"name": "Include Spell Description On Scrolls",
 				"hint": "Copies the selected spell's own description onto the scroll item, beneath the scroll rules. Turning this off does not affect whether the scroll can be cast."
 			}
 		},
@@ -3244,10 +3244,10 @@
 				"arcanaCheck": "DC 10 Arcana check to cast, unless you already know a spell of this school."
 			},
 			"dialog": {
-				"chooserTitle": "{actor}: Add {spell}",
-				"pickerTitle": "{actor}: {scroll}",
-				"batchChooserTitle": "{actor}: Add {count} spells",
-				"pickerPrompt": "Which {tier} spell is inscribed on it?",
+				"chooserTitle": "{name}: Add {spell}",
+				"pickerTitle": "{name}: {scroll}",
+				"batchChooserTitle": "{name}: Add {count} spells",
+				"pickerPrompt": "Which spell is inscribed on it? ({tier})",
 				"searchPlaceholder": "Search {count} spells",
 				"filterAll": "All",
 				"addToSpellList": "Add to spell list",
@@ -3255,29 +3255,29 @@
 				"addToSpellListHintCantrip": "Learn it. Cantrips are free to cast.",
 				"addAsScroll": "Add as a spell scroll",
 				"addAsScrollHint": "Single use. No mana, no magical ability needed.",
-				"noManaWarning": "{actor} has no mana and no unlocked spell tiers. This spell would sit on the list uncastable, and could not be upcast.",
+				"noManaWarning": "{name} has no mana and no unlocked spell tiers. This spell would sit on the list uncastable, and could not be upcast.",
 				"labelTier": "Tier",
 				"labelValue": "Value",
 				"labelCasting": "Casting",
 				"labelArcana": "Arcana",
 				"labelUpcasting": "Upcasting",
 				"labelInventory": "Inventory",
-				"upcastUpToTier": "Up to tier {tier} · your highest unlocked",
+				"upcastUpToTier": "Up to {tier} · your highest unlocked",
 				"upcastNone": "Not possible — no unlocked spell tiers",
-				"upcastFixed": "Not possible — fixed at tier {tier}",
+				"upcastFixed": "Not possible — fixed at {tier}",
 				"arcanaNotNeeded": "No check — you know {school} spells",
-				"arcanaRequired": "DC 10 — {actor} knows no {school} spells",
+				"arcanaRequired": "DC 10 — {name} knows no {school} spells",
 				"sharesSlot": "Shares a slot with small items",
 				"secretBadge": "Secret",
 				"inscribe": "Inscribe and add to inventory",
-				"noCandidates": "No {tier} spells are available to inscribe.",
+				"noCandidates": "No spells of this tier are available to inscribe. ({tier})",
 				"submitAddToSpellList": "Add to spell list",
-				"submitAddToInventory": "Add to inventory"
+				"submitAddToInventory": "Add to inventory",
+				"toggleDetails": "Show details for {spell}"
 			},
 			"chat": {
 				"arcanaSuccess": "Arcana check succeeded — the scroll takes effect.",
-				"arcanaFailure": "Arcana check failed — the scroll is wasted.",
-				"consumed": "{scroll} was consumed."
+				"arcanaFailure": "Arcana check failed — the scroll is wasted."
 			},
 			"confirmUse": "Use {scroll}? This will consume the scroll.",
 			"arcanaCheckHint": "You know no {school} spells, so reading this scroll needs a DC 10 Arcana check. On a failure the spell does not take effect and the scroll is wasted."

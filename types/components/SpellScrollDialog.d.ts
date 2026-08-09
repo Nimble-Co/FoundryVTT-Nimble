@@ -1,10 +1,12 @@
-import type { SpellIndexEntry } from '../../src/utils/getSpells.js';
+import type { Snippet } from 'svelte';
+
+import type { SpellIndexEntry } from '#utils/getSpells.js';
 
 /** What the dialog was opened to ask. */
 export type SpellScrollDialogMode = 'chooser' | 'picker';
 
 /** The answer the dialog resolves with. */
-export interface SpellScrollDialogResult extends Record<string, unknown> {
+export interface SpellScrollDialogResult {
 	/** `spellList` adds the spell as a spell; `scroll` inscribes it onto a scroll. */
 	destination: 'spellList' | 'scroll';
 	/**
@@ -22,11 +24,22 @@ export interface SpellScrollCandidate extends SpellIndexEntry {
 	description: string;
 }
 
+/** A school filter tab, in the shape `SecondaryNavigation` expects. */
+export interface SpellScrollNavigationTab {
+	/** Font Awesome class for a built-in school, or an image path for a custom one. */
+	icon: string;
+	/** School id, or `all` for the unfiltered tab. */
+	name: string;
+	/** Localization key for the tooltip and accessible label. */
+	tooltip: string;
+}
+
+export interface SpellScrollDialogInstance {
+	submit: (result?: SpellScrollDialogResult) => Promise<void>;
+}
+
 export interface SpellScrollDialogProps {
-	dialog: {
-		close: () => Promise<unknown> | unknown;
-		submit: (result?: Record<string, unknown>) => Promise<void>;
-	};
+	dialog: SpellScrollDialogInstance;
 	mode: SpellScrollDialogMode;
 	/** Name of the actor receiving the spell or scroll. */
 	actorName: string;
@@ -51,8 +64,34 @@ export interface SpellScrollDialogProps {
 	batchCount?: number;
 	/** Picker mode: the spells of the template's tier that may be inscribed. */
 	candidates?: SpellScrollCandidate[];
-	/** Picker mode: the scroll template's name, used in the title. */
-	scrollName?: string;
-	/** Picker mode: localized label for the template's tier, e.g. "Tier 3". */
+	/** Localized label for the tier in play, e.g. "Tier 3" or "Cantrip". */
 	tierLabel?: string;
+}
+
+/** Props for the card that renders one destination choice in the chooser. */
+export interface SpellScrollChoiceCardProps {
+	/** Radio group name, scoped to the owning dialog instance. */
+	name: string;
+	/** This card's value within the group. */
+	value: string;
+	/** The group's current value; bound so clicking the card selects it. */
+	group: string;
+	/** Font Awesome class shown beside the title. */
+	icon: string;
+	title: string;
+	/** One-line summary under the title. */
+	hint: string;
+	/** The fact list, warning, or anything else the card carries. */
+	children?: Snippet;
+}
+
+/** Props for one selectable spell row in the picker. */
+export interface SpellScrollCandidateRowProps {
+	candidate: SpellScrollCandidate;
+	/** Localized school name, used for the icon's accessible label. */
+	schoolLabel: string;
+	isSelected: boolean;
+	isExpanded: boolean;
+	onSelect: () => void;
+	onToggleDetails: () => void;
 }

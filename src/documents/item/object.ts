@@ -1,7 +1,8 @@
 import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
-import getSpellScrollData from '#utils/getSpellScrollData.js';
+import { getSpellScrollData } from '#utils/createScrollFromSpell.js';
 import knowsSpellSchool from '#utils/knowsSpellSchool.js';
 import localize from '#utils/localize.js';
+import { getSpellSchoolLabel } from '#utils/spellLabels.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
@@ -212,13 +213,11 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		// Nothing to roll against, so the scroll simply works.
 		if (!actor?.rollSkillCheck) return 'passed';
 
-		const schoolLabel = CONFIG.NIMBLE.spellSchools[school];
-
 		const { roll } = await actor.rollSkillCheck('arcana', {
 			// States the cause and the stake, so the dialog does not appear out of
 			// nowhere with nothing said about what a failure costs.
 			checkHint: localize('NIMBLE.spellScroll.arcanaCheckHint', {
-				school: schoolLabel ? localize(schoolLabel) : school,
+				school: getSpellSchoolLabel(school),
 			}),
 		});
 		if (!roll) return 'cancelled';

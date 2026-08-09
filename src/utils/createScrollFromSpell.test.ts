@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { SYSTEM_ID } from '#system';
 
 import createScrollFromSpell, {
+	getSpellScrollData,
 	type ScrollSourceSpell,
-	SPELL_SCROLL_IMG,
 	SPELL_SCROLL_PRICE_BY_TIER,
 	type SpellScrollFlagData,
 } from './createScrollFromSpell.js';
@@ -47,7 +47,7 @@ describe('createScrollFromSpell', () => {
 
 		expect(scroll.name).toBe('Scroll of Arc Lightning');
 		expect(scroll.type).toBe('object');
-		expect(scroll.img).toBe(SPELL_SCROLL_IMG);
+		expect(scroll.img).toBe('icons/sundries/scrolls/scroll-bound-black-tan.webp');
 	});
 
 	it('creates a single-quantity identified consumable', () => {
@@ -205,6 +205,33 @@ describe('createScrollFromSpell', () => {
 		});
 	});
 
+	it('falls back when the name is explicitly null, not just absent', () => {
+		const scroll = createScrollFromSpell(createSpell({ name: null }), {
+			includeSpellDescription: true,
+		});
+
+		expect(scroll.name).toBe('Scroll of Unknown Spell');
+	});
+
+	it('omits the separator when the spell carries no description object at all', () => {
+		const spell = createSpell({ system: { school: 'fire', tier: 1, activation: {} } });
+
+		const system = scrollSystem(createScrollFromSpell(spell, { includeSpellDescription: true }));
+
+		expect(system.description.public).toContain('Single use.');
+		expect(system.description.public).not.toContain('<hr>');
+	});
+
+	it('falls back to the cantrip price for a negative tier', () => {
+		const spell = createSpell({
+			system: { school: 'fire', tier: -1, description: { baseEffect: '' }, activation: {} },
+		});
+
+		expect(
+			scrollSystem(createScrollFromSpell(spell, { includeSpellDescription: true })).price.value,
+		).toBe(10);
+	});
+
 	it('tolerates a spell missing every optional field', () => {
 		const scroll = createScrollFromSpell({}, { includeSpellDescription: true });
 		const system = scrollSystem(scroll);
@@ -212,5 +239,63 @@ describe('createScrollFromSpell', () => {
 		expect(scroll.name).toBe('Scroll of Unknown Spell');
 		expect(system.price.value).toBe(10);
 		expect(scrollFlags(scroll)).toEqual({ spellUuid: '', school: '', tier: 0 });
+	});
+});
+
+describe('getSpellScrollData', () => {
+	function scrollItem(spellScroll: unknown, type = 'object') {
+		return { type, flags: { [SYSTEM_ID]: { spellScroll } } };
+	}
+
+	it('reads back what createScrollFromSpell wrote', () => {
+		const scroll = createScrollFromSpell(createSpell(), { includeSpellDescription: true });
+
+		expect(getSpellScrollData(scroll as Parameters<typeof getSpellScrollData>[0])).toEqual({
+			spellUuid: 'Compendium.nimble.nimble-spells.Item.arcLightning',
+			school: 'lightning',
+			tier: 1,
+		});
+	});
+
+	it('accepts tier 0, which is valid despite being falsy', () => {
+		const data = getSpellScrollData(scrollItem({ spellUuid: '', school: 'fire', tier: 0 }));
+
+		expect(data).toEqual({ spellUuid: '', school: 'fire', tier: 0 });
+	});
+
+	it('coerces a non-string spellUuid to an empty string', () => {
+		const data = getSpellScrollData(scrollItem({ spellUuid: 42, school: 'fire', tier: 1 }));
+
+		expect(data?.spellUuid).toBe('');
+	});
+
+	it('returns null for a non-object item', () => {
+		expect(getSpellScrollData(scrollItem({ school: 'fire', tier: 1 }, 'spell'))).toBeNull();
+	});
+
+	it('returns null for an item with no flags property at all', () => {
+		expect(getSpellScrollData({ type: 'object' })).toBeNull();
+	});
+
+	it('returns null when there is no flag scope at all', () => {
+		expect(getSpellScrollData({ type: 'object', flags: {} })).toBeNull();
+	});
+
+	it('returns null for a flag written under a foreign scope key', () => {
+		const item = {
+			type: 'object',
+			flags: { someOtherSystem: { spellScroll: { school: 'fire', tier: 1 } } },
+		};
+
+		expect(getSpellScrollData(item)).toBeNull();
+	});
+
+	it('returns null when the tier is missing or not a number', () => {
+		expect(getSpellScrollData(scrollItem({ school: 'fire' }))).toBeNull();
+		expect(getSpellScrollData(scrollItem({ school: 'fire', tier: '1' }))).toBeNull();
+	});
+
+	it('returns null when the school is missing', () => {
+		expect(getSpellScrollData(scrollItem({ tier: 1 }))).toBeNull();
 	});
 });

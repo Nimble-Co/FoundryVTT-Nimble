@@ -9,12 +9,15 @@ import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import { buildSpellIndex, type SpellIndexEntry } from '#utils/getSpells.js';
 import knowsSpellSchool from '#utils/knowsSpellSchool.js';
 import localize from '#utils/localize.js';
+import sortDocumentsByName from '#utils/sortDocumentsByName.js';
+import enrichSpellText from '#utils/spellDescription.js';
+import { getSpellTierLabel } from '#utils/spellLabels.js';
 import SpellScrollDialog from '#view/dialogs/SpellScrollDialog.svelte';
 
 const DIALOG_ICON = 'fa-solid fa-scroll';
 const DIALOG_WIDTH = 420;
 
-interface ScrollDialogActor {
+export interface ScrollDialogActor {
 	name?: string | null;
 	items: Iterable<{ type: string; system?: unknown }>;
 	system?: {
@@ -34,7 +37,7 @@ interface DroppedSpell {
 	};
 }
 
-export interface OpenChooserOptions {
+interface OpenChooserOptions {
 	mode: 'chooser';
 	actor: ScrollDialogActor;
 	spell: DroppedSpell;
@@ -42,7 +45,7 @@ export interface OpenChooserOptions {
 	batchCount?: number;
 }
 
-export interface OpenPickerOptions {
+interface OpenPickerOptions {
 	mode: 'picker';
 	actor: ScrollDialogActor;
 	/** Tier the dropped scroll template is fixed at. */
@@ -51,12 +54,7 @@ export interface OpenPickerOptions {
 	scrollName: string;
 }
 
-export type OpenSpellScrollDialogOptions = OpenChooserOptions | OpenPickerOptions;
-
-function tierLabel(tier: number): string {
-	const label = (CONFIG.NIMBLE.spellTiers as Record<number, string> | undefined)?.[tier];
-	return label ? localize(label) : String(tier);
-}
+type OpenSpellScrollDialogOptions = OpenChooserOptions | OpenPickerOptions;
 
 function activationSummary(spell: DroppedSpell): string {
 	return formatActivationCostLabel(spell.system?.activation?.cost ?? {}) ?? '';
@@ -90,14 +88,14 @@ async function buildCandidates(tier: number): Promise<SpellScrollCandidate[]> {
 			return {
 				...entry,
 				activationSummary: spell ? activationSummary(spell) : '',
-				description: await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-					spell?.system?.description?.baseEffect ?? '',
-				),
+				description: await enrichSpellText(spell?.system?.description?.baseEffect ?? ''),
 			} satisfies SpellScrollCandidate;
 		}),
 	);
 
-	return candidates.sort((a, b) => a.name.localeCompare(b.name));
+	// The shared sort strips parentheses, so scroll candidates order the same way
+	// as every other alphabetical document list in the system.
+	return sortDocumentsByName(candidates);
 }
 
 /**
@@ -119,7 +117,7 @@ export default async function openSpellScrollDialog(
 					actorName,
 					tier: options.spell.system?.tier ?? 0,
 					school: options.spell.system?.school ?? '',
-					tierLabel: tierLabel(options.spell.system?.tier ?? 0),
+					tierLabel: getSpellTierLabel(options.spell.system?.tier ?? 0),
 					activationSummary: activationSummary(options.spell),
 					scrollPrice:
 						SPELL_SCROLL_PRICE_BY_TIER[options.spell.system?.tier ?? 0] ??
@@ -133,8 +131,7 @@ export default async function openSpellScrollDialog(
 					mode: 'picker' as const,
 					actorName,
 					tier: options.tier,
-					tierLabel: tierLabel(options.tier),
-					scrollName: options.scrollName,
+					tierLabel: getSpellTierLabel(options.tier),
 					scrollPrice: SPELL_SCROLL_PRICE_BY_TIER[options.tier] ?? SPELL_SCROLL_PRICE_BY_TIER[0],
 					candidates: await buildCandidates(options.tier),
 				};
@@ -143,15 +140,15 @@ export default async function openSpellScrollDialog(
 		options.mode === 'chooser'
 			? (options.batchCount ?? 0) > 1
 				? localize('NIMBLE.spellScroll.dialog.batchChooserTitle', {
-						actor: actorName,
+						name: actorName,
 						count: String(options.batchCount),
 					})
 				: localize('NIMBLE.spellScroll.dialog.chooserTitle', {
-						actor: actorName,
+						name: actorName,
 						spell: options.spell.name ?? '',
 					})
 			: localize('NIMBLE.spellScroll.dialog.pickerTitle', {
-					actor: actorName,
+					name: actorName,
 					scroll: options.scrollName,
 				});
 

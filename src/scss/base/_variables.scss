@@ -156,6 +156,19 @@
 	--nimble-additional-action-color: hsl(210, 60%, 50%);
 	--nimble-additional-action-color-hover: hsl(210, 60%, 60%);
 
+	/** CHOICE CARDS **/
+	// The selected state for a card-shaped choice in a dialog (spell scroll
+	// chooser, and available to the other binary-choice dialogs). Named by purpose
+	// so retuning the heroic-action callout cannot silently retint a selection.
+	--nimble-choice-card-selected-background: hsla(45, 70%, 50%, 0.15);
+	--nimble-choice-card-selected-border-color: hsla(45, 70%, 40%, 0.5);
+	--nimble-choice-card-selected-text-color: hsl(45, 70%, 28%);
+	--nimble-choice-card-selected-icon-color: hsl(45, 80%, 35%);
+
+	/** SECRET CONTENT **/
+	// GM-only content markers, e.g. the secret-spell badge in the scroll picker.
+	--nimble-secret-badge-background: hsl(276, 30%, 33%);
+
 	/** REACTION COLORS **/
 	// Defend (blue)
 	--nimble-reaction-defend-primary: hsl(210, 60%, 50%);
