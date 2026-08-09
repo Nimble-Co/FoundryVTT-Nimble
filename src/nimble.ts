@@ -1,3 +1,4 @@
+import registerDiceSoNiceIntegration from './dice/diceSoNiceIntegration.js';
 import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import registerBabeleHooks from './hooks/babeleInit.js';
@@ -147,6 +148,7 @@ registerTokenCombatantSync();
 registerRuleEventDispatch();
 registerBabeleHooks();
 registerBabeleInstallNotice();
+registerDiceSoNiceIntegration();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

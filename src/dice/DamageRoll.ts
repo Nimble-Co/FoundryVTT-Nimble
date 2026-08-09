@@ -1,6 +1,6 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
-
+import { getPrimaryDieAppearance } from './diceSoNiceIntegration.js';
 import { getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
@@ -327,6 +327,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (!firstDieTerm) return;
 
 		const { number = 1, faces } = firstDieTerm;
+		const appearance = getPrimaryDieAppearance();
 		let primaryTerm: PrimaryDie;
 
 		if (number > 1) {
@@ -340,7 +341,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				number: 1,
 				faces: faces ?? 6,
 				modifiers: [],
-				options: { flavor: 'Primary Die', isVicious },
+				options: { flavor: 'Primary Die', isVicious, appearance },
 			});
 
 			// Apply advantage/disadvantage to primary die only (keeps 1)
@@ -358,7 +359,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				number: 1,
 				faces: firstDieTerm.faces ?? 6,
 				modifiers: [],
-				options: { isVicious },
+				options: { isVicious, appearance },
 			});
 
 			// Apply advantage/disadvantage (keeps 1)

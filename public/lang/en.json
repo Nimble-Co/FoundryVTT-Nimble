@@ -414,6 +414,10 @@
 			"thunder": "Thunder",
 			"unknown": "Unknown Type"
 		},
+		"diceSoNice": {
+			"category": "Nimble",
+			"primaryDieColorset": "Nimble Primary Die"
+		},
 		"durations": {
 			"action": "Action",
 			"minute": "Minute",
@@ -2763,6 +2767,18 @@
 			"autoAddCharacterToCombatOnInitiativeRoll": {
 				"name": "Auto-Add Character To Combat On Initiative Roll",
 				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat."
+			},
+			"dsnPrimaryDieStyleEnabled": {
+				"name": "3D Dice: Distinct Primary Die",
+				"hint": "When Dice So Nice is active, render the primary die of your damage rolls with a distinct appearance so it stands out from the rest of the dice. Applies to rolls you make, on every player's screen."
+			},
+			"dsnPrimaryDieColor": {
+				"name": "3D Dice: Primary Die Color",
+				"hint": "Body color for the primary die of your damage rolls."
+			},
+			"dsnPrimaryDieLabelColor": {
+				"name": "3D Dice: Primary Die Number Color",
+				"hint": "Number color for the primary die of your damage rolls."
 			},
 			"autoTrackTokenAdjacency": {
 				"name": "Auto-Track Token Adjacency",
