@@ -167,6 +167,8 @@
 
 	/** SECRET CONTENT **/
 	// GM-only content markers, e.g. the secret-spell badge in the scroll picker.
+	// Starts on the subclass badge's purple so the two read as one badge family,
+	// but stays its own token: this one tracks GM-visibility, not subclasses.
 	--nimble-secret-badge-background: hsl(276, 30%, 33%);
 
 	/** REACTION COLORS **/

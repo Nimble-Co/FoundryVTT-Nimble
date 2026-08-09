@@ -130,8 +130,9 @@
 			font-weight: 600;
 			color: var(--nimble-dark-text-color);
 
-			:global(i),
-			:global(img) {
+			// SpellSchoolIcon renders the element, so the class it is handed carries
+			// the parent's scoping hash on no element and has to be matched globally.
+			:global(.nimble-spell-scroll-candidate__school-icon) {
 				color: var(--nimble-medium-text-color);
 				font-size: var(--nimble-xs-text);
 			}

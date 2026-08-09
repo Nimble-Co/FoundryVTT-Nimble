@@ -5,10 +5,13 @@ import type { SpellIndexEntry } from '#utils/getSpells.js';
 /** What the dialog was opened to ask. */
 export type SpellScrollDialogMode = 'chooser' | 'picker';
 
+/** Where the dropped spell is headed. */
+export type SpellScrollDestination = 'spellList' | 'scroll';
+
 /** The answer the dialog resolves with. */
 export interface SpellScrollDialogResult {
 	/** `spellList` adds the spell as a spell; `scroll` inscribes it onto a scroll. */
-	destination: 'spellList' | 'scroll';
+	destination: SpellScrollDestination;
 	/**
 	 * Picker mode only: UUID of the spell chosen to inscribe. Absent in chooser
 	 * mode, where the spell is the one that was dropped.
@@ -73,9 +76,9 @@ export interface SpellScrollChoiceCardProps {
 	/** Radio group name, scoped to the owning dialog instance. */
 	name: string;
 	/** This card's value within the group. */
-	value: string;
+	value: SpellScrollDestination;
 	/** The group's current value; bound so clicking the card selects it. */
-	group: string;
+	group: SpellScrollDestination;
 	/** Font Awesome class shown beside the title. */
 	icon: string;
 	title: string;
