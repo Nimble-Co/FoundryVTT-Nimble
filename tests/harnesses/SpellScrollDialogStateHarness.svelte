@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
 	import type { SpellScrollDialogProps } from '../../types/components/SpellScrollDialog.d.ts';
 
 	import { createSpellScrollDialogState } from '../../src/view/dialogs/SpellScrollDialog.state.svelte.ts';
@@ -13,7 +15,9 @@
 
 	const state = createSpellScrollDialogState(() => props);
 
-	onready?.(state);
+	// Capturing the initial `onready` is the intent, so say so rather than leaving
+	// the compiler to warn about a top-level prop read.
+	untrack(() => onready?.(state));
 
 	// Serialized rather than read directly off `state`, so every assertion goes
 	// through a real render and proves the value is reactive.
