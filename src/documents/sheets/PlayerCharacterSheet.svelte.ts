@@ -19,6 +19,7 @@ import {
 	type PrimaryTabName,
 } from '../../view/sheets/playerCharacterPrimaryTabConfig.js';
 import type { NimbleCharacter } from '../actor/character.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 type DroppedItemData = {
@@ -268,12 +269,27 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		this.#requestDroppedItemFlash(absorbedIds);
 	}
 
-	/** Id of the existing item a stacking create was folded into, if any. */
+	/**
+	 * Id of the existing item a stacking create was folded into, if any.
+	 *
+	 * Mirrors the predicate in `NimbleObjectItem#_preCreate`, including the size
+	 * check on both the incoming item and the candidate — matching on name alone
+	 * would flash an unrelated same-named object whenever a create was refused for
+	 * some other reason.
+	 */
 	#findStackedItemId(item: Record<string, unknown>): string | null {
 		if (item.type !== 'object') return null;
 
+		const { objectSizeType } = (item.system ?? {}) as { objectSizeType?: string };
+		if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(objectSizeType ?? '')) return null;
+
 		const existing = this._actor.items.find(
-			(candidate) => candidate.type === 'object' && candidate.name === item.name,
+			(candidate) =>
+				candidate.type === 'object' &&
+				candidate.name === item.name &&
+				OBJECT_SIZE_TYPES_WITH_QUANTITY.has(
+					(candidate as { system?: { objectSizeType?: string } }).system?.objectSizeType ?? '',
+				),
 		);
 
 		return existing?.id ?? null;

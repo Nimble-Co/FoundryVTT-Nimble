@@ -36,6 +36,15 @@ function syncRuleSourcesToEquippedState(item: NimbleObjectItem): void {
 	} as Record<string, unknown>);
 }
 
+/**
+ * Object sizes that carry a quantity, and so fold into an item of the same name
+ * already carried instead of creating a second document.
+ */
+export const OBJECT_SIZE_TYPES_WITH_QUANTITY: ReadonlySet<string> = new Set([
+	'stackable',
+	'smallSized',
+]);
+
 export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	declare system: NimbleObjectData;
 
@@ -87,14 +96,13 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		user: User.Stored,
 	) {
 		// Update quantity if object already exists and is stackable or smallSized
-		const objectSizeTypesWithQuantity = new Set(['stackable', 'smallSized']);
-		if (this.isEmbedded && objectSizeTypesWithQuantity.has(this.system.objectSizeType)) {
+		if (this.isEmbedded && OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)) {
 			const existing = this.actor?.items.find(
 				(i) =>
 					i instanceof NimbleObjectItem &&
 					i.name === this.name &&
 					i.type === 'object' &&
-					objectSizeTypesWithQuantity.has(i.system.objectSizeType),
+					OBJECT_SIZE_TYPES_WITH_QUANTITY.has(i.system.objectSizeType),
 			) as NimbleObjectItem | undefined;
 
 			if (!existing) return super._preCreate(data, options, user);

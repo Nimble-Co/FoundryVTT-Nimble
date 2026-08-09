@@ -56,6 +56,13 @@
 			border-color: var(--nimble-accent-color);
 		}
 
+		// The radio is the focusable element but is invisible, so the ring has to be
+		// drawn on the label instead. Matches the treatment on .nimble-size-choice__option.
+		&:has(.nimble-spell-scroll-choice__input:focus-visible) {
+			border-color: var(--nimble-accent-color);
+			box-shadow: 0 0 0 1px var(--nimble-accent-color);
+		}
+
 		&--selected {
 			background: var(--nimble-choice-card-selected-background);
 			border-color: var(--nimble-choice-card-selected-border-color);

@@ -35,7 +35,18 @@
 			<i class="fa-solid" class:fa-caret-right={!isExpanded} class:fa-caret-down={isExpanded}></i>
 		</button>
 
-		<button type="button" class="nimble-spell-scroll-candidate__select" onclick={onSelect}>
+		<!--
+			aria-pressed rather than role="radio": a radiogroup owns its arrow-key
+			traversal through a roving tabindex, which this list cannot offer while each
+			row also carries an expand button. This announces the selection without
+			promising keyboard behaviour that is not there.
+		-->
+		<button
+			type="button"
+			class="nimble-spell-scroll-candidate__select"
+			aria-pressed={isSelected}
+			onclick={onSelect}
+		>
 			<img src={candidate.img} alt="" class="nimble-spell-scroll-candidate__thumb" />
 
 			<span class="nimble-spell-scroll-candidate__names">

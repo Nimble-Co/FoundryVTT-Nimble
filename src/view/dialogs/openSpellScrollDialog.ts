@@ -22,7 +22,7 @@ export interface ScrollDialogActor {
 	items: Iterable<{ type: string; system?: unknown }>;
 	system?: {
 		resources?: {
-			mana?: { current?: number; max?: number };
+			mana?: { max?: number };
 			highestUnlockedSpellTier?: number;
 		};
 	};
