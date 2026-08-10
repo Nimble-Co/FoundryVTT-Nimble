@@ -2808,6 +2808,7 @@
 				"remove": "Remove condition",
 				"save": "Save Conditions",
 				"saved": "Custom conditions saved.",
+				"saveFailed": "Could not save the custom conditions. See the console for details.",
 				"errorEmptyId": "Id is required.",
 				"errorReservedId": "That id is reserved by a built-in condition.",
 				"errorDuplicateId": "Duplicate id."

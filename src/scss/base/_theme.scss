@@ -25,6 +25,12 @@
 	--nimble-sidebar-text-color: hsl(36, 53%, 80%);
 	--nimble-code-editor-text-color: hsl(217, 34%, 88%);
 
+	/** VALIDATION COLORS **/
+	// Lightened so error text and the invalid-row border keep their contrast against
+	// the dark box background below.
+	--nimble-validation-error-color: hsl(0, 70%, 68%);
+	--nimble-validation-error-border-color: hsl(0, 70%, 62%);
+
 	/** OTHER COLORS **/
 	--nimble-box-background-color: hsl(293, 10%, 17%);
 	--nimble-card-background-color: hsl(293, 10%, 17%);

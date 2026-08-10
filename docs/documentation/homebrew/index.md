@@ -14,6 +14,7 @@ The golden rule of homebrewing in this system: **everything in this section is p
 - **Complete character options**: whole classes, subclasses, ancestries, backgrounds, and boons, delivered through the same character creator and level-up flow as the official ones.
 - **Passive bonuses** to stats, armor, speed, skills, saving throws, and maximum hit points (and more, such as damage, initiative, and wounds).
 - **Granting things automatically**: an item or feature that gives the bearer other items, spells, proficiencies, or new movement types like flying or swimming.
+- **Custom conditions**: your own statuses, with their own name, description, and icon, added from Settings → System → Custom Conditions. They appear in the token HUD and condition lists beside the built-in ones, and can be applied by rules like any other condition.
 - **Condition immunity**: creatures or items that make their owner immune to specific conditions.
 - **Conditions applied on a hit**: a blade that dazes on a crit, a monster attack that poisons.
 - **Charges and dice pools**: limited-use abilities that track and spend their own resource.
@@ -27,7 +28,7 @@ All of the automatic behavior above is powered by **rules** that you attach to i
 
 Being honest about the edges saves you time:
 
-- **New condition types.** The list of conditions is fixed; you can automate and grant the existing ones but not invent new ones.
+- **New condition *behavior*.** You can add your own conditions, but they are markers: the system won't give them built-in mechanics the way it does for the official ones (which conditions imply or replace others, which ones stack, which ones apply automatically).
 - **Brand-new rule types.** You combine the rule types the system ships with; you can't define a new kind of rule from inside Foundry.
 - **Changing the core dice math.** How attacks, saves, and criticals resolve is built in.
 - **New sheet layouts.** You can't rearrange or redesign the character and monster sheets.

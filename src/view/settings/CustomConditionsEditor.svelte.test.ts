@@ -119,6 +119,23 @@ describe('CustomConditionsEditor', () => {
 		expect(dialog.close).toHaveBeenCalled();
 	});
 
+	it('reports a failed save and keeps the dialog open', async () => {
+		const { settingsMock, dialog } = renderEditor();
+		settingsMock.set.mockRejectedValue(new Error('world is locked'));
+		vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+		await fireEvent.click(screen.getByRole('button', { name: /Add Condition/ }));
+		await fireEvent.input(nameInput(), { target: { value: 'Hexed' } });
+		await fireEvent.click(saveButton());
+
+		expect(ui.notifications?.error).toHaveBeenCalledWith(
+			'Could not save the custom conditions. See the console for details.',
+		);
+		expect(dialog.close).not.toHaveBeenCalled();
+		// The in-flight guard must clear, or the GM can never retry.
+		expect(saveButton()).toBeEnabled();
+	});
+
 	it('loads the stored conditions and drops the ones removed before saving', async () => {
 		const { settingsMock } = renderEditor([
 			{ id: 'hexed', name: 'Hexed', description: 'Cursed.', img: 'icons/svg/hex.svg' },

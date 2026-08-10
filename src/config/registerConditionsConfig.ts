@@ -1,9 +1,14 @@
 import { SYSTEM_PATH } from '#system';
 
 /**
- * Canonical status-effect IDs for system-managed conditions. The keys here are the
- * source of truth — the dictionaries below are typed against this so adding/renaming
- * an ID in one place forces an update in the others.
+ * Canonical status-effect IDs for the conditions that ship with the system. The keys here
+ * are the source of truth for those — the dictionaries below are typed against this so
+ * adding/renaming an ID in one place forces an update in the others.
+ *
+ * At runtime the dictionaries are open-ended: GMs can add their own conditions through the
+ * custom conditions setting, which merges arbitrary IDs into them (see
+ * `src/settings/customConditionSettings.ts`). Treat a condition ID read from CONFIG as a
+ * plain string; only these built-ins are guaranteed to be present.
  */
 export const STATUS_EFFECT_IDS = {
 	blinded: 'blinded',

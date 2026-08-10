@@ -45,13 +45,13 @@ export class ConditionManager {
 			const aliases: string[] = CONFIG.NIMBLE.conditionAliasedConditions[id] ?? [];
 			const statuses: string[] = CONFIG.NIMBLE.conditionLinkedConditions[id] ?? [];
 
-			const data = {
+			const data: Condition = {
 				id,
 				name: CONFIG.NIMBLE.conditions[id],
 				img: CONFIG.NIMBLE.conditionDefaultImages[id],
 				stackable: CONFIG.NIMBLE.conditionStackableConditions.has(id),
 				enriched: enricherText(id),
-			} as Condition;
+			};
 
 			if (aliases.length) data.aliases = new Set(aliases);
 

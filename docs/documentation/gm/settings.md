@@ -27,6 +27,12 @@ Toggles only stop future events. Effects that were already applied linger until 
 
 Worlds upgrading from an earlier version keep their old choice: the stored value of the legacy Auto-Apply Conditions from Rules setting seeds the initial state of Apply Conditions and Effects from Rules.
 
+## Custom conditions
+
+The **Manage Conditions** button in the system settings tab (GM only) opens an editor for adding conditions the system doesn't ship with — useful when your table is running content that introduces its own statuses. Give each one a name, a description, and an icon from your Foundry files; the id is filled in from the name and is what gets stored on the effect, so keep it stable once anything is using it.
+
+Saved conditions appear alongside the built-in ones in the token status panel, both Conditions tabs, and every rule that picks a condition. The token panel picks up changes right away; sheets that are already open show them after you reopen them. Custom conditions carry no built-in mechanics — see [Conditions](../playing/conditions.md#custom-conditions) for what that means and how to clean one up if you remove it.
+
 ## Settings to decide before your first session
 
 **Hide Rolls by Default** is off by default. When on, skill check and weapon roll windows start with the roll hidden from other players, instead of public. Each user sets this for themselves, so turning it on for yourself as GM keeps your monster rolls private without touching the players' rolls.

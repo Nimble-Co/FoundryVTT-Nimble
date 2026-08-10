@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { createCustomConditionsEditorState } from './CustomConditionsEditorState.svelte.ts';
 	import type { CustomConditionsEditorProps } from './CustomConditionsEditor.types.ts';
+	import { createCustomConditionsEditorState } from './CustomConditionsEditorState.svelte.ts';
 
 	let { dialog }: CustomConditionsEditorProps = $props();
 
@@ -11,6 +11,7 @@
 	const rows = $derived(state.rows);
 	const rowErrors = $derived(state.rowErrors);
 	const hasErrors = $derived(state.hasErrors);
+	const saving = $derived(state.saving);
 </script>
 
 <article class="nimble-sheet__body nimble-custom-conditions">
@@ -79,7 +80,7 @@
 					</label>
 
 					{#if rowErrors[index]}
-						<p class="condition-card__error">
+						<p class="condition-card__error" role="alert">
 							<i class="fa-solid fa-circle-exclamation"></i>
 							{rowErrors[index]}
 						</p>
@@ -100,7 +101,7 @@
 		class="nimble-button"
 		data-button-variant="basic"
 		type="button"
-		disabled={hasErrors}
+		disabled={hasErrors || saving}
 		onclick={save}
 	>
 		{t('save')}
@@ -174,7 +175,7 @@
 		border-radius: 6px;
 
 		&--invalid {
-			border-color: hsl(0deg 65% 55%);
+			border-color: var(--nimble-validation-error-border-color);
 		}
 
 		&__header {
@@ -222,8 +223,8 @@
 			align-items: center;
 			justify-content: center;
 			font-size: 0.75rem;
-			color: #fff;
-			background: rgba(0, 0, 0, 0.55);
+			color: var(--nimble-icon-picker-overlay-text-color);
+			background: var(--nimble-icon-picker-overlay-background);
 			opacity: 0;
 			transition: opacity 0.15s ease;
 		}
@@ -247,23 +248,16 @@
 			color: var(--nimble-medium-text-color);
 		}
 
+		// Colour, background, border and focus ring come from the shared
+		// `.system-nimble .nimble-sheet input/textarea` rules in scss/components/_sheet.scss,
+		// which outrank these scoped selectors — only layout belongs here.
 		&__input {
 			width: 100%;
 			padding: 0.375rem 0.5rem;
 			font-size: var(--nimble-sm-text);
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 4px;
-			background: var(--nimble-input-background-color);
-			color: var(--nimble-dark-text-color);
-
-			&:focus {
-				outline: 2px solid hsl(212deg 60% 48%);
-				outline-offset: -1px;
-				border-color: hsl(212deg 60% 48%);
-			}
 
 			&--mono {
-				font-family: var(--nimble-monospace-font, monospace);
+				font-family: var(--nimble-mono-font);
 				font-size: var(--nimble-xs-text);
 			}
 		}
@@ -291,8 +285,8 @@
 				background 0.15s ease;
 
 			&:hover {
-				color: hsl(0deg 65% 50%);
-				background: hsl(0deg 65% 50% / 0.1);
+				color: var(--nimble-validation-error-color);
+				background: color-mix(in srgb, var(--nimble-validation-error-color) 12%, transparent);
 			}
 		}
 
@@ -302,7 +296,7 @@
 			gap: 0.375rem;
 			margin: 0;
 			font-size: var(--nimble-xs-text);
-			color: hsl(0deg 65% 45%);
+			color: var(--nimble-validation-error-color);
 		}
 	}
 

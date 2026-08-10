@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ConditionManager } from '../managers/ConditionManager.js';
 import {
 	DEFAULT_CUSTOM_CONDITION_ICON,
 	getCustomConditions,
@@ -112,6 +113,35 @@ describe('customConditionSettings', () => {
 			expect(config.conditionDescriptions).not.toHaveProperty('hexed');
 			expect(config.conditionDefaultImages).not.toHaveProperty('hexed');
 			expect(Object.keys(config.conditions).sort()).toEqual(['blinded', 'prone']);
+		});
+
+		it('reaches CONFIG.statusEffects once the condition manager reinitializes', () => {
+			// The GM-facing contract: a saved condition becomes a real Foundry status effect.
+			// The merge and the manager are otherwise only tested in isolation.
+			Object.assign(CONFIG.NIMBLE, {
+				conditionAliasedConditions: {},
+				conditionLinkedConditions: {},
+				conditionStackableConditions: new Set<string>(),
+			});
+			const manager = new ConditionManager();
+
+			setStoredConditions(settingsMock, [
+				{ id: 'hexed', name: 'Hexed', description: 'Cursed.', img: 'icons/svg/hex.svg' },
+			]);
+			mergeCustomConditionsIntoConfig();
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			expect(CONFIG.statusEffects).toContainEqual(
+				expect.objectContaining({ id: 'hexed', name: 'Hexed', img: 'icons/svg/hex.svg' }),
+			);
+
+			setStoredConditions(settingsMock, []);
+			mergeCustomConditionsIntoConfig();
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			expect(CONFIG.statusEffects.map((effect) => effect.id)).not.toContain('hexed');
 		});
 
 		it('mutates the config dictionaries in place so existing references stay live', () => {

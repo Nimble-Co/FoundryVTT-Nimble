@@ -40,6 +40,8 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 
 	const hasErrors = $derived(rowErrors.some((error) => error !== ''));
 
+	let saving = $state(false);
+
 	function addRow() {
 		rows.push({
 			id: '',
@@ -81,7 +83,7 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	}
 
 	async function save() {
-		if (hasErrors) return;
+		if (hasErrors || saving) return;
 
 		const cleaned = rows
 			.map((row) => {
@@ -93,9 +95,18 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 			})
 			.filter((row) => row.id);
 
-		await setCustomConditions(cleaned);
-		ui.notifications?.info(t('saved'));
-		dialog().close();
+		saving = true;
+
+		try {
+			await setCustomConditions(cleaned);
+			ui.notifications?.info(t('saved'));
+			dialog().close();
+		} catch (error) {
+			console.error('Nimble | Failed to save the custom conditions:', error);
+			ui.notifications?.error(t('saveFailed'));
+		} finally {
+			saving = false;
+		}
 	}
 
 	return {
@@ -109,6 +120,9 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 		},
 		get hasErrors() {
 			return hasErrors;
+		},
+		get saving() {
+			return saving;
 		},
 		addRow,
 		removeRow,

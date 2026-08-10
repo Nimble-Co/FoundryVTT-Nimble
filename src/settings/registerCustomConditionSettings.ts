@@ -1,6 +1,7 @@
 import type { Component } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
+import localize from '#utils/localize.js';
 import CustomConditionsEditor from '#view/settings/CustomConditionsEditor.svelte';
 import {
 	CUSTOM_CONDITIONS_SETTING_KEY,
@@ -20,10 +21,15 @@ let openEditor: CustomConditionsMenu | null = null;
 class CustomConditionsMenu extends GenericDialog {
 	constructor() {
 		super(
-			game.i18n.localize('NIMBLE.settings.customConditions.title'),
+			localize('NIMBLE.settings.customConditions.title'),
 			CustomConditionsEditor as unknown as Component<Record<string, never>>,
 			{},
-			{ uniqueId: 'nimble-custom-conditions', icon: EDITOR_ICON, width: 560, resizable: true },
+			{
+				uniqueId: `${SYSTEM_ID}-custom-conditions`,
+				icon: EDITOR_ICON,
+				width: 560,
+				resizable: true,
+			},
 		);
 	}
 
@@ -35,32 +41,6 @@ class CustomConditionsMenu extends GenericDialog {
 		openEditor = this;
 		return super.render(...args);
 	}
-}
-
-/**
- * Re-render the actor sheets and dialogs that read condition config at render time, so edits
- * appear without a reload. Svelte components capture `CONFIG.NIMBLE` at script init, so
- * re-rendering the host re-instantiates them. Item sheets pick the changes up when reopened.
- */
-function rerenderConditionConsumers(): void {
-	const shouldRerender = (name: string | undefined): boolean =>
-		name === 'PlayerCharacterSheet' || name === 'NPCSheet' || name === 'GenericDialog';
-
-	const v1 = Object.values(ui.windows ?? {}) as Array<{
-		render?: (force?: boolean) => void;
-		constructor: { name: string };
-	}>;
-	for (const app of v1) {
-		if (shouldRerender(app.constructor?.name)) app.render?.(false);
-	}
-
-	const v2 = (foundry.applications?.instances ?? new Map()) as Map<
-		string,
-		{ render?: (force?: boolean) => void; constructor: { name: string } }
-	>;
-	v2.forEach((app) => {
-		if (shouldRerender(app.constructor?.name)) app.render?.(false);
-	});
 }
 
 export function registerCustomConditionSettings(): void {
@@ -77,11 +57,11 @@ export function registerCustomConditionSettings(): void {
 			onChange: () => {
 				mergeCustomConditionsIntoConfig();
 				// `CONFIG.statusEffects` is a snapshot taken at ready, not a live view of the config,
-				// so the manager has to rebuild its records and re-publish the snapshot before the
-				// token HUD and condition lists can show the change.
+				// so the manager has to rebuild its records and re-publish the snapshot. The token
+				// HUD reads that snapshot each time it opens, so it reflects edits immediately;
+				// sheets that captured the condition list when they rendered pick them up on reopen.
 				game.nimble.conditions.initialize();
 				game.nimble.conditions.configureStatusEffects();
-				rerenderConditionConsumers();
 			},
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
