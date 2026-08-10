@@ -123,6 +123,8 @@ describe('customConditionSettings', () => {
 				conditionLinkedConditions: {},
 				conditionStackableConditions: new Set<string>(),
 			});
+			// V14's CONFIG.statusEffects is mutated in place by the manager, so it must exist.
+			(CONFIG as unknown as { statusEffects: unknown[] }).statusEffects = [];
 			const manager = new ConditionManager();
 
 			setStoredConditions(settingsMock, [

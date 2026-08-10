@@ -72,7 +72,7 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	}
 
 	function pickIcon(row: ConditionEditorRow) {
-		const picker = new FilePicker({
+		const picker = new foundry.applications.apps.FilePicker.implementation({
 			type: 'image',
 			current: row.img,
 			callback: (path: string) => {
