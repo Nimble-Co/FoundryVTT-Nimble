@@ -1487,6 +1487,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `substituteSpendFormula()` | `src/utils/dicePool/substituteSpendFormula.ts` | Resolve the `@n` / `@sum` placeholders in a dice-consumer effect formula against the dice a player picked |
 | `foldBonusIntoPrimaryDamage()`, `findPrimaryDamageNode()`, `replaceDamageRollInRollsSource()` | `src/utils/foldBonusIntoPrimaryDamage.ts` | Add a flat bonus to an activation card's primary damage roll, locate that roll's node, and keep the message `rolls` source in step with a patched damage roll |
 | `appendTypedBonusDamage()` | `src/utils/appendTypedBonusDamage.ts` | Add a differently-typed bonus to an activation card as its own damage packet, beside the damage it derives from |
+| `buildDeferredDamagePatch()`, `findRollableDeferredDamageNode()` | `src/utils/buildDeferredDamagePatch.ts` | Attach an on-demand damage roll to a `deferredRoll` damage node, keeping the patched activation tree and the message `rolls` source in step, and resolve which node a Roll Damage click may still roll. Both return null for a node that is missing, was never deferred, or already carries a roll — which is what refuses a second click |
 | `collectPoolSpendCardOffers()` | `src/utils/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |
 | `arraysAreEqual()` | `src/utils/arraysAreEqual.ts` | Compare two arrays for equality |
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |

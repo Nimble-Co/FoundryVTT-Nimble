@@ -146,7 +146,11 @@
 								updateEffectNode(document, effects, node, 'deferredRoll', target.checked)}
 						/>
 
-						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						<h5
+							class="nimble-field__label nimble-heading"
+							data-heading-variant="field"
+							data-tooltip={localize('NIMBLE.activationEffects.deferredRollHint')}
+						>
 							{localize('NIMBLE.activationEffects.deferredRoll')}
 						</h5>
 					</label>

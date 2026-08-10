@@ -37,6 +37,7 @@
 					"canCrit": false,
 					"canMiss": false,
 					"ignoreArmor": false,
+					"on": {},
 					"parentContext": null,
 					"parentNode": null
 				}

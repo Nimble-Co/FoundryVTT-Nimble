@@ -60,8 +60,11 @@ function patchedNode(message: MockedMessage, nodeId = 'trap-damage') {
 beforeEach(() => {
 	vi.clearAllMocks();
 
-	// The shared Roll mock only resolves a formula in `evaluateSync` and its
-	// `toJSON` omits `class`, which is the card's "this roll is real" signal.
+	// The shared Roll mock only resolves a formula in `evaluateSync`, and its
+	// `toJSON` omits `class` — the card's "this roll is real" signal. The
+	// serialization echoes the formula and total the mock actually resolved
+	// rather than a fixed literal, so the assertions below fail if the card
+	// builds its Roll from the wrong formula or withholds the caster's data.
 	globals.Roll = class SerializableRoll extends BaseRoll {
 		async evaluate() {
 			this.evaluateSync();
@@ -69,7 +72,8 @@ beforeEach(() => {
 		}
 
 		toJSON() {
-			return { class: 'Roll', formula: '3d12', total: 21 };
+			const self = this as unknown as { formula: string; total: number };
+			return { class: 'Roll', formula: self.formula, total: self.total };
 		}
 	};
 
@@ -83,12 +87,40 @@ beforeEach(() => {
 });
 
 describe('rollDeferredDamage', () => {
-	it('writes the rolled damage onto the node that was left unrolled', async () => {
+	it('rolls the node own formula and writes the result onto it', async () => {
 		const message = createMessage();
 
 		await message.rollDeferredDamage('trap-damage');
 
-		expect(patchedNode(message)?.roll).toMatchObject({ class: 'Roll', total: 21 });
+		expect(patchedNode(message)?.roll).toMatchObject({ class: 'Roll', formula: '3d12' });
+	});
+
+	it('resolves the formula against the casting actor roll data', async () => {
+		// `@level` is 5 on the stubbed speaker, so a formula the card resolved
+		// without the actor's data would total 2 instead of 7.
+		const message = createMessage([deferredDamageNode({ formula: '2 + @level' })]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(patchedNode(message)?.roll).toMatchObject({ total: 7 });
+	});
+
+	it('rolls zero rather than throwing when the node carries no formula', async () => {
+		const message = createMessage([deferredDamageNode({ formula: '' })]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(patchedNode(message)?.roll).toMatchObject({ formula: '0', total: 0 });
+	});
+
+	it('still rolls when the speaker actor is gone, just without roll data', async () => {
+		(globals.game as { actors: { get: ReturnType<typeof vi.fn> } }).actors.get = vi.fn(() => null);
+		const message = createMessage([deferredDamageNode({ formula: '2 + @level' })]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		// `@level` resolves to 0 with no actor, per the shared Roll mock.
+		expect(patchedNode(message)?.roll).toMatchObject({ total: 2 });
 	});
 
 	it('appends the roll to the message rolls source', async () => {
@@ -98,7 +130,17 @@ describe('rollDeferredDamage', () => {
 
 		const payload = message.update.mock.calls[0][0] as { rolls: string[] };
 		expect(payload.rolls).toHaveLength(1);
-		expect(JSON.parse(payload.rolls[0])).toMatchObject({ class: 'Roll', total: 21 });
+		expect(JSON.parse(payload.rolls[0])).toMatchObject({ class: 'Roll', formula: '3d12' });
+	});
+
+	it('refuses a card that is not an activation card', async () => {
+		const message = createMessage();
+		(message as unknown as { type: string }).type = 'skillCheck';
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(message.canRollDeferredDamage()).toBe(false);
+		expect(message.update).not.toHaveBeenCalled();
 	});
 
 	it('lets the GM roll a card they did not author', async () => {

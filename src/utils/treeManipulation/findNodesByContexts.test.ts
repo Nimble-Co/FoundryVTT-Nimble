@@ -40,6 +40,14 @@ describe('findNodesByContexts', () => {
 		expect(found.map((node) => node.id)).toEqual(['root-damage-hit']);
 	});
 
+	it('surfaces a disposition-targeted root damage node itself', () => {
+		// The other half of the same widened condition — pinned here so adding
+		// the deferred arm cannot quietly break the arm that predates it.
+		const found = findNodesByContexts([damageNode({ targetDisposition: 'hostile' })], ['hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['root-damage']);
+	});
+
 	it('surfaces a deferred damage node itself, since it has no outcome child', () => {
 		// Shadow Trap: the damage posts unrolled and the node carries the Roll
 		// Damage button, so nothing else on the card can stand in for it.

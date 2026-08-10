@@ -5,7 +5,10 @@ import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
-import { buildDeferredDamagePatch } from '#utils/buildDeferredDamagePatch.js';
+import {
+	buildDeferredDamagePatch,
+	findRollableDeferredDamageNode,
+} from '#utils/buildDeferredDamagePatch.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -1017,10 +1020,13 @@ class NimbleChatMessage extends ChatMessage {
 
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
-		const node = flattenEffectsTree((activation.effects ?? []) as EffectNode[]).find(
-			(candidate) => candidate.id === nodeId,
-		);
-		if (node?.type !== 'damage' || !node.deferredRoll || node.roll?.class) return;
+
+		// Resolved before rolling so a node that is ineligible — or that another
+		// click already rolled — costs no dice. `buildDeferredDamagePatch` runs
+		// the same check again on the tree it patches, which is what actually
+		// settles a race; this only avoids the wasted roll.
+		const node = findRollableDeferredDamageNode(activation, nodeId);
+		if (!node) return;
 
 		const speakerActorId = this.speaker?.actor;
 		const actor = speakerActorId ? (game.actors?.get(speakerActorId) ?? null) : null;

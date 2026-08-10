@@ -6,9 +6,16 @@ import { MigrationBase } from '../MigrationBase.js';
 // compendium source now carries a deferred damage node, which posts unrolled
 // and offers a Roll Damage button; this migration adds it to copies already
 // living on actors, in world items, or in duplicated world compendiums.
+// Both pack namespaces the id has been written under, each in the stable and
+// the dev-rebrand system namespace. `dev-rebrand.mjs` only rewrites
+// `packs/**/*.json`, so on the dev build an actor's copy stores
+// `Compendium.nimble-dev.…` and would otherwise fall through to the weaker
+// name match. See AGENTS.md, "Audited exceptions".
 const SHADOW_TRAP_SOURCE_IDS = new Set([
 	'Compendium.nimble.spells.Item.aoCnJhoJji5s5Etf',
 	'Compendium.nimble.nimble-spells.Item.aoCnJhoJji5s5Etf',
+	'Compendium.nimble-dev.spells.Item.aoCnJhoJji5s5Etf',
+	'Compendium.nimble-dev.nimble-spells.Item.aoCnJhoJji5s5Etf',
 ]);
 const SHADOW_TRAP_NAME = 'Shadow Trap';
 
@@ -53,6 +60,7 @@ class Migration046ShadowTrapDeferredDamage extends MigrationBase {
 			canCrit: false,
 			canMiss: false,
 			ignoreArmor: false,
+			on: {},
 			parentContext: null,
 			parentNode: null,
 		});
