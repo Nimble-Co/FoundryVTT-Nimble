@@ -2811,7 +2811,14 @@
 				"saveFailed": "Could not save the custom conditions. See the console for details.",
 				"errorEmptyId": "Id is required.",
 				"errorReservedId": "That id is reserved by a built-in condition.",
-				"errorDuplicateId": "Duplicate id."
+				"errorDuplicateId": "Duplicate id.",
+				"errorInvalidId": "That id cannot be used. Try adding a letter.",
+				"idLocked": "Ids are locked once saved: effects and rules store this value.",
+				"removeInUseTitle": "Remove Condition In Use",
+				"removeInUseWarning": "{name} is currently on {count} actor(s). Removing it leaves those effects behind with no way to clear them from the conditions list. Remove it anyway?",
+				"removeInUseConfirm": "Remove",
+				"removeInUseCancel": "Cancel",
+				"iconPickerFailed": "Could not open the file picker. See the console for details."
 			},
 			"automationMenu": {
 				"name": "Automation",

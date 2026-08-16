@@ -1,6 +1,9 @@
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 
 export const CUSTOM_CONDITIONS_SETTING_KEY = 'customConditions';
+
+/** Fired after the condition dictionaries are rebuilt, so open condition lists can refresh. */
+export const CONDITIONS_CHANGED_HOOK = systemHookName('conditionsChanged');
 
 /** A GM-defined condition that is merged into CONFIG.NIMBLE alongside the built-in conditions. */
 export interface CustomCondition {
@@ -8,7 +11,7 @@ export interface CustomCondition {
 	id: string;
 	/** Human-readable name shown in the token HUD, condition lists, and enrichers. */
 	name: string;
-	/** Rules text shown in condition tooltips. May contain HTML, and may be empty. */
+	/** Plain rules text shown in condition tooltips. Escaped on the way into CONFIG, and may be empty. */
 	description: string;
 	/** Image path chosen from Foundry's file picker (e.g. `icons/svg/aura.svg`). */
 	img: string;
@@ -34,7 +37,11 @@ let builtInConditions: ConditionConfig | null = null;
 function captureBuiltInConditions(): void {
 	if (builtInConditions) return;
 
-	const config = CONFIG.NIMBLE as unknown as ConditionConfig;
+	const config = CONFIG.NIMBLE as unknown as ConditionConfig | undefined;
+	// An empty snapshot would be cached permanently and wipe the built-ins out of CONFIG on the
+	// next merge, so bail without caching when the config has not been populated yet.
+	if (!config?.conditions) return;
+
 	builtInConditions = {
 		conditions: { ...config.conditions },
 		conditionDescriptions: { ...config.conditionDescriptions },
@@ -59,6 +66,30 @@ export function sanitizeConditionId(raw: unknown): string {
 }
 
 /**
+ * Ids that break `CONFIG.statusEffects`. Its V14 proxy mirrors each entry onto the backing array
+ * under `array[status.id]`, so an all-digit id writes an array index (going sparse, or throwing a
+ * RangeError at `length`) and a name from `Array.prototype` shadows the method the manager calls
+ * to republish the snapshot.
+ */
+export function isUnsafeConditionId(id: string): boolean {
+	return /^\d+$/.test(id) || id in Array.prototype;
+}
+
+/**
+ * Turn a GM's free-form description into HTML that is safe to interpolate into the condition
+ * tooltip and enricher, which both hand built-in descriptions to the DOM as trusted i18n markup.
+ * Blank lines become paragraphs and single newlines become breaks.
+ */
+function toDescriptionHtml(description: string): string {
+	if (!description) return '';
+
+	return description
+		.split(/\n{2,}/)
+		.map((paragraph) => `<p>${foundry.utils.escapeHTML(paragraph).replaceAll('\n', '<br>')}</p>`)
+		.join('');
+}
+
+/**
  * Read the stored custom conditions, dropping any entries that are malformed, duplicated,
  * or collide with a built-in condition id.
  */
@@ -75,7 +106,7 @@ export function getCustomConditions(): CustomCondition[] {
 
 		const candidate = entry as Partial<CustomCondition>;
 		const id = sanitizeConditionId(candidate.id);
-		if (!id || builtInIds.has(id) || seen.has(id)) continue;
+		if (!id || isUnsafeConditionId(id) || builtInIds.has(id) || seen.has(id)) continue;
 
 		const name =
 			typeof candidate.name === 'string' && candidate.name.trim()
@@ -104,14 +135,15 @@ export function getCustomConditions(): CustomCondition[] {
  */
 export function mergeCustomConditionsIntoConfig(): void {
 	captureBuiltInConditions();
+	if (!builtInConditions) return;
 
-	const conditions: Record<string, string> = { ...builtInConditions?.conditions };
-	const descriptions: Record<string, string> = { ...builtInConditions?.conditionDescriptions };
-	const images: Record<string, string> = { ...builtInConditions?.conditionDefaultImages };
+	const conditions: Record<string, string> = { ...builtInConditions.conditions };
+	const descriptions: Record<string, string> = { ...builtInConditions.conditionDescriptions };
+	const images: Record<string, string> = { ...builtInConditions.conditionDefaultImages };
 
 	for (const custom of getCustomConditions()) {
 		conditions[custom.id] = custom.name;
-		descriptions[custom.id] = custom.description;
+		descriptions[custom.id] = toDescriptionHtml(custom.description);
 		images[custom.id] = custom.img;
 	}
 

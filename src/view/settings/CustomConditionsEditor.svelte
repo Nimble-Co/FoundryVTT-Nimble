@@ -21,7 +21,7 @@
 		<p class="nimble-custom-conditions__empty">{t('empty')}</p>
 	{:else}
 		<div class="nimble-custom-conditions__list">
-			{#each rows as row, index (index)}
+			{#each rows as row, index (row.uid)}
 				<section class="condition-card" class:condition-card--invalid={rowErrors[index]}>
 					<header class="condition-card__header">
 						<button
@@ -51,7 +51,7 @@
 							class="condition-card__remove"
 							aria-label={t('remove')}
 							data-tooltip={t('remove')}
-							onclick={() => removeRow(index)}
+							onclick={() => removeRow(row)}
 						>
 							<i class="fa-solid fa-trash"></i>
 						</button>
@@ -64,6 +64,8 @@
 							class="condition-card__input condition-card__input--mono"
 							placeholder={t('idPlaceholder')}
 							value={row.id}
+							readonly={row.persisted}
+							data-tooltip={row.persisted ? t('idLocked') : null}
 							oninput={({ target }) => onIdInput(row, (target as HTMLInputElement).value)}
 							onchange={() => normalizeId(row)}
 						/>
@@ -259,6 +261,11 @@
 			&--mono {
 				font-family: var(--nimble-mono-font);
 				font-size: var(--nimble-xs-text);
+			}
+
+			&[readonly] {
+				opacity: 0.65;
+				cursor: not-allowed;
 			}
 		}
 

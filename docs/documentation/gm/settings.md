@@ -29,9 +29,9 @@ Worlds upgrading from an earlier version keep their old choice: the stored value
 
 ## Custom conditions
 
-The **Manage Conditions** button in the system settings tab (GM only) opens an editor for adding conditions the system doesn't ship with — useful when your table is running content that introduces its own statuses. Give each one a name, a description, and an icon from your Foundry files. The id fills in from the name, but you can type your own; it's what gets stored on the effect, so keep it stable once anything is using it.
+The **Manage Conditions** button in the system settings tab (GM only) opens an editor for adding conditions the system doesn't ship with — useful when your table is running content that introduces its own statuses. Give each one a name, a description, and an icon from your Foundry files. The id fills in from the name, but you can type your own before the first save; after that it's locked, because every effect and rule using the condition stores that id. Descriptions are plain text: type them as you'd read them, and blank lines become paragraphs.
 
-Saved conditions appear alongside the built-in ones in the token status panel, both Conditions tabs, and every rule that picks a condition. The token panel picks up changes right away; sheets that are already open show them after you reopen them. Custom conditions carry no built-in mechanics — see [Conditions](../playing/conditions.md#custom-conditions) for what that means and how to clean one up if you remove it.
+Saved conditions appear alongside the built-in ones in the token status panel, both Conditions tabs, and every rule that picks a condition. The token panel and any open conditions list pick up changes right away; sheets and rule dropdowns that are already open show them after you reopen them. Custom conditions carry no built-in mechanics — see [Conditions](../playing/conditions.md#custom-conditions) for what that means and how to clean one up if you remove it.
 
 ## Settings to decide before your first session
 

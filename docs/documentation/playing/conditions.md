@@ -25,11 +25,11 @@ Some conditions come bundled together, and the system tracks the relationships f
 
 ## Custom conditions
 
-A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a description, and an icon, and from then on it behaves like any other condition in the token panel, the Conditions tab, and the Rules Builder's condition lists.
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, and an icon, and from then on it behaves like any other condition in the token panel, the Conditions tab, and the Rules Builder's condition lists.
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 
-Deleting a custom condition from the settings does not strip it from actors that already have it, so clear it off them first: while the definition still exists it sits in the Conditions tab's list like any other condition. If you've already deleted the definition, the leftover marker drops out of that list — remove it from the same tab's Temporary Effects or Passive Effects section instead, or from the token conditions panel on the canvas.
+Deleting a custom condition from the settings does not strip it from actors that already have it, so clear it off them first; the editor warns you when anything is still carrying the one you're removing. While the definition still exists it sits in the Conditions tab's list like any other condition. If you've already deleted the definition, the leftover marker drops out of that list — remove it from the same tab's Temporary Effects or Passive Effects section instead, or from the token conditions panel on the canvas.
 
 ## Condition immunity
 

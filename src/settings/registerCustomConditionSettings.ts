@@ -4,6 +4,7 @@ import { SYSTEM_ID } from '#system';
 import localize from '#utils/localize.js';
 import CustomConditionsEditor from '#view/settings/CustomConditionsEditor.svelte';
 import {
+	CONDITIONS_CHANGED_HOOK,
 	CUSTOM_CONDITIONS_SETTING_KEY,
 	mergeCustomConditionsIntoConfig,
 } from './customConditionSettings.js';
@@ -58,10 +59,14 @@ export function registerCustomConditionSettings(): void {
 				mergeCustomConditionsIntoConfig();
 				// `CONFIG.statusEffects` is a snapshot taken at ready, not a live view of the config,
 				// so the manager has to rebuild its records and re-publish the snapshot. The token
-				// HUD reads that snapshot each time it opens, so it reflects edits immediately;
-				// sheets that captured the condition list when they rendered pick them up on reopen.
+				// HUD reads that snapshot each time it opens, so it reflects edits immediately.
 				game.nimble.conditions.initialize();
 				game.nimble.conditions.configureStatusEffects();
+				// Condition lists derive from CONFIG, which is not reactive; the hook is what tells
+				// an already-rendered list to re-derive. Rule dropdowns still read their choices when
+				// their sheet renders, so those pick the change up on reopen.
+				// @ts-expect-error - conditionsChanged is a custom system hook
+				Hooks.callAll(CONDITIONS_CHANGED_HOOK);
 			},
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
@@ -77,7 +82,7 @@ export function registerCustomConditionSettings(): void {
 	});
 
 	// Snapshot built-ins and apply any stored custom conditions now that the setting exists.
-	// This runs before `ConditionManager.initialize()` during setup, so the manager picks the
-	// merged conditions up on its first pass.
+	// This runs before documents are initialized and before `ConditionManager.initialize()` during
+	// setup, so both rule validation and the manager see the merged conditions on their first pass.
 	mergeCustomConditionsIntoConfig();
 }

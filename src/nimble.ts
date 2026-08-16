@@ -33,6 +33,7 @@ import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
+import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
@@ -82,6 +83,10 @@ Hooks.once('init', init);
 Hooks.once('setup', setup);
 Hooks.once('ready', ready);
 Hooks.once('i18nInit', i18nInit);
+// Must stay after `i18nInit`, which replaces the condition dictionaries with localized copies, and
+// it cannot wait for `setup`: Foundry initializes documents in between, so an item rule naming a
+// custom condition would fail its `choices` validation and be silently dropped from its RulesManager.
+Hooks.once('i18nInit', registerCustomConditionSettings);
 
 Hooks.on('canvasInit', canvasInit);
 Hooks.on('renderChatMessageHTML', renderChatMessageHTML);

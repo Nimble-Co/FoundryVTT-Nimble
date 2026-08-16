@@ -7,7 +7,10 @@ export default function enrichCondition(
 ) {
 	const { conditions, conditionDescriptions } = CONFIG.NIMBLE;
 	const { enricherType, condition: conditionKey } = args;
-	const condition = localize(conditions[conditionKey]);
+	// Custom condition names are free-form GM text and both the button and the tooltip header are
+	// built as HTML strings. Descriptions need no escaping here: they are already HTML by the time
+	// they reach CONFIG (built-ins from i18n, custom ones escaped on merge).
+	const condition = foundry.utils.escapeHTML(localize(conditions[conditionKey]));
 	const icon = 'fa-solid fa-biohazard';
 	const label = condition;
 

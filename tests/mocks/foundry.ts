@@ -477,6 +477,14 @@ export const foundryApiMocks = {
 		randomID: () => {
 			return Math.random().toString(36).substring(2, 15);
 		},
+		escapeHTML: (value: string) => {
+			return String(value)
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;')
+				.replaceAll("'", '&#39;');
+		},
 		invertObject: (obj: Record<string, any>) => {
 			const inverted: Record<string, any> = {};
 			for (const [key, value] of Object.entries(obj)) {

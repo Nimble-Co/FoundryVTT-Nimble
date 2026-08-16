@@ -3,6 +3,7 @@ import { ConditionManager } from '../managers/ConditionManager.js';
 import {
 	DEFAULT_CUSTOM_CONDITION_ICON,
 	getCustomConditions,
+	isUnsafeConditionId,
 	mergeCustomConditionsIntoConfig,
 	sanitizeConditionId,
 } from './customConditionSettings.js';
@@ -56,6 +57,23 @@ describe('customConditionSettings', () => {
 		});
 	});
 
+	describe('isUnsafeConditionId', () => {
+		// CONFIG.statusEffects mirrors entries onto a real array under their id, so these would
+		// write an array index or shadow the method the manager pushes with.
+		it('rejects ids that collide with array indices or array properties', () => {
+			expect(isUnsafeConditionId('13')).toBe(true);
+			expect(isUnsafeConditionId('0')).toBe(true);
+			expect(isUnsafeConditionId('length')).toBe(true);
+			expect(isUnsafeConditionId('push')).toBe(true);
+		});
+
+		it('accepts ordinary condition ids', () => {
+			expect(isUnsafeConditionId('hexed')).toBe(false);
+			expect(isUnsafeConditionId('soul_burned')).toBe(false);
+			expect(isUnsafeConditionId('c13')).toBe(false);
+		});
+	});
+
 	describe('getCustomConditions', () => {
 		it('returns an empty array when the setting is not an array', () => {
 			setStoredConditions(settingsMock, undefined);
@@ -77,6 +95,16 @@ describe('customConditionSettings', () => {
 			]);
 		});
 
+		it('drops ids that would corrupt CONFIG.statusEffects', () => {
+			setStoredConditions(settingsMock, [
+				{ id: '13', name: 'Numeric' },
+				{ id: 'length', name: 'Length' },
+				{ id: 'hexed', name: 'Hexed' },
+			]);
+
+			expect(getCustomConditions().map(({ id }) => id)).toEqual(['hexed']);
+		});
+
 		it('defaults name, description, and image when omitted', () => {
 			setStoredConditions(settingsMock, [{ id: 'shaken' }]);
 			expect(getCustomConditions()).toEqual([
@@ -95,8 +123,32 @@ describe('customConditionSettings', () => {
 
 			const config = conditionConfig();
 			expect(config.conditions).toMatchObject({ blinded: 'Blinded', hexed: 'Hexed' });
-			expect(config.conditionDescriptions.hexed).toBe('Cursed by a hex.');
+			expect(config.conditionDescriptions.hexed).toBe('<p>Cursed by a hex.</p>');
 			expect(config.conditionDefaultImages.hexed).toBe('icons/svg/hex.svg');
+		});
+
+		it('escapes markup in descriptions, which reach every player as tooltip HTML', () => {
+			setStoredConditions(settingsMock, [
+				{ id: 'hexed', name: 'Hexed', description: '<img src=x onerror=alert(1)>' },
+			]);
+
+			mergeCustomConditionsIntoConfig();
+
+			expect(conditionConfig().conditionDescriptions.hexed).toBe(
+				'<p>&lt;img src=x onerror=alert(1)&gt;</p>',
+			);
+		});
+
+		it('keeps the GM line breaks as paragraphs and breaks', () => {
+			setStoredConditions(settingsMock, [
+				{ id: 'hexed', name: 'Hexed', description: 'First line.\nSecond line.\n\nNew paragraph.' },
+			]);
+
+			mergeCustomConditionsIntoConfig();
+
+			expect(conditionConfig().conditionDescriptions.hexed).toBe(
+				'<p>First line.<br>Second line.</p><p>New paragraph.</p>',
+			);
 		});
 
 		it('is idempotent and removes conditions that are no longer stored', () => {
@@ -144,6 +196,22 @@ describe('customConditionSettings', () => {
 			manager.configureStatusEffects();
 
 			expect(CONFIG.statusEffects.map((effect) => effect.id)).not.toContain('hexed');
+		});
+
+		it('does not cache a snapshot taken before CONFIG was populated', async () => {
+			vi.resetModules();
+			(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {};
+
+			const settings = await import('./customConditionSettings.js');
+			expect(settings.getBuiltInConditionIds()).toEqual([]);
+
+			// Caching the empty snapshot would make the next merge wipe the built-ins out of CONFIG.
+			(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {
+				conditions: { ...BUILT_IN_CONDITIONS },
+				conditionDescriptions: { ...BUILT_IN_DESCRIPTIONS },
+				conditionDefaultImages: { ...BUILT_IN_IMAGES },
+			};
+			expect(settings.getBuiltInConditionIds()).toEqual(['blinded', 'prone']);
 		});
 
 		it('mutates the config dictionaries in place so existing references stay live', () => {

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
 import {
@@ -49,6 +49,7 @@ describe('CustomConditionsEditor', () => {
 			conditionDescriptions: {},
 			conditionDefaultImages: {},
 		};
+		(game as unknown as { actors: unknown[] }).actors = [];
 	});
 
 	it('shows the empty state until a condition is added', async () => {
@@ -84,6 +85,10 @@ describe('CustomConditionsEditor', () => {
 
 		await fireEvent.input(idInput(), { target: { value: 'Prone' } });
 		expect(screen.getByText('That id is reserved by a built-in condition.')).toBeVisible();
+		expect(saveButton()).toBeDisabled();
+
+		await fireEvent.input(idInput(), { target: { value: '13' } });
+		expect(screen.getByText('That id cannot be used. Try adding a letter.')).toBeVisible();
 		expect(saveButton()).toBeDisabled();
 
 		await fireEvent.input(idInput(), { target: { value: 'hexed' } });
@@ -150,5 +155,46 @@ describe('CustomConditionsEditor', () => {
 		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, [
 			{ id: 'shaken', name: 'Shaken', description: '', img: 'icons/svg/shaken.svg' },
 		]);
+	});
+
+	it('locks the id of a stored condition, since effects and rules already carry it', async () => {
+		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
+		expect(idInput()).toHaveAttribute('readonly');
+
+		await fireEvent.click(screen.getByRole('button', { name: /Add Condition/ }));
+		expect(screen.getAllByPlaceholderText('e.g. hexed')[1]).not.toHaveAttribute('readonly');
+	});
+
+	it('keeps each row with its own values when an earlier row is removed', async () => {
+		renderEditor([
+			{ id: 'hexed', name: 'Hexed', description: 'Cursed.', img: 'icons/svg/hex.svg' },
+			{ id: 'shaken', name: 'Shaken', description: 'Rattled.', img: 'icons/svg/shaken.svg' },
+		]);
+
+		await fireEvent.click(screen.getAllByRole('button', { name: 'Remove condition' })[0]);
+
+		expect(screen.getAllByPlaceholderText('e.g. hexed')).toHaveLength(1);
+		expect(idInput().value).toBe('shaken');
+		expect(
+			(screen.getByPlaceholderText(/What this condition does/) as HTMLTextAreaElement).value,
+		).toBe('Rattled.');
+	});
+
+	it('asks before removing a condition that actors are currently carrying', async () => {
+		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
+		(game as unknown as { actors: unknown[] }).actors = [{ statuses: new Set(['hexed']) }];
+		const { settingsMock } = renderEditor([
+			{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' },
+		]);
+
+		confirm.mockResolvedValueOnce(false);
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+		expect(screen.getAllByPlaceholderText('e.g. hexed')).toHaveLength(1);
+
+		confirm.mockResolvedValueOnce(true);
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+		await fireEvent.click(saveButton());
+
+		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, []);
 	});
 });

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import { CUSTOM_CONDITIONS_SETTING_KEY } from './customConditionSettings.js';
+import {
+	CONDITIONS_CHANGED_HOOK,
+	CUSTOM_CONDITIONS_SETTING_KEY,
+} from './customConditionSettings.js';
 import { registerCustomConditionSettings } from './registerCustomConditionSettings.js';
 
 // The settings menu class extends an ApplicationV2-based dialog and pulls in a
@@ -105,5 +108,18 @@ describe('registerCustomConditionSettings', () => {
 			{ blinded: 'Blinded', hexed: 'Hexed' },
 		);
 		expect(calls).toEqual(['initialize', 'configureStatusEffects']);
+	});
+
+	it('announces the rebuild so open condition lists re-derive', () => {
+		const settingsMock = setupSettingsMock([]);
+		registerCustomConditionSettings();
+		(game as unknown as { nimble: { conditions: object } }).nimble = {
+			conditions: { initialize: vi.fn(), configureStatusEffects: vi.fn() },
+		};
+		const callAll = vi.spyOn(Hooks, 'callAll').mockImplementation(() => true);
+
+		registeredConfig(settingsMock).onChange?.();
+
+		expect(callAll).toHaveBeenCalledWith(CONDITIONS_CHANGED_HOOK);
 	});
 });
