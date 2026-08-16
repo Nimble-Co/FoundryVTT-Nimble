@@ -9,9 +9,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				blank: false,
-				// The object form gives the builder `{ id: name }`, so the tag group renders
-				// "Soul Burned" rather than the raw `soul_burned` id. Widened to a plain record
-				// because GMs can add condition ids beyond the built-in keys.
+				// The object form makes the tag group render "Soul Burned" instead of the raw
+				// `soul_burned` id. Widened to a plain record because GMs can add their own ids.
 				choices: () => CONFIG.NIMBLE.conditions as Record<string, string>,
 			}),
 			{

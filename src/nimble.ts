@@ -84,8 +84,8 @@ Hooks.once('setup', setup);
 Hooks.once('ready', ready);
 Hooks.once('i18nInit', i18nInit);
 // Must stay after `i18nInit`, which replaces the condition dictionaries with localized copies, and
-// it cannot wait for `setup`: Foundry initializes documents in between, so an item rule naming a
-// custom condition would fail its `choices` validation and be silently dropped from its RulesManager.
+// cannot move to `setup`: documents initialize in between, and a rule naming a custom condition
+// would fail its `choices` validation and be dropped from its RulesManager without an error.
 Hooks.once('i18nInit', registerCustomConditionSettings);
 
 Hooks.on('canvasInit', canvasInit);

@@ -94,8 +94,8 @@ export default function registerSystemSettings() {
 	registerLanguageSettings();
 	registerSpellSchoolSettings();
 	registerSpellScrollSettings();
-	// Custom conditions register from the `i18nInit` hook instead: their merge into CONFIG has to
-	// beat document initialization, which happens before `setup` runs.
+	// Custom conditions register from the `i18nInit` hook in `nimble.ts`: their merge into CONFIG
+	// has to beat document initialization, which happens before `setup` runs.
 
 	game.settings.register(
 		SYSTEM_ID as 'core',

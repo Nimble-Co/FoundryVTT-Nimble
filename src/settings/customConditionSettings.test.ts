@@ -58,8 +58,6 @@ describe('customConditionSettings', () => {
 	});
 
 	describe('isUnsafeConditionId', () => {
-		// CONFIG.statusEffects mirrors entries onto a real array under their id, so these would
-		// write an array index or shadow the method the manager pushes with.
 		it('rejects ids that collide with array indices or array properties', () => {
 			expect(isUnsafeConditionId('13')).toBe(true);
 			expect(isUnsafeConditionId('0')).toBe(true);

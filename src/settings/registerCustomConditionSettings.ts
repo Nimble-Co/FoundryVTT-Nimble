@@ -57,21 +57,18 @@ export function registerCustomConditionSettings(): void {
 			default: [],
 			onChange: () => {
 				mergeCustomConditionsIntoConfig();
-				// `CONFIG.statusEffects` is a snapshot taken at ready, not a live view of the config,
-				// so the manager has to rebuild its records and re-publish the snapshot. The token
-				// HUD reads that snapshot each time it opens, so it reflects edits immediately.
+				// `CONFIG.statusEffects` is a snapshot, not a live view of the config, so the manager
+				// has to rebuild its records and republish it.
 				game.nimble.conditions.initialize();
 				game.nimble.conditions.configureStatusEffects();
-				// Condition lists derive from CONFIG, which is not reactive; the hook is what tells
-				// an already-rendered list to re-derive. Rule dropdowns still read their choices when
-				// their sheet renders, so those pick the change up on reopen.
+				// CONFIG is not reactive, so an already-rendered condition list only re-derives if
+				// the rebuild is announced.
 				// @ts-expect-error - conditionsChanged is a custom system hook
 				Hooks.callAll(CONDITIONS_CHANGED_HOOK);
 			},
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
-	// GM-only submenu button shown in the system settings tab.
 	game.settings.registerMenu(SYSTEM_ID, 'customConditionsMenu', {
 		name: 'NIMBLE.settings.customConditions.name',
 		label: 'NIMBLE.settings.customConditions.manageButton',
@@ -81,8 +78,7 @@ export function registerCustomConditionSettings(): void {
 		restricted: true,
 	});
 
-	// Snapshot built-ins and apply any stored custom conditions now that the setting exists.
-	// This runs before documents are initialized and before `ConditionManager.initialize()` during
-	// setup, so both rule validation and the manager see the merged conditions on their first pass.
+	// The setting exists now, so snapshot the built-ins and apply anything already stored. See the
+	// registration site in `nimble.ts` for why this cannot wait until `setup`.
 	mergeCustomConditionsIntoConfig();
 }

@@ -252,7 +252,7 @@
 
 		// Colour, background, border and focus ring come from the shared
 		// `.system-nimble .nimble-sheet input/textarea` rules in scss/components/_sheet.scss,
-		// which outrank these scoped selectors — only layout belongs here.
+		// which outrank these scoped selectors. Only layout belongs here.
 		&__input {
 			width: 100%;
 			padding: 0.375rem 0.5rem;

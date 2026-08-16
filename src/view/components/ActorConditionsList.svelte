@@ -297,8 +297,8 @@
 			refreshFromEffect(effect as { parent?: { documentName?: string; id?: string } });
 		});
 
-		// The condition dictionaries this list reads live on CONFIG, which is not reactive, so a GM
-		// editing the custom conditions has to announce the rebuild for an open list to re-derive.
+		// This list reads its conditions off CONFIG, which is not reactive, so a GM editing the
+		// custom conditions only shows up here via the hook.
 		const conditionsHook = Hooks.on(CONDITIONS_CHANGED_HOOK, () => {
 			effectVersion += 1;
 		});

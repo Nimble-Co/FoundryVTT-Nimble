@@ -15,7 +15,7 @@ const t = (key: string, data?: Record<string, string>) =>
 
 type ActorWithStatuses = { statuses?: Set<string> };
 
-/** Every actor a condition could currently be sitting on, including unlinked token actors. */
+/** Every actor a condition could be sitting on, including unlinked token actors. */
 function collectActors(): Set<ActorWithStatuses> {
 	const actors = new Set<ActorWithStatuses>();
 
@@ -40,7 +40,6 @@ function countActorsWithCondition(conditionId: string): number {
 	return count;
 }
 
-/** Creates reactive state for the CustomConditionsEditor component. */
 export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	const builtInIds = getBuiltInConditionIds();
 
@@ -87,9 +86,8 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	}
 
 	async function removeRow(row: ConditionEditorRow) {
-		// Deleting a condition orphans every effect still carrying its status: the sheet's
-		// Conditions tab and the token HUD's Clear All both skip statuses they cannot resolve,
-		// so the GM would have to hunt them down in the effects lists.
+		// Deleting orphans every effect still carrying the status: the Conditions tab and the token
+		// HUD's Clear All both skip statuses they cannot resolve, leaving the GM to hunt them down.
 		if (row.persisted) {
 			const inUse = countActorsWithCondition(row.id);
 			if (inUse > 0) {
@@ -112,7 +110,6 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 
 	function onNameInput(row: ConditionEditorRow, value: string) {
 		row.name = value;
-		// Auto-fill the id from the name until the GM customizes it themselves.
 		if (!row.idEdited) row.id = sanitizeConditionId(value);
 	}
 

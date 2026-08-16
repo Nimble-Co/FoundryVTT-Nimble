@@ -54,8 +54,8 @@
 	--nimble-validation-error-border-color: hsl(0, 65%, 55%);
 
 	/** ICON PICKER COLORS **/
-	// The picker scrim paints over an arbitrary user-chosen image, so it stays dark
-	// in both themes to keep the pencil legible — no theme override.
+	// The scrim paints over an arbitrary user-chosen image, so it stays dark in both
+	// themes (no theme override) to keep the pencil legible.
 	--nimble-icon-picker-overlay-background: hsla(0, 0%, 0%, 0.55);
 	--nimble-icon-picker-overlay-text-color: white;
 

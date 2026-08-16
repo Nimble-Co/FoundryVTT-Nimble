@@ -34,9 +34,8 @@ export class ConditionManager {
 	}
 
 	/**
-	 * Rebuild the condition records from CONFIG.NIMBLE. Safe to re-run after the config changes
-	 * (e.g. when a GM edits the custom conditions setting) — the previous records are discarded
-	 * so conditions that no longer exist in the config are dropped.
+	 * Rebuild the condition records from CONFIG.NIMBLE. Safe to re-run when the config changes:
+	 * the previous records are discarded, so conditions no longer in the config are dropped.
 	 */
 	initialize() {
 		this.#conditions.clear();
@@ -60,7 +59,7 @@ export class ConditionManager {
 				data._id = String(id).padEnd(16, '0');
 			}
 
-			// Registered synchronously — with the raw enricher text as a placeholder — so that
+			// Registered synchronously, with the raw enricher text as a placeholder, so that
 			// `configureStatusEffects()` can run immediately after `initialize()`.
 			this.#conditions.set(id, data);
 			this.#enrich(data);

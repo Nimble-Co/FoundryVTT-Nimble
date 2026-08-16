@@ -4,16 +4,15 @@ export interface CustomConditionsEditorProps {
 	dialog: GenericDialog;
 }
 
-/** A single editable row in the custom conditions editor. */
 export interface ConditionEditorRow {
-	/** Identity for the `{#each}` key, so removing a row does not shift DOM onto its neighbour. */
+	/** Keys the `{#each}` block, so removing a row does not shift its DOM onto the next one. */
 	uid: string;
 	id: string;
 	name: string;
 	description: string;
 	img: string;
-	/** Once the GM edits the id by hand we stop deriving it from the name. */
+	/** Once the GM types an id by hand, it stops being derived from the name. */
 	idEdited: boolean;
-	/** Rows loaded from the setting: their id is locked, because effects and rules store it. */
+	/** True for rows loaded from the setting, whose id is locked because effects store it. */
 	persisted: boolean;
 }

@@ -28,12 +28,10 @@ function renderEditor(storedConditions: unknown[] = []) {
 	return { ...result, settingsMock, dialog };
 }
 
-/** The name field of the first (and, in these tests, only) condition card. */
 function nameInput(): HTMLInputElement {
 	return screen.getByPlaceholderText('e.g. Hexed') as HTMLInputElement;
 }
 
-/** The id field of the first condition card. */
 function idInput(): HTMLInputElement {
 	return screen.getByPlaceholderText('e.g. hexed') as HTMLInputElement;
 }

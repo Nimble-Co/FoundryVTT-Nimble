@@ -25,8 +25,8 @@ describe('ConditionManager', () => {
 
 	beforeEach(() => {
 		setConfiguredConditions({ blinded: 'Blinded', prone: 'Prone' });
-		// V14 exposes CONFIG.statusEffects as a live proxied array that the manager mutates
-		// in place, so it has to already exist — Foundry always provides one.
+		// V14 exposes CONFIG.statusEffects as a live proxied array that the manager mutates in
+		// place, so it has to already exist. Foundry always provides one.
 		(CONFIG as unknown as { statusEffects: unknown[] }).statusEffects = [];
 		manager = new ConditionManager();
 	});
