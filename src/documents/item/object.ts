@@ -147,10 +147,11 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 			scroll.school,
 		);
 
-		// The check gates the effect: a wielder who cannot read the scroll never
-		// casts the spell. Without a check there is no dialog to cancel against, so
-		// the confirmation stands in — the spell's own activation dialog cannot,
-		// since `skipRollDialog` or a held Alt suppresses it.
+		// The check gates the effect: if the wielder cannot read the scroll, the spell
+		// is never cast. When no check is needed, the confirmation takes its place so
+		// there is still a chance to cancel before spending the scroll. We cannot rely
+		// on the spell's activation dialog for that because `skipRollDialog` or holding
+		// Alt can suppress it.
 		if (needsArcanaCheck) {
 			const outcome = await this.#rollScrollArcanaCheck(scroll.school);
 
@@ -185,19 +186,22 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	}
 
 	/**
-	 * Rolls the scroll's DC 10 Arcana check through the normal skill-check flow, so
-	 * the wielder gets the Configure Arcana Skill Check dialog and can apply
-	 * situational modifiers rather than having a bare d20 thrown for them.
+	 * Rolls the scroll's DC 10 Arcana check through the normal skill-check flow,
+	 * giving the wielder the usual Configure Arcana Skill Check dialog and a chance
+	 * to apply situational modifiers.
 	 *
-	 * Closing that dialog reports `cancelled`, and the caller leaves the scroll
-	 * alone — a check the player never agreed to must not spend anything.
+	 * Closing the dialog returns `cancelled`, and the caller leaves the scroll
+	 * untouched. If the player never agreed to make the check, the scroll should
+	 * not be spent.
 	 *
-	 * An actor that cannot roll a skill check throws rather than being waved
-	 * through: knowing a spell of the school is the rulebook's only exemption, and
-	 * skipping the check would make such an actor strictly better with scrolls than
-	 * a character. Only `NimbleCharacter` rolls skill checks today, and only
-	 * characters carry an inventory to hold a scroll, so this is unreachable until
-	 * some other actor type gains one.
+	 * If the actor cannot roll a skill check, this throws instead of letting them
+	 * bypass it. Knowing a spell from the scroll's school is the only exemption in
+	 * the rules, so skipping the check would actually make that actor better at
+	 * using scrolls than a character.
+	 *
+	 * Today this cannot happen: only `NimbleCharacter` can roll skill checks, and
+	 * only characters can carry a scroll. It matters if another actor type gains
+	 * an inventory later.
 	 */
 	async #rollScrollArcanaCheck(school: string): Promise<'passed' | 'failed' | 'cancelled'> {
 		const actor = this.actor as
