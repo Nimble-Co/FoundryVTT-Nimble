@@ -124,16 +124,17 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	/**
 	 * Uses the object.
 	 *
-	 * A spell scroll casts the spell it carries, with three differences from
-	 * casting that spell off a spell list: it costs no mana, there is nothing to
-	 * upcast with (upcasting is spending extra mana, and a scroll spends none), and
-	 * it is consumed.
+	 * A spell scroll casts the spell inscribed on it, with three differences from
+	 * casting it normally: it costs no mana, it cannot be upcast, and the scroll is
+	 * consumed when used.
 	 *
-	 * Exactly one prompt always stands between the click and the scroll being
-	 * spent: the Arcana check's own dialog when the wielder knows no spell of the
-	 * scroll's school, and a plain confirmation when they do. Cancelling that
-	 * prompt leaves the scroll intact; past it the scroll is spent either way — a
-	 * failed check wastes it per the rules, and a passed one casts the spell.
+	 * Using a scroll always requires one prompt before it is spent. If the wielder
+	 * knows no spells from the scroll's school, that prompt is the Arcana check. If
+	 * they do, it is a simple confirmation instead.
+	 *
+	 * Cancelling the prompt leaves the scroll intact. Once confirmed, the scroll is
+	 * consumed either way: a failed Arcana check wastes it, while a successful one
+	 * casts the spell.
 	 */
 	override async activate(
 		options: ItemActivationManager.ActivationOptions = {},
