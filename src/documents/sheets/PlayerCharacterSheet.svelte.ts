@@ -268,12 +268,11 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	}
 
 	/**
-	 * Id of the existing item a stacking create was folded into, if any.
+	 * Id of the existing item this create was stacked into, if any.
 	 *
-	 * Mirrors the predicate in `NimbleObjectItem#_preCreate`, including the size
-	 * check on both the incoming item and the candidate — matching on name alone
-	 * would flash an unrelated same-named object whenever a create was refused for
-	 * some other reason.
+	 * Matches the same conditions as `NimbleObjectItem#_preCreate`, including the
+	 * size check on both items. Matching by name alone could flash an unrelated
+	 * same-named object when creation was blocked for another reason.
 	 */
 	#findStackedItemId(item: Record<string, unknown>): string | null {
 		if (item.type !== 'object') return null;
