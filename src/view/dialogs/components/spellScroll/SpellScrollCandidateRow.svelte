@@ -16,8 +16,7 @@
 
 	const { spellSchoolIcons } = CONFIG.NIMBLE;
 
-	// A school the GM has since deleted leaves no icon; fall back rather than
-	// rendering `class=" undefined"`, as SchoolSelection does.
+	// A school the GM deleted leaves no icon, which would render `class=" undefined"`.
 	const schoolIcon = $derived(spellSchoolIcons[candidate.school] ?? 'fa-solid fa-sparkles');
 </script>
 
@@ -37,10 +36,9 @@
 		</button>
 
 		<!--
-			aria-pressed rather than role="radio": a radiogroup owns its arrow-key
+			aria-pressed rather than role="radio": a radiogroup promises arrow-key
 			traversal through a roving tabindex, which this list cannot offer while each
-			row also carries an expand button. This announces the selection without
-			promising keyboard behaviour that is not there.
+			row also carries an expand button.
 		-->
 		<button
 			type="button"
@@ -114,9 +112,8 @@
 			flex: 1;
 			gap: 0.5rem;
 			align-items: center;
-			// Buttons centre their flex content by default, which left rows without a
-			// secret badge floating in the middle while badged rows were pulled left
-			// by the badge's auto margin.
+			// Buttons centre their flex content by default, which floats an unbadged
+			// row in the middle while a badged one is pulled left by the badge's margin.
 			justify-content: flex-start;
 			padding: 0.375rem 0.5rem 0.375rem 0;
 			background: none;
@@ -147,8 +144,8 @@
 			font-weight: 600;
 			color: var(--nimble-dark-text-color);
 
-			// SpellSchoolIcon renders the element, so the class it is handed carries
-			// the parent's scoping hash on no element and has to be matched globally.
+			// SpellSchoolIcon renders the element, so this class never picks up the
+			// parent's scoping hash and has to be matched globally.
 			:global(.nimble-spell-scroll-candidate__school-icon) {
 				color: var(--nimble-medium-text-color);
 				font-size: var(--nimble-xs-text);

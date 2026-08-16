@@ -3,11 +3,11 @@ import localize from './localize.js';
 
 /**
  * Purchase price of a spell scroll, keyed by the inscribed spell's tier.
- * Mirrors the table in the rulebook (Items → Spell Scrolls) and the prices
- * already carried by `packs/magicItems/core/spellScrollTemplates`.
+ * Mirrors the rulebook table (Items, Spell Scrolls) and the prices already
+ * carried by `packs/magicItems/core/spellScrollTemplates`.
  *
- * Tier 0 covers both cantrips and utility spells: a utility spell is
- * effectively a cantrip, so it takes the cantrip price without a special case.
+ * Tier 0 covers cantrips and utility spells alike, since a utility spell is
+ * effectively a cantrip.
  */
 export const SPELL_SCROLL_PRICE_BY_TIER: Readonly<Record<number, number>> = Object.freeze({
 	0: 10,
@@ -22,7 +22,6 @@ export const SPELL_SCROLL_PRICE_BY_TIER: Readonly<Record<number, number>> = Obje
 	9: 200000,
 });
 
-/** Image shared by every scroll template in the magic items pack. */
 const SPELL_SCROLL_IMG = 'icons/sundries/scrolls/scroll-bound-black-tan.webp';
 
 /**
@@ -37,13 +36,11 @@ const SPELL_SCROLL_IMG = 'icons/sundries/scrolls/scroll-bound-black-tan.webp';
  */
 const SCROLL_CARRIED_SPELL_PROPERTIES: ReadonlySet<string> = new Set(['concentration']);
 
-/** Flag bag written onto a created scroll, read back when the scroll is used. */
+/** Flags written onto a created scroll, read back when the scroll is used. */
 export interface SpellScrollFlagData {
-	/** UUID of the spell this scroll was inscribed from. */
 	spellUuid: string;
-	/** School of the inscribed spell, used for the Arcana check exemption. */
+	/** Decides whether the wielder is exempt from the Arcana check. */
 	school: string;
-	/** Tier the scroll was inscribed at, which is the only tier it can be cast at. */
 	tier: number;
 }
 
@@ -61,19 +58,10 @@ export interface ScrollSourceSpell {
 }
 
 export interface CreateScrollFromSpellOptions {
-	/**
-	 * Whether to append the spell's own description beneath the scroll rules.
-	 * Driven by the world setting; the rules lines are always written either way,
-	 * and this never affects whether the scroll can be cast.
-	 */
+	/** The rules lines are written either way; this only adds the spell text below them. */
 	includeSpellDescription: boolean;
 }
 
-/**
- * The fixed rules block every scroll carries, regardless of the description
- * setting. Kept as list items so the four facts stay scannable on the item
- * sheet rather than reading as a paragraph.
- */
 function buildScrollRulesHtml(): string {
 	const lines = [
 		localize('NIMBLE.spellScroll.rules.singleUse'),
@@ -97,20 +85,19 @@ function buildScrollDescription(
 	const spellDescription = spell.system?.description?.baseEffect ?? '';
 	if (!spellDescription) return rules;
 
-	// Only the base effect transfers. A scroll spends no mana, so the spell's
-	// upcast text describes something the scroll can never do.
+	// Only the base effect transfers, since a scroll spends no mana and so can
+	// never do what the spell's upcast text describes.
 	return `${rules}<hr>${spellDescription}`;
 }
 
 /**
- * Builds the creation data for a spell scroll inscribed with `spell`.
+ * Builds the creation data for a spell scroll inscribed with `spell`. Returns
+ * item data rather than creating the document, so the caller decides where it
+ * lands.
  *
- * Returns plain item data rather than creating the document, so the caller
- * decides where it lands and the transform stays directly testable.
- *
- * Throws when the spell carries no school. Every spell has one, and the school
- * is what the Arcana check's exemption is decided on, so a schoolless spell is
- * broken data rather than a case to inscribe a half-working scroll for.
+ * Throws when the spell has no school. Every spell has one, and the school is
+ * what the Arcana check exemption is decided on, so a schoolless spell is broken
+ * data rather than a scroll to create.
  */
 export default function createScrollFromSpell(
 	spell: ScrollSourceSpell,
@@ -135,12 +122,8 @@ export default function createScrollFromSpell(
 		type: 'object',
 		img: SPELL_SCROLL_IMG,
 		system: {
-			// A scroll casts the spell it carries, so it keeps the spell's own
-			// activation — including its action cost.
+			// A scroll casts the spell as written, down to its action cost.
 			activation: foundry.utils.deepClone(spell.system?.activation ?? {}),
-			// And the spell's own constraints: a concentration spell cast off a
-			// scroll still demands concentration. `ObjectDataModel` only accepts the
-			// properties it defines, so anything spell-only is dropped on the way in.
 			properties: {
 				selected: (spell.system?.properties?.selected ?? []).filter((property) =>
 					SCROLL_CARRIED_SPELL_PROPERTIES.has(property),
@@ -175,10 +158,9 @@ export default function createScrollFromSpell(
  * The scroll data written onto an object by {@link createScrollFromSpell}, or null
  * when the item is not an inscribed spell scroll.
  *
- * Lives beside the writer so the two halves of one flag format cannot drift.
- * Reads through `SYSTEM_ID` so it resolves on the dev build too, where the scope
- * key is `nimble-dev`; scrolls are created at runtime rather than shipped in a
- * pack, so the flag is always written under the running system's id.
+ * Reads through `SYSTEM_ID` so it resolves on the dev build, where the scope key
+ * is `nimble-dev`. Scrolls are created at runtime rather than shipped in a pack,
+ * so the flag is always written under the running system's id.
  */
 export function getSpellScrollData(item: {
 	type?: unknown;

@@ -135,8 +135,7 @@ describe('createSpellScrollDialogState', () => {
 			expect(harness.read().selectedVisibleUuid).toBe('Item.fireball');
 		});
 
-		// The reason this is derived rather than stored: Inscribe must never commit a
-		// spell that the current filter has taken off the screen.
+		// Inscribe must never commit a spell the filter has taken off the screen.
 		it('drops a selection that the school tab hides', async () => {
 			const harness = setup({ mode: 'picker', candidates: [FIREBALL, LIGHTNING_BOLT] });
 
@@ -173,8 +172,6 @@ describe('createSpellScrollDialogState', () => {
 			expect(read().subNavigation[0]).toBe('all');
 		});
 
-		// The Spells tab filters by the schools the actor knows, which would leave a
-		// non-caster with no tabs at all here.
 		it('offers a tab only for the schools the candidates actually cover', async () => {
 			const { read } = setup({ mode: 'picker', candidates: [FIREBALL, FIRE_DART] });
 
@@ -307,8 +304,6 @@ describe('createSpellScrollDialogState', () => {
 			expect(harness.submit).not.toHaveBeenCalled();
 		});
 
-		// Defaults to the spell list so Enter reproduces what the sheet did before
-		// this dialog existed.
 		it('sends the spell list by default in chooser mode', async () => {
 			const harness = setup({ mode: 'chooser', tier: 3 });
 

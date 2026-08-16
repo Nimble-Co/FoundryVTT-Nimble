@@ -16,8 +16,6 @@ const ALL_SCHOOLS_TAB: SpellScrollNavigationTab = {
 export function createSpellScrollDialogState(getProps: () => SpellScrollDialogProps) {
 	const { spellSchools, spellSchoolIcons } = CONFIG.NIMBLE;
 
-	// Defaults to the spell list so Enter reproduces the behaviour the sheet had
-	// before this dialog existed.
 	let destination = $state<'spellList' | 'scroll'>('spellList');
 
 	let searchTerm = $state('');
@@ -25,15 +23,14 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 	let selectedUuid = $state<string | null>(null);
 	let expandedUuid = $state<string | null>(null);
 
-	// Descriptions arrive one expanded row at a time and are kept once fetched, so
-	// reopening a row costs nothing. Reassigned rather than mutated: a plain object
-	// in `$state` tracks the reference, not its keys.
+	// Reassigned rather than mutated: a plain object in `$state` tracks the
+	// reference, not its keys.
 	let descriptionsByUuid = $state<Record<string, string>>({});
 
 	/**
-	 * Only the schools actually present among the candidates get a tab. The Spells
-	 * tab filters by the schools the *actor* knows, which would leave a non-caster
-	 * with no tabs at all here.
+	 * Only the schools present among the candidates get a tab. Filtering by the
+	 * schools the actor knows, as the Spells tab does, would leave a non-caster
+	 * with no tabs at all.
 	 */
 	const subNavigation = $derived.by<SpellScrollNavigationTab[]>(() => {
 		const present = new Set(getProps().candidates?.map((candidate) => candidate.school) ?? []);
@@ -59,8 +56,8 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 
 	/**
 	 * The selection, but only while the player can still see it. Derived rather
-	 * than synced by an effect: a filter or search that hides the selected row must
-	 * not leave Inscribe able to commit a spell that is no longer on screen.
+	 * than synced, so a filter that hides the selected row cannot leave Inscribe
+	 * able to commit a spell that is off screen.
 	 */
 	const selectedVisibleUuid = $derived(
 		visibleCandidates.some((candidate) => candidate.uuid === selectedUuid) ? selectedUuid : null,
@@ -96,8 +93,6 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 
 	const isSubmitDisabled = $derived(getProps().mode === 'picker' && !selectedVisibleUuid);
 
-	// The action names its own outcome and follows the selection, so the button
-	// always says where the spell is about to land.
 	const submitLabel = $derived.by(() => {
 		if (getProps().mode === 'picker') return localize('NIMBLE.spellScroll.dialog.inscribe');
 

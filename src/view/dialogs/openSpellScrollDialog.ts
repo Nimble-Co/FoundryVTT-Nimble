@@ -46,9 +46,8 @@ interface OpenChooserOptions {
 interface OpenPickerOptions {
 	mode: 'picker';
 	actor: ScrollDialogActor;
-	/** Tier the dropped scroll template is fixed at. */
+	/** Tier the dropped blank is fixed at. */
 	tier: number;
-	/** Name of the dropped scroll template, shown in the title. */
 	scrollName: string;
 }
 
@@ -70,10 +69,9 @@ function hasMana(actor: ScrollDialogActor): boolean {
  * The spells of `tier` that may be inscribed, built from the pack indexes alone.
  *
  * A collapsed row needs the name, image, school and action cost, all of which the
- * index carries. Loading each document instead would mean one compendium fetch
- * per candidate — every cantrip in every installed module, for the cantrip
- * template — so the description is left to `loadCandidateDescription` when a row
- * is actually expanded.
+ * index carries. Loading the documents instead would be one compendium fetch per
+ * candidate, which for the cantrip blank is every cantrip in every installed
+ * module, so descriptions wait for `loadCandidateDescription`.
  */
 async function buildCandidates(tier: number): Promise<SpellScrollCandidate[]> {
 	// A GM may inscribe a secret spell; a player may not even see that one exists.
@@ -97,12 +95,7 @@ async function buildCandidates(tier: number): Promise<SpellScrollCandidate[]> {
 	return sortDocumentsByName(candidates);
 }
 
-/**
- * Enriched description of one candidate, fetched when its row is expanded.
- *
- * Resolving `@UUID` links is the expensive half, and only the open row's text is
- * ever read.
- */
+/** Enriched description of one candidate, fetched when its row is expanded. */
 export async function loadCandidateDescription(uuid: string): Promise<string> {
 	const spell = (await fromUuid(uuid as Parameters<typeof fromUuid>[0])) as {
 		system?: { description?: { baseEffect?: string } };
@@ -112,11 +105,8 @@ export async function loadCandidateDescription(uuid: string): Promise<string> {
 }
 
 /**
- * Asks where a dropped spell should go, or which spell a dropped scroll template
+ * Asks where a dropped spell should go, or which spell a dropped scroll blank
  * carries. Resolves null when the player cancels.
- *
- * The question is always asked: the open tab carries no meaning, so nothing here
- * inspects the sheet's active tab.
  */
 export default async function openSpellScrollDialog(
 	options: OpenSpellScrollDialogOptions,

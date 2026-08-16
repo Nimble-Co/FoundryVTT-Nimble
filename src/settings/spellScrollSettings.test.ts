@@ -88,9 +88,8 @@ describe('registerSpellScrollSettings', () => {
 		expect(register.mock.calls[0][1]).toBe(INCLUDE_SPELL_DESCRIPTION_ON_SCROLLS_SETTING_KEY);
 	});
 
-	// World scope is load-bearing: the value is baked into the created document, so
-	// a client-scope toggle would give two players scribing the same spell two
-	// different items.
+	// The value is baked into created documents, so client scope would give two
+	// players inscribing the same spell two different items.
 	it('registers it world-scoped, configurable, and defaulted on', () => {
 		registerSpellScrollSettings();
 

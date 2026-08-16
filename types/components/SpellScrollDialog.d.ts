@@ -2,20 +2,18 @@ import type { Snippet } from 'svelte';
 
 import type { SpellIndexEntry } from '#utils/getSpells.js';
 
-/** What the dialog was opened to ask. */
+/**
+ * `chooser` asks where a dropped spell should go; `picker` asks which spell a
+ * dropped scroll blank carries.
+ */
 export type SpellScrollDialogMode = 'chooser' | 'picker';
 
-/** Where the dropped spell is headed. */
 export type SpellScrollDestination = 'spellList' | 'scroll';
 
 /** The answer the dialog resolves with. */
 export interface SpellScrollDialogResult {
-	/** `spellList` adds the spell as a spell; `scroll` inscribes it onto a scroll. */
 	destination: SpellScrollDestination;
-	/**
-	 * Picker mode only: UUID of the spell chosen to inscribe. Absent in chooser
-	 * mode, where the spell is the one that was dropped.
-	 */
+	/** Picker mode only. Chooser mode inscribes the spell that was dropped. */
 	spellUuid?: string;
 }
 
@@ -42,34 +40,28 @@ export interface SpellScrollDialogInstance {
 export interface SpellScrollDialogProps {
 	dialog: SpellScrollDialogInstance;
 	mode: SpellScrollDialogMode;
-	/** Name of the actor receiving the spell or scroll. */
 	actorName: string;
 	/** Chooser mode: the dropped spell's tier, which is also its mana cost. */
 	tier?: number;
-	/** Chooser mode: the dropped spell's school id. */
+	/** Chooser mode. */
 	school?: string;
-	/** Chooser mode: localized action-cost summary of the dropped spell. */
+	/** Chooser mode. */
 	activationSummary?: string;
-	/** Scroll price in gp, derived from the tier. */
+	/** In gp, derived from the tier. */
 	scrollPrice?: number;
-	/**
-	 * Highest spell tier the actor has unlocked, or 0 when the actor has no
-	 * spellcasting. Drives the upcast line and the no-mana warning.
-	 */
+	/** 0 when the actor has no spellcasting. */
 	highestUnlockedSpellTier?: number;
-	/** Whether the actor has any mana at all. */
 	hasMana?: boolean;
-	/** Whether the actor already knows a spell of the relevant school. */
 	knowsSchool?: boolean;
-	/** Picker mode: the spells of the template's tier that may be inscribed. */
+	/** Picker mode: the spells of the blank's tier that may be inscribed. */
 	candidates?: SpellScrollCandidate[];
 	/**
-	 * Picker mode: fetches one candidate's enriched description, called when its
-	 * row is expanded. Injected rather than imported so the dialog does not reach
-	 * back into the module that opens it, and so tests can supply their own.
+	 * Picker mode: fetches one candidate's enriched description when its row is
+	 * expanded. Injected rather than imported, because importing it would put a
+	 * cycle between the dialog and the module that opens it.
 	 */
 	loadDescription?: (uuid: string) => Promise<string>;
-	/** Localized label for the tier in play, e.g. "Tier 3" or "Cantrip". */
+	/** Localized, e.g. "Tier 3" or "Cantrip". */
 	tierLabel?: string;
 }
 
@@ -77,16 +69,13 @@ export interface SpellScrollDialogProps {
 export interface SpellScrollChoiceCardProps {
 	/** Radio group name, scoped to the owning dialog instance. */
 	name: string;
-	/** This card's value within the group. */
 	value: SpellScrollDestination;
-	/** The group's current value; bound so clicking the card selects it. */
+	/** Bound, so clicking the card selects it. */
 	group: SpellScrollDestination;
-	/** Font Awesome class shown beside the title. */
+	/** Font Awesome class. */
 	icon: string;
 	title: string;
-	/** One-line summary under the title. */
 	hint: string;
-	/** The fact list, warning, or anything else the card carries. */
 	children?: Snippet;
 }
 

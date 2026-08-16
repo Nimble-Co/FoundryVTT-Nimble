@@ -15,8 +15,8 @@ describe('getSpellScrollTemplateTier', () => {
 	});
 
 	it('resolves tier 0 rather than treating a falsy tier as a miss', () => {
-		// The cantrip blank maps to 0, which is falsy — a truthiness check here would
-		// silently report "not a template".
+		// The cantrip blank maps to 0, so a truthiness check would report it as no
+		// blank at all.
 		expect(getSpellScrollTemplateTier({ type: 'object', _id: CANTRIP_TEMPLATE_ID })).toBe(0);
 	});
 
@@ -120,10 +120,9 @@ describe('getSpellScrollTemplateTier', () => {
 	});
 
 	it('matches the ids and tiers of the shipped scroll blanks', () => {
-		// The table is ten opaque document ids. Asserting its own values would pass
-		// even if an id were mistyped, so compare against the packs themselves: a
-		// blank that drifts stops being recognised and silently falls through to
-		// the ordinary item path.
+		// Ten opaque ids: asserting the table against itself would pass even with a
+		// mistyped id, so compare against the pack files. A drifted id stops being
+		// recognised and silently falls through to the ordinary item path.
 		const templateDir = join(process.cwd(), 'packs/magicItems/core/spellScrollTemplates');
 		const files = readdirSync(templateDir).filter((file) => file.endsWith('.json'));
 

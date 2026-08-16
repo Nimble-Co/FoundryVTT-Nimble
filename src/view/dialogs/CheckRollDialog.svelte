@@ -29,11 +29,6 @@
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	{#if data.checkHint}
-		<!--
-			Says why the check was raised and what turns on it. Only set when something
-			other than the player asked for the roll, so an ordinary skill click is
-			unchanged.
-		-->
 		<Hint hintType="warning" hintIcon="fa-solid fa-circle-exclamation" hintText={data.checkHint} />
 	{/if}
 

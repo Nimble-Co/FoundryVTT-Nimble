@@ -2,17 +2,11 @@ import { SYSTEM_ID } from '#system';
 
 export const INCLUDE_SPELL_DESCRIPTION_ON_SCROLLS_SETTING_KEY = 'includeSpellDescriptionOnScrolls';
 
-/**
- * One home for the default, used both by the registration below and by the
- * pre-registration fallback, so the two can never answer differently.
- */
 const INCLUDE_SPELL_DESCRIPTION_DEFAULT = true;
 
 /**
- * Registers the spell scroll settings.
- *
- * World-scope: the value is baked into created documents, so a client-scope
- * toggle would give two players scribing the same spell two different items.
+ * World-scoped because the value is baked into created documents: a client-scope
+ * toggle would give two players inscribing the same spell two different items.
  */
 export function registerSpellScrollSettings(): void {
 	game.settings.register(
@@ -30,11 +24,9 @@ export function registerSpellScrollSettings(): void {
 }
 
 /**
- * Whether a newly created spell scroll copies the inscribed spell's own
- * description beneath the fixed scroll rules.
- *
- * Falls back to the registered default when the setting is not yet registered,
- * which keeps callers working in tests and during early init.
+ * Whether a newly created spell scroll copies the inscribed spell's description
+ * beneath the fixed scroll rules. Falls back to the default before the setting
+ * is registered, so callers work during early init.
  */
 export function shouldIncludeSpellDescriptionOnScrolls(): boolean {
 	const registered = game.settings?.settings as { has: (key: string) => boolean } | undefined;

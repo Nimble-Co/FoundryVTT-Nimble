@@ -164,8 +164,6 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 			return null;
 		}
 
-		// Past the prompt the scroll is read aloud and spent, whether or not the
-		// player carries the activation dialog through to a card.
 		const chatCard = await super.activate(options);
 
 		await this.#consumeScroll();
@@ -173,7 +171,6 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		return chatCard;
 	}
 
-	/** Asks before spending a scroll that would otherwise raise no dialog at all. */
 	async #confirmScrollUse(): Promise<boolean> {
 		return Boolean(
 			await foundry.applications.api.DialogV2.confirm({
@@ -223,8 +220,6 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		}
 
 		const { roll, rollData } = await actor.rollSkillCheck('arcana', {
-			// States the cause and the stake, so the dialog does not appear out of
-			// nowhere with nothing said about what a failure costs.
 			checkHint: localize('NIMBLE.spellScroll.arcanaCheckHint', {
 				school: getSpellSchoolLabel(school),
 			}),
@@ -244,8 +239,8 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 			),
 		} as ChatMessage.CreateData;
 
-		// A GM who hid the roll in the Configure dialog hid its outcome too, so the
-		// pass/fail line follows the same mode every other check-to-chat path uses.
+		// A GM who hid the roll hid its outcome too, so the pass/fail line follows
+		// the roll's own mode.
 		ChatMessage.applyMode(chatData, toMessageMode(rollData?.visibilityMode));
 
 		await ChatMessage.create(chatData);
@@ -253,7 +248,6 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		return succeeded ? 'passed' : 'failed';
 	}
 
-	/** Spends one use of the scroll, deleting it when the last one is gone. */
 	async #consumeScroll(): Promise<void> {
 		if (!this.isEmbedded) return;
 		if (!isResourceSpendingAutomationEnabled()) return;

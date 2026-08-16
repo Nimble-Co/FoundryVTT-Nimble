@@ -15,8 +15,7 @@
 
 	const state = createSpellScrollDialogState(() => props);
 
-	// Capturing the initial `onready` is the intent, so say so rather than leaving
-	// the compiler to warn about a top-level prop read.
+	// Capturing the initial `onready` is the intent, hence the untrack.
 	untrack(() => onready?.(state));
 
 	// Serialized rather than read directly off `state`, so every assertion goes

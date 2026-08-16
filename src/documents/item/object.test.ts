@@ -89,8 +89,7 @@ describe('NimbleObjectItem.activate', () => {
 	beforeEach(() => {
 		vi.restoreAllMocks();
 
-		// The scroll's own spell is cast through the base activation; what it
-		// returns is only "did a card get posted", which the scroll reports back.
+		// Base activation reports only whether a card was posted.
 		baseActivate = vi
 			.spyOn(NimbleBaseItem.prototype, 'activate')
 			.mockResolvedValue({ id: 'chat-1' } as never);
@@ -113,9 +112,7 @@ describe('NimbleObjectItem.activate', () => {
 		});
 	});
 
-	// The rulebook's one exemption from the check: already knowing a spell of the
-	// scroll's school. The confirmation is then the only thing standing between the
-	// click and the scroll being spent.
+	// The rulebook's one exemption from the check.
 	describe('a wielder who knows the school', () => {
 		it('asks before spending the scroll', async () => {
 			const scroll = createScroll({ actorSpellSchools: [SCHOOL] });
@@ -145,9 +142,8 @@ describe('NimbleObjectItem.activate', () => {
 			expect(scroll.delete).toHaveBeenCalled();
 		});
 
-		// The confirmation is the commit point, not the activation card. A spell
-		// authored with `skipRollDialog`, or any scroll used with Alt held, posts no
-		// dialog to back out of, so the scroll is spent either way.
+		// The confirmation is the commit point, not the card. A `skipRollDialog`
+		// spell, or any scroll used with Alt held, posts no dialog to back out of.
 		it('consumes the scroll even when the activation posts no card', async () => {
 			const scroll = createScroll({ actorSpellSchools: [SCHOOL] });
 			baseActivate.mockResolvedValue(null as never);
@@ -199,8 +195,7 @@ describe('NimbleObjectItem.activate', () => {
 			expect(baseActivate).toHaveBeenCalled();
 		});
 
-		// Closing the Configure dialog resolves with no roll. A check the player
-		// never agreed to must not spend anything.
+		// A check the player never agreed to must not spend anything.
 		it('leaves the scroll alone when the check dialog is closed', async () => {
 			const scroll = createScroll({
 				rollSkillCheck: vi.fn(async () => ({ roll: null, rollData: null })),
@@ -226,8 +221,8 @@ describe('NimbleObjectItem.activate', () => {
 			expect(chat.applyMode).toHaveBeenCalledWith(expect.any(Object), 'blind');
 		});
 
-		// Knowing a spell of the school is the only exemption the rulebook grants.
-		// An actor that cannot roll must not be waved through it.
+		// Knowing a spell of the school is the rulebook's only exemption, so an actor
+		// that cannot roll must not be waved through.
 		it('throws for an actor that cannot roll a skill check', async () => {
 			const scroll = createScroll({ rollSkillCheck: null });
 

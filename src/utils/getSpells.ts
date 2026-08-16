@@ -16,30 +16,21 @@ export interface SpellIndexEntry {
 	school: string;
 	tier: number;
 	isUtility: boolean;
-	/**
-	 * The spell's action cost, as `formatActivationCostLabel` reads it. Indexed so
-	 * a list can show how long a spell takes to cast without loading every
-	 * document it offers. Optional because a pack that predates the added index
-	 * field carries no cost until its index is rebuilt.
-	 */
+	/** Indexed so a list can show the cast time without loading every document. */
 	activationCost?: ActivationCost;
 	/**
-	 * Whether this spell is flagged `secretSpell`. Optional because it only
-	 * carries information when the index was built with `includeSecretSpells`;
-	 * without that opt-in no secret spell is indexed at all, so a caller cannot
-	 * surface one by accident.
+	 * Only meaningful when the index was built with `includeSecretSpells`. Without
+	 * that opt-in, no secret spell is indexed at all.
 	 */
 	isSecret?: boolean;
 	/** Class restrictions - empty array means available to all classes */
 	classes: string[];
 }
 
-/** Options for {@link buildSpellIndex}. */
 export interface BuildSpellIndexOptions {
 	/**
-	 * Include spells flagged `secretSpell`. Defaults to false: secret spells are
-	 * never granted during character creation. Only the GM-facing spell scroll
-	 * picker opts in, because a GM may inscribe a secret spell onto a scroll.
+	 * Defaults to false, since secret spells are never granted during character
+	 * creation. Only the GM-facing scroll picker opts in.
 	 */
 	includeSecretSpells?: boolean;
 }
@@ -122,8 +113,6 @@ export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Pro
 
 		const selectedProperties = system.properties?.selected ?? [];
 
-		// Secret spells are never granted during character creation; only the
-		// GM-facing scroll picker opts in.
 		const isSecret = selectedProperties.includes('secretSpell');
 		if (isSecret && !includeSecretSpells) continue;
 
@@ -176,8 +165,6 @@ export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Pro
 
 			const selectedProperties = system.properties?.selected ?? [];
 
-			// Secret spells are never granted during character creation; only the
-			// GM-facing scroll picker opts in.
 			const isSecret = selectedProperties.includes('secretSpell');
 			if (isSecret && !includeSecretSpells) continue;
 

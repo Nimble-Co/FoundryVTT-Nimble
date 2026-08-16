@@ -143,11 +143,6 @@
 	{/if}
 </article>
 
-<!--
-	One full-width action, as Level Up, Field Rest and Safe Rest do. Closing the
-	window cancels: GenericDialog#close resolves the promise with null, and
-	_onDropItem already treats null as "create nothing".
--->
 <footer class="nimble-sheet__footer">
 	<button
 		class="nimble-button"
@@ -179,7 +174,6 @@
 			display: grid;
 			grid-template-columns: auto 1fr;
 			gap: 0.125rem 0.75rem;
-			// The choice card supplies vertical rhythm through its own flex gap.
 			margin: 0;
 			padding-block-start: 0.5rem;
 			border-block-start: 1px solid var(--nimble-card-border-color);
@@ -187,9 +181,8 @@
 
 			dt {
 				color: var(--nimble-medium-text-color);
-				// Foundry core sets `text-shadow: 1px 1px 0 #000` on dt for its own dark
-				// window chrome. On this light surface it smears the small condensed
-				// labels into what reads as a strikethrough.
+				// Foundry core sets `text-shadow: 1px 1px 0 #000` on dt, which smears
+				// these small condensed labels into what reads as a strikethrough.
 				text-shadow: none;
 			}
 
@@ -217,8 +210,6 @@
 		}
 	}
 
-	// Matches the single-action footer used by Level Up, Field Rest, Safe Rest,
-	// Roll Hit Dice and Edit Mana: one button spanning the dialog.
 	.nimble-sheet__footer {
 		--nimble-button-padding: 0.5rem 1rem;
 		--nimble-button-width: 100%;

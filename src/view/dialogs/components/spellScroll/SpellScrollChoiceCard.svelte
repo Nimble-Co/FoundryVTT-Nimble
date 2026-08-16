@@ -13,12 +13,8 @@
 </script>
 
 <!--
-	Mirrors .rest-type-card in FieldRestDialog.svelte, the house pattern for a
-	choice in a dialog: the native radio is hidden, the whole label is the control,
-	and a corner dot marks the selection.
-
-	The input is hidden, not removed — the label still needs a real radio for
-	keyboard traversal and arrow-key group navigation.
+	The radio is hidden, not removed: the label still needs a real one for keyboard
+	traversal and arrow-key group navigation.
 -->
 <label
 	class="nimble-spell-scroll-choice"
@@ -56,8 +52,7 @@
 			border-color: var(--nimble-accent-color);
 		}
 
-		// The radio is the focusable element but is invisible, so the ring has to be
-		// drawn on the label instead. Matches the treatment on .nimble-size-choice__option.
+		// The focusable radio is invisible, so the ring is drawn on the label.
 		&:has(.nimble-spell-scroll-choice__input:focus-visible) {
 			border-color: var(--nimble-accent-color);
 			box-shadow: 0 0 0 1px var(--nimble-accent-color);

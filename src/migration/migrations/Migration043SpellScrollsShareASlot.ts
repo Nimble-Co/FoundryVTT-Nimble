@@ -4,16 +4,11 @@ import { MigrationBase } from '../MigrationBase.js';
  * Document ids of the `Spell Scroll, Tier N` blanks as the magic items pack
  * shipped them.
  *
- * A snapshot, deliberately: a migration has to describe the world as it was when
- * this shipped, so it must not follow later edits to the runtime lookup table in
- * `getSpellScrollTemplateTier`.
- *
- * A set rather than a tier map, because the migration only asks whether an item
- * is one of the blanks — it rewrites the size fields and never reads a tier.
- *
- * Bare document ids rather than full compendium uuids. The ids are byte-identical
- * on the `nimble` and `nimble-dev` installs, so this needs none of the prefix
- * folding `Migration035AncestryBonusSplit` does.
+ * Deliberately a snapshot, not a reference to the runtime table in
+ * `getSpellScrollTemplateTier`: a migration describes the world as it was when
+ * it shipped, so it must not follow later edits to that list. The ids are
+ * identical on the `nimble` and `nimble-dev` installs, so this needs none of the
+ * prefix folding `Migration035AncestryBonusSplit` does.
  */
 const TEMPLATE_IDS: ReadonlySet<string> = new Set([
 	'1UL6G7MDgUqtt4fN',
@@ -44,10 +39,9 @@ interface ObjectSource {
  *
  * The shipped `Spell Scroll, Tier N` blanks were authored as
  * `objectSizeType: 'slots'` with `slotsRequired: 1`, so a character carrying
- * three scrolls lost three inventory slots. Scrolls are small: the rulebook
- * groups small related items into a single slot, and
- * `NimbleCharacter#getUsedInventorySlots` charges one slot in total for every
- * small object carried rather than one each.
+ * three scrolls lost three inventory slots. The rulebook groups small items into
+ * a single slot, which `NimbleCharacter#getUsedInventorySlots` already applies to
+ * every small object carried.
  *
  * Only copies of the pack blanks are touched. Scrolls inscribed by
  * `createScrollFromSpell` are already small-sized and carry no template source

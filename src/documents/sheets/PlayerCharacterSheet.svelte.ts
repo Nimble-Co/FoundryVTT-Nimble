@@ -167,9 +167,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			return result;
 		}
 
-		// A dropped spell asks whether to learn it or inscribe it onto a scroll, and
-		// a dropped scroll template asks which spell it carries. Both are asked
-		// regardless of which tab is open.
 		const scrollItems = await this.#resolveSpellScrollDrop(itemData);
 		if (scrollItems === null) return false;
 
@@ -184,14 +181,13 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	}
 
 	/**
-	 * Routes a dropped spell or scroll template through the spell scroll dialog.
+	 * Routes a dropped spell or scroll blank through the spell scroll dialog. Takes
+	 * one item, since Foundry resolves a drop into a single Item before the sheet
+	 * sees it.
 	 *
 	 * Returns the item data to create in place of the drop, `undefined` when the
 	 * drop is not scroll-related and should proceed untouched, or `null` when the
 	 * player cancelled and nothing should be created.
-	 *
-	 * One item per drop: Foundry resolves a drop into a single Item before this
-	 * sheet ever sees it.
 	 */
 	async #resolveSpellScrollDrop(
 		item: Record<string, unknown>,
@@ -217,9 +213,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		if (item.type !== 'spell') return undefined;
 
-		// Every spell has a school, and the school decides whether the scroll needs
-		// an Arcana check. One without is broken data, so say so and let the drop
-		// carry on as an ordinary spell rather than inscribing an uncastable scroll.
+		// A spell with no school is broken data. Report it and let the drop carry on
+		// as an ordinary spell rather than inscribing a scroll with no check to make.
 		const { school } = (item.system ?? {}) as { school?: string };
 		if (!school) {
 			ui.notifications?.error(
@@ -238,14 +233,12 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	/**
 	 * Switches to the tab the created items landed on and flashes them.
 	 *
-	 * The tab comes from what was *created*, not what was dropped, so a spell
-	 * inscribed onto a scroll takes the player to the inventory rather than
-	 * yanking them to the spells tab.
+	 * The tab comes from what was created, not what was dropped, so a spell
+	 * inscribed onto a scroll opens the inventory rather than the spells tab.
 	 *
-	 * A `smallSized` object whose name matches one already carried is absorbed
-	 * into that stack by `NimbleObjectItem#_preCreate`, which creates no document.
-	 * Two identical scrolls hit that path, so the existing row is flashed instead
-	 * of nothing.
+	 * A second copy of a `smallSized` object is absorbed into the existing stack by
+	 * `NimbleObjectItem#_preCreate` and creates no document, so that row is flashed
+	 * instead of nothing.
 	 */
 	#announceCreatedItems(requestedItems: Array<Record<string, unknown>>, result: unknown): void {
 		const created = Array.isArray(result) ? result : [];

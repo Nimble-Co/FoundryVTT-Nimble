@@ -4,17 +4,11 @@ import { getItemSourceId } from './itemSourceRules.js';
  * Document ids of the generic `Spell Scroll, Tier N` blanks in the magic items
  * pack, mapped to the tier each one is fixed at.
  *
- * Matching on the bare document id rather than a flag or a name is deliberate:
- *
- * - A system-id-scoped flag would not survive the dev build. `dev-rebrand.mjs`
- *   rewrites only the compendium-uuid and asset-path prefixes inside
- *   `packs/**\/*.json` — not flag scope keys — so a scope key authored in pack
- *   data would keep the stable system id while `SYSTEM_ID` resolves to the dev
- *   one, and the lookup would silently miss.
- * - `system.identifier` is a user-editable field shown on the object sheet.
- * - Names are translated by Babele.
- *
- * Document ids are identical across both builds, so this resolves on either.
+ * Matched on the bare document id, which is identical on the `nimble` and
+ * `nimble-dev` builds. The alternatives all break: `dev-rebrand.mjs` rewrites
+ * compendium-uuid and asset-path prefixes in `packs/**\/*.json` but not flag
+ * scope keys, so a scoped flag would silently miss on the dev build;
+ * `system.identifier` is user-editable; and names are translated by Babele.
  */
 const TIER_BY_SPELL_SCROLL_TEMPLATE_ID: Readonly<Record<string, number>> = Object.freeze({
 	'1UL6G7MDgUqtt4fN': 0,
@@ -35,11 +29,10 @@ function documentIdFromUuid(uuid: string): string {
 }
 
 /**
- * The tier of a dropped generic spell scroll template, or null when the item is
- * not one.
+ * The tier of a dropped scroll blank, or null when the item is not one.
  *
- * An already-inscribed scroll is never a template: it is created from
- * `createScrollFromSpell` and carries no template id.
+ * An already-inscribed scroll never matches: `createScrollFromSpell` builds it
+ * fresh, so it carries no blank's document id.
  */
 export default function getSpellScrollTemplateTier(item: {
 	type?: unknown;
@@ -51,12 +44,10 @@ export default function getSpellScrollTemplateTier(item: {
 }): number | null {
 	if (item.type !== 'object') return null;
 
-	// `getItemSourceId` covers `_stats.compendiumSource` and the legacy `sourceId`
-	// and `flags.core.source` locations. `flags.core.sourceId` is checked beside it
-	// because that is the key older Foundry versions actually wrote — it is what
-	// `MigrationBase#getSourceId` reads — so a blank imported back then still
-	// resolves. Documents carry `null` rather than `undefined` for an absent
-	// compendium source, so normalize on the way in.
+	// `flags.core.sourceId` is checked beside `getItemSourceId` because that is the
+	// key older Foundry versions wrote, and it is what `MigrationBase#getSourceId`
+	// reads. Documents carry `null` for an absent compendium source, so normalize
+	// on the way in.
 	const sourceId =
 		getItemSourceId({
 			sourceId: item.sourceId,
