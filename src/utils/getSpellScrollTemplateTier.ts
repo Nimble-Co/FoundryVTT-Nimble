@@ -1,7 +1,7 @@
 import { getItemSourceId } from './itemSourceRules.js';
 
 /**
- * Document ids of the generic `Spell Scroll - Tier N` blanks in the magic items
+ * Document ids of the generic `Spell Scroll, Tier N` blanks in the magic items
  * pack, mapped to the tier each one is fixed at.
  *
  * Matching on the bare document id rather than a flag or a name is deliberate:

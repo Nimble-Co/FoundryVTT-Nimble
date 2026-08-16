@@ -1,7 +1,7 @@
 import { MigrationBase } from '../MigrationBase.js';
 
 /**
- * Document ids of the `Spell Scroll - Tier N` blanks as the magic items pack
+ * Document ids of the `Spell Scroll, Tier N` blanks as the magic items pack
  * shipped them.
  *
  * A snapshot, deliberately: a migration has to describe the world as it was when
@@ -42,7 +42,7 @@ interface ObjectSource {
 /**
  * Retargets spell scrolls onto the small-object slot rule.
  *
- * The shipped `Spell Scroll - Tier N` blanks were authored as
+ * The shipped `Spell Scroll, Tier N` blanks were authored as
  * `objectSizeType: 'slots'` with `slotsRequired: 1`, so a character carrying
  * three scrolls lost three inventory slots. Scrolls are small: the rulebook
  * groups small related items into a single slot, and

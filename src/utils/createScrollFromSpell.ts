@@ -26,14 +26,14 @@ export const SPELL_SCROLL_PRICE_BY_TIER: Readonly<Record<number, number>> = Obje
 const SPELL_SCROLL_IMG = 'icons/sundries/scrolls/scroll-bound-black-tan.webp';
 
 /**
- * Spell properties that keep their meaning on the scroll object, and so transfer
- * when a spell is inscribed.
+ * Spell properties that still mean the same thing on a scroll and should carry
+ * over when the spell is inscribed.
  *
- * `SpellDataModel` and `ObjectDataModel` also share `range` and `reach`, but on an
- * object those are weapon reach backed by their own min/max fields, not the
- * spell's range — so they stay behind. `secretSpell` and `utilitySpell` describe
- * the spell list entry rather than the casting, and `ObjectDataModel` has no
- * matching option for either.
+ * `SpellDataModel` and `ObjectDataModel` both have `range` and `reach`, but those
+ * fields mean weapon reach on an object and use separate min/max values, so the
+ * spell's values should not transfer. `secretSpell` and `utilitySpell` describe
+ * the spell's list entry rather than how it is cast, and `ObjectDataModel` has no
+ * equivalent fields for them.
  */
 const SCROLL_CARRIED_SPELL_PROPERTIES: ReadonlySet<string> = new Set(['concentration']);
 
