@@ -173,7 +173,13 @@ describe('buildSpellIndex', () => {
 		const fireCantrips = index.get('fire')?.get(0) ?? [];
 
 		expect(itemPack.getIndex).toHaveBeenCalledWith({
-			fields: ['system.school', 'system.tier', 'system.classes', 'system.properties.selected'],
+			fields: [
+				'system.school',
+				'system.tier',
+				'system.classes',
+				'system.activation.cost',
+				'system.properties.selected',
+			],
 		});
 		expect(fireCantrips.map((spell) => spell.name)).toEqual([
 			'Class Bolt',

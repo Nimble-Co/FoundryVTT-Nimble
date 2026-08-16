@@ -25,13 +25,25 @@ export const SPELL_SCROLL_PRICE_BY_TIER: Readonly<Record<number, number>> = Obje
 /** Image shared by every scroll template in the magic items pack. */
 const SPELL_SCROLL_IMG = 'icons/sundries/scrolls/scroll-bound-black-tan.webp';
 
+/**
+ * Spell properties that keep their meaning on the scroll object, and so transfer
+ * when a spell is inscribed.
+ *
+ * `SpellDataModel` and `ObjectDataModel` also share `range` and `reach`, but on an
+ * object those are weapon reach backed by their own min/max fields, not the
+ * spell's range — so they stay behind. `secretSpell` and `utilitySpell` describe
+ * the spell list entry rather than the casting, and `ObjectDataModel` has no
+ * matching option for either.
+ */
+const SCROLL_CARRIED_SPELL_PROPERTIES: ReadonlySet<string> = new Set(['concentration']);
+
 /** Flag bag written onto a created scroll, read back when the scroll is used. */
 export interface SpellScrollFlagData {
 	/** UUID of the spell this scroll was inscribed from. */
 	spellUuid: string;
 	/** School of the inscribed spell, used for the Arcana check exemption. */
 	school: string;
-	/** Tier the scroll is fixed at. A scroll can never be upcast. */
+	/** Tier the scroll was inscribed at, which is the only tier it can be cast at. */
 	tier: number;
 }
 
@@ -44,6 +56,7 @@ export interface ScrollSourceSpell {
 		tier?: number;
 		description?: { baseEffect?: string };
 		activation?: Record<string, unknown>;
+		properties?: { selected?: string[] };
 	};
 }
 
@@ -84,8 +97,8 @@ function buildScrollDescription(
 	const spellDescription = spell.system?.description?.baseEffect ?? '';
 	if (!spellDescription) return rules;
 
-	// Only the base effect transfers. A scroll is fixed at its inscribed tier,
-	// so the spell's higher-level and upcast text can never apply.
+	// Only the base effect transfers. A scroll spends no mana, so the spell's
+	// upcast text describes something the scroll can never do.
 	return `${rules}<hr>${spellDescription}`;
 }
 
@@ -94,6 +107,10 @@ function buildScrollDescription(
  *
  * Returns plain item data rather than creating the document, so the caller
  * decides where it lands and the transform stays directly testable.
+ *
+ * Throws when the spell carries no school. Every spell has one, and the school
+ * is what the Arcana check's exemption is decided on, so a schoolless spell is
+ * broken data rather than a case to inscribe a half-working scroll for.
  */
 export default function createScrollFromSpell(
 	spell: ScrollSourceSpell,
@@ -102,6 +119,10 @@ export default function createScrollFromSpell(
 	const tier = spell.system?.tier ?? 0;
 	const school = spell.system?.school ?? '';
 	const spellName = spell.name ?? localize('NIMBLE.spellScroll.unknownSpell');
+
+	if (!school) {
+		throw new Error(`Nimble | Cannot inscribe a scroll: the spell "${spellName}" has no school.`);
+	}
 
 	const flagData: SpellScrollFlagData = {
 		spellUuid: spell.uuid ?? '',
@@ -117,6 +138,14 @@ export default function createScrollFromSpell(
 			// A scroll casts the spell it carries, so it keeps the spell's own
 			// activation — including its action cost.
 			activation: foundry.utils.deepClone(spell.system?.activation ?? {}),
+			// And the spell's own constraints: a concentration spell cast off a
+			// scroll still demands concentration. `ObjectDataModel` only accepts the
+			// properties it defines, so anything spell-only is dropped on the way in.
+			properties: {
+				selected: (spell.system?.properties?.selected ?? []).filter((property) =>
+					SCROLL_CARRIED_SPELL_PROPERTIES.has(property),
+				),
+			},
 			description: {
 				public: buildScrollDescription(spell, includeSpellDescription),
 				unidentified: '',

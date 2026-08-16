@@ -47,19 +47,22 @@ export default function getSpellScrollTemplateTier(item: {
 	uuid?: unknown;
 	sourceId?: string;
 	_stats?: { compendiumSource?: string | null } | null;
-	flags?: { core?: { source?: string } };
+	flags?: { core?: { source?: string; sourceId?: string } };
 }): number | null {
 	if (item.type !== 'object') return null;
 
-	// `getItemSourceId` covers the legacy `sourceId` and `flags.core.source`
-	// locations as well as `_stats.compendiumSource`, so a blank stamped by an
-	// older Foundry version still resolves. Documents carry `null` rather than
-	// `undefined` for an absent compendium source, so normalize on the way in.
-	const sourceId = getItemSourceId({
-		sourceId: item.sourceId,
-		_stats: { compendiumSource: item._stats?.compendiumSource ?? undefined },
-		flags: item.flags,
-	});
+	// `getItemSourceId` covers `_stats.compendiumSource` and the legacy `sourceId`
+	// and `flags.core.source` locations. `flags.core.sourceId` is checked beside it
+	// because that is the key older Foundry versions actually wrote — it is what
+	// `MigrationBase#getSourceId` reads — so a blank imported back then still
+	// resolves. Documents carry `null` rather than `undefined` for an absent
+	// compendium source, so normalize on the way in.
+	const sourceId =
+		getItemSourceId({
+			sourceId: item.sourceId,
+			_stats: { compendiumSource: item._stats?.compendiumSource ?? undefined },
+			flags: item.flags,
+		}) ?? item.flags?.core?.sourceId;
 
 	const candidateIds = [
 		typeof item._id === 'string' ? item._id : null,

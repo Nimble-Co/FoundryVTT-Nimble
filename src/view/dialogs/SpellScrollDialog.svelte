@@ -19,7 +19,6 @@
 		activationSummary = '',
 		scrollPrice = 0,
 		hasMana = false,
-		batchCount = 0,
 		candidates = [],
 		tierLabel = '',
 	} = $derived(props);
@@ -36,15 +35,6 @@
 
 <article class="nimble-sheet__body nimble-spell-scroll-dialog">
 	{#if mode === 'chooser'}
-		{#if batchCount > 1}
-			<p class="nimble-spell-scroll-dialog__prompt">
-				{localize('NIMBLE.spellScroll.dialog.batchChooserTitle', {
-					name: actorName,
-					count: String(batchCount),
-				})}
-			</p>
-		{/if}
-
 		<SpellScrollChoiceCard
 			name={groupName}
 			value="spellList"
@@ -135,8 +125,9 @@
 						schoolLabel={getSpellSchoolLabel(candidate.school)}
 						isSelected={state.selectedVisibleUuid === candidate.uuid}
 						isExpanded={state.expandedUuid === candidate.uuid}
+						description={state.descriptionFor(candidate.uuid)}
 						onSelect={() => state.selectSpell(candidate.uuid)}
-						onToggleDetails={() => state.toggleExpanded(candidate.uuid)}
+						onToggleDetails={() => void state.toggleExpanded(candidate.uuid)}
 					/>
 				{/each}
 			</ul>
@@ -196,6 +187,10 @@
 
 			dt {
 				color: var(--nimble-medium-text-color);
+				// Foundry core sets `text-shadow: 1px 1px 0 #000` on dt for its own dark
+				// window chrome. On this light surface it smears the small condensed
+				// labels into what reads as a strikethrough.
+				text-shadow: none;
 			}
 
 			dd {

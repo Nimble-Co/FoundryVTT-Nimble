@@ -25,6 +25,11 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 	let selectedUuid = $state<string | null>(null);
 	let expandedUuid = $state<string | null>(null);
 
+	// Descriptions arrive one expanded row at a time and are kept once fetched, so
+	// reopening a row costs nothing. Reassigned rather than mutated: a plain object
+	// in `$state` tracks the reference, not its keys.
+	let descriptionsByUuid = $state<Record<string, string>>({});
+
 	/**
 	 * Only the schools actually present among the candidates get a tab. The Spells
 	 * tab filters by the schools the *actor* knows, which would leave a non-caster
@@ -159,8 +164,22 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 			selectedUuid = uuid;
 		},
 
-		toggleExpanded(uuid: string) {
-			expandedUuid = expandedUuid === uuid ? null : uuid;
+		/** The enriched description of `uuid`, or null while it is still loading. */
+		descriptionFor(uuid: string): string | null {
+			return descriptionsByUuid[uuid] ?? null;
+		},
+
+		async toggleExpanded(uuid: string) {
+			if (expandedUuid === uuid) {
+				expandedUuid = null;
+				return;
+			}
+
+			expandedUuid = uuid;
+			if (uuid in descriptionsByUuid) return;
+
+			const description = await getProps().loadDescription?.(uuid);
+			descriptionsByUuid = { ...descriptionsByUuid, [uuid]: description ?? '' };
 		},
 
 		submit() {

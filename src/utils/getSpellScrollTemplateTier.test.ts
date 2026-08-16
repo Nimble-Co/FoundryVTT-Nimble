@@ -59,6 +59,29 @@ describe('getSpellScrollTemplateTier', () => {
 		expect(getSpellScrollTemplateTier(item)).toBe(9);
 	});
 
+	// The key older Foundry versions actually wrote, and what `MigrationBase#getSourceId`
+	// reads. A blank imported back then is migrated by id but has to resolve on drop too.
+	it('resolves the tier from the legacy core sourceId flag', () => {
+		const item = {
+			type: 'object',
+			_id: 'aLocalWorldItemId',
+			flags: { core: { sourceId: `Compendium.nimble.magic-items.Item.${TIER_9_TEMPLATE_ID}` } },
+		};
+
+		expect(getSpellScrollTemplateTier(item)).toBe(9);
+	});
+
+	it('prefers the modern compendium source over the legacy sourceId flag', () => {
+		const item = {
+			type: 'object',
+			_id: 'aLocalWorldItemId',
+			_stats: { compendiumSource: `Compendium.nimble.magic-items.Item.${TIER_3_TEMPLATE_ID}` },
+			flags: { core: { sourceId: `Compendium.nimble.magic-items.Item.${TIER_9_TEMPLATE_ID}` } },
+		};
+
+		expect(getSpellScrollTemplateTier(item)).toBe(3);
+	});
+
 	it('resolves the dev build the same way, since document ids do not change', () => {
 		const item = {
 			type: 'object',

@@ -30,6 +30,7 @@ function scrollFlags(scroll: Record<string, unknown>): SpellScrollFlagData {
 function scrollSystem(scroll: Record<string, unknown>) {
 	return scroll.system as {
 		activation: Record<string, unknown>;
+		properties: { selected: string[] };
 		description: { public: string };
 		objectType: string;
 		objectSizeType: string;
@@ -38,6 +39,10 @@ function scrollSystem(scroll: Record<string, unknown>) {
 		identified: boolean;
 		price: { value: number; denomination: string };
 	};
+}
+
+function scrollProperties(scroll: Record<string, unknown>): string[] {
+	return scrollSystem(scroll).properties.selected;
 }
 
 describe('createScrollFromSpell', () => {
@@ -128,7 +133,7 @@ describe('createScrollFromSpell', () => {
 			expect(system.description.public).toContain('Single use.');
 			expect(system.description.public).toContain('No mana cost.');
 			expect(system.description.public).toContain('No magical ability needed');
-			expect(system.description.public).toContain('Cannot be upcast');
+			expect(system.description.public).toContain('No upcasting');
 			expect(system.description.public).toContain('DC 10 Arcana check');
 		});
 
@@ -231,13 +236,70 @@ describe('createScrollFromSpell', () => {
 		).toBe(10);
 	});
 
-	it('tolerates a spell missing every optional field', () => {
-		const scroll = createScrollFromSpell({}, { includeSpellDescription: true });
+	it('tolerates a spell missing every optional field but its school', () => {
+		const scroll = createScrollFromSpell(
+			{ system: { school: 'fire' } },
+			{ includeSpellDescription: true },
+		);
 		const system = scrollSystem(scroll);
 
 		expect(scroll.name).toBe('Scroll of Unknown Spell');
 		expect(system.price.value).toBe(10);
-		expect(scrollFlags(scroll)).toEqual({ spellUuid: '', school: '', tier: 0 });
+		expect(scrollFlags(scroll)).toEqual({ spellUuid: '', school: 'fire', tier: 0 });
+	});
+
+	describe('school', () => {
+		// The school decides whether the Arcana check applies, and every spell has
+		// one, so a spell without it is broken data rather than a scroll to create.
+		it('refuses to inscribe a spell with no school', () => {
+			const spell = createSpell({ system: { school: '', tier: 1, activation: {} } });
+
+			expect(() => createScrollFromSpell(spell, { includeSpellDescription: true })).toThrow(
+				/Arc Lightning/,
+			);
+		});
+
+		it('refuses to inscribe a spell with no system data at all', () => {
+			expect(() => createScrollFromSpell({}, { includeSpellDescription: true })).toThrow(
+				/no school/,
+			);
+		});
+	});
+
+	describe('properties', () => {
+		it('carries concentration onto the scroll', () => {
+			const spell = createSpell({
+				system: { school: 'fire', tier: 1, properties: { selected: ['concentration'] } },
+			});
+
+			expect(
+				scrollProperties(createScrollFromSpell(spell, { includeSpellDescription: true })),
+			).toEqual(['concentration']);
+		});
+
+		// `range` and `reach` exist on both models but mean weapon reach on an
+		// object, and `ObjectDataModel` has no option for the spell-list flags.
+		it('leaves behind the properties that do not mean the same thing on an object', () => {
+			const spell = createSpell({
+				system: {
+					school: 'fire',
+					tier: 1,
+					properties: {
+						selected: ['concentration', 'range', 'reach', 'secretSpell', 'utilitySpell'],
+					},
+				},
+			});
+
+			expect(
+				scrollProperties(createScrollFromSpell(spell, { includeSpellDescription: true })),
+			).toEqual(['concentration']);
+		});
+
+		it('writes an empty selection for a spell with no properties', () => {
+			expect(
+				scrollProperties(createScrollFromSpell(createSpell(), { includeSpellDescription: true })),
+			).toEqual([]);
+		});
 	});
 });
 

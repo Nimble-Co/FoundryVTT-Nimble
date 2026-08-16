@@ -16,6 +16,7 @@ interface Snapshot {
 	visibleCandidates: string[];
 	selectedVisibleUuid: string | null;
 	expandedUuid: string | null;
+	expandedDescription: string | null;
 	isSubmitDisabled: boolean;
 	submitLabel: string;
 	submitIcon: string;
@@ -31,9 +32,10 @@ function createCandidate(name: string, school: string, uuid: string): SpellScrol
 		uuid,
 		img: '',
 		tier: 3,
+		isUtility: false,
+		classes: [],
 		activationSummary: '1 Action',
-		description: '',
-	} as SpellScrollCandidate;
+	};
 }
 
 const FIREBALL = createCandidate('Fireball', 'fire', 'Item.fireball');
@@ -190,20 +192,79 @@ describe('createSpellScrollDialogState', () => {
 		it('opens a row, and closes it when the same row is toggled again', async () => {
 			const harness = setup({ mode: 'picker', candidates: [FIREBALL, LIGHTNING_BOLT] });
 
-			harness.state.toggleExpanded('Item.fireball');
+			await harness.state.toggleExpanded('Item.fireball');
 			expect(harness.read().expandedUuid).toBe('Item.fireball');
 
-			harness.state.toggleExpanded('Item.fireball');
+			await harness.state.toggleExpanded('Item.fireball');
 			expect(harness.read().expandedUuid).toBeNull();
 		});
 
 		it('moves to the newly opened row rather than opening two at once', async () => {
 			const harness = setup({ mode: 'picker', candidates: [FIREBALL, LIGHTNING_BOLT] });
 
-			harness.state.toggleExpanded('Item.fireball');
-			harness.state.toggleExpanded('Item.lightningbolt');
+			await harness.state.toggleExpanded('Item.fireball');
+			await harness.state.toggleExpanded('Item.lightningbolt');
 
 			expect(harness.read().expandedUuid).toBe('Item.lightningbolt');
+		});
+	});
+
+	// Descriptions are the one field the pack index cannot supply, so they are
+	// fetched per opened row rather than for every candidate on the tier.
+	describe('candidate descriptions', () => {
+		const FIREBALL_TEXT = '<p>A ball of fire.</p>';
+
+		function setupPicker(loadDescription: (uuid: string) => Promise<string>) {
+			return setup({
+				mode: 'picker',
+				candidates: [FIREBALL, LIGHTNING_BOLT],
+				loadDescription,
+			});
+		}
+
+		it('has no description for a row nobody opened', async () => {
+			const loadDescription = vi.fn().mockResolvedValue(FIREBALL_TEXT);
+			const harness = setupPicker(loadDescription);
+
+			harness.read();
+
+			expect(loadDescription).not.toHaveBeenCalled();
+			expect(harness.state.descriptionFor('Item.fireball')).toBeNull();
+		});
+
+		it('reads null while the opened row is still loading, then the fetched text', async () => {
+			const loadDescription = vi.fn().mockResolvedValue(FIREBALL_TEXT);
+			const harness = setupPicker(loadDescription);
+
+			const opened = harness.state.toggleExpanded('Item.fireball');
+			expect(harness.read().expandedDescription).toBeNull();
+
+			await opened;
+
+			expect(harness.read().expandedDescription).toBe(FIREBALL_TEXT);
+			expect(loadDescription).toHaveBeenCalledWith('Item.fireball');
+		});
+
+		it('fetches a row once, however often it is reopened', async () => {
+			const loadDescription = vi.fn().mockResolvedValue(FIREBALL_TEXT);
+			const harness = setupPicker(loadDescription);
+
+			await harness.state.toggleExpanded('Item.fireball');
+			await harness.state.toggleExpanded('Item.fireball');
+			await harness.state.toggleExpanded('Item.fireball');
+
+			expect(loadDescription).toHaveBeenCalledTimes(1);
+			expect(harness.read().expandedDescription).toBe(FIREBALL_TEXT);
+		});
+
+		it('fetches only the rows that were opened', async () => {
+			const loadDescription = vi.fn().mockResolvedValue(FIREBALL_TEXT);
+			const harness = setupPicker(loadDescription);
+
+			await harness.state.toggleExpanded('Item.fireball');
+
+			expect(loadDescription).toHaveBeenCalledTimes(1);
+			expect(harness.state.descriptionFor('Item.lightningbolt')).toBeNull();
 		});
 	});
 

@@ -4,6 +4,7 @@ import {
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import createScrollFromSpell from '#utils/createScrollFromSpell.js';
 import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
+import localize from '#utils/localize.js';
 import openSpellScrollDialog, {
 	type ScrollDialogActor,
 } from '#view/dialogs/openSpellScrollDialog.js';
@@ -169,7 +170,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		// A dropped spell asks whether to learn it or inscribe it onto a scroll, and
 		// a dropped scroll template asks which spell it carries. Both are asked
 		// regardless of which tab is open.
-		const scrollItems = await this.#resolveSpellScrollDrop(items);
+		const scrollItems = await this.#resolveSpellScrollDrop(itemData);
 		if (scrollItems === null) return false;
 
 		// Create regular items
@@ -188,53 +189,50 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	 * Returns the item data to create in place of the drop, `undefined` when the
 	 * drop is not scroll-related and should proceed untouched, or `null` when the
 	 * player cancelled and nothing should be created.
+	 *
+	 * One item per drop: Foundry resolves a drop into a single Item before this
+	 * sheet ever sees it.
 	 */
 	async #resolveSpellScrollDrop(
-		items: Array<Record<string, unknown>>,
+		item: Record<string, unknown>,
 	): Promise<Array<Record<string, unknown>> | undefined | null> {
 		const actor = this._actor as object as ScrollDialogActor;
+		const includeSpellDescription = shouldIncludeSpellDescriptionOnScrolls();
 
-		const template = items.length === 1 ? getSpellScrollTemplateTier(items[0]) : null;
+		const template = getSpellScrollTemplateTier(item);
 		if (template !== null) {
 			const result = await openSpellScrollDialog({
 				mode: 'picker',
 				actor,
 				tier: template,
-				scrollName: String(items[0].name ?? ''),
+				scrollName: String(item.name ?? ''),
 			});
 			if (!result?.spellUuid) return null;
 
 			const spell = await fromUuid(result.spellUuid as Parameters<typeof fromUuid>[0]);
 			if (!spell) return null;
 
-			return [
-				createScrollFromSpell(spell as object, {
-					includeSpellDescription: shouldIncludeSpellDescriptionOnScrolls(),
-				}),
-			];
+			return [createScrollFromSpell(spell as object, { includeSpellDescription })];
 		}
 
-		const spells = items.filter((item) => item.type === 'spell');
-		if (spells.length === 0) return undefined;
-		// A drop mixing spells with other item types keeps the untouched path
-		// rather than asking a question that only applies to part of it.
-		if (spells.length !== items.length) return undefined;
+		if (item.type !== 'spell') return undefined;
 
-		// A batch asks once and applies the answer to every spell in it; asking
-		// per item would be unusable for a GM dragging a folder onto an NPC.
-		const result = await openSpellScrollDialog({
-			mode: 'chooser',
-			actor,
-			spell: spells[0],
-			batchCount: spells.length,
-		});
+		// Every spell has a school, and the school decides whether the scroll needs
+		// an Arcana check. One without is broken data, so say so and let the drop
+		// carry on as an ordinary spell rather than inscribing an uncastable scroll.
+		const { school } = (item.system ?? {}) as { school?: string };
+		if (!school) {
+			ui.notifications?.error(
+				localize('NIMBLE.spellScroll.missingSchool', { spell: String(item.name ?? '') }),
+			);
+			return undefined;
+		}
+
+		const result = await openSpellScrollDialog({ mode: 'chooser', actor, spell: item });
 		if (!result) return null;
 		if (result.destination !== 'scroll') return undefined;
 
-		const includeSpellDescription = shouldIncludeSpellDescriptionOnScrolls();
-		return spells.map((spell) =>
-			createScrollFromSpell(spell as object, { includeSpellDescription }),
-		);
+		return [createScrollFromSpell(item as object, { includeSpellDescription })];
 	}
 
 	/**

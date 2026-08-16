@@ -1,3 +1,5 @@
+import type { ActivationCost } from './formatActivationCostLabel.js';
+
 /**
  * Utilities for building and querying a spell index.
  * Used during character creation to quickly find spells by school and tier.
@@ -14,6 +16,13 @@ export interface SpellIndexEntry {
 	school: string;
 	tier: number;
 	isUtility: boolean;
+	/**
+	 * The spell's action cost, as `formatActivationCostLabel` reads it. Indexed so
+	 * a list can show how long a spell takes to cast without loading every
+	 * document it offers. Optional because a pack that predates the added index
+	 * field carries no cost until its index is rebuilt.
+	 */
+	activationCost?: ActivationCost;
 	/**
 	 * Whether this spell is flagged `secretSpell`. Optional because it only
 	 * carries information when the index was built with `includeSecretSpells`;
@@ -54,6 +63,7 @@ interface SpellPackIndexEntry {
 		school?: string;
 		tier?: number;
 		classes?: string[];
+		activation?: { cost?: ActivationCost };
 		properties?: {
 			selected?: string[];
 		};
@@ -105,6 +115,7 @@ export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Pro
 			school?: string;
 			tier?: number;
 			classes?: string[];
+			activation?: { cost?: ActivationCost };
 			properties?: { selected?: string[] };
 		};
 		if (!system.school) continue;
@@ -126,6 +137,7 @@ export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Pro
 			tier: system.tier ?? 0,
 			isUtility,
 			isSecret,
+			activationCost: system.activation?.cost ?? {},
 			classes: system.classes ?? [],
 		});
 
@@ -144,6 +156,7 @@ export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Pro
 		'system.school',
 		'system.tier',
 		'system.classes',
+		'system.activation.cost',
 		'system.properties.selected',
 	] as string[];
 
@@ -178,6 +191,7 @@ export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Pro
 				tier: system.tier ?? 0,
 				isUtility,
 				isSecret,
+				activationCost: system.activation?.cost ?? {},
 				classes: system.classes ?? [],
 			});
 		}

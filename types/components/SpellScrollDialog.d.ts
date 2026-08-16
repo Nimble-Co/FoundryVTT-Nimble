@@ -23,8 +23,6 @@ export interface SpellScrollDialogResult {
 export interface SpellScrollCandidate extends SpellIndexEntry {
 	/** Localized action-cost summary, e.g. "2 Actions". */
 	activationSummary: string;
-	/** Enriched description shown when the row is expanded. */
-	description: string;
 }
 
 /** A school filter tab, in the shape `SecondaryNavigation` expects. */
@@ -63,10 +61,14 @@ export interface SpellScrollDialogProps {
 	hasMana?: boolean;
 	/** Whether the actor already knows a spell of the relevant school. */
 	knowsSchool?: boolean;
-	/** How many spells a batch drop covers. Chooser mode only, omit for a single spell. */
-	batchCount?: number;
 	/** Picker mode: the spells of the template's tier that may be inscribed. */
 	candidates?: SpellScrollCandidate[];
+	/**
+	 * Picker mode: fetches one candidate's enriched description, called when its
+	 * row is expanded. Injected rather than imported so the dialog does not reach
+	 * back into the module that opens it, and so tests can supply their own.
+	 */
+	loadDescription?: (uuid: string) => Promise<string>;
 	/** Localized label for the tier in play, e.g. "Tier 3" or "Cantrip". */
 	tierLabel?: string;
 }
@@ -95,6 +97,8 @@ export interface SpellScrollCandidateRowProps {
 	schoolLabel: string;
 	isSelected: boolean;
 	isExpanded: boolean;
+	/** Enriched description, or null while the expanded row is still fetching it. */
+	description: string | null;
 	onSelect: () => void;
 	onToggleDetails: () => void;
 }

@@ -28,6 +28,7 @@
 			visibleCandidates: state.visibleCandidates.map((candidate) => candidate.name),
 			selectedVisibleUuid: state.selectedVisibleUuid,
 			expandedUuid: state.expandedUuid,
+			expandedDescription: state.descriptionFor(state.expandedUuid ?? ''),
 			isSubmitDisabled: state.isSubmitDisabled,
 			submitLabel: state.submitLabel,
 			submitIcon: state.submitIcon,

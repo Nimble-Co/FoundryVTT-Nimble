@@ -10,10 +10,10 @@ export type SystemActorTypes = Exclude<foundry.documents.BaseActor.SubType, 'bas
 
 export interface ActorRollOptions {
 	/**
-	 * Explains why a check is being asked for, rendered above the roll controls.
-	 * Used when a check is raised by something other than the player clicking the
-	 * skill — a spell scroll they cannot read, for instance — where the dialog
-	 * would otherwise appear with no stated cause or stake.
+	 * Explains why the check is needed, shown above the roll controls.
+	 * Used when something other than clicking a skill triggers the check, such as
+	 * trying to use a spell scroll the player cannot read. Without it, the dialog
+	 * would appear with no explanation of what prompted the roll or what's at stake.
 	 */
 	checkHint?: string | undefined;
 	prompted?: boolean | undefined;

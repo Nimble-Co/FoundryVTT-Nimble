@@ -9,6 +9,7 @@
 		schoolLabel,
 		isSelected,
 		isExpanded,
+		description,
 		onSelect,
 		onToggleDetails,
 	}: SpellScrollCandidateRowProps = $props();
@@ -72,8 +73,13 @@
 	</div>
 
 	{#if isExpanded}
+		<!-- The description is fetched when the row opens, so the first frame has none. -->
 		<div class="nimble-spell-scroll-candidate__detail">
-			{@html candidate.description}
+			{#if description === null}
+				<i class="fa-solid fa-spinner fa-spin-pulse"></i>
+			{:else}
+				{@html description}
+			{/if}
 		</div>
 	{/if}
 </li>

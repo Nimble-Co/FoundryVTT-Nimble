@@ -41,8 +41,6 @@ interface OpenChooserOptions {
 	mode: 'chooser';
 	actor: ScrollDialogActor;
 	spell: DroppedSpell;
-	/** How many spells the drop covered. A batch asks once and applies to all. */
-	batchCount?: number;
 }
 
 interface OpenPickerOptions {
@@ -68,6 +66,15 @@ function hasMana(actor: ScrollDialogActor): boolean {
 	return (actor.system?.resources?.mana?.max ?? 0) > 0;
 }
 
+/**
+ * The spells of `tier` that may be inscribed, built from the pack indexes alone.
+ *
+ * A collapsed row needs the name, image, school and action cost, all of which the
+ * index carries. Loading each document instead would mean one compendium fetch
+ * per candidate — every cantrip in every installed module, for the cantrip
+ * template — so the description is left to `loadCandidateDescription` when a row
+ * is actually expanded.
+ */
 async function buildCandidates(tier: number): Promise<SpellScrollCandidate[]> {
 	// A GM may inscribe a secret spell; a player may not even see that one exists.
 	const index = await buildSpellIndex({ includeSecretSpells: Boolean(game.user?.isGM) });
@@ -77,25 +84,31 @@ async function buildCandidates(tier: number): Promise<SpellScrollCandidate[]> {
 		entries.push(...(tierMap.get(tier) ?? []));
 	}
 
-	const candidates = await Promise.all(
-		entries.map(async (entry) => {
-			const spell = (await fromUuid(entry.uuid as Parameters<typeof fromUuid>[0])) as
-				| (DroppedSpell & {
-						system?: { description?: { baseEffect?: string } };
-				  })
-				| null;
-
-			return {
+	const candidates = entries.map(
+		(entry) =>
+			({
 				...entry,
-				activationSummary: spell ? activationSummary(spell) : '',
-				description: await enrichSpellText(spell?.system?.description?.baseEffect ?? ''),
-			} satisfies SpellScrollCandidate;
-		}),
+				activationSummary: formatActivationCostLabel(entry.activationCost ?? {}) ?? '',
+			}) satisfies SpellScrollCandidate,
 	);
 
 	// The shared sort strips parentheses, so scroll candidates order the same way
 	// as every other alphabetical document list in the system.
 	return sortDocumentsByName(candidates);
+}
+
+/**
+ * Enriched description of one candidate, fetched when its row is expanded.
+ *
+ * Resolving `@UUID` links is the expensive half, and only the open row's text is
+ * ever read.
+ */
+export async function loadCandidateDescription(uuid: string): Promise<string> {
+	const spell = (await fromUuid(uuid as Parameters<typeof fromUuid>[0])) as {
+		system?: { description?: { baseEffect?: string } };
+	} | null;
+
+	return enrichSpellText(spell?.system?.description?.baseEffect ?? '');
 }
 
 /**
@@ -125,7 +138,6 @@ export default async function openSpellScrollDialog(
 					highestUnlockedSpellTier: highestUnlockedSpellTier(options.actor),
 					hasMana: hasMana(options.actor),
 					knowsSchool: knowsSpellSchool(options.actor, options.spell.system?.school ?? ''),
-					batchCount: options.batchCount ?? 0,
 				}
 			: {
 					mode: 'picker' as const,
@@ -134,19 +146,15 @@ export default async function openSpellScrollDialog(
 					tierLabel: getSpellTierLabel(options.tier),
 					scrollPrice: SPELL_SCROLL_PRICE_BY_TIER[options.tier] ?? SPELL_SCROLL_PRICE_BY_TIER[0],
 					candidates: await buildCandidates(options.tier),
+					loadDescription: loadCandidateDescription,
 				};
 
 	const title =
 		options.mode === 'chooser'
-			? (options.batchCount ?? 0) > 1
-				? localize('NIMBLE.spellScroll.dialog.batchChooserTitle', {
-						name: actorName,
-						count: String(options.batchCount),
-					})
-				: localize('NIMBLE.spellScroll.dialog.chooserTitle', {
-						name: actorName,
-						spell: options.spell.name ?? '',
-					})
+			? localize('NIMBLE.spellScroll.dialog.chooserTitle', {
+					name: actorName,
+					spell: options.spell.name ?? '',
+				})
 			: localize('NIMBLE.spellScroll.dialog.pickerTitle', {
 					name: actorName,
 					scroll: options.scrollName,
