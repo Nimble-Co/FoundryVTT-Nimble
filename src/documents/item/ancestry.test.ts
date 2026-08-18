@@ -157,7 +157,7 @@ describe('NimbleAncestryItem.prepareBaseData', () => {
 			_source: { system: { identifier: authoredIdentifier } },
 			system: { identifier: '', rules: [] },
 			type: 'ancestry',
-		}) as NimbleAncestryItem & { system: { identifier: string } };
+		}) as NimbleAncestryItem & { system: { identifier: string }; tags: Set<string> };
 
 		ancestry.prepareBaseData();
 
@@ -172,10 +172,21 @@ describe('NimbleAncestryItem.prepareBaseData', () => {
 		expect(ancestry.system.identifier).toBe('dryadshroomling');
 	});
 
+	it('tags the item with the identifier that won, not the one the name derives', () => {
+		// The base class tags during `_populateBaseTags`, before the authored identifier is restored.
+		// Rule predicates match on these tags, so a stale tag would make the same ancestry answer to
+		// two different identifiers depending on which mechanism asked.
+		const ancestry = createPreparedAncestry('Shroomling', 'dryadshroomling');
+
+		expect([...ancestry.tags]).toContain('identifier:dryadshroomling');
+		expect([...ancestry.tags]).not.toContain('identifier:shroomling');
+	});
+
 	it('derives the identifier from the name when the ancestry declares none', () => {
 		const ancestry = createPreparedAncestry('Half-Giant', '');
 
 		expect(ancestry.system.identifier).toBe('half-giant');
+		expect([...ancestry.tags]).toContain('identifier:half-giant');
 	});
 });
 

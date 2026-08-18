@@ -24,7 +24,10 @@
 		return effectiveVariants(ancestry.system?.variants);
 	}
 
-	/** Sizes carry a short description from the Size rules; variant names stand on their own. */
+	/**
+	 * Rows for a pick-exactly-one list. Sizes carry a short description from the Size rules; variant
+	 * names stand on their own, so their `description` is empty.
+	 */
 	function toSizeOptions(sizes) {
 		return sizes.map((size) => ({
 			value: size,

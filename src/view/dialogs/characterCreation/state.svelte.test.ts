@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
@@ -7,6 +7,7 @@ import CharacterCreationStateHarness from '../../../../tests/harnesses/Character
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES } from './constants.js';
+import type { CharacterCreationResults } from './types.js';
 
 vi.mock('../../../utils/getClassFeatures.js', () => ({
 	default: vi.fn(),
@@ -1123,9 +1124,11 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 		{
 			alternateAncestryDocument = null,
 			ancestryVariant = null,
+			submitCharacterCreation,
 		}: {
 			alternateAncestryDocument?: NimbleAncestryItem | null;
 			ancestryVariant?: string | null;
+			submitCharacterCreation?: (results: CharacterCreationResults) => Promise<void>;
 		} = {},
 	) {
 		render(CharacterCreationStateHarness, {
@@ -1144,6 +1147,7 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 				alternateAncestryDocument,
 				ancestryVariant,
 				spellIndex: createSpellIndex([]),
+				...(submitCharacterCreation ? { submitCharacterCreation } : {}),
 			},
 		});
 	}
@@ -1188,6 +1192,26 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 		});
 	});
 
+	it('drops the chosen variant when the ancestry is cleared', async () => {
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			ancestryVariant: 'Shroomling',
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
+		});
+	});
+
 	it('drops the chosen variant when the ancestry changes', async () => {
 		// Variants are named by the ancestry offering them, so a pick can't survive a new ancestry.
 		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
@@ -1212,6 +1236,35 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
 			expect(screen.getByTestId('stage')).toHaveTextContent(
 				String(CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS),
+			);
+		});
+	});
+
+	it('hands the chosen variant to the dialog on submit', async () => {
+		// Without this the payload could drop the variant and every other test would still pass: the
+		// field is optional on `CharacterCreationResults`, so nothing else would notice.
+		const submitCharacterCreation = vi.fn(async () => undefined);
+		// The character is incomplete here, so submitting asks for confirmation. Restored afterwards
+		// rather than left set: `vi.clearAllMocks()` clears calls but keeps implementations, so this
+		// would otherwise answer "yes" for every later test in the file.
+		const confirm = vi
+			.spyOn(foundry.applications.api.DialogV2, 'confirm')
+			.mockResolvedValue(true as never);
+		onTestFinished(() => confirm.mockRestore());
+
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			ancestryVariant: 'Shroomling',
+			submitCharacterCreation,
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Submit Character' }));
+
+		await vi.waitFor(() => {
+			expect(submitCharacterCreation).toHaveBeenCalledWith(
+				expect.objectContaining({ selectedAncestryVariant: 'Shroomling' }),
 			);
 		});
 	});

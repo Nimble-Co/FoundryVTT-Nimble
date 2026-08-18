@@ -404,6 +404,30 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 				expect(ancestrySource?.system.identifier).toBe('');
 			});
 
+			it('names the ancestry the way the GM spelled it, not the way it was submitted', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'  shroomling  ',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Shroomling');
+			});
+
+			it('leaves the ancestry alone when the variant is already its name', async () => {
+				// Nothing was renamed, so no identifier needs pinning either.
+				const ancestryDocument = createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryad',
+					name: 'Dryad',
+					system: { rules: [], identifier: '', variants: ['Dryad', 'Shroomling'] },
+				});
+
+				const actor = await submitWithVariant(ancestryDocument, 'Dryad');
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad');
+				expect(ancestrySource?.system.identifier).toBe('');
+			});
+
 			it('ignores a variant the ancestry does not offer', async () => {
 				// A stale or hand-built submission must not be able to rename the item to anything.
 				const actor = await submitWithVariant(

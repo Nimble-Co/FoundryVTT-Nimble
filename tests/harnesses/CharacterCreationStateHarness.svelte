@@ -24,6 +24,7 @@
 		statArray = null,
 		abilityScoreAssignment = null,
 		spellIndex,
+		submitCharacterCreation = async () => undefined,
 	}: {
 		ancestryOptions: Record<'core' | 'exotic', NimbleAncestryItem[]>;
 		ancestryBonusOptions?: NimbleAncestryBonusItem[];
@@ -39,6 +40,9 @@
 		statArray?: import('#view/dialogs/characterCreation/types.js').StatArrayOption | null;
 		abilityScoreAssignment?: Record<string, number | null> | null;
 		spellIndex: import('#utils/getSpells.js').SpellIndex;
+		submitCharacterCreation?: (
+			results: import('#view/dialogs/characterCreation/types.js').CharacterCreationResults,
+		) => Promise<void>;
 	} = $props();
 
 	const state = createCharacterCreationState({
@@ -49,7 +53,7 @@
 		classOptions: Promise.resolve(untrack(() => classOptions)),
 		dialog: {
 			id: 'character-creation-dialog',
-			submitCharacterCreation: async () => undefined,
+			submitCharacterCreation: untrack(() => submitCharacterCreation),
 		},
 		spellIndex: Promise.resolve(untrack(() => spellIndex)),
 	});
@@ -80,6 +84,16 @@
 		if (ancestryVariant) {
 			state.selectedAncestryVariant = ancestryVariant;
 		}
+	}
+
+	/**
+	 * Submitting refuses an unnamed character, so name it here — what these tests are after is the
+	 * payload handed to `submitCharacterCreation`, not the name prompt. An incomplete character also
+	 * prompts for confirmation, so stub `DialogV2.confirm` in any test that clicks this.
+	 */
+	async function submitCharacter() {
+		state.name = 'Harness Character';
+		await state.handleCreateCharacter();
 	}
 
 	function swapAncestryBonus() {
@@ -167,6 +181,7 @@
 <button type="button" onclick={selectAlternateAncestry}>Select Alternate Ancestry</button>
 <button type="button" onclick={clearAncestry}>Clear Ancestry</button>
 <button type="button" onclick={selectAncestryVariant}>Select Ancestry Variant</button>
+<button type="button" onclick={submitCharacter}>Submit Character</button>
 <button type="button" onclick={confirmAncestryBonus}>Confirm Ancestry Bonus</button>
 <button type="button" onclick={clearAncestryBonus}>Clear Ancestry Bonus</button>
 <button type="button" onclick={swapAncestryBonus}>Swap Ancestry Bonus</button>

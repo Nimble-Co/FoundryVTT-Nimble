@@ -125,13 +125,23 @@ function hasAncestryOptions(
 	return hasVariantChoice || hasSizeChoice || hasSaveChoice;
 }
 
-function ancestryOptionsComplete(
-	ancestry: NimbleAncestryItem | null,
-	ancestryBonus: NimbleAncestryBonusItem | null,
-	selectedAncestryVariant: string | null,
-	selectedAncestrySize: string | null,
-	selectedAncestrySave: string | null,
-): boolean {
+/**
+ * Named rather than positional: the three selections are all `string | null`, so any transposition
+ * would type-check and silently gate the stage on the wrong one.
+ */
+function ancestryOptionsComplete({
+	ancestry,
+	ancestryBonus,
+	selectedAncestryVariant,
+	selectedAncestrySize,
+	selectedAncestrySave,
+}: {
+	ancestry: NimbleAncestryItem | null;
+	ancestryBonus: NimbleAncestryBonusItem | null;
+	selectedAncestryVariant: string | null;
+	selectedAncestrySize: string | null;
+	selectedAncestrySave: string | null;
+}): boolean {
 	const hasVariantChoice = ancestryOffersVariantChoice(ancestry);
 	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
@@ -278,13 +288,13 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 
 	if (
 		hasAncestryOptions(selectedAncestry, selectedAncestryBonus) &&
-		!ancestryOptionsComplete(
-			selectedAncestry,
-			selectedAncestryBonus,
+		!ancestryOptionsComplete({
+			ancestry: selectedAncestry,
+			ancestryBonus: selectedAncestryBonus,
 			selectedAncestryVariant,
 			selectedAncestrySize,
 			selectedAncestrySave,
-		)
+		})
 	) {
 		return CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS;
 	}

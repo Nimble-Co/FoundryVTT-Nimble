@@ -173,7 +173,6 @@
 			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
-			"enhancedSaveHeader": "Step 2e. Enhanced Save",
 			"variant": "Ancestry Variant",
 			"variantHeader": "Step 2c. Ancestry Variant",
 			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is — they are the same in play, and your sheet takes the name you pick.",
@@ -183,6 +182,7 @@
 			"sizeGrantedBy": "set by {ancestry}",
 			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
 			"enhancedSave": "Enhanced Save",
+			"enhancedSaveHeader": "Step 2e. Enhanced Save",
 			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
 		},
 		"ancestryBonusSelection": {

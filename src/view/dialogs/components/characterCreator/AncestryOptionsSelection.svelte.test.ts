@@ -38,21 +38,51 @@ describe('AncestryOptionsSelection variant choice', () => {
 		);
 	});
 
-	it('carries the selection with the arrow keys, wrapping at both ends', async () => {
-		renderOptions(createAncestry({ variants: ['Dryad', 'Shroomling'] }));
+	// Three options, not two: with two, forwards and backwards land on the same option, so the
+	// direction of every arrow key would go unverified.
+	it('carries the selection forwards and backwards with the arrow keys, wrapping at both ends', async () => {
+		renderOptions(createAncestry({ variants: ['Dryad', 'Shroomling', 'Sporeling'] }));
+		const selected = () => screen.getByTestId('selected-ancestry-variant');
 
 		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Dryad' }), { key: 'ArrowDown' });
-		expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+		expect(selected()).toHaveTextContent('Shroomling');
 
-		// Past the last option the choice wraps back to the first.
 		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Shroomling' }), {
 			key: 'ArrowDown',
 		});
-		expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Dryad');
+		expect(selected()).toHaveTextContent('Sporeling');
 
-		// And back past the first to the last.
+		// Past the last option the choice wraps back to the first.
+		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Sporeling' }), {
+			key: 'ArrowDown',
+		});
+		expect(selected()).toHaveTextContent('Dryad');
+
+		// Backwards past the first reaches the last.
 		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Dryad' }), { key: 'ArrowUp' });
-		expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+		expect(selected()).toHaveTextContent('Sporeling');
+
+		// Left and right move the same way as up and down.
+		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Sporeling' }), { key: 'ArrowLeft' });
+		expect(selected()).toHaveTextContent('Shroomling');
+
+		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Shroomling' }), {
+			key: 'ArrowRight',
+		});
+		expect(selected()).toHaveTextContent('Sporeling');
+	});
+
+	it('moves focus to the chosen radio and keeps the group to one tab stop', async () => {
+		renderOptions(createAncestry({ variants: ['Dryad', 'Shroomling', 'Sporeling'] }));
+
+		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Dryad' }), { key: 'ArrowDown' });
+
+		const shroomling = screen.getByRole('radio', { name: 'Shroomling' });
+		expect(document.activeElement).toBe(shroomling);
+		// A radiogroup is one stop in the tab order: only the chosen radio is reachable by Tab.
+		expect(shroomling).toHaveAttribute('tabindex', '0');
+		expect(screen.getByRole('radio', { name: 'Dryad' })).toHaveAttribute('tabindex', '-1');
+		expect(screen.getByRole('radio', { name: 'Sporeling' })).toHaveAttribute('tabindex', '-1');
 	});
 
 	it('asks nothing of an ancestry that covers a single kind of people', () => {

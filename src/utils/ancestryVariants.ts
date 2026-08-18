@@ -10,27 +10,37 @@
  * means whatever the GM meant by it. Two names are the minimum that leaves a player anything to
  * choose, which is what `offersVariantChoice` reports — reads still return a lone name so the sheet
  * can show the first one the GM adds.
+ *
+ * Every comparison here is trimmed and case-insensitive (see `variantKey`), so the list a GM
+ * authors and the lookups made against it agree on what counts as the same name.
  */
+
+/**
+ * How two names are compared throughout this module: trimmed and case-folded, so one list can never
+ * hold two names that look alike, and a lookup finds the authored name however it was typed.
+ */
+function variantKey(variant: string | undefined | null): string {
+	return variant?.trim().toLowerCase() ?? '';
+}
 
 /** Names as authored, minus blanks and repeats. Keeps the GM's order, which is the reading order. */
 function effectiveVariants(storedVariants: string[] | undefined | null): string[] {
 	if (!storedVariants?.length) return [];
 
+	const variants: string[] = [];
 	const seen = new Set<string>();
 
-	return storedVariants.reduce<string[]>((variants, storedVariant) => {
+	for (const storedVariant of storedVariants) {
 		const variant = storedVariant?.trim() ?? '';
-		// Compared case-insensitively so "Dryad" and "dryad" can't become two identical-looking
-		// options; the spelling that survives is the one authored first.
-		const key = variant.toLowerCase();
+		const key = variantKey(variant);
 
-		if (!variant || seen.has(key)) return variants;
+		if (!variant || seen.has(key)) continue;
 
 		seen.add(key);
 		variants.push(variant);
+	}
 
-		return variants;
-	}, []);
+	return variants;
 }
 
 /** Whether the stored names leave the player a variant to pick during character creation. */
@@ -38,9 +48,22 @@ function offersVariantChoice(storedVariants: string[] | undefined | null): boole
 	return effectiveVariants(storedVariants).length > 1;
 }
 
-/** Whether a name is one of the variants this ancestry offers. */
-function isVariantOf(storedVariants: string[] | undefined | null, variant: string): boolean {
-	return effectiveVariants(storedVariants).includes(variant.trim());
+/**
+ * The ancestry's own spelling of a name it offers, or `null` when it offers no such name. Callers
+ * that record the choice use this rather than the submitted string, so what lands on the character
+ * is the name the GM authored — "shroomling" becomes "Shroomling".
+ */
+function canonicalVariant(
+	storedVariants: string[] | undefined | null,
+	variant: string,
+): string | null {
+	const key = variantKey(variant);
+	if (!key) return null;
+
+	return (
+		effectiveVariants(storedVariants).find((storedVariant) => variantKey(storedVariant) === key) ??
+		null
+	);
 }
 
 /** Append a name, ignoring one that is blank or already listed. */
@@ -50,7 +73,11 @@ function addVariant(currentVariants: string[], variant: string): string[] {
 
 /** Drop a name, leaving the rest in their authored order. */
 function removeVariant(currentVariants: string[], variant: string): string[] {
-	return effectiveVariants(currentVariants).filter((currentVariant) => currentVariant !== variant);
+	const key = variantKey(variant);
+
+	return effectiveVariants(currentVariants).filter(
+		(currentVariant) => variantKey(currentVariant) !== key,
+	);
 }
 
-export { addVariant, effectiveVariants, isVariantOf, offersVariantChoice, removeVariant };
+export { addVariant, canonicalVariant, effectiveVariants, offersVariantChoice, removeVariant };

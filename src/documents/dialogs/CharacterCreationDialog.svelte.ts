@@ -3,7 +3,7 @@ import type { AncestryCreateOptions } from '#documents/item/ancestry.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-import { isVariantOf } from '#utils/ancestryVariants.js';
+import { canonicalVariant } from '#utils/ancestryVariants.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
@@ -267,13 +267,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			// submission must not be able to rename the item to anything it likes.
 			if (options.isAncestry && results.selectedAncestryVariant) {
 				const systemWithVariants = source.system as { identifier?: string; variants?: string[] };
-				const variant = results.selectedAncestryVariant.trim();
+				// The ancestry's own spelling, not the submitted one, so the character is named the way
+				// the GM authored it whatever casing arrived.
+				const variant = canonicalVariant(
+					systemWithVariants.variants,
+					results.selectedAncestryVariant,
+				);
 
-				if (
-					source.name &&
-					source.name !== variant &&
-					isVariantOf(systemWithVariants.variants, variant)
-				) {
+				if (source.name && variant && source.name !== variant) {
 					// `NimbleBaseItem` derives the identifier from the name, and the ancestry identifier is
 					// what keys the GM's language grants, so record the identifier this ancestry had
 					// before the rename. An ancestry that already declares one keeps it.

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	addVariant,
+	canonicalVariant,
 	effectiveVariants,
-	isVariantOf,
 	offersVariantChoice,
 	removeVariant,
 } from './ancestryVariants.js';
@@ -59,17 +59,21 @@ describe('offersVariantChoice', () => {
 	});
 });
 
-describe('isVariantOf', () => {
-	it('accepts a name the ancestry offers, ignoring surrounding whitespace', () => {
-		expect(isVariantOf(['Dryad', 'Shroomling'], 'Shroomling')).toBe(true);
-		expect(isVariantOf(['Dryad', 'Shroomling'], ' Shroomling ')).toBe(true);
+describe('canonicalVariant', () => {
+	it('returns the name as the ancestry spelled it', () => {
+		expect(canonicalVariant(['Dryad', 'Shroomling'], 'Shroomling')).toBe('Shroomling');
 	});
 
-	it('rejects a name the ancestry does not offer', () => {
-		expect(isVariantOf(['Dryad', 'Shroomling'], 'Oozeling')).toBe(false);
-		expect(isVariantOf([], 'Dryad')).toBe(false);
-		// Matching is exact once trimmed: a differently-cased name is not the authored one.
-		expect(isVariantOf(['Dryad'], 'dryad')).toBe(false);
+	it("returns the ancestry's own spelling, whatever casing or padding was asked for", () => {
+		expect(canonicalVariant(['Dryad', 'Shroomling'], 'shroomling')).toBe('Shroomling');
+		expect(canonicalVariant(['Dryad', 'Shroomling'], '  DRYAD  ')).toBe('Dryad');
+	});
+
+	it('returns null for a name the ancestry does not offer', () => {
+		expect(canonicalVariant(['Dryad'], 'Oozeling')).toBeNull();
+		expect(canonicalVariant([], 'Dryad')).toBeNull();
+		expect(canonicalVariant(['Dryad'], '   ')).toBeNull();
+		expect(canonicalVariant(['Dryad'], '')).toBeNull();
 	});
 });
 
@@ -110,5 +114,9 @@ describe('removeVariant', () => {
 
 	it('leaves the list alone when the variant is not listed', () => {
 		expect(removeVariant(['Dryad'], 'Shroomling')).toEqual(['Dryad']);
+	});
+
+	it('removes by the same case-insensitive comparison the list dedupes with', () => {
+		expect(removeVariant(['Dryad', 'Shroomling'], 'dryad')).toEqual(['Shroomling']);
 	});
 });
