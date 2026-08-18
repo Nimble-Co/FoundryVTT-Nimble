@@ -351,7 +351,7 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			}
 
 			async function submitWithVariant(
-				ancestryDocument: Item,
+				ancestryDocument: Item & { uuid: string },
 				selectedAncestryVariant: string | null,
 			) {
 				const actor = setupActorMock();
