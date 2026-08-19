@@ -212,6 +212,41 @@ describe('customConditionSettings', () => {
 			expect(settings.getBuiltInConditionIds()).toEqual(['blinded', 'prone']);
 		});
 
+		it('leaves entries a module added after the built-ins were captured alone', () => {
+			setStoredConditions(settingsMock, [{ id: 'hexed', name: 'Hexed' }]);
+			mergeCustomConditionsIntoConfig();
+
+			// A module adding a condition at `setup` or `ready` lands after the built-in snapshot.
+			// Rebuilding the dictionaries wholesale would drop it on the next save.
+			const config = conditionConfig();
+			config.conditions.moduleAdded = 'Module Added';
+			config.conditionDescriptions.moduleAdded = '<p>From a module.</p>';
+			config.conditionDefaultImages.moduleAdded = 'icons/svg/aura.svg';
+
+			setStoredConditions(settingsMock, [{ id: 'shaken', name: 'Shaken' }]);
+			mergeCustomConditionsIntoConfig();
+
+			expect(config.conditions).toMatchObject({
+				blinded: 'Blinded',
+				moduleAdded: 'Module Added',
+				shaken: 'Shaken',
+			});
+			expect(config.conditionDescriptions.moduleAdded).toBe('<p>From a module.</p>');
+			expect(config.conditionDefaultImages.moduleAdded).toBe('icons/svg/aura.svg');
+			expect(config.conditions).not.toHaveProperty('hexed');
+		});
+
+		it('bails instead of throwing when a dictionary is missing from CONFIG', () => {
+			// A registration-order change can leave descriptions unpopulated; writing into it would
+			// throw out of the merge with no way to recover.
+			const config = conditionConfig() as unknown as Record<string, unknown>;
+			delete config.conditionDescriptions;
+			setStoredConditions(settingsMock, [{ id: 'hexed', name: 'Hexed' }]);
+
+			expect(() => mergeCustomConditionsIntoConfig()).not.toThrow();
+			expect(conditionConfig().conditions).not.toHaveProperty('hexed');
+		});
+
 		it('mutates the config dictionaries in place so existing references stay live', () => {
 			const config = conditionConfig();
 			const conditionsReference = config.conditions;

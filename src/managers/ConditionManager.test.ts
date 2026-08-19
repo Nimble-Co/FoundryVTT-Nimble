@@ -32,8 +32,8 @@ describe('ConditionManager', () => {
 	});
 
 	afterEach(() => {
-		// The enrichHTML mock is shared infrastructure; restore its echoing default for
-		// the tests that stub it, rather than leaking a stub into the next file.
+		// The enrichHTML mock is shared infrastructure, so restore its echoing default rather than
+		// leaking a cleared spy into the next file.
 		const enrichHTML = foundry.applications.ux.TextEditor.implementation
 			.enrichHTML as unknown as ReturnType<typeof vi.fn>;
 		enrichHTML.mockImplementation((html: string) => Promise.resolve(html));
@@ -90,30 +90,21 @@ describe('ConditionManager', () => {
 			expect(condition?._id).toBeUndefined();
 		});
 
-		it('registers the raw enricher text then upgrades it once enrichment resolves', async () => {
-			const enrichHTML = foundry.applications.ux.TextEditor.implementation
-				.enrichHTML as unknown as ReturnType<typeof vi.fn>;
-			enrichHTML.mockResolvedValue('<button>Blinded</button>');
-
+		it('records the enricher source for each condition', () => {
 			manager.initialize();
 
-			expect(manager.get('blinded')?.enriched).toBe('[[/condition condition=blinded]]');
-
-			await vi.waitFor(() =>
-				expect(manager.get('blinded')?.enriched).toBe('<button>Blinded</button>'),
-			);
+			expect(manager.get('blinded')?.enricherText).toBe('[[/condition condition=blinded]]');
 		});
 
-		it('keeps the raw enricher text when enrichment fails', async () => {
+		it('does not enrich, so a re-run cannot leave promises resolving into dropped records', () => {
 			const enrichHTML = foundry.applications.ux.TextEditor.implementation
 				.enrichHTML as unknown as ReturnType<typeof vi.fn>;
-			enrichHTML.mockRejectedValue(new Error('boom'));
-			vi.spyOn(console, 'error').mockImplementation(() => undefined);
+			enrichHTML.mockClear();
 
-			expect(() => manager.initialize()).not.toThrow();
+			manager.initialize();
+			manager.initialize();
 
-			await vi.waitFor(() => expect(console.error).toHaveBeenCalled());
-			expect(manager.get('blinded')?.enriched).toBe('[[/condition condition=blinded]]');
+			expect(enrichHTML).not.toHaveBeenCalled();
 		});
 
 		it('drops conditions removed from the config on a re-run', () => {

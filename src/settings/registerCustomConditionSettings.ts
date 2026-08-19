@@ -11,8 +11,7 @@ import {
 
 const EDITOR_ICON = 'fa-solid fa-biohazard';
 
-/** Tracks the open editor so repeated submenu clicks focus it instead of stacking copies. */
-let openEditor: CustomConditionsMenu | null = null;
+const EDITOR_UNIQUE_ID = `${SYSTEM_ID}-custom-conditions`;
 
 /**
  * No-argument ApplicationV2 wrapper so the Svelte editor can be registered as a
@@ -26,7 +25,7 @@ class CustomConditionsMenu extends GenericDialog {
 			CustomConditionsEditor as unknown as Component<Record<string, never>>,
 			{},
 			{
-				uniqueId: `${SYSTEM_ID}-custom-conditions`,
+				uniqueId: EDITOR_UNIQUE_ID,
 				icon: EDITOR_ICON,
 				width: 560,
 				resizable: true,
@@ -34,12 +33,14 @@ class CustomConditionsMenu extends GenericDialog {
 		);
 	}
 
+	/** Focus the open editor rather than stacking a second copy on repeated submenu clicks. */
 	override async render(...args: Parameters<GenericDialog['render']>): Promise<this> {
-		if (openEditor?.rendered && openEditor !== this) {
+		const openEditor = GenericDialog.getOpen(EDITOR_UNIQUE_ID);
+		if (openEditor && openEditor !== this) {
 			openEditor.bringToFront();
 			return openEditor as this;
 		}
-		openEditor = this;
+
 		return super.render(...args);
 	}
 }
@@ -56,15 +57,23 @@ export function registerCustomConditionSettings(): void {
 			type: Array,
 			default: [],
 			onChange: () => {
-				mergeCustomConditionsIntoConfig();
-				// `CONFIG.statusEffects` is a snapshot, not a live view of the config, so the manager
-				// has to rebuild its records and republish it.
-				game.nimble.conditions.initialize();
-				game.nimble.conditions.configureStatusEffects();
-				// CONFIG is not reactive, so an already-rendered condition list only re-derives if
-				// the rebuild is announced.
-				// @ts-expect-error - conditionsChanged is a custom system hook
-				Hooks.callAll(CONDITIONS_CHANGED_HOOK);
+				// This runs inside Setting#_onUpdate, so a throw here surfaces as an unrelated
+				// document-update failure. Contain it, and announce the change either way: a partly
+				// rebuilt config is still worth re-deriving from, and a silently stale panel is worse.
+				try {
+					mergeCustomConditionsIntoConfig();
+					// `CONFIG.statusEffects` is a snapshot, not a live view of the config, so the manager
+					// has to rebuild its records and republish it.
+					game.nimble?.conditions?.initialize();
+					game.nimble?.conditions?.configureStatusEffects();
+				} catch (error) {
+					console.error('Nimble | Failed to apply the custom conditions:', error);
+				} finally {
+					// CONFIG is not reactive, so an already-rendered condition list only re-derives if
+					// the rebuild is announced.
+					// @ts-expect-error - conditionsChanged is a custom system hook
+					Hooks.callAll(CONDITIONS_CHANGED_HOOK);
+				}
 			},
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);

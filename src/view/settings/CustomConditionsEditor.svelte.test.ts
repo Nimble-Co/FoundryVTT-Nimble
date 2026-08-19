@@ -48,6 +48,8 @@ describe('CustomConditionsEditor', () => {
 			conditionDefaultImages: {},
 		};
 		(game as unknown as { actors: unknown[] }).actors = [];
+		// Shared across the file and not auto-cleared, so the call assertions below need a clean slate.
+		(foundry.applications.api.DialogV2.confirm as unknown as Mock).mockClear();
 	});
 
 	it('shows the empty state until a condition is added', async () => {
@@ -86,7 +88,11 @@ describe('CustomConditionsEditor', () => {
 		expect(saveButton()).toBeDisabled();
 
 		await fireEvent.input(idInput(), { target: { value: '13' } });
-		expect(screen.getByText('That id cannot be used. Try adding a letter.')).toBeVisible();
+		expect(screen.getByText(/^"13" cannot be used/)).toBeVisible();
+		expect(saveButton()).toBeDisabled();
+
+		await fireEvent.input(idInput(), { target: { value: 'length' } });
+		expect(screen.getByText(/^"length" cannot be used/)).toBeVisible();
 		expect(saveButton()).toBeDisabled();
 
 		await fireEvent.input(idInput(), { target: { value: 'hexed' } });
@@ -180,7 +186,9 @@ describe('CustomConditionsEditor', () => {
 
 	it('asks before removing a condition that actors are currently carrying', async () => {
 		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
-		(game as unknown as { actors: unknown[] }).actors = [{ statuses: new Set(['hexed']) }];
+		(game as unknown as { actors: unknown[] }).actors = [
+			{ effects: [{ statuses: new Set(['hexed']) }] },
+		];
 		const { settingsMock } = renderEditor([
 			{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' },
 		]);
@@ -194,5 +202,38 @@ describe('CustomConditionsEditor', () => {
 		await fireEvent.click(saveButton());
 
 		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, []);
+	});
+
+	it('counts a condition held by a suppressed effect, which Actor#statuses omits', async () => {
+		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
+		// A disabled effect, or one granted by an unequipped item, keeps its statuses out of
+		// `Actor#statuses` while still orphaning on delete.
+		(game as unknown as { actors: unknown[] }).actors = [
+			{
+				statuses: new Set<string>(),
+				effects: [],
+				allApplicableEffects: () => [{ statuses: new Set(['hexed']) }],
+			},
+		];
+		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
+
+		confirm.mockResolvedValueOnce(false);
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+
+		expect(confirm).toHaveBeenCalled();
+		expect(screen.getAllByPlaceholderText('e.g. hexed')).toHaveLength(1);
+	});
+
+	it('removes an unused condition without a confirmation', async () => {
+		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
+		(game as unknown as { actors: unknown[] }).actors = [
+			{ effects: [{ statuses: new Set(['shaken']) }] },
+		];
+		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+
+		expect(confirm).not.toHaveBeenCalled();
+		expect(screen.queryByPlaceholderText('e.g. hexed')).toBeNull();
 	});
 });

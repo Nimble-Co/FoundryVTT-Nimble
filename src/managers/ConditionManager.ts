@@ -16,7 +16,8 @@ export interface Condition {
 	aliases?: Set<string> | undefined;
 	statuses?: string[] | undefined;
 	stackable: boolean;
-	enriched: string;
+	/** The `[[/condition]]` enricher source for this condition, for callers that render it. */
+	enricherText: string;
 }
 
 function enricherText(conditionId: string): string {
@@ -49,7 +50,7 @@ export class ConditionManager {
 				name: CONFIG.NIMBLE.conditions[id],
 				img: CONFIG.NIMBLE.conditionDefaultImages[id],
 				stackable: CONFIG.NIMBLE.conditionStackableConditions.has(id),
-				enriched: enricherText(id),
+				enricherText: enricherText(id),
 			};
 
 			if (aliases.length) data.aliases = new Set(aliases);
@@ -59,25 +60,10 @@ export class ConditionManager {
 				data._id = String(id).padEnd(16, '0');
 			}
 
-			// Registered synchronously, with the raw enricher text as a placeholder, so that
-			// `configureStatusEffects()` can run immediately after `initialize()`.
 			this.#conditions.set(id, data);
-			this.#enrich(data);
 		}
 
 		this.#ready = true;
-	}
-
-	/** Upgrade a record's placeholder text to enriched markup once the text editor resolves. */
-	async #enrich(condition: Condition) {
-		try {
-			const enriched = await foundry.applications.ux?.TextEditor?.implementation?.enrichHTML?.(
-				enricherText(condition.id),
-			);
-			if (enriched) condition.enriched = enriched;
-		} catch (error) {
-			console.error(`Nimble | Failed to enrich the ${condition.id} condition:`, error);
-		}
 	}
 
 	configureStatusEffects() {

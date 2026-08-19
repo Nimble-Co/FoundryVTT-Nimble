@@ -13,16 +13,19 @@ import type { ConditionEditorRow } from './CustomConditionsEditor.types.ts';
 const t = (key: string, data?: Record<string, string>) =>
 	localize(`NIMBLE.settings.customConditions.${key}`, data);
 
-type ActorWithStatuses = { statuses?: Set<string> };
+interface ActorWithEffects {
+	effects?: Iterable<{ statuses?: Set<string> }>;
+	allApplicableEffects?: () => Iterable<{ statuses?: Set<string> }>;
+}
 
 /** Every actor a condition could be sitting on, including unlinked token actors. */
-function collectActors(): Set<ActorWithStatuses> {
-	const actors = new Set<ActorWithStatuses>();
+function collectActors(): Set<ActorWithEffects> {
+	const actors = new Set<ActorWithEffects>();
 
-	for (const actor of (game.actors ?? []) as Iterable<ActorWithStatuses>) actors.add(actor);
+	for (const actor of (game.actors ?? []) as Iterable<ActorWithEffects>) actors.add(actor);
 
 	for (const scene of (game.scenes ?? []) as Iterable<{
-		tokens?: Iterable<{ actor?: ActorWithStatuses | null }>;
+		tokens?: Iterable<{ actor?: ActorWithEffects | null }>;
 	}>) {
 		for (const token of scene.tokens ?? []) {
 			if (token.actor) actors.add(token.actor);
@@ -32,11 +35,28 @@ function collectActors(): Set<ActorWithStatuses> {
 	return actors;
 }
 
+/**
+ * The effects to search for the status. `Actor#statuses` is no help here: it is built from active
+ * effects only, so a disabled effect or one granted by an unequipped item would report the
+ * condition as unused, which is exactly the case the removal warning exists for.
+ */
+function collectEffects(actor: ActorWithEffects): Iterable<{ statuses?: Set<string> }> {
+	if (typeof actor.allApplicableEffects === 'function') return actor.allApplicableEffects();
+	return actor.effects ?? [];
+}
+
 function countActorsWithCondition(conditionId: string): number {
 	let count = 0;
+
 	for (const actor of collectActors()) {
-		if (actor.statuses?.has(conditionId)) count += 1;
+		for (const effect of collectEffects(actor)) {
+			if (!effect.statuses?.has(conditionId)) continue;
+
+			count += 1;
+			break;
+		}
 	}
+
 	return count;
 }
 
@@ -60,7 +80,7 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 		return rows.map((row) => {
 			const id = sanitizeConditionId(row.id);
 			if (!id) return t('errorEmptyId');
-			if (isUnsafeConditionId(id)) return t('errorInvalidId');
+			if (isUnsafeConditionId(id)) return t('errorInvalidId', { id });
 			if (builtInIds.includes(id)) return t('errorReservedId');
 			if (seen.has(id)) return t('errorDuplicateId');
 
@@ -139,15 +159,13 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	async function save() {
 		if (hasErrors || saving) return;
 
-		const cleaned = rows
-			.map((row) => {
-				const id = sanitizeConditionId(row.id);
-				const name = row.name.trim() || id.charAt(0).toUpperCase() + id.slice(1);
-				const description = row.description.trim();
-				const img = row.img.trim() || DEFAULT_CUSTOM_CONDITION_ICON;
-				return { id, name, description, img };
-			})
-			.filter((row) => row.id);
+		const cleaned = rows.map((row) => {
+			const id = sanitizeConditionId(row.id);
+			const name = row.name.trim() || id.charAt(0).toUpperCase() + id.slice(1);
+			const description = row.description.trim();
+			const img = row.img.trim() || DEFAULT_CUSTOM_CONDITION_ICON;
+			return { id, name, description, img };
+		});
 
 		saving = true;
 

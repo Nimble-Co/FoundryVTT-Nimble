@@ -21,7 +21,9 @@
 	const canApplyConditions = game.user?.isGM ?? false;
 
 	function getConditionTooltip(condition: string) {
-		const label = conditions[condition];
+		// Names can be free-form GM text and the header is built as an HTML string, so an unescaped
+		// `<` would swallow the rest of the tooltip. Descriptions arrive from CONFIG already escaped.
+		const label = foundry.utils.escapeHTML(conditions[condition]);
 		const description = conditionDescriptions[condition];
 
 		const tooltipHeader = `

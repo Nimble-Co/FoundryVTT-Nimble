@@ -23,30 +23,36 @@ interface ConditionConfig {
 	conditionDefaultImages: Record<string, string>;
 }
 
+/** The condition dictionaries, or null when any of them is not populated yet. */
+function getConditionConfig(): ConditionConfig | null {
+	const config = CONFIG.NIMBLE as unknown as Partial<ConditionConfig> | undefined;
+	if (!config?.conditions || !config.conditionDescriptions || !config.conditionDefaultImages) {
+		return null;
+	}
+
+	return config as ConditionConfig;
+}
+
 /**
- * The built-in conditions as they were before any custom ones were merged in. Every merge rebuilds
- * from this, which is what makes the merge idempotent and makes removals in the editor stick.
+ * The ids present before any custom condition was merged in, captured on the first merge. Custom
+ * ids are rejected when they collide with one of these, so built-ins can never be overwritten.
  */
-let builtInConditions: ConditionConfig | null = null;
+let builtInConditionIds: string[] | null = null;
 
-function captureBuiltInConditions(): void {
-	if (builtInConditions) return;
+function captureBuiltInConditionIds(): void {
+	if (builtInConditionIds) return;
 
-	const config = CONFIG.NIMBLE as unknown as ConditionConfig | undefined;
-	// An empty snapshot would be cached forever and the next merge would wipe the built-ins out
-	// of CONFIG, so bail without caching rather than capturing an unpopulated config.
-	if (!config?.conditions) return;
+	// An empty snapshot would be cached forever and every id would then read as available, so bail
+	// without caching rather than capturing an unpopulated config.
+	const config = getConditionConfig();
+	if (!config) return;
 
-	builtInConditions = {
-		conditions: { ...config.conditions },
-		conditionDescriptions: { ...config.conditionDescriptions },
-		conditionDefaultImages: { ...config.conditionDefaultImages },
-	};
+	builtInConditionIds = Object.keys(config.conditions);
 }
 
 export function getBuiltInConditionIds(): string[] {
-	captureBuiltInConditions();
-	return Object.keys(builtInConditions?.conditions ?? {});
+	captureBuiltInConditionIds();
+	return builtInConditionIds ?? [];
 }
 
 /** Normalize any input into a lowercase snake_case id, or an empty string if nothing survives. */
@@ -117,36 +123,42 @@ export function getCustomConditions(): CustomCondition[] {
 	return conditions;
 }
 
+/** The custom ids written by the last merge, so a later merge knows which ones to retire. */
+let mergedCustomIds: string[] = [];
+
 /**
- * Rebuild the CONFIG.NIMBLE condition dictionaries from the built-in snapshot plus the stored
- * custom conditions. Safe to call repeatedly, so the setting's onChange can just call it again.
+ * Write the stored custom conditions into the CONFIG.NIMBLE dictionaries, retiring any id the
+ * previous merge added that is no longer stored. Safe to call repeatedly, so the setting's onChange
+ * can just call it again.
  */
 export function mergeCustomConditionsIntoConfig(): void {
-	captureBuiltInConditions();
-	if (!builtInConditions) return;
+	captureBuiltInConditionIds();
 
-	const conditions: Record<string, string> = { ...builtInConditions.conditions };
-	const descriptions: Record<string, string> = { ...builtInConditions.conditionDescriptions };
-	const images: Record<string, string> = { ...builtInConditions.conditionDefaultImages };
+	const config = getConditionConfig();
+	if (!config) return;
 
-	for (const custom of getCustomConditions()) {
-		conditions[custom.id] = custom.name;
-		descriptions[custom.id] = toDescriptionHtml(custom.description);
-		images[custom.id] = custom.img;
+	const customConditions = getCustomConditions();
+	const currentIds = new Set(customConditions.map(({ id }) => id));
+
+	// Only ids this merge owns are removed. Deleting every key and rebuilding would also destroy
+	// entries a module added after the built-ins were captured.
+	for (const retiredId of mergedCustomIds) {
+		if (currentIds.has(retiredId)) continue;
+
+		delete config.conditions[retiredId];
+		delete config.conditionDescriptions[retiredId];
+		delete config.conditionDefaultImages[retiredId];
 	}
-
-	const config = CONFIG.NIMBLE as unknown as ConditionConfig;
 
 	// Mutated in place, not reassigned: anything holding a reference to one of these dictionaries
 	// from init would otherwise keep the stale copy.
-	replaceEntries(config.conditions, conditions);
-	replaceEntries(config.conditionDescriptions, descriptions);
-	replaceEntries(config.conditionDefaultImages, images);
-}
+	for (const custom of customConditions) {
+		config.conditions[custom.id] = custom.name;
+		config.conditionDescriptions[custom.id] = toDescriptionHtml(custom.description);
+		config.conditionDefaultImages[custom.id] = custom.img;
+	}
 
-function replaceEntries(target: Record<string, string>, source: Record<string, string>): void {
-	for (const key of Object.keys(target)) delete target[key];
-	Object.assign(target, source);
+	mergedCustomIds = [...currentIds];
 }
 
 /** Persist the conditions. The setting's onChange is what re-merges them into CONFIG. */

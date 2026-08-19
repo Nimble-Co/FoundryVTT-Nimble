@@ -10,8 +10,8 @@ function schema() {
 				nullable: false,
 				blank: false,
 				// The object form makes the tag group render "Soul Burned" instead of the raw
-				// `soul_burned` id. Widened to a plain record because GMs can add their own ids.
-				choices: () => CONFIG.NIMBLE.conditions as Record<string, string>,
+				// `soul_burned` id.
+				choices: () => CONFIG.NIMBLE.conditions,
 			}),
 			{
 				required: true,

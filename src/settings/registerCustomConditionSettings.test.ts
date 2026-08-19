@@ -122,4 +122,37 @@ describe('registerCustomConditionSettings', () => {
 
 		expect(callAll).toHaveBeenCalledWith(CONDITIONS_CHANGED_HOOK);
 	});
+
+	it('still announces the rebuild when applying the change throws', () => {
+		const settingsMock = setupSettingsMock([]);
+		registerCustomConditionSettings();
+		(game as unknown as { nimble: { conditions: object } }).nimble = {
+			conditions: {
+				initialize: vi.fn(() => {
+					throw new Error('Conditions are not ready yet.');
+				}),
+				configureStatusEffects: vi.fn(),
+			},
+		};
+		const callAll = vi.spyOn(Hooks, 'callAll').mockImplementation(() => true);
+		vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+		// onChange runs inside Setting#_onUpdate: a throw would surface as an unrelated
+		// document-update failure and leave every open conditions list silently stale.
+		expect(() => registeredConfig(settingsMock).onChange?.()).not.toThrow();
+
+		expect(console.error).toHaveBeenCalled();
+		expect(callAll).toHaveBeenCalledWith(CONDITIONS_CHANGED_HOOK);
+	});
+
+	it('survives an onChange that arrives before the condition manager exists', () => {
+		const settingsMock = setupSettingsMock([]);
+		registerCustomConditionSettings();
+		(game as unknown as { nimble: undefined }).nimble = undefined;
+		const callAll = vi.spyOn(Hooks, 'callAll').mockImplementation(() => true);
+
+		expect(() => registeredConfig(settingsMock).onChange?.()).not.toThrow();
+
+		expect(callAll).toHaveBeenCalledWith(CONDITIONS_CHANGED_HOOK);
+	});
 });

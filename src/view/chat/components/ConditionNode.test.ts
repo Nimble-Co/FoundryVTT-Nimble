@@ -154,6 +154,23 @@ describe('ConditionNode', () => {
 		expect(applyConditionToActor).not.toHaveBeenCalled();
 	});
 
+	it('escapes a GM-supplied condition name in the tooltip markup', async () => {
+		// Custom condition names are free-form GM text and the tooltip is built as an HTML string,
+		// so an unescaped `<` would truncate the heading and swallow the description.
+		CONFIG.NIMBLE.conditions = { dazed: 'Hex <3 Bane' } as typeof CONFIG.NIMBLE.conditions;
+		createTokenWithActor('Scene.s.Token.a', 'First');
+
+		render(ConditionNodeTestHarness, {
+			props: { messageDocument: createMessage(['Scene.s.Token.a']), node: conditionNode() },
+		});
+
+		const tooltip =
+			screen.getByRole('button', { name: /apply condition/i }).getAttribute('data-tooltip') ?? '';
+
+		expect(tooltip).toContain('Hex &lt;3 Bane');
+		expect(tooltip).toContain('Dazed description');
+	});
+
 	it("names the card's item as the source of the condition", async () => {
 		createTokenWithActor('Scene.s.Token.a', 'First');
 		const sourceActor = { uuid: 'Actor.attacker', name: 'Attacker' };
