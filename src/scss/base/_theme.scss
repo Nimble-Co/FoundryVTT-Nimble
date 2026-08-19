@@ -138,6 +138,15 @@
 	--nimble-weapon-toggle-on-color: hsl(120, 50%, 62%);
 	--nimble-weapon-toggle-on-color-hover: hsl(120, 50%, 70%);
 
+	/** CHOICE CARDS **/
+	--nimble-choice-card-selected-background: hsla(45, 70%, 50%, 0.15);
+	--nimble-choice-card-selected-border-color: hsla(45, 70%, 50%, 0.4);
+	--nimble-choice-card-selected-text-color: hsl(45, 60%, 65%);
+	--nimble-choice-card-selected-icon-color: hsl(45, 70%, 55%);
+
+	/** SECRET CONTENT **/
+	--nimble-secret-badge-background: hsl(276, 30%, 38%);
+
 	/** REACTION COLORS **/
 	// Defend (blue)
 	--nimble-reaction-defend-primary: hsl(210, 60%, 55%);

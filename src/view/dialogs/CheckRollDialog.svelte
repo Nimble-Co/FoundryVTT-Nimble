@@ -4,6 +4,7 @@
 	import { untrack } from 'svelte';
 
 	import { SYSTEM_ID } from '#system';
+	import Hint from '#view/components/Hint.svelte';
 	import getRollFormula from '../../utils/getRollFormula.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
@@ -27,6 +28,10 @@
 </script>
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
+	{#if data.checkHint}
+		<Hint hintType="warning" hintIcon="fa-solid fa-circle-exclamation" hintText={data.checkHint} />
+	{/if}
+
 	<RollModeConfig bind:selectedRollMode />
 	{#if game.user?.isGM}
 		<div class="nimble-roll-modifiers-container">

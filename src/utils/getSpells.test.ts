@@ -25,6 +25,7 @@ function createIndexedSpell({
 	school = 'fire',
 	tier = 0,
 	isUtility = false,
+	isSecret = false,
 	classes = [],
 }: {
 	uuid: string;
@@ -32,6 +33,7 @@ function createIndexedSpell({
 	school?: string;
 	tier?: number;
 	isUtility?: boolean;
+	isSecret?: boolean;
 	classes?: string[];
 }): SpellIndexEntry {
 	return {
@@ -41,6 +43,7 @@ function createIndexedSpell({
 		school,
 		tier,
 		isUtility,
+		isSecret,
 		classes,
 	};
 }
@@ -170,7 +173,13 @@ describe('buildSpellIndex', () => {
 		const fireCantrips = index.get('fire')?.get(0) ?? [];
 
 		expect(itemPack.getIndex).toHaveBeenCalledWith({
-			fields: ['system.school', 'system.tier', 'system.classes', 'system.properties.selected'],
+			fields: [
+				'system.school',
+				'system.tier',
+				'system.classes',
+				'system.activation.cost',
+				'system.properties.selected',
+			],
 		});
 		expect(fireCantrips.map((spell) => spell.name)).toEqual([
 			'Class Bolt',
@@ -189,6 +198,65 @@ describe('buildSpellIndex', () => {
 			)?.classes,
 		).toEqual(['mage']);
 		expect(fireCantrips.some((spell) => spell.uuid === secretSpell.uuid)).toBe(false);
+	});
+});
+
+describe('buildSpellIndex secret spells', () => {
+	const worldSecret = {
+		uuid: 'Item.world-secret',
+		name: 'World Secret',
+		img: 'icons/svg/item-bag.svg',
+		type: 'spell',
+		system: { school: 'necrotic', tier: 3, properties: { selected: ['secretSpell'] } },
+	};
+	const packSecret = {
+		uuid: 'Compendium.nimble.nimble-secret-spells.Item.pack-secret',
+		name: 'Pack Secret',
+		img: 'icons/svg/item-bag.svg',
+		type: 'spell',
+		system: { school: 'necrotic', tier: 3, properties: { selected: ['secretSpell'] } },
+	};
+	const packOpen = {
+		uuid: 'Compendium.nimble.nimble-spells.Item.pack-open',
+		name: 'Pack Open',
+		img: 'icons/svg/item-bag.svg',
+		type: 'spell',
+		system: { school: 'necrotic', tier: 3, properties: { selected: [] } },
+	};
+
+	beforeEach(() => {
+		(game as unknown as { items: unknown }).items = [worldSecret];
+		(game as unknown as { packs: unknown[] }).packs = [
+			{
+				documentName: 'Item',
+				getIndex: vi.fn().mockResolvedValue([packSecret, packOpen]),
+			},
+		];
+	});
+
+	function necroticTier3(index: Awaited<ReturnType<typeof buildSpellIndex>>) {
+		return (index.get('necrotic')?.get(3) ?? []).map((spell) => spell.name);
+	}
+
+	it('excludes secret spells from both the world and the packs by default', async () => {
+		const names = necroticTier3(await buildSpellIndex());
+
+		expect(names).toEqual(['Pack Open']);
+	});
+
+	it('includes secret spells from both sources when explicitly opted in', async () => {
+		const names = necroticTier3(await buildSpellIndex({ includeSecretSpells: true }));
+
+		expect(names).toEqual(['Pack Open', 'Pack Secret', 'World Secret']);
+	});
+
+	it('marks which entries are secret so a caller can badge them', async () => {
+		const index = await buildSpellIndex({ includeSecretSpells: true });
+		const entries = index.get('necrotic')?.get(3) ?? [];
+
+		expect(entries.find((spell) => spell.name === 'World Secret')?.isSecret).toBe(true);
+		expect(entries.find((spell) => spell.name === 'Pack Secret')?.isSecret).toBe(true);
+		expect(entries.find((spell) => spell.name === 'Pack Open')?.isSecret).toBe(false);
 	});
 });
 

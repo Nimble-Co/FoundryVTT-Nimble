@@ -11,6 +11,7 @@ import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
+import { registerSpellScrollSettings } from './spellScrollSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
 
@@ -92,6 +93,7 @@ export default function registerSystemSettings() {
 	registerNcswSettings();
 	registerLanguageSettings();
 	registerSpellSchoolSettings();
+	registerSpellScrollSettings();
 
 	game.settings.register(
 		SYSTEM_ID as 'core',
