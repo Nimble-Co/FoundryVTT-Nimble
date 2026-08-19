@@ -51,7 +51,7 @@
 			{#if !hasMana && tier > 0}
 				<Hint
 					hintType="warning"
-					hintIcon="fa-solid fa-triangle-exclamation"
+					hintIcon="fa-solid fa-circle-exclamation"
 					hintText={localize('NIMBLE.spellScroll.dialog.noManaWarning', { name: actorName })}
 				/>
 			{/if}

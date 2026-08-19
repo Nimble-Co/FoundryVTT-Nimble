@@ -12,6 +12,24 @@ import { NimbleBaseItem } from './base.svelte.js';
 /** The check a scroll's wielder must pass when they know no spell of its school. */
 const SPELL_SCROLL_ARCANA_DC = 10;
 
+/**
+ * Holds until Dice So Nice has finished throwing the dice for a message.
+ *
+ * Creating the message only starts the animation, so without this the scroll's next
+ * prompt opens over dice that are still rolling and gives away the result. DSN's own
+ * API resolves right away when the module is absent, disabled, or configured to show
+ * chat messages immediately.
+ */
+async function waitForDiceAnimation(messageId: string | undefined): Promise<void> {
+	if (!messageId) return;
+
+	const { dice3d } = game as {
+		dice3d?: { waitFor3DAnimationByMessageID?: (id: string) => Promise<unknown> };
+	};
+
+	await dice3d?.waitFor3DAnimationByMessageID?.(messageId);
+}
+
 type RuleSourceLike = {
 	disabled?: boolean;
 	[key: string]: unknown;
@@ -243,7 +261,9 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		// the roll's own mode.
 		ChatMessage.applyMode(chatData, toMessageMode(rollData?.visibilityMode));
 
-		await ChatMessage.create(chatData);
+		const message = await ChatMessage.create(chatData);
+
+		await waitForDiceAnimation(message?.id ?? undefined);
 
 		return succeeded ? 'passed' : 'failed';
 	}

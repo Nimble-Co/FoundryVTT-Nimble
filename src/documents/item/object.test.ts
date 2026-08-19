@@ -60,7 +60,7 @@ function createScroll(overrides: ScrollOverrides = {}) {
 }
 
 function stubChatMessage() {
-	const create = vi.fn(async () => ({}));
+	const create = vi.fn(async () => ({ id: 'arcana-message' }));
 	const applyMode = vi.fn();
 
 	Object.assign((globalThis as unknown as { ChatMessage: object }).ChatMessage, {
@@ -74,6 +74,12 @@ function stubChatMessage() {
 
 function confirmDialog() {
 	return foundry.applications.api.DialogV2.confirm as unknown as ReturnType<typeof vi.fn>;
+}
+
+type DiceSoNiceMock = { waitFor3DAnimationByMessageID: ReturnType<typeof vi.fn> } | undefined;
+
+function setDiceSoNice(dice3d: DiceSoNiceMock): void {
+	(globalThis as unknown as { game: { dice3d?: DiceSoNiceMock } }).game.dice3d = dice3d;
 }
 
 function setResourceSpendingAutomation(enabled: boolean): void {
@@ -97,6 +103,7 @@ describe('NimbleObjectItem.activate', () => {
 		chat = stubChatMessage();
 		confirmDialog().mockResolvedValue(true);
 
+		setDiceSoNice(undefined);
 		setResourceSpendingAutomation(true);
 	});
 
@@ -219,6 +226,32 @@ describe('NimbleObjectItem.activate', () => {
 			await scroll.activate();
 
 			expect(chat.applyMode).toHaveBeenCalledWith(expect.any(Object), 'blind');
+		});
+
+		// Dice So Nice animates after the message exists, so a prompt opened right away
+		// would sit over rolling dice and give the result away.
+		it('holds the outcome until the dice have finished rolling', async () => {
+			const scroll = createScroll();
+			let finishAnimation = () => {};
+			const waitFor3DAnimationByMessageID = vi.fn(
+				() =>
+					new Promise<void>((resolve) => {
+						finishAnimation = resolve;
+					}),
+			);
+			setDiceSoNice({ waitFor3DAnimationByMessageID });
+
+			const activation = scroll.activate();
+			await vi.waitFor(() =>
+				expect(waitFor3DAnimationByMessageID).toHaveBeenCalledWith('arcana-message'),
+			);
+
+			expect(baseActivate).not.toHaveBeenCalled();
+
+			finishAnimation();
+			await activation;
+
+			expect(baseActivate).toHaveBeenCalled();
 		});
 
 		// Knowing a spell of the school is the rulebook's only exemption, so an actor
