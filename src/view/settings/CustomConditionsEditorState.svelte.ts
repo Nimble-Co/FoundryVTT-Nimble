@@ -1,4 +1,4 @@
-import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import localize from '#utils/localize.js';
 import {
 	DEFAULT_CUSTOM_CONDITION_ICON,
@@ -8,57 +8,14 @@ import {
 	sanitizeConditionId,
 	setCustomConditions,
 } from '../../settings/customConditionSettings.js';
+import findConditionUsage, { type ConditionUsage } from '../../settings/findConditionUsage.js';
+import removeConditionReferences from '../../settings/removeConditionReferences.js';
 import type { ConditionEditorRow } from './CustomConditionsEditor.types.ts';
+import RemoveConditionDialog from './RemoveConditionDialog.svelte';
+import type { RemoveConditionResult } from './RemoveConditionDialog.types.ts';
 
 const t = (key: string, data?: Record<string, string>) =>
 	localize(`NIMBLE.settings.customConditions.${key}`, data);
-
-interface ActorWithEffects {
-	effects?: Iterable<{ statuses?: Set<string> }>;
-	allApplicableEffects?: () => Iterable<{ statuses?: Set<string> }>;
-}
-
-/** Every actor a condition could be sitting on, including unlinked token actors. */
-function collectActors(): Set<ActorWithEffects> {
-	const actors = new Set<ActorWithEffects>();
-
-	for (const actor of (game.actors ?? []) as Iterable<ActorWithEffects>) actors.add(actor);
-
-	for (const scene of (game.scenes ?? []) as Iterable<{
-		tokens?: Iterable<{ actor?: ActorWithEffects | null }>;
-	}>) {
-		for (const token of scene.tokens ?? []) {
-			if (token.actor) actors.add(token.actor);
-		}
-	}
-
-	return actors;
-}
-
-/**
- * The effects to search for the status. `Actor#statuses` is no help here: it is built from active
- * effects only, so a disabled effect or one granted by an unequipped item would report the
- * condition as unused, which is exactly the case the removal warning exists for.
- */
-function collectEffects(actor: ActorWithEffects): Iterable<{ statuses?: Set<string> }> {
-	if (typeof actor.allApplicableEffects === 'function') return actor.allApplicableEffects();
-	return actor.effects ?? [];
-}
-
-function countActorsWithCondition(conditionId: string): number {
-	let count = 0;
-
-	for (const actor of collectActors()) {
-		for (const effect of collectEffects(actor)) {
-			if (!effect.statuses?.has(conditionId)) continue;
-
-			count += 1;
-			break;
-		}
-	}
-
-	return count;
-}
 
 export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	const builtInIds = getBuiltInConditionIds();
@@ -93,6 +50,12 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 
 	let saving = $state(false);
 
+	/**
+	 * Cleanups the GM opted into, applied on save rather than on removal. Closing the editor without
+	 * saving has to leave the world untouched, or the dialog's own promise would be a lie.
+	 */
+	const pendingCleanups = new Map<string, ConditionUsage>();
+
 	function addRow() {
 		rows.push({
 			uid: foundry.utils.randomID(),
@@ -106,21 +69,30 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	}
 
 	async function removeRow(row: ConditionEditorRow) {
-		// Deleting orphans every effect still carrying the status: the Conditions tab and the token
-		// HUD's Clear All both skip statuses they cannot resolve, leaving the GM to hunt them down.
+		// Only a saved condition can have anything pointing at it. An unsaved row has never been in
+		// CONFIG, so no effect carries its status and no rule could have chosen it.
 		if (row.persisted) {
-			const inUse = countActorsWithCondition(row.id);
-			if (inUse > 0) {
-				const confirmed = await foundry.applications.api.DialogV2.confirm({
-					window: { title: t('removeInUseTitle') },
-					content: `<p>${foundry.utils.escapeHTML(
-						t('removeInUseWarning', { name: row.name, count: String(inUse) }),
-					)}</p>`,
-					yes: { label: t('removeInUseConfirm') },
-					no: { label: t('removeInUseCancel') },
-					rejectClose: false,
-				});
-				if (confirmed !== true) return;
+			const usage = findConditionUsage(row.id);
+
+			if (usage.total > 0) {
+				const dialog = GenericDialog.getOrCreate(
+					localize('NIMBLE.settings.customConditions.removeDialog.windowTitle'),
+					RemoveConditionDialog as never,
+					{ conditionName: row.name, conditionImg: row.img, usage },
+					{
+						uniqueId: `nimble-remove-condition-${row.uid}`,
+						icon: 'fa-solid fa-triangle-exclamation',
+						width: 460,
+						resizable: true,
+					},
+				);
+
+				await dialog.render(true);
+				const result = (await dialog.promise) as RemoveConditionResult | null;
+				// Closing the dialog resolves null, which is the cancel path: leave the row alone.
+				if (!result) return;
+
+				if (result.choice === 'clean') pendingCleanups.set(row.id, usage);
 			}
 		}
 
@@ -171,6 +143,7 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 
 		try {
 			await setCustomConditions(cleaned);
+			await applyPendingCleanups(new Set(cleaned.map((row) => row.id)));
 			ui.notifications?.info(t('saved'));
 			dialog().close();
 		} catch (error) {
@@ -179,6 +152,27 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 		} finally {
 			saving = false;
 		}
+	}
+
+	/** Runs the opted-in cleanups, skipping any id the GM re-added under a new row before saving. */
+	async function applyPendingCleanups(savedIds: Set<string>) {
+		for (const [conditionId, usage] of pendingCleanups) {
+			if (savedIds.has(conditionId)) continue;
+
+			const documentCount = usage.actors.length + usage.items.length;
+
+			try {
+				await removeConditionReferences(usage, conditionId);
+				ui.notifications?.info(
+					t('removeDialog.cleanedUp', { name: conditionId, count: String(documentCount) }),
+				);
+			} catch (error) {
+				console.error(`Nimble | Failed to clean up the ${conditionId} references:`, error);
+				ui.notifications?.error(t('removeDialog.cleanupFailed', { name: conditionId }));
+			}
+		}
+
+		pendingCleanups.clear();
 	}
 
 	return {

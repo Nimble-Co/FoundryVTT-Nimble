@@ -29,7 +29,9 @@ A GM can add conditions of their own from **Game Settings → Configure Settings
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 
-Deleting a custom condition from the settings does not strip it from actors that already have it, so clear it off them first; the editor warns you when anything is still carrying the one you're removing. While the definition still exists it sits in the Conditions tab's list like any other condition. If you've already deleted the definition, the leftover marker drops out of that list — remove it from the same tab's Temporary Effects or Passive Effects section instead, or from the token conditions panel on the canvas.
+Removing a custom condition that something still uses opens a confirmation listing what would be left behind: the creatures currently carrying it, and the items whose rules or activation effects name it. From there you can **Remove Everywhere**, which deletes those effects and strips the condition out of those items, or **Remove Only**, which drops the definition and leaves the references in place. Either way nothing changes until you save the conditions list, so closing the editor cancels it.
+
+**Remove Only** leaves markers and rules pointing at an id nothing resolves. Rules in that state stop running and say why on their card in the Rules Builder; leftover markers drop out of the Conditions tab's condition list, so remove them from the same tab's Temporary Effects or Passive Effects section, or from the token conditions panel on the canvas. Items inside compendiums are not searched or rewritten, since packs can be locked or owned by a module.
 
 ## Condition immunity
 

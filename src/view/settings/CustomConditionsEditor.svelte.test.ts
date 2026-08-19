@@ -1,12 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
 import {
 	CUSTOM_CONDITIONS_SETTING_KEY,
 	DEFAULT_CUSTOM_CONDITION_ICON,
 } from '../../settings/customConditionSettings.js';
+import type { ConditionUsage } from '../../settings/findConditionUsage.js';
 import CustomConditionsEditor from './CustomConditionsEditor.svelte';
+import type { RemoveConditionResult } from './RemoveConditionDialog.types.ts';
 
 type SettingsMock = {
 	get: ReturnType<typeof vi.fn>;
@@ -40,6 +42,43 @@ function saveButton(): HTMLButtonElement {
 	return screen.getByRole('button', { name: 'Save Conditions' }) as HTMLButtonElement;
 }
 
+/**
+ * The removal dialog is a real ApplicationV2 subclass, so stub the registry accessor and hand back
+ * the choice under test. Returns the spy so a test can read the usage the editor discovered.
+ */
+function stubRemovalDialog(result: RemoveConditionResult | null) {
+	return vi.spyOn(GenericDialog, 'getOrCreate').mockReturnValue({
+		render: vi.fn().mockResolvedValue(undefined),
+		promise: Promise.resolve(result),
+	} as never);
+}
+
+function discoveredUsage(spy: ReturnType<typeof stubRemovalDialog>): ConditionUsage {
+	return (spy.mock.calls[0]?.[2] as { usage: ConditionUsage }).usage;
+}
+
+function actorCarrying(name: string, conditionId: string) {
+	const actor = {
+		uuid: `Actor.${name}`,
+		name,
+		img: '',
+		items: [] as unknown[],
+		effects: [] as unknown[],
+	};
+	actor.effects = [{ id: 'effect-1', statuses: new Set([conditionId]), parent: actor }];
+	return actor;
+}
+
+function itemNaming(name: string, conditionId: string) {
+	return {
+		uuid: `Item.${name}`,
+		name,
+		img: '',
+		system: { rules: [{ id: 'rule-1', type: 'applyCondition', condition: conditionId }] },
+		update: vi.fn().mockResolvedValue(undefined),
+	};
+}
+
 describe('CustomConditionsEditor', () => {
 	beforeEach(() => {
 		(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {
@@ -48,8 +87,14 @@ describe('CustomConditionsEditor', () => {
 			conditionDefaultImages: {},
 		};
 		(game as unknown as { actors: unknown[] }).actors = [];
+		(game as unknown as { items: unknown[] }).items = [];
+		(game as unknown as { scenes: unknown[] }).scenes = [];
+		(CONFIG.NIMBLE as unknown as Record<string, unknown>).ruleTypes = {
+			applyCondition: 'Apply Condition',
+		};
 		// Shared across the file and not auto-cleared, so the call assertions below need a clean slate.
 		(foundry.applications.api.DialogV2.confirm as unknown as Mock).mockClear();
+		vi.restoreAllMocks();
 	});
 
 	it('shows the empty state until a condition is added', async () => {
@@ -184,56 +229,110 @@ describe('CustomConditionsEditor', () => {
 		).toBe('Rattled.');
 	});
 
-	it('asks before removing a condition that actors are currently carrying', async () => {
-		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
-		(game as unknown as { actors: unknown[] }).actors = [
-			{ effects: [{ statuses: new Set(['hexed']) }] },
-		];
+	it('asks before removing a condition that anything still references', async () => {
+		const spy = stubRemovalDialog(null);
+		(game as unknown as { actors: unknown[] }).actors = [actorCarrying('Goblin', 'hexed')];
+		(game as unknown as { items: unknown[] }).items = [itemNaming('Hex Bolt', 'hexed')];
+		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+
+		// Closing the dialog resolves null, which has to leave the row in place.
+		expect(screen.getAllByPlaceholderText('e.g. hexed')).toHaveLength(1);
+
+		const usage = discoveredUsage(spy);
+		expect(usage.actors.map(({ name }) => name)).toEqual(['Goblin']);
+		expect(usage.items.map(({ name }) => name)).toEqual(['Hex Bolt']);
+	});
+
+	it('leaves the references alone when the GM removes the condition only', async () => {
+		stubRemovalDialog({ choice: 'keep' });
+		const item = itemNaming('Hex Bolt', 'hexed');
+		(game as unknown as { items: unknown[] }).items = [item];
 		const { settingsMock } = renderEditor([
 			{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' },
 		]);
 
-		confirm.mockResolvedValueOnce(false);
-		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
-		expect(screen.getAllByPlaceholderText('e.g. hexed')).toHaveLength(1);
-
-		confirm.mockResolvedValueOnce(true);
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
 		await fireEvent.click(saveButton());
 
 		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, []);
+		expect(item.update).not.toHaveBeenCalled();
+	});
+
+	it('strips the references on save when the GM removes it everywhere', async () => {
+		stubRemovalDialog({ choice: 'clean' });
+		const actor = actorCarrying('Goblin', 'hexed');
+		const deleteEmbedded = vi.fn();
+		(actor as unknown as Record<string, unknown>).deleteEmbeddedDocuments = deleteEmbedded;
+		const item = itemNaming('Hex Bolt', 'hexed');
+		(game as unknown as { actors: unknown[] }).actors = [actor];
+		(game as unknown as { items: unknown[] }).items = [item];
+		const { settingsMock } = renderEditor([
+			{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' },
+		]);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+
+		// Nothing may change before the save: closing the editor has to leave the world untouched.
+		expect(item.update).not.toHaveBeenCalled();
+		expect(deleteEmbedded).not.toHaveBeenCalled();
+
+		await fireEvent.click(saveButton());
+
+		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, []);
+		expect(deleteEmbedded).toHaveBeenCalledWith('ActiveEffect', ['effect-1']);
+		expect(item.update).toHaveBeenCalledWith({ 'system.rules': [] });
+	});
+
+	it('skips the cleanup when the GM re-adds the id before saving', async () => {
+		stubRemovalDialog({ choice: 'clean' });
+		const item = itemNaming('Hex Bolt', 'hexed');
+		(game as unknown as { items: unknown[] }).items = [item];
+		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
+		await fireEvent.click(screen.getByRole('button', { name: /Add Condition/ }));
+		await fireEvent.input(nameInput(), { target: { value: 'Hexed' } });
+		await fireEvent.click(saveButton());
+
+		// The id still exists after the save, so nothing referencing it is stale.
+		expect(item.update).not.toHaveBeenCalled();
 	});
 
 	it('counts a condition held by a suppressed effect, which Actor#statuses omits', async () => {
-		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
+		const spy = stubRemovalDialog(null);
 		// A disabled effect, or one granted by an unequipped item, keeps its statuses out of
 		// `Actor#statuses` while still orphaning on delete.
 		(game as unknown as { actors: unknown[] }).actors = [
 			{
+				uuid: 'Actor.Cleric',
+				name: 'Cleric',
+				img: '',
+				items: [],
 				statuses: new Set<string>(),
 				effects: [],
-				allApplicableEffects: () => [{ statuses: new Set(['hexed']) }],
+				allApplicableEffects: () => [
+					{ id: 'effect-9', statuses: new Set(['hexed']), parent: { uuid: 'Item.Amulet' } },
+				],
 			},
 		];
 		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
 
-		confirm.mockResolvedValueOnce(false);
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
 
-		expect(confirm).toHaveBeenCalled();
-		expect(screen.getAllByPlaceholderText('e.g. hexed')).toHaveLength(1);
+		expect(spy).toHaveBeenCalled();
+		expect(discoveredUsage(spy).actors).toHaveLength(1);
 	});
 
-	it('removes an unused condition without a confirmation', async () => {
-		const confirm = foundry.applications.api.DialogV2.confirm as unknown as Mock;
-		(game as unknown as { actors: unknown[] }).actors = [
-			{ effects: [{ statuses: new Set(['shaken']) }] },
-		];
+	it('removes an unreferenced condition without asking', async () => {
+		const spy = stubRemovalDialog(null);
+		(game as unknown as { actors: unknown[] }).actors = [actorCarrying('Goblin', 'shaken')];
 		renderEditor([{ id: 'hexed', name: 'Hexed', description: '', img: 'icons/svg/hex.svg' }]);
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove condition' }));
 
-		expect(confirm).not.toHaveBeenCalled();
+		expect(spy).not.toHaveBeenCalled();
 		expect(screen.queryByPlaceholderText('e.g. hexed')).toBeNull();
 	});
 });
