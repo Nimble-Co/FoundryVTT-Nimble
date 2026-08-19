@@ -5,6 +5,7 @@ import type { NimbleObjectItem } from '#documents/item/object.js';
 import type { NimbleSpellItem } from '#documents/item/spell.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
+import resolveContentLinks from '#utils/resolveContentLinks.js';
 
 /** Estimated characters per column based on PDF config */
 const CHARS_PER_COLUMN = 1150;
@@ -33,7 +34,7 @@ interface SelectableItem {
  */
 function stripHtml(html: string): string {
 	if (!html) return '';
-	const processed = html
+	const processed = resolveContentLinks(html)
 		.replace(/<\/p>/gi, '\n')
 		.replace(/<br\s*\/?>/gi, '\n')
 		.replace(/<\/div>/gi, '\n')
@@ -55,8 +56,9 @@ function stripHtml(html: string): string {
 function extractMechanicalAbilities(html: string): string {
 	if (!html) return '';
 
-	const hrParts = html.split(/<hr\s*\/?>/i);
-	const mechanicalPart = hrParts.length > 1 ? hrParts.slice(1).join('') : html;
+	const resolved = resolveContentLinks(html);
+	const hrParts = resolved.split(/<hr\s*\/?>/i);
+	const mechanicalPart = hrParts.length > 1 ? hrParts.slice(1).join('') : resolved;
 
 	const processed = mechanicalPart
 		.replace(/<\/p>/gi, '\n')
@@ -82,8 +84,9 @@ function extractMechanicalAbilities(html: string): string {
 function extractMechanicalAbilitiesHtml(html: string): string {
 	if (!html) return '';
 
-	const hrParts = html.split(/<hr\s*\/?>/i);
-	const mechanicalPart = hrParts.length > 1 ? hrParts.slice(1).join('') : html;
+	const resolved = resolveContentLinks(html);
+	const hrParts = resolved.split(/<hr\s*\/?>/i);
+	const mechanicalPart = hrParts.length > 1 ? hrParts.slice(1).join('') : resolved;
 
 	// Clean up HTML but preserve <strong> tags
 	const temp = document.createElement('div');
@@ -864,7 +867,7 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 			category: 'character',
 			label: 'Character Notes',
 			content: stripHtml(notes) || notes,
-			contentHtml: notes,
+			contentHtml: resolveContentLinks(notes),
 		});
 	}
 
