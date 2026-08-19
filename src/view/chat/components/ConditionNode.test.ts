@@ -171,6 +171,22 @@ describe('ConditionNode', () => {
 		expect(tooltip).toContain('Dazed description');
 	});
 
+	it('falls back to the id when the card outlives the condition it names', async () => {
+		// Activation-effect nodes carry no choices validation, so a card can still name a custom
+		// condition the GM has since removed.
+		CONFIG.NIMBLE.conditions = {} as typeof CONFIG.NIMBLE.conditions;
+		CONFIG.NIMBLE.conditionDescriptions = {} as typeof CONFIG.NIMBLE.conditionDescriptions;
+		createTokenWithActor('Scene.s.Token.a', 'First');
+
+		render(ConditionNodeTestHarness, {
+			props: { messageDocument: createMessage(['Scene.s.Token.a']), node: conditionNode() },
+		});
+
+		const chip = screen.getByRole('button', { name: /apply condition/i });
+		expect(chip).toHaveTextContent('dazed');
+		expect(chip.getAttribute('data-tooltip')).toContain('dazed');
+	});
+
 	it("names the card's item as the source of the condition", async () => {
 		createTokenWithActor('Scene.s.Token.a', 'First');
 		const sourceActor = { uuid: 'Actor.attacker', name: 'Attacker' };

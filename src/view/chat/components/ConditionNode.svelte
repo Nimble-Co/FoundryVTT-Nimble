@@ -23,8 +23,10 @@
 	function getConditionTooltip(condition: string) {
 		// Names can be free-form GM text and the header is built as an HTML string, so an unescaped
 		// `<` would swallow the rest of the tooltip. Descriptions arrive from CONFIG already escaped.
-		const label = foundry.utils.escapeHTML(conditions[condition]);
-		const description = conditionDescriptions[condition];
+		// A card can outlive the condition it names, so fall back to the id rather than escaping
+		// undefined, matching prepareActorConditions.
+		const label = foundry.utils.escapeHTML(conditions[condition] ?? condition);
+		const description = conditionDescriptions[condition] ?? '';
 
 		const tooltipHeader = `
         <header class="nimble-tooltip__enricher-header">
@@ -109,5 +111,5 @@
 >
 	<i class="nimble-button__icon fa-solid fa-biohazard"></i>
 
-	{conditions[node.condition]}
+	{conditions[node.condition] ?? node.condition}
 </button>
