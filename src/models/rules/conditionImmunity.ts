@@ -9,7 +9,9 @@ function schema() {
 				required: true,
 				nullable: false,
 				blank: false,
-				choices: () => Object.keys(CONFIG.NIMBLE.conditions),
+				// The object form makes the tag group render "Soul Burned" instead of the raw
+				// `soul_burned` id.
+				choices: () => CONFIG.NIMBLE.conditions,
 			}),
 			{
 				required: true,

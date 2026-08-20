@@ -16,7 +16,12 @@ export interface Condition {
 	aliases?: Set<string> | undefined;
 	statuses?: string[] | undefined;
 	stackable: boolean;
-	enriched: string;
+	/** The `[[/condition]]` enricher source for this condition, for callers that render it. */
+	enricherText: string;
+}
+
+function enricherText(conditionId: string): string {
+	return `[[/condition condition=${conditionId}]]`;
 }
 
 export class ConditionManager {
@@ -29,49 +34,34 @@ export class ConditionManager {
 		this.#ready = false;
 	}
 
+	/**
+	 * Rebuild the condition records from CONFIG.NIMBLE. Safe to re-run when the config changes:
+	 * the previous records are discarded, so conditions no longer in the config are dropped.
+	 */
 	initialize() {
-		const conditions = Object.keys(CONFIG.NIMBLE.conditions);
+		this.#conditions.clear();
 
-		conditions.forEach(async (c) => {
-			let _id: string | null = null;
-
-			const id = c;
-			const name = CONFIG.NIMBLE.conditions[id];
-			const img = CONFIG.NIMBLE.conditionDefaultImages[id];
+		for (const id of Object.keys(CONFIG.NIMBLE.conditions)) {
 			const aliases: string[] = CONFIG.NIMBLE.conditionAliasedConditions[id] ?? [];
 			const statuses: string[] = CONFIG.NIMBLE.conditionLinkedConditions[id] ?? [];
-			const stackable = CONFIG.NIMBLE.conditionStackableConditions.has(id);
 
-			const data = {
+			const data: Condition = {
 				id,
-				name,
-				img,
-				stackable,
-			} as Condition;
+				name: CONFIG.NIMBLE.conditions[id],
+				img: CONFIG.NIMBLE.conditionDefaultImages[id],
+				stackable: CONFIG.NIMBLE.conditionStackableConditions.has(id),
+				enricherText: enricherText(id),
+			};
 
 			if (aliases.length) data.aliases = new Set(aliases);
 
 			if (statuses.length) {
 				data.statuses = statuses;
-
-				_id = String(id).padEnd(16, '0');
-				data._id = _id;
-			}
-
-			// Add an enriched version of the condition to the data
-			try {
-				data.enriched =
-					(await foundry.applications.ux?.TextEditor?.implementation?.enrichHTML?.(
-						`[[/condition condition=${id}]]`,
-					)) || `[[/condition condition=${id}]]`;
-			} catch (_error) {
-				data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-					`[[/condition condition=${id}]]`,
-				);
+				data._id = String(id).padEnd(16, '0');
 			}
 
 			this.#conditions.set(id, data);
-		});
+		}
 
 		this.#ready = true;
 	}

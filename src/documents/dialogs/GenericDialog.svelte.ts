@@ -92,11 +92,20 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	}
 
 	/**
+	 * The rendered dialog registered under this uniqueId, if there is one. Subclasses registered as
+	 * settings submenus use this to focus the open copy: Foundry instantiates the menu class afresh
+	 * on every click, so the new instance has to find its predecessor here.
+	 */
+	static getOpen(uniqueId: string): GenericDialog | null {
+		const dialog = GenericDialog.#openDialogs.get(uniqueId);
+		return dialog?.rendered ? dialog : null;
+	}
+
+	/**
 	 * Check if a dialog with the given uniqueId is currently open.
 	 */
 	static isOpen(uniqueId: string): boolean {
-		const dialog = GenericDialog.#openDialogs.get(uniqueId);
-		return dialog?.rendered ?? false;
+		return GenericDialog.getOpen(uniqueId) !== null;
 	}
 
 	/**

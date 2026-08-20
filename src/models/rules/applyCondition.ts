@@ -37,7 +37,9 @@ function schema() {
 			initial: '',
 			label: 'NIMBLE.rules.applyCondition.condition.label',
 			hint: 'NIMBLE.rules.applyCondition.condition.hint',
-			choices: () => Object.keys(CONFIG.NIMBLE.conditions),
+			// The object form makes the select render "Soul Burned" instead of the raw
+			// `soul_burned` id, matching conditionImmunity and markTarget.
+			choices: () => CONFIG.NIMBLE.conditions,
 		}),
 		trigger: new fields.StringField({
 			required: true,

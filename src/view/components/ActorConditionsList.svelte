@@ -3,6 +3,7 @@
 	import prepareActorConditions from '../dataPreparationHelpers/prepareActorConditions.js';
 	import localize from '../../utils/localize.js';
 	import { endToggleEffectFromAE, isToggleEffectAE } from '../../utils/toggleEffectControl.js';
+	import { CONDITIONS_CHANGED_HOOK } from '../../settings/customConditionSettings.js';
 	import { SYSTEM_ID } from '#system';
 
 	interface Props {
@@ -296,10 +297,17 @@
 			refreshFromEffect(effect as { parent?: { documentName?: string; id?: string } });
 		});
 
+		// This list reads its conditions off CONFIG, which is not reactive, so a GM editing the
+		// custom conditions only shows up here via the hook.
+		const conditionsHook = Hooks.on(CONDITIONS_CHANGED_HOOK, () => {
+			effectVersion += 1;
+		});
+
 		return () => {
 			Hooks.off('createActiveEffect', createHook);
 			Hooks.off('updateActiveEffect', updateHook);
 			Hooks.off('deleteActiveEffect', deleteHook);
+			Hooks.off(CONDITIONS_CHANGED_HOOK, conditionsHook);
 		};
 	});
 </script>

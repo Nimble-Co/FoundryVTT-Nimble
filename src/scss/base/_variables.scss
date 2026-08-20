@@ -49,6 +49,16 @@
 	--nimble-warning-icon-background-color: var(--nimble-light-text-color);
 	--nimble-warning-icon-color: hsl(33, 100%, 35%);
 
+	/** VALIDATION COLORS **/
+	--nimble-validation-error-color: hsl(0, 65%, 45%);
+	--nimble-validation-error-border-color: hsl(0, 65%, 55%);
+
+	/** ICON PICKER COLORS **/
+	// The scrim paints over an arbitrary user-chosen image, so it stays dark in both
+	// themes (no theme override) to keep the pencil legible.
+	--nimble-icon-picker-overlay-background: hsla(0, 0%, 0%, 0.55);
+	--nimble-icon-picker-overlay-text-color: white;
+
 	/** OTHER COLORS **/
 	--nimble-box-color: hsl(41, 18%, 54%);
 	--nimble-box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.2);

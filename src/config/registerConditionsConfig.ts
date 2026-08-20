@@ -1,9 +1,14 @@
 import { SYSTEM_PATH } from '#system';
 
 /**
- * Canonical status-effect IDs for system-managed conditions. The keys here are the
- * source of truth — the dictionaries below are typed against this so adding/renaming
- * an ID in one place forces an update in the others.
+ * Canonical status-effect IDs for the conditions that ship with the system. The keys here are
+ * the source of truth for those: the dictionaries below are typed against this, so adding or
+ * renaming an ID in one place forces an update in the others.
+ *
+ * At runtime the dictionaries are open-ended. GMs can merge arbitrary IDs into them through the
+ * custom conditions setting (`src/settings/customConditionSettings.ts`), so the dictionaries below
+ * are typed `ConditionDictionary`: the built-in keys are still required, and a read with a
+ * GM-supplied ID type-checks without a cast. Only the built-ins are guaranteed to be present.
  */
 export const STATUS_EFFECT_IDS = {
 	blinded: 'blinded',
@@ -41,8 +46,11 @@ export const STATUS_EFFECT_IDS = {
 
 export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFECT_IDS];
 
+/** Every built-in ID required, any GM-supplied ID readable. */
+export type ConditionDictionary = Record<StatusEffectId, string> & Record<string, string>;
+
 export default function registerConditionsConfig() {
-	const conditions: Record<StatusEffectId, string> = {
+	const conditions: ConditionDictionary = {
 		blinded: 'NIMBLE.conditions.blinded',
 		bloodied: 'NIMBLE.conditions.bloodied',
 		charged: 'NIMBLE.conditions.charged',
@@ -76,7 +84,8 @@ export default function registerConditionsConfig() {
 		wounded: 'NIMBLE.conditions.wounded',
 	};
 
-	const conditionDescriptions = {
+	// Not a ConditionDictionary: charged, distracted and hampered have no description of their own.
+	const conditionDescriptions: Record<string, string> = {
 		blinded: 'NIMBLE.conditionDescriptions.blinded',
 		bloodied: 'NIMBLE.conditionDescriptions.bloodied',
 		charmed: 'NIMBLE.conditionDescriptions.charmed',
@@ -107,7 +116,7 @@ export default function registerConditionsConfig() {
 		wounded: 'NIMBLE.conditionDescriptions.wounded',
 	};
 
-	const conditionDefaultImages: Record<StatusEffectId, string> = {
+	const conditionDefaultImages: ConditionDictionary = {
 		blinded: 'icons/svg/blind.svg',
 		bloodied: 'icons/svg/blood.svg',
 		charged: `${SYSTEM_PATH}/assets/icons/charged.svg`,
