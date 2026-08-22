@@ -1994,7 +1994,7 @@
 					"createOpening": {
 						"title": "Create an Opening",
 						"chatTitle": "Assess: Create an Opening",
-						"description": "Your next attack against the target gains +1 to the Primary Die this round.",
+						"description": "Increase the next Primary Die Roll against a target by 1 this round.",
 						"success": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> and create an opening. Their next attack against <strong>{target}</strong> gains <strong>+1 to the Primary Die</strong>.</p>",
 						"failure": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> but failed to create an opening.</p>"
 					},
