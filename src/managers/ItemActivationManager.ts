@@ -199,6 +199,7 @@ class ItemActivationManager {
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
+				enforceManaCost: isResourceSpendingAutomationEnabled(),
 			};
 
 			try {
