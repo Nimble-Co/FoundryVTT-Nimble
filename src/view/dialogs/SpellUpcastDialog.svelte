@@ -39,12 +39,18 @@
 	// mana neither bounds the slider nor blocks the cast.
 	const enforceManaCost = isResourceSpendingAutomationEnabled();
 
+	// A class may pin the cast tier and declare a pool cost; both are resolved
+	// by the activation manager and passed in rather than computed here.
+	const pinnedCastTier = $derived((data.pinnedCastTier ?? null) as number | null);
+	const spellCost = $derived(data.spellCost ?? null);
+	const isPoolCost = $derived(spellCost?.type === 'pool');
+
 	const baseMana = $derived(spell.tier);
 	const bounds = $derived(
 		computeUpcastBounds({
 			spellTier: spell.tier,
 			resources: actor?.system?.resources,
-			enforceManaCost,
+			enforceManaCost: enforceManaCost && !isPoolCost,
 		}),
 	);
 	const currentMana = $derived(bounds.currentMana);
@@ -53,7 +59,10 @@
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
 	const canUpcast = $derived(
-		spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none' && maxMana > baseMana,
+		spell.tier > 0 &&
+			spell.scaling &&
+			spell.scaling.mode !== 'none' &&
+			(pinnedCastTier === null ? maxMana > baseMana : pinnedCastTier > baseMana),
 	);
 	const hasChoices = $derived(spell.scaling?.mode === 'upcastChoice');
 	const isHealingSpell = $derived(
@@ -61,7 +70,7 @@
 	);
 
 	// Upcast state
-	let manaToSpend = $state(untrack(() => baseMana));
+	let manaToSpend = $state(untrack(() => pinnedCastTier ?? baseMana));
 	let choiceIndex = $state(0);
 
 	// Derived values
@@ -188,39 +197,58 @@
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode />
 
+	{#if spellCost && spellCost.type !== 'none'}
+		<p class="nimble-spell-cost">
+			{format(spellUpcastDialog.cost, {
+				cost:
+					spellCost.type === 'pool'
+						? `${spellCost.amount} ${spellCost.poolLabel}`
+						: `${manaToSpend} Mana`,
+			})}
+		</p>
+	{/if}
+
+	{#if pinnedCastTier !== null}
+		<p class="nimble-spell-pinned-tier">
+			{format(spellUpcastDialog.castsAtTier, { tier: String(pinnedCastTier) })}
+		</p>
+	{/if}
+
 	{#if canUpcast}
 		<hr />
 		<div class="nimble-upcast-section">
 			<h3 class="nimble-upcast-heading">
 				{format(spellUpcastDialog.upcastHeading, { spellName })}
 			</h3>
-			<div class="nimble-mana-slider">
-				<div class="nimble-upcast-meta">
-					<span class="nimble-upcast-steps"
-						>{format(spellUpcastDialog.slider.level)}: <strong>{upcastSteps}</strong></span
-					>
+			{#if pinnedCastTier === null}
+				<div class="nimble-mana-slider">
+					<div class="nimble-upcast-meta">
+						<span class="nimble-upcast-steps"
+							>{format(spellUpcastDialog.slider.level)}: <strong>{upcastSteps}</strong></span
+						>
+					</div>
+					<section class="nimble-spell-roll-mode-config">
+						<RangeSlider
+							pips
+							float
+							all="label"
+							min={baseMana}
+							max={maxMana}
+							formatter={(value) => `${value} Mana`}
+							--range-float-text="var(--nimble-light-text-color)"
+							--range-handle="var(--nimble-range-slider-handle-color)"
+							--range-handle-focus="var(--nimble-range-slider-handle-color)"
+							--range-handle-inactive="var(--nimble-range-slider-handle-color)"
+							--range-pip="var(--nimble-dark-text-color)"
+							--range-pip-active="var(--nimble-dark-text-color)"
+							--range-pip-hover="var(--nimble-dark-text-color)"
+							--range-slider="var(--nimble-accent-color)"
+							spring={false}
+							bind:value={manaToSpend}
+						/>
+					</section>
 				</div>
-				<section class="nimble-spell-roll-mode-config">
-					<RangeSlider
-						pips
-						float
-						all="label"
-						min={baseMana}
-						max={maxMana}
-						formatter={(value) => `${value} Mana`}
-						--range-float-text="var(--nimble-light-text-color)"
-						--range-handle="var(--nimble-range-slider-handle-color)"
-						--range-handle-focus="var(--nimble-range-slider-handle-color)"
-						--range-handle-inactive="var(--nimble-range-slider-handle-color)"
-						--range-pip="var(--nimble-dark-text-color)"
-						--range-pip-active="var(--nimble-dark-text-color)"
-						--range-pip-hover="var(--nimble-dark-text-color)"
-						--range-slider="var(--nimble-accent-color)"
-						spring={false}
-						bind:value={manaToSpend}
-					/>
-				</section>
-			</div>
+			{/if}
 			<div class="nimble-upcast-info">
 				{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
 					<fieldset class="nimble-upcast-choices">
@@ -298,8 +326,9 @@
 				}
 			}
 
-			// Validate mana (only for tiered spells that cost mana)
-			if (baseMana > 0) {
+			// Validate mana (only for tiered spells that cost mana; a class pool
+			// cost is validated on the activation path instead)
+			if (baseMana > 0 && !isPoolCost) {
 				if (manaToSpend < baseMana) {
 					ui.notifications?.warn(
 						`Must spend at least ${baseMana} mana for a tier ${baseMana} spell.`,
@@ -314,7 +343,7 @@
 				}
 			}
 
-			if (manaToSpend > maxTier) {
+			if (manaToSpend > maxTier && pinnedCastTier === null) {
 				ui.notifications?.warn(
 					`Cannot spend more mana than your highest unlocked spell tier (${maxTier}).`,
 				);
