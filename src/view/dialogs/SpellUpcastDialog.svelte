@@ -3,6 +3,7 @@
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
+	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
@@ -33,12 +34,16 @@
 	} = CONFIG.NIMBLE;
 	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
+	// With resource spending automation off, costs stay visible but available
+	// mana neither bounds the slider nor blocks the cast.
+	const enforceManaCost = isResourceSpendingAutomationEnabled();
+
 	// Compute upcast constraints (safe for NPCs/Monsters that lack resources)
 	const baseMana = $derived(spell.tier);
 	const resources = $derived(actor?.system?.resources);
 	const currentMana = $derived(resources?.mana?.current ?? 0);
 	const maxTier = $derived(resources?.highestUnlockedSpellTier ?? 9);
-	const maxMana = $derived(Math.min(currentMana, maxTier));
+	const maxMana = $derived(enforceManaCost ? Math.min(currentMana, maxTier) : maxTier);
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
 	const canUpcast = $derived(
@@ -297,7 +302,7 @@
 					);
 					return;
 				}
-				if (manaToSpend > currentMana) {
+				if (enforceManaCost && manaToSpend > currentMana) {
 					ui.notifications?.warn(
 						`Not enough mana. You have ${currentMana}, but need ${manaToSpend}.`,
 					);

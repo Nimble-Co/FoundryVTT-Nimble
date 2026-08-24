@@ -77,6 +77,49 @@ describe('validateAndComputeUpcast', () => {
 			expect(result.error).toContain('Insufficient mana');
 		});
 
+		it('should allow spending beyond current mana when mana cost enforcement is off', () => {
+			const context: UpcastContext = {
+				spell: { tier: 3, scaling: createScaling('upcast') },
+				actor: { resources: { mana: { current: 0 }, highestUnlockedSpellTier: 9 } },
+				activationData: { effects: [] },
+				manaToSpend: 5,
+				enforceManaCost: false,
+			};
+
+			const result = validateAndComputeUpcast(context);
+			expect(result.valid).toBe(true);
+			expect(result.upcastSteps).toBe(2);
+			expect(result.totalMana).toBe(5);
+		});
+
+		it('should still enforce the unlocked tier ceiling when mana cost enforcement is off', () => {
+			const context: UpcastContext = {
+				spell: { tier: 3, scaling: createScaling('upcast') },
+				actor: { resources: { mana: { current: 0 }, highestUnlockedSpellTier: 4 } },
+				activationData: { effects: [] },
+				manaToSpend: 5,
+				enforceManaCost: false,
+			};
+
+			const result = validateAndComputeUpcast(context);
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain('highest unlocked tier');
+		});
+
+		it('should still require the base cost to be spent when mana cost enforcement is off', () => {
+			const context: UpcastContext = {
+				spell: { tier: 3, scaling: createScaling('upcast') },
+				actor: { resources: { mana: { current: 0 }, highestUnlockedSpellTier: 9 } },
+				activationData: { effects: [] },
+				manaToSpend: 2,
+				enforceManaCost: false,
+			};
+
+			const result = validateAndComputeUpcast(context);
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain('at least 3');
+		});
+
 		it('should reject spending below base cost', () => {
 			const context: UpcastContext = {
 				spell: { tier: 3, scaling: createScaling('upcast') },

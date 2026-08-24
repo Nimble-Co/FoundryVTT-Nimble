@@ -5,6 +5,7 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
+import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../utils/attackDelivery.js';
@@ -156,6 +157,7 @@ class ItemActivationManager {
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
+				enforceManaCost: isResourceSpendingAutomationEnabled(),
 			};
 
 			try {

@@ -27,6 +27,12 @@ export interface UpcastContext {
 	};
 	manaToSpend: number;
 	choiceIndex?: number;
+	/**
+	 * When false, the caster's current mana is not checked, so a cast the
+	 * character cannot afford is still valid. Tier bounds are always enforced.
+	 * Defaults to true.
+	 */
+	enforceManaCost?: boolean;
 }
 
 export interface ValidationResult {
@@ -79,7 +85,7 @@ export function validateAndComputeUpcast(context: UpcastContext): ValidationResu
 	const baseMana = spell.tier;
 
 	// Rule 4: Cannot spend more than current mana
-	if (manaToSpend > actor.resources.mana.current) {
+	if ((context.enforceManaCost ?? true) && manaToSpend > actor.resources.mana.current) {
 		return {
 			valid: false,
 			error: 'Insufficient mana',
