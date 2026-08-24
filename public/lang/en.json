@@ -1670,6 +1670,8 @@
 			"spellUpcastDialog": {
 				"upcastHeading": "Upcast {spellName}",
 				"castSpell": "Cast Spell",
+				"cost": "Cost: {cost}",
+				"castsAtTier": "This spell is cast at tier {tier}, your highest unlocked tier.",
 				"manaInfo": {
 					"currentManaCost": "Current mana cost: {currentCost}",
 					"upcastManaCost": "Upcast mana cost: {upcastCost} (Total)"
@@ -1732,6 +1734,14 @@
 				"message": "This costs {cost} action(s), but you only have {current} remaining.",
 				"confirmQuestion": "Do you still want to use {name}?",
 				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			},
+			"confirmSpellOverdraft": {
+				"title": "Overdraw Spell Resource",
+				"message": "You have {available} of the {required} {pool} this cast requires.",
+				"halfMaxHpDamage": "Casting anyway will deal {damage} damage to you (half your maximum Hit Points).",
+				"confirmQuestion": "Cast {name} anyway?",
+				"confirm": "Cast Anyway",
 				"cancel": "Cancel"
 			},
 			"combatTracker": {
