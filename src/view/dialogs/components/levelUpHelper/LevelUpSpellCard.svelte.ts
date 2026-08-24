@@ -5,15 +5,10 @@ import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
 
-/** Extended spell system data that includes mana cost */
-interface SpellSystemDataWithMana extends SpellSystemData {
-	manaCost?: number;
-}
-
 /**
  * Extracts display data from a spell's system data for rendering in the card.
  */
-function extractDisplayData(system: SpellSystemDataWithMana): SpellDisplayData {
+function extractDisplayData(system: SpellSystemData): SpellDisplayData {
 	const { activationCostTypes } = CONFIG.NIMBLE;
 
 	// Action cost
@@ -66,8 +61,8 @@ function extractDisplayData(system: SpellSystemDataWithMana): SpellDisplayData {
 		});
 	}
 
-	// Mana cost
-	const manaCost = system.manaCost ?? 0;
+	// Tiered spells cost their tier in mana; cantrips are free.
+	const manaCost = system.tier ?? 0;
 
 	// Damage/healing effect
 	let effect: { formula: string; isHealing: boolean } | null = null;
@@ -123,7 +118,7 @@ export function createLevelUpSpellCardState(getSpell: () => SpellIndexEntry) {
 		fromUuid(spell.uuid as `Item.${string}`)
 			.then((item) => {
 				if (!item || getSpell().uuid !== currentUuid) return;
-				const system = (item as Item).system as unknown as SpellSystemDataWithMana;
+				const system = (item as Item).system as unknown as SpellSystemData;
 				displayData = extractDisplayData(system);
 			})
 			.catch((err) => {
