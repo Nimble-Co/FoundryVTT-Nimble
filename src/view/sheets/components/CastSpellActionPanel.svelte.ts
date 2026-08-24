@@ -19,7 +19,7 @@ interface SpellEffects {
 
 /** System data for spell items */
 interface SpellSystemData {
-	manaCost?: number;
+	tier?: number;
 	activation?: {
 		effects?: unknown[];
 		cost?: { type: string; quantity: number };
@@ -91,8 +91,9 @@ export function createSpellPanelState(
 		return null;
 	}
 
+	// Tiered spells cost their tier in mana; cantrips are free.
 	function getSpellManaCost(spell: Item): number {
-		return getSystemData(spell).manaCost ?? 0;
+		return getSystemData(spell).tier ?? 0;
 	}
 
 	function getSpellMetadata(spell: Item): string | null {
