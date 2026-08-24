@@ -201,7 +201,7 @@
 				cost:
 					spellCost.type === 'pool'
 						? `${spellCost.amount} ${spellCost.poolLabel}`
-						: `${manaToSpend} Mana`,
+						: format('NIMBLE.ui.heroicActions.mana', { cost: String(manaToSpend) }),
 			})}
 		</p>
 	{/if}
