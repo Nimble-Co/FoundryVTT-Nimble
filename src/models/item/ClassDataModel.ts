@@ -88,6 +88,27 @@ const schema = () => ({
 		required: true,
 		nullable: false,
 	}),
+	spellcasting: new fields.SchemaField({
+		// When true, the class's tiered spells always resolve at the highest
+		// unlocked tier; the cast dialog's tier control is fixed, not offered.
+		castAtHighestTier: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		cost: new fields.SchemaField({
+			// A non-empty identifier replaces the default rule that a tiered
+			// spell costs its tier in mana with a charge pool cost.
+			poolIdentifier: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			// Deterministic formula for the amount spent per cast.
+			amount: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+			// Empty means exceeding the pool is a hard block. A declared
+			// consequence permits the cast and applies the consequence.
+			overdraftConsequence: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: '',
+				blank: true,
+				choices: ['', 'halfMaxHpDamage'],
+			}),
+		}),
+	}),
 	weaponProficiencies: new fields.ArrayField(
 		new fields.StringField({ required: true, initial: '', nullable: false }),
 		{ required: true, nullable: false, initial: [] },
@@ -141,6 +162,14 @@ class NimbleClassData extends NimbleBaseItemData<
 		recovery: string;
 	};
 	declare resources: Record<string, unknown>[];
+	declare spellcasting: {
+		castAtHighestTier: boolean;
+		cost: {
+			poolIdentifier: string;
+			amount: string;
+			overdraftConsequence: '' | 'halfMaxHpDamage';
+		};
+	};
 	declare weaponProficiencies: string[];
 
 	/** @inheritDoc */

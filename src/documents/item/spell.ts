@@ -2,7 +2,16 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
-import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+import localize from '../../utils/localize.js';
+import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
+import {
+	applyOverdraftConsequence,
+	previewOverdraftDamage,
+	type ResolvedSpellCost,
+	resolveSpellCost,
+	spendSpellCost,
+	validateSpellCost,
+} from '../../utils/spell/spellCost.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
@@ -61,17 +70,50 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		});
 		if (!allowed) return null;
 
+		// Resolve what this cast costs (cantrips are free). The seam decides
+		// whether the cost is mana or a class-declared pool, and honours the
+		// resource spending automation setting internally.
+		let spellCost: ResolvedSpellCost = { type: 'none' };
+		if (this.system.tier > 0 && this.actor) {
+			spellCost = resolveSpellCost(this.actor, this, {
+				castTier: manager.upcastResult?.manaSpent,
+			});
+
+			const validation = validateSpellCost(this.actor, spellCost);
+			if (!validation.ok && validation.failure) {
+				const failure = validation.failure;
+				const messageKey =
+					failure.code === 'poolMissing'
+						? 'NIMBLE.charges.notifications.poolMissing'
+						: 'NIMBLE.charges.notifications.insufficient';
+				ui.notifications?.error(
+					localize(messageKey, {
+						item: this.name,
+						pool: failure.poolLabel,
+						required: String(failure.required),
+						available: String(failure.available),
+					}),
+				);
+				return null;
+			}
+
+			if (validation.overdrawn) {
+				const confirmed = await confirmSpellOverdraft({
+					spellName: this.name,
+					cost: spellCost,
+					available: validation.available ?? 0,
+					damage: previewOverdraftDamage(this.actor, spellCost),
+				});
+				if (!confirmed) return null;
+			}
+		}
+
 		// Pool-node side effects run only after the gate allowed the use.
 		await manager.applyDeferredPoolNodes();
 
-		// Deduct mana for tiered spells (cantrips are free)
-		if (this.system.tier > 0 && this.actor && isResourceSpendingAutomationEnabled()) {
-			// Use upcast amount if available, otherwise use base tier cost
-			const manaSpent = manager.upcastResult?.manaSpent ?? this.system.tier;
-			const currentMana = (this.actor.system as any).resources?.mana?.current || 0;
-			await this.actor.update({
-				'system.resources.mana.current': Math.max(0, currentMana - manaSpent),
-			} as any);
+		if (this.system.tier > 0 && this.actor) {
+			const outcome = await spendSpellCost(this.actor, spellCost);
+			if (outcome.overdrawn) await applyOverdraftConsequence(this.actor, spellCost);
 		}
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
