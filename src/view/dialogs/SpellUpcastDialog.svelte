@@ -42,7 +42,9 @@
 	const baseMana = $derived(spell.tier);
 	const resources = $derived(actor?.system?.resources);
 	const currentMana = $derived(resources?.mana?.current ?? 0);
-	const maxTier = $derived(resources?.highestUnlockedSpellTier ?? 9);
+	// Characters always carry a derived unlocked tier; the permissive fallback
+	// applies only to actors with no resources node (NPCs/monsters).
+	const maxTier = $derived(resources ? (resources.highestUnlockedSpellTier ?? 0) : 9);
 	const maxMana = $derived(enforceManaCost ? Math.min(currentMana, maxTier) : maxTier);
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
