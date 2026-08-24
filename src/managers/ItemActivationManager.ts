@@ -34,6 +34,11 @@ import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import {
+	type ResolvedSpellCost,
+	resolvePinnedCastTier,
+	resolveSpellCost,
+} from '../utils/spell/spellCost.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -81,6 +86,17 @@ class ItemActivationManager {
 	/** Result of spell upcasting, if applicable. */
 	upcastResult: UpcastResult | null = null;
 
+	/**
+	 * The tier the spell is forced to resolve at when the actor's class
+	 * declares that its spells always cast at the highest unlocked tier.
+	 * Resolved here rather than in the dialog so the macro and skip-dialog
+	 * paths get the same tier.
+	 */
+	pinnedCastTier: number | null = null;
+
+	/** The resolved cost of this cast, for spells. */
+	spellCost: ResolvedSpellCost | null = null;
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
@@ -125,6 +141,13 @@ class ItemActivationManager {
 	async getData() {
 		const options = this.#options;
 
+		if (this.#item.type === 'spell') {
+			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
+			this.spellCost = resolveSpellCost(this.actor, this.#item, {
+				castTier: this.pinnedCastTier ?? undefined,
+			});
+		}
+
 		const rollOptions = {
 			domain: this.#getItemDomain(),
 			executeMacro: options.executeMacro ?? false,
@@ -135,6 +158,22 @@ class ItemActivationManager {
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
+
+		// A pinned cast tier applies on every activation path, so the macro and
+		// skip-dialog routes synthesize the upcast the dialog would have chosen.
+		if (this.#item.type === 'spell' && !dialogData.upcast && this.pinnedCastTier !== null) {
+			const spellSystem = this.#item.system as {
+				tier?: number;
+				scaling?: { mode?: string; choices?: unknown[] } | null;
+			};
+			const scalingMode = spellSystem.scaling?.mode ?? 'none';
+			if ((spellSystem.tier ?? 0) > 0 && scalingMode !== 'none') {
+				dialogData.upcast = {
+					manaToSpend: this.pinnedCastTier,
+					choiceIndex: scalingMode === 'upcastChoice' ? 0 : undefined,
+				};
+			}
+		}
 
 		// Apply upcast deltas if present
 		if (dialogData.upcast && this.#item.type === 'spell') {
@@ -160,7 +199,9 @@ class ItemActivationManager {
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
-				enforceManaCost: isResourceSpendingAutomationEnabled(),
+				// Mana affordability only applies when mana is what the cast
+				// costs; a class-declared pool cost is validated at spend time.
+				enforceManaCost: isResourceSpendingAutomationEnabled() && this.spellCost?.type !== 'pool',
 			};
 
 			try {
@@ -863,12 +904,11 @@ class ItemActivationManager {
 			? dependencies.SpellUpcastDialog
 			: dependencies.ItemActivationConfigDialog;
 
-		const dialog = new DialogClass(
-			this.actor,
-			this.#item,
-			`Activate ${this.#item.name}`,
-			rollOptions,
-		);
+		const dialog = new DialogClass(this.actor, this.#item, `Activate ${this.#item.name}`, {
+			...rollOptions,
+			pinnedCastTier: this.pinnedCastTier,
+			spellCost: this.spellCost,
+		});
 		await dialog.render(true);
 		const result = await dialog.promise;
 		if (result) return result;
