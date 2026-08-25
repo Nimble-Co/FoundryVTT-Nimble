@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SpellCostActorLike } from './spellCost.js';
 import {
 	applyOverdraftConsequence,
+	formatSpellCostLabel,
 	resolvePinnedCastTier,
 	resolveSpellCost,
 	spendSpellCost,
+	synthesizePinnedUpcast,
 	validateSpellCost,
 } from './spellCost.js';
 
@@ -82,7 +85,7 @@ function createMockActor(params: {
 	mana?: { current: number; max: number };
 	hpMax?: number;
 	unlockedTier?: number | null;
-}): MockActor {
+}): MockActor & SpellCostActorLike {
 	const actor: MockActor = {
 		type: 'character',
 		system: {
@@ -111,7 +114,7 @@ function createMockActor(params: {
 		}),
 		applyDamage: vi.fn(async () => undefined),
 	};
-	return actor;
+	return actor as unknown as MockActor & SpellCostActorLike;
 }
 
 function createSpell(tier: number) {
@@ -407,5 +410,72 @@ describe('applyOverdraftConsequence', () => {
 
 		expect(damage).toBe(0);
 		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+});
+
+describe('formatSpellCostLabel', () => {
+	it('renders a mana cost with the localized unit', () => {
+		expect(formatSpellCostLabel({ type: 'mana', amount: 3 })).toBe('3 Mana');
+	});
+
+	it('renders a pool cost as the amount and the pool label', () => {
+		expect(
+			formatSpellCostLabel({
+				type: 'pool',
+				poolIdentifier: 'pilfered-power',
+				poolLabel: 'Pilfered Power',
+				amount: 1,
+				overdraftConsequence: 'halfMaxHpDamage',
+			}),
+		).toBe('1 Pilfered Power');
+	});
+
+	it('renders nothing for a free cast', () => {
+		expect(formatSpellCostLabel({ type: 'none' })).toBeNull();
+		expect(formatSpellCostLabel({ type: 'mana', amount: 0 })).toBeNull();
+	});
+});
+
+describe('synthesizePinnedUpcast', () => {
+	function scalingSpell(tier: number, mode: string) {
+		return { system: { tier, scaling: { mode } } };
+	}
+
+	it('synthesizes the pinned tier for a scaling spell below it', () => {
+		expect(synthesizePinnedUpcast(scalingSpell(1, 'upcast'), 4)).toEqual({
+			manaToSpend: 4,
+			choiceIndex: undefined,
+		});
+	});
+
+	it('selects the first choice for a choice-scaled spell', () => {
+		expect(synthesizePinnedUpcast(scalingSpell(1, 'upcastChoice'), 3)).toEqual({
+			manaToSpend: 3,
+			choiceIndex: 0,
+		});
+	});
+
+	it('synthesizes nothing when no tier is pinned', () => {
+		expect(synthesizePinnedUpcast(scalingSpell(1, 'upcast'), null)).toBeNull();
+	});
+
+	it('synthesizes nothing for a spell that does not scale', () => {
+		expect(synthesizePinnedUpcast(scalingSpell(1, 'none'), 4)).toBeNull();
+		expect(synthesizePinnedUpcast({ system: { tier: 1 } }, 4)).toBeNull();
+	});
+
+	it('synthesizes nothing for a cantrip', () => {
+		expect(synthesizePinnedUpcast(scalingSpell(0, 'upcast'), 4)).toBeNull();
+	});
+
+	it('synthesizes nothing when the pinned tier adds no upcast steps', () => {
+		expect(synthesizePinnedUpcast(scalingSpell(3, 'upcast'), 3)).toBeNull();
+	});
+
+	it("leaves a spell above the caster's unlocked tier at its own tier", () => {
+		// resolvePinnedCastTier floors at the spell's tier, so a tier-5 spell held
+		// by a caster who has unlocked tier 2 pins at 5. Synthesizing that would
+		// exceed the upcast tier bound and error the cast.
+		expect(synthesizePinnedUpcast(scalingSpell(5, 'upcast'), 5)).toBeNull();
 	});
 });

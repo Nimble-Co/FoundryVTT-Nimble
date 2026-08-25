@@ -67,6 +67,20 @@ describe('createSpellPanelState', () => {
 			);
 		});
 	});
+
+	describe('getSpellCostLabel', () => {
+		it('costs a tiered spell its tier in mana when no class declares another cost', () => {
+			const state = createPanelState();
+
+			expect(state.getSpellCostLabel({ system: { tier: 3 } } as unknown as Item)).toBe('3 Mana');
+		});
+
+		it('shows no cost for a cantrip', () => {
+			const state = createPanelState();
+
+			expect(state.getSpellCostLabel({ system: { tier: 0 } } as unknown as Item)).toBeNull();
+		});
+	});
 });
 
 function createSpellItem(options: {

@@ -8,7 +8,6 @@ import {
 	applyOverdraftConsequence,
 	previewOverdraftDamage,
 	type ResolvedSpellCost,
-	resolveSpellCost,
 	spendSpellCost,
 	validateSpellCost,
 } from '../../utils/spell/spellCost.js';
@@ -70,15 +69,12 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		});
 		if (!allowed) return null;
 
-		// Resolve what this cast costs (cantrips are free). The seam decides
-		// whether the cost is mana or a class-declared pool, and honours the
-		// resource spending automation setting internally.
-		let spellCost: ResolvedSpellCost = { type: 'none' };
+		// The manager resolved what this cast costs (cantrips are free), against
+		// the tier actually cast. The seam decides whether the cost is mana or a
+		// class-declared pool, and honours the resource spending automation
+		// setting internally.
+		const spellCost: ResolvedSpellCost = manager.spellCost ?? { type: 'none' };
 		if (this.system.tier > 0 && this.actor) {
-			spellCost = resolveSpellCost(this.actor, this, {
-				castTier: manager.upcastResult?.manaSpent,
-			});
-
 			const validation = validateSpellCost(this.actor, spellCost);
 			if (!validation.ok && validation.failure) {
 				const failure = validation.failure;
