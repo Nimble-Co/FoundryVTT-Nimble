@@ -4,6 +4,12 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
+import {
+	formatSpellCostLabel,
+	resolveSpellCost,
+	type SpellCostActorLike,
+	type SpellLike,
+} from '../../../utils/spell/spellCost.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
 
@@ -19,7 +25,6 @@ interface SpellEffects {
 
 /** System data for spell items */
 interface SpellSystemData {
-	tier?: number;
 	activation?: {
 		effects?: unknown[];
 		cost?: { type: string; quantity: number };
@@ -91,9 +96,17 @@ export function createSpellPanelState(
 		return null;
 	}
 
-	// Tiered spells cost their tier in mana; cantrips are free.
-	function getSpellManaCost(spell: Item): number {
-		return getSystemData(spell).tier ?? 0;
+	/**
+	 * The cost of casting the spell as the actor would actually pay it: the
+	 * spell's tier in mana by default, or the flat pool cost the actor's class
+	 * declares. Returns null when the cast is free, so the indicator is omitted.
+	 */
+	function getSpellCostLabel(spell: Item): string | null {
+		const cost = resolveSpellCost(
+			getActor() as unknown as SpellCostActorLike,
+			spell as unknown as SpellLike,
+		);
+		return formatSpellCostLabel(cost);
 	}
 
 	function getSpellMetadata(spell: Item): string | null {
@@ -216,7 +229,7 @@ export function createSpellPanelState(
 		},
 		sortItems,
 		getSpellEffect,
-		getSpellManaCost,
+		getSpellCostLabel,
 		getSpellMetadata,
 		getSpellRange,
 		getSpellTargetType,

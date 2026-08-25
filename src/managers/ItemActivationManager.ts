@@ -38,6 +38,8 @@ import {
 	type ResolvedSpellCost,
 	resolvePinnedCastTier,
 	resolveSpellCost,
+	type SpellLike,
+	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
@@ -94,7 +96,11 @@ class ItemActivationManager {
 	 */
 	pinnedCastTier: number | null = null;
 
-	/** The resolved cost of this cast, for spells. */
+	/**
+	 * The resolved cost of this cast, for spells. Set before the dialog from
+	 * the spell's own tier, then re-resolved against the tier actually cast
+	 * once an upcast has been applied.
+	 */
 	spellCost: ResolvedSpellCost | null = null;
 
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
@@ -141,7 +147,7 @@ class ItemActivationManager {
 	async getData() {
 		const options = this.#options;
 
-		if (this.#item.type === 'spell') {
+		if (this.#item.type === 'spell' && this.actor) {
 			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
 			this.spellCost = resolveSpellCost(this.actor, this.#item, {
 				castTier: this.pinnedCastTier ?? undefined,
@@ -161,18 +167,12 @@ class ItemActivationManager {
 
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
-		if (this.#item.type === 'spell' && !dialogData.upcast && this.pinnedCastTier !== null) {
-			const spellSystem = this.#item.system as {
-				tier?: number;
-				scaling?: { mode?: string; choices?: unknown[] } | null;
-			};
-			const scalingMode = spellSystem.scaling?.mode ?? 'none';
-			if ((spellSystem.tier ?? 0) > 0 && scalingMode !== 'none') {
-				dialogData.upcast = {
-					manaToSpend: this.pinnedCastTier,
-					choiceIndex: scalingMode === 'upcastChoice' ? 0 : undefined,
-				};
-			}
+		if (this.#item.type === 'spell' && !dialogData.upcast) {
+			const synthesized = synthesizePinnedUpcast(
+				this.#item as unknown as SpellLike,
+				this.pinnedCastTier,
+			);
+			if (synthesized) dialogData.upcast = synthesized;
 		}
 
 		// Apply upcast deltas if present
@@ -208,6 +208,13 @@ class ItemActivationManager {
 				const upcastData = applyUpcastDeltas(context);
 				this.activationData = upcastData.activationData;
 				this.upcastResult = upcastData.upcastResult;
+				// The cost was first resolved before the tier was known. Re-resolve
+				// it against the tier actually cast so callers read the real cost.
+				if (this.actor) {
+					this.spellCost = resolveSpellCost(this.actor, this.#item, {
+						castTier: upcastData.upcastResult.manaSpent,
+					});
+				}
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 				ui.notifications?.error(`Upcast failed: ${errorMessage}`);

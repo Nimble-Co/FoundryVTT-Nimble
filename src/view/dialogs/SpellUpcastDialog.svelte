@@ -5,6 +5,7 @@
 	import { NimbleRoll } from '../../dice/NimbleRoll';
 	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
+	import { formatSpellCostLabel } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
@@ -73,6 +74,15 @@
 
 	// Derived values
 	let upcastSteps = $derived(manaToSpend - baseMana);
+	// Mana costs track the tier the slider is on, so the label is rebuilt as it moves.
+	const costLabel = $derived(
+		spellCost
+			? formatSpellCostLabel(
+					spellCost.type === 'mana' ? { type: 'mana', amount: manaToSpend } : spellCost,
+				)
+			: null,
+	);
+
 	// let remainingMana = $derived(currentMana - manaToSpend);
 
 	// Compute preview of upcast effects
@@ -195,14 +205,9 @@
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode />
 
-	{#if spellCost && spellCost.type !== 'none'}
+	{#if costLabel}
 		<p class="nimble-spell-cost">
-			{format(spellUpcastDialog.cost, {
-				cost:
-					spellCost.type === 'pool'
-						? `${spellCost.amount} ${spellCost.poolLabel}`
-						: format('NIMBLE.ui.heroicActions.mana', { cost: String(manaToSpend) }),
-			})}
+			{format(spellUpcastDialog.cost, { cost: costLabel ?? '' })}
 		</p>
 	{/if}
 

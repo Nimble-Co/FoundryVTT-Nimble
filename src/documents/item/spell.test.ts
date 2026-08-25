@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
+import {
+	resolveSpellCost,
+	type SpellCostActorLike,
+	type SpellLike as SpellCostSpellLike,
+} from '../../utils/spell/spellCost.js';
 import { NimbleSpellItem } from './spell.js';
 
 interface SpellLike {
@@ -21,8 +26,15 @@ interface SpellLike {
 	_createActivationCard: ReturnType<typeof vi.fn>;
 }
 
+/**
+ * The spell whose cost the stubbed manager should resolve. Activation reads
+ * the cost off the manager, so the stub has to produce one the way the real
+ * `getData` would.
+ */
+let activatingSpell: SpellLike | null = null;
+
 function createSpellLike(params: { tier: number; currentMana: number }): SpellLike {
-	return {
+	const spellLike: SpellLike = {
 		id: 'spell-1',
 		uuid: 'Item.spell-1',
 		name: 'Test Spell',
@@ -40,6 +52,8 @@ function createSpellLike(params: { tier: number; currentMana: number }): SpellLi
 		prepareChatCardData: vi.fn(async () => ({})),
 		_createActivationCard: vi.fn(async () => null),
 	};
+	activatingSpell = spellLike;
+	return spellLike;
 }
 
 async function activateSpell(spellLike: SpellLike): Promise<void> {
@@ -59,12 +73,24 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		// The full activation manager drives dialogs and roll construction; stub
 		// its data preparation so activate() immediately receives a roll-less
 		// activation and proceeds straight to its resource-spending step.
-		vi.spyOn(ItemActivationManager.prototype, 'getData').mockResolvedValue({
-			activation: { effects: [] },
-			rolls: [],
-			rollHidden: false,
-			incomingReactions: [],
-		} as never);
+		vi.spyOn(ItemActivationManager.prototype, 'getData').mockImplementation(async function (
+			this: ItemActivationManager,
+		) {
+			// The real getData resolves the cast's cost before returning; keep that
+			// part so activate() sees the cost it would see in play.
+			this.spellCost = activatingSpell
+				? resolveSpellCost(
+						activatingSpell.actor as unknown as SpellCostActorLike,
+						activatingSpell as unknown as SpellCostSpellLike,
+					)
+				: null;
+			return {
+				activation: { effects: [] },
+				rolls: [],
+				rollHidden: false,
+				incomingReactions: [],
+			} as never;
+		});
 		vi.spyOn(ItemActivationManager.prototype, 'applyDeferredPoolNodes').mockResolvedValue(
 			undefined as never,
 		);
@@ -87,6 +113,7 @@ describe('NimbleSpellItem.activate mana spending', () => {
 	});
 
 	afterEach(() => {
+		activatingSpell = null;
 		(
 			globalThis as unknown as {
 				game: { settings?: unknown };

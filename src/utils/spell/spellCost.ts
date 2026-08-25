@@ -3,10 +3,12 @@ import { emitForCharacter } from '../chargePool/chargePoolHooks.js';
 import {
 	buildEffectiveChargePoolMap,
 	clampCurrentToMax,
+	findChargePoolByIdentifier,
 	persistChargePoolMap,
 	resolveFormulaToInteger,
 } from '../chargePool/helpers.js';
-import type { CharacterActorLike, ChargePoolMap } from '../chargePool/types.js';
+import type { CharacterActorLike } from '../chargePool/types.js';
+import localize from '../localize.js';
 
 type OverdraftConsequence = '' | 'halfMaxHpDamage';
 
@@ -19,7 +21,12 @@ interface ClassSpellcastingDeclaration {
 	};
 }
 
-interface SpellCostActorLike {
+/**
+ * The structural slice of an actor this module reads and writes. Kept
+ * separate from `CharacterActorLike` so callers with a partial actor (and
+ * tests) can satisfy it without a full document.
+ */
+export interface SpellCostActorLike {
 	type?: string;
 	items?: { contents?: Array<{ type?: string; system?: unknown }> };
 	system?: {
@@ -33,8 +40,22 @@ interface SpellCostActorLike {
 	applyDamage?: (damage: number) => Promise<void>;
 }
 
-interface SpellLike {
-	system?: { tier?: number };
+export interface SpellLike {
+	system?: { tier?: number; scaling?: { mode?: string } | null };
+}
+
+/** The upcast selection a dialog would have returned. */
+export interface UpcastSelection {
+	manaToSpend: number;
+	choiceIndex?: number;
+}
+
+/**
+ * The chargePool helpers take a full character document. Everything they
+ * touch is present on `SpellCostActorLike`, so the cast is confined here.
+ */
+function asChargePoolActor(actor: SpellCostActorLike): CharacterActorLike {
+	return actor as unknown as CharacterActorLike;
 }
 
 export type ResolvedSpellCost =
@@ -62,8 +83,7 @@ export interface SpellCostValidation {
 	};
 }
 
-function getClassSpellcasting(actorInput: unknown): ClassSpellcastingDeclaration | null {
-	const actor = actorInput as SpellCostActorLike;
+function getClassSpellcasting(actor: SpellCostActorLike): ClassSpellcastingDeclaration | null {
 	for (const item of actor?.items?.contents ?? []) {
 		if (item.type !== 'class') continue;
 		const spellcasting = (
@@ -76,18 +96,6 @@ function getClassSpellcasting(actorInput: unknown): ClassSpellcastingDeclaration
 	return null;
 }
 
-function findPoolEntry(
-	pools: ChargePoolMap,
-	poolIdentifier: string,
-): { key: string; pool: ChargePoolMap[string] } | null {
-	const bareEntry = pools[poolIdentifier];
-	if (bareEntry) return { key: poolIdentifier, pool: bareEntry };
-	const actorScopedKey = `actor:${poolIdentifier}`;
-	const actorEntry = pools[actorScopedKey];
-	if (actorEntry) return { key: actorScopedKey, pool: actorEntry };
-	return null;
-}
-
 /**
  * Resolves what a cast of the given spell costs the given actor: nothing for
  * cantrips, the cast tier in mana by default, or the flat pool cost the
@@ -96,12 +104,10 @@ function findPoolEntry(
  * off.
  */
 export function resolveSpellCost(
-	actorInput: unknown,
-	spellInput: unknown,
+	actor: SpellCostActorLike,
+	spell: SpellLike,
 	{ castTier }: { castTier?: number } = {},
 ): ResolvedSpellCost {
-	const actor = actorInput as SpellCostActorLike;
-	const spell = spellInput as SpellLike;
 	const tier = spell?.system?.tier ?? 0;
 	if (tier <= 0) return { type: 'none' };
 
@@ -111,10 +117,10 @@ export function resolveSpellCost(
 
 	const amount = Math.max(
 		0,
-		resolveFormulaToInteger(actor as CharacterActorLike, spellcasting?.cost?.amount ?? '1'),
+		resolveFormulaToInteger(asChargePoolActor(actor), spellcasting?.cost?.amount ?? '1'),
 	);
-	const pools = buildEffectiveChargePoolMap(actor as CharacterActorLike);
-	const poolEntry = findPoolEntry(pools, poolIdentifier);
+	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
+	const poolEntry = findChargePoolByIdentifier(pools, poolIdentifier);
 
 	return {
 		type: 'pool',
@@ -130,9 +136,7 @@ export function resolveSpellCost(
  * its spells always resolve at the highest unlocked tier. Returns null when
  * no class pins the tier, leaving the cast tier a player choice.
  */
-export function resolvePinnedCastTier(actorInput: unknown, spellInput: unknown): number | null {
-	const actor = actorInput as SpellCostActorLike;
-	const spell = spellInput as SpellLike;
+export function resolvePinnedCastTier(actor: SpellCostActorLike, spell: SpellLike): number | null {
 	const tier = spell?.system?.tier ?? 0;
 	if (tier <= 0) return null;
 
@@ -144,6 +148,35 @@ export function resolvePinnedCastTier(actorInput: unknown, spellInput: unknown):
 }
 
 /**
+ * Builds the upcast selection a pinned cast tier implies, for the activation
+ * paths that never open a dialog. Returns null when there is nothing to
+ * synthesize: the spell does not scale, or the pinned tier adds no steps.
+ *
+ * A pinned tier at or below the spell's own tier is deliberately skipped. It
+ * contributes no upcast steps, and for a spell whose tier sits above what the
+ * caster has unlocked it would exceed the upcast tier bound, so the cast
+ * resolves at its base tier instead of failing.
+ */
+export function synthesizePinnedUpcast(
+	spell: SpellLike,
+	pinnedCastTier: number | null,
+): UpcastSelection | null {
+	if (pinnedCastTier === null) return null;
+
+	const baseTier = spell?.system?.tier ?? 0;
+	if (baseTier <= 0) return null;
+	if (pinnedCastTier <= baseTier) return null;
+
+	const scalingMode = spell?.system?.scaling?.mode ?? 'none';
+	if (scalingMode === 'none') return null;
+
+	return {
+		manaToSpend: pinnedCastTier,
+		choiceIndex: scalingMode === 'upcastChoice' ? 0 : undefined,
+	};
+}
+
+/**
  * Checks whether the actor can pay the resolved cost, without writing
  * anything. `overdrawn: true` means the pool cannot cover the cost but the
  * declared consequence permits the cast anyway; the caller decides whether
@@ -151,15 +184,14 @@ export function resolvePinnedCastTier(actorInput: unknown, spellInput: unknown):
  * validated and every cast is permitted.
  */
 export function validateSpellCost(
-	actorInput: unknown,
+	actor: SpellCostActorLike,
 	cost: ResolvedSpellCost,
 ): SpellCostValidation {
-	const actor = actorInput as SpellCostActorLike;
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
 	if (cost.type !== 'pool') return { ok: true, overdrawn: false };
 
-	const pools = buildEffectiveChargePoolMap(actor as CharacterActorLike);
-	const poolEntry = findPoolEntry(pools, cost.poolIdentifier);
+	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
+	const poolEntry = findChargePoolByIdentifier(pools, cost.poolIdentifier);
 	if (!poolEntry) {
 		return {
 			ok: false,
@@ -199,10 +231,9 @@ export function validateSpellCost(
  * automation off, nothing is deducted.
  */
 export async function spendSpellCost(
-	actorInput: unknown,
+	actor: SpellCostActorLike,
 	cost: ResolvedSpellCost,
 ): Promise<SpellCostValidation> {
-	const actor = actorInput as SpellCostActorLike;
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
 	if (cost.type === 'none') return { ok: true, overdrawn: false };
 
@@ -217,8 +248,8 @@ export async function spendSpellCost(
 	const validation = validateSpellCost(actor, cost);
 	if (!validation.ok) return validation;
 
-	const pools = buildEffectiveChargePoolMap(actor as CharacterActorLike);
-	const poolEntry = findPoolEntry(pools, cost.poolIdentifier);
+	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
+	const poolEntry = findChargePoolByIdentifier(pools, cost.poolIdentifier);
 	if (!poolEntry) return validation;
 
 	const previousValue = poolEntry.pool.current;
@@ -226,10 +257,10 @@ export async function spendSpellCost(
 		Math.max(0, previousValue - cost.amount),
 		poolEntry.pool.max,
 	);
-	await persistChargePoolMap(actor as CharacterActorLike, pools);
+	await persistChargePoolMap(asChargePoolActor(actor), pools);
 
-	emitForCharacter(actor as CharacterActorLike, 'changed', {
-		actor: actor as CharacterActorLike,
+	emitForCharacter(asChargePoolActor(actor), 'changed', {
+		actor: asChargePoolActor(actor),
 		poolId: poolEntry.key,
 		poolLabel: poolEntry.pool.label,
 		previousValue,
@@ -242,11 +273,21 @@ export async function spendSpellCost(
 }
 
 /**
+ * Renders a resolved cost as the short label the sheet and the cast dialog
+ * both show. Returns null for a free cast so callers can omit the indicator.
+ */
+export function formatSpellCostLabel(cost: ResolvedSpellCost): string | null {
+	if (cost.type === 'none') return null;
+	if (cost.type === 'pool') return `${cost.amount} ${cost.poolLabel}`;
+	if (cost.amount <= 0) return null;
+	return localize('NIMBLE.ui.heroicActions.mana', { cost: String(cost.amount) });
+}
+
+/**
  * Computes the damage the declared overdraft consequence would deal, without
  * applying it. Used to tell the player what confirming will cost.
  */
-export function previewOverdraftDamage(actorInput: unknown, cost: ResolvedSpellCost): number {
-	const actor = actorInput as SpellCostActorLike;
+export function previewOverdraftDamage(actor: SpellCostActorLike, cost: ResolvedSpellCost): number {
 	if (cost.type !== 'pool' || cost.overdraftConsequence !== 'halfMaxHpDamage') return 0;
 	return Math.floor((actor?.system?.attributes?.hp?.max ?? 0) / 2);
 }
@@ -255,10 +296,9 @@ export function previewOverdraftDamage(actorInput: unknown, cost: ResolvedSpellC
  * Applies the declared overdraft consequence and returns the damage dealt.
  */
 export async function applyOverdraftConsequence(
-	actorInput: unknown,
+	actor: SpellCostActorLike,
 	cost: ResolvedSpellCost,
 ): Promise<number> {
-	const actor = actorInput as SpellCostActorLike;
 	const damage = previewOverdraftDamage(actor, cost);
 	if (damage > 0) await actor.applyDamage?.(damage);
 	return damage;
