@@ -79,7 +79,10 @@ const FEATURES: FeatureSpec[] = [
 				poolIdentifier: 'pilfered-power',
 				dieSize: null,
 				maxDelta: null,
-				addRefills: [{ trigger: 'encounterStart', mode: 'add', value: '1', predicate: {} }],
+				// The rules text is "each time you roll Initiative", so the refill is tied
+				// to the initiative roll rather than to the start of the encounter. A second
+				// roll therefore grants a second use, which the pool maximum still bounds.
+				addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1', predicate: {} }],
 			},
 		],
 	},

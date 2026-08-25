@@ -58,7 +58,7 @@ describe('the Shadowmancer pack content', () => {
 		expect(modifier).toMatchObject({
 			poolType: 'charge',
 			poolIdentifier: 'pilfered-power',
-			addRefills: [{ trigger: 'encounterStart', mode: 'add', value: '1', predicate: {} }],
+			addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1', predicate: {} }],
 		});
 	});
 });
