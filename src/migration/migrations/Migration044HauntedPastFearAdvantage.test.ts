@@ -3,26 +3,24 @@ import { describe, expect, it } from 'vitest';
 import { Migration044HauntedPastFearAdvantage } from './Migration044HauntedPastFearAdvantage.js';
 
 const HAUNTED_PAST_SOURCE_ID = 'Compendium.nimble.nimble-backgrounds.Item.TfYvarCWkHj2qVfa';
-const RULE_ID = 'NWCRKRwheYMcCuFN';
+const RULE_ID = 'N43aM4mMNGpq5WN6';
+const SUPERSEDED_RULE_ID = 'NWCRKRwheYMcCuFN';
 
-/** Celestial's Highborn bonus: neutralizes whichever save the class disadvantages. */
-const HIGHBORN_RULE = {
+/** The blanket WIL rule an earlier draft of this migration installed. */
+const SUPERSEDED_RULE = {
 	type: 'savingThrowRollMode',
-	label: 'Highborn',
-	value: 0,
-	target: 'disadvantaged',
-	mode: 'set',
+	id: SUPERSEDED_RULE_ID,
+	label: 'Haunted Past',
+	value: 1,
+	target: 'will',
+	mode: 'adjust',
+	priority: 2,
 };
 
 function createCharacter({
 	backgroundName = 'Haunted Past',
 	compendiumSource = HAUNTED_PAST_SOURCE_ID as string | undefined,
 	rules = [] as any[],
-	classSaves = { advantage: 'strength', disadvantage: 'dexterity' } as {
-		advantage: string | null;
-		disadvantage: string | null;
-	} | null,
-	ancestryBonusRules = null as any[] | null,
 	willRollMode = 0,
 } = {}) {
 	return {
@@ -35,10 +33,7 @@ function createCharacter({
 				_stats: { compendiumSource },
 				system: { rules },
 			},
-			...(classSaves ? [{ type: 'class', system: { savingThrows: classSaves } }] : []),
-			...(ancestryBonusRules
-				? [{ type: 'ancestryBonus', name: 'Highborn', system: { rules: ancestryBonusRules } }]
-				: []),
+			{ type: 'class', system: { savingThrows: { advantage: 'strength', disadvantage: 'will' } } },
 		],
 	} as any;
 }
@@ -50,97 +45,59 @@ function backgroundRules(source: any): any[] {
 describe('Migration044HauntedPastFearAdvantage', () => {
 	const migration = new Migration044HauntedPastFearAdvantage();
 
-	it('adds the rule and advantages WIL when the class leaves it neutral', async () => {
+	it('adds the situational WIL rule to the embedded background', async () => {
 		const source = createCharacter();
 
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source)).toContainEqual(
-			expect.objectContaining({ id: RULE_ID, target: 'will', mode: 'adjust', value: 1 }),
+			expect.objectContaining({
+				id: RULE_ID,
+				type: 'situationalRollMode',
+				checkType: 'savingThrow',
+				saves: ['will'],
+				value: 1,
+				disabled: false,
+				label: 'Against fear',
+			}),
 		);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
 	});
 
-	it('neutralizes WIL when the class disadvantages it', async () => {
-		const source = createCharacter({
-			classSaves: { advantage: 'strength', disadvantage: 'will' },
-			willRollMode: -1,
-		});
+	// The roller opts in per save, so there is no persisted counterpart to write.
+	// Touching the stored roll mode is what made the superseded rule grant advantage
+	// on every WIL save rather than only against fear.
+	it('leaves the persisted WIL roll mode untouched', async () => {
+		const source = createCharacter({ willRollMode: -1 });
 
 		await migration.updateActor(source);
 
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(0);
+		expect(source.system.savingThrows.will.defaultRollMode).toBe(-1);
 	});
 
-	it('stacks on top of a class advantage on WIL', async () => {
-		const source = createCharacter({
-			classSaves: { advantage: 'will', disadvantage: 'dexterity' },
-			willRollMode: 1,
-		});
+	it('drops the superseded blanket rule it installed in an earlier build', async () => {
+		const source = createCharacter({ rules: [{ ...SUPERSEDED_RULE }] });
 
 		await migration.updateActor(source);
 
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(2);
+		expect(backgroundRules(source).map((rule: any) => rule.id)).toEqual([RULE_ID]);
 	});
 
-	// The naive "expected value comes from the class alone" guard skipped these
-	// characters: Highborn already moved WIL from -1 to 0, so the stored 0 never
-	// matched the class-derived -1 and the migration silently did nothing.
-	it('recognizes a WIL already neutralized by an ancestry bonus and advantages it', async () => {
-		const source = createCharacter({
-			classSaves: { advantage: 'strength', disadvantage: 'will' },
-			ancestryBonusRules: [HIGHBORN_RULE],
-			willRollMode: 0,
-		});
+	// Matching the blanket rule by its own pack id is what makes this safe: a GM's
+	// hand-authored WIL rule carries a random id and is left in place.
+	it('keeps a hand-authored savingThrowRollMode rule while adding the situational one', async () => {
+		const handAuthored = {
+			type: 'savingThrowRollMode',
+			id: 'zZyYxXwWvVuUtTsS',
+			target: 'will',
+			mode: 'adjust',
+			value: 1,
+		};
+		const source = createCharacter({ rules: [handAuthored] });
 
 		await migration.updateActor(source);
 
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
-	});
-
-	// Flameborn is the only shipped `requiresChoice` rule: it lands on the save the
-	// player picked, not on its own `target`. The replay has to honour both halves
-	// or the stored value never matches and the migration silently skips.
-	it('replays a configured requiresChoice rule onto its chosen save', async () => {
-		const source = createCharacter({
-			ancestryBonusRules: [
-				{
-					type: 'savingThrowRollMode',
-					label: 'Flameborn',
-					value: 1,
-					target: 'neutral',
-					mode: 'set',
-					requiresChoice: true,
-					selectedSave: 'will',
-				},
-			],
-			willRollMode: 1,
-		});
-
-		await migration.updateActor(source);
-
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(2);
-	});
-
-	it('skips a requiresChoice rule whose save was never chosen', async () => {
-		const source = createCharacter({
-			ancestryBonusRules: [
-				{
-					type: 'savingThrowRollMode',
-					label: 'Flameborn',
-					value: 1,
-					target: 'neutral',
-					mode: 'set',
-					requiresChoice: true,
-					selectedSave: null,
-				},
-			],
-			willRollMode: 0,
-		});
-
-		await migration.updateActor(source);
-
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
+		expect(backgroundRules(source)).toContainEqual(handAuthored);
+		expect(backgroundRules(source)).toHaveLength(2);
 	});
 
 	it('normalizes a background whose rules array is missing', async () => {
@@ -161,7 +118,6 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source)).toHaveLength(1);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
 	});
 
 	it('matches on name only when the background carries no compendium source', async () => {
@@ -181,25 +137,40 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source)).toHaveLength(1);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
 	});
 
 	it('leaves a background that already carries an equivalent hand-authored rule', async () => {
 		// The GM built the rule themselves in the Rules Builder, so it has a random
-		// id; matching on id alone would append a second +1.
+		// id; matching on id alone would offer the player two competing toggles.
 		const handAuthored = {
-			type: 'savingThrowRollMode',
+			type: 'situationalRollMode',
 			id: 'zZyYxXwWvVuUtTsS',
-			target: 'will',
-			mode: 'adjust',
+			checkType: 'savingThrow',
+			saves: ['will'],
 			value: 1,
 		};
-		const source = createCharacter({ rules: [handAuthored], willRollMode: 1 });
+		const source = createCharacter({ rules: [handAuthored] });
 
 		await migration.updateActor(source);
 
-		expect(backgroundRules(source)).toHaveLength(1);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
+		expect(backgroundRules(source)).toEqual([handAuthored]);
+	});
+
+	// Only WIL matters here: a homebrew rule on some other save says nothing about
+	// whether the fear option has been authored.
+	it('adds the rule beside a situational rule that names a different save', async () => {
+		const otherSave = {
+			type: 'situationalRollMode',
+			id: 'zZyYxXwWvVuUtTsS',
+			checkType: 'savingThrow',
+			saves: ['strength'],
+			value: 1,
+		};
+		const source = createCharacter({ rules: [otherSave] });
+
+		await migration.updateActor(source);
+
+		expect(backgroundRules(source)).toHaveLength(2);
 	});
 
 	it('leaves a homebrew background that merely shares the name alone', async () => {
@@ -210,7 +181,6 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source)).toHaveLength(0);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(0);
 	});
 
 	it('appends to rules the background already carries', async () => {
@@ -223,14 +193,13 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 		expect(backgroundRules(source)[0]).toBe(existing);
 	});
 
-	it('is idempotent — a second run neither duplicates the rule nor re-adjusts WIL', async () => {
+	it('does not duplicate the rule on a second run', async () => {
 		const source = createCharacter();
 
 		await migration.updateActor(source);
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source).filter((rule: any) => rule.id === RULE_ID)).toHaveLength(1);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(1);
 	});
 
 	it('gives each migrated actor its own predicate object', async () => {
@@ -243,24 +212,23 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 		expect(backgroundRules(first)[0].predicate).not.toBe(backgroundRules(second)[0].predicate);
 	});
 
-	it('leaves a hand-tuned WIL roll mode alone but still adds the rule', async () => {
-		// The player raised WIL in the saving throw config dialog; re-tuning it
-		// silently would overwrite a deliberate choice.
-		const source = createCharacter({ willRollMode: 3 });
+	it('gives each migrated actor its own saves array', async () => {
+		const first = createCharacter();
+		const second = createCharacter();
 
-		await migration.updateActor(source);
+		await migration.updateActor(first);
+		await migration.updateActor(second);
 
-		expect(backgroundRules(source)).toHaveLength(1);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(3);
+		expect(backgroundRules(first)[0].saves).not.toBe(backgroundRules(second)[0].saves);
 	});
 
-	it('adds the rule but leaves WIL alone when the character has no class', async () => {
-		const source = createCharacter({ classSaves: null });
+	it('adds the rule to a character with no class', async () => {
+		const source = createCharacter();
+		source.items = source.items.filter((item: any) => item.type !== 'class');
 
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source)).toHaveLength(1);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(0);
 	});
 
 	it('ignores characters without the Haunted Past background', async () => {
@@ -272,7 +240,6 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 		await migration.updateActor(source);
 
 		expect(backgroundRules(source)).toHaveLength(0);
-		expect(source.system.savingThrows.will.defaultRollMode).toBe(0);
 	});
 
 	it('ignores non-character actors', async () => {
@@ -303,6 +270,14 @@ describe('Migration044HauntedPastFearAdvantage', () => {
 			await migration.updateItem(item);
 
 			expect(item.system.rules).toContainEqual(expect.objectContaining({ id: RULE_ID }));
+		});
+
+		it('drops the superseded blanket rule from a world-level copy', async () => {
+			const item = worldBackground({ system: { rules: [{ ...SUPERSEDED_RULE }] } });
+
+			await migration.updateItem(item);
+
+			expect(item.system.rules.map((rule: any) => rule.id)).toEqual([RULE_ID]);
 		});
 
 		it('leaves embedded items to updateActor', async () => {

@@ -260,23 +260,23 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});
 
-	describe('background savingThrowRollMode rules', () => {
+	describe('background saving throw rules', () => {
 		/**
-		 * Drives the assertions from the shipped compendium data rather than a
+		 * Drives the pack assertions from the shipped compendium data rather than a
 		 * hand-copied literal, so a typo in the pack (`willpower` for `will`,
-		 * `set` for `adjust`, `disabled: true`) fails here instead of silently
-		 * shipping a background that does nothing. Same approach as
+		 * `abilityCheck` for `savingThrow`, `disabled: true`) fails here instead of
+		 * silently shipping a background that does nothing. Same approach as
 		 * `CharacterCreationDialog.commander.test.ts`.
 		 */
 		const HAUNTED_PAST = JSON.parse(
 			readFileSync(join(process.cwd(), 'packs/backgrounds/core/haunted-past.json'), 'utf-8'),
 		) as { system: { rules: Array<Record<string, unknown>> } };
 
-		function hauntedPastDocument() {
+		function backgroundDocumentWith(rules: Array<Record<string, unknown>>) {
 			return createItemDocument({
-				uuid: 'Compendium.nimble.nimble-backgrounds.Item.haunted-past',
-				name: 'Haunted Past',
-				system: { rules: HAUNTED_PAST.system.rules },
+				uuid: 'Compendium.nimble.nimble-backgrounds.Item.test-background',
+				name: 'Test Background',
+				system: { rules },
 			});
 		}
 
@@ -324,25 +324,17 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			return updateCall.system.savingThrows;
 		}
 
-		it('ships a WIL adjust rule in the Haunted Past pack data', () => {
-			expect(HAUNTED_PAST.system.rules).toContainEqual(
-				expect.objectContaining({
-					type: 'savingThrowRollMode',
-					target: 'will',
-					mode: 'adjust',
-					value: 1,
-					disabled: false,
-					// Must sort after the default-priority (1) ancestry-bonus rules —
-					// Highborn's `set 0 on disadvantaged` has to run first, or it stops
-					// matching WIL once this rule has already raised it.
-					priority: 2,
-				}),
-			);
-		});
+		const willAdjustRule = {
+			type: 'savingThrowRollMode',
+			target: 'will',
+			mode: 'adjust',
+			value: 1,
+			priority: 2,
+		};
 
 		it('grants advantage on WIL when the class leaves it neutral', async () => {
 			const actor = setupActorMock();
-			await createWith(warriorWithWillSave('dexterity'), hauntedPastDocument());
+			await createWith(warriorWithWillSave('dexterity'), backgroundDocumentWith([willAdjustRule]));
 
 			const savingThrows = savingThrowsFrom(actor);
 			expect(savingThrows['will.defaultRollMode']).toBe(1);
@@ -354,11 +346,36 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		// (from disadvantage).
 		it('only neutralizes WIL when the class disadvantages it', async () => {
 			const actor = setupActorMock();
-			await createWith(warriorWithWillSave('will'), hauntedPastDocument());
+			await createWith(warriorWithWillSave('will'), backgroundDocumentWith([willAdjustRule]));
 
 			const savingThrows = savingThrowsFrom(actor);
 			expect(savingThrows['will.defaultRollMode']).toBe(0);
 			expect(savingThrows['strength.defaultRollMode']).toBe(1);
+		});
+
+		it('ships a situational WIL rule in the Haunted Past pack data', () => {
+			expect(HAUNTED_PAST.system.rules).toContainEqual(
+				expect.objectContaining({
+					type: 'situationalRollMode',
+					checkType: 'savingThrow',
+					saves: ['will'],
+					value: 1,
+					disabled: false,
+					label: 'Against fear',
+				}),
+			);
+		});
+
+		// The advantage is offered per save in the check roll dialog, so baking it
+		// into the default roll mode would grant it on every WIL save.
+		it('leaves the default WIL roll mode alone for a Haunted Past character', async () => {
+			const actor = setupActorMock();
+			await createWith(
+				warriorWithWillSave('dexterity'),
+				backgroundDocumentWith(HAUNTED_PAST.system.rules),
+			);
+
+			expect(savingThrowsFrom(actor)['will.defaultRollMode']).toBe(0);
 		});
 	});
 

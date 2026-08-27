@@ -784,6 +784,7 @@
 			"poolGainMessage": "Pool Gain Message",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
+			"situationalRollMode": "Situational Roll Mode",
 			"skillBonus": "Skill Bonus",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
@@ -1427,6 +1428,29 @@
 			},
 			"unarmedDamage": {
 				"description": "Override the actor’s unarmed-strike damage formula."
+			},
+			"situationalRollMode": {
+				"description": "Offer an advantage or disadvantage the roller opts into when the situation calls for it, for circumstances the system cannot detect on its own (e.g. “advantage against fear”). Nothing applies automatically: the check roll dialog lists the option and folds it into that roll only when checked. Use the rule’s label to name the situation, and its predicate for state the system already knows. Attack rolls are covered by Conditional Bonus instead.",
+				"value": {
+					"label": "Roll mode value",
+					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
+				},
+				"checkType": {
+					"label": "Offer on",
+					"hint": "Which kind of roll the option appears on."
+				},
+				"saves": {
+					"label": "Apply to saves",
+					"hint": "Pick one or more saves. Use \"all\" to offer the option on every save."
+				},
+				"abilities": {
+					"label": "Apply to abilities",
+					"hint": "Pick one or more abilities. Use \"all\" to offer the option on every ability check."
+				},
+				"skills": {
+					"label": "Apply to skills",
+					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
 			}
 		},
 		"charges": {
@@ -3324,6 +3348,19 @@
 			"missingSchool": "{spell} has no spell school, so it cannot be inscribed onto a scroll.",
 			"confirmUse": "Use {scroll}? This will consume the scroll.",
 			"arcanaCheckHint": "You know no {school} spells, so reading this scroll needs a DC 10 Arcana check. On a failure the spell does not take effect and the scroll is wasted."
+		},
+		"rollCheckTypes": {
+			"abilityCheck": "Ability Check",
+			"savingThrow": "Saving Throw",
+			"skillCheck": "Skill Check",
+			"initiative": "Initiative"
+		},
+		"checkRollDialog": {
+			"situationalRollMode": {
+				"heading": "Situational Modifiers",
+				"advantage": "Advantage × {count}",
+				"disadvantage": "Disadvantage × {count}"
+			}
 		}
 	}
 }
