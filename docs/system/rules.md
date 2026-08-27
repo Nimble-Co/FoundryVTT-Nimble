@@ -266,6 +266,30 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 
 `toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
 
+## Roll modes: default vs. situational
+
+Two different kinds of rule adjust a d20 roll mode, and the difference is *when the adjustment is decided*.
+
+**Default roll modes** are baked into the actor's stored roll mode and apply to every roll of that kind:
+
+| Rule | Where the value lands | Resolved by |
+| --- | --- | --- |
+| `skillRollMode` | `system.skills.<key>.defaultRollMode` | `afterPrepareData`, every data-prep cycle |
+| `initiativeRollMode` | `system.attributes.initiative.defaultRollMode` | `afterPrepareData`, every data-prep cycle |
+| `savingThrowRollMode` | `system.savingThrows.<key>.defaultRollMode` | Character creation and the "Reset to Class Defaults" button only |
+
+`savingThrowRollMode` is the odd one out: saving throw roll modes are user-configurable and persisted, so the rule has **no data-prep hook**. A pack edit alone therefore never reaches an existing character, which is why changes to it ship with a migration (see `Migration022CelestialSavingThrow`).
+
+**Situational roll modes** (`situationalRollMode`) are offered rather than applied. The rule stores nothing on the actor; `CheckRollDialog` calls `getSituationalRollModeOptions` (`src/view/dialogs/CheckRollDialog.utils.ts`) to list the rules whose predicate passes and whose `checkType` and target key match the roll being configured, renders one checkbox each, and folds the checked values into that roll's roll mode only. Because nothing is persisted, the rule needs no lifecycle hook at all, and adding one would defeat its purpose.
+
+Which to reach for:
+
+- The condition is something the system can see (bloodied, unarmored, a toggle being on, a pool being empty): use a default roll mode rule with a `predicate`. It re-resolves every data-prep cycle, so it turns itself on and off.
+- The condition is something only the table knows (what a save is against, what a skill check is being used for): use `situationalRollMode` and put the description in the rule's `label`, which is what the checkbox shows. The `predicate` still gates whether the option is offered, so the two compose.
+- The roll is an attack: neither applies. Attacks are configured in the item activation dialog, where `conditionalBonus` offers a per-attack choice of advantage or bonus damage.
+
+A rule offering a zero adjustment is skipped, since its checkbox would do nothing. Option keys are `${itemUuid}:${ruleId}`, because rule ids are only unique within an item and two copies of the same item would otherwise collapse into one checkbox.
+
 ## RulesManager API
 
 `RulesManager` extends `Map<string, NimbleBaseRule>`:
