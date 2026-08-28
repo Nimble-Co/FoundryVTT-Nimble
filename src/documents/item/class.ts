@@ -3,6 +3,7 @@ import {
 	ClassResourceManager,
 } from '../../managers/ClassResourceManager.js';
 import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
+import { getMaxHpBonusPerLevel } from '../../models/rules/maxHpBonus.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
@@ -193,8 +194,31 @@ export class NimbleClassItem extends NimbleBaseItem<'class'> {
 		// Type the changed object for this method's usage
 		const changedData = changed as {
 			name?: string & { slugify: (options: { strict: boolean }) => string };
-			system?: { hitDieSize?: number };
+			system?: { hitDieSize?: number; classLevel?: number };
 		};
+
+		// A `maxHpBonus` rule set `perLevel` is worth `value * classLevel`, and that
+		// figure is written into the actor's stored HP bonus once, when the rule's
+		// item is added. Only the class item is told the level moved, so rules living
+		// on features, boons and objects never hear about it — move the stored bonus
+		// by the level difference here, on behalf of every rule on the actor.
+		const nextClassLevel = changedData.system?.classLevel;
+
+		if (typeof nextClassLevel === 'number') {
+			// Signed, so a reverted level up gives the bonus back, and a jump of more
+			// than one level (a level history reset) moves it by the full difference.
+			const levelDifference = nextClassLevel - this.system.classLevel;
+			const hpBonusPerLevel = getMaxHpBonusPerLevel(actor);
+
+			if (levelDifference !== 0 && hpBonusPerLevel !== 0) {
+				const currentHpBonus =
+					(foundry.utils.getProperty(actor, 'system.attributes.hp.bonus') as number | undefined) ??
+					0;
+
+				actorUpdates['system.attributes.hp.bonus'] =
+					currentHpBonus + hpBonusPerLevel * levelDifference;
+			}
+		}
 
 		if (changedData.name) {
 			const existingLevels =
