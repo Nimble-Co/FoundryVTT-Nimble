@@ -47,6 +47,14 @@
 	--nimble-selected-tag-text-color: white;
 	--nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
 	--nimble-hp-bar-background: hsl(293, 10%, 17%);
+	--nimble-resource-bar-border-color: hsl(36, 53%, 80%);
+	--nimble-resource-bar-text-color: var(--nimble-light-text-color);
+	--nimble-resource-bar-shadow-color: hsla(0, 0%, 0%, 0.6);
+	--nimble-resource-bar-fill: linear-gradient(
+		to right,
+		hsl(207deg 40% 26%) 0%,
+		hsl(212deg 44% 52%) 100%
+	);
 	--nimble-sheet-background: hsl(247, 16%, 11%);
 	--nimble-navigation-background-color: hsl(293, 10%, 17%);
 	--nimble-navigation-border-color: hsl(293, 10%, 25%);

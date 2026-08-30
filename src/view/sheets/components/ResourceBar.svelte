@@ -1,25 +1,5 @@
 <script lang="ts">
-	interface BaseProps {
-		current: number;
-		max: number;
-		compact?: boolean;
-		disableControls?: boolean;
-		disableMaxEdit?: boolean;
-		updateCurrent?: (value: number) => void;
-		updateMax?: (value: number) => void;
-	}
-
-	interface WithoutControls extends BaseProps {
-		disableControls: true;
-	}
-
-	interface WithControls extends BaseProps {
-		disableControls?: false;
-		updateCurrent: NonNullable<BaseProps['updateCurrent']>;
-		updateMax: NonNullable<BaseProps['updateMax']>;
-	}
-
-	type Props = WithControls | WithoutControls;
+	import type { ResourceBarProps } from '#types/components/ResourceBar.d.ts';
 
 	let {
 		current,
@@ -29,7 +9,7 @@
 		disableMaxEdit = false,
 		updateCurrent,
 		updateMax,
-	}: Props = $props();
+	}: ResourceBarProps = $props();
 </script>
 
 <div
@@ -67,14 +47,9 @@
 	.nimble-resource-bar {
 		--nimble-resource-input-text-size: var(--nimble-sm-text);
 		--nimble-resource-input-font-weight: 600;
-		// Overridden per resource so mana, charges and anything else added later
-		// share one bar and differ only in colour.
-		--nimble-resource-bar-border-color: hsl(41, 18%, 54%);
-		--nimble-resource-bar-fill: linear-gradient(
-			to right,
-			hsl(207deg 47% 20%) 0%,
-			hsl(212deg 47% 44%) 100%
-		);
+		// Colours come from the theme so the bar reads correctly in both light
+		// and dark mode. A caller may override them per resource, so mana,
+		// charges and anything added later share one bar and differ in colour.
 
 		display: flex;
 		align-items: center;
@@ -106,7 +81,7 @@
 				display: block;
 				height: 100%;
 				width: var(--nimble-resource-bar-percentage);
-				box-shadow: 0 0 6px rgba(0, 0, 0, 0.45);
+				box-shadow: 0 0 6px var(--nimble-resource-bar-shadow-color);
 				background: var(--nimble-resource-bar-fill);
 				z-index: 0;
 				border-radius: 4px 0 0 4px;
@@ -124,7 +99,7 @@
 			width: 100%;
 			font-size: var(--nimble-resource-input-text-size);
 			font-weight: var(--nimble-resource-input-font-weight);
-			color: #fff;
+			color: var(--nimble-resource-bar-text-color);
 			z-index: 5;
 		}
 

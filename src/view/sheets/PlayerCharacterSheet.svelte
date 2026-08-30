@@ -320,7 +320,6 @@
 					current={pool.current}
 					max={pool.max}
 					updateCurrent={(value) => updatePoolCurrent(pool.id, value)}
-					updateMax={() => {}}
 					disableMaxEdit={true}
 				/>
 			{/each}
