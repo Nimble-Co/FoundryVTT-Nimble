@@ -1,4 +1,5 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
@@ -35,10 +36,8 @@ import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import {
-	type ResolvedSpellCost,
 	resolvePinnedCastTier,
 	resolveSpellCost,
-	type SpellLike,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';

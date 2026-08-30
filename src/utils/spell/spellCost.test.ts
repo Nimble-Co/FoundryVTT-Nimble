@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SpellCostActorLike } from './spellCost.js';
+import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import {
 	applyOverdraftConsequence,
 	formatSpellCostLabel,
 	resolvePinnedCastTier,
 	resolveSpellCost,
-	spendSpellCost,
 	synthesizePinnedUpcast,
-	validateSpellCost,
 } from './spellCost.js';
+import { spendSpellCost } from './spendSpellCost.js';
+import { validateSpellCost } from './validateSpellCost.js';
 
 function setResourceSpendingAutomation(enabled: boolean): void {
 	(
@@ -410,6 +410,61 @@ describe('applyOverdraftConsequence', () => {
 
 		expect(damage).toBe(0);
 		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+});
+
+describe('multiclass cost attribution', () => {
+	function createPlainClass(identifier: string) {
+		return createMockItem({
+			id: `class-${identifier}`,
+			name: identifier,
+			type: 'class',
+			system: { identifier },
+		});
+	}
+
+	it('charges the pool when the sole class declares one', () => {
+		const actor = createMockActor({ items: [createPoolClass({ poolCurrent: 3 })] });
+
+		expect(resolveSpellCost(actor, createSpell(1))).toMatchObject({ type: 'pool' });
+	});
+
+	it("does not charge one class's pool for another class's spell", () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ poolCurrent: 3 }), createPlainClass('mage')],
+		});
+		const mageSpell = { system: { tier: 2, classes: ['mage'] } };
+
+		expect(resolveSpellCost(actor, mageSpell)).toEqual({ type: 'mana', amount: 2 });
+	});
+
+	it('charges the pool for a spell restricted to the declaring class', () => {
+		const poolClass = createPoolClass({ poolCurrent: 3 });
+		poolClass.system.identifier = 'shadowmancer';
+		const actor = createMockActor({ items: [poolClass, createPlainClass('mage')] });
+		const shadowSpell = { system: { tier: 2, classes: ['shadowmancer'] } };
+
+		expect(resolveSpellCost(actor, shadowSpell)).toMatchObject({ type: 'pool' });
+	});
+
+	it('falls back to mana when a multiclass spell names no class', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ poolCurrent: 3 }), createPlainClass('mage')],
+		});
+
+		expect(resolveSpellCost(actor, createSpell(2))).toEqual({ type: 'mana', amount: 2 });
+	});
+
+	it("does not pin the cast tier for another class's spell", () => {
+		const poolClass = createPoolClass({ poolCurrent: 3 });
+		(poolClass.system.spellcasting as { castAtHighestTier: boolean }).castAtHighestTier = true;
+		const actor = createMockActor({
+			items: [poolClass, createPlainClass('mage')],
+			unlockedTier: 4,
+		});
+		const mageSpell = { system: { tier: 1, classes: ['mage'] } };
+
+		expect(resolvePinnedCastTier(actor, mageSpell)).toBeNull();
 	});
 });
 

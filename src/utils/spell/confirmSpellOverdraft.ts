@@ -1,5 +1,5 @@
+import type { ResolvedSpellCost } from '#types/spellCost.d.ts';
 import localize from '../localize.js';
-import type { ResolvedSpellCost } from './spellCost.js';
 
 interface SpellOverdraftConfirmationOptions {
 	spellName: string;

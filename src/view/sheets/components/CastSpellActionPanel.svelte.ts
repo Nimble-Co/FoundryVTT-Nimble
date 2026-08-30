@@ -1,15 +1,11 @@
+import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { flattenActivationEffects } from '../../../utils/activationEffects.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
-import {
-	formatSpellCostLabel,
-	resolveSpellCost,
-	type SpellCostActorLike,
-	type SpellLike,
-} from '../../../utils/spell/spellCost.js';
+import { formatSpellCostLabel, resolveSpellCost } from '../../../utils/spell/spellCost.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
 
