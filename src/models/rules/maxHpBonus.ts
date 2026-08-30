@@ -1,19 +1,4 @@
-import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { NimbleBaseRule } from './base.js';
-
-/** Actor system data with HP attributes */
-interface ActorSystemWithHp {
-	attributes: {
-		hp: {
-			bonus: number;
-		};
-	};
-}
-
-/** Class item system data */
-interface ClassItemSystem {
-	classLevel: number;
-}
 
 function schema() {
 	const { fields } = foundry.data;
@@ -42,10 +27,15 @@ declare namespace MaxHpBonusRule {
 }
 
 class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
-	// `perLevel: true` re-interprets `value` as "per level" and multiplies by
-	// the actor's level on apply. The i18n description should call this out.
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.maxHpBonus.description';
+
+	// The base class infers this from the presence of a `prePrepareData` method.
+	// This rule has none, but is read even earlier than that sweep, so it needs
+	// the early-phase predicate guardrails all the same.
+	static override get appliesInPrePrepareData(): boolean {
+		return true;
+	}
 
 	declare value: number;
 	declare perLevel: boolean;
@@ -66,73 +56,20 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		);
 	}
 
-	override async preCreate(): Promise<void> {
-		if (this.invalid) return;
+	/**
+	 * The max-HP this rule currently contributes. Resolved on demand rather than
+	 * banked into the stored `attributes.hp.bonus`, where it went stale as soon
+	 * as anything the formula reads changed and could not be reconciled after
+	 * the fact.
+	 */
+	resolvedBonus(): number {
+		const { item } = this;
+		if (!item?.isEmbedded) return 0;
+		if (!this.test()) return 0;
 
-		const { actor } = this;
-		if (!actor) return;
+		const formula = this.perLevel ? `${this.value} * @level` : `${this.value}`;
 
-		// Update actor bonus hp
-		const formula = this.perLevel ? `${this.value} * @level` : this.value;
-
-		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		if (addedHp === null) return;
-
-		const actorSystem = actor.system as unknown as ActorSystemWithHp;
-		const { bonus } = actorSystem.attributes.hp;
-		await actor.update({ system: { attributes: { hp: { bonus: bonus + addedHp } } } } as Record<
-			string,
-			unknown
-		>);
-	}
-
-	async preUpdate(changes: Record<string, unknown>): Promise<void> {
-		if (this.invalid) return;
-
-		const { actor, item } = this;
-		if (!actor || !item) return;
-		if (item.type !== 'class') return;
-
-		if (!this.perLevel) return;
-
-		// Return if update doesn't pertain to level
-		const keys = Object.keys(foundry.utils.flattenObject(changes));
-		const itemSystem = item.system as unknown as ClassItemSystem;
-		if (
-			!keys.includes('system.classLevel') ||
-			changes['system.classLevel'] === itemSystem.classLevel
-		)
-			return;
-
-		const formula = this.value;
-		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		if (addedHp === null) return;
-
-		const actorSystem = actor.system as unknown as ActorSystemWithHp;
-		const { bonus } = actorSystem.attributes.hp;
-		await actor.update({ system: { attributes: { hp: { bonus: bonus + addedHp } } } } as Record<
-			string,
-			unknown
-		>);
-	}
-
-	async afterDelete(): Promise<void> {
-		if (this.invalid) return;
-
-		const { actor, item } = this;
-		if (!actor || !item) return;
-
-		const formula = this.perLevel ? `${this.value} * @level` : this.value;
-
-		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		if (addedHp === null) return;
-
-		const actorSystem = actor.system as unknown as ActorSystemWithHp;
-		const { bonus } = actorSystem.attributes.hp;
-		await actor.update({ system: { attributes: { hp: { bonus: bonus - addedHp } } } } as Record<
-			string,
-			unknown
-		>);
+		return this.resolveFormula(formula) ?? 0;
 	}
 }
 

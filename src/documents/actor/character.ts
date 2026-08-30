@@ -14,6 +14,7 @@ import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
 import { RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
+import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import {
 	consumeCombatantAction,
@@ -462,8 +463,19 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const classes = Object.values(this.classes ?? {});
 		if (classes.length === 0) return;
 
+		// Summed here rather than through a `prePrepareData` hook because `hp.max`
+		// has to be final before `_populateDerivedTags()` runs, which is ahead of
+		// the rule sweep.
+		const rules = this.rules as unknown as MaxHpBonusRule[];
+		const bonusFromRules = rules.reduce(
+			(acc, rule) => acc + (rule.type === 'maxHpBonus' ? rule.resolvedBonus() : 0),
+			0,
+		);
+
 		actorData.attributes.hp.max =
-			classes.reduce((acc, classData) => acc + classData.maxHp, 0) + actorData.attributes.hp.bonus;
+			classes.reduce((acc, classData) => acc + classData.maxHp, 0) +
+			actorData.attributes.hp.bonus +
+			bonusFromRules;
 	}
 
 	_prepareLevelData(): void {
