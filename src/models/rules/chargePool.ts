@@ -53,6 +53,13 @@ function schema() {
 			label: 'NIMBLE.rules.chargePool.hidden.label',
 			hint: 'NIMBLE.rules.chargePool.hidden.hint',
 		}),
+		showAsResource: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.chargePool.showAsResource.label',
+			hint: 'NIMBLE.rules.chargePool.showAsResource.hint',
+		}),
 		recoveries: new fields.ArrayField(
 			new fields.SchemaField({
 				trigger: new fields.StringField({
@@ -119,6 +126,17 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 	 */
 	declare hidden: boolean;
 
+	/**
+	 * Promotes the pool to the sheet header, where the player's standing
+	 * resources are read at a glance, in addition to its badge on the item that
+	 * grants it. Set it for a pool the player spends and plans around, and leave
+	 * it clear for one they only glance at when using the feature it belongs to.
+	 *
+	 * `hidden` wins: a pool that opts out of the readouts entirely never reaches
+	 * the header, whatever this says.
+	 */
+	declare showAsResource: boolean;
+
 	static override defineSchema(): ChargePoolRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -134,6 +152,7 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20" | null'],
 				['initial', '"max" | "zero"'],
 				['hidden', 'boolean'],
+				['showAsResource', 'boolean'],
 				['recoveries', 'Array<{ trigger: string; mode: string; value: string }>'],
 			]),
 		);

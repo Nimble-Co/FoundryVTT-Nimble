@@ -84,6 +84,15 @@ function toHiddenFlag(value: unknown): boolean {
 	return value === true;
 }
 
+/**
+ * Same conservative reading as {@link toHiddenFlag}: only an explicit `true`
+ * promotes a pool to the header, so stored state and rule data that predate
+ * the field keep rendering where they always did.
+ */
+function toShowAsResourceFlag(value: unknown): boolean {
+	return value === true;
+}
+
 function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	if (typeof value !== 'string') return null;
 	const trimmed = value.trim() as ChargePoolDieSize;
@@ -128,6 +137,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toHiddenFlag(sourcePool.hidden),
+				showAsResource: toShowAsResourceFlag(sourcePool.showAsResource),
 				recoveries,
 			};
 		}
@@ -176,6 +186,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toHiddenFlag(sourcePool.hidden),
+				showAsResource: toShowAsResourceFlag(sourcePool.showAsResource),
 				recoveries,
 			};
 		}
@@ -378,6 +389,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
 				hidden: toHiddenFlag(poolRule.hidden),
+				showAsResource: toShowAsResourceFlag(poolRule.showAsResource),
 				initial,
 				recoveries,
 			};
@@ -415,6 +427,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			// The rule is the source of truth for visibility: flipping the flag on the
 			// rule re-hides or re-reveals a pool that is already tracked in storage.
 			hidden: definition.hidden,
+			showAsResource: definition.showAsResource,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -666,6 +679,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&
+		left.showAsResource === right.showAsResource &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

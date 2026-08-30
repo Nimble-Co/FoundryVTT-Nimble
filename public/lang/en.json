@@ -950,6 +950,10 @@
 					"label": "Hide from sheet",
 					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
 				},
+				"showAsResource": {
+					"label": "Show as a resource",
+					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
+				},
 				"recoveries": {
 					"label": "Recoveries",
 					"hint": "When and how charges are restored. Add an entry per trigger.",
