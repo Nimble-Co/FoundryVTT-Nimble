@@ -36,6 +36,8 @@ For Emberlance: enable **Range** (set it to taste), pick **Tier 2**, and the **F
 
 ::: info Mana cost is the tier
 There is no separate "mana cost" field. Casting a tiered spell automatically deducts mana equal to its tier from the caster, so Emberlance costs 2 mana. Cantrips are free. Upcasting (below) spends more. The deduction happens on its own when the spell is cast from a character.
+
+A class can redirect that cost. If its Spellcasting config names a charge pool, its casters spend that pool instead of mana, and the spell's own fields do not change. See [Classes](character-options.md#the-config-tab).
 :::
 
 ::: tip The raw data editor
@@ -86,6 +88,7 @@ With **Upcast Choice** selected, you instead click **Add Choice**, give each cho
 Casting a spell opens the cast window. It contains the roll mode selector, situational modifiers, and roll options that every activation window has (see [Item Activations & Effects](activations.md)), plus the upcast controls when the spell can be upcast:
 
 - an **Upcast** heading with a **mana slider** running from the spell's base cost up to the smaller of the caster's current mana and their highest unlocked spell tier. The caster simply drags it to the total mana they want to spend, and the **Upcast Level** readout shows how many steps that buys;
+- for a class that casts at its highest tier, no slider at all. The window states the tier the spell will be cast at and what it costs;
 - for Upcast Choice spells, a **Choose Enhancement** list of your labeled options;
 - an **Applied Effect** preview listing exactly what the chosen upcast adds ("+2d8 fire damage").
 

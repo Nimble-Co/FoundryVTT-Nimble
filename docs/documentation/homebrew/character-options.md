@@ -57,6 +57,7 @@ A class is the most involved item in the system, split across a **Description** 
 - **Saving throw advantage / disadvantage**: which save the class is naturally good and bad at.
 - **Hit Die Size**: d4 through d12. This also determines starting HP when the class is dropped on a character.
 - **Mana Formula** and **Mana Recovery**: leave the formula empty for non-casters; a formula (it can reference things like `@level` and ability modifiers) makes the class a caster, and the recovery setting says when the pool refills.
+- **Spellcasting**: how this class pays for tiered spells. Leave **Spell Cost Pool** blank and a spell costs its tier in mana, which is the default. Name a charge pool instead and the class spends that pool, with **Cost Per Cast** saying how much. **Casting Beyond the Pool** decides what happens on an empty pool: block the cast, or allow it at a cost, and **Consequence Stops After Level** is the last level at which that cost is applied automatically. **Cast at Highest Tier** makes every tiered spell resolve at the highest tier the character has unlocked, so the cast window shows the tier instead of offering it.
 - **Armor Proficiencies** and **Weapon Proficiencies**: what the class can use. Weapon proficiency names matter for crits: a weapon whose type is not in the wielder's list cannot critically hit.
 - **Feature Groups**: extra group names whose features this class can draw from, used to share feature pools between classes.
 
