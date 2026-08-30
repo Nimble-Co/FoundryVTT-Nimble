@@ -29,6 +29,9 @@ const CLASS_SPELLCASTING = {
 		poolIdentifier: 'pilfered-power',
 		amount: '1',
 		overdraftConsequence: 'halfMaxHpDamage',
+		// Greedy Pact replaces the fixed penalty from level 12, and that rule is
+		// not automated, so the penalty stops applying past level 11.
+		overdraftMaxLevel: 11,
 	},
 };
 
@@ -79,9 +82,16 @@ const FEATURES: FeatureSpec[] = [
 				poolIdentifier: 'pilfered-power',
 				dieSize: null,
 				maxDelta: null,
-				// The rules text is "each time you roll Initiative", so the refill is tied
-				// to the initiative roll rather than to the start of the encounter. A second
-				// roll therefore grants a second use, which the pool maximum still bounds.
+				// The rules text is "each time you roll Initiative", so the refill is
+				// tied to the initiative roll rather than to the start of the encounter.
+				// A second roll therefore grants a second use, which the pool maximum
+				// still bounds.
+				//
+				// This differs from Migration041, which chose `encounterStart` for the
+				// Commander's equivalent feature to avoid exactly that second grant.
+				// Both readings are defensible; this one follows the printed wording,
+				// and the clamp at the pool maximum keeps the difference small. The
+				// Commander's choice is left as it shipped rather than changed here.
 				addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1', predicate: {} }],
 			},
 		],
@@ -109,6 +119,27 @@ class Migration048ShadowmancerPilferedPower extends MigrationBase {
 	static override readonly version = 48;
 
 	override readonly version = Migration048ShadowmancerPilferedPower.version;
+
+	/**
+	 * Clears the mana the Shadowmancer never had.
+	 *
+	 * The class formula going empty makes the bar disappear, but the stored
+	 * current value stays behind. It is invisible while the character has no
+	 * other mana source and would resurface the moment they gained one, so it
+	 * is cleared here. Only an actor whose classes are all Shadowmancer is
+	 * touched, so a multiclass character's real mana is left alone.
+	 */
+	override async updateActor(source: any): Promise<void> {
+		const classes = (source.items ?? []).filter((item: any) => item?.type === 'class');
+		if (classes.length < 1) return;
+		if (!classes.every((item: any) => item?.system?.identifier === 'shadowmancer')) return;
+
+		const mana = source.system?.resources?.mana;
+		if (!mana || mana.current === 0) return;
+
+		mana.current = 0;
+		console.log('Nimble Migration | Shadowmancer: cleared mana the class never had');
+	}
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type === 'class') {
