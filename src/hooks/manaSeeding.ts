@@ -4,6 +4,7 @@ const PREVIOUS_MANA_MAX_PATH = `${SYSTEM_ID}.previousManaMax`;
 
 type ManaSnapshot = {
 	actor: Actor.Implementation;
+	actorId: string;
 	current: number;
 	max: number;
 };
@@ -22,7 +23,12 @@ function getManaSnapshot(actor: unknown): ManaSnapshot | null {
 	const max = Number(mana.max ?? 0);
 	if (!Number.isFinite(current) || !Number.isFinite(max)) return null;
 
-	return { actor: typedActor, current, max };
+	// The stash is keyed by id, so an actor without one cannot be tracked
+	// across the two hooks.
+	const actorId = typedActor.id;
+	if (!actorId) return null;
+
+	return { actor: typedActor, actorId, current, max };
 }
 
 function toClassItemActor(item: unknown): Actor.Implementation | null {
@@ -34,10 +40,15 @@ function toClassItemActor(item: unknown): Actor.Implementation | null {
 
 // Derived max mana is still the pre-update value inside pre-hooks, so it is
 // recorded on the update options for the post-hook to compare against.
+//
+// Keyed by actor id because one options object is shared by every document in
+// a batched update: the backend runs the whole pre-hook loop before any
+// post-hook, so a single slot would leave every actor reading the last one's
+// value.
 function stashPreviousManaMax(actor: unknown, options: unknown): void {
 	const snapshot = getManaSnapshot(actor);
 	if (!snapshot || !options || typeof options !== 'object') return;
-	foundry.utils.setProperty(options, PREVIOUS_MANA_MAX_PATH, snapshot.max);
+	foundry.utils.setProperty(options, `${PREVIOUS_MANA_MAX_PATH}.${snapshot.actorId}`, snapshot.max);
 }
 
 async function seedManaIfNewlyAvailable(
@@ -53,7 +64,10 @@ async function seedManaIfNewlyAvailable(
 	const snapshot = getManaSnapshot(actor);
 	if (!snapshot || !options || typeof options !== 'object') return;
 
-	const previousMax = foundry.utils.getProperty(options, PREVIOUS_MANA_MAX_PATH);
+	const previousMax = foundry.utils.getProperty(
+		options,
+		`${PREVIOUS_MANA_MAX_PATH}.${snapshot.actorId}`,
+	);
 	if (typeof previousMax !== 'number' || previousMax > 0) return;
 
 	// Seed only on the transition from "no pool" to "has a pool", and never

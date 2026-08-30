@@ -12,13 +12,23 @@ function globals() {
 }
 
 type MockManaActor = {
+	id: string;
 	type: string;
 	system: { resources: { mana: { current: number; max: number } } };
 	update: ReturnType<typeof vi.fn>;
 };
 
-function createManaActor({ current = 0, max = 0, type = 'character' } = {}): MockManaActor {
+let nextActorId = 0;
+
+function createManaActor({
+	current = 0,
+	max = 0,
+	type = 'character',
+	id = '',
+} = {}): MockManaActor {
+	nextActorId += 1;
 	return {
+		id: id || `actor-${nextActorId}`,
 		type,
 		system: { resources: { mana: { current, max } } },
 		update: vi.fn().mockResolvedValue(undefined),
@@ -164,6 +174,41 @@ describe('registerManaSeedingHooks', () => {
 		await updateActor(callbacks, actor, { newMax: 5 });
 
 		expect(actor.update).not.toHaveBeenCalled();
+	});
+
+	// The character sheet's max mana field writes `baseMax`, so raising it from
+	// zero runs the same path a level-up does. Broader than the level-up case
+	// the hook was added for, and intended.
+	it('fills the pool when max mana is raised from zero on the sheet', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 0, max: 0 });
+
+		await updateActor(callbacks, actor, { newMax: 6 });
+
+		expect(actor.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 6 });
+	});
+
+	// A batched update shares one options object across every document: the
+	// backend runs the whole pre-hook loop before any post-hook. Each actor has
+	// to read back its own previous max, not the last one stashed.
+	it("keeps each actor's previous max separate in a batched update", async () => {
+		const callbacks = await registerHooks();
+		const gainsAPool = createManaActor({ current: 0, max: 0 });
+		const alreadyHasOne = createManaActor({ current: 0, max: 4 });
+		const options = {};
+
+		callbacks.get('preUpdateActor')?.(gainsAPool, {}, options, 'user-1');
+		callbacks.get('preUpdateActor')?.(alreadyHasOne, {}, options, 'user-1');
+
+		gainsAPool.system.resources.mana.max = 5;
+		alreadyHasOne.system.resources.mana.max = 7;
+
+		callbacks.get('updateActor')?.(gainsAPool, {}, options, 'user-1');
+		callbacks.get('updateActor')?.(alreadyHasOne, {}, options, 'user-1');
+		await flushAsync();
+
+		expect(gainsAPool.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 5 });
+		expect(alreadyHasOne.update).not.toHaveBeenCalled();
 	});
 
 	it('does not re-seed from the write the seed itself performs', async () => {
