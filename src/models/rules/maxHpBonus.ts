@@ -1,5 +1,9 @@
 import { NimbleBaseRule } from './base.js';
 
+// Dedupe the phase-mismatch warning by item and rule so it fires once per
+// session rather than on every prepare cycle. Bounded by authored content.
+const warnedPhaseMismatchRules = new Set<string>();
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -65,11 +69,51 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	resolvedBonus(): number {
 		const { item } = this;
 		if (!item?.isEmbedded) return 0;
-		if (!this.test()) return 0;
+
+		if (!this.test()) {
+			this.#rejectedInEarlyPass = true;
+			return 0;
+		}
+		this.#rejectedInEarlyPass = false;
 
 		const formula = this.perLevel ? `${this.value} * @level` : `${this.value}`;
 
 		return this.resolveFormula(formula) ?? 0;
+	}
+
+	/** Whether the predicate failed the last time max HP was computed. */
+	#rejectedInEarlyPass = false;
+
+	/**
+	 * `resolvedBonus()` runs before `_populateDerivedTags()`, so it only ever sees
+	 * the actor's base tags and the carrying item's own tags. A predicate on
+	 * anything the actor derives later (`class:`, `level:`, `subclass:`,
+	 * `ancestry:`, `self:`) silently fails there and the rule contributes nothing,
+	 * while the same predicate reads as matching everywhere else in the UI.
+	 *
+	 * Re-testing here, once the domain is complete, catches exactly that case: the
+	 * predicate that passes now but failed then. Comparing the two answers beats
+	 * warning on a list of tag prefixes, which cannot tell an actor's `class:`
+	 * tag apart from the identical one a feature item carries.
+	 */
+	override afterPrepareData(): void {
+		if (!this.#rejectedInEarlyPass) return;
+		if (!this.predicate.size) return;
+
+		const { item } = this;
+		if (!item?.isEmbedded) return;
+		if (!this.test()) return;
+
+		const dedupeKey = `${item.uuid}:${this.id}`;
+		if (warnedPhaseMismatchRules.has(dedupeKey)) return;
+		warnedPhaseMismatchRules.add(dedupeKey);
+
+		console.warn(
+			`Nimble | maxHpBonus rule "${this.label || this.id}" on "${item.name}" predicates on tags ` +
+				'that are computed after max HP, so it added nothing. Max HP is calculated before the ' +
+				"actor's class, level, subclass, ancestry and self: tags exist; only size, disposition " +
+				"and the item's own tags can be tested by this rule.",
+		);
 	}
 }
 
