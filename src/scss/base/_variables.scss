@@ -74,6 +74,16 @@
 	--nimble-selected-tag-text-color: white;
 	--nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
 	--nimble-hp-bar-background: hsl(0, 0%, 24%);
+
+	/** RESOURCE BARS (mana, promoted charge pools) **/
+	--nimble-resource-bar-border-color: var(--nimble-box-color);
+	--nimble-resource-bar-text-color: var(--nimble-light-text-color);
+	--nimble-resource-bar-shadow-color: hsla(0, 0%, 0%, 0.45);
+	--nimble-resource-bar-fill: linear-gradient(
+		to right,
+		hsl(207deg 47% 20%) 0%,
+		hsl(212deg 47% 44%) 100%
+	);
 	--nimble-range-slider-handle-color: hsl(223, 14%, 35%);
 	--nimble-image-background-color: #494949;
 	--nimble-basic-button-background-color: hsl(41, 18%, 80%);
