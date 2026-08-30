@@ -61,6 +61,7 @@ const FEATURES: FeatureSpec[] = [
 				max: 'max(@dexterity, 0)',
 				dieSize: null,
 				initial: 'max',
+				showAsResource: true,
 				recoveries: [{ trigger: 'safeRest', mode: 'refresh', value: '1' }],
 			},
 		],
