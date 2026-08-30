@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { getHighestSpellTier } from './getHighestSpellTier.js';
 
 type GrantRuleOptions = {
@@ -32,7 +33,29 @@ function createItem(rules: ReturnType<typeof createGrantRule>[], itemType = 'fea
 	};
 }
 
+/**
+ * Binds each rule's `appliesTo` the way rule preparation does: the authored
+ * predicate, evaluated against a domain carrying the character's level tag.
+ * Building it here rather than stubbing a boolean keeps the tests honest about
+ * which predicates the real engine would accept.
+ */
 function createActor(level: number, items: ReturnType<typeof createItem>[]): NimbleCharacter {
+	const domain = new Set([`level:${level}`]);
+
+	for (const item of items) {
+		for (const rule of item.rules?.values() ?? []) {
+			const authored = (rule as { predicate?: unknown }).predicate;
+			// A prepared rule holds a Predicate instance, whose raw data sits on
+			// `_source`; unwrap it so the fixture evaluates what was authored.
+			const raw = (
+				authored && typeof authored === 'object' && '_source' in authored
+					? (authored as { _source: unknown })._source
+					: authored
+			) as RawPredicate;
+			(rule as { appliesTo?: () => boolean }).appliesTo = () => new Predicate(raw).test(domain);
+		}
+	}
+
 	return {
 		levels: { character: level, classes: {} },
 		items: { contents: items },
@@ -145,6 +168,17 @@ describe('getHighestSpellTier', () => {
 		]);
 
 		expect(getHighestSpellTier(createActor(2, [feature]))).toBe(1);
+	});
+
+	it('honours every part of the predicate, not only its minimum level', () => {
+		// The minimum is met but the maximum is not, so the grant does not apply.
+		// A derivation that read `level.min` alone would hand out the tier.
+		const feature = createItem([
+			createGrantRule({ tiers: [3], predicate: { level: { min: 2, max: 4 } } }),
+		]);
+
+		expect(getHighestSpellTier(createActor(10, [feature]))).toBe(0);
+		expect(getHighestSpellTier(createActor(3, [feature]))).toBe(3);
 	});
 
 	it('skips items with no prepared rules', () => {

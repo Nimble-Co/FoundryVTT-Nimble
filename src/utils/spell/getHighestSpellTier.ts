@@ -10,6 +10,8 @@ interface GrantRuleLike {
 	disabled?: boolean;
 	tiers?: unknown;
 	predicate?: unknown;
+	/** Optional because plain objects satisfy this structural type in tests. */
+	appliesTo?: () => boolean;
 }
 
 interface RuleBackedItemLike {
@@ -18,17 +20,22 @@ interface RuleBackedItemLike {
 }
 
 interface SpellTierActorLike {
-	levels?: { character?: number };
 	items?: { contents?: RuleBackedItemLike[] };
 }
 
 /**
- * A prepared rule holds a Predicate instance whose raw data sits on
- * `_source`; raw pack data and test fixtures hold the plain object directly.
+ * Whether the grant anchors its tiers to a character level.
+ *
+ * This asks only whether a threshold was authored, never whether it is met:
+ * the rules engine decides that. A grant with no threshold cannot be placed on
+ * the tier ladder at all, so it is skipped rather than read as level zero.
+ *
+ * A prepared rule holds a Predicate instance whose raw data sits on `_source`;
+ * raw pack data and test fixtures hold the plain object directly.
  */
-function getRuleMinLevel(rule: GrantRuleLike): number | null {
+function hasLevelThreshold(rule: GrantRuleLike): boolean {
 	const predicate = rule.predicate;
-	if (!predicate || typeof predicate !== 'object') return null;
+	if (!predicate || typeof predicate !== 'object') return false;
 
 	const source =
 		'_source' in predicate && predicate._source && typeof predicate._source === 'object'
@@ -36,8 +43,7 @@ function getRuleMinLevel(rule: GrantRuleLike): number | null {
 			: predicate;
 
 	const level = (source as { level?: { min?: unknown } }).level;
-	const min = level?.min;
-	return typeof min === 'number' ? min : null;
+	return typeof level?.min === 'number';
 }
 
 /**
@@ -45,14 +51,17 @@ function getRuleMinLevel(rule: GrantRuleLike): number | null {
  * grants authored on their class, subclass, and feature items: the highest
  * granted tier whose level threshold the character has reached.
  *
- * Grants without a level threshold are ignored — they attach spells to a
+ * Grants without a level threshold are ignored: they attach spells to a
  * character without anchoring a tier unlock to a level.
+ *
+ * Whether a threshold is met is decided by the rule's own predicate, through
+ * the rules engine, so a grant gated on more than a level is honoured in full
+ * rather than in part.
  *
  * @returns The highest unlocked tier (1-9), or 0 for a character with no
  *          eligible tiered spell grants.
  */
 export function getHighestSpellTier(actor: SpellTierActorLike): number {
-	const characterLevel = actor.levels?.character ?? 0;
 	let highestTier = 0;
 
 	for (const item of actor.items?.contents ?? []) {
@@ -62,8 +71,8 @@ export function getHighestSpellTier(actor: SpellTierActorLike): number {
 		for (const rule of item.rules.values()) {
 			if (rule.type !== 'grantSpells' || rule.disabled) continue;
 
-			const minLevel = getRuleMinLevel(rule);
-			if (minLevel === null || characterLevel < minLevel) continue;
+			if (!hasLevelThreshold(rule)) continue;
+			if (rule.appliesTo && !rule.appliesTo()) continue;
 
 			const tiers = Array.isArray(rule.tiers) ? rule.tiers : [];
 			for (const tier of tiers) {
