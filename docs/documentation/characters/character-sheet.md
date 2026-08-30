@@ -16,6 +16,7 @@ The header is always visible, whatever tab you're on:
 - **Hit Points bar.** Shows current, temporary, and maximum HP. Click the numbers to edit them. The heart icon cracks when you're at half HP or less (Bloodied).
 - **Hit Dice bar.** Shows your remaining hit dice out of your total, with buttons to roll them and adjust the current count.
 - **Mana bar.** Appears only if your class uses mana. Shows current and maximum mana.
+- **Resource bars.** Any charge pool a feature marks as a resource appears here too, under its own name, with the same current-and-maximum readout as mana. Click the current value to edit it. The maximum comes from the feature and is not editable here.
 - **Name and summary line.** Your ancestry, size, class, subclass, and level.
 
 ## The sidebar buttons
