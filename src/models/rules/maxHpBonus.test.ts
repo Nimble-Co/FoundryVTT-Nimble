@@ -27,15 +27,17 @@ describe('MaxHpBonusRule', () => {
 			options: {
 				value?: number;
 				perLevel?: boolean;
-				level?: number;
+				level?: number | { value: number };
 				isEmbedded?: boolean;
 				predicate?: { size: number; test: (domain: Set<string>) => boolean };
 			} = {},
 		) {
 			const { value = 2, perLevel = false, level = 1, isEmbedded = true, predicate } = options;
 
+			// Read through a box so a test can advance the level on a live rule.
+			const levelBox = typeof level === 'number' ? { value: level } : level;
 			const actor = {
-				getRollData: () => ({ level }),
+				getRollData: () => ({ level: levelBox.value }),
 				getDomain: () => [],
 			};
 			const item = {
@@ -83,9 +85,15 @@ describe('MaxHpBonusRule', () => {
 			expect(createRule({ value: 2, perLevel: true, level: 5 }).resolvedBonus()).toBe(10);
 		});
 
-		it('tracks the level it is asked for, so a level-up is picked up on the next read', () => {
-			expect(createRule({ value: 2, perLevel: true, level: 1 }).resolvedBonus()).toBe(2);
-			expect(createRule({ value: 2, perLevel: true, level: 2 }).resolvedBonus()).toBe(4);
+		it('rescales when the actor levels up, without being re-created', () => {
+			const level = { value: 1 };
+			const rule = createRule({ value: 2, perLevel: true, level });
+
+			expect(rule.resolvedBonus()).toBe(2);
+
+			level.value = 2;
+
+			expect(rule.resolvedBonus()).toBe(4);
 		});
 
 		it('contributes nothing when the predicate fails', () => {

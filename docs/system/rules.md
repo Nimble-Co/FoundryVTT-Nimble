@@ -122,7 +122,7 @@ A few values are needed before the `prePrepareData` sweep runs, so the actor rea
 
 Two consequences for a rule in this position:
 
-- It must override `static get appliesInPrePrepareData()` to `true`. The automatic introspection looks for a `prePrepareData` method and would otherwise miss it, silently dropping the late-predicate guardrails for a rule that evaluates its predicate *earlier* than any early-phase rule.
+- It must override `static get appliesInPrePrepareData()` to `true`. The automatic introspection looks for a `prePrepareData` method and would otherwise miss it, silently dropping the late-predicate guardrails for a rule that evaluates its predicate *earlier* than any early-phase rule. Note the guardrails only cover `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, which is the ability-score keys alone — a predicate on `class:*`, `level:*` or `self:bloodied` draws no warning even though a rule in this position cannot see those tags either.
 - The value must stay derived. Writing it into a stored field is what caused issue #499: the banked total never caught up with a level-up, and a blind add-on-create/subtract-on-delete pair cannot be reconciled afterwards. Note that `attributes.hp.bonus` is *not* that field — it is the player's manually-entered bonus, round-tripped through the Edit Hit Points dialog, so folding a rule total into it would be written back to source on the next save.
 
 #### Tags on all actors

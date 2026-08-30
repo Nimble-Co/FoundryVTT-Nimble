@@ -1,6 +1,5 @@
 <script>
 	import { untrack } from 'svelte';
-	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 
 	const startingHpByHitDie = {
@@ -32,7 +31,6 @@
 	// Collect HP bonuses from rules
 	let ruleBonuses = $derived.by(() => {
 		const bonuses = [];
-		const rollData = document.getRollData?.() ?? {};
 
 		for (const item of document.items ?? []) {
 			if (!item.rules) continue;
@@ -40,14 +38,10 @@
 			for (const rule of item.rules.values()) {
 				if (rule.type !== 'maxHpBonus') continue;
 				if (rule.disabled) continue;
-				if (!rule.appliesTo()) continue;
-
-				const formula = rule.perLevel ? `${rule.value} * @level` : rule.value;
-				const value = getDeterministicBonus(formula, rollData) ?? 0;
 
 				bonuses.push({
 					name: item.name,
-					value,
+					value: rule.resolvedBonus(),
 					perLevel: rule.perLevel,
 				});
 			}

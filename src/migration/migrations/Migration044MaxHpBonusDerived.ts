@@ -33,8 +33,10 @@ class Migration044MaxHpBonusDerived extends MigrationBase {
 		for (const item of source.items ?? []) {
 			for (const rule of item.system?.rules ?? []) {
 				if (rule?.type !== 'maxHpBonus') continue;
-				if (rule.disabled) continue;
 
+				// Deliberately not gated on `disabled` or on the predicate: the old
+				// `preCreate` banked unconditionally, so a rule that is disabled or
+				// non-matching today still has an amount sitting in the stored bonus.
 				const value = Number(rule.value) || 0;
 				banked += rule.perLevel ? value * level : value;
 			}
