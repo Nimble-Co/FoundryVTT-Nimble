@@ -18,7 +18,7 @@
 		school = '',
 		activationSummary = '',
 		scrollPrice = 0,
-		hasMana = false,
+		isSpellcaster = false,
 		candidates = [],
 		tierLabel = '',
 	} = $derived(props);
@@ -48,11 +48,11 @@
 				<dd>{state.upcastLabel}</dd>
 			</dl>
 
-			{#if !hasMana && tier > 0}
+			{#if !isSpellcaster && tier > 0}
 				<Hint
 					hintType="warning"
 					hintIcon="fa-solid fa-circle-exclamation"
-					hintText={localize('NIMBLE.spellScroll.dialog.noManaWarning', { name: actorName })}
+					hintText={localize('NIMBLE.spellScroll.dialog.notACasterWarning', { name: actorName })}
 				/>
 			{/if}
 		</SpellScrollChoiceCard>

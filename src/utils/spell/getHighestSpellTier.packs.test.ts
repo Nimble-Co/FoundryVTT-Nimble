@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { loadAllFeatureDocs } from '../../../tests/fixtures/classProgression.js';
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { getHighestSpellTier } from './getHighestSpellTier.js';
 
 type RawRule = { type?: string; [key: string]: unknown };
@@ -10,6 +11,7 @@ function createActorFromPackFeatures(
 	level: number,
 	{ subclass }: { subclass?: string } = {},
 ): NimbleCharacter {
+	const domain = new Set([`level:${level}`]);
 	const items = loadAllFeatureDocs()
 		.filter((feature) => feature.system.class === classIdentifier)
 		.filter((feature) => {
@@ -19,7 +21,17 @@ function createActorFromPackFeatures(
 		.map((feature) => ({
 			type: 'feature',
 			rules: new Map(
-				((feature.system.rules ?? []) as RawRule[]).map((rule, index) => [String(index), rule]),
+				((feature.system.rules ?? []) as RawRule[]).map((rule, index) => {
+					// Rule preparation binds `appliesTo` to the authored predicate,
+					// evaluated against the actor's domain. Bind the same thing here so
+					// the pack ladders are read through the real predicate engine.
+					const raw = (rule.predicate ?? {}) as RawPredicate;
+					const prepared = {
+						...rule,
+						appliesTo: () => new Predicate(raw).test(domain),
+					};
+					return [String(index), prepared] as const;
+				}),
 			),
 		}));
 
