@@ -75,6 +75,7 @@
 	/>
 
 	<LevelUpSpellGrants
+		actor={document}
 		spells={autoGrantedSpells}
 		schoolSelections={state.schoolSelections}
 		spellSelections={state.spellSelections}

@@ -1740,6 +1740,7 @@
 				"title": "Overdraw Spell Resource",
 				"message": "You have {available} of the {required} {pool} this cast requires.",
 				"halfMaxHpDamage": "Casting anyway will deal {damage} damage to you (half your maximum Hit Points).",
+				"resolvedAtTable": "At your level your class replaces the usual penalty with its own rule, which the system does not apply for you. Resolve it at the table.",
 				"confirmQuestion": "Cast {name} anyway?",
 				"confirm": "Cast Anyway",
 				"cancel": "Cancel"

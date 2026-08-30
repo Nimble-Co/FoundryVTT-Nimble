@@ -1,14 +1,20 @@
 import type { SpellDisplayData } from '#types/components/LevelUpSpellCard.d.ts';
 import type { SpellSystemData } from '#types/components/SpellReferenceCard.d.ts';
+import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import { flattenActivationEffects } from '#utils/activationEffects.js';
 import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
+import { formatSpellCostLabel, resolveSpellCost } from '#utils/spell/spellCost.js';
 
 /**
  * Extracts display data from a spell's system data for rendering in the card.
  */
-function extractDisplayData(system: SpellSystemData): SpellDisplayData {
+function extractDisplayData(
+	system: SpellSystemData,
+	actor: SpellCostActorLike,
+	spell: SpellLike,
+): SpellDisplayData {
 	const { activationCostTypes } = CONFIG.NIMBLE;
 
 	// Action cost
@@ -62,7 +68,9 @@ function extractDisplayData(system: SpellSystemData): SpellDisplayData {
 	}
 
 	// Tiered spells cost their tier in mana; cantrips are free.
-	const manaCost = system.tier ?? 0;
+	// The cost as this character would pay it: the tier in mana by default, or
+	// the flat pool cost their class declares.
+	const costLabel = formatSpellCostLabel(resolveSpellCost(actor, spell));
 
 	// Damage/healing effect
 	let effect: { formula: string; isHealing: boolean } | null = null;
@@ -93,7 +101,7 @@ function extractDisplayData(system: SpellSystemData): SpellDisplayData {
 		requiresConcentration,
 		targetType,
 		spellRange,
-		manaCost,
+		costLabel,
 		effect,
 		baseEffect: hasContent(description?.baseEffect) ? description!.baseEffect! : null,
 		higherLevelEffect: hasContent(description?.higherLevelEffect)
@@ -108,7 +116,10 @@ function extractDisplayData(system: SpellSystemData): SpellDisplayData {
  * Loads the full spell data asynchronously via fromUuid and extracts
  * display metadata. Manages the accordion expand/collapse state.
  */
-export function createLevelUpSpellCardState(getSpell: () => SpellIndexEntry) {
+export function createLevelUpSpellCardState(
+	getSpell: () => SpellIndexEntry,
+	getActor: () => SpellCostActorLike,
+) {
 	let displayData = $state<SpellDisplayData | null>(null);
 	let isExpanded = $state(false);
 
@@ -119,7 +130,7 @@ export function createLevelUpSpellCardState(getSpell: () => SpellIndexEntry) {
 			.then((item) => {
 				if (!item || getSpell().uuid !== currentUuid) return;
 				const system = (item as Item).system as unknown as SpellSystemData;
-				displayData = extractDisplayData(system);
+				displayData = extractDisplayData(system, getActor(), item as unknown as SpellLike);
 			})
 			.catch((err) => {
 				console.warn('Nimble | Failed to load spell data:', err);

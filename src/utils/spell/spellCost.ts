@@ -91,12 +91,21 @@ export function resolveSpellCost(
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
 	const poolEntry = findChargePoolByIdentifier(pools, poolIdentifier);
 
+	// Past the declared level bound the consequence is not applied: the rule
+	// that replaces it is not automated, so the overdraw is still offered and
+	// its cost is settled at the table.
+	const overdraftMaxLevel = spellcasting?.cost?.overdraftMaxLevel ?? null;
+	const characterLevel = actor?.levels?.character ?? 0;
+	const overdraftResolvedAtTable =
+		typeof overdraftMaxLevel === 'number' && characterLevel > overdraftMaxLevel;
+
 	return {
 		type: 'pool',
 		poolIdentifier,
 		poolLabel: poolEntry?.pool.label ?? poolIdentifier,
 		amount,
 		overdraftConsequence: spellcasting?.cost?.overdraftConsequence ?? '',
+		overdraftResolvedAtTable,
 	};
 }
 
@@ -162,6 +171,7 @@ export function formatSpellCostLabel(cost: ResolvedSpellCost): string | null {
  */
 export function previewOverdraftDamage(actor: SpellCostActorLike, cost: ResolvedSpellCost): number {
 	if (cost.type !== 'pool' || cost.overdraftConsequence !== 'halfMaxHpDamage') return 0;
+	if (cost.overdraftResolvedAtTable) return 0;
 	return Math.floor((actor?.system?.attributes?.hp?.max ?? 0) / 2);
 }
 
