@@ -8,7 +8,7 @@
 	import DicePoolTracker from './components/DicePoolTracker.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
 	import HitPointBar from './components/HitPointBar.svelte';
-	import ManaBar from './components/ManaBar.svelte';
+	import ResourceBar from './components/ResourceBar.svelte';
 	import WoundTrack from './components/WoundTrack.svelte';
 	import { createPlayerCharacterSheetState } from './PlayerCharacterSheet.state.svelte.js';
 	import {
@@ -77,6 +77,7 @@
 	let wounds = $derived(playerCharacterSheetState.wounds);
 	let mana = $derived(playerCharacterSheetState.mana);
 	let hasMana = $derived(playerCharacterSheetState.hasMana);
+	let resourcePools = $derived(playerCharacterSheetState.resourcePools);
 	let actorImageXOffset = $derived(playerCharacterSheetState.actorImageXOffset);
 	let actorImageYOffset = $derived(playerCharacterSheetState.actorImageYOffset);
 	let actorImageScale = $derived(playerCharacterSheetState.actorImageScale);
@@ -184,6 +185,7 @@
 	const updateTempHP = playerCharacterSheetState.updateTempHP;
 	const updateCurrentMana = playerCharacterSheetState.updateCurrentMana;
 	const updateMaxMana = playerCharacterSheetState.updateMaxMana;
+	const updatePoolCurrent = playerCharacterSheetState.updatePoolCurrent;
 	const updateCurrentHitDice = playerCharacterSheetState.updateCurrentHitDice;
 	const rollHitDice = playerCharacterSheetState.rollHitDice;
 	const editCurrentHitDice = playerCharacterSheetState.editCurrentHitDice;
@@ -279,31 +281,50 @@
 			disableControls={!editingEnabled}
 		/>
 
-		{#if hasMana}
-			<h3 class="nimble-heading nimble-heading--mana">
-				Mana
-				<i class="fa-solid fa-sparkles"></i>
-				<button
-					class="nimble-button"
-					class:nimble-button--hidden={!editingEnabled}
-					data-button-variant="icon"
-					type="button"
-					aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
-					data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
-					onclick={() => actor.configureMana()}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
-			</h3>
+		<!-- Mana and every pool the author promoted share one column, so a class
+		     that pays from a pool reads the same way a mana class does. -->
+		<div class="nimble-character-resources">
+			{#if hasMana}
+				<h3 class="nimble-heading nimble-heading--mana">
+					Mana
+					<i class="fa-solid fa-sparkles"></i>
+					<button
+						class="nimble-button"
+						class:nimble-button--hidden={!editingEnabled}
+						data-button-variant="icon"
+						type="button"
+						aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
+						data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
+						onclick={() => actor.configureMana()}
+					>
+						<i class="fa-solid fa-edit"></i>
+					</button>
+				</h3>
 
-			<ManaBar
-				currentMana={mana.current}
-				maxMana={mana.max || mana.baseMax}
-				{updateCurrentMana}
-				{updateMaxMana}
-				disableMaxManaEdit={true}
-			/>
-		{/if}
+				<ResourceBar
+					current={mana.current}
+					max={mana.max || mana.baseMax}
+					updateCurrent={updateCurrentMana}
+					updateMax={updateMaxMana}
+					disableMaxEdit={true}
+				/>
+			{/if}
+
+			{#each resourcePools as pool (pool.id)}
+				<h3 class="nimble-heading nimble-heading--resource">
+					{pool.label}
+					<i class={pool.icon || 'fa-solid fa-bolt'}></i>
+				</h3>
+
+				<ResourceBar
+					current={pool.current}
+					max={pool.max}
+					updateCurrent={(value) => updatePoolCurrent(pool.id, value)}
+					updateMax={() => {}}
+					disableMaxEdit={true}
+				/>
+			{/each}
+		</div>
 	</section>
 
 	<div class="nimble-player-character-header">
@@ -579,8 +600,7 @@
 				'hpHeading hitDiceHeading'
 				'hpBar hitDiceBar'
 				'woundTrack .'
-				'manaHeading manaHeading'
-				'manaBar manaBar';
+				'resources resources';
 			grid-gap: 0 0.125rem;
 			margin-block-start: 0.25rem;
 			margin-inline: 0.25rem;
@@ -593,7 +613,8 @@
 	// scopes ancestor selectors with a zero-specificity :where(), so nesting alone ties.
 	.nimble-character-sheet-section--defense {
 		.nimble-heading.nimble-heading--hp,
-		.nimble-heading.nimble-heading--mana {
+		.nimble-heading.nimble-heading--mana,
+		.nimble-heading.nimble-heading--resource {
 			padding-inline-start: 0;
 		}
 	}
@@ -630,10 +651,18 @@
 		}
 	}
 
-	.nimble-heading--mana {
+	// One column for every standing resource, so mana and promoted charge pools
+	// stack in the order the sheet state supplies them.
+	.nimble-character-resources {
+		grid-area: resources;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.nimble-heading--mana,
+	.nimble-heading--resource {
 		--nimble-button-icon-y-nudge: 0;
 
-		grid-area: manaHeading;
 		margin-block-start: 0.25rem;
 	}
 </style>

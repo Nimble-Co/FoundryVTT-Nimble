@@ -3,6 +3,8 @@ import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { SYSTEM_ID } from '#system';
+import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { getResourcePools } from '#utils/chargePool/chargePoolSync.js';
 import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 import {
 	getInitiativeCombatManaRules,
@@ -223,6 +225,10 @@ export function createPlayerCharacterSheetState(params: {
 			});
 	});
 
+	// Charge pools the author promoted to the header, read through `reactive` so
+	// they track spends and recoveries the same way the mana bar tracks mana.
+	const resourcePools = $derived(getResourcePools(actor.reactive));
+
 	const flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	const actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	const actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
@@ -351,6 +357,12 @@ export function createPlayerCharacterSheetState(params: {
 		});
 	}
 
+	// Manual correction of a promoted pool, on the same write path the charges
+	// dialog uses, so a GM fixing a misplay does it wherever the pool is shown.
+	function updatePoolCurrent(poolId: string, newValue: number): void {
+		void adjustPool(actor, poolId, 'set', newValue);
+	}
+
 	async function updateCurrentHitDice(newValue: number): Promise<void> {
 		await actor.updateCurrentHitDice(newValue);
 	}
@@ -392,6 +404,9 @@ export function createPlayerCharacterSheetState(params: {
 		get hasMana() {
 			return hasMana;
 		},
+		get resourcePools() {
+			return resourcePools;
+		},
 		get actorImageXOffset() {
 			return actorImageXOffset;
 		},
@@ -419,6 +434,7 @@ export function createPlayerCharacterSheetState(params: {
 		updateTempHP,
 		updateCurrentMana,
 		updateMaxMana,
+		updatePoolCurrent,
 		updateCurrentHitDice,
 		rollHitDice,
 		editCurrentHitDice,
