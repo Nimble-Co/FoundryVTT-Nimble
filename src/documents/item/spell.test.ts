@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SpellCostActorLike, SpellLike as SpellCostSpellLike } from '#types/spellCost.d.ts';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
-import {
-	resolveSpellCost,
-	type SpellCostActorLike,
-	type SpellLike as SpellCostSpellLike,
-} from '../../utils/spell/spellCost.js';
+import { resolveSpellCost } from '../../utils/spell/spellCost.js';
 import { NimbleSpellItem } from './spell.js';
 
 interface SpellLike {
@@ -34,7 +31,7 @@ interface SpellLike {
 let activatingSpell: SpellLike | null = null;
 
 function createSpellLike(params: { tier: number; currentMana: number }): SpellLike {
-	const spellLike: SpellLike = {
+	return {
 		id: 'spell-1',
 		uuid: 'Item.spell-1',
 		name: 'Test Spell',
@@ -52,11 +49,12 @@ function createSpellLike(params: { tier: number; currentMana: number }): SpellLi
 		prepareChatCardData: vi.fn(async () => ({})),
 		_createActivationCard: vi.fn(async () => null),
 	};
-	activatingSpell = spellLike;
-	return spellLike;
 }
 
 async function activateSpell(spellLike: SpellLike): Promise<void> {
+	// The stubbed manager resolves the cost for whichever spell is being
+	// activated, so name it here rather than as a side effect of building one.
+	activatingSpell = spellLike;
 	await NimbleSpellItem.prototype.activate.call(spellLike as unknown as NimbleSpellItem, {});
 }
 

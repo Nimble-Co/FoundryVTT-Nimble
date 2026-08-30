@@ -1,4 +1,5 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
@@ -48,10 +49,8 @@ import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import {
-	type ResolvedSpellCost,
 	resolvePinnedCastTier,
 	resolveSpellCost,
-	type SpellLike,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';

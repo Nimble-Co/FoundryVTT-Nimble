@@ -1,16 +1,12 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { ResolvedSpellCost } from '#types/spellCost.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
-import {
-	applyOverdraftConsequence,
-	previewOverdraftDamage,
-	type ResolvedSpellCost,
-	spendSpellCost,
-	validateSpellCost,
-} from '../../utils/spell/spellCost.js';
+import { paySpellCost } from '../../utils/spell/paySpellCost.js';
+import { previewOverdraftDamage } from '../../utils/spell/spellCost.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
@@ -75,42 +71,37 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		// setting internally.
 		const spellCost: ResolvedSpellCost = manager.spellCost ?? { type: 'none' };
 		if (this.system.tier > 0 && this.actor) {
-			const validation = validateSpellCost(this.actor, spellCost);
-			if (!validation.ok && validation.failure) {
-				const failure = validation.failure;
-				const messageKey =
-					failure.code === 'poolMissing'
-						? 'NIMBLE.charges.notifications.poolMissing'
-						: 'NIMBLE.charges.notifications.insufficient';
-				ui.notifications?.error(
-					localize(messageKey, {
-						item: this.name,
-						pool: failure.poolLabel,
-						required: String(failure.required),
-						available: String(failure.available),
+			const payment = await paySpellCost(this.actor, spellCost, {
+				confirmOverdraft: (available) =>
+					confirmSpellOverdraft({
+						spellName: this.name,
+						cost: spellCost,
+						available,
+						damage: previewOverdraftDamage(this.actor!, spellCost),
 					}),
-				);
+			});
+
+			if (!payment.paid) {
+				if (payment.failure) {
+					const messageKey =
+						payment.failure.code === 'poolMissing'
+							? 'NIMBLE.charges.notifications.poolMissing'
+							: 'NIMBLE.charges.notifications.insufficient';
+					ui.notifications?.error(
+						localize(messageKey, {
+							item: this.name,
+							pool: payment.failure.poolLabel,
+							required: String(payment.failure.required),
+							available: String(payment.failure.available),
+						}),
+					);
+				}
 				return null;
 			}
-
-			if (validation.overdrawn) {
-				const confirmed = await confirmSpellOverdraft({
-					spellName: this.name,
-					cost: spellCost,
-					available: validation.available ?? 0,
-					damage: previewOverdraftDamage(this.actor, spellCost),
-				});
-				if (!confirmed) return null;
-			}
 		}
 
-		// Pool-node side effects run only after the gate allowed the use.
+		// Pool-node side effects run only after the cast has been paid for.
 		await manager.applyDeferredPoolNodes();
-
-		if (this.system.tier > 0 && this.actor) {
-			const outcome = await spendSpellCost(this.actor, spellCost);
-			if (outcome.overdrawn) await applyOverdraftConsequence(this.actor, spellCost);
-		}
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
