@@ -121,7 +121,8 @@
 			"cost": {
 				"poolIdentifier": "pilfered-power",
 				"amount": "1",
-				"overdraftConsequence": "halfMaxHpDamage"
+				"overdraftConsequence": "halfMaxHpDamage",
+				"overdraftMaxLevel": 11
 			}
 		},
 		"weaponProficiencies": [

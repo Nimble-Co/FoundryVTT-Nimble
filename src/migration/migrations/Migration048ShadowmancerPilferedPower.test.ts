@@ -33,6 +33,7 @@ describe('the Shadowmancer pack content', () => {
 				poolIdentifier: 'pilfered-power',
 				amount: '1',
 				overdraftConsequence: 'halfMaxHpDamage',
+				overdraftMaxLevel: 11,
 			},
 		});
 	});
@@ -120,5 +121,41 @@ describe('Migration048ShadowmancerPilferedPower', () => {
 		await new Migration048ShadowmancerPilferedPower().updateItem(source);
 
 		expect(source).toEqual(before);
+	});
+
+	describe('updateActor', () => {
+		function shadowmancerActor(current: number, extraClasses: string[] = []) {
+			return {
+				system: { resources: { mana: { current, max: 0 } } },
+				items: [
+					{ type: 'class', system: { identifier: 'shadowmancer' } },
+					...extraClasses.map((identifier) => ({ type: 'class', system: { identifier } })),
+				],
+			};
+		}
+
+		it('clears mana the Shadowmancer never had', async () => {
+			const actor = shadowmancerActor(8);
+
+			await new Migration044ShadowmancerPilferedPower().updateActor(actor);
+
+			expect(actor.system.resources.mana.current).toBe(0);
+		});
+
+		it("leaves a multiclass character's mana alone", async () => {
+			const actor = shadowmancerActor(8, ['mage']);
+
+			await new Migration044ShadowmancerPilferedPower().updateActor(actor);
+
+			expect(actor.system.resources.mana.current).toBe(8);
+		});
+
+		it('does nothing for an actor with no class', async () => {
+			const actor = { system: { resources: { mana: { current: 5, max: 5 } } }, items: [] };
+
+			await new Migration044ShadowmancerPilferedPower().updateActor(actor);
+
+			expect(actor.system.resources.mana.current).toBe(5);
+		});
 	});
 });
