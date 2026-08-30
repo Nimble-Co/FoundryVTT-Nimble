@@ -468,6 +468,60 @@ describe('multiclass cost attribution', () => {
 	});
 });
 
+describe('overdraft level bound', () => {
+	function createBoundedActor(level: number) {
+		const poolClass = createPoolClass({
+			poolCurrent: 0,
+			overdraftConsequence: 'halfMaxHpDamage',
+		});
+		(
+			poolClass.system.spellcasting as { cost: { overdraftMaxLevel: number | null } }
+		).cost.overdraftMaxLevel = 11;
+		const actor = createMockActor({ items: [poolClass], hpMax: 20 });
+		(actor as unknown as { levels: { character: number } }).levels = { character: level };
+		return actor;
+	}
+
+	it('applies the consequence at or below the declared level', async () => {
+		setResourceSpendingAutomation(true);
+		const actor = createBoundedActor(11);
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		expect(cost).toMatchObject({ overdraftResolvedAtTable: false });
+		expect(await applyOverdraftConsequence(actor, cost)).toBe(10);
+	});
+
+	it('applies nothing above the declared level, leaving the cost to the table', async () => {
+		setResourceSpendingAutomation(true);
+		const actor = createBoundedActor(12);
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		expect(cost).toMatchObject({ overdraftResolvedAtTable: true });
+		expect(await applyOverdraftConsequence(actor, cost)).toBe(0);
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('still permits the overdraw above the declared level', () => {
+		setResourceSpendingAutomation(true);
+		const actor = createBoundedActor(12);
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		expect(validateSpellCost(actor, cost)).toMatchObject({ ok: true, overdrawn: true });
+	});
+
+	it('applies the consequence at every level when no bound is declared', async () => {
+		setResourceSpendingAutomation(true);
+		const actor = createMockActor({
+			items: [createPoolClass({ poolCurrent: 0, overdraftConsequence: 'halfMaxHpDamage' })],
+			hpMax: 20,
+		});
+		(actor as unknown as { levels: { character: number } }).levels = { character: 20 };
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		expect(await applyOverdraftConsequence(actor, cost)).toBe(10);
+	});
+});
+
 describe('formatSpellCostLabel', () => {
 	it('renders a mana cost with the localized unit', () => {
 		expect(formatSpellCostLabel({ type: 'mana', amount: 3 })).toBe('3 Mana');
@@ -481,6 +535,7 @@ describe('formatSpellCostLabel', () => {
 				poolLabel: 'Pilfered Power',
 				amount: 1,
 				overdraftConsequence: 'halfMaxHpDamage',
+				overdraftResolvedAtTable: false,
 			}),
 		).toBe('1 Pilfered Power');
 	});

@@ -8,6 +8,7 @@ export interface ClassSpellcastingDeclaration {
 		poolIdentifier?: string;
 		amount?: string;
 		overdraftConsequence?: OverdraftConsequence;
+		overdraftMaxLevel?: number | null;
 	};
 }
 
@@ -18,6 +19,7 @@ export interface ClassSpellcastingDeclaration {
  */
 export interface SpellCostActorLike {
 	type?: string;
+	levels?: { character?: number };
 	items?: { contents?: Array<{ type?: string; system?: unknown }> };
 	system?: {
 		resources?: {
@@ -51,6 +53,13 @@ export type ResolvedSpellCost =
 			poolLabel: string;
 			amount: number;
 			overdraftConsequence: OverdraftConsequence;
+			/**
+			 * True when the caster is past the level at which the declared
+			 * consequence applies automatically. The overdraw is still permitted;
+			 * nothing is applied for it, because the rule that replaces it is not
+			 * automated.
+			 */
+			overdraftResolvedAtTable: boolean;
 	  };
 
 export interface SpellCostFailure {

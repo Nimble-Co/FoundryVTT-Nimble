@@ -3,9 +3,12 @@
 	import localize from '#utils/localize.js';
 	import { createLevelUpSpellCardState } from './LevelUpSpellCard.svelte.ts';
 
-	let { spell }: LevelUpSpellCardProps = $props();
+	let { spell, actor }: LevelUpSpellCardProps = $props();
 
-	const state = createLevelUpSpellCardState(() => spell);
+	const state = createLevelUpSpellCardState(
+		() => spell,
+		() => actor,
+	);
 	const { toggleExpanded, handleKeydown } = state;
 	const displayData = $derived(state.displayData);
 	const isExpanded = $derived(state.isExpanded);
@@ -47,20 +50,18 @@
 				<div class="spell-card__meta">
 					{#if displayData.targetType}
 						<span class="spell-card__target-type">
-							{displayData.targetType}{displayData.spellRange || displayData.manaCost > 0
-								? ','
-								: ''}
+							{displayData.targetType}{displayData.spellRange || displayData.costLabel ? ',' : ''}
 						</span>
 					{/if}
 					{#if displayData.spellRange}
 						<span class="spell-card__range">
-							{displayData.spellRange}{displayData.manaCost > 0 ? ',' : ''}
+							{displayData.spellRange}{displayData.costLabel ? ',' : ''}
 						</span>
 					{/if}
-					{#if displayData.manaCost > 0}
+					{#if displayData.costLabel}
 						<span class="spell-card__mana">
 							<i class="fa-solid fa-sparkles"></i>
-							{localize('NIMBLE.ui.heroicActions.mana', { cost: displayData.manaCost })}
+							{displayData.costLabel}
 						</span>
 					{/if}
 				</div>

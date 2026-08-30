@@ -15,6 +15,7 @@ function poolCost(overrides: Partial<Extract<ResolvedSpellCost, { type: 'pool' }
 		poolLabel: 'Pilfered Power',
 		amount: 1,
 		overdraftConsequence: '' as const,
+		overdraftResolvedAtTable: false,
 		...overrides,
 	};
 }

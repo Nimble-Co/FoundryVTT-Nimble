@@ -29,7 +29,12 @@ export default async function confirmSpellOverdraft(
 		}),
 	];
 
-	if (cost.overdraftConsequence === 'halfMaxHpDamage') {
+	if (cost.overdraftResolvedAtTable) {
+		// Past the declared level the class's own rule replaces the fixed
+		// consequence, and that rule is not automated. Say so rather than
+		// applying a penalty the character has outgrown.
+		paragraphs.push(localize(`${confirmKey}.resolvedAtTable`));
+	} else if (cost.overdraftConsequence === 'halfMaxHpDamage') {
 		paragraphs.push(localize(`${confirmKey}.halfMaxHpDamage`, { damage: String(damage) }));
 	}
 

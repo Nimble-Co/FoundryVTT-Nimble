@@ -107,6 +107,16 @@ const schema = () => ({
 				blank: true,
 				choices: ['', 'halfMaxHpDamage'],
 			}),
+			// The last character level at which the declared consequence is
+			// applied automatically. Above it the overdraw is still permitted,
+			// but its cost is resolved at the table. Null means no bound.
+			overdraftMaxLevel: new fields.NumberField({
+				required: true,
+				nullable: true,
+				initial: null,
+				integer: true,
+				min: 1,
+			}),
 		}),
 	}),
 	weaponProficiencies: new fields.ArrayField(
@@ -168,6 +178,7 @@ class NimbleClassData extends NimbleBaseItemData<
 			poolIdentifier: string;
 			amount: string;
 			overdraftConsequence: '' | 'halfMaxHpDamage';
+			overdraftMaxLevel: number | null;
 		};
 	};
 	declare weaponProficiencies: string[];
