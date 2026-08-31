@@ -16,6 +16,8 @@ export interface SituationalRollModeOption {
 	 */
 	key: string;
 	label: string;
+	/** Font Awesome classes for the icon shown beside the option. */
+	icon: string;
 	/** Roll mode adjustment: positive for advantage, negative for disadvantage. */
 	value: number;
 }
@@ -68,6 +70,7 @@ export function getSituationalRollModeOptions(
 		options.push({
 			key: `${rule.item?.uuid ?? ''}:${rule.id}`,
 			label: rule.label || rule.item?.name || localize('NIMBLE.ruleTypes.situationalRollMode'),
+			icon: rule.iconClass(),
 			value: rule.value,
 		});
 	}

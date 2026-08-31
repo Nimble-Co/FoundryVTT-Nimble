@@ -15,6 +15,7 @@ const FEAR_ADVANTAGE_RULE = {
 	predicate: {},
 	priority: 1,
 	value: 1,
+	icon: 'fa-solid fa-ghost',
 	checkType: 'savingThrow',
 	saves: ['will'],
 	abilities: [],

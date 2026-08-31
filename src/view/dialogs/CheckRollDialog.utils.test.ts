@@ -11,6 +11,7 @@ function createRule(overrides: Record<string, unknown> = {}) {
 		label: 'Against fear',
 		value: 1,
 		item: { name: 'Haunted Past', uuid: 'Item.hp1' },
+		iconClass: vi.fn(() => 'fa-solid fa-ghost'),
 		appliesTo: vi.fn(() => true),
 		offersAdjustment: vi.fn(() => true),
 		matchesRoll: vi.fn(() => true),
@@ -99,10 +100,11 @@ describe('getSituationalRollModeOptions', () => {
 	});
 
 	describe('option shape', () => {
-		it('carries the label and adjustment', () => {
+		it('carries the label, icon, and adjustment', () => {
 			const rule = createRule({ value: -2 });
 			expect(getSituationalRollModeOptions(createActor([rule]), willSave)[0]).toMatchObject({
 				label: 'Against fear',
+				icon: 'fa-solid fa-ghost',
 				value: -2,
 			});
 		});

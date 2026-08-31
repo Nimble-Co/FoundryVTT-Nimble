@@ -1435,6 +1435,10 @@
 					"label": "Roll mode value",
 					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
 				},
+				"icon": {
+					"label": "Icon",
+					"hint": "Font Awesome classes for the icon shown beside the option, e.g. \"fa-solid fa-ghost\". Leave blank to use the system's advantage or disadvantage icon."
+				},
 				"checkType": {
 					"label": "Offer on",
 					"hint": "Which kind of roll the option appears on."

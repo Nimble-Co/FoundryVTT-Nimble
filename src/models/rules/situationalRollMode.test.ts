@@ -5,6 +5,7 @@ import { SituationalRollModeRule } from './situationalRollMode.js';
 
 interface RuleConfig {
 	value?: number;
+	icon?: string;
 	checkType?: RollDialogType;
 	saves?: string[];
 	abilities?: string[];
@@ -13,6 +14,7 @@ interface RuleConfig {
 
 type TestRule = SituationalRollModeRule & {
 	value: number;
+	icon: string;
 	saves: string[];
 	abilities: string[];
 	skills: string[];
@@ -21,6 +23,7 @@ type TestRule = SituationalRollModeRule & {
 function createRule(config: RuleConfig = {}): TestRule {
 	const sourceData = {
 		value: config.value ?? 1,
+		icon: config.icon ?? '',
 		checkType: config.checkType ?? 'savingThrow',
 		saves: config.saves ?? [],
 		abilities: config.abilities ?? [],
@@ -43,6 +46,7 @@ function createRule(config: RuleConfig = {}): TestRule {
 
 	// The mock DataModel does not assign source data onto the instance.
 	rule.value = sourceData.value;
+	rule.icon = sourceData.icon;
 	rule.checkType = sourceData.checkType;
 	rule.saves = sourceData.saves;
 	rule.abilities = sourceData.abilities;
@@ -57,6 +61,7 @@ describe('SituationalRollModeRule', () => {
 			const schema = SituationalRollModeRule.defineSchema();
 			expect(schema).toHaveProperty('type');
 			expect(schema).toHaveProperty('value');
+			expect(schema).toHaveProperty('icon');
 			expect(schema).toHaveProperty('checkType');
 			expect(schema).toHaveProperty('saves');
 			expect(schema).toHaveProperty('abilities');
@@ -183,6 +188,26 @@ describe('SituationalRollModeRule', () => {
 		it('rejects initiative rolls for a rule scoped to another check type', () => {
 			const rule = createRule({ checkType: 'savingThrow', saves: ['all'] });
 			expect(rule.matchesRoll('initiative', undefined)).toBe(false);
+		});
+	});
+
+	describe('iconClass', () => {
+		it('uses the authored icon', () => {
+			expect(createRule({ icon: 'fa-solid fa-ghost' }).iconClass()).toBe('fa-solid fa-ghost');
+		});
+
+		it('falls back to the advantage icon when an unlabelled rule grants advantage', () => {
+			expect(createRule({ value: 1 }).iconClass()).toBe('fa-solid fa-circle-plus');
+		});
+
+		it('falls back to the disadvantage icon when an unlabelled rule imposes a penalty', () => {
+			expect(createRule({ value: -1 }).iconClass()).toBe('fa-solid fa-circle-minus');
+		});
+
+		it('keeps the authored icon even when the rule imposes a penalty', () => {
+			expect(createRule({ icon: 'fa-solid fa-ghost', value: -2 }).iconClass()).toBe(
+				'fa-solid fa-ghost',
+			);
 		});
 	});
 });

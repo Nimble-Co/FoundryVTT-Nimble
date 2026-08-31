@@ -69,7 +69,7 @@
 	<RollModeConfig bind:selectedRollMode />
 
 	{#if situationalOptions.length}
-		<div class="nimble-roll-modifiers-container">
+		<section class="nimble-situational-roll-mode">
 			<h5 class="nimble-situational-roll-mode__heading">
 				{localize('NIMBLE.checkRollDialog.situationalRollMode.heading')}
 			</h5>
@@ -87,20 +87,27 @@
 							};
 						}}
 					/>
+					<i class="nimble-situational-roll-mode__icon {option.icon}" aria-hidden="true"></i>
 					<span class="nimble-situational-roll-mode__label">{option.label}</span>
-					<span class="nimble-situational-roll-mode__value">{situationalLabel(option.value)}</span>
+					<span
+						class="nimble-situational-roll-mode__value"
+						class:nimble-situational-roll-mode__value--penalty={option.value < 0}
+					>
+						{situationalLabel(option.value)}
+					</span>
 				</label>
 			{/each}
-		</div>
+		</section>
 	{/if}
 
 	{#if game.user?.isGM}
-		<div class="nimble-roll-modifiers-container">
-			<label>
-				{skillCheckDialog.hideRoll}
+		<section class="nimble-gm-roll-options">
+			<label class="nimble-gm-roll-options__option">
+				<i class="fa-solid fa-user-secret nimble-gm-roll-options__icon" aria-hidden="true"></i>
+				<span class="nimble-gm-roll-options__label">{skillCheckDialog.hideRoll}</span>
 				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
 			</label>
-		</div>
+		</section>
 	{/if}
 	<div class="nimble-roll-formula">{rollFormula}</div>
 </article>
@@ -127,23 +134,74 @@
 		--nimble-button-width: 100%;
 	}
 
-	.nimble-situational-roll-mode__heading {
-		margin: 0 0 0.25rem;
-		font-size: var(--nimble-sm-text);
-	}
-
-	.nimble-situational-roll-mode__option {
+	.nimble-situational-roll-mode {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+		flex-direction: column;
+		gap: 0.375rem;
+		margin-top: 0.75rem;
+		padding: 0.5rem 0.625rem;
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		background: var(--nimble-card-background-color);
+
+		&__heading {
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__option {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			cursor: pointer;
+		}
+
+		&__icon {
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__label {
+			flex: 1;
+		}
+
+		&__value {
+			font-size: var(--nimble-xs-text);
+			font-weight: 700;
+			text-transform: uppercase;
+			color: var(--nimble-medium-text-color);
+
+			&--penalty {
+				color: var(--nimble-validation-error-color);
+			}
+		}
 	}
 
-	.nimble-situational-roll-mode__label {
-		flex: 1;
-	}
+	.nimble-gm-roll-options {
+		margin-top: 0.75rem;
+		padding-top: 0.625rem;
+		border-top: 1px dashed var(--nimble-card-border-color);
 
-	.nimble-situational-roll-mode__value {
-		color: var(--nimble-medium-text-color);
-		font-size: var(--nimble-xs-text);
+		&__option {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			cursor: pointer;
+		}
+
+		&__icon {
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__label {
+			flex: 1;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-medium-text-color);
+		}
 	}
 </style>

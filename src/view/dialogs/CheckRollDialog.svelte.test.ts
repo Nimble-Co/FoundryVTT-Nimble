@@ -16,9 +16,14 @@ vi.mock('../../utils/getRollFormula.js', () => ({
  * this test on the dialog's wiring; `situationalRollMode.test.ts` covers the rule.
  */
 function createSituationalRule(
-	overrides: { id?: string; label?: string; value?: number } = {},
+	overrides: { id?: string; label?: string; value?: number; icon?: string } = {},
 ): Record<string, unknown> {
-	const { id = 'fear-rule', label = 'Against fear', value = 1 } = overrides;
+	const {
+		id = 'fear-rule',
+		label = 'Against fear',
+		value = 1,
+		icon = 'fa-solid fa-ghost',
+	} = overrides;
 
 	return {
 		type: 'situationalRollMode',
@@ -26,6 +31,7 @@ function createSituationalRule(
 		label,
 		value,
 		item: { name: 'Haunted Past', uuid: 'Item.haunted-past' },
+		iconClass: () => icon,
 		appliesTo: () => true,
 		offersAdjustment: () => value !== 0,
 		matchesRoll: () => true,
@@ -43,11 +49,18 @@ function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
 	} as never);
 
 	const formula = () => container.querySelector('.nimble-roll-formula')?.textContent;
+	// Svelte appends its own scope class, so read back only the icon's own classes.
+	const optionIcons = () =>
+		Array.from(container.querySelectorAll('.nimble-situational-roll-mode__icon')).map((icon) =>
+			Array.from(icon.classList)
+				.filter((name) => name.startsWith('fa-'))
+				.join(' '),
+		);
 	const roll = () => fireEvent.click(screen.getByRole('button', { name: /roll/i }));
 	const toggle = (name: string) =>
 		fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(name) }));
 
-	return { submitRoll, formula, roll, toggle };
+	return { submitRoll, formula, optionIcons, roll, toggle };
 }
 
 describe('CheckRollDialog situational roll modes', () => {
@@ -129,6 +142,15 @@ describe('CheckRollDialog situational roll modes', () => {
 		await roll();
 
 		expect(submitRoll).toHaveBeenCalledWith(expect.objectContaining({ rollMode: 2 }));
+	});
+
+	it("shows each option's icon beside its label", () => {
+		const { optionIcons } = renderWillSave([
+			createSituationalRule({ id: 'fear', icon: 'fa-solid fa-ghost' }),
+			createSituationalRule({ id: 'cursed', icon: 'fa-solid fa-skull' }),
+		]);
+
+		expect(optionIcons()).toEqual(['fa-solid fa-ghost', 'fa-solid fa-skull']);
 	});
 
 	it('clamps the combined roll mode at the slider ceiling', async () => {

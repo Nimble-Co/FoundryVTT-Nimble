@@ -288,6 +288,8 @@ Which to reach for:
 - The condition is something only the table knows (what a save is against, what a skill check is being used for): use `situationalRollMode` and put the description in the rule's `label`, which is what the checkbox shows. The `predicate` still gates whether the option is offered, so the two compose.
 - The roll is an attack: neither applies. Attacks are configured in the item activation dialog, where `conditionalBonus` offers a per-attack choice of advantage or bonus damage.
 
+Each option renders with an icon: the rule's own `icon` (Font Awesome classes) when it has one, otherwise the system's advantage/disadvantage icon picked from the sign of `value`. The GM's "hide roll" toggle sits in its own divided section below, so it never reads as one more situational option.
+
 A rule offering a zero adjustment is skipped, since its checkbox would do nothing. Option keys are `${itemUuid}:${ruleId}`, because rule ids are only unique within an item and two copies of the same item would otherwise collapse into one checkbox.
 
 ## RulesManager API
