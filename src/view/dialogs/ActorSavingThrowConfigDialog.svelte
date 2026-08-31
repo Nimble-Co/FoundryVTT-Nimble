@@ -1,9 +1,7 @@
 <script>
-	import localize from '#utils/localize.ts';
 	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 	import { calculateDefaultRollModes } from './ActorSavingThrowConfigDialog.utils.js';
 	import formatRollModeLabel from './formatRollModeLabel.js';
-	import { collectSituationalRules } from './situationalSaveRules.js';
 
 	function formatModifier(value) {
 		return replaceHyphenWithMinusSign(
@@ -104,14 +102,7 @@
 		for (const item of document.items) {
 			if (!item.rules) continue;
 			for (const [, rule] of item.rules) {
-				// `!rule.situation`: a situational rule never reaches the roll-mode calculation,
-				// so offering its save picker would make the player choose a save nothing consumes.
-				if (
-					rule.type === 'savingThrowRollMode' &&
-					rule.requiresChoice &&
-					!rule.disabled &&
-					!rule.situation
-				) {
+				if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && !rule.disabled) {
 					rules.push({
 						rule,
 						item,
@@ -124,23 +115,6 @@
 			}
 		}
 		return rules;
-	});
-
-	// Rules that only apply in a named circumstance ("advantage against poison saves").
-	// A persisted default roll mode can't express that, so they're listed as reminders
-	// instead of being folded into the calculated defaults. `target` is deliberately not
-	// surfaced: nothing narrows a situational rule to a save, so naming one would imply a
-	// scope the system never applies.
-	let situationalRules = $derived.by(() => {
-		// Access reactive to ensure this derived re-runs when items update
-		const _ = document.reactive.items;
-		return collectSituationalRules(document.items).map((rule) => ({
-			label: rule.label,
-			summary: localize('NIMBLE.saveConfig.situationalEffect', {
-				rollMode: formatRollModeLabel(rule.value),
-				situation: rule.situation,
-			}),
-		}));
 	});
 
 	// Get available save options for a choice-based rule based on its target
@@ -386,22 +360,6 @@
 									{/if}
 								</td>
 							{/each}
-						</tr>
-					{/each}
-				{/if}
-
-				<!-- Situational Section (reminders — these never move the default roll mode) -->
-				{#if situationalRules.length > 0}
-					{@render sectionHeader(saveConfig.situational, saveConfig.situationalSubtitle)}
-					{#each situationalRules as ruleData}
-						<tr class="nimble-save-config__data-row nimble-save-config__data-row--situational">
-							<th class="nimble-save-config__row-label">
-								<i class="fa-solid fa-circle-exclamation"></i>
-								{ruleData.label}
-							</th>
-							<td class="nimble-save-config__situational-cell" colspan={savingThrowKeys.length}>
-								{ruleData.summary}
-							</td>
 						</tr>
 					{/each}
 				{/if}
@@ -712,17 +670,6 @@
 			display: inline-block;
 			font-size: var(--nimble-sm-text);
 			color: var(--nimble-light-text-color);
-		}
-
-		&__data-row--situational {
-			background: hsla(200, 80%, 50%, 0.03);
-		}
-
-		&__situational-cell {
-			padding: 0.5rem 0.75rem;
-			text-align: left;
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-dark-text-color);
 		}
 
 		&__spacer-row {

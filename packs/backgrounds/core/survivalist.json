@@ -15,15 +15,23 @@
 				"id": "1C7GnDgBamsrGvjI"
 			},
 			{
-				"type": "savingThrowRollMode",
-				"label": "Survivalist",
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "8pUORSgg0CfUHYPc",
+				"identifier": "",
+				"label": "Against poison",
+				"predicate": {},
+				"priority": 1,
 				"value": 1,
-				"mode": "adjust",
-				"situation": "poison",
-				"id": "8pUORSgg0CfUHYPc"
+				"checkType": "savingThrow",
+				"saves": [
+					"strength"
+				],
+				"abilities": [],
+				"skills": []
 			}
 		],
-		"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>"
+		"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>Advantage against poison saves [A]</p><p>+1 max Hit Die [M]</p>"
 	},
 	"effects": [],
 	"flags": {},

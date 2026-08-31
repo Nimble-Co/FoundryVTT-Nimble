@@ -16,7 +16,8 @@ interface StubRule {
 	value?: number;
 	selectedSave?: string;
 	requiresChoice?: boolean;
-	situation?: string;
+	checkType?: string;
+	saves?: string[];
 }
 
 /** Stands in for an embedded item: the calculators read the `rules` Map, not `system.rules`. */
@@ -36,12 +37,13 @@ describe('calculateDefaultRollModes', () => {
 		});
 	});
 
-	it('ignores a situational rule so the stored default stays at the class value', () => {
-		// Survivalist's "advantage against poison saves" only applies when poison comes up.
-		// Folding it in would hand out blanket advantage on every save.
+	// Survivalist's "advantage against poison saves" is a `situationalRollMode`, which the
+	// roller opts into per roll. Folding it in would hand out blanket advantage on every STR
+	// save, whether or not poison is involved.
+	it('ignores a situationalRollMode rule so the stored default stays at the class value', () => {
 		const items = [
 			createItem('Survivalist', [
-				{ type: 'savingThrowRollMode', value: 1, mode: 'adjust', situation: 'poison' },
+				{ type: 'situationalRollMode', value: 1, checkType: 'savingThrow', saves: ['strength'] },
 			]),
 		];
 
@@ -53,8 +55,7 @@ describe('calculateDefaultRollModes', () => {
 		});
 	});
 
-	it('still applies an otherwise identical rule that names no situation', () => {
-		// The guard must key on `situation` alone — this is the same rule without it.
+	it('applies an untargeted adjust rule to every save', () => {
 		const items = [
 			createItem('Homebrew', [{ type: 'savingThrowRollMode', value: 1, mode: 'adjust' }]),
 		];

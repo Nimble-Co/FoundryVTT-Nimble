@@ -260,10 +260,6 @@
 			"defaultRollModeSubtitle": "Advantage or disadvantage on saves",
 			"ancestryTraits": "Ancestry Traits",
 			"ancestryTraitsSubtitle": "Features that enhance a save of your choice",
-			"situational": "Situational",
-			"situationalSubtitle": "Applies only in the listed circumstance — apply it yourself when it comes up",
-			"situationalEffect": "{rollMode} against {situation}",
-			"situationalToggle": "{label} — against {situation}",
 			"rollModeAdvantage": "Adv ×{count}",
 			"rollModeDisadvantage": "Dis ×{count}",
 			"rollModeNormal": "Normal",
@@ -1336,7 +1332,7 @@
 				}
 			},
 			"savingThrowRollMode": {
-				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use. Naming a situation instead lists the rule as a reminder on the saving throw config and leaves the stored default roll mode alone.",
+				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use.",
 				"value": {
 					"label": "Roll mode value"
 				},
@@ -1351,10 +1347,6 @@
 				},
 				"requiresChoice": {
 					"label": "Player chooses save at use"
-				},
-				"situation": {
-					"label": "Only against",
-					"hint": "Leave blank to change the default roll mode. Naming a circumstance (e.g. \"poison\") instead lists the rule as a reminder on the saving throw config, since it only applies when that comes up."
 				}
 			},
 			"skillBonus": {

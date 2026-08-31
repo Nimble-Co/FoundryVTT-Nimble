@@ -21,7 +21,6 @@ declare interface NimbleBaseRule<Schema = any, Parent = any> {
 	requiresChoice?: boolean;
 	target?: string;
 	selectedSave?: string;
-	situation?: string;
 
 	// GrantProficiencyRule properties
 	proficiencyType?: string;

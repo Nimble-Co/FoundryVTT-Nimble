@@ -4,15 +4,14 @@
 	import { untrack } from 'svelte';
 
 	import { SYSTEM_ID } from '#system';
-	import localize from '#utils/localize.ts';
 	import Hint from '#view/components/Hint.svelte';
 	import getRollFormula from '../../utils/getRollFormula.js';
+	import localize from '../../utils/localize.js';
 	import {
 		getSituationalRollModeOptions,
 		type SituationalRollModeOption,
 	} from './CheckRollDialog.utils.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
-	import { collectSituationalRules } from './situationalSaveRules.js';
 
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
@@ -22,15 +21,14 @@
 
 	// Rules are re-instantiated on every data-prep cycle, so the options are resolved
 	// once for the life of the dialog rather than tracked reactively.
-	const situationalOptions = untrack(() => [
-		...getSituationalRollModeOptions(actor, {
+	const situationalOptions = untrack(() =>
+		getSituationalRollModeOptions(actor, {
 			type,
 			abilityKey: data.abilityKey,
 			saveKey: data.saveKey,
 			skillKey: data.skillKey,
 		}),
-		...savingThrowSituationalOptions(),
-	]);
+	);
 
 	// Keyed by option, holding the adjustment actually applied to the slider rather
 	// than the option's own value: clamping at the slider's ends can swallow part of
@@ -48,23 +46,6 @@
 			type,
 		});
 	});
-
-	// A `savingThrowRollMode` rule that names a circumstance ("advantage against poison
-	// saves") never moves the stored default, so it is offered here instead. It carries no
-	// predicate or target of its own, which is why it is not a `situationalRollMode`.
-	function savingThrowSituationalOptions(): SituationalRollModeOption[] {
-		if (type !== 'savingThrow') return [];
-
-		return collectSituationalRules(actor.items ?? []).map((rule, index) => ({
-			key: `savingThrowRollMode:${index}`,
-			label: localize('NIMBLE.saveConfig.situationalToggle', {
-				label: rule.label,
-				situation: rule.situation,
-			}),
-			icon: '',
-			value: rule.value,
-		}));
-	}
 
 	function isSelected(option: SituationalRollModeOption): boolean {
 		return option.key in appliedAdjustments;
@@ -256,13 +237,26 @@
 			}
 		}
 
+		// Square, unringed and dark-backed, matching the feature cards on the character
+		// sheet's Features tab, so the same artwork reads as the same item in both places.
+		// Direction is carried by the row tint and the value pill, not by the icon.
 		&__icon {
 			width: 1.75rem;
 			height: 1.75rem;
-			border-radius: 50%;
-			border: 1px solid var(--nimble-situational-accent);
-			background: var(--nimble-situational-accent-background);
+			border: 0;
+			border-radius: 0;
 			object-fit: cover;
+			object-position: center;
+
+			// The backing is scoped to the image: the `{:else}` element is a bare spacer
+			// keeping the grid columns aligned, and must stay invisible.
+			&:is(img) {
+				background: rgba(0, 0, 0, 0.7);
+			}
+
+			&[src$='.svg' i] {
+				padding: 0.2rem;
+			}
 		}
 
 		&__label {

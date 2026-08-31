@@ -48,15 +48,6 @@ describe('ancestryBonusRequiresSaveChoice', () => {
 		expect(ancestryBonusRequiresSaveChoice(bonus)).toBe(false);
 	});
 
-	it('returns false when the choice rule is situational', () => {
-		// `resolveSavingThrowRollModes` drops situational rules before it reaches the
-		// `requiresChoice` gate, so gating the wizard on one would make the player pick a
-		// save that is then discarded.
-		const bonus = createBonusStub([{ ...NEUTRAL_SAVE_CHOICE_RULE, situation: 'poison' }]);
-
-		expect(ancestryBonusRequiresSaveChoice(bonus)).toBe(false);
-	});
-
 	it('returns true when a choice rule targets something other than neutral', () => {
 		// `resolveSavingThrowRollModes` skips every `requiresChoice` rule when no save has
 		// been picked, so not gating here would drop this homebrew rule at submit time.

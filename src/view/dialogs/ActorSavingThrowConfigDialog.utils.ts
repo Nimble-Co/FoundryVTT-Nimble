@@ -12,7 +12,6 @@ interface SavingThrowRollModeRuleData {
 	value?: number;
 	selectedSave?: string | null;
 	requiresChoice?: boolean;
-	situation?: string;
 }
 
 interface RuleBearingItem {
@@ -77,10 +76,9 @@ function resolveTargetSaves(
  * `savingThrowRollMode` rules. This is what the "Reset to Class Defaults" button writes,
  * and what the button's visibility is decided against.
  *
- * Two kinds of rule are deliberately skipped: a choice-based rule with no save picked yet
- * has nothing to apply to, and a situational rule ("advantage against poison saves") only
- * applies when its circumstance comes up, which a single persisted value cannot express.
- * Situational rules surface through {@link collectSituationalRules} instead.
+ * A choice-based rule with no save picked yet is deliberately skipped: it has nothing to
+ * apply to. `situationalRollMode` rules never reach here at all: they are a separate rule
+ * type, offered per roll in the check roll dialog rather than stored on the actor.
  */
 export function calculateDefaultRollModes(
 	items: Iterable<RuleBearingItem>,
@@ -94,7 +92,6 @@ export function calculateDefaultRollModes(
 
 	for (const rule of collectRollModeRules(items)) {
 		if (rule.disabled) continue;
-		if (rule.situation) continue;
 		if (rule.requiresChoice && !rule.selectedSave) continue;
 
 		const value = rule.value ?? 0;

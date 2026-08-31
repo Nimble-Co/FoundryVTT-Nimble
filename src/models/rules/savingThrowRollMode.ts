@@ -37,17 +37,6 @@ function schema() {
 			initial: false,
 			label: 'NIMBLE.rules.savingThrowRollMode.requiresChoice.label',
 		}),
-		// Free text rather than a closed set: the circumstances the rulebooks attach to
-		// saves (poison, fear, being grabbed) span damage types, conditions and plain
-		// prose, and none of the existing config vocabularies covers them.
-		situation: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			label: 'NIMBLE.rules.savingThrowRollMode.situation.label',
-			hint: 'NIMBLE.rules.savingThrowRollMode.situation.hint',
-		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -67,11 +56,6 @@ declare namespace SavingThrowRollModeRule {
  * ActorSavingThrowConfigDialog.svelte and by the character creation flow,
  * so users can customize their saving throw roll modes while still being
  * able to reset to calculated defaults.
- *
- * A rule that names a `situation` only applies when that circumstance comes up
- * ("advantage against poison saves"), which a persisted default roll mode cannot
- * express. Both calculators skip those rules so the stored default stays correct,
- * and the saving throw config dialog lists them separately as reminders.
  */
 class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Schema> {
 	static override group = 'bonuses';
@@ -92,7 +76,6 @@ class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Sch
 				['selectedSave', 'string | null'],
 				['mode', '"set" | "adjust"'],
 				['requiresChoice', 'boolean'],
-				['situation', 'string'],
 			]),
 		);
 	}
