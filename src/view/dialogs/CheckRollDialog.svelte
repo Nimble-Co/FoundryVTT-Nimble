@@ -96,21 +96,16 @@
 						<label
 							class="nimble-situational__option"
 							class:nimble-situational__option--selected={isSelected(option)}
+							data-direction={option.value < 0 ? 'penalty' : 'bonus'}
 						>
-							<i class="nimble-situational__icon {option.icon}" aria-hidden="true"></i>
-							<span class="nimble-situational__label">{option.label}</span>
-							<span
-								class="nimble-situational__value"
-								class:nimble-situational__value--penalty={option.value < 0}
-							>
-								{situationalLabel(option.value)}
-							</span>
 							<input
 								type="checkbox"
-								class="nimble-situational__checkbox"
 								checked={isSelected(option)}
 								onchange={(event) => toggleSituational(option, event.currentTarget.checked)}
 							/>
+							<i class="nimble-situational__icon {option.icon}" aria-hidden="true"></i>
+							<span class="nimble-situational__label">{option.label}</span>
+							<span class="nimble-situational__value">{situationalLabel(option.value)}</span>
 						</label>
 					</li>
 				{/each}
@@ -123,13 +118,9 @@
 
 		{#if game.user?.isGM}
 			<label class="nimble-hide-roll">
+				<input type="checkbox" bind:checked={shouldRollBeHidden} />
 				<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-				<span class="nimble-hide-roll__label">{skillCheckDialog.hideRoll}</span>
-				<input
-					type="checkbox"
-					class="nimble-hide-roll__checkbox"
-					bind:checked={shouldRollBeHidden}
-				/>
+				<span>{skillCheckDialog.hideRoll}</span>
 			</label>
 		{/if}
 	</div>
@@ -158,6 +149,12 @@
 	}
 
 	.nimble-situational {
+		// Advantage and disadvantage borrow the roll success/failure pair: it is the
+		// system's only semantic green/red defined for both themes. The accent colour
+		// is desaturated in dark mode and reads as disabled at these sizes.
+		--nimble-situational-accent: var(--nimble-roll-success-color);
+		--nimble-situational-accent-background: var(--nimble-roll-success-background-color);
+
 		margin-block: 0.5rem 0.75rem;
 		margin-inline: 1rem;
 		padding: 0.625rem 0.75rem 0.75rem;
@@ -186,7 +183,7 @@
 
 		&__option {
 			display: grid;
-			grid-template-columns: 1.75rem 1fr auto auto;
+			grid-template-columns: auto 1.75rem 1fr auto;
 			align-items: center;
 			gap: 0.625rem;
 			padding: 0.375rem 0.5rem;
@@ -195,17 +192,20 @@
 			cursor: pointer;
 			transition: var(--nimble-standard-transition);
 
-			&:hover {
-				background: hsla(var(--nimble-accent-color-values), 0.08);
+			&[data-direction='penalty'] {
+				--nimble-situational-accent: var(--nimble-roll-failure-color);
+				--nimble-situational-accent-background: var(--nimble-roll-failure-background-color);
 			}
 
-			&:focus-within {
-				border-color: var(--nimble-accent-color);
+			// currentColor tracks the theme's body text, so the tint stays visible in
+			// both themes without a second set of tokens.
+			&:hover {
+				background: color-mix(in srgb, currentColor 8%, transparent);
 			}
 
 			&--selected {
-				border-color: hsla(var(--nimble-accent-color-values), 0.5);
-				background: hsla(var(--nimble-accent-color-values), 0.12);
+				border-color: color-mix(in srgb, var(--nimble-situational-accent) 45%, transparent);
+				background: color-mix(in srgb, var(--nimble-situational-accent) 14%, transparent);
 			}
 		}
 
@@ -215,38 +215,25 @@
 			width: 1.75rem;
 			height: 1.75rem;
 			border-radius: 50%;
-			background: hsla(var(--nimble-accent-color-values), 0.12);
+			background: var(--nimble-situational-accent-background);
 			font-size: var(--nimble-md-text);
-			color: var(--nimble-accent-color);
+			color: var(--nimble-situational-accent);
 		}
 
 		&__label {
 			font-size: var(--nimble-sm-text);
+			font-weight: 600;
 			line-height: 1.2;
 		}
 
 		&__value {
 			padding: 0.125rem 0.5rem;
 			border-radius: 999px;
-			background: hsla(var(--nimble-accent-color-values), 0.15);
-			font-size: var(--nimble-xxs-text);
+			background: var(--nimble-situational-accent-background);
+			font-size: var(--nimble-xs-text);
 			font-weight: 700;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
 			white-space: nowrap;
-			color: var(--nimble-accent-color);
-
-			&--penalty {
-				background: hsla(0, 65%, 45%, 0.15);
-				color: var(--nimble-validation-error-color);
-			}
-		}
-
-		&__checkbox {
-			width: 1rem;
-			height: 1rem;
-			margin: 0;
-			cursor: pointer;
+			color: var(--nimble-situational-accent);
 		}
 	}
 
@@ -273,18 +260,8 @@
 		background: var(--nimble-card-background-color);
 		cursor: pointer;
 		white-space: nowrap;
+		font-size: var(--nimble-xs-text);
+		font-weight: 600;
 		color: var(--nimble-medium-text-color);
-
-		&__label {
-			font-size: var(--nimble-xs-text);
-			font-weight: 500;
-		}
-
-		&__checkbox {
-			width: 1rem;
-			height: 1rem;
-			margin: 0;
-			cursor: pointer;
-		}
 	}
 </style>
