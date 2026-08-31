@@ -764,6 +764,30 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 		});
 	});
 
+	it('keeps the ancestry options out of the way until the bonus is confirmed', async () => {
+		// The options ask about the ancestry the player has settled on, and an unconfirmed bonus
+		// means they have not settled it yet.
+		const bonusUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.test-bonus';
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi
+			.fn()
+			.mockResolvedValue({ uuid: bonusUuid, system: { rules: [] } });
+
+		renderWithAncestry(createClass('mage'), createAncestryWithDefaultBonus(bonusUuid));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('ancestry-options-available')).toHaveTextContent('false');
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Confirm Ancestry Bonus' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('ancestry-options-available')).toHaveTextContent('true');
+		});
+	});
+
 	it('skips ANCESTRY_BONUS when no bonuses are available at all', async () => {
 		// The bonus pack is missing or disabled, so the default resolves to nothing and there is
 		// nothing to pick. Gating here would dead-end the wizard: no way to complete a character.

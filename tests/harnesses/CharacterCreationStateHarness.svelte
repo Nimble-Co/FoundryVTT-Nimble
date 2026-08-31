@@ -200,6 +200,7 @@
 <div data-testid="stage">{String(state.stage)}</div>
 <div data-testid="selected-ancestry-bonus">{String(state.selectedAncestryBonus?.uuid ?? null)}</div>
 <div data-testid="ancestry-bonus-confirmed">{String(state.ancestryBonusConfirmed)}</div>
+<div data-testid="ancestry-options-available">{String(state.ancestryOptionsAvailable)}</div>
 <div data-testid="selected-ancestry-variant">{String(state.selectedAncestryVariant)}</div>
 <div data-testid="selected-ancestry-save">{String(state.selectedAncestrySave)}</div>
 <!-- Both bonus maps seed every key at 0; only non-zero entries are interesting to assert. -->

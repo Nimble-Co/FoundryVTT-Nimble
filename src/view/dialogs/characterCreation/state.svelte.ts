@@ -115,6 +115,26 @@ function ancestryOffersVariantChoice(ancestry: NimbleAncestryItem | null): boole
 	return offersVariantChoice(ancestry?.system?.variants);
 }
 
+/**
+ * Whether the ancestry bonus step still holds the player's attention. Everything the ancestry asks
+ * afterwards waits on it, so the options are not put to a player who has yet to settle the bonus.
+ */
+function ancestryBonusPending({
+	ancestry,
+	ancestryBonus,
+	ancestryBonusConfirmed,
+	hasAncestryBonuses,
+}: {
+	ancestry: NimbleAncestryItem | null;
+	ancestryBonus: NimbleAncestryBonusItem | null;
+	ancestryBonusConfirmed: boolean;
+	hasAncestryBonuses: boolean;
+}): boolean {
+	if (!hasAncestryBonuses || !ancestry?.system?.defaultBonus) return false;
+
+	return !ancestryBonus || !ancestryBonusConfirmed;
+}
+
 function hasAncestryOptions(
 	ancestry: NimbleAncestryItem | null,
 	ancestryBonus: NimbleAncestryBonusItem | null,
@@ -279,9 +299,12 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 	// or disabled there is nothing to select and nothing for the default to resolve to, so the
 	// stage could never be satisfied and character creation could never be completed.
 	if (
-		hasAncestryBonuses &&
-		selectedAncestry?.system?.defaultBonus &&
-		(!selectedAncestryBonus || !ancestryBonusConfirmed)
+		ancestryBonusPending({
+			ancestry: selectedAncestry,
+			ancestryBonus: selectedAncestryBonus,
+			ancestryBonusConfirmed,
+			hasAncestryBonuses,
+		})
 	) {
 		return CHARACTER_CREATION_STAGES.ANCESTRY_BONUS;
 	}
@@ -538,6 +561,16 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	);
 
 	const stageNumber = $derived(getStageNumber(stage));
+
+	const ancestryOptionsAvailable = $derived(
+		!!selectedAncestry &&
+			!ancestryBonusPending({
+				ancestry: selectedAncestry,
+				ancestryBonus: selectedAncestryBonus,
+				ancestryBonusConfirmed,
+				hasAncestryBonuses,
+			}),
+	);
 
 	const needsClassSpellSelection = $derived(
 		hasSpellGrants(spellGrants, 'class') &&
@@ -1012,6 +1045,10 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		get grantedLanguages() {
 			return grantedLanguages;
 		},
+		get ancestryOptionsAvailable() {
+			return ancestryOptionsAvailable;
+		},
+
 		get stage() {
 			return stage;
 		},

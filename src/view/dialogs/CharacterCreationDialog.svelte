@@ -130,15 +130,17 @@
 		{/await}
 	{/if}
 
-	<AncestryOptionsSelection
-		active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
-		selectedAncestry={state.selectedAncestry}
-		selectedAncestryBonus={state.selectedAncestryBonus}
-		selectedClass={state.selectedClass}
-		bind:selectedAncestryVariant={state.selectedAncestryVariant}
-		bind:selectedAncestrySize={state.selectedAncestrySize}
-		bind:selectedAncestrySave={state.selectedAncestrySave}
-	/>
+	{#if state.ancestryOptionsAvailable}
+		<AncestryOptionsSelection
+			active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
+			selectedAncestry={state.selectedAncestry}
+			selectedAncestryBonus={state.selectedAncestryBonus}
+			selectedClass={state.selectedClass}
+			bind:selectedAncestryVariant={state.selectedAncestryVariant}
+			bind:selectedAncestrySize={state.selectedAncestrySize}
+			bind:selectedAncestrySave={state.selectedAncestrySave}
+		/>
+	{/if}
 
 	{#await backgroundOptions then backgrounds}
 		<BackgroundSelection

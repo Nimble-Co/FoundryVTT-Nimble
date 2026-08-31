@@ -92,6 +92,39 @@
 	let hasSaveChoice = $derived(ancestryBonusRequiresSaveChoice(selectedAncestryBonus));
 	let hasAnyChoice = $derived(hasVariantChoice || hasSizeChoice || hasFixedSize || hasSaveChoice);
 
+	let stepHeaders = $derived(
+		numberSteps([
+			[hasVariantChoice, 'variant', ancestryOptions.variant],
+			[hasSizeChoice, 'sizeCategory', ancestryOptions.sizeCategory],
+			[hasSaveChoice && !!selectedClass, 'enhancedSave', ancestryOptions.enhancedSave],
+		]),
+	);
+
+	// The ancestry itself is Step 2 and its bonus 2b, so the first thing asked here is 2c.
+	const FIRST_STEP_LETTER = 'c';
+
+	/**
+	 * Letters the steps the player is actually asked, in the order they are asked, so a lettered
+	 * step is always a choice and the letters never skip one that went unasked. A stated size is
+	 * not a step and takes no letter.
+	 */
+	function numberSteps(steps) {
+		const headers = {};
+		let letterCode = FIRST_STEP_LETTER.charCodeAt(0);
+
+		for (const [asked, key, label] of steps) {
+			if (!asked) continue;
+
+			headers[key] = localize(ancestryOptions.stepHeader, {
+				step: String.fromCharCode(letterCode),
+				label,
+			});
+			letterCode += 1;
+		}
+
+		return headers;
+	}
+
 	const ARROW_STEPS = {
 		ArrowDown: 1,
 		ArrowRight: 1,
@@ -99,21 +132,28 @@
 		ArrowLeft: -1,
 	};
 
-	// A radiogroup is one stop in the tab order, so focus lands on the chosen option — or on the
-	// first one when nothing is chosen yet.
-	function focusedValue(values, selected) {
-		return values.includes(selected) ? selected : values[0];
+	// Where the arrow keys have walked to in each group, so the group stays one stop in the tab
+	// order and Tab returns to the option the player was last looking at.
+	let focusedValues = $state({});
+
+	function focusedValue(groupLabel, values, selected) {
+		const focused = focusedValues[groupLabel] ?? selected;
+
+		return values.includes(focused) ? focused : values[0];
 	}
 
-	/** Arrow keys move the choice between the radios of a radiogroup, wrapping at both ends. */
-	function handleRadioKeydown(event, index, values, select) {
+	/**
+	 * Arrow keys walk the radios of a group, wrapping at both ends, and leave the choosing to Space
+	 * and Enter. Choosing a variant closes its list behind an edit control, so arrows that carried
+	 * the choice with them would commit a player to the first option they walked onto.
+	 */
+	function handleRadioKeydown(event, groupLabel, index, values) {
 		const step = ARROW_STEPS[event.key];
 		if (step === undefined) return;
 
 		event.preventDefault();
 		const next = (index + step + values.length) % values.length;
-		// In a radiogroup the arrows carry the selection with them, not just the focus.
-		select(values[next]);
+		focusedValues[groupLabel] = values[next];
 		// The radios are the group's own children, so the group is the pressed radio's closest one.
 		const group = event.currentTarget.closest('[role="radiogroup"]');
 		group?.querySelectorAll('[role="radio"]')[next]?.focus();
@@ -123,7 +163,7 @@
 <!-- Shared by every ancestry option that is a pick-exactly-one list, with nothing pre-selected. -->
 {#snippet radioChoice(groupLabel, options, selected, select)}
 	{@const values = options.map((option) => option.value)}
-	{@const focused = focusedValue(values, selected)}
+	{@const focused = focusedValue(groupLabel, values, selected)}
 
 	<!-- A radiogroup takes the radios as its own children, so the options cannot be list items. -->
 	<div class="nimble-ancestry-choice" role="radiogroup" aria-label={groupLabel}>
@@ -138,12 +178,16 @@
 				aria-checked={isSelected}
 				tabindex={option.value === focused ? 0 : -1}
 				onclick={() => select(option.value)}
-				onkeydown={(event) => handleRadioKeydown(event, index, values, select)}
+				onkeydown={(event) => handleRadioKeydown(event, groupLabel, index, values)}
 			>
 				<span class="nimble-ancestry-choice__dot" aria-hidden="true"></span>
 
 				{#if option.icon}
-					<i class="nimble-ancestry-choice__icon {option.icon}" aria-hidden="true"></i>
+					<span
+						class="nimble-ancestry-choice__icon"
+						style="--nimble-ancestry-choice-icon: url('{option.icon}')"
+						aria-hidden="true"
+					></span>
 				{/if}
 
 				<span>{option.label}</span>
@@ -165,69 +209,102 @@
 			<div class="nimble-character-creation-section__subsection">
 				<header class="nimble-section-header" data-header-variant="character-creator">
 					<h3 class="nimble-heading" data-heading-variant="section">
-						{ancestryOptions.variantHeader}
+						{stepHeaders.variant}
+
+						{#if selectedAncestryVariant}
+							<button
+								class="nimble-button"
+								data-button-variant="icon"
+								aria-label={ancestryOptions.editVariant}
+								data-tooltip={ancestryOptions.editVariant}
+								onclick={() => (selectedAncestryVariant = null)}
+							>
+								<i class="fa-solid fa-edit"></i>
+							</button>
+						{/if}
+					</h3>
+				</header>
+
+				{#if selectedAncestryVariant}
+					<div class="nimble-character-creation-section__body">
+						<p class="nimble-ancestry-choice__granted">
+							<span
+								class="nimble-ancestry-choice__icon"
+								style="--nimble-ancestry-choice-icon: url('{variantIcon(selectedAncestryVariant)}')"
+								aria-hidden="true"
+							></span>
+
+							<strong>{selectedAncestryVariant}</strong>
+						</p>
+					</div>
+				{:else}
+					{#if active}
+						<Hint hintText={ancestryOptions.variantHint} />
+					{/if}
+
+					<div class="nimble-character-creation-section__body">
+						{@render radioChoice(
+							ancestryOptions.variant,
+							toVariantOptions(ancestryVariants),
+							selectedAncestryVariant,
+							(variant) => (selectedAncestryVariant = variant),
+						)}
+					</div>
+				{/if}
+			</div>
+		{/if}
+
+		{#if hasSizeChoice}
+			<div class="nimble-character-creation-section__subsection">
+				<header class="nimble-section-header" data-header-variant="character-creator">
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{stepHeaders.sizeCategory}
 					</h3>
 				</header>
 
 				{#if active}
-					<Hint hintText={ancestryOptions.variantHint} />
-				{/if}
-
-				<div class="nimble-character-creation-section__body">
-					{@render radioChoice(
-						ancestryOptions.variant,
-						toVariantOptions(ancestryVariants),
-						selectedAncestryVariant,
-						(variant) => (selectedAncestryVariant = variant),
-					)}
-				</div>
-			</div>
-		{/if}
-
-		{#if hasSizeChoice || hasFixedSize}
-			<div class="nimble-character-creation-section__subsection">
-				<header class="nimble-section-header" data-header-variant="character-creator">
-					<h3 class="nimble-heading" data-heading-variant="section">
-						{ancestryOptions.sizeCategoryHeader}
-					</h3>
-				</header>
-
-				{#if active && hasSizeChoice}
 					<Hint hintText={ancestryOptions.sizeCategoryHint} />
 				{/if}
 
 				<div class="nimble-character-creation-section__body">
-					{#if hasFixedSize}
-						{@const sizeCategory = ancestrySizes[0]}
+					{@render radioChoice(
+						ancestryOptions.sizeCategory,
+						toSizeOptions(ancestrySizes),
+						selectedAncestrySize,
+						(sizeCategory) => (selectedAncestrySize = sizeCategory),
+					)}
 
-						<p class="nimble-ancestry-choice__granted">
-							<strong>{sizeCategories[sizeCategory] ?? sizeCategory}</strong>
-
-							<span class="nimble-ancestry-choice__description">
-								{sizeCategoryDescriptions[sizeCategory] ?? ''}
-							</span>
-
-							<span class="nimble-ancestry-choice__source">
-								{localize('NIMBLE.ancestryOptions.sizeGrantedBy', {
-									ancestry: selectedAncestry?.name ?? '',
-								})}
-							</span>
+					{#if active}
+						<p class="nimble-ancestry-choice__note">
+							{localize('NIMBLE.ancestryOptions.sizeGrappleNote')}
 						</p>
-					{:else}
-						{@render radioChoice(
-							ancestryOptions.sizeCategory,
-							toSizeOptions(ancestrySizes),
-							selectedAncestrySize,
-							(sizeCategory) => (selectedAncestrySize = sizeCategory),
-						)}
-
-						{#if active}
-							<p class="nimble-ancestry-choice__note">
-								{localize('NIMBLE.ancestryOptions.sizeGrappleNote')}
-							</p>
-						{/if}
 					{/if}
 				</div>
+			</div>
+		{/if}
+
+		<!-- A size the ancestry settles is stated, not asked, so it is a line rather than a step. -->
+		{#if hasFixedSize}
+			{@const sizeCategory = ancestrySizes[0]}
+
+			<div class="nimble-character-creation-section__subsection">
+				<p class="nimble-ancestry-choice__granted">
+					<span class="nimble-ancestry-choice__granted-label">
+						{ancestryOptions.sizeCategory}
+					</span>
+
+					<strong>{sizeCategories[sizeCategory] ?? sizeCategory}</strong>
+
+					<span class="nimble-ancestry-choice__description">
+						{sizeCategoryDescriptions[sizeCategory] ?? ''}
+					</span>
+
+					<span class="nimble-ancestry-choice__source">
+						{localize('NIMBLE.ancestryOptions.sizeGrantedBy', {
+							ancestry: selectedAncestry?.name ?? '',
+						})}
+					</span>
+				</p>
 			</div>
 		{/if}
 
@@ -235,7 +312,7 @@
 			<div class="nimble-character-creation-section__subsection">
 				<header class="nimble-section-header" data-header-variant="character-creator">
 					<h3 class="nimble-heading" data-heading-variant="section">
-						{ancestryOptions.enhancedSaveHeader}
+						{stepHeaders.enhancedSave}
 					</h3>
 				</header>
 
@@ -308,15 +385,19 @@
 			}
 		}
 
+		// The icons are single-colour game-icons silhouettes, so they are masked rather than drawn:
+		// the shape comes from the file and the colour from the row it sits in, in either theme.
 		&__icon {
 			flex: 0 0 auto;
-			width: 1rem;
-			font-size: var(--nimble-sm-text);
-			text-align: center;
-			color: var(--nimble-medium-text-color);
+			width: 1.125rem;
+			height: 1.125rem;
+			background-color: var(--nimble-medium-text-color);
+			-webkit-mask: var(--nimble-ancestry-choice-icon) center / contain no-repeat;
+			mask: var(--nimble-ancestry-choice-icon) center / contain no-repeat;
 
-			.nimble-ancestry-choice__option--selected & {
-				color: var(--nimble-selected-tag-background-color);
+			.nimble-ancestry-choice__option--selected &,
+			.nimble-ancestry-choice__granted & {
+				background-color: var(--nimble-selected-tag-background-color);
 			}
 		}
 
@@ -352,7 +433,7 @@
 
 		&__granted {
 			display: flex;
-			align-items: baseline;
+			align-items: center;
 			gap: 0.4375rem;
 			margin: 0;
 			padding: 0.3125rem 0.4375rem;
@@ -362,6 +443,12 @@
 			background: color-mix(in srgb, var(--nimble-accent-color) 8%, transparent);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
+		}
+
+		&__granted-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__source {

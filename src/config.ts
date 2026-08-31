@@ -67,14 +67,13 @@ const characterCreationStages = {
 };
 
 const ancestryOptions = {
+	stepHeader: 'NIMBLE.ancestryOptions.stepHeader',
 	variant: 'NIMBLE.ancestryOptions.variant',
-	variantHeader: 'NIMBLE.ancestryOptions.variantHeader',
 	variantHint: 'NIMBLE.ancestryOptions.variantHint',
+	editVariant: 'NIMBLE.ancestryOptions.editVariant',
 	sizeCategory: 'NIMBLE.ancestryOptions.sizeCategory',
-	sizeCategoryHeader: 'NIMBLE.ancestryOptions.sizeCategoryHeader',
 	sizeCategoryHint: 'NIMBLE.ancestryOptions.sizeCategoryHint',
 	enhancedSave: 'NIMBLE.ancestryOptions.enhancedSave',
-	enhancedSaveHeader: 'NIMBLE.ancestryOptions.enhancedSaveHeader',
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
 };
 
@@ -82,15 +81,15 @@ const ancestryOptions = {
 // on the ancestry rather than keys the data model knows. A name with no icon of its own shows
 // `defaultAncestryVariantIcon`.
 const ancestryVariantIcons: Record<string, string> = {
-	beastfolk: 'fa-solid fa-paw-claws',
-	construct: 'fa-solid fa-robot',
-	dryad: 'fa-solid fa-leaf',
-	minotaur: 'fa-solid fa-cow',
-	oozeling: 'fa-solid fa-droplet',
-	shroomling: 'fa-solid fa-mushroom',
+	beastfolk: `${SYSTEM_PATH}/assets/icons/beastfolk.svg`,
+	construct: `${SYSTEM_PATH}/assets/icons/construct.svg`,
+	dryad: `${SYSTEM_PATH}/assets/icons/dryad.svg`,
+	minotaur: `${SYSTEM_PATH}/assets/icons/minotaur.svg`,
+	oozeling: `${SYSTEM_PATH}/assets/icons/oozeling.svg`,
+	shroomling: `${SYSTEM_PATH}/assets/icons/shroomling.svg`,
 };
 
-const defaultAncestryVariantIcon = 'fa-solid fa-user';
+const defaultAncestryVariantIcon = `${SYSTEM_PATH}/assets/icons/ancestry-variant.svg`;
 
 const backgroundOptionsSelection = {
 	header: 'NIMBLE.backgroundOptionsSelection.header',

@@ -124,11 +124,11 @@ describe('removeVariant', () => {
 
 describe('variantIcon', () => {
 	it('gives a name an icon of what kind of people it is, however the name was typed', () => {
-		expect(variantIcon('Shroomling')).toBe('fa-solid fa-mushroom');
-		expect(variantIcon(' shroomling ')).toBe('fa-solid fa-mushroom');
+		expect(variantIcon('Shroomling')).toMatch(/assets\/icons\/shroomling\.svg$/);
+		expect(variantIcon(' shroomling ')).toMatch(/assets\/icons\/shroomling\.svg$/);
 	});
 
 	it('falls back to a neutral icon for a name no icon has been drawn for', () => {
-		expect(variantIcon('Sporeling')).toBe('fa-solid fa-user');
+		expect(variantIcon('Sporeling')).toMatch(/assets\/icons\/ancestry-variant\.svg$/);
 	});
 });
