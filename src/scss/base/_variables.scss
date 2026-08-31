@@ -59,6 +59,11 @@
 	--nimble-icon-picker-overlay-background: hsla(0, 0%, 0%, 0.55);
 	--nimble-icon-picker-overlay-text-color: white;
 
+	/** ARTWORK BACKDROP **/
+	// Painted behind item artwork, which is arbitrary and often transparent, so it stays dark
+	// in both themes (no theme override) to keep pale icons legible.
+	--nimble-artwork-backdrop: hsla(0, 0%, 0%, 0.7);
+
 	/** OTHER COLORS **/
 	--nimble-box-color: hsl(41, 18%, 54%);
 	--nimble-box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.2);

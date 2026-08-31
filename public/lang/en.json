@@ -251,6 +251,11 @@
 			"choose": "Choose {count}",
 			"confirmSelection": "Confirm Bonus Language Selections"
 		},
+		"rollMode": {
+			"advantage": "Adv ×{count}",
+			"disadvantage": "Dis ×{count}",
+			"normal": "Normal"
+		},
 		"saveConfig": {
 			"abilityModifier": "Ability Modifier",
 			"abilityModifierSubtitle": "Base modifier from linked ability score",

@@ -237,13 +237,26 @@
 			}
 		}
 
+		// Square, unringed and dark-backed, matching the feature cards on the character
+		// sheet's Features tab, so the same artwork reads as the same item in both places.
+		// Direction is carried by the row tint and the value pill, not by the icon.
 		&__icon {
 			width: 1.75rem;
 			height: 1.75rem;
-			border-radius: 50%;
-			border: 1px solid var(--nimble-situational-accent);
-			background: var(--nimble-situational-accent-background);
+			border: 0;
+			border-radius: 0;
 			object-fit: cover;
+			object-position: center;
+
+			// The backing is scoped to the image: the `{:else}` element is a bare spacer
+			// keeping the grid columns aligned, and must stay invisible.
+			&:is(img) {
+				background: var(--nimble-artwork-backdrop);
+			}
+
+			&[src$='.svg' i] {
+				padding: 0.2rem;
+			}
 		}
 
 		&__label {

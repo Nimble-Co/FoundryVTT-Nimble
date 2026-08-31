@@ -272,6 +272,10 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			readFileSync(join(process.cwd(), 'packs/backgrounds/core/haunted-past.json'), 'utf-8'),
 		) as { system: { rules: Array<Record<string, unknown>> } };
 
+		const SURVIVALIST = JSON.parse(
+			readFileSync(join(process.cwd(), 'packs/backgrounds/core/survivalist.json'), 'utf-8'),
+		) as { system: { rules: Array<Record<string, unknown>> } };
+
 		function backgroundDocumentWith(rules: Array<Record<string, unknown>>) {
 			return createItemDocument({
 				uuid: 'Compendium.nimble.nimble-backgrounds.Item.test-background',
@@ -376,6 +380,33 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			);
 
 			expect(savingThrowsFrom(actor)['will.defaultRollMode']).toBe(0);
+		});
+
+		// Poison is a STR save, so the rule names `strength` the way Haunted Past names
+		// `will`, rather than applying to every save.
+		it('ships a situational STR rule in the Survivalist pack data', () => {
+			expect(SURVIVALIST.system.rules).toContainEqual(
+				expect.objectContaining({
+					type: 'situationalRollMode',
+					checkType: 'savingThrow',
+					saves: ['strength'],
+					value: 1,
+					disabled: false,
+					label: 'Against poison',
+				}),
+			);
+		});
+
+		// Baking it into the default would grant advantage on every STR save, not just
+		// the ones against poison.
+		it('leaves the default STR roll mode at the class value for a Survivalist', async () => {
+			const actor = setupActorMock();
+			await createWith(
+				warriorWithWillSave('dexterity'),
+				backgroundDocumentWith(SURVIVALIST.system.rules),
+			);
+
+			expect(savingThrowsFrom(actor)['strength.defaultRollMode']).toBe(1);
 		});
 	});
 

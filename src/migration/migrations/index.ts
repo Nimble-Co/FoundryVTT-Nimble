@@ -44,3 +44,4 @@ export { Migration043SpellScrollsShareASlot } from './Migration043SpellScrollsSh
 export { Migration044MaxHpBonusDerived } from './Migration044MaxHpBonusDerived.js';
 export { Migration045HauntedPastFearAdvantage } from './Migration045HauntedPastFearAdvantage.js';
 export { Migration046ShadowTrapDeferredDamage } from './Migration046ShadowTrapDeferredDamage.js';
+export { Migration047SurvivalistPoisonSave } from './Migration047SurvivalistPoisonSave.js';
