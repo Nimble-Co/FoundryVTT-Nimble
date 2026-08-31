@@ -144,7 +144,7 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 ## What the engine does NOT do
 
 - **It doesn't render the chat card.** That lives in `src/view/chat/components/` and consumes the finalized roll.
-- **It doesn't integrate with Dice So Nice.** DSN visualizes whatever dice are on the roll; the engine has already decided the outcome before DSN sees anything. One current quirk: the vicious explosion path manually rerolls the primary die to avoid DSN preempting the crit chain. Don't touch that without talking to whoever owns DSN integration.
+- **It doesn't take results from Dice So Nice.** DSN visualizes whatever dice are on the roll; the engine has already decided the outcome before DSN sees anything. The one thing the engine hands DSN is cosmetic: `_extractPrimaryDie` and the `c`/`cv` modifier handlers tag the primary term with an `appearance` option so the primary die renders in the roller's own colors (`src/dice/diceSoNiceIntegration.ts`). Those options are inert without the module. One current quirk: the vicious explosion path manually rerolls the primary die to avoid DSN preempting the crit chain. Don't touch that without talking to whoever owns DSN integration.
 - **It doesn't do targeting.** Target selection is upstream in the activation flow; the engine just receives a target count.
 - **It doesn't validate rule compliance.** If you pass it a mixed-type primary pool (`d6 + d8`), it will roll it. The rules say you shouldn't, but the engine doesn't police that — that's on the content layer.
 
@@ -155,6 +155,7 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 | The roll formula preprocessing | `src/dice/DamageRoll.ts` (`_preProcessFormula`, `_applyRollMode`) |
 | The primary die logic | `src/dice/terms/PrimaryDie.ts` |
 | Tie-aware adv/dis handlers | `src/dice/nimbleDieModifiers.ts` |
+| Dice So Nice primary die styling | `src/dice/diceSoNiceIntegration.ts`, `src/settings/registerDiceSoNiceSettings.ts` |
 | Die modifier metadata (`c`, `cv`, `v`, `n`) | `src/dice/nimbleDieModifiers.ts` (`getNimbleMods()`, `NIMBLE_MODS`) |
 | Where custom modifiers get registered | `src/hooks/init.ts` (calls `registerNimbleDieModifiers()`) |
 | Roll construction from an item | `src/managers/ItemActivationManager.ts` |
