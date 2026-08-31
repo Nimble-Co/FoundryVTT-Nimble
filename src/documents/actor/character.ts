@@ -1751,6 +1751,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+
 		await this.#syncPoolBonusItemDescriptions();
 	}
 
