@@ -580,6 +580,7 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			max: number;
 			temp: number;
 			value: number;
+			/** Manually-entered bonus. Rule contributions are never folded in. */
 			bonus: number;
 		};
 		hitDice: Record<string, HitDiceData>;

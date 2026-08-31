@@ -41,3 +41,4 @@ export { Migration040CommanderHiddenGatePools } from './Migration040CommanderHid
 export { Migration041CommanderInitiativeRegain } from './Migration041CommanderInitiativeRegain.js';
 export { Migration042AoETemplateFlags } from './Migration042AoETemplateFlags.js';
 export { Migration043SpellScrollsShareASlot } from './Migration043SpellScrollsShareASlot.js';
+export { Migration044MaxHpBonusDerived } from './Migration044MaxHpBonusDerived.js';

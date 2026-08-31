@@ -2,7 +2,7 @@
  * Live regression tests for the item-lifecycle document-writing rules:
  * grantItem resolves a compendium UUID during preCreate and creates the
  * granted item alongside its carrier (with dedupe via compendiumSource),
- * and maxHpBonus issues persistent hp-bonus updates on item add/remove.
+ * and maxHpBonus derives its contribution instead of writing to stored data.
  *
  * grantSpells and savingThrowRollMode are intentionally NOT covered here:
  * both are consumed exclusively by the character-creation / level-up
@@ -18,6 +18,7 @@ const TEST_PREFIX = 'V14 Item Grants';
 interface GrantActor {
 	id: string;
 	system: { attributes: { hp: { bonus: number } } };
+	_source: { system: { attributes: { hp: { bonus: number } } } };
 	items: {
 		contents: Array<{
 			id: string;
@@ -84,21 +85,27 @@ describe('item grant and lifecycle rules', () => {
 		expect(grantedCopies()).toHaveLength(1);
 	}, 60_000);
 
-	test('maxHpBonus adjusts the persistent hp bonus on add and reverts on delete', async () => {
-		const bonusBefore = actor.system.attributes.hp.bonus;
+	// #499: the contribution is derived from the rule now, so the player's manual
+	// bonus - the field the old implementation banked into - must never move.
+	// The arithmetic is covered by the maxHpBonus unit tests; what needs a live
+	// document round-trip is that nothing writes it back to stored data.
+	test('maxHpBonus leaves the stored hp bonus untouched on add and delete', async () => {
+		const storedBonusBefore = actor._source.system.attributes.hp.bonus;
 
 		const [item] = await actor.createEmbeddedDocuments('Item', [
 			ruleFeatureData(`${TEST_PREFIX} Tough`, [{ type: 'maxHpBonus', value: 5, perLevel: false }]),
 		]);
 		await waitFor(
-			() => actor.system.attributes.hp.bonus === bonusBefore + 5,
-			'the hp bonus to be applied',
+			() => actor.items.contents.some((carried) => carried.name === `${TEST_PREFIX} Tough`),
+			'the rule item to be created',
 		);
+		expect(actor._source.system.attributes.hp.bonus).toBe(storedBonusBefore);
 
 		await actor.deleteEmbeddedDocuments('Item', [item.id]);
 		await waitFor(
-			() => actor.system.attributes.hp.bonus === bonusBefore,
-			'the hp bonus to be reverted',
+			() => !actor.items.contents.some((carried) => carried.name === `${TEST_PREFIX} Tough`),
+			'the rule item to be deleted',
 		);
+		expect(actor._source.system.attributes.hp.bonus).toBe(storedBonusBefore);
 	}, 60_000);
 });
