@@ -431,7 +431,7 @@
 		height: 100%;
 		border: 0;
 		border-radius: 0;
-		background-color: rgba(0, 0, 0, 0.7);
+		background-color: var(--nimble-artwork-backdrop);
 		object-fit: cover;
 		object-position: center;
 

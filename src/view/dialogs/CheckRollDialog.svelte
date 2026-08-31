@@ -251,7 +251,7 @@
 			// The backing is scoped to the image: the `{:else}` element is a bare spacer
 			// keeping the grid columns aligned, and must stay invisible.
 			&:is(img) {
-				background: rgba(0, 0, 0, 0.7);
+				background: var(--nimble-artwork-backdrop);
 			}
 
 			&[src$='.svg' i] {

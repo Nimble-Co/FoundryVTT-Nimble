@@ -96,7 +96,7 @@
     aspect-ratio: 1 / 1;
     object-fit: cover;
     object-position: center;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--nimble-artwork-backdrop);
     border: 1px solid var(--nimble-card-border-color);
 
     &--fa-icon {

@@ -251,6 +251,11 @@
 			"choose": "Choose {count}",
 			"confirmSelection": "Confirm Bonus Language Selections"
 		},
+		"rollMode": {
+			"advantage": "Adv ×{count}",
+			"disadvantage": "Dis ×{count}",
+			"normal": "Normal"
+		},
 		"saveConfig": {
 			"abilityModifier": "Ability Modifier",
 			"abilityModifierSubtitle": "Base modifier from linked ability score",
@@ -260,9 +265,6 @@
 			"defaultRollModeSubtitle": "Advantage or disadvantage on saves",
 			"ancestryTraits": "Ancestry Traits",
 			"ancestryTraitsSubtitle": "Features that enhance a save of your choice",
-			"rollModeAdvantage": "Adv ×{count}",
-			"rollModeDisadvantage": "Dis ×{count}",
-			"rollModeNormal": "Normal",
 			"abilityMod": "Ability Mod",
 			"flatBonus": "Flat Bonus",
 			"rollMode": "Roll Mode",

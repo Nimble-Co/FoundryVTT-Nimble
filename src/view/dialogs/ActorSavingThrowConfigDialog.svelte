@@ -1,7 +1,25 @@
 <script>
+	import localize from '#utils/localize.js';
 	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 	import { calculateDefaultRollModes } from './ActorSavingThrowConfigDialog.utils.js';
-	import formatRollModeLabel from './formatRollModeLabel.js';
+
+	/**
+	 * The compact label for a roll mode level: "Adv ×2", "Dis ×1", "Normal".
+	 *
+	 * A level is a number of extra d20s, not a numeric bonus: `1` rolls `2d20khn` (one extra
+	 * die, keep the highest).
+	 */
+	function formatRollModeLabel(value) {
+		if (value > 0) {
+			return localize('NIMBLE.rollMode.advantage', { count: String(value) });
+		}
+
+		if (value < 0) {
+			return localize('NIMBLE.rollMode.disadvantage', { count: String(Math.abs(value)) });
+		}
+
+		return localize('NIMBLE.rollMode.normal');
+	}
 
 	function formatModifier(value) {
 		return replaceHyphenWithMinusSign(

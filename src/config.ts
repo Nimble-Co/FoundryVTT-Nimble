@@ -117,10 +117,6 @@ const saveConfig = {
 	defaultRollModeSubtitle: 'NIMBLE.saveConfig.defaultRollModeSubtitle',
 	ancestryTraits: 'NIMBLE.saveConfig.ancestryTraits',
 	ancestryTraitsSubtitle: 'NIMBLE.saveConfig.ancestryTraitsSubtitle',
-	// The `rollMode*` labels are deliberately absent: `formatRollModeLabel` resolves them from
-	// literal keys, so a prelocalized copy here would never be read. Registering an
-	// interpolated template is fine when the consumer formats the CONFIG value instead. See
-	// `speaks` and `choose` above.
 	abilityMod: 'NIMBLE.saveConfig.abilityMod',
 	flatBonus: 'NIMBLE.saveConfig.flatBonus',
 	rollMode: 'NIMBLE.saveConfig.rollMode',

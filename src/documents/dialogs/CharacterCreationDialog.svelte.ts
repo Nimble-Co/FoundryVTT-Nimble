@@ -4,6 +4,9 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import { canonicalVariant } from '#utils/ancestryVariants.js';
+import calculateSavingThrowRollModes, {
+	type SavingThrowRollModeRuleData,
+} from '#utils/calculateSavingThrowRollModes.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
@@ -12,39 +15,6 @@ import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
-
-type SavingThrowRollModeRuleData = {
-	type: string;
-	disabled?: boolean;
-	priority?: number;
-	requiresChoice?: boolean;
-	selectedSave?: string | null;
-	target?: string;
-	mode?: string;
-	value?: number;
-};
-
-function resolveTargetSaves(
-	target: string,
-	selectedSave: string | null,
-	rollModes: Record<string, number>,
-	savingThrowKeys: string[],
-): string[] {
-	if (selectedSave && savingThrowKeys.includes(selectedSave)) return [selectedSave];
-	if (savingThrowKeys.includes(target)) return [target];
-	switch (target) {
-		case 'all':
-			return savingThrowKeys;
-		case 'advantaged':
-			return savingThrowKeys.filter((key) => rollModes[key] > 0);
-		case 'disadvantaged':
-			return savingThrowKeys.filter((key) => rollModes[key] < 0);
-		case 'neutral':
-			return savingThrowKeys.filter((key) => rollModes[key] === 0);
-		default:
-			return [];
-	}
-}
 
 function resolveSavingThrowRollModes({
 	classDocument,
@@ -60,43 +30,22 @@ function resolveSavingThrowRollModes({
 	selectedAncestrySave: string | null;
 }): Record<string, number> {
 	const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows ?? {});
-	const rollModes = Object.fromEntries(savingThrowKeys.map((key) => [key, 0]));
 
-	if (classDocument?.system.savingThrows.advantage) {
-		rollModes[classDocument.system.savingThrows.advantage] = 1;
-	}
-	if (classDocument?.system.savingThrows.disadvantage) {
-		rollModes[classDocument.system.savingThrows.disadvantage] = -1;
-	}
-
-	const rollModeRules = [classDocument, ancestryDocument, ancestryBonusDocument, backgroundDocument]
+	const rules = [classDocument, ancestryDocument, ancestryBonusDocument, backgroundDocument]
 		.flatMap((doc) => {
 			if (!doc) return [];
 			const source = doc.toObject() as { system?: { rules?: SavingThrowRollModeRuleData[] } };
 			return source.system?.rules ?? [];
 		})
-		.filter((rule) => !rule.disabled && rule.type === 'savingThrowRollMode')
-		.sort((a, b) => (a.priority ?? 1) - (b.priority ?? 1));
+		// The choice lives on the creation form rather than on the rule, so stamp it on before
+		// the shared calculator reads `selectedSave`.
+		.map((rule) => (rule.requiresChoice ? { ...rule, selectedSave: selectedAncestrySave } : rule));
 
-	for (const rule of rollModeRules) {
-		if (rule.requiresChoice && !selectedAncestrySave) continue;
-
-		const effectiveSave = rule.requiresChoice ? selectedAncestrySave : (rule.selectedSave ?? null);
-		const targets = resolveTargetSaves(
-			rule.target ?? 'all',
-			effectiveSave,
-			rollModes,
-			savingThrowKeys,
-		);
-
-		for (const saveKey of targets) {
-			if (rule.mode === 'adjust') {
-				rollModes[saveKey] = Math.max(-3, Math.min(3, rollModes[saveKey] + (rule.value ?? 0)));
-			} else {
-				rollModes[saveKey] = rule.value ?? 0;
-			}
-		}
-	}
+	const rollModes = calculateSavingThrowRollModes(
+		rules,
+		classDocument?.system.savingThrows ?? {},
+		savingThrowKeys,
+	);
 
 	return Object.fromEntries(
 		savingThrowKeys.map((key) => [`${key}.defaultRollMode`, rollModes[key]]),

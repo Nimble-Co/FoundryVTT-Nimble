@@ -25,6 +25,7 @@ interface RuleSource {
 	type?: string;
 	checkType?: string;
 	saves?: string[];
+	label?: string;
 	id?: string;
 }
 
@@ -64,16 +65,19 @@ class Migration047SurvivalistPoisonSave extends MigrationBase {
 	}
 
 	/**
-	 * Adds the rule unless an equivalent is already there. Matched by shape as well as
+	 * Adds the rule unless an equivalent is already there. Matched by label as well as
 	 * id: the background's description promised advantage against poison saves while
 	 * shipping no rule for it, so a GM may well have authored the same rule by hand,
 	 * and theirs carries a random id.
 	 *
-	 * The signature deliberately omits `value` and `disabled`: ANY STR
-	 * `situationalRollMode` on this background counts as the GM having already
-	 * expressed intent, including a disabled one or an oppositely-signed homebrew
-	 * penalty. Adding a second rule beside either would offer the player two competing
-	 * toggles for one line of text.
+	 * The label is part of the signature because STR is a broad save. It covers forced
+	 * movement, restraint and extreme temperatures as well as poison, so a hand-authored
+	 * "Against extreme cold" rule is a different feature, not this one, and skipping on
+	 * any STR `situationalRollMode` would leave that character with no poison rule and no
+	 * signal. `value` and `disabled` stay out of the signature: a disabled copy or an
+	 * oppositely-signed homebrew penalty against poison is still the GM having expressed
+	 * intent about this clause, and a second rule beside either would offer the player two
+	 * competing toggles for one line of text.
 	 */
 	#addRule(system: any): void {
 		if (!Array.isArray(system.rules)) system.rules = [];
@@ -84,6 +88,7 @@ class Migration047SurvivalistPoisonSave extends MigrationBase {
 				rule?.id === POISON_ADVANTAGE_RULE.id ||
 				(rule?.type === POISON_ADVANTAGE_RULE.type &&
 					rule?.checkType === POISON_ADVANTAGE_RULE.checkType &&
+					rule?.label?.trim().toLowerCase() === POISON_ADVANTAGE_RULE.label.toLowerCase() &&
 					Array.isArray(rule?.saves) &&
 					rule.saves.includes('strength')),
 		);
