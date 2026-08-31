@@ -55,7 +55,7 @@ function stashPreviousManaMax(actor: unknown, options: unknown): void {
 	foundry.utils.setProperty(options, PREVIOUS_MANA_MAX_PATH, stash);
 }
 
-async function seedManaIfNewlyAvailable(
+async function reconcileManaAgainstMax(
 	actor: unknown,
 	options: unknown,
 	userId: unknown,
@@ -71,15 +71,21 @@ async function seedManaIfNewlyAvailable(
 	const previousMax = readStash(options)?.[snapshot.actorUuid];
 	if (typeof previousMax !== 'number') return;
 
-	if (previousMax > 0) return;
-
 	// Seed only on the transition from "no pool" to "has a pool", and never
 	// touch a value that already exists.
-	if (snapshot.max <= 0 || snapshot.current !== 0) return;
+	if (previousMax <= 0 && snapshot.max > 0 && snapshot.current === 0) {
+		await snapshot.actor.update({
+			'system.resources.mana.current': snapshot.max,
+		} as Parameters<Actor.Implementation['update']>[0]);
+		return;
+	}
 
-	await snapshot.actor.update({
-		'system.resources.mana.current': snapshot.max,
-	} as Parameters<Actor.Implementation['update']>[0]);
+	// This write re-enters the hook and stops, because current then equals max.
+	if (snapshot.current > snapshot.max) {
+		await snapshot.actor.update({
+			'system.resources.mana.current': Math.max(0, snapshot.max),
+		} as Parameters<Actor.Implementation['update']>[0]);
+	}
 }
 
 export default function registerManaSeedingHooks(): void {
@@ -88,6 +94,6 @@ export default function registerManaSeedingHooks(): void {
 	});
 
 	Hooks.on('updateActor', (actor: Actor.Implementation, _changes, options, userId) => {
-		void seedManaIfNewlyAvailable(actor, options, userId);
+		void reconcileManaAgainstMax(actor, options, userId);
 	});
 }

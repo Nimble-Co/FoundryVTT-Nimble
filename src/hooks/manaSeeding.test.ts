@@ -223,4 +223,53 @@ describe('registerManaSeedingHooks', () => {
 
 		expect(actor.update).toHaveBeenCalledTimes(1);
 	});
+
+	it('clamps the current value down when max mana falls away entirely', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 2, max: 2 });
+
+		await updateActor(callbacks, actor, { newMax: 0 });
+
+		expect(actor.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 0 });
+	});
+
+	it('clamps the current value down to a max that fell but stayed positive', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 5, max: 5 });
+
+		await updateActor(callbacks, actor, { newMax: 3 });
+
+		expect(actor.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 3 });
+	});
+
+	it('leaves a current value that still fits inside a reduced max alone', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 1, max: 5 });
+
+		await updateActor(callbacks, actor, { newMax: 3 });
+
+		expect(actor.update).not.toHaveBeenCalled();
+	});
+
+	it('does not re-clamp from the write the clamp itself performs', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 2, max: 2 });
+
+		await updateActor(callbacks, actor, { newMax: 0 });
+		expect(actor.update).toHaveBeenCalledTimes(1);
+
+		actor.system.resources.mana.current = 0;
+		await updateActor(callbacks, actor, { newMax: 0 });
+
+		expect(actor.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not clamp when the update was initiated by a different user', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 2, max: 2 });
+
+		await updateActor(callbacks, actor, { newMax: 0, userId: 'someone-else' });
+
+		expect(actor.update).not.toHaveBeenCalled();
+	});
 });
