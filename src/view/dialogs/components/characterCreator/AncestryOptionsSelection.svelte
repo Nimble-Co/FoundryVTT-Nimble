@@ -1,7 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 
-	import { effectiveVariants } from '../../../../utils/ancestryVariants.js';
+	import { effectiveVariants, variantIcon } from '../../../../utils/ancestryVariants.js';
 	import localize from '../../../../utils/localize.js';
 	import { effectiveSizes } from '../../../../utils/sizeSelection.js';
 	import Hint from '../../../components/Hint.svelte';
@@ -25,19 +25,25 @@
 	}
 
 	/**
-	 * Rows for a pick-exactly-one list. Sizes carry a short description from the Size rules; variant
-	 * names stand on their own, so their `description` is empty.
+	 * Rows for a pick-exactly-one list. Sizes carry a short description from the Size rules and no
+	 * icon; variant names stand on their own behind an icon of what kind of people they are.
 	 */
 	function toSizeOptions(sizes) {
 		return sizes.map((size) => ({
 			value: size,
 			label: sizeCategories[size] ?? size,
 			description: sizeCategoryDescriptions[size] ?? '',
+			icon: '',
 		}));
 	}
 
 	function toVariantOptions(variants) {
-		return variants.map((variant) => ({ value: variant, label: variant, description: '' }));
+		return variants.map((variant) => ({
+			value: variant,
+			label: variant,
+			description: '',
+			icon: variantIcon(variant),
+		}));
 	}
 
 	function getNeutralSaves(selectedClass) {
@@ -135,6 +141,10 @@
 				onkeydown={(event) => handleRadioKeydown(event, index, values, select)}
 			>
 				<span class="nimble-ancestry-choice__dot" aria-hidden="true"></span>
+
+				{#if option.icon}
+					<i class="nimble-ancestry-choice__icon {option.icon}" aria-hidden="true"></i>
+				{/if}
 
 				<span>{option.label}</span>
 
@@ -251,8 +261,13 @@
 		gap: 0.125rem;
 
 		&__option {
+			// Foundry's own button rule centres and sizes every button. These options are rows of
+			// text, so they read from the start edge and take their height from their content.
+			--button-size: fit-content;
+
 			display: flex;
 			align-items: center;
+			justify-content: flex-start;
 			gap: 0.4375rem;
 			width: 100%;
 			margin: 0;
@@ -290,6 +305,18 @@
 			&:focus-visible {
 				border-color: var(--nimble-accent-color);
 				box-shadow: 0 0 0 1px var(--nimble-accent-color);
+			}
+		}
+
+		&__icon {
+			flex: 0 0 auto;
+			width: 1rem;
+			font-size: var(--nimble-sm-text);
+			text-align: center;
+			color: var(--nimble-medium-text-color);
+
+			.nimble-ancestry-choice__option--selected & {
+				color: var(--nimble-selected-tag-background-color);
 			}
 		}
 

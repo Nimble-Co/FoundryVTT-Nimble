@@ -78,6 +78,20 @@ const ancestryOptions = {
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
 };
 
+// Keyed by the variant name itself, trimmed and lowercased, because variants are names a GM authors
+// on the ancestry rather than keys the data model knows. A name with no icon of its own shows
+// `defaultAncestryVariantIcon`.
+const ancestryVariantIcons: Record<string, string> = {
+	beastfolk: 'fa-solid fa-paw-claws',
+	construct: 'fa-solid fa-robot',
+	dryad: 'fa-solid fa-leaf',
+	minotaur: 'fa-solid fa-cow',
+	oozeling: 'fa-solid fa-droplet',
+	shroomling: 'fa-solid fa-mushroom',
+};
+
+const defaultAncestryVariantIcon = 'fa-solid fa-user';
+
 const backgroundOptionsSelection = {
 	header: 'NIMBLE.backgroundOptionsSelection.header',
 	editSelection: 'NIMBLE.backgroundOptionsSelection.editSelection',
@@ -934,6 +948,8 @@ const NIMBLE = {
 	abilityScoreTooltips,
 	activationCostTypes,
 	ancestryOptions,
+	ancestryVariantIcons,
+	defaultAncestryVariantIcon,
 	activationCostTypesPlural,
 	backgroundOptionsSelection,
 	bonusLanguageSelection,

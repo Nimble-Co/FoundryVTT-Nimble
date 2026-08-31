@@ -1,5 +1,5 @@
 /**
- * Pure helpers for an ancestry's variant names.
+ * Helpers for an ancestry's variant names.
  *
  * Some ancestries cover more than one kind of people — a Dryad and a Shroomling are the same
  * ancestry in play, and the rules say to take whichever flavour fits ("Flavor Is Free"). Such an
@@ -66,6 +66,16 @@ function canonicalVariant(
 	);
 }
 
+/**
+ * The icon that stands for a variant name in the lists that offer it, falling back to a neutral one
+ * for a name no icon has been drawn for, which is every homebrew name.
+ */
+function variantIcon(variant: string): string {
+	const { ancestryVariantIcons, defaultAncestryVariantIcon } = CONFIG.NIMBLE;
+
+	return ancestryVariantIcons[variantKey(variant)] ?? defaultAncestryVariantIcon;
+}
+
 /** Append a name, ignoring one that is blank or already listed. */
 function addVariant(currentVariants: string[], variant: string): string[] {
 	return effectiveVariants([...currentVariants, variant]);
@@ -80,4 +90,11 @@ function removeVariant(currentVariants: string[], variant: string): string[] {
 	);
 }
 
-export { addVariant, canonicalVariant, effectiveVariants, offersVariantChoice, removeVariant };
+export {
+	addVariant,
+	canonicalVariant,
+	effectiveVariants,
+	offersVariantChoice,
+	removeVariant,
+	variantIcon,
+};

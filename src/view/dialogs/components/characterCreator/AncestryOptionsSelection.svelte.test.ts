@@ -85,6 +85,18 @@ describe('AncestryOptionsSelection variant choice', () => {
 		expect(screen.getByRole('radio', { name: 'Sporeling' })).toHaveAttribute('tabindex', '-1');
 	});
 
+	it('marks each variant with an icon of what kind of people it is', () => {
+		renderOptions(createAncestry({ variants: ['Dryad', 'Shroomling', 'Sporeling'] }));
+
+		const iconOf = (name: string) =>
+			screen.getByRole('radio', { name }).querySelector('i')?.className;
+
+		expect(iconOf('Dryad')).toContain('fa-leaf');
+		expect(iconOf('Shroomling')).toContain('fa-mushroom');
+		// A homebrew name no icon has been drawn for still gets one, so the rows line up.
+		expect(iconOf('Sporeling')).toContain('fa-user');
+	});
+
 	it('asks nothing of an ancestry that covers a single kind of people', () => {
 		// A lone variant is the ancestry's own name, so the section has nothing to show for it.
 		renderOptions(createAncestry({ variants: ['Dryad'] }));

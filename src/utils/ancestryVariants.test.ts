@@ -6,6 +6,7 @@ import {
 	effectiveVariants,
 	offersVariantChoice,
 	removeVariant,
+	variantIcon,
 } from './ancestryVariants.js';
 
 describe('effectiveVariants', () => {
@@ -118,5 +119,16 @@ describe('removeVariant', () => {
 
 	it('removes by the same case-insensitive comparison the list dedupes with', () => {
 		expect(removeVariant(['Dryad', 'Shroomling'], 'dryad')).toEqual(['Shroomling']);
+	});
+});
+
+describe('variantIcon', () => {
+	it('gives a name an icon of what kind of people it is, however the name was typed', () => {
+		expect(variantIcon('Shroomling')).toBe('fa-solid fa-mushroom');
+		expect(variantIcon(' shroomling ')).toBe('fa-solid fa-mushroom');
+	});
+
+	it('falls back to a neutral icon for a name no icon has been drawn for', () => {
+		expect(variantIcon('Sporeling')).toBe('fa-solid fa-user');
 	});
 });
