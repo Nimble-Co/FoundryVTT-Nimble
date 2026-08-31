@@ -5,7 +5,7 @@
 - **Offer on** → `Saving Throw`
 - **Apply to saves** → `Will`
 
-Rolling a WIL save now shows an "Against fear" checkbox above the roll mode slider. Leave it unchecked and the save rolls as normal; check it and the roll gets one stack of advantage, for that roll only. Nothing is written to the character's default WIL roll mode, so the option never leaks into an unrelated save.
+Rolling a WIL save now shows an "Against fear" checkbox below the roll mode slider. Leave it unchecked and the save rolls as normal; check it and the roll gets one stack of advantage, for that roll only. Nothing is written to the character's default WIL roll mode, so the option never leaks into an unrelated save.
 
 Use this rule whenever a feature's condition is something the system cannot see: what a save is against, what a skill check is being used for, who the target is out of fiction. For conditions the system does know about (bloodied, unarmored, a charge pool being empty, a toggle being on), put them in the rule's predicate instead and the option is only offered when they hold. The two compose: a predicate-gated rule that is also situational is offered only when the predicate passes, and still only applies when checked.
 

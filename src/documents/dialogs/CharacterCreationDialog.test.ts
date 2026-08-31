@@ -341,9 +341,9 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
 		});
 
-		// Paired with the neutral case above, this pins `mode: 'adjust'`: a `set`
-		// rule of any single value cannot produce both 1 (from neutral) and 0
-		// (from disadvantage).
+		// Backgrounds are a separate gather slot from ancestries, and `adjust` stacks
+		// onto the class default rather than replacing it: no single `set` value
+		// produces both 1 (neutral class) and 0 (disadvantaged class).
 		it('only neutralizes WIL when the class disadvantages it', async () => {
 			const actor = setupActorMock();
 			await createWith(warriorWithWillSave('will'), backgroundDocumentWith([willAdjustRule]));

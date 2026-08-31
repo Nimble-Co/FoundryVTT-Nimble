@@ -21,17 +21,8 @@ const FEAR_ADVANTAGE_RULE = {
 	skills: [],
 };
 
-/**
- * The blanket WIL rule an earlier draft of this migration installed, before the
- * situational option existed. Matched by its own pack id, which is provably ours
- * rather than a GM's hand-authored rule.
- */
-const SUPERSEDED_BLANKET_RULE_ID = 'NWCRKRwheYMcCuFN';
-
 interface RuleSource {
 	type?: string;
-	target?: string;
-	mode?: string;
 	checkType?: string;
 	saves?: string[];
 	id?: string;
@@ -47,13 +38,10 @@ interface RuleSource {
  * each character, and any world-level copy, so characters built from it later
  * carry the rule too.
  *
- * `situationalRollMode` needs no persisted counterpart. Unlike the
- * `savingThrowRollMode` rule this migration originally installed, it does not
- * feed `savingThrows.will.defaultRollMode`: the roller opts in per save, so the
- * stored roll mode is left exactly as the player configured it. A character
- * carrying the superseded blanket rule from a pre-release build loses it here;
- * "Reset to Class Defaults" in the saving throw config then recomputes a WIL roll
- * mode without it.
+ * `situationalRollMode` needs no persisted counterpart: unlike
+ * `savingThrowRollMode`, it does not feed `savingThrows.will.defaultRollMode`,
+ * because the roller opts in per save. The stored roll mode is left exactly as
+ * the player configured it.
  */
 class Migration045HauntedPastFearAdvantage extends MigrationBase {
 	static override readonly version = 45;
@@ -86,12 +74,9 @@ class Migration045HauntedPastFearAdvantage extends MigrationBase {
 	 * penalty. Adding a second rule beside either would offer the player two
 	 * competing toggles for one line of text.
 	 */
-	#replaceRules(system: any): void {
+	#addRule(system: any): void {
 		if (!Array.isArray(system.rules)) system.rules = [];
 		const rules: RuleSource[] = system.rules;
-
-		const supersededIndex = rules.findIndex((rule) => rule?.id === SUPERSEDED_BLANKET_RULE_ID);
-		if (supersededIndex !== -1) rules.splice(supersededIndex, 1);
 
 		const alreadyPresent = rules.some(
 			(rule) =>
@@ -112,7 +97,7 @@ class Migration045HauntedPastFearAdvantage extends MigrationBase {
 		if (parent) return;
 		if (!this.#isHauntedPast(source) || !source.system) return;
 
-		this.#replaceRules(source.system);
+		this.#addRule(source.system);
 	}
 
 	override async updateActor(source: any): Promise<void> {
@@ -122,7 +107,7 @@ class Migration045HauntedPastFearAdvantage extends MigrationBase {
 		const hauntedPast = items.find((item) => this.#isHauntedPast(item));
 		if (!hauntedPast?.system) return;
 
-		this.#replaceRules(hauntedPast.system);
+		this.#addRule(hauntedPast.system);
 	}
 }
 
