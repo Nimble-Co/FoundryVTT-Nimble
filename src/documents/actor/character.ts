@@ -1739,6 +1739,17 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+
+		// Max mana falls with the level, and the current value does not follow it
+		// down on its own. Read back the recomputed max rather than deriving it
+		// here, so the clamp cannot drift from the preparation logic.
+		const mana = this.system.resources.mana;
+		if (mana.current > mana.max) {
+			await this.update({
+				'system.resources.mana.current': Math.max(0, mana.max),
+			} as Parameters<this['update']>[0]);
+		}
+
 		await this.#syncPoolBonusItemDescriptions();
 	}
 

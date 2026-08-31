@@ -4,7 +4,7 @@ const PREVIOUS_MANA_MAX_PATH = `${SYSTEM_ID}.previousManaMax`;
 
 type ManaSnapshot = {
 	actor: Actor.Implementation;
-	actorId: string;
+	actorUuid: string;
 	current: number;
 	max: number;
 };
@@ -23,12 +23,18 @@ function getManaSnapshot(actor: unknown): ManaSnapshot | null {
 	const max = Number(mana.max ?? 0);
 	if (!Number.isFinite(current) || !Number.isFinite(max)) return null;
 
-	// The stash is keyed by id, so an actor without one cannot be tracked
-	// across the two hooks.
-	const actorId = typedActor.id;
-	if (!actorId) return null;
+	// Keyed by uuid rather than id: an unlinked token's synthetic actor carries
+	// the base actor's id, so several of them in one batch would share a key.
+	const actorUuid = typedActor.uuid;
+	if (!actorUuid) return null;
 
-	return { actor: typedActor, actorId, current, max };
+	return { actor: typedActor, actorUuid, current, max };
+}
+
+function readStash(options: object): Record<string, number> | undefined {
+	return foundry.utils.getProperty(options, PREVIOUS_MANA_MAX_PATH) as
+		| Record<string, number>
+		| undefined;
 }
 
 function toClassItemActor(item: unknown): Actor.Implementation | null {
@@ -41,14 +47,19 @@ function toClassItemActor(item: unknown): Actor.Implementation | null {
 // Derived max mana is still the pre-update value inside pre-hooks, so it is
 // recorded on the update options for the post-hook to compare against.
 //
-// Keyed by actor id because one options object is shared by every document in
-// a batched update: the backend runs the whole pre-hook loop before any
+// Keyed per actor because one options object is shared by every document in a
+// batched update: the backend runs the whole pre-hook loop before any
 // post-hook, so a single slot would leave every actor reading the last one's
 // value.
 function stashPreviousManaMax(actor: unknown, options: unknown): void {
 	const snapshot = getManaSnapshot(actor);
 	if (!snapshot || !options || typeof options !== 'object') return;
-	foundry.utils.setProperty(options, `${PREVIOUS_MANA_MAX_PATH}.${snapshot.actorId}`, snapshot.max);
+
+	// Indexed into a record rather than appended to the path: a uuid contains
+	// dots, which `setProperty` would read as nesting.
+	const stash = readStash(options) ?? {};
+	stash[snapshot.actorUuid] = snapshot.max;
+	foundry.utils.setProperty(options, PREVIOUS_MANA_MAX_PATH, stash);
 }
 
 async function seedManaIfNewlyAvailable(
@@ -64,10 +75,7 @@ async function seedManaIfNewlyAvailable(
 	const snapshot = getManaSnapshot(actor);
 	if (!snapshot || !options || typeof options !== 'object') return;
 
-	const previousMax = foundry.utils.getProperty(
-		options,
-		`${PREVIOUS_MANA_MAX_PATH}.${snapshot.actorId}`,
-	);
+	const previousMax = readStash(options)?.[snapshot.actorUuid];
 	if (typeof previousMax !== 'number' || previousMax > 0) return;
 
 	// Seed only on the transition from "no pool" to "has a pool", and never

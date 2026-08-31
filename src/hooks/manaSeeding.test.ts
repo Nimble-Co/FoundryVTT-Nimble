@@ -13,6 +13,7 @@ function globals() {
 
 type MockManaActor = {
 	id: string;
+	uuid: string;
 	type: string;
 	system: { resources: { mana: { current: number; max: number } } };
 	update: ReturnType<typeof vi.fn>;
@@ -25,10 +26,13 @@ function createManaActor({
 	max = 0,
 	type = 'character',
 	id = '',
+	uuid = '',
 } = {}): MockManaActor {
 	nextActorId += 1;
+	const actorId = id || `actor-${nextActorId}`;
 	return {
-		id: id || `actor-${nextActorId}`,
+		id: actorId,
+		uuid: uuid || `Actor.${actorId}`,
 		type,
 		system: { resources: { mana: { current, max } } },
 		update: vi.fn().mockResolvedValue(undefined),
@@ -209,6 +213,51 @@ describe('registerManaSeedingHooks', () => {
 
 		expect(gainsAPool.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 5 });
 		expect(alreadyHasOne.update).not.toHaveBeenCalled();
+	});
+
+	// An unlinked token's synthetic actor carries the base actor's id, so two of
+	// them in one batch would collide on an id-keyed stash. Their uuids differ.
+	it('keeps unlinked token actors sharing a base id separate', async () => {
+		const callbacks = await registerHooks();
+		const gainsAPool = createManaActor({
+			current: 0,
+			max: 0,
+			id: 'base-actor',
+			uuid: 'Scene.s1.Token.t1.Actor.base-actor',
+		});
+		const alreadyHasOne = createManaActor({
+			current: 0,
+			max: 4,
+			id: 'base-actor',
+			uuid: 'Scene.s1.Token.t2.Actor.base-actor',
+		});
+		const options = {};
+
+		callbacks.get('preUpdateActor')?.(gainsAPool, {}, options, 'user-1');
+		callbacks.get('preUpdateActor')?.(alreadyHasOne, {}, options, 'user-1');
+
+		gainsAPool.system.resources.mana.max = 5;
+		alreadyHasOne.system.resources.mana.max = 7;
+
+		callbacks.get('updateActor')?.(gainsAPool, {}, options, 'user-1');
+		callbacks.get('updateActor')?.(alreadyHasOne, {}, options, 'user-1');
+		await flushAsync();
+
+		expect(gainsAPool.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 5 });
+		expect(alreadyHasOne.update).not.toHaveBeenCalled();
+	});
+
+	// Nothing stashed means the pre-hook never ran for this actor, so there is
+	// no before-value to compare against and the post-hook must do nothing.
+	it('does nothing when the post-hook runs without a stashed previous max', async () => {
+		const callbacks = await registerHooks();
+		const actor = createManaActor({ current: 0, max: 0 });
+
+		actor.system.resources.mana.max = 5;
+		callbacks.get('updateActor')?.(actor, {}, {}, 'user-1');
+		await flushAsync();
+
+		expect(actor.update).not.toHaveBeenCalled();
 	});
 
 	it('does not re-seed from the write the seed itself performs', async () => {
