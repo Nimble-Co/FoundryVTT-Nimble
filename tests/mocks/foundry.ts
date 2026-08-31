@@ -605,6 +605,11 @@ export const foundryApiMocks = {
 						assignWithOptions(this, options);
 					}
 				},
+				ColorField: class ColorField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
 				NumberField: class NumberField {
 					constructor(options?: any) {
 						assignWithOptions(this, options);

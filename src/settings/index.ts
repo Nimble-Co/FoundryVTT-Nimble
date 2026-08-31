@@ -6,11 +6,11 @@ import LanguageCustomizationDialog from '#view/dialogs/LanguageCustomizationDial
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerAdjacencySettings } from './adjacencySettings.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
-import { registerDiceSoNiceSettings } from './diceSoNiceSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
+import { registerDiceSoNiceSettings } from './registerDiceSoNiceSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
 import { registerSpellScrollSettings } from './spellScrollSettings.js';
 

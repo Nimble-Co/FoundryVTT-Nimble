@@ -2768,16 +2768,30 @@
 				"name": "Auto-Add Character To Combat On Initiative Roll",
 				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat."
 			},
+			"diceSoNiceMenu": {
+				"name": "3D Dice",
+				"manageButton": "Configure 3D Dice",
+				"hint": "Choose how the primary die of your damage rolls looks in Dice So Nice. Each player sets this for themselves.",
+				"title": "3D Dice Settings",
+				"intro": "These settings apply to the rolls you make, and every player sees them on their own screen.",
+				"sectionPrimaryDie": "Primary Die",
+				"preview": "Preview",
+				"moduleMissing": "Install and enable the Dice So Nice module to use these settings.",
+				"reset": "Reset Colors",
+				"save": "Save Changes",
+				"saved": "3D dice settings saved.",
+				"saveError": "Could not save the 3D dice settings. See the console for details."
+			},
 			"dsnPrimaryDieStyleEnabled": {
-				"name": "3D Dice: Distinct Primary Die",
-				"hint": "When Dice So Nice is active, render the primary die of your damage rolls with a distinct appearance so it stands out from the rest of the dice. Applies to rolls you make, on every player's screen."
+				"name": "Distinct Primary Die",
+				"hint": "Render the primary die of your damage rolls with a distinct appearance so it stands out from the rest of the dice."
 			},
 			"dsnPrimaryDieColor": {
-				"name": "3D Dice: Primary Die Color",
+				"name": "Primary Die Color",
 				"hint": "Body color for the primary die of your damage rolls."
 			},
 			"dsnPrimaryDieLabelColor": {
-				"name": "3D Dice: Primary Die Number Color",
+				"name": "Primary Die Number Color",
 				"hint": "Number color for the primary die of your damage rolls."
 			},
 			"autoTrackTokenAdjacency": {

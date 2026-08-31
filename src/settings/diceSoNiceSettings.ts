@@ -7,6 +7,9 @@ export const DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY = 'dsnPrimaryDieLabelColor'
 export const DEFAULT_PRIMARY_DIE_COLOR = '#8a1c1c';
 export const DEFAULT_PRIMARY_DIE_LABEL_COLOR = '#f5e7c1';
 
+/** Module id of Dice So Nice, the only consumer of these preferences. */
+export const DICE_SO_NICE_MODULE_ID = 'dice-so-nice';
+
 /** User preferences controlling the primary die's 3D dice appearance. */
 export interface PrimaryDiePreferences {
 	enabled: boolean;
@@ -14,7 +17,12 @@ export interface PrimaryDiePreferences {
 	foreground: string;
 }
 
-function normalizeHexColor(value: unknown, fallback: string): string {
+/** Whether Dice So Nice is installed and enabled in this world. */
+export function isDiceSoNiceActive(): boolean {
+	return Boolean(game.modules?.get(DICE_SO_NICE_MODULE_ID)?.active);
+}
+
+export function normalizeHexColor(value: unknown, fallback: string): string {
 	if (value === null || value === undefined) return fallback;
 	// ColorField-backed settings return a Color instance; its toString() is
 	// the css hex form. Plain strings pass through unchanged.
@@ -26,10 +34,6 @@ function normalizeHexColor(value: unknown, fallback: string): string {
 		return `#${red}${red}${green}${green}${blue}${blue}`;
 	}
 	return fallback;
-}
-
-function colorSettingField(initial: string) {
-	return new foundry.data.fields.ColorField({ nullable: false, initial });
 }
 
 /**
@@ -61,41 +65,21 @@ export function getPrimaryDiePreferences(): PrimaryDiePreferences {
 	};
 }
 
-export function registerDiceSoNiceSettings() {
-	game.settings.register(
+/** Stores the current user's primary die appearance preferences. */
+export async function setPrimaryDiePreferences(preferences: PrimaryDiePreferences): Promise<void> {
+	await game.settings.set(
 		SYSTEM_ID as 'core',
 		DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY as 'rollMode',
-		{
-			name: 'NIMBLE.settings.dsnPrimaryDieStyleEnabled.name',
-			hint: 'NIMBLE.settings.dsnPrimaryDieStyleEnabled.hint',
-			scope: 'user',
-			config: true,
-			type: Boolean,
-			default: true,
-		} as unknown as Parameters<typeof game.settings.register>[2],
+		preferences.enabled as never,
 	);
-
-	game.settings.register(
+	await game.settings.set(
 		SYSTEM_ID as 'core',
 		DSN_PRIMARY_DIE_COLOR_SETTING_KEY as 'rollMode',
-		{
-			name: 'NIMBLE.settings.dsnPrimaryDieColor.name',
-			hint: 'NIMBLE.settings.dsnPrimaryDieColor.hint',
-			scope: 'user',
-			config: true,
-			type: colorSettingField(DEFAULT_PRIMARY_DIE_COLOR),
-		} as unknown as Parameters<typeof game.settings.register>[2],
+		normalizeHexColor(preferences.background, DEFAULT_PRIMARY_DIE_COLOR) as never,
 	);
-
-	game.settings.register(
+	await game.settings.set(
 		SYSTEM_ID as 'core',
 		DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY as 'rollMode',
-		{
-			name: 'NIMBLE.settings.dsnPrimaryDieLabelColor.name',
-			hint: 'NIMBLE.settings.dsnPrimaryDieLabelColor.hint',
-			scope: 'user',
-			config: true,
-			type: colorSettingField(DEFAULT_PRIMARY_DIE_LABEL_COLOR),
-		} as unknown as Parameters<typeof game.settings.register>[2],
+		normalizeHexColor(preferences.foreground, DEFAULT_PRIMARY_DIE_LABEL_COLOR) as never,
 	);
 }
