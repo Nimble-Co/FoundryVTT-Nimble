@@ -7,6 +7,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import FeatureOptionPickerStateHarness from '../../../../../tests/harnesses/FeatureOptionPickerStateHarness.svelte';
+// @ts-expect-error - Svelte component default export is provided by the Svelte compiler
+import LevelUpFeatureOptionPicker from './LevelUpFeatureOptionPicker.svelte';
 
 interface LevelUpOptionInput {
 	id: string;
@@ -235,4 +237,57 @@ describe('createFeatureOptionPickerState — Shepherd Sacred Graces (real compen
 			expect(getByTestId('sub-selection-count').textContent).toBe('1');
 		});
 	}
+});
+
+/**
+ * The count alone does not tell a player what they are picking; the option's own label does.
+ * The picker only drew the label when the level offered a choice between options, which is
+ * never at the Shepherd's level 5.
+ */
+describe('LevelUpFeatureOptionPicker — option label', () => {
+	it('shows the sole applicable option label instead of the "choose one" hint', () => {
+		const feature = createFeature([
+			{ id: 'sacred-grace-initial', label: 'Choose 2 Sacred Graces', applyAtLevels: [5] },
+			{ id: 'sacred-grace', label: 'Choose a Sacred Grace', applyAtLevels: [9, 13] },
+		]);
+
+		const { getByText, queryByText } = render(LevelUpFeatureOptionPicker, {
+			props: {
+				feature,
+				levelingTo: 5,
+				selectedOptionId: 'sacred-grace-initial',
+				selectedSubItemUuids: [],
+				ownedItemUuids: new Set<string>(),
+				classFeatureIndex: null,
+				onSelect: vi.fn(),
+				onSubItemSelect: vi.fn(),
+			},
+		});
+
+		expect(getByText('Choose 2 Sacred Graces')).toBeTruthy();
+		expect(queryByText('(Choose one)')).toBeNull();
+	});
+
+	it('keeps the "choose one" hint when the level offers alternatives', () => {
+		const feature = createFeature([
+			{ id: 'pool-pick', label: 'Choose a Combat Ability', applyAtLevels: [6] },
+			{ id: 'flat-bonus', label: '+1 Max Combat Die', applyAtLevels: [6] },
+		]);
+
+		const { getByText } = render(LevelUpFeatureOptionPicker, {
+			props: {
+				feature,
+				levelingTo: 6,
+				selectedOptionId: null,
+				selectedSubItemUuids: [],
+				ownedItemUuids: new Set<string>(),
+				classFeatureIndex: null,
+				onSelect: vi.fn(),
+				onSubItemSelect: vi.fn(),
+			},
+		});
+
+		expect(getByText('(Choose one)')).toBeTruthy();
+		expect(getByText('Choose a Combat Ability')).toBeTruthy();
+	});
 });

@@ -83,6 +83,7 @@
 	let editingEnabled = $derived(playerCharacterSheetState.editingEnabled);
 	let metaData = $derived(playerCharacterSheetState.metaData);
 	let hitDiceData = $derived(playerCharacterSheetState.hitDiceData);
+	let missingLevelSelections = $derived(playerCharacterSheetState.missingLevelSelections);
 
 	function handleActorPortraitImageError(event: Event) {
 		const img = event.currentTarget;
@@ -338,6 +339,20 @@
 	</div>
 </header>
 
+{#if missingLevelSelections.length > 0}
+	<button
+		class="nimble-hint nimble-hint--warning nimble-level-correction-warning"
+		type="button"
+		data-tooltip={localize('NIMBLE.levelCorrectionDialog.sheetWarningTooltip', {
+			level: String(missingLevelSelections[0].level),
+		})}
+		onclick={() => actor.triggerLevelCorrection()}
+	>
+		<i class="nimble-hint__icon fa-solid fa-triangle-exclamation"></i>
+		{localize('NIMBLE.levelCorrectionDialog.sheetWarning')}
+	</button>
+{/if}
+
 <PrimaryNavigation bind:currentTab {navigation} condenseNavigation={true} />
 
 <currentTab.component />
@@ -416,6 +431,20 @@
 <style lang="scss">
 	.nimble-sheet__header {
 		position: relative;
+	}
+
+	// Reuses the shared warning hint so the banner picks up its light/dark palette; only the
+	// button chrome needs resetting.
+	.nimble-level-correction-warning {
+		align-items: center;
+		width: 100%;
+		font-family: inherit;
+		color: inherit;
+		cursor: pointer;
+
+		&:hover {
+			border-color: var(--nimble-accent-color);
+		}
 	}
 
 	.nimble-sheet__left-trackers {

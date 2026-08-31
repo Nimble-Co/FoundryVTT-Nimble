@@ -605,6 +605,14 @@
 			"confirmLevelDown": "Confirm Level Down",
 			"levelUpInProgress": "Cannot revert level while a level up is in progress."
 		},
+		"levelCorrectionDialog": {
+			"title": "Level Correction",
+			"hint": "This character is missing choices from an earlier level. Make them here to bring the sheet up to date.",
+			"gapHeading": "Level {level}",
+			"nothingMissing": "This character is not missing any level choices.",
+			"sheetWarning": "Missing level choices",
+			"sheetWarningTooltip": "Missing choices from level {level}. Click to correct."
+		},
 		"skillPointAssignment": {
 			"decrementSkillPoints": "Decrement Skill Points",
 			"incrementSkillPoints": "Increment Skill Points",
