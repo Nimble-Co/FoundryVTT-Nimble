@@ -3359,7 +3359,8 @@
 			"situationalRollMode": {
 				"heading": "Situational Modifiers",
 				"advantage": "Advantage × {count}",
-				"disadvantage": "Disadvantage × {count}"
+				"disadvantage": "Disadvantage × {count}",
+				"noEffect": "No effect"
 			}
 		}
 	}

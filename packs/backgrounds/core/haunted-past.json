@@ -24,7 +24,7 @@
 				"skills": []
 			}
 		],
-		"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p><hr><p>+1 WIL save roll mode, offered when the save is against fear [A]</p>"
+		"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p><hr><p>Advantage against fear [A]</p>"
 	},
 	"effects": [],
 	"flags": {},

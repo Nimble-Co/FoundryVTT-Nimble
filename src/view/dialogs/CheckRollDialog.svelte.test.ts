@@ -50,14 +50,18 @@ function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
 
 	const formula = () => container.querySelector('.nimble-roll-formula')?.textContent;
 	const optionIcons = () =>
-		Array.from(container.querySelectorAll('.nimble-situational__icon')).map((icon) =>
+		Array.from(container.querySelectorAll('img.nimble-situational__icon')).map((icon) =>
 			icon.getAttribute('src'),
+		);
+	const optionValues = () =>
+		Array.from(container.querySelectorAll('.nimble-situational__value')).map((value) =>
+			value.textContent?.trim(),
 		);
 	const roll = () => fireEvent.click(screen.getByRole('button', { name: /roll/i }));
 	const toggle = (name: string) =>
 		fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(name) }));
 
-	return { submitRoll, formula, optionIcons, roll, toggle };
+	return { submitRoll, formula, optionIcons, optionValues, roll, toggle };
 }
 
 describe('CheckRollDialog situational roll modes', () => {
@@ -157,6 +161,20 @@ describe('CheckRollDialog situational roll modes', () => {
 		const { optionIcons } = renderWillSave([createSituationalRule({ img: '' })]);
 
 		expect(optionIcons()).toEqual([]);
+	});
+
+	it('previews what an unchecked option would contribute', () => {
+		const { optionValues } = renderWillSave([createSituationalRule({ value: 1 })]);
+
+		expect(optionValues()).toEqual(['Advantage × 1']);
+	});
+
+	it('reports no effect for an option the slider ceiling swallowed', async () => {
+		const { optionValues, toggle } = renderWillSave([createSituationalRule({ value: 1 })], 6);
+
+		await toggle('Against fear');
+
+		await waitFor(() => expect(optionValues()).toEqual(['No effect']));
 	});
 
 	it('clamps the combined roll mode at the slider ceiling', async () => {

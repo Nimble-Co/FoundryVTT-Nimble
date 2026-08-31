@@ -66,7 +66,19 @@
 		appliedAdjustments = next;
 	}
 
-	function situationalLabel(value: number): string {
+	// Unselected rows preview what the option offers; a selected row reports what it
+	// actually contributed, which the slider's ends can clamp to nothing.
+	function appliedValue(option: SituationalRollModeOption): number {
+		return appliedAdjustments[option.key] ?? option.value;
+	}
+
+	function situationalLabel(option: SituationalRollModeOption): string {
+		const value = appliedValue(option);
+
+		if (value === 0) {
+			return localize('NIMBLE.checkRollDialog.situationalRollMode.noEffect');
+		}
+
 		if (value > 0) {
 			return localize('NIMBLE.checkRollDialog.situationalRollMode.advantage', { count: value });
 		}
@@ -74,6 +86,13 @@
 		return localize('NIMBLE.checkRollDialog.situationalRollMode.disadvantage', {
 			count: Math.abs(value),
 		});
+	}
+
+	function optionDirection(option: SituationalRollModeOption): 'bonus' | 'penalty' | 'none' {
+		const value = appliedValue(option);
+
+		if (value === 0) return 'none';
+		return value < 0 ? 'penalty' : 'bonus';
 	}
 </script>
 
@@ -96,7 +115,7 @@
 						<label
 							class="nimble-situational__option"
 							class:nimble-situational__option--selected={isSelected(option)}
-							data-direction={option.value < 0 ? 'penalty' : 'bonus'}
+							data-direction={optionDirection(option)}
 						>
 							<input
 								type="checkbox"
@@ -105,9 +124,11 @@
 							/>
 							{#if option.icon}
 								<img class="nimble-situational__icon" src={option.icon} alt="" />
+							{:else}
+								<span class="nimble-situational__icon" aria-hidden="true"></span>
 							{/if}
 							<span class="nimble-situational__label">{option.label}</span>
-							<span class="nimble-situational__value">{situationalLabel(option.value)}</span>
+							<span class="nimble-situational__value">{situationalLabel(option)}</span>
 						</label>
 					</li>
 				{/each}
@@ -197,6 +218,11 @@
 			&[data-direction='penalty'] {
 				--nimble-situational-accent: var(--nimble-roll-failure-color);
 				--nimble-situational-accent-background: var(--nimble-roll-failure-background-color);
+			}
+
+			&[data-direction='none'] {
+				--nimble-situational-accent: var(--nimble-medium-text-color);
+				--nimble-situational-accent-background: transparent;
 			}
 
 			// currentColor tracks the theme's body text, so the tint stays visible in
