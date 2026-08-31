@@ -19,6 +19,15 @@
   input[type="checkbox"] {
     --checkbox-checked-color: var(--nimble-checkbox-checked-color);
 
+    // Foundry declares width and height on these pseudo-elements but never sets
+    // display, so they stay inline and the dimensions are ignored: the control
+    // renders as the square glyph's advance width by its line box (19.5x22
+    // rather than 22x22), leaving dead space to the right and below it.
+    &::before,
+    &::after {
+      display: block;
+    }
+
     &:checked::before {
       --checkbox-checkmark-color: var(--nimble-checkbox-checkmark-color);
     }
