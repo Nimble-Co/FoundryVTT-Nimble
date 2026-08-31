@@ -103,7 +103,9 @@
 								checked={isSelected(option)}
 								onchange={(event) => toggleSituational(option, event.currentTarget.checked)}
 							/>
-							<i class="nimble-situational__icon {option.icon}" aria-hidden="true"></i>
+							{#if option.icon}
+								<img class="nimble-situational__icon" src={option.icon} alt="" />
+							{/if}
 							<span class="nimble-situational__label">{option.label}</span>
 							<span class="nimble-situational__value">{situationalLabel(option.value)}</span>
 						</label>
@@ -210,14 +212,12 @@
 		}
 
 		&__icon {
-			display: grid;
-			place-items: center;
 			width: 1.75rem;
 			height: 1.75rem;
 			border-radius: 50%;
+			border: 1px solid var(--nimble-situational-accent);
 			background: var(--nimble-situational-accent-background);
-			font-size: var(--nimble-md-text);
-			color: var(--nimble-situational-accent);
+			object-fit: cover;
 		}
 
 		&__label {

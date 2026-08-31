@@ -10,8 +10,8 @@ function createRule(overrides: Record<string, unknown> = {}) {
 		id: 'rule-id',
 		label: 'Against fear',
 		value: 1,
-		item: { name: 'Haunted Past', uuid: 'Item.hp1' },
-		iconClass: vi.fn(() => 'fa-solid fa-ghost'),
+		item: { name: 'Haunted Past', uuid: 'Item.hp1', img: 'icons/backgrounds/haunted-past.webp' },
+		iconPath: vi.fn(() => 'icons/backgrounds/haunted-past.webp'),
 		appliesTo: vi.fn(() => true),
 		offersAdjustment: vi.fn(() => true),
 		matchesRoll: vi.fn(() => true),
@@ -104,7 +104,7 @@ describe('getSituationalRollModeOptions', () => {
 			const rule = createRule({ value: -2 });
 			expect(getSituationalRollModeOptions(createActor([rule]), willSave)[0]).toMatchObject({
 				label: 'Against fear',
-				icon: 'fa-solid fa-ghost',
+				icon: 'icons/backgrounds/haunted-past.webp',
 				value: -2,
 			});
 		});

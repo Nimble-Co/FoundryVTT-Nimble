@@ -16,13 +16,13 @@ vi.mock('../../utils/getRollFormula.js', () => ({
  * this test on the dialog's wiring; `situationalRollMode.test.ts` covers the rule.
  */
 function createSituationalRule(
-	overrides: { id?: string; label?: string; value?: number; icon?: string } = {},
+	overrides: { id?: string; label?: string; value?: number; img?: string } = {},
 ): Record<string, unknown> {
 	const {
 		id = 'fear-rule',
 		label = 'Against fear',
 		value = 1,
-		icon = 'fa-solid fa-ghost',
+		img = 'icons/backgrounds/haunted-past.webp',
 	} = overrides;
 
 	return {
@@ -30,8 +30,8 @@ function createSituationalRule(
 		id,
 		label,
 		value,
-		item: { name: 'Haunted Past', uuid: 'Item.haunted-past' },
-		iconClass: () => icon,
+		item: { name: 'Haunted Past', uuid: 'Item.haunted-past', img },
+		iconPath: () => img,
 		appliesTo: () => true,
 		offersAdjustment: () => value !== 0,
 		matchesRoll: () => true,
@@ -49,12 +49,9 @@ function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
 	} as never);
 
 	const formula = () => container.querySelector('.nimble-roll-formula')?.textContent;
-	// Svelte appends its own scope class, so read back only the icon's own classes.
 	const optionIcons = () =>
 		Array.from(container.querySelectorAll('.nimble-situational__icon')).map((icon) =>
-			Array.from(icon.classList)
-				.filter((name) => name.startsWith('fa-'))
-				.join(' '),
+			icon.getAttribute('src'),
 		);
 	const roll = () => fireEvent.click(screen.getByRole('button', { name: /roll/i }));
 	const toggle = (name: string) =>
@@ -144,13 +141,22 @@ describe('CheckRollDialog situational roll modes', () => {
 		expect(submitRoll).toHaveBeenCalledWith(expect.objectContaining({ rollMode: 2 }));
 	});
 
-	it("shows each option's icon beside its label", () => {
+	it("shows each granting item's image beside its label", () => {
 		const { optionIcons } = renderWillSave([
-			createSituationalRule({ id: 'fear', icon: 'fa-solid fa-ghost' }),
-			createSituationalRule({ id: 'cursed', icon: 'fa-solid fa-skull' }),
+			createSituationalRule({ id: 'fear', img: 'icons/backgrounds/haunted-past.webp' }),
+			createSituationalRule({ id: 'cursed', img: 'icons/backgrounds/cursed.webp' }),
 		]);
 
-		expect(optionIcons()).toEqual(['fa-solid fa-ghost', 'fa-solid fa-skull']);
+		expect(optionIcons()).toEqual([
+			'icons/backgrounds/haunted-past.webp',
+			'icons/backgrounds/cursed.webp',
+		]);
+	});
+
+	it('renders no icon when the granting item has no image', () => {
+		const { optionIcons } = renderWillSave([createSituationalRule({ img: '' })]);
+
+		expect(optionIcons()).toEqual([]);
 	});
 
 	it('clamps the combined roll mode at the slider ceiling', async () => {

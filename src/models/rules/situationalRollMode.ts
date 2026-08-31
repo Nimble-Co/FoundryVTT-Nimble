@@ -4,9 +4,6 @@ import { NimbleBaseRule } from './base.js';
 /** Sentinel accepted by every target list, meaning "every key of that kind". */
 const ALL_TARGETS = 'all';
 
-const ADVANTAGE_ICON = 'fa-solid fa-circle-plus';
-const DISADVANTAGE_ICON = 'fa-solid fa-circle-minus';
-
 function schema() {
 	const { fields } = foundry.data;
 
@@ -18,13 +15,6 @@ function schema() {
 			initial: 1,
 			label: 'NIMBLE.rules.situationalRollMode.value.label',
 			hint: 'NIMBLE.rules.situationalRollMode.value.hint',
-		}),
-		icon: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '',
-			label: 'NIMBLE.rules.situationalRollMode.icon.label',
-			hint: 'NIMBLE.rules.situationalRollMode.icon.hint',
 		}),
 		checkType: new fields.StringField({
 			required: true,
@@ -114,7 +104,6 @@ class SituationalRollModeRule extends NimbleBaseRule<SituationalRollModeRule.Sch
 	static override description = 'NIMBLE.rules.situationalRollMode.description';
 
 	declare value: number;
-	declare icon: string;
 	declare saves: string[];
 	declare abilities: string[];
 	declare skills: string[];
@@ -132,7 +121,6 @@ class SituationalRollModeRule extends NimbleBaseRule<SituationalRollModeRule.Sch
 		return super.tooltipInfo(
 			new Map([
 				['value', 'number'],
-				['icon', 'string'],
 				['checkType', 'string'],
 				['saves', 'string[]'],
 				['abilities', 'string[]'],
@@ -142,13 +130,12 @@ class SituationalRollModeRule extends NimbleBaseRule<SituationalRollModeRule.Sch
 	}
 
 	/**
-	 * The icon the check roll dialog shows beside this option. Authored content sets
-	 * one that names the situation; anything without one falls back to the system's
-	 * advantage/disadvantage icons, so every option still reads at a glance.
+	 * The image the check roll dialog shows beside this option: the owning item's own
+	 * artwork, so the option is recognisable as the feature that granted it and no
+	 * second icon has to be authored or kept in sync.
 	 */
-	iconClass(): string {
-		if (this.icon) return this.icon;
-		return this.value < 0 ? DISADVANTAGE_ICON : ADVANTAGE_ICON;
+	iconPath(): string {
+		return this.item?.img ?? '';
 	}
 
 	/** A zero adjustment would render a toggle that does nothing. */
