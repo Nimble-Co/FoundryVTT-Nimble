@@ -261,7 +261,10 @@ class ItemActivationManager {
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
 
 		for (const node of flattenEffectsTree(effects)) {
-			if (node.type === 'damage' || node.type === 'healing') {
+			// A deferred damage node is left unrolled and does not claim the primary
+			// damage slot: its damage lands on a later trigger than the activation,
+			// so the card offers a Roll Damage button and rolls it then.
+			if ((node.type === 'damage' && !node.deferredRoll) || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
 
 				if (node.type === 'damage' && !foundDamageRoll) {

@@ -135,6 +135,27 @@
 					</label>
 				{/if}
 
+				<!-- Only a top-level damage node can defer: damage nested under an
+				outcome is already gated on that outcome being known. -->
+				{#if !parentNode}
+					<label class="nimble-field">
+						<input
+							type="checkbox"
+							checked={node.deferredRoll}
+							onchange={({ target }) =>
+								updateEffectNode(document, effects, node, 'deferredRoll', target.checked)}
+						/>
+
+						<h5
+							class="nimble-field__label nimble-heading"
+							data-heading-variant="field"
+							data-tooltip={localize('NIMBLE.activationEffects.deferredRollHint')}
+						>
+							{localize('NIMBLE.activationEffects.deferredRoll')}
+						</h5>
+					</label>
+				{/if}
+
 				<label class="nimble-field">
 					<input
 						type="checkbox"

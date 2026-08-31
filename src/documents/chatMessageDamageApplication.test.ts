@@ -111,6 +111,39 @@ function createCard(packets: Array<{ damageType: string; total: number }>) {
 	} as unknown as ChatMessage.CreateData);
 }
 
+/** A card whose damage posts unrolled, waiting on a later trigger. */
+function deferredDamageCard() {
+	return new NimbleChatMessage({
+		type: 'spell',
+		system: {
+			targets: ['Scene.scene.Token.token'],
+			isCritical: false,
+			isMiss: false,
+			activation: {
+				effects: [
+					{
+						id: 'trap-damage',
+						type: 'damage',
+						damageType: 'necrotic',
+						formula: '3d12',
+						deferredRoll: true,
+						canCrit: false,
+						canMiss: false,
+						parentNode: null,
+						parentContext: null,
+					},
+				],
+			},
+		},
+	} as unknown as ChatMessage.CreateData);
+}
+
+function deferredNodeOf(card: NimbleChatMessage) {
+	const effects = (card.system as unknown as { activation: { effects: Array<{ id: string }> } })
+		.activation.effects;
+	return effects.find((effect) => effect.id === 'trap-damage') as { roll?: object };
+}
+
 /** A weapon hit plus a differently-typed bonus packet, as a typed spend posts. */
 function slashingPlusRadiant(slashing = 7, radiant = 5) {
 	return createCard([
@@ -254,6 +287,31 @@ describe('NimbleChatMessage.applyAllDamage', () => {
 		await card.applyAllDamage();
 
 		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('has nothing to apply until deferred damage is rolled, then applies it', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const card = deferredDamageCard();
+		expect(card.canApplyAllDamage()).toBe(false);
+
+		await card.applyAllDamage();
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+
+		// What the card's Roll Damage button writes back onto the node.
+		deferredNodeOf(card).roll = {
+			class: 'Roll',
+			formula: '3d12',
+			total: 21,
+			evaluated: true,
+			options: {},
+			terms: [{ class: 'Die', number: 3, faces: 12, evaluated: true, results: [] }],
+		};
+
+		expect(card.canApplyAllDamage()).toBe(true);
+		await card.applyAllDamage();
+		expect(actor.applyDamage).toHaveBeenCalledWith(21);
 	});
 });
 

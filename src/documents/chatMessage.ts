@@ -5,6 +5,10 @@ import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
+import {
+	buildDeferredDamagePatch,
+	findRollableDeferredDamageNode,
+} from '#utils/buildDeferredDamagePatch.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -18,6 +22,7 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
+import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
@@ -987,6 +992,76 @@ class NimbleChatMessage extends ChatMessage {
 		return this.update({
 			system: { targets: [...targets] },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+	}
+
+	/** Whether this client may press the card's Roll Damage button. */
+	canRollDeferredDamage(): boolean {
+		if (!this.isActivationCard()) return false;
+		return game.user?.isGM === true || this.author?.id === game.user?.id;
+	}
+
+	/**
+	 * Roll a damage node the activation deliberately left unrolled, and put the
+	 * result on the card so Apply Damage picks it up like any other packet.
+	 *
+	 * A DamageRoll, so the node's `canCrit` and `canMiss` mean something: the
+	 * Core Rules give every single-target attack a primary die that misses on a 1
+	 * and crits on its maximum, and only `DamageRoll` reads those two flags. The
+	 * card's own `isCritical` and `isMiss` are restated from the result, because
+	 * the activation posted before there was a roll to read them from.
+	 *
+	 * Runs on the clicking client rather than being routed to the primary GM the
+	 * way the incoming-reaction resolvers are: a chat message is updatable by its
+	 * author or a GM, and the button is offered to nobody else. `update()`
+	 * rewrites `rolls` wholesale, so two of them clicking in the same instant
+	 * leaves whichever landed last, matching the node the same call wrote.
+	 */
+	async rollDeferredDamage(nodeId: string): Promise<void> {
+		if (!this.canRollDeferredDamage()) return;
+
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
+
+		// Resolved before rolling so a node that is ineligible — or that another
+		// click already rolled — costs no dice. `buildDeferredDamagePatch` runs
+		// the same check again on the tree it patches, which is what actually
+		// settles a race; this only avoids the wasted roll.
+		const node = findRollableDeferredDamageNode(activation, nodeId);
+		if (!node) return;
+
+		const speakerActorId = this.speaker?.actor;
+		const actor = speakerActorId ? (game.actors?.get(speakerActorId) ?? null) : null;
+		const roll = new DamageRoll(
+			node.formula || '0',
+			(actor?.getRollData() ?? {}) as DamageRoll.Data,
+			{
+				canCrit: node.canCrit ?? true,
+				canMiss: node.canMiss ?? true,
+				rollMode: node.rollMode ?? 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			} as DamageRoll.Options,
+		);
+		await roll.evaluate();
+
+		const patched = buildDeferredDamagePatch(
+			activation,
+			((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			nodeId,
+			roll.toJSON() as unknown as Record<string, unknown>,
+		);
+		if (!patched) return;
+
+		await this.update({
+			rolls: patched.rolls,
+			system: {
+				activation: patched.activation,
+				isCritical: roll.isCritical === true,
+				isMiss: roll.isMiss === true,
+			},
+		} as Record<string, unknown>);
+
+		await showDiceAnimation(roll, this.id ?? undefined);
 	}
 
 	/**

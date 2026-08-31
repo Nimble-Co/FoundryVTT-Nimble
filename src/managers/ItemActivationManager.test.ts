@@ -871,6 +871,83 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				},
 			);
 		});
+
+		it('should leave a deferred damage node unrolled for the card to roll', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const deferredNode: EffectNode = {
+				id: 'trap-damage',
+				type: 'damage',
+				damageType: 'necrotic',
+				formula: '3d12',
+				deferredRoll: true,
+				canCrit: false,
+				canMiss: false,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [deferredNode] };
+			mockReconstructEffectsTree.mockReturnValue([deferredNode]);
+
+			const result = await manager.getData();
+
+			expect(result.rolls).toEqual([]);
+			expect(DamageRoll).not.toHaveBeenCalled();
+			expect(MockRoll).not.toHaveBeenCalled();
+			expect(deferredNode).not.toHaveProperty('roll');
+		});
+
+		it('should let the next damage node claim the primary slot a deferred one skips', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const deferredNode: EffectNode = {
+				id: 'trap-damage',
+				type: 'damage',
+				damageType: 'necrotic',
+				formula: '3d12',
+				deferredRoll: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			const attackNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [deferredNode, attackNode] };
+			mockReconstructEffectsTree.mockReturnValue([deferredNode, attackNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 6 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			// One DamageRoll, and it is the attack's: a skipped node must not spend
+			// the crit/miss treatment the first *rolled* damage node is owed.
+			expect(DamageRoll).toHaveBeenCalledTimes(1);
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8',
+				{ level: 1, strength: 10 },
+				expect.objectContaining({ canCrit: true, canMiss: true }),
+			);
+		});
 	});
 
 	describe('Healing effects', () => {

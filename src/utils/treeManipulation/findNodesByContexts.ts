@@ -19,8 +19,10 @@ export function findNodesByContexts(
 	function traverse(node: EffectNode) {
 		if (!node.parentNode) {
 			const hasTargetDisposition = 'targetDisposition' in node && node.targetDisposition != null;
-			if (node.type === 'damage' && hasTargetDisposition) {
-				// Disposition-targeted damage is a deliberate UI action, always present it
+			if (node.type === 'damage' && (hasTargetDisposition || node.deferredRoll)) {
+				// Disposition-targeted damage is a deliberate UI action, always present
+				// it. Deferred damage likewise: it has no outcome child to surface it,
+				// and its Roll Damage button lives on the node itself.
 				result.push(node);
 			} else if (includeBaseDamageNodes && node.type === 'damage') {
 				result.push(node);
