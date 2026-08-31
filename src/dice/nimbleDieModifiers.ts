@@ -31,7 +31,7 @@
  *   - `kln3`   → keep 3 lowest
  */
 
-import { getPrimaryDieAppearance, type PrimaryDieAppearance } from './diceSoNiceIntegration.js';
+import { getPrimaryDieDiceOptions, type PrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
 
 // ─── Die Modifier Metadata ──────────────────────────────────────────
 
@@ -74,7 +74,7 @@ type DieResult = {
 interface DieLike {
 	results: DieResult[];
 	modifiers?: string[];
-	options?: { appearance?: PrimaryDieAppearance };
+	options?: Partial<PrimaryDieDiceOptions>;
 }
 
 /**
@@ -82,12 +82,17 @@ interface DieLike {
  * render it distinctly from the rest of the pool. Preserves any appearance
  * already set on the term, and does nothing when the rolling user has
  * disabled distinct primary die styling.
+ *
+ * A 3D dice appearance is per term, and in modifier mode the whole tagged term
+ * is the primary pool: every die in `4d4cv` crits and explodes on its own, so
+ * there is no single die within it to single out.
  */
 function applyPrimaryDieAppearance(die: DieLike): void {
-	const appearance = getPrimaryDieAppearance();
-	if (!appearance) return;
+	const diceSoNiceOptions = getPrimaryDieDiceOptions();
+	if (!diceSoNiceOptions) return;
 	die.options ??= {};
-	die.options.appearance ??= appearance;
+	if (die.options.appearance) return;
+	Object.assign(die.options, diceSoNiceOptions);
 }
 
 function parseCount(modifier: string, prefix: 'khn' | 'kln'): number {

@@ -7,7 +7,7 @@ import {
 	DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY,
 	DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY,
 } from '../settings/diceSoNiceSettings.js';
-import { getPrimaryDieAppearance, PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
+import { getPrimaryDieDiceOptions, PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
 
 type SettingsMock = {
 	settings: { has: (id: string) => boolean };
@@ -24,19 +24,22 @@ function installSettingsMock(values: Record<string, unknown>): SettingsMock {
 	return mock;
 }
 
-describe('getPrimaryDieAppearance', () => {
+describe('getPrimaryDieDiceOptions', () => {
 	beforeEach(() => {
 		installSettingsMock({});
 	});
 
 	it('returns only the colorset when no settings are registered', () => {
-		expect(getPrimaryDieAppearance()).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+		expect(getPrimaryDieDiceOptions()).toEqual({
+			appearance: { colorset: PRIMARY_DIE_COLORSET },
+			dsnDamageTypeManaged: true,
+		});
 	});
 
 	it('returns undefined when the user has disabled primary die styling', () => {
 		installSettingsMock({ [DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY]: false });
 
-		expect(getPrimaryDieAppearance()).toBeUndefined();
+		expect(getPrimaryDieDiceOptions()).toBeUndefined();
 	});
 
 	it('returns only the colorset when settings hold the default colors', () => {
@@ -46,23 +49,24 @@ describe('getPrimaryDieAppearance', () => {
 			[DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY]: DEFAULT_PRIMARY_DIE_LABEL_COLOR,
 		});
 
-		expect(getPrimaryDieAppearance()).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+		expect(getPrimaryDieDiceOptions()?.appearance).toEqual({ colorset: PRIMARY_DIE_COLORSET });
 	});
 
-	it('includes a custom background with a matching edge', () => {
+	it('derives a matching edge and a darkened outline from a custom background', () => {
 		installSettingsMock({ [DSN_PRIMARY_DIE_COLOR_SETTING_KEY]: '#123456' });
 
-		expect(getPrimaryDieAppearance()).toEqual({
+		expect(getPrimaryDieDiceOptions()?.appearance).toEqual({
 			colorset: PRIMARY_DIE_COLORSET,
 			background: '#123456',
 			edge: '#123456',
+			outline: '#06121e',
 		});
 	});
 
 	it('includes a custom foreground without touching the background', () => {
 		installSettingsMock({ [DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY]: '#ffffff' });
 
-		expect(getPrimaryDieAppearance()).toEqual({
+		expect(getPrimaryDieDiceOptions()?.appearance).toEqual({
 			colorset: PRIMARY_DIE_COLORSET,
 			foreground: '#ffffff',
 		});
@@ -71,7 +75,7 @@ describe('getPrimaryDieAppearance', () => {
 	it('expands three-digit hex colors', () => {
 		installSettingsMock({ [DSN_PRIMARY_DIE_COLOR_SETTING_KEY]: '#a1c' });
 
-		expect(getPrimaryDieAppearance()).toMatchObject({ background: '#aa11cc' });
+		expect(getPrimaryDieDiceOptions()?.appearance).toMatchObject({ background: '#aa11cc' });
 	});
 
 	it('stringifies Color-like setting values', () => {
@@ -79,12 +83,18 @@ describe('getPrimaryDieAppearance', () => {
 			[DSN_PRIMARY_DIE_COLOR_SETTING_KEY]: { toString: () => '#654321' },
 		});
 
-		expect(getPrimaryDieAppearance()).toMatchObject({ background: '#654321' });
+		expect(getPrimaryDieDiceOptions()?.appearance).toMatchObject({ background: '#654321' });
 	});
 
 	it('falls back to the default for invalid color values', () => {
 		installSettingsMock({ [DSN_PRIMARY_DIE_COLOR_SETTING_KEY]: 'not-a-color' });
 
-		expect(getPrimaryDieAppearance()).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+		expect(getPrimaryDieDiceOptions()?.appearance).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+	});
+
+	it('marks the damage type as system-managed so a flavor cannot override the colorset', () => {
+		installSettingsMock({});
+
+		expect(getPrimaryDieDiceOptions()?.dsnDamageTypeManaged).toBe(true);
 	});
 });
