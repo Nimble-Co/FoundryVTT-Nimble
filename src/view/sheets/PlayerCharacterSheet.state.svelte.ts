@@ -9,6 +9,7 @@ import {
 	primeActorCombatManaSourceRules,
 } from '#utils/combatManaRules.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
+import type { MissingLevelSelection } from '#utils/findMissingLevelSelections.ts';
 
 type NavigationComponents = {
 	core: unknown;
@@ -178,6 +179,48 @@ export function createPlayerCharacterSheetState(params: {
 
 		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
 		return classHasManaFormula;
+	});
+
+	let missingLevelSelections = $state<MissingLevelSelection[]>([]);
+
+	/**
+	 * What the audit's answer depends on: the class, its level, and which feature sources the
+	 * character holds. Re-auditing on anything else would rebuild the class-feature index on
+	 * every unrelated sheet update.
+	 */
+	const missingSelectionsAuditKey = $derived.by(() => {
+		const characterClass = actor.reactive.items.find((item: any) => item.type === 'class');
+		if (!characterClass) return '';
+
+		const featureSources = actor.reactive.items
+			.filter((item: any) => item.type === 'feature')
+			.map((item: any) => item._stats?.compendiumSource ?? '')
+			.sort()
+			.join(',');
+
+		return `${characterClass.identifier}:${characterClass.system.classLevel}:${featureSources}`;
+	});
+
+	let lastAuditedKey: string | null = null;
+
+	$effect(() => {
+		const auditKey = missingSelectionsAuditKey;
+		if (auditKey === lastAuditedKey) return;
+		lastAuditedKey = auditKey;
+
+		if (!auditKey) {
+			missingLevelSelections = [];
+			return;
+		}
+
+		void actor
+			.getMissingLevelSelections()
+			.then((gaps: MissingLevelSelection[]) => {
+				missingLevelSelections = gaps;
+			})
+			.catch((err: unknown) => {
+				console.warn('Nimble | Failed to audit level selections:', err);
+			});
 	});
 
 	const flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -366,6 +409,9 @@ export function createPlayerCharacterSheetState(params: {
 		},
 		get hitDiceData() {
 			return hitDiceData;
+		},
+		get missingLevelSelections() {
+			return missingLevelSelections;
 		},
 		toggleWounds,
 		updateCurrentHP,

@@ -6,7 +6,16 @@ import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type {
+	LevelCorrectionSelection,
+	LevelCorrectionSubmitData,
+	ResolvedLevelSelectionGap,
+} from '#types/components/CharacterLevelCorrectionDialog.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import findMissingLevelSelections, {
+	type MissingLevelSelection,
+} from '#utils/findMissingLevelSelections.ts';
+import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
@@ -25,6 +34,7 @@ import showInsufficientActionsConfirmation from '../../utils/showInsufficientAct
 import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
+import CharacterLevelCorrectionDialog from '../../view/dialogs/CharacterLevelCorrectionDialog.svelte';
 import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
 import CharacterLevelUpDialog from '../../view/dialogs/CharacterLevelUpDialog.svelte';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
@@ -1180,6 +1190,131 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 */
 	getLevelDownDialogId(): string {
 		return `${this.id}-level-down`;
+	}
+
+	/**
+	 * Get the unique dialog ID for level correction dialogs for this character.
+	 */
+	getLevelCorrectionDialogId(): string {
+		return `${this.id}-level-correction`;
+	}
+
+	/**
+	 * The class feature pools this character is still owed picks from.
+	 *
+	 * A level-up grant that was wrong when the character passed through it leaves no trace on the
+	 * sheet — the picks simply never happened — so the shortfall has to be recomputed from the
+	 * class data every time rather than read back from `levelUpHistory`.
+	 */
+	async getMissingLevelSelections(): Promise<MissingLevelSelection[]> {
+		const characterClass = Object.values(this.classes)?.[0];
+		if (!characterClass) return [];
+
+		const ownedSourceUuids = new Set<string>();
+		for (const item of this.items) {
+			if (item.type !== 'feature') continue;
+			const compendiumSource = item._stats?.compendiumSource;
+			if (compendiumSource) ownedSourceUuids.add(compendiumSource);
+		}
+
+		const index = await buildClassFeatureIndex();
+
+		return findMissingLevelSelections(
+			index,
+			characterClass.identifier,
+			characterClass.system.classLevel,
+			ownedSourceUuids,
+		);
+	}
+
+	/**
+	 * Opens the level correction dialog so the player can make the picks a past level owes them,
+	 * then grants what they chose.
+	 */
+	async triggerLevelCorrection() {
+		const gaps = await this.getMissingLevelSelections();
+
+		if (gaps.length === 0) {
+			ui.notifications?.info(game.i18n.localize('NIMBLE.levelCorrectionDialog.nothingMissing'));
+			return;
+		}
+
+		const resolvedGaps: ResolvedLevelSelectionGap[] = [];
+		for (const gap of gaps) {
+			const { candidateUuids, ...rest } = gap;
+			const candidates = await Promise.all(
+				candidateUuids.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+			);
+			resolvedGaps.push({
+				...rest,
+				candidates: candidates.filter((doc): doc is NimbleFeatureItem => Boolean(doc)),
+			});
+		}
+
+		const dialogId = this.getLevelCorrectionDialogId();
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: ${game.i18n.localize('NIMBLE.levelCorrectionDialog.title')}`,
+			CharacterLevelCorrectionDialog,
+			{ gaps: resolvedGaps },
+			{ icon: 'fa-solid fa-triangle-exclamation', width: 600, uniqueId: dialogId },
+		);
+
+		if (dialog.rendered) return;
+
+		await dialog.render(true);
+		const dialogData = await dialog.promise;
+		if (!dialogData) return;
+
+		await this.applyLevelCorrection(
+			(dialogData as unknown as LevelCorrectionSubmitData).selections,
+		);
+	}
+
+	/**
+	 * Grants the picks chosen in the level correction dialog.
+	 *
+	 * Each grant is recorded on the `levelUpHistory` entry for the level it was owed to, so
+	 * reverting that level still removes it. A correction owed to level 1 has no history entry
+	 * to record against — the character keeps the feature, and reverting cannot reach it anyway.
+	 */
+	async applyLevelCorrection(selections: LevelCorrectionSelection[]): Promise<void> {
+		const featureSources: Item.CreateData[] = [];
+		const levelByCreatedIndex: number[] = [];
+
+		for (const selection of selections) {
+			for (const uuid of selection.uuids) {
+				const feature = await fromUuid(uuid as `Item.${string}`);
+				if (!feature) continue;
+				const source = (feature as NimbleFeatureItem).toObject();
+				source._stats.compendiumSource = uuid;
+				featureSources.push(source as object as Item.CreateData);
+				levelByCreatedIndex.push(selection.level);
+			}
+		}
+
+		if (featureSources.length === 0) return;
+
+		const created = (await this.createEmbeddedDocuments('Item', featureSources)) ?? [];
+
+		const idsByLevel = new Map<number, string[]>();
+		created.forEach((doc, position) => {
+			const id = (doc as unknown as { id: string | null }).id;
+			if (!id) return;
+			const level = levelByCreatedIndex[position];
+			const ids = idsByLevel.get(level);
+			if (ids) ids.push(id);
+			else idsByLevel.set(level, [id]);
+		});
+
+		const levelUpHistory = this.system.levelUpHistory.map((entry) => {
+			const ids = idsByLevel.get(entry.level);
+			if (!ids?.length) return entry;
+			return { ...entry, grantedFeatureIds: [...entry.grantedFeatureIds, ...ids] };
+		});
+
+		const actorUpdates: Record<string, unknown> = { 'system.levelUpHistory': levelUpHistory };
+		await this.update(actorUpdates);
+		this.sheet?.render(true);
 	}
 
 	/**

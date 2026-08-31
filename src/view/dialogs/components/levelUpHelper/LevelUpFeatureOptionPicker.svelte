@@ -44,7 +44,9 @@
 	</ul>
 
 	<div class="feature-option-picker__body">
-		{#if !isSingleOption}
+		{#if isSingleOption}
+			<span class="feature-option-picker__hint">{options[0].label}</span>
+		{:else}
 			<span class="feature-option-picker__hint">
 				{localize('NIMBLE.classFeatureSelection.chooseOne')}
 			</span>

@@ -165,6 +165,29 @@ describe('Shepherd — sacred-grace pool resolution (singular/plural groupIdenti
 	});
 });
 
+describe('Shepherd — sacred-grace selection counts', () => {
+	// Rulebook: "Choose 2 Sacred Graces" at level 5, then a 3rd at 9 and a 4th at 13.
+	const GRACE_LEVELS = [5, 9, 13];
+	const EXPECTED_COUNT: Record<number, number> = { 5: 2, 9: 1, 13: 1 };
+
+	for (const level of GRACE_LEVELS) {
+		it(`level ${level}: offers ${EXPECTED_COUNT[level]} pick(s) from the pool`, () => {
+			const offered = summaries[level - 1].offeredGroups[SACRED_GRACE_GROUP];
+			expect(offered, `sacred-grace pool did not resolve at level ${level}`).toBeDefined();
+			expect(offered.selectionCount).toBe(EXPECTED_COUNT[level]);
+			expect(offered.options.length).toBeGreaterThanOrEqual(offered.selectionCount);
+		});
+	}
+
+	it('grants four graces in total across the progression', () => {
+		const total = GRACE_LEVELS.reduce(
+			(sum, level) => sum + summaries[level - 1].offeredGroups[SACRED_GRACE_GROUP].selectionCount,
+			0,
+		);
+		expect(total).toBe(4);
+	});
+});
+
 describe('Shepherd — data integrity across the full progression', () => {
 	it('produces exactly 20 level summaries', () => {
 		expect(summaries).toHaveLength(20);
