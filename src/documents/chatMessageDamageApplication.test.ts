@@ -111,7 +111,7 @@ function createCard(packets: Array<{ damageType: string; total: number }>) {
 	} as unknown as ChatMessage.CreateData);
 }
 
-/** A Shadow Trap card: damage that posts unrolled, waiting on the trap firing. */
+/** A card whose damage posts unrolled, waiting on a later trigger. */
 function deferredDamageCard() {
 	return new NimbleChatMessage({
 		type: 'spell',

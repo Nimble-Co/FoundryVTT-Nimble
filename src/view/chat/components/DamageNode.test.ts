@@ -98,6 +98,26 @@ describe('DamageNode', () => {
 		expect(screen.getByText('21')).toBeTruthy();
 	});
 
+	it('leaves out the primary-die details for a roll that carries none', () => {
+		// A roll written onto the card after the fact serializes `options: {}`.
+		// Drawing the block then puts two empty labels under the total.
+		renderNode(createMessage(), deferredNode({ roll: rolledRoll() }));
+
+		expect(screen.queryByText(/primary die value/i)).toBeNull();
+	});
+
+	it('shows the primary-die details when the roll actually has them', () => {
+		renderNode(
+			createMessage(),
+			deferredNode({
+				roll: { ...rolledRoll(), options: { primaryDieValue: 12, primaryDieModifier: 2 } },
+			}),
+		);
+
+		expect(screen.getByText(/primary die value: 12/i)).toBeTruthy();
+		expect(screen.getByText(/primary die modifier: 2/i)).toBeTruthy();
+	});
+
 	it('shows the total for ordinary damage that was never deferred', () => {
 		renderNode(createMessage(), deferredNode({ deferredRoll: false, roll: rolledRoll(14) }));
 

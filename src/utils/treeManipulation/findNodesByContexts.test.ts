@@ -49,7 +49,7 @@ describe('findNodesByContexts', () => {
 	});
 
 	it('surfaces a deferred damage node itself, since it has no outcome child', () => {
-		// Shadow Trap: the damage posts unrolled and the node carries the Roll
+		// Deferred damage posts unrolled and the node carries the Roll
 		// Damage button, so nothing else on the card can stand in for it.
 		const found = findNodesByContexts([damageNode({ deferredRoll: true })], ['hit']);
 

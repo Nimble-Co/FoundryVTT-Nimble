@@ -1,4 +1,5 @@
 import type { DamageNode, EffectNode } from '#types/effectTree.js';
+import { replaceDamageRollInRollsSource } from './foldBonusIntoPrimaryDamage.js';
 import { flattenEffectsTree } from './treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from './treeManipulation/reconstructEffectsTree.js';
 
@@ -63,6 +64,6 @@ export function buildDeferredDamagePatch(
 
 	return {
 		activation: { ...activation, effects: reconstructEffectsTree(nodes) as unknown[] },
-		rolls: [...rollsSource, JSON.stringify(serializedRoll)],
+		rolls: replaceDamageRollInRollsSource(rollsSource, serializedRoll),
 	};
 }

@@ -22,6 +22,7 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
+import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
@@ -1003,17 +1004,17 @@ class NimbleChatMessage extends ChatMessage {
 	 * Roll a damage node the activation deliberately left unrolled, and put the
 	 * result on the card so Apply Damage picks it up like any other packet.
 	 *
-	 * A plain Roll, never a DamageRoll: deferred damage is a trap going off, not
-	 * an attack, so it neither crits nor misses, and `foldBonusIntoPrimaryDamage`
-	 * and `resolveForceRerollReaction` both find their target by
-	 * `class === 'DamageRoll'` — this roll is neither of their business.
+	 * A DamageRoll, so the node's `canCrit` and `canMiss` mean something: the
+	 * Core Rules give every single-target attack a primary die that misses on a 1
+	 * and crits on its maximum, and only `DamageRoll` reads those two flags. The
+	 * card's own `isCritical` and `isMiss` are restated from the result, because
+	 * the activation posted before there was a roll to read them from.
 	 *
 	 * Runs on the clicking client rather than being routed to the primary GM the
 	 * way the incoming-reaction resolvers are: a chat message is updatable by its
-	 * author or a GM, and the button is offered to nobody else. Two of them
-	 * clicking in the same instant can each append a roll to `rolls`, but the
-	 * node keeps whichever landed last and the node's roll is the only one the
-	 * card renders or applies.
+	 * author or a GM, and the button is offered to nobody else. `update()`
+	 * rewrites `rolls` wholesale, so two of them clicking in the same instant
+	 * leaves whichever landed last, matching the node the same call wrote.
 	 */
 	async rollDeferredDamage(nodeId: string): Promise<void> {
 		if (!this.canRollDeferredDamage()) return;
@@ -1030,7 +1031,17 @@ class NimbleChatMessage extends ChatMessage {
 
 		const speakerActorId = this.speaker?.actor;
 		const actor = speakerActorId ? (game.actors?.get(speakerActorId) ?? null) : null;
-		const roll = new Roll(node.formula || '0', actor?.getRollData() ?? {});
+		const roll = new DamageRoll(
+			node.formula || '0',
+			(actor?.getRollData() ?? {}) as DamageRoll.Data,
+			{
+				canCrit: node.canCrit ?? true,
+				canMiss: node.canMiss ?? true,
+				rollMode: node.rollMode ?? 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			} as DamageRoll.Options,
+		);
 		await roll.evaluate();
 
 		const patched = buildDeferredDamagePatch(
@@ -1043,8 +1054,14 @@ class NimbleChatMessage extends ChatMessage {
 
 		await this.update({
 			rolls: patched.rolls,
-			system: { activation: patched.activation },
+			system: {
+				activation: patched.activation,
+				isCritical: roll.isCritical === true,
+				isMiss: roll.isMiss === true,
+			},
 		} as Record<string, unknown>);
+
+		await showDiceAnimation(roll, this.id ?? undefined);
 	}
 
 	/**

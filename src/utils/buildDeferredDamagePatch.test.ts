@@ -11,7 +11,7 @@ const TRIGGERED_ROLL = {
 	terms: [{ class: 'Die', number: 3, faces: 12, evaluated: true, results: [{ result: 7 }] }],
 };
 
-/** A Shadow Trap card: concentration, plus damage nothing has triggered yet. */
+/** A concentration effect, plus damage whose trigger has not fired yet. */
 function activation(damageOverrides: Partial<DamageNode> = {}) {
 	return {
 		effects: [

@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 /**
@@ -9,10 +10,38 @@ import { NimbleChatMessage } from './chatMessage.js';
 
 const globals = globalThis as unknown as Record<string, unknown>;
 
-const BaseRoll = globals.Roll as new (
-	formula: string,
-	data?: unknown,
-) => { evaluateSync: () => unknown };
+/** The shared Roll mock DamageRoll is built on in tests. */
+const RollMockPrototype = Object.getPrototypeOf(DamageRoll.prototype) as {
+	toJSON(): Record<string, unknown>;
+};
+
+type EvaluableRoll = DamageRoll & { evaluateSync(): void; total: number };
+
+/**
+ * Resolve the formula the way the shared Roll mock does, and report the outcome
+ * a test asked for. The mock never runs `_evaluate`, which is where the real
+ * class decides crit and miss, so an outcome has to be stated rather than
+ * rolled. Every other assertion here reads the real class's own work: the
+ * rewritten formula, the serialized fields, the options it was handed.
+ */
+function stubEvaluate(outcome: { isCritical?: boolean; isMiss?: boolean } = {}) {
+	vi.spyOn(DamageRoll.prototype, 'evaluate').mockImplementation(async function evaluate(
+		this: EvaluableRoll,
+	) {
+		this.evaluateSync();
+		if (outcome.isCritical !== undefined) this.isCritical = outcome.isCritical;
+		if (outcome.isMiss !== undefined) this.isMiss = outcome.isMiss;
+		return this as never;
+	});
+}
+
+/** The options the card handed the DamageRoll it built, or undefined. */
+function rolledWithOptions(): Record<string, unknown> | undefined {
+	const constructed = vi.mocked(DamageRoll.prototype.evaluate).mock.instances[0] as
+		| DamageRoll
+		| undefined;
+	return constructed?.options as Record<string, unknown> | undefined;
+}
 
 type MockedMessage = NimbleChatMessage & { update: ReturnType<typeof vi.fn> };
 
@@ -23,8 +52,8 @@ function deferredDamageNode(overrides: Record<string, unknown> = {}) {
 		damageType: 'necrotic',
 		formula: '3d12',
 		deferredRoll: true,
-		canCrit: false,
-		canMiss: false,
+		canCrit: true,
+		canMiss: true,
 		parentNode: null,
 		parentContext: null,
 		...overrides,
@@ -60,22 +89,12 @@ function patchedNode(message: MockedMessage, nodeId = 'trap-damage') {
 beforeEach(() => {
 	vi.clearAllMocks();
 
-	// The shared Roll mock only resolves a formula in `evaluateSync`, and its
-	// `toJSON` omits `class` — the card's "this roll is real" signal. The
-	// serialization echoes the formula and total the mock actually resolved
-	// rather than a fixed literal, so the assertions below fail if the card
-	// builds its Roll from the wrong formula or withholds the caster's data.
-	globals.Roll = class SerializableRoll extends BaseRoll {
-		async evaluate() {
-			this.evaluateSync();
-			return this;
-		}
-
-		toJSON() {
-			const self = this as unknown as { formula: string; total: number };
-			return { class: 'Roll', formula: self.formula, total: self.total };
-		}
-	};
+	// The mock's `toJSON` omits `class`, which is the card's "this roll is real"
+	// signal and the guard a second click trips on.
+	vi.spyOn(RollMockPrototype, 'toJSON').mockImplementation(function toJSON(this: EvaluableRoll) {
+		return { class: this.constructor.name, formula: this.formula, total: this.total };
+	});
+	stubEvaluate();
 
 	(globals.game as { user: { isGM: boolean; id: string } }).user = {
 		isGM: false,
@@ -84,6 +103,11 @@ beforeEach(() => {
 	(globals.game as { actors: unknown }).actors = {
 		get: vi.fn(() => ({ getRollData: () => ({ level: 5 }) })),
 	};
+	(globals.game as { dice3d?: unknown }).dice3d = undefined;
+});
+
+afterEach(() => {
+	vi.restoreAllMocks();
 });
 
 describe('rollDeferredDamage', () => {
@@ -92,7 +116,10 @@ describe('rollDeferredDamage', () => {
 
 		await message.rollDeferredDamage('trap-damage');
 
-		expect(patchedNode(message)?.roll).toMatchObject({ class: 'Roll', formula: '3d12' });
+		expect(patchedNode(message)?.roll).toMatchObject({
+			class: 'DamageRoll',
+			originalFormula: '3d12',
+		});
 	});
 
 	it('resolves the formula against the casting actor roll data', async () => {
@@ -130,7 +157,118 @@ describe('rollDeferredDamage', () => {
 
 		const payload = message.update.mock.calls[0][0] as { rolls: string[] };
 		expect(payload.rolls).toHaveLength(1);
-		expect(JSON.parse(payload.rolls[0])).toMatchObject({ class: 'Roll', formula: '3d12' });
+		expect(JSON.parse(payload.rolls[0])).toMatchObject({
+			class: 'DamageRoll',
+			originalFormula: '3d12',
+		});
+	});
+
+	it('replaces the card existing damage roll rather than leaving two behind', async () => {
+		const message = createMessage();
+		(message as unknown as { _source: { rolls: string[] } })._source = {
+			rolls: [JSON.stringify({ class: 'DamageRoll', formula: '1d6', total: 4 })],
+		};
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as { rolls: string[] };
+		expect(payload.rolls).toHaveLength(1);
+		expect(JSON.parse(payload.rolls[0])).toMatchObject({ originalFormula: '3d12' });
+	});
+
+	it('rolls damage that can crit and can miss, per the node flags', async () => {
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(rolledWithOptions()).toMatchObject({ canCrit: true, canMiss: true });
+	});
+
+	it('splits off a primary die so the trap can crit, like any other attack', async () => {
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		// The class rewrites the formula it was given: an exploding primary die
+		// plus the remainder. `3d12` coming back unrewritten would mean the roll
+		// never treated the damage as an attack.
+		expect(patchedNode(message)?.roll).toMatchObject({
+			formula: '1d12x + 2d12',
+			originalFormula: '3d12',
+		});
+	});
+
+	it('forwards a node that opts out of crits and misses', async () => {
+		const message = createMessage([deferredDamageNode({ canCrit: false, canMiss: false })]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(rolledWithOptions()).toMatchObject({ canCrit: false, canMiss: false });
+	});
+
+	it('lets a node that states neither flag crit and miss', async () => {
+		const node = deferredDamageNode();
+		delete (node as Record<string, unknown>).canCrit;
+		delete (node as Record<string, unknown>).canMiss;
+		const message = createMessage([node]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(rolledWithOptions()).toMatchObject({ canCrit: true, canMiss: true });
+	});
+
+	it('restates the card outcome from the deferred roll, since the activation had none', async () => {
+		stubEvaluate({ isCritical: false, isMiss: true });
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as {
+			system: { isCritical: boolean; isMiss: boolean };
+		};
+		expect(payload.system).toMatchObject({ isCritical: false, isMiss: true });
+	});
+
+	it('reads a crit off the deferred roll onto the card', async () => {
+		stubEvaluate({ isCritical: true, isMiss: false });
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as { system: { isCritical: boolean } };
+		expect(payload.system.isCritical).toBe(true);
+	});
+
+	it('writes booleans to the card even when the roll reports no outcome', async () => {
+		const message = createMessage([deferredDamageNode({ canCrit: false, canMiss: false })]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as {
+			system: { isCritical: unknown; isMiss: unknown };
+		};
+		expect(payload.system).toMatchObject({ isCritical: false, isMiss: false });
+	});
+
+	it('throws the dice for Dice So Nice, which never saw the message being created', async () => {
+		const showForRoll = vi.fn().mockResolvedValue(true);
+		(globals.game as { dice3d?: unknown }).dice3d = { showForRoll };
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(showForRoll).toHaveBeenCalledTimes(1);
+		expect(showForRoll.mock.calls[0][0]).toMatchObject({ originalFormula: '3d12' });
+	});
+
+	it('does not throw dice for a click that rolled nothing', async () => {
+		const showForRoll = vi.fn().mockResolvedValue(true);
+		(globals.game as { dice3d?: unknown }).dice3d = { showForRoll };
+		const message = createMessage([deferredDamageNode({ deferredRoll: false })]);
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(showForRoll).not.toHaveBeenCalled();
 	});
 
 	it('refuses a card that is not an activation card', async () => {

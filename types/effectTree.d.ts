@@ -70,9 +70,8 @@ export type DamageNode = {
 	/**
 	 * When true the activation leaves this damage unrolled and the card shows a
 	 * Roll Damage button instead. For damage that lands on a later trigger than
-	 * the activation itself — Shadow Trap springing on the next creature to step
-	 * adjacent — where rolling up front would put a number on the card for
-	 * something that has not happened yet.
+	 * the activation itself, where rolling up front would put a number on the
+	 * card for something that has not happened yet.
 	 */
 	deferredRoll?: boolean;
 	ignoreArmor?: boolean;
