@@ -38,6 +38,7 @@
 	const optionCount = $derived(state.options.length);
 	const isSingleOption = $derived(state.isSingleOption);
 	const hasSubSelection = $derived(state.hasSubSelection);
+	const subSelectionCount = $derived(state.subSelectionCount);
 	const subItemsLoading = $derived(state.subItemsLoading);
 	const loadedCount = $derived(state.loadedSubItems.length);
 </script>
@@ -45,5 +46,6 @@
 <div data-testid="option-count">{optionCount}</div>
 <div data-testid="is-single">{String(isSingleOption)}</div>
 <div data-testid="has-sub-selection">{String(hasSubSelection)}</div>
+<div data-testid="sub-selection-count">{subSelectionCount}</div>
 <div data-testid="loading">{String(subItemsLoading)}</div>
 <div data-testid="loaded-count">{loadedCount}</div>
