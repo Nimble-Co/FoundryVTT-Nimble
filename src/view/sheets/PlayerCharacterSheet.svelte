@@ -337,21 +337,21 @@
 			</h4>
 		{/if}
 	</div>
-</header>
 
-{#if missingLevelSelections.length > 0}
-	<button
-		class="nimble-hint nimble-hint--warning nimble-level-correction-warning"
-		type="button"
-		data-tooltip={localize('NIMBLE.levelCorrectionDialog.sheetWarningTooltip', {
-			level: String(missingLevelSelections[0].level),
-		})}
-		onclick={() => actor.triggerLevelCorrection()}
-	>
-		<i class="nimble-hint__icon fa-solid fa-triangle-exclamation"></i>
-		{localize('NIMBLE.levelCorrectionDialog.sheetWarning')}
-	</button>
-{/if}
+	{#if missingLevelSelections.length > 0}
+		<button
+			class="nimble-hint nimble-hint--warning nimble-level-correction-warning"
+			type="button"
+			data-tooltip={localize('NIMBLE.levelCorrectionDialog.sheetWarningTooltip', {
+				level: String(missingLevelSelections[0].level),
+			})}
+			onclick={() => actor.triggerLevelCorrection()}
+		>
+			<i class="nimble-hint__icon fa-solid fa-triangle-exclamation"></i>
+			{localize('NIMBLE.levelCorrectionDialog.sheetWarning')}
+		</button>
+	{/if}
+</header>
 
 <PrimaryNavigation bind:currentTab {navigation} condenseNavigation={true} />
 
@@ -433,11 +433,16 @@
 		position: relative;
 	}
 
+	// Lives inside the header rather than between the header and the tab list: the sheet's
+	// window-content grid names every row, so a child with no grid area would be auto-placed
+	// into whichever named row happens to be empty, and the spells tab fills them both.
+	//
 	// Reuses the shared warning hint so the banner picks up its light/dark palette; only the
 	// button chrome needs resetting.
 	.nimble-level-correction-warning {
 		align-items: center;
-		width: 100%;
+		width: calc(100% - 0.5rem);
+		margin-inline: 0.25rem;
 		font-family: inherit;
 		color: inherit;
 		cursor: pointer;
