@@ -1,68 +1,27 @@
-<script>
+<script lang="ts">
+	import type {
+		AncestryChoiceOption,
+		AncestryOptionsSelectionProps,
+	} from './AncestryOptionsSelection.types.js';
+
 	import { getContext } from 'svelte';
 
-	import { effectiveVariants, variantIcon } from '../../../../utils/ancestryVariants.js';
-	import localize from '../../../../utils/localize.js';
-	import { effectiveSizes } from '../../../../utils/sizeSelection.js';
+	import localize from '#utils/localize.js';
+	import { variantIcon } from '#utils/ancestryVariants.js';
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
-	import { ancestryBonusRequiresSaveChoice } from '../../characterCreation/utils/ancestryBonusRequiresSaveChoice.js';
+	import { createAncestryOptionsSelectionState } from './AncestryOptionsSelection.svelte.js';
+	import {
+		prepareSaveOptions,
+		toSizeOptions,
+		toVariantOptions,
+	} from './AncestryOptionsSelection.utils.js';
 
-	// Smallest to largest, so the list reads the same regardless of the order the sizes were authored
-	// in. An ancestry that predates the required-one rule resolves to the same default the character
-	// creation flow already falls back to, so the player is still told their size.
-	function prepareAncestrySizes(ancestry) {
-		if (!ancestry) return [];
-
-		return effectiveSizes(ancestry.system?.size, Object.keys(sizeCategories));
-	}
-
-	function prepareAncestryVariants(ancestry) {
-		if (!ancestry) return [];
-
-		return effectiveVariants(ancestry.system?.variants);
-	}
-
-	function toSizeOptions(sizes) {
-		return sizes.map((size) => ({
-			value: size,
-			label: sizeCategories[size] ?? size,
-			description: sizeCategoryDescriptions[size] ?? '',
-			icon: '',
-		}));
-	}
-
-	function toVariantOptions(variants) {
-		return variants.map((variant) => ({
-			value: variant,
-			label: variant,
-			description: '',
-			icon: variantIcon(variant),
-		}));
-	}
-
-	function getNeutralSaves(selectedClass) {
-		if (!selectedClass) return [];
-
-		const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows);
-		const classAdvantage = selectedClass.system?.savingThrows?.advantage;
-		const classDisadvantage = selectedClass.system?.savingThrows?.disadvantage;
-
-		return savingThrowKeys.filter((key) => key !== classAdvantage && key !== classDisadvantage);
-	}
-
-	function prepareSaveOptions(selectedClass) {
-		const neutralSaves = getNeutralSaves(selectedClass);
-		const { savingThrows } = CONFIG.NIMBLE;
-
-		return neutralSaves.map((saveKey) => ({
-			value: saveKey,
-			label: savingThrows[saveKey] ?? saveKey,
-		}));
-	}
-
-	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
-	const dialog = getContext('dialog');
+	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES') as Record<
+		string,
+		number | string
+	>;
+	const dialog = getContext('dialog') as { id: string };
 
 	const { sizeCategories, sizeCategoryDescriptions, ancestryOptions } = CONFIG.NIMBLE;
 
@@ -74,77 +33,31 @@
 		selectedAncestryVariant = $bindable(),
 		selectedAncestrySize = $bindable(),
 		selectedAncestrySave = $bindable(),
-	} = $props();
+	}: AncestryOptionsSelectionProps = $props();
 
-	let ancestryVariants = $derived(prepareAncestryVariants(selectedAncestry));
-	let hasVariantChoice = $derived(ancestryVariants.length > 1);
+	const state = createAncestryOptionsSelectionState({
+		getSelectedAncestry: () => selectedAncestry,
+		getSelectedAncestryBonus: () => selectedAncestryBonus,
+		getSelectedClass: () => selectedClass,
+	});
 
-	let ancestrySizes = $derived(prepareAncestrySizes(selectedAncestry));
-	let hasSizeChoice = $derived(ancestrySizes.length > 1);
-	// A single size is stated rather than asked, so the player still learns what they are.
-	let hasFixedSize = $derived(ancestrySizes.length === 1);
-	let hasSaveChoice = $derived(ancestryBonusRequiresSaveChoice(selectedAncestryBonus));
-	let hasAnyChoice = $derived(hasVariantChoice || hasSizeChoice || hasFixedSize || hasSaveChoice);
-
-	let stepHeaders = $derived(
-		numberSteps([
-			[hasVariantChoice, 'variant', ancestryOptions.variant],
-			[hasSizeChoice, 'sizeCategory', ancestryOptions.sizeCategory],
-			[hasSaveChoice && !!selectedClass, 'enhancedSave', ancestryOptions.enhancedSave],
-		]),
-	);
-
-	// The ancestry itself is Step 2 and its bonus 2b, so the first thing asked here is 2c.
-	const FIRST_STEP_LETTER = 'c';
-
-	function numberSteps(steps) {
-		const headers = {};
-		let letterCode = FIRST_STEP_LETTER.charCodeAt(0);
-
-		for (const [asked, key, label] of steps) {
-			if (!asked) continue;
-
-			headers[key] = localize(ancestryOptions.stepHeader, {
-				step: String.fromCharCode(letterCode),
-				label,
-			});
-			letterCode += 1;
-		}
-
-		return headers;
-	}
-
-	const ARROW_STEPS = {
-		ArrowDown: 1,
-		ArrowRight: 1,
-		ArrowUp: -1,
-		ArrowLeft: -1,
-	};
-
-	// Roving tabindex: the group is one tab stop, and Tab returns to the last option walked to.
-	let focusedValues = $state({});
-
-	function focusedValue(groupLabel, values, selected) {
-		const focused = focusedValues[groupLabel] ?? selected;
-
-		return values.includes(focused) ? focused : values[0];
-	}
-
-	// Arrows move focus only, unlike the usual radiogroup pattern: choosing a variant closes its list
-	// behind an edit control, so an arrow that chose would commit the player to whatever it landed on.
-	function handleRadioKeydown(event, groupLabel, index, values) {
-		const step = ARROW_STEPS[event.key];
-		if (step === undefined) return;
-
-		event.preventDefault();
-		const next = (index + step + values.length) % values.length;
-		focusedValues[groupLabel] = values[next];
-		const group = event.currentTarget.closest('[role="radiogroup"]');
-		group?.querySelectorAll('[role="radio"]')[next]?.focus();
-	}
+	const { focusedValue, handleRadioKeydown } = state;
+	const ancestryVariants = $derived(state.ancestryVariants);
+	const ancestrySizes = $derived(state.ancestrySizes);
+	const hasVariantChoice = $derived(state.hasVariantChoice);
+	const hasSizeChoice = $derived(state.hasSizeChoice);
+	const hasFixedSize = $derived(state.hasFixedSize);
+	const hasSaveChoice = $derived(state.hasSaveChoice);
+	const hasAnyChoice = $derived(state.hasAnyChoice);
+	const stepHeaders = $derived(state.stepHeaders);
 </script>
 
-{#snippet radioChoice(groupLabel, options, selected, select)}
+{#snippet radioChoice(
+	groupLabel: string,
+	options: AncestryChoiceOption[],
+	selected: string | null,
+	select: (value: string) => void,
+)}
 	{@const values = options.map((option) => option.value)}
 	{@const focused = focusedValue(groupLabel, values, selected)}
 
