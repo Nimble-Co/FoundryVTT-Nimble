@@ -312,8 +312,11 @@ async function joinWorld(page: Page): Promise<void> {
 		throw new Error(`Expected to be on /join but got pathname ${pathname}`);
 	}
 
-	await page.selectOption('[name=userid]', { label: user });
-	await page.click('[name=join]');
+	// 14.367 replaced the userid <select> with a free-text username field, and the
+	// submit button's click handler does not fire for a synthetic click, so the
+	// form has to be submitted directly.
+	await page.fill('[name=username]', user);
+	await page.evaluate(() => document.querySelector<HTMLFormElement>('form')?.requestSubmit());
 	await page.waitForURL('**/game');
 	await page.waitForFunction(() => typeof game !== 'undefined' && game.ready);
 
