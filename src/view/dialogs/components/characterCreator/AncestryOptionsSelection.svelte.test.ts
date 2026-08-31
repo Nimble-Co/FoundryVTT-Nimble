@@ -50,8 +50,7 @@ describe('AncestryOptionsSelection variant choice', () => {
 		expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
 	});
 
-	// Three options, not two: with two, forwards and backwards land on the same option, so the
-	// direction of every arrow key would go unverified.
+	// Three options, not two: with two, forwards and backwards land on the same one.
 	it('walks focus forwards and backwards with the arrow keys, wrapping at both ends', async () => {
 		renderOptions(createAncestry({ variants: ['Dryad', 'Shroomling', 'Sporeling'] }));
 		const focused = () => document.activeElement;
@@ -64,17 +63,14 @@ describe('AncestryOptionsSelection variant choice', () => {
 		});
 		expect(focused()).toBe(screen.getByRole('radio', { name: 'Sporeling' }));
 
-		// Past the last option focus wraps back to the first.
 		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Sporeling' }), {
 			key: 'ArrowDown',
 		});
 		expect(focused()).toBe(screen.getByRole('radio', { name: 'Dryad' }));
 
-		// Backwards past the first reaches the last.
 		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Dryad' }), { key: 'ArrowUp' });
 		expect(focused()).toBe(screen.getByRole('radio', { name: 'Sporeling' }));
 
-		// Left and right move the same way as up and down.
 		await fireEvent.keyDown(screen.getByRole('radio', { name: 'Sporeling' }), { key: 'ArrowLeft' });
 		expect(focused()).toBe(screen.getByRole('radio', { name: 'Shroomling' }));
 
@@ -84,8 +80,6 @@ describe('AncestryOptionsSelection variant choice', () => {
 		expect(focused()).toBe(screen.getByRole('radio', { name: 'Sporeling' }));
 	});
 
-	// Choosing closes the list behind an edit control, so an arrow key that chose as it moved would
-	// commit a player to the first option they walked onto.
 	it('chooses nothing until the walked-to option is pressed', async () => {
 		renderOptions(createAncestry({ variants: ['Dryad', 'Shroomling', 'Sporeling'] }));
 
@@ -103,7 +97,6 @@ describe('AncestryOptionsSelection variant choice', () => {
 
 		const shroomling = screen.getByRole('radio', { name: 'Shroomling' });
 		expect(document.activeElement).toBe(shroomling);
-		// A radiogroup is one stop in the tab order: only the walked-to radio is reachable by Tab.
 		expect(shroomling).toHaveAttribute('tabindex', '0');
 		expect(screen.getByRole('radio', { name: 'Dryad' })).toHaveAttribute('tabindex', '-1');
 		expect(screen.getByRole('radio', { name: 'Sporeling' })).toHaveAttribute('tabindex', '-1');
@@ -120,12 +113,10 @@ describe('AncestryOptionsSelection variant choice', () => {
 
 		expect(iconOf('Dryad')).toContain('/assets/icons/dryad.svg');
 		expect(iconOf('Shroomling')).toContain('/assets/icons/shroomling.svg');
-		// A homebrew name no icon has been drawn for still gets one, so the rows line up.
 		expect(iconOf('Sporeling')).toContain('/assets/icons/ancestry-variant.svg');
 	});
 
 	it('asks nothing of an ancestry that covers a single kind of people', () => {
-		// A lone variant is the ancestry's own name, so the section has nothing to show for it.
 		renderOptions(createAncestry({ variants: ['Dryad'] }));
 
 		expect(screen.queryByRole('radiogroup', { name: 'Ancestry Variant' })).not.toBeInTheDocument();
@@ -168,7 +159,6 @@ describe('AncestryOptionsSelection step numbering', () => {
 	});
 
 	it('closes the gap a step that is never asked would otherwise leave', () => {
-		// No variants to choose between, so the size is the first thing asked and takes 2c.
 		renderOptions(createAncestry({ size: ['small', 'medium'] }));
 
 		expect(screen.getByRole('heading', { name: 'Step 2c. Size Category' })).toBeInTheDocument();

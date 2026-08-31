@@ -13,9 +13,8 @@ const schema = {
 		new fields.StringField({ required: true, initial: DEFAULT_SIZE, nullable: false }),
 		{ required: true, nullable: false, initial: () => [DEFAULT_SIZE] },
 	),
-	// Names for the kinds of people this ancestry covers ("Dryad", "Shroomling"). Two or more
-	// becomes a player choice during character creation, and the chosen name replaces the
-	// ancestry's own on that character. Most ancestries cover one kind and list none.
+	// Names for the kinds of people this ancestry covers ("Dryad", "Shroomling"). Most cover one and
+	// list none. See `src/utils/ancestryVariants.ts`.
 	variants: new fields.ArrayField(
 		new fields.StringField({ required: true, initial: '', nullable: false }),
 		{ required: true, nullable: false, initial: () => [] },

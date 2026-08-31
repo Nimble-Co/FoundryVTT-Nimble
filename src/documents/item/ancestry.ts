@@ -77,18 +77,13 @@ export class NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 
 		if (!authoredIdentifier) return;
 
-		// A character who chose a variant carries an ancestry renamed to it ("Dryad" out of
-		// "Dryad/Shroomling"), and the ancestry identifier is what keys the GM's language grants —
-		// so the identifier the ancestry declares outranks the one its name would produce.
-		//
-		// Only ancestries: six shipped subclasses declare an identifier that is deliberately not
-		// their name's slug ("chaos" for Invoker of Chaos), so honouring authored identifiers in
-		// `NimbleBaseItem` would re-identify them.
+		// A variant renames the ancestry on the character ("Dryad" out of "Dryad/Shroomling") and the
+		// identifier keys the GM's language grants, so a declared identifier outranks the derived one.
+		// Ancestries only: six shipped subclasses declare an identifier that is deliberately not their
+		// name's slug ("chaos" for Invoker of Chaos), so doing this in `NimbleBaseItem` re-identifies them.
 		(this.system as object as { identifier: string }).identifier = authoredIdentifier;
 
-		// The base tagged the item on its way through `_populateBaseTags`, back when the identifier
-		// was still the one derived from the name. Rule predicates match against these tags, so they
-		// have to be rebuilt from the identifier that won rather than left disagreeing with it.
+		// Rule predicates match on tags, which the base built from the identifier that just lost.
 		this.tags = new Set();
 		this._populateBaseTags();
 	}

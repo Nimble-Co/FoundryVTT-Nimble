@@ -96,7 +96,6 @@ export interface CharacterCreationDialogInstance {
 export interface CharacterCreationResults {
 	name?: string;
 	sizeCategory?: string;
-	/** The variant name the player picked, which the ancestry on the character takes. */
 	selectedAncestryVariant?: string | null;
 	selectedAncestrySave?: string | null;
 	selectedRaisedByAncestry?: { language: string; label: string } | null;

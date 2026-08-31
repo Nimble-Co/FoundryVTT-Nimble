@@ -3,18 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createVariantOptionsInputState } from './VariantOptionsInput.svelte.ts';
 
-/**
- * The factory reads its props through a getter, so the test owns the "stored" list and re-points it
- * the way the sheet does when `item.update()` round-trips.
- */
+// The factory reads its props through a getter, so a `$state` holder here lets the test re-point the
+// stored list the way the sheet does when `item.update()` round-trips.
 function createState({
 	selectedVariants = [] as string[] | undefined,
-	// Deliberately shares no words with the variant names or the summary strings, so an assertion
-	// about one summary branch cannot pass against another.
+	// Shares no words with the variant names or summary strings, so no branch passes for another.
 	ancestryName = 'Fey-Kin',
 } = {}) {
-	// `$state` rather than a plain `let`: the factory reads its props through a getter, so only a
-	// reactive holder proves the `$derived` values recompute when the sheet writes back.
 	let storedVariants = $state(selectedVariants);
 	const onChange = vi.fn((nextVariants: string[]) => {
 		storedVariants = nextVariants;
@@ -55,7 +50,6 @@ describe('createVariantOptionsInputState', () => {
 			state.addDraftVariant();
 
 			expect(onChange).not.toHaveBeenCalled();
-			// The notice names the trimmed name, not the padded draft the GM typed.
 			expect(state.duplicateVariant).toBe('Oozeling');
 		});
 
@@ -73,7 +67,6 @@ describe('createVariantOptionsInputState', () => {
 			state.addDraftVariant();
 			flushSync();
 
-			// A stale snapshot here would leave the badge row and the summary frozen on the old list.
 			expect(state.currentVariants).toEqual(['Dryad', 'Shroomling']);
 			expect(state.summary).toBe(
 				game.i18n.format('NIMBLE.ancestrySheet.variantsSummaryChoice', {
@@ -89,7 +82,6 @@ describe('createVariantOptionsInputState', () => {
 		const cleanup = $effect.root(() => {
 			const { state, onChange } = createState({ selectedVariants: ['Dryad', 'Shroomling'] });
 
-			// Case-insensitively already listed, matching how the stored list dedupes.
 			state.draftVariant = 'dryad';
 			state.addDraftVariant();
 
@@ -161,8 +153,6 @@ describe('createVariantOptionsInputState', () => {
 		const cleanup = $effect.root(() => {
 			const { state } = createState({ selectedVariants: ['Dryad', 'Shroomling'] });
 
-			// Asserted exactly: every summary string mentions character creation, so a looser check
-			// would pass against the wrong branch.
 			expect(state.summary).toBe(
 				game.i18n.format('NIMBLE.ancestrySheet.variantsSummaryChoice', {
 					variants: 'Dryad or Shroomling',

@@ -13,13 +13,10 @@ function formatVariants(variants: string[]): string {
 
 export function createVariantOptionsInputState(getProps: () => VariantOptionsInputProps) {
 	let draftVariant = $state('');
-	/** A name the list already carries, shown until the next add or removal. */
 	let duplicateVariant = $state('');
 
-	// Imported or hand-edited ancestries can still store blanks or repeats; reads normalize both.
 	const currentVariants = $derived(effectiveVariants(getProps().selectedVariants));
 
-	/** What the GM's list means for character creation. */
 	const summary = $derived.by(() => {
 		if (currentVariants.length > 1) {
 			return localize('NIMBLE.ancestrySheet.variantsSummaryChoice', {
@@ -34,10 +31,6 @@ export function createVariantOptionsInputState(getProps: () => VariantOptionsInp
 		});
 	});
 
-	/**
-	 * Commit the draft name. A name the list already carries stays in the field with a note saying
-	 * so, rather than vanishing as though it had been added.
-	 */
 	function addDraftVariant() {
 		const variant = draftVariant.trim();
 		const nextVariants = addVariant(currentVariants, variant);
@@ -52,7 +45,6 @@ export function createVariantOptionsInputState(getProps: () => VariantOptionsInp
 		getProps().onChange(nextVariants);
 	}
 
-	/** Enter adds the name rather than submitting the sheet, matching the Add button. */
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
 

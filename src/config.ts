@@ -77,9 +77,7 @@ const ancestryOptions = {
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
 };
 
-// Keyed by the variant name itself, trimmed and lowercased, because variants are names a GM authors
-// on the ancestry rather than keys the data model knows. A name with no icon of its own shows
-// `defaultAncestryVariantIcon`.
+// Keyed by the lowercased variant name: variants are names a GM authors, not keys the data model knows.
 const ancestryVariantIcons: Record<string, string> = {
 	beastfolk: `${SYSTEM_PATH}/assets/icons/beastfolk.svg`,
 	construct: `${SYSTEM_PATH}/assets/icons/construct.svg`,

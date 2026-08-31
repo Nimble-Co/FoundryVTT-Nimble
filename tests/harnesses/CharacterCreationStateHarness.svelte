@@ -86,11 +86,7 @@
 		}
 	}
 
-	/**
-	 * Submitting refuses an unnamed character, so name it here — what these tests are after is the
-	 * payload handed to `submitCharacterCreation`, not the name prompt. An incomplete character also
-	 * prompts for confirmation, so stub `DialogV2.confirm` in any test that clicks this.
-	 */
+	/** An incomplete character prompts for confirmation, so stub `DialogV2.confirm` before clicking. */
 	async function submitCharacter() {
 		state.name = 'Harness Character';
 		await state.handleCreateCharacter();

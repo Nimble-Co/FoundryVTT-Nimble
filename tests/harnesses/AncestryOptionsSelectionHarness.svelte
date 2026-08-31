@@ -3,14 +3,11 @@
 
 	import AncestryOptionsSelection from '../../src/view/dialogs/components/characterCreator/AncestryOptionsSelection.svelte';
 
-	// The enhanced-save subsection needs a bonus and a class; nothing exercises it yet, so those
-	// props are left off rather than passed through unused.
 	let { selectedAncestry }: { selectedAncestry: NimbleAncestryItem | null } = $props();
 
 	setContext('CHARACTER_CREATION_STAGES', { ANCESTRY_OPTIONS: '1c' });
 	setContext('dialog', { id: 'character-creation-dialog' });
 
-	// Nothing is pre-selected, matching the state the stage gates on.
 	let selectedAncestryVariant = $state<string | null>(null);
 	let selectedAncestrySize = $state<string | null>(null);
 	let selectedAncestrySave = $state<string | null>(null);

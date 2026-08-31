@@ -110,15 +110,10 @@ function ancestryOffersSizeChoice(ancestry: NimbleAncestryItem | null): boolean 
 	return offersSizeChoice(ancestry?.system?.size, Object.keys(CONFIG.NIMBLE.sizeCategories));
 }
 
-/** Likewise the variant step: an ancestry covering a single kind of people lists no variants. */
 function ancestryOffersVariantChoice(ancestry: NimbleAncestryItem | null): boolean {
 	return offersVariantChoice(ancestry?.system?.variants);
 }
 
-/**
- * Whether the ancestry bonus step still holds the player's attention. Everything the ancestry asks
- * afterwards waits on it, so the options are not put to a player who has yet to settle the bonus.
- */
 function ancestryBonusPending({
 	ancestry,
 	ancestryBonus,
@@ -145,10 +140,8 @@ function hasAncestryOptions(
 	return hasVariantChoice || hasSizeChoice || hasSaveChoice;
 }
 
-/**
- * Named rather than positional: the three selections are all `string | null`, so any transposition
- * would type-check and silently gate the stage on the wrong one.
- */
+// Named rather than positional: the three selections are all `string | null`, so a transposition
+// would type-check and gate the stage on the wrong one.
 function ancestryOptionsComplete({
 	ancestry,
 	ancestryBonus,
@@ -410,8 +403,6 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Sequence number for the in-flight default-bonus lookup. Every new lookup and every
 	// manual pick bumps it, so a resolution that lands after either one is discarded.
 	let defaultBonusRequestId = 0;
-	// Which kind of people the character is, for an ancestry that covers more than one. Nothing is
-	// pre-selected: the player names their own, and the ancestry on the finished character takes it.
 	let selectedAncestryVariant = $state<string | null>(null);
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
@@ -732,8 +723,6 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 		// A fresh ancestry means the player hasn't confirmed its bonus yet.
 		ancestryBonusConfirmed = false;
-		// Variants are named by the ancestry that offers them, so the previous ancestry's pick can't
-		// carry over — not even when both ancestries happen to offer the same name.
 		selectedAncestryVariant = null;
 
 		// Invalidate any lookup still in flight for the previous ancestry.

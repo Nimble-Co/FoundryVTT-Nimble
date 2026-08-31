@@ -261,23 +261,15 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				}
 			}
 
-			// An ancestry that covers more than one kind of people takes the name the player chose, so
-			// the character reads as a Dryad rather than a Dryad/Shroomling everywhere the ancestry is
-			// named. Only a name the ancestry actually offers is honoured — a stale or hand-built
-			// submission must not be able to rename the item to anything it likes.
 			if (options.isAncestry && results.selectedAncestryVariant) {
 				const systemWithVariants = source.system as { identifier?: string; variants?: string[] };
-				// The ancestry's own spelling, not the submitted one, so the character is named the way
-				// the GM authored it whatever casing arrived.
 				const variant = canonicalVariant(
 					systemWithVariants.variants,
 					results.selectedAncestryVariant,
 				);
 
 				if (source.name && variant && source.name !== variant) {
-					// `NimbleBaseItem` derives the identifier from the name, and the ancestry identifier is
-					// what keys the GM's language grants, so record the identifier this ancestry had
-					// before the rename. An ancestry that already declares one keeps it.
+					// Pin the pre-rename identifier; see `NimbleAncestryItem#prepareBaseData`.
 					systemWithVariants.identifier ||= source.name.slugify({ strict: true });
 					source.name = variant;
 				}

@@ -17,17 +17,12 @@
 		return effectiveSizes(ancestry.system?.size, Object.keys(sizeCategories));
 	}
 
-	// Kept in the order the ancestry authored them, which is the order its name reads in.
 	function prepareAncestryVariants(ancestry) {
 		if (!ancestry) return [];
 
 		return effectiveVariants(ancestry.system?.variants);
 	}
 
-	/**
-	 * Rows for a pick-exactly-one list. Sizes carry a short description from the Size rules and no
-	 * icon; variant names stand on their own behind an icon of what kind of people they are.
-	 */
 	function toSizeOptions(sizes) {
 		return sizes.map((size) => ({
 			value: size,
@@ -82,7 +77,6 @@
 	} = $props();
 
 	let ancestryVariants = $derived(prepareAncestryVariants(selectedAncestry));
-	// A lone variant is the ancestry's own name, so there is nothing to ask about.
 	let hasVariantChoice = $derived(ancestryVariants.length > 1);
 
 	let ancestrySizes = $derived(prepareAncestrySizes(selectedAncestry));
@@ -103,11 +97,6 @@
 	// The ancestry itself is Step 2 and its bonus 2b, so the first thing asked here is 2c.
 	const FIRST_STEP_LETTER = 'c';
 
-	/**
-	 * Letters the steps the player is actually asked, in the order they are asked, so a lettered
-	 * step is always a choice and the letters never skip one that went unasked. A stated size is
-	 * not a step and takes no letter.
-	 */
 	function numberSteps(steps) {
 		const headers = {};
 		let letterCode = FIRST_STEP_LETTER.charCodeAt(0);
@@ -132,8 +121,7 @@
 		ArrowLeft: -1,
 	};
 
-	// Where the arrow keys have walked to in each group, so the group stays one stop in the tab
-	// order and Tab returns to the option the player was last looking at.
+	// Roving tabindex: the group is one tab stop, and Tab returns to the last option walked to.
 	let focusedValues = $state({});
 
 	function focusedValue(groupLabel, values, selected) {
@@ -142,11 +130,8 @@
 		return values.includes(focused) ? focused : values[0];
 	}
 
-	/**
-	 * Arrow keys walk the radios of a group, wrapping at both ends, and leave the choosing to Space
-	 * and Enter. Choosing a variant closes its list behind an edit control, so arrows that carried
-	 * the choice with them would commit a player to the first option they walked onto.
-	 */
+	// Arrows move focus only, unlike the usual radiogroup pattern: choosing a variant closes its list
+	// behind an edit control, so an arrow that chose would commit the player to whatever it landed on.
 	function handleRadioKeydown(event, groupLabel, index, values) {
 		const step = ARROW_STEPS[event.key];
 		if (step === undefined) return;
@@ -154,13 +139,11 @@
 		event.preventDefault();
 		const next = (index + step + values.length) % values.length;
 		focusedValues[groupLabel] = values[next];
-		// The radios are the group's own children, so the group is the pressed radio's closest one.
 		const group = event.currentTarget.closest('[role="radiogroup"]');
 		group?.querySelectorAll('[role="radio"]')[next]?.focus();
 	}
 </script>
 
-<!-- Shared by every ancestry option that is a pick-exactly-one list, with nothing pre-selected. -->
 {#snippet radioChoice(groupLabel, options, selected, select)}
 	{@const values = options.map((option) => option.value)}
 	{@const focused = focusedValue(groupLabel, values, selected)}
@@ -283,7 +266,6 @@
 			</div>
 		{/if}
 
-		<!-- A size the ancestry settles is stated, not asked, so it is a line rather than a step. -->
 		{#if hasFixedSize}
 			{@const sizeCategory = ancestrySizes[0]}
 
@@ -338,8 +320,7 @@
 		gap: 0.125rem;
 
 		&__option {
-			// Foundry's own button rule centres and sizes every button. These options are rows of
-			// text, so they read from the start edge and take their height from their content.
+			// Foundry's own button rule centres and sizes every button; these options are text rows.
 			--button-size: fit-content;
 
 			display: flex;
@@ -385,8 +366,7 @@
 			}
 		}
 
-		// The icons are single-colour game-icons silhouettes, so they are masked rather than drawn:
-		// the shape comes from the file and the colour from the row it sits in, in either theme.
+		// Single-colour silhouettes, masked rather than drawn so the row supplies the colour.
 		&__icon {
 			flex: 0 0 auto;
 			width: 1.125rem;

@@ -765,8 +765,6 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 	});
 
 	it('keeps the ancestry options out of the way until the bonus is confirmed', async () => {
-		// The options ask about the ancestry the player has settled on, and an unconfirmed bonus
-		// means they have not settled it yet.
 		const bonusUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.test-bonus';
 		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi
 			.fn()
@@ -1184,7 +1182,7 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
 
-		// One size and no save choice, so the variant is the only thing holding the stage.
+		// The fixture has one size and no save choice, so the variant alone holds the stage.
 		await vi.waitFor(() => {
 			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
 			expect(screen.getByTestId('stage')).toHaveTextContent(
@@ -1203,7 +1201,6 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 	});
 
 	it('skips ANCESTRY_OPTIONS for an ancestry that covers a single kind of people', async () => {
-		// One name is the ancestry's own, and none at all is the common case; neither is a choice.
 		renderWithAncestries(createAncestryWithVariants(['Dryad']));
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
@@ -1237,7 +1234,6 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 	});
 
 	it('drops the chosen variant when the ancestry changes', async () => {
-		// Variants are named by the ancestry offering them, so a pick can't survive a new ancestry.
 		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
 			alternateAncestryDocument: createAncestryWithVariants(
 				['Oozeling', 'Construct'],
@@ -1265,12 +1261,9 @@ describe('createCharacterCreationState ancestry variant stage', () => {
 	});
 
 	it('hands the chosen variant to the dialog on submit', async () => {
-		// Without this the payload could drop the variant and every other test would still pass: the
-		// field is optional on `CharacterCreationResults`, so nothing else would notice.
 		const submitCharacterCreation = vi.fn(async () => undefined);
-		// The character is incomplete here, so submitting asks for confirmation. Restored afterwards
-		// rather than left set: `vi.clearAllMocks()` clears calls but keeps implementations, so this
-		// would otherwise answer "yes" for every later test in the file.
+		// Restored rather than left set: `vi.clearAllMocks()` clears calls but keeps implementations,
+		// so this would answer "yes" for every later test in the file.
 		const confirm = vi
 			.spyOn(foundry.applications.api.DialogV2, 'confirm')
 			.mockResolvedValue(true as never);

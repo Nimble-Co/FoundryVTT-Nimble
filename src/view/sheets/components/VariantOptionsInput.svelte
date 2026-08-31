@@ -73,8 +73,7 @@
 		</ul>
 	{/if}
 
-	<!-- Rendered even when empty so the live region exists before it has something to announce, and
-	so the input's `aria-describedby` always points at a real element. -->
+	<!-- Always rendered so the live region exists before it has something to announce. -->
 	<p class="nimble-variant-options__notice" id={noticeId} role="status">
 		{duplicateVariant
 			? localize('NIMBLE.ancestrySheet.variantsDuplicate', { variant: duplicateVariant })
@@ -101,13 +100,11 @@
 			min-width: 0;
 		}
 
-		// Layout only — the look comes from the global `secondary` button variant. That variant has
-		// neither a disabled state nor a focus ring of its own, so both are supplied here.
+		// The global `secondary` variant has no disabled state and no focus ring, so both go here.
 		&__add {
 			flex: 0 0 auto;
 
-			// Qualified with `.nimble-button` deliberately: the global base rule clears `box-shadow`
-			// at the same specificity this block would otherwise have, and would win on source order.
+			// Qualified with `.nimble-button` to outrank the global rule that clears `box-shadow`.
 			&.nimble-button:focus-visible {
 				box-shadow: 0 0 0 1px var(--nimble-accent-color);
 			}
@@ -151,7 +148,6 @@
 			padding: 0;
 			font-size: var(--nimble-xxs-text);
 			color: inherit;
-			// Tinted from the badge's own text color, so the chip stays legible whatever the badge is.
 			background: color-mix(in srgb, currentColor 18%, transparent);
 			border: none;
 			border-radius: 50%;
@@ -186,10 +182,8 @@
 		&__notice {
 			color: var(--nimble-dark-text-color);
 
-			// Deliberately not `display: none` while empty: that would drop the live region out of the
-			// accessibility tree between announcements, which is the failure this always-rendered
-			// element exists to avoid. The paragraph has no height without text, but it is still a flex
-			// item, so its share of the column `gap` is cancelled instead.
+			// Not `display: none`, which would drop the live region out of the accessibility tree, so
+			// cancel its share of the column `gap` instead.
 			&:empty {
 				margin-block-start: -0.375rem;
 			}

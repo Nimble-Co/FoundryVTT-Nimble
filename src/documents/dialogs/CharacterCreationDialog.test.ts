@@ -384,9 +384,6 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			});
 
 			it('keeps the identifier the ancestry had before the variant renamed it', async () => {
-				// The ancestry identifier keys the GM's language grants, and the base item derives it
-				// from the name — so a renamed Shroomling still has to answer to the identifier
-				// "Dryad/Shroomling" produced.
 				const actor = await submitWithVariant(
 					createVariantAncestry(['Dryad', 'Shroomling']),
 					'Shroomling',
@@ -400,7 +397,6 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 
 				const ancestrySource = findAncestrySource(actor);
 				expect(ancestrySource?.name).toBe('Dryad/Shroomling');
-				// Nothing was renamed, so nothing has to be pinned either.
 				expect(ancestrySource?.system.identifier).toBe('');
 			});
 
@@ -414,7 +410,6 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			});
 
 			it('leaves the ancestry alone when the variant is already its name', async () => {
-				// Nothing was renamed, so no identifier needs pinning either.
 				const ancestryDocument = createItemDocument({
 					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryad',
 					name: 'Dryad',
@@ -429,7 +424,6 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			});
 
 			it('ignores a variant the ancestry does not offer', async () => {
-				// A stale or hand-built submission must not be able to rename the item to anything.
 				const actor = await submitWithVariant(
 					createVariantAncestry(['Dryad', 'Shroomling']),
 					'Oozeling',

@@ -137,8 +137,7 @@ describe('NimbleAncestryItem._preCreate', () => {
 });
 
 describe('NimbleAncestryItem.prepareBaseData', () => {
-	// Same reason as `_preCreate` above: the base class ends in `super.prepareBaseData()`, and the
-	// shared `Item` mock has no such method.
+	// `super.prepareBaseData()` has no counterpart on the shared `Item` mock either.
 	beforeEach(() => {
 		itemPrototype.prepareBaseData = vi.fn();
 	});
@@ -147,10 +146,7 @@ describe('NimbleAncestryItem.prepareBaseData', () => {
 		delete itemPrototype.prepareBaseData;
 	});
 
-	/**
-	 * Built on the real prototype so the base class's own data prep runs — it derives the identifier
-	 * from the name, populates tags, and builds a rules manager, all against these fields.
-	 */
+	// Built on the real prototype so the base class's own data prep runs against these fields.
 	function createPreparedAncestry(name: string, authoredIdentifier: string) {
 		const ancestry = Object.assign(Object.create(NimbleAncestryItem.prototype), {
 			name,
@@ -165,17 +161,12 @@ describe('NimbleAncestryItem.prepareBaseData', () => {
 	}
 
 	it('keeps the identifier the ancestry declares, whatever the variant renamed it to', () => {
-		// A character who chose "Shroomling" carries an ancestry renamed to it, and the ancestry
-		// identifier is what keys the GM's language grants.
 		const ancestry = createPreparedAncestry('Shroomling', 'dryadshroomling');
 
 		expect(ancestry.system.identifier).toBe('dryadshroomling');
 	});
 
 	it('tags the item with the identifier that won, not the one the name derives', () => {
-		// The base class tags during `_populateBaseTags`, before the authored identifier is restored.
-		// Rule predicates match on these tags, so a stale tag would make the same ancestry answer to
-		// two different identifiers depending on which mechanism asked.
 		const ancestry = createPreparedAncestry('Shroomling', 'dryadshroomling');
 
 		expect([...ancestry.tags]).toContain('identifier:dryadshroomling');

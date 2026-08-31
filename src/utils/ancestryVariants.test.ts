@@ -109,7 +109,6 @@ describe('removeVariant', () => {
 	});
 
 	it('empties the list when the last variant is removed', () => {
-		// Unlike sizes, an ancestry needs no variants at all — most cover a single kind of people.
 		expect(removeVariant(['Dryad'], 'Dryad')).toEqual([]);
 	});
 
