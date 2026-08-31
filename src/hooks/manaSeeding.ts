@@ -37,13 +37,6 @@ function readStash(options: object): Record<string, number> | undefined {
 		| undefined;
 }
 
-function toClassItemActor(item: unknown): Actor.Implementation | null {
-	if (!item || typeof item !== 'object') return null;
-	const typedItem = item as Item.Implementation;
-	if (typedItem.type !== 'class') return null;
-	return typedItem.actor ?? null;
-}
-
 // Derived max mana is still the pre-update value inside pre-hooks, so it is
 // recorded on the update options for the post-hook to compare against.
 //
@@ -76,7 +69,9 @@ async function seedManaIfNewlyAvailable(
 	if (!snapshot || !options || typeof options !== 'object') return;
 
 	const previousMax = readStash(options)?.[snapshot.actorUuid];
-	if (typeof previousMax !== 'number' || previousMax > 0) return;
+	if (typeof previousMax !== 'number') return;
+
+	if (previousMax > 0) return;
 
 	// Seed only on the transition from "no pool" to "has a pool", and never
 	// touch a value that already exists.
@@ -88,22 +83,6 @@ async function seedManaIfNewlyAvailable(
 }
 
 export default function registerManaSeedingHooks(): void {
-	Hooks.on('preCreateItem', (item: Item.Implementation, _data, options) => {
-		stashPreviousManaMax(toClassItemActor(item), options);
-	});
-
-	Hooks.on('createItem', (item: Item.Implementation, options, userId) => {
-		void seedManaIfNewlyAvailable(toClassItemActor(item), options, userId);
-	});
-
-	Hooks.on('preUpdateItem', (item: Item.Implementation, _changes, options) => {
-		stashPreviousManaMax(toClassItemActor(item), options);
-	});
-
-	Hooks.on('updateItem', (item: Item.Implementation, _changes, options, userId) => {
-		void seedManaIfNewlyAvailable(toClassItemActor(item), options, userId);
-	});
-
 	Hooks.on('preUpdateActor', (actor: Actor.Implementation, _changes, options) => {
 		stashPreviousManaMax(actor, options);
 	});
