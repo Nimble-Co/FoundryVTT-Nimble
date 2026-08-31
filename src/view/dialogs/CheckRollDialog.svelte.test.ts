@@ -51,7 +51,7 @@ function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
 	const formula = () => container.querySelector('.nimble-roll-formula')?.textContent;
 	// Svelte appends its own scope class, so read back only the icon's own classes.
 	const optionIcons = () =>
-		Array.from(container.querySelectorAll('.nimble-situational-roll-mode__icon')).map((icon) =>
+		Array.from(container.querySelectorAll('.nimble-situational__icon')).map((icon) =>
 			Array.from(icon.classList)
 				.filter((name) => name.startsWith('fa-'))
 				.join(' '),
@@ -156,6 +156,21 @@ describe('CheckRollDialog situational roll modes', () => {
 	it('clamps the combined roll mode at the slider ceiling', async () => {
 		const { submitRoll, formula, roll, toggle } = renderWillSave([createSituationalRule()], 6);
 
+		await toggle('Against fear');
+		await waitFor(() => expect(formula()).toBe('d20 @ 6'));
+
+		await roll();
+
+		expect(submitRoll).toHaveBeenCalledWith(expect.objectContaining({ rollMode: 6 }));
+	});
+
+	// Unchecking gives back what checking took, not the option's own value: at the
+	// ceiling the adjustment is swallowed, so subtracting it would drop the roll
+	// below where the roller left the slider.
+	it('restores the roll mode when an option clamped at the ceiling is unchecked', async () => {
+		const { submitRoll, formula, roll, toggle } = renderWillSave([createSituationalRule()], 6);
+
+		await toggle('Against fear');
 		await toggle('Against fear');
 		await waitFor(() => expect(formula()).toBe('d20 @ 6'));
 

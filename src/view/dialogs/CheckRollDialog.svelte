@@ -7,7 +7,10 @@
 	import Hint from '#view/components/Hint.svelte';
 	import getRollFormula from '../../utils/getRollFormula.js';
 	import localize from '../../utils/localize.js';
-	import { getSituationalRollModeOptions } from './CheckRollDialog.utils.js';
+	import {
+		getSituationalRollModeOptions,
+		type SituationalRollModeOption,
+	} from './CheckRollDialog.utils.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
 	const { skillCheckDialog } = CONFIG.NIMBLE;
@@ -27,28 +30,41 @@
 		}),
 	);
 
-	let selectedSituationalKeys = $state<Record<string, boolean>>({});
-
-	let situationalAdjustment = $derived(
-		situationalOptions.reduce(
-			(total, option) => (selectedSituationalKeys[option.key] ? total + option.value : total),
-			0,
-		),
-	);
-
-	let effectiveRollMode = $derived(Math.clamp(selectedRollMode + situationalAdjustment, -6, 6));
+	// Keyed by option, holding the adjustment actually applied to the slider rather
+	// than the option's own value: clamping at the slider's ends can swallow part of
+	// it, and unchecking has to give back exactly what checking took.
+	let appliedAdjustments = $state<Record<string, number>>({});
 
 	let rollFormula = $derived.by(() => {
 		if (type === 'initiative') {
-			return actor._getInitiativeFormula({ rollMode: effectiveRollMode });
+			return actor._getInitiativeFormula({ rollMode: selectedRollMode });
 		}
 
 		return getRollFormula(actor as Parameters<typeof getRollFormula>[0], {
 			...data,
-			rollMode: effectiveRollMode,
+			rollMode: selectedRollMode,
 			type,
 		});
 	});
+
+	function isSelected(option: SituationalRollModeOption): boolean {
+		return option.key in appliedAdjustments;
+	}
+
+	function toggleSituational(option: SituationalRollModeOption, checked: boolean): void {
+		const next = { ...appliedAdjustments };
+
+		if (checked) {
+			const rollMode = Math.clamp(selectedRollMode + option.value, -6, 6);
+			next[option.key] = rollMode - selectedRollMode;
+			selectedRollMode = rollMode;
+		} else {
+			selectedRollMode = Math.clamp(selectedRollMode - (next[option.key] ?? 0), -6, 6);
+			delete next[option.key];
+		}
+
+		appliedAdjustments = next;
+	}
 
 	function situationalLabel(value: number): string {
 		if (value > 0) {
@@ -69,47 +85,54 @@
 	<RollModeConfig bind:selectedRollMode />
 
 	{#if situationalOptions.length}
-		<section class="nimble-situational-roll-mode">
-			<h5 class="nimble-situational-roll-mode__heading">
+		<section class="nimble-situational">
+			<h5 class="nimble-situational__heading">
 				{localize('NIMBLE.checkRollDialog.situationalRollMode.heading')}
 			</h5>
 
-			{#each situationalOptions as option (option.key)}
-				<label class="nimble-situational-roll-mode__option">
-					<input
-						type="checkbox"
-						class="modifier-item__checkbox"
-						checked={selectedSituationalKeys[option.key] ?? false}
-						onchange={(event) => {
-							selectedSituationalKeys = {
-								...selectedSituationalKeys,
-								[option.key]: event.currentTarget.checked,
-							};
-						}}
-					/>
-					<i class="nimble-situational-roll-mode__icon {option.icon}" aria-hidden="true"></i>
-					<span class="nimble-situational-roll-mode__label">{option.label}</span>
-					<span
-						class="nimble-situational-roll-mode__value"
-						class:nimble-situational-roll-mode__value--penalty={option.value < 0}
-					>
-						{situationalLabel(option.value)}
-					</span>
-				</label>
-			{/each}
+			<ul class="nimble-situational__list">
+				{#each situationalOptions as option (option.key)}
+					<li>
+						<label
+							class="nimble-situational__option"
+							class:nimble-situational__option--selected={isSelected(option)}
+						>
+							<i class="nimble-situational__icon {option.icon}" aria-hidden="true"></i>
+							<span class="nimble-situational__label">{option.label}</span>
+							<span
+								class="nimble-situational__value"
+								class:nimble-situational__value--penalty={option.value < 0}
+							>
+								{situationalLabel(option.value)}
+							</span>
+							<input
+								type="checkbox"
+								class="nimble-situational__checkbox"
+								checked={isSelected(option)}
+								onchange={(event) => toggleSituational(option, event.currentTarget.checked)}
+							/>
+						</label>
+					</li>
+				{/each}
+			</ul>
 		</section>
 	{/if}
 
-	{#if game.user?.isGM}
-		<section class="nimble-gm-roll-options">
-			<label class="nimble-gm-roll-options__option">
-				<i class="fa-solid fa-user-secret nimble-gm-roll-options__icon" aria-hidden="true"></i>
-				<span class="nimble-gm-roll-options__label">{skillCheckDialog.hideRoll}</span>
-				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
+	<div class="nimble-check-roll-summary">
+		<div class="nimble-roll-formula">{rollFormula}</div>
+
+		{#if game.user?.isGM}
+			<label class="nimble-hide-roll">
+				<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+				<span class="nimble-hide-roll__label">{skillCheckDialog.hideRoll}</span>
+				<input
+					type="checkbox"
+					class="nimble-hide-roll__checkbox"
+					bind:checked={shouldRollBeHidden}
+				/>
 			</label>
-		</section>
-	{/if}
-	<div class="nimble-roll-formula">{rollFormula}</div>
+		{/if}
+	</div>
 </article>
 
 <footer class="nimble-sheet__footer">
@@ -118,7 +141,7 @@
 		data-button-variant="basic"
 		onclick={() =>
 			dialog.submitRoll({
-				rollMode: effectiveRollMode,
+				rollMode: selectedRollMode,
 				rollFormula,
 				visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
 			})}
@@ -134,74 +157,134 @@
 		--nimble-button-width: 100%;
 	}
 
-	.nimble-situational-roll-mode {
+	.nimble-situational {
+		margin-block: 0.5rem 0.75rem;
+		margin-inline: 1rem;
+		padding: 0.625rem 0.75rem 0.75rem;
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 6px;
+		background: var(--nimble-card-background-color);
+
+		&__heading {
+			margin: 0 0 0.5rem;
+			border: 0;
+			font-size: var(--nimble-xs-text);
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		&__option {
+			display: grid;
+			grid-template-columns: 1.75rem 1fr auto auto;
+			align-items: center;
+			gap: 0.625rem;
+			padding: 0.375rem 0.5rem;
+			border: 1px solid transparent;
+			border-radius: 4px;
+			cursor: pointer;
+			transition: var(--nimble-standard-transition);
+
+			&:hover {
+				background: hsla(var(--nimble-accent-color-values), 0.08);
+			}
+
+			&:focus-within {
+				border-color: var(--nimble-accent-color);
+			}
+
+			&--selected {
+				border-color: hsla(var(--nimble-accent-color-values), 0.5);
+				background: hsla(var(--nimble-accent-color-values), 0.12);
+			}
+		}
+
+		&__icon {
+			display: grid;
+			place-items: center;
+			width: 1.75rem;
+			height: 1.75rem;
+			border-radius: 50%;
+			background: hsla(var(--nimble-accent-color-values), 0.12);
+			font-size: var(--nimble-md-text);
+			color: var(--nimble-accent-color);
+		}
+
+		&__label {
+			font-size: var(--nimble-sm-text);
+			line-height: 1.2;
+		}
+
+		&__value {
+			padding: 0.125rem 0.5rem;
+			border-radius: 999px;
+			background: hsla(var(--nimble-accent-color-values), 0.15);
+			font-size: var(--nimble-xxs-text);
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			white-space: nowrap;
+			color: var(--nimble-accent-color);
+
+			&--penalty {
+				background: hsla(0, 65%, 45%, 0.15);
+				color: var(--nimble-validation-error-color);
+			}
+		}
+
+		&__checkbox {
+			width: 1rem;
+			height: 1rem;
+			margin: 0;
+			cursor: pointer;
+		}
+	}
+
+	.nimble-check-roll-summary {
 		display: flex;
-		flex-direction: column;
+		align-items: stretch;
+		gap: 0.5rem;
+		margin-inline: 1rem;
+
+		.nimble-roll-formula {
+			flex: 1;
+			display: grid;
+			place-items: center;
+		}
+	}
+
+	.nimble-hide-roll {
+		display: flex;
+		align-items: center;
 		gap: 0.375rem;
-		margin-top: 0.75rem;
 		padding: 0.5rem 0.625rem;
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
 		background: var(--nimble-card-background-color);
-
-		&__heading {
-			margin: 0;
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			color: var(--nimble-medium-text-color);
-		}
-
-		&__option {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			cursor: pointer;
-		}
-
-		&__icon {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
-		}
+		cursor: pointer;
+		white-space: nowrap;
+		color: var(--nimble-medium-text-color);
 
 		&__label {
-			flex: 1;
-		}
-
-		&__value {
 			font-size: var(--nimble-xs-text);
-			font-weight: 700;
-			text-transform: uppercase;
-			color: var(--nimble-medium-text-color);
-
-			&--penalty {
-				color: var(--nimble-validation-error-color);
-			}
+			font-weight: 500;
 		}
-	}
 
-	.nimble-gm-roll-options {
-		margin-top: 0.75rem;
-		padding-top: 0.625rem;
-		border-top: 1px dashed var(--nimble-card-border-color);
-
-		&__option {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
+		&__checkbox {
+			width: 1rem;
+			height: 1rem;
+			margin: 0;
 			cursor: pointer;
-		}
-
-		&__icon {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
-		}
-
-		&__label {
-			flex: 1;
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
 		}
 	}
 </style>
