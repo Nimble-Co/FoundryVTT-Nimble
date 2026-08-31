@@ -96,6 +96,7 @@ export interface CharacterCreationDialogInstance {
 export interface CharacterCreationResults {
 	name?: string;
 	sizeCategory?: string;
+	selectedAncestryVariant?: string | null;
 	selectedAncestrySave?: string | null;
 	selectedRaisedByAncestry?: { language: string; label: string } | null;
 	abilityScores?: Record<string, number>;

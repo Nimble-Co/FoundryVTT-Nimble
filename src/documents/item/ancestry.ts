@@ -66,6 +66,28 @@ async function replaceAncestryBonus(
 export class NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 	declare system: NimbleAncestryData;
 
+	/** ------------------------------------------------------ */
+	//                        Data Prep
+	/** ------------------------------------------------------ */
+	override prepareBaseData(): void {
+		// Read before the base class derives an identifier from the name.
+		const authoredIdentifier = (this._source.system as { identifier?: string }).identifier ?? '';
+
+		super.prepareBaseData();
+
+		if (!authoredIdentifier) return;
+
+		// A variant renames the ancestry on the character ("Dryad" out of "Dryad/Shroomling") and the
+		// identifier keys the GM's language grants, so a declared identifier outranks the derived one.
+		// Ancestries only: six shipped subclasses declare an identifier that is deliberately not their
+		// name's slug ("chaos" for Invoker of Chaos), so doing this in `NimbleBaseItem` re-identifies them.
+		(this.system as object as { identifier: string }).identifier = authoredIdentifier;
+
+		// Rule predicates match on tags, which the base built from the identifier that just lost.
+		this.tags = new Set();
+		this._populateBaseTags();
+	}
+
 	override async prepareChatCardData() {
 		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			this.system.description,

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
@@ -7,6 +7,7 @@ import CharacterCreationStateHarness from '../../../../tests/harnesses/Character
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES } from './constants.js';
+import type { CharacterCreationResults } from './types.js';
 
 vi.mock('../../../utils/getClassFeatures.js', () => ({
 	default: vi.fn(),
@@ -763,6 +764,28 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 		});
 	});
 
+	it('keeps the ancestry options out of the way until the bonus is confirmed', async () => {
+		const bonusUuid = 'Compendium.nimble.nimble-ancestry-bonuses.Item.test-bonus';
+		(globalThis as unknown as GlobalWithFromUuid).fromUuid = vi
+			.fn()
+			.mockResolvedValue({ uuid: bonusUuid, system: { rules: [] } });
+
+		renderWithAncestry(createClass('mage'), createAncestryWithDefaultBonus(bonusUuid));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('ancestry-options-available')).toHaveTextContent('false');
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Confirm Ancestry Bonus' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('ancestry-options-available')).toHaveTextContent('true');
+		});
+	});
+
 	it('skips ANCESTRY_BONUS when no bonuses are available at all', async () => {
 		// The bonus pack is missing or disabled, so the default resolves to nothing and there is
 		// nothing to pick. Gating here would dead-end the wizard: no way to complete a character.
@@ -1090,6 +1113,175 @@ describe('createCharacterCreationState ancestry bonus stage', () => {
 			expect(screen.getByTestId('selected-ancestry-save')).toHaveTextContent('null');
 			expect(screen.getByTestId('stage')).toHaveTextContent(
 				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+});
+
+describe('createCharacterCreationState ancestry variant stage', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.mocked(getClassFeaturesFromIndex).mockResolvedValue(createClassFeaturesResult([]));
+		(
+			globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame }
+		).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+			callback(0);
+			return 1;
+		});
+	});
+
+	function createAncestryWithVariants(variants: string[], uuid = 'dryadshroomling') {
+		return {
+			uuid: `Compendium.nimble.nimble-ancestries.Item.${uuid}`,
+			system: {
+				size: ['medium'],
+				rules: [],
+				variants,
+			},
+		} as unknown as NimbleAncestryItem;
+	}
+
+	function renderWithAncestries(
+		ancestryDocument: NimbleAncestryItem,
+		{
+			alternateAncestryDocument = null,
+			ancestryVariant = null,
+			submitCharacterCreation,
+		}: {
+			alternateAncestryDocument?: NimbleAncestryItem | null;
+			ancestryVariant?: string | null;
+			submitCharacterCreation?: (results: CharacterCreationResults) => Promise<void>;
+		} = {},
+	) {
+		render(CharacterCreationStateHarness, {
+			props: {
+				ancestryOptions: {
+					core: alternateAncestryDocument
+						? [ancestryDocument, alternateAncestryDocument]
+						: [ancestryDocument],
+					exotic: [],
+				},
+				backgroundOptions: [createBackground()],
+				classDocument: createClass('mage'),
+				classOptions: [createClass('mage')],
+				backgroundDocument: createBackground(),
+				ancestryDocument,
+				alternateAncestryDocument,
+				ancestryVariant,
+				spellIndex: createSpellIndex([]),
+				...(submitCharacterCreation ? { submitCharacterCreation } : {}),
+			},
+		});
+	}
+
+	it('gates on ANCESTRY_OPTIONS until a variant is chosen', async () => {
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			ancestryVariant: 'Shroomling',
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		// The fixture has one size and no save choice, so the variant alone holds the stage.
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS),
+			);
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('skips ANCESTRY_OPTIONS for an ancestry that covers a single kind of people', async () => {
+		renderWithAncestries(createAncestryWithVariants(['Dryad']));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.BACKGROUND),
+			);
+		});
+	});
+
+	it('drops the chosen variant when the ancestry is cleared', async () => {
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			ancestryVariant: 'Shroomling',
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
+		});
+	});
+
+	it('drops the chosen variant when the ancestry changes', async () => {
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			alternateAncestryDocument: createAncestryWithVariants(
+				['Oozeling', 'Construct'],
+				'oozelingconstruct',
+			),
+			ancestryVariant: 'Shroomling',
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('Shroomling');
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Alternate Ancestry' }));
+
+		await vi.waitFor(() => {
+			expect(screen.getByTestId('selected-ancestry-variant')).toHaveTextContent('null');
+			expect(screen.getByTestId('stage')).toHaveTextContent(
+				String(CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS),
+			);
+		});
+	});
+
+	it('hands the chosen variant to the dialog on submit', async () => {
+		const submitCharacterCreation = vi.fn(async () => undefined);
+		// Restored rather than left set: `vi.clearAllMocks()` clears calls but keeps implementations,
+		// so this would answer "yes" for every later test in the file.
+		const confirm = vi
+			.spyOn(foundry.applications.api.DialogV2, 'confirm')
+			.mockResolvedValue(true as never);
+		onTestFinished(() => confirm.mockRestore());
+
+		renderWithAncestries(createAncestryWithVariants(['Dryad', 'Shroomling']), {
+			ancestryVariant: 'Shroomling',
+			submitCharacterCreation,
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Class' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Ancestry Variant' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Submit Character' }));
+
+		await vi.waitFor(() => {
+			expect(submitCharacterCreation).toHaveBeenCalledWith(
+				expect.objectContaining({ selectedAncestryVariant: 'Shroomling' }),
 			);
 		});
 	});

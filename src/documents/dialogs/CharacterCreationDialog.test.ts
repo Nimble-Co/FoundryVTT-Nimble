@@ -333,6 +333,120 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			expect(bonusSource?.system.rules?.map((rule) => rule.selectedSave)).toEqual(['will', 'will']);
 		});
 
+		describe('ancestry variant', () => {
+			function createVariantAncestry(variants: string[]) {
+				return createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryadshroomling',
+					name: 'Dryad/Shroomling',
+					system: { rules: [], identifier: '', variants },
+				});
+			}
+
+			function findAncestrySource(actor: { createEmbeddedDocuments: ReturnType<typeof vi.fn> }) {
+				const sources = actor.createEmbeddedDocuments.mock.calls[0][1] as Array<{
+					name: string;
+					system: { variants?: string[]; identifier?: string };
+				}>;
+				return sources.find((source) => source.system.variants !== undefined);
+			}
+
+			async function submitWithVariant(
+				ancestryDocument: Item & { uuid: string },
+				selectedAncestryVariant: string | null,
+			) {
+				const actor = setupActorMock();
+				const classDocument = createClassDocument();
+				stubUuids([classDocument, ancestryDocument]);
+
+				const dialog = new CharacterCreationDialog();
+				await dialog.submitCharacterCreation({
+					name: 'Test Character',
+					selectedAncestryVariant,
+					origins: {
+						characterClass: { uuid: classDocument.uuid },
+						ancestry: { uuid: ancestryDocument.uuid },
+					},
+					languages: [],
+					classFeatures: { autoGrant: [], selected: new Map() },
+					spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+				});
+
+				return actor;
+			}
+
+			it('names the ancestry after the chosen variant', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'Shroomling',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Shroomling');
+			});
+
+			it('keeps the identifier the ancestry had before the variant renamed it', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'Shroomling',
+				);
+
+				expect(findAncestrySource(actor)?.system.identifier).toBe('dryad-shroomling');
+			});
+
+			it('leaves the ancestry alone when no variant was chosen', async () => {
+				const actor = await submitWithVariant(createVariantAncestry(['Dryad', 'Shroomling']), null);
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad/Shroomling');
+				expect(ancestrySource?.system.identifier).toBe('');
+			});
+
+			it('names the ancestry the way the GM spelled it, not the way it was submitted', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'  shroomling  ',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Shroomling');
+			});
+
+			it('leaves the ancestry alone when the variant is already its name', async () => {
+				const ancestryDocument = createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryad',
+					name: 'Dryad',
+					system: { rules: [], identifier: '', variants: ['Dryad', 'Shroomling'] },
+				});
+
+				const actor = await submitWithVariant(ancestryDocument, 'Dryad');
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad');
+				expect(ancestrySource?.system.identifier).toBe('');
+			});
+
+			it('ignores a variant the ancestry does not offer', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'Oozeling',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Dryad/Shroomling');
+			});
+
+			it('respects an identifier the ancestry already declares', async () => {
+				const ancestryDocument = createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryadshroomling',
+					name: 'Dryad/Shroomling',
+					system: { rules: [], identifier: 'fey-kin', variants: ['Dryad', 'Shroomling'] },
+				});
+
+				const actor = await submitWithVariant(ancestryDocument, 'Dryad');
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad');
+				expect(ancestrySource?.system.identifier).toBe('fey-kin');
+			});
+		});
+
 		it('tells the ancestry not to grant its default when the bonus is in the same batch', async () => {
 			const actor = setupActorMock();
 			const classDocument = createClassDocument();

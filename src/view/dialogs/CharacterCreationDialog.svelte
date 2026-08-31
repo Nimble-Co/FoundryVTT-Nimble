@@ -8,8 +8,8 @@
 	import { isRaisedByBackground } from './characterCreation/utils/backgroundChecks.js';
 
 	import AncestryBonusSelection from './components/characterCreator/AncestryBonusSelection.svelte';
+	import AncestryOptionsSelection from './components/characterCreator/AncestryOptionsSelection.svelte';
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
-	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
 	import BackgroundOptionsSelection from './components/characterCreator/BackgroundOptionsSelection.svelte';
 	import BackgroundSelection from './components/characterCreator/BackgroundSelection.svelte';
 	import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
@@ -130,14 +130,17 @@
 		{/await}
 	{/if}
 
-	<AncestrySizeSelection
-		active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
-		selectedAncestry={state.selectedAncestry}
-		selectedAncestryBonus={state.selectedAncestryBonus}
-		selectedClass={state.selectedClass}
-		bind:selectedAncestrySize={state.selectedAncestrySize}
-		bind:selectedAncestrySave={state.selectedAncestrySave}
-	/>
+	{#if state.ancestryOptionsAvailable}
+		<AncestryOptionsSelection
+			active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
+			selectedAncestry={state.selectedAncestry}
+			selectedAncestryBonus={state.selectedAncestryBonus}
+			selectedClass={state.selectedClass}
+			bind:selectedAncestryVariant={state.selectedAncestryVariant}
+			bind:selectedAncestrySize={state.selectedAncestrySize}
+			bind:selectedAncestrySave={state.selectedAncestrySave}
+		/>
+	{/if}
 
 	{#await backgroundOptions then backgrounds}
 		<BackgroundSelection

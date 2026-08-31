@@ -4,6 +4,7 @@ import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
+import { offersVariantChoice } from '../../../utils/ancestryVariants.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
@@ -109,24 +110,56 @@ function ancestryOffersSizeChoice(ancestry: NimbleAncestryItem | null): boolean 
 	return offersSizeChoice(ancestry?.system?.size, Object.keys(CONFIG.NIMBLE.sizeCategories));
 }
 
+function ancestryOffersVariantChoice(ancestry: NimbleAncestryItem | null): boolean {
+	return offersVariantChoice(ancestry?.system?.variants);
+}
+
+function ancestryBonusPending({
+	ancestry,
+	ancestryBonus,
+	ancestryBonusConfirmed,
+	hasAncestryBonuses,
+}: {
+	ancestry: NimbleAncestryItem | null;
+	ancestryBonus: NimbleAncestryBonusItem | null;
+	ancestryBonusConfirmed: boolean;
+	hasAncestryBonuses: boolean;
+}): boolean {
+	if (!hasAncestryBonuses || !ancestry?.system?.defaultBonus) return false;
+
+	return !ancestryBonus || !ancestryBonusConfirmed;
+}
+
 function hasAncestryOptions(
 	ancestry: NimbleAncestryItem | null,
 	ancestryBonus: NimbleAncestryBonusItem | null,
 ): boolean {
+	const hasVariantChoice = ancestryOffersVariantChoice(ancestry);
 	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
-	return hasSizeChoice || hasSaveChoice;
+	return hasVariantChoice || hasSizeChoice || hasSaveChoice;
 }
 
-function ancestryOptionsComplete(
-	ancestry: NimbleAncestryItem | null,
-	ancestryBonus: NimbleAncestryBonusItem | null,
-	selectedAncestrySize: string | null,
-	selectedAncestrySave: string | null,
-): boolean {
+// Named rather than positional: the three selections are all `string | null`, so a transposition
+// would type-check and gate the stage on the wrong one.
+function ancestryOptionsComplete({
+	ancestry,
+	ancestryBonus,
+	selectedAncestryVariant,
+	selectedAncestrySize,
+	selectedAncestrySave,
+}: {
+	ancestry: NimbleAncestryItem | null;
+	ancestryBonus: NimbleAncestryBonusItem | null;
+	selectedAncestryVariant: string | null;
+	selectedAncestrySize: string | null;
+	selectedAncestrySave: string | null;
+}): boolean {
+	const hasVariantChoice = ancestryOffersVariantChoice(ancestry);
 	const hasSizeChoice = ancestryOffersSizeChoice(ancestry);
 	const hasSaveChoice = ancestryBonusRequiresSaveChoice(ancestryBonus);
 
+	if (hasVariantChoice && !selectedAncestryVariant) return false;
 	if (hasSizeChoice && !selectedAncestrySize) return false;
 	if (hasSaveChoice && !selectedAncestrySave) return false;
 
@@ -174,6 +207,7 @@ interface GetCurrentStageParams {
 	selectedAncestry: NimbleAncestryItem | null;
 	selectedAncestryBonus: NimbleAncestryBonusItem | null;
 	ancestryBonusConfirmed: boolean;
+	selectedAncestryVariant: string | null;
 	selectedAncestrySize: string | null;
 	selectedAncestrySave: string | null;
 	selectedBackground: NimbleBackgroundItem | null;
@@ -201,6 +235,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		selectedAncestry,
 		selectedAncestryBonus,
 		ancestryBonusConfirmed,
+		selectedAncestryVariant,
 		selectedAncestrySize,
 		selectedAncestrySave,
 		selectedBackground,
@@ -257,21 +292,25 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 	// or disabled there is nothing to select and nothing for the default to resolve to, so the
 	// stage could never be satisfied and character creation could never be completed.
 	if (
-		hasAncestryBonuses &&
-		selectedAncestry?.system?.defaultBonus &&
-		(!selectedAncestryBonus || !ancestryBonusConfirmed)
+		ancestryBonusPending({
+			ancestry: selectedAncestry,
+			ancestryBonus: selectedAncestryBonus,
+			ancestryBonusConfirmed,
+			hasAncestryBonuses,
+		})
 	) {
 		return CHARACTER_CREATION_STAGES.ANCESTRY_BONUS;
 	}
 
 	if (
 		hasAncestryOptions(selectedAncestry, selectedAncestryBonus) &&
-		!ancestryOptionsComplete(
-			selectedAncestry,
-			selectedAncestryBonus,
+		!ancestryOptionsComplete({
+			ancestry: selectedAncestry,
+			ancestryBonus: selectedAncestryBonus,
+			selectedAncestryVariant,
 			selectedAncestrySize,
 			selectedAncestrySave,
-		)
+		})
 	) {
 		return CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS;
 	}
@@ -364,6 +403,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Sequence number for the in-flight default-bonus lookup. Every new lookup and every
 	// manual pick bumps it, so a resolution that lands after either one is discarded.
 	let defaultBonusRequestId = 0;
+	let selectedAncestryVariant = $state<string | null>(null);
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
 	let selectedBackground = $state<NimbleBackgroundItem | null>(null);
@@ -488,6 +528,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selectedAncestry,
 			selectedAncestryBonus,
 			ancestryBonusConfirmed,
+			selectedAncestryVariant,
 			selectedAncestrySize,
 			selectedAncestrySave,
 			selectedBackground,
@@ -511,6 +552,16 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	);
 
 	const stageNumber = $derived(getStageNumber(stage));
+
+	const ancestryOptionsAvailable = $derived(
+		!!selectedAncestry &&
+			!ancestryBonusPending({
+				ancestry: selectedAncestry,
+				ancestryBonus: selectedAncestryBonus,
+				ancestryBonusConfirmed,
+				hasAncestryBonuses,
+			}),
+	);
 
 	const needsClassSpellSelection = $derived(
 		hasSpellGrants(spellGrants, 'class') &&
@@ -672,6 +723,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 		// A fresh ancestry means the player hasn't confirmed its bonus yet.
 		ancestryBonusConfirmed = false;
+		selectedAncestryVariant = null;
 
 		// Invalidate any lookup still in flight for the previous ancestry.
 		const requestId = ++defaultBonusRequestId;
@@ -822,6 +874,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 				{} as Record<string, number>,
 			),
 			sizeCategory: selectedAncestrySize,
+			selectedAncestryVariant,
 			selectedAncestrySave,
 			selectedRaisedByAncestry,
 			skills: Object.entries(assignedSkillPoints).reduce(
@@ -873,6 +926,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		set ancestryBonusConfirmed(value: boolean) {
 			ancestryBonusConfirmed = value;
+		},
+		get selectedAncestryVariant() {
+			return selectedAncestryVariant;
+		},
+		set selectedAncestryVariant(value: string | null) {
+			selectedAncestryVariant = value;
 		},
 		get selectedAncestrySize() {
 			return selectedAncestrySize;
@@ -975,6 +1034,10 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		get grantedLanguages() {
 			return grantedLanguages;
 		},
+		get ancestryOptionsAvailable() {
+			return ancestryOptionsAvailable;
+		},
+
 		get stage() {
 			return stage;
 		},
