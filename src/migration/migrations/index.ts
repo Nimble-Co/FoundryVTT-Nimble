@@ -42,3 +42,4 @@ export { Migration041CommanderInitiativeRegain } from './Migration041CommanderIn
 export { Migration042AoETemplateFlags } from './Migration042AoETemplateFlags.js';
 export { Migration043SpellScrollsShareASlot } from './Migration043SpellScrollsShareASlot.js';
 export { Migration044MaxHpBonusDerived } from './Migration044MaxHpBonusDerived.js';
+export { Migration045HauntedPastFearAdvantage } from './Migration045HauntedPastFearAdvantage.js';

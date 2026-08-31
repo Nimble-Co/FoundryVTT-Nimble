@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
@@ -256,6 +258,125 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		const savingThrows = updateCall.system.savingThrows;
 		expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+	});
+
+	describe('background saving throw rules', () => {
+		/**
+		 * Drives the pack assertions from the shipped compendium data rather than a
+		 * hand-copied literal, so a typo in the pack (`willpower` for `will`,
+		 * `abilityCheck` for `savingThrow`, `disabled: true`) fails here instead of
+		 * silently shipping a background that does nothing. Same approach as
+		 * `CharacterCreationDialog.commander.test.ts`.
+		 */
+		const HAUNTED_PAST = JSON.parse(
+			readFileSync(join(process.cwd(), 'packs/backgrounds/core/haunted-past.json'), 'utf-8'),
+		) as { system: { rules: Array<Record<string, unknown>> } };
+
+		function backgroundDocumentWith(rules: Array<Record<string, unknown>>) {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-backgrounds.Item.test-background',
+				name: 'Test Background',
+				system: { rules },
+			});
+		}
+
+		function warriorWithWillSave(disadvantage: string | null) {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+				name: 'Warrior',
+				system: {
+					identifier: 'warrior',
+					savingThrows: { advantage: 'strength', disadvantage },
+				},
+			});
+		}
+
+		async function createWith(
+			classDocument: ReturnType<typeof createItemDocument>,
+			backgroundDocument: ReturnType<typeof createItemDocument>,
+		) {
+			vi.stubGlobal(
+				'fromUuid',
+				vi.fn(async (uuid: string) => {
+					if (uuid === classDocument.uuid) return classDocument;
+					if (uuid === backgroundDocument.uuid) return backgroundDocument;
+					return null;
+				}),
+			);
+
+			const dialog = new CharacterCreationDialog();
+			await dialog.submitCharacterCreation({
+				name: 'Test Character',
+				origins: {
+					characterClass: { uuid: classDocument.uuid },
+					background: { uuid: backgroundDocument.uuid },
+				},
+				languages: [],
+				classFeatures: { autoGrant: [], selected: new Map() },
+				spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+			});
+		}
+
+		function savingThrowsFrom(actor: { update: { mock: { calls: unknown[][] } } }) {
+			const updateCall = actor.update.mock.calls[0][0] as {
+				system: { savingThrows: Record<string, number> };
+			};
+			return updateCall.system.savingThrows;
+		}
+
+		const willAdjustRule = {
+			type: 'savingThrowRollMode',
+			target: 'will',
+			mode: 'adjust',
+			value: 1,
+			priority: 2,
+		};
+
+		it('grants advantage on WIL when the class leaves it neutral', async () => {
+			const actor = setupActorMock();
+			await createWith(warriorWithWillSave('dexterity'), backgroundDocumentWith([willAdjustRule]));
+
+			const savingThrows = savingThrowsFrom(actor);
+			expect(savingThrows['will.defaultRollMode']).toBe(1);
+			expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
+		});
+
+		// Backgrounds are a separate gather slot from ancestries, and `adjust` stacks
+		// onto the class default rather than replacing it: no single `set` value
+		// produces both 1 (neutral class) and 0 (disadvantaged class).
+		it('only neutralizes WIL when the class disadvantages it', async () => {
+			const actor = setupActorMock();
+			await createWith(warriorWithWillSave('will'), backgroundDocumentWith([willAdjustRule]));
+
+			const savingThrows = savingThrowsFrom(actor);
+			expect(savingThrows['will.defaultRollMode']).toBe(0);
+			expect(savingThrows['strength.defaultRollMode']).toBe(1);
+		});
+
+		it('ships a situational WIL rule in the Haunted Past pack data', () => {
+			expect(HAUNTED_PAST.system.rules).toContainEqual(
+				expect.objectContaining({
+					type: 'situationalRollMode',
+					checkType: 'savingThrow',
+					saves: ['will'],
+					value: 1,
+					disabled: false,
+					label: 'Against fear',
+				}),
+			);
+		});
+
+		// The advantage is offered per save in the check roll dialog, so baking it
+		// into the default roll mode would grant it on every WIL save.
+		it('leaves the default WIL roll mode alone for a Haunted Past character', async () => {
+			const actor = setupActorMock();
+			await createWith(
+				warriorWithWillSave('dexterity'),
+				backgroundDocumentWith(HAUNTED_PAST.system.rules),
+			);
+
+			expect(savingThrowsFrom(actor)['will.defaultRollMode']).toBe(0);
+		});
 	});
 
 	describe('ancestry bonus handling', () => {

@@ -87,7 +87,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Check migration count matches schema version
         run: |
-          MIGRATION_COUNT=$(ls -1 src/migration/migrations/Migration*.ts 2>/dev/null | wc -l | tr -d ' ')
+          MIGRATION_COUNT=$(ls -1 src/migration/migrations/Migration*.ts 2>/dev/null | grep -v '\.test\.ts$' | wc -l | tr -d ' ')
           SCHEMA_VERSION=$(grep -E 'static LATEST_SCHEMA_VERSION\s*=' src/migration/MigrationRunnerBase.ts | grep -oE '[0-9]+')
 
           echo "Migration files found: $MIGRATION_COUNT"

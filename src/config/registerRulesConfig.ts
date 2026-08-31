@@ -37,6 +37,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
+import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
@@ -84,6 +85,7 @@ export default function registerRulesConfig() {
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
+		situationalRollMode: 'NIMBLE.ruleTypes.situationalRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
 		skillRollMode: 'NIMBLE.ruleTypes.skillRollMode',
 		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
@@ -131,6 +133,7 @@ export default function registerRulesConfig() {
 		poolGainMessage: PoolGainMessageRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
+		situationalRollMode: SituationalRollModeRule,
 		skillBonus: SkillBonusRule,
 		skillRollMode: SkillRollModeRule,
 		speedBonus: SpeedBonusRule,

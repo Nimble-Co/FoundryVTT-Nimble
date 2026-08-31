@@ -516,6 +516,13 @@ const restTypes = {
 	safeRest: 'NIMBLE.restTypes.safeRest',
 };
 
+const rollCheckTypes = {
+	abilityCheck: 'NIMBLE.rollCheckTypes.abilityCheck',
+	savingThrow: 'NIMBLE.rollCheckTypes.savingThrow',
+	skillCheck: 'NIMBLE.rollCheckTypes.skillCheck',
+	initiative: 'NIMBLE.rollCheckTypes.initiative',
+};
+
 const saves = {
 	save: 'NIMBLE.saves.save',
 	saves: 'NIMBLE.saves.saves',
@@ -998,6 +1005,7 @@ const NIMBLE = {
 	objectTypeHeadings,
 	objectTypes,
 	restTypes,
+	rollCheckTypes,
 	safeRest,
 	saveConfig,
 	saves,
