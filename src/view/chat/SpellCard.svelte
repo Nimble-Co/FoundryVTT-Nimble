@@ -1,6 +1,7 @@
 <script>
 	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
+	import localize from '../../utils/localize.js';
 
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -38,9 +39,8 @@
 
 	let { messageDocument } = $props();
 
-	let { activation, description, image, isCritical, isMiss, spellName, tier, upcast } = $derived(
-		messageDocument.reactive.system,
-	);
+	let { activation, castTier, description, image, isCritical, isMiss, spellName, tier, upcast } =
+		$derived(messageDocument.reactive.system);
 
 	let headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	let headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -52,6 +52,13 @@
 	let upcastLabel = $derived(getUpcastingDescriptionLabel(tier, upcastContent));
 
 	let hasUpcast = $derived(upcast?.isUpcast);
+	// A pinned class reaches a higher tier without upcasting when the spell does
+	// not scale. Reported here so the card agrees with what the cast window said.
+	let pinnedTierSummary = $derived(
+		!hasUpcast && castTier && castTier > tier
+			? localize('NIMBLE.spells.spellUpcastDialog.castsAtTier', { tier: String(castTier) })
+			: null,
+	);
 	let upcastSummary = $derived(() => {
 		if (!hasUpcast) return null;
 		const parts = [`Upcast to level ${upcast.manaSpent}`];
@@ -119,6 +126,13 @@
 	<ChargeConsumptionNode />
 
 	<ActionDeltaSummaryNode />
+
+	{#if pinnedTierSummary}
+		<section class="nimble-card-section nimble-upcast-indicator">
+			<i class="fa-solid fa-arrow-up-right-dots"></i>
+			{pinnedTierSummary}
+		</section>
+	{/if}
 
 	{#if hasUpcast}
 		<section class="nimble-card-section nimble-upcast-indicator">
