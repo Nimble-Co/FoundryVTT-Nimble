@@ -32,6 +32,7 @@ import {
 	type IncomingAttackPlan,
 } from '../utils/incomingAttackModifiers.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
+import localize from '../utils/localize.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -218,7 +219,11 @@ class ItemActivationManager {
 				}
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-				ui.notifications?.error(`Upcast failed: ${errorMessage}`);
+				ui.notifications?.error(
+					localize('NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed', {
+						error: errorMessage,
+					}),
+				);
 				return { activation: null, rolls: null };
 			}
 		}

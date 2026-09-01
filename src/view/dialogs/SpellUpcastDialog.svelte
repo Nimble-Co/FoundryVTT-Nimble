@@ -336,13 +336,16 @@
 			if (baseMana > 0 && !isPoolCost) {
 				if (manaToSpend < baseMana) {
 					ui.notifications?.warn(
-						`Must spend at least ${baseMana} mana for a tier ${baseMana} spell.`,
+						format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) }),
 					);
 					return;
 				}
 				if (enforceManaCost && manaToSpend > currentMana) {
 					ui.notifications?.warn(
-						`Not enough mana. You have ${currentMana}, but need ${manaToSpend}.`,
+						format(spellUpcastDialog.warnings.insufficientMana, {
+							current: String(currentMana),
+							needed: String(manaToSpend),
+						}),
 					);
 					return;
 				}
@@ -350,7 +353,7 @@
 
 			if (manaToSpend > maxTier && pinnedCastTier === null) {
 				ui.notifications?.warn(
-					`Cannot spend more mana than your highest unlocked spell tier (${maxTier}).`,
+					format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) }),
 				);
 				return;
 			}

@@ -609,6 +609,12 @@ const spellUpcastDialog = {
 	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
+	warnings: {
+		minMana: 'NIMBLE.spells.spellUpcastDialog.warnings.minMana',
+		insufficientMana: 'NIMBLE.spells.spellUpcastDialog.warnings.insufficientMana',
+		aboveMaxTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveMaxTier',
+		upcastFailed: 'NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed',
+	},
 };
 
 const spellProperties = {
