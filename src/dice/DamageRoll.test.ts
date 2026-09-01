@@ -3,6 +3,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { ItemActivationManager, testDependencies } from '../managers/ItemActivationManager.js';
 import { hasWeaponProficiency } from '../utils/attackUtils.js';
 import { DamageRoll } from './DamageRoll.js';
+import { PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
 import {
 	getNimbleMods,
 	nimbleCrit,
@@ -61,6 +62,11 @@ function stubBaseRollEvaluate() {
  * Stage evaluated state on a DamageRoll so that calling `_evaluate` exercises
  * the post-evaluation logic (isCritical / isMiss / total adjustments).
  */
+/** The 3D dice appearance a term carries, if any. */
+function appearanceOf(term: foundry.dice.terms.RollTerm | undefined) {
+	return (term?.options as { appearance?: unknown } | undefined)?.appearance;
+}
+
 function stagePrimaryDieResults(roll: DamageRoll, results: DieResult[], total: number) {
 	if (!roll.primaryDie) throw new Error('roll has no primaryDie — cannot stage results');
 	roll.primaryDie.results = results as any;
@@ -203,6 +209,30 @@ describe('DamageRoll preprocessing', () => {
 
 			expect(roll.formula).toBe('1d6');
 			expect(roll.primaryDie).toBeDefined();
+		});
+
+		it('should tag the primary die of a single die formula for 3D dice', () => {
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(appearanceOf(roll.primaryDie)).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+		});
+
+		it('should tag the primary die of a multi-die formula for 3D dice', () => {
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(appearanceOf(roll.primaryDie)).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+			const damageTerm = roll.terms.find(
+				(term) => term instanceof foundry.dice.terms.Die && term !== roll.primaryDie,
+			);
+			expect(appearanceOf(damageTerm)).toBeUndefined();
 		});
 	});
 

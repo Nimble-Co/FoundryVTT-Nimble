@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
+import { DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY } from '../settings/diceSoNiceSettings.js';
+import { PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
 import {
 	_resetVWarned,
 	getNimbleMods,
@@ -19,6 +22,7 @@ type DieResult = {
 interface MockDie {
 	results: DieResult[];
 	modifiers: string[];
+	options?: Record<string, unknown>;
 }
 
 function createMockDie(overrides?: Partial<MockDie>): MockDie {
@@ -236,5 +240,55 @@ describe('NIMBLE_MODS', () => {
 
 		const raw = (die as unknown as Record<symbol, unknown>)[NIMBLE_MODS];
 		expect(raw).toEqual({ canCrit: true, explosionStyle: 'standard' });
+	});
+});
+
+// ─── Primary die appearance (3D dice) ───────────────────────────────
+
+describe('primary die appearance', () => {
+	function installSettingsMock(values: Record<string, unknown>) {
+		const registeredIds = new Set(Object.keys(values).map((key) => `${SYSTEM_ID}.${key}`));
+		(game as unknown as { settings: unknown }).settings = {
+			settings: { has: (id: string) => registeredIds.has(id) },
+			get: vi.fn((_namespace: string, key: string) => values[key]),
+		};
+	}
+
+	beforeEach(() => {
+		installSettingsMock({});
+	});
+
+	it('should tag a die crit-capable through the c modifier', () => {
+		const die = createMockDie();
+
+		nimbleCrit.call(die, 'c');
+
+		expect(die.options?.appearance).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+		expect(die.options?.dsnDamageTypeManaged).toBe(true);
+	});
+
+	it('should tag a die crit-capable through the cv modifier', () => {
+		const die = createMockDie();
+
+		nimbleCritVicious.call(die, 'cv');
+
+		expect(die.options?.appearance).toEqual({ colorset: PRIMARY_DIE_COLORSET });
+	});
+
+	it('should preserve an appearance already set on the term', () => {
+		const die = createMockDie({ options: { appearance: { colorset: 'custom' } } });
+
+		nimbleCrit.call(die, 'c');
+
+		expect(die.options?.appearance).toEqual({ colorset: 'custom' });
+	});
+
+	it('should leave options untouched when the user disabled primary die styling', () => {
+		installSettingsMock({ [DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY]: false });
+		const die = createMockDie();
+
+		nimbleCrit.call(die, 'c');
+
+		expect(die.options).toBeUndefined();
 	});
 });
