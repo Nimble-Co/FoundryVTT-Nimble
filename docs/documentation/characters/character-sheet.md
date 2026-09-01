@@ -72,7 +72,11 @@ Each spell card shows what casting it costs. For most classes that is the spell'
 A class that pays from a pool may also declare what happens when you cast anyway with the pool empty. The Shadowmancer is the example that ships with the system: Pilfered Power is a pool of uses equal to your Dexterity, spells always cast at your highest unlocked tier for one use, and casting on an empty pool asks you to confirm and then costs you half your maximum hit points.
 
 ::: warning Greedy Pact is not automated
-From level 12 the Shadowmancer's Greedy Pact replaces that fixed penalty with a saving throw that has three different outcomes, one of which changes the tier the spell is cast at. The system cannot express that yet, so a Shadowmancer of level 12 or higher still takes the level 2 penalty automatically. Roll Greedy Pact by hand and adjust the result at the table.
+From level 12 the Shadowmancer's Greedy Pact replaces that fixed penalty with a saving throw that has three different outcomes, one of which changes the tier the spell is cast at. The system cannot express that yet, so from level 12 it stops applying the penalty instead of applying the wrong one. The confirmation still offers the overdraw and says the cost is settled at the table. Roll Greedy Pact by hand and apply the result yourself.
+:::
+
+::: warning Heart of Burning Fire does not expire
+Pact of the Red Dragon's Heart of Burning Fire returns a use of Pilfered Power each time you roll Initiative. The rules say that use expires at the end of combat if you do not spend it; the system keeps it until your next Safe Rest, because it cannot yet tell a temporary use apart from one you already had. Hand the use back at the end of combat if it went unspent.
 :::
 
 ### Bio
