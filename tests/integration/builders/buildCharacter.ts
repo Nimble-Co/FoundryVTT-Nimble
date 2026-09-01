@@ -1,13 +1,10 @@
 /**
- * Builds a character the way the system would, without driving the creation
- * wizard's nine steps.
+ * Builds a character without driving the creation wizard.
  *
- * The split between what is granted automatically and what the player picks is
- * not guessed here: `getMissingLevelSelections()` reports the pools a character
- * is owed picks from, and every feature outside those pools is automatic. The
- * picks themselves are then granted by `applyLevelCorrection()`, which is the
- * system's own repair path. Nothing about class progression is reimplemented,
- * so the helper works for any class rather than the ones it was written against.
+ * Which features are automatic is not guessed: `getMissingLevelSelections()`
+ * names the pools the player owes picks from, everything outside them is
+ * automatic, and `applyLevelCorrection()` grants the picks. No class
+ * progression is reimplemented, so any class works.
  */
 
 import { settle } from '../liveHelpers.ts';
@@ -130,6 +127,7 @@ export interface CharacterActor {
 
 export async function buildCharacter(spec: CharacterSpec): Promise<CharacterActor> {
 	const level = spec.level ?? 1;
+	// Non-zero so pools sized from an ability score are non-zero too.
 	const abilities = { strength: 1, dexterity: 3, intelligence: 3, will: 1, ...spec.abilities };
 
 	const actor = (await Actor.create({
@@ -142,29 +140,21 @@ export async function buildCharacter(spec: CharacterSpec): Promise<CharacterActo
 		},
 	} as never)) as unknown as CharacterActor;
 
-	// Origins first: the real creation path resolves these before any feature,
-	// so a pool whose maximum reads an ability score seeds from a real value.
+	// Origins before features, so pools seed from a real ability score.
 	const classes = await packIndex('nimble-classes');
 	await addFromPack(actor, 'nimble-classes', [byName(classes, spec.className, 'class')]);
 
-	if (spec.ancestryName) {
-		const ancestries = await packIndex('nimble-ancestries');
-		await addFromPack(actor, 'nimble-ancestries', [
-			byName(ancestries, spec.ancestryName, 'ancestry'),
-		]);
+	const optionalOrigins = [
+		['nimble-ancestries', spec.ancestryName, 'ancestry'],
+		['nimble-backgrounds', spec.backgroundName, 'background'],
+		['nimble-subclasses', spec.subclassName, 'subclass'],
+	] as const;
+	for (const [packName, chosenName, label] of optionalOrigins) {
+		if (!chosenName) continue;
+		const entries = await packIndex(packName);
+		await addFromPack(actor, packName, [byName(entries, chosenName, label)]);
 	}
-	if (spec.backgroundName) {
-		const backgrounds = await packIndex('nimble-backgrounds');
-		await addFromPack(actor, 'nimble-backgrounds', [
-			byName(backgrounds, spec.backgroundName, 'background'),
-		]);
-	}
-	if (spec.subclassName) {
-		const subclasses = await packIndex('nimble-subclasses');
-		await addFromPack(actor, 'nimble-subclasses', [
-			byName(subclasses, spec.subclassName, 'subclass'),
-		]);
-	}
+
 	await settle();
 
 	await levelCharacterTo(actor, level);
@@ -249,6 +239,7 @@ async function grantAutomaticFeatures(actor: CharacterActor, level: number): Pro
 
 /** Lets the system grant the picks a character of this level is owed. */
 async function grantOwedPicks(actor: CharacterActor): Promise<void> {
+	// One pool's picks can reveal another, so repeat until the audit is clean.
 	for (let pass = 0; pass < 6; pass += 1) {
 		const gaps = await actor.getMissingLevelSelections();
 		if (!gaps.length) return;

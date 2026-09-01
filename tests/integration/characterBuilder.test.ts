@@ -29,35 +29,25 @@ afterAll(async () => {
 });
 
 describe('the builder produces a complete character for any class', () => {
-	test('every class at level 5', { timeout: 300_000 }, async () => {
-		const report: Array<{ cls: string; items: number; missing: number; err?: string }> = [];
+	test('every class at level 5 is owed nothing', { timeout: 300_000 }, async () => {
+		// Collected so a failure names every broken class, not just the first.
+		const owed: Array<{ className: string; missing: string[] }> = [];
 
 		for (const className of classNames) {
-			try {
-				const actor = await buildCharacter({
-					name: `${PREFIX} ${className}`,
-					className,
-					level: 5,
-				});
-				await settle(200);
-				const missing = await missingSelections(actor);
-				report.push({
-					cls: className,
-					items: (actor.items as unknown as { contents: unknown[] }).contents.length,
-					missing: missing.length,
-					gaps: missing.map((g) => `${g.poolKey}@${g.level}`),
-				} as never);
-			} catch (error) {
-				report.push({
-					cls: className,
-					items: 0,
-					missing: -1,
-					err: (error as Error).message.slice(0, 80),
-				});
-			}
+			const actor = await buildCharacter({
+				name: `${PREFIX} ${className}`,
+				className,
+				level: 5,
+			});
+			await settle(200);
+
+			const missing = await missingSelections(actor);
+			owed.push({
+				className,
+				missing: missing.map((gap) => `${gap.poolKey}@${gap.level}`),
+			});
 		}
 
-		expect(report.filter((r) => r.err)).toEqual([]);
-		expect(report.filter((r) => r.missing !== 0)).toEqual([]);
+		expect(owed.filter((entry) => entry.missing.length > 0)).toEqual([]);
 	});
 });
