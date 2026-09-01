@@ -31,6 +31,8 @@
  *   - `kln3`   → keep 3 lowest
  */
 
+import { getPrimaryDieDiceOptions, type PrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
+
 // ─── Die Modifier Metadata ──────────────────────────────────────────
 
 /**
@@ -72,6 +74,25 @@ type DieResult = {
 interface DieLike {
 	results: DieResult[];
 	modifiers?: string[];
+	options?: Partial<PrimaryDieDiceOptions>;
+}
+
+/**
+ * Tag a crit-capable die with the primary-die appearance so 3D dice modules
+ * render it distinctly from the rest of the pool. Preserves any appearance
+ * already set on the term, and does nothing when the rolling user has
+ * disabled distinct primary die styling.
+ *
+ * A 3D dice appearance is per term, and in modifier mode the whole tagged term
+ * is the primary pool: every die in `4d4cv` crits and explodes on its own, so
+ * there is no single die within it to single out.
+ */
+function applyPrimaryDieAppearance(die: DieLike): void {
+	const diceSoNiceOptions = getPrimaryDieDiceOptions();
+	if (!diceSoNiceOptions) return;
+	die.options ??= {};
+	if (die.options.appearance) return;
+	Object.assign(die.options, diceSoNiceOptions);
 }
 
 function parseCount(modifier: string, prefix: 'khn' | 'kln'): number {
@@ -160,6 +181,7 @@ export function nimbleCrit(this: DieLike, _modifier: string): boolean {
 	if (this.modifiers && !this.modifiers.includes('x')) {
 		this.modifiers.push('x');
 	}
+	applyPrimaryDieAppearance(this);
 	return true;
 }
 
@@ -177,6 +199,7 @@ export function nimbleCritVicious(this: DieLike, _modifier: string): boolean {
 		canCrit: true,
 		explosionStyle: 'vicious',
 	} satisfies NimbleDieMetadata;
+	applyPrimaryDieAppearance(this);
 	return true;
 }
 

@@ -1,4 +1,5 @@
 import type { InexactPartial } from 'fvtt-types/utils';
+import type { PrimaryDieDiceOptions } from '../diceSoNiceIntegration.js';
 
 declare namespace PrimaryDie {
 	/** Options for PrimaryDie that extend standard die options. */
@@ -7,6 +8,10 @@ declare namespace PrimaryDie {
 		isVicious?: boolean;
 		/** Optional flavor text for the die. */
 		flavor?: string;
+		/** Per-term appearance override read by Dice So Nice when active. */
+		appearance?: PrimaryDieDiceOptions['appearance'];
+		/** Marks the term's damage type as system-managed for Dice So Nice. */
+		dsnDamageTypeManaged?: boolean;
 	}
 
 	/** Term data for configuring a PrimaryDie. */

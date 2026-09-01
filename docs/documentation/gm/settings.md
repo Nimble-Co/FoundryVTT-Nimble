@@ -51,6 +51,15 @@ Want the system to carry as much as possible? Leave every Automation toggle **on
 Prefer to stay hands-on? Open Configure Automation and turn **off** Apply Conditions and Effects from Rules (conditions become one-click suggestions on chat cards instead), plus any other family you'd rather track yourself, such as Resource Spending or Action Tracking. Leave **off** Auto-Add Character To Combat On Initiative Roll and Auto-Track Token Adjacency. Consider turning **on** Hide Rolls by Default on your own client so GM rolls stay behind the screen. The system still rolls the dice and does the math. It just asks before changing anything.
 :::
 
+## 3D dice
+
+If your table uses the **Dice So Nice** module, the **Configure 3D Dice** button in the system settings tab opens a window where each player chooses how the primary die of their damage rolls looks. The primary die is drawn in its own colors so it reads apart from the rest of the pool, and the colors travel with the roll: everyone at the table sees the roller's choice, not their own.
+
+- **Distinct Primary Die** is on by default. Turn it off to have the primary die use your normal Dice So Nice theme.
+- **Primary Die Color** and **Primary Die Number Color** set the body and the numerals. **Reset Colors** puts both back to the crimson and gold defaults.
+
+All three are per-user, so every player sets their own. Without Dice So Nice installed and enabled, the button is greyed out: these settings only change 3D dice, and there is nothing for them to affect.
+
 ## The combat tracker has its own settings
 
 The combat tracker at the top of the screen isn't configured from the settings menu. Instead, click the gear button on the tracker itself to open the **Combat Tracker Settings** window. Size, colors, hit point bar display, and what players are allowed to see all live there, and every option is listed in the [Settings Reference](../reference/settings.md).

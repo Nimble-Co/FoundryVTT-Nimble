@@ -20,6 +20,7 @@ import { registerAdjacencySettings } from '../../src/settings/adjacencySettings.
 import { registerCombatTrackerSettings } from '../../src/settings/combatTrackerSettings.js';
 import registerSystemSettings from '../../src/settings/index.js';
 import { registerNcswSettings } from '../../src/settings/ncswSettings.js';
+import { registerDiceSoNiceSettings } from '../../src/settings/registerDiceSoNiceSettings.js';
 
 const OUT_DIR = path.resolve(process.cwd(), 'docs/documentation/reference');
 const PARTIALS_DIR = path.join(OUT_DIR, '_partials');
@@ -495,6 +496,8 @@ function captureSettings(): CapturedSetting[] {
 	registerCombatTrackerSettings();
 	currentCategory = 'Nimble Character Widget';
 	registerNcswSettings();
+	currentCategory = '3D Dice';
+	registerDiceSoNiceSettings();
 	currentCategory = 'General';
 	registerSystemSettings();
 
@@ -506,17 +509,28 @@ function describeSettingDefault(setting: CapturedSetting): string {
 		const choiceLabel = setting.choices[String(setting.default)];
 		if (choiceLabel) return localize(choiceLabel);
 	}
+	// DataField-typed settings (e.g. ColorField) carry their default as the
+	// field's `initial` rather than a sibling `default`.
+	if (setting.default === undefined && setting.type?.initial !== undefined) {
+		return resolveInitial(setting.type.initial);
+	}
 	return resolveInitial(setting.default);
 }
 
 function generateSettingsPage(): void {
 	const captured = captureSettings();
 
-	const categories = ['General', 'Token Adjacency', 'Combat Tracker', 'Nimble Character Widget'];
+	const categories = [
+		'General',
+		'Token Adjacency',
+		'Combat Tracker',
+		'Nimble Character Widget',
+		'3D Dice',
+	];
 
 	// Categories whose config:false settings are still user-facing because they
 	// are edited from a dedicated in-app dialog rather than the settings window.
-	const dialogManagedCategories = new Set(['Combat Tracker', 'Nimble Character Widget']);
+	const dialogManagedCategories = new Set(['Combat Tracker', 'Nimble Character Widget', '3D Dice']);
 
 	const sections = categories
 		.map((category) => {
