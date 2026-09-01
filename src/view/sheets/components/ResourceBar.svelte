@@ -16,7 +16,7 @@
 	class="nimble-resource-bar"
 	class:nimble-resource-bar--compact={compact}
 	style="--nimble-resource-bar-percentage: {max > 0
-		? Math.clamp(0, Math.round((current / max) * 100), 100)
+		? Math.clamp(Math.round((current / max) * 100), 0, 100)
 		: 0}%"
 >
 	<div class="nimble-resource-bar__bar">
