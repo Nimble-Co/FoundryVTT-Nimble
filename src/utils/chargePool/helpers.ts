@@ -402,7 +402,13 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	for (const definition of definitions) {
 		const existingPool = existingPools[definition.id];
 		const defaultCurrent = definition.initial === 'zero' ? 0 : definition.max;
-		const current = clampCurrentToMax(existingPool?.current ?? defaultCurrent, definition.max);
+		// A pool stored while its maximum was zero was never really seeded, so it
+		// takes its initial value once the maximum appears.
+		const seeded = existingPool !== undefined && existingPool.max > 0;
+		const current = clampCurrentToMax(
+			seeded ? existingPool.current : defaultCurrent,
+			definition.max,
+		);
 
 		nextPools[definition.id] = {
 			id: definition.id,
