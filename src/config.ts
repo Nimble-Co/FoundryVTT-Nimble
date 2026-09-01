@@ -613,6 +613,7 @@ const spellUpcastDialog = {
 		minMana: 'NIMBLE.spells.spellUpcastDialog.warnings.minMana',
 		insufficientMana: 'NIMBLE.spells.spellUpcastDialog.warnings.insufficientMana',
 		aboveMaxTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveMaxTier',
+		aboveUnlockedTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveUnlockedTier',
 		upcastFailed: 'NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed',
 	},
 };
