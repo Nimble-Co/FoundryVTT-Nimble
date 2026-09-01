@@ -48,7 +48,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('cantripCannotUpcast');
+			expect(result.refusal?.code).toBe('cantripCannotUpcast');
 		});
 
 		it('should reject spells without scaling', () => {
@@ -61,7 +61,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('spellCannotUpcast');
+			expect(result.refusal?.code).toBe('spellCannotUpcast');
 		});
 
 		it('should reject insufficient mana', () => {
@@ -74,7 +74,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('insufficientMana');
+			expect(result.refusal?.code).toBe('insufficientMana');
 		});
 
 		it('should allow spending beyond current mana when mana cost enforcement is off', () => {
@@ -103,7 +103,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('aboveUnlockedTier');
+			expect(result.refusal?.code).toBe('aboveUnlockedTier');
 		});
 
 		it('should still require the base cost to be spent when mana cost enforcement is off', () => {
@@ -117,7 +117,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('belowBaseTier');
+			expect(result.refusal?.code).toBe('belowBaseTier');
 		});
 
 		it('should reject spending below base cost', () => {
@@ -130,8 +130,8 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('belowBaseTier');
-			expect(result.errorData).toEqual({ min: '3' });
+			expect(result.refusal?.code).toBe('belowBaseTier');
+			expect(result.refusal?.data).toEqual({ min: '3' });
 		});
 
 		it('should reject spending above highest unlocked tier', () => {
@@ -144,8 +144,8 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.errorCode).toBe('aboveUnlockedTier');
-			expect(result.errorData).toEqual({ maxTier: '5' });
+			expect(result.refusal?.code).toBe('aboveUnlockedTier');
+			expect(result.refusal?.data).toEqual({ maxTier: '5' });
 		});
 
 		it('should validate correct upcast steps calculation', () => {
