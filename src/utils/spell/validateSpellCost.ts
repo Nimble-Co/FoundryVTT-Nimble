@@ -1,7 +1,7 @@
 import type {
 	ResolvedSpellCost,
 	SpellCostActorLike,
-	SpellCostValidation,
+	SpellCostOutcome,
 } from '#types/spellCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { buildEffectiveChargePoolMap, findChargePoolByIdentifier } from '../chargePool/helpers.js';
@@ -17,7 +17,7 @@ import { asChargePoolActor } from './asChargePoolActor.js';
 export function validateSpellCost(
 	actor: SpellCostActorLike,
 	cost: ResolvedSpellCost,
-): SpellCostValidation {
+): SpellCostOutcome {
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
 	if (cost.type === 'none') return { ok: true, overdrawn: false };
 	if (cost.type === 'mana') return validateManaCost(actor, cost.amount);
@@ -57,7 +57,7 @@ export function validateSpellCost(
 }
 
 /** Mana has no overdraft: a cast the caster cannot cover is refused outright. */
-function validateManaCost(actor: SpellCostActorLike, amount: number): SpellCostValidation {
+function validateManaCost(actor: SpellCostActorLike, amount: number): SpellCostOutcome {
 	const available = actor?.system?.resources?.mana?.current ?? 0;
 	if (available >= amount) return { ok: true, overdrawn: false };
 
