@@ -47,7 +47,11 @@ import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import localize from '../utils/localize.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
-import { applyUpcastDeltas, UpcastError } from '../utils/spell/applyUpcastDeltas.js';
+import {
+	applyUpcastDeltas,
+	UpcastError,
+	type UpcastErrorCode,
+} from '../utils/spell/applyUpcastDeltas.js';
 import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import {
 	exceedsUnlockedSpellTier,
@@ -285,12 +289,17 @@ class ItemActivationManager {
 					});
 				}
 			} catch (error) {
-				// The refusal reason travels as a code so the player reads it in
-				// their own language; the English message is for the log.
+				// Mapped by hand so a code without a message is a type error.
 				if (error instanceof UpcastError) {
-					ui.notifications?.error(
-						localize(`NIMBLE.spells.spellUpcastDialog.warnings.${error.code}`, error.data),
-					);
+					const { warnings } = CONFIG.NIMBLE.spellUpcastDialog;
+					const messageKeys: Record<UpcastErrorCode, string> = {
+						cantripCannotUpcast: warnings.cantripCannotUpcast,
+						spellCannotUpcast: warnings.spellCannotUpcast,
+						insufficientMana: warnings.insufficientMana,
+						belowBaseTier: warnings.minMana,
+						aboveUnlockedTier: warnings.aboveUnlockedTier,
+					};
+					ui.notifications?.error(localize(messageKeys[error.refusal.code], error.refusal.data));
 					console.warn('Nimble | Upcast refused:', error.message);
 					return { activation: null, rolls: null };
 				}
