@@ -30,6 +30,16 @@ const spellCardSchema = () => ({
 		max: 9,
 		nullable: false,
 	}),
+	// The tier the cast actually resolved at, when a class pins it above the
+	// spell's own tier. Null leaves the card reading `tier`, which is what
+	// every cast posted before this field did.
+	castTier: new fields.NumberField({
+		required: false,
+		initial: null,
+		min: 0,
+		max: 9,
+		nullable: true,
+	}),
 	upcast: new fields.ObjectField({ required: false, nullable: true, initial: null }),
 });
 
