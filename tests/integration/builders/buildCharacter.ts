@@ -50,7 +50,11 @@ async function packIndex(packName: string, fields: string[] = []): Promise<Index
 	return [...(index as unknown as { contents: IndexEntry[] }).contents];
 }
 
-async function addFromPack(actor: Actor, packName: string, entries: IndexEntry[]): Promise<void> {
+async function addFromPack(
+	actor: CharacterActor,
+	packName: string,
+	entries: IndexEntry[],
+): Promise<void> {
 	if (!entries.length) return;
 	const pack = game.packs.get(`${game.system.id}.${packName}`)!;
 	const sources: object[] = [];
@@ -92,12 +96,37 @@ interface MissingSelection {
 	candidateUuids: string[];
 }
 
-type CharacterActor = Actor & {
+/**
+ * The parts of a built character a test reads. Declared here so test files do
+ * not each restate the same shape.
+ */
+export interface CharacterActor {
+	id: string;
+	name: string;
 	classes: Record<string, { id: string; identifier: string }>;
+	levels: { character: number };
+	items: {
+		contents: Array<{
+			id: string;
+			name: string;
+			type: string;
+			flags: Record<string, Record<string, unknown>>;
+			rules?: Map<string, Record<string, unknown>>;
+		}>;
+	};
+	system: {
+		classData: { levels: string[] };
+		resources: {
+			mana: { current: number; max: number };
+			highestUnlockedSpellTier: number | null;
+		};
+	};
+	update(changes: Record<string, unknown>): Promise<unknown>;
+	updateItem(itemId: string, changes: Record<string, unknown>): Promise<unknown>;
+	createEmbeddedDocuments(embeddedName: string, data: object[]): Promise<unknown>;
 	getMissingLevelSelections(): Promise<MissingSelection[]>;
 	applyLevelCorrection(selections: Array<{ level: number; uuids: string[] }>): Promise<void>;
-	updateItem(itemId: string, changes: Record<string, unknown>): Promise<unknown>;
-};
+}
 
 export async function buildCharacter(spec: CharacterSpec): Promise<CharacterActor> {
 	const level = spec.level ?? 1;
@@ -116,23 +145,23 @@ export async function buildCharacter(spec: CharacterSpec): Promise<CharacterActo
 	// Origins first: the real creation path resolves these before any feature,
 	// so a pool whose maximum reads an ability score seeds from a real value.
 	const classes = await packIndex('nimble-classes');
-	await addFromPack(actor as Actor, 'nimble-classes', [byName(classes, spec.className, 'class')]);
+	await addFromPack(actor, 'nimble-classes', [byName(classes, spec.className, 'class')]);
 
 	if (spec.ancestryName) {
 		const ancestries = await packIndex('nimble-ancestries');
-		await addFromPack(actor as Actor, 'nimble-ancestries', [
+		await addFromPack(actor, 'nimble-ancestries', [
 			byName(ancestries, spec.ancestryName, 'ancestry'),
 		]);
 	}
 	if (spec.backgroundName) {
 		const backgrounds = await packIndex('nimble-backgrounds');
-		await addFromPack(actor as Actor, 'nimble-backgrounds', [
+		await addFromPack(actor, 'nimble-backgrounds', [
 			byName(backgrounds, spec.backgroundName, 'background'),
 		]);
 	}
 	if (spec.subclassName) {
 		const subclasses = await packIndex('nimble-subclasses');
-		await addFromPack(actor as Actor, 'nimble-subclasses', [
+		await addFromPack(actor, 'nimble-subclasses', [
 			byName(subclasses, spec.subclassName, 'subclass'),
 		]);
 	}
@@ -214,7 +243,7 @@ async function grantAutomaticFeatures(actor: CharacterActor, level: number): Pro
 		return grantLevels(entry).some((granted) => granted <= level);
 	});
 
-	await addFromPack(actor as Actor, 'nimble-class-features', automatic);
+	await addFromPack(actor, 'nimble-class-features', automatic);
 	await settle();
 }
 
