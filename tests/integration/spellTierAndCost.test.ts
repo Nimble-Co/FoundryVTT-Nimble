@@ -11,44 +11,24 @@
  */
 
 import { beforeAll, describe, expect, test } from 'vitest';
-import { buildCharacter, levelCharacterTo } from './builders/buildCharacter.ts';
+import {
+	buildCharacter,
+	type CharacterActor,
+	levelCharacterTo,
+} from './builders/buildCharacter.ts';
 import { importPackItem, purgeTestDocuments, settle } from './liveHelpers.ts';
 
 const TEST_PREFIX = 'V14 Spell Tier And Cost';
 
-interface CasterActor {
-	id: string;
-	classes: Record<string, { id: string; identifier: string }>;
-	system: {
-		classData: { levels: string[] };
-		resources: { mana: { current: number; max: number }; highestUnlockedSpellTier: number | null };
-	};
-	levels: { character: number };
-	items: { contents: Array<{ id: string; name: string; type: string }> };
-	updateItem(itemId: string, changes: Record<string, unknown>): Promise<unknown>;
-	update(changes: Record<string, unknown>): Promise<unknown>;
-}
-
-async function buildCaster(suffix: string, className: string, level = 1): Promise<CasterActor> {
-	const actor = await buildCharacter({
-		name: `${TEST_PREFIX} ${suffix}`,
-		className,
-		level,
-	});
-	return actor as unknown as CasterActor;
-}
-
-async function levelTo(actor: CasterActor, level: number): Promise<void> {
-	await levelCharacterTo(actor as never, level);
-	await settle();
-}
-
 describe("a Shadowmancer's unlocked tier follows the class's own grants", () => {
-	let shadowmancer: CasterActor;
+	let shadowmancer: CharacterActor;
 
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
-		shadowmancer = await buildCaster('Shadowmancer', 'Shadowmancer');
+		shadowmancer = await buildCharacter({
+			name: `${TEST_PREFIX} Shadowmancer`,
+			className: 'Shadowmancer',
+		});
 	});
 
 	// The ladder printed for the class: tier 1 at level 2, then 5, 7, 10.
@@ -60,7 +40,7 @@ describe("a Shadowmancer's unlocked tier follows the class's own grants", () => 
 		[7, 3],
 		[10, 4],
 	])('at level %i the highest unlocked tier is %i', async (level, expected) => {
-		await levelTo(shadowmancer, level);
+		await levelCharacterTo(shadowmancer, level);
 
 		expect(shadowmancer.system.resources.highestUnlockedSpellTier).toBe(expected);
 	});
@@ -72,10 +52,10 @@ describe("a Shadowmancer's unlocked tier follows the class's own grants", () => 
  * class's own grants rather than one shared table.
  */
 describe("a Mage's unlocked tier follows its own ladder", () => {
-	let mage: CasterActor;
+	let mage: CharacterActor;
 
 	beforeAll(async () => {
-		mage = await buildCaster('Mage Ladder', 'Mage');
+		mage = await buildCharacter({ name: `${TEST_PREFIX} Mage Ladder`, className: 'Mage' });
 	});
 
 	test.each([
@@ -84,7 +64,7 @@ describe("a Mage's unlocked tier follows its own ladder", () => {
 		[4, 2],
 		[6, 3],
 	])('at level %i the highest unlocked tier is %i', async (level, expected) => {
-		await levelTo(mage, level);
+		await levelCharacterTo(mage, level);
 
 		expect(mage.system.resources.highestUnlockedSpellTier).toBe(expected);
 	});
@@ -97,10 +77,14 @@ describe("a Mage's unlocked tier follows its own ladder", () => {
  * value is what everything else reads.
  */
 describe('a GM can override the unlocked tier and give it back', () => {
-	let shadowmancer: CasterActor;
+	let shadowmancer: CharacterActor;
 
 	beforeAll(async () => {
-		shadowmancer = await buildCaster('Override', 'Shadowmancer', 7);
+		shadowmancer = await buildCharacter({
+			name: `${TEST_PREFIX} Override`,
+			className: 'Shadowmancer',
+			level: 7,
+		});
 	});
 
 	test('derives its own tier before anyone overrides it', () => {
@@ -136,7 +120,7 @@ describe('a GM can override the unlocked tier and give it back', () => {
  * the pool-paying class may change what a mana caster spends.
  */
 describe('casting spends the resource the class declares', () => {
-	const poolOf = (actor: CasterActor, itemName: string) => {
+	const poolOf = (actor: CharacterActor, itemName: string) => {
 		const item = actor.items.contents.find((entry) => entry.name === itemName)!;
 		const pools = (item as unknown as { flags: Record<string, any> }).flags[game.system.id]
 			?.chargePools;
@@ -146,7 +130,11 @@ describe('casting spends the resource the class declares', () => {
 	test('a Shadowmancer spends one use of Pilfered Power, not mana', async () => {
 		// The builder grants what a Shadowmancer of this level holds, Pilfered
 		// Power included, so the test never names the feature it depends on.
-		const shadowmancer = await buildCaster('Casting', 'Shadowmancer', 10);
+		const shadowmancer = await buildCharacter({
+			name: `${TEST_PREFIX} Casting`,
+			className: 'Shadowmancer',
+			level: 10,
+		});
 
 		const spell = await importPackItem(
 			shadowmancer as unknown as Actor,
@@ -170,7 +158,11 @@ describe('casting spends the resource the class declares', () => {
 	});
 
 	test('a Mage still spends the spell tier in mana', async () => {
-		const mage = await buildCaster('Mana Control', 'Mage', 4);
+		const mage = await buildCharacter({
+			name: `${TEST_PREFIX} Mana Control`,
+			className: 'Mage',
+			level: 4,
+		});
 
 		const spell = await importPackItem(
 			mage as unknown as Actor,
