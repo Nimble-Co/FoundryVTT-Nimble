@@ -48,7 +48,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('Cantrips');
+			expect(result.errorCode).toBe('cantripCannotUpcast');
 		});
 
 		it('should reject spells without scaling', () => {
@@ -61,7 +61,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('cannot be upcast');
+			expect(result.errorCode).toBe('spellCannotUpcast');
 		});
 
 		it('should reject insufficient mana', () => {
@@ -74,7 +74,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('Insufficient mana');
+			expect(result.errorCode).toBe('insufficientMana');
 		});
 
 		it('should allow spending beyond current mana when mana cost enforcement is off', () => {
@@ -103,7 +103,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('highest unlocked tier');
+			expect(result.errorCode).toBe('aboveUnlockedTier');
 		});
 
 		it('should still require the base cost to be spent when mana cost enforcement is off', () => {
@@ -117,7 +117,7 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('at least 3');
+			expect(result.errorCode).toBe('belowBaseTier');
 		});
 
 		it('should reject spending below base cost', () => {
@@ -130,7 +130,8 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('Must spend at least 3 mana');
+			expect(result.errorCode).toBe('belowBaseTier');
+			expect(result.errorData).toEqual({ min: '3' });
 		});
 
 		it('should reject spending above highest unlocked tier', () => {
@@ -143,7 +144,8 @@ describe('validateAndComputeUpcast', () => {
 
 			const result = validateAndComputeUpcast(context);
 			expect(result.valid).toBe(false);
-			expect(result.error).toContain('Cannot spend more than 5 mana');
+			expect(result.errorCode).toBe('aboveUnlockedTier');
+			expect(result.errorData).toEqual({ maxTier: '5' });
 		});
 
 		it('should validate correct upcast steps calculation', () => {

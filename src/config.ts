@@ -615,6 +615,8 @@ const spellUpcastDialog = {
 		aboveMaxTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveMaxTier',
 		aboveUnlockedTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveUnlockedTier',
 		upcastFailed: 'NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed',
+		cantripCannotUpcast: 'NIMBLE.spells.spellUpcastDialog.warnings.cantripCannotUpcast',
+		spellCannotUpcast: 'NIMBLE.spells.spellUpcastDialog.warnings.spellCannotUpcast',
 	},
 };
 

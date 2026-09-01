@@ -35,7 +35,7 @@ import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import localize from '../utils/localize.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
-import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import { applyUpcastDeltas, UpcastError } from '../utils/spell/applyUpcastDeltas.js';
 import {
 	exceedsUnlockedSpellTier,
 	resolvePinnedCastTier,
@@ -232,6 +232,16 @@ class ItemActivationManager {
 					});
 				}
 			} catch (error) {
+				// The refusal reason travels as a code so the player reads it in
+				// their own language; the English message is for the log.
+				if (error instanceof UpcastError) {
+					ui.notifications?.error(
+						localize(`NIMBLE.spells.spellUpcastDialog.warnings.${error.code}`, error.data),
+					);
+					console.warn('Nimble | Upcast refused:', error.message);
+					return { activation: null, rolls: null };
+				}
+
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 				ui.notifications?.error(
 					localize('NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed', {

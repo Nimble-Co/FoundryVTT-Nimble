@@ -1695,7 +1695,9 @@
 					"insufficientMana": "Not enough mana. You have {current}, but need {needed}.",
 					"aboveMaxTier": "Cannot spend more mana than your highest unlocked spell tier ({maxTier}).",
 					"aboveUnlockedTier": "This spell is above your highest unlocked spell tier ({maxTier}), so you cannot cast it.",
-					"upcastFailed": "Upcast failed: {error}"
+					"upcastFailed": "Upcast failed: {error}",
+					"cantripCannotUpcast": "Cantrips cannot be upcast.",
+					"spellCannotUpcast": "This spell cannot be upcast."
 				}
 			}
 		},
