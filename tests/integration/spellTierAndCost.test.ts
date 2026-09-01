@@ -10,13 +10,13 @@
  * mock exercises end to end.
  */
 
-import { beforeAll, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import {
 	buildCharacter,
 	type CharacterActor,
 	levelCharacterTo,
 } from './builders/buildCharacter.ts';
-import { importPackItem, purgeTestDocuments, settle } from './liveHelpers.ts';
+import { importPackItem, purgeTestDocuments, settle, waitFor } from './liveHelpers.ts';
 
 const TEST_PREFIX = 'V14 Spell Tier And Cost';
 
@@ -113,31 +113,60 @@ describe('a GM can override the unlocked tier and give it back', () => {
 	});
 });
 
-/**
- * What a cast actually costs. The Shadowmancer pays from Pilfered Power, a
- * charge pool stored on the feature that grants it, and pays one use whatever
- * tier the spell resolves at. The Mage is here as the control: nothing about
- * the pool-paying class may change what a mana caster spends.
- */
-describe('casting spends the resource the class declares', () => {
-	const poolOf = (actor: CharacterActor, itemName: string) => {
-		const item = actor.items.contents.find((entry) => entry.name === itemName)!;
-		const pools = (item as unknown as { flags: Record<string, any> }).flags[game.system.id]
-			?.chargePools;
-		return pools?.['pilfered-power'] as { current: number; max: number } | undefined;
+/** Drives the real cast window: what it quotes is what gets spent. */
+describe('casting through the cast window spends what the window said', () => {
+	// An open window leaks into the next file's dialog queries.
+	afterEach(async () => {
+		const open = castWindow();
+		if (!open) return;
+		const app = [...foundry.applications.instances.values()].find((instance: any) =>
+			instance.element?.contains(open),
+		) as { close(): Promise<unknown> } | undefined;
+		await app?.close();
+		await settle(200);
+	});
+
+	const castWindow = () => {
+		const marker = document.querySelector('.nimble-spell-cost, .nimble-spell-pinned-tier');
+		return (marker?.closest('.application') ?? null) as HTMLElement | null;
 	};
 
-	test('a Shadowmancer spends one use of Pilfered Power, not mana', async () => {
-		// The builder grants what a Shadowmancer of this level holds, Pilfered
-		// Power included, so the test never names the feature it depends on.
+	const openCastWindow = async (spell: unknown): Promise<HTMLElement> => {
+		// Not awaited: activation only resolves once the dialog is answered.
+		void (spell as { activate(options: object): Promise<unknown> }).activate({});
+		await waitFor(() => !!castWindow(), 'the cast window to open', { timeout: 15_000 });
+		await settle(400);
+		return castWindow()!;
+	};
+
+	const pressCastSpell = async (root: HTMLElement) => {
+		const cast = [...root.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
+			button.textContent?.trim().startsWith('Cast Spell'),
+		);
+		expect(cast, 'the window offers a Cast Spell button').toBeTruthy();
+		cast!.click();
+		await settle(900);
+	};
+
+	const costText = (root: HTMLElement) =>
+		root.querySelector('.nimble-spell-cost')?.textContent?.trim() ?? '';
+
+	const poolOf = (actor: CharacterActor, itemName: string) => {
+		const item = actor.items.contents.find((entry) => entry.name === itemName)!;
+		const pools = item.flags[game.system.id]?.chargePools as
+			| Record<string, { current: number; max: number }>
+			| undefined;
+		return pools?.['pilfered-power'];
+	};
+
+	test('a Shadowmancer is told the pool it pays, and pays one use', async () => {
 		const shadowmancer = await buildCharacter({
 			name: `${TEST_PREFIX} Casting`,
 			className: 'Shadowmancer',
 			level: 10,
 		});
-
 		const spell = await importPackItem(
-			shadowmancer as unknown as Actor,
+			shadowmancer as never,
 			'nimble-spells',
 			(entry: { name: string }) => entry.name === 'Shadow Trap',
 			[],
@@ -147,39 +176,71 @@ describe('casting spends the resource the class declares', () => {
 		const before = poolOf(shadowmancer, 'Pilfered Power')!;
 		expect(before.current).toBeGreaterThan(0);
 
-		await (spell as unknown as { activate(options: object): Promise<unknown> }).activate({
-			fastForward: true,
-		});
-		await settle();
+		const root = await openCastWindow(spell);
+		expect(costText(root)).toContain('Pilfered Power');
+		expect(root.querySelector('.nimble-spell-pinned-tier')?.textContent).toContain('tier 4');
 
-		const after = poolOf(shadowmancer, 'Pilfered Power')!;
-		expect(after.current).toBe(before.current - 1);
+		await pressCastSpell(root);
+
+		expect(poolOf(shadowmancer, 'Pilfered Power')!.current).toBe(before.current - 1);
 		expect(shadowmancer.system.resources.mana.current).toBe(0);
 	});
 
-	test('a Mage still spends the spell tier in mana', async () => {
+	test('a Mage is told the mana it pays, and pays the spell tier', async () => {
 		const mage = await buildCharacter({
 			name: `${TEST_PREFIX} Mana Control`,
 			className: 'Mage',
 			level: 4,
 		});
-
 		const spell = await importPackItem(
-			mage as unknown as Actor,
+			mage as never,
 			'nimble-spells',
-			(entry: { name: string; system?: { tier?: number } }) => entry.name === 'Shadow Trap',
+			(entry: { name: string }) => entry.name === 'Ignite',
 			['system.tier'],
 		);
 		await settle();
 
 		const manaBefore = mage.system.resources.mana.current;
-		expect(manaBefore).toBeGreaterThan(0);
+		expect(manaBefore).toBeGreaterThan(1);
 
-		await (spell as unknown as { activate(options: object): Promise<unknown> }).activate({
-			fastForward: true,
-		});
-		await settle();
+		const root = await openCastWindow(spell);
+		expect(costText(root)).toContain('1');
+
+		await pressCastSpell(root);
 
 		expect(mage.system.resources.mana.current).toBe(manaBefore - 1);
+	});
+
+	test('a Mage upcasting one step is charged the higher tier', async () => {
+		const mage = await buildCharacter({
+			name: `${TEST_PREFIX} Upcasting`,
+			className: 'Mage',
+			level: 4,
+		});
+		const spell = await importPackItem(
+			mage as never,
+			'nimble-spells',
+			(entry: { name: string }) => entry.name === 'Ignite',
+			['system.tier'],
+		);
+		await settle();
+
+		const manaBefore = mage.system.resources.mana.current;
+		const root = await openCastWindow(spell);
+
+		// Scoped to the tier slider: the roll mode control is a slider too.
+		const handle = root.querySelector<HTMLElement>('.nimble-mana-slider .rangeHandle');
+		expect(handle, 'the window offers a tier slider').toBeTruthy();
+		expect(handle!.getAttribute('aria-valuemax')).toBe('2');
+
+		handle!.focus();
+		handle!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		await settle(400);
+
+		expect(costText(root)).toContain('2');
+
+		await pressCastSpell(root);
+
+		expect(mage.system.resources.mana.current).toBe(manaBefore - 2);
 	});
 });

@@ -138,9 +138,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 					// Add upcast result to chat data
 					upcast: manager.upcastResult,
-					// The tier the cast resolved at. A class that pins the tier
-					// reaches it without an upcast when the spell does not scale,
-					// so the card cannot read it from the upcast result alone.
+					// A pinned tier reaches the card without an upcast to read it from.
 					castTier: manager.pinnedCastTier,
 				},
 				type: 'spell',
