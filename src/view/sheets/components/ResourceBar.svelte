@@ -4,7 +4,6 @@
 	let {
 		current,
 		max,
-		compact = false,
 		disableControls = false,
 		disableMaxEdit = false,
 		updateCurrent,
@@ -14,7 +13,6 @@
 
 <div
 	class="nimble-resource-bar"
-	class:nimble-resource-bar--compact={compact}
 	style="--nimble-resource-bar-percentage: {max > 0
 		? Math.clamp(Math.round((current / max) * 100), 0, 100)
 		: 0}%"
@@ -61,12 +59,6 @@
 		box-shadow: var(--nimble-card-box-shadow);
 		font-weight: 600;
 		text-shadow: 0 0 4px var(--nimble-resource-bar-border-color);
-
-		&--compact {
-			--nimble-resource-input-text-size: var(--nimble-xs-text);
-			--form-field-height: 1rem;
-			--nimble-resource-input-font-weight: 500;
-		}
 
 		&__bar {
 			flex: 1;
