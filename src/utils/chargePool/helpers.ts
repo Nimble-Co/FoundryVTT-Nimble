@@ -77,19 +77,10 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 }
 
 /**
- * Only an explicit `true` hides a pool, so stored state and rule data that
- * predate the field keep rendering.
+ * Only an explicit `true` sets one of a pool's display flags, so stored state
+ * and rule data that predate a flag keep rendering where they always did.
  */
-function toHiddenFlag(value: unknown): boolean {
-	return value === true;
-}
-
-/**
- * Same conservative reading as {@link toHiddenFlag}: only an explicit `true`
- * promotes a pool to the header, so stored state and rule data that predate
- * the field keep rendering where they always did.
- */
-function toShowAsResourceFlag(value: unknown): boolean {
+function toPoolDisplayFlag(value: unknown): boolean {
 	return value === true;
 }
 
@@ -136,8 +127,8 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
-				showAsResource: toShowAsResourceFlag(sourcePool.showAsResource),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
 				recoveries,
 			};
 		}
@@ -185,8 +176,8 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
-				showAsResource: toShowAsResourceFlag(sourcePool.showAsResource),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
 				recoveries,
 			};
 		}
@@ -388,8 +379,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
-				hidden: toHiddenFlag(poolRule.hidden),
-				showAsResource: toShowAsResourceFlag(poolRule.showAsResource),
+				hidden: toPoolDisplayFlag(poolRule.hidden),
+				showAsResource: toPoolDisplayFlag(poolRule.showAsResource),
 				initial,
 				recoveries,
 			};
