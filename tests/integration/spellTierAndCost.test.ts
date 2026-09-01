@@ -11,6 +11,7 @@
  */
 
 import { beforeAll, describe, expect, test } from 'vitest';
+import { buildCharacter, levelCharacterTo } from './builders/buildCharacter.ts';
 import { importPackItem, purgeTestDocuments, settle } from './liveHelpers.ts';
 
 const TEST_PREFIX = 'V14 Spell Tier And Cost';
@@ -28,42 +29,18 @@ interface CasterActor {
 	update(changes: Record<string, unknown>): Promise<unknown>;
 }
 
-/** Levels a character by the two writes the level-up dialog makes once it closes. */
-async function levelTo(actor: CasterActor, level: number): Promise<void> {
-	const characterClass = Object.values(actor.classes)[0]!;
-	await actor.updateItem(characterClass.id, { 'system.classLevel': level });
-	await actor.update({
-		'system.classData.levels': Array.from({ length: level }, () => characterClass.identifier),
+async function buildCaster(suffix: string, className: string, level = 1): Promise<CasterActor> {
+	const actor = await buildCharacter({
+		name: `${TEST_PREFIX} ${suffix}`,
+		className,
+		level,
 	});
-	await settle();
+	return actor as unknown as CasterActor;
 }
 
-async function buildCaster(
-	suffix: string,
-	className: string,
-	featureNames: string[],
-): Promise<CasterActor> {
-	const actor = (await Actor.create({
-		name: `${TEST_PREFIX} ${suffix}`,
-		type: 'character',
-	} as Actor.CreateData)) as unknown as CasterActor;
-
-	await importPackItem(
-		actor as unknown as Actor,
-		'nimble-classes',
-		(entry: { name: string }) => entry.name === className,
-		[],
-	);
-	for (const featureName of featureNames) {
-		await importPackItem(
-			actor as unknown as Actor,
-			'nimble-class-features',
-			(entry: { name: string }) => entry.name === featureName,
-			[],
-		);
-	}
+async function levelTo(actor: CasterActor, level: number): Promise<void> {
+	await levelCharacterTo(actor as never, level);
 	await settle();
-	return actor;
 }
 
 describe("a Shadowmancer's unlocked tier follows the class's own grants", () => {
@@ -71,7 +48,7 @@ describe("a Shadowmancer's unlocked tier follows the class's own grants", () => 
 
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
-		shadowmancer = await buildCaster('Shadowmancer', 'Shadowmancer', ['Master of Darkness']);
+		shadowmancer = await buildCaster('Shadowmancer', 'Shadowmancer');
 	});
 
 	// The ladder printed for the class: tier 1 at level 2, then 5, 7, 10.
@@ -98,7 +75,7 @@ describe("a Mage's unlocked tier follows its own ladder", () => {
 	let mage: CasterActor;
 
 	beforeAll(async () => {
-		mage = await buildCaster('Mage Ladder', 'Mage', ['Mana and Unlock Tier 1 Spells']);
+		mage = await buildCaster('Mage Ladder', 'Mage');
 	});
 
 	test.each([
@@ -123,8 +100,7 @@ describe('a GM can override the unlocked tier and give it back', () => {
 	let shadowmancer: CasterActor;
 
 	beforeAll(async () => {
-		shadowmancer = await buildCaster('Override', 'Shadowmancer', ['Master of Darkness']);
-		await levelTo(shadowmancer, 7);
+		shadowmancer = await buildCaster('Override', 'Shadowmancer', 7);
 	});
 
 	test('derives its own tier before anyone overrides it', () => {
@@ -168,18 +144,9 @@ describe('casting spends the resource the class declares', () => {
 	};
 
 	test('a Shadowmancer spends one use of Pilfered Power, not mana', async () => {
-		const shadowmancer = await buildCaster('Casting', 'Shadowmancer', ['Master of Darkness']);
-		// Dexterity first: the pool seeds itself from its maximum when the rule
-		// that declares it arrives, and that maximum is the Dexterity modifier.
-		await shadowmancer.update({ 'system.abilities.dexterity.baseValue': 3 });
-		await levelTo(shadowmancer, 10);
-		await importPackItem(
-			shadowmancer as unknown as Actor,
-			'nimble-class-features',
-			(entry: { name: string }) => entry.name === 'Pilfered Power',
-			[],
-		);
-		await settle();
+		// The builder grants what a Shadowmancer of this level holds, Pilfered
+		// Power included, so the test never names the feature it depends on.
+		const shadowmancer = await buildCaster('Casting', 'Shadowmancer', 10);
 
 		const spell = await importPackItem(
 			shadowmancer as unknown as Actor,
@@ -203,8 +170,7 @@ describe('casting spends the resource the class declares', () => {
 	});
 
 	test('a Mage still spends the spell tier in mana', async () => {
-		const mage = await buildCaster('Mana Control', 'Mage', ['Mana and Unlock Tier 1 Spells']);
-		await levelTo(mage, 4);
+		const mage = await buildCaster('Mana Control', 'Mage', 4);
 
 		const spell = await importPackItem(
 			mage as unknown as Actor,
