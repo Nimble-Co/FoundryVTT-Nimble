@@ -37,6 +37,7 @@ import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import {
+	exceedsUnlockedSpellTier,
 	resolvePinnedCastTier,
 	resolveSpellCost,
 	synthesizePinnedUpcast,
@@ -151,6 +152,19 @@ class ItemActivationManager {
 
 		if (this.#item.type === 'spell' && this.actor) {
 			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
+
+			// A pinned class never sees the tier control, so the bound is enforced
+			// here instead. Checked on every activation path, not just the dialog,
+			// so a macro cannot cast above the caster's ladder either.
+			if (this.pinnedCastTier !== null && exceedsUnlockedSpellTier(this.actor, this.#item)) {
+				ui.notifications?.warn(
+					localize('NIMBLE.spells.spellUpcastDialog.warnings.aboveUnlockedTier', {
+						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
+					}),
+				);
+				return { activation: null, rolls: null };
+			}
+
 			this.spellCost = resolveSpellCost(this.actor, this.#item, {
 				castTier: this.pinnedCastTier ?? undefined,
 			});

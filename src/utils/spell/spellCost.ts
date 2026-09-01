@@ -141,6 +141,21 @@ export function resolvePinnedCastTier(actor: SpellCostActorLike, spell: SpellLik
 }
 
 /**
+ * Whether the spell's own tier sits above what the caster has unlocked.
+ *
+ * A class that pins its cast tier never offers the tier control, so nothing
+ * on that path compares the spell against the caster's ladder. Without this
+ * the bound would hold for a caster who picks a tier and not for one whose
+ * class picks it for them.
+ */
+export function exceedsUnlockedSpellTier(actor: SpellCostActorLike, spell: SpellLike): boolean {
+	const tier = spell?.system?.tier ?? 0;
+	if (tier <= 0) return false;
+
+	return tier > (actor?.system?.resources?.highestUnlockedSpellTier ?? 0);
+}
+
+/**
  * Builds the upcast selection a pinned cast tier implies, for the activation
  * paths that never open a dialog. Returns null when there is nothing to
  * synthesize: the spell does not scale, or the pinned tier adds no steps.

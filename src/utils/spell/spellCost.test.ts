@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import {
 	applyOverdraftConsequence,
+	exceedsUnlockedSpellTier,
 	formatSpellCostLabel,
 	resolvePinnedCastTier,
 	resolveSpellCost,
@@ -259,6 +260,42 @@ describe('resolvePinnedCastTier', () => {
 			unlockedTier: 0,
 		});
 		expect(resolvePinnedCastTier(actor, createSpell(2))).toBe(2);
+	});
+});
+
+describe('exceedsUnlockedSpellTier', () => {
+	it('refuses a spell above the tier the caster has unlocked', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ castAtHighestTier: true })],
+			unlockedTier: 4,
+		});
+		expect(exceedsUnlockedSpellTier(actor, createSpell(5))).toBe(true);
+	});
+
+	it('permits a spell at the unlocked tier', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ castAtHighestTier: true })],
+			unlockedTier: 4,
+		});
+		expect(exceedsUnlockedSpellTier(actor, createSpell(4))).toBe(false);
+	});
+
+	it('permits a spell below the unlocked tier', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ castAtHighestTier: true })],
+			unlockedTier: 4,
+		});
+		expect(exceedsUnlockedSpellTier(actor, createSpell(1))).toBe(false);
+	});
+
+	it('permits a cantrip whatever the caster has unlocked', () => {
+		const actor = createMockActor({ items: [createPoolClass({})], unlockedTier: 0 });
+		expect(exceedsUnlockedSpellTier(actor, createSpell(0))).toBe(false);
+	});
+
+	it('refuses any tiered spell for a character who has unlocked nothing', () => {
+		const actor = createMockActor({ items: [createPoolClass({})], unlockedTier: 0 });
+		expect(exceedsUnlockedSpellTier(actor, createSpell(1))).toBe(true);
 	});
 });
 

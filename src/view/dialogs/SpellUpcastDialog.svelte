@@ -351,7 +351,7 @@
 				}
 			}
 
-			if (manaToSpend > maxTier && pinnedCastTier === null) {
+			if (manaToSpend > maxTier) {
 				ui.notifications?.warn(
 					format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) }),
 				);
