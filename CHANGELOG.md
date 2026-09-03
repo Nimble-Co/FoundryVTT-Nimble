@@ -6,6 +6,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.9.0] - 2026-09-03
+
+### Added
+
+- [#843] Migrate the system to Foundry VTT v14. The minimum compatibility is now v14, verified against 14.365, and v13 is no longer supported. @fronix
+- [#843] Place area-of-effect spells and features as native v14 Regions: placement starts on activation with a grid-conformed preview, per-shape snapping, wheel rotation, and a retry button on the chat card, and tokens inside the placed area become the card's targets. @fronix
+- [#843] Let template shape tags in the targeting config be deselected, and gate AoE placement and crit/miss handling on acquireTargetsFromTemplate rather than a bare template shape. @fronix
+- [#843] Add a Playwright-driven live-Foundry integration test harness covering chat cards, sheets, conditions, rules, and the damage pipeline against a real v14 world. @fronix
+- [#843] Type PredicateField so rule models read their predicates without casts. @fronix
+- [#908] Add the situationalRollMode rule type, which offers an opt-in roll mode adjustment in the check roll dialog for circumstances the system cannot see, folded into that roll only. @trevlar
+- [#908] Automate Haunted Past with advantage on Will saves against fear, offered per roll. @trevlar
+- [#909] Automate Survivalist with advantage on Strength saves against poison, offered per roll. @trevlar
+- [#910] Roll Shadow Trap's damage from the chat card: damage nodes gain a deferred roll option, and the card offers a Roll Damage button to the author and GM in place of a total. @trevlar
+- [#911] Let GMs add, edit, and remove custom conditions from world settings, usable everywhere built-in conditions appear, with a cleanup dialog when a condition still in use is removed. @trevlar
+- [#912] Let ancestries list the peoples they cover, and add an Ancestry Variant step to character creation that picks one by name. @trevlar
+- [#913] Dropping a spell on a character sheet asks whether it joins the spell list or becomes a spell scroll, and dropping a scroll template opens a searchable picker of that tier's spells. @trevlar
+- [#913] Spell scrolls cast the spell they carry: the spell's actions, no mana, no upcast, consumed on use, with the DC 10 Arcana check applied only when the wielder knows no spell of that school. @trevlar
+- [#913] Add a world setting controlling whether a new scroll copies the inscribed spell's description. @trevlar
+- [#913] Let CheckRollDialog show a hint explaining what raised the check and what a failure costs. @trevlar
+- [#914] Render the primary die distinctly in Dice So Nice, with a per-user 3D Dice settings dialog for the toggle and die colours. @fronix
+
+### Fixed
+
+- [#843] Ignore skipped turn dispatches on v14 so pools, charges, and actions are not refilled for combatants who were jumped over. @fronix
+- [#843] Keep token status icons on effects created before the v14 upgrade. @fronix
+- [#843] Stop AoE auto-targeting from writing hidden or defeated tokens into a public card's targets. @fronix
+- [#843] Label a square AoE from its configured width instead of its unset length. @fronix
+- [#843] Surface AoE placement failures as notifications instead of dropping them. @fronix
+- [#843] Keep character portraits editable when Tokenizer is enabled but failed to load. @fronix
+- [#843] Restore the hidden-combatant initiative whisper on v14. @fronix
+- [#843] Keep placeholder strings interpolating on v14, so the upcast dialog no longer shows the raw "Upcast {spellName}". @fronix
+- [#843] Stop v14's token HUD height cap from clipping the conditions panel. @fronix
+- [#843] Render chat card headers when the author user has been deleted. @fronix
+- [#843] Create condition effects from their source data on v14 so derived duration fields are not stored. @fronix
+- [#843] Make RecordField entry deletion remove entries on v14 instead of resetting them to defaults. @fronix
+- [#907] Stop duplicate class feature copies from freezing the level-up dialog. @fronix
+- [#915] Print document link labels instead of raw UUIDs in the PDF export. @trevlar
+- [#919] Seed current mana to full when a character first gains a mana pool, and clamp it when the maximum falls away on level down, history reset, or class removal. @fronix
+- [#927] Recalculate maxHpBonus on level-up instead of banking it into the stored hit point bonus, warn when its predicate only matches late, and count it in the import preview. @fronix
+- [#928] Make checkboxes square, centred, and legible in dark mode. @trevlar
+- [#929] Grant two Sacred Graces at level 5 for the Shepherd, and offer a correction dialog for characters an earlier level still owes picks. @trevlar
+- [#931] Join the live test world through the v14.367 username field. @trevlar
+
+### Changed
+
+- [#843] Flag Pyroclasm as an AoE and clear Boisterous Winds' stale square template; migration 042 repairs existing copies. @fronix
+- [#908] Haunted Past ships the fear advantage rule; migration 045 backfills existing copies. @trevlar
+- [#909] Survivalist ships the poison advantage rule; migration 047 backfills existing copies. @trevlar
+- [#910] Shadow Trap ships deferred 3d12 damage; migration 046 backfills existing copies. @trevlar
+- [#912] Dryad/Shroomling, Minotaur/Beastfolk, and Oozeling/Construct list their variant names. @trevlar
+- [#913] Rename the spell scroll templates to "Spell Scroll, Tier N" and make them small-sized so they share one inventory slot; migration 043 retargets existing copies. @trevlar
+- [#914] Document the Dice So Nice integration and the 3D Dice dialog. @fronix
+- [#917] Clarify the Create Opening action description. @fronix
+- [#927] Migration 044 removes banked maxHpBonus amounts from stored hit point bonuses. @fronix
+- [#929] Sacred Graces draws two picks at level 5 and one each at 9 and 13. @trevlar
+
+---
+
+
 ## [0.8.9] - 2026-08-06
 
 ### Added
