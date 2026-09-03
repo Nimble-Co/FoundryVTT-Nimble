@@ -9,8 +9,7 @@ import {
 
 const EDITOR_ICON = 'fa-solid fa-hat-wizard';
 
-/** Tracks the open editor so repeated submenu clicks focus it instead of stacking copies. */
-let openEditor: CustomSpellSchoolsMenu | null = null;
+const EDITOR_UNIQUE_ID = `${SYSTEM_ID}-custom-spell-schools`;
 
 /**
  * No-argument ApplicationV2 wrapper so the Svelte editor can be registered as a
@@ -23,16 +22,18 @@ class CustomSpellSchoolsMenu extends GenericDialog {
 			game.i18n.localize('NIMBLE.settings.customSpellSchools.title'),
 			CustomSpellSchoolsEditor as unknown as Component<Record<string, never>>,
 			{},
-			{ uniqueId: 'nimble-custom-spell-schools', icon: EDITOR_ICON, width: 520, resizable: true },
+			{ uniqueId: EDITOR_UNIQUE_ID, icon: EDITOR_ICON, width: 520, resizable: true },
 		);
 	}
 
+	/** Focus the open editor rather than stacking a second copy on repeated submenu clicks. */
 	override async render(...args: Parameters<GenericDialog['render']>): Promise<this> {
-		if (openEditor?.rendered && openEditor !== this) {
+		const openEditor = GenericDialog.getOpen(EDITOR_UNIQUE_ID);
+		if (openEditor && openEditor !== this) {
 			openEditor.bringToFront();
 			return openEditor as this;
 		}
-		openEditor = this;
+
 		return super.render(...args);
 	}
 }

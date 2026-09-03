@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
@@ -72,7 +74,7 @@ function createItemDocument({
 		sheet: {
 			render: vi.fn(),
 		},
-	} as unknown as Item;
+	} as unknown as Item & { uuid: string };
 }
 
 describe('CharacterCreationDialog.submitCharacterCreation saving throw resolution', () => {
@@ -258,6 +260,156 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});
 
+	describe('background saving throw rules', () => {
+		/**
+		 * Drives the pack assertions from the shipped compendium data rather than a
+		 * hand-copied literal, so a typo in the pack (`willpower` for `will`,
+		 * `abilityCheck` for `savingThrow`, `disabled: true`) fails here instead of
+		 * silently shipping a background that does nothing. Same approach as
+		 * `CharacterCreationDialog.commander.test.ts`.
+		 */
+		const HAUNTED_PAST = JSON.parse(
+			readFileSync(join(process.cwd(), 'packs/backgrounds/core/haunted-past.json'), 'utf-8'),
+		) as { system: { rules: Array<Record<string, unknown>> } };
+
+		const SURVIVALIST = JSON.parse(
+			readFileSync(join(process.cwd(), 'packs/backgrounds/core/survivalist.json'), 'utf-8'),
+		) as { system: { rules: Array<Record<string, unknown>> } };
+
+		function backgroundDocumentWith(rules: Array<Record<string, unknown>>) {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-backgrounds.Item.test-background',
+				name: 'Test Background',
+				system: { rules },
+			});
+		}
+
+		function warriorWithWillSave(disadvantage: string | null) {
+			return createItemDocument({
+				uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+				name: 'Warrior',
+				system: {
+					identifier: 'warrior',
+					savingThrows: { advantage: 'strength', disadvantage },
+				},
+			});
+		}
+
+		async function createWith(
+			classDocument: ReturnType<typeof createItemDocument>,
+			backgroundDocument: ReturnType<typeof createItemDocument>,
+		) {
+			vi.stubGlobal(
+				'fromUuid',
+				vi.fn(async (uuid: string) => {
+					if (uuid === classDocument.uuid) return classDocument;
+					if (uuid === backgroundDocument.uuid) return backgroundDocument;
+					return null;
+				}),
+			);
+
+			const dialog = new CharacterCreationDialog();
+			await dialog.submitCharacterCreation({
+				name: 'Test Character',
+				origins: {
+					characterClass: { uuid: classDocument.uuid },
+					background: { uuid: backgroundDocument.uuid },
+				},
+				languages: [],
+				classFeatures: { autoGrant: [], selected: new Map() },
+				spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+			});
+		}
+
+		function savingThrowsFrom(actor: { update: { mock: { calls: unknown[][] } } }) {
+			const updateCall = actor.update.mock.calls[0][0] as {
+				system: { savingThrows: Record<string, number> };
+			};
+			return updateCall.system.savingThrows;
+		}
+
+		const willAdjustRule = {
+			type: 'savingThrowRollMode',
+			target: 'will',
+			mode: 'adjust',
+			value: 1,
+			priority: 2,
+		};
+
+		it('grants advantage on WIL when the class leaves it neutral', async () => {
+			const actor = setupActorMock();
+			await createWith(warriorWithWillSave('dexterity'), backgroundDocumentWith([willAdjustRule]));
+
+			const savingThrows = savingThrowsFrom(actor);
+			expect(savingThrows['will.defaultRollMode']).toBe(1);
+			expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
+		});
+
+		// Backgrounds are a separate gather slot from ancestries, and `adjust` stacks
+		// onto the class default rather than replacing it: no single `set` value
+		// produces both 1 (neutral class) and 0 (disadvantaged class).
+		it('only neutralizes WIL when the class disadvantages it', async () => {
+			const actor = setupActorMock();
+			await createWith(warriorWithWillSave('will'), backgroundDocumentWith([willAdjustRule]));
+
+			const savingThrows = savingThrowsFrom(actor);
+			expect(savingThrows['will.defaultRollMode']).toBe(0);
+			expect(savingThrows['strength.defaultRollMode']).toBe(1);
+		});
+
+		it('ships a situational WIL rule in the Haunted Past pack data', () => {
+			expect(HAUNTED_PAST.system.rules).toContainEqual(
+				expect.objectContaining({
+					type: 'situationalRollMode',
+					checkType: 'savingThrow',
+					saves: ['will'],
+					value: 1,
+					disabled: false,
+					label: 'Against fear',
+				}),
+			);
+		});
+
+		// The advantage is offered per save in the check roll dialog, so baking it
+		// into the default roll mode would grant it on every WIL save.
+		it('leaves the default WIL roll mode alone for a Haunted Past character', async () => {
+			const actor = setupActorMock();
+			await createWith(
+				warriorWithWillSave('dexterity'),
+				backgroundDocumentWith(HAUNTED_PAST.system.rules),
+			);
+
+			expect(savingThrowsFrom(actor)['will.defaultRollMode']).toBe(0);
+		});
+
+		// Poison is a STR save, so the rule names `strength` the way Haunted Past names
+		// `will`, rather than applying to every save.
+		it('ships a situational STR rule in the Survivalist pack data', () => {
+			expect(SURVIVALIST.system.rules).toContainEqual(
+				expect.objectContaining({
+					type: 'situationalRollMode',
+					checkType: 'savingThrow',
+					saves: ['strength'],
+					value: 1,
+					disabled: false,
+					label: 'Against poison',
+				}),
+			);
+		});
+
+		// Baking it into the default would grant advantage on every STR save, not just
+		// the ones against poison.
+		it('leaves the default STR roll mode at the class value for a Survivalist', async () => {
+			const actor = setupActorMock();
+			await createWith(
+				warriorWithWillSave('dexterity'),
+				backgroundDocumentWith(SURVIVALIST.system.rules),
+			);
+
+			expect(savingThrowsFrom(actor)['strength.defaultRollMode']).toBe(1);
+		});
+	});
+
 	describe('ancestry bonus handling', () => {
 		function createClassDocument() {
 			return createItemDocument({
@@ -331,6 +483,120 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 
 			const bonusSource = findSource(actor, 'Highborn');
 			expect(bonusSource?.system.rules?.map((rule) => rule.selectedSave)).toEqual(['will', 'will']);
+		});
+
+		describe('ancestry variant', () => {
+			function createVariantAncestry(variants: string[]) {
+				return createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryadshroomling',
+					name: 'Dryad/Shroomling',
+					system: { rules: [], identifier: '', variants },
+				});
+			}
+
+			function findAncestrySource(actor: { createEmbeddedDocuments: ReturnType<typeof vi.fn> }) {
+				const sources = actor.createEmbeddedDocuments.mock.calls[0][1] as Array<{
+					name: string;
+					system: { variants?: string[]; identifier?: string };
+				}>;
+				return sources.find((source) => source.system.variants !== undefined);
+			}
+
+			async function submitWithVariant(
+				ancestryDocument: Item & { uuid: string },
+				selectedAncestryVariant: string | null,
+			) {
+				const actor = setupActorMock();
+				const classDocument = createClassDocument();
+				stubUuids([classDocument, ancestryDocument]);
+
+				const dialog = new CharacterCreationDialog();
+				await dialog.submitCharacterCreation({
+					name: 'Test Character',
+					selectedAncestryVariant,
+					origins: {
+						characterClass: { uuid: classDocument.uuid },
+						ancestry: { uuid: ancestryDocument.uuid },
+					},
+					languages: [],
+					classFeatures: { autoGrant: [], selected: new Map() },
+					spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+				});
+
+				return actor;
+			}
+
+			it('names the ancestry after the chosen variant', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'Shroomling',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Shroomling');
+			});
+
+			it('keeps the identifier the ancestry had before the variant renamed it', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'Shroomling',
+				);
+
+				expect(findAncestrySource(actor)?.system.identifier).toBe('dryad-shroomling');
+			});
+
+			it('leaves the ancestry alone when no variant was chosen', async () => {
+				const actor = await submitWithVariant(createVariantAncestry(['Dryad', 'Shroomling']), null);
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad/Shroomling');
+				expect(ancestrySource?.system.identifier).toBe('');
+			});
+
+			it('names the ancestry the way the GM spelled it, not the way it was submitted', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'  shroomling  ',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Shroomling');
+			});
+
+			it('leaves the ancestry alone when the variant is already its name', async () => {
+				const ancestryDocument = createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryad',
+					name: 'Dryad',
+					system: { rules: [], identifier: '', variants: ['Dryad', 'Shroomling'] },
+				});
+
+				const actor = await submitWithVariant(ancestryDocument, 'Dryad');
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad');
+				expect(ancestrySource?.system.identifier).toBe('');
+			});
+
+			it('ignores a variant the ancestry does not offer', async () => {
+				const actor = await submitWithVariant(
+					createVariantAncestry(['Dryad', 'Shroomling']),
+					'Oozeling',
+				);
+
+				expect(findAncestrySource(actor)?.name).toBe('Dryad/Shroomling');
+			});
+
+			it('respects an identifier the ancestry already declares', async () => {
+				const ancestryDocument = createItemDocument({
+					uuid: 'Compendium.nimble.nimble-ancestries.Item.dryadshroomling',
+					name: 'Dryad/Shroomling',
+					system: { rules: [], identifier: 'fey-kin', variants: ['Dryad', 'Shroomling'] },
+				});
+
+				const actor = await submitWithVariant(ancestryDocument, 'Dryad');
+
+				const ancestrySource = findAncestrySource(actor);
+				expect(ancestrySource?.name).toBe('Dryad');
+				expect(ancestrySource?.system.identifier).toBe('fey-kin');
+			});
 		});
 
 		it('tells the ancestry not to grant its default when the bonus is in the same batch', async () => {

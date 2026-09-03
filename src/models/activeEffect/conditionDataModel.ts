@@ -1,5 +1,27 @@
 const { fields } = foundry.data;
 
+/**
+ * AE V2 (Foundry V14) moved the document-level `changes` array into the type
+ * data model: every ActiveEffect TypeDataModel must define a core-compatible
+ * `changes` field or Game##verifyActiveEffectModels errors at world load and
+ * force-extends the schema. This mirrors foundry.data.ActiveEffectTypeDataModel's
+ * schema (that base class is not yet typed by fvtt-types); the verifier
+ * requires an ArrayField of SchemaFields with string `type`/`phase` and
+ * numeric `priority`. Nimble conditions carry no stat changes, so the array
+ * simply stays empty.
+ */
+const changesSchema = () => ({
+	changes: new fields.ArrayField(
+		new fields.SchemaField({
+			key: new fields.StringField({ required: true }),
+			type: new fields.StringField({ required: true, blank: false, initial: 'add' }),
+			value: new fields.AnyField({ required: true, nullable: true, initial: '' }),
+			phase: new fields.StringField({ required: true, blank: false, initial: 'initial' }),
+			priority: new fields.NumberField(),
+		}),
+	),
+});
+
 const conditionSchema = () => ({
 	identifier: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	aliases: new fields.ArrayField(
@@ -26,7 +48,7 @@ const conditionSchema = () => ({
 });
 
 declare namespace NimbleConditionEffectData {
-	type Schema = DataSchema & ReturnType<typeof conditionSchema>;
+	type Schema = DataSchema & ReturnType<typeof conditionSchema> & ReturnType<typeof changesSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
@@ -39,6 +61,7 @@ class NimbleConditionEffectData extends foundry.abstract.TypeDataModel<
 > {
 	static override defineSchema(): NimbleConditionEffectData.Schema {
 		return {
+			...changesSchema(),
 			...conditionSchema(),
 		};
 	}

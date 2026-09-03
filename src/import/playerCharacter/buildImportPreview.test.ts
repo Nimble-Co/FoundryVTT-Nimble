@@ -38,6 +38,32 @@ describe('buildImportPreview', () => {
 		expect(buildImportPreview(characterExport()).hpMax).toBe(37);
 	});
 
+	it('folds maxHpBonus rules into the derived max HP', () => {
+		const withRules = characterExport({
+			items: [
+				{ name: 'Berserker', type: 'class', system: { hitDieSize: 12, hpData: [7, 8] } },
+				{
+					name: 'Veteran',
+					type: 'boon',
+					system: { rules: [{ type: 'maxHpBonus', value: 10, perLevel: false }] },
+				},
+				{
+					name: 'Tough As Nails',
+					type: 'feature',
+					system: { rules: [{ type: 'maxHpBonus', value: 2, perLevel: true }] },
+				},
+				{
+					name: 'Disabled Bonus',
+					type: 'feature',
+					system: { rules: [{ type: 'maxHpBonus', value: 99, disabled: true }] },
+				},
+			],
+		});
+
+		// 37 as above, + Veteran (10) + Tough As Nails (2 x level 3)
+		expect(buildImportPreview(withRules).hpMax).toBe(53);
+	});
+
 	it('returns null max HP when the export has no class items', () => {
 		expect(buildImportPreview(characterExport({ items: [] })).hpMax).toBeNull();
 	});

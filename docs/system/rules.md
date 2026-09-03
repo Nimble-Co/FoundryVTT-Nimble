@@ -111,10 +111,20 @@ Tags are populated during `_populateDerivedTags()` in actor data prep, before ru
 Not every tag exists at every lifecycle phase. Three populating points, in order:
 
 1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
-2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`, and pool state (`self:*ChargePool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`, and pool state (`self:*ChargePool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there, folding in their `maxHpBonus` rules — see [Rules read outside the hook sweep](#rules-read-outside-the-hook-sweep)) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
 3. **Late in `prepareDerivedData()`** (after ability mods are finalized) — emits the character `<ability>:<mod>` tags. Ability mods can't exist earlier: `abilityBonus` rules contribute to them *during* `prePrepareData`, so these tags are visible **only in `afterPrepareData` and later hooks**.
 
-A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<ability>:<mod>` tag — the predicate would never match. This is enforced by guardrails rather than left silent: the Rules Builder's predicate editor shows a warning banner (instead of the match preview) when an early-phase rule references a key in `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, and rule construction emits a once-per-rule `console.warn` for the same condition. Whether a rule class is early-phase is introspected automatically via `NimbleBaseRule.appliesInPrePrepareData` (true when the class implements a `prePrepareData` method) — never add a no-op `prePrepareData` for documentation purposes, as it would falsely mark the rule early.
+A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<ability>:<mod>` tag — the predicate would never match. This is enforced by guardrails rather than left silent: the Rules Builder's predicate editor shows a warning banner (instead of the match preview) when an early-phase rule references a key in `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, and rule construction emits a once-per-rule `console.warn` for the same condition. Whether a rule class is early-phase is introspected automatically via `NimbleBaseRule.appliesInPrePrepareData` (true when the class implements a `prePrepareData` method) — never add a no-op `prePrepareData` for documentation purposes, as it would falsely mark the rule early. A rule read outside the hook sweep overrides the getter instead (see below).
+
+#### Rules read outside the hook sweep
+
+A few values are needed before the `prePrepareData` sweep runs, so the actor reads those rules directly instead of letting them push. `maxHpBonus` is the case to copy: it exposes `resolvedBonus()`, and `character.ts#_prepareHitPoints` sums every `maxHpBonus` rule on the actor straight into `hp.max`. It has to work this way because `hp.max` feeds `_populateDerivedTags()`, which runs ahead of the sweep — a `prePrepareData` hook would land too late.
+
+Two consequences for a rule in this position:
+
+- It must override `static get appliesInPrePrepareData()` to `true`. The automatic introspection looks for a `prePrepareData` method and would otherwise miss it, silently dropping the late-predicate guardrails for a rule that evaluates its predicate *earlier* than any early-phase rule.
+- Those shared guardrails are not enough on their own. `CONFIG.NIMBLE.LATE_PREDICATE_KEYS` holds the ability-score keys alone, so a predicate on `class:*`, `level:*` or `self:bloodied` draws no warning from them, even though a rule read this early cannot see those tags either. `maxHpBonus` closes the gap with an `afterPrepareData` hook that re-tests its predicate once the domain is complete and warns when the answer flipped: a predicate that passes then but failed during the early pass is one that contributed nothing. Comparing the two answers is more accurate than warning on a list of tag prefixes, which cannot tell the actor's `class:` tag apart from the identical one a feature item carries.
+- The value must stay derived. Writing it into a stored field is what caused issue #499: the banked total never caught up with a level-up, and a blind add-on-create/subtract-on-delete pair cannot be reconciled afterwards. Note that `attributes.hp.bonus` is *not* that field — it is the player's manually-entered bonus, round-tripped through the Edit Hit Points dialog, so folding a rule total into it would be written back to source on the next save.
 
 #### Tags on all actors
 
@@ -256,6 +266,32 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 
 `toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
 
+## Roll modes: default vs. situational
+
+Two different kinds of rule adjust a d20 roll mode, and the difference is *when the adjustment is decided*.
+
+**Default roll modes** are baked into the actor's stored roll mode and apply to every roll of that kind:
+
+| Rule | Where the value lands | Resolved by |
+| --- | --- | --- |
+| `skillRollMode` | `system.skills.<key>.defaultRollMode` | `afterPrepareData`, every data-prep cycle |
+| `initiativeRollMode` | `system.attributes.initiative.defaultRollMode` | `afterPrepareData`, every data-prep cycle |
+| `savingThrowRollMode` | `system.savingThrows.<key>.defaultRollMode` | Character creation and the "Reset to Class Defaults" button only |
+
+`savingThrowRollMode` is the odd one out: saving throw roll modes are user-configurable and persisted, so the rule has **no data-prep hook**. A pack edit alone therefore never reaches an existing character, which is why changes to it ship with a migration (see `Migration022CelestialSavingThrow`).
+
+**Situational roll modes** (`situationalRollMode`) are offered rather than applied. The rule stores nothing on the actor; `CheckRollDialog` calls `getSituationalRollModeOptions` (`src/view/dialogs/CheckRollDialog.utils.ts`) to list the rules whose predicate passes and whose `checkType` and target key match the roll being configured, renders one checkbox each, and folds the checked values into that roll's roll mode only. Because nothing is persisted, the rule needs no lifecycle hook at all, and adding one would defeat its purpose.
+
+Which to reach for:
+
+- The condition is something the system can see (bloodied, unarmored, a toggle being on, a pool being empty): use a default roll mode rule with a `predicate`. It re-resolves every data-prep cycle, so it turns itself on and off.
+- The condition is something only the table knows (what a save is against, what a skill check is being used for): use `situationalRollMode` and put the description in the rule's `label`, which is what the checkbox shows. The `predicate` still gates whether the option is offered, so the two compose.
+- The roll is an attack: neither applies. Attacks are configured in the item activation dialog, where `conditionalBonus` offers a per-attack choice of advantage or bonus damage.
+
+Each option renders with the granting item's own image, so no icon has to be authored on the rule or kept in sync with the item. Checking an option moves the roll mode slider itself, so the slider always shows the roll that will be made; the dialog records the adjustment it actually applied, since clamping at the slider's ends can swallow part of it and unchecking has to give back exactly what checking took. The GM's "hide roll" toggle sits beside the roll formula at the bottom of the dialog, well away from the situational options.
+
+A rule offering a zero adjustment is skipped, since its checkbox would do nothing. Option keys are `${itemUuid}:${ruleId}`, because rule ids are only unique within an item and two copies of the same item would otherwise collapse into one checkbox.
+
 ## RulesManager API
 
 `RulesManager` extends `Map<string, NimbleBaseRule>`:
@@ -276,7 +312,7 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 8. Make the rule renderable in the **Rules Builder** — see [below](#rules-builder-integration).
 9. Keep the rule **generic** — it should be reusable across any item type.
 10. Add a co-located test (`src/models/rules/yourRule.test.ts`). Mock actor/item, instantiate the rule directly, and verify the lifecycle hook mutates actor data correctly. See `speedBonus.test.ts` for the pattern.
-11. The user documentation's rule reference is generated automatically from your schema (`pnpm docs:generate`), so labels, hints, and choices must be user-comprehensible. Optionally add a hand-written worked example at `docs/documentation/reference/_partials/<key>.md` (no headings; start with `**Example — <item name>:**`) — it is inlined under your rule's entry.
+11. The user documentation's rule reference is generated automatically from your schema (`pnpm docs:generate`), so labels, hints, and choices must be user-comprehensible. Optionally add a hand-written worked example at `docs/documentation/reference/_partials/<key>.md` (no headings; start with `**Example: <item name>.**` followed by a `- **Field** → \`value\`` list) — it is inlined under your rule's entry.
 
 ### Minimal class skeleton
 

@@ -39,3 +39,9 @@ export { Migration038CommanderStrikeRiders } from './Migration038CommanderStrike
 export { Migration039CommanderEncounterGate } from './Migration039CommanderEncounterGate.js';
 export { Migration040CommanderHiddenGatePools } from './Migration040CommanderHiddenGatePools.js';
 export { Migration041CommanderInitiativeRegain } from './Migration041CommanderInitiativeRegain.js';
+export { Migration042AoETemplateFlags } from './Migration042AoETemplateFlags.js';
+export { Migration043SpellScrollsShareASlot } from './Migration043SpellScrollsShareASlot.js';
+export { Migration044MaxHpBonusDerived } from './Migration044MaxHpBonusDerived.js';
+export { Migration045HauntedPastFearAdvantage } from './Migration045HauntedPastFearAdvantage.js';
+export { Migration046ShadowTrapDeferredDamage } from './Migration046ShadowTrapDeferredDamage.js';
+export { Migration047SurvivalistPoisonSave } from './Migration047SurvivalistPoisonSave.js';

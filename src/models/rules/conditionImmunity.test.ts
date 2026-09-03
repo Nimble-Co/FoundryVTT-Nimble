@@ -68,7 +68,7 @@ function createConditionImmunityRule(
 		configurable: true,
 	});
 
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0 }),
 		configurable: true,
 	});

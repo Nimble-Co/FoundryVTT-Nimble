@@ -39,25 +39,26 @@ function showPdfPreviewDialog(pdfUrl: string, characterName: string): void {
 		</div>
 	`;
 
-	// Use Foundry's Dialog class (global)
-	new Dialog(
-		{
+	void foundry.applications.api.DialogV2.wait({
+		window: {
 			title: `PDF Preview: ${characterName}`,
-			content,
-			buttons: {
-				close: {
-					label: 'Close',
-					icon: '<i class="fas fa-times"></i>',
-				},
-			},
-			default: 'close',
-		},
-		{
-			width: 700,
-			height: 700,
 			resizable: true,
 		},
-	).render(true);
+		position: {
+			width: 700,
+			height: 700,
+		},
+		content,
+		buttons: [
+			{
+				action: 'close',
+				label: 'Close',
+				icon: 'fa-solid fa-times',
+				default: true,
+			},
+		],
+		rejectClose: false,
+	});
 }
 
 export { showPdfPreview };

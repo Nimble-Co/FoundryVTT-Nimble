@@ -140,10 +140,10 @@ function createSpeedBonusRule(
 		configurable: true,
 	});
 
-	// Mock the _predicate property: size 0 always passes; a non-empty stub
+	// Mock the predicate property: size 0 always passes; a non-empty stub
 	// exercises the predicate-gated path
 	const predicatePasses = config.predicatePasses ?? true;
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: predicatePasses ? 0 : 1, test: () => predicatePasses }),
 		configurable: true,
 	});

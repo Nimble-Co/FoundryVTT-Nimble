@@ -49,6 +49,21 @@
 	--nimble-warning-icon-background-color: var(--nimble-light-text-color);
 	--nimble-warning-icon-color: hsl(33, 100%, 35%);
 
+	/** VALIDATION COLORS **/
+	--nimble-validation-error-color: hsl(0, 65%, 45%);
+	--nimble-validation-error-border-color: hsl(0, 65%, 55%);
+
+	/** ICON PICKER COLORS **/
+	// The scrim paints over an arbitrary user-chosen image, so it stays dark in both
+	// themes (no theme override) to keep the pencil legible.
+	--nimble-icon-picker-overlay-background: hsla(0, 0%, 0%, 0.55);
+	--nimble-icon-picker-overlay-text-color: white;
+
+	/** ARTWORK BACKDROP **/
+	// Painted behind item artwork, which is arbitrary and often transparent, so it stays dark
+	// in both themes (no theme override) to keep pale icons legible.
+	--nimble-artwork-backdrop: hsla(0, 0%, 0%, 0.7);
+
 	/** OTHER COLORS **/
 	--nimble-box-color: hsl(41, 18%, 54%);
 	--nimble-box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.2);
@@ -155,6 +170,21 @@
 	--nimble-action-button-icon-color: hsl(210, 65%, 45%);
 	--nimble-additional-action-color: hsl(210, 60%, 50%);
 	--nimble-additional-action-color-hover: hsl(210, 60%, 60%);
+
+	/** CHOICE CARDS **/
+	// The selected state for a card-shaped choice in a dialog (spell scroll
+	// chooser, and available to the other binary-choice dialogs). Named by purpose
+	// so retuning the heroic-action callout cannot silently retint a selection.
+	--nimble-choice-card-selected-background: hsla(45, 70%, 50%, 0.15);
+	--nimble-choice-card-selected-border-color: hsla(45, 70%, 40%, 0.5);
+	--nimble-choice-card-selected-text-color: hsl(45, 70%, 28%);
+	--nimble-choice-card-selected-icon-color: hsl(45, 80%, 35%);
+
+	/** SECRET CONTENT **/
+	// GM-only content markers, e.g. the secret-spell badge in the scroll picker.
+	// Starts on the subclass badge's purple so the two read as one badge family,
+	// but stays its own token: this one tracks GM-visibility, not subclasses.
+	--nimble-secret-badge-background: hsl(276, 30%, 33%);
 
 	/** REACTION COLORS **/
 	// Defend (blue)

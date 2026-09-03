@@ -5,7 +5,7 @@
  * Mirrors Foundry core's exportToJSON, which hardcodes its filename
  * (fvtt-Actor-<name>-<id>); we serialize the same way but name the file
  * fvtt-<system>-<character>-<classes> instead. Note exportSource lives under
- * _stats in v13 (flags.exportSource is a read-only deprecation shim).
+ * _stats since v13 (flags.exportSource is a read-only deprecation shim).
  */
 
 import type { NimbleCharacter } from '#documents/actor/character.js';

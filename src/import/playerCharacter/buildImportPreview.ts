@@ -19,7 +19,7 @@ export interface ParsedActor {
 	img?: string;
 	system?: Record<string, unknown>;
 	items?: ParsedActorItem[];
-	/** v13 exports record their source system here. */
+	/** v13+ exports record their source system here. */
 	_stats?: { exportSource?: { systemId?: string } | null };
 	/** Pre-v13 exports recorded it under flags instead. */
 	flags?: { exportSource?: { system?: string } } & Record<string, unknown>;
@@ -85,22 +85,57 @@ function itemLevel(item: ParsedActorItem | undefined): number | null {
 	return null;
 }
 
+interface ParsedMaxHpBonusRule {
+	type?: string;
+	disabled?: boolean;
+	value?: unknown;
+	perLevel?: boolean;
+}
+
+/** Total max-HP the exported actor's `maxHpBonus` rules would contribute. */
+function sumMaxHpBonusRules(data: ParsedActor, items: ParsedActorItem[]): number {
+	const classData = data.system?.classData as { levels?: unknown } | undefined;
+	const level = Array.isArray(classData?.levels) ? classData.levels.length : 0;
+
+	let total = 0;
+	for (const item of items) {
+		const rules = (item?.system?.rules ?? []) as ParsedMaxHpBonusRule[];
+		if (!Array.isArray(rules)) continue;
+
+		for (const rule of rules) {
+			if (rule?.type !== 'maxHpBonus' || rule.disabled) continue;
+
+			const value = Number(rule.value) || 0;
+			total += rule.perLevel ? value * level : value;
+		}
+	}
+
+	return total;
+}
+
 /**
  * Compute the character's derived max HP from class hit-die data.
  *
  * Mirrors the runtime derivation (see `character.ts#_prepareHitPoints` and
  * `class.ts`): `hp.max` is never stored, so reading it from the export yields
  * 0. Each class contributes `startingHpByHitDieSize[size] + sum(hpData)`, plus
- * the actor's flat `hp.bonus`.
+ * the actor's flat `hp.bonus` and whatever its `maxHpBonus` rules resolve to.
+ *
+ * Predicates are not evaluated — there is no prepared actor to test them
+ * against yet — so a predicated rule is counted optimistically in the preview.
  */
-function deriveMaxHp(data: ParsedActor, classItems: ParsedActorItem[]): number | null {
+function deriveMaxHp(
+	data: ParsedActor,
+	classItems: ParsedActorItem[],
+	items: ParsedActorItem[],
+): number | null {
 	if (classItems.length === 0) return null;
 
 	const startingByDie =
 		(CONFIG.NIMBLE as { startingHpByHitDieSize?: Record<number, number> }).startingHpByHitDieSize ??
 		{};
 	const attributes = data.system?.attributes as { hp?: { bonus?: number } } | undefined;
-	const bonus = attributes?.hp?.bonus ?? 0;
+	const bonus = (attributes?.hp?.bonus ?? 0) + sumMaxHpBonusRules(data, items);
 
 	return classItems.reduce((total, item) => {
 		const system = (item.system ?? {}) as { hitDieSize?: number; hpData?: number[] };
@@ -160,7 +195,7 @@ export default function buildImportPreview(data: ParsedActor): ImportPreview {
 		img: data.img ?? null,
 		typeLabel: localize(`TYPES.Actor.${data.type ?? 'character'}`),
 		level: Array.isArray(levels) ? levels.length : null,
-		hpMax: deriveMaxHp(data, classItems),
+		hpMax: deriveMaxHp(data, classItems, items),
 		ancestry,
 		className,
 		itemGroups,

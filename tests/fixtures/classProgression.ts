@@ -268,7 +268,7 @@ export async function simulateProgression(
 		);
 
 		const newAutoGrants = res.autoGrant.map((f) => f.name);
-		for (const f of res.autoGrant) owned.add(f.uuid);
+		for (const f of res.autoGrant) owned.add(f.uuid ?? '');
 
 		const offeredGroups: Record<string, OfferedGroup> = {};
 
@@ -279,7 +279,7 @@ export async function simulateProgression(
 				options: sel.features.map((f) => f.name),
 			};
 			for (let i = 0; i < sel.selectionCount && i < sel.features.length; i++) {
-				owned.add(sel.features[i].uuid);
+				owned.add(sel.features[i].uuid ?? '');
 			}
 		}
 
@@ -290,7 +290,7 @@ export async function simulateProgression(
 		const optionFeatureNames = res.optionFeatures.map((f) => f.name);
 		const offeredOptions: OfferedOption[] = [];
 		for (const optFeature of res.optionFeatures) {
-			owned.add(optFeature.uuid);
+			owned.add(optFeature.uuid ?? '');
 			const applicable = (optFeature.system.levelUpOptions ?? []).filter(
 				(opt: LevelUpOption) => !opt.applyAtLevels?.length || opt.applyAtLevels.includes(level),
 			);

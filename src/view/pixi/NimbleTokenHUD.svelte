@@ -1,4 +1,5 @@
 <script>
+	import { CONDITIONS_CHANGED_HOOK } from '../../settings/customConditionSettings.js';
 	import localize from '../../utils/localize.js';
 
 	const { HUD } = $props();
@@ -35,10 +36,27 @@
 		await HUD.actor.deleteEmbeddedDocuments('ActiveEffect', removals);
 	}
 
-	const statusEffects = CONFIG.statusEffects;
+	// configureStatusEffects() rebuilds CONFIG.statusEffects in place, so the array identity never
+	// changes and this grid has nothing to invalidate. The hook is what tells it a GM edited the
+	// custom conditions while the HUD was open.
+	let conditionsVersion = $state(0);
+
+	const statusEffects = $derived.by(() => {
+		void conditionsVersion;
+		return [...CONFIG.statusEffects];
+	});
+
 	const conditionsMetadata = $derived(HUD?.actor?.conditionsMetadata);
 	const activeStatuses = $derived(conditionsMetadata?.active ?? new Set());
 	const overlayStatuses = $derived(conditionsMetadata?.overlay ?? new Set());
+
+	$effect(() => {
+		const conditionsHook = Hooks.on(CONDITIONS_CHANGED_HOOK, () => {
+			conditionsVersion += 1;
+		});
+
+		return () => Hooks.off(CONDITIONS_CHANGED_HOOK, conditionsHook);
+	});
 </script>
 
 <div class="status-effects-container">

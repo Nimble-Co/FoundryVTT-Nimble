@@ -1,3 +1,5 @@
+import type { ActivationCost } from './formatActivationCostLabel.js';
+
 /**
  * Utilities for building and querying a spell index.
  * Used during character creation to quickly find spells by school and tier.
@@ -14,8 +16,23 @@ export interface SpellIndexEntry {
 	school: string;
 	tier: number;
 	isUtility: boolean;
+	/** Indexed so a list can show the cast time without loading every document. */
+	activationCost?: ActivationCost;
+	/**
+	 * Only meaningful when the index was built with `includeSecretSpells`. Without
+	 * that opt-in, no secret spell is indexed at all.
+	 */
+	isSecret?: boolean;
 	/** Class restrictions - empty array means available to all classes */
 	classes: string[];
+}
+
+export interface BuildSpellIndexOptions {
+	/**
+	 * Defaults to false, since secret spells are never granted during character
+	 * creation. Only the GM-facing scroll picker opts in.
+	 */
+	includeSecretSpells?: boolean;
 }
 
 /**
@@ -37,6 +54,7 @@ interface SpellPackIndexEntry {
 		school?: string;
 		tier?: number;
 		classes?: string[];
+		activation?: { cost?: ActivationCost };
 		properties?: {
 			selected?: string[];
 		};
@@ -48,7 +66,8 @@ interface SpellPackIndexEntry {
  * Call this when opening the character creator, then use getSpellsFromIndex
  * for instant lookups.
  */
-export async function buildSpellIndex(): Promise<SpellIndex> {
+export async function buildSpellIndex(options: BuildSpellIndexOptions = {}): Promise<SpellIndex> {
+	const includeSecretSpells = options.includeSecretSpells ?? false;
 	const index: SpellIndex = new Map();
 
 	// Track seen UUIDs to avoid duplicates.
@@ -87,14 +106,15 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			school?: string;
 			tier?: number;
 			classes?: string[];
+			activation?: { cost?: ActivationCost };
 			properties?: { selected?: string[] };
 		};
 		if (!system.school) continue;
 
 		const selectedProperties = system.properties?.selected ?? [];
 
-		// Skip secret spells - they should never be granted during character creation
-		if (selectedProperties.includes('secretSpell')) continue;
+		const isSecret = selectedProperties.includes('secretSpell');
+		if (isSecret && !includeSecretSpells) continue;
 
 		const isUtility = selectedProperties.includes('utilitySpell');
 
@@ -105,6 +125,8 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			school: system.school,
 			tier: system.tier ?? 0,
 			isUtility,
+			isSecret,
+			activationCost: system.activation?.cost ?? {},
 			classes: system.classes ?? [],
 		});
 
@@ -123,13 +145,13 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		'system.school',
 		'system.tier',
 		'system.classes',
+		'system.activation.cost',
 		'system.properties.selected',
 	] as string[];
 
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
 
-		// @ts-expect-error - Foundry types don't include custom index fields, but the API accepts them
 		const packIndex = await pack.getIndex({ fields: indexFields });
 		for (const indexEntry of packIndex) {
 			const packEntry = indexEntry as SpellPackIndexEntry;
@@ -143,8 +165,8 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 
 			const selectedProperties = system.properties?.selected ?? [];
 
-			// Skip secret spells - they should never be granted during character creation
-			if (selectedProperties.includes('secretSpell')) continue;
+			const isSecret = selectedProperties.includes('secretSpell');
+			if (isSecret && !includeSecretSpells) continue;
 
 			const isUtility = selectedProperties.includes('utilitySpell');
 
@@ -155,6 +177,8 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 				school: system.school,
 				tier: system.tier ?? 0,
 				isUtility,
+				isSecret,
+				activationCost: system.activation?.cost ?? {},
 				classes: system.classes ?? [],
 			});
 		}

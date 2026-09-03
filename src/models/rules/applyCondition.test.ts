@@ -108,7 +108,7 @@ function createApplyConditionRule(
 	rule.label = config.label ?? 'Test Apply Condition';
 
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0 }),
 		configurable: true,
 	});
@@ -171,8 +171,16 @@ describe('ApplyConditionRule', () => {
 
 		it('declares choices on the condition field (driven by CONFIG.NIMBLE.conditions)', () => {
 			const schema = ApplyConditionRule.defineSchema();
-			const condition = schema.condition as unknown as { choices: () => string[] };
+			const condition = schema.condition as unknown as { choices: () => unknown };
 			expect(typeof condition.choices).toBe('function');
+		});
+
+		it('returns the id-to-label object, so the select shows names rather than raw ids', () => {
+			// SchemaFieldRenderer maps an array of ids to [id, id], which renders `soul_burned`.
+			const schema = ApplyConditionRule.defineSchema();
+			const condition = schema.condition as unknown as { choices: () => Record<string, string> };
+
+			expect(condition.choices()).toBe(CONFIG.NIMBLE.conditions);
 		});
 	});
 

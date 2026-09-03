@@ -36,7 +36,7 @@
 			"template": {
 				"length": 1,
 				"radius": 1,
-				"shape": "square",
+				"shape": "",
 				"width": 1
 			}
 		},

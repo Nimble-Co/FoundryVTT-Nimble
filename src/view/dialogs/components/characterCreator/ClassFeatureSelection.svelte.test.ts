@@ -17,13 +17,15 @@ type HarnessFactory = (
 	setSelectedFeatures: (features: Map<string, NimbleFeatureItem[]>) => void,
 ) => { handleFeatureSelect: (groupName: string, feature: NimbleFeatureItem) => void };
 
-function createFeatureItem(uuid: string, name: string): NimbleFeatureItem {
+// The UUID stays non-null in the return type: these copies stand in for stored documents, and
+// the groups below key on the exact UUID handed in here.
+function createFeatureItem(uuid: string, name: string): NimbleFeatureItem & { uuid: string } {
 	return {
 		uuid,
 		name,
 		img: 'icons/svg/item-bag.svg',
 		system: { description: '' },
-	} as NimbleFeatureItem;
+	} as NimbleFeatureItem & { uuid: string };
 }
 
 function createResult(groups: Array<[string, SelectionGroup]>): ClassFeatureResult {

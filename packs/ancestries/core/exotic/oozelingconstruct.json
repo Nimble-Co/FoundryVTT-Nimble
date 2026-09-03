@@ -12,6 +12,10 @@
 			"small",
 			"medium"
 		],
+		"variants": [
+			"Oozeling",
+			"Construct"
+		],
 		"defaultBonus": "Compendium.nimble.nimble-ancestry-bonuses.Item.K1sViOESSiQ6VEeV"
 	},
 	"effects": [],

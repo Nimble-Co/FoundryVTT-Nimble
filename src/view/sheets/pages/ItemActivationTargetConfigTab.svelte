@@ -3,7 +3,10 @@
 	import TemplateConfig from '../components/TemplateConfig.svelte';
 
 	async function toggleTemplateShapeOption(selectedShape) {
-		await document.update({ 'system.activation.template.shape': selectedShape });
+		const currentShape = document.system?.activation?.template?.shape;
+		await document.update({
+			'system.activation.template.shape': currentShape === selectedShape ? '' : selectedShape,
+		});
 	}
 
 	let document = getContext('document');

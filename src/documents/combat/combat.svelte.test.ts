@@ -94,7 +94,7 @@ describe('NimbleCombat', () => {
 						create: ReturnType<typeof vi.fn>;
 					};
 					getSpeaker: ReturnType<typeof vi.fn>;
-					applyRollMode: ReturnType<typeof vi.fn>;
+					applyMode: ReturnType<typeof vi.fn>;
 				};
 			}
 		).ChatMessage = {
@@ -103,7 +103,7 @@ describe('NimbleCombat', () => {
 				create: vi.fn().mockResolvedValue([{ id: 'chat-message' }]),
 			},
 			getSpeaker: vi.fn().mockReturnValue({}),
-			applyRollMode: vi.fn(),
+			applyMode: vi.fn(),
 		};
 		(
 			globalThis as unknown as {
@@ -1392,6 +1392,31 @@ describe('NimbleCombat', () => {
 
 			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
 		});
+
+		it('neither emits nor claims for skipped turn-start dispatches', async () => {
+			// Foundry dispatches turn events for every turn in the advanced interval; jumped-over
+			// combatants arrive with `skipped: true`, must not emit, and must not consume the
+			// claim — the same combatant's real dispatch afterwards still emits.
+			const combatId = 'combat-start-turn-skipped';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat._onStartTurn(incomingHero, {
+				round: 1,
+				turn: 1,
+				skipped: true,
+			} as Combat.TurnEventContext);
+
+			expect(turnStartCalls()).toEqual([]);
+
+			await combat._onStartTurn(incomingHero, {
+				round: 2,
+				turn: 1,
+				skipped: false,
+			} as Combat.TurnEventContext);
+
+			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
+		});
 	});
 
 	it('restores all alive minion-group member actions when rewinding to the group turn', async () => {
@@ -2343,11 +2368,12 @@ describe('NimbleCombat', () => {
 		expect(actor.resolveInitiativeRollData).toHaveBeenCalledTimes(1);
 		expect(combatant.getInitiativeRoll).toHaveBeenCalledWith('2d20kh + 5');
 		expect(combatant.initiative).toBe(18);
+		expect(initiativeRoll.toMessage).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({ messageMode: 'blind', create: false }),
+		);
 		expect(chatMessageCreate).toHaveBeenCalledWith([
-			expect.objectContaining({
-				id: 'initiative-chat-data',
-				rollMode: 'blindroll',
-			}),
+			expect.objectContaining({ id: 'initiative-chat-data' }),
 		]);
 	});
 
@@ -3731,6 +3757,34 @@ describe('NimbleCombat', () => {
 		expect(defendingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
+	it('does not refill or fire the end-of-turn hook for skipped turn-end dispatches', async () => {
+		// Foundry dispatches turn events for every turn in the advanced interval; a combatant
+		// whose turn was jumped over (`skipped: true`) never acted, so no refill and no hook.
+		const combatant = createMockCombatant({
+			id: 'character-skipped-turn',
+			type: 'character',
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+		});
+		const combat = new NimbleCombat({
+			id: 'combat-end-turn-skipped',
+			combatants: createCombatantsCollectionFixture([combatant]),
+		} as unknown as Combat.CreateData);
+
+		await combat._onEndTurn(combatant, {
+			round: 1,
+			turn: 0,
+			skipped: true,
+		} as Combat.TurnEventContext);
+
+		expect(combatant.update).not.toHaveBeenCalled();
+		const turnEndCalls = (
+			globals().Hooks.call as unknown as ReturnType<typeof vi.fn>
+		).mock.calls.filter(([hook]) => hook === 'nimbleCombatTurnEnd');
+		expect(turnEndCalls).toEqual([]);
+	});
+
 	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {
 		const combatId = 'combat-ncs-round-boundary';
 		const minionActorA = {
@@ -4158,7 +4212,7 @@ describe('NimbleCombat', () => {
 				ChatMessage: {
 					create: ReturnType<typeof vi.fn>;
 					getSpeaker: ReturnType<typeof vi.fn>;
-					applyRollMode: ReturnType<typeof vi.fn>;
+					applyMode: ReturnType<typeof vi.fn>;
 				};
 			}
 		).ChatMessage.create = chatCreate;
@@ -4169,9 +4223,9 @@ describe('NimbleCombat', () => {
 		).ChatMessage.getSpeaker = vi.fn().mockReturnValue({});
 		(
 			globalThis as unknown as {
-				ChatMessage: { applyRollMode: ReturnType<typeof vi.fn> };
+				ChatMessage: { applyMode: ReturnType<typeof vi.fn> };
 			}
-		).ChatMessage.applyRollMode = vi.fn();
+		).ChatMessage.applyMode = vi.fn();
 		(
 			globalThis as unknown as {
 				CONST: { CHAT_MESSAGE_STYLES: { OTHER: number } };

@@ -78,6 +78,17 @@
 			"specialBoonAvailable": "Special Boon Available",
 			"boon": "Boon"
 		},
+		"aoe": {
+			"noScene": "An active scene is required to place an area of effect.",
+			"place": {
+				"circle": "Place {size}-square circle",
+				"cone": "Place {size}-square cone",
+				"emanation": "Place {size}-square emanation",
+				"line": "Place {size}-square line",
+				"square": "Place {size}-square square"
+			},
+			"placementFailed": "Could not place the area of effect. See the console for details."
+		},
 		"chat": {
 			"applyConditionHint": "Left click to apply this condition to this card's targets.",
 			"applyConditionToTargets": "Apply condition to this card's targets",
@@ -89,6 +100,8 @@
 			"undo": "Undo",
 			"noTargetsSelected": "No targets selected",
 			"noDamageToApply": "No damage to apply.",
+			"rollDamage": "Roll Damage",
+			"rollDamageFailed": "Could not roll this damage.",
 			"targetSkippedZeroDamage": "Ignored {tokenName} because the result is 0.",
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
@@ -162,9 +175,11 @@
 			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
-			"enhancedSaveHeader": "Step 2d. Enhanced Save",
+			"stepHeader": "Step 2{step}. {label}",
+			"variant": "Ancestry Variant",
+			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is — they are the same in play, and your sheet takes the name you pick.",
+			"editVariant": "Edit Ancestry Variant Selection",
 			"sizeCategory": "Size Category",
-			"sizeCategoryHeader": "Step 2c. Size Category",
 			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
 			"sizeGrantedBy": "set by {ancestry}",
 			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
@@ -208,7 +223,16 @@
 			"sizeOptionsRestored": "An ancestry needs at least one size — restored to {sizes}.",
 			"sizeSummaryAll": "Players will choose any size, {first} through {last}.",
 			"sizeSummaryChoice": "Players will choose {sizes} during character creation.",
-			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation."
+			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation.",
+			"variants": "Variant Names",
+			"variantsAdd": "Add",
+			"variantsDuplicate": "{variant} is already listed.",
+			"variantsHint": "Name each kind of people this ancestry covers, such as Dryad and Shroomling. Two or more becomes a player choice.",
+			"variantsPlaceholder": "Add a variant name…",
+			"variantsRemove": "Remove {variant}",
+			"variantsSummaryChoice": "Players will choose {variants} during character creation, and their ancestry takes that name.",
+			"variantsSummaryNone": "All characters will be {ancestry}. No variant step during character creation.",
+			"variantsSummaryOne": "One name is the ancestry's own. Add another for players to have a choice."
 		},
 		"backgroundOptionsSelection": {
 			"header": "Step 3b. Choose Heritage Ancestry",
@@ -226,6 +250,11 @@
 			"granted": "Granted",
 			"choose": "Choose {count}",
 			"confirmSelection": "Confirm Bonus Language Selections"
+		},
+		"rollMode": {
+			"advantage": "Adv ×{count}",
+			"disadvantage": "Dis ×{count}",
+			"normal": "Normal"
 		},
 		"saveConfig": {
 			"abilityModifier": "Ability Modifier",
@@ -389,6 +418,10 @@
 			"slashing": "Slashing",
 			"thunder": "Thunder",
 			"unknown": "Unknown Type"
+		},
+		"diceSoNice": {
+			"category": "Nimble",
+			"primaryDieColorset": "Nimble Primary Die"
 		},
 		"durations": {
 			"action": "Action",
@@ -594,6 +627,14 @@
 			"confirmLevelDown": "Confirm Level Down",
 			"levelUpInProgress": "Cannot revert level while a level up is in progress."
 		},
+		"levelCorrectionDialog": {
+			"title": "Level Correction",
+			"hint": "This character is missing choices from an earlier level. Make them here to bring the sheet up to date.",
+			"gapHeading": "Level {level}",
+			"nothingMissing": "This character is not missing any level choices.",
+			"sheetWarning": "Missing level choices",
+			"sheetWarningTooltip": "Missing choices from level {level}. Click to correct."
+		},
 		"skillPointAssignment": {
 			"decrementSkillPoints": "Decrement Skill Points",
 			"incrementSkillPoints": "Increment Skill Points",
@@ -773,6 +814,7 @@
 			"poolGainMessage": "Pool Gain Message",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
+			"situationalRollMode": "Situational Roll Mode",
 			"skillBonus": "Skill Bonus",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
@@ -1416,6 +1458,29 @@
 			},
 			"unarmedDamage": {
 				"description": "Override the actor’s unarmed-strike damage formula."
+			},
+			"situationalRollMode": {
+				"description": "Offer an advantage or disadvantage the roller opts into when the situation calls for it, for circumstances the system cannot detect on its own (e.g. “advantage against fear”). Nothing applies automatically: the check roll dialog lists the option and folds it into that roll only when checked. Use the rule’s label to name the situation, and its predicate for state the system already knows. Attack rolls are covered by Conditional Bonus instead.",
+				"value": {
+					"label": "Roll mode value",
+					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
+				},
+				"checkType": {
+					"label": "Offer on",
+					"hint": "Which kind of roll the option appears on."
+				},
+				"saves": {
+					"label": "Apply to saves",
+					"hint": "Pick one or more saves. Use \"all\" to offer the option on every save."
+				},
+				"abilities": {
+					"label": "Apply to abilities",
+					"hint": "Pick one or more abilities. Use \"all\" to offer the option on every ability check."
+				},
+				"skills": {
+					"label": "Apply to skills",
+					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
 			}
 		},
 		"charges": {
@@ -1983,7 +2048,7 @@
 					"createOpening": {
 						"title": "Create an Opening",
 						"chatTitle": "Assess: Create an Opening",
-						"description": "Your next attack against the target gains +1 to the Primary Die this round.",
+						"description": "Change the next Primary Die rolled against a target this round 1 face higher (yes, this means that attack cannot miss and is more likely to crit as well).",
 						"success": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> and create an opening. Their next attack against <strong>{target}</strong> gains <strong>+1 to the Primary Die</strong>.</p>",
 						"failure": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> but failed to create an opening.</p>"
 					},
@@ -2366,6 +2431,8 @@
 			"canMiss": "Can Miss",
 			"canCrit": "Can Crit",
 			"noAdditionalEffects": "No additional effects",
+			"deferredRoll": "Roll Damage From Card",
+			"deferredRollHint": "Leave this damage unrolled when the card is posted and show a Roll Damage button instead. For damage that triggers later than the activation itself.",
 			"ignoreArmor": "Ignore Armor",
 			"onlyDamageHostile": "Only Damage Hostile Actors",
 			"rollFormula": "Roll Formula",
@@ -2706,6 +2773,32 @@
 				"name": "Auto-Add Character To Combat On Initiative Roll",
 				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat."
 			},
+			"diceSoNiceMenu": {
+				"name": "3D Dice",
+				"manageButton": "Configure 3D Dice",
+				"hint": "Choose how the primary die of your damage rolls looks in Dice So Nice. Each player sets this for themselves.",
+				"title": "3D Dice Settings",
+				"intro": "These settings apply to the rolls you make, and every player sees them on their own screen.",
+				"sectionPrimaryDie": "Primary Die",
+				"preview": "Preview",
+				"moduleMissing": "Install and enable the Dice So Nice module to use these settings.",
+				"reset": "Reset Colors",
+				"save": "Save Changes",
+				"saved": "3D dice settings saved.",
+				"saveError": "Could not save the 3D dice settings. See the console for details."
+			},
+			"dsnPrimaryDieStyleEnabled": {
+				"name": "Distinct Primary Die",
+				"hint": "Render the primary die of your damage rolls with a distinct appearance so it stands out from the rest of the dice."
+			},
+			"dsnPrimaryDieColor": {
+				"name": "Primary Die Color",
+				"hint": "Body color for the primary die of your damage rolls."
+			},
+			"dsnPrimaryDieLabelColor": {
+				"name": "Primary Die Number Color",
+				"hint": "Number color for the primary die of your damage rolls."
+			},
 			"autoTrackTokenAdjacency": {
 				"name": "Auto-Track Token Adjacency",
 				"hint": "When enabled, the system automatically tracks the adjacency status of combatants."
@@ -2778,6 +2871,49 @@
 				"errorEmptyKey": "Key is required.",
 				"errorReservedKey": "That key is reserved by a built-in school.",
 				"errorDuplicateKey": "Duplicate key."
+			},
+			"customConditions": {
+				"name": "Custom Conditions",
+				"hint": "Add your own conditions alongside the built-in ones. They appear in the token HUD, condition lists, and anywhere a condition can be applied.",
+				"title": "Custom Conditions",
+				"manageButton": "Manage Conditions",
+				"intro": "Create conditions for your world — useful for statuses from content the system does not ship with. The name is what players see; the id is stored on each effect and is filled in for you. Pick an icon from your Foundry files.",
+				"empty": "No custom conditions yet. Add one to get started.",
+				"columnId": "Id",
+				"columnName": "Name",
+				"columnDescription": "Description",
+				"idPlaceholder": "e.g. hexed",
+				"namePlaceholder": "e.g. Hexed",
+				"descriptionPlaceholder": "What this condition does. Shown in condition tooltips.",
+				"chooseIcon": "Choose icon",
+				"addCondition": "Add Condition",
+				"remove": "Remove condition",
+				"removeDialog": {
+					"windowTitle": "Remove Condition",
+					"title": "Remove \"{name}\"?",
+					"lede": "This condition is still in use. Removing it from the list does not remove it from anything below unless you ask.",
+					"onCreatures": "On creatures",
+					"inItems": "In items",
+					"effectCount": "{count} effect(s)",
+					"itemCount": "{count} item(s)",
+					"deferredNote": "Nothing changes until you save the conditions list.",
+					"cancel": "Cancel",
+					"keepReferences": "Remove Only",
+					"keepReferencesHint": "Remove the condition and leave the effects and items above untouched. They will reference an id that no longer resolves.",
+					"cleanReferences": "Remove Everywhere",
+					"cleanReferencesHint": "Remove the condition, delete the effects above, and strip it from the items above.",
+					"cleanedUp": "Removed {name} from {count} document(s).",
+					"cleanupFailed": "Could not finish removing {name} everywhere. See the console for details."
+				},
+				"save": "Save Conditions",
+				"saved": "Custom conditions saved.",
+				"saveFailed": "Could not save the custom conditions. See the console for details.",
+				"errorEmptyId": "Id is required.",
+				"errorReservedId": "That id is reserved by a built-in condition.",
+				"errorDuplicateId": "Duplicate id.",
+				"errorInvalidId": "\"{id}\" cannot be used: ids that are all digits, or that match a JavaScript array property such as \"length\" or \"find\", would corrupt the token HUD. Try a longer or more specific id.",
+				"idLocked": "Ids are locked once saved: effects and rules store this value.",
+				"iconPickerFailed": "Could not open the file picker. See the console for details."
 			},
 			"automationMenu": {
 				"name": "Automation",
@@ -2882,6 +3018,10 @@
 			"combatTrackerCurrentTurnEdgeCrawlerSize": {
 				"name": "Combat Tracker Edge Crawler Size",
 				"hint": "Adjust capsule size for the active combatant edge crawler effect"
+			},
+			"includeSpellDescriptionOnScrolls": {
+				"name": "Include Spell Description On Scrolls",
+				"hint": "Copies the selected spell's own description onto the scroll item, beneath the scroll rules. Turning this off does not affect whether the scroll can be cast."
 			}
 		},
 		"diceTestbench": {
@@ -3216,6 +3356,69 @@
 				"spells": "Spells",
 				"inventory": "Inventory",
 				"character": "Character"
+			}
+		},
+		"spellScroll": {
+			"name": "Scroll of {spell}",
+			"unknownSpell": "Unknown Spell",
+			"rules": {
+				"singleUse": "Single use.",
+				"noManaCost": "No mana cost.",
+				"noMagicalAbility": "No magical ability needed. Anyone who can read it can use it.",
+				"noUpcast": "No upcasting. Upcasting spends extra mana, and a scroll spends none.",
+				"arcanaCheck": "DC 10 Arcana check to cast, unless you already know a spell of this school."
+			},
+			"dialog": {
+				"chooserTitle": "{name}: Add {spell}",
+				"pickerTitle": "{name}: {scroll}",
+				"pickerPrompt": "Which spell is inscribed on it? ({tier})",
+				"searchPlaceholder": "Search {count} spells",
+				"filterAll": "All",
+				"addToSpellList": "Add to spell list",
+				"addToSpellListHint": "Learn it. {mana} mana to cast (the spell's tier).",
+				"addToSpellListHintCantrip": "Learn it. Cantrips are free to cast.",
+				"addAsScroll": "Add as a spell scroll",
+				"addAsScrollHint": "Single use. No mana, no magical ability needed.",
+				"noManaWarning": "{name} has no mana, so this spell would sit on the list uncastable.",
+				"labelTier": "Tier",
+				"labelValue": "Value",
+				"labelCasting": "Casting",
+				"labelArcana": "Arcana",
+				"labelUpcasting": "Upcasting",
+				"labelInventory": "Inventory",
+				"upcastUpToTier": "Up to {tier} · your highest unlocked",
+				"upcastNone": "Not possible. You haven't unlocked any spell tiers yet.",
+				"upcastFixed": "Not possible. It's fixed at {tier}.",
+				"arcanaNotNeeded": "No check needed. You already know {school} spells.",
+				"arcanaRequired": "DC 10. {name} doesn't know any {school} spells.",
+				"sharesSlot": "Shares a slot with small items",
+				"secretBadge": "Secret",
+				"inscribe": "Inscribe and add to inventory",
+				"noCandidates": "No spells of this tier are available to inscribe. ({tier})",
+				"submitAddToSpellList": "Add to spell list",
+				"submitAddToInventory": "Add to inventory",
+				"toggleDetails": "Show details for {spell}"
+			},
+			"chat": {
+				"arcanaSuccess": "Arcana check passed. The scroll takes effect.",
+				"arcanaFailure": "Arcana check failed. The scroll is wasted."
+			},
+			"missingSchool": "{spell} has no spell school, so it cannot be inscribed onto a scroll.",
+			"confirmUse": "Use {scroll}? This will consume the scroll.",
+			"arcanaCheckHint": "You know no {school} spells, so reading this scroll needs a DC 10 Arcana check. On a failure the spell does not take effect and the scroll is wasted."
+		},
+		"rollCheckTypes": {
+			"abilityCheck": "Ability Check",
+			"savingThrow": "Saving Throw",
+			"skillCheck": "Skill Check",
+			"initiative": "Initiative"
+		},
+		"checkRollDialog": {
+			"situationalRollMode": {
+				"heading": "Situational Modifiers",
+				"advantage": "Advantage × {count}",
+				"disadvantage": "Disadvantage × {count}",
+				"noEffect": "No effect"
 			}
 		}
 	}

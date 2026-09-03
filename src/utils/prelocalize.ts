@@ -1,7 +1,17 @@
 import localize from './localize.js';
 
+// Strings with `{placeholder}` tokens must stay as localization keys: they are
+// consumed via `game.i18n.format(key, data)`, and V14's format only
+// interpolates when it receives a real translation key (it returns an already-
+// localized string verbatim, leaving the raw `{placeholder}` visible).
+const PLACEHOLDER_PATTERN = /\{[^}]+\}/;
+
 export function prelocalize(input: unknown): unknown {
-	if (typeof input === 'string') return localize(input);
+	if (typeof input === 'string') {
+		const localized = localize(input);
+		// Keep the key so `format(key, data)` can interpolate the placeholders.
+		return PLACEHOLDER_PATTERN.test(localized) ? input : localized;
+	}
 
 	if (Array.isArray(input)) return input.map(prelocalize);
 

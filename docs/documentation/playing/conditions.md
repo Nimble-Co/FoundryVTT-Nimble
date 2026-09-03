@@ -4,7 +4,7 @@ title: "Conditions"
 
 # Conditions
 
-Conditions are status markers (Prone, Frightened, Grappled, and friends) that sit on a character or monster and show as icons on its token. The system ships with the full set of Nimble conditions; for what each one does, see the [Conditions Reference](../reference/conditions.md) (and the Nimble rulebook for the underlying rules).
+Conditions are status markers (Prone, Frightened, Grappled, and friends) that sit on a character or monster and show as icons on its token. The system ships with the full set of Nimble conditions; for what each one does, see the [Conditions Reference](../reference/conditions.md) (and the Nimble rulebook for the underlying rules). GMs can also [add conditions of their own](#custom-conditions).
 
 ## Three ways to apply and remove them
 
@@ -22,6 +22,16 @@ Some conditions come bundled together, and the system tracks the relationships f
 - **Applied together.** Petrified automatically carries Incapacitated with it.
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.
+
+## Custom conditions
+
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, and an icon, and from then on it behaves like any other condition in the token panel, the Conditions tab, and the Rules Builder's condition lists.
+
+Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
+
+Removing a custom condition that something still uses opens a confirmation listing what would be left behind: the creatures currently carrying it, and the items whose rules or activation effects name it. From there you can **Remove Everywhere**, which deletes those effects and strips the condition out of those items, or **Remove Only**, which drops the definition and leaves the references in place. Either way nothing changes until you save the conditions list, so closing the editor cancels it.
+
+**Remove Only** leaves markers and rules pointing at an id nothing resolves. Rules in that state stop running and say why on their card in the Rules Builder; leftover markers drop out of the Conditions tab's condition list, so remove them from the same tab's Temporary Effects or Passive Effects section, or from the token conditions panel on the canvas. Items inside compendiums are not searched or rewritten, since packs can be locked or owned by a module.
 
 ## Condition immunity
 

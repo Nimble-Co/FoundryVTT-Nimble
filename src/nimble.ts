@@ -1,3 +1,4 @@
+import registerDiceSoNiceIntegration from './dice/diceSoNiceIntegration.js';
 import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import registerBabeleHooks from './hooks/babeleInit.js';
@@ -23,6 +24,7 @@ import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnT
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
+import registerManaSeedingHooks from './hooks/manaSeeding.js';
 import registerMinionGroupTokenActions from './hooks/minionGroupTokenActions.js';
 import registerMinionGroupTokenBadges from './hooks/minionGroupTokenBadges.js';
 import { registerPoolGainMessageHooks } from './hooks/poolGainMessage.js';
@@ -33,6 +35,7 @@ import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
+import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
@@ -82,6 +85,10 @@ Hooks.once('init', init);
 Hooks.once('setup', setup);
 Hooks.once('ready', ready);
 Hooks.once('i18nInit', i18nInit);
+// Must stay after `i18nInit`, which replaces the condition dictionaries with localized copies, and
+// cannot move to `setup`: documents initialize in between, and a rule naming a custom condition
+// would fail its `choices` validation and be dropped from its RulesManager without an error.
+Hooks.once('i18nInit', registerCustomConditionSettings);
 
 Hooks.on('canvasInit', canvasInit);
 Hooks.on('renderChatMessageHTML', renderChatMessageHTML);
@@ -122,6 +129,7 @@ registerCombatantHealthStateSync();
 registerDyingActionLimitSync();
 registerPendingActionDeltaFold();
 registerChargeSystemHooks();
+registerManaSeedingHooks();
 registerActionEconomySystemHooks();
 registerDicePoolSystemHooks();
 registerWoundTriggerHooks();
@@ -140,6 +148,7 @@ registerTokenCombatantSync();
 registerRuleEventDispatch();
 registerBabeleHooks();
 registerBabeleInstallNotice();
+registerDiceSoNiceIntegration();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

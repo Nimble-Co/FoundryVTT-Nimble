@@ -1,6 +1,6 @@
 {
 	"folder": null,
-	"name": "Spell Scroll - Tier 8",
+	"name": "Spell Scroll, Tier 8",
 	"type": "object",
 	"img": "icons/sundries/scrolls/scroll-bound-black-tan.webp",
 	"system": {
@@ -42,8 +42,8 @@
 		"objectType": "consumable",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
-		"slotsRequired": 1,
+		"objectSizeType": "smallSized",
+		"slotsRequired": 0,
 		"stackSize": 2,
 		"properties": {
 			"range": {

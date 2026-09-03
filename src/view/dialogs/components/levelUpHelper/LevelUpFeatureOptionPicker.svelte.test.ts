@@ -1,9 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { render, waitFor } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import FeatureOptionPickerStateHarness from '../../../../../tests/harnesses/FeatureOptionPickerStateHarness.svelte';
+// @ts-expect-error - Svelte component default export is provided by the Svelte compiler
+import LevelUpFeatureOptionPicker from './LevelUpFeatureOptionPicker.svelte';
 
 interface LevelUpOptionInput {
 	id: string;
@@ -179,5 +184,110 @@ describe('createFeatureOptionPickerState', () => {
 
 		await waitFor(() => expect(getByTestId('loaded-count').textContent).toBe('2'));
 		expect(onSubItemSelect).not.toHaveBeenCalled();
+	});
+});
+
+/**
+ * Guards the Shepherd's level-5 "Choose 2 Sacred Graces" against a silent regression.
+ *
+ * The class-progression suites simulate the level-up flow, so they can agree with the
+ * compendium while the dialog still asks for one pick. This drives the REAL picker state
+ * with the REAL compendium document, which is the pair that decides what a player sees.
+ */
+describe('createFeatureOptionPickerState — Shepherd Sacred Graces (real compendium data)', () => {
+	const SACRED_GRACES_PATH = join(
+		process.cwd(),
+		'packs/classFeatures/core/shepherd/shepherd-progression/sacred-graces.json',
+	);
+
+	function loadSacredGraces(): NimbleFeatureItem {
+		const doc = JSON.parse(readFileSync(SACRED_GRACES_PATH, 'utf-8'));
+		return { name: doc.name, uuid: `Item.${doc._id}`, system: doc.system } as NimbleFeatureItem;
+	}
+
+	async function renderAtLevel(level: number) {
+		const feature = loadSacredGraces();
+		const applicable = feature.system.levelUpOptions.filter((opt) =>
+			opt.applyAtLevels.includes(level),
+		);
+		expect(applicable, `exactly one option must apply at level ${level}`).toHaveLength(1);
+
+		const { getByTestId } = render(FeatureOptionPickerStateHarness, {
+			props: {
+				feature,
+				levelingTo: level,
+				selectedOptionId: applicable[0].id,
+				onSelect: vi.fn(),
+				onSubItemSelect: vi.fn(),
+			},
+		});
+
+		await waitFor(() => expect(getByTestId('option-count').textContent).toBe('1'));
+		return getByTestId;
+	}
+
+	it('asks for 2 picks when leveling to 5', async () => {
+		const getByTestId = await renderAtLevel(5);
+		expect(getByTestId('sub-selection-count').textContent).toBe('2');
+	});
+
+	for (const level of [9, 13]) {
+		it(`asks for 1 pick when leveling to ${level}`, async () => {
+			const getByTestId = await renderAtLevel(level);
+			expect(getByTestId('sub-selection-count').textContent).toBe('1');
+		});
+	}
+});
+
+/**
+ * The count alone does not tell a player what they are picking; the option's own label does.
+ * The picker only drew the label when the level offered a choice between options, which is
+ * never at the Shepherd's level 5.
+ */
+describe('LevelUpFeatureOptionPicker — option label', () => {
+	it('shows the sole applicable option label instead of the "choose one" hint', () => {
+		const feature = createFeature([
+			{ id: 'sacred-grace-initial', label: 'Choose 2 Sacred Graces', applyAtLevels: [5] },
+			{ id: 'sacred-grace', label: 'Choose a Sacred Grace', applyAtLevels: [9, 13] },
+		]);
+
+		const { getByText, queryByText } = render(LevelUpFeatureOptionPicker, {
+			props: {
+				feature,
+				levelingTo: 5,
+				selectedOptionId: 'sacred-grace-initial',
+				selectedSubItemUuids: [],
+				ownedItemUuids: new Set<string>(),
+				classFeatureIndex: null,
+				onSelect: vi.fn(),
+				onSubItemSelect: vi.fn(),
+			},
+		});
+
+		expect(getByText('Choose 2 Sacred Graces')).toBeTruthy();
+		expect(queryByText('(Choose one)')).toBeNull();
+	});
+
+	it('keeps the "choose one" hint when the level offers alternatives', () => {
+		const feature = createFeature([
+			{ id: 'pool-pick', label: 'Choose a Combat Ability', applyAtLevels: [6] },
+			{ id: 'flat-bonus', label: '+1 Max Combat Die', applyAtLevels: [6] },
+		]);
+
+		const { getByText } = render(LevelUpFeatureOptionPicker, {
+			props: {
+				feature,
+				levelingTo: 6,
+				selectedOptionId: null,
+				selectedSubItemUuids: [],
+				ownedItemUuids: new Set<string>(),
+				classFeatureIndex: null,
+				onSelect: vi.fn(),
+				onSubItemSelect: vi.fn(),
+			},
+		});
+
+		expect(getByText('(Choose one)')).toBeTruthy();
+		expect(getByText('Choose a Combat Ability')).toBeTruthy();
 	});
 });

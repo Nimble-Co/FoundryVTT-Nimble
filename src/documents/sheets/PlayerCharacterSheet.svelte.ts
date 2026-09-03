@@ -2,6 +2,13 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import createScrollFromSpell from '#utils/createScrollFromSpell.js';
+import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
+import localize from '#utils/localize.js';
+import openSpellScrollDialog, {
+	type ScrollDialogActor,
+} from '#view/dialogs/openSpellScrollDialog.js';
+import { shouldIncludeSpellDescriptionOnScrolls } from '../../settings/spellScrollSettings.js';
 import {
 	getDroppedItemFlashIds,
 	type SheetDropItemFlashState,
@@ -13,6 +20,7 @@ import {
 	type PrimaryTabName,
 } from '../../view/sheets/playerCharacterPrimaryTabConfig.js';
 import type { NimbleCharacter } from '../actor/character.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 type DroppedItemData = {
@@ -91,7 +99,16 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	/**
 	 * Handle drop events on the character sheet
 	 */
-	async _onDropItem(event: DragEvent, data: Record<string, unknown>) {
+	// v14's ActorSheetV2 resolves the drop into an Item before calling
+	// `_onDropItem(event, item: Item)`. Nimble never uses that core dispatch: its Svelte sheet
+	// components (PlayerCharacterInventoryTab.svelte) call this method directly with raw drop *data*,
+	// so the override resolves the Item itself via fromDropData. The signature diverges from the base.
+	// @ts-expect-error TS2416: deliberate divergence from the v14 base signature (see comment above).
+	override async _onDropItem(
+		event: DragEvent,
+		dropArg: Record<string, unknown> | Item.Implementation,
+	) {
+		const data = dropArg as Record<string, unknown>;
 		event.preventDefault();
 		event.stopPropagation();
 
@@ -150,13 +167,122 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			return result;
 		}
 
+		const scrollItems = await this.#resolveSpellScrollDrop(itemData);
+		if (scrollItems === null) return false;
+
 		// Create regular items
-		const result = await this._actor.createEmbeddedDocuments('Item', items);
-		if (Array.isArray(result) && result.length > 0) {
-			this.#requestPrimaryTabForDroppedItems(items);
-			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
-		}
+		const itemsToCreate = scrollItems ?? items;
+		const result = await this._actor.createEmbeddedDocuments(
+			'Item',
+			itemsToCreate as unknown as ReturnType<Item.Implementation['toObject']>[],
+		);
+		this.#announceCreatedItems(itemsToCreate, result);
 		return result;
+	}
+
+	/**
+	 * Routes a dropped spell or scroll blank through the spell scroll dialog. Takes
+	 * one item, since Foundry resolves a drop into a single Item before the sheet
+	 * sees it.
+	 *
+	 * Returns the item data to create in place of the drop, `undefined` when the
+	 * drop is not scroll-related and should proceed untouched, or `null` when the
+	 * player cancelled and nothing should be created.
+	 */
+	async #resolveSpellScrollDrop(
+		item: Record<string, unknown>,
+	): Promise<Array<Record<string, unknown>> | undefined | null> {
+		const actor = this._actor as object as ScrollDialogActor;
+		const includeSpellDescription = shouldIncludeSpellDescriptionOnScrolls();
+
+		const template = getSpellScrollTemplateTier(item);
+		if (template !== null) {
+			const result = await openSpellScrollDialog({
+				mode: 'picker',
+				actor,
+				tier: template,
+				scrollName: String(item.name ?? ''),
+			});
+			if (!result?.spellUuid) return null;
+
+			const spell = await fromUuid(result.spellUuid as Parameters<typeof fromUuid>[0]);
+			if (!spell) return null;
+
+			return [createScrollFromSpell(spell as object, { includeSpellDescription })];
+		}
+
+		if (item.type !== 'spell') return undefined;
+
+		// A spell with no school is broken data. Report it and let the drop carry on
+		// as an ordinary spell rather than inscribing a scroll with no check to make.
+		const { school } = (item.system ?? {}) as { school?: string };
+		if (!school) {
+			ui.notifications?.error(
+				localize('NIMBLE.spellScroll.missingSchool', { spell: String(item.name ?? '') }),
+			);
+			return undefined;
+		}
+
+		const result = await openSpellScrollDialog({ mode: 'chooser', actor, spell: item });
+		if (!result) return null;
+		if (result.destination !== 'scroll') return undefined;
+
+		return [createScrollFromSpell(item as object, { includeSpellDescription })];
+	}
+
+	/**
+	 * Switches to the tab the created items landed on and flashes them.
+	 *
+	 * The tab comes from what was created, not what was dropped, so a spell
+	 * inscribed onto a scroll opens the inventory rather than the spells tab.
+	 *
+	 * A second copy of a `smallSized` object is absorbed into the existing stack by
+	 * `NimbleObjectItem#_preCreate` and creates no document, so that row is flashed
+	 * instead of nothing.
+	 */
+	#announceCreatedItems(requestedItems: Array<Record<string, unknown>>, result: unknown): void {
+		const created = Array.isArray(result) ? result : [];
+
+		if (created.length > 0) {
+			this.#requestPrimaryTabForDroppedItems(created as Array<{ type?: unknown }>);
+			this.#requestDroppedItemFlash(
+				this.#extractDroppedItemIds(created as Array<{ id?: unknown; _id?: unknown }>),
+			);
+			return;
+		}
+
+		const absorbedIds = requestedItems
+			.map((item) => this.#findStackedItemId(item))
+			.filter((itemId): itemId is string => itemId !== null);
+		if (absorbedIds.length === 0) return;
+
+		this.#requestPrimaryTabForDroppedItems(requestedItems as Array<{ type?: unknown }>);
+		this.#requestDroppedItemFlash(absorbedIds);
+	}
+
+	/**
+	 * Id of the existing item this create was stacked into, if any.
+	 *
+	 * Matches the same conditions as `NimbleObjectItem#_preCreate`, including the
+	 * size check on both items. Matching by name alone could flash an unrelated
+	 * same-named object when creation was blocked for another reason.
+	 */
+	#findStackedItemId(item: Record<string, unknown>): string | null {
+		if (item.type !== 'object') return null;
+
+		const { objectSizeType } = (item.system ?? {}) as { objectSizeType?: string };
+		if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(objectSizeType ?? '')) return null;
+
+		const existing = this._actor.items.find(
+			(candidate) =>
+				candidate.type === 'object' &&
+				candidate.name === item.name &&
+				OBJECT_SIZE_TYPES_WITH_QUANTITY.has(
+					(candidate as { system?: { objectSizeType?: string } }).system?.objectSizeType ?? '',
+				),
+		);
+
+		return existing?.id ?? null;
 	}
 
 	async _onDropSubclassCreate(itemData: DroppedItemData | DroppedItemData[]) {

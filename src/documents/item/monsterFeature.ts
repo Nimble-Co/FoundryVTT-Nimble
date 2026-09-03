@@ -2,7 +2,7 @@ import type { NimbleMonsterFeatureData } from '../../models/item/MonsterFeatureD
 
 import { NimbleBaseItem } from './base.svelte.js';
 
-export class NimbleMonsterFeatureItem extends NimbleBaseItem {
+export class NimbleMonsterFeatureItem extends NimbleBaseItem<'monsterFeature'> {
 	declare system: NimbleMonsterFeatureData;
 
 	override async prepareChatCardData(_options) {

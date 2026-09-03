@@ -146,7 +146,7 @@ export function buildNcsGroupAttackChatData(params: {
 	unsupportedWarnings: string[];
 	speakerCombatant: Combatant.Implementation | undefined;
 	speakerAlias: string;
-}): Record<string, unknown> & { rollMode: string | null } {
+}): Record<string, unknown> {
 	const speakerImage = resolveGroupAttackSpeakerImage(params.speakerCombatant);
 	const speakerPermissions = resolveGroupAttackSpeakerPermissions(params.speakerCombatant);
 	const targetUuids = resolveTargetUuids(params.targetTokenIds);
@@ -160,7 +160,6 @@ export function buildNcsGroupAttackChatData(params: {
 		}),
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
-		rollMode: game.settings.get('core', 'rollMode'),
 		system: {
 			actorName: params.speakerAlias,
 			actorType: params.speakerCombatant?.actor?.type ?? 'minion',

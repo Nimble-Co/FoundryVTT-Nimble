@@ -16,10 +16,10 @@ export default actorDataModels;
 declare global {
 	interface DataModelConfig {
 		Actor: {
-			character: NimbleCharacterData;
-			npc: NimbleNPCData;
-			minion: NimbleMinionData;
-			soloMonster: NimbleSoloMonsterData;
+			character: typeof NimbleCharacterData;
+			npc: typeof NimbleNPCData;
+			minion: typeof NimbleMinionData;
+			soloMonster: typeof NimbleSoloMonsterData;
 		};
 	}
 }

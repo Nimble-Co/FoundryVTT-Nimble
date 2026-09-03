@@ -136,6 +136,51 @@ describe('NimbleAncestryItem._preCreate', () => {
 	});
 });
 
+describe('NimbleAncestryItem.prepareBaseData', () => {
+	// `super.prepareBaseData()` has no counterpart on the shared `Item` mock either.
+	beforeEach(() => {
+		itemPrototype.prepareBaseData = vi.fn();
+	});
+
+	afterEach(() => {
+		delete itemPrototype.prepareBaseData;
+	});
+
+	// Built on the real prototype so the base class's own data prep runs against these fields.
+	function createPreparedAncestry(name: string, authoredIdentifier: string) {
+		const ancestry = Object.assign(Object.create(NimbleAncestryItem.prototype), {
+			name,
+			_source: { system: { identifier: authoredIdentifier } },
+			system: { identifier: '', rules: [] },
+			type: 'ancestry',
+		}) as NimbleAncestryItem & { system: { identifier: string }; tags: Set<string> };
+
+		ancestry.prepareBaseData();
+
+		return ancestry;
+	}
+
+	it('keeps the identifier the ancestry declares, whatever the variant renamed it to', () => {
+		const ancestry = createPreparedAncestry('Shroomling', 'dryadshroomling');
+
+		expect(ancestry.system.identifier).toBe('dryadshroomling');
+	});
+
+	it('tags the item with the identifier that won, not the one the name derives', () => {
+		const ancestry = createPreparedAncestry('Shroomling', 'dryadshroomling');
+
+		expect([...ancestry.tags]).toContain('identifier:dryadshroomling');
+		expect([...ancestry.tags]).not.toContain('identifier:shroomling');
+	});
+
+	it('derives the identifier from the name when the ancestry declares none', () => {
+		const ancestry = createPreparedAncestry('Half-Giant', '');
+
+		expect(ancestry.system.identifier).toBe('half-giant');
+		expect([...ancestry.tags]).toContain('identifier:half-giant');
+	});
+});
+
 describe('NimbleAncestryBonusItem._preCreate', () => {
 	async function runBonusPreCreate(bonus: unknown) {
 		return NimbleAncestryBonusItem.prototype._preCreate.call(

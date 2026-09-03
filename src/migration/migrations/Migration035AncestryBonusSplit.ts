@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 
+import { SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 /**
@@ -7,8 +8,8 @@ import { MigrationBase } from '../MigrationBase.js';
  *
  * A snapshot, deliberately: a migration has to describe the world as it was when the split
  * shipped. `dev-rebrand.mjs` only rewrites `packs/**` — not `src/**` — so on the `nimble-dev`
- * build an actor's stored source id reads `Compendium.nimble-dev.…`. `normalizePackSource`
- * below folds it back onto these stable keys.
+ * build an actor's stored source id reads `Compendium.nimble-dev.…`. `toSnapshotId`, imported
+ * from `../compendiumSourceId.js`, folds it back onto these stable keys.
  */
 const DEFAULT_BONUSES: Record<string, { bonus: string; trait: string }> = {
 	// Birdfolk
@@ -136,27 +137,8 @@ const DEFAULT_BONUSES: Record<string, { bonus: string; trait: string }> = {
 /** Matches the trait separator, including `<hr />` and an `<hr>` carrying attributes. */
 const TRAIT_SEPARATOR = /<hr\b[^>]*>/i;
 
-/** The compendium namespace `DEFAULT_BONUSES` was snapshotted under. */
-const SNAPSHOT_PREFIX = 'Compendium.nimble.';
-
 /** The namespace the running install stores and resolves uuids under. */
 const INSTALLED_PREFIX = `Compendium.${SYSTEM_ID}.`;
-
-/** Every namespace a stored id could have been written under — the stable id or the dev rebrand. */
-const STORED_PREFIXES = [SNAPSHOT_PREFIX, 'Compendium.nimble-dev.'];
-
-/**
- * Folds a stored source id onto the snapshot's namespace so `DEFAULT_BONUSES` resolves on the dev
- * build too, where an actor's ids read `Compendium.nimble-dev.…`. The document ids are identical
- * across the two installs — only the system id segment differs — so the fold is exact. Both forms
- * are folded rather than just the running install's, since actors get exported and imported
- * across the two.
- */
-function toSnapshotId(packSource: string | undefined): string | undefined {
-	if (!packSource) return packSource;
-	const prefix = STORED_PREFIXES.find((candidate) => packSource.startsWith(candidate));
-	return prefix ? `${SNAPSHOT_PREFIX}${packSource.slice(prefix.length)}` : packSource;
-}
 
 /**
  * The inverse: rebrands a snapshot id back to the running install, so every uuid this migration

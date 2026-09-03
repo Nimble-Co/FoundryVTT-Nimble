@@ -6,7 +6,16 @@ import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type {
+	LevelCorrectionSelection,
+	LevelCorrectionSubmitData,
+	ResolvedLevelSelectionGap,
+} from '#types/components/CharacterLevelCorrectionDialog.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import findMissingLevelSelections, {
+	type MissingLevelSelection,
+} from '#utils/findMissingLevelSelections.ts';
+import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
@@ -14,6 +23,7 @@ import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
 import { RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
+import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import {
 	consumeCombatantAction,
@@ -21,8 +31,10 @@ import {
 } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import showInsufficientActionsConfirmation from '../../utils/showInsufficientActionsConfirmation.js';
+import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
+import CharacterLevelCorrectionDialog from '../../view/dialogs/CharacterLevelCorrectionDialog.svelte';
 import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
 import CharacterLevelUpDialog from '../../view/dialogs/CharacterLevelUpDialog.svelte';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
@@ -114,7 +126,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 	#dialogs: Record<string, GenericDialog>;
 
-	constructor(data: Actor.CreateData, context?: Actor.ConstructionContext) {
+	constructor(data: Actor.CreateData<'character'>, context?: Actor.ConstructionContext) {
 		super(data, context);
 
 		this.#dialogs = {};
@@ -461,8 +473,19 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const classes = Object.values(this.classes ?? {});
 		if (classes.length === 0) return;
 
+		// Summed here rather than through a `prePrepareData` hook because `hp.max`
+		// has to be final before `_populateDerivedTags()` runs, which is ahead of
+		// the rule sweep.
+		const rules = this.rules as unknown as MaxHpBonusRule[];
+		const bonusFromRules = rules.reduce(
+			(acc, rule) => acc + (rule.type === 'maxHpBonus' ? rule.resolvedBonus() : 0),
+			0,
+		);
+
 		actorData.attributes.hp.max =
-			classes.reduce((acc, classData) => acc + classData.maxHp, 0) + actorData.attributes.hp.bonus;
+			classes.reduce((acc, classData) => acc + classData.maxHp, 0) +
+			actorData.attributes.hp.bonus +
+			bonusFromRules;
 	}
 
 	_prepareLevelData(): void {
@@ -972,13 +995,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			flavor: `${this.name}: Hit Dice Roll`,
 			content,
 			rolls: [roll],
-			speaker: ChatMessage.getSpeaker({ actor: this }),
+			speaker: ChatMessage.getSpeaker({ actor: this as object as Actor }),
 		};
 
-		ChatMessage.applyRollMode(
-			chatData as unknown as ChatMessage.CreateData,
-			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
-		);
+		ChatMessage.applyMode(chatData as unknown as ChatMessage.CreateData);
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	}
@@ -1086,9 +1106,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			rollMode,
 		});
 
-		ChatMessage.applyRollMode(
+		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
-			visibilityMode ?? game.settings.get('core', 'rollMode'),
+			toMessageMode(visibilityMode),
 		);
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
@@ -1170,6 +1190,131 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 */
 	getLevelDownDialogId(): string {
 		return `${this.id}-level-down`;
+	}
+
+	/**
+	 * Get the unique dialog ID for level correction dialogs for this character.
+	 */
+	getLevelCorrectionDialogId(): string {
+		return `${this.id}-level-correction`;
+	}
+
+	/**
+	 * The class feature pools this character is still owed picks from.
+	 *
+	 * A level-up grant that was wrong when the character passed through it leaves no trace on the
+	 * sheet — the picks simply never happened — so the shortfall has to be recomputed from the
+	 * class data every time rather than read back from `levelUpHistory`.
+	 */
+	async getMissingLevelSelections(): Promise<MissingLevelSelection[]> {
+		const characterClass = Object.values(this.classes)?.[0];
+		if (!characterClass) return [];
+
+		const ownedSourceUuids = new Set<string>();
+		for (const item of this.items) {
+			if (item.type !== 'feature') continue;
+			const compendiumSource = item._stats?.compendiumSource;
+			if (compendiumSource) ownedSourceUuids.add(compendiumSource);
+		}
+
+		const index = await buildClassFeatureIndex();
+
+		return findMissingLevelSelections(
+			index,
+			characterClass.identifier,
+			characterClass.system.classLevel,
+			ownedSourceUuids,
+		);
+	}
+
+	/**
+	 * Opens the level correction dialog so the player can make the picks a past level owes them,
+	 * then grants what they chose.
+	 */
+	async triggerLevelCorrection() {
+		const gaps = await this.getMissingLevelSelections();
+
+		if (gaps.length === 0) {
+			ui.notifications?.info(game.i18n.localize('NIMBLE.levelCorrectionDialog.nothingMissing'));
+			return;
+		}
+
+		const resolvedGaps: ResolvedLevelSelectionGap[] = [];
+		for (const gap of gaps) {
+			const { candidateUuids, ...rest } = gap;
+			const candidates = await Promise.all(
+				candidateUuids.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+			);
+			resolvedGaps.push({
+				...rest,
+				candidates: candidates.filter((doc): doc is NimbleFeatureItem => Boolean(doc)),
+			});
+		}
+
+		const dialogId = this.getLevelCorrectionDialogId();
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: ${game.i18n.localize('NIMBLE.levelCorrectionDialog.title')}`,
+			CharacterLevelCorrectionDialog,
+			{ gaps: resolvedGaps },
+			{ icon: 'fa-solid fa-triangle-exclamation', width: 600, uniqueId: dialogId },
+		);
+
+		if (dialog.rendered) return;
+
+		await dialog.render(true);
+		const dialogData = await dialog.promise;
+		if (!dialogData) return;
+
+		await this.applyLevelCorrection(
+			(dialogData as unknown as LevelCorrectionSubmitData).selections,
+		);
+	}
+
+	/**
+	 * Grants the picks chosen in the level correction dialog.
+	 *
+	 * Each grant is recorded on the `levelUpHistory` entry for the level it was owed to, so
+	 * reverting that level still removes it. A correction owed to level 1 has no history entry
+	 * to record against — the character keeps the feature, and reverting cannot reach it anyway.
+	 */
+	async applyLevelCorrection(selections: LevelCorrectionSelection[]): Promise<void> {
+		const featureSources: Item.CreateData[] = [];
+		const levelByCreatedIndex: number[] = [];
+
+		for (const selection of selections) {
+			for (const uuid of selection.uuids) {
+				const feature = await fromUuid(uuid as `Item.${string}`);
+				if (!feature) continue;
+				const source = (feature as NimbleFeatureItem).toObject();
+				source._stats.compendiumSource = uuid;
+				featureSources.push(source as object as Item.CreateData);
+				levelByCreatedIndex.push(selection.level);
+			}
+		}
+
+		if (featureSources.length === 0) return;
+
+		const created = (await this.createEmbeddedDocuments('Item', featureSources)) ?? [];
+
+		const idsByLevel = new Map<number, string[]>();
+		created.forEach((doc, position) => {
+			const id = (doc as unknown as { id: string | null }).id;
+			if (!id) return;
+			const level = levelByCreatedIndex[position];
+			const ids = idsByLevel.get(level);
+			if (ids) ids.push(id);
+			else idsByLevel.set(level, [id]);
+		});
+
+		const levelUpHistory = this.system.levelUpHistory.map((entry) => {
+			const ids = idsByLevel.get(entry.level);
+			if (!ids?.length) return entry;
+			return { ...entry, grantedFeatureIds: [...entry.grantedFeatureIds, ...ids] };
+		});
+
+		const actorUpdates: Record<string, unknown> = { 'system.levelUpHistory': levelUpHistory };
+		await this.update(actorUpdates);
+		this.sheet?.render(true);
 	}
 
 	/**
@@ -1378,7 +1523,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				// Create a copy of the subclass for the character
 				const subclassData = subclass.toObject();
 				(subclassData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
-					subclass.uuid;
+					subclass.uuid ?? undefined;
 
 				await this.createEmbeddedDocuments('Item', [subclassData]);
 			} else {
@@ -1393,7 +1538,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (typedDialogData.selectedEpicBoon) {
 			const boonData = typedDialogData.selectedEpicBoon.toObject();
 			(boonData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
-				typedDialogData.selectedEpicBoon.uuid;
+				typedDialogData.selectedEpicBoon.uuid ?? undefined;
 			const created = await this.createEmbeddedDocuments('Item', [boonData] as Parameters<
 				typeof this.createEmbeddedDocuments
 			>[1]);
@@ -1741,6 +1886,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
+
 		await this.#syncPoolBonusItemDescriptions();
 	}
 
@@ -1763,10 +1909,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			},
 		};
 
-		ChatMessage.applyRollMode(
-			chatData as unknown as ChatMessage.CreateData,
-			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
-		);
+		ChatMessage.applyMode(chatData as unknown as ChatMessage.CreateData);
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;
@@ -1850,18 +1993,21 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	protected override async _preCreate(
 		data: Actor.CreateData,
 		options: Actor.Database.PreCreateOptions,
-		user: User.Implementation,
+		user: User.Stored,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
-		// Player character configuration. In Foundry v13 token sight is keyed on
-		// `sight.enabled` (the old top-level `vision` boolean no longer exists), and
-		// `enabled` only auto-defaults to true when `sight.range > 0` — which it is
-		// not — so enable it explicitly. Range stays at the default 0: Nimble has no
-		// darkvision, so the token sees illuminated areas rather than a fixed radius.
+		// Player character configuration. Token sight is keyed on `sight.enabled`,
+		// and `enabled` only auto-defaults to true when `sight.range > 0` — which it
+		// is not — so enable it explicitly. Range stays at the default 0: Nimble has
+		// no darkvision, so the token sees illuminated areas rather than a fixed
+		// radius. `displayBars` is seeded here because V14 removed the world-level
+		// default token configuration (`core.defaultToken`); the schema default is
+		// NONE, which would hide the HP/mana bar mappings entirely.
 		const prototypeToken = {
 			sight: { enabled: true },
 			actorLink: true,
 			disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+			displayBars: CONST.TOKEN_DISPLAY_MODES.OWNER_HOVER,
 		};
 		this.updateSource({ prototypeToken } as Record<string, unknown>);
 

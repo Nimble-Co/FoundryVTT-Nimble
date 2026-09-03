@@ -250,6 +250,7 @@ function collectRedirectCandidates(targetToken: Token.Implementation): IncomingR
 		if (isDowned(actor)) continue;
 
 		const tokenKey = token.document.id ?? token.document.uuid;
+		if (!tokenKey) continue;
 		const base = {
 			actorUuid: (token.actor?.uuid as string) ?? '',
 			tokenUuid: token.document.uuid,

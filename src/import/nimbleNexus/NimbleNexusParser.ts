@@ -556,7 +556,7 @@ export async function importMonster(
 
 		// Set folder if provided
 		if (options.folderId) {
-			(actorData as Record<string, unknown>).folder = options.folderId;
+			(actorData as unknown as Record<string, unknown>).folder = options.folderId;
 		}
 
 		const actor = await Actor.create(actorData);

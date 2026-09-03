@@ -20,6 +20,16 @@
     --nimble-hint-border-color: var(--nimble-warning-border-color);
     --nimble-hint-icon-background-color: var(--nimble-warning-icon-background-color);
     --nimble-hint-icon-color: var(--nimble-warning-icon-color);
+
+    // The shared warning tokens are built for a light sheet: on a dark one the
+    // translucent yellow lands at 3:1 against the inherited text, and the icon disc
+    // resolves against `:root`, so it stays light-theme cream on the dark fill.
+    .theme-dark & {
+      --nimble-hint-background-color: hsla(45, 55%, 40%, 0.22);
+      --nimble-hint-border-color: hsl(45, 45%, 55%);
+      --nimble-hint-icon-background-color: transparent;
+      --nimble-hint-icon-color: hsl(45, 85%, 68%);
+    }
   }
 
   &--success {

@@ -3,6 +3,10 @@ import type { AncestryCreateOptions } from '#documents/item/ancestry.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import { canonicalVariant } from '#utils/ancestryVariants.js';
+import calculateSavingThrowRollModes, {
+	type SavingThrowRollModeRuleData,
+} from '#utils/calculateSavingThrowRollModes.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
@@ -11,39 +15,6 @@ import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
-
-type SavingThrowRollModeRuleData = {
-	type: string;
-	disabled?: boolean;
-	priority?: number;
-	requiresChoice?: boolean;
-	selectedSave?: string | null;
-	target?: string;
-	mode?: string;
-	value?: number;
-};
-
-function resolveTargetSaves(
-	target: string,
-	selectedSave: string | null,
-	rollModes: Record<string, number>,
-	savingThrowKeys: string[],
-): string[] {
-	if (selectedSave && savingThrowKeys.includes(selectedSave)) return [selectedSave];
-	if (savingThrowKeys.includes(target)) return [target];
-	switch (target) {
-		case 'all':
-			return savingThrowKeys;
-		case 'advantaged':
-			return savingThrowKeys.filter((key) => rollModes[key] > 0);
-		case 'disadvantaged':
-			return savingThrowKeys.filter((key) => rollModes[key] < 0);
-		case 'neutral':
-			return savingThrowKeys.filter((key) => rollModes[key] === 0);
-		default:
-			return [];
-	}
-}
 
 function resolveSavingThrowRollModes({
 	classDocument,
@@ -59,43 +30,22 @@ function resolveSavingThrowRollModes({
 	selectedAncestrySave: string | null;
 }): Record<string, number> {
 	const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows ?? {});
-	const rollModes = Object.fromEntries(savingThrowKeys.map((key) => [key, 0]));
 
-	if (classDocument?.system.savingThrows.advantage) {
-		rollModes[classDocument.system.savingThrows.advantage] = 1;
-	}
-	if (classDocument?.system.savingThrows.disadvantage) {
-		rollModes[classDocument.system.savingThrows.disadvantage] = -1;
-	}
-
-	const rollModeRules = [classDocument, ancestryDocument, ancestryBonusDocument, backgroundDocument]
+	const rules = [classDocument, ancestryDocument, ancestryBonusDocument, backgroundDocument]
 		.flatMap((doc) => {
 			if (!doc) return [];
 			const source = doc.toObject() as { system?: { rules?: SavingThrowRollModeRuleData[] } };
 			return source.system?.rules ?? [];
 		})
-		.filter((rule) => !rule.disabled && rule.type === 'savingThrowRollMode')
-		.sort((a, b) => (a.priority ?? 1) - (b.priority ?? 1));
+		// The choice lives on the creation form rather than on the rule, so stamp it on before
+		// the shared calculator reads `selectedSave`.
+		.map((rule) => (rule.requiresChoice ? { ...rule, selectedSave: selectedAncestrySave } : rule));
 
-	for (const rule of rollModeRules) {
-		if (rule.requiresChoice && !selectedAncestrySave) continue;
-
-		const effectiveSave = rule.requiresChoice ? selectedAncestrySave : (rule.selectedSave ?? null);
-		const targets = resolveTargetSaves(
-			rule.target ?? 'all',
-			effectiveSave,
-			rollModes,
-			savingThrowKeys,
-		);
-
-		for (const saveKey of targets) {
-			if (rule.mode === 'adjust') {
-				rollModes[saveKey] = Math.max(-3, Math.min(3, rollModes[saveKey] + (rule.value ?? 0)));
-			} else {
-				rollModes[saveKey] = rule.value ?? 0;
-			}
-		}
-	}
+	const rollModes = calculateSavingThrowRollModes(
+		rules,
+		classDocument?.system.savingThrows ?? {},
+		savingThrowKeys,
+	);
 
 	return Object.fromEntries(
 		savingThrowKeys.map((key) => [`${key}.defaultRollMode`, rollModes[key]]),
@@ -104,8 +54,6 @@ function resolveSavingThrowRollModes({
 
 export default class CharacterCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
 	data: Record<string, any>;
-	parent: any;
-	pack: any;
 	folder: string | null;
 	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
 	spellIndex: Promise<SpellIndex> | null = null;
@@ -114,7 +62,10 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 	constructor(
 		data = {},
-		{ parent = null, pack = null, folder = null as string | null, ...options } = {},
+		// `parent`/`pack` are accepted (callers may pass them) but unused: character
+		// creation only targets the world collection. V14's ApplicationV2 owns the
+		// `parent` property, so they must not be assigned onto the application.
+		{ parent: _parent = null, pack: _pack = null, folder = null as string | null, ...options } = {},
 	) {
 		const width = 608;
 		super(
@@ -130,8 +81,6 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		this.root = CharacterCreationDialogComponent;
 
 		this.data = data;
-		this.parent = parent;
-		this.pack = pack;
 		this.folder = folder;
 	}
 
@@ -183,6 +132,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async submitCharacterCreation(results: {
 		name?: string;
 		sizeCategory?: string;
+		selectedAncestryVariant?: string | null;
 		selectedAncestrySave?: string | null;
 		selectedRaisedByAncestry?: { language: string; label: string } | null;
 		abilityScores?: Record<string, number>;
@@ -238,7 +188,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				| NimbleAncestryBonusItem
 				| null,
 			uuid: string | undefined,
-			options: { isAncestryBonus?: boolean; isBackground?: boolean } = {},
+			options: { isAncestry?: boolean; isAncestryBonus?: boolean; isBackground?: boolean } = {},
 		) => {
 			if (!doc || !uuid) return;
 
@@ -257,6 +207,20 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 							rule.disabled = true;
 						}
 					}
+				}
+			}
+
+			if (options.isAncestry && results.selectedAncestryVariant) {
+				const systemWithVariants = source.system as { identifier?: string; variants?: string[] };
+				const variant = canonicalVariant(
+					systemWithVariants.variants,
+					results.selectedAncestryVariant,
+				);
+
+				if (source.name && variant && source.name !== variant) {
+					// Pin the pre-rename identifier; see `NimbleAncestryItem#prepareBaseData`.
+					systemWithVariants.identifier ||= source.name.slugify({ strict: true });
+					source.name = variant;
 				}
 			}
 
@@ -336,7 +300,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		processOriginSource(backgroundDocument, background?.uuid, { isBackground: true });
 		processOriginSource(classDocument, characterClass?.uuid);
-		processOriginSource(ancestryDocument, ancestry?.uuid);
+		processOriginSource(ancestryDocument, ancestry?.uuid, { isAncestry: true });
 		processOriginSource(ancestryBonusDocument, ancestryBonus?.uuid, { isAncestryBonus: true });
 
 		// When origin documents are added, the system automatically processes grantItem rules
@@ -347,7 +311,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// bonus: the player's chosen one is in this same batch and would delete it right back.
 		await actor?.createEmbeddedDocuments('Item', originDocumentSources, {
 			nimbleAncestryBonusInBatch: ancestryBonusDocument !== null,
-		} satisfies AncestryCreateOptions as object as Item.Database.CreateOperation<false>);
+		} satisfies AncestryCreateOptions as object as Item.Database.CreateOperation);
 
 		// Auto-equip all object items granted as starting equipment
 		if (startingEquipmentChoice === 'equipment' && actor) {

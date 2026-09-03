@@ -93,7 +93,7 @@ function createSkillRollModeRule(
 		configurable: true,
 	});
 
-	Object.defineProperty(rule, '_predicate', {
+	Object.defineProperty(rule, 'predicate', {
 		get: () => config.predicate ?? { size: 0 },
 		configurable: true,
 	});

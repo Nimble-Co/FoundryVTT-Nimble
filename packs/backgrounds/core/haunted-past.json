@@ -6,8 +6,25 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
-		"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p>"
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "N43aM4mMNGpq5WN6",
+				"identifier": "",
+				"label": "Against fear",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "savingThrow",
+				"saves": [
+					"will"
+				],
+				"abilities": [],
+				"skills": []
+			}
+		],
+		"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p><hr><p>Advantage against fear [A]</p>"
 	},
 	"effects": [],
 	"flags": {},

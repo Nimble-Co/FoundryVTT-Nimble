@@ -46,10 +46,21 @@
 		"selectionCountByLevel": {},
 		"levelUpOptions": [
 			{
+				"id": "sacred-grace-initial",
+				"label": "Choose 2 Sacred Graces",
+				"applyAtLevels": [
+					5
+				],
+				"rules": [],
+				"selectionGroups": [
+					"sacred-grace"
+				],
+				"selectionCount": 2
+			},
+			{
 				"id": "sacred-grace",
 				"label": "Choose a Sacred Grace",
 				"applyAtLevels": [
-					5,
 					9,
 					13
 				],

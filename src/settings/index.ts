@@ -10,7 +10,9 @@ import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './i
 import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
+import { registerDiceSoNiceSettings } from './registerDiceSoNiceSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
+import { registerSpellScrollSettings } from './spellScrollSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
 
@@ -89,9 +91,13 @@ export default function registerSystemSettings() {
 	registerAutomationSettings();
 
 	registerCombatTrackerSettings();
+	registerDiceSoNiceSettings();
 	registerNcswSettings();
 	registerLanguageSettings();
 	registerSpellSchoolSettings();
+	registerSpellScrollSettings();
+	// Custom conditions register from the `i18nInit` hook in `nimble.ts`: their merge into CONFIG
+	// has to beat document initialization, which happens before `setup` runs.
 
 	game.settings.register(
 		SYSTEM_ID as 'core',

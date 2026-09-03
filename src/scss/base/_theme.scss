@@ -7,6 +7,12 @@
 	--nimble-combat-tracker-mystery-man-filter: none;
 
 	/** INPUT FIELDS **/
+	// Light mode fills a checked box with a dark colour and draws a pale
+	// checkmark on it. Dark mode is the inversion, so the fill has to be the pale
+	// one: the shared default is a bar background that goes near-black here,
+	// leaving a checked box indistinguishable from the card behind it.
+	--nimble-checkbox-checked-color: var(--nimble-dark-text-color);
+	--nimble-checkbox-checkmark-color: var(--nimble-light-text-color);
 	--nimble-input-background-color: hsla(0, 0%, 0%, 0.3);
 	--nimble-input-border-color: hsl(293, 10%, 40%);
 	--nimble-select-option-background-color: color-mix(in srgb, var(--nimble-input-background-color) 10%, #000);
@@ -24,6 +30,12 @@
 	--nimble-secondary-navigation-background: rgba(255, 255, 255, 0.1);
 	--nimble-sidebar-text-color: hsl(36, 53%, 80%);
 	--nimble-code-editor-text-color: hsl(217, 34%, 88%);
+
+	/** VALIDATION COLORS **/
+	// Lightened so error text and the invalid-row border keep their contrast against
+	// the dark box background below.
+	--nimble-validation-error-color: hsl(0, 70%, 68%);
+	--nimble-validation-error-border-color: hsl(0, 70%, 62%);
 
 	/** OTHER COLORS **/
 	--nimble-box-background-color: hsl(293, 10%, 17%);
@@ -137,6 +149,15 @@
 	/** WEAPON CARD COLORS **/
 	--nimble-weapon-toggle-on-color: hsl(120, 50%, 62%);
 	--nimble-weapon-toggle-on-color-hover: hsl(120, 50%, 70%);
+
+	/** CHOICE CARDS **/
+	--nimble-choice-card-selected-background: hsla(45, 70%, 50%, 0.15);
+	--nimble-choice-card-selected-border-color: hsla(45, 70%, 50%, 0.4);
+	--nimble-choice-card-selected-text-color: hsl(45, 60%, 65%);
+	--nimble-choice-card-selected-icon-color: hsl(45, 70%, 55%);
+
+	/** SECRET CONTENT **/
+	--nimble-secret-badge-background: hsl(276, 30%, 38%);
 
 	/** REACTION COLORS **/
 	// Defend (blue)

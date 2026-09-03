@@ -34,6 +34,15 @@
 		return rollModeSummary;
 	}
 
+	// A roll written onto the card after the fact serializes `options: {}`, so a
+	// present-and-non-zero test is the only one that keeps the details block from
+	// drawing two empty labels.
+	function hasPrimaryDieDetails(rollOptions) {
+		return [rollOptions?.primaryDieValue, rollOptions?.primaryDieModifier].some(
+			(value) => value != null && value != 0,
+		);
+	}
+
 	const { damageTypes } = CONFIG.NIMBLE;
 
 	const messageDocument = getContext('messageDocument');
@@ -53,7 +62,7 @@
 		subheading={secondaryInfo}
 		total={Math.ceil(roll.total * multiplier)}
 		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
-		showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
+		showRollDetails={hasPrimaryDieDetails(rollOptions)}
 	/>
 {:else}
 	<RollSummary
