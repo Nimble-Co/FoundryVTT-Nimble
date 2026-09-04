@@ -89,7 +89,7 @@ describe('NimbleSpellItem.activate mana spending', () => {
 				incomingReactions: [],
 			} as never;
 		});
-		vi.spyOn(ItemActivationManager.prototype, 'applyDeferredPoolNodes').mockResolvedValue(
+		vi.spyOn(ItemActivationManager.prototype, 'commitDeferredSideEffects').mockResolvedValue(
 			undefined as never,
 		);
 		(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(true);

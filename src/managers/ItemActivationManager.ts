@@ -107,6 +107,8 @@ class ItemActivationManager {
 
 	#deferredPoolNodes: PoolNode[] = [];
 
+	#deferredDialogData: ItemActivationManager.DialogData | null = null;
+
 	/**
 	 * Creates a new ItemActivationManager.
 	 *
@@ -233,10 +235,11 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
-		// Persist consumption of pool dice the player spent in the dialog.
-		// The dialog already included their face value in rollFormula above.
-		await this.#consumePoolDice(dialogData);
-		await this.#consumeChargePools(dialogData);
+		// What the player spent in the dialog is deferred alongside the pool
+		// nodes: the caller can still refuse the use after getData returns, and
+		// a refusal must not leave the spend persisted. See
+		// commitDeferredSideEffects().
+		this.#deferredDialogData = dialogData;
 
 		return {
 			rolls,
@@ -497,7 +500,7 @@ class ItemActivationManager {
 
 		// Pool nodes mutate actor state, so their application is deferred until
 		// the caller confirms the use is allowed (the preUseItem gate fires
-		// after getData). See applyDeferredPoolNodes().
+		// after getData). See commitDeferredSideEffects().
 		//
 		// Enumerate from the FLAT list so no node can be missed: the tree
 		// reconstruction only re-parents children of damage/savingThrow nodes and
@@ -634,13 +637,22 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Apply the pool effect nodes collected during getData. Pool nodes carry
-	 * actor-state side effects, so they must not run until the caller has
-	 * cleared the preUseItem gate (which fires after getData); results are
-	 * recorded on the same node objects the activation data references, so
-	 * the chat card still renders them. Safe to call once per activation.
+	 * Apply every actor-state side effect collected during getData: the pool
+	 * dice and charges the player spent in the dialog, then the pool effect
+	 * nodes. None of them may run until the caller has cleared its gates, which
+	 * fire after getData returns, so that a refused use costs nothing. Pool node
+	 * results are recorded on the same node objects the activation data
+	 * references, so the chat card still renders them. Safe to call once per
+	 * activation.
 	 */
-	async applyDeferredPoolNodes(): Promise<void> {
+	async commitDeferredSideEffects(): Promise<void> {
+		const dialogData = this.#deferredDialogData;
+		this.#deferredDialogData = null;
+		if (dialogData) {
+			await this.#consumePoolDice(dialogData);
+			await this.#consumeChargePools(dialogData);
+		}
+
 		const nodes = this.#deferredPoolNodes;
 		this.#deferredPoolNodes = [];
 		for (const node of nodes) {

@@ -258,8 +258,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		});
 		if (!allowed) return null;
 
-		// Pool-node side effects run only after the gate allowed the use.
-		await manager.applyDeferredPoolNodes();
+		// Dialog spends and pool-node side effects run only after the gate
+		// allowed the use.
+		await manager.commitDeferredSideEffects();
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';

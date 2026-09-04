@@ -100,8 +100,9 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			}
 		}
 
-		// Pool-node side effects run only after the cast has been paid for.
-		await manager.applyDeferredPoolNodes();
+		// Dialog spends and pool-node side effects land only once the cast is
+		// allowed and paid for, so a refusal above costs the player nothing.
+		await manager.commitDeferredSideEffects();
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
