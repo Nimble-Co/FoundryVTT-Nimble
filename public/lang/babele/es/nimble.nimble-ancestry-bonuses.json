@@ -1,0 +1,184 @@
+{
+	"label": "Nimble Ancestry Bonuses",
+	"entries": {
+		"Bunny Legs": {
+			"description": "<p><strong>Bunny Legs</strong> </p><p>Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p>",
+			"name": "Bunny Legs"
+		},
+		"Chaotic Surge": {
+			"description": "<p><strong>Chaotic Surge</strong> </p><p>Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.</p>",
+			"name": "Chaotic Surge"
+		},
+		"Charge": {
+			"description": "<p><strong>Charge</strong> </p><p>When you move at least 4 spaces, you can push a creature in your path. Medium: 1 space; Small/Tiny: up to 2 spaces. 1/turn.</p>",
+			"name": "Charge"
+		},
+		"Danger Pollen/Spores": {
+			"description": "<p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p>",
+			"name": "Danger Pollen/Spores"
+		},
+		"Draconic Heritage": {
+			"description": "<p><strong>Draconic Heritage</strong></p><p>+1 Armor. [A]</p><p>When you attack: deal an additional LVL+KEY damage (ignoring armor) divided as you choose among any of your targets; recharges whenever you Safe Rest or gain a Wound.</p>",
+			"name": "Draconic Heritage",
+			"rules": {
+				"io7K8HETN3dgovbH": {
+					"label": "Draconic heritage"
+				}
+			}
+		},
+		"Elusive": {
+			"description": "<p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>",
+			"name": "Elusive"
+		},
+		"Flameborn": {
+			"description": "<p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p>",
+			"name": "Flameborn",
+			"rules": {
+				"Ps5OpAcOStWfekWe": {
+					"label": "Flameborn"
+				}
+			}
+		},
+		"Highborn": {
+			"description": "<p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p>",
+			"name": "Highborn",
+			"rules": {
+				"QwL4D7Zl3D1S1sbj": {
+					"label": "Highborn"
+				}
+			}
+		},
+		"Hollow Bones": {
+			"description": "<p><strong>Hollow Bones</strong></p><p>You have a fly Speed as long as you are wearing armor no heavier than Leather. </p><p>Crits against you are Vicious (the attacker rolls 1 additional die). </p><p>Forced movement moves you twice as far.</p>",
+			"name": "Hollow Bones",
+			"rules": {
+				"77PFA7AbSWEB2h30": {
+					"label": "Hollow Bones"
+				}
+			}
+		},
+		"Lithe": {
+			"description": "<p><strong>Lithe</strong></p><p>Advantage on Initiative</p><p>+1 Speed [M]</p>",
+			"name": "Lithe",
+			"rules": {
+				"Jz7OOTWRVvFo1dTC": {
+					"label": "Lithe"
+				},
+				"xDUbWHBMslNIkMiL": {
+					"label": "Lithe (Advantage on Initiative)"
+				}
+			}
+		},
+		"New Place, New Face": {
+			"description": "<p><strong>New Place, New Face</strong> </p><p>+2 shifting skill points. You may take on the appearance of any ancestry. When you do, you may place your 2 shifting skill points into any 1 skill. 1/day.</p>",
+			"name": "New Place, New Face"
+		},
+		"Odd Constitution": {
+			"description": "<p><strong>Odd Constitution</strong> </p><p>Increment your Hit Dice one step (d6 » d8 » d10 » d12 » d20); they always heal you for the maximum amount. Magical healing always heals you for the minimum amount.</p>",
+			"name": "Odd Constitution",
+			"rules": {
+				"E3LTczDN5sCHW2QV": {
+					"label": "Odd Constitution"
+				},
+				"GUqHRh644HlQ11lU": {
+					"label": "Odd Constitution"
+				}
+			}
+		},
+		"Optimistic": {
+			"description": "<p><strong>Optimistic</strong></p><p>Allow an ally within Reach 6 to reroll any single die. Resets when healed to your max HP. </p><p>-1 Speed [M]</p>",
+			"name": "Optimistic",
+			"rules": {
+				"dRasAQ5eyCA70sWv": {
+					"label": "Optimistic"
+				}
+			}
+		},
+		"Planeshift": {
+			"description": "<p><strong>Planeshift</strong> </p><p>Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. </p><p>–2 max Wounds. [A]</p>",
+			"name": "Planeshift",
+			"rules": {
+				"fbhC9ohclITGwSq3": {
+					"label": "Planeshift"
+				}
+			}
+		},
+		"Reflective Aura": {
+			"description": "<p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>",
+			"name": "Reflective Aura"
+		},
+		"Relentless": {
+			"description": "<p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p>",
+			"name": "Relentless",
+			"rules": {
+				"FDQIIE9eJorL65lg": {
+					"label": "Relentless"
+				}
+			}
+		},
+		"Scurry": {
+			"description": "<p><strong>Scurry</strong> </p><p>Gain +2 armor if you moved on your last turn. [M]</p>",
+			"name": "Scurry"
+		},
+		"Skedaddle": {
+			"description": "<p><strong>Skedaddle</strong> </p><p>Can move 2 spaces for free after you become the target of an attack or negative effect (after damage, ignoring difficult terrain). </p>",
+			"name": "Skedaddle"
+		},
+		"Slow & Steady": {
+			"description": "<p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>",
+			"name": "Slow & Steady",
+			"rules": {
+				"ODF6VnVsmfBrfFtp": {
+					"label": "Slow & Steady"
+				},
+				"Xk9mNpQ2rLsYvWtH": {
+					"label": "Slow & Steady"
+				}
+			}
+		},
+		"Small But Ferocious": {
+			"description": "<p><strong>Small But Ferocious</strong> </p><p>Whenever you make a single-target attack against a creature larger than you, roll 1 additional d6 for each size category it is larger. They do the same.</p>",
+			"name": "Small But Ferocious"
+		},
+		"Stout": {
+			"description": "<p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p>",
+			"name": "Stout",
+			"rules": {
+				"TBlofXUDPL1zBvyu": {
+					"label": "Stout"
+				},
+				"v5rARnVgo5eGgtcJ": {
+					"label": "Stout"
+				},
+				"xWH270Re7449Dlb8": {
+					"label": "Stout"
+				}
+			}
+		},
+		"Strength of Stone": {
+			"description": "<p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p>",
+			"name": "Strength of Stone",
+			"rules": {
+				"eJoTbJqZZAqwHrZ2": {
+					"label": "Strength of Stone"
+				}
+			}
+		},
+		"Tenacious": {
+			"description": "<p><strong>Tenacious</strong></p><p>+1 to all skills and initiative [A]</p>",
+			"name": "Tenacious",
+			"rules": {
+				"AuTpcB2psoXIJESI": {
+					"label": "Human Initiative bonus"
+				},
+				"gMJvC5XPYlun1NT3": {
+					"label": "Skill Bonus for Human"
+				}
+			}
+		},
+		"Wily": {
+			"description": "<p><strong>Wily</strong> </p><p>Force an enemy to reroll a non-critical attack against you, 1/encounter. </p><p>+3 to Influence friendly characters. [M]</p><p>Advantage on skill checks related to dragons. [M]</p>",
+			"name": "Wily"
+		}
+	}
+}

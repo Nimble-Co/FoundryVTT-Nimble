@@ -5,6 +5,13 @@
 			"description": "<p>Steal up to INT actions from your next turn (Gain up to INT actions now. The next time you would gain actions, subtract the number stolen). You cannot use this 2 turns in a row.</p>",
 			"name": "\"Creative\" Accounting"
 		},
+		"+1 Max Combat Die": {
+			"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
+			"name": "+1 Max Combat Die"
+		},
+		"A People Person": {
+			"name": "A People Person"
+		},
 		"Abhorrent Speech": {
 			"description": "<p>You can communicate with horrible creatures (aberrations, undead, etc.).</p>",
 			"name": "Abhorrent Speech"
@@ -132,7 +139,15 @@
 		},
 		"Blood Frenzy": {
 			"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p>",
-			"name": "Blood Frenzy"
+			"name": "Blood Frenzy",
+			"rules": {
+				"blood-frenzy-fury-maximize": {
+					"label": "Blood Frenzy: change a Fury Die to its maximum"
+				},
+				"blood-frenzy-use-pool": {
+					"label": "Blood Frenzy use"
+				}
+			}
 		},
 		"Blood Sight": {
 			"description": "<p>(1/day) You may reroll an Examination check. Additionally, you can detect traces of blood on a surface, even after it has been cleaned.</p>",
@@ -140,7 +155,12 @@
 		},
 		"Bloodlust": {
 			"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p>",
-			"name": "Bloodlust"
+			"name": "Bloodlust",
+			"rules": {
+				"bloodlust-fury-consumer": {
+					"label": "Bloodlust: free movement"
+				}
+			}
 		},
 		"Bloody Terror": {
 			"description": "<p>Attacks against you gain 1 instance of disadvantage for each Wound you have (max 3).</p>",
@@ -168,7 +188,12 @@
 		},
 		"BOUNDLESS RAGE": {
 			"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p>",
-			"name": "BOUNDLESS RAGE"
+			"name": "BOUNDLESS RAGE",
+			"rules": {
+				"boundless-rage-fury-floor": {
+					"label": "Boundless Rage: Fury Dice floor of 6"
+				}
+			}
 		},
 		"Bring Me Your Pain": {
 			"costDetails": "When a willing ally within your aura would drop to 0 HP",
@@ -223,6 +248,14 @@
 			"description": "<p>Action: Attack a target. It is Taunted by you until the end of their next turn.</p>",
 			"name": "Come Get Some!"
 		},
+		"Commander's Orders": {
+			"name": "Commander's Orders",
+			"rules": {
+				"grant-coordinated-strike": {
+					"label": "Coordinated Strike"
+				}
+			}
+		},
 		"Commanding Presence": {
 			"description": "<p><strong>Action:</strong> Shout a command up to 2 words long at an enemy. On a failed WIL save (DC 10+STR), they must spend their entire next turn obeying it to the best of their ability, provided it is not obviously harmful to themselves. They then become immune to this effect for 1 day.</p>",
 			"name": "Commanding Presence"
@@ -241,7 +274,36 @@
 		},
 		"Coordinated Strike!": {
 			"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",
-			"name": "Coordinated Strike!"
+			"name": "Coordinated Strike!",
+			"rules": {
+				"coordinated-strike-ally-attack": {
+					"label": "Coordinated Strike"
+				},
+				"coordinated-strike-ally-free-attack": {
+					"label": "Coordinated Strike (ally attack is free)"
+				},
+				"coordinated-strike-as-one": {
+					"label": "As One! (allies gain an action next turn)"
+				},
+				"coordinated-strike-captain-of-legions": {
+					"label": "Captain of Legions (all allies gain an action next turn)"
+				},
+				"coordinated-strike-encounter-pool": {
+					"label": "Coordinated Strike (first use each encounter)"
+				},
+				"coordinated-strike-round-pool": {
+					"label": "Coordinated Strike (once per round)"
+				},
+				"coordinated-strike-self-free-attack": {
+					"label": "Coordinated Strike (your attack is free)"
+				},
+				"coordinated-strike-unparalleled-tactics": {
+					"label": "Unparalleled Tactics (ally gains an action next turn)"
+				},
+				"coordinated-strike-uses-pool": {
+					"label": "Coordinated Strike uses"
+				}
+			}
 		},
 		"Courage!": {
 			"description": "<p>(1/encounter) When you or an ally in your aura would drop to 0 HP, set their HP to 1 instead.</p>",
@@ -271,7 +333,12 @@
 		},
 		"Death Blow": {
 			"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage</p>",
-			"name": "Death Blow"
+			"name": "Death Blow",
+			"rules": {
+				"death-blow-fury-consumer": {
+					"label": "Death Blow: bonus damage"
+				}
+			}
 		},
 		"Deathbringer's Touch": {
 			"description": "<p>Your first melee attack each round against a Bloodied creature is an automatic critical hit. Your Lifebinding Spirit deals additional damage equal to your STR.</p>",
@@ -279,7 +346,12 @@
 		},
 		"Deathless Rage": {
 			"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p>",
-			"name": "Deathless Rage"
+			"name": "Deathless Rage",
+			"rules": {
+				"deathless-rage-use-pool": {
+					"label": "Deathless Rage use"
+				}
+			}
 		},
 		"Decoy": {
 			"description": "<p>When you Defend: The attack misses instead, and you can move up to half your speed away (where you really were all along!).</p>",
@@ -291,7 +363,12 @@
 		},
 		"DEEP RAGE": {
 			"description": "<p>Dropping to 0 HP does not cause your Rage to end.</p>",
-			"name": "DEEP RAGE"
+			"name": "DEEP RAGE",
+			"rules": {
+				"deep-rage-suppress-0hp": {
+					"label": "Deep Rage"
+				}
+			}
 		},
 		"Deepening Study": {
 			"description": "<p>Choose the Ice or Radiant school to learn.</p>",
@@ -329,11 +406,17 @@
 			"description": "<p>Gain advantage on Initiative. Move 2×DEX spaces for free on your first turn each encounter.</p>",
 			"name": "Eager for Battle",
 			"rules": {
+				"I6AZz9ni9tkA3rsp": {
+					"label": "Eager for Battle"
+				},
 				"index:0": {
 					"label": "Eager for Battle (Advantage on Initiative)"
 				},
 				"index:1": {
 					"label": "Eager for Battle"
+				},
+				"uIU5puSybZptEtcS": {
+					"label": "Eager for Battle (Advantage on Initiative)"
 				}
 			}
 		},
@@ -387,7 +470,15 @@
 		},
 		"Enduring Rage": {
 			"description": "<p>While Dying, you Rage automatically for free at the beginning of your turn, have a max of 2 actions instead of 1, and ignore the STR saves to make attacks.</p>",
-			"name": "Enduring Rage"
+			"name": "Enduring Rage",
+			"rules": {
+				"EnduRageDyingAct": {
+					"label": "Enduring Rage"
+				},
+				"enduring-rage-auto-rage": {
+					"label": "Enduring Rage: auto-Rage while Dying"
+				}
+			}
 		},
 		"Enduring Soul": {
 			"description": "<p>Each time you roll Initiative, gain Hit Dice equal to the actions you get on your first turn. These Hit Dice expire at the end of combat if unused.</p>",
@@ -413,7 +504,12 @@
 		},
 		"Experienced Commander.": {
 			"description": "<p>Your Coordinated Strike may target 1 additional ally. Gain +1 use of Coordinated Strike/Safe Rest.</p>",
-			"name": "Experienced Commander."
+			"name": "Experienced Commander.",
+			"rules": {
+				"experienced-commander-uses": {
+					"label": "Experienced Commander: +1 use of Coordinated Strike"
+				}
+			}
 		},
 		"Expert Shifter": {
 			"description": "<p>Gain 1 additional use of Beastshift per Safe Rest.</p><hr><p>Level 9: +1 Beastshift per Safe Rest</p><p>Level 12: +1 Beastshift per Safe Rest</p>",
@@ -440,6 +536,12 @@
 					"label": "Explorer of the Wilds"
 				},
 				"index:1": {
+					"label": "Explorer of the Wilds"
+				},
+				"J3Y32rSs9EXuKrin": {
+					"label": "Explorer of the Wilds"
+				},
+				"t78A5cp7E9AcmEoD": {
 					"label": "Explorer of the Wilds"
 				}
 			}
@@ -535,6 +637,9 @@
 			"description": "<p>+2 speed. Advantage on Stealth checks and against the Grappled condition.</p>",
 			"name": "Fleet Footed",
 			"rules": {
+				"EcMJKDIwbT3q5cP3": {
+					"label": "Fleet Footed"
+				},
 				"index:0": {
 					"label": "Fleet Footed"
 				}
@@ -559,6 +664,9 @@
 		"Gaze of Two Minds": {
 			"description": "<p>Touch a willing creature and perceive through its senses instead of your own for as long as you hold concentration.</p>",
 			"name": "Gaze of Two Minds"
+		},
+		"Gift from the Master": {
+			"name": "Gift from the Master"
 		},
 		"Glacial Resilience": {
 			"description": "<p><em>(1/Safe Rest)</em> <strong>Reaction</strong> (whenever you are attacked or would gain a condition), gain 10×LVL temp HP and end ALL negative conditions on yourself. At the end of your next turn, any remaining temp HP are lost.</p>",
@@ -641,7 +749,12 @@
 		"Hold the Line!": {
 			"costDetails": "when an ally drops to 0 HP",
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>",
-			"name": "Hold the Line!"
+			"name": "Hold the Line!",
+			"rules": {
+				"hold-the-line-use-pool": {
+					"label": "Hold the Line! use"
+				}
+			}
 		},
 		"Hollow One": {
 			"description": "<p>Cut off from your patron, you can no longer cast Shadow Blast and you can no longer cast tiered spells using Pilfered Power. However, as a parting token, you have stolen a secret from your patron: The magical Bonescythe, a weapon of sinew and bone, infused with shadowy magic.</p>",
@@ -657,7 +770,18 @@
 		},
 		"Hunter's Mark": {
 			"description": "<p><strong>Action:</strong> A creature you can see is marked as your quarry for 1 day (or until you mark another creature). It can't be hidden from you, and your attacks against it gain your choice of advantage OR +LVL damage (choose before each attack).</p>",
-			"name": "Hunter's Mark"
+			"name": "Hunter's Mark",
+			"rules": {
+				"hunters-mark-bonus": {
+					"label": "Hunter's Mark"
+				},
+				"hunters-mark-hidden": {
+					"label": "Hunter's Mark"
+				},
+				"hunters-mark-toggle": {
+					"label": "Mark Quarry"
+				}
+			}
 		},
 		"Hunter's Resolve": {
 			"description": "<p>Whenever you have no Thrill of the Hunt charges, gain Hunter's Resolve until the end of your turn: treat all creatures as your quarry for the purposes of movement and melee attacks.</p>",
@@ -666,7 +790,12 @@
 		"I Can Do This ALL DAY!": {
 			"costDetails": "when you would drop to 0 HP",
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>",
-			"name": "I Can Do This ALL DAY!"
+			"name": "I Can Do This ALL DAY!",
+			"rules": {
+				"i-can-do-this-all-day-use-pool": {
+					"label": "I Can Do This ALL DAY! use"
+				}
+			}
 		},
 		"I Have the High Ground": {
 			"description": "<p>When you roll Initiative or gain one or more Thrill of the Hunt charges, move up to half your speed for free, ignoring difficult terrain.</p>",
@@ -744,6 +873,9 @@
 				},
 				"fury-d8-l9": {
 					"label": "Fury Dice → d8"
+				},
+				"intensifying-fury-turn-refill": {
+					"label": "Intensifying Fury: free Fury Die at turn start"
 				}
 			}
 		},
@@ -823,7 +955,12 @@
 		},
 		"Lay on Hands": {
 			"description": "<p>Gain a magical pool of healing power. This pool's maximum is always equal to 5×LVL and recharges on a Safe Rest. Action: Touch a target and spend any amount of remaining healing power to restore that many HP.</p>",
-			"name": "Lay on Hands"
+			"name": "Lay on Hands",
+			"rules": {
+				"lay-on-hands-pool": {
+					"label": "Lay on Hands"
+				}
+			}
 		},
 		"Leader of the Pack": {
 			"description": "<p>Advantage against fear and charm effects for yourself and allies within 6 spaces.</p>",
@@ -831,7 +968,12 @@
 		},
 		"Leave No Trace": {
 			"description": "<p>Advantage on Stealth checks when you are at full health. </p>",
-			"name": "Leave No Trace"
+			"name": "Leave No Trace",
+			"rules": {
+				"lyHWwQGcbooGei1a": {
+					"label": "Leave No Trace"
+				}
+			}
 		},
 		"Life is Beautiful": {
 			"description": "<p>Harmless and lovely creatures such as butterflies and humming birds are attracted to your presence and often follow you. Flowers bloom more vibrantly in your presence.</p>",
@@ -857,6 +999,9 @@
 			"description": "<p>Gain +1 Reach on an attack and deal extra damage equal to 2× a roll of your Combat Die.</p>",
 			"name": "Lunging Strike"
 		},
+		"Lyrical Weaponry": {
+			"name": "Lyrical Weaponry"
+		},
 		"Mal, the Malevolent Imp": {
 			"description": "<p>Summon a tiny fiend for 1 night. He can find out dangerous information you have no right to know! Or “take care” of a problem with only the slightest chance of things going wrong. Make an Influence check to convince him to help you (advantage if you ask him to do something he would find mischievous or fun; with disadvantage if it is something he would find good or menial).</p>",
 			"name": "Mal, the Malevolent Imp"
@@ -869,13 +1014,30 @@
 			"description": "<p>You unlock tier 1 Fire, Ice, and Lightning spells and gain a mana pool to cast these spells. This mana pool's maximum is always equal to (INT×3)+LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2 Spells. You may now cast tier 2 spells and upcast spells at tier 2.</p><p>Level 6: Tier 3 Spells. You may now cast tier 3 spells and upcast spells at tier 3.</p><p>Level 8: Tier 4 Spells. You may now cast tier 4 spells and upcast spells at tier 4.</p><p>Level 10: Tier 5 Spells. You may now cast tier 5 spells and upcast spells at tier 5.</p><p>Level 12: Tier 6 Spells. You may now cast tier 6 spells and upcast spells at tier 6.</p><p>Level 14: Tier 7 Spells. You may now cast tier 7 spells and upcast spells at tier 7.</p><p>Level 16: Tier 8 Spells. You may now cast tier 8 spells and upcast spells at tier 8.</p><p>Level 18: Tier 9 Spells. You may now cast tier 9 spells and upcast spells at tier 9.</p>",
 			"name": "Mana and Unlock Tier 1 Spells"
 		},
+		"Martial Arts Ability": {
+			"name": "Martial Arts Ability"
+		},
 		"Martyr Spawn": {
 			"description": "<p>Whenever you Defend, you can sacrifice a shadow minion to take no damage.</p>",
 			"name": "Martyr Spawn"
 		},
 		"Master Commander": {
 			"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 5, 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
-			"name": "Master Commander"
+			"name": "Master Commander",
+			"rules": {
+				"master-commander-initiative-regain": {
+					"label": "Master Commander: regain 1 use of Coordinated Strike on initiative"
+				},
+				"master-commander-uses-l13": {
+					"label": "Master Commander (3): +1 use of Coordinated Strike"
+				},
+				"master-commander-uses-l17": {
+					"label": "Master Commander (4): +1 use of Coordinated Strike"
+				},
+				"master-commander-uses-l9": {
+					"label": "Master Commander (2): +1 use of Coordinated Strike"
+				}
+			}
 		},
 		"Master of Chaos": {
 			"description": "<p>Whenever you Invoke Chaos, roll with advantage.</p>",
@@ -971,7 +1133,12 @@
 		},
 		"MORE BLOOD!": {
 			"description": "<p>Whenever an enemy crits you, gain 1 Fury Die.</p>",
-			"name": "MORE BLOOD!"
+			"name": "MORE BLOOD!",
+			"rules": {
+				"more-blood-crit-refill": {
+					"label": "MORE BLOOD! (gain a Fury Die when crit)"
+				}
+			}
 		},
 		"Mountain's Endurance": {
 			"description": "<p>While Dying, if an attack against you would be a crit, the attack is rerolled instead (when-crit abilities, such as Titan's Fury, still trigger).</p>",
@@ -1004,7 +1171,12 @@
 		},
 		"Nemesis": {
 			"description": "<p>+1 to any 2 of your stats. Your Hunter's Mark can target any number of creatures simultaneously.</p>",
-			"name": "Nemesis"
+			"name": "Nemesis",
+			"rules": {
+				"nemesis-unlimited-quarry": {
+					"label": "Nemesis"
+				}
+			}
 		},
 		"No Escape": {
 			"description": "<p>Whenever you see one or more allies make an opportunity attack, you may also make a ranged opportunity attack against the same target.</p>",
@@ -1028,11 +1200,21 @@
 		},
 		"One with the Ancients": {
 			"description": "<p>(1/Safe Rest) When faced with a decision about which direction or course of action to take, you can call upon your ancestors to guide you toward the most dangerous or challenging path.</p>",
-			"name": "One with the Ancients"
+			"name": "One with the Ancients",
+			"rules": {
+				"owta-charge-pool": {
+					"label": "One with the Ancients"
+				}
+			}
 		},
 		"Onslaught": {
 			"description": "<p>While Raging, gain +2 speed.<br><em>(1/round)</em> you may move for free.</p>",
-			"name": "Onslaught"
+			"name": "Onslaught",
+			"rules": {
+				"onslaught-raging-speed": {
+					"label": "Onslaught (+2 speed while Raging)"
+				}
+			}
 		},
 		"Opportunistic Frenzy": {
 			"description": "<p>While Raging, you can make opportunity attacks without disadvantage, and you may make them whenever an enemy enters your melee weapon's reach.</p>",
@@ -1112,6 +1294,9 @@
 			"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>",
 			"name": "Professional Skulker",
 			"rules": {
+				"CbCCuwJX0Tt1vxPk": {
+					"label": "Professional Skulker"
+				},
 				"index:0": {
 					"label": "Professional Skulker"
 				}
@@ -1168,6 +1353,9 @@
 				},
 				"fury-pool-base": {
 					"label": "Fury Dice"
+				},
+				"rage-toggle": {
+					"label": "Rage"
 				}
 			}
 		},
@@ -1226,9 +1414,23 @@
 			"description": "<p>Action: If you have no Thrill of the Hunt charges, move up to your speed toward your quarry. If you end adjacent to them, make a melee attack against them for free.</p>",
 			"name": "Roll & Strike"
 		},
+		"Sacred Decree": {
+			"name": "Sacred Decree"
+		},
+		"Sacred Graces": {
+			"name": "Sacred Graces"
+		},
+		"Savage Arsenal": {
+			"name": "Savage Arsenal"
+		},
 		"Savage Awareness": {
 			"description": "<p>Advantage on Perception checks to notice or track down blood. Blindsight 2 while Raging: you ignore the Blinded condition and can see through darkness and Invisibility within that Range.</p>",
-			"name": "Savage Awareness"
+			"name": "Savage Awareness",
+			"rules": {
+				"savage-awareness-perception": {
+					"label": "Savage Awareness (Perception, blood only)"
+				}
+			}
 		},
 		"Searing Light": {
 			"description": "<p>(WIL times/Safe Rest) Action: Heal or Inflict grievous injuries:</p><p>• Heal WIL d8 HP to a Dying creature within Reach 6. OR:</p><p>• Inflict WIL d8 radiant damage to an undead or Bloodied enemy within Reach 6.</p>",
@@ -1344,6 +1546,9 @@
 			"description": "<p>When you use Searing Light to harm an enemy, make a 2nd enemy within range take the same amount of damage (ignoring armor).</p>",
 			"name": "Soul Reaper"
 		},
+		"Spell Shaper": {
+			"name": "Spell Shaper"
+		},
 		"Stand Fast, Friends!": {
 			"description": "<p>When you roll Initiative, grant allies temp HP equal to your STR+WIL. You and allies within your aura have advantage against fear and effects that would move or knock Prone.</p>",
 			"name": "Stand Fast, Friends!"
@@ -1362,7 +1567,12 @@
 		},
 		"Stone's Resilience": {
 			"description": "<p>Whenever you expend Fury Dice to reduce incoming damage, add the value of the die to the amount reduced.</p>",
-			"name": "Stone's Resilience"
+			"name": "Stone's Resilience",
+			"rules": {
+				"stones-resilience-dr-boost": {
+					"label": "Stone's Resilience: add die value to reduction"
+				}
+			}
 		},
 		"Storm Wake": {
 			"description": "<p>(1/encounter) Action: Spend 3 mana to shift into a Beast of the Pack, then teleport in a straight line up to 12 spaces away, unerringly dealing WIL d8 lightning damage to any creatures you choose adjacent to your path.</p>",
@@ -1410,7 +1620,15 @@
 		},
 		"Survey the Battlefield.": {
 			"description": "<p>When you roll Initiative, regain 1 use of Coordinated Strike. +1 max Combat Dice.</p>",
-			"name": "Survey the Battlefield."
+			"name": "Survey the Battlefield.",
+			"rules": {
+				"survey-the-battlefield-combat-dice": {
+					"label": "Survey the Battlefield: +1 max Combat Dice"
+				},
+				"survey-the-battlefield-initiative-regain": {
+					"label": "Survey the Battlefield: regain 1 use of Coordinated Strike on initiative"
+				}
+			}
 		},
 		"Swarming Shadows": {
 			"description": "<p>Whenever one of your shadows would crit, summon another shadow minion adjacent to the target.</p>",
@@ -1436,6 +1654,15 @@
 				},
 				"index:2": {
 					"label": "Swift Feet (9)"
+				},
+				"JflZ8p8jDbfUKhtr": {
+					"label": "Swift Feet (9)"
+				},
+				"lax2tm9WANtF27kW": {
+					"label": "Swift Feet Initiative Bonus"
+				},
+				"N6AjtypNnAog0Yxe": {
+					"label": "Swift Feet (2)"
 				}
 			}
 		},
@@ -1445,7 +1672,12 @@
 		},
 		"Swift Fury": {
 			"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p>",
-			"name": "Swift Fury"
+			"name": "Swift Fury",
+			"rules": {
+				"swift-fury-gain-message": {
+					"label": "Swift Fury"
+				}
+			}
 		},
 		"Swiftshift": {
 			"description": "<p>When you roll Initiative, you may Beastshift or move for free. While transformed, you may shift between different Direbeast forms for free (and as a reaction by spending 1 mana); however, Beastshifting for free does not grant any temp HP.</p>",
@@ -1457,7 +1689,12 @@
 		},
 		"Taunting Strike": {
 			"description": "<p>(1/turn) You may Taunt a creature you hit until the end of their next turn.</p>",
-			"name": "Taunting Strike"
+			"name": "Taunting Strike",
+			"rules": {
+				"taunting-strike-use-pool": {
+					"label": "Taunting Strike use"
+				}
+			}
 		},
 		"Tempest Mage": {
 			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Wind school.</p>",
@@ -1485,6 +1722,9 @@
 			"description": "<p><em>(1/Safe Rest)</em> Action: After a Distracted enemy attacks you, you may change the Primary Die roll to whatever you like (changing the die to the minimum value counts as a miss).</p>",
 			"name": "THAT'S Not What Happened!"
 		},
+		"The Pact is Sealed": {
+			"name": "The Pact is Sealed"
+		},
 		"Thieves' Cant": {
 			"description": "<p>You learn the secret language of rogues and scoundrels. </p>",
 			"name": "Thieves' Cant"
@@ -1504,7 +1744,12 @@
 		"Titan's Fury": {
 			"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p>",
 			"durationDetails": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
-			"name": "Titan's Fury"
+			"name": "Titan's Fury",
+			"rules": {
+				"titans-fury-auto-rage": {
+					"label": "Titan's Fury: Rage for free when crit"
+				}
+			}
 		},
 		"Torment": {
 			"description": "<p>Your Lay on Hands heals you for twice as much, and others for half as much. When you deal damage, you can expend healing power from your Lay on Hands pool to increase the damage dealt by an amount equal to the points spent (ignoring armor).</p>",
@@ -1532,7 +1777,15 @@
 		},
 		"Unbreakable": {
 			"description": "<p><em>(1/encounter)</em> While Raging, if you would suffer your last Wound or other negative condition of your choice, you don't.</p>",
-			"name": "Unbreakable"
+			"name": "Unbreakable",
+			"rules": {
+				"unbreakable-use-pool": {
+					"label": "Unbreakable use"
+				}
+			}
+		},
+		"Underhanded Abilities": {
+			"name": "Underhanded Abilities"
 		},
 		"Unending Judgment": {
 			"description": "<p>While you have no Judgment Dice, gain +5 damage to melee attacks.</p>",
@@ -1576,6 +1829,9 @@
 			"name": "Unstoppable Protector",
 			"rules": {
 				"index:0": {
+					"label": "Unstoppable Protector"
+				},
+				"x5UWrJw1yREILyHx": {
 					"label": "Unstoppable Protector"
 				}
 			}
@@ -1697,6 +1953,9 @@
 			"name": "Winged",
 			"rules": {
 				"index:0": {
+					"label": "Winged"
+				},
+				"RivdlU4xcZIxnZQt": {
 					"label": "Winged"
 				}
 			}
