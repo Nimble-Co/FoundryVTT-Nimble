@@ -426,6 +426,81 @@ describe('variable charge consumers', () => {
 	});
 });
 
+describe('cross-item pool spending', () => {
+	// An item-scoped pool id is the bare identifier, which is what lets a second
+	// feature spend from a pool a first feature declares (a subclass feature
+	// drawing on its base class's pool, say) without an actor-scoped pool.
+	function createPoolAndConsumerItems(): { poolItem: MockItem; consumerItem: MockItem } {
+		return {
+			poolItem: createMockItem('item-1', 'Pool Owner', [
+				{
+					type: 'chargePool',
+					id: 'pool-rule',
+					identifier: 'focus',
+					label: 'Focus',
+					scope: 'item',
+					max: '10',
+					initial: 'max',
+				} as MockRule,
+			]),
+			consumerItem: createMockItem('item-2', 'Other Feature', [
+				{
+					type: 'chargeConsumer',
+					id: 'other-consumer',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					cost: '2',
+				} as MockRule,
+			]),
+		};
+	}
+
+	it('resolves a consumer on one item to a pool declared on another', () => {
+		const { poolItem, consumerItem } = createPoolAndConsumerItems();
+		const actor = createMockActor([poolItem, consumerItem]);
+
+		const [consumer] = getChargeConsumers(actor, consumerItem as unknown as RuleBackedItem);
+
+		expect(consumer).toMatchObject({ poolId: 'focus', poolIdentifier: 'focus', cost: 2 });
+		expect(buildEffectiveChargePoolMap(actor)[consumer!.poolId]).toMatchObject({
+			identifier: 'focus',
+			sourceItemId: 'item-1',
+			current: 10,
+		});
+	});
+
+	it('resolves a variable consumer on one item to the other item pool', () => {
+		const { poolItem } = createPoolAndConsumerItems();
+		const variableConsumer = createMockItem('item-2', 'Other Feature', [
+			{
+				type: 'chargeConsumer',
+				id: 'other-consumer',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '4',
+			} as MockRule,
+		]);
+		const actor = createMockActor([poolItem, variableConsumer]);
+
+		expect(
+			getChargeConsumers(actor, variableConsumer as unknown as RuleBackedItem, {
+				includeVariable: true,
+			}),
+		).toEqual([
+			{
+				ruleId: 'other-consumer',
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: true,
+				maxCost: 4,
+			},
+		]);
+	});
+});
+
 describe('charge pool predicate gating', () => {
 	function createPoolItem(pool: MockRule): MockItem {
 		return createMockItem('item-1', 'Gated Feature', [pool]);
