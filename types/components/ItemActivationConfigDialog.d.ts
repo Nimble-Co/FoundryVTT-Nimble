@@ -22,10 +22,7 @@ export interface SpendableChargePool {
 /** A charge pool the activated item spends a player-chosen amount from. */
 export interface VariableChargeSpend {
 	poolId: string;
-	identifier: string;
 	label: string;
-	current: number;
-	max: number;
 	/** Smallest legal spend. */
 	minimum: number;
 	/** Largest legal spend, already clamped to the pool's current charges. */

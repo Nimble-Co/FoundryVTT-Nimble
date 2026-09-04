@@ -181,7 +181,7 @@
 										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber)}
 								/>
 								<span class="nimble-pool-spend__stepper-available">
-									/ {spend.current}
+									/ {spend.limit}
 								</span>
 							</span>
 							<button

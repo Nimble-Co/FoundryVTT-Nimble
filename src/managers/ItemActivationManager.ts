@@ -411,6 +411,8 @@ class ItemActivationManager {
 						formula = this.#applyHealingBonus(formula, healingBonus);
 					}
 
+					// The extra `spent` key widens the roll data past Roll's default
+					// EmptyObject parameter, which the two types will not narrow between.
 					roll = new Roll(formula, activationRollData) as unknown as Roll;
 				}
 
@@ -579,6 +581,10 @@ class ItemActivationManager {
 	 * `@spent`. Either way this step decrements the pool by what was spent.
 	 */
 	async #consumeChargePools(dialogData: ItemActivationManager.DialogData): Promise<void> {
+		// One activation, one readout: reset rather than append, so a manager
+		// reused for a second getData() does not report the first spend again.
+		this.#chargeConsumption = [];
+
 		const consumed = dialogData.consumedChargePools;
 		if (!Array.isArray(consumed) || consumed.length < 1) return;
 

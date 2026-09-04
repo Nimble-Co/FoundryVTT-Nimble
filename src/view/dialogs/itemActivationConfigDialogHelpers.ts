@@ -93,15 +93,7 @@ export function extractVariableChargeSpends(actor: Actor, item: Item): VariableC
 			consumer.maxCost === null ? pool.current : Math.min(consumer.maxCost, pool.current);
 		if (limit < minimum) continue;
 
-		spends.push({
-			poolId: pool.id,
-			identifier: pool.identifier,
-			label: pool.label,
-			current: pool.current,
-			max: pool.max,
-			minimum,
-			limit,
-		});
+		spends.push({ poolId: pool.id, label: pool.label, minimum, limit });
 	}
 
 	return spends;

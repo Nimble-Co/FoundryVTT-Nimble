@@ -72,14 +72,7 @@ function extract(rules: Rule[], storedCurrent?: number) {
 describe('extractVariableChargeSpends', () => {
 	it('bounds the spend by the consumer cost and the pool remainder', () => {
 		expect(extract([createPoolRule(), createConsumerRule()], 8)).toEqual([
-			expect.objectContaining({
-				poolId: 'focus',
-				identifier: 'focus',
-				current: 8,
-				max: 10,
-				minimum: 1,
-				limit: 8,
-			}),
+			{ poolId: 'focus', label: 'Focus', minimum: 1, limit: 8 },
 		]);
 	});
 
