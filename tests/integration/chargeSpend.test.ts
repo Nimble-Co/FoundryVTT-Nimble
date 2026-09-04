@@ -33,6 +33,10 @@ const LAY_ON_HANDS = 'Lay on Hands';
 
 const RESOURCE_RECOVERY_SETTING = 'automation.resourceRecovery';
 
+/** How much of the pool the spend tests choose, from a starting pool of 5. */
+const SPEND_AMOUNT = 3;
+const POOL_MAX = 5;
+
 /**
  * The resource-recovery toggle, read through the same casts the system uses:
  * it is not in fvtt-types' registered settings map. Local to this file because
@@ -103,7 +107,6 @@ describe('variable charge spends', () => {
 		actor = (await Actor.create({
 			name: `${TEST_PREFIX} Oathsworn`,
 			type: 'character',
-			system: { attributes: { hp: { value: 4, max: 17 } } },
 		} as Actor.CreateData)) as unknown as SheetActor;
 
 		await importPackItem(
@@ -120,6 +123,12 @@ describe('variable charge spends', () => {
 		// Pool flags only seed on a sync hook.
 		await actor.update({ 'system.details.notes': `${TEST_PREFIX} staging` });
 		await waitFor(() => !!pool(), 'the Lay on Hands pool to seed');
+
+		// Wounded enough that the healing lands in full. This has to happen after
+		// the class import, which sets current HP to the class's starting HP.
+		await actor.update({
+			'system.attributes.hp.value': Math.max(1, actor.system.attributes.hp.max - 10),
+		});
 
 		// A target for the card's Apply Healing button to land on.
 		const scene = await createViewedTestScene(`${TEST_PREFIX} Scene`);
@@ -147,7 +156,7 @@ describe('variable charge spends', () => {
 
 	test('the pack feature surfaces a pool of 5 x LVL', () => {
 		// A level 1 character, so the pack's "5 * @level" resolves to 5.
-		expect(pool()).toMatchObject({ current: 5, max: 5 });
+		expect(pool()).toMatchObject({ current: POOL_MAX, max: POOL_MAX });
 	});
 
 	test('activating it prompts for an amount bounded by the pool', async () => {
@@ -169,7 +178,7 @@ describe('variable charge spends', () => {
 
 		// The consumer's cost is the floor, the pool's remaining charges the ceiling.
 		expect(spendInput()!.min).toBe('1');
-		expect(spendInput()!.max).toBe('5');
+		expect(spendInput()!.max).toBe(String(POOL_MAX));
 		expect(spendInput()!.value).toBe('1');
 	}, 60_000);
 
@@ -179,10 +188,10 @@ describe('variable charge spends', () => {
 			...root.querySelectorAll<HTMLButtonElement>('button[aria-label="Spend one more"]'),
 		].at(-1);
 		expect(increment, 'the increment button').toBeTruthy();
-		increment!.click();
-		increment!.click();
+		// Opens at the minimum of 1, so click up to SPEND_AMOUNT.
+		for (let step = 1; step < SPEND_AMOUNT; step += 1) increment!.click();
 		await settle(300);
-		expect(spendInput()!.value).toBe('3');
+		expect(spendInput()!.value).toBe(String(SPEND_AMOUNT));
 
 		const before = new Set(game.messages.contents.map((message) => message.id));
 		submitButtonOutsideSheet()!.click();
@@ -192,16 +201,25 @@ describe('variable charge spends', () => {
 		);
 		await settle(800);
 
+		const remaining = POOL_MAX - SPEND_AMOUNT;
 		const card = game.messages.contents.find((message) => !before.has(message.id))!;
-		expect(card.rolls[0]?.total, 'the healing rolled from @spent').toBe(3);
-		await waitFor(() => pool()?.current === 2, 'the pool to drop by what was spent');
+		expect(card.rolls[0]?.total, 'the healing rolled from @spent').toBe(SPEND_AMOUNT);
+		await waitFor(() => pool()?.current === remaining, 'the pool to drop by what was spent');
 		expect(
 			foundry.utils.getProperty(card, `flags.${game.system.id}.chargeConsumption`),
-		).toMatchObject([{ poolLabel: LAY_ON_HANDS, previousValue: 5, currentValue: 2, change: -3 }]);
+		).toMatchObject([
+			{
+				poolLabel: LAY_ON_HANDS,
+				previousValue: POOL_MAX,
+				currentValue: remaining,
+				change: -SPEND_AMOUNT,
+			},
+		]);
 	}, 60_000);
 
 	test('applying the card restores exactly what was spent', async () => {
-		expect(actor.system.attributes.hp.value).toBe(4);
+		const hpBefore = actor.system.attributes.hp.value;
+		expect(hpBefore).toBeLessThanOrEqual(actor.system.attributes.hp.max - SPEND_AMOUNT);
 
 		const applyHealing = [
 			...document.querySelectorAll<HTMLButtonElement>('button.nimble-button--apply-healing'),
@@ -209,11 +227,14 @@ describe('variable charge spends', () => {
 		expect(applyHealing, 'the Apply Healing button').toBeTruthy();
 		applyHealing!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-		await waitFor(() => actor.system.attributes.hp.value === 7, 'the target to be healed by 3');
+		await waitFor(
+			() => actor.system.attributes.hp.value === hpBefore + SPEND_AMOUNT,
+			`the target to be healed by ${SPEND_AMOUNT}`,
+		);
 	}, 60_000);
 
 	test('a Safe Rest refills the pool', async () => {
-		expect(pool()?.current).toBe(2);
+		expect(pool()?.current).toBe(POOL_MAX - SPEND_AMOUNT);
 
 		const safeRest = actor.sheet.element.querySelector<HTMLButtonElement>(
 			'button[aria-label="Safe Rest"]',
@@ -224,6 +245,6 @@ describe('variable charge spends', () => {
 		await waitFor(() => !!submitButtonOutsideSheet(), 'the Safe Rest dialog to open');
 		submitButtonOutsideSheet()!.click();
 
-		await waitFor(() => pool()?.current === 5, 'the pool to refill on the rest');
+		await waitFor(() => pool()?.current === POOL_MAX, 'the pool to refill on the rest');
 	}, 60_000);
 });
