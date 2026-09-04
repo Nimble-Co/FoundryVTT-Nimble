@@ -23,7 +23,7 @@ export interface SpellCostActorLike {
 	items?: { contents?: Array<{ type?: string; system?: unknown }> };
 	system?: {
 		resources?: {
-			mana?: { current?: number };
+			mana?: { current?: number; max?: number; baseMax?: number };
 			highestUnlockedSpellTier?: number | null;
 		};
 		attributes?: { hp?: { max?: number } };

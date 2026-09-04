@@ -19,6 +19,12 @@ function declaresSpellcasting(spellcasting: ClassSpellcastingDeclaration | undef
 	return poolIdentifier.length > 0 || spellcasting.castAtHighestTier === true;
 }
 
+/** Whether the character holds mana at all, so a mana cost can be paid. */
+function hasManaCapacity(actor: SpellCostActorLike): boolean {
+	const mana = actor?.system?.resources?.mana;
+	return (mana?.max ?? mana?.baseMax ?? 0) > 0;
+}
+
 /**
  * The spellcasting declaration that governs this cast, or null for the default
  * rule that a tiered spell costs its tier in mana.
@@ -51,18 +57,27 @@ function getClassSpellcasting(
 				)
 			: classItems;
 
-	// With no restriction to narrow by, a single class is unambiguous and more
-	// than one is not.
-	if (restrictedTo.length < 1 && classItems.length > 1) return null;
+	const declared = candidates
+		.map(
+			(item) =>
+				(item.system as { spellcasting?: ClassSpellcastingDeclaration } | undefined)?.spellcasting,
+		)
+		.filter((spellcasting): spellcasting is ClassSpellcastingDeclaration =>
+			declaresSpellcasting(spellcasting),
+		);
 
-	for (const item of candidates) {
-		const spellcasting = (
-			item.system as { spellcasting?: ClassSpellcastingDeclaration } | undefined
-		)?.spellcasting;
-		if (declaresSpellcasting(spellcasting)) return spellcasting ?? null;
+	if (declared.length < 1) return null;
+
+	// With no restriction to narrow by, a single class is unambiguous and more
+	// than one is not. Mana is the safe default for the ambiguous case, but only
+	// for a character who holds mana: one who holds none would pay nothing at
+	// all, so a single declared cost is read as the only thing that could be
+	// paying for the cast.
+	if (restrictedTo.length < 1 && classItems.length > 1) {
+		if (declared.length > 1 || hasManaCapacity(actor)) return null;
 	}
 
-	return null;
+	return declared[0];
 }
 
 /**

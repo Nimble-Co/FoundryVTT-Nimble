@@ -447,10 +447,27 @@ describe('multiclass cost attribution', () => {
 		expect(resolveSpellCost(actor, shadowSpell)).toMatchObject({ type: 'pool' });
 	});
 
-	it('falls back to mana when a multiclass spell names no class', () => {
+	it('falls back to mana when a multiclass caster who holds mana names no class', () => {
 		const actor = createMockActor({
 			items: [createPoolClass({ poolCurrent: 3 }), createPlainClass('mage')],
+			mana: { current: 8, max: 12 },
 		});
+
+		expect(resolveSpellCost(actor, createSpell(2))).toEqual({ type: 'mana', amount: 2 });
+	});
+
+	it('charges the only declared pool when a multiclass caster holds no mana', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ poolCurrent: 3 }), createPlainClass('berserker')],
+		});
+
+		expect(resolveSpellCost(actor, createSpell(2))).toMatchObject({ type: 'pool' });
+	});
+
+	it('falls back to mana when more than one class declares a pool', () => {
+		const second = createPoolClass({ poolIdentifier: 'other-power', poolCurrent: 3 });
+		second.id = 'class-2';
+		const actor = createMockActor({ items: [createPoolClass({ poolCurrent: 3 }), second] });
 
 		expect(resolveSpellCost(actor, createSpell(2))).toEqual({ type: 'mana', amount: 2 });
 	});
