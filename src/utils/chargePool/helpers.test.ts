@@ -332,7 +332,14 @@ describe('charge consumer predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
-			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+			{
+				ruleId: 'consumer-rule',
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: false,
+				maxCost: null,
+			},
 		]);
 	});
 
@@ -347,8 +354,75 @@ describe('charge consumer predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
-			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+			{
+				ruleId: 'consumer-rule',
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: false,
+				maxCost: null,
+			},
 		]);
+	});
+});
+
+describe('variable charge consumers', () => {
+	function createVariableConsumerItem(overrides: Partial<MockRule> = {}): MockItem {
+		return createMockItem('item-1', 'Flexible Feature', [
+			{
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '10',
+				initial: 'max',
+			} as MockRule,
+			{
+				type: 'chargeConsumer',
+				id: 'consumer-rule',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '',
+				...overrides,
+			} as MockRule,
+		]);
+	}
+
+	it('is hidden from callers that spend a fixed cost', () => {
+		const item = createVariableConsumerItem();
+		const actor = createMockActor([item]);
+
+		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([]);
+	});
+
+	it('is reported with its minimum and an open ceiling when asked for', () => {
+		const item = createVariableConsumerItem();
+		const actor = createMockActor([item]);
+
+		expect(
+			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true }),
+		).toEqual([
+			{
+				ruleId: 'consumer-rule',
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: true,
+				maxCost: null,
+			},
+		]);
+	});
+
+	it('resolves a maxCost formula into the reported ceiling', () => {
+		const item = createVariableConsumerItem({ maxCost: '3' } as Partial<MockRule>);
+		const actor = createMockActor([item]);
+
+		expect(
+			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true })[0]
+				.maxCost,
+		).toBe(3);
 	});
 });
 

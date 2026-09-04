@@ -40,9 +40,12 @@
 			const [poolId, indexStr] = key.split(':');
 			return { poolId, faceIndex: Number(indexStr) };
 		});
-		const consumedChargePools = Object.entries(state.chargeSpendCounts)
-			.filter(([, count]) => count > 0)
-			.map(([poolId, count]) => ({ poolId, count }));
+		const consumedChargePools = [
+			...Object.entries(state.chargeSpendCounts)
+				.filter(([, count]) => count > 0)
+				.map(([poolId, count]) => ({ poolId, count })),
+			...state.consumedVariableCharges,
+		];
 		dialog.submitActivation({
 			// Fold any "advantage" conditional-bonus choices into the roll mode; "damage"
 			// choices are already baked into the modified formula below. Clamp the sum to
@@ -55,6 +58,7 @@
 			rollHidden: state.shouldRollBeHidden,
 			consumedPoolDice,
 			consumedChargePools,
+			spentCharges: state.spentCharges,
 			// Typed conditional-bonus damage rolls as its own damage effect so the
 			// chosen type applies; untyped choices are already folded into rollFormula.
 			conditionalDamages: state.conditionalTypedDamages,
@@ -143,6 +147,58 @@
 			</label>
 		</div>
 	</div>
+
+	{#if state.variableChargeSpends.length > 0}
+		<div class="nimble-roll-modifiers-container">
+			<div class="nimble-roll-modifiers nimble-pool-spend">
+				<h5 class="nimble-pool-spend__heading">
+					{localize('NIMBLE.activationDialog.spendCharges.heading')}
+				</h5>
+
+				{#each state.variableChargeSpends as spend (spend.poolId)}
+					{@const selected = state.variableSpendCounts[spend.poolId] ?? spend.minimum}
+					<div class="nimble-pool-spend__row">
+						<span class="nimble-pool-spend__label">{spend.label}</span>
+						<div class="nimble-pool-spend__stepper">
+							<button
+								type="button"
+								class="nimble-pool-spend__stepper-btn"
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement')}
+								disabled={selected <= spend.minimum}
+								onclick={() => state.adjustVariableSpend(spend.poolId, -1)}
+							>
+								−
+							</button>
+							<span class="nimble-pool-spend__stepper-value">
+								<input
+									class="nimble-pool-spend__stepper-input"
+									type="number"
+									min={spend.minimum}
+									max={spend.limit}
+									value={selected}
+									aria-label={localize('NIMBLE.activationDialog.spendCharges.amount')}
+									onchange={({ currentTarget }) =>
+										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber)}
+								/>
+								<span class="nimble-pool-spend__stepper-available">
+									/ {spend.current}
+								</span>
+							</span>
+							<button
+								type="button"
+								class="nimble-pool-spend__stepper-btn"
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment')}
+								disabled={selected >= spend.limit}
+								onclick={() => state.adjustVariableSpend(spend.poolId, 1)}
+							>
+								+
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	{#if state.hasSpendablePools}
 		<div class="nimble-roll-modifiers-container">
@@ -530,6 +586,13 @@
 				opacity: 0.35;
 				cursor: not-allowed;
 			}
+		}
+
+		&__stepper-input {
+			width: 3.5rem;
+			padding-block: 0;
+			text-align: center;
+			font-weight: 700;
 		}
 
 		&__stepper-value {

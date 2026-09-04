@@ -26,7 +26,9 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 	if (!isCharacterActor(actor)) return { ok: true };
 
 	const pools = buildEffectiveChargePoolMap(actor);
-	const consumers = getChargeConsumers(actor, ruleBackedItem);
+	// Variable consumers are validated too, against their minimum: an item whose
+	// only cost is "spend any amount" still has nothing to do on an empty pool.
+	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true });
 	for (const consumer of consumers) {
 		const pool = pools[consumer.poolId];
 		if (!pool) {

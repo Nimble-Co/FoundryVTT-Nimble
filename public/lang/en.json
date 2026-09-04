@@ -902,7 +902,19 @@
 				}
 			},
 			"chargeConsumer": {
-				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
+				"description": "Spend charges from an item or actor pool when this rule’s owner is activated.",
+				"costMode": {
+					"label": "Cost mode",
+					"hint": "Fixed spends the cost every activation. Variable asks the player how much to spend, from the cost up to the maximum, and the item’s effect formulas read the chosen amount as @spent."
+				},
+				"cost": {
+					"label": "Cost",
+					"hint": "Charges spent per activation. In variable mode this is the smallest amount the player may choose."
+				},
+				"maxCost": {
+					"label": "Maximum cost",
+					"hint": "Variable mode only. Ceiling formula for the player’s choice. Leave blank to allow the pool’s remaining charges."
+				}
 			},
 			"diceConsumer": {
 				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool.",
@@ -2503,6 +2515,10 @@
 				"advantage": "Advantage × {count}",
 				"damage": "+{value} damage",
 				"none": "None"
+			},
+			"spendCharges": {
+				"heading": "Spend Charges",
+				"amount": "Charges to spend"
 			}
 		},
 		"characterSettings": {

@@ -17,6 +17,10 @@ interface MockActor {
 	token: { uuid: string } | null;
 	getRollData: ReturnType<typeof vi.fn>;
 	type?: string;
+	// Only the charge-pool paths read these, so they stay optional rather than
+	// forcing every fixture to describe an inventory it does not have.
+	flags?: Record<string, unknown>;
+	items?: { contents: MockItem[]; get(id: string): MockItem | undefined };
 	system: {
 		savingThrows: {
 			strength: { mod: number };
@@ -24,6 +28,7 @@ interface MockActor {
 			will: { mod: number };
 			intelligence: { mod: number };
 		};
+		levelUpHistory?: Array<Record<string, unknown>>;
 	};
 }
 
@@ -32,6 +37,9 @@ interface MockItem {
 	type: string;
 	name: string;
 	actor: MockActor | null;
+	id?: string;
+	flags?: Record<string, unknown>;
+	rules?: Map<string, Record<string, unknown>>;
 	system: {
 		activation: {
 			effects: EffectNode[];
@@ -424,7 +432,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: true,
 					canMiss: true,
@@ -465,7 +473,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: true,
 					canMiss: true,
@@ -508,7 +516,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			const result = await manager.getData();
 
 			expect(result.rolls).toHaveLength(1);
-			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10 }, undefined);
+			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10, spent: 0 }, undefined);
 		});
 	});
 
@@ -547,7 +555,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d8',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				expect.objectContaining({
 					canCrit: false,
 					canMiss: true,
@@ -589,7 +597,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d8',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				expect.objectContaining({
 					canCrit: true,
 					canMiss: true,
@@ -629,7 +637,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: false,
 					canMiss: true,
@@ -673,7 +681,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.rolls![0]).toBe(mockRoll);
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: true,
 					canMiss: true,
@@ -718,7 +726,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: true,
 					canMiss: true,
@@ -762,7 +770,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: true,
 					canMiss: true,
@@ -826,7 +834,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.rolls![1]).toBe(mockRegularRoll);
 			expect(DamageRoll).toHaveBeenCalledTimes(1);
 			// MockRoll constructor captures 3 args, third is undefined since not passed by caller
-			expect(MockRoll).toHaveBeenCalledWith('1d4', { level: 1, strength: 10 }, undefined);
+			expect(MockRoll).toHaveBeenCalledWith('1d4', { level: 1, strength: 10, spent: 0 }, undefined);
 		});
 
 		it('should use default formula "0" when formula is missing', async () => {
@@ -860,7 +868,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'0',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: false,
 					canMiss: false,
@@ -944,7 +952,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(DamageRoll).toHaveBeenCalledTimes(1);
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d8',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				expect.objectContaining({ canCrit: true, canMiss: true }),
 			);
 		});
@@ -983,7 +991,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.rolls).toHaveLength(1);
 			expect(result.rolls![0]).toBe(mockRoll);
 			// MockRoll constructor captures 3 args, third is undefined since not passed by caller
-			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10 }, undefined);
+			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10, spent: 0 }, undefined);
 			expect(mockRoll.evaluate).toHaveBeenCalled();
 		});
 
@@ -1016,7 +1024,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			await manager.getData();
 
 			// MockRoll constructor captures 3 args, third is undefined since not passed by caller
-			expect(MockRoll).toHaveBeenCalledWith('0', { level: 1, strength: 10 }, undefined);
+			expect(MockRoll).toHaveBeenCalledWith('0', { level: 1, strength: 10, spent: 0 }, undefined);
 		});
 	});
 
@@ -1352,7 +1360,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			expect(DamageRoll).toHaveBeenCalledWith(
 				'1d6',
-				{ level: 1, strength: 10 },
+				{ level: 1, strength: 10, spent: 0 },
 				{
 					canCrit: true,
 					canMiss: true,
@@ -1370,6 +1378,58 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			dialogState.result = undefined;
 			keyPressStore.set({ ctrl: false, shift: false, alt: false });
 		});
+
+		/**
+		 * A Roll stub that also answers `evaluateSync`, which is how the charge
+		 * system resolves a consumer's cost formula while the dialog is routed.
+		 */
+		function stubRolls(total: number) {
+			const roll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				evaluateSync: vi.fn(() => ({ total })),
+				toJSON: vi.fn().mockReturnValue({ total }),
+			};
+			MockRoll.mockImplementation(() => roll as never);
+			return roll;
+		}
+
+		/** Gives the mock item a pool and a consumer that spends a chosen amount of it. */
+		function makeItemSpendVariableCharges() {
+			mockItem.id = 'item-1';
+			mockItem.flags = {};
+			mockItem.rules = new Map<string, Record<string, unknown>>([
+				[
+					'0',
+					{
+						type: 'chargePool',
+						id: 'pool-rule',
+						identifier: 'focus',
+						scope: 'item',
+						max: '10',
+						initial: 'max',
+					},
+				],
+				[
+					'1',
+					{
+						type: 'chargeConsumer',
+						id: 'consumer-rule',
+						poolIdentifier: 'focus',
+						poolScope: 'item',
+						costMode: 'variable',
+						cost: '1',
+						maxCost: '',
+					},
+				],
+			]);
+			mockActor.type = 'character';
+			mockActor.flags = {};
+			mockActor.system.levelUpHistory = [];
+			mockActor.items = {
+				contents: [mockItem],
+				get: (id: string) => (mockItem.id === id ? mockItem : undefined),
+			};
+		}
 
 		it('should skip the config dialog and complete activation when skipRollDialog is set', async () => {
 			manager = new ItemActivationManager(
@@ -1401,6 +1461,62 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.activation).not.toBeNull();
 			expect(result.rolls).toHaveLength(1);
 			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+		});
+
+		it('should open the config dialog when the item asks for a variable charge spend', async () => {
+			// The amount spent is player input with no default, so skipRollDialog
+			// cannot suppress the prompt that collects it.
+			dialogState.result = { rollMode: 0 };
+			makeItemSpendVariableCharges();
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			stubRolls(1);
+
+			await manager.getData();
+
+			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
+		});
+
+		it('should pass the charges spent in the dialog to effect formulas as @spent', async () => {
+			dialogState.result = { rollMode: 0, spentCharges: 12 };
+			makeItemSpendVariableCharges();
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			stubRolls(12);
+
+			await manager.getData();
+
+			expect(MockRoll).toHaveBeenCalledWith(
+				'@spent',
+				{ level: 1, strength: 10, spent: 12 },
+				undefined,
+			);
 		});
 
 		it('should skip the upcast dialog and activate at base tier when skipRollDialog is set on a spell', async () => {

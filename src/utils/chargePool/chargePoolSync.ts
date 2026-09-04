@@ -61,7 +61,7 @@ function getPoolsForItem(
 		return availablePools.filter((pool) => pool.sourceItemId === normalizedItemId);
 	}
 
-	const consumers = getChargeConsumers(actor, item);
+	const consumers = getChargeConsumers(actor, item, { includeVariable: true });
 	const consumerPoolIds = new Set(consumers.map((consumer) => consumer.poolId));
 	return availablePools.filter(
 		(pool) => pool.sourceItemId === normalizedItemId || consumerPoolIds.has(pool.id),

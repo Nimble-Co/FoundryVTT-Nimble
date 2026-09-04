@@ -3,6 +3,7 @@ import type { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 type ChargePoolScope = (typeof ChargePoolRuleConfig.scopes)[number];
 type ChargePoolDieSize = (typeof ChargePoolRuleConfig.dieSizes)[number];
 type ChargePoolInitialMode = (typeof ChargePoolRuleConfig.initialModes)[number];
+type ChargeCostMode = (typeof ChargePoolRuleConfig.costModes)[number];
 type ChargeRecoveryTrigger = (typeof ChargePoolRuleConfig.recoveryTriggers)[number];
 type ChargeRecoveryMode = (typeof ChargePoolRuleConfig.recoveryModes)[number];
 type ChargeRestType = (typeof ChargePoolRuleConfig.restTypes)[number];
@@ -76,7 +77,9 @@ type ChargeConsumerRuleLike = {
 	identifier?: string;
 	poolIdentifier?: string;
 	poolScope?: string;
+	costMode?: string;
 	cost?: string;
+	maxCost?: string;
 	/**
 	 * Optional because the structural type is also satisfied by plain objects in
 	 * tests; real rule instances always inherit it from the base rule class.
@@ -108,9 +111,14 @@ type CharacterActorLike = Actor.Implementation & {
 };
 
 type ChargeConsumerState = {
+	ruleId: string;
 	poolId: string;
 	poolIdentifier: string;
+	/** A variable consumer reads this as the smallest legal spend. */
 	cost: number;
+	variable: boolean;
+	/** Ceiling for a variable spend; `null` means the pool's current charges. */
+	maxCost: number | null;
 };
 
 type ChargeContext = {
@@ -159,6 +167,7 @@ export type {
 	ChargePoolScope,
 	ChargePoolDieSize,
 	ChargePoolInitialMode,
+	ChargeCostMode,
 	ChargeRecoveryTrigger,
 	ChargeRecoveryMode,
 	ChargeRestType,

@@ -5,6 +5,7 @@ import type {
 	PoolBonusEntry,
 	SpendableChargePool,
 	SpendablePool,
+	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
 import { matchesAttackDelivery } from '#utils/attackDelivery.js';
 import {
@@ -17,6 +18,7 @@ import {
 	extractDamageEffectsFromItem,
 	extractRolledPools,
 	extractSpendableChargePools,
+	extractVariableChargeSpends,
 	getAttackDeliveryFromActivation,
 } from './itemActivationConfigDialogHelpers.js';
 
@@ -51,6 +53,7 @@ export function createItemActivationConfigDialogState(
 			matchesAttackDelivery(pool.bonusOnAttackDelivery, attackDelivery),
 	);
 	const spendableChargePools: SpendableChargePool[] = extractSpendableChargePools(actor);
+	const variableChargeSpends: VariableChargeSpend[] = extractVariableChargeSpends(actor, item);
 	const autoBonusSummaries: AutoBonusSummary[] = buildAutoBonusSummaries(autoBonusPools);
 	const autoBonusFormula: string = buildAutoBonusFormula(autoBonusPools);
 
@@ -97,6 +100,12 @@ export function createItemActivationConfigDialogState(
 		Object.fromEntries(spendableChargePools.map((p) => [p.id, 0])),
 	);
 
+	// Variable spends open at their minimum rather than at 0: the activation is
+	// gated on being able to pay the minimum, so 0 is not a legal amount.
+	let variableSpendCounts = $state<Record<string, number>>(
+		Object.fromEntries(variableChargeSpends.map((spend) => [spend.poolId, spend.minimum])),
+	);
+
 	function toggleDie(poolId: string, faceIndex: number) {
 		const key = `${poolId}:${faceIndex}`;
 		if (selectedDieKeys.has(key)) {
@@ -109,6 +118,20 @@ export function createItemActivationConfigDialogState(
 
 	function isDieSelected(poolId: string, faceIndex: number): boolean {
 		return selectedDieKeys.has(`${poolId}:${faceIndex}`);
+	}
+
+	function setVariableSpend(poolId: string, value: number) {
+		const spend = variableChargeSpends.find((candidate) => candidate.poolId === poolId);
+		if (!spend) return;
+		const next = Number.isFinite(value) ? Math.floor(value) : spend.minimum;
+		variableSpendCounts = {
+			...variableSpendCounts,
+			[poolId]: Math.clamp(next, spend.minimum, spend.limit),
+		};
+	}
+
+	function adjustVariableSpend(poolId: string, delta: number) {
+		setVariableSpend(poolId, (variableSpendCounts[poolId] ?? 0) + delta);
 	}
 
 	function adjustChargeSpend(poolId: string, delta: number) {
@@ -160,6 +183,23 @@ export function createItemActivationConfigDialogState(
 
 	const hasSpendablePools = $derived(
 		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
+	);
+
+	// What the item's own effect formulas read as `@spent`. Summed across
+	// consumers so an item with two variable spends reports one budget, which is
+	// what a formula referring to "the amount spent" means.
+	const spentCharges = $derived(
+		variableChargeSpends.reduce(
+			(total, spend) => total + (variableSpendCounts[spend.poolId] ?? 0),
+			0,
+		),
+	);
+
+	// The variable spends in the shape the manager deducts from.
+	const consumedVariableCharges = $derived(
+		variableChargeSpends
+			.map((spend) => ({ poolId: spend.poolId, count: variableSpendCounts[spend.poolId] ?? 0 }))
+			.filter((entry) => entry.count > 0),
 	);
 
 	// `key` is the composite `${itemUuid}:${ruleId}` from getActiveConditionalBonuses,
@@ -277,6 +317,7 @@ export function createItemActivationConfigDialogState(
 		// Pool snapshots (immutable).
 		spendablePools,
 		spendableChargePools,
+		variableChargeSpends,
 		autoBonusSummaries,
 		conditionalBonusOptions,
 
@@ -295,6 +336,15 @@ export function createItemActivationConfigDialogState(
 		// Selection getters.
 		get chargeSpendCounts() {
 			return chargeSpendCounts;
+		},
+		get variableSpendCounts() {
+			return variableSpendCounts;
+		},
+		get spentCharges() {
+			return spentCharges;
+		},
+		get consumedVariableCharges() {
+			return consumedVariableCharges;
 		},
 		get selectedDieKeys() {
 			return selectedDieKeys;
@@ -327,5 +377,7 @@ export function createItemActivationConfigDialogState(
 		toggleDie,
 		isDieSelected,
 		adjustChargeSpend,
+		adjustVariableSpend,
+		setVariableSpend,
 	};
 }

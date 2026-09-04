@@ -19,6 +19,19 @@ export interface SpendableChargePool {
 	max: number;
 }
 
+/** A charge pool the activated item spends a player-chosen amount from. */
+export interface VariableChargeSpend {
+	poolId: string;
+	identifier: string;
+	label: string;
+	current: number;
+	max: number;
+	/** Smallest legal spend. */
+	minimum: number;
+	/** Largest legal spend, already clamped to the pool's current charges. */
+	limit: number;
+}
+
 export interface AutoBonusSummary {
 	id: string;
 	label: string;
@@ -56,6 +69,8 @@ export interface ItemActivationConfigDialogSubmitData {
 	rollHidden: boolean;
 	consumedPoolDice: ConsumedPoolDie[];
 	consumedChargePools: ConsumedChargePool[];
+	/** Charges spent by variable consumers, which effect formulas read as `@spent`. */
+	spentCharges: number;
 }
 
 export interface ItemActivationConfigDialogInstance {
