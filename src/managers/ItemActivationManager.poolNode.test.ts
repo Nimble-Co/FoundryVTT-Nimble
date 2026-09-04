@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import * as chargePoolRecoverModule from '../utils/chargePool/chargePoolRecover.js';
 import * as dicePoolRefillModule from '../utils/dicePool/dicePoolRefill.js';
@@ -368,5 +368,48 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(out.result?.skipReason).toBe('noActor');
 			expect(mockRollDieIntoPool).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe('ItemActivationManager: deferred dialog spends', () => {
+	const realDialog = testDependencies.ItemActivationConfigDialog;
+	const realSpellDialog = testDependencies.SpellUpcastDialog;
+
+	afterEach(() => {
+		testDependencies.ItemActivationConfigDialog = realDialog;
+		testDependencies.SpellUpcastDialog = realSpellDialog;
+	});
+
+	/** Stands in for the activation dialog, returning what the player spent. */
+	function stubDialogSpending(consumedChargePools: Array<{ poolId: string; count: number }>) {
+		class StubDialog {
+			promise = Promise.resolve({ rollMode: 0, consumedChargePools });
+			async render(): Promise<void> {}
+		}
+		testDependencies.SpellUpcastDialog = StubDialog as never;
+	}
+
+	it('holds a charge spent in the dialog until applyDeferredPoolNodes', async () => {
+		stubDialogSpending([{ poolId: 'pool-a', count: 1 }]);
+		const actor = makeActor(3);
+		const item = {
+			type: 'spell',
+			name: 'Test Spell',
+			actor,
+			system: { tier: 0, activation: { effects: [] } },
+		};
+		const manager = new ItemActivationManager(
+			item as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+			{},
+		);
+
+		await manager.getData();
+
+		// The caller can still refuse the use at this point, so nothing the
+		// player spent may have reached the actor yet.
+		expect(mockAdjustPool).not.toHaveBeenCalled();
+
+		await manager.applyDeferredPoolNodes();
+		expect(mockAdjustPool).toHaveBeenCalledWith(actor, 'pool-a', 'set', 0);
 	});
 });
