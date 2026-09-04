@@ -307,20 +307,22 @@
 		</div>
 	{/if}
 
-	<div class="nimble-roll-formulas">
-		{#each state.damagePreviews as damageEffect}
-			<div class="nimble-roll-formula">
-				{#if damageEffect.damageType}
-					<span class="nimble-roll-formula__type">
-						{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
+	{#if state.damagePreviews.length > 0}
+		<div class="nimble-roll-formulas">
+			{#each state.damagePreviews as damageEffect}
+				<div class="nimble-roll-formula">
+					{#if damageEffect.damageType}
+						<span class="nimble-roll-formula__type">
+							{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
+						</span>
+					{/if}
+					<span class="nimble-roll-formula__formula">
+						{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
 					</span>
-				{/if}
-				<span class="nimble-roll-formula__formula">
-					{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
-				</span>
-			</div>
-		{/each}
-	</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
 	{#if game.user?.isGM}
 		<div class="nimble-roll-modifiers-container">
 			<label>

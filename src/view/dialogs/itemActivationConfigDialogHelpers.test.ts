@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import { extractVariableChargeSpends } from './itemActivationConfigDialogHelpers.js';
+import {
+	extractDamageEffectsFromItem,
+	extractVariableChargeSpends,
+} from './itemActivationConfigDialogHelpers.js';
 
 type Rule = Record<string, unknown> & { type: string };
 
@@ -98,5 +101,25 @@ describe('extractVariableChargeSpends', () => {
 
 	it('leaves a hidden pool out, since it gates a feature rather than budgets one', () => {
 		expect(extract([createPoolRule({ hidden: true }), createConsumerRule()])).toEqual([]);
+	});
+});
+
+describe('extractDamageEffectsFromItem', () => {
+	function itemWithEffects(effects: unknown[]) {
+		return { system: { activation: { effects } } } as unknown as Item;
+	}
+
+	it('reports nothing for an activation that deals no damage', () => {
+		const healingOnly = [{ id: 'heal', type: 'healing', formula: '@spent' }];
+
+		expect(extractDamageEffectsFromItem(itemWithEffects(healingOnly))).toEqual([]);
+	});
+
+	it('reports a top-level damage effect', () => {
+		const effects = [{ id: 'atk', type: 'damage', formula: '1d8', damageType: 'slashing' }];
+
+		expect(extractDamageEffectsFromItem(itemWithEffects(effects))).toEqual([
+			{ formula: '1d8', damageType: 'slashing' },
+		]);
 	});
 });

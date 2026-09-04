@@ -134,6 +134,11 @@ export function buildAutoBonusFormula(autoBonusPools: SpendablePool[]): string {
  * Walk the item's activation effects tree and collect top-level damage
  * effects (excluding conditional damage like criticalHit / miss / hit /
  * failedSaveBy). Also pulls damage out of savingThrow#sharedRolls.
+ *
+ * An item with no damage at all returns nothing rather than a `0` placeholder:
+ * the callers that need a formula already default to `'0'`, and the dialog's
+ * preview would otherwise show a bare `0` for an activation that rolls
+ * healing, or nothing at all.
  */
 export function extractDamageEffectsFromItem(
 	item: Item,
@@ -177,10 +182,6 @@ export function extractDamageEffectsFromItem(
 				}
 			}
 		}
-	}
-
-	if (allDamageEffects.length === 0) {
-		return [{ formula: '0' }];
 	}
 
 	return allDamageEffects;
