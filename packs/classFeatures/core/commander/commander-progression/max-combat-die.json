@@ -5,7 +5,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "max-combat-die-bonus",
+				"type": "poolMaxBonus",
+				"label": "",
+				"disabled": false,
+				"predicate": [],
+				"priority": 1,
+				"poolIdentifier": "combat-dice",
+				"amount": 1
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

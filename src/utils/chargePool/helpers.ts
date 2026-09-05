@@ -19,6 +19,7 @@ import type {
 	ChargeRecoveryTrigger,
 	ModifyPoolRuleLike,
 	NumericInput,
+	PoolMaxBonusRuleLike,
 	RuleBackedItem,
 } from './types.js';
 
@@ -185,19 +186,18 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 }
 
 /**
- * Sums the cumulative level-up pool bonus for a pool identifier from the actor's level-up history
- * (e.g. each level a Commander selected "+1 Max Combat Die" contributes +1 to "combat-dice").
- * Returns 0 when the actor has no matching history entries.
+ * Sums every `poolMaxBonus` rule the actor owns for a pool identifier (e.g. each
+ * "+1 Max Combat Die" item a Commander holds contributes +1 to "combat-dice").
+ * Returns 0 when the actor owns no matching rule.
  */
 function getPoolMaxBonusTotal(actor: CharacterActorLike, identifier: string): number {
-	const history =
-		(actor as { system?: { levelUpHistory?: Array<{ poolMaxBonuses?: Record<string, number> }> } })
-			.system?.levelUpHistory ?? [];
+	const rules = (actor as { rules?: PoolMaxBonusRuleLike[] }).rules ?? [];
 
 	let total = 0;
-	for (const entry of history) {
-		const bonus = entry.poolMaxBonuses?.[identifier];
-		if (typeof bonus === 'number' && Number.isFinite(bonus)) total += bonus;
+	for (const rule of rules) {
+		if (rule?.type !== 'poolMaxBonus') continue;
+		if (!rule.appliesToPool?.(identifier)) continue;
+		total += rule.amount;
 	}
 	return total;
 }

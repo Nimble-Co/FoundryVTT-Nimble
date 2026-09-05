@@ -46,3 +46,4 @@ export { Migration045HauntedPastFearAdvantage } from './Migration045HauntedPastF
 export { Migration046ShadowTrapDeferredDamage } from './Migration046ShadowTrapDeferredDamage.js';
 export { Migration047SurvivalistPoisonSave } from './Migration047SurvivalistPoisonSave.js';
 export { Migration048LayOnHandsPool } from './Migration048LayOnHandsPool.js';
+export { Migration048PoolMaxBonusItems } from './Migration048PoolMaxBonusItems.js';

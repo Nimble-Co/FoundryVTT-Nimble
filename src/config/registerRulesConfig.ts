@@ -35,6 +35,7 @@ import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
+import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
@@ -83,6 +84,7 @@ export default function registerRulesConfig() {
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		note: 'NIMBLE.ruleTypes.note',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
+		poolMaxBonus: 'NIMBLE.ruleTypes.poolMaxBonus',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		situationalRollMode: 'NIMBLE.ruleTypes.situationalRollMode',
@@ -131,6 +133,7 @@ export default function registerRulesConfig() {
 		modifyToggle: ModifyToggleRule,
 		note: NoteRule,
 		poolGainMessage: PoolGainMessageRule,
+		poolMaxBonus: PoolMaxBonusRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		situationalRollMode: SituationalRollModeRule,

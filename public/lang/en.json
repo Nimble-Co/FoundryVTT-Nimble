@@ -812,6 +812,7 @@
 			"modifyToggle": "Modify Toggle",
 			"note": "Note",
 			"poolGainMessage": "Pool Gain Message",
+			"poolMaxBonus": "Pool Max Bonus",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"situationalRollMode": "Situational Roll Mode",
@@ -1340,6 +1341,17 @@
 				"message": {
 					"label": "Message",
 					"hint": "Chat text posted when the pool gains dice. Use {value} to insert the formula result."
+				}
+			},
+			"poolMaxBonus": {
+				"description": "Raise the maximum of a charge pool by a flat amount. The bonus lives on this item, so taking the same option twice grants two items and twice the bonus, and removing an item removes its share.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the charge pool whose maximum is raised (e.g. combat-dice)."
+				},
+				"amount": {
+					"label": "Amount",
+					"hint": "How much this item adds to the pool maximum."
 				}
 			},
 			"savingThrowBonus": {
