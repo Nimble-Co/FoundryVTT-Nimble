@@ -2,8 +2,10 @@
 	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
+	import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
+	import OptionSwapSection from './components/optionSwap/OptionSwapSection.svelte';
 
 	interface HitDiceAdvantageRule {
 		id: string;
@@ -45,10 +47,34 @@
 			makeCamp,
 			selectedHitDice: { ...selectedHitDice },
 			activeAdvantageRuleIds,
+			optionSwap: optionSwapOffer
+				? {
+						pools: optionSwapOffer.pools,
+						selections: optionSwapSelections,
+						skillPoints: optionSwapSkillPoints,
+					}
+				: null,
 		});
 	}
 
 	let { document: actor, dialog }: Props = $props();
+
+	let optionSwapOffer = $state<ResolvedOptionSwapOffer | null>(null);
+	let optionSwapSelections = $state<Map<string, string[]>>(new Map());
+	let optionSwapSkillPoints = $state<Map<string, number>>(new Map());
+
+	// Resolving the offer reads the class feature compendia, so it can only be awaited here.
+	$effect(() => {
+		let isCurrent = true;
+
+		actor.getOptionSwapOffer('fieldRest').then((offer) => {
+			if (isCurrent) optionSwapOffer = offer;
+		});
+
+		return () => {
+			isCurrent = false;
+		};
+	});
 
 	// Reactive hit dice computation (mirrors SafeRestDialog pattern)
 	let hitDice = $derived.by(() => {
@@ -282,6 +308,13 @@
 			</div>
 		</section>
 	{/if}
+
+	<OptionSwapSection
+		document={actor}
+		offer={optionSwapOffer}
+		bind:selections={optionSwapSelections}
+		bind:skillPoints={optionSwapSkillPoints}
+	/>
 </article>
 
 <footer class="nimble-sheet__footer">

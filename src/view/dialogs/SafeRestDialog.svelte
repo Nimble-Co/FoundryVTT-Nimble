@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+	import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
 	import { incrementDieSize } from '#managers/HitDiceManager.js';
 	import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
+	import OptionSwapSection from './components/optionSwap/OptionSwapSection.svelte';
 
 	interface Props {
 		document: NimbleCharacter;
@@ -15,10 +17,34 @@
 	function submit() {
 		dialog.submit({
 			skipChatCard: false,
+			optionSwap: optionSwapOffer
+				? {
+						pools: optionSwapOffer.pools,
+						selections: optionSwapSelections,
+						skillPoints: optionSwapSkillPoints,
+					}
+				: null,
 		});
 	}
 
 	let { document: actor, dialog }: Props = $props();
+
+	let optionSwapOffer = $state<ResolvedOptionSwapOffer | null>(null);
+	let optionSwapSelections = $state<Map<string, string[]>>(new Map());
+	let optionSwapSkillPoints = $state<Map<string, number>>(new Map());
+
+	// Resolving the offer reads the class feature compendia, so it can only be awaited here.
+	$effect(() => {
+		let isCurrent = true;
+
+		actor.getOptionSwapOffer('safeRest').then((offer) => {
+			if (isCurrent) optionSwapOffer = offer;
+		});
+
+		return () => {
+			isCurrent = false;
+		};
+	});
 
 	let reactiveActor = $derived(actor.reactive);
 
@@ -276,6 +302,13 @@
 			<span>{CONFIG.NIMBLE.safeRest.allResourcesFull}</span>
 		</div>
 	{/if}
+
+	<OptionSwapSection
+		document={actor}
+		offer={optionSwapOffer}
+		bind:selections={optionSwapSelections}
+		bind:skillPoints={optionSwapSkillPoints}
+	/>
 </article>
 
 <footer class="nimble-sheet__footer">
