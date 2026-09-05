@@ -60,5 +60,5 @@ _bmad-*/
 .claude/agents
 
 
-# IGNORED TESTS
+# IGNORED TESTS (THIS IS INTENDED)
 src/migration/migrations/*.test.ts
