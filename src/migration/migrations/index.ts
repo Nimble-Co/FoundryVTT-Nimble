@@ -47,3 +47,4 @@ export { Migration046ShadowTrapDeferredDamage } from './Migration046ShadowTrapDe
 export { Migration047SurvivalistPoisonSave } from './Migration047SurvivalistPoisonSave.js';
 export { Migration048LayOnHandsPool } from './Migration048LayOnHandsPool.js';
 export { Migration048PoolMaxBonusItems } from './Migration048PoolMaxBonusItems.js';
+export { Migration049GrantOptionSwapFeatures } from './Migration049GrantOptionSwapFeatures.js';
