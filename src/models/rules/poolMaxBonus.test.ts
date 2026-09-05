@@ -68,3 +68,9 @@ describe('PoolMaxBonusRule.appliesToPool', () => {
 		expect(createRule({ disabled: true }).appliesToPool('combat-dice')).toBe(false);
 	});
 });
+
+describe('PoolMaxBonusRule class metadata', () => {
+	it('declares itself early-phase so the late-predicate guardrails apply', () => {
+		expect(PoolMaxBonusRule.appliesInPrePrepareData).toBe(true);
+	});
+});

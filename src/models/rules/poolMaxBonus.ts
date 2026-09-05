@@ -47,6 +47,13 @@ class PoolMaxBonusRule extends NimbleBaseRule<PoolMaxBonusRule.Schema> {
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.poolMaxBonus.description';
 
+	// The base class infers this from the presence of a `prePrepareData` method.
+	// This rule has none, but its predicate is read ahead of that sweep, so it
+	// needs the early-phase predicate guardrails all the same.
+	static override get appliesInPrePrepareData(): boolean {
+		return true;
+	}
+
 	declare poolIdentifier: string;
 
 	declare amount: number;

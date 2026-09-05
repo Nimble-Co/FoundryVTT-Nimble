@@ -38,16 +38,14 @@ declare namespace OptionSwapRule {
 /**
  * Offers the character a chance to swap class options they already picked.
  *
- * This is the machinery behind the per-class features that let a character change
- * their mind — the Berserker's Wrath & Ruin, the Mage's Study!, and their siblings.
- * Every one of them requires an act in the fiction as well as the rest, and no such
+ * Content of this kind asks for an act in the fiction as well as the rest, and no such
  * act is detectable, so the rule gates nothing: it declares what may be swapped and
  * when the swap is offered, and the table decides whether it is earned. State the
  * required act in the rule's `label` so the player reads it at the moment of choosing.
  *
- * `selectionGroups` names the pools the swap covers. The books say "different
- * <Class> options available to you" without naming a pool, so the sentinel `all`
- * is the faithful setting; explicit group names exist for content that means less.
+ * `selectionGroups` names the pools the swap covers. Content that speaks of the class
+ * options available to a character, without naming a pool, wants the sentinel `all`;
+ * explicit group names exist for content that means less.
  */
 class OptionSwapRule extends NimbleBaseRule<OptionSwapRule.Schema> {
 	static override group = 'grants';
@@ -77,19 +75,25 @@ class OptionSwapRule extends NimbleBaseRule<OptionSwapRule.Schema> {
 	/** Whether this rule offers a swap on the given event. */
 	offersSwapOn(trigger: string): boolean {
 		if (this.trigger !== trigger) return false;
-		if (this.selectionGroups.length === 0) return false;
+		if (this.namedGroups.length === 0 && !this.coversAllGroups) return false;
 		return this.appliesTo();
+	}
+
+	/** Authored groups with surrounding space removed and blank entries dropped. */
+	get #groups(): string[] {
+		return this.selectionGroups.map((group) => group.trim()).filter((group) => group.length > 0);
 	}
 
 	/** Whether the rule covers every pool the class offers, rather than a named few. */
 	get coversAllGroups(): boolean {
-		return this.selectionGroups.includes(ALL_GROUPS);
+		return this.#groups.includes(ALL_GROUPS);
 	}
 
 	/** The named pools this rule covers, empty when it covers all of them. */
 	get namedGroups(): string[] {
-		if (this.coversAllGroups) return [];
-		return this.selectionGroups.map((group) => group.trim()).filter((group) => group.length > 0);
+		const groups = this.#groups;
+		if (groups.includes(ALL_GROUPS)) return [];
+		return groups;
 	}
 }
 

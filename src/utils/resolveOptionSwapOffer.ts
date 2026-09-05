@@ -1,4 +1,4 @@
-import { ALL_GROUPS, type OptionSwapRule } from '../models/rules/optionSwap.js';
+import type { OptionSwapRule } from '../models/rules/optionSwap.js';
 import type { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { stripHtml } from './stripHtml.js';
 
@@ -84,5 +84,3 @@ function addSource(sources: OptionSwapSource[], rule: { label?: string; item?: u
 	if (sources.some((source) => source.name === name && source.text === text)) return;
 	sources.push({ name, text });
 }
-
-export { ALL_GROUPS };

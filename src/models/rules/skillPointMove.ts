@@ -32,8 +32,7 @@ declare namespace SkillPointMoveRule {
 }
 
 /**
- * Lets the character move skill points between skills on a rest, the way the
- * Songweaver's Jack of All Trades does.
+ * Lets the character move skill points between skills on a rest.
  *
  * A move is net zero: one skill loses what another gains. It is not recorded in
  * `levelUpHistory`, because that record exists so level down can subtract what a

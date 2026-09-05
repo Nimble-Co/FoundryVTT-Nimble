@@ -66,3 +66,9 @@ describe('SkillPointMoveRule.offersMoveOn', () => {
 		expect(createRule({ points: 3 }).points).toBe(3);
 	});
 });
+
+describe('SkillPointMoveRule class metadata', () => {
+	it('is not early-phase: the offer is read on a rest, after data prep is complete', () => {
+		expect(SkillPointMoveRule.appliesInPrePrepareData).toBe(false);
+	});
+});

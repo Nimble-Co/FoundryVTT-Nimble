@@ -60,6 +60,20 @@ describe('OptionSwapRule.offersSwapOn', () => {
 		expect(createRule({ selectionGroups: [] }).offersSwapOn('safeRest')).toBe(false);
 	});
 
+	it('offers nothing when every named pool is blank', () => {
+		expect(createRule({ selectionGroups: ['   ', ''] }).offersSwapOn('safeRest')).toBe(false);
+	});
+
+	it('offers a swap for a named pool written with surrounding space', () => {
+		expect(createRule({ selectionGroups: [' savage-arsenal '] }).offersSwapOn('safeRest')).toBe(
+			true,
+		);
+	});
+
+	it("offers a swap for the 'all' sentinel written with surrounding space", () => {
+		expect(createRule({ selectionGroups: [' all '] }).offersSwapOn('safeRest')).toBe(true);
+	});
+
 	it('does not offer a swap when disabled', () => {
 		expect(createRule({ disabled: true }).offersSwapOn('safeRest')).toBe(false);
 	});
@@ -87,5 +101,23 @@ describe('OptionSwapRule group coverage', () => {
 	it('drops blank and whitespace-only group names', () => {
 		const rule = createRule({ selectionGroups: [' savage-arsenal ', '', '   '] });
 		expect(rule.namedGroups).toEqual(['savage-arsenal']);
+	});
+
+	it("covers every pool for an 'all' sentinel written with surrounding space", () => {
+		const rule = createRule({ selectionGroups: [' all '] });
+		expect(rule.coversAllGroups).toBe(true);
+		expect(rule.namedGroups).toEqual([]);
+	});
+
+	it('covers nothing when every group name is blank', () => {
+		const rule = createRule({ selectionGroups: ['   '] });
+		expect(rule.coversAllGroups).toBe(false);
+		expect(rule.namedGroups).toEqual([]);
+	});
+});
+
+describe('OptionSwapRule class metadata', () => {
+	it('is not early-phase: the offer is read on a rest, after data prep is complete', () => {
+		expect(OptionSwapRule.appliesInPrePrepareData).toBe(false);
 	});
 });
