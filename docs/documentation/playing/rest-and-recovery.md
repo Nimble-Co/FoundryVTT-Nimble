@@ -47,6 +47,21 @@ You don't need a rest to spend hit dice. Click the roll button on the hit dice b
 - **Add STR bonus**: add your Strength modifier to each die (on by default).
 - **Apply healing to HP**: apply the result to your HP immediately instead of just rolling (on by default).
 
+## Changing your class options
+
+Several classes let you re-pick the class options you chose at earlier levels. The Berserker's Wrath & Ruin, the Mage's Study!, the Hunter's Remember the Wild and their siblings all say the same thing in their own words: on a safe rest, you may choose different options.
+
+If your character has such a feature, the rest window shows a **Change my options** row. Expand it and you see:
+
+- **What your class asks for**, quoted from the feature. Wrath & Ruin wants "a notable act of destruction or feat of strength"; Focus wants you "meditating alone in a windy place". The system never checks this, and cannot: whether it happened is a question for your table, not for the software. It is shown so you read it while you decide.
+- **Each pool of options** your class has given you picks from, with your current picks already selected. Choose differently and the pool keeps you to the number of picks you are owed.
+
+Nothing happens until you confirm the rest. Close the window and your picks are untouched. Confirm it and the old option is removed, the new one is granted, and the chat card lists what changed so the rest of the table can see it.
+
+The Songweaver's Jack of All Trades works the same way for skills: it offers to move one skill point on a safe rest. A move is net zero, so a point can only be added to one skill by taking it from another.
+
+What a swap covers is your class option pools. It does not change your subclass, your ability score increases, or the spells you know.
+
 ## Features that improve resting
 
 Items and features can change how resting works through their rules: advantage on hit dice under a stated condition, always-maximized hit dice, bigger or bonus hit dice, and stronger healing potions. These show up automatically in the rest windows' Modifiers section or in the results. See the [Rules Reference: Bonuses](../reference/rules-bonuses.md).
