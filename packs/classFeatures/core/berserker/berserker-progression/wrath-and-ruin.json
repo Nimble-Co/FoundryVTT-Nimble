@@ -1,20 +1,22 @@
 {
-	"folder": "910213b07f81138f",
-	"name": "Jack of All Trades",
+	"folder": "d40bf36abe9f4b0a",
+	"name": "Wrath & Ruin",
 	"type": "feature",
-	"img": "icons/tools/smithing/anvil.webp",
+	"img": "icons/skills/melee/strike-hammer-destructive-orange.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "oCCxKr1vIWc7C6QN",
-				"type": "skillPointMove",
-				"label": "When you Safe Rest",
+				"id": "A48mtO5AcIj1oneh",
+				"type": "optionSwap",
+				"label": "Whenever you perform a notable act of destruction or feat of strength during a Safe Rest",
 				"disabled": false,
 				"predicate": [],
 				"priority": 1,
-				"points": 1,
+				"selectionGroups": [
+					"all"
+				],
 				"trigger": "safeRest"
 			}
 		],
@@ -44,14 +46,14 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
+		"description": "<p>Whenever you perform a notable act of destruction or feat of strength during a Safe Rest, you may choose different Berserker options available to you.</p>",
 		"featureType": "class",
-		"class": "songweaver",
-		"group": "songweaver-progression",
-		"gainedAtLevel": 2,
+		"class": "berserker",
+		"group": "berserker-progression",
+		"gainedAtLevel": 4,
 		"subclass": false,
 		"gainedAtLevels": [
-			2
+			4
 		]
 	},
 	"effects": [],
@@ -60,9 +62,9 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.9",
-		"createdTime": 1761888629959,
-		"modifiedTime": 1761888785013,
+		"createdTime": 1762000000000,
+		"modifiedTime": 1762000000000,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "H6rFmCzodKZYW3ye"
+	"_id": "Y2yXfJQzDKP5s3QK"
 }

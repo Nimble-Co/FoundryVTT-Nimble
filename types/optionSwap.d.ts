@@ -13,3 +13,12 @@ export interface ResolvedSwappableOptionPool extends SwappableOptionPool {
 export interface ResolvedOptionSwapOffer extends OptionSwapOffer {
 	pools: ResolvedSwappableOptionPool[];
 }
+
+/** What a rest dialog hands back when the player changed something. */
+export interface OptionSwapSubmitData {
+	pools: ResolvedSwappableOptionPool[];
+	/** Pool key to the uuids the player wants to hold from that pool. */
+	selections: ReadonlyMap<string, readonly string[]>;
+	/** Skill key to its new point total. A move is net zero across the map. */
+	skillPoints: ReadonlyMap<string, number>;
+}

@@ -2267,6 +2267,27 @@
 			"restedWithoutSpending": "Rested without spending hit dice",
 			"manaRestored": "Mana Restored"
 		},
+		"optionSwap": {
+			"cardHeading": "Options Changed",
+			"toggleLabel": "Change my options",
+			"toggleHint": "Swap class options or move a skill point",
+			"requiredActsHeading": "Your class asks you to",
+			"requiredActsNote": "The system never checks this. It is a reminder. Your table decides whether it happened.",
+			"deselectToBrowseHint": "Deselect one of your current picks to see the rest of the pool.",
+			"skillsHeading": "Move Skill Points",
+			"skillsHint": "Take a point from one skill, then give it to another. Your total never changes.",
+			"skillPointsMoved": "{moved} of {total} moved",
+			"unplacedPointWarning": "Give the point you took to another skill. Until you do, nothing moves.",
+			"skill": "Skill",
+			"skillPoints": "Points",
+			"skillTotal": "Total",
+			"takePointFrom": "Take a point from {skill}",
+			"givePointTo": "Give a point to {skill}",
+			"skillCannotGoBelowZero": "A skill cannot go below 0 points.",
+			"skillAtMaximum": "The highest bonus a skill can have is +12.",
+			"skillBudgetSpent": "You have moved every point this rest allows.",
+			"takeAPointFirst": "Take a point from another skill first."
+		},
 		"npcSheet": {
 			"armor": "Armor",
 			"decreaseArmor": "Decrease Armor",

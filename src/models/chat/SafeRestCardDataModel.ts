@@ -3,6 +3,20 @@ import { metadata } from './common.js';
 const { fields } = foundry.data;
 
 const safeRestCardSchema = () => ({
+	// Class options and skills changed as part of this rest
+	optionChanges: new fields.ArrayField(
+		new fields.ObjectField({
+			required: true,
+			nullable: false,
+			initial: {},
+			model: {
+				label: new fields.StringField({ required: true }),
+				removed: new fields.ArrayField(new fields.StringField({ required: true })),
+				added: new fields.ArrayField(new fields.StringField({ required: true })),
+			},
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
 	// Hit dice recovered: { size: amount }
 	hitDiceRecovered: new fields.ObjectField({ required: true, nullable: false, initial: {} }),
 	// HP restored

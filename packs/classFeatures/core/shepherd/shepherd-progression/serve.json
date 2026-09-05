@@ -1,20 +1,22 @@
 {
-	"folder": "910213b07f81138f",
-	"name": "Jack of All Trades",
+	"folder": "c1face1ec4d1249a",
+	"name": "Serve",
 	"type": "feature",
-	"img": "icons/tools/smithing/anvil.webp",
+	"img": "icons/magic/life/heart-hand-gold-green-light.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "oCCxKr1vIWc7C6QN",
-				"type": "skillPointMove",
-				"label": "When you Safe Rest",
+				"id": "KJWsusMa3fuDGyTC",
+				"type": "optionSwap",
+				"label": "After spending a day tending to a sacred place or serving others during a Safe Rest",
 				"disabled": false,
 				"predicate": [],
 				"priority": 1,
-				"points": 1,
+				"selectionGroups": [
+					"all"
+				],
 				"trigger": "safeRest"
 			}
 		],
@@ -44,14 +46,14 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
+		"description": "<p>After spending a day tending to a sacred place or serving others during a Safe Rest, you may choose different Shepherd options available to you.</p>",
 		"featureType": "class",
-		"class": "songweaver",
-		"group": "songweaver-progression",
-		"gainedAtLevel": 2,
+		"class": "shepherd",
+		"group": "shepherd-progression",
+		"gainedAtLevel": 5,
 		"subclass": false,
 		"gainedAtLevels": [
-			2
+			5
 		]
 	},
 	"effects": [],
@@ -60,9 +62,9 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.9",
-		"createdTime": 1761888629959,
-		"modifiedTime": 1761888785013,
+		"createdTime": 1762000000000,
+		"modifiedTime": 1762000000000,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "H6rFmCzodKZYW3ye"
+	"_id": "bGXJKcENIlSwJ3jT"
 }

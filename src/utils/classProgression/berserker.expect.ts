@@ -56,7 +56,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 4,
-			auto: ['Enduring Rage', 'Savage Arsenal'],
+			auto: ['Enduring Rage', 'Savage Arsenal', 'Wrath & Ruin'],
 			pools: [{ group: 'Savage Arsenal', options: SAVAGE_ARSENAL_OPTIONS() }],
 			subclass: [],
 			asi: 'primary',

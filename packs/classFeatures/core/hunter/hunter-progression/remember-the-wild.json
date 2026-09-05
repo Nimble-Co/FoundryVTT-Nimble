@@ -1,20 +1,22 @@
 {
-	"folder": "910213b07f81138f",
-	"name": "Jack of All Trades",
+	"folder": "2e9e32bf9e74e633",
+	"name": "Remember the Wild",
 	"type": "feature",
-	"img": "icons/tools/smithing/anvil.webp",
+	"img": "icons/magic/nature/wolf-paw-glow-green.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "oCCxKr1vIWc7C6QN",
-				"type": "skillPointMove",
-				"label": "When you Safe Rest",
+				"id": "86nidKocRa563nLR",
+				"type": "optionSwap",
+				"label": "Whenever you spend a day in the wilderness during a Safe Rest",
 				"disabled": false,
 				"predicate": [],
 				"priority": 1,
-				"points": 1,
+				"selectionGroups": [
+					"all"
+				],
 				"trigger": "safeRest"
 			}
 		],
@@ -44,10 +46,10 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
+		"description": "<p>Whenever you spend a day in the wilderness during a Safe Rest, you may choose different Hunter options available to you.</p>",
 		"featureType": "class",
-		"class": "songweaver",
-		"group": "songweaver-progression",
+		"class": "hunter",
+		"group": "hunter-progression",
 		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
@@ -60,9 +62,9 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.9",
-		"createdTime": 1761888629959,
-		"modifiedTime": 1761888785013,
+		"createdTime": 1762000000000,
+		"modifiedTime": 1762000000000,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "H6rFmCzodKZYW3ye"
+	"_id": "LrfTLGu5EgYUPoct"
 }

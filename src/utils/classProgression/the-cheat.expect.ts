@@ -53,7 +53,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 4,
-			auto: ['Underhanded Abilities'],
+			auto: ['Trade Secrets', 'Underhanded Abilities'],
 			pools: [UNDERHANDED_POOL()],
 			subclass: [],
 			asi: 'primary',

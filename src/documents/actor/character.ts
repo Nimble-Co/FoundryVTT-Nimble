@@ -11,7 +11,11 @@ import type {
 	LevelCorrectionSubmitData,
 	ResolvedLevelSelectionGap,
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
-import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
+import type {
+	OptionSwapSubmitData,
+	ResolvedOptionSwapOffer,
+	ResolvedSwappableOptionPool,
+} from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
@@ -21,11 +25,12 @@ import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
 import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
+import summarizeOptionSwap from '#utils/summarizeOptionSwap.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
-import { RestManager } from '../../managers/RestManager.js';
+import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
@@ -1760,6 +1765,36 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/**
+	 * Applies the option swaps a rest dialog collected, and describes them for the rest card.
+	 *
+	 * Returns an empty list when the dialog offered nothing or the player changed nothing,
+	 * which is the ordinary rest.
+	 */
+	async #applyRestOptionSwap(restData: RestManager.Data): Promise<OptionChange[]> {
+		const optionSwap = (restData as { optionSwap?: OptionSwapSubmitData }).optionSwap;
+		if (!optionSwap) return [];
+
+		const { pools = [], selections = new Map(), skillPoints = new Map() } = optionSwap;
+
+		const skillChanges = new Map<string, { from: number; to: number }>();
+		for (const [skillKey, to] of skillPoints) {
+			const from = this.system.skills[skillKey as keyof typeof this.system.skills]?.points ?? 0;
+			if (from !== to) skillChanges.set(skillKey, { from, to });
+		}
+
+		const changes = summarizeOptionSwap(pools, selections, skillChanges, (skillKey) =>
+			game.i18n.localize(
+				CONFIG.NIMBLE.skills[skillKey as keyof typeof CONFIG.NIMBLE.skills] ?? skillKey,
+			),
+		);
+		if (changes.length === 0) return [];
+
+		await this.applyOptionSwap(pools, selections, skillPoints);
+
+		return changes;
+	}
+
+	/**
 	 * Creates embedded feature documents for features gained on level-up (both
 	 * auto-grant groups and user-selected groups) and returns the newly created
 	 * item ids so they can be tracked in the level-up history for later reversal.
@@ -1946,6 +1981,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 			restData = { ...dialogData, restType: restOptions.restType } as RestManager.Data;
 		}
+
+		// Apply before resting: a swap can change a pool's maximum, and the rest should
+		// recover against the maximum the character just chose, not the one they dropped.
+		restData.optionChanges = await this.#applyRestOptionSwap(restData);
 
 		// Cast to RestableCharacter interface (extends NimbleCharacterInterface with HitDiceManager)
 		const manager = new RestManager(

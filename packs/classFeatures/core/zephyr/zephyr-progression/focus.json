@@ -1,20 +1,22 @@
 {
-	"folder": "910213b07f81138f",
-	"name": "Jack of All Trades",
+	"folder": "a03073c1f33d5b34",
+	"name": "Focus",
 	"type": "feature",
-	"img": "icons/tools/smithing/anvil.webp",
+	"img": "icons/magic/holy/meditation-chi-focus-blue.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "oCCxKr1vIWc7C6QN",
-				"type": "skillPointMove",
-				"label": "When you Safe Rest",
+				"id": "Y5PuGXCEDfgfRgYq",
+				"type": "optionSwap",
+				"label": "Whenever you spend time meditating alone in a windy place during a Safe Rest",
 				"disabled": false,
 				"predicate": [],
 				"priority": 1,
-				"points": 1,
+				"selectionGroups": [
+					"all"
+				],
 				"trigger": "safeRest"
 			}
 		],
@@ -44,14 +46,14 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
+		"description": "<p>Whenever you spend time meditating alone in a windy place during a Safe Rest, you may choose different Zephyr options available to you.</p>",
 		"featureType": "class",
-		"class": "songweaver",
-		"group": "songweaver-progression",
-		"gainedAtLevel": 2,
+		"class": "zephyr",
+		"group": "zephyr-progression",
+		"gainedAtLevel": 4,
 		"subclass": false,
 		"gainedAtLevels": [
-			2
+			4
 		]
 	},
 	"effects": [],
@@ -60,9 +62,9 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.9",
-		"createdTime": 1761888629959,
-		"modifiedTime": 1761888785013,
+		"createdTime": 1762000000000,
+		"modifiedTime": 1762000000000,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "H6rFmCzodKZYW3ye"
+	"_id": "WGjt3KNOMFWfRRzc"
 }
