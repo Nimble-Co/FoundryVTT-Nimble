@@ -193,8 +193,11 @@ describe('a mana class is unaffected', () => {
 	}, 120_000);
 
 	afterAll(async () => {
-		await mage.sheet.close();
-		await purgeTestDocuments(TEST_PREFIX);
+		try {
+			await mage.sheet.close();
+		} finally {
+			await purgeTestDocuments(TEST_PREFIX);
+		}
 	});
 
 	test('the mana bar is there and no pool joins it', async () => {

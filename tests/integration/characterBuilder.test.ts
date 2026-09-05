@@ -33,6 +33,8 @@ describe('the builder produces a complete character for any class', () => {
 		// Collected so a failure names every broken class, not just the first.
 		const owed: Array<{ className: string; missing: string[] }> = [];
 
+		expect(classNames.length, 'the class pack yielded classes to build').toBeGreaterThan(0);
+
 		for (const className of classNames) {
 			const actor = await buildCharacter({
 				name: `${PREFIX} ${className}`,

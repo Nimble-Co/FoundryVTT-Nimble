@@ -10,7 +10,7 @@
  * mock exercises end to end.
  */
 
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import {
 	buildCharacter,
 	type CharacterActor,
@@ -132,9 +132,21 @@ describe('casting through the cast window spends what the window said', () => {
 	};
 
 	const openCastWindow = async (spell: unknown): Promise<HTMLElement> => {
-		// Not awaited: activation only resolves once the dialog is answered.
-		void (spell as { activate(options: object): Promise<unknown> }).activate({});
-		await waitFor(() => !!castWindow(), 'the cast window to open', { timeout: 15_000 });
+		// Not awaited: activation only resolves once the dialog is answered. The
+		// rejection is still held, so a refused cast reports its own reason rather
+		// than a window that never opened.
+		let activationError: unknown = null;
+		void (spell as { activate(options: object): Promise<unknown> })
+			.activate({})
+			.catch((error: unknown) => {
+				activationError = error;
+			});
+		try {
+			await waitFor(() => !!castWindow(), 'the cast window to open', { timeout: 15_000 });
+		} catch (waitError) {
+			if (activationError) throw new Error(`activation refused: ${String(activationError)}`);
+			throw waitError;
+		}
 		await settle(400);
 		return castWindow()!;
 	};
@@ -243,4 +255,8 @@ describe('casting through the cast window spends what the window said', () => {
 
 		expect(mage.system.resources.mana.current).toBe(manaBefore - 2);
 	});
+});
+
+afterAll(async () => {
+	await purgeTestDocuments(TEST_PREFIX);
 });

@@ -121,6 +121,9 @@ describe('adjustPool, the manual correction path', () => {
 		await expect(adjustPool(actor, 'charges', 'set', 1)).resolves.toBe(true);
 
 		expect(item.update).toHaveBeenCalled();
+		expect(JSON.stringify((item.update as ReturnType<typeof vi.fn>).mock.calls.at(-1))).toContain(
+			'"current":1',
+		);
 	});
 
 	it('never sets a pool above its maximum', async () => {

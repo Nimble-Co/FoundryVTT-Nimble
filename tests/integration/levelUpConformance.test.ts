@@ -93,12 +93,10 @@ test('a Shadowmancer levelled through the real UI gains Pilfered Power on its ow
 		await settle(150);
 	}
 
-	const footerButtons = [
-		...dialogRoot.querySelectorAll<HTMLButtonElement>('.nimble-sheet__footer button'),
-	];
-	const submit = footerButtons.find((button) => !button.disabled);
-	expect(submit, 'the dialog has an enabled submit button').toBeTruthy();
-	submit!.click();
+	const submit = submitButton();
+	expect(submit, 'the dialog has a submit button').toBeTruthy();
+	expect(submit.disabled, 'the submit button is enabled').toBe(false);
+	submit.click();
 
 	await waitFor(() => actor.system.levelUpHistory.length > 0, 'the level up to be applied', {
 		timeout: 15_000,
