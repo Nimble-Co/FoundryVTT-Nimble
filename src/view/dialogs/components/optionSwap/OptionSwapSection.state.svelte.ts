@@ -1,8 +1,8 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
+import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
-import { formatGroupName } from '../characterCreator/FeatureGroupSelection.svelte.ts';
 
 /** The highest bonus a skill can ever have, per the core rules. */
 const MAX_SKILL_MODIFIER = 12;

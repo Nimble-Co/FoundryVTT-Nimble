@@ -3,20 +3,12 @@ import type {
 	FeatureGroupSelectionProps,
 	SelectionGroup,
 } from '#types/components/ClassFeatureSelection.d.ts';
+import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
 import { isFixedGroup, isGroupComplete } from '../../selectionGroupRules.ts';
 
-/**
- * Converts kebab-case to Title Case
- * e.g., "thrill-of-the-hunt" -> "Thrill Of The Hunt"
- */
-export function formatGroupName(name: string): string {
-	return name
-		.split('-')
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(' ');
-}
+export { formatGroupName };
 
 type FeatureGroupSelectionStateProps = Pick<
 	FeatureGroupSelectionProps,

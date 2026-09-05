@@ -57,13 +57,13 @@ describe('summarizeOptionSwap', () => {
 		expect(changes[0].added).toEqual(['uuid:death-blow']);
 	});
 
-	it('falls back to the option label when the pool has no display name', () => {
+	it('titles the pool from its key when it has no display name', () => {
 		const changes = summarizeOptionSwap(
 			[pool({ displayName: null })],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
 		);
 
-		expect(changes[0].label).toBe('Choose a Savage Arsenal Ability');
+		expect(changes[0].label).toBe('Savage Arsenal');
 	});
 
 	it('reports both halves of a skill point move', () => {

@@ -7,9 +7,7 @@ import { ABILITY_SCORE_LEVELS, SUBCLASS_LEVELS } from './ClassProgressionTabCons
 
 type AbilityScoreRecord = { [K in (typeof ABILITY_SCORE_LEVELS)[number]]: AbilityScoreDataEntry };
 
-export function formatGroupName(groupName: string): string {
-	return groupName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-}
+export { default as formatGroupName } from '#utils/formatGroupName.js';
 
 export function isSubclassLevel(level: number): boolean {
 	return SUBCLASS_LEVELS.includes(level as (typeof SUBCLASS_LEVELS)[number]);
