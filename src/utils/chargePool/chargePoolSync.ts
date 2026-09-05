@@ -33,6 +33,19 @@ function getPools(actor: Actor | null | undefined): ChargePoolState[] {
 }
 
 /**
+ * The pools the sheet header presents as standing resources, in the same order
+ * as {@link getPools}.
+ *
+ * `hidden` wins over `showAsResource`: a pool that opts out of the readouts
+ * entirely is not promoted, so the two flags cannot contradict each other on
+ * screen. Every promoted pool still keeps its badge on the item that grants it;
+ * the header is an addition, not a move.
+ */
+function getResourcePools(actor: Actor | null | undefined): ChargePoolState[] {
+	return getPools(actor).filter((pool) => pool.showAsResource && !pool.hidden);
+}
+
+/**
  * The pools belonging to an item: the ones it declares plus the ones it spends
  * from.
  *
@@ -78,4 +91,4 @@ async function syncActorPools(actor: Actor | null | undefined): Promise<void> {
 	await persistChargePoolMap(actor, nextPools);
 }
 
-export { isChargePoolFlagUpdate, getPools, getPoolsForItem, syncActorPools };
+export { isChargePoolFlagUpdate, getPools, getPoolsForItem, getResourcePools, syncActorPools };

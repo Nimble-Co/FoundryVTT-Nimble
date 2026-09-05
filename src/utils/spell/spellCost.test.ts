@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
+import { paySpellCost } from './paySpellCost.js';
 import {
 	applyOverdraftConsequence,
+	exceedsUnlockedSpellTier,
 	formatSpellCostLabel,
 	resolvePinnedCastTier,
 	resolveSpellCost,
@@ -262,6 +264,42 @@ describe('resolvePinnedCastTier', () => {
 	});
 });
 
+describe('exceedsUnlockedSpellTier', () => {
+	it('refuses a spell above the tier the caster has unlocked', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ castAtHighestTier: true })],
+			unlockedTier: 4,
+		});
+		expect(exceedsUnlockedSpellTier(actor, createSpell(5))).toBe(true);
+	});
+
+	it('permits a spell at the unlocked tier', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ castAtHighestTier: true })],
+			unlockedTier: 4,
+		});
+		expect(exceedsUnlockedSpellTier(actor, createSpell(4))).toBe(false);
+	});
+
+	it('permits a spell below the unlocked tier', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ castAtHighestTier: true })],
+			unlockedTier: 4,
+		});
+		expect(exceedsUnlockedSpellTier(actor, createSpell(1))).toBe(false);
+	});
+
+	it('permits a cantrip whatever the caster has unlocked', () => {
+		const actor = createMockActor({ items: [createPoolClass({})], unlockedTier: 0 });
+		expect(exceedsUnlockedSpellTier(actor, createSpell(0))).toBe(false);
+	});
+
+	it('refuses any tiered spell for a character who has unlocked nothing', () => {
+		const actor = createMockActor({ items: [createPoolClass({})], unlockedTier: 0 });
+		expect(exceedsUnlockedSpellTier(actor, createSpell(1))).toBe(true);
+	});
+});
+
 describe('validateSpellCost', () => {
 	it('validates nothing when resource spending automation is off', () => {
 		setResourceSpendingAutomation(false);
@@ -410,6 +448,70 @@ describe('applyOverdraftConsequence', () => {
 
 		expect(damage).toBe(0);
 		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+});
+
+/** The mock stores pools as a loose bag, so reading one back needs its shape. */
+function poolCurrentOf(item: MockItem, identifier = 'stolen-power'): number {
+	return (item.flags.nimble.chargePools[identifier] as { current: number }).current;
+}
+
+describe('paying while the pool changes under the confirmation', () => {
+	beforeEach(() => setResourceSpendingAutomation(true));
+
+	it('spends normally and deals no damage when the pool is refilled mid-prompt', async () => {
+		const classItem = createPoolClass({
+			poolCurrent: 0,
+			overdraftConsequence: 'halfMaxHpDamage',
+			castAtHighestTier: true,
+		});
+		const actor = createMockActor({ items: [classItem], hpMax: 30 });
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		// The pool is empty when the prompt opens, so an overdraw is offered. A
+		// Safe Rest, an ally, or another client refills it while the prompt is up.
+		const payment = await paySpellCost(actor, cost, {
+			confirmOverdraft: () => {
+				classItem.flags.nimble.chargePools['stolen-power'] = { current: 3, max: 3 };
+				return true;
+			},
+		});
+
+		expect(payment.paid).toBe(true);
+		expect(payment.overdrawn).toBeUndefined();
+		expect(payment.damage).toBeUndefined();
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(poolCurrentOf(classItem)).toBe(2);
+	});
+
+	it('still overdraws and applies the consequence when the pool stays empty', async () => {
+		const classItem = createPoolClass({
+			poolCurrent: 0,
+			overdraftConsequence: 'halfMaxHpDamage',
+			castAtHighestTier: true,
+		});
+		const actor = createMockActor({ items: [classItem], hpMax: 30 });
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		const payment = await paySpellCost(actor, cost, { confirmOverdraft: () => true });
+
+		expect(payment).toMatchObject({ paid: true, overdrawn: true, damage: 15 });
+		expect(actor.applyDamage).toHaveBeenCalledWith(15);
+	});
+
+	it('pays nothing and reports a cancel when the caster declines the overdraw', async () => {
+		const classItem = createPoolClass({
+			poolCurrent: 0,
+			overdraftConsequence: 'halfMaxHpDamage',
+		});
+		const actor = createMockActor({ items: [classItem], hpMax: 30 });
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		const payment = await paySpellCost(actor, cost, { confirmOverdraft: () => false });
+
+		expect(payment).toEqual({ paid: false, cancelled: true });
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(poolCurrentOf(classItem)).toBe(0);
 	});
 });
 

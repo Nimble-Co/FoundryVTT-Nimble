@@ -1,7 +1,7 @@
 import type {
 	ResolvedSpellCost,
 	SpellCostActorLike,
-	SpellCostValidation,
+	SpellCostOutcome,
 } from '#types/spellCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { emitForCharacter } from '../chargePool/chargePoolHooks.js';
@@ -23,7 +23,7 @@ import { validateSpellCost } from './validateSpellCost.js';
 export async function spendSpellCost(
 	actor: SpellCostActorLike,
 	cost: ResolvedSpellCost,
-): Promise<SpellCostValidation> {
+): Promise<SpellCostOutcome> {
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
 	if (cost.type === 'none') return { ok: true, overdrawn: false };
 

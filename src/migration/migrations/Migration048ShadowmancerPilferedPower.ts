@@ -61,6 +61,7 @@ const FEATURES: FeatureSpec[] = [
 				max: 'max(@dexterity, 0)',
 				dieSize: null,
 				initial: 'max',
+				showAsResource: true,
 				recoveries: [{ trigger: 'safeRest', mode: 'refresh', value: '1' }],
 			},
 		],
@@ -92,6 +93,13 @@ const FEATURES: FeatureSpec[] = [
 				// Both readings are defensible; this one follows the printed wording,
 				// and the clamp at the pool maximum keeps the difference small. The
 				// Commander's choice is left as it shipped rather than changed here.
+				//
+				// Not expressed: the rules end with "This expires at the end of
+				// combat if unused". A recovery can add a use but not take back an
+				// unspent one, because nothing distinguishes a use granted this
+				// combat from one the character already held. The use therefore
+				// survives to the next Safe Rest, which is the more generous
+				// reading, and the limitation is recorded in the player docs.
 				addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1', predicate: {} }],
 			},
 		],

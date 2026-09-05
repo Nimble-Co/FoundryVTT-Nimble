@@ -39,6 +39,11 @@ export interface SpellLike {
 
 /** The upcast selection a dialog would have returned. */
 export interface UpcastSelection {
+	/**
+	 * The tier the spell resolves at. Named for the default rule, where a tier
+	 * costs that much mana; a class paying from a pool spends its declared
+	 * amount instead and this still carries the tier.
+	 */
 	manaToSpend: number;
 	choiceIndex?: number;
 }
@@ -70,7 +75,8 @@ export interface SpellCostFailure {
 	available: number;
 }
 
-export interface SpellCostValidation {
+/** The result of checking a cost, and of paying one: the two report alike. */
+export interface SpellCostOutcome {
 	ok: boolean;
 	overdrawn: boolean;
 	/** The pool's current value when the cast would overdraw it. */

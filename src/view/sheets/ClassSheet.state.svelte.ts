@@ -102,8 +102,8 @@ export function createClassSheetState(getProps: () => ClassSheetProps) {
 				'system.spellcasting.castAtHighestTier': castAtHighestTier,
 			} as Record<string, unknown>);
 		},
-		async toggleOverdraftConsequence(consequence: string | number) {
-			await getProps().item.update({
+		toggleOverdraftConsequence(consequence: string | number) {
+			void getProps().item.update({
 				'system.spellcasting.cost.overdraftConsequence': String(consequence),
 			} as Record<string, unknown>);
 		},

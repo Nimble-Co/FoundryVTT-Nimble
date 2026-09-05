@@ -523,3 +523,79 @@ describe('charge pool modifier contributed recoveries', () => {
 		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(1);
 	});
 });
+
+describe('a pool whose maximum only appears later', () => {
+	const poolRule = {
+		type: 'chargePool',
+		id: 'pilfered-rule',
+		identifier: 'pilfered-power',
+		scope: 'item',
+		max: '@dexterity',
+		initial: 'max',
+	} as MockRule;
+
+	// Stored state from a time when the formula still read zero.
+	const storedAtZero = {
+		nimble: {
+			chargePools: {
+				'pilfered-power': {
+					id: 'pilfered-power',
+					identifier: 'pilfered-power',
+					scope: 'item',
+					sourceItemId: 'item-1',
+					sourceItemName: 'Pilfered Power',
+					label: 'Pilfered Power',
+					current: 0,
+					max: 0,
+					dieSize: null,
+					recoveries: [],
+				},
+			},
+		},
+	};
+
+	it('fills once the maximum becomes real', () => {
+		const actor = createMockActor(
+			[createMockItem('item-1', 'Pilfered Power', [poolRule], storedAtZero)],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(3);
+	});
+
+	it('leaves a pool that was spent down to zero alone', () => {
+		const spent = foundry.utils.deepClone(storedAtZero);
+		spent.nimble.chargePools['pilfered-power'].max = 3;
+
+		const actor = createMockActor([createMockItem('item-1', 'Pilfered Power', [poolRule], spent)], {
+			dexterity: 3,
+		});
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+
+	it('seeds an empty pool at zero when that is what the rule asks for', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[{ ...poolRule, initial: 'zero' } as MockRule],
+					storedAtZero,
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+});

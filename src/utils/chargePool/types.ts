@@ -43,6 +43,12 @@ type ChargePoolState = {
 	 * the pool the player actually manages.
 	 */
 	hidden: boolean;
+	/**
+	 * Promotes the pool to the sheet header alongside the other standing
+	 * resources, in addition to the badge on the item that grants it. `hidden`
+	 * wins: a pool left out of the readouts never reaches the header.
+	 */
+	showAsResource: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
@@ -64,6 +70,7 @@ type ChargePoolRuleLike = {
 	initial?: string;
 	dieSize?: string | null;
 	hidden?: boolean;
+	showAsResource?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;

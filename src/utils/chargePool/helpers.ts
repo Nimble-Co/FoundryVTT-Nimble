@@ -77,10 +77,10 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 }
 
 /**
- * Only an explicit `true` hides a pool, so stored state and rule data that
- * predate the field keep rendering.
+ * Only an explicit `true` sets one of a pool's display flags, so stored state
+ * and rule data that predate a flag keep rendering where they always did.
  */
-function toHiddenFlag(value: unknown): boolean {
+function toPoolDisplayFlag(value: unknown): boolean {
 	return value === true;
 }
 
@@ -127,7 +127,8 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
 				recoveries,
 			};
 		}
@@ -175,7 +176,8 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
 				recoveries,
 			};
 		}
@@ -377,7 +379,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
-				hidden: toHiddenFlag(poolRule.hidden),
+				hidden: toPoolDisplayFlag(poolRule.hidden),
+				showAsResource: toPoolDisplayFlag(poolRule.showAsResource),
 				initial,
 				recoveries,
 			};
@@ -399,7 +402,13 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	for (const definition of definitions) {
 		const existingPool = existingPools[definition.id];
 		const defaultCurrent = definition.initial === 'zero' ? 0 : definition.max;
-		const current = clampCurrentToMax(existingPool?.current ?? defaultCurrent, definition.max);
+		// A pool stored while its maximum was zero was never really seeded, so it
+		// takes its initial value once the maximum appears.
+		const seeded = existingPool !== undefined && existingPool.max > 0;
+		const current = clampCurrentToMax(
+			seeded ? existingPool.current : defaultCurrent,
+			definition.max,
+		);
 
 		nextPools[definition.id] = {
 			id: definition.id,
@@ -415,6 +424,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			// The rule is the source of truth for visibility: flipping the flag on the
 			// rule re-hides or re-reveals a pool that is already tracked in storage.
 			hidden: definition.hidden,
+			showAsResource: definition.showAsResource,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -666,6 +676,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&
+		left.showAsResource === right.showAsResource &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

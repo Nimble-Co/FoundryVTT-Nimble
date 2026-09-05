@@ -609,6 +609,15 @@ const spellUpcastDialog = {
 	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
+	warnings: {
+		minMana: 'NIMBLE.spells.spellUpcastDialog.warnings.minMana',
+		insufficientMana: 'NIMBLE.spells.spellUpcastDialog.warnings.insufficientMana',
+		aboveMaxTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveMaxTier',
+		aboveUnlockedTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveUnlockedTier',
+		upcastFailed: 'NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed',
+		cantripCannotUpcast: 'NIMBLE.spells.spellUpcastDialog.warnings.cantripCannotUpcast',
+		spellCannotUpcast: 'NIMBLE.spells.spellUpcastDialog.warnings.spellCannotUpcast',
+	},
 };
 
 const spellProperties = {

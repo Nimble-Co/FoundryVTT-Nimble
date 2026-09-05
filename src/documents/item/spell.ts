@@ -138,6 +138,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 					// Add upcast result to chat data
 					upcast: manager.upcastResult,
+					// A pinned tier reaches the card without an upcast to read it from.
+					castTier: manager.pinnedCastTier,
 				},
 				type: 'spell',
 			},

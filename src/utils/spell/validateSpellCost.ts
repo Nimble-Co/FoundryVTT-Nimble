@@ -1,7 +1,7 @@
 import type {
 	ResolvedSpellCost,
 	SpellCostActorLike,
-	SpellCostValidation,
+	SpellCostOutcome,
 } from '#types/spellCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { buildEffectiveChargePoolMap, findChargePoolByIdentifier } from '../chargePool/helpers.js';
@@ -17,7 +17,7 @@ import { asChargePoolActor } from './asChargePoolActor.js';
 export function validateSpellCost(
 	actor: SpellCostActorLike,
 	cost: ResolvedSpellCost,
-): SpellCostValidation {
+): SpellCostOutcome {
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
 	if (cost.type !== 'pool') return { ok: true, overdrawn: false };
 
