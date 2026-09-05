@@ -48,3 +48,4 @@ export { Migration047SurvivalistPoisonSave } from './Migration047SurvivalistPois
 export { Migration048LayOnHandsPool } from './Migration048LayOnHandsPool.js';
 export { Migration048PoolMaxBonusItems } from './Migration048PoolMaxBonusItems.js';
 export { Migration049GrantOptionSwapFeatures } from './Migration049GrantOptionSwapFeatures.js';
+export { Migration050JackOfAllTradesSkillPointMove } from './Migration050JackOfAllTradesSkillPointMove.js';

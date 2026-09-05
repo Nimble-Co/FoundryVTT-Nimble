@@ -1,16 +1,5 @@
-import { SYSTEM_ID } from '#system';
+import { toInstalledId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
-
-/** The namespace snapshot ids are written under in this file. */
-const SNAPSHOT_PREFIX = 'Compendium.nimble.';
-
-/** The namespace the running install stores and resolves uuids under. */
-const INSTALLED_PREFIX = `Compendium.${SYSTEM_ID}.`;
-
-/** Rebrands a snapshot id to the running install, so `fromUuid` can resolve what we write. */
-function toInstalledId(snapshotId: string): string {
-	return `${INSTALLED_PREFIX}${snapshotId.slice(SNAPSHOT_PREFIX.length)}`;
-}
 
 interface SwapFeature {
 	uuid: string;
@@ -191,10 +180,11 @@ class Migration049GrantOptionSwapFeatures extends MigrationBase {
 		if (typeof classLevel !== 'number' || classLevel < feature.level) return;
 
 		const installedUuid = toInstalledId(feature.uuid);
+		// Both sides are folded onto the snapshot namespace: an actor exported from the stable
+		// install and imported into the dev one carries `Compendium.nimble.…` while the running
+		// install writes `Compendium.nimble-dev.…`, and comparing raw would grant a second copy.
 		const alreadyOwned = items.some(
-			(item) =>
-				((item?._stats as Record<string, unknown> | undefined)?.compendiumSource ?? '') ===
-				installedUuid,
+			(item) => toSnapshotId(this.getSourceId(item)) === feature.uuid,
 		);
 		if (alreadyOwned) return;
 
@@ -212,7 +202,7 @@ class Migration049GrantOptionSwapFeatures extends MigrationBase {
 						type: 'optionSwap',
 						label: feature.ruleLabel,
 						disabled: false,
-						predicate: [],
+						predicate: {},
 						priority: 1,
 						selectionGroups: ['all'],
 						trigger: 'safeRest',

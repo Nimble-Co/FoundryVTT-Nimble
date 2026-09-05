@@ -1,21 +1,10 @@
-import { SYSTEM_ID } from '#system';
+import { SNAPSHOT_PREFIX, toInstalledId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 /** The "+1 Max Combat Die" class feature. */
 const MAX_COMBAT_DIE_ITEM_ID = 'WnKpJ8RvCb4mX2Qt';
 
-/** The namespace snapshot ids are written under in this file. */
-const SNAPSHOT_PREFIX = 'Compendium.nimble.';
-
-/** The namespace the running install stores and resolves uuids under. */
-const INSTALLED_PREFIX = `Compendium.${SYSTEM_ID}.`;
-
 const MAX_COMBAT_DIE_UUID = `${SNAPSHOT_PREFIX}nimble-class-features.Item.${MAX_COMBAT_DIE_ITEM_ID}`;
-
-/** Rebrands a snapshot id to the running install, so `fromUuid` can resolve what we write. */
-function toInstalledId(snapshotId: string): string {
-	return `${INSTALLED_PREFIX}${snapshotId.slice(SNAPSHOT_PREFIX.length)}`;
-}
 
 /** The pools a bonus could have been recorded against, and the item that now carries each. */
 const GRANT_UUID_BY_POOL: Record<string, string> = {
@@ -60,7 +49,7 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 						type: 'poolMaxBonus',
 						label: '',
 						disabled: false,
-						predicate: [],
+						predicate: {},
 						priority: 1,
 						poolIdentifier,
 						amount: 1,
@@ -81,8 +70,25 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 		};
 	}
 
-	/** True if this item is a previously granted pool-bonus item, whatever it was renamed to. */
+	/** True if the item already carries the bonus as a rule, so it is one of the new items. */
+	static #carriesBonusRule(source: Record<string, unknown>): boolean {
+		const rules = (source.system as Record<string, unknown> | undefined)?.rules;
+		if (!Array.isArray(rules)) return false;
+		return rules.some((rule: Record<string, unknown>) => rule?.type === 'poolMaxBonus');
+	}
+
+	/**
+	 * True if this item is a previously granted pool-bonus item, whatever it was renamed to.
+	 *
+	 * An item that already carries a `poolMaxBonus` rule is one this migration wrote, or a
+	 * current copy of the pack item, so it is not legacy. Testing for the rule rather than
+	 * leaving it to the early return keeps a second pass a no-op on its own terms: an actor
+	 * whose history still holds a number would otherwise have its migrated items deleted and
+	 * rebuilt with new ids.
+	 */
 	static #isLegacyBonusItem(source: Record<string, unknown>): boolean {
+		if (Migration048PoolMaxBonusItems.#carriesBonusRule(source)) return false;
+
 		const compendiumSource =
 			(source._stats as Record<string, unknown> | undefined)?.compendiumSource ?? '';
 		const legacySourceId =
@@ -190,7 +196,7 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 					type: 'grantItem',
 					label: rule.label ?? '',
 					disabled: rule.disabled ?? false,
-					predicate: rule.predicate ?? [],
+					predicate: rule.predicate ?? {},
 					priority: rule.priority ?? 1,
 					uuid: grantItemUuid,
 					allowDuplicate: true,
