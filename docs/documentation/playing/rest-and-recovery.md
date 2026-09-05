@@ -60,7 +60,7 @@ Nothing happens until you confirm the rest. Close the window and your picks are 
 
 The Songweaver's Jack of All Trades works the same way for skills: it offers to move one skill point on a safe rest. A move is net zero, so a point can only be added to one skill by taking it from another.
 
-What a swap covers is your class option pools. It does not change your subclass, your ability score increases, or the spells you know.
+What a swap covers is your class option pools. A level that let you choose between alternatives, such as the Commander's Combat Ability or +1 max Combat Die, counts every alternative as part of one pool, so a die can be traded for an ability and back. Pools that share options are shown as one pool. A swap does not change your subclass, your ability score increases, or the spells you know.
 
 ## Features that improve resting
 

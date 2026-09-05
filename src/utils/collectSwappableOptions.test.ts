@@ -23,10 +23,15 @@ afterAll(() => {
 	restoreMocks();
 });
 
-/** Every member of a pool, as compendium-source uuids. */
+/** Every member of a pool that a level offers, as compendium-source uuids. */
 function poolMembers(group: string): string[] {
 	return loadAllFeatureDocs()
-		.filter((feature) => !feature.system.subclass && feature.system.group === group)
+		.filter(
+			(feature) =>
+				!feature.system.subclass &&
+				feature.system.group === group &&
+				feature.system.gainedAtLevels.length > 0,
+		)
 		.map((feature) => feature.uuid);
 }
 
@@ -80,6 +85,67 @@ describe('collectSwappableOptions', () => {
 		);
 
 		expect(findPool(pools, 'combat-tactics')?.pickCount).toBe(5);
+	});
+
+	it('offers an item an alternative grants outright as a member of the pool', async () => {
+		// The Commander may take +1 max Combat Die instead of a Combat Ability, and the die is
+		// a granted item rather than a pool member. It has to be tradeable both ways.
+		const pools = await collectSwappableOptions(
+			index,
+			'commander',
+			16,
+			owning('combat-tactics', 2),
+			null,
+		);
+
+		expect(
+			findPool(pools, 'combat-tactics')?.candidateUuids.some((uuid) =>
+				uuid.endsWith('WnKpJ8RvCb4mX2Qt'),
+			),
+		).toBe(true);
+	});
+
+	it('counts a held granted item as one of the picks', async () => {
+		const die = 'Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt';
+		const pools = await collectSwappableOptions(
+			index,
+			'commander',
+			16,
+			new Set([...owning('combat-tactics', 2), die]),
+			null,
+		);
+
+		const pool = findPool(pools, 'combat-tactics');
+		expect(pool?.ownedUuids).toContain(die);
+		expect(pool?.pickCount).toBe(3);
+	});
+
+	it('merges pools that share a group, so no pick counts twice', async () => {
+		// A Combat Ability may come from either Commander pool, so the two pools are one.
+		const owned = new Set([...owning('commanders-orders', 2), ...owning('combat-tactics', 2)]);
+
+		const pools = await collectSwappableOptions(index, 'commander', 16, owned, null);
+		const merged = findPool(pools, 'combat-tactics');
+
+		expect(merged?.poolGroups).toEqual(['combat-tactics', 'commanders-orders']);
+		expect(merged?.pickCount).toBe(4);
+		expect(pools.filter((pool) => pool.poolGroups.includes('commanders-orders'))).toHaveLength(1);
+	});
+
+	it('keeps a narrowed pool to the groups the rule names', async () => {
+		const owned = new Set([...owning('commanders-orders', 2), ...owning('combat-tactics', 2)]);
+
+		const pools = await collectSwappableOptions(
+			index,
+			'commander',
+			16,
+			owned,
+			new Set(['combat-tactics']),
+		);
+
+		expect(pools).toHaveLength(1);
+		expect(pools[0].poolGroups).toEqual(['combat-tactics']);
+		expect(pools[0].pickCount).toBe(2);
 	});
 
 	it('offers the whole pool, not just the members tied to one level', async () => {
@@ -144,7 +210,11 @@ describe('collectSwappableOptions', () => {
 	});
 
 	it('returns every pool when no groups are named', async () => {
-		const owned = new Set([...owning('commanders-orders', 2), ...owning('combat-tactics', 2)]);
+		const owned = new Set([
+			...owning('commanders-orders', 2),
+			...owning('combat-tactics', 2),
+			...owning('weapon-mastery', 1),
+		]);
 
 		const all = await collectSwappableOptions(index, 'commander', 12, owned, null);
 		const narrowed = await collectSwappableOptions(

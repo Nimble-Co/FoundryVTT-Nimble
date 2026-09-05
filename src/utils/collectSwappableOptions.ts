@@ -1,5 +1,8 @@
 import collectPoolCandidates from '#utils/collectPoolCandidates.ts';
-import collectPoolRequirements, { buildPoolKey } from '#utils/collectPoolRequirements.ts';
+import collectPoolRequirements, {
+	buildPoolKey,
+	type PoolRequirement,
+} from '#utils/collectPoolRequirements.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /** One pool of class options a character may re-pick from. */
@@ -32,14 +35,18 @@ export interface SwappableOptionPool {
  *
  * The pick count is what the character currently holds, not what their levels entitled them
  * to. A swap preserves the count rather than re-deriving it, and the two differ: a level that
- * offers a choice between options records nothing about which was taken, so `collectPoolRequirements`
- * skips it, and a Commander's Combat Tactics would otherwise count one pick while holding six.
+ * offers a choice between options records nothing about which was taken.
  * A pool the character owes picks from belongs to the level correction dialog, not here.
  *
+ * A level that offers a choice between alternatives contributes all of them: every group any
+ * alternative draws from, and every item an alternative grants outright, so a pick made either
+ * way can be traded for the other. Pools that share a group are merged, because an item in
+ * two pools would count twice and a swap in one would silently reach into the other.
+ *
  * The offers are gathered by replaying levels 1 to `classLevel`, because a level-up option is
- * applicable at the exact levels it lists — asking the resolver about level 10 alone returns
- * nothing for a Hunter whose Thrill of the Hunt is offered at 2, 4, 6, 8, 12 and 14. Pool
- * members are not level-gated, so the whole pool is offered at any level.
+ * applicable at the exact levels it lists, and a pool offered at earlier levels only would
+ * otherwise go unseen. Pool members are not level-gated, so the whole pool is offered at any
+ * level.
  *
  * `allowedGroups` narrows the result to what the character's `optionSwap` rules cover; pass
  * `null` for every pool, which is what the sentinel `all` means.
@@ -53,28 +60,31 @@ export default async function collectSwappableOptions(
 ): Promise<SwappableOptionPool[]> {
 	if (!classIdentifier || classLevel < 1) return [];
 
-	const requirements = await collectPoolRequirements(index, classIdentifier, classLevel);
+	const requirements = await collectPoolRequirements(index, classIdentifier, classLevel, {
+		alternatives: 'union',
+	});
 
-	const byPool = new Map<string, typeof requirements>();
+	const buckets: PoolBucket[] = [];
 	for (const requirement of requirements) {
-		if (allowedGroups && !requirement.poolGroups.some((group) => allowedGroups.has(group))) {
-			continue;
-		}
-		const key = buildPoolKey(requirement.poolGroups);
-		const bucket = byPool.get(key);
-		if (bucket) bucket.push(requirement);
-		else byPool.set(key, [requirement]);
+		const poolGroups = allowedGroups
+			? requirement.poolGroups.filter((group) => allowedGroups.has(group))
+			: requirement.poolGroups;
+		if (poolGroups.length === 0) continue;
+
+		mergeIntoBuckets(buckets, { ...requirement, poolGroups });
 	}
 
 	const pools: SwappableOptionPool[] = [];
 
-	for (const [poolKey, poolRequirements] of byPool) {
-		const { poolGroups } = poolRequirements[0];
-		const candidateUuids = collectPoolCandidates(
-			index,
-			[classIdentifier, ...poolGroups],
-			poolGroups,
-		);
+	for (const bucket of buckets) {
+		const poolGroups = [...bucket.groups].sort();
+		const extras = bucket.requirements.flatMap((requirement) => requirement.extraCandidateUuids);
+		const candidateUuids = [
+			...new Set([
+				...collectPoolCandidates(index, [classIdentifier, ...poolGroups], poolGroups),
+				...extras,
+			]),
+		];
 		// A pool with one member offers no alternative, so there is nothing to swap.
 		if (candidateUuids.length < 2) continue;
 
@@ -82,16 +92,15 @@ export default async function collectSwappableOptions(
 		// Nothing held is nothing to swap.
 		if (ownedUuids.length < 1) continue;
 
-		// The first requirement names the pool: later levels repeat the same option, so its
-		// wording is the same, and the earliest one is what the character first saw.
-		const [first] = poolRequirements;
+		const byLevel = [...bucket.requirements].sort((a, b) => a.level - b.level);
+		const [first] = byLevel;
 
 		pools.push({
-			poolKey,
-			poolGroups: [...poolGroups],
-			displayName: first.displayName,
+			poolKey: buildPoolKey(poolGroups),
+			poolGroups,
+			displayName: joinDistinct(byLevel.map((requirement) => requirement.displayName)),
 			optionLabel: first.optionLabel,
-			levels: [...new Set(poolRequirements.map((req) => req.level))].sort((a, b) => a - b),
+			levels: [...new Set(byLevel.map((requirement) => requirement.level))].sort((a, b) => a - b),
 			pickCount: ownedUuids.length,
 			candidateUuids,
 			ownedUuids,
@@ -99,4 +108,34 @@ export default async function collectSwappableOptions(
 	}
 
 	return pools.sort((a, b) => a.levels[0] - b.levels[0] || a.poolKey.localeCompare(b.poolKey));
+}
+
+interface PoolBucket {
+	groups: Set<string>;
+	requirements: PoolRequirement[];
+}
+
+/** Adds a requirement to the bucket sharing a group with it, folding together any it bridges. */
+function mergeIntoBuckets(buckets: PoolBucket[], requirement: PoolRequirement): void {
+	const touching = buckets.filter((bucket) =>
+		requirement.poolGroups.some((group) => bucket.groups.has(group)),
+	);
+
+	const merged: PoolBucket = {
+		groups: new Set(requirement.poolGroups),
+		requirements: [requirement],
+	};
+	for (const bucket of touching) {
+		for (const group of bucket.groups) merged.groups.add(group);
+		merged.requirements.unshift(...bucket.requirements);
+		buckets.splice(buckets.indexOf(bucket), 1);
+	}
+
+	buckets.push(merged);
+}
+
+/** The distinct names in order of first appearance, or `null` when there are none. */
+function joinDistinct(names: ReadonlyArray<string | null>): string | null {
+	const distinct = [...new Set(names.filter((name): name is string => Boolean(name)))];
+	return distinct.length > 0 ? distinct.join(' / ') : null;
 }
