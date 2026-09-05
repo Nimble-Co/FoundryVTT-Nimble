@@ -53,8 +53,8 @@ Several classes let you re-pick the class options you chose at earlier levels. T
 
 If your character has such a feature, the rest window shows a **Change my options** row. Expand it and you see:
 
-- **What your class asks for**, quoted from the feature. Wrath & Ruin wants "a notable act of destruction or feat of strength"; Focus wants you "meditating alone in a windy place". The system never checks this, and cannot: whether it happened is a question for your table, not for the software. It is shown so you read it while you decide.
-- **Each pool of options** your class has given you picks from, with your current picks already selected. Choose differently and the pool keeps you to the number of picks you are owed.
+- **The feature's own text**, quoted under the heading. Wrath & Ruin wants "a notable act of destruction or feat of strength"; Focus wants you "meditating alone in a windy place". The system never checks this, and cannot: whether it happened is a question for your table, not for the software. It is shown so you read it while you decide.
+- **Each pool of options** your class has given you picks from. Your current picks sit at the top, marked as selected, and the rest of the pool is listed below them. In a pool with a single pick, clicking another option swaps it in. In a pool with several picks, deselect one of yours first, then pick its replacement. The pool keeps you to the number of picks you are owed.
 
 Nothing happens until you confirm the rest. Close the window and your picks are untouched. Confirm it and the old option is removed, the new one is granted, and the chat card lists what changed so the rest of the table can see it.
 

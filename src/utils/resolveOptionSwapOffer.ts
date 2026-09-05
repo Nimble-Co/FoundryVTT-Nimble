@@ -1,5 +1,13 @@
 import { ALL_GROUPS, type OptionSwapRule } from '../models/rules/optionSwap.js';
 import type { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
+import { stripHtml } from './stripHtml.js';
+
+/** The feature that offers a change, and what its text says about when. For display only. */
+export interface OptionSwapSource {
+	name: string;
+	/** The feature's own description, or the rule's label when it has none. */
+	text: string;
+}
 
 /** The groups a character's `optionSwap` rules cover, and the acts those rules ask for. */
 export interface OptionSwapOffer {
@@ -11,10 +19,10 @@ export interface OptionSwapOffer {
 	/** How many skill points may be moved. */
 	skillPoints: number;
 	/**
-	 * What each offering rule asks the character to do in the fiction, for display only.
-	 * None of it is checked; the table decides whether it happened.
+	 * The features whose rules make the offer, so the surface can quote them. Nothing in
+	 * their text is checked; the table decides whether it happened.
 	 */
-	requiredActs: string[];
+	sources: OptionSwapSource[];
 }
 
 interface RuleBearingActor {
@@ -34,7 +42,7 @@ export default function resolveOptionSwapOffer(
 	const rules = actor?.rules ?? [];
 
 	const namedGroups = new Set<string>();
-	const requiredActs: string[] = [];
+	const sources: OptionSwapSource[] = [];
 	let coversAllGroups = false;
 	let offersSwap = false;
 	let skillPoints = 0;
@@ -46,13 +54,13 @@ export default function resolveOptionSwapOffer(
 			offersSwap = true;
 			if (rule.coversAllGroups) coversAllGroups = true;
 			for (const group of rule.namedGroups) namedGroups.add(group);
-			if (rule.label) requiredActs.push(rule.label);
+			addSource(sources, rule);
 			continue;
 		}
 
 		if (rule?.type === 'skillPointMove' && rule.offersMoveOn?.(trigger)) {
 			skillPoints += rule.points;
-			if (rule.label) requiredActs.push(rule.label);
+			addSource(sources, rule);
 		}
 	}
 
@@ -63,8 +71,18 @@ export default function resolveOptionSwapOffer(
 		// contradictory, so the widest offer wins.
 		allowedGroups: !offersSwap ? new Set() : coversAllGroups ? null : namedGroups,
 		skillPoints,
-		requiredActs,
+		sources,
 	};
+}
+
+/** Records the rule's feature once, however many rules on it make an offer. */
+function addSource(sources: OptionSwapSource[], rule: { label?: string; item?: unknown }) {
+	const item = rule.item as { name?: string; system?: { description?: string } } | undefined;
+	const name = item?.name ?? '';
+	const text = stripHtml(item?.system?.description ?? '').trim() || rule.label || '';
+	if (!name && !text) return;
+	if (sources.some((source) => source.name === name && source.text === text)) return;
+	sources.push({ name, text });
 }
 
 export { ALL_GROUPS };

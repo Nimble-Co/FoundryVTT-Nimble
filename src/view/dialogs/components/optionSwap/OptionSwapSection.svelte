@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { OptionSwapSectionProps } from '#types/components/OptionSwapSection.d.ts';
 
-	import FeatureGroupSelection from '../characterCreator/FeatureGroupSelection.svelte';
+	import FeatureCard from '../characterCreator/FeatureCard.svelte';
 	import Hint from '#view/components/Hint.svelte';
 	import localize from '#utils/localize.js';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
@@ -62,40 +62,63 @@
 
 		{#if state.isExpanded}
 			<div class="nimble-option-swap__body">
-				{#if state.requiredActs.length > 0}
-					<div class="nimble-option-swap__acts">
-						<h4 class="nimble-heading" data-heading-variant="section">
-							{localize('NIMBLE.optionSwap.requiredActsHeading')}
-						</h4>
+				{#if state.poolViews.length > 0}
+					<h4 class="nimble-heading" data-heading-variant="section">
+						{localize('NIMBLE.optionSwap.swapHeading')}
+					</h4>
+				{/if}
 
-						<ul class="nimble-option-swap__acts-list">
-							{#each state.requiredActs as act, index (index)}
-								<li class="nimble-option-swap__act">{act}</li>
+				{#each state.sources as source, index (index)}
+					<Hint hintText={source} hintIcon="fa-solid fa-book-open" hintType="flavor" />
+				{/each}
+
+				{#each state.poolViews as view (view.pool.poolKey)}
+					<section class="nimble-option-swap__pool">
+						<header class="nimble-option-swap__pool-header">
+							<h4 class="nimble-heading" data-heading-variant="section">{view.heading}</h4>
+							<span class="nimble-option-swap__pool-hint">{view.pickHint}</span>
+							<span
+								class="nimble-option-swap__pool-progress"
+								class:nimble-option-swap__pool-progress--complete={view.isFull}
+							>
+								{view.progressText}
+							</span>
+						</header>
+
+						<span class="nimble-option-swap__list-label">
+							{localize('NIMBLE.optionSwap.currentPicks')}
+						</span>
+						<ul class="nimble-option-swap__cards">
+							{#each view.selected as feature (feature.uuid)}
+								<FeatureCard
+									{feature}
+									isSelected
+									onSelect={() => state.toggleFeature(view.pool.poolKey, feature)}
+								/>
 							{/each}
 						</ul>
 
-						<Hint
-							hintText={localize('NIMBLE.optionSwap.requiredActsNote')}
-							hintIcon="fa-solid fa-comments"
-							hintType="reminder"
-						/>
-					</div>
-				{/if}
-
-				{#each state.groups as { pool, group } (pool.poolKey)}
-					<section class="nimble-option-swap__pool">
-						<FeatureGroupSelection
-							groupName={pool.poolKey}
-							{group}
-							selectedFeatures={state.getSelectedFeatures(pool.poolKey)}
-							onSelect={(feature) => state.toggleFeature(pool.poolKey, feature)}
-						/>
+						{#if view.available.length > 0}
+							<span class="nimble-option-swap__list-label">
+								{localize('NIMBLE.optionSwap.availablePicks')}
+							</span>
+							<ul
+								class="nimble-option-swap__cards"
+								data-tooltip={view.isFull && view.pool.pickCount > 1
+									? localize('NIMBLE.optionSwap.releaseAPickFirst')
+									: undefined}
+							>
+								{#each view.available as feature (feature.uuid)}
+									<FeatureCard
+										{feature}
+										isDisabled={view.isFull && view.pool.pickCount > 1}
+										onSelect={() => state.toggleFeature(view.pool.poolKey, feature)}
+									/>
+								{/each}
+							</ul>
+						{/if}
 					</section>
 				{/each}
-
-				{#if state.groups.length > 0}
-					<Hint hintText={localize('NIMBLE.optionSwap.deselectToBrowseHint')} />
-				{/if}
 
 				{#if state.skillBudget > 0}
 					<section class="nimble-option-swap__skills">
@@ -288,14 +311,47 @@
 			border-radius: 0 0 6px 6px;
 		}
 
-		&__acts-list {
-			margin: 0.25rem 0;
-			padding-left: 1.25rem;
+		&__pool {
+			display: flex;
+			flex-direction: column;
+			gap: 0.375rem;
 		}
 
-		&__act {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-dark-text-color);
+		&__pool-header {
+			display: flex;
+			align-items: baseline;
+			gap: 0.5rem;
+		}
+
+		&__pool-hint,
+		&__pool-progress {
+			font-size: 0.875rem;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__pool-progress {
+			margin-left: auto;
+
+			&--complete {
+				font-weight: 600;
+				color: var(--nimble-accent-color);
+			}
+		}
+
+		&__list-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__cards {
+			display: flex;
+			flex-direction: column;
+			margin: 0;
+			padding: 0;
+			list-style: none;
 		}
 
 		&__skills-header {

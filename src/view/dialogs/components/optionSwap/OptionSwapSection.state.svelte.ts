@@ -1,7 +1,8 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
-import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
+import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import localize from '#utils/localize.js';
+import sortDocumentsByName from '#utils/sortDocumentsByName.js';
+import { formatGroupName } from '../characterCreator/FeatureGroupSelection.svelte.ts';
 
 /** The highest bonus a skill can ever have, per the core rules. */
 const MAX_SKILL_MODIFIER = 12;
@@ -25,6 +26,19 @@ export interface OptionSwapSkillRow {
 	subtractTooltip: string;
 }
 
+/** One pool as the section lays it out: the picks held on top, the rest of the pool below. */
+export interface OptionSwapPoolView {
+	pool: ResolvedSwappableOptionPool;
+	heading: string;
+	/** How many picks the pool asks for, e.g. "(Choose 2)". */
+	pickHint: string;
+	/** How many the player holds against that, e.g. "1 of 2 selected". */
+	progressText: string;
+	selected: NimbleFeatureItem[];
+	available: NimbleFeatureItem[];
+	isFull: boolean;
+}
+
 interface OptionSwapSectionStateProps {
 	offer: ResolvedOptionSwapOffer | null;
 	skills: Record<string, OptionSwapSkillData>;
@@ -45,18 +59,39 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 
 	const pools = $derived(getProps().offer?.pools ?? []);
 	const skillBudget = $derived(getProps().offer?.skillPoints ?? 0);
-	const requiredActs = $derived(getProps().offer?.requiredActs ?? []);
+	const sources = $derived(
+		(getProps().offer?.sources ?? []).map((source) =>
+			source.name
+				? localize('NIMBLE.optionSwap.sourceQuote', { name: source.name, text: source.text })
+				: source.text,
+		),
+	);
 	const hasOffer = $derived(pools.length > 0 || skillBudget > 0);
 
-	const groups = $derived(
-		pools.map((pool) => ({
-			pool,
-			group: {
-				features: pool.candidates,
-				selectionCount: pool.pickCount,
-				...(pool.displayName ? { displayName: pool.displayName } : {}),
-			} satisfies SelectionGroup,
-		})),
+	const poolViews = $derived.by((): OptionSwapPoolView[] =>
+		pools.map((pool) => {
+			const selected = getSelectedFeatures(pool.poolKey);
+			const selectedUuids = new Set(selected.map((feature) => feature.uuid));
+			return {
+				pool,
+				heading: pool.displayName || formatGroupName(pool.poolKey),
+				pickHint:
+					pool.pickCount === 1
+						? localize('NIMBLE.classFeatureSelection.chooseOne')
+						: localize('NIMBLE.classFeatureSelection.chooseN', {
+								count: String(pool.pickCount),
+							}),
+				progressText: localize('NIMBLE.classFeatureSelection.nOfMSelected', {
+					current: String(selected.length),
+					required: String(pool.pickCount),
+				}),
+				selected: sortDocumentsByName(selected),
+				available: sortDocumentsByName(
+					pool.candidates.filter((candidate) => !selectedUuids.has(candidate.uuid)),
+				),
+				isFull: selected.length >= pool.pickCount,
+			};
+		}),
 	);
 
 	const pointsTaken = $derived(
@@ -188,10 +223,13 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		let next: NimbleFeatureItem[];
 		if (isSelected) {
 			next = current.filter((selected) => selected.uuid !== feature.uuid);
-		} else if (current.length >= pool.pickCount) {
-			return;
-		} else {
+		} else if (current.length < pool.pickCount) {
 			next = [...current, feature];
+		} else if (pool.pickCount === 1) {
+			// With one pick there is nothing to choose between, so a click is the swap.
+			next = [feature];
+		} else {
+			return;
 		}
 
 		const updated = new Map(selectedByPool);
@@ -210,11 +248,11 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		get isExpanded() {
 			return isExpanded;
 		},
-		get groups() {
-			return groups;
+		get poolViews() {
+			return poolViews;
 		},
-		get requiredActs() {
-			return requiredActs;
+		get sources() {
+			return sources;
 		},
 		get skillBudget() {
 			return skillBudget;

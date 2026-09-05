@@ -43,7 +43,12 @@ function createOffer(overrides: Partial<ResolvedOptionSwapOffer> = {}): Resolved
 	return {
 		allowedGroups: null,
 		skillPoints: 0,
-		requiredActs: ['Whenever you perform a notable act of destruction during a Safe Rest'],
+		sources: [
+			{
+				name: 'Wrath & Ruin',
+				text: 'Whenever you perform a notable act of destruction during a Safe Rest, you may choose different Berserker options available to you.',
+			},
+		],
 		pools: [createPool()],
 		...overrides,
 	};
@@ -96,38 +101,58 @@ describe('OptionSwapSection', () => {
 		expect(queryByText('Savage Arsenal')).toBeNull();
 	});
 
-	it('shows the acts the class asks for as an unchecked reminder once expanded', async () => {
+	it('quotes the feature that offers the swap once expanded', async () => {
 		const { expand, getByText } = renderSection(createOffer());
 
 		await expand();
 
+		expect(getByText('Swap class options')).toBeTruthy();
 		expect(
-			getByText('Whenever you perform a notable act of destruction during a Safe Rest'),
+			getByText(/Wrath & Ruin: Whenever you perform a notable act of destruction/),
 		).toBeTruthy();
-		expect(getByText(/system never checks this/i)).toBeTruthy();
 	});
 
 	it('preselects the picks the character already holds', async () => {
-		const { expand, getByText, queryByText, latest } = renderSection(createOffer());
+		const { expand, getByText, getByLabelText, latest } = renderSection(createOffer());
 
 		await expand();
 
 		expect(getByText('Savage Arsenal')).toBeTruthy();
-		expect(getByText('Cleave')).toBeTruthy();
-		// The pool already holds its full count, so the alternatives stay collapsed until a
-		// pick is released.
-		expect(queryByText('Rampage')).toBeNull();
+		expect(getByLabelText('Deselect Cleave')).toBeTruthy();
+		// The rest of the pool stays in view below the held pick.
+		expect(getByLabelText('Select Rampage')).toBeTruthy();
+		expect(getByLabelText('Select Savage Leap')).toBeTruthy();
 		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.cleave']);
 	});
 
-	it('swaps a pick for another member of the pool', async () => {
+	it('swaps a single pick for another member of the pool in one click', async () => {
 		const { expand, getByLabelText, latest } = renderSection(createOffer());
 
 		await expand();
-		await fireEvent.click(getByLabelText('Deselect Cleave'));
 		await fireEvent.click(getByLabelText('Select Rampage'));
 
 		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.rampage']);
+	});
+
+	it('asks for a pick to be released before a multi-pick pool takes another', async () => {
+		const { expand, getByLabelText, latest } = renderSection(
+			createOffer({
+				pools: [
+					createPool({
+						pickCount: 2,
+						ownedUuids: ['Item.cleave', 'Item.rampage'],
+					}),
+				],
+			}),
+		);
+
+		await expand();
+		await fireEvent.click(getByLabelText('Select Savage Leap'));
+		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.cleave', 'Item.rampage']);
+
+		await fireEvent.click(getByLabelText('Deselect Cleave'));
+		await fireEvent.click(getByLabelText('Select Savage Leap'));
+		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.rampage', 'Item.savage-leap']);
 	});
 
 	it('only offers a skill point once one has been taken from another skill', async () => {

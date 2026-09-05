@@ -106,13 +106,39 @@ describe('resolveOptionSwapOffer', () => {
 		expect(offer?.skillPoints).toBe(0);
 	});
 
-	it('collects the acts the rules ask for, so the surface can show them', () => {
+	it('quotes the offering feature, so the surface can show what the rules say', () => {
+		const rule = {
+			...swapRule({ label: 'Perform a notable act of destruction' }),
+			item: {
+				name: 'Wrath & Ruin',
+				system: { description: '<p>Whenever you perform a notable act of destruction.</p>' },
+			},
+		};
+
+		const offer = resolveOptionSwapOffer(actorWith(rule), 'safeRest');
+
+		expect(offer?.sources).toEqual([
+			{ name: 'Wrath & Ruin', text: 'Whenever you perform a notable act of destruction.' },
+		]);
+	});
+
+	it('falls back to the rule label when the feature has no description', () => {
 		const offer = resolveOptionSwapOffer(
 			actorWith(swapRule({ label: 'Perform a notable act of destruction' })),
 			'safeRest',
 		);
 
-		expect(offer?.requiredActs).toEqual(['Perform a notable act of destruction']);
+		expect(offer?.sources).toEqual([{ name: '', text: 'Perform a notable act of destruction' }]);
+	});
+
+	it('quotes a feature once, however many of its rules make an offer', () => {
+		const item = { name: 'Jack of All Trades', system: { description: '<p>Move a point.</p>' } };
+		const offer = resolveOptionSwapOffer(
+			actorWith({ ...swapRule(), item }, { ...moveRule(), item }),
+			'safeRest',
+		);
+
+		expect(offer?.sources).toHaveLength(1);
 	});
 
 	it('ignores rules of other types', () => {
