@@ -511,6 +511,13 @@ const objectTypes = {
 	misc: 'NIMBLE.objectTypes.misc',
 };
 
+// Keyed by the value stored on a class's spell cost. The empty key is the
+// absence of a consequence, which makes exceeding the pool a hard block.
+const overdraftConsequences = {
+	'': 'NIMBLE.overdraftConsequences.none',
+	halfMaxHpDamage: 'NIMBLE.overdraftConsequences.halfMaxHpDamage',
+};
+
 const restTypes = {
 	fieldRest: 'NIMBLE.restTypes.fieldRest',
 	safeRest: 'NIMBLE.restTypes.safeRest',
@@ -586,6 +593,8 @@ const skills: Record<SkillKeyType, string> = {
 const spellUpcastDialog = {
 	upcastHeading: 'NIMBLE.spells.spellUpcastDialog.upcastHeading',
 	castSpell: 'NIMBLE.spells.spellUpcastDialog.castSpell',
+	cost: 'NIMBLE.spells.spellUpcastDialog.cost',
+	castsAtTier: 'NIMBLE.spells.spellUpcastDialog.castsAtTier',
 	manaInfo: {
 		currentManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.currentManaCost',
 		upcastManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.upcastManaCost',
@@ -1004,6 +1013,7 @@ const NIMBLE = {
 	objectSizeTypes,
 	objectTypeHeadings,
 	objectTypes,
+	overdraftConsequences,
 	restTypes,
 	rollCheckTypes,
 	safeRest,

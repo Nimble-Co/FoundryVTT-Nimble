@@ -38,7 +38,7 @@
 			<ul class="spell-panel__list">
 				{#each state.sortItems(state.spells) as spell (spell._id)}
 					{@const meta = state.getSpellMetadata(spell)}
-					{@const manaCost = state.getSpellManaCost(spell)}
+					{@const costLabel = state.getSpellCostLabel(spell)}
 					{@const effect = state.getSpellEffect(spell)}
 					{@const spellRange = state.getSpellRange(spell)}
 					{@const requiresConcentration =
@@ -92,16 +92,16 @@
 								<div class="spell-card__meta">
 									{#if targetType}
 										<span class="spell-card__target-type"
-											>{targetType}{spellRange || manaCost > 0 ? ',' : ''}</span
+											>{targetType}{spellRange || costLabel ? ',' : ''}</span
 										>
 									{/if}
 									{#if spellRange}
-										<span class="spell-card__range">{spellRange}{manaCost > 0 ? ',' : ''}</span>
+										<span class="spell-card__range">{spellRange}{costLabel ? ',' : ''}</span>
 									{/if}
-									{#if manaCost > 0}
+									{#if costLabel}
 										<span class="spell-card__mana">
 											<i class="fa-solid fa-sparkles"></i>
-											{localize('NIMBLE.ui.heroicActions.mana', { cost: manaCost })}
+											{costLabel}
 										</span>
 									{/if}
 								</div>

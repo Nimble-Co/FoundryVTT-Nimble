@@ -68,17 +68,17 @@ describe('createSpellPanelState', () => {
 		});
 	});
 
-	describe('getSpellManaCost', () => {
-		it('costs a tiered spell its tier in mana', () => {
+	describe('getSpellCostLabel', () => {
+		it('costs a tiered spell its tier in mana when no class declares another cost', () => {
 			const state = createPanelState();
 
-			expect(state.getSpellManaCost({ system: { tier: 3 } } as unknown as Item)).toBe(3);
+			expect(state.getSpellCostLabel({ system: { tier: 3 } } as unknown as Item)).toBe('3 Mana');
 		});
 
-		it('costs nothing for a cantrip', () => {
+		it('shows no cost for a cantrip', () => {
 			const state = createPanelState();
 
-			expect(state.getSpellManaCost({ system: { tier: 0 } } as unknown as Item)).toBe(0);
+			expect(state.getSpellCostLabel({ system: { tier: 0 } } as unknown as Item)).toBeNull();
 		});
 	});
 });

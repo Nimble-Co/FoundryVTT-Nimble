@@ -1670,6 +1670,8 @@
 			"spellUpcastDialog": {
 				"upcastHeading": "Upcast {spellName}",
 				"castSpell": "Cast Spell",
+				"cost": "Cost: {cost}",
+				"castsAtTier": "This spell is cast at tier {tier}, your highest unlocked tier.",
 				"manaInfo": {
 					"currentManaCost": "Current mana cost: {currentCost}",
 					"upcastManaCost": "Upcast mana cost: {upcastCost} (Total)"
@@ -1732,6 +1734,15 @@
 				"message": "This costs {cost} action(s), but you only have {current} remaining.",
 				"confirmQuestion": "Do you still want to use {name}?",
 				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			},
+			"confirmSpellOverdraft": {
+				"title": "Overdraw Spell Resource",
+				"message": "You have {available} of the {required} {pool} this cast requires.",
+				"halfMaxHpDamage": "Casting anyway will deal {damage} damage to you (half your maximum Hit Points).",
+				"resolvedAtTable": "At your level your class replaces the usual penalty with its own rule, which the system does not apply for you. Resolve it at the table.",
+				"confirmQuestion": "Cast {name} anyway?",
+				"confirm": "Cast Anyway",
 				"cancel": "Cancel"
 			},
 			"combatTracker": {
@@ -2325,7 +2336,20 @@
 			"progressionNewSubclassName": "New {className} Subclass",
 			"progressionNewSubclassFeatureName": "New {subclassName} Feature (Level {level})",
 			"progressionNewGroupFeatureName": "New {groupName} Feature",
-			"progressionNewFeatureChoiceName": "New Feature Choice"
+			"progressionNewFeatureChoiceName": "New Feature Choice",
+			"spellcasting": {
+				"heading": "Spellcasting",
+				"castAtHighestTier": "Cast at Highest Tier",
+				"castAtHighestTierHint": "Tiered spells from this class always cast at the highest tier the character has unlocked. The cast dialog shows the tier instead of offering it.",
+				"poolIdentifier": "Spell Cost Pool",
+				"poolIdentifierHint": "Leave blank to use mana, where a tiered spell costs its tier. Naming a charge pool makes the class spend that pool instead.",
+				"amount": "Cost Per Cast",
+				"amountHint": "How much of the pool one cast spends. A number, or a formula resolved against the character's roll data.",
+				"overdraftConsequence": "Casting Beyond the Pool",
+				"overdraftConsequenceHint": "What happens when a cast would take more than the pool holds. Not Allowed blocks the cast.",
+				"overdraftMaxLevel": "Consequence Stops After Level",
+				"overdraftMaxLevelHint": "The last character level at which the consequence is applied. Above it the cast is still allowed, but the cost is settled at the table. Leave blank for no limit."
+			}
 		},
 		"skillsConfig": {
 			"skill": "Skill",
@@ -3420,6 +3444,10 @@
 				"disadvantage": "Disadvantage × {count}",
 				"noEffect": "No effect"
 			}
+		},
+		"overdraftConsequences": {
+			"none": "Not Allowed",
+			"halfMaxHpDamage": "Half Max HP Damage"
 		}
 	}
 }

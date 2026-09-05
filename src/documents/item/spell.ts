@@ -1,8 +1,12 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { ResolvedSpellCost } from '#types/spellCost.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
-import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+import localize from '../../utils/localize.js';
+import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
+import { paySpellCost } from '../../utils/spell/paySpellCost.js';
+import { previewOverdraftDamage } from '../../utils/spell/spellCost.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
@@ -61,18 +65,44 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		});
 		if (!allowed) return null;
 
-		// Pool-node side effects run only after the gate allowed the use.
-		await manager.applyDeferredPoolNodes();
+		// The manager resolved what this cast costs (cantrips are free), against
+		// the tier actually cast. The seam decides whether the cost is mana or a
+		// class-declared pool, and honours the resource spending automation
+		// setting internally.
+		const spellCost: ResolvedSpellCost = manager.spellCost ?? { type: 'none' };
+		if (this.system.tier > 0 && this.actor) {
+			const payment = await paySpellCost(this.actor, spellCost, {
+				confirmOverdraft: (available) =>
+					confirmSpellOverdraft({
+						spellName: this.name,
+						cost: spellCost,
+						available,
+						damage: previewOverdraftDamage(this.actor!, spellCost),
+					}),
+			});
 
-		// Deduct mana for tiered spells (cantrips are free)
-		if (this.system.tier > 0 && this.actor && isResourceSpendingAutomationEnabled()) {
-			// Use upcast amount if available, otherwise use base tier cost
-			const manaSpent = manager.upcastResult?.manaSpent ?? this.system.tier;
-			const currentMana = (this.actor.system as any).resources?.mana?.current || 0;
-			await this.actor.update({
-				'system.resources.mana.current': Math.max(0, currentMana - manaSpent),
-			} as any);
+			if (!payment.paid) {
+				if (payment.failure) {
+					const messageKey =
+						payment.failure.code === 'poolMissing'
+							? 'NIMBLE.charges.notifications.poolMissing'
+							: 'NIMBLE.charges.notifications.insufficient';
+					ui.notifications?.error(
+						localize(messageKey, {
+							item: this.name,
+							pool: payment.failure.poolLabel,
+							required: String(payment.failure.required),
+							available: String(payment.failure.available),
+						}),
+					);
+				}
+				return null;
+			}
 		}
+
+		// Dialog spends and pool-node side effects land only once the cast is
+		// allowed and paid for, so a refusal above costs the player nothing.
+		await manager.commitDeferredSideEffects();
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';

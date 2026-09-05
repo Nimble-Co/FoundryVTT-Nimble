@@ -1,4 +1,5 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
@@ -34,6 +35,11 @@ import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import {
+	resolvePinnedCastTier,
+	resolveSpellCost,
+	synthesizePinnedUpcast,
+} from '../utils/spell/spellCost.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -81,10 +87,27 @@ class ItemActivationManager {
 	/** Result of spell upcasting, if applicable. */
 	upcastResult: UpcastResult | null = null;
 
+	/**
+	 * The tier the spell is forced to resolve at when the actor's class
+	 * declares that its spells always cast at the highest unlocked tier.
+	 * Resolved here rather than in the dialog so the macro and skip-dialog
+	 * paths get the same tier.
+	 */
+	pinnedCastTier: number | null = null;
+
+	/**
+	 * The resolved cost of this cast, for spells. Set before the dialog from
+	 * the spell's own tier, then re-resolved against the tier actually cast
+	 * once an upcast has been applied.
+	 */
+	spellCost: ResolvedSpellCost | null = null;
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
+
+	#deferredDialogData: ItemActivationManager.DialogData | null = null;
 
 	/**
 	 * Creates a new ItemActivationManager.
@@ -125,6 +148,13 @@ class ItemActivationManager {
 	async getData() {
 		const options = this.#options;
 
+		if (this.#item.type === 'spell' && this.actor) {
+			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
+			this.spellCost = resolveSpellCost(this.actor, this.#item, {
+				castTier: this.pinnedCastTier ?? undefined,
+			});
+		}
+
 		const rollOptions = {
 			domain: this.#getItemDomain(),
 			executeMacro: options.executeMacro ?? false,
@@ -135,6 +165,16 @@ class ItemActivationManager {
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
+
+		// A pinned cast tier applies on every activation path, so the macro and
+		// skip-dialog routes synthesize the upcast the dialog would have chosen.
+		if (this.#item.type === 'spell' && !dialogData.upcast) {
+			const synthesized = synthesizePinnedUpcast(
+				this.#item as unknown as SpellLike,
+				this.pinnedCastTier,
+			);
+			if (synthesized) dialogData.upcast = synthesized;
+		}
 
 		// Apply upcast deltas if present
 		if (dialogData.upcast && this.#item.type === 'spell') {
@@ -160,13 +200,22 @@ class ItemActivationManager {
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
-				enforceManaCost: isResourceSpendingAutomationEnabled(),
+				// Mana affordability only applies when mana is what the cast
+				// costs; a class-declared pool cost is validated at spend time.
+				enforceManaCost: isResourceSpendingAutomationEnabled() && this.spellCost?.type !== 'pool',
 			};
 
 			try {
 				const upcastData = applyUpcastDeltas(context);
 				this.activationData = upcastData.activationData;
 				this.upcastResult = upcastData.upcastResult;
+				// The cost was first resolved before the tier was known. Re-resolve
+				// it against the tier actually cast so callers read the real cost.
+				if (this.actor) {
+					this.spellCost = resolveSpellCost(this.actor, this.#item, {
+						castTier: upcastData.upcastResult.manaSpent,
+					});
+				}
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 				ui.notifications?.error(`Upcast failed: ${errorMessage}`);
@@ -186,10 +235,11 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
-		// Persist consumption of pool dice the player spent in the dialog.
-		// The dialog already included their face value in rollFormula above.
-		await this.#consumePoolDice(dialogData);
-		await this.#consumeChargePools(dialogData);
+		// What the player spent in the dialog is deferred alongside the pool
+		// nodes: the caller can still refuse the use after getData returns, and
+		// a refusal must not leave the spend persisted. See
+		// commitDeferredSideEffects().
+		this.#deferredDialogData = dialogData;
 
 		return {
 			rolls,
@@ -450,7 +500,7 @@ class ItemActivationManager {
 
 		// Pool nodes mutate actor state, so their application is deferred until
 		// the caller confirms the use is allowed (the preUseItem gate fires
-		// after getData). See applyDeferredPoolNodes().
+		// after getData). See commitDeferredSideEffects().
 		//
 		// Enumerate from the FLAT list so no node can be missed: the tree
 		// reconstruction only re-parents children of damage/savingThrow nodes and
@@ -587,13 +637,22 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Apply the pool effect nodes collected during getData. Pool nodes carry
-	 * actor-state side effects, so they must not run until the caller has
-	 * cleared the preUseItem gate (which fires after getData); results are
-	 * recorded on the same node objects the activation data references, so
-	 * the chat card still renders them. Safe to call once per activation.
+	 * Apply every actor-state side effect collected during getData: the pool
+	 * dice and charges the player spent in the dialog, then the pool effect
+	 * nodes. None of them may run until the caller has cleared its gates, which
+	 * fire after getData returns, so that a refused use costs nothing. Pool node
+	 * results are recorded on the same node objects the activation data
+	 * references, so the chat card still renders them. Safe to call once per
+	 * activation.
 	 */
-	async applyDeferredPoolNodes(): Promise<void> {
+	async commitDeferredSideEffects(): Promise<void> {
+		const dialogData = this.#deferredDialogData;
+		this.#deferredDialogData = null;
+		if (dialogData) {
+			await this.#consumePoolDice(dialogData);
+			await this.#consumeChargePools(dialogData);
+		}
+
 		const nodes = this.#deferredPoolNodes;
 		this.#deferredPoolNodes = [];
 		for (const node of nodes) {
@@ -863,12 +922,11 @@ class ItemActivationManager {
 			? dependencies.SpellUpcastDialog
 			: dependencies.ItemActivationConfigDialog;
 
-		const dialog = new DialogClass(
-			this.actor,
-			this.#item,
-			`Activate ${this.#item.name}`,
-			rollOptions,
-		);
+		const dialog = new DialogClass(this.actor, this.#item, `Activate ${this.#item.name}`, {
+			...rollOptions,
+			pinnedCastTier: this.pinnedCastTier,
+			spellCost: this.spellCost,
+		});
 		await dialog.render(true);
 		const result = await dialog.promise;
 		if (result) return result;
