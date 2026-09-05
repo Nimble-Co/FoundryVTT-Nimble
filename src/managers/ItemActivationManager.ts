@@ -103,6 +103,13 @@ class ItemActivationManager {
 	#deferredChargeSpends: Array<{ poolId: string; count: number }> = [];
 
 	/**
+	 * Dice-pool faces named in the dialog, held for the same reason: the gate
+	 * refuses a use over its charge cost, and a refused use must not have eaten
+	 * the dice the player picked for it.
+	 */
+	#deferredPoolDice: Array<{ poolId: string; faceIndex: number }> = [];
+
+	/**
 	 * What the player spent from charge pools in the activation dialog, in the
 	 * shape the chat card's consumption readout renders. The rule-driven spend
 	 * writes the same flag from the useItem hook; this one is stamped when the
@@ -210,10 +217,9 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
-		// Persist consumption of pool dice the player spent in the dialog.
-		// The dialog already included their face value in rollFormula above.
-		await this.#consumePoolDice(dialogData);
-		this.#deferChargePools(dialogData);
+		// Hold what the dialog spent until the caller clears the preUseItem gate.
+		// The dialog already included the dice faces in rollFormula above.
+		this.#deferPoolSpends(dialogData);
 
 		return {
 			rolls,
@@ -267,7 +273,7 @@ class ItemActivationManager {
 		// which keeps a formula referencing it from failing to parse.
 		const activationRollData = {
 			...(this.actor?.getRollData() ?? {}),
-			spent: Math.max(0, Math.floor(Number(dialogData.spentCharges) || 0)),
+			spent: this.#resolveSpentCharges(dialogData),
 		};
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
@@ -534,9 +540,10 @@ class ItemActivationManager {
 	 * from the same pool are removed in descending index order so earlier
 	 * removals don't shift later indices.
 	 */
-	async #consumePoolDice(dialogData: ItemActivationManager.DialogData): Promise<void> {
-		const consumed = dialogData.consumedPoolDice;
-		if (!Array.isArray(consumed) || consumed.length < 1) return;
+	async #consumePoolDice(): Promise<void> {
+		const consumed = this.#deferredPoolDice;
+		this.#deferredPoolDice = [];
+		if (consumed.length < 1) return;
 
 		const actor = this.actor as Actor.Implementation | null;
 		if (!actor) return;
@@ -585,16 +592,54 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Collect the charge spends named in the dialog, to be applied once the
-	 * caller has cleared the preUseItem gate. See `#deferredChargeSpends`.
+	 * What the item's own formulas read as `@spent`.
+	 *
+	 * The dialog clamps the player's choice, but against a snapshot taken when it
+	 * opened. Capping the formula input at what the variable consumers' pools
+	 * actually hold keeps the healing from outrunning the charges if the pool
+	 * moved underneath the open dialog.
 	 */
-	#deferChargePools(dialogData: ItemActivationManager.DialogData): void {
+	#resolveSpentCharges(dialogData: ItemActivationManager.DialogData): number {
+		const named = Math.max(0, Math.floor(Number(dialogData.spentCharges) || 0));
+		if (named < 1) return 0;
+
+		const actor = this.actor;
+		if (actor?.type !== 'character') return named;
+
+		const variablePoolIds = new Set(
+			getChargeConsumers(
+				actor as unknown as CharacterActorLike,
+				this.#item as unknown as RuleBackedItem,
+				{ includeVariable: true },
+			)
+				.filter((consumer) => consumer.variable)
+				.map((consumer) => consumer.poolId),
+		);
+		if (variablePoolIds.size < 1) return named;
+
+		const pools = getChargePools(actor as unknown as Actor.Implementation);
+		let ceiling = 0;
+		for (const poolId of variablePoolIds) {
+			ceiling += pools.find((candidate) => candidate.id === poolId)?.current ?? 0;
+		}
+
+		return Math.min(named, ceiling);
+	}
+
+	/**
+	 * Collect what the dialog spent, to be applied once the caller has cleared
+	 * the preUseItem gate. See `#deferredChargeSpends` and `#deferredPoolDice`.
+	 */
+	#deferPoolSpends(dialogData: ItemActivationManager.DialogData): void {
 		// One activation, one readout: reset rather than append, so a manager
 		// reused for a second getData() does not report the first spend again.
 		this.#chargeConsumption = [];
 
-		const consumed = dialogData.consumedChargePools;
-		this.#deferredChargeSpends = Array.isArray(consumed) ? [...consumed] : [];
+		const charges = dialogData.consumedChargePools;
+		this.#deferredChargeSpends = Array.isArray(charges) ? [...charges] : [];
+
+		const dice = dialogData.consumedPoolDice;
+		this.#deferredPoolDice = Array.isArray(dice) ? [...dice] : [];
 	}
 
 	/**
@@ -629,6 +674,7 @@ class ItemActivationManager {
 			const pool = getChargePools(actor).find((candidate) => candidate.id === entry.poolId);
 			if (!pool) continue;
 			const next = Math.max(0, pool.current - count);
+			if (next === pool.current) continue;
 			const adjusted = await adjustPool(actor, entry.poolId, 'set', next);
 			if (!adjusted) continue;
 
@@ -644,7 +690,7 @@ class ItemActivationManager {
 
 	/**
 	 * Apply the pool side effects collected during getData: the pool effect
-	 * nodes, and the charge spends named in the activation dialog. Both mutate
+	 * nodes, and the dice and charges the activation dialog spent. All mutate
 	 * actor state, so they must not run until the caller has cleared the
 	 * preUseItem gate (which fires after getData); results are recorded on the
 	 * same node objects the activation data references, so the chat card still
@@ -656,6 +702,7 @@ class ItemActivationManager {
 		for (const node of nodes) {
 			await this.#applyPoolNode(node);
 		}
+		await this.#consumePoolDice();
 		await this.#consumeChargePools();
 	}
 

@@ -3,6 +3,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../tests/mocks/foundry.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
+import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import { findNodesByContexts } from '../utils/treeManipulation/findNodesByContexts.js';
 import { ItemActivationManager, testDependencies } from './ItemActivationManager.js';
 
@@ -1440,6 +1441,21 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			});
 		}
 
+		/** Dice-pool writes the fixture has seen, so ordering can be asserted. */
+		function dicePoolWrites(): unknown[] {
+			return (mockItem.update?.mock.calls ?? []).filter((call: unknown[]) =>
+				Object.hasOwn(call[0] as object, DicePoolRuleConfig.flagPath),
+			);
+		}
+
+		/** Faces left in the item-scoped `fury` dice pool, read back off the fixture. */
+		function readFuryFaces(): number[] | undefined {
+			const pools = foundry.utils.getProperty(mockItem, DicePoolRuleConfig.flagPath) as
+				| Record<string, { faces?: number[] }>
+				| undefined;
+			return pools?.fury?.faces;
+		}
+
 		/** Current charges of the item-scoped `focus` pool, read back off the fixture. */
 		function readFocusCharges(): number | undefined {
 			const pools = foundry.utils.getProperty(mockItem, ChargePoolRuleConfig.flagPath) as
@@ -1575,6 +1591,83 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(manager.chargeConsumption).toEqual([
 				expect.objectContaining({ previousValue: 10, currentValue: 0, change: -10 }),
 			]);
+		});
+
+		it('should cap @spent at what the pool actually holds', async () => {
+			// The dialog clamps against a snapshot from when it opened, so a pool that
+			// moved underneath it could otherwise heal for more than it can pay.
+			dialogState.result = { rollMode: 0, spentCharges: 40 };
+			makeItemSpendVariableCharges();
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			stubRolls(10);
+
+			await manager.getData();
+
+			// The pool's max, not the 40 the dialog claimed.
+			expect(MockRoll).toHaveBeenCalledWith(
+				'@spent',
+				{ level: 1, strength: 10, spent: 10 },
+				undefined,
+			);
+		});
+
+		it('should hold spent pool dice until the caller clears the preUseItem gate', async () => {
+			// Same reason as the charge spend: the gate can still refuse the use over
+			// its charge cost, and a refused use must not have eaten the dice.
+			makeItemSpendVariableCharges();
+			// The rule defines the pool, the stored flag holds the rolled faces; the
+			// spend needs both, since the write resolves the pool from the definitions.
+			mockItem.rules!.set('2', {
+				type: 'dicePool',
+				id: 'fury-pool',
+				identifier: 'fury',
+				label: 'Fury Dice',
+				scope: 'item',
+				dieSize: 'd6',
+				max: '3',
+				initial: 'zero',
+			});
+			foundry.utils.setProperty(mockItem, `${DicePoolRuleConfig.flagPath}.fury`, {
+				identifier: 'fury',
+				label: 'Fury Dice',
+				dieSize: 'd6',
+				max: 3,
+				faces: [4, 5, 6],
+			});
+			dialogState.result = {
+				rollMode: 0,
+				spentCharges: 1,
+				consumedPoolDice: [{ poolId: 'fury', faceIndex: 1 }],
+			};
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [] };
+			mockReconstructEffectsTree.mockReturnValue([]);
+
+			await manager.getData();
+
+			expect(readFuryFaces(), 'the dice are untouched before the gate').toEqual([4, 5, 6]);
+			expect(dicePoolWrites(), 'writes before the gate').toHaveLength(0);
+
+			await manager.applyDeferredPoolNodes();
+
+			expect(dicePoolWrites(), 'writes after the gate').toHaveLength(1);
 		});
 
 		it('should refuse the use when two variable consumers share one pool', async () => {
