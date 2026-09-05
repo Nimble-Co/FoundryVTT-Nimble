@@ -131,7 +131,9 @@ export function createItemActivationConfigDialogState(
 	}
 
 	function adjustVariableSpend(poolId: string, delta: number) {
-		setVariableSpend(poolId, (variableSpendCounts[poolId] ?? 0) + delta);
+		const spend = variableChargeSpends.find((candidate) => candidate.poolId === poolId);
+		if (!spend) return;
+		setVariableSpend(poolId, (variableSpendCounts[poolId] ?? spend.minimum) + delta);
 	}
 
 	function adjustChargeSpend(poolId: string, delta: number) {

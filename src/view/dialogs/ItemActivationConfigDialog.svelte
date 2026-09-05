@@ -152,7 +152,7 @@
 		<div class="nimble-roll-modifiers-container">
 			<div class="nimble-roll-modifiers nimble-pool-spend">
 				<h5 class="nimble-pool-spend__heading">
-					{localize('NIMBLE.activationDialog.spendCharges.heading')}
+					{localize('NIMBLE.activationDialog.spendCharge.heading')}
 				</h5>
 
 				{#each state.variableChargeSpends as spend (spend.poolId)}
@@ -176,9 +176,14 @@
 									min={spend.minimum}
 									max={spend.limit}
 									value={selected}
-									aria-label={localize('NIMBLE.activationDialog.spendCharges.amount')}
-									onchange={({ currentTarget }) =>
-										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber)}
+									aria-label={localize('NIMBLE.activationDialog.spendCharge.amount')}
+									onchange={({ currentTarget }) => {
+										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber);
+										// The clamp often lands on the value already stored — typing 99 at
+										// the limit, or clearing the field — which leaves Svelte nothing to
+										// push back, so the box would keep showing what was typed.
+										currentTarget.value = String(state.variableSpendCounts[spend.poolId]);
+									}}
 								/>
 								<span class="nimble-pool-spend__stepper-available">
 									/ {spend.limit}

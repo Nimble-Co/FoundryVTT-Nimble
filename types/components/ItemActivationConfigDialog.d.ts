@@ -66,8 +66,11 @@ export interface ItemActivationConfigDialogSubmitData {
 	rollHidden: boolean;
 	consumedPoolDice: ConsumedPoolDie[];
 	consumedChargePools: ConsumedChargePool[];
-	/** Charges spent by variable consumers, which effect formulas read as `@spent`. */
-	spentCharges: number;
+	/**
+	 * Charges spent by variable consumers, which effect formulas read as `@spent`.
+	 * Optional: the upcast dialog submits the same shape without it.
+	 */
+	spentCharges?: number;
 }
 
 export interface ItemActivationConfigDialogInstance {

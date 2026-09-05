@@ -2513,17 +2513,15 @@
 			"spendPoolDice": "Spend Pool Dice",
 			"spendCharge": {
 				"increment": "Spend one more",
-				"decrement": "Spend one less"
+				"decrement": "Spend one less",
+				"heading": "Spend Charges",
+				"amount": "Charges to spend"
 			},
 			"conditionalBonus": {
 				"heading": "Conditional Bonuses",
 				"advantage": "Advantage × {count}",
 				"damage": "+{value} damage",
 				"none": "None"
-			},
-			"spendCharges": {
-				"heading": "Spend Charges",
-				"amount": "Charges to spend"
 			}
 		},
 		"characterSettings": {
