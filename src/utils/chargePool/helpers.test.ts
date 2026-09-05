@@ -737,7 +737,14 @@ describe('a pool whose maximum only appears later', () => {
 
 	it('fills once the maximum becomes real', () => {
 		const actor = createMockActor(
-			[createMockItem('item-1', 'Pilfered Power', [poolRule], storedAtZero)],
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[poolRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
 			{ dexterity: 3 },
 		);
 
@@ -761,6 +768,47 @@ describe('a pool whose maximum only appears later', () => {
 		expect(pool.current).toBe(0);
 	});
 
+	it('does not re-seed a spent pool when its maximum returns', () => {
+		// Seeded while the maximum was real, spent down to nothing, then the
+		// maximum resolved to zero for a while and came back.
+		const spentThenLapsed = {
+			nimble: {
+				chargePools: {
+					'pilfered-power': {
+						...storedAtZero.nimble.chargePools['pilfered-power'],
+						seeded: true,
+					},
+				},
+			},
+		};
+
+		const actor = createMockActor(
+			[createMockItem('item-1', 'Pilfered Power', [poolRule], spentThenLapsed)],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+
+	it('records the seeded marker once the maximum is real', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[poolRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		expect(Object.values(buildEffectiveChargePoolMap(actor))[0].seeded).toBe(true);
+	});
+
 	it('seeds an empty pool at zero when that is what the rule asks for', () => {
 		const actor = createMockActor(
 			[
@@ -768,7 +816,7 @@ describe('a pool whose maximum only appears later', () => {
 					'item-1',
 					'Pilfered Power',
 					[{ ...poolRule, initial: 'zero' } as MockRule],
-					storedAtZero,
+					foundry.utils.deepClone(storedAtZero),
 				),
 			],
 			{ dexterity: 3 },

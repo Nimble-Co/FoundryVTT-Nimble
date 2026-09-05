@@ -92,6 +92,14 @@ function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	return null;
 }
 
+/**
+ * Reads the stored seeding marker. Stays undefined when absent so a pool
+ * written before the marker existed falls back to its maximum.
+ */
+function toSeededMarker(value: unknown): boolean | undefined {
+	return typeof value === 'boolean' ? value : undefined;
+}
+
 function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 	const normalizedRecord: ChargePoolMap = {};
 
@@ -130,6 +138,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toPoolDisplayFlag(sourcePool.hidden),
 				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
 		}
@@ -179,6 +188,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toPoolDisplayFlag(sourcePool.hidden),
 				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
 		}
@@ -402,11 +412,14 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	for (const definition of definitions) {
 		const existingPool = existingPools[definition.id];
 		const defaultCurrent = definition.initial === 'zero' ? 0 : definition.max;
-		// A pool stored while its maximum was zero was never really seeded, so it
-		// takes its initial value once the maximum appears.
-		const seeded = existingPool !== undefined && existingPool.max > 0;
+		// A pool takes its initial value until it has been seeded. The marker is
+		// stored rather than derived from the maximum, so a maximum that falls to
+		// zero and returns does not re-seed a pool the player has already spent.
+		// Pools stored before the marker existed are read as seeded when they held
+		// a maximum.
+		const wasSeeded = existingPool !== undefined && (existingPool.seeded ?? existingPool.max > 0);
 		const current = clampCurrentToMax(
-			seeded ? existingPool.current : defaultCurrent,
+			wasSeeded ? existingPool.current : defaultCurrent,
 			definition.max,
 		);
 
@@ -419,6 +432,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			label: definition.label,
 			current,
 			max: definition.max,
+			seeded: wasSeeded || definition.max > 0,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
 			// The rule is the source of truth for visibility: flipping the flag on the
