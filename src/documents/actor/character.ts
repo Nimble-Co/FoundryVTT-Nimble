@@ -11,11 +11,15 @@ import type {
 	LevelCorrectionSubmitData,
 	ResolvedLevelSelectionGap,
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
+import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
+import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
@@ -1308,6 +1312,123 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const actorUpdates: Record<string, unknown> = { 'system.levelUpHistory': levelUpHistory };
 		await this.update(actorUpdates);
 		this.sheet?.render(true);
+	}
+
+	/**
+	 * What this character may change on a given rest, or `null` when nothing is offered.
+	 *
+	 * The offer comes from `optionSwap` and `skillPointMove` rules the character's features
+	 * carry, so a class that never prints such a feature gets no surface at all.
+	 */
+	async getOptionSwapOffer(trigger: string): Promise<ResolvedOptionSwapOffer | null> {
+		const offer = resolveOptionSwapOffer(this, trigger);
+		if (!offer) return null;
+
+		const characterClass = Object.values(this.classes)?.[0];
+
+		const pools: ResolvedSwappableOptionPool[] = [];
+		if (characterClass && offer.allowedGroups?.size !== 0) {
+			const ownedSourceUuids = new Set<string>();
+			const itemIdByUuid = new Map<string, string>();
+			for (const item of this.items) {
+				if (item.type !== 'feature') continue;
+				const compendiumSource = item._stats?.compendiumSource;
+				if (!compendiumSource || !item.id) continue;
+				ownedSourceUuids.add(compendiumSource);
+				// First owned copy wins: a duplicate pick is one the swap can only unmake once.
+				if (!itemIdByUuid.has(compendiumSource)) itemIdByUuid.set(compendiumSource, item.id);
+			}
+
+			const index = await buildClassFeatureIndex();
+			const collected = await collectSwappableOptions(
+				index,
+				characterClass.identifier,
+				characterClass.system.classLevel,
+				ownedSourceUuids,
+				offer.allowedGroups,
+			);
+
+			for (const pool of collected) {
+				const candidates = await Promise.all(
+					pool.candidateUuids.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+				);
+				pools.push({
+					...pool,
+					itemIdByUuid,
+					candidates: candidates.filter((doc): doc is NimbleFeatureItem => Boolean(doc)),
+				});
+			}
+		}
+
+		if (pools.length === 0 && offer.skillPoints < 1) return null;
+
+		return { ...offer, pools };
+	}
+
+	/**
+	 * Applies a set of option swaps and skill point moves.
+	 *
+	 * Each replacement takes the `levelUpHistory` entry of the pick it replaces, so the entry
+	 * keeps naming exactly what that level currently owns and level down needs no knowledge
+	 * that a swap ever happened. Skill totals are written straight to `system.skills`: a move
+	 * is net zero and belongs to no level, so recording it would make level down reverse it.
+	 */
+	async applyOptionSwap(
+		pools: readonly ResolvedSwappableOptionPool[],
+		selections: ReadonlyMap<string, readonly string[]>,
+		skillPoints: ReadonlyMap<string, number> = new Map(),
+	): Promise<OptionSwapPlan> {
+		const itemIdByUuid = pools[0]?.itemIdByUuid ?? new Map<string, string>();
+		const plan = planOptionSwap(pools, selections, itemIdByUuid, this.system.levelUpHistory);
+
+		const featureSources: Item.CreateData[] = [];
+		const historyIndexByCreatedIndex: number[] = [];
+		for (const grant of plan.grants) {
+			const feature = await fromUuid(grant.uuid as `Item.${string}`);
+			if (!feature) continue;
+			const source = (feature as NimbleFeatureItem).toObject();
+			source._stats.compendiumSource = grant.uuid;
+			featureSources.push(source as object as Item.CreateData);
+			historyIndexByCreatedIndex.push(grant.historyIndex);
+		}
+
+		// Delete first: a pick and its replacement can share a pool whose max is derived from
+		// the items held, and removing after granting would show a spike in between.
+		if (plan.deleteItemIds.length > 0) {
+			await this.deleteEmbeddedDocuments('Item', [...plan.deleteItemIds]);
+		}
+
+		const created = featureSources.length
+			? ((await this.createEmbeddedDocuments('Item', featureSources)) ?? [])
+			: [];
+
+		const addedIdsByHistoryIndex = new Map<number, string[]>();
+		created.forEach((doc, position) => {
+			const id = (doc as unknown as { id: string | null }).id;
+			const historyIndex = historyIndexByCreatedIndex[position];
+			if (!id || historyIndex < 0) return;
+			const ids = addedIdsByHistoryIndex.get(historyIndex);
+			if (ids) ids.push(id);
+			else addedIdsByHistoryIndex.set(historyIndex, [id]);
+		});
+
+		const removedIds = new Set(plan.deleteItemIds);
+		const levelUpHistory = this.system.levelUpHistory.map((entry, index) => {
+			const kept = entry.grantedFeatureIds.filter((id) => !removedIds.has(id));
+			const added = addedIdsByHistoryIndex.get(index) ?? [];
+			if (kept.length === entry.grantedFeatureIds.length && added.length === 0) return entry;
+			return { ...entry, grantedFeatureIds: [...kept, ...added] };
+		});
+
+		const actorUpdates: Record<string, unknown> = { 'system.levelUpHistory': levelUpHistory };
+		for (const [skill, points] of skillPoints) {
+			actorUpdates[`system.skills.${skill}.points`] = points;
+		}
+
+		await this.update(actorUpdates);
+		this.sheet?.render(true);
+
+		return plan;
 	}
 
 	/**
