@@ -84,7 +84,11 @@ function renderSection(offer: ResolvedOptionSwapOffer | null, actor = DEFAULT_AC
 		await fireEvent.click(rendered.getByRole('button', { name: /change my options/i }));
 	}
 
-	return { ...rendered, expand, latest };
+	async function unfold() {
+		await fireEvent.click(rendered.getByRole('button', { name: /more option/i }));
+	}
+
+	return { ...rendered, expand, unfold, latest };
 }
 
 describe('OptionSwapSection', () => {
@@ -113,29 +117,34 @@ describe('OptionSwapSection', () => {
 	});
 
 	it('preselects the picks the character already holds', async () => {
-		const { expand, getByText, getByLabelText, latest } = renderSection(createOffer());
+		const { expand, unfold, getByText, getByRole, getByLabelText, latest } = renderSection(
+			createOffer(),
+		);
 
 		await expand();
 
 		expect(getByText('Savage Arsenal')).toBeTruthy();
 		expect(getByLabelText('Deselect Cleave')).toBeTruthy();
-		// The rest of the pool stays in view below the held pick.
+		// The rest of the pool sits folded below the held pick, a click away.
+		expect(getByRole('button', { name: 'Show 2 more options' })).toBeTruthy();
+		await unfold();
 		expect(getByLabelText('Select Rampage')).toBeTruthy();
 		expect(getByLabelText('Select Savage Leap')).toBeTruthy();
 		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.cleave']);
 	});
 
 	it('swaps a single pick for another member of the pool in one click', async () => {
-		const { expand, getByLabelText, latest } = renderSection(createOffer());
+		const { expand, unfold, getByLabelText, latest } = renderSection(createOffer());
 
 		await expand();
+		await unfold();
 		await fireEvent.click(getByLabelText('Select Rampage'));
 
 		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.rampage']);
 	});
 
 	it('asks for a pick to be released before a multi-pick pool takes another', async () => {
-		const { expand, getByLabelText, latest } = renderSection(
+		const { expand, unfold, getByLabelText, latest } = renderSection(
 			createOffer({
 				pools: [
 					createPool({
@@ -147,6 +156,7 @@ describe('OptionSwapSection', () => {
 		);
 
 		await expand();
+		await unfold();
 		await fireEvent.click(getByLabelText('Select Savage Leap'));
 		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.cleave', 'Item.rampage']);
 

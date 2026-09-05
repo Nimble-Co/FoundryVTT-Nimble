@@ -38,7 +38,6 @@
 	<section class="nimble-option-swap">
 		<button
 			class="nimble-option-swap__toggle"
-			class:nimble-option-swap__toggle--expanded={state.isExpanded}
 			type="button"
 			aria-expanded={state.isExpanded}
 			onclick={toggle}
@@ -99,23 +98,35 @@
 						</ul>
 
 						{#if view.available.length > 0}
-							<span class="nimble-option-swap__list-label">
-								{localize('NIMBLE.optionSwap.availablePicks')}
-							</span>
-							<ul
-								class="nimble-option-swap__cards"
-								data-tooltip={view.isFull && view.pool.pickCount > 1
-									? localize('NIMBLE.optionSwap.releaseAPickFirst')
-									: undefined}
+							<button
+								class="nimble-option-swap__unfold"
+								type="button"
+								aria-expanded={view.showsAvailable}
+								onclick={() => state.toggleAvailable(view.pool.poolKey)}
 							>
-								{#each view.available as feature (feature.uuid)}
-									<FeatureCard
-										{feature}
-										isDisabled={view.isFull && view.pool.pickCount > 1}
-										onSelect={() => state.toggleFeature(view.pool.poolKey, feature)}
-									/>
-								{/each}
-							</ul>
+								<i
+									class="nimble-option-swap__chevron fa-solid fa-chevron-down"
+									class:nimble-option-swap__chevron--expanded={view.showsAvailable}
+								></i>
+								{view.availableToggleLabel}
+							</button>
+
+							{#if view.showsAvailable}
+								<ul
+									class="nimble-option-swap__cards"
+									data-tooltip={view.isFull && view.pool.pickCount > 1
+										? localize('NIMBLE.optionSwap.releaseAPickFirst')
+										: undefined}
+								>
+									{#each view.available as feature (feature.uuid)}
+										<FeatureCard
+											{feature}
+											isDisabled={view.isFull && view.pool.pickCount > 1}
+											onSelect={() => state.toggleFeature(view.pool.poolKey, feature)}
+										/>
+									{/each}
+								</ul>
+							{/if}
 						{/if}
 					</section>
 				{/each}
@@ -251,11 +262,6 @@
 				border-color: var(--nimble-accent-color);
 				box-shadow: none;
 			}
-
-			&--expanded {
-				border-bottom-left-radius: 0;
-				border-bottom-right-radius: 0;
-			}
 		}
 
 		&__icon {
@@ -303,12 +309,34 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.75rem;
-			margin-top: -0.5rem;
-			padding: 0.75rem 0.875rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			border-top: 0;
-			border-radius: 0 0 6px 6px;
+			padding: 0.25rem 0 0;
+		}
+
+		&__unfold {
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			gap: 0.5rem;
+			width: 100%;
+			height: auto;
+			min-height: 0;
+			padding: 0.375rem 0.5rem;
+			font-size: var(--nimble-sm-text);
+			line-height: 1.3;
+			color: var(--nimble-medium-text-color);
+			background: transparent;
+			border: 1px dashed var(--nimble-card-border-color);
+			border-radius: 4px;
+			box-shadow: none;
+			cursor: pointer;
+
+			&:hover,
+			&:focus-visible {
+				color: var(--nimble-dark-text-color);
+				background: transparent;
+				border-color: var(--nimble-accent-color);
+				box-shadow: none;
+			}
 		}
 
 		&__pool {
@@ -403,9 +431,9 @@
 		width: 3ch;
 	}
 
+	// The recovery cards above hard-code these dark colours, and the row is one of them.
 	:global(.theme-dark) {
-		.nimble-option-swap__toggle,
-		.nimble-option-swap__body {
+		.nimble-option-swap__toggle {
 			background: hsl(220, 15%, 18%);
 			border-color: hsl(220, 10%, 30%);
 		}

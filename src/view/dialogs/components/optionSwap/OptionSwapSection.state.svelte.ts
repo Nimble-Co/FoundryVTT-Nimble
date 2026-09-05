@@ -37,6 +37,9 @@ export interface OptionSwapPoolView {
 	selected: NimbleFeatureItem[];
 	available: NimbleFeatureItem[];
 	isFull: boolean;
+	/** Whether the rest of the pool is unfolded. It starts folded to keep the section short. */
+	showsAvailable: boolean;
+	availableToggleLabel: string;
 }
 
 interface OptionSwapSectionStateProps {
@@ -54,6 +57,7 @@ interface OptionSwapSectionStateProps {
  */
 export function createOptionSwapSectionState(getProps: () => OptionSwapSectionStateProps) {
 	let isExpanded = $state(false);
+	let unfoldedPools = $state<Set<string>>(new Set());
 	let selectedByPool = $state<Map<string, NimbleFeatureItem[]>>(new Map());
 	let skillChanges = $state<Record<string, number>>({});
 
@@ -72,6 +76,10 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		pools.map((pool) => {
 			const selected = getSelectedFeatures(pool.poolKey);
 			const selectedUuids = new Set(selected.map((feature) => feature.uuid));
+			const available = sortDocumentsByName(
+				pool.candidates.filter((candidate) => !selectedUuids.has(candidate.uuid)),
+			);
+			const showsAvailable = unfoldedPools.has(pool.poolKey);
 			return {
 				pool,
 				heading: pool.displayName || formatGroupName(pool.poolKey),
@@ -86,10 +94,14 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 					required: String(pool.pickCount),
 				}),
 				selected: sortDocumentsByName(selected),
-				available: sortDocumentsByName(
-					pool.candidates.filter((candidate) => !selectedUuids.has(candidate.uuid)),
-				),
+				available,
 				isFull: selected.length >= pool.pickCount,
+				showsAvailable,
+				availableToggleLabel: showsAvailable
+					? localize('NIMBLE.optionSwap.hideAvailable')
+					: available.length === 1
+						? localize('NIMBLE.optionSwap.showOneAvailable')
+						: localize('NIMBLE.optionSwap.showAvailable', { count: String(available.length) }),
 			};
 		}),
 	);
@@ -241,6 +253,13 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		isExpanded = !isExpanded;
 	}
 
+	function toggleAvailable(poolKey: string) {
+		const next = new Set(unfoldedPools);
+		if (next.has(poolKey)) next.delete(poolKey);
+		else next.add(poolKey);
+		unfoldedPools = next;
+	}
+
 	return {
 		get hasOffer() {
 			return hasOffer;
@@ -277,6 +296,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		},
 		adjustSkill,
 		getSelectedFeatures,
+		toggleAvailable,
 		toggleExpanded,
 		toggleFeature,
 	};
