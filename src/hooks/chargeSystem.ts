@@ -68,6 +68,16 @@ function registerCustomHook(eventName: string, fn: HookFn): void {
 }
 
 function notifyChargeFailure(itemName: string, failure: ChargeValidationFailure): void {
+	if (failure.code === 'conflictingConsumers') {
+		ui.notifications?.error(
+			localize('NIMBLE.charges.notifications.conflictingConsumers', {
+				item: itemName,
+				pool: failure.poolLabel,
+			}),
+		);
+		return;
+	}
+
 	if (failure.code === 'poolMissing') {
 		ui.notifications?.error(
 			localize('NIMBLE.charges.notifications.poolMissing', {

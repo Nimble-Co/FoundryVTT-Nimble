@@ -477,6 +477,31 @@ function getChargeConsumers(
 	return consumers;
 }
 
+/**
+ * Pools that more than one variable consumer on this item spends from.
+ *
+ * The activation collects one amount per pool, so a second variable consumer
+ * on the same pool has no amount of its own: what the author asked for cannot
+ * be honoured, and guessing between "one budget" and "two spends" would make
+ * the item quietly do something nobody wrote. The use is refused instead.
+ */
+function findConflictingVariablePools(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): ChargeConsumerState[] {
+	const seen = new Map<string, ChargeConsumerState>();
+	const conflicting = new Map<string, ChargeConsumerState>();
+
+	for (const consumer of getChargeConsumers(actor, item, { includeVariable: true })) {
+		if (!consumer.variable) continue;
+		const first = seen.get(consumer.poolId);
+		if (first) conflicting.set(consumer.poolId, first);
+		else seen.set(consumer.poolId, consumer);
+	}
+
+	return [...conflicting.values()];
+}
+
 function getApplicableUsageTriggers(context: {
 	isMiss?: boolean;
 	isCritical?: boolean;
@@ -725,6 +750,7 @@ export {
 	getChargePoolDefinitions,
 	buildEffectiveChargePoolMap,
 	getChargeConsumers,
+	findConflictingVariablePools,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,
 	resolveRecoveryTrigger,

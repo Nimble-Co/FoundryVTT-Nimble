@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
 	applyRecoveryTriggersToPools,
 	buildEffectiveChargePoolMap,
+	findConflictingVariablePools,
 	getChargeConsumers,
 } from './helpers.js';
 import type {
@@ -393,6 +394,70 @@ describe('variable charge consumers', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([]);
+	});
+
+	describe('two of them on one pool', () => {
+		function createDoubleSpendItem(secondConsumer: Partial<MockRule> = {}): MockItem {
+			return createMockItem('item-1', 'Flexible Feature', [
+				{
+					type: 'chargePool',
+					id: 'pool-rule',
+					identifier: 'focus',
+					scope: 'item',
+					max: '10',
+					initial: 'max',
+				} as MockRule,
+				{
+					type: 'chargeConsumer',
+					id: 'consumer-a',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					costMode: 'variable',
+					cost: '1',
+					maxCost: '',
+				} as MockRule,
+				{
+					type: 'chargeConsumer',
+					id: 'consumer-b',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					costMode: 'variable',
+					cost: '2',
+					maxCost: '',
+					...secondConsumer,
+				} as MockRule,
+			]);
+		}
+
+		it('is reported as a conflict, naming the pool once', () => {
+			const item = createDoubleSpendItem();
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toMatchObject([
+				{ poolId: 'focus', poolIdentifier: 'focus' },
+			]);
+		});
+
+		it('is not a conflict when only one of them is variable', () => {
+			const item = createDoubleSpendItem({ costMode: 'fixed' } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+
+		it('is not a conflict when they spend from different pools', () => {
+			const item = createDoubleSpendItem({ poolIdentifier: 'resolve' } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+
+		it('is not a conflict when a predicate rules the second one out', () => {
+			const item = createDoubleSpendItem({ appliesTo: () => false } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
 	});
 
 	it('is reported with its minimum and an open ceiling when asked for', () => {
