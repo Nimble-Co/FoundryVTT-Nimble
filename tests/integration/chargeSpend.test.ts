@@ -147,7 +147,7 @@ describe('variable charge spends', () => {
 			[`flags.${game.system.id}.chargePools.lay-on-hands.current`]: charges,
 		});
 		await actor.update({
-			'system.attributes.hp.value': actor.system.attributes.hp.max - wound,
+			'system.attributes.hp.value': Math.max(1, actor.system.attributes.hp.max - wound),
 		});
 		await waitFor(() => pool()?.current === charges, `the pool to start at ${charges}`);
 	}
