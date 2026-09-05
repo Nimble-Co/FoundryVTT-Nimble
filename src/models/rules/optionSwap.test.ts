@@ -5,13 +5,13 @@ import { ALL_GROUPS, OptionSwapRule } from './optionSwap.js';
 
 interface RuleConfig {
 	selectionGroups?: string[];
-	trigger?: string;
+	trigger?: 'safeRest' | 'fieldRest';
 	disabled?: boolean;
 }
 
 type TestRule = OptionSwapRule & {
 	selectionGroups: string[];
-	trigger: string;
+	trigger: 'safeRest' | 'fieldRest';
 	disabled: boolean;
 	predicate: Predicate;
 };

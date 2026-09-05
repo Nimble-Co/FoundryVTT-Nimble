@@ -5,13 +5,13 @@ import { SkillPointMoveRule } from './skillPointMove.js';
 
 interface RuleConfig {
 	points?: number;
-	trigger?: string;
+	trigger?: 'safeRest' | 'fieldRest';
 	disabled?: boolean;
 }
 
 type TestRule = SkillPointMoveRule & {
 	points: number;
-	trigger: string;
+	trigger: 'safeRest' | 'fieldRest';
 	disabled: boolean;
 	predicate: Predicate;
 };
