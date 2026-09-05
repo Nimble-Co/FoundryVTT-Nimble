@@ -7,13 +7,7 @@
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 	import { createOptionSwapSectionState } from './OptionSwapSection.state.svelte.ts';
 
-	let {
-		document: actor,
-		offer,
-		selections = $bindable(new Map()),
-		skillPoints = $bindable(new Map()),
-		onToggle,
-	}: OptionSwapSectionProps = $props();
+	let { document: actor, offer, onChange, onToggle }: OptionSwapSectionProps = $props();
 
 	function toggle() {
 		state.toggleExpanded();
@@ -23,15 +17,8 @@
 	const state = createOptionSwapSectionState(() => ({
 		offer,
 		skills: actor.reactive.system.skills,
+		onChange,
 	}));
-
-	$effect(() => {
-		selections = state.selectionUuids;
-	});
-
-	$effect(() => {
-		skillPoints = state.skillTotals;
-	});
 </script>
 
 {#if state.hasOffer}
@@ -394,6 +381,9 @@
 			color: var(--nimble-medium-text-color);
 		}
 
+		// Nested rather than written flat so the table's own class carries the specificity: the
+		// vendor rule `.system-nimble .nimble-sheet table th` sets `font-weight: inherit`, which
+		// a one-class scoped selector loses to.
 		&__skills-table {
 			--nimble-button-min-width: 4ch;
 
@@ -408,27 +398,27 @@
 			th {
 				padding-inline: 0;
 			}
+
+			.nimble-skill-config-table__skill-name {
+				font-weight: 900;
+				text-transform: uppercase;
+			}
+
+			.nimble-skill-config-table__skill-points {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+			}
+
+			.nimble-skill-config__value {
+				width: 3ch;
+			}
 		}
 
 		&__delta {
 			color: var(--nimble-medium-text-color);
 		}
-	}
-
-	.nimble-skill-config-table__skill-name {
-		font-weight: 900 !important;
-		text-transform: uppercase;
-	}
-
-	.nimble-skill-config-table__skill-points {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-	}
-
-	.nimble-skill-config__value {
-		width: 3ch;
 	}
 
 	// The recovery cards above hard-code these dark colours, and the row is one of them.

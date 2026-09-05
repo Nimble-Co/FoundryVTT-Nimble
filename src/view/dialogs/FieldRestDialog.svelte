@@ -307,8 +307,10 @@
 	<OptionSwapSection
 		document={actor}
 		offer={optionSwapOffer}
-		bind:selections={optionSwapSelections}
-		bind:skillPoints={optionSwapSkillPoints}
+		onChange={({ selections, skillPoints }) => {
+			optionSwapSelections = selections;
+			optionSwapSkillPoints = skillPoints;
+		}}
 		onToggle={fitWindow}
 	/>
 </article>

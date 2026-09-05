@@ -1,13 +1,9 @@
 <script lang="ts">
+	import type { OptionChangesListProps } from '#types/components/OptionChangesList.d.ts';
+
 	import localize from '#utils/localize.js';
 
-	interface OptionChange {
-		label: string;
-		removed: string[];
-		added: string[];
-	}
-
-	let { changes }: { changes: OptionChange[] } = $props();
+	let { changes }: OptionChangesListProps = $props();
 </script>
 
 {#if changes.length > 0}
@@ -41,7 +37,7 @@
 		gap: 0.25rem;
 		margin-top: 0.5rem;
 		padding-top: 0.5rem;
-		border-top: 1px solid rgba(0, 0, 0, 0.1);
+		border-top: 1px solid var(--nimble-card-border-color);
 	}
 
 	.option-changes__heading {

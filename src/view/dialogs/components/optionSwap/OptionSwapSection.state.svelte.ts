@@ -1,11 +1,12 @@
+import { untrack } from 'svelte';
+
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { OptionSwapChange } from '#types/components/OptionSwapSection.d.ts';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
+import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
-
-/** The highest bonus a skill can ever have, per the core rules. */
-const MAX_SKILL_MODIFIER = 12;
 
 export interface OptionSwapSkillData {
 	points: number;
@@ -45,6 +46,8 @@ export interface OptionSwapPoolView {
 interface OptionSwapSectionStateProps {
 	offer: ResolvedOptionSwapOffer | null;
 	skills: Record<string, OptionSwapSkillData>;
+	/** Told the whole picture — every pick and every moved point — after each change. */
+	onChange: (change: OptionSwapChange) => void;
 }
 
 /**
@@ -182,18 +185,32 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 			hasChanges = true;
 		}
 
-		if (hasChanges) selectedByPool = seeded;
+		if (!hasChanges) return;
+
+		selectedByPool = seeded;
+		untrack(notifyChange);
 	});
 
-	function canSubtractPoint(row: { points: number; change: number }): boolean {
+	function notifyChange() {
+		getProps().onChange({ selections: selectionUuids, skillPoints: skillTotals });
+	}
+
+	/**
+	 * A point can only leave a skill that holds one, and only while the skill it leaves keeps a
+	 * bonus of +0 or better — a negative ability can hold the bonus under the points the skill
+	 * shows, so the two floors are not the same test.
+	 */
+	function canSubtractPoint(row: { points: number; mod: number; change: number }): boolean {
 		if (row.points < 1) return false;
+		if (row.mod < 1) return false;
 		// Taking back a point the player just placed costs no budget.
 		if (row.change > 0) return true;
 		return pointsTaken < skillBudget;
 	}
 
-	function getSubtractTooltip(row: { points: number; change: number }): string {
+	function getSubtractTooltip(row: { points: number; mod: number; change: number }): string {
 		if (row.points < 1) return localize('NIMBLE.optionSwap.skillCannotGoBelowZero');
+		if (row.mod < 1) return localize('NIMBLE.optionSwap.skillBonusCannotGoNegative');
 		if (row.change > 0) return '';
 		if (pointsTaken >= skillBudget) return localize('NIMBLE.optionSwap.skillBudgetSpent');
 		return '';
@@ -219,6 +236,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		if (delta > 0 ? !row.canAdd : !row.canSubtract) return;
 
 		skillChanges = { ...skillChanges, [skillKey]: (skillChanges[skillKey] ?? 0) + delta };
+		notifyChange();
 	}
 
 	function getSelectedFeatures(poolKey: string): NimbleFeatureItem[] {
@@ -247,6 +265,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		const updated = new Map(selectedByPool);
 		updated.set(poolKey, next);
 		selectedByPool = updated;
+		notifyChange();
 	}
 
 	function toggleExpanded() {
@@ -287,12 +306,6 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		},
 		get hasUnplacedPoint() {
 			return hasUnplacedPoint;
-		},
-		get selectionUuids() {
-			return selectionUuids;
-		},
-		get skillTotals() {
-			return skillTotals;
 		},
 		adjustSkill,
 		getSelectedFeatures,

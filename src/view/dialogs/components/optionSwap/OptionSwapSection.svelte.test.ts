@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
-import OptionSwapSectionHarness from './OptionSwapSection.testHarness.svelte';
+import OptionSwapSection from './OptionSwapSection.svelte';
 
 function createFeature(uuid: string, name: string): NimbleFeatureItem {
 	return {
@@ -69,7 +69,7 @@ function renderSection(offer: ResolvedOptionSwapOffer | null, actor = DEFAULT_AC
 		skillPoints: new Map<string, number>(),
 	};
 
-	const rendered = render(OptionSwapSectionHarness, {
+	const rendered = render(OptionSwapSection, {
 		props: {
 			document: actor,
 			offer,
@@ -186,6 +186,23 @@ describe('OptionSwapSection', () => {
 
 	it('refuses to take a point from a skill that holds none', async () => {
 		const { expand, getByLabelText } = renderSection(createOffer({ pools: [], skillPoints: 1 }));
+
+		await expand();
+
+		expect(getByLabelText('Take a point from Stealth').hasAttribute('disabled')).toBe(true);
+	});
+
+	it('refuses to take a point that would push a skill bonus below +0', async () => {
+		// A negative ability can hold the bonus under the points, so the points floor alone
+		// would let this skill go negative.
+		const actor = createActor({
+			arcana: { points: 2, mod: 4 },
+			stealth: { points: 1, mod: 0 },
+		});
+		const { expand, getByLabelText } = renderSection(
+			createOffer({ pools: [], skillPoints: 1 }),
+			actor,
+		);
 
 		await expand();
 

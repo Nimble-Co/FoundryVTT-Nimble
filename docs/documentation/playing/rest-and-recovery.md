@@ -58,7 +58,7 @@ If your character has such a feature, the rest window shows a **Change my option
 
 Nothing happens until you confirm the rest. Close the window and your picks are untouched. Confirm it and the old option is removed, the new one is granted, and the chat card lists what changed so the rest of the table can see it.
 
-The Songweaver's Jack of All Trades works the same way for skills: it offers to move one skill point on a safe rest. A move is net zero, so a point can only be added to one skill by taking it from another.
+The Songweaver's Jack of All Trades works the same way for skills: it offers to move one skill point on a safe rest. A move is net zero, so a point can only be added to one skill by taking it from another. A point can only leave a skill that holds one and whose total would stay at +0 or better, and no skill can be pushed past the +12 maximum.
 
 What a swap covers is your class option pools. A level that let you choose between alternatives, such as the Commander's Combat Ability or +1 max Combat Die, counts every alternative as part of one pool, so a die can be traded for an ability and back. Pools that share options are shown as one pool. A swap does not change your subclass, your ability score increases, or the spells you know.
 

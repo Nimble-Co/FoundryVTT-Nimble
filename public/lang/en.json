@@ -2287,7 +2287,9 @@
 			"skillTotal": "Total",
 			"takePointFrom": "Take a point from {skill}",
 			"givePointTo": "Give a point to {skill}",
+			"grantFailed": "One of the chosen options could not be found, so no options were changed.",
 			"skillCannotGoBelowZero": "A skill cannot go below 0 points.",
+			"skillBonusCannotGoNegative": "A skill's bonus cannot go below +0.",
 			"skillAtMaximum": "The highest bonus a skill can have is +12.",
 			"skillBudgetSpent": "You have moved every point this rest allows.",
 			"takeAPointFirst": "Take a point from another skill first."
