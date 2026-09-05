@@ -1625,6 +1625,55 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			);
 		});
 
+		it('should cap @spent at what a same-pool fixed cost leaves behind', async () => {
+			// The fixed cost is taken after the variable spend, so a spend sized
+			// against the whole pool would empty it and leave that cost unpaid.
+			dialogState.result = { rollMode: 0, spentCharges: 10 };
+			makeItemSpendVariableCharges();
+			mockItem.rules!.set('2', {
+				type: 'chargeConsumer',
+				id: 'fixed-consumer-rule',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'fixed',
+				cost: '4',
+			});
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			// stubRolls answers every formula with the same total, which would make
+			// the pool max and the fixed cost indistinguishable. Resolve each numeric
+			// formula to itself instead.
+			MockRoll.mockImplementation((formula: unknown) => {
+				const total = Number.parseInt(String(formula), 10);
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					evaluateSync: vi.fn(() => ({ total })),
+					toJSON: vi.fn().mockReturnValue({ total }),
+				} as never;
+			});
+
+			await manager.getData();
+
+			expect(MockRoll).toHaveBeenCalledWith(
+				'@spent',
+				{ level: 1, strength: 10, spent: 6 },
+				undefined,
+			);
+		});
+
 		it('should hold spent pool dice until the caller clears the preUseItem gate', async () => {
 			// Same reason as the charge spend: the gate can still refuse the use over
 			// its charge cost, and a refused use must not have eaten the dice.

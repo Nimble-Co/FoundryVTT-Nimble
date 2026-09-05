@@ -2,7 +2,11 @@ import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
-import { findConflictingVariablePools, getChargeConsumers } from '#utils/chargePool/helpers.js';
+import {
+	findConflictingVariablePools,
+	getChargeConsumers,
+	getFixedChargeCostsByPool,
+} from '#utils/chargePool/helpers.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumptionDetail,
@@ -617,10 +621,17 @@ class ItemActivationManager {
 		);
 		if (variablePoolIds.size < 1) return named;
 
+		// The item's own fixed costs come out of the same pools later in the
+		// activation, so they are reserved here rather than spent twice over.
+		const fixedCosts = getFixedChargeCostsByPool(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
 		const pools = getChargePools(actor as unknown as Actor.Implementation);
 		let ceiling = 0;
 		for (const poolId of variablePoolIds) {
-			ceiling += pools.find((candidate) => candidate.id === poolId)?.current ?? 0;
+			const current = pools.find((candidate) => candidate.id === poolId)?.current ?? 0;
+			ceiling += Math.max(0, current - (fixedCosts.get(poolId) ?? 0));
 		}
 
 		return Math.min(named, ceiling);

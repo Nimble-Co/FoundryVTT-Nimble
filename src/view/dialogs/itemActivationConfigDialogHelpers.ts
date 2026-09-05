@@ -7,7 +7,7 @@ import type {
 } from '#types/components/ItemActivationConfigDialog.d.ts';
 import { attackDeliveryFromAttackType } from '#utils/attackDelivery.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
-import { getChargeConsumers } from '#utils/chargePool/helpers.js';
+import { getChargeConsumers, getFixedChargeCostsByPool } from '#utils/chargePool/helpers.js';
 import type { CharacterActorLike, RuleBackedItem } from '#utils/chargePool/types.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
@@ -72,6 +72,10 @@ export function extractSpendableChargePools(actor: Actor): SpendableChargePool[]
  * activation does, not a rider on it, so the item's own effect formulas read it
  * back as `@spent`.
  *
+ * The bounds are taken against what is left once the item's own fixed charge
+ * costs on the same pool are reserved, because those are deducted after the
+ * variable spend.
+ *
  * A pool with fewer charges than the consumer's minimum is dropped rather than
  * offered at 0 — there is nothing to choose.
  */
@@ -81,6 +85,7 @@ export function extractVariableChargeSpends(actor: Actor, item: Item): VariableC
 	}).filter((consumer) => consumer.variable);
 	if (consumers.length === 0) return [];
 
+	const fixedCosts = getFixedChargeCostsByPool(actor as CharacterActorLike, item as RuleBackedItem);
 	const pools = getChargePools(actor);
 	const spends: VariableChargeSpend[] = [];
 
@@ -89,8 +94,8 @@ export function extractVariableChargeSpends(actor: Actor, item: Item): VariableC
 		if (!pool || pool.hidden) continue;
 
 		const minimum = Math.max(1, consumer.cost);
-		const limit =
-			consumer.maxCost === null ? pool.current : Math.min(consumer.maxCost, pool.current);
+		const available = Math.max(0, pool.current - (fixedCosts.get(pool.id) ?? 0));
+		const limit = consumer.maxCost === null ? available : Math.min(consumer.maxCost, available);
 		if (limit < minimum) continue;
 
 		spends.push({ poolId: pool.id, label: pool.label, minimum, limit });

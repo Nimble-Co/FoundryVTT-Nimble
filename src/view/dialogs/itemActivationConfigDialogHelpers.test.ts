@@ -95,6 +95,45 @@ describe('extractVariableChargeSpends', () => {
 	it('leaves a hidden pool out, since it gates a feature rather than budgets one', () => {
 		expect(extract([createPoolRule({ hidden: true }), createConsumerRule()])).toEqual([]);
 	});
+
+	it('reserves a same-pool fixed cost before bounding the spend', () => {
+		// The fixed cost is taken later in the activation than the variable spend,
+		// so an amount sized against the raw balance can empty the pool first and
+		// leave the fixed cost unpaid.
+		expect(
+			extract([
+				createPoolRule(),
+				createConsumerRule({ id: 'fixed-rule', costMode: 'fixed', cost: '3' }),
+				createConsumerRule(),
+			])[0].limit,
+		).toBe(7);
+	});
+
+	it('offers nothing when the fixed cost leaves less than the minimum', () => {
+		expect(
+			extract([
+				createPoolRule({ max: '3' }),
+				createConsumerRule({ id: 'fixed-rule', costMode: 'fixed', cost: '3' }),
+				createConsumerRule(),
+			]),
+		).toEqual([]);
+	});
+
+	it('reserves nothing for a fixed cost on another pool', () => {
+		expect(
+			extract([
+				createPoolRule(),
+				createPoolRule({ id: 'ward-pool-rule', identifier: 'ward', label: 'Ward', max: '4' }),
+				createConsumerRule({
+					id: 'fixed-rule',
+					poolIdentifier: 'ward',
+					costMode: 'fixed',
+					cost: '3',
+				}),
+				createConsumerRule(),
+			])[0].limit,
+		).toBe(10);
+	});
 });
 
 describe('extractDamageEffectsFromItem', () => {

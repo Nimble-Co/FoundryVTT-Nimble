@@ -478,6 +478,25 @@ function getChargeConsumers(
 }
 
 /**
+ * Total fixed charge cost this item takes from each pool, keyed by pool id.
+ *
+ * A variable spend has to stay inside what is left once these are reserved.
+ * The two are deducted at different points in the activation, so an amount
+ * sized against the raw balance can empty the pool first and leave the fixed
+ * cost unpaid after the effect has already resolved.
+ */
+function getFixedChargeCostsByPool(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): Map<string, number> {
+	const costsByPoolId = new Map<string, number>();
+	for (const consumer of getChargeConsumers(actor, item)) {
+		costsByPoolId.set(consumer.poolId, (costsByPoolId.get(consumer.poolId) ?? 0) + consumer.cost);
+	}
+	return costsByPoolId;
+}
+
+/**
  * Pools that more than one variable consumer on this item spends from.
  *
  * The activation collects one amount per pool, so a second variable consumer
@@ -750,6 +769,7 @@ export {
 	getChargePoolDefinitions,
 	buildEffectiveChargePoolMap,
 	getChargeConsumers,
+	getFixedChargeCostsByPool,
 	findConflictingVariablePools,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,

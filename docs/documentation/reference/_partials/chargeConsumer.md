@@ -12,3 +12,5 @@ The consumer sits on the item that spends the charges, which need not be the ite
 Because the amount is player input, an item with a variable consumer always opens its roll window, whatever its skip setting says.
 
 One variable consumer per pool, per item. The activation asks for one amount per pool, so a second variable consumer pointing at the same pool has no amount of its own: the system refuses to use the item rather than guess which spend you meant. Give each one its own pool, or make all but one a fixed cost.
+
+An item may pair a fixed consumer with a variable one on the same pool. The fixed cost is reserved first, so the amount offered for the variable spend is what is left after it. A pool of 10 with a fixed cost of 3 offers a variable spend of up to 7, and the item is refused outright if the pool cannot cover both.

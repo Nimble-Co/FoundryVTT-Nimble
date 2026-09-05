@@ -47,6 +47,11 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 	// Variable consumers are validated too, against their minimum: an item whose
 	// only cost is "spend any amount" still has nothing to do on an empty pool.
 	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true });
+
+	// Summed per pool, not checked one consumer at a time: costs that each fit
+	// alone can still overdraw the pool together, and the two kinds are deducted
+	// at different points in the activation, so nothing later catches it.
+	const requiredByPoolId = new Map<string, { identifier: string; required: number }>();
 	for (const consumer of consumers) {
 		const pool = pools[consumer.poolId];
 		if (!pool) {
@@ -67,15 +72,26 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 			};
 		}
 
-		const available = toFiniteNonNegativeInteger(pool.current);
-		if (available < consumer.cost) {
+		const minimum = consumer.variable ? Math.max(1, consumer.cost) : consumer.cost;
+		const tally = requiredByPoolId.get(consumer.poolId);
+		if (tally) tally.required += minimum;
+		else
+			requiredByPoolId.set(consumer.poolId, {
+				identifier: consumer.poolIdentifier,
+				required: minimum,
+			});
+	}
+
+	for (const [poolId, tally] of requiredByPoolId) {
+		const available = toFiniteNonNegativeInteger(pools[poolId].current);
+		if (available < tally.required) {
 			return {
 				ok: false,
 				failure: {
 					code: 'insufficientCharges',
-					poolIdentifier: consumer.poolIdentifier,
-					poolLabel: pool.label,
-					required: consumer.cost,
+					poolIdentifier: tally.identifier,
+					poolLabel: pools[poolId].label,
+					required: tally.required,
 					available,
 				},
 			};

@@ -28,6 +28,8 @@ type MockRule = {
 	poolType?: string;
 	poolScope?: string;
 	cost?: string;
+	costMode?: string;
+	maxCost?: string;
 };
 
 type MockItem = {
@@ -239,6 +241,62 @@ describe('ChargePoolService', () => {
 		expect(validation.failure?.code).toBe('insufficientCharges');
 		expect(validation.failure?.available).toBe(2);
 		expect(validation.failure?.required).toBe(3);
+	});
+
+	it('blocks activation when the fixed and variable costs together exceed the pool', () => {
+		// Each consumer fits on its own, so only the per-pool total catches this.
+		const actor = createMockActor({
+			items: [
+				{
+					id: 'item-1',
+					name: 'Wand',
+					rules: [
+						{
+							type: 'chargePool',
+							id: 'pool-rule',
+							identifier: 'wand',
+							scope: 'item',
+							max: '3',
+							initial: 'max',
+						},
+						{
+							type: 'chargeConsumer',
+							id: 'consume-rule',
+							poolIdentifier: 'wand',
+							poolScope: 'item',
+							cost: '2',
+						},
+						{
+							type: 'chargeConsumer',
+							id: 'variable-rule',
+							poolIdentifier: 'wand',
+							poolScope: 'item',
+							costMode: 'variable',
+							cost: '2',
+						},
+					],
+					itemFlags: {
+						nimble: {
+							chargePools: {
+								wand: {
+									current: 3,
+									max: 3,
+									recoveries: [],
+								},
+							},
+						},
+					},
+				},
+			],
+		});
+
+		const item = actor.items.contents[0];
+		const validation = validateItemChargeConsumption(item as unknown as Item.Implementation);
+
+		expect(validation.ok).toBe(false);
+		expect(validation.failure?.code).toBe('insufficientCharges');
+		expect(validation.failure?.available).toBe(3);
+		expect(validation.failure?.required).toBe(4);
 	});
 
 	it('does not consume charges when the item has a chargePool rule but no chargeConsumer rule', async () => {
