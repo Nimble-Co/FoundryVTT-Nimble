@@ -150,8 +150,11 @@ class ItemActivationManager {
 						mana: {
 							current: actorSystem.resources?.mana?.current || 0,
 						},
-						// In any case highestUnlockedSpellTier isn't set correctly we default to highest tier to ensure upcasting works
-						highestUnlockedSpellTier: actorSystem.resources?.highestUnlockedSpellTier ?? 9,
+						// Characters always carry a derived unlocked tier; the permissive
+						// fallback applies only to actors with no resources node.
+						highestUnlockedSpellTier: actorSystem.resources
+							? (actorSystem.resources.highestUnlockedSpellTier ?? 0)
+							: 9,
 					},
 				},
 				activationData: this.activationData,

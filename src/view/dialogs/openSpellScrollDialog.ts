@@ -22,7 +22,6 @@ export interface ScrollDialogActor {
 	items: Iterable<{ type: string; system?: unknown }>;
 	system?: {
 		resources?: {
-			mana?: { max?: number };
 			highestUnlockedSpellTier?: number;
 		};
 	};
@@ -61,8 +60,14 @@ function highestUnlockedSpellTier(actor: ScrollDialogActor): number {
 	return actor.system?.resources?.highestUnlockedSpellTier ?? 0;
 }
 
-function hasMana(actor: ScrollDialogActor): boolean {
-	return (actor.system?.resources?.mana?.max ?? 0) > 0;
+/**
+ * Whether the actor can cast tiered spells at all. Holding mana is not the
+ * test: a class may pay for its spells from a pool instead, and would hold
+ * none. An unlocked tier above zero means a class or subclass granted them
+ * tiered spells, which is what makes a spell on the list castable.
+ */
+function isSpellcaster(actor: ScrollDialogActor): boolean {
+	return highestUnlockedSpellTier(actor) > 0;
 }
 
 /**
@@ -126,7 +131,7 @@ export default async function openSpellScrollDialog(
 						SPELL_SCROLL_PRICE_BY_TIER[options.spell.system?.tier ?? 0] ??
 						SPELL_SCROLL_PRICE_BY_TIER[0],
 					highestUnlockedSpellTier: highestUnlockedSpellTier(options.actor),
-					hasMana: hasMana(options.actor),
+					isSpellcaster: isSpellcaster(options.actor),
 					knowsSchool: knowsSpellSchool(options.actor, options.spell.system?.school ?? ''),
 				}
 			: {

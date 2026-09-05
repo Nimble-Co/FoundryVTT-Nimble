@@ -3379,7 +3379,7 @@
 				"addToSpellListHintCantrip": "Learn it. Cantrips are free to cast.",
 				"addAsScroll": "Add as a spell scroll",
 				"addAsScrollHint": "Single use. No mana, no magical ability needed.",
-				"noManaWarning": "{name} has no mana, so this spell would sit on the list uncastable.",
+				"notACasterWarning": "{name} cannot cast spells of this tier, so it would sit on the list uncastable.",
 				"labelTier": "Tier",
 				"labelValue": "Value",
 				"labelCasting": "Casting",
