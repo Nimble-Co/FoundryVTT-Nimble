@@ -1081,12 +1081,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		data.level = this.levels.character ?? 1;
 
-		// NOTE: Pool max bonuses from level-up selections (e.g. "+1 Max Combat Die") are applied
-		// directly in the charge-pool max computation (see getChargePoolDefinitions), reading the
-		// cumulative total from levelUpHistory. They are intentionally NOT exposed as roll-data
-		// variables here: doing so required every embedded pool formula to reference @<pool>Bonus,
-		// which silently dropped the bonus whenever an actor carried a stale formula. Applying the
-		// bonus in code makes it robust regardless of the embedded chargePool formula.
+		// NOTE: Pool max bonuses (e.g. "+1 Max Combat Die") are applied directly in the
+		// charge-pool max computation (see getChargePoolDefinitions), which sums the
+		// poolMaxBonus rules the actor's items carry. They are intentionally NOT exposed as
+		// roll-data variables here: doing so required every embedded pool formula to reference
+		// @<pool>Bonus, which silently dropped the bonus whenever an actor carried a stale
+		// formula. Applying the bonus in code makes it robust regardless of the formula.
 
 		return data;
 	}
@@ -1869,12 +1869,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 
-		// Revert skills
+		// Revert skills. Clamped at zero: a skill point moved away since the level up leaves
+		// less to take back than the level added, and a negative skill is not a state the
+		// rules have.
 		Object.entries(lastHistory.skillIncreases).forEach(([skill, change]) => {
 			if (change) {
 				const path = `system.skills.${skill}.points`;
 				const current = this.system.skills[skill].points;
-				actorUpdates[path] = current - change;
+				actorUpdates[path] = Math.max(0, current - change);
 			}
 		});
 

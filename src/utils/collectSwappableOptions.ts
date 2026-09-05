@@ -14,7 +14,7 @@ export interface SwappableOptionPool {
 	optionLabel: string | null;
 	/** Levels that contributed picks, ascending. */
 	levels: number[];
-	/** How many picks the character holds from this pool in total. */
+	/** How many picks the character holds from this pool, which a swap must preserve. */
 	pickCount: number;
 	/** Every member of the pool, owned or not. */
 	candidateUuids: string[];
@@ -29,6 +29,12 @@ export interface SwappableOptionPool {
  * is not recorded anywhere: the level-up dialog discards the option a player chose and keeps
  * only the granted item. Summing the levels is therefore the only honest presentation, and it
  * is the one `findMissingLevelSelections` already settled on for the same reason.
+ *
+ * The pick count is what the character currently holds, not what their levels entitled them
+ * to. A swap preserves the count rather than re-deriving it, and the two differ: a level that
+ * offers a choice between options records nothing about which was taken, so `collectPoolRequirements`
+ * skips it, and a Commander's Combat Tactics would otherwise count one pick while holding six.
+ * A pool the character owes picks from belongs to the level correction dialog, not here.
  *
  * The offers are gathered by replaying levels 1 to `classLevel`, because a level-up option is
  * applicable at the exact levels it lists — asking the resolver about level 10 alone returns
@@ -72,8 +78,9 @@ export default async function collectSwappableOptions(
 		// A pool with one member offers no alternative, so there is nothing to swap.
 		if (candidateUuids.length < 2) continue;
 
-		const pickCount = poolRequirements.reduce((total, req) => total + req.requiredCount, 0);
-		if (pickCount < 1) continue;
+		const ownedUuids = candidateUuids.filter((uuid) => ownedSourceUuids.has(uuid));
+		// Nothing held is nothing to swap.
+		if (ownedUuids.length < 1) continue;
 
 		// The first requirement names the pool: later levels repeat the same option, so its
 		// wording is the same, and the earliest one is what the character first saw.
@@ -85,9 +92,9 @@ export default async function collectSwappableOptions(
 			displayName: first.displayName,
 			optionLabel: first.optionLabel,
 			levels: [...new Set(poolRequirements.map((req) => req.level))].sort((a, b) => a - b),
-			pickCount,
+			pickCount: ownedUuids.length,
 			candidateUuids,
-			ownedUuids: candidateUuids.filter((uuid) => ownedSourceUuids.has(uuid)),
+			ownedUuids,
 		});
 	}
 

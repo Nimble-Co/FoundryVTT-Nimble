@@ -27,9 +27,10 @@ interface HistoryEntryLike {
  * down correct: the entry keeps naming exactly what that level currently owns, and level down
  * never has to learn that a swap happened.
  *
- * Removals and additions are paired in order within each pool. The pick count is fixed, so the
- * two lists are the same length in practice; a leftover addition falls back to the last entry
- * that holds a pick from the pool, and then to no entry at all rather than a wrong one.
+ * A pool is only acted on when the selection holds exactly as many picks as the character
+ * already has, so the two lists are always the same length. A leftover addition falls back to
+ * the last entry that holds a pick from the pool, and then to no entry at all rather than a
+ * wrong one.
  */
 export default function planOptionSwap(
 	pools: readonly SwappableOptionPool[],
@@ -44,6 +45,9 @@ export default function planOptionSwap(
 	for (const pool of pools) {
 		const selected = selections.get(pool.poolKey);
 		if (!selected) continue;
+		// A half-finished selection is not a swap. Acting on one would delete the pick the
+		// player dropped and grant nothing back, quietly costing them an option.
+		if (selected.length !== pool.pickCount) continue;
 
 		const owned = new Set(pool.ownedUuids);
 		const wanted = new Set(selected);

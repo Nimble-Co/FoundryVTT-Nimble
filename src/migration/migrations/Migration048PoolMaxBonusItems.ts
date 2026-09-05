@@ -174,7 +174,15 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 			option.rules = rules.map((rule: Record<string, unknown>) => {
 				if (rule.type !== 'poolMaxBonus') return rule;
 				const grantItemUuid = rule.grantItemUuid;
-				if (typeof grantItemUuid !== 'string' || grantItemUuid.length < 1) return rule;
+				// Without an item to grant there is nothing to rewrite the rule into, and the
+				// reader that made the bare form work is gone, so say so rather than leave a
+				// rule that silently does nothing.
+				if (typeof grantItemUuid !== 'string' || grantItemUuid.length < 1) {
+					console.warn(
+						`Nimble Migration | ${source.name ?? 'feature'}: option "${option.id}" has a poolMaxBonus with no item to grant and can no longer take effect. Give it a grantItem rule pointing at an item that carries the bonus.`,
+					);
+					return rule;
+				}
 
 				rewrote = true;
 				return {

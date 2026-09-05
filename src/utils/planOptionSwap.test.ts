@@ -96,6 +96,29 @@ describe('planOptionSwap', () => {
 		]);
 	});
 
+	it('ignores a selection with fewer picks than the character holds', () => {
+		// Deselecting a pick to browse the pool must never cost the player that option.
+		const plan = planOptionSwap(
+			[pool()],
+			new Map([['savage-arsenal', ['uuid:rampage']]]),
+			itemIds,
+			history,
+		);
+
+		expect(plan).toEqual({ deleteItemIds: [], grants: [], changedPoolKeys: [] });
+	});
+
+	it('ignores a selection with more picks than the character holds', () => {
+		const plan = planOptionSwap(
+			[pool()],
+			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:whirlwind', 'uuid:death-blow']]]),
+			itemIds,
+			history,
+		);
+
+		expect(plan.changedPoolKeys).toEqual([]);
+	});
+
 	it('reports which pools changed', () => {
 		const plan = planOptionSwap(
 			[pool()],

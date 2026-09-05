@@ -356,8 +356,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			if (identifier.length < 1) continue;
 
 			const scope = toChargePoolScope(poolRule.scope);
-			// The pool max is the resolved formula PLUS any cumulative level-up pool bonus
-			// (e.g. "+1 Max Combat Die") recorded in levelUpHistory. Applying the bonus here —
+			// The pool max is the resolved formula PLUS every poolMaxBonus rule the actor owns
+			// for this pool (e.g. each "+1 Max Combat Die" item). Applying the bonus here —
 			// rather than requiring the formula to reference @<pool>Bonus — keeps it correct even
 			// when an actor carries a stale embedded formula.
 			const max =
