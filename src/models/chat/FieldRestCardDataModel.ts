@@ -5,15 +5,16 @@ const { fields } = foundry.data;
 const fieldRestCardSchema = () => ({
 	// Class options and skills changed as part of this rest
 	optionChanges: new fields.ArrayField(
-		new fields.ObjectField({
-			required: true,
-			nullable: false,
-			initial: {},
-			model: {
-				label: new fields.StringField({ required: true }),
-				removed: new fields.ArrayField(new fields.StringField({ required: true })),
-				added: new fields.ArrayField(new fields.StringField({ required: true })),
-			},
+		new fields.SchemaField({
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			removed: new fields.ArrayField(
+				new fields.StringField({ required: true, nullable: false, initial: '' }),
+				{ required: true, nullable: false, initial: [] },
+			),
+			added: new fields.ArrayField(
+				new fields.StringField({ required: true, nullable: false, initial: '' }),
+				{ required: true, nullable: false, initial: [] },
+			),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),
