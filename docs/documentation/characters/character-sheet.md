@@ -62,7 +62,17 @@ Your class features, subclass features, ancestry, background, and boons, grouped
 
 Your known spells. When you know spells from two or more schools, a school filter appears. Click a spell's icon to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
+Each spell card shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead, and their cards show that pool by name.
+
 ![The spells tab with the school filter and a spell card visible](/images/documentation/character-sheet-spells-tab.png)
+
+#### Casting without enough left to pay
+
+A class that pays from a pool may also declare what happens when you cast anyway with the pool empty. The Shadowmancer is the example that ships with the system: Pilfered Power is a pool of uses equal to your Dexterity, spells always cast at your highest unlocked tier for one use, and casting on an empty pool asks you to confirm and then costs you half your maximum hit points.
+
+::: warning Greedy Pact is not automated
+From level 12 the Shadowmancer's Greedy Pact replaces that fixed penalty with a saving throw that has three different outcomes, one of which changes the tier the spell is cast at. The system cannot express that yet, so a Shadowmancer of level 12 or higher still takes the level 2 penalty automatically. Roll Greedy Pact by hand and adjust the result at the table.
+:::
 
 ### Bio
 
