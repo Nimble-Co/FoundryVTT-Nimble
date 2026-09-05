@@ -175,7 +175,7 @@
 						"type": "grantItem",
 						"label": "",
 						"disabled": false,
-						"predicate": [],
+						"predicate": {},
 						"priority": 1,
 						"uuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt",
 						"allowDuplicate": true,

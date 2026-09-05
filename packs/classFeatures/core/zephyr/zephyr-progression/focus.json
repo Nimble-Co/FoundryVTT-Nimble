@@ -12,7 +12,7 @@
 				"type": "optionSwap",
 				"label": "Whenever you spend time meditating alone in a windy place during a Safe Rest",
 				"disabled": false,
-				"predicate": [],
+				"predicate": {},
 				"priority": 1,
 				"selectionGroups": [
 					"all"
@@ -62,8 +62,8 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.9",
-		"createdTime": 1762000000000,
-		"modifiedTime": 1762000000000,
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "WGjt3KNOMFWfRRzc"

@@ -11,7 +11,7 @@
 				"type": "poolMaxBonus",
 				"label": "",
 				"disabled": false,
-				"predicate": [],
+				"predicate": {},
 				"priority": 1,
 				"poolIdentifier": "combat-dice",
 				"amount": 1

@@ -12,7 +12,7 @@
 				"type": "skillPointMove",
 				"label": "When you Safe Rest",
 				"disabled": false,
-				"predicate": [],
+				"predicate": {},
 				"priority": 1,
 				"points": 1,
 				"trigger": "safeRest"
