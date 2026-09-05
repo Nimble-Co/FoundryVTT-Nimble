@@ -111,7 +111,6 @@ type CharacterActorLike = Actor.Implementation & {
 };
 
 type ChargeConsumerState = {
-	ruleId: string;
 	poolId: string;
 	poolIdentifier: string;
 	/** A variable consumer reads this as the smallest legal spend. */

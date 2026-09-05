@@ -463,7 +463,6 @@ function getChargeConsumers(
 		const maxCostFormula = typeof consumerRule.maxCost === 'string' ? consumerRule.maxCost : '';
 		const poolId = buildChargePoolId(poolScope, poolIdentifier, sourceItemId);
 		consumers.push({
-			ruleId: normalizeIdentifier(consumerRule.id),
 			poolId,
 			poolIdentifier,
 			cost,

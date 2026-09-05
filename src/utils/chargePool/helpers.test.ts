@@ -333,7 +333,6 @@ describe('charge consumer predicate gating', () => {
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
 			{
-				ruleId: 'consumer-rule',
 				poolId: 'focus',
 				poolIdentifier: 'focus',
 				cost: 1,
@@ -355,7 +354,6 @@ describe('charge consumer predicate gating', () => {
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
 			{
-				ruleId: 'consumer-rule',
 				poolId: 'focus',
 				poolIdentifier: 'focus',
 				cost: 1,
@@ -405,7 +403,6 @@ describe('variable charge consumers', () => {
 			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true }),
 		).toEqual([
 			{
-				ruleId: 'consumer-rule',
 				poolId: 'focus',
 				poolIdentifier: 'focus',
 				cost: 1,
@@ -490,7 +487,6 @@ describe('cross-item pool spending', () => {
 			}),
 		).toEqual([
 			{
-				ruleId: 'other-consumer',
 				poolId: 'focus',
 				poolIdentifier: 'focus',
 				cost: 1,
