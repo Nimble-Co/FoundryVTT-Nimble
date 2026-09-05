@@ -2512,10 +2512,10 @@
 		"activationDialog": {
 			"spendPoolDice": "Spend Pool Dice",
 			"spendCharge": {
-				"increment": "Spend one more",
-				"decrement": "Spend one less",
+				"increment": "Spend one more from {pool}",
+				"decrement": "Spend one less from {pool}",
 				"heading": "Spend Charges",
-				"amount": "Charges to spend"
+				"amount": "Charges to spend from {pool}"
 			},
 			"conditionalBonus": {
 				"heading": "Conditional Bonuses",

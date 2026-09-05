@@ -163,7 +163,9 @@
 							<button
 								type="button"
 								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement')}
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement', {
+									pool: spend.label,
+								})}
 								disabled={selected <= spend.minimum}
 								onclick={() => state.adjustVariableSpend(spend.poolId, -1)}
 							>
@@ -176,7 +178,9 @@
 									min={spend.minimum}
 									max={spend.limit}
 									value={selected}
-									aria-label={localize('NIMBLE.activationDialog.spendCharge.amount')}
+									aria-label={localize('NIMBLE.activationDialog.spendCharge.amount', {
+										pool: spend.label,
+									})}
 									onchange={({ currentTarget }) => {
 										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber);
 										// The clamp often lands on the value already stored — typing 99 at
@@ -185,14 +189,16 @@
 										currentTarget.value = String(state.variableSpendCounts[spend.poolId]);
 									}}
 								/>
-								<span class="nimble-pool-spend__stepper-available">
+								<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
 									/ {spend.limit}
 								</span>
 							</span>
 							<button
 								type="button"
 								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment')}
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment', {
+									pool: spend.label,
+								})}
 								disabled={selected >= spend.limit}
 								onclick={() => state.adjustVariableSpend(spend.poolId, 1)}
 							>
@@ -262,7 +268,9 @@
 							<button
 								type="button"
 								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement')}
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement', {
+									pool: pool.label,
+								})}
 								disabled={selected <= 0}
 								onclick={() => state.adjustChargeSpend(pool.id, -1)}
 							>
@@ -270,14 +278,16 @@
 							</button>
 							<span class="nimble-pool-spend__stepper-value">
 								<strong>{selected}</strong>{pool.dieSize}
-								<span class="nimble-pool-spend__stepper-available">
+								<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
 									/ {pool.current}
 								</span>
 							</span>
 							<button
 								type="button"
 								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment')}
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment', {
+									pool: pool.label,
+								})}
 								disabled={selected >= pool.current}
 								onclick={() => state.adjustChargeSpend(pool.id, 1)}
 							>
