@@ -63,6 +63,41 @@ describe('Migration048LayOnHandsPool', () => {
 		expect(feature.system.activation.effects[0].formula).toBe('@spent');
 	});
 
+	it('matches a world copy whose source id is not a compendium one', async () => {
+		// A copy made inside the world stores a plain document id, which is not a
+		// compendium reference, so the name is all there is to match on.
+		const feature = createFeature({ _stats: { compendiumSource: 'Item.Ddm1A7P01CcmPrim' } });
+
+		await new Migration048LayOnHandsPool().updateItem!(feature);
+
+		expect(feature.system.rules).toHaveLength(2);
+	});
+
+	it('rewrites the spaced form of the superseded formula', async () => {
+		const feature = createFeature();
+		feature.system.activation.effects[0].formula = '5 * @level';
+
+		await new Migration048LayOnHandsPool().updateItem!(feature);
+
+		expect(feature.system.activation.effects[0].formula).toBe('@spent');
+	});
+
+	it('builds the rules array when the copy has none', async () => {
+		const feature = createFeature({ system: { activation: { effects: [] } } });
+
+		await new Migration048LayOnHandsPool().updateItem!(feature);
+
+		expect(feature.system.rules).toHaveLength(2);
+	});
+
+	it('leaves an item that is not a feature alone', async () => {
+		const feature = createFeature({ type: 'object' });
+
+		await new Migration048LayOnHandsPool().updateItem!(feature);
+
+		expect(feature.system.rules).toHaveLength(0);
+	});
+
 	it('leaves a feature from another compendium alone', async () => {
 		const feature = createFeature({
 			_stats: { compendiumSource: 'Compendium.homebrew.features.Item.abcdefghijklmnop' },

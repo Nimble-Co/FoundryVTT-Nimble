@@ -58,9 +58,9 @@ const CONSUMER_RULE = {
  *
  * Matches on compendium source id, falling back to the feature name for copies
  * a duplicated world compendium stripped it from. Idempotent, and conservative
- * about a GM's own work: the rules are appended only when nothing already
- * targets the pool, and the healing formula is rewritten only while it is still
- * the superseded flat one.
+ * about a GM's own work: the rules are appended only when the copy carries no
+ * charge rules at all, and the healing formula is rewritten only while it is
+ * still the superseded flat one.
  */
 class Migration048LayOnHandsPool extends MigrationBase {
 	static override readonly version = 48;
@@ -89,7 +89,13 @@ class Migration048LayOnHandsPool extends MigrationBase {
 		console.log(`Nimble Migration | ${source.name}: added the Lay on Hands healing pool`);
 	}
 
-	/** Appends the pool and its consumer unless something already covers them. */
+	/**
+	 * Appends the pool and its consumer, unless the copy already carries a charge
+	 * rule of any kind. The check is deliberately broader than this pool: a copy
+	 * someone has already given charge rules is one whose author had a plan for
+	 * it, and appending a second pool beside theirs would be worse than leaving
+	 * the feature as they built it.
+	 */
 	#addPoolRules(source: any): boolean {
 		const system = (source.system ??= {} as Record<string, unknown>);
 		const rules: Array<Record<string, unknown>> = Array.isArray(system.rules)
