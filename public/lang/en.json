@@ -811,12 +811,14 @@
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
 			"note": "Note",
+			"optionSwap": "Option Swap",
 			"poolGainMessage": "Pool Gain Message",
 			"poolMaxBonus": "Pool Max Bonus",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"situationalRollMode": "Situational Roll Mode",
 			"skillBonus": "Skill Bonus",
+			"skillPointMove": "Skill Point Move",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
@@ -1328,6 +1330,17 @@
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
 			},
+			"optionSwap": {
+				"description": "Offer the character a chance to swap class options they already picked, on a Safe Rest or Field Rest. The rule offers the swap; it cannot check whatever the feature asks the character to do in the fiction, so state that in the rule's label.",
+				"selectionGroups": {
+					"label": "Option pools",
+					"hint": "Which pools may be swapped. Use 'all' for every pool the character's class offers, which is what the class features mean by 'different <Class> options'."
+				},
+				"trigger": {
+					"label": "Offered on",
+					"hint": "The rest that offers the swap."
+				}
+			},
 			"poolGainMessage": {
 				"description": "Post a chat reminder whenever a dice pool gains dice. Supports `{value}` interpolation from a formula.",
 				"poolIdentifier": {
@@ -1392,6 +1405,17 @@
 				"skills": {
 					"label": "Apply to",
 					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				}
+			},
+			"skillPointMove": {
+				"description": "Let the character move skill points between skills on a rest. A skill may not go negative and may not exceed +12.",
+				"points": {
+					"label": "Points",
+					"hint": "How many points may be moved each time."
+				},
+				"trigger": {
+					"label": "Offered on",
+					"hint": "The rest that offers the move."
 				}
 			},
 			"skillRollMode": {

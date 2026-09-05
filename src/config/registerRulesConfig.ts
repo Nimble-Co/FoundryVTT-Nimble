@@ -34,12 +34,14 @@ import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.j
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
+import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
+import { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
@@ -83,12 +85,14 @@ export default function registerRulesConfig() {
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		note: 'NIMBLE.ruleTypes.note',
+		optionSwap: 'NIMBLE.ruleTypes.optionSwap',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		poolMaxBonus: 'NIMBLE.ruleTypes.poolMaxBonus',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		situationalRollMode: 'NIMBLE.ruleTypes.situationalRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
+		skillPointMove: 'NIMBLE.ruleTypes.skillPointMove',
 		skillRollMode: 'NIMBLE.ruleTypes.skillRollMode',
 		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
 		toggleEffect: 'NIMBLE.ruleTypes.toggleEffect',
@@ -132,12 +136,14 @@ export default function registerRulesConfig() {
 		modifyPool: ModifyPoolRule,
 		modifyToggle: ModifyToggleRule,
 		note: NoteRule,
+		optionSwap: OptionSwapRule,
 		poolGainMessage: PoolGainMessageRule,
 		poolMaxBonus: PoolMaxBonusRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		situationalRollMode: SituationalRollModeRule,
 		skillBonus: SkillBonusRule,
+		skillPointMove: SkillPointMoveRule,
 		skillRollMode: SkillRollModeRule,
 		speedBonus: SpeedBonusRule,
 		toggleEffect: ToggleEffectRule,
