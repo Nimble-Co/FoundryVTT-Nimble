@@ -12,7 +12,13 @@
 		offer,
 		selections = $bindable(new Map()),
 		skillPoints = $bindable(new Map()),
+		onToggle,
 	}: OptionSwapSectionProps = $props();
+
+	function toggle() {
+		state.toggleExpanded();
+		onToggle?.(state.isExpanded);
+	}
 
 	const state = createOptionSwapSectionState(() => ({
 		offer,
@@ -32,20 +38,26 @@
 	<section class="nimble-option-swap">
 		<button
 			class="nimble-option-swap__toggle"
+			class:nimble-option-swap__toggle--expanded={state.isExpanded}
 			type="button"
 			aria-expanded={state.isExpanded}
-			onclick={state.toggleExpanded}
+			onclick={toggle}
 		>
+			<span class="nimble-option-swap__icon">
+				<i class="fa-solid fa-arrow-right-arrow-left"></i>
+			</span>
+			<span class="nimble-option-swap__toggle-text">
+				<span class="nimble-option-swap__toggle-label">
+					{localize('NIMBLE.optionSwap.toggleLabel')}
+				</span>
+				<span class="nimble-option-swap__toggle-hint">
+					{localize('NIMBLE.optionSwap.toggleHint')}
+				</span>
+			</span>
 			<i
-				class="nimble-option-swap__chevron fa-solid fa-chevron-right"
+				class="nimble-option-swap__chevron fa-solid fa-chevron-down"
 				class:nimble-option-swap__chevron--expanded={state.isExpanded}
 			></i>
-			<span class="nimble-option-swap__toggle-label">
-				{localize('NIMBLE.optionSwap.toggleLabel')}
-			</span>
-			<span class="nimble-option-swap__toggle-hint">
-				{localize('NIMBLE.optionSwap.toggleHint')}
-			</span>
 		</button>
 
 		{#if state.isExpanded}
@@ -72,10 +84,6 @@
 
 				{#each state.groups as { pool, group } (pool.poolKey)}
 					<section class="nimble-option-swap__pool">
-						{#if pool.optionLabel}
-							<span class="nimble-option-swap__pool-label">{pool.optionLabel}</span>
-						{/if}
-
 						<FeatureGroupSelection
 							groupName={pool.poolKey}
 							{group}
@@ -191,34 +199,61 @@
 		flex-direction: column;
 		gap: 0.5rem;
 
+		// Matches the recovery cards above it. Foundry's button reset is undone here: its fixed
+		// height would clip the two lines of text and its hover colours would not fit the cards.
 		&__toggle {
 			display: flex;
-			align-items: baseline;
-			gap: 0.5rem;
+			align-items: center;
+			justify-content: flex-start;
+			gap: 0.75rem;
 			width: 100%;
-			padding: 0.5rem 0.75rem;
+			height: auto;
+			min-height: 0;
+			padding: 0.625rem 0.875rem;
 			font-size: var(--nimble-sm-text);
+			line-height: 1.3;
 			text-align: left;
 			color: var(--nimble-dark-text-color);
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 4px;
+			border-radius: 6px;
+			box-shadow: none;
 			cursor: pointer;
-			transition: var(--nimble-standard-transition);
+			transition: all 0.15s ease;
 
-			&:hover {
+			&:hover,
+			&:focus-visible {
+				color: var(--nimble-dark-text-color);
+				background: var(--nimble-box-background-color);
 				border-color: var(--nimble-accent-color);
+				box-shadow: none;
+			}
+
+			&--expanded {
+				border-bottom-left-radius: 0;
+				border-bottom-right-radius: 0;
 			}
 		}
 
-		&__chevron {
+		&__icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			flex-shrink: 0;
-			font-size: var(--nimble-xs-text);
-			transition: transform 0.2s ease;
+			width: 2rem;
+			height: 2rem;
+			border-radius: 6px;
+			font-size: 0.875rem;
+			background: hsla(200, 60%, 50%, 0.15);
+			color: hsl(200, 60%, 40%);
+		}
 
-			&--expanded {
-				transform: rotate(90deg);
-			}
+		&__toggle-text {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			flex: 1;
+			min-width: 0;
 		}
 
 		&__toggle-label {
@@ -226,16 +261,31 @@
 		}
 
 		&__toggle-hint {
-			margin-left: auto;
 			font-size: var(--nimble-xs-text);
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__chevron {
+			flex-shrink: 0;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			transition: transform 0.2s ease;
+
+			&--expanded {
+				transform: rotate(180deg);
+			}
 		}
 
 		&__body {
 			display: flex;
 			flex-direction: column;
 			gap: 0.75rem;
-			padding: 0 0.75rem 0.75rem;
+			margin-top: -0.5rem;
+			padding: 0.75rem 0.875rem;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-top: 0;
+			border-radius: 0 0 6px 6px;
 		}
 
 		&__acts-list {
@@ -246,11 +296,6 @@
 		&__act {
 			font-size: var(--nimble-sm-text);
 			color: var(--nimble-dark-text-color);
-		}
-
-		&__pool-label {
-			font-size: 0.875rem;
-			color: var(--nimble-medium-text-color);
 		}
 
 		&__skills-header {
@@ -300,5 +345,24 @@
 
 	.nimble-skill-config__value {
 		width: 3ch;
+	}
+
+	:global(.theme-dark) {
+		.nimble-option-swap__toggle,
+		.nimble-option-swap__body {
+			background: hsl(220, 15%, 18%);
+			border-color: hsl(220, 10%, 30%);
+		}
+
+		.nimble-option-swap__toggle:hover,
+		.nimble-option-swap__toggle:focus-visible {
+			background: hsl(220, 15%, 18%);
+			border-color: var(--nimble-accent-color);
+		}
+
+		.nimble-option-swap__icon {
+			background: hsla(200, 60%, 50%, 0.2);
+			color: hsl(200, 60%, 60%);
+		}
 	}
 </style>

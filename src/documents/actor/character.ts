@@ -68,6 +68,9 @@ import resolveCharacterItemActionCost, {
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
 
+/** Wide enough for the option cards a rest dialog shows when a swap is on offer. */
+const REST_DIALOG_WIDTH_WITH_OPTIONS = 480;
+
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
 	classUpdates: Array<{ id: string; hpData: number[] }>;
@@ -1956,11 +1959,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			restData = restOptions;
 		} else if (restOptions.restType === 'safe') {
 			// Launch Safe Rest Dialog (singleton per actor)
+			const optionSwapOffer = await this.getOptionSwapOffer('safeRest');
 			const dialog = GenericDialog.getOrCreate(
 				game.i18n.format(CONFIG.NIMBLE.safeRest.dialogTitle, { name: this.name }),
 				SafeRestDialog,
-				{ document: this },
-				{ icon: 'fa-solid fa-moon', uniqueId: `safe-rest-${this.uuid}` },
+				{ document: this, optionSwapOffer },
+				{
+					icon: 'fa-solid fa-moon',
+					uniqueId: `safe-rest-${this.uuid}`,
+					width: optionSwapOffer ? REST_DIALOG_WIDTH_WITH_OPTIONS : undefined,
+				},
 			);
 
 			await dialog.render(true);
@@ -1970,11 +1978,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			restData = { ...dialogData, restType: 'safe' } as RestManager.Data;
 		} else {
 			// Launch Field Rest Dialog (singleton per actor)
+			const optionSwapOffer = await this.getOptionSwapOffer('fieldRest');
 			const dialog = GenericDialog.getOrCreate(
 				`${this.name}: Field Rest`,
 				FieldRestDialog,
-				{ document: this },
-				{ icon: 'fa-solid fa-hourglass-half', uniqueId: `field-rest-${this.uuid}` },
+				{ document: this, optionSwapOffer },
+				{
+					icon: 'fa-solid fa-hourglass-half',
+					uniqueId: `field-rest-${this.uuid}`,
+					width: optionSwapOffer ? REST_DIALOG_WIDTH_WITH_OPTIONS : undefined,
+				},
 			);
 
 			await dialog.render(true);

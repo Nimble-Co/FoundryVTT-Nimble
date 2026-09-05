@@ -19,4 +19,6 @@ export interface OptionSwapSectionProps {
 	 * by the section, and empty until a move is balanced — an unplaced point is not a move.
 	 */
 	skillPoints: Map<string, number>;
+	/** Called after the section opens or closes, so the host can fit its window to the new height. */
+	onToggle?: (isExpanded: boolean) => void;
 }

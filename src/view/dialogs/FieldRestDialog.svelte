@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
@@ -19,6 +20,7 @@
 	interface Props {
 		document: NimbleCharacter;
 		dialog: GenericDialog;
+		optionSwapOffer: ResolvedOptionSwapOffer | null;
 	}
 
 	function incrementHitDie(die: string) {
@@ -57,24 +59,17 @@
 		});
 	}
 
-	let { document: actor, dialog }: Props = $props();
+	let { document: actor, dialog, optionSwapOffer }: Props = $props();
 
-	let optionSwapOffer = $state<ResolvedOptionSwapOffer | null>(null);
 	let optionSwapSelections = $state<Map<string, string[]>>(new Map());
 	let optionSwapSkillPoints = $state<Map<string, number>>(new Map());
 
-	// Resolving the offer reads the class feature compendia, so it can only be awaited here.
-	$effect(() => {
-		let isCurrent = true;
-
-		actor.getOptionSwapOffer('fieldRest').then((offer) => {
-			if (isCurrent) optionSwapOffer = offer;
-		});
-
-		return () => {
-			isCurrent = false;
-		};
-	});
+	// An auto-height window grows past the bottom of the screen when its content does, and
+	// Foundry only pulls it back inside the viewport when its position is set again.
+	async function fitWindow() {
+		await tick();
+		dialog.setPosition();
+	}
 
 	// Reactive hit dice computation (mirrors SafeRestDialog pattern)
 	let hitDice = $derived.by(() => {
@@ -314,6 +309,7 @@
 		offer={optionSwapOffer}
 		bind:selections={optionSwapSelections}
 		bind:skillPoints={optionSwapSkillPoints}
+		onToggle={fitWindow}
 	/>
 </article>
 

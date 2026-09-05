@@ -113,7 +113,6 @@ describe('OptionSwapSection', () => {
 		await expand();
 
 		expect(getByText('Savage Arsenal')).toBeTruthy();
-		expect(getByText('Choose a Savage Arsenal Ability')).toBeTruthy();
 		expect(getByText('Cleave')).toBeTruthy();
 		// The pool already holds its full count, so the alternatives stay collapsed until a
 		// pick is released.
