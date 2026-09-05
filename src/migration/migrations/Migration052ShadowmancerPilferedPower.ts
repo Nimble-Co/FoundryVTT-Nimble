@@ -165,18 +165,32 @@ class Migration052ShadowmancerPilferedPower extends MigrationBase {
 		console.log('Nimble Migration | Shadowmancer class: declared Pilfered Power spell cost');
 	}
 
+	/**
+	 * Brings the item's rules up to what the pack now ships. A rule the item does
+	 * not have is added. A rule it already has keeps every value it holds and
+	 * gains only the keys it never had, so an item carrying an earlier version of
+	 * a rule picks up fields added since without losing an edit made to it.
+	 */
 	#appendRules(source: any, rules: RuleSource[]): boolean {
 		const system = (source.system ??= {} as Record<string, unknown>);
 		const existing: RuleSource[] = Array.isArray(system.rules) ? system.rules : (system.rules = []);
-		const present = new Set(existing.map((rule) => ruleId(rule)).filter((id) => id.length > 0));
 
 		let changed = false;
 		for (const rule of rules) {
 			const id = ruleId(rule);
-			if (present.has(id)) continue;
-			existing.push(foundry.utils.deepClone(rule));
-			present.add(id);
-			changed = true;
+			const current = existing.find((candidate) => ruleId(candidate) === id);
+
+			if (!current) {
+				existing.push(foundry.utils.deepClone(rule));
+				changed = true;
+				continue;
+			}
+
+			for (const [key, value] of Object.entries(rule)) {
+				if (key in (current as Record<string, unknown>)) continue;
+				(current as Record<string, unknown>)[key] = foundry.utils.deepClone(value);
+				changed = true;
+			}
 		}
 		return changed;
 	}
