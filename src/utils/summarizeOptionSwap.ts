@@ -20,6 +20,9 @@ export default function summarizeOptionSwap(
 	for (const pool of pools) {
 		const selected = selections.get(pool.poolKey);
 		if (!selected) continue;
+		// The same guard the planner applies: a half-finished selection is not a swap, so it
+		// must not be reported as one.
+		if (selected.length !== pool.pickCount) continue;
 
 		const owned = new Set(pool.ownedUuids);
 		const wanted = new Set(selected);

@@ -57,6 +57,15 @@ describe('summarizeOptionSwap', () => {
 		expect(changes[0].added).toEqual(['uuid:death-blow']);
 	});
 
+	it('reports nothing for a selection with fewer picks than the character holds', () => {
+		const changes = summarizeOptionSwap(
+			[pool({ pickCount: 2, ownedUuids: ['uuid:rampage', 'uuid:whirlwind'] })],
+			new Map([['savage-arsenal', ['uuid:rampage']]]),
+		);
+
+		expect(changes).toEqual([]);
+	});
+
 	it('titles the pool from its key when it has no display name', () => {
 		const changes = summarizeOptionSwap(
 			[pool({ displayName: null })],

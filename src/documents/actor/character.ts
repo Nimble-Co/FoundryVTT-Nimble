@@ -22,6 +22,7 @@ import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import localize from '#utils/localize.js';
 import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
 import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
@@ -1385,15 +1386,23 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		pools: readonly ResolvedSwappableOptionPool[],
 		selections: ReadonlyMap<string, readonly string[]>,
 		skillPoints: ReadonlyMap<string, number> = new Map(),
-	): Promise<OptionSwapPlan> {
-		const itemIdByUuid = pools[0]?.itemIdByUuid ?? new Map<string, string>();
+	): Promise<OptionSwapPlan | null> {
+		const itemIdByUuid = new Map<string, string>();
+		for (const pool of pools) {
+			for (const [uuid, itemId] of pool.itemIdByUuid) itemIdByUuid.set(uuid, itemId);
+		}
 		const plan = planOptionSwap(pools, selections, itemIdByUuid, this.system.levelUpHistory);
 
 		const featureSources: Item.CreateData[] = [];
 		const historyIndexByCreatedIndex: number[] = [];
 		for (const grant of plan.grants) {
 			const feature = await fromUuid(grant.uuid as `Item.${string}`);
-			if (!feature) continue;
+			// Deleting the old pick with nothing to put in its place would cost the player an
+			// option, so the whole swap stops here.
+			if (!feature) {
+				ui.notifications?.error(localize('NIMBLE.optionSwap.grantFailed'));
+				return null;
+			}
 			const source = (feature as NimbleFeatureItem).toObject();
 			source._stats.compendiumSource = grant.uuid;
 			featureSources.push(source as object as Item.CreateData);
@@ -1785,16 +1794,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			if (from !== to) skillChanges.set(skillKey, { from, to });
 		}
 
-		const changes = summarizeOptionSwap(pools, selections, skillChanges, (skillKey) =>
-			game.i18n.localize(
-				CONFIG.NIMBLE.skills[skillKey as keyof typeof CONFIG.NIMBLE.skills] ?? skillKey,
-			),
+		const plan = await this.applyOptionSwap(pools, selections, skillPoints);
+		if (!plan) return [];
+
+		// Only the pools the plan acted on are reported, so the card never names a swap that
+		// did not happen.
+		const changedPools = pools.filter((pool) => plan.changedPoolKeys.includes(pool.poolKey));
+		return summarizeOptionSwap(changedPools, selections, skillChanges, (skillKey) =>
+			localize(CONFIG.NIMBLE.skills[skillKey as keyof typeof CONFIG.NIMBLE.skills] ?? skillKey),
 		);
-		if (changes.length === 0) return [];
-
-		await this.applyOptionSwap(pools, selections, skillPoints);
-
-		return changes;
 	}
 
 	/**

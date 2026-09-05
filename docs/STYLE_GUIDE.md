@@ -1501,6 +1501,14 @@ export const myStore = writable<MyStoreState>(initialState);
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
 | `isLevelUpOptionApplicable()` | `src/utils/isLevelUpOptionApplicable.ts` | Whether a feature's level-up option applies at a given level (empty `applyAtLevels` ⇒ every level) |
+| `collectPoolRequirements()`, `buildPoolKey()` | `src/utils/collectPoolRequirements.ts` | What each level from 1 to N asks a class to pick from a feature pool, replaying the class feature index; a level offering a choice between alternatives is skipped by default or folded into one requirement with `alternatives: 'union'`. `buildPoolKey` is the order-independent identity of a pool's groups |
+| `collectPoolCandidates()` | `src/utils/collectPoolCandidates.ts` | Every feature in the index belonging to a set of groups, across all levels, deduplicated by uuid |
+| `collectSwappableOptions()` | `src/utils/collectSwappableOptions.ts` | The option pools a character may re-pick from on a rest: pools merged where they share a group, granted alternatives folded in as members, pick count taken from what the character holds |
+| `resolveOptionSwapOffer()` | `src/utils/resolveOptionSwapOffer.ts` | Read a character's `optionSwap` and `skillPointMove` rules for a rest trigger into one offer: the groups covered (`null` for all), skill points to move, and the features to quote |
+| `planOptionSwap()` | `src/utils/planOptionSwap.ts` | Turn a selection per pool into item ids to delete and uuids to grant, each grant paired with the level-up history entry of the pick it replaces |
+| `summarizeOptionSwap()` | `src/utils/summarizeOptionSwap.ts` | Describe a set of swaps and skill point moves by name for the rest chat card |
+| `formatGroupName()` | `src/utils/formatGroupName.ts` | Title a kebab-case group key (`thrill-of-the-hunt` ⇒ `Thrill Of The Hunt`) |
+| `stripHtml()` | `src/utils/stripHtml.ts` | Drop HTML tags from a string |
 | `getItemSource()` | `src/utils/getItemSource.ts` | Whether a document lives in a compendium pack or the world, from its UUID |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
 | `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
