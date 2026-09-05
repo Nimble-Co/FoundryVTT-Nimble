@@ -58,3 +58,7 @@ _bmad-*/
 .claude/commands/nimble-rules-agent.md
 .claude/commands/review-pr.md
 .claude/agents
+
+
+# IGNORED TESTS
+src/migration/migrations/*.test.ts
