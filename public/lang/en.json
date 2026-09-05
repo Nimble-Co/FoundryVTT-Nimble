@@ -905,7 +905,11 @@
 				"description": "Spend charges from an item or actor pool when this rule’s owner is activated.",
 				"costMode": {
 					"label": "Cost mode",
-					"hint": "Fixed spends the cost every activation. Variable asks the player how much to spend, from the cost up to the maximum, and the item’s effect formulas read the chosen amount as @spent."
+					"hint": "Fixed spends the cost every activation. Variable asks the player how much to spend, from the cost up to the maximum, and the item’s effect formulas read the chosen amount as @spent.",
+					"choices": {
+						"fixed": "Fixed",
+						"variable": "Variable"
+					}
 				},
 				"cost": {
 					"label": "Cost",

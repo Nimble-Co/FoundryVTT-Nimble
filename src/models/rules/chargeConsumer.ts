@@ -29,7 +29,13 @@ function schema() {
 			initial: 'fixed',
 			label: 'NIMBLE.rules.chargeConsumer.costMode.label',
 			hint: 'NIMBLE.rules.chargeConsumer.costMode.hint',
-			choices: CHARGE_CONSUMER_COST_MODES,
+			choices: () =>
+				Object.fromEntries(
+					CHARGE_CONSUMER_COST_MODES.map((mode) => [
+						mode,
+						`NIMBLE.rules.chargeConsumer.costMode.choices.${mode}`,
+					]),
+				),
 		}),
 		cost: new fields.StringField(
 			withWidget({
@@ -50,6 +56,7 @@ function schema() {
 				label: 'NIMBLE.rules.chargeConsumer.maxCost.label',
 				hint: 'NIMBLE.rules.chargeConsumer.maxCost.hint',
 				widget: 'formula',
+				showWhen: (data: Record<string, unknown>) => data.costMode === 'variable',
 			}),
 		),
 		type: new fields.StringField({
