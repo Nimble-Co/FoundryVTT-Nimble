@@ -16,9 +16,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
 	createViewedTestScene,
+	getAutomationToggle,
 	importPackItem,
 	placeToken,
 	purgeTestDocuments,
+	setAutomationToggle,
 	settle,
 	targetToken,
 	waitFor,
@@ -37,24 +39,9 @@ const RESOURCE_RECOVERY_SETTING = 'automation.resourceRecovery';
 const SPEND_AMOUNT = 3;
 const POOL_MAX = 5;
 
-/**
- * The resource-recovery toggle, read through the same casts the system uses:
- * it is not in fvtt-types' registered settings map. Local to this file because
- * nothing else needs it yet.
- */
-function getResourceRecoveryEnabled(): boolean {
-	return Boolean(
-		game.settings.get(game.system.id as 'core', RESOURCE_RECOVERY_SETTING as 'rollMode'),
-	);
-}
-
-async function setResourceRecoveryEnabled(value: boolean): Promise<void> {
-	await game.settings.set(
-		game.system.id as 'core',
-		RESOURCE_RECOVERY_SETTING as 'rollMode',
-		value as never,
-	);
-}
+const getResourceRecoveryEnabled = () => getAutomationToggle(RESOURCE_RECOVERY_SETTING);
+const setResourceRecoveryEnabled = (value: boolean) =>
+	setAutomationToggle(RESOURCE_RECOVERY_SETTING, value);
 
 interface SheetActor {
 	id: string;
@@ -154,12 +141,33 @@ describe('variable charge spends', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
-	test('the pack feature surfaces a pool of 5 x LVL', () => {
-		// A level 1 character, so the pack's "5 * @level" resolves to 5.
-		expect(pool()).toMatchObject({ current: POOL_MAX, max: POOL_MAX });
-	});
+	/** Puts the pool and the actor's wounds where a test needs them to start. */
+	async function stage({ charges, wound }: { charges: number; wound: number }): Promise<void> {
+		await layOnHands.update({
+			[`flags.${game.system.id}.chargePools.lay-on-hands.current`]: charges,
+		});
+		await actor.update({
+			'system.attributes.hp.value': actor.system.attributes.hp.max - wound,
+		});
+		await waitFor(() => pool()?.current === charges, `the pool to start at ${charges}`);
+	}
 
-	test('activating it prompts for an amount bounded by the pool', async () => {
+	/** Closes any prompt a previous test left open, so each opens its own. */
+	async function closeSpendPrompt(): Promise<void> {
+		if (!spendInput()) return;
+		for (const app of foundry.applications.instances.values()) {
+			const element = (app as { element?: HTMLElement }).element;
+			if (element?.querySelector('.nimble-pool-spend__stepper-input')) {
+				await (app as { close(): Promise<unknown> }).close().catch(() => {});
+			}
+		}
+		await waitFor(() => !spendInput(), 'the previous spend prompt to close');
+	}
+
+	/** Activates the feature from its card and waits for the spend prompt. */
+	async function openSpendPrompt(): Promise<void> {
+		await closeSpendPrompt();
+
 		const featuresTab = actor.sheet.element.querySelector<HTMLButtonElement>(
 			'.nimble-primary-navigation button[aria-label="Features"]',
 		);
@@ -175,6 +183,55 @@ describe('variable charge spends', () => {
 		activate!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
 		await waitFor(() => !!spendInput(), 'the spend prompt to open');
+	}
+
+	/** Raises the open prompt's amount to `amount`, which it opens below. */
+	async function chooseSpend(amount: number): Promise<void> {
+		const root = spendInput()!.closest('.application') ?? document;
+		const increment = [
+			...root.querySelectorAll<HTMLButtonElement>('button[aria-label^="Spend one more"]'),
+		].at(-1);
+		expect(increment, 'the increment button').toBeTruthy();
+		// Opens at the consumer minimum of 1.
+		for (let step = 1; step < amount; step += 1) increment!.click();
+		await settle(300);
+		expect(spendInput()!.value).toBe(String(amount));
+	}
+
+	/** Rolls the open prompt and returns the card it posts. */
+	async function submitAndReadCard(): Promise<ChatMessage> {
+		const before = new Set(game.messages.contents.map((message) => message.id));
+		const submit = submitButtonOutsideSheet();
+		expect(submit, 'the dialog Roll button').toBeTruthy();
+		submit!.click();
+
+		await waitFor(
+			() => game.messages.contents.some((message) => !before.has(message.id)),
+			'the activation card',
+		);
+		await settle(800);
+		return game.messages.contents.find((message) => !before.has(message.id))!;
+	}
+
+	/** Clicks the newest card's Apply Healing button. */
+	function applyHealingFromCard(): void {
+		const applyHealing = [
+			...document.querySelectorAll<HTMLButtonElement>('button.nimble-button--apply-healing'),
+		].at(-1);
+		expect(applyHealing, 'the Apply Healing button').toBeTruthy();
+		applyHealing!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+	}
+
+	test('the pack feature surfaces a pool of 5 x LVL', async () => {
+		await stage({ charges: POOL_MAX, wound: 10 });
+
+		// A level 1 character, so the pack's "5 * @level" resolves to 5.
+		expect(pool()).toMatchObject({ current: POOL_MAX, max: POOL_MAX });
+	}, 60_000);
+
+	test('activating it prompts for an amount bounded by the pool', async () => {
+		await stage({ charges: POOL_MAX, wound: 10 });
+		await openSpendPrompt();
 
 		// The consumer's cost is the floor, the pool's remaining charges the ceiling.
 		expect(spendInput()!.min).toBe('1');
@@ -182,29 +239,15 @@ describe('variable charge spends', () => {
 		expect(spendInput()!.value).toBe('1');
 	}, 60_000);
 
-	test('the amount chosen is spent, healed, and reported on the card', async () => {
-		const root = spendInput()!.closest('.application') ?? document;
-		const increment = [
-			...root.querySelectorAll<HTMLButtonElement>('button[aria-label="Spend one more"]'),
-		].at(-1);
-		expect(increment, 'the increment button').toBeTruthy();
-		// Opens at the minimum of 1, so click up to SPEND_AMOUNT.
-		for (let step = 1; step < SPEND_AMOUNT; step += 1) increment!.click();
-		await settle(300);
-		expect(spendInput()!.value).toBe(String(SPEND_AMOUNT));
+	test('the amount chosen is spent, reported on the card, and healed', async () => {
+		await stage({ charges: POOL_MAX, wound: 10 });
+		const hpBefore = actor.system.attributes.hp.value;
+		await openSpendPrompt();
+		await chooseSpend(SPEND_AMOUNT);
 
-		const before = new Set(game.messages.contents.map((message) => message.id));
-		const submit = submitButtonOutsideSheet();
-		expect(submit, 'the dialog Roll button').toBeTruthy();
-		submit!.click();
-		await waitFor(
-			() => game.messages.contents.some((message) => !before.has(message.id)),
-			'the activation card',
-		);
-		await settle(800);
+		const card = await submitAndReadCard();
 
 		const remaining = POOL_MAX - SPEND_AMOUNT;
-		const card = game.messages.contents.find((message) => !before.has(message.id))!;
 		expect(card.rolls[0]?.total, 'the healing rolled from @spent').toBe(SPEND_AMOUNT);
 		await waitFor(() => pool()?.current === remaining, 'the pool to drop by what was spent');
 		expect(
@@ -217,17 +260,8 @@ describe('variable charge spends', () => {
 				change: -SPEND_AMOUNT,
 			},
 		]);
-	}, 60_000);
 
-	test('applying the card restores exactly what was spent', async () => {
-		const hpBefore = actor.system.attributes.hp.value;
-		expect(hpBefore).toBeLessThanOrEqual(actor.system.attributes.hp.max - SPEND_AMOUNT);
-
-		const applyHealing = [
-			...document.querySelectorAll<HTMLButtonElement>('button.nimble-button--apply-healing'),
-		].at(-1);
-		expect(applyHealing, 'the Apply Healing button').toBeTruthy();
-		applyHealing!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		applyHealingFromCard();
 
 		await waitFor(
 			() => actor.system.attributes.hp.value === hpBefore + SPEND_AMOUNT,
@@ -236,7 +270,8 @@ describe('variable charge spends', () => {
 	}, 60_000);
 
 	test('a Safe Rest refills the pool', async () => {
-		expect(pool()?.current).toBe(POOL_MAX - SPEND_AMOUNT);
+		await stage({ charges: POOL_MAX - SPEND_AMOUNT, wound: 10 });
+		await closeSpendPrompt();
 
 		const safeRest = actor.sheet.element.querySelector<HTMLButtonElement>(
 			'button[aria-label="Safe Rest"]',
@@ -252,60 +287,23 @@ describe('variable charge spends', () => {
 		await waitFor(() => pool()?.current === POOL_MAX, 'the pool to refill on the rest');
 	}, 60_000);
 
-	// The boundary the earlier tests walk past: the preUseItem gate validates a
-	// variable consumer's minimum against what is left in the pool, so spending
-	// the pool to empty has to survive its own validation. Runs last, on the
-	// pool the Safe Rest refilled.
+	// The boundary the other tests walk past: the preUseItem gate validates a
+	// variable consumer's minimum against what is left, so spending the pool to
+	// empty has to survive its own validation.
 	test('spending the whole pool still heals and posts a card', async () => {
-		expect(pool()?.current).toBe(POOL_MAX);
-
-		// The Safe Rest that refilled the pool also restored all HP, so re-wound
-		// the actor: healing the whole pool needs somewhere to land.
-		await actor.update({
-			'system.attributes.hp.value': actor.system.attributes.hp.max - POOL_MAX,
-		});
+		await stage({ charges: POOL_MAX, wound: POOL_MAX });
 		const hpBefore = actor.system.attributes.hp.value;
-		expect(hpBefore).toBe(actor.system.attributes.hp.max - POOL_MAX);
-
-		const activate = actor.sheet.element.querySelector<HTMLElement>(
-			`.nimble-feature-card[data-item-id="${layOnHands.id}"] .nimble-feature-card__img-activate`,
-		);
-		expect(activate, 'the feature card activate button').toBeTruthy();
-		activate!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-		await waitFor(() => !!spendInput(), 'the spend prompt to open');
-
-		const root = spendInput()!.closest('.application') ?? document;
-		const increment = [
-			...root.querySelectorAll<HTMLButtonElement>('button[aria-label="Spend one more"]'),
-		].at(-1);
-		expect(increment, 'the increment button').toBeTruthy();
-		for (let step = 1; step < POOL_MAX; step += 1) increment!.click();
-		await settle(300);
-		expect(spendInput()!.value).toBe(String(POOL_MAX));
-
-		const before = new Set(game.messages.contents.map((message) => message.id));
-		const submit = submitButtonOutsideSheet();
-		expect(submit, 'the dialog Roll button').toBeTruthy();
-		submit!.click();
+		await openSpendPrompt();
+		await chooseSpend(POOL_MAX);
 
 		// The failure this guards against loses the charges and posts nothing, so
 		// the card arriving at all is the assertion that matters.
-		await waitFor(
-			() => game.messages.contents.some((message) => !before.has(message.id)),
-			'the activation card for a full spend',
-		);
-		await settle(800);
+		const card = await submitAndReadCard();
 
-		const card = game.messages.contents.find((message) => !before.has(message.id))!;
 		expect(card.rolls[0]?.total, 'the healing rolled from @spent').toBe(POOL_MAX);
 		await waitFor(() => pool()?.current === 0, 'the pool to empty');
 
-		const applyHealing = [
-			...document.querySelectorAll<HTMLButtonElement>('button.nimble-button--apply-healing'),
-		].at(-1);
-		expect(applyHealing, 'the Apply Healing button').toBeTruthy();
-		applyHealing!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		applyHealingFromCard();
 
 		await waitFor(
 			() => actor.system.attributes.hp.value === hpBefore + POOL_MAX,
