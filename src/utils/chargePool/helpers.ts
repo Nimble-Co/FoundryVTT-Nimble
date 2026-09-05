@@ -422,9 +422,19 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	return nextPools;
 }
 
+/**
+ * The charge consumers declared on an item.
+ *
+ * Variable consumers are left out by default: their spend is chosen by the
+ * player at activation and deducted from that choice, so a caller that spends
+ * or validates a fixed cost must not see them. Callers that describe an item's
+ * relationship to a pool (the sheet readout, the activation dialog) pass
+ * `includeVariable`.
+ */
 function getChargeConsumers(
 	actor: CharacterActorLike,
 	item: RuleBackedItem,
+	{ includeVariable = false }: { includeVariable?: boolean } = {},
 ): ChargeConsumerState[] {
 	const rules = item.rules;
 	if (!rules) return [];
@@ -445,17 +455,51 @@ function getChargeConsumers(
 		);
 		if (poolIdentifier.length < 1) continue;
 
+		const variable = consumerRule.costMode === 'variable';
+		if (variable && !includeVariable) continue;
+
 		const poolScope = toChargePoolScope(consumerRule.poolScope);
 		const cost = resolveFormulaToInteger(actor, consumerRule.cost);
+		const maxCostFormula = typeof consumerRule.maxCost === 'string' ? consumerRule.maxCost : '';
 		const poolId = buildChargePoolId(poolScope, poolIdentifier, sourceItemId);
 		consumers.push({
 			poolId,
 			poolIdentifier,
 			cost,
+			variable,
+			maxCost:
+				variable && maxCostFormula.trim().length > 0
+					? resolveFormulaToInteger(actor, maxCostFormula)
+					: null,
 		});
 	}
 
 	return consumers;
+}
+
+/**
+ * Pools that more than one variable consumer on this item spends from.
+ *
+ * The activation collects one amount per pool, so a second variable consumer
+ * on the same pool has no amount of its own: what the author asked for cannot
+ * be honoured, and guessing between "one budget" and "two spends" would make
+ * the item quietly do something nobody wrote. The use is refused instead.
+ */
+function findConflictingVariablePools(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): ChargeConsumerState[] {
+	const seen = new Map<string, ChargeConsumerState>();
+	const conflicting = new Map<string, ChargeConsumerState>();
+
+	for (const consumer of getChargeConsumers(actor, item, { includeVariable: true })) {
+		if (!consumer.variable) continue;
+		const first = seen.get(consumer.poolId);
+		if (first) conflicting.set(consumer.poolId, first);
+		else seen.set(consumer.poolId, consumer);
+	}
+
+	return [...conflicting.values()];
 }
 
 function getApplicableUsageTriggers(context: {
@@ -706,6 +750,7 @@ export {
 	getChargePoolDefinitions,
 	buildEffectiveChargePoolMap,
 	getChargeConsumers,
+	findConflictingVariablePools,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,
 	resolveRecoveryTrigger,

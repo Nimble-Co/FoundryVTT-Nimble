@@ -78,6 +78,8 @@ Some features give you a resource that lives on the sheet rather than on a chat 
 
 **Charges** are a simple count, like 1 use per turn or 3 per safe rest. The pip shows what you have left and refills on whatever the feature says. Using a feature that costs a charge spends it for you, and if you have none left the use is blocked with a message explaining why.
 
+Some features spend an amount you choose instead of a fixed cost. An Oathsworn's Lay on Hands is the clearest example: the pool holds 5 x LVL points of healing power and refills on a safe rest, and using the feature asks how much of it to spend before healing your target for exactly that much. The roll window cannot be skipped for these, because the amount is yours to name. The chat card reports what you spent and what the pool is down to.
+
 **Dice pools** hold rolled dice, and each die remembers the number it came up with. A Berserker's Fury Dice are the clearest example: you Rage, dice go into the pool, and they add to your attacks until the Rage ends.
 
 Clicking the pool opens its panel, which does two jobs:

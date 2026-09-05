@@ -3,9 +3,12 @@ import type {
 	AutoBonusSummary,
 	SpendableChargePool,
 	SpendablePool,
+	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
 import { attackDeliveryFromAttackType } from '#utils/attackDelivery.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
+import { getChargeConsumers } from '#utils/chargePool/helpers.js';
+import type { CharacterActorLike, RuleBackedItem } from '#utils/chargePool/types.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 
@@ -62,6 +65,41 @@ export function extractSpendableChargePools(actor: Actor): SpendableChargePool[]
 }
 
 /**
+ * The charge pools this item spends a player-chosen amount from, with the
+ * bounds that choice has to stay inside. Unlike `extractSpendableChargePools`,
+ * which offers every rollable pool on the actor as an attack bonus, a variable
+ * spend belongs to the item being activated: the amount chosen is what the
+ * activation does, not a rider on it, so the item's own effect formulas read it
+ * back as `@spent`.
+ *
+ * A pool with fewer charges than the consumer's minimum is dropped rather than
+ * offered at 0 — there is nothing to choose.
+ */
+export function extractVariableChargeSpends(actor: Actor, item: Item): VariableChargeSpend[] {
+	const consumers = getChargeConsumers(actor as CharacterActorLike, item as RuleBackedItem, {
+		includeVariable: true,
+	}).filter((consumer) => consumer.variable);
+	if (consumers.length === 0) return [];
+
+	const pools = getChargePools(actor);
+	const spends: VariableChargeSpend[] = [];
+
+	for (const consumer of consumers) {
+		const pool = pools.find((candidate) => candidate.id === consumer.poolId);
+		if (!pool || pool.hidden) continue;
+
+		const minimum = Math.max(1, consumer.cost);
+		const limit =
+			consumer.maxCost === null ? pool.current : Math.min(consumer.maxCost, pool.current);
+		if (limit < minimum) continue;
+
+		spends.push({ poolId: pool.id, label: pool.label, minimum, limit });
+	}
+
+	return spends;
+}
+
+/**
  * Per-pool summary of every face plus its sum. autoBonus pools auto-apply
  * to every qualifying attack with no opt-in and no consumption.
  */
@@ -88,6 +126,11 @@ export function buildAutoBonusFormula(autoBonusPools: SpendablePool[]): string {
  * Walk the item's activation effects tree and collect top-level damage
  * effects (excluding conditional damage like criticalHit / miss / hit /
  * failedSaveBy). Also pulls damage out of savingThrow#sharedRolls.
+ *
+ * An item with no damage at all returns nothing rather than a `0` placeholder:
+ * the callers that need a formula already default to `'0'`, and the dialog's
+ * preview would otherwise show a bare `0` for an activation that rolls
+ * healing, or nothing at all.
  */
 export function extractDamageEffectsFromItem(
 	item: Item,
@@ -131,10 +174,6 @@ export function extractDamageEffectsFromItem(
 				}
 			}
 		}
-	}
-
-	if (allDamageEffects.length === 0) {
-		return [{ formula: '0' }];
 	}
 
 	return allDamageEffects;

@@ -68,6 +68,16 @@ function registerCustomHook(eventName: string, fn: HookFn): void {
 }
 
 function notifyChargeFailure(itemName: string, failure: ChargeValidationFailure): void {
+	if (failure.code === 'conflictingConsumers') {
+		ui.notifications?.error(
+			localize('NIMBLE.charges.notifications.conflictingConsumers', {
+				item: itemName,
+				pool: failure.poolLabel,
+			}),
+		);
+		return;
+	}
+
 	if (failure.code === 'poolMissing') {
 		ui.notifications?.error(
 			localize('NIMBLE.charges.notifications.poolMissing', {
@@ -141,13 +151,17 @@ function registerItemUseHooks(): void {
 		if (!characterItem) return;
 		const itemUseContext = toItemUseContext(context);
 		const typedChatMessage = chatMessage as {
+			flags?: Record<string, { chargeConsumption?: unknown[] } | undefined>;
 			update?(data: Record<string, unknown>): Promise<unknown>;
 		} | null;
 
 		void consumeOnResolvedItemUse(characterItem, itemUseContext).then(async (validation) => {
 			if (validation.consumption && validation.consumption.length > 0 && typedChatMessage?.update) {
+				// The card may already carry what the player spent in the activation
+				// dialog, which this rule-driven spend adds to rather than replaces.
+				const alreadyOnCard = typedChatMessage.flags?.[SYSTEM_ID]?.chargeConsumption ?? [];
 				await typedChatMessage.update({
-					[`flags.${SYSTEM_ID}.chargeConsumption`]: validation.consumption,
+					[`flags.${SYSTEM_ID}.chargeConsumption`]: [...alreadyOnCard, ...validation.consumption],
 				} as Record<string, unknown>);
 			}
 

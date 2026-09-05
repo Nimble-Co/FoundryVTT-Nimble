@@ -1,10 +1,19 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { UpcastResult } from '#types/spellScaling.js';
+import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
+import { findConflictingVariablePools, getChargeConsumers } from '#utils/chargePool/helpers.js';
+import type {
+	CharacterActorLike,
+	ChargeConsumptionDetail,
+	RuleBackedItem,
+} from '#utils/chargePool/types.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
+import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../utils/attackDelivery.js';
@@ -13,7 +22,6 @@ import {
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/attackUtils.js';
-import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
 import { buildTargetDomain } from '../utils/conditionalBonuses.js';
 import {
@@ -84,6 +92,34 @@ class ItemActivationManager {
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
+
+	/**
+	 * Charge spends named in the activation dialog, held until the caller has
+	 * cleared the preUseItem gate. Deducting them during getData() would spend
+	 * the pool before the gate validates it, and the gate reads a variable
+	 * consumer's minimum against what is left: spending a pool to empty would
+	 * fail its own validation and lose the charges with no card.
+	 */
+	#deferredChargeSpends: Array<{ poolId: string; count: number }> = [];
+
+	/**
+	 * Dice-pool faces named in the dialog, held for the same reason: the gate
+	 * refuses a use over its charge cost, and a refused use must not have eaten
+	 * the dice the player picked for it.
+	 */
+	#deferredPoolDice: Array<{ poolId: string; faceIndex: number }> = [];
+
+	/**
+	 * What the player spent from charge pools in the activation dialog, in the
+	 * shape the chat card's consumption readout renders. The rule-driven spend
+	 * writes the same flag from the useItem hook; this one is stamped when the
+	 * card is created, which is after the deferred spend has settled.
+	 */
+	#chargeConsumption: ChargeConsumptionDetail[] = [];
+
+	get chargeConsumption(): ChargeConsumptionDetail[] {
+		return this.#chargeConsumption;
+	}
 
 	/**
 	 * Creates a new ItemActivationManager.
@@ -181,10 +217,9 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
-		// Persist consumption of pool dice the player spent in the dialog.
-		// The dialog already included their face value in rollFormula above.
-		await this.#consumePoolDice(dialogData);
-		await this.#consumeChargePools(dialogData);
+		// Hold what the dialog spent until the caller clears the preUseItem gate.
+		// The dialog already included the dice faces in rollFormula above.
+		this.#deferPoolSpends(dialogData);
 
 		return {
 			rolls,
@@ -233,6 +268,13 @@ class ItemActivationManager {
 		const effects = this.activationData?.effects ?? [];
 		const updatedEffects: EffectNode[] = [];
 		const rolls: (Roll | DamageRoll)[] = [];
+		// `@spent` is only meaningful for this activation, so it is added here
+		// rather than on the actor's roll data. Absent a variable spend it is 0,
+		// which keeps a formula referencing it from failing to parse.
+		const activationRollData = {
+			...(this.actor?.getRollData() ?? {}),
+			spent: this.#resolveSpentCharges(dialogData),
+		};
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
 		// roll evaluates (automatic rerolls need the outcome).
@@ -372,7 +414,7 @@ class ItemActivationManager {
 
 					roll = new dependencies.DamageRoll(
 						formula,
-						this.actor!.getRollData() as DamageRoll.Data,
+						activationRollData as DamageRoll.Data,
 						damageOptions,
 					);
 
@@ -385,7 +427,9 @@ class ItemActivationManager {
 						formula = this.#applyHealingBonus(formula, healingBonus);
 					}
 
-					roll = new Roll(formula, this.actor!.getRollData()) as Roll;
+					// The extra `spent` key widens the roll data past Roll's default
+					// EmptyObject parameter, which the two types will not narrow between.
+					roll = new Roll(formula, activationRollData) as unknown as Roll;
 				}
 
 				await roll.evaluate();
@@ -496,9 +540,10 @@ class ItemActivationManager {
 	 * from the same pool are removed in descending index order so earlier
 	 * removals don't shift later indices.
 	 */
-	async #consumePoolDice(dialogData: ItemActivationManager.DialogData): Promise<void> {
-		const consumed = dialogData.consumedPoolDice;
-		if (!Array.isArray(consumed) || consumed.length < 1) return;
+	async #consumePoolDice(): Promise<void> {
+		const consumed = this.#deferredPoolDice;
+		this.#deferredPoolDice = [];
+		if (consumed.length < 1) return;
 
 		const actor = this.actor as Actor.Implementation | null;
 		if (!actor) return;
@@ -547,14 +592,72 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Persist consumption of charge-pool charges the player spent in the dialog.
-	 * The dialog already added `+Nd<size>[Label]` to the damage formula so the
-	 * dice roll as part of the damage roll; this step decrements the charge
-	 * pool's current count by the spent amount.
+	 * What the item's own formulas read as `@spent`.
+	 *
+	 * The dialog clamps the player's choice, but against a snapshot taken when it
+	 * opened. Capping the formula input at what the variable consumers' pools
+	 * actually hold keeps the healing from outrunning the charges if the pool
+	 * moved underneath the open dialog.
 	 */
-	async #consumeChargePools(dialogData: ItemActivationManager.DialogData): Promise<void> {
-		const consumed = dialogData.consumedChargePools;
-		if (!Array.isArray(consumed) || consumed.length < 1) return;
+	#resolveSpentCharges(dialogData: ItemActivationManager.DialogData): number {
+		const named = Math.max(0, Math.floor(Number(dialogData.spentCharges) || 0));
+		if (named < 1) return 0;
+
+		const actor = this.actor;
+		if (actor?.type !== 'character') return named;
+
+		const variablePoolIds = new Set(
+			getChargeConsumers(
+				actor as unknown as CharacterActorLike,
+				this.#item as unknown as RuleBackedItem,
+				{ includeVariable: true },
+			)
+				.filter((consumer) => consumer.variable)
+				.map((consumer) => consumer.poolId),
+		);
+		if (variablePoolIds.size < 1) return named;
+
+		const pools = getChargePools(actor as unknown as Actor.Implementation);
+		let ceiling = 0;
+		for (const poolId of variablePoolIds) {
+			ceiling += pools.find((candidate) => candidate.id === poolId)?.current ?? 0;
+		}
+
+		return Math.min(named, ceiling);
+	}
+
+	/**
+	 * Collect what the dialog spent, to be applied once the caller has cleared
+	 * the preUseItem gate. See `#deferredChargeSpends` and `#deferredPoolDice`.
+	 */
+	#deferPoolSpends(dialogData: ItemActivationManager.DialogData): void {
+		// One activation, one readout: reset rather than append, so a manager
+		// reused for a second getData() does not report the first spend again.
+		this.#chargeConsumption = [];
+
+		const charges = dialogData.consumedChargePools;
+		this.#deferredChargeSpends = Array.isArray(charges) ? [...charges] : [];
+
+		const dice = dialogData.consumedPoolDice;
+		this.#deferredPoolDice = Array.isArray(dice) ? [...dice] : [];
+	}
+
+	/**
+	 * Persist consumption of charge-pool charges the player spent in the dialog:
+	 * both rollable charges, whose dice the dialog already added to the damage
+	 * formula, and variable spends, whose amount the item's own effects read as
+	 * `@spent`. Either way this step decrements the pool by what was spent.
+	 *
+	 * Skipped with spending automation off, which leaves the pool for the table
+	 * to track. The dialog still asks for the amount: it feeds the item's own
+	 * effect formulas, so suppressing it would heal for nothing rather than
+	 * hand the count back to the GM.
+	 */
+	async #consumeChargePools(): Promise<void> {
+		const consumed = this.#deferredChargeSpends;
+		this.#deferredChargeSpends = [];
+		if (consumed.length < 1) return;
+		if (!isResourceSpendingAutomationEnabled()) return;
 
 		const actor = this.actor as Actor.Implementation | null;
 		if (!actor) return;
@@ -564,29 +667,34 @@ class ItemActivationManager {
 			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
 			if (count < 1) continue;
 			// adjustPool with negative-equivalent: 'add' supports only non-negative
-			// values, so read current and 'set' to current - count.
-			let currentValue = 0;
-			for (const item of actor.items.contents) {
-				const map = foundry.utils.getProperty(item, ChargePoolRuleConfig.flagPath) as
-					| Record<string, { current?: number }>
-					| undefined;
-				const poolEntry = map?.[entry.poolId];
-				if (poolEntry && typeof poolEntry.current === 'number') {
-					currentValue = poolEntry.current;
-					break;
-				}
-			}
-			const next = Math.max(0, currentValue - count);
-			await adjustPool(actor, entry.poolId, 'set', next);
+			// values, so read current and 'set' to current - count. Read through
+			// getPools rather than the item flags directly: an actor-scoped pool is
+			// stored on the actor, and scanning items alone would read it as 0 and
+			// wipe the pool instead of deducting from it.
+			const pool = getChargePools(actor).find((candidate) => candidate.id === entry.poolId);
+			if (!pool) continue;
+			const next = Math.max(0, pool.current - count);
+			if (next === pool.current) continue;
+			const adjusted = await adjustPool(actor, entry.poolId, 'set', next);
+			if (!adjusted) continue;
+
+			this.#chargeConsumption.push({
+				poolLabel: pool.label,
+				previousValue: pool.current,
+				currentValue: next,
+				maxValue: pool.max,
+				change: next - pool.current,
+			});
 		}
 	}
 
 	/**
-	 * Apply the pool effect nodes collected during getData. Pool nodes carry
-	 * actor-state side effects, so they must not run until the caller has
-	 * cleared the preUseItem gate (which fires after getData); results are
-	 * recorded on the same node objects the activation data references, so
-	 * the chat card still renders them. Safe to call once per activation.
+	 * Apply the pool side effects collected during getData: the pool effect
+	 * nodes, and the dice and charges the activation dialog spent. All mutate
+	 * actor state, so they must not run until the caller has cleared the
+	 * preUseItem gate (which fires after getData); results are recorded on the
+	 * same node objects the activation data references, so the chat card still
+	 * renders them. Safe to call once per activation.
 	 */
 	async applyDeferredPoolNodes(): Promise<void> {
 		const nodes = this.#deferredPoolNodes;
@@ -594,6 +702,8 @@ class ItemActivationManager {
 		for (const node of nodes) {
 			await this.#applyPoolNode(node);
 		}
+		await this.#consumePoolDice();
+		await this.#consumeChargePools();
 	}
 
 	/**
@@ -835,7 +945,25 @@ class ItemActivationManager {
 		// Check if this is a spell (for upcast dialog)
 		const isSpell = this.#item.type === 'spell';
 
-		if (!hasRolls && !isSpell) {
+		// The preUseItem gate refuses this too, but it fires after the dialog, and
+		// the dialog is what a duplicate pool breaks: it renders one prompt per
+		// pool, so two would collide. Refuse before opening it.
+		const conflict = this.#findConflictingVariableSpend();
+		if (conflict) {
+			ui.notifications?.error(
+				game.i18n.format('NIMBLE.charges.notifications.conflictingConsumers', {
+					item: this.#item.name ?? '',
+					pool: conflict,
+				}),
+			);
+			return null;
+		}
+
+		// A variable charge spend has no sensible default — the amount is the
+		// player's input — so an item that asks for one always gets the dialog.
+		const hasVariableChargeSpend = this.#hasVariableChargeSpend();
+
+		if (!hasRolls && !isSpell && !hasVariableChargeSpend) {
 			// No rolls needed, use default
 			return this.#getDefaultDialogData(rollOptions);
 		}
@@ -847,7 +975,8 @@ class ItemActivationManager {
 		});
 		unsubscribe();
 
-		const skipDialog = this.activationData?.skipRollDialog ? !altPressed : altPressed;
+		const skipDialog =
+			!hasVariableChargeSpend && (this.activationData?.skipRollDialog ? !altPressed : altPressed);
 
 		if (skipDialog) {
 			return this.#getDefaultDialogData(rollOptions);
@@ -870,6 +999,32 @@ class ItemActivationManager {
 
 		// If dialog is cancelled, don't roll
 		return null;
+	}
+
+	/** The pool this item asks to spend a chosen amount from twice, if any. */
+	#findConflictingVariableSpend(): string | null {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return null;
+
+		const [conflict] = findConflictingVariablePools(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
+		return conflict?.poolIdentifier ?? null;
+	}
+
+	/** Whether this item spends a player-chosen number of charges. */
+	#hasVariableChargeSpend(): boolean {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return false;
+
+		return getChargeConsumers(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+			{
+				includeVariable: true,
+			},
+		).some((consumer) => consumer.variable);
 	}
 
 	/**
@@ -1011,6 +1166,12 @@ namespace ItemActivationManager {
 		 * pool's current count after the roll succeeds.
 		 */
 		consumedChargePools?: Array<{ poolId: string; count: number }>;
+		/**
+		 * Charges spent by this item's variable charge consumers. Exposed to the
+		 * item's own effect formulas as `@spent`, which is how an activation whose
+		 * effect *is* the amount spent gets at the player's choice.
+		 */
+		spentCharges?: number;
 		/**
 		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
 		 * grants a specific damage type). Each becomes its own damage effect so the

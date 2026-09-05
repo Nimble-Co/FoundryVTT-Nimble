@@ -4,6 +4,7 @@ import {
 	areChargePoolMapsEqual,
 	buildEffectiveChargePoolMap,
 	clampCurrentToMax,
+	findConflictingVariablePools,
 	getApplicableUsageTriggers,
 	getChargeConsumers,
 	isCharacterActor,
@@ -25,8 +26,27 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 	const actor = item.actor;
 	if (!isCharacterActor(actor)) return { ok: true };
 
+	// An item that asks for two player-chosen spends from one pool cannot be
+	// honoured as written, so the use is refused rather than silently spending
+	// for only one of them. See findConflictingVariablePools.
+	const [conflict] = findConflictingVariablePools(actor, ruleBackedItem);
+	if (conflict) {
+		return {
+			ok: false,
+			failure: {
+				code: 'conflictingConsumers',
+				poolIdentifier: conflict.poolIdentifier,
+				poolLabel: conflict.poolIdentifier,
+				required: conflict.cost,
+				available: 0,
+			},
+		};
+	}
+
 	const pools = buildEffectiveChargePoolMap(actor);
-	const consumers = getChargeConsumers(actor, ruleBackedItem);
+	// Variable consumers are validated too, against their minimum: an item whose
+	// only cost is "spend any amount" still has nothing to do on an empty pool.
+	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true });
 	for (const consumer of consumers) {
 		const pool = pools[consumer.poolId];
 		if (!pool) {
