@@ -1,12 +1,9 @@
+import { toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
-// Both system namespaces the id can be stored under. `dev-rebrand.mjs` only
-// rewrites `packs/**/*.json`, so on the dev build an actor's copy stores
-// `Compendium.nimble-dev.…`. See AGENTS.md, "Audited exceptions".
-const LAY_ON_HANDS_SOURCE_IDS = new Set([
-	'Compendium.nimble.nimble-class-features.Item.Ddm1A7P01CcmPrim',
-	'Compendium.nimble-dev.nimble-class-features.Item.Ddm1A7P01CcmPrim',
-]);
+const COMPENDIUM_PREFIX = 'Compendium.';
+
+const LAY_ON_HANDS_SOURCE_ID = 'Compendium.nimble.nimble-class-features.Item.Ddm1A7P01CcmPrim';
 const LAY_ON_HANDS_NAME = 'Lay on Hands';
 
 // The flat formula the healing node carried before the pool existed.
@@ -73,9 +70,9 @@ class Migration048LayOnHandsPool extends MigrationBase {
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
 
-		const sourceId = this.getSourceId(source);
-		const isLayOnHands = sourceId?.startsWith('Compendium.')
-			? LAY_ON_HANDS_SOURCE_IDS.has(sourceId)
+		const sourceId = toSnapshotId(this.getSourceId(source));
+		const isLayOnHands = sourceId?.startsWith(COMPENDIUM_PREFIX)
+			? sourceId === LAY_ON_HANDS_SOURCE_ID
 			: source.name === LAY_ON_HANDS_NAME;
 		if (!isLayOnHands) return;
 

@@ -48,6 +48,21 @@ describe('Migration048LayOnHandsPool', () => {
 		expect(feature.system.rules).toHaveLength(2);
 	});
 
+	it('matches a copy stored under the dev build namespace', async () => {
+		// `dev-rebrand.mjs` rewrites packs but not src, so an actor's copy on the
+		// dev build stores `Compendium.nimble-dev.…` for the same document.
+		const feature = createFeature({
+			_stats: {
+				compendiumSource: 'Compendium.nimble-dev.nimble-class-features.Item.Ddm1A7P01CcmPrim',
+			},
+		});
+
+		await new Migration048LayOnHandsPool().updateItem!(feature);
+
+		expect(feature.system.rules).toHaveLength(2);
+		expect(feature.system.activation.effects[0].formula).toBe('@spent');
+	});
+
 	it('leaves a feature from another compendium alone', async () => {
 		const feature = createFeature({
 			_stats: { compendiumSource: 'Compendium.homebrew.features.Item.abcdefghijklmnop' },
