@@ -1984,6 +1984,7 @@
 				"toggleOn": "Activate {name}",
 				"toggleOff": "Deactivate {name}",
 				"mana": "{cost} Mana",
+				"poolCost": "{cost} {pool}",
 				"thrown": "Thrown: {distance}",
 				"baseEffect": "Effect",
 				"higherLevelEffect": "At Higher Levels",

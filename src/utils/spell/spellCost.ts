@@ -175,7 +175,12 @@ export function synthesizePinnedUpcast(
  */
 export function formatSpellCostLabel(cost: ResolvedSpellCost): string | null {
 	if (cost.type === 'none') return null;
-	if (cost.type === 'pool') return `${cost.amount} ${cost.poolLabel}`;
+	if (cost.type === 'pool') {
+		return localize('NIMBLE.ui.heroicActions.poolCost', {
+			cost: String(cost.amount),
+			pool: cost.poolLabel,
+		});
+	}
 	if (cost.amount <= 0) return null;
 	return localize('NIMBLE.ui.heroicActions.mana', { cost: String(cost.amount) });
 }

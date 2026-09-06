@@ -557,6 +557,29 @@ describe('formatSpellCostLabel', () => {
 		).toBe('1 Pilfered Power');
 	});
 
+	it('renders the pool cost through the language file', () => {
+		const format = vi.spyOn(game.i18n, 'format').mockReturnValue('Pilfered Power x1');
+
+		try {
+			expect(
+				formatSpellCostLabel({
+					type: 'pool',
+					poolIdentifier: 'pilfered-power',
+					poolLabel: 'Pilfered Power',
+					amount: 1,
+					overdraftConsequence: '',
+					overdraftResolvedAtTable: false,
+				}),
+			).toBe('Pilfered Power x1');
+			expect(format).toHaveBeenCalledWith('NIMBLE.ui.heroicActions.poolCost', {
+				cost: '1',
+				pool: 'Pilfered Power',
+			});
+		} finally {
+			format.mockRestore();
+		}
+	});
+
 	it('renders nothing for a free cast', () => {
 		expect(formatSpellCostLabel({ type: 'none' })).toBeNull();
 		expect(formatSpellCostLabel({ type: 'mana', amount: 0 })).toBeNull();
