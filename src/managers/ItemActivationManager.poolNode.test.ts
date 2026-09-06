@@ -375,6 +375,10 @@ describe('ItemActivationManager: deferred dialog spends', () => {
 	const realDialog = testDependencies.ItemActivationConfigDialog;
 	const realSpellDialog = testDependencies.SpellUpcastDialog;
 
+	beforeEach(() => {
+		mockAdjustPool.mockClear();
+	});
+
 	afterEach(() => {
 		testDependencies.ItemActivationConfigDialog = realDialog;
 		testDependencies.SpellUpcastDialog = realSpellDialog;
