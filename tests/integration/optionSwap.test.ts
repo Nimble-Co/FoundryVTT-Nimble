@@ -356,6 +356,59 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		expect(card?.querySelector('.option-changes__added')?.textContent).toBe('Sweeping Strike');
 	}, 90_000);
 
+	test('a held die is not offered again, so a second copy cannot be added by swapping', async () => {
+		const dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+		const pool = poolSection(dialog, 'Fit for Any Battlefield');
+		await unfold(pool);
+
+		// Picks are identified by source, so the one copy still held stands for the die and
+		// the pool has no second card to offer.
+		expect(pool.querySelector('[aria-label="Deselect +1 Max Combat Die"]')).not.toBeNull();
+		expect(pool.querySelector('[aria-label="Select +1 Max Combat Die"]')).toBeNull();
+		expect(pool.querySelectorAll('[aria-label*="+1 Max Combat Die"]')).toHaveLength(1);
+
+		await closeWithoutResting(dialog);
+	}, 60_000);
+
+	test('once no die is held it is offered again and can be taken back for a tactic', async () => {
+		// Trade the last die away first.
+		let dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+		let pool = poolSection(dialog, 'Fit for Any Battlefield');
+		await unfold(pool);
+		await clickCard(pool, 'Deselect +1 Max Combat Die');
+		await clickCard(pool, 'Select Commanding Presence');
+		await confirmRest(commander, dialog, 'safeRest');
+		await waitFor(
+			() => ownedNamed(commander, '+1 Max Combat Die').length === 0,
+			'the last die to go',
+		);
+		expect(dieBonus()).toBe(0);
+
+		// Now the die sits in the available list like any other member of the pool.
+		dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+		pool = poolSection(dialog, 'Fit for Any Battlefield');
+		await unfold(pool);
+		expect(pool.querySelector('[aria-label="Deselect +1 Max Combat Die"]')).toBeNull();
+		await clickCard(pool, 'Deselect Commanding Presence');
+		await clickCard(pool, 'Select +1 Max Combat Die');
+		const message = await confirmRest(commander, dialog, 'safeRest');
+
+		await waitFor(
+			() => ownedNamed(commander, '+1 Max Combat Die').length === 1,
+			'the die to be granted',
+		);
+		expect(ownedNamed(commander, 'Commanding Presence')).toHaveLength(0);
+		expect(dieBonus()).toBe(1);
+		const die = ownedNamed(commander, '+1 Max Combat Die')[0]!;
+		expect(historyIds(commander)).toContain(die.id);
+		expect(message?.system.optionChanges).toEqual([
+			expect.objectContaining({ removed: ['Commanding Presence'], added: ['+1 Max Combat Die'] }),
+		]);
+	}, 120_000);
+
 	test('levelling down removes whatever the vacated level now records', async () => {
 		const granted = ownedNamed(commander, 'Sweeping Strike')[0]!;
 		const vacatedLevel = commander.system.levelUpHistory.find((entry) =>
