@@ -5,7 +5,11 @@ import { flattenActivationEffects } from '#utils/activationEffects.js';
 import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
-import { formatSpellCostLabel, resolveSpellCost } from '#utils/spell/spellCost.js';
+import {
+	formatSpellCostLabel,
+	resolvePinnedCastTier,
+	resolveSpellCost,
+} from '#utils/spell/spellCost.js';
 
 /**
  * Extracts display data from a spell's system data for rendering in the card.
@@ -69,7 +73,9 @@ function extractDisplayData(
 
 	// The cost as this character would pay it: the tier in mana by default, or
 	// the flat pool cost their class declares.
-	const costLabel = formatSpellCostLabel(resolveSpellCost(actor, spell));
+	const costLabel = formatSpellCostLabel(
+		resolveSpellCost(actor, spell, { castTier: resolvePinnedCastTier(actor, spell) ?? undefined }),
+	);
 
 	// Damage/healing effect
 	let effect: { formula: string; isHealing: boolean } | null = null;

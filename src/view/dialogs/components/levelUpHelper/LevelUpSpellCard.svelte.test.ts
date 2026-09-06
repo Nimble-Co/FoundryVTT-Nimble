@@ -38,6 +38,22 @@ describe('createLevelUpSpellCardState', () => {
 		expect(getByTestId('cost-label').textContent).toBe('3 Mana');
 	});
 
+	it('labels the cost at the tier a pinning class would actually cast at', async () => {
+		restore = stubSpellDocument('Item.test-spell', { tier: 1 });
+		const actor = {
+			items: {
+				contents: [{ type: 'class', system: { spellcasting: { castAtHighestTier: true } } }],
+			},
+			system: { resources: { highestUnlockedSpellTier: 3 } },
+		};
+		const { getByTestId } = render(LevelUpSpellCardStateHarness, {
+			props: { spell: createIndexEntry(1), actor },
+		});
+
+		await waitFor(() => expect(getByTestId('loaded').textContent).toBe('true'));
+		expect(getByTestId('cost-label').textContent).toBe('3 Mana');
+	});
+
 	it('shows no cost for a cantrip', async () => {
 		stubSpellDocument('Item.test-spell', { tier: 0 });
 		const { getByTestId } = render(LevelUpSpellCardStateHarness, {

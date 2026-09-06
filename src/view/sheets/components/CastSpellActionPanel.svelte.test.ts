@@ -80,6 +80,21 @@ describe('createSpellPanelState', () => {
 
 			expect(state.getSpellCostLabel({ system: { tier: 0 } } as unknown as Item)).toBeNull();
 		});
+
+		it('shows the cost at the tier a pinning class would actually cast at', () => {
+			const pinningClass = { type: 'class', system: { spellcasting: { castAtHighestTier: true } } };
+			const state = createSpellPanelState(
+				() =>
+					({
+						reactive: { items: [] },
+						items: { contents: [pinningClass] },
+						system: { resources: { highestUnlockedSpellTier: 3 } },
+					}) as unknown as NimbleCharacter,
+				() => async () => {},
+			);
+
+			expect(state.getSpellCostLabel({ system: { tier: 1 } } as unknown as Item)).toBe('3 Mana');
+		});
 	});
 });
 

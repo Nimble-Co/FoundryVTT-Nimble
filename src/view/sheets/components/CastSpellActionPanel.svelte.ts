@@ -5,7 +5,11 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
-import { formatSpellCostLabel, resolveSpellCost } from '../../../utils/spell/spellCost.js';
+import {
+	formatSpellCostLabel,
+	resolvePinnedCastTier,
+	resolveSpellCost,
+} from '../../../utils/spell/spellCost.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
 
@@ -98,10 +102,11 @@ export function createSpellPanelState(
 	 * declares. Returns null when the cast is free, so the indicator is omitted.
 	 */
 	function getSpellCostLabel(spell: Item): string | null {
-		const cost = resolveSpellCost(
-			getActor() as unknown as SpellCostActorLike,
-			spell as unknown as SpellLike,
-		);
+		const actor = getActor() as unknown as SpellCostActorLike;
+		const spellLike = spell as unknown as SpellLike;
+		const cost = resolveSpellCost(actor, spellLike, {
+			castTier: resolvePinnedCastTier(actor, spellLike) ?? undefined,
+		});
 		return formatSpellCostLabel(cost);
 	}
 
