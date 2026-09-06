@@ -14,6 +14,17 @@ export interface ResolvedOptionSwapOffer extends OptionSwapOffer {
 	pools: ResolvedSwappableOptionPool[];
 }
 
+/** Everything the swap section has picked so far, handed over whole on every change. */
+export interface OptionSwapChange {
+	/** Pool key to the uuids the player wants to hold from that pool. */
+	selections: Map<string, string[]>;
+	/**
+	 * Skill key to its new point total, for the skills a move changed. Empty until a move is
+	 * balanced — an unplaced point is not a move.
+	 */
+	skillPoints: Map<string, number>;
+}
+
 /** What a rest dialog hands back when the player changed something. */
 export interface OptionSwapSubmitData {
 	pools: ResolvedSwappableOptionPool[];

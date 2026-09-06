@@ -1,8 +1,11 @@
 import { untrack } from 'svelte';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { OptionSwapChange } from '#types/components/OptionSwapSection.d.ts';
-import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
+import type {
+	OptionSwapChange,
+	ResolvedOptionSwapOffer,
+	ResolvedSwappableOptionPool,
+} from '#types/optionSwap.d.ts';
 import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
 import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.js';

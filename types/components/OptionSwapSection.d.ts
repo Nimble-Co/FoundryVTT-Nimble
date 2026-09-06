@@ -1,16 +1,5 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
-import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
-
-/** Everything the section has picked so far, handed over whole on every change. */
-export interface OptionSwapChange {
-	/** Pool key to the uuids the player wants to hold from that pool. */
-	selections: Map<string, string[]>;
-	/**
-	 * Skill key to its new point total, for the skills a move changed. Empty until a move is
-	 * balanced — an unplaced point is not a move.
-	 */
-	skillPoints: Map<string, number>;
-}
+import type { OptionSwapChange, ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
 
 export interface OptionSwapSectionProps {
 	/** The character whose picks and skill points the section edits. */
