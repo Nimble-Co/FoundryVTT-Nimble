@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import {
 	applyOverdraftConsequence,
+	createSpellCostResolver,
 	formatSpellCostLabel,
 	resolvePinnedCastTier,
 	resolveSpellCost,
@@ -228,6 +229,32 @@ describe('resolveSpellCost', () => {
 	it('labels the cost with the pool label', () => {
 		const actor = createMockActor({ items: [createPoolClass({})] });
 		expect(resolveSpellCost(actor, createSpell(1))).toMatchObject({ poolLabel: 'Stolen Power' });
+	});
+});
+
+describe('createSpellCostResolver', () => {
+	it('evaluates the cost formula once for a whole spell list', () => {
+		const actor = createMockActor({ items: [createPoolClass({ amount: '1 + 1' })] });
+		const getRollData = vi.fn(() => ({}));
+		actor.getRollData = getRollData;
+
+		createSpellCostResolver(actor)(createSpell(1));
+		const callsForOneSpell = getRollData.mock.calls.length;
+
+		getRollData.mockClear();
+		const resolveCost = createSpellCostResolver(actor);
+		const costs = [1, 2, 3].map((tier) => resolveCost(createSpell(tier)));
+
+		expect(costs.map((cost) => cost.type)).toEqual(['pool', 'pool', 'pool']);
+		expect(getRollData).toHaveBeenCalledTimes(callsForOneSpell);
+	});
+
+	it('resolves the same cost the one-shot resolver does', () => {
+		const actor = createMockActor({ items: [createPoolClass({ amount: '2' })] });
+
+		expect(createSpellCostResolver(actor)(createSpell(2))).toEqual(
+			resolveSpellCost(actor, createSpell(2)),
+		);
 	});
 });
 

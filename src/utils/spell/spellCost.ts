@@ -10,6 +10,7 @@ import {
 	findChargePoolByIdentifier,
 	resolveFormulaToInteger,
 } from '../chargePool/helpers.js';
+import type { ChargePoolMap } from '../chargePool/types.js';
 import localize from '../localize.js';
 import { asChargePoolActor } from './asChargePoolActor.js';
 
@@ -80,6 +81,57 @@ function getClassSpellcasting(
 	return declared[0];
 }
 
+type SpellCostOptions = { castTier?: number };
+
+/**
+ * Builds a cost resolver bound to one actor. The charge-pool map and each
+ * evaluated amount formula are computed once and shared across every spell
+ * the resolver is asked about, so labelling a whole spell list costs the same
+ * as labelling one spell. Build a fresh resolver per render; it does not
+ * observe later changes to the actor.
+ */
+export function createSpellCostResolver(
+	actor: SpellCostActorLike,
+): (spell: SpellLike, options?: SpellCostOptions) => ResolvedSpellCost {
+	let pools: ChargePoolMap | null = null;
+	const amountsByFormula = new Map<string, number>();
+
+	return (spell, { castTier }: SpellCostOptions = {}) => {
+		const tier = spell?.system?.tier ?? 0;
+		if (tier <= 0) return { type: 'none' };
+
+		const spellcasting = getClassSpellcasting(actor, spell);
+		const poolIdentifier = spellcasting?.cost?.poolIdentifier?.trim() ?? '';
+		if (poolIdentifier.length === 0) return { type: 'mana', amount: castTier ?? tier };
+
+		const formula = spellcasting?.cost?.amount ?? '1';
+		let amount = amountsByFormula.get(formula);
+		if (amount === undefined) {
+			amount = Math.max(0, resolveFormulaToInteger(asChargePoolActor(actor), formula));
+			amountsByFormula.set(formula, amount);
+		}
+		pools ??= buildEffectiveChargePoolMap(asChargePoolActor(actor));
+		const poolEntry = findChargePoolByIdentifier(pools, poolIdentifier);
+
+		// Past the declared level bound the consequence is not applied: the rule
+		// that replaces it is not automated, so the overdraw is still offered and
+		// its cost is settled at the table.
+		const overdraftMaxLevel = spellcasting?.cost?.overdraftMaxLevel ?? null;
+		const characterLevel = actor?.levels?.character ?? 0;
+		const overdraftResolvedAtTable =
+			typeof overdraftMaxLevel === 'number' && characterLevel > overdraftMaxLevel;
+
+		return {
+			type: 'pool',
+			poolIdentifier,
+			poolLabel: poolEntry?.pool.label ?? poolIdentifier,
+			amount,
+			overdraftConsequence: spellcasting?.cost?.overdraftConsequence ?? '',
+			overdraftResolvedAtTable,
+		};
+	};
+}
+
 /**
  * Resolves what a cast of the given spell costs the given actor: nothing for
  * cantrips, the cast tier in mana by default, or the flat pool cost the
@@ -90,38 +142,9 @@ function getClassSpellcasting(
 export function resolveSpellCost(
 	actor: SpellCostActorLike,
 	spell: SpellLike,
-	{ castTier }: { castTier?: number } = {},
+	options: SpellCostOptions = {},
 ): ResolvedSpellCost {
-	const tier = spell?.system?.tier ?? 0;
-	if (tier <= 0) return { type: 'none' };
-
-	const spellcasting = getClassSpellcasting(actor, spell);
-	const poolIdentifier = spellcasting?.cost?.poolIdentifier?.trim() ?? '';
-	if (poolIdentifier.length === 0) return { type: 'mana', amount: castTier ?? tier };
-
-	const amount = Math.max(
-		0,
-		resolveFormulaToInteger(asChargePoolActor(actor), spellcasting?.cost?.amount ?? '1'),
-	);
-	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
-	const poolEntry = findChargePoolByIdentifier(pools, poolIdentifier);
-
-	// Past the declared level bound the consequence is not applied: the rule
-	// that replaces it is not automated, so the overdraw is still offered and
-	// its cost is settled at the table.
-	const overdraftMaxLevel = spellcasting?.cost?.overdraftMaxLevel ?? null;
-	const characterLevel = actor?.levels?.character ?? 0;
-	const overdraftResolvedAtTable =
-		typeof overdraftMaxLevel === 'number' && characterLevel > overdraftMaxLevel;
-
-	return {
-		type: 'pool',
-		poolIdentifier,
-		poolLabel: poolEntry?.pool.label ?? poolIdentifier,
-		amount,
-		overdraftConsequence: spellcasting?.cost?.overdraftConsequence ?? '',
-		overdraftResolvedAtTable,
-	};
+	return createSpellCostResolver(actor)(spell, options);
 }
 
 /**

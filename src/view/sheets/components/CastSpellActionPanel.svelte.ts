@@ -6,6 +6,7 @@ import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 import {
+	createSpellCostResolver,
 	formatSpellCostLabel,
 	resolvePinnedCastTier,
 	resolveSpellCost,
@@ -96,12 +97,30 @@ export function createSpellPanelState(
 		return null;
 	}
 
+	// One resolver per spell list, so the pool map and the cost formula are
+	// evaluated once per render rather than once per spell.
+	const spellCostLabels = $derived.by(() => {
+		const actor = getActor() as unknown as SpellCostActorLike;
+		const resolveCost = createSpellCostResolver(actor);
+		return new Map<unknown, string | null>(
+			spells.map((spell) => {
+				const spellLike = spell as unknown as SpellLike;
+				const cost = resolveCost(spellLike, {
+					castTier: resolvePinnedCastTier(actor, spellLike) ?? undefined,
+				});
+				return [spell, formatSpellCostLabel(cost)];
+			}),
+		);
+	});
+
 	/**
 	 * The cost of casting the spell as the actor would actually pay it: the
 	 * spell's tier in mana by default, or the flat pool cost the actor's class
 	 * declares. Returns null when the cast is free, so the indicator is omitted.
 	 */
 	function getSpellCostLabel(spell: Item): string | null {
+		if (spellCostLabels.has(spell)) return spellCostLabels.get(spell) ?? null;
+
 		const actor = getActor() as unknown as SpellCostActorLike;
 		const spellLike = spell as unknown as SpellLike;
 		const cost = resolveSpellCost(actor, spellLike, {

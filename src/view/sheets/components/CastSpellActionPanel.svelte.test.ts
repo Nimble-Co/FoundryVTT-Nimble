@@ -81,6 +81,34 @@ describe('createSpellPanelState', () => {
 			expect(state.getSpellCostLabel({ system: { tier: 0 } } as unknown as Item)).toBeNull();
 		});
 
+		it('evaluates a pool cost formula once for the whole spell list', () => {
+			const poolClass = {
+				type: 'class',
+				flags: {},
+				system: { spellcasting: { cost: { poolIdentifier: 'pilfered-power', amount: '1 + 1' } } },
+			};
+			const spells = [1, 2, 3].map((tier) => ({
+				type: 'spell',
+				name: `Spell ${tier}`,
+				system: { tier },
+			}));
+			const getRollData = vi.fn(() => ({}));
+			const state = createSpellPanelState(
+				() =>
+					({
+						reactive: { items: spells },
+						items: { contents: [poolClass] },
+						getRollData,
+					}) as unknown as NimbleCharacter,
+				() => async () => {},
+			);
+
+			const labels = state.spells.map((spell) => state.getSpellCostLabel(spell as unknown as Item));
+
+			expect(labels).toEqual(['2 pilfered-power', '2 pilfered-power', '2 pilfered-power']);
+			expect(getRollData).toHaveBeenCalledTimes(1);
+		});
+
 		it('shows the cost at the tier a pinning class would actually cast at', () => {
 			const pinningClass = { type: 'class', system: { spellcasting: { castAtHighestTier: true } } };
 			const state = createSpellPanelState(
