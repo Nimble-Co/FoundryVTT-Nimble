@@ -1422,6 +1422,19 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			? ((await this.createEmbeddedDocuments('Item', featureSources)) ?? [])
 			: [];
 
+		// A create that drops an invalid entry returns fewer documents than it was given, and
+		// the history below pairs them off by position, so a short result would file the
+		// survivors under the wrong levels. Nothing has been removed yet, so backing out here
+		// only costs the grants.
+		if (created.length !== featureSources.length) {
+			console.error(
+				`Nimble | option swap granted ${created.length} of ${featureSources.length} options, undoing it`,
+			);
+			await this.#undoOptionSwap(created, []);
+			ui.notifications?.error(localize('NIMBLE.optionSwap.swapFailed'));
+			return null;
+		}
+
 		const addedIdsByHistoryIndex = new Map<number, string[]>();
 		created.forEach((doc, position) => {
 			const id = (doc as unknown as { id: string | null }).id;
@@ -1448,6 +1461,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		try {
 			if (plan.deleteItemIds.length > 0) {
 				await this.deleteEmbeddedDocuments('Item', [...plan.deleteItemIds]);
+				// The history is about to stop naming these, so one left behind would become a
+				// pick no level accounts for and no later swap can reach.
+				const survivor = plan.deleteItemIds.find((itemId) => this.items.get(itemId));
+				if (survivor) throw new Error(`item ${survivor} outlived its deletion`);
 			}
 			await this.update(actorUpdates);
 		} catch (error) {
@@ -1923,16 +1940,33 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 
-		// Revert skills. Clamped at zero: a skill point moved away since the level up leaves
-		// less to take back than the level added, and a negative skill is not a state the
-		// rules have.
+		// Revert skills. Clamped at zero: a point moved to another skill since the level up
+		// leaves less to take back than the level added, and a negative skill is not a state
+		// the rules have. What is left over sits on whichever skill it was moved to, and only
+		// the table knows which point that was, so this reports the shortfall rather than
+		// taking a point from a skill of its own choosing.
+		const unreverted: string[] = [];
 		Object.entries(lastHistory.skillIncreases).forEach(([skill, change]) => {
 			if (change) {
 				const path = `system.skills.${skill}.points`;
 				const current = this.system.skills[skill].points;
 				actorUpdates[path] = Math.max(0, current - change);
+				const shortfall = change - Math.min(current, change);
+				if (shortfall > 0) {
+					unreverted.push(
+						`${localize(CONFIG.NIMBLE.skills[skill as keyof typeof CONFIG.NIMBLE.skills] ?? skill)} (${shortfall})`,
+					);
+				}
 			}
 		});
+
+		if (unreverted.length > 0) {
+			ui.notifications?.warn(
+				localize('NIMBLE.levelDownDialog.skillPointsMovedAway', {
+					skills: unreverted.join(', '),
+				}),
+			);
+		}
 
 		// Remove all subclasses if reverting from level 3
 		if (lastHistory.level <= 3) {

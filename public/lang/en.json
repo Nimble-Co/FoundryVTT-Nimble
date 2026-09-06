@@ -625,7 +625,8 @@
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
-			"levelUpInProgress": "Cannot revert level while a level up is in progress."
+			"levelUpInProgress": "Cannot revert level while a level up is in progress.",
+			"skillPointsMovedAway": "This level's skill points were moved to other skills, so they could not all be taken back: {skills}. Adjust the skills by hand."
 		},
 		"levelCorrectionDialog": {
 			"title": "Level Correction",
