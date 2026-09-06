@@ -117,26 +117,27 @@ describe('paySpellCost', () => {
 		expect(payment).toMatchObject({ paid: true, overdrawn: true, damage: 10 });
 	});
 
-	it('does not pay when the pool drains while the overdraw is being confirmed', async () => {
-		// The window this operation exists to close: the check passed, then an
-		// awaited confirmation let something else empty the pool.
+	it('pays without the consequence when the pool refills while the overdraw is confirmed', async () => {
+		// The window the re-check exists to close: the first check saw an empty
+		// pool, then the awaited confirmation let something else refill it. The
+		// cast is then an ordinary payment, not an overdraw.
 		setResourceSpendingAutomation(true);
-		const { actor, flags } = createActor(2);
+		const { actor, flags } = createActor(0);
 
-		const payment = await paySpellCost(actor, poolCost({ amount: 2 }), {
-			confirmOverdraft: () => true,
-		});
-		expect(payment.paid).toBe(true);
-
-		const second = await paySpellCost(actor, poolCost({ amount: 2 }), {
-			confirmOverdraft: async () => {
-				flags.nimble.chargePools['pilfered-power'].current = 0;
-				return true;
+		const payment = await paySpellCost(
+			actor,
+			poolCost({ overdraftConsequence: 'halfMaxHpDamage' }),
+			{
+				confirmOverdraft: async () => {
+					flags.nimble.chargePools['pilfered-power'].current = 3;
+					return true;
+				},
 			},
-		});
+		);
 
-		expect(second.paid).toBe(false);
-		expect(second.failure?.code).toBe('insufficientCharges');
+		expect(payment).toEqual({ paid: true });
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(flags.nimble.chargePools['pilfered-power'].current).toBe(2);
 	});
 
 	it('pays without touching anything when spending automation is off', async () => {
