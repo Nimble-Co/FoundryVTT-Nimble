@@ -28,21 +28,23 @@ describe('createLevelUpSpellCardState', () => {
 		vi.unstubAllGlobals();
 	});
 
-	it('reads a tiered spell as costing its tier in mana', async () => {
+	it('labels a tiered spell with its tier in mana', async () => {
 		stubSpellDocument('Item.test-spell', { tier: 3 });
 		const { getByTestId } = render(LevelUpSpellCardStateHarness, {
 			props: { spell: createIndexEntry(3) },
 		});
 
-		await waitFor(() => expect(getByTestId('mana-cost').textContent).toBe('3'));
+		await waitFor(() => expect(getByTestId('loaded').textContent).toBe('true'));
+		expect(getByTestId('cost-label').textContent).toBe('3 Mana');
 	});
 
-	it('reads a cantrip as free', async () => {
+	it('shows no cost for a cantrip', async () => {
 		stubSpellDocument('Item.test-spell', { tier: 0 });
 		const { getByTestId } = render(LevelUpSpellCardStateHarness, {
 			props: { spell: createIndexEntry(0) },
 		});
 
-		await waitFor(() => expect(getByTestId('mana-cost').textContent).toBe('0'));
+		await waitFor(() => expect(getByTestId('loaded').textContent).toBe('true'));
+		expect(getByTestId('cost-label').textContent).toBe('');
 	});
 });
