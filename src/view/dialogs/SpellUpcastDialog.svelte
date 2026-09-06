@@ -38,11 +38,12 @@
 	// mana neither bounds the slider nor blocks the cast.
 	const enforceManaCost = isResourceSpendingAutomationEnabled();
 
-	// Compute upcast constraints (safe for NPCs/Monsters that lack resources)
 	const baseMana = $derived(spell.tier);
 	const resources = $derived(actor?.system?.resources);
 	const currentMana = $derived(resources?.mana?.current ?? 0);
-	const maxTier = $derived(resources?.highestUnlockedSpellTier ?? 9);
+	// An actor with no resources node (an NPC or monster) has no tier ladder to
+	// climb, so it casts at the spell's own tier.
+	const maxTier = $derived(resources ? (resources.highestUnlockedSpellTier ?? 9) : spell.tier);
 	const maxMana = $derived(enforceManaCost ? Math.min(currentMana, maxTier) : maxTier);
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
