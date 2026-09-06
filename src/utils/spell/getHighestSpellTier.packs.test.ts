@@ -70,6 +70,7 @@ describe('getHighestSpellTier against authored pack ladders', () => {
 		[7, 3],
 		[9, 3],
 		[10, 4],
+		[12, 4],
 		[13, 5],
 		[16, 6],
 		[19, 7],
