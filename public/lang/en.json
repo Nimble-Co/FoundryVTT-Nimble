@@ -2288,6 +2288,7 @@
 			"takePointFrom": "Take a point from {skill}",
 			"givePointTo": "Give a point to {skill}",
 			"grantFailed": "One of the chosen options could not be found, so no options were changed.",
+			"swapFailed": "The options could not be changed. Your picks were put back as they were.",
 			"skillCannotGoBelowZero": "A skill cannot go below 0 points.",
 			"skillBonusCannotGoNegative": "A skill's bonus cannot go below +0.",
 			"skillAtMaximum": "The highest bonus a skill can have is +12.",

@@ -1409,12 +1409,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			historyIndexByCreatedIndex.push(grant.historyIndex);
 		}
 
-		// Delete first: a pick and its replacement can share a pool whose max is derived from
-		// the items held, and removing after granting would show a spike in between.
-		if (plan.deleteItemIds.length > 0) {
-			await this.deleteEmbeddedDocuments('Item', [...plan.deleteItemIds]);
-		}
+		// The dropped picks as they stand, so a failure part way through can put them back.
+		const removedSources = plan.deleteItemIds
+			.map((itemId) => this.items.get(itemId)?.toObject())
+			.filter((source): source is NonNullable<typeof source> => Boolean(source));
 
+		// Grant before removing. The two orders fail differently, and only one of them is
+		// recoverable by hand: granting first can leave the character holding one option too
+		// many, while removing first can leave them holding none. A pool maximum derived from
+		// the items held reads one too high in between, for the moment before the removal.
 		const created = featureSources.length
 			? ((await this.createEmbeddedDocuments('Item', featureSources)) ?? [])
 			: [];
@@ -1442,10 +1445,50 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			actorUpdates[`system.skills.${skill}.points`] = points;
 		}
 
-		await this.update(actorUpdates);
+		try {
+			if (plan.deleteItemIds.length > 0) {
+				await this.deleteEmbeddedDocuments('Item', [...plan.deleteItemIds]);
+			}
+			await this.update(actorUpdates);
+		} catch (error) {
+			console.error('Nimble | option swap failed part way through, undoing it', error);
+			await this.#undoOptionSwap(created, removedSources);
+			ui.notifications?.error(localize('NIMBLE.optionSwap.swapFailed'));
+			return null;
+		}
+
 		this.sheet?.render(true);
 
 		return plan;
+	}
+
+	/**
+	 * Puts the character back as they were after a swap failed mid-write.
+	 *
+	 * Each step is attempted on its own: a rollback that gives up on its first failure would
+	 * leave a worse state than the one it is repairing. The history is left alone, because it
+	 * is only written once both item writes have gone through.
+	 */
+	async #undoOptionSwap(
+		created: readonly unknown[],
+		removedSources: readonly Record<string, unknown>[],
+	): Promise<void> {
+		const createdIds = created
+			.map((doc) => (doc as { id?: string | null }).id)
+			.filter((id): id is string => Boolean(id) && Boolean(this.items.get(id as string)));
+
+		if (createdIds.length > 0) {
+			await this.deleteEmbeddedDocuments('Item', createdIds).catch((error) =>
+				console.error('Nimble | could not remove the granted options again', error),
+			);
+		}
+
+		const missing = removedSources.filter((source) => !this.items.get(source._id as string));
+		if (missing.length > 0) {
+			await this.createEmbeddedDocuments('Item', missing as unknown as Item.CreateData[], {
+				keepId: true,
+			}).catch((error) => console.error('Nimble | could not restore the removed options', error));
+		}
 	}
 
 	/**
