@@ -76,7 +76,9 @@ export function getHighestSpellTier(actor: SpellTierActorLike): number {
 
 			const tiers = Array.isArray(rule.tiers) ? rule.tiers : [];
 			for (const tier of tiers) {
-				if (typeof tier === 'number' && tier > highestTier) highestTier = tier;
+				// Spell tiers run 0 to 9; anything else is bad authoring, not a tier.
+				if (!Number.isInteger(tier) || tier < 0 || tier > 9) continue;
+				if (tier > highestTier) highestTier = tier;
 			}
 		}
 	}

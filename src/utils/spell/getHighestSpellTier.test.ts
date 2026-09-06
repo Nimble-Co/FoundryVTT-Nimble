@@ -162,6 +162,12 @@ describe('getHighestSpellTier', () => {
 		expect(getHighestSpellTier(createActor(4, [feature]))).toBe(2);
 	});
 
+	it('ignores a tier outside the 0 to 9 range instead of unlocking it', () => {
+		const feature = createItem([createGrantRule({ tiers: [3, 10], minLevel: 4 })]);
+
+		expect(getHighestSpellTier(createActor(4, [feature]))).toBe(3);
+	});
+
 	it('reads the raw predicate from a prepared Predicate instance', () => {
 		const feature = createItem([
 			createGrantRule({ tiers: [1], predicate: { _source: { level: { min: 2 } } } }),
