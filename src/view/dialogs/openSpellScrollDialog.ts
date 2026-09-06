@@ -61,16 +61,6 @@ function highestUnlockedSpellTier(actor: ScrollDialogActor): number {
 }
 
 /**
- * Whether the actor can cast tiered spells at all. Holding mana is not the
- * test: a class may pay for its spells from a pool instead, and would hold
- * none. An unlocked tier above zero means a class or subclass granted them
- * tiered spells, which is what makes a spell on the list castable.
- */
-function isSpellcaster(actor: ScrollDialogActor): boolean {
-	return highestUnlockedSpellTier(actor) > 0;
-}
-
-/**
  * The spells of `tier` that may be inscribed, built from the pack indexes alone.
  *
  * A collapsed row needs the name, image, school and action cost, all of which the
@@ -131,7 +121,6 @@ export default async function openSpellScrollDialog(
 						SPELL_SCROLL_PRICE_BY_TIER[options.spell.system?.tier ?? 0] ??
 						SPELL_SCROLL_PRICE_BY_TIER[0],
 					highestUnlockedSpellTier: highestUnlockedSpellTier(options.actor),
-					isSpellcaster: isSpellcaster(options.actor),
 					knowsSchool: knowsSpellSchool(options.actor, options.spell.system?.school ?? ''),
 				}
 			: {

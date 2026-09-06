@@ -51,7 +51,6 @@ export interface SpellScrollDialogProps {
 	scrollPrice?: number;
 	/** 0 when the actor has no spellcasting. */
 	highestUnlockedSpellTier?: number;
-	isSpellcaster?: boolean;
 	knowsSchool?: boolean;
 	/** Picker mode: the spells of the blank's tier that may be inscribed. */
 	candidates?: SpellScrollCandidate[];
