@@ -69,16 +69,35 @@ describe('createSpellPanelState', () => {
 	});
 
 	describe('getSpellCostLabel', () => {
-		it('costs a tiered spell its tier in mana when no class declares another cost', () => {
-			const state = createPanelState();
+		function createListedSpell(tier: number) {
+			return { type: 'spell', name: `Tier ${tier} Spell`, system: { tier } };
+		}
 
-			expect(state.getSpellCostLabel({ system: { tier: 3 } } as unknown as Item)).toBe('3 Mana');
+		function createPanelStateListing(spells: object[], actor: Record<string, unknown> = {}) {
+			return createSpellPanelState(
+				() => ({ reactive: { items: spells }, ...actor }) as unknown as NimbleCharacter,
+				() => async () => {},
+			);
+		}
+
+		it('costs a tiered spell its tier in mana when no class declares another cost', () => {
+			const state = createPanelStateListing([createListedSpell(3)]);
+
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBe('3 Mana');
 		});
 
 		it('shows no cost for a cantrip', () => {
-			const state = createPanelState();
+			const state = createPanelStateListing([createListedSpell(0)]);
 
-			expect(state.getSpellCostLabel({ system: { tier: 0 } } as unknown as Item)).toBeNull();
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBeNull();
+		});
+
+		it('refuses a spell the panel does not list', () => {
+			const state = createPanelStateListing([]);
+
+			expect(() =>
+				state.getSpellCostLabel({ name: 'Stray', system: { tier: 1 } } as unknown as Item),
+			).toThrow('Stray');
 		});
 
 		it('evaluates a pool cost formula once for the whole spell list', () => {
@@ -111,17 +130,12 @@ describe('createSpellPanelState', () => {
 
 		it('shows the cost at the tier a pinning class would actually cast at', () => {
 			const pinningClass = { type: 'class', system: { spellcasting: { castAtHighestTier: true } } };
-			const state = createSpellPanelState(
-				() =>
-					({
-						reactive: { items: [] },
-						items: { contents: [pinningClass] },
-						system: { resources: { highestUnlockedSpellTier: 3 } },
-					}) as unknown as NimbleCharacter,
-				() => async () => {},
-			);
+			const state = createPanelStateListing([createListedSpell(1)], {
+				items: { contents: [pinningClass] },
+				system: { resources: { highestUnlockedSpellTier: 3 } },
+			});
 
-			expect(state.getSpellCostLabel({ system: { tier: 1 } } as unknown as Item)).toBe('3 Mana');
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBe('3 Mana');
 		});
 	});
 });

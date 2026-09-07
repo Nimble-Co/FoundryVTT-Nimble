@@ -9,7 +9,6 @@ import {
 	createSpellCostResolver,
 	formatSpellCostLabel,
 	resolvePinnedCastTier,
-	resolveSpellCost,
 } from '../../../utils/spell/spellCost.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
@@ -117,16 +116,13 @@ export function createSpellPanelState(
 	 * The cost of casting the spell as the actor would actually pay it: the
 	 * spell's tier in mana by default, or the flat pool cost the actor's class
 	 * declares. Returns null when the cast is free, so the indicator is omitted.
+	 * Only spells in this panel's list have a label.
 	 */
 	function getSpellCostLabel(spell: Item): string | null {
-		if (spellCostLabels.has(spell)) return spellCostLabels.get(spell) ?? null;
-
-		const actor = getActor() as unknown as SpellCostActorLike;
-		const spellLike = spell as unknown as SpellLike;
-		const cost = resolveSpellCost(actor, spellLike, {
-			castTier: resolvePinnedCastTier(actor, spellLike) ?? undefined,
-		});
-		return formatSpellCostLabel(cost);
+		if (!spellCostLabels.has(spell)) {
+			throw new Error(`Spell cost requested for a spell outside the panel: ${spell.name}`);
+		}
+		return spellCostLabels.get(spell) ?? null;
 	}
 
 	function getSpellMetadata(spell: Item): string | null {
