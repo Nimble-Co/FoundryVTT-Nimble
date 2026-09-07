@@ -273,7 +273,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Prepare highest unlocked spell tier. A stored number is a manual
 		// override; a stored null means derive. Reading the override from the
-		// source keeps the derivation live — assigning onto the prepared value
+		// source keeps the derivation live. Assigning onto the prepared value
 		// and re-checking it would freeze the first computed number in place.
 		const spellTierOverride = (
 			this.system._source as { resources?: { highestUnlockedSpellTier?: number | null } }
@@ -532,8 +532,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	// Derived from the spell grants on the character's class, subclass, and
-	// feature items. A character with no eligible tiered grant — whatever
-	// resource they hold — has no unlocked tier and is not a caster.
+	// feature items. A character with no eligible tiered grant, whatever
+	// resource they hold, has no unlocked tier and is not a caster.
 	_prepareHighestUnlockedSpellTier(_: NimbleCharacterData): number {
 		return getHighestSpellTier(this);
 	}
