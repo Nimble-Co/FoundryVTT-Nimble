@@ -205,7 +205,7 @@ class ItemActivationManager {
 			// so a macro cannot cast above the caster's ladder either.
 			if (this.pinnedCastTier !== null && exceedsUnlockedSpellTier(this.actor, this.#item)) {
 				ui.notifications?.warn(
-					localize('NIMBLE.spells.spellUpcastDialog.warnings.aboveUnlockedTier', {
+					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
 						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
 					}),
 				);
