@@ -2049,7 +2049,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('lets an actor with no tier ladder cast a tiered spell at its own tier', async () => {
-			mockActor.type = 'npc';
+			expect(mockActor.system.resources).toBeUndefined();
 			mockItem.type = 'spell';
 			mockItem.system.tier = 3;
 			mockItem.system.scaling = { mode: 'none' };
