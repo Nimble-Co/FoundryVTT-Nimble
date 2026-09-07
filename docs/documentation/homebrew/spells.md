@@ -89,6 +89,7 @@ Casting a spell opens the cast window. It contains the roll mode selector, situa
 
 - an **Upcast** heading with a **mana slider** running from the spell's base cost up to the caster's highest unlocked spell tier. While the **Resource Spending** automation setting is on (see [Settings](../gm/settings.md)), the slider is also capped by the caster's current mana. The caster simply drags it to the total mana they want to spend, and the **Upcast Level** readout shows how many steps that buys;
 - for a class that casts at its highest tier, no slider at all. The window states the tier the spell will be cast at and what it costs;
+- for a class that pays with a charge pool, no slider either, unless it also casts at its highest tier. The pool cost is the same at every tier, so it buys no upcast steps and the spell casts at its own tier;
 - for Upcast Choice spells, a **Choose Enhancement** list of your labeled options;
 - an **Applied Effect** preview listing exactly what the chosen upcast adds ("+2d8 fire damage").
 

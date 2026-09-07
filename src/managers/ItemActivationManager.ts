@@ -229,12 +229,14 @@ class ItemActivationManager {
 			const actorSystem = this.actor!.system as any;
 			// Mana affordability only applies when mana is what the cast
 			// costs; a class-declared pool cost is validated at spend time.
-			const enforceManaCost =
-				isResourceSpendingAutomationEnabled() && this.spellCost?.type !== 'pool';
+			const flatCost = this.spellCost?.type === 'pool';
+			const enforceManaCost = isResourceSpendingAutomationEnabled() && !flatCost;
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
 				resources: actorSystem.resources,
 				enforceManaCost,
+				flatCost,
+				pinnedCastTier: this.pinnedCastTier,
 			});
 			const context = {
 				spell: {

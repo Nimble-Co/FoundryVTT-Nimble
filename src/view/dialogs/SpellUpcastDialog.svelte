@@ -47,11 +47,15 @@
 	const isPoolCost = $derived(spellCost?.type === 'pool');
 
 	const baseMana = $derived(spell.tier);
+	// A pool cost is the same at every tier, so it buys no upcast steps unless
+	// the class pins the tier.
 	const bounds = $derived(
 		computeUpcastBounds({
 			spellTier: spell.tier,
 			resources: actor?.system?.resources,
 			enforceManaCost: enforceManaCost && !isPoolCost,
+			flatCost: isPoolCost,
+			pinnedCastTier,
 		}),
 	);
 	const currentMana = $derived(bounds.currentMana);

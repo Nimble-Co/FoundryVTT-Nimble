@@ -2061,6 +2061,43 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
 			});
 
+			it('refuses an upcast bought with a flat pool cost when no class pins the tier', async () => {
+				const poolClass = {
+					type: 'class',
+					name: 'Pool Class',
+					actor: mockActor,
+					flags: {},
+					system: {
+						activation: { effects: [] },
+						spellcasting: { cost: { poolIdentifier: 'stolen-power', amount: '1' } },
+					},
+				} as MockItem;
+				mockActor.items = { contents: [poolClass], get: () => poolClass };
+				mockActor.system.resources = {
+					mana: { current: 0, max: 0 },
+					highestUnlockedSpellTier: 5,
+				};
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'upcast', deltas: [] };
+				dialogState.result = { rollMode: 0, upcast: { manaToSpend: 3 } };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [] };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(manager.spellCost).toMatchObject({ type: 'pool' });
+				expect(result).toEqual({ activation: null, rolls: null });
+				expect(manager.upcastResult).toBeNull();
+				expect(ui.notifications?.error).toHaveBeenCalledWith(
+					expect.stringContaining('Upcast failed'),
+				);
+			});
+
 			it('charges the pinned tier when the spell scales to it', async () => {
 				pinCastTier(5);
 				mockItem.type = 'spell';
