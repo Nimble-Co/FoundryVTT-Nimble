@@ -4,6 +4,7 @@ import { flattenActivationEffects } from '#utils/activationEffects.js';
 import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
 import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
+import { getSpellManaCost } from '#utils/spell/getSpellManaCost.js';
 
 /**
  * Extracts display data from a spell's system data for rendering in the card.
@@ -61,8 +62,7 @@ function extractDisplayData(system: SpellSystemData): SpellDisplayData {
 		});
 	}
 
-	// Tiered spells cost their tier in mana; cantrips are free.
-	const manaCost = system.tier ?? 0;
+	const manaCost = getSpellManaCost(system);
 
 	// Damage/healing effect
 	let effect: { formula: string; isHealing: boolean } | null = null;

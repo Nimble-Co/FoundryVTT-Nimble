@@ -91,11 +91,6 @@ export function createSpellPanelState(
 		return null;
 	}
 
-	// Tiered spells cost their tier in mana; cantrips are free.
-	function getSpellManaCost(spell: Item): number {
-		return getSystemData(spell).tier ?? 0;
-	}
-
 	function getSpellMetadata(spell: Item): string | null {
 		const activation = getSystemData(spell).activation;
 		if (!activation?.cost) return null;
@@ -216,7 +211,6 @@ export function createSpellPanelState(
 		},
 		sortItems,
 		getSpellEffect,
-		getSpellManaCost,
 		getSpellMetadata,
 		getSpellRange,
 		getSpellTargetType,
