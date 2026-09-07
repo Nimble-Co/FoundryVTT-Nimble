@@ -80,6 +80,10 @@ From level 12 the Shadowmancer's Greedy Pact replaces that fixed penalty with a 
 Pact of the Red Dragon's Heart of Burning Fire returns a use of Pilfered Power each time you roll Initiative. The rules say that use expires at the end of combat if you do not spend it; the system keeps it until your next Safe Rest, because it cannot yet tell a temporary use apart from one you already had. Hand the use back at the end of combat if it went unspent.
 :::
 
+::: warning Hollow One and free casts are not automated
+The system does not know when a use of Pilfered Power should not be spent. The Reaver subclass's Hollow One cuts you off from your patron, so you can no longer cast tiered spells using Pilfered Power; the sheet still shows the pool and still lets you cast. Three features grant a cast without Pilfering Power: We'll ALL Burn! (Pact of the Red Dragon) for Pyroclasm when you include yourself in the damage, Shadowfrost (Pact of the Abyssal Depths) for Cryosleep or Rimeblades when you expend 10 temp HP, and the Hungering Shadows invocation for the next tiered spell after one of your shadows would crit. The sheet spends a use for those casts anyway. Handle both at the table: a Reaver does not cast tiered spells from the pool, and after a free cast add the use back by hand.
+:::
+
 ### Bio
 
 Freeform character details: age, height, weight, gender, and notes.
