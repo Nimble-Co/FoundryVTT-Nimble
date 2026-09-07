@@ -56,7 +56,7 @@ A class is the most involved item in the system, split across a **Description** 
 - **Key Stats**: the class's key ability scores; the highest of them backs the `@key` reference in formulas.
 - **Saving throw advantage / disadvantage**: which save the class is naturally good and bad at.
 - **Hit Die Size**: d4 through d12. This also determines starting HP when the class is dropped on a character.
-- **Mana Formula** and **Mana Recovery**: leave the formula empty for non-casters; a formula (it can reference things like `@level` and ability modifiers) makes the class a caster, and the recovery setting says when the pool refills.
+- **Mana Formula** and **Mana Recovery**: leave the formula empty for classes without mana; a formula (it can reference things like `@level` and ability modifiers) gives the class a mana pool, and the recovery setting says when the pool refills. Mana alone does not let a character cast tiered spells; see [Spell grants unlock spell tiers](#spell-grants-unlock-spell-tiers).
 - **Armor Proficiencies** and **Weapon Proficiencies**: what the class can use. Weapon proficiency names matter for crits: a weapon whose type is not in the wielder's list cannot critically hit.
 - **Feature Groups**: extra group names whose features this class can draw from, used to share feature pools between classes.
 
@@ -80,6 +80,10 @@ When a player levels up, the level-up window automatically grants the features r
 ::: tip Start from a copy, not from blank
 Strongly recommended: import an existing class from the **Classes** compendium and study or adapt it rather than starting empty. One important subtlety: because the progression is looked up by **identifier**, a duplicated class with the same identifier shows the *original* class's features. That is often exactly what you want ("the Berserker, but with my extra feature at level 3"): keep the identifier, and use the Progression tab's add buttons to layer your own world features on top of the compendium ones. If you want a genuinely new class, give it a new identifier and build its feature list fresh.
 :::
+
+### Spell grants unlock spell tiers
+
+A **Grant Spells** rule on a class, subclass, or class feature also decides which spell tiers the character can cast. Give the rule a level condition (`level` is at least `5`, for example) and it unlocks the tiers it lists once the character reaches that level. The character's highest unlocked tier is the highest tier across all such rules they meet. A grant with no level condition still hands out its spells, but it does not unlock a tier. A class with no such rule leaves the character unable to cast tiered spells, whatever its mana formula says.
 
 ### Features can do things too
 
