@@ -1,22 +1,5 @@
+import { toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
-
-/** Namespace the source ids below are written under. */
-const SNAPSHOT_PREFIX = 'Compendium.nimble.';
-
-/** Every namespace a stored id could carry: the stable id, or the dev rebrand. */
-const STORED_PREFIXES = [SNAPSHOT_PREFIX, 'Compendium.nimble-dev.'];
-
-/**
- * Folds a stored source id onto the namespace the specs use. `dev-rebrand.mjs`
- * rewrites `packs/**` but not `src/**`, so on the dev build an actor's stored id
- * reads `Compendium.nimble-dev.…` and would never match a literal written here.
- * The document ids are identical across both installs, so the fold is exact.
- */
-function toSnapshotId(packSource: string | undefined): string | undefined {
-	if (!packSource) return packSource;
-	const prefix = STORED_PREFIXES.find((candidate) => packSource.startsWith(candidate));
-	return prefix ? `${SNAPSHOT_PREFIX}${packSource.slice(prefix.length)}` : packSource;
-}
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
