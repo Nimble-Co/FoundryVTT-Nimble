@@ -8,6 +8,7 @@ import sortItems from '../../../utils/sortItems.js';
 import {
 	createSpellCostResolver,
 	formatSpellCostLabel,
+	resolveEffectiveCastTier,
 	resolvePinnedCastTier,
 } from '../../../utils/spell/spellCost.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
@@ -105,7 +106,9 @@ export function createSpellPanelState(
 			spells.map((spell) => {
 				const spellLike = spell as unknown as SpellLike;
 				const cost = resolveCost(spellLike, {
-					castTier: resolvePinnedCastTier(actor, spellLike) ?? undefined,
+					castTier:
+						resolveEffectiveCastTier(spellLike, resolvePinnedCastTier(actor, spellLike)) ??
+						undefined,
 				});
 				return [spell, formatSpellCostLabel(cost)];
 			}),

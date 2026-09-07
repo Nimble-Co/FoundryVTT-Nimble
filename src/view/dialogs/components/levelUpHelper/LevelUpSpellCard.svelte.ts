@@ -7,6 +7,7 @@ import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
 import {
 	formatSpellCostLabel,
+	resolveEffectiveCastTier,
 	resolvePinnedCastTier,
 	resolveSpellCost,
 } from '#utils/spell/spellCost.js';
@@ -74,7 +75,9 @@ function extractDisplayData(
 	// The cost as this character would pay it: the tier in mana by default, or
 	// the flat pool cost their class declares.
 	const costLabel = formatSpellCostLabel(
-		resolveSpellCost(actor, spell, { castTier: resolvePinnedCastTier(actor, spell) ?? undefined }),
+		resolveSpellCost(actor, spell, {
+			castTier: resolveEffectiveCastTier(spell, resolvePinnedCastTier(actor, spell)) ?? undefined,
+		}),
 	);
 
 	// Damage/healing effect

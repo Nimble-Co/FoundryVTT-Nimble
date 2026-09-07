@@ -4,6 +4,7 @@ import {
 	applyOverdraftConsequence,
 	createSpellCostResolver,
 	formatSpellCostLabel,
+	resolveEffectiveCastTier,
 	resolvePinnedCastTier,
 	resolveSpellCost,
 	synthesizePinnedUpcast,
@@ -663,5 +664,29 @@ describe('synthesizePinnedUpcast', () => {
 		// by a caster who has unlocked tier 2 pins at 5. Synthesizing that would
 		// exceed the upcast tier bound and error the cast.
 		expect(synthesizePinnedUpcast(scalingSpell(5, 'upcast'), 5)).toBeNull();
+	});
+});
+
+describe('resolveEffectiveCastTier', () => {
+	function scalingSpell(tier: number, mode: string) {
+		return { system: { tier, scaling: { mode } } };
+	}
+
+	it('resolves the pinned tier for a spell that scales to it', () => {
+		expect(resolveEffectiveCastTier(scalingSpell(1, 'upcast'), 5)).toBe(5);
+		expect(resolveEffectiveCastTier(scalingSpell(1, 'upcastChoice'), 5)).toBe(5);
+	});
+
+	it('resolves nothing for a spell that does not scale', () => {
+		expect(resolveEffectiveCastTier(scalingSpell(1, 'none'), 5)).toBeNull();
+		expect(resolveEffectiveCastTier({ system: { tier: 1 } }, 5)).toBeNull();
+	});
+
+	it('resolves nothing for a cantrip', () => {
+		expect(resolveEffectiveCastTier(scalingSpell(0, 'upcast'), 5)).toBeNull();
+	});
+
+	it('resolves nothing when no tier is pinned', () => {
+		expect(resolveEffectiveCastTier(scalingSpell(1, 'upcast'), null)).toBeNull();
 	});
 });

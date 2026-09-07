@@ -6,7 +6,7 @@
 	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
-	import { formatSpellCostLabel } from '../../utils/spell/spellCost.js';
+	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
@@ -43,6 +43,9 @@
 	// A class may pin the cast tier and declare a pool cost; both are resolved
 	// by the activation manager and passed in rather than computed here.
 	const pinnedCastTier = $derived((data.pinnedCastTier ?? null) as number | null);
+	// A pinned tier only lifts a spell that scales to it; any other spell
+	// casts, and is labelled, at its own tier.
+	const effectiveCastTier = $derived(resolveEffectiveCastTier({ system: spell }, pinnedCastTier));
 	const spellCost = $derived(data.spellCost ?? null);
 	const isPoolCost = $derived(spellCost?.type === 'pool');
 
@@ -75,7 +78,7 @@
 	);
 
 	// Upcast state
-	let manaToSpend = $state(untrack(() => pinnedCastTier ?? baseMana));
+	let manaToSpend = $state(untrack(() => effectiveCastTier ?? baseMana));
 	let choiceIndex = $state(0);
 
 	// Derived values
@@ -217,9 +220,9 @@
 		</p>
 	{/if}
 
-	{#if pinnedCastTier !== null}
+	{#if effectiveCastTier !== null}
 		<p class="nimble-spell-pinned-tier">
-			{format(spellUpcastDialog.castsAtTier, { tier: String(pinnedCastTier) })}
+			{format(spellUpcastDialog.castsAtTier, { tier: String(effectiveCastTier) })}
 		</p>
 	{/if}
 

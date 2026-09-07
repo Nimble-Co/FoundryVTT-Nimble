@@ -49,6 +49,7 @@ import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import {
+	resolveEffectiveCastTier,
 	resolvePinnedCastTier,
 	resolveSpellCost,
 	synthesizePinnedUpcast,
@@ -110,8 +111,9 @@ class ItemActivationManager {
 
 	/**
 	 * The resolved cost of this cast, for spells. Set before the dialog from
-	 * the spell's own tier, then re-resolved against the tier actually cast
-	 * once an upcast has been applied.
+	 * the pinned tier when one lifts the spell, else from the spell's own tier,
+	 * then re-resolved against the tier actually cast once an upcast has been
+	 * applied.
 	 */
 	spellCost: ResolvedSpellCost | null = null;
 
@@ -192,7 +194,9 @@ class ItemActivationManager {
 		if (this.#item.type === 'spell' && this.actor) {
 			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
 			this.spellCost = resolveSpellCost(this.actor, this.#item, {
-				castTier: this.pinnedCastTier ?? undefined,
+				castTier:
+					resolveEffectiveCastTier(this.#item as unknown as SpellLike, this.pinnedCastTier) ??
+					undefined,
 			});
 		}
 
@@ -214,13 +218,7 @@ class ItemActivationManager {
 				this.#item as unknown as SpellLike,
 				this.pinnedCastTier,
 			);
-			if (synthesized) {
-				dialogData.upcast = synthesized;
-			} else if (this.actor) {
-				// Nothing lifts the cast above the spell's own tier, so it must not
-				// be charged at the pinned one.
-				this.spellCost = resolveSpellCost(this.actor, this.#item);
-			}
+			if (synthesized) dialogData.upcast = synthesized;
 		}
 
 		// Apply upcast deltas if present

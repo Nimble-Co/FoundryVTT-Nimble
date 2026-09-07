@@ -193,6 +193,18 @@ export function synthesizePinnedUpcast(
 }
 
 /**
+ * The tier a pinned cast actually resolves at, for labelling. A pinned tier
+ * only lifts a spell that scales to it; a spell that does not scale casts
+ * and is charged at its own tier, so null is returned for it.
+ */
+export function resolveEffectiveCastTier(
+	spell: SpellLike,
+	pinnedCastTier: number | null,
+): number | null {
+	return synthesizePinnedUpcast(spell, pinnedCastTier) ? pinnedCastTier : null;
+}
+
+/**
  * Renders a resolved cost as the short label the sheet and the cast dialog
  * both show. Returns null for a free cast so callers can omit the indicator.
  */
