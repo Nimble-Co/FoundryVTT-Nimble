@@ -71,7 +71,12 @@
 		},
 		"Haunted Past": {
 			"description": "<p>You are haunted by voices that occasionally give you cryptic advice. The voices are sometimes VERY helpful. Other times they only want to see you suffer. Advantage against fear.</p>",
-			"name": "Haunted Past"
+			"name": "Haunted Past",
+			"rules": {
+				"N43aM4mMNGpq5WN6": {
+					"label": "Against fear"
+				}
+			}
 		},
 		"History Buff": {
 			"description": "<p>Advantage on all Lore checks related to knowledge about items, facts, or events that happened more than 100 years ago.</p>",
@@ -97,6 +102,12 @@
 			"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>",
 			"name": "Survivalist",
 			"rules": {
+				"1C7GnDgBamsrGvjI": {
+					"label": "Survivalist"
+				},
+				"8pUORSgg0CfUHYPc": {
+					"label": "Against poison"
+				},
 				"index:0": {
 					"label": "Survivalist"
 				}
@@ -119,6 +130,9 @@
 			"name": "Wild One",
 			"rules": {
 				"index:1": {
+					"label": "Wild One"
+				},
+				"VeZT7ntScHXwdEm0": {
 					"label": "Wild One"
 				}
 			}

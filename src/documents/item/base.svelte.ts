@@ -292,6 +292,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,
 						tokenUuid: this.actor?.token?.uuid,
+						...(manager.chargeConsumption.length > 0
+							? { chargeConsumption: manager.chargeConsumption }
+							: {}),
 					},
 				},
 				system: {

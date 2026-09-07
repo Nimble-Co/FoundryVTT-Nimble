@@ -6,7 +6,43 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "lay-on-hands-pool",
+				"identifier": "lay-on-hands",
+				"label": "Lay on Hands",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "5 * @level",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "lay-on-hands-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "lay-on-hands",
+				"poolScope": "item",
+				"costMode": "variable",
+				"cost": "1",
+				"maxCost": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -25,13 +61,13 @@
 					"id": "LayOnHandsHealing1",
 					"type": "healing",
 					"healingType": "healing",
-					"formula": "5*@level",
+					"formula": "@spent",
 					"parentContext": null,
 					"parentNode": null
 				}
 			],
 			"showDescription": true,
-			"skipRollDialog": true,
+			"skipRollDialog": false,
 			"targets": {
 				"count": 1,
 				"restrictions": ""
@@ -43,7 +79,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Gain a magical pool of healing power. This pool's maximum is always equal to 5×LVL and recharges on a Safe Rest. Action: Touch a target and spend any amount of remaining healing power to restore that many HP.</p>",
+		"description": "<p>Gain a magical pool of healing power. This pool's maximum is always equal to 5×LVL and recharges on a Safe Rest. Action: Touch a target and spend any amount of remaining healing power to restore that many HP.</p><p><em>Click this feature to use it. Choose how much healing power to spend; the target is healed for that much. The pool refreshes on a Safe Rest.</em></p>",
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",

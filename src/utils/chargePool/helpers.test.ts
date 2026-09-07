@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
 	applyRecoveryTriggersToPools,
 	buildEffectiveChargePoolMap,
+	findConflictingVariablePools,
 	getChargeConsumers,
 } from './helpers.js';
 import type {
@@ -332,7 +333,13 @@ describe('charge consumer predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
-			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: false,
+				maxCost: null,
+			},
 		]);
 	});
 
@@ -347,7 +354,210 @@ describe('charge consumer predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
-			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: false,
+				maxCost: null,
+			},
+		]);
+	});
+});
+
+describe('variable charge consumers', () => {
+	function createVariableConsumerItem(overrides: Partial<MockRule> = {}): MockItem {
+		return createMockItem('item-1', 'Flexible Feature', [
+			{
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '10',
+				initial: 'max',
+			} as MockRule,
+			{
+				type: 'chargeConsumer',
+				id: 'consumer-rule',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '',
+				...overrides,
+			} as MockRule,
+		]);
+	}
+
+	it('is hidden from callers that spend a fixed cost', () => {
+		const item = createVariableConsumerItem();
+		const actor = createMockActor([item]);
+
+		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([]);
+	});
+
+	describe('two of them on one pool', () => {
+		function createDoubleSpendItem(secondConsumer: Partial<MockRule> = {}): MockItem {
+			return createMockItem('item-1', 'Flexible Feature', [
+				{
+					type: 'chargePool',
+					id: 'pool-rule',
+					identifier: 'focus',
+					scope: 'item',
+					max: '10',
+					initial: 'max',
+				} as MockRule,
+				{
+					type: 'chargeConsumer',
+					id: 'consumer-a',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					costMode: 'variable',
+					cost: '1',
+					maxCost: '',
+				} as MockRule,
+				{
+					type: 'chargeConsumer',
+					id: 'consumer-b',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					costMode: 'variable',
+					cost: '2',
+					maxCost: '',
+					...secondConsumer,
+				} as MockRule,
+			]);
+		}
+
+		it('is reported as a conflict, naming the pool once', () => {
+			const item = createDoubleSpendItem();
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toMatchObject([
+				{ poolId: 'focus', poolIdentifier: 'focus' },
+			]);
+		});
+
+		it('is not a conflict when only one of them is variable', () => {
+			const item = createDoubleSpendItem({ costMode: 'fixed' } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+
+		it('is not a conflict when they spend from different pools', () => {
+			const item = createDoubleSpendItem({ poolIdentifier: 'resolve' } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+
+		it('is not a conflict when a predicate rules the second one out', () => {
+			const item = createDoubleSpendItem({ appliesTo: () => false } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+	});
+
+	it('is reported with its minimum and an open ceiling when asked for', () => {
+		const item = createVariableConsumerItem();
+		const actor = createMockActor([item]);
+
+		expect(
+			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true }),
+		).toEqual([
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: true,
+				maxCost: null,
+			},
+		]);
+	});
+
+	it('resolves a maxCost formula into the reported ceiling', () => {
+		const item = createVariableConsumerItem({ maxCost: '3' } as Partial<MockRule>);
+		const actor = createMockActor([item]);
+
+		expect(
+			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true })[0]
+				.maxCost,
+		).toBe(3);
+	});
+});
+
+describe('cross-item pool spending', () => {
+	// An item-scoped pool id is the bare identifier, which is what lets a second
+	// feature spend from a pool a first feature declares (a subclass feature
+	// drawing on its base class's pool, say) without an actor-scoped pool.
+	function createPoolAndConsumerItems(): { poolItem: MockItem; consumerItem: MockItem } {
+		return {
+			poolItem: createMockItem('item-1', 'Pool Owner', [
+				{
+					type: 'chargePool',
+					id: 'pool-rule',
+					identifier: 'focus',
+					label: 'Focus',
+					scope: 'item',
+					max: '10',
+					initial: 'max',
+				} as MockRule,
+			]),
+			consumerItem: createMockItem('item-2', 'Other Feature', [
+				{
+					type: 'chargeConsumer',
+					id: 'other-consumer',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					cost: '2',
+				} as MockRule,
+			]),
+		};
+	}
+
+	it('resolves a consumer on one item to a pool declared on another', () => {
+		const { poolItem, consumerItem } = createPoolAndConsumerItems();
+		const actor = createMockActor([poolItem, consumerItem]);
+
+		const [consumer] = getChargeConsumers(actor, consumerItem as unknown as RuleBackedItem);
+
+		expect(consumer).toMatchObject({ poolId: 'focus', poolIdentifier: 'focus', cost: 2 });
+		expect(buildEffectiveChargePoolMap(actor)[consumer!.poolId]).toMatchObject({
+			identifier: 'focus',
+			sourceItemId: 'item-1',
+			current: 10,
+		});
+	});
+
+	it('resolves a variable consumer on one item to the other item pool', () => {
+		const { poolItem } = createPoolAndConsumerItems();
+		const variableConsumer = createMockItem('item-2', 'Other Feature', [
+			{
+				type: 'chargeConsumer',
+				id: 'other-consumer',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '4',
+			} as MockRule,
+		]);
+		const actor = createMockActor([poolItem, variableConsumer]);
+
+		expect(
+			getChargeConsumers(actor, variableConsumer as unknown as RuleBackedItem, {
+				includeVariable: true,
+			}),
+		).toEqual([
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: true,
+				maxCost: 4,
+			},
 		]);
 	});
 });
