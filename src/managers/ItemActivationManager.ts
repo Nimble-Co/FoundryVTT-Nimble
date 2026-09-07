@@ -4,6 +4,7 @@ import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import {
 	findConflictingVariablePools,
+	findUnofferableVariableSpends,
 	getChargeConsumers,
 	getFixedChargeCostsByPool,
 } from '#utils/chargePool/helpers.js';
@@ -105,6 +106,8 @@ class ItemActivationManager {
 	 * fail its own validation and lose the charges with no card.
 	 */
 	#deferredChargeSpends: Array<{ poolId: string; count: number }> = [];
+
+	#deferredVariableSpends: Array<{ poolId: string; count: number }> = [];
 
 	/**
 	 * Dice-pool faces named in the dialog, held for the same reason: the gate
@@ -218,12 +221,14 @@ class ItemActivationManager {
 			{ delivery: this.#getAttackDelivery() },
 		);
 
+		// Hold what the dialog spent until the caller clears the preUseItem gate.
+		// The dialog already included the dice faces in rollFormula above. Settled
+		// before the rolls so the spend and the `@spent` the formulas resolve
+		// against are capped by one reading of the pools.
+		this.#deferPoolSpends(dialogData);
+
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
-
-		// Hold what the dialog spent until the caller clears the preUseItem gate.
-		// The dialog already included the dice faces in rollFormula above.
-		this.#deferPoolSpends(dialogData);
 
 		return {
 			rolls,
@@ -277,7 +282,7 @@ class ItemActivationManager {
 		// which keeps a formula referencing it from failing to parse.
 		const activationRollData = {
 			...(this.actor?.getRollData() ?? {}),
-			spent: this.#resolveSpentCharges(dialogData),
+			spent: this.#resolveSpentCharges(),
 		};
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
@@ -596,19 +601,20 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * What the item's own formulas read as `@spent`.
+	 * The most each of this item's variable consumers can spend right now, keyed
+	 * by pool id.
 	 *
-	 * The dialog clamps the player's choice, but against a snapshot taken when it
-	 * opened. Capping the formula input at what the variable consumers' pools
-	 * actually hold keeps the healing from outrunning the charges if the pool
-	 * moved underneath the open dialog.
+	 * Two claims come off the same pool later in the activation and are reserved
+	 * rather than spent twice over: the item's own fixed charge costs, and any
+	 * rollable charges the player also chose to spend from that pool.
 	 */
-	#resolveSpentCharges(dialogData: ItemActivationManager.DialogData): number {
-		const named = Math.max(0, Math.floor(Number(dialogData.spentCharges) || 0));
-		if (named < 1) return 0;
+	#getVariableChargeCeilings(
+		rollableSpends: Array<{ poolId: string; count: number }> = [],
+	): Map<string, number> {
+		const ceilings = new Map<string, number>();
 
 		const actor = this.actor;
-		if (actor?.type !== 'character') return named;
+		if (actor?.type !== 'character') return ceilings;
 
 		const variablePoolIds = new Set(
 			getChargeConsumers(
@@ -619,22 +625,57 @@ class ItemActivationManager {
 				.filter((consumer) => consumer.variable)
 				.map((consumer) => consumer.poolId),
 		);
-		if (variablePoolIds.size < 1) return named;
+		if (variablePoolIds.size < 1) return ceilings;
 
-		// The item's own fixed costs come out of the same pools later in the
-		// activation, so they are reserved here rather than spent twice over.
 		const fixedCosts = getFixedChargeCostsByPool(
 			actor as unknown as CharacterActorLike,
 			this.#item as unknown as RuleBackedItem,
 		);
 		const pools = getChargePools(actor as unknown as Actor.Implementation);
-		let ceiling = 0;
 		for (const poolId of variablePoolIds) {
 			const current = pools.find((candidate) => candidate.id === poolId)?.current ?? 0;
-			ceiling += Math.max(0, current - (fixedCosts.get(poolId) ?? 0));
+			const rollable = rollableSpends
+				.filter((entry) => entry?.poolId === poolId)
+				.reduce((total, entry) => total + Math.max(0, Math.floor(Number(entry.count) || 0)), 0);
+			ceilings.set(poolId, Math.max(0, current - (fixedCosts.get(poolId) ?? 0) - rollable));
 		}
 
-		return Math.min(named, ceiling);
+		return ceilings;
+	}
+
+	/**
+	 * What the item's own formulas read as `@spent`: the variable spends the
+	 * dialog submitted, after `#deferPoolSpends` capped them at what their pools
+	 * can pay. Reading the deducted numbers rather than a separate total from the
+	 * dialog is what keeps the effect and the pool in step when a pool moved
+	 * underneath the open dialog.
+	 */
+	#resolveSpentCharges(): number {
+		return this.#deferredVariableSpends.reduce((total, entry) => total + entry.count, 0);
+	}
+
+	/**
+	 * The dialog's variable spends, each capped at what its pool can still pay.
+	 * The dialog bounded the player's choice against a snapshot taken when it
+	 * opened, which the pool may have moved out from under.
+	 */
+	#clampVariableSpends(
+		entries: unknown,
+		rollableSpends: Array<{ poolId: string; count: number }>,
+	): Array<{ poolId: string; count: number }> {
+		if (!Array.isArray(entries)) return [];
+
+		const ceilings = this.#getVariableChargeCeilings(rollableSpends);
+		const clamped: Array<{ poolId: string; count: number }> = [];
+		for (const entry of entries as Array<{ poolId?: unknown; count?: unknown }>) {
+			if (!entry || typeof entry.poolId !== 'string') continue;
+			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
+			const allowed = Math.min(count, ceilings.get(entry.poolId) ?? count);
+			if (allowed < 1) continue;
+			clamped.push({ poolId: entry.poolId, count: allowed });
+		}
+
+		return clamped;
 	}
 
 	/**
@@ -648,6 +689,10 @@ class ItemActivationManager {
 
 		const charges = dialogData.consumedChargePools;
 		this.#deferredChargeSpends = Array.isArray(charges) ? [...charges] : [];
+		this.#deferredVariableSpends = this.#clampVariableSpends(
+			dialogData.consumedVariableCharges,
+			this.#deferredChargeSpends,
+		);
 
 		const dice = dialogData.consumedPoolDice;
 		this.#deferredPoolDice = Array.isArray(dice) ? [...dice] : [];
@@ -665,8 +710,9 @@ class ItemActivationManager {
 	 * hand the count back to the GM.
 	 */
 	async #consumeChargePools(): Promise<void> {
-		const consumed = this.#deferredChargeSpends;
+		const consumed = [...this.#deferredChargeSpends, ...this.#deferredVariableSpends];
 		this.#deferredChargeSpends = [];
+		this.#deferredVariableSpends = [];
 		if (consumed.length < 1) return;
 		if (!isResourceSpendingAutomationEnabled()) return;
 
@@ -970,6 +1016,20 @@ class ItemActivationManager {
 			return null;
 		}
 
+		// Same reason: the dialog would render no prompt for a spend it cannot
+		// offer, so the player would fill in a blank window and roll before the
+		// gate refused the use.
+		const unofferable = this.#findUnofferableVariableSpend();
+		if (unofferable) {
+			ui.notifications?.error(
+				game.i18n.format('NIMBLE.charges.notifications.unofferableSpend', {
+					item: this.#item.name ?? '',
+					pool: unofferable,
+				}),
+			);
+			return null;
+		}
+
 		// A variable charge spend has no sensible default — the amount is the
 		// player's input — so an item that asks for one always gets the dialog.
 		const hasVariableChargeSpend = this.#hasVariableChargeSpend();
@@ -1022,6 +1082,18 @@ class ItemActivationManager {
 			this.#item as unknown as RuleBackedItem,
 		);
 		return conflict?.poolIdentifier ?? null;
+	}
+
+	/** The first pool whose player-chosen spend cannot be offered, if any. */
+	#findUnofferableVariableSpend(): string | null {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return null;
+
+		const [unofferable] = findUnofferableVariableSpends(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
+		return unofferable?.poolLabel ?? null;
 	}
 
 	/** Whether this item spends a player-chosen number of charges. */
@@ -1178,11 +1250,12 @@ namespace ItemActivationManager {
 		 */
 		consumedChargePools?: Array<{ poolId: string; count: number }>;
 		/**
-		 * Charges spent by this item's variable charge consumers. Exposed to the
-		 * item's own effect formulas as `@spent`, which is how an activation whose
-		 * effect *is* the amount spent gets at the player's choice.
+		 * Charges spent by this item's variable charge consumers, per pool. Their
+		 * total is what the item's own effect formulas read as `@spent`, which is
+		 * how an activation whose effect *is* the amount spent gets at the
+		 * player's choice.
 		 */
-		spentCharges?: number;
+		consumedVariableCharges?: Array<{ poolId: string; count: number }>;
 		/**
 		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
 		 * grants a specific damage type). Each becomes its own damage effect so the

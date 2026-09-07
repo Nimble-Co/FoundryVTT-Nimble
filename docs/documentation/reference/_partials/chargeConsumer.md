@@ -14,3 +14,5 @@ Because the amount is player input, an item with a variable consumer always open
 One variable consumer per pool, per item. The activation asks for one amount per pool, so a second variable consumer pointing at the same pool has no amount of its own: the system refuses to use the item rather than guess which spend you meant. Give each one its own pool, or make all but one a fixed cost.
 
 An item may pair a fixed consumer with a variable one on the same pool. The fixed cost is reserved first, so the amount offered for the variable spend is what is left after it. A pool of 10 with a fixed cost of 3 offers a variable spend of up to 7, and the item is refused outright if the pool cannot cover both.
+
+A variable spend the activation could never ask about is refused the same way, naming the pool: a hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell is routed to the upcast window, which asks about tier rather than charges. Put a variable consumer on a feature or an item, not on a spell.

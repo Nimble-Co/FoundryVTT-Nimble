@@ -243,6 +243,87 @@ describe('ChargePoolService', () => {
 		expect(validation.failure?.required).toBe(3);
 	});
 
+	function itemWithVariableConsumer(
+		poolOverrides: Partial<MockRule>,
+		consumerOverrides: Partial<MockRule>,
+	) {
+		const actor = createMockActor({
+			items: [
+				{
+					id: 'item-1',
+					name: 'Wand',
+					rules: [
+						{
+							type: 'chargePool',
+							id: 'pool-rule',
+							identifier: 'wand',
+							scope: 'item',
+							max: '5',
+							initial: 'max',
+							...poolOverrides,
+						},
+						{
+							type: 'chargeConsumer',
+							id: 'variable-rule',
+							poolIdentifier: 'wand',
+							poolScope: 'item',
+							costMode: 'variable',
+							cost: '1',
+							...consumerOverrides,
+						},
+					],
+					itemFlags: {
+						nimble: {
+							chargePools: {
+								wand: { current: 5, max: 5, recoveries: [] },
+							},
+						},
+					},
+				},
+			],
+		});
+
+		return actor.items.contents[0] as unknown as Item.Implementation;
+	}
+
+	it('blocks activation when a variable consumer sits on a hidden pool', () => {
+		// A hidden pool has no stepper to prompt with, so the spend could never be
+		// asked for: the item would post a card that spent nothing.
+		const validation = validateItemChargeConsumption(
+			itemWithVariableConsumer({ hidden: true }, {}),
+		);
+
+		expect(validation.ok).toBe(false);
+		expect(validation.failure?.code).toBe('unofferableSpend');
+		expect(validation.failure?.poolIdentifier).toBe('wand');
+	});
+
+	it('blocks activation when a variable maximum falls below its minimum', () => {
+		const validation = validateItemChargeConsumption(
+			itemWithVariableConsumer({}, { cost: '3', maxCost: '2' }),
+		);
+
+		expect(validation.ok).toBe(false);
+		expect(validation.failure?.code).toBe('unofferableSpend');
+		expect(validation.failure?.required).toBe(3);
+	});
+
+	it('blocks activation when a variable consumer sits on a spell', () => {
+		// A spell is routed to the upcast window, which asks about tier and has no
+		// stepper to prompt for an amount.
+		const item = itemWithVariableConsumer({}, {});
+		(item as unknown as { type: string }).type = 'spell';
+
+		const validation = validateItemChargeConsumption(item);
+
+		expect(validation.ok).toBe(false);
+		expect(validation.failure?.code).toBe('unofferableSpend');
+	});
+
+	it('allows a variable consumer with a blank maximum on a visible pool', () => {
+		expect(validateItemChargeConsumption(itemWithVariableConsumer({}, {})).ok).toBe(true);
+	});
+
 	it('blocks activation when the fixed and variable costs together exceed the pool', () => {
 		// Each consumer fits on its own, so only the per-pool total catches this.
 		const actor = createMockActor({

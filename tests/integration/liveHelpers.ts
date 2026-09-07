@@ -216,14 +216,6 @@ async function createCombatWith(
 const RULE_AUTOMATION_SETTING = 'automation.applyRuleEffects';
 
 /**
- * The rule-automation world setting, read/written through the same casts the
- * system uses (see isRuleAutomationEnabled) — it is not in fvtt-types'
- * registered settings map. This is the toggle that gates ruleEventDispatch, so
- * suites that depend on rule lifecycle events firing (or not) must snapshot and
- * restore it. Note that the health-state sync (bloodied/dying status mirroring)
- * has its own toggle and is NOT gated by this setting.
- */
-/**
  * Any `automation.*` world toggle, read and written through the casts the
  * system uses: none of them are in fvtt-types' registered settings map. Suites
  * that depend on a toggle must snapshot and restore it.
@@ -236,6 +228,13 @@ async function setAutomationToggle(key: string, value: boolean): Promise<void> {
 	await game.settings.set(game.system.id as 'core', key as 'rollMode', value as never);
 }
 
+/**
+ * The rule-automation world setting. This is the toggle that gates
+ * ruleEventDispatch, so suites that depend on rule lifecycle events firing (or
+ * not) must snapshot and restore it. Note that the health-state sync
+ * (bloodied/dying status mirroring) has its own toggle and is NOT gated by
+ * this setting.
+ */
 function getRuleAutomationEnabled(): boolean {
 	return getAutomationToggle(RULE_AUTOMATION_SETTING);
 }

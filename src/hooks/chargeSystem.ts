@@ -78,6 +78,16 @@ function notifyChargeFailure(itemName: string, failure: ChargeValidationFailure)
 		return;
 	}
 
+	if (failure.code === 'unofferableSpend') {
+		ui.notifications?.error(
+			localize('NIMBLE.charges.notifications.unofferableSpend', {
+				item: itemName,
+				pool: failure.poolLabel,
+			}),
+		);
+		return;
+	}
+
 	if (failure.code === 'poolMissing') {
 		ui.notifications?.error(
 			localize('NIMBLE.charges.notifications.poolMissing', {

@@ -1396,6 +1396,22 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			return roll;
 		}
 
+		/**
+		 * stubRolls answers every formula with one total, which would make a pool's
+		 * max indistinguishable from a consumer's cost. Resolve each numeric formula
+		 * to itself instead.
+		 */
+		function stubRollsByFormula() {
+			MockRoll.mockImplementation((formula: unknown) => {
+				const total = Number.parseInt(String(formula), 10);
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					evaluateSync: vi.fn(() => ({ total })),
+					toJSON: vi.fn().mockReturnValue({ total }),
+				} as never;
+			});
+		}
+
 		/** Gives the mock item a pool and a consumer that spends a chosen amount of it. */
 		function makeItemSpendVariableCharges() {
 			mockItem.id = 'item-1';
@@ -1456,13 +1472,15 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			return pools?.fury?.faces;
 		}
 
-		/** Current charges of the item-scoped `focus` pool, read back off the fixture. */
-		function readFocusCharges(): number | undefined {
+		/** Current charges of an item-scoped charge pool, read back off the fixture. */
+		function readChargePool(identifier: string): number | undefined {
 			const pools = foundry.utils.getProperty(mockItem, ChargePoolRuleConfig.flagPath) as
 				| Record<string, { current?: number }>
 				| undefined;
-			return pools?.focus?.current;
+			return pools?.[identifier]?.current;
 		}
+
+		const readFocusCharges = () => readChargePool('focus');
 
 		it('should skip the config dialog and complete activation when skipRollDialog is set', async () => {
 			manager = new ItemActivationManager(
@@ -1524,7 +1542,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should pass the charges spent in the dialog to effect formulas as @spent', async () => {
-			dialogState.result = { rollMode: 0, spentCharges: 8 };
+			dialogState.result = {
+				rollMode: 0,
+				consumedVariableCharges: [{ poolId: 'focus', count: 8 }],
+			};
 			makeItemSpendVariableCharges();
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
@@ -1559,8 +1580,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			// no card, so the deduction waits for applyDeferredPoolNodes().
 			dialogState.result = {
 				rollMode: 0,
-				spentCharges: 10,
-				consumedChargePools: [{ poolId: 'focus', count: 10 }],
+				consumedVariableCharges: [{ poolId: 'focus', count: 10 }],
 			};
 			makeItemSpendVariableCharges();
 			manager = new ItemActivationManager(
@@ -1596,7 +1616,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		it('should cap @spent at what the pool actually holds', async () => {
 			// The dialog clamps against a snapshot from when it opened, so a pool that
 			// moved underneath it could otherwise heal for more than it can pay.
-			dialogState.result = { rollMode: 0, spentCharges: 40 };
+			dialogState.result = {
+				rollMode: 0,
+				consumedVariableCharges: [{ poolId: 'focus', count: 40 }],
+			};
 			makeItemSpendVariableCharges();
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
@@ -1628,7 +1651,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		it('should cap @spent at what a same-pool fixed cost leaves behind', async () => {
 			// The fixed cost is taken after the variable spend, so a spend sized
 			// against the whole pool would empty it and leave that cost unpaid.
-			dialogState.result = { rollMode: 0, spentCharges: 10 };
+			dialogState.result = {
+				rollMode: 0,
+				consumedVariableCharges: [{ poolId: 'focus', count: 10 }],
+			};
 			makeItemSpendVariableCharges();
 			mockItem.rules!.set('2', {
 				type: 'chargeConsumer',
@@ -1653,17 +1679,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			manager.activationData = { effects: [healingNode] };
 			mockReconstructEffectsTree.mockReturnValue([healingNode]);
-			// stubRolls answers every formula with the same total, which would make
-			// the pool max and the fixed cost indistinguishable. Resolve each numeric
-			// formula to itself instead.
-			MockRoll.mockImplementation((formula: unknown) => {
-				const total = Number.parseInt(String(formula), 10);
-				return {
-					evaluate: vi.fn().mockResolvedValue(undefined),
-					evaluateSync: vi.fn(() => ({ total })),
-					toJSON: vi.fn().mockReturnValue({ total }),
-				} as never;
-			});
+			stubRollsByFormula();
 
 			await manager.getData();
 
@@ -1672,6 +1688,171 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				{ level: 1, strength: 10, spent: 6 },
 				undefined,
 			);
+		});
+
+		it('should deduct the same number of charges that @spent resolved to', async () => {
+			// A pool that moved underneath the open dialog would otherwise be charged
+			// the player's choice while the effect resolved for what the pool could
+			// still pay.
+			dialogState.result = {
+				rollMode: 0,
+				consumedVariableCharges: [{ poolId: 'focus', count: 6 }],
+			};
+			makeItemSpendVariableCharges();
+			mockItem.rules!.set('0', {
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '5',
+				initial: 'max',
+			});
+			mockItem.rules!.set('2', {
+				type: 'chargeConsumer',
+				id: 'fixed-consumer-rule',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'fixed',
+				cost: '4',
+			});
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			stubRollsByFormula();
+
+			await manager.getData();
+			await manager.applyDeferredPoolNodes();
+
+			// 5 charges less the fixed cost of 4 leaves 1 to spend, not the 6 asked for.
+			expect(MockRoll).toHaveBeenCalledWith(
+				'@spent',
+				{ level: 1, strength: 10, spent: 1 },
+				undefined,
+			);
+			expect(readFocusCharges()).toBe(4);
+		});
+
+		it("should cap @spent per pool, not against the pools' combined headroom", async () => {
+			// Two variable consumers on two pools: spare charges in one must not pay
+			// for an overspend in the other.
+			dialogState.result = {
+				rollMode: 0,
+				consumedVariableCharges: [
+					{ poolId: 'focus', count: 6 },
+					{ poolId: 'vigor', count: 8 },
+				],
+			};
+			makeItemSpendVariableCharges();
+			mockItem.rules!.set('0', {
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '3',
+				initial: 'max',
+			});
+			mockItem.rules!.set('2', {
+				type: 'chargePool',
+				id: 'vigor-pool-rule',
+				identifier: 'vigor',
+				scope: 'item',
+				max: '10',
+				initial: 'max',
+			});
+			mockItem.rules!.set('3', {
+				type: 'chargeConsumer',
+				id: 'vigor-consumer-rule',
+				poolIdentifier: 'vigor',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '',
+			});
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			stubRollsByFormula();
+
+			await manager.getData();
+			await manager.applyDeferredPoolNodes();
+
+			// 3 from focus and 8 from vigor, not the 14 the dialog named.
+			expect(MockRoll).toHaveBeenCalledWith(
+				'@spent',
+				{ level: 1, strength: 10, spent: 11 },
+				undefined,
+			);
+			expect(readFocusCharges()).toBe(0);
+			expect(readChargePool('vigor')).toBe(2);
+		});
+
+		it('should reserve a rollable charge spend taken from the same pool', async () => {
+			// Both come out of one pool in the same activation, so the variable
+			// spend can only have what the rollable one leaves.
+			dialogState.result = {
+				rollMode: 0,
+				consumedChargePools: [{ poolId: 'focus', count: 2 }],
+				consumedVariableCharges: [{ poolId: 'focus', count: 10 }],
+			};
+			makeItemSpendVariableCharges();
+			mockItem.rules!.set('0', {
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '5',
+				initial: 'max',
+			});
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '@spent',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
+			stubRollsByFormula();
+
+			await manager.getData();
+			await manager.applyDeferredPoolNodes();
+
+			expect(MockRoll).toHaveBeenCalledWith(
+				'@spent',
+				{ level: 1, strength: 10, spent: 3 },
+				undefined,
+			);
+			expect(readFocusCharges()).toBe(0);
 		});
 
 		it('should hold spent pool dice until the caller clears the preUseItem gate', async () => {
@@ -1699,7 +1880,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			});
 			dialogState.result = {
 				rollMode: 0,
-				spentCharges: 1,
+				consumedVariableCharges: [{ poolId: 'focus', count: 1 }],
 				consumedPoolDice: [{ poolId: 'fury', faceIndex: 1 }],
 			};
 			manager = new ItemActivationManager(
@@ -1747,6 +1928,32 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(readFocusCharges()).toBeUndefined();
 		});
 
+		it('should refuse the use when the variable spend cannot be offered', async () => {
+			// A hidden pool renders no stepper, so the dialog would ask nothing and
+			// the activation would resolve `@spent` as 0. Refused before it opens.
+			makeItemSpendVariableCharges();
+			mockItem.rules!.set('0', {
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '10',
+				initial: 'max',
+				hidden: true,
+			});
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [] };
+			mockReconstructEffectsTree.mockReturnValue([]);
+
+			const result = await manager.getData();
+
+			expect(result).toEqual({ activation: null, rolls: null });
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+		});
+
 		it('should leave the pool to the table when spending automation is off', async () => {
 			// The prompt still runs: the amount feeds the item's own effect formulas,
 			// so suppressing it would heal for nothing rather than hand the GM a count.
@@ -1759,8 +1966,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			try {
 				dialogState.result = {
 					rollMode: 0,
-					spentCharges: 4,
-					consumedChargePools: [{ poolId: 'focus', count: 4 }],
+					consumedVariableCharges: [{ poolId: 'focus', count: 4 }],
 				};
 				makeItemSpendVariableCharges();
 				manager = new ItemActivationManager(

@@ -5,6 +5,7 @@ import {
 	buildEffectiveChargePoolMap,
 	clampCurrentToMax,
 	findConflictingVariablePools,
+	findUnofferableVariableSpends,
 	getApplicableUsageTriggers,
 	getChargeConsumers,
 	isCharacterActor,
@@ -80,6 +81,22 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 				identifier: consumer.poolIdentifier,
 				required: minimum,
 			});
+	}
+
+	// See findUnofferableVariableSpends: an amount the activation could never ask
+	// about is an authoring mistake, not a spend of nothing.
+	const [unofferable] = findUnofferableVariableSpends(actor, ruleBackedItem);
+	if (unofferable) {
+		return {
+			ok: false,
+			failure: {
+				code: 'unofferableSpend',
+				poolIdentifier: unofferable.poolIdentifier,
+				poolLabel: unofferable.poolLabel,
+				required: unofferable.minimum,
+				available: unofferable.available,
+			},
+		};
 	}
 
 	for (const [poolId, tally] of requiredByPoolId) {

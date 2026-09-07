@@ -40,12 +40,9 @@
 			const [poolId, indexStr] = key.split(':');
 			return { poolId, faceIndex: Number(indexStr) };
 		});
-		const consumedChargePools = [
-			...Object.entries(state.chargeSpendCounts)
-				.filter(([, count]) => count > 0)
-				.map(([poolId, count]) => ({ poolId, count })),
-			...state.consumedVariableCharges,
-		];
+		const consumedChargePools = Object.entries(state.chargeSpendCounts)
+			.filter(([, count]) => count > 0)
+			.map(([poolId, count]) => ({ poolId, count }));
 		dialog.submitActivation({
 			// Fold any "advantage" conditional-bonus choices into the roll mode; "damage"
 			// choices are already baked into the modified formula below. Clamp the sum to
@@ -58,7 +55,7 @@
 			rollHidden: state.shouldRollBeHidden,
 			consumedPoolDice,
 			consumedChargePools,
-			spentCharges: state.spentCharges,
+			consumedVariableCharges: state.consumedVariableCharges,
 			// Typed conditional-bonus damage rolls as its own damage effect so the
 			// chosen type applies; untyped choices are already folded into rollFormula.
 			conditionalDamages: state.conditionalTypedDamages,
