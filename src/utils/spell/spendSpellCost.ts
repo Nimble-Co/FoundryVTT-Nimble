@@ -43,7 +43,19 @@ export async function spendSpellCost(
 
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
 	const poolEntry = findChargePoolByIdentifier(pools, cost.poolIdentifier);
-	if (!poolEntry) return validation;
+	if (!poolEntry) {
+		return {
+			ok: false,
+			overdrawn: false,
+			failure: {
+				code: 'poolMissing',
+				poolIdentifier: cost.poolIdentifier,
+				poolLabel: cost.poolLabel,
+				required: cost.amount,
+				available: 0,
+			},
+		};
+	}
 
 	const previousValue = poolEntry.pool.current;
 	poolEntry.pool.current = clampCurrentToMax(
