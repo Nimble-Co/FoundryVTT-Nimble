@@ -35,6 +35,8 @@ import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
+import { RemoveSpellsRule } from '../models/rules/removeSpells.js';
+import { RestrictSpellSchoolsRule } from '../models/rules/restrictSpellSchools.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
@@ -66,6 +68,8 @@ export default function registerRulesConfig() {
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		grantSpells: 'NIMBLE.ruleTypes.grantSpells',
+		removeSpells: 'NIMBLE.ruleTypes.removeSpells',
+		restrictSpellSchools: 'NIMBLE.ruleTypes.restrictSpellSchools',
 		healingPotionBonus: 'NIMBLE.ruleTypes.healingPotionBonus',
 		hitDiceAdvantage: 'NIMBLE.ruleTypes.hitDiceAdvantage',
 		incrementHitDice: 'NIMBLE.ruleTypes.incrementHitDice',
@@ -114,6 +118,8 @@ export default function registerRulesConfig() {
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		grantSpells: GrantSpellsRule,
+		removeSpells: RemoveSpellsRule,
+		restrictSpellSchools: RestrictSpellSchoolsRule,
 		healingPotionBonus: HealingPotionBonusRule,
 		hitDiceAdvantage: HitDiceAdvantageRule,
 		incrementHitDice: IncrementHitDiceRule,

@@ -25,6 +25,8 @@
 	const grantedFeatures = $derived(state.grantedFeatures);
 	const grantedSpells = $derived(state.grantedSpells);
 	const poolBonusChanges = $derived(state.poolBonusChanges);
+	const removedSpells = $derived(state.removedSpells);
+	const revertedSpells = $derived(state.revertedSpells);
 </script>
 
 <article class="nimble-sheet__body">
@@ -168,6 +170,52 @@
 			</div>
 			<ul class="nimble-level-down-group__list">
 				{#each grantedSpells as spell}
+					<li class="nimble-level-down-group__card">
+						<img
+							class="nimble-level-down-group__card-img"
+							src={spell.img || 'icons/svg/item-bag.svg'}
+							alt={spell.name}
+						/>
+						<span class="nimble-level-down-group__card-name">{spell.name}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if removedSpells.length > 0}
+		<section class="nimble-level-down-group">
+			<div class="nimble-level-down-group__header">
+				<i class="fa-solid fa-wand-sparkles"></i>
+				<h4 class="nimble-level-down-group__title">
+					{levelDownDialog.spellsRestored}
+				</h4>
+			</div>
+			<ul class="nimble-level-down-group__list">
+				{#each removedSpells as spell}
+					<li class="nimble-level-down-group__card">
+						<img
+							class="nimble-level-down-group__card-img"
+							src={spell.img || 'icons/svg/item-bag.svg'}
+							alt={spell.name}
+						/>
+						<span class="nimble-level-down-group__card-name">{spell.name}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if revertedSpells.length > 0}
+		<section class="nimble-level-down-group">
+			<div class="nimble-level-down-group__header">
+				<i class="fa-solid fa-arrow-rotate-left"></i>
+				<h4 class="nimble-level-down-group__title">
+					{levelDownDialog.spellsReverted}
+				</h4>
+			</div>
+			<ul class="nimble-level-down-group__list">
+				{#each revertedSpells as spell}
 					<li class="nimble-level-down-group__card">
 						<img
 							class="nimble-level-down-group__card-img"

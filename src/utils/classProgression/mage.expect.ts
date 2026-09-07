@@ -236,6 +236,12 @@ export const REPORT: Report = {
 			asi: 'capstone',
 		},
 	],
-	subclasses: ['Invoker Of Chaos', 'Invoker Of Control'],
+	subclasses: [
+		'Invoker Of Chaos',
+		'Invoker Of Control',
+		'Invoker Of Flame',
+		'Invoker Of Frost',
+		'Invoker Of Surges',
+	],
 	subclassSelectLevel: 3,
 };
