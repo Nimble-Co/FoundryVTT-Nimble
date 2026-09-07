@@ -50,7 +50,7 @@
 				<Hint
 					hintType="warning"
 					hintIcon="fa-solid fa-circle-exclamation"
-					hintText={localize('NIMBLE.spellScroll.dialog.notACasterWarning', { name: actorName })}
+					hintText={localize('NIMBLE.spellScroll.dialog.tierLockedWarning', { name: actorName })}
 				/>
 			{/if}
 		</SpellScrollChoiceCard>
