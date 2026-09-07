@@ -23,7 +23,7 @@ function declaresSpellcasting(spellcasting: ClassSpellcastingDeclaration | undef
 /** Whether the character holds mana at all, so a mana cost can be paid. */
 function hasManaCapacity(actor: SpellCostActorLike): boolean {
 	const mana = actor?.system?.resources?.mana;
-	return (mana?.max ?? mana?.baseMax ?? 0) > 0;
+	return Math.max(mana?.max ?? 0, mana?.baseMax ?? 0) > 0;
 }
 
 /**

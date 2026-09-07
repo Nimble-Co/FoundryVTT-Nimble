@@ -491,6 +491,15 @@ describe('multiclass cost attribution', () => {
 		expect(resolveSpellCost(actor, createSpell(2))).toMatchObject({ type: 'pool' });
 	});
 
+	it('reads a mana pool whose max is zeroed but whose base max is not as mana held', () => {
+		const actor = createMockActor({
+			items: [createPoolClass({ poolCurrent: 3 }), createPlainClass('mage')],
+			mana: { current: 0, max: 0, baseMax: 6 } as { current: number; max: number },
+		});
+
+		expect(resolveSpellCost(actor, createSpell(2))).toEqual({ type: 'mana', amount: 2 });
+	});
+
 	it('falls back to mana when more than one class declares a pool', () => {
 		const second = createPoolClass({ poolIdentifier: 'other-power', poolCurrent: 3 });
 		second.id = 'class-2';
