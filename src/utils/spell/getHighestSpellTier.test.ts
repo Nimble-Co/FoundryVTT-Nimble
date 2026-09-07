@@ -187,6 +187,41 @@ describe('getHighestSpellTier', () => {
 		expect(getHighestSpellTier(createActor(3, [feature]))).toBe(3);
 	});
 
+	it('finds a level threshold nested inside an $and branch', () => {
+		const feature = createItem([
+			createGrantRule({
+				tiers: [3],
+				predicate: { $and: [{ level: { min: 5 } }, { level: { max: 10 } }] },
+			}),
+		]);
+
+		expect(getHighestSpellTier(createActor(5, [feature]))).toBe(3);
+		expect(getHighestSpellTier(createActor(4, [feature]))).toBe(0);
+	});
+
+	it('finds a level threshold nested inside an $or branch', () => {
+		const feature = createItem([
+			createGrantRule({
+				tiers: [3],
+				predicate: { $or: ['class:mage', { level: { min: 5 } }] },
+			}),
+		]);
+
+		expect(getHighestSpellTier(createActor(5, [feature]))).toBe(3);
+		expect(getHighestSpellTier(createActor(4, [feature]))).toBe(0);
+	});
+
+	it('finds a level threshold nested two operators deep', () => {
+		const feature = createItem([
+			createGrantRule({
+				tiers: [2],
+				predicate: { $and: ['level:6', { $or: [{ level: { min: 6 } }] }] },
+			}),
+		]);
+
+		expect(getHighestSpellTier(createActor(6, [feature]))).toBe(2);
+	});
+
 	it('skips items with no prepared rules', () => {
 		const bareItem = { type: 'feature' } as unknown as ReturnType<typeof createItem>;
 

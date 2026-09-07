@@ -1,3 +1,6 @@
+import { Predicate } from '../../etc/Predicate.js';
+import { isPlainObject } from '../isPlainObject.js';
+
 /**
  * Item types whose spell grants can unlock cast tiers. Spells granted by
  * other item types (wands, scrolls, backgrounds) do not make a character a
@@ -30,6 +33,10 @@ interface SpellTierActorLike {
  * the rules engine decides that. A grant with no threshold cannot be placed on
  * the tier ladder at all, so it is skipped rather than read as level zero.
  *
+ * The threshold may sit at the top level or inside any `$and` / `$or` branch,
+ * the only logical operators the predicate schema defines. Whether the branch
+ * that holds it is the one that applies is again left to the rules engine.
+ *
  * A prepared rule holds a Predicate instance whose raw data sits on `_source`;
  * raw pack data and test fixtures hold the plain object directly.
  */
@@ -42,8 +49,19 @@ function hasLevelThreshold(rule: GrantRuleLike): boolean {
 			? predicate._source
 			: predicate;
 
-	const level = (source as { level?: { min?: unknown } }).level;
-	return typeof level?.min === 'number';
+	return containsLevelMin(source);
+}
+
+function containsLevelMin(raw: object): boolean {
+	const level = (raw as { level?: { min?: unknown } }).level;
+	if (typeof level?.min === 'number') return true;
+
+	for (const [key, value] of Object.entries(raw)) {
+		if (!Predicate.isLogicalKey(key) || !Array.isArray(value)) continue;
+		if (value.some((item) => isPlainObject(item) && containsLevelMin(item))) return true;
+	}
+
+	return false;
 }
 
 /**
