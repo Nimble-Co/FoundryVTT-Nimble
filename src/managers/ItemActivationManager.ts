@@ -305,7 +305,7 @@ class ItemActivationManager {
 
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 				ui.notifications?.error(
-					localize('NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed', {
+					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.upcastFailed, {
 						error: errorMessage,
 					}),
 				);
