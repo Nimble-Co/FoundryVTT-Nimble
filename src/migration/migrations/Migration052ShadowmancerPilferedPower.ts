@@ -65,23 +65,8 @@ const FEATURES: FeatureSpec[] = [
 				poolIdentifier: 'pilfered-power',
 				dieSize: null,
 				maxDelta: null,
-				// The rules text is "each time you roll Initiative", so the refill is
-				// tied to the initiative roll rather than to the start of the encounter.
-				// A second roll therefore grants a second use, which the pool maximum
-				// still bounds.
-				//
-				// This differs from Migration041, which chose `encounterStart` for the
-				// Commander's equivalent feature to avoid exactly that second grant.
-				// Both readings are defensible; this one follows the printed wording,
-				// and the clamp at the pool maximum keeps the difference small. The
-				// Commander's choice is left as it shipped rather than changed here.
-				//
-				// Not expressed: the rules end with "This expires at the end of
-				// combat if unused". A recovery can add a use but not take back an
-				// unspent one, because nothing distinguishes a use granted this
-				// combat from one the character already held. The use therefore
-				// survives to the next Safe Rest, which is the more generous
-				// reading, and the limitation is recorded in the player docs.
+				// Trigger follows the printed wording, "each time you roll Initiative".
+				// The end-of-combat expiry of an unused grant is not expressible.
 				addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1', predicate: {} }],
 			},
 		],
@@ -125,7 +110,7 @@ class Migration052ShadowmancerPilferedPower extends MigrationBase {
 		if (!classes.every((item: any) => item?.system?.identifier === 'shadowmancer')) return;
 
 		const mana = source.system?.resources?.mana;
-		if (!mana || mana.current === 0) return;
+		if (!(mana?.current > 0)) return;
 
 		mana.current = 0;
 		console.log('Nimble Migration | Shadowmancer: cleared mana the class never had');
