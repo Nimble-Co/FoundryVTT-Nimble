@@ -38,7 +38,7 @@ export default function summarizeOptionSwap(
 
 		changes.push({
 			// The same heading the rest dialog showed the pool under.
-			label: pool.displayName || formatGroupName(pool.poolKey),
+			label: pool.displayName || pool.poolGroups.map(formatGroupName).join(' / '),
 			removed,
 			added,
 		});

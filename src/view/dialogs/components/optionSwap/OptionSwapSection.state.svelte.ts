@@ -88,7 +88,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 			const showsAvailable = unfoldedPools.has(pool.poolKey);
 			return {
 				pool,
-				heading: pool.displayName || formatGroupName(pool.poolKey),
+				heading: pool.displayName || pool.poolGroups.map(formatGroupName).join(' / '),
 				pickHint:
 					pool.pickCount === 1
 						? localize('NIMBLE.classFeatureSelection.chooseOne')
