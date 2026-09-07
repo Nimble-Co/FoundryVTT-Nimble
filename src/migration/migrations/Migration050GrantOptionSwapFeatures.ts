@@ -6,7 +6,6 @@ interface SwapFeature {
 	level: number;
 	name: string;
 	img: string;
-	folder: string;
 	group: string;
 	description: string;
 	ruleLabel: string;
@@ -22,7 +21,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 4,
 		name: 'Wrath & Ruin',
 		img: 'icons/skills/melee/strike-hammer-destructive-orange.webp',
-		folder: 'd40bf36abe9f4b0a',
 		group: 'berserker-progression',
 		description:
 			'<p>Whenever you perform a notable act of destruction or feat of strength during a Safe Rest, you may choose different Berserker options available to you.</p>',
@@ -34,7 +32,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 4,
 		name: 'Rigorous Training',
 		img: 'icons/environment/people/infantry.webp',
-		folder: '406c4e162069a4a8',
 		group: 'commander-progression',
 		description:
 			'<p>Whenever you train with your party or other soldiers during a Safe Rest, you may choose different Commander options available to you.</p>',
@@ -45,7 +42,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 2,
 		name: 'Remember the Wild',
 		img: 'icons/magic/nature/wolf-paw-glow-green.webp',
-		folder: '2e9e32bf9e74e633',
 		group: 'hunter-progression',
 		description:
 			'<p>Whenever you spend a day in the wilderness during a Safe Rest, you may choose different Hunter options available to you.</p>',
@@ -56,7 +52,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 3,
 		name: 'Study!',
 		img: 'icons/sundries/books/book-open-purple.webp',
-		folder: 'a95d9a582c294f7c',
 		group: 'mage-progression',
 		description:
 			'<p>Whenever you study arcane books or are tutored by a higher level Mage during a Safe Rest, you may choose different Mage options available to you.</p>',
@@ -68,7 +63,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 3,
 		name: 'Serve Selflessly',
 		img: 'icons/magic/holy/prayer-hands-glowing-yellow.webp',
-		folder: 'c5f324248b31dabc',
 		group: 'oathsworn-progression',
 		description:
 			'<p>Whenever you perform a notable selfless act during a Safe Rest, you may choose different Oathsworn options available to you.</p>',
@@ -79,7 +73,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 3,
 		name: 'Supplicate',
 		img: 'icons/magic/unholy/silhouette-robe-evil-glow.webp',
-		folder: '81e685bc5c9127ce',
 		group: 'shadowmancer-progression',
 		description:
 			'<p>Whenever you commune with your Patron on a Safe Rest, you may beg them to allow you to choose different Shadowmancer options (they may ask for something in return).</p>',
@@ -90,7 +83,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 5,
 		name: 'Serve',
 		img: 'icons/magic/life/heart-hand-gold-green-light.webp',
-		folder: 'c1face1ec4d1249a',
 		group: 'shepherd-progression',
 		description:
 			'<p>After spending a day tending to a sacred place or serving others during a Safe Rest, you may choose different Shepherd options available to you.</p>',
@@ -102,7 +94,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 4,
 		name: 'Perform!',
 		img: 'icons/tools/instruments/lute-gold-brown.webp',
-		folder: '910213b07f81138f',
 		group: 'songweaver-progression',
 		description:
 			'<p>Whenever you perform in a place that inspires you, or exchange barbs with another competent wordsmith during a Safe Rest, you may choose different Songweaver options available to you.</p>',
@@ -114,7 +105,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 4,
 		name: 'Be Wild',
 		img: 'icons/creatures/mammals/deer-movement-leap-green.webp',
-		folder: '0075e1e989d0552b',
 		group: 'stormshifter-progression',
 		description:
 			'<p>Whenever you spend a day with wild animals during a Safe Rest, you may choose different Stormshifter options available to you.</p>',
@@ -125,7 +115,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 4,
 		name: 'Trade Secrets',
 		img: 'icons/sundries/gaming/playing-cards.webp',
-		folder: '4915fea5a41fc733',
 		group: 'the-cheat-progression',
 		description:
 			'<p>Whenever you spend a night talking shop with other roguish types during a Safe Rest, you may choose different Cheat options available to you.</p>',
@@ -137,7 +126,6 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
 		level: 4,
 		name: 'Focus',
 		img: 'icons/magic/holy/meditation-chi-focus-blue.webp',
-		folder: 'a03073c1f33d5b34',
 		group: 'zephyr-progression',
 		description:
 			'<p>Whenever you spend time meditating alone in a windy place during a Safe Rest, you may choose different Zephyr options available to you.</p>',
