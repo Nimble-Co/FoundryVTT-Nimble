@@ -326,6 +326,12 @@ describe('exceedsUnlockedSpellTier', () => {
 		const actor = createMockActor({ items: [createPoolClass({})], unlockedTier: 0 });
 		expect(exceedsUnlockedSpellTier(actor, createSpell(1))).toBe(true);
 	});
+
+	it('never bounds an actor with no tier ladder', () => {
+		const actor = createMockActor({});
+		(actor.system as { resources: Record<string, unknown> }).resources = {};
+		expect(exceedsUnlockedSpellTier(actor, createSpell(5))).toBe(false);
+	});
 });
 
 describe('validateSpellCost', () => {

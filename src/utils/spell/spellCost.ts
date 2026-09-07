@@ -171,16 +171,19 @@ export function resolvePinnedCastTier(actor: SpellCostActorLike, spell: SpellLik
 /**
  * Whether the spell's own tier sits above what the caster has unlocked.
  *
- * A class that pins its cast tier never offers the tier control, so nothing
- * on that path compares the spell against the caster's ladder. Without this
- * the bound would hold for a caster who picks a tier and not for one whose
- * class picks it for them.
+ * The tier control only exists for a spell that scales, so this is the bound
+ * for every other cast: a spell that does not scale, a class that pins the
+ * tier, or a macro. An actor with no tier ladder, such as a monster, casts at
+ * the spell's own tier and is never bounded, matching computeUpcastBounds.
  */
 export function exceedsUnlockedSpellTier(actor: SpellCostActorLike, spell: SpellLike): boolean {
 	const tier = spell?.system?.tier ?? 0;
 	if (tier <= 0) return false;
 
-	return tier > (actor?.system?.resources?.highestUnlockedSpellTier ?? 0);
+	const unlockedTier = actor?.system?.resources?.highestUnlockedSpellTier;
+	if (unlockedTier === null || unlockedTier === undefined) return false;
+
+	return tier > unlockedTier;
 }
 
 /**

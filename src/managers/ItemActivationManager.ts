@@ -200,10 +200,9 @@ class ItemActivationManager {
 		if (this.#item.type === 'spell' && this.actor) {
 			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
 
-			// A pinned class never sees the tier control, so the bound is enforced
-			// here instead. Checked on every activation path, not just the dialog,
-			// so a macro cannot cast above the caster's ladder either.
-			if (this.pinnedCastTier !== null && exceedsUnlockedSpellTier(this.actor, this.#item)) {
+			// Checked on every activation path, not just the dialog, so a macro or
+			// a spell without a tier control cannot cast above the caster's ladder.
+			if (exceedsUnlockedSpellTier(this.actor, this.#item)) {
 				ui.notifications?.warn(
 					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
 						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
