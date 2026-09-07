@@ -5,14 +5,19 @@
 - **Cost mode** → `fixed`
 - **Cost** → `1`
 
-The consumer sits on the item that spends the charges, which need not be the item that declares the pool: point it at the identifier of a Charge Pool rule anywhere on the actor and it spends from there. A use with too few charges left is blocked, and the chat card reports what the use cost.
+The consumer goes on the item that spends the charges. It does not have to be the item that holds the pool: point **Pool** at any Charge Pool rule on the character. If too few charges are left, the item cannot be used. The chat card reports what the use cost.
 
-**Example: a pool you spend any amount of.** Set **Cost mode** to `variable` and the activation asks how much to spend instead of taking a fixed amount. **Cost** becomes the smallest legal spend and **Maximum cost** the largest, with a blank maximum meaning whatever the pool has left. The amount the player picks is available to the item's own damage and healing formulas as `@spent`, so a healing effect of `@spent` restores exactly what was spent. This is how Lay on Hands works: a pool of `5 * @level` that refills on a safe rest, and a variable consumer that heals what it spends.
+**Example: a pool you spend any amount of.** Set **Cost mode** to `variable` and the item asks the player how many charges to spend. **Cost** is the smallest amount they can pick, **Maximum cost** the largest. Leave **Maximum cost** blank to let them spend whatever the pool has.
 
-Because the amount is player input, an item with a variable consumer always opens its roll window, whatever its skip setting says.
+The item's own damage and healing formulas read that amount as `@spent`, so a healing effect of `@spent` heals what was spent. Lay on Hands works this way: a pool of `5 * @level` that refills on a safe rest, and a variable consumer that heals what it spends.
 
-One variable consumer per pool, per item. The activation asks for one amount per pool, so a second variable consumer pointing at the same pool has no amount of its own: the system refuses to use the item rather than guess which spend you meant. Give each one its own pool, or make all but one a fixed cost.
+An item with a variable consumer always opens its roll window, even when it is set to skip it.
 
-An item may pair a fixed consumer with a variable one on the same pool. The fixed cost is reserved first, so the amount offered for the variable spend is what is left after it. A pool of 10 with a fixed cost of 3 offers a variable spend of up to 7, and the item is refused outright if the pool cannot cover both.
+An item can have a fixed cost and a variable one on the same pool. The fixed cost comes out first and the player picks from what is left, so a pool of 10 with a fixed cost of 3 offers up to 7. If the pool cannot cover both, the item cannot be used.
 
-A variable spend the activation could never ask about is refused the same way, naming the pool: a hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell is routed to the upcast window, which asks about tier rather than charges. Put a variable consumer on a feature or an item, not on a spell.
+A variable consumer will not work in these cases. The item cannot be used, and the message names the pool.
+
+- **Two variable consumers on one pool.** The item asks once per pool, so the second has no answer of its own. Give it another pool, or make it a fixed cost.
+- **Maximum cost below Cost.** Nothing is left to pick.
+- **A hidden pool.** It has no control on the sheet, so there is nowhere to enter an amount.
+- **A variable consumer on a spell.** Casting opens the upcast window, which asks for a tier. Put it on a feature or an item instead.
