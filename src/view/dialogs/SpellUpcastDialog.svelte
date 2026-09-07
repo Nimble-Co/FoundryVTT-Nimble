@@ -5,6 +5,7 @@
 	import { NimbleRoll } from '../../dice/NimbleRoll';
 	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
+	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
@@ -39,12 +40,16 @@
 	const enforceManaCost = isResourceSpendingAutomationEnabled();
 
 	const baseMana = $derived(spell.tier);
-	const resources = $derived(actor?.system?.resources);
-	const currentMana = $derived(resources?.mana?.current ?? 0);
-	// An actor with no resources node (an NPC or monster) has no tier ladder to
-	// climb, so it casts at the spell's own tier.
-	const maxTier = $derived(resources ? (resources.highestUnlockedSpellTier ?? 9) : spell.tier);
-	const maxMana = $derived(enforceManaCost ? Math.min(currentMana, maxTier) : maxTier);
+	const bounds = $derived(
+		computeUpcastBounds({
+			spellTier: spell.tier,
+			resources: actor?.system?.resources,
+			enforceManaCost,
+		}),
+	);
+	const currentMana = $derived(bounds.currentMana);
+	const maxTier = $derived(bounds.maxTier);
+	const maxMana = $derived(bounds.maxMana);
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
 	const canUpcast = $derived(
