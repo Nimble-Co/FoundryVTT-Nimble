@@ -296,7 +296,7 @@ class ItemActivationManager {
 						spellCannotUpcast: warnings.spellCannotUpcast,
 						insufficientMana: warnings.insufficientMana,
 						belowBaseTier: warnings.minMana,
-						aboveUnlockedTier: warnings.aboveUnlockedTier,
+						aboveUnlockedTier: warnings.aboveMaxTier,
 					};
 					ui.notifications?.error(localize(messageKeys[error.refusal.code], error.refusal.data));
 					console.warn('Nimble | Upcast refused:', error.message);
