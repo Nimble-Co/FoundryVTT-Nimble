@@ -88,12 +88,12 @@ With **Upcast Choice** selected, you instead click **Add Choice**, give each cho
 Casting a spell opens the cast window. It contains the roll mode selector, situational modifiers, and roll options that every activation window has (see [Item Activations & Effects](activations.md)), plus the upcast controls when the spell can be upcast:
 
 - an **Upcast** heading with a **mana slider** running from the spell's base cost up to the caster's highest unlocked spell tier. While the **Resource Spending** automation setting is on (see [Settings](../gm/settings.md)), the slider is also capped by the caster's current mana. The caster simply drags it to the total mana they want to spend, and the **Upcast Level** readout shows how many steps that buys;
-- for a class that casts at its highest tier, no slider at all. The window states the tier the spell will be cast at and what it costs;
+- for a class that casts at its highest tier, no slider at all. The window states the tier the spell will be cast at and what it costs. A spell that does not scale is unaffected: it casts at, and costs, its own tier;
 - for a class that pays with a charge pool, no slider either, unless it also casts at its highest tier. The pool cost is the same at every tier, so it buys no upcast steps and the spell casts at its own tier;
 - for Upcast Choice spells, a **Choose Enhancement** list of your labeled options;
 - an **Applied Effect** preview listing exactly what the chosen upcast adds ("+2d8 fire damage").
 
-A spell that cannot be upcast (or, with Resource Spending on, a caster without spare mana) just gets the normal roll controls. A caster with no mana pool and no unlocked spell tiers, such as a monster, always casts at the spell's own tier. Holding **Alt** skips the window and casts at base tier. When the caster confirms, the upcast changes are baked into the rolls and the total mana is deducted.
+A spell that cannot be upcast (or, with Resource Spending on, a caster without spare mana) just gets the normal roll controls. A caster with no mana pool and no unlocked spell tiers, such as a monster, always casts at the spell's own tier. Holding **Alt** skips the window and casts at base tier, except for an Upcast Choice spell whose class casts at its highest tier: the window opens anyway so the caster picks the enhancement. When the caster confirms, the upcast changes are baked into the rolls and the total mana is deducted.
 
 ![The cast window for an upcastable spell, showing the mana slider and the Applied Effect preview](/images/documentation/roll-dialog-spell-upcast.png)
 

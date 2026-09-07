@@ -1093,9 +1093,10 @@ class ItemActivationManager {
 
 		// A variable charge spend has no sensible default — the amount is the
 		// player's input — so an item that asks for one always gets the dialog.
-		const hasVariableChargeSpend = this.#hasVariableChargeSpend();
+		// The same holds for the enhancement a pinned upcast picks from a list.
+		const mustPrompt = this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice();
 
-		if (!hasRolls && !isSpell && !hasVariableChargeSpend) {
+		if (!hasRolls && !isSpell && !mustPrompt) {
 			// No rolls needed, use default
 			return this.#getDefaultDialogData(rollOptions);
 		}
@@ -1108,7 +1109,7 @@ class ItemActivationManager {
 		unsubscribe();
 
 		const skipDialog =
-			!hasVariableChargeSpend && (this.activationData?.skipRollDialog ? !altPressed : altPressed);
+			!mustPrompt && (this.activationData?.skipRollDialog ? !altPressed : altPressed);
 
 		if (skipDialog) {
 			return this.#getDefaultDialogData(rollOptions);
@@ -1168,6 +1169,16 @@ class ItemActivationManager {
 				includeVariable: true,
 			},
 		).some((consumer) => consumer.variable);
+	}
+
+	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
+	#hasPinnedUpcastChoice(): boolean {
+		if (this.#item.type !== 'spell') return false;
+		const synthesized = synthesizePinnedUpcast(
+			this.#item as unknown as SpellLike,
+			this.pinnedCastTier,
+		);
+		return synthesized?.choiceIndex !== undefined;
 	}
 
 	/**

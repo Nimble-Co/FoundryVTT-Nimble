@@ -49,7 +49,7 @@ interface MockItem {
 			effects: EffectNode[];
 		};
 		tier?: number;
-		scaling?: { mode: string; deltas?: unknown[] };
+		scaling?: { mode: string; deltas?: unknown[]; choices?: unknown[] };
 	};
 }
 
@@ -2096,6 +2096,52 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(ui.notifications?.error).toHaveBeenCalledWith(
 					expect.stringContaining('Upcast failed'),
 				);
+			});
+
+			it('opens the dialog for a choice-scaled spell even when the sheet skips it', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = {
+					mode: 'upcastChoice',
+					choices: [
+						{ label: 'First', deltas: [] },
+						{ label: 'Second', deltas: [] },
+					],
+				};
+				dialogState.result = { rollMode: 0, upcast: { manaToSpend: 5, choiceIndex: 1 } };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).toHaveBeenCalledTimes(1);
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult?.manaSpent).toBe(5);
+				expect(manager.upcastResult?.choiceIndex).toBe(1);
+			});
+
+			it('still skips the dialog for a choice-scaled spell the pinned tier does not lift', async () => {
+				pinCastTier(1);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'upcastChoice', choices: [] };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult).toBeNull();
 			});
 
 			it('charges the pinned tier when the spell scales to it', async () => {
