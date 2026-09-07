@@ -14,6 +14,7 @@ describe('migration schema version', () => {
 		const versions = MigrationList.constructAll().map(
 			(migration) => (migration.constructor as { version?: number }).version,
 		);
+		expect(versions.every((version) => typeof version === 'number')).toBe(true);
 		expect(new Set(versions).size).toBe(versions.length);
 	});
 });
