@@ -1,5 +1,6 @@
 import { HitDiceManager } from '#managers/HitDiceManager.js';
 import { systemHookName } from '#system';
+import type { OptionSwapSubmitData } from '#types/optionSwap.d.ts';
 import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
@@ -65,7 +66,7 @@ class RestManager {
 			skipChatCard: false,
 		};
 
-		this.#data = foundry.utils.mergeObject(defaultData, data);
+		this.#data = { ...defaultData, ...data };
 	}
 
 	get restTypes(): string[] {
@@ -357,6 +358,8 @@ declare namespace RestManager {
 		skipChatCard: boolean;
 		selectedHitDice?: Record<number, number>;
 		activeAdvantageRuleIds?: string[];
+		/** What the rest dialog's option swap section submitted, if it was shown. */
+		optionSwap?: OptionSwapSubmitData;
 		/** Class options and skills the character changed as part of this rest. */
 		optionChanges?: OptionChange[];
 	}

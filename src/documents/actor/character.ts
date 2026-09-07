@@ -11,11 +11,7 @@ import type {
 	LevelCorrectionSubmitData,
 	ResolvedLevelSelectionGap,
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
-import type {
-	OptionSwapSubmitData,
-	ResolvedOptionSwapOffer,
-	ResolvedSwappableOptionPool,
-} from '#types/optionSwap.d.ts';
+import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
@@ -1843,7 +1839,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 * which is the ordinary rest.
 	 */
 	async #applyRestOptionSwap(restData: RestManager.Data): Promise<OptionChange[]> {
-		const optionSwap = (restData as { optionSwap?: OptionSwapSubmitData }).optionSwap;
+		const { optionSwap } = restData;
 		if (!optionSwap) return [];
 
 		const { pools = [], selections = new Map(), skillPoints = new Map() } = optionSwap;
