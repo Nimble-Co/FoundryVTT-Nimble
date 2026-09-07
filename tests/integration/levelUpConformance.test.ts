@@ -13,22 +13,27 @@ import { importPackItem, purgeTestDocuments, settle, waitFor } from './liveHelpe
 
 const TEST_PREFIX = 'V14 LevelUp Prototype';
 
+type LevelUpActor = Actor & {
+	sheet: {
+		render(force: boolean): Promise<unknown>;
+		element: HTMLElement;
+		close(): Promise<unknown>;
+	};
+	items: { contents: Array<{ name: string; type: string }> };
+	levels: { character: number };
+	system: any;
+};
+
+let createdActor: LevelUpActor | undefined;
+
 test('a Shadowmancer levelled through the real UI gains Pilfered Power on its own', async () => {
 	await purgeTestDocuments(TEST_PREFIX);
 
 	const actor = (await Actor.create({
 		name: `${TEST_PREFIX} Shadowmancer`,
 		type: 'character',
-	} as Actor.CreateData)) as unknown as Actor & {
-		sheet: {
-			render(force: boolean): Promise<unknown>;
-			element: HTMLElement;
-			close(): Promise<unknown>;
-		};
-		items: { contents: Array<{ name: string; type: string }> };
-		levels: { character: number };
-		system: any;
-	};
+	} as Actor.CreateData)) as unknown as LevelUpActor;
+	createdActor = actor;
 
 	// A real character has its stats before it takes a level.
 	await actor.update({ 'system.abilities.dexterity.baseValue': 3 } as never);
@@ -115,10 +120,12 @@ test('a Shadowmancer levelled through the real UI gains Pilfered Power on its ow
 	expect(pool, 'Pilfered Power seeded its pool').toBeTruthy();
 	expect(pool.max).toBe(3);
 	expect(pool.current).toBe(3);
-
-	await actor.sheet.close();
 });
 
 afterAll(async () => {
-	await purgeTestDocuments(TEST_PREFIX);
+	try {
+		await createdActor?.sheet.close();
+	} finally {
+		await purgeTestDocuments(TEST_PREFIX);
+	}
 });
