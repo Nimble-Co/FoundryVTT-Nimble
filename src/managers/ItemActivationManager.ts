@@ -214,7 +214,13 @@ class ItemActivationManager {
 				this.#item as unknown as SpellLike,
 				this.pinnedCastTier,
 			);
-			if (synthesized) dialogData.upcast = synthesized;
+			if (synthesized) {
+				dialogData.upcast = synthesized;
+			} else if (this.actor) {
+				// Nothing lifts the cast above the spell's own tier, so it must not
+				// be charged at the pinned one.
+				this.spellCost = resolveSpellCost(this.actor, this.#item);
+			}
 		}
 
 		// Apply upcast deltas if present

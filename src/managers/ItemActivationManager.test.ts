@@ -31,6 +31,7 @@ interface MockActor {
 			intelligence: { mod: number };
 		};
 		levelUpHistory?: Array<Record<string, unknown>>;
+		resources?: { mana?: { current: number; max: number }; highestUnlockedSpellTier?: number };
 	};
 }
 
@@ -47,6 +48,8 @@ interface MockItem {
 		activation: {
 			effects: EffectNode[];
 		};
+		tier?: number;
+		scaling?: { mode: string; deltas?: unknown[] };
 	};
 }
 
@@ -2018,6 +2021,64 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.activation).not.toBeNull();
 			// No upcast was applied, so the spell activated at its base tier.
 			expect(manager.upcastResult).toBeNull();
+		});
+
+		describe('pinned cast tier', () => {
+			function pinCastTier(unlockedTier: number) {
+				const pinningClass = {
+					type: 'class',
+					name: 'Pinning Class',
+					actor: mockActor,
+					system: {
+						activation: { effects: [] },
+						spellcasting: { castAtHighestTier: true },
+					},
+				} as MockItem;
+				mockActor.items = { contents: [pinningClass], get: () => pinningClass };
+				mockActor.system.resources = {
+					mana: { current: 10, max: 10 },
+					highestUnlockedSpellTier: unlockedTier,
+				};
+			}
+
+			it('charges the spell its own tier when it does not scale', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'none' };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(result.activation).not.toBeNull();
+				expect(manager.pinnedCastTier).toBe(5);
+				expect(manager.upcastResult).toBeNull();
+				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
+			});
+
+			it('charges the pinned tier when the spell scales to it', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'upcast', deltas: [] };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult?.manaSpent).toBe(5);
+				expect(manager.spellCost).toEqual({ type: 'mana', amount: 5 });
+			});
 		});
 
 		it('should open the config dialog when skipRollDialog is unset and the item has rolls', async () => {
