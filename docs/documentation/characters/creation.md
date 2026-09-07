@@ -54,7 +54,7 @@ Open the new sheet and give it a quick once-over:
 
 - **Hit Points**: your maximum HP comes from your class. Make sure the HP bar looks right.
 - **Hit dice**: you should have one hit die of your class's size at level 1.
-- **Mana**: if you play a spellcasting class, the mana bar appears in the sheet header. No mana bar means the sheet doesn't think you're a caster.
+- **Mana**: if your class has a mana formula, the mana bar appears in the sheet header. The mana bar does not decide whether you can cast. That comes from the spell grants on your class: the Settings tab shows your **Highest Unlocked Spell Tier**, and a 0 there means your class grants no tiered spells.
 - **Known spells**: check the Spells tab against what you picked in the creator.
 - **Equipment**: if you chose starting equipment, it should already be equipped on the Inventory tab; if you chose gold, you should have 50 gp.
 
