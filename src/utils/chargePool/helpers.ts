@@ -798,6 +798,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&
 		left.showAsResource === right.showAsResource &&
+		left.seeded === right.seeded &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

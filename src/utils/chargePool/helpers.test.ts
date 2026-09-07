@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
 	applyRecoveryTriggersToPools,
+	areChargePoolMapsEqual,
 	buildEffectiveChargePoolMap,
 	findConflictingVariablePools,
 	getChargeConsumers,
+	getChargePoolMapFromActor,
 } from './helpers.js';
 import type {
 	CharacterActorLike,
@@ -791,6 +793,24 @@ describe('a pool whose maximum only appears later', () => {
 
 		expect(pool.max).toBe(3);
 		expect(pool.current).toBe(0);
+	});
+
+	it('writes a pool whose only change is the seeded marker', () => {
+		const spent = foundry.utils.deepClone(storedAtZero);
+		spent.nimble.chargePools['pilfered-power'].max = 3;
+
+		const actor = createMockActor([createMockItem('item-1', 'Pilfered Power', [poolRule], spent)], {
+			dexterity: 3,
+		});
+
+		const stored = getChargePoolMapFromActor(actor);
+		const effective = buildEffectiveChargePoolMap(actor);
+		const [storedPool] = Object.values(stored);
+		const [effectivePool] = Object.values(effective);
+
+		expect(storedPool.seeded).toBeUndefined();
+		expect({ ...storedPool, seeded: effectivePool.seeded }).toEqual(effectivePool);
+		expect(areChargePoolMapsEqual(stored, effective)).toBe(false);
 	});
 
 	it('records the seeded marker once the maximum is real', () => {
