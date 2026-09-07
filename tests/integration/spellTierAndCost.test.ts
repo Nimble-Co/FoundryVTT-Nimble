@@ -171,6 +171,8 @@ describe('casting through the cast window spends what the window said', () => {
 		return pools?.['pilfered-power'];
 	};
 
+	// Vampiric Greed scales, so the pinned tier lifts it and the window says so.
+	// Shadow Trap does not scale, so it casts at its own tier with no label.
 	test('a Shadowmancer is told the pool it pays, and pays one use', async () => {
 		const shadowmancer = await buildCharacter({
 			name: `${TEST_PREFIX} Casting`,
@@ -180,7 +182,7 @@ describe('casting through the cast window spends what the window said', () => {
 		const spell = await importPackItem(
 			shadowmancer as never,
 			'nimble-spells',
-			(entry: { name: string }) => entry.name === 'Shadow Trap',
+			(entry: { name: string }) => entry.name === 'Vampiric Greed',
 			[],
 		);
 		await settle();
