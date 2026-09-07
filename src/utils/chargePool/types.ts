@@ -126,7 +126,12 @@ type ChargeContext = {
 };
 
 type ChargeValidationFailure = {
-	code: 'poolMissing' | 'insufficientCharges' | 'consumptionBlocked' | 'conflictingConsumers';
+	code:
+		| 'poolMissing'
+		| 'insufficientCharges'
+		| 'consumptionBlocked'
+		| 'conflictingConsumers'
+		| 'unofferableSpend';
 	poolIdentifier: string;
 	poolLabel: string;
 	required: number;

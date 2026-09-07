@@ -521,6 +521,50 @@ function findConflictingVariablePools(
 	return [...conflicting.values()];
 }
 
+/**
+ * Variable consumers on this item whose amount could never be asked for.
+ *
+ * A hidden pool is an internal gate rather than a resource the player manages,
+ * so it renders no stepper to prompt with; a maximum below the minimum leaves
+ * no legal amount; and a spell is routed to the upcast window, which asks about
+ * tier rather than charges. Each would post a card that resolved `@spent` as 0
+ * and moved neither the pool nor the target, so the use is refused instead.
+ */
+function findUnofferableVariableSpends(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): Array<{ poolIdentifier: string; poolLabel: string; minimum: number; available: number }> {
+	const pools = buildEffectiveChargePoolMap(actor);
+	const unofferable: Array<{
+		poolIdentifier: string;
+		poolLabel: string;
+		minimum: number;
+		available: number;
+	}> = [];
+
+	for (const consumer of getChargeConsumers(actor, item, { includeVariable: true })) {
+		if (!consumer.variable) continue;
+		const pool = pools[consumer.poolId];
+		if (!pool) continue;
+
+		const minimum = Math.max(1, consumer.cost);
+		const offerable =
+			!pool.hidden &&
+			item.type !== 'spell' &&
+			(consumer.maxCost === null || consumer.maxCost >= minimum);
+		if (offerable) continue;
+
+		unofferable.push({
+			poolIdentifier: consumer.poolIdentifier,
+			poolLabel: pool.label,
+			minimum,
+			available: toFiniteNonNegativeInteger(pool.current),
+		});
+	}
+
+	return unofferable;
+}
+
 function getApplicableUsageTriggers(context: {
 	isMiss?: boolean;
 	isCritical?: boolean;
@@ -771,6 +815,7 @@ export {
 	getChargeConsumers,
 	getFixedChargeCostsByPool,
 	findConflictingVariablePools,
+	findUnofferableVariableSpends,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,
 	resolveRecoveryTrigger,

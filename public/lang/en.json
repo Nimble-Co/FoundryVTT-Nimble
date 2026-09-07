@@ -1544,7 +1544,8 @@
 			"notifications": {
 				"poolMissing": "{item} requires the charge pool \"{pool}\", but it is not available.",
 				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available.",
-				"conflictingConsumers": "{item} asks for more than one player-chosen spend from the charge pool \"{pool}\". Give each variable consumer its own pool, or make all but one a fixed cost."
+				"conflictingConsumers": "{item} asks for more than one player-chosen spend from the charge pool \"{pool}\". Give each variable consumer its own pool, or make all but one a fixed cost.",
+				"unofferableSpend": "{item} cannot ask how much to spend from the charge pool \"{pool}\". A hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell asks about tier instead."
 			}
 		},
 		"dicePoolTracker": {

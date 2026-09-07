@@ -187,16 +187,6 @@ export function createItemActivationConfigDialogState(
 		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
 	);
 
-	// What the item's own effect formulas read as `@spent`. Summed across
-	// consumers so an item with two variable spends reports one budget, which is
-	// what a formula referring to "the amount spent" means.
-	const spentCharges = $derived(
-		variableChargeSpends.reduce(
-			(total, spend) => total + (variableSpendCounts[spend.poolId] ?? 0),
-			0,
-		),
-	);
-
 	// The variable spends in the shape the manager deducts from.
 	const consumedVariableCharges = $derived(
 		variableChargeSpends
@@ -341,9 +331,6 @@ export function createItemActivationConfigDialogState(
 		},
 		get variableSpendCounts() {
 			return variableSpendCounts;
-		},
-		get spentCharges() {
-			return spentCharges;
 		},
 		get consumedVariableCharges() {
 			return consumedVariableCharges;

@@ -68,9 +68,13 @@ export interface ItemActivationConfigDialogSubmitData {
 	consumedChargePools: ConsumedChargePool[];
 	/**
 	 * Charges spent by variable consumers, which effect formulas read as `@spent`.
+	 * Kept apart from `consumedChargePools` because the two are bounded
+	 * differently: a variable spend is the amount the activation resolves
+	 * against, a rollable charge spend is a rider on it.
+	 *
 	 * Optional: the upcast dialog submits the same shape without it.
 	 */
-	spentCharges?: number;
+	consumedVariableCharges?: ConsumedChargePool[];
 }
 
 export interface ItemActivationConfigDialogInstance {
