@@ -8,8 +8,6 @@ import localize from '#utils/localize.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
 import { isFixedGroup, isGroupComplete } from '../../selectionGroupRules.ts';
 
-export { formatGroupName };
-
 type FeatureGroupSelectionStateProps = Pick<
 	FeatureGroupSelectionProps,
 	'groupName' | 'group' | 'selectedFeatures'
