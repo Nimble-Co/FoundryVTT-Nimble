@@ -2138,7 +2138,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(result).toEqual({ activation: null, rolls: null });
 				expect(manager.upcastResult).toBeNull();
 				expect(ui.notifications?.error).toHaveBeenCalledWith(
-					expect.stringContaining('Upcast failed'),
+					'Cannot spend more mana than your highest unlocked spell tier (1).',
 				);
 			});
 
