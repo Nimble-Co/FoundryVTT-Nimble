@@ -132,6 +132,22 @@ describe('collectSwappableOptions', () => {
 		expect(pools.filter((pool) => pool.poolGroups.includes('commanders-orders'))).toHaveLength(1);
 	});
 
+	it('titles a merged pool from its groups when no feature lends it a name', async () => {
+		const feature = loadAllFeatureDocs().find((doc) => doc.name === 'Fit for Any Battlefield');
+		if (!feature) throw new Error('fixture feature missing');
+		const owned = new Set([...owning('commanders-orders', 2), ...owning('combat-tactics', 2)]);
+
+		feature.name = '';
+		try {
+			const pools = await collectSwappableOptions(index, 'commander', 16, owned, null);
+			expect(findPool(pools, 'combat-tactics')?.displayName).toBe(
+				'Combat Tactics / Commanders Orders',
+			);
+		} finally {
+			feature.name = 'Fit for Any Battlefield';
+		}
+	});
+
 	it('keeps a narrowed pool to the groups the rule names', async () => {
 		const owned = new Set([...owning('commanders-orders', 2), ...owning('combat-tactics', 2)]);
 

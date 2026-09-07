@@ -1,6 +1,5 @@
 import type { OptionChange } from '#managers/RestManager.ts';
 import type { ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
-import formatGroupName from './formatGroupName.js';
 
 /**
  * Describes a set of swaps in names rather than uuids, so the rest card can report what
@@ -38,7 +37,7 @@ export default function summarizeOptionSwap(
 
 		changes.push({
 			// The same heading the rest dialog showed the pool under.
-			label: pool.displayName || pool.poolGroups.map(formatGroupName).join(' / '),
+			label: pool.displayName,
 			removed,
 			added,
 		});

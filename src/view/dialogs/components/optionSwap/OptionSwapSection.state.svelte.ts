@@ -6,7 +6,6 @@ import type {
 	ResolvedOptionSwapOffer,
 	ResolvedSwappableOptionPool,
 } from '#types/optionSwap.d.ts';
-import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
 import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
@@ -88,7 +87,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 			const showsAvailable = unfoldedPools.has(pool.poolKey);
 			return {
 				pool,
-				heading: pool.displayName || pool.poolGroups.map(formatGroupName).join(' / '),
+				heading: pool.displayName,
 				pickHint:
 					pool.pickCount === 1
 						? localize('NIMBLE.classFeatureSelection.chooseOne')

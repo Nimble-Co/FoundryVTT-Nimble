@@ -3,6 +3,7 @@ import collectOptionPoolRequirements, {
 	buildOptionPoolKey,
 	type OptionPoolRequirement,
 } from '#utils/collectOptionPoolRequirements.ts';
+import formatGroupName from '#utils/formatGroupName.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /** One pool of class options a character may re-pick from. */
@@ -12,7 +13,7 @@ export interface SwappableOptionPool {
 	/** Feature `system.group` values the pool draws from. */
 	poolGroups: string[];
 	/** Heading to show, from the parent feature (e.g. "Savage Arsenal"). */
-	displayName: string | null;
+	displayName: string;
 	/** The level-up option's own wording (e.g. "Choose a Savage Arsenal Ability"). */
 	optionLabel: string | null;
 	/** Levels that contributed picks, ascending. */
@@ -98,7 +99,9 @@ export default async function collectSwappableOptions(
 		pools.push({
 			poolKey: buildOptionPoolKey(poolGroups),
 			poolGroups,
-			displayName: joinDistinct(byLevel.map((requirement) => requirement.displayName)),
+			displayName:
+				joinDistinct(byLevel.map((requirement) => requirement.displayName)) ??
+				poolGroups.map(formatGroupName).join(' / '),
 			optionLabel: first.optionLabel,
 			levels: [...new Set(byLevel.map((requirement) => requirement.level))].sort((a, b) => a - b),
 			pickCount: ownedUuids.length,

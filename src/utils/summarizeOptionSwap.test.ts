@@ -66,30 +66,6 @@ describe('summarizeOptionSwap', () => {
 		expect(changes).toEqual([]);
 	});
 
-	it('titles the pool from its key when it has no display name', () => {
-		const changes = summarizeOptionSwap(
-			[pool({ displayName: null })],
-			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
-		);
-
-		expect(changes[0].label).toBe('Savage Arsenal');
-	});
-
-	it('titles a merged pool from each of its groups when it has no display name', () => {
-		const changes = summarizeOptionSwap(
-			[
-				pool({
-					poolKey: 'commander-orders+commander-tactics',
-					poolGroups: ['commander-orders', 'commander-tactics'],
-					displayName: null,
-				}),
-			],
-			new Map([['commander-orders+commander-tactics', ['uuid:rampage', 'uuid:death-blow']]]),
-		);
-
-		expect(changes[0].label).toBe('Commander Orders / Commander Tactics');
-	});
-
 	it('reports both halves of a skill point move', () => {
 		const changes = summarizeOptionSwap(
 			[],
