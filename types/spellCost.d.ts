@@ -18,7 +18,6 @@ export interface ClassSpellcastingDeclaration {
  * tests) can satisfy it without a full document.
  */
 export interface SpellCostActorLike {
-	type?: string;
 	levels?: { character?: number };
 	items?: { contents?: Array<{ type?: string; system?: unknown }> };
 	/** Read when a declared cost amount is a formula. */
