@@ -90,9 +90,9 @@ function ruleId(rule: RuleSource): string {
  * resource state moves; the pool seeds itself from its `initial` mode.
  *
  * Matches on compendium source id, falling back to class + item name for
- * copies without one. Appends only, and idempotent across repeat runs: a rule
- * carrying the same id is never added twice, and the class declaration is
- * only written when the pool identifier is not already set.
+ * copies without one. Idempotent across repeat runs: a rule carrying the same
+ * id is never added twice, only back-filled with keys it lacks, and the class
+ * declaration is only written when the pool identifier is not already set.
  */
 class Migration052ShadowmancerPilferedPower extends MigrationBase {
 	static override readonly version = 52;
