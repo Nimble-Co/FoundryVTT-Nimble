@@ -157,10 +157,10 @@ const SWAP_FEATURE_BY_CLASS: Record<string, SwapFeature> = {
  * Nothing else about the character changes. The feature is not recorded in `levelUpHistory`,
  * because it was not granted by a level up and levelling down should not take it away.
  */
-class Migration049GrantOptionSwapFeatures extends MigrationBase {
-	static override readonly version = 49;
+class Migration050GrantOptionSwapFeatures extends MigrationBase {
+	static override readonly version = 50;
 
-	override readonly version = Migration049GrantOptionSwapFeatures.version;
+	override readonly version = Migration050GrantOptionSwapFeatures.version;
 
 	override async updateActor(source: Record<string, unknown>): Promise<void> {
 		if (source.type !== 'character') return;
@@ -228,4 +228,4 @@ class Migration049GrantOptionSwapFeatures extends MigrationBase {
 	}
 }
 
-export { Migration049GrantOptionSwapFeatures };
+export { Migration050GrantOptionSwapFeatures };

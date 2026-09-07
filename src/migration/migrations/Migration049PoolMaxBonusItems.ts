@@ -28,10 +28,10 @@ interface HistoryEntry {
  * This reverses the levelUpOption half of Migration028, which swapped the option's `grantItem`
  * for a `poolMaxBonus` when the numeric record was introduced.
  */
-class Migration048PoolMaxBonusItems extends MigrationBase {
-	static override readonly version = 48;
+class Migration049PoolMaxBonusItems extends MigrationBase {
+	static override readonly version = 49;
 
-	override readonly version = Migration048PoolMaxBonusItems.version;
+	override readonly version = Migration049PoolMaxBonusItems.version;
 
 	/** Builds one granted item carrying the bonus. */
 	static #buildBonusItem(poolIdentifier: string, grantUuid: string): Record<string, unknown> {
@@ -87,7 +87,7 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 	 * rebuilt with new ids.
 	 */
 	static #isLegacyBonusItem(source: Record<string, unknown>): boolean {
-		if (Migration048PoolMaxBonusItems.#carriesBonusRule(source)) return false;
+		if (Migration049PoolMaxBonusItems.#carriesBonusRule(source)) return false;
 
 		const compendiumSource =
 			(source._stats as Record<string, unknown> | undefined)?.compendiumSource ?? '';
@@ -120,10 +120,10 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 		// Its id may sit in a history entry's grantedFeatureIds; that is pruned below.
 		const legacyIds = new Set(
 			items
-				.filter((item) => Migration048PoolMaxBonusItems.#isLegacyBonusItem(item))
+				.filter((item) => Migration049PoolMaxBonusItems.#isLegacyBonusItem(item))
 				.map((item) => item._id as string),
 		);
-		source.items = items.filter((item) => !Migration048PoolMaxBonusItems.#isLegacyBonusItem(item));
+		source.items = items.filter((item) => !Migration049PoolMaxBonusItems.#isLegacyBonusItem(item));
 		const nextItems = source.items as Record<string, unknown>[];
 
 		let created = 0;
@@ -147,7 +147,7 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 
 				// One item per point, so removing a single pick removes exactly its share.
 				for (let i = 0; i < amount; i += 1) {
-					const item = Migration048PoolMaxBonusItems.#buildBonusItem(poolIdentifier, grantUuid);
+					const item = Migration049PoolMaxBonusItems.#buildBonusItem(poolIdentifier, grantUuid);
 					nextItems.push(item);
 					granted.push(item._id as string);
 					created += 1;
@@ -214,4 +214,4 @@ class Migration048PoolMaxBonusItems extends MigrationBase {
 	}
 }
 
-export { Migration048PoolMaxBonusItems };
+export { Migration049PoolMaxBonusItems };

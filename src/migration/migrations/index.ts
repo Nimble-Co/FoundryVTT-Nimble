@@ -46,6 +46,6 @@ export { Migration045HauntedPastFearAdvantage } from './Migration045HauntedPastF
 export { Migration046ShadowTrapDeferredDamage } from './Migration046ShadowTrapDeferredDamage.js';
 export { Migration047SurvivalistPoisonSave } from './Migration047SurvivalistPoisonSave.js';
 export { Migration048LayOnHandsPool } from './Migration048LayOnHandsPool.js';
-export { Migration048PoolMaxBonusItems } from './Migration048PoolMaxBonusItems.js';
-export { Migration049GrantOptionSwapFeatures } from './Migration049GrantOptionSwapFeatures.js';
-export { Migration050JackOfAllTradesSkillPointMove } from './Migration050JackOfAllTradesSkillPointMove.js';
+export { Migration049PoolMaxBonusItems } from './Migration049PoolMaxBonusItems.js';
+export { Migration050GrantOptionSwapFeatures } from './Migration050GrantOptionSwapFeatures.js';
+export { Migration051JackOfAllTradesSkillPointMove } from './Migration051JackOfAllTradesSkillPointMove.js';

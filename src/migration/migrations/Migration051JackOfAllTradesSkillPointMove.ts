@@ -30,10 +30,10 @@ const SKILL_POINT_MOVE_RULE = {
  * Copies are matched by compendium source id only. The name alone would also catch a homebrew
  * feature that borrows the title, and this rewrite is specific to the printed one.
  */
-class Migration050JackOfAllTradesSkillPointMove extends MigrationBase {
-	static override readonly version = 50;
+class Migration051JackOfAllTradesSkillPointMove extends MigrationBase {
+	static override readonly version = 51;
 
-	override readonly version = Migration050JackOfAllTradesSkillPointMove.version;
+	override readonly version = Migration051JackOfAllTradesSkillPointMove.version;
 
 	#isJackOfAllTrades(source: any): boolean {
 		if (source?.type !== 'feature') return false;
@@ -70,9 +70,9 @@ class Migration050JackOfAllTradesSkillPointMove extends MigrationBase {
 	override async updateItem(source: any): Promise<void> {
 		if (!this.#isJackOfAllTrades(source) || !source.system) return;
 
-		Migration050JackOfAllTradesSkillPointMove.#addRule(source.system);
-		Migration050JackOfAllTradesSkillPointMove.#fixActivation(source.system);
+		Migration051JackOfAllTradesSkillPointMove.#addRule(source.system);
+		Migration051JackOfAllTradesSkillPointMove.#fixActivation(source.system);
 	}
 }
 
-export { Migration050JackOfAllTradesSkillPointMove };
+export { Migration051JackOfAllTradesSkillPointMove };
