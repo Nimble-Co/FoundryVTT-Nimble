@@ -4,7 +4,6 @@
 	let {
 		current,
 		max,
-		disableControls = false,
 		disableMaxEdit = false,
 		updateCurrent,
 		updateMax,
@@ -25,8 +24,7 @@
 				min="0"
 				value={current}
 				{max}
-				onchange={({ target }) => updateCurrent?.(Number((target as HTMLInputElement).value))}
-				disabled={disableControls}
+				onchange={({ target }) => updateCurrent(Number((target as HTMLInputElement).value))}
 			/>
 			/
 			<input
@@ -35,7 +33,7 @@
 				min="0"
 				value={max}
 				onchange={({ target }) => updateMax?.(Number((target as HTMLInputElement).value))}
-				disabled={disableControls || disableMaxEdit}
+				disabled={disableMaxEdit}
 			/>
 		</div>
 	</div>
