@@ -39,7 +39,7 @@ describe('createLevelUpSpellCardState', () => {
 	});
 
 	it('labels the cost at the tier a pinning class would actually cast at', async () => {
-		restore = stubSpellDocument('Item.test-spell', { tier: 1 });
+		stubSpellDocument('Item.test-spell', { tier: 1 });
 		const actor = {
 			items: {
 				contents: [{ type: 'class', system: { spellcasting: { castAtHighestTier: true } } }],
