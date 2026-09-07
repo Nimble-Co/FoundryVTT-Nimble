@@ -1,8 +1,8 @@
-import collectPoolCandidates from '#utils/collectPoolCandidates.ts';
-import collectPoolRequirements, {
-	buildPoolKey,
-	type PoolRequirement,
-} from '#utils/collectPoolRequirements.ts';
+import collectOptionPoolCandidates from '#utils/collectOptionPoolCandidates.ts';
+import collectOptionPoolRequirements, {
+	buildOptionPoolKey,
+	type OptionPoolRequirement,
+} from '#utils/collectOptionPoolRequirements.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /** One pool of class options a character may re-pick from. */
@@ -60,11 +60,11 @@ export default async function collectSwappableOptions(
 ): Promise<SwappableOptionPool[]> {
 	if (!classIdentifier || classLevel < 1) return [];
 
-	const requirements = await collectPoolRequirements(index, classIdentifier, classLevel, {
+	const requirements = await collectOptionPoolRequirements(index, classIdentifier, classLevel, {
 		alternatives: 'union',
 	});
 
-	const buckets: PoolBucket[] = [];
+	const buckets: OptionPoolBucket[] = [];
 	for (const requirement of requirements) {
 		const poolGroups = allowedGroups
 			? requirement.poolGroups.filter((group) => allowedGroups.has(group))
@@ -81,7 +81,7 @@ export default async function collectSwappableOptions(
 		const extras = bucket.requirements.flatMap((requirement) => requirement.extraCandidateUuids);
 		const candidateUuids = [
 			...new Set([
-				...collectPoolCandidates(index, [classIdentifier, ...poolGroups], poolGroups),
+				...collectOptionPoolCandidates(index, [classIdentifier, ...poolGroups], poolGroups),
 				...extras,
 			]),
 		];
@@ -96,7 +96,7 @@ export default async function collectSwappableOptions(
 		const [first] = byLevel;
 
 		pools.push({
-			poolKey: buildPoolKey(poolGroups),
+			poolKey: buildOptionPoolKey(poolGroups),
 			poolGroups,
 			displayName: joinDistinct(byLevel.map((requirement) => requirement.displayName)),
 			optionLabel: first.optionLabel,
@@ -110,18 +110,18 @@ export default async function collectSwappableOptions(
 	return pools.sort((a, b) => a.levels[0] - b.levels[0] || a.poolKey.localeCompare(b.poolKey));
 }
 
-interface PoolBucket {
+interface OptionPoolBucket {
 	groups: Set<string>;
-	requirements: PoolRequirement[];
+	requirements: OptionPoolRequirement[];
 }
 
 /** Adds a requirement to the bucket sharing a group with it, folding together any it bridges. */
-function mergeIntoBuckets(buckets: PoolBucket[], requirement: PoolRequirement): void {
+function mergeIntoBuckets(buckets: OptionPoolBucket[], requirement: OptionPoolRequirement): void {
 	const touching = buckets.filter((bucket) =>
 		requirement.poolGroups.some((group) => bucket.groups.has(group)),
 	);
 
-	const merged: PoolBucket = {
+	const merged: OptionPoolBucket = {
 		groups: new Set(requirement.poolGroups),
 		requirements: [requirement],
 	};

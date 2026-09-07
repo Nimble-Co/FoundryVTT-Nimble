@@ -1,8 +1,8 @@
 import getClassFeaturesFromIndex, { type ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
 
-/** One level's demand on one pool. */
-export interface PoolRequirement {
+/** One level's demand on one option pool: a set of feature groups a class asks a pick from. */
+export interface OptionPoolRequirement {
 	level: number;
 	poolGroups: string[];
 	/** Items an alternative at this level grants outright, offered alongside the groups' members. */
@@ -12,7 +12,7 @@ export interface PoolRequirement {
 	optionLabel: string | null;
 }
 
-export interface CollectPoolRequirementsOptions {
+export interface CollectOptionPoolRequirementsOptions {
 	/**
 	 * What to do with a level whose feature offers a choice between several options.
 	 * `skip`, the default, leaves the level out: which option was taken is never recorded, so
@@ -29,26 +29,26 @@ function grantedUuids(rules: ReadonlyArray<Record<string, unknown>>): string[] {
 		.map((rule) => rule.uuid as string);
 }
 
-/** Order-independent identity for a pool, so the same groups always resolve to one bucket. */
-export function buildPoolKey(groups: readonly string[]): string {
+/** Order-independent identity for an option pool, so the same groups always resolve to one bucket. */
+export function buildOptionPoolKey(groups: readonly string[]): string {
 	return [...groups].sort().join('+');
 }
 
 /**
- * What each level from 1 to `classLevel` asks the character to pick from a feature pool.
+ * What each level from 1 to `classLevel` asks the character to pick from an option pool.
  *
  * A level-up option whose applicable set holds more than one alternative is skipped by
  * default: the player's choice between alternatives is never stored, so which pool (if any)
  * that level demanded picks from cannot be recovered. Reporting it would mean warning about a
- * character that is fine. See {@link CollectPoolRequirementsOptions} for the other reading.
+ * character that is fine. See {@link CollectOptionPoolRequirementsOptions} for the other reading.
  */
-export default async function collectPoolRequirements(
+export default async function collectOptionPoolRequirements(
 	index: ClassFeatureIndex,
 	classIdentifier: string,
 	classLevel: number,
-	{ alternatives = 'skip' }: CollectPoolRequirementsOptions = {},
-): Promise<PoolRequirement[]> {
-	const requirements: PoolRequirement[] = [];
+	{ alternatives = 'skip' }: CollectOptionPoolRequirementsOptions = {},
+): Promise<OptionPoolRequirement[]> {
+	const requirements: OptionPoolRequirement[] = [];
 
 	for (let level = 1; level <= classLevel; level++) {
 		// An empty owned set asks the resolver what the level demands, independent of what the

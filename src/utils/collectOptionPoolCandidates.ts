@@ -3,11 +3,11 @@ import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 /**
  * Every feature in the index that belongs to one of `poolGroups`, deduplicated by UUID.
  *
- * A pool spans the levels it is offered at, so the whole level map is scanned rather than a
+ * An option pool spans the levels it is offered at, so the whole level map is scanned rather than a
  * single level. `lookupKeys` covers both index shapes: features that carry a class are indexed
  * under the class identifier, features that do not are indexed under their group.
  */
-export default function collectPoolCandidates(
+export default function collectOptionPoolCandidates(
 	index: ClassFeatureIndex,
 	lookupKeys: readonly string[],
 	poolGroups: readonly string[],

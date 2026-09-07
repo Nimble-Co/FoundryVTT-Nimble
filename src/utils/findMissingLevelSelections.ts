@@ -1,8 +1,8 @@
-import collectPoolCandidates from '#utils/collectPoolCandidates.ts';
-import collectPoolRequirements, {
-	buildPoolKey,
-	type PoolRequirement,
-} from '#utils/collectPoolRequirements.ts';
+import collectOptionPoolCandidates from '#utils/collectOptionPoolCandidates.ts';
+import collectOptionPoolRequirements, {
+	buildOptionPoolKey,
+	type OptionPoolRequirement,
+} from '#utils/collectOptionPoolRequirements.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /**
@@ -48,11 +48,11 @@ export default async function findMissingLevelSelections(
 ): Promise<MissingLevelSelection[]> {
 	if (!classIdentifier || classLevel < 1) return [];
 
-	const requirements = await collectPoolRequirements(index, classIdentifier, classLevel);
+	const requirements = await collectOptionPoolRequirements(index, classIdentifier, classLevel);
 
-	const requirementsByPool = new Map<string, PoolRequirement[]>();
+	const requirementsByPool = new Map<string, OptionPoolRequirement[]>();
 	for (const requirement of requirements) {
-		const key = buildPoolKey(requirement.poolGroups);
+		const key = buildOptionPoolKey(requirement.poolGroups);
 		const bucket = requirementsByPool.get(key);
 		if (bucket) bucket.push(requirement);
 		else requirementsByPool.set(key, [requirement]);
@@ -62,7 +62,7 @@ export default async function findMissingLevelSelections(
 
 	for (const [poolKey, poolRequirements] of requirementsByPool) {
 		const poolGroups = poolRequirements[0].poolGroups;
-		const candidateUuids = collectPoolCandidates(
+		const candidateUuids = collectOptionPoolCandidates(
 			index,
 			[classIdentifier, ...poolGroups],
 			poolGroups,
@@ -77,7 +77,7 @@ export default async function findMissingLevelSelections(
 
 		// The first level the owned picks run out on: allocate them across the levels in order.
 		let credit = ownedCount;
-		let shortfall: PoolRequirement | undefined;
+		let shortfall: OptionPoolRequirement | undefined;
 		for (const requirement of poolRequirements) {
 			if (credit < requirement.requiredCount) {
 				shortfall = requirement;
