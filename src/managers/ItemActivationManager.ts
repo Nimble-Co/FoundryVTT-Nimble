@@ -670,7 +670,9 @@ class ItemActivationManager {
 		for (const entry of entries as Array<{ poolId?: unknown; count?: unknown }>) {
 			if (!entry || typeof entry.poolId !== 'string') continue;
 			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
-			const allowed = Math.min(count, ceilings.get(entry.poolId) ?? count);
+			const ceiling = ceilings.get(entry.poolId);
+			if (ceiling === undefined) continue;
+			const allowed = Math.min(count, ceiling);
 			if (allowed < 1) continue;
 			clamped.push({ poolId: entry.poolId, count: allowed });
 		}
