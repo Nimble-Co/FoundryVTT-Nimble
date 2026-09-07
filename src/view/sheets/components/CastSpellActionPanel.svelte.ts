@@ -19,7 +19,6 @@ interface SpellEffects {
 
 /** System data for spell items */
 interface SpellSystemData {
-	tier?: number;
 	activation?: {
 		effects?: unknown[];
 		cost?: { type: string; quantity: number };

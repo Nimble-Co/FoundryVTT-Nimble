@@ -19,11 +19,7 @@ export interface UpcastBounds {
 
 /**
  * The one place that decides how far a spell can be upcast. The cast dialog
- * bounds its slider with this, and the activation manager validates against
- * the same numbers, so the two cannot disagree.
- *
- * An actor with no tier ladder casts at the spell's own tier and cannot
- * upcast at all.
+ * and the activation manager both use it, so the two cannot disagree.
  */
 export function computeUpcastBounds({
 	spellTier,
