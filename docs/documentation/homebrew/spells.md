@@ -93,7 +93,7 @@ Casting a spell opens the cast window. It contains the roll mode selector, situa
 - for Upcast Choice spells, a **Choose Enhancement** list of your labeled options;
 - an **Applied Effect** preview listing exactly what the chosen upcast adds ("+2d8 fire damage").
 
-A spell that cannot be upcast (or, with Resource Spending on, a caster without spare mana) just gets the normal roll controls. A caster with no mana pool and no unlocked spell tiers, such as a monster, always casts at the spell's own tier. Holding **Alt** skips the window and casts at base tier, except for an Upcast Choice spell whose class casts at its highest tier: the window opens anyway so the caster picks the enhancement. When the caster confirms, the upcast changes are baked into the rolls and the total mana is deducted.
+A spell that cannot be upcast (or, with Resource Spending on, a caster without spare mana) just gets the normal roll controls. A caster with no mana pool and no unlocked spell tiers, such as a monster, always casts at the spell's own tier. Holding **Alt** skips the window: an ordinary caster then casts at the spell's base tier, and a class that casts at its highest tier still casts at that tier. The exception is an Upcast Choice spell under such a class, where the window opens anyway so the caster picks the enhancement. A macro that skips the window cannot cast that spell at all unless it names the enhancement, because nothing may pick one for the caster. When the caster confirms, the upcast changes are baked into the rolls and the total mana is deducted.
 
 ![The cast window for an upcastable spell, showing the mana slider and the Applied Effect preview](/images/documentation/roll-dialog-spell-upcast.png)
 
