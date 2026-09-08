@@ -486,6 +486,36 @@ describe('a Commander with two max Combat Die picks', () => {
 		expect(commander.items.get(handAdded.id)).toBeDefined();
 	}, 90_000);
 
+	test('a Commander holding no die takes one in place of an ability', async () => {
+		expect(ownedNamed(commander, '+1 Max Combat Die')).toHaveLength(0);
+
+		const dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+		const pool = poolSection(dialog, 'Fit for Any Battlefield');
+		await unfold(pool);
+
+		// With no pick of it, the die sits among the alternatives like any other member.
+		expect(pool.querySelector('[aria-label="Select +1 Max Combat Die"]')).not.toBeNull();
+		await clickCard(pool, 'Deselect Sweeping Strike');
+		await clickCard(pool, 'Select +1 Max Combat Die');
+		const message = await confirmRest(commander, dialog, 'safeRest');
+
+		await waitFor(
+			() => ownedNamed(commander, '+1 Max Combat Die').length === 1,
+			'the die to be granted',
+		);
+		expect(ownedNamed(commander, 'Sweeping Strike')).toHaveLength(0);
+		await waitFor(() => dieBonus() === 1, 'the pool bonus to rise by one');
+		const die = ownedNamed(commander, '+1 Max Combat Die')[0]!;
+		expect(
+			commander.system.levelUpHistory.find((entry) => entry.grantedFeatureIds.includes(die.id))
+				?.level,
+		).toBe(6);
+		expect(message?.system.optionChanges).toEqual([
+			expect.objectContaining({ removed: ['Sweeping Strike'], added: ['+1 Max Combat Die'] }),
+		]);
+	}, 90_000);
+
 	test('a field rest offers no swap when the feature only names the safe rest', async () => {
 		const dialog = await openRestDialog(commander, 'field');
 		await settle(800);
@@ -630,6 +660,53 @@ describe('a Berserker with a two-pick pool', () => {
 				added: ['Death Blow'],
 			}),
 		]);
+	}, 90_000);
+
+	test('a swap whose pick left the history while the window was open is refused', async () => {
+		const rampage = ownedNamed(berserker, 'Rampage')[0]!;
+		const historyBefore = berserker.system.levelUpHistory.map((entry) => ({ ...entry }));
+
+		const dialog = await openRestDialog(berserker, 'safe');
+		await expandOptions(dialog);
+		const pool = poolSection(dialog, 'Savage Arsenal');
+		await unfold(pool);
+
+		// The offer was computed on open. Now the entry that recorded Rampage stops naming it,
+		// as a level revert on another client would make it.
+		await berserker.update({
+			'system.levelUpHistory': historyBefore.map((entry) => ({
+				...entry,
+				grantedFeatureIds: entry.grantedFeatureIds.filter((id) => id !== rampage.id),
+			})),
+		});
+		await settle();
+
+		await clickCard(pool, 'Deselect Rampage');
+		await clickCard(pool, 'Select Whirlwind');
+
+		const warnings: string[] = [];
+		const notifications = ui.notifications as unknown as { warn(text: string): unknown };
+		const warn = notifications.warn;
+		notifications.warn = (text: string) => {
+			warnings.push(text);
+			return warn.call(notifications, text);
+		};
+		let message: RestMessage | undefined;
+		try {
+			message = await confirmRest(berserker, dialog, 'safeRest');
+		} finally {
+			notifications.warn = warn;
+		}
+
+		// No item no level records may be created, so the pool is left as it was and said so.
+		expect(ownedNamed(berserker, 'Rampage')).toHaveLength(1);
+		expect(ownedNamed(berserker, 'Whirlwind')).toHaveLength(0);
+		expect(message?.system.optionChanges ?? []).toEqual([]);
+		expect(warnings.some((text) => text.includes('changed since the rest window opened'))).toBe(
+			true,
+		);
+
+		await berserker.update({ 'system.levelUpHistory': historyBefore });
 	}, 90_000);
 });
 
