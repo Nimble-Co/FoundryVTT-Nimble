@@ -8,7 +8,8 @@
  *
  * The characters are built the way the level-up path leaves them: a class item at the
  * target level, one history entry per level, and the picks recorded against the entries
- * that granted them.
+ * that granted them. A pick is what a history entry records: an item embedded by hand
+ * with no entry behind it is not one, and the swap never counts, trades or deletes it.
  */
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
@@ -58,7 +59,8 @@ interface RestMessage {
 
 /**
  * Embeds a pack document with its source recorded, the way a grant or a drag from the
- * compendium does. The swap identifies a character's picks by that source.
+ * compendium does. The swap attributes a pick to a pool by that source; whether the item is
+ * a pick at all is decided by the history entry `levelTo` records it under.
  */
 async function embedFromPack(
 	actor: SwapActor,
@@ -206,10 +208,10 @@ afterAll(async () => {
 	await purgeTestDocuments(TEST_PREFIX);
 });
 
-describe('a Commander trades a max Combat Die pick for a Combat Ability', () => {
+describe('a Commander with two max Combat Die picks', () => {
 	let commander: SwapActor;
 	let dieItems: SwapItem[];
-	let tacticItem: SwapItem;
+	let handAdded: SwapItem;
 
 	// The pool's maximum is derived from the poolMaxBonus rules the character holds, one per
 	// die item, so the rules are the observable the swap has to move.
@@ -223,6 +225,11 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 				rule.poolIdentifier === 'combat-dice',
 		).length;
 	};
+
+	const dieCard = (pool: HTMLElement) =>
+		[...pool.querySelectorAll<HTMLElement>('.feature-item')].find((card) =>
+			card.querySelector('.feature-row__name')?.textContent?.includes('+1 Max Combat Die'),
+		);
 
 	beforeAll(async () => {
 		commander = (await Actor.create({
@@ -246,7 +253,7 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 			'nimble-class-features',
 			'Fit for Any Battlefield',
 		);
-		tacticItem = await embedFromPack(commander, 'nimble-class-features', 'Heavy Strike');
+		const tacticItem = await embedFromPack(commander, 'nimble-class-features', 'Heavy Strike');
 		const secondTactic = await embedFromPack(commander, 'nimble-class-features', 'Lunging Strike');
 		dieItems = [
 			await embedFromPack(commander, 'nimble-class-features', '+1 Max Combat Die'),
@@ -267,7 +274,7 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		await commander.sheet.close().catch(() => {});
 	});
 
-	test('the dialog offers one merged pool holding orders, tactics, and the die', async () => {
+	test('the dialog offers one merged pool with the die counted as two picks', async () => {
 		const dialog = await openRestDialog(commander, 'safe');
 		await expandOptions(dialog);
 
@@ -275,19 +282,28 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		const held = [...pool.querySelectorAll('[aria-label^="Deselect "]')].map((button) =>
 			button.getAttribute('aria-label'),
 		);
-		// Two orders, two tactics, and the die as one pick however many copies are held.
+		// Two orders and two tactics carry a deselect control. The die, held twice, is one card
+		// with its count and the give-up control instead.
 		expect(held).toEqual(
 			expect.arrayContaining([
 				'Deselect Face Me!',
 				'Deselect Hold the Line!',
 				'Deselect Heavy Strike',
 				'Deselect Lunging Strike',
-				'Deselect +1 Max Combat Die',
 			]),
 		);
-		expect(held).toHaveLength(5);
+		expect(held).toHaveLength(4);
+		expect(pool.querySelectorAll('[aria-label="Deselect +1 Max Combat Die"]')).toHaveLength(0);
+		expect(dieCard(pool)?.querySelector('.nimble-option-swap__count')?.textContent?.trim()).toBe(
+			'x2',
+		);
+		expect(pool.querySelector('[aria-label="Give up one +1 Max Combat Die"]')).not.toBeNull();
+		// The pool is full, so a third die is offered but not takeable, with the reason attached.
+		const more = pool.querySelector('[aria-label="Take another +1 Max Combat Die"]');
+		expect(more?.getAttribute('aria-disabled')).toBe('true');
+		expect(more?.getAttribute('data-tooltip')).toContain('full');
 		expect(pool.querySelector('.nimble-option-swap__pool-progress')?.textContent).toContain(
-			'5 of 5',
+			'6 of 6',
 		);
 
 		// The die must not also be offered under its own heading.
@@ -310,7 +326,7 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		expect(dieBonus()).toBe(2);
 	}, 60_000);
 
-	test('swapping the die for a Combat Ability removes one copy and one point of pool bonus', async () => {
+	test('trading one die for a Combat Ability leaves the other and drops the pool bonus by one', async () => {
 		const historyBefore = historyIds(commander);
 
 		const dialog = await openRestDialog(commander, 'safe');
@@ -322,7 +338,10 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		expect(
 			pool.querySelector('[aria-label="Select Sweeping Strike"]')?.closest('.disabled'),
 		).not.toBeNull();
-		await clickCard(pool, 'Deselect +1 Max Combat Die');
+		await clickCard(pool, 'Give up one +1 Max Combat Die');
+		// One copy is still held, so the card stays, now with a deselect control and no count.
+		expect(pool.querySelector('[aria-label="Deselect +1 Max Combat Die"]')).not.toBeNull();
+		expect(dieCard(pool)?.querySelector('.nimble-option-swap__count')).toBeNull();
 		await clickCard(pool, 'Select Sweeping Strike');
 
 		const message = await confirmRest(commander, dialog, 'safeRest');
@@ -336,17 +355,20 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		// One die item fewer is one poolMaxBonus rule fewer, which is what the pool's maximum reads.
 		await waitFor(() => dieBonus() === 1, 'the pool bonus to drop by one');
 
+		// The oldest pick is the one released, so the level 6 die went and the level 8 die stays.
+		expect(commander.items.get(dieItems[0]!.id)).toBeUndefined();
+		expect(commander.items.get(dieItems[1]!.id)).toBeDefined();
+
 		// The replacement took over the history entry of the die it replaced.
-		const deletedId = dieItems.map((item) => item.id).find((id) => !commander.items.get(id))!;
 		const granted = ownedNamed(commander, 'Sweeping Strike')[0]!;
 		const historyAfter = historyIds(commander);
-		expect(historyAfter).not.toContain(deletedId);
+		expect(historyAfter).not.toContain(dieItems[0]!.id);
 		expect(historyAfter).toContain(granted.id);
 		expect(historyAfter).toHaveLength(historyBefore.length);
-		const vacated = commander.system.levelUpHistory.find((entry) =>
-			entry.grantedFeatureIds.includes(granted.id),
-		);
-		expect([6, 8]).toContain(vacated?.level);
+		expect(
+			commander.system.levelUpHistory.find((entry) => entry.grantedFeatureIds.includes(granted.id))
+				?.level,
+		).toBe(6);
 
 		expect(message?.system.optionChanges).toEqual([
 			expect.objectContaining({ removed: ['+1 Max Combat Die'], added: ['Sweeping Strike'] }),
@@ -356,72 +378,112 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		expect(card?.querySelector('.option-changes__added')?.textContent).toBe('Sweeping Strike');
 	}, 90_000);
 
-	test('a held die is not offered again, so a second copy cannot be added by swapping', async () => {
+	test('a Commander holding one die takes a second in place of an ability', async () => {
 		const dialog = await openRestDialog(commander, 'safe');
 		await expandOptions(dialog);
 		const pool = poolSection(dialog, 'Fit for Any Battlefield');
-		await unfold(pool);
 
-		// Picks are identified by source, so the one copy still held stands for the die and
-		// the pool has no second card to offer.
-		expect(pool.querySelector('[aria-label="Deselect +1 Max Combat Die"]')).not.toBeNull();
-		expect(pool.querySelector('[aria-label="Select +1 Max Combat Die"]')).toBeNull();
-		expect(pool.querySelectorAll('[aria-label*="+1 Max Combat Die"]')).toHaveLength(1);
-
-		await closeWithoutResting(dialog);
-	}, 60_000);
-
-	test('once no die is held it is offered again and can be taken back for a tactic', async () => {
-		// Trade the last die away first.
-		let dialog = await openRestDialog(commander, 'safe');
-		await expandOptions(dialog);
-		let pool = poolSection(dialog, 'Fit for Any Battlefield');
-		await unfold(pool);
-		await clickCard(pool, 'Deselect +1 Max Combat Die');
-		await clickCard(pool, 'Select Commanding Presence');
-		await confirmRest(commander, dialog, 'safeRest');
-		await waitFor(
-			() => ownedNamed(commander, '+1 Max Combat Die').length === 0,
-			'the last die to go',
+		const more = () =>
+			pool.querySelector<HTMLButtonElement>('[aria-label="Take another +1 Max Combat Die"]')!;
+		expect(more().getAttribute('aria-disabled')).toBe('true');
+		await clickCard(pool, 'Deselect Heavy Strike');
+		await waitFor(() => more().getAttribute('aria-disabled') === 'false', 'room for another die');
+		await clickCard(pool, 'Take another +1 Max Combat Die');
+		expect(dieCard(pool)?.querySelector('.nimble-option-swap__count')?.textContent?.trim()).toBe(
+			'x2',
 		);
-		expect(dieBonus()).toBe(0);
+		expect(pool.querySelector('.nimble-option-swap__pool-progress')?.textContent).toContain(
+			'6 of 6',
+		);
 
-		// Now the die sits in the available list like any other member of the pool.
-		dialog = await openRestDialog(commander, 'safe');
-		await expandOptions(dialog);
-		pool = poolSection(dialog, 'Fit for Any Battlefield');
-		await unfold(pool);
-		expect(pool.querySelector('[aria-label="Deselect +1 Max Combat Die"]')).toBeNull();
-		await clickCard(pool, 'Deselect Commanding Presence');
-		await clickCard(pool, 'Select +1 Max Combat Die');
 		const message = await confirmRest(commander, dialog, 'safeRest');
 
 		await waitFor(
-			() => ownedNamed(commander, '+1 Max Combat Die').length === 1,
-			'the die to be granted',
+			() => ownedNamed(commander, '+1 Max Combat Die').length === 2,
+			'the second die to be granted',
 		);
-		expect(ownedNamed(commander, 'Commanding Presence')).toHaveLength(0);
-		expect(dieBonus()).toBe(1);
-		const die = ownedNamed(commander, '+1 Max Combat Die')[0]!;
-		expect(historyIds(commander)).toContain(die.id);
+		expect(ownedNamed(commander, 'Heavy Strike')).toHaveLength(0);
+		await waitFor(() => dieBonus() === 2, 'the pool bonus to rise by one');
+
+		// The new die took over the level 4 entry that Heavy Strike vacated.
+		const newDie = ownedNamed(commander, '+1 Max Combat Die').find(
+			(item) => item.id !== dieItems[1]!.id,
+		)!;
+		expect(
+			commander.system.levelUpHistory.find((entry) => entry.grantedFeatureIds.includes(newDie.id))
+				?.level,
+		).toBe(4);
 		expect(message?.system.optionChanges).toEqual([
-			expect.objectContaining({ removed: ['Commanding Presence'], added: ['+1 Max Combat Die'] }),
+			expect.objectContaining({ removed: ['Heavy Strike'], added: ['+1 Max Combat Die'] }),
 		]);
+	}, 90_000);
+
+	test('an item added by hand is not counted, is still offered, and survives a swap', async () => {
+		// No history entry records this copy, so the system does not know it is there.
+		handAdded = await embedFromPack(commander, 'nimble-class-features', 'Commanding Presence');
+		await settle();
+
+		let dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+		let pool = poolSection(dialog, 'Fit for Any Battlefield');
+
+		expect(pool.querySelector('.nimble-option-swap__pool-progress')?.textContent).toContain(
+			'6 of 6',
+		);
+		expect(pool.querySelector('[aria-label="Deselect Commanding Presence"]')).toBeNull();
+		await unfold(pool);
+		// The member is offered like any other, because nothing recorded it as taken.
+		expect(pool.querySelector('[aria-label="Select Commanding Presence"]')).not.toBeNull();
+
+		await clickCard(pool, 'Give up one +1 Max Combat Die');
+		await clickCard(pool, 'Select Commanding Presence');
+		const message = await confirmRest(commander, dialog, 'safeRest');
+
+		await waitFor(
+			() => ownedNamed(commander, 'Commanding Presence').length === 2,
+			'the earned copy to be granted beside the hand-added one',
+		);
+		expect(commander.items.get(handAdded.id)).toBeDefined();
+		expect(historyIds(commander)).not.toContain(handAdded.id);
+		expect(ownedNamed(commander, '+1 Max Combat Die')).toHaveLength(1);
+		expect(message?.system.optionChanges).toEqual([
+			expect.objectContaining({ removed: ['+1 Max Combat Die'], added: ['Commanding Presence'] }),
+		]);
+
+		// Only the earned copy is a pick: one card, and the member no longer among the alternatives.
+		dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+		pool = poolSection(dialog, 'Fit for Any Battlefield');
+		expect(pool.querySelector('.nimble-option-swap__pool-progress')?.textContent).toContain(
+			'6 of 6',
+		);
+		expect(pool.querySelectorAll('[aria-label="Deselect Commanding Presence"]')).toHaveLength(1);
+		await unfold(pool);
+		expect(pool.querySelector('[aria-label="Select Commanding Presence"]')).toBeNull();
+		await closeWithoutResting(dialog);
 	}, 120_000);
 
-	test('levelling down removes whatever the vacated level now records', async () => {
-		const granted = ownedNamed(commander, 'Sweeping Strike')[0]!;
-		const vacatedLevel = commander.system.levelUpHistory.find((entry) =>
-			entry.grantedFeatureIds.includes(granted.id),
-		)!.level;
+	test('levelling down removes what each level records and leaves the hand-added item alone', async () => {
+		// After the swaps the one die left is the level 8 pick. Level 10 holds Lunging Strike.
+		expect(ownedNamed(commander, '+1 Max Combat Die')).toHaveLength(1);
 
-		while (commander.levels.character >= vacatedLevel) {
+		while (commander.levels.character > 8) {
 			await commander.revertLastLevelUp();
 			await settle(300);
 		}
+		expect(ownedNamed(commander, 'Lunging Strike')).toHaveLength(0);
+		expect(ownedNamed(commander, '+1 Max Combat Die')).toHaveLength(1);
+		expect(dieBonus()).toBe(1);
 
-		expect(commander.levels.character).toBe(vacatedLevel - 1);
-		expect(ownedNamed(commander, 'Sweeping Strike')).toHaveLength(0);
+		await commander.revertLastLevelUp();
+		await settle(300);
+		expect(commander.levels.character).toBe(7);
+		expect(ownedNamed(commander, '+1 Max Combat Die')).toHaveLength(0);
+		expect(dieBonus()).toBe(0);
+
+		// The earned copy at level 4 and the hand-added copy are both still there.
+		expect(ownedNamed(commander, 'Commanding Presence')).toHaveLength(2);
+		expect(commander.items.get(handAdded.id)).toBeDefined();
 	}, 90_000);
 
 	test('a field rest offers no swap when the feature only names the safe rest', async () => {
@@ -429,6 +491,46 @@ describe('a Commander trades a max Combat Die pick for a Combat Ability', () => 
 		await settle(800);
 
 		expect(dialog.querySelector('.nimble-option-swap')).toBeNull();
+		await closeWithoutResting(dialog);
+	}, 60_000);
+});
+
+describe('a Commander built by hand with no level-up history', () => {
+	let commander: SwapActor;
+
+	beforeAll(async () => {
+		commander = (await Actor.create({
+			name: `${TEST_PREFIX} Hand-built Commander`,
+			type: 'character',
+		} as Actor.CreateData)) as unknown as SwapActor;
+		await embedFromPack(commander, 'nimble-classes', 'Commander');
+		await settle();
+
+		for (const name of [
+			'Face Me!',
+			'Fit for Any Battlefield',
+			'Heavy Strike',
+			'+1 Max Combat Die',
+			'Rigorous Training',
+		]) {
+			await embedFromPack(commander, 'nimble-class-features', name);
+		}
+		// Every entry is empty: the GM dragged the items on, no level granted them.
+		await levelTo(commander, 8);
+	}, 120_000);
+
+	afterAll(async () => {
+		await commander.sheet.close().catch(() => {});
+	});
+
+	test('the rest window quotes the swap feature and offers no pool', async () => {
+		const dialog = await openRestDialog(commander, 'safe');
+		await expandOptions(dialog);
+
+		expect(dialog.textContent).toContain('Rigorous Training');
+		expect(dialog.textContent).toContain('No class option picks are recorded');
+		expect(dialog.querySelectorAll('.nimble-option-swap__pool')).toHaveLength(0);
+
 		await closeWithoutResting(dialog);
 	}, 60_000);
 });
@@ -453,6 +555,22 @@ describe('a Berserker with a two-pick pool', () => {
 	afterAll(async () => {
 		await berserker.sheet.close().catch(() => {});
 	});
+
+	test('an ability with a pick is never offered again, so it cannot be taken twice', async () => {
+		const dialog = await openRestDialog(berserker, 'safe');
+		await expandOptions(dialog);
+		const pool = poolSection(dialog, 'Savage Arsenal');
+		await unfold(pool);
+
+		// No arsenal ability is repeatable, so a held one carries no take-another control and
+		// sits nowhere among the alternatives.
+		expect(pool.querySelector('[aria-label="Deselect Rampage"]')).not.toBeNull();
+		expect(pool.querySelector('[aria-label="Select Rampage"]')).toBeNull();
+		expect(pool.querySelector('[aria-label^="Take another "]')).toBeNull();
+		expect(pool.querySelector('[aria-label^="Give up one "]')).toBeNull();
+
+		await closeWithoutResting(dialog);
+	}, 60_000);
 
 	test('releasing a pick without replacing it changes nothing and posts no change', async () => {
 		const dialog = await openRestDialog(berserker, 'safe');
