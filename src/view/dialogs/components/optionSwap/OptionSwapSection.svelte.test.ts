@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { describe, expect, it } from 'vitest';
 
 import type { NimbleCharacter } from '#documents/actor/character.js';
@@ -37,6 +38,34 @@ function createPool(
 		candidates: ARSENAL,
 		...overrides,
 	};
+}
+
+const TACTICS = [
+	createFeature('Item.heavy-strike', 'Heavy Strike'),
+	createFeature('Item.sweeping-strike', 'Sweeping Strike'),
+	createFeature('Item.max-die', '+1 Max Combat Die'),
+];
+
+/** A Commander pool: one tactic and the die twice, three picks, the die repeatable. */
+function createDiePool(
+	overrides: Partial<ResolvedSwappableOptionPool> = {},
+): ResolvedSwappableOptionPool {
+	return createPool({
+		poolKey: 'combat-tactics',
+		poolGroups: ['combat-tactics'],
+		displayName: 'Fit for Any Battlefield',
+		optionLabel: null,
+		levels: [4, 6, 8],
+		pickCount: 3,
+		candidateUuids: TACTICS.map((feature) => feature.uuid as string),
+		pickIdsByUuid: new Map([
+			['Item.heavy-strike', ['t4']],
+			['Item.max-die', ['d6', 'd8']],
+		]),
+		repeatableUuids: ['Item.max-die'],
+		candidates: TACTICS,
+		...overrides,
+	});
 }
 
 function createOffer(overrides: Partial<ResolvedOptionSwapOffer> = {}): ResolvedOptionSwapOffer {
@@ -166,6 +195,149 @@ describe('OptionSwapSection', () => {
 		await fireEvent.click(getByLabelText('Deselect Cleave'));
 		await fireEvent.click(getByLabelText('Select Savage Leap'));
 		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.rampage', 'Item.savage-leap']);
+	});
+
+	it('unfolds the alternatives when the last pick of a member is released', async () => {
+		const { expand, getByLabelText, queryByLabelText, latest } = renderSection(
+			createOffer({
+				pools: [
+					createPool({
+						pickCount: 2,
+						pickIdsByUuid: new Map([
+							['Item.cleave', ['abc123']],
+							['Item.rampage', ['def456']],
+						]),
+					}),
+				],
+			}),
+		);
+
+		await expand();
+		expect(queryByLabelText('Select Savage Leap')).toBeNull();
+
+		await fireEvent.click(getByLabelText('Deselect Cleave'));
+
+		// The released member is among the alternatives, in view rather than behind the fold,
+		// and focus follows it there rather than falling to the body.
+		expect(getByLabelText('Select Cleave')).toBeTruthy();
+		expect(getByLabelText('Select Savage Leap')).toBeTruthy();
+		await tick();
+		expect(document.activeElement).toBe(getByLabelText('Select Cleave'));
+		expect(latest.selections.get('savage-arsenal')).toEqual(['Item.rampage']);
+	});
+
+	describe('a repeated pick', () => {
+		it('renders one card carrying its count, and counts every pick in the progress', async () => {
+			const { expand, getAllByText, getByText, latest } = renderSection(
+				createOffer({ pools: [createDiePool()] }),
+			);
+
+			await expand();
+
+			expect(getAllByText('+1 Max Combat Die')).toHaveLength(1);
+			expect(getByText('x2')).toBeTruthy();
+			expect(getByText('3 of 3 selected')).toBeTruthy();
+			expect(latest.selections.get('combat-tactics')).toEqual([
+				'Item.heavy-strike',
+				'Item.max-die',
+				'Item.max-die',
+			]);
+		});
+
+		it('keeps a member with a pick out of the alternatives and one without in them', async () => {
+			const { expand, unfold, queryByLabelText, getByLabelText } = renderSection(
+				createOffer({ pools: [createDiePool()] }),
+			);
+
+			await expand();
+			await unfold();
+
+			expect(queryByLabelText('Select +1 Max Combat Die')).toBeNull();
+			expect(queryByLabelText('Select Heavy Strike')).toBeNull();
+			expect(getByLabelText('Select Sweeping Strike')).toBeTruthy();
+		});
+
+		it('offers to take one more only on a repeatable member, and not while the pool is full', async () => {
+			const { expand, getByLabelText, queryByLabelText, latest } = renderSection(
+				createOffer({ pools: [createDiePool()] }),
+			);
+
+			await expand();
+
+			const more = getByLabelText('Take another +1 Max Combat Die');
+			expect(more.getAttribute('aria-disabled')).toBe('true');
+			expect(queryByLabelText('Take another Heavy Strike')).toBeNull();
+
+			await fireEvent.click(more);
+			expect(latest.selections.get('combat-tactics')).toHaveLength(3);
+		});
+
+		it('gives up one copy at a time and never the last through that control', async () => {
+			const { expand, getByLabelText, queryByLabelText, queryByText, latest } = renderSection(
+				createOffer({ pools: [createDiePool()] }),
+			);
+
+			await expand();
+			expect(queryByLabelText('Give up one Heavy Strike')).toBeNull();
+			expect(queryByLabelText('Deselect +1 Max Combat Die')).toBeNull();
+
+			await fireEvent.click(getByLabelText('Give up one +1 Max Combat Die'));
+
+			expect(latest.selections.get('combat-tactics')).toEqual([
+				'Item.heavy-strike',
+				'Item.max-die',
+			]);
+			// At one the card keeps the member, loses the count, and offers deselect instead.
+			expect(queryByText('x2')).toBeNull();
+			expect(queryByLabelText('Give up one +1 Max Combat Die')).toBeNull();
+			expect(getByLabelText('Deselect +1 Max Combat Die')).toBeTruthy();
+			await tick();
+			expect(document.activeElement).toBe(getByLabelText('Deselect +1 Max Combat Die'));
+			expect(getByLabelText('Take another +1 Max Combat Die').getAttribute('aria-disabled')).toBe(
+				'false',
+			);
+		});
+
+		it('trades an ability for a second copy once room is made', async () => {
+			const { expand, getByLabelText, getByText, latest } = renderSection(
+				createOffer({
+					pools: [
+						createDiePool({
+							pickCount: 2,
+							pickIdsByUuid: new Map([
+								['Item.heavy-strike', ['t4']],
+								['Item.max-die', ['d6']],
+							]),
+						}),
+					],
+				}),
+			);
+
+			await expand();
+			await fireEvent.click(getByLabelText('Deselect Heavy Strike'));
+			await fireEvent.click(getByLabelText('Take another +1 Max Combat Die'));
+
+			expect(latest.selections.get('combat-tactics')).toEqual(['Item.max-die', 'Item.max-die']);
+			expect(getByText('x2')).toBeTruthy();
+			expect(getByText('2 of 2 selected')).toBeTruthy();
+		});
+
+		it('offers no count control in a one-pick pool, which is always full', async () => {
+			const { expand, queryByLabelText } = renderSection(
+				createOffer({
+					pools: [
+						createDiePool({
+							pickCount: 1,
+							pickIdsByUuid: new Map([['Item.max-die', ['d6']]]),
+						}),
+					],
+				}),
+			);
+
+			await expand();
+
+			expect(queryByLabelText('Take another +1 Max Combat Die')).toBeNull();
+		});
 	});
 
 	it('only offers a skill point once one has been taken from another skill', async () => {

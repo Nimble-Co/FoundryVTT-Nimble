@@ -310,6 +310,9 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		let next: string[];
 		if (position >= 0) {
 			next = current.filter((_selected, index) => index !== position);
+			// The released member lands among the alternatives, which are not rendered while
+			// folded, so the card would otherwise vanish from under the player.
+			unfoldAvailable(poolKey);
 		} else if (current.length < pool.pickCount) {
 			next = [...current, uuid];
 		} else if (pool.pickCount === 1) {
@@ -355,6 +358,11 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		if (next.has(poolKey)) next.delete(poolKey);
 		else next.add(poolKey);
 		unfoldedPools = next;
+	}
+
+	function unfoldAvailable(poolKey: string) {
+		if (unfoldedPools.has(poolKey)) return;
+		unfoldedPools = new Set([...unfoldedPools, poolKey]);
 	}
 
 	return {

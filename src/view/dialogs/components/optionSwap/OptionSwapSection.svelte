@@ -1,13 +1,22 @@
 <script lang="ts">
+	import { tick } from 'svelte';
+
+	import type { NimbleFeatureItem } from '#documents/item/feature.js';
 	import type { OptionSwapSectionProps } from '#types/components/OptionSwapSection.d.ts';
 
 	import FeatureCard from '../characterCreator/FeatureCard.svelte';
 	import Hint from '#view/components/Hint.svelte';
 	import localize from '#utils/localize.js';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
-	import { createOptionSwapSectionState } from './OptionSwapSection.state.svelte.ts';
+	import {
+		createOptionSwapSectionState,
+		type OptionSwapPoolView,
+		type OptionSwapSelectedEntry,
+	} from './OptionSwapSection.state.svelte.ts';
 
 	let { document: actor, offer, onChange, onToggle }: OptionSwapSectionProps = $props();
+
+	const poolElements: Record<string, HTMLElement | undefined> = {};
 
 	function toggle() {
 		state.toggleExpanded();
@@ -19,6 +28,49 @@
 		skills: actor.reactive.system.skills,
 		onChange,
 	}));
+
+	const featureName = (feature: NimbleFeatureItem) => feature.name ?? '';
+
+	/** A control the player just used may leave the row, so focus is moved to a named one. */
+	async function focusControl(poolKey: string, ariaLabel: string) {
+		await tick();
+		poolElements[poolKey]?.querySelector<HTMLElement>(`[aria-label="${ariaLabel}"]`)?.focus();
+	}
+
+	/** Releases the last pick of a member, which sends its card down among the alternatives. */
+	function release(view: OptionSwapPoolView, feature: NimbleFeatureItem) {
+		state.toggleFeature(view.pool.poolKey, feature);
+		void focusControl(
+			view.pool.poolKey,
+			localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
+				featureName: featureName(feature),
+			}),
+		);
+	}
+
+	function takeAnother(
+		event: MouseEvent,
+		view: OptionSwapPoolView,
+		entry: OptionSwapSelectedEntry,
+	) {
+		event.stopPropagation();
+		if (!entry.canTakeAnother) return;
+		state.adjustFeatureCount(view.pool.poolKey, entry.feature, 1);
+	}
+
+	function giveUpOne(event: MouseEvent, view: OptionSwapPoolView, entry: OptionSwapSelectedEntry) {
+		event.stopPropagation();
+		state.adjustFeatureCount(view.pool.poolKey, entry.feature, -1);
+		// At one the give-up control leaves the row and the deselect control takes its place.
+		if (entry.count === 2) {
+			void focusControl(
+				view.pool.poolKey,
+				localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
+					featureName: featureName(entry.feature),
+				}),
+			);
+		}
+	}
 </script>
 
 {#if state.hasOffer}
@@ -59,7 +111,7 @@
 				{/each}
 
 				{#each state.poolViews as view (view.pool.poolKey)}
-					<section class="nimble-option-swap__pool">
+					<section class="nimble-option-swap__pool" bind:this={poolElements[view.pool.poolKey]}>
 						<header class="nimble-option-swap__pool-header">
 							<h4 class="nimble-heading" data-heading-variant="section">{view.heading}</h4>
 							<span class="nimble-option-swap__pool-hint">{view.pickHint}</span>
@@ -76,10 +128,55 @@
 						</span>
 						<ul class="nimble-option-swap__cards">
 							{#each view.selected as entry (entry.feature.uuid)}
+								{#snippet countControls()}
+									<span class="nimble-option-swap__count-controls">
+										{#if entry.canGiveUpOne}
+											<button
+												class="nimble-button"
+												type="button"
+												data-button-variant="basic"
+												aria-label={localize('NIMBLE.optionSwap.giveUpOne', {
+													featureName: featureName(entry.feature),
+												})}
+												onclick={(event) => giveUpOne(event, view, entry)}
+											>
+												−
+											</button>
+										{/if}
+
+										{#if entry.count > 1}
+											<span class="nimble-option-swap__count">
+												{localize('NIMBLE.optionSwap.pickCount', { count: String(entry.count) })}
+											</span>
+										{/if}
+
+										{#if entry.offersAnother}
+											<!-- aria-disabled rather than disabled, so the tooltip explaining why
+											     still reaches the player: a disabled button gets no pointer events. -->
+											<button
+												class="nimble-button"
+												type="button"
+												data-button-variant="basic"
+												aria-disabled={!entry.canTakeAnother}
+												aria-label={localize('NIMBLE.optionSwap.takeAnother', {
+													featureName: featureName(entry.feature),
+												})}
+												data-tooltip={entry.takeAnotherTooltip || undefined}
+												onclick={(event) => takeAnother(event, view, entry)}
+											>
+												+
+											</button>
+										{/if}
+									</span>
+								{/snippet}
+
+								<!-- Above one pick the card carries the count controls and no deselect: a
+								     deselect there would drop every copy at once. -->
 								<FeatureCard
 									feature={entry.feature}
 									isSelected
-									onSelect={() => state.toggleFeature(view.pool.poolKey, entry.feature)}
+									onSelect={entry.count > 1 ? undefined : () => release(view, entry.feature)}
+									trailing={entry.count > 1 || entry.offersAnother ? countControls : undefined}
 								/>
 							{/each}
 						</ul>
@@ -365,6 +462,27 @@
 			margin: 0;
 			padding: 0;
 			list-style: none;
+		}
+
+		&__count-controls {
+			--nimble-button-min-width: 3ch;
+
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+
+			.nimble-button[aria-disabled='true'] {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+		}
+
+		&__count {
+			min-width: 2.5ch;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			text-align: center;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__skills-header {
