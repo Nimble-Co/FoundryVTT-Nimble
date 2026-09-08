@@ -1,13 +1,7 @@
 <script lang="ts">
 	import type { ResourceBarProps } from '#types/components/ResourceBar.d.ts';
 
-	let {
-		current,
-		max,
-		disableMaxEdit = false,
-		updateCurrent,
-		updateMax,
-	}: ResourceBarProps = $props();
+	let { current, max, label, updateCurrent }: ResourceBarProps = $props();
 </script>
 
 <div
@@ -24,6 +18,7 @@
 				min="0"
 				value={current}
 				{max}
+				aria-label="{label} current"
 				onchange={({ target }) => updateCurrent(Number((target as HTMLInputElement).value))}
 			/>
 			/
@@ -32,8 +27,8 @@
 				type="number"
 				min="0"
 				value={max}
-				onchange={({ target }) => updateMax?.(Number((target as HTMLInputElement).value))}
-				disabled={disableMaxEdit}
+				aria-label="{label} maximum"
+				disabled
 			/>
 		</div>
 	</div>

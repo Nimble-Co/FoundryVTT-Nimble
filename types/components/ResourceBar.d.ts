@@ -1,17 +1,6 @@
-interface ResourceBarBaseProps {
+export interface ResourceBarProps {
 	current: number;
 	max: number;
+	label: string;
 	updateCurrent: (value: number) => void;
 }
-
-interface ResourceBarWithFixedMax extends ResourceBarBaseProps {
-	disableMaxEdit: true;
-	updateMax?: (value: number) => void;
-}
-
-interface ResourceBarWithEditableMax extends ResourceBarBaseProps {
-	disableMaxEdit?: false;
-	updateMax: (value: number) => void;
-}
-
-export type ResourceBarProps = ResourceBarWithFixedMax | ResourceBarWithEditableMax;

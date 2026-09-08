@@ -345,18 +345,6 @@ export function createPlayerCharacterSheetState(params: {
 		});
 	}
 
-	function updateMaxMana(newValue: number): void {
-		const manaData = actor.reactive.system.resources.mana;
-		const baseMax = manaData.baseMax ?? 0;
-		const max = manaData.max || baseMax;
-		const formulaBonus = max - baseMax;
-		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
-
-		void actor.update({
-			'system.resources.mana.baseMax': adjustedBaseMax,
-		});
-	}
-
 	// Manual correction of a promoted pool, on the same write path the charges
 	// dialog uses, so a GM fixing a misplay does it wherever the pool is shown.
 	function updatePoolCurrent(poolId: string, newValue: number): void {
@@ -433,7 +421,6 @@ export function createPlayerCharacterSheetState(params: {
 		updateMaxHP,
 		updateTempHP,
 		updateCurrentMana,
-		updateMaxMana,
 		updatePoolCurrent,
 		updateCurrentHitDice,
 		rollHitDice,

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
 	import localize from '#utils/localize.js';
+	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import { PORTRAIT_FALLBACK_IMAGE } from '#view/ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
@@ -184,7 +185,6 @@
 	const updateMaxHP = playerCharacterSheetState.updateMaxHP;
 	const updateTempHP = playerCharacterSheetState.updateTempHP;
 	const updateCurrentMana = playerCharacterSheetState.updateCurrentMana;
-	const updateMaxMana = playerCharacterSheetState.updateMaxMana;
 	const updatePoolCurrent = playerCharacterSheetState.updatePoolCurrent;
 	const updateCurrentHitDice = playerCharacterSheetState.updateCurrentHitDice;
 	const rollHitDice = playerCharacterSheetState.rollHitDice;
@@ -304,23 +304,22 @@
 				<ResourceBar
 					current={mana.current}
 					max={mana.max || mana.baseMax}
+					label="Mana"
 					updateCurrent={updateCurrentMana}
-					updateMax={updateMaxMana}
-					disableMaxEdit={true}
 				/>
 			{/if}
 
 			{#each resourcePools as pool (pool.id)}
 				<h3 class="nimble-heading nimble-heading--resource">
 					{pool.label}
-					<i class={pool.icon || 'fa-solid fa-bolt'}></i>
+					<i class={pool.icon || ChargeUiConfig.defaultPoolIcon}></i>
 				</h3>
 
 				<ResourceBar
 					current={pool.current}
 					max={pool.max}
+					label={pool.label}
 					updateCurrent={(value) => updatePoolCurrent(pool.id, value)}
-					disableMaxEdit={true}
 				/>
 			{/each}
 		</div>
