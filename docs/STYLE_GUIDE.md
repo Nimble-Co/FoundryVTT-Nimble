@@ -1508,6 +1508,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `resolveOptionSwapOffer()` | `src/utils/resolveOptionSwapOffer.ts` | Read a character's `optionSwap` and `skillPointMove` rules for a rest trigger into one offer: the groups covered (`null` for all), skill points to move, and the features to quote |
 | `planOptionSwap()` | `src/utils/planOptionSwap.ts` | Turn a selection per pool (a multiset of member uuids) into item ids to delete and uuids to grant as a count difference per member, releasing the oldest pick first; each grant is paired with the history entry of the pick it replaces, and a pool whose released pick no entry holds is refused rather than planned |
 | `summarizeOptionSwap()` | `src/utils/summarizeOptionSwap.ts` | Describe a set of swaps and skill point moves by name for the rest chat card, naming an option that moved more than once with its count |
+| `countBy()` | `src/utils/countBy.ts` | How many times each value appears in a list, as a map in order of first appearance |
 | `formatGroupName()` | `src/utils/formatGroupName.ts` | Title a kebab-case group key (`thrill-of-the-hunt` ⇒ `Thrill Of The Hunt`) |
 | `stripHtml()` | `src/utils/stripHtml.ts` | Drop HTML tags from a string |
 | `getItemSource()` | `src/utils/getItemSource.ts` | Whether a document lives in a compendium pack or the world, from its UUID |

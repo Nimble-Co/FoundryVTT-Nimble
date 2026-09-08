@@ -1,7 +1,7 @@
 import type { OptionChange } from '#managers/RestManager.ts';
 import type { ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
+import countBy from '#utils/countBy.ts';
 import localize from '#utils/localize.js';
-import { countBy } from '#utils/planOptionSwap.ts';
 
 /**
  * Describes a set of swaps in names rather than uuids, so the rest card can report what

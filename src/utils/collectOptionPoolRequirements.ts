@@ -40,7 +40,7 @@ function grantedUuids(rules: ReadonlyArray<Record<string, unknown>>): string[] {
  * The uuids an option's rules grant with duplicates allowed. The rules on a level-up option
  * are raw objects, so no schema default reaches them: an unauthored flag reads as off.
  */
-function repeatableUuids(rules: ReadonlyArray<Record<string, unknown>>): string[] {
+function duplicateAllowedUuids(rules: ReadonlyArray<Record<string, unknown>>): string[] {
 	return grantRules(rules)
 		.filter((rule) => rule.allowDuplicate === true)
 		.map((rule) => rule.uuid as string);
@@ -102,7 +102,9 @@ export default async function collectOptionPoolRequirements(
 				level,
 				poolGroups,
 				extraCandidateUuids: applicable.flatMap((candidate) => grantedUuids(candidate.rules ?? [])),
-				repeatableUuids: applicable.flatMap((candidate) => repeatableUuids(candidate.rules ?? [])),
+				repeatableUuids: applicable.flatMap((candidate) =>
+					duplicateAllowedUuids(candidate.rules ?? []),
+				),
 				// Compendium options may leave the count unset, meaning a single pick. A choice
 				// between alternatives is one pick whichever way it went.
 				requiredCount: isSingle ? (option.selectionCount ?? 1) : 1,

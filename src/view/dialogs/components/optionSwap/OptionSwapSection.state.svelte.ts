@@ -6,6 +6,7 @@ import type {
 	ResolvedOptionSwapOffer,
 	ResolvedSwappableOptionPool,
 } from '#types/optionSwap.d.ts';
+import countBy from '#utils/countBy.ts';
 import localize from '#utils/localize.js';
 import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.js';
 import sortDocumentsByName from '#utils/sortDocumentsByName.js';
@@ -105,15 +106,15 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 	const poolViews = $derived.by((): OptionSwapPoolView[] =>
 		pools.map((pool) => {
 			const selectedUuids = getSelectedUuids(pool.poolKey);
-			const counts = countSelected(selectedUuids);
+			const counts = countBy(selectedUuids);
 			const isFull = selectedUuids.length >= pool.pickCount;
 			const repeatable = new Set(pool.repeatableUuids);
 			const selected = sortDocumentsByName(
-				pool.candidates.filter((candidate) => counts.has(candidate.uuid ?? '')),
+				pool.candidates.filter((candidate) => counts.has(uuidOf(candidate))),
 			).map((feature): OptionSwapSelectedEntry => {
-				const count = counts.get(feature.uuid ?? '') ?? 0;
+				const count = counts.get(uuidOf(feature)) ?? 0;
 				// A one-pick pool is always full at one, so the control would never do anything.
-				const offersAnother = repeatable.has(feature.uuid ?? '') && pool.pickCount > 1;
+				const offersAnother = repeatable.has(uuidOf(feature)) && pool.pickCount > 1;
 				return {
 					feature,
 					count,
@@ -124,7 +125,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 				};
 			});
 			const available = sortDocumentsByName(
-				pool.candidates.filter((candidate) => !counts.has(candidate.uuid ?? '')),
+				pool.candidates.filter((candidate) => !counts.has(uuidOf(candidate))),
 			);
 			const showsAvailable = unfoldedPools.has(pool.poolKey);
 			return {
@@ -223,8 +224,8 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 			if (seeded.has(pool.poolKey)) continue;
 			const uuids: string[] = [];
 			for (const candidate of pool.candidates) {
-				const ids = pool.pickIdsByUuid.get(candidate.uuid ?? '') ?? [];
-				for (const _id of ids) uuids.push(candidate.uuid ?? '');
+				const ids = pool.pickIdsByUuid.get(uuidOf(candidate)) ?? [];
+				for (const _id of ids) uuids.push(uuidOf(candidate));
 			}
 			seeded.set(pool.poolKey, uuids);
 			hasChanges = true;
@@ -288,12 +289,6 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		return selectedByPool.get(poolKey) ?? [];
 	}
 
-	function getSelectedFeatures(poolKey: string): NimbleFeatureItem[] {
-		const pool = pools.find((candidate) => candidate.poolKey === poolKey);
-		const counts = countSelected(getSelectedUuids(poolKey));
-		return pool?.candidates.filter((candidate) => counts.has(candidate.uuid ?? '')) ?? [];
-	}
-
 	function setSelected(poolKey: string, next: string[]) {
 		const updated = new Map(selectedByPool);
 		updated.set(poolKey, next);
@@ -302,15 +297,15 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 	}
 
 	/**
-	 * Selects a member from the alternatives, or releases one pick of a selected member. On the
-	 * held side this is only reachable at a count of one, so a release always takes the member
-	 * to zero and back among the alternatives.
+	 * Selects a member from the alternatives, or releases the last pick of a selected member,
+	 * which sends it back among the alternatives. Above one pick the card offers `giveUpOne`
+	 * instead, so a release here always takes the member to zero.
 	 */
 	function toggleFeature(poolKey: string, feature: NimbleFeatureItem) {
 		const pool = pools.find((candidate) => candidate.poolKey === poolKey);
 		if (!pool) return;
 
-		const uuid = feature.uuid ?? '';
+		const uuid = uuidOf(feature);
 		const current = getSelectedUuids(poolKey);
 		const position = current.indexOf(uuid);
 
@@ -333,27 +328,47 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 	}
 
 	/**
-	 * Takes one more pick of a selected member, or gives one up. Only a repeatable member can go
-	 * above one, only a pool with room can take another, and giving up never goes below one:
-	 * the last pick is released through the card's deselect control instead.
+	 * Releases the last pick of a member and names the control that now stands for it, so the
+	 * caller can move focus there rather than let it fall to the body.
 	 */
-	function adjustFeatureCount(poolKey: string, feature: NimbleFeatureItem, delta: 1 | -1) {
-		const view = poolViews.find((candidate) => candidate.pool.poolKey === poolKey);
-		const entry = view?.selected.find((candidate) => candidate.feature.uuid === feature.uuid);
-		if (!view || !entry) return;
-		if (delta > 0 ? !entry.canTakeAnother : !entry.canGiveUpOne) return;
+	function releaseLastPick(poolKey: string, feature: NimbleFeatureItem): string {
+		toggleFeature(poolKey, feature);
+		return localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
+			featureName: feature.name ?? '',
+		});
+	}
 
-		const uuid = feature.uuid ?? '';
+	function selectedEntry(poolKey: string, feature: NimbleFeatureItem) {
+		const view = poolViews.find((candidate) => candidate.pool.poolKey === poolKey);
+		return view?.selected.find((candidate) => candidate.feature.uuid === feature.uuid);
+	}
+
+	/** Takes one more pick of a repeatable member, while the pool has room for it. */
+	function takeAnother(poolKey: string, feature: NimbleFeatureItem) {
+		if (!selectedEntry(poolKey, feature)?.canTakeAnother) return;
+		setSelected(poolKey, [...getSelectedUuids(poolKey), uuidOf(feature)]);
+	}
+
+	/**
+	 * Gives up one pick of a member held more than once, never the last. Returns the control
+	 * that replaces the give-up control when the count reaches one, for focus, else `null`.
+	 */
+	function giveUpOne(poolKey: string, feature: NimbleFeatureItem): string | null {
+		const entry = selectedEntry(poolKey, feature);
+		if (!entry?.canGiveUpOne) return null;
+
 		const current = getSelectedUuids(poolKey);
-		if (delta > 0) {
-			setSelected(poolKey, [...current, uuid]);
-		} else {
-			const position = current.lastIndexOf(uuid);
-			setSelected(
-				poolKey,
-				current.filter((_selected, index) => index !== position),
-			);
-		}
+		const position = current.lastIndexOf(uuidOf(feature));
+		setSelected(
+			poolKey,
+			current.filter((_selected, index) => index !== position),
+		);
+
+		return entry.count === 2
+			? localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
+					featureName: feature.name ?? '',
+				})
+			: null;
 	}
 
 	function toggleExpanded() {
@@ -403,18 +418,14 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		get hasUnplacedPoint() {
 			return hasUnplacedPoint;
 		},
-		adjustFeatureCount,
 		adjustSkill,
-		getSelectedFeatures,
+		giveUpOne,
+		releaseLastPick,
+		takeAnother,
 		toggleAvailable,
 		toggleExpanded,
 		toggleFeature,
 	};
 }
 
-/** How many times each uuid appears in a selection. */
-function countSelected(uuids: readonly string[]): Map<string, number> {
-	const counts = new Map<string, number>();
-	for (const uuid of uuids) counts.set(uuid, (counts.get(uuid) ?? 0) + 1);
-	return counts;
-}
+const uuidOf = (feature: NimbleFeatureItem) => feature.uuid ?? '';

@@ -29,23 +29,15 @@
 		onChange,
 	}));
 
-	const featureName = (feature: NimbleFeatureItem) => feature.name ?? '';
-
 	/** A control the player just used may leave the row, so focus is moved to a named one. */
 	async function focusControl(poolKey: string, ariaLabel: string) {
 		await tick();
-		poolElements[poolKey]?.querySelector<HTMLElement>(`[aria-label="${ariaLabel}"]`)?.focus();
+		const controls = poolElements[poolKey]?.querySelectorAll<HTMLElement>('[aria-label]') ?? [];
+		[...controls].find((control) => control.getAttribute('aria-label') === ariaLabel)?.focus();
 	}
 
-	/** Releases the last pick of a member, which sends its card down among the alternatives. */
 	function release(view: OptionSwapPoolView, feature: NimbleFeatureItem) {
-		state.toggleFeature(view.pool.poolKey, feature);
-		void focusControl(
-			view.pool.poolKey,
-			localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
-				featureName: featureName(feature),
-			}),
-		);
+		void focusControl(view.pool.poolKey, state.releaseLastPick(view.pool.poolKey, feature));
 	}
 
 	function takeAnother(
@@ -54,22 +46,13 @@
 		entry: OptionSwapSelectedEntry,
 	) {
 		event.stopPropagation();
-		if (!entry.canTakeAnother) return;
-		state.adjustFeatureCount(view.pool.poolKey, entry.feature, 1);
+		state.takeAnother(view.pool.poolKey, entry.feature);
 	}
 
 	function giveUpOne(event: MouseEvent, view: OptionSwapPoolView, entry: OptionSwapSelectedEntry) {
 		event.stopPropagation();
-		state.adjustFeatureCount(view.pool.poolKey, entry.feature, -1);
-		// At one the give-up control leaves the row and the deselect control takes its place.
-		if (entry.count === 2) {
-			void focusControl(
-				view.pool.poolKey,
-				localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
-					featureName: featureName(entry.feature),
-				}),
-			);
-		}
+		const target = state.giveUpOne(view.pool.poolKey, entry.feature);
+		if (target) void focusControl(view.pool.poolKey, target);
 	}
 </script>
 
@@ -140,7 +123,7 @@
 												type="button"
 												data-button-variant="basic"
 												aria-label={localize('NIMBLE.optionSwap.giveUpOne', {
-													featureName: featureName(entry.feature),
+													featureName: entry.feature.name ?? '',
 												})}
 												onclick={(event) => giveUpOne(event, view, entry)}
 											>
@@ -163,7 +146,7 @@
 												data-button-variant="basic"
 												aria-disabled={!entry.canTakeAnother}
 												aria-label={localize('NIMBLE.optionSwap.takeAnother', {
-													featureName: featureName(entry.feature),
+													featureName: entry.feature.name ?? '',
 												})}
 												data-tooltip={entry.takeAnotherTooltip || undefined}
 												onclick={(event) => takeAnother(event, view, entry)}
