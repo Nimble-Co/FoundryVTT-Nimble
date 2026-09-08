@@ -12,15 +12,32 @@ function pool(overrides: Partial<SwappableOptionPool> = {}): SwappableOptionPool
 		levels: [4, 6],
 		pickCount: 2,
 		candidateUuids: ['uuid:rampage', 'uuid:whirlwind', 'uuid:death-blow', 'uuid:swift-fury'],
-		ownedUuids: ['uuid:rampage', 'uuid:whirlwind'],
+		pickIdsByUuid: new Map([
+			['uuid:rampage', ['item-rampage']],
+			['uuid:whirlwind', ['item-whirlwind']],
+		]),
+		repeatableUuids: [],
 		...overrides,
 	};
 }
 
-const itemIds = new Map([
-	['uuid:rampage', 'item-rampage'],
-	['uuid:whirlwind', 'item-whirlwind'],
-]);
+/** A Commander pool: one tactic at level 4, the die at levels 6 and 8. */
+function diePool(overrides: Partial<SwappableOptionPool> = {}): SwappableOptionPool {
+	return pool({
+		poolKey: 'combat-tactics',
+		poolGroups: ['combat-tactics'],
+		displayName: 'Fit for Any Battlefield',
+		levels: [4, 6, 8],
+		pickCount: 3,
+		candidateUuids: ['uuid:tactic-a', 'uuid:tactic-b', 'uuid:die'],
+		pickIdsByUuid: new Map([
+			['uuid:tactic-a', ['item-tactic-a']],
+			['uuid:die', ['item-die-6', 'item-die-8']],
+		]),
+		repeatableUuids: ['uuid:die'],
+		...overrides,
+	});
+}
 
 /** Level 4 granted Rampage, level 6 granted Whirlwind. */
 const history = [
@@ -28,20 +45,28 @@ const history = [
 	{ grantedFeatureIds: ['item-whirlwind'] },
 ];
 
+/** Level 4 granted a tactic, levels 6 and 8 a die each. */
+const dieHistory = [
+	{ grantedFeatureIds: ['item-tactic-a'] },
+	{ grantedFeatureIds: ['item-die-6'] },
+	{ grantedFeatureIds: ['item-die-8'] },
+];
+
+const empty = { deleteItemIds: [], grants: [], changedPoolKeys: [], refusedPoolKeys: [] };
+
 describe('planOptionSwap', () => {
-	it('plans nothing when the selection matches what is owned', () => {
+	it('plans nothing when the selection matches the picks', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:whirlwind']]]),
-			itemIds,
 			history,
 		);
 
-		expect(plan).toEqual({ deleteItemIds: [], grants: [], changedPoolKeys: [] });
+		expect(plan).toEqual(empty);
 	});
 
 	it('plans nothing for a pool the player did not touch', () => {
-		const plan = planOptionSwap([pool()], new Map(), itemIds, history);
+		const plan = planOptionSwap([pool()], new Map(), history);
 
 		expect(plan.changedPoolKeys).toEqual([]);
 	});
@@ -50,7 +75,6 @@ describe('planOptionSwap', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:whirlwind', 'uuid:rampage']]]),
-			itemIds,
 			history,
 		);
 
@@ -61,7 +85,6 @@ describe('planOptionSwap', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
-			itemIds,
 			history,
 		);
 
@@ -74,7 +97,6 @@ describe('planOptionSwap', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
-			itemIds,
 			history,
 		);
 
@@ -85,7 +107,6 @@ describe('planOptionSwap', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:death-blow', 'uuid:swift-fury']]]),
-			itemIds,
 			history,
 		);
 
@@ -98,22 +119,27 @@ describe('planOptionSwap', () => {
 
 	it('ignores a selection with fewer picks than the character holds', () => {
 		// Deselecting a pick to browse the pool must never cost the player that option.
-		const plan = planOptionSwap(
-			[pool()],
-			new Map([['savage-arsenal', ['uuid:rampage']]]),
-			itemIds,
-			history,
-		);
+		const plan = planOptionSwap([pool()], new Map([['savage-arsenal', ['uuid:rampage']]]), history);
 
-		expect(plan).toEqual({ deleteItemIds: [], grants: [], changedPoolKeys: [] });
+		expect(plan).toEqual(empty);
 	});
 
 	it('ignores a selection with more picks than the character holds', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:whirlwind', 'uuid:death-blow']]]),
-			itemIds,
 			history,
+		);
+
+		expect(plan.changedPoolKeys).toEqual([]);
+	});
+
+	it('ignores a selection that repeats a pick past the pool total', () => {
+		// Two dice and two tactics is four picks against three.
+		const plan = planOptionSwap(
+			[diePool()],
+			new Map([['combat-tactics', ['uuid:tactic-a', 'uuid:tactic-b', 'uuid:die', 'uuid:die']]]),
+			dieHistory,
 		);
 
 		expect(plan.changedPoolKeys).toEqual([]);
@@ -123,48 +149,83 @@ describe('planOptionSwap', () => {
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
-			itemIds,
 			history,
 		);
 
 		expect(plan.changedPoolKeys).toEqual(['savage-arsenal']);
 	});
 
-	it('falls back to the latest entry holding the pool when a pick is untracked', () => {
-		// An item the character owns that no history entry records — a hand-dropped pick, or one
-		// from a level that predates the history.
+	it('releases one pick of a repeated option and leaves the rest', () => {
 		const plan = planOptionSwap(
-			[pool({ ownedUuids: ['uuid:rampage', 'uuid:whirlwind'] })],
-			new Map([['savage-arsenal', ['uuid:whirlwind', 'uuid:death-blow']]]),
-			itemIds,
-			[{ grantedFeatureIds: ['item-whirlwind'] }],
+			[diePool()],
+			new Map([['combat-tactics', ['uuid:tactic-a', 'uuid:die', 'uuid:tactic-b']]]),
+			dieHistory,
 		);
 
-		expect(plan.deleteItemIds).toEqual(['item-rampage']);
-		expect(plan.grants[0].historyIndex).toBe(0);
+		expect(plan.deleteItemIds).toEqual(['item-die-6']);
+		expect(plan.grants).toEqual([{ uuid: 'uuid:tactic-b', historyIndex: 1 }]);
 	});
 
-	it('records no entry when the pool appears nowhere in history', () => {
+	it('releases the oldest pick first, so the most recent one survives', () => {
+		const plan = planOptionSwap(
+			[diePool()],
+			new Map([['combat-tactics', ['uuid:die', 'uuid:tactic-a', 'uuid:tactic-b']]]),
+			dieHistory,
+		);
+
+		expect(plan.deleteItemIds).toEqual(['item-die-6']);
+	});
+
+	it('grants one more of a repeated option when its count rose', () => {
+		const plan = planOptionSwap(
+			[diePool()],
+			new Map([['combat-tactics', ['uuid:die', 'uuid:die', 'uuid:die']]]),
+			dieHistory,
+		);
+
+		expect(plan.deleteItemIds).toEqual(['item-tactic-a']);
+		expect(plan.grants).toEqual([{ uuid: 'uuid:die', historyIndex: 0 }]);
+	});
+
+	it('releases every pick of an option whose count fell to zero', () => {
+		const plan = planOptionSwap(
+			[diePool()],
+			new Map([['combat-tactics', ['uuid:tactic-a', 'uuid:tactic-b', 'uuid:tactic-b']]]),
+			dieHistory,
+		);
+
+		expect(plan.deleteItemIds).toEqual(['item-die-6', 'item-die-8']);
+		expect(plan.grants).toEqual([
+			{ uuid: 'uuid:tactic-b', historyIndex: 1 },
+			{ uuid: 'uuid:tactic-b', historyIndex: 2 },
+		]);
+	});
+
+	it('refuses a pool whose released pick no history entry holds', () => {
+		// The history was rewritten between the offer and the rest, so the pick id is stale.
+		// Creating a replacement no level records is the one state the swap must never make.
 		const plan = planOptionSwap(
 			[pool()],
 			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
-			itemIds,
-			[{ grantedFeatureIds: ['item-unrelated'] }],
+			[{ grantedFeatureIds: ['item-rampage'] }],
 		);
 
-		expect(plan.grants[0].historyIndex).toBe(-1);
+		expect(plan).toEqual({ ...empty, refusedPoolKeys: ['savage-arsenal'] });
 	});
 
-	it('skips a dropped pick whose item cannot be resolved', () => {
+	it('refuses only the stale pool and plans the rest', () => {
 		const plan = planOptionSwap(
-			[pool({ ownedUuids: ['uuid:rampage', 'uuid:ghost'] })],
-			new Map([['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']]]),
-			itemIds,
-			history,
+			[pool(), diePool()],
+			new Map([
+				['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']],
+				['combat-tactics', ['uuid:tactic-a', 'uuid:die', 'uuid:tactic-b']],
+			]),
+			[{ grantedFeatureIds: ['item-rampage'] }, ...dieHistory],
 		);
 
-		expect(plan.deleteItemIds).toEqual([]);
-		expect(plan.grants.map((grant) => grant.uuid)).toEqual(['uuid:death-blow']);
+		expect(plan.refusedPoolKeys).toEqual(['savage-arsenal']);
+		expect(plan.changedPoolKeys).toEqual(['combat-tactics']);
+		expect(plan.deleteItemIds).toEqual(['item-die-6']);
 	});
 
 	it('plans each pool independently', () => {
@@ -172,10 +233,9 @@ describe('planOptionSwap', () => {
 			poolKey: 'combat-tactics',
 			poolGroups: ['combat-tactics'],
 			candidateUuids: ['uuid:tactic-a', 'uuid:tactic-b'],
-			ownedUuids: ['uuid:tactic-a'],
+			pickIdsByUuid: new Map([['uuid:tactic-a', ['item-tactic-a']]]),
 			pickCount: 1,
 		});
-		const ids = new Map([...itemIds, ['uuid:tactic-a', 'item-tactic-a']]);
 
 		const plan = planOptionSwap(
 			[pool(), tactics],
@@ -183,7 +243,6 @@ describe('planOptionSwap', () => {
 				['savage-arsenal', ['uuid:rampage', 'uuid:death-blow']],
 				['combat-tactics', ['uuid:tactic-b']],
 			]),
-			ids,
 			[...history, { grantedFeatureIds: ['item-tactic-a'] }],
 		);
 

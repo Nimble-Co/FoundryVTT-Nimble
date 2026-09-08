@@ -75,11 +75,11 @@
 							{localize('NIMBLE.optionSwap.currentPicks')}
 						</span>
 						<ul class="nimble-option-swap__cards">
-							{#each view.selected as feature (feature.uuid)}
+							{#each view.selected as entry (entry.feature.uuid)}
 								<FeatureCard
-									{feature}
+									feature={entry.feature}
 									isSelected
-									onSelect={() => state.toggleFeature(view.pool.poolKey, feature)}
+									onSelect={() => state.toggleFeature(view.pool.poolKey, entry.feature)}
 								/>
 							{/each}
 						</ul>
@@ -101,9 +101,7 @@
 							{#if view.showsAvailable}
 								<ul
 									class="nimble-option-swap__cards"
-									data-tooltip={view.isFull && view.pool.pickCount > 1
-										? localize('NIMBLE.optionSwap.releaseAPickFirst')
-										: undefined}
+									data-tooltip={view.isFull && view.pool.pickCount > 1 ? view.fullHint : undefined}
 								>
 									{#each view.available as feature (feature.uuid)}
 										<FeatureCard

@@ -1,9 +1,14 @@
 import type { OptionChange } from '#managers/RestManager.ts';
 import type { ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
+import localize from '#utils/localize.js';
+import { countBy } from '#utils/planOptionSwap.ts';
 
 /**
  * Describes a set of swaps in names rather than uuids, so the rest card can report what
  * changed without resolving anything later.
+ *
+ * What moved is the same count difference the planner acts on, so the card and the plan
+ * cannot disagree. An option that moved more than once is named once with its count.
  *
  * A pool whose selection did not change is left out, which is what keeps an ordinary rest
  * from posting an empty "options changed" block.
@@ -23,16 +28,30 @@ export default function summarizeOptionSwap(
 		// must not be reported as one.
 		if (selected.length !== pool.pickCount) continue;
 
-		const owned = new Set(pool.ownedUuids);
-		const wanted = new Set(selected);
+		const wanted = countBy(selected);
 
 		const nameByUuid = new Map(
 			pool.candidates.map((candidate) => [candidate.uuid ?? '', candidate.name ?? '']),
 		);
-		const nameOf = (uuid: string) => nameByUuid.get(uuid) || uuid;
+		const nameOf = (uuid: string, count: number) => {
+			const name = nameByUuid.get(uuid) || uuid;
+			return count > 1
+				? localize('NIMBLE.optionSwap.countedName', { name, count: String(count) })
+				: name;
+		};
 
-		const removed = pool.ownedUuids.filter((uuid) => !wanted.has(uuid)).map(nameOf);
-		const added = selected.filter((uuid) => !owned.has(uuid)).map(nameOf);
+		const removed: string[] = [];
+		for (const [uuid, ids] of pool.pickIdsByUuid) {
+			const lost = ids.length - (wanted.get(uuid) ?? 0);
+			if (lost > 0) removed.push(nameOf(uuid, lost));
+		}
+
+		const added: string[] = [];
+		for (const [uuid, count] of wanted) {
+			const gained = count - (pool.pickIdsByUuid.get(uuid)?.length ?? 0);
+			if (gained > 0) added.push(nameOf(uuid, gained));
+		}
+
 		if (removed.length === 0 && added.length === 0) continue;
 
 		changes.push({

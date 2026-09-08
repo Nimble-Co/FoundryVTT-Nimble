@@ -5,6 +5,7 @@ import collectOptionPoolRequirements, {
 } from '#utils/collectOptionPoolRequirements.ts';
 import formatGroupName from '#utils/formatGroupName.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import { toSnapshotId } from '../migration/compendiumSourceId.js';
 
 /** One pool of class options a character may re-pick from. */
 export interface SwappableOptionPool {
@@ -20,10 +21,15 @@ export interface SwappableOptionPool {
 	levels: number[];
 	/** How many picks the character holds from this pool, which a swap must preserve. */
 	pickCount: number;
-	/** Every member of the pool, owned or not. */
+	/** Every member of the pool, held or not. */
 	candidateUuids: string[];
-	/** The members the character currently holds. */
-	ownedUuids: string[];
+	/**
+	 * Member uuid to the embedded item ids that are picks of it, oldest granting level first.
+	 * Only members with at least one pick appear.
+	 */
+	pickIdsByUuid: ReadonlyMap<string, string[]>;
+	/** Members a character may hold more than one pick of. */
+	repeatableUuids: string[];
 }
 
 /**
@@ -34,15 +40,21 @@ export interface SwappableOptionPool {
  * only the granted item. Summing the levels is therefore the only honest presentation, and it
  * is the one `findMissingLevelSelections` already settled on for the same reason.
  *
- * The pick count is what the character currently holds, not what their levels entitled them
- * to. A swap preserves the count rather than re-deriving it, and the two differ: a level that
- * offers a choice between options records nothing about which was taken.
- * A pool the character owes picks from belongs to the level correction dialog, not here.
+ * A pick is an item the level-up history recorded, handed in as `pickIdsBySource`: for each
+ * compendium source, the item ids that stand for picks of it. Two ids under one source are
+ * two picks, which is how an option taken at two levels is counted twice. An item on the sheet
+ * that no entry recorded is not in that map and so is not a pick. A pool the character owes
+ * picks from belongs to the level correction dialog, not here.
+ *
+ * A source is matched to a member with the compendium namespaces folded, because a stored
+ * source and a pack rule can name the same document under the stable and the dev system ids.
  *
  * A level that offers a choice between alternatives contributes all of them: every group any
  * alternative draws from, and every item an alternative grants outright, so a pick made either
- * way can be traded for the other. Pools that share a group are merged, because an item in
- * two pools would count twice and a swap in one would silently reach into the other.
+ * way can be traded for the other. An alternative that grants its item with duplicates allowed
+ * marks that member repeatable, and the union across the pool's levels wins. Pools that share
+ * a group are merged, because an item in two pools would count twice and a swap in one would
+ * silently reach into the other.
  *
  * The offers are gathered by replaying levels 1 to `classLevel`, because a level-up option is
  * applicable at the exact levels it lists, and a pool offered at earlier levels only would
@@ -56,7 +68,7 @@ export default async function collectSwappableOptions(
 	index: ClassFeatureIndex,
 	classIdentifier: string,
 	classLevel: number,
-	ownedSourceUuids: ReadonlySet<string>,
+	pickIdsBySource: ReadonlyMap<string, readonly string[]>,
 	allowedGroups: ReadonlySet<string> | null,
 ): Promise<SwappableOptionPool[]> {
 	if (!classIdentifier || classLevel < 1) return [];
@@ -75,6 +87,7 @@ export default async function collectSwappableOptions(
 		mergeIntoBuckets(buckets, { ...requirement, poolGroups });
 	}
 
+	const pickIdsBySnapshot = foldSources(pickIdsBySource);
 	const pools: SwappableOptionPool[] = [];
 
 	for (const bucket of buckets) {
@@ -89,12 +102,18 @@ export default async function collectSwappableOptions(
 		// A pool with one member offers no alternative, so there is nothing to swap.
 		if (candidateUuids.length < 2) continue;
 
-		const ownedUuids = candidateUuids.filter((uuid) => ownedSourceUuids.has(uuid));
-		// Nothing held is nothing to swap.
-		if (ownedUuids.length < 1) continue;
+		const pickIdsByUuid = new Map<string, string[]>();
+		for (const uuid of candidateUuids) {
+			const ids = pickIdsBySnapshot.get(toSnapshotId(uuid) ?? uuid);
+			if (ids && ids.length > 0) pickIdsByUuid.set(uuid, [...ids]);
+		}
+		const pickCount = [...pickIdsByUuid.values()].reduce((total, ids) => total + ids.length, 0);
+		// Nothing picked is nothing to swap.
+		if (pickCount < 1) continue;
 
 		const byLevel = [...bucket.requirements].sort((a, b) => a.level - b.level);
 		const [first] = byLevel;
+		const repeatable = new Set(byLevel.flatMap((requirement) => requirement.repeatableUuids));
 
 		pools.push({
 			poolKey: buildOptionPoolKey(poolGroups),
@@ -104,13 +123,28 @@ export default async function collectSwappableOptions(
 				poolGroups.map(formatGroupName).join(' / '),
 			optionLabel: first.optionLabel,
 			levels: [...new Set(byLevel.map((requirement) => requirement.level))].sort((a, b) => a - b),
-			pickCount: ownedUuids.length,
+			pickCount,
 			candidateUuids,
-			ownedUuids,
+			pickIdsByUuid,
+			repeatableUuids: candidateUuids.filter((uuid) => repeatable.has(uuid)),
 		});
 	}
 
 	return pools.sort((a, b) => a.levels[0] - b.levels[0] || a.poolKey.localeCompare(b.poolKey));
+}
+
+/** The picks keyed by their source folded onto the snapshot namespace. */
+function foldSources(
+	pickIdsBySource: ReadonlyMap<string, readonly string[]>,
+): Map<string, string[]> {
+	const folded = new Map<string, string[]>();
+	for (const [source, ids] of pickIdsBySource) {
+		const key = toSnapshotId(source) ?? source;
+		const existing = folded.get(key);
+		if (existing) existing.push(...ids);
+		else folded.set(key, [...ids]);
+	}
+	return folded;
 }
 
 interface OptionPoolBucket {

@@ -32,8 +32,8 @@ function createPool(
 		levels: [3],
 		pickCount: 1,
 		candidateUuids: ARSENAL.map((feature) => feature.uuid as string),
-		ownedUuids: ['Item.cleave'],
-		itemIdByUuid: new Map([['Item.cleave', 'abc123']]),
+		pickIdsByUuid: new Map([['Item.cleave', ['abc123']]]),
+		repeatableUuids: [],
 		candidates: ARSENAL,
 		...overrides,
 	};
@@ -149,7 +149,10 @@ describe('OptionSwapSection', () => {
 				pools: [
 					createPool({
 						pickCount: 2,
-						ownedUuids: ['Item.cleave', 'Item.rampage'],
+						pickIdsByUuid: new Map([
+							['Item.cleave', ['abc123']],
+							['Item.rampage', ['def456']],
+						]),
 					}),
 				],
 			}),

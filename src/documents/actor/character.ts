@@ -13,6 +13,7 @@ import type {
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import collectOptionPicks from '#utils/collectOptionPicks.ts';
 import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
@@ -1333,23 +1334,23 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		const pools: ResolvedSwappableOptionPool[] = [];
 		if (characterClass && offer.allowedGroups?.size !== 0) {
-			const ownedSourceUuids = new Set<string>();
-			const itemIdByUuid = new Map<string, string>();
+			// The history records item ids only, so each pick's source is read off the live item.
+			const sourceByItemId = new Map<string, string>();
 			for (const item of this.items) {
 				if (item.type !== 'feature') continue;
 				const compendiumSource = item._stats?.compendiumSource;
-				if (!compendiumSource || !item.id) continue;
-				ownedSourceUuids.add(compendiumSource);
-				// First owned copy wins: a duplicate pick is one the swap can only unmake once.
-				if (!itemIdByUuid.has(compendiumSource)) itemIdByUuid.set(compendiumSource, item.id);
+				if (compendiumSource && item.id) sourceByItemId.set(item.id, compendiumSource);
 			}
+			const picks = collectOptionPicks(this.system.levelUpHistory, (itemId) =>
+				sourceByItemId.get(itemId),
+			);
 
 			const index = await buildClassFeatureIndex();
 			const collected = await collectSwappableOptions(
 				index,
 				characterClass.identifier,
 				characterClass.system.classLevel,
-				ownedSourceUuids,
+				picks,
 				offer.allowedGroups,
 			);
 
@@ -1359,7 +1360,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				);
 				pools.push({
 					...pool,
-					itemIdByUuid,
 					candidates: candidates.filter((doc): doc is NimbleFeatureItem => Boolean(doc)),
 				});
 			}
@@ -1383,11 +1383,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		selections: ReadonlyMap<string, readonly string[]>,
 		skillPoints: ReadonlyMap<string, number> = new Map(),
 	): Promise<OptionSwapPlan | null> {
-		const itemIdByUuid = new Map<string, string>();
-		for (const pool of pools) {
-			for (const [uuid, itemId] of pool.itemIdByUuid) itemIdByUuid.set(uuid, itemId);
+		const plan = planOptionSwap(pools, selections, this.system.levelUpHistory);
+		// A pick that left the history since the offer was made cannot be replaced by an item
+		// no level records, so that pool is left alone and the player told why.
+		if (plan.refusedPoolKeys.length > 0) {
+			ui.notifications?.warn(localize('NIMBLE.optionSwap.staleSwapRefused'));
 		}
-		const plan = planOptionSwap(pools, selections, itemIdByUuid, this.system.levelUpHistory);
 
 		const featureSources: Item.CreateData[] = [];
 		const historyIndexByCreatedIndex: number[] = [];
@@ -1435,7 +1436,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		created.forEach((doc, position) => {
 			const id = (doc as unknown as { id: string | null }).id;
 			const historyIndex = historyIndexByCreatedIndex[position];
-			if (!id || historyIndex < 0) return;
+			if (!id) return;
 			const ids = addedIdsByHistoryIndex.get(historyIndex);
 			if (ids) ids.push(id);
 			else addedIdsByHistoryIndex.set(historyIndex, [id]);

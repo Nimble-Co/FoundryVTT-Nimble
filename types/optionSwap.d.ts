@@ -4,8 +4,6 @@ import type { OptionSwapOffer } from '#utils/resolveOptionSwapOffer.ts';
 
 /** A swappable pool with its members resolved to documents the picker can render. */
 export interface ResolvedSwappableOptionPool extends SwappableOptionPool {
-	/** Compendium source uuid to the embedded item id the character holds for it. */
-	itemIdByUuid: ReadonlyMap<string, string>;
 	candidates: NimbleFeatureItem[];
 }
 
@@ -16,7 +14,10 @@ export interface ResolvedOptionSwapOffer extends OptionSwapOffer {
 
 /** Everything the swap section has picked so far, handed over whole on every change. */
 export interface OptionSwapChange {
-	/** Pool key to the uuids the player wants to hold from that pool. */
+	/**
+	 * Pool key to the uuids the player wants to hold from that pool. A uuid appears once per
+	 * pick, so a repeated option is listed as many times as it is held.
+	 */
 	selections: Map<string, string[]>;
 	/**
 	 * Skill key to its new point total, for the skills a move changed. Empty until a move is
@@ -28,7 +29,7 @@ export interface OptionSwapChange {
 /** What a rest dialog hands back when the player changed something. */
 export interface OptionSwapSubmitData {
 	pools: ResolvedSwappableOptionPool[];
-	/** Pool key to the uuids the player wants to hold from that pool. */
+	/** Pool key to the uuids the player wants to hold from that pool, once per pick. */
 	selections: ReadonlyMap<string, readonly string[]>;
 	/** Skill key to its new point total. A move is net zero across the map. */
 	skillPoints: ReadonlyMap<string, number>;

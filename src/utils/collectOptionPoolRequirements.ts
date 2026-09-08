@@ -7,6 +7,8 @@ export interface OptionPoolRequirement {
 	poolGroups: string[];
 	/** Items an alternative at this level grants outright, offered alongside the groups' members. */
 	extraCandidateUuids: string[];
+	/** The subset of `extraCandidateUuids` whose grant rule allows a duplicate, so a pick may repeat. */
+	repeatableUuids: string[];
 	requiredCount: number;
 	displayName: string | null;
 	optionLabel: string | null;
@@ -22,10 +24,25 @@ export interface CollectOptionPoolRequirementsOptions {
 	alternatives?: 'skip' | 'union';
 }
 
+/** The grant rules among an option's rules. */
+function grantRules(rules: ReadonlyArray<Record<string, unknown>>): Record<string, unknown>[] {
+	return rules.filter(
+		(rule) => rule.type === 'grantItem' && typeof rule.uuid === 'string' && rule.uuid,
+	);
+}
+
 /** The uuids an option's rules grant outright. */
 function grantedUuids(rules: ReadonlyArray<Record<string, unknown>>): string[] {
-	return rules
-		.filter((rule) => rule.type === 'grantItem' && typeof rule.uuid === 'string' && rule.uuid)
+	return grantRules(rules).map((rule) => rule.uuid as string);
+}
+
+/**
+ * The uuids an option's rules grant with duplicates allowed. The rules on a level-up option
+ * are raw objects, so no schema default reaches them: an unauthored flag reads as off.
+ */
+function repeatableUuids(rules: ReadonlyArray<Record<string, unknown>>): string[] {
+	return grantRules(rules)
+		.filter((rule) => rule.allowDuplicate === true)
 		.map((rule) => rule.uuid as string);
 }
 
@@ -60,6 +77,7 @@ export default async function collectOptionPoolRequirements(
 				level,
 				poolGroups: [groupName],
 				extraCandidateUuids: [],
+				repeatableUuids: [],
 				requiredCount: group.selectionCount,
 				displayName: group.displayName ?? null,
 				optionLabel: null,
@@ -84,6 +102,7 @@ export default async function collectOptionPoolRequirements(
 				level,
 				poolGroups,
 				extraCandidateUuids: applicable.flatMap((candidate) => grantedUuids(candidate.rules ?? [])),
+				repeatableUuids: applicable.flatMap((candidate) => repeatableUuids(candidate.rules ?? [])),
 				// Compendium options may leave the count unset, meaning a single pick. A choice
 				// between alternatives is one pick whichever way it went.
 				requiredCount: isSingle ? (option.selectionCount ?? 1) : 1,
