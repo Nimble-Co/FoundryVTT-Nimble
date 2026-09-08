@@ -69,14 +69,17 @@ function getClassSpellcasting(
 
 	if (declared.length < 1) return null;
 
+	// More than one declared cost cannot name which pool pays, so the cast falls
+	// back to mana. Two pool classes and no mana would then pay nothing, an
+	// unshipped combination.
+	if (declared.length > 1) return null;
+
 	// With no restriction to narrow by, a single class is unambiguous and more
 	// than one is not. Mana is the safe default for the ambiguous case, but only
 	// for a character who holds mana: one who holds none would pay nothing at
-	// all, so a single declared cost is read as the only thing that could be
+	// all, so the single declared cost is read as the only thing that could be
 	// paying for the cast.
-	if (restrictedTo.length < 1 && classItems.length > 1) {
-		if (declared.length > 1 || hasManaCapacity(actor)) return null;
-	}
+	if (restrictedTo.length < 1 && classItems.length > 1 && hasManaCapacity(actor)) return null;
 
 	return declared[0];
 }

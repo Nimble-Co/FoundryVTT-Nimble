@@ -509,6 +509,18 @@ describe('multiclass cost attribution', () => {
 		expect(resolveSpellCost(actor, createSpell(2))).toEqual({ type: 'mana', amount: 2 });
 	});
 
+	it('falls back to mana when a spell is open to two classes that each declare a pool', () => {
+		const first = createPoolClass({ poolCurrent: 3 });
+		first.system.identifier = 'shadowmancer';
+		const second = createPoolClass({ poolIdentifier: 'other-power', poolCurrent: 3 });
+		second.id = 'class-2';
+		second.system.identifier = 'hexbinder';
+		const actor = createMockActor({ items: [first, second] });
+		const sharedSpell = { system: { tier: 2, classes: ['shadowmancer', 'hexbinder'] } };
+
+		expect(resolveSpellCost(actor, sharedSpell)).toEqual({ type: 'mana', amount: 2 });
+	});
+
 	it("does not pin the cast tier for another class's spell", () => {
 		const poolClass = createPoolClass({ poolCurrent: 3 });
 		(poolClass.system.spellcasting as { castAtHighestTier: boolean }).castAtHighestTier = true;
