@@ -611,6 +611,10 @@ const spellUpcastDialog = {
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
 };
 
+const spellNotifications = {
+	pinnedUpcastChoice: 'NIMBLE.spells.notifications.pinnedUpcastChoice',
+};
+
 const spellProperties = {
 	...genericProperties,
 	concentration: 'NIMBLE.properties.concentration',
@@ -1026,6 +1030,7 @@ const NIMBLE = {
 	sizeCategoryDescriptions,
 	skillPointAssignment,
 	skills,
+	spellNotifications,
 	spellUpcastDialog,
 	spellProperties,
 	startingEquipment,

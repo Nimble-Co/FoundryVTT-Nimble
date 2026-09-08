@@ -218,7 +218,12 @@ class ItemActivationManager {
 				this.#item as unknown as SpellLike,
 				this.pinnedCastTier,
 			);
-			if (synthesized) dialogData.upcast = synthesized;
+			if (synthesized) {
+				if (synthesized.choiceIndex !== undefined && options.upcastChoiceIndex !== undefined) {
+					synthesized.choiceIndex = options.upcastChoiceIndex;
+				}
+				dialogData.upcast = synthesized;
+			}
 		}
 
 		// Apply upcast deltas if present
@@ -1044,6 +1049,18 @@ class ItemActivationManager {
 		const options = this.#options;
 
 		if (options.fastForward) {
+			// No window opens here, and a pinned tier that lands on a list of
+			// enhancements has no default: the pick belongs to the player. Refuse
+			// unless the caller named one, as an unofferable variable spend does.
+			if (this.#hasPinnedUpcastChoice() && options.upcastChoiceIndex === undefined) {
+				ui.notifications?.error(
+					game.i18n.format(CONFIG.NIMBLE.spellNotifications.pinnedUpcastChoice, {
+						item: this.#item.name ?? '',
+					}),
+				);
+				return null;
+			}
+
 			return {
 				rollMode: options.rollMode ?? 0,
 				rollFormula: options.rollFormula,
@@ -1251,6 +1268,12 @@ namespace ItemActivationManager {
 		executeMacro?: boolean;
 		/** Skip dialogs and use provided/default values directly. */
 		fastForward?: boolean;
+		/**
+		 * The upcast enhancement to apply, by index, for a caller that skips the
+		 * dialog. A pinned cast tier that reaches a list of enhancements is
+		 * refused without it, so nothing picks one on the player's behalf.
+		 */
+		upcastChoiceIndex?: number;
 		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode?: number;
 		/**

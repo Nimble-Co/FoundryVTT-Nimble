@@ -2125,6 +2125,59 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(manager.upcastResult?.choiceIndex).toBe(1);
 			});
 
+			it('refuses a fast-forwarded cast that would pick an enhancement for the player', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = {
+					mode: 'upcastChoice',
+					choices: [
+						{ label: 'First', deltas: [] },
+						{ label: 'Second', deltas: [] },
+					],
+				};
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true },
+				);
+				manager.activationData = { effects: [] };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+				expect(result).toEqual({ activation: null, rolls: null });
+				expect(manager.upcastResult).toBeNull();
+				expect(ui.notifications?.error).toHaveBeenCalledWith(expect.stringContaining('Test Item'));
+			});
+
+			it('applies the enhancement a fast-forwarded caller names', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = {
+					mode: 'upcastChoice',
+					choices: [
+						{ label: 'First', deltas: [] },
+						{ label: 'Second', deltas: [] },
+					],
+				};
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true, upcastChoiceIndex: 1 },
+				);
+				manager.activationData = { effects: [] };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult?.manaSpent).toBe(5);
+				expect(manager.upcastResult?.choiceIndex).toBe(1);
+				expect(ui.notifications?.error).not.toHaveBeenCalled();
+			});
+
 			it('still skips the dialog for a choice-scaled spell the pinned tier does not lift', async () => {
 				pinCastTier(1);
 				mockItem.type = 'spell';
