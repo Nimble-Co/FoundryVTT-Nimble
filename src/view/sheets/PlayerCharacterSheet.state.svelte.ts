@@ -25,7 +25,7 @@ type NavigationComponents = {
 };
 
 function getHitPointPercentage(currentHP: number, maxHP: number): number {
-	return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
+	return Math.clamp(Math.round((currentHP / maxHP) * 100), 0, 100);
 }
 
 function hasInitiativeCombatManaRule(character: any, _primeVersion = 0): boolean {
