@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Migration052ShadowmancerPilferedPower } from './Migration052ShadowmancerPilferedPower.js';
+import { Migration049ShadowmancerPilferedPower } from './Migration049ShadowmancerPilferedPower.js';
 
 function shadowmancer(mana: Record<string, unknown> | undefined) {
 	return {
@@ -8,8 +8,8 @@ function shadowmancer(mana: Record<string, unknown> | undefined) {
 	};
 }
 
-describe('Migration052ShadowmancerPilferedPower.updateActor', () => {
-	const migration = new Migration052ShadowmancerPilferedPower();
+describe('Migration049ShadowmancerPilferedPower.updateActor', () => {
+	const migration = new Migration049ShadowmancerPilferedPower();
 	const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 	afterEach(() => log.mockClear());
