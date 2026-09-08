@@ -127,6 +127,27 @@ describe('OptionSwapSection', () => {
 		expect(container.textContent?.trim()).toBe('');
 	});
 
+	it('shows the feature and says why when no pick is recorded to swap', async () => {
+		// A character built by hand has picks on the sheet that no level up recorded. The
+		// system does not guess at them, so it offers no pool and says so.
+		const { expand, getByText, queryByText } = renderSection(createOffer({ pools: [] }));
+
+		await expand();
+
+		expect(getByText(/Wrath & Ruin: Whenever/)).toBeTruthy();
+		expect(getByText(/No class option picks are recorded/)).toBeTruthy();
+		expect(queryByText('Savage Arsenal')).toBeNull();
+	});
+
+	it('renders nothing when only a skill move is offered and none is left', () => {
+		// An empty allowed set is the resolver's word for "no swap rule on this rest".
+		const { container } = renderSection(
+			createOffer({ pools: [], skillPoints: 0, allowedGroups: new Set() }),
+		);
+
+		expect(container.textContent?.trim()).toBe('');
+	});
+
 	it('starts collapsed, showing only the row that opens it', () => {
 		const { getByRole, queryByText } = renderSection(createOffer());
 

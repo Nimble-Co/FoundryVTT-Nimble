@@ -93,7 +93,14 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 				: source.text,
 		),
 	);
-	const hasOffer = $derived(pools.length > 0 || skillBudget > 0);
+	// An empty set is the resolver's word for "no swap rule on this rest"; `null` is every pool.
+	const offersPools = $derived.by(() => {
+		const offer = getProps().offer;
+		return offer ? offer.allowedGroups?.size !== 0 : false;
+	});
+	const hasOffer = $derived(offersPools || skillBudget > 0);
+	/** Whether a swap is offered but the history records no pick to swap. */
+	const hasNoPicks = $derived(offersPools && pools.length === 0);
 
 	const poolViews = $derived.by((): OptionSwapPoolView[] =>
 		pools.map((pool) => {
@@ -368,6 +375,9 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 	return {
 		get hasOffer() {
 			return hasOffer;
+		},
+		get hasNoPicks() {
+			return hasNoPicks;
 		},
 		get isExpanded() {
 			return isExpanded;

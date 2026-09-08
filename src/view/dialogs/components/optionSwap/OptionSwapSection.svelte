@@ -100,7 +100,7 @@
 
 		{#if state.isExpanded}
 			<div class="nimble-option-swap__body">
-				{#if state.poolViews.length > 0}
+				{#if state.poolViews.length > 0 || state.hasNoPicks}
 					<h4 class="nimble-heading" data-heading-variant="section">
 						{localize('NIMBLE.optionSwap.swapHeading')}
 					</h4>
@@ -109,6 +109,10 @@
 				{#each state.sources as source, index (index)}
 					<Hint hintText={source} hintIcon="fa-solid fa-book-open" hintType="flavor" />
 				{/each}
+
+				{#if state.hasNoPicks}
+					<Hint hintText={localize('NIMBLE.optionSwap.noPicksRecorded')} />
+				{/if}
 
 				{#each state.poolViews as view (view.pool.poolKey)}
 					<section class="nimble-option-swap__pool" bind:this={poolElements[view.pool.poolKey]}>

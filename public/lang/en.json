@@ -2284,6 +2284,7 @@
 			"takeAnother": "Take another {featureName}",
 			"giveUpOne": "Give up one {featureName}",
 			"pickCount": "x{count}",
+			"noPicksRecorded": "No class option picks are recorded for this character, so there is nothing to swap. Only picks made through a level up can be swapped.",
 			"skillsHeading": "Move Skill Points",
 			"skillsHint": "Take a point from one skill, then give it to another. Your total never changes.",
 			"skillPointsMoved": "{moved} of {total} moved",

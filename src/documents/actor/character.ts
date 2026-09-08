@@ -1365,8 +1365,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
-		if (pools.length === 0 && offer.skillPoints < 1) return null;
-
+		// An offer with no pools is still shown, so a character whose history records no pick
+		// sees the feature and why it has nothing to swap, rather than nothing at all.
 		return { ...offer, pools };
 	}
 
