@@ -65,7 +65,8 @@ export type ResolvedSpellCost =
 	  };
 
 export interface SpellCostFailure {
-	code: 'poolMissing' | 'insufficientCharges';
+	code: 'poolMissing' | 'insufficientCharges' | 'insufficientMana';
+	/** For a mana cost, the identifier and label are both `mana`. */
 	poolIdentifier: string;
 	poolLabel: string;
 	required: number;

@@ -612,6 +612,7 @@ const spellUpcastDialog = {
 };
 
 const spellNotifications = {
+	insufficientMana: 'NIMBLE.spells.notifications.insufficientMana',
 	pinnedUpcastChoice: 'NIMBLE.spells.notifications.pinnedUpcastChoice',
 };
 

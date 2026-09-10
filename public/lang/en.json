@@ -1743,6 +1743,7 @@
 				"maxTier": "Max tier"
 			},
 			"notifications": {
+				"insufficientMana": "{item} needs {required} mana, but only {available} is available.",
 				"pinnedUpcastChoice": "{item} casts at your highest unlocked tier, which offers a choice of enhancement. Cast it from the sheet so the window can ask which one, or pass an upcast choice when you activate it from a macro."
 			}
 		},

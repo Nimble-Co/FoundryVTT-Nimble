@@ -1,5 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
-import type { ResolvedSpellCost } from '#types/spellCost.d.ts';
+import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
@@ -83,12 +83,13 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 
 			if (!payment.paid) {
 				if (payment.failure) {
-					const messageKey =
-						payment.failure.code === 'poolMissing'
-							? 'NIMBLE.charges.notifications.poolMissing'
-							: 'NIMBLE.charges.notifications.insufficient';
+					const messageKeys: Record<SpellCostFailure['code'], string> = {
+						poolMissing: 'NIMBLE.charges.notifications.poolMissing',
+						insufficientCharges: 'NIMBLE.charges.notifications.insufficient',
+						insufficientMana: CONFIG.NIMBLE.spellNotifications.insufficientMana,
+					};
 					ui.notifications?.error(
-						localize(messageKey, {
+						localize(messageKeys[payment.failure.code], {
 							item: this.name,
 							pool: payment.failure.poolLabel,
 							required: String(payment.failure.required),

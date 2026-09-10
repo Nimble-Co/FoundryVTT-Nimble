@@ -142,15 +142,16 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		});
 	});
 
-	it('clamps the deducted mana at zero when the cost exceeds current mana', async () => {
+	it('refuses the cast and writes nothing when the cost exceeds current mana', async () => {
 		setResourceSpendingAutomation(true);
+		vi.mocked(ui.notifications!.error).mockClear();
 		const spellLike = createSpellLike({ tier: 3, currentMana: 1 });
 
 		await activateSpell(spellLike);
 
-		expect(spellLike.actor.update).toHaveBeenCalledWith({
-			'system.resources.mana.current': 0,
-		});
+		expect(spellLike.actor.update).not.toHaveBeenCalled();
+		expect(spellLike._createActivationCard).not.toHaveBeenCalled();
+		expect(ui.notifications?.error).toHaveBeenCalledTimes(1);
 	});
 
 	it('never deducts mana for a cantrip even with resource-spending automation on', async () => {

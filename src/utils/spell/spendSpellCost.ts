@@ -16,7 +16,8 @@ import { validateSpellCost } from './validateSpellCost.js';
 
 /**
  * Pays the resolved cost: deducts mana, or deducts from the declared pool,
- * flooring at zero. Does not apply an overdraft consequence; the caller does
+ * flooring at zero. A mana cost the caster cannot cover is refused, since mana
+ * has no overdraft. Does not apply an overdraft consequence; the caller does
  * that after this resolves with `overdrawn: true`. With resource spending
  * automation off, nothing is deducted.
  */
@@ -27,19 +28,19 @@ export async function spendSpellCost(
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
 	if (cost.type === 'none') return { ok: true, overdrawn: false };
 
-	if (cost.type === 'mana') {
-		const currentMana = actor?.system?.resources?.mana?.current || 0;
-		await actor.update?.({
-			'system.resources.mana.current': Math.max(0, currentMana - cost.amount),
-		});
-		return { ok: true, overdrawn: false };
-	}
-
 	// Re-checked here rather than trusted from the caller: an overdraft
 	// confirmation is awaited between the first check and this spend, and
 	// anything that resolves in that window can drain the pool.
 	const validation = validateSpellCost(actor, cost);
 	if (!validation.ok) return validation;
+
+	if (cost.type === 'mana') {
+		const currentMana = actor?.system?.resources?.mana?.current ?? 0;
+		await actor.update?.({
+			'system.resources.mana.current': Math.max(0, currentMana - cost.amount),
+		});
+		return { ok: true, overdrawn: false };
+	}
 
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
 	const poolEntry = findChargePoolByIdentifier(pools, cost.poolIdentifier);

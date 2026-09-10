@@ -328,6 +328,24 @@ describe('validateSpellCost', () => {
 		});
 	});
 
+	it('refuses a mana cost the caster cannot cover', () => {
+		const actor = createMockActor({ mana: { current: 2, max: 10 } });
+
+		const result = validateSpellCost(actor, { type: 'mana', amount: 3 });
+
+		expect(result.ok).toBe(false);
+		expect(result.failure).toMatchObject({ code: 'insufficientMana', required: 3, available: 2 });
+	});
+
+	it('passes a mana cost the caster can cover', () => {
+		const actor = createMockActor({ mana: { current: 3, max: 10 } });
+
+		expect(validateSpellCost(actor, { type: 'mana', amount: 3 })).toEqual({
+			ok: true,
+			overdrawn: false,
+		});
+	});
+
 	it('fails when the declared pool does not exist', () => {
 		const classItem = createMockItem({
 			id: 'class-1',
@@ -350,13 +368,23 @@ describe('validateSpellCost', () => {
 });
 
 describe('spendSpellCost', () => {
-	it('deducts mana and clamps at zero', async () => {
+	it('deducts an affordable mana cost', async () => {
+		const actor = createMockActor({ mana: { current: 5, max: 10 } });
+
+		const outcome = await spendSpellCost(actor, { type: 'mana', amount: 3 });
+
+		expect(outcome).toEqual({ ok: true, overdrawn: false });
+		expect(actor.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 2 });
+	});
+
+	it('refuses a mana cost the caster cannot cover and writes nothing', async () => {
 		const actor = createMockActor({ mana: { current: 2, max: 10 } });
 
 		const outcome = await spendSpellCost(actor, { type: 'mana', amount: 5 });
 
-		expect(outcome).toEqual({ ok: true, overdrawn: false });
-		expect(actor.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 0 });
+		expect(outcome.ok).toBe(false);
+		expect(outcome.failure).toMatchObject({ code: 'insufficientMana', required: 5, available: 2 });
+		expect(actor.update).not.toHaveBeenCalled();
 	});
 
 	it('deducts a pool cost from the stored pool', async () => {

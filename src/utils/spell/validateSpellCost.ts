@@ -19,7 +19,8 @@ export function validateSpellCost(
 	cost: ResolvedSpellCost,
 ): SpellCostValidation {
 	if (!isResourceSpendingAutomationEnabled()) return { ok: true, overdrawn: false };
-	if (cost.type !== 'pool') return { ok: true, overdrawn: false };
+	if (cost.type === 'none') return { ok: true, overdrawn: false };
+	if (cost.type === 'mana') return validateManaCost(actor, cost.amount);
 
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
 	const poolEntry = findChargePoolByIdentifier(pools, cost.poolIdentifier);
@@ -51,6 +52,24 @@ export function validateSpellCost(
 			poolLabel: poolEntry.pool.label,
 			required: cost.amount,
 			available: poolEntry.pool.current,
+		},
+	};
+}
+
+/** Mana has no overdraft: a cast the caster cannot cover is refused outright. */
+function validateManaCost(actor: SpellCostActorLike, amount: number): SpellCostValidation {
+	const available = actor?.system?.resources?.mana?.current ?? 0;
+	if (available >= amount) return { ok: true, overdrawn: false };
+
+	return {
+		ok: false,
+		overdrawn: false,
+		failure: {
+			code: 'insufficientMana',
+			poolIdentifier: 'mana',
+			poolLabel: 'mana',
+			required: amount,
+			available,
 		},
 	};
 }
