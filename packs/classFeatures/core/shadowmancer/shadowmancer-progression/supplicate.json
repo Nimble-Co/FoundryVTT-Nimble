@@ -1,20 +1,23 @@
 {
-	"name": "+1 Max Combat Die",
+	"folder": "81e685bc5c9127ce",
+	"name": "Supplicate",
 	"type": "feature",
-	"img": "icons/sundries/gaming/dice-runed-brown.webp",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "max-combat-die-bonus",
-				"type": "poolMaxBonus",
-				"label": "",
+				"id": "1F16zybf0bJL989y",
+				"type": "optionSwap",
+				"label": "Whenever you commune with your Patron on a Safe Rest",
 				"disabled": false,
 				"predicate": {},
 				"priority": 1,
-				"poolIdentifier": "combat-dice",
-				"amount": 1
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
 			}
 		],
 		"activation": {
@@ -43,24 +46,25 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
+		"description": "<p>Whenever you commune with your Patron on a Safe Rest, you may beg them to allow you to choose different Shadowmancer options (they may ask for something in return).</p>",
 		"featureType": "class",
-		"class": "commander",
-		"group": "commander-progression",
-		"gainedAtLevel": null,
+		"class": "shadowmancer",
+		"group": "shadowmancer-progression",
+		"gainedAtLevel": 3,
 		"subclass": false,
-		"gainedAtLevels": []
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
-	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.8",
-		"createdTime": 1761434361016,
-		"modifiedTime": 1761434361016,
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "WnKpJ8RvCb4mX2Qt"
+	"_id": "P7THnH0G3rFkE1CM"
 }

@@ -56,7 +56,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 4,
-			auto: ['Mana and Unlock Tier 1 Spells', 'Stormcaller'],
+			auto: ['Be Wild', 'Mana and Unlock Tier 1 Spells', 'Stormcaller'],
 			pools: [],
 			subclass: [],
 			asi: 'primary',

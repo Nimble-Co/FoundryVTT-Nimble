@@ -60,7 +60,7 @@ export const report: Report = {
 		},
 		{
 			level: 3,
-			auto: ['The Pact is Sealed'],
+			auto: ['Supplicate', 'The Pact is Sealed'],
 			pools: [{ group: 'Lesser Invocations', options: LESSER }],
 			subclass: [
 				{ group: 'Pact Of The Abyssal Depths', options: ['Master of Nightfrost'] },

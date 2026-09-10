@@ -1,20 +1,23 @@
 {
-	"name": "+1 Max Combat Die",
+	"folder": "c1face1ec4d1249a",
+	"name": "Serve",
 	"type": "feature",
-	"img": "icons/sundries/gaming/dice-runed-brown.webp",
+	"img": "icons/magic/life/heart-hand-gold-green-light.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "max-combat-die-bonus",
-				"type": "poolMaxBonus",
-				"label": "",
+				"id": "KJWsusMa3fuDGyTC",
+				"type": "optionSwap",
+				"label": "After spending a day tending to a sacred place or serving others during a Safe Rest",
 				"disabled": false,
 				"predicate": {},
 				"priority": 1,
-				"poolIdentifier": "combat-dice",
-				"amount": 1
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
 			}
 		],
 		"activation": {
@@ -43,24 +46,25 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
+		"description": "<p>After spending a day tending to a sacred place or serving others during a Safe Rest, you may choose different Shepherd options available to you.</p>",
 		"featureType": "class",
-		"class": "commander",
-		"group": "commander-progression",
-		"gainedAtLevel": null,
+		"class": "shepherd",
+		"group": "shepherd-progression",
+		"gainedAtLevel": 5,
 		"subclass": false,
-		"gainedAtLevels": []
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
-	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.8",
-		"createdTime": 1761434361016,
-		"modifiedTime": 1761434361016,
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "WnKpJ8RvCb4mX2Qt"
+	"_id": "bGXJKcENIlSwJ3jT"
 }

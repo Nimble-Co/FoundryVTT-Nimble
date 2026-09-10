@@ -1,20 +1,23 @@
 {
-	"name": "+1 Max Combat Die",
+	"folder": "a03073c1f33d5b34",
+	"name": "Focus",
 	"type": "feature",
-	"img": "icons/sundries/gaming/dice-runed-brown.webp",
+	"img": "icons/magic/holy/meditation-chi-focus-blue.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
 		"rules": [
 			{
-				"id": "max-combat-die-bonus",
-				"type": "poolMaxBonus",
-				"label": "",
+				"id": "Y5PuGXCEDfgfRgYq",
+				"type": "optionSwap",
+				"label": "Whenever you spend time meditating alone in a windy place during a Safe Rest",
 				"disabled": false,
 				"predicate": {},
 				"priority": 1,
-				"poolIdentifier": "combat-dice",
-				"amount": 1
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
 			}
 		],
 		"activation": {
@@ -43,24 +46,25 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
+		"description": "<p>Whenever you spend time meditating alone in a windy place during a Safe Rest, you may choose different Zephyr options available to you.</p>",
 		"featureType": "class",
-		"class": "commander",
-		"group": "commander-progression",
-		"gainedAtLevel": null,
+		"class": "zephyr",
+		"group": "zephyr-progression",
+		"gainedAtLevel": 4,
 		"subclass": false,
-		"gainedAtLevels": []
+		"gainedAtLevels": [
+			4
+		]
 	},
 	"effects": [],
-	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.8",
-		"createdTime": 1761434361016,
-		"modifiedTime": 1761434361016,
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "WnKpJ8RvCb4mX2Qt"
+	"_id": "WGjt3KNOMFWfRRzc"
 }
