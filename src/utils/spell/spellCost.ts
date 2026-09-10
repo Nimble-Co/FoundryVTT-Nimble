@@ -26,9 +26,11 @@ function hasManaCapacity(actor: SpellCostActorLike): boolean {
 	return Math.max(mana?.max ?? 0, mana?.baseMax ?? 0) > 0;
 }
 
+type DeclaringClass = { identifier: string; spellcasting: ClassSpellcastingDeclaration };
+
 /**
- * The spellcasting declaration that governs this cast, or null for the default
- * rule that a tiered spell costs its tier in mana.
+ * The class whose spellcasting declaration governs this cast, or null for the
+ * default rule that a tiered spell costs its tier in mana.
  *
  * The declaration belongs to a class, so a character with more than one class
  * must not pay one class's cost for another class's spell. Attribution runs in
@@ -40,10 +42,7 @@ function hasManaCapacity(actor: SpellCostActorLike): boolean {
  * rather than guessing which class to charge. Attributing a spell by the school
  * that granted it would resolve this and is not built.
  */
-function getClassSpellcasting(
-	actor: SpellCostActorLike,
-	spell: SpellLike,
-): ClassSpellcastingDeclaration | null {
+function getDeclaringClass(actor: SpellCostActorLike, spell: SpellLike): DeclaringClass | null {
 	const classItems = (actor?.items?.contents ?? []).filter((item) => item.type === 'class');
 	if (classItems.length < 1) return null;
 
@@ -59,13 +58,13 @@ function getClassSpellcasting(
 			: classItems;
 
 	const declared = candidates
-		.map(
-			(item) =>
-				(item.system as { spellcasting?: ClassSpellcastingDeclaration } | undefined)?.spellcasting,
-		)
-		.filter((spellcasting): spellcasting is ClassSpellcastingDeclaration =>
-			declaresSpellcasting(spellcasting),
-		);
+		.map((item) => {
+			const system = item.system as
+				| { identifier?: string; spellcasting?: ClassSpellcastingDeclaration }
+				| undefined;
+			return { identifier: system?.identifier ?? '', spellcasting: system?.spellcasting };
+		})
+		.filter((entry): entry is DeclaringClass => declaresSpellcasting(entry.spellcasting));
 
 	if (declared.length < 1) return null;
 
@@ -103,7 +102,8 @@ export function createSpellCostResolver(
 		const tier = spell?.system?.tier ?? 0;
 		if (tier <= 0) return { type: 'none' };
 
-		const spellcasting = getClassSpellcasting(actor, spell);
+		const declaring = getDeclaringClass(actor, spell);
+		const spellcasting = declaring?.spellcasting;
 		const poolIdentifier = spellcasting?.cost?.poolIdentifier?.trim() ?? '';
 		if (poolIdentifier.length === 0) return { type: 'mana', amount: castTier ?? tier };
 
@@ -118,11 +118,12 @@ export function createSpellCostResolver(
 
 		// Past the declared level bound the consequence is not applied: the rule
 		// that replaces it is not automated, so the overdraw is still offered and
-		// its cost is settled at the table.
+		// its cost is settled at the table. The bound counts levels in the
+		// declaring class, so levels in another class do not move it.
 		const overdraftMaxLevel = spellcasting?.cost?.overdraftMaxLevel ?? null;
-		const characterLevel = actor?.levels?.character ?? 0;
+		const classLevel = actor?.levels?.classes?.[declaring?.identifier ?? ''] ?? 0;
 		const overdraftResolvedAtTable =
-			typeof overdraftMaxLevel === 'number' && characterLevel > overdraftMaxLevel;
+			typeof overdraftMaxLevel === 'number' && classLevel > overdraftMaxLevel;
 
 		return {
 			type: 'pool',
@@ -159,8 +160,7 @@ export function resolvePinnedCastTier(actor: SpellCostActorLike, spell: SpellLik
 	const tier = spell?.system?.tier ?? 0;
 	if (tier <= 0) return null;
 
-	const spellcasting = getClassSpellcasting(actor, spell);
-	if (!spellcasting?.castAtHighestTier) return null;
+	if (!getDeclaringClass(actor, spell)?.spellcasting.castAtHighestTier) return null;
 
 	const unlockedTier = actor?.system?.resources?.highestUnlockedSpellTier ?? 0;
 	return Math.max(tier, unlockedTier);

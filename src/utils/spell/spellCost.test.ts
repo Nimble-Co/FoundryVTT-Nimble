@@ -535,16 +535,20 @@ describe('multiclass cost attribution', () => {
 });
 
 describe('overdraft level bound', () => {
-	function createBoundedActor(level: number) {
+	function createBoundedActor(classLevel: number, characterLevel = classLevel) {
 		const poolClass = createPoolClass({
 			poolCurrent: 0,
 			overdraftConsequence: 'halfMaxHpDamage',
 		});
+		poolClass.system.identifier = 'pool-caster';
 		(
 			poolClass.system.spellcasting as { cost: { overdraftMaxLevel: number | null } }
 		).cost.overdraftMaxLevel = 11;
 		const actor = createMockActor({ items: [poolClass], hpMax: 20 });
-		(actor as unknown as { levels: { character: number } }).levels = { character: level };
+		(actor as unknown as { levels: SpellCostActorLike['levels'] }).levels = {
+			character: characterLevel,
+			classes: { 'pool-caster': classLevel },
+		};
 		return actor;
 	}
 
@@ -565,6 +569,15 @@ describe('overdraft level bound', () => {
 		expect(cost).toMatchObject({ overdraftResolvedAtTable: true });
 		expect(await applyOverdraftConsequence(actor, cost)).toBe(0);
 		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('bounds by the level in the declaring class, not the character level', async () => {
+		setResourceSpendingAutomation(true);
+		const actor = createBoundedActor(5, 12);
+		const cost = resolveSpellCost(actor, createSpell(1));
+
+		expect(cost).toMatchObject({ overdraftResolvedAtTable: false });
+		expect(await applyOverdraftConsequence(actor, cost)).toBe(10);
 	});
 
 	it('still permits the overdraw above the declared level', () => {

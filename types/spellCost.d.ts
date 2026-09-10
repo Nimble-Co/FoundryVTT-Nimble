@@ -18,7 +18,7 @@ export interface ClassSpellcastingDeclaration {
  * tests) can satisfy it without a full document.
  */
 export interface SpellCostActorLike {
-	levels?: { character?: number };
+	levels?: { character?: number; classes?: Record<string, number> };
 	items?: { contents?: Array<{ type?: string; system?: unknown }> };
 	/** Read when a declared cost amount is a formula. */
 	getRollData?: () => Record<string, unknown>;
@@ -55,8 +55,8 @@ export type ResolvedSpellCost =
 			amount: number;
 			overdraftConsequence: OverdraftConsequence;
 			/**
-			 * True when the caster is past the level at which the declared
-			 * consequence applies automatically. The overdraw is still permitted;
+			 * True when the caster's level in the declaring class is past the
+			 * level at which the declared consequence applies automatically. The overdraw is still permitted;
 			 * nothing is applied for it, because the rule that replaces it is not
 			 * automated.
 			 */

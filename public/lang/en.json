@@ -2450,7 +2450,7 @@
 				"overdraftConsequence": "Casting Beyond the Pool",
 				"overdraftConsequenceHint": "What happens when a cast would take more than the pool holds. Not Allowed blocks the cast.",
 				"overdraftMaxLevel": "Consequence Stops After Level",
-				"overdraftMaxLevelHint": "The last character level at which the consequence is applied. Above it the cast is still allowed, but the cost is settled at the table. Leave blank for no limit."
+				"overdraftMaxLevelHint": "The last level in this class at which the consequence is applied. Levels in other classes do not count. Above it the cast is still allowed, but the cost is settled at the table. Leave blank for no limit."
 			}
 		},
 		"skillsConfig": {
