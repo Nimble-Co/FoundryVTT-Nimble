@@ -19,7 +19,8 @@ export interface ClassSpellcastingDeclaration {
  */
 export interface SpellCostActorLike {
 	levels?: { character?: number; classes?: Record<string, number> };
-	items?: { contents?: Array<{ type?: string; system?: unknown }> };
+	/** `identifier` is the item document's getter, which falls back to the name slug. */
+	items?: { contents?: Array<{ type?: string; identifier?: string; system?: unknown }> };
 	/** Read when a declared cost amount is a formula. */
 	getRollData?: () => Record<string, unknown>;
 	system?: {
@@ -56,9 +57,9 @@ export type ResolvedSpellCost =
 			overdraftConsequence: OverdraftConsequence;
 			/**
 			 * True when the caster's level in the declaring class is past the
-			 * level at which the declared consequence applies automatically. The overdraw is still permitted;
-			 * nothing is applied for it, because the rule that replaces it is not
-			 * automated.
+			 * level at which the declared consequence applies automatically. The
+			 * overdraw is still permitted; nothing is applied for it, because the
+			 * rule that replaces it is not automated.
 			 */
 			overdraftResolvedAtTable: boolean;
 	  };

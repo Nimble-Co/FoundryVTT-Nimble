@@ -580,6 +580,17 @@ describe('overdraft level bound', () => {
 		expect(await applyOverdraftConsequence(actor, cost)).toBe(10);
 	});
 
+	it('finds the level of a class whose identifier falls back to its name', () => {
+		const actor = createBoundedActor(12);
+		const poolClass = actor.items.contents[0] as MockItem & { identifier?: string };
+		poolClass.system.identifier = '';
+		poolClass.identifier = 'pool-caster';
+
+		expect(resolveSpellCost(actor, createSpell(1))).toMatchObject({
+			overdraftResolvedAtTable: true,
+		});
+	});
+
 	it('still permits the overdraw above the declared level', () => {
 		setResourceSpendingAutomation(true);
 		const actor = createBoundedActor(12);

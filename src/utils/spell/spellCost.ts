@@ -28,6 +28,13 @@ function hasManaCapacity(actor: SpellCostActorLike): boolean {
 
 type DeclaringClass = { identifier: string; spellcasting: ClassSpellcastingDeclaration };
 
+type ClassItemLike = NonNullable<NonNullable<SpellCostActorLike['items']>['contents']>[number];
+
+/** The key `levels.classes` uses: the document getter, which falls back to the name slug. */
+function classIdentifier(item: ClassItemLike): string {
+	return item.identifier || (item.system as { identifier?: string } | undefined)?.identifier || '';
+}
+
 /**
  * The class whose spellcasting declaration governs this cast, or null for the
  * default rule that a tiered spell costs its tier in mana.
@@ -50,20 +57,15 @@ function getDeclaringClass(actor: SpellCostActorLike, spell: SpellLike): Declari
 
 	const candidates =
 		restrictedTo.length > 0
-			? classItems.filter((item) =>
-					restrictedTo.includes(
-						(item.system as { identifier?: string } | undefined)?.identifier ?? '',
-					),
-				)
+			? classItems.filter((item) => restrictedTo.includes(classIdentifier(item)))
 			: classItems;
 
 	const declared = candidates
-		.map((item) => {
-			const system = item.system as
-				| { identifier?: string; spellcasting?: ClassSpellcastingDeclaration }
-				| undefined;
-			return { identifier: system?.identifier ?? '', spellcasting: system?.spellcasting };
-		})
+		.map((item) => ({
+			identifier: classIdentifier(item),
+			spellcasting: (item.system as { spellcasting?: ClassSpellcastingDeclaration } | undefined)
+				?.spellcasting,
+		}))
 		.filter((entry): entry is DeclaringClass => declaresSpellcasting(entry.spellcasting));
 
 	if (declared.length < 1) return null;
