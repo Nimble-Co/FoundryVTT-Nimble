@@ -21,7 +21,7 @@
 				"maxDelta": null,
 				"addRefills": [
 					{
-						"trigger": "onInitiativeRolled",
+						"trigger": "encounterStart",
 						"mode": "add",
 						"value": "1",
 						"predicate": {}

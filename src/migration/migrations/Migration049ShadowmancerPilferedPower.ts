@@ -13,7 +13,7 @@ const CLASS_SPELLCASTING = {
 		amount: '1',
 		overdraftConsequence: 'halfMaxHpDamage',
 		// Greedy Pact replaces the fixed penalty from level 12, and that rule is
-		// not automated, so the penalty stops applying past level 11.
+		// not automated, so the penalty stops applying past Shadowmancer level 11.
 		overdraftMaxLevel: 11,
 	},
 };
@@ -65,9 +65,11 @@ const FEATURES: FeatureSpec[] = [
 				poolIdentifier: 'pilfered-power',
 				dieSize: null,
 				maxDelta: null,
-				// Trigger follows the printed wording, "each time you roll Initiative".
-				// The end-of-combat expiry of an unused grant is not expressible.
-				addRefills: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '1', predicate: {} }],
+				// Not `onInitiativeRolled`, which the rules text names: it fires on
+				// every roll with no dedup, so a re-roll would hand out a second use.
+				// `encounterStart` fires once per combat. The end-of-combat expiry of
+				// an unused grant is not expressible.
+				addRefills: [{ trigger: 'encounterStart', mode: 'add', value: '1', predicate: {} }],
 			},
 		],
 	},
@@ -82,7 +84,7 @@ function ruleId(rule: RuleSource): string {
  *
  * The class item's mana formula is cleared and replaced with a pool spell
  * cost declaration, the Pilfered Power feature gains its charge pool rule,
- * and Heart of Burning Fire gains its initiative use recovery. No stored
+ * and Heart of Burning Fire gains its combat-start use recovery. No stored
  * resource state moves; the pool seeds itself from its `initial` mode.
  *
  * Matches on compendium source id, falling back to class + item name for

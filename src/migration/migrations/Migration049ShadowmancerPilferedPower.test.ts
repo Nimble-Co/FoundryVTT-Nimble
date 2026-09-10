@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import shadowmancerClass from '../../../packs/classes/core/shadowmancer.json';
+import pilferedPower from '../../../packs/classFeatures/core/shadowmancer/shadowmancer-progression/pilfered-power.json';
+import heartOfBurningFire from '../../../packs/classFeatures/core/shadowmancer/shadowmancer-subclasses/pact-of-the-red-dragon/heart-of-burning-fire.json';
 import { Migration049ShadowmancerPilferedPower } from './Migration049ShadowmancerPilferedPower.js';
 
 function shadowmancer(mana: Record<string, unknown> | undefined) {
@@ -54,5 +57,48 @@ describe('Migration049ShadowmancerPilferedPower.updateActor', () => {
 
 		expect(source.system.resources.mana.current).toBe(3);
 		expect(log).not.toHaveBeenCalled();
+	});
+});
+
+describe('Migration049ShadowmancerPilferedPower.updateItem', () => {
+	const migration = new Migration049ShadowmancerPilferedPower();
+	vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+	function withoutRules(packItem: object): any {
+		const source = structuredClone(packItem) as any;
+		source.system.rules = [];
+		return source;
+	}
+
+	it.each([
+		['Pilfered Power', pilferedPower],
+		['Heart of Burning Fire', heartOfBurningFire],
+	])('gives an old %s the rules the pack ships', async (_name, packItem) => {
+		const source = withoutRules(packItem);
+
+		await migration.updateItem(source);
+
+		expect(source.system.rules).toEqual(packItem.system.rules);
+	});
+
+	it('gives an old Shadowmancer class the spell cost the pack ships', async () => {
+		const source = structuredClone(shadowmancerClass) as any;
+		delete source.system.spellcasting;
+		source.system.mana.formula = '(max(@dexterity, 0))';
+
+		await migration.updateItem(source);
+
+		expect(source.system.spellcasting).toEqual(shadowmancerClass.system.spellcasting);
+		expect(source.system.mana.formula).toBe('');
+	});
+
+	it('regains the Heart of Burning Fire use once per combat, not on each initiative roll', async () => {
+		const source = withoutRules(heartOfBurningFire);
+
+		await migration.updateItem(source);
+
+		expect(source.system.rules[0].addRefills).toEqual([
+			expect.objectContaining({ trigger: 'encounterStart', mode: 'add' }),
+		]);
 	});
 });
