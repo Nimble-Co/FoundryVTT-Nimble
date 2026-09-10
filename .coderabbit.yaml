@@ -1,0 +1,271 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# This file overrides the repository settings in the CodeRabbit web UI.
+language: en-US
+tone_instructions: >-
+  Use ASD-STE100 Simplified Technical English: short sentences, active voice,
+  one instruction per sentence. No em-dashes. Use Nimble rulebook terms, not
+  D&D 5e terms. State the defect, the input that triggers it, and the fix.
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_instructions: >-
+    Start with what changes for a player, GM or homebrewer, in plain words.
+    Then list the engine changes. Always name: new or renumbered migrations,
+    changed pack content, new or changed settings, new rule types, and added or
+    removed en.json keys.
+  poem: false
+  in_progress_fortune: false
+  sequence_diagrams: false
+  suggested_labels: false
+  suggested_reviewers: false
+  review_status: true
+  collapse_walkthrough: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    # PRs target dev, and stacked PRs target feature branches.
+    base_branches:
+      - ".*"
+    ignore_title_keywords:
+      - "WIP"
+      - "chore(release)"
+
+  path_filters:
+    - "!**/pnpm-lock.yaml"
+    - "!CHANGELOG.md"
+    - "!public/lang/babele/**"
+
+  path_instructions:
+    - path: "**"
+      instructions: |
+        This is the Nimble 2 game system for Foundry VTT v14.
+        - CI runs Biome, ESLint on .svelte files, tsc, dependency-cruiser, Vitest and a migration count check. Do not comment on formatting, import order or anything these tools report.
+        - Report behaviour defects first: a wrong game result, lost or corrupted actor or item data, or a path that skips a guard. Raise a style point only when AGENTS.md or docs/STYLE_GUIDE.md states the rule, and cite it.
+        - Automate bookkeeping, not decisions. Do not suggest that the code blocks, disables or greys out a legal player or GM choice (targets, activations, picks). Suggest that it shows the state instead. A hard gate is correct only for an action limit the rulebook states outright, for example "1/round".
+        - Do not suggest that the code clamps a number to a rulebook maximum. Homebrew values must pass through.
+        - When the PR adds a guard or a rule check, find every entry path that reaches the same behaviour: sheet button, chat card, macro and `fastForward`, Alt and `skipRollDialog`, level-up, rest and scroll dialogs, and hooks. Name each path that skips the guard.
+        - The system assumes that one connected GM runs combat. Do not report double execution of turn start or turn end effects when two or more GMs are connected.
+        - The Nimble 2 rulebooks are not in this repository. Do not correct a game mechanic from D&D 5e knowledge. If a mechanic looks wrong, ask a question. Do not state it as a defect.
+        - Nimble has no proficiency bonus and no spell slots. Flag code or content that adds them. Nimble does have concentration.
+        - Actor types are `character`, `npc`, `minion` and `soloMonster`. Only characters have classes, mana and `highestUnlockedSpellTier`. Check that new code does not fail on the other types.
+        - Code comments in `src/` describe the generic mechanism. Flag an engine comment that names one class feature, spell or item as the reason for the code.
+
+    - path: "src/**/*.ts"
+      instructions: |
+        - Never import the Foundry globals (`game`, `CONFIG`, `Hooks`, `Roll`, `Actor`, `Item`, `foundry`, `ui`, `canvas`). Reach namespaced v14 APIs through `foundry.*`, for example `foundry.applications.ux.TextEditor.implementation`, not through deprecated bare globals.
+        - Never hardcode `'nimble'` as the system id in flag scopes, flag paths, settings, hook names, asset paths or object scope keys. Use `SYSTEM_ID`, `SYSTEM_PATH` or `systemHookName()` from `#system`, because the dev build runs as `nimble-dev`. `src/utils/systemId.test.ts` finds the literal forms. Flag the indirect forms that it can miss. `game.nimble` and `Compendium.nimble.*` ids in `src/migration/**` are permitted exceptions.
+        - Persist changes with `update()`, `updateEmbeddedDocuments()` or `createEmbeddedDocuments()`. A direct assignment to `document.system` in an event handler does not persist. Mutation of prepared data with `foundry.utils.setProperty` inside a data-preparation hook is correct.
+        - Document classes extend `NimbleBaseActor` or `NimbleBaseItem`, never the Foundry `Actor` or `Item` classes.
+        - Use `@ts-expect-error` with a reason. Never use `@ts-ignore`.
+        - No barrel files and no re-export shims (`export { x } from ...`). The only permitted barrel is `src/migration/migrations/index.ts`. When the PR moves a helper to a wider scope, every caller must import it from the new location.
+        - YAGNI: flag a new export, prop, union member or fallback that has no caller. An unsupported path must throw. It must not return a silent default.
+        - Rule of Three: flag the third copy of the same logic or literal across different files. Name the existing helper in the "Shared Code Inventory" of docs/STYLE_GUIDE.md, or the existing `CONFIG.NIMBLE` constant.
+        - Type-only imports use `import type`. Do not flag `.js` against `.ts` import extensions, because both resolve.
+        - Unused parameters get a `_` prefix. Do not remove them.
+        - All code must be reachable from `src/nimble.ts`. Do not add a new entry point.
+        - A new user-facing string goes through `localize()` and has a key in `public/lang/en.json`.
+
+    - path: "src/**/*.svelte"
+      instructions: |
+        Svelte 5 runes mode.
+        - Flag Svelte 4 syntax: `export let`, `$:`, `on:event` directives and `createEventDispatcher()`. Use `$props()`, `$derived`, `$effect` and `onclick`.
+        - Every user-facing string goes through `localize()`. Hardcoded display text is a defect.
+        - Colours use `--nimble-*` custom properties and must work in light and dark mode. Flag hardcoded colours.
+        - Prop types go in `types/components/*.d.ts`, not inline.
+        - When the `<script>` logic is longer than about 30 lines, move the state to a co-located `.svelte.ts` file.
+        - A component that declares a local `const state` cannot use the `$state` rune in the same script. The compiler reads `$state` as a store subscription and the component throws on mount.
+        - An overlay rendered into `document.body` (hover card, menu, picker) needs `z-index: var(--z-index-tooltip, 9999)`. Foundry raises a focused window above 100, so a lower value puts the overlay behind the window.
+        - Inputs and icon-only buttons need an accessible name.
+        - Use Svelte bindings or actions, not `document.querySelector`. Do not call `actor.prepareData()` from a component. In reactive contexts, read document data through `.reactive`.
+
+    - path: "src/**/*.svelte.ts"
+      instructions: |
+        - Use the `.svelte.ts` extension only for files that use runes. Flag a `.svelte.ts` file without runes, and a plain `.ts` file that uses runes.
+        - Do not import a `types/components/*.d.ts` file that imports a document class. dependency-cruiser reports a cycle through the document, the dialog and the component, although every edge is `import type`. Put shared view types in a domain types file that does not import the document.
+
+    - path: "src/documents/**"
+      instructions: |
+        - Data preparation runs `prepareBaseData()`, then `prepareEmbeddedDocuments()`, then `prepareDerivedData()`, with an `if (this.initialized) return;` guard. Flag code that calls `prepareData()` manually.
+        - Check `item.isEmbedded` before the code reads `item.actor`.
+        - The actor and item base classes cannot import each other. Use a local interface for the needed shape. Load dialogs and sheets with `await import()`.
+        - When one user action makes more than one document write, check the state that remains if a later write fails.
+
+    - path: "src/models/rules/**"
+      instructions: |
+        Rule types. See docs/system/rules.md.
+        - The rule name says what the rule does. It never names one feature. The rule works on any item type.
+        - The rule is registered in `src/config/registerRulesConfig.ts` in both `ruleTypes` and `ruleDataModels`, and `type` is the same as the registration key.
+        - en.json has `NIMBLE.ruleTypes.<key>` and `NIMBLE.ruleDescriptions.<key>`. The class sets `static group` (not `'unsorted'`) and `static description`. Each field that a user edits has a localized `label`, and a `hint` when the field is not obvious.
+        - Lifecycle methods start with `if (!this.test()) return;` and check `item.isEmbedded` before they read `item.actor`.
+        - Flag a no-op `prePrepareData()`, because it marks the rule as early-phase. A rule that is read outside the hook sweep overrides `appliesInPrePrepareData`. A dual-phase rule (numeric value early, formula late) overrides `appliesInPrePrepareDataFor`.
+        - Change actor data with `foundry.utils.setProperty(actor.system, path, value)`. For list values, use `pushToActorSystemArray()`, which registers the path so that the array is reset each prepare cycle. Flag a direct `push` onto actor system arrays.
+        - `static alwaysDispatchedEvents` makes an event run when the user turns rule automation off. Use it only for core plumbing that a player cannot do by hand. Flag any other use.
+        - Derived values stay derived. Flag code that adds a rule total into a stored source field (see issue #499).
+        - A co-located `<rule>.test.ts` covers the embedded, not-embedded, disabled, predicate-fail and stacking (two instances) paths, and each phase of a dual-phase rule.
+        - A schema change alters the generated rule reference. If `docs/documentation/reference/_partials/<key>.md` exists, check that it is still correct.
+
+    - path: "src/migration/**"
+      instructions: |
+        World data migrations.
+        - CI requires that the number of `Migration*.ts` files equals `LATEST_SCHEMA_VERSION` in `MigrationRunnerBase.ts`. Numbers are contiguous. A new migration uses the highest number on `dev` plus 1 and is exported from `migrations/index.ts`. Flag gaps and reserved numbers.
+        - A migration must be idempotent and must not throw on data that is already migrated or only partly shaped. Check what happens when the target data already exists: when the pack version of that data changed, the migration updates it. It does not skip it.
+        - A migration whose writes a later migration must see sets `requiresFlush = true`.
+        - Match embedded copies by compendium source id, with a name fallback. Use `toSnapshotId` and the helpers in `src/migration/compendiumSourceId.ts`. Do not copy them. Stored ids can start with `Compendium.nimble.` or `Compendium.nimble-dev.`.
+        - Do not delete or clear data that the migration does not own: user-authored entries, unknown identifiers and homebrew content.
+        - Rule objects that a migration writes are the same as the pack JSON, so a migrated copy is equal to a new copy from the compendium.
+
+    - path: "packs/**/*.json"
+      instructions: |
+        Compendium source content. Review structure and references. Do not review game balance.
+        - A new document has a 16-character alphanumeric `_id`, and that id is in `packs/ids.json` in the correct category. File names are kebab-case.
+        - References use `Compendium.nimble.nimble-<pack>.<DocumentType>.<id>`, and the id exists. Do not flag the `nimble` literal here, because the dev build rewrites the packs.
+        - Each rule has a registered `type`, an `id` that is unique in the item, and only fields that the schema of that rule type defines. Rule ids can be random or slugs; do not flag the format.
+        - Every `grantItem` or `grantSpells` UUID points to a document that exists in `packs/`. A dead UUID fails silently at the table.
+        - Spells: `tier` is 0 to 9 (0 is a cantrip), and `school` is a key of `spellSchools` in `src/config.ts`.
+        - Classes: `hitDieSize` is 4, 6, 8, 10 or 12, `complexity` is 1 to 3, and `savingThrows.advantage` and `savingThrows.disadvantage` are different abilities. Abilities are `strength`, `dexterity`, `intelligence` and `will`.
+        - Movement is in squares, never feet.
+        - `_stats.coreVersion` values are historical stamps. Do not flag them.
+        - Authored text (names, descriptions, labels, reminder notes) contains no em-dashes. Verbatim rulebook quotes can keep them.
+        - If the PR changes the rules or data of an existing item that existing characters already hold, and the PR has no migration, ask if old worlds need one.
+
+    - path: "public/lang/*.json"
+      instructions: |
+        `en.json` is the source locale. New keys follow the existing nesting under `NIMBLE`. Flag a key that code uses but en.json does not have, and a removed key that code still uses. Translators maintain the other locale files: do not review translation text, and flag edits to these files in a PR that is not a translation PR.
+
+    - path: "**/*.test.ts"
+      instructions: |
+        Vitest. `describe`, `it`, `expect` and `vi` are globals and are not imported.
+        - `tests/setup.ts` and `tests/mocks/foundry.ts` are shared infrastructure. Flag edits to them, and suggest a change to the test.
+        - A behaviour change needs a test that fails without the change. Flag a test that only asserts that a mock was called and not the result. Flag fixture fields that nothing reads.
+        - Use `vi.stubGlobal` for globals such as `fromUuid`, not a manual save and restore.
+        - A `vi.mock('#utils/...')` call does not reach src modules that import the same alias. Prefer the real helpers with the fixtures in `tests/fixtures/`.
+        - Unit tests run on mocks and do not prove Foundry v14 runtime behaviour. For code that depends on real document updates or hooks, suggest a test in `tests/integration/`.
+
+    - path: "tests/integration/**"
+      instructions: |
+        Live suite: Vitest runs in a real Foundry v14 world through Playwright, on a local machine only (see tests/integration/README.md).
+        - Each file removes the documents, sheets and dialogs it creates, also when an assertion fails (`afterEach`, `afterAll` or `try`/`finally`).
+        - A loop over a collection first asserts that the collection is not empty.
+        - The action under test goes through the real UI or the real document API. Setup can use the API directly.
+
+    - path: "docs/documentation/**/*.md"
+      instructions: |
+        User-facing VitePress docs for players, GMs and homebrewers.
+        - The text agrees with the code in this PR: names of settings and fields, default values, and what the system does and does not automate.
+        - No em-dashes. Use Nimble rulebook terms.
+        - A new page needs a sidebar entry in `docs/.vitepress/config.mts`.
+        - `docs/documentation/reference/*.md` is generated and is never edited by hand. Files in `reference/_partials/` are hand-written, have no headings and start with `**Example: <item name>.**`.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        CONTRIBUTING.md requires maintainer agreement before a CI or infrastructure change. Say so in the review. Use pnpm with `--frozen-lockfile`, never npm or yarn. Node is version 22.
+
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >-
+        Conventional Commits: `type(scope): description`. The type is feat, fix,
+        chore or docs. The scope is optional. The description is lower case and
+        has no final period.
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+    custom_checks:
+      - name: Base branch
+        mode: warning
+        instructions: >-
+          Pass if the PR targets `dev` or a feature branch (a stacked PR). Fail
+          if the PR targets `main` and is not a release merge from `dev`.
+      - name: User docs
+        mode: warning
+        instructions: >-
+          Fail if the PR changes what a player, GM or homebrewer sees or does
+          (sheets, dialogs, chat cards, settings, conditions, rule types, rests,
+          import or export) and does not change `docs/documentation/**`, and the
+          PR description does not say why no docs change is necessary. Name the
+          stale page.
+      - name: Localization
+        mode: warning
+        instructions: >-
+          Fail if new user-facing text in `src/` does not go through
+          `localize()`, if a key that the code uses is missing from
+          `public/lang/en.json`, or if a PR that is not a translation PR edits a
+          locale file other than `en.json`.
+      - name: Pack changes reach existing worlds
+        mode: warning
+        instructions: >-
+          Pass if the PR does not change existing documents in `packs/`. If it
+          changes the rules or system data of an existing item, pass only if the
+          PR adds a migration in `src/migration/migrations/` or the description
+          says why existing characters do not need one.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: true
+
+  tools:
+    # CI runs Biome and ESLint on every PR.
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
+    oxc:
+      enabled: false
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+    reactDoctor:
+      enabled: false
+    github-checks:
+      enabled: true
+      timeout_ms: 900000
+    gitleaks:
+      enabled: true
+    actionlint:
+      enabled: true
+    stylelint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    yamllint:
+      enabled: true
+
+code_generation:
+  unit_tests:
+    path_instructions:
+      - path: "src/**/*.ts"
+        instructions: >-
+          Write Vitest tests next to the source file as `<name>.test.ts`.
+          `describe`, `it`, `expect` and `vi` are globals. `tests/setup.ts`
+          already mocks the Foundry globals and runs `init()`, so `CONFIG.NIMBLE`
+          is populated. Use `tests/fixtures/` and `tests/mocks/`, and never edit
+          `tests/setup.ts` or `tests/mocks/foundry.ts`. Use `vi.stubGlobal` for
+          globals such as `fromUuid`. Test one behaviour per `it`, and assert the
+          result, not only that a mock was called.
+
+knowledge_base:
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "AGENTS.md"
+      - "docs/STYLE_GUIDE.md"
+      - "docs/PROJECT_CONTEXT.md"
+      - "docs/system/*.md"
+      - ".claude/agents/*.md"
+  learnings:
+    scope: auto
+
+chat:
+  art: false
+  auto_reply: true
