@@ -2299,6 +2299,8 @@
 			"skillMoveLabel": "Move a point",
 			"skillFrom": "from a skill",
 			"skillTo": "to a skill",
+			"skillFromNumbered": "from a skill (point {number})",
+			"skillToNumbered": "to a skill (point {number})",
 			"skillOption": "{name} ({total})",
 			"skillMoveResult": "{fromName} {fromTotal} → {fromNext}, {toName} {toTotal} → {toNext}",
 			"skillMoveNeedsTarget": "Pick a skill to give the point to.",

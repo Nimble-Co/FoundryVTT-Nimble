@@ -32,18 +32,14 @@ function setup(
 		skillPoints: new Map<string, number>(),
 	};
 
-	const props = {
-		offer,
-		skills,
-		onChange: (change: OptionSwapChange) => {
-			latest.selections = change.selections;
-			latest.skillPoints = change.skillPoints;
-		},
-	};
-
-	const { getByTestId } = render(OptionSwapSectionStateHarness, {
+	const { getByTestId, rerender } = render(OptionSwapSectionStateHarness, {
 		props: {
-			props,
+			offer,
+			skills,
+			onChange: (change: OptionSwapChange) => {
+				latest.selections = change.selections;
+				latest.skillPoints = change.skillPoints;
+			},
 			onready: (ready: OptionSwapSectionState) => {
 				section = ready;
 			},
@@ -61,7 +57,10 @@ function setup(
 		flushSync();
 	};
 
-	return { act, latest, pool, read, section: section as OptionSwapSectionState };
+	/** Hands the section a new offer, the way a host that re-resolved one would. */
+	const reoffer = (next: ResolvedOptionSwapOffer) => rerender({ offer: next });
+
+	return { act, latest, pool, read, reoffer, section: section as OptionSwapSectionState };
 }
 
 describe('the option swap section state', () => {
@@ -542,12 +541,24 @@ describe('the option swap section state', () => {
 		it('is on once a skill move is balanced', () => {
 			const { act, read, section } = setup(createOffer({ pools: [], skillPoints: 1 }));
 
-			act(() => section.setSkillFrom('arcana'));
+			act(() => section.setSkillFrom(0, 'arcana'));
 			expect(read().isPending).toBe(false);
 			expect(read().hasUnplacedPoint).toBe(true);
 
-			act(() => section.setSkillTo('stealth'));
+			act(() => section.setSkillTo(0, 'stealth'));
 			expect(read().isPending).toBe(true);
+		});
+
+		it('stays on while a second point is in hand, since the first line is applied', () => {
+			const { act, read, section } = setup(createOffer({ pools: [], skillPoints: 2 }));
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+			expect(read().isPending).toBe(true);
+
+			act(() => section.setSkillFrom(1, 'arcana'));
+			expect(read().isPending).toBe(true);
+			expect(read().hasUnplacedPoint).toBe(true);
 		});
 	});
 
@@ -579,23 +590,131 @@ describe('the option swap section state', () => {
 		it('moves one point and says what it does', () => {
 			const { act, latest, read, section } = setup(createOffer({ pools: [], skillPoints: 1 }));
 
-			act(() => section.setSkillFrom('arcana'));
+			act(() => section.setSkillFrom(0, 'arcana'));
 			expect(latest.skillPoints.size).toBe(0);
 
-			act(() => section.setSkillTo('stealth'));
+			act(() => section.setSkillTo(0, 'stealth'));
 
 			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 1, stealth: 1 });
-			expect(read().skillMoveSummary).toBe('Arcana 4 → 3, Stealth 1 → 2');
+			expect(read().skillMoves[0].summary).toBe('Arcana 4 → 3, Stealth 1 → 2');
 		});
 
 		it('drops a target the giver was moved onto', () => {
 			const { act, latest, section } = setup(createOffer({ pools: [], skillPoints: 1 }));
 
-			act(() => section.setSkillFrom('arcana'));
-			act(() => section.setSkillTo('stealth'));
-			act(() => section.setSkillFrom('stealth'));
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+			act(() => section.setSkillFrom(0, 'stealth'));
 
 			expect(latest.skillPoints.size).toBe(0);
+		});
+
+		it('offers one line per point the offer holds', () => {
+			const { read } = setup(createOffer({ pools: [], skillPoints: 2 }));
+
+			expect(read().skillMoves).toHaveLength(2);
+		});
+
+		it('adds every line up in what it hands over', () => {
+			const { act, latest, read, section } = setup(createOffer({ pools: [], skillPoints: 2 }));
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+			act(() => section.setSkillFrom(1, 'arcana'));
+			act(() => section.setSkillTo(1, 'stealth'));
+
+			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 0, stealth: 2 });
+			expect(read().skillMoves.map((move: { summary: string }) => move.summary)).toEqual([
+				'Arcana 4 → 3, Stealth 1 → 2',
+				'Arcana 3 → 2, Stealth 2 → 3',
+			]);
+		});
+
+		it('refuses a second point from a skill that held one', () => {
+			const { act, section } = setup(createOffer({ pools: [], skillPoints: 2 }), {
+				arcana: { points: 1, mod: 4 },
+				stealth: { points: 0, mod: 1 },
+			});
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+
+			expect(section.skillRows.find((row) => row.key === 'arcana')?.canGive).toBe(false);
+		});
+
+		it('holds a point back while it is out of its skill and not yet placed', () => {
+			const { act, section } = setup(createOffer({ pools: [], skillPoints: 2 }), {
+				arcana: { points: 1, mod: 4 },
+				stealth: { points: 0, mod: 1 },
+			});
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+
+			expect(section.skillRows.find((row) => row.key === 'arcana')?.canGive).toBe(false);
+		});
+
+		it('gives each feature the lines for its own points', () => {
+			const { read } = setup(
+				createOffer({
+					pools: [],
+					skillPoints: 3,
+					sources: [
+						createSwapSource({ name: 'One Point', uuid: 'Actor.hero.Item.one', skillPoints: 1 }),
+						createSwapSource({ name: 'Two Points', uuid: 'Actor.hero.Item.two', skillPoints: 2 }),
+					],
+				}),
+			);
+
+			expect(
+				read().cards.map((card: { name: string; skillMoveIndices: number[] }) => [
+					card.name,
+					card.skillMoveIndices,
+				]),
+			).toEqual([
+				['One Point', [0]],
+				['Two Points', [1, 2]],
+			]);
+		});
+
+		it('hands a line no feature claims to the last feature that moves points', () => {
+			const { read } = setup(
+				createOffer({
+					pools: [],
+					skillPoints: 2,
+					sources: [createSwapSource({ name: 'Jack of All Trades', skillPoints: 1 })],
+				}),
+			);
+
+			expect(read().cards[0].skillMoveIndices).toEqual([0, 1]);
+		});
+
+		it('drops the lines a smaller offer no longer holds', async () => {
+			const { act, latest, read, reoffer, section } = setup(
+				createOffer({ pools: [], skillPoints: 2 }),
+			);
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+			act(() => section.setSkillFrom(1, 'arcana'));
+			act(() => section.setSkillTo(1, 'stealth'));
+
+			await reoffer(createOffer({ pools: [], skillPoints: 1 }));
+			expect(read().skillMoves).toHaveLength(1);
+			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 1, stealth: 1 });
+		});
+
+		it('refuses to push a skill past the highest bonus across lines', () => {
+			const { act, section } = setup(createOffer({ pools: [], skillPoints: 2 }), {
+				arcana: { points: 3, mod: 4 },
+				stealth: { points: 3, mod: 11 },
+			});
+
+			expect(section.skillRows.find((row) => row.key === 'stealth')?.canTake).toBe(true);
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+
+			expect(section.skillRows.find((row) => row.key === 'stealth')?.canTake).toBe(false);
 		});
 	});
 
@@ -637,13 +756,27 @@ describe('the option swap section state', () => {
 		it('puts a point it moved back where it was', () => {
 			const { act, latest, read, section } = setup(givenUpOffer('i-focus', 1));
 
-			act(() => section.setSkillFrom('arcana'));
-			act(() => section.setSkillTo('stealth'));
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
 			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 1, stealth: 1 });
 
 			act(() => section.giveUpPlace('mage-options', 0));
 
-			expect(read().skillMoveSummary).toBe('');
+			expect(read().skillMoves[0].summary).toBe('');
+			expect(latest.skillPoints.size).toBe(0);
+		});
+
+		it('puts every point it moved back where it was', () => {
+			const { act, latest, read, section } = setup(givenUpOffer('i-focus', 2));
+
+			act(() => section.setSkillFrom(0, 'arcana'));
+			act(() => section.setSkillTo(0, 'stealth'));
+			act(() => section.setSkillFrom(1, 'arcana'));
+			act(() => section.setSkillTo(1, 'stealth'));
+
+			act(() => section.giveUpPlace('mage-options', 0));
+
+			expect(read().skillMoves.map((move: { from: string }) => move.from)).toEqual(['', '']);
 			expect(latest.skillPoints.size).toBe(0);
 		});
 	});

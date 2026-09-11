@@ -3,7 +3,26 @@
 
 	import type { SkillMoveLineProps } from '#types/components/SkillMoveLine.d.ts';
 
-	let { section }: SkillMoveLineProps = $props();
+	let { section, moveIndices }: SkillMoveLineProps = $props();
+
+	let moves = $derived(
+		moveIndices
+			.map((index) => ({ index, move: section.skillMoves[index] }))
+			.filter((line) => line.move !== undefined),
+	);
+
+	// A single line needs no number to be told apart from the others.
+	let isNumbered = $derived(section.skillMoves.length > 1);
+
+	const fromLabel = (index: number) =>
+		isNumbered
+			? localize('NIMBLE.optionSwap.skillFromNumbered', { number: String(index + 1) })
+			: localize('NIMBLE.optionSwap.skillFrom');
+
+	const toLabel = (index: number) =>
+		isNumbered
+			? localize('NIMBLE.optionSwap.skillToNumbered', { number: String(index + 1) })
+			: localize('NIMBLE.optionSwap.skillTo');
 </script>
 
 <div class="nimble-skill-move">
@@ -12,46 +31,48 @@
 		{localize('NIMBLE.optionSwap.skillMoveLabel')}
 	</span>
 
-	<div class="nimble-skill-move__selects">
-		<select
-			class="nimble-skill-move__select"
-			aria-label={localize('NIMBLE.optionSwap.skillFrom')}
-			value={section.skillMoveFrom}
-			onchange={(event) => section.setSkillFrom(event.currentTarget.value)}
-		>
-			<option value="">{localize('NIMBLE.optionSwap.skillFrom')}</option>
-			{#each section.skillRows as row (row.key)}
-				{#if row.canGive || row.key === section.skillMoveFrom}
-					<option value={row.key}>{row.label}</option>
-				{/if}
-			{/each}
-		</select>
+	{#each moves as { index, move } (index)}
+		<div class="nimble-skill-move__selects">
+			<select
+				class="nimble-skill-move__select"
+				aria-label={fromLabel(index)}
+				value={move.from}
+				onchange={(event) => section.setSkillFrom(index, event.currentTarget.value)}
+			>
+				<option value="">{localize('NIMBLE.optionSwap.skillFrom')}</option>
+				{#each section.skillRows as row (row.key)}
+					{#if row.canGive || row.key === move.from}
+						<option value={row.key}>{row.label}</option>
+					{/if}
+				{/each}
+			</select>
 
-		<i class="fa-solid fa-arrow-right"></i>
+			<i class="fa-solid fa-arrow-right"></i>
 
-		<select
-			class="nimble-skill-move__select"
-			aria-label={localize('NIMBLE.optionSwap.skillTo')}
-			disabled={!section.skillMoveFrom}
-			value={section.skillMoveTo}
-			onchange={(event) => section.setSkillTo(event.currentTarget.value)}
-		>
-			<option value="">{localize('NIMBLE.optionSwap.skillTo')}</option>
-			{#each section.skillRows as row (row.key)}
-				{#if row.key !== section.skillMoveFrom && (row.canTake || row.key === section.skillMoveTo)}
-					<option value={row.key}>{row.label}</option>
-				{/if}
-			{/each}
-		</select>
-	</div>
+			<select
+				class="nimble-skill-move__select"
+				aria-label={toLabel(index)}
+				disabled={!move.from}
+				value={move.to}
+				onchange={(event) => section.setSkillTo(index, event.currentTarget.value)}
+			>
+				<option value="">{localize('NIMBLE.optionSwap.skillTo')}</option>
+				{#each section.skillRows as row (row.key)}
+					{#if row.key !== move.from && (row.canTake || row.key === move.to)}
+						<option value={row.key}>{row.label}</option>
+					{/if}
+				{/each}
+			</select>
+		</div>
 
-	{#if section.skillMoveSummary}
-		<small class="nimble-skill-move__result">{section.skillMoveSummary}</small>
-	{:else if section.hasUnplacedPoint}
-		<small class="nimble-skill-move__result nimble-skill-move__result--warning">
-			{localize('NIMBLE.optionSwap.skillMoveNeedsTarget')}
-		</small>
-	{/if}
+		{#if move.summary}
+			<small class="nimble-skill-move__result">{move.summary}</small>
+		{:else if move.needsTarget}
+			<small class="nimble-skill-move__result nimble-skill-move__result--warning">
+				{localize('NIMBLE.optionSwap.skillMoveNeedsTarget')}
+			</small>
+		{/if}
+	{/each}
 </div>
 
 <style lang="scss">

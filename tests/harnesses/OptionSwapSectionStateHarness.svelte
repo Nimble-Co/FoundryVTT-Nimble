@@ -10,18 +10,16 @@
 	} from '../../src/view/dialogs/components/optionSwap/OptionSwapSection.state.svelte.ts';
 
 	interface Props {
-		props: {
-			offer: ResolvedOptionSwapOffer | null;
-			skills: Record<string, OptionSwapSkillData>;
-			onChange: (change: OptionSwapChange) => void;
-		};
+		offer: ResolvedOptionSwapOffer | null;
+		skills: Record<string, OptionSwapSkillData>;
+		onChange: (change: OptionSwapChange) => void;
 		/** Hands the state object back so a test can drive the actions. */
 		onready?: (state: OptionSwapSectionState) => void;
 	}
 
-	let { props, onready }: Props = $props();
+	let { offer, skills, onChange, onready }: Props = $props();
 
-	const sectionState = createOptionSwapSectionState(() => props);
+	const sectionState = createOptionSwapSectionState(() => ({ offer, skills, onChange }));
 
 	// Capturing the initial `onready` is the intent, hence the untrack.
 	untrack(() => onready?.(sectionState));
@@ -31,12 +29,13 @@
 	const snapshot = $derived(
 		JSON.stringify({
 			isPending: sectionState.isPending,
-			skillMoveSummary: sectionState.skillMoveSummary,
+			skillMoves: sectionState.skillMoves,
 			hasUnplacedPoint: sectionState.hasUnplacedPoint,
 			cards: sectionState.cards.map((card) => ({
 				name: card.name,
 				subtitle: card.subtitle,
 				offersSkillMove: card.offersSkillMove,
+				skillMoveIndices: card.skillMoveIndices,
 				isGivenUp: card.isGivenUp,
 				givenUpText: card.givenUpText,
 				pools: card.pools.map((view) => ({

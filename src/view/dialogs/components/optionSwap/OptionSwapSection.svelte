@@ -304,7 +304,7 @@
 								hintType="warning"
 							/>
 						{:else if card.offersSkillMove}
-							<SkillMoveLine {section} />
+							<SkillMoveLine {section} moveIndices={card.skillMoveIndices} />
 						{/if}
 					</article>
 				{/each}

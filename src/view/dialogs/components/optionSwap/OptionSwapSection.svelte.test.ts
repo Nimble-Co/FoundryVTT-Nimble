@@ -73,6 +73,10 @@ async function hover(chip: Element) {
 
 const chipOf = (control: HTMLElement) => control.closest('li') as HTMLElement;
 
+/** The skills a select offers, by key. */
+const optionValues = (select: HTMLElement) =>
+	[...(select as HTMLSelectElement).options].map((option) => option.value);
+
 /** The sub-heading of each option list, in the order they are shown. */
 const listTitles = (root: HTMLElement) =>
 	[...root.querySelectorAll('.nimble-option-swap__list-title')].map((title) =>
@@ -330,6 +334,91 @@ describe('OptionSwapSection', () => {
 
 			expect(getByText('Arcana 4 → 3, Stealth 1 → 2')).toBeTruthy();
 			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 1, stealth: 1 });
+		});
+
+		it('shows one line per point the feature moves, and adds them up', async () => {
+			const { expand, getByLabelText, getByText, latest } = renderSection(
+				createOffer({
+					pools: [],
+					skillPoints: 2,
+					sources: [createSwapSource({ name: 'Jack of All Trades', skillPoints: 2 })],
+				}),
+			);
+
+			await expand();
+
+			await fireEvent.change(getByLabelText('from a skill (point 1)'), {
+				target: { value: 'arcana' },
+			});
+			await fireEvent.change(getByLabelText('to a skill (point 1)'), {
+				target: { value: 'stealth' },
+			});
+			await fireEvent.change(getByLabelText('from a skill (point 2)'), {
+				target: { value: 'arcana' },
+			});
+			await fireEvent.change(getByLabelText('to a skill (point 2)'), {
+				target: { value: 'stealth' },
+			});
+
+			expect(getByText('Arcana 4 → 3, Stealth 1 → 2')).toBeTruthy();
+			expect(getByText('Arcana 3 → 2, Stealth 2 → 3')).toBeTruthy();
+			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 0, stealth: 2 });
+		});
+
+		it('keeps the point a line took out of the other lines', async () => {
+			const { expand, getByLabelText } = renderSection(
+				createOffer({
+					pools: [],
+					skillPoints: 2,
+					sources: [createSwapSource({ name: 'Jack of All Trades', skillPoints: 2 })],
+				}),
+				{ actor: createActor({ arcana: { points: 1, mod: 4 }, stealth: { points: 0, mod: 1 } }) },
+			);
+
+			await expand();
+
+			await fireEvent.change(getByLabelText('from a skill (point 1)'), {
+				target: { value: 'arcana' },
+			});
+			await fireEvent.change(getByLabelText('to a skill (point 1)'), {
+				target: { value: 'stealth' },
+			});
+
+			expect(optionValues(getByLabelText('from a skill (point 1)'))).toContain('arcana');
+			expect(optionValues(getByLabelText('from a skill (point 2)'))).not.toContain('arcana');
+		});
+
+		it('gives each feature that moves a point a line of its own', async () => {
+			const { expand, getAllByText, getByLabelText, latest } = renderSection(
+				createOffer({
+					pools: [],
+					skillPoints: 2,
+					sources: [
+						createSwapSource({ name: 'Jack of All Trades', uuid: 'Actor.hero.Item.a' }),
+						createSwapSource({ name: 'Wide Study', uuid: 'Actor.hero.Item.b' }),
+					].map((source) => ({ ...source, skillPoints: 1 })),
+				}),
+			);
+
+			await expand();
+
+			// One line on each card, not both lines on both.
+			expect(getAllByText('Move a point')).toHaveLength(2);
+
+			await fireEvent.change(getByLabelText('from a skill (point 1)'), {
+				target: { value: 'arcana' },
+			});
+			await fireEvent.change(getByLabelText('to a skill (point 1)'), {
+				target: { value: 'stealth' },
+			});
+			await fireEvent.change(getByLabelText('from a skill (point 2)'), {
+				target: { value: 'arcana' },
+			});
+			await fireEvent.change(getByLabelText('to a skill (point 2)'), {
+				target: { value: 'stealth' },
+			});
+
+			expect(Object.fromEntries(latest.skillPoints)).toEqual({ arcana: 0, stealth: 2 });
 		});
 
 		it('offers no skill until one is chosen to give the point', async () => {

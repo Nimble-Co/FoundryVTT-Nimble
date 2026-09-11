@@ -44,12 +44,22 @@ export interface OptionSwapSkillRow {
 	label: string;
 	/** The total the character rolls with now. */
 	total: number;
-	/** The total after the pending move. */
+	/** The total after every pending move. */
 	nextTotal: number;
-	/** Whether this skill may give the point away. */
+	/** Whether this skill may give a point away. */
 	canGive: boolean;
-	/** Whether this skill may take the point. */
+	/** Whether this skill may take a point. */
 	canTake: boolean;
+}
+
+/** One point the offer lets the player move: where it comes from, and where it goes. */
+export interface OptionSwapSkillMove {
+	from: string;
+	to: string;
+	/** What this move does to the two skills, in words. Empty until the point is placed. */
+	summary: string;
+	/** Whether the point was taken and not yet placed. */
+	needsTarget: boolean;
 }
 
 interface OptionSwapSectionStateProps {
@@ -63,18 +73,22 @@ export type OptionSwapSectionState = ReturnType<typeof createOptionSwapSectionSt
 
 /**
  * Creates reactive state for the OptionSwapSection component: one card per offering feature,
- * each pool a fixed row of places that starts on what the sheet holds, and one skill point that
- * moves between two skills.
+ * each pool a fixed row of places that starts on what the sheet holds, and one line per skill
+ * point the offer lets the player move.
  */
 export function createOptionSwapSectionState(getProps: () => OptionSwapSectionStateProps) {
 	let isExpanded = $state(false);
 	let unfoldedPools = $state<Set<string>>(new Set());
 	let placesByPool = $state<Map<string, OptionSwapPlaceEntry[]>>(new Map());
-	let skillMove = $state<{ from: string; to: string }>({ from: '', to: '' });
+	let skillPairs = $state<SkillMovePair[]>([]);
 
 	const pools = $derived(getProps().offer?.pools ?? []);
 	const sources = $derived(getProps().offer?.sources ?? []);
 	const skillBudget = $derived(getProps().offer?.skillPoints ?? 0);
+	// One line per point the offer holds. Lines the player never touched are empty.
+	const movePairs = $derived.by((): SkillMovePair[] =>
+		Array.from({ length: skillBudget }, (_, index) => skillPairs[index] ?? EMPTY_MOVE),
+	);
 	// An empty set is the resolver's word for "no swap rule on this rest"; `null` is every pool.
 	const offersPools = $derived.by(() => {
 		const offer = getProps().offer;
@@ -97,6 +111,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		return released;
 	});
 
+	// Each feature holds the lines for its own points, in the order the cards stand.
 	const cards = $derived.by((): OptionSwapCardView[] => {
 		const drafts = sources.map((source) => ({ source, pools: [] as OptionSwapPoolView[] }));
 		const claim = (view: OptionSwapPoolView) =>
@@ -112,13 +127,44 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 			else orphaned.push(view);
 		}
 
+		let taken = 0;
 		const views = drafts
 			.filter((draft) => draft.pools.length > 0 || draft.source.skillPoints > 0)
-			.map((draft, index) => buildCard(draft.source, draft.pools, index));
+			.map((draft, index) => {
+				const indices = lineRange(taken, draft.source.skillPoints);
+				taken += indices.length;
+				return buildCard(draft.source, draft.pools, index, indices);
+			});
+
+		// A point whose rule names no feature still has to be movable, so the last card that
+		// offers a move takes the lines no card claimed.
+		const spare = lineRange(taken, skillBudget - taken);
+		const last = views.findLast((view) => view.skillMoveIndices.length > 0);
+		if (last) last.skillMoveIndices.push(...spare);
 
 		// A pool with no feature to sit under still belongs on screen, under a plain heading.
-		if (orphaned.length > 0) views.push(buildCard(null, orphaned, views.length));
+		if (orphaned.length > 0) views.push(buildCard(null, orphaned, views.length, []));
 		return views;
+	});
+
+	/** What each complete move does to the point totals, added up across the lines. */
+	const skillChanges = $derived.by(() => {
+		const changes = new Map<string, number>();
+		for (const move of movePairs) {
+			if (!move.from || !move.to) continue;
+			addChange(changes, move.from, -1);
+			addChange(changes, move.to, 1);
+		}
+		return changes;
+	});
+
+	/** The same, plus a point taken and not yet placed: it is out of its skill already. */
+	const heldChanges = $derived.by(() => {
+		const changes = new Map(skillChanges);
+		for (const move of movePairs) {
+			if (move.from && !move.to) addChange(changes, move.from, -1);
+		}
+		return changes;
 	});
 
 	const skillRows = $derived.by((): OptionSwapSkillRow[] => {
@@ -127,6 +173,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		return Object.entries(getProps().skills)
 			.map(([key, skill]) => {
 				const name = skillNames[key] ?? key;
+				const held = heldChanges.get(key) ?? 0;
 				return {
 					key,
 					name,
@@ -135,33 +182,50 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 						total: replaceHyphenWithMinusSign(skill.mod),
 					}),
 					total: skill.mod,
-					nextTotal: skill.mod + skillChangeOf(key),
+					nextTotal: skill.mod + (skillChanges.get(key) ?? 0),
 					// A point can only leave a skill that holds one, and only while the bonus it
 					// leaves stays at +0 or better. A negative ability can hold the bonus under the
 					// points the skill shows, so the two floors are not the same test.
-					canGive: skill.points >= 1 && skill.mod >= 1,
-					canTake: skill.mod < MAX_SKILL_MODIFIER,
+					canGive: skill.points + held >= 1 && skill.mod + held >= 1,
+					canTake: skill.mod + held < MAX_SKILL_MODIFIER,
 				};
 			})
 			.sort((a, b) => a.name.localeCompare(b.name));
 	});
 
-	const skillMoveSummary = $derived.by(() => {
-		if (!skillMove.from || !skillMove.to) return '';
-		const from = skillRows.find((row) => row.key === skillMove.from);
-		const to = skillRows.find((row) => row.key === skillMove.to);
-		if (!from || !to) return '';
-		return localize('NIMBLE.optionSwap.skillMoveResult', {
-			fromName: from.name,
-			fromTotal: replaceHyphenWithMinusSign(from.total),
-			fromNext: replaceHyphenWithMinusSign(from.nextTotal),
-			toName: to.name,
-			toTotal: replaceHyphenWithMinusSign(to.total),
-			toNext: replaceHyphenWithMinusSign(to.nextTotal),
+	// Each line reads the totals the lines above it leave behind, so two points off one skill
+	// count down from where the first one left it.
+	const skillMoves = $derived.by((): OptionSwapSkillMove[] => {
+		const running = new Map<string, number>();
+
+		return movePairs.map((move) => {
+			const needsTarget = Boolean(move.from) && !move.to;
+			const from = skillRows.find((row) => row.key === move.from);
+			const to = skillRows.find((row) => row.key === move.to);
+			if (!from || !to) return { from: move.from, to: move.to, summary: '', needsTarget };
+
+			const fromTotal = from.total + (running.get(move.from) ?? 0);
+			const toTotal = to.total + (running.get(move.to) ?? 0);
+			addChange(running, move.from, -1);
+			addChange(running, move.to, 1);
+
+			return {
+				from: move.from,
+				to: move.to,
+				needsTarget,
+				summary: localize('NIMBLE.optionSwap.skillMoveResult', {
+					fromName: from.name,
+					fromTotal: replaceHyphenWithMinusSign(fromTotal),
+					fromNext: replaceHyphenWithMinusSign(fromTotal - 1),
+					toName: to.name,
+					toTotal: replaceHyphenWithMinusSign(toTotal),
+					toNext: replaceHyphenWithMinusSign(toTotal + 1),
+				}),
+			};
 		});
 	});
 
-	const hasUnplacedPoint = $derived(Boolean(skillMove.from) && !skillMove.to);
+	const hasUnplacedPoint = $derived(skillMoves.some((move) => move.needsTarget));
 
 	/** Pool key to chosen uuids, once per pick, the shape `planOptionSwap` reads. */
 	const selectionUuids = $derived.by(() => {
@@ -173,23 +237,22 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 	});
 
 	/**
-	 * Skill key to its new point total. An unbalanced move is not offered at all: a point taken
-	 * and never placed would be a point lost, so it stays where it is until the player places it.
+	 * Skill key to its new point total, across every line. An unbalanced line is not offered at
+	 * all: a point taken and never placed would be a point lost, so it stays where it is until
+	 * the player places it.
 	 */
 	const skillTotals = $derived.by(() => {
 		const result = new Map<string, number>();
-		if (!skillMove.from || !skillMove.to) return result;
-
 		const skills = getProps().skills;
-		result.set(skillMove.from, (skills[skillMove.from]?.points ?? 0) - 1);
-		result.set(skillMove.to, (skills[skillMove.to]?.points ?? 0) + 1);
+		for (const [key, change] of skillChanges) {
+			result.set(key, (skills[key]?.points ?? 0) + change);
+		}
 		return result;
 	});
 
 	/** Whether confirming the rest would change anything the section offers. */
 	const isPending = $derived(
-		poolViews.some((view) => view.status.changed && view.status.isReady) ||
-			Boolean(skillMove.from && skillMove.to),
+		poolViews.some((view) => view.status.changed && view.status.isReady) || skillChanges.size > 0,
 	);
 
 	// A pool the player has not touched starts on the picks the sheet holds, one place per held
@@ -215,14 +278,23 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 	});
 
 	// What a feature lets the player do is not offered on the rest that gives that feature up,
-	// so a point it moved goes back where it was.
+	// so every point it moved goes back where it was.
 	$effect(() => {
 		const isLost = cards.some((card) => card.offersSkillMove && card.isGivenUp);
 		if (!isLost) return;
-		if (!skillMove.from && !skillMove.to) return;
+		if (!skillPairs.some((move) => move.from || move.to)) return;
 
-		skillMove = { from: '', to: '' };
+		skillPairs = [];
 		untrack(notifyChange);
+	});
+
+	// A smaller offer holds fewer points, so the lines it no longer has go with it.
+	$effect(() => {
+		if (skillPairs.length <= skillBudget) return;
+
+		const dropped = skillPairs.slice(skillBudget).some((move) => move.from && move.to);
+		skillPairs = skillPairs.slice(0, skillBudget);
+		if (dropped) untrack(notifyChange);
 	});
 
 	function notifyChange() {
@@ -283,6 +355,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		source: OptionSwapSource | null,
 		cardPools: OptionSwapPoolView[],
 		index: number,
+		skillMoveIndices: number[],
 	): OptionSwapCardView {
 		const name = source?.name || localize('NIMBLE.optionSwap.classOptions');
 		const offersSkillMove = (source?.skillPoints ?? 0) > 0;
@@ -296,6 +369,7 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 			itemId,
 			pools: cardPools,
 			offersSkillMove,
+			skillMoveIndices,
 			isGivenUp: Boolean(itemId) && releasedItemIds.has(itemId),
 			givenUpText: localize('NIMBLE.optionSwap.givenUpCard', { name }),
 		};
@@ -339,12 +413,6 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		notifyChange();
 	}
 
-	function skillChangeOf(key: string): number {
-		if (key === skillMove.from) return -1;
-		if (key === skillMove.to) return 1;
-		return 0;
-	}
-
 	/** Empties a place, which sends its pick back among the choices. */
 	function giveUpPlace(poolKey: string, index: number) {
 		const places = placesByPool.get(poolKey) ?? [];
@@ -370,15 +438,23 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		setPlaces(poolKey, next);
 	}
 
-	function setSkillFrom(key: string) {
-		skillMove = { from: key, to: skillMove.to === key ? '' : skillMove.to };
+	function writeMove(index: number, move: SkillMovePair) {
+		const next = [...movePairs];
+		next[index] = move;
+		skillPairs = next;
 		notifyChange();
 	}
 
-	function setSkillTo(key: string) {
-		if (!skillMove.from) return;
-		skillMove = { ...skillMove, to: key };
-		notifyChange();
+	function setSkillFrom(index: number, key: string) {
+		const move = movePairs[index];
+		if (!move) return;
+		writeMove(index, { from: key, to: move.to === key ? '' : move.to });
+	}
+
+	function setSkillTo(index: number, key: string) {
+		const move = movePairs[index];
+		if (!move?.from) return;
+		writeMove(index, { from: move.from, to: key });
 	}
 
 	function toggleExpanded() {
@@ -413,14 +489,8 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		get isPending() {
 			return isPending;
 		},
-		get skillMoveFrom() {
-			return skillMove.from;
-		},
-		get skillMoveTo() {
-			return skillMove.to;
-		},
-		get skillMoveSummary() {
-			return skillMoveSummary;
+		get skillMoves() {
+			return skillMoves;
 		},
 		get skillRows() {
 			return skillRows;
@@ -432,6 +502,22 @@ export function createOptionSwapSectionState(getProps: () => OptionSwapSectionSt
 		toggleChoices,
 		toggleExpanded,
 	};
+}
+
+/** One line's two ends. An end is empty until the player picks a skill for it. */
+interface SkillMovePair {
+	from: string;
+	to: string;
+}
+
+const EMPTY_MOVE: SkillMovePair = { from: '', to: '' };
+
+/** The line numbers of `count` points, starting at `start`. */
+const lineRange = (start: number, count: number) =>
+	Array.from({ length: Math.max(0, count) }, (_, offset) => start + offset);
+
+function addChange(changes: Map<string, number>, key: string, amount: number) {
+	changes.set(key, (changes.get(key) ?? 0) + amount);
 }
 
 const uuidOf = (feature: NimbleFeatureItem) => feature.uuid ?? '';

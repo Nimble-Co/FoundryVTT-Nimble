@@ -79,6 +79,8 @@ export interface OptionSwapCardView {
 	itemId: string;
 	pools: OptionSwapPoolView[];
 	offersSkillMove: boolean;
+	/** The lines this feature's own points move on, numbered across the whole offer. */
+	skillMoveIndices: number[];
 	/** Whether the pending selection gives this card's own feature up. */
 	isGivenUp: boolean;
 	givenUpText: string;
