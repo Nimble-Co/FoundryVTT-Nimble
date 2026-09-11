@@ -31,7 +31,7 @@ For what the content *should say* mechanically, defer to the nimble-rules-agent 
 | `packs/legendaryMonsters` | `nimble-legendary-monsters` | Actor |
 | `packs/tables` | `nimble-tables` | RollTable |
 
-Reference format: `Compendium.nimble.<compendium-id>.Item.<id>` (or `.Actor.`). Verify a UUID resolves to a real file before shipping it — a dead `grantItem` uuid fails silently at the table.
+Reference format: `Compendium.nimble.<compendium-id>.Item.<id>` (or `.Actor.<id>`, `.RollTable.<id>`, matching the pack's document type). Verify a UUID resolves to a real file before shipping it — a dead `grantItem` uuid fails silently at the table.
 
 ## Invariants
 - Abilities: `strength`, `dexterity`, `intelligence`, `will` only.

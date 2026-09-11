@@ -41,7 +41,7 @@ this.#subscribe = createSubscriber((update) => {
 
 **Conditions** are ActiveEffects driven through `src/managers/ConditionManager.ts` and registered in `src/config/registerConditionsConfig.ts` — go through the manager, not raw effect CRUD.
 
-**Compendium UUIDs** — `Compendium.nimble.nimble-<pack>.Item.<id>` / `.Actor.<id>`; pack ids are declared in `system.json`.
+**Compendium UUIDs** — `Compendium.nimble.nimble-<pack>.Item.<id>` / `.Actor.<id>` / `.RollTable.<id>`; pack ids are declared in `system.json`.
 
 **i18n** — every user-facing string is a `NIMBLE.`-prefixed key; components use `#utils/localize.js`, not `game.i18n.localize`.
 

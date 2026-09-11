@@ -98,7 +98,7 @@ reviews:
         Rule types. See docs/system/rules.md.
         - The rule name says what the rule does. It never names one feature. The rule works on any item type.
         - The rule is registered in `src/config/registerRulesConfig.ts` in both `ruleTypes` and `ruleDataModels`, and `type` is the same as the registration key.
-        - en.json has `NIMBLE.ruleTypes.<key>` and `NIMBLE.ruleDescriptions.<key>`. The class sets `static group` (not `'unsorted'`) and `static description`. Each field that a user edits has a localized `label`, and a `hint` when the field is not obvious.
+        - en.json has `NIMBLE.ruleTypes.<key>` and `NIMBLE.rules.<key>.description` (the key that `static description` points to), with field labels and hints under `NIMBLE.rules.<key>.<field>`. The class sets `static group` (not `'unsorted'`) and `static description`. Each field that a user edits has a localized `label`, and a `hint` when the field is not obvious.
         - Lifecycle methods start with `if (!this.test()) return;` and check `item.isEmbedded` before they read `item.actor`.
         - Flag a no-op `prePrepareData()`, because it marks the rule as early-phase. A rule that is read outside the hook sweep overrides `appliesInPrePrepareData`. A dual-phase rule (numeric value early, formula late) overrides `appliesInPrePrepareDataFor`.
         - Change actor data with `foundry.utils.setProperty(actor.system, path, value)`. For list values, use `pushToActorSystemArray()`, which registers the path so that the array is reset each prepare cycle. Flag a direct `push` onto actor system arrays.
