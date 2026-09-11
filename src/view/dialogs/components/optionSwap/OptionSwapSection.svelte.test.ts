@@ -278,6 +278,24 @@ describe('OptionSwapSection', () => {
 			);
 		});
 
+		it('opens for a chip that takes keyboard focus, and closes when it leaves', async () => {
+			const { expand, getByLabelText } = renderSection(createOffer());
+
+			await expand();
+			const check = getByLabelText('Give up Cleave');
+			await fireEvent.focusIn(check);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 250);
+			});
+			await tick();
+
+			expect(screen.getByRole('tooltip').textContent).toContain('Hit them all.');
+
+			await fireEvent.focusOut(check);
+
+			expect(screen.queryByRole('tooltip')).toBeNull();
+		});
+
 		it('closes when the pointer leaves', async () => {
 			const { expand, getByLabelText } = renderSection(createOffer());
 

@@ -105,6 +105,10 @@
 					place.feature &&
 					showPeek(place.feature, event.currentTarget, repeatableNote(place.isRepeatable))}
 				onmouseleave={hidePeek}
+				onfocusin={(event) =>
+					place.feature &&
+					showPeek(place.feature, event.currentTarget, repeatableNote(place.isRepeatable))}
+				onfocusout={hidePeek}
 			>
 				{#if place.feature}
 					<img class="nimble-option-swap__chip-img" src={place.feature.img} alt="" />
@@ -146,6 +150,9 @@
 				onmouseenter={(event) =>
 					showPeek(choice.feature, event.currentTarget, repeatableNote(choice.isRepeatable))}
 				onmouseleave={hidePeek}
+				onfocusin={(event) =>
+					showPeek(choice.feature, event.currentTarget, repeatableNote(choice.isRepeatable))}
+				onfocusout={hidePeek}
 			>
 				<img class="nimble-option-swap__chip-img" src={choice.feature.img} alt="" />
 				<span class="nimble-option-swap__chip-name">{choice.feature.name}</span>
