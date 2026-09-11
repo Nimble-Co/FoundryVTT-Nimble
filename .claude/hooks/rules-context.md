@@ -40,7 +40,7 @@ Rules are sorted by `priority` (lower runs first) before each hook fires.
 2. Local `schema()` + override `defineSchema()` merging base + local
 3. Implement lifecycle hooks
 4. Register in `src/config/registerRulesConfig.ts` (both `ruleTypes` and `ruleDataModels`)
-5. Add `NIMBLE.ruleTypes.<key>` and `NIMBLE.ruleDescriptions.<key>` to `en.json`
+5. Add `NIMBLE.ruleTypes.<key>` and `NIMBLE.rules.<key>.description` to `en.json`
 6. Set `static group` (one of `bonuses` / `grants` / `triggers` / `resources` / `flavor`) and `static description`
 7. Give every editable field a `label:` (and ideally a `hint:`) — without `label:`, the builder warns and ships English-only labels
 8. Use `withWidget()` for fields needing widget hints (`formula` / `diceFormula` / `documentUuid` / `predicate` / `templateString` / `richText` / `hidden`)

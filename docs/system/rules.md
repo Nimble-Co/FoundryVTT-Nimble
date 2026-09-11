@@ -308,7 +308,7 @@ A rule offering a zero adjustment is skipped, since its checkbox would do nothin
 4. Implement lifecycle hooks (most commonly `prePrepareData()`).
 5. Register in `src/config/registerRulesConfig.ts` — add to both `ruleTypes` and `ruleDataModels`.
 6. Add the i18n label key to `en.json` (under `NIMBLE.ruleTypes.<key>`).
-7. Add a description i18n key under `NIMBLE.ruleDescriptions.<key>` for the builder UI.
+7. Add a description i18n key under `NIMBLE.rules.<key>.description` for the builder UI, with field labels and hints under `NIMBLE.rules.<key>.<field>`.
 8. Make the rule renderable in the **Rules Builder** — see [below](#rules-builder-integration).
 9. Keep the rule **generic** — it should be reusable across any item type.
 10. Add a co-located test (`src/models/rules/yourRule.test.ts`). Mock actor/item, instantiate the rule directly, and verify the lifecycle hook mutates actor data correctly. See `speedBonus.test.ts` for the pattern.
@@ -319,7 +319,7 @@ A rule offering a zero adjustment is skipped, since its checkbox would do nothin
 ```typescript
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
   static override group = 'bonuses';
-  static override description = 'NIMBLE.ruleDescriptions.abilityBonus';
+  static override description = 'NIMBLE.rules.abilityBonus.description';
 
   static override defineSchema(): AbilityBonusRule.Schema {
     return { ...NimbleBaseRule.defineSchema(), ...schema() };
@@ -346,13 +346,13 @@ The rules-builder UI (`src/view/rulesBuilder/`) auto-generates a card per rule f
 ```typescript
 class YourRule extends NimbleBaseRule<YourRule.Schema> {
   static override group = 'bonuses';
-  static override description = 'NIMBLE.ruleDescriptions.yourRule';
+  static override description = 'NIMBLE.rules.yourRule.description';
   // ...
 }
 ```
 
 - `static group` — bucket in the rule-type picker. Existing groups: `'bonuses'`, `'grants'`, `'triggers'`, `'resources'`, `'flavor'`. Defaulting to `'unsorted'` triggers a dev-mode warning.
-- `static description` — i18n key shown in the card's help tooltip and the picker's grid. Add the string to `en.json` under `NIMBLE.ruleDescriptions.<key>`.
+- `static description` — i18n key shown in the card's help tooltip and the picker's grid. Add the string to `en.json` under `NIMBLE.rules.<key>.description`.
 
 ### Per-field metadata (required)
 

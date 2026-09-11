@@ -50,6 +50,9 @@ public/packs/**/CURRENT
 public/packs/**/LOG
 public/packs/**/MANIFEST-*
 
+# LOCAL FOLDERS
+.nimblerules/
+
 # BMAD
 _bmad/
 _bmad-*/
@@ -57,4 +60,3 @@ _bmad-*/
 .claude/commands/content-pack-agent.md
 .claude/commands/nimble-rules-agent.md
 .claude/commands/review-pr.md
-.claude/agents
