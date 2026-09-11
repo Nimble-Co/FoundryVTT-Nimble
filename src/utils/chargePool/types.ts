@@ -98,6 +98,16 @@ type ModifyPoolRuleLike = {
 	addRefills?: unknown;
 };
 
+type PoolMaxBonusRuleLike = {
+	type?: string;
+	amount: number;
+	/**
+	 * Optional because the structural type is also satisfied by plain objects in
+	 * tests; real rule instances always inherit it from the base rule class.
+	 */
+	appliesToPool?: (identifier: string) => boolean;
+};
+
 type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike & ModifyPoolRuleLike;
 
 type RuleBackedItem = Item.Implementation & {
@@ -184,6 +194,7 @@ export type {
 	ChargePoolRuleLike,
 	ChargeConsumerRuleLike,
 	ModifyPoolRuleLike,
+	PoolMaxBonusRuleLike,
 	RuleLike,
 	RuleBackedItem,
 	CharacterActorLike,

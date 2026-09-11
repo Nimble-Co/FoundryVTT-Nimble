@@ -49,7 +49,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 4,
-			auto: ['Lyrical Weaponry', 'Mana and Unlock Tier 1 Spells'],
+			auto: ['Lyrical Weaponry', 'Mana and Unlock Tier 1 Spells', 'Perform!'],
 			pools: [
 				{
 					group: 'Lyrical Weaponry',

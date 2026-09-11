@@ -55,7 +55,7 @@ export const REPORT = {
 		{ level: 4, auto: ['Mana and Unlock Tier 1 Spells'], pools: [], subclass: [], asi: 'primary' },
 		{
 			level: 5,
-			auto: ['Sacred Graces'],
+			auto: ['Sacred Graces', 'Serve'],
 			pools: [{ group: 'Sacred Grace', options: SACRED_GRACE_OPTIONS }],
 			subclass: [],
 			asi: 'secondary',

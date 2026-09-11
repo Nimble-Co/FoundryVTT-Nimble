@@ -625,7 +625,8 @@
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
-			"levelUpInProgress": "Cannot revert level while a level up is in progress."
+			"levelUpInProgress": "Cannot revert level while a level up is in progress.",
+			"skillPointsMovedAway": "This level's skill points were moved to other skills, so they could not all be taken back: {skills}. Adjust the skills by hand."
 		},
 		"levelCorrectionDialog": {
 			"title": "Level Correction",
@@ -811,11 +812,14 @@
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
 			"note": "Note",
+			"optionSwap": "Option Swap",
 			"poolGainMessage": "Pool Gain Message",
+			"poolMaxBonus": "Pool Max Bonus",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"situationalRollMode": "Situational Roll Mode",
 			"skillBonus": "Skill Bonus",
+			"skillPointMove": "Skill Point Move",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
@@ -1327,6 +1331,17 @@
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
 			},
+			"optionSwap": {
+				"description": "Offer the character a chance to swap class options they already picked, on a Safe Rest or Field Rest. The rule offers the swap; it cannot check whatever the feature asks the character to do in the fiction, so state that in the rule's label.",
+				"selectionGroups": {
+					"label": "Option pools",
+					"hint": "Which pools may be swapped. Use 'all' for every pool the character's class offers, which is what the class features mean by 'different <Class> options'."
+				},
+				"trigger": {
+					"label": "Offered on",
+					"hint": "The rest that offers the swap."
+				}
+			},
 			"poolGainMessage": {
 				"description": "Post a chat reminder whenever a dice pool gains dice. Supports `{value}` interpolation from a formula.",
 				"poolIdentifier": {
@@ -1340,6 +1355,17 @@
 				"message": {
 					"label": "Message",
 					"hint": "Chat text posted when the pool gains dice. Use {value} to insert the formula result."
+				}
+			},
+			"poolMaxBonus": {
+				"description": "Raise the maximum of a charge pool by a flat amount. The bonus lives on this item, so taking the same option twice grants two items and twice the bonus, and removing an item removes its share.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the charge pool whose maximum is raised (e.g. combat-dice)."
+				},
+				"amount": {
+					"label": "Amount",
+					"hint": "How much this item adds to the pool maximum."
 				}
 			},
 			"savingThrowBonus": {
@@ -1380,6 +1406,17 @@
 				"skills": {
 					"label": "Apply to",
 					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				}
+			},
+			"skillPointMove": {
+				"description": "Let the character move skill points between skills on a rest. A skill may not go negative and may not exceed +12.",
+				"points": {
+					"label": "Points",
+					"hint": "How many points may be moved each time."
+				},
+				"trigger": {
+					"label": "Offered on",
+					"hint": "The rest that offers the move."
 				}
 			},
 			"skillRollMode": {
@@ -2230,6 +2267,49 @@
 			"advantage": "Advantage",
 			"restedWithoutSpending": "Rested without spending hit dice",
 			"manaRestored": "Mana Restored"
+		},
+		"optionSwap": {
+			"cardHeading": "Options Changed",
+			"toggleLabel": "Change my options",
+			"toggleHint": "Swap class options or move a skill point",
+			"classOptions": "Class options",
+			"cardSwap": "Swap class options",
+			"cardSkills": "Move a skill point",
+			"cardBoth": "Swap class options, move a skill point",
+			"countPair": "{chosen} / {granted}",
+			"countTooltip": "Chosen / what your level gives you",
+			"holdingsLine": "Your level gives you {granted} options. You have {held}.",
+			"holdingsLineOne": "Your level gives you 1 option. You have {held}.",
+			"holdingsShortfall": "Choose {missing} more.",
+			"emptyPlace": "Empty. Choose below.",
+			"giveUpPick": "Give up {featureName}",
+			"choosePick": "Select {featureName}",
+			"showChoices": "Show {count} other options",
+			"showOneChoice": "Show 1 other option",
+			"hideChoices": "Hide other options",
+			"needEmptyPlace": "Give up an option to choose another.",
+			"statusSwap": "You give up {removed} and take {added}.",
+			"statusTake": "You take {added}.",
+			"statusChooseOne": "Choose 1 more option to complete the swap.",
+			"statusChooseMore": "Choose {count} more options to complete the swap.",
+			"statusGiveUpOne": "Give up 1 more option to complete the swap.",
+			"statusGiveUpMore": "Give up {count} more options to complete the swap.",
+			"peekRepeatable": "You can take this more than once.",
+			"givenUpCard": "You are giving up {name}. What it lets you do is not offered on this rest.",
+			"skillMoveLabel": "Move a point",
+			"skillFrom": "from a skill",
+			"skillTo": "to a skill",
+			"skillFromNumbered": "from a skill (point {number})",
+			"skillToNumbered": "to a skill (point {number})",
+			"skillOption": "{name} ({total})",
+			"skillMoveResult": "{fromName} {fromTotal} → {fromNext}, {toName} {toTotal} → {toNext}",
+			"skillMoveNeedsTarget": "Pick a skill to give the point to.",
+			"confirmWithSwap": "Safe Rest and swap options",
+			"fieldRestWithSwap": "Field Rest and swap options",
+			"grantFailed": "One of the chosen options could not be found, so no options were changed.",
+			"swapFailed": "The options could not be changed. Your picks were put back as they were.",
+			"countedName": "{name} x{count}",
+			"skillPointRange": "{from} to {to}"
 		},
 		"npcSheet": {
 			"armor": "Armor",

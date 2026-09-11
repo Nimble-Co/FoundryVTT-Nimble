@@ -1,0 +1,70 @@
+{
+	"folder": "c1face1ec4d1249a",
+	"name": "Serve",
+	"type": "feature",
+	"img": "icons/magic/life/heart-hand-gold-green-light.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "KJWsusMa3fuDGyTC",
+				"type": "optionSwap",
+				"label": "After spending a day tending to a sacred place or serving others during a Safe Rest",
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>After spending a day tending to a sacred place or serving others during a Safe Rest, you may choose different Shepherd options available to you.</p>",
+		"featureType": "class",
+		"class": "shepherd",
+		"group": "shepherd-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "bGXJKcENIlSwJ3jT"
+}

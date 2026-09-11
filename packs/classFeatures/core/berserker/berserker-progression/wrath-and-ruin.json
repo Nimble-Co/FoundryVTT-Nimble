@@ -1,0 +1,70 @@
+{
+	"folder": "d40bf36abe9f4b0a",
+	"name": "Wrath & Ruin",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-hammer-destructive-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "A48mtO5AcIj1oneh",
+				"type": "optionSwap",
+				"label": "Whenever you perform a notable act of destruction or feat of strength during a Safe Rest",
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you perform a notable act of destruction or feat of strength during a Safe Rest, you may choose different Berserker options available to you.</p>",
+		"featureType": "class",
+		"class": "berserker",
+		"group": "berserker-progression",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Y2yXfJQzDKP5s3QK"
+}

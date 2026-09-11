@@ -3,6 +3,7 @@
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
+	import OptionChangesList from './components/OptionChangesList.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 
 	let { messageDocument } = $props();
@@ -14,6 +15,7 @@
 	const manaRestored = $derived(system.manaRestored);
 	const woundsRecovered = $derived(system.woundsRecovered);
 	const chargePoolsRecovered = $derived(system.chargePoolsRecovered ?? []);
+	const optionChanges = $derived(system.optionChanges ?? []);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -100,9 +102,11 @@
 					</div>
 				{/each}
 			</div>
-		{:else}
+		{:else if optionChanges.length === 0}
 			<div class="no-recovery-message">{CONFIG.NIMBLE.safeRest.alreadyFullyRested}</div>
 		{/if}
+
+		<OptionChangesList changes={optionChanges} />
 	</section>
 </article>
 

@@ -1,12 +1,19 @@
-import getClassFeaturesFromIndex, { type ClassFeatureIndex } from '#utils/getClassFeatures.ts';
-import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
+import collectHeldPicks, {
+	countHeldPicks,
+	type HeldFeature,
+	type HeldPickHistoryEntry,
+} from '#utils/collectHeldPicks.ts';
+import collectOptionPoolEntitlement, {
+	type OptionPoolSlot,
+} from '#utils/collectOptionPoolEntitlement.ts';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
 
 /**
  * A pool of class features the character is still owed picks from, and the level whose
  * grant fell short.
  */
 export interface MissingLevelSelection {
-	/** Earliest level whose requirement the character's picks do not cover. */
+	/** Earliest level whose slot the character's holdings do not cover. */
 	level: number;
 	/** Stable key for the pool, used as the selection group key in the correction dialog. */
 	poolKey: string;
@@ -18,177 +25,55 @@ export interface MissingLevelSelection {
 	optionLabel: string | null;
 	/** How many picks the character still owes from this pool. */
 	missingCount: number;
-	/** Pool candidates the character does not already own. */
+	/** Pool candidates the character holds none of. */
 	candidateUuids: string[];
 }
 
-/** One level's demand on one pool. */
-interface PoolRequirement {
-	level: number;
-	poolGroups: string[];
-	requiredCount: number;
-	displayName: string | null;
-	optionLabel: string | null;
-}
-
-/** Order-independent identity for a pool, so the same groups always resolve to one bucket. */
-function buildPoolKey(groups: readonly string[]): string {
-	return [...groups].sort().join('+');
-}
-
 /**
- * Every feature in the index that belongs to one of `poolGroups`, deduplicated by UUID.
+ * Finds the feature pools a character holds fewer picks from than their levels grant.
  *
- * A pool spans the levels it is offered at, so the whole level map is scanned rather than a
- * single level. `lookupKeys` covers both index shapes: features that carry a class are indexed
- * under the class identifier, features that do not are indexed under their group.
- */
-function collectPoolCandidates(
-	index: ClassFeatureIndex,
-	lookupKeys: readonly string[],
-	poolGroups: readonly string[],
-): string[] {
-	const groupSet = new Set(poolGroups);
-	const seen = new Set<string>();
-	const uuids: string[] = [];
-
-	for (const key of lookupKeys) {
-		const levelMap = index.get(key);
-		if (!levelMap) continue;
-
-		for (const entries of levelMap.values()) {
-			for (const entry of entries) {
-				if (!groupSet.has(entry.group)) continue;
-				if (seen.has(entry.uuid)) continue;
-				seen.add(entry.uuid);
-				uuids.push(entry.uuid);
-			}
-		}
-	}
-
-	return uuids;
-}
-
-/**
- * What each level from 1 to `classLevel` asks the character to pick from a feature pool.
+ * The banner reads the class entitlement and the sheet's holdings, which is what the rest
+ * window reads, so the two surfaces cannot report different numbers. A pick is an item on the
+ * sheet whose compendium source is a member of the pool, duplicates included, so a hand-added
+ * copy counts and a deleted one shows up as a shortfall.
  *
- * A level-up option whose applicable set holds more than one alternative is skipped: the
- * player's choice between alternatives is never stored, so which pool (if any) that level
- * demanded picks from cannot be recovered. Reporting it would mean warning about a character
- * that is fine.
- */
-async function collectPoolRequirements(
-	index: ClassFeatureIndex,
-	classIdentifier: string,
-	classLevel: number,
-): Promise<PoolRequirement[]> {
-	const requirements: PoolRequirement[] = [];
-
-	for (let level = 1; level <= classLevel; level++) {
-		// An empty owned set asks the resolver what the level demands, independent of what the
-		// character has — the comparison against owned features happens below.
-		const offered = await getClassFeaturesFromIndex(index, classIdentifier, level, {});
-
-		for (const [groupName, group] of offered.selectionGroups) {
-			requirements.push({
-				level,
-				poolGroups: [groupName],
-				requiredCount: group.selectionCount,
-				displayName: group.displayName ?? null,
-				optionLabel: null,
-			});
-		}
-
-		for (const feature of offered.optionFeatures) {
-			const applicable = (feature.system.levelUpOptions ?? []).filter((option) =>
-				isLevelUpOptionApplicable(option, level),
-			);
-			if (applicable.length !== 1) continue;
-
-			const [option] = applicable;
-			const selectionGroups = option.selectionGroups ?? [];
-			if (selectionGroups.length === 0) continue;
-
-			requirements.push({
-				level,
-				poolGroups: [...selectionGroups],
-				// Compendium options may leave the count unset, meaning a single pick.
-				requiredCount: option.selectionCount ?? 1,
-				displayName: feature.name ?? null,
-				optionLabel: option.label || null,
-			});
-		}
-	}
-
-	return requirements;
-}
-
-/**
- * Finds the feature pools a character is still owed picks from.
- *
- * Compares what every level up to `classLevel` asks the character to pick against the pool
- * members they own, which catches a character who levelled through a level whose grant was
- * later corrected — a Shepherd who reached level 5 when it offered one Sacred Grace instead
- * of two keeps a single grace, and nothing on the sheet records the second as outstanding.
- *
- * The shortfall for a pool is reported once, against the earliest level whose requirement the
- * character's picks do not cover: that is where the data first went wrong, and merging the
- * levels keeps the correction dialog from offering the same candidate twice. It is capped at
- * the number of candidates left, since a pick can only be offered from a pool that still has
- * members to offer.
+ * The shortfall for a pool is reported once, against the earliest slot the holdings do not
+ * cover: that is where the sheet first falls behind, and merging the levels keeps the
+ * correction dialog from offering the same candidate twice. It is capped at the number of
+ * members the character holds none of, since a pick can only be offered from a pool that still
+ * has members to offer.
  */
 export default async function findMissingLevelSelections(
 	index: ClassFeatureIndex,
 	classIdentifier: string,
 	classLevel: number,
-	ownedSourceUuids: ReadonlySet<string>,
+	features: ReadonlyArray<HeldFeature>,
+	history: ReadonlyArray<HeldPickHistoryEntry>,
 ): Promise<MissingLevelSelection[]> {
 	if (!classIdentifier || classLevel < 1) return [];
 
-	const requirements = await collectPoolRequirements(index, classIdentifier, classLevel);
-
-	const requirementsByPool = new Map<string, PoolRequirement[]>();
-	for (const requirement of requirements) {
-		const key = buildPoolKey(requirement.poolGroups);
-		const bucket = requirementsByPool.get(key);
-		if (bucket) bucket.push(requirement);
-		else requirementsByPool.set(key, [requirement]);
-	}
+	const entitlements = await collectOptionPoolEntitlement(index, classIdentifier, classLevel, null);
+	const heldByPool = collectHeldPicks(features, entitlements, history);
 
 	const gaps: MissingLevelSelection[] = [];
 
-	for (const [poolKey, poolRequirements] of requirementsByPool) {
-		const poolGroups = poolRequirements[0].poolGroups;
-		const candidateUuids = collectPoolCandidates(
-			index,
-			[classIdentifier, ...poolGroups],
-			poolGroups,
-		);
+	for (const entitlement of entitlements) {
+		const heldIdsByUuid = heldByPool.get(entitlement.poolKey) ?? new Map<string, string[]>();
+		const heldCount = countHeldPicks(heldIdsByUuid);
+		if (heldCount >= entitlement.grantedCount) continue;
 
-		const ownedCount = candidateUuids.filter((uuid) => ownedSourceUuids.has(uuid)).length;
-		const remainingUuids = candidateUuids.filter((uuid) => !ownedSourceUuids.has(uuid));
-
-		const requiredCount = poolRequirements.reduce((total, req) => total + req.requiredCount, 0);
-		const missingCount = Math.min(requiredCount - ownedCount, remainingUuids.length);
+		const remainingUuids = entitlement.candidateUuids.filter((uuid) => !heldIdsByUuid.has(uuid));
+		const missingCount = Math.min(entitlement.grantedCount - heldCount, remainingUuids.length);
 		if (missingCount < 1) continue;
 
-		// The first level the owned picks run out on: allocate them across the levels in order.
-		let credit = ownedCount;
-		let shortfall: PoolRequirement | undefined;
-		for (const requirement of poolRequirements) {
-			if (credit < requirement.requiredCount) {
-				shortfall = requirement;
-				break;
-			}
-			credit -= requirement.requiredCount;
-		}
+		const shortfall = findShortSlot(entitlement.slots, heldCount);
 		if (!shortfall) continue;
 
 		gaps.push({
 			level: shortfall.level,
-			poolKey,
-			poolGroups: [...shortfall.poolGroups],
-			displayName: shortfall.displayName,
+			poolKey: entitlement.poolKey,
+			poolGroups: [...entitlement.poolGroups],
+			displayName: entitlement.displayName,
 			optionLabel: shortfall.optionLabel,
 			missingCount,
 			candidateUuids: remainingUuids,
@@ -196,4 +81,19 @@ export default async function findMissingLevelSelections(
 	}
 
 	return gaps.sort((a, b) => a.level - b.level || a.poolKey.localeCompare(b.poolKey));
+}
+
+/** The first slot the holdings run out on, allocating them across the slots in level order. */
+function findShortSlot(
+	slots: ReadonlyArray<OptionPoolSlot>,
+	heldCount: number,
+): OptionPoolSlot | undefined {
+	let credit = heldCount;
+
+	for (const slot of slots) {
+		if (credit < slot.count) return slot;
+		credit -= slot.count;
+	}
+
+	return undefined;
 }

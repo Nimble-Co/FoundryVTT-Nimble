@@ -11,17 +11,24 @@ import type {
 	LevelCorrectionSubmitData,
 	ResolvedLevelSelectionGap,
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
+import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import collectHeldPicks, { countHeldPicks, type HeldFeature } from '#utils/collectHeldPicks.ts';
+import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import localize from '#utils/localize.js';
+import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
+import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
+import summarizeOptionSwap from '#utils/summarizeOptionSwap.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
-import { RestManager } from '../../managers/RestManager.js';
+import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
@@ -56,14 +63,14 @@ import resolveCharacterItemActionCost, {
 	type ActivatableItem,
 } from './resolveCharacterItemActionCost.js';
 
+/** A swap plan together with the pools, read at apply time, that it was planned against. */
+type AppliedOptionSwap = OptionSwapPlan & { pools: ResolvedSwappableOptionPool[] };
+
 // Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
 // are ambient types declared in src/documents/item/item.d.ts
 
-/**
- * Shape of a `poolMaxBonus` rule carried by a feature's `levelUpOptions`. The model types
- * option rules as `Record<string, unknown>`, so this narrows the fields we read off them.
- */
-type PoolMaxBonusRule = { type?: string; poolIdentifier?: string; grantItemUuid?: string };
+/** Wide enough for the option cards a rest dialog shows when a swap is on offer. */
+const REST_DIALOG_WIDTH_WITH_OPTIONS = 480;
 
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
@@ -104,7 +111,6 @@ interface LevelUpDialogData {
 		autoGrant: string[];
 		selected: Map<string, NimbleFeatureItem[]>;
 		grantedOptionItems?: string[];
-		poolMaxBonuses?: Record<string, number>;
 	};
 	spellUuids: string[];
 }
@@ -1079,12 +1085,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		data.level = this.levels.character ?? 1;
 
-		// NOTE: Pool max bonuses from level-up selections (e.g. "+1 Max Combat Die") are applied
-		// directly in the charge-pool max computation (see getChargePoolDefinitions), reading the
-		// cumulative total from levelUpHistory. They are intentionally NOT exposed as roll-data
-		// variables here: doing so required every embedded pool formula to reference @<pool>Bonus,
-		// which silently dropped the bonus whenever an actor carried a stale formula. Applying the
-		// bonus in code makes it robust regardless of the embedded chargePool formula.
+		// NOTE: Pool max bonuses (e.g. "+1 Max Combat Die") are applied directly in the
+		// charge-pool max computation (see getChargePoolDefinitions), which sums the
+		// poolMaxBonus rules the actor's items carry. They are intentionally NOT exposed as
+		// roll-data variables here: doing so required every embedded pool formula to reference
+		// @<pool>Bonus, which silently dropped the bonus whenever an actor carried a stale
+		// formula. Applying the bonus in code makes it robust regardless of the formula.
 
 		return data;
 	}
@@ -1200,22 +1206,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/**
-	 * The class feature pools this character is still owed picks from.
+	 * The class feature pools this character holds fewer picks from than their levels grant.
 	 *
-	 * A level-up grant that was wrong when the character passed through it leaves no trace on the
-	 * sheet — the picks simply never happened — so the shortfall has to be recomputed from the
-	 * class data every time rather than read back from `levelUpHistory`.
+	 * The shortfall is the class entitlement against the items on the sheet, which is what the
+	 * rest window compares, so the banner and the window always give the same number.
 	 */
 	async getMissingLevelSelections(): Promise<MissingLevelSelection[]> {
 		const characterClass = Object.values(this.classes)?.[0];
 		if (!characterClass) return [];
-
-		const ownedSourceUuids = new Set<string>();
-		for (const item of this.items) {
-			if (item.type !== 'feature') continue;
-			const compendiumSource = item._stats?.compendiumSource;
-			if (compendiumSource) ownedSourceUuids.add(compendiumSource);
-		}
 
 		const index = await buildClassFeatureIndex();
 
@@ -1223,8 +1221,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			index,
 			characterClass.identifier,
 			characterClass.system.classLevel,
-			ownedSourceUuids,
+			this.#sheetFeatures(),
+			this.system.levelUpHistory,
 		);
+	}
+
+	/** Every feature item on the sheet, which is where a pick is read from. */
+	#sheetFeatures(): HeldFeature[] {
+		return [...this.items]
+			.filter((item): item is typeof item & { id: string } => item.type === 'feature' && !!item.id)
+			.map((item) => ({ id: item.id, compendiumSource: item._stats?.compendiumSource }));
 	}
 
 	/**
@@ -1315,6 +1321,209 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const actorUpdates: Record<string, unknown> = { 'system.levelUpHistory': levelUpHistory };
 		await this.update(actorUpdates);
 		this.sheet?.render(true);
+	}
+
+	/**
+	 * What this character may change on a given rest, or `null` when nothing is offered.
+	 *
+	 * The offer comes from `optionSwap` and `skillPointMove` rules the character's features
+	 * carry, so a class that never prints such a feature gets no surface at all.
+	 */
+	async getOptionSwapOffer(trigger: string): Promise<ResolvedOptionSwapOffer | null> {
+		const offer = resolveOptionSwapOffer(this, trigger);
+		if (!offer) return null;
+
+		const characterClass = Object.values(this.classes)?.[0];
+
+		const pools: ResolvedSwappableOptionPool[] = [];
+		if (characterClass && offer.allowedGroups?.size !== 0) {
+			const index = await buildClassFeatureIndex();
+			const collected = await collectSwappableOptions(
+				index,
+				characterClass.identifier,
+				characterClass.system.classLevel,
+				this.#sheetFeatures(),
+				this.system.levelUpHistory,
+				offer.allowedGroups,
+			);
+
+			for (const pool of collected) {
+				const candidates = await Promise.all(
+					pool.candidateUuids.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+				);
+				pools.push({
+					...pool,
+					candidates: candidates.filter((doc): doc is NimbleFeatureItem => Boolean(doc)),
+				});
+			}
+		}
+
+		// An offer with no pools is still shown, so a character whose history records no pick
+		// sees the feature and why it has nothing to swap, rather than nothing at all.
+		return { ...offer, pools };
+	}
+
+	/**
+	 * Applies a set of option swaps and skill point moves.
+	 *
+	 * A swap deletes the picks the player gave up, creates the ones they took, and writes the
+	 * new skill totals. Skill totals go straight to `system.skills`, because a move is net zero
+	 * and belongs to no level, so recording it would make level down reverse it.
+	 *
+	 * The `levelUpHistory` is kept on a best-effort basis. Where an entry names a released
+	 * pick, the replacement takes its place in that entry, so level down still removes it with
+	 * that level. Where no entry names the released pick, the new item is untracked, exactly
+	 * like the item it replaced. Nothing is refused.
+	 */
+	async applyOptionSwap(
+		pools: readonly ResolvedSwappableOptionPool[],
+		selections: ReadonlyMap<string, readonly string[]>,
+		skillPoints: ReadonlyMap<string, number> = new Map(),
+	): Promise<AppliedOptionSwap | null> {
+		const history = this.system.levelUpHistory;
+
+		// The sheet may have changed since the window opened, so the swap is planned against
+		// what it holds now, not against what the window was shown.
+		const heldByPool = collectHeldPicks(this.#sheetFeatures(), pools, history);
+		const currentPools = pools.map((pool) => {
+			const heldIdsByUuid = heldByPool.get(pool.poolKey) ?? new Map<string, string[]>();
+			return { ...pool, heldIdsByUuid, heldCount: countHeldPicks(heldIdsByUuid) };
+		});
+
+		const plan: AppliedOptionSwap = {
+			...planOptionSwap(currentPools, selections, history),
+			pools: currentPools,
+		};
+
+		// Nothing to write, so the actor is left alone rather than given a no-op update and re-render.
+		if (plan.grants.length === 0 && plan.deleteItemIds.length === 0 && skillPoints.size === 0) {
+			return plan;
+		}
+
+		const featureSources: Item.CreateData[] = [];
+		for (const grant of plan.grants) {
+			const feature = await fromUuid(grant.uuid as `Item.${string}`);
+			// Deleting the old pick with nothing to put in its place would cost the player an
+			// option, so the whole swap stops here.
+			if (!feature) {
+				ui.notifications?.error(localize('NIMBLE.optionSwap.grantFailed'));
+				return null;
+			}
+			const source = (feature as NimbleFeatureItem).toObject();
+			source._stats.compendiumSource = grant.uuid;
+			featureSources.push(source as object as Item.CreateData);
+		}
+
+		// A pick that left the sheet since the window opened is already gone, so only the ids
+		// the character still holds are deleted.
+		const deletableIds = plan.deleteItemIds.filter((itemId) => this.items.get(itemId));
+
+		// The dropped picks as they stand, so a failure part way through can put them back.
+		const removedSources = deletableIds
+			.map((itemId) => this.items.get(itemId)?.toObject())
+			.filter((source): source is NonNullable<typeof source> => Boolean(source));
+
+		// Every write goes through the one try, so any failure point rolls the whole swap back
+		// and reports it, rather than leaving the character part way through.
+		let created: unknown[] = [];
+		try {
+			// Grant before removing. The two orders fail differently, and only one of them is
+			// recoverable by hand: granting first can leave the character holding one option too
+			// many, while removing first can leave them holding none. A pool maximum derived from
+			// the items held reads one too high in between, for the moment before the removal.
+			created = featureSources.length
+				? ((await this.createEmbeddedDocuments('Item', featureSources)) ?? [])
+				: [];
+
+			// A create that drops an invalid entry returns fewer documents than it was given, and
+			// the history below pairs them off by position, so a short result would file the
+			// survivors under the wrong levels.
+			if (created.length !== featureSources.length) {
+				throw new Error(`granted ${created.length} of ${featureSources.length} options`);
+			}
+
+			const createdIds = created.map((doc) => (doc as unknown as { id: string | null }).id);
+
+			// Each released pick hands its place to one created item: the grant that named the
+			// entry the pick sits in. A pick no entry names has no place to hand on.
+			const replacementByReleasedId = new Map<string, string>();
+			const pairedGrants = new Set<number>();
+			for (const releasedId of plan.deleteItemIds) {
+				const position = plan.grants.findIndex(
+					(grant, index) =>
+						!pairedGrants.has(index) &&
+						grant.historyIndex >= 0 &&
+						Boolean(history[grant.historyIndex]?.grantedFeatureIds.includes(releasedId)),
+				);
+				const createdId = position >= 0 ? createdIds[position] : null;
+				if (!createdId) continue;
+				pairedGrants.add(position);
+				replacementByReleasedId.set(releasedId, createdId);
+			}
+
+			const releasedIds = new Set(plan.deleteItemIds);
+			const levelUpHistory = history.map((entry) => {
+				if (!entry.grantedFeatureIds.some((id) => releasedIds.has(id))) return entry;
+				const grantedFeatureIds = entry.grantedFeatureIds.flatMap((id) => {
+					if (!releasedIds.has(id)) return [id];
+					const replacement = replacementByReleasedId.get(id);
+					return replacement ? [replacement] : [];
+				});
+				return { ...entry, grantedFeatureIds };
+			});
+
+			const actorUpdates: Record<string, unknown> = { 'system.levelUpHistory': levelUpHistory };
+			for (const [skill, points] of skillPoints) {
+				actorUpdates[`system.skills.${skill}.points`] = points;
+			}
+
+			if (deletableIds.length > 0) {
+				await this.deleteEmbeddedDocuments('Item', deletableIds);
+				// The history is about to stop naming these, so one left behind would become a
+				// pick no level accounts for and no later swap can reach.
+				const survivor = deletableIds.find((itemId) => this.items.get(itemId));
+				if (survivor) throw new Error(`item ${survivor} outlived its deletion`);
+			}
+			await this.update(actorUpdates);
+		} catch (error) {
+			console.error('Nimble | option swap failed part way through, undoing it', error);
+			await this.#undoOptionSwap(created, removedSources);
+			ui.notifications?.error(localize('NIMBLE.optionSwap.swapFailed'));
+			return null;
+		}
+
+		this.sheet?.render(true);
+
+		return plan;
+	}
+
+	/**
+	 * Puts the character back as they were after a swap failed mid-write.
+	 *
+	 * Each step is attempted on its own: a rollback that gives up on its first failure would
+	 * leave a worse state than the one it is repairing. The history is left alone, because it
+	 * is only written once both item writes have gone through.
+	 */
+	async #undoOptionSwap(
+		created: readonly unknown[],
+		removedSources: readonly Record<string, unknown>[],
+	): Promise<void> {
+		const createdIds = created
+			.map((doc) => (doc as { id?: string | null }).id)
+			.filter((id): id is string => Boolean(id) && Boolean(this.items.get(id as string)));
+
+		if (createdIds.length > 0) {
+			await this.deleteEmbeddedDocuments('Item', createdIds).catch((error) =>
+				console.error('Nimble | could not remove the granted options again', error),
+			);
+		}
+
+		const missing = removedSources.filter((source) => !this.items.get(source._id as string));
+		if (missing.length > 0) {
+			await this.createEmbeddedDocuments('Item', missing as unknown as Item.CreateData[], {
+				keepId: true,
+			}).catch((error) => console.error('Nimble | could not restore the removed options', error));
+		}
 	}
 
 	/**
@@ -1547,17 +1756,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				.filter((id): id is string => id !== null);
 		}
 
-		// Conditionally grant pool-bonus items (e.g. "+1 Max Combat Die") not yet on the actor
-		const poolBonusGrantUuids = this.#resolvePoolBonusGrantUuids(
-			typedDialogData.classFeatures?.poolMaxBonuses ?? {},
-		);
-		if (typedDialogData.classFeatures && poolBonusGrantUuids.length > 0) {
-			typedDialogData.classFeatures.grantedOptionItems = [
-				...(typedDialogData.classFeatures.grantedOptionItems ?? []),
-				...poolBonusGrantUuids,
-			];
-		}
-
 		// Grant any class features gained at this level (auto + selected)
 		const classFeatureIds = await this.grantLevelUpFeatures(typedDialogData.classFeatures);
 
@@ -1601,14 +1799,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			classIdentifier: characterClass.identifier,
 			grantedFeatureIds,
 			grantedSpellIds,
-			poolMaxBonuses: typedDialogData.classFeatures?.poolMaxBonuses ?? {},
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
-		await this.#syncPoolBonusItemDescriptions();
 		this.sheet?.render(true);
 	}
 
@@ -1659,105 +1855,32 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/**
-	 * Returns compendium UUIDs for pool-bonus items (e.g. "+1 Max Combat Die") referenced by
-	 * poolMaxBonus rules on the actor's items that should be granted this level but aren't yet
-	 * embedded on the actor.
+	 * Applies the option swaps a rest dialog collected, and describes them for the rest card.
+	 *
+	 * Returns an empty list when the dialog offered nothing or the player changed nothing,
+	 * which is the ordinary rest.
 	 */
-	#resolvePoolBonusGrantUuids(poolMaxBonuses: Record<string, number>): string[] {
-		const uuids: string[] = [];
-		for (const item of this.items.contents) {
-			if (!item.isType('feature')) continue;
-			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
-			for (const option of levelUpOptions) {
-				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
-					if (
-						rule.type !== 'poolMaxBonus' ||
-						typeof rule.poolIdentifier !== 'string' ||
-						typeof rule.grantItemUuid !== 'string' ||
-						(poolMaxBonuses[rule.poolIdentifier] ?? 0) <= 0
-					)
-						continue;
+	async #applyRestOptionSwap(restData: RestManager.Data): Promise<OptionChange[]> {
+		const { optionSwap } = restData;
+		if (!optionSwap) return [];
 
-					const grantUuid = rule.grantItemUuid;
-					// Match the full compendium UUID exactly — a bare id substring can false-match.
-					const alreadyOwned = this.items.some(
-						(owned) =>
-							((owned as unknown as { _stats?: { compendiumSource?: string } })._stats
-								?.compendiumSource ?? '') === grantUuid,
-					);
+		const { pools = [], selections = new Map(), skillPoints = new Map() } = optionSwap;
 
-					if (!alreadyOwned && !uuids.includes(grantUuid)) uuids.push(grantUuid);
-				}
-			}
-		}
-		return uuids;
-	}
-
-	/**
-	 * Updates the name and description of pool-bonus items embedded on this actor to reflect
-	 * the cumulative bonus totals stored in levelUpHistory. Called after every level-up and revert.
-	 */
-	async #syncPoolBonusItemDescriptions(): Promise<void> {
-		const totals: Record<string, number> = {};
-		for (const entry of this.system.levelUpHistory) {
-			for (const [poolId, bonus] of Object.entries(entry.poolMaxBonuses ?? {})) {
-				totals[poolId] = (totals[poolId] ?? 0) + bonus;
-			}
+		const skillChanges = new Map<string, { from: number; to: number }>();
+		for (const [skillKey, to] of skillPoints) {
+			const from = this.system.skills[skillKey as keyof typeof this.system.skills]?.points ?? 0;
+			if (from !== to) skillChanges.set(skillKey, { from, to });
 		}
 
-		const poolToGrantUuid: Record<string, string> = {};
-		for (const item of this.items.contents) {
-			if (!item.isType('feature')) continue;
-			const levelUpOptions = (item as NimbleFeatureItem).system.levelUpOptions ?? [];
-			for (const option of levelUpOptions) {
-				for (const rule of (option.rules ?? []) as PoolMaxBonusRule[]) {
-					if (
-						rule.type === 'poolMaxBonus' &&
-						typeof rule.poolIdentifier === 'string' &&
-						typeof rule.grantItemUuid === 'string'
-					) {
-						poolToGrantUuid[rule.poolIdentifier] ??= rule.grantItemUuid;
-					}
-				}
-			}
-		}
+		const plan = await this.applyOptionSwap(pools, selections, skillPoints);
+		if (!plan) return [];
 
-		const embeddedUpdates: { _id: string; name: string; 'system.description': string }[] = [];
-
-		for (const [poolId, grantUuid] of Object.entries(poolToGrantUuid)) {
-			const total = totals[poolId] ?? 0;
-			if (total <= 0) continue;
-
-			// Match the full compendium UUID exactly — a bare id substring can false-match.
-			const ownedItem = this.items.find(
-				(i) =>
-					((i as unknown as { _stats?: { compendiumSource?: string } })._stats?.compendiumSource ??
-						'') === grantUuid,
-			);
-
-			if (!ownedItem || ownedItem.id === null) continue;
-
-			const currentName = ownedItem.name ?? '';
-			const currentDescription =
-				(ownedItem as unknown as { system?: { description?: string } }).system?.description ?? '';
-
-			const newName = currentName
-				.replace(/\+\d+/, `+${total}`)
-				.replace(/\b(?:Die|Dice)\b/, total === 1 ? 'Die' : 'Dice');
-			const newDescription = currentDescription.replace(/\+\d+/g, `+${total}`);
-
-			if (newName !== currentName || newDescription !== currentDescription) {
-				embeddedUpdates.push({
-					_id: ownedItem.id,
-					name: newName,
-					'system.description': newDescription,
-				});
-			}
-		}
-
-		if (embeddedUpdates.length > 0) {
-			await this.updateEmbeddedDocuments('Item', embeddedUpdates);
-		}
+		// Only the pools the plan acted on are reported, so the card never names a swap that
+		// did not happen.
+		const changedPools = plan.pools.filter((pool) => plan.changedPoolKeys.includes(pool.poolKey));
+		return summarizeOptionSwap(changedPools, selections, skillChanges, (skillKey) =>
+			localize(CONFIG.NIMBLE.skills[skillKey as keyof typeof CONFIG.NIMBLE.skills] ?? skillKey),
+		);
 	}
 
 	/**
@@ -1835,14 +1958,33 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 
-		// Revert skills
+		// Revert skills. Clamped at zero: a point moved to another skill since the level up
+		// leaves less to take back than the level added, and a negative skill is not a state
+		// the rules have. What is left over sits on whichever skill it was moved to, and only
+		// the table knows which point that was, so this reports the shortfall rather than
+		// taking a point from a skill of its own choosing.
+		const unreverted: string[] = [];
 		Object.entries(lastHistory.skillIncreases).forEach(([skill, change]) => {
 			if (change) {
 				const path = `system.skills.${skill}.points`;
 				const current = this.system.skills[skill].points;
-				actorUpdates[path] = current - change;
+				actorUpdates[path] = Math.max(0, current - change);
+				const shortfall = change - Math.min(current, change);
+				if (shortfall > 0) {
+					unreverted.push(
+						`${localize(CONFIG.NIMBLE.skills[skill as keyof typeof CONFIG.NIMBLE.skills] ?? skill)} (${shortfall})`,
+					);
+				}
 			}
 		});
+
+		if (unreverted.length > 0) {
+			ui.notifications?.warn(
+				localize('NIMBLE.levelDownDialog.skillPointsMovedAway', {
+					skills: unreverted.join(', '),
+				}),
+			);
+		}
 
 		// Remove all subclasses if reverting from level 3
 		if (lastHistory.level <= 3) {
@@ -1886,8 +2028,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
-
-		await this.#syncPoolBonusItemDescriptions();
 	}
 
 	async outputLevelUpSummary(data, roll: Roll | undefined) {
@@ -1922,11 +2062,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			restData = restOptions;
 		} else if (restOptions.restType === 'safe') {
 			// Launch Safe Rest Dialog (singleton per actor)
+			const optionSwapOffer = await this.getOptionSwapOffer('safeRest');
 			const dialog = GenericDialog.getOrCreate(
 				game.i18n.format(CONFIG.NIMBLE.safeRest.dialogTitle, { name: this.name }),
 				SafeRestDialog,
-				{ document: this },
-				{ icon: 'fa-solid fa-moon', uniqueId: `safe-rest-${this.uuid}` },
+				{ document: this, optionSwapOffer },
+				{
+					icon: 'fa-solid fa-moon',
+					uniqueId: `safe-rest-${this.uuid}`,
+					width: optionSwapOffer ? REST_DIALOG_WIDTH_WITH_OPTIONS : undefined,
+				},
 			);
 
 			await dialog.render(true);
@@ -1936,11 +2081,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			restData = { ...dialogData, restType: 'safe' } as RestManager.Data;
 		} else {
 			// Launch Field Rest Dialog (singleton per actor)
+			const optionSwapOffer = await this.getOptionSwapOffer('fieldRest');
 			const dialog = GenericDialog.getOrCreate(
 				`${this.name}: Field Rest`,
 				FieldRestDialog,
-				{ document: this },
-				{ icon: 'fa-solid fa-hourglass-half', uniqueId: `field-rest-${this.uuid}` },
+				{ document: this, optionSwapOffer },
+				{
+					icon: 'fa-solid fa-hourglass-half',
+					uniqueId: `field-rest-${this.uuid}`,
+					width: optionSwapOffer ? REST_DIALOG_WIDTH_WITH_OPTIONS : undefined,
+				},
 			);
 
 			await dialog.render(true);
@@ -1949,6 +2099,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 			restData = { ...dialogData, restType: restOptions.restType } as RestManager.Data;
 		}
+
+		// Apply before resting: a swap can change a pool's maximum, and the rest should
+		// recover against the maximum the character just chose, not the one they dropped.
+		restData.optionChanges = await this.#applyRestOptionSwap(restData);
 
 		// Cast to RestableCharacter interface (extends NimbleCharacterInterface with HitDiceManager)
 		const manager = new RestManager(

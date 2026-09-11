@@ -50,7 +50,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 4,
-			auto: ['Martial Arts Ability', 'Unyielding Resolve'],
+			auto: ['Focus', 'Martial Arts Ability', 'Unyielding Resolve'],
 			pools: [MARTIAL_ARTS_POOL()],
 			subclass: [],
 			asi: 'primary',

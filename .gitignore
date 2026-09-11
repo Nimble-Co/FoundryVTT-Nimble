@@ -60,3 +60,6 @@ _bmad-*/
 .claude/commands/content-pack-agent.md
 .claude/commands/nimble-rules-agent.md
 .claude/commands/review-pr.md
+
+# IGNORED TESTS (THIS IS INTENDED)
+src/migration/migrations/*.test.ts

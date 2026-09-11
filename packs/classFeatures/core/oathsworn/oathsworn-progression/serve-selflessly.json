@@ -1,0 +1,70 @@
+{
+	"folder": "c5f324248b31dabc",
+	"name": "Serve Selflessly",
+	"type": "feature",
+	"img": "icons/magic/holy/prayer-hands-glowing-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "z3JXu3uVUGz7clgq",
+				"type": "optionSwap",
+				"label": "Whenever you perform a notable selfless act during a Safe Rest",
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you perform a notable selfless act during a Safe Rest, you may choose different Oathsworn options available to you.</p>",
+		"featureType": "class",
+		"class": "oathsworn",
+		"group": "oathsworn-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "UdlGmLJfrBJnGeco"
+}

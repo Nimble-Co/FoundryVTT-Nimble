@@ -71,6 +71,7 @@ const EXPECTED_AUTO_UNION = [
 	'Weapon Mastery',
 	'Unparalleled Tactics',
 	'Captain of Legions',
+	'Rigorous Training',
 ];
 
 /** #708 option features expected to surface a picker, keyed by level. */

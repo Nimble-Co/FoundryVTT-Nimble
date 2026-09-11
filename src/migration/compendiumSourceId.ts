@@ -1,3 +1,5 @@
+import { SYSTEM_ID } from '#system';
+
 /**
  * The compendium namespace migrations snapshot their source ids under.
  *
@@ -22,4 +24,18 @@ export function toSnapshotId(packSource: string | undefined): string | undefined
 	if (!packSource) return packSource;
 	const prefix = STORED_PREFIXES.find((candidate) => packSource.startsWith(candidate));
 	return prefix ? `${SNAPSHOT_PREFIX}${packSource.slice(prefix.length)}` : packSource;
+}
+
+/** The namespace the running install stores and resolves uuids under. */
+const INSTALLED_PREFIX = `Compendium.${SYSTEM_ID}.`;
+
+/**
+ * The inverse of `toSnapshotId`: rebrands a snapshot id onto the running install, so that a
+ * uuid a migration writes resolves through `fromUuid` on both the stable and the dev build.
+ * Ids that carry no snapshot prefix are returned untouched.
+ */
+export function toInstalledId(snapshotId: string): string {
+	return snapshotId.startsWith(SNAPSHOT_PREFIX)
+		? `${INSTALLED_PREFIX}${snapshotId.slice(SNAPSHOT_PREFIX.length)}`
+		: snapshotId;
 }

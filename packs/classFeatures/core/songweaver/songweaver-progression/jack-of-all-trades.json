@@ -6,14 +6,25 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "oCCxKr1vIWc7C6QN",
+				"type": "skillPointMove",
+				"label": "When you Safe Rest",
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"points": 1,
+				"trigger": "safeRest"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "An ally makes a roll",
+				"details": "",
 				"quantity": 1,
 				"type": "none",
-				"isReaction": true
+				"isReaction": false
 			},
 			"duration": {
 				"details": "",

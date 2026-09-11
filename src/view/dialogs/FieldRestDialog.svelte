@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
+	import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
+	import localize from '#utils/localize.ts';
+	import OptionSwapSection from './components/optionSwap/OptionSwapSection.svelte';
 
 	interface HitDiceAdvantageRule {
 		id: string;
@@ -17,6 +21,7 @@
 	interface Props {
 		document: NimbleCharacter;
 		dialog: GenericDialog;
+		optionSwapOffer: ResolvedOptionSwapOffer | null;
 	}
 
 	function incrementHitDie(die: string) {
@@ -45,10 +50,28 @@
 			makeCamp,
 			selectedHitDice: { ...selectedHitDice },
 			activeAdvantageRuleIds,
+			optionSwap: optionSwapOffer
+				? {
+						pools: optionSwapOffer.pools,
+						selections: optionSwapSelections,
+						skillPoints: optionSwapSkillPoints,
+					}
+				: null,
 		});
 	}
 
-	let { document: actor, dialog }: Props = $props();
+	let { document: actor, dialog, optionSwapOffer }: Props = $props();
+
+	let optionSwapSelections = $state<Map<string, string[]>>(new Map());
+	let optionSwapSkillPoints = $state<Map<string, number>>(new Map());
+	let hasPendingOptionSwap = $state(false);
+
+	// An auto-height window grows past the bottom of the screen when its content does, and
+	// Foundry only pulls it back inside the viewport when its position is set again.
+	async function fitWindow() {
+		await tick();
+		dialog.setPosition();
+	}
 
 	// Reactive hit dice computation (mirrors SafeRestDialog pattern)
 	let hitDice = $derived.by(() => {
@@ -282,11 +305,26 @@
 			</div>
 		</section>
 	{/if}
+
+	<OptionSwapSection
+		document={actor}
+		offer={optionSwapOffer}
+		onChange={({ selections, skillPoints }) => {
+			optionSwapSelections = selections;
+			optionSwapSkillPoints = skillPoints;
+		}}
+		onPending={(isPending) => {
+			hasPendingOptionSwap = isPending;
+		}}
+		onToggle={fitWindow}
+	/>
 </article>
 
 <footer class="nimble-sheet__footer">
 	<button class="nimble-button" data-button-variant="basic" onclick={submit}>
-		{#if totalSelected > 0}
+		{#if hasPendingOptionSwap}
+			{localize('NIMBLE.optionSwap.fieldRestWithSwap')}
+		{:else if totalSelected > 0}
 			{game.i18n.format(
 				totalSelected === 1
 					? CONFIG.NIMBLE.fieldRest.restAndSpendHitDie
