@@ -62,6 +62,8 @@ Your class features, subclass features, ancestry, background, and boons, grouped
 
 Your known spells. When you know spells from two or more schools, a school filter appears. Click a spell's icon to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
+Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
+
 ![The spells tab with the school filter and a spell card visible](/images/documentation/character-sheet-spells-tab.png)
 
 ### Bio
@@ -71,6 +73,8 @@ Freeform character details: age, height, weight, gender, and notes.
 ### Settings
 
 Per-character sheet options: portrait positioning and scale, whether item macros run when you use an item, whether item images are shown, and inventory slot tracking.
+
+This tab also shows your **Highest Unlocked Spell Tier**. The sheet works this out from the spell grants on your class, subclass, and features, so it normally needs no attention. If your table plays it differently, enable editing and use the plus and minus buttons to set the tier by hand. A tier you set stays until you click **Reset spell tier**, which hands the value back to the sheet.
 
 ## Dice pools and charges
 

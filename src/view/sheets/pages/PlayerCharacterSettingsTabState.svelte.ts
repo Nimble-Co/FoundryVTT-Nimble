@@ -33,6 +33,12 @@ export function createPlayerCharacterSettingsTabState(
 		await getActor().update({ 'system.resources.highestUnlockedSpellTier': newValue });
 	}
 
+	// A stored null means "derive from spell grants", so resetting clears the
+	// override instead of persisting the currently computed number.
+	async function resetHighestUnlockedSpellTier() {
+		await getActor().update({ 'system.resources.highestUnlockedSpellTier': null });
+	}
+
 	return {
 		get editingEnabled() {
 			return editingEnabled;
@@ -72,5 +78,6 @@ export function createPlayerCharacterSettingsTabState(
 		},
 		updateBonusInventorySlots,
 		updateHighestUnlockedSpellTier,
+		resetHighestUnlockedSpellTier,
 	};
 }
