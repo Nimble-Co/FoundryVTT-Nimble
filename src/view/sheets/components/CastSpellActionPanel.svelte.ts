@@ -19,7 +19,6 @@ interface SpellEffects {
 
 /** System data for spell items */
 interface SpellSystemData {
-	manaCost?: number;
 	activation?: {
 		effects?: unknown[];
 		cost?: { type: string; quantity: number };
@@ -89,10 +88,6 @@ export function createSpellPanelState(
 		}
 
 		return null;
-	}
-
-	function getSpellManaCost(spell: Item): number {
-		return getSystemData(spell).manaCost ?? 0;
 	}
 
 	function getSpellMetadata(spell: Item): string | null {
@@ -215,7 +210,6 @@ export function createSpellPanelState(
 		},
 		sortItems,
 		getSpellEffect,
-		getSpellManaCost,
 		getSpellMetadata,
 		getSpellRange,
 		getSpellTargetType,

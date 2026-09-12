@@ -46,6 +46,7 @@ import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -182,6 +183,12 @@ class ItemActivationManager {
 		if (dialogData.upcast && this.#item.type === 'spell') {
 			const spellSystem = this.#item.system as any;
 			const actorSystem = this.actor!.system as any;
+			const enforceManaCost = isResourceSpendingAutomationEnabled();
+			const bounds = computeUpcastBounds({
+				spellTier: spellSystem.tier,
+				resources: actorSystem.resources,
+				enforceManaCost,
+			});
 			const context = {
 				spell: {
 					tier: spellSystem.tier,
@@ -189,16 +196,14 @@ class ItemActivationManager {
 				},
 				actor: {
 					resources: {
-						mana: {
-							current: actorSystem.resources?.mana?.current || 0,
-						},
-						// In any case highestUnlockedSpellTier isn't set correctly we default to highest tier to ensure upcasting works
-						highestUnlockedSpellTier: actorSystem.resources?.highestUnlockedSpellTier ?? 9,
+						mana: { current: bounds.currentMana },
+						highestUnlockedSpellTier: bounds.maxTier,
 					},
 				},
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
+				enforceManaCost,
 			};
 
 			try {

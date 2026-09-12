@@ -103,7 +103,6 @@ function createSpellItem(options: {
 		},
 		system: {
 			tier: 1,
-			manaCost: 0,
 			properties: { selected: [] },
 			activation: { cost: { type: 'action', quantity: 1 } },
 			description: {},

@@ -3,6 +3,7 @@
 	import localize from '../../../utils/localize.js';
 	import { createSpellPanelState } from './CastSpellActionPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
+	import { getSpellManaCost } from '#utils/spell/getSpellManaCost.js';
 
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 	import SearchBar from './SearchBar.svelte';
@@ -38,7 +39,7 @@
 			<ul class="spell-panel__list">
 				{#each state.sortItems(state.spells) as spell (spell._id)}
 					{@const meta = state.getSpellMetadata(spell)}
-					{@const manaCost = state.getSpellManaCost(spell)}
+					{@const manaCost = getSpellManaCost(spell.system)}
 					{@const effect = state.getSpellEffect(spell)}
 					{@const spellRange = state.getSpellRange(spell)}
 					{@const requiresConcentration =

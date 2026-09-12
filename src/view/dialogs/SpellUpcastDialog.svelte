@@ -3,7 +3,9 @@
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
+	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
+	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
@@ -33,12 +35,21 @@
 	} = CONFIG.NIMBLE;
 	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
-	// Compute upcast constraints (safe for NPCs/Monsters that lack resources)
+	// With resource spending automation off, costs stay visible but available
+	// mana neither bounds the slider nor blocks the cast.
+	const enforceManaCost = isResourceSpendingAutomationEnabled();
+
 	const baseMana = $derived(spell.tier);
-	const resources = $derived(actor?.system?.resources);
-	const currentMana = $derived(resources?.mana?.current ?? 0);
-	const maxTier = $derived(resources?.highestUnlockedSpellTier ?? 9);
-	const maxMana = $derived(Math.min(currentMana, maxTier));
+	const bounds = $derived(
+		computeUpcastBounds({
+			spellTier: spell.tier,
+			resources: actor?.system?.resources,
+			enforceManaCost,
+		}),
+	);
+	const currentMana = $derived(bounds.currentMana);
+	const maxTier = $derived(bounds.maxTier);
+	const maxMana = $derived(bounds.maxMana);
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
 	const canUpcast = $derived(
@@ -278,8 +289,6 @@
 		class="nimble-button"
 		data-button-variant="basic"
 		onclick={() => {
-			console.log('[SpellUpcastDialog] Cast button clicked');
-
 			// Validate situational modifiers
 			if (situationalModifiers !== '') {
 				const isValid = Roll.validate(situationalModifiers);
@@ -297,7 +306,7 @@
 					);
 					return;
 				}
-				if (manaToSpend > currentMana) {
+				if (enforceManaCost && manaToSpend > currentMana) {
 					ui.notifications?.warn(
 						`Not enough mana. You have ${currentMana}, but need ${manaToSpend}.`,
 					);
