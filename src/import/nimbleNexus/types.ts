@@ -133,7 +133,23 @@ export interface NimbleNexusMonsterRelationships {
 export interface NimbleNexusCreator {
 	username: string;
 	displayName: string;
-	imageUrl?: string;
+}
+
+/**
+ * Any Nimble Nexus resource that names a creator. Items and collections carry
+ * the same relationship as monsters, so creator handling stays shared.
+ */
+export interface NimbleNexusCreatedResource {
+	relationships?: {
+		creator?: {
+			data: NimbleNexusCreatorRef | null;
+		};
+	};
+	/**
+	 * Resolved from the response `included` array by the API client.
+	 * This is not part of the wire format.
+	 */
+	creator?: NimbleNexusCreator;
 }
 
 /**
@@ -149,16 +165,11 @@ export interface NimbleNexusIncludedResource {
 /**
  * Single monster from the API response
  */
-export interface NimbleNexusMonster {
+export interface NimbleNexusMonster extends NimbleNexusCreatedResource {
 	type: 'monsters';
 	id: string;
 	attributes: NimbleNexusMonsterAttributes;
 	relationships?: NimbleNexusMonsterRelationships;
-	/**
-	 * Resolved from the response `included` array by the API client.
-	 * This is not part of the wire format.
-	 */
-	creator?: NimbleNexusCreator;
 }
 
 /**

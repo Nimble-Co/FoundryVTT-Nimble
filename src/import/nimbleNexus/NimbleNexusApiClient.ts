@@ -2,10 +2,16 @@
  * API client for fetching monsters from nimble.nexus
  */
 
-import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, NIMBLE_NEXUS_API_URL } from './constants.js';
+import {
+	DEFAULT_PAGE_LIMIT,
+	MAX_PAGE_LIMIT,
+	MONSTER_INCLUDES,
+	NIMBLE_NEXUS_API_URL,
+} from './constants.js';
 import type {
 	NimbleNexusApiResponse,
 	NimbleNexusApiSearchOptions,
+	NimbleNexusCreatedResource,
 	NimbleNexusCreator,
 	NimbleNexusInclude,
 	NimbleNexusIncludedResource,
@@ -76,17 +82,14 @@ async function fetchWithErrorHandling<T>(url: string): Promise<T> {
 }
 
 /**
- * Add `creator` to the relationships the API side-loads, without repeating it.
- * Sending an unsupported value here makes the API answer 400.
+ * Ask for the creator alongside whatever the caller wanted, keeping only what
+ * the endpoint declares it supports.
  */
-function withCreatorInclude(include?: NimbleNexusInclude[]): NimbleNexusInclude[] {
-	const requested = include ?? [];
-	return requested.includes('creator') ? requested : [...requested, 'creator'];
+function resolveInclude(supported: NimbleNexusInclude[], requested?: NimbleNexusInclude[]): string {
+	const wanted = new Set<NimbleNexusInclude>([...(requested ?? []), 'creator']);
+	return supported.filter((value) => wanted.has(value)).join(',');
 }
 
-/**
- * Read a string attribute off a side-loaded resource, which is untyped JSON.
- */
 function readString(attributes: Record<string, unknown> | undefined, key: string): string {
 	const value = attributes?.[key];
 	return typeof value === 'string' ? value : '';
@@ -94,7 +97,7 @@ function readString(attributes: Record<string, unknown> | undefined, key: string
 
 /**
  * Index the side-loaded user resources by id. The API deduplicates them across
- * the whole page, so many monsters can share one entry.
+ * the whole page, so many resources can share one entry.
  */
 function indexCreators(included?: NimbleNexusIncludedResource[]): Map<string, NimbleNexusCreator> {
 	const creators = new Map<string, NimbleNexusCreator>();
@@ -102,12 +105,9 @@ function indexCreators(included?: NimbleNexusIncludedResource[]): Map<string, Ni
 	for (const resource of included ?? []) {
 		if (resource.type !== 'users') continue;
 
-		const imageUrl = readString(resource.attributes, 'imageUrl');
-
 		creators.set(resource.id, {
 			username: readString(resource.attributes, 'username'),
 			displayName: readString(resource.attributes, 'displayName'),
-			imageUrl: imageUrl || undefined,
 		});
 	}
 
@@ -115,20 +115,20 @@ function indexCreators(included?: NimbleNexusIncludedResource[]): Map<string, Ni
 }
 
 /**
- * Resolve each monster's creator relationship against the side-loaded users.
+ * Resolve each resource's creator relationship against the side-loaded users.
  */
-export function attachCreators(
-	monsters: NimbleNexusMonster[],
+function attachCreators<T extends NimbleNexusCreatedResource>(
+	resources: T[],
 	included?: NimbleNexusIncludedResource[],
-): NimbleNexusMonster[] {
+): T[] {
 	const creators = indexCreators(included);
-	if (!creators.size) return monsters.map((monster) => ({ ...monster }));
+	if (!creators.size) return resources;
 
-	return monsters.map((monster) => {
-		const ref = monster.relationships?.creator?.data;
+	return resources.map((resource) => {
+		const ref = resource.relationships?.creator?.data;
 		const creator = ref ? creators.get(ref.id) : undefined;
 
-		return creator ? { ...monster, creator } : { ...monster };
+		return creator ? { ...resource, creator } : resource;
 	});
 }
 
@@ -146,7 +146,7 @@ export async function searchMonsters(
 		limit,
 		cursor: options.cursor,
 		sort: options.sort,
-		include: withCreatorInclude(options.include).join(','),
+		include: resolveInclude(MONSTER_INCLUDES, options.include),
 		type: options.monsterType !== 'all' ? options.monsterType : undefined,
 		role: options.role !== 'all' ? options.role : undefined,
 	};
@@ -161,7 +161,7 @@ export async function searchMonsters(
  * Get a single monster by ID
  */
 export async function getMonsterById(id: string): Promise<NimbleNexusMonster> {
-	const url = buildUrl(`/monsters/${id}`, { include: withCreatorInclude().join(',') });
+	const url = buildUrl(`/monsters/${id}`, { include: resolveInclude(MONSTER_INCLUDES) });
 	const response = await fetchWithErrorHandling<NimbleNexusSingleMonsterResponse>(url);
 	const [monster] = attachCreators([response.data], response.included);
 
