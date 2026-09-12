@@ -52,6 +52,29 @@ describe('computeUpcastBounds', () => {
 		expect(bounds.maxMana).toBe(3);
 	});
 
+	it('offers no upcast for a flat cost the caster would not pay more for', () => {
+		const bounds = computeUpcastBounds({
+			spellTier: 1,
+			resources: { mana: { current: 0 }, highestUnlockedSpellTier: 5 },
+			enforceManaCost: false,
+			flatCost: true,
+		});
+
+		expect(bounds).toEqual({ currentMana: 0, maxTier: 1, maxMana: 1 });
+	});
+
+	it('keeps the ladder for a flat cost when a class pins the cast tier', () => {
+		const bounds = computeUpcastBounds({
+			spellTier: 1,
+			resources: { mana: { current: 0 }, highestUnlockedSpellTier: 5 },
+			enforceManaCost: false,
+			flatCost: true,
+			pinnedCastTier: 5,
+		});
+
+		expect(bounds).toEqual({ currentMana: 0, maxTier: 5, maxMana: 5 });
+	});
+
 	it('leaves a cantrip at tier 0 when the actor has no ladder', () => {
 		const bounds = computeUpcastBounds({
 			spellTier: 0,

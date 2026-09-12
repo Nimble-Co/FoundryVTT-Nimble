@@ -794,6 +794,26 @@ function areChargePoolMapsEqual(left: ChargePoolMap, right: ChargePoolMap): bool
 	return true;
 }
 
+/**
+ * Looks up a pool by its bare identifier, falling back to the actor-scoped id
+ * so callers that only know the authored identifier find the pool whichever
+ * scope it was declared at. Returns the matched key alongside the pool so the
+ * caller can write back to the right entry.
+ */
+function findChargePoolByIdentifier(
+	pools: ChargePoolMap,
+	identifier: string,
+): { key: string; pool: ChargePoolState } | null {
+	const bareEntry = pools[identifier];
+	if (bareEntry) return { key: identifier, pool: bareEntry };
+
+	const actorScopedKey = buildChargePoolId('actor', identifier, '');
+	const actorEntry = pools[actorScopedKey];
+	if (actorEntry) return { key: actorScopedKey, pool: actorEntry };
+
+	return null;
+}
+
 export {
 	VALID_RECOVERY_TRIGGERS,
 	VALID_RECOVERY_MODES,
@@ -812,6 +832,7 @@ export {
 	normalizeRecoveries,
 	getChargePoolDefinitions,
 	buildEffectiveChargePoolMap,
+	findChargePoolByIdentifier,
 	getChargeConsumers,
 	getFixedChargeCostsByPool,
 	findConflictingVariablePools,

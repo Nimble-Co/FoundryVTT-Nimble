@@ -67,6 +67,91 @@ describe('createSpellPanelState', () => {
 			);
 		});
 	});
+
+	describe('getSpellCostLabel', () => {
+		function createListedSpell(tier: number, scalingMode = 'none') {
+			return {
+				type: 'spell',
+				name: `Tier ${tier} Spell`,
+				system: { tier, scaling: { mode: scalingMode } },
+			};
+		}
+
+		function createPanelStateListing(spells: object[], actor: Record<string, unknown> = {}) {
+			return createSpellPanelState(
+				() => ({ reactive: { items: spells }, ...actor }) as unknown as NimbleCharacter,
+				() => async () => {},
+			);
+		}
+
+		it('costs a tiered spell its tier in mana when no class declares another cost', () => {
+			const state = createPanelStateListing([createListedSpell(3)]);
+
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBe('3 Mana');
+		});
+
+		it('shows no cost for a cantrip', () => {
+			const state = createPanelStateListing([createListedSpell(0)]);
+
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBeNull();
+		});
+
+		it('refuses a spell the panel does not list', () => {
+			const state = createPanelStateListing([]);
+
+			expect(() =>
+				state.getSpellCostLabel({ name: 'Stray', system: { tier: 1 } } as unknown as Item),
+			).toThrow('Stray');
+		});
+
+		it('evaluates a pool cost formula once for the whole spell list', () => {
+			const poolClass = {
+				type: 'class',
+				flags: {},
+				system: { spellcasting: { cost: { poolIdentifier: 'pilfered-power', amount: '1 + 1' } } },
+			};
+			const spells = [1, 2, 3].map((tier) => ({
+				type: 'spell',
+				name: `Spell ${tier}`,
+				system: { tier },
+			}));
+			const getRollData = vi.fn(() => ({}));
+			const state = createSpellPanelState(
+				() =>
+					({
+						reactive: { items: spells },
+						items: { contents: [poolClass] },
+						getRollData,
+					}) as unknown as NimbleCharacter,
+				() => async () => {},
+			);
+
+			const labels = state.spells.map((spell) => state.getSpellCostLabel(spell as unknown as Item));
+
+			expect(labels).toEqual(['2 pilfered-power', '2 pilfered-power', '2 pilfered-power']);
+			expect(getRollData).toHaveBeenCalledTimes(1);
+		});
+
+		it('shows the cost at the tier a pinning class would actually cast at', () => {
+			const pinningClass = { type: 'class', system: { spellcasting: { castAtHighestTier: true } } };
+			const state = createPanelStateListing([createListedSpell(1, 'upcast')], {
+				items: { contents: [pinningClass] },
+				system: { resources: { highestUnlockedSpellTier: 3 } },
+			});
+
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBe('3 Mana');
+		});
+
+		it('shows the own-tier cost of a spell that does not scale under a pinning class', () => {
+			const pinningClass = { type: 'class', system: { spellcasting: { castAtHighestTier: true } } };
+			const state = createPanelStateListing([createListedSpell(1)], {
+				items: { contents: [pinningClass] },
+				system: { resources: { highestUnlockedSpellTier: 5 } },
+			});
+
+			expect(state.getSpellCostLabel(state.spells[0] as unknown as Item)).toBe('1 Mana');
+		});
+	});
 });
 
 function createSpellItem(options: {

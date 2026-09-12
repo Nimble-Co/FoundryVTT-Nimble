@@ -4,6 +4,7 @@ import {
 	prepareArmorOptions,
 	prepareHitDieTagOptions,
 	prepareManaRecoveryTypeOptions,
+	prepareOverdraftConsequenceOptions,
 	prepareSavingThrowTagOptions,
 } from './ClassSheetUtils.js';
 
@@ -12,6 +13,7 @@ export function createClassSheetState(getProps: () => ClassSheetProps) {
 	const armorOptions = prepareArmorOptions();
 	const hitDieOptions = prepareHitDieTagOptions();
 	const manaRecoveryOptions = prepareManaRecoveryTypeOptions();
+	const overdraftConsequenceOptions = prepareOverdraftConsequenceOptions();
 	const savingThrowOptions = prepareSavingThrowTagOptions();
 	const { saves } = CONFIG.NIMBLE;
 
@@ -20,6 +22,7 @@ export function createClassSheetState(getProps: () => ClassSheetProps) {
 		armorOptions,
 		hitDieOptions,
 		manaRecoveryOptions,
+		overdraftConsequenceOptions,
 		savingThrowOptions,
 		saves,
 
@@ -92,6 +95,36 @@ export function createClassSheetState(getProps: () => ClassSheetProps) {
 		toggleManaRecoveryType(recoveryType: string) {
 			void getProps().item.update({
 				'system.mana.recovery': recoveryType,
+			} as Record<string, unknown>);
+		},
+		toggleCastAtHighestTier(castAtHighestTier: boolean) {
+			void getProps().item.update({
+				'system.spellcasting.castAtHighestTier': castAtHighestTier,
+			} as Record<string, unknown>);
+		},
+		async toggleOverdraftConsequence(consequence: string | number) {
+			await getProps().item.update({
+				'system.spellcasting.cost.overdraftConsequence': String(consequence),
+			} as Record<string, unknown>);
+		},
+		updateSpellCostAmount(amount: string) {
+			void getProps().item.update({
+				'system.spellcasting.cost.amount': amount,
+			} as Record<string, unknown>);
+		},
+		updateSpellCostPoolIdentifier(identifier: string) {
+			void getProps().item.update({
+				'system.spellcasting.cost.poolIdentifier': identifier,
+			} as Record<string, unknown>);
+		},
+		updateOverdraftMaxLevel(value: string) {
+			// Blank clears the bound rather than pinning it to a level, which is
+			// what the nullable field means: the consequence never stops applying.
+			const trimmed = value.trim();
+			const parsed = Number.parseInt(trimmed, 10);
+			void getProps().item.update({
+				'system.spellcasting.cost.overdraftMaxLevel':
+					trimmed.length === 0 || Number.isNaN(parsed) ? null : Math.max(1, parsed),
 			} as Record<string, unknown>);
 		},
 		toggleKeyAbilityScoreOption(abilityScore: string) {

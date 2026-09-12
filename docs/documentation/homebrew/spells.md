@@ -36,6 +36,8 @@ For Emberlance: enable **Range** (set it to taste), pick **Tier 2**, and the **F
 
 ::: info Mana cost is the tier
 There is no separate "mana cost" field. Casting a tiered spell automatically deducts mana equal to its tier from the caster, so Emberlance costs 2 mana. Cantrips are free. Upcasting (below) spends more. The deduction happens on its own when the spell is cast from a character.
+
+A class can redirect that cost. If its Spellcasting config names a charge pool, its casters spend that pool instead of mana, and the spell's own fields do not change. See [Classes](character-options.md#the-config-tab).
 :::
 
 ::: tip The raw data editor
@@ -86,10 +88,12 @@ With **Upcast Choice** selected, you instead click **Add Choice**, give each cho
 Casting a spell opens the cast window. It contains the roll mode selector, situational modifiers, and roll options that every activation window has (see [Item Activations & Effects](activations.md)), plus the upcast controls when the spell can be upcast:
 
 - an **Upcast** heading with a **mana slider** running from the spell's base cost up to the caster's highest unlocked spell tier. While the **Resource Spending** automation setting is on (see [Settings](../gm/settings.md)), the slider is also capped by the caster's current mana. The caster simply drags it to the total mana they want to spend, and the **Upcast Level** readout shows how many steps that buys;
+- for a class that casts at its highest tier, no slider at all. The window states the tier the spell will be cast at and what it costs. A spell that does not scale is unaffected: it casts at, and costs, its own tier;
+- for a class that pays with a charge pool, no slider either, and none whether or not it also casts at its highest tier. The pool cost is the same at every tier, so it buys no upcast steps. Such a class spends its charge pool rather than mana, and the window names the pool and the amount;
 - for Upcast Choice spells, a **Choose Enhancement** list of your labeled options;
 - an **Applied Effect** preview listing exactly what the chosen upcast adds ("+2d8 fire damage").
 
-A spell that cannot be upcast (or, with Resource Spending on, a caster without spare mana) just gets the normal roll controls. A caster with no mana pool and no unlocked spell tiers, such as a monster, always casts at the spell's own tier. Holding **Alt** skips the window and casts at base tier. When the caster confirms, the upcast changes are baked into the rolls and the total mana is deducted.
+A spell that cannot be upcast (or, with Resource Spending on, a caster without spare mana) just gets the normal roll controls. A caster with no mana pool and no unlocked spell tiers, such as a monster, always casts at the spell's own tier. Holding **Alt** skips the window: an ordinary caster then casts at the spell's base tier, and a class that casts at its highest tier still casts at that tier. The exception is an Upcast Choice spell under such a class, where the window opens anyway so the caster picks the enhancement. A macro that skips the window cannot cast that spell at all unless it names the enhancement, because nothing may pick one for the caster. When the caster confirms, the upcast changes are baked into the rolls and the cost is deducted: the total mana for most classes, or the declared charge pool for a class that pays from one.
 
 ![The cast window for an upcastable spell, showing the mana slider and the Applied Effect preview](/images/documentation/roll-dialog-spell-upcast.png)
 

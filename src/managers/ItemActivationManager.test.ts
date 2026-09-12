@@ -31,6 +31,7 @@ interface MockActor {
 			intelligence: { mod: number };
 		};
 		levelUpHistory?: Array<Record<string, unknown>>;
+		resources?: { mana?: { current: number; max: number }; highestUnlockedSpellTier?: number };
 	};
 }
 
@@ -47,6 +48,8 @@ interface MockItem {
 		activation: {
 			effects: EffectNode[];
 		};
+		tier?: number;
+		scaling?: { mode: string; deltas?: unknown[]; choices?: unknown[] };
 	};
 }
 
@@ -2018,6 +2021,200 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.activation).not.toBeNull();
 			// No upcast was applied, so the spell activated at its base tier.
 			expect(manager.upcastResult).toBeNull();
+		});
+
+		describe('pinned cast tier', () => {
+			function pinCastTier(unlockedTier: number) {
+				const pinningClass = {
+					type: 'class',
+					name: 'Pinning Class',
+					actor: mockActor,
+					system: {
+						activation: { effects: [] },
+						spellcasting: { castAtHighestTier: true },
+					},
+				} as MockItem;
+				mockActor.items = { contents: [pinningClass], get: () => pinningClass };
+				mockActor.system.resources = {
+					mana: { current: 10, max: 10 },
+					highestUnlockedSpellTier: unlockedTier,
+				};
+			}
+
+			it('charges the spell its own tier when it does not scale', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'none' };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(result.activation).not.toBeNull();
+				expect(manager.pinnedCastTier).toBe(5);
+				expect(manager.upcastResult).toBeNull();
+				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
+			});
+
+			it('refuses an upcast bought with a flat pool cost when no class pins the tier', async () => {
+				const poolClass = {
+					type: 'class',
+					name: 'Pool Class',
+					actor: mockActor,
+					flags: {},
+					system: {
+						activation: { effects: [] },
+						spellcasting: { cost: { poolIdentifier: 'stolen-power', amount: '1' } },
+					},
+				} as MockItem;
+				mockActor.items = { contents: [poolClass], get: () => poolClass };
+				mockActor.system.resources = {
+					mana: { current: 0, max: 0 },
+					highestUnlockedSpellTier: 5,
+				};
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'upcast', deltas: [] };
+				dialogState.result = { rollMode: 0, upcast: { manaToSpend: 3 } };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [] };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(manager.spellCost).toMatchObject({ type: 'pool' });
+				expect(result).toEqual({ activation: null, rolls: null });
+				expect(manager.upcastResult).toBeNull();
+				expect(ui.notifications?.error).toHaveBeenCalledWith(
+					expect.stringContaining('Upcast failed'),
+				);
+			});
+
+			it('opens the dialog for a choice-scaled spell even when the sheet skips it', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = {
+					mode: 'upcastChoice',
+					choices: [
+						{ label: 'First', deltas: [] },
+						{ label: 'Second', deltas: [] },
+					],
+				};
+				dialogState.result = { rollMode: 0, upcast: { manaToSpend: 5, choiceIndex: 1 } };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).toHaveBeenCalledTimes(1);
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult?.manaSpent).toBe(5);
+				expect(manager.upcastResult?.choiceIndex).toBe(1);
+			});
+
+			it('refuses a fast-forwarded cast that would pick an enhancement for the player', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = {
+					mode: 'upcastChoice',
+					choices: [
+						{ label: 'First', deltas: [] },
+						{ label: 'Second', deltas: [] },
+					],
+				};
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true },
+				);
+				manager.activationData = { effects: [] };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+				expect(result).toEqual({ activation: null, rolls: null });
+				expect(manager.upcastResult).toBeNull();
+				expect(ui.notifications?.error).toHaveBeenCalledWith(expect.stringContaining('Test Item'));
+			});
+
+			it('applies the enhancement a fast-forwarded caller names', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = {
+					mode: 'upcastChoice',
+					choices: [
+						{ label: 'First', deltas: [] },
+						{ label: 'Second', deltas: [] },
+					],
+				};
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true, upcastChoiceIndex: 1 },
+				);
+				manager.activationData = { effects: [] };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult?.manaSpent).toBe(5);
+				expect(manager.upcastResult?.choiceIndex).toBe(1);
+				expect(ui.notifications?.error).not.toHaveBeenCalled();
+			});
+
+			it('still skips the dialog for a choice-scaled spell the pinned tier does not lift', async () => {
+				pinCastTier(1);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'upcastChoice', choices: [] };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult).toBeNull();
+			});
+
+			it('charges the pinned tier when the spell scales to it', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'upcast', deltas: [] };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{},
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				const result = await manager.getData();
+
+				expect(result.activation).not.toBeNull();
+				expect(manager.upcastResult?.manaSpent).toBe(5);
+				expect(manager.spellCost).toEqual({ type: 'mana', amount: 5 });
+			});
 		});
 
 		it('should open the config dialog when skipRollDialog is unset and the item has rolls', async () => {

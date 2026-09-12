@@ -1,9 +1,16 @@
+import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { flattenActivationEffects } from '../../../utils/activationEffects.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
+import {
+	createSpellCostResolver,
+	formatSpellCostLabel,
+	resolveEffectiveCastTier,
+	resolvePinnedCastTier,
+} from '../../../utils/spell/spellCost.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import { isCustomReaction } from './CustomReactionsPanel.svelte.js';
 
@@ -88,6 +95,37 @@ export function createSpellPanelState(
 		}
 
 		return null;
+	}
+
+	// One resolver per spell list, so the pool map and the cost formula are
+	// evaluated once per render rather than once per spell.
+	const spellCostLabels = $derived.by(() => {
+		const actor = getActor() as unknown as SpellCostActorLike;
+		const resolveCost = createSpellCostResolver(actor);
+		return new Map<unknown, string | null>(
+			spells.map((spell) => {
+				const spellLike = spell as unknown as SpellLike;
+				const cost = resolveCost(spellLike, {
+					castTier:
+						resolveEffectiveCastTier(spellLike, resolvePinnedCastTier(actor, spellLike)) ??
+						undefined,
+				});
+				return [spell, formatSpellCostLabel(cost)];
+			}),
+		);
+	});
+
+	/**
+	 * The cost of casting the spell as the actor would actually pay it: the
+	 * spell's tier in mana by default, or the flat pool cost the actor's class
+	 * declares. Returns null when the cast is free, so the indicator is omitted.
+	 * Only spells in this panel's list have a label.
+	 */
+	function getSpellCostLabel(spell: Item): string | null {
+		if (!spellCostLabels.has(spell)) {
+			throw new Error(`Spell cost requested for a spell outside the panel: ${spell.name}`);
+		}
+		return spellCostLabels.get(spell) ?? null;
 	}
 
 	function getSpellMetadata(spell: Item): string | null {
@@ -210,6 +248,7 @@ export function createSpellPanelState(
 		},
 		sortItems,
 		getSpellEffect,
+		getSpellCostLabel,
 		getSpellMetadata,
 		getSpellRange,
 		getSpellTargetType,
