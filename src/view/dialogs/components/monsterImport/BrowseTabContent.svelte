@@ -1,5 +1,6 @@
 <script>
 	import { getMonsterPreviewImageUrl } from '../../../../import/nimbleNexus/constants.js';
+	import { getCreatorName } from '../../../../import/nimbleNexus/creatorCredit.js';
 
 	const { actorImport } = CONFIG.NIMBLE;
 
@@ -64,6 +65,7 @@
 
 		<!-- Monster Items -->
 		{#each dialog.searchResults as monster (monster.id)}
+			{@const creatorName = getCreatorName(monster.creator)}
 			<label class="actor-import-monster-item">
 				<input
 					type="checkbox"
@@ -85,6 +87,9 @@
 					<span class="actor-import-monster-hp">{monster.attributes.hp} HP</span>
 					{#if monster.attributes.kind}
 						<span class="actor-import-monster-kind">{monster.attributes.kind}</span>
+					{/if}
+					{#if creatorName}
+						<span class="actor-import-monster-creator">by {creatorName}</span>
 					{/if}
 				</div>
 			</label>
@@ -254,6 +259,11 @@
 
 	.actor-import-monster-kind {
 		font-style: italic;
+	}
+
+	.actor-import-monster-creator {
+		color: var(--color-text-dark-secondary);
+		font-size: var(--font-size-12);
 	}
 
 	.actor-import-loading-more {
