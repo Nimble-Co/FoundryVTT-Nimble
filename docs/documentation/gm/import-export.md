@@ -57,11 +57,13 @@ Each monster arrives as the right actor type automatically (legendary monsters b
 
 ### Creator credit
 
-The browse list shows who published each monster, and every import keeps that name. The credit sits at the top of the imported monster's **Notes** tab, linked to the creator's Nimble Nexus profile:
+The browse list shows who published each monster, and every import keeps that name. The credit then sits in the monster's sheet header, beside the level and size line, on every tab:
 
 > *Created by [(jao)](https://nimble.nexus/u/jao7371) on Nimble Nexus.*
 
-It is a courtesy to the person who made the monster, not a licence notice. The name is a snapshot taken at the moment you imported, so it never updates afterwards, and it is ordinary description text that you can edit or remove like anything else in that tab.
+It is a courtesy to the person who made the monster, not a licence notice. The name is a snapshot taken at the moment you imported, so it never updates afterwards. The credit is stored on the actor rather than written into its description, so it survives an edit to the notes and it travels with the actor when you duplicate or export it.
+
+Monsters imported before this feature existed carry no credit, and it cannot be added to them after the fact.
 
 ::: warning Imports are a strong starting point, not always a finished monster
 The converter reads the stat block's action text to build rollable attacks, including reach, range, and cone/line/area templates. It's good, but it's parsing prose, so know its limits:

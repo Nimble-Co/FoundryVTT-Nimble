@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
+import { IMPORT_CREDIT_FLAG } from '../importCredit.js';
 import { toActorData } from './NimbleNexusParser.js';
 import type { NimbleNexusCreator, NimbleNexusMonster } from './types.js';
 
@@ -8,15 +10,11 @@ beforeEach(() => {
 	vi.stubGlobal('foundry', {
 		utils: {
 			randomID: () => `mock-id-${++idCounter}`,
-			escapeHTML: (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;'),
 		},
 	});
 });
 
 const creator: NimbleNexusCreator = { username: 'jao7371', displayName: '(jao)' };
-
-const CREDIT =
-	'<p><em>Created by <a href="https://nimble.nexus/u/jao7371">(jao)</a> on Nimble Nexus.</em></p>';
 
 function monster(description: string, withCreator: boolean): NimbleNexusMonster {
 	return {
@@ -38,32 +36,38 @@ function monster(description: string, withCreator: boolean): NimbleNexusMonster 
 	} as unknown as NimbleNexusMonster;
 }
 
-function descriptionOf(actorData: ReturnType<typeof toActorData>): string {
-	return (actorData as unknown as { system: { description: string } }).system.description;
+function actorFields(actorData: ReturnType<typeof toActorData>) {
+	return actorData as unknown as {
+		system: { description: string };
+		flags?: Record<string, Record<string, unknown>>;
+	};
 }
 
 describe('toActorData creator credit', () => {
-	it('puts the credit above an existing description', () => {
-		const result = descriptionOf(toActorData(monster('<p>A big lizard.</p>', true)));
+	it('records the credit as a system flag', () => {
+		const { flags } = actorFields(toActorData(monster('', true)));
 
-		expect(result).toBe(`${CREDIT}<hr /><p>A big lizard.</p>`);
+		expect(flags?.[SYSTEM_ID]?.[IMPORT_CREDIT_FLAG]).toEqual({
+			source: 'nimble-nexus',
+			creator: { username: 'jao7371', displayName: '(jao)' },
+		});
 	});
 
-	it('uses the credit as the whole description when the monster has none', () => {
-		const result = descriptionOf(toActorData(monster('', true)));
+	it('leaves the imported description exactly as the source wrote it', () => {
+		const { system } = actorFields(toActorData(monster('<p>A big lizard.</p>', true)));
 
-		expect(result).toBe(CREDIT);
+		expect(system.description).toBe('<p>A big lizard.</p>');
 	});
 
-	it('leaves the description alone when no creator was side-loaded', () => {
-		const result = descriptionOf(toActorData(monster('<p>A big lizard.</p>', false)));
+	it('sets no flag when no creator was side-loaded', () => {
+		const { flags } = actorFields(toActorData(monster('<p>A big lizard.</p>', false)));
 
-		expect(result).toBe('<p>A big lizard.</p>');
+		expect(flags?.[SYSTEM_ID]?.[IMPORT_CREDIT_FLAG]).toBeUndefined();
 	});
 
-	it('leaves the description empty when there is no creator and no description', () => {
-		const result = descriptionOf(toActorData(monster('', false)));
+	it('leaves an empty description empty', () => {
+		const { system } = actorFields(toActorData(monster('', false)));
 
-		expect(result).toBe('');
+		expect(system.description).toBe('');
 	});
 });

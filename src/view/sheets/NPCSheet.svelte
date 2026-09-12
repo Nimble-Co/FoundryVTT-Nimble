@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import { SYSTEM_ID } from '#system';
+	import { IMPORT_CREDIT_FLAG, buildCreditHtml } from '../../import/importCredit.js';
 	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -11,6 +12,10 @@
 	import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
 
 	let { actor } = $props();
+
+	let creditHtml = $derived(
+		buildCreditHtml(actor.reactive.flags?.[SYSTEM_ID]?.[IMPORT_CREDIT_FLAG]),
+	);
 
 	function getHitPointPercentage(
 		currentHP: number | null | undefined,
@@ -189,6 +194,10 @@
 			>
 				<i class="fa-solid fa-edit"></i>
 			</button>
+
+			{#if creditHtml}
+				<span class="nimble-monster-credit">{@html creditHtml}</span>
+			{/if}
 		</h4>
 	</div>
 </header>
@@ -228,6 +237,13 @@
 		&:hover {
 			--nimble-button-opacity: 1;
 		}
+	}
+
+	.nimble-monster-credit {
+		margin-inline-start: auto;
+		font-size: var(--nimble-xs-text);
+		font-style: italic;
+		white-space: nowrap;
 	}
 
 	.nimble-monster-sheet-section {

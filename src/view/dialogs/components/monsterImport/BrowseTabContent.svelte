@@ -1,6 +1,6 @@
 <script>
 	import { getMonsterPreviewImageUrl } from '../../../../import/nimbleNexus/constants.js';
-	import { getCreatorName } from '../../../../import/nimbleNexus/creatorCredit.js';
+	import { getCreatorName } from '../../../../import/importCredit.js';
 
 	const { actorImport } = CONFIG.NIMBLE;
 

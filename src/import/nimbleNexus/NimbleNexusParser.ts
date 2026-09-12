@@ -2,6 +2,8 @@
  * Parser for converting Nimble Nexus monster data to FoundryVTT Actor format
  */
 
+import { SYSTEM_ID } from '#system';
+import { buildImportCredit, IMPORT_CREDIT_FLAG } from '../importCredit.js';
 import {
 	DEFAULT_FEATURE_ICONS,
 	FEATURE_SUBTYPES,
@@ -11,7 +13,6 @@ import {
 	SIZE_TO_TOKEN_DIMENSIONS,
 	saveValueToRollMode,
 } from './constants.js';
-import { withCreatorCredit } from './creatorCredit.js';
 import { buildEffectTree, parseRangeReach } from './descriptionParser.js';
 import type {
 	ActorType,
@@ -493,6 +494,7 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 	const items = createMonsterFeatures(attributes);
 	const tokenDimensions = SIZE_TO_TOKEN_DIMENSIONS[attributes.size] ?? { width: 1, height: 1 };
 	const imageUrl = getMonsterImageUrl(attributes.paperforgeImageUrl);
+	const credit = buildImportCredit('nimble-nexus', monster.creator);
 
 	return {
 		name: attributes.name,
@@ -512,7 +514,7 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 				sizeCategory: attributes.size,
 				movement,
 			},
-			description: withCreatorCredit(attributes.description || '', monster.creator),
+			description: attributes.description || '',
 			details: {
 				creatureType: attributes.kind || '',
 				level: levelToString(attributes.level),
@@ -539,6 +541,7 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 			},
 		},
 		items,
+		...(credit ? { flags: { [SYSTEM_ID]: { [IMPORT_CREDIT_FLAG]: credit } } } : {}),
 	} as object as Actor.CreateData;
 }
 
