@@ -35,12 +35,41 @@ export interface UpcastContext {
 	enforceManaCost?: boolean;
 }
 
+/** Why an upcast was refused. The caller turns this into a localized message. */
+export type UpcastErrorCode =
+	| 'cantripCannotUpcast'
+	| 'spellCannotUpcast'
+	| 'insufficientMana'
+	| 'belowBaseTier'
+	| 'aboveUnlockedTier';
+
+/** Why an upcast was refused, and what its message needs. */
+export interface UpcastRefusal {
+	code: UpcastErrorCode;
+	/** Values the message needs, already stringified. */
+	data: Record<string, string>;
+	/** For logs only; the caller localizes from `code`. */
+	message: string;
+}
+
 export interface ValidationResult {
 	valid: boolean;
-	error?: string;
+	/** Set whenever `valid` is false, and only then. */
+	refusal?: UpcastRefusal;
 	upcastSteps: number;
 	baseMana: number;
 	totalMana: number;
+}
+
+/** Carries the refusal across the throw so the caller can localize it. */
+export class UpcastError extends Error {
+	refusal: UpcastRefusal;
+
+	constructor(refusal: UpcastRefusal) {
+		super(refusal.message);
+		this.name = 'UpcastError';
+		this.refusal = refusal;
+	}
 }
 
 export interface AppliedUpcastData {
@@ -63,7 +92,11 @@ export function validateAndComputeUpcast(context: UpcastContext): ValidationResu
 	if (spell.tier === 0) {
 		return {
 			valid: false,
-			error: 'Cantrips cannot be upcast',
+			refusal: {
+				code: 'cantripCannotUpcast',
+				data: {},
+				message: 'Cantrips cannot be upcast',
+			},
 			upcastSteps: 0,
 			baseMana: 0,
 			totalMana: 0,
@@ -74,7 +107,11 @@ export function validateAndComputeUpcast(context: UpcastContext): ValidationResu
 	if (!spell.scaling || spell.scaling.mode === 'none') {
 		return {
 			valid: false,
-			error: 'This spell cannot be upcast',
+			refusal: {
+				code: 'spellCannotUpcast',
+				data: {},
+				message: 'This spell cannot be upcast',
+			},
 			upcastSteps: 0,
 			baseMana: spell.tier,
 			totalMana: spell.tier,
@@ -88,7 +125,14 @@ export function validateAndComputeUpcast(context: UpcastContext): ValidationResu
 	if ((context.enforceManaCost ?? true) && manaToSpend > actor.resources.mana.current) {
 		return {
 			valid: false,
-			error: 'Insufficient mana',
+			refusal: {
+				code: 'insufficientMana',
+				data: {
+					current: String(actor.resources.mana.current),
+					needed: String(manaToSpend),
+				},
+				message: 'Insufficient mana',
+			},
 			upcastSteps: 0,
 			baseMana,
 			totalMana: manaToSpend,
@@ -99,7 +143,11 @@ export function validateAndComputeUpcast(context: UpcastContext): ValidationResu
 	if (manaToSpend < baseMana) {
 		return {
 			valid: false,
-			error: `Must spend at least ${baseMana} mana`,
+			refusal: {
+				code: 'belowBaseTier',
+				data: { min: String(baseMana) },
+				message: `Must spend at least ${baseMana} mana`,
+			},
 			upcastSteps: 0,
 			baseMana,
 			totalMana: manaToSpend,
@@ -110,7 +158,11 @@ export function validateAndComputeUpcast(context: UpcastContext): ValidationResu
 	if (manaToSpend > actor.resources.highestUnlockedSpellTier) {
 		return {
 			valid: false,
-			error: `Cannot spend more than ${actor.resources.highestUnlockedSpellTier} mana (highest unlocked tier)`,
+			refusal: {
+				code: 'aboveUnlockedTier',
+				data: { maxTier: String(actor.resources.highestUnlockedSpellTier) },
+				message: `Cannot spend more than ${actor.resources.highestUnlockedSpellTier} mana (highest unlocked tier)`,
+			},
 			upcastSteps: 0,
 			baseMana,
 			totalMana: manaToSpend,
@@ -131,7 +183,8 @@ export function applyUpcastDeltas(context: UpcastContext): AppliedUpcastData {
 	const validation = validateAndComputeUpcast(context);
 
 	if (!validation.valid) {
-		throw new Error(validation.error || 'Invalid upcast configuration');
+		if (!validation.refusal) throw new Error('An upcast was refused without a reason');
+		throw new UpcastError(validation.refusal);
 	}
 
 	const { upcastSteps } = validation;

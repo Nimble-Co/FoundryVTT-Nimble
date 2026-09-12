@@ -44,11 +44,17 @@ import {
 	type IncomingAttackPlan,
 } from '../utils/incomingAttackModifiers.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
+import localize from '../utils/localize.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
-import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import {
+	applyUpcastDeltas,
+	UpcastError,
+	type UpcastErrorCode,
+} from '../utils/spell/applyUpcastDeltas.js';
 import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import {
+	exceedsUnlockedSpellTier,
 	resolveEffectiveCastTier,
 	resolvePinnedCastTier,
 	resolveSpellCost,
@@ -193,6 +199,18 @@ class ItemActivationManager {
 
 		if (this.#item.type === 'spell' && this.actor) {
 			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
+
+			// Checked on every activation path, not just the dialog, so a macro or
+			// a spell without a tier control cannot cast above the caster's ladder.
+			if (exceedsUnlockedSpellTier(this.actor, this.#item)) {
+				ui.notifications?.warn(
+					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
+						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
+					}),
+				);
+				return { activation: null, rolls: null };
+			}
+
 			this.spellCost = resolveSpellCost(this.actor, this.#item, {
 				castTier:
 					resolveEffectiveCastTier(this.#item as unknown as SpellLike, this.pinnedCastTier) ??
@@ -270,8 +288,27 @@ class ItemActivationManager {
 					});
 				}
 			} catch (error) {
+				// Mapped by hand so a code without a message is a type error.
+				if (error instanceof UpcastError) {
+					const { warnings } = CONFIG.NIMBLE.spellUpcastDialog;
+					const messageKeys: Record<UpcastErrorCode, string> = {
+						cantripCannotUpcast: warnings.cantripCannotUpcast,
+						spellCannotUpcast: warnings.spellCannotUpcast,
+						insufficientMana: warnings.insufficientMana,
+						belowBaseTier: warnings.minMana,
+						aboveUnlockedTier: warnings.aboveMaxTier,
+					};
+					ui.notifications?.error(localize(messageKeys[error.refusal.code], error.refusal.data));
+					console.warn('Nimble | Upcast refused:', error.message);
+					return { activation: null, rolls: null };
+				}
+
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-				ui.notifications?.error(`Upcast failed: ${errorMessage}`);
+				ui.notifications?.error(
+					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.upcastFailed, {
+						error: errorMessage,
+					}),
+				);
 				return { activation: null, rolls: null };
 			}
 		}

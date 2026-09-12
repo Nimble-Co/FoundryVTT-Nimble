@@ -43,7 +43,7 @@
 <div
 	class="nimble-hit-points"
 	class:nimble-hit-points--compact={compact}
-	style="--nimble-hp-bar-percentage: {Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100)}%"
+	style="--nimble-hp-bar-percentage: {Math.clamp(Math.round((currentHP / maxHP) * 100), 0, 100)}%"
 >
 	<div class="nimble-hit-points__bar" class:nimble-hit-points__bar--bloodied={isBloodied}>
 		<div class="nimble-hit-points__values">

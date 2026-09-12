@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
 	applyRecoveryTriggersToPools,
+	areChargePoolMapsEqual,
 	buildEffectiveChargePoolMap,
 	findConflictingVariablePools,
 	getChargeConsumers,
+	getChargePoolMapFromActor,
 } from './helpers.js';
 import type {
 	CharacterActorLike,
@@ -702,5 +704,147 @@ describe('charge pool modifier contributed recoveries', () => {
 		(actor as unknown as { getDomain: () => Set<string> }).getDomain = () =>
 			new Set(['self:raging']);
 		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(1);
+	});
+});
+
+describe('a pool whose maximum only appears later', () => {
+	const poolRule = {
+		type: 'chargePool',
+		id: 'pilfered-rule',
+		identifier: 'pilfered-power',
+		scope: 'item',
+		max: '@dexterity',
+		initial: 'max',
+	} as MockRule;
+
+	// Stored state from a time when the formula still read zero.
+	const storedAtZero = {
+		nimble: {
+			chargePools: {
+				'pilfered-power': {
+					id: 'pilfered-power',
+					identifier: 'pilfered-power',
+					scope: 'item',
+					sourceItemId: 'item-1',
+					sourceItemName: 'Pilfered Power',
+					label: 'Pilfered Power',
+					current: 0,
+					max: 0,
+					dieSize: null,
+					recoveries: [],
+				},
+			},
+		},
+	};
+
+	it('fills once the maximum becomes real', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[poolRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(3);
+	});
+
+	it('leaves a pool that was spent down to zero alone', () => {
+		const spent = foundry.utils.deepClone(storedAtZero);
+		spent.nimble.chargePools['pilfered-power'].max = 3;
+
+		const actor = createMockActor([createMockItem('item-1', 'Pilfered Power', [poolRule], spent)], {
+			dexterity: 3,
+		});
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+
+	it('does not re-seed a spent pool when its maximum returns', () => {
+		// Seeded while the maximum was real, spent down to nothing, then the
+		// maximum resolved to zero for a while and came back.
+		const spentThenLapsed = {
+			nimble: {
+				chargePools: {
+					'pilfered-power': {
+						...storedAtZero.nimble.chargePools['pilfered-power'],
+						seeded: true,
+					},
+				},
+			},
+		};
+
+		const actor = createMockActor(
+			[createMockItem('item-1', 'Pilfered Power', [poolRule], spentThenLapsed)],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+
+	it('writes a pool whose only change is the seeded marker', () => {
+		const spent = foundry.utils.deepClone(storedAtZero);
+		spent.nimble.chargePools['pilfered-power'].max = 3;
+
+		const actor = createMockActor([createMockItem('item-1', 'Pilfered Power', [poolRule], spent)], {
+			dexterity: 3,
+		});
+
+		const stored = getChargePoolMapFromActor(actor);
+		const effective = buildEffectiveChargePoolMap(actor);
+		const [storedPool] = Object.values(stored);
+		const [effectivePool] = Object.values(effective);
+
+		expect(storedPool.seeded).toBeUndefined();
+		expect({ ...storedPool, seeded: effectivePool.seeded }).toEqual(effectivePool);
+		expect(areChargePoolMapsEqual(stored, effective)).toBe(false);
+	});
+
+	it('records the seeded marker once the maximum is real', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[poolRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		expect(Object.values(buildEffectiveChargePoolMap(actor))[0].seeded).toBe(true);
+	});
+
+	it('seeds an empty pool at zero when that is what the rule asks for', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[{ ...poolRule, initial: 'zero' } as MockRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
 	});
 });

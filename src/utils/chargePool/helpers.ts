@@ -78,10 +78,10 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 }
 
 /**
- * Only an explicit `true` hides a pool, so stored state and rule data that
- * predate the field keep rendering.
+ * Only an explicit `true` sets one of a pool's display flags, so stored state
+ * and rule data that predate a flag keep rendering where they always did.
  */
-function toHiddenFlag(value: unknown): boolean {
+function toPoolDisplayFlag(value: unknown): boolean {
 	return value === true;
 }
 
@@ -90,6 +90,14 @@ function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	const trimmed = value.trim() as ChargePoolDieSize;
 	if (VALID_DIE_SIZES.has(trimmed)) return trimmed;
 	return null;
+}
+
+/**
+ * Reads the stored seeding marker. Stays undefined when absent so a pool
+ * written before the marker existed falls back to its maximum.
+ */
+function toSeededMarker(value: unknown): boolean | undefined {
+	return typeof value === 'boolean' ? value : undefined;
 }
 
 function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
@@ -128,7 +136,9 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
 		}
@@ -176,7 +186,9 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
 		}
@@ -377,7 +389,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
-				hidden: toHiddenFlag(poolRule.hidden),
+				hidden: toPoolDisplayFlag(poolRule.hidden),
+				showAsResource: toPoolDisplayFlag(poolRule.showAsResource),
 				initial,
 				recoveries,
 			};
@@ -399,7 +412,16 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	for (const definition of definitions) {
 		const existingPool = existingPools[definition.id];
 		const defaultCurrent = definition.initial === 'zero' ? 0 : definition.max;
-		const current = clampCurrentToMax(existingPool?.current ?? defaultCurrent, definition.max);
+		// A pool takes its initial value until it has been seeded. The marker is
+		// stored rather than derived from the maximum, so a maximum that falls to
+		// zero and returns does not re-seed a pool the player has already spent.
+		// Pools stored before the marker existed are read as seeded when they held
+		// a maximum.
+		const wasSeeded = existingPool !== undefined && (existingPool.seeded ?? existingPool.max > 0);
+		const current = clampCurrentToMax(
+			wasSeeded ? existingPool.current : defaultCurrent,
+			definition.max,
+		);
 
 		nextPools[definition.id] = {
 			id: definition.id,
@@ -410,11 +432,13 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			label: definition.label,
 			current,
 			max: definition.max,
+			seeded: wasSeeded || definition.max > 0,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
 			// The rule is the source of truth for visibility: flipping the flag on the
 			// rule re-hides or re-reveals a pool that is already tracked in storage.
 			hidden: definition.hidden,
+			showAsResource: definition.showAsResource,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -773,6 +797,8 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&
+		left.showAsResource === right.showAsResource &&
+		left.seeded === right.seeded &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }

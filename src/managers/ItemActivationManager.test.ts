@@ -2023,6 +2023,50 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(manager.upcastResult).toBeNull();
 		});
 
+		it('refuses a mana caster a spell above the unlocked tier even when it does not scale', async () => {
+			mockActor.system.resources = {
+				mana: { current: 10, max: 10 },
+				highestUnlockedSpellTier: 1,
+			};
+			mockItem.type = 'spell';
+			mockItem.system.tier = 3;
+			mockItem.system.scaling = { mode: 'none' };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([]);
+
+			const result = await manager.getData();
+
+			expect(result).toEqual({ activation: null, rolls: null });
+			expect(MockSpellUpcastDialog).not.toHaveBeenCalled();
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(ui.notifications?.warn).toHaveBeenCalledWith(
+				'This spell is above your highest unlocked spell tier (1), so you cannot cast it.',
+			);
+		});
+
+		it('lets an actor with no tier ladder cast a tiered spell at its own tier', async () => {
+			expect(mockActor.system.resources).toBeUndefined();
+			mockItem.type = 'spell';
+			mockItem.system.tier = 3;
+			mockItem.system.scaling = { mode: 'none' };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([]);
+
+			const result = await manager.getData();
+
+			expect(result.activation).not.toBeNull();
+			expect(manager.upcastResult).toBeNull();
+			expect(ui.notifications?.warn).not.toHaveBeenCalled();
+		});
+
 		describe('pinned cast tier', () => {
 			function pinCastTier(unlockedTier: number) {
 				const pinningClass = {
@@ -2094,7 +2138,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(result).toEqual({ activation: null, rolls: null });
 				expect(manager.upcastResult).toBeNull();
 				expect(ui.notifications?.error).toHaveBeenCalledWith(
-					expect.stringContaining('Upcast failed'),
+					'Cannot spend more mana than your highest unlocked spell tier (1).',
 				);
 			});
 

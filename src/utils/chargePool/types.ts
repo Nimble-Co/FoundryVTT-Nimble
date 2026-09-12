@@ -44,12 +44,25 @@ type ChargePoolState = {
 	 * the pool the player actually manages.
 	 */
 	hidden: boolean;
+	/**
+	 * Whether the pool has already taken its initial value. A pool whose maximum
+	 * has never resolved above zero is not seeded yet, so it takes `initial` when
+	 * the maximum first appears instead of reading a stored zero as spent. Absent
+	 * on pools stored before the marker existed.
+	 */
+	seeded?: boolean;
+	/**
+	 * Promotes the pool to the sheet header alongside the other standing
+	 * resources, in addition to the badge on the item that grants it. `hidden`
+	 * wins: a pool left out of the readouts never reaches the header.
+	 */
+	showAsResource: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
 type ChargePoolMap = Record<string, ChargePoolState>;
 
-type ChargePoolDefinition = Omit<ChargePoolState, 'current'> & {
+type ChargePoolDefinition = Omit<ChargePoolState, 'current' | 'seeded'> & {
 	initial: ChargePoolInitialMode;
 };
 
@@ -65,6 +78,7 @@ type ChargePoolRuleLike = {
 	initial?: string;
 	dieSize?: string | null;
 	hidden?: boolean;
+	showAsResource?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;

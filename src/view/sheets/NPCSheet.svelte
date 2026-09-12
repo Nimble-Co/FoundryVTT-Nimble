@@ -18,7 +18,7 @@
 	): number {
 		const safeCurrentHP = typeof currentHP === 'number' ? currentHP : 0;
 		const safeMaxHP = typeof maxHP === 'number' && maxHP > 0 ? maxHP : 1;
-		return Math.clamp(0, Math.round((safeCurrentHP / safeMaxHP) * 100), 100);
+		return Math.clamp(Math.round((safeCurrentHP / safeMaxHP) * 100), 0, 100);
 	}
 
 	function updateCurrentHP(newValue: number): void {
