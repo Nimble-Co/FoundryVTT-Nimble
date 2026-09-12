@@ -4,6 +4,7 @@ import { MigrationBase } from '../MigrationBase.js';
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
 const CLASS_SOURCE_ID = 'Compendium.nimble.nimble-classes.Item.xfwQiIupABgyzq3o';
+const CLASS_IDENTIFIER = 'shadowmancer';
 
 /** The spell cost declaration the pack now ships on the Shadowmancer class. */
 const CLASS_SPELLCASTING = {
@@ -109,7 +110,7 @@ class Migration052ShadowmancerPilferedPower extends MigrationBase {
 	override async updateActor(source: any): Promise<void> {
 		const classes = (source.items ?? []).filter((item: any) => item?.type === 'class');
 		if (classes.length < 1) return;
-		if (!classes.every((item: any) => item?.system?.identifier === 'shadowmancer')) return;
+		if (!classes.every((item: any) => this.#isShadowmancerClass(item))) return;
 
 		const mana = source.system?.resources?.mana;
 		if (!(mana?.current > 0)) return;
@@ -134,11 +135,23 @@ class Migration052ShadowmancerPilferedPower extends MigrationBase {
 		}
 	}
 
+	/**
+	 * A class copied into a world can lose its compendium source id, and its
+	 * identifier field can be blank. The name is read in that case only, the
+	 * same fallback the item's `identifier` getter makes.
+	 */
+	#isShadowmancerClass(source: any): boolean {
+		if (toSnapshotId(this.getSourceId(source)) === CLASS_SOURCE_ID) return true;
+
+		const identifier = source.system?.identifier ?? '';
+		if (identifier.length > 0) return identifier === CLASS_IDENTIFIER;
+
+		const name = typeof source.name === 'string' ? source.name.trim().toLowerCase() : '';
+		return name === CLASS_IDENTIFIER;
+	}
+
 	#updateClass(source: any): void {
-		const sourceId = toSnapshotId(this.getSourceId(source));
-		const matchesId = sourceId === CLASS_SOURCE_ID;
-		const matchesIdentifier = source.system?.identifier === 'shadowmancer';
-		if (!matchesId && !matchesIdentifier) return;
+		if (!this.#isShadowmancerClass(source)) return;
 
 		const system = (source.system ??= {} as Record<string, unknown>);
 		const alreadyDeclared =

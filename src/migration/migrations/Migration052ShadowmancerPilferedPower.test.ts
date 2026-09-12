@@ -58,6 +58,29 @@ describe('Migration052ShadowmancerPilferedPower.updateActor', () => {
 		expect(source.system.resources.mana.current).toBe(3);
 		expect(log).not.toHaveBeenCalled();
 	});
+
+	it('clears mana for a copied class that kept the name but lost the identifier', async () => {
+		const source = {
+			items: [{ type: 'class', name: 'Shadowmancer', system: { identifier: '' } }],
+			system: { resources: { mana: { current: 3 } } },
+		};
+
+		await migration.updateActor(source);
+
+		expect(source.system.resources.mana.current).toBe(0);
+	});
+
+	it('skips a class that only shares the name', async () => {
+		const source = {
+			items: [{ type: 'class', name: 'Shadowmancer', system: { identifier: 'shadow-knight' } }],
+			system: { resources: { mana: { current: 3 } } },
+		};
+
+		await migration.updateActor(source);
+
+		expect(source.system.resources.mana.current).toBe(3);
+		expect(log).not.toHaveBeenCalled();
+	});
 });
 
 describe('Migration052ShadowmancerPilferedPower.updateItem', () => {
@@ -100,5 +123,17 @@ describe('Migration052ShadowmancerPilferedPower.updateItem', () => {
 		expect(source.system.rules[0].addRefills).toEqual([
 			expect.objectContaining({ trigger: 'encounterStart', mode: 'add' }),
 		]);
+	});
+
+	it('declares the spell cost on a copied class that kept the name but lost the identifier', async () => {
+		const source = structuredClone(shadowmancerClass) as any;
+		delete source.system.spellcasting;
+		source.system.identifier = '';
+		source.system.mana.formula = '(max(@dexterity, 0))';
+
+		await migration.updateItem(source);
+
+		expect(source.system.spellcasting).toEqual(shadowmancerClass.system.spellcasting);
+		expect(source.system.mana.formula).toBe('');
 	});
 });
