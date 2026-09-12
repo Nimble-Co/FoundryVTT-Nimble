@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildCreatorCreditHtml } from './creatorCredit.js';
 import { toActorData } from './NimbleNexusParser.js';
 import type { NimbleNexusCreator, NimbleNexusMonster } from './types.js';
 
@@ -9,11 +8,15 @@ beforeEach(() => {
 	vi.stubGlobal('foundry', {
 		utils: {
 			randomID: () => `mock-id-${++idCounter}`,
+			escapeHTML: (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;'),
 		},
 	});
 });
 
 const creator: NimbleNexusCreator = { username: 'jao7371', displayName: '(jao)' };
+
+const CREDIT =
+	'<p><em>Created by <a href="https://nimble.nexus/u/jao7371">(jao)</a> on Nimble Nexus.</em></p>';
 
 function monster(description: string, withCreator: boolean): NimbleNexusMonster {
 	return {
@@ -43,13 +46,13 @@ describe('toActorData creator credit', () => {
 	it('puts the credit above an existing description', () => {
 		const result = descriptionOf(toActorData(monster('<p>A big lizard.</p>', true)));
 
-		expect(result).toBe(`${buildCreatorCreditHtml(creator)}<hr /><p>A big lizard.</p>`);
+		expect(result).toBe(`${CREDIT}<hr /><p>A big lizard.</p>`);
 	});
 
 	it('uses the credit as the whole description when the monster has none', () => {
 		const result = descriptionOf(toActorData(monster('', true)));
 
-		expect(result).toBe(buildCreatorCreditHtml(creator));
+		expect(result).toBe(CREDIT);
 	});
 
 	it('leaves the description alone when no creator was side-loaded', () => {

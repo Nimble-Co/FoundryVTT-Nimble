@@ -5,21 +5,9 @@
  * licence notice, so it must never claim rights or terms.
  */
 
+import localize from '#utils/localize.js';
 import { NIMBLE_NEXUS_BASE_URL } from './constants.js';
 import type { NimbleNexusCreator } from './types.js';
-
-/**
- * Escape text for inclusion in an HTMLField.
- * Creator names come from a third party, so they are never trusted.
- */
-function escapeHtml(value: string): string {
-	return value
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-		.replaceAll('"', '&quot;')
-		.replaceAll("'", '&#39;');
-}
 
 /**
  * The name to credit: the display name, else the username, else nothing.
@@ -29,20 +17,18 @@ export function getCreatorName(creator?: NimbleNexusCreator): string {
 	return creator?.displayName?.trim() || creator?.username?.trim() || '';
 }
 
-/**
- * Build the credit line, or an empty string when there is nobody to credit.
- */
-export function buildCreatorCreditHtml(creator?: NimbleNexusCreator): string {
+function buildCreatorCreditHtml(creator?: NimbleNexusCreator): string {
 	const name = getCreatorName(creator);
 	if (!name) return '';
 
 	const username = creator?.username?.trim() ?? '';
-	const escapedName = escapeHtml(name);
+	// Creator names are third-party text entering an HTMLField.
+	const escapedName = foundry.utils.escapeHTML(name);
 	const credited = username
 		? `<a href="${NIMBLE_NEXUS_BASE_URL}/u/${encodeURIComponent(username)}">${escapedName}</a>`
 		: escapedName;
 
-	return `<p><em>Created by ${credited} on Nimble Nexus.</em></p>`;
+	return `<p><em>${localize('NIMBLE.actorImport.creatorCredit', { creator: credited })}</em></p>`;
 }
 
 /**

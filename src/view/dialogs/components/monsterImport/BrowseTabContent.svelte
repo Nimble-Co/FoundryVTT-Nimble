@@ -89,7 +89,9 @@
 						<span class="actor-import-monster-kind">{monster.attributes.kind}</span>
 					{/if}
 					{#if creatorName}
-						<span class="actor-import-monster-creator">by {creatorName}</span>
+						<span class="actor-import-monster-creator">
+							{game.i18n.format(actorImport.creatorPrefix, { creator: creatorName })}
+						</span>
 					{/if}
 				</div>
 			</label>
