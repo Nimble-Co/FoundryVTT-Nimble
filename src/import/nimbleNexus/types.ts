@@ -2,6 +2,8 @@
  * TypeScript interfaces for Nimble Nexus monster import
  */
 
+import type { ImportCreator } from '../importCredit.js';
+
 // Size categories matching both API and FoundryVTT
 export type MonsterSize = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
 
@@ -130,10 +132,7 @@ export interface NimbleNexusMonsterRelationships {
 /**
  * A Nimble Nexus user who published content on the site
  */
-export interface NimbleNexusCreator {
-	username: string;
-	displayName: string;
-}
+export type NimbleNexusCreator = ImportCreator;
 
 /**
  * Any Nimble Nexus resource that names a creator. Items and collections carry

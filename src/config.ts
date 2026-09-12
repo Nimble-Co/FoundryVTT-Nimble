@@ -154,7 +154,6 @@ const characterCreation = {
 
 const actorImport = {
 	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
-	creatorCredit: 'NIMBLE.actorImport.creatorCredit',
 	creatorPrefix: 'NIMBLE.actorImport.creatorPrefix',
 	jsonButtonLabel: 'NIMBLE.actorImport.jsonButtonLabel',
 	dialogTitle: 'NIMBLE.actorImport.dialogTitle',

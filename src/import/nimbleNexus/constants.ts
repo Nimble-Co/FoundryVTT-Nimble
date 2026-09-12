@@ -20,9 +20,9 @@ export const NIMBLE_NEXUS_API_URL = `${NIMBLE_NEXUS_BASE_URL}/api`;
 export const NIMBLE_NEXUS_STORAGE_URL = 'https://nimble-nexus.fly.storage.tigris.dev';
 
 /**
- * Relationships the /monsters endpoints can side-load. An `include` value the
- * endpoint does not support makes the API answer 400, so each endpoint declares
- * its own set rather than sharing one list.
+ * Relationships the /monsters endpoints can side-load. An `include` value an
+ * endpoint does not support makes the API answer 400, so a request keeps only
+ * the values listed here. Another content type needs its own list.
  */
 export const MONSTER_INCLUDES: NimbleNexusInclude[] = ['families', 'creator'];
 

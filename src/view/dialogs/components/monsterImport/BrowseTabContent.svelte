@@ -1,6 +1,7 @@
 <script>
 	import { getMonsterPreviewImageUrl } from '../../../../import/nimbleNexus/constants.js';
 	import { getCreatorName } from '../../../../import/importCredit.js';
+	import localize from '../../../../utils/localize.js';
 
 	const { actorImport } = CONFIG.NIMBLE;
 
@@ -90,7 +91,7 @@
 					{/if}
 					{#if creatorName}
 						<span class="actor-import-monster-creator">
-							{game.i18n.format(actorImport.creatorPrefix, { creator: creatorName })}
+							{localize(actorImport.creatorPrefix, { creator: creatorName })}
 						</span>
 					{/if}
 				</div>

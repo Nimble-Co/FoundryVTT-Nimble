@@ -13,10 +13,6 @@
 
 	let { actor } = $props();
 
-	let creditHtml = $derived(
-		buildCreditHtml(actor.reactive.flags?.[SYSTEM_ID]?.[IMPORT_CREDIT_FLAG]),
-	);
-
 	function getHitPointPercentage(
 		currentHP: number | null | undefined,
 		maxHP: number | null | undefined,
@@ -103,6 +99,7 @@
 
 	// Flags
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
+	let creditHtml = $derived(buildCreditHtml(flags?.[IMPORT_CREDIT_FLAG]));
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
