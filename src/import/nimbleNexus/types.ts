@@ -108,12 +108,42 @@ export interface NimbleNexusFamilyRef {
 }
 
 /**
+ * Reference to the user who published a piece of content
+ */
+export interface NimbleNexusCreatorRef {
+	type: 'users';
+	id: string;
+}
+
+/**
  * Monster relationships
  */
 export interface NimbleNexusMonsterRelationships {
 	families?: {
 		data: NimbleNexusFamilyRef[];
 	};
+	creator?: {
+		data: NimbleNexusCreatorRef | null;
+	};
+}
+
+/**
+ * A Nimble Nexus user who published content on the site
+ */
+export interface NimbleNexusCreator {
+	username: string;
+	displayName: string;
+	imageUrl?: string;
+}
+
+/**
+ * A resource from the top-level `included` array of a JSON:API response.
+ * `included` mixes resource types, so callers must narrow on `type`.
+ */
+export interface NimbleNexusIncludedResource {
+	type: string;
+	id: string;
+	attributes?: Record<string, unknown>;
 }
 
 /**
@@ -124,6 +154,11 @@ export interface NimbleNexusMonster {
 	id: string;
 	attributes: NimbleNexusMonsterAttributes;
 	relationships?: NimbleNexusMonsterRelationships;
+	/**
+	 * Resolved from the response `included` array by the API client.
+	 * This is not part of the wire format.
+	 */
+	creator?: NimbleNexusCreator;
 }
 
 /**
@@ -140,6 +175,7 @@ export interface NimbleNexusLinks {
 export interface NimbleNexusApiResponse {
 	data: NimbleNexusMonster[];
 	links?: NimbleNexusLinks;
+	included?: NimbleNexusIncludedResource[];
 }
 
 /**
@@ -147,6 +183,7 @@ export interface NimbleNexusApiResponse {
  */
 export interface NimbleNexusSingleMonsterResponse {
 	data: NimbleNexusMonster;
+	included?: NimbleNexusIncludedResource[];
 }
 
 /**
@@ -171,6 +208,12 @@ export type MonsterRoleFilter =
 	| 'support';
 
 /**
+ * Relationships the API can side-load into `included`.
+ * An unsupported value makes the API answer 400, so it is a closed set.
+ */
+export type NimbleNexusInclude = 'families' | 'creator';
+
+/**
  * Search/filter options for the API
  */
 export interface NimbleNexusApiSearchOptions {
@@ -179,7 +222,7 @@ export interface NimbleNexusApiSearchOptions {
 	limit?: number;
 	cursor?: string;
 	sort?: 'name' | '-name' | 'createdAt' | '-createdAt' | 'level' | '-level';
-	include?: 'families';
+	include?: NimbleNexusInclude[];
 	monsterType?: MonsterTypeFilter;
 	role?: MonsterRoleFilter;
 }
