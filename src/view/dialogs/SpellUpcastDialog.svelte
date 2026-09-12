@@ -289,8 +289,6 @@
 		class="nimble-button"
 		data-button-variant="basic"
 		onclick={() => {
-			console.log('[SpellUpcastDialog] Cast button clicked');
-
 			// Validate situational modifiers
 			if (situationalModifiers !== '') {
 				const isValid = Roll.validate(situationalModifiers);
