@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import shadowmancerClass from '../../../packs/classes/core/shadowmancer.json';
 import pilferedPower from '../../../packs/classFeatures/core/shadowmancer/shadowmancer-progression/pilfered-power.json';
 import heartOfBurningFire from '../../../packs/classFeatures/core/shadowmancer/shadowmancer-subclasses/pact-of-the-red-dragon/heart-of-burning-fire.json';
-import { Migration049ShadowmancerPilferedPower } from './Migration049ShadowmancerPilferedPower.js';
+import { Migration052ShadowmancerPilferedPower } from './Migration052ShadowmancerPilferedPower.js';
 
 function shadowmancer(mana: Record<string, unknown> | undefined) {
 	return {
@@ -11,8 +11,8 @@ function shadowmancer(mana: Record<string, unknown> | undefined) {
 	};
 }
 
-describe('Migration049ShadowmancerPilferedPower.updateActor', () => {
-	const migration = new Migration049ShadowmancerPilferedPower();
+describe('Migration052ShadowmancerPilferedPower.updateActor', () => {
+	const migration = new Migration052ShadowmancerPilferedPower();
 	const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 	afterEach(() => log.mockClear());
@@ -60,8 +60,8 @@ describe('Migration049ShadowmancerPilferedPower.updateActor', () => {
 	});
 });
 
-describe('Migration049ShadowmancerPilferedPower.updateItem', () => {
-	const migration = new Migration049ShadowmancerPilferedPower();
+describe('Migration052ShadowmancerPilferedPower.updateItem', () => {
+	const migration = new Migration052ShadowmancerPilferedPower();
 	vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 	function withoutRules(packItem: object): any {

@@ -92,10 +92,10 @@ function ruleId(rule: RuleSource): string {
  * carrying the same id is never added twice, and the class declaration is
  * only written when the pool identifier is not already set.
  */
-class Migration049ShadowmancerPilferedPower extends MigrationBase {
-	static override readonly version = 49;
+class Migration052ShadowmancerPilferedPower extends MigrationBase {
+	static override readonly version = 52;
 
-	override readonly version = Migration049ShadowmancerPilferedPower.version;
+	override readonly version = Migration052ShadowmancerPilferedPower.version;
 
 	/**
 	 * Clears the mana the Shadowmancer never had.
@@ -178,4 +178,4 @@ class Migration049ShadowmancerPilferedPower extends MigrationBase {
 	}
 }
 
-export { Migration049ShadowmancerPilferedPower };
+export { Migration052ShadowmancerPilferedPower };
