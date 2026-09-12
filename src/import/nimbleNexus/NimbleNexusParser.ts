@@ -11,6 +11,7 @@ import {
 	SIZE_TO_TOKEN_DIMENSIONS,
 	saveValueToRollMode,
 } from './constants.js';
+import { withCreatorCredit } from './creatorCredit.js';
 import { buildEffectTree, parseRangeReach } from './descriptionParser.js';
 import type {
 	ActorType,
@@ -511,7 +512,7 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 				sizeCategory: attributes.size,
 				movement,
 			},
-			description: attributes.description || '',
+			description: withCreatorCredit(attributes.description || '', monster.creator),
 			details: {
 				creatureType: attributes.kind || '',
 				level: levelToString(attributes.level),
