@@ -112,10 +112,19 @@
 			}
 		},
 		"mana": {
-			"formula": "(max(@dexterity, 0))",
+			"formula": "",
 			"recovery": "safeRest"
 		},
 		"resources": [],
+		"spellcasting": {
+			"castAtHighestTier": true,
+			"cost": {
+				"poolIdentifier": "pilfered-power",
+				"amount": "1",
+				"overdraftConsequence": "halfMaxHpDamage",
+				"overdraftMaxLevel": 11
+			}
+		},
 		"weaponProficiencies": [
 			"Blades",
 			"Wands"

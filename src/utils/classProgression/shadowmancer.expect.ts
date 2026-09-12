@@ -39,8 +39,10 @@ export const report: Report = {
 	keyAbilities: ['INT', 'DEX'],
 	savingThrows: { adv: 'INT', dis: 'WILL' },
 	startingGear: ["Adventurer's Garb", 'Sickle', 'Shovel'],
-	caster: true,
-	manaFormula: '(max(@dexterity, 0))',
+	// The Shadowmancer has no mana. Pilfered Power is a charge pool on the
+	// level 2 feature, and the class declares a pool spell cost instead.
+	caster: false,
+	manaFormula: '',
 	subclasses: ['Pact Of The Abyssal Depths', 'Pact Of The Red Dragon', 'Reaver'],
 	subclassSelectLevel: 1,
 	levels: [

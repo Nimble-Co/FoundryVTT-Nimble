@@ -6,7 +6,28 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "pilfered-power-use-pool",
+				"identifier": "pilfered-power",
+				"label": "Pilfered Power",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(@dexterity, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

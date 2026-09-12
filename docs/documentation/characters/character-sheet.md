@@ -64,7 +64,25 @@ Your known spells. When you know spells from two or more schools, a school filte
 
 Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
 
+Each spell card shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead, and their cards show that pool by name.
+
 ![The spells tab with the school filter and a spell card visible](/images/documentation/character-sheet-spells-tab.png)
+
+#### Casting without enough left to pay
+
+A class that pays from a pool may also declare what happens when you cast anyway with the pool empty. The Shadowmancer is the example that ships with the system: Pilfered Power is a pool of uses equal to your Dexterity, spells always cast at your highest unlocked tier for one use, and casting on an empty pool asks you to confirm and then costs you half your maximum hit points.
+
+::: warning Greedy Pact is not automated
+From Shadowmancer level 12 Greedy Pact replaces that fixed penalty with a saving throw that has three different outcomes, one of which changes the tier the spell is cast at. The system cannot express that yet, so from Shadowmancer level 12 it stops applying the penalty instead of applying the wrong one. Levels in other classes do not count toward this. The confirmation still offers the overdraw and says the cost is settled at the table. Roll Greedy Pact by hand and apply the result yourself.
+:::
+
+::: warning Heart of Burning Fire returns one use per combat and does not expire
+Pact of the Red Dragon's Heart of Burning Fire returns a use of Pilfered Power when you roll Initiative. The system gives that use once, when the GM starts the combat, so rolling Initiative again does not give a second use. A character added to a combat that is already running does not get the use; give it by hand. The rules also say that use expires at the end of combat if you do not spend it; the system keeps it until your next Safe Rest, because it cannot yet tell a temporary use apart from one you already had. Take the use away at the end of combat if it went unspent.
+:::
+
+::: warning Hollow One and free casts are not automated
+The system does not know when a use of Pilfered Power should not be spent. The Reaver subclass's Hollow One cuts you off from your patron, so you can no longer cast tiered spells using Pilfered Power; the sheet still shows the pool and still lets you cast. Three features grant a cast without Pilfering Power: We'll ALL Burn! (Pact of the Red Dragon) for Pyroclasm when you include yourself in the damage, Shadowfrost (Pact of the Abyssal Depths) for Cryosleep or Rimeblades when you expend 10 temp HP, and the Hungering Shadows invocation for the next tiered spell after one of your shadows would crit. The sheet spends a use for those casts anyway. Handle both at the table: a Reaver does not cast tiered spells from the pool, and after a free cast add the use back by hand.
+:::
 
 ### Bio
 
