@@ -70,7 +70,7 @@ describe('buildImportCredit', () => {
 describe('buildCreditHtml', () => {
 	it('names the source and links the creator profile', () => {
 		expect(buildCreditHtml({ source: 'nimble-nexus', creator })).toBe(
-			'Created by <a href="https://nimble.nexus/u/jao7371">(jao)</a> on Nimble Nexus.',
+			'Created by <a href="https://nimble.nexus/u/jao7371">(jao)</a> on Nimble Nexus',
 		);
 	});
 
@@ -81,7 +81,7 @@ describe('buildCreditHtml', () => {
 				creator: { username: 'antlers6109', displayName: '' },
 			}),
 		).toBe(
-			'Created by <a href="https://nimble.nexus/u/antlers6109">antlers6109</a> on Nimble Nexus.',
+			'Created by <a href="https://nimble.nexus/u/antlers6109">antlers6109</a> on Nimble Nexus',
 		);
 	});
 
@@ -91,7 +91,7 @@ describe('buildCreditHtml', () => {
 				source: 'nimble-nexus',
 				creator: { username: '', displayName: 'Some Body' },
 			}),
-		).toBe('Created by Some Body on Nimble Nexus.');
+		).toBe('Created by Some Body on Nimble Nexus');
 	});
 
 	it('escapes HTML in the name', () => {
@@ -100,7 +100,7 @@ describe('buildCreditHtml', () => {
 				source: 'nimble-nexus',
 				creator: { username: '', displayName: '<img src=x onerror="alert(1)">' },
 			}),
-		).toBe('Created by &lt;img src=x onerror=&quot;alert(1)&quot;&gt; on Nimble Nexus.');
+		).toBe('Created by &lt;img src=x onerror=&quot;alert(1)&quot;&gt; on Nimble Nexus');
 	});
 
 	it('url-encodes the username in the profile link', () => {
