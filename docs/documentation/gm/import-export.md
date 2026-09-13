@@ -59,7 +59,7 @@ Each monster arrives as the right actor type automatically (legendary monsters b
 
 The browse list shows who published each monster, and every import keeps that name. The credit then sits in the monster's sheet header, beside the level and size line, on every tab:
 
-> *Created by [(jao)](https://nimble.nexus/u/jao7371) on Nimble Nexus*
+> *Created by [(user)](https://nimble.nexus/u/user) on Nimble Nexus*
 
 It is a courtesy to the person who made the monster, not a licence notice. The name is a snapshot taken at the moment you imported, so it never updates afterwards. The credit is stored on the actor rather than written into its description, so it survives an edit to the notes and it travels with the actor when you duplicate or export it.
 
