@@ -19,19 +19,19 @@ beforeEach(() => {
 			.replaceAll("'", '&#39;');
 });
 
-const creator: ImportCreator = { username: 'jao7371', displayName: '(jao)' };
+const creator: ImportCreator = { username: 'sample-user', displayName: 'Sample User' };
 
 describe('getCreatorName', () => {
 	it('prefers the display name', () => {
-		expect(getCreatorName(creator)).toBe('(jao)');
+		expect(getCreatorName(creator)).toBe('Sample User');
 	});
 
 	it('falls back to the username when the display name is blank', () => {
-		expect(getCreatorName({ username: 'jao7371', displayName: '' })).toBe('jao7371');
+		expect(getCreatorName({ username: 'sample-user', displayName: '' })).toBe('sample-user');
 	});
 
 	it('treats a whitespace-only display name as blank', () => {
-		expect(getCreatorName({ username: 'jao7371', displayName: '   ' })).toBe('jao7371');
+		expect(getCreatorName({ username: 'sample-user', displayName: '   ' })).toBe('sample-user');
 	});
 
 	it('returns an empty string when both names are blank', () => {
@@ -47,7 +47,7 @@ describe('buildImportCredit', () => {
 	it('records the source id, never the label', () => {
 		expect(buildImportCredit('nimble-nexus', creator)).toEqual({
 			source: 'nimble-nexus',
-			creator: { username: 'jao7371', displayName: '(jao)' },
+			creator: { username: 'sample-user', displayName: 'Sample User' },
 		});
 	});
 
@@ -70,7 +70,7 @@ describe('buildImportCredit', () => {
 describe('buildCreditHtml', () => {
 	it('names the source and links the creator profile', () => {
 		expect(buildCreditHtml({ source: 'nimble-nexus', creator })).toBe(
-			'Created by <a href="https://nimble.nexus/u/jao7371">(jao)</a> on Nimble Nexus',
+			'Created by <a href="https://nimble.nexus/u/sample-user">Sample User</a> on Nimble Nexus',
 		);
 	});
 
@@ -78,11 +78,9 @@ describe('buildCreditHtml', () => {
 		expect(
 			buildCreditHtml({
 				source: 'nimble-nexus',
-				creator: { username: 'antlers6109', displayName: '' },
+				creator: { username: 'other-user', displayName: '' },
 			}),
-		).toBe(
-			'Created by <a href="https://nimble.nexus/u/antlers6109">antlers6109</a> on Nimble Nexus',
-		);
+		).toBe('Created by <a href="https://nimble.nexus/u/other-user">other-user</a> on Nimble Nexus');
 	});
 
 	it('drops the link when the username is blank', () => {

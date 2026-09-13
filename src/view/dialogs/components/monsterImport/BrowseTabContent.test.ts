@@ -36,15 +36,15 @@ function renderBrowseTab(searchResults: ReturnType<typeof monster>[]) {
 
 describe('BrowseTabContent creator credit', () => {
 	it('credits the creator by display name', () => {
-		renderBrowseTab([monster('m1', { username: 'jao7371', displayName: '(jao)' })]);
+		renderBrowseTab([monster('m1', { username: 'sample-user', displayName: 'Sample User' })]);
 
-		expect(screen.getByText('by (jao)')).toBeTruthy();
+		expect(screen.getByText('by Sample User')).toBeTruthy();
 	});
 
 	it('falls back to the username when the display name is blank', () => {
-		renderBrowseTab([monster('m1', { username: 'antlers6109', displayName: '' })]);
+		renderBrowseTab([monster('m1', { username: 'other-user', displayName: '' })]);
 
-		expect(screen.getByText('by antlers6109')).toBeTruthy();
+		expect(screen.getByText('by other-user')).toBeTruthy();
 	});
 
 	it('shows no credit when the monster has no creator', () => {

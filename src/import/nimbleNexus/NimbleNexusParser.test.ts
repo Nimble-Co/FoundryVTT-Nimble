@@ -14,7 +14,7 @@ beforeEach(() => {
 	});
 });
 
-const creator: NimbleNexusCreator = { username: 'jao7371', displayName: '(jao)' };
+const creator: NimbleNexusCreator = { username: 'sample-user', displayName: 'Sample User' };
 
 function monster(description: string, withCreator: boolean): NimbleNexusMonster {
 	return {
@@ -49,7 +49,7 @@ describe('toActorData creator credit', () => {
 
 		expect(flags?.[SYSTEM_ID]?.[IMPORT_CREDIT_FLAG]).toEqual({
 			source: 'nimble-nexus',
-			creator: { username: 'jao7371', displayName: '(jao)' },
+			creator: { username: 'sample-user', displayName: 'Sample User' },
 		});
 	});
 

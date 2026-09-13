@@ -21,8 +21,8 @@ const user: NimbleNexusIncludedResource = {
 	type: 'users',
 	id: 'user-1',
 	attributes: {
-		username: 'jao7371',
-		displayName: '(jao)',
+		username: 'sample-user',
+		displayName: 'Sample User',
 		imageUrl: 'https://cdn.example/avatar.png',
 	},
 };
@@ -79,7 +79,10 @@ describe('searchMonsters creator resolution', () => {
 
 		const response = await searchMonsters();
 
-		expect(response.data[0].creator).toEqual({ username: 'jao7371', displayName: '(jao)' });
+		expect(response.data[0].creator).toEqual({
+			username: 'sample-user',
+			displayName: 'Sample User',
+		});
 	});
 
 	it('shares one included creator across every monster that references it', async () => {
@@ -87,7 +90,7 @@ describe('searchMonsters creator resolution', () => {
 
 		const response = await searchMonsters();
 
-		expect(response.data.map((m) => m.creator?.username)).toEqual(['jao7371', 'jao7371']);
+		expect(response.data.map((m) => m.creator?.username)).toEqual(['sample-user', 'sample-user']);
 	});
 
 	it('leaves the creator unset when the monster has no relationship', async () => {
@@ -161,6 +164,6 @@ describe('getMonsterById', () => {
 
 		const result = await getMonsterById('m1');
 
-		expect(result.creator?.username).toBe('jao7371');
+		expect(result.creator?.username).toBe('sample-user');
 	});
 });
