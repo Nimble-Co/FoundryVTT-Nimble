@@ -39,8 +39,8 @@ function mockFetchOnce(body: unknown): ReturnType<typeof vi.fn> {
 	return fetchMock;
 }
 
-function requestedUrl(fetchMock: ReturnType<typeof vi.fn>): string {
-	return decodeURIComponent(fetchMock.mock.calls[0][0] as string);
+function requestedInclude(fetchMock: ReturnType<typeof vi.fn>): string | null {
+	return new URL(fetchMock.mock.calls[0][0] as string).searchParams.get('include');
 }
 
 afterEach(() => {
@@ -53,7 +53,7 @@ describe('searchMonsters include handling', () => {
 
 		await searchMonsters();
 
-		expect(requestedUrl(fetchMock)).toContain('include=creator');
+		expect(requestedInclude(fetchMock)).toBe('creator');
 	});
 
 	it('keeps a caller-supplied include and adds creator to it', async () => {
@@ -61,7 +61,7 @@ describe('searchMonsters include handling', () => {
 
 		await searchMonsters({ include: ['families'] });
 
-		expect(requestedUrl(fetchMock)).toContain('include=families,creator');
+		expect(requestedInclude(fetchMock)).toBe('families,creator');
 	});
 
 	it('does not ask for creator twice', async () => {
@@ -69,7 +69,7 @@ describe('searchMonsters include handling', () => {
 
 		await searchMonsters({ include: ['creator'] });
 
-		expect(requestedUrl(fetchMock)).toContain('include=creator');
+		expect(requestedInclude(fetchMock)).toBe('creator');
 	});
 });
 
@@ -153,7 +153,7 @@ describe('getMonsterById', () => {
 
 		await getMonsterById('m1');
 
-		expect(requestedUrl(fetchMock)).toContain('include=creator');
+		expect(requestedInclude(fetchMock)).toBe('creator');
 	});
 
 	it('attaches the creator to the monster it returns', async () => {
