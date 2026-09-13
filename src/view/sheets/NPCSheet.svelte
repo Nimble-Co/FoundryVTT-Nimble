@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import { SYSTEM_ID } from '#system';
+	import { IMPORT_CREDIT_FLAG, buildCreditHtml } from '../../import/importCredit.js';
 	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -98,6 +99,7 @@
 
 	// Flags
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
+	let creditHtml = $derived(buildCreditHtml(flags?.[IMPORT_CREDIT_FLAG]));
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
@@ -189,6 +191,10 @@
 			>
 				<i class="fa-solid fa-edit"></i>
 			</button>
+
+			{#if creditHtml}
+				<span class="nimble-monster-credit">{@html creditHtml}</span>
+			{/if}
 		</h4>
 	</div>
 </header>
@@ -228,6 +234,13 @@
 		&:hover {
 			--nimble-button-opacity: 1;
 		}
+	}
+
+	.nimble-monster-credit {
+		margin-inline-start: auto;
+		font-size: var(--nimble-xs-text);
+		font-style: italic;
+		white-space: nowrap;
 	}
 
 	.nimble-monster-sheet-section {

@@ -3384,6 +3384,8 @@
 		},
 		"actorImport": {
 			"buttonLabel": "Import from Nimble Nexus",
+			"creatorCredit": "Created by {creator} on {source}",
+			"creatorPrefix": "by {creator}",
 			"jsonButtonLabel": "Import Player Character",
 			"json": {
 				"dialogTitle": "Import Player Character from JSON",
