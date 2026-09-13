@@ -54,10 +54,19 @@
 			},
 			"effects": [
 				{
-					"id": "uC0AteQ0SifbYMh7",
+					"id": "IBAV55mrssf6bXJT",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "3 * @level",
+					"targetDisposition": "friendly",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "rYpZpBzMBZLtQIsD",
 					"type": "note",
-					"noteType": "warning",
-					"text": "Set their HP to 3× your LVL.",
+					"noteType": "reminder",
+					"text": "Set their HP to 3× your LVL: this heals a creature at 0 HP to that amount.",
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -74,7 +83,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>",
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commanders-orders",
