@@ -6,14 +6,7 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [
-			{
-				"type": "speedBonus",
-				"value": "2",
-				"label": "Fleet Footed",
-				"id": "EcMJKDIwbT3q5cP3"
-			}
-		],
+		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
