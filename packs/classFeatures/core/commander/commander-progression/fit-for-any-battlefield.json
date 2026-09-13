@@ -35,6 +35,11 @@
 						"trigger": "onInitiativeRolled",
 						"mode": "refresh",
 						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "set",
+						"value": "0"
 					}
 				]
 			},
