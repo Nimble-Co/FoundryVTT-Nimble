@@ -44,7 +44,7 @@
 			"cost": {
 				"details": "when you would drop to 0 HP",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": true
 			},
 			"duration": {
@@ -74,7 +74,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>",
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR).</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commanders-orders",

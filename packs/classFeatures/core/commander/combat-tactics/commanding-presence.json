@@ -19,45 +19,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "7PnCCAempcQf8NJd",
-					"type": "damage",
-					"damageType": "psychic",
-					"formula": "10+@strength",
-					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false,
-					"on": {
-						"hit": [
-							{
-								"id": "tQt7Kx8gVfpwCBjN",
-								"type": "note",
-								"noteType": "warning",
-								"text": "\n\nDC 10+STR (below)",
-								"parentContext": "hit",
-								"parentNode": "7PnCCAempcQf8NJd"
-							},
-							{
-								"id": "63I1XqUXoUQvy4GU",
-								"type": "damageOutcome",
-								"outcome": "fullDamage",
-								"parentContext": "hit",
-								"parentNode": "7PnCCAempcQf8NJd"
-							}
-						]
-					}
-				},
-				{
-					"id": "IsAy46e12s3J0Ao1",
-					"type": "note",
-					"noteType": "flavor",
-					"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
