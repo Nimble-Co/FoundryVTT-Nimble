@@ -171,21 +171,30 @@ function deepEquals(left: unknown, right: unknown): boolean {
 	);
 }
 
+/** Initial values of the base rule schema, for keys a pack file may leave out. */
+const BASE_RULE_DEFAULTS: RuleSource = {
+	disabled: false,
+	identifier: '',
+	label: '',
+	predicate: {},
+	priority: 1,
+	suppressActivationCard: 'auto',
+};
+
 /**
  * True when the stored rule still holds every value the pack wrote into it.
  *
- * Keys the pack file never had are ignored, because the data model fills in its own
- * defaults on a stored copy: Fleet Footed shipped four keys and comes back with
- * `predicate` and `priority` as well. A key the pack did write must match, so a rule
- * the GM retuned is left exactly as they set it. A predicate or disabled flag the pack
- * never wrote counts as a GM edit when it differs from the default, since gating or
- * switching off the rule is the hand-fix for the bug this migration corrects.
+ * A key the pack wrote must match. A base key the pack left out must still hold the
+ * schema default, because the data model fills it in on a stored copy: Fleet Footed
+ * shipped four keys and comes back with `predicate` and `priority` as well. A GM who
+ * gated, disabled or retuned the rule changed one of these, and their copy is left as
+ * they set it. Keys of the rule's own schema that the pack left out are not checked.
  */
 function isPackRule(rule: RuleSource, old: RuleSource): boolean {
 	if (!Object.entries(old).every(([key, value]) => deepEquals(rule[key], value))) return false;
-	if (!('predicate' in old) && rule.predicate && Object.keys(rule.predicate).length) return false;
-	if (!('disabled' in old) && rule.disabled === true) return false;
-	return true;
+	return Object.entries(BASE_RULE_DEFAULTS).every(
+		([key, initial]) => key in old || rule[key] === undefined || deepEquals(rule[key], initial),
+	);
 }
 
 /**

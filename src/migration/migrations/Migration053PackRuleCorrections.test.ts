@@ -257,6 +257,9 @@ describe('rules the pack no longer ships', () => {
 	it.each([
 		['gated with a predicate', { predicate: { self: 'bloodied' } }],
 		['switched off', { disabled: true }],
+		['gave an identifier', { identifier: 'houserule-speed' }],
+		['reprioritised', { priority: 5 }],
+		['set to never show a card', { suppressActivationCard: 'never' }],
 	])('leaves a Fleet Footed rule the GM %s alone', async (_how, edit) => {
 		const edited = { ...structuredClone(OLD_FLEET_FOOTED_RULE), ...edit };
 		const source = embeddedCopy(fleetFooted, { class: 'stormshifter', rules: [edited] });
