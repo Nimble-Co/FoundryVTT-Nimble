@@ -50,3 +50,4 @@ export { Migration049PoolMaxBonusItems } from './Migration049PoolMaxBonusItems.j
 export { Migration050GrantOptionSwapFeatures } from './Migration050GrantOptionSwapFeatures.js';
 export { Migration051JackOfAllTradesSkillPointMove } from './Migration051JackOfAllTradesSkillPointMove.js';
 export { Migration052ShadowmancerPilferedPower } from './Migration052ShadowmancerPilferedPower.js';
+export { Migration053PackRuleCorrections } from './Migration053PackRuleCorrections.js';
