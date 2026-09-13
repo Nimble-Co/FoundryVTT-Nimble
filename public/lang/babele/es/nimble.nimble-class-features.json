@@ -105,6 +105,15 @@
 			"description": "<p>Whenever you or an ally within your aura gain any Wounds, change up to that many Judgment Dice to their max. Then, move up to half your speed for free.</p>",
 			"name": "Avenger"
 		},
+		"Be Wild": {
+			"description": "<p>Whenever you spend a day with wild animals during a Safe Rest, you may choose different Stormshifter options available to you.</p>",
+			"name": "Be Wild",
+			"rules": {
+				"3BaGzXGoWbVjoy6l": {
+					"label": "Whenever you spend a day with wild animals during a Safe Rest"
+				}
+			}
+		},
 		"Beast of Nightmares": {
 			"description": "<p><strong>(Tiny)</strong>. Transform into any Tiny beast or insect (provided it is horrible). Gain the Sting attack and Silent But Deadly. </p><p><strong>Sting</strong>. (1/round) Action: Reach: 0. 1d4 piercing + 3×LVL acid damage (ignoring armor), on crit: 4×LVL damage instead. </p><p><strong>Silent But Deadly</strong>. Speed: 2. You cannot Defend or Interpose. Attackers cannot target you until you become conspicuous (e.g., being seen transforming or attacking).</p>",
 			"name": "Beast of Nightmares"
@@ -645,6 +654,15 @@
 				}
 			}
 		},
+		"Focus": {
+			"description": "<p>Whenever you spend time meditating alone in a windy place during a Safe Rest, you may choose different Zephyr options available to you.</p>",
+			"name": "Focus",
+			"rules": {
+				"Y5PuGXCEDfgfRgYq": {
+					"label": "Whenever you spend time meditating alone in a windy place during a Safe Rest"
+				}
+			}
+		},
 		"Forager": {
 			"description": "<p>Gain advantage on skill checks to find food and water in the wild.</p>",
 			"name": "Forager"
@@ -732,7 +750,12 @@
 		},
 		"Heart of Burning Fire": {
 			"description": "<p>Regain 1 use of Pilfered Power each time you roll Initiative. This expires at the end of combat if unused.</p>",
-			"name": "Heart of Burning Fire"
+			"name": "Heart of Burning Fire",
+			"rules": {
+				"heart-of-burning-fire-initiative-regain": {
+					"label": "Heart of Burning Fire: regain 1 use of Pilfered Power on initiative"
+				}
+			}
 		},
 		"Heavy Shot": {
 			"description": "<p><em>(Half range)</em> Action: Attack with a ranged weapon and push your target: 4 spaces for a small creature, 2 for a medium creature, 1 for a large creature.</p>",
@@ -898,7 +921,12 @@
 		"Jack of All Trades": {
 			"costDetails": "An ally makes a roll",
 			"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
-			"name": "Jack of All Trades"
+			"name": "Jack of All Trades",
+			"rules": {
+				"oCCxKr1vIWc7C6QN": {
+					"label": "When you Safe Rest"
+				}
+			}
 		},
 		"Juggernaut": {
 			"description": "<p>When you use Coordinated Strike, you deal extra damage equal to your armor, and you can <strong>add 1 to your primary die.</strong></p>",
@@ -1249,6 +1277,15 @@
 			"description": "<p>You can Defend against your quarry for free.</p>",
 			"name": "Peerless Hunter"
 		},
+		"Perform!": {
+			"description": "<p>Whenever you perform in a place that inspires you, or exchange barbs with another competent wordsmith during a Safe Rest, you may choose different Songweaver options available to you.</p>",
+			"name": "Perform!",
+			"rules": {
+				"MpQR4TBEzgw6vKQK": {
+					"label": "Whenever you perform in a place that inspires you, or exchange barbs with another competent wordsmith during a Safe Rest"
+				}
+			}
+		},
 		"Phasebeast": {
 			"description": "<p>Whenever you shift between this form and your normal form (and vice versa), you may teleport up to 6 spaces away to a place you can see.</p>",
 			"name": "Phasebeast"
@@ -1259,7 +1296,12 @@
 		},
 		"Pilfered Power": {
 			"description": "<p>You may steal power from your patron to cast tiered spells, always casting them at the highest tier you have unlocked. You can do this DEX times before your patron takes notice. Each time you exceed this limit, your patron damages you for half your max HP as recompense. This limit resets when you commune with your patron during a Safe Rest.</p>",
-			"name": "Pilfered Power"
+			"name": "Pilfered Power",
+			"rules": {
+				"pilfered-power-use-pool": {
+					"label": "Pilfered Power"
+				}
+			}
 		},
 		"Pinning Shot": {
 			"description": "<p>Spend 3 actions shooting your quarry. They are Restrained until they can escape (DC 10+WIL).</p>",
@@ -1375,6 +1417,15 @@
 			"description": "<p>Whenever you roll Judgment Dice, roll with advantage (roll one extra and drop the lowest).</p>",
 			"name": "Reliable Justice"
 		},
+		"Remember the Wild": {
+			"description": "<p>Whenever you spend a day in the wilderness during a Safe Rest, you may choose different Hunter options available to you.</p>",
+			"name": "Remember the Wild",
+			"rules": {
+				"86nidKocRa563nLR": {
+					"label": "Whenever you spend a day in the wilderness during a Safe Rest"
+				}
+			}
+		},
 		"Repelling Blast": {
 			"description": "<p>When you hit a Medium or smaller creature with Shadow Blast, you can push the creature up to 2 spaces away from yourself.</p>",
 			"name": "Repelling Blast"
@@ -1404,6 +1455,15 @@
 		"Rhapsody of the Normal": {
 			"description": "<p>When you roll 4 or more on your Vicious Mockery, you may spend a Songweaver's Inspiration charge to temporarily suppress any special abilities they have until the end of their next turn. They can do only what an untrained average villager can do, attack once for 1d4 damage and move up to 6 spaces (no armor, spellcasting, flying, regeneration, other inherent or trained features).</p>",
 			"name": "Rhapsody of the Normal"
+		},
+		"Rigorous Training": {
+			"description": "<p>Whenever you train with your party or other soldiers during a Safe Rest, you may choose different Commander options available to you.</p>",
+			"name": "Rigorous Training",
+			"rules": {
+				"HVX1bzCXgdkwUeKi": {
+					"label": "Whenever you train with your party or other soldiers during a Safe Rest"
+				}
+			}
 		},
 		"Rising Phoenix": {
 			"costDetails": "when you would drop to 0 HP",
@@ -1435,6 +1495,24 @@
 		"Searing Light": {
 			"description": "<p>(WIL times/Safe Rest) Action: Heal or Inflict grievous injuries:</p><p>• Heal WIL d8 HP to a Dying creature within Reach 6. OR:</p><p>• Inflict WIL d8 radiant damage to an undead or Bloodied enemy within Reach 6.</p>",
 			"name": "Searing Light"
+		},
+		"Serve": {
+			"description": "<p>After spending a day tending to a sacred place or serving others during a Safe Rest, you may choose different Shepherd options available to you.</p>",
+			"name": "Serve",
+			"rules": {
+				"KJWsusMa3fuDGyTC": {
+					"label": "After spending a day tending to a sacred place or serving others during a Safe Rest"
+				}
+			}
+		},
+		"Serve Selflessly": {
+			"description": "<p>Whenever you perform a notable selfless act during a Safe Rest, you may choose different Oathsworn options available to you.</p>",
+			"name": "Serve Selflessly",
+			"rules": {
+				"z3JXu3uVUGz7clgq": {
+					"label": "Whenever you perform a notable selfless act during a Safe Rest"
+				}
+			}
 		},
 		"Shadow Exploit": {
 			"description": "<p>Sacrifice a shadow minion to cast a spell at the highest tier you have unlocked. Each subsequent spell you cast in this encounter costs 1 additional minion.</p>",
@@ -1602,6 +1680,15 @@
 			"description": "<p>(2 mana) Reduce the action cost of a spell by 1 (min 1).</p>",
 			"name": "Stretch Time"
 		},
+		"Study!": {
+			"description": "<p>Whenever you study arcane books or are tutored by a higher level Mage during a Safe Rest, you may choose different Mage options available to you.</p>",
+			"name": "Study!",
+			"rules": {
+				"OdUZQshBLbKcdHyg": {
+					"label": "Whenever you study arcane books or are tutored by a higher level Mage during a Safe Rest"
+				}
+			}
+		},
 		"Sunder Armor (Heavy)": {
 			"description": "<p><em>Req. Sunder Armor (Medium).</em> Your Sunder Armor ability now also applies to enemies wearing heavy armor. </p>",
 			"name": "Sunder Armor (Heavy)"
@@ -1609,6 +1696,15 @@
 		"Sunder Armor (Medium)": {
 			"description": "<p>Action: When you crit an enemy with medium armor, sunder their armor. Until the start of your next turn, ALL melee attacks against that target ignore its armor. </p>",
 			"name": "Sunder Armor (Medium)"
+		},
+		"Supplicate": {
+			"description": "<p>Whenever you commune with your Patron on a Safe Rest, you may beg them to allow you to choose different Shadowmancer options (they may ask for something in return).</p>",
+			"name": "Supplicate",
+			"rules": {
+				"1F16zybf0bJL989y": {
+					"label": "Whenever you commune with your Patron on a Safe Rest"
+				}
+			}
 		},
 		"Supreme Control": {
 			"description": "<p>Whenever you Demand Control, you may choose to trigger the selected option twice. You may Demand Control as a Reaction.</p>",
@@ -1758,6 +1854,15 @@
 		"Tracker's Intuition": {
 			"description": "<p>You can discern the events of a past encounter by studying tracks and other subtle environmental clues, accurately determining the kind and amount of creatures, their direction, key actions, and passage of time.</p>",
 			"name": "Tracker's Intuition"
+		},
+		"Trade Secrets": {
+			"description": "<p>Whenever you spend a night talking shop with other roguish types during a Safe Rest, you may choose different Cheat options available to you.</p>",
+			"name": "Trade Secrets",
+			"rules": {
+				"uHgqH7K3fszNT01I": {
+					"label": "Whenever you spend a night talking shop with other roguish types during a Safe Rest"
+				}
+			}
 		},
 		"Trickshot": {
 			"description": "<p>When you throw a dagger, it returns back to your hand at the end of your turn. On a hit, it ricochets to another creature within 2 spaces, dealing half as much damage to them. </p>",
@@ -1967,6 +2072,15 @@
 		"Words Like Swords": {
 			"description": "<p>Your Vicious Mockery damage becomes 1d6+INT+ WIL.</p>",
 			"name": "Words Like Swords"
+		},
+		"Wrath & Ruin": {
+			"description": "<p>Whenever you perform a notable act of destruction or feat of strength during a Safe Rest, you may choose different Berserker options available to you.</p>",
+			"name": "Wrath & Ruin",
+			"rules": {
+				"A48mtO5AcIj1oneh": {
+					"label": "Whenever you perform a notable act of destruction or feat of strength during a Safe Rest"
+				}
+			}
 		},
 		"You're Next!": {
 			"description": "<p>Action: While Raging, you can make a Might skill check to demoralize an enemy within Reach 12 (DC: their current HP). On a success, they immediately flee the battle.</p>",
