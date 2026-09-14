@@ -149,7 +149,7 @@ class Migration053CommanderChecklist extends MigrationBase {
 			const index = effects.findIndex(
 				(node) => node?.type === 'note' && node?.text === HOLD_THE_LINE_OLD_NOTE_TEXT,
 			);
-			const alreadyHeals = effects.some((node) => node?.id === HOLD_THE_LINE_HEALING.id);
+			const alreadyHeals = effects.some((node) => node?.type === 'healing');
 
 			if (index >= 0 && !alreadyHeals) {
 				effects.splice(
@@ -191,19 +191,25 @@ class Migration053CommanderChecklist extends MigrationBase {
 				node?.type === 'damage' &&
 				node?.formula === COMMANDING_PRESENCE_OLD_DAMAGE.formula,
 		);
-		if (damage < 0) return;
+		if (damage >= 0) effects.splice(damage, 1);
 
-		effects.splice(damage, 1);
-
-		const note = effects.findIndex(
-			(node) =>
-				node?.id === COMMANDING_PRESENCE_OLD_NOTE.id &&
-				node?.type === 'note' &&
-				node?.text === COMMANDING_PRESENCE_OLD_NOTE.text,
-		);
+		// The note goes with the damage, so a damage node the GM kept keeps it too.
+		const keepsDamage = effects.some((node) => node?.type === 'damage');
+		const note = keepsDamage
+			? -1
+			: effects.findIndex(
+					(node) =>
+						node?.id === COMMANDING_PRESENCE_OLD_NOTE.id &&
+						node?.type === 'note' &&
+						node?.text === COMMANDING_PRESENCE_OLD_NOTE.text,
+				);
 		if (note >= 0) effects.splice(note, 1);
 
-		console.log('Nimble Migration | Commanding Presence: removed the damage it never dealt');
+		if (damage >= 0) {
+			console.log('Nimble Migration | Commanding Presence: removed the damage it never dealt');
+		} else if (note >= 0) {
+			console.log('Nimble Migration | Commanding Presence: removed the combat tactics note');
+		}
 	}
 }
 
