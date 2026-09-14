@@ -6,7 +6,46 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "master-radiance-radiant-l7",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Master of Radiance: Radiant Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				}
+			},
+			{
+				"id": "master-radiance-radiant-l11",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Master of Radiance (2): Radiant Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +72,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose 1 Radiant Utility Spell.</p><hr><p>Level 11: Choose a 2nd Radiant Utility Spell</p>",
+		"description": "<p>Choose 1 Radiant Utility Spell.</p><hr><p>Level 11: Choose a 2nd Radiant Utility Spell.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",
