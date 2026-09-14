@@ -213,10 +213,10 @@ const ITEMS: ItemSpec[] = [
  * that lost its id. Idempotent: every change is guarded by the state it
  * produces, so a second run does nothing, and an edit a GM made is kept.
  */
-class Migration053MageShepherdPilot extends MigrationBase {
+class Migration054MageShepherdPilot extends MigrationBase {
 	static override readonly version = 53;
 
-	override readonly version = Migration053MageShepherdPilot.version;
+	override readonly version = Migration054MageShepherdPilot.version;
 
 	/** Called for a world item and, with the actor as parent, for an embedded one. */
 	override async updateItem(source: any): Promise<void> {
@@ -250,4 +250,4 @@ class Migration053MageShepherdPilot extends MigrationBase {
 	}
 }
 
-export { Migration053MageShepherdPilot };
+export { Migration054MageShepherdPilot };
