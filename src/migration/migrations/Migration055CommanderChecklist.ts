@@ -94,10 +94,10 @@ function nodes(source: any): Node[] | undefined {
  * value, so a GM edit stays, an added node or rule stays, and a second run changes
  * nothing.
  */
-class Migration053CommanderChecklist extends MigrationBase {
-	static override readonly version = 53;
+class Migration055CommanderChecklist extends MigrationBase {
+	static override readonly version = 55;
 
-	override readonly version = Migration053CommanderChecklist.version;
+	override readonly version = Migration055CommanderChecklist.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature') return;
@@ -213,4 +213,4 @@ class Migration053CommanderChecklist extends MigrationBase {
 	}
 }
 
-export { Migration053CommanderChecklist };
+export { Migration055CommanderChecklist };
