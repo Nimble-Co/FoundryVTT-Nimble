@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { OpportunityAttackPanelProps } from '../../../../types/components/ReactionPanel.d.ts';
 	import { getContext } from 'svelte';
+	import getHeroicReactionCostLabel from '../../../utils/heroicReactionCostLabel.js';
 	import localize from '../../../utils/localize.js';
 	import { createOpportunityAttackPanelState } from './OpportunityAttackPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
@@ -36,6 +37,7 @@
 	const showUnarmedStrike = $derived(state.showUnarmedStrike);
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
+	const costLabel = $derived(getHeroicReactionCostLabel(actor.reactive, ['opportunityAttack']));
 	const {
 		sortItems,
 		getWeaponDamage,
@@ -73,7 +75,7 @@
 			</h3>
 			<span class="reaction-panel__cost">
 				<i class="fa-solid fa-bolt"></i>
-				{localize('NIMBLE.ui.heroicActions.reactions.cost')}
+				{costLabel}
 			</span>
 		</div>
 		<div class="reaction-panel__badge">

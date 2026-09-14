@@ -1,6 +1,18 @@
 import type { ReactionCardProps } from '../../../types/components/ReactionCard.d.ts';
+import type { HeroicReactionKey } from '../../utils/heroicActions.js';
+import getHeroicReactionCostLabel, {
+	type HeroicReactionCostActor,
+} from '../../utils/heroicReactionCostLabel.js';
 import localize from '../../utils/localize.js';
 import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
+
+/** The card stores its own reaction names; only `opportunity` differs from the reaction key. */
+const CARD_REACTION_KEYS: Record<string, HeroicReactionKey> = {
+	defend: 'defend',
+	interpose: 'interpose',
+	opportunity: 'opportunityAttack',
+	help: 'help',
+};
 
 export interface ReactionConfig {
 	icon: string;
@@ -30,6 +42,17 @@ export function createReactionCardState(
 	const weaponName = $derived(system.weaponName);
 	const weaponDamage = $derived(system.weaponDamage);
 	const actorName = $derived(system.actorName);
+
+	const costLabel = $derived.by(() => {
+		const reactionKey = CARD_REACTION_KEYS[reactionType];
+		if (!reactionKey) return localize('NIMBLE.ui.heroicActions.reactions.cost');
+
+		// The speaker actor is a separate document; subscribe to it, not the message.
+		const speakerActor = getMessageDocument().speakerActor as
+			| (HeroicReactionCostActor & { reactive?: HeroicReactionCostActor })
+			| null;
+		return getHeroicReactionCostLabel(speakerActor?.reactive ?? speakerActor, [reactionKey]);
+	});
 
 	const chatMessage = $derived.by(() => {
 		switch (reactionType) {
@@ -124,6 +147,9 @@ export function createReactionCardState(
 		},
 		get chatMessage() {
 			return chatMessage;
+		},
+		get costLabel() {
+			return costLabel;
 		},
 		get reactionConfig() {
 			return reactionConfig;
