@@ -7,8 +7,7 @@ type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
 /**
  * Snapshots of what the packs now ship, ids included, so a migrated copy and a
- * fresh one from the compendium behave identically. Each one is asserted equal
- * to its pack JSON in the test beside this file.
+ * fresh one from the compendium behave identically.
  */
 const TALENTED_RESEARCHER_RULES: RuleSource[] = [
 	{
@@ -214,7 +213,7 @@ const ITEMS: ItemSpec[] = [
  * produces, so a second run does nothing, and an edit a GM made is kept.
  */
 class Migration054MageShepherdPilot extends MigrationBase {
-	static override readonly version = 53;
+	static override readonly version = 54;
 
 	override readonly version = Migration054MageShepherdPilot.version;
 
