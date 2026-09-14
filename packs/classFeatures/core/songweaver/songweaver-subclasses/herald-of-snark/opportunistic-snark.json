@@ -12,7 +12,7 @@
 			"cost": {
 				"details": "when an enemy within Range 12 misses an attack",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": true
 			},
 			"duration": {
