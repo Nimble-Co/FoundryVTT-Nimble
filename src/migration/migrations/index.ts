@@ -51,3 +51,4 @@ export { Migration050GrantOptionSwapFeatures } from './Migration050GrantOptionSw
 export { Migration051JackOfAllTradesSkillPointMove } from './Migration051JackOfAllTradesSkillPointMove.js';
 export { Migration052ShadowmancerPilferedPower } from './Migration052ShadowmancerPilferedPower.js';
 export { Migration053PackRuleCorrections } from './Migration053PackRuleCorrections.js';
+export { Migration054MageShepherdPilot } from './Migration054MageShepherdPilot.js';
