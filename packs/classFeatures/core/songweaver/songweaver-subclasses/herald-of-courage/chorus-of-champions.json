@@ -6,14 +6,77 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "rwu9fnvv1Zt3eSqc",
+				"identifier": "chorus-of-champions-encounter",
+				"label": "Chorus of Champions (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "mFyQuRdtkLDdffgh",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "chorus-of-champions-encounter",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "oVuhOT9lfMaJyHTq",
+				"identifier": "",
+				"label": "Chorus of Champions",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "allAllies",
+				"borrowFromNextTurn": false
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "o0rWADa7dscg4q66",
+				"identifier": "",
+				"label": "Chorus of Champions",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "self",
+				"borrowFromNextTurn": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
-				"isReaction": false
+				"quantity": 0,
+				"type": "action",
+				"isReaction": true
 			},
 			"duration": {
 				"details": "",
