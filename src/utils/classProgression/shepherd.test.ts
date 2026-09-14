@@ -1,12 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import lifebindingSpirit from '../../../packs/spells/core/radiant/lifebinding-spirit.json';
 import {
 	buildRealIndex,
 	getClassMeta,
+	loadAllFeatureDocs,
 	resolveLevel,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { ClassMeta, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type {
+	ClassMeta,
+	FeatureDoc,
+	LevelSummary,
+} from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT, SACRED_GRACE_OPTIONS } from './shepherd.expect.ts';
 
@@ -220,5 +226,74 @@ describe('Shepherd — data integrity across the full progression', () => {
 		const reported = new Set<string>();
 		for (const rl of REPORT.levels) for (const n of rl.auto) reported.add(n);
 		expect([...real].sort()).toEqual([...reported].sort());
+	});
+});
+
+/**
+ * Asserts the shipped compendium data itself, the way
+ * `CharacterCreationDialog.test.ts` asserts the background packs: a wrong scope,
+ * a dropped recovery or a re-authored identifier fails here instead of shipping
+ * a pool the sheet never refills.
+ */
+describe('Shepherd — shipped pack data', () => {
+	function packFeature(name: string): FeatureDoc {
+		const doc = loadAllFeatureDocs().find((f) => f.system.class === CLASS_ID && f.name === name);
+		expect(doc, `${name} is in the shepherd feature pack`).toBeDefined();
+		return doc as FeatureDoc;
+	}
+
+	function packRules(name: string): Record<string, unknown>[] {
+		return (packFeature(name).system.rules ?? []) as Record<string, unknown>[];
+	}
+
+	function searingLightRules(type: string): Record<string, unknown>[] {
+		return packRules('Searing Light').filter((rule) => rule.type === type);
+	}
+
+	// The uses are a character resource, not a per-item one: subclass features and
+	// graces spend and regain them, so the pool has to live on the actor.
+	it('ships one actor-scope Searing Light charge pool sized by WIL', () => {
+		const pools = searingLightRules('chargePool');
+
+		expect(pools).toHaveLength(1);
+		expect(pools[0]).toEqual(
+			expect.objectContaining({
+				identifier: 'searing-light',
+				scope: 'actor',
+				max: 'max(@will, 0)',
+				disabled: false,
+			}),
+		);
+	});
+
+	it('refreshes the Searing Light pool on a Safe Rest', () => {
+		const [pool] = searingLightRules('chargePool');
+
+		expect(pool?.recoveries).toEqual([
+			expect.objectContaining({ trigger: 'safeRest', mode: 'refresh' }),
+		]);
+	});
+
+	it('spends one charge from that pool each time Searing Light is used', () => {
+		const consumers = searingLightRules('chargeConsumer');
+
+		expect(consumers).toHaveLength(1);
+		expect(consumers[0]).toEqual(
+			expect.objectContaining({
+				poolIdentifier: 'searing-light',
+				poolScope: 'actor',
+				cost: '1',
+				disabled: false,
+			}),
+		);
+	});
+
+	it('gives Sacred Graces a description', () => {
+		expect(String(packFeature('Sacred Graces').system.description ?? '').trim()).not.toBe('');
+	});
+
+	// Lifebinding Spirit has no material cost in the rulebook.
+	it('asks for no material component to cast Lifebinding Spirit', () => {
+		expect(lifebindingSpirit.system.activation.cost.details).toBe('');
 	});
 });
