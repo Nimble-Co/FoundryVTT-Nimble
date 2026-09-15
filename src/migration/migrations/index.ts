@@ -52,3 +52,4 @@ export { Migration051JackOfAllTradesSkillPointMove } from './Migration051JackOfA
 export { Migration052ShadowmancerPilferedPower } from './Migration052ShadowmancerPilferedPower.js';
 export { Migration053PackRuleCorrections } from './Migration053PackRuleCorrections.js';
 export { Migration054MageShepherdPilot } from './Migration054MageShepherdPilot.js';
+export { Migration055CommanderChecklist } from './Migration055CommanderChecklist.js';
