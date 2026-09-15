@@ -6,7 +6,62 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "1HKRLtUhQxrFwUJY",
+				"identifier": "quickstrike-round",
+				"label": "Quickstrike (once per round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": true,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnEnd",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "5nQl9jEcRz63J9UE",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "quickstrike-round",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "EXXA4m4drUjXLrSo",
+				"identifier": "",
+				"label": "Quickstrike",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "self",
+				"borrowFromNextTurn": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +75,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "lTyPeYJqp7me1BEg",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "When you Interpose, make an unarmed strike against that enemy for free.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
