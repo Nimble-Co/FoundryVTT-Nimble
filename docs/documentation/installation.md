@@ -43,6 +43,7 @@ Open the **Compendium Packs** tab in the sidebar and you'll find the full Nimble
 | **Nimble Monsters** | The standard bestiary, including minions. |
 | **Nimble Legendary Monsters** | Solo boss monsters, built on their own sheet type. |
 | **Nimble Tables** | Roll tables used by certain features and boons, such as the chaos table. |
+| **Nimble Core Rules** | The Core Rules as a journal, one entry per chapter in the book's order, with rule titles linked to the items, spells, ancestries and backgrounds in the other packs. |
 
 ::: tip Copy before you customize
 Compendium content is refreshed whenever the system updates. If you want to tweak something (a spell, a monster, a weapon), drag it into your world (or duplicate it there) and edit the copy. Edits made to your world's copies are never touched by updates. See [Core Concepts](core-concepts.md) for more on this habit.
