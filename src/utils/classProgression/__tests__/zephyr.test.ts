@@ -225,7 +225,7 @@ describe('Zephyr - pack data', () => {
 
 		it('names the damage in its description', () => {
 			expect(feature('Swift Fists').system.description).toBe(
-				'<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules), and their damage is 1d4+STR.</p>',
+				'<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see @UUID[Compendium.nimble.nimble-rules.JournalEntry.7oaOqkg5Sp05mR2s.JournalEntryPage.88BfZWt1WsX6hQd0]{pg. 13 of the Core Rules}), and their damage is 1d4+STR.</p>',
 			);
 		});
 	});
