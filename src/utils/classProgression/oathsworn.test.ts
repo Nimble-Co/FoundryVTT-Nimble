@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
-	loadAllFeatureDocs,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { FeatureDoc, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type { LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT } from './oathsworn.expect.ts';
 
@@ -232,15 +232,7 @@ describe('Oathsworn - data integrity', () => {
 });
 
 describe('Oathsworn - pack data', () => {
-	/** The oathsworn class feature with this exact name, read from `packs/` on disk. */
-	const feature = (name: string): FeatureDoc => {
-		const doc = loadAllFeatureDocs().find((f) => f.system.class === ID && f.name === name);
-		if (!doc) throw new Error(`No oathsworn feature named "${name}"`);
-		return doc;
-	};
-
-	const rulesOf = (name: string, type: string): Record<string, any>[] =>
-		(feature(name).system.rules ?? []).filter((rule: Record<string, any>) => rule.type === type);
+	const { feature, rulesOf } = packFeatureHelpers(ID);
 
 	it('Paragon of Virtue ships two influence roll-mode rules, one favourable and one not', () => {
 		const rules = rulesOf('Paragon of Virtue', 'situationalRollMode');
