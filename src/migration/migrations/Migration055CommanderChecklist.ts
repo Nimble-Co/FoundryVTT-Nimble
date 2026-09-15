@@ -70,11 +70,6 @@ const ALL_DAY_DESCRIPTION =
 /** The damage the tactic rolled although the rules give it no damage at all. */
 const COMMANDING_PRESENCE_OLD_DAMAGE = { id: '7PnCCAempcQf8NJd', formula: '10+@strength' };
 
-const COMMANDING_PRESENCE_OLD_NOTE = {
-	id: 'IsAy46e12s3J0Ao1',
-	text: 'Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.',
-};
-
 function nodes(source: any): Node[] | undefined {
 	const effects = source?.system?.activation?.effects;
 	return Array.isArray(effects) ? effects : undefined;
@@ -191,25 +186,10 @@ class Migration055CommanderChecklist extends MigrationBase {
 				node?.type === 'damage' &&
 				node?.formula === COMMANDING_PRESENCE_OLD_DAMAGE.formula,
 		);
-		if (damage >= 0) effects.splice(damage, 1);
+		if (damage < 0) return;
 
-		// The note goes with the damage, so a damage node the GM kept keeps it too.
-		const keepsDamage = effects.some((node) => node?.type === 'damage');
-		const note = keepsDamage
-			? -1
-			: effects.findIndex(
-					(node) =>
-						node?.id === COMMANDING_PRESENCE_OLD_NOTE.id &&
-						node?.type === 'note' &&
-						node?.text === COMMANDING_PRESENCE_OLD_NOTE.text,
-				);
-		if (note >= 0) effects.splice(note, 1);
-
-		if (damage >= 0) {
-			console.log('Nimble Migration | Commanding Presence: removed the damage it never dealt');
-		} else if (note >= 0) {
-			console.log('Nimble Migration | Commanding Presence: removed the combat tactics note');
-		}
+		effects.splice(damage, 1);
+		console.log('Nimble Migration | Commanding Presence: removed the damage it never dealt');
 	}
 }
 
