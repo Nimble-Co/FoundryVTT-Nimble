@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "HWumOYrtF2r6J2lz",
+				"identifier": "",
+				"label": "Tracking a creature",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"all"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +50,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You have advantage on skill checks to track creatures</p>",
+		"description": "<p>You have advantage on skill checks to track creatures.</p>",
 		"featureType": "class",
 		"class": "hunter",
 		"group": "keeper-of-the-shadowpath",
