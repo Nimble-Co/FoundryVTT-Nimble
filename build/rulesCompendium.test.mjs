@@ -145,4 +145,49 @@ describe('Nimble Core Rules compendium', () => {
 		const stripped = allText.replace(/<a\b[^>]*>.*?<\/a>/g, '');
 		expect(stripped).not.toMatch(/nimbleRPG\.com|https?:\/\//i);
 	});
+
+	it('carries no navigation left over from the source vault', () => {
+		expect(allText).not.toContain('<strong>Related</strong>');
+		expect(allText).not.toContain('<p>---</p>');
+	});
+
+	it('links item titles to documents that exist in their pack', () => {
+		const packDirs = {
+			'nimble-ancestries': 'ancestries',
+			'nimble-ancestry-bonuses': 'ancestryBonuses',
+			'nimble-backgrounds': 'backgrounds',
+			'nimble-classes': 'classes',
+			'nimble-items': 'items',
+			'nimble-magic-items': 'magicItems',
+			'nimble-spells': 'spells',
+		};
+
+		const idsFor = (dir) => {
+			const root = path.resolve(PACK_DIR, '../..', dir);
+			const found = new Set();
+			const walk = (p) => {
+				for (const name of fs.readdirSync(p, { withFileTypes: true })) {
+					const child = path.join(p, name.name);
+					if (name.isDirectory()) walk(child);
+					else if (name.name.endsWith('.json')) {
+						const doc = JSON.parse(fs.readFileSync(child, 'utf-8'));
+						if (doc?._id) found.add(doc._id);
+					}
+				}
+			};
+			walk(root);
+			return found;
+		};
+
+		const known = Object.fromEntries(
+			Object.entries(packDirs).map(([pack, dir]) => [pack, idsFor(dir)]),
+		);
+
+		const links = [...allText.matchAll(/@UUID\[Compendium\.nimble\.([a-z-]+)\.Item\.([^\]]+)\]/g)];
+		expect(links.length).toBeGreaterThan(200);
+		for (const [, pack, id] of links) {
+			expect(known[pack], `unknown pack ${pack}`).toBeDefined();
+			expect(known[pack], `${pack} has no document ${id}`).toContain(id);
+		}
+	});
 });
