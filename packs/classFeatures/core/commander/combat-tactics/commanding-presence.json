@@ -19,7 +19,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "IsAy46e12s3J0Ao1",
+					"type": "note",
+					"noteType": "flavor",
+					"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

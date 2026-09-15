@@ -377,6 +377,7 @@ interface PoolRule {
 interface EffectNode {
 	type: string;
 	noteType?: string;
+	text?: string;
 	formula?: string;
 }
 
@@ -439,5 +440,11 @@ describe('Commander — Commanding Presence in the pack data', () => {
 	it('ships no damage node', () => {
 		const damage = effectsOf('Commanding Presence').filter((node) => node.type === 'damage');
 		expect(damage).toEqual([]);
+	});
+
+	it('keeps the Combat Tactics note the other tactics carry', () => {
+		const noteTexts = (name: string) =>
+			effectsOf(name).flatMap((node) => (node.type === 'note' ? [node.text] : []));
+		expect(noteTexts('Commanding Presence')).toEqual(noteTexts('Heavy Strike'));
 	});
 });
