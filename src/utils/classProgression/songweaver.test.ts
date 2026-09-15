@@ -2,10 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	loadAllFeatureDocs,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type { FeatureDoc, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT } from './songweaver.expect.ts';
 
@@ -226,6 +227,200 @@ describe('Songweaver progression (real resolver)', () => {
 					).toBeGreaterThanOrEqual(offered.selectionCount);
 				}
 			}
+		});
+	});
+});
+
+describe('Songweaver - pack data', () => {
+	/** The songweaver class feature with this exact name, read from `packs/` on disk. */
+	const feature = (name: string): FeatureDoc => {
+		const doc = loadAllFeatureDocs().find((f) => f.system.class === CLASS_ID && f.name === name);
+		if (!doc) throw new Error(`Songweaver feature missing from the pack data: ${name}`);
+		return doc;
+	};
+
+	const rulesOf = (name: string, type: string): Record<string, any>[] =>
+		(feature(name).system.rules ?? []).filter((rule: Record<string, any>) => rule.type === type);
+
+	const effectsOf = (name: string, type: string): Record<string, any>[] =>
+		(feature(name).system.activation?.effects ?? []).filter(
+			(node: Record<string, any>) => node.type === type,
+		);
+
+	const costOf = (name: string): Record<string, any> => feature(name).system.activation.cost;
+
+	describe('Inspiring Anthem', () => {
+		it('ships one charge pool that refreshes at the start of each encounter', () => {
+			const pools = rulesOf('Inspiring Anthem', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.identifier).toBe('inspiring-anthem-encounter');
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.disabled).toBe(false);
+			expect(pool.recoveries).toEqual([{ trigger: 'encounterStart', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Inspiring Anthem', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.poolIdentifier).toBe('inspiring-anthem-encounter');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+			expect(consumer.disabled).toBe(false);
+		});
+
+		it('ships one action delta that gives the targeted creature 1 action now', () => {
+			const deltas = rulesOf('Inspiring Anthem', 'actionDelta');
+			expect(deltas).toHaveLength(1);
+			const [delta] = deltas;
+			expect(delta.target).toBe('targeted');
+			expect(delta.value).toBe('1');
+			expect(delta.timing).toBe('now');
+			expect(delta.borrowFromNextTurn).toBe(false);
+			expect(delta.disabled).toBe(false);
+		});
+
+		it('ships one healing node aimed at friendly creatures', () => {
+			const healing = effectsOf('Inspiring Anthem', 'healing');
+			expect(healing).toHaveLength(1);
+			const [node] = healing;
+			expect(node.healingType).toBe('healing');
+			expect(node.formula).toBe('1');
+			expect(node.targetDisposition).toBe('friendly');
+		});
+	});
+
+	describe.each([
+		{ name: 'Stompy', poolIdentifier: 'stompy-uses', actions: 3 },
+		{ name: 'Gran Gran (NOT a hag)', poolIdentifier: 'gran-gran-uses', actions: 1 },
+		{ name: 'Linos, the Everfriendly', poolIdentifier: 'linos-uses', actions: 1 },
+		{ name: 'Mal, the Malevolent Imp', poolIdentifier: 'mal-uses', actions: 1 },
+	])('$name', ({ name, poolIdentifier, actions }) => {
+		it('ships one charge pool that refreshes on a Safe Rest', () => {
+			const pools = rulesOf(name, 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.identifier).toBe(poolIdentifier);
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.disabled).toBe(false);
+			expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf(name, 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.poolIdentifier).toBe(poolIdentifier);
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+			expect(consumer.disabled).toBe(false);
+		});
+
+		it('keeps the action cost the book prints', () => {
+			expect(costOf(name).quantity).toBe(actions);
+		});
+	});
+
+	describe('Mal, the Malevolent Imp', () => {
+		it('ships two influence roll-mode rules, one favourable and one not', () => {
+			const rules = rulesOf('Mal, the Malevolent Imp', 'situationalRollMode');
+			expect(rules).toHaveLength(2);
+			for (const rule of rules) {
+				expect(rule.checkType).toBe('skillCheck');
+				expect(rule.skills).toEqual(['influence']);
+				expect(rule.disabled).toBe(false);
+			}
+			expect(rules.map((rule) => rule.value).sort((a, b) => a - b)).toEqual([-1, 1]);
+		});
+	});
+
+	describe('Chorus of Champions', () => {
+		it('ships one charge pool that refreshes at the start of each encounter', () => {
+			const pools = rulesOf('Chorus of Champions', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.identifier).toBe('chorus-of-champions-encounter');
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.disabled).toBe(false);
+			expect(pool.recoveries).toEqual([{ trigger: 'encounterStart', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Chorus of Champions', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.poolIdentifier).toBe('chorus-of-champions-encounter');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+			expect(consumer.disabled).toBe(false);
+		});
+
+		it('gives every ally 1 action now', () => {
+			const deltas = rulesOf('Chorus of Champions', 'actionDelta');
+			expect(deltas).toHaveLength(2);
+			expect(deltas.map((delta) => delta.target).sort()).toEqual(['allAllies', 'self']);
+			for (const delta of deltas) {
+				expect(delta.value).toBe('1');
+				expect(delta.timing).toBe('now');
+				expect(delta.borrowFromNextTurn).toBe(false);
+				expect(delta.disabled).toBe(false);
+			}
+		});
+
+		it('costs a free reaction', () => {
+			const cost = costOf('Chorus of Champions');
+			expect(cost.type).toBe('action');
+			expect(cost.quantity).toBe(0);
+			expect(cost.isReaction).toBe(true);
+		});
+	});
+
+	describe.each(['A People Person', 'Lyrical Weaponry'])('%s', (name) => {
+		it('ships a description', () => {
+			expect(feature(name).system.description.trim()).not.toBe('');
+		});
+	});
+
+	describe.each([
+		"I'm So Famous!",
+		'Mana and Unlock Tier 1 Spells',
+		'Quick Wit',
+		'Song of Rest',
+		'Windbag',
+	])('%s', (name) => {
+		it('is not a reaction', () => {
+			expect(costOf(name).isReaction).toBe(false);
+			expect(costOf(name).details).toBe('');
+		});
+	});
+
+	describe('Opportunistic Snark', () => {
+		it('is a reaction that costs its action', () => {
+			expect(costOf('Opportunistic Snark')).toMatchObject({
+				type: 'action',
+				quantity: 1,
+				isReaction: true,
+			});
+		});
+	});
+
+	describe("Songweaver's Inspiration", () => {
+		it('is a free reaction', () => {
+			expect(costOf("Songweaver's Inspiration")).toMatchObject({
+				type: 'action',
+				quantity: 0,
+				isReaction: true,
+			});
 		});
 	});
 });

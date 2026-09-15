@@ -54,3 +54,4 @@ export { Migration053PackRuleCorrections } from './Migration053PackRuleCorrectio
 export { Migration054MageShepherdPilot } from './Migration054MageShepherdPilot.js';
 export { Migration055CommanderChecklist } from './Migration055CommanderChecklist.js';
 export { Migration056OathswornChecklist } from './Migration056OathswornChecklist.js';
+export { Migration057SongweaverChecklist } from './Migration057SongweaverChecklist.js';

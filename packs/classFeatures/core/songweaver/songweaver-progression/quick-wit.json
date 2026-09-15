@@ -10,10 +10,10 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "An ally makes a roll",
+				"details": "",
 				"quantity": 1,
 				"type": "none",
-				"isReaction": true
+				"isReaction": false
 			},
 			"duration": {
 				"details": "",
