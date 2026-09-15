@@ -222,7 +222,12 @@
 			"label": "Nimble Core Rules",
 			"path": "packs/rules.db",
 			"type": "JournalEntry",
-			"system": "nimble"
+			"system": "nimble",
+			"flags": {
+				"nimble": {
+					"sorting": "m"
+				}
+			}
 		}
 	],
 	"relationships": {
