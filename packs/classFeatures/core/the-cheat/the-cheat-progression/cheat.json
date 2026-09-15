@@ -6,7 +6,78 @@
 	"system": {
 		"macro": "",
 		"identifier": "cheat",
-		"rules": [],
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "IcKe27NHzAsdT0T0",
+				"identifier": "",
+				"label": "Playing a game, competing, or placing a wager",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"all"
+				]
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "3dT1X6L8FsDqVgdo",
+				"identifier": "cheat-free-move-or-hide",
+				"label": "Free Move or Hide (1/round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": true,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "kjeK5TE6b0P8jjup",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "cheat-free-move-or-hide",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "zEpqjsJl49AcfRyH",
+				"identifier": "",
+				"label": "Free Move or Hide",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "self",
+				"borrowFromNextTurn": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +91,32 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "OXRBcboLwVAmHnkY",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Spend the extra action on a Move or a Hide only.",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "q7VbN2kLwXp4RsTe",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "1/day: you may change any skill check to 10+INT.",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "Xm3kQp9vLt2RwHn7",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "If you roll under 10 on Initiative, you may change it to 10.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
