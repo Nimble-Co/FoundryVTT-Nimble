@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
-	loadAllFeatureDocs,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { FeatureDoc, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type { LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT } from './songweaver.expect.ts';
 
@@ -232,22 +232,7 @@ describe('Songweaver progression (real resolver)', () => {
 });
 
 describe('Songweaver - pack data', () => {
-	/** The songweaver class feature with this exact name, read from `packs/` on disk. */
-	const feature = (name: string): FeatureDoc => {
-		const doc = loadAllFeatureDocs().find((f) => f.system.class === CLASS_ID && f.name === name);
-		if (!doc) throw new Error(`Songweaver feature missing from the pack data: ${name}`);
-		return doc;
-	};
-
-	const rulesOf = (name: string, type: string): Record<string, any>[] =>
-		(feature(name).system.rules ?? []).filter((rule: Record<string, any>) => rule.type === type);
-
-	const effectsOf = (name: string, type: string): Record<string, any>[] =>
-		(feature(name).system.activation?.effects ?? []).filter(
-			(node: Record<string, any>) => node.type === type,
-		);
-
-	const costOf = (name: string): Record<string, any> => feature(name).system.activation.cost;
+	const { feature, rulesOf, effectsOf, costOf } = packFeatureHelpers(CLASS_ID);
 
 	describe('Inspiring Anthem', () => {
 		it('ships one charge pool that refreshes at the start of each encounter', () => {
