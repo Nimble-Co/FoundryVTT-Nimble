@@ -104,8 +104,11 @@ describe('Nimble Core Rules compendium', () => {
 		expect(entries.map((e) => e.name)).toEqual(BOOK_ORDER.map(([name]) => name));
 	});
 
-	it('gives every entry a sort value, so the pack is not alphabetised', () => {
-		for (const entry of entries) expect(typeof entry.sort).toBe('number');
+	it('gives every entry and page a sort value, so nothing falls back to alphabetical', () => {
+		for (const entry of entries) {
+			expect(typeof entry.sort).toBe('number');
+			for (const page of entry.pages) expect(typeof page.sort, page.name).toBe('number');
+		}
 	});
 
 	it.each(BOOK_ORDER)('orders the pages of %s as the book does', (name, pageNames) => {
