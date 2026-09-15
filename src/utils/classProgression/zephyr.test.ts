@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -204,5 +205,127 @@ describe('Zephyr selection pools per level', () => {
 			);
 			expect(summary.offeredGroups[slug('Martial Arts Ability')], `pool @ L${level}`).toBeDefined();
 		}
+	});
+});
+
+describe('Zephyr - pack data', () => {
+	const { feature, rulesOf, effectsOf, costOf } = packFeatureHelpers(CLASS_ID);
+
+	describe('Swift Fists', () => {
+		it('ships one unarmed damage rule of 1d4 plus STR', () => {
+			const rules = rulesOf('Swift Fists', 'unarmedDamage');
+			expect(rules).toHaveLength(1);
+			const [rule] = rules;
+			expect(rule.disabled).toBe(false);
+			expect(rule.label).toBe('Swift Fists');
+			expect(rule.predicate).toEqual({});
+			expect(rule.priority).toBe(1);
+			expect(rule.value).toBe('1d4 + @abilities.strength.mod');
+		});
+
+		it('names the damage in its description', () => {
+			expect(feature('Swift Fists').system.description).toBe(
+				'<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules), and their damage is 1d4+STR.</p>',
+			);
+		});
+	});
+
+	describe('Quickstrike', () => {
+		it('ships one action delta that gives the Zephyr 1 action now', () => {
+			const deltas = rulesOf('Quickstrike', 'actionDelta');
+			expect(deltas).toHaveLength(1);
+			const [delta] = deltas;
+			expect(delta.disabled).toBe(false);
+			expect(delta.predicate).toEqual({});
+			expect(delta.priority).toBe(3);
+			expect(delta.target).toBe('self');
+			expect(delta.value).toBe('1');
+			expect(delta.timing).toBe('now');
+			expect(delta.borrowFromNextTurn).toBe(false);
+		});
+
+		it('ships one hidden pool that gates it until the next turn ends', () => {
+			const pools = rulesOf('Quickstrike', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.disabled).toBe(false);
+			expect(pool.priority).toBe(1);
+			expect(pool.identifier).toBe('quickstrike-round');
+			expect(pool.label).toBe('Quickstrike (once per round)');
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.dieSize).toBeNull();
+			expect(pool.hidden).toBe(true);
+			expect(pool.recoveries).toEqual([
+				{ trigger: 'onTurnEnd', mode: 'refresh', value: '1' },
+				{ trigger: 'encounterEnd', mode: 'refresh', value: '1' },
+			]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Quickstrike', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.disabled).toBe(false);
+			expect(consumer.priority).toBe(2);
+			expect(consumer.maxCost).toBe('');
+			expect(consumer.poolIdentifier).toBe('quickstrike-round');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+		});
+
+		it('ships a reminder that the action buys the unarmed strike', () => {
+			expect(effectsOf('Quickstrike', 'note').map((note) => [note.noteType, note.text])).toEqual([
+				['reminder', 'When you Interpose, make an unarmed strike against that enemy for free.'],
+			]);
+		});
+
+		it('has no activation cost of its own', () => {
+			const cost = costOf('Quickstrike');
+			expect(cost.type).toBe('none');
+			expect(cost.isReaction).toBe(false);
+		});
+	});
+
+	describe('Ethereal Projection', () => {
+		it('ships one pool of one use that refreshes on a Safe Rest, off the resource bar', () => {
+			const pools = rulesOf('Ethereal Projection', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.disabled).toBe(false);
+			expect(pool.priority).toBe(1);
+			expect(pool.identifier).toBe('ethereal-projection-uses');
+			expect(pool.label).toBe('Ethereal Projection (1/Safe Rest)');
+			expect(pool.scope).toBe('item');
+			expect(pool.dieSize).toBeNull();
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.hidden).toBe(false);
+			expect(pool.showAsResource).toBe(false);
+			expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Ethereal Projection', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.disabled).toBe(false);
+			expect(consumer.priority).toBe(2);
+			expect(consumer.maxCost).toBe('');
+			expect(consumer.poolIdentifier).toBe('ethereal-projection-uses');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+		});
+	});
+
+	describe('Martial Arts Ability', () => {
+		it('ships a description that lists every pick up to level 18', () => {
+			expect(feature('Martial Arts Ability').system.description).toBe(
+				'<p>Choose a Martial Arts Ability.</p><hr><p>Level 6: Choose a 2nd Martial Arts Ability.</p><p>Level 8: Choose a 3rd Martial Arts Ability.</p><p>Level 10: Choose a 4th Martial Arts Ability.</p><p>Level 12: Choose a 5th Martial Arts Ability.</p><p>Level 14: Choose a 6th Martial Arts Ability.</p><p>Level 16: Choose a 7th Martial Arts Ability.</p><p>Level 18: Choose an 8th Martial Arts Ability.</p>',
+			);
+		});
 	});
 });
