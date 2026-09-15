@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ReactionPanelProps } from '../../../../types/components/ReactionPanel.d.ts';
+	import getHeroicReactionCostLabel from '../../../utils/heroicReactionCostLabel.js';
 	import localize from '../../../utils/localize.js';
 	import { createInterposePanelState } from './InterposeReactionPanel.svelte.ts';
 	import TargetSelector from './TargetSelector.svelte';
@@ -32,6 +33,10 @@
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
+	const costLabel = $derived(getHeroicReactionCostLabel(actor.reactive, ['interpose']));
+	const combinedCostLabel = $derived(
+		getHeroicReactionCostLabel(actor.reactive, ['interpose', 'defend']),
+	);
 	const { getTargetName, handleInterpose, handleInterposeAndDefend } = state;
 
 	function handleInterposeDragStart(event: DragEvent) {
@@ -68,7 +73,7 @@
 			</h3>
 			<span class="reaction-panel__cost">
 				<i class="fa-solid fa-bolt"></i>
-				{localize('NIMBLE.ui.heroicActions.reactions.cost')}
+				{costLabel}
 			</span>
 		</div>
 		<div class="reaction-panel__badge">
@@ -113,7 +118,7 @@
 			<i class="fa-solid fa-shield"></i>
 			{localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm')}
 			<span class="reaction-panel__button-cost">
-				({localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.cost')})
+				({combinedCostLabel})
 			</span>
 		</button>
 	</div>

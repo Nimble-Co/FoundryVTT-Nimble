@@ -3483,8 +3483,7 @@
 					},
 					"interposeAndDefend": {
 						"chatMessage": "<p><strong>{name}</strong> utilise <strong>2 reactions</strong> pour <strong>Interposer</strong> sur <strong>{target}</strong> et <strong>Défendre</strong>, réduisant les dégâts par leur valeur d'Armure ({armor}).</p>",
-						"confirm": "Interposer et Défendre",
-						"cost": "2 Actions"
+						"confirm": "Interposer et Défendre"
 					},
 					"multipleTargets": "Plusieurs cibles sélectionnées",
 					"opportunity": {

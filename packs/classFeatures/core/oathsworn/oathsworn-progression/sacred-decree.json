@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "",
+		"description": "<p>Learn 1 Sacred Decree.</p><hr><p>Level 6: Learn a 2nd Sacred Decree.</p><p>Level 9: Learn a 3rd Sacred Decree.</p><p>Level 12: Learn a 4th Sacred Decree.</p><p>Level 14: Learn a 5th Sacred Decree.</p><p>Level 16: Learn a 6th Sacred Decree.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",

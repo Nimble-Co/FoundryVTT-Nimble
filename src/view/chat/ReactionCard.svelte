@@ -19,6 +19,7 @@
 	const weaponName = $derived(state.weaponName);
 	const weaponDamage = $derived(state.weaponDamage);
 	const chatMessage = $derived(state.chatMessage);
+	const costLabel = $derived(state.costLabel);
 	const reactionConfig = $derived(state.reactionConfig);
 
 	setContext(
@@ -43,7 +44,7 @@
 			<h3 class="reaction-card__title">{reactionConfig.title}</h3>
 			<span class="reaction-card__cost">
 				<i class="fa-solid fa-bolt"></i>
-				{localize('NIMBLE.ui.heroicActions.reactions.cost')}
+				{costLabel}
 			</span>
 		</div>
 		{#if reactionType === 'defend' && armorValue !== null}
