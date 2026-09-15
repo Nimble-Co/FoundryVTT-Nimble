@@ -46,7 +46,8 @@ function sign(value: unknown): number {
 /**
  * A rule already covering the same clause, whatever id it carries: a pool is
  * keyed by what it holds, a consumer by the pool it spends, an action by who
- * gains it, and a roll mode by the skills it reads and the direction it bends.
+ * gains it, a roll mode by the skills it reads and the direction it bends, and
+ * an unarmed damage formula by the formula it sets.
  */
 function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 	if (!existing || existing.type !== wanted.type) return false;
@@ -58,6 +59,8 @@ function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 			return existing.poolIdentifier === wanted.poolIdentifier;
 		case 'actionDelta':
 			return existing.target === wanted.target;
+		case 'unarmedDamage':
+			return existing.value === wanted.value;
 		case 'situationalRollMode':
 			return (
 				existing.checkType === 'skillCheck' &&
