@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "9jrjpKpM5T57Wa7r",
+				"identifier": "",
+				"label": "Finding food and water in the wild",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"all"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
