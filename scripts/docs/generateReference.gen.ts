@@ -793,9 +793,17 @@ function generateFormulaReferencePage(): void {
 	].map((row) => `| ${row.map(cell).join(' | ')} |`);
 
 	const ruleTypes: Record<string, string> = NIMBLE.ruleTypes;
+	const ruleTypeName = (key: string) => {
+		if (!ruleTypes[key]) {
+			throw new Error(
+				`Unknown rule type "${key}" in the formula reference. Update the rule type lists in scripts/docs/generateReference.gen.ts.`,
+			);
+		}
+		return localize(ruleTypes[key]);
+	};
 	const ruleNameList = (keys: string[]) =>
 		keys
-			.map((key) => `**${localize(ruleTypes[key])}**`)
+			.map((key) => `**${ruleTypeName(key)}**`)
 			.join(', ')
 			.replace(/, ([^,]*)$/, ' and $1');
 
@@ -841,7 +849,7 @@ The system prepares an actor in steps, and rules resolve their formulas at diffe
 - **Later rules see most late values.** ${ruleNameList(LATER_FORMULA_RULE_TYPES)} resolve after them. The exception is \`@attributes.armor.value\`, which is calculated after every rule.
 - **Activation formulas are safe.** Formulas in an item's activation (damage, healing, and similar) resolve when the item is used, after the actor is fully prepared. Every value on this page is safe there.
 - **Values marked Yes can still change.** Other rules can change a value after an early rule has read it, for example a stat modifier or a speed. An early rule sees the value as it is at that moment.
-- **Calculate it yourself when you can.** In an early rule, write \`6 + @attributes.wounds.bonus\` instead of \`@attributes.wounds.max\`. The bonus includes only the **${localize(ruleTypes.maxWounds)}** rules that have already run.
+- **Calculate it yourself when you can.** In an early rule, write \`6 + @attributes.wounds.bonus\` instead of \`@attributes.wounds.max\`. The bonus includes only the **${ruleTypeName('maxWounds')}** rules that have already run.
 `;
 
 	writePage('formula-reference.md', body);
