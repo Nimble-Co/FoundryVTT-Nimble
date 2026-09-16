@@ -7,6 +7,7 @@ on:
       - 'docs/**'
       # Inputs to the generated reference pages (pnpm docs:generate)
       - 'src/models/rules/**'
+      - 'src/models/actor/**'
       - 'src/settings/**'
       - 'src/config.ts'
       - 'src/config/**'

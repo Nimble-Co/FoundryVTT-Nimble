@@ -1,7 +1,7 @@
 /**
  * Generates the user-documentation reference pages from the system's source of
- * truth: rule DataModel schemas, settings registrations, and the conditions
- * config, with display text resolved through en.json.
+ * truth: rule and actor DataModel schemas, settings registrations, and the
+ * conditions config, with display text resolved through en.json.
  *
  * Runs as a vitest spec (`pnpm docs:generate`) so it can reuse tests/setup.ts,
  * which boots the real init()/i18nInit() under the Foundry mocks. Output lands
@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { expect, it } from 'vitest';
 
+import actorDataModels from '../../src/models/actor/actorDataModels.js';
 import { registerAdjacencySettings } from '../../src/settings/adjacencySettings.js';
 import { registerCombatTrackerSettings } from '../../src/settings/combatTrackerSettings.js';
 import registerSystemSettings from '../../src/settings/index.js';
@@ -578,6 +579,275 @@ ${sections.join('\n\n')}
 }
 
 /* -------------------------------------------------- */
+/*  Formula references                                */
+/* -------------------------------------------------- */
+
+type ActorTypeKey = 'character' | 'npc' | 'minion' | 'soloMonster';
+
+const ACTOR_COLUMNS: Array<{ key: ActorTypeKey; title: string }> = [
+	{ key: 'character', title: 'Character' },
+	{ key: 'npc', title: 'NPC' },
+	{ key: 'minion', title: 'Minion' },
+	{ key: 'soloMonster', title: 'Solo monster' },
+];
+
+const MONSTER_TYPES: ActorTypeKey[] = ['npc', 'minion', 'soloMonster'];
+
+// Numeric schema fields that are internal state rather than something a formula wants.
+const SKIPPED_FORMULA_FIELDS = new Set(['defaultRollMode']);
+
+// Keyed by path with stat and skill keys collapsed to <stat> and <skill>.
+// A numeric schema field without an entry here fails the generator.
+const FORMULA_PATH_DESCRIPTIONS: Record<string, string> = {
+	'abilities.<stat>.mod': 'Stat modifier, with every bonus included. Same as `@<stat>`.',
+	'abilities.<stat>.baseValue': 'Stat modifier as entered on the sheet, before bonuses.',
+	'abilities.<stat>.bonus': 'Bonus to the stat modifier from rules.',
+	'savingThrows.<stat>.mod': 'Saving throw modifier. Same as `@<stat>Save`.',
+	'savingThrows.<stat>.bonus': 'Bonus to the saving throw from rules or the sheet.',
+	'skills.<skill>.mod': 'Skill modifier, with every bonus included. Same as `@<skill>`.',
+	'skills.<skill>.points': 'Skill points spent on the skill.',
+	'skills.<skill>.bonus': 'Bonus to the skill from rules.',
+	'attributes.armor.value': 'Armor value, after armor, shields and Armor Class rules.',
+	'attributes.dyingActionLimit': 'Actions the character can take while Dying.',
+	'attributes.hp.value': 'Current hit points.',
+	'attributes.hp.max': 'Maximum hit points.',
+	'attributes.hp.temp': 'Temporary hit points.',
+	'attributes.hp.bonus': 'Bonus to maximum hit points entered on the sheet.',
+	'attributes.movement.walk': 'Walking speed.',
+	'attributes.movement.climb': 'Climbing speed.',
+	'attributes.movement.fly': 'Flying speed.',
+	'attributes.movement.swim': 'Swimming speed.',
+	'attributes.movement.burrow': 'Burrowing speed.',
+	'attributes.wounds.value': 'Current wounds.',
+	'attributes.wounds.bonus': 'Bonus to maximum wounds, for example from a Max Wounds rule.',
+	'currency.cp.value': 'Copper pieces carried.',
+	'currency.sp.value': 'Silver pieces carried.',
+	'currency.gp.value': 'Gold pieces carried.',
+	'inventory.bonusSlots': 'Extra inventory slots.',
+	'resources.mana.current': 'Current mana.',
+	'resources.mana.baseMax': 'Base part of maximum mana, before class mana is added.',
+	'resources.highestUnlockedSpellTier': 'Highest spell tier the character can cast.',
+};
+
+interface FormulaPathEntry {
+	path: string;
+	description: string;
+	// Actor types that have the value, and whether it is ready before the rule sweep.
+	actors: Partial<Record<ActorTypeKey, { late: boolean }>>;
+}
+
+const CHARACTER_ONLY_LATE: FormulaPathEntry['actors'] = { character: { late: true } };
+
+const forMonsters = <T>(value: T): Partial<Record<ActorTypeKey, T>> =>
+	Object.fromEntries(MONSTER_TYPES.map((type) => [type, value]));
+
+// Calculated during data preparation, so they have no schema field to find.
+const CALCULATED_FORMULA_PATHS: FormulaPathEntry[] = [
+	{
+		path: 'attributes.wounds.max',
+		description: 'Maximum wounds: 6 plus `@attributes.wounds.bonus`.',
+		actors: CHARACTER_ONLY_LATE,
+	},
+	{
+		path: 'attributes.initiative.mod',
+		description: 'Initiative modifier.',
+		actors: CHARACTER_ONLY_LATE,
+	},
+	{
+		path: 'resources.mana.value',
+		description: 'Current mana. Same as `@resources.mana.current`.',
+		actors: CHARACTER_ONLY_LATE,
+	},
+	{
+		path: 'resources.mana.max',
+		description: 'Maximum mana.',
+		actors: CHARACTER_ONLY_LATE,
+	},
+	{
+		path: 'inventory.totalSlots',
+		description: 'Total inventory slots: 10 plus STR plus bonus slots.',
+		actors: CHARACTER_ONLY_LATE,
+	},
+	{
+		path: 'inventory.usedSlots',
+		description: 'Inventory slots in use.',
+		actors: CHARACTER_ONLY_LATE,
+	},
+	{
+		path: 'details.level',
+		description:
+			'Monster level. Stored as text such as `1/2`, so put it in parentheses when you divide by it: `10 / (@details.level)`.',
+		actors: forMonsters({ late: false }),
+	},
+];
+
+// Formula rule types that resolve before and after the late values exist.
+const EARLY_FORMULA_RULE_TYPES = [
+	'abilityBonus',
+	'skillBonus',
+	'savingThrowBonus',
+	'maxWounds',
+	'maxHitDice',
+	'incrementHitDice',
+	'healingPotionBonus',
+];
+const LATER_FORMULA_RULE_TYPES = ['armorClass', 'initiativeBonus'];
+
+// Stored fields that are recalculated after the rule sweep.
+const LATE_SCHEMA_PATHS: Partial<Record<ActorTypeKey, Set<string>>> = {
+	character: new Set(['attributes.armor.value', 'resources.highestUnlockedSpellTier']),
+	...forMonsters(new Set(['savingThrows.<stat>.mod'])),
+};
+
+function collectNumericSchemaPaths(fields: Record<string, any>, prefix = ''): string[] {
+	const paths: string[] = [];
+	for (const [name, field] of Object.entries(fields)) {
+		const fieldPath = prefix ? `${prefix}.${name}` : name;
+		const constructorName = field?.constructor?.name ?? '';
+		if (constructorName === 'SchemaField' && field.fields) {
+			paths.push(...collectNumericSchemaPaths(field.fields, fieldPath));
+		} else if (constructorName === 'NumberField' && !SKIPPED_FORMULA_FIELDS.has(name)) {
+			paths.push(fieldPath);
+		}
+	}
+	return paths;
+}
+
+function collapseFormulaPath(
+	fieldPath: string,
+	statKeys: Set<string>,
+	skillKeys: Set<string>,
+): string {
+	const [group, key, ...rest] = fieldPath.split('.');
+	if ((group === 'abilities' || group === 'savingThrows') && statKeys.has(key)) {
+		return [group, '<stat>', ...rest].join('.');
+	}
+	if (group === 'skills' && skillKeys.has(key)) return [group, '<skill>', ...rest].join('.');
+	return fieldPath;
+}
+
+function collectFormulaPathEntries(statKeys: Set<string>, skillKeys: Set<string>) {
+	const entries = new Map<string, FormulaPathEntry>();
+	const undescribed = new Set<string>();
+
+	for (const { key: actorType } of ACTOR_COLUMNS) {
+		const schema = actorDataModels[actorType].defineSchema();
+		for (const fieldPath of collectNumericSchemaPaths(schema)) {
+			const collapsed = collapseFormulaPath(fieldPath, statKeys, skillKeys);
+			const description = FORMULA_PATH_DESCRIPTIONS[collapsed];
+			if (!description) {
+				undescribed.add(collapsed);
+				continue;
+			}
+			const entry = entries.get(collapsed) ?? { path: collapsed, description, actors: {} };
+			entry.actors[actorType] = {
+				late: LATE_SCHEMA_PATHS[actorType]?.has(collapsed) ?? false,
+			};
+			entries.set(collapsed, entry);
+		}
+	}
+
+	if (undescribed.size > 0) {
+		throw new Error(
+			`Numeric actor fields without a formula reference description: ${[...undescribed].join(', ')}. ` +
+				'Add them to FORMULA_PATH_DESCRIPTIONS (or SKIPPED_FORMULA_FIELDS) in scripts/docs/generateReference.gen.ts.',
+		);
+	}
+
+	for (const calculated of CALCULATED_FORMULA_PATHS) {
+		entries.set(calculated.path, calculated);
+	}
+
+	return [...entries.values()].sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function availabilityCell(entry: FormulaPathEntry, actorType: ActorTypeKey): string {
+	const availability = entry.actors[actorType];
+	if (!availability) return '';
+	return availability.late ? 'Late' : 'Yes';
+}
+
+function generateFormulaReferencePage(): void {
+	const { NIMBLE } = globals.CONFIG;
+	const abilityScores: Record<string, string> = NIMBLE.abilityScores;
+	const skills: Record<string, string> = NIMBLE.skills;
+	const statKeys = new Set(Object.keys(abilityScores));
+	const skillKeys = new Set(Object.keys(skills));
+
+	const keyList = (labels: Record<string, string>, suffix = '') =>
+		Object.entries(labels)
+			.map(([key, label]) => `\`${key}${suffix}\` (${localize(label)})`)
+			.join(', ');
+
+	const inlineCode = (value: string) => `\`${value}\``;
+	const statShortcuts = Object.keys(abilityScores).map((key) => inlineCode(`@${key}`));
+	const saveShortcuts = Object.keys(abilityScores).map((key) => inlineCode(`@${key}Save`));
+	const skillShortcuts = Object.keys(skills).map((key) => inlineCode(`@${key}`));
+
+	const shortcutRows = [
+		['`@level`', 'Character level.', 'Yes', ''],
+		['`@key`', "The highest modifier among the character's class key stats.", 'Yes', ''],
+		[statShortcuts.join(', '), 'Stat modifiers.', 'Yes', ''],
+		[saveShortcuts.join(', '), 'Saving throw modifiers.', 'Yes', 'Late'],
+		[skillShortcuts.join(', '), 'Skill modifiers.', 'Yes', ''],
+	].map((row) => `| ${row.map(cell).join(' | ')} |`);
+
+	const ruleTypes: Record<string, string> = NIMBLE.ruleTypes;
+	const ruleNameList = (keys: string[]) =>
+		keys
+			.map((key) => `**${localize(ruleTypes[key])}**`)
+			.join(', ')
+			.replace(/, ([^,]*)$/, ' and $1');
+
+	const pathRows = collectFormulaPathEntries(statKeys, skillKeys).map((entry) => {
+		const actorCells = ACTOR_COLUMNS.map(({ key }) => availabilityCell(entry, key));
+		return `| ${inlineCode(`@${entry.path}`)} | ${cell(entry.description)} | ${actorCells.join(' | ')} |`;
+	});
+
+	const body = `---
+title: "Formula Reference"
+---
+
+${BANNER}
+
+# Formula Reference
+
+Every value a formula can read with an \`@\` reference, and which kinds of actor have it. For how to write formulas, see [Formulas & References](../rules-builder/formulas.md).
+
+In the tables, **Yes** means the actor has the value. **Late** means the actor has it, but the system calculates it after some rules have already resolved their formulas (see [Values calculated late](#values-calculated-late)). An empty cell means the actor does not have the value.
+
+## Shortcuts
+
+| Reference | Value | Character | NPC, minion, solo monster |
+| :--- | :--- | :--- | :--- |
+${shortcutRows.join('\n')}
+
+## Full paths
+
+Write any of these with \`@\` in front, for example \`@attributes.wounds.value\`.
+
+- \`<stat>\` is one of: ${keyList(abilityScores)}.
+- \`<skill>\` is one of: ${keyList(skills)}.
+
+| Reference | Value | ${ACTOR_COLUMNS.map(({ title }) => title).join(' | ')} |
+| :--- | :--- | ${ACTOR_COLUMNS.map(() => ':---').join(' | ')} |
+${pathRows.join('\n')}
+
+## Values calculated late
+
+The system prepares an actor in steps, and rules resolve their formulas at different steps.
+
+- **Early rules do not see late values.** ${ruleNameList(EARLY_FORMULA_RULE_TYPES)} resolve their formulas before the values marked **Late** are calculated, so they do not get the correct number from them.
+- **Later rules see most late values.** ${ruleNameList(LATER_FORMULA_RULE_TYPES)} resolve after them. The exception is \`@attributes.armor.value\`, which is calculated after every rule.
+- **Activation formulas are safe.** Formulas in an item's activation (damage, healing, and similar) resolve when the item is used, after the actor is fully prepared. Every value on this page is safe there.
+- **Values marked Yes can still change.** Other rules can change a value after an early rule has read it, for example a stat modifier or a speed. An early rule sees the value as it is at that moment.
+- **Calculate it yourself when you can.** In an early rule, write \`6 + @attributes.wounds.bonus\` instead of \`@attributes.wounds.max\`. The bonus includes only the **${localize(ruleTypes.maxWounds)}** rules that have already run.
+`;
+
+	writePage('formula-reference.md', body);
+}
+
+/* -------------------------------------------------- */
 /*  Entry point                                       */
 /* -------------------------------------------------- */
 
@@ -585,11 +855,23 @@ it('generates the documentation reference pages', () => {
 	const rulePages = generateRulePages();
 	generateConditionsPage();
 	generateSettingsPage();
+	generateFormulaReferencePage();
 
-	const expectedFiles = [...rulePages, 'conditions.md', 'settings.md'];
+	const expectedFiles = [...rulePages, 'conditions.md', 'settings.md', 'formula-reference.md'];
 	for (const fileName of expectedFiles) {
 		const filePath = path.join(OUT_DIR, fileName);
 		expect(fs.existsSync(filePath), `${fileName} should exist`).toBe(true);
 		expect(fs.statSync(filePath).size, `${fileName} should not be empty`).toBeGreaterThan(500);
+	}
+
+	const formulaPage = fs.readFileSync(path.join(OUT_DIR, 'formula-reference.md'), 'utf-8');
+	for (const reference of [
+		'`@attributes.wounds.value`',
+		'`@attributes.wounds.max`',
+		'`@attributes.wounds.bonus`',
+		'`@strengthSave`',
+		'`@details.level`',
+	]) {
+		expect(formulaPage, `formula-reference.md should list ${reference}`).toContain(reference);
 	}
 });
