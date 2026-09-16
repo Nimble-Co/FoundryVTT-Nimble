@@ -643,6 +643,12 @@ export const foundryApiMocks = {
 						assignWithOptions(this, options);
 					}
 				},
+				SetField: class SetField {
+					constructor(element?: any, options?: any) {
+						(this as unknown as { element: unknown }).element = element;
+						assignWithOptions(this, options);
+					}
+				},
 				DataField: class DataField {
 					constructor(options?: any) {
 						assignWithOptions(this, options);
