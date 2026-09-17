@@ -1,4 +1,3 @@
-import { SYSTEM_ID } from '#system';
 import type { MovementOffer, MovementOfferResult } from '#types/movement.js';
 import { buildMovementRecord } from './buildMovementRecord.js';
 import { FORCED_MOVEMENT_ACTION, FREE_MOVEMENT_ACTION } from './movementActions.js';
@@ -17,14 +16,18 @@ function planOptionsFor(offer: MovementOffer, gridDistance: number): Record<stri
 	const limit = offer.spaces * gridDistance;
 	const options: Record<string, unknown> = {
 		allowedActions: [offer.kind === 'forced' ? FORCED_MOVEMENT_ACTION : FREE_MOVEMENT_ACTION],
-		direct: offer.kind === 'forced',
-		preventDrop: false,
-		moveOptions: { [SYSTEM_ID]: { offerId: offer.id, messageId: offer.messageId } },
+		// A push "away" or "toward" is one straight drag; a push in any
+		// direction and every free move may bend around corners.
+		direct: offer.kind === 'forced' && offer.direction !== 'any',
 	};
 	// Cost doubles in difficult terrain, distance does not: a free move that
 	// honours terrain is capped by cost, every other offer by distance.
-	if (offer.kind === 'free' && !offer.ignoreDifficultTerrain) options.maxCost = limit;
-	else options.maxDistance = limit;
+	if (offer.kind === 'free' && !offer.ignoreDifficultTerrain) {
+		options.maxCost = limit;
+	} else {
+		options.maxDistance = limit;
+		options.constrainOptions = { ignoreCost: true };
+	}
 	return options;
 }
 
@@ -47,11 +50,16 @@ export async function planOfferedMove(
 		fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]),
 ): Promise<MovementOfferResult> {
 	const token = resolveToken(offer.tokenUuid) as PlannableTokenDocument | null;
-	if (!token?.isOwner || !token.object) return UNAVAILABLE;
+	const gridDistance = token?.parent?.grid?.distance;
+	if (!token?.isOwner || !token.object || !gridDistance) return UNAVAILABLE;
 
-	const plan = await token.object.planMovement(
-		planOptionsFor(offer, token.parent?.grid?.distance ?? 1),
-	);
+	let plan: { id: string } | null;
+	try {
+		plan = await token.object.planMovement(planOptionsFor(offer, gridDistance));
+	} catch {
+		// Core throws for a hidden token a player cannot move or a canvas that is not ready.
+		return UNAVAILABLE;
+	}
 	if (!plan) return DECLINED;
 
 	// Resolves once the movement completed or was stopped short; false alone
