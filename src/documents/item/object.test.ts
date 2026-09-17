@@ -323,8 +323,6 @@ describe('NimbleObjectItem.prepareChatCardData concentration', () => {
 		});
 	}
 
-	// A scroll carries the inscribed spell's concentration property, so its card
-	// has to say so the same way the spell's own card does.
 	it('tells the card the wielder is concentrating', async () => {
 		const chatData = await createScrollItem(['concentration']).prepareChatCardData({});
 

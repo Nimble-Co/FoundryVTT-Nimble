@@ -57,9 +57,7 @@ describe('requiresConcentration', () => {
 });
 
 describe('applyCasterConcentration', () => {
-	// The condition belongs to the caster whatever the spell points at, so this
-	// covers a spell that buffs an ally and one that targets nobody alike.
-	it('applies the condition to the caster, crediting the item as its source', async () => {
+	it('applies the condition to the caster whatever the spell targets, crediting the item', async () => {
 		const caster = createCaster();
 
 		await applyCasterConcentration(createItem(['concentration'], caster));
@@ -86,9 +84,6 @@ describe('applyCasterConcentration', () => {
 		expect(createEffect).not.toHaveBeenCalled();
 	});
 
-	// applyConditionToActor refuses a condition the actor already carries, so
-	// without the removal a second concentration spell would leave the first
-	// spell's instance in place and apply nothing.
 	it('ends the previous concentration so the caster holds exactly one', async () => {
 		const caster = createCaster();
 		caster.statuses.add('concentration');

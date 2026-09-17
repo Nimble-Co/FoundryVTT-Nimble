@@ -177,13 +177,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	}
 
 	/**
-	 * Create the activation chat card unless a rule suppresses it, apply the
-	 * caster's concentration, then fire the `useItem` hook. Shared tail of every
-	 * activate() implementation.
+	 * Create the activation chat card unless a rule suppresses it, then fire
+	 * the `useItem` hook. Shared tail of every activate() implementation.
 	 *
-	 * Concentration is applied here rather than on the damage-applied path so
-	 * that a utility spell such as Fly, which rolls nothing and may target
-	 * nobody, still occupies it.
+	 * Concentration is applied here, not on the damage-applied path, which a
+	 * roll-less utility spell such as Fly never reaches.
 	 */
 	protected async _createActivationCard(
 		chatData: unknown,

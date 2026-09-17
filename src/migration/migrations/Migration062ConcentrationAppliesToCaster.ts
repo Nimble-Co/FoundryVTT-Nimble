@@ -4,17 +4,11 @@ const CONCENTRATION = 'concentration';
 
 /**
  * Drop the `condition: concentration` activation nodes eight core spells shipped
- * with (issue #23).
+ * with, now that the property applies the condition on its own (issue #23).
  *
- * Casting an item that carries the `concentration` property now applies the
- * condition to the caster on its own, so those nodes are redundant. They were
- * also wrong: the card chip is GM-only, and it applies the condition to the
- * card's targets rather than to the caster.
- *
- * Matched on the property rather than on source ids, so a homebrew copy and an
- * inscribed scroll, which deep-clones the spell's activation, are cleared too.
- * An item without the property keeps whatever concentration node was authored on
- * it: nothing else applies the condition there, so the chip is still the only way.
+ * Matched on the property rather than on source ids, so homebrew copies and
+ * inscribed scrolls are cleared too. An item without the property keeps its node:
+ * nothing else applies the condition there.
  */
 class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 	static override readonly version = 62;

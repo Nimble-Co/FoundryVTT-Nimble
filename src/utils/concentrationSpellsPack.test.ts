@@ -14,8 +14,7 @@ type SpellSource = {
 	};
 };
 
-/** Rulebook durations for the spells whose pack data stored one minute instead. */
-const CORRECTED_DURATIONS: Record<string, { quantity: number; type: string }> = {
+const RULEBOOK_TEN_MINUTE_DURATIONS: Record<string, { quantity: number; type: string }> = {
 	Fly: { quantity: 10, type: 'minute' },
 	'Greater Windform': { quantity: 10, type: 'minute' },
 	'Lesser Windform': { quantity: 10, type: 'minute' },
@@ -29,8 +28,6 @@ function readSpellSources(): SpellSource[] {
 }
 
 describe('concentration spell pack data', () => {
-	// Casting derives the condition from the property, so a node would apply a
-	// second concentration, to the card's targets, and only for a GM.
 	it('leaves no concentration condition node on a spell that carries the property', () => {
 		const spellsWithRedundantNodes = readSpellSources()
 			.filter((spell) => spell.system.properties.selected.includes('concentration'))
@@ -47,7 +44,7 @@ describe('concentration spell pack data', () => {
 	it('stores the rulebook duration for the spells that concentrate for ten minutes', () => {
 		const durations = Object.fromEntries(
 			readSpellSources()
-				.filter((spell) => spell.name in CORRECTED_DURATIONS)
+				.filter((spell) => spell.name in RULEBOOK_TEN_MINUTE_DURATIONS)
 				.map((spell) => [
 					spell.name,
 					{
@@ -57,6 +54,6 @@ describe('concentration spell pack data', () => {
 				]),
 		);
 
-		expect(durations).toEqual(CORRECTED_DURATIONS);
+		expect(durations).toEqual(RULEBOOK_TEN_MINUTE_DURATIONS);
 	});
 });
