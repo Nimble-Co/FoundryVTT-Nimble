@@ -1,5 +1,4 @@
 import { SYSTEM_ID } from '#system';
-import { getAdjacencyIncludesDiagonals } from '../../settings/adjacencySettings.js';
 import {
 	countAdjacentAllies,
 	countAdjacentEnemies,
@@ -35,15 +34,10 @@ async function syncAdjacency(overrides?: PositionOverrides): Promise<void> {
 
 	if (tokens.length === 0) return;
 
-	const includeDiagonals = getAdjacencyIncludesDiagonals();
-	const counts = tokens.map((token) =>
-		countAdjacentEnemies(token, tokens, overrides, includeDiagonals),
-	);
+	const counts = tokens.map((token) => countAdjacentEnemies(token, tokens, overrides));
 	const maxCount = Math.max(...counts, 0);
 
-	const allyCounts = tokens.map((token) =>
-		countAdjacentAllies(token, tokens, overrides, includeDiagonals),
-	);
+	const allyCounts = tokens.map((token) => countAdjacentAllies(token, tokens, overrides));
 	const maxAllyCount = Math.max(...allyCounts, 0);
 
 	const updates = activeCombatants

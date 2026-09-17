@@ -114,8 +114,9 @@ Feature rules can then use this in their conditions (the Condition box), with te
 Details worth knowing:
 
 - "Enemies" is decided by token disposition: hostile tokens count non-hostile tokens as enemies, and vice versa.
-- The companion setting **Adjacency Includes Diagonals** controls whether corner-to-corner counts as adjacent (on by default).
-- Both settings are world settings, apply to the whole table, and require a reload when changed.
+- Whether corner-to-corner counts as adjacent follows Foundry's **Grid Diagonals** core setting, so it matches the ruler and every other measurement.
+- Adjacency is measured between token footprints, so a Large or bigger creature is adjacent when any of its spaces is.
+- The setting is a world setting, applies to the whole table, and requires a reload when changed.
 - The tracking data is cleared when the combat is deleted, or when you turn the setting off.
 
 ## Related pages

@@ -2945,8 +2945,9 @@
 				"hint": "When enabled, the system automatically tracks the adjacency status of combatants."
 			},
 			"adjacencyIncludesDiagonals": {
-				"name": "Adjacency Includes Diagonals",
-				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
+				"name": "Adjacency Includes Diagonals (Legacy)",
+				"hint": "Superseded by Foundry's Grid Diagonals core setting. A stored value is carried over once and has no other effect.",
+				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting (diagonals are not adjacent). Reload for it to take effect."
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules (Legacy)",
