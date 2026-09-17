@@ -1,10 +1,16 @@
 import { SYSTEM_ID } from '#system';
-import type { MovementOffer, MovementOfferOutcome } from '#types/movement.js';
+import type { MovementOffer, MovementOfferResult } from '#types/movement.js';
 import { planOfferedMove } from './planOfferedMove.js';
 
 export const PLAN_MOVE_QUERY = `${SYSTEM_ID}.planMove`;
 
 const QUERY_TIMEOUT_MS = 120_000;
+
+const UNAVAILABLE: MovementOfferResult = {
+	outcome: 'unavailable',
+	movedSpaces: null,
+	stopped: false,
+};
 
 interface MovingUser {
 	id: string | null;
@@ -46,13 +52,13 @@ export async function requestMove(
 		resolveToken?: (uuid: string) => unknown;
 		users?: Iterable<MovingUser>;
 		activeGm?: MovingUser | null;
-		planLocally?: (offer: MovementOffer) => Promise<MovementOfferOutcome>;
+		planLocally?: (offer: MovementOffer) => Promise<MovementOfferResult>;
 	} = {},
-): Promise<MovementOfferOutcome> {
+): Promise<MovementOfferResult> {
 	const resolveToken =
 		deps.resolveToken ?? ((uuid) => fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]));
 	const token = resolveToken(offer.tokenUuid) as OfferedToken | null;
-	if (!token) return 'unavailable';
+	if (!token) return UNAVAILABLE;
 
 	const users = deps.users ?? ((game.users ?? []) as unknown as Iterable<MovingUser>);
 	const activeGm =
@@ -60,14 +66,21 @@ export async function requestMove(
 			? ((game.users as unknown as { activeGM?: MovingUser | null })?.activeGM ?? null)
 			: deps.activeGm;
 	const mover = selectMovingUser(token, users, activeGm);
-	if (!mover) return 'unavailable';
+	if (!mover) return UNAVAILABLE;
 
 	if (mover.isSelf) return (deps.planLocally ?? planOfferedMove)(offer);
 
 	try {
-		const outcome = await mover.query(PLAN_MOVE_QUERY, offer, { timeout: QUERY_TIMEOUT_MS });
-		return outcome === 'started' || outcome === 'declined' ? outcome : 'unavailable';
+		const result = (await mover.query(PLAN_MOVE_QUERY, offer, {
+			timeout: QUERY_TIMEOUT_MS,
+		})) as Partial<MovementOfferResult> | null;
+		if (result?.outcome !== 'started' && result?.outcome !== 'declined') return UNAVAILABLE;
+		return {
+			outcome: result.outcome,
+			movedSpaces: result.movedSpaces ?? null,
+			stopped: !!result.stopped,
+		};
 	} catch {
-		return 'unavailable';
+		return UNAVAILABLE;
 	}
 }

@@ -1,8 +1,7 @@
-import { SYSTEM_ID, systemHookName } from '#system';
+import { SYSTEM_ID } from '#system';
 import type { MoveNode } from '#types/effectTree.js';
-import type { MovementOffer, MovementOfferOutcome, MovementRecord } from '#types/movement.js';
+import type { MovementOffer, MovementOfferOutcome } from '#types/movement.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
-import { isActiveGM } from '../isActiveGM.js';
 import localize from '../localize.js';
 import { requestMove } from './requestMove.js';
 
@@ -37,11 +36,7 @@ export function buildMovementOfferId(messageId: string, nodeId: string, tokenId:
 	return `${messageId}.${nodeId}.${tokenId}`;
 }
 
-/**
- * Upserts one entry. The drag start (from the mover) and the drag result
- * (from the active GM) can land in either order, so both merge over what is
- * already there.
- */
+/** Upserts one entry, keeping whatever an earlier stamp already recorded. */
 export function mergeMovementOfferEntry(
 	entries: readonly MovementOfferEntry[],
 	patch: Partial<MovementOfferEntry> & { id: string },
@@ -100,8 +95,8 @@ async function requestMovementOfferUpdate(
 
 /**
  * Takes a Movement Offer from a card's `move` node for one recipient token:
- * offers the drag to the token's owner and, once it starts, records the use
- * on the card. The system never moves the token itself.
+ * offers the drag to the token's owner and, once it lands, records on the
+ * card how far the token went. The system never moves the token itself.
  */
 export async function takeMovementOffer(params: {
 	messageId: string;
@@ -124,8 +119,8 @@ export async function takeMovementOffer(params: {
 		messageId,
 	};
 
-	const outcome = await requestMove(offer);
-	if (outcome === 'started') {
+	const result = await requestMove(offer);
+	if (result.outcome === 'started') {
 		await requestMovementOfferUpdate(messageId, {
 			id,
 			nodeId: node.id,
@@ -133,13 +128,15 @@ export async function takeMovementOffer(params: {
 			spaces,
 			used: true,
 			usedBy: game.user?.id ?? null,
+			movedSpaces: result.movedSpaces,
+			stopped: result.stopped,
 		});
-	} else if (outcome === 'unavailable') {
+	} else if (result.outcome === 'unavailable') {
 		ui.notifications?.warn(
 			localize('NIMBLE.chat.movementOffers.unavailable', { name: token.name }),
 		);
 	}
-	return outcome;
+	return result.outcome;
 }
 
 async function handleMovementOfferRequest(payload: unknown): Promise<void> {
@@ -156,11 +153,8 @@ async function handleMovementOfferRequest(payload: unknown): Promise<void> {
 
 let didRegister = false;
 
-/**
- * GM-side listeners: relayed use stamps from players, and the drag result from
- * the movement record once an offered drag lands. Idempotent; call from ready.
- */
-export function registerMovementOfferListeners(): void {
+/** GM-side listener for relayed offer stamps from players. Idempotent; call from ready. */
+export function registerMovementOfferSocketListener(): void {
 	if (didRegister) return;
 	didRegister = true;
 
@@ -169,16 +163,5 @@ export function registerMovementOfferListeners(): void {
 		| undefined;
 	socket?.on?.(MOVEMENT_OFFER_SOCKET_NAME, (payload) => {
 		void handleMovementOfferRequest(payload);
-	});
-
-	// @ts-expect-error - movementFinished is a custom system hook
-	Hooks.on(systemHookName('movementFinished'), (record: MovementRecord) => {
-		if (!isActiveGM() || !record.offer?.messageId) return;
-		void executeMovementOfferUpdate(record.offer.messageId, {
-			id: record.offer.id,
-			used: true,
-			movedSpaces: record.spaces,
-			stopped: record.stopped,
-		});
 	});
 }
