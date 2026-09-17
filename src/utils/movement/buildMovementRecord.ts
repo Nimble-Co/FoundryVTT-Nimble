@@ -46,6 +46,7 @@ function toPosition(waypoint: TokenPosition): TokenPosition {
 export function buildMovementRecord(
 	token: RecordableToken,
 	movement: MovementLike,
+	offerId: string | null = null,
 ): MovementRecord | null {
 	const lastPassed = movement.passed.waypoints.at(-1);
 	if (!lastPassed) return null;
@@ -89,6 +90,7 @@ export function buildMovementRecord(
 			? summariseMovementHistory(token, token.movementHistory).counted
 			: null,
 		stopped: movement.state === 'stopped' || movement.constrained,
+		offerId,
 		user: movement.user,
 	};
 }

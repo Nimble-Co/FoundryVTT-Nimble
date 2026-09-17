@@ -1,4 +1,4 @@
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { buildMovementRecord } from '../../utils/movement/buildMovementRecord.js';
 
@@ -73,6 +73,9 @@ export class NimbleTokenDocument extends TokenDocument {
 
 	#lastFinishedMovementId: string | null = null;
 
+	/** Offer ids seen on this token's movement operations, keyed by the chain's first movement id. */
+	#offerIdsByMovement = new Map<string, string>();
+
 	protected override _onUpdateMovement(
 		movement: TokenDocument.MovementOperation,
 		operation: TokenDocument.Database.OnUpdateOptions,
@@ -80,6 +83,10 @@ export class NimbleTokenDocument extends TokenDocument {
 	): void {
 		super._onUpdateMovement(movement, operation, user);
 		if (this.movement.id !== movement.id) return;
+		const offerId = (operation as unknown as Record<string, { offerId?: string } | undefined>)[
+			SYSTEM_ID
+		]?.offerId;
+		if (offerId) this.#offerIdsByMovement.set(movement.chain[0] ?? movement.id, offerId);
 		this.#emitMovementFinished();
 	}
 
@@ -101,7 +108,9 @@ export class NimbleTokenDocument extends TokenDocument {
 		const record = buildMovementRecord(
 			this as unknown as Parameters<typeof buildMovementRecord>[0],
 			movement,
+			this.#offerIdsByMovement.get(movementId) ?? null,
 		);
+		this.#offerIdsByMovement.delete(movementId);
 		if (!record) return;
 		// @ts-expect-error - movementFinished is a custom system hook
 		Hooks.callAll(systemHookName('movementFinished'), record);
