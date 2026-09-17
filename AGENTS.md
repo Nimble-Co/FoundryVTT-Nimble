@@ -98,6 +98,7 @@ These are mandatory implementation constraints, not slogans.
 | Sheet components | `src/view/sheets/` |
 | Dialogs | `src/view/dialogs/` |
 | Stores | `src/stores/` |
+| Movement | `src/utils/movement/` |
 | Utilities | `src/utils/` |
 | Document classes | `src/documents/` |
 | Data models | `src/models/` |

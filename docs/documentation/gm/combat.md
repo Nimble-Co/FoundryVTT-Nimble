@@ -95,6 +95,16 @@ Some features, such as the Spellblade's, grant a character mana *per combat* rat
 
 Nothing for you to track: it appears when the fight starts and vanishes when it's over.
 
+## Movement tracking
+
+With the **Movement Tracking** automation toggle on (the default), the system watches every token that is part of a started combat. It uses Foundry's own movement record, so nothing new is stored on your actors:
+
+- Each time a token finishes moving, the system notes how far it went, which spaces it crossed, and whether that was regular movement, a Free Move, or Forced Movement (a push or pull). A Teleport (any teleporting movement action, including a place swap done with one) is never counted as movement, following the rulebooks.
+- **Spaces Moved This Turn** is kept for every combatant and resets when that creature's own turn begins. An ally moving you during someone else's turn still counts until your next turn starts. Features can read it in their conditions, for example "if you have not moved this turn".
+- Every finished move is reported to features, in and out of combat. The count of spaces moved this turn exists only while a combat is running, because that is when Foundry keeps a movement history.
+
+The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.
@@ -104,8 +114,9 @@ Feature rules can then use this in their conditions (the Condition box), with te
 Details worth knowing:
 
 - "Enemies" is decided by token disposition: hostile tokens count non-hostile tokens as enemies, and vice versa.
-- The companion setting **Adjacency Includes Diagonals** controls whether corner-to-corner counts as adjacent (on by default).
-- Both settings are world settings, apply to the whole table, and require a reload when changed.
+- Whether corner-to-corner counts as adjacent follows Foundry's **Grid Diagonals** core setting, so it matches the ruler and every other measurement.
+- Adjacency is measured between token footprints, so a Large or bigger creature is adjacent when any of its spaces is.
+- The setting is a world setting, applies to the whole table, and requires a reload when changed.
 - The tracking data is cleared when the combat is deleted, or when you turn the setting off.
 
 ## Related pages

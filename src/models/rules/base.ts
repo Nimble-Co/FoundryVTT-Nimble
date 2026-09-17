@@ -1,4 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { MovementRecord } from '#types/movement.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
@@ -146,6 +147,16 @@ interface RoundChangedContext {
 	combat: Combat;
 	actor: NimbleBaseActor;
 	round: number;
+}
+
+// Context passed to onMovementFinished. Fires once per finished Movement, to the
+// mover's rules and to the rules of every other actor with a token on the scene.
+// `actor` and `token` are the observer whose rules are running.
+interface MovementFinishedContext {
+	record: MovementRecord;
+	actor: NimbleBaseActor;
+	token: TokenDocument;
+	isMover: boolean;
 }
 
 // Members of NimbleBaseRule, used to type `alwaysDispatchedEvents` (statics
@@ -477,6 +488,11 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/** Hook called once per finished token Movement, on the mover and on every observer. */
+	async onMovementFinished(_context: MovementFinishedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
@@ -545,4 +561,5 @@ export {
 	type EncounterEndContext,
 	type ActorDyingContext,
 	type RoundChangedContext,
+	type MovementFinishedContext,
 };
