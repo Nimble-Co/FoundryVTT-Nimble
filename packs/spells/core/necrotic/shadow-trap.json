@@ -22,13 +22,6 @@
 			},
 			"effects": [
 				{
-					"id": "egIi60fgbgO5hvFH",
-					"type": "condition",
-					"condition": "concentration",
-					"parentContext": null,
-					"parentNode": null
-				},
-				{
 					"id": "tMyTaEsCtivi63VN",
 					"type": "damage",
 					"damageType": "necrotic",

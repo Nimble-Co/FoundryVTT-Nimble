@@ -22,13 +22,6 @@
 			},
 			"effects": [
 				{
-					"id": "YmI8NIul2LaDRxaT",
-					"type": "condition",
-					"condition": "concentration",
-					"parentContext": null,
-					"parentNode": null
-				},
-				{
 					"id": "UwlrMMyPLgwUatZb",
 					"type": "savingThrow",
 					"savingThrowType": "strength",

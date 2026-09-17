@@ -94,6 +94,7 @@
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
+			"concentrationApplied": "Concentrating",
 			"healing": "Healing",
 			"healingApplied": "Healing Applied",
 			"undoHealing": "Undo Healing",
