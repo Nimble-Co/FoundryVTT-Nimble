@@ -204,6 +204,19 @@
 		return item?.reactive?.system?.container?.enabled ?? false;
 	}
 
+	/**
+	 * A stored object is packed away, so it can never be equipped. Otherwise the
+	 * toggle belongs to items whose rules it switches, plus containers that only
+	 * apply their rule while equipped: those usually carry no rules of their own,
+	 * and without the toggle their setting could never be satisfied.
+	 */
+	function canToggleEquipment(item): boolean {
+		if (item.reactive.system.containerId) return false;
+		if ((item.reactive.system.rules?.length ?? 0) > 0) return true;
+
+		return isContainer(item) && item.reactive.system.container.requiresEquipped;
+	}
+
 	/** Highlights the container a drag is currently over. */
 	function handleContainerDragEnter(item): void {
 		if (!isContainer(item)) return;
@@ -405,8 +418,7 @@
 				/>
 			</div>
 
-			<!-- A stored object is packed away, so it cannot be equipped and shows its quantity instead. -->
-			{#if rules && (item.reactive.system.rules?.length ?? 0) > 0 && !item.reactive.system.containerId}
+			{#if rules && canToggleEquipment(item)}
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
