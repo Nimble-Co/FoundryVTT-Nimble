@@ -32,7 +32,7 @@ import actorDataModels from '../models/actor/actorDataModels.js';
 import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
-import { registerMovementActions } from '../movement/movementActions.js';
+import { registerMovementActions } from '../utils/movement/movementActions.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;

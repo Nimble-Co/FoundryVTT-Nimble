@@ -1,8 +1,8 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { MovementRecord } from '#types/movement.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
-import type { MovementRecord } from '../../movement/movementRecord.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 

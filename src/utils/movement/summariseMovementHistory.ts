@@ -1,4 +1,6 @@
-import { getMovementKind, type MovementKind } from './movementKind.js';
+import type { MovementKind } from '#types/movement.js';
+import { measureWaypointSpaces } from './measureWaypointSpaces.js';
+import { getMovementKind } from './movementKind.js';
 
 export interface MovementHistorySummary {
 	regular: number;
@@ -39,14 +41,8 @@ export function summariseMovementHistory(
 	};
 	if (waypoints.length < 2) return summary;
 
-	const grid = token.parent?.grid;
-	const { segments } = token.measureMovementPath([...waypoints]);
-
-	segments.forEach((segment, index) => {
+	measureWaypointSpaces(token, waypoints).forEach((spaces, index) => {
 		const kind: MovementKind = getMovementKind(waypoints[index + 1].action);
-		const spaces = grid?.isGridless
-			? Math.round(segment.distance / (grid.distance || 1))
-			: segment.spaces;
 		summary[kind] += spaces;
 	});
 

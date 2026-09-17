@@ -1,6 +1,6 @@
 import { systemHookName } from '#system';
-import { buildMovementRecord } from '../../movement/buildMovementRecord.js';
-import { isMovementTrackingEnabled } from '../../settings/automationSettings.js';
+import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { buildMovementRecord } from '../../utils/movement/buildMovementRecord.js';
 
 interface CombatantCreateData {
 	type: string;
@@ -79,6 +79,7 @@ export class NimbleTokenDocument extends TokenDocument {
 		user: User.Stored,
 	): void {
 		super._onUpdateMovement(movement, operation, user);
+		if (this.movement.id !== movement.id) return;
 		this.#emitMovementFinished();
 	}
 
@@ -90,7 +91,7 @@ export class NimbleTokenDocument extends TokenDocument {
 	// Runs on every client. `this.movement` already carries the final state when
 	// core calls the callbacks above, so one check covers checkpoints and stops.
 	#emitMovementFinished(): void {
-		if (!isMovementTrackingEnabled()) return;
+		if (!isMovementTrackingAutomationEnabled()) return;
 		const movement = this.movement as unknown as Parameters<typeof buildMovementRecord>[1];
 		if (movement.state !== 'completed' && movement.state !== 'stopped') return;
 		const movementId = movement.chain[0] ?? movement.id;

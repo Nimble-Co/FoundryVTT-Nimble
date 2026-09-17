@@ -4,7 +4,10 @@ import { getSpacesMovedThisTurn } from './getSpacesMovedThisTurn.js';
 const actor = { id: 'hero' };
 
 function stubCombat(combat: unknown): void {
-	vi.stubGlobal('game', { ...(globalThis as { game?: object }).game, combat });
+	vi.stubGlobal('game', {
+		...(globalThis as { game?: object }).game,
+		combats: combat ? [combat] : [],
+	});
 }
 
 function makeToken(history: { x: number; y: number; action: string }[]) {

@@ -1,6 +1,6 @@
+import type { MovementRecord, TokenPosition } from '#types/movement.js';
+import { measureWaypointSpaces } from './measureWaypointSpaces.js';
 import { getMovementKind } from './movementKind.js';
-import type { MovementRecord } from './movementRecord.js';
-import type { TokenPosition } from './spacesBetween.js';
 import { summariseMovementHistory } from './summariseMovementHistory.js';
 
 interface Waypoint extends TokenPosition {
@@ -63,16 +63,13 @@ export function buildMovementRecord(
 		start = 1;
 	}
 
-	const grid = token.parent?.grid;
-	const { segments } = token.measureMovementPath(known);
+	const legs = measureWaypointSpaces(token, known);
 	let spaces = 0;
-	for (let index = start - 1; index < segments.length; index++) {
+	for (let index = start - 1; index < legs.length; index++) {
 		const destination = known[index + 1];
 		if (!chainIds.has(destination.movementId ?? '')) continue;
 		if (getMovementKind(destination.action) === 'teleport') continue;
-		spaces += grid?.isGridless
-			? Math.round(segments[index].distance / (grid.distance || 1))
-			: segments[index].spaces;
+		spaces += legs[index];
 	}
 
 	const path = token.getCompleteMovementPath(known.slice(start - 1)).map(toPosition);

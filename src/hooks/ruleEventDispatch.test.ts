@@ -57,6 +57,7 @@ interface RuleLike {
 	onEncounterEnd: Mock;
 	onActorDying: Mock;
 	onRoundChanged: Mock;
+	onMovementFinished: Mock;
 }
 
 function createMockRule(): RuleLike {
@@ -74,6 +75,7 @@ function createMockRule(): RuleLike {
 		onEncounterEnd: vi.fn().mockResolvedValue(undefined),
 		onActorDying: vi.fn().mockResolvedValue(undefined),
 		onRoundChanged: vi.fn().mockResolvedValue(undefined),
+		onMovementFinished: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -719,6 +721,107 @@ describe('ruleEventDispatch', () => {
 			await Promise.resolve();
 
 			expect(rule.onActorDying).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('nimble.movementFinished → onMovementFinished', () => {
+		const gameStub = game as unknown as {
+			user?: { id: string; isGM: boolean };
+			users?: { activeGM?: { id: string } | null };
+		};
+
+		function makeRecord(moverActor: unknown, sceneTokens: unknown[]) {
+			const token = { actor: moverActor, parent: { tokens: sceneTokens } };
+			return { token, actor: moverActor, kind: 'regular', spaces: 2 };
+		}
+
+		function makeMoverRecord(moverToken: { actor: unknown }, sceneTokens: unknown[]) {
+			Object.assign(moverToken, { parent: { tokens: sceneTokens } });
+			return { token: moverToken, actor: moverToken.actor, kind: 'regular', spaces: 2 };
+		}
+
+		async function fire(record: unknown): Promise<void> {
+			await handlers.get('nimble.movementFinished')?.(record);
+		}
+
+		beforeEach(() => {
+			gameStub.user = { id: 'gm', isGM: true };
+			gameStub.users = { activeGM: { id: 'gm' } };
+		});
+
+		afterEach(() => {
+			gameStub.user = undefined;
+			gameStub.users = undefined;
+		});
+
+		it('dispatches to the mover first and then to every other actor on the scene', async () => {
+			const order: string[] = [];
+			const moverRule = createMockRule();
+			moverRule.onMovementFinished.mockImplementation(async () => {
+				order.push('mover');
+			});
+			const watcherRule = createMockRule();
+			watcherRule.onMovementFinished.mockImplementation(async () => {
+				order.push('watcher');
+			});
+			const mover = { rules: [moverRule] };
+			const watcher = { rules: [watcherRule] };
+			const moverToken = { actor: mover };
+			const watcherToken = { actor: watcher };
+
+			await fire(makeMoverRecord(moverToken, [watcherToken, moverToken]));
+
+			expect(order).toEqual(['mover', 'watcher']);
+			expect(moverRule.onMovementFinished).toHaveBeenCalledWith(
+				expect.objectContaining({ isMover: true, actor: mover, token: moverToken }),
+			);
+			expect(watcherRule.onMovementFinished).toHaveBeenCalledWith(
+				expect.objectContaining({ isMover: false, actor: watcher, token: watcherToken }),
+			);
+		});
+
+		it('dispatches once per actor when several tokens share one', async () => {
+			const rule = createMockRule();
+			const shared = { rules: [rule] };
+			const mover = { rules: [createMockRule()] };
+
+			await fire(makeRecord(mover, [{ actor: shared }, { actor: shared }, { actor: null }]));
+
+			expect(rule.onMovementFinished).toHaveBeenCalledTimes(1);
+		});
+
+		it('does nothing on a client that is not the active GM', async () => {
+			gameStub.users = { activeGM: { id: 'someone-else' } };
+			const rule = createMockRule();
+			const mover = { rules: [rule] };
+
+			await fire(makeRecord(mover, []));
+
+			expect(rule.onMovementFinished).not.toHaveBeenCalled();
+		});
+
+		it('does nothing when movement tracking is off', async () => {
+			settingsGet.mockImplementation(
+				(_scope: string, key: string) => key !== 'automation.movementTracking',
+			);
+			const rule = createMockRule();
+			const mover = { rules: [rule] };
+
+			await fire(makeRecord(mover, []));
+
+			expect(rule.onMovementFinished).not.toHaveBeenCalled();
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockImplementation(
+				(_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+			);
+			const rule = createMockRule();
+			const mover = { rules: [rule] };
+
+			await fire(makeRecord(mover, []));
+
+			expect(rule.onMovementFinished).not.toHaveBeenCalled();
 		});
 	});
 });

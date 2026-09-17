@@ -73,7 +73,7 @@ export function isChatNotificationsAutomationEnabled(): boolean {
 }
 
 /** Whether token movement is recorded, Spaces Moved This Turn is tracked, and movement events fire. */
-export function isMovementTrackingEnabled(): boolean {
+export function isMovementTrackingAutomationEnabled(): boolean {
 	return readAutomationToggle(AUTOMATION_SETTING_KEYS.movementTracking);
 }
 

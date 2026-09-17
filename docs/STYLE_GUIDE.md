@@ -1519,6 +1519,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `formatActivationCostLabel()` | `src/utils/formatActivationCostLabel.ts` | Render an activation cost as "1 Action", "2 Actions", "10 Minutes" or "Free"; returns `null` for the types that carry no quantity so the caller can label them |
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
+| `spacesBetween()` | `src/utils/movement/spacesBetween.ts` | Footprint-aware minimum distance in spaces between two tokens through `grid.measurePath`, honouring the core Grid Diagonals setting; accepts position overrides |
 | `countAdjacentEnemies()`, `ADJACENCY_QUALIFIER` | `src/utils/tokenAdjacency.ts` | Count enemy tokens adjacent to a given token; footprint-aware through `spacesBetween()`, honouring the core Grid Diagonals setting; accepts position overrides for pre-commit token moves |
 | `tokenHoverIn()`, `tokenGroupHoverIn()`, `tokenHoverOut()` | `src/utils/tokenHoverHighlight.ts` | Draw/remove a PIXI ring on canvas tokens on hover; `tokenGroupHoverIn` highlights multiple tokens simultaneously (used for monster stacks) |
 | `readToggledEffects()`, `computeNextToggledList()`, `getToggledTargetTags()`, `TOGGLED_EFFECTS_FLAG_KEY` | `src/utils/toggledEffects.ts` | Relational "marked target" tracking for the `markTarget` rule — read/update the marking actor's flag list, compute capacity-bounded eviction, and emit `target:<flagKey>` domain tags (e.g. `target:quarry`) only for the marking actor |

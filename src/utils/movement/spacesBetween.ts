@@ -1,34 +1,4 @@
-export interface TokenPosition {
-	x: number;
-	y: number;
-	elevation?: number;
-	width?: number;
-	height?: number;
-	shape?: number;
-}
-
-interface GridOffset {
-	i: number;
-	j: number;
-	k?: number;
-}
-
-interface GridLike {
-	isGridless: boolean;
-	size: number;
-	measurePath(points: GridOffset[]): { spaces: number };
-}
-
-export interface MeasurableTokenDocument {
-	x: number;
-	y: number;
-	elevation?: number;
-	width: number;
-	height: number;
-	shape?: number;
-	parent?: { grid?: GridLike } | null;
-	getOccupiedGridSpaceOffsets(data?: Partial<TokenPosition>): GridOffset[];
-}
+import type { MeasurableGrid, MeasurableTokenDocument, TokenPosition } from '#types/movement.js';
 
 function positionOf(token: MeasurableTokenDocument, override?: TokenPosition): TokenPosition {
 	return {
@@ -42,7 +12,7 @@ function positionOf(token: MeasurableTokenDocument, override?: TokenPosition): T
 	};
 }
 
-function gridlessSpaces(a: TokenPosition, b: TokenPosition, grid: GridLike): number {
+function gridlessSpaces(a: TokenPosition, b: TokenPosition, grid: MeasurableGrid): number {
 	const aw = (a.width ?? 1) * grid.size;
 	const ah = (a.height ?? 1) * grid.size;
 	const bw = (b.width ?? 1) * grid.size;
