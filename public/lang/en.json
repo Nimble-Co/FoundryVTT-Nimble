@@ -523,6 +523,33 @@
 			"swim": "Swimming",
 			"walk": "Walking"
 		},
+		"containerSlotCostModes": {
+			"ignore": "Ignore slot cost",
+			"reduce": "Reduce slot cost",
+			"half": "Half slot cost"
+		},
+		"containers": {
+			"allowedObjectTypes": "Allowed Object Types",
+			"allowedObjectTypesHint": "Only objects of these types may be stored. Select none to allow anything.",
+			"capacity": "Capacity",
+			"capacityHint": "How many slots' worth of objects fit inside. Leave blank for no limit.",
+			"capacityUsage": "{used} / {capacity} slots stored",
+			"empty": "Nothing stored",
+			"enabled": "This Object Is A Container",
+			"enabledHint": "Objects can be dropped into this one, and this object's rule changes what they cost their carrier.",
+			"heading": "Container",
+			"rejection": {
+				"capacity": "{container} has no room left for {object}.",
+				"nested": "{object} is a container, and containers cannot be stored inside other containers.",
+				"notAContainer": "{container} is not a container.",
+				"objectType": "{container} does not hold objects of that type."
+			},
+			"removeFromContainer": "Take {object} out of its container",
+			"requiresEquipped": "Only Apply While Equipped",
+			"slotCostMode": "Stored Object Slot Cost",
+			"slotCostReduction": "Slots Reduced By",
+			"storedContents": "Stored in {container}"
+		},
 		"objectSizeTypes": {
 			"slots": "Slots required",
 			"stackable": "Stackable",
