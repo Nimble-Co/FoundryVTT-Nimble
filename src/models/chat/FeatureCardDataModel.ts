@@ -4,6 +4,7 @@ import {
 	grantedActionOffers,
 	incomingReactions,
 	metadata,
+	movementOffers,
 	targets,
 } from './common.js';
 
@@ -38,6 +39,7 @@ declare namespace NimbleFeatureCardData {
 		ReturnType<typeof appliedHealing> &
 		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof incomingReactions> &
+		ReturnType<typeof movementOffers> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof featureCardSchema> &
 		ReturnType<typeof targets>;
@@ -57,6 +59,7 @@ class NimbleFeatureCardData extends foundry.abstract.TypeDataModel<
 			...appliedHealing(),
 			...grantedActionOffers(),
 			...incomingReactions(),
+			...movementOffers(),
 			...featureCardSchema(),
 			...metadata(),
 			...targets(),

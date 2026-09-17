@@ -116,6 +116,22 @@
 				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
 				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
 			},
+			"movementOffers": {
+				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
+				"offer": "{name}: up to {spaces} spaces {direction}",
+				"directions": {
+					"any": "in any direction",
+					"away": "away from {source}",
+					"toward": "toward {source}"
+				},
+				"choosers": { "mover": "{mover} chooses where.", "source": "{source} chooses where." },
+				"moveButton": "Move (up to {spaces})",
+				"started": "{name} is moving.",
+				"result": "{name} moved {moved} of {offered} spaces.",
+				"resultShortened": "{name} moved {moved} of {offered} spaces, shortened by {short}.",
+				"noRecipient": "No creature to move.",
+				"unavailable": "Nobody connected can move {name}."
+			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
@@ -2554,6 +2570,22 @@
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
+			"move": "Move",
+			"deleteMove": "Delete Move",
+			"moveNode": {
+				"kind": "Kind",
+				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
+				"recipient": "Who Moves",
+				"recipients": { "self": "The user", "targets": "The targets" },
+				"distance": "Distance (spaces)",
+				"distanceHint": "A formula against the mover's data. @speed is the mover's walk speed; @abilities.strength.mod is a modifier.",
+				"distanceBySize": "Distance by size (optional)",
+				"ignoreDifficultTerrain": "Ignore difficult terrain",
+				"direction": "Direction",
+				"directions": { "any": "Any", "away": "Away", "toward": "Toward" },
+				"chooser": "Who chooses the path",
+				"choosers": { "mover": "The mover", "source": "The user of the feature" }
+			},
 			"note": "Note",
 			"pool": "Pool",
 			"onFailedSave": "On Failed Save",

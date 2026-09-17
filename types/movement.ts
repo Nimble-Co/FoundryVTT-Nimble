@@ -60,7 +60,7 @@ export interface MovementRecord {
 	/** True when a wall, terrain, the mover or a disconnect cut the path short. */
 	stopped: boolean;
 	/** The Movement Offer this path answered, when it was an offered drag. */
-	offerId: string | null;
+	offer: { id: string; messageId: string | null } | null;
 	user: User;
 }
 
