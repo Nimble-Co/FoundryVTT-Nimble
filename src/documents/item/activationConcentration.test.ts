@@ -41,12 +41,18 @@ async function createActivationCard(
 	item: ReturnType<typeof createItemStub>,
 	{ rolls = [] as unknown[] } = {},
 ) {
-	return (item as ActivationCardHost)._createActivationCard(
-		{ type: 'spell' },
+	const chatData = { type: 'spell', system: {} } as {
+		type: string;
+		system: Record<string, unknown>;
+	};
+	const chatCard = await (item as ActivationCardHost)._createActivationCard(
+		chatData,
 		rolls,
 		{ effects: [] },
 		{},
 	);
+
+	return { chatCard, chatData };
 }
 
 beforeEach(() => {
@@ -82,9 +88,56 @@ describe('NimbleBaseItem#_createActivationCard concentration', () => {
 		const item = createItemStub(['concentration']);
 		item.rules.set('suppressor', { disabled: false, suppressesActivationCard: () => true });
 
-		const chatCard = await createActivationCard(item);
+		const { chatCard } = await createActivationCard(item);
 
 		expect(chatCard).toBeNull();
 		expect(createEffect).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('NimbleBaseItem#_createActivationCard concentration card flag', () => {
+	it('tells the card the caster is concentrating', async () => {
+		const { chatData } = await createActivationCard(createItemStub(['concentration']));
+
+		expect(chatData.system.concentration).toBe(true);
+	});
+
+	it('leaves the flag off for an item without the property', async () => {
+		const { chatData } = await createActivationCard(createItemStub(['reach']));
+
+		expect(chatData.system.concentration).toBe(false);
+	});
+
+	it('leaves the flag off when a caster immune to concentration refuses it', async () => {
+		(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(false);
+
+		const { chatData } = await createActivationCard(createItemStub(['concentration']));
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(chatData.system.concentration).toBe(false);
+	});
+
+	it('leaves the flag off and still posts the card when applying the condition throws', async () => {
+		const item = createItemStub(['concentration']);
+		item.actor.toggleStatusEffect.mockRejectedValue(new Error('no permission'));
+
+		const { chatCard, chatData } = await createActivationCard(item);
+
+		expect(chatCard).toBe(postedMessage);
+		expect(chatData.system.concentration).toBe(false);
+	});
+
+	it('still fires the useItem hook when applying the condition throws', async () => {
+		const item = createItemStub(['concentration']);
+		item.actor.toggleStatusEffect.mockRejectedValue(new Error('no permission'));
+
+		await createActivationCard(item);
+
+		expect(Hooks.callAll).toHaveBeenCalledWith(
+			'nimble.useItem',
+			item,
+			postedMessage,
+			expect.anything(),
+		);
 	});
 });

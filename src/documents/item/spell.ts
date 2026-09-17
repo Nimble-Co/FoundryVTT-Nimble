@@ -3,7 +3,6 @@ import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts'
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
-import { requiresConcentration } from '../../utils/applyCasterConcentration.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
 import { paySpellCost } from '../../utils/spell/paySpellCost.js';
@@ -177,7 +176,6 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		return {
 			system: {
 				actorName: this.actor?.name ?? game?.user?.name ?? '',
-				concentration: requiresConcentration(this),
 				description: {
 					baseEffect: showDescription ? baseEffect : '',
 					higherLevelEffect: showDescription ? higherLevelEffect : '',

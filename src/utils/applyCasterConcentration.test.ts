@@ -4,7 +4,7 @@ const fromStatusEffect = vi.fn();
 const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
-import applyCasterConcentration, { requiresConcentration } from './applyCasterConcentration.js';
+import applyCasterConcentration from './applyCasterConcentration.js';
 
 function createConditionEffect() {
 	const source: Record<string, unknown> = { _id: 'concentration-effect' };
@@ -42,20 +42,6 @@ beforeEach(() => {
 	(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(true);
 });
 
-describe('requiresConcentration', () => {
-	it('is true for an item tagged with the concentration property', () => {
-		expect(requiresConcentration(createItem(['concentration'], null))).toBe(true);
-	});
-
-	it('is false for an item carrying other properties only', () => {
-		expect(requiresConcentration(createItem(['reach', 'secretSpell'], null))).toBe(false);
-	});
-
-	it('is false for an item with no tags at all', () => {
-		expect(requiresConcentration({})).toBe(false);
-	});
-});
-
 describe('applyCasterConcentration', () => {
 	it('applies the condition to the caster whatever the spell targets, crediting the item', async () => {
 		const caster = createCaster();
@@ -81,6 +67,22 @@ describe('applyCasterConcentration', () => {
 	it('applies nothing when the item has no owner', async () => {
 		await applyCasterConcentration(createItem(['concentration'], null));
 
+		expect(createEffect).not.toHaveBeenCalled();
+	});
+
+	it('applies nothing to an item carrying no tags at all', async () => {
+		const result = await applyCasterConcentration({ actor: createCaster() });
+
+		expect(result).toBeNull();
+		expect(createEffect).not.toHaveBeenCalled();
+	});
+
+	it('reports nothing applied when a preApplyCondition listener refuses', async () => {
+		(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(false);
+
+		const result = await applyCasterConcentration(createItem(['concentration'], createCaster()));
+
+		expect(result).toBeNull();
 		expect(createEffect).not.toHaveBeenCalled();
 	});
 

@@ -1,5 +1,4 @@
 import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
-import { requiresConcentration } from '#utils/applyCasterConcentration.js';
 import { getSpellScrollData } from '#utils/createScrollFromSpell.js';
 import knowsSpellSchool from '#utils/knowsSpellSchool.js';
 import localize from '#utils/localize.js';
@@ -93,7 +92,6 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 
 		return {
 			system: {
-				concentration: requiresConcentration(this),
 				description: {
 					public: showDescription ? publicDescription : '',
 					unidentified: showDescription ? unidentifiedDescription : '',

@@ -181,7 +181,10 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	 * the `useItem` hook. Shared tail of every activate() implementation.
 	 *
 	 * Concentration is applied here, not on the damage-applied path, which a
-	 * roll-less utility spell such as Fly never reaches.
+	 * roll-less utility spell such as Fly never reaches, and before the card is
+	 * built so the card reports whether it took rather than that the item asked
+	 * for it. A failure costs the condition rather than the rest of the
+	 * activation, the same bargain `placeAoEForMessage` strikes below.
 	 */
 	protected async _createActivationCard(
 		chatData: unknown,
@@ -190,11 +193,18 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		hookContext: Record<string, unknown>,
 	): Promise<ChatMessage | null> {
 		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+
+		let concentrating = false;
+		try {
+			concentrating = (await applyCasterConcentration(this)) !== null;
+		} catch (error) {
+			console.error('Nimble | Could not apply concentration to the caster.', error);
+		}
+		foundry.utils.setProperty(chatData as object, 'system.concentration', concentrating);
+
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
-
-		await applyCasterConcentration(this);
 
 		if (chatCard || suppressCard) {
 			/**
