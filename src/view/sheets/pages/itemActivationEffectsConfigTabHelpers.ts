@@ -21,6 +21,7 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 		['damage', localize('NIMBLE.activationEffects.damage')],
 		['damageOutcome', localize('NIMBLE.activationEffects.damageOutcome')],
 		['healing', localize('NIMBLE.activationEffects.healing')],
+		['move', localize('NIMBLE.activationEffects.move')],
 		['note', localize('NIMBLE.activationEffects.note')],
 		['pool', localize('NIMBLE.activationEffects.pool')],
 		['savingThrow', saves.save],
@@ -29,11 +30,19 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 	const includedOptions: string[] = [];
 
 	if (node === null) {
-		includedOptions.push('damage', 'healing', 'condition', 'pool', 'savingThrow');
+		includedOptions.push('damage', 'healing', 'condition', 'move', 'pool', 'savingThrow');
 	} else if (node.type === 'damage') {
-		includedOptions.push('damage', 'damageOutcome', 'healing', 'condition', 'savingThrow', 'note');
+		includedOptions.push(
+			'damage',
+			'damageOutcome',
+			'healing',
+			'condition',
+			'move',
+			'savingThrow',
+			'note',
+		);
 	} else if (node.type === 'savingThrow') {
-		includedOptions.push('damage', 'healing', 'condition', 'note');
+		includedOptions.push('damage', 'healing', 'condition', 'move', 'note');
 	}
 
 	return includedOptions.sort().map((option) => ({
@@ -129,4 +138,32 @@ export function getPoolActions(): LabeledOption[] {
 			label: localize('NIMBLE.activationEffects.poolNode.config.actionMaximizeDie'),
 		},
 	];
+}
+
+export function getMoveKinds(): LabeledOption[] {
+	return [
+		{ value: 'free', label: localize('NIMBLE.activationEffects.moveNode.kinds.free') },
+		{ value: 'forced', label: localize('NIMBLE.activationEffects.moveNode.kinds.forced') },
+	];
+}
+
+export function getMoveRecipients(): LabeledOption[] {
+	return [
+		{ value: 'self', label: localize('NIMBLE.activationEffects.moveNode.recipients.self') },
+		{ value: 'targets', label: localize('NIMBLE.activationEffects.moveNode.recipients.targets') },
+	];
+}
+
+export function getMoveDirections(): LabeledOption[] {
+	return ['any', 'away', 'toward'].map((value) => ({
+		value,
+		label: localize(`NIMBLE.activationEffects.moveNode.directions.${value}`),
+	}));
+}
+
+export function getMoveChoosers(): LabeledOption[] {
+	return ['mover', 'source'].map((value) => ({
+		value,
+		label: localize(`NIMBLE.activationEffects.moveNode.choosers.${value}`),
+	}));
 }
