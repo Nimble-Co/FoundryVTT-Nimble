@@ -5,7 +5,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "equipmentSwapBonus",
+				"disabled": false,
+				"id": "Ff4NsMxQ7vLb1Tpc",
+				"identifier": "",
+				"label": "Weapon Mastery",
+				"predicate": {},
+				"priority": 1,
+				"value": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

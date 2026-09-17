@@ -609,6 +609,9 @@ const FORMULA_PATH_DESCRIPTIONS: Record<string, string> = {
 	'skills.<skill>.bonus': 'Bonus to the skill from rules.',
 	'attributes.armor.value': 'Armor value, after armor, shields and Armor Class rules.',
 	'attributes.dyingActionLimit': 'Actions the character can take while Dying.',
+	'attributes.equipmentSwapBonus':
+		'Free equipment swaps per round beyond the baseline one, for example from an Equipment Swap Bonus rule.',
+	'attributes.extraHands': 'Hands beyond the usual two, for example from an Extra Hands rule.',
 	'attributes.hp.value': 'Current hit points.',
 	'attributes.hp.max': 'Maximum hit points.',
 	'attributes.hp.temp': 'Temporary hit points.',

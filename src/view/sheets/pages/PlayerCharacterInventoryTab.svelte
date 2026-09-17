@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { RulesManager } from '#managers/RulesManager.js';
+	import checkEquip from '#utils/equipCompatibility.js';
 	import localize from '#utils/localize.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
@@ -57,6 +58,26 @@
 
 	function getObjectMetadata(_item) {
 		return null;
+	}
+
+	/** Equipping is refused when no hand is free, or when the pair is too heavy to dual wield. */
+	async function toggleEquipment(event, item): Promise<void> {
+		event.stopPropagation();
+
+		if (!item.reactive.system.equipped) {
+			const check = checkEquip(actor.reactive, item.reactive);
+			if (!check.allowed) {
+				ui.notifications?.warn(
+					localize(`NIMBLE.weapons.equip.${check.refusal}`, {
+						name: item.reactive.name ?? '',
+						value: String(check.strengthRequired ?? 0),
+					}),
+				);
+				return;
+			}
+		}
+
+		await item.toggleEquipment();
 	}
 
 	const { objectTypeHeadings } = CONFIG.NIMBLE;
@@ -428,10 +449,7 @@
 					data-tooltip={item.reactive.system.equipped
 						? localize('NIMBLE.prompts.equippedTooltip')
 						: localize('NIMBLE.prompts.unequippedTooltip')}
-					onclick={async (event) => {
-						event.stopPropagation();
-						await item.toggleEquipment();
-					}}
+					onclick={(event) => toggleEquipment(event, item)}
 				>
 					{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
 						{#if item.reactive.system.equipped}

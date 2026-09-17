@@ -11,6 +11,7 @@ import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 interface WeaponSystemData {
 	objectType: string;
+	equipped?: boolean;
 	activation?: {
 		effects?: unknown[];
 		cost?: { type: string; quantity: number };
@@ -67,6 +68,7 @@ export function createOpportunityAttackPanelState(
 			if (item.type !== 'object') return false;
 			const system = getSystemData(item);
 			if (system.objectType !== 'weapon') return false;
+			if (!system.equipped) return false;
 
 			// Check if it's a melee weapon (has reach property or no range property)
 			const props = system.properties?.selected ?? [];
