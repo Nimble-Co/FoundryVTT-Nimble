@@ -4,7 +4,7 @@ import { handlePlanMoveQuery } from './registerMovementQueries.js';
 
 const ref = { messageId: 'm', nodeId: 'n', tokenUuid: 'Scene.s.Token.t' };
 const user = { id: 'p1', isGM: false };
-const card = { offer: { id: 'm.n.t' } } as unknown as CardMovementOffer;
+const card = { offer: { id: 'm.n.t' }, entry: null } as unknown as CardMovementOffer;
 
 function makeDeps(overrides: Partial<Parameters<typeof handlePlanMoveQuery>[2]> = {}) {
 	return {
@@ -26,6 +26,13 @@ describe('handlePlanMoveQuery', () => {
 		expect(deps.resolveCard).toHaveBeenCalledWith(ref);
 		expect(deps.canTake).toHaveBeenCalledWith(user, card);
 		expect(deps.plan).toHaveBeenCalledWith(card.offer);
+	});
+
+	it('refuses an offer the card already records as taken', async () => {
+		const taken = { ...card, entry: { used: true } } as unknown as CardMovementOffer;
+		const deps = makeDeps({ resolveCard: vi.fn(() => taken) });
+		expect((await handlePlanMoveQuery(ref, { user }, deps)).outcome).toBe('unavailable');
+		expect(deps.plan).not.toHaveBeenCalled();
 	});
 
 	it('refuses a user who may not take the offer', async () => {

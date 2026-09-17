@@ -26,7 +26,6 @@ function planOptionsFor(offer: MovementOffer, gridDistance: number): Record<stri
 		options.maxCost = limit;
 	} else {
 		options.maxDistance = limit;
-		options.constrainOptions = { ignoreCost: true };
 	}
 	return options;
 }

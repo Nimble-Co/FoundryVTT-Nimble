@@ -68,8 +68,8 @@ describe('resolveMoveDistance', () => {
 			distance: '@abilities.strength.mod',
 			distanceBySize: { small: '@abilities.strength.mod * 2' },
 		};
-		expect(resolveMoveDistance(node, source, makeActor('small'))).toBe(6);
-		expect(resolveMoveDistance(node, source, makeActor('large'))).toBe(3);
+		expect(resolveMoveDistance(node, source, makeActor('small', 7, -1))).toBe(6);
+		expect(resolveMoveDistance(node, source, makeActor('large', 7, -1))).toBe(3);
 	});
 
 	it('never offers an unreadable or negative distance', () => {
