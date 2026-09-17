@@ -77,6 +77,23 @@ type AppliedOptionSwap = OptionSwapPlan & { pools: ResolvedSwappableOptionPool[]
 /** Wide enough for the option cards a rest dialog shows when a swap is on offer. */
 const REST_DIALOG_WIDTH_WITH_OPTIONS = 480;
 
+async function confirmUnequipToStore(
+	object: ContainableObject,
+	container: ContainableObject,
+): Promise<boolean> {
+	return Boolean(
+		await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize('NIMBLE.containers.unequipToStoreTitle') },
+			content: `<p>${localize('NIMBLE.containers.unequipToStore', {
+				object: object.name,
+				container: container.name,
+			})}</p>`,
+			rejectClose: false,
+			modal: true,
+		}),
+	);
+}
+
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
 	classUpdates: Array<{ id: string; hpData: number[] }>;
@@ -410,6 +427,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 * Moves an object into a container carried by this actor. Reports why the
 	 * container refuses it rather than storing it anyway, since the refusal is the
 	 * container's configured limit and the player needs to know it was hit.
+	 *
+	 * Packing something away puts it out of reach, so a stored object is never
+	 * equipped. Stowing one that is asks first, because losing a weapon's or
+	 * armour's rules mid-session is not something to do behind the player's back.
 	 */
 	async storeItemInContainer(itemId: string, containerId: string): Promise<boolean> {
 		const carriedObjects = this.getCarriedObjects();
@@ -432,6 +453,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				}),
 			);
 			return false;
+		}
+
+		if (object.system.equipped) {
+			if (!(await confirmUnequipToStore(object, container))) return false;
+
+			const item = this.items.get(itemId) as unknown as
+				| { toggleEquipment(): Promise<void> }
+				| undefined;
+			await item?.toggleEquipment();
 		}
 
 		await this.updateItem(itemId, { 'system.containerId': containerId });

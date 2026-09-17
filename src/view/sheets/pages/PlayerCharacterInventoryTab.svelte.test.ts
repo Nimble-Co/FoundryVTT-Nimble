@@ -167,29 +167,79 @@ describe('PlayerCharacterInventoryTab containers', () => {
 		expect(storeItemInContainer).not.toHaveBeenCalled();
 	});
 
-	it('takes a stored object back out of its container', async () => {
+	it('takes a stored object out when it is dragged onto the inventory list', async () => {
 		const { container, removeItemFromContainer } = renderWithContainers([
 			bagOfHolding,
 			storedPlateArmor,
 		]);
 
-		const takeOutButton = getRow(container, 'armor').querySelector<HTMLButtonElement>(
-			'[aria-label="Take Plate Armor out of its container"]',
-		);
-		if (!takeOutButton) throw new Error('No take-out button rendered');
+		const inventoryList = container.querySelector('.nimble-sheet__body--player-character');
+		if (!inventoryList) throw new Error('No inventory list rendered');
 
-		await fireEvent.click(takeOutButton);
+		mockDraggedItem('Item.armor');
+		await fireEvent.drop(inventoryList);
 
 		expect(removeItemFromContainer).toHaveBeenCalledWith('armor');
 	});
 
-	it('offers no take-out button for an object carried directly', () => {
-		const { container } = renderWithContainers([plateArmor]);
+	it('leaves an object carried directly alone when it is dropped on the inventory list', async () => {
+		const { container, removeItemFromContainer } = renderWithContainers([plateArmor]);
 
-		expect(
-			getRow(container, 'armor').querySelector(
-				'[aria-label="Take Plate Armor out of its container"]',
-			),
-		).toBeNull();
+		const inventoryList = container.querySelector('.nimble-sheet__body--player-character');
+		if (!inventoryList) throw new Error('No inventory list rendered');
+
+		mockDraggedItem('Item.armor');
+		await fireEvent.drop(inventoryList);
+
+		expect(removeItemFromContainer).not.toHaveBeenCalled();
+	});
+
+	it('takes a stored object out when it is dragged onto an object carried directly', async () => {
+		const { container, removeItemFromContainer } = renderWithContainers([
+			bagOfHolding,
+			storedPlateArmor,
+			{ _id: 'sword', name: 'Longsword', system: { objectSizeType: 'slots', slotsRequired: 2 } },
+		]);
+
+		mockDraggedItem('Item.armor');
+		await fireEvent.drop(getRow(container, 'sword'));
+
+		expect(removeItemFromContainer).toHaveBeenCalledWith('armor');
+	});
+
+	it('stores an object dragged onto a row that is itself inside a container', async () => {
+		const { container, storeItemInContainer } = renderWithContainers([
+			bagOfHolding,
+			storedPlateArmor,
+			{ _id: 'sword', name: 'Longsword', system: { objectSizeType: 'slots', slotsRequired: 2 } },
+		]);
+
+		mockDraggedItem('Item.sword');
+		await fireEvent.drop(getRow(container, 'armor'));
+
+		expect(storeItemInContainer).toHaveBeenCalledWith('sword', 'bag');
+	});
+
+	it('offers no equip toggle for a stored object', () => {
+		const { container } = renderWithContainers([
+			bagOfHolding,
+			{
+				...storedPlateArmor,
+				system: { ...storedPlateArmor.system, rules: [{ type: 'armorClass' }] },
+			},
+		]);
+
+		const row = getRow(container, 'armor');
+
+		expect(row.querySelector('[aria-label^="Toggle"]')).toBeNull();
+		expect(row.querySelector('.nimble-document-card__quantity')).not.toBeNull();
+	});
+
+	it('offers the equip toggle for the same object carried directly', () => {
+		const { container } = renderWithContainers([
+			{ ...plateArmor, system: { ...plateArmor.system, rules: [{ type: 'armorClass' }] } },
+		]);
+
+		expect(getRow(container, 'armor').querySelector('[aria-label^="Toggle"]')).not.toBeNull();
 	});
 });

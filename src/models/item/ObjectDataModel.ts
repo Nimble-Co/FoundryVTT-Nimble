@@ -73,9 +73,9 @@ const schema = () => ({
 		enabled: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 		slotCostMode: new fields.StringField({
 			required: true,
-			initial: 'ignore',
+			initial: 'none',
 			nullable: false,
-			choices: ['ignore', 'reduce', 'half'],
+			choices: ['none', 'ignore', 'reduce', 'half'],
 		}),
 		slotCostReduction: new fields.NumberField({
 			required: true,
@@ -173,7 +173,7 @@ class NimbleObjectData extends NimbleBaseItemData<
 	declare containerId: string;
 	declare container: {
 		enabled: boolean;
-		slotCostMode: 'ignore' | 'reduce' | 'half';
+		slotCostMode: 'none' | 'ignore' | 'reduce' | 'half';
 		slotCostReduction: number;
 		capacity: number | null;
 		allowedObjectTypes: string[];
