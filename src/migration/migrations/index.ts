@@ -55,3 +55,4 @@ export { Migration054MageShepherdPilot } from './Migration054MageShepherdPilot.j
 export { Migration055CommanderChecklist } from './Migration055CommanderChecklist.js';
 export { Migration056OathswornChecklist } from './Migration056OathswornChecklist.js';
 export { Migration057SongweaverChecklist } from './Migration057SongweaverChecklist.js';
+export { Migration058WeaponTwoHandedOverride } from './Migration058WeaponTwoHandedOverride.js';

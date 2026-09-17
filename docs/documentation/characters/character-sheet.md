@@ -47,13 +47,34 @@ All of these open a roll window first. See [Dice Rolls & Chat Cards](../playing/
 
 Your heroic actions and reactions, expandable so you can read what each does. You can drag an action from here to the macro hotbar for one-click access; see [Macros & the Hotbar](../gm/macros.md).
 
+Only equipped weapons are offered as attacks, here and in the opportunity attack list. Unarmed strikes are always available, so you are never left with nothing to attack with.
+
+An attack is refused, with a message saying why, when the weapon is not equipped, when you do not meet its Strength requirement, or when it needs a hand you do not have and cannot free.
+
+#### Freeing a hand mid-attack
+
+You get one free equipment swap per round: sheathe a weapon or shield and draw a different one. A Commander with Weapon Mastery gets two. The counter sits beside the attack list during combat.
+
+Attacking with a two-handed weapon while a shield occupies your other hand spends one of those swaps and sheathes the shield for you, so you never have to visit the inventory mid-fight. The attack row says which item it will put away before you click. Once the round's swaps are spent, the attack is refused until the next round.
+
 ### Conditions
 
 Every condition the system knows, with the ones affecting you highlighted. Search, filter to active only, and toggle conditions on or off. Any other temporary or passive effects on your character are listed here too. See [Conditions](../playing/conditions.md).
 
 ### Inventory
 
-Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Each item has an equip toggle. You can create new items here or drag them in from the compendiums.
+Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Weapons, shields and armor each have an equip toggle, as does anything else carrying rules. You can create new items here or drag them in from the compendiums.
+
+#### Equipping weapons and shields
+
+You have two hands, and each equipped weapon or shield takes one of them. Armor is worn rather than held, so it never competes for a hand. Equipping never takes something else off for you: when both hands are full, unequip what you want to put away first.
+
+Two rules are enforced when you equip a weapon:
+
+- **Hands.** A two-handed weapon can be *held* in one hand, so equipping a greatsword alongside a shield is allowed. Attacking with it is what needs the second hand.
+- **Dual wielding.** Two Light weapons may be wielded together at any Strength. Wielding one weapon without the Light property alongside another needs Strength 2; two non-Light weapons need Strength 3.
+
+Magic items that grant extra arms, such as a Weapon of Many Hands, raise your hand count while equipped.
 
 ### Features
 

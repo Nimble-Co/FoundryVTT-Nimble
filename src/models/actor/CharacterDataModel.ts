@@ -103,6 +103,24 @@ const characterSchema = () => ({
 			integer: true,
 			min: 0,
 		}),
+		// Hands beyond the baseline two, raised in-place during data prep by the
+		// `extraHands` rule (e.g. Weapon of Many Hands). Read via `getHandCount`.
+		extraHands: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			min: 0,
+		}),
+		// Free equipment swaps per round beyond the baseline one, raised in-place
+		// by the `equipmentSwapBonus` rule (e.g. Commander Weapon Mastery).
+		equipmentSwapBonus: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			min: 0,
+		}),
 		armor: new fields.SchemaField({
 			baseValue: new fields.StringField({
 				required: true,
@@ -569,6 +587,8 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			value: number;
 		};
 		bonusHitDice: BonusHitDieEntry[];
+		extraHands: number;
+		equipmentSwapBonus: number;
 		hp: {
 			max: number;
 			temp: number;

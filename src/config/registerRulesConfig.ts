@@ -13,6 +13,8 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { EquipmentSwapBonusRule } from '../models/rules/equipmentSwapBonus.js';
+import { ExtraHandsRule } from '../models/rules/extraHands.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
@@ -62,6 +64,8 @@ export default function registerRulesConfig() {
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
+		equipmentSwapBonus: 'NIMBLE.ruleTypes.equipmentSwapBonus',
+		extraHands: 'NIMBLE.ruleTypes.extraHands',
 		grantActivation: 'NIMBLE.ruleTypes.grantActivation',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
@@ -113,6 +117,8 @@ export default function registerRulesConfig() {
 		damageBonus: DamageBonusRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
+		equipmentSwapBonus: EquipmentSwapBonusRule,
+		extraHands: ExtraHandsRule,
 		grantActivation: GrantActivationRule,
 		grantMovement: GrantMovementRule,
 		diceConsumer: DiceConsumerRule,

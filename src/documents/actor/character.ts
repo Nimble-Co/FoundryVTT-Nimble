@@ -15,6 +15,7 @@ import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#type
 import type { SkillKeyType } from '#types/skillKey.js';
 import collectHeldPicks, { countHeldPicks, type HeldFeature } from '#utils/collectHeldPicks.ts';
 import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
+import enforceWeaponAttack from '#utils/enforceWeaponAttack.js';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/findMissingLevelSelections.ts';
@@ -2186,6 +2187,21 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		options: Record<string, unknown> = {},
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
+
+		// Equip gate, ahead of every other side effect so a refused attack rolls
+		// nothing and spends nothing. This is the authoritative check: the attack
+		// panels filter on the same rules, but a weapon can be unequipped between
+		// the panel rendering and the click, and macros reach here directly.
+		if (
+			item?.type === 'object' &&
+			(item as unknown as NimbleObjectItem).system.objectType === 'weapon'
+		) {
+			const permitted = await enforceWeaponAttack(
+				this as unknown as Parameters<typeof enforceWeaponAttack>[0],
+				item as unknown as NimbleObjectItem,
+			);
+			if (!permitted) return null;
+		}
 
 		// Soft-block gate: when the activation costs more actions than the
 		// combatant has remaining, confirm before any activation side effects

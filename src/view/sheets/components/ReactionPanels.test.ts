@@ -110,6 +110,7 @@ function createOpportunityActor() {
 		},
 		system: {
 			objectType: 'weapon',
+			equipped: true,
 			activation: {
 				effects: [
 					{

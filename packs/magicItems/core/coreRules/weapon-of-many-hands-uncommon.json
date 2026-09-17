@@ -6,7 +6,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "extraHands",
+				"disabled": true,
+				"id": "sLDkQwHn2RxVbT4e",
+				"identifier": "",
+				"label": "Weapon of Many Hands",
+				"predicate": {},
+				"priority": 1,
+				"value": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
