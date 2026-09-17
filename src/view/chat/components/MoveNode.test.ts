@@ -1,11 +1,14 @@
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import MoveNodeTestHarness from './MoveNode.testHarness.svelte';
 
 /**
  * The states a move node renders in: an offer with its Move button for the
- * recipient's owner, text only for everyone else or with the toggle off, and
- * the recorded result once the drag landed.
+ * people who may take it, text only for everyone else or with the toggle off,
+ * and the recorded result once the drag landed.
  */
+
+const takeMovementOffer = vi.hoisted(() => vi.fn().mockResolvedValue('declined'));
+vi.mock('#utils/movement/takeMovementOffer.js', () => ({ takeMovementOffer }));
 
 type Globals = {
 	fromUuidSync: unknown;
@@ -15,14 +18,15 @@ type Globals = {
 
 const g = globalThis as unknown as Globals;
 
-function createToken(overrides: { isOwner?: boolean; walk?: number } = {}) {
+function createToken(overrides: { ownerIds?: string[]; walk?: number } = {}) {
+	const ownerIds = overrides.ownerIds ?? ['player'];
 	return {
 		id: 'tok1',
 		uuid: 'Scene.s1.Token.tok1',
 		name: 'Goblin Cutthroat',
 		actor: {
-			isOwner: overrides.isOwner ?? true,
-			getRollData: () => ({}),
+			getRollData: () => ({ abilities: { strength: { mod: 0 } } }),
+			testUserPermission: (user: { id: string }) => ownerIds.includes(user.id),
 			system: { attributes: { movement: { walk: overrides.walk ?? 6 }, sizeCategory: 'medium' } },
 		},
 	};
@@ -46,20 +50,29 @@ function createNode(overrides: Record<string, unknown> = {}) {
 }
 
 function createMessage(
-	overrides: { targets?: string[]; movementOffers?: unknown[]; speaker?: unknown } = {},
+	node: Record<string, unknown>,
+	overrides: { targets?: string[]; movementOffers?: unknown[]; authorId?: string } = {},
 ) {
 	const message = {
 		id: 'msg1',
-		speaker: overrides.speaker ?? { scene: 's1', token: 'tok1' },
+		author: { id: overrides.authorId ?? 'author' },
+		speaker: { scene: 's1', token: 'tok1', actor: 'actor1' },
 		system: {
 			actorName: 'Sir Brannon',
 			targets: overrides.targets ?? ['Scene.s1.Token.tok1'],
 			movementOffers: overrides.movementOffers ?? [],
+			activation: { effects: [node] },
 		},
 		reactive: null as unknown,
 	};
 	message.reactive = message;
 	return message;
+}
+
+function renderNode(node = createNode(), overrides: Parameters<typeof createMessage>[1] = {}) {
+	return render(MoveNodeTestHarness, {
+		props: { messageDocument: createMessage(node, overrides), node },
+	});
 }
 
 let previous: Partial<Globals> & { rollReplace?: unknown; rollEval?: unknown } = {};
@@ -74,8 +87,10 @@ beforeEach(() => {
 	g.fromUuidSync = vi.fn(() => createToken());
 	g.game.user = { isGM: false, id: 'player' };
 	g.game.settings = { get: vi.fn(() => true) };
-	g.Roll.replaceFormulaData = (formula: string) => formula;
+	g.Roll.replaceFormulaData = (formula: string, data: { speed?: number }) =>
+		formula.replace('@speed', String(data.speed ?? 0));
 	g.Roll.safeEval = (expression: string) => Number(expression);
+	takeMovementOffer.mockClear();
 });
 
 afterEach(() => {
@@ -92,56 +107,103 @@ function moveButton() {
 
 describe('MoveNode', () => {
 	it('offers the drag to the recipient owner with the distance and direction', () => {
-		render(MoveNodeTestHarness, {
-			props: { messageDocument: createMessage(), node: createNode() },
-		});
+		renderNode();
 		expect(screen.getByText(/Goblin Cutthroat: up to 2 spaces away from Sir Brannon/)).toBeTruthy();
 		expect(screen.getByText(/Sir Brannon chooses where/)).toBeTruthy();
 		expect(moveButton()).toBeTruthy();
 	});
 
-	it('shows text only to a user who does not own the recipient', () => {
-		g.fromUuidSync = vi.fn(() => createToken({ isOwner: false }));
-		render(MoveNodeTestHarness, {
-			props: { messageDocument: createMessage(), node: createNode() },
-		});
+	it('shows text only to a user who neither owns the recipient nor used the feature', () => {
+		g.fromUuidSync = vi.fn(() => createToken({ ownerIds: ['someone-else'] }));
+		renderNode();
 		expect(screen.getByText(/up to 2 spaces/)).toBeTruthy();
 		expect(moveButton()).toBeNull();
 	});
 
+	it('offers the button to the user who used the feature', () => {
+		g.fromUuidSync = vi.fn(() => createToken({ ownerIds: ['someone-else'] }));
+		renderNode(createNode(), { authorId: 'player' });
+		expect(moveButton()).toBeTruthy();
+	});
+
 	it('always offers the button to the GM', () => {
-		g.fromUuidSync = vi.fn(() => createToken({ isOwner: false }));
+		g.fromUuidSync = vi.fn(() => createToken({ ownerIds: [] }));
 		g.game.user = { isGM: true, id: 'gm' };
-		render(MoveNodeTestHarness, {
-			props: { messageDocument: createMessage(), node: createNode() },
-		});
+		renderNode();
 		expect(moveButton()).toBeTruthy();
 	});
 
 	it('shows text only when Movement Offers is off', () => {
 		g.game.settings = { get: vi.fn(() => false) };
-		render(MoveNodeTestHarness, {
-			props: { messageDocument: createMessage(), node: createNode() },
-		});
+		renderNode();
 		expect(screen.getByText(/up to 2 spaces/)).toBeTruthy();
 		expect(moveButton()).toBeNull();
 	});
 
 	it('resolves @speed against the recipient for a self free move', () => {
-		g.Roll.safeEval = (expression: string) => Number(expression.replace('@speed', '6'));
-		g.Roll.replaceFormulaData = (formula: string) => formula.replace('@speed', '6');
-		const node = createNode({
-			kind: 'free',
-			recipient: 'self',
-			distance: '@speed',
-			direction: 'any',
-		});
-		render(MoveNodeTestHarness, { props: { messageDocument: createMessage(), node } });
+		renderNode(
+			createNode({ kind: 'free', recipient: 'self', distance: '@speed', direction: 'any' }),
+		);
 		expect(screen.getByText(/up to 6 spaces in any direction/)).toBeTruthy();
 	});
 
+	it('uses the singular for one space', () => {
+		renderNode(createNode({ distance: '1' }));
+		expect(screen.getByText(/up to 1 space away/)).toBeTruthy();
+	});
+
+	it('shows no button for a distance that comes to zero', () => {
+		renderNode(createNode({ distance: '0' }));
+		expect(screen.queryByRole('button')).toBeNull();
+	});
+
+	it('takes the offer by card, node and token when clicked, once at a time', async () => {
+		let release: () => void = () => {};
+		takeMovementOffer.mockImplementation(
+			() =>
+				new Promise<string>((resolve) => {
+					release = () => resolve('started');
+				}),
+		);
+		renderNode();
+
+		const button = moveButton()!;
+		await fireEvent.click(button);
+		await fireEvent.click(button);
+		expect(button.hasAttribute('disabled')).toBe(true);
+		release();
+
+		await waitFor(() => expect(takeMovementOffer).toHaveBeenCalledTimes(1));
+		expect(takeMovementOffer).toHaveBeenCalledWith({
+			messageId: 'msg1',
+			nodeId: 'node1',
+			tokenUuid: 'Scene.s1.Token.tok1',
+		});
+		await waitFor(() => expect(moveButton()?.hasAttribute('disabled')).toBe(false));
+	});
+
 	it('replaces the button with the result once the drag landed', () => {
-		const message = createMessage({
+		renderNode(createNode(), {
+			movementOffers: [
+				{
+					id: 'msg1.node1.tok1',
+					nodeId: 'node1',
+					tokenUuid: 'Scene.s1.Token.tok1',
+					spaces: 2,
+					used: true,
+					usedBy: 'player',
+					movedSpaces: 2,
+					stopped: false,
+				},
+			],
+		});
+		expect(screen.getByText(/moved 2 of 2 spaces/)).toBeTruthy();
+		expect(moveButton()).toBeNull();
+		expect(screen.queryByText(/1d6 bludgeoning/)).toBeNull();
+	});
+
+	it('reminds the table about damage when a push was cut short', () => {
+		renderNode(createNode(), {
 			movementOffers: [
 				{
 					id: 'msg1.node1.tok1',
@@ -155,15 +217,12 @@ describe('MoveNode', () => {
 				},
 			],
 		});
-		render(MoveNodeTestHarness, { props: { messageDocument: message, node: createNode() } });
 		expect(screen.getByText(/moved 1 of 2 spaces, shortened by 1/)).toBeTruthy();
-		expect(moveButton()).toBeNull();
+		expect(screen.getByText(/1d6 bludgeoning damage per space shortened/)).toBeTruthy();
 	});
 
 	it('says so when the card has no creature to move', () => {
-		render(MoveNodeTestHarness, {
-			props: { messageDocument: createMessage({ targets: [] }), node: createNode() },
-		});
+		renderNode(createNode(), { targets: [] });
 		expect(screen.getByText(/No creature to move/)).toBeTruthy();
 	});
 });
