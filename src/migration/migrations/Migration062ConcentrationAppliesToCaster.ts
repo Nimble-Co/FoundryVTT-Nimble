@@ -3,7 +3,7 @@ import { MigrationBase } from '../MigrationBase.js';
 const CONCENTRATION = 'concentration';
 
 /**
- * Drop the `condition: concentration` activation nodes eight core spells shipped
+ * Drop the `condition: concentration` activation nodes the core spells shipped
  * with, now that the property applies the condition on its own (issue #23).
  *
  * Matched on the property rather than on source ids, so homebrew copies and

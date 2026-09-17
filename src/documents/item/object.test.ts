@@ -200,8 +200,6 @@ describe('NimbleObjectItem.activate', () => {
 			expect(scroll.delete).toHaveBeenCalled();
 		});
 
-		// Concentration belongs to the shared activation tail, behind this gate, so a
-		// scroll that fizzles must not leave its wielder concentrating.
 		it('starts no concentration on a failing roll', async () => {
 			const scroll = createScroll({
 				rollSkillCheck: vi.fn(async () => ({ roll: { total: 9 }, rollData: {} })),
