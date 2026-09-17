@@ -32,6 +32,12 @@ type DroppedItemData = {
 	};
 };
 
+/** The fields that decide whether a created object folds into one already carried. */
+type ObjectStackingFields = {
+	objectSizeType?: string;
+	containerId?: string;
+};
+
 type PlayerCharacterSheetState = Record<string, unknown> & SheetDropItemFlashState;
 
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
@@ -270,17 +276,19 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	#findStackedItemId(item: Record<string, unknown>): string | null {
 		if (item.type !== 'object') return null;
 
-		const { objectSizeType } = (item.system ?? {}) as { objectSizeType?: string };
+		const { objectSizeType, containerId } = (item.system ?? {}) as ObjectStackingFields;
 		if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(objectSizeType ?? '')) return null;
 
-		const existing = this._actor.items.find(
-			(candidate) =>
-				candidate.type === 'object' &&
-				candidate.name === item.name &&
-				OBJECT_SIZE_TYPES_WITH_QUANTITY.has(
-					(candidate as { system?: { objectSizeType?: string } }).system?.objectSizeType ?? '',
-				),
-		);
+		const existing = this._actor.items.find((candidate) => {
+			if (candidate.type !== 'object' || candidate.name !== item.name) return false;
+
+			const candidateSystem = (candidate as { system?: ObjectStackingFields }).system;
+
+			return (
+				(candidateSystem?.containerId ?? '') === (containerId ?? '') &&
+				OBJECT_SIZE_TYPES_WITH_QUANTITY.has(candidateSystem?.objectSizeType ?? '')
+			);
+		});
 
 		return existing?.id ?? null;
 	}

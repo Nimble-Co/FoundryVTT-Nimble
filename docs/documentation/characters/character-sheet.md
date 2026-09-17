@@ -55,6 +55,8 @@ Every condition the system knows, with the ones affecting you highlighted. Searc
 
 Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Each item has an equip toggle. You can create new items here or drag them in from the compendiums.
 
+Items set up as containers — a Bag of Holding, a backpack, a quiver — show their contents nested underneath them. Drag an item onto a container's row to put it inside, and use the arrow button on a stored item to take it back out. A container keeps its own slot cost; what its contents cost you depends on how the container is configured, and the slot total at the bottom of the tab reflects that. If a container has a capacity, the row says how much of it is in use, and a drop that would not fit is refused.
+
 ### Features
 
 Your class features, subclass features, ancestry, background, and boons, grouped by category. Click a feature's icon to use it and post its details to chat.
