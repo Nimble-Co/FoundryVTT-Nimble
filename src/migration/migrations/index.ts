@@ -56,3 +56,4 @@ export { Migration055CommanderChecklist } from './Migration055CommanderChecklist
 export { Migration056OathswornChecklist } from './Migration056OathswornChecklist.js';
 export { Migration057SongweaverChecklist } from './Migration057SongweaverChecklist.js';
 export { Migration058CheatChecklist } from './Migration058CheatChecklist.js';
+export { Migration059HunterChecklist } from './Migration059HunterChecklist.js';
