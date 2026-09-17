@@ -59,8 +59,6 @@ export interface MovementRecord {
 	spacesThisTurn: number | null;
 	/** True when a wall, terrain, the mover or a disconnect cut the path short. */
 	stopped: boolean;
-	/** The Movement Offer this path answered, when it was an offered drag. */
-	offer: { id: string; messageId: string | null } | null;
 	user: User;
 }
 
@@ -90,6 +88,15 @@ export interface MovementOffer {
 }
 
 export type MovementOfferOutcome = 'started' | 'declined' | 'unavailable';
+
+/** What came of an offer: whether the drag happened and, when it did, how far it went. */
+export interface MovementOfferResult {
+	outcome: MovementOfferOutcome;
+	/** Spaces the token really moved, once the drag landed. */
+	movedSpaces: number | null;
+	/** True when a wall, terrain or the mover cut the drag short. */
+	stopped: boolean;
+}
 
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */
 export interface ReachChange {

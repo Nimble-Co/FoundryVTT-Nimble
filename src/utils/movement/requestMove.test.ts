@@ -19,7 +19,7 @@ function makeUser(overrides: { id: string; active?: boolean; isGM?: boolean; isS
 		active: true,
 		isGM: false,
 		isSelf: false,
-		query: vi.fn().mockResolvedValue('started'),
+		query: vi.fn().mockResolvedValue({ outcome: 'started', movedSpaces: 2, stopped: false }),
 		...overrides,
 	};
 }
@@ -54,14 +54,16 @@ describe('selectMovingUser', () => {
 describe('requestMove', () => {
 	it('plans locally when this user is the mover', async () => {
 		const me = makeUser({ id: 'p1', isSelf: true });
-		const planLocally = vi.fn().mockResolvedValue('declined');
-		const outcome = await requestMove(offer, {
+		const planLocally = vi
+			.fn()
+			.mockResolvedValue({ outcome: 'declined', movedSpaces: null, stopped: false });
+		const result = await requestMove(offer, {
 			resolveToken: () => makeToken(['p1']),
 			users: [me],
 			activeGm: null,
 			planLocally,
 		});
-		expect(outcome).toBe('declined');
+		expect(result.outcome).toBe('declined');
 		expect(planLocally).toHaveBeenCalledWith(offer);
 		expect(me.query).not.toHaveBeenCalled();
 	});
@@ -69,13 +71,13 @@ describe('requestMove', () => {
 	it('queries the owning client with the offer otherwise', async () => {
 		const player = makeUser({ id: 'p1' });
 		const planLocally = vi.fn();
-		const outcome = await requestMove(offer, {
+		const result = await requestMove(offer, {
 			resolveToken: () => makeToken(['p1']),
 			users: [player],
 			activeGm: null,
 			planLocally,
 		});
-		expect(outcome).toBe('started');
+		expect(result).toEqual({ outcome: 'started', movedSpaces: 2, stopped: false });
 		expect(player.query).toHaveBeenCalledWith(PLAN_MOVE_QUERY, offer, expect.any(Object));
 		expect(planLocally).not.toHaveBeenCalled();
 	});
@@ -83,15 +85,15 @@ describe('requestMove', () => {
 	it('is unavailable when the query fails or times out', async () => {
 		const player = makeUser({ id: 'p1' });
 		player.query.mockRejectedValue(new Error('User has disconnected'));
-		const outcome = await requestMove(offer, {
+		const result = await requestMove(offer, {
 			resolveToken: () => makeToken(['p1']),
 			users: [player],
 			activeGm: null,
 		});
-		expect(outcome).toBe('unavailable');
+		expect(result.outcome).toBe('unavailable');
 	});
 
 	it('is unavailable when the token cannot be resolved', async () => {
-		expect(await requestMove(offer, { resolveToken: () => null })).toBe('unavailable');
+		expect((await requestMove(offer, { resolveToken: () => null })).outcome).toBe('unavailable');
 	});
 });
