@@ -4,7 +4,10 @@ import { runDevFlagRebrandPersist } from '../migration/devFlagRebrand.js';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
-import { getAdjacencySyncEnabled } from '../settings/adjacencySettings.js';
+import {
+	getAdjacencySyncEnabled,
+	migrateLegacyDiagonalSetting,
+} from '../settings/adjacencySettings.js';
 import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
@@ -93,6 +96,7 @@ export default async function ready() {
 
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
+	void migrateLegacyDiagonalSetting();
 	registerMinionGroupTokenActions();
 	registerDicePoolSpendRequestRouter();
 

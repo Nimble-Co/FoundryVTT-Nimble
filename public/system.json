@@ -52,7 +52,8 @@
 	"grid": {
 		"distance": 1,
 		"units": "spaces",
-		"type": 1
+		"type": 1,
+		"diagonals": 0
 	},
 	"primaryTokenAttribute": "attributes.hp",
 	"secondaryTokenAttribute": "resources.mana",
