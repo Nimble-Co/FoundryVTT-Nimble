@@ -136,6 +136,7 @@ Two consequences for a rule in this position:
 | `enemiesAdjacent:most` | Adjacency sync | Has most adjacent enemies |
 | `alliesAdjacent:<count>` | Adjacency sync | In combat |
 | `alliesAdjacent:most` | Adjacency sync | Has most adjacent allies |
+| `spacesMovedThisTurn:<n>` | Token movement history | Combatant in a started combat, with Movement Tracking on. Emitted at `0` too, so `{ "spacesMovedThisTurn": { "max": 0 } }` reads "has not moved this turn". Counts regular, free and forced Movement; teleports never count. Resets when the actor's own turn begins. |
 | `self:bloodied` | `actor.statuses` | Bloodied status active |
 | `self:dying` | `actor.statuses` (dying) | PC/Hero at 0 HP with wounds remaining |
 | `self:lastStand` | `actor.statuses` (lastStand) | Solo/Legendary monster phase change at 0 HP |
