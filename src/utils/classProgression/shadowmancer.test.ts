@@ -223,6 +223,10 @@ describe('Shadowmancer - pack data', () => {
 	const { feature, rulesOf } = packFeatureHelpers(CLASS_ID);
 
 	describe('Whispers of the Grave', () => {
+		it('ships exactly two rules', () => {
+			expect(feature('Whispers of the Grave').system.rules).toHaveLength(2);
+		});
+
 		it('ships one pool of one use that refreshes on a Safe Rest, off the resource bar', () => {
 			const pools = rulesOf('Whispers of the Grave', 'chargePool');
 			expect(pools).toHaveLength(1);

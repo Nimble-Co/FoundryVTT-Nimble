@@ -383,7 +383,7 @@ interface EffectNode {
 
 const { feature: commanderFeature } = packFeatureHelpers('commander');
 
-function rulesOf(name: string): PoolRule[] {
+function poolRulesOf(name: string): PoolRule[] {
 	return (commanderFeature(name).system.rules ?? []) as PoolRule[];
 }
 
@@ -393,7 +393,7 @@ function effectsOf(name: string): EffectNode[] {
 
 describe('Commander — Combat Dice pool in the pack data', () => {
 	it('ships an encounterEnd recovery that sets the combat-dice pool to 0', () => {
-		const pool = rulesOf('Fit for Any Battlefield').find(
+		const pool = poolRulesOf('Fit for Any Battlefield').find(
 			(rule) => rule.type === 'chargePool' && rule.identifier === 'combat-dice',
 		);
 		expect(pool, 'combat-dice charge pool').toBeDefined();
