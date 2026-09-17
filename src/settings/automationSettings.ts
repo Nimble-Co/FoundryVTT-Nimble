@@ -12,6 +12,7 @@ export const AUTOMATION_SETTING_KEYS = {
 	combatConvenience: 'automation.combatConvenience',
 	chatNotifications: 'automation.chatNotifications',
 	movementTracking: 'automation.movementTracking',
+	movementOffers: 'automation.movementOffers',
 } as const;
 
 export type AutomationSettingKey =
@@ -95,4 +96,9 @@ export function resolveLegacyAutoApplyDefault(
 	legacyValue: boolean,
 ): boolean {
 	return storedExists ? legacyValue : true;
+}
+
+/** Whether features offer a constrained drag on the chat card instead of plain text with the distance. */
+export function isMovementOffersAutomationEnabled(): boolean {
+	return readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers);
 }

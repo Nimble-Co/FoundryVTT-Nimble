@@ -3103,6 +3103,10 @@
 				"name": "Chat Notifications",
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
+			"movementOffers": {
+				"name": "Movement Offers",
+				"hint": "When a feature grants a Free Move or pushes a creature, put a Move button on the chat card that starts a drag limited to the offered distance on the owner's client. When off, the card shows the distance as text and the token is dragged as usual."
+			},
 			"movementTracking": {
 				"name": "Movement Tracking",
 				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react when a creature finishes moving or moves adjacent. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history."
