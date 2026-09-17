@@ -87,6 +87,13 @@ export interface MovementOffer {
 	messageId: string | null;
 }
 
+/** Names a `move` node's offer for one recipient token on a chat card. */
+export interface MovementOfferRef {
+	messageId: string;
+	nodeId: string;
+	tokenUuid: string;
+}
+
 export type MovementOfferOutcome = 'started' | 'declined' | 'unavailable';
 
 /** What came of an offer: whether the drag happened and, when it did, how far it went. */

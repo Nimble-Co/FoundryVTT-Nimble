@@ -36,20 +36,30 @@ function makeActor(size = 'medium', walk = 6, str = 3) {
 	};
 }
 
+// Distinct numbers on each side, so a test cannot pass by reading the wrong actor.
+const source = makeActor('large', 4, 3);
+const recipient = makeActor('medium', 7, -1);
+
 describe('resolveMoveDistance', () => {
 	it('resolves @speed to the recipient walk speed', () => {
-		expect(resolveMoveDistance({ distance: '@speed', distanceBySize: {} }, makeActor())).toBe(6);
-	});
-
-	it('floors arithmetic on the formula', () => {
-		expect(resolveMoveDistance({ distance: '@speed / 4', distanceBySize: {} }, makeActor())).toBe(
-			1,
+		expect(resolveMoveDistance({ distance: '@speed', distanceBySize: {} }, source, recipient)).toBe(
+			7,
 		);
 	});
 
-	it('reads ability modifiers from the recipient roll data', () => {
+	it('floors arithmetic on the formula', () => {
 		expect(
-			resolveMoveDistance({ distance: '@abilities.strength.mod', distanceBySize: {} }, makeActor()),
+			resolveMoveDistance({ distance: '@speed / 4', distanceBySize: {} }, source, recipient),
+		).toBe(1);
+	});
+
+	it("reads ability modifiers from the feature user's roll data", () => {
+		expect(
+			resolveMoveDistance(
+				{ distance: '@abilities.strength.mod', distanceBySize: {} },
+				source,
+				recipient,
+			),
 		).toBe(3);
 	});
 
@@ -58,12 +68,21 @@ describe('resolveMoveDistance', () => {
 			distance: '@abilities.strength.mod',
 			distanceBySize: { small: '@abilities.strength.mod * 2' },
 		};
-		expect(resolveMoveDistance(node, makeActor('small'))).toBe(6);
-		expect(resolveMoveDistance(node, makeActor('large'))).toBe(3);
+		expect(resolveMoveDistance(node, source, makeActor('small'))).toBe(6);
+		expect(resolveMoveDistance(node, source, makeActor('large'))).toBe(3);
 	});
 
-	it('never offers an unreadable distance', () => {
-		expect(resolveMoveDistance({ distance: 'nonsense', distanceBySize: {} }, makeActor())).toBe(0);
-		expect(resolveMoveDistance({ distance: '', distanceBySize: {} }, makeActor())).toBe(0);
+	it('never offers an unreadable or negative distance', () => {
+		expect(
+			resolveMoveDistance({ distance: 'nonsense', distanceBySize: {} }, source, recipient),
+		).toBe(0);
+		expect(resolveMoveDistance({ distance: '', distanceBySize: {} }, source, recipient)).toBe(0);
+		expect(
+			resolveMoveDistance(
+				{ distance: '@abilities.strength.mod - 5', distanceBySize: {} },
+				source,
+				recipient,
+			),
+		).toBe(0);
 	});
 });
