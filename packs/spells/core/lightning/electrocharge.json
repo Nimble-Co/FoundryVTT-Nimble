@@ -26,13 +26,6 @@
 					"condition": "charged",
 					"parentContext": null,
 					"parentNode": null
-				},
-				{
-					"id": "qOe7OGm49MiU4osP",
-					"type": "condition",
-					"condition": "concentration",
-					"parentContext": null,
-					"parentNode": null
 				}
 			],
 			"showDescription": true,

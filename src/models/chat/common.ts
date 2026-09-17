@@ -8,6 +8,14 @@ export const metadata = () => ({
 	rollMode: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
 });
 
+/**
+ * Whether the activated item made its user concentrate. Stamped from the item's
+ * `concentration` property, so a spell and a scroll of that spell both carry it.
+ */
+export const concentration = () => ({
+	concentration: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+});
+
 export const targets = () => ({
 	targets: new fields.ArrayField(new fields.StringField({ required: true, nullable: false }), {
 		required: true,

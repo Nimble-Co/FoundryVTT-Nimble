@@ -306,3 +306,34 @@ describe('NimbleObjectItem.activate', () => {
 		});
 	});
 });
+
+describe('NimbleObjectItem.prepareChatCardData concentration', () => {
+	function createScrollItem(properties: string[]) {
+		return Object.assign(Object.create(NimbleObjectItem.prototype), {
+			name: 'Scroll of Fly',
+			tags: new Set(properties.map((property) => `property:${property}`)),
+			system: {
+				activation: { showDescription: false },
+				description: { public: '', unidentified: '' },
+				identified: true,
+				objectType: 'consumable',
+				properties: { selected: properties },
+				unidentifiedName: '',
+			},
+		});
+	}
+
+	// A scroll carries the inscribed spell's concentration property, so its card
+	// has to say so the same way the spell's own card does.
+	it('tells the card the wielder is concentrating', async () => {
+		const chatData = await createScrollItem(['concentration']).prepareChatCardData({});
+
+		expect(chatData.system.concentration).toBe(true);
+	});
+
+	it('leaves the flag off for an object without the property', async () => {
+		const chatData = await createScrollItem(['light']).prepareChatCardData({});
+
+		expect(chatData.system.concentration).toBe(false);
+	});
+});

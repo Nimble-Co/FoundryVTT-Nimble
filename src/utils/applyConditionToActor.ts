@@ -31,7 +31,8 @@ export interface ConditionTargetActor {
 
 /** A document that can stand as the recorded source of a condition. */
 interface ConditionSourceDocument {
-	uuid?: string;
+	/** Nullable because Foundry's own `uuid` is; a null one records no origin. */
+	uuid?: string | null;
 }
 
 export interface ApplyConditionOptions {

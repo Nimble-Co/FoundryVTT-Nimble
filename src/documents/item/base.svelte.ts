@@ -5,6 +5,7 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import applyCasterConcentration from '../../utils/applyCasterConcentration.js';
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -176,8 +177,13 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	}
 
 	/**
-	 * Create the activation chat card unless a rule suppresses it, then fire
-	 * the `useItem` hook. Shared tail of every activate() implementation.
+	 * Create the activation chat card unless a rule suppresses it, apply the
+	 * caster's concentration, then fire the `useItem` hook. Shared tail of every
+	 * activate() implementation.
+	 *
+	 * Concentration is applied here rather than on the damage-applied path so
+	 * that a utility spell such as Fly, which rolls nothing and may target
+	 * nobody, still occupies it.
 	 */
 	protected async _createActivationCard(
 		chatData: unknown,
@@ -189,6 +195,8 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
+
+		await applyCasterConcentration(this);
 
 		if (chatCard || suppressCard) {
 			/**
