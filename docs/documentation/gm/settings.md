@@ -8,7 +8,7 @@ You'll find the system's settings in Foundry under **Game Settings → Configure
 
 ## Automation
 
-How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with eight world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
+How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with nine world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
 
 - **Apply Conditions and Effects from Rules.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and timed effects end on their own. When off, conditions still appear as one-click buttons on the chat card. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
 - **Derived Conditions.** Conditions implied by other conditions are applied and removed automatically, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
@@ -17,6 +17,7 @@ How much the system does on its own is controlled from one place: the **Configur
 - **Action Tracking.** Using an item during combat spends the combatant's actions.
 - **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
 - **Combat Convenience.** Player characters roll initiative automatically when combat starts.
+- **Movement Tracking.** During combat the system records each token's movement, keeps count of the spaces moved this turn, and lets features react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, nothing is recorded and movement rules stay silent. See [Running Combat](combat.md#movement-tracking).
 - **Chat Notifications.** Informational messages such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements.
 
 Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on.

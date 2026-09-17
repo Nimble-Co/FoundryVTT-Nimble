@@ -2984,6 +2984,10 @@
 				"name": "Chat Notifications",
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
+			"movementTracking": {
+				"name": "Movement Tracking",
+				"hint": "Record each token's movement during combat, keep count of the spaces moved this turn, and let features react when a creature finishes moving or moves adjacent. When off, nothing is recorded and movement rules stay silent."
+			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
 				"hint": "Show the Combat System panel during combat. Helps GMs quickly target heroes and roll attacks for minions, monsters, and legendary monsters."
