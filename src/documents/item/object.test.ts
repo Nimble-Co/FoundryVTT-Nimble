@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SYSTEM_ID } from '#system';
 
@@ -304,5 +304,191 @@ describe('NimbleObjectItem.activate', () => {
 			expect(confirmDialog()).not.toHaveBeenCalled();
 			expect(scroll.delete).not.toHaveBeenCalled();
 		});
+	});
+});
+
+interface ObjectStubOverrides {
+	name?: string;
+	objectSizeType?: string;
+	quantity?: number;
+	containerId?: string;
+	isContainer?: boolean;
+}
+
+/**
+ * A plain object item. The Foundry mock assigns the construction data straight
+ * onto the document, so `system` here is what the code under test reads.
+ */
+function createObject(id: string, overrides: ObjectStubOverrides = {}) {
+	const {
+		name = id,
+		objectSizeType = 'slots',
+		quantity = 1,
+		containerId = '',
+		isContainer = false,
+	} = overrides;
+
+	const item = new NimbleObjectItem({
+		_id: id,
+		id,
+		name,
+		type: 'object',
+		system: {
+			objectSizeType,
+			quantity,
+			containerId,
+			container: { enabled: isContainer, requiresEquipped: false },
+			activation: {},
+		},
+	} as never);
+
+	Object.assign(item, { update: vi.fn(async () => undefined) });
+
+	return item as NimbleObjectItem & { update: ReturnType<typeof vi.fn> };
+}
+
+function attachActor(items: NimbleObjectItem[]) {
+	const updateEmbeddedDocuments = vi.fn(async () => []);
+	const actor = { items, updateEmbeddedDocuments };
+
+	for (const item of items) {
+		Object.assign(item, { actor, isEmbedded: true });
+	}
+
+	return { actor, updateEmbeddedDocuments };
+}
+
+const DELETING_USER = 'test-user-id';
+
+describe('NimbleObjectItem._onDelete', () => {
+	let baseOnDelete: ReturnType<typeof vi.spyOn>;
+
+	beforeEach(() => {
+		vi.restoreAllMocks();
+		baseOnDelete = vi.spyOn(NimbleBaseItem.prototype, '_onDelete').mockImplementation(() => {});
+	});
+
+	it('clears the container reference on everything the deleted container held', () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const sword = createObject('sword');
+		const { updateEmbeddedDocuments } = attachActor([bag, armor, sword]);
+
+		bag._onDelete({}, DELETING_USER);
+
+		expect(baseOnDelete).toHaveBeenCalled();
+		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
+			{ _id: 'armor', 'system.containerId': '' },
+		]);
+	});
+
+	it('leaves the updates to the deleting client, so they happen once', () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+
+		bag._onDelete({}, 'a-different-user');
+
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('writes nothing when the deleted container was empty', () => {
+		const bag = createObject('bag', { isContainer: true });
+		const sword = createObject('sword');
+		const { updateEmbeddedDocuments } = attachActor([bag, sword]);
+
+		bag._onDelete({}, DELETING_USER);
+
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('writes nothing when the deleted object was never a container', () => {
+		const sword = createObject('sword');
+		const chalk = createObject('chalk', { containerId: 'sword' });
+		const { updateEmbeddedDocuments } = attachActor([sword, chalk]);
+
+		sword._onDelete({}, DELETING_USER);
+
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleObjectItem._preCreate stacking', () => {
+	type PreCreateHost = { _preCreate?: ReturnType<typeof vi.fn> };
+	let basePreCreate: ReturnType<typeof vi.fn>;
+
+	// `_preCreate` lives on Foundry's own Item, above NimbleBaseItem, so there is
+	// nothing to spy on under the test mock. Stand one in for the block instead.
+	beforeEach(() => {
+		vi.restoreAllMocks();
+		basePreCreate = vi.fn(async () => true);
+		(NimbleBaseItem.prototype as unknown as PreCreateHost)._preCreate = basePreCreate;
+	});
+
+	afterEach(() => {
+		delete (NimbleBaseItem.prototype as unknown as PreCreateHost)._preCreate;
+	});
+
+	/**
+	 * `_preCreate` runs before the document joins the collection, so the incoming
+	 * item is given the actor without being listed among what is already carried.
+	 */
+	function dropOnto(carried: NimbleObjectItem[], incoming: NimbleObjectItem) {
+		const { actor } = attachActor(carried);
+		Object.assign(incoming, { actor, isEmbedded: true });
+
+		return incoming._preCreate({} as never, {} as never, {} as never);
+	}
+
+	it('folds a new stack into one already carried in the same place', async () => {
+		const carried = createObject('carried-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+			quantity: 3,
+		});
+		const dropped = createObject('dropped-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+		});
+
+		expect(await dropOnto([carried], dropped)).toBe(false);
+		expect(carried.update).toHaveBeenCalledWith({ 'system.quantity': 4 });
+		expect(basePreCreate).not.toHaveBeenCalled();
+	});
+
+	it('keeps a new stack out of an identical one stored in a container', async () => {
+		const quivered = createObject('quivered-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+			quantity: 3,
+			containerId: 'quiver',
+		});
+		const dropped = createObject('dropped-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+		});
+
+		await dropOnto([quivered], dropped);
+
+		// Arrows in a quiver and arrows on the belt are separate piles.
+		expect(quivered.update).not.toHaveBeenCalled();
+		expect(basePreCreate).toHaveBeenCalled();
+	});
+
+	it('folds into the stack inside the container when the new one is stored there too', async () => {
+		const quivered = createObject('quivered-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+			quantity: 3,
+			containerId: 'quiver',
+		});
+		const dropped = createObject('dropped-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+			containerId: 'quiver',
+		});
+
+		expect(await dropOnto([quivered], dropped)).toBe(false);
+		expect(quivered.update).toHaveBeenCalledWith({ 'system.quantity': 4 });
 	});
 });

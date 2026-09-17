@@ -261,4 +261,31 @@ describe('PlayerCharacterInventoryTab containers', () => {
 
 		expect(getRow(container, 'armor').querySelector('[aria-label^="Toggle"]')).not.toBeNull();
 	});
+
+	it('offers the equip toggle to a rule-less container that only applies while equipped', () => {
+		const { container } = renderWithContainers([
+			{
+				_id: 'harness',
+				name: 'Harness',
+				system: {
+					objectSizeType: 'slots',
+					slotsRequired: 1,
+					container: { enabled: true, slotCostMode: 'ignore', requiresEquipped: true },
+				},
+			},
+		]);
+
+		// Without it the setting could never be satisfied and the container would
+		// silently do nothing.
+		expect(getRow(container, 'harness').querySelector('[aria-label^="Toggle"]')).not.toBeNull();
+	});
+
+	it('offers no equip toggle to a rule-less container that applies whatever it does', () => {
+		const { container } = renderWithContainers([bagOfHolding]);
+
+		const row = getRow(container, 'bag');
+
+		expect(row.querySelector('[aria-label^="Toggle"]')).toBeNull();
+		expect(row.querySelector('.nimble-document-card__quantity')).not.toBeNull();
+	});
 });
