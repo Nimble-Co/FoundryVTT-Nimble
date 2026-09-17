@@ -24,21 +24,31 @@ describe('mergeMovementOfferEntry', () => {
 	it('appends a new entry with defaults for what the patch leaves out', () => {
 		expect(mergeMovementOfferEntry([], { id: 'm.n.t', spaces: 2 })).toEqual([
 			{
-				...taken,
+				id: 'm.n.t',
+				nodeId: '',
+				tokenUuid: '',
+				spaces: 2,
 				used: false,
 				usedBy: null,
 				movedSpaces: null,
 				stopped: false,
-				nodeId: '',
-				tokenUuid: '',
 			},
 		]);
 	});
 
-	it('updates an existing entry in place and ignores undefined patch values', () => {
+	it('updates an existing entry in place and leaves the others untouched', () => {
 		const other = { ...taken, id: 'm.n.other' };
-		expect(
-			mergeMovementOfferEntry([other, taken], { id: 'm.n.t', movedSpaces: 2, usedBy: undefined }),
-		).toEqual([other, { ...taken, movedSpaces: 2 }]);
+		const merged = mergeMovementOfferEntry([other, taken], { id: 'm.n.t', movedSpaces: 2 });
+		expect(merged[0]).toBe(other);
+		expect(merged[1]).toEqual({ ...taken, movedSpaces: 2 });
+	});
+
+	it('ignores undefined patch values so an earlier stamp survives a later partial one', () => {
+		const merged = mergeMovementOfferEntry([taken], {
+			id: 'm.n.t',
+			usedBy: undefined,
+			stopped: false,
+		});
+		expect(merged[0]).toEqual({ ...taken, stopped: false });
 	});
 });

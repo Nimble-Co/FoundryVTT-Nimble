@@ -15,8 +15,9 @@ const UNAVAILABLE: MovementOfferResult = {
 
 /**
  * Answers a plan request on the owning client. The request names a card, a
- * node and a token; the offer is rebuilt here from the card, and only the GM,
- * the card's author or the token's owner may ask.
+ * node and a token; the offer is rebuilt here from the card, an offer already
+ * taken is refused, and only the GM, the card's author or the token's owner
+ * may ask.
  */
 export async function handlePlanMoveQuery(
 	data: unknown,
@@ -34,7 +35,8 @@ export async function handlePlanMoveQuery(
 		nodeId: ref.nodeId,
 		tokenUuid: ref.tokenUuid,
 	});
-	if (!card || !(deps.canTake ?? canUserTakeMovementOffer)(context.user, card)) return UNAVAILABLE;
+	if (!card || card.entry?.used) return UNAVAILABLE;
+	if (!(deps.canTake ?? canUserTakeMovementOffer)(context.user, card)) return UNAVAILABLE;
 	return (deps.plan ?? planOfferedMove)(card.offer);
 }
 

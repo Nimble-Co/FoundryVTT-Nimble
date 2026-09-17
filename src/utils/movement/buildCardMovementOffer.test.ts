@@ -14,7 +14,10 @@ const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.
 beforeAll(() => {
 	RollGlobal.replaceFormulaData = (formula, data) =>
 		formula.replace('@speed', String(data.speed)).replace('@str', String(data.str));
-	RollGlobal.safeEval = (expression) => Number(expression);
+	RollGlobal.safeEval = (expression) => {
+		if (!/^[\d\s+\-*/().]+$/.test(expression)) throw new Error(`unsafe: ${expression}`);
+		return Function(`"use strict"; return (${expression});`)() as number;
+	};
 });
 
 afterAll(() => {
@@ -27,7 +30,7 @@ const node = {
 	type: 'move' as const,
 	kind: 'forced' as const,
 	recipient: 'targets' as const,
-	distance: '@str',
+	distance: '@str + @speed',
 	distanceBySize: {},
 	ignoreDifficultTerrain: false,
 	direction: 'away' as const,
@@ -39,7 +42,9 @@ const node = {
 function makeActor(str: number, walk: number, ownerIds: string[] = []) {
 	return {
 		getRollData: () => ({ str }),
-		testUserPermission: (user: unknown) => ownerIds.includes((user as { id: string }).id),
+		testUserPermission: (user: unknown, level: number) =>
+			level === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER &&
+			ownerIds.includes((user as { id: string }).id),
 		system: { attributes: { movement: { walk }, sizeCategory: 'medium' } },
 	};
 }
@@ -53,7 +58,7 @@ const goblin = {
 };
 const tokens: Record<string, typeof hero> = { [hero.uuid]: hero, [goblin.uuid]: goblin };
 
-function makeMessage(effects: unknown[] = [node]) {
+function makeMessage(effects: unknown[] = [node], movementOffers: unknown[] = []) {
 	return {
 		id: 'm1',
 		author: { id: 'author' },
@@ -62,6 +67,7 @@ function makeMessage(effects: unknown[] = [node]) {
 			actorName: 'Hero',
 			targets: [goblin.uuid],
 			activation: { effects: effects as never[] },
+			movementOffers: movementOffers as never[],
 		},
 	};
 }
@@ -80,11 +86,12 @@ describe('cardMoveRecipients', () => {
 describe('buildCardMovementOffer', () => {
 	it("rebuilds the offer from the card with the feature user's data and the mover's speed", () => {
 		const card = buildCardMovementOffer(ref, { message: makeMessage(), ...lookups });
+		// 3 from the hero's data plus the goblin's walk speed of 4.
 		expect(card?.offer).toEqual({
 			id: 'm1.n1.gob',
 			tokenUuid: goblin.uuid,
 			kind: 'forced',
-			spaces: 3,
+			spaces: 7,
 			ignoreDifficultTerrain: true,
 			direction: 'away',
 			chooser: 'source',
@@ -92,6 +99,30 @@ describe('buildCardMovementOffer', () => {
 			messageId: 'm1',
 		});
 		expect(card?.token).toBe(goblin);
+		expect(card?.entry).toBeNull();
+	});
+
+	it('carries what the card already recorded for the offer', () => {
+		const entry = { id: 'm1.n1.gob', used: true, movedSpaces: 2 };
+		const card = buildCardMovementOffer(ref, { message: makeMessage([node], [entry]), ...lookups });
+		expect(card?.entry).toBe(entry);
+	});
+
+	it('keeps a free move on the terrain rule its node states', () => {
+		const free = { ...node, kind: 'free' as const, ignoreDifficultTerrain: false };
+		const card = buildCardMovementOffer(ref, { message: makeMessage([free]), ...lookups });
+		expect(card?.offer.ignoreDifficultTerrain).toBe(false);
+	});
+
+	it('finds the feature user through the speaker actor when the speaker token is gone', () => {
+		const message = { ...makeMessage(), speaker: { scene: null, token: null, actor: 'a-hero' } };
+		const resolveActor = (id: string) => (id === 'a-hero' ? hero.actor : null);
+		expect(buildCardMovementOffer(ref, { message, ...lookups, resolveActor })?.offer.spaces).toBe(
+			7,
+		);
+		expect(
+			buildCardMovementOffer(ref, { message, ...lookups, resolveActor: () => null }),
+		).toBeNull();
 	});
 
 	it('finds a move node nested under another effect', () => {
@@ -103,7 +134,7 @@ describe('buildCardMovementOffer', () => {
 			on: { hit: [node] },
 		};
 		const card = buildCardMovementOffer(ref, { message: makeMessage([nested]), ...lookups });
-		expect(card?.offer.spaces).toBe(3);
+		expect(card?.offer.spaces).toBe(7);
 	});
 
 	it('refuses a token that is not one of the node recipients', () => {
@@ -126,9 +157,8 @@ describe('buildCardMovementOffer', () => {
 });
 
 describe('canUserTakeMovementOffer', () => {
-	const card = buildCardMovementOffer(ref, { message: makeMessage(), ...lookups })!;
-
 	it('allows the GM, the card author and the token owner, nobody else', () => {
+		const card = buildCardMovementOffer(ref, { message: makeMessage(), ...lookups })!;
 		expect(canUserTakeMovementOffer({ id: 'x', isGM: true }, card)).toBe(true);
 		expect(canUserTakeMovementOffer({ id: 'author', isGM: false }, card)).toBe(true);
 		expect(canUserTakeMovementOffer({ id: 'gm-owner', isGM: false }, card)).toBe(true);
