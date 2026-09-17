@@ -491,6 +491,7 @@ const npcArmorTypeAbbreviations = {
 };
 
 const containerSlotCostModes = {
+	none: 'NIMBLE.containerSlotCostModes.none',
 	ignore: 'NIMBLE.containerSlotCostModes.ignore',
 	reduce: 'NIMBLE.containerSlotCostModes.reduce',
 	half: 'NIMBLE.containerSlotCostModes.half',

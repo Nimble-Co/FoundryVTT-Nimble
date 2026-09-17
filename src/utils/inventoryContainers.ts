@@ -1,4 +1,4 @@
-export type ContainerSlotCostMode = 'ignore' | 'reduce' | 'half';
+export type ContainerSlotCostMode = 'none' | 'ignore' | 'reduce' | 'half';
 
 export interface ContainerConfig {
 	enabled: boolean;
@@ -69,6 +69,8 @@ export function applyContainerSlotRule(container: ContainableObject, baseSlotCos
 	const { slotCostMode, slotCostReduction } = container.system.container;
 
 	switch (slotCostMode) {
+		case 'none':
+			return baseSlotCost;
 		case 'ignore':
 			return 0;
 		case 'half':
