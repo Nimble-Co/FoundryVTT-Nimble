@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getSpacesMovedThisTurn } from './getSpacesMovedThisTurn.js';
 
-const actor = { id: 'hero' };
+const actor = { id: 'hero', isToken: false };
 
 function stubCombat(combat: unknown): void {
 	vi.stubGlobal('game', {
@@ -10,9 +10,16 @@ function stubCombat(combat: unknown): void {
 	});
 }
 
-function makeToken(history: { x: number; y: number; action: string }[]) {
+function makeToken(
+	history: { x: number; y: number; action: string }[],
+	{ actorLink = true, gridReady = true } = {},
+) {
 	return {
-		parent: { grid: { isGridless: false, distance: 1 } },
+		actorLink,
+		parent: {
+			id: 'scene-1',
+			grid: gridReady ? { isGridless: false, distance: 1, measurePath: () => ({}) } : { type: 1 },
+		},
 		movementHistory: history,
 		measureMovementPath(waypoints: { x: number; y: number }[]) {
 			const segments: { spaces: number; distance: number }[] = [];
@@ -26,6 +33,16 @@ function makeToken(history: { x: number; y: number; action: string }[]) {
 	};
 }
 
+function combatant(
+	token: ReturnType<typeof makeToken> | null,
+	actorId = 'hero',
+	tokenId = 'tok-1',
+) {
+	return { actorId, tokenId, sceneId: 'scene-1', token };
+}
+
+const walk = (x: number, y: number) => ({ x, y, action: 'walk' });
+
 describe('getSpacesMovedThisTurn', () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
@@ -37,26 +54,45 @@ describe('getSpacesMovedThisTurn', () => {
 	});
 
 	it('is null when the combat has not started', () => {
-		stubCombat({ started: false, combatants: [{ actor, token: makeToken([]) }] });
+		stubCombat({ started: false, combatants: [combatant(makeToken([]))] });
 		expect(getSpacesMovedThisTurn(actor)).toBeNull();
 	});
 
 	it('is null when the actor is not a combatant', () => {
-		stubCombat({ started: true, combatants: [{ actor: { id: 'other' }, token: makeToken([]) }] });
+		stubCombat({ started: true, combatants: [combatant(makeToken([]), 'other')] });
 		expect(getSpacesMovedThisTurn(actor)).toBeNull();
 	});
 
 	it('reads the counted spaces from the combatant token history', () => {
-		const token = makeToken([
-			{ x: 0, y: 0, action: 'walk' },
-			{ x: 4, y: 0, action: 'walk' },
-		]);
-		stubCombat({ started: true, combatants: [{ actor, token }] });
-		expect(getSpacesMovedThisTurn(actor)).toBe(4);
+		stubCombat({
+			started: true,
+			combatants: [combatant(makeToken([walk(0, 0), walk(3, 0), walk(3, 2)]))],
+		});
+		expect(getSpacesMovedThisTurn(actor)).toBe(5);
 	});
 
 	it('is zero for a combatant that has not moved', () => {
-		stubCombat({ started: true, combatants: [{ actor, token: makeToken([]) }] });
+		stubCombat({ started: true, combatants: [combatant(makeToken([]))] });
 		expect(getSpacesMovedThisTurn(actor)).toBe(0);
+	});
+
+	it('matches a synthetic token actor by its token, never by the shared actor id', () => {
+		const unlinked = makeToken([walk(0, 0), walk(2, 0)], { actorLink: false });
+		stubCombat({ started: true, combatants: [combatant(unlinked, 'hero', 'tok-9')] });
+		const tokenActor = {
+			id: 'hero',
+			isToken: true,
+			token: { id: 'tok-9', parent: { id: 'scene-1' } },
+		};
+		expect(getSpacesMovedThisTurn(tokenActor)).toBe(2);
+		expect(getSpacesMovedThisTurn(actor)).toBeNull();
+	});
+
+	it('is null until the token scene has a grid to measure with', () => {
+		stubCombat({
+			started: true,
+			combatants: [combatant(makeToken([walk(0, 0), walk(1, 0)], { gridReady: false }))],
+		});
+		expect(getSpacesMovedThisTurn(actor)).toBeNull();
 	});
 });
