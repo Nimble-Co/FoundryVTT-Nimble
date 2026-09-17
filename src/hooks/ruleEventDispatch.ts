@@ -6,13 +6,18 @@ import type {
 	InitiativeRolledContext,
 	ItemActivatedContext,
 	ItemUsedContext,
+	MovementFinishedContext,
 	NimbleBaseRule,
 	RestContext,
 	RoundChangedContext,
 	SaveResolvedContext,
 	TurnContext,
 } from '../models/rules/base.js';
-import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
+import type { MovementRecord } from '../movement/movementRecord.js';
+import {
+	isMovementTrackingEnabled,
+	isRuleAutomationEnabled,
+} from '../settings/automationSettings.js';
 import { getActorHealthState } from '../utils/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
@@ -20,6 +25,7 @@ import {
 	hasAnyActorChangeAt,
 } from '../utils/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
+import { isActiveGM } from '../utils/isActiveGM.js';
 
 const DYING_STATUS_ID = 'dying';
 
@@ -327,6 +333,34 @@ function handleConditionApplied(payload: NimbleConditionAppliedPayload): void {
 	void dispatch(targetActor, 'onActorDying', ctx);
 }
 
+// The record is built on every client; only the active GM dispatches it, to the
+// mover first and then to every other actor with a token on the same scene.
+function handleMovementFinished(record: MovementRecord): void {
+	if (!isActiveGM() || !isMovementTrackingEnabled()) return;
+	const tokens = (record.token.parent?.tokens ?? []) as Iterable<TokenDocument>;
+	const seen = new Set<Actor>();
+	const observers: { token: TokenDocument; actor: Actor }[] = [];
+	if (record.actor) {
+		seen.add(record.actor);
+		observers.push({ token: record.token, actor: record.actor });
+	}
+	for (const token of tokens) {
+		const actor = token.actor;
+		if (!actor || seen.has(actor)) continue;
+		seen.add(actor);
+		observers.push({ token, actor });
+	}
+	for (const { token, actor } of observers) {
+		const context: MovementFinishedContext = {
+			record,
+			actor: actor as unknown as MovementFinishedContext['actor'],
+			token,
+			isMover: actor === record.actor,
+		};
+		void dispatch(actor as unknown as ActorWithRules, 'onMovementFinished', context);
+	}
+}
+
 let didRegister = false;
 
 type HookFn = (...args: unknown[]) => void;
@@ -348,6 +382,7 @@ export default function registerRuleEventDispatch(): void {
 	onHook('updateCombat', handleUpdateCombat as HookFn);
 	onHook('deleteCombat', handleDeleteCombat as HookFn);
 	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);
+	onHook(systemHookName('movementFinished'), handleMovementFinished as HookFn);
 }
 
 export type { NimbleSavePayload, NimbleRestPayload, NimbleInitiativePayload };

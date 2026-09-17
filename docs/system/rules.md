@@ -33,6 +33,10 @@ The actor collects all enabled rules from all items, sorts by `priority` (lower 
 
 Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from the corresponding system events. See `NimbleBaseRule` for the full surface.
 
+### `onMovementFinished(context)`
+
+Fires once per finished token Movement (one drag, teleports included) when the Movement Tracking toggle is on. The system hook `nimble.movementFinished` carries a `MovementRecord` on every client; the active GM dispatches it to the mover's rules and to the rules of every other actor with a token on the same scene. The context holds `record` (token, actor, kind `regular | free | forced | teleport`, origin, stop, path, spaces, spacesThisTurn, stopped), the observing `actor` and `token`, and `isMover`. Use `reachChanges(record, observerToken, reach)` from `src/movement/reachChanges.ts` to learn whether the mover entered, left or passed through the observer's Reach.
+
 ## Key Patterns
 
 - **Guard with `isEmbedded`**: Always start `prePrepareData()` with `if (!this.item.isEmbedded) return;`. Rules on un-embedded items have no actor to mutate.
