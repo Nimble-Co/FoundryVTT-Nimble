@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { RulesManager } from '#managers/RulesManager.js';
+	import checkEquip from '#utils/equipCompatibility.js';
 	import localize from '#utils/localize.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
@@ -47,6 +48,50 @@
 
 	function getObjectMetadata(_item) {
 		return null;
+	}
+
+	// Worn or wielded gear always offers the equip toggle. Anything else offers it
+	// only when it carries rules, which equipping is what switches on.
+	const EQUIPPABLE_OBJECT_TYPES = ['weapon', 'shield', 'armor'];
+
+	function isEquippable(item): boolean {
+		return (
+			EQUIPPABLE_OBJECT_TYPES.includes(item.reactive.system.objectType) ||
+			(item.reactive.system.rules?.length ?? 0) > 0
+		);
+	}
+
+	async function toggleEquipped(event, item) {
+		event.stopPropagation();
+
+		const equipping = !item.reactive.system.equipped;
+		if (equipping) {
+			const check = checkEquip(actor.reactive, item.reactive);
+			if (!check.allowed) {
+				ui.notifications?.warn(
+					localize(`NIMBLE.weapons.equip.${check.refusal}`, {
+						name: item.reactive.name ?? '',
+						value: String(check.strengthRequired ?? 0),
+					}),
+				);
+				return;
+			}
+		}
+
+		const rules = itemRulesManagers.get(item.id);
+		const hasRules = rules && (item.reactive.system.rules?.length ?? 0) > 0;
+
+		if (hasRules) {
+			const rulesUpdated = equipping ? await rules.enableAllRules() : await rules.disableAllRules();
+			if (!rulesUpdated) return;
+		}
+
+		const updatedItem = await actor.updateItem(item._id, { 'system.equipped': equipping });
+		if (updatedItem || !hasRules) return;
+
+		// The item update failed, so put the rules back the way they were.
+		if (equipping) await rules.disableAllRules();
+		else await rules.enableAllRules();
 	}
 
 	function groupItemsByType(items) {
@@ -218,7 +263,6 @@
 			<ul class="nimble-item-list">
 				{#each sortItems(itemCategory) as item (item.reactive._id)}
 					{@const metadata = getObjectMetadata(item)}
-					{@const rules = itemRulesManagers.get(item.id)}
 
 					<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
 					<!-- svelte-ignore  a11y_click_events_have_key_events -->
@@ -266,7 +310,7 @@
 								/>
 							</div>
 
-							{#if rules && (item.reactive.system.rules?.length ?? 0) > 0}
+							{#if isEquippable(item)}
 								<button
 									class="nimble-button"
 									data-button-variant="icon"
@@ -277,27 +321,7 @@
 									data-tooltip={item.reactive.system.equipped
 										? localize('NIMBLE.prompts.equippedTooltip')
 										: localize('NIMBLE.prompts.unequippedTooltip')}
-									onclick={async (event) => {
-										event.stopPropagation();
-										const newEquippedState = !item.reactive.system.equipped;
-										const rulesUpdated = newEquippedState
-											? await rules.enableAllRules()
-											: await rules.disableAllRules();
-
-										if (!rulesUpdated) return;
-
-										const updatedItem = await actor.updateItem(item._id, {
-											'system.equipped': newEquippedState,
-										});
-
-										if (updatedItem) return;
-
-										if (newEquippedState) {
-											await rules.disableAllRules();
-										} else {
-											await rules.enableAllRules();
-										}
-									}}
+									onclick={(event) => toggleEquipped(event, item)}
 								>
 									{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
 										{#if item.reactive.system.equipped}
