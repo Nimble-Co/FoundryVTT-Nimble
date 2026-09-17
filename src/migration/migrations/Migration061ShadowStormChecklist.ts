@@ -99,7 +99,7 @@ const STORMBORN_RULES: RuleSource[] = [
 		disabled: false,
 		id: 'ET9hTDp0Q8Z2T7Lj',
 		identifier: '',
-		label: 'Spending your Stormborn use on this check',
+		label: 'Using Stormborn (1/Safe Rest)',
 		predicate: {},
 		priority: 1,
 		value: 1,
@@ -113,7 +113,7 @@ const STORMBORN_RULES: RuleSource[] = [
 		disabled: false,
 		id: 'eS3yIvNidajuZFNn',
 		identifier: '',
-		label: 'Spending your Stormborn use to hold Concentration',
+		label: 'Using Stormborn to hold Concentration (1/Safe Rest)',
 		predicate: {},
 		priority: 1,
 		value: 1,
@@ -126,7 +126,7 @@ const STORMBORN_RULES: RuleSource[] = [
 
 /**
  * Brings existing Shadowmancer and Stormshifter features up to what the pack
- * now ships (the last class checklist pass).
+ * now ships.
  *
  * Whispers of the Grave gains the Safe Rest use it spends, Voice of the Dark its
  * full stop, The Pact is Sealed and Gift from the Master the descriptions they
