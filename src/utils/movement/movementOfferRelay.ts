@@ -4,7 +4,7 @@ import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import { buildCardMovementOffer, canUserTakeMovementOffer } from './buildCardMovementOffer.js';
 import { type MovementOfferEntry, mergeMovementOfferEntry } from './movementOfferEntry.js';
 
-/** Same channel as the other card relays: only the author or a GM may update a chat message. */
+/** Same channel as the other card relays; a chat message is written by a GM client. */
 const MOVEMENT_OFFER_SOCKET_NAME = `system.${SYSTEM_ID}`;
 const MOVEMENT_OFFER_REQUEST_TYPE = 'movementOffer.stamp';
 
@@ -36,8 +36,10 @@ function sanitiseStamp(stamp: Partial<MovementOfferStamp> | null | undefined): M
 
 /**
  * Writes the entry on the GM's client. The entry is rebuilt from the card, so
- * a request can only say which offer was taken and how far the drag went.
- * A relayed request must come from a player who may take that offer.
+ * a request can only say which offer was taken and how far the drag went,
+ * capped at what was offered. A relayed request must come from a player who
+ * may take that offer; the `userId` it carries is the player's own word, as
+ * on the other card relays over this socket.
  */
 async function executeMovementOfferStamp(
 	ref: MovementOfferRef,
@@ -47,7 +49,7 @@ async function executeMovementOfferStamp(
 ): Promise<void> {
 	if (!game.user?.isGM) return;
 	const card = buildCardMovementOffer(ref);
-	if (!card) return;
+	if (!card || card.entry?.used) return;
 
 	if (viaSocket) {
 		const user = game.users?.get(requestingUserId) as
@@ -69,7 +71,9 @@ async function executeMovementOfferStamp(
 				spaces: card.offer.spaces,
 				used: true,
 				usedBy: requestingUserId,
-				...stamp,
+				movedSpaces:
+					stamp.movedSpaces === null ? null : Math.min(stamp.movedSpaces, card.offer.spaces),
+				stopped: stamp.stopped,
 			}),
 		},
 	});

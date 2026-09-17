@@ -1,7 +1,7 @@
 import type { EffectNode, MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, MovementOfferRef } from '#types/movement.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
-import { buildMovementOfferId } from './movementOfferEntry.js';
+import { buildMovementOfferId, type MovementOfferEntry } from './movementOfferEntry.js';
 import { resolveMoveDistance } from './resolveMoveDistance.js';
 
 export interface OfferActor {
@@ -26,6 +26,7 @@ export interface OfferMessage {
 		actorName?: string;
 		targets?: string[];
 		activation?: { effects?: EffectNode[] };
+		movementOffers?: MovementOfferEntry[];
 	};
 }
 
@@ -35,6 +36,8 @@ export interface CardMovementOffer {
 	message: OfferMessage;
 	token: OfferToken;
 	sourceName: string;
+	/** What the card already recorded for this offer, if it was taken. */
+	entry: MovementOfferEntry | null;
 }
 
 interface Lookups {
@@ -79,11 +82,14 @@ export function buildCardMovementOffer(
 	if (!node) return null;
 	if (!cardMoveRecipients(message, node).includes(ref.tokenUuid)) return null;
 
+	// Lenient lookups: the ids come from another client, so a uuid that cannot
+	// resolve here is a missing token, not an exception.
 	const resolveToken =
 		lookups.resolveToken ??
 		((uuid: string) =>
-			(fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]) as unknown as OfferToken | null) ??
-			null);
+			(fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], {
+				strict: false,
+			}) as unknown as OfferToken | null) ?? null);
 	const token = resolveToken(ref.tokenUuid);
 	if (!token?.actor) return null;
 
@@ -93,13 +99,14 @@ export function buildCardMovementOffer(
 	const sourceUuid = speakerTokenUuid(message);
 	const sourceActor =
 		(sourceUuid ? resolveToken(sourceUuid)?.actor : null) ??
-		(message.speaker?.actor ? resolveActor(message.speaker.actor) : null) ??
-		token.actor;
+		(message.speaker?.actor ? resolveActor(message.speaker.actor) : null);
+	if (!sourceActor) return null;
 
+	const id = buildMovementOfferId(ref);
 	const sourceName = message.system?.actorName ?? '';
 	return {
 		offer: {
-			id: buildMovementOfferId(ref),
+			id,
 			tokenUuid: ref.tokenUuid,
 			kind: node.kind,
 			spaces: resolveMoveDistance(node, sourceActor, token.actor),
@@ -113,10 +120,15 @@ export function buildCardMovementOffer(
 		message,
 		token,
 		sourceName,
+		entry: message.system?.movementOffers?.find((entry) => entry.id === id) ?? null,
 	};
 }
 
-/** The GM, the card's author (the feature's user) and the recipient's owner may take an offer. */
+/**
+ * The GM, the card's author (the feature's user) and the recipient's owner may
+ * take an offer. Authorship is the card's word: what it buys is a request
+ * that the owning client plan a drag, which that client can dismiss.
+ */
 export function canUserTakeMovementOffer(
 	user: { id: string | null; isGM: boolean } | null | undefined,
 	card: CardMovementOffer,
