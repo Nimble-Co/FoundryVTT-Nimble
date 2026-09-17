@@ -239,7 +239,7 @@ describe('Stormshifter - pack data', () => {
 	const { feature, rulesOf } = packFeatureHelpers(CLASS_ID);
 
 	describe('Stormborn (1)', () => {
-		it('ships exactly the five rules the migration copies', () => {
+		it('ships exactly five rules', () => {
 			expect(feature('Stormborn (1)').system.rules).toHaveLength(5);
 		});
 
@@ -280,6 +280,8 @@ describe('Stormshifter - pack data', () => {
 			const [consumer] = consumers;
 			expect(consumer.disabled).toBe(false);
 			expect(consumer.priority).toBe(2);
+			expect(consumer.predicate).toEqual({});
+			expect(consumer.identifier).toBe('');
 			expect(consumer.poolIdentifier).toBe('stormborn-uses');
 			expect(consumer.poolScope).toBe('item');
 			expect(consumer.costMode).toBe('fixed');
@@ -297,10 +299,10 @@ describe('Stormshifter - pack data', () => {
 				expect(rule.value).toBe(1);
 			}
 			const byType = Object.fromEntries(rules.map((rule) => [rule.checkType, rule]));
-			expect(byType.skillCheck.label).toBe('Spending your Stormborn use on this check');
+			expect(byType.skillCheck.label).toBe('Using Stormborn (1/Safe Rest)');
 			expect(byType.skillCheck.skills).toEqual(['naturecraft']);
 			expect(byType.skillCheck.saves).toEqual([]);
-			expect(byType.savingThrow.label).toBe('Spending your Stormborn use to hold Concentration');
+			expect(byType.savingThrow.label).toBe('Using Stormborn to hold Concentration (1/Safe Rest)');
 			expect(byType.savingThrow.saves).toEqual(['strength']);
 			expect(byType.savingThrow.skills).toEqual([]);
 		});
