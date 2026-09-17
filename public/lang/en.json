@@ -3567,6 +3567,12 @@
 		"overdraftConsequences": {
 			"none": "Not Allowed",
 			"halfMaxHpDamage": "Half Max HP Damage"
+		},
+		"movement": {
+			"actions": {
+				"free": "Free Move",
+				"forced": "Forced Movement"
+			}
 		}
 	}
 }
