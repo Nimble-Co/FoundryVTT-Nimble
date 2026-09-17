@@ -78,6 +78,7 @@ describe('buildMovementRecord', () => {
 		const record = buildMovementRecord(
 			makeToken([...earlier, ...movement.passed.waypoints]),
 			movement,
+			null,
 			[combatHolding('t1', 's1')],
 		);
 		expect(record?.spaces).toBe(2);
@@ -92,14 +93,14 @@ describe('buildMovementRecord', () => {
 		const movement = makeMovement();
 		const token = makeToken([waypoint(0, 0, 'm1'), ...movement.passed.waypoints]);
 		const combats = [combatHolding('other', 's1'), combatHolding('t1', 's1')];
-		expect(buildMovementRecord(token, movement, combats)?.spacesThisTurn).toBe(3);
+		expect(buildMovementRecord(token, movement, null, combats)?.spacesThisTurn).toBe(3);
 	});
 
 	it('has no count this turn when the combat holding the token has not started', () => {
 		const movement = makeMovement();
 		const token = makeToken(movement.passed.waypoints);
 		const combats = [combatHolding('t1', 's1', false), combatHolding('t1', 'other-scene')];
-		expect(buildMovementRecord(token, movement, combats)?.spacesThisTurn).toBeNull();
+		expect(buildMovementRecord(token, movement, null, combats)?.spacesThisTurn).toBeNull();
 	});
 
 	it('keys a chained path on its first movement id', () => {

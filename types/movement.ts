@@ -59,8 +59,37 @@ export interface MovementRecord {
 	spacesThisTurn: number | null;
 	/** True when a wall, terrain, the mover or a disconnect cut the path short. */
 	stopped: boolean;
+	/** The Movement Offer this path answered, when it was an offered drag. */
+	offerId: string | null;
 	user: User;
 }
+
+export type MovementOfferKind = 'free' | 'forced';
+export type MovementDirection = 'any' | 'away' | 'toward';
+export type MovementChooser = 'mover' | 'source';
+
+/**
+ * A constrained drag offered to a token's owner. The system never moves the
+ * token: the offer only sets the ruler's limit and the movement action.
+ */
+export interface MovementOffer {
+	id: string;
+	tokenUuid: string;
+	kind: MovementOfferKind;
+	/** Resolved maximum in spaces. The ruler shows it; the path is truncated to it. */
+	spaces: number;
+	/** Always true for forced. Free moves set it per feature. */
+	ignoreDifficultTerrain: boolean;
+	/** Shown on the card. Never enforced. */
+	direction: MovementDirection;
+	/** Who the book says picks the path. Shown on the card. */
+	chooser: MovementChooser;
+	label: string;
+	/** The card that carries the offer, or null for a macro-driven move. */
+	messageId: string | null;
+}
+
+export type MovementOfferOutcome = 'started' | 'declined' | 'unavailable';
 
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */
 export interface ReachChange {

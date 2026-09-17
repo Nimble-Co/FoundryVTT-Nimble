@@ -33,6 +33,7 @@ import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
 import { registerMovementActions } from '../utils/movement/movementActions.js';
+import { registerMovementQueries } from '../utils/movement/registerMovementQueries.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -90,6 +91,7 @@ export default function init() {
 
 	// Movement actions must exist before Foundry freezes CONFIG.Token.movement.actions in setup.
 	registerMovementActions();
+	registerMovementQueries();
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;
