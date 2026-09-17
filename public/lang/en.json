@@ -524,6 +524,7 @@
 			"walk": "Walking"
 		},
 		"containerSlotCostModes": {
+			"none": "Normal slot cost",
 			"ignore": "Ignore slot cost",
 			"reduce": "Reduce slot cost",
 			"half": "Half slot cost"
@@ -544,11 +545,11 @@
 				"notAContainer": "{container} is not a container.",
 				"objectType": "{container} does not hold objects of that type."
 			},
-			"removeFromContainer": "Take {object} out of its container",
 			"requiresEquipped": "Only Apply While Equipped",
 			"slotCostMode": "Stored Object Slot Cost",
 			"slotCostReduction": "Slots Reduced By",
-			"storedContents": "Stored in {container}"
+			"unequipToStore": "Putting {object} into {container} will unequip it. Continue?",
+			"unequipToStoreTitle": "Unequip to store"
 		},
 		"objectSizeTypes": {
 			"slots": "Slots required",

@@ -50,12 +50,14 @@ Below the object type you will find fields shared by every kind:
 ## Containers
 
 A **Container** section sits below the shared fields. Tick **This Object Is A Container** and the
-object can hold others: players drag inventory items onto its row on the character sheet, and the
-contents appear nested under it.
+object can hold others: boxes, chests, pouches, backpacks, bags, quivers, saddlebags. Players drag
+inventory items onto its row on the character sheet and the contents appear nested under it.
 
-A container always costs its own inventory slots. What changes is what the objects inside it cost
-their carrier:
+A container always costs its own inventory slots. **Stored Object Slot Cost** decides what the
+objects inside cost their carrier:
 
+- **Normal slot cost**: nothing changes. This is the mundane case — a chest, a backpack, a belt
+  pouch — where the container organises the sheet and that is all. It is the default.
 - **Ignore slot cost**: stored objects cost nothing. This is the Bag of Holding: the bag takes its
   one slot, and a suit of plate armor inside it takes none.
 - **Half slot cost**: stored objects count for half. Halves are added up before the total is
@@ -75,13 +77,34 @@ Three more fields limit what the container will take:
 - **Allowed Object Types**: select one or more types and only those may be stored, so a quiver
   holds weapons and nothing else. Select none to allow anything.
 - **Only Apply While Equipped**: the container's rule applies only while it is equipped. Stowed,
-  it still holds its contents but they cost their full slots.
+  it still holds its contents but they cost their full slots. Use it for a harness or bandolier
+  that only helps while worn.
+
+Some worked settings:
+
+| Container | Stored Object Slot Cost | Other settings |
+|---|---|---|
+| Chest, crate, backpack, belt pouch | Normal slot cost | — |
+| Bag of holding, portable hole | Ignore slot cost | A **Capacity** if the bag has a stated limit |
+| Handy haversack | Ignore slot cost | **Capacity** for the compartment total |
+| Quiver, bandolier | Normal slot cost | **Allowed Object Types** set to Weapon |
+| Harness worn over armor | Whatever the item grants | **Only Apply While Equipped** ticked |
 
 Containers cannot be nested inside one another. Deleting a container leaves its contents in the
 inventory, back at their own slot cost.
 
-Stacks stay separate per container: arrows in a quiver and arrows carried loose are two piles, and
-dropping another bundle onto the sheet adds to the loose pile rather than the quiver.
+Two more consequences worth knowing:
+
+- **A stored object cannot be equipped.** It is packed away. Dragging an equipped weapon or suit
+  of armor into a container asks for confirmation first, then unequips it — which also switches
+  off any rules that item was granting. Stored rows show a quantity field instead of an equip
+  toggle.
+- **Stacks stay separate per container.** Arrows in a quiver and arrows carried loose are two
+  piles, and dropping another bundle onto the sheet adds to the loose pile rather than the quiver.
+
+The compendium's **Large Sack** and **Quiver & Ammo** ship as containers on **Normal slot cost**,
+matching the rulebook: neither is stated to reduce what you carry, so they organise without
+changing the numbers.
 
 ## Step 3: Weapon properties
 

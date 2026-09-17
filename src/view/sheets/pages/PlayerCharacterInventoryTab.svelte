@@ -46,12 +46,6 @@
 		await actor.deleteItem(id);
 	}
 
-	async function removeFromContainer(event, id) {
-		event.stopPropagation();
-
-		await actor.removeItemFromContainer(id);
-	}
-
 	function getObjectMetadata(_item) {
 		return null;
 	}
@@ -73,6 +67,7 @@
 	let sheet = getContext<PlayerCharacterSheet>('application');
 	const sheetState = getContext<SheetDropItemFlashState>('sheetState');
 	let searchTerm = $state('');
+	let hoveredContainerId = $state<string | null>(null);
 	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 
 	const tooltipCache = new Map();
@@ -113,44 +108,91 @@
 		}
 	}
 
+	/**
+	 * Where an item dropped onto this row belongs: the row's own id when the row is
+	 * a container, otherwise whatever holds the row. Dropping onto a row inside a
+	 * bag puts the item in that bag, and dropping onto a row carried directly takes
+	 * it out of wherever it was.
+	 */
+	function getDropTargetContainerId(item): string {
+		if (isContainer(item)) return item.reactive._id;
+
+		return item.reactive.system.containerId ?? '';
+	}
+
+	/**
+	 * Moving an object in or out of a container wins over reordering: it is the
+	 * change a player is nearly always after, and a reorder can be repeated once the
+	 * item is in the right place.
+	 */
 	async function handleItemDrop(event: DragEvent, item: InventorySortableItem): Promise<void> {
+		event.stopPropagation();
+		hoveredContainerId = null;
+
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
 
-		if (isDropDataRecord(dropData) && dropData.type === 'Item') {
-			if (isContainer(item)) {
-				await storeDroppedItemInContainer(event, dropData, item);
-				return;
-			}
+		if (!isDropDataRecord(dropData) || dropData.type !== 'Item') {
+			await sheet._onSortItem(event, item);
+			return;
+		}
 
+		const targetContainerId = getDropTargetContainerId(item);
+		const carriedItem = actor.items.find((carried) => carried.uuid === dropData.uuid);
+
+		if (!carriedItem) {
+			await createDroppedItemInContainer(event, dropData, targetContainerId);
+			return;
+		}
+
+		if (carriedItem.id === item.reactive._id) return;
+
+		if ((carriedItem.system.containerId ?? '') === targetContainerId) {
 			await sheet._onDropItem(event, dropData);
 			return;
 		}
 
-		await sheet._onSortItem(event, item);
+		await moveItemToContainer(carriedItem.id, targetContainerId);
 	}
 
-	/**
-	 * An object already carried moves into the container. Anything else is created
-	 * the usual way first, then stored, so a drag straight from a compendium into a
-	 * bag lands in the bag.
-	 */
-	async function storeDroppedItemInContainer(
-		event: DragEvent,
-		dropData: Record<string, unknown>,
-		container,
-	): Promise<void> {
-		const containerId = container.reactive._id;
-		const carriedItem = actor.items.find((item) => item.uuid === dropData.uuid);
+	/** A drop on the list itself, rather than on a row, takes the item out of its container. */
+	async function handleInventoryDrop(event: DragEvent): Promise<void> {
+		hoveredContainerId = null;
 
-		if (carriedItem) {
-			if (carriedItem.id !== containerId) {
-				await actor.storeItemInContainer(carriedItem.id, containerId);
-			}
+		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+		if (!isDropDataRecord(dropData) || dropData.type !== 'Item') return;
+
+		const carriedItem = actor.items.find((carried) => carried.uuid === dropData.uuid);
+
+		if (!carriedItem) {
+			await createDroppedItemInContainer(event, dropData, '');
 			return;
 		}
 
+		if (!carriedItem.system.containerId) return;
+
+		await actor.removeItemFromContainer(carriedItem.id);
+	}
+
+	async function moveItemToContainer(itemId: string, containerId: string): Promise<void> {
+		if (containerId) {
+			await actor.storeItemInContainer(itemId, containerId);
+			return;
+		}
+
+		await actor.removeItemFromContainer(itemId);
+	}
+
+	/**
+	 * An item from outside the sheet is created the usual way first, then stored, so
+	 * a drag straight from a compendium into a bag lands in the bag.
+	 */
+	async function createDroppedItemInContainer(
+		event: DragEvent,
+		dropData: Record<string, unknown>,
+		containerId: string,
+	): Promise<void> {
 		const createdItems = await sheet._onDropItem(event, dropData);
-		if (!Array.isArray(createdItems)) return;
+		if (!containerId || !Array.isArray(createdItems)) return;
 
 		for (const createdItem of createdItems) {
 			if (createdItem?.type !== 'object') continue;
@@ -160,6 +202,30 @@
 
 	function isContainer(item): boolean {
 		return item?.reactive?.system?.container?.enabled ?? false;
+	}
+
+	/** Highlights the container a drag is currently over. */
+	function handleContainerDragEnter(item): void {
+		if (!isContainer(item)) return;
+
+		hoveredContainerId = item.reactive._id;
+	}
+
+	/**
+	 * `dragenter` on the row being entered fires before `dragleave` on the row being
+	 * left, so only the highlighted row may clear the highlight — otherwise leaving a
+	 * plain row would wipe the highlight a container had just claimed. Crossing onto a
+	 * child of the row is not leaving it.
+	 */
+	function handleContainerDragLeave(event: DragEvent, item): void {
+		if (hoveredContainerId !== item.reactive._id) return;
+
+		const movedTo = event.relatedTarget;
+		if (movedTo instanceof Node && event.currentTarget instanceof Node) {
+			if (event.currentTarget.contains(movedTo)) return;
+		}
+
+		hoveredContainerId = null;
 	}
 
 	function groupItemsByContainer(items) {
@@ -281,7 +347,7 @@
 	{/each}
 </header>
 
-{#snippet inventoryRow(item, isStored)}
+{#snippet inventoryRow(item)}
 	{@const metadata = getObjectMetadata(item)}
 	{@const rules = itemRulesManagers.get(item.id)}
 
@@ -295,6 +361,7 @@
 			droppedItemFlashIds,
 			item.reactive._id,
 		)}
+		class:nimble-document-card--drop-target={hoveredContainerId === item.reactive._id}
 		data-item-id={item.reactive._id}
 		data-tooltip={tooltipCache.get(item.reactive._id) || ''}
 		data-tooltip-class="nimble-tooltip nimble-tooltip--item"
@@ -304,6 +371,9 @@
 		role="button"
 		ondragstart={(event) => sheet._onDragStart(event)}
 		ondragover={(event) => event.preventDefault()}
+		ondragenter={() => handleContainerDragEnter(item)}
+		ondragleave={(event) => handleContainerDragLeave(event, item)}
+		ondragend={() => (hoveredContainerId = null)}
 		ondrop={(event) => handleItemDrop(event, item)}
 		onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
 		onclick={(event) => {
@@ -330,7 +400,8 @@
 				/>
 			</div>
 
-			{#if rules && (item.reactive.system.rules?.length ?? 0) > 0}
+			<!-- A stored object is packed away, so it cannot be equipped and shows its quantity instead. -->
+			{#if rules && (item.reactive.system.rules?.length ?? 0) > 0 && !item.reactive.system.containerId}
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
@@ -390,23 +461,6 @@
 				/>
 			{/if}
 
-			{#if isStored}
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					type="button"
-					aria-label={localize('NIMBLE.containers.removeFromContainer', {
-						object: item.reactive.name,
-					})}
-					data-tooltip={localize('NIMBLE.containers.removeFromContainer', {
-						object: item.reactive.name,
-					})}
-					onclick={(event) => removeFromContainer(event, item._id)}
-				>
-					<i class="fa-solid fa-arrow-up-from-bracket"></i>
-				</button>
-			{/if}
-
 			<button
 				class="nimble-button"
 				style="grid-area: configureButton"
@@ -451,7 +505,7 @@
 				{:else}
 					<ul class="nimble-item-list nimble-item-list--stored">
 						{#each sortItems(storedItems) as storedItem (storedItem.reactive._id)}
-							{@render inventoryRow(storedItem, true)}
+							{@render inventoryRow(storedItem)}
 						{/each}
 					</ul>
 				{/if}
@@ -460,7 +514,12 @@
 	</li>
 {/snippet}
 
-<section class="nimble-sheet__body nimble-sheet__body--player-character">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<section
+	class="nimble-sheet__body nimble-sheet__body--player-character"
+	ondragover={(event) => event.preventDefault()}
+	ondrop={handleInventoryDrop}
+>
 	{#each Object.entries(categorizedItems).sort(([aKey], [bKey]) => aKey - bKey) as [key, itemCategory]}
 		{@const categoryName = objectTypeHeadings[key] ?? key}
 
@@ -473,7 +532,7 @@
 
 			<ul class="nimble-item-list">
 				{#each sortItems(itemCategory) as item (item.reactive._id)}
-					{@render inventoryRow(item, false)}
+					{@render inventoryRow(item)}
 				{/each}
 			</ul>
 		</div>
@@ -528,6 +587,11 @@
 		&--stored {
 			margin: 0;
 		}
+	}
+
+	:global(.nimble-document-card--drop-target) {
+		outline: 2px dashed var(--nimble-accent-color);
+		outline-offset: 1px;
 	}
 
 	.nimble-container-contents {
