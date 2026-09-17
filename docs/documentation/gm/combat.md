@@ -99,9 +99,9 @@ Nothing for you to track: it appears when the fight starts and vanishes when it'
 
 With the **Movement Tracking** automation toggle on (the default), the system watches every token that is part of a started combat. It uses Foundry's own movement record, so nothing new is stored on your actors:
 
-- Each time a token finishes moving, the system notes how far it went, which spaces it crossed, and whether that was regular movement, a Free Move, or Forced Movement (a push or pull). Teleports and place swaps are never counted as movement, following the rulebooks.
+- Each time a token finishes moving, the system notes how far it went, which spaces it crossed, and whether that was regular movement, a Free Move, or Forced Movement (a push or pull). A Teleport (any teleporting movement action, including a place swap done with one) is never counted as movement, following the rulebooks.
 - **Spaces Moved This Turn** is kept for every combatant and resets when that creature's own turn begins. An ally moving you during someone else's turn still counts until your next turn starts. Features can read it in their conditions, for example "if you have not moved this turn".
-- Movement is only recorded while a combat is running. Outside combat there is nothing to count.
+- Every finished move is reported to features, in and out of combat. The count of spaces moved this turn exists only while a combat is running, because that is when Foundry keeps a movement history.
 
 The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
 

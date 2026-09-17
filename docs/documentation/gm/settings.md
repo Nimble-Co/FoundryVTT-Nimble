@@ -17,7 +17,7 @@ How much the system does on its own is controlled from one place: the **Configur
 - **Action Tracking.** Using an item during combat spends the combatant's actions.
 - **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
 - **Combat Convenience.** Player characters roll initiative automatically when combat starts.
-- **Movement Tracking.** During combat the system records each token's movement, keeps count of the spaces moved this turn, and lets features react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, nothing is recorded and movement rules stay silent. See [Running Combat](combat.md#movement-tracking).
+- **Movement Tracking.** The system reports each finished token move to features and, during combat, keeps count of the spaces moved this turn, so features can react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, nothing is recorded and movement rules stay silent. See [Running Combat](combat.md#movement-tracking).
 - **Chat Notifications.** Informational messages such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements.
 
 Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on.
@@ -44,7 +44,7 @@ Saved conditions appear alongside the built-in ones in the token status panel, b
 
 **Auto-Track Token Adjacency** is off by default. When enabled, the system tracks how many enemies are adjacent to each combatant during fights, so features whose conditions (the Condition box) depend on adjacency work automatically. Leave it off unless your party has such features: it's extra bookkeeping the system only needs when something actually reads it. World setting, requires a reload. Details in [Running Combat](combat.md).
 
-Whether a diagonal counts as adjacent is Foundry's own **Grid Diagonals** setting (under Core Settings). The rulebook offers three table options and they map straight onto it: *Equidistant* means diagonals are adjacent (the default), *Illegal* means they are not, and *Alternating* counts every other diagonal. The system reads it everywhere it measures spaces.
+Whether a diagonal counts as adjacent is Foundry's own **Grid Diagonals** setting (under Core Settings). The rulebook offers three table options and each has a matching choice there: *Equidistant* means diagonals are adjacent (the default), *Illegal* means they are not, and either *Alternating* choice counts every other diagonal. Foundry also lists *Exact*, *Approximate* and *Rectilinear*, which the rulebook does not describe. The system reads the setting everywhere it measures spaces.
 
 ::: tip A high-automation table
 Want the system to carry as much as possible? Leave every Automation toggle **on** (the default), then turn **on** Auto-Add Character To Combat On Initiative Roll and Auto-Expand Rolls (each player sets this last one themselves). Add Auto-Track Token Adjacency if anyone's features care about flanking-style positioning. Result: conditions land on their own, resources spend and refill themselves, the tracker fills itself, and every roll is fully readable at a glance.

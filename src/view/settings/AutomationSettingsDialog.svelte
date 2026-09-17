@@ -9,7 +9,7 @@
 		isCombatConvenienceAutomationEnabled,
 		isDerivedConditionsAutomationEnabled,
 		isHealthStateSyncAutomationEnabled,
-		isMovementTrackingEnabled,
+		isMovementTrackingAutomationEnabled,
 		isResourceRecoveryAutomationEnabled,
 		isResourceSpendingAutomationEnabled,
 		isRuleAutomationEnabled,
@@ -32,7 +32,7 @@
 		healthStateSync: isHealthStateSyncAutomationEnabled(),
 		combatConvenience: isCombatConvenienceAutomationEnabled(),
 		chatNotifications: isChatNotificationsAutomationEnabled(),
-		movementTracking: isMovementTrackingEnabled(),
+		movementTracking: isMovementTrackingAutomationEnabled(),
 	};
 
 	const toggles = $state({ ...initialValues });

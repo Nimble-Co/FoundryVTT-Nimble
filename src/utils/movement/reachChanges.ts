@@ -1,16 +1,5 @@
-import type { MovementRecord } from './movementRecord.js';
-import { type MeasurableTokenDocument, spacesBetween } from './spacesBetween.js';
-
-export interface ReachChange {
-	/** The mover was outside the observer's Reach at some step and inside at a later one. */
-	entered: boolean;
-	/** The mover was inside the observer's Reach at some step and outside at a later one. */
-	left: boolean;
-	insideAtOrigin: boolean;
-	insideAtStop: boolean;
-	/** A step of the path overlapped the observer's footprint. */
-	passedThrough: boolean;
-}
+import type { MeasurableTokenDocument, MovementRecord, ReachChange } from '#types/movement.js';
+import { spacesBetween } from './spacesBetween.js';
 
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */
 export function reachChanges(

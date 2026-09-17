@@ -1,8 +1,4 @@
-import { isMovementTrackingEnabled } from '../settings/automationSettings.js';
-
-interface RecordedTokenDocument {
-	actor?: { reset?: () => void; render?: (force?: boolean) => unknown } | null;
-}
+import { isMovementTrackingAutomationEnabled } from '../settings/automationSettings.js';
 
 let didRegister = false;
 
@@ -14,14 +10,11 @@ export default function registerMovementHistoryRefresh(): void {
 	if (didRegister) return;
 	didRegister = true;
 
-	(Hooks.on as (event: string, fn: (doc: RecordedTokenDocument) => void) => number)(
-		'recordToken',
-		(tokenDocument) => {
-			if (!isMovementTrackingEnabled()) return;
-			const actor = tokenDocument.actor;
-			if (!actor) return;
-			actor.reset?.();
-			actor.render?.(false);
-		},
-	);
+	Hooks.on('recordToken', (tokenDocument) => {
+		if (!isMovementTrackingAutomationEnabled()) return;
+		const actor = tokenDocument.actor;
+		if (!actor) return;
+		actor.reset();
+		actor.render(false);
+	});
 }

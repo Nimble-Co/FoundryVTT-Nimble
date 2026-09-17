@@ -39,7 +39,7 @@ function makeMovement(overrides: Partial<Parameters<typeof buildMovementRecord>[
 		state: 'completed',
 		constrained: false,
 		origin: { x: 0, y: 0 },
-		passed: { waypoints: [waypoint(0, 0, 'm1'), waypoint(3, 0, 'm1')] },
+		passed: { waypoints: [waypoint(3, 0, 'm1')] },
 		history: { recorded: { waypoints: [] }, unrecorded: { waypoints: [] } },
 		user,
 		...overrides,
@@ -59,7 +59,6 @@ describe('buildMovementRecord', () => {
 			stop: { x: 300, y: 0 },
 		});
 		expect(record?.path).toEqual([
-			{ x: 0, y: 0 },
 			{ x: 0, y: 0 },
 			{ x: 300, y: 0 },
 		]);
@@ -91,7 +90,7 @@ describe('buildMovementRecord', () => {
 			passed: { waypoints: [waypoint(4, 0, 'm2')] },
 			history: {
 				recorded: { waypoints: [] },
-				unrecorded: { waypoints: [waypoint(0, 0, 'm1'), waypoint(2, 0, 'm1')] },
+				unrecorded: { waypoints: [waypoint(2, 0, 'm1')] },
 			},
 		});
 		const record = buildMovementRecord(makeToken(), movement);
@@ -99,15 +98,23 @@ describe('buildMovementRecord', () => {
 		expect(record?.spaces).toBe(4);
 	});
 
-	it('reads the kind from the last waypoint and flags a stopped path', () => {
+	it('reads the kind from the last waypoint', () => {
 		const movement = makeMovement({
-			state: 'stopped',
-			constrained: true,
-			passed: { waypoints: [waypoint(0, 0, 'm1'), waypoint(1, 0, 'm1', FORCED_MOVEMENT_ACTION)] },
+			passed: { waypoints: [waypoint(1, 0, 'm1', FORCED_MOVEMENT_ACTION)] },
 		});
-		const record = buildMovementRecord(makeToken(), movement);
-		expect(record?.kind).toBe('forced');
-		expect(record?.stopped).toBe(true);
+		expect(buildMovementRecord(makeToken(), movement)?.kind).toBe('forced');
+	});
+
+	it('flags a path the mover stopped', () => {
+		expect(buildMovementRecord(makeToken(), makeMovement({ state: 'stopped' }))?.stopped).toBe(
+			true,
+		);
+	});
+
+	it('flags a path a wall or terrain constrained', () => {
+		expect(buildMovementRecord(makeToken(), makeMovement({ constrained: true }))?.stopped).toBe(
+			true,
+		);
 	});
 
 	it('returns null when nothing was passed', () => {

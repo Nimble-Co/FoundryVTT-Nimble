@@ -1,4 +1,5 @@
-import { type MeasurableTokenDocument, spacesBetween } from '../movement/spacesBetween.js';
+import type { MeasurableTokenDocument } from '#types/movement.js';
+import { spacesBetween } from './movement/spacesBetween.js';
 
 export const ADJACENCY_QUALIFIER = {
 	MOST: 'most',

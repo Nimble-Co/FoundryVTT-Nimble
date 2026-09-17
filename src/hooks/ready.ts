@@ -96,7 +96,7 @@ export default async function ready() {
 
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
-	void migrateLegacyDiagonalSetting();
+	migrateLegacyDiagonalSetting().catch((error) => console.error(error));
 	registerMinionGroupTokenActions();
 	registerDicePoolSpendRequestRouter();
 

@@ -1,4 +1,5 @@
 import { systemHookName } from '#system';
+import type { MovementRecord } from '#types/movement.js';
 import type {
 	ActorDyingContext,
 	ActorHealthContext,
@@ -13,9 +14,8 @@ import type {
 	SaveResolvedContext,
 	TurnContext,
 } from '../models/rules/base.js';
-import type { MovementRecord } from '../movement/movementRecord.js';
 import {
-	isMovementTrackingEnabled,
+	isMovementTrackingAutomationEnabled,
 	isRuleAutomationEnabled,
 } from '../settings/automationSettings.js';
 import { getActorHealthState } from '../utils/actorHealthState.js';
@@ -335,8 +335,8 @@ function handleConditionApplied(payload: NimbleConditionAppliedPayload): void {
 
 // The record is built on every client; only the active GM dispatches it, to the
 // mover first and then to every other actor with a token on the same scene.
-function handleMovementFinished(record: MovementRecord): void {
-	if (!isActiveGM() || !isMovementTrackingEnabled()) return;
+async function handleMovementFinished(record: MovementRecord): Promise<void> {
+	if (!isActiveGM() || !isMovementTrackingAutomationEnabled()) return;
 	const tokens = (record.token.parent?.tokens ?? []) as Iterable<TokenDocument>;
 	const seen = new Set<Actor>();
 	const observers: { token: TokenDocument; actor: Actor }[] = [];
@@ -357,7 +357,7 @@ function handleMovementFinished(record: MovementRecord): void {
 			token,
 			isMover: actor === record.actor,
 		};
-		void dispatch(actor as unknown as ActorWithRules, 'onMovementFinished', context);
+		await dispatch(actor as unknown as ActorWithRules, 'onMovementFinished', context);
 	}
 }
 

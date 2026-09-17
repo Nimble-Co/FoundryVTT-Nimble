@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { MovementRecord } from './movementRecord.js';
+import type { MovementRecord } from '#types/movement.js';
 import { reachChanges } from './reachChanges.js';
 
 const GRID = 100;

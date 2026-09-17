@@ -22,7 +22,7 @@ import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMu
 import resolveHeroicReactionActionCost from '#utils/resolveHeroicReactionActionCost.js';
 import {
 	isCombatConvenienceAutomationEnabled,
-	isMovementTrackingEnabled,
+	isMovementTrackingAutomationEnabled,
 } from '../../settings/automationSettings.js';
 import {
 	buildCharacterTurnRefillUpdate,
@@ -845,11 +845,11 @@ class NimbleCombat extends Combat {
 	 * counts Spaces Moved This Turn until the mover's own turn begins, so only the
 	 * incoming combatant is cleared.
 	 */
-	override async _clearMovementHistoryOnStartTurn(
+	protected override async _clearMovementHistoryOnStartTurn(
 		combatant: Combatant.Implementation,
 		context: Combat.TurnEventContext,
 	) {
-		if (!isMovementTrackingEnabled()) {
+		if (!isMovementTrackingAutomationEnabled()) {
 			return super._clearMovementHistoryOnStartTurn(combatant, context);
 		}
 		await this.clearMovementHistories([combatant]);

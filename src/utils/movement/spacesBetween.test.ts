@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type MeasurableTokenDocument, spacesBetween } from './spacesBetween.js';
+import type { MeasurableTokenDocument } from '#types/movement.js';
+import { spacesBetween } from './spacesBetween.js';
 
 const GRID_SIZE = 100;
 
