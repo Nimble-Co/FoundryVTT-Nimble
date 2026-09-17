@@ -73,8 +73,8 @@ export class NimbleTokenDocument extends TokenDocument {
 
 	#lastFinishedMovementId: string | null = null;
 
-	/** Offer ids seen on this token's movement operations, keyed by the chain's first movement id. */
-	#offerIdsByMovement = new Map<string, string>();
+	/** Offers seen on this token's movement operations, keyed by the chain's first movement id. */
+	#offersByMovement = new Map<string, { id: string; messageId: string | null }>();
 
 	protected override _onUpdateMovement(
 		movement: TokenDocument.MovementOperation,
@@ -83,10 +83,18 @@ export class NimbleTokenDocument extends TokenDocument {
 	): void {
 		super._onUpdateMovement(movement, operation, user);
 		if (this.movement.id !== movement.id) return;
-		const offerId = (operation as unknown as Record<string, { offerId?: string } | undefined>)[
-			SYSTEM_ID
-		]?.offerId;
-		if (offerId) this.#offerIdsByMovement.set(movement.chain[0] ?? movement.id, offerId);
+		const offer = (
+			operation as unknown as Record<
+				string,
+				{ offerId?: string; messageId?: string | null } | undefined
+			>
+		)[SYSTEM_ID];
+		if (offer?.offerId) {
+			this.#offersByMovement.set(movement.chain[0] ?? movement.id, {
+				id: offer.offerId,
+				messageId: offer.messageId ?? null,
+			});
+		}
 		this.#emitMovementFinished();
 	}
 
@@ -108,9 +116,9 @@ export class NimbleTokenDocument extends TokenDocument {
 		const record = buildMovementRecord(
 			this as unknown as Parameters<typeof buildMovementRecord>[0],
 			movement,
-			this.#offerIdsByMovement.get(movementId) ?? null,
+			this.#offersByMovement.get(movementId) ?? null,
 		);
-		this.#offerIdsByMovement.delete(movementId);
+		this.#offersByMovement.delete(movementId);
 		if (!record) return;
 		// @ts-expect-error - movementFinished is a custom system hook
 		Hooks.callAll(systemHookName('movementFinished'), record);

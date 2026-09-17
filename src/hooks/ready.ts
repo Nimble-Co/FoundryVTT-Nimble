@@ -16,6 +16,7 @@ import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js'
 import { registerGrantedActionOfferSocketListener } from '../utils/grantedActionOffers.js';
 import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
 import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
+import { registerMovementOfferListeners } from '../utils/movement/movementOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
@@ -67,6 +68,7 @@ export default async function ready() {
 	}
 	registerCombatTurnSocketListener();
 	registerGrantedActionOfferSocketListener();
+	registerMovementOfferListeners();
 	registerIncomingReactionSocketListener();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
