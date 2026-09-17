@@ -18,15 +18,19 @@ type Globals = {
 
 const g = globalThis as unknown as Globals;
 
-function createToken(overrides: { ownerIds?: string[]; walk?: number } = {}) {
+function createToken(
+	overrides: { id?: string; name?: string; ownerIds?: string[]; walk?: number } = {},
+) {
 	const ownerIds = overrides.ownerIds ?? ['player'];
+	const id = overrides.id ?? 'tok1';
 	return {
-		id: 'tok1',
-		uuid: 'Scene.s1.Token.tok1',
-		name: 'Goblin Cutthroat',
+		id,
+		uuid: `Scene.s1.Token.${id}`,
+		name: overrides.name ?? 'Goblin Cutthroat',
 		actor: {
 			getRollData: () => ({ abilities: { strength: { mod: 0 } } }),
-			testUserPermission: (user: { id: string }) => ownerIds.includes(user.id),
+			testUserPermission: (user: { id: string }, level: number) =>
+				level === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER && ownerIds.includes(user.id),
 			system: { attributes: { movement: { walk: overrides.walk ?? 6 }, sizeCategory: 'medium' } },
 		},
 	};
@@ -90,7 +94,8 @@ beforeEach(() => {
 	g.Roll.replaceFormulaData = (formula: string, data: { speed?: number }) =>
 		formula.replace('@speed', String(data.speed ?? 0));
 	g.Roll.safeEval = (expression: string) => Number(expression);
-	takeMovementOffer.mockClear();
+	takeMovementOffer.mockReset();
+	takeMovementOffer.mockResolvedValue('declined');
 });
 
 afterEach(() => {
@@ -102,7 +107,7 @@ afterEach(() => {
 });
 
 function moveButton() {
-	return screen.queryByRole('button', { name: /move \(up to 2\)/i });
+	return screen.queryByRole('button', { name: /move \(up to 2 spaces\)/i });
 }
 
 describe('MoveNode', () => {
@@ -150,6 +155,57 @@ describe('MoveNode', () => {
 	it('uses the singular for one space', () => {
 		renderNode(createNode({ distance: '1' }));
 		expect(screen.getByText(/up to 1 space away/)).toBeTruthy();
+		expect(screen.getByRole('button', { name: /move \(up to 1 space\)/i })).toBeTruthy();
+	});
+
+	it('offers every target its own button and holds all of them during one drag', async () => {
+		const tokens = [
+			createToken(),
+			createToken({ id: 'tok2', name: 'Goblin Archer', ownerIds: ['player'] }),
+		];
+		g.fromUuidSync = vi.fn((uuid: string) => tokens.find((token) => token.uuid === uuid) ?? null);
+		let release: () => void = () => {};
+		takeMovementOffer.mockImplementation(
+			() =>
+				new Promise<string>((resolve) => {
+					release = () => resolve('started');
+				}),
+		);
+		renderNode(createNode(), { targets: ['Scene.s1.Token.tok1', 'Scene.s1.Token.tok2'] });
+
+		const buttons = screen.getAllByRole('button', { name: /move \(up to 2 spaces\)/i });
+		expect(buttons).toHaveLength(2);
+		expect(screen.getByText(/Goblin Archer: up to 2 spaces/)).toBeTruthy();
+		await fireEvent.click(buttons[1]);
+		expect(buttons.every((button) => button.hasAttribute('disabled'))).toBe(true);
+		release();
+		await waitFor(() =>
+			expect(buttons.every((button) => !button.hasAttribute('disabled'))).toBe(true),
+		);
+		expect(takeMovementOffer).toHaveBeenCalledWith({
+			messageId: 'msg1',
+			nodeId: 'node1',
+			tokenUuid: 'Scene.s1.Token.tok2',
+		});
+	});
+
+	it('keeps a taken offer taken even when the drag result is unknown', () => {
+		renderNode(createNode(), {
+			movementOffers: [
+				{
+					id: 'msg1.node1.tok1',
+					nodeId: 'node1',
+					tokenUuid: 'Scene.s1.Token.tok1',
+					spaces: 2,
+					used: true,
+					usedBy: 'player',
+					movedSpaces: null,
+					stopped: false,
+				},
+			],
+		});
+		expect(screen.getByText(/Goblin Cutthroat moved\./)).toBeTruthy();
+		expect(screen.queryByRole('button')).toBeNull();
 	});
 
 	it('shows no button for a distance that comes to zero', () => {
@@ -218,7 +274,7 @@ describe('MoveNode', () => {
 			],
 		});
 		expect(screen.getByText(/moved 1 of 2 spaces, shortened by 1/)).toBeTruthy();
-		expect(screen.getByText(/1d6 bludgeoning damage per space shortened/)).toBeTruthy();
+		expect(screen.getByText(/1d6 bludgeoning damage for every space shortened/)).toBeTruthy();
 	});
 
 	it('says so when the card has no creature to move', () => {
