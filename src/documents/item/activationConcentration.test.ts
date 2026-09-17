@@ -15,7 +15,7 @@ function createCaster() {
 	};
 }
 
-/** A real item, so `_createActivationCard` runs against its own prototype. */
+/** Built on the prototype so the real `_createActivationCard` runs. */
 function createItemStub(properties: string[]) {
 	return Object.assign(Object.create(NimbleBaseItem.prototype), {
 		uuid: 'Item.spell',
@@ -25,10 +25,9 @@ function createItemStub(properties: string[]) {
 	});
 }
 
-/** The card the activation posts, shaped like the ones spell and object cards build. */
 const postedMessage = { id: 'message-1', system: { activation: {} } };
 
-/** The activation tail, whose real declaration is protected. */
+/** Re-declared because the real method is protected. */
 type ActivationCardHost = {
 	_createActivationCard(
 		chatData: unknown,
@@ -58,7 +57,6 @@ beforeEach(() => {
 	(CONFIG as { statusEffects?: unknown }).statusEffects = [{ id: 'concentration' }];
 	(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(true);
 	(ChatMessage as unknown as { create: unknown }).create = vi.fn(async () => postedMessage);
-	// isRuleAutomationEnabled() reads game.settings.get().
 	(globalThis as { game?: Record<string, unknown> }).game!.settings = { get: () => true };
 });
 
@@ -80,13 +78,13 @@ describe('NimbleBaseItem#_createActivationCard concentration', () => {
 		expect(createEffect).not.toHaveBeenCalled();
 	});
 
-	// A roll-less utility spell such as Fly never reaches the damage-applied
-	// path, so the concentration has to come from the activation itself.
-	it('applies concentration for an activation that rolls nothing', async () => {
+	it('applies concentration even when a rule suppresses the card', async () => {
 		const item = createItemStub(['concentration']);
+		item.rules.set('suppressor', { disabled: false, suppressesActivationCard: () => true });
 
-		await createActivationCard(item, { rolls: [] });
+		const chatCard = await createActivationCard(item);
 
+		expect(chatCard).toBeNull();
 		expect(createEffect).toHaveBeenCalledTimes(1);
 	});
 });

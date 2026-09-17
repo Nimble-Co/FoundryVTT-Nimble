@@ -5,10 +5,8 @@ import applyConditionToActor, {
 
 const CONCENTRATION_CONDITION_ID = 'concentration';
 
-/** The tag `_populateBaseTags` adds for the `concentration` item property. */
 const CONCENTRATION_PROPERTY_TAG = 'property:concentration';
 
-/** The caster, who both receives the condition and is credited as its source. */
 type ConcentratingActor = ConditionTargetActor & {
 	uuid?: string | null;
 	toggleStatusEffect(statusId: string, options?: { active?: boolean }): Promise<unknown>;
@@ -22,31 +20,19 @@ export interface ConcentrationItem {
 }
 
 /**
- * Whether using this item makes its owner concentrate.
- *
- * Read from the `concentration` property rather than from rules authored on the
- * item, so a homebrew spell or scroll that ticks the box behaves like a shipped
- * one. Both `SpellDataModel` and `ObjectDataModel` offer the property, and both
- * item classes tag it.
+ * Read from the `concentration` property rather than from rules authored on the item,
+ * so a homebrew spell or scroll that ticks the box needs no authoring.
  */
 export function requiresConcentration(item: ConcentrationItem): boolean {
 	return item.tags?.has(CONCENTRATION_PROPERTY_TAG) ?? false;
 }
 
 /**
- * Put the `concentration` condition on the caster, replacing whatever they were
- * concentrating on before.
+ * `applyConditionToActor` no-ops on a condition the actor already carries, so the
+ * previous instance is removed rather than applied over.
  *
- * The condition always lands on the caster, never on the item's targets: a spell
- * that buffs an ally is still the caster's concentration to hold, and a spell
- * that targets nobody still occupies it.
- *
- * `applyConditionToActor` refuses to apply a condition the actor already carries,
- * so ending the prior instance first is what makes casting a second concentration
- * spell leave exactly one behind, credited to the new spell.
- *
- * @returns the applied effect, or `null` when the item needs no concentration,
- *          has no owner, or a `preApplyCondition` listener refused it.
+ * @returns the applied effect, or `null` when the item needs no concentration, has
+ *          no owner, or a `preApplyCondition` listener refused it.
  */
 export default async function applyCasterConcentration(
 	item: ConcentrationItem,
