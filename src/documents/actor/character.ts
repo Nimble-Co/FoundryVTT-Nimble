@@ -15,6 +15,7 @@ import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getChargePoolRollData } from '#utils/chargePool/helpers.js';
+import enforceWeaponAttack from '#utils/enforceWeaponAttack.js';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/classProgression/findMissingLevelSelections.ts';

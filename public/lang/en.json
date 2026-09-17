@@ -5658,6 +5658,18 @@
 				"forced": "Forced Movement: {spaces} of {limit}",
 				"switchTo": "{key}: switch to {movement}"
 			}
+		},
+		"weapons": {
+			"tags": {
+				"twoHandedOneHandedOption": "2-Handed (1-handed: Requires Strength {value})",
+				"strengthRequirement": "Requires Strength {value}"
+			},
+			"refusals": {
+				"notEquipped": "{name} is currently not equipped."
+			},
+			"notices": {
+				"strengthShortfall": "Requires Strength {required}, you have {current}. Ask your GM."
+			}
 		}
 	}
 }

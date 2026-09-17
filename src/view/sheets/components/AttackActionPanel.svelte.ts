@@ -2,10 +2,12 @@ import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
 import { getUnarmedDamageFormula } from '../../../utils/damage/attackUtils.js';
 import sortItems from '../../../utils/documents/sortItems.js';
+import { getEquipmentSwapMax, getEquipmentSwapsRemaining } from '../../../utils/equipmentSwaps.js';
 import { rollUnarmedStrike } from '../../../utils/heroicActions/unarmedStrike.js';
 import localize from '../../../utils/localize.js';
 import { evaluateFormula as evalFormula } from '../../../utils/rolls/evaluateFormula.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
+import { checkWeaponAttack } from '../../../utils/weaponAttackLegality.js';
 
 /** System data for weapon items */
 interface WeaponSystemData {
