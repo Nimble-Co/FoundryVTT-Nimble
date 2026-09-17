@@ -22,21 +22,51 @@ function makeToken({
 	isOwner = true,
 	plan = { id: 'plan-1' } as { id: string } | null,
 	started = true,
+	moved = 3,
 } = {}) {
 	const planMovement = vi.fn().mockResolvedValue(plan);
 	const startMovement = vi.fn().mockResolvedValue(started);
-	return {
-		token: { isOwner, parent: { grid: { distance: 5 } }, object: { planMovement }, startMovement },
-		planMovement,
+	const waypoints = Array.from({ length: moved }, (_, i) => ({
+		x: (i + 1) * 100,
+		y: 0,
+		action: 'walk',
+		movementId: 'plan-1',
+	}));
+	const token = {
+		isOwner,
+		parent: { grid: { distance: 5, isGridless: false } },
+		object: { planMovement },
 		startMovement,
+		actor: null,
+		movementHistory: [],
+		combatant: null,
+		movement: {
+			id: 'plan-1',
+			chain: [],
+			state: started ? 'completed' : 'stopped',
+			constrained: !started,
+			origin: { x: 0, y: 0 },
+			passed: { waypoints },
+			history: { recorded: { waypoints: [] }, unrecorded: { waypoints: [] } },
+			user: { id: 'u1' },
+		},
+		measureMovementPath(points: { x: number }[]) {
+			const segments: { distance: number; spaces: number }[] = [];
+			for (let i = 1; i < points.length; i++) segments.push({ distance: 5, spaces: 1 });
+			return { segments };
+		},
+		getCompleteMovementPath(points: object[]) {
+			return points;
+		},
 	};
+	return { token, planMovement, startMovement };
 }
 
 describe('planOfferedMove', () => {
 	it('caps a free move that honours terrain by cost', async () => {
 		const { token, planMovement, startMovement } = makeToken();
-		const outcome = await planOfferedMove(makeOffer(), () => token);
-		expect(outcome).toBe('started');
+		const result = await planOfferedMove(makeOffer(), () => token);
+		expect(result).toEqual({ outcome: 'started', movedSpaces: 3, stopped: false });
 		expect(planMovement).toHaveBeenCalledWith(
 			expect.objectContaining({
 				allowedActions: [FREE_MOVEMENT_ACTION],
@@ -74,13 +104,27 @@ describe('planOfferedMove', () => {
 
 	it('is declined when the owner dismisses the plan', async () => {
 		const { token, startMovement } = makeToken({ plan: null });
-		expect(await planOfferedMove(makeOffer(), () => token)).toBe('declined');
+		expect((await planOfferedMove(makeOffer(), () => token)).outcome).toBe('declined');
 		expect(startMovement).not.toHaveBeenCalled();
 	});
 
 	it('is unavailable when this client does not own the token', async () => {
 		const { token, planMovement } = makeToken({ isOwner: false });
-		expect(await planOfferedMove(makeOffer(), () => token)).toBe('unavailable');
+		expect((await planOfferedMove(makeOffer(), () => token)).outcome).toBe('unavailable');
 		expect(planMovement).not.toHaveBeenCalled();
+	});
+
+	it('reports a drag a wall cut short with the spaces it did cover', async () => {
+		const { token } = makeToken({ started: false, moved: 1 });
+		expect(await planOfferedMove(makeOffer({ kind: 'forced' }), () => token)).toEqual({
+			outcome: 'started',
+			movedSpaces: 1,
+			stopped: true,
+		});
+	});
+
+	it('is declined when the drop moved nothing', async () => {
+		const { token } = makeToken({ moved: 0 });
+		expect((await planOfferedMove(makeOffer(), () => token)).outcome).toBe('declined');
 	});
 });
