@@ -30,7 +30,7 @@
 	const moveRecipients = getMoveRecipients();
 	const moveDirections = getMoveDirections();
 	const moveChoosers = getMoveChoosers();
-	const sizeCategories = Object.entries(CONFIG.NIMBLE.sizeCategories ?? {});
+	const sizeCategories = Object.entries(CONFIG.NIMBLE.sizeCategories);
 	const poolTypes = getPoolTypes();
 	const poolActions = getPoolActions();
 	const savingThrowOptions = prepareSavingThrowOptions(savingThrows);
