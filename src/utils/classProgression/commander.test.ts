@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
-	loadAllFeatureDocs,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { FeatureDoc, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type { LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 
 /**
@@ -381,16 +381,9 @@ interface EffectNode {
 	formula?: string;
 }
 
-/** The commander feature document of that name, read from the compendium JSON. */
-function commanderFeature(name: string): FeatureDoc {
-	const doc = loadAllFeatureDocs().find(
-		(feature) => feature.system.class === 'commander' && feature.name === name,
-	);
-	if (!doc) throw new Error(`Commander feature missing from the pack data: ${name}`);
-	return doc;
-}
+const { feature: commanderFeature } = packFeatureHelpers('commander');
 
-function rulesOf(name: string): PoolRule[] {
+function poolRulesOf(name: string): PoolRule[] {
 	return (commanderFeature(name).system.rules ?? []) as PoolRule[];
 }
 
@@ -400,7 +393,7 @@ function effectsOf(name: string): EffectNode[] {
 
 describe('Commander — Combat Dice pool in the pack data', () => {
 	it('ships an encounterEnd recovery that sets the combat-dice pool to 0', () => {
-		const pool = rulesOf('Fit for Any Battlefield').find(
+		const pool = poolRulesOf('Fit for Any Battlefield').find(
 			(rule) => rule.type === 'chargePool' && rule.identifier === 'combat-dice',
 		);
 		expect(pool, 'combat-dice charge pool').toBeDefined();

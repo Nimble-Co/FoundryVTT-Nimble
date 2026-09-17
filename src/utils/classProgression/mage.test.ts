@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
-	loadAllFeatureDocs,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type { FeatureDoc, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
+import type { LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT } from './mage.expect.ts';
 
@@ -232,11 +232,7 @@ describe('Mage — pools match the report (case-insensitive group match)', () =>
  * fails here instead of shipping a feature that does nothing.
  */
 describe('Mage — shipped pack data', () => {
-	function packFeature(name: string): FeatureDoc {
-		const doc = loadAllFeatureDocs().find((f) => f.system.class === CLASS_ID && f.name === name);
-		expect(doc, `${name} is in the mage feature pack`).toBeDefined();
-		return doc as FeatureDoc;
-	}
+	const { feature: packFeature } = packFeatureHelpers(CLASS_ID);
 
 	function packRules(name: string): Record<string, unknown>[] {
 		return (packFeature(name).system.rules ?? []) as Record<string, unknown>[];

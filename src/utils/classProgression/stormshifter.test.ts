@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -231,5 +232,79 @@ describe('Stormshifter report reconciliation (findings)', () => {
 		// ...but the resolver still exposes the SINGULAR-keyed selection groups.
 		expect(summaries[1].offeredGroups).toHaveProperty('direbeast-form');
 		expect(summaries[5].offeredGroups).toHaveProperty('chimeric-boon');
+	});
+});
+
+describe('Stormshifter - pack data', () => {
+	const { feature, rulesOf } = packFeatureHelpers(CLASS_ID);
+
+	describe('Stormborn (1)', () => {
+		it('ships exactly five rules', () => {
+			expect(feature('Stormborn (1)').system.rules).toHaveLength(5);
+		});
+
+		it('halves lightning damage', () => {
+			const reductions = rulesOf('Stormborn (1)', 'damageReduction');
+			expect(reductions).toHaveLength(1);
+			const [rule] = reductions;
+			expect(rule.disabled).toBe(false);
+			expect(rule.priority).toBe(1);
+			expect(rule.label).toBe('Stormborn');
+			expect(rule.predicate).toEqual({});
+			expect(rule.mode).toBe('half');
+			expect(rule.value).toBe('1');
+			expect(rule.identifier).toBe('');
+			expect(rule.damageTypes).toEqual(['lightning']);
+		});
+
+		it('ships one pool of one use that refreshes on a Safe Rest, off the resource bar', () => {
+			const pools = rulesOf('Stormborn (1)', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.disabled).toBe(false);
+			expect(pool.priority).toBe(1);
+			expect(pool.identifier).toBe('stormborn-uses');
+			expect(pool.label).toBe('Stormborn (1/Safe Rest)');
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.dieSize).toBeNull();
+			expect(pool.hidden).toBe(false);
+			expect(pool.showAsResource).toBe(false);
+			expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Stormborn (1)', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.disabled).toBe(false);
+			expect(consumer.priority).toBe(2);
+			expect(consumer.predicate).toEqual({});
+			expect(consumer.identifier).toBe('');
+			expect(consumer.poolIdentifier).toBe('stormborn-uses');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+			expect(consumer.maxCost).toBe('');
+		});
+
+		it('offers the advantage on Naturecraft checks and on the STR save that holds concentration', () => {
+			const rules = rulesOf('Stormborn (1)', 'situationalRollMode');
+			expect(rules).toHaveLength(2);
+			for (const rule of rules) {
+				expect(rule.disabled).toBe(false);
+				expect(rule.priority).toBe(1);
+				expect(rule.predicate).toEqual({});
+				expect(rule.value).toBe(1);
+			}
+			const byType = Object.fromEntries(rules.map((rule) => [rule.checkType, rule]));
+			expect(byType.skillCheck.label).toBe('Using Stormborn (1/Safe Rest)');
+			expect(byType.skillCheck.skills).toEqual(['naturecraft']);
+			expect(byType.skillCheck.saves).toEqual([]);
+			expect(byType.savingThrow.label).toBe('Using Stormborn to hold Concentration (1/Safe Rest)');
+			expect(byType.savingThrow.saves).toEqual(['strength']);
+			expect(byType.savingThrow.skills).toEqual([]);
+		});
 	});
 });

@@ -6,7 +6,90 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "damageReduction",
+				"disabled": false,
+				"id": "mVO2vS0NGRfibjKU",
+				"identifier": "",
+				"label": "Stormborn",
+				"predicate": {},
+				"priority": 1,
+				"mode": "half",
+				"value": "1",
+				"damageTypes": [
+					"lightning"
+				]
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "Z7ZxALcnyd6l3Yfl",
+				"identifier": "stormborn-uses",
+				"label": "Stormborn (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "PjV3XrDzPbBd5NwE",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "stormborn-uses",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "ET9hTDp0Q8Z2T7Lj",
+				"identifier": "",
+				"label": "Using Stormborn (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"naturecraft"
+				]
+			},
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "eS3yIvNidajuZFNn",
+				"identifier": "",
+				"label": "Using Stormborn to hold Concentration (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "savingThrow",
+				"saves": [
+					"strength"
+				],
+				"abilities": [],
+				"skills": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

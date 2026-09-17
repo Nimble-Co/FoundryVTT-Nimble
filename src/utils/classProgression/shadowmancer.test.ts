@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -214,6 +215,73 @@ describe('Shadowmancer class progression', () => {
 		it('never auto-grants the same feature twice', () => {
 			const all = summaries.flatMap((s) => s.newAutoGrants);
 			expect(all.length).toBe(new Set(all).size);
+		});
+	});
+});
+
+describe('Shadowmancer - pack data', () => {
+	const { feature, rulesOf } = packFeatureHelpers(CLASS_ID);
+
+	describe('Whispers of the Grave', () => {
+		it('ships exactly two rules', () => {
+			expect(feature('Whispers of the Grave').system.rules).toHaveLength(2);
+		});
+
+		it('ships one pool of one use that refreshes on a Safe Rest, off the resource bar', () => {
+			const pools = rulesOf('Whispers of the Grave', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.disabled).toBe(false);
+			expect(pool.priority).toBe(1);
+			expect(pool.predicate).toEqual({});
+			expect(pool.identifier).toBe('whispers-of-the-grave-uses');
+			expect(pool.label).toBe('Whispers of the Grave (1/Safe Rest)');
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.dieSize).toBeNull();
+			expect(pool.hidden).toBe(false);
+			expect(pool.showAsResource).toBe(false);
+			expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Whispers of the Grave', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.disabled).toBe(false);
+			expect(consumer.priority).toBe(2);
+			expect(consumer.predicate).toEqual({});
+			expect(consumer.identifier).toBe('');
+			expect(consumer.poolIdentifier).toBe('whispers-of-the-grave-uses');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+			expect(consumer.maxCost).toBe('');
+		});
+	});
+
+	describe('Voice of the Dark', () => {
+		it('ends its description with a period', () => {
+			expect(feature('Voice of the Dark').system.description).toBe(
+				'<p>You can communicate telepathically with a humanoid within 6 spaces.</p>',
+			);
+		});
+	});
+
+	describe('The Pact is Sealed', () => {
+		it('ships a description that lists every Lesser Shadow Invocation pick', () => {
+			expect(feature('The Pact is Sealed').system.description).toBe(
+				'<p>Choose a subclass and 1 Lesser Shadow Invocation.</p><hr><p>Level 8: Choose a 2nd Lesser Shadow Invocation.</p><p>Level 11: Choose a 3rd Lesser Shadow Invocation.</p>',
+			);
+		});
+	});
+
+	describe('Gift from the Master', () => {
+		it('ships a description that lists every Greater Shadow Invocation pick', () => {
+			expect(feature('Gift from the Master').system.description).toBe(
+				'<p>Choose 1 Greater Shadow Invocation.</p><hr><p>Level 6: Choose a 2nd Greater Shadow Invocation.</p><p>Level 9: Choose a 3rd Greater Shadow Invocation.</p><p>Level 14: Choose a 4th Greater Shadow Invocation.</p><p>Level 18: Choose a 5th Greater Shadow Invocation.</p>',
+			);
 		});
 	});
 });

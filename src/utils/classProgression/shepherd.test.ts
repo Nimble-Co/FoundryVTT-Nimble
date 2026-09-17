@@ -3,16 +3,12 @@ import lifebindingSpirit from '../../../packs/spells/core/radiant/lifebinding-sp
 import {
 	buildRealIndex,
 	getClassMeta,
-	loadAllFeatureDocs,
+	packFeatureHelpers,
 	resolveLevel,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
-import type {
-	ClassMeta,
-	FeatureDoc,
-	LevelSummary,
-} from '../../../tests/fixtures/classProgression.types.ts';
+import type { ClassMeta, LevelSummary } from '../../../tests/fixtures/classProgression.types.ts';
 import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT, SACRED_GRACE_OPTIONS } from './shepherd.expect.ts';
 
@@ -236,11 +232,7 @@ describe('Shepherd — data integrity across the full progression', () => {
  * a pool the sheet never refills.
  */
 describe('Shepherd — shipped pack data', () => {
-	function packFeature(name: string): FeatureDoc {
-		const doc = loadAllFeatureDocs().find((f) => f.system.class === CLASS_ID && f.name === name);
-		expect(doc, `${name} is in the shepherd feature pack`).toBeDefined();
-		return doc as FeatureDoc;
-	}
+	const { feature: packFeature } = packFeatureHelpers(CLASS_ID);
 
 	function packRules(name: string): Record<string, unknown>[] {
 		return (packFeature(name).system.rules ?? []) as Record<string, unknown>[];
