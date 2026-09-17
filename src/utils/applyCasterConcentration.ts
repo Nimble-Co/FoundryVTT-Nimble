@@ -23,7 +23,7 @@ export interface ConcentrationItem {
  * Read from the `concentration` property rather than from rules authored on the item,
  * so a homebrew spell or scroll that ticks the box needs no authoring.
  */
-export function requiresConcentration(item: ConcentrationItem): boolean {
+function requiresConcentration(item: ConcentrationItem): boolean {
 	return item.tags?.has(CONCENTRATION_PROPERTY_TAG) ?? false;
 }
 

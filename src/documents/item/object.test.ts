@@ -2,6 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SYSTEM_ID } from '#system';
 
+const createConditionEffect = vi.fn();
+vi.stubGlobal('ActiveEffect', {
+	implementation: {
+		fromStatusEffect: vi.fn(async () => ({ id: 'effect-1', updateSource: vi.fn() })),
+		create: createConditionEffect,
+	},
+});
+
 import { NimbleBaseItem } from './base.svelte.js';
 import { NimbleObjectItem } from './object.js';
 
@@ -192,6 +200,19 @@ describe('NimbleObjectItem.activate', () => {
 			expect(scroll.delete).toHaveBeenCalled();
 		});
 
+		// Concentration belongs to the shared activation tail, behind this gate, so a
+		// scroll that fizzles must not leave its wielder concentrating.
+		it('starts no concentration on a failing roll', async () => {
+			const scroll = createScroll({
+				rollSkillCheck: vi.fn(async () => ({ roll: { total: 9 }, rollData: {} })),
+			});
+			Object.assign(scroll, { tags: new Set(['property:concentration']) });
+
+			await scroll.activate();
+
+			expect(createConditionEffect).not.toHaveBeenCalled();
+		});
+
 		it('treats a total of exactly the DC as a pass', async () => {
 			const scroll = createScroll({
 				rollSkillCheck: vi.fn(async () => ({ roll: { total: 10 }, rollData: {} })),
@@ -304,34 +325,5 @@ describe('NimbleObjectItem.activate', () => {
 			expect(confirmDialog()).not.toHaveBeenCalled();
 			expect(scroll.delete).not.toHaveBeenCalled();
 		});
-	});
-});
-
-describe('NimbleObjectItem.prepareChatCardData concentration', () => {
-	function createScrollItem(properties: string[]) {
-		return Object.assign(Object.create(NimbleObjectItem.prototype), {
-			name: 'Scroll of Fly',
-			tags: new Set(properties.map((property) => `property:${property}`)),
-			system: {
-				activation: { showDescription: false },
-				description: { public: '', unidentified: '' },
-				identified: true,
-				objectType: 'consumable',
-				properties: { selected: properties },
-				unidentifiedName: '',
-			},
-		});
-	}
-
-	it('tells the card the wielder is concentrating', async () => {
-		const chatData = await createScrollItem(['concentration']).prepareChatCardData({});
-
-		expect(chatData.system.concentration).toBe(true);
-	});
-
-	it('leaves the flag off for an object without the property', async () => {
-		const chatData = await createScrollItem(['light']).prepareChatCardData({});
-
-		expect(chatData.system.concentration).toBe(false);
 	});
 });

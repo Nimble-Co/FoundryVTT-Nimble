@@ -163,32 +163,3 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		expect(spellLike.actor.update).not.toHaveBeenCalled();
 	});
 });
-
-describe('NimbleSpellItem.prepareChatCardData concentration', () => {
-	function createSpell(properties: string[]) {
-		return Object.assign(Object.create(NimbleSpellItem.prototype), {
-			name: 'Fly',
-			img: 'icons/svg/explosion.svg',
-			tags: new Set(properties.map((property) => `property:${property}`)),
-			system: {
-				activation: { showDescription: false },
-				description: { baseEffect: '', higherLevelEffect: '', upcastEffect: '' },
-				school: 'wind',
-				tier: 3,
-			},
-			actor: null,
-		});
-	}
-
-	it('tells the card the caster is concentrating', async () => {
-		const chatData = await createSpell(['concentration']).prepareChatCardData();
-
-		expect(chatData.system.concentration).toBe(true);
-	});
-
-	it('leaves the flag off for a spell without the property', async () => {
-		const chatData = await createSpell(['reach']).prepareChatCardData();
-
-		expect(chatData.system.concentration).toBe(false);
-	});
-});
