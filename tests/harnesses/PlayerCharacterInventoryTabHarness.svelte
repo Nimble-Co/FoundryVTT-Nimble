@@ -12,10 +12,25 @@
 	let {
 		items = [],
 		updateItem = () => {},
+		storeItemInContainer = () => {},
+		removeItemFromContainer = () => {},
+		onDragStart = () => {},
 	}: {
 		items?: HarnessItem[];
 		updateItem?: (id: string, changes: Record<string, unknown>) => unknown;
+		storeItemInContainer?: (itemId: string, containerId: string) => unknown;
+		removeItemFromContainer?: (itemId: string) => unknown;
+		onDragStart?: (event: DragEvent) => unknown;
 	} = $props();
+
+	const containerDefaults = {
+		enabled: false,
+		slotCostMode: 'ignore',
+		slotCostReduction: 1,
+		capacity: null,
+		allowedObjectTypes: [],
+		requiresEquipped: false,
+	};
 
 	// Build item objects that mirror the shape the inventory tab reads:
 	// each item exposes both a direct `system` (used for the disabled binding)
@@ -29,7 +44,18 @@
 			name: item.name,
 			img: 'icons/svg/item-bag.svg',
 			uuid: `Item.${item._id}`,
-			system: { objectType: 'gear', quantity: 1, rules: [], equipped: false, ...item.system },
+			system: {
+				objectType: 'gear',
+				quantity: 1,
+				rules: [],
+				equipped: false,
+				containerId: '',
+				...item.system,
+				container: {
+					...containerDefaults,
+					...((item.system.container as Record<string, unknown>) ?? {}),
+				},
+			},
 		};
 		// The template reads `item.reactive.*`; point it back at the item itself.
 		prepared.reactive = prepared;
@@ -38,6 +64,8 @@
 
 	const actor = {
 		updateItem: untrack(() => updateItem),
+		storeItemInContainer: untrack(() => storeItemInContainer),
+		removeItemFromContainer: untrack(() => removeItemFromContainer),
 		update: () => {},
 		activateItem: () => {},
 		createItem: () => {},
@@ -56,7 +84,7 @@
 
 	setContext('actor', actor);
 	setContext('application', {
-		_onDragStart: () => {},
+		_onDragStart: untrack(() => onDragStart),
 		_onDropItem: () => {},
 		_onSortItem: () => {},
 		clearDroppedItemFlash: () => {},

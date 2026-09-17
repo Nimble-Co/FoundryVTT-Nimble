@@ -115,11 +115,15 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	) {
 		// Update quantity if object already exists and is stackable or smallSized
 		if (this.isEmbedded && OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)) {
+			// Only a stack in the same place folds in: arrows in a quiver and arrows on
+			// the belt are separate piles, and a stack inside a container must not
+			// silently swallow copies dropped onto the sheet.
 			const existing = this.actor?.items.find(
 				(i) =>
 					i instanceof NimbleObjectItem &&
 					i.name === this.name &&
 					i.type === 'object' &&
+					i.system.containerId === this.system.containerId &&
 					OBJECT_SIZE_TYPES_WITH_QUANTITY.has(i.system.objectSizeType),
 			) as NimbleObjectItem | undefined;
 
@@ -137,6 +141,35 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		}
 
 		return super._preCreate(data, options, user);
+	}
+
+	/**
+	 * Spills a deleted container's contents back into the carrier's inventory, so
+	 * they stop pointing at an item that no longer exists and go back to costing
+	 * their own slots.
+	 *
+	 * `_onDelete` fires on every connected client; only the initiating user runs
+	 * the updates so they happen once, from a client that owns the actor.
+	 */
+	override _onDelete(options, userId: string): void {
+		super._onDelete(options, userId);
+
+		const actor = this.actor;
+		if (!actor || !this.system.container.enabled) return;
+		if (game.user?.id !== userId) return;
+
+		const contents: Array<Record<string, unknown>> = [];
+
+		actor.items.forEach((item) => {
+			if (item.type !== 'object') return;
+			if ((item as unknown as NimbleObjectItem).system.containerId !== this.id) return;
+
+			contents.push({ _id: item.id, 'system.containerId': '' });
+		});
+
+		if (contents.length === 0) return;
+
+		actor.updateEmbeddedDocuments('Item', contents as Item.UpdateData[]);
 	}
 
 	/**

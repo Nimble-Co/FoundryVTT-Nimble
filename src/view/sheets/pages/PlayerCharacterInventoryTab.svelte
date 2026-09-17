@@ -4,6 +4,7 @@
 	import { RulesManager } from '#managers/RulesManager.js';
 	import localize from '#utils/localize.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
+	import { getContainerUsedCapacity } from '#utils/inventoryContainers.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/sortItems.js';
 	import { SYSTEM_ID } from '#system';
@@ -66,6 +67,7 @@
 	let sheet = getContext<PlayerCharacterSheet>('application');
 	const sheetState = getContext<SheetDropItemFlashState>('sheetState');
 	let searchTerm = $state('');
+	let hoveredContainerId = $state<string | null>(null);
 	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 
 	const tooltipCache = new Map();
@@ -106,14 +108,149 @@
 		}
 	}
 
+	/**
+	 * Where an item dropped onto this row belongs: the row's own id when the row is
+	 * a container, otherwise whatever holds the row. Dropping onto a row inside a
+	 * bag puts the item in that bag, and dropping onto a row carried directly takes
+	 * it out of wherever it was.
+	 */
+	function getDropTargetContainerId(item): string {
+		if (isContainer(item)) return item.reactive._id;
+
+		return item.reactive.system.containerId ?? '';
+	}
+
+	/**
+	 * Moving an object in or out of a container wins over reordering: it is the
+	 * change a player is nearly always after, and a reorder can be repeated once the
+	 * item is in the right place.
+	 */
 	async function handleItemDrop(event: DragEvent, item: InventorySortableItem): Promise<void> {
+		event.stopPropagation();
+		hoveredContainerId = null;
+
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
-		if (isDropDataRecord(dropData) && dropData.type === 'Item') {
+
+		if (!isDropDataRecord(dropData) || dropData.type !== 'Item') {
+			await sheet._onSortItem(event, item);
+			return;
+		}
+
+		const targetContainerId = getDropTargetContainerId(item);
+		const carriedItem = actor.items.find((carried) => carried.uuid === dropData.uuid);
+
+		if (!carriedItem) {
+			await createDroppedItemInContainer(event, dropData, targetContainerId);
+			return;
+		}
+
+		if (carriedItem.id === item.reactive._id) return;
+
+		if ((carriedItem.system.containerId ?? '') === targetContainerId) {
 			await sheet._onDropItem(event, dropData);
 			return;
 		}
 
-		await sheet._onSortItem(event, item);
+		await moveItemToContainer(carriedItem.id, targetContainerId);
+	}
+
+	/** A drop on the list itself, rather than on a row, takes the item out of its container. */
+	async function handleInventoryDrop(event: DragEvent): Promise<void> {
+		hoveredContainerId = null;
+
+		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+		if (!isDropDataRecord(dropData) || dropData.type !== 'Item') return;
+
+		const carriedItem = actor.items.find((carried) => carried.uuid === dropData.uuid);
+
+		if (!carriedItem) {
+			await createDroppedItemInContainer(event, dropData, '');
+			return;
+		}
+
+		if (!carriedItem.system.containerId) return;
+
+		await actor.removeItemFromContainer(carriedItem.id);
+	}
+
+	async function moveItemToContainer(itemId: string, containerId: string): Promise<void> {
+		if (containerId) {
+			await actor.storeItemInContainer(itemId, containerId);
+			return;
+		}
+
+		await actor.removeItemFromContainer(itemId);
+	}
+
+	/**
+	 * An item from outside the sheet is created the usual way first, then stored, so
+	 * a drag straight from a compendium into a bag lands in the bag.
+	 */
+	async function createDroppedItemInContainer(
+		event: DragEvent,
+		dropData: Record<string, unknown>,
+		containerId: string,
+	): Promise<void> {
+		const createdItems = await sheet._onDropItem(event, dropData);
+		if (!containerId || !Array.isArray(createdItems)) return;
+
+		for (const createdItem of createdItems) {
+			if (createdItem?.type !== 'object') continue;
+			await actor.storeItemInContainer(createdItem.id, containerId);
+		}
+	}
+
+	function isContainer(item): boolean {
+		return item?.reactive?.system?.container?.enabled ?? false;
+	}
+
+	/**
+	 * A stored object is packed away, so it can never be equipped. Otherwise the
+	 * toggle belongs to items whose rules it switches, plus containers that only
+	 * apply their rule while equipped: those usually carry no rules of their own,
+	 * and without the toggle their setting could never be satisfied.
+	 */
+	function canToggleEquipment(item): boolean {
+		if (item.reactive.system.containerId) return false;
+		if ((item.reactive.system.rules?.length ?? 0) > 0) return true;
+
+		return isContainer(item) && item.reactive.system.container.requiresEquipped;
+	}
+
+	/** Highlights the container a drag is currently over. */
+	function handleContainerDragEnter(item): void {
+		if (!isContainer(item)) return;
+
+		hoveredContainerId = item.reactive._id;
+	}
+
+	/**
+	 * `dragenter` on the row being entered fires before `dragleave` on the row being
+	 * left, so only the highlighted row may clear the highlight — otherwise leaving a
+	 * plain row would wipe the highlight a container had just claimed. Crossing onto a
+	 * child of the row is not leaving it.
+	 */
+	function handleContainerDragLeave(event: DragEvent, item): void {
+		if (hoveredContainerId !== item.reactive._id) return;
+
+		const movedTo = event.relatedTarget;
+		if (movedTo instanceof Node && event.currentTarget instanceof Node) {
+			if (event.currentTarget.contains(movedTo)) return;
+		}
+
+		hoveredContainerId = null;
+	}
+
+	function groupItemsByContainer(items) {
+		return items.reduce((contents, item) => {
+			const { containerId } = item.reactive.system;
+			if (!containerId) return contents;
+
+			contents[containerId] ??= [];
+			contents[containerId].push(item);
+
+			return contents;
+		}, {});
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
@@ -124,7 +261,26 @@
 	let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
 	let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
 	let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
-	let categorizedItems = $derived(groupItemsByType(items));
+	let visibleContainerIds = $derived(
+		new Set(items.filter(isContainer).map((item) => item.reactive._id)),
+	);
+	// A stored item whose container the search filtered out still needs somewhere to
+	// show, so it falls back to the top level.
+	let topLevelItems = $derived(
+		items.filter((item) => !visibleContainerIds.has(item.reactive.system.containerId)),
+	);
+	let storedItemsByContainerId = $derived(groupItemsByContainer(items));
+	let categorizedItems = $derived(groupItemsByType(topLevelItems));
+
+	let allObjects = $derived(filterItems(actor.reactive, ['object'], ''));
+
+	function getContainerCapacityUsage(containerId: string): number {
+		return getContainerUsedCapacity(
+			allObjects
+				.filter((object) => object.reactive.system.containerId === containerId)
+				.map((object) => object.reactive),
+		);
+	}
 
 	let itemRulesManagers = new SvelteMap();
 
@@ -204,7 +360,183 @@
 	{/each}
 </header>
 
-<section class="nimble-sheet__body nimble-sheet__body--player-character">
+{#snippet inventoryRow(item)}
+	{@const metadata = getObjectMetadata(item)}
+	{@const rules = itemRulesManagers.get(item.id)}
+
+	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
+	<!-- svelte-ignore  a11y_click_events_have_key_events -->
+	<li
+		class="nimble-document-card nimble-document-card--actor-inventory"
+		class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
+		class:nimble-document-card--no-meta={!metadata}
+		class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+			droppedItemFlashIds,
+			item.reactive._id,
+		)}
+		class:nimble-document-card--drop-target={hoveredContainerId === item.reactive._id}
+		data-item-id={item.reactive._id}
+		data-tooltip={tooltipCache.get(item.reactive._id) || ''}
+		data-tooltip-class="nimble-tooltip nimble-tooltip--item"
+		data-tooltip-direction="LEFT"
+		onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
+		draggable="true"
+		role="button"
+		ondragstart={(event) => {
+			// A container row wraps its contents, so without this the drag data is
+			// overwritten by the container as the event bubbles out of a stored row.
+			event.stopPropagation();
+			sheet._onDragStart(event);
+		}}
+		ondragover={(event) => event.preventDefault()}
+		ondragenter={() => handleContainerDragEnter(item)}
+		ondragleave={(event) => handleContainerDragLeave(event, item)}
+		ondragend={() => (hoveredContainerId = null)}
+		ondrop={(event) => handleItemDrop(event, item)}
+		onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
+		onclick={(event) => {
+			event.stopPropagation();
+			actor.activateItem(item._id);
+		}}
+	>
+		<header class="u-semantic-only">
+			{#if showEmbeddedDocumentImages}
+				<div class="nimble-document-card__img-wrapper">
+					<img class="nimble-document-card__img" src={item.reactive.img} alt={item.reactive.name} />
+				</div>
+			{/if}
+
+			<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
+				{item.reactive.name}
+			</h4>
+
+			<div class="nimble-document-card__charges">
+				<ChargeIndicator
+					pools={getItemPools(item.reactive._id)}
+					{actor}
+					itemId={item.reactive._id}
+				/>
+			</div>
+
+			{#if rules && canToggleEquipment(item)}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label={localize('NIMBLE.prompts.toggleEquipment', {
+						name: item.reactive.name,
+					})}
+					data-tooltip={item.reactive.system.equipped
+						? localize('NIMBLE.prompts.equippedTooltip')
+						: localize('NIMBLE.prompts.unequippedTooltip')}
+					onclick={async (event) => {
+						event.stopPropagation();
+						const newEquippedState = !item.reactive.system.equipped;
+						const rulesUpdated = newEquippedState
+							? await rules.enableAllRules()
+							: await rules.disableAllRules();
+
+						if (!rulesUpdated) return;
+
+						const updatedItem = await actor.updateItem(item._id, {
+							'system.equipped': newEquippedState,
+						});
+
+						if (updatedItem) return;
+
+						if (newEquippedState) {
+							await rules.disableAllRules();
+						} else {
+							await rules.enableAllRules();
+						}
+					}}
+				>
+					{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
+						{#if item.reactive.system.equipped}
+							<i class="fa-solid fa-shield"></i>
+						{:else}
+							<i class="fa-regular fa-shield"></i>
+						{/if}
+					{:else if item.reactive.system.equipped}
+						<i class="fa-solid fa-hand"></i>
+					{:else}
+						<i class="fa-regular fa-hand"></i>
+					{/if}
+				</button>
+			{:else}
+				<input
+					class="nimble-document-card__quantity"
+					type="number"
+					value={item.reactive.system.quantity || 1}
+					min="0"
+					step="1"
+					onclick={(event) => event.stopPropagation()}
+					onchange={({ currentTarget }) =>
+						actor.updateItem(item._id, {
+							'system.quantity': currentTarget.value,
+						})}
+				/>
+			{/if}
+
+			<button
+				class="nimble-button"
+				style="grid-area: configureButton"
+				data-button-variant="icon"
+				type="button"
+				aria-label="Configure {item.name}"
+				onclick={(event) => configureItem(event, item._id)}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
+
+			<button
+				class="nimble-button"
+				style="grid-area: deleteButton"
+				data-button-variant="icon"
+				type="button"
+				aria-label="Delete {item.name}"
+				onclick={(event) => deleteItem(event, item._id)}
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</header>
+
+		{#if isContainer(item)}
+			{@const storedItems = storedItemsByContainerId[item.reactive._id] ?? []}
+			{@const capacity = item.reactive.system.container.capacity}
+
+			<div class="nimble-container-contents">
+				{#if capacity !== null}
+					<span class="nimble-container-contents__capacity">
+						{localize('NIMBLE.containers.capacityUsage', {
+							used: String(getContainerCapacityUsage(item.reactive._id)),
+							capacity: String(capacity),
+						})}
+					</span>
+				{/if}
+
+				{#if storedItems.length === 0}
+					<span class="nimble-container-contents__empty">
+						{localize('NIMBLE.containers.empty')}
+					</span>
+				{:else}
+					<ul class="nimble-item-list nimble-item-list--stored">
+						{#each sortItems(storedItems) as storedItem (storedItem.reactive._id)}
+							{@render inventoryRow(storedItem)}
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		{/if}
+	</li>
+{/snippet}
+
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<section
+	class="nimble-sheet__body nimble-sheet__body--player-character"
+	ondragover={(event) => event.preventDefault()}
+	ondrop={handleInventoryDrop}
+>
 	{#each Object.entries(categorizedItems).sort(([aKey], [bKey]) => aKey - bKey) as [key, itemCategory]}
 		{@const categoryName = objectTypeHeadings[key] ?? key}
 
@@ -217,138 +549,7 @@
 
 			<ul class="nimble-item-list">
 				{#each sortItems(itemCategory) as item (item.reactive._id)}
-					{@const metadata = getObjectMetadata(item)}
-					{@const rules = itemRulesManagers.get(item.id)}
-
-					<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
-					<!-- svelte-ignore  a11y_click_events_have_key_events -->
-					<li
-						class="nimble-document-card nimble-document-card--actor-inventory"
-						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
-						class:nimble-document-card--no-meta={!metadata}
-						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
-							droppedItemFlashIds,
-							item.reactive._id,
-						)}
-						data-item-id={item.reactive._id}
-						data-tooltip={tooltipCache.get(item.reactive._id) || ''}
-						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-						data-tooltip-direction="LEFT"
-						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
-						draggable="true"
-						role="button"
-						ondragstart={(event) => sheet._onDragStart(event)}
-						ondragover={(event) => event.preventDefault()}
-						ondrop={(event) => handleItemDrop(event, item)}
-						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
-						onclick={() => actor.activateItem(item._id)}
-					>
-						<header class="u-semantic-only">
-							{#if showEmbeddedDocumentImages}
-								<div class="nimble-document-card__img-wrapper">
-									<img
-										class="nimble-document-card__img"
-										src={item.reactive.img}
-										alt={item.reactive.name}
-									/>
-								</div>
-							{/if}
-
-							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
-								{item.reactive.name}
-							</h4>
-
-							<div class="nimble-document-card__charges">
-								<ChargeIndicator
-									pools={getItemPools(item.reactive._id)}
-									{actor}
-									itemId={item.reactive._id}
-								/>
-							</div>
-
-							{#if rules && (item.reactive.system.rules?.length ?? 0) > 0}
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label={localize('NIMBLE.prompts.toggleEquipment', {
-										name: item.reactive.name,
-									})}
-									data-tooltip={item.reactive.system.equipped
-										? localize('NIMBLE.prompts.equippedTooltip')
-										: localize('NIMBLE.prompts.unequippedTooltip')}
-									onclick={async (event) => {
-										event.stopPropagation();
-										const newEquippedState = !item.reactive.system.equipped;
-										const rulesUpdated = newEquippedState
-											? await rules.enableAllRules()
-											: await rules.disableAllRules();
-
-										if (!rulesUpdated) return;
-
-										const updatedItem = await actor.updateItem(item._id, {
-											'system.equipped': newEquippedState,
-										});
-
-										if (updatedItem) return;
-
-										if (newEquippedState) {
-											await rules.disableAllRules();
-										} else {
-											await rules.enableAllRules();
-										}
-									}}
-								>
-									{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
-										{#if item.reactive.system.equipped}
-											<i class="fa-solid fa-shield"></i>
-										{:else}
-											<i class="fa-regular fa-shield"></i>
-										{/if}
-									{:else if item.reactive.system.equipped}
-										<i class="fa-solid fa-hand"></i>
-									{:else}
-										<i class="fa-regular fa-hand"></i>
-									{/if}
-								</button>
-							{:else}
-								<input
-									class="nimble-document-card__quantity"
-									type="number"
-									value={item.reactive.system.quantity || 1}
-									min="0"
-									step="1"
-									onclick={(event) => event.stopPropagation()}
-									onchange={({ currentTarget }) =>
-										actor.updateItem(item._id, {
-											'system.quantity': currentTarget.value,
-										})}
-								/>
-							{/if}
-
-							<button
-								class="nimble-button"
-								style="grid-area: configureButton"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Configure {item.name}"
-								onclick={(event) => configureItem(event, item._id)}
-							>
-								<i class="fa-solid fa-edit"></i>
-							</button>
-
-							<button
-								class="nimble-button"
-								style="grid-area: deleteButton"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Delete {item.name}"
-								onclick={(event) => deleteItem(event, item._id)}
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
-						</header>
-					</li>
+					{@render inventoryRow(item)}
 				{/each}
 			</ul>
 		</div>
@@ -399,6 +600,31 @@
 		padding: 0;
 		list-style: none;
 		width: 100%;
+
+		&--stored {
+			margin: 0;
+		}
+	}
+
+	:global(.nimble-document-card--drop-target) {
+		outline: 2px dashed var(--nimble-accent-color);
+		outline-offset: 1px;
+	}
+
+	.nimble-container-contents {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		grid-column: 1 / -1;
+		margin-top: 0.25rem;
+		padding-left: 0.75rem;
+		border-left: 2px solid var(--nimble-accent-color);
+
+		&__capacity,
+		&__empty {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+		}
 	}
 
 	.nimble-currency-wrapper {

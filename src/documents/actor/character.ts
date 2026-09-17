@@ -19,6 +19,11 @@ import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import {
+	type ContainableObject,
+	calculateInventorySlotCost,
+	findContainerStorageRejection,
+} from '#utils/inventoryContainers.js';
 import localize from '#utils/localize.js';
 import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
 import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
@@ -71,6 +76,23 @@ type AppliedOptionSwap = OptionSwapPlan & { pools: ResolvedSwappableOptionPool[]
 
 /** Wide enough for the option cards a rest dialog shows when a swap is on offer. */
 const REST_DIALOG_WIDTH_WITH_OPTIONS = 480;
+
+async function confirmUnequipToStore(
+	object: ContainableObject,
+	container: ContainableObject,
+): Promise<boolean> {
+	return Boolean(
+		await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize('NIMBLE.containers.unequipToStoreTitle') },
+			content: `<p>${localize('NIMBLE.containers.unequipToStore', {
+				object: object.name,
+				container: container.name,
+			})}</p>`,
+			rejectClose: false,
+			modal: true,
+		}),
+	);
+}
 
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
@@ -368,37 +390,21 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return abilities;
 	}
 
-	getUsedInventorySlots(): number {
-		let slotsRequiredSum = 0;
-		let smallObjectsCarried = false;
-		// Sum up each object
+	/** Every object carried, in the order the item collection holds them. */
+	getCarriedObjects(): ContainableObject[] {
+		const objects: ContainableObject[] = [];
+
 		this.items.forEach((item) => {
 			if (!item.isType('object')) return;
-			// Cast to NimbleObjectItem (ambient type from item.d.ts)
-			const object = item as unknown as NimbleObjectItem;
-			switch (object.system.objectSizeType) {
-				case 'slots':
-					slotsRequiredSum += object.system.slotsRequired;
-					break;
-				case 'stackable': {
-					const slotsRequiredByStack = Math.ceil(object.system.quantity / object.system.stackSize);
-					slotsRequiredSum += slotsRequiredByStack;
-					break;
-				}
-				case 'smallSized':
-					smallObjectsCarried = true;
-					break;
-				default:
-					console.log(
-						"Can't calculate slots used for object size type",
-						object.system.objectSizeType,
-					);
-			}
+			objects.push(item as unknown as ContainableObject);
 		});
-		// round up to account for half used slots e.g. a single potion
-		slotsRequiredSum = Math.ceil(slotsRequiredSum);
-		// add one slots for all small stuff
-		if (smallObjectsCarried) slotsRequiredSum += 1;
+
+		return objects;
+	}
+
+	getUsedInventorySlots(): number {
+		let slotsRequiredSum = calculateInventorySlotCost(this.getCarriedObjects());
+
 		// account for coinage
 		if (this.getFlag(SYSTEM_ID, 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
@@ -410,6 +416,61 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			slotsRequiredSum += Math.floor(totalCoinage / 500);
 		}
 		return slotsRequiredSum;
+	}
+
+	/** The objects stored inside the given container, in no particular order. */
+	getContainerContents(containerId: string): ContainableObject[] {
+		return this.getCarriedObjects().filter((object) => object.system.containerId === containerId);
+	}
+
+	/**
+	 * Moves an object into a container carried by this actor. Reports why the
+	 * container refuses it rather than storing it anyway, since the refusal is the
+	 * container's configured limit and the player needs to know it was hit.
+	 *
+	 * Packing something away puts it out of reach, so a stored object is never
+	 * equipped. Stowing one that is asks first, because losing a weapon's or
+	 * armour's rules mid-session is not something to do behind the player's back.
+	 */
+	async storeItemInContainer(itemId: string, containerId: string): Promise<boolean> {
+		const carriedObjects = this.getCarriedObjects();
+		const object = carriedObjects.find(({ _id }) => _id === itemId);
+		const container = carriedObjects.find(({ _id }) => _id === containerId);
+
+		if (!object || !container || itemId === containerId) return false;
+
+		const rejection = findContainerStorageRejection(
+			container,
+			object,
+			this.getContainerContents(containerId),
+		);
+
+		if (rejection) {
+			ui.notifications?.warn(
+				localize(`NIMBLE.containers.rejection.${rejection}`, {
+					container: container.name,
+					object: object.name,
+				}),
+			);
+			return false;
+		}
+
+		if (object.system.equipped) {
+			if (!(await confirmUnequipToStore(object, container))) return false;
+
+			const item = this.items.get(itemId) as unknown as
+				| { toggleEquipment(): Promise<void> }
+				| undefined;
+			await item?.toggleEquipment();
+		}
+
+		await this.updateItem(itemId, { 'system.containerId': containerId });
+		return true;
+	}
+
+	/** Takes an object back out of whatever container is holding it. */
+	async removeItemFromContainer(itemId: string): Promise<void> {
+		await this.updateItem(itemId, { 'system.containerId': '' });
 	}
 
 	protected override _prepareEarlyDerivedData(): void {

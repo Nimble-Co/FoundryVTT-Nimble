@@ -67,6 +67,29 @@ const schema = () => ({
 		min: 2,
 		nullable: false,
 	}),
+	/** Id of the container object on the same actor that holds this one. Empty when carried directly. */
+	containerId: new fields.StringField({ required: true, initial: '', nullable: false }),
+	container: new fields.SchemaField({
+		enabled: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+		slotCostMode: new fields.StringField({
+			required: true,
+			initial: 'none',
+			nullable: false,
+			choices: ['none', 'ignore', 'reduce', 'half'],
+		}),
+		slotCostReduction: new fields.NumberField({
+			required: true,
+			initial: 1,
+			min: 0,
+			nullable: false,
+		}),
+		capacity: new fields.NumberField({ required: true, initial: null, min: 0, nullable: true }),
+		allowedObjectTypes: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, initial: '' }),
+			{ required: true, nullable: false, initial: [] },
+		),
+		requiresEquipped: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+	}),
 	properties: new fields.SchemaField({
 		...baseProperties(),
 		selected: new fields.ArrayField(
@@ -147,6 +170,15 @@ class NimbleObjectData extends NimbleBaseItemData<
 	declare objectSizeType: 'slots' | 'stackable' | 'smallSized';
 	declare slotsRequired: number;
 	declare stackSize: number;
+	declare containerId: string;
+	declare container: {
+		enabled: boolean;
+		slotCostMode: 'none' | 'ignore' | 'reduce' | 'half';
+		slotCostReduction: number;
+		capacity: number | null;
+		allowedObjectTypes: string[];
+		requiresEquipped: boolean;
+	};
 	declare properties: {
 		reach: { min: number; max: number | null };
 		range: { min: number; max: number | null };
