@@ -85,21 +85,49 @@ describe('planOfferedMove', () => {
 		expect(planMovement.mock.calls[0][0]).not.toHaveProperty('maxCost');
 	});
 
-	it('plans a forced move as a direct drag with the forced action', async () => {
+	it('plans a directed push as one straight drag with the forced action', async () => {
 		const { token, planMovement } = makeToken();
-		await planOfferedMove(makeOffer({ kind: 'forced', spaces: 2 }), () => token);
+		await planOfferedMove(makeOffer({ kind: 'forced', spaces: 2, direction: 'away' }), () => token);
 		expect(planMovement.mock.calls[0][0]).toMatchObject({
 			allowedActions: [FORCED_MOVEMENT_ACTION],
 			direct: true,
 			maxDistance: 10,
+			constrainOptions: { ignoreCost: true },
 		});
 	});
 
-	it('tags the drop with the offer so every client can match the record', async () => {
+	it('lets a push in any direction bend', async () => {
+		const { token, planMovement } = makeToken();
+		await planOfferedMove(makeOffer({ kind: 'forced', direction: 'any' }), () => token);
+		expect(planMovement.mock.calls[0][0]).toMatchObject({ direct: false });
+	});
+
+	it('passes nothing but the plan constraints to core', async () => {
 		const { token, planMovement } = makeToken();
 		await planOfferedMove(makeOffer(), () => token);
-		const moveOptions = planMovement.mock.calls[0][0].moveOptions as Record<string, unknown>;
-		expect(Object.values(moveOptions)[0]).toEqual({ offerId: 'offer-1', messageId: 'msg-1' });
+		expect(planMovement.mock.calls[0][0]).not.toHaveProperty('moveOptions');
+	});
+
+	it('is unavailable when core refuses to plan on this client', async () => {
+		const { token, planMovement } = makeToken();
+		planMovement.mockRejectedValue(new Error('hidden token'));
+		expect((await planOfferedMove(makeOffer(), () => token)).outcome).toBe('unavailable');
+	});
+
+	it('is unavailable without a placed token or a scene grid', async () => {
+		const { token } = makeToken();
+		expect((await planOfferedMove(makeOffer(), () => ({ ...token, object: null }))).outcome).toBe(
+			'unavailable',
+		);
+		expect((await planOfferedMove(makeOffer(), () => ({ ...token, parent: null }))).outcome).toBe(
+			'unavailable',
+		);
+	});
+
+	it('is declined when the movement that ran belongs to another plan', async () => {
+		const { token } = makeToken();
+		token.movement.id = 'someone-elses';
+		expect((await planOfferedMove(makeOffer(), () => token)).outcome).toBe('declined');
 	});
 
 	it('is declined when the owner dismisses the plan', async () => {
