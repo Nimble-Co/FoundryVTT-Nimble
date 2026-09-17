@@ -64,7 +64,6 @@ function toPosition(waypoint: TokenPosition): TokenPosition {
 export function buildMovementRecord(
 	token: RecordableToken,
 	movement: MovementLike,
-	offer: MovementRecord['offer'] = null,
 	combats: Iterable<CombatLike> = (game.combats ?? []) as Iterable<CombatLike>,
 ): MovementRecord | null {
 	const lastPassed = movement.passed.waypoints.at(-1);
@@ -109,7 +108,6 @@ export function buildMovementRecord(
 			? summariseMovementHistory(token, token.movementHistory).counted
 			: null,
 		stopped: movement.state === 'stopped' || movement.constrained,
-		offer,
 		user: movement.user,
 	};
 }
