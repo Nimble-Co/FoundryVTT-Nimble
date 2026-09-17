@@ -181,10 +181,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	 * the `useItem` hook. Shared tail of every activate() implementation.
 	 *
 	 * Concentration is applied here, not on the damage-applied path, which a
-	 * roll-less utility spell such as Fly never reaches, and before the card is
-	 * built so the card reports whether it took rather than that the item asked
-	 * for it. A failure costs the condition rather than the rest of the
-	 * activation, the same bargain `placeAoEForMessage` strikes below.
+	 * roll-less utility spell such as Fly never reaches.
 	 */
 	protected async _createActivationCard(
 		chatData: unknown,
