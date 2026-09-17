@@ -10,6 +10,7 @@
 		isDerivedConditionsAutomationEnabled,
 		isHealthStateSyncAutomationEnabled,
 		isMovementTrackingAutomationEnabled,
+		isMovementOffersAutomationEnabled,
 		isResourceRecoveryAutomationEnabled,
 		isResourceSpendingAutomationEnabled,
 		isRuleAutomationEnabled,
@@ -33,6 +34,7 @@
 		combatConvenience: isCombatConvenienceAutomationEnabled(),
 		chatNotifications: isChatNotificationsAutomationEnabled(),
 		movementTracking: isMovementTrackingAutomationEnabled(),
+		movementOffers: isMovementOffersAutomationEnabled(),
 	};
 
 	const toggles = $state({ ...initialValues });
@@ -42,7 +44,13 @@
 		{ legendKey: 'sectionResources', shortKeys: ['resourceRecovery', 'resourceSpending'] },
 		{
 			legendKey: 'sectionCombat',
-			shortKeys: ['actionTracking', 'healthStateSync', 'combatConvenience', 'movementTracking'],
+			shortKeys: [
+				'actionTracking',
+				'healthStateSync',
+				'combatConvenience',
+				'movementTracking',
+				'movementOffers',
+			],
 		},
 		{ legendKey: 'sectionChat', shortKeys: ['chatNotifications'] },
 	];

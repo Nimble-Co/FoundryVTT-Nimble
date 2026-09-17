@@ -105,6 +105,12 @@ With the **Movement Tracking** automation toggle on (the default), the system wa
 
 The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
 
+## Movement offers
+
+With the **Movement Offers** automation toggle on (the default), a feature that grants a Free Move or pushes a creature puts a **Move** button on its chat card, one per creature it applies to. The button is visible to that creature's owner and to the GM. Clicking it starts a drag on the owner's client with the ruler limited to the offered distance: the player still chooses the path and the final space, or presses Escape to decline. A push is a straight drag that ignores difficult terrain; a Free Move follows the feature's wording. The card shows the direction the feature names ("away", "toward") and who the book says chooses, but nothing enforces either. Once the drag lands, the card records how far the creature actually moved.
+
+When the toggle is off, the card shows the distance as plain text and the token is dragged as usual.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.
