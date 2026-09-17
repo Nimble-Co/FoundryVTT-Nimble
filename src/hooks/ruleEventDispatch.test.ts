@@ -105,6 +105,7 @@ describe('ruleEventDispatch', () => {
 		expect(handlers.has('updateCombat')).toBe(true);
 		expect(handlers.has('deleteCombat')).toBe(true);
 		expect(handlers.has('nimble.conditionApplied')).toBe(true);
+		expect(handlers.has('nimble.movementFinished')).toBe(true);
 	});
 
 	describe('automation.applyRuleEffects gating', () => {
