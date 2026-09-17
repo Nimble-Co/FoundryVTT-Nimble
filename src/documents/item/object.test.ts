@@ -2,6 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SYSTEM_ID } from '#system';
 
+const createConditionEffect = vi.fn();
+vi.stubGlobal('ActiveEffect', {
+	implementation: {
+		fromStatusEffect: vi.fn(async () => ({ id: 'effect-1', updateSource: vi.fn() })),
+		create: createConditionEffect,
+	},
+});
+
 import { NimbleBaseItem } from './base.svelte.js';
 import { NimbleObjectItem } from './object.js';
 
@@ -190,6 +198,17 @@ describe('NimbleObjectItem.activate', () => {
 
 			expect(baseActivate).not.toHaveBeenCalled();
 			expect(scroll.delete).toHaveBeenCalled();
+		});
+
+		it('starts no concentration on a failing roll', async () => {
+			const scroll = createScroll({
+				rollSkillCheck: vi.fn(async () => ({ roll: { total: 9 }, rollData: {} })),
+			});
+			Object.assign(scroll, { tags: new Set(['property:concentration']) });
+
+			await scroll.activate();
+
+			expect(createConditionEffect).not.toHaveBeenCalled();
 		});
 
 		it('treats a total of exactly the DC as a pass', async () => {

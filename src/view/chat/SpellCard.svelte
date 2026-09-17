@@ -6,6 +6,7 @@
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
+	import ConcentrationNode from './components/ConcentrationNode.svelte';
 	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
@@ -119,6 +120,8 @@
 	<ChargeConsumptionNode />
 
 	<ActionDeltaSummaryNode />
+
+	<ConcentrationNode />
 
 	{#if hasUpcast}
 		<section class="nimble-card-section nimble-upcast-indicator">

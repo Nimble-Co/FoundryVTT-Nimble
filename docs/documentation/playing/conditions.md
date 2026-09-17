@@ -23,6 +23,16 @@ Some conditions come bundled together, and the system tracks the relationships f
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.
 
+## Concentration
+
+Concentration applies itself. Casting a spell whose **Concentration** property is ticked puts the Concentration condition on the caster as the chat card posts, and the card says **Concentrating** so the player can see it took. No GM click is involved, and it happens whether the spell targets an ally, several creatures, or nobody at all — the condition always lands on the caster, never on the targets.
+
+A caster holds one concentration at a time. Casting a second concentration spell ends the first: the old condition is removed and a new one applied, credited to the new spell.
+
+This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
+
+What the system does *not* do is break concentration for you. Losing it when crit (a DC 10 STR save), at 0 HP, or when Incapacitated is still yours to track — remove the condition by hand when it ends.
+
 ## Custom conditions
 
 A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, and an icon, and from then on it behaves like any other condition in the token panel, the Conditions tab, and the Rules Builder's condition lists.
