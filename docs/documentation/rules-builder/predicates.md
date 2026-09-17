@@ -45,6 +45,7 @@ These are the tag families that exist:
 | `self:fullHp` | Currently at maximum hit points. |
 | `minion` / `solo-monster` | Present on minions and solo monsters respectively. |
 | `enemiesAdjacent:2` / `enemiesAdjacent:most` | How many enemies are adjacent to the token, and whether this token has the most adjacent enemies. Only present when the adjacency tracking setting is enabled. |
+| `spacesMovedThisTurn:0` | How many spaces the creature has moved since its own turn began, counting regular, free and forced movement but never teleports. Present only for combatants in a started combat while the Movement Tracking automation toggle is on. Use `{ "spacesMovedThisTurn": { "max": 0 } }` for "has not moved this turn" and `{ "min": 4 }` for "after moving at least 4 spaces". |
 
 **The item itself:** a rule also sees the tags of the item it sits on, such as `type:object`, `identifier:belt-of-giant-strength`, and for gear `objectType:armor` and each `property:...`. This mostly matters when you copy one rule between several items and want it to behave differently on some of them.
 

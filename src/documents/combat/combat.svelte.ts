@@ -20,7 +20,10 @@ import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import resolveHeroicReactionActionCost from '#utils/resolveHeroicReactionActionCost.js';
-import { isCombatConvenienceAutomationEnabled } from '../../settings/automationSettings.js';
+import {
+	isCombatConvenienceAutomationEnabled,
+	isMovementTrackingEnabled,
+} from '../../settings/automationSettings.js';
 import {
 	buildCharacterTurnRefillUpdate,
 	getCombatantManualSortValue,
@@ -835,6 +838,21 @@ class NimbleCombat extends Combat {
 		// Claim before any await so a late-dispatched `_onEndTurn` skips its own refill.
 		this.#endingTurnRefilledCharacterId = outgoingCombatantId;
 		await this.#applyCharacterTurnEndRefill(combatant);
+	}
+
+	/**
+	 * Foundry clears every combatant's movement history when any turn starts. Nimble
+	 * counts Spaces Moved This Turn until the mover's own turn begins, so only the
+	 * incoming combatant is cleared.
+	 */
+	override async _clearMovementHistoryOnStartTurn(
+		combatant: Combatant.Implementation,
+		context: Combat.TurnEventContext,
+	) {
+		if (!isMovementTrackingEnabled()) {
+			return super._clearMovementHistoryOnStartTurn(combatant, context);
+		}
+		await this.clearMovementHistories([combatant]);
 	}
 
 	override async _onEndRound() {

@@ -6,7 +6,9 @@ import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
+import { getSpacesMovedThisTurn } from '../../movement/getSpacesMovedThisTurn.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
+import { isMovementTrackingEnabled } from '../../settings/automationSettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
@@ -489,6 +491,11 @@ class NimbleBaseActor<
 					this.tags.add(`alliesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
 				}
 			}
+		}
+
+		if (isMovementTrackingEnabled()) {
+			const spacesMovedThisTurn = getSpacesMovedThisTurn(this);
+			if (spacesMovedThisTurn !== null) this.tags.add(`spacesMovedThisTurn:${spacesMovedThisTurn}`);
 		}
 
 		populateDicePoolTags(
