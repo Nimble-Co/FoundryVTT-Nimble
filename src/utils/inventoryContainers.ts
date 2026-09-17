@@ -77,8 +77,6 @@ export function applyContainerSlotRule(container: ContainableObject, baseSlotCos
 			return baseSlotCost / 2;
 		case 'reduce':
 			return Math.max(0, baseSlotCost - slotCostReduction);
-		default:
-			return baseSlotCost;
 	}
 }
 
