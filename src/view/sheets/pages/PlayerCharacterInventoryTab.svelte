@@ -369,7 +369,12 @@
 		onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
 		draggable="true"
 		role="button"
-		ondragstart={(event) => sheet._onDragStart(event)}
+		ondragstart={(event) => {
+			// A container row wraps its contents, so without this the drag data is
+			// overwritten by the container as the event bubbles out of a stored row.
+			event.stopPropagation();
+			sheet._onDragStart(event);
+		}}
 		ondragover={(event) => event.preventDefault()}
 		ondragenter={() => handleContainerDragEnter(item)}
 		ondragleave={(event) => handleContainerDragLeave(event, item)}

@@ -235,6 +235,25 @@ describe('PlayerCharacterInventoryTab containers', () => {
 		expect(row.querySelector('.nimble-document-card__quantity')).not.toBeNull();
 	});
 
+	it('drags the stored object itself, not the container it sits inside', async () => {
+		const draggedItemIds: (string | undefined)[] = [];
+		const { container } = render(PlayerCharacterInventoryTabHarness, {
+			props: {
+				items: [bagOfHolding, storedPlateArmor],
+				onDragStart: (event: DragEvent) => {
+					const row = event.currentTarget as HTMLElement | null;
+					draggedItemIds.push(row?.dataset.itemId);
+				},
+			},
+		});
+
+		await fireEvent.dragStart(getRow(container, 'armor'));
+
+		// The container row wraps its contents, so an unstopped dragstart reaches it
+		// second and overwrites the drag data with the container.
+		expect(draggedItemIds).toEqual(['armor']);
+	});
+
 	it('offers the equip toggle for the same object carried directly', () => {
 		const { container } = renderWithContainers([
 			{ ...plateArmor, system: { ...plateArmor.system, rules: [{ type: 'armorClass' }] } },
