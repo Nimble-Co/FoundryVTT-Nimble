@@ -46,6 +46,35 @@
 		});
 	}
 
+	function getContainerSlotCostModeOptions() {
+		return Object.entries(containerSlotCostModes).map(([key, mode]) => ({
+			label: mode,
+			value: key,
+		}));
+	}
+
+	function updateContainerSlotCostMode(newSelection) {
+		item.update({
+			'system.container.slotCostMode': newSelection,
+		});
+	}
+
+	function updateContainerAllowedObjectTypes(newSelection) {
+		const allowedObjectTypes = item.reactive?.system?.container?.allowedObjectTypes ?? [];
+
+		item.update({
+			'system.container.allowedObjectTypes': allowedObjectTypes.includes(newSelection)
+				? allowedObjectTypes.filter((objectType) => objectType !== newSelection)
+				: [...allowedObjectTypes, newSelection],
+		});
+	}
+
+	function updateContainerCapacity(value) {
+		item.update({
+			'system.container.capacity': value === '' ? null : Number(value),
+		});
+	}
+
 	function updateWeaponProperties(newSelection) {
 		const currentProperties = item.reactive?.system?.properties?.selected ?? [];
 
@@ -64,7 +93,7 @@
 		});
 	}
 
-	const { objectTypes, objectSizeTypes, weaponProperties } = CONFIG.NIMBLE;
+	const { containerSlotCostModes, objectTypes, objectSizeTypes, weaponProperties } = CONFIG.NIMBLE;
 
 	let { item, sheet } = $props();
 
@@ -113,6 +142,7 @@
 
 	let objectType = $derived(item.reactive.system.objectType);
 	let objectSizeType = $derived(item.reactive.system.objectSizeType);
+	let container = $derived(item.reactive.system.container);
 
 	setContext(
 		'document',
@@ -250,6 +280,114 @@
 						disabled={objectSizeType != 'stackable'}
 					/>
 				</div>
+			{/if}
+		</div>
+
+		<div>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.containers.heading')}
+				</h3>
+			</header>
+
+			<label class="nimble-field">
+				<input
+					type="checkbox"
+					checked={container.enabled}
+					onchange={({ target }) => item.update({ 'system.container.enabled': target.checked })}
+				/>
+
+				<span class="nimble-heading nimble-field__label" data-heading-variant="field">
+					{localize('NIMBLE.containers.enabled')}
+
+					<i
+						class="nimble-field__hint-icon fa-solid fa-circle-info"
+						data-tooltip={localize('NIMBLE.containers.enabledHint')}
+						data-tooltip-direction="UP"
+					></i>
+				</span>
+			</label>
+
+			{#if container.enabled}
+				<div class="nimble-field nimble-field--column">
+					<span class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.containers.slotCostMode')}
+					</span>
+
+					<TagGroup
+						options={getContainerSlotCostModeOptions()}
+						selectedOptions={[container.slotCostMode]}
+						toggleOption={updateContainerSlotCostMode}
+					/>
+				</div>
+
+				{#if container.slotCostMode === 'reduce'}
+					<div class="nimble-field nimble-field--column">
+						<span class="nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.containers.slotCostReduction')}
+						</span>
+
+						<input
+							type="number"
+							min="0"
+							step="0.5"
+							value={container.slotCostReduction}
+							onchange={({ target }) =>
+								item.update({ 'system.container.slotCostReduction': Number(target.value) })}
+						/>
+					</div>
+				{/if}
+
+				<div class="nimble-field nimble-field--column">
+					<span class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.containers.capacity')}
+
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.containers.capacityHint')}
+							data-tooltip-direction="UP"
+						></i>
+					</span>
+
+					<input
+						type="number"
+						min="0"
+						step="1"
+						value={container.capacity ?? ''}
+						onchange={({ target }) => updateContainerCapacity(target.value)}
+					/>
+				</div>
+
+				<div class="nimble-field nimble-field--column">
+					<span class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.containers.allowedObjectTypes')}
+
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.containers.allowedObjectTypesHint')}
+							data-tooltip-direction="UP"
+						></i>
+					</span>
+
+					<TagGroup
+						options={getObjectTypeOptions()}
+						selectedOptions={container.allowedObjectTypes}
+						toggleOption={updateContainerAllowedObjectTypes}
+					/>
+				</div>
+
+				<label class="nimble-field">
+					<input
+						type="checkbox"
+						checked={container.requiresEquipped}
+						onchange={({ target }) =>
+							item.update({ 'system.container.requiresEquipped': target.checked })}
+					/>
+
+					<span class="nimble-heading nimble-field__label" data-heading-variant="field">
+						{localize('NIMBLE.containers.requiresEquipped')}
+					</span>
+				</label>
 			{/if}
 		</div>
 
