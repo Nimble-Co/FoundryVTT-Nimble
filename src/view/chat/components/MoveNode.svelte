@@ -41,36 +41,36 @@
 		localize(`NIMBLE.chat.movementOffers.directions.${node.direction}`, { source: sourceName }),
 	);
 	const recipients = $derived.by<Recipient[]>(() => {
-		if (!messageDocument?.id) return [];
-		// The card's stored effects may lag behind the node being rendered; build
-		// the recipient list from the live message but offers from the card itself.
-		const message = messageDocument as unknown as OfferMessage;
-		const entries = system.movementOffers ?? [];
-		return cardMoveRecipients({ ...message, system }, node).flatMap((tokenUuid) => {
-			const card = buildCardMovementOffer(
-				{ messageId: messageDocument.id ?? '', nodeId: node.id, tokenUuid },
-				{ message },
-			);
-			if (!card) return [];
-			return [
-				{
-					id: card.offer.id,
-					tokenUuid,
-					name: card.token.name,
-					spaces: card.offer.spaces,
-					entry: entries.find((entry) => entry.id === card.offer.id) ?? null,
-					canUse: canUserTakeMovementOffer(game.user, card),
-				},
-			];
-		});
+		const messageId = messageDocument?.id;
+		if (!messageId) return [];
+		// Reads go through the reactive system data so the card re-renders when
+		// a stamp lands.
+		const message: OfferMessage = {
+			id: messageId,
+			author: messageDocument.author,
+			speaker: messageDocument.speaker,
+			system,
+		};
+		return cardMoveRecipients(message, node)
+			.map((tokenUuid) =>
+				buildCardMovementOffer({ messageId, nodeId: node.id, tokenUuid }, { message }),
+			)
+			.filter((card) => card !== null)
+			.map((card) => ({
+				id: card.offer.id,
+				tokenUuid: card.offer.tokenUuid,
+				name: card.token.name,
+				spaces: card.offer.spaces,
+				entry: card.entry,
+				canUse: canUserTakeMovementOffer(game.user, card),
+			}));
 	});
 
-	let busyId = $state<string | null>(null);
+	// One drag at a time: starting a second plan would cancel the first.
+	let busy = $state(false);
 
 	function spacesText(count: number): string {
-		return count === 1
-			? localize('NIMBLE.chat.movementOffers.space')
-			: localize('NIMBLE.chat.movementOffers.spaces', { count });
+		return localize(`NIMBLE.chat.movementOffers.${count === 1 ? 'space' : 'spaces'}`, { count });
 	}
 
 	function chooserText(recipient: Recipient): string {
@@ -82,7 +82,10 @@
 
 	function resultText(recipient: Recipient): string | null {
 		const entry = recipient.entry;
-		if (!entry?.used || entry.movedSpaces === null) return null;
+		if (!entry?.used) return null;
+		if (entry.movedSpaces === null) {
+			return localize('NIMBLE.chat.movementOffers.taken', { name: recipient.name });
+		}
 		const short = Math.max(0, entry.spaces - entry.movedSpaces);
 		return entry.stopped && short > 0
 			? localize('NIMBLE.chat.movementOffers.resultShortened', {
@@ -110,8 +113,8 @@
 	}
 
 	async function take(recipient: Recipient) {
-		if (busyId || !messageDocument?.id) return;
-		busyId = recipient.id;
+		if (busy || !messageDocument?.id) return;
+		busy = true;
 		try {
 			await takeMovementOffer({
 				messageId: messageDocument.id,
@@ -119,7 +122,7 @@
 				tokenUuid: recipient.tokenUuid,
 			});
 		} finally {
-			busyId = null;
+			busy = false;
 		}
 	}
 </script>
@@ -160,11 +163,13 @@
 					class="nimble-button nimble-move-node__button"
 					type="button"
 					data-button-variant="card-action"
-					disabled={busyId !== null}
+					disabled={busy}
 					onclick={() => take(recipient)}
 				>
 					<i class="fa-solid fa-arrows-up-down-left-right" aria-hidden="true"></i>
-					{localize('NIMBLE.chat.movementOffers.moveButton', { spaces: recipient.spaces })}
+					{localize('NIMBLE.chat.movementOffers.moveButton', {
+						distance: spacesText(recipient.spaces),
+					})}
 				</button>
 			{/if}
 		</div>
@@ -199,6 +204,8 @@
 
 		&__hint {
 			margin: 0;
+			font-size: var(--nimble-xs-text);
+			font-style: normal;
 			color: var(--nimble-medium-text-color);
 		}
 

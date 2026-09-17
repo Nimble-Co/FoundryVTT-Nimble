@@ -118,7 +118,7 @@
 			},
 			"movementOffers": {
 				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
-				"space": "1 space",
+				"space": "{count} space",
 				"spaces": "{count} spaces",
 				"offer": "{name}: up to {distance} {direction}",
 				"directions": {
@@ -127,10 +127,11 @@
 					"toward": "toward {source}"
 				},
 				"choosers": { "mover": "{mover} chooses where.", "source": "{source} chooses where." },
-				"moveButton": "Move (up to {spaces})",
+				"moveButton": "Move (up to {distance})",
+				"taken": "{name} moved.",
 				"result": "{name} moved {moved} of {offered}.",
 				"resultShortened": "{name} moved {moved} of {offered}, shortened by {short}.",
-				"forcedShortenedHint": "Stopped by an obstacle: 1d6 bludgeoning damage per space shortened, split with any creature it hit. Table's call.",
+				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
 				"noRecipient": "No creature to move.",
 				"unavailable": "Nobody connected can move {name}."
 			},
@@ -2579,7 +2580,7 @@
 				"recipient": "Who Moves",
 				"recipients": { "self": "The user", "targets": "The targets" },
 				"distance": "Distance (spaces)",
-				"distanceHint": "A formula against the data of the feature's user, so @abilities.strength.mod is their modifier. @speed is the walk speed of the creature that moves.",
+				"distanceHint": "A formula against the user's data: @abilities.strength.mod is their Strength modifier. @speed is the walk speed of the creature that moves.",
 				"distanceBySize": "Distance by size (optional)",
 				"ignoreDifficultTerrain": "Ignore difficult terrain",
 				"direction": "Direction",
