@@ -16,6 +16,7 @@ import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#type
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { ActionCostChange } from '#types/useOption.d.ts';
 import { getChargePoolRollData } from '#utils/chargePool/helpers.js';
+import enforceWeaponAttack from '#utils/enforceWeaponAttack.js';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/classProgression/findMissingLevelSelections.ts';

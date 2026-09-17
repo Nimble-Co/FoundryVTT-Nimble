@@ -56,6 +56,25 @@ const nimbleCharacterCombatantSchema = () => ({
 			}),
 		}),
 	}),
+	// Free equipment swaps spent, stamped with the round they were spent in.
+	// The budget is per round, so a stamp from an earlier round reads as zero
+	// spent and no reset hook is needed.
+	equipmentSwaps: new fields.SchemaField({
+		round: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			min: 0,
+		}),
+		spent: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			min: 0,
+		}),
+	}),
 	sort: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 });
 
