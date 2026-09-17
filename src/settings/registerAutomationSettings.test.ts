@@ -73,7 +73,7 @@ function expectOtherTogglesDefaultTrue(settingsMock: SettingsMock): void {
 	const otherSettingKeys = Object.values(AUTOMATION_SETTING_KEYS).filter(
 		(settingKey) => settingKey !== AUTOMATION_SETTING_KEYS.applyRuleEffects,
 	);
-	expect(otherSettingKeys).toHaveLength(7);
+	expect(otherSettingKeys).toHaveLength(8);
 	for (const settingKey of otherSettingKeys) {
 		expect(getRegisteredConfig(settingsMock, settingKey)).toMatchObject({ default: true });
 	}
@@ -88,8 +88,8 @@ describe('registerAutomationSettings', () => {
 
 		registerAutomationSettings();
 
-		// The legacy setting plus the 8 automation family toggles.
-		expect(settingsMock.register).toHaveBeenCalledTimes(9);
+		// The legacy setting plus the 9 automation family toggles.
+		expect(settingsMock.register).toHaveBeenCalledTimes(10);
 		for (const [namespace] of settingsMock.register.mock.calls) {
 			expect(namespace).toBe(SYSTEM_ID);
 		}

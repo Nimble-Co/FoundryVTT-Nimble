@@ -95,6 +95,16 @@ Some features, such as the Spellblade's, grant a character mana *per combat* rat
 
 Nothing for you to track: it appears when the fight starts and vanishes when it's over.
 
+## Movement tracking
+
+With the **Movement Tracking** automation toggle on (the default), the system watches every token that is part of a started combat. It uses Foundry's own movement record, so nothing new is stored on your actors:
+
+- Each time a token finishes moving, the system notes how far it went, which spaces it crossed, and whether that was regular movement, a Free Move, or Forced Movement (a push or pull). Teleports and place swaps are never counted as movement, following the rulebooks.
+- **Spaces Moved This Turn** is kept for every combatant and resets when that creature's own turn begins. An ally moving you during someone else's turn still counts until your next turn starts. Features can read it in their conditions, for example "if you have not moved this turn".
+- Movement is only recorded while a combat is running. Outside combat there is nothing to count.
+
+The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.
