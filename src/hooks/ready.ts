@@ -16,7 +16,7 @@ import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js'
 import { registerGrantedActionOfferSocketListener } from '../utils/grantedActionOffers.js';
 import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
 import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
-import { registerMovementOfferSocketListener } from '../utils/movement/movementOffers.js';
+import { registerMovementOfferSocketListener } from '../utils/movement/movementOfferRelay.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
