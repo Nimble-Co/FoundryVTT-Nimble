@@ -92,7 +92,6 @@ describe('planOfferedMove', () => {
 			allowedActions: [FORCED_MOVEMENT_ACTION],
 			direct: true,
 			maxDistance: 10,
-			constrainOptions: { ignoreCost: true },
 		});
 	});
 
