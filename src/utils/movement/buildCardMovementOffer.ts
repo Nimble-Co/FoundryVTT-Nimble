@@ -5,9 +5,7 @@ import { buildMovementOfferId, type MovementOfferEntry } from './movementOfferEn
 import { resolveMoveDistance } from './resolveMoveDistance.js';
 
 export interface OfferActor {
-	isOwner?: boolean;
 	getRollData(): Record<string, unknown>;
-	testUserPermission?(user: unknown, level: number): boolean;
 	system?: { attributes?: { movement?: { walk?: number }; sizeCategory?: string } };
 }
 
@@ -122,21 +120,4 @@ export function buildCardMovementOffer(
 		sourceName,
 		entry: message.system?.movementOffers?.find((entry) => entry.id === id) ?? null,
 	};
-}
-
-/**
- * The GM, the card's author (the feature's user) and the recipient's owner may
- * take an offer. Authorship is the card's word: what it buys is a request
- * that the owning client plan a drag, which that client can dismiss.
- */
-export function canUserTakeMovementOffer(
-	user: { id: string | null; isGM: boolean } | null | undefined,
-	card: CardMovementOffer,
-): boolean {
-	if (!user) return false;
-	if (user.isGM) return true;
-	if (card.message.author?.id === user.id) return true;
-	return (
-		card.token.actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true
-	);
 }
