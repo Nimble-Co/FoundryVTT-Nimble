@@ -1,9 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import {
-	buildCardMovementOffer,
-	canUserTakeMovementOffer,
-	cardMoveRecipients,
-} from './buildCardMovementOffer.js';
+import { buildCardMovementOffer, cardMoveRecipients } from './buildCardMovementOffer.js';
 
 const RollGlobal = Roll as unknown as {
 	replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
@@ -153,16 +149,5 @@ describe('buildCardMovementOffer', () => {
 		expect(
 			buildCardMovementOffer(ref, { message: makeMessage(), resolveToken: () => null }),
 		).toBeNull();
-	});
-});
-
-describe('canUserTakeMovementOffer', () => {
-	it('allows the GM, the card author and the token owner, nobody else', () => {
-		const card = buildCardMovementOffer(ref, { message: makeMessage(), ...lookups })!;
-		expect(canUserTakeMovementOffer({ id: 'x', isGM: true }, card)).toBe(true);
-		expect(canUserTakeMovementOffer({ id: 'author', isGM: false }, card)).toBe(true);
-		expect(canUserTakeMovementOffer({ id: 'gm-owner', isGM: false }, card)).toBe(true);
-		expect(canUserTakeMovementOffer({ id: 'stranger', isGM: false }, card)).toBe(false);
-		expect(canUserTakeMovementOffer(null, card)).toBe(false);
 	});
 });

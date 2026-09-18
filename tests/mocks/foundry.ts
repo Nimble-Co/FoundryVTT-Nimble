@@ -441,6 +441,34 @@ class MockDataFieldOperator {
 
 class MockForcedDeletion extends MockDataFieldOperator {}
 
+/**
+ * Stand-in for the core Token placeable. The system subclasses it at import
+ * time, so the class has to exist before any module loads; the drag seams
+ * return the shapes core returns, and the system's own behaviour is unit
+ * tested through the helpers the subclass delegates to.
+ */
+class MockTokenPlaceable {
+	document: any = {};
+	layer: any = {};
+	_onDragLeftStart(_event?: unknown): void {}
+	_onDragEnd(): void {}
+	_onDragLeftCancel(_event?: unknown): boolean {
+		return true;
+	}
+	_getDragConstrainOptions(): Record<string, unknown> {
+		return { ignoreWalls: false, ignoreCost: false };
+	}
+	_getDragLeftDropUpdateOptions(): Record<string, unknown> {
+		return { constrainOptions: { ignoreWalls: false, ignoreCost: false } };
+	}
+	_getDragMovementAction(): string {
+		return 'walk';
+	}
+	_shouldPreventDragLeftDrop(_event?: unknown): boolean {
+		return false;
+	}
+}
+
 export const foundryApiMocks = {
 	dice: {
 		Roll: trackableRollMock,
@@ -668,6 +696,9 @@ export const foundryApiMocks = {
 	canvas: {
 		layers: {
 			TemplateLayer: class TemplateLayer {},
+		},
+		placeables: {
+			Token: MockTokenPlaceable,
 		},
 	},
 };
