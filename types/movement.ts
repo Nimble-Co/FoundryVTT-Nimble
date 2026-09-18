@@ -68,7 +68,8 @@ export type MovementChooser = 'mover' | 'source';
 
 /**
  * A constrained drag offered to a token's owner. The system never moves the
- * token: the offer only sets the ruler's limit and the movement action.
+ * token: while the offer stands, the token's own drag is limited to it and
+ * labelled with its movement action.
  */
 export interface MovementOffer {
 	id: string;
@@ -92,17 +93,6 @@ export interface MovementOfferRef {
 	messageId: string;
 	nodeId: string;
 	tokenUuid: string;
-}
-
-export type MovementOfferOutcome = 'started' | 'declined' | 'unavailable';
-
-/** What came of an offer: whether the drag happened and, when it did, how far it went. */
-export interface MovementOfferResult {
-	outcome: MovementOfferOutcome;
-	/** Spaces the token really moved, once the drag landed. */
-	movedSpaces: number | null;
-	/** True when a wall, terrain or the mover cut the drag short. */
-	stopped: boolean;
 }
 
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */
