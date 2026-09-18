@@ -8,19 +8,15 @@
 	import {
 		buildCardMovementOffer,
 		cardMoveRecipients,
-		canUserTakeMovementOffer,
 		type OfferMessage,
 	} from '#utils/movement/buildCardMovementOffer.js';
-	import { takeMovementOffer } from '#utils/movement/takeMovementOffer.js';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 
 	interface Recipient {
 		id: string;
-		tokenUuid: string;
 		name: string;
 		spaces: number;
 		entry: MovementOfferEntry | null;
-		canUse: boolean;
 	}
 
 	let { node }: MoveNodeProps = $props();
@@ -43,8 +39,8 @@
 	const recipients = $derived.by<Recipient[]>(() => {
 		const messageId = messageDocument?.id;
 		if (!messageId) return [];
-		// Reads go through the reactive system data so the card re-renders when
-		// a stamp lands.
+		// Read through the reactive system data so the card redraws when the
+		// finished Movement is recorded on it.
 		const message: OfferMessage = {
 			id: messageId,
 			author: messageDocument.author,
@@ -58,16 +54,11 @@
 			.filter((card) => card !== null)
 			.map((card) => ({
 				id: card.offer.id,
-				tokenUuid: card.offer.tokenUuid,
 				name: card.token.name,
 				spaces: card.offer.spaces,
 				entry: card.entry,
-				canUse: canUserTakeMovementOffer(game.user, card),
 			}));
 	});
-
-	// One drag at a time: starting a second plan would cancel the first.
-	let busy = $state(false);
 
 	function spacesText(count: number): string {
 		return localize(`NIMBLE.chat.movementOffers.${count === 1 ? 'space' : 'spaces'}`, { count });
@@ -84,7 +75,7 @@
 		const entry = recipient.entry;
 		if (!entry?.used) return null;
 		if (entry.movedSpaces === null) {
-			return localize('NIMBLE.chat.movementOffers.taken', { name: recipient.name });
+			return localize('NIMBLE.chat.movementOffers.unused', { name: recipient.name });
 		}
 		const short = Math.max(0, entry.spaces - entry.movedSpaces);
 		return entry.stopped && short > 0
@@ -110,20 +101,6 @@
 			entry.movedSpaces !== null &&
 			entry.movedSpaces < entry.spaces
 		);
-	}
-
-	async function take(recipient: Recipient) {
-		if (busy || !messageDocument?.id) return;
-		busy = true;
-		try {
-			await takeMovementOffer({
-				messageId: messageDocument.id,
-				nodeId: node.id,
-				tokenUuid: recipient.tokenUuid,
-			});
-		} finally {
-			busy = false;
-		}
 	}
 </script>
 
@@ -158,19 +135,13 @@
 						</small>
 					{/if}
 				</span>
-			{:else if offersEnabled && recipient.canUse && recipient.spaces > 0}
-				<button
-					class="nimble-button nimble-move-node__button"
-					type="button"
-					data-button-variant="card-action"
-					disabled={busy}
-					onclick={() => take(recipient)}
-				>
-					<i class="fa-solid fa-arrows-up-down-left-right" aria-hidden="true"></i>
-					{localize('NIMBLE.chat.movementOffers.moveButton', {
+			{:else if offersEnabled && recipient.spaces > 0}
+				<small class="nimble-move-node__hint">
+					{localize('NIMBLE.chat.movementOffers.dragHint', {
+						name: recipient.name,
 						distance: spacesText(recipient.spaces),
 					})}
-				</button>
+				</small>
 			{/if}
 		</div>
 	{/each}
@@ -190,10 +161,8 @@
 
 		&__recipient {
 			display: flex;
-			flex-wrap: wrap;
-			align-items: center;
-			justify-content: space-between;
-			gap: 0.375rem;
+			flex-direction: column;
+			gap: 0.125rem;
 		}
 
 		&__text,
