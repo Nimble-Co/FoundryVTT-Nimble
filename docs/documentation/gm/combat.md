@@ -107,9 +107,23 @@ The system never moves a token for anyone and never stops a drag. It measures wh
 
 ## Movement offers
 
-With the **Movement Offers** automation toggle on (the default), a feature that grants a Free Move or pushes a creature puts a **Move** button on its chat card, one per creature it applies to. The button is visible to the feature's user, to that creature's owner and to the GM. Clicking it starts a drag on the owner's client (the GM's when no owner is connected) with the ruler limited to the offered distance: whoever drags still chooses the path and the final space, or presses Escape to decline. A push ignores difficult terrain. The rules do not say what shape a push takes, so the system treats a push "away" or "toward" as one straight drag and lets a push in any direction bend; a Free Move follows the feature's wording. A feature whose distance comes to zero shows no button. The card shows the direction the feature names ("away", "toward") and who the book says chooses, but nothing enforces either. Once the drag lands, the card records how far the creature actually moved. A creature or the environment can stop a push early; when that happens the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one.
+With the **Movement Offers** automation toggle on (the default), a feature that grants a Free Move or pushes a creature makes an offer to each creature it applies to. There is nothing to click. The card names the offer, and the creature simply carries it until it is resolved.
 
-When the toggle is off, the card shows the distance as plain text and the token is dragged as usual.
+While a creature carries an offer, dragging its token moves it under that offer:
+
+- The ruler stops at the offered distance. The rest of the path draws as out of reach, so you can see where the limit falls as you drag.
+- Dropping past the limit is refused with a notice naming the feature, and the drag stays open so you can drop closer. This is deliberate: Foundry would otherwise move the token nowhere at all and say nothing.
+- The move is recorded as a Free Move or as Forced Movement, so it never draws on the creature's own speed for the turn.
+
+Whoever owns the token still does the moving and still picks the path and the final space, and may drop short. To move the creature normally while an offer stands, press **Tab** during the drag: that cycles Foundry's movement action, the limit lifts, and the card notes that the creature moved on its own. A GM with Foundry's **Unconstrained Movement** setting on is never limited.
+
+A push ignores difficult terrain; a Free Move follows the feature's wording. The card shows the direction the feature names ("away", "toward") and who the book says chooses the path, but nothing enforces either, and the rules give a push no particular shape.
+
+Once the creature finishes moving, the card records what came of the offer: the spaces it actually covered, or a note that it moved on its own and the offer went unused. A creature or the environment can stop a push early; when that happens the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one.
+
+An offer stands until the creature's next move resolves it, in the same way the other card offers wait to be used. A feature whose distance comes to zero offers nothing.
+
+When the toggle is off, nothing is limited or labelled and the card shows the distance as plain text.
 
 ## Token adjacency tracking
 
