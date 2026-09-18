@@ -62,6 +62,39 @@ export interface MovementRecord {
 	user: User;
 }
 
+export type MovementOfferKind = 'free' | 'forced';
+export type MovementDirection = 'any' | 'away' | 'toward';
+export type MovementChooser = 'mover' | 'source';
+
+/**
+ * A constrained drag offered to a token's owner. The system never moves the
+ * token: while the offer stands, the token's own drag is limited to it and
+ * labelled with its movement action.
+ */
+export interface MovementOffer {
+	id: string;
+	tokenUuid: string;
+	kind: MovementOfferKind;
+	/** Resolved maximum in spaces. The ruler shows it; the path is truncated to it. */
+	spaces: number;
+	/** Always true for forced. Free moves set it per feature. */
+	ignoreDifficultTerrain: boolean;
+	/** Shown on the card. Never enforced. */
+	direction: MovementDirection;
+	/** Who the book says picks the path. Shown on the card. */
+	chooser: MovementChooser;
+	label: string;
+	/** The card that carries the offer, or null for a macro-driven move. */
+	messageId: string | null;
+}
+
+/** Names a `move` node's offer for one recipient token on a chat card. */
+export interface MovementOfferRef {
+	messageId: string;
+	nodeId: string;
+	tokenUuid: string;
+}
+
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */
 export interface ReachChange {
 	/** The mover was outside the observer's Reach at some step and inside at a later one. */

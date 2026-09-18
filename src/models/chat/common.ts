@@ -49,6 +49,38 @@ export const grantedActionOffers = () => ({
 });
 
 /**
+ * Movement Offers taken from this card's `move` effect nodes. One entry per
+ * recipient token that started the offered drag; the active GM fills in how
+ * far the token actually moved once the drag lands.
+ */
+export const movementOffers = () => ({
+	movementOffers: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			nodeId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			tokenUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			spaces: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+			}),
+			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+			movedSpaces: new fields.NumberField({
+				required: false,
+				nullable: true,
+				initial: null,
+				integer: true,
+				min: 0,
+			}),
+			stopped: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
+});
+
+/**
  * Pending interactive offers stamped onto an attack card. Mostly defender-side
  * reactions (force reroll, redirect to self), plus attacker-side spends such as
  * `spendPoolForDamage`. Snapshotted at card creation by the attacker's client;

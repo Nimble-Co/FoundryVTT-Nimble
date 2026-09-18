@@ -105,6 +105,26 @@ With the **Movement Tracking** automation toggle on (the default), the system wa
 
 The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
 
+## Movement offers
+
+With the **Movement Offers** automation toggle on (the default), a feature that grants a Free Move or pushes a creature makes an offer to each creature it applies to. There is nothing to click. The card names the offer, and the creature simply carries it until it is resolved.
+
+While a creature carries an offer, dragging its token moves it under that offer:
+
+- The ruler stops at the offered distance. The rest of the path draws as out of reach, so you can see where the limit falls as you drag.
+- Dropping past the limit is refused with a notice naming the feature, and the drag stays open so you can drop closer. This is deliberate: Foundry would otherwise move the token nowhere at all and say nothing.
+- The move is recorded as a Free Move or as Forced Movement, so it never draws on the creature's own speed for the turn.
+
+Whoever owns the token still does the moving and still picks the path and the final space, and may drop short. To move the creature normally while an offer stands, press **Tab** during the drag: that cycles Foundry's movement action, the limit lifts, and the card notes that the creature moved on its own. A GM with Foundry's **Unconstrained Movement** setting on is never limited.
+
+A push ignores difficult terrain; a Free Move follows the feature's wording. The card shows the direction the feature names ("away", "toward") and who the book says chooses the path, but nothing enforces either, and the rules give a push no particular shape.
+
+Once the creature finishes moving, the card records what came of the offer: the spaces it actually covered, or a note that it moved on its own and the offer went unused. A creature or the environment can stop a push early; when that happens the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one.
+
+An offer stands until the creature's next move resolves it, in the same way the other card offers wait to be used. A feature whose distance comes to zero offers nothing.
+
+When the toggle is off, nothing is limited or labelled and the card shows the distance as plain text.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.

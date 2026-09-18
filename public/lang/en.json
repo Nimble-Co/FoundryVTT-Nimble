@@ -116,6 +116,25 @@
 				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
 				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
 			},
+			"movementOffers": {
+				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"offer": "{name}: up to {distance} {direction}",
+				"directions": {
+					"any": "in any direction",
+					"away": "away from {source}",
+					"toward": "toward {source}"
+				},
+				"choosers": { "mover": "{mover} chooses where.", "source": "{source} chooses where." },
+				"dragHint": "Drag {name}: the ruler stops at {distance}.",
+				"result": "{name} moved {moved} of {offered}.",
+				"unused": "{name} moved on its own, so this went unused.",
+				"resultShortened": "{name} moved {moved} of {offered}, shortened by {short}.",
+				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
+				"noRecipient": "No creature to move.",
+				"unavailable": "Nobody connected can move {name}."
+			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
@@ -2554,6 +2573,21 @@
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
+			"move": "Move",
+			"moveNode": {
+				"kind": "Kind",
+				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
+				"recipient": "Who Moves",
+				"recipients": { "self": "The user", "targets": "The targets" },
+				"distance": "Distance (spaces)",
+				"distanceHint": "A formula against the user's data: @abilities.strength.mod is their Strength modifier. @speed is the walk speed of the creature that moves.",
+				"distanceBySize": "Distance by size (optional)",
+				"ignoreDifficultTerrain": "Ignore difficult terrain",
+				"direction": "Direction",
+				"directions": { "any": "Any", "away": "Away", "toward": "Toward" },
+				"chooser": "Who chooses the path",
+				"choosers": { "mover": "The mover", "source": "The user of the feature" }
+			},
 			"note": "Note",
 			"pool": "Pool",
 			"onFailedSave": "On Failed Save",
@@ -2584,6 +2618,7 @@
 			"noteType": "Note Type",
 			"deleteDamage": "Delete damage roll",
 			"deleteCondition": "Delete condition",
+			"deleteMove": "Delete move",
 			"deleteDamageOutcome": "Delete Damage Outcome",
 			"deleteNote": "Delete Note",
 			"deleteHealing": "Delete healing roll",
@@ -2984,6 +3019,10 @@
 			"chatNotifications": {
 				"name": "Chat Notifications",
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
+			},
+			"movementOffers": {
+				"name": "Movement Offers",
+				"hint": "When a feature grants a Free Move or pushes a creature, put a Move button on the chat card that starts a drag limited to the offered distance on the owner's client. When off, the card shows the distance as text and the token is dragged as usual."
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",
@@ -3577,6 +3616,9 @@
 			"actions": {
 				"free": "Free Move",
 				"forced": "Forced Movement"
+			},
+			"offers": {
+				"tooFar": "{name} was offered {spaces} spaces by {label}. Drop inside the ruler, or press Tab during the drag to move normally."
 			}
 		}
 	}
