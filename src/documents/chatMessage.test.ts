@@ -1379,6 +1379,65 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 	});
 });
 
+describe('NimbleChatMessage.effectNodes', () => {
+	function spellCard(damageOverrides: Record<string, unknown> = {}) {
+		return new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: [],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d6',
+							damageType: 'slashing',
+							canCrit: true,
+							canMiss: true,
+							roll: { class: 'DamageRoll', total: 5 },
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{
+										id: 'dmg-hit',
+										type: 'damageOutcome',
+										outcome: 'fullDamage',
+										parentNode: 'dmg',
+										parentContext: 'hit',
+									},
+								],
+							},
+							...damageOverrides,
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	function damageIds(message: NimbleChatMessage) {
+		return message.effectNodes
+			.flat()
+			.filter((node) => node.type === 'damage' || node.type === 'damageOutcome')
+			.map((node) => node.id);
+	}
+
+	it('shows the damage roll once on a hit', () => {
+		expect(damageIds(spellCard())).toEqual(['dmg-hit']);
+	});
+
+	it('shows the damage roll once when Target Disposition is Any', () => {
+		expect(damageIds(spellCard({ targetDisposition: 'any' }))).toEqual(['dmg-hit']);
+	});
+
+	it('shows the damage roll once when Target Disposition is Hostile', () => {
+		expect(damageIds(spellCard({ targetDisposition: 'hostile' }))).toEqual(['dmg-hit']);
+	});
+});
+
 describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();

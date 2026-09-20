@@ -1,4 +1,5 @@
 import type { EffectNode } from '#types/effectTree.d.js';
+import { hasDispositionTarget } from './hasDispositionTarget.js';
 
 /**
  * Traverses the tree and collects nodes based on the specified contexts.
@@ -18,15 +19,19 @@ export function findNodesByContexts(
 
 	function traverse(node: EffectNode) {
 		if (!node.parentNode) {
-			const hasTargetDisposition = 'targetDisposition' in node && node.targetDisposition != null;
-			if (node.type === 'damage' && (hasTargetDisposition || node.deferredRoll)) {
+			if (node.type === 'damage') {
+				// An outcome child carries the same roll, so a node that has one for
+				// this context is already on the card and must not be added again.
+				const surfacedByOutcome = contexts.some((context) => node.on?.[context]?.length);
+
 				// Disposition-targeted damage is a deliberate UI action, always present
-				// it. Deferred damage likewise: it has no outcome child to surface it,
-				// and its Roll Damage button lives on the node itself.
-				result.push(node);
-			} else if (includeBaseDamageNodes && node.type === 'damage') {
-				result.push(node);
-			} else if (!includeBaseNodes && node.type !== 'damage') {
+				// it. Deferred damage likewise: its Roll Damage button lives on the node
+				// itself.
+				const standsAlone =
+					hasDispositionTarget(node) || node.deferredRoll || includeBaseDamageNodes;
+
+				if (!surfacedByOutcome && standsAlone) result.push(node);
+			} else if (!includeBaseNodes) {
 				result.push(node);
 			}
 		}

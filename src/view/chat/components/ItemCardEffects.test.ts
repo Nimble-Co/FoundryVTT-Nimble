@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
 import ItemCardEffectsTestHarness from './ItemCardEffects.testHarness.svelte';
 
 /**
@@ -159,5 +160,79 @@ describe('ItemCardEffects apply-damage controls', () => {
 		});
 
 		expect(applyButtons()).toHaveLength(0);
+	});
+});
+
+/**
+ * One damage roll on the card per damage roll on the item, whatever the node
+ * carries. A homebrew attack spell's damage reaches the card through its on-hit
+ * outcome child, so the node it hangs off must not draw a box of its own.
+ */
+describe('ItemCardEffects damage boxes', () => {
+	let previousDamageTypes: unknown;
+
+	beforeEach(() => {
+		previousDamageTypes = CONFIG.NIMBLE.damageTypes;
+		CONFIG.NIMBLE.damageTypes = {
+			slashing: 'Slashing',
+		} as unknown as typeof CONFIG.NIMBLE.damageTypes;
+	});
+
+	afterEach(() => {
+		CONFIG.NIMBLE.damageTypes = previousDamageTypes as typeof CONFIG.NIMBLE.damageTypes;
+	});
+
+	function attackSpellEffects(overrides: Record<string, unknown> = {}) {
+		return [
+			{
+				id: 'dmg',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentNode: null,
+				parentContext: null,
+				roll: damageRoll(5),
+				on: {
+					hit: [
+						{
+							id: 'dmg-hit',
+							type: 'damageOutcome',
+							outcome: 'fullDamage',
+							parentNode: 'dmg',
+							parentContext: 'hit',
+						},
+					],
+				},
+				...overrides,
+			},
+		];
+	}
+
+	function renderHit(effects: unknown[]) {
+		const groups = getRelevantNodes(effects as never, ['hit']);
+
+		render(ItemCardEffectsTestHarness, {
+			props: { messageDocument: createMessage(groups, effects), effects },
+		});
+	}
+
+	it('draws one damage box for a plain attack spell', () => {
+		renderHit(attackSpellEffects());
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+	});
+
+	it('draws one damage box when Target Disposition is Any', () => {
+		renderHit(attackSpellEffects({ targetDisposition: 'any' }));
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+	});
+
+	it('draws one damage box when Target Disposition is Hostile', () => {
+		renderHit(attackSpellEffects({ targetDisposition: 'hostile' }));
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
 	});
 });
