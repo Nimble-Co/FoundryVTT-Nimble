@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import type { DamageNode, DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from './getRelevantNodes.js';
 
