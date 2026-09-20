@@ -335,14 +335,16 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	//                 Data Functions
 	/** ------------------------------------------------------ */
 
+	/**
+	 * Equipping an object switches its rules on, unequipping switches them off. Both
+	 * go in one update: written separately, a rejected second write would leave the
+	 * object equipped with its rules off, or stowed with them still running.
+	 */
 	async toggleEquipment(): Promise<void> {
 		const newEquippedState = !this.system.equipped;
-		const rulesUpdated = newEquippedState
-			? await this.rules.enableAllRules()
-			: await this.rules.disableAllRules();
-		if (!rulesUpdated) return;
 
 		await this.update({
+			'system.rules': this.rules.withAllRulesDisabled(!newEquippedState),
 			'system.equipped': newEquippedState,
 		} as Record<string, unknown>);
 	}

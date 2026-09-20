@@ -425,6 +425,49 @@ describe('NimbleObjectItem._preDelete', () => {
 	});
 });
 
+/**
+ * Equipping writes the rules and the equipped flag together. Two writes could half
+ * succeed, so what these assert is the single `update` as much as its contents.
+ */
+describe('NimbleObjectItem.toggleEquipment', () => {
+	function makeEquippable(equipped: boolean) {
+		const update = vi.fn(async () => undefined);
+		const withAllRulesDisabled = vi.fn((disabled: boolean) => [
+			{ id: 'rule-1', type: 'armorClass', disabled },
+		]);
+		const item = { system: { equipped }, rules: { withAllRulesDisabled }, update };
+
+		return {
+			update,
+			toggle: () => NimbleObjectItem.prototype.toggleEquipment.call(item as never),
+		};
+	}
+
+	it('equips and enables the rules in one write', async () => {
+		const { update, toggle } = makeEquippable(false);
+
+		await toggle();
+
+		expect(update).toHaveBeenCalledTimes(1);
+		expect(update).toHaveBeenCalledWith({
+			'system.rules': [{ id: 'rule-1', type: 'armorClass', disabled: false }],
+			'system.equipped': true,
+		});
+	});
+
+	it('unequips and disables the rules in one write', async () => {
+		const { update, toggle } = makeEquippable(true);
+
+		await toggle();
+
+		expect(update).toHaveBeenCalledTimes(1);
+		expect(update).toHaveBeenCalledWith({
+			'system.rules': [{ id: 'rule-1', type: 'armorClass', disabled: true }],
+			'system.equipped': false,
+		});
+	});
+});
+
 describe('NimbleObjectItem._preCreate stacking', () => {
 	type PreCreateHost = { _preCreate?: ReturnType<typeof vi.fn> };
 	let basePreCreate: ReturnType<typeof vi.fn>;
