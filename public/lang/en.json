@@ -535,6 +535,8 @@
 			"capacity": "Capacity",
 			"capacityHint": "How many slots' worth of objects fit inside. Leave blank for no limit.",
 			"capacityUsage": "{used} / {capacity} slots stored",
+			"deleteStocked": "Deleting {container} will empty it. The {count} objects inside go back into the inventory. Continue?",
+			"deleteStockedTitle": "Delete a container that holds objects",
 			"empty": "Nothing stored",
 			"enabled": "This Object Is A Container",
 			"enabledHint": "Objects can be dropped into this one, and this object's rule changes what they cost their carrier.",

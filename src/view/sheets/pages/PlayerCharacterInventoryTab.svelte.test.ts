@@ -59,16 +59,18 @@ function renderWithContainers(
 	handlers: {
 		storeItemInContainer?: ReturnType<typeof vi.fn>;
 		removeItemFromContainer?: ReturnType<typeof vi.fn>;
+		onDropItem?: ReturnType<typeof vi.fn>;
 	} = {},
 ) {
 	const storeItemInContainer = handlers.storeItemInContainer ?? vi.fn();
 	const removeItemFromContainer = handlers.removeItemFromContainer ?? vi.fn();
+	const onDropItem = handlers.onDropItem ?? vi.fn(() => []);
 
 	const result = render(PlayerCharacterInventoryTabHarness, {
-		props: { items, storeItemInContainer, removeItemFromContainer },
+		props: { items, storeItemInContainer, removeItemFromContainer, onDropItem },
 	});
 
-	return { ...result, storeItemInContainer, removeItemFromContainer };
+	return { ...result, storeItemInContainer, removeItemFromContainer, onDropItem };
 }
 
 function getRow(container: HTMLElement, itemId: string): HTMLElement {
@@ -218,6 +220,32 @@ describe('PlayerCharacterInventoryTab containers', () => {
 		await fireEvent.drop(getRow(container, 'armor'));
 
 		expect(storeItemInContainer).toHaveBeenCalledWith('sword', 'bag');
+	});
+
+	it('keeps an item dragged in from outside once the container takes it', async () => {
+		const created = { id: 'potion', type: 'object', delete: vi.fn() };
+		const { container } = renderWithContainers([bagOfHolding], {
+			onDropItem: vi.fn(() => [created]),
+			storeItemInContainer: vi.fn(async () => true),
+		});
+
+		mockDraggedItem('Compendium.nimble.objects.potion');
+		await fireEvent.drop(getRow(container, 'bag'));
+
+		expect(created.delete).not.toHaveBeenCalled();
+	});
+
+	it('deletes an item dragged in from outside when the container refuses it', async () => {
+		const created = { id: 'potion', type: 'object', delete: vi.fn() };
+		const { container } = renderWithContainers([bagOfHolding], {
+			onDropItem: vi.fn(() => [created]),
+			storeItemInContainer: vi.fn(async () => false),
+		});
+
+		mockDraggedItem('Compendium.nimble.objects.potion');
+		await fireEvent.drop(getRow(container, 'bag'));
+
+		expect(created.delete).toHaveBeenCalled();
 	});
 
 	it('offers no equip toggle for a stored object', () => {

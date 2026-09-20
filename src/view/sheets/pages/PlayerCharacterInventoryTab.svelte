@@ -184,7 +184,9 @@
 
 	/**
 	 * An item from outside the sheet is created the usual way first, then stored, so
-	 * a drag straight from a compendium into a bag lands in the bag.
+	 * a drag straight from a compendium into a bag lands in the bag. A container that
+	 * refuses the item has already said why, so the item it was dropped as is taken
+	 * back out rather than left loose in the inventory the player did not aim for.
 	 */
 	async function createDroppedItemInContainer(
 		event: DragEvent,
@@ -196,7 +198,9 @@
 
 		for (const createdItem of createdItems) {
 			if (createdItem?.type !== 'object') continue;
-			await actor.storeItemInContainer(createdItem.id, containerId);
+			if (await actor.storeItemInContainer(createdItem.id, containerId)) continue;
+
+			await createdItem.delete();
 		}
 	}
 

@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import type { ContainableObject } from '#utils/inventoryContainers.js';
 import { NimbleCharacter } from './character.js';
 

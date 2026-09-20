@@ -15,12 +15,14 @@
 		storeItemInContainer = () => {},
 		removeItemFromContainer = () => {},
 		onDragStart = () => {},
+		onDropItem = () => [],
 	}: {
 		items?: HarnessItem[];
 		updateItem?: (id: string, changes: Record<string, unknown>) => unknown;
 		storeItemInContainer?: (itemId: string, containerId: string) => unknown;
 		removeItemFromContainer?: (itemId: string) => unknown;
 		onDragStart?: (event: DragEvent) => unknown;
+		onDropItem?: (event: DragEvent, dropData: Record<string, unknown>) => unknown;
 	} = $props();
 
 	const containerDefaults = {
@@ -85,7 +87,7 @@
 	setContext('actor', actor);
 	setContext('application', {
 		_onDragStart: untrack(() => onDragStart),
-		_onDropItem: () => {},
+		_onDropItem: untrack(() => onDropItem),
 		_onSortItem: () => {},
 		clearDroppedItemFlash: () => {},
 	});
