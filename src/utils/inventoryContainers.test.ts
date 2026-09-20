@@ -1,5 +1,3 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import {
 	applyContainerSlotRule,
 	type ContainableObject,
@@ -64,13 +62,12 @@ describe('getBaseSlotCost', () => {
 		expect(getBaseSlotCost(makeObject('coin', { objectSizeType: 'smallSized' }))).toBeNull();
 	});
 
-	it('charges nothing and warns for an unrecognised size type', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	it('throws for an unrecognised size type', () => {
+		const broken = makeObject('broken', {
+			objectSizeType: 'nonsense' as ContainableObject['system']['objectSizeType'],
+		});
 
-		expect(getBaseSlotCost(makeObject('broken', { objectSizeType: 'nonsense' }))).toBe(0);
-		expect(warn).toHaveBeenCalled();
-
-		warn.mockRestore();
+		expect(() => getBaseSlotCost(broken)).toThrow(/nonsense/);
 	});
 });
 

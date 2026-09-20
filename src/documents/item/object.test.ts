@@ -1,5 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { SYSTEM_ID } from '#system';
 
 import { NimbleBaseItem } from './base.svelte.js';
@@ -358,57 +356,71 @@ function attachActor(items: NimbleObjectItem[]) {
 	return { actor, updateEmbeddedDocuments };
 }
 
-const DELETING_USER = 'test-user-id';
+const DELETING_USER = { id: 'test-user-id' } as never;
 
-describe('NimbleObjectItem._onDelete', () => {
-	let baseOnDelete: ReturnType<typeof vi.spyOn>;
+describe('NimbleObjectItem._preDelete', () => {
+	type PreDeleteHost = { _preDelete?: ReturnType<typeof vi.fn> };
+	let basePreDelete: ReturnType<typeof vi.fn>;
+	const confirmDialog = vi.mocked(foundry.applications.api.DialogV2.confirm);
 
+	// `_preDelete` lives on Foundry's own Item, above NimbleBaseItem, so there is
+	// nothing to spy on under the test mock. Stand one in for the block instead.
 	beforeEach(() => {
 		vi.restoreAllMocks();
-		baseOnDelete = vi.spyOn(NimbleBaseItem.prototype, '_onDelete').mockImplementation(() => {});
+		confirmDialog.mockReset();
+		basePreDelete = vi.fn(async () => undefined);
+		(NimbleBaseItem.prototype as unknown as PreDeleteHost)._preDelete = basePreDelete;
 	});
 
-	it('clears the container reference on everything the deleted container held', () => {
+	afterEach(() => {
+		delete (NimbleBaseItem.prototype as unknown as PreDeleteHost)._preDelete;
+	});
+
+	it('clears the container reference on everything the deleted container held', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		const sword = createObject('sword');
 		const { updateEmbeddedDocuments } = attachActor([bag, armor, sword]);
+		confirmDialog.mockResolvedValue(true);
 
-		bag._onDelete({}, DELETING_USER);
+		await bag._preDelete({} as never, DELETING_USER);
 
-		expect(baseOnDelete).toHaveBeenCalled();
+		expect(basePreDelete).toHaveBeenCalled();
 		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
 			{ _id: 'armor', 'system.containerId': '' },
 		]);
 	});
 
-	it('leaves the updates to the deleting client, so they happen once', () => {
+	it('cancels the deletion and writes nothing when the confirmation is declined', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+		confirmDialog.mockResolvedValue(false);
 
-		bag._onDelete({}, 'a-different-user');
-
+		expect(await bag._preDelete({} as never, DELETING_USER)).toBe(false);
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(basePreDelete).not.toHaveBeenCalled();
 	});
 
-	it('writes nothing when the deleted container was empty', () => {
+	it('writes nothing and asks nothing when the deleted container was empty', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const sword = createObject('sword');
 		const { updateEmbeddedDocuments } = attachActor([bag, sword]);
 
-		bag._onDelete({}, DELETING_USER);
+		await bag._preDelete({} as never, DELETING_USER);
 
+		expect(confirmDialog).not.toHaveBeenCalled();
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
-	it('writes nothing when the deleted object was never a container', () => {
+	it('writes nothing when the deleted object was never a container', async () => {
 		const sword = createObject('sword');
 		const chalk = createObject('chalk', { containerId: 'sword' });
 		const { updateEmbeddedDocuments } = attachActor([sword, chalk]);
 
-		sword._onDelete({}, DELETING_USER);
+		await sword._preDelete({} as never, DELETING_USER);
 
+		expect(confirmDialog).not.toHaveBeenCalled();
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });

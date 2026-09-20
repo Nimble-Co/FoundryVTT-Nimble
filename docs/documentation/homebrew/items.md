@@ -56,8 +56,8 @@ inventory items onto its row on the character sheet and the contents appear nest
 A container always costs its own inventory slots. **Stored Object Slot Cost** decides what the
 objects inside cost their carrier:
 
-- **Normal slot cost**: nothing changes. This is the mundane case — a chest, a backpack, a belt
-  pouch — where the container organises the sheet and that is all. It is the default.
+- **Normal slot cost**: nothing changes. This is the mundane case of a chest, a backpack or a belt
+  pouch, where the container organises the sheet and that is all. It is the default.
 - **Ignore slot cost**: stored objects cost nothing. This is the Bag of Holding: the bag takes its
   one slot, and a suit of plate armor inside it takes none.
 - **Half slot cost**: stored objects count for half. Halves are added up before the total is
@@ -65,8 +65,8 @@ objects inside cost their carrier:
 - **Reduce slot cost**: stored objects cost their own slots minus **Slots Reduced By**, never less
   than zero.
 
-Small items have no slot cost of their own — every small item a character carries shares one slot
-— so only **Ignore slot cost** takes them out of that shared slot. Halving or reducing leaves them
+Small items have no slot cost of their own, because every small item a character carries shares one
+slot. Only **Ignore slot cost** takes them out of that shared slot. Halving or reducing leaves them
 in it.
 
 Three more fields limit what the container will take:
@@ -84,19 +84,20 @@ Some worked settings:
 
 | Container | Stored Object Slot Cost | Other settings |
 |---|---|---|
-| Chest, crate, backpack, belt pouch | Normal slot cost | — |
+| Chest, crate, backpack, belt pouch | Normal slot cost | No additional settings |
 | Bag of holding, portable hole | Ignore slot cost | A **Capacity** if the bag has a stated limit |
 | Handy haversack | Ignore slot cost | **Capacity** for the compartment total |
 | Quiver, bandolier | Normal slot cost | **Allowed Object Types** set to Weapon |
 | Harness worn over armor | Whatever the item grants | **Only Apply While Equipped** ticked |
 
-Containers cannot be nested inside one another. Deleting a container leaves its contents in the
-inventory, back at their own slot cost.
+Containers cannot be nested inside one another. Deleting a container that still holds something
+asks for confirmation first, then leaves its contents in the inventory, back at their own slot
+cost.
 
 Two more consequences worth knowing:
 
 - **A stored object cannot be equipped.** It is packed away. Dragging an equipped weapon or suit
-  of armor into a container asks for confirmation first, then unequips it — which also switches
+  of armor into a container asks for confirmation first, then unequips it, which also switches
   off any rules that item was granting. Stored rows show a quantity field instead of an equip
   toggle.
 - **Stacks stay separate per container.** Arrows in a quiver and arrows carried loose are two

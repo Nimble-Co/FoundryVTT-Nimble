@@ -1,5 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
 import type { ContainableObject } from '#utils/inventoryContainers.js';
 import { NimbleCharacter } from './character.js';
 

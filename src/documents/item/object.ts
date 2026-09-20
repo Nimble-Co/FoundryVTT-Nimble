@@ -30,6 +30,20 @@ async function waitForDiceAnimation(messageId: string | undefined): Promise<void
 	await dice3d?.waitFor3DAnimationByMessageID?.(messageId);
 }
 
+async function confirmDeleteStockedContainer(name: string, storedCount: number): Promise<boolean> {
+	return Boolean(
+		await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize('NIMBLE.containers.deleteStockedTitle') },
+			content: `<p>${localize('NIMBLE.containers.deleteStocked', {
+				container: name,
+				count: String(storedCount),
+			})}</p>`,
+			rejectClose: false,
+			modal: true,
+		}),
+	);
+}
+
 type RuleSourceLike = {
 	disabled?: boolean;
 	[key: string]: unknown;
@@ -148,28 +162,30 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	 * they stop pointing at an item that no longer exists and go back to costing
 	 * their own slots.
 	 *
-	 * `_onDelete` fires on every connected client; only the initiating user runs
-	 * the updates so they happen once, from a client that owns the actor.
+	 * Emptying a container is a surprise when the player only meant to bin the bag,
+	 * so a container holding anything asks first. `_preDelete` runs on the deleting
+	 * client alone and is awaited, so the contents are freed before the container
+	 * goes and a refusal here cancels the deletion.
 	 */
-	override _onDelete(options, userId: string): void {
-		super._onDelete(options, userId);
-
+	override async _preDelete(options: Item.Database.PreDeleteOptions, user: User.Stored) {
 		const actor = this.actor;
-		if (!actor || !this.system.container.enabled) return;
-		if (game.user?.id !== userId) return;
+		if (!actor || !this.system.container.enabled) return super._preDelete(options, user);
 
-		const contents: Array<Record<string, unknown>> = [];
+		const contents = actor.items
+			.filter(
+				(item) =>
+					item.type === 'object' &&
+					(item as unknown as NimbleObjectItem).system.containerId === this.id,
+			)
+			.map((item) => ({ _id: item.id, 'system.containerId': '' }));
 
-		actor.items.forEach((item) => {
-			if (item.type !== 'object') return;
-			if ((item as unknown as NimbleObjectItem).system.containerId !== this.id) return;
+		if (contents.length === 0) return super._preDelete(options, user);
 
-			contents.push({ _id: item.id, 'system.containerId': '' });
-		});
+		if (!(await confirmDeleteStockedContainer(this.name, contents.length))) return false;
 
-		if (contents.length === 0) return;
+		await actor.updateEmbeddedDocuments('Item', contents as Item.UpdateData[]);
 
-		actor.updateEmbeddedDocuments('Item', contents as Item.UpdateData[]);
+		return super._preDelete(options, user);
 	}
 
 	/**

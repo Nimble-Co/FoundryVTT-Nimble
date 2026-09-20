@@ -1,5 +1,7 @@
 export type ContainerSlotCostMode = 'none' | 'ignore' | 'reduce' | 'half';
 
+export type ObjectSizeType = 'slots' | 'stackable' | 'smallSized';
+
 export interface ContainerConfig {
 	enabled: boolean;
 	slotCostMode: ContainerSlotCostMode;
@@ -15,7 +17,7 @@ export interface ContainableObject {
 	name: string;
 	system: {
 		objectType: string;
-		objectSizeType: string;
+		objectSizeType: ObjectSizeType;
 		slotsRequired: number;
 		quantity: number;
 		stackSize: number;
@@ -41,11 +43,9 @@ export function getBaseSlotCost(object: ContainableObject): number | null {
 		case 'smallSized':
 			return null;
 		default:
-			console.warn(
-				"Nimble | Can't calculate slots used for object size type",
-				object.system.objectSizeType,
+			throw new Error(
+				`Nimble | Can't calculate slots used for object size type ${object.system.objectSizeType}`,
 			);
-			return 0;
 	}
 }
 
