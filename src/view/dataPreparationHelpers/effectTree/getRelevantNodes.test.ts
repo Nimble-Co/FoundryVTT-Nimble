@@ -86,8 +86,6 @@ describe('getRelevantNodes', () => {
 	});
 
 	it('still shows a disposition-targeted node whose only On Hit child is a condition', () => {
-		// Only an outcome child stands in for the roll. A condition, a note or a
-		// second damage packet under the same bucket says nothing about it.
 		const effects = attackSpellEffects({
 			targetDisposition: 'hostile',
 			on: {
@@ -129,7 +127,22 @@ describe('getRelevantNodes', () => {
 	});
 
 	it('still shows a deferred damage node, which carries its own Roll Damage button', () => {
-		const effects = attackSpellEffects({ deferredRoll: true, on: undefined });
+		// The shape the effects builder makes: Roll Damage From Card ticked on a
+		// node that already has its default On Hit outcome child. The child has no
+		// roll to stand in with yet, so the node itself must reach the card.
+		const effects = attackSpellEffects({ deferredRoll: true, roll: undefined });
+
+		expect(damageIds(getRelevantNodes(effects, ['hit']))).toContain('root-damage');
+	});
+
+	it('shows a deferred damage node once the roll has landed', () => {
+		const effects = attackSpellEffects({ deferredRoll: true });
+
+		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual(['root-damage-hit']);
+	});
+
+	it('still shows a deferred damage node that has no outcome child', () => {
+		const effects = attackSpellEffects({ deferredRoll: true, roll: undefined, on: undefined });
 
 		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual(['root-damage']);
 	});

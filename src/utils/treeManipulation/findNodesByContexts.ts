@@ -28,13 +28,16 @@ export function findNodesByContexts(
 					node.on?.[context]?.some((child) => child.type === 'damageOutcome'),
 				);
 
-				// Disposition-targeted damage is a deliberate UI action, always present
-				// it. Deferred damage likewise: its Roll Damage button lives on the node
-				// itself.
+				// Deferred damage that has not landed yet has no roll for an outcome
+				// child to stand in with, and its Roll Damage button lives on the node
+				// itself. Mirrors `awaitingRoll` in DamageNode.svelte.
+				const awaitingDeferredRoll = node.deferredRoll === true && !node.roll?.class;
+
+				// Disposition-targeted damage is a deliberate UI action, always present it.
 				const standsAlone =
 					hasDispositionTarget(node) || node.deferredRoll || includeBaseDamageNodes;
 
-				if (!surfacedByOutcome && standsAlone) result.push(node);
+				if (awaitingDeferredRoll || (!surfacedByOutcome && standsAlone)) result.push(node);
 			} else if (!includeBaseNodes) {
 				result.push(node);
 			}
