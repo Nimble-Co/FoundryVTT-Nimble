@@ -18,7 +18,7 @@
 	// each target rolls.
 	const targetDisposition = $derived.by(() => {
 		const dispositions = new Set(
-			nodes.filter((node) => hasDispositionTarget(node)).map((node) => node.targetDisposition),
+			nodes.filter(hasDispositionTarget).map((node) => node.targetDisposition),
 		);
 		return dispositions.size === 1 ? [...dispositions][0] : undefined;
 	});
