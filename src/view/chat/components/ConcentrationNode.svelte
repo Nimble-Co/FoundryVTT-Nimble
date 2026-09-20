@@ -31,8 +31,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		background: var(--nimble-color-primary-alpha);
-		color: var(--nimble-color-primary);
+		background: var(--nimble-chat-concentration-background);
+		color: var(--nimble-chat-concentration-color);
 		font-weight: 600;
 		text-align: center;
 	}

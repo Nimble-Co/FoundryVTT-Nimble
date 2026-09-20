@@ -1,4 +1,4 @@
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 
 export interface ConditionDuration {
 	rounds?: number | null;
@@ -16,6 +16,11 @@ export interface AppliedConditionEffect {
 	updateSource(data: Record<string, unknown>): unknown;
 	/** The stored source, which is what gets written when the effect is created. */
 	toObject?(): Record<string, unknown>;
+}
+
+/** An effect a new application supersedes, which it must be able to remove and put back. */
+export interface ReplaceableConditionEffect extends AppliedConditionEffect {
+	delete(): Promise<unknown>;
 }
 
 /**
@@ -44,6 +49,15 @@ export interface ApplyConditionOptions {
 	duration?: ConditionDuration | null;
 	/** Opaque context forwarded verbatim to both condition hooks. */
 	rule?: unknown;
+	/** System flags stamped on the created effect, under the system's flag scope. */
+	systemFlags?: Record<string, unknown> | null;
+	/**
+	 * The effects this application supersedes. Passing them hands the caller the
+	 * duplicate decision: the target may already carry the condition, and only
+	 * these instances are removed. They go once the application is allowed, and
+	 * come back if creating the replacement fails.
+	 */
+	replaces?: ReplaceableConditionEffect[] | null;
 }
 
 interface StatusEffectEntry {
@@ -151,6 +165,7 @@ async function createConditionEffect(
 	if (origin) patch.origin = origin;
 	const duration = buildDurationPatch(options.duration);
 	if (duration) patch.duration = duration;
+	if (options.systemFlags) patch[`flags.${SYSTEM_ID}`] = options.systemFlags;
 	if (Object.keys(patch).length > 0) effect.updateSource(patch);
 
 	const created = await activeEffectClass.create(effect.toObject?.() ?? effect, {
@@ -161,12 +176,63 @@ async function createConditionEffect(
 }
 
 /**
+ * Remove the superseded effects, keeping their stored sources so a failed
+ * replacement can put them back exactly as they were.
+ */
+async function removeReplacedEffects(
+	replaces: ReplaceableConditionEffect[] | null | undefined,
+): Promise<Record<string, unknown>[]> {
+	if (!replaces?.length) return [];
+
+	const sources: Record<string, unknown>[] = [];
+
+	for (const effect of replaces) {
+		const source = effect.toObject?.();
+		await effect.delete();
+		if (source) sources.push(source);
+	}
+
+	return sources;
+}
+
+/**
+ * Put back what `removeReplacedEffects` took, so a caster whose replacement was
+ * refused keeps the concentration they had rather than ending with none.
+ */
+async function restoreReplacedEffects(
+	target: ConditionTargetActor,
+	sources: Record<string, unknown>[],
+): Promise<void> {
+	if (sources.length === 0) return;
+
+	const activeEffectClass = (
+		ActiveEffect as unknown as {
+			implementation: {
+				create(
+					data: Record<string, unknown>,
+					operation: { parent: unknown; keepId: boolean },
+				): Promise<unknown>;
+			};
+		}
+	).implementation;
+
+	for (const source of sources) {
+		try {
+			await activeEffectClass.create(source, { parent: target, keepId: true });
+		} catch (error) {
+			console.error('Nimble | Could not restore a replaced condition.', error);
+		}
+	}
+}
+
+/**
  * Apply a single condition to a single actor, recording what caused it.
  *
  * Going through here gives a caller one set of guarantees: no duplicate
  * application, a blocking `preApplyCondition` hook that condition immunity
  * listens on, a recorded origin, an optional duration, and a `conditionApplied`
- * hook once the effect exists.
+ * hook once the effect exists. A caller replacing instances it names keeps the
+ * duplicate decision and gets the swap done transactionally.
  *
  * @returns the created effect, or `null` when nothing was applied.
  */
@@ -176,7 +242,7 @@ export default async function applyConditionToActor(
 	options: ApplyConditionOptions = {},
 ): Promise<AppliedConditionEffect | null> {
 	if (!target || !conditionId) return null;
-	if (targetAlreadyHasCondition(target, conditionId)) return null;
+	if (!options.replaces && targetAlreadyHasCondition(target, conditionId)) return null;
 
 	const source = options.sourceItem ?? options.sourceActor ?? null;
 
@@ -191,7 +257,15 @@ export default async function applyConditionToActor(
 	});
 	if (allowed === false) return null;
 
-	const effect = await createConditionEffect(target, conditionId, options);
+	const replacedSources = await removeReplacedEffects(options.replaces);
+
+	let effect: AppliedConditionEffect | null;
+	try {
+		effect = await createConditionEffect(target, conditionId, options);
+	} catch (error) {
+		await restoreReplacedEffects(target, replacedSources);
+		throw error;
+	}
 
 	// @ts-expect-error - conditionApplied is a custom system hook
 	Hooks.callAll(systemHookName('conditionApplied'), {

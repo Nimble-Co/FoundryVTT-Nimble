@@ -25,13 +25,17 @@ Some conditions come bundled together, and the system tracks the relationships f
 
 ## Concentration
 
-Concentration applies itself. Casting a spell whose **Concentration** property is ticked puts the Concentration condition on the caster as the chat card posts, and the card says **Concentrating** so the player can see it took. No GM click is involved, and it happens whether the spell targets an ally, several creatures, or nobody at all — the condition always lands on the caster, never on the targets.
+Concentration applies itself. Casting a spell whose **Concentration** property is ticked puts the Concentration condition on the caster as the chat card posts, and the card says **Concentration Applied** so the player can see it took. No GM click is involved, and it happens whether the spell targets an ally, several creatures, or nobody at all. The condition always lands on the caster, never on the targets. If the condition cannot be applied, the card says nothing and the caster gets a warning instead.
 
-A caster holds one concentration at a time. Casting a second concentration spell ends the first: the old condition is removed and a new one applied, credited to the new spell.
+A caster holds one concentration at a time. Casting a second concentration spell ends the first: the old condition is removed and a new one applied, credited to the new spell. If the new one is refused, the first is left where it was.
+
+The rulebook says a character can only concentrate on one activity at a time, but it does not say what happens when they start a second. Replacing the first is the system's reading of that, not printed text.
+
+**Casters who concentrate on more than one thing.** A feature can give a spell school a concentration of its own. Stormshifter's **Master of Storm** does this for Lightning and Wind, so casting a Wind spell leaves a Lightning concentration alone and the other way round. Every school no feature names shares a single concentration, exactly as it does for a caster with no such feature. Homebrewers get this through the [Concentration Track](../reference/rules-conditions.md#concentration-track) rule.
 
 This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
 
-What the system does *not* do is break concentration for you. Losing it when crit (a DC 10 STR save), at 0 HP, or when Incapacitated is still yours to track — remove the condition by hand when it ends.
+What the system does *not* do is break concentration for you. Losing it when crit (a DC 10 STR save), at 0 HP, or when Incapacitated is still yours to track. Remove the condition by hand when it ends.
 
 ## Custom conditions
 

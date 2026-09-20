@@ -1,11 +1,107 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import applyCasterConcentration from '../../utils/applyCasterConcentration.js';
+import applyConditionToActor, {
+	type ReplaceableConditionEffect,
+} from '../../utils/applyConditionToActor.js';
+import { getSpellScrollData } from '../../utils/createScrollFromSpell.js';
+
+const CONCENTRATION_PROPERTY_TAG = 'property:concentration';
+
+const SPELL_SCHOOL_TAG_PREFIX = 'school:';
+
+/** The track a school with no rule of its own shares with every other such school. */
+const DEFAULT_CONCENTRATION_TRACK = 'default';
+
+/** The card types whose schema carries `system.concentration`. */
+const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
+
+/** An actor whose concentration this reads and replaces. */
+interface ConcentratingActor {
+	uuid?: string | null;
+	system?: { concentrationTracks?: Set<string> };
+	statuses?: Set<string>;
+	effects?: Iterable<
+		ReplaceableConditionEffect & { getFlag?(scope: string, key: string): unknown }
+	>;
+}
+
+/** The item being activated, as the concentration path reads it. */
+interface ConcentrationSource {
+	uuid?: string | null;
+	type?: unknown;
+	flags?: Record<string, unknown>;
+	tags: Set<string>;
+	actor?: ConcentratingActor | null;
+}
+
+/** The school of the spell being cast, read off a scroll's inscription when it is one. */
+function activatedSpellSchool(item: ConcentrationSource): string | null {
+	for (const tag of item.tags) {
+		if (tag.startsWith(SPELL_SCHOOL_TAG_PREFIX)) return tag.slice(SPELL_SCHOOL_TAG_PREFIX.length);
+	}
+
+	return getSpellScrollData(item)?.school ?? null;
+}
+
+/**
+ * The concentration this cast competes with. A `concentrationTrack` rule gives the
+ * schools it names a track of their own, so a caster with one can hold a
+ * concentration in each; every other school shares the default track.
+ */
+function concentrationTrack(item: ConcentrationSource, caster: ConcentratingActor): string {
+	const school = activatedSpellSchool(item);
+	if (!school) return DEFAULT_CONCENTRATION_TRACK;
+
+	return caster.system?.concentrationTracks?.has(school) ? school : DEFAULT_CONCENTRATION_TRACK;
+}
+
+/** The caster's concentrations on this track, which this cast ends. */
+function concentrationOnTrack(
+	caster: ConcentratingActor,
+	track: string,
+): ReplaceableConditionEffect[] {
+	return [...(caster.effects ?? [])].filter((effect) => {
+		if (effect.statuses?.size !== 1) return false;
+		if (!effect.statuses.has(STATUS_EFFECT_IDS.concentration)) return false;
+
+		return (
+			(effect.getFlag?.(SYSTEM_ID, 'concentrationTrack') ?? DEFAULT_CONCENTRATION_TRACK) === track
+		);
+	});
+}
+
+/**
+ * Put concentration on an activated item's owner, ending whatever they were
+ * already concentrating on in the same track.
+ *
+ * Driven by the `concentration` property rather than by anything authored on the
+ * item, so homebrew spells and inscribed scrolls need no rules of their own.
+ *
+ * @returns whether the caster came out of this concentrating on this item.
+ */
+async function applyCasterConcentration(item: ConcentrationSource): Promise<boolean> {
+	if (!item.tags.has(CONCENTRATION_PROPERTY_TAG)) return false;
+
+	const caster = item.actor;
+	if (!caster) return false;
+
+	const track = concentrationTrack(item, caster);
+
+	const effect = await applyConditionToActor(caster, STATUS_EFFECT_IDS.concentration, {
+		sourceItem: item,
+		sourceActor: caster,
+		systemFlags: { concentrationTrack: track },
+		replaces: concentrationOnTrack(caster, track),
+	});
+
+	return effect !== null;
+}
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -181,7 +277,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	 * the `useItem` hook. Shared tail of every activate() implementation.
 	 *
 	 * Concentration is applied here, not on the damage-applied path, which a
-	 * roll-less utility spell such as Fly never reaches.
+	 * roll-less activation never reaches.
 	 */
 	protected async _createActivationCard(
 		chatData: unknown,
@@ -193,11 +289,15 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 		let concentrating = false;
 		try {
-			concentrating = (await applyCasterConcentration(this)) !== null;
+			concentrating = await applyCasterConcentration(this as object as ConcentrationSource);
 		} catch (error) {
 			console.error('Nimble | Could not apply concentration to the caster.', error);
+			ui.notifications?.warn('NIMBLE.chat.concentrationFailed', { localize: true });
 		}
-		foundry.utils.setProperty(chatData as object, 'system.concentration', concentrating);
+
+		if (CONCENTRATION_CARD_TYPES.has((chatData as { type?: string })?.type ?? '')) {
+			foundry.utils.setProperty(chatData as object, 'system.concentration', concentrating);
+		}
 
 		const chatCard = suppressCard
 			? null
