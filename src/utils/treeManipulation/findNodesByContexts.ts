@@ -22,7 +22,11 @@ export function findNodesByContexts(
 			if (node.type === 'damage') {
 				// An outcome child carries the same roll, so a node that has one for
 				// this context is already on the card and must not be added again.
-				const surfacedByOutcome = contexts.some((context) => node.on?.[context]?.length);
+				// Only an outcome child stands in for the roll: a condition, a note or
+				// a second damage packet in the same bucket says nothing about it.
+				const surfacedByOutcome = contexts.some((context) =>
+					node.on?.[context]?.some((child) => child.type === 'damageOutcome'),
+				);
 
 				// Disposition-targeted damage is a deliberate UI action, always present
 				// it. Deferred damage likewise: its Roll Damage button lives on the node

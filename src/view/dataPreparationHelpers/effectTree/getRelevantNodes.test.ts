@@ -86,6 +86,49 @@ describe('getRelevantNodes', () => {
 		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual(['root-damage']);
 	});
 
+	it('still shows a disposition-targeted node whose only On Hit child is a condition', () => {
+		// Only an outcome child stands in for the roll. A condition, a note or a
+		// second damage packet under the same bucket says nothing about it.
+		const effects = attackSpellEffects({
+			targetDisposition: 'hostile',
+			on: {
+				hit: [
+					{
+						id: 'grappled',
+						type: 'condition',
+						conditionType: 'grappled',
+						parentNode: 'root-damage',
+						parentContext: 'hit',
+					} as unknown as EffectNode,
+				],
+			},
+		});
+
+		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual(['root-damage']);
+	});
+
+	it('still shows the base damage node on a miss whose only On Miss child is a note', () => {
+		const effects = attackSpellEffects({
+			on: {
+				hit: [outcomeChild('hit')],
+				miss: [
+					{
+						id: 'glancing',
+						type: 'note',
+						noteType: 'flavor',
+						text: 'The blade skids off the armour.',
+						parentNode: 'root-damage',
+						parentContext: 'miss',
+					} as unknown as EffectNode,
+				],
+			},
+		});
+
+		const groups = getRelevantNodes(effects, ['miss'], { includeBaseDamageNodes: true });
+
+		expect(damageIds(groups)).toEqual(['root-damage']);
+	});
+
 	it('still shows a deferred damage node, which carries its own Roll Damage button', () => {
 		const effects = attackSpellEffects({ deferredRoll: true, on: undefined });
 
