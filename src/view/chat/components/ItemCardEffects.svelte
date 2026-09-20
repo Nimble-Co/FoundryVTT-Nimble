@@ -66,17 +66,13 @@
 	}
 
 	.nimble-card-section {
-		padding: var(--nimble-card-section-padding, 0);
-
-		&:not(:last-of-type) {
-			border-bottom: 1px solid var(--nimble-card-border-color);
-		}
+		--nimble-card-section-padding: 0;
 
 		&--conditions {
+			--nimble-card-section-padding: 0.5rem;
 			display: flex;
 			gap: 0.375rem;
 			flex-wrap: wrap;
-			padding: 0.5rem;
 		}
 	}
 </style>
