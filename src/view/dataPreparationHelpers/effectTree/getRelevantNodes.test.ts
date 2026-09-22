@@ -140,7 +140,9 @@ describe('getRelevantNodes', () => {
 		// roll to stand in with yet, so the node itself must reach the card.
 		const effects = attackSpellEffects({ deferredRoll: true, roll: undefined });
 
-		// Both reach the card. The child has no roll yet and so draws nothing.
+		// Both reach the card: the node draws the Roll Damage button, and the
+		// child draws a "0" box beside it. That placeholder is a known defect, not
+		// the intent — see the note on DamageNode.svelte.
 		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual([
 			'root-damage',
 			'root-damage-hit',

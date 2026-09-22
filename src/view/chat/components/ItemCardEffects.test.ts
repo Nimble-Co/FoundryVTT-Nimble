@@ -282,4 +282,14 @@ describe('ItemCardEffects damage boxes', () => {
 		expect(screen.getAllByText('Slashing')).toHaveLength(1);
 		expect(screen.getByText('3')).toBeTruthy();
 	});
+	it('draws a "0" box beside the Roll Damage button on unrolled deferred damage', () => {
+		// Pinned as-is, not as the intent: `DamageNode.svelte` keeps the node
+		// itself off the card until the roll lands for exactly this reason, but
+		// its outcome child has no such guard and draws the placeholder anyway.
+		// Every deferred node built in the UI carries that child.
+		renderHit(attackSpellEffects({ deferredRoll: true, roll: undefined }));
+
+		expect(screen.getByRole('button', { name: /roll damage/i })).toBeTruthy();
+		expect(screen.getByText('0')).toBeTruthy();
+	});
 });
