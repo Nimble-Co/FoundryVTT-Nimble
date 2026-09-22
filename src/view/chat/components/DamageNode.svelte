@@ -4,6 +4,7 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
+	import { isAwaitingDeferredRoll } from '#utils/treeManipulation/isAwaitingDeferredRoll.ts';
 	import DamageRoll from './DamageRoll.svelte';
 
 	let { node }: DamageNodeProps = $props();
@@ -23,7 +24,7 @@
 	// happened yet. Everyone else sees nothing until it is rolled: only the
 	// message author and the GM can write to a chat message, and a "0 Necrotic"
 	// placeholder would read as damage that already resolved.
-	let awaitingRoll = $derived(node.deferredRoll === true && !roll?.class);
+	let awaitingRoll = $derived(isAwaitingDeferredRoll(node));
 	let canRollDamage = $derived(messageDocument?.canRollDeferredDamage() === true);
 
 	const rollDamageLabel = localize('NIMBLE.chat.rollDamage');
