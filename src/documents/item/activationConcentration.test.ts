@@ -2,7 +2,10 @@ import { SYSTEM_ID, systemHookName } from '#system';
 
 const fromStatusEffect = vi.fn();
 const createEffect = vi.fn();
-vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
+const deleteEffects = vi.fn();
+vi.stubGlobal('ActiveEffect', {
+	implementation: { fromStatusEffect, create: createEffect, deleteDocuments: deleteEffects },
+});
 
 import { NimbleBaseItem } from './base.svelte.js';
 
@@ -27,8 +30,12 @@ function createHeldConcentration(track: string) {
 		toObject: () => ({ _id: `concentration-${track}`, name: track }),
 		getFlag: (scope: string, key: string) =>
 			scope === SYSTEM_ID && key === 'concentrationTrack' ? track : undefined,
-		delete: vi.fn(async () => undefined),
 	};
+}
+
+/** The ids handed to the one delete call the replacement path makes. */
+function deletedEffectIds(): string[] {
+	return deleteEffects.mock.calls.flatMap(([ids]) => ids as string[]);
 }
 
 type Caster = ReturnType<typeof createCaster>;
@@ -98,6 +105,7 @@ function createdEffectFlags() {
 beforeEach(() => {
 	fromStatusEffect.mockReset().mockImplementation(async () => createConditionEffectStub());
 	createEffect.mockReset().mockImplementation(async (effect: unknown) => effect);
+	deleteEffects.mockReset().mockResolvedValue(undefined);
 	(CONFIG as { statusEffects?: unknown }).statusEffects = [{ id: 'concentration' }];
 	(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(true);
 	(ChatMessage as unknown as { create: unknown }).create = vi.fn(async () => postedMessage);
@@ -148,8 +156,20 @@ describe('NimbleBaseItem#_createActivationCard concentration replacement', () =>
 
 		await createActivationCard(item);
 
-		expect(held.delete).toHaveBeenCalled();
+		expect(deletedEffectIds()).toEqual([held.id]);
 		expect(createEffect).toHaveBeenCalledTimes(1);
+	});
+
+	it('ends every replaced concentration in one delete call', async () => {
+		const lightning = createHeldConcentration('lightning');
+		const wind = createHeldConcentration('wind');
+		const caster = createCaster([lightning, wind]);
+		caster.system.concentrationTracks = new Set(['lightning', 'wind']);
+
+		await createActivationCard(createItemStub(['concentration'], { caster, school: 'fire' }));
+
+		expect(deleteEffects).toHaveBeenCalledTimes(1);
+		expect(deletedEffectIds()).toEqual([lightning.id, wind.id]);
 	});
 
 	it('keeps the concentration already held when a listener refuses the new one', async () => {
@@ -159,7 +179,7 @@ describe('NimbleBaseItem#_createActivationCard concentration replacement', () =>
 
 		await createActivationCard(item);
 
-		expect(held.delete).not.toHaveBeenCalled();
+		expect(deleteEffects).not.toHaveBeenCalled();
 		expect(createEffect).not.toHaveBeenCalled();
 	});
 
@@ -170,11 +190,34 @@ describe('NimbleBaseItem#_createActivationCard concentration replacement', () =>
 
 		await createActivationCard(item);
 
-		expect(held.delete).toHaveBeenCalled();
+		expect(deletedEffectIds()).toEqual([held.id]);
 		expect(createEffect).toHaveBeenLastCalledWith(
 			expect.objectContaining({ _id: 'concentration-default' }),
 			{ parent: item.actor, keepId: true },
 		);
+	});
+
+	it('restores the concentration already held when the create is refused', async () => {
+		const held = createHeldConcentration('default');
+		const item = createItemStub(['concentration'], { caster: createCaster([held]) });
+		createEffect.mockResolvedValueOnce(undefined);
+
+		const { chatData } = await createActivationCard(item);
+
+		expect(createEffect).toHaveBeenLastCalledWith(
+			expect.objectContaining({ _id: 'concentration-default' }),
+			{ parent: item.actor, keepId: true },
+		);
+		expect(chatData.system.concentration).toBe(false);
+	});
+
+	it('applies over a concentration held by an effect that carries other statuses too', async () => {
+		const caster = createCaster();
+		caster.statuses = new Set(['concentration']);
+
+		await createActivationCard(createItemStub(['concentration'], { caster }));
+
+		expect(createEffect).toHaveBeenCalledTimes(1);
 	});
 });
 
@@ -201,7 +244,7 @@ describe('NimbleBaseItem#_createActivationCard concentration tracks', () => {
 
 		await createActivationCard(createItemStub(['concentration'], { caster, school: 'wind' }));
 
-		expect(held.delete).not.toHaveBeenCalled();
+		expect(deleteEffects).not.toHaveBeenCalled();
 		expect(createEffect).toHaveBeenCalledTimes(1);
 	});
 
@@ -212,19 +255,39 @@ describe('NimbleBaseItem#_createActivationCard concentration tracks', () => {
 
 		await createActivationCard(createItemStub(['concentration'], { caster, school: 'lightning' }));
 
-		expect(held.delete).toHaveBeenCalled();
+		expect(deletedEffectIds()).toEqual([held.id]);
 	});
 
-	it('ends an untracked school against the default track, not the tracked ones', async () => {
+	it('ends both tracked schools when casting in a school no rule names', async () => {
+		const lightning = createHeldConcentration('lightning');
+		const wind = createHeldConcentration('wind');
+		const caster = createCaster([lightning, wind]);
+		caster.system.concentrationTracks = new Set(['lightning', 'wind']);
+
+		await createActivationCard(createItemStub(['concentration'], { caster, school: 'fire' }));
+
+		expect(deletedEffectIds()).toEqual([lightning.id, wind.id]);
+	});
+
+	it('ends an untracked concentration when casting in a tracked school', async () => {
+		const other = createHeldConcentration('default');
+		const caster = createCaster([other]);
+		caster.system.concentrationTracks = new Set(['lightning', 'wind']);
+
+		await createActivationCard(createItemStub(['concentration'], { caster, school: 'lightning' }));
+
+		expect(deletedEffectIds()).toEqual([other.id]);
+	});
+
+	it('holds no more than the tracks the rule names', async () => {
 		const lightning = createHeldConcentration('lightning');
 		const other = createHeldConcentration('default');
 		const caster = createCaster([lightning, other]);
 		caster.system.concentrationTracks = new Set(['lightning', 'wind']);
 
-		await createActivationCard(createItemStub(['concentration'], { caster, school: 'fire' }));
+		await createActivationCard(createItemStub(['concentration'], { caster, school: 'wind' }));
 
-		expect(lightning.delete).not.toHaveBeenCalled();
-		expect(other.delete).toHaveBeenCalled();
+		expect(deletedEffectIds()).toEqual([other.id]);
 	});
 });
 
@@ -290,5 +353,33 @@ describe('NimbleBaseItem#_createActivationCard concentration card flag', () => {
 			postedMessage,
 			expect.anything(),
 		);
+	});
+
+	it('warns the caster when a listener refuses the condition', async () => {
+		(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(false);
+
+		await createActivationCard(createItemStub(['concentration']));
+
+		expect(ui.notifications?.warn).toHaveBeenCalledWith('NIMBLE.chat.concentrationFailed', {
+			localize: true,
+		});
+	});
+
+	it('warns nobody when the item carries no concentration property', async () => {
+		await createActivationCard(createItemStub(['reach']));
+
+		expect(ui.notifications?.warn).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleBaseItem#_createActivationCard concentration automation', () => {
+	it('applies nothing and warns nobody when rule automation is off', async () => {
+		(globalThis as { game?: Record<string, unknown> }).game!.settings = { get: () => false };
+
+		const { chatData } = await createActivationCard(createItemStub(['concentration']));
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(ui.notifications?.warn).not.toHaveBeenCalled();
+		expect(chatData.system.concentration).toBe(false);
 	});
 });

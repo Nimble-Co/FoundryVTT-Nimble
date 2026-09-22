@@ -112,7 +112,7 @@
 
 <style lang="scss">
 	.safe-rest-card {
-		padding: 0.5rem;
+		--nimble-card-section-padding: 0.5rem;
 	}
 
 	.recovery-list {

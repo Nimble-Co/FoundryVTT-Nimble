@@ -41,9 +41,10 @@ interface ActorSystem {
 
 /**
  * Rule that gives the named spell schools a concentration track of their own,
- * so casting in one of them leaves a concentration held in another alone. Every
- * school the rule does not name shares a single default track, which is the
- * one-at-a-time behaviour a caster without this rule has.
+ * so casting in one of them leaves a concentration held in another alone.
+ * Naming schools splits the caster's single concentration rather than adding
+ * one, so the tracks are the whole of their capacity: see
+ * `concentrationsEndedBy` for what a cast in an unnamed school displaces.
  *
  * Tracks are accumulated in a Set on the actor and read when an activated item
  * applies concentration.

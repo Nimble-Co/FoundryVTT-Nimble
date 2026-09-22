@@ -3,14 +3,15 @@ import { ConcentrationTrackRule } from './concentrationTrack.js';
 interface MockActor {
 	system: { concentrationTracks?: Set<string> };
 	getRollData: ReturnType<typeof vi.fn>;
+	getDomain: ReturnType<typeof vi.fn>;
 }
 
 function createMockActor(): MockActor {
-	return { system: {}, getRollData: vi.fn(() => ({})) };
+	return { system: {}, getRollData: vi.fn(() => ({})), getDomain: vi.fn(() => new Set<string>()) };
 }
 
 function createRule(
-	config: { schools?: string[]; disabled?: boolean },
+	config: { schools?: string[]; disabled?: boolean; predicatePasses?: boolean },
 	actor: MockActor,
 	itemOptions?: { isEmbedded?: boolean },
 ): ConcentrationTrackRule {
@@ -19,6 +20,7 @@ function createRule(
 		actor,
 		name: 'Master of Storm',
 		uuid: 'test-item-uuid',
+		getDomain: () => new Set<string>(),
 	};
 
 	const sourceData = {
@@ -43,7 +45,14 @@ function createRule(
 	(rule as any).disabled = sourceData.disabled;
 
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
-	Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
+
+	// Size 0 always passes; a non-empty stub exercises the predicate-gated path.
+	const predicatePasses = config.predicatePasses ?? true;
+	Object.defineProperty(rule, 'predicate', {
+		get: () => ({ size: predicatePasses ? 0 : 1, test: () => predicatePasses }),
+		configurable: true,
+	});
+	Object.defineProperty(rule, 'actor', { get: () => actor, configurable: true });
 
 	return rule;
 }
@@ -78,6 +87,22 @@ describe('ConcentrationTrackRule', () => {
 		const actor = createMockActor();
 
 		createRule({ schools: [] }, actor).afterPrepareData();
+
+		expect(actor.system.concentrationTracks).toBeUndefined();
+	});
+
+	it('publishes nothing from a disabled rule', () => {
+		const actor = createMockActor();
+
+		createRule({ disabled: true }, actor).afterPrepareData();
+
+		expect(actor.system.concentrationTracks).toBeUndefined();
+	});
+
+	it('publishes nothing while its predicate fails', () => {
+		const actor = createMockActor();
+
+		createRule({ predicatePasses: false }, actor).afterPrepareData();
 
 		expect(actor.system.concentrationTracks).toBeUndefined();
 	});

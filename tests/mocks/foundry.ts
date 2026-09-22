@@ -30,6 +30,14 @@ export const globalFoundryMocks = {
 		}
 
 		_onUpdate(_changed?: any, _options?: any, _userId?: string) {}
+
+		async toggleStatusEffect(_statusId: string, _options?: any): Promise<any> {
+			return undefined;
+		}
+
+		async deleteEmbeddedDocuments(_type: string, _ids: string[]): Promise<any> {
+			return [];
+		}
 	},
 	Item: class Item {
 		constructor(data?: any, _context?: any) {
@@ -556,6 +564,7 @@ export const foundryApiMocks = {
 			},
 			DialogV2: {
 				confirm: vi.fn(),
+				wait: vi.fn(),
 			},
 		},
 		ux: {

@@ -167,7 +167,14 @@
   padding: var(--nimble-card-section-padding, 0.5rem);
 
   &:not(:last-of-type) {
-    border-bottom: 1px solid var(--nimble-card-border-color);
+    border-bottom: var(--nimble-card-section-border, 1px solid var(--nimble-card-border-color));
+  }
+
+  // The AoE button is its own bordered control, and carried neither property
+  // while this block was scoped per card.
+  &--template {
+    --nimble-card-section-padding: 0;
+    --nimble-card-section-border: none;
   }
 
   &--description {

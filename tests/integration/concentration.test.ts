@@ -162,10 +162,13 @@ describe('concentration on cast', () => {
 				.sort(),
 		).toEqual(['lightning', 'wind']);
 
-		// A school the rule does not name still replaces only the default track.
+		// Two named schools are two concentrations, never three: a school the rule
+		// does not name takes the whole capacity back.
 		const fire = await addSpell('Untracked Flame', 'fire');
 		await castSpell(fire);
-		await waitFor(() => concentrationEffects().length === 3, 'the untracked concentration');
+		await waitFor(() => concentrationEffects().length === 1, 'the untracked concentration alone');
+
+		expect(concentrationEffects()[0].getFlag(game.system.id, 'concentrationTrack')).toBe('default');
 
 		await clearConcentration();
 		await caster.deleteEmbeddedDocuments('Item', [feature.id]);
@@ -199,6 +202,30 @@ describe('concentration on cast', () => {
 				(effect) => effect.getFlag(game.system.id, 'concentrationTrack') === 'wind',
 			)?.origin,
 		).toBe((gale as unknown as { uuid: string }).uuid);
+
+		await clearConcentration();
+		await caster.deleteEmbeddedDocuments('Item', [feature.id]);
+	}, 120_000);
+
+	test('a tracked school ends a concentration held on the default track', async () => {
+		const [feature] = await caster.createEmbeddedDocuments('Item', [
+			trackFeatureData(`${TEST_PREFIX} Master of Storm`, ['lightning', 'wind']),
+		]);
+		await settle(400);
+
+		const flame = await addSpell('Displaced Flame', 'fire');
+		const bolt = await addSpell('Displacing Bolt', 'lightning');
+
+		await castSpell(flame);
+		await waitFor(() => concentrationEffects().length === 1, 'the untracked concentration');
+
+		await castSpell(bolt);
+		await settle(800);
+
+		expect(concentrationEffects()).toHaveLength(1);
+		expect(concentrationEffects()[0].getFlag(game.system.id, 'concentrationTrack')).toBe(
+			'lightning',
+		);
 
 		await clearConcentration();
 		await caster.deleteEmbeddedDocuments('Item', [feature.id]);

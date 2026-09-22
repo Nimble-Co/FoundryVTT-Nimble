@@ -31,11 +31,15 @@ A caster holds one concentration at a time. Casting a second concentration spell
 
 The rulebook says a character can only concentrate on one activity at a time, but it does not say what happens when they start a second. Replacing the first is the system's reading of that, not printed text.
 
-**Casters who concentrate on more than one thing.** A feature can give a spell school a concentration of its own. Stormshifter's **Master of Storm** does this for Lightning and Wind, so casting a Wind spell leaves a Lightning concentration alone and the other way round. Every school no feature names shares a single concentration, exactly as it does for a caster with no such feature. Homebrewers get this through the [Concentration Track](../reference/rules-conditions.md#concentration-track) rule.
+**Casters who concentrate on more than one thing.** A feature can give a spell school a concentration of its own. Stormshifter's **Master of Storm** does this for Lightning and Wind, so casting a Wind spell leaves a Lightning concentration alone and the other way round. Naming schools splits the caster's single concentration rather than adding to it, so Master of Storm holds two concentrations and never three: casting in a school the feature does not name ends every concentration the caster is holding, and casting in a named school ends that school's concentration along with anything held in an unnamed school. Homebrewers get this through the [Concentration Track](../reference/rules-conditions.md#concentration-track) rule.
+
+Ending one of two held concentrations is a choice rather than bookkeeping, so removing Concentration from the token panel or the Conditions tab asks which one should end. A caster holding only one is ended without a prompt.
 
 This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
 
 What the system does *not* do is break concentration for you. Losing it when crit (a DC 10 STR save), at 0 HP, or when Incapacitated is still yours to track. Remove the condition by hand when it ends.
+
+Turning off **Apply Conditions and Effects from Rules** in the Automation settings turns this off with it: casting then applies nothing and ends nothing, and Concentration is yours to place by hand.
 
 ## Custom conditions
 

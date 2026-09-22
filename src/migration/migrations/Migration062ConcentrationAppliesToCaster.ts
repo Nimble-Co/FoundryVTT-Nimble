@@ -1,19 +1,52 @@
+import { toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 const CONCENTRATION = 'concentration';
 
+interface ConcentrationPackFix {
+	/** For logs and for the pack test, which matches files by the id in the key. */
+	name: string;
+	/** The duration the rulebook gives it, when what shipped was wrong. */
+	duration?: { quantity: number; type: string };
+	/** Set when the printed text says Concentration but the property was never ticked. */
+	addsProperty?: boolean;
+}
+
 /**
- * The durations the rulebook gives these spells, which shipped as one minute.
+ * The concentration items the rulebook disagrees with, keyed by compendium
+ * source id. Keyed that way rather than by name so a GM's own spell called
+ * `Fly` is left alone and a translated world still matches.
+ *
  * Exported so the pack data is asserted against the same table the migration
  * writes.
  */
-export const RULEBOOK_CONCENTRATION_DURATIONS: Record<string, { quantity: number; type: string }> =
-	{
-		Fly: { quantity: 10, type: 'minute' },
-		'Greater Windform': { quantity: 10, type: 'minute' },
-		'Lesser Windform': { quantity: 10, type: 'minute' },
-		'Radiant Bond': { quantity: 10, type: 'minute' },
-	};
+export const CONCENTRATION_PACK_FIXES: Record<string, ConcentrationPackFix> = {
+	'Compendium.nimble.nimble-spells.Item.DHEl4NDcNMu2ZAj0': {
+		name: 'Fly',
+		duration: { quantity: 10, type: 'minute' },
+	},
+	'Compendium.nimble.nimble-secret-spells.Item.21OMcsYYwn5C7CLR': {
+		name: 'Greater Windform',
+		duration: { quantity: 10, type: 'minute' },
+	},
+	'Compendium.nimble.nimble-secret-spells.Item.eX8CJssX3F2vqFi1': {
+		name: 'Lesser Windform',
+		duration: { quantity: 10, type: 'minute' },
+	},
+	'Compendium.nimble.nimble-secret-spells.Item.pGCVd6N7Ed0AeEBE': {
+		name: 'Radiant Bond',
+		duration: { quantity: 10, type: 'minute' },
+	},
+	'Compendium.nimble.nimble-magic-items.Item.xk3YG0WdGuzb432h': {
+		name: 'Wand of Fly',
+		duration: { quantity: 10, type: 'minute' },
+		addsProperty: true,
+	},
+	'Compendium.nimble.nimble-magic-items.Item.R8tUgZsxOMV9IQDT': {
+		name: 'Cloak of Lesser Windform',
+		addsProperty: true,
+	},
+};
 
 function isConcentrationNode(effect: any): boolean {
 	return effect?.type === 'condition' && effect?.condition === CONCENTRATION;
@@ -55,8 +88,9 @@ function withoutConcentrationNodes(effects: unknown): unknown[] | null {
  * inscribed scrolls are cleared too. An item without the property keeps its node:
  * nothing else applies the condition there.
  *
- * The four spells whose printed duration is ten minutes are corrected here as
- * well, because a copy already on a character is never re-imported from the pack.
+ * The items whose printed duration or concentration property shipped wrong are
+ * corrected here as well, because a copy already on a character is never
+ * re-imported from the pack.
  */
 class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 	static override readonly version = 62;
@@ -65,6 +99,10 @@ class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell' && source.type !== 'object') return;
+
+		const fix = CONCENTRATION_PACK_FIXES[toSnapshotId(this.getSourceId(source)) ?? ''];
+
+		if (fix?.addsProperty) this.#addConcentrationProperty(source);
 		if (!source.system?.properties?.selected?.includes(CONCENTRATION)) return;
 
 		const remaining = withoutConcentrationNodes(source.system?.activation?.effects);
@@ -73,18 +111,26 @@ class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 			console.log(`Nimble Migration | ${source.name}: removed its concentration condition node`);
 		}
 
-		const duration = RULEBOOK_CONCENTRATION_DURATIONS[source.name];
-		if (!duration || !source.system?.activation?.duration) return;
+		if (!fix?.duration || !source.system?.activation?.duration) return;
 
 		const current = source.system.activation.duration;
-		if (current.quantity === duration.quantity && current.type === duration.type) return;
+		if (current.quantity === fix.duration.quantity && current.type === fix.duration.type) return;
 
-		current.quantity = duration.quantity;
-		current.type = duration.type;
+		current.quantity = fix.duration.quantity;
+		current.type = fix.duration.type;
 
 		console.log(
-			`Nimble Migration | ${source.name}: corrected its concentration duration to ${duration.quantity} ${duration.type}`,
+			`Nimble Migration | ${source.name}: corrected its concentration duration to ${fix.duration.quantity} ${fix.duration.type}`,
 		);
+	}
+
+	#addConcentrationProperty(source: any): void {
+		const properties = source.system?.properties;
+		if (!Array.isArray(properties?.selected)) return;
+		if (properties.selected.includes(CONCENTRATION)) return;
+
+		properties.selected.push(CONCENTRATION);
+		console.log(`Nimble Migration | ${source.name}: ticked its concentration property`);
 	}
 }
 

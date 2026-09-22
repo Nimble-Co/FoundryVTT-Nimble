@@ -490,7 +490,7 @@ describe('ApplyConditionRule', () => {
 			);
 		});
 
-		it('passes a null effect when the effect could not be created', async () => {
+		it('does not fire when the effect could not be created', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();
 			createEffect.mockResolvedValue(undefined);
@@ -501,9 +501,9 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(hooksCallAll).toHaveBeenCalledWith(
+			expect(hooksCallAll).not.toHaveBeenCalledWith(
 				'nimble.conditionApplied',
-				expect.objectContaining({ condition: 'dazed', effect: null }),
+				expect.objectContaining({ condition: 'dazed' }),
 			);
 		});
 

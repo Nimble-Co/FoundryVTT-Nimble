@@ -18,9 +18,18 @@ export interface AppliedConditionEffect {
 	toObject?(): Record<string, unknown>;
 }
 
-/** An effect a new application supersedes, which it must be able to remove and put back. */
-export interface ReplaceableConditionEffect extends AppliedConditionEffect {
-	delete(): Promise<unknown>;
+/**
+ * An effect a new application supersedes. Removal goes through the parent actor
+ * in one call, so an id and the stored source are all it needs.
+ */
+export interface ReplaceableConditionEffect {
+	id?: string;
+	toObject?(): Record<string, unknown>;
+}
+
+/** What this helper reads off a condition already on the target. */
+interface ExistingConditionEffect {
+	statuses?: Set<string>;
 }
 
 /**
@@ -29,8 +38,8 @@ export interface ReplaceableConditionEffect extends AppliedConditionEffect {
 export interface ConditionTargetActor {
 	statuses?: Set<string>;
 	effects?: {
-		get?(id: string): AppliedConditionEffect | undefined;
-		[Symbol.iterator](): Iterator<AppliedConditionEffect>;
+		get?(id: string): ExistingConditionEffect | undefined;
+		[Symbol.iterator](): Iterator<ExistingConditionEffect>;
 	};
 }
 
@@ -52,10 +61,11 @@ export interface ApplyConditionOptions {
 	/** System flags stamped on the created effect, under the system's flag scope. */
 	systemFlags?: Record<string, unknown> | null;
 	/**
-	 * The effects this application supersedes. Passing them hands the caller the
-	 * duplicate decision: the target may already carry the condition, and only
-	 * these instances are removed. They go once the application is allowed, and
-	 * come back if creating the replacement fails.
+	 * The effects this application supersedes. Passing the key at all, an empty
+	 * array included, hands the caller the duplicate decision: the target may
+	 * already carry the condition, and only the named instances are removed. They
+	 * go once the application is allowed, and come back if creating the
+	 * replacement fails.
 	 */
 	replaces?: ReplaceableConditionEffect[] | null;
 }
@@ -124,6 +134,22 @@ function buildDurationPatch(duration: ConditionDuration | null | undefined) {
 	return Object.keys(patch).length > 0 ? patch : null;
 }
 
+interface ActiveEffectImplementation {
+	fromStatusEffect(
+		statusId: string,
+		options?: { parent: unknown },
+	): Promise<AppliedConditionEffect>;
+	create(
+		data: AppliedConditionEffect | Record<string, unknown>,
+		operation: { parent: unknown; keepId: boolean },
+	): Promise<AppliedConditionEffect | undefined>;
+	deleteDocuments(ids: string[], operation: { parent: unknown }): Promise<unknown>;
+}
+
+function activeEffectImplementation(): ActiveEffectImplementation {
+	return (ActiveEffect as unknown as { implementation: ActiveEffectImplementation }).implementation;
+}
+
 /**
  * `Actor#toggleStatusEffect` takes only `{ active, overlay }`, so it can never
  * record an origin. This mirrors what it does internally instead: build the
@@ -143,20 +169,7 @@ async function createConditionEffect(
 	conditionId: string,
 	options: ApplyConditionOptions,
 ): Promise<AppliedConditionEffect | null> {
-	const activeEffectClass = (
-		ActiveEffect as unknown as {
-			implementation: {
-				fromStatusEffect(
-					statusId: string,
-					options?: { parent: unknown },
-				): Promise<AppliedConditionEffect>;
-				create(
-					data: AppliedConditionEffect | Record<string, unknown>,
-					operation: { parent: unknown; keepId: boolean },
-				): Promise<AppliedConditionEffect | undefined>;
-			};
-		}
-	).implementation;
+	const activeEffectClass = activeEffectImplementation();
 
 	const effect = await activeEffectClass.fromStatusEffect(conditionId, { parent: target });
 
@@ -178,19 +191,29 @@ async function createConditionEffect(
 /**
  * Remove the superseded effects, keeping their stored sources so a failed
  * replacement can put them back exactly as they were.
+ *
+ * One `deleteDocuments` call rather than a delete each, so a refusal partway
+ * cannot leave the target holding some of them and none of the replacement.
  */
 async function removeReplacedEffects(
+	target: ConditionTargetActor,
 	replaces: ReplaceableConditionEffect[] | null | undefined,
 ): Promise<Record<string, unknown>[]> {
 	if (!replaces?.length) return [];
 
+	const ids: string[] = [];
 	const sources: Record<string, unknown>[] = [];
 
 	for (const effect of replaces) {
+		if (!effect.id) continue;
+		ids.push(effect.id);
 		const source = effect.toObject?.();
-		await effect.delete();
 		if (source) sources.push(source);
 	}
+
+	if (ids.length === 0) return [];
+
+	await activeEffectImplementation().deleteDocuments(ids, { parent: target });
 
 	return sources;
 }
@@ -205,16 +228,7 @@ async function restoreReplacedEffects(
 ): Promise<void> {
 	if (sources.length === 0) return;
 
-	const activeEffectClass = (
-		ActiveEffect as unknown as {
-			implementation: {
-				create(
-					data: Record<string, unknown>,
-					operation: { parent: unknown; keepId: boolean },
-				): Promise<unknown>;
-			};
-		}
-	).implementation;
+	const activeEffectClass = activeEffectImplementation();
 
 	for (const source of sources) {
 		try {
@@ -242,7 +256,7 @@ export default async function applyConditionToActor(
 	options: ApplyConditionOptions = {},
 ): Promise<AppliedConditionEffect | null> {
 	if (!target || !conditionId) return null;
-	if (!options.replaces && targetAlreadyHasCondition(target, conditionId)) return null;
+	if (options.replaces === undefined && targetAlreadyHasCondition(target, conditionId)) return null;
 
 	const source = options.sourceItem ?? options.sourceActor ?? null;
 
@@ -257,7 +271,7 @@ export default async function applyConditionToActor(
 	});
 	if (allowed === false) return null;
 
-	const replacedSources = await removeReplacedEffects(options.replaces);
+	const replacedSources = await removeReplacedEffects(target, options.replaces);
 
 	let effect: AppliedConditionEffect | null;
 	try {
@@ -265,6 +279,13 @@ export default async function applyConditionToActor(
 	} catch (error) {
 		await restoreReplacedEffects(target, replacedSources);
 		throw error;
+	}
+
+	// `Document.create` resolves undefined when a preCreate hook or _preCreate
+	// returns false, which is a refusal rather than a failure.
+	if (!effect) {
+		await restoreReplacedEffects(target, replacedSources);
+		return null;
 	}
 
 	// @ts-expect-error - conditionApplied is a custom system hook

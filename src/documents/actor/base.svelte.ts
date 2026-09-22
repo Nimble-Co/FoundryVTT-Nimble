@@ -13,8 +13,10 @@ import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
+import { type ConcentratingActor, heldConcentrations } from '../concentration.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
@@ -1159,6 +1161,31 @@ class NimbleBaseActor<
 		}
 
 		return super._preUpdate(changes, options, user);
+	}
+
+	/**
+	 * Concentration is the one condition an actor can hold more than one of, and
+	 * core's toggle deletes every unlinked match in a single call. Turning it off
+	 * while two tracks are held asks which to end instead of ending both.
+	 */
+	override async toggleStatusEffect(
+		statusId: string,
+		options: Actor.ToggleStatusEffectOptions = {},
+	): Promise<ActiveEffect.Implementation | boolean | undefined> {
+		if (statusId !== STATUS_EFFECT_IDS.concentration) {
+			return super.toggleStatusEffect(statusId, options);
+		}
+
+		const held = heldConcentrations(this as object as ConcentratingActor);
+		const removing = options.active === false || (options.active === undefined && held.length > 0);
+		if (!removing || held.length < 2) return super.toggleStatusEffect(statusId, options);
+
+		const ending = await promptForConcentrationToEnd(held);
+		if (ending.length === 0) return undefined;
+
+		await this.deleteEmbeddedDocuments('ActiveEffect', ending);
+
+		return false;
 	}
 
 	override _onUpdate(

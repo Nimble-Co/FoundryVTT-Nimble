@@ -6,30 +6,24 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import applyConditionToActor, {
-	type ReplaceableConditionEffect,
-} from '../../utils/applyConditionToActor.js';
+import applyConditionToActor from '../../utils/applyConditionToActor.js';
 import { getSpellScrollData } from '../../utils/createScrollFromSpell.js';
+import {
+	CONCENTRATION_TRACK_FLAG,
+	type ConcentratingActor,
+	concentrationsEndedBy,
+	concentrationTrackForCast,
+} from '../concentration.js';
 
 const CONCENTRATION_PROPERTY_TAG = 'property:concentration';
 
 const SPELL_SCHOOL_TAG_PREFIX = 'school:';
 
-/** The track a school with no rule of its own shares with every other such school. */
-const DEFAULT_CONCENTRATION_TRACK = 'default';
-
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
 
-/** An actor whose concentration this reads and replaces. */
-interface ConcentratingActor {
-	uuid?: string | null;
-	system?: { concentrationTracks?: Set<string> };
-	statuses?: Set<string>;
-	effects?: Iterable<
-		ReplaceableConditionEffect & { getFlag?(scope: string, key: string): unknown }
-	>;
-}
+/** What came of putting concentration on the caster. */
+type ConcentrationOutcome = 'applied' | 'refused' | 'skipped';
 
 /** The item being activated, as the concentration path reads it. */
 interface ConcentrationSource {
@@ -50,57 +44,29 @@ function activatedSpellSchool(item: ConcentrationSource): string | null {
 }
 
 /**
- * The concentration this cast competes with. A `concentrationTrack` rule gives the
- * schools it names a track of their own, so a caster with one can hold a
- * concentration in each; every other school shares the default track.
- */
-function concentrationTrack(item: ConcentrationSource, caster: ConcentratingActor): string {
-	const school = activatedSpellSchool(item);
-	if (!school) return DEFAULT_CONCENTRATION_TRACK;
-
-	return caster.system?.concentrationTracks?.has(school) ? school : DEFAULT_CONCENTRATION_TRACK;
-}
-
-/** The caster's concentrations on this track, which this cast ends. */
-function concentrationOnTrack(
-	caster: ConcentratingActor,
-	track: string,
-): ReplaceableConditionEffect[] {
-	return [...(caster.effects ?? [])].filter((effect) => {
-		if (effect.statuses?.size !== 1) return false;
-		if (!effect.statuses.has(STATUS_EFFECT_IDS.concentration)) return false;
-
-		return (
-			(effect.getFlag?.(SYSTEM_ID, 'concentrationTrack') ?? DEFAULT_CONCENTRATION_TRACK) === track
-		);
-	});
-}
-
-/**
  * Put concentration on an activated item's owner, ending whatever they were
- * already concentrating on in the same track.
+ * already concentrating on that this cast displaces.
  *
  * Driven by the `concentration` property rather than by anything authored on the
  * item, so homebrew spells and inscribed scrolls need no rules of their own.
- *
- * @returns whether the caster came out of this concentrating on this item.
  */
-async function applyCasterConcentration(item: ConcentrationSource): Promise<boolean> {
-	if (!item.tags.has(CONCENTRATION_PROPERTY_TAG)) return false;
+async function applyCasterConcentration(item: ConcentrationSource): Promise<ConcentrationOutcome> {
+	if (!item.tags.has(CONCENTRATION_PROPERTY_TAG)) return 'skipped';
+	if (!isRuleAutomationEnabled()) return 'skipped';
 
 	const caster = item.actor;
-	if (!caster) return false;
+	if (!caster) return 'skipped';
 
-	const track = concentrationTrack(item, caster);
+	const track = concentrationTrackForCast(activatedSpellSchool(item), caster);
 
 	const effect = await applyConditionToActor(caster, STATUS_EFFECT_IDS.concentration, {
 		sourceItem: item,
 		sourceActor: caster,
-		systemFlags: { concentrationTrack: track },
-		replaces: concentrationOnTrack(caster, track),
+		systemFlags: { [CONCENTRATION_TRACK_FLAG]: track },
+		replaces: concentrationsEndedBy(caster, track),
 	});
 
-	return effect !== null;
+	return effect ? 'applied' : 'refused';
 }
 
 export type { SystemItemTypes } from './itemInterfaces.js';
@@ -289,7 +255,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 		let concentrating = false;
 		try {
-			concentrating = await applyCasterConcentration(this as object as ConcentrationSource);
+			const outcome = await applyCasterConcentration(this as object as ConcentrationSource);
+			concentrating = outcome === 'applied';
+
+			if (outcome === 'refused') {
+				ui.notifications?.warn('NIMBLE.chat.concentrationFailed', { localize: true });
+			}
 		} catch (error) {
 			console.error('Nimble | Could not apply concentration to the caster.', error);
 			ui.notifications?.warn('NIMBLE.chat.concentrationFailed', { localize: true });
