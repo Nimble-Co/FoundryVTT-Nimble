@@ -35,7 +35,7 @@ async function confirmDeleteStockedContainer(name: string, storedCount: number):
 		await foundry.applications.api.DialogV2.confirm({
 			window: { title: localize('NIMBLE.containers.deleteStockedTitle') },
 			content: `<p>${localize('NIMBLE.containers.deleteStocked', {
-				container: name,
+				container: foundry.utils.escapeHTML(name),
 				count: String(storedCount),
 			})}</p>`,
 			rejectClose: false,
@@ -127,11 +127,11 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		options: Item.Database.PreCreateOptions,
 		user: User.Stored,
 	) {
+		if (this.isEmbedded) this.#discardUnknownContainerId();
+
 		// Update quantity if object already exists and is stackable or smallSized
 		if (this.isEmbedded && OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)) {
-			// Only a stack in the same place folds in: arrows in a quiver and arrows on
-			// the belt are separate piles, and a stack inside a container must not
-			// silently swallow copies dropped onto the sheet.
+			// Arrows in a quiver and arrows on the belt are separate piles.
 			const existing = this.actor?.items.find(
 				(i) =>
 					i instanceof NimbleObjectItem &&
@@ -158,34 +158,88 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	}
 
 	/**
-	 * Spills a deleted container's contents back into the carrier's inventory, so
-	 * they stop pointing at an item that no longer exists and go back to costing
-	 * their own slots.
-	 *
-	 * Emptying a container is a surprise when the player only meant to bin the bag,
-	 * so a container holding anything asks first. `_preDelete` runs on the deleting
-	 * client alone and is awaited, so the contents are freed before the container
-	 * goes and a refusal here cancels the deletion.
+	 * A copy made from a stored object carries the id of a container on the actor it
+	 * came from, which names nothing here. Left in place it hides the copy's equip
+	 * toggle and keeps it out of the loose stack, so it is cleared before the
+	 * stacking check reads it.
 	 */
-	override async _preDelete(options: Item.Database.PreDeleteOptions, user: User.Stored) {
-		const actor = this.actor;
-		if (!actor || !this.system.container.enabled) return super._preDelete(options, user);
+	#discardUnknownContainerId(): void {
+		const { containerId } = this.system;
+		if (!containerId) return;
 
-		const contents = actor.items
+		const container = this.actor?.items.get(containerId);
+		const holdsObjects =
+			container?.type === 'object' &&
+			(container as unknown as NimbleObjectItem).system.container.enabled;
+
+		if (holdsObjects) return;
+
+		this.updateSource({ 'system.containerId': '' } as Record<string, unknown>);
+	}
+
+	/** The ids of the objects this container currently holds. */
+	#getStoredItemIds(): string[] {
+		const actor = this.actor;
+		if (!actor || !this.system.container.enabled) return [];
+
+		return actor.items
 			.filter(
 				(item) =>
 					item.type === 'object' &&
 					(item as unknown as NimbleObjectItem).system.containerId === this.id,
 			)
-			.map((item) => ({ _id: item.id, 'system.containerId': '' }));
+			.map((item) => item.id as string);
+	}
 
-		if (contents.length === 0) return super._preDelete(options, user);
+	/**
+	 * Emptying a container is a surprise when the player only meant to bin the bag,
+	 * so one holding anything asks first. The inherited hook decides first: a module
+	 * that has already cancelled the delete should not raise a prompt about it.
+	 */
+	override async _preDelete(options: Item.Database.PreDeleteOptions, user: User.Stored) {
+		const inherited = await super._preDelete(options, user);
+		if (inherited === false) return false;
 
-		if (!(await confirmDeleteStockedContainer(this.name, contents.length))) return false;
+		const storedCount = this.#getStoredItemIds().length;
+		if (storedCount === 0) return inherited;
 
-		await actor.updateEmbeddedDocuments('Item', contents as Item.UpdateData[]);
+		if (!(await confirmDeleteStockedContainer(this.name, storedCount))) return false;
 
-		return super._preDelete(options, user);
+		return inherited;
+	}
+
+	/**
+	 * Spills a deleted container's contents back into the carrier's inventory, so
+	 * they stop pointing at an item that no longer exists and go back to costing
+	 * their own slots.
+	 *
+	 * The spill waits for `_onDelete` rather than riding along with the confirmation
+	 * in `_preDelete`, because `preDeleteItem` hooks and the server both get a say
+	 * after `_preDelete` returns. Writing earlier can empty a bag that then survives.
+	 */
+	override _onDelete(options, userId: string): void {
+		super._onDelete(options, userId);
+
+		if (game.user?.id !== userId) return;
+
+		const storedItemIds = this.#getStoredItemIds();
+		if (storedItemIds.length === 0) return;
+
+		void this.#releaseStoredItems(storedItemIds);
+	}
+
+	async #releaseStoredItems(storedItemIds: string[]): Promise<void> {
+		const updates = storedItemIds.map((_id) => ({ _id, 'system.containerId': '' }));
+
+		try {
+			await this.actor?.updateEmbeddedDocuments('Item', updates as Item.UpdateData[]);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(error);
+			ui.notifications?.error(
+				localize('NIMBLE.containers.releaseFailed', { container: this.name }),
+			);
+		}
 	}
 
 	/**

@@ -1,3 +1,5 @@
+import type { ContainerConfig, ObjectSizeType } from '#types/inventoryContainers.js';
+import { CONTAINER_SLOT_COST_MODES, OBJECT_SIZE_TYPES } from '#utils/containerConfig.js';
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 import { activation, baseProperties } from './common.js';
 
@@ -53,7 +55,7 @@ const schema = () => ({
 		required: true,
 		initial: 'slots',
 		nullable: false,
-		options: ['slots', 'stackable', 'smallSized'],
+		choices: OBJECT_SIZE_TYPES,
 	}),
 	slotsRequired: new fields.NumberField({
 		required: true,
@@ -75,7 +77,7 @@ const schema = () => ({
 			required: true,
 			initial: 'none',
 			nullable: false,
-			choices: ['none', 'ignore', 'reduce', 'half'],
+			choices: CONTAINER_SLOT_COST_MODES,
 		}),
 		slotCostReduction: new fields.NumberField({
 			required: true,
@@ -167,18 +169,11 @@ class NimbleObjectData extends NimbleBaseItemData<
 	declare quantity: number;
 	declare equipped: boolean;
 	declare unidentifiedName: string;
-	declare objectSizeType: 'slots' | 'stackable' | 'smallSized';
+	declare objectSizeType: ObjectSizeType;
 	declare slotsRequired: number;
 	declare stackSize: number;
 	declare containerId: string;
-	declare container: {
-		enabled: boolean;
-		slotCostMode: 'none' | 'ignore' | 'reduce' | 'half';
-		slotCostReduction: number;
-		capacity: number | null;
-		allowedObjectTypes: string[];
-		requiresEquipped: boolean;
-	};
+	declare container: ContainerConfig;
 	declare properties: {
 		reach: { min: number; max: number | null };
 		range: { min: number; max: number | null };

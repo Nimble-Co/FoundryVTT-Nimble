@@ -59,18 +59,36 @@ function renderWithContainers(
 	handlers: {
 		storeItemInContainer?: ReturnType<typeof vi.fn>;
 		removeItemFromContainer?: ReturnType<typeof vi.fn>;
+		updateStoredObjectQuantity?: ReturnType<typeof vi.fn>;
+		toggleEquipment?: ReturnType<typeof vi.fn>;
 		onDropItem?: ReturnType<typeof vi.fn>;
 	} = {},
 ) {
 	const storeItemInContainer = handlers.storeItemInContainer ?? vi.fn();
 	const removeItemFromContainer = handlers.removeItemFromContainer ?? vi.fn();
+	const updateStoredObjectQuantity = handlers.updateStoredObjectQuantity ?? vi.fn();
+	const toggleEquipment = handlers.toggleEquipment ?? vi.fn();
 	const onDropItem = handlers.onDropItem ?? vi.fn(() => []);
 
 	const result = render(PlayerCharacterInventoryTabHarness, {
-		props: { items, storeItemInContainer, removeItemFromContainer, onDropItem },
+		props: {
+			items,
+			storeItemInContainer,
+			removeItemFromContainer,
+			updateStoredObjectQuantity,
+			toggleEquipment,
+			onDropItem,
+		},
 	});
 
-	return { ...result, storeItemInContainer, removeItemFromContainer, onDropItem };
+	return {
+		...result,
+		storeItemInContainer,
+		removeItemFromContainer,
+		updateStoredObjectQuantity,
+		toggleEquipment,
+		onDropItem,
+	};
 }
 
 function getRow(container: HTMLElement, itemId: string): HTMLElement {
@@ -222,30 +240,65 @@ describe('PlayerCharacterInventoryTab containers', () => {
 		expect(storeItemInContainer).toHaveBeenCalledWith('sword', 'bag');
 	});
 
-	it('keeps an item dragged in from outside once the container takes it', async () => {
-		const created = { id: 'potion', type: 'object', delete: vi.fn() };
-		const { container } = renderWithContainers([bagOfHolding], {
-			onDropItem: vi.fn(() => [created]),
-			storeItemInContainer: vi.fn(async () => true),
-		});
+	it('creates an item dragged in from outside already inside the container', async () => {
+		const onDropItem = vi.fn(() => []);
+		const { container } = renderWithContainers([bagOfHolding], { onDropItem });
 
 		mockDraggedItem('Compendium.nimble.objects.potion');
 		await fireEvent.drop(getRow(container, 'bag'));
 
-		expect(created.delete).not.toHaveBeenCalled();
+		// Creating it inside the bag is what lets it stack with what is already in
+		// there, rather than folding into the loose pile and never arriving.
+		expect(onDropItem).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+			containerId: 'bag',
+		});
 	});
 
-	it('deletes an item dragged in from outside when the container refuses it', async () => {
-		const created = { id: 'potion', type: 'object', delete: vi.fn() };
-		const { container } = renderWithContainers([bagOfHolding], {
-			onDropItem: vi.fn(() => [created]),
-			storeItemInContainer: vi.fn(async () => false),
-		});
+	it('creates an item dropped on the inventory list outside any container', async () => {
+		const onDropItem = vi.fn(() => []);
+		const { container } = renderWithContainers([bagOfHolding], { onDropItem });
+
+		const inventoryList = container.querySelector('.nimble-sheet__body--player-character');
+		if (!inventoryList) throw new Error('No inventory list rendered');
 
 		mockDraggedItem('Compendium.nimble.objects.potion');
-		await fireEvent.drop(getRow(container, 'bag'));
+		await fireEvent.drop(inventoryList);
 
-		expect(created.delete).toHaveBeenCalled();
+		expect(onDropItem).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+			containerId: '',
+		});
+	});
+
+	it('checks the container capacity before raising a stored stack', async () => {
+		const updateStoredObjectQuantity = vi.fn();
+		const { container } = renderWithContainers([bagOfHolding, storedPlateArmor], {
+			updateStoredObjectQuantity,
+		});
+
+		const input = getRow(container, 'armor').querySelector<HTMLInputElement>(
+			'.nimble-document-card__quantity',
+		);
+		if (!input) throw new Error('No quantity input rendered for the stored row');
+
+		input.value = '9';
+		await fireEvent.change(input);
+
+		expect(updateStoredObjectQuantity).toHaveBeenCalledWith('armor', 9);
+	});
+
+	it('equips through the item, so the rules and the flag go in one write', async () => {
+		const toggleEquipment = vi.fn();
+		const { container } = renderWithContainers(
+			[{ ...plateArmor, system: { ...plateArmor.system, rules: [{ type: 'armorClass' }] } }],
+			{ toggleEquipment },
+		);
+
+		const toggle = getRow(container, 'armor').querySelector<HTMLElement>('[aria-label^="Toggle"]');
+		if (!toggle) throw new Error('No equip toggle rendered');
+
+		await fireEvent.click(toggle);
+
+		expect(toggleEquipment).toHaveBeenCalledWith('armor');
 	});
 
 	it('offers no equip toggle for a stored object', () => {

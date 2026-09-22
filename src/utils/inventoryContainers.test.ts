@@ -1,51 +1,19 @@
+import { describe, expect, it } from 'vitest';
+
+import type { ContainableObject } from '#types/inventoryContainers.js';
 import {
-	applyContainerSlotRule,
-	type ContainableObject,
-	type ContainerConfig,
+	createContainer as makeContainer,
+	createContainableObject as makeObject,
+} from '../../tests/fixtures/containableObject.js';
+import {
 	calculateInventorySlotCost,
-	containerWaivesSmallObjectCost,
 	findContainerStorageRejection,
-	getBaseSlotCost,
 	getContainerUsedCapacity,
 } from './inventoryContainers.js';
 
-function makeObject(
-	_id: string,
-	system: Partial<ContainableObject['system']> = {},
-): ContainableObject {
-	return {
-		_id,
-		name: _id,
-		system: {
-			objectType: 'misc',
-			objectSizeType: 'slots',
-			slotsRequired: 1,
-			quantity: 1,
-			stackSize: 2,
-			equipped: false,
-			containerId: '',
-			container: {
-				enabled: false,
-				slotCostMode: 'ignore',
-				slotCostReduction: 1,
-				capacity: null,
-				allowedObjectTypes: [],
-				requiresEquipped: false,
-			},
-			...system,
-		},
-	};
-}
-
-function makeContainer(_id: string, container: Partial<ContainerConfig> = {}): ContainableObject {
-	const object = makeObject(_id);
-	object.system.container = { ...object.system.container, enabled: true, ...container };
-	return object;
-}
-
-describe('getBaseSlotCost', () => {
+describe('calculateInventorySlotCost slot costs', () => {
 	it('uses the stored slot count for slot-sized objects', () => {
-		expect(getBaseSlotCost(makeObject('sword', { slotsRequired: 2 }))).toBe(2);
+		expect(calculateInventorySlotCost([makeObject('sword', { slotsRequired: 2 })])).toBe(2);
 	});
 
 	it('charges one slot per started stack for stackable objects', () => {
@@ -55,11 +23,14 @@ describe('getBaseSlotCost', () => {
 			stackSize: 20,
 		});
 
-		expect(getBaseSlotCost(arrows)).toBe(2);
+		expect(calculateInventorySlotCost([arrows])).toBe(2);
 	});
 
-	it('reports no individual cost for small objects', () => {
-		expect(getBaseSlotCost(makeObject('coin', { objectSizeType: 'smallSized' }))).toBeNull();
+	it('charges every small object carried loose a single shared slot', () => {
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized' });
+		const twine = makeObject('twine', { objectSizeType: 'smallSized' });
+
+		expect(calculateInventorySlotCost([chalk, twine])).toBe(1);
 	});
 
 	it('throws for an unrecognised size type', () => {
@@ -67,69 +38,138 @@ describe('getBaseSlotCost', () => {
 			objectSizeType: 'nonsense' as ContainableObject['system']['objectSizeType'],
 		});
 
-		expect(() => getBaseSlotCost(broken)).toThrow(/nonsense/);
+		expect(() => calculateInventorySlotCost([broken])).toThrow(/nonsense/);
 	});
 });
 
-describe('applyContainerSlotRule', () => {
-	it('drops the cost to nothing when the container ignores slot cost', () => {
-		expect(applyContainerSlotRule(makeContainer('bag'), 3)).toBe(0);
+describe('calculateInventorySlotCost container rules', () => {
+	it('charges a carried object its own slots when no container holds it', () => {
+		expect(calculateInventorySlotCost([makeObject('sword', { slotsRequired: 2 })])).toBe(2);
 	});
 
-	it('halves the cost when the container halves slot cost', () => {
-		expect(applyContainerSlotRule(makeContainer('bag', { slotCostMode: 'half' }), 3)).toBe(1.5);
+	it('leaves stored objects at full cost on the default normal slot cost', () => {
+		const chest = makeContainer('chest');
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'chest' });
+
+		expect(chest.system.container.slotCostMode).toBe('none');
+		expect(calculateInventorySlotCost([chest, armor])).toBe(5);
 	});
 
-	it('subtracts the configured amount when the container reduces slot cost', () => {
-		const bag = makeContainer('bag', { slotCostMode: 'reduce', slotCostReduction: 1 });
+	it('keeps small objects in the shared slot on normal slot cost', () => {
+		const chest = makeContainer('chest');
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'chest' });
 
-		expect(applyContainerSlotRule(bag, 3)).toBe(2);
+		expect(calculateInventorySlotCost([chest, chalk])).toBe(2);
 	});
 
-	it('never reduces a cost below zero', () => {
-		const bag = makeContainer('bag', { slotCostMode: 'reduce', slotCostReduction: 5 });
+	it('charges a bag of holding its own slot and nothing for what it holds', () => {
+		const bagOfHolding = makeContainer('bag', { slotCostMode: 'ignore' });
+		const plateArmor = makeObject('armor', { slotsRequired: 4, containerId: 'bag' });
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'bag' });
 
-		expect(applyContainerSlotRule(bag, 2)).toBe(0);
+		expect(calculateInventorySlotCost([bagOfHolding, plateArmor, chalk])).toBe(1);
 	});
 
-	it('leaves the cost alone when the item is not configured as a container', () => {
-		expect(applyContainerSlotRule(makeObject('crate'), 3)).toBe(3);
+	it('halves the cost of objects in a half-cost container', () => {
+		const bag = makeContainer('bag', { slotCostMode: 'half' });
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'bag' });
+
+		expect(calculateInventorySlotCost([bag, armor])).toBe(3);
 	});
 
-	it('leaves the cost alone while an equip-only container is stowed', () => {
-		const backpack = makeContainer('backpack', { requiresEquipped: true });
+	it('subtracts the configured reduction from each object in the container', () => {
+		const backpack = makeContainer('backpack', { slotCostMode: 'reduce', slotCostReduction: 1 });
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'backpack' });
+		const sword = makeObject('sword', { slotsRequired: 2, containerId: 'backpack' });
 
-		expect(applyContainerSlotRule(backpack, 3)).toBe(3);
+		expect(calculateInventorySlotCost([backpack, armor, sword])).toBe(5);
+	});
+
+	it('never reduces an object below no cost at all', () => {
+		const backpack = makeContainer('backpack', { slotCostMode: 'reduce', slotCostReduction: 5 });
+		const sword = makeObject('sword', { slotsRequired: 2, containerId: 'backpack' });
+
+		expect(calculateInventorySlotCost([backpack, sword])).toBe(1);
+	});
+
+	it('charges full cost while an equip-only container is stowed', () => {
+		const backpack = makeContainer('backpack', {
+			slotCostMode: 'ignore',
+			requiresEquipped: true,
+		});
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'backpack' });
+
+		expect(calculateInventorySlotCost([backpack, armor])).toBe(5);
 	});
 
 	it('applies the rule once an equip-only container is equipped', () => {
-		const backpack = makeContainer('backpack', { requiresEquipped: true });
-		backpack.system.equipped = true;
+		const backpack = makeContainer(
+			'backpack',
+			{ slotCostMode: 'ignore', requiresEquipped: true },
+			{ equipped: true },
+		);
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'backpack' });
 
-		expect(applyContainerSlotRule(backpack, 3)).toBe(0);
+		expect(calculateInventorySlotCost([backpack, armor])).toBe(1);
 	});
-});
 
-describe('containerWaivesSmallObjectCost', () => {
-	it('waives the shared small-object slot only when the container ignores cost', () => {
-		expect(containerWaivesSmallObjectCost(makeContainer('bag'))).toBe(true);
-		expect(containerWaivesSmallObjectCost(makeContainer('bag', { slotCostMode: 'half' }))).toBe(
-			false,
-		);
-		expect(containerWaivesSmallObjectCost(makeContainer('bag', { slotCostMode: 'reduce' }))).toBe(
-			false,
-		);
+	it('charges full cost when the container is no longer carried', () => {
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'bag-that-is-gone' });
+
+		expect(calculateInventorySlotCost([armor])).toBe(4);
+	});
+
+	it('takes small objects out of the shared slot when their container ignores cost', () => {
+		const bag = makeContainer('bag', { slotCostMode: 'ignore' });
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'bag' });
+
+		expect(calculateInventorySlotCost([bag, chalk])).toBe(1);
+	});
+
+	it('keeps small objects in the shared slot when their container only reduces cost', () => {
+		const backpack = makeContainer('backpack', { slotCostMode: 'reduce' });
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'backpack' });
+
+		expect(calculateInventorySlotCost([backpack, chalk])).toBe(2);
+	});
+
+	it('keeps small objects in the shared slot when their container halves cost', () => {
+		const backpack = makeContainer('backpack', { slotCostMode: 'half' });
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'backpack' });
+
+		expect(calculateInventorySlotCost([backpack, chalk])).toBe(2);
+	});
+
+	it('rounds the total up once, so two half-cost objects share a slot', () => {
+		const bag = makeContainer('bag', { slotCostMode: 'half' });
+		const firstPotion = makeObject('potion-a', { slotsRequired: 1, containerId: 'bag' });
+		const secondPotion = makeObject('potion-b', { slotsRequired: 1, containerId: 'bag' });
+
+		expect(calculateInventorySlotCost([bag, firstPotion, secondPotion])).toBe(2);
 	});
 });
 
 describe('getContainerUsedCapacity', () => {
-	it('adds up the stored objects at their own slot cost, small objects counting for nothing', () => {
+	it('adds up the stored objects at their own slot cost', () => {
+		const stored = [makeObject('sword', { slotsRequired: 2 }), makeObject('rope')];
+
+		expect(getContainerUsedCapacity(stored)).toBe(3);
+	});
+
+	it('gives every small object stored inside one shared slot between them', () => {
 		const stored = [
 			makeObject('sword', { slotsRequired: 2 }),
 			makeObject('coin', { objectSizeType: 'smallSized' }),
+			makeObject('chalk', { objectSizeType: 'smallSized' }),
 		];
 
-		expect(getContainerUsedCapacity(stored)).toBe(2);
+		expect(getContainerUsedCapacity(stored)).toBe(3);
+	});
+
+	it('measures stored objects at full cost even when the container waives it', () => {
+		const stored = [makeObject('armor', { slotsRequired: 4, containerId: 'bag' })];
+
+		expect(getContainerUsedCapacity(stored)).toBe(4);
 	});
 });
 
@@ -171,6 +211,25 @@ describe('findContainerStorageRejection', () => {
 		expect(findContainerStorageRejection(chest, makeObject('sword'), stored)).toBe('capacity');
 	});
 
+	it('refuses a small object once the shared slot it needs would overflow', () => {
+		const pouch = makeContainer('pouch', { capacity: 1 });
+		const stored = [makeObject('sword', { slotsRequired: 1 })];
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized' });
+
+		expect(findContainerStorageRejection(pouch, chalk, stored)).toBe('capacity');
+	});
+
+	it('fits any number of small objects into the one slot they share', () => {
+		const pouch = makeContainer('pouch', { capacity: 1 });
+		const stored = [
+			makeObject('coin', { objectSizeType: 'smallSized' }),
+			makeObject('twine', { objectSizeType: 'smallSized' }),
+		];
+		const chalk = makeObject('chalk', { objectSizeType: 'smallSized' });
+
+		expect(findContainerStorageRejection(pouch, chalk, stored)).toBeNull();
+	});
+
 	it('ignores capacity when the container has no limit', () => {
 		const bag = makeContainer('bag');
 		const stored = [makeObject('armor', { slotsRequired: 99 })];
@@ -184,74 +243,16 @@ describe('findContainerStorageRejection', () => {
 
 		expect(findContainerStorageRejection(chest, sword, [sword])).toBeNull();
 	});
-});
 
-describe('calculateInventorySlotCost', () => {
-	it('charges a carried object its own slots when no container holds it', () => {
-		expect(calculateInventorySlotCost([makeObject('sword', { slotsRequired: 2 })])).toBe(2);
-	});
+	it('refuses a stored stack that grows past the capacity', () => {
+		const quiver = makeContainer('quiver', { capacity: 1 });
+		const arrows = makeObject('arrows', {
+			objectSizeType: 'stackable',
+			quantity: 40,
+			stackSize: 20,
+			containerId: 'quiver',
+		});
 
-	it('still charges the container itself while waiving what it holds', () => {
-		const bagOfHolding = makeContainer('bag');
-		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'bag' });
-
-		expect(calculateInventorySlotCost([bagOfHolding, armor])).toBe(1);
-	});
-
-	it('halves the cost of objects in a half-cost container', () => {
-		const bag = makeContainer('bag', { slotCostMode: 'half' });
-		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'bag' });
-
-		expect(calculateInventorySlotCost([bag, armor])).toBe(3);
-	});
-
-	it('subtracts the configured reduction from each object in the container', () => {
-		const backpack = makeContainer('backpack', { slotCostMode: 'reduce', slotCostReduction: 1 });
-		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'backpack' });
-		const sword = makeObject('sword', { slotsRequired: 2, containerId: 'backpack' });
-
-		expect(calculateInventorySlotCost([backpack, armor, sword])).toBe(5);
-	});
-
-	it('charges full cost while an equip-only container is stowed', () => {
-		const backpack = makeContainer('backpack', { requiresEquipped: true });
-		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'backpack' });
-
-		expect(calculateInventorySlotCost([backpack, armor])).toBe(5);
-	});
-
-	it('charges full cost when the container is no longer carried', () => {
-		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'bag-that-is-gone' });
-
-		expect(calculateInventorySlotCost([armor])).toBe(4);
-	});
-
-	it('takes small objects out of the shared slot when their container ignores cost', () => {
-		const bag = makeContainer('bag');
-		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'bag' });
-
-		expect(calculateInventorySlotCost([bag, chalk])).toBe(1);
-	});
-
-	it('keeps small objects in the shared slot when their container only reduces cost', () => {
-		const backpack = makeContainer('backpack', { slotCostMode: 'reduce' });
-		const chalk = makeObject('chalk', { objectSizeType: 'smallSized', containerId: 'backpack' });
-
-		expect(calculateInventorySlotCost([backpack, chalk])).toBe(2);
-	});
-
-	it('rounds the total up once, so two half-cost objects share a slot', () => {
-		const bag = makeContainer('bag', { slotCostMode: 'half' });
-		const firstPotion = makeObject('potion-a', { slotsRequired: 1, containerId: 'bag' });
-		const secondPotion = makeObject('potion-b', { slotsRequired: 1, containerId: 'bag' });
-
-		expect(calculateInventorySlotCost([bag, firstPotion, secondPotion])).toBe(2);
-	});
-
-	it('charges every small object carried loose a single shared slot', () => {
-		const chalk = makeObject('chalk', { objectSizeType: 'smallSized' });
-		const twine = makeObject('twine', { objectSizeType: 'smallSized' });
-
-		expect(calculateInventorySlotCost([chalk, twine])).toBe(1);
+		expect(findContainerStorageRejection(quiver, arrows, [arrows])).toBe('capacity');
 	});
 });

@@ -100,12 +100,14 @@ describe('container inventory', () => {
 
 		promptAnswer = true;
 		await actor.deleteEmbeddedDocuments('Item', [bag.id]);
-		await settle();
 
-		const survivor = actor.items.get(armor.id);
-		expect(survivor).toBeDefined();
-		// The database source, not just the prepared copy.
-		expect(survivor!.toObject().system.containerId).toBe('');
+		// `_onDelete` spills the contents once the delete has actually landed, so the
+		// write starts after `deleteEmbeddedDocuments` resolves.
+		await waitFor(
+			() => actor.items.get(armor.id)?.toObject().system.containerId === '',
+			'the contents to be freed',
+		);
+
 		expect(actor.items.get(bag.id)).toBeUndefined();
 	});
 
@@ -150,6 +152,15 @@ describe('container inventory', () => {
 		);
 
 		expect(actor.items.filter((item) => item.name === `${TEST_PREFIX} Arrows`)).toHaveLength(1);
+	});
+
+	test('a copy of a stored object is carried loose rather than pointing at a missing bag', async () => {
+		const [ration] = await actor.createEmbeddedDocuments('Item', [
+			objectData('Ration', { containerId: 'a-bag-that-is-not-here' }),
+		]);
+		await settle();
+
+		expect(ration.toObject().system.containerId).toBe('');
 	});
 
 	test('a stack inside a container stays separate from the loose one', async () => {

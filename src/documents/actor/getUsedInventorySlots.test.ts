@@ -1,32 +1,20 @@
-import type { ContainableObject } from '#utils/inventoryContainers.js';
+import { describe, expect, it } from 'vitest';
+
+import type { ContainableObject } from '#types/inventoryContainers.js';
+import {
+	createContainableObject,
+	createContainer,
+} from '../../../tests/fixtures/containableObject.js';
 import { NimbleCharacter } from './character.js';
 
 type ObjectStub = ContainableObject & { isType(type: string): boolean };
 
+function asStub(object: ContainableObject): ObjectStub {
+	return { ...object, isType: (type: string) => type === 'object' };
+}
+
 function makeObject(_id: string, system: Partial<ContainableObject['system']> = {}): ObjectStub {
-	return {
-		_id,
-		name: _id,
-		isType: (type: string) => type === 'object',
-		system: {
-			objectType: 'misc',
-			objectSizeType: 'slots',
-			slotsRequired: 1,
-			quantity: 1,
-			stackSize: 2,
-			equipped: false,
-			containerId: '',
-			container: {
-				enabled: false,
-				slotCostMode: 'ignore',
-				slotCostReduction: 1,
-				capacity: null,
-				allowedObjectTypes: [],
-				requiresEquipped: false,
-			},
-			...system,
-		},
-	};
+	return asStub(createContainableObject(_id, system));
 }
 
 /** Only the fields `getUsedInventorySlots` reads off an actor. */
@@ -51,11 +39,17 @@ describe('getUsedInventorySlots', () => {
 	});
 
 	it('applies the rule of the container an object is stored in', () => {
-		const bagOfHolding = makeObject('bag');
-		bagOfHolding.system.container = { ...bagOfHolding.system.container, enabled: true };
+		const bagOfHolding = asStub(createContainer('bag', { slotCostMode: 'ignore' }));
 		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'bag' });
 
 		expect(countSlots([bagOfHolding, armor])).toBe(1);
+	});
+
+	it('charges a stored object in full for a container on the default normal slot cost', () => {
+		const chest = asStub(createContainer('chest'));
+		const armor = makeObject('armor', { slotsRequired: 4, containerId: 'chest' });
+
+		expect(countSlots([chest, armor])).toBe(5);
 	});
 
 	it('adds a slot per 500 coins on top of the objects carried', () => {

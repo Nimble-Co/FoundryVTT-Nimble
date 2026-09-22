@@ -2,6 +2,7 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import type { ContainableObject } from '#types/inventoryContainers.js';
 import createScrollFromSpell from '#utils/createScrollFromSpell.js';
 import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
 import localize from '#utils/localize.js';
@@ -113,6 +114,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	override async _onDropItem(
 		event: DragEvent,
 		dropArg: Record<string, unknown> | Item.Implementation,
+		options: { containerId?: string } = {},
 	) {
 		const data = dropArg as Record<string, unknown>;
 		event.preventDefault();
@@ -178,12 +180,48 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		// Create regular items
 		const itemsToCreate = scrollItems ?? items;
+
+		if (!this.#routeCreatesIntoContainer(itemsToCreate, options.containerId ?? '')) return false;
+
 		const result = await this._actor.createEmbeddedDocuments(
 			'Item',
 			itemsToCreate as unknown as ReturnType<Item.Implementation['toObject']>[],
 		);
 		this.#announceCreatedItems(itemsToCreate, result);
 		return result;
+	}
+
+	/**
+	 * Marks the objects about to be created as stored in the container they were
+	 * dropped on, so the stack check in `NimbleObjectItem#_preCreate` runs against
+	 * that container's contents rather than the loose pile. Returns false when the
+	 * container refuses one of them, which it reports to the player itself.
+	 *
+	 * A stored object is never equipped, so anything dropped straight into a
+	 * container arrives stowed.
+	 */
+	#routeCreatesIntoContainer(
+		itemsToCreate: Array<Record<string, unknown>>,
+		containerId: string,
+	): boolean {
+		if (!containerId) return true;
+
+		for (const item of itemsToCreate) {
+			if (item.type !== 'object') continue;
+
+			const system = (item.system ?? {}) as Record<string, unknown>;
+			const candidate = { ...item, system } as object as ContainableObject;
+
+			if (!(this._actor as NimbleCharacter).canStoreObjectInContainer(containerId, candidate)) {
+				return false;
+			}
+
+			system.containerId = containerId;
+			system.equipped = false;
+			item.system = system;
+		}
+
+		return true;
 	}
 
 	/**

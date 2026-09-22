@@ -13,6 +13,14 @@
 	import prepareObjectTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
 	import SearchBar from '#view/sheets/components/SearchBar.svelte';
 	import {
+		canToggleEquipment,
+		getDropTargetContainerId,
+		groupItemsByContainer,
+		groupItemsByType,
+		isContainer,
+		isDropDataRecord,
+	} from './PlayerCharacterInventoryTab.svelte.js';
+	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
 		type SheetDropItemFlashState,
@@ -23,10 +31,6 @@
 	type InventorySortableItem = {
 		_id: string;
 	};
-
-	function isDropDataRecord(value: unknown): value is Record<string, unknown> {
-		return typeof value === 'object' && value !== null;
-	}
 
 	async function configureItem(event, id) {
 		event.stopPropagation();
@@ -48,17 +52,6 @@
 
 	function getObjectMetadata(_item) {
 		return null;
-	}
-
-	function groupItemsByType(items) {
-		return items.reduce((categories, item) => {
-			const { objectType } = item.reactive.system;
-
-			categories[objectType] ??= [];
-			categories[objectType].push(item);
-
-			return categories;
-		}, {});
 	}
 
 	const { objectTypeHeadings } = CONFIG.NIMBLE;
@@ -109,18 +102,6 @@
 	}
 
 	/**
-	 * Where an item dropped onto this row belongs: the row's own id when the row is
-	 * a container, otherwise whatever holds the row. Dropping onto a row inside a
-	 * bag puts the item in that bag, and dropping onto a row carried directly takes
-	 * it out of wherever it was.
-	 */
-	function getDropTargetContainerId(item): string {
-		if (isContainer(item)) return item.reactive._id;
-
-		return item.reactive.system.containerId ?? '';
-	}
-
-	/**
 	 * Moving an object in or out of a container wins over reordering: it is the
 	 * change a player is nearly always after, and a reorder can be repeated once the
 	 * item is in the right place.
@@ -156,6 +137,7 @@
 
 	/** A drop on the list itself, rather than on a row, takes the item out of its container. */
 	async function handleInventoryDrop(event: DragEvent): Promise<void> {
+		event.stopPropagation();
 		hoveredContainerId = null;
 
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
@@ -183,42 +165,17 @@
 	}
 
 	/**
-	 * An item from outside the sheet is created the usual way first, then stored, so
-	 * a drag straight from a compendium into a bag lands in the bag. A container that
-	 * refuses the item has already said why, so the item it was dropped as is taken
-	 * back out rather than left loose in the inventory the player did not aim for.
+	 * An item from outside the sheet is created already carrying the container it was
+	 * dropped on, so a stack that matches one already in the bag folds into that one
+	 * rather than into the loose pile. The sheet checks the container will take it
+	 * before anything is created.
 	 */
 	async function createDroppedItemInContainer(
 		event: DragEvent,
 		dropData: Record<string, unknown>,
 		containerId: string,
 	): Promise<void> {
-		const createdItems = await sheet._onDropItem(event, dropData);
-		if (!containerId || !Array.isArray(createdItems)) return;
-
-		for (const createdItem of createdItems) {
-			if (createdItem?.type !== 'object') continue;
-			if (await actor.storeItemInContainer(createdItem.id, containerId)) continue;
-
-			await createdItem.delete();
-		}
-	}
-
-	function isContainer(item): boolean {
-		return item?.reactive?.system?.container?.enabled ?? false;
-	}
-
-	/**
-	 * A stored object is packed away, so it can never be equipped. Otherwise the
-	 * toggle belongs to items whose rules it switches, plus containers that only
-	 * apply their rule while equipped: those usually carry no rules of their own,
-	 * and without the toggle their setting could never be satisfied.
-	 */
-	function canToggleEquipment(item): boolean {
-		if (item.reactive.system.containerId) return false;
-		if ((item.reactive.system.rules?.length ?? 0) > 0) return true;
-
-		return isContainer(item) && item.reactive.system.container.requiresEquipped;
+		await sheet._onDropItem(event, dropData, { containerId });
 	}
 
 	/** Highlights the container a drag is currently over. */
@@ -230,7 +187,7 @@
 
 	/**
 	 * `dragenter` on the row being entered fires before `dragleave` on the row being
-	 * left, so only the highlighted row may clear the highlight — otherwise leaving a
+	 * left, so only the highlighted row may clear the highlight. Otherwise leaving a
 	 * plain row would wipe the highlight a container had just claimed. Crossing onto a
 	 * child of the row is not leaving it.
 	 */
@@ -245,16 +202,19 @@
 		hoveredContainerId = null;
 	}
 
-	function groupItemsByContainer(items) {
-		return items.reduce((contents, item) => {
-			const { containerId } = item.reactive.system;
-			if (!containerId) return contents;
+	/**
+	 * A stored stack grows the container's contents the same way a fresh drop does,
+	 * so raising its quantity has to clear the same capacity limit.
+	 */
+	async function updateItemQuantity(item, quantity: string): Promise<void> {
+		const { containerId } = item.reactive.system;
 
-			contents[containerId] ??= [];
-			contents[containerId].push(item);
+		if (!containerId) {
+			await actor.updateItem(item._id, { 'system.quantity': quantity });
+			return;
+		}
 
-			return contents;
-		}, {});
+		await actor.updateStoredObjectQuantity(item._id, Number(quantity));
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
@@ -435,24 +395,7 @@
 						: localize('NIMBLE.prompts.unequippedTooltip')}
 					onclick={async (event) => {
 						event.stopPropagation();
-						const newEquippedState = !item.reactive.system.equipped;
-						const rulesUpdated = newEquippedState
-							? await rules.enableAllRules()
-							: await rules.disableAllRules();
-
-						if (!rulesUpdated) return;
-
-						const updatedItem = await actor.updateItem(item._id, {
-							'system.equipped': newEquippedState,
-						});
-
-						if (updatedItem) return;
-
-						if (newEquippedState) {
-							await rules.disableAllRules();
-						} else {
-							await rules.enableAllRules();
-						}
+						await item.toggleEquipment();
 					}}
 				>
 					{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
@@ -475,10 +418,7 @@
 					min="0"
 					step="1"
 					onclick={(event) => event.stopPropagation()}
-					onchange={({ currentTarget }) =>
-						actor.updateItem(item._id, {
-							'system.quantity': currentTarget.value,
-						})}
+					onchange={({ currentTarget }) => updateItemQuantity(item, currentTarget.value)}
 				/>
 			{/if}
 
@@ -487,7 +427,7 @@
 				style="grid-area: configureButton"
 				data-button-variant="icon"
 				type="button"
-				aria-label="Configure {item.name}"
+				aria-label={localize('NIMBLE.prompts.configureItem', { name: item.name })}
 				onclick={(event) => configureItem(event, item._id)}
 			>
 				<i class="fa-solid fa-edit"></i>
@@ -498,7 +438,7 @@
 				style="grid-area: deleteButton"
 				data-button-variant="icon"
 				type="button"
-				aria-label="Delete {item.name}"
+				aria-label={localize('NIMBLE.prompts.deleteItem', { name: item.name })}
 				onclick={(event) => deleteItem(event, item._id)}
 			>
 				<i class="fa-solid fa-trash"></i>
@@ -610,7 +550,7 @@
 		}
 	}
 
-	:global(.nimble-document-card--drop-target) {
+	.nimble-document-card--drop-target {
 		outline: 2px dashed var(--nimble-accent-color);
 		outline-offset: 1px;
 	}

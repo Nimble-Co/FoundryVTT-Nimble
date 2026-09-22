@@ -1,3 +1,5 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { SYSTEM_ID } from '#system';
 
 import { NimbleBaseItem } from './base.svelte.js';
@@ -340,14 +342,26 @@ function createObject(id: string, overrides: ObjectStubOverrides = {}) {
 		},
 	} as never);
 
-	Object.assign(item, { update: vi.fn(async () => undefined) });
+	// The base mock's `updateSource` is a no-op, but `_preCreate` relies on it to
+	// rewrite the incoming document before it is stored.
+	Object.assign(item, {
+		update: vi.fn(async () => undefined),
+		updateSource: (changes: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(changes)) {
+				foundry.utils.setProperty(item, path, value);
+			}
+		},
+	});
 
 	return item as NimbleObjectItem & { update: ReturnType<typeof vi.fn> };
 }
 
 function attachActor(items: NimbleObjectItem[]) {
 	const updateEmbeddedDocuments = vi.fn(async () => []);
-	const actor = { items, updateEmbeddedDocuments };
+	const collection = Object.assign(items, {
+		get: (id: string) => items.find((item) => item.id === id),
+	});
+	const actor = { items: collection, updateEmbeddedDocuments };
 
 	for (const item of items) {
 		Object.assign(item, { actor, isEmbedded: true });
@@ -356,7 +370,8 @@ function attachActor(items: NimbleObjectItem[]) {
 	return { actor, updateEmbeddedDocuments };
 }
 
-const DELETING_USER = { id: 'test-user-id' } as never;
+const DELETING_USER_ID = 'test-user-id';
+const DELETING_USER = { id: DELETING_USER_ID } as never;
 
 describe('NimbleObjectItem._preDelete', () => {
 	type PreDeleteHost = { _preDelete?: ReturnType<typeof vi.fn> };
@@ -376,52 +391,116 @@ describe('NimbleObjectItem._preDelete', () => {
 		delete (NimbleBaseItem.prototype as unknown as PreDeleteHost)._preDelete;
 	});
 
+	it('asks before deleting a container that holds something, and writes nothing yet', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+		confirmDialog.mockResolvedValue(true);
+
+		expect(await bag._preDelete({} as never, DELETING_USER)).not.toBe(false);
+		expect(confirmDialog).toHaveBeenCalled();
+		// The contents are freed in `_onDelete`, once the delete has actually happened.
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('cancels the deletion when the confirmation is declined', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		attachActor([bag, armor]);
+		confirmDialog.mockResolvedValue(false);
+
+		expect(await bag._preDelete({} as never, DELETING_USER)).toBe(false);
+	});
+
+	it('does not ask once the inherited hook has already cancelled the delete', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		attachActor([bag, armor]);
+		basePreDelete.mockResolvedValue(false);
+
+		expect(await bag._preDelete({} as never, DELETING_USER)).toBe(false);
+		expect(confirmDialog).not.toHaveBeenCalled();
+	});
+
+	it('asks nothing when the deleted container was empty', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const sword = createObject('sword');
+		attachActor([bag, sword]);
+
+		await bag._preDelete({} as never, DELETING_USER);
+
+		expect(confirmDialog).not.toHaveBeenCalled();
+	});
+
+	it('asks nothing when the deleted object was never a container', async () => {
+		const sword = createObject('sword');
+		const chalk = createObject('chalk', { containerId: 'sword' });
+		attachActor([sword, chalk]);
+
+		await sword._preDelete({} as never, DELETING_USER);
+
+		expect(confirmDialog).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleObjectItem._onDelete', () => {
+	type OnDeleteHost = { _onDelete?: ReturnType<typeof vi.fn> };
+	let baseOnDelete: ReturnType<typeof vi.fn>;
+
+	beforeEach(() => {
+		baseOnDelete = vi.fn();
+		(NimbleBaseItem.prototype as unknown as OnDeleteHost)._onDelete = baseOnDelete;
+	});
+
+	afterEach(() => {
+		delete (NimbleBaseItem.prototype as unknown as OnDeleteHost)._onDelete;
+	});
+
 	it('clears the container reference on everything the deleted container held', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		const sword = createObject('sword');
 		const { updateEmbeddedDocuments } = attachActor([bag, armor, sword]);
-		confirmDialog.mockResolvedValue(true);
 
-		await bag._preDelete({} as never, DELETING_USER);
+		bag._onDelete({} as never, DELETING_USER_ID);
+		await vi.waitFor(() => expect(updateEmbeddedDocuments).toHaveBeenCalled());
 
-		expect(basePreDelete).toHaveBeenCalled();
+		expect(baseOnDelete).toHaveBeenCalled();
 		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
 			{ _id: 'armor', 'system.containerId': '' },
 		]);
 	});
 
-	it('cancels the deletion and writes nothing when the confirmation is declined', async () => {
+	it('leaves the write to the deleting client', () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
-		confirmDialog.mockResolvedValue(false);
 
-		expect(await bag._preDelete({} as never, DELETING_USER)).toBe(false);
-		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
-		expect(basePreDelete).not.toHaveBeenCalled();
-	});
+		bag._onDelete({} as never, 'a-different-user');
 
-	it('writes nothing and asks nothing when the deleted container was empty', async () => {
-		const bag = createObject('bag', { isContainer: true });
-		const sword = createObject('sword');
-		const { updateEmbeddedDocuments } = attachActor([bag, sword]);
-
-		await bag._preDelete({} as never, DELETING_USER);
-
-		expect(confirmDialog).not.toHaveBeenCalled();
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
-	it('writes nothing when the deleted object was never a container', async () => {
+	it('writes nothing when the deleted object was never a container', () => {
 		const sword = createObject('sword');
 		const chalk = createObject('chalk', { containerId: 'sword' });
 		const { updateEmbeddedDocuments } = attachActor([sword, chalk]);
 
-		await sword._preDelete({} as never, DELETING_USER);
+		sword._onDelete({} as never, DELETING_USER_ID);
 
-		expect(confirmDialog).not.toHaveBeenCalled();
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('reports a failed spill rather than leaving it silent', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { actor } = attachActor([bag, armor]);
+		actor.updateEmbeddedDocuments.mockRejectedValue(new Error('no permission'));
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		bag._onDelete({} as never, DELETING_USER_ID);
+
+		await vi.waitFor(() => expect(ui.notifications.error).toHaveBeenCalled());
 	});
 });
 
@@ -531,6 +610,7 @@ describe('NimbleObjectItem._preCreate stacking', () => {
 	});
 
 	it('folds into the stack inside the container when the new one is stored there too', async () => {
+		const quiver = createObject('quiver', { isContainer: true });
 		const quivered = createObject('quivered-arrows', {
 			name: 'Arrows',
 			objectSizeType: 'stackable',
@@ -543,7 +623,49 @@ describe('NimbleObjectItem._preCreate stacking', () => {
 			containerId: 'quiver',
 		});
 
-		expect(await dropOnto([quivered], dropped)).toBe(false);
+		expect(await dropOnto([quiver, quivered], dropped)).toBe(false);
 		expect(quivered.update).toHaveBeenCalledWith({ 'system.quantity': 4 });
+	});
+
+	it('discards a container id that names nothing this actor carries', async () => {
+		const dropped = createObject('copied-armor', { containerId: 'a-bag-on-another-actor' });
+
+		await dropOnto([], dropped);
+
+		expect(dropped.system.containerId).toBe('');
+	});
+
+	it('discards a container id that names an object which is not a container', async () => {
+		const sword = createObject('sword');
+		const dropped = createObject('copied-armor', { containerId: 'sword' });
+
+		await dropOnto([sword], dropped);
+
+		expect(dropped.system.containerId).toBe('');
+	});
+
+	it('keeps a container id that names a container this actor carries', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const dropped = createObject('armor', { containerId: 'bag' });
+
+		await dropOnto([bag], dropped);
+
+		expect(dropped.system.containerId).toBe('bag');
+	});
+
+	it('puts a copied-out stack back in the loose pile rather than keeping it stranded', async () => {
+		const loose = createObject('loose-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+			quantity: 3,
+		});
+		const dropped = createObject('copied-arrows', {
+			name: 'Arrows',
+			objectSizeType: 'stackable',
+			containerId: 'a-quiver-on-another-actor',
+		});
+
+		expect(await dropOnto([loose], dropped)).toBe(false);
+		expect(loose.update).toHaveBeenCalledWith({ 'system.quantity': 4 });
 	});
 });
