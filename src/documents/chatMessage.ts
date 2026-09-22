@@ -1227,21 +1227,9 @@ class NimbleChatMessage extends ChatMessage {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
 		const isMiss = (this.system as unknown as ActivationCardSystemData).isMiss === true;
 
-		// Disposition-targeted damage nodes are surfaced alongside their own
-		// outcome children, which carry the same roll; count only the children.
-		const surfacedOutcomeParentIds = new Set<string>();
-		for (const group of this.effectNodes) {
-			for (const node of group) {
-				if (node.type === 'damageOutcome') {
-					surfacedOutcomeParentIds.add((node as DamageOutcomeNode).parentNode);
-				}
-			}
-		}
-
 		for (const group of this.effectNodes) {
 			for (const node of group) {
 				if (node.type !== 'damage' && node.type !== 'damageOutcome') continue;
-				if (node.type === 'damage' && surfacedOutcomeParentIds.has(node.id)) continue;
 
 				const roll = (node as { roll?: Record<string, unknown> }).roll;
 				if (!roll || typeof roll.class !== 'string') continue;
