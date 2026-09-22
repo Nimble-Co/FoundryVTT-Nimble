@@ -58,6 +58,7 @@ function createMessage(groups: unknown[][], effects: unknown[] = []) {
 		},
 		canApplyAllDamage: () => true,
 		canApplyDamage: () => true,
+		canRollDeferredDamage: () => true,
 		applyAllDamage: () => undefined,
 		applyDamage: () => undefined,
 		reactive: null as unknown,
@@ -234,5 +235,51 @@ describe('ItemCardEffects damage boxes', () => {
 		renderHit(attackSpellEffects({ targetDisposition: 'hostile' }));
 
 		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+	});
+
+	it('draws one damage box for a damage node nested under another damage node', () => {
+		// Damage -> On Hit -> Damage -> On Hit -> Damage Outcome. The nested node
+		// reaches the card through its own outcome child, so it must not draw a
+		// box of its own either.
+		renderHit([
+			{
+				id: 'dmg',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentNode: null,
+				parentContext: null,
+				roll: damageRoll(5),
+				on: {
+					hit: [
+						{
+							id: 'nested',
+							type: 'damage',
+							damageType: 'slashing',
+							formula: '1d4',
+							parentNode: 'dmg',
+							parentContext: 'hit',
+							roll: damageRoll(3),
+							on: {
+								hit: [
+									{
+										id: 'nested-hit',
+										type: 'damageOutcome',
+										outcome: 'fullDamage',
+										parentNode: 'nested',
+										parentContext: 'hit',
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+		]);
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+		expect(screen.getByText('3')).toBeTruthy();
 	});
 });

@@ -1,5 +1,25 @@
-import type { EffectNode } from '#types/effectTree.d.js';
+import type { DamageNode, EffectNode } from '#types/effectTree.d.js';
 import { isAwaitingDeferredRoll } from './isAwaitingDeferredRoll.js';
+
+/**
+ * Whether an outcome child already carries this node's roll onto the card.
+ * Only an outcome child stands in for the roll: a condition, a note or a
+ * second damage packet in the same bucket says nothing about it.
+ */
+function isSurfacedByOutcomeChild(node: DamageNode, contexts: string[]): boolean {
+	return contexts.some((context) =>
+		node.on?.[context]?.some((child) => child.type === 'damageOutcome'),
+	);
+}
+
+/**
+ * Whether a damage node must reach the card in its own right. Deferred damage
+ * that has not landed yet has no roll for an outcome child to stand in with,
+ * and its Roll Damage button lives on the node itself.
+ */
+function needsItsOwnEntry(node: DamageNode, contexts: string[]): boolean {
+	return isAwaitingDeferredRoll(node) || !isSurfacedByOutcomeChild(node, contexts);
+}
 
 /**
  * Traverses the tree and collects nodes based on the specified contexts.
@@ -20,25 +40,14 @@ export function findNodesByContexts(
 	function traverse(node: EffectNode) {
 		if (!node.parentNode) {
 			if (node.type === 'damage') {
-				// An outcome child carries the same roll, so a node that has one for
-				// this context is already on the card and must not be added again.
-				// Only an outcome child stands in for the roll: a condition, a note or
-				// a second damage packet in the same bucket says nothing about it.
-				const surfacedByOutcome = contexts.some((context) =>
-					node.on?.[context]?.some((child) => child.type === 'damageOutcome'),
-				);
-
-				// Deferred damage that has not landed yet has no roll for an outcome
-				// child to stand in with, and its Roll Damage button lives on the node
-				// itself.
-				const awaitingDeferredRoll = isAwaitingDeferredRoll(node);
-
 				// A stored disposition, "Any" included, is a deliberate UI action:
 				// present the node whenever nothing else surfaces its roll.
 				const standsAlone =
 					node.targetDisposition != null || node.deferredRoll || includeBaseDamageNodes;
 
-				if (awaitingDeferredRoll || (!surfacedByOutcome && standsAlone)) result.push(node);
+				if (isAwaitingDeferredRoll(node) || (standsAlone && needsItsOwnEntry(node, contexts))) {
+					result.push(node);
+				}
 			} else if (!includeBaseNodes) {
 				result.push(node);
 			}
@@ -47,8 +56,13 @@ export function findNodesByContexts(
 		if (node.type === 'damage' || node.type === 'savingThrow') {
 			if (node.on) {
 				for (const context of contexts) {
-					if (node.on[context]) {
-						result.push(...node.on[context]);
+					for (const child of node.on[context] ?? []) {
+						// A nested damage node reaches the card through its own outcome
+						// child, exactly as a root one does. Pushing both would draw the
+						// roll twice and apply it twice.
+						if (child.type === 'damage' && !needsItsOwnEntry(child, contexts)) continue;
+
+						result.push(child);
 					}
 				}
 			}

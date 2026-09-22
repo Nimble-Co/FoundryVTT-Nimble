@@ -1438,6 +1438,84 @@ describe('NimbleChatMessage.effectNodes', () => {
 	});
 });
 
+describe('NimbleChatMessage — a damage node nested under another damage node', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn().mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+			name: 'Test Token',
+		});
+	});
+
+	/** Damage -> On Hit -> Damage -> On Hit -> Damage Outcome. */
+	function nestedCard(nestedOverrides: Record<string, unknown> = {}) {
+		return new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'root',
+							type: 'damage',
+							formula: '1d6',
+							damageType: 'slashing',
+							canCrit: true,
+							canMiss: true,
+							roll: createSerializedDamageRoll({ diceResults: [5] }),
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{
+										id: 'nested',
+										type: 'damage',
+										formula: '1d4',
+										damageType: 'necrotic',
+										roll: createSerializedDamageRoll({ diceResults: [3] }),
+										parentNode: 'root',
+										parentContext: 'hit',
+										on: {
+											hit: [
+												{
+													id: 'nested-hit',
+													type: 'damageOutcome',
+													outcome: 'fullDamage',
+													parentNode: 'nested',
+													parentContext: 'hit',
+												},
+											],
+										},
+										...nestedOverrides,
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('counts the nested roll once, so Apply Damage does not double it', () => {
+		// The nested node and its outcome child carry the same roll. Counting
+		// both removes twice the rolled damage from the target's real HP.
+		const breakdown = nestedCard().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+		expect(breakdown?.components).toHaveLength(1);
+		expect(breakdown?.total).toBe(3);
+	});
+
+	it('counts a nested roll that has no outcome child of its own', () => {
+		// The shape the shipped Shatter uses for its critical-hit bonus damage.
+		const breakdown = nestedCard({ on: {} }).getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+		expect(breakdown?.components).toHaveLength(1);
+		expect(breakdown?.total).toBe(3);
+	});
+});
+
 describe('NimbleChatMessage.applyDamage — damage reduction', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();
