@@ -1,5 +1,5 @@
 import type { EffectNode } from '#types/effectTree.d.js';
-import { hasDispositionTarget } from './hasDispositionTarget.js';
+import { isAwaitingDeferredRoll } from './isAwaitingDeferredRoll.js';
 
 /**
  * Traverses the tree and collects nodes based on the specified contexts.
@@ -30,12 +30,13 @@ export function findNodesByContexts(
 
 				// Deferred damage that has not landed yet has no roll for an outcome
 				// child to stand in with, and its Roll Damage button lives on the node
-				// itself. Mirrors `awaitingRoll` in DamageNode.svelte.
-				const awaitingDeferredRoll = node.deferredRoll === true && !node.roll?.class;
+				// itself.
+				const awaitingDeferredRoll = isAwaitingDeferredRoll(node);
 
-				// Disposition-targeted damage is a deliberate UI action, always present it.
+				// A stored disposition, "Any" included, is a deliberate UI action:
+				// present the node whenever nothing else surfaces its roll.
 				const standsAlone =
-					hasDispositionTarget(node) || node.deferredRoll || includeBaseDamageNodes;
+					node.targetDisposition != null || node.deferredRoll || includeBaseDamageNodes;
 
 				if (awaitingDeferredRoll || (!surfacedByOutcome && standsAlone)) result.push(node);
 			} else if (!includeBaseNodes) {

@@ -38,7 +38,7 @@ Effects are built as a tree. Click the **+** button next to **Effects** to add a
 
 ### Damage
 
-A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
+A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. **Any** means no preference: the Apply Damage button gets no hint about the targets. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
 
 **Roll Damage From Card** is for damage that lands on a later trigger than the activation itself, such as a trap that springs on the next creature to step adjacent. The card posts with the damage unrolled and shows a **Roll Damage** button in its place; the message author and the GM can press it, and the result then behaves like any other damage packet. It appears on top-level damage entries only, because damage nested under an outcome already waits on that outcome. Can Miss and Can Crit still apply to the deferred roll.
 

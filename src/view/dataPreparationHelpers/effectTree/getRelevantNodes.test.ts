@@ -49,6 +49,14 @@ describe('getRelevantNodes', () => {
 		expect(damageIds(groups)).toEqual(['root-damage-hit']);
 	});
 
+	it('still shows a bare damage node whose Target Disposition is Any', () => {
+		// The dropdown stores "Any" as a value, and a stored value is a choice
+		// the card must honour when nothing else surfaces the roll.
+		const effects = attackSpellEffects({ targetDisposition: 'any', on: undefined });
+
+		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual(['root-damage']);
+	});
+
 	it('shows one damage roll when Target Disposition is a real disposition', () => {
 		const groups = getRelevantNodes(attackSpellEffects({ targetDisposition: 'hostile' }), ['hit']);
 
@@ -93,10 +101,10 @@ describe('getRelevantNodes', () => {
 					{
 						id: 'grappled',
 						type: 'condition',
-						conditionType: 'grappled',
+						condition: 'grappled',
 						parentNode: 'root-damage',
 						parentContext: 'hit',
-					} as unknown as EffectNode,
+					},
 				],
 			},
 		});
@@ -132,7 +140,11 @@ describe('getRelevantNodes', () => {
 		// roll to stand in with yet, so the node itself must reach the card.
 		const effects = attackSpellEffects({ deferredRoll: true, roll: undefined });
 
-		expect(damageIds(getRelevantNodes(effects, ['hit']))).toContain('root-damage');
+		// Both reach the card. The child has no roll yet and so draws nothing.
+		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual([
+			'root-damage',
+			'root-damage-hit',
+		]);
 	});
 
 	it('shows a deferred damage node once the roll has landed', () => {
