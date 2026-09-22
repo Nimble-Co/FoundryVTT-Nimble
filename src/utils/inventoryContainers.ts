@@ -1,40 +1,11 @@
-export type ContainerSlotCostMode = 'none' | 'ignore' | 'reduce' | 'half';
-
-export type ObjectSizeType = 'slots' | 'stackable' | 'smallSized';
-
-export interface ContainerConfig {
-	enabled: boolean;
-	slotCostMode: ContainerSlotCostMode;
-	slotCostReduction: number;
-	capacity: number | null;
-	allowedObjectTypes: string[];
-	requiresEquipped: boolean;
-}
-
-/** The parts of an object item that the container rules read. */
-export interface ContainableObject {
-	_id: string;
-	name: string;
-	system: {
-		objectType: string;
-		objectSizeType: ObjectSizeType;
-		slotsRequired: number;
-		quantity: number;
-		stackSize: number;
-		equipped: boolean;
-		containerId: string;
-		container: ContainerConfig;
-	};
-}
-
-export type ContainerStorageRejection = 'notAContainer' | 'nested' | 'objectType' | 'capacity';
+import type { ContainableObject, ContainerStorageRejection } from '#types/inventoryContainers.js';
 
 /**
  * Slots the object occupies before any container changes them. `null` for small
  * objects, which share a single slot across the whole inventory rather than
  * costing anything individually.
  */
-export function getBaseSlotCost(object: ContainableObject): number | null {
+function getBaseSlotCost(object: ContainableObject): number | null {
 	switch (object.system.objectSizeType) {
 		case 'slots':
 			return object.system.slotsRequired;
@@ -63,7 +34,7 @@ function isContainerRuleActive(container: ContainableObject): boolean {
 }
 
 /** The slots a stored object costs its carrier once the container's rule applies. */
-export function applyContainerSlotRule(container: ContainableObject, baseSlotCost: number): number {
+function applyContainerSlotRule(container: ContainableObject, baseSlotCost: number): number {
 	if (!isContainerRuleActive(container)) return baseSlotCost;
 
 	const { slotCostMode, slotCostReduction } = container.system.container;
@@ -85,7 +56,7 @@ export function applyContainerSlotRule(container: ContainableObject, baseSlotCos
  * objects have no individual slot cost to reduce or halve, so only a container
  * that ignores cost outright takes them out of the shared small-object slot.
  */
-export function containerWaivesSmallObjectCost(container: ContainableObject): boolean {
+function containerWaivesSmallObjectCost(container: ContainableObject): boolean {
 	return isContainerRuleActive(container) && container.system.container.slotCostMode === 'ignore';
 }
 
@@ -118,16 +89,34 @@ export function calculateInventorySlotCost(objects: ContainableObject[]): number
 	return Math.ceil(slotCost) + (carriesSmallObjects ? 1 : 0);
 }
 
-/** Slots the stored objects take up against the container's own capacity. */
+/**
+ * Slots the stored objects take up against the container's own capacity, at
+ * their own cost rather than the reduced one: a container changes what its
+ * contents cost the carrier, not how much room they take up inside it.
+ *
+ * Small objects have no cost of their own, so they share one slot of the
+ * container the same way they share one slot of the inventory. Without that a
+ * single-slot pouch would swallow any number of them.
+ */
 export function getContainerUsedCapacity(storedObjects: ContainableObject[]): number {
-	return storedObjects.reduce((total, object) => total + (getBaseSlotCost(object) ?? 0), 0);
+	let usedCapacity = 0;
+	let holdsSmallObjects = false;
+
+	for (const object of storedObjects) {
+		const baseSlotCost = getBaseSlotCost(object);
+
+		if (baseSlotCost === null) {
+			holdsSmallObjects = true;
+			continue;
+		}
+
+		usedCapacity += baseSlotCost;
+	}
+
+	return usedCapacity + (holdsSmallObjects ? 1 : 0);
 }
 
-/**
- * Why the container will not take the object, or `null` when it will. Capacity is
- * measured in the objects' own slot costs: a container changes what its contents
- * cost the carrier, not how much room they take up inside it.
- */
+/** Why the container will not take the object, or `null` when it will. */
 export function findContainerStorageRejection(
 	container: ContainableObject,
 	object: ContainableObject,
@@ -145,9 +134,7 @@ export function findContainerStorageRejection(
 	if (capacity === null) return null;
 
 	const remaining = storedObjects.filter((stored) => stored._id !== object._id);
-	if (getContainerUsedCapacity(remaining) + (getBaseSlotCost(object) ?? 0) > capacity) {
-		return 'capacity';
-	}
+	if (getContainerUsedCapacity([...remaining, object]) > capacity) return 'capacity';
 
 	return null;
 }

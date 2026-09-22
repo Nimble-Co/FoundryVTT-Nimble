@@ -55,13 +55,13 @@ Every condition the system knows, with the ones affecting you highlighted. Searc
 
 Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Each item has an equip toggle. You can create new items here or drag them in from the compendiums.
 
-Items set up as containers, such as a chest, a backpack, a pouch, a quiver or a Bag of Holding, show their contents nested underneath them, and the row highlights as you drag something over it.
+Items set up as containers, such as a chest, a backpack, a pouch or a quiver, show their contents nested underneath them, and the row highlights as you drag something over it.
 
 - **To put something in**, drag it onto the container's row, or onto anything already inside it.
 - **To take something out**, drag it onto an item carried directly, or onto any empty part of the inventory list.
 - **To move it between containers**, drag it straight onto the other one.
 
-A container keeps its own slot cost; what its contents cost you depends on how the container is set up, and the slot total at the bottom of the tab reflects that. If a container has a capacity, the row says how much of it is in use, and a drop that would not fit is refused.
+A container keeps its own slot cost; what its contents cost you depends on how the container is set up, and the slot total at the bottom of the tab reflects that. If a container has a capacity, the row says how much of it is in use, a drop that would not fit is refused, and so is raising a stored stack past the limit.
 
 You cannot equip something that is packed away, so stored items show a quantity field rather than an equip toggle. Dragging an item you have equipped into a container asks you to confirm before unequipping it.
 

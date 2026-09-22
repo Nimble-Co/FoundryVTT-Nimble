@@ -541,12 +541,14 @@
 			"enabled": "This Object Is A Container",
 			"enabledHint": "Objects can be dropped into this one, and this object's rule changes what they cost their carrier.",
 			"heading": "Container",
+			"quantityExceedsCapacity": "{container} has no room for that many of {object}.",
 			"rejection": {
 				"capacity": "{container} has no room left for {object}.",
 				"nested": "{object} is a container, and containers cannot be stored inside other containers.",
 				"notAContainer": "{container} is not a container.",
 				"objectType": "{container} does not hold objects of that type."
 			},
+			"releaseFailed": "Could not empty {container}. The objects it held may still point at it.",
 			"requiresEquipped": "Only Apply While Equipped",
 			"slotCostMode": "Stored Object Slot Cost",
 			"slotCostReduction": "Slots Reduced By",
@@ -593,6 +595,8 @@
 			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
+			"configureItem": "Configure {name}",
+			"deleteItem": "Delete {name}",
 			"toggleEquipment": "Toggle Equipped State of {name}",
 			"equippedTooltip": "Equipped",
 			"unequippedTooltip": "Not Equipped",

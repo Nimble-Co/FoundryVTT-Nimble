@@ -75,6 +75,16 @@
 		});
 	}
 
+	/** A blank field means the GM cleared it, not that the reduction is now zero. */
+	function updateContainerSlotCostReduction(target) {
+		if (target.value === '') {
+			target.value = String(container.slotCostReduction);
+			return;
+		}
+
+		item.update({ 'system.container.slotCostReduction': Number(target.value) });
+	}
+
 	function updateWeaponProperties(newSelection) {
 		const currentProperties = item.reactive?.system?.properties?.selected ?? [];
 
@@ -322,7 +332,7 @@
 				</div>
 
 				{#if container.slotCostMode === 'reduce'}
-					<div class="nimble-field nimble-field--column">
+					<label class="nimble-field nimble-field--column">
 						<span class="nimble-heading" data-heading-variant="field">
 							{localize('NIMBLE.containers.slotCostReduction')}
 						</span>
@@ -332,13 +342,12 @@
 							min="0"
 							step="0.5"
 							value={container.slotCostReduction}
-							onchange={({ target }) =>
-								item.update({ 'system.container.slotCostReduction': Number(target.value) })}
+							onchange={({ target }) => updateContainerSlotCostReduction(target)}
 						/>
-					</div>
+					</label>
 				{/if}
 
-				<div class="nimble-field nimble-field--column">
+				<label class="nimble-field nimble-field--column">
 					<span class="nimble-heading" data-heading-variant="field">
 						{localize('NIMBLE.containers.capacity')}
 
@@ -352,11 +361,11 @@
 					<input
 						type="number"
 						min="0"
-						step="1"
+						step="0.5"
 						value={container.capacity ?? ''}
 						onchange={({ target }) => updateContainerCapacity(target.value)}
 					/>
-				</div>
+				</label>
 
 				<div class="nimble-field nimble-field--column">
 					<span class="nimble-heading" data-heading-variant="field">

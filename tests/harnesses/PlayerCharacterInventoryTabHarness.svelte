@@ -12,22 +12,30 @@
 	let {
 		items = [],
 		updateItem = () => {},
+		updateStoredObjectQuantity = () => {},
 		storeItemInContainer = () => {},
 		removeItemFromContainer = () => {},
+		toggleEquipment = () => {},
 		onDragStart = () => {},
 		onDropItem = () => [],
 	}: {
 		items?: HarnessItem[];
 		updateItem?: (id: string, changes: Record<string, unknown>) => unknown;
+		updateStoredObjectQuantity?: (itemId: string, quantity: number) => unknown;
 		storeItemInContainer?: (itemId: string, containerId: string) => unknown;
 		removeItemFromContainer?: (itemId: string) => unknown;
+		toggleEquipment?: (itemId: string) => unknown;
 		onDragStart?: (event: DragEvent) => unknown;
-		onDropItem?: (event: DragEvent, dropData: Record<string, unknown>) => unknown;
+		onDropItem?: (
+			event: DragEvent,
+			dropData: Record<string, unknown>,
+			options?: { containerId?: string },
+		) => unknown;
 	} = $props();
 
 	const containerDefaults = {
 		enabled: false,
-		slotCostMode: 'ignore',
+		slotCostMode: 'none',
 		slotCostReduction: 1,
 		capacity: null,
 		allowedObjectTypes: [],
@@ -59,6 +67,7 @@
 				},
 			},
 		};
+		prepared.toggleEquipment = () => untrack(() => toggleEquipment)(item._id);
 		// The template reads `item.reactive.*`; point it back at the item itself.
 		prepared.reactive = prepared;
 		return prepared;
@@ -66,6 +75,7 @@
 
 	const actor = {
 		updateItem: untrack(() => updateItem),
+		updateStoredObjectQuantity: untrack(() => updateStoredObjectQuantity),
 		storeItemInContainer: untrack(() => storeItemInContainer),
 		removeItemFromContainer: untrack(() => removeItemFromContainer),
 		update: () => {},

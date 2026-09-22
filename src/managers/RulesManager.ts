@@ -166,28 +166,27 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	/**
-	 * The `system.rules` a bulk enable or disable would write, without writing it.
-	 * A caller changing something else on the same item persists both in one update,
-	 * so the rules and what switched them can never end up disagreeing.
+	 * The `system.rules` a bulk enable or disable would write, without writing it or
+	 * touching this manager's own state. A caller changing something else on the same
+	 * item persists both in one update, so the rules and what switched them can never
+	 * end up disagreeing.
 	 */
 	withAllRulesDisabled(disabled: boolean): RuleSource[] {
 		const system = getSystemWithRules(this.#item);
-		const updatedRules = (system.rules ?? []).map((rule) => ({
-			...rule,
-			disabled,
-		}));
+
+		return (system.rules ?? []).map((rule) => ({ ...rule, disabled }));
+	}
+
+	async #setAllRulesDisabledState(disabled: boolean) {
+		const updatedRules = this.withAllRulesDisabled(disabled);
+
+		await this.#item.update({
+			'system.rules': updatedRules,
+		} as Record<string, unknown>);
 
 		for (const rule of updatedRules) {
 			this.rulesTypeMap.set(rule.type, rule as object as InstanceType<typeof NimbleBaseRule>);
 		}
-
-		return updatedRules;
-	}
-
-	async #setAllRulesDisabledState(disabled: boolean) {
-		await this.#item.update({
-			'system.rules': this.withAllRulesDisabled(disabled),
-		} as Record<string, unknown>);
 
 		return true;
 	}

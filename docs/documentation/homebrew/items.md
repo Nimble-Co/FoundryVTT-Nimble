@@ -57,38 +57,51 @@ A container always costs its own inventory slots. **Stored Object Slot Cost** de
 objects inside cost their carrier:
 
 - **Normal slot cost**: nothing changes. This is the mundane case of a chest, a backpack or a belt
-  pouch, where the container organises the sheet and that is all. It is the default.
-- **Ignore slot cost**: stored objects cost nothing. This is the Bag of Holding: the bag takes its
-  one slot, and a suit of plate armor inside it takes none.
+  pouch, where the container organises the sheet and that is all. It is the default, and the only
+  one the Nimble rulebook describes.
+- **Ignore slot cost**: stored objects cost nothing. The container takes its own slots and what is
+  inside takes none.
 - **Half slot cost**: stored objects count for half. Halves are added up before the total is
   rounded, so two one-slot items inside share a single slot.
 - **Reduce slot cost**: stored objects cost their own slots minus **Slots Reduced By**, never less
   than zero.
 
-Small items have no slot cost of their own, because every small item a character carries shares one
-slot. Only **Ignore slot cost** takes them out of that shared slot. Halving or reducing leaves them
-in it.
+The last three are system options rather than Nimble rules. They exist so you can build a magical
+container of your own, or port one from another game: Nimble is meant to run alongside D&D 5th
+edition material, and a bag that carries more than it should is the usual shape that takes.
+
+The Nimble rulebook groups "small, **related** items" into one slot, giving Camping Supplies as the
+example. The system applies that to every small item a character carries, related or not: they all
+share a single slot. Only **Ignore slot cost** takes stored small items out of that shared slot.
+Halving or reducing leaves them in it.
 
 Three more fields limit what the container will take:
 
 - **Capacity**: how many slots' worth of objects fit inside, measured at the objects' own slot
-  cost rather than the reduced one. Leave it blank for no limit. A drop that would overflow is
-  refused with a message.
+  cost rather than the reduced one. Small items share one slot of it between them, the way they
+  share one slot of the inventory. Leave it blank for no limit. A drop that would overflow is
+  refused with a message, and so is raising a stored stack's quantity past the limit.
 - **Allowed Object Types**: select one or more types and only those may be stored, so a quiver
   holds weapons and nothing else. Select none to allow anything.
 - **Only Apply While Equipped**: the container's rule applies only while it is equipped. Stowed,
   it still holds its contents but they cost their full slots. Use it for a harness or bandolier
   that only helps while worn.
 
-Some worked settings:
+Some worked settings. Only the first row is Nimble content; the rest are homebrew examples, and the
+magical bags are the kind of 5th edition item people most often bring across:
 
 | Container | Stored Object Slot Cost | Other settings |
 |---|---|---|
-| Chest, crate, backpack, belt pouch | Normal slot cost | No additional settings |
-| Bag of holding, portable hole | Ignore slot cost | A **Capacity** if the bag has a stated limit |
-| Handy haversack | Ignore slot cost | **Capacity** for the compartment total |
-| Quiver, bandolier | Normal slot cost | **Allowed Object Types** set to Weapon |
-| Harness worn over armor | Whatever the item grants | **Only Apply While Equipped** ticked |
+| Chest, crate, backpack, belt pouch, quiver | Normal slot cost | No additional settings |
+| Homebrew bag of holding or portable hole | Ignore slot cost | A **Capacity** if you want the bag to have a stated limit |
+| Homebrew handy haversack | Ignore slot cost | **Capacity** for the compartment total |
+| Bandolier that only holds weapons | Normal slot cost | **Allowed Object Types** set to Weapon |
+| Harness worn over armor | Whatever you decide it grants | **Only Apply While Equipped** ticked |
+
+A homebrew bag of holding is the shortest worked example: leave the bag itself at one inventory
+slot, set **Stored Object Slot Cost** to **Ignore slot cost**, and everything dropped into it stops
+counting against the carrier. A suit of plate armor inside costs nothing; the bag still costs its
+one slot.
 
 Containers cannot be nested inside one another. Deleting a container that still holds something
 asks for confirmation first, then leaves its contents in the inventory, back at their own slot
@@ -100,12 +113,15 @@ Two more consequences worth knowing:
   of armor into a container asks for confirmation first, then unequips it, which also switches
   off any rules that item was granting. Stored rows show a quantity field instead of an equip
   toggle.
-- **Stacks stay separate per container.** Arrows in a quiver and arrows carried loose are two
-  piles, and dropping another bundle onto the sheet adds to the loose pile rather than the quiver.
+- **Stacks stay separate per container.** A bundle dropped onto a container joins the stack inside
+  it; one dropped anywhere else joins the loose pile. The rulebook's own advice is not to track
+  ammo at all ("If you have a quiver, you have enough arrows"), so this matters only in a game
+  that has chosen to count it.
 
-The compendium's **Large Sack** and **Quiver & Ammo** ship as containers on **Normal slot cost**,
-matching the rulebook: neither is stated to reduce what you carry, so they organise without
-changing the numbers.
+The compendium's **Large Sack** and **Quiver & Ammo** ship as containers on **Normal slot cost**.
+The rulebook says nothing about either reducing what you carry, so they organise the sheet without
+changing the numbers. Copies already in a world are not changed; drag a fresh one out of the
+compendium, or tick **This Object Is A Container** on the copy you have.
 
 ## Step 3: Weapon properties
 

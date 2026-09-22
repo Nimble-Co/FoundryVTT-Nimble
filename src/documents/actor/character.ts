@@ -11,6 +11,7 @@ import type {
 	LevelCorrectionSubmitData,
 	ResolvedLevelSelectionGap,
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
+import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import collectHeldPicks, { countHeldPicks, type HeldFeature } from '#utils/collectHeldPicks.ts';
@@ -20,7 +21,6 @@ import findMissingLevelSelections, {
 } from '#utils/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import {
-	type ContainableObject,
 	calculateInventorySlotCost,
 	findContainerStorageRejection,
 } from '#utils/inventoryContainers.js';
@@ -85,8 +85,8 @@ async function confirmUnequipToStore(
 		await foundry.applications.api.DialogV2.confirm({
 			window: { title: localize('NIMBLE.containers.unequipToStoreTitle') },
 			content: `<p>${localize('NIMBLE.containers.unequipToStore', {
-				object: object.name,
-				container: container.name,
+				object: foundry.utils.escapeHTML(object.name),
+				container: foundry.utils.escapeHTML(container.name),
 			})}</p>`,
 			rejectClose: false,
 			modal: true,
@@ -418,26 +418,20 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return slotsRequiredSum;
 	}
 
-	/** The objects stored inside the given container, in no particular order. */
+	/** The objects stored inside the given container, in the order they are carried. */
 	getContainerContents(containerId: string): ContainableObject[] {
 		return this.getCarriedObjects().filter((object) => object.system.containerId === containerId);
 	}
 
 	/**
-	 * Moves an object into a container carried by this actor. Reports why the
-	 * container refuses it rather than storing it anyway, since the refusal is the
-	 * container's configured limit and the player needs to know it was hit.
-	 *
-	 * Packing something away puts it out of reach, so a stored object is never
-	 * equipped. Stowing one that is asks first, because losing a weapon's or
-	 * armour's rules mid-session is not something to do behind the player's back.
+	 * Whether the container will take this object, warning the player with the
+	 * reason when it will not. The refusal is the container's configured limit, so
+	 * the player needs to know it was hit rather than have the drop quietly ignored.
 	 */
-	async storeItemInContainer(itemId: string, containerId: string): Promise<boolean> {
-		const carriedObjects = this.getCarriedObjects();
-		const object = carriedObjects.find(({ _id }) => _id === itemId);
-		const container = carriedObjects.find(({ _id }) => _id === containerId);
+	canStoreObjectInContainer(containerId: string, object: ContainableObject): boolean {
+		const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
 
-		if (!object || !container || itemId === containerId) return false;
+		if (!container || container._id === object._id) return false;
 
 		const rejection = findContainerStorageRejection(
 			container,
@@ -445,26 +439,80 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			this.getContainerContents(containerId),
 		);
 
-		if (rejection) {
-			ui.notifications?.warn(
-				localize(`NIMBLE.containers.rejection.${rejection}`, {
-					container: container.name,
-					object: object.name,
-				}),
-			);
-			return false;
-		}
+		if (!rejection) return true;
+
+		ui.notifications?.warn(
+			localize(`NIMBLE.containers.rejection.${rejection}`, {
+				container: container.name,
+				object: object.name,
+			}),
+		);
+		return false;
+	}
+
+	/**
+	 * Moves an object into a container carried by this actor. A stored object is
+	 * packed away and so never equipped, and losing a weapon's or armour's rules
+	 * mid-session is not something to do behind the player's back, so stowing an
+	 * equipped one asks first and then unequips it in the same write.
+	 */
+	async storeItemInContainer(itemId: string, containerId: string): Promise<boolean> {
+		const object = this.getCarriedObjects().find(({ _id }) => _id === itemId);
+		const item = this.items.get(itemId);
+
+		if (!object || !item || itemId === containerId) return false;
+		if (!this.canStoreObjectInContainer(containerId, object)) return false;
+
+		const update: Record<string, unknown> = { 'system.containerId': containerId };
 
 		if (object.system.equipped) {
-			if (!(await confirmUnequipToStore(object, container))) return false;
+			const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
+			if (!container || !(await confirmUnequipToStore(object, container))) return false;
 
-			const item = this.items.get(itemId) as unknown as
-				| { toggleEquipment(): Promise<void> }
-				| undefined;
-			await item?.toggleEquipment();
+			const { rules } = item as unknown as {
+				rules: { withAllRulesDisabled(disabled: boolean): unknown[] };
+			};
+
+			update['system.equipped'] = false;
+			update['system.rules'] = rules.withAllRulesDisabled(true);
 		}
 
-		await this.updateItem(itemId, { 'system.containerId': containerId });
+		await this.updateItem(itemId, update);
+		return true;
+	}
+
+	/**
+	 * Writes a new quantity for a stored object, refusing one that would overflow
+	 * the container holding it. Growing a stack takes up the same room a fresh drop
+	 * would, so it has to clear the same limit.
+	 */
+	async updateStoredObjectQuantity(itemId: string, quantity: number): Promise<boolean> {
+		const object = this.getCarriedObjects().find(({ _id }) => _id === itemId);
+		if (!object) return false;
+
+		const { containerId } = object.system;
+		const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
+
+		if (container) {
+			const grown = { ...object, system: { ...object.system, quantity } };
+			const rejection = findContainerStorageRejection(
+				container,
+				grown,
+				this.getContainerContents(containerId),
+			);
+
+			if (rejection === 'capacity') {
+				ui.notifications?.warn(
+					localize('NIMBLE.containers.quantityExceedsCapacity', {
+						container: container.name,
+						object: object.name,
+					}),
+				);
+				return false;
+			}
+		}
+
+		await this.updateItem(itemId, { 'system.quantity': quantity });
 		return true;
 	}
 
