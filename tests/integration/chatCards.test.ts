@@ -30,6 +30,36 @@ const TEST_ACTOR_NAME = 'V14 Chat Card Test Actor';
 const testedTypes = new Set<string>();
 const createdMessageIds = new Set<string>();
 
+/** Every roll formula in an index entry's effect tree, at any depth. */
+function effectFormulas(entry: any): string[] {
+	const formulas: string[] = [];
+
+	function walk(nodes: any[]) {
+		for (const node of nodes ?? []) {
+			if (typeof node?.formula === 'string') formulas.push(node.formula);
+			for (const bucket of Object.values(node?.on ?? {})) walk(bucket as any[]);
+		}
+	}
+
+	walk(entry.system?.activation?.effects ?? []);
+	return formulas;
+}
+
+/**
+ * The test actor is a blank character: no class, so no unlocked spell tiers
+ * and no `@key`. Casting above tier 0 is refused before a card is posted, and
+ * a formula referencing `@key` or `@level` throws when the roll evaluates.
+ * Neither is a card-rendering concern, so pick a spell that avoids both.
+ */
+function isCastableByABlankCharacter(entry: any): boolean {
+	return (
+		entry.system?.tier === 0 &&
+		effectFormulas(entry).every(
+			(formula) => !formula.includes('@key') && !formula.includes('@level'),
+		)
+	);
+}
+
 async function expectCardRendered(message: ChatMessage | null | undefined, type: string) {
 	expect(message, `a ${type} message should be created`).toBeTruthy();
 	expect(message!.type, `message should have the ${type} subtype`).toBe(type);
@@ -82,7 +112,11 @@ describe('chat message cards', () => {
 		const spell = await importPackItem(
 			actor,
 			'nimble-spells',
-			(e) => e.type === 'spell' && !e.system?.activation?.template?.shape,
+			(e) =>
+				e.type === 'spell' &&
+				!e.system?.activation?.template?.shape &&
+				isCastableByABlankCharacter(e),
+			['system.activation.template', 'system.tier', 'system.activation.effects'],
 		);
 		await expectCardRendered(
 			await messageFromFlow('spell', () => (spell as any).activate({ fastForward: true })),
