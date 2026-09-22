@@ -1161,14 +1161,16 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 	function createDamageMessage(params: {
 		roll: object;
 		isMiss?: boolean;
+		isCritical?: boolean;
 		ignoreArmor?: boolean;
 		targets?: string[];
+		on?: Record<string, object[]>;
 	}) {
 		return new NimbleChatMessage({
 			type: 'spell',
 			system: {
 				targets: params.targets ?? ['Scene.scene.Token.token'],
-				isCritical: false,
+				isCritical: params.isCritical ?? false,
 				isMiss: params.isMiss ?? false,
 				activation: {
 					effects: [
@@ -1183,7 +1185,7 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 							roll: params.roll,
 							parentNode: null,
 							parentContext: null,
-							on: {
+							on: params.on ?? {
 								hit: [
 									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
 								],
@@ -1224,6 +1226,41 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll(), ignoreArmor: true });
 
 		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
+	});
+
+	it('applies a crit once when both On Critical Hit and On Hit hold a Damage Outcome', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createDamageMessage({
+			roll: { class: 'DamageRoll', formula: '1d6', total: 6, isCritical: true },
+			isCritical: true,
+			on: {
+				criticalHit: [
+					{
+						id: 'dmg-crit',
+						type: 'damageOutcome',
+						outcome: 'halfDamage',
+						parentNode: 'dmg',
+						parentContext: 'criticalHit',
+					},
+				],
+				hit: [
+					{
+						id: 'dmg-hit',
+						type: 'damageOutcome',
+						outcome: 'fullDamage',
+						parentNode: 'dmg',
+						parentContext: 'hit',
+					},
+				],
+			},
+		});
+
+		// The crit bucket's outcome decides what the roll does: half of 6 is 3, once.
+		expect(message.effectNodes.flat().map((node) => node.id)).toEqual(['dmg-crit']);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(3);
 	});
 
 	it('returns null for a miss so the target list shows no preview', () => {

@@ -160,4 +160,20 @@ describe('getRelevantNodes', () => {
 
 		expect(damageIds(getRelevantNodes(effects, ['hit']))).toEqual(['root-damage']);
 	});
+
+	it('shows one damage roll on a crit when both crit and hit buckets hold an outcome', () => {
+		const effects = attackSpellEffects({
+			on: { criticalHit: [outcomeChild('criticalHit')], hit: [outcomeChild('hit')] },
+		});
+
+		expect(damageIds(getRelevantNodes(effects, ['criticalHit', 'hit']))).toEqual([
+			'root-damage-criticalHit',
+		]);
+	});
+
+	it('falls back to the On Hit outcome on a crit when the crit bucket has none', () => {
+		expect(damageIds(getRelevantNodes(attackSpellEffects(), ['criticalHit', 'hit']))).toEqual([
+			'root-damage-hit',
+		]);
+	});
 });
