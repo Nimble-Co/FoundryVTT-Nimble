@@ -543,6 +543,7 @@ declare namespace NimbleCharacterData {
 		inventory: {
 			totalSlots: number;
 			usedSlots: number;
+			containerCapacityUsage: Record<string, number>;
 		};
 		resources: {
 			mana: {
@@ -616,6 +617,7 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 		bonusSlots: number;
 		totalSlots: number;
 		usedSlots: number;
+		containerCapacityUsage: Record<string, number>;
 	};
 	declare proficiencies: {
 		armor: Set<string>;

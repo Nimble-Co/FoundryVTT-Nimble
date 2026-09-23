@@ -118,10 +118,14 @@ Two more consequences worth knowing:
   ammo at all ("If you have a quiver, you have enough arrows"), so this matters only in a game
   that has chosen to count it.
 
-The compendium's **Large Sack** and **Quiver & Ammo** ship as containers on **Normal slot cost**.
-The rulebook says nothing about either reducing what you carry, so they organise the sheet without
-changing the numbers. Copies already in a world are not changed; drag a fresh one out of the
-compendium, or tick **This Object Is A Container** on the copy you have.
+The compendium's **Large Sack** ships as a container on **Normal slot cost**. The rulebook says
+nothing about a sack reducing what you carry, so it organises the sheet without changing the
+numbers. Copies already in a world are not changed; drag a fresh one out of the compendium, or
+tick **This Object Is A Container** on the copy you have.
+
+**Quiver & Ammo** deliberately does not ship as a container. The rulebook says "In most games,
+there's no need to track ammo. If you have a quiver, you have enough arrows." Tick **This Object
+Is A Container** on your own copy if your table has chosen to count arrows.
 
 ## Step 3: Weapon properties
 
