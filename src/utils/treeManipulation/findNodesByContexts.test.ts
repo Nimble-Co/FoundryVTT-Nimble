@@ -63,6 +63,27 @@ function nestedTree(overrides: Partial<DamageNode> = {}): EffectNode[] {
 	];
 }
 
+function outcomeChild(context: string, parent = 'root-damage'): EffectNode {
+	return {
+		id: `${parent}-${context}`,
+		type: 'damageOutcome',
+		outcome: 'fullDamage',
+		parentNode: parent,
+		parentContext: context,
+	};
+}
+
+function critNote(): EffectNode {
+	return {
+		id: 'crit-note',
+		type: 'note',
+		noteType: 'warning',
+		text: 'CRIT',
+		parentNode: 'root-damage',
+		parentContext: 'criticalHit',
+	} as unknown as EffectNode;
+}
+
 describe('findNodesByContexts', () => {
 	it('surfaces a root damage node through its outcome child, not on its own', () => {
 		const found = findNodesByContexts(attackTree(), ['hit']);
@@ -114,5 +135,86 @@ describe('findNodesByContexts', () => {
 		const found = findNodesByContexts(nestedTree({ deferredRoll: true, roll: undefined }), ['hit']);
 
 		expect(found.map((node) => node.id)).toEqual(['nested-damage', 'nested-damage-hit']);
+	});
+
+	it('lets a Damage Outcome under On Critical Hit override the one under On Hit', () => {
+		// A crit card reads both buckets, and both outcome children carry the same
+		// parent roll. Only the crit bucket's outcome may reach the card.
+		const tree = [
+			damageNode({
+				on: { criticalHit: [outcomeChild('criticalHit')], hit: [outcomeChild('hit')] },
+			}),
+		];
+
+		const found = findNodesByContexts(tree, ['criticalHit', 'hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['root-damage-criticalHit']);
+	});
+
+	it('keeps the other On Hit children when the crit bucket overrides the outcome', () => {
+		const tree = [
+			damageNode({
+				on: {
+					criticalHit: [outcomeChild('criticalHit'), critNote()],
+					hit: [
+						outcomeChild('hit'),
+						{
+							id: 'grappled',
+							type: 'condition',
+							condition: 'grappled',
+							parentNode: 'root-damage',
+							parentContext: 'hit',
+						} as unknown as EffectNode,
+						damageNode({ id: 'cold-rider', parentNode: 'root-damage', parentContext: 'hit' }),
+					],
+				},
+			}),
+		];
+
+		const found = findNodesByContexts(tree, ['criticalHit', 'hit']);
+
+		expect(found.map((node) => node.id)).toEqual([
+			'root-damage-criticalHit',
+			'crit-note',
+			'grappled',
+			'cold-rider',
+		]);
+	});
+
+	it('still shows the On Hit outcome on a crit when the crit bucket has no outcome', () => {
+		const tree = [damageNode({ on: { criticalHit: [critNote()], hit: [outcomeChild('hit')] } })];
+
+		const found = findNodesByContexts(tree, ['criticalHit', 'hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['crit-note', 'root-damage-hit']);
+	});
+
+	it('keeps one outcome per parent when two damage nodes each fill both buckets', () => {
+		const both = (parent: string) => ({
+			criticalHit: [outcomeChild('criticalHit', parent)],
+			hit: [outcomeChild('hit', parent)],
+		});
+		const tree = [
+			damageNode({ id: 'first', on: both('first') }),
+			damageNode({ id: 'second', on: both('second') }),
+		];
+
+		const found = findNodesByContexts(tree, ['criticalHit', 'hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['first-criticalHit', 'second-criticalHit']);
+	});
+
+	it('leaves two outcomes in the same bucket alone', () => {
+		// Only the cross-bucket double is a card-building artefact. What one
+		// bucket holds is the homebrewer's own layout.
+		const tree = [
+			damageNode({
+				on: { hit: [outcomeChild('hit'), { ...outcomeChild('hit'), id: 'second-hit' }] },
+			}),
+		];
+
+		const found = findNodesByContexts(tree, ['hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['root-damage-hit', 'second-hit']);
 	});
 });

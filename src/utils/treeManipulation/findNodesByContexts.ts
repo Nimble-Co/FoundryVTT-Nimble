@@ -55,15 +55,25 @@ export function findNodesByContexts(
 
 		if (node.type === 'damage' || node.type === 'savingThrow') {
 			if (node.on) {
+				// Every outcome child carries the same parent roll. The first context
+				// that holds one wins; later contexts keep their other children.
+				let outcomeSurfaced = false;
+
 				for (const context of contexts) {
-					for (const child of node.on[context] ?? []) {
+					const children = node.on[context] ?? [];
+					const hasOutcome = children.some((child) => child.type === 'damageOutcome');
+
+					for (const child of children) {
 						// A nested damage node reaches the card through its own outcome
 						// child, exactly as a root one does. Pushing both would draw the
 						// roll twice and apply it twice.
 						if (child.type === 'damage' && !needsItsOwnEntry(child, contexts)) continue;
+						if (child.type === 'damageOutcome' && outcomeSurfaced) continue;
 
 						result.push(child);
 					}
+
+					outcomeSurfaced ||= hasOutcome;
 				}
 			}
 		}
