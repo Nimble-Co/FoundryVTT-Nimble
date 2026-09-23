@@ -4,6 +4,7 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
+	import { hasDispositionTarget } from '#utils/treeManipulation/hasDispositionTarget.ts';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
 	const { nodes = [], packet }: ApplyDamageButtonProps = $props();
@@ -17,7 +18,7 @@
 	// each target rolls.
 	const targetDisposition = $derived.by(() => {
 		const dispositions = new Set(
-			nodes.map((node) => node.targetDisposition).filter((disposition) => disposition != null),
+			nodes.filter(hasDispositionTarget).map((node) => node.targetDisposition),
 		);
 		return dispositions.size === 1 ? [...dispositions][0] : undefined;
 	});

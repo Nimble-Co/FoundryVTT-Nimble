@@ -88,6 +88,7 @@ export type DamageOutcomeNode = {
 	id: string;
 	type: 'damageOutcome';
 	damageType?: string;
+	targetDisposition?: EffectNodeDisposition;
 	ignoreArmor?: boolean;
 	ignoreAllies?: boolean;
 	outcome: 'fullDamage' | 'halfDamage';

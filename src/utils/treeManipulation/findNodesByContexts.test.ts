@@ -33,6 +33,36 @@ function attackTree(): EffectNode[] {
 	];
 }
 
+/** A damage node under another damage node's On Hit bucket. */
+function nestedTree(overrides: Partial<DamageNode> = {}): EffectNode[] {
+	return [
+		damageNode({
+			on: {
+				hit: [
+					damageNode({
+						id: 'nested-damage',
+						parentNode: 'root-damage',
+						parentContext: 'hit',
+						roll: { class: 'DamageRoll', total: 3 },
+						on: {
+							hit: [
+								{
+									id: 'nested-damage-hit',
+									type: 'damageOutcome',
+									outcome: 'fullDamage',
+									parentNode: 'nested-damage',
+									parentContext: 'hit',
+								},
+							],
+						},
+						...overrides,
+					}),
+				],
+			},
+		}),
+	];
+}
+
 describe('findNodesByContexts', () => {
 	it('surfaces a root damage node through its outcome child, not on its own', () => {
 		const found = findNodesByContexts(attackTree(), ['hit']);
@@ -62,5 +92,27 @@ describe('findNodesByContexts', () => {
 
 		expect(found).toHaveLength(1);
 		expect((found[0] as DamageNode).roll?.total).toBe(21);
+	});
+
+	it('surfaces a nested damage node through its outcome child, not on its own', () => {
+		// Damage -> On Hit -> Damage -> On Hit -> Damage Outcome. The nested node
+		// and its outcome child carry the same roll, so surfacing both draws the
+		// roll twice on the card and applies it twice.
+		const found = findNodesByContexts(nestedTree(), ['hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['nested-damage-hit']);
+	});
+
+	it('surfaces a nested damage node itself when it has no outcome child', () => {
+		// The shape the shipped Shatter uses for its critical-hit bonus damage.
+		const found = findNodesByContexts(nestedTree({ on: {} }), ['hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['nested-damage']);
+	});
+
+	it('surfaces an unrolled deferred nested damage node, which owns the Roll Damage button', () => {
+		const found = findNodesByContexts(nestedTree({ deferredRoll: true, roll: undefined }), ['hit']);
+
+		expect(found.map((node) => node.id)).toEqual(['nested-damage', 'nested-damage-hit']);
 	});
 });

@@ -38,7 +38,7 @@ Effects are built as a tree. Click the **+** button next to **Effects** to add a
 
 ### Damage
 
-A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
+A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. **Any** means no preference: the Apply Damage button gets no hint about the targets. Picking Any is still a choice, so the entry keeps its own box on the chat card even when nothing else shows its roll. Leave the dropdown alone and a damage entry with no outcome child under On Hit shows on a miss only. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
 
 **Roll Damage From Card** is for damage that lands on a later trigger than the activation itself, such as a trap that springs on the next creature to step adjacent. The card posts with the damage unrolled and shows a **Roll Damage** button in its place; the message author and the GM can press it, and the result then behaves like any other damage packet. It appears on top-level damage entries only, because damage nested under an outcome already waits on that outcome. Can Miss and Can Crit still apply to the deferred roll.
 
@@ -50,7 +50,7 @@ Even with Can Crit ticked, some attacks never crit: template (AoE) attacks, atta
 
 Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, a condition, a saving throw, or a note.
 
-- **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit.
+- **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit. A damage entry nested in a bucket can hold its own Damage Outcome, and the rule is the same at every depth: the roll shows once, through that outcome.
 - **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**.
 
 ### Healing
