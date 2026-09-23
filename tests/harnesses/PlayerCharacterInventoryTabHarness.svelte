@@ -11,6 +11,7 @@
 
 	let {
 		items = [],
+		containerCapacityUsage = {},
 		updateItem = () => {},
 		updateStoredObjectQuantity = () => {},
 		storeItemInContainer = () => {},
@@ -20,6 +21,7 @@
 		onDropItem = () => [],
 	}: {
 		items?: HarnessItem[];
+		containerCapacityUsage?: Record<string, number>;
 		updateItem?: (id: string, changes: Record<string, unknown>) => unknown;
 		updateStoredObjectQuantity?: (itemId: string, quantity: number) => unknown;
 		storeItemInContainer?: (itemId: string, containerId: string) => unknown;
@@ -88,7 +90,11 @@
 			items: preparedItems,
 			system: {
 				currency: {},
-				inventory: { totalSlots: 0, usedSlots: 0 },
+				inventory: {
+					totalSlots: 0,
+					usedSlots: 0,
+					containerCapacityUsage: untrack(() => containerCapacityUsage),
+				},
 			},
 			flags: {},
 		},

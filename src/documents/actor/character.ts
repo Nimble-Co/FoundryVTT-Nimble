@@ -20,10 +20,6 @@ import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
-import {
-	calculateInventorySlotCost,
-	findContainerStorageRejection,
-} from '#utils/inventoryContainers.js';
 import localize from '#utils/localize.js';
 import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
 import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
@@ -64,6 +60,11 @@ import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import {
+	calculateInventorySlotCost,
+	findContainerStorageRejection,
+	getContainerUsedCapacity,
+} from './inventoryContainers.js';
 import resolveCharacterItemActionCost, {
 	type ActivatableItem,
 } from './resolveCharacterItemActionCost.js';
@@ -309,6 +310,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		actorData.inventory.totalSlots = baseInventorySlots + bonusInventorySlots;
 		actorData.inventory.usedSlots = this.getUsedInventorySlots();
+		actorData.inventory.containerCapacityUsage = this.getContainerCapacityUsage();
 
 		// Prepare Wounds
 		actorData.attributes.wounds.max = 6 + actorData.attributes.wounds.bonus;
@@ -421,6 +423,33 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** The objects stored inside the given container, in the order they are carried. */
 	getContainerContents(containerId: string): ContainableObject[] {
 		return this.getCarriedObjects().filter((object) => object.system.containerId === containerId);
+	}
+
+	/** Slots used inside each container carried, keyed by the container's id. */
+	getContainerCapacityUsage(): Record<string, number> {
+		const objects = this.getCarriedObjects();
+		const storedObjectsByContainerId = new Map<string, ContainableObject[]>();
+
+		for (const object of objects) {
+			const { containerId } = object.system;
+			if (!containerId) continue;
+
+			const storedObjects = storedObjectsByContainerId.get(containerId) ?? [];
+			storedObjects.push(object);
+			storedObjectsByContainerId.set(containerId, storedObjects);
+		}
+
+		const usageByContainerId: Record<string, number> = {};
+
+		for (const container of objects) {
+			if (!container.system.container.enabled) continue;
+
+			usageByContainerId[container._id] = getContainerUsedCapacity(
+				storedObjectsByContainerId.get(container._id) ?? [],
+			);
+		}
+
+		return usageByContainerId;
 	}
 
 	/**

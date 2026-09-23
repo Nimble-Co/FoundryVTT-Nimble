@@ -45,15 +45,6 @@
 		"objectSizeType": "slots",
 		"slotsRequired": 1,
 		"stackSize": 2,
-		"containerId": "",
-		"container": {
-			"enabled": true,
-			"slotCostMode": "none",
-			"slotCostReduction": 1,
-			"capacity": null,
-			"allowedObjectTypes": [],
-			"requiresEquipped": false
-		},
 		"properties": {
 			"range": {
 				"min": 2,

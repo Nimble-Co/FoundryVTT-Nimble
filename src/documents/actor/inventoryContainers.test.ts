@@ -4,7 +4,7 @@ import type { ContainableObject } from '#types/inventoryContainers.js';
 import {
 	createContainer as makeContainer,
 	createContainableObject as makeObject,
-} from '../../tests/fixtures/containableObject.js';
+} from '../../../tests/fixtures/containableObject.js';
 import {
 	calculateInventorySlotCost,
 	findContainerStorageRejection,

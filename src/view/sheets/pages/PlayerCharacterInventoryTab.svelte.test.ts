@@ -63,6 +63,7 @@ function renderWithContainers(
 		toggleEquipment?: ReturnType<typeof vi.fn>;
 		onDropItem?: ReturnType<typeof vi.fn>;
 	} = {},
+	containerCapacityUsage: Record<string, number> = {},
 ) {
 	const storeItemInContainer = handlers.storeItemInContainer ?? vi.fn();
 	const removeItemFromContainer = handlers.removeItemFromContainer ?? vi.fn();
@@ -73,6 +74,7 @@ function renderWithContainers(
 	const result = render(PlayerCharacterInventoryTabHarness, {
 		props: {
 			items,
+			containerCapacityUsage,
 			storeItemInContainer,
 			removeItemFromContainer,
 			updateStoredObjectQuantity,
@@ -155,10 +157,11 @@ describe('PlayerCharacterInventoryTab containers', () => {
 				container: { enabled: true, capacity: 10 },
 			},
 		};
-		const { container } = renderWithContainers([
-			chest,
-			{ ...plateArmor, system: { ...plateArmor.system, containerId: 'chest' } },
-		]);
+		const { container } = renderWithContainers(
+			[chest, { ...plateArmor, system: { ...plateArmor.system, containerId: 'chest' } }],
+			{},
+			{ chest: 4 },
+		);
 
 		expect(getRow(container, 'chest').textContent).toContain('4 / 10 slots stored');
 	});
