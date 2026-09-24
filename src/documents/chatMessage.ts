@@ -3,6 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import type { MovementOffer } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
 import {
@@ -22,6 +23,7 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
+import { type OfferCard, reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -984,14 +986,18 @@ class NimbleChatMessage extends ChatMessage {
 
 		const systemData = this.system as ActivationCardSystemData;
 		const existingTargets = systemData.targets || [];
-		const targets = new Set([
-			...existingTargets,
-			...newTargets.map((token) => token.document.uuid),
-		]);
+		const added = newTargets.map((token) => token.document.uuid).filter((uuid) => uuid !== null);
+		const targets = [...new Set([...existingTargets, ...added])];
 
 		return this.update({
-			system: { targets: [...targets] },
+			system: { targets, movementOffers: this.#movementOffersFor(targets) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+	}
+
+	/** The card's Movement Offers once its targets change. */
+	#movementOffersFor(targets: string[]): MovementOffer[] {
+		const system = this.system as OfferCard['system'];
+		return reconcileMovementOffers({ speaker: this.speaker, system: { ...system, targets } });
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */
@@ -1408,7 +1414,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = existingTargets.filter((id) => id !== targetId);
 
 		return this.update({
-			system: { targets },
+			system: { targets, movementOffers: this.#movementOffersFor(targets) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
