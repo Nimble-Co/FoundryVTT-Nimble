@@ -22,7 +22,7 @@ function createMessage(system: Record<string, unknown> = {}) {
 			actorName: 'Hero',
 			name: 'Quick Strike',
 			itemUuid: 'Actor.hero.Item.i1',
-			payload: 'offer',
+			payload: 'use',
 			message: 'Goblin moved next to Hero.',
 			targets: ['Scene.s.Token.gob', 'Scene.s.Token.gone', 'Scene.s.Token.ogre'],
 			moverName: 'Goblin',
@@ -82,7 +82,7 @@ describe('MovementTriggerCard', () => {
 		expect(screen.queryByText(/Creatures:/)).toBeNull();
 	});
 
-	it('shows a use button on an offer to the owner of the item', () => {
+	it('shows a use button on a use card to the owner of the item', () => {
 		renderCard();
 		expect(useButton()).toBeTruthy();
 	});
@@ -123,5 +123,54 @@ describe('MovementTriggerCard', () => {
 		renderCard();
 		await fireEvent.click(useButton()!);
 		expect(setTargets).toHaveBeenCalledWith(['gob'], { mode: 'replace' });
+	});
+
+	it("keeps the user's own targets when none of the card's creatures is on the viewed scene", async () => {
+		documents['Scene.s.Token.gob'] = { id: 'gob', name: 'Goblin', object: null };
+		documents['Scene.s.Token.ogre'] = { id: 'ogre', name: 'Ogre', object: null };
+		renderCard();
+		await fireEvent.click(useButton()!);
+		expect(setTargets).not.toHaveBeenCalled();
+		expect(activateItem).toHaveBeenCalledWith('i1');
+	});
+
+	it("keeps the user's own targets when the card found no creatures", async () => {
+		renderCard({ targets: [] });
+		await fireEvent.click(useButton()!);
+		expect(setTargets).not.toHaveBeenCalled();
+		expect(activateItem).toHaveBeenCalledWith('i1');
+	});
+
+	it('disables the button while the item is in use, so a double click uses it once', async () => {
+		let finish!: () => void;
+		activateItem.mockImplementationOnce(
+			() => new Promise<null>((resolve) => (finish = () => resolve(null))),
+		);
+		renderCard();
+		const button = useButton() as HTMLButtonElement;
+
+		await fireEvent.click(button);
+		expect(button.disabled).toBe(true);
+		await fireEvent.click(button);
+		expect(activateItem).toHaveBeenCalledTimes(1);
+
+		finish();
+		await vi.waitFor(() => expect(button.disabled).toBe(false));
+	});
+
+	it('logs the failure and enables the button again when using the item fails', async () => {
+		const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const failure = new Error('failed');
+		activateItem.mockImplementationOnce(async () => {
+			throw failure;
+		});
+		renderCard();
+		const button = useButton() as HTMLButtonElement;
+
+		await fireEvent.click(button);
+		await vi.waitFor(() => expect(button.disabled).toBe(false));
+		expect(activateItem).toHaveBeenCalledTimes(1);
+		expect(logError).toHaveBeenCalledWith(expect.any(String), failure);
+		logError.mockRestore();
 	});
 });

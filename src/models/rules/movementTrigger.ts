@@ -1,11 +1,7 @@
+import type { MovementTriggerOptions, TriggerCreature, TriggerGeometry } from '#types/movement.js';
 import localize from '#utils/localize.js';
 import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
-import {
-	type MovementTriggerOptions,
-	matchMovementTrigger,
-	type TriggerCreature,
-	type TriggerGeometry,
-} from '../../utils/movement/matchMovementTrigger.js';
+import { matchMovementTrigger } from '../../utils/movement/matchMovementTrigger.js';
 import { postMovementTriggerCard } from '../../utils/movement/postMovementTriggerCard.js';
 import { withWidget } from './_widgetOption.js';
 import { type MovementFinishedContext, NimbleBaseRule } from './base.js';
@@ -128,8 +124,8 @@ function schema() {
 		payload: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'offer',
-			choices: ['offer', 'reminder'],
+			initial: 'use',
+			choices: ['use', 'reminder'],
 			label: 'NIMBLE.rules.movementTrigger.payload.label',
 			hint: 'NIMBLE.rules.movementTrigger.payload.hint',
 		}),
@@ -161,7 +157,7 @@ declare namespace MovementTriggerRule {
 
 /**
  * Posts a card when a finished Movement matches the configured event and
- * geometry. The card offers the use of this rule's item, or only reminds the
+ * geometry. The card lets the owner use this rule's item, or only reminds the
  * table; the system never uses the item itself.
  */
 class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
@@ -178,7 +174,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	declare minTargets: number;
 	declare observerScope: MovementTriggerOptions['observerScope'];
 	declare allyRadius: number;
-	declare payload: 'offer' | 'reminder';
+	declare payload: 'use' | 'reminder';
 	declare message: string;
 	declare chargePoolIdentifier: string;
 
@@ -232,21 +228,26 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 		const template =
 			this.message.trim() ||
 			localize(`NIMBLE.rules.movementTrigger.defaultMessages.${this.payload}`);
+		const spacesThisTurn =
+			record.spacesThisTurn === null
+				? localize('NIMBLE.chat.movementContext.unknown')
+				: String(record.spacesThisTurn);
 		const message = template
 			.replaceAll('{mover}', moverName)
 			.replaceAll('{spaces}', String(record.spaces))
-			.replaceAll('{spacesThisTurn}', String(record.spacesThisTurn ?? record.spaces))
+			.replaceAll('{spacesMovedThisTurn}', spacesThisTurn)
 			.replaceAll('{targets}', targetNames.join(', '));
 
 		const card = await postMovementTriggerCard({
 			actor,
-			item: this.item as unknown as Item,
+			item: this.item,
+			token: context.token,
 			payload: this.payload,
 			message,
 			targets: match.targets.flatMap((token) => (token.uuid ? [token.uuid] : [])),
 			moverName,
 			spaces: record.spaces,
-			spacesThisTurn: record.spacesThisTurn ?? 0,
+			spacesThisTurn: record.spacesThisTurn,
 		});
 		if (card) await spendRuleCharge(actor, this.chargePoolIdentifier);
 	}

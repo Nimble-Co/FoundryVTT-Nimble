@@ -31,7 +31,7 @@
 				"minTargets": 1,
 				"observerScope": "self",
 				"allyRadius": 6,
-				"payload": "offer",
+				"payload": "use",
 				"message": "",
 				"chargePoolIdentifier": ""
 			}
