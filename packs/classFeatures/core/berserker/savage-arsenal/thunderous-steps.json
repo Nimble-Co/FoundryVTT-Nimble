@@ -7,7 +7,35 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "movementTrigger",
+				"disabled": false,
+				"id": "thunderous-steps-trigger",
+				"identifier": "",
+				"label": "Thunderous Steps",
+				"predicate": {
+					"self": "raging"
+				},
+				"priority": 1,
+				"event": "selfMoved",
+				"creature": "any",
+				"kinds": [
+					"regular",
+					"free"
+				],
+				"minSpaces": 4,
+				"spacesScope": "thisTurn",
+				"geometry": "endsAdjacent",
+				"reach": 1,
+				"minTargets": 1,
+				"observerScope": "self",
+				"allyRadius": 6,
+				"payload": "offer",
+				"message": "",
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
