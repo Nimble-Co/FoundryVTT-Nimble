@@ -32,7 +32,7 @@ const DEFAULTS = {
 	minTargets: 1,
 	observerScope: 'self',
 	allyRadius: 6,
-	payload: 'offer',
+	payload: 'use',
 	message: '',
 	chargePoolIdentifier: '',
 };
@@ -125,12 +125,13 @@ function makeContext(overrides: Record<string, unknown> = {}) {
 type TriggerInput = {
 	actor: unknown;
 	item: unknown;
+	token: unknown;
 	payload: string;
 	message: string;
 	targets: string[];
 	moverName: string;
 	spaces: number;
-	spacesThisTurn: number;
+	spacesThisTurn: number | null;
 };
 
 function lastCard(): TriggerInput {
@@ -179,7 +180,7 @@ describe('MovementTriggerRule', () => {
 				'movedToward',
 			]);
 			expect(schema.observerScope?.choices).toEqual(['self', 'selfOrAllyWithin']);
-			expect(schema.payload?.choices).toEqual(['offer', 'reminder']);
+			expect(schema.payload?.choices).toEqual(['use', 'reminder']);
 			expect(schema.chargePoolIdentifier?.options?.widget).toBe('chargePoolPicker');
 		});
 
@@ -272,13 +273,15 @@ describe('MovementTriggerRule', () => {
 			});
 			const { rule, actor, item } = makeRule({
 				payload: 'reminder',
-				message: '{mover} moved {spaces} ({spacesThisTurn} this turn) near {targets}.',
+				message: '{mover} moved {spaces} ({spacesMovedThisTurn} this turn) near {targets}.',
 			});
-			await rule.onMovementFinished(makeContext() as never);
+			const context = makeContext();
+			await rule.onMovementFinished(context as never);
 
 			expect(lastCard()).toEqual({
 				actor,
 				item,
+				token: context.token,
 				payload: 'reminder',
 				message: 'Goblin moved 3 (5 this turn) near Ann, Bob.',
 				targets: ['Scene.s.Token.a', 'Scene.s.Token.b'],
@@ -289,19 +292,26 @@ describe('MovementTriggerRule', () => {
 		});
 
 		it('uses a default message for each payload when the message is empty', async () => {
-			await makeRule({ payload: 'offer' }).rule.onMovementFinished(makeContext() as never);
-			const offer = lastCard().message;
-			await makeRule({ payload: 'reminder' }).rule.onMovementFinished(makeContext() as never);
+			const context = makeContext({ spaces: 1, spacesThisTurn: 1 });
+			await makeRule({ payload: 'use' }).rule.onMovementFinished(context as never);
+			const use = lastCard().message;
+			await makeRule({ payload: 'reminder' }).rule.onMovementFinished(context as never);
 			const reminder = lastCard().message;
-			expect(offer).toContain('Goblin');
+			expect(use).toContain('Goblin');
 			expect(reminder).toContain('Goblin');
-			expect(offer).not.toBe(reminder);
-			expect(offer).not.toContain('{');
+			expect(use).not.toBe(reminder);
+			for (const message of [use, reminder]) {
+				expect(message).not.toContain('{');
+				expect(message).not.toContain('1 spaces');
+			}
 		});
 
-		it('reports 0 spaces this turn when no history is recorded', async () => {
-			await makeRule().rule.onMovementFinished(makeContext({ spacesThisTurn: null }) as never);
-			expect(lastCard().spacesThisTurn).toBe(0);
+		it('keeps unknown spaces this turn as null and says unknown in the message', async () => {
+			await makeRule({ message: '{spacesMovedThisTurn} this turn' }).rule.onMovementFinished(
+				makeContext({ spacesThisTurn: null }) as never,
+			);
+			expect(lastCard().spacesThisTurn).toBeNull();
+			expect(lastCard().message).toBe('unknown this turn');
 		});
 	});
 
@@ -317,7 +327,18 @@ describe('MovementTriggerRule', () => {
 			const { rule, poolItem } = makeRule({ chargePoolIdentifier: 'lash' }, { pool: 1 });
 			await rule.onMovementFinished(makeContext() as never);
 			expect(postMovementTriggerCard).toHaveBeenCalledTimes(1);
-			expect(JSON.stringify(poolItem?.update.mock.calls.at(-1))).toContain('"current":0');
+			expect(poolItem?.update).toHaveBeenCalledWith(
+				{ 'flags.nimble.chargePools': { lash: expect.objectContaining({ current: 0 }) } },
+				expect.anything(),
+			);
+		});
+
+		it('spends no charge when the card is not posted', async () => {
+			postMovementTriggerCard.mockResolvedValueOnce(null);
+			const { rule, poolItem } = makeRule({ chargePoolIdentifier: 'lash' }, { pool: 1 });
+			await rule.onMovementFinished(makeContext() as never);
+			expect(postMovementTriggerCard).toHaveBeenCalledTimes(1);
+			expect(poolItem?.update).not.toHaveBeenCalled();
 		});
 
 		it('does not fire on an empty pool', async () => {
@@ -337,7 +358,7 @@ describe('MovementTriggerRule', () => {
 	});
 
 	it('several rules each post their own card', async () => {
-		await makeRule({ payload: 'offer' }).rule.onMovementFinished(makeContext() as never);
+		await makeRule({ payload: 'use' }).rule.onMovementFinished(makeContext() as never);
 		await makeRule({ payload: 'reminder' }).rule.onMovementFinished(makeContext() as never);
 		expect(postMovementTriggerCard).toHaveBeenCalledTimes(2);
 	});
