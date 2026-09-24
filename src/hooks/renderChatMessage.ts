@@ -8,6 +8,8 @@ import NimbleFieldRestCard from '../view/chat/FieldRestCard.svelte';
 import NimbleLevelUpSummaryCard from '../view/chat/LevelUpSummaryCard.svelte';
 import NimbleMinionGroupAttackCard from '../view/chat/MinionGroupAttackCard.svelte';
 import NimbleMoveActionCard from '../view/chat/MoveActionCard.svelte';
+import NimbleMovementOfferCard from '../view/chat/MovementOfferCard.svelte';
+import NimbleMovementTriggerCard from '../view/chat/MovementTriggerCard.svelte';
 import NimbleObjectCard from '../view/chat/ObjectCard.svelte';
 import NimbleReactionCard from '../view/chat/ReactionCard.svelte';
 import NimbleSafeRestCard from '../view/chat/SafeRestCard.svelte';
@@ -97,6 +99,8 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleFeatureCard
 		| typeof NimbleFieldRestCard
 		| typeof NimbleMoveActionCard
+		| typeof NimbleMovementOfferCard
+		| typeof NimbleMovementTriggerCard
 		| typeof NimbleReactionCard
 		| typeof NimbleSafeRestCard
 		| typeof NimbleMinionGroupAttackCard
@@ -138,6 +142,12 @@ export default function renderChatMessageHTML(message, html) {
 			break;
 		case 'moveAction':
 			component = NimbleMoveActionCard;
+			break;
+		case 'movementOffer':
+			component = NimbleMovementOfferCard;
+			break;
+		case 'movementTrigger':
+			component = NimbleMovementTriggerCard;
 			break;
 		case 'savingThrow':
 			component = NimbleSavingThrowCard;
