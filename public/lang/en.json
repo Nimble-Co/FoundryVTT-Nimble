@@ -127,7 +127,7 @@
 					"toward": "toward {source}"
 				},
 				"choosers": { "mover": "{mover} chooses where.", "source": "{source} chooses where." },
-				"dragHint": "Drag {name}: the ruler stops at {distance}.",
+				"dragHint": "Drag {name}: the ruler changes past {distance}.",
 				"result": "{name} moved {moved} of {offered}.",
 				"unused": "{name} moved on its own, so this went unused.",
 				"resultShortened": "{name} moved {moved} of {offered}, shortened by {short}.",
@@ -3616,9 +3616,6 @@
 			"actions": {
 				"free": "Free Move",
 				"forced": "Forced Movement"
-			},
-			"offers": {
-				"tooFar": "{name} was offered {spaces} spaces by {label}. Drop inside the ruler, or press Tab during the drag to move normally."
 			}
 		}
 	}

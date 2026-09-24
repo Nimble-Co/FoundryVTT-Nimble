@@ -115,7 +115,7 @@ describe('MoveNode', () => {
 		renderNode();
 		expect(screen.getByText(/Goblin Cutthroat: up to 2 spaces away from Sir Brannon/)).toBeTruthy();
 		expect(screen.getByText(/Sir Brannon chooses where/)).toBeTruthy();
-		expect(screen.getByText(/Drag Goblin Cutthroat: the ruler stops at 2 spaces/)).toBeTruthy();
+		expect(screen.getByText(/Drag Goblin Cutthroat: the ruler changes past 2 spaces/)).toBeTruthy();
 	});
 
 	it('carries no button in any state', () => {
