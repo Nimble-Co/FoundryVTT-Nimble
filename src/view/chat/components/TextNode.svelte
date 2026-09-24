@@ -1,11 +1,12 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+	import type { TextNodeProps } from '#types/components/TextNode.d.ts';
 	import type { TextNode } from '#types/effectTree.js';
 	import type { MovementContext } from '#utils/movement/movementContext.js';
 
 	import { getContext } from 'svelte';
 	import Hint from '../../components/Hint.svelte';
-	import { resolveMovementPlaceholders } from '../../dataPreparationHelpers/resolveMovementPlaceholders.js';
+	import { resolveMovementPlaceholders } from '#view/dataPreparationHelpers/resolveMovementPlaceholders.js';
 
 	function getNodeIcon(noteType: TextNode['noteType']) {
 		switch (noteType) {
@@ -20,7 +21,7 @@
 		}
 	}
 
-	let { node }: { node: TextNode } = $props();
+	let { node }: TextNodeProps = $props();
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 
