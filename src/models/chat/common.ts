@@ -100,6 +100,41 @@ export const movementOffers = () => ({
 });
 
 /**
+ * A record of Movement as the table saw it when the card was posted: the
+ * speaker's Spaces Moved This Turn (null outside combat or with movement
+ * tracking off) and how far each target was from the speaker token. Never
+ * recomputed; a target added later is measured when it is added.
+ */
+export const movementContext = () => ({
+	movementContext: new fields.SchemaField(
+		{
+			spacesMovedThisTurn: new fields.NumberField({
+				required: true,
+				nullable: true,
+				initial: null,
+				integer: true,
+				min: 0,
+			}),
+			targetsSpacesAway: new fields.ArrayField(
+				new fields.SchemaField({
+					tokenUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					spaces: new fields.NumberField({
+						required: true,
+						nullable: false,
+						initial: 0,
+						integer: true,
+						min: 0,
+					}),
+				}),
+				{ required: true, nullable: false, initial: [] },
+			),
+		},
+		{ required: true, nullable: false },
+	),
+});
+
+/**
  * Pending interactive offers stamped onto an attack card. Mostly defender-side
  * reactions (force reroll, redirect to self), plus attacker-side spends such as
  * `spendPoolForDamage`. Snapshotted at card creation by the attacker's client;
