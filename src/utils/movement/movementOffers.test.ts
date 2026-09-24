@@ -3,6 +3,7 @@ import type { MoveNode } from '#types/effectTree.js';
 import type { MovementOffer } from '#types/movement.js';
 import {
 	findArmedMovementOffer,
+	lapseMovementOffers,
 	movementOfferOutcome,
 	type OfferCard,
 	type OfferToken,
@@ -253,6 +254,19 @@ describe('settleMovementOffer', () => {
 		const base = { taken: true, spaces: 1, stopped: false, userId: null };
 		expect(settleMovementOffer([offer()], 'missing', base)).toBeNull();
 		expect(settleMovementOffer([offer({ state: 'unused' })], 'n1.gob', base)).toBeNull();
+	});
+});
+
+describe('lapseMovementOffers', () => {
+	it('lapses the open offers the filter keeps and leaves the rest', () => {
+		const offers = [offer(), offer({ id: 'b', state: 'taken' }), offer({ id: 'c' })];
+		const lapsed = lapseMovementOffers(offers, (o) => o.id !== 'c');
+		expect(lapsed?.map((o) => o.state)).toEqual(['lapsed', 'taken', 'open']);
+	});
+
+	it('is nothing to write when no open offer lapses', () => {
+		expect(lapseMovementOffers([offer({ state: 'unused' })])).toBeNull();
+		expect(lapseMovementOffers([])).toBeNull();
 	});
 });
 
