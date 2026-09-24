@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { grantedActionOffers } from './common.js';
+import type { MovementOffer } from '#types/movement.js';
+import { grantedActionOffers, movementOffers } from './common.js';
 
 describe('grantedActionOffers schema factory', () => {
 	it('defines an offers array that is empty by default', () => {
@@ -49,5 +50,41 @@ describe('grantedActionOffers schema factory', () => {
 
 		expect(element.fields.activationType.choices).toEqual(['weaponAttack']);
 		expect(element.fields.activationType.options.initial).toBe('weaponAttack');
+	});
+});
+
+describe('movementOffers schema factory', () => {
+	type Element = {
+		element: { fields: Record<string, { options: { initial: unknown; choices?: unknown } }> };
+		options: { initial: unknown };
+	};
+	const field = () => movementOffers().movementOffers as unknown as Element;
+
+	it('defines an offers array that is empty by default', () => {
+		expect(field().options.initial).toEqual([]);
+	});
+
+	it('stores every field an offer carries, so none is dropped when the card is saved', () => {
+		const stamped: MovementOffer = {
+			id: 'n1.tok',
+			nodeId: 'n1',
+			tokenUuid: 'Scene.s.Token.tok',
+			name: 'Goblin',
+			kind: 'forced',
+			spaces: 2,
+			ignoreDifficultTerrain: true,
+			state: 'open',
+			usedBy: null,
+			movedSpaces: null,
+			stopped: false,
+		};
+		expect(Object.keys(field().element.fields).sort()).toEqual(Object.keys(stamped).sort());
+	});
+
+	it('starts an offer open and accepts every state it can settle into', () => {
+		const { state, kind } = field().element.fields;
+		expect(state.options.initial).toBe('open');
+		expect(state.options.choices).toEqual(['open', 'taken', 'unused', 'lapsed']);
+		expect(kind.options.choices).toEqual(['free', 'forced']);
 	});
 });
