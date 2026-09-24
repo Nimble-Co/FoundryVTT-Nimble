@@ -125,4 +125,86 @@ describe('registerPoolGainMessageHooks', () => {
 
 		expect(chat.create).not.toHaveBeenCalled();
 	});
+
+	describe('freeMove rules', () => {
+		function makeFreeMove() {
+			return { type: 'freeMove', onPoolGain: vi.fn(async () => undefined) };
+		}
+
+		function stubSettings(values: Record<string, boolean>) {
+			(globals().game as { settings?: unknown }).settings = {
+				get: (_scope: string, key: string) => values[key] ?? true,
+			};
+		}
+
+		it('passes the bare pool identifier and label to each freeMove rule', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			stubChatMessage();
+			const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+			registerPoolGainMessageHooks();
+
+			const first = makeFreeMove();
+			const second = makeFreeMove();
+			const actor = makeActor([first, makeRule(), second]);
+			callbacks.get('nimble.dicePool.changed')?.(
+				gainPayload(actor, { poolId: 'actor:fury', poolLabel: 'Fury Dice' }),
+			);
+
+			expect(first.onPoolGain).toHaveBeenCalledWith({
+				poolIdentifier: 'fury',
+				poolLabel: 'Fury Dice',
+			});
+			expect(second.onPoolGain).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not call freeMove rules when the pool did not gain dice', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			stubChatMessage();
+			const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+			registerPoolGainMessageHooks();
+
+			const rule = makeFreeMove();
+			callbacks.get('nimble.dicePool.changed')?.(
+				gainPayload(makeActor([rule]), { previousFaces: [2, 4], newFaces: [2] }),
+			);
+
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('still calls freeMove rules when chat-notification automation is off', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const chat = stubChatMessage();
+			const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+			registerPoolGainMessageHooks();
+
+			stubSettings({ 'automation.chatNotifications': false });
+			try {
+				const rule = makeFreeMove();
+				callbacks.get('nimble.dicePool.changed')?.(gainPayload(makeActor([rule, makeRule()])));
+
+				expect(rule.onPoolGain).toHaveBeenCalledTimes(1);
+				expect(chat.create).not.toHaveBeenCalled();
+			} finally {
+				(globals().game as { settings?: unknown }).settings = undefined;
+			}
+		});
+
+		it('does not call freeMove rules when rule automation is off', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const chat = stubChatMessage();
+			const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+			registerPoolGainMessageHooks();
+
+			stubSettings({ 'automation.applyRuleEffects': false });
+			try {
+				const rule = makeFreeMove();
+				callbacks.get('nimble.dicePool.changed')?.(gainPayload(makeActor([rule, makeRule()])));
+
+				expect(rule.onPoolGain).not.toHaveBeenCalled();
+				expect(chat.create).toHaveBeenCalledTimes(1);
+			} finally {
+				(globals().game as { settings?: unknown }).settings = undefined;
+			}
+		});
+	});
 });
