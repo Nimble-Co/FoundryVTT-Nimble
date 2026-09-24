@@ -37,6 +37,14 @@ Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from
 
 Fires once per finished token Movement (one drag; a Teleport is reported too, with kind `teleport` and zero spaces) when the Movement Tracking toggle is on. The system hook `nimble.movementFinished` carries a `MovementRecord` on every client; the active GM dispatches it, in order and awaiting each, to the mover's rules first and then to the rules of every other actor with a token on the same scene. Like every other lifecycle event it is also skipped when `applyRuleEffects` is off. The context holds `record` (token, actor, movementId, kind `regular | free | forced | teleport`, action, origin, stop, path, spaces, spacesThisTurn, stopped, user), the observing `actor` and `token`, and `isMover`. Use `reachChanges(record, observerToken, reach)` from `src/utils/movement/reachChanges.ts` to learn whether the mover entered, left or passed through the observer's Reach.
 
+The `movementTrigger` rule is the authored consumer. It runs `matchMovementTrigger` (`src/utils/movement/matchMovementTrigger.ts`) on the record, then its predicate, then its charge pool, and posts a `movementTrigger` chat card through `postMovementTriggerCard`. The payload is an offer to use the owning item on the tokens the match found, or a reminder. It never deals damage and never moves a token.
+
+### Rules that post a Movement Offer
+
+`freeMove` posts a standalone `movementOffer` chat card through `postMovementOfferCard` (`src/utils/movement/postMovementOfferCard.ts`). The card carries one synthetic `move` node and is stamped with its offers before it is created, so arming, the drag tag, settling and lapsing work the same as for an activation card. Each trigger posts on exactly one client: `onActivation` (this item's `onItemActivated`) and `onInitiativeRolled` on the acting client, `onTurnStart` on the client that advanced the turn, `onCritReceived` (`onAttackReceived` with `isCritical`) on the GM who applied damage, and `onPoolGain` on the client that changed the pool. `onPoolGain` has no base hook: the `dicePool.changed` listener in `src/hooks/poolGainMessage.ts` calls `onPoolGain` on each `freeMove` rule, and is gated by `applyRuleEffects`, not by chat notifications.
+
+Both rules take a `chargePoolIdentifier`: when set, the rule fires only while that pool holds a charge and spends one when its card posts (`src/utils/chargePool/ruleChargeGate.ts`). An offer to use an item leaves it empty and gates on the `self:<identifier>ChargePool` tag instead, so the item's own consumer spends the charge only when the player uses it.
+
 ## Key Patterns
 
 - **Guard with `isEmbedded`**: Always start `prePrepareData()` with `if (!this.item.isEmbedded) return;`. Rules on un-embedded items have no actor to mutate.
