@@ -9,16 +9,21 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "poolGainMessage",
+				"type": "freeMove",
 				"disabled": false,
-				"id": "swift-fury-gain-message",
+				"id": "swift-fury-free-move",
 				"identifier": "",
 				"label": "Swift Fury",
 				"predicate": {},
 				"priority": 1,
+				"trigger": "onPoolGain",
 				"poolIdentifier": "fury",
-				"formula": "@dexterity",
-				"message": "Swift Fury: move up to {value} spaces for free, ignoring difficult terrain."
+				"distance": "@dexterity",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": true,
+				"chargePoolIdentifier": ""
 			}
 		],
 		"activation": {
@@ -47,7 +52,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p><p><em>A chat reminder with your movement distance posts whenever you gain Fury Dice.</em></p>",
+		"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p><p><em>A Movement Offer card posts whenever you gain Fury Dice.</em></p>",
 		"featureType": "class",
 		"class": "berserker",
 		"gainedAtLevel": 4,
