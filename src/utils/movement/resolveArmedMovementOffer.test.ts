@@ -23,6 +23,7 @@ function record(over: Partial<MovementRecord> = {}): MovementRecord {
 		spaces: 2,
 		stopped: false,
 		user: { id: 'p1' },
+		offer: { messageId: 'm', offerId: 'n.gob' },
 		...over,
 	} as unknown as MovementRecord;
 }
@@ -44,11 +45,13 @@ beforeEach(() => {
 			stopped: false,
 		},
 	];
-	const message = { id: 'm', system: { movementOffers: offers }, update };
+	const older = { id: 'm', system: { movementOffers: offers }, update };
+	const newer = { id: 'm2', system: { movementOffers: [{ ...offers[0] }] }, update: vi.fn() };
+	const messages = [older, newer];
 	g.game = {
 		...previousGame,
 		user: { id: 'gm', isGM: true },
-		messages: { contents: [message], get: () => message },
+		messages: { contents: messages, get: (id: string) => messages.find((m) => m.id === id) },
 	} as GameStub;
 	getPrimaryActiveGmId.mockReturnValue('gm');
 });
@@ -62,14 +65,24 @@ function written() {
 }
 
 describe('resolveArmedMovementOffer', () => {
-	it('records a Movement of the offered kind as the offer taken', async () => {
+	it('takes the offer the drag names, even when a newer card offers another', async () => {
 		await resolveArmedMovementOffer(record({ spaces: 5 }));
 		expect(written()).toMatchObject({ state: 'taken', usedBy: 'p1', movedSpaces: 2 });
 	});
 
-	it('leaves the offer unused when the mover went their own way', async () => {
-		await resolveArmedMovementOffer(record({ kind: 'regular' }));
-		expect(written()).toMatchObject({ state: 'unused', movedSpaces: null });
+	it('leaves the offer the token carries unused when the Movement names none', async () => {
+		const newerUpdate = (g.game.messages.get('m2') as { update: ReturnType<typeof vi.fn> }).update;
+		await resolveArmedMovementOffer(record({ kind: 'regular', offer: null }));
+		expect(update).not.toHaveBeenCalled();
+		expect(newerUpdate.mock.calls[0]?.[0]?.system?.movementOffers?.[0]).toMatchObject({
+			state: 'unused',
+			movedSpaces: null,
+		});
+	});
+
+	it('ignores a tag that names an offer to another token', async () => {
+		await resolveArmedMovementOffer(record({ token: { uuid: 'Scene.s.Token.ogre' } as never }));
+		expect(update).not.toHaveBeenCalled();
 	});
 
 	it('leaves a teleport alone', async () => {
@@ -85,7 +98,7 @@ describe('resolveArmedMovementOffer', () => {
 		expect(update).not.toHaveBeenCalled();
 	});
 
-	it('does nothing when the token carries no offer', async () => {
+	it('does not settle an offer twice', async () => {
 		offers[0].state = 'taken';
 		await resolveArmedMovementOffer(record());
 		expect(update).not.toHaveBeenCalled();

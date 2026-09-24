@@ -60,6 +60,8 @@ export interface MovementRecord {
 	/** True when a wall, terrain, the mover or a disconnect cut the path short. */
 	stopped: boolean;
 	user: User;
+	/** The Movement Offer the drag was made under, or null. */
+	offer: MovementOfferTag | null;
 }
 
 export type MovementOfferKind = 'free' | 'forced';
@@ -92,6 +94,12 @@ export interface MovementOffer {
 	movedSpaces: number | null;
 	/** A wall, terrain or the mover cut the Movement short. */
 	stopped: boolean;
+}
+
+/** Names one Movement Offer across cards: the card, and the offer on it. */
+export interface MovementOfferTag {
+	messageId: string;
+	offerId: string;
 }
 
 /** The offer a token carries, with the card it is on. */

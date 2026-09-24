@@ -1,6 +1,7 @@
-import type { MovementOffer } from '#types/movement.js';
+import type { ArmedMovementOffer } from '#types/movement.js';
 import { movementOfferAction } from '../../utils/movement/movementActions.js';
 import { findArmedMovementOffer } from '../../utils/movement/movementOffers.js';
+import { withMovementOfferTag } from '../../utils/movement/movementOfferTag.js';
 
 interface ConstrainOptions {
 	ignoreWalls?: boolean;
@@ -24,7 +25,7 @@ export class NimbleToken extends foundry.canvas.placeables.Token {
 	 * movement action for the drag, and the GM by turning on core Unconstrained
 	 * Movement, which is how a GM puts a token wherever they want.
 	 */
-	#dragOffer(): MovementOffer | null {
+	#dragOffer(): ArmedMovementOffer | null {
 		if ((this.layer as unknown as DraggingLayer)._dragMovementAction) return null;
 		// @ts-expect-error - fvtt-types does not declare the v14 drag option seams
 		const base = super._getDragConstrainOptions() as ConstrainOptions;
@@ -39,5 +40,20 @@ export class NimbleToken extends foundry.canvas.placeables.Token {
 		// @ts-expect-error - fvtt-types does not declare the v14 drag option seams
 		if (!offer) return super._getDragMovementAction() as string;
 		return movementOfferAction(offer.kind);
+	}
+
+	/** Names the offer on the drop, so the GM records the Movement against it. */
+	_getDragLeftDropUpdateOptions(): { constrainOptions?: object } {
+		// @ts-expect-error - fvtt-types does not declare the v14 drag option seams
+		const options = super._getDragLeftDropUpdateOptions() as { constrainOptions?: object };
+		const offer = this.#dragOffer();
+		if (!offer) return options;
+		return {
+			...options,
+			constrainOptions: withMovementOfferTag(options.constrainOptions, {
+				messageId: offer.messageId,
+				offerId: offer.id,
+			}),
+		};
 	}
 }
