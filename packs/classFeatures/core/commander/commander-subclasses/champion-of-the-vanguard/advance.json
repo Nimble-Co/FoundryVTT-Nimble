@@ -5,7 +5,59 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "advance-round-pool",
+				"identifier": "advance-round",
+				"label": "Advance! (once per round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				],
+				"hidden": true
+			},
+			{
+				"type": "movementTrigger",
+				"disabled": false,
+				"id": "advance-trigger",
+				"identifier": "",
+				"label": "Advance!",
+				"predicate": {},
+				"priority": 2,
+				"event": "selfMoved",
+				"creature": "enemy",
+				"kinds": [
+					"regular",
+					"free"
+				],
+				"minSpaces": 1,
+				"spacesScope": "thisMovement",
+				"geometry": "movedToward",
+				"reach": 1,
+				"minTargets": 1,
+				"observerScope": "self",
+				"allyRadius": 6,
+				"payload": "reminder",
+				"message": "You moved toward {targets}. Gain advantage on your first melee attack against it.",
+				"chargePoolIdentifier": "advance-round"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
