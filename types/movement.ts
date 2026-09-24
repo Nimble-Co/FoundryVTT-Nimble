@@ -63,36 +63,40 @@ export interface MovementRecord {
 }
 
 export type MovementOfferKind = 'free' | 'forced';
-export type MovementDirection = 'any' | 'away' | 'toward';
-export type MovementChooser = 'mover' | 'source';
+
+/** Open until the token's next Movement settles it: taken, or left unused. */
+export type MovementOfferState = 'open' | 'taken' | 'unused';
 
 /**
- * A constrained drag offered to a token's owner. The system never moves the
- * token: while the offer stands, the token's own drag is limited to it and
- * labelled with its movement action.
+ * A Movement Offer as its card stores it: one per move node and recipient, with
+ * the distance fixed when the offer is made. The system never moves the token;
+ * the token's next drag is labelled with the offer and its ruler shows how far
+ * the offer reaches.
  */
 export interface MovementOffer {
+	/** `<nodeId>.<tokenId>`, unique on its card. */
 	id: string;
+	nodeId: string;
 	tokenUuid: string;
+	/** The recipient's name when the offer was made. */
+	name: string;
 	kind: MovementOfferKind;
-	/** Resolved maximum in spaces. The ruler shows it; the path is truncated to it. */
+	/** Offered distance in spaces. */
 	spaces: number;
 	/** Always true for forced. Free moves set it per feature. */
 	ignoreDifficultTerrain: boolean;
-	/** Shown on the card. Never enforced. */
-	direction: MovementDirection;
-	/** Who the book says picks the path. Shown on the card. */
-	chooser: MovementChooser;
-	label: string;
-	/** The card that carries the offer, or null for a macro-driven move. */
-	messageId: string | null;
+	state: MovementOfferState;
+	/** The user whose Movement settled the offer. */
+	usedBy: string | null;
+	/** Spaces covered under the offer, never more than offered. Set when taken. */
+	movedSpaces: number | null;
+	/** A wall, terrain or the mover cut the Movement short. */
+	stopped: boolean;
 }
 
-/** Names a `move` node's offer for one recipient token on a chat card. */
-export interface MovementOfferRef {
+/** The offer a token carries, with the card it is on. */
+export interface ArmedMovementOffer extends MovementOffer {
 	messageId: string;
-	nodeId: string;
-	tokenUuid: string;
 }
 
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */

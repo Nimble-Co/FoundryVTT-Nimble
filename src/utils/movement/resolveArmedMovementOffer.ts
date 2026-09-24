@@ -1,19 +1,18 @@
-import type { MovementRecord } from '#types/movement.js';
+import type { MovementOffer, MovementRecord } from '#types/movement.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
-import { findArmedMovementOffer } from './findArmedMovementOffer.js';
-import { type MovementOfferEntry, mergeMovementOfferEntry } from './movementOfferEntry.js';
+import { findArmedMovementOffer, settleMovementOffer } from './movementOffers.js';
 
 interface OfferBearingMessage {
-	system?: { movementOffers?: MovementOfferEntry[] };
+	system?: { movementOffers?: MovementOffer[] };
 	update?: (changes: Record<string, unknown>) => Promise<unknown>;
 }
 
 /**
  * Records on its card what came of a Movement Offer, once the token has
- * finished moving. A Movement of the offered kind is the offer being taken and
- * keeps the spaces the token really covered; a Movement of any other kind is
- * the mover going their own way, which leaves the offer spent and unused so a
- * later Movement is not limited by it. A teleport resolves nothing.
+ * finished moving. A Movement of the offered kind is the offer being taken; a
+ * Movement of any other kind is the mover going their own way, which leaves the
+ * offer unused so a later Movement is not labelled by it. A teleport settles
+ * nothing.
  *
  * Runs on the primary active GM, the only client that may write the card.
  */
@@ -23,25 +22,17 @@ export async function resolveArmedMovementOffer(record: MovementRecord): Promise
 
 	const tokenUuid = record.token?.uuid;
 	if (!tokenUuid) return;
-	const card = findArmedMovementOffer(tokenUuid);
-	if (!card?.offer.messageId) return;
+	const armed = findArmedMovementOffer(tokenUuid);
+	if (!armed) return;
 
-	const message = game.messages?.get(card.offer.messageId) as OfferBearingMessage | undefined;
+	const message = game.messages?.get(armed.messageId) as OfferBearingMessage | undefined;
 	if (!message?.update) return;
 
-	const taken = record.kind === card.offer.kind;
-	await message.update({
-		system: {
-			movementOffers: mergeMovementOfferEntry(message.system?.movementOffers ?? [], {
-				id: card.offer.id,
-				nodeId: card.node.id,
-				tokenUuid,
-				spaces: card.offer.spaces,
-				used: true,
-				usedBy: record.user?.id ?? null,
-				movedSpaces: taken ? Math.min(record.spaces, card.offer.spaces) : null,
-				stopped: taken ? record.stopped : false,
-			}),
-		},
+	const offers = settleMovementOffer(message.system?.movementOffers ?? [], armed.id, {
+		taken: record.kind === armed.kind,
+		spaces: record.spaces,
+		stopped: record.stopped,
+		userId: record.user?.id ?? null,
 	});
+	if (offers) await message.update({ system: { movementOffers: offers } });
 }

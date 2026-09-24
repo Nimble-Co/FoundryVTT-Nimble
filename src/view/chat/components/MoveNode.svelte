@@ -1,34 +1,23 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { MoveNodeProps } from '#types/components/MoveNode.d.ts';
-	import type { MovementOfferEntry } from '#utils/movement/movementOfferEntry.ts';
+	import type { MovementOffer } from '#types/movement.js';
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
-	import {
-		buildCardMovementOffer,
-		cardMoveRecipients,
-		type OfferMessage,
-	} from '#utils/movement/buildCardMovementOffer.js';
+	import { movementOfferOutcome } from '#utils/movement/movementOffers.js';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
-
-	interface Recipient {
-		id: string;
-		name: string;
-		spaces: number;
-		entry: MovementOfferEntry | null;
-	}
 
 	let { node }: MoveNodeProps = $props();
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 	const offersEnabled = isMovementOffersAutomationEnabled();
 
+	// Read through the reactive system data so the card redraws when an offer is settled.
 	const system = $derived(
 		(messageDocument?.reactive?.system ?? {}) as {
 			actorName?: string;
-			targets?: string[];
-			movementOffers?: MovementOfferEntry[];
+			movementOffers?: MovementOffer[];
 		},
 	);
 	const sourceName = $derived(system.actorName ?? '');
@@ -36,71 +25,21 @@
 	const directionText = $derived(
 		localize(`NIMBLE.chat.movementOffers.directions.${node.direction}`, { source: sourceName }),
 	);
-	const recipients = $derived.by<Recipient[]>(() => {
-		const messageId = messageDocument?.id;
-		if (!messageId) return [];
-		// Read through the reactive system data so the card redraws when the
-		// finished Movement is recorded on it.
-		const message: OfferMessage = {
-			id: messageId,
-			author: messageDocument.author,
-			speaker: messageDocument.speaker,
-			system,
-		};
-		return cardMoveRecipients(message, node)
-			.map((tokenUuid) =>
-				buildCardMovementOffer({ messageId, nodeId: node.id, tokenUuid }, { message }),
-			)
-			.filter((card) => card !== null)
-			.map((card) => ({
-				id: card.offer.id,
-				name: card.token.name,
-				spaces: card.offer.spaces,
-				entry: card.entry,
-			}));
-	});
+	const offers = $derived(
+		(system.movementOffers ?? []).filter((offer) => offer.nodeId === node.id),
+	);
 
 	function spacesText(count: number): string {
-		return localize(`NIMBLE.chat.movementOffers.${count === 1 ? 'space' : 'spaces'}`, { count });
-	}
-
-	function chooserText(recipient: Recipient): string {
-		return localize(`NIMBLE.chat.movementOffers.choosers.${node.chooser}`, {
-			mover: recipient.name,
-			source: sourceName,
+		return localize(`NIMBLE.chat.movementOffers.${count === 1 ? 'space' : 'spaces'}`, {
+			count: String(count),
 		});
 	}
 
-	function resultText(recipient: Recipient): string | null {
-		const entry = recipient.entry;
-		if (!entry?.used) return null;
-		if (entry.movedSpaces === null) {
-			return localize('NIMBLE.chat.movementOffers.unused', { name: recipient.name });
-		}
-		const short = Math.max(0, entry.spaces - entry.movedSpaces);
-		return entry.stopped && short > 0
-			? localize('NIMBLE.chat.movementOffers.resultShortened', {
-					name: recipient.name,
-					moved: entry.movedSpaces,
-					offered: spacesText(entry.spaces),
-					short,
-				})
-			: localize('NIMBLE.chat.movementOffers.result', {
-					name: recipient.name,
-					moved: entry.movedSpaces,
-					offered: spacesText(entry.spaces),
-				});
-	}
-
-	function showsShortenedHint(recipient: Recipient): boolean {
-		const entry = recipient.entry;
-		return (
-			node.kind === 'forced' &&
-			!!entry?.used &&
-			entry.stopped &&
-			entry.movedSpaces !== null &&
-			entry.movedSpaces < entry.spaces
-		);
+	function chooserText(offer: MovementOffer): string {
+		return localize(`NIMBLE.chat.movementOffers.choosers.${node.chooser}`, {
+			mover: offer.name,
+			source: sourceName,
+		});
 	}
 </script>
 
@@ -110,36 +49,51 @@
 		{kindLabel}
 	</h4>
 
-	{#if recipients.length === 0}
+	{#if offers.length === 0}
 		<p class="nimble-move-node__hint">{localize('NIMBLE.chat.movementOffers.noRecipient')}</p>
 	{/if}
 
-	{#each recipients as recipient (recipient.id)}
-		{@const result = resultText(recipient)}
+	{#each offers as offer (offer.id)}
+		{@const outcome = movementOfferOutcome(offer)}
 		<div class="nimble-move-node__recipient">
 			<span class="nimble-move-node__text">
 				{localize('NIMBLE.chat.movementOffers.offer', {
-					name: recipient.name,
-					distance: spacesText(recipient.spaces),
+					name: offer.name,
+					distance: spacesText(offer.spaces),
 					direction: directionText,
 				})}
-				<small class="nimble-move-node__hint">{chooserText(recipient)}</small>
+				<small class="nimble-move-node__hint">{chooserText(offer)}</small>
 			</span>
 
-			{#if result}
+			{#if outcome.state === 'taken'}
 				<span class="nimble-move-node__result">
-					{result}
-					{#if showsShortenedHint(recipient)}
+					{outcome.shortfall > 0
+						? localize('NIMBLE.chat.movementOffers.resultShortened', {
+								name: offer.name,
+								moved: String(outcome.moved ?? 0),
+								offered: spacesText(outcome.offered),
+								short: String(outcome.shortfall),
+							})
+						: localize('NIMBLE.chat.movementOffers.result', {
+								name: offer.name,
+								moved: String(outcome.moved ?? 0),
+								offered: spacesText(outcome.offered),
+							})}
+					{#if outcome.damageOwed}
 						<small class="nimble-move-node__hint">
 							{localize('NIMBLE.chat.movementOffers.forcedShortenedHint')}
 						</small>
 					{/if}
 				</span>
-			{:else if offersEnabled && recipient.spaces > 0}
+			{:else if outcome.state === 'unused'}
+				<span class="nimble-move-node__result">
+					{localize('NIMBLE.chat.movementOffers.unused', { name: offer.name })}
+				</span>
+			{:else if offersEnabled && offer.spaces > 0}
 				<small class="nimble-move-node__hint">
 					{localize('NIMBLE.chat.movementOffers.dragHint', {
-						name: recipient.name,
-						distance: spacesText(recipient.spaces),
+						name: offer.name,
+						distance: spacesText(offer.spaces),
 					})}
 				</small>
 			{/if}
