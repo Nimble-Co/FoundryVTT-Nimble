@@ -133,8 +133,7 @@
 				"lapsed": "{name} did not take this before the turn ended.",
 				"resultShortened": "{name} moved {moved} of {offered}, shortened by {short}.",
 				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
-				"noRecipient": "No creature to move.",
-				"unavailable": "Nobody connected can move {name}."
+				"noRecipient": "No creature to move."
 			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
@@ -3023,7 +3022,7 @@
 			},
 			"movementOffers": {
 				"name": "Movement Offers",
-				"hint": "When a feature grants a Free Move or pushes a creature, put a Move button on the chat card that starts a drag limited to the offered distance on the owner's client. When off, the card shows the distance as text and the token is dragged as usual."
+				"hint": "When a feature grants a Free Move or pushes a creature, the creature's next drag is recorded as that Free Move or Forced Movement, and the ruler changes past the offered distance. Nothing stops a drag that goes further. When off, the card shows the distance as text and the token is dragged as usual."
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",
