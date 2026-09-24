@@ -38,6 +38,36 @@
 				"poolIdentifier": "chaos-lash-use",
 				"poolScope": "item",
 				"cost": "1"
+			},
+			{
+				"type": "movementTrigger",
+				"disabled": false,
+				"id": "chaos-lash-trigger",
+				"identifier": "",
+				"label": "Chaos Lash",
+				"predicate": {
+					"self:chaos-lash-useChargePool": {
+						"min": 1
+					}
+				},
+				"priority": 3,
+				"event": "creatureMoved",
+				"creature": "enemy",
+				"kinds": [
+					"regular",
+					"free",
+					"forced"
+				],
+				"minSpaces": 0,
+				"spacesScope": "thisTurn",
+				"geometry": "enteredReach",
+				"reach": 1,
+				"minTargets": 1,
+				"observerScope": "self",
+				"allyRadius": 6,
+				"payload": "offer",
+				"message": "",
+				"chargePoolIdentifier": ""
 			}
 		],
 		"activation": {
