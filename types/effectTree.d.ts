@@ -10,8 +10,8 @@ export type EffectNode =
 
 /**
  * A Movement Offer: a Free Move or Forced Movement the card offers to the
- * recipient's owner as a constrained drag. `distance` is a formula against
- * the recipient's roll data, with `@speed` as the recipient's walk speed.
+ * recipient's owner as a guided drag. `distance` is a formula against the
+ * source's roll data, with `@speed` as the recipient's walk speed.
  */
 export type MoveNode = {
 	id: string;
