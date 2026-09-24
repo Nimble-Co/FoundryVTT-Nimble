@@ -11,12 +11,12 @@ function waypoint(gx: number, gy: number, movementId: string | null, action = 'w
 	return { x: gx * GRID, y: gy * GRID, action, movementId };
 }
 
-function makeToken(history: Waypoint[] = [], started = false) {
+function makeToken(history: readonly Waypoint[] = []) {
 	return {
+		id: 't1',
 		actor: null,
 		movementHistory: history,
-		combatant: started ? { parent: { started: true } } : null,
-		parent: { grid: { isGridless: false, distance: 1 } },
+		parent: { id: 's1', grid: { isGridless: false, distance: 1 } },
 		measureMovementPath(waypoints: { x: number; y: number }[]) {
 			const segments: { distance: number; spaces: number }[] = [];
 			for (let i = 1; i < waypoints.length; i++) {
@@ -30,6 +30,10 @@ function makeToken(history: Waypoint[] = [], started = false) {
 			return waypoints.map(({ x, y }) => ({ x, y }));
 		},
 	};
+}
+
+function combatHolding(tokenId: string, sceneId: string, started = true) {
+	return { started, combatants: [{ tokenId, sceneId }] };
 }
 
 function makeMovement(overrides: Partial<Parameters<typeof buildMovementRecord>[1]> = {}) {
@@ -72,8 +76,9 @@ describe('buildMovementRecord', () => {
 			history: { recorded: { waypoints: earlier }, unrecorded: { waypoints: [] } },
 		});
 		const record = buildMovementRecord(
-			makeToken([...earlier, ...movement.passed.waypoints], true),
+			makeToken([...earlier, ...movement.passed.waypoints]),
 			movement,
+			[combatHolding('t1', 's1')],
 		);
 		expect(record?.spaces).toBe(2);
 		expect(record?.spacesThisTurn).toBe(6);
@@ -81,6 +86,20 @@ describe('buildMovementRecord', () => {
 			{ x: 0, y: 400 },
 			{ x: 200, y: 400 },
 		]);
+	});
+
+	it('counts this turn in a started combat the client is not viewing', () => {
+		const movement = makeMovement();
+		const token = makeToken([waypoint(0, 0, 'm1'), ...movement.passed.waypoints]);
+		const combats = [combatHolding('other', 's1'), combatHolding('t1', 's1')];
+		expect(buildMovementRecord(token, movement, combats)?.spacesThisTurn).toBe(3);
+	});
+
+	it('has no count this turn when the combat holding the token has not started', () => {
+		const movement = makeMovement();
+		const token = makeToken(movement.passed.waypoints);
+		const combats = [combatHolding('t1', 's1', false), combatHolding('t1', 'other-scene')];
+		expect(buildMovementRecord(token, movement, combats)?.spacesThisTurn).toBeNull();
 	});
 
 	it('keys a chained path on its first movement id', () => {

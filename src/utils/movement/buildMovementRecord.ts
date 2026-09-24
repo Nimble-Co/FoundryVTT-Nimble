@@ -24,12 +24,30 @@ interface MovementLike {
 }
 
 interface RecordableToken {
+	id: string | null;
 	actor: Actor | null;
 	movementHistory: readonly { action: string }[];
-	combatant?: { parent?: { started?: boolean } | null } | null;
-	parent?: { grid?: { isGridless?: boolean; distance: number } } | null;
+	parent?: { id?: string | null; grid?: { isGridless?: boolean; distance: number } } | null;
 	measureMovementPath(waypoints: object[]): { segments: { distance: number; spaces: number }[] };
 	getCompleteMovementPath(waypoints: object[]): TokenPosition[];
+}
+
+interface CombatLike {
+	started?: boolean;
+	combatants?: Iterable<{ tokenId: string | null; sceneId: string | null }>;
+}
+
+// Every started combat, not only the one this client views: the active GM may
+// be looking at another scene.
+function isInStartedCombat(token: RecordableToken, combats: Iterable<CombatLike>): boolean {
+	const sceneId = token.parent?.id ?? null;
+	for (const combat of combats) {
+		if (!combat.started || !combat.combatants) continue;
+		for (const combatant of combat.combatants) {
+			if (combatant.tokenId === token.id && combatant.sceneId === sceneId) return true;
+		}
+	}
+	return false;
 }
 
 function toPosition(waypoint: TokenPosition): TokenPosition {
@@ -46,6 +64,7 @@ function toPosition(waypoint: TokenPosition): TokenPosition {
 export function buildMovementRecord(
 	token: RecordableToken,
 	movement: MovementLike,
+	combats: Iterable<CombatLike> = (game.combats ?? []) as Iterable<CombatLike>,
 ): MovementRecord | null {
 	const lastPassed = movement.passed.waypoints.at(-1);
 	if (!lastPassed) return null;
@@ -73,7 +92,7 @@ export function buildMovementRecord(
 	}
 
 	const path = token.getCompleteMovementPath(known.slice(start - 1)).map(toPosition);
-	const inStartedCombat = Boolean(token.combatant?.parent?.started);
+	const inStartedCombat = isInStartedCombat(token, combats);
 
 	return {
 		token: token as unknown as TokenDocument,
