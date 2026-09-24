@@ -135,6 +135,11 @@
 				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
 				"noRecipient": "No creature to move."
 			},
+			"movementContext": {
+				"unknown": "unknown",
+				"noTarget": "no target",
+				"targetSpacesAway": "{name}: {distance}"
+			},
 			"movementTrigger": {
 				"use": "Use {name}",
 				"targets": "Creatures: {names}"
