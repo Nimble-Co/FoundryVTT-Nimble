@@ -66,8 +66,11 @@ export interface MovementRecord {
 
 export type MovementOfferKind = 'free' | 'forced';
 
-/** Open until the token's next Movement settles it: taken, or left unused. */
-export type MovementOfferState = 'open' | 'taken' | 'unused';
+/**
+ * Open until the token's next Movement settles it, taken or left unused. In
+ * combat an offer still open when its turn ends lapses.
+ */
+export type MovementOfferState = 'open' | 'taken' | 'unused' | 'lapsed';
 
 /**
  * A Movement Offer as its card stores it: one per move node and recipient, with

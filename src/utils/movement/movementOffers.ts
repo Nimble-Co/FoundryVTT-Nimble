@@ -181,6 +181,20 @@ export function settleMovementOffer(
 	return offers.map((candidate) => (candidate.id === offerId ? settled : candidate));
 }
 
+/**
+ * The card's offers once a combat turn ends: every open offer that `applies`
+ * keeps lapses, because each granted move in the books happens inside the
+ * effect that grants it. Null when there is nothing to write.
+ */
+export function lapseMovementOffers(
+	offers: readonly MovementOffer[],
+	applies: (offer: MovementOffer) => boolean = () => true,
+): MovementOffer[] | null {
+	const lapses = (offer: MovementOffer) => offer.state === 'open' && applies(offer);
+	if (!offers.some(lapses)) return null;
+	return offers.map((offer) => (lapses(offer) ? { ...offer, state: 'lapsed' } : offer));
+}
+
 /** What the card reports for one offer. */
 export interface MovementOfferOutcome {
 	state: MovementOfferState;

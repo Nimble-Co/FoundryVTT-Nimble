@@ -152,6 +152,14 @@ describe('MoveNode', () => {
 		expect(screen.queryByText(/the ruler changes/)).toBeNull();
 	});
 
+	it('says so when the turn ended before the offer was taken', () => {
+		renderNode([createOffer({ state: 'lapsed' })]);
+		expect(
+			screen.getByText(/Goblin Cutthroat did not take this before the turn ended/),
+		).toBeTruthy();
+		expect(screen.queryByText(/the ruler changes/)).toBeNull();
+	});
+
 	it('shows only the offers of its own node', () => {
 		renderNode([
 			createOffer(),

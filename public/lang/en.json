@@ -130,6 +130,7 @@
 				"dragHint": "Drag {name}: the ruler changes past {distance}.",
 				"result": "{name} moved {moved} of {offered}.",
 				"unused": "{name} moved on its own, so this went unused.",
+				"lapsed": "{name} did not take this before the turn ended.",
 				"resultShortened": "{name} moved {moved} of {offered}, shortened by {short}.",
 				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
 				"noRecipient": "No creature to move.",

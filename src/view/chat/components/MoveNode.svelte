@@ -89,6 +89,10 @@
 				<span class="nimble-move-node__result">
 					{localize('NIMBLE.chat.movementOffers.unused', { name: offer.name })}
 				</span>
+			{:else if outcome.state === 'lapsed'}
+				<span class="nimble-move-node__result">
+					{localize('NIMBLE.chat.movementOffers.lapsed', { name: offer.name })}
+				</span>
 			{:else if offersEnabled && offer.spaces > 0}
 				<small class="nimble-move-node__hint">
 					{localize('NIMBLE.chat.movementOffers.dragHint', {

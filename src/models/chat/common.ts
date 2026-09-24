@@ -51,7 +51,8 @@ export const grantedActionOffers = () => ({
 /**
  * Movement Offers made by this card's `move` effect nodes, one per node and
  * recipient, stamped when the card is posted or a target is added. The active
- * GM settles each one after the recipient's next Movement.
+ * GM settles each one after the recipient's next Movement, or lapses it when
+ * the combat turn ends.
  */
 export const movementOffers = () => ({
 	movementOffers: new fields.ArrayField(
@@ -82,7 +83,7 @@ export const movementOffers = () => ({
 				required: true,
 				nullable: false,
 				initial: 'open',
-				choices: ['open', 'taken', 'unused'],
+				choices: ['open', 'taken', 'unused', 'lapsed'],
 			}),
 			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
 			movedSpaces: new fields.NumberField({
