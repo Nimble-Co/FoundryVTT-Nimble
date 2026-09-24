@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { MovementKind, MovementRecord } from '#types/movement.js';
-import { type MovementTriggerOptions, matchMovementTrigger } from './matchMovementTrigger.js';
+import type { MovementKind, MovementRecord, MovementTriggerOptions } from '#types/movement.js';
+import { matchMovementTrigger } from './matchMovementTrigger.js';
 
 const GRID = 100;
 const { FRIENDLY, HOSTILE, NEUTRAL, SECRET } = {

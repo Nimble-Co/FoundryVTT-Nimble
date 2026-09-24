@@ -41,8 +41,8 @@ afterEach(() => {
 function input(over: Partial<MovementTriggerCardInput> = {}): MovementTriggerCardInput {
 	return {
 		actor: actor as unknown as Actor,
-		item: item as unknown as Item,
-		payload: 'offer',
+		item,
+		payload: 'use',
 		message: 'Goblin moved next to Hero.',
 		targets: ['Scene.s.Token.gob'],
 		moverName: 'Goblin',
@@ -70,7 +70,7 @@ describe('postMovementTriggerCard', () => {
 				rollMode: 0,
 				name: 'Quick Strike',
 				itemUuid: 'Actor.a-hero.Item.i1',
-				payload: 'offer',
+				payload: 'use',
 				message: 'Goblin moved next to Hero.',
 				targets: ['Scene.s.Token.gob'],
 				moverName: 'Goblin',
@@ -79,6 +79,33 @@ describe('postMovementTriggerCard', () => {
 			},
 		});
 		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: heroToken });
+	});
+
+	it('speaks as the given token instead of the first active token', async () => {
+		const otherToken = { id: 'other', parent: { id: 's2' } };
+		await postMovementTriggerCard(input({ token: otherToken as unknown as TokenDocument }));
+
+		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: otherToken });
+	});
+
+	it('speaks as the actor alone when the given token is null', async () => {
+		await postMovementTriggerCard(input({ token: null }));
+
+		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: null });
+	});
+
+	it('stores an empty item uuid when the item has none', async () => {
+		await postMovementTriggerCard(input({ item: { ...item, uuid: null } }));
+
+		const system = (create.mock.calls[0][0] as { system: Record<string, unknown> }).system;
+		expect(system.itemUuid).toBe('');
+	});
+
+	it('stores an unknown spacesThisTurn as null', async () => {
+		await postMovementTriggerCard(input({ spacesThisTurn: null }));
+
+		const system = (create.mock.calls[0][0] as { system: Record<string, unknown> }).system;
+		expect(system.spacesThisTurn).toBeNull();
 	});
 
 	it('speaks as the actor alone when it has no active token', async () => {

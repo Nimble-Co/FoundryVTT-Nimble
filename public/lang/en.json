@@ -1192,7 +1192,7 @@
 				}
 			},
 			"movementTrigger": {
-				"description": "Post a chat card when a Movement agrees with the conditions. The card can offer the use of this item, or it can only show a reminder.",
+				"description": "Post a chat card when a Movement agrees with the conditions. The card can let the owner use this item, or it can only show a reminder.",
 				"event": {
 					"label": "Event",
 					"hint": "selfMoved: this creature moves. creatureMoved: a different creature moves."
@@ -1215,11 +1215,11 @@
 				},
 				"geometry": {
 					"label": "Geometry",
-					"hint": "any: no position test. endsAdjacent: the Movement stops in reach of the creature. enteredReach: it goes into the reach. leftReach: it goes out of the reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started."
+					"hint": "any: no position test. endsAdjacent: the Movement stops in the Reach of the creature. enteredReach: it goes into the Reach. leftReach: it goes out of the Reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started."
 				},
 				"reach": {
 					"label": "Reach",
-					"hint": "The number of spaces that the geometry tests use. 1 is adjacent."
+					"hint": "The Reach, in spaces, that the geometry tests use. Reach 1 is adjacent."
 				},
 				"minTargets": {
 					"label": "Minimum creatures",
@@ -1235,19 +1235,19 @@
 				},
 				"payload": {
 					"label": "Card",
-					"hint": "offer: the card shows a button to use this item. reminder: the card only shows the message."
+					"hint": "use: the card lets the owner use this item with a button. reminder: the card only shows the message."
 				},
 				"message": {
 					"label": "Message",
-					"hint": "The text on the card. You can use {mover}, {spaces}, {spacesThisTurn} and {targets}. Leave empty to use the default text."
+					"hint": "The text on the card. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn, or unknown) and {targets} (the creatures that were found). Leave empty to use the default text."
 				},
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "Optional. When set, the card is posted only while this charge pool has a charge, and each card spends 1 charge. Leave empty for no limit."
 				},
 				"defaultMessages": {
-					"offer": "{mover} moved {spaces} spaces. You can use this item now.",
-					"reminder": "{mover} moved {spaces} spaces, and {spacesThisTurn} spaces this turn."
+					"use": "{mover} moved. You can use this item now.",
+					"reminder": "{mover} moved."
 				}
 			},
 			"grantMovement": {

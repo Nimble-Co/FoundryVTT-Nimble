@@ -8,17 +8,24 @@ const movementTriggerCardSchema = () => ({
 	payload: new fields.StringField({
 		required: true,
 		nullable: false,
-		initial: 'reminder',
-		choices: ['offer', 'reminder'],
+		initial: 'use',
+		choices: ['use', 'reminder'],
 	}),
 	message: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	moverName: new fields.StringField({ required: true, nullable: false, initial: '' }),
-	spaces: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
-	spacesThisTurn: new fields.NumberField({
+	spaces: new fields.NumberField({
 		required: true,
 		nullable: false,
 		initial: 0,
 		integer: true,
+		min: 0,
+	}),
+	spacesThisTurn: new fields.NumberField({
+		required: true,
+		nullable: true,
+		initial: null,
+		integer: true,
+		min: 0,
 	}),
 });
 
@@ -31,7 +38,7 @@ declare namespace NimbleMovementTriggerCardData {
 	interface DerivedData extends Record<string, unknown> {}
 }
 
-/** A Movement offers the use of an item, or reminds the table of it. */
+/** A card that lets the owner use an item after a Movement, or reminds the table of it. */
 class NimbleMovementTriggerCardData extends foundry.abstract.TypeDataModel<
 	NimbleMovementTriggerCardData.Schema,
 	ChatMessage.ConfiguredInstance,

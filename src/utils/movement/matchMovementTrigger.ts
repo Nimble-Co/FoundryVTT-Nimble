@@ -1,31 +1,12 @@
-import type { MeasurableTokenDocument, MovementRecord } from '#types/movement.js';
+import type {
+	MeasurableTokenDocument,
+	MovementRecord,
+	MovementTriggerOptions,
+	TriggerCreature,
+	TriggerGeometry,
+} from '#types/movement.js';
 import { reachChanges } from './reachChanges.js';
 import { spacesBetween } from './spacesBetween.js';
-
-export type TriggerCreature = 'enemy' | 'ally' | 'any';
-export type TriggerGeometry =
-	| 'any'
-	| 'endsAdjacent'
-	| 'enteredReach'
-	| 'leftReach'
-	| 'inPath'
-	| 'movedToward';
-
-export interface MovementTriggerOptions {
-	event: 'selfMoved' | 'creatureMoved';
-	/** selfMoved: which other creatures the geometry is tested against. creatureMoved: which movers count. */
-	creature: TriggerCreature;
-	/** Empty means no kind counts. A teleport never counts. */
-	kinds: ('regular' | 'free' | 'forced')[];
-	minSpaces: number;
-	spacesScope: 'thisTurn' | 'thisMovement';
-	geometry: TriggerGeometry;
-	reach: number;
-	minTargets: number;
-	observerScope: 'self' | 'selfOrAllyWithin';
-	/** 0 means any ally on the scene. */
-	allyRadius: number;
-}
 
 type Relation = 'enemy' | 'ally' | 'neither';
 
