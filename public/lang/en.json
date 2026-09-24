@@ -818,7 +818,8 @@
 			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
 			"grantActivation": "Grant Activation",
-			"grantMovement": "Grant Movement",
+			"freeMove": "Free Move",
+			"grantMovement": "Grant Movement Mode",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
 			"grantItem": "Item",
@@ -839,6 +840,7 @@
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
+			"movementTrigger": "Movement Trigger",
 			"note": "Note",
 			"optionSwap": "Option Swap",
 			"poolGainMessage": "Pool Gain Message",
@@ -1145,6 +1147,107 @@
 				"activationType": {
 					"label": "Granted activation",
 					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
+				}
+			},
+			"freeMove": {
+				"description": "Offer a Free Move on a chat card when an event occurs. The player chooses where to move, or chooses not to move.",
+				"trigger": {
+					"label": "Trigger",
+					"hint": "The event that makes the offer. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit."
+				},
+				"poolIdentifier": {
+					"label": "Dice pool",
+					"hint": "The dice pool that must gain dice (e.g. fury)."
+				},
+				"distance": {
+					"label": "Distance",
+					"hint": "How many spaces the creature can move. A formula: @speed is the speed of the creature that moves, and all other references use the data of this creature."
+				},
+				"recipient": {
+					"label": "Recipient",
+					"hint": "Who gets the offer. self: this creature. allies: each ally in range. selfAndAllies: this creature and each ally in range."
+				},
+				"within": {
+					"label": "Ally range",
+					"hint": "The maximum number of spaces between this creature and an ally that gets the offer."
+				},
+				"direction": {
+					"label": "Direction",
+					"hint": "any: in any direction. away: away from this creature. toward: toward this creature."
+				},
+				"ignoresDifficultTerrain": {
+					"label": "Ignores difficult terrain",
+					"hint": "When set, difficult terrain does not decrease the move."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the offer occurs only while this charge pool has a charge, and each offer spends 1 charge. Leave empty for no limit."
+				},
+				"reasons": {
+					"onActivation": "When {actor} uses {item}",
+					"onPoolGain": "When {actor} gains {pool}",
+					"onInitiativeRolled": "When {actor} rolls Initiative",
+					"onTurnStart": "At the start of the turn of {actor}",
+					"onCritReceived": "When {actor} takes a critical hit"
+				}
+			},
+			"movementTrigger": {
+				"description": "Post a chat card when a Movement agrees with the conditions. The card can offer the use of this item, or it can only show a reminder.",
+				"event": {
+					"label": "Event",
+					"hint": "selfMoved: this creature moves. creatureMoved: a different creature moves."
+				},
+				"creature": {
+					"label": "Creature",
+					"hint": "selfMoved: the other creatures that the geometry is tested against. creatureMoved: the creatures whose Movement counts. enemy, ally, or any."
+				},
+				"kinds": {
+					"label": "Movement kinds",
+					"hint": "The kinds of Movement that count: regular, free, and forced. By default all three count. A Teleport never counts."
+				},
+				"minSpaces": {
+					"label": "Minimum spaces",
+					"hint": "The Movement counts only when the creature moved this number of spaces or more."
+				},
+				"spacesScope": {
+					"label": "Count spaces",
+					"hint": "thisTurn: all spaces moved this turn. thisMovement: the spaces of this Movement only."
+				},
+				"geometry": {
+					"label": "Geometry",
+					"hint": "any: no position test. endsAdjacent: the Movement stops in reach of the creature. enteredReach: it goes into the reach. leftReach: it goes out of the reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started."
+				},
+				"reach": {
+					"label": "Reach",
+					"hint": "The number of spaces that the geometry tests use. 1 is adjacent."
+				},
+				"minTargets": {
+					"label": "Minimum creatures",
+					"hint": "The number of creatures that must agree with the geometry."
+				},
+				"observerScope": {
+					"label": "Watched creatures",
+					"hint": "self: the geometry is tested against this creature only. selfOrAllyWithin: against this creature or an ally in range."
+				},
+				"allyRadius": {
+					"label": "Ally range",
+					"hint": "The maximum number of spaces between this creature and a watched ally. 0 means all allies on the scene."
+				},
+				"payload": {
+					"label": "Card",
+					"hint": "offer: the card shows a button to use this item. reminder: the card only shows the message."
+				},
+				"message": {
+					"label": "Message",
+					"hint": "The text on the card. You can use {mover}, {spaces}, {spacesThisTurn} and {targets}. Leave empty to use the default text."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the card is posted only while this charge pool has a charge, and each card spends 1 charge. Leave empty for no limit."
+				},
+				"defaultMessages": {
+					"offer": "{mover} moved {spaces} spaces. You can use this item now.",
+					"reminder": "{mover} moved {spaces} spaces, and {spacesThisTurn} spaces this turn."
 				}
 			},
 			"grantMovement": {
