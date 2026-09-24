@@ -5,6 +5,7 @@ import {
 	grantedActionOffers,
 	incomingReactions,
 	metadata,
+	movementContext,
 	movementOffers,
 	targets,
 } from './common.js';
@@ -38,6 +39,7 @@ declare namespace NimbleSpellCardData {
 		ReturnType<typeof concentration> &
 		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof incomingReactions> &
+		ReturnType<typeof movementContext> &
 		ReturnType<typeof movementOffers> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
@@ -59,6 +61,7 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 			...concentration(),
 			...grantedActionOffers(),
 			...incomingReactions(),
+			...movementContext(),
 			...movementOffers(),
 			...spellCardSchema(),
 			...metadata(),
