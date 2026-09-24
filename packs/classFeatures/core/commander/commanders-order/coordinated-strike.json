@@ -176,6 +176,28 @@
 				"borrowFromNextTurn": false
 			},
 			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "coordinated-strike-advance-free-move",
+				"identifier": "",
+				"label": "Advance! (move before the strike)",
+				"predicate": {
+					"subclass": "champion-of-the-vanguard",
+					"level": {
+						"min": 3
+					}
+				},
+				"priority": 4,
+				"trigger": "onActivation",
+				"poolIdentifier": "",
+				"distance": "floor(@speed / 2)",
+				"recipient": "selfAndAllies",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": ""
+			},
+			{
 				"type": "actionDelta",
 				"disabled": false,
 				"id": "coordinated-strike-unparalleled-tactics",
