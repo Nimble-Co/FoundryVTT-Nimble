@@ -20,7 +20,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "shReminderN7kQ2x",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Requires: you have not moved this turn, and your quarry is 4 or more spaces away. Then double the damage. Spaces moved this turn: {spacesMovedThisTurn}. Distance: {targetsSpacesAway}.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
