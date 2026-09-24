@@ -174,6 +174,11 @@
 				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
 				"noRecipient": "No creature to move."
 			},
+			"movementContext": {
+				"unknown": "unknown",
+				"noTarget": "no target",
+				"targetSpacesAway": "{name}: {distance}"
+			},
 			"movementTrigger": {
 				"use": "Use {name}",
 				"targets": "Creatures: {names}"

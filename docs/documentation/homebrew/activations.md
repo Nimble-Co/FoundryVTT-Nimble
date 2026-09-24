@@ -53,7 +53,7 @@ Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hi
 A critical hit is also a hit, so a crit card shows the children of both **On Critical Hit** and **On Hit**. The Damage Outcome is the one exception. If both buckets hold one, only the On Critical Hit outcome applies. Two outcomes would apply the same roll two times.
 
 - **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit. A damage entry nested in a bucket can hold its own Damage Outcome, and the rule is the same at every depth: the roll shows once, through that outcome.
-- **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**.
+- **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**. Two placeholders fill in with numbers recorded when the card is posted. `{spacesMovedThisTurn}` is how many spaces the user has moved this turn, or "unknown" outside combat or with movement tracking off. `{targetsSpacesAway}` lists how far each target is from the user's token, for example "Goblin: 5 spaces, Ogre: 1 space", or "no target". A target added to the card later is measured when it is added. The numbers do not change when a token moves after that.
 
 ### Healing
 
