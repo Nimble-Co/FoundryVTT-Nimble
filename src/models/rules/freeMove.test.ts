@@ -327,20 +327,41 @@ describe('FreeMoveRule', () => {
 	});
 
 	describe('onTurnStart', () => {
-		it("fires at the start of this actor's own turn", async () => {
+		function turnStart(harness: Harness, actor: unknown = harness.actor) {
+			return harness.rule.onActiveGmTurnStart({
+				combat: {},
+				combatant: { token: harness.heroToken },
+				actor,
+			} as never);
+		}
+
+		it("fires once, on the active GM, at the start of this actor's own turn", async () => {
+			const harness = makeRule({ trigger: 'onTurnStart' });
+			await turnStart(harness);
+			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
+			expect(lastOffer().reason).toContain('turn');
+		});
+
+		it('does not fire from the client-side turn start', async () => {
 			const harness = makeRule({ trigger: 'onTurnStart' });
 			await harness.rule.onTurnStart({
 				combat: {},
 				combatant: { token: harness.heroToken },
 				actor: harness.actor,
 			} as never);
-			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
-			expect(lastOffer().reason).toContain('turn');
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 
 		it("does not fire at the start of another creature's turn", async () => {
-			const harness = makeRule({ trigger: 'onTurnStart' });
-			await harness.rule.onTurnStart({ combat: {}, combatant: {}, actor: {} } as never);
+			await turnStart(makeRule({ trigger: 'onTurnStart' }), {});
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('guards the turn start path the same as the others', async () => {
+			const config = { trigger: 'onTurnStart' };
+			await turnStart(makeRule(config, { isEmbedded: false }));
+			await turnStart(makeRule({ ...config, disabled: true }));
+			await turnStart(makeRule(config, { predicate: () => false }));
 			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 	});
@@ -372,30 +393,33 @@ describe('FreeMoveRule', () => {
 	});
 
 	describe('onPoolGain', () => {
+		function gain(harness: Harness, poolIdentifier: string, poolLabel?: string) {
+			return harness.rule.onPoolGain({ actor: harness.actor, poolIdentifier, poolLabel } as never);
+		}
+
 		it('fires when the named pool gains dice', async () => {
-			const harness = makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' });
-			await harness.rule.onPoolGain({ poolIdentifier: 'fury', poolLabel: 'Fury Dice' });
+			await gain(makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' }), 'fury', 'Fury Dice');
 			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
 			expect(lastOffer().reason).toContain('Fury Dice');
 		});
 
 		it('does not fire for another pool or another trigger', async () => {
-			await makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' }).rule.onPoolGain({
-				poolIdentifier: 'judgment',
-			});
-			await makeRule({ trigger: 'onTurnStart', poolIdentifier: 'fury' }).rule.onPoolGain({
-				poolIdentifier: 'fury',
-			});
+			await gain(makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' }), 'judgment');
+			await gain(makeRule({ trigger: 'onTurnStart', poolIdentifier: 'fury' }), 'fury');
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('does not fire without a configured pool, even for an empty pool identifier', async () => {
+			await gain(makeRule({ trigger: 'onPoolGain', poolIdentifier: '' }), '');
+			await gain(makeRule({ trigger: 'onPoolGain', poolIdentifier: '  ' }), '');
 			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 
 		it('guards the pool path the same as the others', async () => {
 			const config = { trigger: 'onPoolGain', poolIdentifier: 'fury' };
-			await makeRule(config, { isEmbedded: false }).rule.onPoolGain({ poolIdentifier: 'fury' });
-			await makeRule({ ...config, disabled: true }).rule.onPoolGain({ poolIdentifier: 'fury' });
-			await makeRule(config, { predicate: () => false }).rule.onPoolGain({
-				poolIdentifier: 'fury',
-			});
+			await gain(makeRule(config, { isEmbedded: false }), 'fury');
+			await gain(makeRule({ ...config, disabled: true }), 'fury');
+			await gain(makeRule(config, { predicate: () => false }), 'fury');
 			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 	});
@@ -421,6 +445,16 @@ describe('FreeMoveRule', () => {
 			expect(lastOffer().recipients).toEqual([near.uuid]);
 		});
 
+		it('allies: a creature exactly at the range is included, one space beyond is not', async () => {
+			const harness = makeRule({ recipient: 'allies', within: 12 });
+			const edge = harness.addToken('edge');
+			harness.addToken('beyond');
+			distances.set('hero>edge', 12);
+			distances.set('hero>beyond', 13);
+			await activate(harness);
+			expect(lastOffer().recipients).toEqual([edge.uuid]);
+		});
+
 		it('selfAndAllies: adds the source token', async () => {
 			const harness = makeRule({ recipient: 'selfAndAllies', within: 12 });
 			const { near } = setUpAllies(harness);
@@ -439,6 +473,11 @@ describe('FreeMoveRule', () => {
 	});
 
 	describe('charge pool', () => {
+		function poolItemOf(harness: Harness) {
+			return (harness.actor.items as { contents: { update: ReturnType<typeof vi.fn> }[] })
+				.contents[0] as { update: ReturnType<typeof vi.fn> };
+		}
+
 		it('an empty identifier is unlimited', async () => {
 			const harness = makeRule();
 			await activate(harness);
@@ -450,9 +489,18 @@ describe('FreeMoveRule', () => {
 			const harness = makeRule({ chargePoolIdentifier: 'thrill' }, { pool: 1 });
 			await activate(harness);
 			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
-			const poolItem = (harness.actor.items as { contents: { update: ReturnType<typeof vi.fn> }[] })
-				.contents[0];
-			expect(JSON.stringify(poolItem?.update.mock.calls.at(-1))).toContain('"current":0');
+			expect(poolItemOf(harness).update).toHaveBeenCalledWith(
+				{ 'flags.nimble.chargePools': { thrill: expect.objectContaining({ current: 0 }) } },
+				expect.anything(),
+			);
+		});
+
+		it('spends no charge when the card is not posted', async () => {
+			postMovementOfferCard.mockResolvedValueOnce(null);
+			const harness = makeRule({ chargePoolIdentifier: 'thrill' }, { pool: 1 });
+			await activate(harness);
+			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
+			expect(poolItemOf(harness).update).not.toHaveBeenCalled();
 		});
 
 		it('does not fire on an empty pool', async () => {

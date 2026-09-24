@@ -9,6 +9,7 @@ import {
 	type ItemActivatedContext,
 	type ItemUsedContext,
 	NimbleBaseRule,
+	type PoolGainContext,
 	type TurnContext,
 } from './base.js';
 
@@ -108,11 +109,6 @@ declare namespace FreeMoveRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface PoolGainContext {
-	poolIdentifier: string;
-	poolLabel?: string;
-}
-
 interface SceneTokens {
 	tokens?: Iterable<TokenDocument>;
 }
@@ -179,7 +175,8 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		);
 	}
 
-	override async onTurnStart(context: TurnContext): Promise<void> {
+	// The stored trigger stays `onTurnStart`; the active-GM hook posts the card once.
+	override async onActiveGmTurnStart(context: TurnContext): Promise<void> {
 		if (!this.item.isEmbedded) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onTurnStart') return;
@@ -200,8 +197,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		);
 	}
 
-	/** Called by the pool-gain listener when one of this actor's dice pools gains dice. */
-	async onPoolGain(context: PoolGainContext): Promise<void> {
+	override async onPoolGain(context: PoolGainContext): Promise<void> {
 		if (!this.item.isEmbedded) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onPoolGain') return;
