@@ -75,14 +75,20 @@ describe('ruleChargeGate', () => {
 	it('spends one charge from an item-scoped pool', async () => {
 		const { actor, item } = makeActor(2);
 		await spendRuleCharge(actor, 'thrill');
-		expect(JSON.stringify(item.update.mock.calls.at(-1))).toContain('"current":1');
+		expect(item.update).toHaveBeenCalledWith(
+			{ 'flags.nimble.chargePools': { thrill: expect.objectContaining({ current: 1 }) } },
+			expect.anything(),
+		);
 	});
 
 	it('spends one charge from an actor-scoped pool', async () => {
 		const { actor } = makeActor(2, { scope: 'actor' });
 		await spendRuleCharge(actor, 'thrill');
 		const update = (actor as unknown as { update: ReturnType<typeof vi.fn> }).update;
-		expect(JSON.stringify(update.mock.calls.at(-1))).toContain('"current":1');
+		expect(update).toHaveBeenCalledWith(
+			{ 'flags.nimble.chargePools': { 'actor:thrill': expect.objectContaining({ current: 1 }) } },
+			expect.anything(),
+		);
 	});
 
 	it('with resource spending automation off, the pool neither gates nor is spent', async () => {

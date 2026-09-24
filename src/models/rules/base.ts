@@ -159,6 +159,15 @@ interface MovementFinishedContext {
 	isMover: boolean;
 }
 
+// Context passed to onPoolGain. Fires on the client that changed the pool when one
+// of the actor's dice pools gains dice. `poolIdentifier` is the bare identifier,
+// without the `actor:` scope prefix.
+interface PoolGainContext {
+	actor: NimbleBaseActor;
+	poolIdentifier: string;
+	poolLabel?: string;
+}
+
 // Members of NimbleBaseRule, used to type `alwaysDispatchedEvents` (statics
 // inside the generic class body cannot reference the bare class name).
 type RuleLifecycleEvent = keyof NimbleBaseRule;
@@ -443,6 +452,15 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/**
+	 * Hook called once per turn start, on the active GM. Unlike onTurnStart, which
+	 * runs on the client that advanced the turn, this runs where every actor's
+	 * data can be changed.
+	 */
+	async onActiveGmTurnStart(_context: TurnContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/** Hook called at the end of a combatant's turn. */
 	async onTurnEnd(_context: TurnContext): Promise<void> {
 		// Default implementation does nothing
@@ -490,6 +508,11 @@ abstract class NimbleBaseRule<
 
 	/** Hook called once per finished token Movement, on the mover and on every observer. */
 	async onMovementFinished(_context: MovementFinishedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when one of the actor's dice pools gains dice, on the client that changed it. */
+	async onPoolGain(_context: PoolGainContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
@@ -562,4 +585,5 @@ export {
 	type ActorDyingContext,
 	type RoundChangedContext,
 	type MovementFinishedContext,
+	type PoolGainContext,
 };
