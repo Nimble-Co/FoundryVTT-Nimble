@@ -59,3 +59,4 @@ export { Migration058CheatChecklist } from './Migration058CheatChecklist.js';
 export { Migration059HunterChecklist } from './Migration059HunterChecklist.js';
 export { Migration060ZephyrChecklist } from './Migration060ZephyrChecklist.js';
 export { Migration061ShadowStormChecklist } from './Migration061ShadowStormChecklist.js';
+export { Migration062MovementPilots } from './Migration062MovementPilots.js';
