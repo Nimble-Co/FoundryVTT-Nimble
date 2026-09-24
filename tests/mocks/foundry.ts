@@ -699,6 +699,12 @@ export const foundryApiMocks = {
 		},
 		placeables: {
 			Token: MockTokenPlaceable,
+			tokens: {
+				TokenRuler: class MockTokenRuler {
+					token: any = { document: {} };
+					_preparePath(_path: unknown): void {}
+				},
+			},
 		},
 	},
 };
