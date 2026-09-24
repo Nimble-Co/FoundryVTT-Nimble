@@ -1,8 +1,8 @@
-import { findArmedMovementOffer } from '../../utils/movement/findArmedMovementOffer.js';
 import {
 	markWaypointsPastOffer,
 	type OfferRulerWaypoint,
 } from '../../utils/movement/markWaypointsPastOffer.js';
+import { findArmedMovementOffer } from '../../utils/movement/movementOffers.js';
 
 /**
  * Shows how far a Movement Offer reaches while its token is dragged: the part
@@ -15,7 +15,7 @@ export class NimbleTokenRuler extends foundry.canvas.placeables.tokens.TokenRule
 		super._preparePath(path);
 		const document = this.token.document;
 		const gridDistance = document.parent?.grid?.distance ?? 0;
-		const offer = document.uuid ? findArmedMovementOffer(document.uuid)?.offer : null;
+		const offer = document.uuid ? findArmedMovementOffer(document.uuid) : null;
 		if (!offer || !gridDistance) return;
 		markWaypointsPastOffer(path as unknown as OfferRulerWaypoint[], offer, gridDistance);
 	}

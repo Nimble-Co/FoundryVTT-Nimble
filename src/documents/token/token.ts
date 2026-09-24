@@ -1,6 +1,6 @@
 import type { MovementOffer } from '#types/movement.js';
-import { findArmedMovementOffer } from '../../utils/movement/findArmedMovementOffer.js';
 import { movementOfferAction } from '../../utils/movement/movementActions.js';
+import { findArmedMovementOffer } from '../../utils/movement/movementOffers.js';
 
 interface ConstrainOptions {
 	ignoreWalls?: boolean;
@@ -30,7 +30,7 @@ export class NimbleToken extends foundry.canvas.placeables.Token {
 		const base = super._getDragConstrainOptions() as ConstrainOptions;
 		if (base.ignoreWalls && base.ignoreCost) return null;
 		const uuid = this.document.uuid;
-		return uuid ? (findArmedMovementOffer(uuid)?.offer ?? null) : null;
+		return uuid ? findArmedMovementOffer(uuid) : null;
 	}
 
 	/** Labels the drag, so an offered Movement never draws on the creature's own speed. */
