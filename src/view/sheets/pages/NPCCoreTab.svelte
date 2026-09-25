@@ -641,7 +641,7 @@
 												class="nimble-button"
 												data-button-variant="icon"
 												type="button"
-												aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+												aria-label={game.i18n.format('NIMBLE.prompts.configureItem', {
 													name: item.reactive.name,
 												})}
 												onclick={(event) => {
@@ -655,7 +655,7 @@
 												class="nimble-button"
 												data-button-variant="icon"
 												type="button"
-												aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+												aria-label={game.i18n.format('NIMBLE.prompts.deleteItem', {
 													name: item.reactive.name,
 												})}
 												onclick={(event) => {
@@ -767,7 +767,7 @@
 					class="nimble-button"
 					data-button-variant="icon"
 					type="button"
-					aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+					aria-label={game.i18n.format('NIMBLE.prompts.configureItem', {
 						name: itemName,
 					})}
 					onclick={(event) => configureItem(event, itemId)}
@@ -778,7 +778,7 @@
 					class="nimble-button"
 					data-button-variant="icon"
 					type="button"
-					aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+					aria-label={game.i18n.format('NIMBLE.prompts.deleteItem', {
 						name: itemName,
 					})}
 					onclick={(event) => deleteItem(event, itemId)}
@@ -931,7 +931,7 @@
 							class="nimble-button"
 							data-button-variant="icon"
 							type="button"
-							aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+							aria-label={game.i18n.format('NIMBLE.prompts.configureItem', {
 								name: item.reactive.name,
 							})}
 							onclick={(event) => configureItem(event, item.reactive._id)}
@@ -943,7 +943,7 @@
 							class="nimble-button"
 							data-button-variant="icon"
 							type="button"
-							aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+							aria-label={game.i18n.format('NIMBLE.prompts.deleteItem', {
 								name: item.reactive.name,
 							})}
 							onclick={(event) => deleteItem(event, item.reactive._id)}
@@ -1109,7 +1109,7 @@
 							class="nimble-button"
 							data-button-variant="icon"
 							type="button"
-							aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+							aria-label={game.i18n.format('NIMBLE.prompts.configureItem', {
 								name: item.reactive.name,
 							})}
 							onclick={(event) => configureItem(event, item.reactive._id)}
@@ -1121,7 +1121,7 @@
 							class="nimble-button"
 							data-button-variant="icon"
 							type="button"
-							aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+							aria-label={game.i18n.format('NIMBLE.prompts.deleteItem', {
 								name: item.reactive.name,
 							})}
 							onclick={(event) => deleteItem(event, item.reactive._id)}

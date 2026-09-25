@@ -373,72 +373,49 @@ function attachActor(items: NimbleObjectItem[]) {
 const DELETING_USER_ID = 'test-user-id';
 const DELETING_USER = { id: DELETING_USER_ID } as never;
 
-describe('NimbleObjectItem._preDelete', () => {
-	type PreDeleteHost = { _preDelete?: ReturnType<typeof vi.fn> };
-	let basePreDelete: ReturnType<typeof vi.fn>;
+describe('NimbleObjectItem.confirmDeleteWithContents', () => {
 	const confirmDialog = vi.mocked(foundry.applications.api.DialogV2.confirm);
 
-	// `_preDelete` lives on Foundry's own Item, above NimbleBaseItem, so there is
-	// nothing to spy on under the test mock. Stand one in for the block instead.
 	beforeEach(() => {
-		vi.restoreAllMocks();
 		confirmDialog.mockReset();
-		basePreDelete = vi.fn(async () => undefined);
-		(NimbleBaseItem.prototype as unknown as PreDeleteHost)._preDelete = basePreDelete;
 	});
 
-	afterEach(() => {
-		delete (NimbleBaseItem.prototype as unknown as PreDeleteHost)._preDelete;
-	});
-
-	it('asks before deleting a container that holds something, and writes nothing yet', async () => {
+	it('asks before a container that holds something is deleted, and writes nothing yet', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
 		confirmDialog.mockResolvedValue(true);
 
-		expect(await bag._preDelete({} as never, DELETING_USER)).not.toBe(false);
+		expect(await bag.confirmDeleteWithContents()).toBe(true);
 		expect(confirmDialog).toHaveBeenCalled();
 		// The contents are freed in `_onDelete`, once the delete has actually happened.
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
-	it('cancels the deletion when the confirmation is declined', async () => {
+	it('refuses the deletion when the confirmation is declined', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		attachActor([bag, armor]);
 		confirmDialog.mockResolvedValue(false);
 
-		expect(await bag._preDelete({} as never, DELETING_USER)).toBe(false);
+		expect(await bag.confirmDeleteWithContents()).toBe(false);
 	});
 
-	it('does not ask once the inherited hook has already cancelled the delete', async () => {
-		const bag = createObject('bag', { isContainer: true });
-		const armor = createObject('armor', { containerId: 'bag' });
-		attachActor([bag, armor]);
-		basePreDelete.mockResolvedValue(false);
-
-		expect(await bag._preDelete({} as never, DELETING_USER)).toBe(false);
-		expect(confirmDialog).not.toHaveBeenCalled();
-	});
-
-	it('asks nothing when the deleted container was empty', async () => {
+	it('asks nothing when the container is empty', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const sword = createObject('sword');
 		attachActor([bag, sword]);
 
-		await bag._preDelete({} as never, DELETING_USER);
-
+		expect(await bag.confirmDeleteWithContents()).toBe(true);
 		expect(confirmDialog).not.toHaveBeenCalled();
 	});
 
-	it('asks nothing when the deleted object was never a container', async () => {
+	it('asks nothing for an object that was never a container', async () => {
 		const sword = createObject('sword');
 		const chalk = createObject('chalk', { containerId: 'sword' });
 		attachActor([sword, chalk]);
 
-		await sword._preDelete({} as never, DELETING_USER);
-
+		expect(await sword.confirmDeleteWithContents()).toBe(true);
 		expect(confirmDialog).not.toHaveBeenCalled();
 	});
 });
@@ -491,16 +468,130 @@ describe('NimbleObjectItem._onDelete', () => {
 		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
+	it('leaves out contents that are being deleted in the same batch', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const rope = createObject('rope', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor, rope]);
+
+		bag._onDelete({ ids: ['bag', 'armor'] } as never, DELETING_USER_ID);
+		await vi.waitFor(() => expect(updateEmbeddedDocuments).toHaveBeenCalled());
+
+		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
+			{ _id: 'rope', 'system.containerId': '' },
+		]);
+	});
+
+	it('writes nothing when the whole container went in one batch', () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+
+		bag._onDelete({ ids: ['bag', 'armor'] } as never, DELETING_USER_ID);
+
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
 	it('reports a failed spill rather than leaving it silent', async () => {
 		const bag = createObject('bag', { isContainer: true });
 		const armor = createObject('armor', { containerId: 'bag' });
 		const { actor } = attachActor([bag, armor]);
 		actor.updateEmbeddedDocuments.mockRejectedValue(new Error('no permission'));
 		vi.spyOn(console, 'error').mockImplementation(() => {});
+		vi.mocked(ui.notifications.error).mockClear();
 
 		bag._onDelete({} as never, DELETING_USER_ID);
 
-		await vi.waitFor(() => expect(ui.notifications.error).toHaveBeenCalled());
+		await vi.waitFor(() =>
+			expect(ui.notifications.error).toHaveBeenCalledWith(
+				expect.stringContaining('Could not empty bag'),
+			),
+		);
+	});
+});
+
+describe('NimbleObjectItem container configuration', () => {
+	type UpdateHooks = {
+		_preUpdate?: ReturnType<typeof vi.fn>;
+		_onUpdate?: ReturnType<typeof vi.fn>;
+	};
+	let basePreUpdate: ReturnType<typeof vi.fn>;
+
+	// `_preUpdate` is protected, so the test reaches it the way Foundry does.
+	function preUpdate(item: NimbleObjectItem, changed: Record<string, unknown>) {
+		const hook = item as unknown as {
+			_preUpdate(
+				changed: Record<string, unknown>,
+				options: never,
+				user: never,
+			): Promise<boolean | undefined>;
+		};
+
+		return hook._preUpdate(changed, {} as never, DELETING_USER);
+	}
+
+	beforeEach(() => {
+		basePreUpdate = vi.fn(async () => undefined);
+		(NimbleBaseItem.prototype as unknown as UpdateHooks)._preUpdate = basePreUpdate;
+		(NimbleBaseItem.prototype as unknown as UpdateHooks)._onUpdate = vi.fn();
+		vi.mocked(ui.notifications.warn).mockClear();
+	});
+
+	afterEach(() => {
+		delete (NimbleBaseItem.prototype as unknown as UpdateHooks)._preUpdate;
+		delete (NimbleBaseItem.prototype as unknown as UpdateHooks)._onUpdate;
+	});
+
+	it('refuses to make a stored object a container', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const pouch = createObject('pouch', { containerId: 'bag' });
+		attachActor([bag, pouch]);
+
+		expect(await preUpdate(pouch, { system: { container: { enabled: true } } })).toBe(false);
+		expect(ui.notifications.warn).toHaveBeenCalled();
+	});
+
+	it('lets an object carried loose become a container', async () => {
+		const pouch = createObject('pouch');
+		attachActor([pouch]);
+
+		expect(await preUpdate(pouch, { system: { container: { enabled: true } } })).toBeUndefined();
+		expect(basePreUpdate).toHaveBeenCalled();
+	});
+
+	it('releases the contents when the container box is unticked', async () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+		bag.system.container.enabled = false;
+
+		bag._onUpdate({ system: { container: { enabled: false } } }, {} as never, DELETING_USER_ID);
+		await vi.waitFor(() => expect(updateEmbeddedDocuments).toHaveBeenCalled());
+
+		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
+			{ _id: 'armor', 'system.containerId': '' },
+		]);
+	});
+
+	it('leaves the contents alone when some other field changes', () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+
+		bag._onUpdate({ system: { container: { capacity: 4 } } }, {} as never, DELETING_USER_ID);
+
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('leaves the release to the client that made the change', () => {
+		const bag = createObject('bag', { isContainer: true });
+		const armor = createObject('armor', { containerId: 'bag' });
+		const { updateEmbeddedDocuments } = attachActor([bag, armor]);
+		bag.system.container.enabled = false;
+
+		bag._onUpdate({ system: { container: { enabled: false } } }, {} as never, 'a-different-user');
+
+		expect(updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });
 

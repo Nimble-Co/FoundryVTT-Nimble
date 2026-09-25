@@ -7,7 +7,7 @@ import {
 	groupItemsByType,
 	type InventoryRowItem,
 	isContainer,
-} from './PlayerCharacterInventoryTab.svelte.js';
+} from './PlayerCharacterInventoryTabUtils.js';
 
 function makeRow(
 	_id: string,

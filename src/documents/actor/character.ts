@@ -58,6 +58,7 @@ import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
 import {
@@ -68,6 +69,26 @@ import {
 import resolveCharacterItemActionCost, {
 	type ActivatableItem,
 } from './resolveCharacterItemActionCost.js';
+
+/**
+ * The stored stack a dropped object folds into, grown by the one the drop adds, or
+ * the drop itself when it starts a pile of its own.
+ */
+function findStackToMergeInto(
+	storedObjects: ContainableObject[],
+	dropped: ContainableObject,
+): ContainableObject {
+	if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(dropped.system.objectSizeType)) return dropped;
+
+	const stack = storedObjects.find(
+		(stored) =>
+			stored.name === dropped.name &&
+			OBJECT_SIZE_TYPES_WITH_QUANTITY.has(stored.system.objectSizeType),
+	);
+	if (!stack) return dropped;
+
+	return { ...stack, system: { ...stack.system, quantity: stack.system.quantity + 1 } };
+}
 
 /** A swap plan together with the pools, read at apply time, that it was planned against. */
 type AppliedOptionSwap = OptionSwapPlan & { pools: ResolvedSwappableOptionPool[] };
@@ -480,6 +501,17 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/**
+	 * Whether the container will take an object being dropped onto it. A drop that
+	 * folds into a stack already inside is measured as that stack grown by one,
+	 * because the merge costs the stack's next slot rather than a second stack.
+	 */
+	canStoreDroppedObjectInContainer(containerId: string, dropped: ContainableObject): boolean {
+		const stored = this.getContainerContents(containerId);
+
+		return this.canStoreObjectInContainer(containerId, findStackToMergeInto(stored, dropped));
+	}
+
+	/**
 	 * Moves an object into a container carried by this actor. A stored object is
 	 * packed away and so never equipped, and losing a weapon's or armour's rules
 	 * mid-session is not something to do behind the player's back, so stowing an
@@ -487,7 +519,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 */
 	async storeItemInContainer(itemId: string, containerId: string): Promise<boolean> {
 		const object = this.getCarriedObjects().find(({ _id }) => _id === itemId);
-		const item = this.items.get(itemId);
+		const item = this.items.get(itemId) as NimbleBaseItem | undefined;
 
 		if (!object || !item || itemId === containerId) return false;
 		if (!this.canStoreObjectInContainer(containerId, object)) return false;
@@ -498,12 +530,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
 			if (!container || !(await confirmUnequipToStore(object, container))) return false;
 
-			const { rules } = item as unknown as {
-				rules: { withAllRulesDisabled(disabled: boolean): unknown[] };
-			};
-
 			update['system.equipped'] = false;
-			update['system.rules'] = rules.withAllRulesDisabled(true);
+			update['system.rules'] = item.rules.withAllRulesDisabled(true);
 		}
 
 		await this.updateItem(itemId, update);
@@ -522,7 +550,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const { containerId } = object.system;
 		const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
 
-		if (container) {
+		// Lowering a quantity never needs more room, and a container whose capacity was
+		// cut below what it already holds would otherwise refuse the write that fixes it.
+		if (container && quantity > object.system.quantity) {
 			const grown = { ...object, system: { ...object.system, quantity } };
 			const rejection = findContainerStorageRejection(
 				container,

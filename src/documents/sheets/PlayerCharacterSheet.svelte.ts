@@ -206,13 +206,15 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	): boolean {
 		if (!containerId) return true;
 
+		const actor = this._actor as NimbleCharacter;
+
 		for (const item of itemsToCreate) {
 			if (item.type !== 'object') continue;
 
 			const system = (item.system ?? {}) as Record<string, unknown>;
 			const candidate = { ...item, system } as object as ContainableObject;
 
-			if (!(this._actor as NimbleCharacter).canStoreObjectInContainer(containerId, candidate)) {
+			if (!actor.canStoreDroppedObjectInContainer(containerId, candidate)) {
 				return false;
 			}
 

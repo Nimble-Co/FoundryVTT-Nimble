@@ -3,7 +3,8 @@
  * asserts that the lifecycle hooks call `update` with the right arguments; these
  * assert what actually reaches the database:
  * - deleting a container clears the persisted `containerId` of what it held
- * - declining the confirmation leaves the container and its contents alone
+ * - declining the sheet's confirmation leaves the container and its contents alone
+ * - the delete itself never raises a dialog, so migrations and macros are not blocked
  * - a matching stack folds into the one already carried instead of adding a row
  * - stacks in different containers stay separate rows
  */
@@ -45,17 +46,22 @@ function containerData(name: string) {
 }
 
 /**
- * `_preDelete` asks before emptying a stocked container, so a live delete would
- * otherwise sit on an open dialog forever. Answers from `answer` without
- * rendering one, and stays installed through cleanup, which deletes containers too.
+ * The sheet asks before emptying a stocked container. Answers from `answer`
+ * without rendering a dialog, and counts the asking so a test can prove the
+ * delete itself asked nothing.
  */
+let promptCount = 0;
+
 function stubDeletePrompt(answer: () => boolean): () => void {
 	const api = foundry.applications.api.DialogV2 as unknown as {
 		confirm: (...args: unknown[]) => Promise<boolean>;
 	};
 	const original = api.confirm;
 
-	api.confirm = async () => answer();
+	api.confirm = async () => {
+		promptCount += 1;
+		return answer();
+	};
 
 	return () => {
 		api.confirm = original;
@@ -111,28 +117,46 @@ describe('container inventory', () => {
 		expect(actor.items.get(bag.id)).toBeUndefined();
 	});
 
-	test('declining the prompt leaves the container and its contents in place', async () => {
+	test('declining the confirmation leaves the container and its contents in place', async () => {
 		const [bag] = await actor.createEmbeddedDocuments('Item', [containerData('Kept Bag')]);
 		const [armor] = await actor.createEmbeddedDocuments('Item', [
 			objectData('Kept Armor', { containerId: bag.id }),
 		]);
 
 		promptAnswer = false;
-		await actor.deleteEmbeddedDocuments('Item', [bag.id]);
-		await settle();
+		const stocked = actor.items.get(bag.id) as unknown as {
+			confirmDeleteWithContents(): Promise<boolean>;
+		};
+
+		expect(await stocked.confirmDeleteWithContents()).toBe(false);
 
 		expect(actor.items.get(bag.id)).toBeDefined();
 		expect(actor.items.get(armor.id)?.toObject().system.containerId).toBe(bag.id);
 	});
 
-	test('an empty container deletes without asking', async () => {
+	test('an empty container needs no confirmation', async () => {
 		const [bag] = await actor.createEmbeddedDocuments('Item', [containerData('Empty Bag')]);
 
-		// Declining would keep it, so its absence proves nothing asked.
 		promptAnswer = false;
+		const empty = actor.items.get(bag.id) as unknown as {
+			confirmDeleteWithContents(): Promise<boolean>;
+		};
+
+		// Declining would refuse it, so a true here proves nothing asked.
+		expect(await empty.confirmDeleteWithContents()).toBe(true);
+	});
+
+	test('deleting a stocked container raises no dialog of its own', async () => {
+		const [bag] = await actor.createEmbeddedDocuments('Item', [containerData('Unasked Bag')]);
+		await actor.createEmbeddedDocuments('Item', [
+			objectData('Unasked Armor', { containerId: bag.id }),
+		]);
+
+		promptCount = 0;
 		await actor.deleteEmbeddedDocuments('Item', [bag.id]);
 		await settle();
 
+		expect(promptCount).toBe(0);
 		expect(actor.items.get(bag.id)).toBeUndefined();
 	});
 
