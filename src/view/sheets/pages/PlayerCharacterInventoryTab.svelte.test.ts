@@ -62,6 +62,8 @@ function renderWithContainers(
 		updateStoredObjectQuantity?: ReturnType<typeof vi.fn>;
 		toggleEquipment?: ReturnType<typeof vi.fn>;
 		onDropItem?: ReturnType<typeof vi.fn>;
+		deleteItem?: ReturnType<typeof vi.fn>;
+		confirmDeleteWithContents?: ReturnType<typeof vi.fn>;
 	} = {},
 	containerCapacityUsage: Record<string, number> = {},
 ) {
@@ -70,6 +72,8 @@ function renderWithContainers(
 	const updateStoredObjectQuantity = handlers.updateStoredObjectQuantity ?? vi.fn();
 	const toggleEquipment = handlers.toggleEquipment ?? vi.fn();
 	const onDropItem = handlers.onDropItem ?? vi.fn(() => []);
+	const deleteItem = handlers.deleteItem ?? vi.fn();
+	const confirmDeleteWithContents = handlers.confirmDeleteWithContents ?? vi.fn(() => true);
 
 	const result = render(PlayerCharacterInventoryTabHarness, {
 		props: {
@@ -80,6 +84,8 @@ function renderWithContainers(
 			updateStoredObjectQuantity,
 			toggleEquipment,
 			onDropItem,
+			deleteItem,
+			confirmDeleteWithContents,
 		},
 	});
 
@@ -90,6 +96,8 @@ function renderWithContainers(
 		updateStoredObjectQuantity,
 		toggleEquipment,
 		onDropItem,
+		deleteItem,
+		confirmDeleteWithContents,
 	};
 }
 
@@ -371,5 +379,53 @@ describe('PlayerCharacterInventoryTab containers', () => {
 
 		expect(row.querySelector('[aria-label^="Toggle"]')).toBeNull();
 		expect(row.querySelector('.nimble-document-card__quantity')).not.toBeNull();
+	});
+});
+
+describe('PlayerCharacterInventoryTab delete', () => {
+	it('deletes a container once the player agrees to empty it', async () => {
+		const { container, deleteItem, confirmDeleteWithContents } = renderWithContainers([
+			bagOfHolding,
+			storedPlateArmor,
+		]);
+
+		await fireEvent.click(
+			getRow(container, 'bag').querySelector('[aria-label^="Delete"]') as HTMLElement,
+		);
+
+		expect(confirmDeleteWithContents).toHaveBeenCalledWith('bag');
+		expect(deleteItem).toHaveBeenCalledWith('bag');
+	});
+
+	it('leaves the container alone when the player declines', async () => {
+		const { container, deleteItem } = renderWithContainers([bagOfHolding, storedPlateArmor], {
+			confirmDeleteWithContents: vi.fn(() => false),
+		});
+
+		await fireEvent.click(
+			getRow(container, 'bag').querySelector('[aria-label^="Delete"]') as HTMLElement,
+		);
+
+		expect(deleteItem).not.toHaveBeenCalled();
+	});
+});
+
+describe('PlayerCharacterInventoryTab drops that are not items', () => {
+	it('leaves an active effect drop to the sheet', async () => {
+		const { container, removeItemFromContainer } = renderWithContainers([
+			bagOfHolding,
+			storedPlateArmor,
+		]);
+		vi.mocked(foundry.applications.ux.TextEditor.implementation.getDragEventData).mockReturnValue({
+			type: 'ActiveEffect',
+			uuid: 'ActiveEffect.whatever',
+		});
+
+		const list = container.querySelector('.nimble-sheet__body') as HTMLElement;
+		const drop = new Event('drop', { bubbles: true, cancelable: true });
+		list.dispatchEvent(drop);
+
+		expect(drop.cancelBubble).toBe(false);
+		expect(removeItemFromContainer).not.toHaveBeenCalled();
 	});
 });

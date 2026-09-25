@@ -1,25 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ContainableObject, ContainerConfig } from '#types/inventoryContainers.js';
 import {
-	createContainableObject,
-	createContainer,
+	createCarriedContainer as makeContainer,
+	createCarriedObject as makeObject,
+	type ContainableObjectStub as ObjectStub,
 } from '../../../tests/fixtures/containableObject.js';
 import { NimbleCharacter } from './character.js';
-
-type ObjectStub = ContainableObject & { isType(type: string): boolean };
-
-function asStub(object: ContainableObject): ObjectStub {
-	return { ...object, isType: (type: string) => type === 'object' };
-}
-
-function makeObject(_id: string, system: Partial<ContainableObject['system']> = {}): ObjectStub {
-	return asStub(createContainableObject(_id, system));
-}
-
-function makeContainer(_id: string, container: Partial<ContainerConfig> = {}): ObjectStub {
-	return asStub(createContainer(_id, container));
-}
 
 function makeActor(objects: ObjectStub[]) {
 	const withAllRulesDisabled = vi.fn(() => [{ type: 'armorClass', disabled: true }]);
@@ -35,6 +21,7 @@ function makeActor(objects: ObjectStub[]) {
 		getCarriedObjects: NimbleCharacter.prototype.getCarriedObjects,
 		getContainerContents: NimbleCharacter.prototype.getContainerContents,
 		canStoreObjectInContainer: NimbleCharacter.prototype.canStoreObjectInContainer,
+		canStoreDroppedObjectInContainer: NimbleCharacter.prototype.canStoreDroppedObjectInContainer,
 	};
 
 	return { actor: actor as unknown as NimbleCharacter, withAllRulesDisabled, updateItem };
@@ -121,6 +108,71 @@ describe('storeItemInContainer', () => {
 
 		expect(await store(actor, 'bag', 'bag')).toBe(false);
 		expect(updateItem).not.toHaveBeenCalled();
+	});
+});
+
+describe('canStoreDroppedObjectInContainer', () => {
+	/** A fresh drop of the same thing: the same name, but not the document already stored. */
+	function droppedCopyOf(stored: ObjectStub): ObjectStub {
+		const dropped = makeObject('dropped', {
+			objectSizeType: stored.system.objectSizeType,
+			stackSize: stored.system.stackSize,
+		});
+		dropped.name = stored.name;
+
+		return dropped;
+	}
+
+	function canStore(actor: NimbleCharacter, containerId: string, dropped: ObjectStub): boolean {
+		return NimbleCharacter.prototype.canStoreDroppedObjectInContainer.call(
+			actor,
+			containerId,
+			dropped,
+		);
+	}
+
+	it('measures a drop that folds into a stored stack as that stack grown by one', () => {
+		const quiver = makeContainer('quiver', { capacity: 1 });
+		const arrows = makeObject('arrows', {
+			objectSizeType: 'stackable',
+			stackSize: 20,
+			quantity: 5,
+			containerId: 'quiver',
+		});
+		const { actor } = makeActor([quiver, arrows]);
+
+		expect(canStore(actor, 'quiver', droppedCopyOf(arrows))).toBe(true);
+	});
+
+	it('refuses a drop that would start the stack a second slot past the capacity', () => {
+		const quiver = makeContainer('quiver', { capacity: 1 });
+		const arrows = makeObject('arrows', {
+			objectSizeType: 'stackable',
+			stackSize: 20,
+			quantity: 20,
+			containerId: 'quiver',
+		});
+		const { actor } = makeActor([quiver, arrows]);
+
+		expect(canStore(actor, 'quiver', droppedCopyOf(arrows))).toBe(false);
+	});
+
+	it('measures a drop that matches nothing stored as its own object', () => {
+		const chest = makeContainer('chest', { capacity: 2 });
+		const { actor } = makeActor([chest]);
+		const dropped = makeObject('armor', { slotsRequired: 4 });
+
+		expect(canStore(actor, 'chest', dropped)).toBe(false);
+	});
+
+	it('does not merge a slot-sized object into a same-named stack', () => {
+		const chest = makeContainer('chest', { capacity: 1 });
+		const rope = makeObject('rope', { objectSizeType: 'stackable', containerId: 'chest' });
+		const { actor } = makeActor([chest, rope]);
+		const dropped = makeObject('dropped-rope', { slotsRequired: 1 });
+		dropped.name = rope.name;
+
+		expect(canStore(actor, 'chest', dropped)).toBe(false);
 	});
 });
 

@@ -16,7 +16,9 @@
 		updateStoredObjectQuantity = () => {},
 		storeItemInContainer = () => {},
 		removeItemFromContainer = () => {},
+		deleteItem = () => {},
 		toggleEquipment = () => {},
+		confirmDeleteWithContents = () => true,
 		onDragStart = () => {},
 		onDropItem = () => [],
 	}: {
@@ -26,7 +28,9 @@
 		updateStoredObjectQuantity?: (itemId: string, quantity: number) => unknown;
 		storeItemInContainer?: (itemId: string, containerId: string) => unknown;
 		removeItemFromContainer?: (itemId: string) => unknown;
+		deleteItem?: (itemId: string) => unknown;
 		toggleEquipment?: (itemId: string) => unknown;
+		confirmDeleteWithContents?: (itemId: string) => boolean | Promise<boolean>;
 		onDragStart?: (event: DragEvent) => unknown;
 		onDropItem?: (
 			event: DragEvent,
@@ -70,6 +74,7 @@
 			},
 		};
 		prepared.toggleEquipment = () => untrack(() => toggleEquipment)(item._id);
+		prepared.confirmDeleteWithContents = () => untrack(() => confirmDeleteWithContents)(item._id);
 		// The template reads `item.reactive.*`; point it back at the item itself.
 		prepared.reactive = prepared;
 		return prepared;
@@ -84,7 +89,7 @@
 		activateItem: () => {},
 		createItem: () => {},
 		configureItem: () => {},
-		deleteItem: () => {},
+		deleteItem: untrack(() => deleteItem),
 		items: preparedItems,
 		reactive: {
 			items: preparedItems,

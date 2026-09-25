@@ -75,6 +75,12 @@ example. The system applies that to every small item a character carries, relate
 share a single slot. Only **Ignore slot cost** takes stored small items out of that shared slot.
 Halving or reducing leaves them in it.
 
+Containers themselves are a system feature. The rulebook describes inventory slots
+and what fills them, not bags that hold other things, so everything in this section,
+the slot cost modes, capacity, allowed object types, the equipped-only switch, the
+ban on nesting one container in another, and the rule that a stored object cannot be
+equipped, is the system's own design rather than Nimble content.
+
 Three more fields limit what the container will take:
 
 - **Capacity**: how many slots' worth of objects fit inside, measured at the objects' own slot
@@ -103,9 +109,11 @@ slot, set **Stored Object Slot Cost** to **Ignore slot cost**, and everything dr
 counting against the carrier. A suit of plate armor inside costs nothing; the bag still costs its
 one slot.
 
-Containers cannot be nested inside one another. Deleting a container that still holds something
+Containers cannot be nested inside one another, so an object that is already stored cannot be
+turned into a container until it is taken out. Deleting a container that still holds something
 asks for confirmation first, then leaves its contents in the inventory, back at their own slot
-cost.
+cost. Unticking **This Object Is A Container** does the same without asking: the contents come
+back out rather than being left pointing at a bag that no longer holds anything.
 
 Two more consequences worth knowing:
 

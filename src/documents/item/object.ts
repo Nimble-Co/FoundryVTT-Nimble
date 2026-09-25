@@ -177,35 +177,86 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		this.updateSource({ 'system.containerId': '' } as Record<string, unknown>);
 	}
 
-	/** The ids of the objects this container currently holds. */
-	#getStoredItemIds(): string[] {
+	/**
+	 * The ids of the objects this container currently holds. Ids passed in are left
+	 * out: an object deleted in the same batch as its container is still in the
+	 * collection while the hooks run, and writing to it would fail.
+	 */
+	#getStoredItemIds(
+		excludedIds: readonly string[] = [],
+		{ includeDisabled = false } = {},
+	): string[] {
 		const actor = this.actor;
-		if (!actor || !this.system.container.enabled) return [];
+		if (!actor) return [];
+		if (!includeDisabled && !this.system.container.enabled) return [];
+
+		const excluded = new Set(excludedIds);
 
 		return actor.items
 			.filter(
 				(item) =>
 					item.type === 'object' &&
-					(item as unknown as NimbleObjectItem).system.containerId === this.id,
+					(item as unknown as NimbleObjectItem).system.containerId === this.id &&
+					!excluded.has(item.id as string),
 			)
 			.map((item) => item.id as string);
 	}
 
 	/**
-	 * Emptying a container is a surprise when the player only meant to bin the bag,
-	 * so one holding anything asks first. The inherited hook decides first: a module
-	 * that has already cancelled the delete should not raise a prompt about it.
+	 * A stored object cannot become a container, because a container cannot sit
+	 * inside another one. The drop path already refuses the nesting; this refuses
+	 * the same thing done from the object's own sheet.
 	 */
-	override async _preDelete(options: Item.Database.PreDeleteOptions, user: User.Stored) {
-		const inherited = await super._preDelete(options, user);
-		if (inherited === false) return false;
+	protected override async _preUpdate(
+		changed: Record<string, unknown>,
+		options: Item.Database.UpdateOptions,
+		user: User.Stored,
+	): Promise<boolean | undefined> {
+		const becomingAContainer =
+			foundry.utils.getProperty(changed, 'system.container.enabled') === true &&
+			!this.system.container.enabled;
 
+		if (becomingAContainer && this.system.containerId) {
+			ui.notifications?.warn(
+				localize('NIMBLE.containers.rejection.nestedConfig', { object: this.name }),
+			);
+			return false;
+		}
+
+		return super._preUpdate(changed, options, user);
+	}
+
+	/**
+	 * Unticking the container box leaves its contents pointing at an object that no
+	 * longer holds anything, which hides their equip toggle and refuses them a way
+	 * back out. They are released the same way a deleted container releases them.
+	 */
+	override _onUpdate(changed, options, userId: string): void {
+		super._onUpdate(changed, options, userId);
+
+		if (game.user?.id !== userId) return;
+		if (foundry.utils.getProperty(changed, 'system.container.enabled') !== false) return;
+
+		const strandedItemIds = this.#getStoredItemIds([], { includeDisabled: true });
+		if (strandedItemIds.length === 0) return;
+
+		void this.#releaseStoredItems(strandedItemIds);
+	}
+
+	/**
+	 * Whether the player still wants this container deleted once they know it will
+	 * be emptied. Emptying a bag is a surprise when they only meant to bin it, so
+	 * one holding anything asks first.
+	 *
+	 * The sheet asks, not the delete lifecycle: `_preDelete` is awaited for every
+	 * deletion, so a prompt there would stop a migration or a macro on one modal per
+	 * container.
+	 */
+	async confirmDeleteWithContents(): Promise<boolean> {
 		const storedCount = this.#getStoredItemIds().length;
-		if (storedCount === 0) return inherited;
+		if (storedCount === 0) return true;
 
-		if (!(await confirmDeleteStockedContainer(this.name, storedCount))) return false;
-
-		return inherited;
+		return confirmDeleteStockedContainer(this.name, storedCount);
 	}
 
 	/**
@@ -213,16 +264,17 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	 * they stop pointing at an item that no longer exists and go back to costing
 	 * their own slots.
 	 *
-	 * The spill waits for `_onDelete` rather than riding along with the confirmation
-	 * in `_preDelete`, because `preDeleteItem` hooks and the server both get a say
-	 * after `_preDelete` returns. Writing earlier can empty a bag that then survives.
+	 * The spill waits for `_onDelete` rather than for the pre-delete hook, because
+	 * `preDeleteItem` hooks and the server both get a say after that returns.
+	 * Writing earlier can empty a bag that then survives.
 	 */
 	override _onDelete(options, userId: string): void {
 		super._onDelete(options, userId);
 
 		if (game.user?.id !== userId) return;
 
-		const storedItemIds = this.#getStoredItemIds();
+		const deletedIds = Array.isArray(options?.ids) ? (options.ids as string[]) : [];
+		const storedItemIds = this.#getStoredItemIds(deletedIds);
 		if (storedItemIds.length === 0) return;
 
 		void this.#releaseStoredItems(storedItemIds);

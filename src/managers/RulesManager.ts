@@ -1,3 +1,4 @@
+import type { RuleSource } from '#types/ruleSource.js';
 import localize from '#utils/localize.js';
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
@@ -10,13 +11,6 @@ export namespace RulesManager {
 /** Interface for item system data that includes rules */
 interface ItemSystemWithRules {
 	rules: RuleSource[];
-}
-
-interface RuleSource {
-	id: string;
-	type: string;
-	disabled?: boolean;
-	[key: string]: string | number | boolean | object | null | undefined;
 }
 
 /** Helper to get system data with rules */
@@ -183,10 +177,6 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		await this.#item.update({
 			'system.rules': updatedRules,
 		} as Record<string, unknown>);
-
-		for (const rule of updatedRules) {
-			this.rulesTypeMap.set(rule.type, rule as object as InstanceType<typeof NimbleBaseRule>);
-		}
 
 		return true;
 	}

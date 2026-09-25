@@ -19,7 +19,7 @@
 		groupItemsByType,
 		isContainer,
 		isDropDataRecord,
-	} from './PlayerCharacterInventoryTab.svelte.js';
+	} from './PlayerCharacterInventoryTabUtils.js';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
@@ -46,6 +46,9 @@
 
 	async function deleteItem(event, id) {
 		event.stopPropagation();
+
+		const item = actor.items.find((carried) => carried._id === id);
+		if (item?.confirmDeleteWithContents && !(await item.confirmDeleteWithContents())) return;
 
 		await actor.deleteItem(id);
 	}
@@ -137,11 +140,14 @@
 
 	/** A drop on the list itself, rather than on a row, takes the item out of its container. */
 	async function handleInventoryDrop(event: DragEvent): Promise<void> {
-		event.stopPropagation();
 		hoveredContainerId = null;
 
+		// Anything that is not an item, an active effect for instance, belongs to the
+		// sheet's own drop handling, so it is left to bubble.
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
 		if (!isDropDataRecord(dropData) || dropData.type !== 'Item') return;
+
+		event.stopPropagation();
 
 		const carriedItem = actor.items.find((carried) => carried.uuid === dropData.uuid);
 

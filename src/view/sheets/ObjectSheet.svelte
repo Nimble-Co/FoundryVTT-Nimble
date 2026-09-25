@@ -8,6 +8,7 @@
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import ObjectContainerConfig from './components/ObjectContainerConfig.svelte';
 	import ObjectDescriptionTab from './pages/ObjectDescriptionTab.svelte';
 	import RangeConfig from './components/RangeConfig.svelte';
 	import ReachConfig from './components/ReachConfig.svelte';
@@ -46,45 +47,6 @@
 		});
 	}
 
-	function getContainerSlotCostModeOptions() {
-		return Object.entries(containerSlotCostModes).map(([key, mode]) => ({
-			label: mode,
-			value: key,
-		}));
-	}
-
-	function updateContainerSlotCostMode(newSelection) {
-		item.update({
-			'system.container.slotCostMode': newSelection,
-		});
-	}
-
-	function updateContainerAllowedObjectTypes(newSelection) {
-		const allowedObjectTypes = item.reactive?.system?.container?.allowedObjectTypes ?? [];
-
-		item.update({
-			'system.container.allowedObjectTypes': allowedObjectTypes.includes(newSelection)
-				? allowedObjectTypes.filter((objectType) => objectType !== newSelection)
-				: [...allowedObjectTypes, newSelection],
-		});
-	}
-
-	function updateContainerCapacity(value) {
-		item.update({
-			'system.container.capacity': value === '' ? null : Number(value),
-		});
-	}
-
-	/** A blank field means the GM cleared it, not that the reduction is now zero. */
-	function updateContainerSlotCostReduction(target) {
-		if (target.value === '') {
-			target.value = String(container.slotCostReduction);
-			return;
-		}
-
-		item.update({ 'system.container.slotCostReduction': Number(target.value) });
-	}
-
 	function updateWeaponProperties(newSelection) {
 		const currentProperties = item.reactive?.system?.properties?.selected ?? [];
 
@@ -103,7 +65,7 @@
 		});
 	}
 
-	const { containerSlotCostModes, objectTypes, objectSizeTypes, weaponProperties } = CONFIG.NIMBLE;
+	const { objectTypes, objectSizeTypes, weaponProperties } = CONFIG.NIMBLE;
 
 	let { item, sheet } = $props();
 
@@ -152,7 +114,6 @@
 
 	let objectType = $derived(item.reactive.system.objectType);
 	let objectSizeType = $derived(item.reactive.system.objectSizeType);
-	let container = $derived(item.reactive.system.container);
 
 	setContext(
 		'document',
@@ -293,112 +254,7 @@
 			{/if}
 		</div>
 
-		<div>
-			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">
-					{localize('NIMBLE.containers.heading')}
-				</h3>
-			</header>
-
-			<label class="nimble-field">
-				<input
-					type="checkbox"
-					checked={container.enabled}
-					onchange={({ target }) => item.update({ 'system.container.enabled': target.checked })}
-				/>
-
-				<span class="nimble-heading nimble-field__label" data-heading-variant="field">
-					{localize('NIMBLE.containers.enabled')}
-
-					<i
-						class="nimble-field__hint-icon fa-solid fa-circle-info"
-						data-tooltip={localize('NIMBLE.containers.enabledHint')}
-						data-tooltip-direction="UP"
-					></i>
-				</span>
-			</label>
-
-			{#if container.enabled}
-				<div class="nimble-field nimble-field--column">
-					<span class="nimble-heading" data-heading-variant="field">
-						{localize('NIMBLE.containers.slotCostMode')}
-					</span>
-
-					<TagGroup
-						options={getContainerSlotCostModeOptions()}
-						selectedOptions={[container.slotCostMode]}
-						toggleOption={updateContainerSlotCostMode}
-					/>
-				</div>
-
-				{#if container.slotCostMode === 'reduce'}
-					<label class="nimble-field nimble-field--column">
-						<span class="nimble-heading" data-heading-variant="field">
-							{localize('NIMBLE.containers.slotCostReduction')}
-						</span>
-
-						<input
-							type="number"
-							min="0"
-							step="0.5"
-							value={container.slotCostReduction}
-							onchange={({ target }) => updateContainerSlotCostReduction(target)}
-						/>
-					</label>
-				{/if}
-
-				<label class="nimble-field nimble-field--column">
-					<span class="nimble-heading" data-heading-variant="field">
-						{localize('NIMBLE.containers.capacity')}
-
-						<i
-							class="nimble-field__hint-icon fa-solid fa-circle-info"
-							data-tooltip={localize('NIMBLE.containers.capacityHint')}
-							data-tooltip-direction="UP"
-						></i>
-					</span>
-
-					<input
-						type="number"
-						min="0"
-						step="0.5"
-						value={container.capacity ?? ''}
-						onchange={({ target }) => updateContainerCapacity(target.value)}
-					/>
-				</label>
-
-				<div class="nimble-field nimble-field--column">
-					<span class="nimble-heading" data-heading-variant="field">
-						{localize('NIMBLE.containers.allowedObjectTypes')}
-
-						<i
-							class="nimble-field__hint-icon fa-solid fa-circle-info"
-							data-tooltip={localize('NIMBLE.containers.allowedObjectTypesHint')}
-							data-tooltip-direction="UP"
-						></i>
-					</span>
-
-					<TagGroup
-						options={getObjectTypeOptions()}
-						selectedOptions={container.allowedObjectTypes}
-						toggleOption={updateContainerAllowedObjectTypes}
-					/>
-				</div>
-
-				<label class="nimble-field">
-					<input
-						type="checkbox"
-						checked={container.requiresEquipped}
-						onchange={({ target }) =>
-							item.update({ 'system.container.requiresEquipped': target.checked })}
-					/>
-
-					<span class="nimble-heading nimble-field__label" data-heading-variant="field">
-						{localize('NIMBLE.containers.requiresEquipped')}
-					</span>
-				</label>
-			{/if}
-		</div>
+		<ObjectContainerConfig />
 
 		{#if objectType === 'weapon'}
 			{@const itemWeaponProperties = item.reactive?.system?.properties?.selected ?? []}
