@@ -556,6 +556,7 @@ export const foundryApiMocks = {
 			},
 			DialogV2: {
 				confirm: vi.fn(),
+				prompt: vi.fn(),
 			},
 		},
 		ux: {
