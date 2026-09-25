@@ -77,6 +77,13 @@ const schema = () => ({
 		min: 0,
 		nullable: false,
 	}),
+	/** Slots the object takes while it is not equipped. Null costs the same either way. */
+	stowedSlotsRequired: new fields.NumberField({
+		required: true,
+		initial: null,
+		min: 0,
+		nullable: true,
+	}),
 	stackSize: new fields.NumberField({
 		required: true,
 		initial: 2,
@@ -185,6 +192,7 @@ class NimbleObjectData extends NimbleBaseItemData<
 	declare unidentifiedName: string;
 	declare objectSizeType: ObjectSizeType;
 	declare slotsRequired: number;
+	declare stowedSlotsRequired: number | null;
 	declare stackSize: number;
 	declare containerId: string;
 	declare container: ContainerConfig;

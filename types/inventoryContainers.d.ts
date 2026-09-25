@@ -21,6 +21,7 @@ export interface ContainableObject {
 		objectType: string;
 		objectSizeType: ObjectSizeType;
 		slotsRequired: number;
+		stowedSlotsRequired: number | null;
 		quantity: number;
 		stackSize: number;
 		equipped: boolean;

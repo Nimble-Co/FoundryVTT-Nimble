@@ -41,6 +41,13 @@
 		});
 	}
 
+	/** A blank field means it costs the same stowed as it does in use. */
+	function updateStowedSlotsRequired(value) {
+		item.update({
+			'system.stowedSlotsRequired': value === '' ? null : Number(value),
+		});
+	}
+
 	function updateObjectSizeType(newSelection) {
 		item.update({
 			'system.objectSizeType': newSelection,
@@ -223,6 +230,26 @@
 								'system.slotsRequired': target.value,
 							})}
 						disabled={objectSizeType != 'slots'}
+					/>
+				</div>
+
+				<div class="nimble-field nimble-field--column">
+					<span class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.inventory.stowedSlotsRequired')}
+
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.inventory.stowedSlotsRequiredHint')}
+							data-tooltip-direction="UP"
+						></i>
+					</span>
+
+					<input
+						type="number"
+						min="0"
+						step="0.5"
+						value={item.reactive.system.stowedSlotsRequired ?? ''}
+						onchange={({ target }) => updateStowedSlotsRequired(target.value)}
 					/>
 				</div>
 			{/if}
