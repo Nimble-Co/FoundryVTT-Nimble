@@ -16,7 +16,7 @@
 				"isReaction": false
 			},
 			"duration": {
-				"details": "Up to 10 minutes",
+				"details": "",
 				"quantity": 10,
 				"type": "minute"
 			},

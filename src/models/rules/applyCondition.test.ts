@@ -501,10 +501,7 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(hooksCallAll).not.toHaveBeenCalledWith(
-				'nimble.conditionApplied',
-				expect.objectContaining({ condition: 'dazed' }),
-			);
+			expect(hooksCallAll).not.toHaveBeenCalled();
 		});
 
 		it('does not fire when preApplyCondition blocks application', async () => {

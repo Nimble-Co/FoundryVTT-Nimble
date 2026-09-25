@@ -11,11 +11,16 @@ function createHeldConcentration(track: string, { spell = '' }: { spell?: string
 	};
 }
 
-const dialog = () => foundry.applications.api.DialogV2.wait as ReturnType<typeof vi.fn>;
+const dialogApi = foundry.applications.api.DialogV2 as { wait?: unknown };
+const dialog = () => dialogApi.wait as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
-	dialog().mockReset();
+	dialogApi.wait = vi.fn();
 	vi.stubGlobal('fromUuidSync', (uuid: string) => ({ name: uuid.replace('Item.', '') }));
+});
+
+afterEach(() => {
+	dialogApi.wait = undefined;
 });
 
 describe('concentrationChoices', () => {

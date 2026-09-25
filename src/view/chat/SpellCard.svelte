@@ -133,11 +133,12 @@
 
 <style>
 	.nimble-upcast-indicator {
+		--nimble-card-section-padding: 0.5rem;
+
 		background: var(--nimble-chat-upcast-background);
 		color: var(--nimble-chat-upcast-color);
 		font-weight: 600;
 		text-align: center;
-		padding: 0.5rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;

@@ -24,13 +24,22 @@ function createConcentratingActor(held: ReturnType<typeof createHeldConcentratio
 	}) as ToggleHost;
 }
 
-const dialog = () => foundry.applications.api.DialogV2.wait as ReturnType<typeof vi.fn>;
-const coreToggle = () =>
-	Object.getPrototypeOf(NimbleBaseActor.prototype).toggleStatusEffect as ReturnType<typeof vi.fn>;
+const dialogApi = foundry.applications.api.DialogV2 as { wait?: unknown };
+const dialog = () => dialogApi.wait as ReturnType<typeof vi.fn>;
+
+const coreActor = Object.getPrototypeOf(NimbleBaseActor.prototype) as {
+	toggleStatusEffect?: unknown;
+};
+const coreToggle = () => coreActor.toggleStatusEffect as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
-	dialog().mockReset();
-	vi.spyOn(Object.getPrototypeOf(NimbleBaseActor.prototype), 'toggleStatusEffect');
+	dialogApi.wait = vi.fn();
+	coreActor.toggleStatusEffect = vi.fn(async () => undefined);
+});
+
+afterEach(() => {
+	dialogApi.wait = undefined;
+	coreActor.toggleStatusEffect = undefined;
 });
 
 describe('NimbleBaseActor#toggleStatusEffect concentration', () => {
@@ -46,17 +55,38 @@ describe('NimbleBaseActor#toggleStatusEffect concentration', () => {
 		expect(coreToggle()).not.toHaveBeenCalled();
 	});
 
-	it('leaves both in place when the choice is dismissed', async () => {
+	it('leaves both in place when the choice is dismissed, reporting still active', async () => {
 		const actor = createConcentratingActor([
 			createHeldConcentration('lightning'),
 			createHeldConcentration('wind'),
 		]);
 		dialog().mockResolvedValue(null);
 
-		await actor.toggleStatusEffect('concentration', { active: false });
-
+		expect(await actor.toggleStatusEffect('concentration', { active: false })).toBe(true);
 		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		expect(coreToggle()).not.toHaveBeenCalled();
+	});
+
+	it('reports the status still active when one of two tracks ends', async () => {
+		const lightning = createHeldConcentration('lightning');
+		const wind = createHeldConcentration('wind');
+		const actor = createConcentratingActor([lightning, wind]);
+		dialog().mockResolvedValue(wind.id);
+
+		expect(await actor.toggleStatusEffect('concentration')).toBe(true);
+	});
+
+	it('reports the status gone when every track ends', async () => {
+		const lightning = createHeldConcentration('lightning');
+		const wind = createHeldConcentration('wind');
+		const actor = createConcentratingActor([lightning, wind]);
+		dialog().mockResolvedValue('all');
+
+		expect(await actor.toggleStatusEffect('concentration')).toBe(false);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			lightning.id,
+			wind.id,
+		]);
 	});
 
 	it('goes straight to the core toggle when one concentration is held', async () => {

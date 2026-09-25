@@ -1,10 +1,10 @@
-import localize from '../../utils/localize.js';
-import { getSpellSchoolLabel } from '../../utils/spellLabels.js';
 import {
 	concentrationTrackOf,
 	DEFAULT_CONCENTRATION_TRACK,
 	type HeldConcentration,
-} from '../concentration.js';
+} from '../../utils/concentration.js';
+import localize from '../../utils/localize.js';
+import { getSpellSchoolLabel } from '../../utils/spellLabels.js';
 
 const END_EVERY_TRACK = 'all';
 
@@ -20,12 +20,11 @@ export interface ConcentrationChoice {
 function concentrationSourceName(effect: HeldConcentration): string | null {
 	if (!effect.origin) return null;
 
-	const resolve = (globalThis as Record<string, unknown>).fromUuidSync as
-		| ((uuid: string) => unknown)
-		| undefined;
-	if (typeof resolve !== 'function') return null;
+	const source = fromUuidSync(effect.origin as Parameters<typeof fromUuidSync>[0]) as {
+		name?: string;
+	} | null;
 
-	return (resolve(effect.origin) as { name?: string } | null)?.name ?? null;
+	return source?.name ?? null;
 }
 
 /** Names a held concentration by its spell, with the track it occupies when that is a school. */

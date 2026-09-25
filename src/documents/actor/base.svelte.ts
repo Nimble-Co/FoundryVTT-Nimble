@@ -9,11 +9,11 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
+import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
-import { type ConcentratingActor, heldConcentrations } from '../concentration.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
@@ -328,13 +328,13 @@ class NimbleBaseActor<
 		this._onBeforePrepareData();
 		super.prepareData();
 
-		// Defence in depth for the guard above: rule accumulator arrays live on
-		// the `system` object, so a prepare cycle that somehow reused one would
+		// Defence in depth for the guard above: rule accumulators live on the
+		// `system` object, so a prepare cycle that somehow reused one would
 		// duplicate every afterPrepareData push below.
 		for (const path of actorAccumulatorPaths) {
-			if (foundry.utils.getProperty(this.system, path) !== undefined) {
-				foundry.utils.setProperty(this.system, path, []);
-			}
+			const current = foundry.utils.getProperty(this.system, path);
+			if (current === undefined) continue;
+			foundry.utils.setProperty(this.system, path, current instanceof Set ? new Set() : []);
 		}
 
 		// Call Rule Hooks
@@ -1181,11 +1181,14 @@ class NimbleBaseActor<
 		if (!removing || held.length < 2) return super.toggleStatusEffect(statusId, options);
 
 		const ending = await promptForConcentrationToEnd(held);
-		if (ending.length === 0) return undefined;
+
+		// Core's contract: true when the status is still active afterwards, false
+		// when an effect was removed.
+		if (ending.length === 0) return true;
 
 		await this.deleteEmbeddedDocuments('ActiveEffect', ending);
 
-		return false;
+		return held.length > ending.length;
 	}
 
 	override _onUpdate(

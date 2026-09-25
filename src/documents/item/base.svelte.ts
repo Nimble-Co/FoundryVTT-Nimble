@@ -1,73 +1,14 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
-import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import applyConditionToActor from '../../utils/applyConditionToActor.js';
-import { getSpellScrollData } from '../../utils/createScrollFromSpell.js';
-import {
-	CONCENTRATION_TRACK_FLAG,
-	type ConcentratingActor,
-	concentrationsEndedBy,
-	concentrationTrackForCast,
-} from '../concentration.js';
-
-const CONCENTRATION_PROPERTY_TAG = 'property:concentration';
-
-const SPELL_SCHOOL_TAG_PREFIX = 'school:';
+import { applyCasterConcentration, type ConcentrationSource } from '../../utils/concentration.js';
 
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
-
-/** What came of putting concentration on the caster. */
-type ConcentrationOutcome = 'applied' | 'refused' | 'skipped';
-
-/** The item being activated, as the concentration path reads it. */
-interface ConcentrationSource {
-	uuid?: string | null;
-	type?: unknown;
-	flags?: Record<string, unknown>;
-	tags: Set<string>;
-	actor?: ConcentratingActor | null;
-}
-
-/** The school of the spell being cast, read off a scroll's inscription when it is one. */
-function activatedSpellSchool(item: ConcentrationSource): string | null {
-	for (const tag of item.tags) {
-		if (tag.startsWith(SPELL_SCHOOL_TAG_PREFIX)) return tag.slice(SPELL_SCHOOL_TAG_PREFIX.length);
-	}
-
-	return getSpellScrollData(item)?.school ?? null;
-}
-
-/**
- * Put concentration on an activated item's owner, ending whatever they were
- * already concentrating on that this cast displaces.
- *
- * Driven by the `concentration` property rather than by anything authored on the
- * item, so homebrew spells and inscribed scrolls need no rules of their own.
- */
-async function applyCasterConcentration(item: ConcentrationSource): Promise<ConcentrationOutcome> {
-	if (!item.tags.has(CONCENTRATION_PROPERTY_TAG)) return 'skipped';
-	if (!isRuleAutomationEnabled()) return 'skipped';
-
-	const caster = item.actor;
-	if (!caster) return 'skipped';
-
-	const track = concentrationTrackForCast(activatedSpellSchool(item), caster);
-
-	const effect = await applyConditionToActor(caster, STATUS_EFFECT_IDS.concentration, {
-		sourceItem: item,
-		sourceActor: caster,
-		systemFlags: { [CONCENTRATION_TRACK_FLAG]: track },
-		replaces: concentrationsEndedBy(caster, track),
-	});
-
-	return effect ? 'applied' : 'refused';
-}
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 

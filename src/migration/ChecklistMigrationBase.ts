@@ -78,6 +78,9 @@ function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 			return existing.target === wanted.target;
 		case 'unarmedDamage':
 			return true;
+		case 'concentrationTrack':
+			// One split of a caster's concentration per feature is the whole clause.
+			return true;
 		case 'damageReduction':
 			return (
 				existing.mode === wanted.mode && coversDamageTypes(existing.damageTypes, wanted.damageTypes)

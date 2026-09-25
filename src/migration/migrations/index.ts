@@ -60,3 +60,4 @@ export { Migration059HunterChecklist } from './Migration059HunterChecklist.js';
 export { Migration060ZephyrChecklist } from './Migration060ZephyrChecklist.js';
 export { Migration061ShadowStormChecklist } from './Migration061ShadowStormChecklist.js';
 export { Migration062ConcentrationAppliesToCaster } from './Migration062ConcentrationAppliesToCaster.js';
+export { Migration063MasterOfStormTracks } from './Migration063MasterOfStormTracks.js';

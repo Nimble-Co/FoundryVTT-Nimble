@@ -5,4 +5,6 @@
 
 While the feature is on the character, casting a Wind concentration spell leaves a Lightning concentration alone, and the other way round.
 
-Naming schools splits the caster's single concentration rather than adding to it: two named schools hold two concentrations, never three. Casting in a school the rule does not name ends every concentration the caster is holding, and casting in a named school ends that school's concentration plus any held in an unnamed school. Ending one of two by hand is a choice, so the system asks which.
+The rule reads naming a school as splitting the caster's single concentration rather than adding to it, so two named schools hold two concentrations and no more. Casting in a school the rule does not name ends every concentration the caster is holding, and casting in a named school ends that school's concentration plus any held in an unnamed school. That is the system's reading of what a feature like Master of Storm grants, not printed text.
+
+Ending one of two by hand is a choice, so the system asks which.

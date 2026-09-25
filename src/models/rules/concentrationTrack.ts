@@ -1,3 +1,4 @@
+import { CONCENTRATION_TRACKS_PATH } from '../../utils/concentration.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -33,12 +34,6 @@ declare namespace ConcentrationTrackRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface ActorSystem {
-	system: {
-		concentrationTracks?: Set<string>;
-	};
-}
-
 /**
  * Rule that gives the named spell schools a concentration track of their own,
  * so casting in one of them leaves a concentration held in another alone.
@@ -70,17 +65,9 @@ class ConcentrationTrackRule extends NimbleBaseRule<ConcentrationTrackRule.Schem
 		const { item } = this;
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
-		if (this.schools.length === 0) return;
-
-		const { actor } = item;
-		const actorSystem = actor as object as ActorSystem;
-
-		if (!actorSystem.system.concentrationTracks) {
-			foundry.utils.setProperty(actor.system, 'concentrationTracks', new Set<string>());
-		}
 
 		for (const school of this.schools) {
-			actorSystem.system.concentrationTracks!.add(school);
+			this.addToActorSystemSet(CONCENTRATION_TRACKS_PATH, school);
 		}
 	}
 }

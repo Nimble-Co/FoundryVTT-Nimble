@@ -27,14 +27,18 @@ interface ConcentratingActor {
 	toggleStatusEffect(statusId: string, options?: { active?: boolean }): Promise<unknown>;
 }
 
-/** A roll-less concentration spell of the given school, so activation posts a card and nothing else. */
+/**
+ * A roll-less concentration cantrip of the given school, so activation posts a
+ * card and nothing else. Cantrip because the caster has no class, and a tiered
+ * spell is refused above `highestUnlockedSpellTier`, which is then 0.
+ */
 function concentrationSpellData(name: string, school: string) {
 	return {
 		name,
 		type: 'spell',
 		system: {
 			school,
-			tier: 1,
+			tier: 0,
 			properties: { selected: ['concentration'] },
 			activation: { effects: [] },
 		},

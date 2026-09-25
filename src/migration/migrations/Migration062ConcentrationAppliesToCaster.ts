@@ -84,13 +84,13 @@ function withoutConcentrationNodes(effects: unknown): unknown[] | null {
  * Drop the `condition: concentration` activation nodes the core spells shipped
  * with, now that the property applies the condition on its own.
  *
- * Matched on the property rather than on source ids, so homebrew copies and
- * inscribed scrolls are cleared too. An item without the property keeps its node:
- * nothing else applies the condition there.
+ * Node removal is matched on the property rather than on source ids, so homebrew
+ * copies and inscribed scrolls are cleared too. An item without the property
+ * keeps its node: nothing else applies the condition there.
  *
- * The items whose printed duration or concentration property shipped wrong are
- * corrected here as well, because a copy already on a character is never
- * re-imported from the pack.
+ * The named items are corrected whatever their property says, because a copy
+ * already on a character is never re-imported from the pack, and a GM who
+ * un-ticked Concentration still wants the printed duration.
  */
 class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 	static override readonly version = 62;
@@ -103,17 +103,19 @@ class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 		const fix = CONCENTRATION_PACK_FIXES[toSnapshotId(this.getSourceId(source)) ?? ''];
 
 		if (fix?.addsProperty) this.#addConcentrationProperty(source);
+		if (fix?.duration) this.#correctDuration(source, fix);
 		if (!source.system?.properties?.selected?.includes(CONCENTRATION)) return;
 
 		const remaining = withoutConcentrationNodes(source.system?.activation?.effects);
-		if (remaining) {
-			source.system.activation.effects = remaining;
-			console.log(`Nimble Migration | ${source.name}: removed its concentration condition node`);
-		}
+		if (!remaining) return;
 
-		if (!fix?.duration || !source.system?.activation?.duration) return;
+		source.system.activation.effects = remaining;
+		console.log(`Nimble Migration | ${source.name}: removed its concentration condition node`);
+	}
 
-		const current = source.system.activation.duration;
+	#correctDuration(source: any, fix: ConcentrationPackFix): void {
+		const current = source.system?.activation?.duration;
+		if (!current || !fix.duration) return;
 		if (current.quantity === fix.duration.quantity && current.type === fix.duration.type) return;
 
 		current.quantity = fix.duration.quantity;
@@ -124,9 +126,11 @@ class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 		);
 	}
 
+	/** Creates `selected` when the source never had one, which is how an old object reads. */
 	#addConcentrationProperty(source: any): void {
 		const properties = source.system?.properties;
-		if (!Array.isArray(properties?.selected)) return;
+		if (!properties || typeof properties !== 'object') return;
+		if (!Array.isArray(properties.selected)) properties.selected = [];
 		if (properties.selected.includes(CONCENTRATION)) return;
 
 		properties.selected.push(CONCENTRATION);

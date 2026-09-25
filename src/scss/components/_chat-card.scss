@@ -170,8 +170,7 @@
     border-bottom: var(--nimble-card-section-border, 1px solid var(--nimble-card-border-color));
   }
 
-  // The AoE button is its own bordered control, and carried neither property
-  // while this block was scoped per card.
+  // The AoE button is its own bordered control, so its section adds no frame.
   &--template {
     --nimble-card-section-padding: 0;
     --nimble-card-section-border: none;

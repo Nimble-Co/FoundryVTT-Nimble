@@ -388,6 +388,22 @@ abstract class NimbleBaseRule<
 	}
 
 	/**
+	 * Add an entry to an accumulator Set on the actor's system data, creating the
+	 * Set on first use. Registers the path so the actor empties it at the start of
+	 * each prepare cycle, which matters for values read outside data prep.
+	 */
+	protected addToActorSystemSet(path: string, entry: string): void {
+		actorAccumulatorPaths.add(path);
+		const { actor } = this.item;
+		const existing = foundry.utils.getProperty(actor.system, path) as Set<string> | undefined;
+		if (existing instanceof Set) {
+			existing.add(entry);
+			return;
+		}
+		foundry.utils.setProperty(actor.system, path, new Set([entry]));
+	}
+
+	/**
 	 * Hook called during item pre-creation. Override in subclasses to implement rule-specific logic.
 	 */
 	async preCreate(_args: PreCreateArgs): Promise<void> {

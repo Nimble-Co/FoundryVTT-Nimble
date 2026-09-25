@@ -15,22 +15,34 @@ type ItemSource = {
 	};
 };
 
-function readSources(...globs: string[]): ItemSource[] {
-	return globs
-		.flatMap((pattern) => globSync(pattern))
-		.map((file) => JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8')));
+/** The compendium each pack directory ships as, so a file resolves to its source id. */
+const PACK_NAMES: Record<string, string> = {
+	spells: 'nimble-spells',
+	secretSpells: 'nimble-secret-spells',
+	magicItems: 'nimble-magic-items',
+};
+
+interface PackFile {
+	sourceId: string;
+	item: ItemSource;
+}
+
+function readPackFiles(): PackFile[] {
+	return Object.entries(PACK_NAMES).flatMap(([directory, packName]) =>
+		globSync(`packs/${directory}/**/*.json`).map((file) => {
+			const item = JSON.parse(
+				readFileSync(path.resolve(process.cwd(), file), 'utf-8'),
+			) as ItemSource;
+
+			return { sourceId: `Compendium.nimble.${packName}.Item.${item._id}`, item };
+		}),
+	);
 }
 
 function readSpellSources(): ItemSource[] {
-	return readSources('packs/spells/**/*.json', 'packs/secretSpells/**/*.json');
-}
-
-function readFixedSources(): ItemSource[] {
-	return readSources(
-		'packs/spells/**/*.json',
-		'packs/secretSpells/**/*.json',
-		'packs/magicItems/**/*.json',
-	);
+	return readPackFiles()
+		.filter(({ sourceId }) => !sourceId.includes('nimble-magic-items'))
+		.map(({ item }) => item);
 }
 
 function hasConcentrationNode(effects: unknown): boolean {
@@ -43,13 +55,12 @@ function hasConcentrationNode(effects: unknown): boolean {
 	);
 }
 
-/** The fix table is keyed by compendium source id, whose last segment is the document id. */
-const FIXES_BY_DOCUMENT_ID = new Map(
-	Object.entries(CONCENTRATION_PACK_FIXES).map(([sourceId, fix]) => [
-		sourceId.split('.').at(-1) as string,
-		fix,
-	]),
-);
+/** The pack files Migration062 names, resolved by full compendium source id. */
+function readFixedFiles(): Array<PackFile & { fix: (typeof CONCENTRATION_PACK_FIXES)[string] }> {
+	return readPackFiles()
+		.map((file) => ({ ...file, fix: CONCENTRATION_PACK_FIXES[file.sourceId] }))
+		.filter((file) => file.fix !== undefined);
+}
 
 describe('concentration pack data', () => {
 	it('leaves no concentration condition node on a spell that carries the property', () => {
@@ -61,21 +72,23 @@ describe('concentration pack data', () => {
 		expect(spellsWithRedundantNodes).toEqual([]);
 	});
 
-	it('ships every item Migration062 fixes, under the id the fix is keyed by', () => {
-		const shipped = readFixedSources()
-			.filter((item) => FIXES_BY_DOCUMENT_ID.has(item._id))
-			.map((item) => item.name)
+	it('ships every item Migration062 fixes, at the source id the fix is keyed by', () => {
+		const shipped = readFixedFiles()
+			.map(({ item }) => item.name)
 			.sort();
 
-		expect(shipped).toEqual([...FIXES_BY_DOCUMENT_ID.values()].map((fix) => fix.name).sort());
+		expect(shipped).toEqual(
+			Object.values(CONCENTRATION_PACK_FIXES)
+				.map((fix) => fix.name)
+				.sort(),
+		);
 	});
 
 	it('ships the durations Migration062 corrects existing copies to', () => {
-		const durations = readFixedSources()
-			.map((item) => [item, FIXES_BY_DOCUMENT_ID.get(item._id)] as const)
-			.filter(([, fix]) => fix?.duration)
-			.map(([item, fix]) => [
-				fix!.name,
+		const durations = readFixedFiles()
+			.filter(({ fix }) => fix.duration)
+			.map(({ item, fix }) => [
+				fix.name,
 				{
 					quantity: item.system?.activation?.duration?.quantity,
 					type: item.system?.activation?.duration?.type,
@@ -84,7 +97,7 @@ describe('concentration pack data', () => {
 
 		expect(Object.fromEntries(durations)).toEqual(
 			Object.fromEntries(
-				[...FIXES_BY_DOCUMENT_ID.values()]
+				Object.values(CONCENTRATION_PACK_FIXES)
 					.filter((fix) => fix.duration)
 					.map((fix) => [fix.name, fix.duration]),
 			),
@@ -92,10 +105,10 @@ describe('concentration pack data', () => {
 	});
 
 	it('ships the concentration property Migration062 ticks on existing copies', () => {
-		const missingProperty = readFixedSources()
-			.filter((item) => FIXES_BY_DOCUMENT_ID.get(item._id)?.addsProperty)
-			.filter((item) => !item.system?.properties?.selected?.includes('concentration'))
-			.map((item) => item.name);
+		const missingProperty = readFixedFiles()
+			.filter(({ fix }) => fix.addsProperty)
+			.filter(({ item }) => !item.system?.properties?.selected?.includes('concentration'))
+			.map(({ item }) => item.name);
 
 		expect(missingProperty).toEqual([]);
 	});

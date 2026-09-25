@@ -220,7 +220,11 @@ async function removeReplacedEffects(
 
 /**
  * Put back what `removeReplacedEffects` took, so a caster whose replacement was
- * refused keeps the concentration they had rather than ending with none.
+ * refused keeps the condition they had rather than ending with none.
+ *
+ * Whatever refused the replacement usually refuses the restore too, and losing a
+ * condition silently is worse than the original failure, so the loss is told to
+ * the user rather than left in the console.
  */
 async function restoreReplacedEffects(
 	target: ConditionTargetActor,
@@ -229,13 +233,19 @@ async function restoreReplacedEffects(
 	if (sources.length === 0) return;
 
 	const activeEffectClass = activeEffectImplementation();
+	let lost = 0;
 
 	for (const source of sources) {
 		try {
 			await activeEffectClass.create(source, { parent: target, keepId: true });
 		} catch (error) {
+			lost += 1;
 			console.error('Nimble | Could not restore a replaced condition.', error);
 		}
+	}
+
+	if (lost > 0) {
+		ui.notifications?.error('NIMBLE.ui.conditionReplacementLost', { localize: true });
 	}
 }
 

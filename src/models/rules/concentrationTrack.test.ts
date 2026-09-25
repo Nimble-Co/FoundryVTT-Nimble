@@ -18,7 +18,7 @@ function createRule(
 	const item = {
 		isEmbedded: itemOptions?.isEmbedded ?? true,
 		actor,
-		name: 'Master of Storm',
+		name: 'Test Item',
 		uuid: 'test-item-uuid',
 		getDomain: () => new Set<string>(),
 	};
