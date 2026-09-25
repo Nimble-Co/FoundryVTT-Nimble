@@ -16,6 +16,31 @@ describe('calculateInventorySlotCost slot costs', () => {
 		expect(calculateInventorySlotCost([makeObject('sword', { slotsRequired: 2 })])).toBe(2);
 	});
 
+	it('charges the stowed cost for a slot-sized object that is not equipped', () => {
+		const armor = makeObject('armor', { slotsRequired: 1, stowedSlotsRequired: 2 });
+
+		expect(calculateInventorySlotCost([armor])).toBe(2);
+	});
+
+	it('charges the worn cost once the same object is equipped', () => {
+		const armor = makeObject('armor', {
+			slotsRequired: 1,
+			stowedSlotsRequired: 2,
+			equipped: true,
+		});
+
+		expect(calculateInventorySlotCost([armor])).toBe(1);
+	});
+
+	it('charges an unstowable object the same either way', () => {
+		const sword = makeObject('sword', { slotsRequired: 2 });
+
+		expect(calculateInventorySlotCost([sword])).toBe(2);
+		expect(
+			calculateInventorySlotCost([makeObject('worn', { slotsRequired: 2, equipped: true })]),
+		).toBe(2);
+	});
+
 	it('charges one slot per started stack for stackable objects', () => {
 		const arrows = makeObject('arrows', {
 			objectSizeType: 'stackable',
@@ -164,6 +189,16 @@ describe('getContainerUsedCapacity', () => {
 		];
 
 		expect(getContainerUsedCapacity(stored)).toBe(3);
+	});
+
+	it('measures stored armor at its stowed cost, since a stored object is never worn', () => {
+		const armor = makeObject('armor', {
+			slotsRequired: 1,
+			stowedSlotsRequired: 2,
+			containerId: 'chest',
+		});
+
+		expect(getContainerUsedCapacity([armor])).toBe(2);
 	});
 
 	it('measures stored objects at full cost even when the container waives it', () => {

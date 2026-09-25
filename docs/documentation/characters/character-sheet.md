@@ -65,6 +65,8 @@ A container keeps its own slot cost; what its contents cost you depends on how t
 
 You cannot equip something that is packed away, so stored items show a quantity field rather than an equip toggle. Dragging an item you have equipped into a container asks you to confirm before unequipping it.
 
+Some items cost more packed away than they do in use. Armor is the one the rulebook names: worn it takes 1 slot, and stowed it takes 2. Unequipping a suit of armor, or putting it in a container, raises the slot total to match.
+
 Deleting a container that still holds something asks you to confirm first, then leaves its contents in the inventory at their own slot cost.
 
 ### Features

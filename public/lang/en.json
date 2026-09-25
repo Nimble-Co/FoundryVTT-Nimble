@@ -529,6 +529,10 @@
 			"reduce": "Reduce slot cost",
 			"half": "Half slot cost"
 		},
+		"inventory": {
+			"stowedSlotsRequired": "Slots When Stowed",
+			"stowedSlotsRequiredHint": "Slots this takes while it is not equipped. Worn armor takes 1 slot and the same armor packed away takes 2. Leave blank to cost the same either way."
+		},
 		"containers": {
 			"allowedObjectTypes": "Allowed Object Types",
 			"allowedObjectTypesHint": "Only objects of these types may be stored. Select none to allow anything.",
