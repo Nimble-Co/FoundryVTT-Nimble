@@ -51,7 +51,7 @@ Even with Can Crit ticked, some attacks never crit: template (AoE) attacks, atta
 Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, a condition, a saving throw, or a note.
 
 - **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit.
-- **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**.
+- **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**. Two placeholders fill in with numbers recorded when the card is posted. `{spacesMovedThisTurn}` is how many spaces the user has moved this turn, or "unknown" outside combat or with movement tracking off. `{targetsSpacesAway}` lists how far each target is from the user's token, for example "Goblin: 5 spaces, Ogre: 1 space", or "no target". A target added to the card later is measured when it is added. The numbers do not change when a token moves after that.
 
 ### Healing
 

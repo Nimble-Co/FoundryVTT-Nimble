@@ -125,6 +125,17 @@ Every granted move in the books happens as part of the effect that grants it. So
 
 When the toggle is off, nothing is labelled and the card shows the distance as plain text.
 
+Some features grant a Free Move without being used, for example when a creature gains dice in a pool, rolls Initiative, starts its turn or is crit. These post a small Movement Offer card of their own, which says why the offer was made. It works the same as the offer on a feature's card: the creature carries it, the drag is labelled, and the card records the result or the lapse. A feature that moves allies too offers one move to each ally in range, and each player moves their own token.
+
+## Features that react to movement
+
+With **Movement Tracking** on, a feature can react when its creature finishes a move, or when another creature finishes a move near it: an enemy that moves next to you, or the enemies you moved toward. The system never uses the feature for you. It posts a card that names the creatures the move found:
+
+- For a feature you use in reply, such as a Reaction, the card has a **Use** button for the feature's owner. It targets the creatures the card names and then uses the feature as normal, so the player can still change the targets or cancel. Nothing is spent until the feature is used.
+- For a feature that only changes what happens next, the card is a reminder, for example that your next melee attack against that enemy has advantage. A feature limited to some uses per round or per encounter spends the use when the reminder posts.
+
+A move counts from where it began to where it stopped. A move broken into two drags is two moves, but a feature that needs "at least 4 spaces" counts all the spaces moved this turn unless it says otherwise. Each stop that meets the condition posts a new card; whether the feature applies again is the table's call.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.

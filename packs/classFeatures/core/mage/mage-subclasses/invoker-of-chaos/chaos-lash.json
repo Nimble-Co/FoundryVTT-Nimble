@@ -6,21 +6,118 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "chaos-lash-use-pool",
+				"identifier": "chaos-lash-use",
+				"label": "Chaos Lash use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "chaos-lash-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "chaos-lash-use",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "movementTrigger",
+				"disabled": false,
+				"id": "chaos-lash-trigger",
+				"identifier": "",
+				"label": "Chaos Lash",
+				"predicate": {
+					"self:chaos-lash-useChargePool": {
+						"min": 1
+					}
+				},
+				"priority": 3,
+				"event": "creatureMoved",
+				"creature": "enemy",
+				"kinds": [
+					"regular",
+					"free",
+					"forced"
+				],
+				"minSpaces": 0,
+				"spacesScope": "thisTurn",
+				"geometry": "enteredReach",
+				"reach": 1,
+				"minTargets": 1,
+				"observerScope": "self",
+				"allyRadius": 6,
+				"payload": "use",
+				"message": "",
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "",
+				"details": "when an enemy moves adjacent to you",
 				"quantity": 1,
-				"type": "none",
-				"isReaction": false
+				"type": "action",
+				"isReaction": true
 			},
 			"duration": {
 				"details": "",
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "gmO2MKqpZnQXXYfP",
+					"type": "move",
+					"kind": "forced",
+					"recipient": "targets",
+					"distance": "2",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": true,
+					"direction": "away",
+					"chooser": "source",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "aT3fhQwScelVWqMl",
+					"type": "savingThrow",
+					"savingThrowType": "will",
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "will",
+					"on": {
+						"failedSave": [
+							{
+								"id": "ygKnUFB52UVUP3K3",
+								"type": "condition",
+								"condition": "prone",
+								"parentContext": "failedSave",
+								"parentNode": "aT3fhQwScelVWqMl"
+							}
+						]
+					},
+					"sharedRolls": []
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

@@ -6,15 +6,16 @@
  * Types whose producers are plain document methods are driven through the real
  * flow (rolls, item activation, rests, level-up summary). Types whose only
  * producers live inside interactive dialogs or combat UI flows (assessAction,
- * moveAction, reaction, chargeAdjustment, minionGroupAttack) are created with
- * the same message shape their producer builds — that still exercises the V14
- * subtype data model and the card's Svelte mount, which is what this suite
- * certifies.
+ * moveAction, reaction, chargeAdjustment, minionGroupAttack), or in the
+ * movement posters that need a live Movement (movementOffer, movementTrigger),
+ * are created with the same message shape their producer builds. That still
+ * exercises the V14 subtype data model and the card's Svelte mount, which is
+ * what this suite certifies.
  *
  * Note: system.json declares `boon` and `damage` ChatMessage subtypes, but
  * neither has a data model, card component, or producer (a boon activation
  * posts a `base` message). They are vestigial declarations, so this suite
- * covers the 14 registered subtypes.
+ * covers the 16 registered subtypes.
  *
  * RestManager is imported from source into the live page: it has no module
  * state and operates purely on the actor passed to it, so the /@fs copy
@@ -137,8 +138,9 @@ describe('chat message cards', () => {
 
 	test('dialog-produced cards render from their producer data shapes', async () => {
 		// Shapes mirror AssessActionDialog, executeMoveAction,
-		// buildReactionChatData, the charge system, and
-		// buildNcsGroupAttackChatData respectively.
+		// buildReactionChatData, the charge system, buildNcsGroupAttackChatData,
+		// postMovementOfferCard and postMovementTriggerCard respectively.
+		const moveNodeId = foundry.utils.randomID();
 		const producerShapedData: Record<string, Record<string, unknown>> = {
 			assessAction: {
 				actorName: actor.name,
@@ -179,6 +181,63 @@ describe('chat message cards', () => {
 				rows: [],
 				skippedMembers: [],
 				unsupportedWarnings: [],
+			},
+			movementOffer: {
+				actorName: actor.name,
+				actorType: actor.type,
+				image: 'icons/svg/item-bag.svg',
+				permissions: 3,
+				rollMode: 0,
+				name: 'Test Shove',
+				reason: 'A test reason for the offer.',
+				targets: ['Scene.chatCardTest.Token.chatCardTarget'],
+				activation: {
+					effects: [
+						{
+							id: moveNodeId,
+							type: 'move',
+							kind: 'forced',
+							recipient: 'targets',
+							distance: '2',
+							distanceBySize: {},
+							ignoreDifficultTerrain: false,
+							direction: 'away',
+							chooser: 'source',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				movementOffers: [
+					{
+						id: foundry.utils.randomID(),
+						nodeId: moveNodeId,
+						tokenUuid: 'Scene.chatCardTest.Token.chatCardTarget',
+						name: 'Test Target',
+						kind: 'forced',
+						spaces: 2,
+						ignoreDifficultTerrain: false,
+						state: 'unused',
+						usedBy: null,
+						movedSpaces: null,
+						stopped: false,
+					},
+				],
+			},
+			movementTrigger: {
+				actorName: actor.name,
+				actorType: actor.type,
+				image: 'icons/svg/item-bag.svg',
+				permissions: 3,
+				rollMode: 0,
+				name: 'Test Trigger Feature',
+				itemUuid: '',
+				payload: 'reminder',
+				message: 'Test Mover moved 3 spaces.',
+				targets: [],
+				moverName: 'Test Mover',
+				spaces: 3,
+				spacesThisTurn: 3,
 			},
 		};
 

@@ -20,7 +20,21 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "Z2RgHVnXzsRTuIWI",
+					"type": "move",
+					"kind": "free",
+					"recipient": "self",
+					"distance": "@speed",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": true,
+					"direction": "any",
+					"chooser": "mover",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

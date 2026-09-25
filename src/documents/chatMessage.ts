@@ -23,6 +23,7 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
+import { type ContextCard, reconcileMovementContext } from '#utils/movement/movementContext.js';
 import { type OfferCard, reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
@@ -990,14 +991,20 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = [...new Set([...existingTargets, ...added])];
 
 		return this.update({
-			system: { targets, movementOffers: this.#movementOffersFor(targets) },
+			system: { targets, ...this.#movementRecordsFor(targets) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
-	/** The card's Movement Offers once its targets change. */
-	#movementOffersFor(targets: string[]): MovementOffer[] {
-		const system = this.system as OfferCard['system'];
-		return reconcileMovementOffers({ speaker: this.speaker, system: { ...system, targets } });
+	/** The card's Movement Offers, and its Movement context when it keeps one, once its targets change. */
+	#movementRecordsFor(targets: string[]): {
+		movementOffers: MovementOffer[];
+		movementContext?: ReturnType<typeof reconcileMovementContext>;
+	} {
+		const system = this.system as OfferCard['system'] & ContextCard['system'];
+		const card = { speaker: this.speaker, system: { ...system, targets } };
+		const movementOffers = reconcileMovementOffers(card);
+		if (!system?.movementContext) return { movementOffers };
+		return { movementOffers, movementContext: reconcileMovementContext(card) };
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */
@@ -1426,7 +1433,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = existingTargets.filter((id) => id !== targetId);
 
 		return this.update({
-			system: { targets, movementOffers: this.#movementOffersFor(targets) },
+			system: { targets, ...this.#movementRecordsFor(targets) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 

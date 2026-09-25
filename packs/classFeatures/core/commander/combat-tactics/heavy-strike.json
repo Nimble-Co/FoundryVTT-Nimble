@@ -27,6 +27,22 @@
 					"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
 					"parentContext": null,
 					"parentNode": null
+				},
+				{
+					"id": "ZlYMdKeVkcuJ7Uux",
+					"type": "move",
+					"kind": "forced",
+					"recipient": "targets",
+					"distance": "@strength",
+					"distanceBySize": {
+						"small": "@strength * 2",
+						"large": "floor(@strength / 2)"
+					},
+					"ignoreDifficultTerrain": true,
+					"direction": "away",
+					"chooser": "source",
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,

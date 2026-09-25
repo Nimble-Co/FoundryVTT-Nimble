@@ -33,9 +33,23 @@ The actor collects all enabled rules from all items, sorts by `priority` (lower 
 
 Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from the corresponding system events. See `NimbleBaseRule` for the full surface.
 
+### `onActiveGmTurnStart(context)` and `onPoolGain(context)`
+
+`onTurnStart` comes from core `combatTurn`, which runs only on the client that advanced the turn. That client can belong to a different player, who cannot change this actor. `onActiveGmTurnStart` takes the same `TurnContext` (combat, combatant, actor) but comes from Nimble's `nimbleCombatTurnStart` hook, which the combat document calls once per turn start, on the active GM only. Use it when the rule must write to the actor or post exactly one card.
+
+`onPoolGain` fires when one of the actor's dice pools gains dice, on the client that changed the pool (the `nimble.dicePool.changed` hook). The context holds `actor`, `poolIdentifier` (the bare identifier, with the `actor:` prefix removed) and `poolLabel`. `src/hooks/ruleEventDispatch.ts` dispatches both through the same `dispatch()` as every other event, so the `applyRuleEffects` toggle gates them.
+
 ### `onMovementFinished(context)`
 
 Fires once per finished token Movement (one drag; a Teleport is reported too, with kind `teleport` and zero spaces) when the Movement Tracking toggle is on. The system hook `nimble.movementFinished` carries a `MovementRecord` on every client; the active GM dispatches it, in order and awaiting each, to the mover's rules first and then to the rules of every other actor with a token on the same scene. Like every other lifecycle event it is also skipped when `applyRuleEffects` is off. The context holds `record` (token, actor, movementId, kind `regular | free | forced | teleport`, action, origin, stop, path, spaces, spacesThisTurn, stopped, user), the observing `actor` and `token`, and `isMover`. Use `reachChanges(record, observerToken, reach)` from `src/utils/movement/reachChanges.ts` to learn whether the mover entered, left or passed through the observer's Reach.
+
+The `movementTrigger` rule is the authored consumer. It tests its predicate, then runs `matchMovementTrigger` (`src/utils/movement/matchMovementTrigger.ts`) on the record, then checks its charge pool, and posts a `movementTrigger` chat card through `postMovementTriggerCard`, spoken by the observer's token. The payload is `use` (the card lets the owner use the owning item on the tokens the match found) or `reminder`. It never deals damage and never moves a token.
+
+### Rules that post a Movement Offer
+
+`freeMove` posts a standalone `movementOffer` chat card through `postMovementOfferCard` (`src/utils/movement/postMovementOfferCard.ts`). The card carries one synthetic `move` node and is stamped with its offers before it is created, so arming, the drag tag, settling and lapsing work the same as for an activation card. Each trigger posts on exactly one client: `onActivation` (this item's `onItemActivated`) and `onInitiativeRolled` on the acting client, `onTurnStart` (the stored trigger value; the rule overrides `onActiveGmTurnStart`) once on the active GM, `onCritReceived` (`onAttackReceived` with `isCritical`) on the GM who applied damage, and `onPoolGain` on the client that changed the pool. Both lifecycle methods are gated by `applyRuleEffects`, not by chat notifications.
+
+Both rules take a `chargePoolIdentifier`: when set, the rule fires only while that pool holds a charge and spends one when its card posts (`src/utils/chargePool/ruleChargeGate.ts`). An offer to use an item leaves it empty and gates on the `self:<identifier>ChargePool` tag instead, so the item's own consumer spends the charge only when the player uses it.
 
 ## Key Patterns
 
