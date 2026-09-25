@@ -1,3 +1,7 @@
+import { systemHookName } from '#system';
+import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { buildMovementRecord } from '../../utils/movement/buildMovementRecord.js';
+
 interface CombatantCreateData {
 	type: string;
 	tokenId: string;
@@ -65,6 +69,42 @@ export class NimbleTokenDocument extends TokenDocument {
 			createData as Combatant.CreateData[],
 		);
 		return created ?? [];
+	}
+
+	#lastFinishedMovementId: string | null = null;
+
+	protected override _onUpdateMovement(
+		movement: TokenDocument.MovementOperation,
+		operation: TokenDocument.Database.OnUpdateOptions,
+		user: User.Stored,
+	): void {
+		super._onUpdateMovement(movement, operation, user);
+		if (this.movement.id !== movement.id) return;
+		this.#emitMovementFinished();
+	}
+
+	protected override _onMovementStopped(): void {
+		super._onMovementStopped();
+		this.#emitMovementFinished();
+	}
+
+	// Runs on every client. `this.movement` already carries the final state when
+	// core calls the callbacks above, so one check covers checkpoints and stops.
+	#emitMovementFinished(): void {
+		if (!isMovementTrackingAutomationEnabled()) return;
+		const movement = this.movement as unknown as Parameters<typeof buildMovementRecord>[1];
+		if (movement.state !== 'completed' && movement.state !== 'stopped') return;
+		const movementId = movement.chain[0] ?? movement.id;
+		if (this.#lastFinishedMovementId === movementId) return;
+		this.#lastFinishedMovementId = movementId;
+
+		const record = buildMovementRecord(
+			this as unknown as Parameters<typeof buildMovementRecord>[0],
+			movement,
+		);
+		if (!record) return;
+		// @ts-expect-error - movementFinished is a custom system hook
+		Hooks.callAll(systemHookName('movementFinished'), record);
 	}
 
 	override getBarAttribute(

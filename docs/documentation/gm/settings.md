@@ -8,7 +8,7 @@ You'll find the system's settings in Foundry under **Game Settings → Configure
 
 ## Automation
 
-How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with eight world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
+How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with nine world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
 
 - **Apply Conditions and Effects from Rules.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and timed effects end on their own. When off, conditions still appear as one-click buttons on the chat card. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
 - **Derived Conditions.** Conditions implied by other conditions are applied and removed automatically, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
@@ -17,6 +17,7 @@ How much the system does on its own is controlled from one place: the **Configur
 - **Action Tracking.** Using an item during combat spends the combatant's actions.
 - **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
 - **Combat Convenience.** Player characters roll initiative automatically when combat starts.
+- **Movement Tracking.** The system reports each finished token move to features and, during combat, keeps count of the spaces moved this turn, so features can react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, nothing is recorded and movement rules stay silent. See [Running Combat](combat.md#movement-tracking).
 - **Chat Notifications.** Informational messages such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements.
 
 Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on.
@@ -41,7 +42,9 @@ Saved conditions appear alongside the built-in ones in the token status panel, b
 
 **Auto-Add Character To Combat On Initiative Roll** is off by default. When on, a player rolling initiative from their character sheet is added to the current scene's combat automatically if they're not in it yet. Great for tables where "roll initiative!" is the announcement itself; leave it off if you prefer to build the tracker by hand. World setting.
 
-**Auto-Track Token Adjacency** is off by default, with the companion **Adjacency Includes Diagonals** (on by default). When enabled, the system tracks how many enemies are adjacent to each combatant during fights, so features whose conditions (the Condition box) depend on adjacency work automatically. Leave it off unless your party has such features: it's extra bookkeeping the system only needs when something actually reads it. Both are world settings and require a reload. Details in [Running Combat](combat.md).
+**Auto-Track Token Adjacency** is off by default. When enabled, the system tracks how many enemies are adjacent to each combatant during fights, so features whose conditions (the Condition box) depend on adjacency work automatically. Leave it off unless your party has such features: it's extra bookkeeping the system only needs when something actually reads it. World setting, requires a reload. Details in [Running Combat](combat.md).
+
+Whether a diagonal counts as adjacent is Foundry's own **Grid Diagonals** setting (under Core Settings). The rulebook offers three table options and each has a matching choice there: *Equidistant* means diagonals are adjacent (the default), *Illegal* means they are not, and either *Alternating* choice counts every other diagonal. Foundry also lists *Exact*, *Approximate* and *Rectilinear*, which the rulebook does not describe. The system reads the setting everywhere it measures spaces.
 
 ::: tip A high-automation table
 Want the system to carry as much as possible? Leave every Automation toggle **on** (the default), then turn **on** Auto-Add Character To Combat On Initiative Roll and Auto-Expand Rolls (each player sets this last one themselves). Add Auto-Track Token Adjacency if anyone's features care about flanking-style positioning. Result: conditions land on their own, resources spend and refill themselves, the tracker fills itself, and every roll is fully readable at a glance.

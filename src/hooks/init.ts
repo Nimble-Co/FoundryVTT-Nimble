@@ -32,6 +32,7 @@ import actorDataModels from '../models/actor/actorDataModels.js';
 import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
+import { registerMovementActions } from '../utils/movement/movementActions.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -86,6 +87,9 @@ export default function init() {
 
 	// Register Nimble custom Die modifiers (khn / kln — leftmost-on-tie keep).
 	registerNimbleDieModifiers();
+
+	// Movement actions must exist before Foundry freezes CONFIG.Token.movement.actions in setup.
+	registerMovementActions();
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;
