@@ -18,6 +18,7 @@ const RULE_ICONS: Record<string, string> = {
 	chargeConsumer: 'fa-solid fa-arrow-down-from-line',
 	chargePool: 'fa-solid fa-battery-three-quarters',
 	combatMana: 'fa-solid fa-droplet',
+	concentrationTrack: 'fa-solid fa-brain',
 	conditionImmunity: 'fa-solid fa-shield-virus',
 	damageBonus: 'fa-solid fa-explosion',
 	dyingActionLimit: 'fa-solid fa-skull',

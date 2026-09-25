@@ -116,10 +116,11 @@
 
 <style lang="scss">
 	.nimble-card-section {
+		--nimble-card-section-padding: 0.5rem;
+
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		padding: 0.5rem;
 	}
 
 	.hit-dice-spent {

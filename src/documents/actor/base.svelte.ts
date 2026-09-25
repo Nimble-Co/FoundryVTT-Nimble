@@ -9,12 +9,14 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
+import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
@@ -326,13 +328,13 @@ class NimbleBaseActor<
 		this._onBeforePrepareData();
 		super.prepareData();
 
-		// Defence in depth for the guard above: rule accumulator arrays live on
-		// the `system` object, so a prepare cycle that somehow reused one would
+		// Defence in depth for the guard above: rule accumulators live on the
+		// `system` object, so a prepare cycle that somehow reused one would
 		// duplicate every afterPrepareData push below.
 		for (const path of actorAccumulatorPaths) {
-			if (foundry.utils.getProperty(this.system, path) !== undefined) {
-				foundry.utils.setProperty(this.system, path, []);
-			}
+			const current = foundry.utils.getProperty(this.system, path);
+			if (current === undefined) continue;
+			foundry.utils.setProperty(this.system, path, current instanceof Set ? new Set() : []);
 		}
 
 		// Call Rule Hooks
@@ -1159,6 +1161,34 @@ class NimbleBaseActor<
 		}
 
 		return super._preUpdate(changes, options, user);
+	}
+
+	/**
+	 * Concentration is the one condition an actor can hold more than one of, and
+	 * core's toggle deletes every unlinked match in a single call. Turning it off
+	 * while two tracks are held asks which to end instead of ending both.
+	 */
+	override async toggleStatusEffect(
+		statusId: string,
+		options: Actor.ToggleStatusEffectOptions = {},
+	): Promise<ActiveEffect.Implementation | boolean | undefined> {
+		if (statusId !== STATUS_EFFECT_IDS.concentration) {
+			return super.toggleStatusEffect(statusId, options);
+		}
+
+		const held = heldConcentrations(this as object as ConcentratingActor);
+		const removing = options.active === false || (options.active === undefined && held.length > 0);
+		if (!removing || held.length < 2) return super.toggleStatusEffect(statusId, options);
+
+		const ending = await promptForConcentrationToEnd(held);
+
+		// Core's contract: true when the status is still active afterwards, false
+		// when an effect was removed.
+		if (ending.length === 0) return true;
+
+		await this.deleteEmbeddedDocuments('ActiveEffect', ending);
+
+		return held.length > ending.length;
 	}
 
 	override _onUpdate(

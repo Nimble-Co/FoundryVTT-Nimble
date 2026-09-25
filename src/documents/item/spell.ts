@@ -181,10 +181,6 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					higherLevelEffect: showDescription ? higherLevelEffect : '',
 					upcastEffect: showDescription ? upcastEffect : '',
 				},
-				duration: {
-					concentration: this.tags.has('property:concentration'),
-					period: this.tags.has('property:utility'),
-				},
 				img: this.img ?? 'icons/svg/explosion.svg',
 				tier: this.system.tier,
 				school: this.system.school,
