@@ -15,6 +15,7 @@ export function createContainableObject(
 			objectType: 'misc',
 			objectSizeType: 'slots',
 			slotsRequired: 1,
+			stowedSlotsRequired: null,
 			quantity: 1,
 			stackSize: 2,
 			equipped: false,

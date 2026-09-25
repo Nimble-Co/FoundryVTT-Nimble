@@ -4,11 +4,14 @@ import type { ContainableObject, ContainerStorageRejection } from '#types/invent
  * Slots the object occupies before any container changes them. `null` for small
  * objects, which share a single slot across the whole inventory rather than
  * costing anything individually.
+ *
+ * An object can cost more stowed than it does in use: worn armor takes one slot
+ * and the same armor packed away takes two.
  */
 function getBaseSlotCost(object: ContainableObject): number | null {
 	switch (object.system.objectSizeType) {
 		case 'slots':
-			return object.system.slotsRequired;
+			return getSlotsRequired(object);
 		case 'stackable':
 			return Math.ceil(object.system.quantity / object.system.stackSize);
 		case 'smallSized':
@@ -18,6 +21,14 @@ function getBaseSlotCost(object: ContainableObject): number | null {
 				`Nimble | Can't calculate slots used for object size type ${object.system.objectSizeType}`,
 			);
 	}
+}
+
+function getSlotsRequired(object: ContainableObject): number {
+	const { slotsRequired, stowedSlotsRequired, equipped } = object.system;
+
+	if (equipped || stowedSlotsRequired === null) return slotsRequired;
+
+	return stowedSlotsRequired;
 }
 
 /**
