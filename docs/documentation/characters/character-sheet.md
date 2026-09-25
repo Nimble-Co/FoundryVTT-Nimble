@@ -61,6 +61,10 @@ Items set up as containers, such as a chest, a backpack, a pouch or a quiver, sh
 - **To take something out**, drag it onto an item carried directly, or onto any empty part of the inventory list.
 - **To move it between containers**, drag it straight onto the other one.
 
+Every row also has a button for this, so none of it needs a drag. On a carried item it stores the
+item, asking which container when you have more than one; on a stored item it takes the item back
+out. The item's name is a button too: press it to use the item.
+
 A container keeps its own slot cost; what its contents cost you depends on how the container is set up, and the slot total at the bottom of the tab reflects that. If a container has a capacity, the row says how much of it is in use, a drop that would not fit is refused, and so is raising a stored stack past the limit.
 
 You cannot equip something that is packed away, so stored items show a quantity field rather than an equip toggle. Dragging an item you have equipped into a container asks you to confirm before unequipping it.

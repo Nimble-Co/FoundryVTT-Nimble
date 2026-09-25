@@ -17,6 +17,7 @@
 		storeItemInContainer = () => {},
 		removeItemFromContainer = () => {},
 		deleteItem = () => {},
+		activateItem = () => {},
 		toggleEquipment = () => {},
 		confirmDeleteWithContents = () => true,
 		onDragStart = () => {},
@@ -29,6 +30,7 @@
 		storeItemInContainer?: (itemId: string, containerId: string) => unknown;
 		removeItemFromContainer?: (itemId: string) => unknown;
 		deleteItem?: (itemId: string) => unknown;
+		activateItem?: (itemId: string) => unknown;
 		toggleEquipment?: (itemId: string) => unknown;
 		confirmDeleteWithContents?: (itemId: string) => boolean | Promise<boolean>;
 		onDragStart?: (event: DragEvent) => unknown;
@@ -86,7 +88,7 @@
 		storeItemInContainer: untrack(() => storeItemInContainer),
 		removeItemFromContainer: untrack(() => removeItemFromContainer),
 		update: () => {},
-		activateItem: () => {},
+		activateItem: untrack(() => activateItem),
 		createItem: () => {},
 		configureItem: () => {},
 		deleteItem: untrack(() => deleteItem),

@@ -5,6 +5,7 @@ export type InventoryRowItem = {
 	_id: string;
 	reactive: {
 		_id: string;
+		name?: string;
 		system: {
 			objectType: string;
 			containerId?: string;
@@ -70,4 +71,29 @@ export function groupItemsByType<T extends InventoryRowItem>(items: T[]): Record
 
 		return categories;
 	}, {});
+}
+
+/** A container this row's item could be moved into, named for a picker. */
+export type ContainerChoice = { _id: string; name: string };
+
+/**
+ * The containers an item may be moved into: every container carried except the
+ * one already holding it, and none at all for a container, which cannot nest.
+ */
+export function getContainerChoices<T extends InventoryRowItem & { reactive: { name: string } }>(
+	items: T[],
+	movedItem: InventoryRowItem,
+): ContainerChoice[] {
+	if (isContainer(movedItem)) return [];
+
+	const holdingId = movedItem.reactive.system.containerId ?? '';
+
+	return items
+		.filter(
+			(item) =>
+				isContainer(item) &&
+				item.reactive._id !== holdingId &&
+				item.reactive._id !== movedItem.reactive._id,
+		)
+		.map((item) => ({ _id: item.reactive._id, name: item.reactive.name }));
 }
