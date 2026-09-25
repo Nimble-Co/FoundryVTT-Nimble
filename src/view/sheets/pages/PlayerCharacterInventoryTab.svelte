@@ -14,6 +14,8 @@
 	import SearchBar from '#view/sheets/components/SearchBar.svelte';
 	import {
 		canToggleEquipment,
+		type ContainerChoice,
+		getContainerChoices,
 		getDropTargetContainerId,
 		groupItemsByContainer,
 		groupItemsByType,
@@ -184,6 +186,48 @@
 		await sheet._onDropItem(event, dropData, { containerId });
 	}
 
+	/**
+	 * Moves an object in or out of a container without a drag. One container needs no
+	 * question; several ask which. A stored object goes back to being carried directly.
+	 */
+	async function moveItemWithoutDragging(event, item): Promise<void> {
+		event.stopPropagation();
+
+		if (item.reactive.system.containerId) {
+			await actor.removeItemFromContainer(item._id);
+			return;
+		}
+
+		const choices = getContainerChoices(items, item);
+		if (choices.length === 0) return;
+
+		const containerId =
+			choices.length === 1 ? choices[0]._id : await askWhichContainer(item, choices);
+		if (!containerId) return;
+
+		await actor.storeItemInContainer(item._id, containerId);
+	}
+
+	async function askWhichContainer(item, choices: ContainerChoice[]): Promise<string | null> {
+		const options = choices
+			.map(({ _id, name }) => `<option value="${_id}">${foundry.utils.escapeHTML(name)}</option>`)
+			.join('');
+
+		const chosen = await foundry.applications.api.DialogV2.prompt({
+			window: { title: localize('NIMBLE.containers.chooseContainerTitle') },
+			content: `<p>${localize('NIMBLE.containers.chooseContainer', {
+				object: foundry.utils.escapeHTML(item.reactive.name),
+			})}</p><select name="containerId">${options}</select>`,
+			ok: {
+				callback: (_event, button) => button.form?.elements?.containerId?.value ?? null,
+			},
+			rejectClose: false,
+			modal: true,
+		});
+
+		return typeof chosen === 'string' ? chosen : null;
+	}
+
 	/** Highlights the container a drag is currently over. */
 	function handleContainerDragEnter(item): void {
 		if (!isContainer(item)) return;
@@ -240,6 +284,11 @@
 		items.filter((item) => !visibleContainerIds.has(item.reactive.system.containerId)),
 	);
 	let storedItemsByContainerId = $derived(groupItemsByContainer(items));
+	let containerNames = $derived(
+		Object.fromEntries(
+			items.filter(isContainer).map((item) => [item.reactive._id, item.reactive.name]),
+		),
+	);
 	let categorizedItems = $derived(groupItemsByType(topLevelItems));
 
 	let containerCapacityUsage = $derived(
@@ -301,8 +350,9 @@
 	{@const metadata = getObjectMetadata(item)}
 	{@const rules = itemRulesManagers.get(item.id)}
 
-	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
-	<!-- svelte-ignore  a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- Clicking the row is a pointer shortcut. The name below is the keyboard path. -->
 	<li
 		class="nimble-document-card nimble-document-card--actor-inventory"
 		class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
@@ -318,7 +368,6 @@
 		data-tooltip-direction="LEFT"
 		onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
 		draggable="true"
-		role="button"
 		ondragstart={(event) => {
 			// A container row wraps its contents, so without this the drag data is
 			// overwritten by the container as the event bubbles out of a stored row.
@@ -344,7 +393,16 @@
 			{/if}
 
 			<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
-				{item.reactive.name}
+				<button
+					class="nimble-document-card__name-button"
+					type="button"
+					onclick={(event) => {
+						event.stopPropagation();
+						actor.activateItem(item._id);
+					}}
+				>
+					{item.reactive.name}
+				</button>
 			</h4>
 
 			<div class="nimble-document-card__charges">
@@ -393,6 +451,33 @@
 					onclick={(event) => event.stopPropagation()}
 					onchange={({ currentTarget }) => updateItemQuantity(item, currentTarget.value)}
 				/>
+			{/if}
+
+			{#if item.reactive.system.containerId}
+				<button
+					class="nimble-button"
+					style="grid-area: storeButton"
+					data-button-variant="icon"
+					type="button"
+					aria-label={localize('NIMBLE.containers.takeOut', {
+						object: item.reactive.name,
+						container: containerNames[item.reactive.system.containerId] ?? '',
+					})}
+					onclick={(event) => moveItemWithoutDragging(event, item)}
+				>
+					<i class="fa-solid fa-box-open"></i>
+				</button>
+			{:else if getContainerChoices(items, item).length > 0}
+				<button
+					class="nimble-button"
+					style="grid-area: storeButton"
+					data-button-variant="icon"
+					type="button"
+					aria-label={localize('NIMBLE.containers.storeObject', { object: item.reactive.name })}
+					onclick={(event) => moveItemWithoutDragging(event, item)}
+				>
+					<i class="fa-solid fa-box-archive"></i>
+				</button>
 			{/if}
 
 			<button
@@ -520,6 +605,26 @@
 
 		&--stored {
 			margin: 0;
+		}
+	}
+
+	.nimble-document-card__name-button {
+		display: block;
+		width: 100%;
+		padding: 0;
+		margin: 0;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		background: none;
+		border: none;
+		border-radius: 0;
+		line-height: inherit;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			box-shadow: none;
 		}
 	}
 

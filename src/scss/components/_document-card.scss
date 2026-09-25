@@ -28,11 +28,11 @@
 
   &--actor-inventory {
     grid-template-areas:
-      "img name quantity charges configureButton deleteButton"
-      "img name quantity charges configureButton deleteButton";
+      "img name quantity charges storeButton configureButton deleteButton"
+      "img name quantity charges storeButton configureButton deleteButton";
     grid-template-columns:
       2rem minmax(0, 1fr)
-      fit-content fit-content fit-content fit-content;
+      fit-content fit-content fit-content fit-content fit-content;
     grid-template-rows: repeat(2, max-content);
   }
 
@@ -100,10 +100,10 @@
   }
 
   &--no-meta.nimble-document-card--actor-inventory {
-    grid-template-areas: "img name quantity charges configureButton deleteButton";
+    grid-template-areas: "img name quantity charges storeButton configureButton deleteButton";
     grid-template-columns:
       2rem minmax(0, 1fr)
-      fit-content fit-content fit-content fit-content;
+      fit-content fit-content fit-content fit-content fit-content;
   }
 
   &--no-meta.nimble-document-card--character-creator {
@@ -111,7 +111,7 @@
   }
 
   &--no-meta.nimble-document-card--no-image {
-    grid-template-areas: "name charges configureButton deleteButton";
+    grid-template-areas: "name charges storeButton configureButton deleteButton";
   }
 
   &--no-meta.nimble-document-card--monster-sheet {
