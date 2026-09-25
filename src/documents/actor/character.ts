@@ -11,6 +11,7 @@ import type {
 	LevelCorrectionSubmitData,
 	ResolvedLevelSelectionGap,
 } from '#types/components/CharacterLevelCorrectionDialog.d.ts';
+import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import collectHeldPicks, { countHeldPicks, type HeldFeature } from '#utils/collectHeldPicks.ts';
@@ -57,11 +58,37 @@ import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import {
+	calculateInventorySlotCost,
+	findContainerStorageRejection,
+	getContainerUsedCapacity,
+} from './inventoryContainers.js';
 import resolveCharacterItemActionCost, {
 	type ActivatableItem,
 } from './resolveCharacterItemActionCost.js';
+
+/**
+ * The stored stack a dropped object folds into, grown by the one the drop adds, or
+ * the drop itself when it starts a pile of its own.
+ */
+function findStackToMergeInto(
+	storedObjects: ContainableObject[],
+	dropped: ContainableObject,
+): ContainableObject {
+	if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(dropped.system.objectSizeType)) return dropped;
+
+	const stack = storedObjects.find(
+		(stored) =>
+			stored.name === dropped.name &&
+			OBJECT_SIZE_TYPES_WITH_QUANTITY.has(stored.system.objectSizeType),
+	);
+	if (!stack) return dropped;
+
+	return { ...stack, system: { ...stack.system, quantity: stack.system.quantity + 1 } };
+}
 
 /** A swap plan together with the pools, read at apply time, that it was planned against. */
 type AppliedOptionSwap = OptionSwapPlan & { pools: ResolvedSwappableOptionPool[] };
@@ -71,6 +98,23 @@ type AppliedOptionSwap = OptionSwapPlan & { pools: ResolvedSwappableOptionPool[]
 
 /** Wide enough for the option cards a rest dialog shows when a swap is on offer. */
 const REST_DIALOG_WIDTH_WITH_OPTIONS = 480;
+
+async function confirmUnequipToStore(
+	object: ContainableObject,
+	container: ContainableObject,
+): Promise<boolean> {
+	return Boolean(
+		await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize('NIMBLE.containers.unequipToStoreTitle') },
+			content: `<p>${localize('NIMBLE.containers.unequipToStore', {
+				object: foundry.utils.escapeHTML(object.name),
+				container: foundry.utils.escapeHTML(container.name),
+			})}</p>`,
+			rejectClose: false,
+			modal: true,
+		}),
+	);
+}
 
 /** Extended dialog result type for configuring hit points */
 interface ConfigureHitPointsResult {
@@ -287,6 +331,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		actorData.inventory.totalSlots = baseInventorySlots + bonusInventorySlots;
 		actorData.inventory.usedSlots = this.getUsedInventorySlots();
+		actorData.inventory.containerCapacityUsage = this.getContainerCapacityUsage();
 
 		// Prepare Wounds
 		actorData.attributes.wounds.max = 6 + actorData.attributes.wounds.bonus;
@@ -368,37 +413,21 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return abilities;
 	}
 
-	getUsedInventorySlots(): number {
-		let slotsRequiredSum = 0;
-		let smallObjectsCarried = false;
-		// Sum up each object
+	/** Every object carried, in the order the item collection holds them. */
+	getCarriedObjects(): ContainableObject[] {
+		const objects: ContainableObject[] = [];
+
 		this.items.forEach((item) => {
 			if (!item.isType('object')) return;
-			// Cast to NimbleObjectItem (ambient type from item.d.ts)
-			const object = item as unknown as NimbleObjectItem;
-			switch (object.system.objectSizeType) {
-				case 'slots':
-					slotsRequiredSum += object.system.slotsRequired;
-					break;
-				case 'stackable': {
-					const slotsRequiredByStack = Math.ceil(object.system.quantity / object.system.stackSize);
-					slotsRequiredSum += slotsRequiredByStack;
-					break;
-				}
-				case 'smallSized':
-					smallObjectsCarried = true;
-					break;
-				default:
-					console.log(
-						"Can't calculate slots used for object size type",
-						object.system.objectSizeType,
-					);
-			}
+			objects.push(item as unknown as ContainableObject);
 		});
-		// round up to account for half used slots e.g. a single potion
-		slotsRequiredSum = Math.ceil(slotsRequiredSum);
-		// add one slots for all small stuff
-		if (smallObjectsCarried) slotsRequiredSum += 1;
+
+		return objects;
+	}
+
+	getUsedInventorySlots(): number {
+		let slotsRequiredSum = calculateInventorySlotCost(this.getCarriedObjects());
+
 		// account for coinage
 		if (this.getFlag(SYSTEM_ID, 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
@@ -410,6 +439,145 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			slotsRequiredSum += Math.floor(totalCoinage / 500);
 		}
 		return slotsRequiredSum;
+	}
+
+	/** The objects stored inside the given container, in the order they are carried. */
+	getContainerContents(containerId: string): ContainableObject[] {
+		return this.getCarriedObjects().filter((object) => object.system.containerId === containerId);
+	}
+
+	/** Slots used inside each container carried, keyed by the container's id. */
+	getContainerCapacityUsage(): Record<string, number> {
+		const objects = this.getCarriedObjects();
+		const storedObjectsByContainerId = new Map<string, ContainableObject[]>();
+
+		for (const object of objects) {
+			const { containerId } = object.system;
+			if (!containerId) continue;
+
+			const storedObjects = storedObjectsByContainerId.get(containerId) ?? [];
+			storedObjects.push(object);
+			storedObjectsByContainerId.set(containerId, storedObjects);
+		}
+
+		const usageByContainerId: Record<string, number> = {};
+
+		for (const container of objects) {
+			if (!container.system.container.enabled) continue;
+
+			usageByContainerId[container._id] = getContainerUsedCapacity(
+				storedObjectsByContainerId.get(container._id) ?? [],
+			);
+		}
+
+		return usageByContainerId;
+	}
+
+	/**
+	 * Whether the container will take this object, warning the player with the
+	 * reason when it will not. The refusal is the container's configured limit, so
+	 * the player needs to know it was hit rather than have the drop quietly ignored.
+	 */
+	canStoreObjectInContainer(containerId: string, object: ContainableObject): boolean {
+		const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
+
+		if (!container || container._id === object._id) return false;
+
+		const rejection = findContainerStorageRejection(
+			container,
+			object,
+			this.getContainerContents(containerId),
+		);
+
+		if (!rejection) return true;
+
+		ui.notifications?.warn(
+			localize(`NIMBLE.containers.rejection.${rejection}`, {
+				container: container.name,
+				object: object.name,
+			}),
+		);
+		return false;
+	}
+
+	/**
+	 * Whether the container will take an object being dropped onto it. A drop that
+	 * folds into a stack already inside is measured as that stack grown by one,
+	 * because the merge costs the stack's next slot rather than a second stack.
+	 */
+	canStoreDroppedObjectInContainer(containerId: string, dropped: ContainableObject): boolean {
+		const stored = this.getContainerContents(containerId);
+
+		return this.canStoreObjectInContainer(containerId, findStackToMergeInto(stored, dropped));
+	}
+
+	/**
+	 * Moves an object into a container carried by this actor. A stored object is
+	 * packed away and so never equipped, and losing a weapon's or armour's rules
+	 * mid-session is not something to do behind the player's back, so stowing an
+	 * equipped one asks first and then unequips it in the same write.
+	 */
+	async storeItemInContainer(itemId: string, containerId: string): Promise<boolean> {
+		const object = this.getCarriedObjects().find(({ _id }) => _id === itemId);
+		const item = this.items.get(itemId) as NimbleBaseItem | undefined;
+
+		if (!object || !item || itemId === containerId) return false;
+		if (!this.canStoreObjectInContainer(containerId, object)) return false;
+
+		const update: Record<string, unknown> = { 'system.containerId': containerId };
+
+		if (object.system.equipped) {
+			const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
+			if (!container || !(await confirmUnequipToStore(object, container))) return false;
+
+			update['system.equipped'] = false;
+			update['system.rules'] = item.rules.withAllRulesDisabled(true);
+		}
+
+		await this.updateItem(itemId, update);
+		return true;
+	}
+
+	/**
+	 * Writes a new quantity for a stored object, refusing one that would overflow
+	 * the container holding it. Growing a stack takes up the same room a fresh drop
+	 * would, so it has to clear the same limit.
+	 */
+	async updateStoredObjectQuantity(itemId: string, quantity: number): Promise<boolean> {
+		const object = this.getCarriedObjects().find(({ _id }) => _id === itemId);
+		if (!object) return false;
+
+		const { containerId } = object.system;
+		const container = this.getCarriedObjects().find(({ _id }) => _id === containerId);
+
+		// Lowering a quantity never needs more room, and a container whose capacity was
+		// cut below what it already holds would otherwise refuse the write that fixes it.
+		if (container && quantity > object.system.quantity) {
+			const grown = { ...object, system: { ...object.system, quantity } };
+			const rejection = findContainerStorageRejection(
+				container,
+				grown,
+				this.getContainerContents(containerId),
+			);
+
+			if (rejection === 'capacity') {
+				ui.notifications?.warn(
+					localize('NIMBLE.containers.quantityExceedsCapacity', {
+						container: container.name,
+						object: object.name,
+					}),
+				);
+				return false;
+			}
+		}
+
+		await this.updateItem(itemId, { 'system.quantity': quantity });
+		return true;
+	}
+
+	/** Takes an object back out of whatever container is holding it. */
+	async removeItemFromContainer(itemId: string): Promise<void> {
+		await this.updateItem(itemId, { 'system.containerId': '' });
 	}
 
 	protected override _prepareEarlyDerivedData(): void {

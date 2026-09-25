@@ -1,7 +1,23 @@
+import type {
+	ContainerConfig,
+	ContainerSlotCostMode,
+	ObjectSizeType,
+} from '#types/inventoryContainers.js';
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 import { activation, baseProperties } from './common.js';
 
 const { fields } = foundry.data;
+
+/** The slot cost modes a container can be set to, in the order the sheet offers them. */
+export const CONTAINER_SLOT_COST_MODES: readonly ContainerSlotCostMode[] = [
+	'none',
+	'ignore',
+	'reduce',
+	'half',
+];
+
+/** The ways an object can occupy inventory space. */
+export const OBJECT_SIZE_TYPES: readonly ObjectSizeType[] = ['slots', 'stackable', 'smallSized'];
 
 const schema = () => ({
 	description: new fields.SchemaField({
@@ -53,7 +69,7 @@ const schema = () => ({
 		required: true,
 		initial: 'slots',
 		nullable: false,
-		options: ['slots', 'stackable', 'smallSized'],
+		choices: OBJECT_SIZE_TYPES,
 	}),
 	slotsRequired: new fields.NumberField({
 		required: true,
@@ -66,6 +82,29 @@ const schema = () => ({
 		initial: 2,
 		min: 2,
 		nullable: false,
+	}),
+	/** Id of the container object on the same actor that holds this one. Empty when carried directly. */
+	containerId: new fields.StringField({ required: true, initial: '', nullable: false }),
+	container: new fields.SchemaField({
+		enabled: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+		slotCostMode: new fields.StringField({
+			required: true,
+			initial: 'none',
+			nullable: false,
+			choices: CONTAINER_SLOT_COST_MODES,
+		}),
+		slotCostReduction: new fields.NumberField({
+			required: true,
+			initial: 1,
+			min: 0,
+			nullable: false,
+		}),
+		capacity: new fields.NumberField({ required: true, initial: null, min: 0, nullable: true }),
+		allowedObjectTypes: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, initial: '' }),
+			{ required: true, nullable: false, initial: [] },
+		),
+		requiresEquipped: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	}),
 	properties: new fields.SchemaField({
 		...baseProperties(),
@@ -144,9 +183,11 @@ class NimbleObjectData extends NimbleBaseItemData<
 	declare quantity: number;
 	declare equipped: boolean;
 	declare unidentifiedName: string;
-	declare objectSizeType: 'slots' | 'stackable' | 'smallSized';
+	declare objectSizeType: ObjectSizeType;
 	declare slotsRequired: number;
 	declare stackSize: number;
+	declare containerId: string;
+	declare container: ContainerConfig;
 	declare properties: {
 		reach: { min: number; max: number | null };
 		range: { min: number; max: number | null };

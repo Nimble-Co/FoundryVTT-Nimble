@@ -30,6 +30,20 @@ async function waitForDiceAnimation(messageId: string | undefined): Promise<void
 	await dice3d?.waitFor3DAnimationByMessageID?.(messageId);
 }
 
+async function confirmDeleteStockedContainer(name: string, storedCount: number): Promise<boolean> {
+	return Boolean(
+		await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize('NIMBLE.containers.deleteStockedTitle') },
+			content: `<p>${localize('NIMBLE.containers.deleteStocked', {
+				container: foundry.utils.escapeHTML(name),
+				count: String(storedCount),
+			})}</p>`,
+			rejectClose: false,
+			modal: true,
+		}),
+	);
+}
+
 type RuleSourceLike = {
 	disabled?: boolean;
 	[key: string]: unknown;
@@ -113,13 +127,17 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		options: Item.Database.PreCreateOptions,
 		user: User.Stored,
 	) {
+		if (this.isEmbedded) this.#discardUnknownContainerId();
+
 		// Update quantity if object already exists and is stackable or smallSized
 		if (this.isEmbedded && OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)) {
+			// Arrows in a quiver and arrows on the belt are separate piles.
 			const existing = this.actor?.items.find(
 				(i) =>
 					i instanceof NimbleObjectItem &&
 					i.name === this.name &&
 					i.type === 'object' &&
+					i.system.containerId === this.system.containerId &&
 					OBJECT_SIZE_TYPES_WITH_QUANTITY.has(i.system.objectSizeType),
 			) as NimbleObjectItem | undefined;
 
@@ -137,6 +155,143 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		}
 
 		return super._preCreate(data, options, user);
+	}
+
+	/**
+	 * A copy made from a stored object carries the id of a container on the actor it
+	 * came from, which names nothing here. Left in place it hides the copy's equip
+	 * toggle and keeps it out of the loose stack, so it is cleared before the
+	 * stacking check reads it.
+	 */
+	#discardUnknownContainerId(): void {
+		const { containerId } = this.system;
+		if (!containerId) return;
+
+		const container = this.actor?.items.get(containerId);
+		const holdsObjects =
+			container?.type === 'object' &&
+			(container as unknown as NimbleObjectItem).system.container.enabled;
+
+		if (holdsObjects) return;
+
+		this.updateSource({ 'system.containerId': '' } as Record<string, unknown>);
+	}
+
+	/**
+	 * The ids of the objects this container currently holds. Ids passed in are left
+	 * out: an object deleted in the same batch as its container is still in the
+	 * collection while the hooks run, and writing to it would fail.
+	 */
+	#getStoredItemIds(
+		excludedIds: readonly string[] = [],
+		{ includeDisabled = false } = {},
+	): string[] {
+		const actor = this.actor;
+		if (!actor) return [];
+		if (!includeDisabled && !this.system.container.enabled) return [];
+
+		const excluded = new Set(excludedIds);
+
+		return actor.items
+			.filter(
+				(item) =>
+					item.type === 'object' &&
+					(item as unknown as NimbleObjectItem).system.containerId === this.id &&
+					!excluded.has(item.id as string),
+			)
+			.map((item) => item.id as string);
+	}
+
+	/**
+	 * A stored object cannot become a container, because a container cannot sit
+	 * inside another one. The drop path already refuses the nesting; this refuses
+	 * the same thing done from the object's own sheet.
+	 */
+	protected override async _preUpdate(
+		changed: Record<string, unknown>,
+		options: Item.Database.UpdateOptions,
+		user: User.Stored,
+	): Promise<boolean | undefined> {
+		const becomingAContainer =
+			foundry.utils.getProperty(changed, 'system.container.enabled') === true &&
+			!this.system.container.enabled;
+
+		if (becomingAContainer && this.system.containerId) {
+			ui.notifications?.warn(
+				localize('NIMBLE.containers.rejection.nestedConfig', { object: this.name }),
+			);
+			return false;
+		}
+
+		return super._preUpdate(changed, options, user);
+	}
+
+	/**
+	 * Unticking the container box leaves its contents pointing at an object that no
+	 * longer holds anything, which hides their equip toggle and refuses them a way
+	 * back out. They are released the same way a deleted container releases them.
+	 */
+	override _onUpdate(changed, options, userId: string): void {
+		super._onUpdate(changed, options, userId);
+
+		if (game.user?.id !== userId) return;
+		if (foundry.utils.getProperty(changed, 'system.container.enabled') !== false) return;
+
+		const strandedItemIds = this.#getStoredItemIds([], { includeDisabled: true });
+		if (strandedItemIds.length === 0) return;
+
+		void this.#releaseStoredItems(strandedItemIds);
+	}
+
+	/**
+	 * Whether the player still wants this container deleted once they know it will
+	 * be emptied. Emptying a bag is a surprise when they only meant to bin it, so
+	 * one holding anything asks first.
+	 *
+	 * The sheet asks, not the delete lifecycle: `_preDelete` is awaited for every
+	 * deletion, so a prompt there would stop a migration or a macro on one modal per
+	 * container.
+	 */
+	async confirmDeleteWithContents(): Promise<boolean> {
+		const storedCount = this.#getStoredItemIds().length;
+		if (storedCount === 0) return true;
+
+		return confirmDeleteStockedContainer(this.name, storedCount);
+	}
+
+	/**
+	 * Spills a deleted container's contents back into the carrier's inventory, so
+	 * they stop pointing at an item that no longer exists and go back to costing
+	 * their own slots.
+	 *
+	 * The spill waits for `_onDelete` rather than for the pre-delete hook, because
+	 * `preDeleteItem` hooks and the server both get a say after that returns.
+	 * Writing earlier can empty a bag that then survives.
+	 */
+	override _onDelete(options, userId: string): void {
+		super._onDelete(options, userId);
+
+		if (game.user?.id !== userId) return;
+
+		const deletedIds = Array.isArray(options?.ids) ? (options.ids as string[]) : [];
+		const storedItemIds = this.#getStoredItemIds(deletedIds);
+		if (storedItemIds.length === 0) return;
+
+		void this.#releaseStoredItems(storedItemIds);
+	}
+
+	async #releaseStoredItems(storedItemIds: string[]): Promise<void> {
+		const updates = storedItemIds.map((_id) => ({ _id, 'system.containerId': '' }));
+
+		try {
+			await this.actor?.updateEmbeddedDocuments('Item', updates as Item.UpdateData[]);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(error);
+			ui.notifications?.error(
+				localize('NIMBLE.containers.releaseFailed', { container: this.name }),
+			);
+		}
 	}
 
 	/**
@@ -286,14 +441,16 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	//                 Data Functions
 	/** ------------------------------------------------------ */
 
+	/**
+	 * Equipping an object switches its rules on, unequipping switches them off. Both
+	 * go in one update: written separately, a rejected second write would leave the
+	 * object equipped with its rules off, or stowed with them still running.
+	 */
 	async toggleEquipment(): Promise<void> {
 		const newEquippedState = !this.system.equipped;
-		const rulesUpdated = newEquippedState
-			? await this.rules.enableAllRules()
-			: await this.rules.disableAllRules();
-		if (!rulesUpdated) return;
 
 		await this.update({
+			'system.rules': this.rules.withAllRulesDisabled(!newEquippedState),
 			'system.equipped': newEquippedState,
 		} as Record<string, unknown>);
 	}

@@ -47,7 +47,7 @@ function makeStub(storedTier: number | null, items: GrantItem[]): ActorStub {
 			// Prepared data starts as a copy of the source, so the prepared value
 			// begins equal to the stored one, just as it does on a real actor.
 			resources: { mana: { current: 0, value: 0, max: 0 }, highestUnlockedSpellTier: storedTier },
-			inventory: { bonusSlots: 0, totalSlots: 0, usedSlots: 0 },
+			inventory: { bonusSlots: 0, totalSlots: 0, usedSlots: 0, containerCapacityUsage: {} },
 		},
 		items: { contents: items },
 		classes: {},
@@ -59,6 +59,7 @@ function makeStub(storedTier: number | null, items: GrantItem[]): ActorStub {
 		prepareClassData: vi.fn(),
 		_prepareMaxMana: vi.fn(() => 0),
 		getUsedInventorySlots: vi.fn(() => 0),
+		getContainerCapacityUsage: vi.fn(() => ({})),
 		_prepareHighestUnlockedSpellTier: NimbleCharacter.prototype._prepareHighestUnlockedSpellTier,
 	};
 }

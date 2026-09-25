@@ -523,6 +523,39 @@
 			"swim": "Swimming",
 			"walk": "Walking"
 		},
+		"containerSlotCostModes": {
+			"none": "Normal slot cost",
+			"ignore": "Ignore slot cost",
+			"reduce": "Reduce slot cost",
+			"half": "Half slot cost"
+		},
+		"containers": {
+			"allowedObjectTypes": "Allowed Object Types",
+			"allowedObjectTypesHint": "Only objects of these types may be stored. Select none to allow anything.",
+			"capacity": "Capacity",
+			"capacityHint": "How many slots' worth of objects fit inside. Leave blank for no limit.",
+			"capacityUsage": "{used} / {capacity} slots stored",
+			"deleteStocked": "Deleting {container} will empty it. The {count} objects inside go back into the inventory. Continue?",
+			"deleteStockedTitle": "Delete a container that holds objects",
+			"empty": "Nothing stored",
+			"enabled": "This Object Is A Container",
+			"enabledHint": "Objects can be dropped into this one, and this object's rule changes what they cost their carrier.",
+			"heading": "Container",
+			"quantityExceedsCapacity": "{container} has no room for that many of {object}.",
+			"rejection": {
+				"capacity": "{container} has no room left for {object}.",
+				"nested": "{object} is a container, and containers cannot be stored inside other containers.",
+				"nestedConfig": "{object} is stored in a container, so it cannot become one. Take it out first.",
+				"notAContainer": "{container} is not a container.",
+				"objectType": "{container} does not hold objects of that type."
+			},
+			"releaseFailed": "Could not empty {container}. The objects it held may still point at it.",
+			"requiresEquipped": "Only Apply While Equipped",
+			"slotCostMode": "Stored Object Slot Cost",
+			"slotCostReduction": "Slots Reduced By",
+			"unequipToStore": "Putting {object} into {container} will unequip it. Continue?",
+			"unequipToStoreTitle": "Unequip to store"
+		},
 		"objectSizeTypes": {
 			"slots": "Slots required",
 			"stackable": "Stackable",
@@ -563,6 +596,8 @@
 			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
+			"configureItem": "Configure {name}",
+			"deleteItem": "Delete {name}",
 			"toggleEquipment": "Toggle Equipped State of {name}",
 			"equippedTooltip": "Equipped",
 			"unequippedTooltip": "Not Equipped",
@@ -2349,8 +2384,6 @@
 			"expandAllDescriptions": "Expand all descriptions",
 			"collapseAllDescriptions": "Collapse all descriptions",
 			"editAttackSequence": "Edit Attack Sequence",
-			"configureItem": "Configure {name}",
-			"deleteItem": "Delete {name}",
 			"collapseDescription": "Collapse description for {name}",
 			"revealDescription": "Reveal description for {name}",
 			"melee": "Melee",

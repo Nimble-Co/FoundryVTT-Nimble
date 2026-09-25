@@ -11,4 +11,5 @@ declare interface RulesManagerInterface extends Map<string, NimbleBaseRule> {
 	updateRule(id: string, data: string | Record<string, any>): Promise<boolean>;
 	disableAllRules(): Promise<boolean>;
 	enableAllRules(): Promise<boolean>;
+	withAllRulesDisabled(disabled: boolean): import('../../types/ruleSource.js').RuleSource[];
 }

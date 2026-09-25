@@ -1,3 +1,4 @@
+import type { RuleSource } from '#types/ruleSource.js';
 import localize from '#utils/localize.js';
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
@@ -10,13 +11,6 @@ export namespace RulesManager {
 /** Interface for item system data that includes rules */
 interface ItemSystemWithRules {
 	rules: RuleSource[];
-}
-
-interface RuleSource {
-	id: string;
-	type: string;
-	disabled?: boolean;
-	[key: string]: string | number | boolean | object | null | undefined;
 }
 
 /** Helper to get system data with rules */
@@ -165,16 +159,20 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return this.#setAllRulesDisabledState(false);
 	}
 
-	async #setAllRulesDisabledState(disabled: boolean) {
+	/**
+	 * The `system.rules` a bulk enable or disable would write, without writing it or
+	 * touching this manager's own state. A caller changing something else on the same
+	 * item persists both in one update, so the rules and what switched them can never
+	 * end up disagreeing.
+	 */
+	withAllRulesDisabled(disabled: boolean): RuleSource[] {
 		const system = getSystemWithRules(this.#item);
-		const updatedRules = (system.rules ?? []).map((rule) => ({
-			...rule,
-			disabled,
-		}));
 
-		for (const rule of updatedRules) {
-			this.rulesTypeMap.set(rule.type, rule as object as InstanceType<typeof NimbleBaseRule>);
-		}
+		return (system.rules ?? []).map((rule) => ({ ...rule, disabled }));
+	}
+
+	async #setAllRulesDisabledState(disabled: boolean) {
+		const updatedRules = this.withAllRulesDisabled(disabled);
 
 		await this.#item.update({
 			'system.rules': updatedRules,

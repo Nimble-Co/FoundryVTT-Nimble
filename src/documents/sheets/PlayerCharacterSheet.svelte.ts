@@ -2,6 +2,7 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import type { ContainableObject } from '#types/inventoryContainers.js';
 import createScrollFromSpell from '#utils/createScrollFromSpell.js';
 import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
 import localize from '#utils/localize.js';
@@ -30,6 +31,12 @@ type DroppedItemData = {
 		parentClass?: unknown;
 		identifier?: unknown;
 	};
+};
+
+/** The fields that decide whether a created object folds into one already carried. */
+type ObjectStackingFields = {
+	objectSizeType?: string;
+	containerId?: string;
 };
 
 type PlayerCharacterSheetState = Record<string, unknown> & SheetDropItemFlashState;
@@ -107,6 +114,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	override async _onDropItem(
 		event: DragEvent,
 		dropArg: Record<string, unknown> | Item.Implementation,
+		options: { containerId?: string } = {},
 	) {
 		const data = dropArg as Record<string, unknown>;
 		event.preventDefault();
@@ -172,12 +180,50 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		// Create regular items
 		const itemsToCreate = scrollItems ?? items;
+
+		if (!this.#routeCreatesIntoContainer(itemsToCreate, options.containerId ?? '')) return false;
+
 		const result = await this._actor.createEmbeddedDocuments(
 			'Item',
 			itemsToCreate as unknown as ReturnType<Item.Implementation['toObject']>[],
 		);
 		this.#announceCreatedItems(itemsToCreate, result);
 		return result;
+	}
+
+	/**
+	 * Marks the objects about to be created as stored in the container they were
+	 * dropped on, so the stack check in `NimbleObjectItem#_preCreate` runs against
+	 * that container's contents rather than the loose pile. Returns false when the
+	 * container refuses one of them, which it reports to the player itself.
+	 *
+	 * A stored object is never equipped, so anything dropped straight into a
+	 * container arrives stowed.
+	 */
+	#routeCreatesIntoContainer(
+		itemsToCreate: Array<Record<string, unknown>>,
+		containerId: string,
+	): boolean {
+		if (!containerId) return true;
+
+		const actor = this._actor as NimbleCharacter;
+
+		for (const item of itemsToCreate) {
+			if (item.type !== 'object') continue;
+
+			const system = (item.system ?? {}) as Record<string, unknown>;
+			const candidate = { ...item, system } as object as ContainableObject;
+
+			if (!actor.canStoreDroppedObjectInContainer(containerId, candidate)) {
+				return false;
+			}
+
+			system.containerId = containerId;
+			system.equipped = false;
+			item.system = system;
+		}
+
+		return true;
 	}
 
 	/**
@@ -270,17 +316,19 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	#findStackedItemId(item: Record<string, unknown>): string | null {
 		if (item.type !== 'object') return null;
 
-		const { objectSizeType } = (item.system ?? {}) as { objectSizeType?: string };
+		const { objectSizeType, containerId } = (item.system ?? {}) as ObjectStackingFields;
 		if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(objectSizeType ?? '')) return null;
 
-		const existing = this._actor.items.find(
-			(candidate) =>
-				candidate.type === 'object' &&
-				candidate.name === item.name &&
-				OBJECT_SIZE_TYPES_WITH_QUANTITY.has(
-					(candidate as { system?: { objectSizeType?: string } }).system?.objectSizeType ?? '',
-				),
-		);
+		const existing = this._actor.items.find((candidate) => {
+			if (candidate.type !== 'object' || candidate.name !== item.name) return false;
+
+			const candidateSystem = (candidate as { system?: ObjectStackingFields }).system;
+
+			return (
+				(candidateSystem?.containerId ?? '') === (containerId ?? '') &&
+				OBJECT_SIZE_TYPES_WITH_QUANTITY.has(candidateSystem?.objectSizeType ?? '')
+			);
+		});
 
 		return existing?.id ?? null;
 	}
