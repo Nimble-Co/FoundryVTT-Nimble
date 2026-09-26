@@ -334,3 +334,18 @@ describe('maximizePoolDie — raise lowest faces to the die max', () => {
 		expect(item.flags?.nimble?.dicePools?.judgment?.faces).toEqual([6, 3]);
 	});
 });
+
+describe('rollDieIntoPool pool-changed event', () => {
+	it('announces the gain by default, and not when the caller will announce it', async () => {
+		const call = vi.spyOn(Hooks, 'call');
+		const changed = () =>
+			call.mock.calls.filter(([name]) => String(name).endsWith('dicePool.changed')).length;
+
+		await rollDieIntoPool(makeOathswornActor().actor, 'judgment');
+		expect(changed()).toBe(1);
+
+		await rollDieIntoPool(makeOathswornActor().actor, 'judgment', { emitChange: false });
+		expect(changed()).toBe(1);
+		call.mockRestore();
+	});
+});

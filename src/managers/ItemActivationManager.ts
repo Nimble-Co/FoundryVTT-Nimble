@@ -31,6 +31,7 @@ import {
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
 import { buildTargetDomain } from '../utils/conditionalBonuses.js';
 import {
+	emitDicePoolChanged,
 	maximizePoolDie,
 	rollDieIntoPool,
 	rollPoolFresh,
@@ -954,11 +955,20 @@ class ItemActivationManager {
 				// player can see what was rolled.
 				const rolledFaces: number[] = [];
 				for (let i = 0; i < count; i += 1) {
-					const result = await rollDieIntoPool(actor, poolId, { suppressChat });
+					const result = await rollDieIntoPool(actor, poolId, { suppressChat, emitChange: false });
 					if (result.face !== null) rolledFaces.push(result.face);
 					if (result.applied) applied = true;
 				}
 				const after = readPool();
+				if (applied) {
+					emitDicePoolChanged(
+						actor as unknown as CharacterActorLike,
+						poolId,
+						after.label ?? before.label,
+						before.faces,
+						after.faces,
+					);
+				}
 				node.result = {
 					applied,
 					poolLabel: after.label ?? before.label,
