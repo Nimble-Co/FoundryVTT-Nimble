@@ -107,7 +107,7 @@ The system never moves a token for anyone and never stops a drag. It measures wh
 
 ## Movement offers
 
-With the **Movement Offers** automation toggle on (the default), a feature that grants a Free Move or pushes a creature makes an offer to each creature it applies to. There is nothing to click. The card names the offer, with its distance worked out once when the feature is used, and the creature carries the offer until its next move.
+With the **Movement Offers** automation toggle on (the default), a feature that grants a Free Move or pushes a creature makes an offer to each creature it applies to. There is nothing to click. The card shows the offer with its distance, worked out once when the feature is used, and the creature carries the offer until its next move. An offer to the feature's user alone shows no name; otherwise the card lists each creature by name.
 
 While a creature carries an offer, dragging its token moves it under that offer:
 
@@ -117,7 +117,7 @@ While a creature carries an offer, dragging its token moves it under that offer:
 
 Whoever owns the token still does the moving and picks the path and the final space. To move the creature normally while an offer stands, press **Tab** during the drag to pick another movement action. The card then notes that the creature moved on its own. A GM with Foundry's **Unconstrained Movement** setting on is placing the token, not taking the offer, and the card notes the same.
 
-A push ignores difficult terrain; a Free Move follows the feature's wording. The card shows the direction the feature names ("away", "toward") and who the book says chooses the path, but nothing enforces either, and the rules give a push no particular shape.
+A push ignores difficult terrain; a Free Move follows the feature's wording, and the card tags a Free Move that ignores it. The card shows the direction the feature names ("away from" or "toward" the feature's user), but nothing enforces it, and the rules give a push no particular shape.
 
 Once the creature finishes moving, the card records what came of the offer: the spaces it covered under the offer, up to the offered distance, or a note that it moved on its own. A creature or the environment can stop a push early. When that happens the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one.
 

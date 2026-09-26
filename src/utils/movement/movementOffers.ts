@@ -42,7 +42,8 @@ function resolveActorById(id: string): OfferActor | null {
 	return (game.actors?.get(id) as unknown as OfferActor | undefined) ?? null;
 }
 
-function speakerTokenUuid(card: OfferCard): string | null {
+/** The uuid of the token that speaks for the card, when it names one. */
+export function speakerTokenUuid(card: Pick<OfferCard, 'speaker'>): string | null {
 	const speaker = card.speaker;
 	return speaker?.scene && speaker.token ? `Scene.${speaker.scene}.Token.${speaker.token}` : null;
 }
