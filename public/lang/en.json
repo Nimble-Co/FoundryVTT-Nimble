@@ -120,18 +120,18 @@
 				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
 				"space": "{count} space",
 				"spaces": "{count} spaces",
-				"offer": "{name}: up to {distance} {direction}",
+				"upTo": "up to {distance}",
 				"directions": {
-					"any": "in any direction",
 					"away": "away from {source}",
 					"toward": "toward {source}"
 				},
-				"choosers": { "mover": "{mover} chooses where.", "source": "{source} chooses where." },
-				"dragHint": "Drag {name}: the ruler changes past {distance}.",
-				"result": "{name} moved {moved} of {offered}.",
-				"unused": "{name} moved on its own, so this went unused.",
-				"lapsed": "{name} did not take this before the turn ended.",
-				"resultShortened": "{name} moved {moved} of {offered}, shortened by {short}.",
+				"ignoresDifficultTerrain": "ignores difficult terrain",
+				"results": {
+					"taken": "moved {moved} of {offered}",
+					"shortened": "moved {moved} of {offered}, shortened by {short}",
+					"unused": "moved on its own",
+					"lapsed": "not taken before the turn ended"
+				},
 				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
 				"noRecipient": "No creature to move."
 			},

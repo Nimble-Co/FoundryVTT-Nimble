@@ -5,29 +5,41 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
-	import { movementOfferOutcome } from '#utils/movement/movementOffers.js';
-	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
+	import { movementOfferOutcome, speakerTokenUuid } from '#utils/movement/movementOffers.js';
 
 	let { node }: MoveNodeProps = $props();
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
-	const offersEnabled = isMovementOffersAutomationEnabled();
 
 	// Read through the reactive system data so the card redraws when an offer is settled.
+	const reactiveMessage = $derived(messageDocument?.reactive);
 	const system = $derived(
-		(messageDocument?.reactive?.system ?? {}) as {
+		(reactiveMessage?.system ?? {}) as {
 			actorName?: string;
 			movementOffers?: MovementOffer[];
 		},
 	);
-	const sourceName = $derived(system.actorName ?? '');
-	const kindLabel = $derived(localize(`NIMBLE.chat.movementOffers.kinds.${node.kind}`));
-	const directionText = $derived(
-		localize(`NIMBLE.chat.movementOffers.directions.${node.direction}`, { source: sourceName }),
-	);
 	const offers = $derived(
 		(system.movementOffers ?? []).filter((offer) => offer.nodeId === node.id),
 	);
+	const selfOffer = $derived.by(() => {
+		if (offers.length !== 1) return null;
+		const speakerUuid = speakerTokenUuid({ speaker: reactiveMessage?.speaker ?? undefined });
+		return offers[0].tokenUuid === speakerUuid ? offers[0] : null;
+	});
+	const directionText = $derived(
+		node.direction === 'any'
+			? null
+			: localize(`NIMBLE.chat.movementOffers.directions.${node.direction}`, {
+					source: system.actorName ?? '',
+				}),
+	);
+	const headingParts = $derived.by(() => {
+		const parts = directionText ? [directionText] : [];
+		if (selfOffer) parts.push(resultText(selfOffer) ?? distanceText(selfOffer));
+		return parts;
+	});
+	const showsTerrainTag = $derived(node.kind === 'free' && node.ignoreDifficultTerrain);
 
 	function spacesText(count: number): string {
 		return localize(`NIMBLE.chat.movementOffers.${count === 1 ? 'space' : 'spaces'}`, {
@@ -35,103 +47,112 @@
 		});
 	}
 
-	function chooserText(offer: MovementOffer): string {
-		return localize(`NIMBLE.chat.movementOffers.choosers.${node.chooser}`, {
-			mover: offer.name,
-			source: sourceName,
-		});
+	function distanceText(offer: MovementOffer): string {
+		return localize('NIMBLE.chat.movementOffers.upTo', { distance: spacesText(offer.spaces) });
+	}
+
+	function resultText(offer: MovementOffer): string | null {
+		const outcome = movementOfferOutcome(offer);
+		switch (outcome.state) {
+			case 'taken':
+				return localize(
+					`NIMBLE.chat.movementOffers.results.${outcome.shortfall > 0 ? 'shortened' : 'taken'}`,
+					{
+						moved: String(outcome.moved ?? 0),
+						offered: spacesText(outcome.offered),
+						short: String(outcome.shortfall),
+					},
+				);
+			case 'unused':
+				return localize('NIMBLE.chat.movementOffers.results.unused');
+			case 'lapsed':
+				return localize('NIMBLE.chat.movementOffers.results.lapsed');
+			default:
+				return null;
+		}
 	}
 </script>
+
+{#snippet damageReminder(offer: MovementOffer)}
+	{#if movementOfferOutcome(offer).damageOwed}
+		<small class="nimble-move-node__hint">
+			{localize('NIMBLE.chat.movementOffers.forcedShortenedHint')}
+		</small>
+	{/if}
+{/snippet}
 
 <div class="nimble-move-node">
 	<h4 class="nimble-heading nimble-move-node__heading" data-heading-variant="field">
 		<i class="fa-solid fa-person-running" aria-hidden="true"></i>
-		{kindLabel}
+		<span>
+			{localize(`NIMBLE.chat.movementOffers.kinds.${node.kind}`)}<span
+				class="nimble-move-node__part">{headingParts.map((part) => ` - ${part}`).join('')}</span
+			>
+		</span>
 	</h4>
+
+	{#if showsTerrainTag}
+		<small class="nimble-move-node__hint">
+			{localize('NIMBLE.chat.movementOffers.ignoresDifficultTerrain')}
+		</small>
+	{/if}
 
 	{#if offers.length === 0}
 		<p class="nimble-move-node__hint">{localize('NIMBLE.chat.movementOffers.noRecipient')}</p>
-	{/if}
-
-	{#each offers as offer (offer.id)}
-		{@const outcome = movementOfferOutcome(offer)}
-		<div class="nimble-move-node__recipient">
-			<span class="nimble-move-node__text">
-				{localize('NIMBLE.chat.movementOffers.offer', {
-					name: offer.name,
-					distance: spacesText(offer.spaces),
-					direction: directionText,
-				})}
-				<small class="nimble-move-node__hint">{chooserText(offer)}</small>
-			</span>
-
-			{#if outcome.state === 'taken'}
-				<span class="nimble-move-node__result">
-					{outcome.shortfall > 0
-						? localize('NIMBLE.chat.movementOffers.resultShortened', {
-								name: offer.name,
-								moved: String(outcome.moved ?? 0),
-								offered: spacesText(outcome.offered),
-								short: String(outcome.shortfall),
-							})
-						: localize('NIMBLE.chat.movementOffers.result', {
-								name: offer.name,
-								moved: String(outcome.moved ?? 0),
-								offered: spacesText(outcome.offered),
-							})}
-					{#if outcome.damageOwed}
-						<small class="nimble-move-node__hint">
-							{localize('NIMBLE.chat.movementOffers.forcedShortenedHint')}
-						</small>
-					{/if}
-				</span>
-			{:else if outcome.state === 'unused'}
-				<span class="nimble-move-node__result">
-					{localize('NIMBLE.chat.movementOffers.unused', { name: offer.name })}
-				</span>
-			{:else if outcome.state === 'lapsed'}
-				<span class="nimble-move-node__result">
-					{localize('NIMBLE.chat.movementOffers.lapsed', { name: offer.name })}
-				</span>
-			{:else if offersEnabled && offer.spaces > 0}
-				<small class="nimble-move-node__hint">
-					{localize('NIMBLE.chat.movementOffers.dragHint', {
-						name: offer.name,
-						distance: spacesText(offer.spaces),
-					})}
-				</small>
-			{/if}
+	{:else if selfOffer}
+		{@render damageReminder(selfOffer)}
+	{:else}
+		<div class="nimble-move-node__rows">
+			{#each offers as offer (offer.id)}
+				{@const result = resultText(offer)}
+				<div class="nimble-move-node__row">
+					<span class="nimble-move-node__name">{offer.name}</span>
+					<span class="nimble-move-node__details">
+						{distanceText(offer)}<span class="nimble-move-node__result"
+							>{result ? ` - ${result}` : ''}</span
+						>
+					</span>
+					{@render damageReminder(offer)}
+				</div>
+			{/each}
 		</div>
-	{/each}
+	{/if}
 </div>
 
 <style lang="scss">
 	.nimble-move-node {
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
+		gap: 0.25rem;
 
 		&__heading {
-			display: flex;
-			align-items: center;
-			gap: 0.375rem;
+			--nimble-heading-size: var(--nimble-md-text);
+
+			white-space: normal;
 		}
 
-		&__recipient {
-			display: flex;
-			flex-direction: column;
-			gap: 0.125rem;
+		&__part {
+			font-weight: normal;
 		}
 
-		&__text,
-		&__result {
-			display: flex;
-			flex-direction: column;
+		&__rows {
+			display: grid;
+			grid-template-columns: max-content 1fr;
+			column-gap: 0.75rem;
+			row-gap: 0.125rem;
+		}
+
+		&__row {
+			display: contents;
+		}
+
+		&__rows &__hint {
+			grid-column: 2;
 		}
 
 		&__hint {
 			margin: 0;
-			font-size: var(--nimble-xs-text);
+			font-size: var(--nimble-sm-text);
 			font-style: normal;
 			color: var(--nimble-medium-text-color);
 		}
