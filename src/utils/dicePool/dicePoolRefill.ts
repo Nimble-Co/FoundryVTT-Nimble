@@ -271,7 +271,7 @@ type RollDieIntoPoolResult = { applied: boolean; face: number | null };
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string; suppressChat?: boolean } = {},
+	options: { flavor?: string; suppressChat?: boolean; emitChange?: boolean } = {},
 ): Promise<RollDieIntoPoolResult> {
 	if (!isCharacterActor(actor)) return { applied: false, face: null };
 	if (typeof poolId !== 'string' || poolId.length < 1) return { applied: false, face: null };
@@ -317,17 +317,33 @@ async function rollDieIntoPool(
 
 	await persistDicePoolMap(actor, currentPools);
 
+	if (options.emitChange !== false) {
+		emitDicePoolChanged(actor, poolId, pool.label, previousFaces, pool.faces);
+	}
+
+	return { applied: true, face };
+}
+
+/**
+ * Announces a manual change to a pool's faces. A caller that rolls several dice
+ * as one gain announces them once, so listeners see one gain of several dice.
+ */
+function emitDicePoolChanged(
+	actor: CharacterActorLike,
+	poolId: string,
+	poolLabel: string | undefined,
+	previousFaces: readonly number[],
+	newFaces: readonly number[],
+): void {
 	emitForCharacter(actor, 'changed', {
 		actor,
 		poolId,
-		poolLabel: pool.label,
-		previousFaces,
-		newFaces: [...pool.faces],
+		poolLabel,
+		previousFaces: [...previousFaces],
+		newFaces: [...newFaces],
 		reason: 'manual',
 		trigger: 'manual',
 	});
-
-	return { applied: true, face };
 }
 
 /**
@@ -512,6 +528,7 @@ export {
 	applyRefillTriggersToPools,
 	applyRestRefill,
 	maximizePoolDie,
+	emitDicePoolChanged,
 	rollDieIntoPool,
 	rollPoolFresh,
 	setPoolFaces,
