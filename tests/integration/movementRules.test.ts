@@ -349,10 +349,9 @@ describe('movement rules', () => {
 
 			await waitForRendered(card, '.nimble-move-node');
 			const text = cardText(card);
-			expect(text).toContain(`When ${hero.name} uses ${dash.name}`);
-			expect(text).toContain('Free Move');
-			expect(text).toContain(`${hero.name}: up to 3 spaces in any direction`);
-			expect(text).toContain(`${hero.name} chooses where.`);
+			expect(text).toContain(`used ${dash.name}`);
+			expect(text).toContain('Free Move - up to 3 spaces');
+			expect(text).not.toContain('chooses where');
 		});
 
 		test('the token carries the offer, and a Movement made under it is recorded as taken', async () => {
@@ -380,7 +379,8 @@ describe('movement rules', () => {
 			expect(offered).not.toContain(farAllyToken.uuid);
 
 			await waitForRendered(card, '.nimble-move-node');
-			expect(cardText(card)).toContain(`${nearAllyToken.name}: up to 2 spaces`);
+			expect(cardText(card)).toContain(nearAllyToken.name);
+			expect(cardText(card)).toContain('up to 2 spaces');
 			expect(cardText(card)).not.toContain(farAllyToken.name);
 			expect(draggable(nearAllyToken)._getDragMovementAction()).toBe(FREE_ACTION);
 			expect(draggable(farAllyToken)._getDragMovementAction()).not.toBe(FREE_ACTION);

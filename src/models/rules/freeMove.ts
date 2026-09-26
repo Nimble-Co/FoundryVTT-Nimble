@@ -158,8 +158,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (this.trigger !== 'onActivation') return;
 		if (context.sourceItem?.uuid !== this.item.uuid) return;
 		await this.#offer(
-			(actor) =>
-				localize('NIMBLE.rules.freeMove.reasons.onActivation', { actor, item: this.item.name }),
+			localize('NIMBLE.rules.freeMove.reasons.onActivation', { item: this.item.name }),
 			speakerToken(context.card),
 		);
 	}
@@ -170,7 +169,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (this.trigger !== 'onInitiativeRolled') return;
 		if (context.actor !== this.actor) return;
 		await this.#offer(
-			(actor) => localize('NIMBLE.rules.freeMove.reasons.onInitiativeRolled', { actor }),
+			localize('NIMBLE.rules.freeMove.reasons.onInitiativeRolled'),
 			context.combatant?.token ?? null,
 		);
 	}
@@ -182,7 +181,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (this.trigger !== 'onTurnStart') return;
 		if (context.actor !== this.actor) return;
 		await this.#offer(
-			(actor) => localize('NIMBLE.rules.freeMove.reasons.onTurnStart', { actor }),
+			localize('NIMBLE.rules.freeMove.reasons.onTurnStart'),
 			context.combatant?.token ?? null,
 		);
 	}
@@ -192,9 +191,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.test()) return;
 		if (this.trigger !== 'onCritReceived') return;
 		if (context.isCritical !== true || context.targetActor !== this.actor) return;
-		await this.#offer((actor) =>
-			localize('NIMBLE.rules.freeMove.reasons.onCritReceived', { actor }),
-		);
+		await this.#offer(localize('NIMBLE.rules.freeMove.reasons.onCritReceived'));
 	}
 
 	override async onPoolGain(context: PoolGainContext): Promise<void> {
@@ -204,15 +201,10 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		const identifier = this.poolIdentifier.trim();
 		if (!identifier || identifier !== context.poolIdentifier) return;
 		const pool = context.poolLabel || identifier;
-		await this.#offer((actor) =>
-			localize('NIMBLE.rules.freeMove.reasons.onPoolGain', { actor, pool }),
-		);
+		await this.#offer(localize('NIMBLE.rules.freeMove.reasons.onPoolGain', { pool }));
 	}
 
-	async #offer(
-		reason: (actorName: string) => string,
-		contextToken: TokenDocument | null = null,
-	): Promise<void> {
+	async #offer(reason: string, contextToken: TokenDocument | null = null): Promise<void> {
 		const { actor } = this;
 		if (!hasRuleCharge(actor, this.chargePoolIdentifier)) return;
 
@@ -226,7 +218,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			token,
 			name: this.item.name,
 			image: (this.item as { img?: string | null }).img ?? undefined,
-			reason: reason(token.name || actor.name || ''),
+			reason,
 			node: {
 				kind: 'free',
 				chooser: 'mover',
