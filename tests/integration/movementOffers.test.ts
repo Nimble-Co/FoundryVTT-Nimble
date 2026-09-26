@@ -197,8 +197,9 @@ describe('movement offers', () => {
 		expect(offersOn(card)).toMatchObject([
 			{ tokenUuid: goblinToken.uuid, spaces: 2, state: 'open', movedSpaces: null },
 		]);
-		expect(moveNodeText()).toContain(`${goblin.name}: up to 2 spaces away from ${hero.name}`);
-		expect(moveNodeText()).toContain(`${hero.name} chooses where.`);
+		expect(moveNodeText()).toContain(`Forced Movement - away from ${hero.name}`);
+		expect(moveNodeText()).toContain(`${goblin.name} up to 2 spaces`);
+		expect(moveNodeText()).not.toContain('chooses');
 		expect(messageNode(card.id!)?.querySelectorAll('.nimble-move-node button')).toHaveLength(0);
 	});
 
@@ -269,7 +270,7 @@ describe('movement offers', () => {
 		await combat.nextTurn();
 		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');
 		await waitFor(
-			() => moveNodeText().includes('did not take this before the turn ended'),
+			() => moveNodeText().includes('not taken before the turn ended'),
 			'the lapse on the card',
 		);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
@@ -277,7 +278,7 @@ describe('movement offers', () => {
 
 	test('with Movement Offers off nothing is labelled', async () => {
 		await setAutomationToggle(OFFERS_SETTING, false);
-		expect(moveNodeText()).toContain('up to 2 spaces away from');
+		expect(moveNodeText()).toContain(`${goblin.name} up to 2 spaces`);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 		expect(dropTag()).toBeUndefined();
 	});
