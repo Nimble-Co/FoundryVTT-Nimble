@@ -136,6 +136,15 @@ describe('buildMovementRecord', () => {
 		);
 	});
 
+	it('names the Movement Offer the drag was made under, and none otherwise', () => {
+		const tag = { messageId: 'card', offerId: 'n1.tok' };
+		const constrainOptions = { ignoreWalls: false, nimbleMovementOffer: tag };
+		expect(buildMovementRecord(makeToken(), makeMovement({ constrainOptions }))?.offer).toEqual(
+			tag,
+		);
+		expect(buildMovementRecord(makeToken(), makeMovement())?.offer).toBeNull();
+	});
+
 	it('returns null when nothing was passed', () => {
 		expect(
 			buildMovementRecord(makeToken(), makeMovement({ passed: { waypoints: [] } })),

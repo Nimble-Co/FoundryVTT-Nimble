@@ -52,3 +52,8 @@ export function registerMovementActions(): void {
 		terrainAction: null,
 	};
 }
+
+/** The movement action a Movement Offer of this kind labels its drag with. */
+export function movementOfferAction(kind: 'free' | 'forced'): string {
+	return kind === 'forced' ? FORCED_MOVEMENT_ACTION : FREE_MOVEMENT_ACTION;
+}

@@ -3,9 +3,30 @@ export type EffectNode =
 	| DamageNode
 	| DamageOutcomeNode
 	| HealingNode
+	| MoveNode
 	| PoolNode
 	| SavingThrowNode
 	| TextNode;
+
+/**
+ * A Movement Offer: a Free Move or Forced Movement the card offers to the
+ * recipient's owner as a guided drag. `distance` is a formula against the
+ * source's roll data, with `@speed` as the recipient's walk speed.
+ */
+export type MoveNode = {
+	id: string;
+	type: 'move';
+	kind: 'free' | 'forced';
+	recipient: 'self' | 'targets';
+	distance: string;
+	/** Per-size overrides of `distance`, keyed by the recipient's size category. */
+	distanceBySize: Record<string, string>;
+	ignoreDifficultTerrain: boolean;
+	direction: 'any' | 'away' | 'toward';
+	chooser: 'mover' | 'source';
+	parentContext: string | null;
+	parentNode: string | null;
+};
 
 export type PoolNode = {
 	id: string;

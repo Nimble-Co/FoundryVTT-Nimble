@@ -49,6 +49,57 @@ export const grantedActionOffers = () => ({
 });
 
 /**
+ * Movement Offers made by this card's `move` effect nodes, one per node and
+ * recipient, stamped when the card is posted or a target is added. The active
+ * GM settles each one after the recipient's next Movement, or lapses it when
+ * the combat turn ends.
+ */
+export const movementOffers = () => ({
+	movementOffers: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			nodeId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			tokenUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			kind: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'free',
+				choices: ['free', 'forced'],
+			}),
+			spaces: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			ignoreDifficultTerrain: new fields.BooleanField({
+				required: true,
+				nullable: false,
+				initial: false,
+			}),
+			state: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'open',
+				choices: ['open', 'taken', 'unused', 'lapsed'],
+			}),
+			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+			movedSpaces: new fields.NumberField({
+				required: false,
+				nullable: true,
+				initial: null,
+				integer: true,
+				min: 0,
+			}),
+			stopped: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
+});
+
+/**
  * Pending interactive offers stamped onto an attack card. Mostly defender-side
  * reactions (force reroll, redirect to self), plus attacker-side spends such as
  * `spendPoolForDamage`. Snapshotted at card creation by the attacker's client;

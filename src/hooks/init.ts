@@ -24,7 +24,9 @@ import ObjectSheet from '../documents/sheets/ObjectSheet.svelte.js';
 import PlayerCharacterSheet from '../documents/sheets/PlayerCharacterSheet.svelte.js';
 import SpellSheet from '../documents/sheets/SpellSheet.svelte.js';
 import SubclassSheet from '../documents/sheets/SubclassSheet.svelte.js';
+import { NimbleToken } from '../documents/token/token.js';
 import { NimbleTokenDocument } from '../documents/token/tokenDocument.js';
+import { NimbleTokenRuler } from '../documents/token/tokenRuler.js';
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 import { NIMBLE_GAME } from '../game.js';
 import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels.js';
@@ -47,6 +49,8 @@ export default function init() {
 	CONFIG.Item.documentClass = ItemProxy as typeof CONFIG.Item.documentClass;
 	CONFIG.Scene.documentClass = NimbleScene as typeof CONFIG.Scene.documentClass;
 	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;
+	CONFIG.Token.objectClass = NimbleToken as unknown as typeof CONFIG.Token.objectClass;
+	CONFIG.Token.rulerClass = NimbleTokenRuler as unknown as typeof CONFIG.Token.rulerClass;
 
 	// Add data models. ActiveEffect must MERGE, not replace: V14 registers a core
 	// `base` model (foundry.data.ActiveEffectTypeDataModel) that owns the AE V2

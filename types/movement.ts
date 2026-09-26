@@ -60,6 +60,54 @@ export interface MovementRecord {
 	/** True when a wall, terrain, the mover or a disconnect cut the path short. */
 	stopped: boolean;
 	user: User;
+	/** The Movement Offer the drag was made under, or null. */
+	offer: MovementOfferTag | null;
+}
+
+export type MovementOfferKind = 'free' | 'forced';
+
+/**
+ * Open until the token's next Movement settles it, taken or left unused. In
+ * combat an offer still open when its turn ends lapses.
+ */
+export type MovementOfferState = 'open' | 'taken' | 'unused' | 'lapsed';
+
+/**
+ * A Movement Offer as its card stores it: one per move node and recipient, with
+ * the distance fixed when the offer is made. The system never moves the token;
+ * the token's next drag is labelled with the offer and its ruler shows how far
+ * the offer reaches.
+ */
+export interface MovementOffer {
+	/** `<nodeId>.<tokenId>`, unique on its card. */
+	id: string;
+	nodeId: string;
+	tokenUuid: string;
+	/** The recipient's name when the offer was made. */
+	name: string;
+	kind: MovementOfferKind;
+	/** Offered distance in spaces. */
+	spaces: number;
+	/** Always true for forced. Free moves set it per feature. */
+	ignoreDifficultTerrain: boolean;
+	state: MovementOfferState;
+	/** The user whose Movement settled the offer. */
+	usedBy: string | null;
+	/** Spaces covered under the offer, never more than offered. Set when taken. */
+	movedSpaces: number | null;
+	/** A wall, terrain or the mover cut the Movement short. */
+	stopped: boolean;
+}
+
+/** Names one Movement Offer across cards: the card, and the offer on it. */
+export interface MovementOfferTag {
+	messageId: string;
+	offerId: string;
+}
+
+/** The offer a token carries, with the card it is on. */
+export interface ArmedMovementOffer extends MovementOffer {
+	messageId: string;
 }
 
 /** How a finished Movement changed the mover's position relative to an observer's Reach. */

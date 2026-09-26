@@ -4,6 +4,7 @@ export function groupNodes(nodes: EffectNode[]) {
 	const damageNodes: EffectNode[] = [];
 	const healingNodes: EffectNode[] = [];
 	const conditionNodes: EffectNode[] = [];
+	const moveNodes: EffectNode[] = [];
 	const poolNodes: EffectNode[] = [];
 	const savingThrowNodes: EffectNode[] = [];
 	const textNodes: Map<string, EffectNode[]> = new Map([
@@ -26,6 +27,8 @@ export function groupNodes(nodes: EffectNode[]) {
 			if (!noteCategory) continue;
 
 			noteCategory.push(node);
+		} else if (node.type === 'move') {
+			moveNodes.push(node);
 		} else if (node.type === 'pool') {
 			poolNodes.push(node);
 		} else if (node.type === 'savingThrow') {
@@ -38,6 +41,7 @@ export function groupNodes(nodes: EffectNode[]) {
 		damageNodes,
 		healingNodes,
 		conditionNodes,
+		moveNodes,
 		poolNodes,
 		// To ensure each saving throw is in its own group, wrap each node in an array
 		...savingThrowNodes.map((node) => [node]),

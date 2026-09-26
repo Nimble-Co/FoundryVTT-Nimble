@@ -9,6 +9,10 @@
 		POOL_PREDICATE_PLACEHOLDER,
 		getDamageOutcomes,
 		getDispositionOptions,
+		getMoveChoosers,
+		getMoveDirections,
+		getMoveKinds,
+		getMoveRecipients,
 		getNodeOptions,
 		getNoteTypes,
 		getPoolActions,
@@ -22,6 +26,11 @@
 	const damageOutcomes = getDamageOutcomes();
 	const dispositionOptions = getDispositionOptions();
 	const noteTypes = getNoteTypes();
+	const moveKinds = getMoveKinds();
+	const moveRecipients = getMoveRecipients();
+	const moveDirections = getMoveDirections();
+	const moveChoosers = getMoveChoosers();
+	const sizeCategories = Object.entries(CONFIG.NIMBLE.sizeCategories);
 	const poolTypes = getPoolTypes();
 	const poolActions = getPoolActions();
 	const savingThrowOptions = prepareSavingThrowOptions(savingThrows);
@@ -38,6 +47,8 @@
 				return DamageOutcomeNode;
 			case 'healing':
 				return HealingNode;
+			case 'move':
+				return MoveNode;
 			case 'pool':
 				return PoolNode;
 			case 'savingThrow':
@@ -785,6 +796,123 @@
 						</span>
 					</label>
 				{/if}
+			</div>
+		</div>
+	</li>
+{/snippet}
+
+{#snippet MoveNode(node, _parentNode = null)}
+	<li data-node-id={node.id}>
+		<header>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.move')}
+			</h4>
+
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				aria-label={localize('NIMBLE.activationEffects.deleteMove')}
+				data-tooltip={localize('NIMBLE.activationEffects.deleteMove')}
+				type="button"
+				onclick={() => deleteEffectNode(document, effects, node.id)}
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</header>
+
+		<div
+			class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
+			style="--nimble-card-width: 320px;"
+		>
+			<div class="nimble-config-block nimble-card">
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.kind')}
+					</h5>
+					<TagGroup
+						options={moveKinds}
+						selectedOptions={[node.kind]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'kind', value)}
+					/>
+				</div>
+
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.recipient')}
+					</h5>
+					<TagGroup
+						options={moveRecipients}
+						selectedOptions={[node.recipient]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
+					/>
+				</div>
+
+				<label class="nimble-field" data-field-variant="stacked">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.distance')}
+					</h5>
+					<input
+						type="text"
+						value={node.distance}
+						placeholder="@speed"
+						onchange={({ target }) =>
+							updateEffectNode(document, effects, node, 'distance', target.value)}
+					/>
+					<small class="nimble-hint"
+						>{localize('NIMBLE.activationEffects.moveNode.distanceHint')}</small
+					>
+				</label>
+
+				<details style="width: 100%;">
+					<summary class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.distanceBySize')}
+					</summary>
+					{#each sizeCategories as [size, sizeLabel]}
+						<label class="nimble-field">
+							<span class="nimble-field__label">{sizeLabel}</span>
+							<input
+								type="text"
+								value={node.distanceBySize?.[size] ?? ''}
+								onchange={({ target }) =>
+									updateEffectNode(document, effects, node, `distanceBySize.${size}`, target.value)}
+							/>
+						</label>
+					{/each}
+				</details>
+
+				<label class="nimble-field">
+					<input
+						type="checkbox"
+						checked={node.ignoreDifficultTerrain}
+						onchange={({ target }) =>
+							updateEffectNode(document, effects, node, 'ignoreDifficultTerrain', target.checked)}
+					/>
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.ignoreDifficultTerrain')}
+					</h5>
+				</label>
+
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.direction')}
+					</h5>
+					<TagGroup
+						options={moveDirections}
+						selectedOptions={[node.direction]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'direction', value)}
+					/>
+				</div>
+
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.chooser')}
+					</h5>
+					<TagGroup
+						options={moveChoosers}
+						selectedOptions={[node.chooser]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'chooser', value)}
+					/>
+				</div>
 			</div>
 		</div>
 	</li>

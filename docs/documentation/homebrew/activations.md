@@ -34,7 +34,7 @@ On monster features only, an **Attack Type** dropdown (None / Reach / Range) and
 
 ## The Effects sub-tab: the effect tree
 
-Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
+Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
 
 ### Damage
 
@@ -69,6 +69,10 @@ A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity
 ### Condition
 
 A condition entry picks one status condition from the system's list (Frightened, Poisoned, Prone…). It renders as a labeled button on the chat card.
+
+### Move
+
+A Free Move or Forced Movement the card offers to a creature, which then carries the offer: dragging that token labels the move, and the ruler changes past the offered distance. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Free Move or Forced Movement), **Who Moves** (the user of the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Tick **Ignore difficult terrain** for a Free Move that says so; Forced Movement always ignores it. The card shows **Direction** when it is away from or toward the feature's user, and a Free Move that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. **Who chooses the path** is stored with the effect but is not shown on the card. Placed under **On Hit** or **On Failed Save**, the offer is made only on that outcome. With the Movement Offers automation toggle off, nothing is labelled and the card shows the distance as text. See [Running Combat](../gm/combat.md#movement-offers).
 
 ### Pool
 

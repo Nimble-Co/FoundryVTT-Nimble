@@ -1,6 +1,7 @@
 import type { MovementRecord, TokenPosition } from '#types/movement.js';
 import { measureWaypointSpaces } from './measureWaypointSpaces.js';
 import { getMovementKind } from './movementKind.js';
+import { readMovementOfferTag } from './movementOfferTag.js';
 import { summariseMovementHistory } from './summariseMovementHistory.js';
 
 interface Waypoint extends TokenPosition {
@@ -21,6 +22,7 @@ interface MovementLike {
 		unrecorded: { waypoints: readonly Waypoint[] };
 	};
 	user: User;
+	constrainOptions?: unknown;
 }
 
 interface RecordableToken {
@@ -109,5 +111,6 @@ export function buildMovementRecord(
 			: null,
 		stopped: movement.state === 'stopped' || movement.constrained,
 		user: movement.user,
+		offer: readMovementOfferTag(movement.constrainOptions),
 	};
 }

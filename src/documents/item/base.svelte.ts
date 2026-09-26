@@ -5,6 +5,11 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import {
+	type OfferActor,
+	type OfferCard,
+	reconcileMovementOffers,
+} from '../../utils/movement/movementOffers.js';
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -186,6 +191,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		hookContext: Record<string, unknown>,
 	): Promise<ChatMessage | null> {
 		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+		const card = chatData as OfferCard;
+		if (!suppressCard && card.system) {
+			card.system.movementOffers = reconcileMovementOffers(card, {
+				source: this.actor as unknown as OfferActor | null,
+			});
+		}
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
