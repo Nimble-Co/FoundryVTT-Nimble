@@ -276,7 +276,6 @@ describe('FreeMoveRule', () => {
 				direction: 'away',
 				ignoreDifficultTerrain: true,
 			});
-			expect(offer.reason).toContain('Hero');
 			expect(offer.reason).toContain('Swift Step');
 		});
 

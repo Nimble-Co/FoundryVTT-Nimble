@@ -1184,11 +1184,11 @@
 					"hint": "Optional. When set, the offer occurs only while this charge pool has a charge, and each offer spends 1 charge. Leave empty for no limit."
 				},
 				"reasons": {
-					"onActivation": "When {actor} uses {item}",
-					"onPoolGain": "When {actor} gains {pool}",
-					"onInitiativeRolled": "When {actor} rolls Initiative",
-					"onTurnStart": "At the start of the turn of {actor}",
-					"onCritReceived": "When {actor} takes a critical hit"
+					"onActivation": "used {item}",
+					"onPoolGain": "gained {pool}",
+					"onInitiativeRolled": "rolled Initiative",
+					"onTurnStart": "turn started",
+					"onCritReceived": "took a critical hit"
 				}
 			},
 			"movementTrigger": {
