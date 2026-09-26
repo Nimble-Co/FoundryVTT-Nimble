@@ -41,13 +41,10 @@
 		image={system.image || 'icons/svg/item-bag.svg'}
 		alt={system.name}
 		heading={system.name}
+		subheading={system.reason || undefined}
 	/>
 
 	<section class="nimble-movement-offer-card__section">
-		{#if system.reason}
-			<p class="nimble-movement-offer-card__reason">{system.reason}</p>
-		{/if}
-
 		{#each moveNodes as node (node.id)}
 			<MoveNode {node} />
 		{/each}
@@ -61,12 +58,6 @@
 			flex-direction: column;
 			gap: 0.5rem;
 			padding: var(--nimble-card-section-padding, 0.5rem);
-		}
-
-		&__reason {
-			margin: 0;
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-dark-text-color);
 		}
 	}
 </style>
