@@ -9,7 +9,7 @@ type ItemSource = {
 	system?: {
 		activation?: {
 			duration?: { quantity?: number; type?: string };
-			effects?: { type?: string; condition?: string; children?: unknown }[];
+			effects?: { type?: string; condition?: string; on?: Record<string, unknown> }[];
 		};
 		properties?: { selected?: string[] };
 	};
@@ -51,7 +51,7 @@ function hasConcentrationNode(effects: unknown): boolean {
 	return effects.some(
 		(effect) =>
 			(effect?.type === 'condition' && effect?.condition === 'concentration') ||
-			hasConcentrationNode(effect?.children),
+			Object.values(effect?.on ?? {}).some(hasConcentrationNode),
 	);
 }
 
@@ -99,7 +99,7 @@ describe('concentration pack data', () => {
 			Object.fromEntries(
 				Object.values(CONCENTRATION_PACK_FIXES)
 					.filter((fix) => fix.duration)
-					.map((fix) => [fix.name, fix.duration]),
+					.map((fix) => [fix.name, fix.duration?.corrected]),
 			),
 		);
 	});

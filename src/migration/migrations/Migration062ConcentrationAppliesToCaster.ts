@@ -3,14 +3,26 @@ import { MigrationBase } from '../MigrationBase.js';
 
 const CONCENTRATION = 'concentration';
 
+interface Duration {
+	quantity: number;
+	type: string;
+}
+
 interface ConcentrationPackFix {
 	/** For logs and for the pack test, which matches files by the id in the key. */
 	name: string;
-	/** The duration the rulebook gives it, when what shipped was wrong. */
-	duration?: { quantity: number; type: string };
+	/**
+	 * The duration the rulebook gives it, when what shipped was wrong, alongside
+	 * the wrong value it shipped with. A stored duration that is neither is a
+	 * GM's own edit and is left alone.
+	 */
+	duration?: { shipped: Duration; corrected: Duration };
 	/** Set when the printed text says Concentration but the property was never ticked. */
 	addsProperty?: boolean;
 }
+
+const SHIPPED_ONE_MINUTE: Duration = { quantity: 1, type: 'minute' };
+const TEN_MINUTES: Duration = { quantity: 10, type: 'minute' };
 
 /**
  * The concentration items the rulebook disagrees with, keyed by compendium
@@ -23,23 +35,23 @@ interface ConcentrationPackFix {
 export const CONCENTRATION_PACK_FIXES: Record<string, ConcentrationPackFix> = {
 	'Compendium.nimble.nimble-spells.Item.DHEl4NDcNMu2ZAj0': {
 		name: 'Fly',
-		duration: { quantity: 10, type: 'minute' },
+		duration: { shipped: SHIPPED_ONE_MINUTE, corrected: TEN_MINUTES },
 	},
 	'Compendium.nimble.nimble-secret-spells.Item.21OMcsYYwn5C7CLR': {
 		name: 'Greater Windform',
-		duration: { quantity: 10, type: 'minute' },
+		duration: { shipped: SHIPPED_ONE_MINUTE, corrected: TEN_MINUTES },
 	},
 	'Compendium.nimble.nimble-secret-spells.Item.eX8CJssX3F2vqFi1': {
 		name: 'Lesser Windform',
-		duration: { quantity: 10, type: 'minute' },
+		duration: { shipped: SHIPPED_ONE_MINUTE, corrected: TEN_MINUTES },
 	},
 	'Compendium.nimble.nimble-secret-spells.Item.pGCVd6N7Ed0AeEBE': {
 		name: 'Radiant Bond',
-		duration: { quantity: 10, type: 'minute' },
+		duration: { shipped: SHIPPED_ONE_MINUTE, corrected: TEN_MINUTES },
 	},
 	'Compendium.nimble.nimble-magic-items.Item.xk3YG0WdGuzb432h': {
 		name: 'Wand of Fly',
-		duration: { quantity: 10, type: 'minute' },
+		duration: { shipped: SHIPPED_ONE_MINUTE, corrected: TEN_MINUTES },
 		addsProperty: true,
 	},
 	'Compendium.nimble.nimble-magic-items.Item.R8tUgZsxOMV9IQDT': {
@@ -54,7 +66,8 @@ function isConcentrationNode(effect: any): boolean {
 
 /**
  * Strips concentration nodes at every depth, since a node can nest under
- * another and would otherwise apply the condition a second time.
+ * another and would otherwise apply the condition a second time. Children are
+ * stored per outcome under `on.<context>[]`, so every array there is walked.
  *
  * @returns the pruned nodes, or `null` when nothing matched.
  */
@@ -70,7 +83,11 @@ function withoutConcentrationNodes(effects: unknown): unknown[] | null {
 				return false;
 			}
 
-			if (Array.isArray(node?.children)) node.children = prune(node.children);
+			if (node?.on && typeof node.on === 'object') {
+				for (const [context, children] of Object.entries(node.on)) {
+					if (Array.isArray(children)) node.on[context] = prune(children);
+				}
+			}
 
 			return true;
 		});
@@ -89,8 +106,9 @@ function withoutConcentrationNodes(effects: unknown): unknown[] | null {
  * keeps its node: nothing else applies the condition there.
  *
  * The named items are corrected whatever their property says, because a copy
- * already on a character is never re-imported from the pack, and a GM who
- * un-ticked Concentration still wants the printed duration.
+ * already on a character is never re-imported from the pack. A duration is only
+ * rewritten when it still holds the wrong value that shipped, so a GM's own
+ * edit survives.
  */
 class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 	static override readonly version = 62;
@@ -116,13 +134,15 @@ class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 	#correctDuration(source: any, fix: ConcentrationPackFix): void {
 		const current = source.system?.activation?.duration;
 		if (!current || !fix.duration) return;
-		if (current.quantity === fix.duration.quantity && current.type === fix.duration.type) return;
 
-		current.quantity = fix.duration.quantity;
-		current.type = fix.duration.type;
+		const { shipped, corrected } = fix.duration;
+		if (current.quantity !== shipped.quantity || current.type !== shipped.type) return;
+
+		current.quantity = corrected.quantity;
+		current.type = corrected.type;
 
 		console.log(
-			`Nimble Migration | ${source.name}: corrected its concentration duration to ${fix.duration.quantity} ${fix.duration.type}`,
+			`Nimble Migration | ${source.name}: corrected its concentration duration to ${corrected.quantity} ${corrected.type}`,
 		);
 	}
 

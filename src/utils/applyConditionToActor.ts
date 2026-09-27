@@ -237,7 +237,10 @@ async function restoreReplacedEffects(
 
 	for (const source of sources) {
 		try {
-			await activeEffectClass.create(source, { parent: target, keepId: true });
+			// A refusing `preCreateActiveEffect` hook resolves undefined rather than
+			// throwing, and that is a loss too.
+			const restored = await activeEffectClass.create(source, { parent: target, keepId: true });
+			if (!restored) lost += 1;
 		} catch (error) {
 			lost += 1;
 			console.error('Nimble | Could not restore a replaced condition.', error);

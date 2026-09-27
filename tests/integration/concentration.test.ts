@@ -5,7 +5,7 @@
  * ActiveEffect.implementation, so only these exercise real persistence.
  */
 
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { messageFromFlow, purgeTestDocuments, settle, waitFor } from './liveHelpers.ts';
 
 const TEST_PREFIX = 'V14 Concentration';
@@ -106,6 +106,24 @@ describe('concentration on cast', () => {
 		await waitFor(() => concentrationEffects().length === 0, 'concentration to clear');
 	}
 
+	// Every test shares one caster, so a failed assertion must not leave a
+	// concentration behind for the next one.
+	afterEach(clearConcentration);
+
+	/** Keeps the shared caster clean when an assertion in `body` throws. */
+	async function withTrackFeature(schools: string[], body: () => Promise<void>) {
+		const [feature] = await caster.createEmbeddedDocuments('Item', [
+			trackFeatureData(`${TEST_PREFIX} Master of Storm`, schools),
+		]);
+		await settle(400);
+
+		try {
+			await body();
+		} finally {
+			await caster.deleteEmbeddedDocuments('Item', [feature.id]);
+		}
+	}
+
 	test('casting persists a concentration effect on the caster, credited to the spell', async () => {
 		const spell = await addSpell('Persisting Gale', 'wind');
 
@@ -115,8 +133,6 @@ describe('concentration on cast', () => {
 		const [effect] = concentrationEffects();
 		expect(effect.origin).toBe((spell as unknown as { uuid: string }).uuid);
 		expect(effect.getFlag(game.system.id, 'concentrationTrack')).toBe('default');
-
-		await clearConcentration();
 	}, 60_000);
 
 	test('the card reports the concentration it applied', async () => {
@@ -125,8 +141,6 @@ describe('concentration on cast', () => {
 		const card = await castSpell(spell);
 
 		expect((card?.system as { concentration?: boolean })?.concentration).toBe(true);
-
-		await clearConcentration();
 	}, 60_000);
 
 	test('a second cast leaves the caster with exactly one concentration', async () => {
@@ -141,97 +155,82 @@ describe('concentration on cast', () => {
 
 		expect(concentrationEffects()).toHaveLength(1);
 		expect(concentrationEffects()[0].origin).toBe((second as unknown as { uuid: string }).uuid);
-
-		await clearConcentration();
 	}, 90_000);
 
 	test('a concentrationTrack rule lets two tracked schools be held at once', async () => {
-		const [feature] = await caster.createEmbeddedDocuments('Item', [
-			trackFeatureData(`${TEST_PREFIX} Master of Storm`, ['lightning', 'wind']),
-		]);
-		await settle(400);
+		await withTrackFeature(['lightning', 'wind'], async () => {
+			const lightning = await addSpell('Tracked Bolt', 'lightning');
+			const wind = await addSpell('Tracked Gale', 'wind');
 
-		const lightning = await addSpell('Tracked Bolt', 'lightning');
-		const wind = await addSpell('Tracked Gale', 'wind');
+			await castSpell(lightning);
+			await waitFor(() => concentrationEffects().length === 1, 'the lightning concentration');
 
-		await castSpell(lightning);
-		await waitFor(() => concentrationEffects().length === 1, 'the lightning concentration');
+			await castSpell(wind);
+			await waitFor(
+				() => concentrationEffects().length === 2,
+				'the wind concentration alongside it',
+			);
 
-		await castSpell(wind);
-		await waitFor(() => concentrationEffects().length === 2, 'the wind concentration alongside it');
+			expect(
+				concentrationEffects()
+					.map((effect) => effect.getFlag(game.system.id, 'concentrationTrack'))
+					.sort(),
+			).toEqual(['lightning', 'wind']);
 
-		expect(
-			concentrationEffects()
-				.map((effect) => effect.getFlag(game.system.id, 'concentrationTrack'))
-				.sort(),
-		).toEqual(['lightning', 'wind']);
+			// Two named schools are two concentrations, never three: a school the rule
+			// does not name takes the whole capacity back.
+			const fire = await addSpell('Untracked Flame', 'fire');
+			await castSpell(fire);
+			await waitFor(() => concentrationEffects().length === 1, 'the untracked concentration alone');
 
-		// Two named schools are two concentrations, never three: a school the rule
-		// does not name takes the whole capacity back.
-		const fire = await addSpell('Untracked Flame', 'fire');
-		await castSpell(fire);
-		await waitFor(() => concentrationEffects().length === 1, 'the untracked concentration alone');
-
-		expect(concentrationEffects()[0].getFlag(game.system.id, 'concentrationTrack')).toBe('default');
-
-		await clearConcentration();
-		await caster.deleteEmbeddedDocuments('Item', [feature.id]);
+			expect(concentrationEffects()[0].getFlag(game.system.id, 'concentrationTrack')).toBe(
+				'default',
+			);
+		});
 	}, 120_000);
 
 	test('casting the same tracked school again replaces only that track', async () => {
-		const [feature] = await caster.createEmbeddedDocuments('Item', [
-			trackFeatureData(`${TEST_PREFIX} Master of Storm`, ['lightning', 'wind']),
-		]);
-		await settle(400);
+		await withTrackFeature(['lightning', 'wind'], async () => {
+			const bolt = await addSpell('Replacing Bolt', 'lightning');
+			const gale = await addSpell('Held Gale', 'wind');
+			const secondBolt = await addSpell('Second Bolt', 'lightning');
 
-		const bolt = await addSpell('Replacing Bolt', 'lightning');
-		const gale = await addSpell('Held Gale', 'wind');
-		const secondBolt = await addSpell('Second Bolt', 'lightning');
+			await castSpell(bolt);
+			await castSpell(gale);
+			await waitFor(() => concentrationEffects().length === 2, 'both tracks held');
 
-		await castSpell(bolt);
-		await castSpell(gale);
-		await waitFor(() => concentrationEffects().length === 2, 'both tracks held');
+			await castSpell(secondBolt);
+			await settle(800);
 
-		await castSpell(secondBolt);
-		await settle(800);
-
-		expect(concentrationEffects()).toHaveLength(2);
-		expect(
-			concentrationEffects().find(
-				(effect) => effect.getFlag(game.system.id, 'concentrationTrack') === 'lightning',
-			)?.origin,
-		).toBe((secondBolt as unknown as { uuid: string }).uuid);
-		expect(
-			concentrationEffects().find(
-				(effect) => effect.getFlag(game.system.id, 'concentrationTrack') === 'wind',
-			)?.origin,
-		).toBe((gale as unknown as { uuid: string }).uuid);
-
-		await clearConcentration();
-		await caster.deleteEmbeddedDocuments('Item', [feature.id]);
+			expect(concentrationEffects()).toHaveLength(2);
+			expect(
+				concentrationEffects().find(
+					(effect) => effect.getFlag(game.system.id, 'concentrationTrack') === 'lightning',
+				)?.origin,
+			).toBe((secondBolt as unknown as { uuid: string }).uuid);
+			expect(
+				concentrationEffects().find(
+					(effect) => effect.getFlag(game.system.id, 'concentrationTrack') === 'wind',
+				)?.origin,
+			).toBe((gale as unknown as { uuid: string }).uuid);
+		});
 	}, 120_000);
 
 	test('a tracked school ends a concentration held on the default track', async () => {
-		const [feature] = await caster.createEmbeddedDocuments('Item', [
-			trackFeatureData(`${TEST_PREFIX} Master of Storm`, ['lightning', 'wind']),
-		]);
-		await settle(400);
+		await withTrackFeature(['lightning', 'wind'], async () => {
+			const flame = await addSpell('Displaced Flame', 'fire');
+			const bolt = await addSpell('Displacing Bolt', 'lightning');
 
-		const flame = await addSpell('Displaced Flame', 'fire');
-		const bolt = await addSpell('Displacing Bolt', 'lightning');
+			await castSpell(flame);
+			await waitFor(() => concentrationEffects().length === 1, 'the untracked concentration');
 
-		await castSpell(flame);
-		await waitFor(() => concentrationEffects().length === 1, 'the untracked concentration');
+			await castSpell(bolt);
+			await settle(800);
 
-		await castSpell(bolt);
-		await settle(800);
-
-		expect(concentrationEffects()).toHaveLength(1);
-		expect(concentrationEffects()[0].getFlag(game.system.id, 'concentrationTrack')).toBe(
-			'lightning',
-		);
-
-		await clearConcentration();
-		await caster.deleteEmbeddedDocuments('Item', [feature.id]);
+			expect(concentrationEffects()).toHaveLength(1);
+			expect(concentrationEffects()[0].getFlag(game.system.id, 'concentrationTrack')).toBe(
+				'lightning',
+			);
+		});
 	}, 120_000);
 });
