@@ -125,7 +125,7 @@ When the creature finishes moving, its tag shows what happened:
 
 - **2/2**: it moved the full distance. A Free Move that stopped early by choice shows the spaces it covered, for example **1/3**.
 - **1/3** with a warning sign: a push covered fewer spaces. A creature or the environment can stop a push early, so the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one. The table decides whether an obstacle stopped it. A Free Move whose path was blocked shows the same sign, with no damage.
-- **Not pushed** (**Not pulled**, **Not moved**, or **Not used** for a Free Move): the creature moved a different way first, or the turn ended first. The text on the tag says which.
+- **Not pushed**, **Not pulled**, **Not moved** or **Not used**: the creature moved a different way first, or the turn ended first. The text on the tag says which.
 
 In the books, every push and every Free Move happens as part of the effect that causes it. So in combat, a move still waiting when the turn ends is not used. Out of combat, it waits until the creature next moves. If a creature waits on two moves, its next drag uses the newest one, and the other card shows that it was not used. Adding a target to the card gives that creature the move too, and removing a target takes back a move it has not made. A feature whose distance comes to zero moves nobody.
 

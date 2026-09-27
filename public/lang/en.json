@@ -149,6 +149,7 @@
 						"partial": "{verb} {moved} of {offered}.",
 						"short": "{verb} {moved} of {offered}.",
 						"unused": "Not {passive}. It moved another way instead.",
+						"unusedAny": "Did not use the Forced Movement. It moved another way instead.",
 						"lapsed": "Not {passive}. The turn ended first.",
 						"failedSave": "{verb} {distance}{direction} if it fails the save.",
 						"passedSave": "{verb} {distance}{direction} if it passes the save.",
