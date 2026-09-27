@@ -145,7 +145,8 @@ export function findContainerStorageRejection(
 	if (capacity === null) return null;
 
 	const remaining = storedObjects.filter((stored) => stored._id !== object._id);
-	if (getContainerUsedCapacity([...remaining, object]) > capacity) return 'capacity';
+	const stowedObject = { ...object, system: { ...object.system, equipped: false } };
+	if (getContainerUsedCapacity([...remaining, stowedObject]) > capacity) return 'capacity';
 
 	return null;
 }

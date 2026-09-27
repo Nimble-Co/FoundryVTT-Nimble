@@ -279,6 +279,17 @@ describe('findContainerStorageRejection', () => {
 		expect(findContainerStorageRejection(chest, sword, [sword])).toBeNull();
 	});
 
+	it('measures worn armor at its stowed cost, since storing it takes it off', () => {
+		const pouch = makeContainer('pouch', { capacity: 1 });
+		const plate = makeObject('plate', {
+			slotsRequired: 1,
+			stowedSlotsRequired: 2,
+			equipped: true,
+		});
+
+		expect(findContainerStorageRejection(pouch, plate, [])).toBe('capacity');
+	});
+
 	it('refuses a stored stack that grows past the capacity', () => {
 		const quiver = makeContainer('quiver', { capacity: 1 });
 		const arrows = makeObject('arrows', {
