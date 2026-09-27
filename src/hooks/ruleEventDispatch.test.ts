@@ -934,8 +934,15 @@ describe('ruleEventDispatch', () => {
 			expect(rule.onTurnStart).not.toHaveBeenCalled();
 		});
 
-		it('does nothing for a combatant without an actor', async () => {
-			await expect(fire({ actor: null, combat: {} })).resolves.toBeUndefined();
+		it('dispatches to no other actor for a combatant without an actor', async () => {
+			const otherRule = createMockRule();
+			const otherCombatant = { actor: { rules: [otherRule] } };
+			const combat = { combatant: otherCombatant, combatants: { contents: [otherCombatant] } };
+
+			await fire({ actor: null, combat });
+
+			expect(otherRule.onActiveGmTurnStart).not.toHaveBeenCalled();
+			expect(otherRule.onTurnStart).not.toHaveBeenCalled();
 		});
 
 		it('skips dispatch when the auto-apply setting is disabled', async () => {
