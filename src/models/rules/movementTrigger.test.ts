@@ -32,7 +32,6 @@ const DEFAULTS = {
 	minTargets: 1,
 	observerScope: 'self',
 	allyRadius: 6,
-	payload: 'use',
 	message: '',
 	chargePoolIdentifier: '',
 };
@@ -126,7 +125,6 @@ type TriggerInput = {
 	actor: unknown;
 	item: unknown;
 	token: unknown;
-	payload: string;
 	message: string;
 	targets: string[];
 	moverName: string;
@@ -180,7 +178,6 @@ describe('MovementTriggerRule', () => {
 				'movedToward',
 			]);
 			expect(schema.observerScope?.choices).toEqual(['self', 'selfOrAllyWithin']);
-			expect(schema.payload?.choices).toEqual(['use', 'reminder']);
 			expect(schema.chargePoolIdentifier?.options?.widget).toBe('chargePoolPicker');
 		});
 
@@ -272,7 +269,6 @@ describe('MovementTriggerRule', () => {
 				],
 			});
 			const { rule, actor, item } = makeRule({
-				payload: 'reminder',
 				message: '{mover} moved {spaces} ({spacesMovedThisTurn} this turn) near {targets}.',
 			});
 			const context = makeContext();
@@ -282,7 +278,6 @@ describe('MovementTriggerRule', () => {
 				actor,
 				item,
 				token: context.token,
-				payload: 'reminder',
 				message: 'Goblin moved 3 (5 this turn) near Ann, Bob.',
 				targets: ['Scene.s.Token.a', 'Scene.s.Token.b'],
 				moverName: 'Goblin',
@@ -291,19 +286,10 @@ describe('MovementTriggerRule', () => {
 			});
 		});
 
-		it('uses a default message for each payload when the message is empty', async () => {
-			const context = makeContext({ spaces: 1, spacesThisTurn: 1 });
-			await makeRule({ payload: 'use' }).rule.onMovementFinished(context as never);
-			const use = lastCard().message;
-			await makeRule({ payload: 'reminder' }).rule.onMovementFinished(context as never);
-			const reminder = lastCard().message;
-			expect(use).toContain('Goblin');
-			expect(reminder).toContain('Goblin');
-			expect(use).not.toBe(reminder);
-			for (const message of [use, reminder]) {
-				expect(message).not.toContain('{');
-				expect(message).not.toContain('1 spaces');
-			}
+		it('uses the default message when the message is empty', async () => {
+			await makeRule({ message: '  ' }).rule.onMovementFinished(makeContext() as never);
+			const template = game.i18n.localize('NIMBLE.rules.movementTrigger.defaultMessage');
+			expect(lastCard().message).toBe(template.replaceAll('{mover}', 'Goblin'));
 		});
 
 		it('keeps unknown spaces this turn as null and says unknown in the message', async () => {
@@ -358,8 +344,8 @@ describe('MovementTriggerRule', () => {
 	});
 
 	it('several rules each post their own card', async () => {
-		await makeRule({ payload: 'use' }).rule.onMovementFinished(makeContext() as never);
-		await makeRule({ payload: 'reminder' }).rule.onMovementFinished(makeContext() as never);
+		await makeRule().rule.onMovementFinished(makeContext() as never);
+		await makeRule({ message: 'second' }).rule.onMovementFinished(makeContext() as never);
 		expect(postMovementTriggerCard).toHaveBeenCalledTimes(2);
 	});
 });

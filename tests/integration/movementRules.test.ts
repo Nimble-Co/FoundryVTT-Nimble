@@ -5,7 +5,7 @@
  * freeMove: using the feature posts a Movement Offer card, the offered token
  * then drags as a Free Move, and a Movement made under the offer is recorded
  * on the card. movementTrigger: a finished Movement that agrees with the rule
- * posts a card that offers the item or only reminds the table.
+ * posts a card that lets the owner use the item.
  *
  * Token Movements are real Movements of the token documents; a drop is
  * reproduced with the drag's action and the offer tag, like the sibling
@@ -112,7 +112,6 @@ function movementTriggerRule(id: string, overrides: Record<string, unknown>) {
 		minTargets: 1,
 		observerScope: 'self',
 		allyRadius: 6,
-		payload: 'use',
 		message: '',
 		chargePoolIdentifier: '',
 		...overrides,
@@ -419,7 +418,6 @@ describe('movement rules', () => {
 						creature: 'enemy',
 						geometry: 'enteredReach',
 						reach: 1,
-						payload: 'use',
 					}),
 				]),
 				featureData(`${TEST_PREFIX} Rampage`, [
@@ -431,7 +429,6 @@ describe('movement rules', () => {
 						spacesScope: 'thisTurn',
 						geometry: 'endsAdjacent',
 						reach: 1,
-						payload: 'reminder',
 						message: '{mover} moved {spaces} spaces, {spacesMovedThisTurn} this turn.',
 						chargePoolIdentifier: 'rampage-use',
 					}),
@@ -520,7 +517,7 @@ describe('movement rules', () => {
 			await clearTargets();
 		});
 
-		test('a short move next to a creature posts no reminder', async () => {
+		test('a short move next to a creature posts no card', async () => {
 			await displace(goblinToken, [5, 2]);
 			await heroToken.clearMovementHistory();
 			await settle(500);
@@ -529,21 +526,19 @@ describe('movement rules', () => {
 			expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
 		});
 
-		test('a move that brings this turn to 4 spaces and ends adjacent posts a reminder and spends the charge', async () => {
+		test('a move that brings this turn to 4 spaces and ends adjacent posts a card and spends the charge', async () => {
 			const card = await cardFrom('movementTrigger', hero, () =>
 				moveToken(heroToken, [
 					[4, 4],
 					[4, 2],
 				]),
 			);
-			await waitForRendered(card, '.nimble-movement-trigger-card');
+			await waitForRendered(card, '.nimble-movement-trigger-card button');
 			const text = cardText(card);
 			expect(text).toContain(rampage.name);
 			expect(text).toContain(`${hero.name} moved 4 spaces, 6 this turn.`);
 			expect(text).toContain(`Creatures: ${goblin.name}`);
-			expect(
-				messageNode(card.id!)!.querySelectorAll('.nimble-movement-trigger-card button'),
-			).toHaveLength(0);
+			expect(text).toContain(`Use ${rampage.name}`);
 			await waitFor(
 				() => poolCurrent(hero, rampage, 'rampage-use') === 0,
 				'the Rampage charge to be spent',

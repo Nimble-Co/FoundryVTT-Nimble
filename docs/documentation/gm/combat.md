@@ -146,10 +146,7 @@ Some features grant a Free Move without being used, for example when a creature 
 
 ## Features that react to movement
 
-With **Movement Tracking** on, a feature can react when its creature finishes a move, or when another creature finishes a move near it: an enemy that moves next to you, or the enemies you moved toward. The system never uses the feature for you. It posts a card that names the creatures the move found:
-
-- For a feature you use in reply, such as a Reaction, the card has a **Use** button for the feature's owner. It targets the creatures the card names and then uses the feature as normal, so the player can still change the targets or cancel. Nothing is spent until the feature is used.
-- For a feature that only changes what happens next, the card is a reminder, for example that your next melee attack against that enemy has advantage. A feature limited to some uses per round or per encounter spends the use when the reminder posts.
+With **Movement Tracking** on, a feature can react when its creature finishes a move, or when another creature finishes a move near it: an enemy that moves next to you, or a move of your own that ends next to a creature. The system never uses the feature for you. It posts a card that names the creatures the move found, with a **Use** button for the feature's owner. The button targets the creatures the card names and then uses the feature as normal, so the player can still change the targets or cancel. Nothing is spent until the feature is used.
 
 A move counts from where it began to where it stopped. A move broken into two drags is two moves, but a feature that needs "at least 4 spaces" counts all the spaces moved this turn unless it says otherwise. Each stop that meets the condition posts a new card; whether the feature applies again is the table's call.
 

@@ -265,7 +265,6 @@ describe('chat message cards', () => {
 				rollMode: 0,
 				name: 'Test Trigger Feature',
 				itemUuid: '',
-				payload: 'reminder',
 				message: 'Test Mover moved 3 spaces.',
 				targets: [],
 				moverName: 'Test Mover',

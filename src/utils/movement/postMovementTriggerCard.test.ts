@@ -42,7 +42,6 @@ function input(over: Partial<MovementTriggerCardInput> = {}): MovementTriggerCar
 	return {
 		actor: actor as unknown as Actor,
 		item,
-		payload: 'use',
 		message: 'Goblin moved next to Hero.',
 		targets: ['Scene.s.Token.gob'],
 		moverName: 'Goblin',
@@ -70,7 +69,6 @@ describe('postMovementTriggerCard', () => {
 				rollMode: 0,
 				name: 'Quick Strike',
 				itemUuid: 'Actor.a-hero.Item.i1',
-				payload: 'use',
 				message: 'Goblin moved next to Hero.',
 				targets: ['Scene.s.Token.gob'],
 				moverName: 'Goblin',
@@ -110,11 +108,10 @@ describe('postMovementTriggerCard', () => {
 
 	it('speaks as the actor alone when it has no active token', async () => {
 		actor.getActiveTokens.mockReturnValue([]);
-		await postMovementTriggerCard(input({ payload: 'reminder', targets: [] }));
+		await postMovementTriggerCard(input({ targets: [] }));
 
 		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: null });
 		const system = (create.mock.calls[0][0] as { system: Record<string, unknown> }).system;
-		expect(system.payload).toBe('reminder');
 		expect(system.targets).toEqual([]);
 	});
 });

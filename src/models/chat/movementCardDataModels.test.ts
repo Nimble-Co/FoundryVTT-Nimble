@@ -43,19 +43,12 @@ describe('movement chat card data models', () => {
 				'targets',
 				'name',
 				'itemUuid',
-				'payload',
 				'message',
 				'moverName',
 				'spaces',
 				'spacesThisTurn',
 			].sort(),
 		);
-	});
-
-	it('lets a movementTrigger card be a use card or a reminder, a use card by default', () => {
-		const payload = movementTriggerSchema().payload as { choices: string[]; initial: string };
-		expect(payload.choices).toEqual(['use', 'reminder']);
-		expect(payload.initial).toBe('use');
 	});
 
 	it('keeps movementTrigger distances at zero or more, with spacesThisTurn unknown by default', () => {

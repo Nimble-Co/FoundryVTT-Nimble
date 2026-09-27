@@ -1331,7 +1331,7 @@
 				}
 			},
 			"movementTrigger": {
-				"description": "Post a chat card when a Movement agrees with the conditions. The card can let the owner use this item, or it can only show a reminder.",
+				"description": "Post a chat card when a Movement agrees with the conditions. The card lets the owner use this item.",
 				"event": {
 					"label": "Event",
 					"hint": "selfMoved: this creature moves. creatureMoved: a different creature moves."
@@ -1372,10 +1372,6 @@
 					"label": "Ally range",
 					"hint": "The maximum number of spaces between this creature and a watched ally. 0 means all allies on the scene."
 				},
-				"payload": {
-					"label": "Card",
-					"hint": "use: the card lets the owner use this item with a button. reminder: the card only shows the message."
-				},
 				"message": {
 					"label": "Message",
 					"hint": "The text on the card. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn, or unknown) and {targets} (the creatures that were found). Leave empty to use the default text."
@@ -1384,10 +1380,7 @@
 					"label": "Charge pool",
 					"hint": "Optional. When set, the card is posted only while this charge pool has a charge, and each card spends 1 charge. Leave empty for no limit."
 				},
-				"defaultMessages": {
-					"use": "{mover} moved. You can use this item now.",
-					"reminder": "{mover} moved."
-				}
+				"defaultMessage": "{mover} moved. You can use this item now."
 			},
 			"grantMovement": {
 				"description": "Grant a base movement mode (walk, fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
