@@ -1963,7 +1963,11 @@ class NimbleChatMessage extends ChatMessage {
 		);
 
 		await this.update({
-			system: { targets, incomingReactions: updatedEntries },
+			system: {
+				targets,
+				incomingReactions: updatedEntries,
+				movementOffers: this.#movementOffersFor(targets),
+			},
 		} as Record<string, unknown>);
 
 		const tokenDoc = fromUuidSync(entry.tokenUuid) as TokenDocument | null;
