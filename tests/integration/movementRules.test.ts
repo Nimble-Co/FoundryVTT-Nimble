@@ -82,6 +82,16 @@ function chargePoolRule(identifier: string) {
 	};
 }
 
+function chargeConsumerRule(poolIdentifier: string) {
+	return {
+		...ruleBase(`${poolIdentifier}-consumer`, poolIdentifier),
+		type: 'chargeConsumer',
+		poolIdentifier,
+		poolScope: 'item',
+		cost: '1',
+	};
+}
+
 function freeMoveRule(id: string, overrides: Record<string, unknown> = {}) {
 	return {
 		...ruleBase(id, id, 2),
@@ -113,7 +123,6 @@ function movementTriggerRule(id: string, overrides: Record<string, unknown>) {
 		observerScope: 'self',
 		allyRadius: 6,
 		message: '',
-		chargePoolIdentifier: '',
 		...overrides,
 	};
 }
@@ -407,6 +416,7 @@ describe('movement rules', () => {
 		let goblinToken: TokenDocument;
 		let lash: Item;
 		let rampage: Item;
+		let rampageCard: ChatMessage;
 
 		beforeAll(async () => {
 			hero = (await Actor.create({ name: `${TEST_PREFIX} Warden`, type: 'character' }))!;
@@ -422,7 +432,9 @@ describe('movement rules', () => {
 				]),
 				featureData(`${TEST_PREFIX} Rampage`, [
 					chargePoolRule('rampage-use'),
+					chargeConsumerRule('rampage-use'),
 					movementTriggerRule('rampage-trigger', {
+						predicate: { 'self:rampage-useChargePool': { min: 1 } },
 						event: 'selfMoved',
 						creature: 'any',
 						minSpaces: 4,
@@ -430,7 +442,6 @@ describe('movement rules', () => {
 						geometry: 'endsAdjacent',
 						reach: 1,
 						message: '{mover} moved {spaces} spaces, {spacesMovedThisTurn} this turn.',
-						chargePoolIdentifier: 'rampage-use',
 					}),
 				]),
 			]);
@@ -526,7 +537,7 @@ describe('movement rules', () => {
 			expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
 		});
 
-		test('a move that brings this turn to 4 spaces and ends adjacent posts a card and spends the charge', async () => {
+		test('a move that brings this turn to 4 spaces and ends adjacent posts a card that spends nothing', async () => {
 			const card = await cardFrom('movementTrigger', hero, () =>
 				moveToken(heroToken, [
 					[4, 4],
@@ -539,10 +550,30 @@ describe('movement rules', () => {
 			expect(text).toContain(`${hero.name} moved 4 spaces, 6 this turn.`);
 			expect(text).toContain(`Creatures: ${goblin.name}`);
 			expect(text).toContain(`Use ${rampage.name}`);
+			expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
+			rampageCard = card;
+		});
+
+		test("the card's Use button uses the item, and the item spends its charge", async () => {
+			const button = messageNode(rampageCard.id!)!.querySelector<HTMLButtonElement>(
+				'.nimble-movement-trigger-card button',
+			)!;
+			const before = messageIds();
+			button.click();
+			await waitFor(
+				() =>
+					newMessages(before, 'feature', hero).some(
+						(message) =>
+							foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) ===
+							rampage.uuid,
+					),
+				'the Rampage activation card',
+			);
 			await waitFor(
 				() => poolCurrent(hero, rampage, 'rampage-use') === 0,
 				'the Rampage charge to be spent',
 			);
+			await clearTargets();
 		});
 
 		test('with the charge spent a further qualifying move posts nothing', async () => {

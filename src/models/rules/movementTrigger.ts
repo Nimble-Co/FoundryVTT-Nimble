@@ -1,6 +1,5 @@
 import type { MovementTriggerOptions, TriggerCreature, TriggerGeometry } from '#types/movement.js';
 import localize from '#utils/localize.js';
-import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { matchMovementTrigger } from '../../utils/movement/matchMovementTrigger.js';
 import { postMovementTriggerCard } from '../../utils/movement/postMovementTriggerCard.js';
 import { withWidget } from './_widgetOption.js';
@@ -129,16 +128,6 @@ function schema() {
 			label: 'NIMBLE.rules.movementTrigger.message.label',
 			hint: 'NIMBLE.rules.movementTrigger.message.hint',
 		}),
-		chargePoolIdentifier: new fields.StringField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: '',
-				label: 'NIMBLE.rules.movementTrigger.chargePoolIdentifier.label',
-				hint: 'NIMBLE.rules.movementTrigger.chargePoolIdentifier.hint',
-				widget: 'chargePoolPicker',
-			}),
-		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'movementTrigger' }),
 	};
 }
@@ -172,7 +161,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	declare observerScope: MovementTriggerOptions['observerScope'];
 	declare allyRadius: number;
 	declare message: string;
-	declare chargePoolIdentifier: string;
 
 	static override defineSchema(): MovementTriggerRule.Schema {
 		return {
@@ -195,7 +183,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 				['observerScope', 'string'],
 				['allyRadius', 'number'],
 				['message', 'string'],
-				['chargePoolIdentifier', 'string'],
 			]),
 		);
 	}
@@ -215,9 +202,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 		);
 		if (!match) return;
 
-		const { actor } = this;
-		if (!hasRuleCharge(actor, this.chargePoolIdentifier)) return;
-
 		const moverName = record.token.name || record.actor?.name || '';
 		const targetNames = match.targets.map((token) => token.name ?? '').filter(Boolean);
 		const template = this.message.trim() || localize('NIMBLE.rules.movementTrigger.defaultMessage');
@@ -231,8 +215,8 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			.replaceAll('{spacesMovedThisTurn}', spacesThisTurn)
 			.replaceAll('{targets}', targetNames.join(', '));
 
-		const card = await postMovementTriggerCard({
-			actor,
+		await postMovementTriggerCard({
+			actor: this.actor,
 			item: this.item,
 			token: context.token,
 			message,
@@ -241,7 +225,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			spaces: record.spaces,
 			spacesThisTurn: record.spacesThisTurn,
 		});
-		if (card) await spendRuleCharge(actor, this.chargePoolIdentifier);
 	}
 
 	#options(): MovementTriggerOptions {
