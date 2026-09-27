@@ -174,12 +174,14 @@
 				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
 				"noRecipient": "No creature to move."
 			},
-			"movementContext": {
-				"unknown": "unknown"
-			},
 			"movementTrigger": {
 				"use": "Use {name}",
-				"targets": "Creatures: {names}"
+				"targets": "Creatures: {names}",
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"movement": "{mover} moved {spaces}.",
+				"movementThisTurn": "{mover} moved {spaces}, {spacesThisTurn} this turn.",
+				"unknownMover": "A creature"
 			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
@@ -1374,9 +1376,9 @@
 				},
 				"message": {
 					"label": "Message",
-					"hint": "The text on the card. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn, or unknown) and {targets} (the creatures that were found). Leave empty to use the default text."
+					"hint": "The text on the card, under the line that says who moved and how far. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn) and {targets} (the creatures that were found). Leave empty to use the default text."
 				},
-				"defaultMessage": "{mover} moved. You can use this item now."
+				"defaultMessage": "You can use this item now."
 			},
 			"grantMovement": {
 				"description": "Grant a base movement mode (walk, fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",

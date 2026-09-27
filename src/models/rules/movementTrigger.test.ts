@@ -312,12 +312,12 @@ describe('MovementTriggerRule', () => {
 			expect(lastCard().message).toBe(template.replaceAll('{mover}', 'Goblin'));
 		});
 
-		it('keeps unknown spaces this turn as null and says unknown in the message', async () => {
+		it("keeps unknown spaces this turn as null, and the message uses this Movement's spaces", async () => {
 			await makeRule({ message: '{spacesMovedThisTurn} this turn' }).rule.onMovementFinished(
 				makeContext({ spacesThisTurn: null }) as never,
 			);
 			expect(lastCard().spacesThisTurn).toBeNull();
-			expect(lastCard().message).toBe('unknown this turn');
+			expect(lastCard().message).toBe('3 this turn');
 		});
 	});
 

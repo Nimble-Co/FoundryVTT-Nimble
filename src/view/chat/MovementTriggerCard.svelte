@@ -25,7 +25,11 @@
 	/>
 
 	<section class="nimble-movement-trigger-card__section">
-		<p class="nimble-movement-trigger-card__message">{card.system.message}</p>
+		<p class="nimble-movement-trigger-card__movement">{card.movement}</p>
+
+		{#if card.system.message}
+			<p class="nimble-movement-trigger-card__message">{card.system.message}</p>
+		{/if}
 
 		{#if card.targetNames}
 			<p class="nimble-movement-trigger-card__targets">
@@ -51,6 +55,7 @@
 			padding: var(--nimble-card-section-padding, 0.5rem);
 		}
 
+		&__movement,
 		&__message,
 		&__targets {
 			margin: 0;
