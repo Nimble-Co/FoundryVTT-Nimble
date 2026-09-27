@@ -35,7 +35,7 @@ const TEST_PREFIX = 'V14 Movement Offers';
 const OFFERS_SETTING = 'automation.movementOffers';
 const TRACKING_SETTING = 'automation.movementTracking';
 const FORCED_ACTION = `${game.system.id}Forced`;
-const TAG_KEY = 'nimbleMovementOffer';
+const TAG_KEY = `${game.system.id}MovementOffer`;
 
 interface OfferTag {
 	messageId: string;

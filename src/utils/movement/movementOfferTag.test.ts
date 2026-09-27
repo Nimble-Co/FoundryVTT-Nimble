@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	MOVEMENT_OFFER_TAG_KEY,
 	readMovementOfferTag,
 	tagDragMovements,
 	withMovementOfferTag,
@@ -22,7 +23,7 @@ describe('movement offer tag', () => {
 	it('is null for a Movement made under no offer, or a malformed tag', () => {
 		expect(readMovementOfferTag(undefined)).toBeNull();
 		expect(readMovementOfferTag({ ignoreWalls: true })).toBeNull();
-		expect(readMovementOfferTag({ nimbleMovementOffer: { messageId: 'm1' } })).toBeNull();
+		expect(readMovementOfferTag({ [MOVEMENT_OFFER_TAG_KEY]: { messageId: 'm1' } })).toBeNull();
 	});
 });
 
@@ -53,6 +54,9 @@ describe('tagDragMovements', () => {
 		const own = movement();
 		own.a.constrainOptions = { ignoreWalls: true };
 		const tagged = tagDragMovements(own, shared, () => tag);
-		expect(tagged.a.constrainOptions).toEqual({ ignoreWalls: true, nimbleMovementOffer: tag });
+		expect(tagged.a.constrainOptions).toEqual({
+			ignoreWalls: true,
+			[MOVEMENT_OFFER_TAG_KEY]: tag,
+		});
 	});
 });
