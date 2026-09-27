@@ -26,43 +26,29 @@
 		font-weight: 700;
 		line-height: 1.2;
 		white-space: nowrap;
-		color: var(--nimble-medium-text-color);
+		color: var(--nimble-dark-text-color);
 		pointer-events: all;
-		background: hsl(41, 18%, 54%, 15%);
+		background: var(--nimble-movement-chip-background-color);
 		border-radius: 3px;
 
 		i {
 			font-size: 0.625rem;
 		}
 
-		&[data-status='open'],
-		&[data-status='untracked'],
-		&[data-status='conditional'] {
-			color: var(--nimble-dark-text-color);
-		}
-
 		&[data-status='taken'],
 		&[data-status='partial'] {
-			color: var(--nimble-card-text-color);
-			background: hsl(120, 40%, 40%, 22%);
-
-			i {
-				color: var(--color-level-success, #26b231);
-			}
+			color: var(--nimble-movement-chip-done-color);
+			background: var(--nimble-movement-chip-done-background-color);
 		}
 
 		&[data-status='short'] {
-			color: var(--nimble-card-text-color);
-			background: hsl(40, 90%, 50%, 22%);
-
-			i {
-				color: var(--color-level-warning, #d98a00);
-			}
+			color: var(--nimble-movement-chip-short-color);
+			background: var(--nimble-movement-chip-short-background-color);
 		}
 
 		&[data-status='unused'],
 		&[data-status='lapsed'] {
-			opacity: 0.75;
+			color: var(--nimble-medium-text-color);
 		}
 	}
 </style>
