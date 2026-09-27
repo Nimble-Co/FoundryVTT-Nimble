@@ -540,6 +540,30 @@ describe('FreeMoveRule', () => {
 			await activate(makeRule({ chargePoolIdentifier: 'thrill' }, { pool: 2, actorType: 'npc' }));
 			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
+
+		it('two combatants of one actor rolling Initiative in the same tick share its one charge', async () => {
+			const harness = makeRule(
+				{ trigger: 'onInitiativeRolled', chargePoolIdentifier: 'thrill' },
+				{ pool: 1 },
+			);
+			const poolItem = poolItemOf(harness) as unknown as {
+				update: ReturnType<typeof vi.fn>;
+				flags: { nimble: { chargePools: Record<string, { current: number }> } };
+			};
+			poolItem.update.mockImplementation(async (changes: Record<string, unknown>) => {
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				const pools = changes['flags.nimble.chargePools'] as Record<string, { current: number }>;
+				poolItem.flags.nimble.chargePools.thrill.current = pools.thrill.current;
+			});
+			const roll = (id: string) =>
+				harness.rule.onInitiativeRolled({
+					actor: harness.actor,
+					combatant: { token: harness.addToken(id, { actor: harness.actor }) },
+				} as never);
+			await Promise.all([roll('first'), roll('second')]);
+			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
+			expect(poolItem.update).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	describe('toggles', () => {
