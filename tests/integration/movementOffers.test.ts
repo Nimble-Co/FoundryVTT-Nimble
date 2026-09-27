@@ -9,9 +9,13 @@
  * the label and the name are read from the seams Foundry asks during a drag,
  * and the recording is driven by real Movements of the token document carrying
  * the same options a drop would.
+ *
+ * Movement Offers need Movement Tracking, so both toggles are pinned on. Each
+ * test deletes the cards it posted, so no open offer arms the goblin in a
+ * later test.
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import {
 	clearTargets,
 	createViewedTestScene,
@@ -29,6 +33,7 @@ import {
 
 const TEST_PREFIX = 'V14 Movement Offers';
 const OFFERS_SETTING = 'automation.movementOffers';
+const TRACKING_SETTING = 'automation.movementTracking';
 const FORCED_ACTION = `${game.system.id}Forced`;
 const TAG_KEY = 'nimbleMovementOffer';
 
@@ -37,10 +42,16 @@ interface OfferTag {
 	offerId: string;
 }
 
+interface DropOptions {
+	constrainOptions?: Record<string, unknown>;
+	movement: Record<string, { constrainOptions?: Record<string, unknown> }>;
+}
+
 interface DraggableToken {
+	id: string;
 	_getDragConstrainOptions(): Record<string, unknown>;
-	_getDragLeftDropUpdateOptions(): { constrainOptions?: Record<string, unknown> };
 	_getDragMovementAction(): string;
+	_prepareDragLeftDropUpdates(event: object): [object[], DropOptions];
 }
 
 interface StoredOffer {
@@ -74,7 +85,6 @@ function shoveFeatureData(name: string) {
 						distanceBySize: {},
 						ignoreDifficultTerrain: true,
 						direction: 'away',
-						chooser: 'source',
 						parentNode: null,
 						parentContext: null,
 					},
@@ -90,11 +100,19 @@ describe('movement offers', () => {
 	let goblinToken: TokenDocument;
 	let feature: Item;
 	let offersWereEnabled: boolean;
+	let trackingWasEnabled: boolean;
+	let messageIdsBefore: Set<string>;
 	let combat: Combat;
 	let card: OfferCardDocument;
 
 	function placeable(): DraggableToken {
 		return canvas.tokens?.get(goblinToken.id!) as unknown as DraggableToken;
+	}
+
+	function heroPlaceable(): DraggableToken {
+		return canvas.tokens?.placeables.find(
+			(token) => token.name === hero.name,
+		) as unknown as DraggableToken;
 	}
 
 	function offersOn(message: ChatMessage): StoredOffer[] {
@@ -107,8 +125,21 @@ describe('movement offers', () => {
 			.trim();
 	}
 
-	function dropTag(): OfferTag | undefined {
-		return placeable()._getDragLeftDropUpdateOptions().constrainOptions?.[TAG_KEY] as
+	/** The drop options core builds for a one-space drag of the tokens, grabbed by the first. */
+	function prepareDrop(...tokens: DraggableToken[]): DropOptions {
+		const origin = { x: 0, y: 0, elevation: 0 };
+		const contexts = Object.fromEntries(
+			tokens.map((token) => [
+				token.id,
+				{ token, foundPath: [origin, { ...origin, x: GRID_SIZE }] },
+			]),
+		);
+		const [, options] = tokens[0]._prepareDragLeftDropUpdates({ interactionData: { contexts } });
+		return options;
+	}
+
+	function dropTag(token: DraggableToken = placeable()): OfferTag | undefined {
+		return prepareDrop(token).movement[token.id]?.constrainOptions?.[TAG_KEY] as
 			| OfferTag
 			| undefined;
 	}
@@ -145,6 +176,8 @@ describe('movement offers', () => {
 	beforeAll(async () => {
 		await purgeTestDocuments(TEST_PREFIX);
 		offersWereEnabled = getAutomationToggle(OFFERS_SETTING);
+		trackingWasEnabled = getAutomationToggle(TRACKING_SETTING);
+		await setAutomationToggle(TRACKING_SETTING, true);
 		await setAutomationToggle(OFFERS_SETTING, true);
 
 		hero = (await Actor.create({ name: `${TEST_PREFIX} Hero`, type: 'character' }))!;
@@ -180,16 +213,27 @@ describe('movement offers', () => {
 	}, 60_000);
 
 	beforeEach(async () => {
+		await setAutomationToggle(TRACKING_SETTING, true);
 		await setAutomationToggle(OFFERS_SETTING, true);
 		await goblinToken.update({ x: 3 * GRID_SIZE, y: 2 * GRID_SIZE });
 		await settle(500);
+		messageIdsBefore = new Set(game.messages.map((message) => message.id!));
 		card = await activateShove();
 	}, 60_000);
+
+	afterEach(async () => {
+		const posted = game.messages
+			.filter((message) => !messageIdsBefore.has(message.id!))
+			.map((message) => message.id!);
+		if (posted.length) await ChatMessage.deleteDocuments(posted);
+		await settle(200);
+	});
 
 	afterAll(async () => {
 		await combat?.delete().catch((error) => console.error(error));
 		await clearTargets();
 		await setAutomationToggle(OFFERS_SETTING, offersWereEnabled);
+		await setAutomationToggle(TRACKING_SETTING, trackingWasEnabled);
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
@@ -206,9 +250,11 @@ describe('movement offers', () => {
 	test('the offered token drags under the offer, and nothing limits the drag', () => {
 		expect(placeable()._getDragMovementAction()).toBe(FORCED_ACTION);
 		expect(dropTag()).toEqual({ messageId: card.id, offerId: offersOn(card)[0].id });
+		const drop = prepareDrop(placeable());
 		for (const options of [
 			placeable()._getDragConstrainOptions(),
-			placeable()._getDragLeftDropUpdateOptions().constrainOptions ?? {},
+			drop.constrainOptions ?? {},
+			drop.movement[placeable().id]?.constrainOptions ?? {},
 		]) {
 			expect(options.maxDistance).toBeUndefined();
 			expect(options.maxCost).toBeUndefined();
@@ -221,13 +267,20 @@ describe('movement offers', () => {
 	});
 
 	test('a token carrying no offer drags as usual', () => {
-		const heroPlaceable = canvas.tokens?.placeables.find(
-			(token) => token.name === hero.name,
-		) as unknown as DraggableToken;
-		expect(heroPlaceable._getDragMovementAction()).not.toBe(FORCED_ACTION);
-		expect(
-			heroPlaceable._getDragLeftDropUpdateOptions().constrainOptions?.[TAG_KEY],
-		).toBeUndefined();
+		expect(heroPlaceable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
+		expect(prepareDrop(heroPlaceable()).movement[heroPlaceable().id]).toBeDefined();
+		expect(dropTag(heroPlaceable())).toBeUndefined();
+	});
+
+	test('in a drag of two tokens, only the token carrying the offer is named', () => {
+		const drop = prepareDrop(placeable(), heroPlaceable());
+		expect(drop.movement[placeable().id]?.constrainOptions?.[TAG_KEY]).toEqual({
+			messageId: card.id,
+			offerId: offersOn(card)[0].id,
+		});
+		expect(drop.movement[heroPlaceable().id]).toBeDefined();
+		expect(drop.movement[heroPlaceable().id]?.constrainOptions).toBeUndefined();
+		expect(drop.constrainOptions?.[TAG_KEY]).toBeUndefined();
 	});
 
 	test('a drop past the offer moves the whole way, and the card records the offer taken', async () => {
@@ -276,10 +329,25 @@ describe('movement offers', () => {
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 	});
 
-	test('with Movement Offers off nothing is labelled', async () => {
+	test('with Movement Offers off nothing is labelled, and the open offer lapses', async () => {
+		expect(dropTag(), 'the drop should be named while the offer is open').toBeDefined();
 		await setAutomationToggle(OFFERS_SETTING, false);
 		expect(moveNodeText()).toContain(`${goblin.name} up to 2 spaces`);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 		expect(dropTag()).toBeUndefined();
+		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');
+	});
+
+	test('with Movement Tracking off nothing is labelled, and the open offer lapses', async () => {
+		expect(dropTag(), 'the drop should be named while the offer is open').toBeDefined();
+		await setAutomationToggle(TRACKING_SETTING, false);
+		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
+		expect(dropTag()).toBeUndefined();
+		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');
+
+		await setAutomationToggle(TRACKING_SETTING, true);
+		expect(placeable()._getDragMovementAction(), 'a lapsed offer arms nothing').not.toBe(
+			FORCED_ACTION,
+		);
 	});
 });
