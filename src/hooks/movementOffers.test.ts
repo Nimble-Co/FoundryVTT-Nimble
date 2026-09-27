@@ -3,21 +3,17 @@ import type { MovementOffer } from '#types/movement.js';
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 const resolveArmedMovementOffer = vi.hoisted(() => vi.fn());
-const getPrimaryActiveGmId = vi.hoisted(() => vi.fn<() => string | null>(() => 'gm'));
-vi.mock('./resolveArmedMovementOffer.js', () => ({ resolveArmedMovementOffer }));
-vi.mock('../getPrimaryActiveGmId.js', () => ({ getPrimaryActiveGmId }));
+vi.mock('#utils/movement/resolveArmedMovementOffer.js', () => ({ resolveArmedMovementOffer }));
 
 import { SYSTEM_ID, systemHookName } from '#system';
-import {
-	combatSceneIds,
-	lapseOpenMovementOffers,
-	registerMovementOfferListener,
-} from './registerMovementOffers.js';
+import registerMovementOffers from './movementOffers.js';
 
 type GameStub = {
 	user: { id: string; isGM: boolean };
+	users: { activeGM: { id: string } | null };
 	messages: { contents: unknown[] };
 	settings: { get: () => unknown };
+	combats?: unknown[];
 };
 const g = globalThis as unknown as { game: GameStub; Hooks: unknown };
 const previous = { game: g.game, Hooks: g.Hooks };
@@ -29,21 +25,11 @@ function offer(id: string, tokenUuid: string, state: MovementOffer['state'] = 'o
 let update: ReturnType<typeof vi.fn>;
 let offersEnabled: boolean;
 
-beforeAll(() => {
-	g.Hooks = {
-		on: (event: string, handler: (...args: unknown[]) => unknown) => handlers.set(event, handler),
-	};
-	registerMovementOfferListener();
-});
-
-beforeEach(() => {
-	update = vi.fn().mockResolvedValue(undefined);
-	offersEnabled = true;
-	resolveArmedMovementOffer.mockClear();
-	getPrimaryActiveGmId.mockReturnValue('gm');
-	g.game = {
+function stubGame(): GameStub {
+	return {
 		...previous.game,
 		user: { id: 'gm', isGM: true },
+		users: { activeGM: { id: 'gm' } },
 		settings: { get: () => offersEnabled },
 		messages: {
 			contents: [
@@ -57,10 +43,30 @@ beforeEach(() => {
 					},
 					update,
 				},
-				{ system: {}, update: vi.fn() },
 			],
 		},
 	} as GameStub;
+}
+
+const fighter = (id: string) => ({ id, sceneId: 's1' });
+
+beforeAll(() => {
+	g.Hooks = {
+		on: (event: string, handler: (...args: unknown[]) => unknown) => handlers.set(event, handler),
+	};
+	g.game = {
+		...stubGame(),
+		combats: [{ id: 'loaded', round: 1, combatant: fighter('a'), scene: { id: 's1' } }],
+	};
+	registerMovementOffers();
+	registerMovementOffers();
+});
+
+beforeEach(() => {
+	update = vi.fn().mockResolvedValue(undefined);
+	offersEnabled = true;
+	resolveArmedMovementOffer.mockClear();
+	g.game = stubGame();
 });
 
 afterAll(() => {
@@ -72,44 +78,10 @@ const written = () =>
 	(update.mock.calls[0]?.[0]?.system?.movementOffers ?? []).map(
 		(o: MovementOffer) => `${o.id}:${o.state}`,
 	);
+const sceneOneLapsed = ['here:lapsed', 'there:open', 'done:taken'];
+const everyOpenOfferLapsed = ['here:lapsed', 'there:lapsed', 'done:taken'];
 
-describe('lapseOpenMovementOffers', () => {
-	it('lapses the open offers on the scenes and leaves settled ones and other scenes alone', async () => {
-		await lapseOpenMovementOffers(new Set(['s1']));
-		expect(written()).toEqual(['here:lapsed', 'there:open', 'done:taken']);
-	});
-
-	it('lapses nothing when there is no scene', async () => {
-		await lapseOpenMovementOffers(new Set());
-		expect(update).not.toHaveBeenCalled();
-	});
-
-	it('writes nothing off the primary GM or with Movement Offers off', async () => {
-		g.game.user = { id: 'p1', isGM: false };
-		await lapseOpenMovementOffers(new Set(['s1']));
-		g.game.user = { id: 'gm', isGM: true };
-		offersEnabled = false;
-		await lapseOpenMovementOffers(new Set(['s1']));
-		expect(update).not.toHaveBeenCalled();
-	});
-});
-
-describe('combatSceneIds', () => {
-	it('is the combat scene and the scene of each combatant', () => {
-		const ids = combatSceneIds({
-			scene: { id: 's1' },
-			combatants: [{ sceneId: 's2' }, { sceneId: null, token: { parent: { id: 's3' } } }, {}],
-		});
-		expect([...ids].sort()).toEqual(['s1', 's2', 's3']);
-	});
-
-	it('is only the combatant scenes for a combat with no scene, and empty with no combatants', () => {
-		expect([...combatSceneIds({ scene: null, combatants: [{ sceneId: 's2' }] })]).toEqual(['s2']);
-		expect(combatSceneIds({ scene: null, combatants: [] }).size).toBe(0);
-	});
-});
-
-describe('registerMovementOfferListener', () => {
+describe('registerMovementOffers', () => {
 	it('records an offer after every finished Movement', () => {
 		const record = { kind: 'forced' };
 		handlers.get(systemHookName('movementFinished'))?.(record);
@@ -118,7 +90,6 @@ describe('registerMovementOfferListener', () => {
 
 	describe('when the combat updates', () => {
 		let nextCombatId = 0;
-		const fighter = (id: string) => ({ id, sceneId: 's1' });
 		function makeCombat(scene: { id: string } | null = { id: 's1' }) {
 			const combat = {
 				id: `combat-${nextCombatId++}`,
@@ -151,9 +122,7 @@ describe('registerMovementOfferListener', () => {
 			combat.turn = 1;
 			combat.combatant = fighter('b');
 			handlers.get('updateCombat')?.(combat, { turn: 1 });
-			await vi.waitFor(() =>
-				expect(written()).toEqual(['here:lapsed', 'there:open', 'done:taken']),
-			);
+			await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
 		});
 
 		it('lapses offers when the round changes, even for the same combatant', async () => {
@@ -174,6 +143,15 @@ describe('registerMovementOfferListener', () => {
 			expect(update).toHaveBeenCalledOnce();
 		});
 
+		it('knows the turn of a combat that existed when it registered', async () => {
+			handlers.get('updateCombat')?.(
+				{ id: 'loaded', round: 1, combatant: fighter('a'), scene: { id: 's1' } },
+				{ turn: 2 },
+			);
+			await Promise.resolve();
+			expect(update).not.toHaveBeenCalled();
+		});
+
 		it('falls back to the Foundry previous turn for a combat it has not seen', async () => {
 			const combat = {
 				id: 'unseen',
@@ -192,15 +170,13 @@ describe('registerMovementOfferListener', () => {
 			const combat = makeCombat(null);
 			combat.combatant = fighter('b');
 			handlers.get('updateCombat')?.(combat, { turn: 1 });
-			await vi.waitFor(() =>
-				expect(written()).toEqual(['here:lapsed', 'there:open', 'done:taken']),
-			);
+			await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
 		});
 	});
 
 	it('lapses offers on the combat scenes when the combat is deleted', async () => {
 		handlers.get('deleteCombat')?.({ id: 'gone', scene: null, combatants: [{ sceneId: 's1' }] });
-		await vi.waitFor(() => expect(written()).toEqual(['here:lapsed', 'there:open', 'done:taken']));
+		await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
 	});
 
 	describe('when a toggle that gates Movement Offers changes', () => {
@@ -209,7 +185,6 @@ describe('registerMovementOfferListener', () => {
 			value,
 			config: { default: true },
 		});
-		const everyOpenOfferLapsed = ['here:lapsed', 'there:lapsed', 'done:taken'];
 
 		it.each([
 			['automation.movementOffers', true],
