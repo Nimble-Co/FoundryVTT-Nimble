@@ -22,7 +22,6 @@ function createMessage(system: Record<string, unknown> = {}) {
 			actorName: 'Hero',
 			name: 'Quick Strike',
 			itemUuid: 'Actor.hero.Item.i1',
-			payload: 'use',
 			message: 'Goblin moved next to Hero.',
 			targets: ['Scene.s.Token.gob', 'Scene.s.Token.gone', 'Scene.s.Token.ogre'],
 			moverName: 'Goblin',
@@ -82,14 +81,9 @@ describe('MovementTriggerCard', () => {
 		expect(screen.queryByText(/Creatures:/)).toBeNull();
 	});
 
-	it('shows a use button on a use card to the owner of the item', () => {
+	it('shows a use button to the owner of the item', () => {
 		renderCard();
 		expect(useButton()).toBeTruthy();
-	});
-
-	it('shows no use button on a reminder', () => {
-		renderCard({ payload: 'reminder' });
-		expect(useButton()).toBeNull();
 	});
 
 	it('shows no use button to a user who does not own the item', () => {

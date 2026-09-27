@@ -4,7 +4,6 @@ interface TriggerSystem {
 	name: string;
 	image?: string;
 	itemUuid: string;
-	payload: 'use' | 'reminder';
 	message: string;
 	targets: string[];
 }
@@ -47,7 +46,7 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 	const targetNames = $derived(targetTokens.map((token) => token.name).join(', '));
 
 	const item = $derived(resolve<TriggerItem>(system.itemUuid));
-	const canUse = $derived(system.payload === 'use' && item?.isOwner === true);
+	const canUse = $derived(item?.isOwner === true);
 	let using = $state(false);
 
 	function targetCardTokens(): void {

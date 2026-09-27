@@ -3,8 +3,6 @@ export interface MovementTriggerCardInput {
 	item: { uuid: string | null; name: string | null; img?: string | null };
 	/** Speaker token. When undefined, the actor's first active token speaks. */
 	token?: TokenDocument | null;
-	/** 'use' shows a button to use the item; 'reminder' only states the message. */
-	payload: 'use' | 'reminder';
 	/** Already resolved, plain text. */
 	message: string;
 	/** Token uuids the trigger found. */
@@ -19,7 +17,7 @@ function firstActiveToken(actor: Actor): TokenDocument | null {
 	return token?.document ?? null;
 }
 
-/** Posts a card that lets the owner use an item after a Movement, or reminds the table of it. */
+/** Posts a card that lets the owner use an item after a Movement. */
 export async function postMovementTriggerCard(
 	input: MovementTriggerCardInput,
 ): Promise<ChatMessage | null> {
@@ -38,7 +36,6 @@ export async function postMovementTriggerCard(
 			rollMode: 0,
 			name: item.name ?? '',
 			itemUuid: item.uuid ?? '',
-			payload: input.payload,
 			message: input.message,
 			targets: [...input.targets],
 			moverName: input.moverName,

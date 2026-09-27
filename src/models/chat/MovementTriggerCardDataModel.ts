@@ -5,12 +5,6 @@ const { fields } = foundry.data;
 const movementTriggerCardSchema = () => ({
 	name: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
-	payload: new fields.StringField({
-		required: true,
-		nullable: false,
-		initial: 'use',
-		choices: ['use', 'reminder'],
-	}),
 	message: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	moverName: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	spaces: new fields.NumberField({
@@ -38,7 +32,7 @@ declare namespace NimbleMovementTriggerCardData {
 	interface DerivedData extends Record<string, unknown> {}
 }
 
-/** A card that lets the owner use an item after a Movement, or reminds the table of it. */
+/** A card that lets the owner use an item after a Movement. */
 class NimbleMovementTriggerCardData extends foundry.abstract.TypeDataModel<
 	NimbleMovementTriggerCardData.Schema,
 	ChatMessage.ConfiguredInstance,

@@ -121,14 +121,6 @@ function schema() {
 					data.event === 'creatureMoved' && data.observerScope === 'selfOrAllyWithin',
 			}),
 		),
-		payload: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: 'use',
-			choices: ['use', 'reminder'],
-			label: 'NIMBLE.rules.movementTrigger.payload.label',
-			hint: 'NIMBLE.rules.movementTrigger.payload.hint',
-		}),
 		// Plain text: the templateString widget's hint names a formula this rule does not have.
 		message: new fields.StringField({
 			required: true,
@@ -157,8 +149,8 @@ declare namespace MovementTriggerRule {
 
 /**
  * Posts a card when a finished Movement matches the configured event and
- * geometry. The card lets the owner use this rule's item, or only reminds the
- * table; the system never uses the item itself.
+ * geometry. The card lets the owner use this rule's item; the system never
+ * uses the item itself.
  */
 class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	static override group = 'triggers';
@@ -174,7 +166,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	declare minTargets: number;
 	declare observerScope: MovementTriggerOptions['observerScope'];
 	declare allyRadius: number;
-	declare payload: 'use' | 'reminder';
 	declare message: string;
 	declare chargePoolIdentifier: string;
 
@@ -198,7 +189,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 				['minTargets', 'number'],
 				['observerScope', 'string'],
 				['allyRadius', 'number'],
-				['payload', 'string'],
 				['message', 'string'],
 				['chargePoolIdentifier', 'string'],
 			]),
@@ -225,9 +215,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 
 		const moverName = record.token.name || record.actor?.name || '';
 		const targetNames = match.targets.map((token) => token.name ?? '').filter(Boolean);
-		const template =
-			this.message.trim() ||
-			localize(`NIMBLE.rules.movementTrigger.defaultMessages.${this.payload}`);
+		const template = this.message.trim() || localize('NIMBLE.rules.movementTrigger.defaultMessage');
 		const spacesThisTurn =
 			record.spacesThisTurn === null
 				? localize('NIMBLE.chat.movementContext.unknown')
@@ -242,7 +230,6 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			actor,
 			item: this.item,
 			token: context.token,
-			payload: this.payload,
 			message,
 			targets: match.targets.flatMap((token) => (token.uuid ? [token.uuid] : [])),
 			moverName,
