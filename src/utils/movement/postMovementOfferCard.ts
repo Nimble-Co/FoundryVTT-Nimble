@@ -7,7 +7,7 @@ export interface MovementOfferCardInput {
 	actor: Actor;
 	/** The source's token, and the speaker. */
 	token: TokenDocument;
-	/** The feature name, shown as the card title. */
+	/** The card title. */
 	name: string;
 	image?: string;
 	/** One localized line that says why the offer was made. */

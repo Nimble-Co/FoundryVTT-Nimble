@@ -234,7 +234,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			return postMovementOfferCard({
 				actor,
 				token,
-				name: this.item.name,
+				name: this.label || this.item.name,
 				image: (this.item as { img?: string | null }).img ?? undefined,
 				reason,
 				node: {

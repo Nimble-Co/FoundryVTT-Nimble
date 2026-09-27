@@ -7,7 +7,7 @@
 - **Recipient** → `self`
 - **Ignores difficult terrain** → on
 
-When the trigger fires, the rule posts a small Movement Offer card that says why, for example "gained Fury Dice". The creature then carries the offer: its next drag is recorded as a Free Move, so it does not draw on the creature's speed for the turn. Nothing moves by itself, and the player can choose not to move. See [Movement offers](../gm/combat.md#movement-offers) for how an offer is taken, settled and lapsed.
+When the trigger fires, the rule posts a small Movement Offer card that says why, for example "gained Fury Dice". The card title is the rule's **Label**, or the item name when the label is empty. The creature then carries the offer: its next drag is recorded as a Free Move, so it does not draw on the creature's speed for the turn. Nothing moves by itself, and the player can choose not to move. See [Movement offers](../gm/combat.md#movement-offers) for how an offer is taken, settled and lapsed.
 
 The rule posts nothing while the **Movement Offers** toggle is off, or while **Movement Tracking** is off, because Movement Offers needs it. The **Apply Conditions and Effects from Rules** toggle does not stop it. It also posts nothing when the distance comes to zero for every creature, for example Swift Fury with DEX 0 or less.
 
