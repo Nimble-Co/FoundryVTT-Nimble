@@ -66,14 +66,11 @@ const selfNode = (overrides: Record<string, unknown> = {}) =>
 	});
 
 function createMessage(movementOffers: unknown[]) {
-	const message = {
+	return {
 		id: 'msg1',
 		speaker: { scene: 's1', token: 'hero', actor: 'a1' },
 		system: { actorName: 'Sir Brannon', movementOffers },
-		reactive: null as unknown,
 	};
-	message.reactive = message;
-	return message;
 }
 
 function renderNode(movementOffers: unknown[] = [createOffer()], node = createNode()) {
