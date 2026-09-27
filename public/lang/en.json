@@ -2654,9 +2654,7 @@
 				"distanceBySize": "Distance by size (optional)",
 				"ignoreDifficultTerrain": "Ignore difficult terrain",
 				"direction": "Direction",
-				"directions": { "any": "Any", "away": "Away", "toward": "Toward" },
-				"chooser": "Who chooses the path",
-				"choosers": { "mover": "The mover", "source": "The user of the feature" }
+				"directions": { "any": "Any", "away": "Away", "toward": "Toward" }
 			},
 			"note": "Note",
 			"pool": "Pool",

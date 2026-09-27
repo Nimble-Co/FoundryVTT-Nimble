@@ -9,7 +9,6 @@
 		POOL_PREDICATE_PLACEHOLDER,
 		getDamageOutcomes,
 		getDispositionOptions,
-		getMoveChoosers,
 		getMoveDirections,
 		getMoveKinds,
 		getMoveRecipients,
@@ -29,7 +28,6 @@
 	const moveKinds = getMoveKinds();
 	const moveRecipients = getMoveRecipients();
 	const moveDirections = getMoveDirections();
-	const moveChoosers = getMoveChoosers();
 	const sizeCategories = Object.entries(CONFIG.NIMBLE.sizeCategories);
 	const poolTypes = getPoolTypes();
 	const poolActions = getPoolActions();
@@ -900,17 +898,6 @@
 						options={moveDirections}
 						selectedOptions={[node.direction]}
 						toggleOption={(value) => updateEffectNode(document, effects, node, 'direction', value)}
-					/>
-				</div>
-
-				<div style="width: 100%;">
-					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-						{localize('NIMBLE.activationEffects.moveNode.chooser')}
-					</h5>
-					<TagGroup
-						options={moveChoosers}
-						selectedOptions={[node.chooser]}
-						toggleOption={(value) => updateEffectNode(document, effects, node, 'chooser', value)}
 					/>
 				</div>
 			</div>

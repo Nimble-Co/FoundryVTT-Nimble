@@ -160,10 +160,3 @@ export function getMoveDirections(): LabeledOption[] {
 		label: localize(`NIMBLE.activationEffects.moveNode.directions.${value}`),
 	}));
 }
-
-export function getMoveChoosers(): LabeledOption[] {
-	return ['mover', 'source'].map((value) => ({
-		value,
-		label: localize(`NIMBLE.activationEffects.moveNode.choosers.${value}`),
-	}));
-}

@@ -23,7 +23,6 @@ export type MoveNode = {
 	distanceBySize: Record<string, string>;
 	ignoreDifficultTerrain: boolean;
 	direction: 'any' | 'away' | 'toward';
-	chooser: 'mover' | 'source';
 	parentContext: string | null;
 	parentNode: string | null;
 };

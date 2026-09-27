@@ -22,7 +22,6 @@ function createNode(overrides: Record<string, unknown> = {}) {
 		distanceBySize: {},
 		ignoreDifficultTerrain: true,
 		direction: 'away',
-		chooser: 'source',
 		parentContext: null,
 		parentNode: null,
 		...overrides,
@@ -62,7 +61,6 @@ const selfNode = (overrides: Record<string, unknown> = {}) =>
 		kind: 'free',
 		recipient: 'self',
 		direction: 'any',
-		chooser: 'mover',
 		ignoreDifficultTerrain: false,
 		...overrides,
 	});
@@ -192,9 +190,9 @@ describe('MoveNode', () => {
 		});
 	});
 
-	it('shows no chooser line and no drag hint', () => {
+	it('shows no drag hint', () => {
 		const { container } = renderNode();
-		expect(nodeText(container)).not.toMatch(/chooses|Drag|ruler/);
+		expect(nodeText(container)).not.toMatch(/Drag|ruler/);
 	});
 
 	it('shows the distance when Movement Offers is off', () => {

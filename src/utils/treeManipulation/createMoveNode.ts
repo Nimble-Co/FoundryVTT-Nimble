@@ -13,7 +13,6 @@ export function createMoveNode(
 		distanceBySize: {},
 		ignoreDifficultTerrain: false,
 		direction: 'any',
-		chooser: 'mover',
 		parentContext: context,
 		parentNode,
 	};
