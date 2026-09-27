@@ -44,8 +44,11 @@ interface OfferTag {
 }
 
 interface DraggableToken {
+	id: string;
 	_getDragMovementAction(): string;
-	_getDragLeftDropUpdateOptions(): { constrainOptions?: Record<string, unknown> };
+	_prepareDragLeftDropUpdates(
+		event: object,
+	): [object[], { movement: Record<string, { constrainOptions?: Record<string, unknown> }> }];
 }
 
 interface StoredOffer {
@@ -215,10 +218,15 @@ function draggable(token: TokenDocument): DraggableToken {
 	return canvas.tokens?.get(token.id!) as unknown as DraggableToken;
 }
 
+/** The offer a one-space drop of this token would name, as core builds the drop. */
 function dropTag(token: TokenDocument): OfferTag | undefined {
-	return draggable(token)._getDragLeftDropUpdateOptions().constrainOptions?.[TAG_KEY] as
-		| OfferTag
-		| undefined;
+	const placeable = draggable(token);
+	const origin = { x: 0, y: 0, elevation: 0 };
+	const contexts = {
+		[placeable.id]: { token: placeable, foundPath: [origin, { ...origin, x: GRID_SIZE }] },
+	};
+	const [, options] = placeable._prepareDragLeftDropUpdates({ interactionData: { contexts } });
+	return options.movement[placeable.id]?.constrainOptions?.[TAG_KEY] as OfferTag | undefined;
 }
 
 function poolCurrent(actor: Actor, item: Item, identifier: string): number | undefined {
@@ -372,7 +380,7 @@ describe('movement rules', () => {
 			await waitFor(() => offersOn(card)[0].state === 'taken', 'the offer to be recorded taken');
 			expect(offersOn(card)[0].movedSpaces).toBe(2);
 			await waitFor(
-				() => cardText(card).includes(`${hero.name} moved 2 of 3 spaces.`),
+				() => cardText(card).includes('Free Move - moved 2 of 3 spaces'),
 				'the result on the card',
 			);
 			expect(draggable(heroToken)._getDragMovementAction()).not.toBe(FREE_ACTION);
