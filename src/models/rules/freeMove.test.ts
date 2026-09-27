@@ -1,4 +1,6 @@
+import type { Mock } from 'vitest';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { systemHookName } from '#system';
 import type { FreeMoveRule as FreeMoveRuleType } from './freeMove.js';
 
 // tests/setup.ts loads the rules config, so this rule and its imports are
@@ -509,6 +511,90 @@ describe('FreeMoveRule', () => {
 		it('does not fire for an actor that is not a character', async () => {
 			await activate(makeRule({ chargePoolIdentifier: 'thrill' }, { pool: 2, actorType: 'npc' }));
 			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('toggles', () => {
+		function stubSettings(values: Record<string, boolean>) {
+			vi.stubGlobal('game', {
+				...(globalThis as unknown as { game: object }).game,
+				settings: { get: (_scope: string, key: string) => values[key] ?? true },
+			});
+		}
+
+		it('posts nothing while Movement Offers is off', async () => {
+			stubSettings({ 'automation.movementOffers': false });
+			await activate(makeRule());
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('posts nothing while Movement Tracking is off', async () => {
+			stubSettings({ 'automation.movementTracking': false });
+			await activate(makeRule());
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		describe('with rule automation off, through the rule event dispatcher', () => {
+			type Handler = (...args: unknown[]) => unknown;
+			let handlers: Map<string, Handler>;
+
+			beforeAll(async () => {
+				const on = Hooks.on as unknown as Mock;
+				on.mockClear();
+				const { default: register } = await import('../../hooks/ruleEventDispatch.js');
+				register();
+				handlers = new Map(on.mock.calls.map(([event, handler]) => [event, handler as Handler]));
+			});
+
+			function withRules(harness: Harness): Harness {
+				harness.actor.rules = [harness.rule];
+				return harness;
+			}
+
+			const cases: [string, string, (harness: Harness) => unknown[]][] = [
+				['onActivation', systemHookName('useItem'), ({ item }) => [item, null, { targets: [] }]],
+				[
+					'onInitiativeRolled',
+					systemHookName('initiativeRolled'),
+					({ actor, heroToken }) => [{ actor, combatant: { token: heroToken } }],
+				],
+				[
+					'onTurnStart',
+					'nimbleCombatTurnStart',
+					({ actor, heroToken }) => [{ actor, combat: {}, token: heroToken }],
+				],
+				[
+					'onCritReceived',
+					systemHookName('damageApplied'),
+					({ actor }) => [
+						{ sourceActor: {}, targetActor: actor, card: null, isCritical: true, isMiss: false },
+					],
+				],
+				[
+					'onPoolGain',
+					systemHookName('dicePool.changed'),
+					({ actor }) => [{ actor, poolId: 'fury', previousFaces: [], newFaces: [3] }],
+				],
+			];
+
+			it.each(cases)('%s still posts its offer', async (trigger, hook, args) => {
+				stubSettings({ 'automation.applyRuleEffects': false });
+				const harness = withRules(makeRule({ trigger, poolIdentifier: 'fury' }));
+				await handlers.get(hook)?.(...args(harness));
+				await vi.waitFor(() => expect(postMovementOfferCard).toHaveBeenCalledTimes(1));
+			});
+
+			it('lists every lifecycle method it overrides', () => {
+				expect([...FreeMoveRule.alwaysDispatchedEvents].sort()).toEqual(
+					[
+						'onActiveGmTurnStart',
+						'onAttackReceived',
+						'onInitiativeRolled',
+						'onItemActivated',
+						'onPoolGain',
+					].sort(),
+				);
+			});
 		});
 	});
 

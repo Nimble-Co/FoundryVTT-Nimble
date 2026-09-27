@@ -1,5 +1,6 @@
 import type { MeasurableTokenDocument } from '#types/movement.js';
 import localize from '#utils/localize.js';
+import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { postMovementOfferCard } from '../../utils/movement/postMovementOfferCard.js';
 import { spacesBetween } from '../../utils/movement/spacesBetween.js';
@@ -121,6 +122,15 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.freeMove.description';
 
+	// The Movement Offers toggle gates these cards, not rule automation.
+	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = [
+		'onItemActivated',
+		'onInitiativeRolled',
+		'onActiveGmTurnStart',
+		'onAttackReceived',
+		'onPoolGain',
+	];
+
 	declare trigger: FreeMoveTrigger;
 	declare poolIdentifier: string;
 	declare distance: string;
@@ -205,6 +215,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	}
 
 	async #offer(reason: string, contextToken: TokenDocument | null = null): Promise<void> {
+		if (!isMovementOffersAutomationEnabled()) return;
 		const { actor } = this;
 		if (!hasRuleCharge(actor, this.chargePoolIdentifier)) return;
 
