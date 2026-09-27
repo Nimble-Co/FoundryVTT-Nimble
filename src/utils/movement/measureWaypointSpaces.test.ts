@@ -82,24 +82,20 @@ describe('measureWaypointSpaces', () => {
 		]);
 	});
 
-	it('skips the unmeasured resize segment core inserts before a size change', () => {
+	it('reads one segment per waypoint across a size change, as core returns', () => {
 		const token = makeToken([
 			{ distance: 5, spaces: 1 },
-			{ distance: 0, spaces: 0 },
 			{ distance: 10, spaces: 2 },
+			{ distance: 15, spaces: 3 },
 		]);
 		expect(
 			measureWaypointSpaces(token, [
 				{ width: 1, height: 1 },
 				{ width: 1, height: 1 },
 				{ width: 2, height: 2 },
+				{ width: 2, height: 2 },
 			]),
-		).toEqual([1, 2]);
-	});
-
-	it('treats a missing size field as unchanged', () => {
-		const token = makeToken([{ distance: 5, spaces: 1 }]);
-		expect(measureWaypointSpaces(token, [{ width: 2, height: 2 }, {}])).toEqual([1]);
+		).toEqual([1, 2, 3]);
 	});
 
 	it('converts gridless distance to whole spaces', () => {
