@@ -207,10 +207,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 		const moverName = record.token.name || record.actor?.name || '';
 		const targetNames = match.targets.map((token) => token.name ?? '').filter(Boolean);
 		const template = this.message.trim() || localize('NIMBLE.rules.movementTrigger.defaultMessage');
-		const spacesThisTurn =
-			record.spacesThisTurn === null
-				? localize('NIMBLE.chat.movementContext.unknown')
-				: String(record.spacesThisTurn);
+		const spacesThisTurn = String(record.spacesThisTurn ?? record.spaces);
 		const message = template
 			.replaceAll('{mover}', moverName)
 			.replaceAll('{spaces}', String(record.spaces))

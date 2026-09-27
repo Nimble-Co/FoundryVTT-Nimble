@@ -505,7 +505,9 @@ describe('movement rules', () => {
 				await waitForRendered(card, '.nimble-movement-trigger-card');
 				const text = cardText(card);
 				expect(text).toContain(lash.name);
-				expect(text).toContain(`${goblin.name} moved. You can use this item now.`);
+				expect(text).toContain(`${goblin.name} moved 3 spaces`);
+				const defaultMessage = game.i18n.localize('NIMBLE.rules.movementTrigger.defaultMessage');
+				expect(text).toContain(defaultMessage.replaceAll('{mover}', goblin.name!));
 				expect(text).toContain(`Creatures: ${goblin.name}`);
 			});
 
@@ -566,6 +568,7 @@ describe('movement rules', () => {
 				await waitForRendered(card, '.nimble-movement-trigger-card button');
 				const text = cardText(card);
 				expect(text).toContain(rampage.name);
+				expect(text).toContain(`${hero.name} moved 4 spaces, 6 spaces this turn.`);
 				expect(text).toContain(`${hero.name} moved 4 spaces, 6 this turn.`);
 				expect(text).toContain(`Creatures: ${goblin.name}`);
 				expect(text).toContain(`Use ${rampage.name}`);

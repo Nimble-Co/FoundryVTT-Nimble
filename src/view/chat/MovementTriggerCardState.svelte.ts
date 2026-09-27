@@ -1,3 +1,4 @@
+import localize from '#utils/localize.js';
 import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 interface TriggerSystem {
@@ -6,6 +7,9 @@ interface TriggerSystem {
 	itemUuid: string;
 	message: string;
 	targets: string[];
+	moverName?: string;
+	spaces?: number;
+	spacesThisTurn?: number | null;
 }
 
 interface TriggerItem {
@@ -27,6 +31,25 @@ interface TriggerMessage {
 	};
 }
 
+function spacesText(count: number): string {
+	return localize(`NIMBLE.chat.movementTrigger.${count === 1 ? 'space' : 'spaces'}`, {
+		count: String(count),
+	});
+}
+
+function movementText(system: TriggerSystem): string {
+	const mover = system.moverName || localize('NIMBLE.chat.movementTrigger.unknownMover');
+	const spaces = spacesText(system.spaces ?? 0);
+	if (system.spacesThisTurn === null || system.spacesThisTurn === undefined) {
+		return localize('NIMBLE.chat.movementTrigger.movement', { mover, spaces });
+	}
+	return localize('NIMBLE.chat.movementTrigger.movementThisTurn', {
+		mover,
+		spaces,
+		spacesThisTurn: spacesText(system.spacesThisTurn),
+	});
+}
+
 function resolve<T>(uuid: string): T | null {
 	if (!uuid) return null;
 	return (fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false }) ??
@@ -44,6 +67,7 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 			.filter((token): token is TargetTokenDocument => token !== null),
 	);
 	const targetNames = $derived(targetTokens.map((token) => token.name).join(', '));
+	const movement = $derived(movementText(system));
 
 	const item = $derived(resolve<TriggerItem>(system.itemUuid));
 	const canUse = $derived(item?.isOwner === true);
@@ -83,6 +107,9 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 		},
 		get targetNames() {
 			return targetNames;
+		},
+		get movement() {
+			return movement;
 		},
 		get canUse() {
 			return canUse;
