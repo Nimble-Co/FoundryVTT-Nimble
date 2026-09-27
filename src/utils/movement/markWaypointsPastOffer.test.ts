@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { markWaypointsPastOffer, type OfferRulerWaypoint } from './markWaypointsPastOffer.js';
+import type { OfferRulerWaypoint } from '#types/movement.js';
+import { markWaypointsPastOffer } from './markWaypointsPastOffer.js';
 import { FORCED_MOVEMENT_ACTION, FREE_MOVEMENT_ACTION } from './movementActions.js';
 
 const push = { kind: 'forced' as const, spaces: 2, ignoreDifficultTerrain: true };

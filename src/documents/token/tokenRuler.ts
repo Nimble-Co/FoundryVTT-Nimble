@@ -1,8 +1,6 @@
-import {
-	markWaypointsPastOffer,
-	type OfferRulerWaypoint,
-} from '../../utils/movement/markWaypointsPastOffer.js';
-import { findArmedMovementOffer } from '../../utils/movement/movementOffers.js';
+import type { OfferRulerWaypoint } from '#types/movement.js';
+import { markWaypointsPastOffer } from '#utils/movement/markWaypointsPastOffer.js';
+import { findArmedMovementOffer } from '#utils/movement/movementOffers.js';
 
 /**
  * Shows how far a Movement Offer reaches while its token is dragged: the part
