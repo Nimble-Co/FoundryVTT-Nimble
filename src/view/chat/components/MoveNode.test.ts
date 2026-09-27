@@ -7,9 +7,7 @@ import MoveNodeTestHarness from './MoveNode.testHarness.svelte';
  * damage reminder for a push that fell short. It never carries a button.
  */
 
-type Globals = { game: { settings: unknown }; fromUuidSync: unknown };
-
-const g = globalThis as unknown as Globals;
+const baseGame = game;
 
 const SPEAKER_TOKEN = 'Scene.s1.Token.hero';
 const GOBLIN_TOKEN = 'Scene.s1.Token.tok1';
@@ -121,19 +119,16 @@ function chipLabel(chip: HTMLElement): string {
 	return chip.textContent?.trim() ?? '';
 }
 
-let previousSettings: unknown;
-let previousFromUuidSync: unknown;
-
 beforeEach(() => {
-	previousSettings = g.game.settings;
-	previousFromUuidSync = g.fromUuidSync;
-	g.game.settings = { get: vi.fn(() => true) };
-	g.fromUuidSync = vi.fn(() => ({}));
+	vi.stubGlobal('game', { ...baseGame, settings: { get: vi.fn(() => true) } });
+	vi.stubGlobal(
+		'fromUuidSync',
+		vi.fn(() => ({})),
+	);
 });
 
 afterEach(() => {
-	g.game.settings = previousSettings;
-	g.fromUuidSync = previousFromUuidSync;
+	vi.unstubAllGlobals();
 });
 
 describe('MoveNode', () => {
@@ -217,7 +212,10 @@ describe('MoveNode', () => {
 		});
 
 		it('keeps the row of a target whose token is gone, as TARGETS drops it', () => {
-			g.fromUuidSync = vi.fn((uuid: string) => (uuid === GOBLIN_TOKEN ? null : {}));
+			vi.stubGlobal(
+				'fromUuidSync',
+				vi.fn((uuid: string) => (uuid === GOBLIN_TOKEN ? null : {})),
+			);
 			const { container } = renderNode([createOffer(), createArcherOffer()], {
 				targets: [GOBLIN_TOKEN, ARCHER_TOKEN],
 				targetsShown: true,
@@ -246,11 +244,12 @@ describe('MoveNode', () => {
 		});
 
 		it('shows the token image, then the actor image, then the default image', () => {
-			g.fromUuidSync = vi.fn((uuid: string) => {
+			const fromUuidSync = vi.fn((uuid: string) => {
 				if (uuid === GOBLIN_TOKEN) return { texture: { src: 'goblin.webp' } };
 				if (uuid === ARCHER_TOKEN) return { texture: { src: '' }, actor: { img: 'archer.webp' } };
 				return null;
 			});
+			vi.stubGlobal('fromUuidSync', fromUuidSync);
 			const { container } = renderNode([
 				createOffer(),
 				createArcherOffer(),
@@ -260,7 +259,7 @@ describe('MoveNode', () => {
 				img.getAttribute('src'),
 			);
 			expect(images).toEqual(['goblin.webp', 'archer.webp', 'icons/svg/mystery-man.svg']);
-			expect(g.fromUuidSync).toHaveBeenCalledWith(GOBLIN_TOKEN, { strict: false });
+			expect(fromUuidSync).toHaveBeenCalledWith(GOBLIN_TOKEN, { strict: false });
 		});
 	});
 
@@ -336,7 +335,7 @@ describe('MoveNode', () => {
 		});
 
 		it('states an open push when tracking is off', () => {
-			g.game.settings = { get: vi.fn(() => false) };
+			vi.stubGlobal('game', { ...baseGame, settings: { get: vi.fn(() => false) } });
 			const { container } = renderNode();
 			const chip = chipOf(container);
 			expect(chip.dataset.status).toBe('untracked');
