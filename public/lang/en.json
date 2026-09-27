@@ -3281,7 +3281,7 @@
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",
-				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react when a creature finishes moving or moves adjacent. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history."
+				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react, in a started combat, when a creature finishes moving or moves adjacent. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
