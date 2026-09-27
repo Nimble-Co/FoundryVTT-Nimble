@@ -21,9 +21,15 @@
 	);
 
 	const text = $derived(moveNodeText(messageDocument, node, { tracking }));
-	// A creature with a TARGETS row shows its chip there instead.
+	// A creature with a TARGETS row shows its chip there instead. TARGETS drops a
+	// token it cannot find, so that creature keeps its row here.
 	const rowOffers = $derived(
-		text.offers.filter((offer) => !targetsShown || !targetUuids.has(offer.tokenUuid)),
+		text.offers.filter(
+			(offer) =>
+				!targetsShown ||
+				!targetUuids.has(offer.tokenUuid) ||
+				!fromUuidSync(offer.tokenUuid, { strict: false }),
+		),
 	);
 	const damageLines = $derived(
 		text.offers.flatMap((offer) => {

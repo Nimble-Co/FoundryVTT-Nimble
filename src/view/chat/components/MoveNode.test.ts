@@ -128,7 +128,7 @@ beforeEach(() => {
 	previousSettings = g.game.settings;
 	previousFromUuidSync = g.fromUuidSync;
 	g.game.settings = { get: vi.fn(() => true) };
-	g.fromUuidSync = vi.fn(() => null);
+	g.fromUuidSync = vi.fn(() => ({}));
 });
 
 afterEach(() => {
@@ -214,6 +214,15 @@ describe('MoveNode', () => {
 				targetsShown: true,
 			});
 			expect(rowNames(container)).toEqual(['Goblin Archer']);
+		});
+
+		it('keeps the row of a target whose token is gone, as TARGETS drops it', () => {
+			g.fromUuidSync = vi.fn((uuid: string) => (uuid === GOBLIN_TOKEN ? null : {}));
+			const { container } = renderNode([createOffer(), createArcherOffer()], {
+				targets: [GOBLIN_TOKEN, ARCHER_TOKEN],
+				targetsShown: true,
+			});
+			expect(rowNames(container)).toEqual(['Goblin Cutthroat']);
 		});
 
 		it('shows no row when every creature has a TARGETS row', () => {
