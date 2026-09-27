@@ -16,7 +16,6 @@ import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js'
 import { registerGrantedActionOfferSocketListener } from '../utils/grantedActionOffers.js';
 import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
 import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
-import { registerMovementOfferListener } from '../utils/movement/registerMovementOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
@@ -25,6 +24,7 @@ import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerDicePoolSpendRequestRouter from './dicePoolSpendRequestRouter.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
+import registerMovementOffers from './movementOffers.js';
 
 let canvasConditionsPanelComponent: object | null = null;
 
@@ -68,7 +68,7 @@ export default async function ready() {
 	}
 	registerCombatTurnSocketListener();
 	registerGrantedActionOfferSocketListener();
-	registerMovementOfferListener();
+	registerMovementOffers();
 	registerIncomingReactionSocketListener();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
