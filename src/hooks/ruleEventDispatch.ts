@@ -69,6 +69,7 @@ interface NimblePoolChangedPayload {
 	poolLabel?: string;
 	previousFaces?: number[];
 	newFaces?: number[];
+	reason?: string;
 }
 
 interface NimbleConditionAppliedPayload {
@@ -176,6 +177,7 @@ async function handleActiveGmTurnStart(combatant: Combatant): Promise<void> {
 
 // The pool-changed hook fires only on the client that changed the pool.
 async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<void> {
+	if (payload?.reason === 'refund') return;
 	const previousCount = payload?.previousFaces?.length ?? 0;
 	const newCount = payload?.newFaces?.length ?? 0;
 	if (newCount <= previousCount) return;

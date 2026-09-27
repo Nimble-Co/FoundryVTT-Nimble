@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyRefillTriggersToPools, applyRestRefill } from './dicePoolRefill.js';
+import { applyRefillTriggersToPools, applyRestRefill, setPoolFaces } from './dicePoolRefill.js';
 import { buildEffectiveDicePoolMap } from './helpers.js';
 import type { CharacterActorLike, DicePoolMap, DicePoolState, DiceRefillEntry } from './types.js';
 
@@ -592,5 +592,64 @@ describe('applyRestRefill — resource-recovery automation gate', () => {
 		await applyRestRefill(actor as unknown as Actor, 'safe');
 
 		expect(item.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('setPoolFaces — change reason', () => {
+	function makePoolActor(faces: number[]) {
+		const item = {
+			id: 'item-1',
+			name: 'Radiant Judgment',
+			flags: { nimble: { dicePools: { judgment: { faces } } } },
+			rules: new Map([
+				[
+					'rule-1',
+					{
+						type: 'dicePool',
+						disabled: false,
+						id: 'judgment',
+						identifier: 'judgment',
+						scope: 'item',
+						dieSize: 'd6',
+						max: '3',
+						initial: 'zero',
+						refills: [],
+					},
+				],
+			]),
+			update: vi.fn(async () => undefined),
+		};
+		return {
+			type: 'character',
+			getRollData: vi.fn(() => ({})),
+			items: { contents: [item] },
+			update: vi.fn(async () => undefined),
+		} as unknown as Actor;
+	}
+
+	function hooksCall() {
+		return (globalThis as unknown as { Hooks: { call: ReturnType<typeof vi.fn> } }).Hooks.call;
+	}
+
+	beforeEach(() => {
+		hooksCall().mockClear();
+	});
+
+	it('announces a manual change by default', async () => {
+		await setPoolFaces(makePoolActor([2]), 'judgment', [2, 5]);
+
+		expect(hooksCall()).toHaveBeenCalledWith(
+			'nimble.dicePool.changed',
+			expect.objectContaining({ previousFaces: [2], newFaces: [2, 5], reason: 'manual' }),
+		);
+	});
+
+	it('announces a refund when the caller asks for it', async () => {
+		await setPoolFaces(makePoolActor([2]), 'judgment', [2, 5], 'refund');
+
+		expect(hooksCall()).toHaveBeenCalledWith(
+			'nimble.dicePool.changed',
+			expect.objectContaining({ previousFaces: [2], newFaces: [2, 5], reason: 'refund' }),
+		);
 	});
 });

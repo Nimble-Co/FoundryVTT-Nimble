@@ -877,6 +877,34 @@ describe('ruleEventDispatch', () => {
 			expect(rule.onPoolGain).not.toHaveBeenCalled();
 		});
 
+		it('does not dispatch when spent dice are refunded', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'fury',
+				previousFaces: [3],
+				newFaces: [3, 4, 5],
+				reason: 'refund',
+			});
+
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('dispatches a manual gain', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'fury',
+				previousFaces: [3],
+				newFaces: [3, 4],
+				reason: 'manual',
+			});
+
+			expect(rule.onPoolGain).toHaveBeenCalledTimes(1);
+		});
+
 		it('skips dispatch when the auto-apply setting is disabled', async () => {
 			settingsGet.mockImplementation(
 				(_scope: string, key: string) => key !== 'automation.applyRuleEffects',

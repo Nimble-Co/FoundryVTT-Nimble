@@ -1661,7 +1661,7 @@ class NimbleChatMessage extends ChatMessage {
 		const source = this.#findOfferSource(entry);
 		if (!source) return false;
 
-		return setPoolFaces(source.actor, source.pool.id, [...source.pool.faces, ...faces]);
+		return setPoolFaces(source.actor, source.pool.id, [...source.pool.faces, ...faces], 'refund');
 	}
 
 	/**
