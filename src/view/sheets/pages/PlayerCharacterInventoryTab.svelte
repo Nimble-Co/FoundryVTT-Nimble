@@ -198,7 +198,7 @@
 			return;
 		}
 
-		const choices = getContainerChoices(items, item);
+		const choices = getContainerChoices(allCarriedObjects, item);
 		if (choices.length === 0) return;
 
 		const containerId =
@@ -213,11 +213,14 @@
 			.map(({ _id, name }) => `<option value="${_id}">${foundry.utils.escapeHTML(name)}</option>`)
 			.join('');
 
+		const labelId = 'nimble-choose-container-label';
+		const question = localize('NIMBLE.containers.chooseContainer', {
+			object: foundry.utils.escapeHTML(item.reactive.name),
+		});
+
 		const chosen = await foundry.applications.api.DialogV2.prompt({
 			window: { title: localize('NIMBLE.containers.chooseContainerTitle') },
-			content: `<p>${localize('NIMBLE.containers.chooseContainer', {
-				object: foundry.utils.escapeHTML(item.reactive.name),
-			})}</p><select name="containerId">${options}</select>`,
+			content: `<p id="${labelId}">${question}</p><select name="containerId" aria-labelledby="${labelId}">${options}</select>`,
 			ok: {
 				callback: (_event, button) => button.form?.elements?.containerId?.value ?? null,
 			},
@@ -275,6 +278,7 @@
 	let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
 	let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
 	let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
+	let allCarriedObjects = $derived(filterItems(actor.reactive, ['object'], ''));
 	let visibleContainerIds = $derived(
 		new Set(items.filter(isContainer).map((item) => item.reactive._id)),
 	);
@@ -286,7 +290,7 @@
 	let storedItemsByContainerId = $derived(groupItemsByContainer(items));
 	let containerNames = $derived(
 		Object.fromEntries(
-			items.filter(isContainer).map((item) => [item.reactive._id, item.reactive.name]),
+			allCarriedObjects.filter(isContainer).map((item) => [item.reactive._id, item.reactive.name]),
 		),
 	);
 	let categorizedItems = $derived(groupItemsByType(topLevelItems));
@@ -467,7 +471,7 @@
 				>
 					<i class="fa-solid fa-box-open"></i>
 				</button>
-			{:else if getContainerChoices(items, item).length > 0}
+			{:else if getContainerChoices(allCarriedObjects, item).length > 0}
 				<button
 					class="nimble-button"
 					style="grid-area: storeButton"

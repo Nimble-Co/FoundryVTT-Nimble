@@ -59,15 +59,17 @@ Items set up as containers, such as a chest, a backpack, a pouch or a quiver, sh
 
 - **To put something in**, drag it onto the container's row, or onto anything already inside it.
 - **To take something out**, drag it onto an item carried directly, or onto any empty part of the inventory list.
-- **To move it between containers**, drag it straight onto the other one.
+- **To move it between containers**, drag it straight onto the other one, or take it out with the
+  row's button and then store it again.
 
-Every row also has a button for this, so none of it needs a drag. On a carried item it stores the
+Item rows carry a button for this, so a drag is never the only way. On a carried item it stores the
 item, asking which container when you have more than one; on a stored item it takes the item back
-out. The item's name is a button too: press it to use the item.
+out. A container has no button, since containers do not nest, and neither does a carried item while
+you have no container to put it in. The item's name is a button too: press it to use the item.
 
 A container keeps its own slot cost; what its contents cost you depends on how the container is set up, and the slot total at the bottom of the tab reflects that. If a container has a capacity, the row says how much of it is in use, a drop that would not fit is refused, and so is raising a stored stack past the limit.
 
-You cannot equip something that is packed away, so stored items show a quantity field rather than an equip toggle. Dragging an item you have equipped into a container asks you to confirm before unequipping it.
+You cannot equip something that is packed away, so stored items show a quantity field rather than an equip toggle. Storing an item you have equipped asks you to confirm before unequipping it, whether you drag it in or use the row's button.
 
 Some items cost more packed away than they do in use. Armor is the one the rulebook names: worn it takes 1 slot, and stowed it takes 2. Unequipping a suit of armor, or putting it in a container, raises the slot total to match.
 

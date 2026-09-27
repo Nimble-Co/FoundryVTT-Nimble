@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PlayerCharacterInventoryTabHarness from '../../../../tests/harnesses/PlayerCharacterInventoryTabHarness.svelte';
 
@@ -111,6 +111,30 @@ function getRow(container: HTMLElement, itemId: string): HTMLElement {
 	return row;
 }
 
+type ContainerPromptOptions = { content: string };
+
+function stubContainerPrompt(chosenId: string) {
+	const prompt = vi.fn<(options: ContainerPromptOptions) => Promise<string>>(() =>
+		Promise.resolve(chosenId),
+	);
+	(foundry.applications.api.DialogV2 as unknown as { prompt: unknown }).prompt = prompt;
+
+	return prompt;
+}
+
+function clearContainerPrompt(): void {
+	delete (foundry.applications.api.DialogV2 as unknown as { prompt?: unknown }).prompt;
+}
+
+function search(container: HTMLElement, term: string): Promise<boolean> {
+	const searchField = container.querySelector<HTMLInputElement>('input[type="search"]');
+	if (!searchField) throw new Error('No search field rendered');
+
+	searchField.value = term;
+
+	return fireEvent.keyUp(searchField);
+}
+
 function mockDraggedItem(uuid: string): void {
 	vi.mocked(foundry.applications.ux.TextEditor.implementation.getDragEventData).mockReturnValue({
 		type: 'Item',
@@ -149,11 +173,7 @@ describe('PlayerCharacterInventoryTab containers', () => {
 	it('shows a stored object on its own when the search hides its container', async () => {
 		const { container } = renderWithContainers([bagOfHolding, storedPlateArmor]);
 
-		const searchField = container.querySelector<HTMLInputElement>('input[type="search"]');
-		if (!searchField) throw new Error('No search field rendered');
-
-		searchField.value = 'Plate';
-		await fireEvent.keyUp(searchField);
+		await search(container, 'Plate');
 
 		expect(container.querySelector('[data-item-id="bag"]')).toBeNull();
 		expect(container.querySelector('[data-item-id="armor"]')).not.toBeNull();
@@ -435,6 +455,8 @@ describe('PlayerCharacterInventoryTab drops that are not items', () => {
 });
 
 describe('PlayerCharacterInventoryTab without a mouse', () => {
+	afterEach(clearContainerPrompt);
+
 	it('activates an item from a real button rather than a clickable row', async () => {
 		const { container, activateItem } = renderWithContainers([plateArmor]);
 
@@ -445,6 +467,7 @@ describe('PlayerCharacterInventoryTab without a mouse', () => {
 		await fireEvent.click(name as HTMLElement);
 
 		expect(activateItem).toHaveBeenCalledWith('armor');
+		expect(activateItem).toHaveBeenCalledTimes(1);
 	});
 
 	it('does not nest interactive rows inside a button', () => {
@@ -483,13 +506,38 @@ describe('PlayerCharacterInventoryTab without a mouse', () => {
 			secondBag,
 			plateArmor,
 		]);
-		vi.mocked(foundry.applications.api.DialogV2.prompt).mockResolvedValue('sack');
+		const prompt = stubContainerPrompt('sack');
 
 		await fireEvent.click(
 			getRow(container, 'armor').querySelector('[aria-label^="Store"]') as HTMLElement,
 		);
 
+		const { content } = prompt.mock.calls[0][0];
+		expect(content).toContain('value="bag"');
+		expect(content).toContain('value="sack"');
 		expect(storeItemInContainer).toHaveBeenCalledWith('armor', 'sack');
+	});
+
+	it('still offers a container the search has hidden', async () => {
+		const { container, storeItemInContainer } = renderWithContainers([bagOfHolding, plateArmor]);
+
+		await search(container, 'Plate');
+
+		await fireEvent.click(
+			getRow(container, 'armor').querySelector('[aria-label^="Store"]') as HTMLElement,
+		);
+
+		expect(storeItemInContainer).toHaveBeenCalledWith('armor', 'bag');
+	});
+
+	it('names the container in the take-out label when the search hides it', async () => {
+		const { container } = renderWithContainers([bagOfHolding, storedPlateArmor]);
+
+		await search(container, 'Plate');
+
+		expect(
+			getRow(container, 'armor').querySelector('[aria-label^="Take"]')?.getAttribute('aria-label'),
+		).toBe('Take Plate Armor out of Bag of Holding');
 	});
 
 	it('offers no move button when no container is carried', () => {

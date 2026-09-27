@@ -111,6 +111,10 @@
   }
 
   &--no-meta.nimble-document-card--no-image {
+    grid-template-areas: "name charges configureButton deleteButton";
+  }
+
+  &--no-meta.nimble-document-card--no-image.nimble-document-card--actor-inventory {
     grid-template-areas: "name charges storeButton configureButton deleteButton";
   }
 
