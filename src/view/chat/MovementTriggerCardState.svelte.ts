@@ -90,6 +90,9 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 			await item.actor.activateItem(item.id);
 		} catch (error) {
 			console.error('Nimble | Failed to use the Movement trigger item:', error);
+			ui.notifications?.error(
+				localize('NIMBLE.chat.movementTrigger.useFailed', { name: system.name ?? '' }),
+			);
 		} finally {
 			using = false;
 		}
