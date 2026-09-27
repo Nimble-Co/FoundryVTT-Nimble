@@ -890,16 +890,19 @@
 					</h5>
 				</label>
 
-				<div style="width: 100%;">
-					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-						{localize('NIMBLE.activationEffects.moveNode.direction')}
-					</h5>
-					<TagGroup
-						options={moveDirections}
-						selectedOptions={[node.direction]}
-						toggleOption={(value) => updateEffectNode(document, effects, node, 'direction', value)}
-					/>
-				</div>
+				{#if node.recipient !== 'self'}
+					<div style="width: 100%;">
+						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.activationEffects.moveNode.direction')}
+						</h5>
+						<TagGroup
+							options={moveDirections}
+							selectedOptions={[node.direction]}
+							toggleOption={(value) =>
+								updateEffectNode(document, effects, node, 'direction', value)}
+						/>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</li>
