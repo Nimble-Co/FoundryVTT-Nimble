@@ -1,8 +1,10 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { MovementOffer, MovementRecord } from '#types/movement.js';
 
 const getPrimaryActiveGmId = vi.hoisted(() => vi.fn<() => string | null>(() => 'gm'));
 vi.mock('../getPrimaryActiveGmId.js', () => ({ getPrimaryActiveGmId }));
+const isMovementOffersAutomationEnabled = vi.hoisted(() => vi.fn(() => true));
+vi.mock('../../settings/automationSettings.js', () => ({ isMovementOffersAutomationEnabled }));
 
 import { resolveArmedMovementOffer } from './resolveArmedMovementOffer.js';
 
@@ -13,8 +15,27 @@ type GameStub = {
 const g = globalThis as unknown as { game: GameStub };
 const previousGame = g.game;
 
-let update: ReturnType<typeof vi.fn>;
-let offers: MovementOffer[];
+type Card = { id: string; system: { movementOffers: MovementOffer[] }; update: Mock };
+let older: Card;
+let newer: Card;
+
+function offer(over: Partial<MovementOffer> = {}): MovementOffer {
+	return {
+		id: 'n.gob',
+		nodeId: 'n',
+		tokenUuid: 'Scene.s.Token.gob',
+		name: 'Goblin',
+		kind: 'forced',
+		spaces: 2,
+		ignoreDifficultTerrain: true,
+		state: 'open',
+		usedBy: null,
+		movedSpaces: null,
+		stopped: false,
+		conditional: false,
+		...over,
+	};
+}
 
 function record(over: Partial<MovementRecord> = {}): MovementRecord {
 	return {
@@ -28,67 +49,90 @@ function record(over: Partial<MovementRecord> = {}): MovementRecord {
 	} as unknown as MovementRecord;
 }
 
+function card(id: string, offers: MovementOffer[]): Card {
+	return { id, system: { movementOffers: offers }, update: vi.fn().mockResolvedValue(undefined) };
+}
+
+function useCards(...cards: Card[]) {
+	g.game.messages = {
+		contents: cards,
+		get: (id: string) => cards.find((m) => m.id === id),
+	};
+}
+
+function written(target: Card, index = 0): MovementOffer | undefined {
+	return target.update.mock.calls[0]?.[0]?.system?.movementOffers?.[index];
+}
+
 beforeEach(() => {
-	update = vi.fn().mockResolvedValue(undefined);
-	offers = [
-		{
-			id: 'n.gob',
-			nodeId: 'n',
-			tokenUuid: 'Scene.s.Token.gob',
-			name: 'Goblin',
-			kind: 'forced',
-			spaces: 2,
-			ignoreDifficultTerrain: true,
-			state: 'open',
-			usedBy: null,
-			movedSpaces: null,
-			stopped: false,
-			conditional: false,
-		},
-	];
-	const older = { id: 'm', system: { movementOffers: offers }, update };
-	const newer = { id: 'm2', system: { movementOffers: [{ ...offers[0] }] }, update: vi.fn() };
-	const messages = [older, newer];
-	g.game = {
-		...previousGame,
-		user: { id: 'gm', isGM: true },
-		messages: { contents: messages, get: (id: string) => messages.find((m) => m.id === id) },
-	} as GameStub;
+	older = card('m', [offer()]);
+	newer = card('m2', [offer()]);
+	g.game = { ...previousGame, user: { id: 'gm', isGM: true } } as GameStub;
+	useCards(older, newer);
 	getPrimaryActiveGmId.mockReturnValue('gm');
+	isMovementOffersAutomationEnabled.mockReturnValue(true);
 });
 
 afterAll(() => {
 	g.game = previousGame;
 });
 
-function written() {
-	return update.mock.calls[0]?.[0]?.system?.movementOffers?.[0];
-}
-
 describe('resolveArmedMovementOffer', () => {
-	it('takes the offer the drag names, even when a newer card offers another', async () => {
+	it('takes the offer the drag names, and leaves a newer open offer to the token unused', async () => {
 		await resolveArmedMovementOffer(record({ spaces: 5 }));
-		expect(written()).toMatchObject({ state: 'taken', usedBy: 'p1', movedSpaces: 2 });
+		expect(written(older)).toMatchObject({ state: 'taken', usedBy: 'p1', movedSpaces: 2 });
+		expect(written(newer)).toMatchObject({ state: 'unused', movedSpaces: null });
 	});
 
-	it('leaves the offer the token carries unused when the Movement names none', async () => {
-		const newerUpdate = (g.game.messages.get('m2') as { update: ReturnType<typeof vi.fn> }).update;
+	it('leaves every open offer to the token unused when the Movement names none', async () => {
 		await resolveArmedMovementOffer(record({ kind: 'regular', offer: null }));
-		expect(update).not.toHaveBeenCalled();
-		expect(newerUpdate.mock.calls[0]?.[0]?.system?.movementOffers?.[0]).toMatchObject({
-			state: 'unused',
-			movedSpaces: null,
-		});
+		expect(written(older)).toMatchObject({ state: 'unused', movedSpaces: null });
+		expect(written(newer)).toMatchObject({ state: 'unused', movedSpaces: null });
+	});
+
+	it('leaves no older offer open to label the next Movement', async () => {
+		await resolveArmedMovementOffer(record({ offer: { messageId: 'm2', offerId: 'n.gob' } }));
+		expect(written(older)).toMatchObject({ state: 'unused' });
+		expect(written(newer)).toMatchObject({ state: 'taken' });
+	});
+
+	it('settles two open offers to the token on one card', async () => {
+		const both = card('m3', [offer(), offer({ id: 'k.gob', nodeId: 'k' })]);
+		useCards(both);
+		await resolveArmedMovementOffer(record({ offer: { messageId: 'm3', offerId: 'k.gob' } }));
+		expect(both.update).toHaveBeenCalledTimes(1);
+		expect(written(both, 0)).toMatchObject({ state: 'unused' });
+		expect(written(both, 1)).toMatchObject({ state: 'taken' });
+	});
+
+	it('leaves offers to other tokens, conditional offers and offers of no distance alone', async () => {
+		const others = card('m3', [
+			offer({ id: 'n.ogre', tokenUuid: 'Scene.s.Token.ogre' }),
+			offer({ id: 'c.gob', nodeId: 'c', conditional: true }),
+			offer({ id: 'z.gob', nodeId: 'z', spaces: 0 }),
+		]);
+		useCards(others);
+		await resolveArmedMovementOffer(record({ offer: null }));
+		expect(others.update).not.toHaveBeenCalled();
 	});
 
 	it('ignores a tag that names an offer to another token', async () => {
 		await resolveArmedMovementOffer(record({ token: { uuid: 'Scene.s.Token.ogre' } as never }));
-		expect(update).not.toHaveBeenCalled();
+		expect(older.update).not.toHaveBeenCalled();
+		expect(newer.update).not.toHaveBeenCalled();
 	});
 
 	it('leaves a teleport alone', async () => {
 		await resolveArmedMovementOffer(record({ kind: 'teleport' }));
-		expect(update).not.toHaveBeenCalled();
+		expect(older.update).not.toHaveBeenCalled();
+		expect(newer.update).not.toHaveBeenCalled();
+	});
+
+	it('settles nothing for an untagged Movement while Movement Offers are off', async () => {
+		isMovementOffersAutomationEnabled.mockReturnValue(false);
+		await resolveArmedMovementOffer(record({ offer: null }));
+		expect(older.update).not.toHaveBeenCalled();
+		expect(newer.update).not.toHaveBeenCalled();
 	});
 
 	it('runs on the primary active GM only', async () => {
@@ -96,12 +140,15 @@ describe('resolveArmedMovementOffer', () => {
 		await resolveArmedMovementOffer(record());
 		g.game.user = { id: 'gm2', isGM: true };
 		await resolveArmedMovementOffer(record());
-		expect(update).not.toHaveBeenCalled();
+		expect(older.update).not.toHaveBeenCalled();
+		expect(newer.update).not.toHaveBeenCalled();
 	});
 
 	it('does not settle an offer twice', async () => {
-		offers[0].state = 'taken';
+		older.system.movementOffers[0].state = 'taken';
+		newer.system.movementOffers[0].state = 'unused';
 		await resolveArmedMovementOffer(record());
-		expect(update).not.toHaveBeenCalled();
+		expect(older.update).not.toHaveBeenCalled();
+		expect(newer.update).not.toHaveBeenCalled();
 	});
 });

@@ -1,41 +1,50 @@
 import type { MovementOffer, MovementRecord } from '#types/movement.js';
+import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
-import { findArmedMovementOffer, settleMovementOffer } from './movementOffers.js';
+import { settleMovementOffer } from './movementOffers.js';
 
 interface OfferBearingMessage {
+	id?: string | null;
 	system?: { movementOffers?: MovementOffer[] };
 	update?: (changes: Record<string, unknown>) => Promise<unknown>;
 }
 
 /**
- * Records on its card what came of a Movement Offer, once the token has
- * finished moving. A drag made under an offer names it, and takes it. Any other
- * Movement is the mover going their own way, which leaves the offer the token
- * carries unused, so a later Movement is not labelled by it. A teleport settles
- * nothing.
+ * Records on the cards what came of the Movement Offers to a token, once it
+ * has finished moving. An offer lasts until the token's next Movement, so that
+ * Movement settles every open offer to it: a drag made under an offer names it,
+ * and takes it; every other offer is left unused, so an older one cannot label
+ * a later Movement. A teleport settles nothing, and a conditional offer is
+ * never settled.
  *
- * Runs on the primary active GM, the only client that may write the card.
+ * Runs on the primary active GM, the only client that may write the cards.
  */
 export async function resolveArmedMovementOffer(record: MovementRecord): Promise<void> {
 	if (record.kind === 'teleport') return;
 	if (!game.user?.isGM || (game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	if (!record.offer && !isMovementOffersAutomationEnabled()) return;
 
 	const tokenUuid = record.token?.uuid;
 	if (!tokenUuid) return;
-	const armed = record.offer ? null : findArmedMovementOffer(tokenUuid);
-	const target = record.offer ?? (armed ? { messageId: armed.messageId, offerId: armed.id } : null);
-	if (!target) return;
 
-	const message = game.messages?.get(target.messageId) as OfferBearingMessage | undefined;
-	const current = message?.system?.movementOffers ?? [];
-	const offer = current.find((candidate) => candidate.id === target.offerId);
-	if (!message?.update || offer?.tokenUuid !== tokenUuid) return;
-
-	const offers = settleMovementOffer(current, target.offerId, {
-		taken: record.offer !== null,
-		spaces: record.spaces,
-		stopped: record.stopped,
-		userId: record.user?.id ?? null,
-	});
-	if (offers) await message.update({ system: { movementOffers: offers } });
+	const named = record.offer;
+	const messages = (game.messages?.contents ?? []) as unknown as OfferBearingMessage[];
+	for (const message of messages) {
+		const current = message.system?.movementOffers ?? [];
+		let offers = current;
+		for (const offer of current) {
+			if (offer.tokenUuid !== tokenUuid || offer.spaces <= 0) continue;
+			const taken = !!named && named.messageId === message.id && named.offerId === offer.id;
+			offers =
+				settleMovementOffer(offers, offer.id, {
+					taken,
+					spaces: record.spaces,
+					stopped: record.stopped,
+					userId: record.user?.id ?? null,
+				}) ?? offers;
+		}
+		if (offers !== current && message.update) {
+			await message.update({ system: { movementOffers: offers } });
+		}
+	}
 }
