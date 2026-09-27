@@ -1,6 +1,6 @@
 import type { MoveNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
-import { moveNodeRecipients, reconcileMovementOffers } from './movementOffers.js';
+import { reconcileMovementOffers } from './movementOffers.js';
 
 export interface MovementOfferCardInput {
 	/** The source of the offer, and the speaker. */
@@ -20,8 +20,8 @@ export interface MovementOfferCardInput {
 
 /**
  * Posts a Movement Offer that no item activation made. The card is born with
- * its offers, the same as an activation card. Posts nothing when the offer has
- * no recipient.
+ * its offers, the same as an activation card. Posts nothing when no creature
+ * gets an offer, as when there is no recipient or the distance comes to zero.
  */
 export async function postMovementOfferCard(
 	input: MovementOfferCardInput,
@@ -60,12 +60,10 @@ export async function postMovementOfferCard(
 		},
 	};
 
-	const card = chatData as unknown as OfferCard;
-	if (moveNodeRecipients(card, node).length === 0) return null;
-
-	chatData.system.movementOffers = reconcileMovementOffers(card, {
+	chatData.system.movementOffers = reconcileMovementOffers(chatData as unknown as OfferCard, {
 		source: actor as unknown as OfferActor,
 	});
+	if (!chatData.system.movementOffers.some((offer) => offer.spaces > 0)) return null;
 
 	return (await ChatMessage.create(chatData as unknown as ChatMessage.CreateData)) ?? null;
 }

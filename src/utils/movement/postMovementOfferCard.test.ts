@@ -161,6 +161,15 @@ describe('postMovementOfferCard', () => {
 		expect(create).not.toHaveBeenCalled();
 	});
 
+	it('posts nothing when the distance comes to zero', async () => {
+		const zero = input({
+			recipients: 'self',
+			node: { kind: 'free', distance: '0', ignoreDifficultTerrain: false, direction: 'any' },
+		});
+		expect(await postMovementOfferCard(zero)).toBeNull();
+		expect(create).not.toHaveBeenCalled();
+	});
+
 	it('writes a movementOffer card whose node carries the input fields', async () => {
 		await postMovementOfferCard(
 			input({
