@@ -3122,8 +3122,8 @@
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
 			"movementOffers": {
-				"name": "Movement Offers",
-				"hint": "When a feature grants a Free Move or pushes a creature, the creature's next drag is recorded as that Free Move or Forced Movement, and the ruler changes past the offered distance. Nothing stops a drag that goes further. Needs Movement Tracking. When either is off, the card shows the distance as text and the token is dragged as usual."
+				"name": "Forced and Free Movement",
+				"hint": "When a card pushes or pulls a creature, or gives it a Free Move, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",

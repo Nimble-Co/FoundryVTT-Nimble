@@ -105,25 +105,33 @@ With the **Movement Tracking** automation toggle on (the default), the system wa
 
 The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
 
-## Movement offers
+## Forced and Free Movement
 
-With the **Movement Offers** and **Movement Tracking** automation toggles on (the default), a feature that grants a Free Move or pushes a creature makes an offer to each creature it applies to. There is nothing to click. The card shows the offer with its distance, worked out once when the feature is used, and the creature carries the offer until its next move. An offer to the feature's user alone shows no name; otherwise the card lists each creature by name.
+With the **Forced and Free Movement** and **Movement Tracking** automation toggles on (the default), a card that pushes or pulls a creature, or gives it a Free Move, also watches that creature's next drag. There is nothing to click. The distance is worked out once, when the feature is used.
 
-While a creature carries an offer, dragging its token moves it under that offer:
+The card shows one line that says what the feature does, for example that each target is pushed up to 2 spaces away from the feature's user. Each creature that moves gets a small tag with its distance: on its row under **Targets**, or in a list under that line when the card has no such row, as for a Free Move for the feature's user. Hold the pointer on a tag to read what it means.
 
-- The ruler shows how far the offer reaches. Past the offered distance, the path is drawn the way Foundry draws a path out of reach.
-- Nothing stops the drag. Drop past the offered distance and the token moves the whole way. What the extra spaces mean is for the table to decide.
+The creature's next drag counts as that movement:
+
+- The ruler shows how far the creature can go. Past that distance, the path is drawn the way Foundry draws a path out of reach.
+- Nothing stops the drag. Drop further and the token moves the whole way. What the extra spaces mean is for the table to decide.
 - The move is recorded as a Free Move or as Forced Movement, so it never draws on the creature's own speed for the turn.
 
-Whoever owns the token still does the moving and picks the path and the final space. To move the creature normally while an offer stands, press **Tab** during the drag to pick another movement action. The card then notes that the creature moved on its own. A GM with Foundry's **Unconstrained Movement** setting on is placing the token, not taking the offer, and the card notes the same.
+Whoever owns the token still does the moving and picks the path and the final space. To move the creature a different way, press **Tab** during the drag to pick another movement action. A GM with Foundry's **Unconstrained Movement** setting on is placing the token, and that also counts as a different way.
 
-A push ignores difficult terrain; a Free Move follows the feature's wording, and the card tags a Free Move that ignores it. The card shows the direction the feature names ("away from" or "toward" the feature's user), but nothing enforces it, and the rules give a push no particular shape.
+A push ignores difficult terrain; a Free Move follows the feature's wording, and the card says when a Free Move ignores it. The card shows the direction the feature names ("away from" or "toward" the feature's user), but nothing enforces it, and the rules give a push no particular shape.
 
-Once the creature finishes moving, the card records what came of the offer: the spaces it covered under the offer, up to the offered distance, or a note that it moved on its own. A creature or the environment can stop a push early. When a push covers fewer spaces than it offered, for any reason, the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one. The table decides whether an obstacle stopped it.
+When the creature finishes moving, its tag shows what happened:
 
-Every granted move in the books happens as part of the effect that grants it. So in combat, an offer still open when the turn ends lapses, and the card says it was not taken. Out of combat, an offer stands until the creature next moves. If a creature has two open offers, its next drag uses the newest one. Every move settles all the open offers to the creature: the offer the drag used is taken, and the card of each other offer notes that the creature moved on its own. Adding a target to the card makes an offer to that creature too, and removing a target withdraws an offer it has not taken. A feature whose distance comes to zero offers nothing.
+- **2/2**: it moved the full distance. A Free Move that stopped early by choice shows the spaces it covered, for example **1/3**.
+- **1/3** with a warning sign: a push covered fewer spaces. A creature or the environment can stop a push early, so the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one. The table decides whether an obstacle stopped it. A Free Move whose path was blocked shows the same sign, with no damage.
+- **Not pushed** (**Not pulled**, **Not moved**, or **Not used** for a Free Move): the creature moved a different way first, or the turn ended first. The text on the tag says which.
 
-Movement Offers need Movement Tracking, because only a recorded move settles an offer. When either toggle is off, nothing is labelled and the card shows the distance as plain text. Turning either toggle on or off lapses every open offer, so no creature carries an offer made under the old setting.
+In the books, every push and every Free Move happens as part of the effect that causes it. So in combat, a move still waiting when the turn ends is not used. Out of combat, it waits until the creature next moves. If a creature waits on two moves, its next drag uses the newest one, and the other card shows that it was not used. Adding a target to the card gives that creature the move too, and removing a target takes back a move it has not made. A feature whose distance comes to zero moves nobody.
+
+The card does not record the saving throw of each target. Under a save result, the tag shows the distance with a die sign and the save that decides it, and the drag is not watched. Move the token by hand when the save calls for it.
+
+This toggle needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the ruler shows nothing extra and the card shows the distance as text. Turning either toggle on or off ends every waiting move, so no creature keeps a move from the old setting.
 
 ## Token adjacency tracking
 
