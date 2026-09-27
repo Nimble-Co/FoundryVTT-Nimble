@@ -123,7 +123,7 @@ Once the creature finishes moving, the card records what came of the offer: the 
 
 Every granted move in the books happens as part of the effect that grants it. So in combat, an offer still open when the turn ends lapses, and the card says it was not taken. Out of combat, an offer stands until the creature next moves. If a creature has two open offers, its next drag uses the newest one. Every move settles all the open offers to the creature: the offer the drag used is taken, and the card of each other offer notes that the creature moved on its own. Adding a target to the card makes an offer to that creature too, and removing a target withdraws an offer it has not taken. A feature whose distance comes to zero offers nothing.
 
-Movement Offers need Movement Tracking, because only a recorded move settles an offer. When either toggle is off, nothing is labelled and the card shows the distance as plain text.
+Movement Offers need Movement Tracking, because only a recorded move settles an offer. When either toggle is off, nothing is labelled and the card shows the distance as plain text. Turning either toggle on or off lapses every open offer, so no creature carries an offer made under the old setting.
 
 ## Token adjacency tracking
 
