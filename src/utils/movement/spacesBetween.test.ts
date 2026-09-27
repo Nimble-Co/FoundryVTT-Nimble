@@ -3,17 +3,54 @@ import type { MeasurableTokenDocument } from '#types/movement.js';
 import { spacesBetween } from './spacesBetween.js';
 
 const GRID_SIZE = 100;
+const GRID_DISTANCE = 5;
 
-type Diagonals = 'equidistant' | 'illegal';
+type Diagonals =
+	| 'equidistant'
+	| 'exact'
+	| 'approximate'
+	| 'rectilinear'
+	| 'alternating1'
+	| 'alternating2'
+	| 'illegal';
+
+/** Mirrors core's square grid measurePath for one 2D move between offsets. */
+function measureSquare(diagonals: Diagonals, di: number, dj: number) {
+	const [long, short] = di < dj ? [dj, di] : [di, dj];
+	let spaces = long;
+	let cost: number;
+	switch (diagonals) {
+		case 'equidistant':
+			cost = long;
+			break;
+		case 'exact':
+			cost = long + (Math.SQRT2 - 1) * short;
+			break;
+		case 'approximate':
+			cost = long + 0.5 * short;
+			break;
+		case 'rectilinear':
+			cost = long + short;
+			break;
+		case 'illegal':
+			spaces = long + short;
+			cost = spaces;
+			break;
+		default: {
+			const start = diagonals === 'alternating2' ? 1.5 : 0;
+			cost = long + Math.floor((start + short) / 2) - Math.floor(start / 2);
+		}
+	}
+	return { spaces, distance: cost * GRID_DISTANCE };
+}
 
 function makeGrid(diagonals: Diagonals = 'equidistant', gridless = false) {
 	return {
 		isGridless: gridless,
 		size: GRID_SIZE,
+		distance: GRID_DISTANCE,
 		measurePath([from, to]: { i: number; j: number }[]) {
-			const di = Math.abs(from.i - to.i);
-			const dj = Math.abs(from.j - to.j);
-			return { spaces: diagonals === 'illegal' ? di + dj : Math.max(di, dj) };
+			return measureSquare(diagonals, Math.abs(from.i - to.i), Math.abs(from.j - to.j));
 		},
 	};
 }
@@ -53,10 +90,19 @@ describe('spacesBetween', () => {
 		expect(spacesBetween(makeToken(0, 0, grid), makeToken(2, 0, grid))).toBe(2);
 	});
 
-	it('follows the grid diagonal rule', () => {
-		const grid = makeGrid('illegal');
-		expect(spacesBetween(makeToken(0, 0, grid), makeToken(1, 1, grid))).toBe(2);
+	it.each([
+		['equidistant', 1, 2],
+		['illegal', 2, 4],
+		['alternating1', 1, 3],
+		['alternating2', 2, 3],
+		['rectilinear', 2, 4],
+		['exact', 1, 3],
+		['approximate', 2, 3],
+	] as const)('follows the %s diagonal rule', (diagonals, neighbour, twoAway) => {
+		const grid = makeGrid(diagonals);
 		expect(spacesBetween(makeToken(0, 0, grid), makeToken(1, 0, grid))).toBe(1);
+		expect(spacesBetween(makeToken(0, 0, grid), makeToken(1, 1, grid))).toBe(neighbour);
+		expect(spacesBetween(makeToken(0, 0, grid), makeToken(2, 2, grid))).toBe(twoAway);
 	});
 
 	it('measures large footprints edge to edge, not centre to centre', () => {

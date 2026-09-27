@@ -10,6 +10,63 @@ function makeToken(segments: Segment[], grid = { isGridless: false, distance: 5 
 	};
 }
 
+type Diagonals =
+	| 'equidistant'
+	| 'exact'
+	| 'approximate'
+	| 'rectilinear'
+	| 'alternating1'
+	| 'alternating2'
+	| 'illegal';
+
+type GridPoint = { x: number; y: number };
+
+/** Mirrors core's square grid measurePath for 2D moves between grid spaces. */
+function makeSquareToken(diagonals: Diagonals, gridDistance = 5) {
+	return {
+		parent: { grid: { isGridless: false, distance: gridDistance } },
+		measureMovementPath(waypoints: GridPoint[]) {
+			let diagonalsSoFar = diagonals === 'alternating2' ? 1.5 : 0;
+			const segments: Segment[] = [];
+			for (let index = 1; index < waypoints.length; index++) {
+				const dx = Math.abs(waypoints[index].x - waypoints[index - 1].x);
+				const dy = Math.abs(waypoints[index].y - waypoints[index - 1].y);
+				const [long, short] = dx < dy ? [dy, dx] : [dx, dy];
+				let spaces = long;
+				let cost: number;
+				switch (diagonals) {
+					case 'equidistant':
+						cost = long;
+						break;
+					case 'exact':
+						cost = long + (Math.SQRT2 - 1) * short;
+						break;
+					case 'approximate':
+						cost = long + 0.5 * short;
+						break;
+					case 'rectilinear':
+						cost = long + short;
+						break;
+					case 'illegal':
+						spaces = long + short;
+						cost = spaces;
+						break;
+					default: {
+						const before = diagonalsSoFar;
+						diagonalsSoFar += short;
+						cost = long + Math.floor(diagonalsSoFar / 2) - Math.floor(before / 2);
+					}
+				}
+				segments.push({ spaces, distance: cost * gridDistance });
+			}
+			return { segments };
+		},
+	};
+}
+
+const diagonalSteps = (count: number): GridPoint[] =>
+	Array.from({ length: count + 1 }, (_, index) => ({ x: index, y: index }));
+
 describe('measureWaypointSpaces', () => {
 	it('returns nothing for fewer than two waypoints', () => {
 		expect(measureWaypointSpaces(makeToken([]), [{ x: 0 }])).toEqual([]);
@@ -48,5 +105,30 @@ describe('measureWaypointSpaces', () => {
 	it('converts gridless distance to whole spaces', () => {
 		const token = makeToken([{ distance: 12, spaces: 0 }], { isGridless: true, distance: 5 });
 		expect(measureWaypointSpaces(token, [{}, {}])).toEqual([2]);
+	});
+
+	it.each([
+		['equidistant', [1, 1, 1, 1]],
+		['illegal', [2, 2, 2, 2]],
+		['alternating1', [1, 2, 1, 2]],
+		['alternating2', [2, 1, 2, 1]],
+		['rectilinear', [2, 2, 2, 2]],
+	] as const)('counts diagonal steps by the %s rule', (diagonals, legs) => {
+		expect(measureWaypointSpaces(makeSquareToken(diagonals), diagonalSteps(4))).toEqual(legs);
+	});
+
+	it('counts four diagonals in one leg as 6 under alternating 1', () => {
+		const token = makeSquareToken('alternating1');
+		expect(measureWaypointSpaces(token, [diagonalSteps(4)[0], diagonalSteps(4)[4]])).toEqual([6]);
+	});
+
+	it('rounds the running distance so the legs sum to the rounded total', () => {
+		expect(measureWaypointSpaces(makeSquareToken('exact'), diagonalSteps(2))).toEqual([1, 2]);
+		expect(measureWaypointSpaces(makeSquareToken('approximate'), diagonalSteps(1))).toEqual([2]);
+	});
+
+	it('counts nothing without a grid distance', () => {
+		const token = makeToken([{ distance: 5, spaces: 1 }], { isGridless: false, distance: 0 });
+		expect(measureWaypointSpaces(token, [{}, {}])).toEqual([0]);
 	});
 });

@@ -18,7 +18,7 @@ function makeToken(gridless = false, gridDistance = 1) {
 				const dy = Math.abs(waypoints[i].y - waypoints[i - 1].y);
 				segments.push({
 					spaces: gridless ? 0 : Math.max(dx, dy),
-					distance: Math.hypot(dx, dy) * gridDistance,
+					distance: (gridless ? Math.hypot(dx, dy) : Math.max(dx, dy)) * gridDistance,
 				});
 			}
 			return { segments };

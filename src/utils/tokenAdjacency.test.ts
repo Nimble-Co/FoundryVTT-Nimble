@@ -14,10 +14,12 @@ function makeGrid(diagonals: Diagonals = 'equidistant') {
 	return {
 		isGridless: false,
 		size: GRID_SIZE,
+		distance: 1,
 		measurePath([from, to]: { i: number; j: number }[]) {
 			const di = Math.abs(from.i - to.i);
 			const dj = Math.abs(from.j - to.j);
-			return { spaces: diagonals === 'illegal' ? di + dj : Math.max(di, dj) };
+			const spaces = diagonals === 'illegal' ? di + dj : Math.max(di, dj);
+			return { spaces, distance: spaces };
 		},
 	};
 }

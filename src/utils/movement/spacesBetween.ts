@@ -27,9 +27,10 @@ function gridlessSpaces(a: TokenPosition, b: TokenPosition, grid: MeasurableGrid
 /**
  * Spaces between two token footprints: 0 when they overlap, 1 when adjacent.
  * On a grid it is the smallest path between any space of one footprint and any
- * space of the other, measured by the scene grid so the world's diagonal rule
- * applies. Gridless scenes measure the edge to edge gap in grid units. A
- * position override measures a token as if it stood there.
+ * space of the other: the grid's measured distance over the grid distance,
+ * rounded, so the world's diagonal rule applies. Gridless scenes measure the
+ * edge to edge gap in grid units. A position override measures a token as if
+ * it stood there.
  */
 export function spacesBetween(
 	a: MeasurableTokenDocument,
@@ -51,7 +52,7 @@ export function spacesBetween(
 	for (const from of offsetsA) {
 		for (const to of offsetsB) {
 			if (from.i === to.i && from.j === to.j && (from.k ?? 0) === (to.k ?? 0)) return 0;
-			const { spaces } = grid.measurePath([from, to]);
+			const spaces = Math.round(grid.measurePath([from, to]).distance / grid.distance);
 			if (spaces < minimum) minimum = spaces;
 		}
 	}

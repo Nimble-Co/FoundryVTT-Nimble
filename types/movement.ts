@@ -22,7 +22,8 @@ export interface GridOffset {
 export interface MeasurableGrid {
 	isGridless: boolean;
 	size: number;
-	measurePath(points: GridOffset[]): { spaces: number };
+	distance: number;
+	measurePath(points: GridOffset[]): { distance: number };
 }
 
 /** The slice of a TokenDocument that footprint-aware distance needs. */
