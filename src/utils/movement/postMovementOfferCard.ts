@@ -5,8 +5,8 @@ import { moveNodeRecipients, reconcileMovementOffers } from './movementOffers.js
 export interface MovementOfferCardInput {
 	/** The source of the offer, and the speaker. */
 	actor: Actor;
-	/** The source's token. Defaults to its first active token on the viewed scene. */
-	token?: TokenDocument | null;
+	/** The source's token, and the speaker. */
+	token: TokenDocument;
 	/** The feature name, shown as the card title. */
 	name: string;
 	image?: string;
@@ -18,11 +18,6 @@ export interface MovementOfferCardInput {
 	recipients: 'self' | string[];
 }
 
-function defaultToken(actor: Actor): TokenDocument | null {
-	const token = actor.getActiveTokens()[0] as { document?: TokenDocument } | undefined;
-	return token?.document ?? null;
-}
-
 /**
  * Posts a Movement Offer that no item activation made. The card is born with
  * its offers, the same as an activation card. Posts nothing when the offer has
@@ -31,8 +26,7 @@ function defaultToken(actor: Actor): TokenDocument | null {
 export async function postMovementOfferCard(
 	input: MovementOfferCardInput,
 ): Promise<ChatMessage | null> {
-	const { actor } = input;
-	const token = input.token === undefined ? defaultToken(actor) : input.token;
+	const { actor, token } = input;
 	const isSelf = input.recipients === 'self';
 
 	const node: MoveNode = {

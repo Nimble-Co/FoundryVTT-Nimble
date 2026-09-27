@@ -1,8 +1,8 @@
 export interface MovementTriggerCardInput {
 	actor: Actor;
 	item: { uuid: string | null; name: string | null; img?: string | null };
-	/** Speaker token. When undefined, the actor's first active token speaks. */
-	token?: TokenDocument | null;
+	/** The speaker. */
+	token: TokenDocument;
 	/** Already resolved, plain text. */
 	message: string;
 	/** Token uuids the trigger found. */
@@ -12,17 +12,11 @@ export interface MovementTriggerCardInput {
 	spacesThisTurn: number | null;
 }
 
-function firstActiveToken(actor: Actor): TokenDocument | null {
-	const token = actor.getActiveTokens()[0] as { document?: TokenDocument } | undefined;
-	return token?.document ?? null;
-}
-
 /** Posts a card that lets the owner use an item after a Movement. */
 export async function postMovementTriggerCard(
 	input: MovementTriggerCardInput,
 ): Promise<ChatMessage | null> {
-	const { actor, item } = input;
-	const token = input.token === undefined ? firstActiveToken(actor) : input.token;
+	const { actor, item, token } = input;
 
 	const chatData = {
 		author: game.user?.id,

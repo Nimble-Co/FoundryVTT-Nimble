@@ -27,7 +27,6 @@ function makeActor(name: string, walk: number) {
 		permission: 3,
 		getRollData: () => ({}),
 		system: { attributes: { movement: { walk }, sizeCategory: 'medium' } },
-		getActiveTokens: vi.fn(() => [] as unknown[]),
 	};
 }
 
@@ -74,7 +73,6 @@ beforeEach(() => {
 	g.ChatMessage.create = create;
 	g.ChatMessage.getSpeaker = getSpeaker;
 	g.fromUuidSync = (uuid: string) => tokens[uuid] ?? null;
-	hero.getActiveTokens.mockReturnValue([{ document: heroToken }]);
 });
 
 afterEach(() => {
@@ -86,6 +84,7 @@ afterEach(() => {
 function input(over: Partial<MovementOfferCardInput> = {}): MovementOfferCardInput {
 	return {
 		actor: hero as unknown as Actor,
+		token: heroToken as unknown as TokenDocument,
 		name: 'Shove',
 		reason: 'Hero hit the goblin.',
 		node: {
@@ -151,7 +150,7 @@ describe('postMovementOfferCard', () => {
 		]);
 	});
 
-	it('uses the token the caller gives over the active token', async () => {
+	it('speaks as the token the caller gives', async () => {
 		const other = { ...heroToken, id: 'hero2', uuid: 'Scene.s.Token.hero2' };
 		await postMovementOfferCard(input({ token: other as unknown as TokenDocument }));
 		expect(getSpeaker).toHaveBeenCalledWith({ actor: hero, token: other });
@@ -159,12 +158,6 @@ describe('postMovementOfferCard', () => {
 
 	it('posts nothing when the list of recipients is empty', async () => {
 		expect(await postMovementOfferCard(input({ recipients: [] }))).toBeNull();
-		expect(create).not.toHaveBeenCalled();
-	});
-
-	it("posts nothing for 'self' when the source has no token", async () => {
-		hero.getActiveTokens.mockReturnValue([]);
-		expect(await postMovementOfferCard(input({ recipients: 'self' }))).toBeNull();
 		expect(create).not.toHaveBeenCalled();
 	});
 
