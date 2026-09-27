@@ -221,7 +221,6 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			reason,
 			node: {
 				kind: 'free',
-				chooser: 'mover',
 				distance: this.distance,
 				direction: this.direction,
 				ignoreDifficultTerrain: this.ignoresDifficultTerrain,

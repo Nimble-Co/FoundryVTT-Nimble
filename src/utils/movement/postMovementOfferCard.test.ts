@@ -93,7 +93,6 @@ function input(over: Partial<MovementOfferCardInput> = {}): MovementOfferCardInp
 			distance: '2',
 			ignoreDifficultTerrain: true,
 			direction: 'away',
-			chooser: 'source',
 		},
 		recipients: ['Scene.s.Token.gob'],
 		...over,
@@ -133,7 +132,6 @@ describe('postMovementOfferCard', () => {
 					distance: '@speed',
 					ignoreDifficultTerrain: false,
 					direction: 'any',
-					chooser: 'mover',
 				},
 			}),
 		);
@@ -180,7 +178,6 @@ describe('postMovementOfferCard', () => {
 					distanceBySize: { small: '3' },
 					ignoreDifficultTerrain: true,
 					direction: 'toward',
-					chooser: 'mover',
 				},
 			}),
 		);
@@ -210,7 +207,6 @@ describe('postMovementOfferCard', () => {
 			distanceBySize: { small: '3' },
 			ignoreDifficultTerrain: true,
 			direction: 'toward',
-			chooser: 'mover',
 			parentContext: null,
 			parentNode: null,
 		});

@@ -13,7 +13,6 @@ const node = {
 	distanceBySize: {},
 	ignoreDifficultTerrain: true,
 	direction: 'away',
-	chooser: 'source',
 	parentContext: null,
 	parentNode: null,
 };

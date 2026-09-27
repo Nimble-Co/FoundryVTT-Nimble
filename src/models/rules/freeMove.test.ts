@@ -271,7 +271,6 @@ describe('FreeMoveRule', () => {
 			expect(offer.recipients).toBe('self');
 			expect(offer.node).toEqual({
 				kind: 'free',
-				chooser: 'mover',
 				distance: '@dexterity',
 				direction: 'away',
 				ignoreDifficultTerrain: true,
