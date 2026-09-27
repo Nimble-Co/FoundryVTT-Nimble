@@ -58,7 +58,9 @@ export function createMoveNodeState(getProps: () => MoveNodeProps, card: MoveNod
 	const speakerUuid = speakerTokenUuid({ speaker: card?.speaker ?? undefined });
 
 	const offers = $derived(
-		(system.movementOffers ?? []).filter((offer) => offer.nodeId === getProps().node.id),
+		(system.movementOffers ?? []).filter(
+			(offer) => offer.nodeId === getProps().node.id && offer.spaces > 0,
+		),
 	);
 	const selfOffer = $derived(
 		offers.length === 1 && offers[0].tokenUuid === speakerUuid ? offers[0] : null,

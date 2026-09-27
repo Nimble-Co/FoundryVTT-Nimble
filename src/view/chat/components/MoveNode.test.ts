@@ -262,6 +262,20 @@ describe('MoveNode', () => {
 		expect(screen.getByText(/No creature to move/)).toBeTruthy();
 	});
 
+	it('does not list an offer of zero spaces', () => {
+		const { container } = renderNode([
+			createOffer(),
+			createOffer({ id: 'node1.tok2', tokenUuid: 'Scene.s1.Token.tok2', name: 'Ogre', spaces: 0 }),
+		]);
+		expect(container.querySelectorAll('.nimble-move-node__row')).toHaveLength(1);
+		expect(screen.queryByText('Ogre')).toBeNull();
+	});
+
+	it('says so when every offer for this node is zero spaces', () => {
+		renderNode([createOffer({ spaces: 0 })]);
+		expect(screen.getByText(/No creature to move/)).toBeTruthy();
+	});
+
 	it('carries no button in any state', () => {
 		for (const offer of [
 			createOffer(),
