@@ -7,7 +7,7 @@ const getPrimaryActiveGmId = vi.hoisted(() => vi.fn<() => string | null>(() => '
 vi.mock('./resolveArmedMovementOffer.js', () => ({ resolveArmedMovementOffer }));
 vi.mock('../getPrimaryActiveGmId.js', () => ({ getPrimaryActiveGmId }));
 
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import {
 	lapseOpenMovementOffers,
 	registerMovementOfferListener,
@@ -111,5 +111,52 @@ describe('registerMovementOfferListener', () => {
 	it('lapses offers when the combat is deleted', async () => {
 		handlers.get('deleteCombat')?.({ scene: { id: 's1' } });
 		await vi.waitFor(() => expect(written()).toEqual(['here:lapsed', 'there:open', 'done:taken']));
+	});
+
+	describe('when a toggle that gates Movement Offers changes', () => {
+		const setting = (key: string, value: boolean) => ({
+			key: `${SYSTEM_ID}.${key}`,
+			value,
+			config: { default: true },
+		});
+		const everyOpenOfferLapsed = ['here:lapsed', 'there:lapsed', 'done:taken'];
+
+		it.each([
+			['automation.movementOffers', true],
+			['automation.movementOffers', false],
+			['automation.movementTracking', true],
+			['automation.movementTracking', false],
+		])('lapses every open offer when %s turns %s', async (key, value) => {
+			offersEnabled = value;
+			handlers.get('updateSetting')?.(setting(key, value), { value });
+			await vi.waitFor(() => expect(written()).toEqual(everyOpenOfferLapsed));
+		});
+
+		it('lapses every open offer when the first write turns a toggle off', async () => {
+			offersEnabled = false;
+			handlers.get('createSetting')?.(setting('automation.movementOffers', false));
+			await vi.waitFor(() => expect(written()).toEqual(everyOpenOfferLapsed));
+		});
+
+		it('writes nothing for a first write that holds the default, another setting, or no value change', async () => {
+			handlers.get('createSetting')?.(setting('automation.movementOffers', true));
+			handlers.get('updateSetting')?.(setting('automation.chatNotifications', false), {
+				value: false,
+			});
+			handlers.get('updateSetting')?.(setting('automation.movementOffers', false), {
+				_stats: {},
+			});
+			await Promise.resolve();
+			expect(update).not.toHaveBeenCalled();
+		});
+
+		it('writes nothing off the primary GM', async () => {
+			g.game.user = { id: 'p1', isGM: false };
+			handlers.get('updateSetting')?.(setting('automation.movementOffers', false), {
+				value: false,
+			});
+			await Promise.resolve();
+			expect(update).not.toHaveBeenCalled();
+		});
 	});
 });
