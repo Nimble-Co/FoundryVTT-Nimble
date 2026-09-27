@@ -1,4 +1,4 @@
-import { movementChipsFor, movementStatus, moveNodeText } from './moveNodeText.ts';
+import { movementChipsFor, moveNodeText } from './moveNodeText.ts';
 
 const SPEAKER_TOKEN = 'Scene.s1.Token.hero';
 const TRACKING = { tracking: true };
@@ -316,9 +316,16 @@ describe('moveNodeText', () => {
 	});
 });
 
-describe('movementStatus', () => {
-	it('reads a conditional offer as conditional whatever its state', () => {
-		expect(movementStatus(offer({ conditional: true }), true)).toBe('conditional');
+describe('a conditional offer', () => {
+	it.each([
+		['open', {}],
+		['taken', { state: 'taken', movedSpaces: 1 }],
+		['unused', { state: 'unused' }],
+		['lapsed', { state: 'lapsed' }],
+		['untracked', { state: 'untracked' }],
+	])('reads as conditional when %s', (_state, overrides) => {
+		const chip = chipOf(moveNode(), offer({ conditional: true, ...overrides }));
+		expect(chip).toMatchObject({ status: 'conditional', label: '2' });
 	});
 });
 
@@ -337,9 +344,9 @@ describe('movementChipsFor', () => {
 			},
 		];
 		const offers = [
-			offer(),
 			offer({ id: 'pull1.tok1', nodeId: 'pull1', conditional: true }),
 			offer({ id: 'push1.tok2', tokenUuid: 'Scene.s1.Token.tok2' }),
+			offer(),
 		];
 		const chips = movementChipsFor(card(offers, effects), 'Scene.s1.Token.tok1', TRACKING);
 		expect(chips.map((chip) => chip.key)).toEqual(['push1.tok1', 'pull1.tok1']);

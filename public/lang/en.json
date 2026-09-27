@@ -146,7 +146,6 @@
 					"forced": {
 						"open": "Waiting to be {passive} {distance}{direction}.",
 						"taken": "{verb} the full {offered}.",
-						"partial": "{verb} {moved} of {offered}.",
 						"short": "{verb} {moved} of {offered}.",
 						"unused": "Not {passive}. It moved another way instead.",
 						"unusedAny": "Did not use the Forced Movement. It moved another way instead.",
