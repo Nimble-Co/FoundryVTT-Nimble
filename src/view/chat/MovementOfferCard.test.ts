@@ -55,14 +55,20 @@ function createMessage() {
 let previous: Record<string, unknown>;
 
 beforeEach(() => {
-	previous = { settings: g.game.settings, timeSince: g.foundry.utils.timeSince };
+	previous = {
+		settings: g.game.settings,
+		timeSince: g.foundry.utils.timeSince,
+		fromUuidSync: g.fromUuidSync,
+	};
 	g.game.settings = { get: vi.fn(() => true) };
 	g.foundry.utils.timeSince = () => 'now';
+	g.fromUuidSync = vi.fn(() => null);
 });
 
 afterEach(() => {
 	g.game.settings = previous.settings;
 	g.foundry.utils.timeSince = previous.timeSince;
+	g.fromUuidSync = previous.fromUuidSync;
 });
 
 describe('MovementOfferCard', () => {
@@ -73,7 +79,7 @@ describe('MovementOfferCard', () => {
 
 		expect(screen.getByRole('heading', { name: 'Shove' })).toBeTruthy();
 		expect(screen.getByText('Sir Brannon hit the goblin.')).toBeTruthy();
-		expect(screen.getByText('Forced Movement')).toBeTruthy();
+		expect(screen.getByRole('img', { name: 'Forced Movement' })).toBeTruthy();
 		expect(screen.getByText('Goblin Cutthroat')).toBeTruthy();
 		expect(screen.getByText(/up to 2 spaces/)).toBeTruthy();
 		expect(screen.getByText(/away from Sir Brannon/)).toBeTruthy();
