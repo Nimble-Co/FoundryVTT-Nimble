@@ -483,12 +483,14 @@ async function maximizePoolDie(
 
 /**
  * Manually adjust a pool's faces (GM tool or sheet UI). Operates on a single pool by id.
- * Pass an explicit `faces` array to overwrite, or null to clear.
+ * Pass an explicit `faces` array to overwrite, or null to clear. Pass `'refund'`
+ * when spent dice go back, so pool-gain listeners do not count them as a gain.
  */
 async function setPoolFaces(
 	actor: Actor | null | undefined,
 	poolId: string,
 	faces: number[] | null,
+	reason: 'manual' | 'refund' = 'manual',
 ): Promise<boolean> {
 	if (!isCharacterActor(actor)) return false;
 	if (typeof poolId !== 'string' || poolId.length < 1) return false;
@@ -515,7 +517,7 @@ async function setPoolFaces(
 		poolLabel: pool.label,
 		previousFaces,
 		newFaces: [...pool.faces],
-		reason: 'manual',
+		reason,
 		trigger: 'manual',
 	});
 

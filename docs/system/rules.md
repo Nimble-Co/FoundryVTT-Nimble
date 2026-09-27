@@ -37,7 +37,7 @@ Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from
 
 `onTurnStart` comes from core `combatTurn`, which runs only on the client that advanced the turn. That client can belong to a different player, who cannot change this actor. `onActiveGmTurnStart` takes the same `TurnContext` (combat, combatant, actor) but comes from Nimble's `nimbleCombatTurnStart` hook, which the combat document calls once per turn start, on the active GM only. Use it when the rule must write to the actor or post exactly one card.
 
-`onPoolGain` fires when one of the actor's dice pools gains dice, on the client that changed the pool (the `nimble.dicePool.changed` hook). The context holds `actor`, `poolIdentifier` (the bare identifier, with the `actor:` prefix removed) and `poolLabel`. `src/hooks/ruleEventDispatch.ts` dispatches both through the same `dispatch()` as every other event, so the `applyRuleEffects` toggle gates them unless the rule lists them in `alwaysDispatchedEvents`.
+`onPoolGain` fires when one of the actor's dice pools gains dice, on the client that changed the pool (the `nimble.dicePool.changed` hook). Spent dice that go back to the pool (`reason: 'refund'`, for example after a reroll removes the crit they were spent on) are not a gain. The context holds `actor`, `poolIdentifier` (the bare identifier, with the `actor:` prefix removed) and `poolLabel`. `src/hooks/ruleEventDispatch.ts` dispatches both through the same `dispatch()` as every other event, so the `applyRuleEffects` toggle gates them unless the rule lists them in `alwaysDispatchedEvents`.
 
 ### `onMovementFinished(context)`
 
@@ -532,7 +532,7 @@ That is harmless for a one-way gate such as a level threshold, which is what the
 - **`modifyPool.minFace`**: a minimum face value for dice rolled into the target pool. Rolls below the floor are raised to it at every roll point (refills, activation rolls, initial seeding); manual face edits stay unclamped. The highest floor among contributing modifiers wins.
 
 - **`modifyConsumer`**: augments the effect formula of `diceConsumer` rules targeting a pool. Matching consumers' `effectFormula` gains `+ (appendFormula)`, with an optional `effectTypeFilter` to restrict the change to e.g. `damageReduction` spends. Applied at consumer enumeration time, so both the spend panel and its preview reflect the change.
-- **`poolGainMessage`**: posts a chat reminder whenever the targeted dice pool gains dice. `formula` is resolved against actor data and interpolated into `message` via `{value}`.
+- **`poolGainMessage`**: posts a chat reminder whenever the targeted dice pool gains dice. Refunded dice do not count as a gain. `formula` is resolved against actor data and interpolated into `message` via `{value}`.
 - **Dice refill triggers wired to dispatchers**: `onAttacked` and `onCritReceived` (damage-application pipeline), `onTurnStart` / `onTurnEnd` (turn-boundary custom hooks, GM-side), and `encounterEnd`. Other declared triggers have no dispatcher yet.
 - **`maximizeDie` pool node action**: an activation effect node that raises the lowest N faces of a dice pool to the die's maximum.
 

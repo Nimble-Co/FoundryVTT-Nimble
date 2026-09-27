@@ -8,6 +8,7 @@ type PoolChangedPayload = {
 	poolId?: string;
 	previousFaces?: number[];
 	newFaces?: number[];
+	reason?: string;
 };
 
 type PoolGainMessageRuleLike = {
@@ -27,7 +28,7 @@ type ActorWithRules = Actor.Implementation & {
  * gains dice. Listens to the pool-changed event, which fires locally on the
  * client that performed the change, so the message posts exactly once
  * regardless of how the gain happened (activation roll, refill trigger, or
- * manual sheet edit).
+ * manual sheet edit). Spent dice that are refunded are not a gain.
  */
 export function registerPoolGainMessageHooks(): void {
 	if (registered) return;
@@ -36,6 +37,7 @@ export function registerPoolGainMessageHooks(): void {
 	// @ts-expect-error Custom hook
 	Hooks.on(systemHookName('dicePool.changed'), (payload: PoolChangedPayload) => {
 		if (!isChatNotificationsAutomationEnabled()) return;
+		if (payload.reason === 'refund') return;
 		const previousCount = payload.previousFaces?.length ?? 0;
 		const newCount = payload.newFaces?.length ?? 0;
 		if (newCount <= previousCount) return;

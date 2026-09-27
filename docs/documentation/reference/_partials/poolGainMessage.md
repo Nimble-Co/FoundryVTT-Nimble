@@ -5,7 +5,7 @@
 - **Formula** → `@dexterity`
 - **Message** → `Swift Fury: move up to {value} spaces for free, ignoring difficult terrain.`
 
-This posts a chat message whenever the named dice pool *gains* dice, whatever caused it: an activation that rolls a die in, a refill trigger, or a manual edit on the sheet. Losing dice does not fire it.
+This posts a chat message whenever the named dice pool *gains* dice, whatever caused it: an activation that rolls a die in, a refill trigger, or a manual edit on the sheet. Losing dice does not fire it, and neither do spent dice that go back to the pool, for example after a reroll removes the crit they were spent on.
 
 **Formula** is resolved against the character, and `{value}` in the **Message** is replaced with the result, so the reminder carries the actual number rather than making the player work it out. Leave the formula blank if the message has nothing to calculate.
 
