@@ -58,7 +58,7 @@ interface StoredOffer {
 	id: string;
 	tokenUuid: string;
 	spaces: number;
-	state: 'open' | 'taken' | 'unused' | 'lapsed';
+	state: 'open' | 'taken' | 'unused' | 'lapsed' | 'untracked';
 	movedSpaces: number | null;
 }
 
@@ -349,25 +349,34 @@ describe('movement offers', () => {
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 	});
 
-	test('with Movement Offers off nothing is labelled, and the open offer lapses', async () => {
+	test('with Movement Offers off nothing is labelled, and the card stops tracking the open offer', async () => {
 		expect(dropTag(), 'the drop should be named while the offer is open').toBeDefined();
 		await setAutomationToggle(OFFERS_SETTING, false);
 		expect(moveNodeText()).toContain(`Pushed up to 2 spaces away from ${hero.name}.`);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 		expect(dropTag()).toBeUndefined();
-		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');
+		await waitFor(() => offersOn(card)[0].state === 'untracked', 'the offer to be untracked');
+		await waitFor(
+			() => goblinTagText() === `Pushed up to 2 spaces away from ${hero.name}.`,
+			'the tag to state the push',
+		);
+		expect(goblinTag()?.textContent?.trim()).toBe('2');
 	});
 
-	test('with Movement Tracking off nothing is labelled, and the open offer lapses', async () => {
+	test('with Movement Tracking off nothing is labelled, and the card stops tracking the open offer', async () => {
 		expect(dropTag(), 'the drop should be named while the offer is open').toBeDefined();
 		await setAutomationToggle(TRACKING_SETTING, false);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 		expect(dropTag()).toBeUndefined();
-		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');
+		await waitFor(() => offersOn(card)[0].state === 'untracked', 'the offer to be untracked');
 
 		await setAutomationToggle(TRACKING_SETTING, true);
-		expect(placeable()._getDragMovementAction(), 'a lapsed offer arms nothing').not.toBe(
+		expect(placeable()._getDragMovementAction(), 'an untracked offer arms nothing').not.toBe(
 			FORCED_ACTION,
+		);
+		await waitFor(
+			() => goblinTagText() === `Pushed up to 2 spaces away from ${hero.name}.`,
+			'the tag to state the push with tracking back on',
 		);
 	});
 });

@@ -85,7 +85,7 @@ describe('movementOffers schema factory', () => {
 	it('starts an offer open and accepts every state it can settle into', () => {
 		const { state, kind } = field().element.fields;
 		expect(state.options.initial).toBe('open');
-		expect(state.options.choices).toEqual(['open', 'taken', 'unused', 'lapsed']);
+		expect(state.options.choices).toEqual(['open', 'taken', 'unused', 'lapsed', 'untracked']);
 		expect(kind.options.choices).toEqual(['free', 'forced']);
 	});
 });

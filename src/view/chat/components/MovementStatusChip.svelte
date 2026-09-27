@@ -36,6 +36,7 @@
 		}
 
 		&[data-status='open'],
+		&[data-status='untracked'],
 		&[data-status='conditional'] {
 			color: var(--nimble-dark-text-color);
 		}

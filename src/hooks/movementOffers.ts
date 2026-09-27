@@ -2,9 +2,9 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { MovementRecord } from '#types/movement.js';
 import {
 	combatSceneIds,
-	lapseAllOpenMovementOffers,
 	lapseOpenMovementOffers,
 	type OfferCombatScenes,
+	untrackOpenMovementOffers,
 } from '#utils/movement/lapseOpenMovementOffers.js';
 import { resolveArmedMovementOffer } from '#utils/movement/resolveArmedMovementOffer.js';
 import { AUTOMATION_SETTING_KEYS } from '../settings/automationSettings.js';
@@ -27,7 +27,7 @@ interface ChangedSetting {
 	config?: { default?: unknown };
 }
 
-/** The settings whose change lapses every open Movement Offer. */
+/** The settings whose change untracks every open Movement Offer. */
 const OFFER_GATE_SETTING_KEYS = new Set<string>([
 	`${SYSTEM_ID}.${AUTOMATION_SETTING_KEYS.movementOffers}`,
 	`${SYSTEM_ID}.${AUTOMATION_SETTING_KEYS.movementTracking}`,
@@ -64,15 +64,16 @@ function endsTurn(combat: OfferCombat): boolean {
 function onOfferGateSettingChanged(setting: ChangedSetting, created: boolean): void {
 	if (!setting.key || !OFFER_GATE_SETTING_KEYS.has(setting.key)) return;
 	if (created && setting.value === setting.config?.default) return;
-	void lapseAllOpenMovementOffers();
+	void untrackOpenMovementOffers();
 }
 
 let didRegister = false;
 
 /**
  * Settles Movement Offers: records one on its card after its token's next
- * Movement, and lapses the open ones when a combat turn ends, the combat is
- * deleted, or a toggle that gates them changes. Idempotent; call from `ready`.
+ * Movement, lapses the open ones when a combat turn ends or the combat is
+ * deleted, and untracks them when a toggle that gates them changes.
+ * Idempotent; call from `ready`.
  */
 export default function registerMovementOffers(): void {
 	if (didRegister) return;

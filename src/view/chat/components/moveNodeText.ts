@@ -23,7 +23,8 @@ interface MoveTextCardSystem {
 /**
  * What came of one offer, as the card tells it. `partial` is a Free Move that
  * stopped short by choice; `short` is a push that covered fewer spaces, or a
- * Free Move whose path was cut short.
+ * Free Move whose path was cut short. `untracked` is a move no drag settles,
+ * because tracking is off or a toggle changed while it waited.
  */
 export type MovementStatus =
 	| 'open'
@@ -32,6 +33,7 @@ export type MovementStatus =
 	| 'short'
 	| 'unused'
 	| 'lapsed'
+	| 'untracked'
 	| 'conditional';
 
 export interface MovementChip {
@@ -67,10 +69,11 @@ const STATUS_ICONS: Record<MovementStatus, string> = {
 	short: 'fa-triangle-exclamation',
 	unused: 'fa-xmark',
 	lapsed: 'fa-clock',
+	untracked: 'fa-person-running',
 	conditional: 'fa-dice-d20',
 };
 
-export function movementStatus(offer: MovementOffer): MovementStatus {
+export function movementStatus(offer: MovementOffer, tracking: boolean): MovementStatus {
 	if (offer.conditional) return 'conditional';
 	const outcome = movementOfferOutcome(offer);
 	switch (outcome.state) {
@@ -79,9 +82,10 @@ export function movementStatus(offer: MovementOffer): MovementStatus {
 			return (outcome.moved ?? 0) < outcome.offered ? 'partial' : 'taken';
 		case 'unused':
 		case 'lapsed':
+		case 'untracked':
 			return outcome.state;
 		default:
-			return 'open';
+			return tracking ? 'open' : 'untracked';
 	}
 }
 
@@ -163,7 +167,7 @@ export function moveNodeText(
 	};
 
 	const chip = (offer: MovementOffer): MovementChip => {
-		const status = movementStatus(offer);
+		const status = movementStatus(offer, options.tracking);
 		const data = {
 			verb,
 			passive,
@@ -181,9 +185,9 @@ export function moveNodeText(
 				`${kindKey}.${saveKey(saveOutcomeAbove(node, system.activation?.effects ?? []))}`,
 				data,
 			);
-		} else if (status === 'open' && isForced && !options.tracking) {
-			// Nothing records the drag, so the chip states the push instead of waiting for it.
-			tooltip = localize(`${KEY}.summary.forced`, data);
+		} else if (status === 'untracked') {
+			// Nothing records the drag, so the chip states the move instead of waiting for it.
+			tooltip = localize(`${KEY}.summary.${isForced ? 'forced' : 'free'}`, data);
 		} else {
 			tooltip = localize(`${kindKey}.${status}`, data);
 		}

@@ -267,6 +267,7 @@ describe('MoveNode', () => {
 				'Not pushed. It moved another way instead.',
 			],
 			['lapsed', { state: 'lapsed' }, 'Not pushed', 'Not pushed. The turn ended first.'],
+			['untracked', { state: 'untracked' }, '2', 'Pushed up to 2 spaces away from Sir Brannon.'],
 		])('shows a push that is %s', (status, overrides, label, tooltip) => {
 			const { container } = renderNode([createOffer(overrides)]);
 			const chip = chipOf(container);
@@ -298,6 +299,7 @@ describe('MoveNode', () => {
 				'Not used',
 				'Did not use the Free Move. The turn ended first.',
 			],
+			['untracked', { state: 'untracked' }, '2', 'Can move up to 2 spaces for free.'],
 		])('shows a Free Move that is %s', (status, overrides, label, tooltip) => {
 			const { container } = renderNode([createSelfOffer(overrides)], { node: selfNode() });
 			const chip = chipOf(container);
@@ -322,9 +324,11 @@ describe('MoveNode', () => {
 		it('states an open push when tracking is off', () => {
 			g.game.settings = { get: vi.fn(() => false) };
 			const { container } = renderNode();
-			const tooltip = chipOf(container).getAttribute('data-tooltip');
-			expect(tooltip).toBe('Pushed up to 2 spaces away from Sir Brannon.');
-			expect(tooltip).not.toMatch(/Waiting/);
+			const chip = chipOf(container);
+			expect(chip.dataset.status).toBe('untracked');
+			expect(chip.getAttribute('data-tooltip')).toBe(
+				'Pushed up to 2 spaces away from Sir Brannon.',
+			);
 		});
 
 		it('uses the singular for one space', () => {

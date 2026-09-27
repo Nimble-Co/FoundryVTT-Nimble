@@ -2,8 +2,8 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MovementOffer } from '#types/movement.js';
 import {
 	combatSceneIds,
-	lapseAllOpenMovementOffers,
 	lapseOpenMovementOffers,
+	untrackOpenMovementOffers,
 } from './lapseOpenMovementOffers.js';
 
 type GameStub = {
@@ -80,16 +80,16 @@ describe('lapseOpenMovementOffers', () => {
 	});
 });
 
-describe('lapseAllOpenMovementOffers', () => {
-	it('lapses every open offer on every scene, even with Movement Offers off', async () => {
+describe('untrackOpenMovementOffers', () => {
+	it('untracks every open offer on every scene, even with Movement Offers off', async () => {
 		offersEnabled = false;
-		await lapseAllOpenMovementOffers();
-		expect(written()).toEqual(['here:lapsed', 'there:lapsed', 'done:taken']);
+		await untrackOpenMovementOffers();
+		expect(written()).toEqual(['here:untracked', 'there:untracked', 'done:taken']);
 	});
 
 	it('writes nothing off the primary GM', async () => {
 		g.game.user = { id: 'p1', isGM: false };
-		await lapseAllOpenMovementOffers();
+		await untrackOpenMovementOffers();
 		expect(update).not.toHaveBeenCalled();
 	});
 });
