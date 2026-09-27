@@ -1,9 +1,7 @@
 import { render, screen } from '@testing-library/svelte';
 import TargetsTestHarness from './Targets.testHarness.svelte';
 
-type Globals = { game: { settings: unknown }; fromUuid: unknown };
-
-const g = globalThis as unknown as Globals;
+const baseGame = game;
 
 const GOBLIN_TOKEN = 'Scene.s1.Token.tok1';
 const ARCHER_TOKEN = 'Scene.s1.Token.tok2';
@@ -69,19 +67,16 @@ function createMessage() {
 	return { ...message, reactive: message };
 }
 
-let previousSettings: unknown;
-let previousFromUuid: unknown;
-
 beforeEach(() => {
-	previousSettings = g.game.settings;
-	previousFromUuid = g.fromUuid;
-	g.game.settings = { get: vi.fn(() => true) };
-	g.fromUuid = vi.fn(async (uuid: string) => TOKENS[uuid] ?? null);
+	vi.stubGlobal('game', { ...baseGame, settings: { get: vi.fn(() => true) } });
+	vi.stubGlobal(
+		'fromUuid',
+		vi.fn(async (uuid: string) => TOKENS[uuid] ?? null),
+	);
 });
 
 afterEach(() => {
-	g.game.settings = previousSettings;
-	g.fromUuid = previousFromUuid;
+	vi.unstubAllGlobals();
 });
 
 describe('Targets', () => {

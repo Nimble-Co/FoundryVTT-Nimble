@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MovementOffer } from '#types/movement.js';
 import {
 	combatSceneIds,
@@ -13,7 +13,7 @@ type GameStub = {
 	settings: { get: () => unknown };
 };
 const g = globalThis as unknown as { game: GameStub };
-const previousGame = g.game;
+const baseGame = g.game;
 
 function offer(id: string, tokenUuid: string, state: MovementOffer['state'] = 'open') {
 	return { id, tokenUuid, state, spaces: 2 } as MovementOffer;
@@ -25,8 +25,8 @@ let offersEnabled: boolean;
 beforeEach(() => {
 	update = vi.fn().mockResolvedValue(undefined);
 	offersEnabled = true;
-	g.game = {
-		...previousGame,
+	vi.stubGlobal('game', {
+		...baseGame,
 		user: { id: 'gm', isGM: true },
 		users: { activeGM: { id: 'gm' } },
 		settings: { get: () => offersEnabled },
@@ -45,11 +45,11 @@ beforeEach(() => {
 				{ system: {}, update: vi.fn() },
 			],
 		},
-	} as GameStub;
+	} as GameStub);
 });
 
-afterAll(() => {
-	g.game = previousGame;
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 const written = () =>

@@ -19,8 +19,8 @@ type GameStub = {
 	settings: { get: () => unknown };
 	combats?: unknown[];
 };
-const g = globalThis as unknown as { game: GameStub; Hooks: unknown };
-const previous = { game: g.game, Hooks: g.Hooks };
+const g = globalThis as unknown as { game: GameStub };
+const baseGame = g.game;
 
 function offer(id: string, tokenUuid: string, state: MovementOffer['state'] = 'open') {
 	return { id, tokenUuid, state, spaces: 2 } as MovementOffer;
@@ -31,7 +31,7 @@ let offersEnabled: boolean;
 
 function stubGame(): GameStub {
 	return {
-		...previous.game,
+		...baseGame,
 		user: { id: 'gm', isGM: true },
 		users: { activeGM: { id: 'gm' } },
 		settings: { get: () => offersEnabled },
@@ -55,13 +55,13 @@ function stubGame(): GameStub {
 const fighter = (id: string) => ({ id, sceneId: 's1' });
 
 beforeAll(() => {
-	g.Hooks = {
+	vi.stubGlobal('Hooks', {
 		on: (event: string, handler: (...args: unknown[]) => unknown) => handlers.set(event, handler),
-	};
-	g.game = {
+	});
+	vi.stubGlobal('game', {
 		...stubGame(),
 		combats: [{ id: 'loaded', round: 1, combatant: fighter('a'), scene: { id: 's1' } }],
-	};
+	});
 	registerMovementOffers();
 	registerMovementOffers();
 });
@@ -70,12 +70,11 @@ beforeEach(() => {
 	update = vi.fn().mockResolvedValue(undefined);
 	offersEnabled = true;
 	resolveArmedMovementOffer.mockClear();
-	g.game = stubGame();
+	vi.stubGlobal('game', stubGame());
 });
 
 afterAll(() => {
-	g.game = previous.game;
-	g.Hooks = previous.Hooks;
+	vi.unstubAllGlobals();
 });
 
 const written = () =>

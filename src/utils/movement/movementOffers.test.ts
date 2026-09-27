@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import {
@@ -30,6 +30,10 @@ beforeAll(() => {
 afterAll(() => {
 	RollGlobal.replaceFormulaData = original.replace;
 	RollGlobal.safeEval = original.safeEval;
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 function moveNode(over: Partial<MoveNode> = {}): MoveNode {
@@ -325,16 +329,17 @@ describe('findArmedMovementOffer', () => {
 	});
 
 	it('reads the chat log once until a chat message changes', () => {
-		const g = globalThis as unknown as { game: { messages?: unknown } };
-		const saved = g.game.messages;
 		let reads = 0;
 		let contents = [message('m1', [offer()])];
-		g.game.messages = {
-			get contents() {
-				reads++;
-				return contents;
+		vi.stubGlobal('game', {
+			...game,
+			messages: {
+				get contents() {
+					reads++;
+					return contents;
+				},
 			},
-		};
+		});
 		try {
 			forgetArmedMovementOffers();
 			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m1');
@@ -350,7 +355,6 @@ describe('findArmedMovementOffer', () => {
 			const first = findArmedMovementOffer('Scene.s.Token.gob', { enabled: true });
 			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })).not.toBe(first);
 		} finally {
-			g.game.messages = saved;
 			forgetArmedMovementOffers();
 		}
 	});

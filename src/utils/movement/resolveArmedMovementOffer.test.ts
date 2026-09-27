@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { MovementOffer, MovementRecord } from '#types/movement.js';
 
 const getPrimaryActiveGmId = vi.hoisted(() => vi.fn<() => string | null>(() => 'gm'));
@@ -13,7 +13,7 @@ type GameStub = {
 	messages: { contents: unknown[]; get: (id: string) => unknown };
 };
 const g = globalThis as unknown as { game: GameStub };
-const previousGame = g.game;
+const baseGame = g.game;
 
 type Card = { id: string; system: { movementOffers: MovementOffer[] }; update: Mock };
 let older: Card;
@@ -67,14 +67,14 @@ function written(target: Card, index = 0): MovementOffer | undefined {
 beforeEach(() => {
 	older = card('m', [offer()]);
 	newer = card('m2', [offer()]);
-	g.game = { ...previousGame, user: { id: 'gm', isGM: true } } as GameStub;
+	vi.stubGlobal('game', { ...baseGame, user: { id: 'gm', isGM: true } } as GameStub);
 	useCards(older, newer);
 	getPrimaryActiveGmId.mockReturnValue('gm');
 	isMovementOffersAutomationEnabled.mockReturnValue(true);
 });
 
-afterAll(() => {
-	g.game = previousGame;
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 describe('resolveArmedMovementOffer', () => {
