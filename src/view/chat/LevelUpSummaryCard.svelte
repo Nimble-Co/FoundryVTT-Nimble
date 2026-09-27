@@ -52,8 +52,9 @@
 
 <style lang="scss">
 	.nimble-card-section {
+		--nimble-card-section-padding: 0.25rem;
+
 		display: flex;
 		flex-direction: column;
-		padding: 0.25rem;
 	}
 </style>

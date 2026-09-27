@@ -94,6 +94,8 @@
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
+			"concentrationApplied": "Concentration Applied",
+			"concentrationFailed": "The concentration condition could not be applied to the caster.",
 			"healing": "Healing",
 			"healingApplied": "Healing Applied",
 			"undoHealing": "Undo Healing",
@@ -359,6 +361,13 @@
 			"unconscious": "Unconscious",
 			"wounded": "Wounded",
 			"lastStand": "Last Stand"
+		},
+		"concentration": {
+			"endPrompt": {
+				"title": "End Concentration",
+				"content": "This caster is concentrating on more than one thing. Which should end?",
+				"all": "End All"
+			}
 		},
 		"conditionDescriptions": {
 			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
@@ -784,6 +793,7 @@
 			"chargeConsumer": "Charge Consumer",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
+			"concentrationTrack": "Concentration Track",
 			"conditionalBonus": "Conditional Bonus",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
@@ -993,6 +1003,13 @@
 			},
 			"combatMana": {
 				"description": "Grant a mana resource on a combat trigger and clear it on a configurable event."
+			},
+			"concentrationTrack": {
+				"description": "Track concentration on the named spell schools separately, so the actor can concentrate on one spell from each at the same time.",
+				"schools": {
+					"label": "Tracked separately",
+					"hint": "Each school named here gets a concentration of its own. Naming schools splits the caster's single concentration rather than adding one, so casting in a school no rule names ends every concentration they hold."
+				}
 			},
 			"conditionImmunity": {
 				"description": "Make the actor immune to one or more named conditions.",
@@ -2169,6 +2186,7 @@
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
 			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
+			"conditionReplacementLost": "A condition was removed to make room for a new one, and neither could be put back.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",
 			"failedToRemoveEffect": "Failed to remove effect.",
@@ -2954,7 +2972,7 @@
 			},
 			"applyRuleEffects": {
 				"name": "Apply Conditions and Effects from Rules",
-				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire, and put Concentration on a caster who casts a concentration spell. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
 			},
 			"derivedConditions": {
 				"name": "Derived Conditions",

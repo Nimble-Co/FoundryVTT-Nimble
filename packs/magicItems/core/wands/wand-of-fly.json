@@ -17,7 +17,7 @@
 			},
 			"duration": {
 				"details": "",
-				"quantity": 1,
+				"quantity": 10,
 				"type": "minute"
 			},
 			"effects": [],
@@ -54,7 +54,9 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [],
+			"selected": [
+				"concentration"
+			],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false

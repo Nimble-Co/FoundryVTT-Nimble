@@ -40,13 +40,6 @@
 							}
 						]
 					}
-				},
-				{
-					"id": "Z609aBIYuy8DuptT",
-					"type": "condition",
-					"condition": "concentration",
-					"parentContext": null,
-					"parentNode": null
 				}
 			],
 			"showDescription": true,

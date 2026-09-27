@@ -19,15 +19,7 @@
 				"quantity": 1,
 				"type": "minute"
 			},
-			"effects": [
-				{
-					"id": "Vy8prtbBQAXUTI8j",
-					"type": "condition",
-					"condition": "concentration",
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

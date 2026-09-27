@@ -28,7 +28,7 @@ Spell sheets have no Rules tab. Passive bonuses belong on features and objects, 
 
 On the **Configuration** tab:
 
-- **Spell Properties**: toggle any of **Concentration**, **Range**, **Reach**, **Secret Spell**, and **Utility**. Selecting Range or Reach reveals the matching distance configuration. Marking a spell as **Utility** hides the tier and scaling sections entirely, because utility spells sit outside the tier system.
+- **Spell Properties**: toggle any of **Concentration**, **Range**, **Reach**, **Secret Spell**, and **Utility**. Selecting Range or Reach reveals the matching distance configuration. Marking a spell as **Utility** hides the tier and scaling sections entirely, because utility spells sit outside the tier system. Ticking **Concentration** is all it takes to make casting the spell apply the [Concentration condition](../playing/conditions.md#concentration) to the caster. Don't add a condition effect for it as well.
 - **Spell Tier**: **Cantrip** or **Tier 1** through **Tier 9**.
 - **Spell School**: **Fire**, **Ice**, **Lightning**, **Necrotic**, **Radiant**, or **Wind**, each with its icon.
 

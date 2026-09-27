@@ -5,6 +5,10 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { applyCasterConcentration, type ConcentrationSource } from '../../utils/concentration.js';
+
+/** The card types whose schema carries `system.concentration`. */
+const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -178,6 +182,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	/**
 	 * Create the activation chat card unless a rule suppresses it, then fire
 	 * the `useItem` hook. Shared tail of every activate() implementation.
+	 *
+	 * Concentration is applied here, not on the damage-applied path, which a
+	 * roll-less activation never reaches.
 	 */
 	protected async _createActivationCard(
 		chatData: unknown,
@@ -186,6 +193,24 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		hookContext: Record<string, unknown>,
 	): Promise<ChatMessage | null> {
 		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
+
+		let concentrating = false;
+		try {
+			const outcome = await applyCasterConcentration(this as object as ConcentrationSource);
+			concentrating = outcome === 'applied';
+
+			if (outcome === 'refused') {
+				ui.notifications?.warn('NIMBLE.chat.concentrationFailed', { localize: true });
+			}
+		} catch (error) {
+			console.error('Nimble | Could not apply concentration to the caster.', error);
+			ui.notifications?.warn('NIMBLE.chat.concentrationFailed', { localize: true });
+		}
+
+		if (CONCENTRATION_CARD_TYPES.has((chatData as { type?: string })?.type ?? '')) {
+			foundry.utils.setProperty(chatData as object, 'system.concentration', concentrating);
+		}
+
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);

@@ -6,6 +6,7 @@
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
+	import ConcentrationNode from './components/ConcentrationNode.svelte';
 	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
@@ -120,6 +121,8 @@
 
 	<ActionDeltaSummaryNode />
 
+	<ConcentrationNode />
+
 	{#if hasUpcast}
 		<section class="nimble-card-section nimble-upcast-indicator">
 			<i class="fa-solid fa-arrow-up-right-dots"></i>
@@ -129,32 +132,17 @@
 </article>
 
 <style>
-	.nimble-card-section {
-		padding: var(--nimble-card-section-padding, 0.5rem);
-
-		&:not(:last-of-type) {
-			border-bottom: 1px solid var(--nimble-card-border-color);
-		}
-	}
-
 	.nimble-upcast-indicator {
-		background: var(--nimble-color-primary-alpha);
-		color: var(--nimble-color-primary);
+		--nimble-card-section-padding: 0.5rem;
+
+		background: var(--nimble-chat-upcast-background);
+		color: var(--nimble-chat-upcast-color);
 		font-weight: 600;
 		text-align: center;
-		padding: 0.5rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-	}
-
-	:global(.nimble-card-section--description *:first-child) {
-		margin-block-start: 0 !important;
-	}
-
-	:global(.nimble-card-section--description *:last-child) {
-		margin-block-end: 0 !important;
 	}
 
 	[data-heading-variant='section'] {
