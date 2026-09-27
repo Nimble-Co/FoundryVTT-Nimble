@@ -292,14 +292,17 @@ describe('movement offers', () => {
 		await waitFor(() => moveNodeText().includes('moved 2 of 2 spaces'), 'the result on the card');
 	});
 
-	test('the name settles the offer the drag was made under, even with a newer one open', async () => {
+	test('the drop takes the offer it names, and leaves a newer open offer unused', async () => {
 		const first = card;
 		const tag = dropTag();
 		const second = await activateShove();
 
 		await moveGoblin(5, { action: FORCED_ACTION, tag });
 		await waitFor(() => offersOn(first)[0].state === 'taken', 'the named offer to be recorded');
-		expect(offersOn(second)[0].state).toBe('open');
+		await waitFor(
+			() => offersOn(second)[0].state === 'unused',
+			'the newer offer to be left unused',
+		);
 	});
 
 	test('a Movement made under no offer leaves the offer unused', async () => {
