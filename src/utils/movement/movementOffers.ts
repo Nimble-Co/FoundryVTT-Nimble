@@ -101,12 +101,13 @@ export function movementOfferId(nodeId: string, tokenUuid: string): string {
 }
 
 /**
- * The card's Movement Offers once its recipients are set or changed. Each offer
- * is worked out once, when it is first made, so a later change to either
- * creature does not move the number on the card. An offer of zero spaces
- * stays only as that record: no token carries it, the card does not list it,
- * and it never lapses. A settled offer stays as the record of what happened; an
- * open or untracked one goes with its recipient.
+ * The card's Movement Offers once its recipients or its outcome are set or
+ * changed. Each offer is worked out once, when it is first made, so a later
+ * change to either creature does not move the number on the card. An offer of
+ * zero spaces stays only as that record: no token carries it, the card does not
+ * list it, and it never lapses. A settled offer stays as the record of what
+ * happened; an open or untracked one goes with its recipient, or with the
+ * outcome that made it.
  */
 export function reconcileMovementOffers(
 	card: OfferCard,
@@ -114,8 +115,6 @@ export function reconcileMovementOffers(
 ): MovementOffer[] {
 	const existing = card.system?.movementOffers ?? [];
 	const nodes = offeredMoveNodes(card);
-	if (!nodes.length) return [...existing];
-
 	const resolveToken = lookups.resolveToken ?? resolveTokenByUuid;
 	const resolveActor = lookups.resolveActor ?? resolveActorById;
 	let source = lookups.source;

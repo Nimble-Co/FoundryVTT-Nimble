@@ -239,6 +239,42 @@ describe('rollDeferredDamage', () => {
 		expect(payload.system.isCritical).toBe(true);
 	});
 
+	it('drops an open Movement Offer the rolled miss no longer makes', async () => {
+		stubEvaluate({ isCritical: false, isMiss: true });
+		const push = {
+			id: 'push',
+			type: 'move',
+			kind: 'forced',
+			recipient: 'targets',
+			distance: '2',
+			distanceBySize: {},
+			ignoreDifficultTerrain: false,
+			direction: 'away',
+		};
+		const message = createMessage([deferredDamageNode({ on: { hit: [push] } })]);
+		(message.system as unknown as { movementOffers: unknown[] }).movementOffers = [
+			{
+				id: 'push.victim',
+				nodeId: 'push',
+				tokenUuid: 'Scene.scene.Token.victim',
+				name: 'Victim',
+				kind: 'forced',
+				spaces: 2,
+				ignoreDifficultTerrain: true,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional: false,
+			},
+		];
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as { system: { movementOffers: unknown[] } };
+		expect(payload.system.movementOffers).toEqual([]);
+	});
+
 	it('writes booleans to the card even when the roll reports no outcome', async () => {
 		const message = createMessage([deferredDamageNode({ canCrit: false, canMiss: false })]);
 

@@ -183,9 +183,8 @@ describe('reconcileMovementOffers', () => {
 		expect(reconcileMovementOffers(card(nested), lookups)).toEqual([offer()]);
 	});
 
-	it('leaves a card with no move node as it is', () => {
-		const kept = [offer()];
-		expect(reconcileMovementOffers(card([], undefined, kept), lookups)).toEqual(kept);
+	it('makes no offer on a card with no move node', () => {
+		expect(reconcileMovementOffers(card([]), lookups)).toEqual([]);
 	});
 });
 
@@ -224,6 +223,28 @@ describe('reconcileMovementOffers on an outcome branch', () => {
 			ids(reconcileMovementOffers(card(underAttack('criticalHit'), undefined, [], crit), lookups)),
 		).toEqual([['n1.gob', false]]);
 		expect(reconcileMovementOffers(card(underAttack('criticalHit')), lookups)).toEqual([]);
+	});
+
+	it('drops the open offer an outcome no longer makes, but keeps a settled one', () => {
+		const open = offer();
+		const taken = offer({ id: 'n1.ogre', tokenUuid: 'Scene.s.Token.ogre', state: 'taken' });
+		const targets = ['Scene.s.Token.gob', 'Scene.s.Token.ogre'];
+		const missed = card(underAttack('hit'), targets, [open, taken], { isMiss: true });
+		expect(reconcileMovementOffers(missed, lookups)).toEqual([taken]);
+	});
+
+	it('adds the offer under On Critical Hit when a hit turns critical', () => {
+		const effects = [
+			{ id: 'd', type: 'damage', on: { hit: [moveNode()], criticalHit: [moveNode({ id: 'n2' })] } },
+		];
+		const hit = reconcileMovementOffers(card(effects), lookups);
+		expect(ids(hit)).toEqual([['n1.gob', false]]);
+
+		const crit = card(effects, undefined, hit, { isCritical: true });
+		expect(ids(reconcileMovementOffers(crit, lookups))).toEqual([
+			['n1.gob', false],
+			['n2.gob', false],
+		]);
 	});
 
 	it('stamps a conditional offer under a save outcome', () => {
