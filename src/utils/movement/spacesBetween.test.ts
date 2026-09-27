@@ -127,7 +127,27 @@ describe('spacesBetween', () => {
 		expect(spacesBetween(makeToken(0, 0, grid), makeToken(0.5, 0, grid))).toBe(0);
 		expect(spacesBetween(makeToken(0, 0, grid), makeToken(1, 0, grid))).toBe(1);
 		expect(spacesBetween(makeToken(0, 0, grid), makeToken(1.5, 0, grid))).toBe(1);
+		expect(spacesBetween(makeToken(0, 0, grid), makeToken(2, 0, grid))).toBe(2);
+		expect(spacesBetween(makeToken(0, 0, grid), makeToken(3, 0, grid))).toBe(3);
 		expect(spacesBetween(makeToken(0, 0, grid), makeToken(3.2, 0, grid))).toBe(3);
+	});
+
+	it('counts a gridless gap the same as the grid does', () => {
+		const gridless = makeGrid('equidistant', true);
+		const grid = makeGrid();
+		for (const x of [1, 2, 3]) {
+			expect(spacesBetween(makeToken(0, 0, gridless), makeToken(x, 0, gridless))).toBe(
+				spacesBetween(makeToken(0, 0, grid), makeToken(x, 0, grid)),
+			);
+		}
+	});
+
+	it('absorbs float error in a gridless gap', () => {
+		const grid = makeGrid('equidistant', true);
+		const a = makeToken(0, 0, grid);
+		const b = makeToken(0, 0, grid);
+		const twoSpacesAway = GRID_SIZE + 2 * GRID_SIZE - 1e-9;
+		expect(spacesBetween(a, b, { b: { x: twoSpacesAway, y: 0 } })).toBe(3);
 	});
 
 	it('is infinite without a scene grid', () => {
