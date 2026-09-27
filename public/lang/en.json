@@ -1283,7 +1283,7 @@
 				}
 			},
 			"movementTrigger": {
-				"description": "Post a chat card when a Movement agrees with the conditions. The card lets the owner use this item.",
+				"description": "Post a chat card when a Movement in a started combat agrees with the conditions. The card lets the owner use this item.",
 				"event": {
 					"label": "Event",
 					"hint": "selfMoved: this creature moves. creatureMoved: a different creature moves."

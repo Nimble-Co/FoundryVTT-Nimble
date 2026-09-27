@@ -71,10 +71,21 @@ function makeRule(
 	return { rule, actor, item };
 }
 
+type Combatants = { tokenId: string; sceneId: string }[];
+
+function startedCombat(tokenIds: string[], started = true) {
+	const combatants: Combatants = tokenIds.map((tokenId) => ({ tokenId, sceneId: 's' }));
+	return { started, combatants };
+}
+
+function setCombats(combats: { started: boolean; combatants: Combatants }[]) {
+	vi.stubGlobal('game', { ...(globalThis as unknown as { game: object }).game, combats });
+}
+
 function makeContext(overrides: Record<string, unknown> = {}) {
 	const sceneTokens = [{ id: 'a' }, { id: 'b' }];
-	const moverToken = { id: 'mover', name: 'Goblin', parent: { tokens: sceneTokens } };
-	const observerToken = { id: 'obs', name: 'Observer' };
+	const moverToken = { id: 'mover', name: 'Goblin', parent: { id: 's', tokens: sceneTokens } };
+	const observerToken = { id: 'obs', name: 'Observer', parent: { id: 's' } };
 	return {
 		record: {
 			token: moverToken,
@@ -109,6 +120,11 @@ describe('MovementTriggerRule', () => {
 		matchMovementTrigger.mockReset();
 		matchMovementTrigger.mockReturnValue({ targets: [] });
 		postMovementTriggerCard.mockClear();
+		setCombats([startedCombat(['mover', 'obs'])]);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	describe('schema', () => {
@@ -226,6 +242,39 @@ describe('MovementTriggerRule', () => {
 			);
 		});
 
+		describe('combat', () => {
+			it('posts nothing out of combat, and does not run the matcher', async () => {
+				setCombats([]);
+				await makeRule().rule.onMovementFinished(makeContext() as never);
+				expect(matchMovementTrigger).not.toHaveBeenCalled();
+				expect(postMovementTriggerCard).not.toHaveBeenCalled();
+			});
+
+			it('posts nothing when the combat has not started', async () => {
+				setCombats([startedCombat(['mover', 'obs'], false)]);
+				await makeRule().rule.onMovementFinished(makeContext() as never);
+				expect(postMovementTriggerCard).not.toHaveBeenCalled();
+			});
+
+			it('posts nothing when the observer is in combat but the mover is not', async () => {
+				setCombats([startedCombat(['obs'])]);
+				await makeRule().rule.onMovementFinished(makeContext() as never);
+				expect(postMovementTriggerCard).not.toHaveBeenCalled();
+			});
+
+			it('posts nothing when the mover is in combat but the observer is not', async () => {
+				setCombats([startedCombat(['mover'])]);
+				await makeRule().rule.onMovementFinished(makeContext() as never);
+				expect(postMovementTriggerCard).not.toHaveBeenCalled();
+			});
+
+			it('posts when both tokens are in a started combat', async () => {
+				setCombats([startedCombat(['mover', 'obs'])]);
+				await makeRule().rule.onMovementFinished(makeContext() as never);
+				expect(postMovementTriggerCard).toHaveBeenCalledTimes(1);
+			});
+		});
+
 		it('posts nothing when the matcher does not fire', async () => {
 			matchMovementTrigger.mockReturnValue(null);
 			await makeRule().rule.onMovementFinished(makeContext() as never);
@@ -282,10 +331,6 @@ describe('MovementTriggerRule', () => {
 			const { default: register } = await import('../../hooks/ruleEventDispatch.js');
 			register();
 			handlers = new Map(on.mock.calls.map(([event, handler]) => [event, handler as Handler]));
-		});
-
-		afterEach(() => {
-			vi.unstubAllGlobals();
 		});
 
 		it('still posts its card', async () => {

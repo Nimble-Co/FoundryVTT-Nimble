@@ -4,8 +4,8 @@
  *
  * freeMove: using the feature posts a Movement Offer card, the offered token
  * then drags as a Free Move, and a Movement made under the offer is recorded
- * on the card. movementTrigger: a finished Movement that agrees with the rule
- * posts a card that lets the owner use the item.
+ * on the card. movementTrigger: a finished Movement in a started combat that
+ * agrees with the rule posts a card that lets the owner use the item.
  *
  * Token Movements are real Movements of the token documents; a drop is
  * reproduced with the drag's action and the offer tag, like the sibling
@@ -417,6 +417,7 @@ describe('movement rules', () => {
 		let lash: Item;
 		let rampage: Item;
 		let rampageCard: ChatMessage;
+		let combat: Combat;
 
 		beforeAll(async () => {
 			hero = (await Actor.create({ name: `${TEST_PREFIX} Warden`, type: 'character' }))!;
@@ -465,125 +466,144 @@ describe('movement rules', () => {
 				actorLink: true,
 			});
 
-			// Spaces Moved This Turn is only counted in a started combat.
-			const combat = (await Combat.create({ active: true, scene: scene.id } as Combat.CreateData))!;
+			combat = (await Combat.create({ active: true, scene: scene.id } as Combat.CreateData))!;
 			combats.push(combat);
 			await combat.createEmbeddedDocuments('Combatant', [
 				{ actorId: hero.id, tokenId: heroToken.id, sceneId: scene.id, type: 'character' },
 				{ actorId: goblin.id, tokenId: goblinToken.id, sceneId: scene.id, type: 'npc' },
 			] as Combatant.CreateData[]);
-			await combat.startCombat();
 			await settle(500);
 		}, 60_000);
 
-		test('an enemy that moves but stays out of Reach posts nothing', async () => {
+		test('before the combat starts, an enemy that moves next to the user posts nothing', async () => {
 			const cards = await cardsAfter('movementTrigger', hero, () =>
-				moveToken(goblinToken, [[6, 2]]),
-			);
-			expect(cards).toHaveLength(0);
-		});
-
-		test('an enemy that moves next to the user posts a card that names it and lets the user use the item', async () => {
-			await displace(goblinToken, [6, 2]);
-			const card = await cardFrom('movementTrigger', hero, () => moveToken(goblinToken, [[3, 2]]));
-			await waitForRendered(card, '.nimble-movement-trigger-card');
-			const text = cardText(card);
-			expect(text).toContain(lash.name);
-			expect(text).toContain(`${goblin.name} moved. You can use this item now.`);
-			expect(text).toContain(`Creatures: ${goblin.name}`);
-		});
-
-		test('the Use button targets exactly the enemy and uses the item', async () => {
-			await displace(goblinToken, [6, 2]);
-			const [card] = await cardsFrom('movementTrigger', hero, () =>
 				moveToken(goblinToken, [[3, 2]]),
 			);
-			await waitForRendered(card, '.nimble-movement-trigger-card button');
-			const buttons = messageNode(card.id!)!.querySelectorAll<HTMLButtonElement>(
-				'.nimble-movement-trigger-card button',
-			);
-			expect(buttons).toHaveLength(1);
-			expect(buttons[0].textContent).toContain(`Use ${lash.name}`);
-
-			await targetToken(heroToken);
-			const before = messageIds();
-			buttons[0].click();
-			await waitFor(
-				() =>
-					newMessages(before, 'feature', hero).some(
-						(message) =>
-							foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) === lash.uuid,
-					),
-				'the Lash activation card',
-			);
-
-			expect([...game.user!.targets].map((token) => token.id)).toEqual([goblinToken.id]);
-			const activation = newMessages(before, 'feature', hero).find(
-				(message) =>
-					foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) === lash.uuid,
-			)!;
-			expect((activation.system as unknown as { targets: string[] }).targets).toEqual([
-				goblinToken.uuid,
-			]);
-			await clearTargets();
-		});
-
-		test('a short move next to a creature posts no card', async () => {
-			await displace(goblinToken, [5, 2]);
-			await heroToken.clearMovementHistory();
-			await settle(500);
-			const cards = await cardsAfter('movementTrigger', hero, () => moveToken(heroToken, [[4, 2]]));
 			expect(cards).toHaveLength(0);
-			expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
+			await displace(goblinToken, [8, 2]);
 		});
 
-		test('a move that brings this turn to 4 spaces and ends adjacent posts a card that spends nothing', async () => {
-			const card = await cardFrom('movementTrigger', hero, () =>
-				moveToken(heroToken, [
-					[4, 4],
-					[4, 2],
-				]),
-			);
-			await waitForRendered(card, '.nimble-movement-trigger-card button');
-			const text = cardText(card);
-			expect(text).toContain(rampage.name);
-			expect(text).toContain(`${hero.name} moved 4 spaces, 6 this turn.`);
-			expect(text).toContain(`Creatures: ${goblin.name}`);
-			expect(text).toContain(`Use ${rampage.name}`);
-			expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
-			rampageCard = card;
-		});
+		describe('in a started combat', () => {
+			// Movement triggers fire only in a started combat, where Spaces Moved This Turn is counted.
+			beforeAll(async () => {
+				await combat.startCombat();
+				await settle(500);
+			});
 
-		test("the card's Use button uses the item, and the item spends its charge", async () => {
-			const button = messageNode(rampageCard.id!)!.querySelector<HTMLButtonElement>(
-				'.nimble-movement-trigger-card button',
-			)!;
-			const before = messageIds();
-			button.click();
-			await waitFor(
-				() =>
-					newMessages(before, 'feature', hero).some(
-						(message) =>
-							foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) ===
-							rampage.uuid,
-					),
-				'the Rampage activation card',
-			);
-			await waitFor(
-				() => poolCurrent(hero, rampage, 'rampage-use') === 0,
-				'the Rampage charge to be spent',
-			);
-			await clearTargets();
-		});
+			test('an enemy that moves but stays out of Reach posts nothing', async () => {
+				const cards = await cardsAfter('movementTrigger', hero, () =>
+					moveToken(goblinToken, [[6, 2]]),
+				);
+				expect(cards).toHaveLength(0);
+			});
 
-		test('with the charge spent a further qualifying move posts nothing', async () => {
-			const cards = await cardsAfter('movementTrigger', hero, () =>
-				moveToken(heroToken, [
-					[4, 3],
-					[4, 2],
-				]),
-			);
-			expect(cards).toHaveLength(0);
+			test('an enemy that moves next to the user posts a card that names it and lets the user use the item', async () => {
+				await displace(goblinToken, [6, 2]);
+				const card = await cardFrom('movementTrigger', hero, () =>
+					moveToken(goblinToken, [[3, 2]]),
+				);
+				await waitForRendered(card, '.nimble-movement-trigger-card');
+				const text = cardText(card);
+				expect(text).toContain(lash.name);
+				expect(text).toContain(`${goblin.name} moved. You can use this item now.`);
+				expect(text).toContain(`Creatures: ${goblin.name}`);
+			});
+
+			test('the Use button targets exactly the enemy and uses the item', async () => {
+				await displace(goblinToken, [6, 2]);
+				const [card] = await cardsFrom('movementTrigger', hero, () =>
+					moveToken(goblinToken, [[3, 2]]),
+				);
+				await waitForRendered(card, '.nimble-movement-trigger-card button');
+				const buttons = messageNode(card.id!)!.querySelectorAll<HTMLButtonElement>(
+					'.nimble-movement-trigger-card button',
+				);
+				expect(buttons).toHaveLength(1);
+				expect(buttons[0].textContent).toContain(`Use ${lash.name}`);
+
+				await targetToken(heroToken);
+				const before = messageIds();
+				buttons[0].click();
+				await waitFor(
+					() =>
+						newMessages(before, 'feature', hero).some(
+							(message) =>
+								foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) ===
+								lash.uuid,
+						),
+					'the Lash activation card',
+				);
+
+				expect([...game.user!.targets].map((token) => token.id)).toEqual([goblinToken.id]);
+				const activation = newMessages(before, 'feature', hero).find(
+					(message) =>
+						foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) === lash.uuid,
+				)!;
+				expect((activation.system as unknown as { targets: string[] }).targets).toEqual([
+					goblinToken.uuid,
+				]);
+				await clearTargets();
+			});
+
+			test('a short move next to a creature posts no card', async () => {
+				await displace(goblinToken, [5, 2]);
+				await heroToken.clearMovementHistory();
+				await settle(500);
+				const cards = await cardsAfter('movementTrigger', hero, () =>
+					moveToken(heroToken, [[4, 2]]),
+				);
+				expect(cards).toHaveLength(0);
+				expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
+			});
+
+			test('a move that brings this turn to 4 spaces and ends adjacent posts a card that spends nothing', async () => {
+				const card = await cardFrom('movementTrigger', hero, () =>
+					moveToken(heroToken, [
+						[4, 4],
+						[4, 2],
+					]),
+				);
+				await waitForRendered(card, '.nimble-movement-trigger-card button');
+				const text = cardText(card);
+				expect(text).toContain(rampage.name);
+				expect(text).toContain(`${hero.name} moved 4 spaces, 6 this turn.`);
+				expect(text).toContain(`Creatures: ${goblin.name}`);
+				expect(text).toContain(`Use ${rampage.name}`);
+				expect(poolCurrent(hero, rampage, 'rampage-use')).toBe(1);
+				rampageCard = card;
+			});
+
+			test("the card's Use button uses the item, and the item spends its charge", async () => {
+				const button = messageNode(rampageCard.id!)!.querySelector<HTMLButtonElement>(
+					'.nimble-movement-trigger-card button',
+				)!;
+				const before = messageIds();
+				button.click();
+				await waitFor(
+					() =>
+						newMessages(before, 'feature', hero).some(
+							(message) =>
+								foundry.utils.getProperty(message, `flags.${game.system.id}.itemUuid`) ===
+								rampage.uuid,
+						),
+					'the Rampage activation card',
+				);
+				await waitFor(
+					() => poolCurrent(hero, rampage, 'rampage-use') === 0,
+					'the Rampage charge to be spent',
+				);
+				await clearTargets();
+			});
+
+			test('with the charge spent a further qualifying move posts nothing', async () => {
+				const cards = await cardsAfter('movementTrigger', hero, () =>
+					moveToken(heroToken, [
+						[4, 3],
+						[4, 2],
+					]),
+				);
+				expect(cards).toHaveLength(0);
+			});
 		});
 	});
 });
