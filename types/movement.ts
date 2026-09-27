@@ -99,6 +99,12 @@ export interface MovementOffer {
 	movedSpaces: number | null;
 	/** A wall, terrain or the mover cut the Movement short. */
 	stopped: boolean;
+	/**
+	 * Made under a save outcome, which the card does not track for each target.
+	 * The card shows the distance, but no token carries the offer: it is never
+	 * settled and never lapses.
+	 */
+	conditional: boolean;
 }
 
 /** Names one Movement Offer across cards: the card, and the offer on it. */

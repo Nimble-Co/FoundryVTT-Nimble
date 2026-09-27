@@ -77,6 +77,7 @@ describe('movementOffers schema factory', () => {
 			usedBy: null,
 			movedSpaces: null,
 			stopped: false,
+			conditional: false,
 		};
 		expect(Object.keys(field().element.fields).sort()).toEqual(Object.keys(stamped).sort());
 	});
