@@ -119,7 +119,7 @@ Whoever owns the token still does the moving and picks the path and the final sp
 
 A push ignores difficult terrain; a Free Move follows the feature's wording, and the card tags a Free Move that ignores it. The card shows the direction the feature names ("away from" or "toward" the feature's user), but nothing enforces it, and the rules give a push no particular shape.
 
-Once the creature finishes moving, the card records what came of the offer: the spaces it covered under the offer, up to the offered distance, or a note that it moved on its own. A creature or the environment can stop a push early. When that happens the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one.
+Once the creature finishes moving, the card records what came of the offer: the spaces it covered under the offer, up to the offered distance, or a note that it moved on its own. A creature or the environment can stop a push early. When a push covers fewer spaces than it offered, for any reason, the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one. The table decides whether an obstacle stopped it.
 
 Every granted move in the books happens as part of the effect that grants it. So in combat, an offer still open when the turn ends lapses, and the card says it was not taken. Out of combat, an offer stands until the creature next moves. If a creature has two open offers, its next drag uses the newest one. Adding a target to the card makes an offer to that creature too, and removing a target withdraws an offer it has not taken. A feature whose distance comes to zero offers nothing.
 
