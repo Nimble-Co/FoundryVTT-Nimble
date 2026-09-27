@@ -15,7 +15,6 @@ const actor = {
 	name: 'Hero',
 	type: 'character',
 	permission: 3,
-	getActiveTokens: vi.fn(() => [{ document: heroToken }] as unknown[]),
 };
 const item = { uuid: 'Actor.a-hero.Item.i1', name: 'Quick Strike', img: 'icons/strike.webp' };
 
@@ -30,7 +29,6 @@ const getSpeaker = vi.fn(({ token }: { token?: typeof heroToken | null }) => ({
 beforeEach(() => {
 	g.ChatMessage.create = create;
 	g.ChatMessage.getSpeaker = getSpeaker;
-	actor.getActiveTokens.mockReturnValue([{ document: heroToken }]);
 });
 
 afterEach(() => {
@@ -42,6 +40,7 @@ function input(over: Partial<MovementTriggerCardInput> = {}): MovementTriggerCar
 	return {
 		actor: actor as unknown as Actor,
 		item,
+		token: heroToken as unknown as TokenDocument,
 		message: 'Goblin moved next to Hero.',
 		targets: ['Scene.s.Token.gob'],
 		moverName: 'Goblin',
@@ -79,17 +78,11 @@ describe('postMovementTriggerCard', () => {
 		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: heroToken });
 	});
 
-	it('speaks as the given token instead of the first active token', async () => {
+	it('speaks as the given token', async () => {
 		const otherToken = { id: 'other', parent: { id: 's2' } };
 		await postMovementTriggerCard(input({ token: otherToken as unknown as TokenDocument }));
 
 		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: otherToken });
-	});
-
-	it('speaks as the actor alone when the given token is null', async () => {
-		await postMovementTriggerCard(input({ token: null }));
-
-		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: null });
 	});
 
 	it('stores an empty item uuid when the item has none', async () => {
@@ -106,11 +99,9 @@ describe('postMovementTriggerCard', () => {
 		expect(system.spacesThisTurn).toBeNull();
 	});
 
-	it('speaks as the actor alone when it has no active token', async () => {
-		actor.getActiveTokens.mockReturnValue([]);
+	it('stores an empty list when the trigger found no creatures', async () => {
 		await postMovementTriggerCard(input({ targets: [] }));
 
-		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: null });
 		const system = (create.mock.calls[0][0] as { system: Record<string, unknown> }).system;
 		expect(system.targets).toEqual([]);
 	});

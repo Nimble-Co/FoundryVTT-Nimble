@@ -1,5 +1,7 @@
-import type { MeasurableTokenDocument } from '#types/movement.js';
+import type { MeasurableTokenDocument, OfferCard } from '#types/movement.js';
 import localize from '#utils/localize.js';
+import { findActorToken } from '#utils/movement/findActorToken.js';
+import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { postMovementOfferCard } from '../../utils/movement/postMovementOfferCard.js';
@@ -201,7 +203,10 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.test()) return;
 		if (this.trigger !== 'onCritReceived') return;
 		if (context.isCritical !== true || context.targetActor !== this.actor) return;
-		await this.#offer(localize('NIMBLE.rules.freeMove.reasons.onCritReceived'));
+		await this.#offer(
+			localize('NIMBLE.rules.freeMove.reasons.onCritReceived'),
+			targetTokenOf(context.card, this.actor),
+		);
 	}
 
 	override async onPoolGain(context: PoolGainContext): Promise<void> {
@@ -219,7 +224,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		const { actor } = this;
 		if (!hasRuleCharge(actor, this.chargePoolIdentifier)) return;
 
-		const token = contextToken ?? firstActiveToken(actor);
+		const token = contextToken ?? findActorToken(actor);
 		if (!token) return;
 		const recipients = this.#recipients(token);
 		if (recipients !== 'self' && recipients.length === 0) return;
@@ -249,18 +254,24 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	}
 }
 
-function firstActiveToken(actor: Actor): TokenDocument | null {
-	const token = actor.getActiveTokens()[0] as { document?: TokenDocument } | undefined;
-	return token?.document ?? null;
+function tokenFromUuid(uuid: string): TokenDocument | null {
+	return (fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false }) ??
+		null) as TokenDocument | null;
 }
 
 function speakerToken(card: ChatMessage | null): TokenDocument | null {
-	const speaker = card?.speaker as { scene?: string | null; token?: string | null } | undefined;
-	if (!speaker?.scene || !speaker.token) return null;
-	const scene = game.scenes?.get(speaker.scene) as
-		| { tokens?: { get(id: string): TokenDocument | undefined } }
-		| undefined;
-	return scene?.tokens?.get(speaker.token) ?? null;
+	const uuid = card ? speakerTokenUuid(card as unknown as OfferCard) : null;
+	return uuid ? tokenFromUuid(uuid) : null;
+}
+
+/** The token of `actor` among the attack card's targets. */
+function targetTokenOf(card: ChatMessage | null, actor: Actor): TokenDocument | null {
+	const targets = (card as unknown as OfferCard | null)?.system?.targets ?? [];
+	for (const uuid of targets) {
+		const token = tokenFromUuid(uuid);
+		if (token?.actor === actor) return token;
+	}
+	return null;
 }
 
 function alliesWithin(source: TokenDocument, within: number): string[] {

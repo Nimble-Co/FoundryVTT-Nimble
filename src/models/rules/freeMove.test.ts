@@ -110,7 +110,9 @@ function makeRule(
 		update: vi.fn(async () => undefined),
 	};
 	const heroToken = options.withToken === false ? null : addToken('hero', { actor, name: 'Hero' });
-	actor.getActiveTokens = () => (heroToken ? [{ document: heroToken }] : []);
+	// The canvas is not ready here: the rule must find the token another way.
+	actor.getActiveTokens = () => [];
+	actor.getDependentTokens = () => (heroToken ? [heroToken] : []);
 
 	const item: Record<string, unknown> = {
 		isEmbedded: options.isEmbedded ?? true,
@@ -289,10 +291,10 @@ describe('FreeMoveRule', () => {
 		it('uses the speaker token of the activation card', async () => {
 			const harness = makeRule();
 			const other = harness.addToken('hero-2', { actor: harness.actor });
-			vi.stubGlobal('game', {
-				...(globalThis as unknown as { game: object }).game,
-				scenes: { get: () => ({ tokens: { get: () => other } }) },
-			});
+			const fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Scene.s.Token.hero-2' ? other : null,
+			);
+			vi.stubGlobal('fromUuidSync', fromUuidSync);
 			await harness.rule.onItemActivated({
 				sourceItem: harness.item,
 				sourceActor: harness.actor,
@@ -382,6 +384,30 @@ describe('FreeMoveRule', () => {
 			const harness = makeRule({ trigger: 'onCritReceived' });
 			await receive(harness, true);
 			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
+			expect(lastOffer().token).toBe(harness.heroToken);
+		});
+
+		it("offers from this actor's token among the attack card's targets", async () => {
+			const harness = makeRule({ trigger: 'onCritReceived' });
+			const struck = harness.addToken('hero-struck', { actor: harness.actor });
+			const bystander = harness.addToken('bystander');
+			const byUuid = new Map([
+				[struck.uuid, struck],
+				[bystander.uuid, bystander],
+			]);
+			vi.stubGlobal(
+				'fromUuidSync',
+				vi.fn((uuid: string) => byUuid.get(uuid) ?? null),
+			);
+			await harness.rule.onAttackReceived({
+				sourceItem: {},
+				sourceActor: {},
+				targetActor: harness.actor,
+				card: { system: { targets: [bystander.uuid, struck.uuid] } },
+				isCritical: true,
+				isMiss: false,
+			} as never);
+			expect(lastOffer().token).toBe(struck);
 		});
 
 		it('does not fire on a hit that is not critical, or on another target', async () => {
@@ -397,10 +423,12 @@ describe('FreeMoveRule', () => {
 			return harness.rule.onPoolGain({ actor: harness.actor, poolIdentifier, poolLabel } as never);
 		}
 
-		it('fires when the named pool gains dice', async () => {
-			await gain(makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' }), 'fury', 'Fury Dice');
+		it('fires when the named pool gains dice, from the token it finds for the actor', async () => {
+			const harness = makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' });
+			await gain(harness, 'fury', 'Fury Dice');
 			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
 			expect(lastOffer().reason).toContain('Fury Dice');
+			expect(lastOffer().token).toBe(harness.heroToken);
 		});
 
 		it('does not fire for another pool or another trigger', async () => {
