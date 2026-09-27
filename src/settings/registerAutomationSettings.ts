@@ -2,6 +2,7 @@ import type { Component } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
 import AutomationSettingsDialog from '#view/settings/AutomationSettingsDialog.svelte';
+import { refreshMovementTrackedActors } from '../hooks/movementHistoryRefresh.js';
 import {
 	AUTOMATION_SETTING_KEYS,
 	LEGACY_AUTO_APPLY_CONDITIONS_SETTING_KEY,
@@ -89,6 +90,10 @@ export function registerAutomationSettings(): void {
 		[AUTOMATION_SETTING_KEYS.applyRuleEffects]: applyRuleEffectsDefault,
 	};
 
+	const toggleOnChange: Record<string, () => void> = {
+		[AUTOMATION_SETTING_KEYS.movementTracking]: refreshMovementTrackedActors,
+	};
+
 	for (const [shortKey, settingKey] of Object.entries(AUTOMATION_SETTING_KEYS)) {
 		game.settings.register(
 			SYSTEM_ID as 'core',
@@ -100,6 +105,7 @@ export function registerAutomationSettings(): void {
 				config: false,
 				type: Boolean,
 				default: toggleDefaults[settingKey] ?? true,
+				onChange: toggleOnChange[settingKey],
 			} as unknown as Parameters<typeof game.settings.register>[2],
 		);
 	}
