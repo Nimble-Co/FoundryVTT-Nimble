@@ -1,10 +1,6 @@
 import type { MoveNode } from '#types/effectTree.js';
-import {
-	moveNodeRecipients,
-	type OfferActor,
-	type OfferCard,
-	reconcileMovementOffers,
-} from './movementOffers.js';
+import type { OfferActor, OfferCard } from '#types/movement.js';
+import { moveNodeRecipients, reconcileMovementOffers } from './movementOffers.js';
 
 export interface MovementOfferCardInput {
 	/** The source of the offer, and the speaker. */
@@ -16,7 +12,7 @@ export interface MovementOfferCardInput {
 	image?: string;
 	/** One localized line that says why the offer was made. */
 	reason: string;
-	node: Pick<MoveNode, 'kind' | 'distance' | 'ignoreDifficultTerrain' | 'direction' | 'chooser'> &
+	node: Pick<MoveNode, 'kind' | 'distance' | 'ignoreDifficultTerrain' | 'direction'> &
 		Partial<Pick<MoveNode, 'distanceBySize'>>;
 	/** 'self' offers to the speaker token; a list of token uuids offers to those tokens. */
 	recipients: 'self' | string[];
@@ -48,7 +44,6 @@ export async function postMovementOfferCard(
 		distanceBySize: { ...(input.node.distanceBySize ?? {}) },
 		ignoreDifficultTerrain: input.node.ignoreDifficultTerrain,
 		direction: input.node.direction,
-		chooser: input.node.chooser,
 		parentContext: null,
 		parentNode: null,
 	};

@@ -236,7 +236,6 @@ describe('chat message cards', () => {
 							distanceBySize: {},
 							ignoreDifficultTerrain: false,
 							direction: 'away',
-							chooser: 'source',
 							parentContext: null,
 							parentNode: null,
 						},

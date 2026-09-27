@@ -30,7 +30,6 @@
 					"distanceBySize": {},
 					"ignoreDifficultTerrain": true,
 					"direction": "any",
-					"chooser": "mover",
 					"parentContext": null,
 					"parentNode": null
 				}
