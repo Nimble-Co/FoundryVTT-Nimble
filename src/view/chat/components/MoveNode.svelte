@@ -66,7 +66,7 @@
 		<ul class="nimble-move-node__rows">
 			{#each rowOffers as offer (offer.id)}
 				<li class="nimble-move-node__row">
-					<img class="nimble-move-node__img" src={tokenImage(offer.tokenUuid)} alt={offer.name} />
+					<img class="nimble-move-node__img" src={tokenImage(offer.tokenUuid)} alt="" />
 					<span class="nimble-move-node__name" data-tooltip={offer.name}>{offer.name}</span>
 					<MovementStatusChip chip={text.chip(offer)} />
 				</li>
