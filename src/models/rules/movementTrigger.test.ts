@@ -35,7 +35,6 @@ const DEFAULTS = {
 	observerScope: 'self',
 	allyRadius: 6,
 	message: '',
-	chargePoolIdentifier: '',
 };
 
 function makeRule(
@@ -43,46 +42,13 @@ function makeRule(
 	options: {
 		isEmbedded?: boolean;
 		predicate?: (domain: Set<string>) => boolean;
-		pool?: number;
-		actorType?: string;
 	} = {},
 ) {
-	const poolItem =
-		options.pool === undefined
-			? null
-			: {
-					id: 'pool-item',
-					name: 'Reaction',
-					flags: { nimble: { chargePools: { lash: { current: options.pool, max: 1 } } } },
-					rules: new Map([
-						[
-							'pool-rule',
-							{
-								type: 'chargePool',
-								disabled: false,
-								id: 'lash',
-								identifier: 'lash',
-								scope: 'item',
-								max: '1',
-								initial: 'max',
-								recoveries: [],
-							},
-						],
-					]),
-					update: vi.fn(async () => undefined),
-				};
 	const actor = {
 		id: 'observer',
 		name: 'Observer',
-		type: options.actorType ?? 'character',
-		flags: {},
+		type: 'character',
 		getDomain: () => new Set<string>(['self:raging']),
-		getRollData: () => ({}),
-		items: {
-			contents: poolItem ? [poolItem] : [],
-			get: (id: string) => (poolItem && id === poolItem.id ? poolItem : undefined),
-		},
-		update: vi.fn(async () => undefined),
 	};
 	const item = {
 		isEmbedded: options.isEmbedded ?? true,
@@ -102,7 +68,7 @@ function makeRule(
 		get: () => (predicate ? { size: 1, test: predicate } : { size: 0 }),
 		configurable: true,
 	});
-	return { rule, actor, item, poolItem };
+	return { rule, actor, item };
 }
 
 function makeContext(overrides: Record<string, unknown> = {}) {
@@ -166,6 +132,10 @@ describe('MovementTriggerRule', () => {
 			expect(schema.type?.initial).toBe('movementTrigger');
 		});
 
+		it('has no charge pool of its own; a limited item gates on its pool tag instead', () => {
+			expect(schema.chargePoolIdentifier).toBeUndefined();
+		});
+
 		it('offers the choices of the matcher', () => {
 			expect(schema.event?.choices).toEqual(['selfMoved', 'creatureMoved']);
 			expect(schema.creature?.choices).toEqual(['enemy', 'ally', 'any']);
@@ -180,7 +150,6 @@ describe('MovementTriggerRule', () => {
 				'movedToward',
 			]);
 			expect(schema.observerScope?.choices).toEqual(['self', 'selfOrAllyWithin']);
-			expect(schema.chargePoolIdentifier?.options?.widget).toBe('chargePoolPicker');
 		});
 
 		it('shows the dependent fields only when they apply', () => {
@@ -300,48 +269,6 @@ describe('MovementTriggerRule', () => {
 			);
 			expect(lastCard().spacesThisTurn).toBeNull();
 			expect(lastCard().message).toBe('unknown this turn');
-		});
-	});
-
-	describe('charge pool', () => {
-		it('an empty identifier is unlimited', async () => {
-			const { rule } = makeRule();
-			await rule.onMovementFinished(makeContext() as never);
-			await rule.onMovementFinished(makeContext() as never);
-			expect(postMovementTriggerCard).toHaveBeenCalledTimes(2);
-		});
-
-		it('fires while the pool has a charge and spends one', async () => {
-			const { rule, poolItem } = makeRule({ chargePoolIdentifier: 'lash' }, { pool: 1 });
-			await rule.onMovementFinished(makeContext() as never);
-			expect(postMovementTriggerCard).toHaveBeenCalledTimes(1);
-			expect(poolItem?.update).toHaveBeenCalledWith(
-				{ 'flags.nimble.chargePools': { lash: expect.objectContaining({ current: 0 }) } },
-				expect.anything(),
-			);
-		});
-
-		it('spends no charge when the card is not posted', async () => {
-			postMovementTriggerCard.mockResolvedValueOnce(null);
-			const { rule, poolItem } = makeRule({ chargePoolIdentifier: 'lash' }, { pool: 1 });
-			await rule.onMovementFinished(makeContext() as never);
-			expect(postMovementTriggerCard).toHaveBeenCalledTimes(1);
-			expect(poolItem?.update).not.toHaveBeenCalled();
-		});
-
-		it('does not fire on an empty pool', async () => {
-			await makeRule({ chargePoolIdentifier: 'lash' }, { pool: 0 }).rule.onMovementFinished(
-				makeContext() as never,
-			);
-			expect(postMovementTriggerCard).not.toHaveBeenCalled();
-		});
-
-		it('does not fire for an actor that is not a character', async () => {
-			await makeRule(
-				{ chargePoolIdentifier: 'lash' },
-				{ pool: 1, actorType: 'npc' },
-			).rule.onMovementFinished(makeContext() as never);
-			expect(postMovementTriggerCard).not.toHaveBeenCalled();
 		});
 	});
 

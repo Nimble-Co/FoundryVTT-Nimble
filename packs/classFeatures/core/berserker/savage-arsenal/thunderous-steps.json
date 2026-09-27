@@ -31,8 +31,7 @@
 				"minTargets": 1,
 				"observerScope": "self",
 				"allyRadius": 6,
-				"message": "",
-				"chargePoolIdentifier": ""
+				"message": ""
 			}
 		],
 		"activation": {

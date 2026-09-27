@@ -1376,10 +1376,6 @@
 					"label": "Message",
 					"hint": "The text on the card. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn, or unknown) and {targets} (the creatures that were found). Leave empty to use the default text."
 				},
-				"chargePoolIdentifier": {
-					"label": "Charge pool",
-					"hint": "Optional. When set, the card is posted only while this charge pool has a charge, and each card spends 1 charge. Leave empty for no limit."
-				},
 				"defaultMessage": "{mover} moved. You can use this item now."
 			},
 			"grantMovement": {
