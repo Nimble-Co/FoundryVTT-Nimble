@@ -79,7 +79,7 @@ const written = () =>
 		(o: MovementOffer) => `${o.id}:${o.state}`,
 	);
 const sceneOneLapsed = ['here:lapsed', 'there:open', 'done:taken'];
-const everyOpenOfferLapsed = ['here:lapsed', 'there:lapsed', 'done:taken'];
+const everyOpenOfferUntracked = ['here:untracked', 'there:untracked', 'done:taken'];
 
 describe('registerMovementOffers', () => {
 	it('records an offer after every finished Movement', () => {
@@ -191,16 +191,16 @@ describe('registerMovementOffers', () => {
 			['automation.movementOffers', false],
 			['automation.movementTracking', true],
 			['automation.movementTracking', false],
-		])('lapses every open offer when %s turns %s', async (key, value) => {
+		])('untracks every open offer when %s turns %s', async (key, value) => {
 			offersEnabled = value;
 			handlers.get('updateSetting')?.(setting(key, value), { value });
-			await vi.waitFor(() => expect(written()).toEqual(everyOpenOfferLapsed));
+			await vi.waitFor(() => expect(written()).toEqual(everyOpenOfferUntracked));
 		});
 
-		it('lapses every open offer when the first write turns a toggle off', async () => {
+		it('untracks every open offer when the first write turns a toggle off', async () => {
 			offersEnabled = false;
 			handlers.get('createSetting')?.(setting('automation.movementOffers', false));
-			await vi.waitFor(() => expect(written()).toEqual(everyOpenOfferLapsed));
+			await vi.waitFor(() => expect(written()).toEqual(everyOpenOfferUntracked));
 		});
 
 		it('writes nothing for a first write that holds the default, another setting, or no value change', async () => {

@@ -1,7 +1,7 @@
 import type { MovementOffer } from '#types/movement.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
-import { lapseMovementOffers } from './movementOffers.js';
+import { lapseMovementOffers, untrackMovementOffers } from './movementOffers.js';
 
 interface OfferBearingMessage {
 	system?: { movementOffers?: MovementOffer[] };
@@ -17,17 +17,17 @@ export interface OfferCombatScenes {
 }
 
 /**
- * Lapses every open Movement Offer that `applies` keeps. Runs on the primary
- * active GM, the only client that may write the cards.
+ * Writes the offers `close` returns for each card. Runs on the primary active
+ * GM, the only client that may write the cards.
  */
-async function writeLapsedMovementOffers(
-	applies: (offer: MovementOffer) => boolean,
+async function writeClosedMovementOffers(
+	close: (offers: readonly MovementOffer[]) => MovementOffer[] | null,
 ): Promise<void> {
 	if (!game.user?.isGM || (game.user.id ?? null) !== getPrimaryActiveGmId()) return;
 
 	const messages = (game.messages?.contents ?? []) as unknown as OfferBearingMessage[];
 	for (const message of messages) {
-		const offers = lapseMovementOffers(message.system?.movementOffers ?? [], applies);
+		const offers = close(message.system?.movementOffers ?? []);
 		if (offers && message.update) await message.update({ system: { movementOffers: offers } });
 	}
 }
@@ -38,15 +38,17 @@ async function writeLapsedMovementOffers(
  */
 export async function lapseOpenMovementOffers(sceneIds: ReadonlySet<string>): Promise<void> {
 	if (!isMovementOffersAutomationEnabled() || !sceneIds.size) return;
-	await writeLapsedMovementOffers((offer) => sceneIds.has(offer.tokenUuid.split('.')[1] ?? ''));
+	await writeClosedMovementOffers((offers) =>
+		lapseMovementOffers(offers, (offer) => sceneIds.has(offer.tokenUuid.split('.')[1] ?? '')),
+	);
 }
 
 /**
- * Lapses every open Movement Offer on every card, whatever the toggles now
+ * Untracks every open Movement Offer on every card, whatever the toggles now
  * hold, so an offer stamped under an old setting does not arm a token.
  */
-export async function lapseAllOpenMovementOffers(): Promise<void> {
-	await writeLapsedMovementOffers(() => true);
+export async function untrackOpenMovementOffers(): Promise<void> {
+	await writeClosedMovementOffers(untrackMovementOffers);
 }
 
 /**

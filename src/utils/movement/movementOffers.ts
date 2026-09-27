@@ -106,7 +106,7 @@ export function movementOfferId(nodeId: string, tokenUuid: string): string {
  * creature does not move the number on the card. An offer of zero spaces
  * stays only as that record: no token carries it, the card does not list it,
  * and it never lapses. A settled offer stays as the record of what happened; an
- * open one goes with its recipient.
+ * open or untracked one goes with its recipient.
  */
 export function reconcileMovementOffers(
 	card: OfferCard,
@@ -157,7 +157,9 @@ export function reconcileMovementOffers(
 		}
 	}
 
-	const kept = existing.filter((offer) => wanted.has(offer.id) || offer.state !== 'open');
+	const kept = existing.filter(
+		(offer) => wanted.has(offer.id) || (offer.state !== 'open' && offer.state !== 'untracked'),
+	);
 	return [...kept, ...made];
 }
 
@@ -222,6 +224,18 @@ export function settleMovementOffer(
 	return offers.map((candidate) => (candidate.id === offerId ? settled : candidate));
 }
 
+/** Moves every open offer a token could carry that `applies` keeps to `state`. */
+function closeOpenMovementOffers(
+	offers: readonly MovementOffer[],
+	state: 'lapsed' | 'untracked',
+	applies: (offer: MovementOffer) => boolean,
+): MovementOffer[] | null {
+	const closes = (offer: MovementOffer) =>
+		offer.state === 'open' && !offer.conditional && offer.spaces > 0 && applies(offer);
+	if (!offers.some(closes)) return null;
+	return offers.map((offer) => (closes(offer) ? { ...offer, state } : offer));
+}
+
 /**
  * The card's offers once a combat turn ends: every open offer that `applies`
  * keeps lapses, because each granted move in the books happens inside the
@@ -231,10 +245,16 @@ export function lapseMovementOffers(
 	offers: readonly MovementOffer[],
 	applies: (offer: MovementOffer) => boolean = () => true,
 ): MovementOffer[] | null {
-	const lapses = (offer: MovementOffer) =>
-		offer.state === 'open' && !offer.conditional && offer.spaces > 0 && applies(offer);
-	if (!offers.some(lapses)) return null;
-	return offers.map((offer) => (lapses(offer) ? { ...offer, state: 'lapsed' } : offer));
+	return closeOpenMovementOffers(offers, 'lapsed', applies);
+}
+
+/**
+ * The card's offers once a toggle that gates them changes: every open offer is
+ * untracked, so no drag settles it and the card only states the move. Null when
+ * there is nothing to write.
+ */
+export function untrackMovementOffers(offers: readonly MovementOffer[]): MovementOffer[] | null {
+	return closeOpenMovementOffers(offers, 'untracked', () => true);
 }
 
 /** What the card reports for one offer. */

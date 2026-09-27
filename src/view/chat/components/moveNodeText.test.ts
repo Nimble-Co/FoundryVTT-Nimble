@@ -183,8 +183,22 @@ describe('moveNodeText', () => {
 		});
 
 		it('states an open push instead of waiting for it when nothing records the drag', () => {
-			expect(chipOf(moveNode(), offer(), { tracking: false }).tooltip).toBe(
-				'Pushed up to 2 spaces away from Sir Brannon.',
+			expect(chipOf(moveNode(), offer(), { tracking: false })).toMatchObject({
+				status: 'untracked',
+				label: '2',
+				tooltip: 'Pushed up to 2 spaces away from Sir Brannon.',
+			});
+		});
+
+		it('states a move that a toggle change untracked, with tracking back on', () => {
+			expect(chipOf(moveNode(), offer({ state: 'untracked' }))).toMatchObject({
+				status: 'untracked',
+				label: '2',
+				tooltip: 'Pushed up to 2 spaces away from Sir Brannon.',
+			});
+			const free = moveNode({ kind: 'free', direction: 'toward', ignoreDifficultTerrain: false });
+			expect(chipOf(free, offer({ kind: 'free', spaces: 3, state: 'untracked' })).tooltip).toBe(
+				'Can move up to 3 spaces toward Sir Brannon for free.',
 			);
 		});
 
@@ -195,12 +209,13 @@ describe('moveNodeText', () => {
 				{ state: 'taken', movedSpaces: 1 },
 				{ state: 'unused' },
 				{ state: 'lapsed' },
+				{ state: 'untracked' },
 				{ conditional: true },
 			];
 			for (const kind of ['forced', 'free']) {
 				for (const overrides of states) {
 					const chip = chipOf(moveNode({ kind }), offer({ kind, ...overrides }));
-					expect(`${chip.label} ${chip.tooltip}`).not.toMatch(/offer|taken|unused|lapse/i);
+					expect(`${chip.label} ${chip.tooltip}`).not.toMatch(/offer|taken|unused|lapse|untrack/i);
 				}
 			}
 		});
@@ -291,7 +306,7 @@ describe('moveNodeText', () => {
 
 describe('movementStatus', () => {
 	it('reads a conditional offer as conditional whatever its state', () => {
-		expect(movementStatus(offer({ conditional: true }))).toBe('conditional');
+		expect(movementStatus(offer({ conditional: true }), true)).toBe('conditional');
 	});
 });
 

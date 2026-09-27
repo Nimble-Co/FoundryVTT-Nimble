@@ -8,6 +8,7 @@ import {
 	type OfferToken,
 	reconcileMovementOffers,
 	settleMovementOffer,
+	untrackMovementOffers,
 } from './movementOffers.js';
 
 const RollGlobal = Roll as unknown as {
@@ -149,10 +150,13 @@ describe('reconcileMovementOffers', () => {
 		]);
 	});
 
-	it('drops an open offer with its removed target but keeps a settled one', () => {
+	it('drops an open or untracked offer with its removed target but keeps a settled one', () => {
 		const open = offer();
 		const taken = offer({ id: 'n1.ogre', tokenUuid: 'Scene.s.Token.ogre', state: 'taken' });
-		expect(reconcileMovementOffers(card(undefined, [], [open, taken]), lookups)).toEqual([taken]);
+		const untracked = offer({ id: 'n1.orc', tokenUuid: 'Scene.s.Token.orc', state: 'untracked' });
+		expect(reconcileMovementOffers(card(undefined, [], [open, taken, untracked]), lookups)).toEqual(
+			[taken],
+		);
 	});
 
 	it('skips a recipient that does not resolve here', () => {
@@ -363,6 +367,28 @@ describe('lapseMovementOffers', () => {
 		expect(lapseMovementOffers([offer({ conditional: true })])).toBeNull();
 		expect(lapseMovementOffers([offer({ spaces: 0 })])).toBeNull();
 		expect(lapseMovementOffers([])).toBeNull();
+	});
+});
+
+describe('untrackMovementOffers', () => {
+	it('untracks every open offer a token could carry and leaves the rest', () => {
+		const offers = [
+			offer(),
+			offer({ id: 'b', state: 'lapsed' }),
+			offer({ id: 'c', conditional: true }),
+			offer({ id: 'd', spaces: 0 }),
+		];
+		expect(untrackMovementOffers(offers)?.map((o) => o.state)).toEqual([
+			'untracked',
+			'lapsed',
+			'open',
+			'open',
+		]);
+	});
+
+	it('is nothing to write when no offer is open', () => {
+		expect(untrackMovementOffers([offer({ state: 'taken' })])).toBeNull();
+		expect(untrackMovementOffers([])).toBeNull();
 	});
 });
 
