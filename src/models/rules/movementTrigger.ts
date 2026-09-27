@@ -1,5 +1,6 @@
 import type { MovementTriggerOptions, TriggerCreature, TriggerGeometry } from '#types/movement.js';
 import localize from '#utils/localize.js';
+import { isInStartedCombat } from '#utils/movement/isInStartedCombat.js';
 import { matchMovementTrigger } from '../../utils/movement/matchMovementTrigger.js';
 import { postMovementTriggerCard } from '../../utils/movement/postMovementTriggerCard.js';
 import { withWidget } from './_widgetOption.js';
@@ -137,9 +138,9 @@ declare namespace MovementTriggerRule {
 }
 
 /**
- * Posts a card when a finished Movement matches the configured event and
- * geometry. The card lets the owner use this rule's item; the system never
- * uses the item itself.
+ * Posts a card when a finished Movement in a started combat matches the
+ * configured event and geometry. The card lets the owner use this rule's
+ * item; the system never uses the item itself.
  */
 class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	static override group = 'triggers';
@@ -192,6 +193,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 		if (!this.test()) return;
 
 		const { record } = context;
+		if (!isInStartedCombat(context.token) || !isInStartedCombat(record.token)) return;
 		const sceneTokens = (record.token.parent?.tokens ?? []) as Iterable<TokenDocument>;
 		const match = matchMovementTrigger(
 			record,
