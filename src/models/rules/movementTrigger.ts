@@ -156,6 +156,11 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.movementTrigger.description';
 
+	// Movement Tracking gates this card, not rule automation.
+	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = [
+		'onMovementFinished',
+	];
+
 	declare event: MovementTriggerOptions['event'];
 	declare creature: TriggerCreature;
 	declare kinds: MovementTriggerOptions['kinds'];

@@ -1,4 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { systemHookName } from '#system';
 import type { MovementTriggerRule as MovementTriggerRuleType } from './movementTrigger.js';
 
 // tests/setup.ts loads the rules config, so this rule and its imports are
@@ -340,6 +342,50 @@ describe('MovementTriggerRule', () => {
 				{ pool: 1, actorType: 'npc' },
 			).rule.onMovementFinished(makeContext() as never);
 			expect(postMovementTriggerCard).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('with rule automation off, through the rule event dispatcher', () => {
+		type Handler = (...args: unknown[]) => unknown;
+		let handlers: Map<string, Handler>;
+
+		beforeAll(async () => {
+			const on = Hooks.on as unknown as Mock;
+			on.mockClear();
+			const { default: register } = await import('../../hooks/ruleEventDispatch.js');
+			register();
+			handlers = new Map(on.mock.calls.map(([event, handler]) => [event, handler as Handler]));
+		});
+
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		it('still posts its card', async () => {
+			const game = (globalThis as unknown as { game: { user: { id: string } } }).game;
+			vi.stubGlobal('game', {
+				...game,
+				users: { activeGM: { id: game.user.id } },
+				settings: {
+					get: (_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+				},
+			});
+			const { rule, actor } = makeRule();
+			const scene = { id: 's', tokens: [] as object[] };
+			const moverToken = { id: 'mover', name: 'Goblin', actor: { name: 'Goblin' }, parent: scene };
+			const observerToken = { id: 'obs', name: 'Observer', actor, parent: scene };
+			scene.tokens.push(moverToken, observerToken);
+			Object.assign(actor, { rules: [rule] });
+
+			await handlers.get(systemHookName('movementFinished'))?.({
+				token: moverToken,
+				actor: moverToken.actor,
+				spaces: 3,
+				spacesThisTurn: 3,
+			});
+
+			expect(postMovementTriggerCard).toHaveBeenCalledTimes(1);
+			expect(MovementTriggerRule.alwaysDispatchedEvents).toEqual(['onMovementFinished']);
 		});
 	});
 
