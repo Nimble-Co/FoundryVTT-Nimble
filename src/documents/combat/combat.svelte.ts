@@ -843,7 +843,7 @@ class NimbleCombat extends Combat {
 	/**
 	 * Foundry clears every combatant's movement history when any turn starts. Nimble
 	 * counts Spaces Moved This Turn until the mover's own turn begins, so only the
-	 * incoming combatant is cleared.
+	 * incoming combatant is cleared. Skipped turns never took place, so they clear nothing.
 	 */
 	protected override async _clearMovementHistoryOnStartTurn(
 		combatant: Combatant.Implementation,
@@ -852,6 +852,7 @@ class NimbleCombat extends Combat {
 		if (!isMovementTrackingAutomationEnabled()) {
 			return super._clearMovementHistoryOnStartTurn(combatant, context);
 		}
+		if (context.skipped) return;
 		await this.clearMovementHistories([combatant]);
 	}
 
