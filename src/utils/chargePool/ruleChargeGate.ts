@@ -33,3 +33,42 @@ export async function spendRuleCharge(
 	if (!entry || entry.pool.current < 1) return;
 	await adjustPool(actor, entry.key, 'set', entry.pool.current - 1);
 }
+
+const pending = new WeakMap<object, Map<string, Promise<void>>>();
+
+/**
+ * Runs `post` while the rule may fire, and spends one charge when it returns a
+ * card. The pool value changes only when the server answers the spend, so
+ * calls for one actor and pool run one after another: a call that starts while
+ * an earlier one is still posting waits, then sees that spend.
+ */
+export function withRuleCharge(
+	actor: Actor | null | undefined,
+	identifier: string,
+	post: () => Promise<unknown>,
+): Promise<void> {
+	const id = identifier.trim();
+	if (!id || !isResourceSpendingAutomationEnabled() || !actor) {
+		return (async () => {
+			if (!hasRuleCharge(actor, id)) return;
+			await post();
+		})();
+	}
+
+	let chains = pending.get(actor);
+	if (!chains) {
+		chains = new Map();
+		pending.set(actor, chains);
+	}
+	const run = (chains.get(id) ?? Promise.resolve()).then(async () => {
+		if (!hasRuleCharge(actor, id)) return;
+		const card = await post();
+		if (card) await spendRuleCharge(actor, id);
+	});
+	const settled = run.catch(() => undefined);
+	chains.set(id, settled);
+	void settled.then(() => {
+		if (chains.get(id) === settled) chains.delete(id);
+	});
+	return run;
+}

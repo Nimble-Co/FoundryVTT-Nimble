@@ -3,7 +3,7 @@ import localize from '#utils/localize.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
-import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
+import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { postMovementOfferCard } from '../../utils/movement/postMovementOfferCard.js';
 import { spacesBetween } from '../../utils/movement/spacesBetween.js';
 import { withWidget } from './_widgetOption.js';
@@ -222,28 +222,27 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	async #offer(reason: string, contextToken: TokenDocument | null = null): Promise<void> {
 		if (!isMovementOffersAutomationEnabled()) return;
 		const { actor } = this;
-		if (!hasRuleCharge(actor, this.chargePoolIdentifier)) return;
+		await withRuleCharge(actor, this.chargePoolIdentifier, async () => {
+			const token = contextToken ?? findActorToken(actor);
+			if (!token) return null;
+			const recipients = this.#recipients(token);
+			if (recipients !== 'self' && recipients.length === 0) return null;
 
-		const token = contextToken ?? findActorToken(actor);
-		if (!token) return;
-		const recipients = this.#recipients(token);
-		if (recipients !== 'self' && recipients.length === 0) return;
-
-		const card = await postMovementOfferCard({
-			actor,
-			token,
-			name: this.item.name,
-			image: (this.item as { img?: string | null }).img ?? undefined,
-			reason,
-			node: {
-				kind: 'free',
-				distance: this.distance,
-				direction: this.direction,
-				ignoreDifficultTerrain: this.ignoresDifficultTerrain,
-			},
-			recipients,
+			return postMovementOfferCard({
+				actor,
+				token,
+				name: this.item.name,
+				image: (this.item as { img?: string | null }).img ?? undefined,
+				reason,
+				node: {
+					kind: 'free',
+					distance: this.distance,
+					direction: this.direction,
+					ignoreDifficultTerrain: this.ignoresDifficultTerrain,
+				},
+				recipients,
+			});
 		});
-		if (card) await spendRuleCharge(actor, this.chargePoolIdentifier);
 	}
 
 	#recipients(source: TokenDocument): 'self' | string[] {
