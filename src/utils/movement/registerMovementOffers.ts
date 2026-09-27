@@ -42,14 +42,67 @@ async function writeLapsedMovementOffers(
 }
 
 /**
- * Lapses every open Movement Offer to a token on the scene, when a combat turn
- * there ends.
+ * Lapses every open Movement Offer to a token on one of the scenes, when a
+ * combat turn there ends.
  */
-export async function lapseOpenMovementOffers(sceneId: string | null): Promise<void> {
-	if (!isMovementOffersAutomationEnabled()) return;
-	await writeLapsedMovementOffers(
-		(offer) => !sceneId || offer.tokenUuid.startsWith(`Scene.${sceneId}.`),
-	);
+export async function lapseOpenMovementOffers(sceneIds: ReadonlySet<string>): Promise<void> {
+	if (!isMovementOffersAutomationEnabled() || !sceneIds.size) return;
+	await writeLapsedMovementOffers((offer) => sceneIds.has(offer.tokenUuid.split('.')[1] ?? ''));
+}
+
+interface OfferCombat {
+	id?: string | null;
+	round?: number | null;
+	combatant?: { id?: string | null } | null;
+	previous?: TurnState;
+	scene?: { id?: string | null } | null;
+	combatants?: Iterable<{
+		sceneId?: string | null;
+		token?: { parent?: { id?: string | null } | null } | null;
+	}>;
+}
+
+interface TurnState {
+	round?: number | null;
+	combatantId?: string | null;
+}
+
+/**
+ * The scenes a combat is fought on: its own scene and each combatant's. A
+ * combat made from the core tracker has no scene of its own.
+ */
+export function combatSceneIds(combat: OfferCombat): Set<string> {
+	const ids = new Set<string>();
+	if (combat.scene?.id) ids.add(combat.scene.id);
+	for (const combatant of combat.combatants ?? []) {
+		const sceneId = combatant.sceneId ?? combatant.token?.parent?.id;
+		if (sceneId) ids.add(sceneId);
+	}
+	return ids;
+}
+
+function turnStateOf(combat: OfferCombat): TurnState {
+	return { round: combat.round ?? 0, combatantId: combat.combatant?.id ?? null };
+}
+
+/**
+ * The round and combatant each combat last held after an update. Foundry's own
+ * `previous` also moves when the combatants are re-sorted, so a turn index
+ * rewritten for the same combatant would read as a new turn.
+ */
+const lastTurnStates = new Map<string, TurnState>();
+
+function recordTurnState(combat: OfferCombat): void {
+	if (combat.id) lastTurnStates.set(combat.id, turnStateOf(combat));
+}
+
+/** Whether an update to the combat ended a turn: the round or the current combatant changed. */
+function endsTurn(combat: OfferCombat): boolean {
+	const prior = (combat.id ? lastTurnStates.get(combat.id) : undefined) ?? combat.previous;
+	const next = turnStateOf(combat);
+	recordTurnState(combat);
+	if (!prior) return true;
+	return (prior.round ?? 0) !== next.round || (prior.combatantId ?? null) !== next.combatantId;
 }
 
 /**
@@ -87,12 +140,19 @@ export function registerMovementOfferListener(): void {
 			void resolveArmedMovementOffer(record);
 		}) as never,
 	);
+	for (const combat of game.combats ?? []) recordTurnState(combat as unknown as OfferCombat);
+	Hooks.on('createCombat', (combat: Combat) => {
+		recordTurnState(combat as unknown as OfferCombat);
+	});
 	Hooks.on('updateCombat', (combat: Combat, changes: Record<string, unknown>) => {
 		if (!('turn' in changes) && !('round' in changes)) return;
-		void lapseOpenMovementOffers(combat.scene?.id ?? null);
+		const offerCombat = combat as unknown as OfferCombat;
+		if (endsTurn(offerCombat)) void lapseOpenMovementOffers(combatSceneIds(offerCombat));
 	});
 	Hooks.on('deleteCombat', (combat: Combat) => {
-		void lapseOpenMovementOffers(combat.scene?.id ?? null);
+		const offerCombat = combat as unknown as OfferCombat;
+		if (offerCombat.id) lastTurnStates.delete(offerCombat.id);
+		void lapseOpenMovementOffers(combatSceneIds(offerCombat));
 	});
 	Hooks.on('createSetting', (setting: Setting) => {
 		onOfferGateSettingChanged(setting as unknown as ChangedSetting, true);
