@@ -1292,10 +1292,10 @@
 				}
 			},
 			"freeMove": {
-				"description": "Offer a Free Move on a chat card when an event occurs. The player chooses where to move, or chooses not to move.",
+				"description": "Give a Free Move on a chat card when an event occurs. The player chooses where to move, or chooses not to move.",
 				"trigger": {
 					"label": "Trigger",
-					"hint": "The event that makes the offer. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit."
+					"hint": "The event that gives the Free Move. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit."
 				},
 				"poolIdentifier": {
 					"label": "Dice pool",
@@ -1307,11 +1307,11 @@
 				},
 				"recipient": {
 					"label": "Recipient",
-					"hint": "Who gets the offer. self: this creature. allies: each ally within the set number of spaces. selfAndAllies: this creature and each ally within that number of spaces."
+					"hint": "Who gets the Free Move. self: this creature. allies: each ally within the set number of spaces. selfAndAllies: this creature and each ally within that number of spaces."
 				},
 				"within": {
 					"label": "Allies within (spaces)",
-					"hint": "The maximum number of spaces between this creature and an ally that gets the offer."
+					"hint": "The maximum number of spaces between this creature and an ally that gets the Free Move."
 				},
 				"direction": {
 					"label": "Direction",
@@ -1323,7 +1323,7 @@
 				},
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
-					"hint": "Optional. When set, the offer occurs only while this charge pool has a charge, and each offer spends 1 charge. Leave empty for no limit."
+					"hint": "Optional. When set, the rule gives the Free Move only while this charge pool has a charge, and each card it posts spends 1 charge. Leave empty for no limit."
 				},
 				"reasons": {
 					"onActivation": "used {item}",
