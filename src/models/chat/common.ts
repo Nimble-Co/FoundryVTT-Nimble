@@ -99,6 +99,7 @@ export const movementOffers = () => ({
 				min: 0,
 			}),
 			stopped: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			conditional: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),

@@ -43,6 +43,7 @@ beforeEach(() => {
 			usedBy: null,
 			movedSpaces: null,
 			stopped: false,
+			conditional: false,
 		},
 	];
 	const older = { id: 'm', system: { movementOffers: offers }, update };

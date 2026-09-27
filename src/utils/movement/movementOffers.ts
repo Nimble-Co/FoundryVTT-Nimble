@@ -20,6 +20,8 @@ export interface OfferCard {
 	speaker?: { scene?: string | null; token?: string | null; actor?: string | null };
 	system?: {
 		targets?: string[];
+		isCritical?: boolean;
+		isMiss?: boolean;
 		activation?: { effects?: EffectNode[] };
 		movementOffers?: MovementOffer[];
 	};
@@ -48,10 +50,53 @@ export function speakerTokenUuid(card: Pick<OfferCard, 'speaker'>): string | nul
 	return speaker?.scene && speaker.token ? `Scene.${speaker.scene}.Token.${speaker.token}` : null;
 }
 
-function moveNodes(card: OfferCard): MoveNode[] {
-	return flattenEffectsTree(card.system?.activation?.effects ?? []).filter(
-		(node): node is MoveNode => node.type === 'move',
-	);
+const ATTACK_OUTCOMES = new Set(['criticalHit', 'hit', 'miss']);
+
+function isSaveOutcome(context: string): boolean {
+	return context === 'failedSave' || context === 'passedSave' || context.startsWith('failedSaveBy');
+}
+
+/** The attack outcomes the card knows, read as the card reads them: a critical hit is also a hit. */
+function cardOutcomes(card: OfferCard): Set<string> {
+	if (card.system?.isCritical) return new Set(['criticalHit', 'hit']);
+	if (card.system?.isMiss) return new Set(['miss']);
+	return new Set(['hit']);
+}
+
+interface OfferedMoveNode {
+	node: MoveNode;
+	conditional: boolean;
+}
+
+/**
+ * The move nodes that make offers on this card. A node under an attack outcome
+ * that did not occur makes none. A node under a save outcome is conditional:
+ * the card does not know each target's save.
+ */
+function offeredMoveNodes(card: OfferCard): OfferedMoveNode[] {
+	const nodes = flattenEffectsTree(card.system?.activation?.effects ?? []);
+	const byId = new Map(nodes.map((node) => [node.id, node]));
+	const outcomes = cardOutcomes(card);
+
+	const offered: OfferedMoveNode[] = [];
+	for (const node of nodes) {
+		if (node.type !== 'move') continue;
+		let occurs = true;
+		let conditional = false;
+		const seen = new Set<EffectNode>();
+		for (
+			let cursor: EffectNode | undefined = node;
+			cursor?.parentNode && !seen.has(cursor);
+			cursor = byId.get(cursor.parentNode)
+		) {
+			seen.add(cursor);
+			const context = cursor.parentContext ?? '';
+			if (ATTACK_OUTCOMES.has(context) && !outcomes.has(context)) occurs = false;
+			if (isSaveOutcome(context)) conditional = true;
+		}
+		if (occurs) offered.push({ node, conditional });
+	}
+	return offered;
 }
 
 /** The token uuids a move node applies to on this card. */
@@ -78,7 +123,7 @@ export function reconcileMovementOffers(
 	lookups: OfferLookups = {},
 ): MovementOffer[] {
 	const existing = card.system?.movementOffers ?? [];
-	const nodes = moveNodes(card);
+	const nodes = offeredMoveNodes(card);
 	if (!nodes.length) return [...existing];
 
 	const resolveToken = lookups.resolveToken ?? resolveTokenByUuid;
@@ -96,7 +141,7 @@ export function reconcileMovementOffers(
 
 	const wanted = new Set<string>();
 	const made: MovementOffer[] = [];
-	for (const node of nodes) {
+	for (const { node, conditional } of nodes) {
 		for (const tokenUuid of moveNodeRecipients(card, node)) {
 			const id = movementOfferId(node.id, tokenUuid);
 			wanted.add(id);
@@ -117,6 +162,7 @@ export function reconcileMovementOffers(
 				usedBy: null,
 				movedSpaces: null,
 				stopped: false,
+				conditional,
 			});
 		}
 	}
@@ -128,7 +174,8 @@ export function reconcileMovementOffers(
 /**
  * The Movement Offer a token carries, or null when it carries none: the newest
  * open offer to it with any distance, so a second push supersedes an unsettled
- * first one. Null whenever Movement Offers are off.
+ * first one. A conditional offer is never carried. Null whenever Movement
+ * Offers are off.
  */
 export function findArmedMovementOffer(
 	tokenUuid: string,
@@ -143,7 +190,10 @@ export function findArmedMovementOffer(
 		if (!message?.id) continue;
 		const offer = message.system?.movementOffers?.find(
 			(candidate) =>
-				candidate.tokenUuid === tokenUuid && candidate.state === 'open' && candidate.spaces > 0,
+				candidate.tokenUuid === tokenUuid &&
+				candidate.state === 'open' &&
+				!candidate.conditional &&
+				candidate.spaces > 0,
 		);
 		if (offer) return { ...offer, messageId: message.id };
 	}
@@ -169,7 +219,7 @@ export function settleMovementOffer(
 	settlement: MovementOfferSettlement,
 ): MovementOffer[] | null {
 	const offer = offers.find((candidate) => candidate.id === offerId);
-	if (!offer || offer.state !== 'open') return null;
+	if (!offer || offer.state !== 'open' || offer.conditional) return null;
 
 	const { taken } = settlement;
 	const settled: MovementOffer = {
@@ -191,7 +241,8 @@ export function lapseMovementOffers(
 	offers: readonly MovementOffer[],
 	applies: (offer: MovementOffer) => boolean = () => true,
 ): MovementOffer[] | null {
-	const lapses = (offer: MovementOffer) => offer.state === 'open' && applies(offer);
+	const lapses = (offer: MovementOffer) =>
+		offer.state === 'open' && !offer.conditional && applies(offer);
 	if (!offers.some(lapses)) return null;
 	return offers.map((offer) => (lapses(offer) ? { ...offer, state: 'lapsed' } : offer));
 }
