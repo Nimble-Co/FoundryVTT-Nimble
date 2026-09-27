@@ -14,13 +14,15 @@ const grid = {
 	},
 };
 
-function makeDoc(gx: number, gy: number) {
+const gridless = { ...grid, isGridless: true };
+
+function makeDoc(gx: number, gy: number, scene = grid) {
 	const doc = {
 		x: gx * GRID,
 		y: gy * GRID,
 		width: 1,
 		height: 1,
-		parent: { grid },
+		parent: { grid: scene },
 		getOccupiedGridSpaceOffsets(data?: { x?: number; y?: number }) {
 			return [
 				{ i: Math.floor((data?.y ?? doc.y) / GRID), j: Math.floor((data?.x ?? doc.x) / GRID) },
@@ -30,10 +32,14 @@ function makeDoc(gx: number, gy: number) {
 	return doc as unknown as TokenDocument;
 }
 
-function makeRecord(path: [number, number][]): MovementRecord {
+function makeRecord(
+	path: [number, number][],
+	{ scene = grid, kind = 'regular' } = {},
+): MovementRecord {
 	const positions = path.map(([gx, gy]) => ({ x: gx * GRID, y: gy * GRID }));
 	return {
-		token: makeDoc(path[0][0], path[0][1]),
+		token: makeDoc(path[0][0], path[0][1], scene),
+		kind,
 		path: positions,
 		origin: positions[0],
 		stop: positions.at(-1) ?? positions[0],
@@ -115,5 +121,53 @@ describe('reachChanges', () => {
 			observer,
 		);
 		expect(change.passedThrough).toBe(true);
+	});
+
+	it('sees a straight gridless drag pass through reach', () => {
+		const change = reachChanges(
+			makeRecord(
+				[
+					[0, 0],
+					[6, 0],
+				],
+				{ scene: gridless },
+			),
+			makeDoc(3, 0, gridless),
+		);
+		expect(change).toEqual({
+			entered: true,
+			left: true,
+			insideAtOrigin: false,
+			insideAtStop: false,
+			passedThrough: true,
+		});
+	});
+
+	it('sees a gridless drag that stops inside reach', () => {
+		const change = reachChanges(
+			makeRecord(
+				[
+					[0, 0],
+					[2, 0],
+				],
+				{ scene: gridless },
+			),
+			makeDoc(3, 0, gridless),
+		);
+		expect(change).toMatchObject({ entered: true, left: false, passedThrough: false });
+	});
+
+	it('does not fill in the gap of a gridless teleport', () => {
+		const change = reachChanges(
+			makeRecord(
+				[
+					[0, 0],
+					[6, 0],
+				],
+				{ scene: gridless, kind: 'teleport' },
+			),
+			makeDoc(3, 0, gridless),
+		);
+		expect(change).toMatchObject({ entered: false, left: false, passedThrough: false });
 	});
 });
