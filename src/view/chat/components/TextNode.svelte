@@ -1,14 +1,7 @@
-<script lang="ts">
-	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { TextNodeProps } from '#types/components/TextNode.d.ts';
-	import type { TextNode } from '#types/effectTree.js';
-	import type { MovementContext } from '#utils/movement/movementContext.js';
-
-	import { getContext } from 'svelte';
+<script>
 	import Hint from '../../components/Hint.svelte';
-	import { resolveMovementPlaceholders } from '#view/dataPreparationHelpers/resolveMovementPlaceholders.js';
 
-	function getNodeIcon(noteType: TextNode['noteType']) {
+	function getNodeIcon(noteType) {
 		switch (noteType) {
 			case 'flavor':
 				return 'fa-solid fa-comment';
@@ -17,19 +10,11 @@
 			case 'warning':
 				return 'fa-solid fa-circle-exclamation';
 			default:
-				return '';
+				return null;
 		}
 	}
 
-	let { node }: TextNodeProps = $props();
-
-	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
-
-	const movementContext = $derived(
-		(messageDocument?.reactive?.system as { movementContext?: MovementContext } | undefined)
-			?.movementContext,
-	);
-	const text = $derived(resolveMovementPlaceholders(node.text, movementContext));
+	let { node } = $props();
 </script>
 
-<Hint hintIcon={getNodeIcon(node.noteType)} hintText={text} hintType={node.noteType} />
+<Hint hintIcon={getNodeIcon(node.noteType)} hintText={node.text} hintType={node.noteType} />

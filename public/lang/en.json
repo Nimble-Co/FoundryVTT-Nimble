@@ -171,9 +171,7 @@
 				"noRecipient": "No creature to move."
 			},
 			"movementContext": {
-				"unknown": "unknown",
-				"noTarget": "no target",
-				"targetSpacesAway": "{name}: {distance}"
+				"unknown": "unknown"
 			},
 			"movementTrigger": {
 				"use": "Use {name}",
