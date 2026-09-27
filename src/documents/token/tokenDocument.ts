@@ -1,6 +1,7 @@
 import { systemHookName } from '#system';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { buildMovementRecord } from '../../utils/movement/buildMovementRecord.js';
+import { isInStartedCombat } from '../../utils/movement/isInStartedCombat.js';
 
 interface CombatantCreateData {
 	type: string;
@@ -72,6 +73,13 @@ export class NimbleTokenDocument extends TokenDocument {
 	}
 
 	#lastFinishedMovementId: string | null = null;
+
+	// Core records only for the combat this client views; Spaces Moved This Turn
+	// reads every started combat.
+	protected override _shouldRecordMovementHistory(): boolean {
+		if (!isMovementTrackingAutomationEnabled()) return super._shouldRecordMovementHistory();
+		return isInStartedCombat(this);
+	}
 
 	protected override _onUpdateMovement(
 		movement: TokenDocument.MovementOperation,

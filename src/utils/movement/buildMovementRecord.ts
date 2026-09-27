@@ -1,4 +1,5 @@
 import type { MovementRecord, TokenPosition } from '#types/movement.js';
+import { type CombatLike, isInStartedCombat } from './isInStartedCombat.js';
 import { measureWaypointSpaces } from './measureWaypointSpaces.js';
 import { getMovementKind } from './movementKind.js';
 import { summariseMovementHistory } from './summariseMovementHistory.js';
@@ -31,24 +32,6 @@ interface RecordableToken {
 	getCompleteMovementPath(waypoints: object[]): TokenPosition[];
 }
 
-interface CombatLike {
-	started?: boolean;
-	combatants?: Iterable<{ tokenId: string | null; sceneId: string | null }>;
-}
-
-// Every started combat, not only the one this client views: the active GM may
-// be looking at another scene.
-function isInStartedCombat(token: RecordableToken, combats: Iterable<CombatLike>): boolean {
-	const sceneId = token.parent?.id ?? null;
-	for (const combat of combats) {
-		if (!combat.started || !combat.combatants) continue;
-		for (const combatant of combat.combatants) {
-			if (combatant.tokenId === token.id && combatant.sceneId === sceneId) return true;
-		}
-	}
-	return false;
-}
-
 /**
  * Index of the chain's origin in the known waypoints. With no earlier history,
  * or after a gap, core writes the origin as a waypoint of the chain's first
@@ -78,7 +61,7 @@ function toPosition(waypoint: TokenPosition): TokenPosition {
 export function buildMovementRecord(
 	token: RecordableToken,
 	movement: MovementLike,
-	combats: Iterable<CombatLike> = (game.combats ?? []) as Iterable<CombatLike>,
+	combats?: Iterable<CombatLike>,
 ): MovementRecord | null {
 	const lastPassed = movement.passed.waypoints.at(-1);
 	if (!lastPassed) return null;
