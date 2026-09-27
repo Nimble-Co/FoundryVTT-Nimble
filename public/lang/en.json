@@ -3057,7 +3057,7 @@
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",
-				"hint": "Record each token's movement during combat, keep count of the spaces moved this turn, and let features react when a creature finishes moving or moves adjacent. When off, nothing is recorded and movement rules stay silent."
+				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react when a creature finishes moving or moves adjacent. When off, nothing is recorded and movement rules stay silent."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
