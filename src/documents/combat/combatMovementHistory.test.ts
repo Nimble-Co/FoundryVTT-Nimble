@@ -17,6 +17,8 @@ type TestGlobals = NimbleCombatDocumentTestGlobals & {
 
 type MovementHistoryCombat = NimbleCombat & {
 	clearMovementHistories: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 	_clearMovementHistoryOnStartTurn: (
 		combatant: Combatant.Implementation,
 		context: Combat.TurnEventContext,
@@ -79,7 +81,24 @@ function buildCombat(combatId: string, combatants: Combatant.Implementation[]) {
 		combatant: combatants[0],
 	} as unknown as Combat.CreateData) as MovementHistoryCombat;
 	combat.clearMovementHistories = vi.fn().mockResolvedValue(undefined);
+	combat.update = vi.fn().mockResolvedValue(combat);
+	combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 	return combat;
+}
+
+type AdvanceTarget = Combat & { turn?: number; combatant?: Combatant.Implementation | null };
+
+/** Core advances the turn but, as under a turn-event skip, never starts the incoming turn. */
+function advanceWithoutTurnEvents(
+	method: 'nextTurn' | 'nextRound',
+	incoming: Combatant.Implementation,
+) {
+	const superAdvance = globals().Combat.prototype[method] as ReturnType<typeof vi.fn>;
+	superAdvance.mockImplementation(async function (this: AdvanceTarget) {
+		this.turn = (this.turns ?? []).indexOf(incoming);
+		this.combatant = incoming;
+		return this;
+	});
 }
 
 function clearedIds(combat: MovementHistoryCombat): string[][] {
@@ -99,6 +118,19 @@ describe('NimbleCombat movement history clearing', () => {
 		superClear = vi.fn(async () => undefined);
 		const combatPrototype = globals().Combat.prototype;
 		combatPrototype._clearMovementHistoryOnStartTurn = superClear;
+		combatPrototype._onEndTurn = vi.fn(async () => undefined);
+		combatPrototype._onStartTurn = vi.fn(async () => undefined);
+		combatPrototype.setupTurns = vi.fn(function (this: {
+			combatants?: { contents?: Combatant.Implementation[] };
+		}) {
+			return this.combatants?.contents ?? [];
+		});
+		combatPrototype.nextTurn = vi.fn(async function (this: Combat) {
+			return this;
+		});
+		combatPrototype.nextRound = vi.fn(async function (this: Combat) {
+			return this;
+		});
 	});
 
 	describe('turn start', () => {
@@ -149,6 +181,118 @@ describe('NimbleCombat movement history clearing', () => {
 
 			expect(superClear).toHaveBeenCalledTimes(2);
 			expect(combat.clearMovementHistories).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('turn-event skip backstop', () => {
+		beforeEach(() => {
+			globals().game.user = {
+				isGM: true,
+				role: 4,
+				isActiveGM: true,
+			} as TestGlobals['game']['user'];
+		});
+
+		it('clears the incoming combatant when core never starts the turn on nextTurn', async () => {
+			const combatId = 'combat-backstop-next-turn';
+			const outgoing = createHero('outgoing', combatId);
+			const incoming = createHero('incoming', combatId, 2);
+			const combat = buildCombat(combatId, [outgoing, incoming]);
+			advanceWithoutTurnEvents('nextTurn', incoming);
+
+			await combat.nextTurn();
+
+			expect(clearedIds(combat)).toEqual([['incoming']]);
+		});
+
+		it('clears the incoming combatant when core never starts the turn on nextRound', async () => {
+			const combatId = 'combat-backstop-next-round';
+			const outgoing = createHero('outgoing', combatId);
+			const incoming = createHero('incoming', combatId, 2);
+			const combat = buildCombat(combatId, [outgoing, incoming]);
+			advanceWithoutTurnEvents('nextRound', incoming);
+
+			await combat.nextRound();
+
+			expect(clearedIds(combat)).toEqual([['incoming']]);
+		});
+
+		it('clears the whole minion group when the incoming combatant is a group leader', async () => {
+			const combatId = 'combat-backstop-minion-group';
+			const hero = createHero('hero', combatId, 0);
+			const leader = createMinion('minion-leader', combatId, 'group-1', 'leader');
+			const member = createMinion('minion-member', combatId, 'group-1', 'member');
+			const combat = buildCombat(combatId, [hero, leader, member]);
+			advanceWithoutTurnEvents('nextTurn', leader);
+
+			await combat.nextTurn();
+
+			expect(clearedIds(combat)).toEqual([['minion-leader', 'minion-member']]);
+		});
+
+		it('does not clear again when core starts the turn late', async () => {
+			const combatId = 'combat-backstop-late-start';
+			const outgoing = createHero('outgoing', combatId);
+			const incoming = createHero('incoming', combatId, 2);
+			const combat = buildCombat(combatId, [outgoing, incoming]);
+			advanceWithoutTurnEvents('nextTurn', incoming);
+
+			await combat.nextTurn();
+			await combat._onStartTurn(incoming, turnContext(false));
+			await combat._clearMovementHistoryOnStartTurn(incoming, turnContext(false));
+
+			expect(clearedIds(combat)).toEqual([['incoming']]);
+		});
+
+		it('does not clear again when core already started the turn', async () => {
+			const combatId = 'combat-backstop-core-started';
+			const outgoing = createHero('outgoing', combatId);
+			const incoming = createHero('incoming', combatId, 2);
+			const combat = buildCombat(combatId, [outgoing, incoming]);
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (this: AdvanceTarget) {
+				this.turn = 1;
+				this.combatant = incoming;
+				const self = this as unknown as MovementHistoryCombat;
+				await self._onStartTurn(incoming, turnContext(false));
+				await self._clearMovementHistoryOnStartTurn(incoming, turnContext(false));
+				return this;
+			});
+
+			await combat.nextTurn();
+
+			expect(clearedIds(combat)).toEqual([['incoming']]);
+		});
+
+		it('leaves the history to the active GM', async () => {
+			globals().game.user = {
+				isGM: true,
+				role: 4,
+				isActiveGM: false,
+			} as TestGlobals['game']['user'];
+			const combatId = 'combat-backstop-not-active-gm';
+			const outgoing = createHero('outgoing', combatId);
+			const incoming = createHero('incoming', combatId, 2);
+			const combat = buildCombat(combatId, [outgoing, incoming]);
+			advanceWithoutTurnEvents('nextTurn', incoming);
+
+			await combat.nextTurn();
+
+			expect(combat.clearMovementHistories).not.toHaveBeenCalled();
+		});
+
+		it('clears nothing when movement tracking is off', async () => {
+			setMovementTracking(false);
+			const combatId = 'combat-backstop-toggle-off';
+			const outgoing = createHero('outgoing', combatId);
+			const incoming = createHero('incoming', combatId, 2);
+			const combat = buildCombat(combatId, [outgoing, incoming]);
+			advanceWithoutTurnEvents('nextTurn', incoming);
+
+			await combat.nextTurn();
+
+			expect(combat.clearMovementHistories).not.toHaveBeenCalled();
+			expect(superClear).not.toHaveBeenCalled();
 		});
 	});
 });
