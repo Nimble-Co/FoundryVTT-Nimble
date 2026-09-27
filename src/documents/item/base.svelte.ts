@@ -9,11 +9,6 @@ import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { applyCasterConcentration, type ConcentrationSource } from '../../utils/concentration.js';
-import {
-	type ContextCard,
-	type MovementContextLookups,
-	reconcileMovementContext,
-} from '../../utils/movement/movementContext.js';
 
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
@@ -224,10 +219,6 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			card.system.movementOffers = reconcileMovementOffers(card, {
 				source: this.actor as unknown as OfferActor | null,
 			});
-			(card.system as NonNullable<ContextCard['system']>).movementContext =
-				reconcileMovementContext(card as ContextCard, {
-					source: this.actor as unknown as MovementContextLookups['source'],
-				});
 		}
 		const chatCard = suppressCard
 			? null
