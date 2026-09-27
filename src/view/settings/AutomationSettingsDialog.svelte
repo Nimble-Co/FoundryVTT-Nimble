@@ -9,11 +9,11 @@
 		isCombatConvenienceAutomationEnabled,
 		isDerivedConditionsAutomationEnabled,
 		isHealthStateSyncAutomationEnabled,
-		isMovementOffersAutomationEnabled,
 		isMovementTrackingAutomationEnabled,
 		isResourceRecoveryAutomationEnabled,
 		isResourceSpendingAutomationEnabled,
 		isRuleAutomationEnabled,
+		readAutomationToggle,
 		setAutomationToggle,
 	} from '../../settings/automationSettings.js';
 
@@ -34,7 +34,7 @@
 		combatConvenience: isCombatConvenienceAutomationEnabled(),
 		chatNotifications: isChatNotificationsAutomationEnabled(),
 		movementTracking: isMovementTrackingAutomationEnabled(),
-		movementOffers: isMovementOffersAutomationEnabled(),
+		movementOffers: readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers),
 	};
 
 	const toggles = $state({ ...initialValues });
