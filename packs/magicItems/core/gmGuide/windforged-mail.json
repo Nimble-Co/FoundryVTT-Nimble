@@ -43,7 +43,8 @@
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
 		"objectSizeType": "slots",
-		"slotsRequired": 2,
+		"slotsRequired": 1,
+		"stowedSlotsRequired": 2,
 		"stackSize": 1,
 		"properties": {
 			"range": {

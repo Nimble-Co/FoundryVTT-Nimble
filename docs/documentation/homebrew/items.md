@@ -44,6 +44,10 @@ Below the object type you will find fields shared by every kind:
 - **Price**: a number plus a coin denomination (cp, sp, or gp).
 - **Object Size Type** controls how the item occupies inventory space:
   - **Slots required**: the item takes a fixed number of inventory slots. Set **Inventory Slots** below it; the compendium longsword uses 2, and potions use 0.5.
+    **Slots When Stowed** sets a different cost for while the item is not equipped. The rulebook
+    puts worn armor at 1 slot and unworn armor at 2, so the compendium's armor carries 1 and 2.
+    Leave it blank and the item costs the same whether it is in use or packed away. An object
+    inside a container is never equipped, so it always pays the stowed cost.
   - **Stackable**: multiple copies merge into stacks. Set **Stack Size** (minimum 2). Dropping another copy onto a character increases the quantity instead of creating a duplicate.
   - **Small**: small items counted by quantity rather than slots.
 
