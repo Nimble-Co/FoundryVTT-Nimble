@@ -6,7 +6,11 @@ const resolveArmedMovementOffer = vi.hoisted(() => vi.fn());
 vi.mock('#utils/movement/resolveArmedMovementOffer.js', () => ({ resolveArmedMovementOffer }));
 
 import { SYSTEM_ID, systemHookName } from '#system';
-import registerMovementOffers from './movementOffers.js';
+import {
+	findArmedMovementOffer,
+	forgetArmedMovementOffers,
+} from '#utils/movement/movementOffers.js';
+import registerMovementOffers, { registerArmedMovementOfferIndex } from './movementOffers.js';
 
 type GameStub = {
 	user: { id: string; isGM: boolean };
@@ -223,5 +227,27 @@ describe('registerMovementOffers', () => {
 			await Promise.resolve();
 			expect(update).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe('registerArmedMovementOfferIndex', () => {
+	it('drops the carried offers when a chat message is created, updated or deleted', () => {
+		registerArmedMovementOfferIndex();
+		const card = (offerId: string) => ({
+			id: 'm1',
+			system: { movementOffers: [offer(offerId, 'Scene.s1.Token.a')] },
+		});
+		const armedId = () => findArmedMovementOffer('Scene.s1.Token.a', { enabled: true })?.id;
+
+		for (const event of ['createChatMessage', 'updateChatMessage', 'deleteChatMessage']) {
+			g.game.messages = { contents: [card('before')] };
+			forgetArmedMovementOffers();
+			expect(armedId()).toBe('before');
+			g.game.messages = { contents: [card('after')] };
+			expect(armedId()).toBe('before');
+			handlers.get(event)?.();
+			expect(armedId()).toBe('after');
+		}
+		forgetArmedMovementOffers();
 	});
 });

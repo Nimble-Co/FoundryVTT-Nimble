@@ -163,11 +163,33 @@ export function reconcileMovementOffers(
 	return [...kept, ...made];
 }
 
+/** The offer each token carries in the chat log, until a chat message changes. */
+let armedOffers: Map<string, ArmedMovementOffer> | null = null;
+
+function armedOffersByToken(messages: readonly OfferCard[]): Map<string, ArmedMovementOffer> {
+	const armed = new Map<string, ArmedMovementOffer>();
+	for (let index = messages.length - 1; index >= 0; index--) {
+		const message = messages[index];
+		if (!message?.id) continue;
+		for (const offer of message.system?.movementOffers ?? []) {
+			if (offer.state !== 'open' || offer.conditional || !(offer.spaces > 0)) continue;
+			if (!armed.has(offer.tokenUuid))
+				armed.set(offer.tokenUuid, { ...offer, messageId: message.id });
+		}
+	}
+	return armed;
+}
+
+/** Drops the carried offers read from the chat log, so the next lookup reads it again. */
+export function forgetArmedMovementOffers(): void {
+	armedOffers = null;
+}
+
 /**
  * The Movement Offer a token carries, or null when it carries none: the newest
  * open offer to it with any distance, so a second push supersedes an unsettled
  * first one. A conditional offer is never carried. Null whenever Movement
- * Offers are off.
+ * Offers are off. The chat log is read once until a chat message changes.
  */
 export function findArmedMovementOffer(
 	tokenUuid: string,
@@ -176,20 +198,13 @@ export function findArmedMovementOffer(
 	const enabled = deps.enabled ?? isMovementOffersAutomationEnabled();
 	if (!enabled || !tokenUuid) return null;
 
-	const messages = deps.messages ?? ((game.messages?.contents ?? []) as unknown as OfferCard[]);
-	for (let index = messages.length - 1; index >= 0; index--) {
-		const message = messages[index];
-		if (!message?.id) continue;
-		const offer = message.system?.movementOffers?.find(
-			(candidate) =>
-				candidate.tokenUuid === tokenUuid &&
-				candidate.state === 'open' &&
-				!candidate.conditional &&
-				candidate.spaces > 0,
-		);
-		if (offer) return { ...offer, messageId: message.id };
-	}
-	return null;
+	const armed = deps.messages
+		? armedOffersByToken(deps.messages)
+		: (armedOffers ??= armedOffersByToken(
+				(game.messages?.contents ?? []) as unknown as OfferCard[],
+			));
+	const offer = armed.get(tokenUuid);
+	return offer ? { ...offer } : null;
 }
 
 export interface MovementOfferSettlement {
