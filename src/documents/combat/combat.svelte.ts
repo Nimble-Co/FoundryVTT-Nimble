@@ -853,7 +853,20 @@ class NimbleCombat extends Combat {
 			return super._clearMovementHistoryOnStartTurn(combatant, context);
 		}
 		if (context.skipped) return;
-		await this.clearMovementHistories([combatant]);
+		await this.clearMovementHistories(this.#getMovementHistoryClearTargets(combatant));
+	}
+
+	/**
+	 * A minion group takes one turn through its leader, so the whole group's movement
+	 * history is cleared with it.
+	 */
+	#getMovementHistoryClearTargets(combatant: Combatant.Implementation): Combatant.Implementation[] {
+		const groupId = getMinionGroupId(combatant);
+		if (!groupId) return [combatant];
+
+		const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
+		if (!summary?.members.length) return [combatant];
+		return summary.members;
 	}
 
 	override async _onEndRound() {

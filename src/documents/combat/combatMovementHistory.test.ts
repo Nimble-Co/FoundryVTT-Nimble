@@ -51,6 +51,25 @@ function createHero(id: string, combatId: string, sort = 1) {
 	});
 }
 
+function createMinion(id: string, combatId: string, groupId: string, role: 'leader' | 'member') {
+	const minion = createMockCombatant({
+		id,
+		type: 'npc',
+		sort: role === 'leader' ? 1 : 2,
+		isOwner: false,
+		initiative: 12,
+		actor: {
+			...createCombatActorFixture({ id: `${id}-actor`, hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation,
+		combatId,
+	});
+	(minion as unknown as { flags: Record<string, unknown> }).flags = {
+		nimble: { minionGroup: { id: groupId, role } },
+	};
+	return minion;
+}
+
 function buildCombat(combatId: string, combatants: Combatant.Implementation[]) {
 	const combat = new NimbleCombat({
 		id: combatId,
@@ -104,6 +123,19 @@ describe('NimbleCombat movement history clearing', () => {
 
 			expect(combat.clearMovementHistories).not.toHaveBeenCalled();
 			expect(superClear).not.toHaveBeenCalled();
+		});
+
+		it('clears every member of the minion group when the group leader starts its turn', async () => {
+			const combatId = 'combat-clear-minion-group';
+			const leader = createMinion('minion-leader', combatId, 'group-1', 'leader');
+			const member = createMinion('minion-member', combatId, 'group-1', 'member');
+			const otherGroupMember = createMinion('other-member', combatId, 'group-2', 'member');
+			const hero = createHero('hero', combatId, 3);
+			const combat = buildCombat(combatId, [leader, member, otherGroupMember, hero]);
+
+			await combat._clearMovementHistoryOnStartTurn(leader, turnContext(false));
+
+			expect(clearedIds(combat)).toEqual([['minion-leader', 'minion-member']]);
 		});
 
 		it('defers to core when movement tracking is off, skipped or not', async () => {
