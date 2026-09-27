@@ -2796,6 +2796,78 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
 	});
 
+	it('moves the open Movement Offers from the old target to the protector', async () => {
+		const RollGlobal = Roll as unknown as Record<string, unknown>;
+		const saved = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+		RollGlobal.replaceFormulaData = (formula: string) => formula;
+		RollGlobal.safeEval = (expression: string) => Number(expression);
+		const sourceActor = { getRollData: () => ({}), system: { attributes: {} } };
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) => {
+			if (uuid === 'Scene.scene.Token.protector') {
+				return { name: 'Protector', actor: { ...protectorActor, getRollData: () => ({}) } };
+			}
+			if (uuid === 'Scene.scene.Token.source') return { name: 'Source', actor: sourceActor };
+			return null;
+		});
+
+		const message = createReactionMessage({
+			entries: [createRedirectEntry()],
+			targets: ['Scene.scene.Token.victim'],
+		});
+		const moveNode = {
+			id: 'push',
+			type: 'move',
+			kind: 'forced',
+			recipient: 'targets',
+			distance: '2',
+			distanceBySize: {},
+			ignoreDifficultTerrain: false,
+			direction: 'away',
+			parentNode: null,
+			parentContext: null,
+		};
+		const system = message.system as unknown as { activation: { effects: unknown[] } } & Record<
+			string,
+			unknown
+		>;
+		system.activation.effects.push(moveNode);
+		system.movementOffers = [
+			{
+				id: 'push.victim',
+				nodeId: 'push',
+				tokenUuid: 'Scene.scene.Token.victim',
+				name: 'Victim',
+				kind: 'forced',
+				spaces: 2,
+				ignoreDifficultTerrain: true,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional: false,
+			},
+		];
+		(message as unknown as { speaker: unknown }).speaker = { scene: 'scene', token: 'source' };
+
+		try {
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		} finally {
+			RollGlobal.replaceFormulaData = saved.replace;
+			RollGlobal.safeEval = saved.safeEval;
+		}
+
+		const payload = message.update.mock.calls[0][0] as {
+			system: { movementOffers: { tokenUuid: string; state: string; spaces: number }[] };
+		};
+		expect(payload.system.movementOffers).toEqual([
+			expect.objectContaining({
+				tokenUuid: 'Scene.scene.Token.protector',
+				state: 'open',
+				spaces: 2,
+			}),
+		]);
+	});
+
 	it('marks every entry tied to the original target as used, leaving other targets live', async () => {
 		const message = createReactionMessage({
 			entries: [
