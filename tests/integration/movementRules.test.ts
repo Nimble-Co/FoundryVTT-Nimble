@@ -207,6 +207,13 @@ function cardText(message: ChatMessage): string {
 	return (messageNode(message.id!)?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+/** What each movement tag on the card says. */
+function tagTexts(message: ChatMessage): string[] {
+	return [
+		...(messageNode(message.id!)?.querySelectorAll<HTMLElement>('.nimble-movement-chip') ?? []),
+	].map((chip) => chip.dataset.tooltip ?? '');
+}
+
 async function waitForRendered(message: ChatMessage, selector: string): Promise<void> {
 	await waitFor(
 		() => !!messageNode(message.id!)?.querySelector(selector),
@@ -366,7 +373,7 @@ describe('movement rules', () => {
 			await waitForRendered(card, '.nimble-move-node');
 			const text = cardText(card);
 			expect(text).toContain(`used ${dash.name}`);
-			expect(text).toContain('Free Move - up to 3 spaces');
+			expect(text).toContain('Can move up to 3 spaces for free');
 			expect(text).not.toContain('chooses where');
 		});
 
@@ -380,7 +387,7 @@ describe('movement rules', () => {
 			await waitFor(() => offersOn(card)[0].state === 'taken', 'the offer to be recorded taken');
 			expect(offersOn(card)[0].movedSpaces).toBe(2);
 			await waitFor(
-				() => cardText(card).includes('Free Move - moved 2 of 3 spaces'),
+				() => tagTexts(card).includes('Moved 2 of 3 spaces for free.'),
 				'the result on the card',
 			);
 			expect(draggable(heroToken)._getDragMovementAction()).not.toBe(FREE_ACTION);
