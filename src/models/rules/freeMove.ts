@@ -79,14 +79,17 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.recipient !== 'self',
 			}),
 		),
-		direction: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: 'any',
-			choices: ['any', 'away', 'toward'],
-			label: 'NIMBLE.rules.freeMove.direction.label',
-			hint: 'NIMBLE.rules.freeMove.direction.hint',
-		}),
+		direction: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: ['any', 'away', 'toward'],
+				label: 'NIMBLE.rules.freeMove.direction.label',
+				hint: 'NIMBLE.rules.freeMove.direction.hint',
+				showWhen: (data: Record<string, unknown>) => data.recipient !== 'self',
+			}),
+		),
 		ignoresDifficultTerrain: new fields.BooleanField({
 			required: true,
 			nullable: false,

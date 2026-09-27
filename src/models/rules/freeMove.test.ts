@@ -227,6 +227,13 @@ describe('FreeMoveRule', () => {
 			expect(withinShow({ recipient: 'allies' })).toBe(true);
 			expect(withinShow({ recipient: 'selfAndAllies' })).toBe(true);
 		});
+
+		it('shows the direction only when allies move', () => {
+			const directionShow = schema.direction?.options?.showWhen as (d: object) => boolean;
+			expect(directionShow({ recipient: 'self' })).toBe(false);
+			expect(directionShow({ recipient: 'allies' })).toBe(true);
+			expect(directionShow({ recipient: 'selfAndAllies' })).toBe(true);
+		});
 	});
 
 	it('lists in the grants group with a description', () => {
