@@ -13,8 +13,9 @@ const { FRIENDLY, HOSTILE, NEUTRAL, SECRET } = {
 const grid = {
 	isGridless: false,
 	size: GRID,
+	distance: 1,
 	measurePath([from, to]: { i: number; j: number }[]) {
-		return { spaces: Math.max(Math.abs(from.i - to.i), Math.abs(from.j - to.j)) };
+		return { distance: Math.max(Math.abs(from.i - to.i), Math.abs(from.j - to.j)) };
 	},
 };
 
