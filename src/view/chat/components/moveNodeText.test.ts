@@ -142,7 +142,19 @@ describe('moveNodeText', () => {
 		])('uses the %s verb', (direction, openTooltip, notMovedLabel) => {
 			const node = moveNode({ direction });
 			expect(chipOf(node, offer()).tooltip).toBe(openTooltip);
-			expect(chipOf(node, offer({ state: 'unused' })).label).toBe(notMovedLabel);
+			expect(chipOf(node, offer({ state: 'lapsed' })).label).toBe(notMovedLabel);
+		});
+
+		it('never says "Not moved" of a creature that moved another way', () => {
+			const expected = {
+				status: 'unused',
+				label: 'Not used',
+				tooltip: 'Did not use the Forced Movement. It moved another way instead.',
+			};
+			const unused = offer({ state: 'unused' });
+			expect(chipOf(moveNode({ direction: 'any' }), unused)).toMatchObject(expected);
+			const self = offer({ state: 'unused', tokenUuid: SPEAKER_TOKEN });
+			expect(chipOf(moveNode({ recipient: 'self' }), self)).toMatchObject(expected);
 		});
 
 		it.each([

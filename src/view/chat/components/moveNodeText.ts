@@ -168,6 +168,8 @@ export function moveNodeText(
 
 	const chip = (offer: MovementOffer): MovementChip => {
 		const status = movementStatus(offer, options.tracking);
+		// "Not moved" would deny the move the creature made instead.
+		const unusedAny = status === 'unused' && isForced && way === 'any';
 		const data = {
 			verb,
 			passive,
@@ -189,7 +191,7 @@ export function moveNodeText(
 			// Nothing records the drag, so the chip states the move instead of waiting for it.
 			tooltip = localize(`${KEY}.summary.${isForced ? 'forced' : 'free'}`, data);
 		} else {
-			tooltip = localize(`${kindKey}.${status}`, data);
+			tooltip = localize(`${kindKey}.${unusedAny ? 'unusedAny' : status}`, data);
 		}
 		const damage = obstacleDamage(offer);
 		if (damage) tooltip = `${tooltip} ${damage}`;
@@ -203,9 +205,10 @@ export function moveNodeText(
 				break;
 			case 'unused':
 			case 'lapsed':
-				label = isForced
-					? localize(`${KEY}.chip.notMoved`, { passive })
-					: localize(`${KEY}.chip.notUsed`);
+				label =
+					isForced && !unusedAny
+						? localize(`${KEY}.chip.notMoved`, { passive })
+						: localize(`${KEY}.chip.notUsed`);
 				break;
 			default:
 				label = String(offer.spaces);
