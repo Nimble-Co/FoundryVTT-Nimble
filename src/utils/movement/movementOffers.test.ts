@@ -371,8 +371,26 @@ describe('movementOfferOutcome', () => {
 		expect(outcome).toMatchObject({ shortfall: 4, damageOwed: false });
 	});
 
-	it('is no shortfall when the mover chose to stop early', () => {
-		expect(movementOfferOutcome(offer({ state: 'taken', movedSpaces: 3 })).shortfall).toBe(0);
+	it('reports a push dropped short even when nothing cut the path', () => {
+		const outcome = movementOfferOutcome(offer({ state: 'taken', movedSpaces: 3 }));
+		expect(outcome).toMatchObject({ moved: 3, shortfall: 4, damageOwed: true });
+	});
+
+	it('is no shortfall for a push taken in full, or carried past its distance', () => {
+		expect(movementOfferOutcome(offer({ state: 'taken', movedSpaces: 7 }))).toMatchObject({
+			shortfall: 0,
+			damageOwed: false,
+		});
+	});
+
+	it('is no shortfall when a Free Move stops early by choice', () => {
+		const outcome = movementOfferOutcome(offer({ kind: 'free', state: 'taken', movedSpaces: 3 }));
+		expect(outcome).toMatchObject({ shortfall: 0, damageOwed: false });
+	});
+
+	it('is no shortfall for a push that was not taken', () => {
+		expect(movementOfferOutcome(offer({ state: 'unused', stopped: true })).shortfall).toBe(0);
+		expect(movementOfferOutcome(offer({ state: 'lapsed' })).shortfall).toBe(0);
 	});
 
 	it('has no moved spaces for an open or unused offer', () => {

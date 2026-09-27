@@ -134,7 +134,7 @@
 					"unused": "moved on its own",
 					"lapsed": "not taken before the turn ended"
 				},
-				"forcedShortenedHint": "Stopped early: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
+				"forcedShortenedHint": "If an obstacle stopped it: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
 				"noRecipient": "No creature to move."
 			},
 			"grantedActionOffers": {

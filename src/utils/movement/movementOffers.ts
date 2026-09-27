@@ -252,15 +252,20 @@ export interface MovementOfferOutcome {
 	state: MovementOfferState;
 	offered: number;
 	moved: number | null;
-	/** Spaces a wall, terrain or the mover cut off a taken offer. */
+	/**
+	 * Spaces cut off a taken offer. A Free Move counts only a path that was cut
+	 * short. A push counts any shortfall, because a creature that halts it
+	 * leaves no trace on the path: why it fell short is the table's call.
+	 */
 	shortfall: number;
-	/** A push cut short: the book deals damage per space shortened. */
+	/** A push that fell short: the book deals damage per space shortened. */
 	damageOwed: boolean;
 }
 
 export function movementOfferOutcome(offer: MovementOffer): MovementOfferOutcome {
 	const moved = offer.state === 'taken' ? (offer.movedSpaces ?? 0) : null;
-	const shortfall = moved !== null && offer.stopped ? Math.max(0, offer.spaces - moved) : 0;
+	const counts = moved !== null && (offer.kind === 'forced' || offer.stopped);
+	const shortfall = counts ? Math.max(0, offer.spaces - moved) : 0;
 	return {
 		state: offer.state,
 		offered: offer.spaces,
