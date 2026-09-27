@@ -123,6 +123,27 @@ describe('measureWaypointSpaces', () => {
 		expect(measureWaypointSpaces(makeSquareToken('approximate'), diagonalSteps(1))).toEqual([2]);
 	});
 
+	it('rounds gridless legs on the running total, not one by one', () => {
+		const gridless = { isGridless: true, distance: 5 };
+		const nearlyWhole = makeToken(
+			[
+				{ distance: 7, spaces: 0 },
+				{ distance: 7, spaces: 0 },
+				{ distance: 7, spaces: 0 },
+			],
+			gridless,
+		);
+		expect(measureWaypointSpaces(nearlyWhole, [{}, {}, {}, {}])).toEqual([1, 2, 1]);
+		const halves = makeToken(
+			[
+				{ distance: 7.5, spaces: 0 },
+				{ distance: 7.5, spaces: 0 },
+			],
+			gridless,
+		);
+		expect(measureWaypointSpaces(halves, [{}, {}, {}])).toEqual([2, 1]);
+	});
+
 	it('counts nothing without a grid distance', () => {
 		const token = makeToken([{ distance: 5, spaces: 1 }], { isGridless: false, distance: 0 });
 		expect(measureWaypointSpaces(token, [{}, {}])).toEqual([0]);

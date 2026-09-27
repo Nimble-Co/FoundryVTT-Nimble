@@ -11,22 +11,17 @@ export interface MovementHistorySummary {
 	counted: number;
 }
 
-interface MeasuredSegment {
-	distance: number;
-	spaces: number;
-}
-
 interface MeasurableToken {
-	parent?: { grid?: { isGridless?: boolean; distance: number } } | null;
-	measureMovementPath(waypoints: object[]): { segments: MeasuredSegment[] };
+	parent?: { grid?: { distance: number } } | null;
+	measureMovementPath(waypoints: object[]): { segments: { distance: number }[] };
 }
 
 /**
  * Sums the spaces of a movement history by Movement kind. The history is
  * measured once as a whole so alternating diagonal rules stay consistent, and
- * each segment is attributed to the action of the waypoint it arrives at. On a
- * gridless scene a segment's spaces are its distance in scene units divided by
- * the grid distance, rounded to the nearest whole space.
+ * each leg is attributed to the action of the waypoint it arrives at. Legs are
+ * rounded on the running distance, not one by one, so the summary adds up to
+ * the whole history's distance rounded to the nearest space.
  */
 export function summariseMovementHistory(
 	token: MeasurableToken,

@@ -77,4 +77,15 @@ describe('summariseMovementHistory', () => {
 		];
 		expect(summariseMovementHistory(token, history).regular).toBe(5);
 	});
+
+	it('rounds gridless legs on the running total', () => {
+		const token = makeToken(true, 5);
+		const history: Waypoint[] = [
+			{ x: 0, y: 0, action: 'walk' },
+			{ x: 1.4, y: 0, action: 'walk' },
+			{ x: 2.8, y: 0, action: 'walk' },
+			{ x: 4.2, y: 0, action: 'walk' },
+		];
+		expect(summariseMovementHistory(token, history).regular).toBe(4);
+	});
 });

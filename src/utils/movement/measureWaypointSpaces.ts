@@ -8,9 +8,9 @@ interface MeasuringToken {
  * whole path in one call so alternating diagonal rules stay consistent. Core
  * drops the resize segments it adds for size changes, so there is one segment
  * for each waypoint after the first. Spaces are the distance in scene units
- * over the grid distance, so every diagonal rule is honoured. Rounding is
- * cumulative: each leg is a whole number, and the legs up to any waypoint sum
- * to the rounded distance to it.
+ * over the grid distance, so every diagonal rule and gridless scenes are
+ * honoured. Rounding is cumulative, never per segment: each leg is a whole
+ * number, and the legs up to any waypoint sum to the rounded distance to it.
  */
 export function measureWaypointSpaces(
 	token: MeasuringToken,
