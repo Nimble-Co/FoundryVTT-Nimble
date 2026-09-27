@@ -11,6 +11,7 @@ import {
 	isResourceRecoveryAutomationEnabled,
 	isResourceSpendingAutomationEnabled,
 	isRuleAutomationEnabled,
+	readAutomationToggle,
 	resolveLegacyAutoApplyDefault,
 	setAutomationToggle,
 } from './automationSettings.js';
@@ -65,6 +66,32 @@ describe('automationSettings', () => {
 		it.each(GETTERS_BY_KEY)('%s fails open when the read returns undefined', (_key, getter) => {
 			settingsMock.get.mockReturnValue(undefined);
 			expect(getter()).toBe(true);
+		});
+	});
+
+	describe('isMovementOffersAutomationEnabled', () => {
+		const stored = (tracking: unknown, offers: unknown) =>
+			settingsMock.get.mockImplementation((_namespace, key) =>
+				key === AUTOMATION_SETTING_KEYS.movementTracking ? tracking : offers,
+			);
+
+		it('is off while Movement Tracking is off, whatever its own toggle holds', () => {
+			stored(false, true);
+			expect(isMovementOffersAutomationEnabled()).toBe(false);
+			stored(false, false);
+			expect(isMovementOffersAutomationEnabled()).toBe(false);
+		});
+
+		it('follows its own toggle while Movement Tracking is on', () => {
+			stored(true, true);
+			expect(isMovementOffersAutomationEnabled()).toBe(true);
+			stored(true, false);
+			expect(isMovementOffersAutomationEnabled()).toBe(false);
+		});
+
+		it('reads the stored toggle apart from Movement Tracking through readAutomationToggle', () => {
+			stored(false, true);
+			expect(readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers)).toBe(true);
 		});
 	});
 

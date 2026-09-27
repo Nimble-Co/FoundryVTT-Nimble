@@ -23,7 +23,7 @@ export type AutomationSettingKey =
  * settings are unavailable or the key is not yet registered, so automation
  * behaves as configured out of the box rather than silently shutting off.
  */
-function readAutomationToggle(key: AutomationSettingKey): boolean {
+export function readAutomationToggle(key: AutomationSettingKey): boolean {
 	try {
 		const value = game.settings?.get(SYSTEM_ID as 'core', key as 'rollMode');
 		if (value === undefined) return true;
@@ -98,7 +98,14 @@ export function resolveLegacyAutoApplyDefault(
 	return storedExists ? legacyValue : true;
 }
 
-/** Whether features offer a constrained drag on the chat card instead of plain text with the distance. */
+/**
+ * Whether a feature's Free Move or push arms the recipient's token, so its next
+ * drag is labelled with the offered action and settled on the card. Off while
+ * Movement Tracking is off: only a recorded Movement settles an offer.
+ */
 export function isMovementOffersAutomationEnabled(): boolean {
-	return readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers);
+	return (
+		isMovementTrackingAutomationEnabled() &&
+		readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers)
+	);
 }
