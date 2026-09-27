@@ -125,6 +125,19 @@ describe('movement offers', () => {
 			.trim();
 	}
 
+	/** The movement tag on the goblin's TARGETS row. */
+	function goblinTag(message: ChatMessage = card): HTMLElement | null {
+		return (
+			messageNode(message.id!)?.querySelector<HTMLElement>(
+				'.nimble-target-list .nimble-movement-chip',
+			) ?? null
+		);
+	}
+
+	function goblinTagText(message: ChatMessage = card): string {
+		return goblinTag(message)?.dataset.tooltip ?? '';
+	}
+
 	/** The drop options core builds for a one-space drag of the tokens, grabbed by the first. */
 	function prepareDrop(...tokens: DraggableToken[]): DropOptions {
 		const origin = { x: 0, y: 0, elevation: 0 };
@@ -241,8 +254,9 @@ describe('movement offers', () => {
 		expect(offersOn(card)).toMatchObject([
 			{ tokenUuid: goblinToken.uuid, spaces: 2, state: 'open', movedSpaces: null },
 		]);
-		expect(moveNodeText()).toContain(`Forced Movement - away from ${hero.name}`);
-		expect(moveNodeText()).toContain(`${goblin.name} up to 2 spaces`);
+		expect(moveNodeText()).toContain(`Pushed up to 2 spaces away from ${hero.name}.`);
+		expect(goblinTag()?.textContent?.trim()).toBe('2');
+		expect(goblinTagText()).toBe(`Waiting to be pushed up to 2 spaces away from ${hero.name}.`);
 		expect(moveNodeText()).not.toContain('chooses');
 		expect(messageNode(card.id!)?.querySelectorAll('.nimble-move-node button')).toHaveLength(0);
 	});
@@ -289,7 +303,7 @@ describe('movement offers', () => {
 		// `x` follows the animation; the source holds where the Movement ended.
 		expect(goblinToken._source.x, 'nothing should stop the token short').toBe(8 * GRID_SIZE);
 		expect(offersOn(card)[0].movedSpaces).toBe(2);
-		await waitFor(() => moveNodeText().includes('moved 2 of 2 spaces'), 'the result on the card');
+		await waitFor(() => goblinTagText() === 'Pushed the full 2 spaces.', 'the result on the card');
 	});
 
 	test('the drop takes the offer it names, and leaves a newer open offer unused', async () => {
@@ -308,7 +322,10 @@ describe('movement offers', () => {
 	test('a Movement made under no offer leaves the offer unused', async () => {
 		await moveGoblin(5);
 		await waitFor(() => offersOn(card)[0].state === 'unused', 'the offer to be left unused');
-		await waitFor(() => moveNodeText().includes('moved on its own'), 'the unused note on the card');
+		await waitFor(
+			() => goblinTagText() === 'Not pushed. It moved another way instead.',
+			'the unused note on the card',
+		);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 	});
 
@@ -326,7 +343,7 @@ describe('movement offers', () => {
 		await combat.nextTurn();
 		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');
 		await waitFor(
-			() => moveNodeText().includes('not taken before the turn ended'),
+			() => goblinTagText() === 'Not pushed. The turn ended first.',
 			'the lapse on the card',
 		);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
@@ -335,7 +352,7 @@ describe('movement offers', () => {
 	test('with Movement Offers off nothing is labelled, and the open offer lapses', async () => {
 		expect(dropTag(), 'the drop should be named while the offer is open').toBeDefined();
 		await setAutomationToggle(OFFERS_SETTING, false);
-		expect(moveNodeText()).toContain(`${goblin.name} up to 2 spaces`);
+		expect(moveNodeText()).toContain(`Pushed up to 2 spaces away from ${hero.name}.`);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 		expect(dropTag()).toBeUndefined();
 		await waitFor(() => offersOn(card)[0].state === 'lapsed', 'the offer to lapse');

@@ -2,15 +2,18 @@ import { render, screen } from '@testing-library/svelte';
 import MoveNodeTestHarness from './MoveNode.testHarness.svelte';
 
 /**
- * The move node is a record, not a control: it states each stored offer and
- * what the finished Movement came to. It never carries a button.
+ * The move node is a record, not a control: one summary line, a row with a
+ * status chip for each creature the TARGETS section does not show, and the
+ * damage reminder for a push that fell short. It never carries a button.
  */
 
-type Globals = { game: { settings: unknown } };
+type Globals = { game: { settings: unknown }; fromUuidSync: unknown };
 
 const g = globalThis as unknown as Globals;
 
 const SPEAKER_TOKEN = 'Scene.s1.Token.hero';
+const GOBLIN_TOKEN = 'Scene.s1.Token.tok1';
+const ARCHER_TOKEN = 'Scene.s1.Token.tok2';
 
 function createNode(overrides: Record<string, unknown> = {}) {
 	return {
@@ -32,7 +35,7 @@ function createOffer(overrides: Record<string, unknown> = {}) {
 	return {
 		id: 'node1.tok1',
 		nodeId: 'node1',
-		tokenUuid: 'Scene.s1.Token.tok1',
+		tokenUuid: GOBLIN_TOKEN,
 		name: 'Goblin Cutthroat',
 		kind: 'forced',
 		spaces: 2,
@@ -41,8 +44,18 @@ function createOffer(overrides: Record<string, unknown> = {}) {
 		usedBy: null,
 		movedSpaces: null,
 		stopped: false,
+		conditional: false,
 		...overrides,
 	};
+}
+
+function createArcherOffer(overrides: Record<string, unknown> = {}) {
+	return createOffer({
+		id: 'node1.tok2',
+		tokenUuid: ARCHER_TOKEN,
+		name: 'Goblin Archer',
+		...overrides,
+	});
 }
 
 function createSelfOffer(overrides: Record<string, unknown> = {}) {
@@ -65,228 +78,322 @@ const selfNode = (overrides: Record<string, unknown> = {}) =>
 		...overrides,
 	});
 
-function createMessage(movementOffers: unknown[]) {
+function createMessage(movementOffers: unknown[], targets: string[] = []) {
 	return {
 		id: 'msg1',
 		speaker: { scene: 's1', token: 'hero', actor: 'a1' },
-		system: { actorName: 'Sir Brannon', movementOffers },
+		system: { actorName: 'Sir Brannon', movementOffers, targets },
 	};
 }
 
-function renderNode(movementOffers: unknown[] = [createOffer()], node = createNode()) {
+interface RenderOptions {
+	node?: ReturnType<typeof createNode>;
+	targets?: string[];
+	targetsShown?: boolean;
+}
+
+function renderNode(movementOffers: unknown[] = [createOffer()], options: RenderOptions = {}) {
+	const { node = createNode(), targets = [], targetsShown = false } = options;
 	return render(MoveNodeTestHarness, {
-		props: { messageDocument: createMessage(movementOffers), node },
+		props: { messageDocument: createMessage(movementOffers, targets), node, targetsShown },
 	});
 }
 
-function nodeText(container: HTMLElement): string {
-	return (container.querySelector('.nimble-move-node')?.textContent ?? '')
+function summaryText(container: HTMLElement): string {
+	return (container.querySelector('.nimble-move-node__line')?.textContent ?? '')
 		.replace(/\s+/g, ' ')
 		.trim();
 }
 
+function rowNames(container: HTMLElement): string[] {
+	return [...container.querySelectorAll('.nimble-move-node__row .nimble-move-node__name')].map(
+		(name) => name.textContent?.trim() ?? '',
+	);
+}
+
+function chipOf(container: HTMLElement): HTMLElement {
+	const chip = container.querySelector<HTMLElement>('.nimble-movement-chip');
+	if (!chip) throw new Error('no chip');
+	return chip;
+}
+
+function chipLabel(chip: HTMLElement): string {
+	return chip.textContent?.trim() ?? '';
+}
+
 let previousSettings: unknown;
+let previousFromUuidSync: unknown;
 
 beforeEach(() => {
 	previousSettings = g.game.settings;
+	previousFromUuidSync = g.fromUuidSync;
 	g.game.settings = { get: vi.fn(() => true) };
+	g.fromUuidSync = vi.fn(() => null);
 });
 
 afterEach(() => {
 	g.game.settings = previousSettings;
+	g.fromUuidSync = previousFromUuidSync;
 });
 
 describe('MoveNode', () => {
-	describe('an offer to the card speaker alone', () => {
-		it('puts the distance on the heading line and shows no name', () => {
-			const { container } = renderNode([createSelfOffer()], selfNode());
-			expect(nodeText(container)).toBe('Free Move - up to 2 spaces');
-			expect(screen.queryByText(/Sir Brannon/)).toBeNull();
+	describe('summary line', () => {
+		it('states a push', () => {
+			const { container } = renderNode();
+			expect(summaryText(container)).toBe('Pushed up to 2 spaces away from Sir Brannon.');
 		});
 
-		it('puts the result on the heading line once settled', () => {
-			const { container } = renderNode(
-				[createSelfOffer({ state: 'taken', usedBy: 'player', movedSpaces: 2 })],
-				selfNode(),
-			);
-			expect(nodeText(container)).toBe('Free Move - moved 2 of 2 spaces');
+		it('states a pull', () => {
+			const { container } = renderNode([createOffer()], {
+				node: createNode({ direction: 'toward' }),
+			});
+			expect(summaryText(container)).toBe('Pulled up to 2 spaces toward Sir Brannon.');
 		});
 
-		it('tags a Free Move that ignores difficult terrain', () => {
-			const { container } = renderNode(
-				[createSelfOffer({ ignoreDifficultTerrain: true })],
-				selfNode({ ignoreDifficultTerrain: true }),
+		it('states a move in any direction', () => {
+			const { container } = renderNode([createOffer()], {
+				node: createNode({ direction: 'any' }),
+			});
+			expect(summaryText(container)).toBe('Moved up to 2 spaces in any direction.');
+		});
+
+		it('gives a Free Move to the user alone no direction', () => {
+			const { container } = renderNode([createSelfOffer()], {
+				node: selfNode({ recipient: 'targets', direction: 'away' }),
+			});
+			expect(summaryText(container)).toBe('Can move up to 2 spaces for free.');
+		});
+
+		it('adds the terrain to a Free Move that ignores difficult terrain', () => {
+			const { container } = renderNode([createSelfOffer({ ignoreDifficultTerrain: true })], {
+				node: selfNode({ ignoreDifficultTerrain: true }),
+			});
+			expect(summaryText(container)).toBe(
+				'Can move up to 2 spaces for free, ignoring difficult terrain.',
 			);
-			expect(nodeText(container)).toBe('Free Move - up to 2 spaces ignores difficult terrain');
+		});
+
+		it('puts one shared distance on the line', () => {
+			const { container } = renderNode([createOffer(), createArcherOffer()]);
+			expect(summaryText(container)).toBe('Pushed up to 2 spaces away from Sir Brannon.');
+		});
+
+		it('sends different distances to the chips', () => {
+			const { container } = renderNode([createOffer(), createArcherOffer({ spaces: 3 })]);
+			expect(summaryText(container)).toBe(
+				'Pushed away from Sir Brannon. Each creature shows its spaces.',
+			);
+		});
+
+		it('says so when the card has no creature to move', () => {
+			const { container } = renderNode([]);
+			expect(summaryText(container)).toBe('Pushed away from Sir Brannon.');
+			expect(screen.getByText('No creature to move.')).toBeTruthy();
+		});
+
+		it('labels the icon with the kind of movement', () => {
+			const { container } = renderNode();
+			const icon = container.querySelector('.nimble-move-node__line i');
+			expect(icon?.getAttribute('aria-label')).toBe('Forced Movement');
+			expect(icon?.getAttribute('data-tooltip')).toBe('Forced Movement');
+			expect(container.querySelector('.nimble-move-node h4')).toBeNull();
 		});
 	});
 
-	describe('offers to other creatures', () => {
-		it('names the one recipient in a row, even when there is only one', () => {
-			const { container } = renderNode();
-			expect(nodeText(container)).toBe(
-				'Forced Movement - away from Sir Brannon Goblin Cutthroat up to 2 spaces',
-			);
-			expect(screen.getByText('Goblin Cutthroat')).toBeTruthy();
+	describe('rows', () => {
+		it('lists every creature when the card shows no TARGETS section', () => {
+			const { container } = renderNode([createOffer(), createArcherOffer()], {
+				targets: [GOBLIN_TOKEN, ARCHER_TOKEN],
+			});
+			expect(rowNames(container)).toEqual(['Goblin Cutthroat', 'Goblin Archer']);
 		});
 
-		it('names every recipient in its own row', () => {
+		it('lists only the creatures that have no TARGETS row', () => {
+			const { container } = renderNode([createOffer(), createArcherOffer()], {
+				targets: [GOBLIN_TOKEN],
+				targetsShown: true,
+			});
+			expect(rowNames(container)).toEqual(['Goblin Archer']);
+		});
+
+		it('shows no row when every creature has a TARGETS row', () => {
+			const { container } = renderNode([createOffer()], {
+				targets: [GOBLIN_TOKEN],
+				targetsShown: true,
+			});
+			expect(container.querySelector('.nimble-move-node__rows')).toBeNull();
+			expect(summaryText(container)).toBe('Pushed up to 2 spaces away from Sir Brannon.');
+		});
+
+		it('gives the name its own tooltip', () => {
+			const { container } = renderNode();
+			const name = container.querySelector('.nimble-move-node__name');
+			expect(name?.getAttribute('data-tooltip')).toBe('Goblin Cutthroat');
+		});
+
+		it('shows the token image, then the actor image, then the default image', () => {
+			g.fromUuidSync = vi.fn((uuid: string) => {
+				if (uuid === GOBLIN_TOKEN) return { texture: { src: 'goblin.webp' } };
+				if (uuid === ARCHER_TOKEN) return { texture: { src: '' }, actor: { img: 'archer.webp' } };
+				return null;
+			});
 			const { container } = renderNode([
 				createOffer(),
-				createOffer({
-					id: 'node1.tok2',
-					tokenUuid: 'Scene.s1.Token.tok2',
-					name: 'Goblin Archer',
-					spaces: 3,
-				}),
+				createArcherOffer(),
+				createSelfOffer({ kind: 'forced' }),
 			]);
-			expect(container.querySelectorAll('.nimble-move-node__row')).toHaveLength(2);
-			expect(screen.getByText('Goblin Cutthroat')).toBeTruthy();
-			expect(screen.getByText('Goblin Archer')).toBeTruthy();
-			expect(screen.getByText('up to 3 spaces')).toBeTruthy();
+			const images = [...container.querySelectorAll('.nimble-move-node__img')].map((img) =>
+				img.getAttribute('src'),
+			);
+			expect(images).toEqual(['goblin.webp', 'archer.webp', 'icons/svg/mystery-man.svg']);
+			expect(g.fromUuidSync).toHaveBeenCalledWith(GOBLIN_TOKEN, { strict: false });
+		});
+	});
+
+	describe('chip', () => {
+		it.each([
+			['open', {}, '2', 'Waiting to be pushed up to 2 spaces away from Sir Brannon.'],
+			['taken', { state: 'taken', movedSpaces: 2 }, '2/2', 'Pushed the full 2 spaces.'],
+			[
+				'short',
+				{ state: 'taken', movedSpaces: 1, stopped: true },
+				'1/2',
+				'Pushed 1 of 2 spaces. If an obstacle stopped Goblin Cutthroat, it takes 1d6 bludgeoning damage. If it hit another creature, both creatures split the damage.',
+			],
+			[
+				'unused',
+				{ state: 'unused', usedBy: 'player' },
+				'Not pushed',
+				'Not pushed. It moved another way instead.',
+			],
+			['lapsed', { state: 'lapsed' }, 'Not pushed', 'Not pushed. The turn ended first.'],
+		])('shows a push that is %s', (status, overrides, label, tooltip) => {
+			const { container } = renderNode([createOffer(overrides)]);
+			const chip = chipOf(container);
+			expect(chip.dataset.status).toBe(status);
+			expect(chipLabel(chip)).toBe(label);
+			expect(chip.getAttribute('data-tooltip')).toBe(tooltip);
+			expect(chip.getAttribute('aria-label')).toBe(tooltip);
 		});
 
-		it('names the speaker too when it is one of several recipients', () => {
-			renderNode([createSelfOffer(), createOffer()], selfNode({ recipient: 'targets' }));
-			expect(screen.getByText('Sir Brannon')).toBeTruthy();
-			expect(screen.getByText('Goblin Cutthroat')).toBeTruthy();
+		it.each([
+			['open', {}, '2', 'Can move up to 2 spaces for free.'],
+			['taken', { state: 'taken', movedSpaces: 2 }, '2/2', 'Moved the full 2 spaces for free.'],
+			['partial', { state: 'taken', movedSpaces: 1 }, '1/2', 'Moved 1 of 2 spaces for free.'],
+			[
+				'short',
+				{ state: 'taken', movedSpaces: 1, stopped: true },
+				'1/2',
+				'Moved 1 of 2 spaces for free before something blocked the path.',
+			],
+			[
+				'unused',
+				{ state: 'unused', usedBy: 'player' },
+				'Not used',
+				'Did not use the Free Move. It moved another way instead.',
+			],
+			[
+				'lapsed',
+				{ state: 'lapsed' },
+				'Not used',
+				'Did not use the Free Move. The turn ended first.',
+			],
+		])('shows a Free Move that is %s', (status, overrides, label, tooltip) => {
+			const { container } = renderNode([createSelfOffer(overrides)], { node: selfNode() });
+			const chip = chipOf(container);
+			expect(chip.dataset.status).toBe(status);
+			expect(chipLabel(chip)).toBe(label);
+			expect(chip.getAttribute('data-tooltip')).toBe(tooltip);
 		});
 
-		it('adds the result to the row after the distance', () => {
-			const { container } = renderNode([
-				createOffer({ state: 'taken', usedBy: 'player', movedSpaces: 2 }),
-			]);
-			expect(nodeText(container)).toContain(
-				'Goblin Cutthroat up to 2 spaces - moved 2 of 2 spaces',
+		it.each([
+			['failedSave', 'Pushed up to 2 spaces away from Sir Brannon if it fails the save.'],
+			['passedSave', 'Pushed up to 2 spaces away from Sir Brannon if it passes the save.'],
+		])('lets the save decide a push under %s', (outcome, tooltip) => {
+			const { container } = renderNode([createOffer({ conditional: true })], {
+				node: createNode({ parentNode: 'save1', parentContext: outcome }),
+			});
+			const chip = chipOf(container);
+			expect(chip.dataset.status).toBe('conditional');
+			expect(chipLabel(chip)).toBe('2');
+			expect(chip.getAttribute('data-tooltip')).toBe(tooltip);
+		});
+
+		it('states an open push when tracking is off', () => {
+			g.game.settings = { get: vi.fn(() => false) };
+			const { container } = renderNode();
+			const tooltip = chipOf(container).getAttribute('data-tooltip');
+			expect(tooltip).toBe('Pushed up to 2 spaces away from Sir Brannon.');
+			expect(tooltip).not.toMatch(/Waiting/);
+		});
+
+		it('uses the singular for one space', () => {
+			const { container } = renderNode([createOffer({ spaces: 1 })]);
+			expect(summaryText(container)).toBe('Pushed up to 1 space away from Sir Brannon.');
+			expect(chipOf(container).getAttribute('data-tooltip')).toBe(
+				'Waiting to be pushed up to 1 space away from Sir Brannon.',
 			);
 		});
 	});
 
-	describe('direction', () => {
-		it('shows toward the source', () => {
-			renderNode([createOffer()], createNode({ direction: 'toward' }));
-			expect(screen.getByText(/toward Sir Brannon/)).toBeTruthy();
+	describe('damage line', () => {
+		it('reminds the table about damage when a push fell short', () => {
+			renderNode([createOffer({ state: 'taken', movedSpaces: 1, stopped: true })]);
+			expect(
+				screen.getByText(
+					'If an obstacle stopped Goblin Cutthroat, it takes 1d6 bludgeoning damage. If it hit another creature, both creatures split the damage.',
+				),
+			).toBeTruthy();
 		});
 
-		it('shows nothing for any direction', () => {
-			const { container } = renderNode([createOffer()], createNode({ direction: 'any' }));
-			expect(nodeText(container)).toBe('Forced Movement Goblin Cutthroat up to 2 spaces');
-			expect(screen.queryByText(/direction/)).toBeNull();
-		});
-
-		it('shows nothing on a move to the speaker itself', () => {
-			const { container } = renderNode([createSelfOffer()], selfNode({ direction: 'away' }));
-			expect(nodeText(container)).toBe('Free Move - up to 2 spaces');
-		});
-
-		it('shows nothing when the speaker is the only creature that moves', () => {
+		it('shows the damage line for a creature with a TARGETS row too', () => {
 			const { container } = renderNode(
-				[createSelfOffer()],
-				selfNode({ recipient: 'targets', direction: 'away' }),
+				[createOffer({ state: 'taken', movedSpaces: 0, stopped: true })],
+				{ targets: [GOBLIN_TOKEN], targetsShown: true },
 			);
-			expect(nodeText(container)).toBe('Free Move - up to 2 spaces');
-		});
-	});
-
-	describe('difficult terrain', () => {
-		it('gives Forced Movement no tag', () => {
-			renderNode();
-			expect(screen.queryByText(/difficult terrain/)).toBeNull();
-		});
-
-		it('gives a Free Move that follows difficult terrain no tag', () => {
-			renderNode([createSelfOffer()], selfNode());
-			expect(screen.queryByText(/difficult terrain/)).toBeNull();
-		});
-	});
-
-	it('shows no drag hint', () => {
-		const { container } = renderNode();
-		expect(nodeText(container)).not.toMatch(/Drag|ruler/);
-	});
-
-	it('shows the distance when Movement Offers is off', () => {
-		g.game.settings = { get: vi.fn(() => false) };
-		renderNode();
-		expect(screen.getByText('up to 2 spaces')).toBeTruthy();
-	});
-
-	it('uses the singular for one space', () => {
-		renderNode([createOffer({ spaces: 1, state: 'taken', movedSpaces: 1 })]);
-		expect(screen.getByText('up to 1 space')).toBeTruthy();
-		expect(screen.getByText(/- moved 1 of 1 space$/)).toBeTruthy();
-	});
-
-	describe('results', () => {
-		it('reports a taken offer', () => {
-			renderNode([createOffer({ state: 'taken', usedBy: 'player', movedSpaces: 2 })]);
-			expect(screen.getByText(/- moved 2 of 2 spaces$/)).toBeTruthy();
-			expect(screen.queryByText(/shortened by/)).toBeNull();
-			expect(screen.queryByText(/1d6 bludgeoning/)).toBeNull();
-		});
-
-		it('reminds the table about damage when a push was cut short', () => {
-			renderNode([
-				createOffer({ state: 'taken', usedBy: 'player', movedSpaces: 1, stopped: true }),
-			]);
-			expect(screen.getByText(/- moved 1 of 2 spaces, shortened by 1$/)).toBeTruthy();
-			expect(screen.getByText(/1d6 bludgeoning damage for every space shortened/)).toBeTruthy();
-		});
-
-		it('gives no damage reminder when a Free Move was cut short', () => {
-			renderNode(
-				[
-					createSelfOffer({
-						state: 'taken',
-						usedBy: 'player',
-						spaces: 6,
-						movedSpaces: 4,
-						stopped: true,
-					}),
-				],
-				selfNode(),
+			expect(container.querySelector('.nimble-move-node__rows')).toBeNull();
+			expect(container.querySelector('.nimble-move-node__damage')?.textContent).toMatch(
+				/takes 2d6 bludgeoning damage/,
 			);
-			expect(screen.getByText(/moved 4 of 6 spaces, shortened by 2/)).toBeTruthy();
-			expect(screen.queryByText(/1d6 bludgeoning/)).toBeNull();
 		});
 
-		it('says so when the mover went their own way instead', () => {
-			renderNode([createOffer({ state: 'unused', usedBy: 'player' })]);
-			expect(screen.getByText(/- moved on its own$/)).toBeTruthy();
+		it('gives no damage line when a Free Move fell short', () => {
+			const { container } = renderNode(
+				[createSelfOffer({ state: 'taken', spaces: 6, movedSpaces: 4, stopped: true })],
+				{ node: selfNode() },
+			);
+			expect(chipOf(container).dataset.status).toBe('short');
+			expect(container.querySelector('.nimble-move-node__damage')).toBeNull();
+			expect(screen.queryByText(/bludgeoning/)).toBeNull();
 		});
 
-		it('says so when the turn ended before the offer was taken', () => {
-			renderNode([createOffer({ state: 'lapsed' })]);
-			expect(screen.getByText(/- not taken before the turn ended$/)).toBeTruthy();
+		it('gives no damage line for a full push', () => {
+			const { container } = renderNode([createOffer({ state: 'taken', movedSpaces: 2 })]);
+			expect(container.querySelector('.nimble-move-node__damage')).toBeNull();
 		});
-	});
-
-	it('shows only the offers of its own node', () => {
-		renderNode([
-			createOffer(),
-			createOffer({ id: 'node2.tok2', nodeId: 'node2', name: 'Goblin Archer' }),
-		]);
-		expect(screen.getByText('Goblin Cutthroat')).toBeTruthy();
-		expect(screen.queryByText(/Goblin Archer/)).toBeNull();
-	});
-
-	it('says so when the card has no offer for this node', () => {
-		renderNode([]);
-		expect(screen.getByText(/No creature to move/)).toBeTruthy();
 	});
 
 	it('does not list an offer of zero spaces', () => {
 		const { container } = renderNode([
 			createOffer(),
-			createOffer({ id: 'node1.tok2', tokenUuid: 'Scene.s1.Token.tok2', name: 'Ogre', spaces: 0 }),
+			createArcherOffer({ name: 'Ogre', spaces: 0 }),
 		]);
-		expect(container.querySelectorAll('.nimble-move-node__row')).toHaveLength(1);
+		expect(rowNames(container)).toEqual(['Goblin Cutthroat']);
 		expect(screen.queryByText('Ogre')).toBeNull();
 	});
 
 	it('says so when every offer for this node is zero spaces', () => {
 		renderNode([createOffer({ spaces: 0 })]);
-		expect(screen.getByText(/No creature to move/)).toBeTruthy();
+		expect(screen.getByText('No creature to move.')).toBeTruthy();
+	});
+
+	it('shows only the offers of its own node', () => {
+		const { container } = renderNode([
+			createOffer(),
+			createArcherOffer({ id: 'node2.tok2', nodeId: 'node2' }),
+		]);
+		expect(rowNames(container)).toEqual(['Goblin Cutthroat']);
+		expect(screen.queryByText(/Goblin Archer/)).toBeNull();
 	});
 
 	it('carries no button in any state', () => {
@@ -294,6 +401,8 @@ describe('MoveNode', () => {
 			createOffer(),
 			createOffer({ state: 'taken', movedSpaces: 1, stopped: true }),
 			createOffer({ state: 'unused' }),
+			createOffer({ state: 'lapsed' }),
+			createOffer({ conditional: true }),
 		]) {
 			const { unmount } = renderNode([offer]);
 			expect(screen.queryByRole('button')).toBeNull();
