@@ -180,7 +180,7 @@
 				"disabled": false,
 				"id": "coordinated-strike-advance-free-move",
 				"identifier": "",
-				"label": "Advance! (move before the strike)",
+				"label": "Advance!",
 				"predicate": {
 					"subclass": "champion-of-the-vanguard",
 					"level": {

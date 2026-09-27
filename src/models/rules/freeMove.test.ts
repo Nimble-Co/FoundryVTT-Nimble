@@ -289,6 +289,12 @@ describe('FreeMoveRule', () => {
 			expect(offer.reason).toContain('Swift Step');
 		});
 
+		it('titles the card with the rule label when it has one', async () => {
+			await activate(makeRule({ label: 'Advance!' }));
+			expect(lastOffer().name).toBe('Advance!');
+			expect(lastOffer().reason).toContain('Swift Step');
+		});
+
 		it('does not fire when another item is used', async () => {
 			const harness = makeRule();
 			await activate(harness, { uuid: 'Actor.hero-actor.Item.other' });
