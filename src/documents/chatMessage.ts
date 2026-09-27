@@ -990,14 +990,14 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = [...new Set([...existingTargets, ...added])];
 
 		return this.update({
-			system: { targets, movementOffers: this.#movementOffersFor(targets) },
+			system: { targets, movementOffers: this.#movementOffersFor({ targets }) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
-	/** The card's Movement Offers once its targets change. */
-	#movementOffersFor(targets: string[]): MovementOffer[] {
-		const system = this.system as OfferCard['system'];
-		return reconcileMovementOffers({ speaker: this.speaker, system: { ...system, targets } });
+	/** The card's Movement Offers once its targets or its outcome change. */
+	#movementOffersFor(changes: Record<string, unknown>): MovementOffer[] {
+		const system = { ...(this.system as object), ...changes } as OfferCard['system'];
+		return reconcileMovementOffers({ speaker: this.speaker, system });
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */
@@ -1058,13 +1058,14 @@ class NimbleChatMessage extends ChatMessage {
 		);
 		if (!patched) return;
 
+		const outcome = {
+			activation: patched.activation,
+			isCritical: roll.isCritical === true,
+			isMiss: roll.isMiss === true,
+		};
 		await this.update({
 			rolls: patched.rolls,
-			system: {
-				activation: patched.activation,
-				isCritical: roll.isCritical === true,
-				isMiss: roll.isMiss === true,
-			},
+			system: { ...outcome, movementOffers: this.#movementOffersFor(outcome) },
 		} as Record<string, unknown>);
 
 		await showDiceAnimation(roll, this.id ?? undefined);
@@ -1414,7 +1415,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = existingTargets.filter((id) => id !== targetId);
 
 		return this.update({
-			system: { targets, movementOffers: this.#movementOffersFor(targets) },
+			system: { targets, movementOffers: this.#movementOffersFor({ targets }) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
@@ -1561,13 +1562,13 @@ class NimbleChatMessage extends ChatMessage {
 			carried.roll,
 		);
 
+		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
 		await this.update({
 			rolls: rollsSource,
 			system: {
-				activation,
-				isCritical: newRoll.isCritical,
-				isMiss: newRoll.isMiss,
+				...outcome,
 				incomingReactions: this.#dropStaleOutcomeOffers(carried.entries, newRoll),
+				movementOffers: this.#movementOffersFor(outcome),
 			},
 		} as Record<string, unknown>);
 	}
@@ -1966,7 +1967,7 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				targets,
 				incomingReactions: updatedEntries,
-				movementOffers: this.#movementOffersFor(targets),
+				movementOffers: this.#movementOffersFor({ targets }),
 			},
 		} as Record<string, unknown>);
 

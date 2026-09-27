@@ -2588,6 +2588,49 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-hit']);
 	});
 
+	it('drops an open Movement Offer the new outcome no longer makes', async () => {
+		const message = createReactionMessage({ isCritical: true, entries: [createReactionEntry()] });
+		const system = message.system as unknown as {
+			activation: { effects: Array<Record<string, unknown>> };
+			movementOffers?: unknown[];
+		};
+		system.activation.effects[0].on = {
+			criticalHit: [
+				{
+					id: 'push',
+					type: 'move',
+					kind: 'forced',
+					recipient: 'targets',
+					distance: '2',
+					distanceBySize: {},
+					ignoreDifficultTerrain: false,
+					direction: 'away',
+				},
+			],
+		};
+		system.movementOffers = [
+			{
+				id: 'push.victim',
+				nodeId: 'push',
+				tokenUuid: 'Scene.scene.Token.victim',
+				name: 'Victim',
+				kind: 'forced',
+				spaces: 2,
+				ignoreDifficultTerrain: true,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional: false,
+			},
+		];
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const payload = message.update.mock.calls[0][0] as { system: { movementOffers: unknown[] } };
+		expect(payload.system.movementOffers).toEqual([]);
+	});
+
 	it('keeps a spent entry whose outcome no longer matches, for its attribution', async () => {
 		const message = createReactionMessage({
 			isCritical: true,
