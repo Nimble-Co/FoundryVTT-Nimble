@@ -1,11 +1,20 @@
 import type { ArmedMovementOffer } from '#types/movement.js';
-import { movementOfferAction } from '../../utils/movement/movementActions.js';
-import { findArmedMovementOffer } from '../../utils/movement/movementOffers.js';
-import { withMovementOfferTag } from '../../utils/movement/movementOfferTag.js';
+import { movementOfferAction } from '#utils/movement/movementActions.js';
+import { findArmedMovementOffer } from '#utils/movement/movementOffers.js';
+import { tagDragMovements } from '#utils/movement/movementOfferTag.js';
 
 interface ConstrainOptions {
 	ignoreWalls?: boolean;
 	ignoreCost?: boolean;
+}
+
+interface DropOptions {
+	constrainOptions?: object;
+	movement: Record<string, { constrainOptions?: object }>;
+}
+
+interface DropEvent {
+	interactionData: { contexts: Record<string, { token: unknown }> };
 }
 
 /** Set by core when the user picks a movement action for this drag with the cycle key. */
@@ -42,18 +51,22 @@ export class NimbleToken extends foundry.canvas.placeables.Token {
 		return movementOfferAction(offer.kind);
 	}
 
-	/** Names the offer on the drop, so the GM records the Movement against it. */
-	_getDragLeftDropUpdateOptions(): { constrainOptions?: object } {
-		// @ts-expect-error - fvtt-types does not declare the v14 drag option seams
-		const options = super._getDragLeftDropUpdateOptions() as { constrainOptions?: object };
-		const offer = this.#dragOffer();
-		if (!offer) return options;
-		return {
-			...options,
-			constrainOptions: withMovementOfferTag(options.constrainOptions, {
-				messageId: offer.messageId,
-				offerId: offer.id,
-			}),
-		};
+	/**
+	 * Names each dragged token's own offer on the drop, so the GM records every
+	 * Movement against the offer its token carries.
+	 */
+	// @ts-expect-error - fvtt-types declares the v13 return; v14 returns [updates, options]
+	protected override _prepareDragLeftDropUpdates(event: DropEvent): [object[], DropOptions] {
+		const [updates, options] = super._prepareDragLeftDropUpdates(event as never) as unknown as [
+			object[],
+			DropOptions,
+		];
+		const { contexts } = event.interactionData;
+		const movement = tagDragMovements(options.movement, options.constrainOptions, (id) => {
+			const token = contexts[id]?.token;
+			const offer = token instanceof NimbleToken ? token.#dragOffer() : null;
+			return offer ? { messageId: offer.messageId, offerId: offer.id } : null;
+		});
+		return [updates, { ...options, movement }];
 	}
 }

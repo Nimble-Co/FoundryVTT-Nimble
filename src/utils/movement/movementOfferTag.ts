@@ -14,6 +14,26 @@ export function withMovementOfferTag<T extends object>(
 	return { ...(constrainOptions ?? ({} as T)), [MOVEMENT_OFFER_TAG_KEY]: tag };
 }
 
+/**
+ * Core asks only the grabbed token for the drop options of a drag and gives
+ * them to every dragged token. Each token that carries an offer gets its own
+ * tag in its own movement entry; the others keep the shared options.
+ */
+export function tagDragMovements<M extends { constrainOptions?: object }>(
+	movement: Record<string, M>,
+	constrainOptions: object | undefined,
+	tagFor: (id: string) => MovementOfferTag | null,
+): Record<string, M> {
+	return Object.fromEntries(
+		Object.entries(movement).map(([id, entry]) => {
+			const tag = tagFor(id);
+			if (!tag) return [id, entry];
+			const base = entry.constrainOptions ?? constrainOptions;
+			return [id, { ...entry, constrainOptions: withMovementOfferTag(base, tag) }];
+		}),
+	);
+}
+
 export function readMovementOfferTag(constrainOptions: unknown): MovementOfferTag | null {
 	const tag = (constrainOptions as Record<string, unknown> | null | undefined)?.[
 		MOVEMENT_OFFER_TAG_KEY
