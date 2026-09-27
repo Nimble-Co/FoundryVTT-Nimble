@@ -2,7 +2,7 @@ import { getContext, setContext } from 'svelte';
 
 const TARGETS_SECTION_KEY = Symbol('targetsSectionShown');
 
-/** The card sets this at init when it renders a TARGETS section. */
+/** Each card that renders move nodes sets this at init: whether it renders a TARGETS section. */
 export function setTargetsSectionShown(shown: boolean): void {
 	setContext(TARGETS_SECTION_KEY, shown);
 }
