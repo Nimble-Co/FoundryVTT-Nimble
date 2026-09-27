@@ -42,9 +42,8 @@ function makeMovement(overrides: Partial<Parameters<typeof buildMovementRecord>[
 		chain: [],
 		state: 'completed',
 		constrained: false,
-		origin: { x: 0, y: 0 },
 		passed: { waypoints: [waypoint(3, 0, 'm1')] },
-		history: { recorded: { waypoints: [] }, unrecorded: { waypoints: [] } },
+		history: { recorded: { waypoints: [] }, unrecorded: { waypoints: [waypoint(0, 0, 'm1')] } },
 		user,
 		...overrides,
 	};
@@ -71,7 +70,6 @@ describe('buildMovementRecord', () => {
 	it('counts only this chain when earlier history exists', () => {
 		const earlier = [waypoint(0, 0, 'm0'), waypoint(0, 4, 'm0')];
 		const movement = makeMovement({
-			origin: { x: 0, y: 400 },
 			passed: { waypoints: [waypoint(2, 4, 'm1')] },
 			history: { recorded: { waypoints: earlier }, unrecorded: { waypoints: [] } },
 		});
@@ -82,6 +80,7 @@ describe('buildMovementRecord', () => {
 		);
 		expect(record?.spaces).toBe(2);
 		expect(record?.spacesThisTurn).toBe(6);
+		expect(record?.origin).toEqual({ x: 0, y: 400 });
 		expect(record?.path).toEqual([
 			{ x: 0, y: 400 },
 			{ x: 200, y: 400 },
@@ -97,7 +96,7 @@ describe('buildMovementRecord', () => {
 
 	it('has no count this turn when the combat holding the token has not started', () => {
 		const movement = makeMovement();
-		const token = makeToken(movement.passed.waypoints);
+		const token = makeToken([waypoint(0, 0, 'm1'), ...movement.passed.waypoints]);
 		const combats = [combatHolding('t1', 's1', false), combatHolding('t1', 'other-scene')];
 		expect(buildMovementRecord(token, movement, combats)?.spacesThisTurn).toBeNull();
 	});
@@ -109,12 +108,89 @@ describe('buildMovementRecord', () => {
 			passed: { waypoints: [waypoint(4, 0, 'm2')] },
 			history: {
 				recorded: { waypoints: [] },
-				unrecorded: { waypoints: [waypoint(2, 0, 'm1')] },
+				unrecorded: { waypoints: [waypoint(0, 0, 'm1'), waypoint(2, 0, 'm1')] },
 			},
 		});
 		const record = buildMovementRecord(makeToken(), movement);
 		expect(record?.movementId).toBe('m1');
 		expect(record?.spaces).toBe(4);
+	});
+
+	it('starts a drag through a waypoint at the first leg origin', () => {
+		const movement = makeMovement({
+			id: 'm2',
+			chain: ['m1'],
+			passed: { waypoints: [waypoint(3, 3, 'm2')] },
+			history: {
+				recorded: { waypoints: [] },
+				unrecorded: { waypoints: [waypoint(0, 0, 'm1'), waypoint(3, 0, 'm1')] },
+			},
+		});
+		const record = buildMovementRecord(makeToken(), movement);
+		expect(record?.spaces).toBe(6);
+		expect(record?.origin).toEqual({ x: 0, y: 0 });
+		expect(record?.stop).toEqual({ x: 300, y: 300 });
+		expect(record?.path).toEqual([
+			{ x: 0, y: 0 },
+			{ x: 300, y: 0 },
+			{ x: 300, y: 300 },
+		]);
+	});
+
+	it('starts a drag through a waypoint after earlier history at the last history waypoint', () => {
+		const earlier = [waypoint(0, 0, 'm0'), waypoint(0, 4, 'm0')];
+		const movement = makeMovement({
+			id: 'm2',
+			chain: ['m1'],
+			passed: { waypoints: [waypoint(2, 2, 'm2')] },
+			history: {
+				recorded: { waypoints: [...earlier, waypoint(2, 4, 'm1')] },
+				unrecorded: { waypoints: [] },
+			},
+		});
+		const record = buildMovementRecord(makeToken(), movement);
+		expect(record?.spaces).toBe(4);
+		expect(record?.origin).toEqual({ x: 0, y: 400 });
+		expect(record?.path).toEqual([
+			{ x: 0, y: 400 },
+			{ x: 200, y: 400 },
+			{ x: 200, y: 200 },
+		]);
+	});
+
+	it('starts at the position core wrote after a gap in the history', () => {
+		const earlier = [waypoint(0, 0, 'm0'), waypoint(0, 4, 'm0')];
+		const movement = makeMovement({
+			id: 'm2',
+			chain: ['m1'],
+			passed: { waypoints: [waypoint(7, 7, 'm2')] },
+			history: {
+				recorded: { waypoints: earlier },
+				unrecorded: { waypoints: [waypoint(5, 5, 'm1', 'displace'), waypoint(5, 7, 'm1')] },
+			},
+		});
+		const record = buildMovementRecord(makeToken(), movement);
+		expect(record?.spaces).toBe(4);
+		expect(record?.origin).toEqual({ x: 500, y: 500 });
+		expect(record?.path).toEqual([
+			{ x: 500, y: 500 },
+			{ x: 500, y: 700 },
+			{ x: 700, y: 700 },
+		]);
+	});
+
+	it('starts a one-waypoint teleport at the last history waypoint', () => {
+		const earlier = [waypoint(0, 0, 'm0'), waypoint(0, 4, 'm0')];
+		const movement = makeMovement({
+			passed: { waypoints: [waypoint(6, 4, 'm1', 'displace')] },
+			history: { recorded: { waypoints: earlier }, unrecorded: { waypoints: [] } },
+		});
+		const record = buildMovementRecord(makeToken(), movement);
+		expect(record).toMatchObject({ kind: 'teleport', spaces: 0, origin: { x: 0, y: 400 } });
+		expect(record?.path).toEqual([
+			{ x: 0, y: 400 },
+			{ x: 600, y: 400 },
+		]);
 	});
 
 	it('reads the kind from the last waypoint', () => {

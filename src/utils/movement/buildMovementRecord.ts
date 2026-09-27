@@ -14,7 +14,6 @@ interface MovementLike {
 	chain: readonly string[];
 	state: string;
 	constrained: boolean;
-	origin: TokenPosition;
 	passed: { waypoints: readonly Waypoint[] };
 	history: {
 		recorded: { waypoints: readonly Waypoint[] };
@@ -50,6 +49,21 @@ function isInStartedCombat(token: RecordableToken, combats: Iterable<CombatLike>
 	return false;
 }
 
+/**
+ * Index of the chain's origin in the known waypoints. With no earlier history,
+ * or after a gap, core writes the origin as a waypoint of the chain's first
+ * movement; after a gap its action is "displace" and more waypoints of that
+ * movement follow, which a one-waypoint teleport lacks. Else the origin is the
+ * last waypoint before the chain.
+ */
+function findChainOrigin(known: readonly Waypoint[], start: number): number {
+	if (start === 0) return 0;
+	const first = known[start];
+	const next = known[start + 1];
+	const wroteOrigin = first.action === 'displace' && next?.movementId === first.movementId;
+	return wroteOrigin ? start : start - 1;
+}
+
 function toPosition(waypoint: TokenPosition): TokenPosition {
 	const { x, y, elevation, width, height, shape } = waypoint;
 	return { x, y, elevation, width, height, shape };
@@ -75,23 +89,21 @@ export function buildMovementRecord(
 		...movement.history.unrecorded.waypoints,
 		...movement.passed.waypoints,
 	];
-	let start = known.findIndex((waypoint) => chainIds.has(waypoint.movementId ?? ''));
+	const start = known.findIndex((waypoint) => chainIds.has(waypoint.movementId ?? ''));
 	if (start === -1) return null;
-	if (start === 0) {
-		known.unshift({ ...movement.origin, action: known[0].action, movementId: null });
-		start = 1;
-	}
+	const originIndex = findChainOrigin(known, start);
+	const origin = known[originIndex];
 
 	const legs = measureWaypointSpaces(token, known);
 	let spaces = 0;
-	for (let index = start - 1; index < legs.length; index++) {
+	for (let index = originIndex; index < legs.length; index++) {
 		const destination = known[index + 1];
 		if (!chainIds.has(destination.movementId ?? '')) continue;
 		if (getMovementKind(destination.action) === 'teleport') continue;
 		spaces += legs[index];
 	}
 
-	const path = token.getCompleteMovementPath(known.slice(start - 1)).map(toPosition);
+	const path = token.getCompleteMovementPath(known.slice(originIndex)).map(toPosition);
 	const inStartedCombat = isInStartedCombat(token, combats);
 
 	return {
@@ -100,7 +112,7 @@ export function buildMovementRecord(
 		movementId: movement.chain[0] ?? movement.id,
 		kind: getMovementKind(lastPassed.action),
 		action: lastPassed.action,
-		origin: toPosition(movement.origin),
+		origin: toPosition(origin),
 		stop: toPosition(lastPassed),
 		path,
 		spaces,
