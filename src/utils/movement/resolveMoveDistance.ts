@@ -1,9 +1,5 @@
 import type { MoveNode } from '#types/effectTree.js';
-
-interface RollDataActor {
-	getRollData(): Record<string, unknown>;
-	system?: { attributes?: { movement?: { walk?: number }; sizeCategory?: string } };
-}
+import type { OfferActor } from '#types/movement.js';
 
 /**
  * The offered distance in spaces for one recipient. The formula reads the
@@ -12,8 +8,8 @@ interface RollDataActor {
  */
 export function resolveMoveDistance(
 	node: Pick<MoveNode, 'distance' | 'distanceBySize'>,
-	source: RollDataActor,
-	recipient: RollDataActor,
+	source: OfferActor,
+	recipient: OfferActor,
 ): number {
 	const size = recipient.system?.attributes?.sizeCategory ?? '';
 	const formula = node.distanceBySize?.[size]?.trim() || node.distance;

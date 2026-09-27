@@ -3,7 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
-import type { MovementOffer } from '#types/movement.js';
+import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
 import {
@@ -23,7 +23,7 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
-import { type OfferCard, reconcileMovementOffers } from '#utils/movement/movementOffers.js';
+import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';

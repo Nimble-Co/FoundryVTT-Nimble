@@ -1,11 +1,7 @@
 import type { MoveNodeProps } from '#types/components/MoveNode.d.ts';
-import type { MovementOffer } from '#types/movement.js';
+import type { MovementOffer, OfferCard } from '#types/movement.js';
 import localize from '#utils/localize.ts';
-import {
-	movementOfferOutcome,
-	type OfferCard,
-	speakerTokenUuid,
-} from '#utils/movement/movementOffers.js';
+import { movementOfferOutcome, speakerTokenUuid } from '#utils/movement/movementOffers.js';
 
 /** The parts of the chat card that the move node reads. */
 export interface MoveNodeCard {

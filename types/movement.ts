@@ -1,3 +1,5 @@
+import type { EffectNode } from '#types/effectTree.js';
+
 /**
  * How the rules read a Movement. Regular and free are Regular Movement; forced
  * is Forced Movement; teleport is not Movement at all and never counts.
@@ -128,4 +130,31 @@ export interface ReachChange {
 	insideAtStop: boolean;
 	/** A step of the path overlapped the observer's footprint. */
 	passedThrough: boolean;
+}
+
+/** The slice of an actor that works out a Movement Offer's distance. */
+export interface OfferActor {
+	getRollData(): Record<string, unknown>;
+	system?: { attributes?: { movement?: { walk?: number }; sizeCategory?: string } };
+}
+
+/** The parts of a chat card that decide its Movement Offers. */
+export interface OfferCard {
+	id?: string | null;
+	speaker?: { scene?: string | null; token?: string | null; actor?: string | null };
+	system?: {
+		targets?: string[];
+		isCritical?: boolean;
+		isMiss?: boolean;
+		activation?: { effects?: EffectNode[] };
+		movementOffers?: MovementOffer[];
+	};
+}
+
+/** The slice of a core token ruler waypoint that marking a drag past an offer reads and marks. */
+export interface OfferRulerWaypoint {
+	stage: string;
+	action: string;
+	unreachable: boolean;
+	measurement: { distance: number; cost: number };
 }

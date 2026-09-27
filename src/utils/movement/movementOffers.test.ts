@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { MoveNode } from '#types/effectTree.js';
-import type { MovementOffer } from '#types/movement.js';
+import type { MovementOffer, OfferCard } from '#types/movement.js';
 import {
 	findArmedMovementOffer,
 	lapseMovementOffers,
 	movementOfferOutcome,
-	type OfferCard,
 	type OfferToken,
 	reconcileMovementOffers,
 	settleMovementOffer,

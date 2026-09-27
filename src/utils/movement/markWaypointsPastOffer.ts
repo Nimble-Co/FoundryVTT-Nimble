@@ -1,13 +1,5 @@
-import type { MovementOffer } from '#types/movement.js';
+import type { MovementOffer, OfferRulerWaypoint } from '#types/movement.js';
 import { movementOfferAction } from './movementActions.js';
-
-/** The slice of a core token ruler waypoint this reads and marks. */
-export interface OfferRulerWaypoint {
-	stage: string;
-	action: string;
-	unreachable: boolean;
-	measurement: { distance: number; cost: number };
-}
 
 /**
  * Marks the part of a planned drag that goes past a Movement Offer, so the ruler

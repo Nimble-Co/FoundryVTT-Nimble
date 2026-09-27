@@ -1,30 +1,18 @@
 import type { EffectNode, MoveNode } from '#types/effectTree.js';
-import type { ArmedMovementOffer, MovementOffer, MovementOfferState } from '#types/movement.js';
+import type {
+	ArmedMovementOffer,
+	MovementOffer,
+	MovementOfferState,
+	OfferActor,
+	OfferCard,
+} from '#types/movement.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { resolveMoveDistance } from './resolveMoveDistance.js';
 
-export interface OfferActor {
-	getRollData(): Record<string, unknown>;
-	system?: { attributes?: { movement?: { walk?: number }; sizeCategory?: string } };
-}
-
 export interface OfferToken {
 	name: string;
 	actor?: OfferActor | null;
-}
-
-/** The parts of a chat card that decide its Movement Offers. */
-export interface OfferCard {
-	id?: string | null;
-	speaker?: { scene?: string | null; token?: string | null; actor?: string | null };
-	system?: {
-		targets?: string[];
-		isCritical?: boolean;
-		isMiss?: boolean;
-		activation?: { effects?: EffectNode[] };
-		movementOffers?: MovementOffer[];
-	};
 }
 
 export interface OfferLookups {

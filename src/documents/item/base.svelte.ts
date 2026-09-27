@@ -1,16 +1,13 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { OfferActor, OfferCard } from '#types/movement.js';
+import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { applyCasterConcentration, type ConcentrationSource } from '../../utils/concentration.js';
-import {
-	type OfferActor,
-	type OfferCard,
-	reconcileMovementOffers,
-} from '../../utils/movement/movementOffers.js';
 
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
