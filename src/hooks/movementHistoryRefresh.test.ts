@@ -30,8 +30,12 @@ function createActor(): ActorStub {
 	return { reset: vi.fn(), render: vi.fn() };
 }
 
-function createCombat(started: boolean, actors: Array<ActorStub | null>) {
-	return { started, combatants: actors.map((actor) => ({ actor })) };
+function createCombat(started: boolean, actors: Array<ActorStub | null>, previousRound = 0) {
+	return {
+		started,
+		previous: { round: previousRound },
+		combatants: actors.map((actor) => ({ actor })),
+	};
 }
 
 function expectRefreshed(actor: ActorStub, times = 1): void {
@@ -68,11 +72,11 @@ describe('registerMovementHistoryRefresh', () => {
 		expectRefreshed(actor);
 	});
 
-	it('re-prepares each combatant actor once when the combat round changes', async () => {
+	it('re-prepares each combatant actor once when the combat starts', async () => {
 		const hooks = await register();
 		const shared = createActor();
 		const other = createActor();
-		const combat = createCombat(true, [shared, shared, other, null]);
+		const combat = createCombat(true, [shared, shared, other, null], 0);
 
 		hooks.get('updateCombat')?.(combat, { round: 1, turn: 0 });
 
@@ -84,9 +88,19 @@ describe('registerMovementHistoryRefresh', () => {
 		const hooks = await register();
 		const actor = createActor();
 
-		hooks.get('updateCombat')?.(createCombat(false, [actor]), { round: 0 });
+		hooks.get('updateCombat')?.(createCombat(false, [actor], 1), { round: 0 });
 
 		expectRefreshed(actor);
+	});
+
+	it('does nothing when the round of a started combat changes', async () => {
+		const hooks = await register();
+		const actor = createActor();
+
+		hooks.get('updateCombat')?.(createCombat(true, [actor], 1), { round: 2, turn: 0 });
+		hooks.get('updateCombat')?.(createCombat(true, [actor], 3), { round: 2, turn: 4 });
+
+		expectNotRefreshed(actor);
 	});
 
 	it('does nothing when a combat update does not change the round', async () => {

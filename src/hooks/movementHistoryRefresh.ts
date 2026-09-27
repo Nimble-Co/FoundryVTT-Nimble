@@ -40,10 +40,13 @@ export default function registerMovementHistoryRefresh(): void {
 		refreshActor(tokenDocument.actor);
 	});
 
-	// A combat is started while its round is above 0.
+	// Each turn start refreshes its own actor through `recordToken`, so a round
+	// change refreshes them all only when it starts or ends the combat.
 	Hooks.on('updateCombat', (combat, changed) => {
 		if (!isMovementTrackingAutomationEnabled()) return;
 		if (!('round' in changed)) return;
+		const wasStarted = (combat.previous?.round ?? 0) > 0;
+		if (wasStarted === combat.started) return;
 		refreshCombatantActors(combat);
 	});
 
