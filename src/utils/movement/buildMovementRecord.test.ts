@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildMovementRecord } from './buildMovementRecord.js';
 import { FORCED_MOVEMENT_ACTION } from './movementActions.js';
+import { MOVEMENT_OFFER_TAG_KEY } from './movementOfferTag.js';
 
 const GRID = 100;
 const user = { id: 'u1' } as unknown as User;
@@ -214,7 +215,7 @@ describe('buildMovementRecord', () => {
 
 	it('names the Movement Offer the drag was made under, and none otherwise', () => {
 		const tag = { messageId: 'card', offerId: 'n1.tok' };
-		const constrainOptions = { ignoreWalls: false, nimbleMovementOffer: tag };
+		const constrainOptions = { ignoreWalls: false, [MOVEMENT_OFFER_TAG_KEY]: tag };
 		expect(buildMovementRecord(makeToken(), makeMovement({ constrainOptions }))?.offer).toEqual(
 			tag,
 		);

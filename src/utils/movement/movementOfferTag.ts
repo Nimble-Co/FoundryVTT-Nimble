@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { MovementOfferTag } from '#types/movement.js';
 
 /**
@@ -5,12 +6,12 @@ import type { MovementOfferTag } from '#types/movement.js';
  * copies those options to every client with the Movement and reads only the
  * keys it knows, so the offer's name reaches the GM that records it.
  */
-export const MOVEMENT_OFFER_TAG_KEY = 'nimbleMovementOffer';
+export const MOVEMENT_OFFER_TAG_KEY = `${SYSTEM_ID}MovementOffer`;
 
 export function withMovementOfferTag<T extends object>(
 	constrainOptions: T | undefined,
 	tag: MovementOfferTag,
-): T & { [MOVEMENT_OFFER_TAG_KEY]: MovementOfferTag } {
+): T & Record<string, unknown> {
 	return { ...(constrainOptions ?? ({} as T)), [MOVEMENT_OFFER_TAG_KEY]: tag };
 }
 
