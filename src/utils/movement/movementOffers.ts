@@ -103,8 +103,10 @@ export function movementOfferId(nodeId: string, tokenUuid: string): string {
 /**
  * The card's Movement Offers once its recipients are set or changed. Each offer
  * is worked out once, when it is first made, so a later change to either
- * creature does not move the number on the card. A settled offer stays as the
- * record of what happened; an open one goes with its recipient.
+ * creature does not move the number on the card. An offer of zero spaces
+ * stays only as that record: no token carries it, the card does not list it,
+ * and it never lapses. A settled offer stays as the record of what happened; an
+ * open one goes with its recipient.
  */
 export function reconcileMovementOffers(
 	card: OfferCard,
@@ -230,7 +232,7 @@ export function lapseMovementOffers(
 	applies: (offer: MovementOffer) => boolean = () => true,
 ): MovementOffer[] | null {
 	const lapses = (offer: MovementOffer) =>
-		offer.state === 'open' && !offer.conditional && applies(offer);
+		offer.state === 'open' && !offer.conditional && offer.spaces > 0 && applies(offer);
 	if (!offers.some(lapses)) return null;
 	return offers.map((offer) => (lapses(offer) ? { ...offer, state: 'lapsed' } : offer));
 }

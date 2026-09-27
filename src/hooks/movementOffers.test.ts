@@ -19,7 +19,7 @@ const g = globalThis as unknown as { game: GameStub; Hooks: unknown };
 const previous = { game: g.game, Hooks: g.Hooks };
 
 function offer(id: string, tokenUuid: string, state: MovementOffer['state'] = 'open') {
-	return { id, tokenUuid, state } as MovementOffer;
+	return { id, tokenUuid, state, spaces: 2 } as MovementOffer;
 }
 
 let update: ReturnType<typeof vi.fn>;

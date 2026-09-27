@@ -159,6 +159,20 @@ describe('reconcileMovementOffers', () => {
 		expect(reconcileMovementOffers(card(undefined, ['Scene.s.Token.gone']), lookups)).toEqual([]);
 	});
 
+	it('keeps an offer of zero spaces, so a later change to the creature does not make one', () => {
+		const zero = card([moveNode({ distance: '@speed - 5' })]);
+		const [made] = reconcileMovementOffers(zero, lookups);
+		expect(made).toEqual(offer({ spaces: 0 }));
+
+		const faster = {
+			...lookups,
+			resolveToken: (uuid: string) =>
+				uuid === 'Scene.s.Token.gob' ? { ...goblin, actor: makeActor(-1, 9) } : null,
+		};
+		const again = card([moveNode({ distance: '@speed - 5' })], undefined, [made]);
+		expect(reconcileMovementOffers(again, faster)).toEqual([made]);
+	});
+
 	it('finds a move node nested under another effect', () => {
 		const nested = [{ id: 'd', type: 'damage', on: { hit: [moveNode()] } }];
 		expect(reconcileMovementOffers(card(nested), lookups)).toEqual([offer()]);
@@ -347,6 +361,7 @@ describe('lapseMovementOffers', () => {
 	it('is nothing to write when no open offer lapses', () => {
 		expect(lapseMovementOffers([offer({ state: 'unused' })])).toBeNull();
 		expect(lapseMovementOffers([offer({ conditional: true })])).toBeNull();
+		expect(lapseMovementOffers([offer({ spaces: 0 })])).toBeNull();
 		expect(lapseMovementOffers([])).toBeNull();
 	});
 });
