@@ -177,7 +177,8 @@
 				"spaces": "{count} spaces",
 				"movement": "{mover} moved {spaces}.",
 				"movementThisTurn": "{mover} moved {spaces}, {spacesThisTurn} this turn.",
-				"unknownMover": "A creature"
+				"unknownMover": "A creature",
+				"useFailed": "Could not use {name}."
 			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",

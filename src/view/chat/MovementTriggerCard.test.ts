@@ -205,7 +205,7 @@ describe('MovementTriggerCard', () => {
 		await vi.waitFor(() => expect(button.disabled).toBe(false));
 	});
 
-	it('logs the failure and enables the button again when using the item fails', async () => {
+	it('logs the failure, tells the user, and enables the button again when using the item fails', async () => {
 		const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const failure = new Error('failed');
 		activateItem.mockImplementationOnce(async () => {
@@ -218,6 +218,7 @@ describe('MovementTriggerCard', () => {
 		await vi.waitFor(() => expect(button.disabled).toBe(false));
 		expect(activateItem).toHaveBeenCalledTimes(1);
 		expect(logError).toHaveBeenCalledWith(expect.any(String), failure);
+		expect(ui.notifications?.error).toHaveBeenCalledWith('Could not use Quick Strike.');
 		logError.mockRestore();
 	});
 });
