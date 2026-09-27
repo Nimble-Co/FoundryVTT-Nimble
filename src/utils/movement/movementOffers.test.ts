@@ -3,6 +3,7 @@ import type { MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import {
 	findArmedMovementOffer,
+	forgetArmedMovementOffers,
 	lapseMovementOffers,
 	movementOfferOutcome,
 	type OfferToken,
@@ -300,6 +301,37 @@ describe('findArmedMovementOffer', () => {
 		expect(findArmedMovementOffer('Scene.s.Token.hero', { messages, enabled: true })).toBeNull();
 		expect(findArmedMovementOffer('Scene.s.Token.ogre', { messages, enabled: true })).toBeNull();
 		expect(findArmedMovementOffer('Scene.s.Token.gob', { messages, enabled: false })).toBeNull();
+	});
+
+	it('reads the chat log once until a chat message changes', () => {
+		const g = globalThis as unknown as { game: { messages?: unknown } };
+		const saved = g.game.messages;
+		let reads = 0;
+		let contents = [message('m1', [offer()])];
+		g.game.messages = {
+			get contents() {
+				reads++;
+				return contents;
+			},
+		};
+		try {
+			forgetArmedMovementOffers();
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m1');
+			contents = [message('m2', [offer()])];
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m1');
+			expect(findArmedMovementOffer('Scene.s.Token.hero', { enabled: true })).toBeNull();
+			expect(reads).toBe(1);
+
+			forgetArmedMovementOffers();
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m2');
+			expect(reads).toBe(2);
+
+			const first = findArmedMovementOffer('Scene.s.Token.gob', { enabled: true });
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })).not.toBe(first);
+		} finally {
+			g.game.messages = saved;
+			forgetArmedMovementOffers();
+		}
 	});
 });
 

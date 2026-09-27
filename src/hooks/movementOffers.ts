@@ -6,6 +6,7 @@ import {
 	type OfferCombatScenes,
 	untrackOpenMovementOffers,
 } from '#utils/movement/lapseOpenMovementOffers.js';
+import { forgetArmedMovementOffers } from '#utils/movement/movementOffers.js';
 import { resolveArmedMovementOffer } from '#utils/movement/resolveArmedMovementOffer.js';
 import { AUTOMATION_SETTING_KEYS } from '../settings/automationSettings.js';
 
@@ -65,6 +66,21 @@ function onOfferGateSettingChanged(setting: ChangedSetting, created: boolean): v
 	if (!setting.key || !OFFER_GATE_SETTING_KEYS.has(setting.key)) return;
 	if (created && setting.value === setting.config?.default) return;
 	void untrackOpenMovementOffers();
+}
+
+let didRegisterIndex = false;
+
+/**
+ * Makes each chat message change drop the carried offers read from the chat
+ * log. Call at load: a token ruler can read them on the first canvas draw,
+ * before `ready`.
+ */
+export function registerArmedMovementOfferIndex(): void {
+	if (didRegisterIndex) return;
+	didRegisterIndex = true;
+	Hooks.on('createChatMessage', forgetArmedMovementOffers);
+	Hooks.on('updateChatMessage', forgetArmedMovementOffers);
+	Hooks.on('deleteChatMessage', forgetArmedMovementOffers);
 }
 
 let didRegister = false;
