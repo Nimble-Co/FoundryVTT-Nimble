@@ -240,6 +240,11 @@ describe('MoveNode', () => {
 			expect(name?.getAttribute('data-tooltip')).toBe('Goblin Cutthroat');
 		});
 
+		it('gives the image no alt text, so a screen reader reads the name once', () => {
+			const { container } = renderNode();
+			expect(container.querySelector('.nimble-move-node__img')?.getAttribute('alt')).toBe('');
+		});
+
 		it('shows the token image, then the actor image, then the default image', () => {
 			g.fromUuidSync = vi.fn((uuid: string) => {
 				if (uuid === GOBLIN_TOKEN) return { texture: { src: 'goblin.webp' } };
