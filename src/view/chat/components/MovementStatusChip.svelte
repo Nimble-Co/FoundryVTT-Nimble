@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { MovementChip } from './moveNodeText.ts';
+	import type { MovementStatusChipProps } from '#types/components/MovementStatusChip.d.ts';
 
-	let { chip }: { chip: MovementChip } = $props();
+	let { chip }: MovementStatusChipProps = $props();
 </script>
 
 <span

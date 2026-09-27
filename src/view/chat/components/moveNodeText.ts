@@ -1,3 +1,4 @@
+import type { MovementChip, MovementStatus } from '#types/components/MovementStatusChip.d.ts';
 import type { EffectNode, MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import localize from '#utils/localize.ts';
@@ -18,30 +19,6 @@ interface MoveTextCardSystem {
 	actorName?: string;
 	movementOffers?: MovementOffer[];
 	activation?: { effects?: EffectNode[] };
-}
-
-/**
- * What came of one offer, as the card tells it. `partial` is a Free Move that
- * stopped short by choice; `short` is a push that covered fewer spaces, or a
- * Free Move whose path was cut short. `untracked` is a move no drag settles,
- * because tracking is off or a toggle changed while it waited.
- */
-export type MovementStatus =
-	| 'open'
-	| 'taken'
-	| 'partial'
-	| 'short'
-	| 'unused'
-	| 'lapsed'
-	| 'untracked'
-	| 'conditional';
-
-export interface MovementChip {
-	key: string;
-	status: MovementStatus;
-	icon: string;
-	label: string;
-	tooltip: string;
 }
 
 export interface MoveNodeText {
@@ -73,7 +50,7 @@ const STATUS_ICONS: Record<MovementStatus, string> = {
 	conditional: 'fa-dice-d20',
 };
 
-export function movementStatus(offer: MovementOffer, tracking: boolean): MovementStatus {
+function movementStatus(offer: MovementOffer, tracking: boolean): MovementStatus {
 	if (offer.conditional) return 'conditional';
 	const outcome = movementOfferOutcome(offer);
 	switch (outcome.state) {
