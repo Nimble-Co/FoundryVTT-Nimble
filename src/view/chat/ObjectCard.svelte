@@ -12,6 +12,7 @@
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
@@ -38,6 +39,7 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
+	setTargetsSectionShown(true);
 </script>
 
 <CardHeader {messageDocument} />

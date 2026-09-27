@@ -40,7 +40,7 @@ export function speakerTokenUuid(card: Pick<OfferCard, 'speaker'>): string | nul
 
 const ATTACK_OUTCOMES = new Set(['criticalHit', 'hit', 'miss']);
 
-function isSaveOutcome(context: string): boolean {
+export function isSaveOutcome(context: string): boolean {
 	return context === 'failedSave' || context === 'passedSave' || context.startsWith('failedSaveBy');
 }
 

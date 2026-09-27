@@ -124,17 +124,50 @@
 				"spaces": "{count} spaces",
 				"upTo": "up to {distance}",
 				"directions": {
-					"away": "away from {source}",
-					"toward": "toward {source}"
+					"away": " away from {source}",
+					"toward": " toward {source}",
+					"any": " in any direction"
 				},
-				"ignoresDifficultTerrain": "ignores difficult terrain",
-				"results": {
-					"taken": "moved {moved} of {offered}",
-					"shortened": "moved {moved} of {offered}, shortened by {short}",
-					"unused": "moved on its own",
-					"lapsed": "not taken before the turn ended"
+				"verbs": {
+					"away": { "past": "Pushed", "passive": "pushed" },
+					"toward": { "past": "Pulled", "passive": "pulled" },
+					"any": { "past": "Moved", "passive": "moved" }
 				},
-				"forcedShortenedHint": "If an obstacle stopped it: 1d6 bludgeoning damage for every space shortened. If it hit another creature, both split the damage.",
+				"ignoringDifficultTerrain": ", ignoring difficult terrain",
+				"summary": {
+					"forced": "{verb} {distance}{direction}.",
+					"forcedEach": "{verb}{direction}. Each creature shows its spaces.",
+					"forcedNone": "{verb}{direction}.",
+					"free": "Can move {distance}{direction} for free{terrain}.",
+					"freeEach": "Can move{direction} for free{terrain}. Each creature shows its spaces.",
+					"freeNone": "Can move{direction} for free{terrain}."
+				},
+				"status": {
+					"forced": {
+						"open": "Waiting to be {passive} {distance}{direction}.",
+						"taken": "{verb} the full {offered}.",
+						"partial": "{verb} {moved} of {offered}.",
+						"short": "{verb} {moved} of {offered}.",
+						"unused": "Not {passive}. It moved another way instead.",
+						"lapsed": "Not {passive}. The turn ended first.",
+						"failedSave": "{verb} {distance}{direction} if it fails the save.",
+						"passedSave": "{verb} {distance}{direction} if it passes the save.",
+						"otherSave": "{verb} {distance}{direction}, depending on the save."
+					},
+					"free": {
+						"open": "Can move {distance}{direction} for free{terrain}.",
+						"taken": "Moved the full {offered} for free.",
+						"partial": "Moved {moved} of {offered} for free.",
+						"short": "Moved {moved} of {offered} for free before something blocked the path.",
+						"unused": "Did not use the Free Move. It moved another way instead.",
+						"lapsed": "Did not use the Free Move. The turn ended first.",
+						"failedSave": "Can move {distance}{direction} for free if it fails the save.",
+						"passedSave": "Can move {distance}{direction} for free if it passes the save.",
+						"otherSave": "Can move {distance}{direction} for free, depending on the save."
+					}
+				},
+				"chip": { "notMoved": "Not {passive}", "notUsed": "Not used" },
+				"obstacleDamage": "If an obstacle stopped {name}, it takes {dice}d6 bludgeoning damage. If it hit another creature, both creatures split the damage.",
 				"noRecipient": "No creature to move."
 			},
 			"grantedActionOffers": {

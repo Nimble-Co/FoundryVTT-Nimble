@@ -6,8 +6,11 @@
 	} from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
+	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
+	import MovementStatusChip from './MovementStatusChip.svelte';
+	import { movementChipsFor } from './moveNodeText.ts';
 
 	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
 
@@ -112,6 +115,8 @@
 	}
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
+	// Foundry mounts a new card on each message update, so one read is enough.
+	const tracking = isMovementOffersAutomationEnabled();
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
 </script>
 
@@ -152,8 +157,10 @@
 						? messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid)
 						: null}
 				{@const damageBadges = getDamageBadges(breakdown)}
+				{@const movementChips = movementChipsFor(messageDocument, token?.uuid ?? '', { tracking })}
 				<li
 					class="nimble-card"
+					class:nimble-target--moves={movementChips.length > 0}
 					onmouseenter={() => tokenHoverIn(token.object)}
 					onmouseleave={() => tokenHoverOut(token.object)}
 				>
@@ -186,6 +193,14 @@
 								>
 									{badge.abbreviation}
 								</span>
+							{/each}
+						</span>
+					{/if}
+
+					{#if movementChips.length > 0}
+						<span class="nimble-target-movement">
+							{#each movementChips as chip (chip.key)}
+								<MovementStatusChip {chip} />
 							{/each}
 						</span>
 					{/if}
@@ -264,6 +279,13 @@
 		gap: 0.125rem;
 	}
 
+	.nimble-target-movement {
+		display: flex;
+		grid-area: move;
+		align-self: center;
+		gap: 0.125rem;
+	}
+
 	.nimble-target-badge {
 		padding: 0 0.25rem;
 		font-size: var(--nimble-xs-text);
@@ -317,5 +339,11 @@
 		list-style: none;
 		padding: 0;
 		margin: 0;
+	}
+
+	// Only a row with chips gets the extra column, so the others keep their gaps.
+	.nimble-target-list > .nimble-target--moves {
+		--nimble-card-content-grid: 'img title badges move armor button';
+		--nimble-card-column-dimensions: 1.75rem 1fr auto auto 1rem 2rem;
 	}
 </style>

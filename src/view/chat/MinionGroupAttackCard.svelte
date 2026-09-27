@@ -6,6 +6,7 @@
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import Targets from './components/Targets.svelte';
+	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	interface MinionGroupAttackRow {
 		memberCombatantId?: string;
@@ -115,6 +116,7 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
+	setTargetsSectionShown(true);
 </script>
 
 <CardHeader {messageDocument} />
