@@ -72,6 +72,26 @@ describe('resolveMoveDistance', () => {
 		expect(resolveMoveDistance(node, source, makeActor('large', 7, -1))).toBe(3);
 	});
 
+	it('keeps the sign of a negative term', () => {
+		const weak = makeActor('medium', 4, -1);
+		expect(
+			resolveMoveDistance(
+				{ distance: '@abilities.strength.mod', distanceBySize: {} },
+				weak,
+				recipient,
+			),
+		).toBe(0);
+		expect(resolveMoveDistance({ distance: '4 + -1', distanceBySize: {} }, source, recipient)).toBe(
+			3,
+		);
+	});
+
+	it('floors the whole formula, not each term', () => {
+		expect(
+			resolveMoveDistance({ distance: '6 / 4 + 6 / 4', distanceBySize: {} }, source, recipient),
+		).toBe(3);
+	});
+
 	it('never offers an unreadable or negative distance', () => {
 		expect(
 			resolveMoveDistance({ distance: 'nonsense', distanceBySize: {} }, source, recipient),
