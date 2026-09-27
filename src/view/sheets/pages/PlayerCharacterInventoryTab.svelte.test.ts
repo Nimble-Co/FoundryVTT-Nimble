@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PlayerCharacterInventoryTabHarness from '../../../../tests/harnesses/PlayerCharacterInventoryTabHarness.svelte';
 
@@ -64,6 +64,7 @@ function renderWithContainers(
 		onDropItem?: ReturnType<typeof vi.fn>;
 		deleteItem?: ReturnType<typeof vi.fn>;
 		confirmDeleteWithContents?: ReturnType<typeof vi.fn>;
+		activateItem?: ReturnType<typeof vi.fn>;
 	} = {},
 	containerCapacityUsage: Record<string, number> = {},
 ) {
@@ -74,6 +75,7 @@ function renderWithContainers(
 	const onDropItem = handlers.onDropItem ?? vi.fn(() => []);
 	const deleteItem = handlers.deleteItem ?? vi.fn();
 	const confirmDeleteWithContents = handlers.confirmDeleteWithContents ?? vi.fn(() => true);
+	const activateItem = handlers.activateItem ?? vi.fn();
 
 	const result = render(PlayerCharacterInventoryTabHarness, {
 		props: {
@@ -86,6 +88,7 @@ function renderWithContainers(
 			onDropItem,
 			deleteItem,
 			confirmDeleteWithContents,
+			activateItem,
 		},
 	});
 
@@ -98,6 +101,7 @@ function renderWithContainers(
 		onDropItem,
 		deleteItem,
 		confirmDeleteWithContents,
+		activateItem,
 	};
 }
 
@@ -105,6 +109,30 @@ function getRow(container: HTMLElement, itemId: string): HTMLElement {
 	const row = container.querySelector<HTMLElement>(`[data-item-id="${itemId}"]`);
 	if (!row) throw new Error(`No inventory row rendered for ${itemId}`);
 	return row;
+}
+
+type ContainerPromptOptions = { content: string };
+
+function stubContainerPrompt(chosenId: string) {
+	const prompt = vi.fn<(options: ContainerPromptOptions) => Promise<string>>(() =>
+		Promise.resolve(chosenId),
+	);
+	(foundry.applications.api.DialogV2 as unknown as { prompt: unknown }).prompt = prompt;
+
+	return prompt;
+}
+
+function clearContainerPrompt(): void {
+	delete (foundry.applications.api.DialogV2 as unknown as { prompt?: unknown }).prompt;
+}
+
+function search(container: HTMLElement, term: string): Promise<boolean> {
+	const searchField = container.querySelector<HTMLInputElement>('input[type="search"]');
+	if (!searchField) throw new Error('No search field rendered');
+
+	searchField.value = term;
+
+	return fireEvent.keyUp(searchField);
 }
 
 function mockDraggedItem(uuid: string): void {
@@ -145,11 +173,7 @@ describe('PlayerCharacterInventoryTab containers', () => {
 	it('shows a stored object on its own when the search hides its container', async () => {
 		const { container } = renderWithContainers([bagOfHolding, storedPlateArmor]);
 
-		const searchField = container.querySelector<HTMLInputElement>('input[type="search"]');
-		if (!searchField) throw new Error('No search field rendered');
-
-		searchField.value = 'Plate';
-		await fireEvent.keyUp(searchField);
+		await search(container, 'Plate');
 
 		expect(container.querySelector('[data-item-id="bag"]')).toBeNull();
 		expect(container.querySelector('[data-item-id="armor"]')).not.toBeNull();
@@ -427,5 +451,107 @@ describe('PlayerCharacterInventoryTab drops that are not items', () => {
 
 		expect(drop.cancelBubble).toBe(false);
 		expect(removeItemFromContainer).not.toHaveBeenCalled();
+	});
+});
+
+describe('PlayerCharacterInventoryTab without a mouse', () => {
+	afterEach(clearContainerPrompt);
+
+	it('activates an item from a real button rather than a clickable row', async () => {
+		const { container, activateItem } = renderWithContainers([plateArmor]);
+
+		const name = getRow(container, 'armor').querySelector('.nimble-document-card__name-button');
+
+		expect(name?.tagName).toBe('BUTTON');
+
+		await fireEvent.click(name as HTMLElement);
+
+		expect(activateItem).toHaveBeenCalledWith('armor');
+		expect(activateItem).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not nest interactive rows inside a button', () => {
+		const { container } = renderWithContainers([bagOfHolding, storedPlateArmor]);
+
+		expect(getRow(container, 'bag').getAttribute('role')).toBeNull();
+	});
+
+	it('takes a stored object out without a drag', async () => {
+		const { container, removeItemFromContainer } = renderWithContainers([
+			bagOfHolding,
+			storedPlateArmor,
+		]);
+
+		await fireEvent.click(
+			getRow(container, 'armor').querySelector('[aria-label^="Take"]') as HTMLElement,
+		);
+
+		expect(removeItemFromContainer).toHaveBeenCalledWith('armor');
+	});
+
+	it('stores a carried object without a drag when one container is carried', async () => {
+		const { container, storeItemInContainer } = renderWithContainers([bagOfHolding, plateArmor]);
+
+		await fireEvent.click(
+			getRow(container, 'armor').querySelector('[aria-label^="Store"]') as HTMLElement,
+		);
+
+		expect(storeItemInContainer).toHaveBeenCalledWith('armor', 'bag');
+	});
+
+	it('asks which container when more than one is carried', async () => {
+		const secondBag = { ...bagOfHolding, _id: 'sack', name: 'Large Sack' };
+		const { container, storeItemInContainer } = renderWithContainers([
+			bagOfHolding,
+			secondBag,
+			plateArmor,
+		]);
+		const prompt = stubContainerPrompt('sack');
+
+		await fireEvent.click(
+			getRow(container, 'armor').querySelector('[aria-label^="Store"]') as HTMLElement,
+		);
+
+		const { content } = prompt.mock.calls[0][0];
+		expect(content).toContain('value="bag"');
+		expect(content).toContain('value="sack"');
+		expect(storeItemInContainer).toHaveBeenCalledWith('armor', 'sack');
+	});
+
+	it('still offers a container the search has hidden', async () => {
+		const { container, storeItemInContainer } = renderWithContainers([bagOfHolding, plateArmor]);
+
+		await search(container, 'Plate');
+
+		await fireEvent.click(
+			getRow(container, 'armor').querySelector('[aria-label^="Store"]') as HTMLElement,
+		);
+
+		expect(storeItemInContainer).toHaveBeenCalledWith('armor', 'bag');
+	});
+
+	it('names the container in the take-out label when the search hides it', async () => {
+		const { container } = renderWithContainers([bagOfHolding, storedPlateArmor]);
+
+		await search(container, 'Plate');
+
+		expect(
+			getRow(container, 'armor').querySelector('[aria-label^="Take"]')?.getAttribute('aria-label'),
+		).toBe('Take Plate Armor out of Bag of Holding');
+	});
+
+	it('offers no move button when no container is carried', () => {
+		const { container } = renderWithContainers([plateArmor]);
+
+		const row = getRow(container, 'armor');
+
+		expect(row.querySelector('[aria-label^="Store"]')).toBeNull();
+		expect(row.querySelector('[aria-label^="Take"]')).toBeNull();
+	});
+
+	it('offers no move button on a container, which cannot be nested', () => {
+		const { container } = renderWithContainers([bagOfHolding, { ...bagOfHolding, _id: 'sack' }]);
+
+		expect(getRow(container, 'bag').querySelector('[aria-label^="Store"]')).toBeNull();
 	});
 });

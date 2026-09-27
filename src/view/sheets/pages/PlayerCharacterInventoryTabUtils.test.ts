@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	canToggleEquipment,
+	getContainerChoices,
 	getDropTargetContainerId,
 	groupItemsByContainer,
 	groupItemsByType,
@@ -9,11 +10,13 @@ import {
 	isContainer,
 } from './PlayerCharacterInventoryTabUtils.js';
 
+type NamedRow = InventoryRowItem & { reactive: { name: string } };
+
 function makeRow(
 	_id: string,
 	system: Partial<InventoryRowItem['reactive']['system']> = {},
-): InventoryRowItem {
-	const reactive = { _id, system: { objectType: 'gear', ...system } };
+): NamedRow {
+	const reactive = { _id, name: _id, system: { objectType: 'gear', ...system } };
 
 	return { _id, reactive };
 }
@@ -82,5 +85,35 @@ describe('groupItemsByType', () => {
 		const rows = [makeRow('sword', { objectType: 'weapon' }), makeRow('rope')];
 
 		expect(groupItemsByType(rows)).toEqual({ weapon: [rows[0]], gear: [rows[1]] });
+	});
+});
+
+describe('getContainerChoices', () => {
+	const bag = makeRow('bag', { container: { enabled: true } });
+	const sack = makeRow('sack', { container: { enabled: true } });
+
+	it('offers every container carried to a loose object', () => {
+		const sword = makeRow('sword');
+
+		expect(getContainerChoices([bag, sack, sword], sword)).toEqual([
+			{ _id: 'bag', name: 'bag' },
+			{ _id: 'sack', name: 'sack' },
+		]);
+	});
+
+	it('leaves out the container already holding the object', () => {
+		const armor = makeRow('armor', { containerId: 'bag' });
+
+		expect(getContainerChoices([bag, sack, armor], armor)).toEqual([{ _id: 'sack', name: 'sack' }]);
+	});
+
+	it('offers nothing to a container, which cannot be nested', () => {
+		expect(getContainerChoices([bag, sack], bag)).toEqual([]);
+	});
+
+	it('offers nothing when no container is carried', () => {
+		const sword = makeRow('sword');
+
+		expect(getContainerChoices([sword], sword)).toEqual([]);
 	});
 });
