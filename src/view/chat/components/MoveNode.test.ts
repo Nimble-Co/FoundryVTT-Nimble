@@ -173,6 +173,19 @@ describe('MoveNode', () => {
 			expect(nodeText(container)).toBe('Forced Movement Goblin Cutthroat up to 2 spaces');
 			expect(screen.queryByText(/direction/)).toBeNull();
 		});
+
+		it('shows nothing on a move to the speaker itself', () => {
+			const { container } = renderNode([createSelfOffer()], selfNode({ direction: 'away' }));
+			expect(nodeText(container)).toBe('Free Move - up to 2 spaces');
+		});
+
+		it('shows nothing when the speaker is the only creature that moves', () => {
+			const { container } = renderNode(
+				[createSelfOffer()],
+				selfNode({ recipient: 'targets', direction: 'away' }),
+			);
+			expect(nodeText(container)).toBe('Free Move - up to 2 spaces');
+		});
 	});
 
 	describe('difficult terrain', () => {

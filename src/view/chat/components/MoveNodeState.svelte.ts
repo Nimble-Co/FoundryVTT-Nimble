@@ -66,9 +66,9 @@ export function createMoveNodeState(getProps: () => MoveNodeProps, card: MoveNod
 		offers.length === 1 && offers[0].tokenUuid === speakerUuid ? offers[0] : null,
 	);
 	const headingSuffix = $derived.by(() => {
-		const { direction } = getProps().node;
+		const { direction, recipient } = getProps().node;
 		const directionText =
-			direction === 'any'
+			direction === 'any' || recipient === 'self' || selfOffer
 				? null
 				: localize(`NIMBLE.chat.movementOffers.directions.${direction}`, {
 						source: system.actorName ?? '',
