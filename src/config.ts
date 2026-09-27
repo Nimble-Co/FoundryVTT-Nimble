@@ -490,6 +490,13 @@ const npcArmorTypeAbbreviations = {
 	heavy: 'H',
 };
 
+const containerSlotCostModes = {
+	none: 'NIMBLE.containerSlotCostModes.none',
+	ignore: 'NIMBLE.containerSlotCostModes.ignore',
+	reduce: 'NIMBLE.containerSlotCostModes.reduce',
+	half: 'NIMBLE.containerSlotCostModes.half',
+};
+
 const objectSizeTypes = {
 	slots: 'NIMBLE.objectSizeTypes.slots',
 	stackable: 'NIMBLE.objectSizeTypes.stackable',
@@ -991,6 +998,7 @@ const NIMBLE = {
 	charges,
 	classBanners,
 	classes,
+	containerSlotCostModes,
 	creatureFeatures,
 	damageTypes,
 	data,

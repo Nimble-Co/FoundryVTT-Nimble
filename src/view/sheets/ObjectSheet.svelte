@@ -8,6 +8,7 @@
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import ObjectContainerConfig from './components/ObjectContainerConfig.svelte';
 	import ObjectDescriptionTab from './pages/ObjectDescriptionTab.svelte';
 	import RangeConfig from './components/RangeConfig.svelte';
 	import ReachConfig from './components/ReachConfig.svelte';
@@ -252,6 +253,8 @@
 				</div>
 			{/if}
 		</div>
+
+		<ObjectContainerConfig />
 
 		{#if objectType === 'weapon'}
 			{@const itemWeaponProperties = item.reactive?.system?.properties?.selected ?? []}
