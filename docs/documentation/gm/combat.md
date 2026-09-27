@@ -119,7 +119,7 @@ The creature's next drag counts as that movement:
 
 Whoever owns the token still does the moving and picks the path and the final space. To move the creature a different way, press **Tab** during the drag to pick another movement action. A GM with Foundry's **Unconstrained Movement** setting on is placing the token, and that also counts as a different way.
 
-A push ignores difficult terrain; a Free Move follows the feature's wording, and the card says when a Free Move ignores it. The card shows the direction the feature names ("away from" or "toward" the feature's user), but nothing enforces it, and the rules give a push no particular shape.
+A push ignores difficult terrain; a Free Move follows the feature's wording, and the card says when a Free Move ignores it. The card shows the direction the feature names: "away from" or "toward" the feature's user, or "in any direction" for Forced Movement. Nothing enforces it, and the rules give a push no particular shape.
 
 When the creature finishes moving, its tag shows what happened:
 
