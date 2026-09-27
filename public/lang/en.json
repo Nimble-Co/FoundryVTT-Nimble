@@ -1258,10 +1258,10 @@
 				},
 				"recipient": {
 					"label": "Recipient",
-					"hint": "Who gets the offer. self: this creature. allies: each ally in range. selfAndAllies: this creature and each ally in range."
+					"hint": "Who gets the offer. self: this creature. allies: each ally within the set number of spaces. selfAndAllies: this creature and each ally within that number of spaces."
 				},
 				"within": {
-					"label": "Ally range",
+					"label": "Allies within (spaces)",
 					"hint": "The maximum number of spaces between this creature and an ally that gets the offer."
 				},
 				"direction": {
@@ -1320,10 +1320,10 @@
 				},
 				"observerScope": {
 					"label": "Watched creatures",
-					"hint": "self: the geometry is tested against this creature only. selfOrAllyWithin: against this creature or an ally in range."
+					"hint": "self: the geometry is tested against this creature only. selfOrAllyWithin: against this creature or an ally within the set number of spaces."
 				},
 				"allyRadius": {
-					"label": "Ally range",
+					"label": "Allies within (spaces)",
 					"hint": "The maximum number of spaces between this creature and a watched ally. 0 means all allies on the scene."
 				},
 				"message": {
