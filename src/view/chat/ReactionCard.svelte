@@ -7,7 +7,6 @@
 	import localize from '../../utils/localize.js';
 	import CardHeader from './components/CardHeader.svelte';
 	import Targets from './components/Targets.svelte';
-	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	const { messageDocument }: ReactionCardProps = $props();
 
@@ -27,9 +26,6 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
-
-	const showsTargets = untrack(() => reactionConfig.showTargets);
-	setTargetsSectionShown(showsTargets);
 </script>
 
 <CardHeader {messageDocument} />
@@ -90,7 +86,7 @@
 		</div>
 	{/if}
 
-	{#if showsTargets}
+	{#if reactionConfig.showTargets}
 		<Targets />
 	{/if}
 
