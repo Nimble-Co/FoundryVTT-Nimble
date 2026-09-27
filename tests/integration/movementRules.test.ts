@@ -29,7 +29,7 @@ import {
 
 const TEST_PREFIX = 'V14 Movement Rules';
 const FREE_ACTION = `${game.system.id}Free`;
-const TAG_KEY = 'nimbleMovementOffer';
+const TAG_KEY = `${game.system.id}MovementOffer`;
 
 const SETTINGS = [
 	'automation.applyRuleEffects',
