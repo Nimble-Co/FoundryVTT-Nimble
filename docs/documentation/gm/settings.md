@@ -17,7 +17,7 @@ How much the system does on its own is controlled from one place: the **Configur
 - **Action Tracking.** Using an item during combat spends the combatant's actions.
 - **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
 - **Combat Convenience.** Player characters roll initiative automatically when combat starts.
-- **Movement Tracking.** The system reports each finished token move to features and, during combat, keeps count of the spaces moved this turn, so features can react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, nothing is recorded and movement rules stay silent. See [Running Combat](combat.md#movement-tracking).
+- **Movement Tracking.** The system reports each finished token move to features and, during combat, keeps count of the spaces moved this turn, so features can react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history. See [Running Combat](combat.md#movement-tracking).
 - **Chat Notifications.** Informational messages such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements.
 
 Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on.
