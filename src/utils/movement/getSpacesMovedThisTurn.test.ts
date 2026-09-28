@@ -3,10 +3,10 @@ import { getSpacesMovedThisTurn } from './getSpacesMovedThisTurn.js';
 
 const actor = { id: 'hero', isToken: false };
 
-function stubCombat(combat: unknown): void {
+function stubCombat(...combats: unknown[]): void {
 	vi.stubGlobal('game', {
 		...(globalThis as { game?: object }).game,
-		combats: combat ? [combat] : [],
+		combats: combats.filter(Boolean),
 	});
 }
 
@@ -86,6 +86,14 @@ describe('getSpacesMovedThisTurn', () => {
 		};
 		expect(getSpacesMovedThisTurn(tokenActor)).toBe(2);
 		expect(getSpacesMovedThisTurn(actor)).toBeNull();
+	});
+
+	it('reads the next started combat when an earlier one holds the actor without a token', () => {
+		stubCombat(
+			{ started: true, combatants: [combatant(null)] },
+			{ started: true, combatants: [combatant(makeToken([walk(0, 0), walk(2, 0)]))] },
+		);
+		expect(getSpacesMovedThisTurn(actor)).toBe(2);
 	});
 
 	it('is null until the token scene has a grid to measure with', () => {

@@ -46,7 +46,7 @@ export function getSpacesMovedThisTurn(actor: ActorLike): number | null {
 		for (const combatant of combat.combatants) {
 			if (!isCombatantFor(combatant, actor)) continue;
 			const token = combatant.token;
-			if (!token || typeof token.parent?.grid?.measurePath !== 'function') return null;
+			if (!token || typeof token.parent?.grid?.measurePath !== 'function') continue;
 			return summariseMovementHistory(
 				token as unknown as Parameters<typeof summariseMovementHistory>[0],
 				token.movementHistory,
