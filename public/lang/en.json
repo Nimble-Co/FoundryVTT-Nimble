@@ -1185,7 +1185,9 @@
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
 			"wounded": "Wounded",
-			"lastStand": "Last Stand"
+			"lastStand": "Last Stand",
+			"latchedOn": "Latched On",
+			"swallowed": "Swallowed"
 		},
 		"concentration": {
 			"endPrompt": {
@@ -1227,7 +1229,9 @@
 			"stunned": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
 			"unconscious": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>"
+			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>",
+			"latchedOn": "<p>You move where your target moves until either dies. Your attacks can't miss or be Defended/Interposed against. Attacks that miss you damage your target instead.</p>",
+			"swallowed": "<p>You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.</p>"
 		},
 		"currency": {
 			"cp": "Copper",
@@ -1787,7 +1791,8 @@
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
 			"unarmedDamage": "Unarmed Damage",
-			"reroll": "Reroll"
+			"reroll": "Reroll",
+			"recurringDamage": "Recurring Damage"
 		},
 		"rules": {
 			"abilityBonus": {
@@ -1856,6 +1861,10 @@
 				"trigger": {
 					"label": "Trigger",
 					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc."
+				},
+				"recipient": {
+					"label": "Applies To",
+					"hint": "Whether the condition lands on the creature attacked or on this actor. Only meaningful for hit/crit/miss triggers."
 				}
 			},
 			"armorClass": {
@@ -3435,6 +3444,17 @@
 				"useAnotherStat": {
 					"label": "Use another stat",
 					"hint": "A click on the row shows the other three stats, and the player picks one for the new roll. On a save it uses that stat's save modifier. On a skill check it swaps the stat part and keeps the other bonuses. On an attack it swaps the stat in the formula; an attack with no stat in its formula gets no row."
+				}
+			},
+			"recurringDamage": {
+				"description": "Damage this actor every turn, on a cadence no duration expresses — the damage for being on fire, or inside something. The roll is posted to chat before it is applied.",
+				"formula": {
+					"label": "Damage",
+					"hint": "Flat (20), formula (@level), or dice (2d6+1)."
+				},
+				"trigger": {
+					"label": "When",
+					"hint": "At the start or the end of this actor’s turn."
 				}
 			}
 		},

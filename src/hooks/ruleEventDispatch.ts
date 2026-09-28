@@ -19,7 +19,7 @@ import {
 	isMovementTrackingAutomationEnabled,
 	isRuleAutomationEnabled,
 } from '../settings/automationSettings.js';
-import { getActorHealthState } from '../utils/actor/actorHealthState.js';
+import { getActorHealthState, isActorDead } from '../utils/actor/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
@@ -27,7 +27,6 @@ import {
 	hpBeforeUpdate,
 	hpGained,
 } from '../utils/actor/actorHpChangePaths.js';
-import { getActorWoundsValueAndMax } from '../utils/actor/actorResources.js';
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { keyedQueue } from '../utils/keyedQueue.js';
@@ -248,12 +247,7 @@ function handleActorUpdate(
 	};
 
 	if (currentHp <= 0) {
-		// Dropping to 0 HP alone means dying, not dead. An actor is killed only
-		// at 0 HP with a full wound track; actors without a wound track (NPCs)
-		// die at 0 HP outright.
-		const wounds = getActorWoundsValueAndMax(actor);
-		const isDead = !wounds || wounds.value >= wounds.max;
-		if (isDead) {
+		if (isActorDead(actor)) {
 			void dispatch(actorWithRules, 'onActorKilled', healthContext);
 		} else if (hpChanged) {
 			// Only an HP drop signals entering the Dying state; a wound gained
