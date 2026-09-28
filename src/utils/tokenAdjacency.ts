@@ -25,7 +25,7 @@ function areWithinSpaces(
 		a: overrides?.get(tokenA.document.id ?? ''),
 		b: overrides?.get(tokenB.document.id ?? ''),
 	};
-	return spacesBetween(measurable(tokenA), measurable(tokenB), positions) <= spaces;
+	return spacesBetween(measurable(tokenA), measurable(tokenB), positions, spaces) <= spaces;
 }
 
 function areAdjacentOnGrid(

@@ -25,18 +25,41 @@ function gridlessSpaces(a: TokenPosition, b: TokenPosition, grid: MeasurableGrid
 	return 1 + Math.floor(Math.hypot(gapX, gapY) / grid.size + 1e-6);
 }
 
+/** A token's width or height in grid spaces, rounded the way core rounds its footprint. */
+function footprintSize(size: number | undefined): number {
+	return Math.max(Math.round((size ?? 1) * 2) / 2, 0.5);
+}
+
+/**
+ * The fewest spaces two tokens on a square grid can be apart, from their
+ * rectangles alone. No diagonal rule reaches a space in fewer moves than the
+ * larger of its row and column distance, and that distance is never less than
+ * the gap between the rectangles in whole spaces.
+ */
+function squareSpacesFloor(a: TokenPosition, b: TokenPosition, size: number): number {
+	const gap = (start: number, length: number, otherStart: number, otherLength: number) =>
+		Math.max(0, otherStart - (start + length * size), start - (otherStart + otherLength * size));
+	const gapX = gap(a.x, footprintSize(a.width), b.x, footprintSize(b.width));
+	const gapY = gap(a.y, footprintSize(a.height), b.y, footprintSize(b.height));
+	return Math.floor(Math.max(gapX, gapY) / size);
+}
+
 /**
  * Spaces between two token footprints: 0 when they overlap, 1 when adjacent.
  * On a grid it is the smallest path between any space of one footprint and any
  * space of the other: the grid's measured distance over the grid distance,
  * rounded, so the world's diagonal rule applies. Gridless scenes count 1 plus
  * the whole grid units in the edge to edge gap. A position override measures
- * a token as if it stood there.
+ * a token as if it stood there. A caller that only asks whether two tokens are
+ * within `maxSpaces` passes it: on a square grid, tokens whose rectangles are
+ * already farther apart return a count above it before core works out their
+ * grid spaces.
  */
 export function spacesBetween(
 	a: MeasurableTokenDocument,
 	b: MeasurableTokenDocument,
 	positions?: { a?: TokenPosition; b?: TokenPosition },
+	maxSpaces = Number.POSITIVE_INFINITY,
 ): number {
 	const grid = a.parent?.grid ?? b.parent?.grid;
 	if (!grid) return Number.POSITIVE_INFINITY;
@@ -44,6 +67,10 @@ export function spacesBetween(
 	const positionA = positionOf(a, positions?.a);
 	const positionB = positionOf(b, positions?.b);
 	if (grid.isGridless) return gridlessSpaces(positionA, positionB, grid);
+	if (grid.isSquare) {
+		const floor = squareSpacesFloor(positionA, positionB, grid.size);
+		if (floor > maxSpaces) return floor;
+	}
 
 	const offsetsA = a.getOccupiedGridSpaceOffsets(positionA);
 	const offsetsB = b.getOccupiedGridSpaceOffsets(positionB);

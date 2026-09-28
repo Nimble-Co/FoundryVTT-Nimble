@@ -21,6 +21,7 @@ export interface GridOffset {
 
 export interface MeasurableGrid {
 	isGridless: boolean;
+	isSquare?: boolean;
 	size: number;
 	distance: number;
 	measurePath(points: GridOffset[]): { distance: number };

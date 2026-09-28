@@ -43,7 +43,7 @@ export function reachChanges(
 		grid?.isGridless && record.kind !== 'teleport'
 			? samplePath(record.path, grid.size / 2)
 			: record.path;
-	const distances = path.map((position) => spacesBetween(mover, watcher, { a: position }));
+	const distances = path.map((position) => spacesBetween(mover, watcher, { a: position }, reach));
 
 	let entered = false;
 	let left = false;

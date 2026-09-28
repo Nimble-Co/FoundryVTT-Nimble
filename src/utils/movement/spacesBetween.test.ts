@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { MeasurableTokenDocument } from '#types/movement.js';
 import { spacesBetween } from './spacesBetween.js';
 
@@ -154,5 +154,33 @@ describe('spacesBetween', () => {
 		const a = { ...makeToken(0, 0, makeGrid()), parent: null };
 		const b = { ...makeToken(1, 0, makeGrid()), parent: null };
 		expect(spacesBetween(a, b)).toBe(Number.POSITIVE_INFINITY);
+	});
+
+	describe('with a limit', () => {
+		const squareGrid = (diagonals: Diagonals = 'equidistant') => ({
+			...makeGrid(diagonals),
+			isSquare: true,
+		});
+
+		it('answers for square grid tokens farther apart than the limit without their grid spaces', () => {
+			const a = makeToken(0, 0, squareGrid());
+			const offsets = vi.spyOn(a, 'getOccupiedGridSpaceOffsets');
+			expect(spacesBetween(a, makeToken(4, 0, squareGrid()), undefined, 1)).toBeGreaterThan(1);
+			expect(offsets).not.toHaveBeenCalled();
+		});
+
+		it('counts exactly when the tokens can be within the limit', () => {
+			const grid = squareGrid('exact');
+			expect(spacesBetween(makeToken(0, 0, grid), makeToken(2, 2, grid), undefined, 3)).toBe(3);
+			expect(spacesBetween(makeToken(0, 0, grid), makeToken(1, 1, grid), undefined, 1)).toBe(1);
+		});
+
+		it('always measures on a grid that is not square', () => {
+			const grid = makeGrid();
+			const a = makeToken(0, 0, grid);
+			const offsets = vi.spyOn(a, 'getOccupiedGridSpaceOffsets');
+			expect(spacesBetween(a, makeToken(4, 0, grid), undefined, 1)).toBe(4);
+			expect(offsets).toHaveBeenCalled();
+		});
 	});
 });
