@@ -51,6 +51,14 @@ import {
 
 const TRIGGER_CHOICES = RULE_TRIGGERS;
 
+/** The creature a condition ends with, carried on the effect so its expiry can find them. */
+function linkedActorFlags(
+	linked: ConditionTargetActor | null,
+): Record<string, unknown> | undefined {
+	const linkedActorUuid = (linked as { uuid?: string } | null)?.uuid ?? null;
+	return linkedActorUuid ? { linkedActorUuid } : undefined;
+}
+
 type ApplyConditionTrigger = (typeof TRIGGER_CHOICES)[number];
 
 /** Effect flag: the save card, and the item and condition of the rule that added this effect. */
@@ -124,6 +132,20 @@ function schema() {
 			// The same triggers, and words, as Use an item for free.
 			choices: choiceLabels('useItemFree', 'triggers', TRIGGER_CHOICES),
 		}),
+		recipient: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'target',
+				choices: ['target', 'self'],
+				label: 'NIMBLE.rules.applyCondition.recipient.label',
+				hint: 'NIMBLE.rules.applyCondition.recipient.hint',
+				// Self-target triggers already apply to the rule's owner; the choice only means
+				// something on an attack outcome, where there is someone else to apply it to.
+				showWhen: (data: Record<string, unknown>) =>
+					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')),
+			}),
+		),
 		effectId: new fields.StringField(
 			withWidget({
 				required: true,
@@ -134,7 +156,9 @@ function schema() {
 				hint: 'NIMBLE.rules.applyCondition.effectId.hint',
 				widget: 'itemEffectPicker',
 				recipient: (data: Record<string, unknown>): 'self' | 'targets' =>
-					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')) ? 'targets' : 'self',
+					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')) && data.recipient !== 'self'
+						? 'targets'
+						: 'self',
 			}),
 		),
 		wounds: new fields.NumberField({
@@ -185,6 +209,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onSaveResolved'];
 
 	declare condition: string;
+	declare recipient: 'target' | 'self';
 	declare trigger: ApplyConditionTrigger;
 	declare effectId: string;
 	declare wounds: number;
@@ -203,6 +228,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['condition', 'string'],
+				['recipient', "'target' <span class=\"nimble-type-summary__operator\">|</span> 'self'"],
 				[
 					'trigger',
 					TRIGGER_CHOICES.map((t) => `'${t}'`).join(
@@ -219,9 +245,20 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onItemUsed(context: ItemUsedContext): Promise<void> {
 		if (!this.#shouldFireOnItemUsed(context)) return;
-		const targetActor = context.targetActor as unknown as ConditionTargetActor | null;
-		if (!targetActor) return;
-		await this.#applyConditionTo(targetActor, undefined, context.card as unknown as WoundCard);
+
+		// A self-applied condition still links to whoever was attacked: Latched On sits on the
+		// stirge but ends when the creature it latched onto dies.
+		const attacker = this.actor as unknown as ConditionTargetActor | null;
+		const defender = context.targetActor as unknown as ConditionTargetActor | null;
+		const [recipient, linked] =
+			this.recipient === 'self' ? [attacker, defender] : [defender, attacker];
+		if (!recipient) return;
+
+		await this.#applyConditionTo(
+			recipient,
+			linkedActorFlags(linked),
+			context.card as unknown as WoundCard,
+		);
 	}
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
@@ -237,7 +274,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				effectId: effect ? this.effectId : null,
 				effectItemUuid: effect ? (this.item?.uuid ?? null) : null,
 				condition: this.condition || null,
-				recipient: 'targets',
+				recipient: this.recipient === 'self' ? 'self' : 'targets',
 				parentContext: null,
 				parentNode: null,
 			};
