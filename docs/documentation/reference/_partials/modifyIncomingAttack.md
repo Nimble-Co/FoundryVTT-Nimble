@@ -13,10 +13,13 @@ The **Modifier** picks what happens:
 - `autoMiss` turns the attack into a miss, even against attackers who normally cannot miss.
 - `forceReroll` offers a button on the attack card to discard the roll and roll again; the second result stands.
 - `redirectToSelf` offers an Interpose: when an ally within **Range (spaces)** is attacked, this character may swap in as the target.
+- `raiseMissThreshold` raises the primary die result that counts as a miss to **Miss threshold**. This is the bandit Parry trait: set it to `2` and attacks against the character miss on a 1 and a 2.
 
-`disadvantage` and `autoMiss` apply on their own. `forceReroll` and `redirectToSelf` show a button on the attack card that only the reacting player (or the GM) can use.
+`disadvantage`, `autoMiss`, and `raiseMissThreshold` apply on their own. `forceReroll` and `redirectToSelf` show a button on the attack card that only the reacting player (or the GM) can use.
 
 **Force Reroll** has three extra options. Check **Automatic** to reroll the moment the attack resolves with no button, for rerolls that are not optional (for example, rerolling an incoming critical hit). **Reroll when** limits it to `always`, only on a `hit` (not a miss), or only on a `criticalHit`. Check **Reroll at disadvantage** to make the reroll itself roll at disadvantage.
+
+**Raise Miss Threshold** is an absolute value, not an amount added to the default of 1. Several sources do not stack: the highest threshold wins, so two Parry traits still miss only on a 1 and a 2. A primary die that rolls its maximum face is a critical hit and never a miss, and an attacker who cannot miss is not subject to the threshold at all.
 
 **Redirect to Self** covers an ally within **Range** spaces (2 by default). Every living allied character is already offered the baseline Interpose within 2 spaces without any rule; use this modifier for feature versions that reach further or that let a non-character (such as an animal companion) step in. Using an Interpose swaps the attack card's target to the protector, so armor and damage reduction are resolved against them when damage is applied. Moving the token into place stays manual.
 

@@ -13,6 +13,8 @@ const BASELINE_INTERPOSE_RANGE = 2;
 
 const MODIFY_INCOMING_ATTACK_RULE_TYPE = 'modifyIncomingAttack';
 
+const DEFAULT_MISS_THRESHOLD = 1;
+
 interface RuleLike {
 	type?: string;
 	id?: string;
@@ -22,6 +24,7 @@ interface RuleLike {
 	automatic?: boolean;
 	rerollTrigger?: RerollTrigger;
 	rerollWithDisadvantage?: boolean;
+	missThreshold?: number;
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
 }
@@ -45,11 +48,15 @@ interface IncomingAttackModifierEntry {
 	rerollTrigger?: RerollTrigger;
 	/** forceReroll only: roll the reroll at disadvantage */
 	rerollWithDisadvantage?: boolean;
+	/** raiseMissThreshold only: the highest primary-die result that misses */
+	missThreshold?: number;
 }
 
 interface IncomingAttackPlan {
 	disadvantageCount: number;
 	forceMiss: boolean;
+	/** Highest primary-die result that counts as a miss; 1 unless a rule raises it */
+	missThreshold: number;
 	/** Automatically applied modifiers (disadvantage / autoMiss), for roll metadata */
 	appliedEntries: IncomingAttackModifierEntry[];
 	/** Interactive prompts (forceReroll / redirectToSelf) to stamp onto the card */
@@ -191,6 +198,7 @@ function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 		automatic: rule.automatic ?? false,
 		rerollTrigger: rule.rerollTrigger ?? 'always',
 		rerollWithDisadvantage: rule.rerollWithDisadvantage ?? false,
+		missThreshold: rule.missThreshold ?? DEFAULT_MISS_THRESHOLD,
 	};
 }
 
@@ -315,6 +323,7 @@ function computeIncomingAttackPlan(
 	const plan: IncomingAttackPlan = {
 		disadvantageCount: 0,
 		forceMiss: false,
+		missThreshold: DEFAULT_MISS_THRESHOLD,
 		appliedEntries: [],
 		reactionEntries: [...collectPoolSpendCardOffers(attackingActor, attackContext)],
 		autoRerollEntries: [],
@@ -331,6 +340,12 @@ function computeIncomingAttackPlan(
 			plan.appliedEntries.push(entry);
 		} else if (entry.modifier === 'autoMiss') {
 			plan.forceMiss = true;
+			plan.appliedEntries.push(entry);
+		} else if (entry.modifier === 'raiseMissThreshold') {
+			plan.missThreshold = Math.max(
+				plan.missThreshold,
+				entry.missThreshold ?? DEFAULT_MISS_THRESHOLD,
+			);
 			plan.appliedEntries.push(entry);
 		}
 	}
@@ -366,6 +381,7 @@ function computeIncomingAttackPlan(
 export {
 	applyPostRollIncomingBehavior,
 	BASELINE_INTERPOSE_RANGE,
+	DEFAULT_MISS_THRESHOLD,
 	collectRedirectCandidates,
 	collectTargetIncomingModifiers,
 	computeIncomingAttackPlan,

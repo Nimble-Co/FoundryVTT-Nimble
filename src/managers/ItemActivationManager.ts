@@ -41,6 +41,7 @@ import getRollFormula from '../utils/getRollFormula.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
+	DEFAULT_MISS_THRESHOLD,
 	type IncomingAttackPlan,
 } from '../utils/incomingAttackModifiers.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
@@ -514,6 +515,9 @@ class ItemActivationManager {
 							damageOptions.rollModeSources = sources;
 						}
 						if (incomingAttackPlan.forceMiss) damageOptions.forceMiss = true;
+						if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
+							damageOptions.missThreshold = incomingAttackPlan.missThreshold;
+						}
 						if (incomingAttackPlan.appliedEntries.length > 0) {
 							(damageOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
 								incomingAttackPlan.appliedEntries;

@@ -12,6 +12,7 @@ describe('ModifyIncomingAttackRule', () => {
 
 			expect(schema).toHaveProperty('modifier');
 			expect(schema).toHaveProperty('range');
+			expect(schema).toHaveProperty('missThreshold');
 			expect(schema).toHaveProperty('type');
 			expect(schema).toHaveProperty('disabled');
 			expect(schema).toHaveProperty('label');
@@ -28,7 +29,32 @@ describe('ModifyIncomingAttackRule', () => {
 				'forceReroll',
 				'redirectToSelf',
 				'autoMiss',
+				'raiseMissThreshold',
 			]);
+		});
+
+		it('defaults missThreshold to 2 with a minimum of 1', () => {
+			const schema = ModifyIncomingAttackRule.defineSchema();
+			const missThreshold = schema.missThreshold as unknown as {
+				initial: number;
+				min: number;
+				integer: boolean;
+			};
+
+			expect(missThreshold.initial).toBe(2);
+			expect(missThreshold.min).toBe(1);
+			expect(missThreshold.integer).toBe(true);
+		});
+
+		it('only shows the missThreshold field for the raiseMissThreshold modifier', () => {
+			const schema = ModifyIncomingAttackRule.defineSchema();
+			const missThreshold = schema.missThreshold as unknown as {
+				showWhen: (data: Record<string, unknown>) => boolean;
+			};
+
+			expect(missThreshold.showWhen({ modifier: 'raiseMissThreshold' })).toBe(true);
+			expect(missThreshold.showWhen({ modifier: 'autoMiss' })).toBe(false);
+			expect(missThreshold.showWhen({ modifier: 'disadvantage' })).toBe(false);
 		});
 
 		it('defaults modifier to disadvantage', () => {

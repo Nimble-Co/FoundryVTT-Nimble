@@ -13,6 +13,7 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
+	DEFAULT_MISS_THRESHOLD,
 } from '../../../utils/incomingAttackModifiers.js';
 import localize from '../../../utils/localize.js';
 import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
@@ -264,6 +265,9 @@ export function createAttackPanelState(
 			];
 		}
 		if (incomingAttackPlan.forceMiss) rollOptions.forceMiss = true;
+		if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
+			rollOptions.missThreshold = incomingAttackPlan.missThreshold;
+		}
 		if (incomingAttackPlan.appliedEntries.length > 0) {
 			(rollOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
 				incomingAttackPlan.appliedEntries;

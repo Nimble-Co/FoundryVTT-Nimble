@@ -20,8 +20,12 @@ declare namespace DamageRoll {
 		criticalThreshold?: number;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
 		damageType?: string;
-		/** The maximum roll value that counts as a fumble/miss. */
-		fumbleThreshold?: number;
+		/**
+		 * The highest primary-die result that counts as a miss. Defaults to 1.
+		 * Raised by target-side incoming-attack rules (e.g. the bandit Parry
+		 * trait, which misses on a 1 and a 2). Only consulted when `canMiss`.
+		 */
+		missThreshold?: number;
 		/** The roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode: number;
 		/**
@@ -341,7 +345,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				number: 1,
 				faces: faces ?? 6,
 				modifiers: [],
-				options: { flavor: 'Primary Die', isVicious, ...diceSoNiceOptions },
+				options: {
+					flavor: 'Primary Die',
+					isVicious,
+					missThreshold: options.missThreshold,
+					...diceSoNiceOptions,
+				},
 			});
 
 			// Apply advantage/disadvantage to primary die only (keeps 1)
@@ -359,7 +368,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				number: 1,
 				faces: firstDieTerm.faces ?? 6,
 				modifiers: [],
-				options: { isVicious, ...diceSoNiceOptions },
+				options: { isVicious, missThreshold: options.missThreshold, ...diceSoNiceOptions },
 			});
 
 			// Apply advantage/disadvantage (keeps 1)
@@ -782,8 +791,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				return !(meta && !meta.canCrit && meta.explosionStyle === 'none');
 			});
 			if (missDie) {
+				const threshold = this.options.missThreshold ?? 1;
 				const firstActive = missDie.results.find((r) => r.active && !r.discarded);
-				this.isMiss = firstActive?.result === 1;
+				this.isMiss =
+					firstActive !== undefined &&
+					firstActive.result <= threshold &&
+					firstActive.result !== missDie.faces;
 			} else {
 				// All dice are neutral — no die qualifies for miss detection
 				this.isMiss = false;

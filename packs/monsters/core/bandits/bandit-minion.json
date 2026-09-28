@@ -138,7 +138,15 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "modifyIncomingAttack",
+						"modifier": "raiseMissThreshold",
+						"missThreshold": 2,
+						"label": "Parry: Attacks miss on a 1 and a 2",
+						"id": "DdlfAVZ9HQuT3tYA"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
