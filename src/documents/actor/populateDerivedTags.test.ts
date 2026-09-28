@@ -1,5 +1,6 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 import { NimbleBaseActor } from './base.svelte.js';
 import { NimbleCharacter } from './character.js';
 
@@ -250,6 +251,81 @@ describe('_populateDerivedTags — self / target state tags', () => {
 				expect([...tags].some((t) => t.startsWith('enemiesAdjacent:'))).toBe(false);
 				expect([...tags].some((t) => t.startsWith('alliesAdjacent:'))).toBe(false);
 			});
+		});
+	});
+
+	describe('spacesMovedThisTurn', () => {
+		const baseGame = game;
+		let tracking: boolean;
+
+		/** A linked combatant token that walked through the given cells this turn. */
+		function tokenThatWalked(cells: number[]) {
+			return {
+				actorLink: true,
+				parent: { id: 's1', grid: { distance: 1, measurePath: () => ({}) } },
+				movementHistory: cells.map((x) => ({ x, y: 0, action: 'walk' })),
+				measureMovementPath: (waypoints: { x: number }[]) => ({
+					segments: waypoints.slice(1).map((to, index) => ({
+						distance: Math.abs(to.x - waypoints[index].x),
+					})),
+				}),
+			};
+		}
+
+		function withCombat(cells: number[], started = true) {
+			vi.stubGlobal('game', {
+				...game,
+				combats: [
+					{
+						started,
+						combatants: [
+							{ actorId: 'a1', tokenId: 't1', sceneId: 's1', token: tokenThatWalked(cells) },
+						],
+					},
+				],
+			});
+		}
+
+		const combatantActor = (): ActorStub => Object.assign(makeStub(), { id: 'a1' });
+
+		const movedTags = (tags: Set<string>) =>
+			[...tags].filter((tag) => tag.startsWith('spacesMovedThisTurn:'));
+
+		beforeEach(() => {
+			tracking = true;
+			vi.stubGlobal('game', {
+				...baseGame,
+				settings: {
+					settings: new Map(),
+					get: (_namespace: string, key: string) =>
+						key === AUTOMATION_SETTING_KEYS.movementTracking ? tracking : undefined,
+				},
+			});
+		});
+
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		it('adds the spaces a combatant in a started combat moved this turn', () => {
+			withCombat([0, 2, 3]);
+			expect(movedTags(runPopulate(combatantActor()))).toEqual(['spacesMovedThisTurn:3']);
+		});
+
+		it('adds 0 for a combatant that has not moved this turn', () => {
+			withCombat([]);
+			expect(movedTags(runPopulate(combatantActor()))).toEqual(['spacesMovedThisTurn:0']);
+		});
+
+		it('omits the tag for an actor with no combatant in a started combat', () => {
+			withCombat([0, 2], false);
+			expect(movedTags(runPopulate(combatantActor()))).toEqual([]);
+		});
+
+		it('omits the tag while Movement Tracking is off', () => {
+			tracking = false;
+			withCombat([0, 2]);
+			expect(movedTags(runPopulate(combatantActor()))).toEqual([]);
 		});
 	});
 
