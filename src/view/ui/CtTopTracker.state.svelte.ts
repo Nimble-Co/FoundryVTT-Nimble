@@ -19,7 +19,10 @@ import localize from '#utils/localize.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import { tokenGroupHoverIn, tokenHoverIn, tokenHoverOut } from '#utils/tokenHoverHighlight.js';
 import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
-import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
+import {
+	COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME,
+	setCombatTrackerCtMinimized,
+} from '../../settings/combatTrackerSettings.js';
 import {
 	canCurrentUserAdjustCombatantActions,
 	canCurrentUserRollInitiativeForCombatant,
@@ -47,6 +50,7 @@ import {
 	resolvePreviewBeforeState,
 	trackDependency,
 } from './ctTopTracker/layout.utils.js';
+import { resolveMinimizedTrackerSummary } from './ctTopTracker/minimized.utils.js';
 import { CtTopTrackerStore } from './ctTopTracker/topTrackerStore.svelte.js';
 import type {
 	CanvasTokenLike,
@@ -1286,6 +1290,10 @@ export function createCtTopTrackerState() {
 		}
 	}
 
+	async function toggleCtMinimized(): Promise<void> {
+		await setCombatTrackerCtMinimized(!trackerStore.ctMinimized);
+	}
+
 	async function handleControlAction(event: MouseEvent, action: string): Promise<void> {
 		event.preventDefault();
 		event.stopPropagation();
@@ -1386,6 +1394,7 @@ export function createCtTopTrackerState() {
 	const nonPlayerHpBarTextMode = $derived(trackerStore.nonPlayerHpBarTextMode);
 	const resourceDrawerHoverEnabled = $derived(trackerStore.resourceDrawerHoverEnabled);
 	const ctEnabled = $derived(trackerStore.ctEnabled);
+	const ctMinimized = $derived(trackerStore.ctMinimized);
 	const activeDragSourceKey = $derived(trackerStore.activeDragSourceKey);
 	const activeDragSourceCombatantIds = $derived(trackerStore.activeDragSourceCombatantIds);
 	const dragHandleArmedEntryKey = $derived(trackerStore.dragHandleArmedEntryKey);
@@ -1423,6 +1432,16 @@ export function createCtTopTrackerState() {
 	const roundSeparatorIndex = $derived(trackerStore.roundSeparatorIndex);
 	const combatStarted = $derived(trackerStore.combatStarted);
 	const currentRoundLabel = $derived(trackerStore.currentRoundLabel);
+	const minimizedSummary = $derived.by(() => {
+		// Foundry mutates combatant documents in place, so the strip has to follow
+		// renderVersion the way the combatant cards do.
+		trackDependency(trackerStore.renderVersion);
+		return resolveMinimizedTrackerSummary({
+			combatStarted: trackerStore.combatStarted,
+			roundLabel: trackerStore.currentRoundLabel,
+			activeCombatant: trackerStore.activeCombatant,
+		});
+	});
 	const ctTrackMaxWidth = $derived(trackerStore.ctTrackMaxWidth);
 	const ctWidthPreviewVisible = $derived(trackerStore.ctWidthPreviewVisible);
 	const ctWidthPreviewMaxWidth = $derived(trackerStore.ctWidthPreviewMaxWidth);
@@ -1631,6 +1650,13 @@ export function createCtTopTrackerState() {
 		get ctEnabled() {
 			return ctEnabled;
 		},
+		get ctMinimized() {
+			return ctMinimized;
+		},
+		get minimizedSummary() {
+			return minimizedSummary;
+		},
+		toggleCtMinimized,
 		get activeDragSourceKey() {
 			return activeDragSourceKey;
 		},

@@ -2,6 +2,7 @@ import {
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtEnabled,
 	getCombatTrackerCtLeftToRightOrdering,
+	getCombatTrackerCtMinimized,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
@@ -82,6 +83,8 @@ export class CtTopTrackerStore {
 	resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
 
 	ctEnabled = $state(getCombatTrackerCtEnabled());
+
+	ctMinimized = $state(getCombatTrackerCtMinimized());
 
 	ctWidthLevel = $state(getCombatTrackerCtWidthLevel());
 
@@ -295,6 +298,9 @@ export class CtTopTrackerStore {
 		}
 		if (patch.ctEnabled !== undefined) {
 			this.ctEnabled = patch.ctEnabled;
+		}
+		if (patch.ctMinimized !== undefined) {
+			this.ctMinimized = patch.ctMinimized;
 		}
 		if (patch.ctWidthLevel !== undefined) {
 			this.ctWidthLevel = patch.ctWidthLevel;
