@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 
 const hooksCall = vi.fn().mockReturnValue(true);
 const hooksCallAll = vi.fn();
@@ -19,6 +20,7 @@ interface MockActiveEffect {
 }
 
 interface MockActor {
+	uuid: string;
 	statuses: Set<string>;
 	effects: MockActiveEffect[];
 }
@@ -45,6 +47,7 @@ function lastAppliedEffect(): MockActiveEffect | undefined {
 
 interface ApplyConditionSource {
 	condition: string;
+	recipient?: 'target' | 'self';
 	trigger: ApplyConditionTrigger;
 	duration?: { rounds?: number | null; turns?: number | null; seconds?: number | null };
 	disabled?: boolean;
@@ -58,14 +61,18 @@ interface ApplyConditionSource {
 
 interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	condition: string;
+	recipient: 'target' | 'self';
 	trigger: ApplyConditionTrigger;
 	duration: { rounds: number | null; turns: number | null; seconds: number | null };
 	disabled: boolean;
 	label: string;
 }
 
+let nextActorId = 0;
+
 function createMockActor(): MockActor {
-	return { statuses: new Set<string>(), effects: [] };
+	nextActorId += 1;
+	return { uuid: `Actor.mock-${nextActorId}`, statuses: new Set<string>(), effects: [] };
 }
 
 function createMockItem(actor: MockActor): MockItem {
@@ -79,6 +86,7 @@ function createApplyConditionRule(
 	const item = createMockItem(actor);
 	const sourceData = {
 		condition: config.condition,
+		recipient: config.recipient ?? 'target',
 		trigger: config.trigger,
 		duration: {
 			rounds: config.duration?.rounds ?? null,
@@ -102,6 +110,7 @@ function createApplyConditionRule(
 	) as ApplyConditionRuleTestInstance;
 
 	rule.condition = config.condition;
+	rule.recipient = config.recipient ?? 'target';
 	rule.trigger = config.trigger;
 	rule.duration = sourceData.duration;
 	rule.disabled = config.disabled ?? false;
@@ -235,6 +244,63 @@ describe('ApplyConditionRule', () => {
 			await rule.onItemUsed(buildItemUsedContext(otherActor, targetActor, { isCritical: true }));
 
 			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+		});
+
+		it('applies the condition to the attacker when target is self', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latchedOn', recipient: 'self', trigger: 'onHit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
+
+			expect(conditionsAppliedTo(attackerActor)).toEqual(['latchedOn']);
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+		});
+
+		it('records the creature attacked as the link on a self-applied condition', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latchedOn', recipient: 'self', trigger: 'onHit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
+
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
+				linkedActorUuid: targetActor.uuid,
+			});
+		});
+
+		it('records the attacker as the link on a condition applied to the target', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'swallowed', recipient: 'target', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
+				linkedActorUuid: attackerActor.uuid,
+			});
+		});
+
+		it('still applies a self-targeted condition when there is no target to link to', async () => {
+			const attackerActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latchedOn', recipient: 'self', trigger: 'onHit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, null));
+
+			expect(conditionsAppliedTo(attackerActor)).toEqual(['latchedOn']);
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toBeUndefined();
 		});
 
 		it('no-ops gracefully when targetActor is null', async () => {

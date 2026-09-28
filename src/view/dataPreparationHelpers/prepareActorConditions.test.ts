@@ -188,6 +188,49 @@ describe('prepareActorConditions', () => {
 		expect(blinded?.active).toBe(false);
 	});
 
+	it('leaves monster-scoped conditions out of the sheet picker', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set<string>(),
+				overlay: new Set<string>(),
+			},
+			effects: [],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor, { includeInactive: true });
+
+		expect(result.find((condition) => condition.id === 'swallowed')).toBeUndefined();
+		expect(result.find((condition) => condition.id === 'latchedOn')).toBeUndefined();
+	});
+
+	it('still lists a monster-scoped condition the actor is already carrying', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set(['swallowed']),
+				overlay: new Set<string>(),
+			},
+			effects: [],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor, { includeInactive: true });
+		const swallowed = result.find((condition) => condition.id === 'swallowed');
+
+		expect(swallowed).toBeDefined();
+		expect(swallowed?.active).toBe(true);
+	});
+
 	it('does not include non-standard effect statuses when includeInactive is true', () => {
 		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
 			id,

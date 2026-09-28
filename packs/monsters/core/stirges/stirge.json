@@ -142,7 +142,24 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"disabled": false,
+						"label": "Latch On: become Latched On",
+						"predicate": {},
+						"priority": 1,
+						"type": "applyCondition",
+						"id": "YtnQpbJ2fLiKvRr7",
+						"condition": "latchedOn",
+						"recipient": "self",
+						"trigger": "onHit",
+						"duration": {
+							"rounds": null,
+							"turns": null,
+							"seconds": null
+						}
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -265,8 +282,22 @@
 			"img": "icons/creatures/abilities/wing-membrane-red.webp",
 			"system": {
 				"macro": "",
-				"identifier": "",
-				"rules": [],
+				"identifier": "latchedOn",
+				"rules": [
+					{
+						"disabled": false,
+						"label": "Latched On: attacks cannot miss",
+						"predicate": {
+							"$and": [
+								"self:condition:latchedOn"
+							]
+						},
+						"priority": 1,
+						"type": "modifyOutgoingAttack",
+						"id": "QvMzL4cXaTdN9sWg",
+						"modifier": "cannotMiss"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

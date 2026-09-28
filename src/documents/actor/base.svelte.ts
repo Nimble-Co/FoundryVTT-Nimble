@@ -424,6 +424,12 @@ class NimbleBaseActor<
 		// and the system's condition toggle (registerConditionsConfig) round-trips through it.
 		const statuses = this.statuses as Set<string> | undefined;
 		if (statuses) {
+			// Every active status also emits a generic tag, so a rule can gate on holding a
+			// condition without the condition needing its own bespoke tag.
+			for (const statusId of statuses) {
+				this.tags.add(`self:condition:${statusId}`);
+			}
+
 			const isDying = statuses.has(STATUS_EFFECT_IDS.dying);
 
 			// self:dying = PC/Hero at 0 HP with wounds remaining (the dying condition)
