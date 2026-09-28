@@ -2850,7 +2850,13 @@
 			"previousRound": "Previous Round",
 			"previousTurn": "Previous Turn",
 			"nextTurn": "Next Turn",
-			"nextRound": "Next Round"
+			"nextRound": "Next Round",
+			"minimizeTracker": "Minimize Combat Tracker",
+			"expandTracker": "Expand Combat Tracker",
+			"currentRound": "Current Round",
+			"roundBadge": "R{round}",
+			"combatNotStarted": "Combat Not Started",
+			"availableActions": "Available actions: {current} / {max}"
 		},
 		"itemConfig": {
 			"areaSize": "Area Size",

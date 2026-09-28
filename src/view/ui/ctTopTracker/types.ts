@@ -127,6 +127,7 @@ export interface CtTopTrackerSettingPatch {
 	nonPlayerHpBarEnabled?: boolean;
 	nonPlayerHpBarTextMode?: CombatTrackerNonPlayerHpBarTextMode;
 	ctEnabled?: boolean;
+	ctMinimized?: boolean;
 	ctWidthLevel?: number;
 	ctCardSizeLevel?: number;
 	ctLeftToRightOrdering?: boolean;
