@@ -18,6 +18,7 @@ export const COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY = 'combatTrackerCtReactio
 export const COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY = 'combatTrackerCtHoverColor';
 export const COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY =
 	'combatTrackerCtLeftToRightOrdering';
+export const COMBAT_TRACKER_MINIMIZED_SETTING_KEY = 'combatTrackerCtMinimized';
 export const COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME = 'nimble:ct-client-setting-updated';
 export const CURRENT_TURN_ANIMATION_SETTING_KEYS = {
 	pulseAnimation: 'combatTrackerCurrentTurnPulseAnimation',
@@ -56,6 +57,7 @@ const DEFAULT_CT_ACTION_DICE_COLOR_SETTING = '#ffffff';
 const DEFAULT_CT_REACTION_COLOR_SETTING = '#4fc3f7';
 const DEFAULT_CT_HOVER_COLOR_SETTING = '#33bc4e';
 const DEFAULT_CT_LEFT_TO_RIGHT_ORDERING_SETTING = false;
+const DEFAULT_CT_MINIMIZED_SETTING = false;
 const DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS: CurrentTurnAnimationSettings = {
 	pulseAnimation: true,
 	pulseSpeed: 50,
@@ -253,6 +255,18 @@ export function registerCombatTrackerSettings(): void {
 		default: DEFAULT_CT_ENABLED_SETTING,
 		onChange: () => {
 			dispatchCtClientSettingUpdated(COMBAT_TRACKER_ENABLED_SETTING_KEY);
+		},
+	});
+
+	registerWorldSetting(COMBAT_TRACKER_MINIMIZED_SETTING_KEY, {
+		name: 'NIMBLE.settings.combatTrackerMinimized.name',
+		hint: 'NIMBLE.settings.combatTrackerMinimized.hint',
+		scope: 'client',
+		config: false,
+		type: Boolean,
+		default: DEFAULT_CT_MINIMIZED_SETTING,
+		onChange: () => {
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_MINIMIZED_SETTING_KEY);
 		},
 	});
 
@@ -465,6 +479,12 @@ export function getCombatTrackerCtEnabled(): boolean {
 	);
 }
 
+export function getCombatTrackerCtMinimized(): boolean {
+	return Boolean(
+		game.settings.get(SYSTEM_ID as 'core', COMBAT_TRACKER_MINIMIZED_SETTING_KEY as 'rollMode'),
+	);
+}
+
 export function getCombatTrackerCtWidthLevel(): number {
 	return normalizeCtWidthLevel(
 		game.settings.get(SYSTEM_ID as 'core', COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY as 'rollMode'),
@@ -532,6 +552,12 @@ export function isCombatTrackerEnabledSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_ENABLED_SETTING_KEY) return true;
 	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`;
+}
+
+export function isCombatTrackerMinimizedSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_MINIMIZED_SETTING_KEY) return true;
+	return settingKey === `${SYSTEM_ID}.${COMBAT_TRACKER_MINIMIZED_SETTING_KEY}`;
 }
 
 export function isCombatTrackerWidthLevelSettingKey(settingKey: unknown): boolean {
@@ -691,6 +717,14 @@ export async function setCombatTrackerCtEnabled(value: boolean): Promise<void> {
 	await game.settings.set(
 		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode',
+		Boolean(value) as never,
+	);
+}
+
+export async function setCombatTrackerCtMinimized(value: boolean): Promise<void> {
+	await game.settings.set(
+		SYSTEM_ID as 'core',
+		COMBAT_TRACKER_MINIMIZED_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
 }
