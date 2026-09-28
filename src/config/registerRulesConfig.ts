@@ -32,12 +32,14 @@ import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
 import { ModifyConsumerRule } from '../models/rules/modifyConsumer.js';
 import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.js';
+import { ModifyOutgoingAttackRule } from '../models/rules/modifyOutgoingAttack.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
+import { RecurringDamageRule } from '../models/rules/recurringDamage.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
@@ -84,12 +86,14 @@ export default function registerRulesConfig() {
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
 		modifyIncomingAttack: 'NIMBLE.ruleTypes.modifyIncomingAttack',
 		modifyConsumer: 'NIMBLE.ruleTypes.modifyConsumer',
+		modifyOutgoingAttack: 'NIMBLE.ruleTypes.modifyOutgoingAttack',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		note: 'NIMBLE.ruleTypes.note',
 		optionSwap: 'NIMBLE.ruleTypes.optionSwap',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		poolMaxBonus: 'NIMBLE.ruleTypes.poolMaxBonus',
+		recurringDamage: 'NIMBLE.ruleTypes.recurringDamage',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		situationalRollMode: 'NIMBLE.ruleTypes.situationalRollMode',
@@ -136,12 +140,14 @@ export default function registerRulesConfig() {
 		maxWounds: MaxWoundsRule,
 		modifyIncomingAttack: ModifyIncomingAttackRule,
 		modifyConsumer: ModifyConsumerRule,
+		modifyOutgoingAttack: ModifyOutgoingAttackRule,
 		modifyPool: ModifyPoolRule,
 		modifyToggle: ModifyToggleRule,
 		note: NoteRule,
 		optionSwap: OptionSwapRule,
 		poolGainMessage: PoolGainMessageRule,
 		poolMaxBonus: PoolMaxBonusRule,
+		recurringDamage: RecurringDamageRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		situationalRollMode: SituationalRollModeRule,

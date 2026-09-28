@@ -1,5 +1,6 @@
 import type { ConditionNode, EffectNode } from '#types/effectTree.js';
 import applyConditionToActor, { type ConditionTargetActor } from '#utils/applyConditionToActor.js';
+import { withWidget } from './_widgetOption.js';
 import {
 	type ActivationCardContext,
 	type ActorHealthContext,
@@ -49,6 +50,22 @@ function schema() {
 			hint: 'NIMBLE.rules.applyCondition.trigger.hint',
 			choices: TRIGGER_CHOICES as unknown as string[],
 		}),
+		recipient: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'target',
+				choices: ['target', 'self'],
+				label: 'NIMBLE.rules.applyCondition.recipient.label',
+				hint: 'NIMBLE.rules.applyCondition.recipient.hint',
+				// Self-target triggers already apply to the rule's owner; the choice only means
+				// something on an attack outcome, where there is someone else to apply it to.
+				showWhen: (data: Record<string, unknown>) =>
+					ATTACK_OUTCOME_TRIGGERS.includes(
+						data.trigger as (typeof ATTACK_OUTCOME_TRIGGERS)[number],
+					),
+			}),
+		),
 		duration: new fields.SchemaField(
 			{
 				rounds: new fields.NumberField({ required: false, nullable: true, initial: null }),
@@ -78,6 +95,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	static override description = 'NIMBLE.rules.applyCondition.description';
 
 	declare condition: string;
+	declare recipient: 'target' | 'self';
 	declare trigger: ApplyConditionTrigger;
 	declare duration: { rounds: number | null; turns: number | null; seconds: number | null };
 
@@ -92,6 +110,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['condition', 'string'],
+				['recipient', "'target' <span class=\"nimble-type-summary__operator\">|</span> 'self'"],
 				[
 					'trigger',
 					TRIGGER_CHOICES.map((t) => `'${t}'`).join(
@@ -105,9 +124,16 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onItemUsed(context: ItemUsedContext): Promise<void> {
 		if (!this.#shouldFireOnItemUsed(context)) return;
-		const targetActor = context.targetActor as unknown as ConditionTargetActor | null;
-		if (!targetActor) return;
-		await this.#applyConditionTo(targetActor);
+
+		// A self-applied condition still links to whoever was attacked: Latched On sits on the
+		// stirge but ends when the creature it latched onto dies.
+		const attacker = this.item.actor as unknown as ConditionTargetActor | null;
+		const defender = context.targetActor as unknown as ConditionTargetActor | null;
+		const [recipient, linked] =
+			this.recipient === 'self' ? [attacker, defender] : [defender, attacker];
+		if (!recipient) return;
+
+		await this.#applyConditionTo(recipient, linked);
 	}
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
@@ -191,14 +217,20 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		await this.#applyConditionTo(selfActor);
 	}
 
-	async #applyConditionTo(target: ConditionTargetActor): Promise<void> {
+	async #applyConditionTo(
+		target: ConditionTargetActor,
+		linkedActor: ConditionTargetActor | null = null,
+	): Promise<void> {
 		if (!this.condition) return;
+
+		const linkedActorUuid = (linkedActor as { uuid?: string } | null)?.uuid ?? null;
 
 		await applyConditionToActor(target, this.condition, {
 			sourceItem: this.item as unknown as { uuid?: string },
 			sourceActor: this.item.actor as unknown as { uuid?: string } | null,
 			duration: this.duration,
 			rule: this,
+			systemFlags: linkedActorUuid ? { linkedActorUuid } : null,
 		});
 	}
 }

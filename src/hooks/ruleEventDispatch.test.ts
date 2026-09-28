@@ -38,6 +38,16 @@ vi.stubGlobal('foundry', {
 
 vi.mock('../utils/actorHealthState.js', () => ({
 	getActorHealthState: vi.fn(() => 'normal'),
+	// Mirrors the real predicate: dead is 0 HP with a full wound track, or 0 HP and no track.
+	isActorDead: (actor: {
+		system?: { attributes?: Record<string, { value: number; max: number }> };
+	}) => {
+		const attributes = actor?.system?.attributes;
+		if ((attributes?.hp?.value ?? 0) > 0) return false;
+		const wounds = attributes?.wounds;
+		if (!wounds || wounds.max <= 0) return true;
+		return wounds.value >= wounds.max;
+	},
 }));
 
 import { getActorHealthState } from '../utils/actorHealthState.js';

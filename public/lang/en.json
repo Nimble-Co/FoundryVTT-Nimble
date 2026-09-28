@@ -360,7 +360,9 @@
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
 			"wounded": "Wounded",
-			"lastStand": "Last Stand"
+			"lastStand": "Last Stand",
+			"latchedOn": "Latched On",
+			"swallowed": "Swallowed"
 		},
 		"concentration": {
 			"endPrompt": {
@@ -400,7 +402,9 @@
 			"stunned": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
 			"unconscious": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>"
+			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>",
+			"latchedOn": "<p>You move where your target moves until either dies. Your attacks can't miss or be Defended/Interposed against. Attacks that miss you damage your target instead.</p>",
+			"swallowed": "<p>You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.</p>"
 		},
 		"currency": {
 			"cp": "Copper",
@@ -876,7 +880,9 @@
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
-			"unarmedDamage": "Unarmed Damage"
+			"unarmedDamage": "Unarmed Damage",
+			"modifyOutgoingAttack": "Modify Outgoing Attack",
+			"recurringDamage": "Recurring Damage"
 		},
 		"rules": {
 			"abilityBonus": {
@@ -945,6 +951,10 @@
 				"trigger": {
 					"label": "Trigger",
 					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc."
+				},
+				"recipient": {
+					"label": "Applies To",
+					"hint": "Whether the condition lands on the creature attacked or on this actor. Only meaningful for hit/crit/miss triggers."
 				}
 			},
 			"armorClass": {
@@ -1597,6 +1607,24 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"modifyOutgoingAttack": {
+				"description": "Modify every attack this actor makes. Cannot Miss turns the attack roll’s miss check off entirely, so a natural 1 still lands; Ignore Armor makes its damage bypass the target’s armor. Pair with a predicate to limit it to while a condition is held.",
+				"modifier": {
+					"label": "Modifier",
+					"hint": "Cannot Miss means no miss threshold is consulted and a natural 1 lands. It does not change saving throws, and a target’s Auto Miss still wins."
+				}
+			},
+			"recurringDamage": {
+				"description": "Damage this actor every turn, on a cadence no duration expresses — the damage for being on fire, or inside something. The roll is posted to chat before it is applied.",
+				"formula": {
+					"label": "Damage",
+					"hint": "Flat (20), formula (@level), or dice (2d6+1)."
+				},
+				"trigger": {
+					"label": "When",
+					"hint": "At the start or the end of this actor’s turn."
 				}
 			}
 		},

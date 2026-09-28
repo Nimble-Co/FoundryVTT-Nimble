@@ -46,6 +46,7 @@ import {
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import localize from '../utils/localize.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
+import getOutgoingAttackOverrides from '../utils/outgoingAttackOverrides.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import {
 	applyUpcastDeltas,
@@ -408,6 +409,9 @@ class ItemActivationManager {
 		// are skipped entirely — non-attack items (consumables, utilities) should not receive
 		// attack damage bonuses.
 		const delivery = this.#getAttackDelivery();
+		// Actor-driven attack overrides (e.g. a condition that makes every attack land). Resolved
+		// once per activation rather than per node: every damage node belongs to the same attack.
+		const attackOverrides = getOutgoingAttackOverrides(this.actor);
 		// Source classification: spells are 'spell', everything else (weapons, monster features,
 		// class features) is 'weapon'. Monster features are physical attacks, not spells.
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
@@ -448,8 +452,12 @@ class ItemActivationManager {
 					const resolvedCanCrit =
 						isAoE || isMinion || isFlunky || lacksProficiency ? false : (canCrit ?? true);
 					// Minions cannot crit but can still miss — the asymmetry with
-					// resolvedCanCrit above is intentional.
-					const resolvedCanMiss = isAoE ? false : isMinion || (canMiss ?? true);
+					// resolvedCanCrit above is intentional. An actor-driven cannot-miss outranks
+					// even that, so a minion under such an effect lands its natural 1 too.
+					const resolvedCanMiss =
+						isAoE || attackOverrides.cannotMiss ? false : isMinion || (canMiss ?? true);
+
+					if (attackOverrides.ignoreArmor) node.ignoreArmor = true;
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Check if item has vicious property
