@@ -1,3 +1,5 @@
+import { getMovementKind } from './movementKind.js';
+
 interface MeasuringToken {
 	parent?: { grid?: { distance: number } } | null;
 	measureMovementPath(waypoints: object[]): { segments: { distance: number }[] };
@@ -10,7 +12,9 @@ interface MeasuringToken {
  * for each waypoint after the first. Spaces are the distance in scene units
  * over the grid distance, so every diagonal rule and gridless scenes are
  * honoured. Rounding is cumulative, never per segment: each leg is a whole
- * number, and the legs up to any waypoint sum to the rounded distance to it.
+ * number, and the moving legs up to any waypoint sum to the rounded distance
+ * moved to it. Teleport legs keep a running total of their own, so a measured
+ * teleport never moves where the spaces of the other legs fall.
  */
 export function measureWaypointSpaces(
 	token: MeasuringToken,
@@ -21,14 +25,16 @@ export function measureWaypointSpaces(
 	if (!gridDistance) return waypoints.slice(1).map(() => 0);
 	const { segments } = token.measureMovementPath([...waypoints]);
 
+	const travelled = { moved: 0, teleported: 0 };
+	const counted = { moved: 0, teleported: 0 };
 	const result: number[] = [];
-	let travelled = 0;
-	let counted = 0;
 	for (let index = 0; index < waypoints.length - 1; index++) {
-		travelled += segments[index]?.distance ?? 0;
-		const total = Math.round(travelled / gridDistance);
-		result.push(total - counted);
-		counted = total;
+		const action = (waypoints[index + 1] as { action?: string }).action ?? '';
+		const kind = getMovementKind(action) === 'teleport' ? 'teleported' : 'moved';
+		travelled[kind] += segments[index]?.distance ?? 0;
+		const spaces = Math.round(travelled[kind] / gridDistance);
+		result.push(spaces - counted[kind]);
+		counted[kind] = spaces;
 	}
 	return result;
 }

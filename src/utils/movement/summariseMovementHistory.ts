@@ -20,8 +20,9 @@ interface MeasurableToken {
  * Sums the spaces of a movement history by Movement kind. The history is
  * measured once as a whole so alternating diagonal rules stay consistent, and
  * each leg is attributed to the action of the waypoint it arrives at. Legs are
- * rounded on the running distance, not one by one, so the summary adds up to
- * the whole history's distance rounded to the nearest space.
+ * rounded on the running distance, not one by one, so the counted spaces add up
+ * to the distance moved, rounded to the nearest space. Teleports are rounded
+ * apart, so they never change that count.
  */
 export function summariseMovementHistory(
 	token: MeasurableToken,

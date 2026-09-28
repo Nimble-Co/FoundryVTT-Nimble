@@ -69,6 +69,20 @@ describe('summariseMovementHistory', () => {
 		expect(summary.counted).toBe(1);
 	});
 
+	it('counts the spaces walked around a measured teleport as if it never happened', () => {
+		(CONFIG as unknown as { Token: TokenConfig }).Token = {
+			movement: { actions: { blink: { teleport: true } } },
+		};
+		const token = makeToken(true, 5);
+		const history: Waypoint[] = [
+			{ x: 0, y: 0, action: 'walk' },
+			{ x: 0.5, y: 0, action: 'walk' },
+			{ x: 1, y: 0, action: 'blink' },
+			{ x: 1.5, y: 0, action: 'walk' },
+		];
+		expect(summariseMovementHistory(token, history).counted).toBe(1);
+	});
+
 	it('derives spaces from distance on a gridless scene', () => {
 		const token = makeToken(true, 5);
 		const history: Waypoint[] = [

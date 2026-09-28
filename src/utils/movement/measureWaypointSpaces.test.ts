@@ -68,6 +68,27 @@ const diagonalSteps = (count: number): GridPoint[] =>
 	Array.from({ length: count + 1 }, (_, index) => ({ x: index, y: index }));
 
 describe('measureWaypointSpaces', () => {
+	const withDistances = (distances: number[]) =>
+		makeToken(distances.map((distance) => ({ distance, spaces: 0 })));
+	const walkTeleportWalk = [
+		{ action: 'walk' },
+		{ action: 'walk' },
+		{ action: 'displace' },
+		{ action: 'walk' },
+	];
+
+	it('rounds a measured teleport apart, so it never adds a space to the moves around it', () => {
+		// 2.5 + 2.5 feet walked on 5 foot spaces is 1 space, whatever the teleport between covers.
+		const legs = measureWaypointSpaces(withDistances([2.5, 2.5, 2.5]), walkTeleportWalk);
+		expect(legs[0] + legs[2]).toBe(1);
+	});
+
+	it('rounds a measured teleport apart, so it never takes a space from the moves around it', () => {
+		// 2.4 + 2.4 feet walked is 0.96 spaces, which rounds to 1.
+		const legs = measureWaypointSpaces(withDistances([2.4, 0.2, 2.4]), walkTeleportWalk);
+		expect(legs[0] + legs[2]).toBe(1);
+	});
+
 	it('returns nothing for fewer than two waypoints', () => {
 		expect(measureWaypointSpaces(makeToken([]), [{ x: 0 }])).toEqual([]);
 	});
