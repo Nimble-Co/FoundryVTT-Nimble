@@ -888,6 +888,8 @@ class ItemActivationManager {
 		// A hero item with no attack type has no delivery, and damage bonuses are skipped
 		// entirely: non-attack items (consumables, utilities) receive no attack damage bonuses.
 		const delivery = this.#getAttackDelivery();
+		// Actor-driven attack overrides (e.g. a condition that makes every attack land). Resolved
+		// once per activation rather than per node: every damage node belongs to the same attack.
 		// Source classification: spells are 'spell', everything else (weapons, monster features,
 		// class features) is 'weapon'. Monster features are physical attacks, not spells.
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';

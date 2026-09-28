@@ -50,7 +50,12 @@ export async function applyHitConditions(input: {
 				uuid: held?.uuid ?? '',
 				name: held?.name ?? '',
 			});
-			if (automatic) await applyConditionToActor(attacker, rule.condition, context);
+			if (automatic) {
+				await applyConditionToActor(attacker, rule.condition, {
+					...context,
+					systemFlags: held?.uuid ? { linkedActorUuid: held.uuid } : null,
+				});
+			}
 			continue;
 		}
 		if (!automatic) continue;

@@ -9,6 +9,7 @@ function setConfiguredConditions(
 		linked?: Record<string, readonly string[]>;
 		stackable?: string[];
 		lastsUntil?: Record<string, object[]>;
+		scopes?: Record<string, string>;
 	} = {},
 ): void {
 	(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {
@@ -19,6 +20,7 @@ function setConfiguredConditions(
 		conditionLinkedConditions: relationships.linked ?? {},
 		conditionStackableConditions: new Set<string>(relationships.stackable ?? []),
 		conditionLastsUntil: relationships.lastsUntil ?? {},
+		conditionScopes: relationships.scopes ?? {},
 	};
 }
 
@@ -146,6 +148,27 @@ describe('ConditionManager', () => {
 			manager.configureStatusEffects();
 
 			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['afraid', 'zealous']);
+		});
+
+		it('leaves monster-scoped conditions out of the token HUD picker', () => {
+			setConfiguredConditions(
+				{ blinded: 'Blinded', swallowed: 'Swallowed' },
+				{ scopes: { swallowed: 'monster' } },
+			);
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['blinded']);
+		});
+
+		it('still registers a monster-scoped condition, so it can be applied and read', () => {
+			setConfiguredConditions(
+				{ blinded: 'Blinded', swallowed: 'Swallowed' },
+				{ scopes: { swallowed: 'monster' } },
+			);
+			manager.initialize();
+
+			expect(manager.get('swallowed')).toBeDefined();
 		});
 
 		it('re-publishes the snapshot after the config changes', () => {

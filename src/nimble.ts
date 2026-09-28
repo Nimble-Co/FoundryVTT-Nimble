@@ -19,7 +19,9 @@ import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHe
 import registerDyingActionLimitSync from './hooks/combatantHooks/dyingActionLimitSync.js';
 import registerPendingActionDeltaFold from './hooks/combatantHooks/pendingActionDeltaFold.js';
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
+import { registerConditionExpiryHooks } from './hooks/conditionExpiry.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
+import registerConditionRuleGrantHooks from './hooks/conditionRuleGrants.js';
 import { registerCritDiceSaveHooks } from './hooks/critDiceSave.js';
 import { registerDamageBackOnAttackHooks } from './hooks/damageBackOnAttack.js';
 import registerDeleteItemOriginEffectsHooks from './hooks/deleteItemOriginEffects.js';
@@ -205,6 +207,8 @@ registerCardEventsQuery();
 registerApplyEffectQuery();
 registerGiveWoundsQuery();
 registerUseItemForFreeQuery();
+registerConditionExpiryHooks();
+registerConditionRuleGrantHooks();
 registerMinionGroupTokenBadges();
 registerMovementHistoryRefresh();
 registerArmedMovementOfferIndex();
