@@ -265,7 +265,24 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"disabled": false,
+						"label": "Bite/Swallow: Swallowed on crit",
+						"predicate": {},
+						"priority": 1,
+						"type": "applyCondition",
+						"id": "Kq2rFhVnDs7XmYbT",
+						"condition": "swallowed",
+						"recipient": "target",
+						"trigger": "onCrit",
+						"duration": {
+							"rounds": null,
+							"turns": null,
+							"seconds": null
+						}
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -316,11 +333,103 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+40. On crit: Swallowed. (Swallowed. You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.)</p>",
+				"description": "<p>1d4+40. On crit: Swallowed.</p>",
 				"subtype": "action"
 			},
 			"_id": "y6ehHXM8WKOXUyUl",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-needles-purple.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"name": "Swallowed.",
+			"type": "monsterFeature",
+			"system": {
+				"macro": "",
+				"identifier": "swallowed",
+				"rules": [
+					{
+						"disabled": false,
+						"label": "Swallowed: 20 damage at the start of your turn",
+						"predicate": {
+							"$and": [
+								"self:condition:swallowed"
+							]
+						},
+						"priority": 1,
+						"type": "recurringDamage",
+						"id": "Tb5mXsQaVe8YnCwJ",
+						"formula": "20",
+						"trigger": "turnStart"
+					},
+					{
+						"disabled": false,
+						"label": "Swallowed: attacks cannot miss",
+						"predicate": {
+							"$and": [
+								"self:condition:swallowed"
+							]
+						},
+						"priority": 1,
+						"type": "modifyOutgoingAttack",
+						"id": "Wg3jUpLd6RzHfBxM",
+						"modifier": "cannotMiss"
+					},
+					{
+						"disabled": false,
+						"label": "Swallowed: attacks ignore armor",
+						"predicate": {
+							"$and": [
+								"self:condition:swallowed"
+							]
+						},
+						"priority": 1,
+						"type": "modifyOutgoingAttack",
+						"id": "Nc7vEyKs2QmTdArX",
+						"modifier": "ignoreArmor"
+					}
+				],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": "",
+						"attackType": "",
+						"distance": 1
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.</p>",
+				"subtype": "feature"
+			},
+			"_id": "Zp4cNwRt9LkGvHqD",
+			"img": "icons/svg/cave.svg",
 			"effects": [],
 			"folder": null,
 			"sort": 0,

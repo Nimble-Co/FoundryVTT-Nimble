@@ -2947,6 +2947,25 @@ describe('forceMiss option', () => {
 		expect(roll.isCritical).toBe(false);
 	});
 
+	it('still wins against an attacker who cannot miss', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: false,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forceMiss: true,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 1, active: true }], 1);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+	});
+
 	it('overrides a primary die crit: isCritical false and critCount zeroed', async () => {
 		const roll = new DamageRoll(
 			'1d8',

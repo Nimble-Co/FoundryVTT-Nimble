@@ -23,6 +23,8 @@ interface MockActor {
 	// forcing every fixture to describe an inventory it does not have.
 	flags?: Record<string, unknown>;
 	items?: { contents: MockItem[]; get(id: string): MockItem | undefined };
+	// Only the outgoing-attack-override path reads these.
+	rules?: Array<{ type: string; modifier: string; disabled: boolean; test(): boolean }>;
 	system: {
 		savingThrows: {
 			strength: { mod: number };
@@ -225,6 +227,114 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			const result = await manager.getData();
 
 			expect(result.rolls).toEqual([]);
+		});
+	});
+
+	describe('Actor-driven attack overrides', () => {
+		function outgoingRule(modifier: 'cannotMiss' | 'ignoreArmor', passes = true) {
+			return { type: 'modifyOutgoingAttack', modifier, disabled: false, test: () => passes };
+		}
+
+		function damageNode(overrides: Partial<EffectNode> = {}): EffectNode {
+			return {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+				...overrides,
+			} as unknown as EffectNode;
+		}
+
+		// The manager works on a flattened clone of the tree, so the rolled node is read back from
+		// what `reconstructEffectsTree` was handed rather than from the fixture.
+		async function rollDamageNode(node: EffectNode) {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			manager.activationData = { effects: [node] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 5 }),
+				}),
+			);
+
+			await manager.getData();
+
+			return {
+				damageOptions: vi.mocked(DamageRoll).mock.calls[0][2] as Record<string, unknown>,
+				rolledNode: manager.activationData!.effects[0] as EffectNode,
+			};
+		}
+
+		it('forces canMiss false while a cannotMiss rule applies, so a natural 1 lands', async () => {
+			mockActor.rules = [outgoingRule('cannotMiss')];
+
+			const { damageOptions } = await rollDamageNode(damageNode());
+
+			expect(damageOptions.canMiss).toBe(false);
+		});
+
+		it('leaves canMiss alone when the rule’s predicate does not pass', async () => {
+			mockActor.rules = [outgoingRule('cannotMiss', false)];
+
+			const { damageOptions } = await rollDamageNode(damageNode());
+
+			expect(damageOptions.canMiss).toBe(true);
+		});
+
+		it('leaves canCrit alone, since cannot-miss says nothing about critting', async () => {
+			mockActor.rules = [outgoingRule('cannotMiss')];
+
+			const { damageOptions } = await rollDamageNode(damageNode());
+
+			expect(damageOptions.canCrit).toBe(true);
+		});
+
+		it('marks the damage node as ignoring armor while an ignoreArmor rule applies', async () => {
+			mockActor.rules = [outgoingRule('ignoreArmor')];
+
+			const { rolledNode } = await rollDamageNode(damageNode());
+
+			expect((rolledNode as { ignoreArmor?: boolean }).ignoreArmor).toBe(true);
+		});
+
+		it('leaves a saving throw untouched, so a save still avoids a save-gated effect', async () => {
+			mockActor.rules = [outgoingRule('cannotMiss'), outgoingRule('ignoreArmor')];
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const savingThrowNode = {
+				id: 'save-1',
+				type: 'savingThrow',
+				savingThrowType: 'strength',
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [savingThrowNode] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+
+			const result = await manager.getData();
+
+			expect(result.rolls).toEqual([]);
+			expect(DamageRoll).not.toHaveBeenCalled();
+			expect(savingThrowNode).not.toHaveProperty('ignoreArmor');
+		});
+
+		it('does not mark the node when no ignoreArmor rule applies', async () => {
+			mockActor.rules = [outgoingRule('cannotMiss')];
+
+			const { rolledNode } = await rollDamageNode(damageNode());
+
+			expect((rolledNode as { ignoreArmor?: boolean }).ignoreArmor).toBeUndefined();
 		});
 	});
 

@@ -46,6 +46,29 @@ export const STATUS_EFFECT_IDS = {
 
 export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFECT_IDS];
 
+/**
+ * Conditions a monster feature inflicts rather than ones a GM hands out. They are registered
+ * alongside the general conditions so they can be applied, described and carry rules, but they
+ * are kept out of the token HUD picker and the sheet's inactive-condition list: a GM toggling
+ * "Swallowed" onto an arbitrary creature has no defined meaning, since the condition's mechanics
+ * come from the feature that inflicted it.
+ */
+export const MONSTER_CONDITION_IDS = {
+	latchedOn: 'latchedOn',
+	swallowed: 'swallowed',
+} as const;
+
+export type MonsterConditionId = (typeof MONSTER_CONDITION_IDS)[keyof typeof MONSTER_CONDITION_IDS];
+
+export type ConditionScope = 'general' | 'monster';
+
+/**
+ * How a condition ends when no duration governs it. `linkedDeath` clears the condition as soon as
+ * either the creature carrying it or the creature it is linked to dies, which is Latched On's
+ * "until either dies". The link itself is recorded on the effect by `applyCondition`.
+ */
+export type ConditionExpiryTrigger = 'linkedDeath';
+
 /** Every built-in ID required, any GM-supplied ID readable. */
 export type ConditionDictionary = Record<StatusEffectId, string> & Record<string, string>;
 
@@ -68,6 +91,7 @@ export default function registerConditionsConfig() {
 		incapacitated: 'NIMBLE.conditions.incapacitated',
 		invisible: 'NIMBLE.conditions.invisible',
 		lastStand: 'NIMBLE.conditions.lastStand',
+		latchedOn: 'NIMBLE.conditions.latchedOn',
 		marked: 'NIMBLE.conditions.marked',
 		paralyzed: 'NIMBLE.conditions.paralyzed',
 		petrified: 'NIMBLE.conditions.petrified',
@@ -79,6 +103,7 @@ export default function registerConditionsConfig() {
 		slowed: 'NIMBLE.conditions.slowed',
 		stunned: 'NIMBLE.conditions.stunned',
 		smoldering: 'NIMBLE.conditions.smoldering',
+		swallowed: 'NIMBLE.conditions.swallowed',
 		taunted: 'NIMBLE.conditions.taunted',
 		unconscious: 'NIMBLE.conditions.unconscious',
 		wounded: 'NIMBLE.conditions.wounded',
@@ -100,6 +125,7 @@ export default function registerConditionsConfig() {
 		incapacitated: 'NIMBLE.conditionDescriptions.incapacitated',
 		invisible: 'NIMBLE.conditionDescriptions.invisible',
 		lastStand: 'NIMBLE.conditionDescriptions.lastStand',
+		latchedOn: 'NIMBLE.conditionDescriptions.latchedOn',
 		marked: 'NIMBLE.conditionDescriptions.marked',
 		paralyzed: 'NIMBLE.conditionDescriptions.paralyzed',
 		petrified: 'NIMBLE.conditionDescriptions.petrified',
@@ -111,6 +137,7 @@ export default function registerConditionsConfig() {
 		slowed: 'NIMBLE.conditionDescriptions.slowed',
 		smoldering: 'NIMBLE.conditionDescriptions.smoldering',
 		stunned: 'NIMBLE.conditionDescriptions.stunned',
+		swallowed: 'NIMBLE.conditionDescriptions.swallowed',
 		taunted: 'NIMBLE.conditionDescriptions.taunted',
 		unconscious: 'NIMBLE.conditionDescriptions.unconscious',
 		wounded: 'NIMBLE.conditionDescriptions.wounded',
@@ -134,6 +161,7 @@ export default function registerConditionsConfig() {
 		incapacitated: `${SYSTEM_PATH}/assets/icons/incapacitated.svg`,
 		invisible: 'icons/svg/invisible.svg',
 		lastStand: 'icons/svg/combat.svg',
+		latchedOn: 'icons/svg/trap.svg',
 		marked: 'icons/svg/target.svg',
 		paralyzed: 'icons/svg/paralysis.svg',
 		petrified: `${SYSTEM_PATH}/assets/icons/petrified.svg`,
@@ -145,6 +173,7 @@ export default function registerConditionsConfig() {
 		slowed: `${SYSTEM_PATH}/assets/icons/slowed.svg`,
 		smoldering: 'icons/svg/fire.svg',
 		stunned: `${SYSTEM_PATH}/assets/icons/stunned.svg`,
+		swallowed: 'icons/svg/cave.svg',
 		taunted: `${SYSTEM_PATH}/assets/icons/taunted.svg`,
 		unconscious: 'icons/svg/unconscious.svg',
 		wounded: `${SYSTEM_PATH}/assets/icons/wound.svg`,
@@ -161,6 +190,17 @@ export default function registerConditionsConfig() {
 
 	const conditionLinkedConditions = {
 		petrified: ['incapacitated'] as const,
+	};
+
+	// Only the exceptions are listed; an unlisted id is general-scoped, which keeps GM-defined
+	// custom conditions general without the custom-condition merge having to know about scopes.
+	const conditionScopes: Record<string, ConditionScope> = {
+		latchedOn: 'monster',
+		swallowed: 'monster',
+	};
+
+	const conditionExpiryTriggers: Record<string, ConditionExpiryTrigger> = {
+		latchedOn: 'linkedDeath',
 	};
 
 	const conditionStackableConditions = new Set(['wounded']);
@@ -182,7 +222,9 @@ export default function registerConditionsConfig() {
 		conditionAliasedConditions,
 		conditionDescriptions,
 		conditionDefaultImages,
+		conditionExpiryTriggers,
 		conditionLinkedConditions,
+		conditionScopes,
 		conditionStackableConditions,
 		conditionOverlayConditions,
 		conditionTriggerRelationships,
