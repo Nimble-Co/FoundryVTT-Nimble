@@ -2,6 +2,7 @@ import {
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtEnabled,
 	getCombatTrackerCtLeftToRightOrdering,
+	getCombatTrackerCtMinimized,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
@@ -10,6 +11,7 @@ import {
 	isCombatTrackerCardSizeLevelSettingKey,
 	isCombatTrackerEnabledSettingKey,
 	isCombatTrackerLeftToRightOrderingSettingKey,
+	isCombatTrackerMinimizedSettingKey,
 	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
 	isCombatTrackerPlayerHpBarTextModeSettingKey,
@@ -45,6 +47,13 @@ export function resolveCtTopTrackerSettingPatch(
 	if (isCombatTrackerEnabledSettingKey(settingKey)) {
 		return {
 			ctEnabled: getCombatTrackerCtEnabled(),
+		};
+	}
+	if (isCombatTrackerMinimizedSettingKey(settingKey)) {
+		return {
+			ctMinimized: getCombatTrackerCtMinimized(),
+			layoutVersionDelta: 1,
+			shouldCenterActiveEntry: true,
 		};
 	}
 	if (isCombatTrackerWidthLevelSettingKey(settingKey)) {
