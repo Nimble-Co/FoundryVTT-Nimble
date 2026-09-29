@@ -213,6 +213,16 @@ describe('NimbleTokenDocument movementFinished report', () => {
 		expect(reports()).toEqual([expect.objectContaining({ movementId: 'm1' })]);
 	});
 
+	it('reports a stopped Movement once, even if a continuation of it arrives after the stop', () => {
+		// Core can still apply a continuation that was in flight when the Movement stopped.
+		const { token, moveTo } = tokenMoving(movement('m1', 'stopped'));
+		token._onMovementStopped();
+		const continued = movement('m2', 'completed', ['m1']);
+		moveTo(continued);
+		token._onUpdateMovement(continued, {}, {});
+		expect(reports()).toEqual([expect.objectContaining({ movementId: 'm1', stopped: true })]);
+	});
+
 	it('ignores an update for a Movement the token has already moved on from', () => {
 		const { token } = tokenMoving(movement('m2', 'completed'));
 		token._onUpdateMovement(movement('m1', 'completed'), {}, {});
