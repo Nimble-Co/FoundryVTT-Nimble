@@ -175,6 +175,11 @@ describe('spacesBetween', () => {
 			expect(spacesBetween(makeToken(0, 0, grid), makeToken(1, 1, grid), undefined, 1)).toBe(1);
 		});
 
+		it('counts exactly when the gap between the rectangles equals the limit', () => {
+			const grid = squareGrid('illegal');
+			expect(spacesBetween(makeToken(0, 0, grid), makeToken(3, 3, grid), undefined, 2)).toBe(6);
+		});
+
 		it('always measures on a grid that is not square', () => {
 			const grid = makeGrid();
 			const a = makeToken(0, 0, grid);
