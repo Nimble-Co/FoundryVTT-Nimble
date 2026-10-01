@@ -140,7 +140,7 @@ In the books, every push and every Free Move happens as part of the effect that 
 
 The card does not record the saving throw of each target. Under a save result, the tag shows the distance with a die sign and the save that decides it, and the drag is not watched. Move the token by hand when the save calls for it.
 
-This toggle needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the ruler shows nothing extra and the card shows the distance as text. Turning either toggle on or off stops the card from watching every waiting move, so no creature keeps a move from the old setting. The tag of that move then shows only the distance, as when a toggle is off.
+This toggle needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the card shows the distance as text and the token is dragged as usual. Turning either toggle on or off stops the card from watching every waiting move, so no creature keeps a move from the old setting. The tag of that move then shows only the distance, as when a toggle is off.
 
 ## Token adjacency tracking
 
