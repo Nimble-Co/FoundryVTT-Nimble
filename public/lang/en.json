@@ -3720,7 +3720,9 @@
 			},
 			"ruler": {
 				"free": "Free Move: {spaces} of {limit}",
-				"forced": "Forced Movement: {spaces} of {limit}"
+				"forced": "Forced Movement: {spaces} of {limit}",
+				"switchToOwn": "{key}: own movement",
+				"switchToOffer": "{key}: {movement}"
 			}
 		}
 	}
