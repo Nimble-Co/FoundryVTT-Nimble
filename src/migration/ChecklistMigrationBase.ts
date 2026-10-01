@@ -59,27 +59,32 @@ function sign(value: unknown): number {
 	return typeof value === 'number' ? Math.sign(value) : Number.NaN;
 }
 
-const POOL_MODIFIER_FIELDS = ['dieSize', 'maxDelta', 'minFace', 'addRefills'];
+/**
+ * Whether an active rule already changes the size of the same pool in the same
+ * direction and under the same condition. A modifier that changes any other part
+ * of a pool is matched by id only.
+ */
+function coversPoolMaxDelta(existing: RuleSource, wanted: RuleSource): boolean {
+	const changesOnlyMax = ['dieSize', 'minFace'].every((field) => wanted[field] == null);
+	const addsNoRefill = !Array.isArray(wanted.addRefills) || wanted.addRefills.length === 0;
+	if (!changesOnlyMax || !addsNoRefill) return false;
 
-function isSet(value: unknown): boolean {
-	if (Array.isArray(value)) return value.length > 0;
-	return value != null && String(value).trim() !== '';
-}
-
-/** Whether a pool modifier changes every part of the pool another one changes. */
-function coversPoolModifier(existing: RuleSource, wanted: RuleSource): boolean {
+	if (existing.disabled === true) return false;
 	if (existing.poolType !== wanted.poolType) return false;
 	if (existing.poolIdentifier !== wanted.poolIdentifier) return false;
-	return POOL_MODIFIER_FIELDS.every((field) => !isSet(wanted[field]) || isSet(existing[field]));
+	if (JSON.stringify(existing.predicate ?? {}) !== JSON.stringify(wanted.predicate ?? {})) {
+		return false;
+	}
+	return sign(Number(existing.maxDelta)) === sign(Number(wanted.maxDelta));
 }
 
 /**
  * A rule already covering the same clause, whatever id it carries: a pool is
  * keyed by what it holds, a consumer by the pool it spends, an action by who
  * gains it, a roll mode by the skills it reads and the direction it bends, a
- * damage reduction by its mode and the damage types it covers, a pool modifier
- * by the pool and the parts of it that it changes, and an unarmed damage formula
- * by its type alone, as the last one to run sets the value.
+ * damage reduction by its mode and the damage types it covers, a pool size
+ * change by the pool, the direction and the condition, and an unarmed damage
+ * formula by its type alone, as the last one to run sets the value.
  */
 function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 	if (!existing || existing.type !== wanted.type) return false;
@@ -92,7 +97,7 @@ function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 		case 'actionDelta':
 			return existing.target === wanted.target;
 		case 'modifyPool':
-			return coversPoolModifier(existing, wanted);
+			return coversPoolMaxDelta(existing, wanted);
 		case 'unarmedDamage':
 			return true;
 		case 'concentrationTrack':
