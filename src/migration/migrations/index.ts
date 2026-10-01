@@ -62,3 +62,4 @@ export { Migration061ShadowStormChecklist } from './Migration061ShadowStormCheck
 export { Migration062ConcentrationAppliesToCaster } from './Migration062ConcentrationAppliesToCaster.js';
 export { Migration063MasterOfStormTracks } from './Migration063MasterOfStormTracks.js';
 export { Migration064ObjectSizeTypeChoices } from './Migration064ObjectSizeTypeChoices.js';
+export { Migration065AuraOfZealJudgmentDie } from './Migration065AuraOfZealJudgmentDie.js';

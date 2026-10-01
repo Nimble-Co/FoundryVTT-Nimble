@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "aura-of-zeal-judgment-plus1",
+				"identifier": "",
+				"label": "Aura of Zeal: roll 1 more Judgment Die",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "dice",
+				"poolIdentifier": "judgment",
+				"dieSize": null,
+				"maxDelta": "+1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

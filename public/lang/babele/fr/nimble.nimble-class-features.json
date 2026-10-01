@@ -99,7 +99,12 @@
 		},
 		"Aura of Zeal": {
 			"description": "<p>Whenever you roll Judgment Dice, roll 1 more. Gain an aura with a Reach of 4. Your Radiant Judgment also triggers when an ally within your aura is attacked while you have no Judgment Dice.</p>",
-			"name": "Aura of Zeal"
+			"name": "Aura of Zeal",
+			"rules": {
+				"aura-of-zeal-judgment-plus1": {
+					"label": "Aura of Zeal: roll 1 more Judgment Die"
+				}
+			}
 		},
 		"Avenger": {
 			"description": "<p>Whenever you or an ally within your aura gain any Wounds, change up to that many Judgment Dice to their max. Then, move up to half your speed for free.</p>",
