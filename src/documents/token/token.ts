@@ -17,9 +17,10 @@ interface DropEvent {
 	interactionData: { contexts: Record<string, { token: unknown }> };
 }
 
-/** Set by core when the user picks a movement action for this drag with the cycle key. */
 interface DraggingLayer {
+	/** Set by core when the user picks a movement action for this drag with the cycle key. */
 	_dragMovementAction?: string | null;
+	_draggedToken?: unknown;
 }
 
 /**
@@ -30,17 +31,39 @@ interface DraggingLayer {
  */
 export class NimbleToken extends foundry.canvas.placeables.Token {
 	/**
-	 * The offer this drag moves under. The user sets it aside by picking another
-	 * movement action for the drag, and the GM by turning on core Unconstrained
-	 * Movement, which is how a GM puts a token wherever they want.
+	 * The offer this token's drags can move under: the one it carries, unless the
+	 * GM turns on core Unconstrained Movement, which is how a GM puts a token
+	 * wherever they want.
 	 */
-	#dragOffer(): ArmedMovementOffer | null {
-		if ((this.layer as unknown as DraggingLayer)._dragMovementAction) return null;
+	#availableDragOffer(): ArmedMovementOffer | null {
 		// @ts-expect-error - fvtt-types does not declare the v14 drag option seams
 		const base = super._getDragConstrainOptions() as ConstrainOptions;
 		if (base.ignoreWalls && base.ignoreCost) return null;
 		const uuid = this.document.uuid;
 		return uuid ? findArmedMovementOffer(uuid) : null;
+	}
+
+	/** The offer this drag moves under, unless the user switched the drag to another movement action. */
+	#dragOffer(): ArmedMovementOffer | null {
+		if ((this.layer as unknown as DraggingLayer)._dragMovementAction) return null;
+		return this.#availableDragOffer();
+	}
+
+	/** The offer the user can switch this token's current drag to and from, if any. */
+	switchableDragOffer(): ArmedMovementOffer | null {
+		if ((this.layer as unknown as DraggingLayer)._draggedToken !== this) return null;
+		return this.#availableDragOffer();
+	}
+
+	/**
+	 * Switches the current drag between the offer this token carries and its own
+	 * movement action. False when there is no offer to switch to.
+	 */
+	switchDragBudget(): boolean {
+		if (!this.switchableDragOffer()) return false;
+		const layer = this.layer as unknown as DraggingLayer;
+		layer._dragMovementAction = layer._dragMovementAction ? null : this.document.movementAction;
+		return true;
 	}
 
 	/** Labels the drag, so an offered Movement never draws on the creature's own speed. */
