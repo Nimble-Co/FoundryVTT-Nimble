@@ -25,6 +25,14 @@
         <span class="delta-elevation">({{elevation.delta}})</span>
         {{/if}}
         {{/if}}
+        {{#if moveDie}}
+        <span class="nimble-ruler-move">
+            <i class="fa-solid {{moveDie.icon}}"></i>
+            {{#if moveDie.over}}
+            <span class="nimble-ruler-move-over">!</span>
+            {{/if}}
+        </span>
+        {{/if}}
         {{#if secret}}
         <i class="icon fa-solid fa-eye-slash"></i>
         {{/if}}

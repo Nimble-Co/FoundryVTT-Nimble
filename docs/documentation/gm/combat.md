@@ -105,6 +105,15 @@ With the **Movement Tracking** automation toggle on (the default), the system wa
 
 The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
 
+## Moves on the ruler
+
+On a character's own turn, dragging its token shows its **Moves** on the ruler. No setting turns this off.
+
+- In the rules, each Move action lets a hero move up to their Speed, and a Move can be broken up with other actions. So the first Speed spaces the character moves in a turn are Move 1, the next Speed spaces Move 2, and so on, and a later drag goes on in the Move where the last one stopped. Difficult terrain counts double. A Free Move, Forced Movement or a Teleport never counts.
+- The grid spaces of the second and third Moves have colours of their own, and spaces past the third Move are red.
+- The label on the path shows a die for the Move the drop lands in: one pip for the first Move, two for the second and three for the third. These are the dice the character sheet shows for the actions. Past the third Move, a red **!** follows the die.
+- The Moves only show the distance. They do not know how many actions the character has left, nothing stops the drag, and no action is spent for you. The table keeps track of actions.
+
 ## Forced and Free Movement
 
 With the **Forced and Free Movement** and **Movement Tracking** automation toggles on (the default), a card that pushes or pulls a creature, or gives it a Free Move, also watches that creature's next drag. There is nothing to click. The distance is worked out once, when the feature is used.
@@ -117,7 +126,7 @@ The creature's next drag counts as that movement:
 - Nothing stops the drag. Drop further and the token moves the whole way. What the extra spaces mean is for the table to decide.
 - The move is recorded as a Free Move or as Forced Movement, so it never draws on the creature's own speed for the turn.
 
-Whoever owns the token still does the moving and picks the path and the final space. The label under the path says which movement the drag uses, for example **Free Move: 2 of 3**. To move the creature with its own movement instead, press **Tab** during the drag, and press it again to switch back; the label shows the key. A GM with Foundry's **Unconstrained Movement** setting on is placing the token, so the drag is not counted as the push or the Free Move.
+Whoever owns the token still does the moving and picks the path and the final space. The label under the path says which movement the drag uses, for example **Free Move: 2 of 3**. To move the creature with its own movement instead, press **Tab** during the drag, and press it again to switch back; the label shows the key. On a character's own turn, its own movement shows its Moves (see [Moves on the ruler](#moves-on-the-ruler)). A GM with Foundry's **Unconstrained Movement** setting on is placing the token, so the drag is not counted as the push or the Free Move.
 
 A push ignores difficult terrain; a Free Move follows the feature's wording, and the card says when a Free Move ignores it. The card shows the direction the feature names: "away from" or "toward" the feature's user, or "in any direction" for Forced Movement. Nothing enforces it, and the rules give a push no particular shape.
 
