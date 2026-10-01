@@ -167,3 +167,13 @@ export interface OfferRulerWaypoint {
 	measurement: { distance: number; cost: number };
 	offerBand?: OfferBand;
 }
+
+/** The slice of a core token ruler waypoint that marking the Moves of a drag reads and marks. */
+export interface MoveBandWaypoint {
+	stage: string;
+	action: string;
+	unreachable: boolean;
+	measurement: { cost: number };
+	/** The Move of the turn a planned waypoint falls in: 1 for the first Speed spaces. */
+	moveBand?: number;
+}
