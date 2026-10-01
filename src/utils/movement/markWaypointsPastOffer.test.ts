@@ -58,6 +58,17 @@ describe('markWaypointsPastOffer', () => {
 		expect(unreachable(path)).toEqual([false, false, false, false]);
 	});
 
+	it('notes how many offered spaces each waypoint of the drag has used', () => {
+		const path = [0, 5, 10, 15].map((d, i) => waypoint('planned', d, i ? undefined : 'walk'));
+		markWaypointsPastOffer(path, push, 5);
+		expect(path.map((w) => w.offerBand && [w.offerBand.spaces, w.offerBand.limit])).toEqual([
+			undefined,
+			[1, 2],
+			[2, 2],
+			[3, 2],
+		]);
+	});
+
 	it('does nothing to a path with no planned part', () => {
 		const path = [waypoint('passed', 0), waypoint('passed', 50)];
 		markWaypointsPastOffer(path, push, 5);
