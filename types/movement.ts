@@ -152,10 +152,18 @@ export interface OfferCard {
 	};
 }
 
+/** How many spaces of a Movement Offer a planned ruler waypoint has used. */
+export interface OfferBand {
+	kind: MovementOfferKind;
+	spaces: number;
+	limit: number;
+}
+
 /** The slice of a core token ruler waypoint that marking a drag past an offer reads and marks. */
 export interface OfferRulerWaypoint {
 	stage: string;
 	action: string;
 	unreachable: boolean;
 	measurement: { distance: number; cost: number };
+	offerBand?: OfferBand;
 }

@@ -3765,6 +3765,10 @@
 			"actions": {
 				"free": "Free Move",
 				"forced": "Forced Movement"
+			},
+			"ruler": {
+				"free": "Free Move: {spaces} of {limit}",
+				"forced": "Forced Movement: {spaces} of {limit}"
 			}
 		}
 	}

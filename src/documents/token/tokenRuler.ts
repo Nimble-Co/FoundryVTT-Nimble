@@ -1,4 +1,6 @@
+import { SYSTEM_PATH } from '#system';
 import type { OfferRulerWaypoint } from '#types/movement.js';
+import localize from '#utils/localize.ts';
 import { markWaypointsPastOffer } from '#utils/movement/markWaypointsPastOffer.js';
 import { findArmedMovementOffer } from '#utils/movement/movementOffers.js';
 
@@ -11,11 +13,22 @@ function endsReach(waypoint: unknown): boolean {
 	return !unreachable && !!next?.unreachable;
 }
 
+/** Which offered movement a drag waypoint uses and how many of its spaces. */
+function budgetText({ offerBand }: OfferRulerWaypoint): string {
+	if (!offerBand) return '';
+	return localize(`NIMBLE.movement.ruler.${offerBand.kind}`, {
+		spaces: String(offerBand.spaces),
+		limit: String(offerBand.limit),
+	});
+}
+
 /**
  * Shows how far a Movement Offer reaches while its token is dragged: the part
  * of the drag past the offer is drawn the way core draws an unreachable path.
  */
 export class NimbleTokenRuler extends foundry.canvas.placeables.tokens.TokenRuler {
+	static override WAYPOINT_LABEL_TEMPLATE = `${SYSTEM_PATH}/templates/hud/waypoint-label.hbs`;
+
 	protected override _preparePath(
 		path: foundry.canvas.placeables.tokens.TokenRuler.Waypoint[],
 	): void {
@@ -31,5 +44,14 @@ export class NimbleTokenRuler extends foundry.canvas.placeables.tokens.TokenRule
 		waypoint: Parameters<foundry.canvas.placeables.tokens.TokenRuler['_shouldRenderWaypoint']>[0],
 	): boolean {
 		return super._shouldRenderWaypoint(waypoint) || endsReach(waypoint);
+	}
+
+	protected override _getWaypointLabelContext(
+		...args: Parameters<foundry.canvas.placeables.tokens.TokenRuler['_getWaypointLabelContext']>
+	): ReturnType<foundry.canvas.placeables.tokens.TokenRuler['_getWaypointLabelContext']> {
+		const context = super._getWaypointLabelContext(...args);
+		if (!context) return context;
+		const budget = budgetText(args[0] as unknown as OfferRulerWaypoint);
+		return budget ? Object.assign(context, { budget }) : context;
 	}
 }

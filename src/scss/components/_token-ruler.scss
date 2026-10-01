@@ -1,0 +1,19 @@
+// Lines the system adds under core's measurement in a token ruler label. Without them the label keeps core's layout.
+#measurement .waypoint-label .nimble-ruler-measure {
+  display: contents;
+}
+
+#measurement .waypoint-label:has(.nimble-ruler-budget) {
+  flex-direction: column;
+
+  .nimble-ruler-measure {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+#measurement .waypoint-label .nimble-ruler-budget {
+  font-size: var(--font-size-16);
+  color: var(--color-text-emphatic);
+}
