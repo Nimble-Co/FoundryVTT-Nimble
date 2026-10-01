@@ -59,12 +59,27 @@ function sign(value: unknown): number {
 	return typeof value === 'number' ? Math.sign(value) : Number.NaN;
 }
 
+const POOL_MODIFIER_FIELDS = ['dieSize', 'maxDelta', 'minFace', 'addRefills'];
+
+function isSet(value: unknown): boolean {
+	if (Array.isArray(value)) return value.length > 0;
+	return value != null && String(value).trim() !== '';
+}
+
+/** Whether a pool modifier changes every part of the pool another one changes. */
+function coversPoolModifier(existing: RuleSource, wanted: RuleSource): boolean {
+	if (existing.poolType !== wanted.poolType) return false;
+	if (existing.poolIdentifier !== wanted.poolIdentifier) return false;
+	return POOL_MODIFIER_FIELDS.every((field) => !isSet(wanted[field]) || isSet(existing[field]));
+}
+
 /**
  * A rule already covering the same clause, whatever id it carries: a pool is
  * keyed by what it holds, a consumer by the pool it spends, an action by who
  * gains it, a roll mode by the skills it reads and the direction it bends, a
- * damage reduction by its mode and the damage types it covers, and an unarmed
- * damage formula by its type alone, as the last one to run sets the value.
+ * damage reduction by its mode and the damage types it covers, a pool modifier
+ * by the pool and the parts of it that it changes, and an unarmed damage formula
+ * by its type alone, as the last one to run sets the value.
  */
 function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 	if (!existing || existing.type !== wanted.type) return false;
@@ -76,6 +91,8 @@ function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
 			return existing.poolIdentifier === wanted.poolIdentifier;
 		case 'actionDelta':
 			return existing.target === wanted.target;
+		case 'modifyPool':
+			return coversPoolModifier(existing, wanted);
 		case 'unarmedDamage':
 			return true;
 		case 'concentrationTrack':
