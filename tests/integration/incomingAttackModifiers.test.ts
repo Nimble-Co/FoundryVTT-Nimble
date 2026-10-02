@@ -207,6 +207,27 @@ describe('incoming attack modifiers', () => {
 		);
 	}, 60_000);
 
+	test('raiseMissThreshold forwards Parry to the attack roll', async () => {
+		await withDefenderRules(
+			[
+				{
+					type: 'modifyIncomingAttack',
+					modifier: 'raiseMissThreshold',
+					missThreshold: 2,
+					label: 'Parry',
+				},
+			],
+			async () => {
+				const message = await attack(2);
+				const roll = message.rolls[0]!;
+				expect(message.system.isMiss).toBe(true);
+				expect(roll.options.missThreshold).toBe(2);
+				const modifiers = roll.options.incomingAttackModifiers as Array<{ label: string }>;
+				expect(modifiers?.some((entry) => entry.label === 'Parry')).toBe(true);
+			},
+		);
+	}, 60_000);
+
 	test("automatic forceReroll with the 'hit' trigger rerolls a hit", async () => {
 		await withDefenderRules(
 			[

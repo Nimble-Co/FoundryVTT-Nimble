@@ -143,7 +143,7 @@
 						"type": "modifyIncomingAttack",
 						"modifier": "raiseMissThreshold",
 						"missThreshold": 2,
-						"label": "Parry: Attacks miss on a 1 and a 2",
+						"label": "",
 						"id": "DdlfAVZ9HQuT3tYA"
 					}
 				],

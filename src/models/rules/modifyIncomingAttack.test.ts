@@ -22,18 +22,18 @@ describe('ModifyIncomingAttackRule', () => {
 
 		it('restricts modifier to the closed choice set', () => {
 			const schema = ModifyIncomingAttackRule.defineSchema();
-			const modifier = schema.modifier as unknown as { choices: string[] };
+			const modifier = schema.modifier as unknown as { choices: Record<string, string> };
 
-			expect(modifier.choices).toEqual([
-				'disadvantage',
-				'forceReroll',
-				'redirectToSelf',
-				'autoMiss',
-				'raiseMissThreshold',
-			]);
+			expect(modifier.choices).toEqual({
+				disadvantage: 'NIMBLE.rules.modifyIncomingAttack.modifiers.disadvantage',
+				forceReroll: 'NIMBLE.rules.modifyIncomingAttack.modifiers.forceReroll',
+				redirectToSelf: 'NIMBLE.rules.modifyIncomingAttack.modifiers.redirectToSelf',
+				autoMiss: 'NIMBLE.rules.modifyIncomingAttack.modifiers.autoMiss',
+				raiseMissThreshold: 'NIMBLE.rules.modifyIncomingAttack.modifiers.raiseMissThreshold',
+			});
 		});
 
-		it('defaults missThreshold to 2 with a minimum of 1', () => {
+		it('defaults missThreshold to 2 with a minimum of 2', () => {
 			const schema = ModifyIncomingAttackRule.defineSchema();
 			const missThreshold = schema.missThreshold as unknown as {
 				initial: number;
@@ -42,7 +42,7 @@ describe('ModifyIncomingAttackRule', () => {
 			};
 
 			expect(missThreshold.initial).toBe(2);
-			expect(missThreshold.min).toBe(1);
+			expect(missThreshold.min).toBe(2);
 			expect(missThreshold.integer).toBe(true);
 		});
 

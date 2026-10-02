@@ -238,6 +238,28 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(container.querySelector('select')).toBeTruthy();
 	});
 
+	it('StringField choice labels are localized', () => {
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'fixed',
+			choices: {
+				fixed: 'NIMBLE.rules.chargeConsumer.costMode.choices.fixed',
+				variable: 'NIMBLE.rules.chargeConsumer.costMode.choices.variable',
+			},
+		});
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'fixed',
+			parentData: {},
+			name: 'costMode',
+			onChange: noop,
+		});
+		const labels = [...container.querySelectorAll('option')].map((option) => option.textContent);
+
+		expect(labels).toEqual(['Fixed', 'Variable']);
+	});
+
 	it('StringField without choices → mounts a text input', () => {
 		const field = new fields.StringField({ required: true, nullable: false, initial: '' });
 		const { container } = render(SchemaFieldRenderer, {

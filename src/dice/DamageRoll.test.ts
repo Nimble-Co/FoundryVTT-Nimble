@@ -2963,11 +2963,41 @@ describe('missThreshold option', () => {
 		}
 	});
 
+	it('forwards threshold 2 to the primary die extracted from a 2d6 pool', async () => {
+		const roll = rollWithThreshold('2d6', 2);
+		stagePrimaryDieResults(roll, [{ result: 2, active: true }], 5);
+
+		await (roll as any)._evaluate();
+
+		expect((roll.primaryDie?.options as { missThreshold?: number }).missThreshold).toBe(2);
+		expect(roll.isMiss).toBe(true);
+	});
+
 	it('threshold 2 leaves a 3 a hit', async () => {
 		const roll = rollWithThreshold('1d8', 2);
 		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
 		await (roll as any)._evaluate();
 		expect(roll.isMiss).toBe(false);
+	});
+
+	it('a negative primary-die modifier that produces 0 is a miss', async () => {
+		vi.spyOn(Math, 'random').mockReturnValue(0.1);
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: -1,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 0, active: true }], 0);
+
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
 	});
 
 	it('canMiss false lands a 1 even under a raised threshold', async () => {

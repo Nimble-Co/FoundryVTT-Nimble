@@ -11,7 +11,7 @@ Nimble rolls dice a little differently from most systems, and the chat cards are
 When you attack, the whole damage pool is rolled at once, but only one die decides the outcome: the **primary die**, the first die of your weapon's base damage. Everything else (sneak attack dice, bonus damage, flat modifiers) just adds to the total.
 
 - **Critical hit:** the primary die rolls its maximum value. It explodes: the die is rerolled and added to the damage, and keeps going as long as it keeps rolling maximum.
-- **Miss:** the primary die rolls a natural 1. The attack misses no matter what the bonus dice rolled.
+- **Miss:** the primary die normally rolls a natural 1. Some targets can raise this threshold, causing other low primary-die results to miss too. The attack misses no matter what the bonus dice rolled.
 - **Advantage and disadvantage:** each level of advantage adds one extra die to the pool, and the lowest die is dropped before anything else is decided (disadvantage drops the highest instead). Advantage and disadvantage cancel each other out one-for-one, and only the leftover applies.
 - **Area attacks** (anything with a template shape, such as a cone, line, or circle) can neither crit nor miss: one shared roll applies to everyone in the area.
 - **No proficiency, no crit.** If a weapon requires a proficiency you don't have, you can still use it, but it won't crit. Minions never crit.

@@ -1,5 +1,6 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
+import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { getPrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
 import { getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
@@ -14,7 +15,7 @@ declare namespace DamageRoll {
 	interface Options extends foundry.dice.Roll.Options {
 		/** Whether this roll can score a critical hit (exploding die). */
 		canCrit: boolean;
-		/** Whether this roll can miss (rolling a 1 on the primary die). */
+		/** Whether this roll can miss based on the primary die. */
 		canMiss: boolean;
 		/** The minimum roll value needed to score a critical hit. */
 		criticalThreshold?: number;
@@ -22,8 +23,8 @@ declare namespace DamageRoll {
 		damageType?: string;
 		/**
 		 * The highest primary-die result that counts as a miss. Defaults to 1.
-		 * Raised by target-side incoming-attack rules (e.g. the bandit Parry
-		 * trait, which misses on a 1 and a 2). Only consulted when `canMiss`.
+		 * Raised by target-side incoming-attack rules. Only consulted when
+		 * `canMiss`.
 		 */
 		missThreshold?: number;
 		/** The roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
@@ -114,13 +115,13 @@ declare namespace DamageRoll {
  *
  * DamageRoll extends Foundry's Roll class with support for:
  * - Critical hit detection via exploding primary dice
- * - Miss detection when rolling a 1 on the primary die
+ * - Miss detection against a configurable primary-die threshold
  * - Advantage/disadvantage on damage (roll multiple primary dice, keep highest/lowest)
  * - Automatic separation and tracking of the "primary die" from the formula
  *
  * The primary die is the first die term in the formula and determines critical/miss status.
  * When the primary die explodes (rolls max value), the roll is a critical hit.
- * When the primary die rolls a 1, the roll is a miss.
+ * When the primary die rolls at or below the miss threshold, the roll is a miss.
  *
  * @extends {foundry.dice.Roll<DamageRoll.Data>}
  *
@@ -500,7 +501,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 *
 	 * After evaluation, checks the primary die's results to determine:
 	 * - `isCritical`: true if the primary die exploded (rolled max value)
-	 * - `isMiss`: true if the primary die rolled a 1
+	 * - `isMiss`: true if the primary die rolled at or below the miss threshold
 	 *
 	 * For vicious weapons, explosion dice are rolled manually after the initial roll
 	 * to avoid preemptive rolling that would show in visual dice mods like Dice So Nice.
@@ -791,7 +792,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				return !(meta && !meta.canCrit && meta.explosionStyle === 'none');
 			});
 			if (missDie) {
-				const threshold = this.options.missThreshold ?? 1;
+				const threshold = this.options.missThreshold ?? DEFAULT_MISS_THRESHOLD;
 				const firstActive = missDie.results.find((r) => r.active && !r.discarded);
 				this.isMiss =
 					firstActive !== undefined &&

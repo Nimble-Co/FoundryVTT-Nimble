@@ -1,5 +1,6 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
 import type { IncomingReactionEntry, RerollTrigger } from './incomingReactionEntry.js';
+import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
 	collectPoolSpendCardOffers,
@@ -12,8 +13,6 @@ import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 const BASELINE_INTERPOSE_RANGE = 2;
 
 const MODIFY_INCOMING_ATTACK_RULE_TYPE = 'modifyIncomingAttack';
-
-const DEFAULT_MISS_THRESHOLD = 1;
 
 interface RuleLike {
 	type?: string;
@@ -57,7 +56,7 @@ interface IncomingAttackPlan {
 	forceMiss: boolean;
 	/** Highest primary-die result that counts as a miss; 1 unless a rule raises it */
 	missThreshold: number;
-	/** Automatically applied modifiers (disadvantage / autoMiss), for roll metadata */
+	/** Automatically applied modifiers, for roll metadata */
 	appliedEntries: IncomingAttackModifierEntry[];
 	/** Interactive prompts (forceReroll / redirectToSelf) to stamp onto the card */
 	reactionEntries: IncomingReactionEntry[];
@@ -203,8 +202,8 @@ function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 }
 
 /**
- * Collect the target's own attack-time modifiers (disadvantage, forceReroll,
- * autoMiss). `redirectToSelf` is protector-side and excluded here.
+ * Collect the target's own attack-time modifiers. `redirectToSelf` is
+ * protector-side and excluded here.
  */
 function collectTargetIncomingModifiers(actor: ActorLike | null | undefined) {
 	return getMatchingRules(actor)
@@ -381,7 +380,6 @@ function computeIncomingAttackPlan(
 export {
 	applyPostRollIncomingBehavior,
 	BASELINE_INTERPOSE_RANGE,
-	DEFAULT_MISS_THRESHOLD,
 	collectRedirectCandidates,
 	collectTargetIncomingModifiers,
 	computeIncomingAttackPlan,

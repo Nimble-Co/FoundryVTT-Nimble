@@ -1329,6 +1329,13 @@
 			},
 			"modifyIncomingAttack": {
 				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, a raised miss threshold, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"modifiers": {
+					"disadvantage": "Disadvantage",
+					"forceReroll": "Force Reroll",
+					"redirectToSelf": "Redirect to Self",
+					"autoMiss": "Auto Miss",
+					"raiseMissThreshold": "Raise Miss Threshold"
+				},
 				"modifier": {
 					"label": "Modifier",
 					"hint": "Disadvantage, Auto Miss, and Raise Miss Threshold apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card."
@@ -1351,7 +1358,7 @@
 				},
 				"missThreshold": {
 					"label": "Miss threshold",
-					"hint": "The highest primary die result that counts as a miss against this actor. The default is 1; the bandit Parry trait raises it to 2 so attacks miss on a 1 and a 2. Multiple sources do not stack — the highest wins."
+					"hint": "The highest primary die result that counts as a miss against this actor. Attacks normally miss on a 1. Set 2 to make attacks miss on a 1 and a 2. If more than one rule applies, the highest value wins."
 				}
 			},
 			"modifyPool": {

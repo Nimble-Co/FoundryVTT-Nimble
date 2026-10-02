@@ -501,15 +501,28 @@ describe('computeIncomingAttackPlan', () => {
 		const target = createToken({
 			actor: createActor({
 				rules: [
-					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-a' }),
-					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-b' }),
 					createRule({ modifier: 'raiseMissThreshold', missThreshold: 3, id: 'parry-c' }),
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-a' }),
 				],
 			}),
 		});
 		setCanvasTokens([target]);
 
 		expect(computeIncomingAttackPlan(target as never).missThreshold).toBe(3);
+	});
+
+	it('keeps two threshold-2 sources at 2', () => {
+		const target = createToken({
+			actor: createActor({
+				rules: [
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-a' }),
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-b' }),
+				],
+			}),
+		});
+		setCanvasTokens([target]);
+
+		expect(computeIncomingAttackPlan(target as never).missThreshold).toBe(2);
 	});
 
 	it('creates a forceReroll reaction entry bound to the target actor', () => {

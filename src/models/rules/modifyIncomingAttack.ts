@@ -16,7 +16,13 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'disadvantage',
-			choices: ['disadvantage', 'forceReroll', 'redirectToSelf', 'autoMiss', 'raiseMissThreshold'],
+			choices: {
+				disadvantage: 'NIMBLE.rules.modifyIncomingAttack.modifiers.disadvantage',
+				forceReroll: 'NIMBLE.rules.modifyIncomingAttack.modifiers.forceReroll',
+				redirectToSelf: 'NIMBLE.rules.modifyIncomingAttack.modifiers.redirectToSelf',
+				autoMiss: 'NIMBLE.rules.modifyIncomingAttack.modifiers.autoMiss',
+				raiseMissThreshold: 'NIMBLE.rules.modifyIncomingAttack.modifiers.raiseMissThreshold',
+			},
 			label: 'NIMBLE.rules.modifyIncomingAttack.modifier.label',
 			hint: 'NIMBLE.rules.modifyIncomingAttack.modifier.hint',
 		}),
@@ -53,18 +59,6 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.modifier === 'forceReroll',
 			}),
 		),
-		missThreshold: new fields.NumberField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 2,
-				min: 1,
-				integer: true,
-				label: 'NIMBLE.rules.modifyIncomingAttack.missThreshold.label',
-				hint: 'NIMBLE.rules.modifyIncomingAttack.missThreshold.hint',
-				showWhen: (data: Record<string, unknown>) => data.modifier === 'raiseMissThreshold',
-			}),
-		),
 		rerollWithDisadvantage: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -73,6 +67,18 @@ function schema() {
 				label: 'NIMBLE.rules.modifyIncomingAttack.rerollWithDisadvantage.label',
 				hint: 'NIMBLE.rules.modifyIncomingAttack.rerollWithDisadvantage.hint',
 				showWhen: (data: Record<string, unknown>) => data.modifier === 'forceReroll',
+			}),
+		),
+		missThreshold: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 2,
+				min: 2,
+				integer: true,
+				label: 'NIMBLE.rules.modifyIncomingAttack.missThreshold.label',
+				hint: 'NIMBLE.rules.modifyIncomingAttack.missThreshold.hint',
+				showWhen: (data: Record<string, unknown>) => data.modifier === 'raiseMissThreshold',
 			}),
 		),
 		type: new fields.StringField({

@@ -1,4 +1,5 @@
 import type { InexactPartial } from 'fvtt-types/utils';
+import { DEFAULT_MISS_THRESHOLD } from '../../utils/missThreshold.js';
 import type { PrimaryDieDiceOptions } from '../diceSoNiceIntegration.js';
 
 declare namespace PrimaryDie {
@@ -83,7 +84,7 @@ class PrimaryDie extends foundry.dice.terms.Die {
 	get isMiss() {
 		if (!this._evaluated) return undefined;
 		if (this.exploded) return false;
-		const threshold = this.options.missThreshold ?? 1;
+		const threshold = this.options.missThreshold ?? DEFAULT_MISS_THRESHOLD;
 		return this.results.some(
 			(r) => r.result <= threshold && r.result !== this.faces && r.active && !r.discarded,
 		);

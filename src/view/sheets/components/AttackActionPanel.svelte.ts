@@ -13,9 +13,9 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
-	DEFAULT_MISS_THRESHOLD,
 } from '../../../utils/incomingAttackModifiers.js';
 import localize from '../../../utils/localize.js';
+import { DEFAULT_MISS_THRESHOLD } from '../../../utils/missThreshold.js';
 import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
 import sortItems from '../../../utils/sortItems.js';
 import { stripHtml } from '../../../utils/stripHtml.js';

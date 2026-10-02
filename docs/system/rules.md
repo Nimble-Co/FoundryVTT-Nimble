@@ -587,9 +587,9 @@ The system never hides Active Effects: every enabled AE on an actor renders on t
 
 `disadvantage`, `forceReroll`, `autoMiss`, and `raiseMissThreshold` fire when the rule's owner is the attack's target; the predicate is tested against the owner's own domain at attack time (positional tags such as `alliesAdjacent` are fresh). `redirectToSelf` is protector-side: it fires when an ally within `range` spaces (default 2) is targeted, with the predicate tested against the protector's own domain.
 
-Miss thresholds are absolute values, not increments, and several matching rules resolve to their maximum rather than their sum — Parry is a fixed "misses on a 1 and a 2", and two Parry sources do not make it 3. The threshold sits behind `canMiss`, so an attacker who cannot miss ignores it entirely, and a max-face primary die crits rather than missing.
+Miss thresholds are absolute values, not increments, and several matching rules resolve to their maximum rather than their sum. Parry is a fixed "misses on a 1 and a 2", and two Parry sources do not make it 3. The threshold sits behind `canMiss`, so an attacker who cannot miss ignores it entirely, and a max-face primary die crits rather than missing.
 
-These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and minion group attack cards are not covered.
+These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and the opportunity-attack panel, heroic-action macro, deferred-damage chat flow, and minion group attack cards are not covered.
 
 ### Interactive reactions
 
