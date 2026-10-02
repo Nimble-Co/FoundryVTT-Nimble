@@ -7,11 +7,13 @@ import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
+import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -491,6 +493,11 @@ class NimbleBaseActor<
 					this.tags.add(`alliesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
 				}
 			}
+		}
+
+		if (isMovementTrackingAutomationEnabled()) {
+			const spacesMovedThisTurn = getSpacesMovedThisTurn(this);
+			if (spacesMovedThisTurn !== null) this.tags.add(`spacesMovedThisTurn:${spacesMovedThisTurn}`);
 		}
 
 		populateDicePoolTags(

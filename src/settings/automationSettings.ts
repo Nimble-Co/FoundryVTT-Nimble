@@ -11,6 +11,7 @@ export const AUTOMATION_SETTING_KEYS = {
 	healthStateSync: 'automation.healthStateSync',
 	combatConvenience: 'automation.combatConvenience',
 	chatNotifications: 'automation.chatNotifications',
+	movementTracking: 'automation.movementTracking',
 } as const;
 
 export type AutomationSettingKey =
@@ -69,6 +70,11 @@ export function isCombatConvenienceAutomationEnabled(): boolean {
 /** Whether informational automation chat messages are posted. */
 export function isChatNotificationsAutomationEnabled(): boolean {
 	return readAutomationToggle(AUTOMATION_SETTING_KEYS.chatNotifications);
+}
+
+/** Whether token movement is recorded, Spaces Moved This Turn is tracked, and movement events fire. */
+export function isMovementTrackingAutomationEnabled(): boolean {
+	return readAutomationToggle(AUTOMATION_SETTING_KEYS.movementTracking);
 }
 
 /** Persists an automation toggle. Used by the automation settings dialog. */

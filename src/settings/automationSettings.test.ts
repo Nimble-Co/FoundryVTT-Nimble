@@ -6,6 +6,7 @@ import {
 	isCombatConvenienceAutomationEnabled,
 	isDerivedConditionsAutomationEnabled,
 	isHealthStateSyncAutomationEnabled,
+	isMovementTrackingAutomationEnabled,
 	isResourceRecoveryAutomationEnabled,
 	isResourceSpendingAutomationEnabled,
 	isRuleAutomationEnabled,
@@ -27,6 +28,7 @@ const GETTERS_BY_KEY: Array<[string, () => boolean]> = [
 	[AUTOMATION_SETTING_KEYS.healthStateSync, isHealthStateSyncAutomationEnabled],
 	[AUTOMATION_SETTING_KEYS.combatConvenience, isCombatConvenienceAutomationEnabled],
 	[AUTOMATION_SETTING_KEYS.chatNotifications, isChatNotificationsAutomationEnabled],
+	[AUTOMATION_SETTING_KEYS.movementTracking, isMovementTrackingAutomationEnabled],
 ];
 
 describe('automationSettings', () => {
