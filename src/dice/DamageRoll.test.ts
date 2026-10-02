@@ -2921,6 +2921,142 @@ describe('DamageRoll.matches', () => {
 	it('does not match 2d20kh + 1d6', () => expect(DamageRoll.matches('2d20kh + 1d6')).toBe(false));
 });
 
+describe('missThreshold option', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	function rollWithThreshold(formula: string, missThreshold?: number, canMiss = true) {
+		return new DamageRoll(
+			formula,
+			{},
+			{
+				canCrit: true,
+				canMiss,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				...(missThreshold === undefined ? {} : { missThreshold }),
+			},
+		);
+	}
+
+	it('without a threshold, a 1 misses and a 2 does not', async () => {
+		const missed = rollWithThreshold('1d8');
+		stagePrimaryDieResults(missed, [{ result: 1, active: true }], 1);
+		await (missed as any)._evaluate();
+		expect(missed.isMiss).toBe(true);
+
+		const hit = rollWithThreshold('1d8');
+		stagePrimaryDieResults(hit, [{ result: 2, active: true }], 2);
+		await (hit as any)._evaluate();
+		expect(hit.isMiss).toBe(false);
+	});
+
+	it('threshold 2 makes both a 1 and a 2 a miss', async () => {
+		for (const result of [1, 2]) {
+			const roll = rollWithThreshold('1d8', 2);
+			stagePrimaryDieResults(roll, [{ result, active: true }], result);
+			await (roll as any)._evaluate();
+			expect(roll.isMiss).toBe(true);
+		}
+	});
+
+	it('forwards threshold 2 to the primary die extracted from a 2d6 pool', async () => {
+		const roll = rollWithThreshold('2d6', 2);
+		stagePrimaryDieResults(roll, [{ result: 2, active: true }], 5);
+
+		await (roll as any)._evaluate();
+
+		expect((roll.primaryDie?.options as { missThreshold?: number }).missThreshold).toBe(2);
+		expect(roll.isMiss).toBe(true);
+	});
+
+	it('threshold 2 leaves a 3 a hit', async () => {
+		const roll = rollWithThreshold('1d8', 2);
+		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('a negative primary-die modifier that produces 0 is a miss', async () => {
+		vi.spyOn(Math, 'random').mockReturnValue(0.1);
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: -1,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 0, active: true }], 0);
+
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+	});
+
+	it('canMiss false lands a 1 even under a raised threshold', async () => {
+		const roll = rollWithThreshold('1d8', 2, false);
+		stagePrimaryDieResults(roll, [{ result: 1, active: true }], 1);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('a max-face result crits rather than missing when the threshold covers it', async () => {
+		const roll = rollWithThreshold('1d2', 2);
+		stagePrimaryDieResults(roll, [{ result: 2, active: true }], 2);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('modifier-mode honors the threshold on the leftmost non-neutral die', async () => {
+		const roll = rollWithThreshold('1d8c', 2);
+		stageModifierModeRoll(roll, [[{ result: 2, active: true }]], 2);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(true);
+	});
+
+	it('modifier-mode leaves a 3 a hit under threshold 2', async () => {
+		const roll = rollWithThreshold('1d8c', 2);
+		stageModifierModeRoll(roll, [[{ result: 3, active: true }]], 3);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('modifier-mode reports a max-face result as a crit, not a miss', async () => {
+		const roll = rollWithThreshold('1d2c', 2);
+		stageModifierModeRoll(roll, [[{ result: 2, active: true }]], 2);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('forceMiss still misses on a hitting roll under a raised threshold', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				missThreshold: 2,
+				forceMiss: true,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(true);
+	});
+});
+
 describe('forceMiss option', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

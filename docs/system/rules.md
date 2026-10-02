@@ -581,12 +581,15 @@ The system never hides Active Effects: every enabled AE on an actor renders on t
 | --- | --- | --- |
 | `disadvantage` | Automatic, pre-roll | One disadvantage level per matching rule, pushed into the attack roll's `rollModeSources` (cancels 1-for-1 with advantage) |
 | `autoMiss` | Automatic, pre-roll | The attack roll is forced to a miss (`forceMiss` on `DamageRoll`), even against attacker-side "cannot miss" effects |
+| `raiseMissThreshold` | Automatic, pre-roll | Raises the highest primary-die result that misses to the rule's `missThreshold` (`missThreshold` on `DamageRoll`). The bandit Parry trait sets 2, so attacks miss on a 1 and a 2 |
 | `forceReroll` | Interactive or automatic | Discard the roll and roll once more; the second result stands. See the reroll options below |
 | `redirectToSelf` | Interactive | An Interpose offer: when an ally within `range` spaces is targeted, the rule's owner may swap in as the target |
 
-`disadvantage`, `forceReroll`, and `autoMiss` fire when the rule's owner is the attack's target; the predicate is tested against the owner's own domain at attack time (positional tags such as `alliesAdjacent` are fresh). `redirectToSelf` is protector-side: it fires when an ally within `range` spaces (default 2) is targeted, with the predicate tested against the protector's own domain.
+`disadvantage`, `forceReroll`, `autoMiss`, and `raiseMissThreshold` fire when the rule's owner is the attack's target; the predicate is tested against the owner's own domain at attack time (positional tags such as `alliesAdjacent` are fresh). `redirectToSelf` is protector-side: it fires when an ally within `range` spaces (default 2) is targeted, with the predicate tested against the protector's own domain.
 
-These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and minion group attack cards are not covered.
+Miss thresholds are absolute values, not increments, and several matching rules resolve to their maximum rather than their sum. Parry is a fixed "misses on a 1 and a 2", and two Parry sources do not make it 3. The threshold sits behind `canMiss`, so an attacker who cannot miss ignores it entirely, and a max-face primary die crits rather than missing.
+
+These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and the opportunity-attack panel, heroic-action macro, deferred-damage chat flow, and minion group attack cards are not covered.
 
 ### Interactive reactions
 

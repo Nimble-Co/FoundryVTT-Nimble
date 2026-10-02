@@ -1,4 +1,5 @@
 import type { InexactPartial } from 'fvtt-types/utils';
+import { DEFAULT_MISS_THRESHOLD } from '../../utils/missThreshold.js';
 import type { PrimaryDieDiceOptions } from '../diceSoNiceIntegration.js';
 
 declare namespace PrimaryDie {
@@ -8,6 +9,8 @@ declare namespace PrimaryDie {
 		isVicious?: boolean;
 		/** Optional flavor text for the die. */
 		flavor?: string;
+		/** Highest result that counts as a miss. Defaults to 1. */
+		missThreshold?: number;
 		/** Per-term appearance override read by Dice So Nice when active. */
 		appearance?: PrimaryDieDiceOptions['appearance'];
 		/** Marks the term's damage type as system-managed for Dice So Nice. */
@@ -25,7 +28,7 @@ declare namespace PrimaryDie {
  *
  * PrimaryDie extends Foundry's Die term to provide:
  * - `exploded` getter: Checks if the die exploded (rolled max value), indicating a critical hit
- * - `isMiss` getter: Checks if the die rolled a 1, indicating a miss
+ * - `isMiss` getter: Checks if the die rolled at or under the miss threshold (default 1)
  * - Vicious weapon support: When `isVicious` option is true, the DamageRoll class handles
  *   explosions manually to avoid preemptive dice rolling.
  *
@@ -67,20 +70,24 @@ class PrimaryDie extends foundry.dice.terms.Die {
 	}
 
 	/**
-	 * Whether the die resulted in a miss (rolled a 1 on an active, non-discarded result).
+	 * Whether the die resulted in a miss (rolled at or under the miss threshold
+	 * on an active, non-discarded result).
 	 *
 	 * A result is considered a miss if it:
-	 * - Has a value of 1
+	 * - Is at or below `options.missThreshold` (default 1)
 	 * - Is marked as active
 	 * - Is not discarded (e.g., from keep highest/lowest)
-	 * - The roll did not explode (crits cannot be misses)
+	 * - Is not the die's max face, and the roll did not explode (crits cannot be misses)
 	 *
 	 * @returns `true` if the roll is a miss, `false` if not, or `undefined` if not yet evaluated.
 	 */
 	get isMiss() {
 		if (!this._evaluated) return undefined;
 		if (this.exploded) return false;
-		return this.results.some((r) => r.result === 1 && r.active && !r.discarded);
+		const threshold = this.options.missThreshold ?? DEFAULT_MISS_THRESHOLD;
+		return this.results.some(
+			(r) => r.result <= threshold && r.result !== this.faces && r.active && !r.discarded,
+		);
 	}
 }
 

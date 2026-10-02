@@ -1,7 +1,12 @@
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-type IncomingAttackModifier = 'disadvantage' | 'forceReroll' | 'redirectToSelf' | 'autoMiss';
+type IncomingAttackModifier =
+	| 'disadvantage'
+	| 'forceReroll'
+	| 'redirectToSelf'
+	| 'autoMiss'
+	| 'raiseMissThreshold';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -11,7 +16,13 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'disadvantage',
-			choices: ['disadvantage', 'forceReroll', 'redirectToSelf', 'autoMiss'],
+			choices: {
+				disadvantage: 'NIMBLE.rules.modifyIncomingAttack.modifiers.disadvantage',
+				forceReroll: 'NIMBLE.rules.modifyIncomingAttack.modifiers.forceReroll',
+				redirectToSelf: 'NIMBLE.rules.modifyIncomingAttack.modifiers.redirectToSelf',
+				autoMiss: 'NIMBLE.rules.modifyIncomingAttack.modifiers.autoMiss',
+				raiseMissThreshold: 'NIMBLE.rules.modifyIncomingAttack.modifiers.raiseMissThreshold',
+			},
 			label: 'NIMBLE.rules.modifyIncomingAttack.modifier.label',
 			hint: 'NIMBLE.rules.modifyIncomingAttack.modifier.hint',
 		}),
@@ -58,6 +69,18 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.modifier === 'forceReroll',
 			}),
 		),
+		missThreshold: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 2,
+				min: 2,
+				integer: true,
+				label: 'NIMBLE.rules.modifyIncomingAttack.missThreshold.label',
+				hint: 'NIMBLE.rules.modifyIncomingAttack.missThreshold.hint',
+				showWhen: (data: Record<string, unknown>) => data.modifier === 'raiseMissThreshold',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -73,8 +96,9 @@ declare namespace ModifyIncomingAttackRule {
 /**
  * Rule that modifies attacks made against an actor.
  *
- * `disadvantage`, `forceReroll`, and `autoMiss` fire when the rule's owner is
- * the attack's target; the predicate is tested against the owner's own domain.
+ * `disadvantage`, `forceReroll`, `autoMiss`, and `raiseMissThreshold` fire when
+ * the rule's owner is the attack's target; the predicate is tested against the
+ * owner's own domain.
  * `redirectToSelf` fires when an ally within `range` spaces is targeted: the
  * owner is offered a reaction to swap in as the target (predicate tested
  * against the owner's domain).
@@ -92,6 +116,7 @@ class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.S
 	declare automatic: boolean;
 	declare rerollTrigger: 'always' | 'hit' | 'criticalHit';
 	declare rerollWithDisadvantage: boolean;
+	declare missThreshold: number;
 
 	static override defineSchema(): ModifyIncomingAttackRule.Schema {
 		return {
@@ -108,6 +133,7 @@ class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.S
 				['automatic', 'boolean'],
 				['rerollTrigger', 'string'],
 				['rerollWithDisadvantage', 'boolean'],
+				['missThreshold', 'number'],
 			]),
 		);
 	}

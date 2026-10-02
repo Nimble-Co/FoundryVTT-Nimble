@@ -33,7 +33,8 @@ interface MockRule {
 	type?: string;
 	id?: string;
 	label?: string;
-	modifier?: 'disadvantage' | 'forceReroll' | 'redirectToSelf' | 'autoMiss';
+	modifier?: 'disadvantage' | 'forceReroll' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
+	missThreshold?: number;
 	range?: number;
 	automatic?: boolean;
 	rerollTrigger?: 'always' | 'criticalHit';
@@ -414,6 +415,7 @@ describe('computeIncomingAttackPlan', () => {
 		expect(computeIncomingAttackPlan(null)).toEqual({
 			disadvantageCount: 0,
 			forceMiss: false,
+			missThreshold: 1,
 			appliedEntries: [],
 			reactionEntries: [],
 			autoRerollEntries: [],
@@ -426,6 +428,7 @@ describe('computeIncomingAttackPlan', () => {
 		expect(computeIncomingAttackPlan(token as never)).toEqual({
 			disadvantageCount: 0,
 			forceMiss: false,
+			missThreshold: 1,
 			appliedEntries: [],
 			reactionEntries: [],
 			autoRerollEntries: [],
@@ -467,6 +470,59 @@ describe('computeIncomingAttackPlan', () => {
 		expect(plan.forceMiss).toBe(true);
 		expect(plan.appliedEntries).toEqual([expect.objectContaining({ modifier: 'autoMiss' })]);
 		expect(plan.reactionEntries).toEqual([]);
+	});
+
+	it('defaults the miss threshold to 1 when no rule raises it', () => {
+		const target = createToken({
+			actor: createActor({ rules: [createRule({ modifier: 'disadvantage' })] }),
+		});
+		setCanvasTokens([target]);
+
+		expect(computeIncomingAttackPlan(target as never).missThreshold).toBe(1);
+	});
+
+	it('raises the miss threshold and records the rule that raised it', () => {
+		const target = createToken({
+			actor: createActor({
+				rules: [createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry' })],
+			}),
+		});
+		setCanvasTokens([target]);
+
+		const plan = computeIncomingAttackPlan(target as never);
+
+		expect(plan.missThreshold).toBe(2);
+		expect(plan.appliedEntries).toEqual([
+			expect.objectContaining({ modifier: 'raiseMissThreshold', missThreshold: 2 }),
+		]);
+	});
+
+	it('takes the maximum of stacked miss thresholds rather than the sum', () => {
+		const target = createToken({
+			actor: createActor({
+				rules: [
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 3, id: 'parry-c' }),
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-a' }),
+				],
+			}),
+		});
+		setCanvasTokens([target]);
+
+		expect(computeIncomingAttackPlan(target as never).missThreshold).toBe(3);
+	});
+
+	it('keeps two threshold-2 sources at 2', () => {
+		const target = createToken({
+			actor: createActor({
+				rules: [
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-a' }),
+					createRule({ modifier: 'raiseMissThreshold', missThreshold: 2, id: 'parry-b' }),
+				],
+			}),
+		});
+		setCanvasTokens([target]);
+
+		expect(computeIncomingAttackPlan(target as never).missThreshold).toBe(2);
 	});
 
 	it('creates a forceReroll reaction entry bound to the target actor', () => {
@@ -604,6 +660,7 @@ describe('applyPostRollIncomingBehavior', () => {
 	const emptyPlan = () => ({
 		disadvantageCount: 0,
 		forceMiss: false,
+		missThreshold: 1,
 		appliedEntries: [],
 		reactionEntries: [],
 		autoRerollEntries: [],

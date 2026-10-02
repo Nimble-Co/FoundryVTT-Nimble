@@ -45,6 +45,7 @@ import {
 } from '../utils/incomingAttackModifiers.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import localize from '../utils/localize.js';
+import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
 import {
@@ -514,6 +515,9 @@ class ItemActivationManager {
 							damageOptions.rollModeSources = sources;
 						}
 						if (incomingAttackPlan.forceMiss) damageOptions.forceMiss = true;
+						if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
+							damageOptions.missThreshold = incomingAttackPlan.missThreshold;
+						}
 						if (incomingAttackPlan.appliedEntries.length > 0) {
 							(damageOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
 								incomingAttackPlan.appliedEntries;
