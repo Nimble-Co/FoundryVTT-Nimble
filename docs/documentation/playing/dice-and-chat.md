@@ -48,14 +48,14 @@ Use **Set Primary Die Result** or **Add to Primary Die Result**, not both. If yo
 
 With advantage or disadvantage, the extra dice are still rolled and the usual drop still applies. The number you set or changed counts as one die in the pool, so it can be the die that is dropped.
 
-The chat card shows what you entered below the dice, as **Primary Die Set To** and **Added to Primary Die**.
+The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the roll before and after it, for example "Primary Die: rolled 1, modifier +1, result 2". The die on the card always shows the result after the number is added.
 
 ## Anatomy of a chat card
 
 An attack or spell card is built from a few recurring pieces:
 
 - **Header and outcome.** The card names the item used, and the subheading calls out **Critical Hit** or **Miss** when the primary die decided one.
-- **Roll summaries.** Each damage or healing roll shows its total in a box, with a damage type label. Click the arrow beside it to expand the individual dice; hovering the total shows the same breakdown as a tooltip. If the roll window set the primary die or added to it, those numbers are shown below the dice.
+- **Roll summaries.** Each damage or healing roll shows its total in a box, with a damage type label. Click the arrow beside it to expand the individual dice; hovering the total shows the same breakdown as a tooltip. If the roll window set the primary die or added to it, that is shown below the dice, with the roll before the added number.
 - **Apply Damage** *(GMs only)*. Applies the damage to the card's targets. If a target takes less than the rolled total, from a damage reduction rule, a monster's resistances or immunities, or a pending one-shot reduction from a feature like the Berserker's "That all you got?!", the reduced number is what lands, and the card lists each reason per target under **Reduced Damage**. The button stays available even when reduction absorbs the whole hit, and is disabled only when there's nothing to apply, for example on a miss.
 - **Targets.** Tokens targeted when the roll was made are listed on the card. Buttons in this section let you add the currently selected or currently targeted tokens as targets, or remove targets, so a GM can fix up targeting after the roll. Hostile targets are highlighted so it's obvious when you're about to damage the wrong side.
 - **Save prompts.** If the item forces a saving throw, the card shows the save with a d20 button: select the tokens that need to save and click it to roll the save for each of them. The card lists what happens on a failed and a successful save.

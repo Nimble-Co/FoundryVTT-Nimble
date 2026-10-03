@@ -149,6 +149,20 @@ describe('DamageRoll preprocessing', () => {
 			expect(roll.formula).toMatch(/^1d6x \+ \d+ \+ 1$/);
 		});
 
+		it('should record the primary die roll before the modifier', () => {
+			const roll = new DamageRoll(
+				'1d6+1',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 2 },
+			);
+
+			const base = roll.options.primaryDieBaseResult;
+			expect(base).toBeGreaterThanOrEqual(1);
+			expect(base).toBeLessThanOrEqual(6);
+			const shown = roll.primaryDie?.results[0].result;
+			expect(shown).toBe(Math.min((base ?? 0) + 2, 6));
+		});
+
 		it('should put the modifier excess after the primary die in a multi-die formula', () => {
 			const roll = new DamageRoll(
 				'2d6+1',

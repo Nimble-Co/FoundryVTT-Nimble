@@ -118,6 +118,21 @@ describe('DamageNode', () => {
 		expect(screen.getByText(/added to primary die: 2/i)).toBeTruthy();
 	});
 
+	it('shows the primary die roll before the modifier when the roll recorded it', () => {
+		renderNode(
+			createMessage(),
+			deferredNode({
+				roll: {
+					...rolledRoll(),
+					options: { primaryDieValue: 0, primaryDieModifier: 1, primaryDieBaseResult: 1 },
+				},
+			}),
+		);
+
+		expect(screen.getByText(/primary die: rolled 1, modifier \+1, result 2/i)).toBeTruthy();
+		expect(screen.queryByText(/primary die set to/i)).toBeNull();
+	});
+
 	it('shows the total for ordinary damage that was never deferred', () => {
 		renderNode(createMessage(), deferredNode({ deferredRoll: false, roll: rolledRoll(14) }));
 

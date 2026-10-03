@@ -48,6 +48,8 @@ declare namespace DamageRoll {
 		primaryDieValue: number;
 		/** A modifier to add to the primary die result. */
 		primaryDieModifier: number;
+		/** The primary die roll before primaryDieModifier was added (computed; do not set manually). */
+		primaryDieBaseResult?: number;
 		/**
 		 * Whether the primary die's base result contributes to damage.
 		 * When false, the primary die is used only for hit/miss/crit detection,
@@ -402,6 +404,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const faces = primaryTerm.faces;
 		if (options.primaryDieModifier && faces) {
 			const baseResult = Math.ceil(Math.random() * faces);
+			this.options.primaryDieBaseResult = baseResult;
 			const modifiedResult = baseResult + options.primaryDieModifier;
 			if (modifiedResult > faces) {
 				primaryTerm.results = [{ result: faces, active: true }];

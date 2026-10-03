@@ -2,6 +2,7 @@ interface RollSummaryOptions {
 	rollOptions?: {
 		primaryDieValue?: string | number;
 		primaryDieModifier?: string | number;
+		primaryDieBaseResult?: number;
 		[key: string]: unknown;
 	};
 	[key: string]: unknown;

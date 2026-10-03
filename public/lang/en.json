@@ -2280,6 +2280,7 @@
 			"configureHitDice": "Configure Hit Dice",
 			"primaryDieValue": "Primary Die Set To",
 			"primaryDieModifier": "Added to Primary Die",
+			"primaryDieModifierBreakdown": "Primary Die: rolled {base}, modifier {modifier}, result {result}",
 			"setPrimaryDie": "Set Primary Die Result",
 			"setPrimaryDieModifier": "Add to Primary Die Result",
 			"situationalModifiers": "Add to Roll (number or dice)"
