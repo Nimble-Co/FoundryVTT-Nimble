@@ -103,7 +103,7 @@ describe('DamageNode', () => {
 		// Drawing the block then puts two empty labels under the total.
 		renderNode(createMessage(), deferredNode({ roll: rolledRoll() }));
 
-		expect(screen.queryByText(/primary die value/i)).toBeNull();
+		expect(screen.queryByText(/primary die set to/i)).toBeNull();
 	});
 
 	it('shows the primary-die details when the roll actually has them', () => {
@@ -114,8 +114,8 @@ describe('DamageNode', () => {
 			}),
 		);
 
-		expect(screen.getByText(/primary die value: 12/i)).toBeTruthy();
-		expect(screen.getByText(/primary die modifier: 2/i)).toBeTruthy();
+		expect(screen.getByText(/primary die set to: 12/i)).toBeTruthy();
+		expect(screen.getByText(/added to primary die: 2/i)).toBeTruthy();
 	});
 
 	it('shows the total for ordinary damage that was never deferred', () => {
