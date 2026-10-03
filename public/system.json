@@ -94,6 +94,8 @@
 			"levelUpSummary": {},
 			"minionGroupAttack": {},
 			"moveAction": {},
+			"movementOffer": {},
+			"movementTrigger": {},
 			"object": {},
 			"reaction": {},
 			"safeRest": {},

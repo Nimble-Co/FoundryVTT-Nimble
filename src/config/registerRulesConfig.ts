@@ -14,6 +14,7 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
@@ -34,6 +35,7 @@ import { ModifyConsumerRule } from '../models/rules/modifyConsumer.js';
 import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
+import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
@@ -64,6 +66,7 @@ export default function registerRulesConfig() {
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
+		freeMove: 'NIMBLE.ruleTypes.freeMove',
 		grantActivation: 'NIMBLE.ruleTypes.grantActivation',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
@@ -86,6 +89,7 @@ export default function registerRulesConfig() {
 		modifyConsumer: 'NIMBLE.ruleTypes.modifyConsumer',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
+		movementTrigger: 'NIMBLE.ruleTypes.movementTrigger',
 		note: 'NIMBLE.ruleTypes.note',
 		optionSwap: 'NIMBLE.ruleTypes.optionSwap',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
@@ -116,6 +120,7 @@ export default function registerRulesConfig() {
 		damageBonus: DamageBonusRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
+		freeMove: FreeMoveRule,
 		grantActivation: GrantActivationRule,
 		grantMovement: GrantMovementRule,
 		diceConsumer: DiceConsumerRule,
@@ -138,6 +143,7 @@ export default function registerRulesConfig() {
 		modifyConsumer: ModifyConsumerRule,
 		modifyPool: ModifyPoolRule,
 		modifyToggle: ModifyToggleRule,
+		movementTrigger: MovementTriggerRule,
 		note: NoteRule,
 		optionSwap: OptionSwapRule,
 		poolGainMessage: PoolGainMessageRule,

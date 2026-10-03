@@ -583,6 +583,11 @@ describe('resolveForceRerollReaction with a folded card-side spend', () => {
 		const written = actor._item.update.mock.calls[0][0] as Record<string, unknown>;
 		const pools = written[`flags.${SYSTEM_ID}.dicePools`] as Record<string, { faces: number[] }>;
 		expect(pools.fury.faces).toEqual([3, 4, 5]);
+		// A refund is not a pool gain, so gain listeners must be able to tell
+		expect((globals.Hooks as { call: ReturnType<typeof vi.fn> }).call).toHaveBeenCalledWith(
+			'nimble.dicePool.changed',
+			expect.objectContaining({ previousFaces: [3], newFaces: [3, 4, 5], reason: 'refund' }),
+		);
 
 		// Reverted to unused, so the stale-outcome filter takes it off the card
 		expect(rerolledEntries(message).map((e) => e.id)).toEqual(['reroll-1']);
