@@ -22,7 +22,7 @@
 		if (state.situationalModifiers !== '') {
 			const isValid = Roll.validate(state.situationalModifiers);
 			if (!isValid) {
-				ui.notifications?.warn('❌ Invalid dice formula in the situational modifiers!');
+				ui.notifications?.warn(localize('NIMBLE.hitDice.invalidAddToRoll'));
 				return;
 			}
 		}
@@ -32,7 +32,7 @@
 			const firstDieIndex = terms.findIndex((t) => t instanceof foundry.dice.terms.Die);
 			const firstDie = terms[firstDieIndex] as { faces?: number } | undefined;
 			if (!firstDie?.faces || state.primaryDieValue > firstDie.faces || state.primaryDieValue < 0) {
-				ui.notifications?.warn('❌ Invalid value for primary die!');
+				ui.notifications?.warn(localize('NIMBLE.hitDice.invalidSetPrimaryDie'));
 				return;
 			}
 		}

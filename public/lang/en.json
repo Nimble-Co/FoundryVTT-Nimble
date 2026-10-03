@@ -2284,7 +2284,9 @@
 			"primaryDieModifierBreakdownCapped": "Primary Die: rolled {base}, modifier {modifier}, result {result} (maximum), {excess} added to damage",
 			"setPrimaryDie": "Set Primary Die Result",
 			"setPrimaryDieModifier": "Add to Primary Die Result",
-			"situationalModifiers": "Add to Roll (number or dice)"
+			"situationalModifiers": "Add to Roll (number or dice)",
+			"invalidAddToRoll": "Add to Roll must be a number or a dice formula.",
+			"invalidSetPrimaryDie": "Set Primary Die Result must be from 1 to the size of the die."
 		},
 		"hitPoints": {
 			"startingHp": "Starting HP",
