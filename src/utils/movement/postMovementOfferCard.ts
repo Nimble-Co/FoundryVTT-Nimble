@@ -1,5 +1,6 @@
 import type { MoveNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
+import { movementCardWhisper } from './movementCardWhisper.js';
 import { reconcileMovementOffers } from './movementOffers.js';
 
 export interface MovementOfferCardInput {
@@ -16,6 +17,13 @@ export interface MovementOfferCardInput {
 		Partial<Pick<MoveNode, 'distanceBySize'>>;
 	/** 'self' offers to the speaker token; a list of token uuids offers to those tokens. */
 	recipients: 'self' | string[];
+	/** Whether only the owners of the source and of each creature with an offer, and the GMs, see the card. */
+	whisper: boolean;
+}
+
+function tokenActor(tokenUuid: string): Actor | null {
+	const token = fromUuidSync(tokenUuid as Parameters<typeof fromUuidSync>[0], { strict: false });
+	return (token as TokenDocument | null)?.actor ?? null;
 }
 
 /**
@@ -63,7 +71,15 @@ export async function postMovementOfferCard(
 	chatData.system.movementOffers = reconcileMovementOffers(chatData as unknown as OfferCard, {
 		source: actor as unknown as OfferActor,
 	});
-	if (!chatData.system.movementOffers.some((offer) => offer.spaces > 0)) return null;
+	const offered = chatData.system.movementOffers.filter((offer) => offer.spaces > 0);
+	if (offered.length === 0) return null;
 
-	return (await ChatMessage.create(chatData as unknown as ChatMessage.CreateData)) ?? null;
+	const whisper = input.whisper
+		? movementCardWhisper([actor, ...offered.map((offer) => tokenActor(offer.tokenUuid))])
+		: [];
+
+	return (
+		(await ChatMessage.create({ ...chatData, whisper } as unknown as ChatMessage.CreateData)) ??
+		null
+	);
 }

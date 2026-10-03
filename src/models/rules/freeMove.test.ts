@@ -136,6 +136,7 @@ function makeRule(
 		direction: 'any',
 		ignoresDifficultTerrain: false,
 		chargePoolIdentifier: '',
+		whisper: false,
 		disabled: false,
 		id: 'rule-1',
 		label: '',
@@ -158,6 +159,7 @@ type OfferInput = {
 	reason: string;
 	node: Record<string, unknown>;
 	recipients: 'self' | string[];
+	whisper: boolean;
 };
 
 function lastOffer(): OfferInput {
@@ -209,6 +211,7 @@ describe('FreeMoveRule', () => {
 			expect(schema.direction?.choices).toEqual(['any', 'away', 'toward']);
 			expect(schema.ignoresDifficultTerrain?.initial).toBe(false);
 			expect(schema.chargePoolIdentifier?.initial).toBe('');
+			expect(schema.whisper?.initial).toBe(false);
 			expect(schema.type?.initial).toBe('freeMove');
 		});
 
@@ -287,6 +290,16 @@ describe('FreeMoveRule', () => {
 				ignoreDifficultTerrain: true,
 			});
 			expect(offer.reason).toContain('Swift Step');
+		});
+
+		it('posts a card for everyone by default', async () => {
+			await activate(makeRule());
+			expect(lastOffer().whisper).toBe(false);
+		});
+
+		it('posts a whispered card when the rule whispers', async () => {
+			await activate(makeRule({ whisper: true }));
+			expect(lastOffer().whisper).toBe(true);
 		});
 
 		it('titles the card with the rule label when it has one', async () => {

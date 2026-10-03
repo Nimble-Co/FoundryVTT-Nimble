@@ -1325,6 +1325,10 @@
 					"label": "Charge pool",
 					"hint": "Optional. When set, the rule gives the Free Move only while this charge pool has a charge, and each card it posts spends 1 charge. Leave empty for no limit."
 				},
+				"whisper": {
+					"label": "Whisper the card",
+					"hint": "When set, only the feature's owner, the players whose creatures get the move, and the GM see the card. When not set, everyone sees it."
+				},
 				"reasons": {
 					"onActivation": "used {item}",
 					"onPoolGain": "gained {pool}",

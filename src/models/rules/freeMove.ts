@@ -107,6 +107,13 @@ function schema() {
 				widget: 'chargePoolPicker',
 			}),
 		),
+		whisper: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.freeMove.whisper.label',
+			hint: 'NIMBLE.rules.freeMove.whisper.hint',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'freeMove' }),
 	};
 }
@@ -144,6 +151,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	declare direction: 'any' | 'away' | 'toward';
 	declare ignoresDifficultTerrain: boolean;
 	declare chargePoolIdentifier: string;
+	declare whisper: boolean;
 
 	static override defineSchema(): FreeMoveRule.Schema {
 		return {
@@ -244,6 +252,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 					ignoreDifficultTerrain: this.ignoresDifficultTerrain,
 				},
 				recipients,
+				whisper: this.whisper,
 			});
 		});
 	}

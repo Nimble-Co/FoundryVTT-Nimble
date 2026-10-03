@@ -19,7 +19,7 @@ const original = {
 	safeEval: g.Roll.safeEval,
 };
 
-function makeActor(name: string, walk: number) {
+function makeActor(name: string, walk: number, owners: string[] = []) {
 	return {
 		id: `a-${name}`,
 		name,
@@ -27,12 +27,14 @@ function makeActor(name: string, walk: number) {
 		permission: 3,
 		getRollData: () => ({}),
 		system: { attributes: { movement: { walk }, sizeCategory: 'medium' } },
+		testUserPermission: (user: { id: string }) => owners.includes(user.id),
 	};
 }
 
-const hero = makeActor('Hero', 6);
-const goblin = makeActor('Goblin', 4);
+const hero = makeActor('Hero', 6, ['alice']);
+const goblin = makeActor('Goblin', 4, ['bob']);
 const ogre = makeActor('Ogre', 8);
+const statue = makeActor('Statue', 0, ['carol']);
 const heroToken = {
 	id: 'hero',
 	uuid: 'Scene.s.Token.hero',
@@ -44,6 +46,7 @@ const tokens: Record<string, unknown> = {
 	'Scene.s.Token.hero': heroToken,
 	'Scene.s.Token.gob': { name: 'Goblin', actor: goblin },
 	'Scene.s.Token.ogre': { name: 'Ogre', actor: ogre },
+	'Scene.s.Token.statue': { name: 'Statue', actor: statue },
 };
 
 const create = vi.fn(async (data: unknown) => ({ id: 'm1', ...(data as object) }));
@@ -94,6 +97,7 @@ function input(over: Partial<MovementOfferCardInput> = {}): MovementOfferCardInp
 			direction: 'away',
 		},
 		recipients: ['Scene.s.Token.gob'],
+		whisper: false,
 		...over,
 	};
 }
@@ -103,6 +107,7 @@ function posted() {
 		type: string;
 		author: string;
 		speaker: Record<string, unknown>;
+		whisper: string[];
 		system: Record<string, any>;
 	};
 }
@@ -213,5 +218,63 @@ describe('postMovementOfferCard', () => {
 			parentNode: null,
 		});
 		expect(data.system.movementOffers[0].nodeId).toBe(node.id);
+	});
+
+	describe('who sees the card', () => {
+		const gm = { id: 'gm', isGM: true };
+		const users = [gm, ...['alice', 'bob', 'carol', 'dave'].map((id) => ({ id, isGM: false }))];
+		const freeMove = {
+			kind: 'free',
+			distance: '@speed',
+			ignoreDifficultTerrain: false,
+			direction: 'any',
+		} as const;
+
+		function postAs(user: { id: string }) {
+			vi.stubGlobal('game', { ...game, user, users });
+		}
+
+		beforeEach(() => {
+			postAs(gm);
+		});
+
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		it('goes to everyone unless the card is a whisper', async () => {
+			await postMovementOfferCard(input());
+			expect(posted().whisper).toEqual([]);
+		});
+
+		it('goes to the owners of the source and of each creature with an offer, and the GMs, for a whisper', async () => {
+			await postMovementOfferCard(
+				input({ whisper: true, recipients: ['Scene.s.Token.gob', 'Scene.s.Token.ogre'] }),
+			);
+			expect(posted().whisper).toEqual(['gm', 'alice', 'bob']);
+		});
+
+		it('goes to the owners of the source and the GMs for a Free Move of its own', async () => {
+			await postMovementOfferCard(input({ whisper: true, recipients: 'self', node: freeMove }));
+			expect(posted().whisper).toEqual(['gm', 'alice']);
+		});
+
+		it('names a player who posts the card and owns none of its creatures', async () => {
+			postAs({ id: 'dave' });
+			await postMovementOfferCard(input({ whisper: true }));
+			expect(posted().author).toBe('dave');
+			expect(posted().whisper).toEqual(['gm', 'alice', 'bob', 'dave']);
+		});
+
+		it('leaves out the owner of a creature that gets no offer', async () => {
+			await postMovementOfferCard(
+				input({
+					whisper: true,
+					recipients: ['Scene.s.Token.gob', 'Scene.s.Token.statue'],
+					node: freeMove,
+				}),
+			);
+			expect(posted().whisper).toEqual(['gm', 'alice', 'bob']);
+		});
 	});
 });
