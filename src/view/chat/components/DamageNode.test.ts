@@ -133,23 +133,19 @@ describe('DamageNode', () => {
 		expect(screen.queryByText(/primary die set to/i)).toBeNull();
 	});
 
-	it('caps the primary die result at the die maximum and shows the rest as damage', () => {
+	it('leaves out the primary-die details for a roll that can neither crit nor miss', () => {
 		renderNode(
 			createMessage(),
 			deferredNode({
 				roll: {
 					...rolledRoll(),
-					terms: [{ class: 'PrimaryDie', faces: 6, number: 1 }],
-					options: { primaryDieValue: 0, primaryDieModifier: 5, primaryDieBaseResult: 4 },
+					options: { canCrit: false, canMiss: false, primaryDieValue: 3, primaryDieModifier: 2 },
 				},
 			}),
 		);
 
-		expect(
-			screen.getByText(
-				/primary die: rolled 4, modifier \+5, result 6 \(maximum\), 3 added to damage/i,
-			),
-		).toBeTruthy();
+		expect(screen.queryByText(/primary die set to/i)).toBeNull();
+		expect(screen.queryByText(/added to primary die/i)).toBeNull();
 	});
 
 	it('shows the total for ordinary damage that was never deferred', () => {

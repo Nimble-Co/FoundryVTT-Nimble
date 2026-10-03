@@ -1,10 +1,11 @@
-interface RollSummaryOptions {
+export interface RollSummaryOptions {
 	rollOptions?: {
 		primaryDieValue?: string | number;
 		primaryDieModifier?: string | number;
 		primaryDieBaseResult?: number;
 		[key: string]: unknown;
 	};
+	roll?: { terms?: { faces?: number }[] } | null;
 	[key: string]: unknown;
 }
 
