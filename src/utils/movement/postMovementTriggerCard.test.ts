@@ -46,6 +46,7 @@ function input(over: Partial<MovementTriggerCardInput> = {}): MovementTriggerCar
 		moverName: 'Goblin',
 		spaces: 3,
 		spacesThisTurn: 5,
+		whisper: false,
 		...over,
 	};
 }
@@ -59,6 +60,7 @@ describe('postMovementTriggerCard', () => {
 		expect(create.mock.calls[0][0]).toEqual({
 			author: 'test-user-id',
 			speaker: { scene: 's', token: 'hero', actor: 'a-hero', alias: 'Hero' },
+			whisper: [],
 			type: 'movementTrigger',
 			system: {
 				actorName: 'Hero',
@@ -104,5 +106,35 @@ describe('postMovementTriggerCard', () => {
 
 		const system = (create.mock.calls[0][0] as { system: Record<string, unknown> }).system;
 		expect(system.targets).toEqual([]);
+	});
+
+	describe('who sees the card', () => {
+		const gm = { id: 'gm', isGM: true };
+		const alice = { id: 'alice', isGM: false };
+		const bob = { id: 'bob', isGM: false };
+		const owned = {
+			...actor,
+			testUserPermission: (user: { id: string }) => user.id === 'alice',
+		} as unknown as Actor;
+
+		const whisper = () => (create.mock.calls[0][0] as { whisper: string[] }).whisper;
+
+		beforeEach(() => {
+			vi.stubGlobal('game', { ...game, user: gm, users: [gm, alice, bob] });
+		});
+
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		it('goes to the owners of the item and the GMs for a whisper', async () => {
+			await postMovementTriggerCard(input({ actor: owned, whisper: true }));
+			expect(whisper()).toEqual(['gm', 'alice']);
+		});
+
+		it('goes to everyone otherwise', async () => {
+			await postMovementTriggerCard(input({ actor: owned }));
+			expect(whisper()).toEqual([]);
+		});
 	});
 });

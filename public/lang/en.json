@@ -1379,6 +1379,10 @@
 					"label": "Message",
 					"hint": "The text on the card, under the line that says who moved and how far. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn) and {targets} (the creatures that were found). Leave empty to use the default text."
 				},
+				"whisper": {
+					"label": "Whisper the card",
+					"hint": "When set, only the feature's owner and the GM see the card. When not set, everyone sees it."
+				},
 				"defaultMessage": "You can use this item now."
 			},
 			"grantMovement": {

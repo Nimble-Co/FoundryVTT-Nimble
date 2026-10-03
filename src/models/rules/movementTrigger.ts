@@ -129,6 +129,13 @@ function schema() {
 			label: 'NIMBLE.rules.movementTrigger.message.label',
 			hint: 'NIMBLE.rules.movementTrigger.message.hint',
 		}),
+		whisper: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: true,
+			label: 'NIMBLE.rules.movementTrigger.whisper.label',
+			hint: 'NIMBLE.rules.movementTrigger.whisper.hint',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'movementTrigger' }),
 	};
 }
@@ -162,6 +169,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	declare observerScope: MovementTriggerOptions['observerScope'];
 	declare allyRadius: number;
 	declare message: string;
+	declare whisper: boolean;
 
 	static override defineSchema(): MovementTriggerRule.Schema {
 		return {
@@ -223,6 +231,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			moverName,
 			spaces: record.spaces,
 			spacesThisTurn: record.spacesThisTurn,
+			whisper: this.whisper,
 		});
 	}
 

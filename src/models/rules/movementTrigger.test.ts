@@ -35,6 +35,7 @@ const DEFAULTS = {
 	observerScope: 'self',
 	allyRadius: 6,
 	message: '',
+	whisper: true,
 };
 
 function makeRule(
@@ -109,6 +110,7 @@ type TriggerInput = {
 	moverName: string;
 	spaces: number;
 	spacesThisTurn: number | null;
+	whisper: boolean;
 };
 
 function lastCard(): TriggerInput {
@@ -303,7 +305,13 @@ describe('MovementTriggerRule', () => {
 				moverName: 'Goblin',
 				spaces: 3,
 				spacesThisTurn: 5,
+				whisper: true,
 			});
+		});
+
+		it('posts a card for everyone when the rule does not whisper', async () => {
+			await makeRule({ whisper: false }).rule.onMovementFinished(makeContext() as never);
+			expect(lastCard().whisper).toBe(false);
 		});
 
 		it('uses the default message when the message is empty', async () => {

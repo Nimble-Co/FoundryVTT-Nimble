@@ -1,3 +1,5 @@
+import { movementCardWhisper } from './movementCardWhisper.js';
+
 export interface MovementTriggerCardInput {
 	actor: Actor;
 	item: { uuid: string | null; name: string | null; img?: string | null };
@@ -10,6 +12,8 @@ export interface MovementTriggerCardInput {
 	moverName: string;
 	spaces: number;
 	spacesThisTurn: number | null;
+	/** Whether only the item's owners and the GMs see the card. */
+	whisper: boolean;
 }
 
 /** Posts a card that lets the owner use an item after a Movement. */
@@ -21,6 +25,8 @@ export async function postMovementTriggerCard(
 	const chatData = {
 		author: game.user?.id,
 		speaker: ChatMessage.getSpeaker({ actor, token }),
+		// Only the item's owners can use the card, so the creatures it names get no whisper.
+		whisper: input.whisper ? movementCardWhisper([actor]) : [],
 		type: 'movementTrigger',
 		system: {
 			actorName: actor.name ?? '',
