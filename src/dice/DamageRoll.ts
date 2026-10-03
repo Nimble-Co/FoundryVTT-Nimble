@@ -403,7 +403,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		const faces = primaryTerm.faces;
 		if (options.primaryDieModifier && faces) {
-			const baseResult = Math.ceil(Math.random() * faces);
+			const baseResult = options.primaryDieValue || Math.ceil(Math.random() * faces);
 			this.options.primaryDieBaseResult = baseResult;
 			const modifiedResult = baseResult + options.primaryDieModifier;
 			if (modifiedResult > faces) {
