@@ -205,3 +205,6 @@ export interface MovementTriggerOptions {
 	/** 0 means any ally on the scene. */
 	allyRadius: number;
 }
+
+/** The slice of an actor that says which users own it, for the whisper list of a movement card. */
+export type CardCreature = Pick<Actor, 'testUserPermission'>;
