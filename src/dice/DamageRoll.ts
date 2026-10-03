@@ -361,8 +361,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
 			if (shouldExplode && explosionStyle === 'standard') primaryTerm.modifiers.push('x');
 
-			this._applyPrimaryDiePresets(primaryTerm, options);
 			this.terms.unshift(primaryTerm);
+			this._applyPrimaryDiePresets(primaryTerm, options);
 		} else {
 			// Single-die formula: convert to PrimaryDie
 			primaryTerm = new PrimaryDie({
@@ -379,10 +379,10 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
 			if (shouldExplode && explosionStyle === 'standard') primaryTerm.modifiers.push('x');
 
-			this._applyPrimaryDiePresets(primaryTerm, options);
-
 			const idx = this.terms.findIndex((t) => t instanceof Terms.Die);
 			if (idx !== -1) this.terms[idx] = primaryTerm;
+
+			this._applyPrimaryDiePresets(primaryTerm, options);
 		}
 
 		this.primaryDie = primaryTerm;
