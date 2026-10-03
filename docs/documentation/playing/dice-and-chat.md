@@ -48,7 +48,7 @@ Use **Set Primary Die Result** or **Add to Primary Die Result**, not both. If yo
 
 With advantage or disadvantage, the extra dice are still rolled and the usual drop still applies. The number you set or changed counts as one die in the pool, so it can be the die that is dropped.
 
-The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the roll before and after it, for example "Primary Die: rolled 1, modifier +1, result 2". The die on the card always shows the result after the number is added.
+The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the roll before and after it, for example "Primary Die: rolled 1, modifier +1, result 2". If the sum goes past the maximum, the line also says how much was added to the damage. The die on the card always shows the result after the number is added.
 
 ## Anatomy of a chat card
 

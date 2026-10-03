@@ -133,6 +133,25 @@ describe('DamageNode', () => {
 		expect(screen.queryByText(/primary die set to/i)).toBeNull();
 	});
 
+	it('caps the primary die result at the die maximum and shows the rest as damage', () => {
+		renderNode(
+			createMessage(),
+			deferredNode({
+				roll: {
+					...rolledRoll(),
+					terms: [{ class: 'PrimaryDie', faces: 6, number: 1 }],
+					options: { primaryDieValue: 0, primaryDieModifier: 5, primaryDieBaseResult: 4 },
+				},
+			}),
+		);
+
+		expect(
+			screen.getByText(
+				/primary die: rolled 4, modifier \+5, result 6 \(maximum\), 3 added to damage/i,
+			),
+		).toBeTruthy();
+	});
+
 	it('shows the total for ordinary damage that was never deferred', () => {
 		renderNode(createMessage(), deferredNode({ deferredRoll: false, roll: rolledRoll(14) }));
 

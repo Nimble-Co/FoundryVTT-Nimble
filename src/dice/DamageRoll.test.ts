@@ -552,6 +552,37 @@ describe('DamageRoll.fromData', () => {
 			expect(roll).toHaveProperty('originalFormula');
 		});
 
+		it('should keep the recorded primary die base result', () => {
+			for (let i = 0; i < 20; i++) {
+				const data = {
+					formula: '1d6x + 1',
+					data: {},
+					options: { canCrit: true, canMiss: true, primaryDieModifier: 2, primaryDieBaseResult: 3 },
+					terms: [],
+					originalFormula: '1d6+1',
+				};
+
+				const roll = DamageRoll.fromData(data);
+
+				expect(roll.options.primaryDieBaseResult).toBe(3);
+				expect(data.options.primaryDieBaseResult).toBe(3);
+			}
+		});
+
+		it('should not add a primary die base result to a roll that recorded none', () => {
+			const data = {
+				formula: '1d6x + 1',
+				data: {},
+				options: { canCrit: true, canMiss: true, primaryDieModifier: 2 },
+				terms: [],
+				originalFormula: '1d6+1',
+			};
+
+			const roll = DamageRoll.fromData(data);
+
+			expect(roll.options.primaryDieBaseResult).toBeUndefined();
+		});
+
 		it('should set originalFormula from data', () => {
 			const data = {
 				formula: '1d6+2',

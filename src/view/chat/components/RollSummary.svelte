@@ -14,6 +14,27 @@
 	const primaryDieValue = $derived(Number(rollOptions.primaryDieValue) || 0);
 	const primaryDieModifier = $derived(Number(rollOptions.primaryDieModifier) || 0);
 	const primaryDieBaseResult = $derived(rollOptions.primaryDieBaseResult);
+
+	const primaryDieBreakdown = $derived.by(() => {
+		if (!primaryDieModifier || primaryDieBaseResult == null) return null;
+
+		const terms = (options?.roll as { terms?: { faces?: number }[] } | undefined)?.terms;
+		const faces = terms?.find((term) => term?.faces)?.faces;
+		const sum = primaryDieBaseResult + primaryDieModifier;
+		const excess = faces && sum > faces ? sum - faces : 0;
+
+		return localize(
+			excess
+				? 'NIMBLE.hitDice.primaryDieModifierBreakdownCapped'
+				: 'NIMBLE.hitDice.primaryDieModifierBreakdown',
+			{
+				base: String(primaryDieBaseResult),
+				modifier: primaryDieModifier > 0 ? `+${primaryDieModifier}` : String(primaryDieModifier),
+				result: String(sum - excess),
+				excess: String(excess),
+			},
+		);
+	});
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -52,14 +73,8 @@
 		{#if primaryDieValue}
 			<span>{hitDice.primaryDieValue}: {primaryDieValue}</span>
 		{/if}
-		{#if primaryDieModifier && primaryDieBaseResult != null}
-			<span>
-				{localize('NIMBLE.hitDice.primaryDieModifierBreakdown', {
-					base: String(primaryDieBaseResult),
-					modifier: primaryDieModifier > 0 ? `+${primaryDieModifier}` : String(primaryDieModifier),
-					result: String(primaryDieBaseResult + primaryDieModifier),
-				})}
-			</span>
+		{#if primaryDieBreakdown}
+			<span>{primaryDieBreakdown}</span>
 		{:else if primaryDieModifier}
 			<span>{hitDice.primaryDieModifier}: {primaryDieModifier}</span>
 		{/if}

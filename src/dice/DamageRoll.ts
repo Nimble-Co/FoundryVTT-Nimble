@@ -975,8 +975,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
 		const options = (data.options ?? baseRoll.options) as DamageRoll.Options;
 		const damageData = data.data ?? {};
+		const primaryDieBaseResult = options?.primaryDieBaseResult;
 
 		const roll = new DamageRoll(formula, damageData, options);
+
+		// The constructor rolls a new base result; keep the recorded one.
+		if (primaryDieBaseResult === undefined) delete roll.options.primaryDieBaseResult;
+		else roll.options.primaryDieBaseResult = primaryDieBaseResult;
 
 		if (baseRoll.terms && baseRoll.terms.length > 0) {
 			// Restore terms from baseRoll (which has properly reconstructed term instances)
