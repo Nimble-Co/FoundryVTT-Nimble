@@ -104,8 +104,8 @@ Because the item has a healing effect, drinking it with no target selected autom
 **The roll window.** If the activation contains any damage or healing, clicking the item opens a roll window first (spells always get one; see [Spells](spells.md)). It offers:
 
 - a roll mode selector (advantage / disadvantage),
-- a **Situational Modifiers** field for one-off bonuses like `1d4`,
-- fields to preset the primary die and its modifier (useful for handling table rulings),
+- an **Add to Roll** field for one-off bonuses like `2` or `1d4`,
+- **Set Primary Die Result** and **Add to Primary Die Result** fields, to handle table rulings (see [The attack roll window](../playing/dice-and-chat.md#the-attack-roll-window)),
 - if the character has spendable dice or charge pools, a section to click individual rolled dice or step charges to add to the roll,
 - a live preview of each damage formula with references filled in,
 - for GMs activating a non-player-character item, a **Hide roll** checkbox that whispers the card to GMs only,

@@ -2278,11 +2278,11 @@
 			"selectAll": "Select all",
 			"heading": "Hit Dice",
 			"configureHitDice": "Configure Hit Dice",
-			"primaryDieValue": "Primary Die Value",
-			"primaryDieModifier": "Primary Die Modifier",
-			"setPrimaryDie": "Set Primary Die",
-			"setPrimaryDieModifier": "Set Primary Die Modifier",
-			"situationalModifiers": "Situational Modifiers"
+			"primaryDieValue": "Primary Die Set To",
+			"primaryDieModifier": "Added to Primary Die",
+			"setPrimaryDie": "Set Primary Die Result",
+			"setPrimaryDieModifier": "Add to Primary Die Result",
+			"situationalModifiers": "Add to Roll (number or dice)"
 		},
 		"hitPoints": {
 			"startingHp": "Starting HP",
