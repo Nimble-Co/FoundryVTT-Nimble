@@ -40,11 +40,11 @@ If you're a GM who usually rolls in secret, turn on the **Hide Rolls by Default*
 
 Attacks, spells, and other items that roll damage or healing open their own roll window. It has the same advantage slider, plus three fields for one-off changes. Leave a field empty (or at 0) and it does nothing.
 
-- **Add to Roll (number or dice).** A bonus for this roll only, such as `2` or `1d4`. It is added to the end of each damage or healing formula of the item. It does not change the primary die, so it cannot cause a crit or prevent a miss.
-- **Set Primary Die Result.** The primary die is not rolled: it shows the number you enter, from 1 up to the die's size. Enter the maximum and the attack crits and the die explodes as usual. Enter 1 and the attack misses.
-- **Add to Primary Die Result.** The primary die is rolled, then this number is added to its result. A die cannot show more than its maximum. If the sum goes past the maximum, the die counts as its maximum (so the attack crits and the die explodes), and the remainder is added to the damage as a flat number. For example, a d6 that rolls 4 with 5 added becomes a 6, a crit, with 3 more damage.
+- **Add to Roll (number or dice).** A bonus for this roll only, such as `2` or `1d4`. It is added to the end of the item's first damage formula. Other damage rolls of the item, and healing rolls, do not get it. It does not change the primary die, so it cannot cause a crit or prevent a miss.
+- **Set Primary Die Result.** The primary die is not rolled: it shows the number you enter, from 1 up to the die's size. Enter the maximum and the attack crits and the die explodes as usual, if the attack can crit. Enter 1 and the attack misses.
+- **Add to Primary Die Result.** The primary die is rolled, then this number is added to its result. A die cannot show more than its maximum. If the sum goes past the maximum, the die counts as its maximum (so the attack crits and the die explodes, if the attack can crit), and the remainder is added to the damage as a flat number. For example, a d6 that rolls 4 with 5 added becomes a 6, a crit, with 3 more damage.
 
-Use **Set Primary Die Result** or **Add to Primary Die Result**, not both. If you fill in both, the set result is ignored. Both fields only apply to attacks that can crit or miss. They do nothing for area attacks.
+If you fill in both **Set Primary Die Result** and **Add to Primary Die Result**, the number is added to the set result. Both fields only apply to attacks that can crit or miss. They do nothing for area attacks, and the card shows nothing for them.
 
 With advantage or disadvantage, the extra dice are still rolled and the usual drop still applies. The number you set or changed counts as one die in the pool, so it can be the die that is dropped.
 
