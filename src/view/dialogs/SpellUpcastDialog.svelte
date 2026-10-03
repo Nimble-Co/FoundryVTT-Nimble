@@ -333,7 +333,7 @@
 			if (situationalModifiers !== '') {
 				const isValid = Roll.validate(situationalModifiers);
 				if (!isValid) {
-					ui.notifications?.warn('Invalid dice formula in situational modifiers.');
+					ui.notifications?.warn(format('NIMBLE.hitDice.invalidAddToRoll'));
 					return;
 				}
 			}

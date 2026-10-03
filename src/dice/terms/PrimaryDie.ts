@@ -15,6 +15,8 @@ declare namespace PrimaryDie {
 		appearance?: PrimaryDieDiceOptions['appearance'];
 		/** Marks the term's damage type as system-managed for Dice So Nice. */
 		dsnDamageTypeManaged?: boolean;
+		/** The keep/drop flags on the results are final; `khn`/`kln` must not run again. */
+		keepResolved?: boolean;
 	}
 
 	/** Term data for configuring a PrimaryDie. */

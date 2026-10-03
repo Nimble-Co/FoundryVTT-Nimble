@@ -5,6 +5,8 @@ import { PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
 import {
 	_resetVWarned,
 	getNimbleMods,
+	khn,
+	kln,
 	NIMBLE_MODS,
 	nimbleCrit,
 	nimbleCritVicious,
@@ -290,5 +292,44 @@ describe('primary die appearance', () => {
 		nimbleCrit.call(die, 'c');
 
 		expect(die.options).toBeUndefined();
+	});
+});
+
+describe('khn and kln', () => {
+	it('khn keeps the highest die and drops the leftmost on a tie', () => {
+		const die = createMockDie({ results: [{ result: 4 }, { result: 4 }, { result: 2 }] });
+
+		khn.call(die, 'khn');
+
+		expect(die.results.map((r) => r.active)).toEqual([false, true, false]);
+	});
+
+	it('kln keeps the lowest die', () => {
+		const die = createMockDie({ results: [{ result: 4 }, { result: 2 }] });
+
+		kln.call(die, 'kln');
+
+		expect(die.results.map((r) => r.active)).toEqual([false, true]);
+	});
+
+	it('leaves the results as they are when the keep is already resolved', () => {
+		const results = [
+			{ result: 1, active: true, discarded: false },
+			{ result: 5, active: false, discarded: true },
+		];
+		const high = createMockDie({
+			results: structuredClone(results),
+			options: { keepResolved: true },
+		});
+		const low = createMockDie({
+			results: structuredClone(results),
+			options: { keepResolved: true },
+		});
+
+		khn.call(high, 'khn');
+		kln.call(low, 'kln');
+
+		expect(high.results).toEqual(results);
+		expect(low.results).toEqual(results);
 	});
 });

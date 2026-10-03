@@ -2278,11 +2278,15 @@
 			"selectAll": "Select all",
 			"heading": "Hit Dice",
 			"configureHitDice": "Configure Hit Dice",
-			"primaryDieValue": "Primary Die Value",
-			"primaryDieModifier": "Primary Die Modifier",
-			"setPrimaryDie": "Set Primary Die",
-			"setPrimaryDieModifier": "Set Primary Die Modifier",
-			"situationalModifiers": "Situational Modifiers"
+			"primaryDieValue": "Primary Die Set To",
+			"primaryDieModifier": "Added to Primary Die",
+			"primaryDieModifierBreakdown": "Primary Die: rolled {base}, modifier {modifier}, result {result}",
+			"primaryDieModifierBreakdownCapped": "Primary Die: rolled {base}, modifier {modifier}, result {result} (maximum), {excess} added to damage",
+			"setPrimaryDie": "Set Primary Die Result",
+			"setPrimaryDieModifier": "Add to Primary Die Result",
+			"situationalModifiers": "Add to Roll (number or dice)",
+			"invalidAddToRoll": "Add to Roll must be a number or a dice formula.",
+			"invalidSetPrimaryDie": "Set Primary Die Result must be from 1 to the size of the die."
 		},
 		"hitPoints": {
 			"startingHp": "Starting HP",

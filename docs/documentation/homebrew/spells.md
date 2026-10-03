@@ -85,7 +85,7 @@ With **Upcast Choice** selected, you instead click **Add Choice**, give each cho
 
 ## What the caster sees
 
-Casting a spell opens the cast window. It contains the roll mode selector, situational modifiers, and roll options that every activation window has (see [Item Activations & Effects](activations.md)), plus the upcast controls when the spell can be upcast:
+Casting a spell opens the cast window. It contains the roll mode selector, the **Add to Roll** field, and roll options that every activation window has (see [Item Activations & Effects](activations.md)), plus the upcast controls when the spell can be upcast:
 
 - an **Upcast** heading with a **mana slider** running from the spell's base cost up to the caster's highest unlocked spell tier. While the **Resource Spending** automation setting is on (see [Settings](../gm/settings.md)), the slider is also capped by the caster's current mana. The caster simply drags it to the total mana they want to spend, and the **Upcast Level** readout shows how many steps that buys;
 - for a class that casts at its highest tier, no slider at all. The window states the tier the spell will be cast at and what it costs. A spell that does not scale is unaffected: it casts at, and costs, its own tier;
