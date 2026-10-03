@@ -34,7 +34,7 @@ On monster features only, an **Attack Type** dropdown (None / Reach / Range) and
 
 ## The Effects sub-tab: the effect tree
 
-Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
+Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
 
 ### Damage
 
@@ -69,6 +69,10 @@ A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity
 ### Condition
 
 A condition entry picks one status condition from the system's list (Frightened, Poisoned, Prone…). It renders as a labeled button on the chat card.
+
+### Move
+
+A Free Move or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Free Move or Forced Movement), **Who Moves** (the user of the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Tick **Ignore difficult terrain** for a Free Move that says so; Forced Movement always ignores it. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A Free Move that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Forced and Free Movement automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-and-free-movement).
 
 ### Pool
 

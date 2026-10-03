@@ -8,7 +8,7 @@ You'll find the system's settings in Foundry under **Game Settings → Configure
 
 ## Automation
 
-How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with nine world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
+How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with ten world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
 
 - **Apply Conditions and Effects from Rules.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and timed effects end on their own. When off, conditions still appear as one-click buttons on the chat card. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
 - **Derived Conditions.** Conditions implied by other conditions are applied and removed automatically, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
@@ -18,9 +18,10 @@ How much the system does on its own is controlled from one place: the **Configur
 - **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
 - **Combat Convenience.** Player characters roll initiative automatically when combat starts.
 - **Movement Tracking.** The system reports each finished token move to features and, during combat, keeps count of the spaces moved this turn, so features can react when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history. See [Running Combat](combat.md#movement-tracking).
+- **Forced and Free Movement.** When a card pushes or pulls a creature, or gives it a Free Move, the creature's next drag counts as that movement: it never draws on the creature's own speed, and the ruler shows how far it can go. Nothing stops a longer drag, there is nothing to click, and the player still picks the path and the final space. It needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the card shows the distance as text and the token is dragged as usual. Turning either toggle on or off stops the card from watching every waiting move, and its tag then shows only the distance. See [Running Combat](combat.md#forced-and-free-movement).
 - **Chat Notifications.** Informational messages such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements.
 
-Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on.
+Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on. The Moves on the ruler are always on too, because they only show distance. See [Running Combat](combat.md#moves-on-the-ruler).
 
 ::: info Flipping a toggle mid-combat
 Toggles only stop future events. Effects that were already applied linger until removed by hand, and refills skipped while a toggle was off are not replayed when you turn it back on.

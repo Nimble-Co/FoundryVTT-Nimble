@@ -105,6 +105,43 @@ With the **Movement Tracking** automation toggle on (the default), the system wa
 
 The system never moves a token for anyone and never stops a drag. It measures what happened and tells the features that care.
 
+## Moves on the ruler
+
+On a character's own turn, dragging its token shows its **Moves** on the ruler. No setting turns this off.
+
+- In the rules, each Move action lets a hero move up to their Speed, and a Move can be broken up with other actions. So the first Speed spaces the character moves in a turn are Move 1, the next Speed spaces Move 2, and so on, and a later drag goes on in the Move where the last one stopped. Difficult terrain counts double. A Free Move, Forced Movement or a Teleport never counts.
+- The grid spaces of the second and third Moves have colours of their own, and spaces past the third Move are red.
+- The label on the path shows a die for the Move the drop lands in: one pip for the first Move, two for the second and three for the third. These are the dice the character sheet shows for the actions. Past the third Move, a red **!** follows the die.
+- The Moves only show the distance. They do not know how many actions the character has left, nothing stops the drag, and no action is spent for you. The table keeps track of actions.
+
+## Forced and Free Movement
+
+With the **Forced and Free Movement** and **Movement Tracking** automation toggles on (the default), a card that pushes or pulls a creature, or gives it a Free Move, also watches that creature's next drag. There is nothing to click. The distance is worked out once, when the feature is used.
+
+The card shows one line that says what the feature does, for example that each target is pushed up to 2 spaces away from the feature's user. Each creature that moves gets a small tag with its distance: on its row under **Targets**, or in a list under that line when the card has no such row, as for a Free Move for the feature's user. Hold the pointer on a tag to read what it means.
+
+The creature's next drag counts as that movement:
+
+- The ruler shows how far the creature can go. Past that distance, the path is drawn the way Foundry draws a path out of reach.
+- Nothing stops the drag. Drop further and the token moves the whole way. What the extra spaces mean is for the table to decide.
+- The move is recorded as a Free Move or as Forced Movement, so it never draws on the creature's own speed for the turn.
+
+Whoever owns the token still does the moving and picks the path and the final space. The label under the path says which movement the drag uses, for example **Free Move: 2 of 3**. To move the creature with its own movement instead, press **Tab** during the drag, and press it again to switch back; the label shows the key. On a character's own turn, its own movement shows its Moves (see [Moves on the ruler](#moves-on-the-ruler)). A GM with Foundry's **Unconstrained Movement** setting on is placing the token, so the drag is not counted as the push or the Free Move.
+
+A push ignores difficult terrain; a Free Move follows the feature's wording, and the card says when a Free Move ignores it. The card shows the direction the feature names: "away from" or "toward" the feature's user, or "in any direction" for Forced Movement. Nothing enforces it, and the rules give a push no particular shape.
+
+When the creature finishes moving, its tag shows what happened:
+
+- **2/2**: it moved the full distance. A Free Move that stopped early by choice shows the spaces it covered, for example **1/3**.
+- **1/3** with a warning sign: a push covered fewer spaces. A creature or the environment can stop a push early, so the card carries the rulebook reminder: 1d6 bludgeoning damage for every space shortened, split between both creatures if it hit one. The table decides whether an obstacle stopped it. A Free Move whose path was blocked shows the same sign, with no damage.
+- **Not pushed**, **Not pulled**, **Not moved** or **Not used**: the creature moved a different way first, or the turn ended first. The text on the tag says which.
+
+In the books, every push and every Free Move happens as part of the effect that causes it. So in combat, a move still waiting when the turn ends is not used. Out of combat, it waits until the creature next moves. If a creature waits on two moves, its next drag uses the newest one, and the other card shows that it was not used. Adding a target to the card gives that creature the move too, and removing a target takes back a move it has not made. A feature whose distance comes to zero moves nobody.
+
+The card does not record the saving throw of each target. Under a save result, the tag shows the distance with a die sign and the save that decides it, and the drag is not watched. Move the token by hand when the save calls for it.
+
+This toggle needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the card shows the distance as text and the token is dragged as usual. Turning either toggle on or off stops the card from watching every waiting move, so no creature keeps a move from the old setting. The tag of that move then shows only the distance, as when a toggle is off.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.

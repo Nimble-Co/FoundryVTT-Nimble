@@ -668,6 +668,13 @@ export const foundryApiMocks = {
 	canvas: {
 		layers: {
 			TemplateLayer: class TemplateLayer {},
+			TokenLayer: class TokenLayer {},
+		},
+		placeables: {
+			Token: class Token {},
+			tokens: {
+				TokenRuler: class TokenRuler {},
+			},
 		},
 	},
 };
@@ -785,6 +792,7 @@ export const configStructure = {
 	Canvas: {
 		layers: {
 			templates: {},
+			tokens: {},
 		},
 	},
 	TextEditor: {

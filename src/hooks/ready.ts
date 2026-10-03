@@ -24,6 +24,7 @@ import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerDicePoolSpendRequestRouter from './dicePoolSpendRequestRouter.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
+import registerMovementOffers from './movementOffers.js';
 
 let canvasConditionsPanelComponent: object | null = null;
 
@@ -67,6 +68,7 @@ export default async function ready() {
 	}
 	registerCombatTurnSocketListener();
 	registerGrantedActionOfferSocketListener();
+	registerMovementOffers();
 	registerIncomingReactionSocketListener();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();

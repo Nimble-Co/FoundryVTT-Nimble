@@ -1,5 +1,7 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { OfferActor, OfferCard } from '#types/movement.js';
+import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
@@ -211,6 +213,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			foundry.utils.setProperty(chatData as object, 'system.concentration', concentrating);
 		}
 
+		const card = chatData as OfferCard;
+		if (!suppressCard && card.system) {
+			card.system.movementOffers = reconcileMovementOffers(card, {
+				source: this.actor as unknown as OfferActor | null,
+			});
+		}
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);

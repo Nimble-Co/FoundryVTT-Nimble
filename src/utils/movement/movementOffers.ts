@@ -1,0 +1,300 @@
+import type { EffectNode, MoveNode } from '#types/effectTree.js';
+import type {
+	ArmedMovementOffer,
+	MovementOffer,
+	MovementOfferState,
+	OfferActor,
+	OfferCard,
+} from '#types/movement.js';
+import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
+import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
+import { resolveMoveDistance } from './resolveMoveDistance.js';
+
+export interface OfferToken {
+	name: string;
+	actor?: OfferActor | null;
+}
+
+export interface OfferLookups {
+	resolveToken?: (uuid: string) => OfferToken | null;
+	resolveActor?: (id: string) => OfferActor | null;
+	/** The feature user, when the caller already holds it. */
+	source?: OfferActor | null;
+}
+
+function resolveTokenByUuid(uuid: string): OfferToken | null {
+	// A uuid from another client that does not resolve here is a missing token, not an error.
+	const token = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false });
+	return (token as unknown as OfferToken | null) ?? null;
+}
+
+function resolveActorById(id: string): OfferActor | null {
+	return (game.actors?.get(id) as unknown as OfferActor | undefined) ?? null;
+}
+
+/** The uuid of the token that speaks for the card, when it names one. */
+export function speakerTokenUuid(card: Pick<OfferCard, 'speaker'>): string | null {
+	const speaker = card.speaker;
+	return speaker?.scene && speaker.token ? `Scene.${speaker.scene}.Token.${speaker.token}` : null;
+}
+
+const ATTACK_OUTCOMES = new Set(['criticalHit', 'hit', 'miss']);
+
+export function isSaveOutcome(context: string): boolean {
+	return context === 'failedSave' || context === 'passedSave' || context.startsWith('failedSaveBy');
+}
+
+/** The attack outcomes the card knows, read as the card reads them: a critical hit is also a hit. */
+function cardOutcomes(card: OfferCard): Set<string> {
+	if (card.system?.isCritical) return new Set(['criticalHit', 'hit']);
+	if (card.system?.isMiss) return new Set(['miss']);
+	return new Set(['hit']);
+}
+
+interface OfferedMoveNode {
+	node: MoveNode;
+	conditional: boolean;
+}
+
+/**
+ * The move nodes that make offers on this card. A node under an attack outcome
+ * that did not occur makes none. A node under a save outcome is conditional:
+ * the card does not know each target's save.
+ */
+function offeredMoveNodes(card: OfferCard): OfferedMoveNode[] {
+	const nodes = flattenEffectsTree(card.system?.activation?.effects ?? []);
+	const byId = new Map(nodes.map((node) => [node.id, node]));
+	const outcomes = cardOutcomes(card);
+
+	const offered: OfferedMoveNode[] = [];
+	for (const node of nodes) {
+		if (node.type !== 'move') continue;
+		let occurs = true;
+		let conditional = false;
+		const seen = new Set<EffectNode>();
+		for (
+			let cursor: EffectNode | undefined = node;
+			cursor?.parentNode && !seen.has(cursor);
+			cursor = byId.get(cursor.parentNode)
+		) {
+			seen.add(cursor);
+			const context = cursor.parentContext ?? '';
+			if (ATTACK_OUTCOMES.has(context) && !outcomes.has(context)) occurs = false;
+			if (isSaveOutcome(context)) conditional = true;
+		}
+		if (occurs) offered.push({ node, conditional });
+	}
+	return offered;
+}
+
+/** The token uuids a move node applies to on this card. */
+export function moveNodeRecipients(card: OfferCard, node: MoveNode): string[] {
+	if (node.recipient === 'self') {
+		const uuid = speakerTokenUuid(card);
+		return uuid ? [uuid] : [];
+	}
+	return card.system?.targets ?? [];
+}
+
+export function movementOfferId(nodeId: string, tokenUuid: string): string {
+	return `${nodeId}.${tokenUuid.split('.').at(-1) ?? ''}`;
+}
+
+/**
+ * The card's Movement Offers once its recipients or its outcome are set or
+ * changed. Each offer is worked out once, when it is first made, so a later
+ * change to either creature does not move the number on the card. An offer of
+ * zero spaces stays only as that record: no token carries it, the card does not
+ * list it, and it never lapses. A settled offer stays as the record of what
+ * happened; an open or untracked one goes with its recipient, or with the
+ * outcome that made it.
+ */
+export function reconcileMovementOffers(
+	card: OfferCard,
+	lookups: OfferLookups = {},
+): MovementOffer[] {
+	const existing = card.system?.movementOffers ?? [];
+	const nodes = offeredMoveNodes(card);
+	const resolveToken = lookups.resolveToken ?? resolveTokenByUuid;
+	const resolveActor = lookups.resolveActor ?? resolveActorById;
+	let source = lookups.source;
+	const findSource = (): OfferActor | null => {
+		if (source !== undefined) return source;
+		const speakerUuid = speakerTokenUuid(card);
+		const actorId = card.speaker?.actor;
+		source =
+			(speakerUuid ? resolveToken(speakerUuid)?.actor : null) ??
+			(actorId ? resolveActor(actorId) : null);
+		return source;
+	};
+
+	const wanted = new Set<string>();
+	const made: MovementOffer[] = [];
+	for (const { node, conditional } of nodes) {
+		for (const tokenUuid of moveNodeRecipients(card, node)) {
+			const id = movementOfferId(node.id, tokenUuid);
+			wanted.add(id);
+			if (existing.some((offer) => offer.id === id)) continue;
+
+			const token = resolveToken(tokenUuid);
+			const sourceActor = findSource();
+			if (!token?.actor || !sourceActor) continue;
+			made.push({
+				id,
+				nodeId: node.id,
+				tokenUuid,
+				name: token.name,
+				kind: node.kind,
+				spaces: resolveMoveDistance(node, sourceActor, token.actor),
+				ignoreDifficultTerrain: node.kind === 'forced' || node.ignoreDifficultTerrain,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional,
+			});
+		}
+	}
+
+	const kept = existing.filter(
+		(offer) => wanted.has(offer.id) || (offer.state !== 'open' && offer.state !== 'untracked'),
+	);
+	return [...kept, ...made];
+}
+
+/** The offer each token carries in the chat log, until a chat message changes. */
+let armedOffers: Map<string, ArmedMovementOffer> | null = null;
+
+function armedOffersByToken(messages: readonly OfferCard[]): Map<string, ArmedMovementOffer> {
+	const armed = new Map<string, ArmedMovementOffer>();
+	for (let index = messages.length - 1; index >= 0; index--) {
+		const message = messages[index];
+		if (!message?.id) continue;
+		for (const offer of message.system?.movementOffers ?? []) {
+			if (offer.state !== 'open' || offer.conditional || !(offer.spaces > 0)) continue;
+			if (!armed.has(offer.tokenUuid))
+				armed.set(offer.tokenUuid, { ...offer, messageId: message.id });
+		}
+	}
+	return armed;
+}
+
+/** Drops the carried offers read from the chat log, so the next lookup reads it again. */
+export function forgetArmedMovementOffers(): void {
+	armedOffers = null;
+}
+
+/**
+ * The Movement Offer a token carries, or null when it carries none: the newest
+ * open offer to it with any distance, so a second push supersedes an unsettled
+ * first one. A conditional offer is never carried. Null whenever Movement
+ * Offers are off. The chat log is read once until a chat message changes.
+ */
+export function findArmedMovementOffer(
+	tokenUuid: string,
+	deps: { messages?: readonly OfferCard[]; enabled?: boolean } = {},
+): ArmedMovementOffer | null {
+	const enabled = deps.enabled ?? isMovementOffersAutomationEnabled();
+	if (!enabled || !tokenUuid) return null;
+
+	const armed = deps.messages
+		? armedOffersByToken(deps.messages)
+		: (armedOffers ??= armedOffersByToken(
+				(game.messages?.contents ?? []) as unknown as OfferCard[],
+			));
+	const offer = armed.get(tokenUuid);
+	return offer ? { ...offer } : null;
+}
+
+export interface MovementOfferSettlement {
+	/** The Movement was made under the offer, rather than the mover going their own way. */
+	taken: boolean;
+	spaces: number;
+	stopped: boolean;
+	userId: string | null;
+}
+
+/**
+ * The card's offers after a Movement settled one of them, or null when that
+ * offer is missing or already settled. A taken offer keeps the spaces covered,
+ * never more than it offered: what the extra spaces mean is the table's call.
+ */
+export function settleMovementOffer(
+	offers: readonly MovementOffer[],
+	offerId: string,
+	settlement: MovementOfferSettlement,
+): MovementOffer[] | null {
+	const offer = offers.find((candidate) => candidate.id === offerId);
+	if (!offer || offer.state !== 'open' || offer.conditional) return null;
+
+	const { taken } = settlement;
+	const settled: MovementOffer = {
+		...offer,
+		state: taken ? 'taken' : 'unused',
+		usedBy: settlement.userId,
+		movedSpaces: taken ? Math.min(settlement.spaces, offer.spaces) : null,
+		stopped: taken && settlement.stopped,
+	};
+	return offers.map((candidate) => (candidate.id === offerId ? settled : candidate));
+}
+
+/** Moves every open offer a token could carry that `applies` keeps to `state`. */
+function closeOpenMovementOffers(
+	offers: readonly MovementOffer[],
+	state: 'lapsed' | 'untracked',
+	applies: (offer: MovementOffer) => boolean,
+): MovementOffer[] | null {
+	const closes = (offer: MovementOffer) =>
+		offer.state === 'open' && !offer.conditional && offer.spaces > 0 && applies(offer);
+	if (!offers.some(closes)) return null;
+	return offers.map((offer) => (closes(offer) ? { ...offer, state } : offer));
+}
+
+/**
+ * The card's offers once a combat turn ends: every open offer that `applies`
+ * keeps lapses, because each granted move in the books happens inside the
+ * effect that grants it. Null when there is nothing to write.
+ */
+export function lapseMovementOffers(
+	offers: readonly MovementOffer[],
+	applies: (offer: MovementOffer) => boolean = () => true,
+): MovementOffer[] | null {
+	return closeOpenMovementOffers(offers, 'lapsed', applies);
+}
+
+/**
+ * The card's offers once a toggle that gates them changes: every open offer is
+ * untracked, so no drag settles it and the card only states the move. Null when
+ * there is nothing to write.
+ */
+export function untrackMovementOffers(offers: readonly MovementOffer[]): MovementOffer[] | null {
+	return closeOpenMovementOffers(offers, 'untracked', () => true);
+}
+
+/** What the card reports for one offer. */
+export interface MovementOfferOutcome {
+	state: MovementOfferState;
+	offered: number;
+	moved: number | null;
+	/**
+	 * Spaces cut off a taken offer. A Free Move counts only a path that was cut
+	 * short. A push counts any shortfall, because a creature that halts it
+	 * leaves no trace on the path: why it fell short is the table's call.
+	 */
+	shortfall: number;
+	/** A push that fell short: the book deals damage per space shortened. */
+	damageOwed: boolean;
+}
+
+export function movementOfferOutcome(offer: MovementOffer): MovementOfferOutcome {
+	const moved = offer.state === 'taken' ? (offer.movedSpaces ?? 0) : null;
+	const counts = moved !== null && (offer.kind === 'forced' || offer.stopped);
+	const shortfall = counts ? Math.max(0, offer.spaces - moved) : 0;
+	return {
+		state: offer.state,
+		offered: offer.spaces,
+		moved,
+		shortfall,
+		damageOwed: offer.kind === 'forced' && shortfall > 0,
+	};
+}

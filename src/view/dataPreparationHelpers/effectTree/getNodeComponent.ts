@@ -2,6 +2,7 @@ import ConditionNode from '../../chat/components/ConditionNode.svelte';
 import DamageNode from '../../chat/components/DamageNode.svelte';
 import DamageOutcomeNode from '../../chat/components/DamageOutcomeNode.svelte';
 import HealingNode from '../../chat/components/HealingNode.svelte';
+import MoveNode from '../../chat/components/MoveNode.svelte';
 import PoolNode from '../../chat/components/PoolNode.svelte';
 import SavingThrowNode from '../../chat/components/SavingThrowNode.svelte';
 import TextNode from '../../chat/components/TextNode.svelte';
@@ -16,6 +17,8 @@ export function getNodeComponent(nodeType: string) {
 			return DamageOutcomeNode;
 		case 'healing':
 			return HealingNode;
+		case 'move':
+			return MoveNode;
 		case 'note':
 			return TextNode;
 		case 'pool':

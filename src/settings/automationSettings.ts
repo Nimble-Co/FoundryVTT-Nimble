@@ -12,6 +12,7 @@ export const AUTOMATION_SETTING_KEYS = {
 	combatConvenience: 'automation.combatConvenience',
 	chatNotifications: 'automation.chatNotifications',
 	movementTracking: 'automation.movementTracking',
+	movementOffers: 'automation.movementOffers',
 } as const;
 
 export type AutomationSettingKey =
@@ -22,7 +23,7 @@ export type AutomationSettingKey =
  * settings are unavailable or the key is not yet registered, so automation
  * behaves as configured out of the box rather than silently shutting off.
  */
-function readAutomationToggle(key: AutomationSettingKey): boolean {
+export function readAutomationToggle(key: AutomationSettingKey): boolean {
 	try {
 		const value = game.settings?.get(SYSTEM_ID as 'core', key as 'rollMode');
 		if (value === undefined) return true;
@@ -95,4 +96,16 @@ export function resolveLegacyAutoApplyDefault(
 	legacyValue: boolean,
 ): boolean {
 	return storedExists ? legacyValue : true;
+}
+
+/**
+ * Whether a feature's Free Move or push arms the recipient's token, so its next
+ * drag is labelled with the offered action and settled on the card. Off while
+ * Movement Tracking is off: only a recorded Movement settles an offer.
+ */
+export function isMovementOffersAutomationEnabled(): boolean {
+	return (
+		isMovementTrackingAutomationEnabled() &&
+		readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers)
+	);
 }
