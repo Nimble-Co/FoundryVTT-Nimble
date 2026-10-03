@@ -46,7 +46,7 @@ Attacks, spells, and other items that roll damage or healing open their own roll
 
 If you fill in both **Set Primary Die Result** and **Add to Primary Die Result**, the number is added to the set result. Both fields only apply to attacks that can crit or miss. They do nothing for area attacks, and the card shows nothing for them.
 
-With advantage or disadvantage, the extra dice are still rolled and the usual drop still applies. The number you set or changed counts as one die in the pool, so it can be the die that is dropped.
+With advantage or disadvantage, the dice are rolled and dropped first. The set result or the added number then applies to the die that stays, so it is never dropped.
 
 The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the roll before and after it, for example "Primary Die: rolled 1, modifier +1, result 2". If the sum goes past the maximum, the line also says how much was added to the damage. The die on the card always shows the result after the number is added.
 

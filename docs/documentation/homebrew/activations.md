@@ -113,7 +113,7 @@ Because the item has a healing effect, drinking it with no target selected autom
 
 Holding **Alt** while clicking the item skips the window and rolls with defaults.
 
-![The activation roll window showing roll mode, situational modifiers, and the formula preview pills](/images/documentation/roll-dialog-simple-attack.png)
+![The activation roll window showing roll mode, the Add to Roll field, and the formula preview pills](/images/documentation/roll-dialog-simple-attack.png)
 
 **The chat card.** After rolling, a card is posted with:
 
