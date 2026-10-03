@@ -2,7 +2,7 @@ import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { getPrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
-import { getNimbleMods } from './nimbleDieModifiers.js';
+import { applyKeep, getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -397,25 +397,37 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
 	 */
 	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
-		if (options.primaryDieValue) {
-			primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
+		const { primaryDieValue, primaryDieModifier } = options;
+		const faces = primaryTerm.faces;
+		if (typeof faces !== 'number' || (!primaryDieValue && !primaryDieModifier)) return;
+
+		// The preset applies to the die that stays, so the pool is rolled and dropped here.
+		const poolSize = Math.max(1, Number(primaryTerm.number) || 1);
+		const results: foundry.dice.terms.DiceTerm.Result[] = Array.from({ length: poolSize }, () => ({
+			result: Math.ceil(Math.random() * faces),
+			active: true,
+		}));
+		if (poolSize > 1) {
+			const keepHighest = primaryTerm.modifiers.some((modifier) => modifier.startsWith('khn'));
+			applyKeep(results, 1, keepHighest);
+			primaryTerm.options.keepResolved = true;
 		}
 
-		const faces = primaryTerm.faces;
-		if (options.primaryDieModifier && faces) {
-			const baseResult = options.primaryDieValue || Math.ceil(Math.random() * faces);
-			this.options.primaryDieBaseResult = baseResult;
-			const modifiedResult = baseResult + options.primaryDieModifier;
+		const kept = results.find((result) => result.active) ?? results[0];
+		if (primaryDieValue) kept.result = primaryDieValue;
+
+		if (primaryDieModifier) {
+			this.options.primaryDieBaseResult = kept.result;
+			const modifiedResult = kept.result + primaryDieModifier;
+			kept.result = Math.min(modifiedResult, faces);
 			if (modifiedResult > faces) {
-				primaryTerm.results = [{ result: faces, active: true }];
-				const excess = modifiedResult - faces;
-				const excessTerm = new Terms.NumericTerm({ number: excess });
+				const excessTerm = new Terms.NumericTerm({ number: modifiedResult - faces });
 				const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
 				this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
-			} else {
-				primaryTerm.results = [{ result: modifiedResult, active: true }];
 			}
 		}
+
+		primaryTerm.results = results;
 	}
 
 	/**

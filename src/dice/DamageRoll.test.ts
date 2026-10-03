@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { ItemActivationManager, testDependencies } from '../managers/ItemActivationManager.js';
 import { hasWeaponProficiency } from '../utils/attackUtils.js';
@@ -139,49 +139,108 @@ describe('DamageRoll preprocessing', () => {
 			expect(roll.primaryDie).toBeDefined();
 		});
 
-		it('should put the modifier excess after the primary die in a single die formula', () => {
-			const roll = new DamageRoll(
-				'1d6+1',
-				{},
-				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 100 },
-			);
+		describe('primary die presets', () => {
+			// Math.random values for d6 results: 0.1 → 1, 0.4 → 3, 0.6 → 4, 0.8 → 5
+			function mockDice(...values: number[]) {
+				const spy = vi.spyOn(Math, 'random');
+				for (const value of values) spy.mockReturnValueOnce(value);
+				return spy;
+			}
 
-			expect(roll.formula).toMatch(/^1d6x \+ \d+ \+ 1$/);
-		});
+			function presetRoll(formula: string, options: Partial<DamageRoll.Options>) {
+				return new DamageRoll(
+					formula,
+					{},
+					{
+						canCrit: true,
+						canMiss: true,
+						rollMode: 0,
+						primaryDieValue: 0,
+						primaryDieModifier: 0,
+						...options,
+					},
+				);
+			}
 
-		it('should add the modifier to the set primary die value', () => {
-			const roll = new DamageRoll(
-				'1d6+1',
-				{},
-				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 4, primaryDieModifier: 1 },
-			);
+			function keepResolved(roll: DamageRoll) {
+				return (roll.primaryDie?.options as { keepResolved?: boolean } | undefined)?.keepResolved;
+			}
 
-			expect(roll.options.primaryDieBaseResult).toBe(4);
-			expect(roll.primaryDie?.results[0].result).toBe(5);
-		});
+			afterEach(() => {
+				vi.restoreAllMocks();
+			});
 
-		it('should record the primary die roll before the modifier', () => {
-			const roll = new DamageRoll(
-				'1d6+1',
-				{},
-				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 2 },
-			);
+			it('should put the modifier excess after the primary die in a single die formula', () => {
+				mockDice(0.6);
+				const roll = presetRoll('1d6+1', { primaryDieModifier: 100 });
 
-			const base = roll.options.primaryDieBaseResult;
-			expect(base).toBeGreaterThanOrEqual(1);
-			expect(base).toBeLessThanOrEqual(6);
-			const shown = roll.primaryDie?.results[0].result;
-			expect(shown).toBe(Math.min((base ?? 0) + 2, 6));
-		});
+				expect(roll.formula).toBe('1d6x + 98 + 1');
+			});
 
-		it('should keep the modifier excess after the primary die in a multi-die formula', () => {
-			const roll = new DamageRoll(
-				'2d6+1',
-				{},
-				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 100 },
-			);
+			it('should keep the modifier excess after the primary die in a multi-die formula', () => {
+				mockDice(0.6);
+				const roll = presetRoll('2d6+1', { primaryDieModifier: 100 });
 
-			expect(roll.formula).toMatch(/^1d6x \+ \d+ \+ 1d6 \+ 1$/);
+				expect(roll.formula).toBe('1d6x + 98 + 1d6 + 1');
+			});
+
+			it('should add the modifier to the set primary die value', () => {
+				const roll = presetRoll('1d6+1', { primaryDieValue: 4, primaryDieModifier: 1 });
+
+				expect(roll.options.primaryDieBaseResult).toBe(4);
+				expect(roll.primaryDie?.results).toEqual([{ result: 5, active: true }]);
+			});
+
+			it('should record the primary die roll before the modifier', () => {
+				mockDice(0.4);
+				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });
+
+				expect(roll.options.primaryDieBaseResult).toBe(3);
+				expect(roll.primaryDie?.results).toEqual([{ result: 5, active: true }]);
+			});
+
+			it('should add the modifier to the die that stays with advantage', () => {
+				mockDice(0.8, 0.4);
+				const roll = presetRoll('1d6+1', { rollMode: 1, primaryDieModifier: 2 });
+
+				expect(roll.options.primaryDieBaseResult).toBe(5);
+				expect(roll.primaryDie?.results).toEqual([
+					{ result: 6, active: true, discarded: false },
+					{ result: 3, active: false, discarded: true },
+				]);
+				expect(keepResolved(roll)).toBe(true);
+				expect(roll.formula).toBe('2d6khnx + 1 + 1');
+			});
+
+			it('should set the die that stays with disadvantage', () => {
+				mockDice(0.8, 0.4);
+				const roll = presetRoll('1d6+1', { rollMode: -1, primaryDieValue: 6 });
+
+				expect(roll.primaryDie?.results).toEqual([
+					{ result: 5, active: false, discarded: true },
+					{ result: 6, active: true, discarded: false },
+				]);
+				expect(roll.options.primaryDieBaseResult).toBeUndefined();
+			});
+
+			it('should not resolve the keep when there is no preset', () => {
+				const roll = presetRoll('1d6+1', { rollMode: 1 });
+
+				expect(roll.primaryDie?.results).toEqual([]);
+				expect(keepResolved(roll)).toBeUndefined();
+			});
+
+			it('should keep the recorded roll through toJSON and fromData', () => {
+				mockDice(0.4);
+				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });
+
+				mockDice(0.8);
+				// The Roll mock leaves `options` out of toJSON; Foundry serializes it.
+				const json = { ...roll.toJSON(), options: { ...roll.options } };
+				const restored = DamageRoll.fromData(json as any);
+
+				expect(restored.options.primaryDieBaseResult).toBe(3);
+			});
 		});
 
 		it('should extract primary die from multi-die formula', () => {
@@ -564,7 +623,8 @@ describe('DamageRoll.fromData', () => {
 		});
 
 		it('should keep the recorded primary die base result', () => {
-			for (let i = 0; i < 20; i++) {
+			const randSpy = vi.spyOn(Math, 'random').mockReturnValue(0.8);
+			try {
 				const data = {
 					formula: '1d6x + 1',
 					data: {},
@@ -577,6 +637,8 @@ describe('DamageRoll.fromData', () => {
 
 				expect(roll.options.primaryDieBaseResult).toBe(3);
 				expect(data.options.primaryDieBaseResult).toBe(3);
+			} finally {
+				randSpy.mockRestore();
 			}
 		});
 

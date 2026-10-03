@@ -74,7 +74,7 @@ type DieResult = {
 interface DieLike {
 	results: DieResult[];
 	modifiers?: string[];
-	options?: Partial<PrimaryDieDiceOptions>;
+	options?: Partial<PrimaryDieDiceOptions> & { keepResolved?: boolean };
 }
 
 /**
@@ -117,7 +117,7 @@ function parseCount(modifier: string, prefix: 'khn' | 'kln'): number {
  * we sort by value primary and by index DESCENDING as the tiebreaker, so
  * higher-index ties win the keep slot.
  */
-function applyKeep(results: DieResult[], keepCount: number, keepHighest: boolean): void {
+export function applyKeep(results: DieResult[], keepCount: number, keepHighest: boolean): void {
 	if (!Array.isArray(results) || results.length === 0) return;
 	const n = Math.max(0, Math.min(keepCount, results.length));
 
@@ -148,6 +148,7 @@ function applyKeep(results: DieResult[], keepCount: number, keepHighest: boolean
  * Bound to a Die instance via `this`.
  */
 export function khn(this: DieLike, modifier: string): boolean {
+	if (this.options?.keepResolved) return true;
 	const count = parseCount(modifier, 'khn');
 	applyKeep(this.results, count, true);
 	return true;
@@ -158,6 +159,7 @@ export function khn(this: DieLike, modifier: string): boolean {
  * Bound to a Die instance via `this`.
  */
 export function kln(this: DieLike, modifier: string): boolean {
+	if (this.options?.keepResolved) return true;
 	const count = parseCount(modifier, 'kln');
 	applyKeep(this.results, count, false);
 	return true;
