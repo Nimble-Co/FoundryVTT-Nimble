@@ -81,7 +81,8 @@ describe('MovementOfferCard', () => {
 		expect(screen.getByText('Sir Brannon hit the goblin.')).toBeTruthy();
 		expect(screen.getByRole('img', { name: 'Forced Movement' })).toBeTruthy();
 		expect(screen.getByText('Goblin Cutthroat')).toBeTruthy();
-		expect(screen.getByText(/up to 2 spaces/)).toBeTruthy();
+		expect(screen.getByText(/2 spaces/)).toBeTruthy();
+		expect(screen.queryByText(/up to/)).toBeNull();
 		expect(screen.getByText(/away from Sir Brannon/)).toBeTruthy();
 		expect(container.querySelector('article')?.querySelector('button')).toBeNull();
 	});

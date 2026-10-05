@@ -7,6 +7,7 @@
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import MoveNode from './components/MoveNode.svelte';
+	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	interface OfferSystem {
 		name: string;
@@ -28,6 +29,7 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
+	setTargetsSectionShown(false);
 </script>
 
 <CardHeader {messageDocument} />
