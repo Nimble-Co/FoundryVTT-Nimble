@@ -22,12 +22,12 @@
   color: var(--color-text-emphatic);
 }
 
-// The red of the grid spaces past the third Move.
+// The colour of the grid spaces past the third Move.
 #measurement .waypoint-label .nimble-ruler-move-over {
   font-size: var(--font-size-24);
   font-weight: bold;
   line-height: 1;
-  color: #eb5757;
+  color: var(--nimble-ruler-move-over-color);
 }
 
 #measurement .waypoint-label .nimble-ruler-budget {

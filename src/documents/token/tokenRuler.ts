@@ -6,6 +6,14 @@ import { markWaypointsPastOffer } from '#utils/movement/markWaypointsPastOffer.j
 import { getMoveBandOptions } from '#utils/movement/moveBandOptions.js';
 import { movementOfferAction } from '#utils/movement/movementActions.js';
 import { findArmedMovementOffer } from '#utils/movement/movementOffers.js';
+import {
+	budgetText,
+	endsReach,
+	type MoveColors,
+	moveColor,
+	moveDie,
+	readMoveColors,
+} from '#utils/movement/rulerDisplay.js';
 import { NimbleToken } from './token.js';
 
 type Waypoint = foundry.canvas.placeables.tokens.TokenRuler.Waypoint;
@@ -13,53 +21,6 @@ type LabelWaypoint = MoveBandWaypoint & OfferRulerWaypoint & { next?: unknown; u
 
 interface KeybindingsLike {
 	get(namespace: string, action: string): { key: string; modifiers?: string[] }[] | undefined;
-}
-
-/**
- * A hero gets 3 actions a turn, so a turn has at most 3 Moves. The label shows
- * the Move as one of the dice the sheet shows for the actions.
- */
-const MOVE_ICONS = ['fa-dice-one', 'fa-dice-two', 'fa-dice-three'];
-const MOVES_PER_TURN = MOVE_ICONS.length;
-
-/**
- * The spaces of the second and third Move get a colour of their own and every
- * space past the third Move is red; the first keeps the user's colour.
- */
-const MOVE_COLORS: Record<number, number> = { 2: 0xf2c94c, 3: 0xf2994a };
-const PAST_LAST_MOVE_COLOR = 0xeb5757;
-
-function moveColor(waypoint: unknown): number | undefined {
-	const { unreachable, moveBand } = waypoint as MoveBandWaypoint;
-	if (unreachable || !moveBand) return undefined;
-	return moveBand > MOVES_PER_TURN ? PAST_LAST_MOVE_COLOR : MOVE_COLORS[moveBand];
-}
-
-/** The die of the Move a drag waypoint falls in, and whether that is past the last Move of a turn. */
-function moveDie({ moveBand }: LabelWaypoint): { icon: string; over: boolean } | null {
-	if (!moveBand) return null;
-	return {
-		icon: MOVE_ICONS[Math.min(moveBand, MOVES_PER_TURN) - 1],
-		over: moveBand > MOVES_PER_TURN,
-	};
-}
-
-/** Core dashes the line from the first drawn waypoint out of reach, so the last one in reach must be drawn. */
-function endsReach(waypoint: unknown): boolean {
-	const { unreachable, next } = waypoint as {
-		unreachable: boolean;
-		next?: { unreachable: boolean } | null;
-	};
-	return !unreachable && !!next?.unreachable;
-}
-
-/** Which offered movement a drag waypoint uses and how many of its spaces. */
-function budgetText({ offerBand }: LabelWaypoint): string {
-	if (!offerBand) return '';
-	return localize(`NIMBLE.movement.ruler.${offerBand.kind}`, {
-		spaces: String(offerBand.spaces),
-		limit: String(offerBand.limit),
-	});
 }
 
 /**
@@ -71,8 +32,12 @@ function budgetText({ offerBand }: LabelWaypoint): string {
 export class NimbleTokenRuler extends foundry.canvas.placeables.tokens.TokenRuler {
 	static override WAYPOINT_LABEL_TEMPLATE = `${SYSTEM_PATH}/templates/hud/waypoint-label.hbs`;
 
+	/** The colours of the Moves, read from the style sheet once for each draw. */
+	#moveColors: MoveColors | null = null;
+
 	protected override _preparePath(path: Waypoint[]): void {
 		super._preparePath(path);
+		this.#moveColors = null;
 		const document = this.token.document;
 		const gridDistance = document.parent?.grid?.distance ?? 0;
 		if (!gridDistance) return;
@@ -85,14 +50,15 @@ export class NimbleTokenRuler extends foundry.canvas.placeables.tokens.TokenRule
 	protected override _shouldRenderWaypoint(
 		waypoint: Parameters<foundry.canvas.placeables.tokens.TokenRuler['_shouldRenderWaypoint']>[0],
 	): boolean {
-		return super._shouldRenderWaypoint(waypoint) || endsReach(waypoint);
+		return super._shouldRenderWaypoint(waypoint) || endsReach(waypoint as never);
 	}
 
 	protected override _getGridHighlightStyle(
 		...args: Parameters<foundry.canvas.placeables.tokens.TokenRuler['_getGridHighlightStyle']>
 	): ReturnType<foundry.canvas.placeables.tokens.TokenRuler['_getGridHighlightStyle']> {
 		const style = super._getGridHighlightStyle(...args);
-		const color = moveColor(args[0]);
+		this.#moveColors ??= readMoveColors(globalThis.getComputedStyle(document.documentElement));
+		const color = moveColor(args[0] as unknown as MoveBandWaypoint, this.#moveColors);
 		return color === undefined || style.alpha === 0 ? style : { ...style, color };
 	}
 
@@ -109,21 +75,19 @@ export class NimbleTokenRuler extends foundry.canvas.placeables.tokens.TokenRule
 		return Object.assign(context, { moveDie: die, budget, switchHint });
 	}
 
-	/** Names the key that switches the user's drag between the offer and the token's own movement. */
+	/** Names the cycle key and the movement it switches the user's drag to. */
 	#switchHint(waypoint: LabelWaypoint): string {
 		// Recorded waypoints also carry the id of the user who moved the token.
 		if (waypoint.stage !== 'planned' || waypoint.userId !== game.user?.id) return '';
 		if (!(this.token instanceof NimbleToken)) return '';
 		const offer = this.token.switchableDragOffer();
+		const next = this.token.nextDragAction();
 		const binding = (game.keybindings as unknown as KeybindingsLike).get('core', 'cycleView')?.[0];
-		if (!offer || !binding) return '';
+		if (!offer || next === undefined || !binding) return '';
+		const actions = CONFIG.Token.movement.actions as unknown as Record<string, { label: string }>;
+		const label = actions[next ?? movementOfferAction(offer.kind)]?.label;
+		if (!label) return '';
 		const key = foundry.applications.sidebar.apps.ControlsConfig.humanizeBinding(binding as never);
-		if (waypoint.action === movementOfferAction(offer.kind)) {
-			return localize('NIMBLE.movement.ruler.switchToOwn', { key });
-		}
-		return localize('NIMBLE.movement.ruler.switchToOffer', {
-			key,
-			movement: localize(`NIMBLE.movement.actions.${offer.kind}`),
-		});
+		return localize('NIMBLE.movement.ruler.switchTo', { key, movement: localize(label) });
 	}
 }
