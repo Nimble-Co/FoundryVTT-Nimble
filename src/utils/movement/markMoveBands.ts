@@ -14,9 +14,10 @@ interface MoveBandOptions {
  * with the Move it falls in: the first Speed spaces are Move 1, the next Speed
  * spaces Move 2, and so on. The count goes on from the creature's own movement
  * earlier in the history, and it runs on cost, so difficult terrain counts
- * double. A Free Move, Forced Movement and a Teleport never count. Only a
- * creature with no Speed for the movement action is drawn as out of reach; the
- * drag itself never changes.
+ * double. A Free Move, Forced Movement and a Teleport never count. Only the
+ * part of the drag under a movement action the creature has no Speed for is
+ * drawn as out of reach, and it adds nothing to the count; the drag itself
+ * never changes.
  */
 export function markMoveBands(
 	path: MoveBandWaypoint[],
@@ -28,10 +29,11 @@ export function markMoveBands(
 		if (getMovementKind(waypoint.action) !== 'regular') continue;
 		const speed = Math.max(speedFor(waypoint.action), 0);
 		const cost = waypoint.measurement.cost - path[index - 1].measurement.cost;
-		if (cost > 0) moves += cost / (speed * gridDistance);
+		const noSpeed = cost > 0 && speed === 0;
+		if (cost > 0 && !noSpeed) moves += cost / (speed * gridDistance);
 		if (waypoint.stage !== 'planned') continue;
 
-		if (!Number.isFinite(moves)) {
+		if (noSpeed) {
 			waypoint.unreachable = true;
 			continue;
 		}

@@ -86,6 +86,27 @@ describe('markMoveBands', () => {
 		expect(unreachable(path)).toEqual([true]);
 	});
 
+	it('draws only the part under an action with no Speed as out of reach, and goes on counting after it', () => {
+		const noWalk = { ...options, speedFor: (action: string) => (action === 'fly' ? 8 : 0) };
+		const path = pathOf(
+			['planned', 'walk', 1],
+			['planned', 'fly', 8],
+			['planned', 'fly', 1],
+			['planned', 'walk', 1],
+		);
+		markMoveBands(path, noWalk);
+		expect(bands(path)).toEqual([null, 1, 2, null]);
+		expect(unreachable(path)).toEqual([true, false, false, true]);
+	});
+
+	it('goes on counting after a recorded step under an action with no Speed', () => {
+		const noWalk = { ...options, speedFor: (action: string) => (action === 'fly' ? 8 : 0) };
+		const path = pathOf(['passed', 'walk', 1], ['planned', 'fly', 2]);
+		markMoveBands(path, noWalk);
+		expect(bands(path)).toEqual([null, 1]);
+		expect(unreachable(path)).toEqual([false, false]);
+	});
+
 	it('marks nothing on a path with no planned part', () => {
 		const path = pathOf(['passed', 'walk', 4], ['passed', 'walk', 4]);
 		markMoveBands(path, options);
