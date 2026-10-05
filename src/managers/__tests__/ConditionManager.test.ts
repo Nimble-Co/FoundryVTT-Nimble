@@ -142,7 +142,7 @@ describe('ConditionManager', () => {
 			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['afraid', 'zealous']);
 		});
 
-		it('leaves monster-scoped conditions out of the token HUD picker', () => {
+		it('keeps monster-scoped conditions in CONFIG.statusEffects, so they can be applied', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', swallowed: 'Swallowed' },
 				{ scopes: { swallowed: 'monster' } },
@@ -150,7 +150,21 @@ describe('ConditionManager', () => {
 			manager.initialize();
 			manager.configureStatusEffects();
 
-			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['blinded']);
+			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['blinded', 'swallowed']);
+		});
+
+		it('publishes every registered condition, since an absent id cannot be applied at all', () => {
+			setConfiguredConditions(
+				{ blinded: 'Blinded', swallowed: 'Swallowed', latchedOn: 'Latched On' },
+				{ scopes: { swallowed: 'monster', latchedOn: 'monster' } },
+			);
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			const published = new Set(CONFIG.statusEffects.map((effect) => effect.id));
+			for (const conditionId of Object.keys(CONFIG.NIMBLE.conditions)) {
+				expect(published).toContain(conditionId);
+			}
 		});
 
 		it('still registers a monster-scoped condition, so it can be applied and read', () => {

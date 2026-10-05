@@ -1,5 +1,4 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
-import isMonsterScopedCondition from '../utils/isMonsterScopedCondition.js';
 import localize from '../utils/localize.js';
 
 export interface ConditionTriggerConfig {
@@ -70,16 +69,16 @@ export class ConditionManager {
 	configureStatusEffects() {
 		if (!this.#ready) throw Error('Conditions are not ready yet.');
 
-		// Monster-scoped conditions are deliberately absent: CONFIG.statusEffects is what the token
-		// HUD offers, and these are inflicted by features rather than chosen from a list.
-		const statusEffects = [...this.#conditions.values()]
-			.filter((condition) => !isMonsterScopedCondition(condition.id))
-			.sort((a, b) => {
-				const aid = a.name !== undefined ? localize(a.name) : a.id || a;
-				const bid = b.name !== undefined ? localize(b.name) : b.id || b;
+		// Every registered condition belongs here, monster-scoped ones included: Foundry validates a
+		// status id against CONFIG.statusEffects before ActiveEffect.fromStatusEffect will build the
+		// effect, so an id missing from this list can never be applied. Keeping them out of the
+		// pickers is a display concern, handled by shouldListCondition.
+		const statusEffects = [...this.#conditions.values()].sort((a, b) => {
+			const aid = a.name !== undefined ? localize(a.name) : a.id || a;
+			const bid = b.name !== undefined ? localize(b.name) : b.id || b;
 
-				return aid > bid ? 1 : aid < bid ? -1 : 0;
-			});
+			return aid > bid ? 1 : aid < bid ? -1 : 0;
+		});
 
 		// V14's CONFIG.statusEffects is a Proxy that mirrors entries under their
 		// ids (core looks conditions up as CONFIG.statusEffects[statusId]).
