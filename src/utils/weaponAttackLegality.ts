@@ -1,98 +1,77 @@
-import { hasWeaponProficiency } from './attackUtils.js';
-import { getEquipmentSwapsRemaining } from './equipmentSwaps.js';
-import {
-	type EquipmentActor,
-	getFreeHandCount,
-	getHeldItems,
-	getStrengthModifier,
-	type HandItem,
-} from './weaponHands.js';
+/**
+ * Structural shapes for the equipment an actor carries. Declared locally rather
+ * than importing the document classes so the attack panels, the inventory tab
+ * and the character document can all use these without an import cycle.
+ */
+export interface WeaponItem {
+	id: string | null;
+	name: string | null;
+	type: string;
+	system: {
+		objectType: string;
+		equipped: boolean;
+		properties: {
+			selected: string[];
+			strengthRequirement?: { value: number | null; overridesTwoHanded: boolean };
+		};
+	};
+}
 
-export type WeaponAttackRefusal =
-	| 'notEquipped'
-	| 'strengthRequirement'
-	| 'noFreeHand'
-	| 'noSwapsLeft';
+export interface EquipmentActor {
+	system: {
+		abilities?: { strength?: { mod?: number } };
+	};
+}
+
+export type WeaponAttackRefusal = 'notEquipped';
 
 export interface WeaponAttackCheck {
 	allowed: boolean;
 	refusal?: WeaponAttackRefusal;
-	/** The strength the weapon asks for, when that is what failed. */
-	strengthRequired?: number;
-	/**
-	 * Held items that could be sheathed to free the hand this attack needs.
-	 * Empty unless taking the attack requires a swap.
-	 */
-	sheatheCandidates: HandItem[];
-	/** Taking this attack must sheathe something and spend a swap. */
-	requiresSwap: boolean;
-}
-
-interface CombatContext {
-	combatant: Parameters<typeof getEquipmentSwapsRemaining>[1];
-	combat: Parameters<typeof getEquipmentSwapsRemaining>[2];
-}
-
-function allow(): WeaponAttackCheck {
-	return { allowed: true, sheatheCandidates: [], requiresSwap: false };
-}
-
-function refuse(refusal: WeaponAttackRefusal, strengthRequired?: number): WeaponAttackCheck {
-	return { allowed: false, refusal, strengthRequired, sheatheCandidates: [], requiresSwap: false };
-}
-
-/** The free swap covers only weapons and shields the hero is proficient with. */
-function canBeSheathedFreely(actor: EquipmentActor, held: HandItem): boolean {
-	if (held.system.objectType !== 'weapon') return true;
-	return hasWeaponProficiency(actor, held);
 }
 
 /**
- * Whether `weapon` can be attacked with right now, and what it would cost.
+ * Whether `weapon` can be attacked with right now.
  *
- * The hand rules come from two book clauses. "2-handed: can be held in a single
- * hand, but must be wielded in 2 hands to attack with it" means a two-handed
- * weapon occupies one hand at rest and needs a second one free at the moment of
- * the attack. "Swapping Equipment: a hero can sheathe weapons or shields they
- * are proficient with and equip a different one for free 1/round" is what pays
- * for freeing that hand inline.
+ * Being equipped is the only hard condition: a weapon you are not holding is
+ * not one you can swing. A Strength requirement is surfaced as a notice
+ * instead, see `getStrengthShortfall`, because the book leaves what an
+ * under-strength hero may do with the weapon to the table.
+ */
+export function checkWeaponAttack(weapon: WeaponItem): WeaponAttackCheck {
+	if (weapon.system.objectType !== 'weapon') return { allowed: true };
+	if (!weapon.system.equipped) return { allowed: false, refusal: 'notEquipped' };
+
+	return { allowed: true };
+}
+
+export function getStrengthModifier(actor: EquipmentActor): number {
+	return Number(actor.system.abilities?.strength?.mod ?? 0);
+}
+
+/**
+ * How far short of a weapon's Strength requirement the character falls, or
+ * `null` when nothing is owed.
  *
  * `strengthRequirement.value` means two different things depending on the
- * boolean beside it: with `overridesTwoHanded` it gates wielding the weapon
- * one-handed (the Longsword), and without it gates using the weapon at all
- * (the great weapons, the Handheld Ballista, the Longbow).
+ * boolean beside it. With `overridesTwoHanded` it buys one-handed use of a
+ * two-handed weapon (the Longsword), so missing it costs nothing: the weapon
+ * is simply used in two hands. Without it the requirement is a flat condition
+ * on using the weapon at all (the great weapons, the Handheld Ballista, the
+ * Longbow), and that is what the notice reports.
  */
-export function checkWeaponAttack(
+export function getStrengthShortfall(
 	actor: EquipmentActor,
-	weapon: HandItem,
-	combatContext: CombatContext = { combatant: null, combat: null },
-): WeaponAttackCheck {
-	const { system } = weapon;
-	if (system.objectType !== 'weapon') return allow();
-	if (!system.equipped) return refuse('notEquipped');
+	weapon: WeaponItem,
+): { required: number; current: number } | null {
+	const { objectType, properties } = weapon.system;
+	if (objectType !== 'weapon') return null;
 
-	if (!system.properties.selected.includes('twoHanded')) return allow();
+	const { value = null, overridesTwoHanded = false } = properties.strengthRequirement ?? {};
+	if (overridesTwoHanded || value === null) return null;
 
-	const { value, overridesTwoHanded } = system.properties.strengthRequirement;
-	const strength = getStrengthModifier(actor);
+	const current = getStrengthModifier(actor);
+	if (current >= value) return null;
 
-	if (overridesTwoHanded) {
-		// The requirement buys one-handed use; two-handed use is unconditional.
-		if (value !== null && strength >= value) return allow();
-	} else if (value !== null && strength < value) {
-		return refuse('strengthRequirement', value);
-	}
-
-	if (getFreeHandCount(actor) > 0) return allow();
-
-	const sheatheCandidates = getHeldItems(actor).filter(
-		(held) => held.id !== weapon.id && canBeSheathedFreely(actor, held),
-	);
-	if (sheatheCandidates.length === 0) return refuse('noFreeHand');
-
-	if (getEquipmentSwapsRemaining(actor, combatContext.combatant, combatContext.combat) <= 0) {
-		return refuse('noSwapsLeft');
-	}
-
-	return { allowed: true, sheatheCandidates, requiresSwap: true };
+	return { required: value, current };
 }

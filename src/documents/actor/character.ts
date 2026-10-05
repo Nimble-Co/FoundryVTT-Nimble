@@ -15,11 +15,11 @@ import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getChargePoolRollData } from '#utils/chargePool/helpers.js';
-import enforceWeaponAttack from '#utils/enforceWeaponAttack.js';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/classProgression/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
+import enforceWeaponAttack from '#utils/enforceWeaponAttack.js';
 import localize from '#utils/localize.js';
 import collectHeldPicks, {
 	countHeldPicks,
@@ -2400,6 +2400,18 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		options: Record<string, unknown> = {},
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
+
+		// Equip gate, ahead of every other side effect so a refused attack rolls
+		// nothing and spends nothing. This is the authoritative check: the attack
+		// panels filter on the same rule, but a weapon can be unequipped between
+		// the panel rendering and the click, and macros reach here directly.
+		if (
+			item?.type === 'object' &&
+			(item as unknown as NimbleObjectItem).system.objectType === 'weapon' &&
+			!enforceWeaponAttack(item as unknown as Parameters<typeof enforceWeaponAttack>[0])
+		) {
+			return null;
+		}
 
 		// Soft-block gate: when the activation costs more actions than the
 		// combatant has remaining, confirm before any activation side effects

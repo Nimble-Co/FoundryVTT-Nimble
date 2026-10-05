@@ -290,6 +290,12 @@
     overflow: hidden;
   }
 
+  &__warning {
+    margin-inline-start: 0.25rem;
+    font-size: var(--nimble-xs-text);
+    color: var(--nimble-warning-icon-color);
+  }
+
   .nimble-document-card__content {
     flex-grow: 1;
     display: flex;
