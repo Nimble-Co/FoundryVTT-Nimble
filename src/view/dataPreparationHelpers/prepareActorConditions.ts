@@ -1,7 +1,7 @@
 import { stacksOf } from '../../utils/actor/effectStacks.js';
 import { deriveDurationDetails, expandDurationLabel } from '../../utils/formatDuration.js';
-import isMonsterScopedCondition from '../../utils/isMonsterScopedCondition.js';
 import localize from '../../utils/localize.js';
+import shouldListCondition from '../../utils/shouldListCondition.js';
 import { effectLastsUntil, escapeOf } from './effectLastsUntil.js';
 
 export type ActorCondition = {
@@ -176,10 +176,8 @@ export default function prepareActorConditions(
 		}
 	}
 
-	// The inactive list is the sheet's condition picker, so monster-scoped conditions are left out
-	// of it unless the actor already carries one.
-	const selectableConditionIds = Object.keys(CONFIG.NIMBLE.conditions ?? {}).filter(
-		(conditionId) => !isMonsterScopedCondition(conditionId),
+	const selectableConditionIds = Object.keys(CONFIG.NIMBLE.conditions ?? {}).filter((conditionId) =>
+		shouldListCondition(conditionId, activeConditions),
 	);
 
 	const conditionIds = includeInactive
