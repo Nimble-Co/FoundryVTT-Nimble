@@ -1,5 +1,21 @@
 import { movementChipsFor, moveNodeText } from './moveNodeText.ts';
 
+const baseGame = game;
+
+/** Fills every placeholder, as Foundry does; the shared mock fills only the first of a repeated one. */
+function formatAll(key: string, data?: Record<string, string>): string {
+	const text = baseGame.i18n.localize(key);
+	return data ? text.replace(/{[^}]+}/g, (slot) => data[slot.slice(1, -1)]) : text;
+}
+
+beforeEach(() => {
+	vi.stubGlobal('game', { ...baseGame, i18n: { ...baseGame.i18n, format: formatAll } });
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
+
 const SPEAKER_TOKEN = 'Scene.s1.Token.hero';
 const TRACKING = { tracking: true };
 
@@ -55,9 +71,9 @@ function chipOf(node: never, entry: never, options = TRACKING) {
 describe('moveNodeText', () => {
 	describe('summary line', () => {
 		it.each([
-			['away', 'Pushed up to 2 spaces away from Sir Brannon.'],
-			['toward', 'Pulled up to 2 spaces toward Sir Brannon.'],
-			['any', 'Moved up to 2 spaces in any direction.'],
+			['away', 'Pushed 2 spaces away from Sir Brannon.'],
+			['toward', 'Pulled 2 spaces toward Sir Brannon.'],
+			['any', 'Moved 2 spaces in any direction.'],
 		])('names a %s push with the book verb', (direction, expected) => {
 			expect(summaryOf(moveNode({ direction }), [offer()])).toBe(expected);
 		});
@@ -77,7 +93,7 @@ describe('moveNodeText', () => {
 			expect(summaryOf(moveNode(), [offer({ spaces: 0 })])).toBe('Pushed away from Sir Brannon.');
 		});
 
-		it('says a Free Move is for free, with the terrain clause only when it ignores difficult terrain', () => {
+		it('says a move for free is for free, with the terrain clause only when it ignores difficult terrain', () => {
 			const self = { kind: 'free', recipient: 'self', direction: 'any' };
 			const selfOffer = { tokenUuid: SPEAKER_TOKEN, kind: 'free', spaces: 6 };
 			expect(summaryOf(moveNode(self), [offer(selfOffer)])).toBe(
@@ -88,7 +104,7 @@ describe('moveNodeText', () => {
 			).toBe('Can move up to 6 spaces for free.');
 		});
 
-		it('gives a Free Move its direction', () => {
+		it('gives a move for free its direction', () => {
 			const node = moveNode({ kind: 'free', direction: 'toward', ignoreDifficultTerrain: false });
 			expect(summaryOf(node, [offer({ kind: 'free', spaces: 3 })])).toBe(
 				'Can move up to 3 spaces toward Sir Brannon for free.',
@@ -105,10 +121,32 @@ describe('moveNodeText', () => {
 		it('hides the direction when the feature user is the only creature that moves', () => {
 			expect(
 				summaryOf(moveNode({ recipient: 'self' }), [offer({ tokenUuid: SPEAKER_TOKEN })]),
-			).toBe('Moved up to 2 spaces.');
-			expect(summaryOf(moveNode(), [offer({ tokenUuid: SPEAKER_TOKEN })])).toBe(
-				'Moved up to 2 spaces.',
+			).toBe('Moved 2 spaces.');
+			expect(summaryOf(moveNode(), [offer({ tokenUuid: SPEAKER_TOKEN })])).toBe('Moved 2 spaces.');
+		});
+
+		it('says "up to" only for a move for free, unless the node sets it', () => {
+			const pull = moveNode({ direction: 'toward', upTo: true });
+			expect(summaryOf(pull, [offer()])).toBe('Pulled up to 2 spaces toward Sir Brannon.');
+			expect(chipOf(pull, offer()).tooltip).toBe(
+				'Waiting to be pulled up to 2 spaces toward Sir Brannon.',
 			);
+			expect(chipOf(pull, offer({ conditional: true })).tooltip).toBe(
+				'Will be pulled up to 2 spaces toward Sir Brannon, depending on the save.',
+			);
+
+			const exact = moveNode({ kind: 'free', ignoreDifficultTerrain: false, upTo: false });
+			const entry = offer({ kind: 'free', spaces: 3 });
+			expect(summaryOf(exact, [entry])).toBe('Can move 3 spaces away from Sir Brannon for free.');
+			expect(chipOf(exact, offer({ kind: 'free', spaces: 3, conditional: true })).tooltip).toBe(
+				'Can move 3 spaces away from Sir Brannon for free, depending on the save.',
+			);
+		});
+
+		it('leaves no gap when there is no distance and no direction', () => {
+			const self = moveNode({ kind: 'free', recipient: 'self', ignoreDifficultTerrain: false });
+			expect(summaryOf(self, [])).toBe('Can move for free.');
+			expect(summaryOf(moveNode({ recipient: 'self' }), [])).toBe('Moved.');
 		});
 
 		it('never mentions terrain for a push', () => {
@@ -118,9 +156,9 @@ describe('moveNodeText', () => {
 
 	describe('chip', () => {
 		it.each([
-			['open', {}, '2', 'Waiting to be pushed up to 2 spaces away from Sir Brannon.'],
+			['open', {}, '2', 'Waiting to be pushed 2 spaces away from Sir Brannon.'],
 			['taken', { state: 'taken', movedSpaces: 2 }, '2/2', 'Pushed the full 2 spaces.'],
-			['unused', { state: 'unused' }, 'Not pushed', 'Not pushed. It moved another way instead.'],
+			['unused', { state: 'unused' }, 'Not pushed', 'Not pushed. The token was moved another way.'],
 			['lapsed', { state: 'lapsed' }, 'Not pushed', 'Not pushed. The turn ended first.'],
 		])('tells a %s push in plain words', (status, overrides, label, tooltip) => {
 			const chip = chipOf(moveNode(), offer(overrides));
@@ -132,13 +170,13 @@ describe('moveNodeText', () => {
 			expect(chip.status).toBe('short');
 			expect(chip.label).toBe('1/3');
 			expect(chip.tooltip).toBe(
-				'Pushed 1 of 3 spaces. If an obstacle stopped Goblin Cutthroat, it takes 2d6 bludgeoning damage. If it hit another creature, both creatures split the damage.',
+				'Pushed 1 of 3 spaces. If an obstacle stopped Goblin Cutthroat, Goblin Cutthroat takes 2d6 bludgeoning damage. If Goblin Cutthroat hit another creature, the two creatures split this damage.',
 			);
 		});
 
 		it.each([
-			['toward', 'Waiting to be pulled up to 2 spaces toward Sir Brannon.', 'Not pulled'],
-			['any', 'Waiting to be moved up to 2 spaces in any direction.', 'Not moved'],
+			['toward', 'Waiting to be pulled 2 spaces toward Sir Brannon.', 'Not pulled'],
+			['any', 'Waiting to be moved 2 spaces in any direction.', 'Not moved'],
 		])('uses the %s verb', (direction, openTooltip, notMovedLabel) => {
 			const node = moveNode({ direction });
 			expect(chipOf(node, offer()).tooltip).toBe(openTooltip);
@@ -149,7 +187,7 @@ describe('moveNodeText', () => {
 			const expected = {
 				status: 'unused',
 				label: 'Not used',
-				tooltip: 'Did not use the Forced Movement. It moved another way instead.',
+				tooltip: 'Not moved by this effect. The token was moved another way.',
 			};
 			const unused = offer({ state: 'unused' });
 			expect(chipOf(moveNode({ direction: 'any' }), unused)).toMatchObject(expected);
@@ -171,15 +209,10 @@ describe('moveNodeText', () => {
 				'unused',
 				{ state: 'unused' },
 				'Not used',
-				'Did not use the Free Move. It moved another way instead.',
+				'Did not move for free. The token was moved another way.',
 			],
-			[
-				'lapsed',
-				{ state: 'lapsed' },
-				'Not used',
-				'Did not use the Free Move. The turn ended first.',
-			],
-		])('tells a %s Free Move in plain words', (status, overrides, label, tooltip) => {
+			['lapsed', { state: 'lapsed' }, 'Not used', 'Did not move for free. The turn ended first.'],
+		])('tells a %s move for free in plain words', (status, overrides, label, tooltip) => {
 			const node = moveNode({ kind: 'free', direction: 'toward', ignoreDifficultTerrain: false });
 			const chip = chipOf(node, offer({ kind: 'free', spaces: 3, ...overrides }));
 			expect(chip).toMatchObject({ status, label, tooltip });
@@ -187,7 +220,7 @@ describe('moveNodeText', () => {
 
 		it('uses the singular for one space', () => {
 			expect(chipOf(moveNode(), offer({ spaces: 1 })).tooltip).toBe(
-				'Waiting to be pushed up to 1 space away from Sir Brannon.',
+				'Waiting to be pushed 1 space away from Sir Brannon.',
 			);
 			expect(chipOf(moveNode(), offer({ spaces: 1, state: 'taken', movedSpaces: 1 })).tooltip).toBe(
 				'Pushed the full 1 space.',
@@ -198,7 +231,7 @@ describe('moveNodeText', () => {
 			expect(chipOf(moveNode(), offer(), { tracking: false })).toMatchObject({
 				status: 'untracked',
 				label: '2',
-				tooltip: 'Pushed up to 2 spaces away from Sir Brannon.',
+				tooltip: 'Pushed 2 spaces away from Sir Brannon.',
 			});
 		});
 
@@ -206,7 +239,7 @@ describe('moveNodeText', () => {
 			expect(chipOf(moveNode(), offer({ state: 'untracked' }))).toMatchObject({
 				status: 'untracked',
 				label: '2',
-				tooltip: 'Pushed up to 2 spaces away from Sir Brannon.',
+				tooltip: 'Pushed 2 spaces away from Sir Brannon.',
 			});
 			const free = moveNode({ kind: 'free', direction: 'toward', ignoreDifficultTerrain: false });
 			expect(chipOf(free, offer({ kind: 'free', spaces: 3, state: 'untracked' })).tooltip).toBe(
@@ -249,9 +282,9 @@ describe('moveNodeText', () => {
 		}
 
 		it.each([
-			['failedSave', 'Pushed up to 2 spaces away from Sir Brannon if it fails the save.'],
-			['passedSave', 'Pushed up to 2 spaces away from Sir Brannon if it passes the save.'],
-			['failedSaveBy5', 'Pushed up to 2 spaces away from Sir Brannon, depending on the save.'],
+			['failedSave', 'Will be pushed 2 spaces away from Sir Brannon on a failed save.'],
+			['passedSave', 'Will be pushed 2 spaces away from Sir Brannon on a passed save.'],
+			['failedSaveBy5', 'Will be pushed 2 spaces away from Sir Brannon, depending on the save.'],
 		])('names the %s outcome', (context, tooltip) => {
 			const entry = offer({ conditional: true });
 			const { text } = saveCard(context, entry);
@@ -281,7 +314,7 @@ describe('moveNodeText', () => {
 				},
 			];
 			expect(moveNodeText(card([entry], effects), push, TRACKING).chip(entry).tooltip).toBe(
-				'Pushed up to 2 spaces away from Sir Brannon if it fails the save.',
+				'Will be pushed 2 spaces away from Sir Brannon on a failed save.',
 			);
 		});
 	});
@@ -292,7 +325,7 @@ describe('moveNodeText', () => {
 
 		it('is there only for a push that fell short', () => {
 			expect(text(offer({ state: 'taken', spaces: 3, movedSpaces: 1 }))).toMatch(
-				/^If an obstacle stopped Goblin Cutthroat, it takes 2d6 bludgeoning damage\./,
+				/^If an obstacle stopped Goblin Cutthroat, Goblin Cutthroat takes 2d6 bludgeoning damage\./,
 			);
 			expect(text(offer({ state: 'taken', movedSpaces: 2 }))).toBeNull();
 			expect(text(offer())).toBeNull();
@@ -350,7 +383,7 @@ describe('movementChipsFor', () => {
 		];
 		const chips = movementChipsFor(card(offers, effects), 'Scene.s1.Token.tok1', TRACKING);
 		expect(chips.map((chip) => chip.key)).toEqual(['push1.tok1', 'pull1.tok1']);
-		expect(chips[1].tooltip).toBe('Pulled up to 2 spaces toward Sir Brannon if it fails the save.');
+		expect(chips[1].tooltip).toBe('Will be pulled 2 spaces toward Sir Brannon on a failed save.');
 	});
 
 	it('gives no chip for an offer of zero spaces', () => {

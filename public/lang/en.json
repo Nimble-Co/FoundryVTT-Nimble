@@ -119,55 +119,59 @@
 				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
 			},
 			"movementOffers": {
-				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
+				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
 				"space": "{count} space",
 				"spaces": "{count} spaces",
 				"upTo": "up to {distance}",
 				"directions": {
-					"away": " away from {source}",
-					"toward": " toward {source}",
-					"any": " in any direction"
+					"away": "away from {source}",
+					"toward": "toward {source}",
+					"any": "in any direction"
 				},
+				"distanceAndDirection": "{distance} {direction}",
+				"sentences": "{first} {second}",
 				"verbs": {
 					"away": { "past": "Pushed", "passive": "pushed" },
 					"toward": { "past": "Pulled", "passive": "pulled" },
 					"any": { "past": "Moved", "passive": "moved" }
 				},
-				"ignoringDifficultTerrain": ", ignoring difficult terrain",
+				"forFree": {
+					"plain": "for free",
+					"ignoringDifficultTerrain": "for free, ignoring difficult terrain"
+				},
 				"summary": {
-					"forced": "{verb} {distance}{direction}.",
-					"forcedEach": "{verb}{direction}. Each creature shows its spaces.",
-					"forcedNone": "{verb}{direction}.",
-					"free": "Can move {distance}{direction} for free{terrain}.",
-					"freeEach": "Can move{direction} for free{terrain}. Each creature shows its spaces.",
-					"freeNone": "Can move{direction} for free{terrain}."
+					"forced": "{verb} {motion}.",
+					"forcedBare": "{verb}.",
+					"free": "Can move {motion} {forFree}.",
+					"freeBare": "Can move {forFree}.",
+					"eachShowsSpaces": "Each creature shows its spaces."
 				},
 				"status": {
 					"forced": {
-						"open": "Waiting to be {passive} {distance}{direction}.",
+						"open": "Waiting to be {passive} {motion}.",
 						"taken": "{verb} the full {offered}.",
 						"short": "{verb} {moved} of {offered}.",
-						"unused": "Not {passive}. It moved another way instead.",
-						"unusedAny": "Did not use the Forced Movement. It moved another way instead.",
+						"unused": "Not {passive}. The token was moved another way.",
+						"unusedAny": "Not moved by this effect. The token was moved another way.",
 						"lapsed": "Not {passive}. The turn ended first.",
-						"failedSave": "{verb} {distance}{direction} if it fails the save.",
-						"passedSave": "{verb} {distance}{direction} if it passes the save.",
-						"otherSave": "{verb} {distance}{direction}, depending on the save."
+						"failedSave": "Will be {passive} {motion} on a failed save.",
+						"passedSave": "Will be {passive} {motion} on a passed save.",
+						"otherSave": "Will be {passive} {motion}, depending on the save."
 					},
 					"free": {
-						"open": "Can move {distance}{direction} for free{terrain}.",
+						"open": "Can move {motion} {forFree}.",
 						"taken": "Moved the full {offered} for free.",
 						"partial": "Moved {moved} of {offered} for free.",
 						"short": "Moved {moved} of {offered} for free before something blocked the path.",
-						"unused": "Did not use the Free Move. It moved another way instead.",
-						"lapsed": "Did not use the Free Move. The turn ended first.",
-						"failedSave": "Can move {distance}{direction} for free if it fails the save.",
-						"passedSave": "Can move {distance}{direction} for free if it passes the save.",
-						"otherSave": "Can move {distance}{direction} for free, depending on the save."
+						"unused": "Did not move for free. The token was moved another way.",
+						"lapsed": "Did not move for free. The turn ended first.",
+						"failedSave": "Can move {motion} for free on a failed save.",
+						"passedSave": "Can move {motion} for free on a passed save.",
+						"otherSave": "Can move {motion} for free, depending on the save."
 					}
 				},
 				"chip": { "notMoved": "Not {passive}", "notUsed": "Not used" },
-				"obstacleDamage": "If an obstacle stopped {name}, it takes {dice}d6 bludgeoning damage. If it hit another creature, both creatures split the damage.",
+				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
 				"noRecipient": "No creature to move."
 			},
 			"grantedActionOffers": {
@@ -2727,11 +2731,12 @@
 			"move": "Move",
 			"moveNode": {
 				"kind": "Kind",
-				"kinds": { "free": "Free Move", "forced": "Forced Movement" },
+				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
 				"recipient": "Who Moves",
-				"recipients": { "self": "The user", "targets": "The targets" },
+				"recipients": { "self": "The creature that uses this", "targets": "The targets" },
 				"distance": "Distance (spaces)",
-				"distanceHint": "A formula against the user's data: @abilities.strength.mod is their Strength modifier. @speed is the walk speed of the creature that moves.",
+				"distanceHint": "A formula against the data of the creature that uses this: @abilities.strength.mod is the Strength modifier of that creature. @speed is the walk speed of the creature that moves.",
+				"upTo": "Show the distance as \"up to\" (the creature can move less)",
 				"distanceBySize": "Distance by size (optional)",
 				"ignoreDifficultTerrain": "Ignore difficult terrain",
 				"direction": "Direction",
@@ -3170,8 +3175,8 @@
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
 			},
 			"movementOffers": {
-				"name": "Forced and Free Movement",
-				"hint": "When a card pushes or pulls a creature, or gives it a Free Move, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
+				"name": "Forced Movement and Moves for Free",
+				"hint": "When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",
@@ -3763,14 +3768,13 @@
 		},
 		"movement": {
 			"actions": {
-				"free": "Free Move",
+				"free": "Move for free",
 				"forced": "Forced Movement"
 			},
 			"ruler": {
-				"free": "Free Move: {spaces} of {limit}",
+				"free": "Move for free: {spaces} of {limit}",
 				"forced": "Forced Movement: {spaces} of {limit}",
-				"switchToOwn": "{key}: own movement",
-				"switchToOffer": "{key}: {movement}"
+				"switchTo": "{key}: switch to {movement}"
 			}
 		}
 	}

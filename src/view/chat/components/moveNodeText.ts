@@ -22,7 +22,7 @@ interface MoveTextCardSystem {
 }
 
 export interface MoveNodeText {
-	/** "Forced Movement" or "Free Move". */
+	/** "Forced Movement" or "Move for free". */
 	kindLabel: string;
 	/** The offers of this node the card lists: each one with a distance. */
 	offers: MovementOffer[];
@@ -70,8 +70,8 @@ function spacesText(count: number): string {
 	return localize(`${KEY}.${count === 1 ? 'space' : 'spaces'}`, { count: String(count) });
 }
 
-function upTo(count: number): string {
-	return localize(`${KEY}.upTo`, { distance: spacesText(count) });
+function sentences(first: string, second: string): string {
+	return localize(`${KEY}.sentences`, { first, second });
 }
 
 /** The save outcome nearest above the node, or null when no save decides it. */
@@ -112,6 +112,10 @@ export function moveNodeText(
 		node.recipient === 'self' || (offers.length === 1 && offers[0].tokenUuid === speakerUuid);
 	const isForced = node.kind === 'forced';
 
+	// A push is a flat distance in the book; a move for free is "up to".
+	const isUpTo = node.upTo ?? !isForced;
+	const kindKey = isForced ? 'forced' : 'free';
+
 	const way = hidesDirection ? 'any' : node.direction;
 	let direction = '';
 	if (!hidesDirection && node.direction !== 'any') {
@@ -119,20 +123,31 @@ export function moveNodeText(
 	} else if (!hidesDirection && isForced) {
 		direction = localize(`${KEY}.directions.any`);
 	}
-	const terrain =
-		!isForced && node.ignoreDifficultTerrain ? localize(`${KEY}.ignoringDifficultTerrain`) : '';
+	const forFree = localize(
+		`${KEY}.forFree.${node.ignoreDifficultTerrain ? 'ignoringDifficultTerrain' : 'plain'}`,
+	);
+
+	const distanceText = (count: number): string =>
+		isUpTo ? localize(`${KEY}.upTo`, { distance: spacesText(count) }) : spacesText(count);
+	/** The distance and the direction as one phrase, or the one that is there. */
+	const motionText = (distance: string): string =>
+		distance && direction
+			? localize(`${KEY}.distanceAndDirection`, { distance, direction })
+			: distance || direction;
 	const verb = localize(`${KEY}.verbs.${way}.past`);
 	const passive = localize(`${KEY}.verbs.${way}.passive`);
 
 	const distances = new Set(offers.map((offer) => offer.spaces));
 	const shared = distances.size === 1 ? [...distances][0] : null;
-	const shape = offers.length === 0 ? 'None' : shared === null ? 'Each' : '';
-	const summary = localize(`${KEY}.summary.${isForced ? 'forced' : 'free'}${shape}`, {
+	const summaryMotion = motionText(shared === null ? '' : distanceText(shared));
+	let summary = localize(`${KEY}.summary.${kindKey}${summaryMotion ? '' : 'Bare'}`, {
 		verb,
-		distance: shared === null ? '' : upTo(shared),
-		direction,
-		terrain,
+		motion: summaryMotion,
+		forFree,
 	});
+	if (distances.size > 1) {
+		summary = sentences(summary, localize(`${KEY}.summary.eachShowsSpaces`));
+	}
 
 	const obstacleDamage = (offer: MovementOffer): string | null => {
 		const outcome = movementOfferOutcome(offer);
@@ -150,28 +165,27 @@ export function moveNodeText(
 		const data = {
 			verb,
 			passive,
-			direction,
-			terrain,
-			distance: upTo(offer.spaces),
+			motion: motionText(distanceText(offer.spaces)),
+			forFree,
 			offered: spacesText(offer.spaces),
 			moved: String(movementOfferOutcome(offer).moved ?? 0),
 		};
-		const kindKey = `${KEY}.status.${isForced ? 'forced' : 'free'}`;
+		const statusKey = `${KEY}.status.${kindKey}`;
 
 		let tooltip: string;
 		if (status === 'conditional') {
 			tooltip = localize(
-				`${kindKey}.${saveKey(saveOutcomeAbove(node, system.activation?.effects ?? []))}`,
+				`${statusKey}.${saveKey(saveOutcomeAbove(node, system.activation?.effects ?? []))}`,
 				data,
 			);
 		} else if (status === 'untracked') {
 			// Nothing records the drag, so the chip states the move instead of waiting for it.
-			tooltip = localize(`${KEY}.summary.${isForced ? 'forced' : 'free'}`, data);
+			tooltip = localize(`${KEY}.summary.${kindKey}`, data);
 		} else {
-			tooltip = localize(`${kindKey}.${unusedAny ? 'unusedAny' : status}`, data);
+			tooltip = localize(`${statusKey}.${unusedAny ? 'unusedAny' : status}`, data);
 		}
 		const damage = obstacleDamage(offer);
-		if (damage) tooltip = `${tooltip} ${damage}`;
+		if (damage) tooltip = sentences(tooltip, damage);
 
 		let label: string;
 		switch (status) {

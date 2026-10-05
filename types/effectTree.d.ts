@@ -22,6 +22,8 @@ export type MoveNode = {
 	/** Per-size overrides of `distance`, keyed by the recipient's size category. */
 	distanceBySize: Record<string, string>;
 	ignoreDifficultTerrain: boolean;
+	/** The text says "up to" the distance. Unset: only a move for free does. */
+	upTo?: boolean;
 	direction: 'any' | 'away' | 'toward';
 	parentContext: string | null;
 	parentNode: string | null;

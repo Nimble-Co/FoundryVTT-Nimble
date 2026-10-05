@@ -890,6 +890,18 @@
 					</h5>
 				</label>
 
+				<label class="nimble-field">
+					<input
+						type="checkbox"
+						checked={node.upTo ?? node.kind === 'free'}
+						onchange={({ target }) =>
+							updateEffectNode(document, effects, node, 'upTo', target.checked)}
+					/>
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.moveNode.upTo')}
+					</h5>
+				</label>
+
 				{#if node.recipient !== 'self'}
 					<div style="width: 100%;">
 						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import MoveNode from './MoveNode.svelte';
 import MoveNodeTestHarness from './MoveNode.testHarness.svelte';
 
 /**
@@ -8,6 +9,12 @@ import MoveNodeTestHarness from './MoveNode.testHarness.svelte';
  */
 
 const baseGame = game;
+
+/** Fills every placeholder, as Foundry does; the shared mock fills only the first of a repeated one. */
+function formatAll(key: string, data?: Record<string, string>): string {
+	const text = baseGame.i18n.localize(key);
+	return data ? text.replace(/{[^}]+}/g, (slot) => data[slot.slice(1, -1)]) : text;
+}
 
 const SPEAKER_TOKEN = 'Scene.s1.Token.hero';
 const GOBLIN_TOKEN = 'Scene.s1.Token.tok1';
@@ -120,7 +127,11 @@ function chipLabel(chip: HTMLElement): string {
 }
 
 beforeEach(() => {
-	vi.stubGlobal('game', { ...baseGame, settings: { get: vi.fn(() => true) } });
+	vi.stubGlobal('game', {
+		...baseGame,
+		i18n: { ...baseGame.i18n, format: formatAll },
+		settings: { get: vi.fn(() => true) },
+	});
 	vi.stubGlobal(
 		'fromUuidSync',
 		vi.fn(() => ({})),
@@ -135,31 +146,31 @@ describe('MoveNode', () => {
 	describe('summary line', () => {
 		it('states a push', () => {
 			const { container } = renderNode();
-			expect(summaryText(container)).toBe('Pushed up to 2 spaces away from Sir Brannon.');
+			expect(summaryText(container)).toBe('Pushed 2 spaces away from Sir Brannon.');
 		});
 
 		it('states a pull', () => {
 			const { container } = renderNode([createOffer()], {
 				node: createNode({ direction: 'toward' }),
 			});
-			expect(summaryText(container)).toBe('Pulled up to 2 spaces toward Sir Brannon.');
+			expect(summaryText(container)).toBe('Pulled 2 spaces toward Sir Brannon.');
 		});
 
 		it('states a move in any direction', () => {
 			const { container } = renderNode([createOffer()], {
 				node: createNode({ direction: 'any' }),
 			});
-			expect(summaryText(container)).toBe('Moved up to 2 spaces in any direction.');
+			expect(summaryText(container)).toBe('Moved 2 spaces in any direction.');
 		});
 
-		it('gives a Free Move to the user alone no direction', () => {
+		it('gives a move for free to the user alone no direction', () => {
 			const { container } = renderNode([createSelfOffer()], {
 				node: selfNode({ recipient: 'targets', direction: 'away' }),
 			});
 			expect(summaryText(container)).toBe('Can move up to 2 spaces for free.');
 		});
 
-		it('adds the terrain to a Free Move that ignores difficult terrain', () => {
+		it('adds the terrain to a move for free that ignores difficult terrain', () => {
 			const { container } = renderNode([createSelfOffer({ ignoreDifficultTerrain: true })], {
 				node: selfNode({ ignoreDifficultTerrain: true }),
 			});
@@ -170,7 +181,7 @@ describe('MoveNode', () => {
 
 		it('puts one shared distance on the line', () => {
 			const { container } = renderNode([createOffer(), createArcherOffer()]);
-			expect(summaryText(container)).toBe('Pushed up to 2 spaces away from Sir Brannon.');
+			expect(summaryText(container)).toBe('Pushed 2 spaces away from Sir Brannon.');
 		});
 
 		it('sends different distances to the chips', () => {
@@ -229,7 +240,7 @@ describe('MoveNode', () => {
 				targetsShown: true,
 			});
 			expect(container.querySelector('.nimble-move-node__rows')).toBeNull();
-			expect(summaryText(container)).toBe('Pushed up to 2 spaces away from Sir Brannon.');
+			expect(summaryText(container)).toBe('Pushed 2 spaces away from Sir Brannon.');
 		});
 
 		it('gives the name its own tooltip', () => {
@@ -265,22 +276,22 @@ describe('MoveNode', () => {
 
 	describe('chip', () => {
 		it.each([
-			['open', {}, '2', 'Waiting to be pushed up to 2 spaces away from Sir Brannon.'],
+			['open', {}, '2', 'Waiting to be pushed 2 spaces away from Sir Brannon.'],
 			['taken', { state: 'taken', movedSpaces: 2 }, '2/2', 'Pushed the full 2 spaces.'],
 			[
 				'short',
 				{ state: 'taken', movedSpaces: 1, stopped: true },
 				'1/2',
-				'Pushed 1 of 2 spaces. If an obstacle stopped Goblin Cutthroat, it takes 1d6 bludgeoning damage. If it hit another creature, both creatures split the damage.',
+				'Pushed 1 of 2 spaces. If an obstacle stopped Goblin Cutthroat, Goblin Cutthroat takes 1d6 bludgeoning damage. If Goblin Cutthroat hit another creature, the two creatures split this damage.',
 			],
 			[
 				'unused',
 				{ state: 'unused', usedBy: 'player' },
 				'Not pushed',
-				'Not pushed. It moved another way instead.',
+				'Not pushed. The token was moved another way.',
 			],
 			['lapsed', { state: 'lapsed' }, 'Not pushed', 'Not pushed. The turn ended first.'],
-			['untracked', { state: 'untracked' }, '2', 'Pushed up to 2 spaces away from Sir Brannon.'],
+			['untracked', { state: 'untracked' }, '2', 'Pushed 2 spaces away from Sir Brannon.'],
 		])('shows a push that is %s', (status, overrides, label, tooltip) => {
 			const { container } = renderNode([createOffer(overrides)]);
 			const chip = chipOf(container);
@@ -288,6 +299,7 @@ describe('MoveNode', () => {
 			expect(chipLabel(chip)).toBe(label);
 			expect(chip.getAttribute('data-tooltip')).toBe(tooltip);
 			expect(chip.getAttribute('aria-label')).toBe(tooltip);
+			expect(chip.tabIndex).toBe(0);
 		});
 
 		it.each([
@@ -304,16 +316,11 @@ describe('MoveNode', () => {
 				'unused',
 				{ state: 'unused', usedBy: 'player' },
 				'Not used',
-				'Did not use the Free Move. It moved another way instead.',
+				'Did not move for free. The token was moved another way.',
 			],
-			[
-				'lapsed',
-				{ state: 'lapsed' },
-				'Not used',
-				'Did not use the Free Move. The turn ended first.',
-			],
+			['lapsed', { state: 'lapsed' }, 'Not used', 'Did not move for free. The turn ended first.'],
 			['untracked', { state: 'untracked' }, '2', 'Can move up to 2 spaces for free.'],
-		])('shows a Free Move that is %s', (status, overrides, label, tooltip) => {
+		])('shows a move for free that is %s', (status, overrides, label, tooltip) => {
 			const { container } = renderNode([createSelfOffer(overrides)], { node: selfNode() });
 			const chip = chipOf(container);
 			expect(chip.dataset.status).toBe(status);
@@ -322,8 +329,8 @@ describe('MoveNode', () => {
 		});
 
 		it.each([
-			['failedSave', 'Pushed up to 2 spaces away from Sir Brannon if it fails the save.'],
-			['passedSave', 'Pushed up to 2 spaces away from Sir Brannon if it passes the save.'],
+			['failedSave', 'Will be pushed 2 spaces away from Sir Brannon on a failed save.'],
+			['passedSave', 'Will be pushed 2 spaces away from Sir Brannon on a passed save.'],
 		])('lets the save decide a push under %s', (outcome, tooltip) => {
 			const { container } = renderNode([createOffer({ conditional: true })], {
 				node: createNode({ parentNode: 'save1', parentContext: outcome }),
@@ -339,16 +346,14 @@ describe('MoveNode', () => {
 			const { container } = renderNode();
 			const chip = chipOf(container);
 			expect(chip.dataset.status).toBe('untracked');
-			expect(chip.getAttribute('data-tooltip')).toBe(
-				'Pushed up to 2 spaces away from Sir Brannon.',
-			);
+			expect(chip.getAttribute('data-tooltip')).toBe('Pushed 2 spaces away from Sir Brannon.');
 		});
 
 		it('uses the singular for one space', () => {
 			const { container } = renderNode([createOffer({ spaces: 1 })]);
-			expect(summaryText(container)).toBe('Pushed up to 1 space away from Sir Brannon.');
+			expect(summaryText(container)).toBe('Pushed 1 space away from Sir Brannon.');
 			expect(chipOf(container).getAttribute('data-tooltip')).toBe(
-				'Waiting to be pushed up to 1 space away from Sir Brannon.',
+				'Waiting to be pushed 1 space away from Sir Brannon.',
 			);
 		});
 	});
@@ -358,7 +363,7 @@ describe('MoveNode', () => {
 			renderNode([createOffer({ state: 'taken', movedSpaces: 1, stopped: true })]);
 			expect(
 				screen.getByText(
-					'If an obstacle stopped Goblin Cutthroat, it takes 1d6 bludgeoning damage. If it hit another creature, both creatures split the damage.',
+					'If an obstacle stopped Goblin Cutthroat, Goblin Cutthroat takes 1d6 bludgeoning damage. If Goblin Cutthroat hit another creature, the two creatures split this damage.',
 				),
 			).toBeTruthy();
 		});
@@ -374,7 +379,7 @@ describe('MoveNode', () => {
 			);
 		});
 
-		it('gives no damage line when a Free Move fell short', () => {
+		it('gives no damage line when a move for free fell short', () => {
 			const { container } = renderNode(
 				[createSelfOffer({ state: 'taken', spaces: 6, movedSpaces: 4, stopped: true })],
 				{ node: selfNode() },
@@ -388,6 +393,12 @@ describe('MoveNode', () => {
 			const { container } = renderNode([createOffer({ state: 'taken', movedSpaces: 2 })]);
 			expect(container.querySelector('.nimble-move-node__damage')).toBeNull();
 		});
+	});
+
+	it('throws when the card did not say whether it shows a TARGETS section', () => {
+		expect(() => render(MoveNode, { props: { node: createNode() as never } })).toThrow(
+			/setTargetsSectionShown/,
+		);
 	});
 
 	it('does not list an offer of zero spaces', () => {

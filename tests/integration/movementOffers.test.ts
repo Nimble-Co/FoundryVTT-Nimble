@@ -254,9 +254,9 @@ describe('movement offers', () => {
 		expect(offersOn(card)).toMatchObject([
 			{ tokenUuid: goblinToken.uuid, spaces: 2, state: 'open', movedSpaces: null },
 		]);
-		expect(moveNodeText()).toContain(`Pushed up to 2 spaces away from ${hero.name}.`);
+		expect(moveNodeText()).toContain(`Pushed 2 spaces away from ${hero.name}.`);
 		expect(goblinTag()?.textContent?.trim()).toBe('2');
-		expect(goblinTagText()).toBe(`Waiting to be pushed up to 2 spaces away from ${hero.name}.`);
+		expect(goblinTagText()).toBe(`Waiting to be pushed 2 spaces away from ${hero.name}.`);
 		expect(moveNodeText()).not.toContain('chooses');
 		expect(messageNode(card.id!)?.querySelectorAll('.nimble-move-node button')).toHaveLength(0);
 	});
@@ -323,7 +323,7 @@ describe('movement offers', () => {
 		await moveGoblin(5);
 		await waitFor(() => offersOn(card)[0].state === 'unused', 'the offer to be left unused');
 		await waitFor(
-			() => goblinTagText() === 'Not pushed. It moved another way instead.',
+			() => goblinTagText() === 'Not pushed. The token was moved another way.',
 			'the unused note on the card',
 		);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
@@ -352,12 +352,12 @@ describe('movement offers', () => {
 	test('with Movement Offers off nothing is labelled, and the card stops tracking the open offer', async () => {
 		expect(dropTag(), 'the drop should be named while the offer is open').toBeDefined();
 		await setAutomationToggle(OFFERS_SETTING, false);
-		expect(moveNodeText()).toContain(`Pushed up to 2 spaces away from ${hero.name}.`);
+		expect(moveNodeText()).toContain(`Pushed 2 spaces away from ${hero.name}.`);
 		expect(placeable()._getDragMovementAction()).not.toBe(FORCED_ACTION);
 		expect(dropTag()).toBeUndefined();
 		await waitFor(() => offersOn(card)[0].state === 'untracked', 'the offer to be untracked');
 		await waitFor(
-			() => goblinTagText() === `Pushed up to 2 spaces away from ${hero.name}.`,
+			() => goblinTagText() === `Pushed 2 spaces away from ${hero.name}.`,
 			'the tag to state the push',
 		);
 		expect(goblinTag()?.textContent?.trim()).toBe('2');
@@ -375,7 +375,7 @@ describe('movement offers', () => {
 			FORCED_ACTION,
 		);
 		await waitFor(
-			() => goblinTagText() === `Pushed up to 2 spaces away from ${hero.name}.`,
+			() => goblinTagText() === `Pushed 2 spaces away from ${hero.name}.`,
 			'the tag to state the push with tracking back on',
 		);
 	});
