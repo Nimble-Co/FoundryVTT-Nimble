@@ -26,6 +26,7 @@ import {
 	hasAnyActorChangeAt,
 } from '../utils/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
+import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 
 const DYING_STATUS_ID = 'dying';
@@ -177,15 +178,9 @@ async function handleActiveGmTurnStart(combatant: Combatant): Promise<void> {
 
 // The pool-changed hook fires only on the client that changed the pool.
 async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<void> {
-	if (payload?.reason === 'refund') return;
-	const previousCount = payload?.previousFaces?.length ?? 0;
-	const newCount = payload?.newFaces?.length ?? 0;
-	if (newCount <= previousCount) return;
-	const actor = payload.actor ?? null;
-	if (!actor) return;
-	const poolId = payload.poolId ?? '';
-	// Actor-scoped pool ids carry an "actor:" prefix; rules reference the bare identifier.
-	const poolIdentifier = poolId.startsWith('actor:') ? poolId.slice('actor:'.length) : poolId;
+	const poolIdentifier = gainedPoolIdentifier(payload);
+	const actor = payload?.actor ?? null;
+	if (poolIdentifier === null || !actor) return;
 	const context: PoolGainContext = {
 		actor: actor as unknown as PoolGainContext['actor'],
 		poolIdentifier,

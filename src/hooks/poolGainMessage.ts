@@ -1,5 +1,6 @@
 import { systemHookName } from '#system';
 import { isChatNotificationsAutomationEnabled } from '../settings/automationSettings.js';
+import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 
 let registered = false;
 
@@ -37,17 +38,11 @@ export function registerPoolGainMessageHooks(): void {
 	// @ts-expect-error Custom hook
 	Hooks.on(systemHookName('dicePool.changed'), (payload: PoolChangedPayload) => {
 		if (!isChatNotificationsAutomationEnabled()) return;
-		if (payload.reason === 'refund') return;
-		const previousCount = payload.previousFaces?.length ?? 0;
-		const newCount = payload.newFaces?.length ?? 0;
-		if (newCount <= previousCount) return;
+		const poolIdentifier = gainedPoolIdentifier(payload);
+		if (poolIdentifier === null) return;
 
 		const actor = payload.actor as ActorWithRules | null | undefined;
 		if (!actor?.rules) return;
-		const poolId = payload.poolId ?? '';
-		// Actor-scoped pool ids carry an "actor:" prefix; rules reference the
-		// bare identifier in both scopes.
-		const poolIdentifier = poolId.startsWith('actor:') ? poolId.slice('actor:'.length) : poolId;
 
 		for (const rule of actor.rules) {
 			if (rule.type !== 'poolGainMessage' || rule.disabled) continue;
