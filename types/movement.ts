@@ -59,6 +59,8 @@ export interface MovementRecord {
 	path: TokenPosition[];
 	/** Spaces of this Movement alone. Zero for a teleport. */
 	spaces: number;
+	/** What this Movement alone cost, in spaces: difficult terrain counts double. Zero for a teleport. */
+	costSpaces: number;
 	/** Spaces Moved This Turn including this Movement, or null when no history is recorded. */
 	spacesThisTurn: number | null;
 	/** True when a wall, terrain, the mover or a disconnect cut the path short. */
@@ -142,6 +144,7 @@ export interface OfferActor {
 /** The parts of a chat card that decide its Movement Offers. */
 export interface OfferCard {
 	id?: string | null;
+	type?: string;
 	speaker?: { scene?: string | null; token?: string | null; actor?: string | null };
 	system?: {
 		targets?: string[];

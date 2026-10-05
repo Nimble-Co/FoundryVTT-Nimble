@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import type { MovementOffer, MovementRecord } from '#types/movement.js';
+import type { MovementOffer, MovementRecord, OfferRulerWaypoint } from '#types/movement.js';
 
 const getPrimaryActiveGmId = vi.hoisted(() => vi.fn<() => string | null>(() => 'gm'));
 vi.mock('../getPrimaryActiveGmId.js', () => ({ getPrimaryActiveGmId }));
 const isMovementOffersAutomationEnabled = vi.hoisted(() => vi.fn(() => true));
 vi.mock('../../settings/automationSettings.js', () => ({ isMovementOffersAutomationEnabled }));
 
+import { markWaypointsPastOffer } from './markWaypointsPastOffer.js';
+import { FREE_MOVEMENT_ACTION } from './movementActions.js';
 import { resolveArmedMovementOffer } from './resolveArmedMovementOffer.js';
 
 type GameStub = {
@@ -42,6 +44,7 @@ function record(over: Partial<MovementRecord> = {}): MovementRecord {
 		token: { uuid: 'Scene.s.Token.gob' },
 		kind: 'forced',
 		spaces: 2,
+		costSpaces: 2,
 		stopped: false,
 		user: { id: 'p1' },
 		offer: { messageId: 'm', offerId: 'n.gob' },
@@ -150,5 +153,92 @@ describe('resolveArmedMovementOffer', () => {
 		await resolveArmedMovementOffer(record());
 		expect(older.update).not.toHaveBeenCalled();
 		expect(newer.update).not.toHaveBeenCalled();
+	});
+
+	describe('the measure of a taken offer', () => {
+		const free = { kind: 'free' as const, ignoreDifficultTerrain: false };
+		const overDifficultTerrain = { kind: 'free' as const, spaces: 1, costSpaces: 2 };
+
+		it('counts a Free Move that honours difficult terrain by cost, as its ruler does', async () => {
+			older.system.movementOffers = [offer(free)];
+			await resolveArmedMovementOffer(record(overDifficultTerrain));
+			expect(written(older)).toMatchObject({ state: 'taken', movedSpaces: 2 });
+		});
+
+		it('agrees with the ruler for the same drag', async () => {
+			const path = [
+				{
+					stage: 'planned',
+					action: 'walk',
+					unreachable: false,
+					measurement: { distance: 0, cost: 0 },
+				},
+				{
+					stage: 'planned',
+					action: FREE_MOVEMENT_ACTION,
+					unreachable: false,
+					measurement: { distance: 5, cost: 10 },
+				},
+			] as OfferRulerWaypoint[];
+			for (const terms of [free, { ...free, ignoreDifficultTerrain: true }]) {
+				older = card('m', [offer(terms)]);
+				useCards(older);
+				markWaypointsPastOffer(path, older.system.movementOffers[0], 5);
+				await resolveArmedMovementOffer(record(overDifficultTerrain));
+				expect(written(older)?.movedSpaces).toBe(path[1].offerBand?.spaces);
+			}
+		});
+
+		it('counts a Free Move that ignores difficult terrain, and Forced Movement, by distance', async () => {
+			older.system.movementOffers = [offer({ ...free, ignoreDifficultTerrain: true })];
+			newer.system.movementOffers = [];
+			await resolveArmedMovementOffer(record(overDifficultTerrain));
+			expect(written(older)).toMatchObject({ state: 'taken', movedSpaces: 1 });
+
+			const pushed = card('m', [offer()]);
+			useCards(pushed);
+			await resolveArmedMovementOffer(record({ spaces: 1, costSpaces: 2 }));
+			expect(written(pushed)).toMatchObject({ state: 'taken', movedSpaces: 1 });
+		});
+	});
+
+	it('keeps both settlements when two tokens with offers on one card stop together', async () => {
+		const ogre = 'Scene.s.Token.ogre';
+		const shared = card('m', [offer(), offer({ id: 'n.ogre', tokenUuid: ogre, name: 'Ogre' })]);
+		const releases: (() => void)[] = [];
+		// As the server does: the card holds the new offers only once the write lands.
+		shared.update.mockImplementation(
+			(changes: { system: { movementOffers: MovementOffer[] } }) =>
+				new Promise<void>((resolve) => {
+					releases.push(() => {
+						shared.system.movementOffers = changes.system.movementOffers;
+						resolve();
+					});
+				}),
+		);
+		useCards(shared);
+
+		const first = resolveArmedMovementOffer(record());
+		const second = resolveArmedMovementOffer(
+			record({
+				token: { uuid: ogre } as never,
+				offer: { messageId: 'm', offerId: 'n.ogre' },
+			}),
+		);
+		await vi.waitFor(() => expect(releases).toHaveLength(1));
+		releases[0]();
+		await vi.waitFor(() => expect(releases).toHaveLength(2));
+		releases[1]();
+		await Promise.all([first, second]);
+
+		expect(shared.system.movementOffers.map((o) => o.state)).toEqual(['taken', 'taken']);
+	});
+
+	it('goes on settling after a write that failed', async () => {
+		older.update.mockRejectedValueOnce(new Error('no write'));
+		await expect(resolveArmedMovementOffer(record())).rejects.toThrow('no write');
+		older.update.mockClear();
+		await resolveArmedMovementOffer(record());
+		expect(written(older)).toMatchObject({ state: 'taken' });
 	});
 });

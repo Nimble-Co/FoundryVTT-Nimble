@@ -30,7 +30,9 @@ interface RecordableToken {
 	actor: Actor | null;
 	movementHistory: readonly { action: string }[];
 	parent?: { id?: string | null; grid?: { isGridless?: boolean; distance: number } } | null;
-	measureMovementPath(waypoints: object[]): { segments: { distance: number; spaces: number }[] };
+	measureMovementPath(waypoints: object[]): {
+		segments: { distance: number; cost?: number; spaces: number }[];
+	};
 	getCompleteMovementPath(waypoints: object[]): TokenPosition[];
 }
 
@@ -80,12 +82,15 @@ export function buildMovementRecord(
 	const origin = known[originIndex];
 
 	const legs = measureWaypointSpaces(token, known);
+	const costLegs = measureWaypointSpaces(token, known, 'cost');
 	let spaces = 0;
+	let costSpaces = 0;
 	for (let index = originIndex; index < legs.length; index++) {
 		const destination = known[index + 1];
 		if (!chainIds.has(destination.movementId ?? '')) continue;
 		if (getMovementKind(destination.action) === 'teleport') continue;
 		spaces += legs[index];
+		costSpaces += costLegs[index];
 	}
 
 	const path = token.getCompleteMovementPath(known.slice(originIndex)).map(toPosition);
@@ -101,6 +106,7 @@ export function buildMovementRecord(
 		stop: toPosition(lastPassed),
 		path,
 		spaces,
+		costSpaces,
 		spacesThisTurn: inStartedCombat
 			? summariseMovementHistory(token, token.movementHistory).counted
 			: null,

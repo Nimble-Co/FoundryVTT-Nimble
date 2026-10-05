@@ -1,5 +1,6 @@
 import type { MovementOffer, OfferRulerWaypoint } from '#types/movement.js';
 import { movementOfferAction } from './movementActions.js';
+import { movementOfferMeasure } from './movementOfferMeasure.js';
 
 /**
  * Marks the part of a planned drag that goes past a Movement Offer, so the ruler
@@ -23,14 +24,11 @@ export function markWaypointsPastOffer(
 	const origin = path[originIndex].measurement;
 	const action = movementOfferAction(offer.kind);
 	const limit = Math.max(0, offer.spaces) * gridDistance;
-	// Difficult terrain doubles cost, not distance, so an offer that honours it is measured by cost.
-	const byCost = offer.kind === 'free' && !offer.ignoreDifficultTerrain;
+	const measure = movementOfferMeasure(offer);
 
 	for (const waypoint of path.slice(originIndex + 1)) {
 		if (waypoint.stage !== 'planned' || waypoint.action !== action) continue;
-		const used = byCost
-			? waypoint.measurement.cost - origin.cost
-			: waypoint.measurement.distance - origin.distance;
+		const used = waypoint.measurement[measure] - origin[measure];
 		waypoint.offerBand = {
 			kind: offer.kind,
 			spaces: Math.round(used / gridDistance),
