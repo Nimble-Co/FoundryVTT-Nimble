@@ -4,12 +4,17 @@
 	let { chip }: MovementStatusChipProps = $props();
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<!-- Foundry shows a tooltip on pointer only, so focus opens it for the keyboard. -->
 <span
 	class="nimble-movement-chip"
 	data-status={chip.status}
 	data-tooltip={chip.tooltip}
 	aria-label={chip.tooltip}
 	role="img"
+	tabindex="0"
+	onfocus={({ currentTarget }) => game.tooltip.activate(currentTarget)}
+	onblur={() => game.tooltip.deactivate()}
 >
 	<i class="fa-solid {chip.icon}" aria-hidden="true"></i>
 	{#if chip.label}<span>{chip.label}</span>{/if}
