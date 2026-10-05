@@ -283,7 +283,11 @@
 					data-portrait-fallback={getPortraitFallbackForCombatant()}
 					onerror={handleCombatantPortraitImageError}
 				/>
-				<span class="nimble-ct__minimized-name">{minimizedSummary.combatantName}</span>
+				<span
+					class="nimble-ct__minimized-name"
+					data-tooltip={minimizedSummary.combatantName}
+					data-tooltip-direction="DOWN">{minimizedSummary.combatantName}</span
+				>
 				{#if minimizedSummary.actions}
 					<span
 						class="nimble-ct__minimized-actions"
@@ -1118,8 +1122,10 @@
 	}
 	.nimble-ct__minimized-round {
 		flex: none;
+		min-width: 2rem;
 		font-size: 0.78rem;
 		font-weight: 700;
+		font-variant-numeric: tabular-nums;
 		color: hsl(36 92% 86%);
 	}
 	.nimble-ct__minimized-portrait {
@@ -1130,8 +1136,11 @@
 		border-radius: 50%;
 		object-fit: cover;
 	}
+	/* Fixed width, not content width: the strip is centre-anchored, so a longer name would
+	   slide the turn arrows out from under the pointer. */
 	.nimble-ct__minimized-name {
-		min-width: 0;
+		flex: none;
+		width: 11rem;
 		overflow: hidden;
 		font-size: 0.8rem;
 		color: hsl(0 0% 93%);
@@ -1144,9 +1153,12 @@
 	}
 	.nimble-ct__minimized-actions {
 		flex: none;
+		min-width: 2.75rem;
 		padding: 0.05rem 0.3rem;
 		font-size: 0.78rem;
 		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
 		color: var(--nimble-ct-action-color-resolved);
 		background: var(--nimble-ct-action-box-bg);
 		border: 1px solid var(--nimble-ct-action-box-border);
