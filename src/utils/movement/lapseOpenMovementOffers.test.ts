@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MovementOffer } from '#types/movement.js';
 import {
-	combatSceneIds,
+	combatTokenUuids,
 	lapseOpenMovementOffers,
 	untrackOpenMovementOffers,
 } from './lapseOpenMovementOffers.js';
@@ -58,24 +58,30 @@ const written = () =>
 	);
 
 describe('lapseOpenMovementOffers', () => {
-	it('lapses the open offers on the scenes and leaves settled ones and other scenes alone', async () => {
-		await lapseOpenMovementOffers(new Set(['s1']));
+	it('lapses the open offers to the tokens and leaves settled ones and other tokens alone', async () => {
+		await lapseOpenMovementOffers(new Set(['Scene.s1.Token.a', 'Scene.s1.Token.c']));
 		expect(written()).toEqual(['here:lapsed', 'there:open', 'done:taken']);
 	});
 
-	it('lapses nothing when there is no scene', async () => {
+	it('leaves the offer of a token on the same scene that is not named', async () => {
+		await lapseOpenMovementOffers(new Set(['Scene.s1.Token.other']));
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('lapses nothing when there is no token', async () => {
 		await lapseOpenMovementOffers(new Set());
 		expect(update).not.toHaveBeenCalled();
 	});
 
 	it('writes nothing off the primary GM or with Movement Offers off', async () => {
+		const tokens = new Set(['Scene.s1.Token.a']);
 		g.game.user = { id: 'p1', isGM: false };
-		await lapseOpenMovementOffers(new Set(['s1']));
+		await lapseOpenMovementOffers(tokens);
 		g.game.user = { id: 'gm2', isGM: true };
-		await lapseOpenMovementOffers(new Set(['s1']));
+		await lapseOpenMovementOffers(tokens);
 		g.game.user = { id: 'gm', isGM: true };
 		offersEnabled = false;
-		await lapseOpenMovementOffers(new Set(['s1']));
+		await lapseOpenMovementOffers(tokens);
 		expect(update).not.toHaveBeenCalled();
 	});
 });
@@ -94,17 +100,22 @@ describe('untrackOpenMovementOffers', () => {
 	});
 });
 
-describe('combatSceneIds', () => {
-	it('is the combat scene and the scene of each combatant', () => {
-		const ids = combatSceneIds({
-			scene: { id: 's1' },
-			combatants: [{ sceneId: 's2' }, { sceneId: null, token: { parent: { id: 's3' } } }, {}],
+describe('combatTokenUuids', () => {
+	it('is the token of each combatant, on the scene the combatant names', () => {
+		const uuids = combatTokenUuids({
+			combatants: [
+				{ tokenId: 'a', sceneId: 's2' },
+				{ tokenId: 'b', sceneId: null, token: { parent: { id: 's3' } } },
+				{ tokenId: null, sceneId: 's2' },
+				{ tokenId: 'c' },
+				{},
+			],
 		});
-		expect([...ids].sort()).toEqual(['s1', 's2', 's3']);
+		expect([...uuids].sort()).toEqual(['Scene.s2.Token.a', 'Scene.s3.Token.b']);
 	});
 
-	it('is only the combatant scenes for a combat with no scene, and empty with no combatants', () => {
-		expect([...combatSceneIds({ scene: null, combatants: [{ sceneId: 's2' }] })]).toEqual(['s2']);
-		expect(combatSceneIds({ scene: null, combatants: [] }).size).toBe(0);
+	it('is empty for a combat with no combatants', () => {
+		expect(combatTokenUuids({ combatants: [] }).size).toBe(0);
+		expect(combatTokenUuids({}).size).toBe(0);
 	});
 });

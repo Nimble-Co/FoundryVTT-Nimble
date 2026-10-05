@@ -52,7 +52,7 @@ function stubGame(): GameStub {
 	} as GameStub;
 }
 
-const fighter = (id: string) => ({ id, sceneId: 's1' });
+const fighter = (id: string) => ({ id, tokenId: id, sceneId: 's1' });
 
 beforeAll(() => {
 	vi.stubGlobal('Hooks', {
@@ -81,6 +81,8 @@ const written = () =>
 	(update.mock.calls[0]?.[0]?.system?.movementOffers ?? []).map(
 		(o: MovementOffer) => `${o.id}:${o.state}`,
 	);
+/** Lets the queued writes run. */
+const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 const sceneOneLapsed = ['here:lapsed', 'there:open', 'done:taken'];
 const everyOpenOfferUntracked = ['here:untracked', 'there:untracked', 'done:taken'];
 
@@ -108,7 +110,7 @@ describe('registerMovementOffers', () => {
 
 		it('lapses nothing for a change with no turn or round', async () => {
 			handlers.get('updateCombat')?.(makeCombat(), { active: true });
-			await Promise.resolve();
+			await settled();
 			expect(update).not.toHaveBeenCalled();
 		});
 
@@ -116,7 +118,7 @@ describe('registerMovementOffers', () => {
 			const combat = makeCombat();
 			combat.turn = 1;
 			handlers.get('updateCombat')?.(combat, { turn: 1 });
-			await Promise.resolve();
+			await settled();
 			expect(update).not.toHaveBeenCalled();
 		});
 
@@ -142,7 +144,7 @@ describe('registerMovementOffers', () => {
 			await vi.waitFor(() => expect(update).toHaveBeenCalledOnce());
 			combat.turn = 0;
 			handlers.get('updateCombat')?.(combat, { turn: 0 });
-			await Promise.resolve();
+			await settled();
 			expect(update).toHaveBeenCalledOnce();
 		});
 
@@ -151,7 +153,7 @@ describe('registerMovementOffers', () => {
 				{ id: 'loaded', round: 1, combatant: fighter('a'), scene: { id: 's1' } },
 				{ turn: 2 },
 			);
-			await Promise.resolve();
+			await settled();
 			expect(update).not.toHaveBeenCalled();
 		});
 
@@ -165,21 +167,76 @@ describe('registerMovementOffers', () => {
 				combatants: [fighter('a')],
 			};
 			handlers.get('updateCombat')?.(combat, { turn: 1 });
-			await Promise.resolve();
+			await settled();
 			expect(update).not.toHaveBeenCalled();
 		});
 
-		it('lapses only the offers on the combatant scenes for a combat with no scene', async () => {
+		it('lapses the offers of the combatants for a combat with no scene', async () => {
 			const combat = makeCombat(null);
 			combat.combatant = fighter('b');
 			handlers.get('updateCombat')?.(combat, { turn: 1 });
 			await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
 		});
+
+		it('leaves the offer of a token on the scene that is not in the combat', async () => {
+			const combat = makeCombat();
+			combat.combatants = [fighter('b'), fighter('c')];
+			combat.combatant = fighter('b');
+			handlers.get('updateCombat')?.(combat, { turn: 1 }, { direction: 1 });
+			await settled();
+			expect(update).not.toHaveBeenCalled();
+		});
+
+		it('lapses nothing when the combat starts, and knows the first turn from then on', async () => {
+			const combat = makeCombat();
+			combat.round = 0;
+			combat.combatant = null;
+			handlers.get('createCombat')?.(combat);
+			combat.round = 1;
+			combat.combatant = fighter('a');
+			handlers.get('updateCombat')?.(combat, { round: 1, turn: 0 });
+			await settled();
+			expect(update).not.toHaveBeenCalled();
+
+			combat.combatant = fighter('b');
+			handlers.get('updateCombat')?.(combat, { turn: 1 }, { direction: 1 });
+			await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
+		});
+
+		it('lapses nothing on a step back to the turn or round before, but records the turn', async () => {
+			const combat = makeCombat();
+			combat.turn = 1;
+			combat.combatant = fighter('b');
+			handlers.get('updateCombat')?.(combat, { turn: 1 }, { direction: -1 });
+			combat.round = 0;
+			handlers.get('updateCombat')?.(combat, { round: 0, turn: 1 }, { direction: -1 });
+			combat.round = 1;
+			handlers.get('updateCombat')?.(combat, { round: 1, turn: 1 }, { direction: -1 });
+			// The same turn again: a lapse here would mean the steps back were not recorded.
+			handlers.get('updateCombat')?.(combat, { turn: 1 }, { direction: 1 });
+			await settled();
+			expect(update).not.toHaveBeenCalled();
+		});
 	});
 
-	it('lapses offers on the combat scenes when the combat is deleted', async () => {
-		handlers.get('deleteCombat')?.({ id: 'gone', scene: null, combatants: [{ sceneId: 's1' }] });
-		await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
+	describe('when the combat is deleted', () => {
+		const gone = (round: number) => ({
+			id: 'gone',
+			round,
+			scene: null,
+			combatants: [fighter('a')],
+		});
+
+		it('lapses the offers of the combatants of a started combat', async () => {
+			handlers.get('deleteCombat')?.(gone(1));
+			await vi.waitFor(() => expect(written()).toEqual(sceneOneLapsed));
+		});
+
+		it('lapses nothing for a combat that never started', async () => {
+			handlers.get('deleteCombat')?.(gone(0));
+			await settled();
+			expect(update).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('when a toggle that gates Movement Offers changes', () => {
@@ -214,7 +271,7 @@ describe('registerMovementOffers', () => {
 			handlers.get('updateSetting')?.(setting('automation.movementOffers', false), {
 				_stats: {},
 			});
-			await Promise.resolve();
+			await settled();
 			expect(update).not.toHaveBeenCalled();
 		});
 
@@ -223,7 +280,7 @@ describe('registerMovementOffers', () => {
 			handlers.get('updateSetting')?.(setting('automation.movementOffers', false), {
 				value: false,
 			});
-			await Promise.resolve();
+			await settled();
 			expect(update).not.toHaveBeenCalled();
 		});
 	});
