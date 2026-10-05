@@ -1,5 +1,9 @@
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
-import { getActorHpMaxValue, getActorHpValue } from './actorResources.js';
+import {
+	getActorHpMaxValue,
+	getActorHpValue,
+	getActorWoundsValueAndMax,
+} from './actorResources.js';
 
 export type ActorHealthState = 'normal' | 'bloodied' | 'lastStand' | 'unknown';
 
@@ -59,6 +63,19 @@ export function getActorHealthState(
 
 	if (hpValue <= 0) return 'unknown';
 	return hpValue <= hpMax / 2 ? 'bloodied' : 'normal';
+}
+
+/**
+ * Whether the actor is dead rather than merely down. Dropping to 0 HP alone means dying; an actor
+ * is killed at 0 HP with a full wound track, and actors without a wound track (NPCs) die outright.
+ */
+export function isActorDead(actor: Actor.Implementation | null | undefined): boolean {
+	if (!actor) return false;
+	const hpValue = getActorHpValue(actor);
+	if (hpValue === null || hpValue > 0) return false;
+
+	const wounds = getActorWoundsValueAndMax(actor);
+	return !wounds || wounds.value >= wounds.max;
 }
 
 export function isActorAtOrBelowHalfHp(actor: Actor.Implementation | null | undefined): boolean {

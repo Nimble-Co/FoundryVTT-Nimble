@@ -18,13 +18,12 @@ import {
 	isMovementTrackingAutomationEnabled,
 	isRuleAutomationEnabled,
 } from '../settings/automationSettings.js';
-import { getActorHealthState } from '../utils/actorHealthState.js';
+import { getActorHealthState, isActorDead } from '../utils/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
 	hasAnyActorChangeAt,
 } from '../utils/actorHpChangePaths.js';
-import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 
 const DYING_STATUS_ID = 'dying';
@@ -172,12 +171,7 @@ function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, 
 	};
 
 	if (currentHp <= 0) {
-		// Dropping to 0 HP alone means dying, not dead. An actor is killed only
-		// at 0 HP with a full wound track; actors without a wound track (NPCs)
-		// die at 0 HP outright.
-		const wounds = getActorWoundsValueAndMax(actor);
-		const isDead = !wounds || wounds.value >= wounds.max;
-		if (isDead) {
+		if (isActorDead(actor)) {
 			void dispatch(actorWithRules, 'onActorKilled', healthContext);
 		} else if (hpChanged) {
 			// Only an HP drop signals entering the Dying state; a wound gained

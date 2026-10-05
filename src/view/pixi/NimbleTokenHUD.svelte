@@ -1,6 +1,7 @@
 <script>
 	import { CONDITIONS_CHANGED_HOOK } from '../../settings/customConditionSettings.js';
 	import localize from '../../utils/localize.js';
+	import shouldListCondition from '../../utils/shouldListCondition.js';
 
 	const { HUD } = $props();
 
@@ -41,14 +42,14 @@
 	// custom conditions while the HUD was open.
 	let conditionsVersion = $state(0);
 
-	const statusEffects = $derived.by(() => {
-		void conditionsVersion;
-		return [...CONFIG.statusEffects];
-	});
-
 	const conditionsMetadata = $derived(HUD?.actor?.conditionsMetadata);
 	const activeStatuses = $derived(conditionsMetadata?.active ?? new Set());
 	const overlayStatuses = $derived(conditionsMetadata?.overlay ?? new Set());
+
+	const statusEffects = $derived.by(() => {
+		void conditionsVersion;
+		return CONFIG.statusEffects.filter((effect) => shouldListCondition(effect.id, activeStatuses));
+	});
 
 	$effect(() => {
 		const conditionsHook = Hooks.on(CONDITIONS_CHANGED_HOOK, () => {

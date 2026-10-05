@@ -146,6 +146,7 @@ Two consequences for a rule in this position:
 | `self:lastStand` | `actor.statuses` (lastStand) | Solo/Legendary monster phase change at 0 HP |
 | `self:fullHp` | HP value/max | HP equals max |
 | `self:concentrating` | `actor.statuses` | Concentration status active |
+| `self:condition:<id>` | `actor.statuses` | One per active status, for gating on holding a condition |
 | `target:bloodied` | `actor.statuses` | Bloodied status active (for `targetCondition`) |
 | `target:concentrating` | `actor.statuses` | Concentration status active (for `targetCondition`) |
 
