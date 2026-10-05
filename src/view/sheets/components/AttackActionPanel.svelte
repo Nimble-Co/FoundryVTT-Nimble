@@ -79,15 +79,6 @@
 		<h3 class="nimble-heading" data-heading-variant="section">
 			{localize('NIMBLE.ui.heroicActions.selectAttack')}
 		</h3>
-
-		{#if state.swapsRemaining}
-			<span class="attack-panel__swaps">
-				{localize('NIMBLE.weapons.swaps.remaining', {
-					current: String(state.swapsRemaining.current),
-					max: String(state.swapsRemaining.max),
-				})}
-			</span>
-		{/if}
 	</header>
 
 	<div class="attack-panel__search">
@@ -115,6 +106,7 @@
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={state.getWeaponProperties(item)}
+					notice={state.getStrengthNotice(item)}
 					description={state.getItemDescription(item)}
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}
@@ -160,12 +152,6 @@
 
 		&__search {
 			display: flex;
-		}
-
-		&__swaps {
-			margin-inline-start: auto;
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
 		}
 
 		&__content {

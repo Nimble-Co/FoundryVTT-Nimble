@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { checkWeaponAttack } from './weaponAttackLegality.js';
-import type { EquipmentActor, HandItem } from './weaponHands.js';
+import {
+	checkWeaponAttack,
+	type EquipmentActor,
+	getStrengthShortfall,
+	type WeaponItem,
+} from './weaponAttackLegality.js';
 
 interface WeaponOptions {
-	id?: string;
-	name?: string;
 	objectType?: string;
 	equipped?: boolean;
 	properties?: string[];
@@ -13,17 +15,15 @@ interface WeaponOptions {
 }
 
 function weapon({
-	id = 'weapon-1',
-	name = 'Weapon',
 	objectType = 'weapon',
 	equipped = true,
 	properties = [],
 	strength = null,
 	overridesTwoHanded = false,
-}: WeaponOptions = {}): HandItem {
+}: WeaponOptions = {}): WeaponItem {
 	return {
-		id,
-		name,
+		id: 'weapon-1',
+		name: 'Weapon',
 		type: 'object',
 		system: {
 			objectType,
@@ -36,122 +36,66 @@ function weapon({
 	};
 }
 
-function actor(held: HandItem[], strengthMod = 0, extraHands = 0): EquipmentActor {
-	return {
-		items: { filter: (predicate) => held.filter(predicate) },
-		system: {
-			abilities: { strength: { mod: strengthMod } },
-			attributes: { extraHands },
-		},
-	};
+function actor(strengthMod = 0): EquipmentActor {
+	return { system: { abilities: { strength: { mod: strengthMod } } } };
 }
 
-const shield = weapon({ id: 'shield-1', name: 'Wooden Buckler', objectType: 'shield' });
-const greatsword = weapon({
-	id: 'greatsword',
-	name: 'Greatsword',
-	properties: ['twoHanded'],
-	strength: 2,
-});
-const longsword = weapon({
-	id: 'longsword',
-	name: 'Longsword',
-	properties: ['twoHanded'],
-	strength: 2,
-	overridesTwoHanded: true,
-});
-
 describe('checkWeaponAttack', () => {
-	it('refuses an unequipped weapon', () => {
-		const dagger = weapon({ equipped: false });
-		const check = checkWeaponAttack(actor([]), dagger);
-
-		expect(check.allowed).toBe(false);
-		expect(check.refusal).toBe('notEquipped');
+	it('allows an equipped weapon', () => {
+		expect(checkWeaponAttack(weapon())).toEqual({ allowed: true });
 	});
 
-	it('allows an equipped one-handed weapon with both hands full', () => {
-		const dagger = weapon({ id: 'dagger', properties: ['light'] });
-		const check = checkWeaponAttack(actor([dagger, shield], 0), dagger);
-
-		expect(check.allowed).toBe(true);
-		expect(check.requiresSwap).toBe(false);
-	});
-
-	it('allows a two-handed weapon when the other hand is free', () => {
-		const check = checkWeaponAttack(actor([greatsword], 2), greatsword);
-
-		expect(check.allowed).toBe(true);
-		expect(check.requiresSwap).toBe(false);
-	});
-
-	it('refuses a two-handed weapon below its strength requirement', () => {
-		const check = checkWeaponAttack(actor([greatsword], 1), greatsword);
-
-		expect(check.allowed).toBe(false);
-		expect(check.refusal).toBe('strengthRequirement');
-		expect(check.strengthRequired).toBe(2);
-	});
-
-	it('never wields a great weapon one-handed, even at high strength', () => {
-		const check = checkWeaponAttack(actor([greatsword, shield], 4), greatsword);
-
-		expect(check.requiresSwap).toBe(true);
-	});
-
-	describe('a two-handed weapon alongside a shield', () => {
-		it('offers the attack and spends a swap to sheathe the shield', () => {
-			const check = checkWeaponAttack(actor([greatsword, shield], 2), greatsword);
-
-			expect(check.allowed).toBe(true);
-			expect(check.requiresSwap).toBe(true);
-			expect(check.sheatheCandidates.map((item) => item.id)).toEqual(['shield-1']);
-		});
-
-		it('refuses once the round has no swaps left', () => {
-			const combatant = {
-				id: 'c1',
-				type: 'character',
-				system: { equipmentSwaps: { round: 3, spent: 1 } },
-				update: async () => undefined,
-			};
-			const check = checkWeaponAttack(actor([greatsword, shield], 2), greatsword, {
-				combatant,
-				combat: { round: 3, combatants: { find: () => combatant } },
-			});
-
-			expect(check.allowed).toBe(false);
-			expect(check.refusal).toBe('noSwapsLeft');
-		});
-
-		it('needs no swap when an extra hand is available', () => {
-			const check = checkWeaponAttack(actor([greatsword, shield], 2, 1), greatsword);
-
-			expect(check.allowed).toBe(true);
-			expect(check.requiresSwap).toBe(false);
+	it('refuses a weapon that is not equipped', () => {
+		expect(checkWeaponAttack(weapon({ equipped: false }))).toEqual({
+			allowed: false,
+			refusal: 'notEquipped',
 		});
 	});
 
-	describe('a weapon whose strength requirement overrides two-handed', () => {
-		it('is wielded one-handed alongside a shield at the required strength', () => {
-			const check = checkWeaponAttack(actor([longsword, shield], 2), longsword);
+	it('leaves anything that is not a weapon alone', () => {
+		expect(checkWeaponAttack(weapon({ objectType: 'armor', equipped: false }))).toEqual({
+			allowed: true,
+		});
+	});
 
-			expect(check.allowed).toBe(true);
-			expect(check.requiresSwap).toBe(false);
+	it('allows an equipped weapon whose strength requirement is not met', () => {
+		const greatsword = weapon({ properties: ['twoHanded'], strength: 3 });
+
+		expect(checkWeaponAttack(greatsword)).toEqual({ allowed: true });
+	});
+});
+
+describe('getStrengthShortfall', () => {
+	it('reports the gap when strength falls short of a flat requirement', () => {
+		const greatsword = weapon({ properties: ['twoHanded'], strength: 3 });
+
+		expect(getStrengthShortfall(actor(1), greatsword)).toEqual({ required: 3, current: 1 });
+	});
+
+	it('reports nothing once strength meets the requirement', () => {
+		const greatsword = weapon({ properties: ['twoHanded'], strength: 3 });
+
+		expect(getStrengthShortfall(actor(3), greatsword)).toBeNull();
+	});
+
+	it('reports nothing for an override requirement, which only buys one-handed use', () => {
+		const longsword = weapon({
+			properties: ['twoHanded'],
+			strength: 2,
+			overridesTwoHanded: true,
 		});
 
-		it('falls back to two hands below the required strength', () => {
-			const check = checkWeaponAttack(actor([longsword, shield], 1), longsword);
+		expect(getStrengthShortfall(actor(0), longsword)).toBeNull();
+	});
 
-			expect(check.allowed).toBe(true);
-			expect(check.requiresSwap).toBe(true);
-		});
+	it('reports nothing for a weapon with no requirement', () => {
+		expect(getStrengthShortfall(actor(0), weapon())).toBeNull();
+	});
 
-		it('is still usable two-handed below the required strength with a hand free', () => {
-			const check = checkWeaponAttack(actor([longsword], 1), longsword);
+	it('reports nothing for an item carrying no strengthRequirement at all', () => {
+		const bare = weapon();
+		delete (bare.system.properties as { strengthRequirement?: unknown }).strengthRequirement;
 
-			expect(check.allowed).toBe(true);
-			expect(check.requiresSwap).toBe(false);
-		});
+		expect(getStrengthShortfall(actor(0), bare)).toBeNull();
 	});
 });
