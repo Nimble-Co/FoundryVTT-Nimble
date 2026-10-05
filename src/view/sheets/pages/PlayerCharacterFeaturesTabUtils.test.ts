@@ -38,70 +38,176 @@ function itemIds(items: TestRow[]): string[] {
 	return items.map((item) => item.reactive._id);
 }
 
+function sectionNamed(sections: FeatureSection<TestRow>[], key: string): FeatureSection<TestRow> {
+	const section = sections.find((candidate) => candidate.key === key);
+	if (!section) throw new Error(`no ${key} section`);
+
+	return section;
+}
+
+function blockKeys(section: FeatureSection<TestRow>): string[] {
+	return section.blocks.map((block) => block.key);
+}
+
+function allItemIds(sections: FeatureSection<TestRow>[]): string[] {
+	return sections.flatMap((section) => [
+		...itemIds(section.items),
+		...section.blocks.flatMap((block) => itemIds(block.items)),
+	]);
+}
+
+const CLASS_CARD = makeRow('class', 'class');
+
 describe('buildFeatureSections', () => {
-	it('gives each named feature group its own section', () => {
+	it('nests each named feature group under the class it came from', () => {
 		const sections = buildFeatureSections(
 			[
+				CLASS_CARD,
 				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
 				makeRow('greater', 'feature', { group: 'greater-invocations', gainedAtLevel: 7 }),
 			],
 			TYPE_ORDER,
 		);
 
-		expect(sectionKeys(sections)).toEqual(['lesser-invocations', 'greater-invocations']);
+		expect(sectionKeys(sections)).toEqual(['class']);
+		expect(blockKeys(sections[0])).toEqual(['lesser-invocations', 'greater-invocations']);
 	});
 
-	it('keeps ungrouped and progression features together under the class features section', () => {
+	it('labels each group block with its group name', () => {
+		const sections = buildFeatureSections(
+			[CLASS_CARD, makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 })],
+			TYPE_ORDER,
+		);
+
+		expect(sectionNamed(sections, 'class').blocks[0].label).toBe('Lesser Invocations');
+	});
+
+	it('leaves the auto-granted block unlabelled so it reads as part of the class card', () => {
+		const sections = buildFeatureSections(
+			[CLASS_CARD, makeRow('ungrouped', 'feature', { gainedAtLevel: 1 })],
+			TYPE_ORDER,
+		);
+
+		const [block] = sectionNamed(sections, 'class').blocks;
+		expect(block.kind).toBe('classFeatures');
+		expect(block.label).toBeNull();
+	});
+
+	it('keeps ungrouped and progression features together in the class features block', () => {
 		const sections = buildFeatureSections(
 			[
+				CLASS_CARD,
 				makeRow('ungrouped', 'feature', { gainedAtLevel: 1 }),
 				makeRow('progression', 'feature', { group: 'berserker-progression', gainedAtLevel: 3 }),
 			],
 			TYPE_ORDER,
 		);
 
-		expect(sections).toHaveLength(1);
-		expect(sections[0].key).toBe('feature');
-		expect(itemIds(sections[0].items)).toEqual(['ungrouped', 'progression']);
+		const [block] = sectionNamed(sections, 'class').blocks;
+		expect(itemIds(block.items)).toEqual(['ungrouped', 'progression']);
 	});
 
-	it('renders no section for a group with no features', () => {
-		const sections = buildFeatureSections([makeRow('class', 'class')], TYPE_ORDER);
-
-		expect(sectionKeys(sections)).toEqual(['class']);
-	});
-
-	it('orders group sections by the level their features first appear at', () => {
+	it('orders the class blocks as features, then subclass, then groups', () => {
 		const sections = buildFeatureSections(
 			[
+				CLASS_CARD,
+				makeRow('subclass', 'subclass'),
+				makeRow('subclassFeature', 'feature', { subclass: 'reaper', gainedAtLevel: 3 }),
+				makeRow('ungrouped', 'feature', { gainedAtLevel: 1 }),
+				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
+			],
+			TYPE_ORDER,
+		);
+
+		expect(sectionKeys(sections)).toEqual(['class']);
+		expect(blockKeys(sections[0])).toEqual(['feature', 'subclass', 'lesser-invocations']);
+	});
+
+	it('puts the subclass card above its own features', () => {
+		const sections = buildFeatureSections(
+			[
+				CLASS_CARD,
+				makeRow('subclassFeature', 'feature', { subclass: 'reaper', gainedAtLevel: 3 }),
+				makeRow('subclass', 'subclass'),
+			],
+			TYPE_ORDER,
+		);
+
+		const subclassBlock = sectionNamed(sections, 'class').blocks[0];
+		expect(itemIds(subclassBlock.items)).toEqual(['subclass', 'subclassFeature']);
+	});
+
+	it('renders no block for a group with no features', () => {
+		const sections = buildFeatureSections([CLASS_CARD], TYPE_ORDER);
+
+		expect(sectionKeys(sections)).toEqual(['class']);
+		expect(sections[0].blocks).toEqual([]);
+	});
+
+	it('orders group blocks by the level their features first appear at', () => {
+		const sections = buildFeatureSections(
+			[
+				CLASS_CARD,
 				makeRow('greater', 'feature', { group: 'greater-invocations', gainedAtLevel: 7 }),
 				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
 			],
 			TYPE_ORDER,
 		);
 
-		expect(sectionKeys(sections)).toEqual(['lesser-invocations', 'greater-invocations']);
+		expect(blockKeys(sections[0])).toEqual(['lesser-invocations', 'greater-invocations']);
 	});
 
 	it('orders groups sharing a first level by group name', () => {
 		const sections = buildFeatureSections(
 			[
+				CLASS_CARD,
 				makeRow('b', 'feature', { group: 'war-cries', gainedAtLevel: 2 }),
 				makeRow('a', 'feature', { group: 'savage-arsenal', gainedAtLevel: 2 }),
 			],
 			TYPE_ORDER,
 		);
 
-		expect(sectionKeys(sections)).toEqual(['savage-arsenal', 'war-cries']);
+		expect(blockKeys(sections[0])).toEqual(['savage-arsenal', 'war-cries']);
 	});
 
-	it('places group sections after class features and before ancestry', () => {
+	it('keeps ancestry and background as their own sections beneath the class', () => {
 		const sections = buildFeatureSections(
 			[
 				makeRow('background', 'background'),
 				makeRow('ancestry', 'ancestry'),
-				makeRow('class', 'class'),
+				CLASS_CARD,
 				makeRow('subclass', 'subclass'),
+				makeRow('ungrouped', 'feature', { gainedAtLevel: 1 }),
+				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
+			],
+			TYPE_ORDER,
+		);
+
+		expect(sectionKeys(sections)).toEqual(['class', 'ancestry', 'background']);
+	});
+
+	it('nests ancestry bonuses under the ancestry card', () => {
+		const sections = buildFeatureSections(
+			[makeRow('ancestry', 'ancestry'), makeRow('bonus', 'ancestryBonus')],
+			TYPE_ORDER,
+		);
+
+		expect(sectionKeys(sections)).toEqual(['ancestry']);
+		expect(blockKeys(sections[0])).toEqual(['ancestryBonus']);
+	});
+
+	it('gives ancestry bonuses their own section when there is no ancestry to nest them under', () => {
+		const sections = buildFeatureSections([makeRow('bonus', 'ancestryBonus')], TYPE_ORDER);
+
+		expect(sectionKeys(sections)).toEqual(['ancestryBonus']);
+	});
+
+	it('falls back to top-level sections when there is no class to nest under', () => {
+		const sections = buildFeatureSections(
+			[
+				makeRow('ancestry', 'ancestry'),
+				makeRow('subclass', 'subclass'),
+				makeRow('subclassFeature', 'feature', { subclass: 'reaper', gainedAtLevel: 3 }),
 				makeRow('ungrouped', 'feature', { gainedAtLevel: 1 }),
 				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
 			],
@@ -109,59 +215,19 @@ describe('buildFeatureSections', () => {
 		);
 
 		expect(sectionKeys(sections)).toEqual([
-			'class',
 			'subclass',
 			'feature',
 			'lesser-invocations',
 			'ancestry',
-			'background',
 		]);
 	});
 
-	it('places group sections at the class features slot when there are no class features', () => {
+	it('lists every feature exactly once', () => {
 		const sections = buildFeatureSections(
 			[
-				makeRow('ancestry', 'ancestry'),
-				makeRow('class', 'class'),
-				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
-			],
-			TYPE_ORDER,
-		);
-
-		expect(sectionKeys(sections)).toEqual(['class', 'lesser-invocations', 'ancestry']);
-	});
-
-	it('leaves subclass features out of every section so they stay nested under the subclass card', () => {
-		const sections = buildFeatureSections(
-			[
+				CLASS_CARD,
 				makeRow('subclass', 'subclass'),
 				makeRow('subclassFeature', 'feature', { subclass: 'reaper', gainedAtLevel: 3 }),
-				makeRow('groupedSubclassFeature', 'feature', {
-					subclass: 'reaper',
-					group: 'lesser-invocations',
-					gainedAtLevel: 3,
-				}),
-			],
-			TYPE_ORDER,
-		);
-
-		expect(sectionKeys(sections)).toEqual(['subclass']);
-	});
-
-	it('drops the ancestry bonus section only when an ancestry is there to nest it under', () => {
-		const withAncestry = buildFeatureSections(
-			[makeRow('ancestry', 'ancestry'), makeRow('bonus', 'ancestryBonus')],
-			TYPE_ORDER,
-		);
-		const withoutAncestry = buildFeatureSections([makeRow('bonus', 'ancestryBonus')], TYPE_ORDER);
-
-		expect(sectionKeys(withAncestry)).toEqual(['ancestry']);
-		expect(sectionKeys(withoutAncestry)).toEqual(['ancestryBonus']);
-	});
-
-	it('lists every non-subclass feature exactly once', () => {
-		const sections = buildFeatureSections(
-			[
 				makeRow('ungrouped', 'feature', { gainedAtLevel: 1 }),
 				makeRow('progression', 'feature', { group: 'mage-progression', gainedAtLevel: 2 }),
 				makeRow('lesser', 'feature', { group: 'lesser-invocations', gainedAtLevel: 2 }),
@@ -170,10 +236,13 @@ describe('buildFeatureSections', () => {
 			TYPE_ORDER,
 		);
 
-		expect(sections.flatMap((section) => itemIds(section.items)).sort()).toEqual([
+		expect(allItemIds(sections).sort()).toEqual([
+			'class',
 			'greater',
 			'lesser',
 			'progression',
+			'subclass',
+			'subclassFeature',
 			'ungrouped',
 		]);
 	});

@@ -14,22 +14,35 @@ export type FeatureRowItem = {
 	};
 };
 
-/**
- * A section heading on the tab, either an item type from `typeOrder` or a class
- * feature group named by the features themselves.
- */
+/** A top-level section on the tab, named by an item type from `typeOrder`. */
 export type FeatureSectionKind = 'type' | 'group';
+
+/**
+ * A run of cards nested under a section's own cards: the features a class grants,
+ * its subclass and that subclass's features, each of its selection groups, and the
+ * ancestry bonuses that belong to an ancestry.
+ */
+export type FeatureBlockKind = 'classFeatures' | 'subclass' | 'group' | 'ancestryBonus';
+
+export type FeatureBlock<T> = {
+	key: string;
+	kind: FeatureBlockKind;
+	/** The heading above the block, or null when it reads as a continuation of the card above it. */
+	label: string | null;
+	items: T[];
+};
 
 export type FeatureSection<T> = {
 	key: string;
 	kind: FeatureSectionKind;
 	items: T[];
+	blocks: FeatureBlock<T>[];
 };
 
 /** The bucket features with no group of their own fall into, matching the class feature index. */
 const UNGROUPED = 'ungrouped';
 
-/** The type section auto-granted class features are listed under. */
+/** The type section auto-granted class features are listed under when there is no class to nest them in. */
 const AUTO_GRANT_SECTION = 'feature';
 
 /**
@@ -73,14 +86,14 @@ export function formatGroupName(name: string): string {
 		.join(' ');
 }
 
-function addToSection<T>(sections: Map<string, T[]>, key: string, item: T): void {
-	const section = sections.get(key) ?? [];
-	section.push(item);
-	sections.set(key, section);
+function push<T>(bucket: Map<string, T[]>, key: string, item: T): void {
+	const existing = bucket.get(key) ?? [];
+	existing.push(item);
+	bucket.set(key, existing);
 }
 
 /**
- * The lowest level any feature in the section is gained at, which is what the
+ * The lowest level any feature in the group is gained at, which is what the
  * selection groups order by: a class offers its lesser options before its
  * greater ones, and that reads better than alphabetical order.
  */
@@ -88,13 +101,35 @@ function lowestLevel(items: FeatureRowItem[]): number {
 	return Math.min(...items.map(getEffectiveLevel));
 }
 
+function groupBlocks<T extends FeatureRowItem>(byGroup: Map<string, T[]>): FeatureBlock<T>[] {
+	return [...byGroup]
+		.map(([key, items]) => ({
+			key,
+			kind: 'group' as const,
+			label: formatGroupName(key),
+			items: sortFeatureItems(items),
+		}))
+		.sort((a, b) => {
+			const levelA = lowestLevel(a.items);
+			const levelB = lowestLevel(b.items);
+			if (levelA !== levelB) return levelA - levelB;
+
+			return a.key.localeCompare(b.key);
+		});
+}
+
 /**
  * The sections the Features tab renders, in display order.
  *
- * Item types keep the order given by `typeOrder`. Class feature groups become
- * sections of their own, named by the group, and follow the auto-granted class
- * features they sit alongside. Subclass features and ancestry bonuses are left
- * out: those render nested under their parent card.
+ * Everything a class gives a character nests under that class: the features it
+ * grants, the subclass and the subclass's own features, then each selection
+ * group the class offers, under its own heading. Keeping the class as the
+ * container is what will let a multiclassed character read as two separate
+ * stacks rather than one merged list.
+ *
+ * A character with no class card still has to be able to reach those items, so
+ * they fall back to top-level sections of their own. The same rule already
+ * applies to ancestry bonuses with no ancestry to nest under.
  */
 export function buildFeatureSections<T extends FeatureRowItem>(
 	items: T[],
@@ -102,30 +137,93 @@ export function buildFeatureSections<T extends FeatureRowItem>(
 ): FeatureSection<T>[] {
 	const byType = new Map<string, T[]>();
 	const byGroup = new Map<string, T[]>();
+	const autoGranted: T[] = [];
+	const subclassFeatures: T[] = [];
 
 	for (const item of items) {
 		const { type } = item.reactive;
 
 		if (type !== 'feature') {
-			addToSection(byType, type, item);
+			push(byType, type, item);
 			continue;
 		}
 
-		if (item.reactive.system.subclass) continue;
+		if (item.reactive.system.subclass) {
+			subclassFeatures.push(item);
+			continue;
+		}
 
 		const group = item.reactive.system.group || UNGROUPED;
-		if (isAutoGrantGroup(group)) addToSection(byType, AUTO_GRANT_SECTION, item);
-		else addToSection(byGroup, group, item);
+		if (isAutoGrantGroup(group)) autoGranted.push(item);
+		else push(byGroup, group, item);
+	}
+
+	const blocksByType = new Map<string, FeatureBlock<T>[]>();
+	const hasClass = byType.has('class');
+
+	if (hasClass) {
+		const classBlocks: FeatureBlock<T>[] = [];
+		const subclassCards = byType.get('subclass') ?? [];
+
+		if (autoGranted.length) {
+			classBlocks.push({
+				key: AUTO_GRANT_SECTION,
+				kind: 'classFeatures',
+				label: null,
+				items: sortFeatureItems(autoGranted),
+			});
+		}
+
+		if (subclassCards.length || subclassFeatures.length) {
+			classBlocks.push({
+				key: 'subclass',
+				kind: 'subclass',
+				label: null,
+				items: [...sortFeatureItems(subclassCards), ...sortFeatureItems(subclassFeatures)],
+			});
+		}
+
+		classBlocks.push(...groupBlocks(byGroup));
+		blocksByType.set('class', classBlocks);
+		byType.delete('subclass');
+	} else {
+		if (autoGranted.length) byType.set(AUTO_GRANT_SECTION, autoGranted);
+		if (subclassFeatures.length) {
+			blocksByType.set('subclass', [
+				{
+					key: 'subclass',
+					kind: 'subclass',
+					label: null,
+					items: sortFeatureItems(subclassFeatures),
+				},
+			]);
+		}
 	}
 
 	// Ancestry bonuses normally render nested under the ancestry card. Only suppress the
 	// top-level section when there is an ancestry to nest them under — otherwise deleting
 	// the ancestry, or searching for the bonus by name, hides an item whose rules are
 	// still applying, with no path left to edit or delete it.
-	if (byType.has('ancestry')) byType.delete('ancestryBonus');
+	const ancestryBonuses = byType.get('ancestryBonus');
+	if (byType.has('ancestry') && ancestryBonuses?.length) {
+		blocksByType.set('ancestry', [
+			{
+				key: 'ancestryBonus',
+				kind: 'ancestryBonus',
+				label: null,
+				items: sortFeatureItems(ancestryBonuses),
+			},
+		]);
+		byType.delete('ancestryBonus');
+	}
 
 	const typeSections: FeatureSection<T>[] = [...byType]
-		.map(([key, sectionItems]) => ({ key, kind: 'type' as const, items: sectionItems }))
+		.map(([key, sectionItems]) => ({
+			key,
+			kind: 'type' as const,
+			items: sortFeatureItems(sectionItems),
+			blocks: blocksByType.get(key) ?? [],
+		}))
 		.sort((a, b) => {
 			const orderA = typeOrder.indexOf(a.key);
 			const orderB = typeOrder.indexOf(b.key);
@@ -134,21 +232,21 @@ export function buildFeatureSections<T extends FeatureRowItem>(
 			return a.key.localeCompare(b.key);
 		});
 
-	const groupSections: FeatureSection<T>[] = [...byGroup]
-		.map(([key, sectionItems]) => ({ key, kind: 'group' as const, items: sectionItems }))
-		.sort((a, b) => {
-			const levelA = lowestLevel(a.items);
-			const levelB = lowestLevel(b.items);
-			if (levelA !== levelB) return levelA - levelB;
+	if (hasClass) return typeSections;
 
-			return a.key.localeCompare(b.key);
-		});
-
+	// Without a class to nest them under, the selection groups stand on their own,
+	// slotted where the class features section sits in the type order.
+	const orphanGroups: FeatureSection<T>[] = groupBlocks(byGroup).map((block) => ({
+		key: block.key,
+		kind: 'group' as const,
+		items: block.items,
+		blocks: [],
+	}));
 	const autoGrantOrder = typeOrder.indexOf(AUTO_GRANT_SECTION);
 
 	return [
 		...typeSections.filter((section) => typeOrder.indexOf(section.key) <= autoGrantOrder),
-		...groupSections,
+		...orphanGroups,
 		...typeSections.filter((section) => typeOrder.indexOf(section.key) > autoGrantOrder),
 	];
 }

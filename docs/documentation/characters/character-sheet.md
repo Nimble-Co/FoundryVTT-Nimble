@@ -79,7 +79,7 @@ Deleting a container that still holds something asks you to confirm first, then 
 
 Your class features, subclass features, ancestry, background, and boons, grouped by category. Click a feature's icon to use it and post its details to chat.
 
-Features your class hands you automatically sit together under **Class Features**. Anything your class offers as a named set of choices gets a heading of its own, taken from the name of the set, so a Shadowmancer sees **Lesser Invocations** and **Greater Invocations** as separate sections rather than one long list. A class with no such choices shows only Class Features.
+Everything a class gives you sits under that class. The features it hands you automatically come first, then your subclass and the features it brings, then each named set of choices the class offers under a heading of its own, taken from the name of the set. A Shadowmancer sees **Lesser Invocations** and **Greater Invocations** as separate headings under their class rather than one long list, and a class offering no such choices shows no extra headings at all. Ancestry and background keep their own sections below.
 
 ### Spells
 

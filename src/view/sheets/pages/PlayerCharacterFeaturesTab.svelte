@@ -18,7 +18,6 @@
 		type FeatureSection,
 		formatGroupName,
 		getEffectiveLevel,
-		sortFeatureItems,
 	} from './PlayerCharacterFeaturesTabUtils.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
@@ -93,16 +92,6 @@
 	let searchTerm = $state('');
 	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
 	let sections = $derived(buildFeatureSections(items, validTypes));
-
-	// Subclass features sorted by level — rendered nested under the subclass card
-	let subclassFeatureItems = $derived(
-		sortFeatureItems(
-			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
-		),
-	);
-
-	// Ancestry bonuses — rendered nested under the ancestry card
-	let ancestryBonusItems = $derived(items.filter((item) => item.reactive.type === 'ancestryBonus'));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -252,26 +241,24 @@
 			</header>
 
 			<ul class="nimble-item-list">
-				{#each sortFeatureItems(section.items) as item (item.reactive._id)}
+				{#each section.items as item (item.reactive._id)}
 					{@render featureCard(item)}
 				{/each}
 			</ul>
 
-			{#if section.kind === 'type' && section.key === 'subclass' && subclassFeatureItems.length}
-				<ul class="nimble-item-list nimble-item-list--sublist">
-					{#each subclassFeatureItems as item (item.reactive._id)}
-						{@render featureCard(item)}
-					{/each}
-				</ul>
-			{/if}
+			{#each section.blocks as block (block.key)}
+				{#if block.label}
+					<h4 class="nimble-heading nimble-group-heading" data-heading-variant="section">
+						{block.label}
+					</h4>
+				{/if}
 
-			{#if section.kind === 'type' && section.key === 'ancestry' && ancestryBonusItems.length}
 				<ul class="nimble-item-list nimble-item-list--sublist">
-					{#each ancestryBonusItems as item (item.reactive._id)}
+					{#each block.items as item (item.reactive._id)}
 						{@render featureCard(item)}
 					{/each}
 				</ul>
-			{/if}
+			{/each}
 		</div>
 	{/each}
 </section>
@@ -288,7 +275,19 @@
 		&--sublist {
 			margin-block-start: 0;
 			margin-inline-start: 1rem;
+
+			& + & {
+				margin-block-start: 0.5rem;
+			}
 		}
+	}
+
+	.nimble-group-heading {
+		// The global .nimble-heading rule sets the margin shorthand, so feed it the variable
+		// it reads rather than setting margin-inline-start, which it would reset to 0.
+		--nimble-heading-margin: 0.625rem 0 0.25rem 1rem;
+		--nimble-heading-size: var(--nimble-xs-text);
+		--nimble-heading-color: var(--nimble-medium-text-color);
 	}
 
 	.nimble-feature-card {
