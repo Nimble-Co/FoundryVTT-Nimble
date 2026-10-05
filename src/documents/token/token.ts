@@ -1,4 +1,5 @@
 import type { ArmedMovementOffer } from '#types/movement.js';
+import { cycleOfferedDragAction } from '#utils/movement/cycleOfferedDragAction.js';
 import { movementOfferAction } from '#utils/movement/movementActions.js';
 import { findArmedMovementOffer } from '#utils/movement/movementOffers.js';
 import { tagDragMovements } from '#utils/movement/movementOfferTag.js';
@@ -15,6 +16,10 @@ interface DropOptions {
 
 interface DropEvent {
 	interactionData: { contexts: Record<string, { token: unknown }> };
+}
+
+interface SelectableAction {
+	canSelect(token: TokenDocument): boolean;
 }
 
 interface DraggingLayer {
@@ -49,21 +54,27 @@ export class NimbleToken extends foundry.canvas.placeables.Token {
 		return this.#availableDragOffer();
 	}
 
-	/** The offer the user can switch this token's current drag to and from, if any. */
+	/** The offer the user can switch this token's current drag to and from with the cycle key, if any. */
 	switchableDragOffer(): ArmedMovementOffer | null {
 		if ((this.layer as unknown as DraggingLayer)._draggedToken !== this) return null;
 		return this.#availableDragOffer();
 	}
 
 	/**
-	 * Switches the current drag between the offer this token carries and its own
-	 * movement action. False when there is no offer to switch to.
+	 * The movement action the cycle key switches this token's drag to, where null
+	 * is the offered movement. Undefined when there is no offer to cycle with.
 	 */
-	switchDragBudget(): boolean {
-		if (!this.switchableDragOffer()) return false;
-		const layer = this.layer as unknown as DraggingLayer;
-		layer._dragMovementAction = layer._dragMovementAction ? null : this.document.movementAction;
-		return true;
+	nextDragAction(reverse = false): string | null | undefined {
+		if (!this.switchableDragOffer()) return undefined;
+		// The actions core's own cycle goes through for a dragged token.
+		const own = this.document.movementAction;
+		const actions = Object.entries(
+			CONFIG.Token.movement.actions as unknown as Record<string, SelectableAction>,
+		)
+			.filter(([action, config]) => config.canSelect(this.document) || action === own)
+			.map(([action]) => action);
+		const current = (this.layer as unknown as DraggingLayer)._dragMovementAction ?? null;
+		return cycleOfferedDragAction(actions, current, reverse);
 	}
 
 	/** Labels the drag, so an offered Movement never draws on the creature's own speed. */
