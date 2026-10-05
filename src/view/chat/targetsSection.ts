@@ -1,4 +1,4 @@
-import { getContext, setContext } from 'svelte';
+import { getContext, hasContext, setContext } from 'svelte';
 
 const TARGETS_SECTION_KEY = Symbol('targetsSectionShown');
 
@@ -8,5 +8,10 @@ export function setTargetsSectionShown(shown: boolean): void {
 }
 
 export function isTargetsSectionShown(): boolean {
-	return getContext<boolean | undefined>(TARGETS_SECTION_KEY) ?? false;
+	if (!hasContext(TARGETS_SECTION_KEY)) {
+		throw new Error(
+			'isTargetsSectionShown() was read before setTargetsSectionShown(). A card that renders move nodes must call setTargetsSectionShown() at init.',
+		);
+	}
+	return getContext<boolean>(TARGETS_SECTION_KEY);
 }
