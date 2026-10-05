@@ -23,6 +23,7 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
+import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
@@ -990,14 +991,18 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = [...new Set([...existingTargets, ...added])];
 
 		return this.update({
-			system: { targets, movementOffers: this.#movementOffersFor({ targets }) },
+			system: { targets, ...this.#movementOfferChanges({ targets }) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
-	/** The card's Movement Offers once its targets or its outcome change. */
-	#movementOffersFor(changes: Record<string, unknown>): MovementOffer[] {
+	/**
+	 * The card's Movement Offers once its targets or its outcome change. Empty
+	 * for a card type that has no field for them.
+	 */
+	#movementOfferChanges(changes: Record<string, unknown>): { movementOffers?: MovementOffer[] } {
+		if (!cardCarriesMovementOffers(this.type)) return {};
 		const system = { ...(this.system as object), ...changes } as OfferCard['system'];
-		return reconcileMovementOffers({ speaker: this.speaker, system });
+		return { movementOffers: reconcileMovementOffers({ speaker: this.speaker, system }) };
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */
@@ -1065,7 +1070,7 @@ class NimbleChatMessage extends ChatMessage {
 		};
 		await this.update({
 			rolls: patched.rolls,
-			system: { ...outcome, movementOffers: this.#movementOffersFor(outcome) },
+			system: { ...outcome, ...this.#movementOfferChanges(outcome) },
 		} as Record<string, unknown>);
 
 		await showDiceAnimation(roll, this.id ?? undefined);
@@ -1415,7 +1420,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = existingTargets.filter((id) => id !== targetId);
 
 		return this.update({
-			system: { targets, movementOffers: this.#movementOffersFor({ targets }) },
+			system: { targets, ...this.#movementOfferChanges({ targets }) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
@@ -1568,7 +1573,7 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				...outcome,
 				incomingReactions: this.#dropStaleOutcomeOffers(carried.entries, newRoll),
-				movementOffers: this.#movementOffersFor(outcome),
+				...this.#movementOfferChanges(outcome),
 			},
 		} as Record<string, unknown>);
 	}
@@ -1967,7 +1972,7 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				targets,
 				incomingReactions: updatedEntries,
-				movementOffers: this.#movementOffersFor({ targets }),
+				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);
 

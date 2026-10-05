@@ -1,6 +1,7 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { OfferActor, OfferCard } from '#types/movement.js';
+import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
@@ -214,7 +215,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		}
 
 		const card = chatData as OfferCard;
-		if (!suppressCard && card.system) {
+		if (!suppressCard && card.system && cardCarriesMovementOffers(card.type)) {
 			card.system.movementOffers = reconcileMovementOffers(card, {
 				source: this.actor as unknown as OfferActor | null,
 			});
