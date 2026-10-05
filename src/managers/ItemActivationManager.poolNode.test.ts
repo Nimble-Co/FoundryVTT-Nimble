@@ -185,6 +185,27 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(mockEmitDicePoolChanged.mock.calls[0][1]).toBe('fury');
 		});
 
+		it('rollDie: announces the faces before the rolls first, then the faces after them', async () => {
+			const pool = { label: 'Fury Dice', faces: [2] };
+			const item = { id: 'rage', flags: { nimble: { dicePools: { fury: pool } } } };
+			const actor = makeActor(3, { items: { contents: [item] } });
+			mockRollDieIntoPool.mockImplementation(async () => {
+				pool.faces = [...pool.faces, 4];
+				return { applied: true, face: 4 };
+			});
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 2 }));
+			mockRollDieIntoPool.mockResolvedValue({ applied: true, face: 4 });
+
+			expect(mockEmitDicePoolChanged).toHaveBeenCalledTimes(1);
+			expect(mockEmitDicePoolChanged).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				'Fury Dice',
+				[2],
+				[2, 4, 4],
+			);
+		});
+
 		it('rollDie: announces nothing when no die landed in the pool', async () => {
 			mockRollDieIntoPool
 				.mockResolvedValueOnce({ applied: false, face: 3 })
