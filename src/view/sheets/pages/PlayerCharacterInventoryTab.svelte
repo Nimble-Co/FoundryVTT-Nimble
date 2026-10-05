@@ -2,7 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { RulesManager } from '#managers/RulesManager.js';
-	import checkEquip from '#utils/equipCompatibility.js';
+	import { getStrengthShortfall } from '#utils/weaponAttackLegality.js';
 	import localize from '#utils/localize.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
@@ -60,24 +60,21 @@
 		return null;
 	}
 
-	/** Equipping is refused when no hand is free, or when the pair is too heavy to dual wield. */
-	async function toggleEquipment(event, item): Promise<void> {
-		event.stopPropagation();
+	/**
+	 * A Strength requirement the character does not meet is reported, never
+	 * enforced: equipping and attacking both stay available, and the GM rules on
+	 * what wielding it costs.
+	 */
+	function getStrengthNotice(item): string | null {
+		if (!item.reactive.system.equipped) return null;
 
-		if (!item.reactive.system.equipped) {
-			const check = checkEquip(actor.reactive, item.reactive);
-			if (!check.allowed) {
-				ui.notifications?.warn(
-					localize(`NIMBLE.weapons.equip.${check.refusal}`, {
-						name: item.reactive.name ?? '',
-						value: String(check.strengthRequired ?? 0),
-					}),
-				);
-				return;
-			}
-		}
+		const shortfall = getStrengthShortfall(actor.reactive, item.reactive);
+		if (!shortfall) return null;
 
-		await item.toggleEquipment();
+		return localize('NIMBLE.weapons.notices.strengthShortfall', {
+			required: String(shortfall.required),
+			current: String(shortfall.current),
+		});
 	}
 
 	const { objectTypeHeadings } = CONFIG.NIMBLE;
@@ -374,6 +371,7 @@
 {#snippet inventoryRow(item)}
 	{@const metadata = getObjectMetadata(item)}
 	{@const rules = itemRulesManagers.get(item.id)}
+	{@const strengthNotice = getStrengthNotice(item)}
 
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -428,6 +426,14 @@
 				>
 					{item.reactive.name}
 				</button>
+
+				{#if strengthNotice}
+					<i
+						class="nimble-document-card__warning fa-solid fa-triangle-exclamation"
+						data-tooltip={strengthNotice}
+						aria-label={strengthNotice}
+					></i>
+				{/if}
 			</h4>
 
 			<div class="nimble-document-card__charges">
@@ -449,7 +455,10 @@
 					data-tooltip={item.reactive.system.equipped
 						? localize('NIMBLE.prompts.equippedTooltip')
 						: localize('NIMBLE.prompts.unequippedTooltip')}
-					onclick={(event) => toggleEquipment(event, item)}
+					onclick={async (event) => {
+						event.stopPropagation();
+						await item.toggleEquipment();
+					}}
 				>
 					{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
 						{#if item.reactive.system.equipped}

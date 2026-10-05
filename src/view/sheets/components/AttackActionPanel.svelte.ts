@@ -9,7 +9,6 @@ import {
 	getUnarmedDamageFormula,
 	hasUnarmedProficiency,
 } from '../../../utils/attackUtils.js';
-import { getEquipmentSwapMax, getEquipmentSwapsRemaining } from '../../../utils/equipmentSwaps.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import {
 	applyPostRollIncomingBehavior,
@@ -20,7 +19,7 @@ import { DEFAULT_MISS_THRESHOLD } from '../../../utils/missThreshold.js';
 import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
 import sortItems from '../../../utils/sortItems.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
-import { checkWeaponAttack } from '../../../utils/weaponAttackLegality.js';
+import { getStrengthShortfall } from '../../../utils/weaponAttackLegality.js';
 
 /**
  * An unarmed strike is a melee attack at reach 1. The posted card declares it
@@ -162,44 +161,23 @@ export function createAttackPanelState(
 			})
 			.filter(Boolean);
 
-		const swapCostHint = getSwapCostHint(item);
-		return swapCostHint ? [...labels, swapCostHint] : labels;
-	}
-
-	function getCombatContext() {
-		const combat = (game.combat as Combat.Implementation | null) ?? null;
-		if (!combat?.started) return { combat: null, combatant: null };
-		const actorId = getActor().id;
-		return {
-			combat,
-			combatant: combat.combatants.find((entry) => entry.actorId === actorId) ?? null,
-		};
+		return labels;
 	}
 
 	/**
-	 * Freeing a hand for a two-handed attack costs one of the round's free
-	 * equipment swaps, so the row says so before the player commits to it.
+	 * A Strength requirement the character does not meet is reported, never
+	 * enforced: the book leaves what an under-strength hero may do with the
+	 * weapon to the table, so the row says so and the GM rules on it.
 	 */
-	function getSwapCostHint(item: Item): string | null {
-		const { combat, combatant } = getCombatContext();
-		const check = checkWeaponAttack(getActor(), item as never, { combat, combatant });
-		if (!check.requiresSwap) return null;
-		return localize('NIMBLE.weapons.swaps.sheathesInline', {
-			name: check.sheatheCandidates[0]?.name ?? '',
+	function getStrengthNotice(item: Item): string | null {
+		const shortfall = getStrengthShortfall(getActor().reactive, item as never);
+		if (!shortfall) return null;
+
+		return localize('NIMBLE.weapons.notices.strengthShortfall', {
+			required: String(shortfall.required),
+			current: String(shortfall.current),
 		});
 	}
-
-	const swapsRemaining = $derived.by(() => {
-		const actor = getActor().reactive;
-		const { combat, combatant } = getCombatContext();
-		if (!combat || !combatant) return null;
-		// `.reactive` so spending a swap re-renders the counter.
-		const reactiveCombatant = (combatant as unknown as { reactive: typeof combatant }).reactive;
-		return {
-			current: getEquipmentSwapsRemaining(actor, reactiveCombatant, combat),
-			max: getEquipmentSwapMax(actor),
-		};
-	});
 
 	function getItemDescription(item: Item): string {
 		const descData = getSystemData(item).description;
@@ -429,9 +407,7 @@ export function createAttackPanelState(
 			return attackFeatures;
 		},
 		sortItems,
-		get swapsRemaining() {
-			return swapsRemaining;
-		},
+		getStrengthNotice,
 		getWeaponDamage,
 		getWeaponProperties,
 		getItemDescription,

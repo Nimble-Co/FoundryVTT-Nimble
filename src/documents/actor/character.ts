@@ -2358,17 +2358,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Equip gate, ahead of every other side effect so a refused attack rolls
 		// nothing and spends nothing. This is the authoritative check: the attack
-		// panels filter on the same rules, but a weapon can be unequipped between
+		// panels filter on the same rule, but a weapon can be unequipped between
 		// the panel rendering and the click, and macros reach here directly.
 		if (
 			item?.type === 'object' &&
-			(item as unknown as NimbleObjectItem).system.objectType === 'weapon'
+			(item as unknown as NimbleObjectItem).system.objectType === 'weapon' &&
+			!enforceWeaponAttack(item as unknown as Parameters<typeof enforceWeaponAttack>[0])
 		) {
-			const permitted = await enforceWeaponAttack(
-				this as unknown as Parameters<typeof enforceWeaponAttack>[0],
-				item as unknown as NimbleObjectItem,
-			);
-			if (!permitted) return null;
+			return null;
 		}
 
 		// Soft-block gate: when the activation costs more actions than the

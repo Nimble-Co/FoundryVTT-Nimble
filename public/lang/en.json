@@ -876,9 +876,7 @@
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
-			"unarmedDamage": "Unarmed Damage",
-			"equipmentSwapBonus": "Equipment Swap Bonus",
-			"extraHands": "Extra Hands"
+			"unarmedDamage": "Unarmed Damage"
 		},
 		"rules": {
 			"abilityBonus": {
@@ -1610,20 +1608,6 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
-				}
-			},
-			"equipmentSwapBonus": {
-				"description": "Grants additional free equipment swaps each round, on top of the one every hero gets.",
-				"value": {
-					"label": "Additional Swaps",
-					"hint": "Extra free sheathe-and-draw swaps per round. Commander Weapon Mastery grants 1."
-				}
-			},
-			"extraHands": {
-				"description": "Grants additional hands, letting the wearer hold more weapons and shields at once.",
-				"value": {
-					"label": "Additional Hands",
-					"hint": "Hands beyond the usual two. A Weapon of Many Hands grants 1 to 4."
 				}
 			}
 		},
@@ -3675,20 +3659,10 @@
 				"strengthRequirement": "Requires Strength {value}"
 			},
 			"refusals": {
-				"notEquipped": "{name} is currently not equipped.",
-				"strengthRequirement": "{name} requires Strength {value} to attack with.",
-				"noFreeHand": "{name} must be wielded in 2 hands to attack with, and no hand is free.",
-				"noSwapsLeft": "No free equipment swaps left this round to free a hand for {name}."
+				"notEquipped": "{name} is currently not equipped."
 			},
-			"equip": {
-				"noFreeHand": "No free hand to equip {name}. Unequip something first.",
-				"dualWieldStrength": "Dual wielding {name} requires Strength {value}."
-			},
-			"swaps": {
-				"remaining": "Free equipment swaps left this round: {current}/{max}",
-				"sheathesInline": "Sheathes {name} (1 swap)",
-				"sheathed": "{name} sheathed to free a hand.",
-				"choosePrompt": "Choose what to sheathe to free a hand"
+			"notices": {
+				"strengthShortfall": "Requires Strength {required}, you have {current}. Ask your GM."
 			}
 		}
 	}

@@ -20,6 +20,8 @@ export interface WeaponCardProps {
 	icon?: string;
 	damage?: string | null;
 	properties?: string[];
+	/** Advisory text shown beneath the tags, for a requirement the hero does not meet. */
+	notice?: string | null;
 	description?: string | null;
 	isExpanded?: boolean;
 	disabled?: boolean;
