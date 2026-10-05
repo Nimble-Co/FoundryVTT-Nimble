@@ -5,16 +5,17 @@ import type {
 	TriggerCreature,
 	TriggerGeometry,
 } from '#types/movement.js';
+import { alliesWithin, areAllies } from './alliesWithin.js';
 import { reachChanges } from './reachChanges.js';
 import { spacesBetween } from './spacesBetween.js';
 
 type Relation = 'enemy' | 'ally' | 'neither';
 
 function relationOf(a: TokenDocument, b: TokenDocument): Relation {
-	const { FRIENDLY, HOSTILE, NEUTRAL, SECRET } = CONST.TOKEN_DISPOSITIONS;
+	const { FRIENDLY, HOSTILE } = CONST.TOKEN_DISPOSITIONS;
 	const dispA = a.disposition;
 	const dispB = b.disposition;
-	if (dispA === dispB && dispA !== NEUTRAL && dispA !== SECRET) return 'ally';
+	if (areAllies(a, b)) return 'ally';
 	if ((dispA === FRIENDLY && dispB === HOSTILE) || (dispA === HOSTILE && dispB === FRIENDLY))
 		return 'enemy';
 	return 'neither';
@@ -107,14 +108,8 @@ function watchedTokens(
 	sceneTokens: Iterable<TokenDocument>,
 ): TokenDocument[] {
 	if (options.observerScope === 'self') return [observer];
-	const allies = [...sceneTokens].filter(
-		(token) =>
-			!sameToken(token, observer) &&
-			!sameToken(token, record.token) &&
-			isCandidate(token) &&
-			relationOf(observer, token) === 'ally' &&
-			(options.allyRadius <= 0 ||
-				spacesBetween(measurable(observer), measurable(token)) <= options.allyRadius),
+	const allies = alliesWithin(observer, sceneTokens, options.allyRadius).filter(
+		(token) => !sameToken(token, record.token),
 	);
 	return [observer, ...allies];
 }

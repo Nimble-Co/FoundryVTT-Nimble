@@ -1311,7 +1311,7 @@
 				},
 				"within": {
 					"label": "Allies within (spaces)",
-					"hint": "The maximum number of spaces between this creature and an ally that can move for free."
+					"hint": "The maximum number of spaces between this creature and an ally that can move for free. 0 means all allies on the scene."
 				},
 				"direction": {
 					"label": "Direction",

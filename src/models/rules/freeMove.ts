@@ -1,11 +1,11 @@
-import type { MeasurableTokenDocument, OfferCard } from '#types/movement.js';
+import type { OfferCard } from '#types/movement.js';
 import localize from '#utils/localize.js';
+import { alliesWithin } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { postMovementOfferCard } from '../../utils/movement/postMovementOfferCard.js';
-import { spacesBetween } from '../../utils/movement/spacesBetween.js';
 import { withWidget } from './_widgetOption.js';
 import {
 	type InitiativeRolledContext,
@@ -259,7 +259,10 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 
 	#recipients(source: TokenDocument): 'self' | string[] {
 		if (this.recipient === 'self') return 'self';
-		const allies = alliesWithin(source, this.within);
+		const sceneTokens = (source.parent as SceneTokens | null)?.tokens ?? [];
+		const allies = alliesWithin(source, sceneTokens, this.within)
+			.map((token) => token.uuid)
+			.filter((uuid): uuid is string => !!uuid);
 		if (this.recipient !== 'selfAndAllies') return allies;
 		return source.uuid ? [source.uuid, ...allies] : allies;
 	}
@@ -283,24 +286,6 @@ function targetTokenOf(card: ChatMessage | null, actor: Actor): TokenDocument | 
 		if (token?.actor === actor) return token;
 	}
 	return null;
-}
-
-function alliesWithin(source: TokenDocument, within: number): string[] {
-	const { NEUTRAL, SECRET } = CONST.TOKEN_DISPOSITIONS;
-	const disposition = source.disposition;
-	if (disposition === NEUTRAL || disposition === SECRET) return [];
-	const tokens = (source.parent as SceneTokens | null)?.tokens ?? [];
-	const allies: string[] = [];
-	for (const token of tokens) {
-		if (token === source || token.id === source.id) continue;
-		if (token.disposition !== disposition || token.hidden || !token.actor) continue;
-		const spaces = spacesBetween(
-			source as unknown as MeasurableTokenDocument,
-			token as unknown as MeasurableTokenDocument,
-		);
-		if (token.uuid && spaces <= within) allies.push(token.uuid);
-	}
-	return allies;
 }
 
 export { FreeMoveRule };

@@ -509,6 +509,18 @@ describe('FreeMoveRule', () => {
 			expect(lastOffer().recipients).toEqual([edge.uuid]);
 		});
 
+		it('allies: a range of 0 means every ally on the scene', async () => {
+			const harness = makeRule({ recipient: 'allies', within: 0 });
+			const near = harness.addToken('near');
+			const far = harness.addToken('far');
+			harness.addToken('enemy', { disposition: HOSTILE });
+			distances.set('hero>near', 3);
+			distances.set('hero>far', 40);
+			distances.set('hero>enemy', 3);
+			await activate(harness);
+			expect(lastOffer().recipients).toEqual([near.uuid, far.uuid]);
+		});
+
 		it('selfAndAllies: adds the source token', async () => {
 			const harness = makeRule({ recipient: 'selfAndAllies', within: 12 });
 			const { near } = setUpAllies(harness);
