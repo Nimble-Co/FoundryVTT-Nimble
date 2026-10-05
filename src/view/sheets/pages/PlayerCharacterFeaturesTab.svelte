@@ -246,19 +246,23 @@
 				{/each}
 			</ul>
 
-			{#each section.blocks as block (block.key)}
-				{#if block.label}
-					<h4 class="nimble-heading nimble-group-heading" data-heading-variant="section">
-						{block.label}
-					</h4>
-				{/if}
+			{#if section.blocks.length}
+				<div class="nimble-nested-blocks">
+					{#each section.blocks as block (block.key)}
+						{#if block.label}
+							<h4 class="nimble-heading nimble-group-heading" data-heading-variant="section">
+								{block.label}
+							</h4>
+						{/if}
 
-				<ul class="nimble-item-list nimble-item-list--sublist">
-					{#each block.items as item (item.reactive._id)}
-						{@render featureCard(item)}
+						<ul class="nimble-item-list nimble-item-list--sublist">
+							{#each block.items as item (item.reactive._id)}
+								{@render featureCard(item)}
+							{/each}
+						</ul>
 					{/each}
-				</ul>
-			{/each}
+				</div>
+			{/if}
 		</div>
 	{/each}
 </section>
@@ -274,7 +278,6 @@
 
 		&--sublist {
 			margin-block-start: 0;
-			margin-inline-start: 1rem;
 
 			& + & {
 				margin-block-start: 0.5rem;
@@ -282,10 +285,20 @@
 		}
 	}
 
+	// The rail brackets everything the parent card brings with it, so a class reads as one
+	// scope however many groups it offers.
+	.nimble-nested-blocks {
+		margin-inline-start: 0.5rem;
+		padding-inline-start: 0.625rem;
+		border-inline-start: 2px solid
+			color-mix(in srgb, var(--nimble-medium-text-color) 40%, transparent);
+		border-end-start-radius: 2px;
+	}
+
 	.nimble-group-heading {
 		// The global .nimble-heading rule sets the margin shorthand, so feed it the variable
 		// it reads rather than setting margin-inline-start, which it would reset to 0.
-		--nimble-heading-margin: 0.625rem 0 0.25rem 1rem;
+		--nimble-heading-margin: 0.625rem 0 0.25rem 0;
 		--nimble-heading-size: var(--nimble-xs-text);
 		--nimble-heading-color: var(--nimble-medium-text-color);
 	}
