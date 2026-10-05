@@ -18,7 +18,7 @@ function getDescriptionText(description: ItemDescription): string {
 
 export default function filterItems(
 	actor: NimbleCharacter,
-	requiredItemTypes: string[] | string,
+	requiredItemTypes: readonly string[] | string,
 	searchTerm: string,
 ): NimbleBaseItem[] {
 	const types = Array.isArray(requiredItemTypes) ? requiredItemTypes : [requiredItemTypes];

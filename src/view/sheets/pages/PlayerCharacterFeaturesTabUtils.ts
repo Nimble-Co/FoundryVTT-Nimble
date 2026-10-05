@@ -14,7 +14,10 @@ export type FeatureRowItem = {
 	};
 };
 
-/** A top-level section on the tab, named by an item type from `typeOrder`. */
+/**
+ * What a top-level section is keyed by: an item type from `FEATURE_TYPE_ORDER`, or a
+ * selection group standing on its own because there is no class card to nest it under.
+ */
 export type FeatureSectionKind = 'type' | 'group';
 
 /**
@@ -25,10 +28,9 @@ export type FeatureSectionKind = 'type' | 'group';
 export type FeatureBlockKind = 'classFeatures' | 'subclass' | 'group' | 'ancestryBonus';
 
 export type FeatureBlock<T> = {
+	/** For a `group` block, the group name the tab resolves a heading from. */
 	key: string;
 	kind: FeatureBlockKind;
-	/** The heading above the block, or null when it reads as a continuation of the card above it. */
-	label: string | null;
 	items: T[];
 };
 
@@ -38,6 +40,17 @@ export type FeatureSection<T> = {
 	items: T[];
 	blocks: FeatureBlock<T>[];
 };
+
+/** The item types the tab lists, in the order their sections appear. */
+export const FEATURE_TYPE_ORDER = [
+	'class',
+	'subclass',
+	'feature',
+	'ancestry',
+	'ancestryBonus',
+	'background',
+	'boon',
+] as const;
 
 /** The bucket features with no group of their own fall into, matching the class feature index. */
 const UNGROUPED = 'ungrouped';
@@ -78,14 +91,6 @@ export function sortFeatureItems<T extends FeatureRowItem>(items: T[]): T[] {
 	});
 }
 
-/** Turns a kebab-case group name into a heading, so `lesser-invocations` reads as Lesser Invocations. */
-export function formatGroupName(name: string): string {
-	return name
-		.split('-')
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(' ');
-}
-
 function push<T>(bucket: Map<string, T[]>, key: string, item: T): void {
 	const existing = bucket.get(key) ?? [];
 	existing.push(item);
@@ -106,7 +111,6 @@ function groupBlocks<T extends FeatureRowItem>(byGroup: Map<string, T[]>): Featu
 		.map(([key, items]) => ({
 			key,
 			kind: 'group' as const,
-			label: formatGroupName(key),
 			items: sortFeatureItems(items),
 		}))
 		.sort((a, b) => {
@@ -128,12 +132,13 @@ function groupBlocks<T extends FeatureRowItem>(byGroup: Map<string, T[]>): Featu
  * stacks rather than one merged list.
  *
  * A character with no class card still has to be able to reach those items, so
- * they fall back to top-level sections of their own. The same rule already
- * applies to ancestry bonuses with no ancestry to nest under.
+ * they fall back to top-level sections of their own. The same rule applies to
+ * subclass features with no subclass card, and to ancestry bonuses with no
+ * ancestry to nest under.
  */
 export function buildFeatureSections<T extends FeatureRowItem>(
 	items: T[],
-	typeOrder: readonly string[],
+	typeOrder: readonly string[] = FEATURE_TYPE_ORDER,
 ): FeatureSection<T>[] {
 	const byType = new Map<string, T[]>();
 	const byGroup = new Map<string, T[]>();
@@ -169,7 +174,6 @@ export function buildFeatureSections<T extends FeatureRowItem>(
 			classBlocks.push({
 				key: AUTO_GRANT_SECTION,
 				kind: 'classFeatures',
-				label: null,
 				items: sortFeatureItems(autoGranted),
 			});
 		}
@@ -178,7 +182,6 @@ export function buildFeatureSections<T extends FeatureRowItem>(
 			classBlocks.push({
 				key: 'subclass',
 				kind: 'subclass',
-				label: null,
 				items: [...sortFeatureItems(subclassCards), ...sortFeatureItems(subclassFeatures)],
 			});
 		}
@@ -188,15 +191,21 @@ export function buildFeatureSections<T extends FeatureRowItem>(
 		byType.delete('subclass');
 	} else {
 		if (autoGranted.length) byType.set(AUTO_GRANT_SECTION, autoGranted);
+
+		// With a subclass card present the features nest under it, as they do under a class.
+		// With neither card they would have nothing to attach to, so they become the section.
 		if (subclassFeatures.length) {
-			blocksByType.set('subclass', [
-				{
-					key: 'subclass',
-					kind: 'subclass',
-					label: null,
-					items: sortFeatureItems(subclassFeatures),
-				},
-			]);
+			if (byType.has('subclass')) {
+				blocksByType.set('subclass', [
+					{
+						key: 'subclass',
+						kind: 'subclass',
+						items: sortFeatureItems(subclassFeatures),
+					},
+				]);
+			} else {
+				byType.set('subclass', subclassFeatures);
+			}
 		}
 	}
 
@@ -210,7 +219,6 @@ export function buildFeatureSections<T extends FeatureRowItem>(
 			{
 				key: 'ancestryBonus',
 				kind: 'ancestryBonus',
-				label: null,
 				items: sortFeatureItems(ancestryBonuses),
 			},
 		]);

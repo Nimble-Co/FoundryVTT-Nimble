@@ -15,10 +15,13 @@
 
 	import {
 		buildFeatureSections,
+		FEATURE_TYPE_ORDER,
 		type FeatureSection,
-		formatGroupName,
 		getEffectiveLevel,
 	} from './PlayerCharacterFeaturesTabUtils.js';
+
+	import formatGroupName from '#utils/formatGroupName.ts';
+	import localize from '#utils/localize.ts';
 
 	import SearchBar from '../components/SearchBar.svelte';
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
@@ -42,9 +45,18 @@
 	}
 
 	function getSectionHeading(section: FeatureSection<unknown>): string {
-		if (section.kind === 'group') return formatGroupName(section.key);
+		if (section.kind === 'group') return getGroupHeading(section.key);
 
-		return featureTypeHeadings[section.key] ?? formatGroupName(section.key);
+		const heading = featureTypeHeadings[section.key];
+
+		return heading ? localize(heading) : getGroupHeading(section.key);
+	}
+
+	/** Falls back to the key read as Title Case so a homebrew group still gets a heading. */
+	function getGroupHeading(groupName: string): string {
+		const heading = featureGroupHeadings[groupName];
+
+		return heading ? localize(heading) : formatGroupName(groupName);
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
@@ -70,17 +82,7 @@
 		return !allExpanded;
 	}
 
-	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = [
-		'class',
-		'subclass',
-		'feature',
-		'ancestry',
-		'ancestryBonus',
-		'background',
-		'boon',
-	];
-	const { featureTypeHeadings } = CONFIG.NIMBLE;
+	const { featureGroupHeadings, featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
 	let sheet = getContext<PlayerCharacterSheet>('application');
@@ -90,8 +92,8 @@
 	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	let searchTerm = $state('');
-	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
-	let sections = $derived(buildFeatureSections(items, validTypes));
+	let items = $derived(filterItems(actor.reactive, FEATURE_TYPE_ORDER, searchTerm));
+	let sections = $derived(buildFeatureSections(items));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -248,10 +250,10 @@
 
 			{#if section.blocks.length}
 				<div class="nimble-nested-blocks">
-					{#each section.blocks as block (block.key)}
-						{#if block.label}
+					{#each section.blocks as block (`${block.kind}:${block.key}`)}
+						{#if block.kind === 'group'}
 							<h4 class="nimble-heading nimble-group-heading" data-heading-variant="section">
-								{block.label}
+								{getGroupHeading(block.key)}
 							</h4>
 						{/if}
 
