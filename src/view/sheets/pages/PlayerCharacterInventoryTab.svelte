@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { RulesManager } from '#managers/RulesManager.js';
+	import { getStrengthShortfall } from '#utils/weaponAttackLegality.js';
 	import localize from '#utils/localize.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
@@ -57,6 +58,23 @@
 
 	function getObjectMetadata(_item) {
 		return null;
+	}
+
+	/**
+	 * A Strength requirement the character does not meet is reported, never
+	 * enforced: equipping and attacking both stay available, and the GM rules on
+	 * what wielding it costs.
+	 */
+	function getStrengthNotice(item): string | null {
+		if (!item.reactive.system.equipped) return null;
+
+		const shortfall = getStrengthShortfall(actor.reactive, item.reactive);
+		if (!shortfall) return null;
+
+		return localize('NIMBLE.weapons.notices.strengthShortfall', {
+			required: String(shortfall.required),
+			current: String(shortfall.current),
+		});
 	}
 
 	const { objectTypeHeadings } = CONFIG.NIMBLE;
@@ -353,6 +371,7 @@
 {#snippet inventoryRow(item)}
 	{@const metadata = getObjectMetadata(item)}
 	{@const rules = itemRulesManagers.get(item.id)}
+	{@const strengthNotice = getStrengthNotice(item)}
 
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -407,6 +426,14 @@
 				>
 					{item.reactive.name}
 				</button>
+
+				{#if strengthNotice}
+					<i
+						class="nimble-document-card__warning fa-solid fa-triangle-exclamation"
+						data-tooltip={strengthNotice}
+						aria-label={strengthNotice}
+					></i>
+				{/if}
 			</h4>
 
 			<div class="nimble-document-card__charges">

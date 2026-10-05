@@ -3652,6 +3652,18 @@
 				"free": "Free Move",
 				"forced": "Forced Movement"
 			}
+		},
+		"weapons": {
+			"tags": {
+				"twoHandedOneHandedOption": "2-Handed (1-handed: Requires Strength {value})",
+				"strengthRequirement": "Requires Strength {value}"
+			},
+			"refusals": {
+				"notEquipped": "{name} is currently not equipped."
+			},
+			"notices": {
+				"strengthShortfall": "Requires Strength {required}, you have {current}. Ask your GM."
+			}
 		}
 	}
 }

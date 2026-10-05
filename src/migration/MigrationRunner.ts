@@ -153,7 +153,14 @@ class MigrationRunner extends MigrationRunnerBase {
 		options?: { isAdventure?: boolean; pack?: string },
 	): Promise<any | null> {
 		const { pack, isAdventure = false } = options ?? {};
-		const baseActor = game.data.actors?.find((a) => actor._id === a._id) ?? actor.toObject();
+		// An unlinked token's synthetic actor shares the world actor's id, so looking
+		// the id up in `game.data.actors` returns the *world* actor's items while the
+		// update below targets the token's delta. Diffing one against the other made
+		// Foundry reject the update as a document type change, and the token's items
+		// were never migrated. Take the token's own source instead.
+		const baseActor = actor.isToken
+			? actor.toObject()
+			: (game.data.actors?.find((a) => actor._id === a._id) ?? actor.toObject());
 
 		const updatedActor = await (async () => {
 			try {

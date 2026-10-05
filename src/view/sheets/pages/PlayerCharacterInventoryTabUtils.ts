@@ -35,14 +35,19 @@ export function getDropTargetContainerId(item: InventoryRowItem): string {
 	return item.reactive.system.containerId ?? '';
 }
 
+/** Worn or wielded gear, which is equippable whether or not it carries rules. */
+const EQUIPPABLE_OBJECT_TYPES = ['weapon', 'shield', 'armor'];
+
 /**
  * A stored object is packed away, so it can never be equipped. Otherwise the
- * toggle belongs to items whose rules it switches, plus containers that only
- * apply their rule while equipped: those usually carry no rules of their own,
- * and without the toggle their setting could never be satisfied.
+ * toggle belongs to worn or wielded gear and to items whose rules it switches,
+ * plus containers that only apply their rule while equipped: those usually carry
+ * no rules of their own, and without the toggle their setting could never be
+ * satisfied.
  */
 export function canToggleEquipment(item: InventoryRowItem): boolean {
 	if (item.reactive.system.containerId) return false;
+	if (EQUIPPABLE_OBJECT_TYPES.includes(item.reactive.system.objectType)) return true;
 	if ((item.reactive.system.rules?.length ?? 0) > 0) return true;
 
 	return isContainer(item) && Boolean(item.reactive.system.container?.requiresEquipped);

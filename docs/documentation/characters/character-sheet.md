@@ -47,13 +47,19 @@ All of these open a roll window first. See [Dice Rolls & Chat Cards](../playing/
 
 Your heroic actions and reactions, expandable so you can read what each does. You can drag an action from here to the macro hotbar for one-click access; see [Macros & the Hotbar](../gm/macros.md).
 
+Only equipped weapons are offered as attacks, here and in the opportunity attack list. Unarmed strikes are always available, so you are never left with nothing to attack with. Attacking with a weapon you are not holding is refused, with a message saying so.
+
+A weapon whose Strength requirement you do not meet still shows up and can still be used. It carries a warning instead, naming the Strength it asks for and the Strength you have. What that costs you is your GM's call: they may wave it through, ask for disadvantage, or rule it out.
+
 ### Conditions
 
 Every condition the system knows, with the ones affecting you highlighted. Search, filter to active only, and toggle conditions on or off. Any other temporary or passive effects on your character are listed here too. See [Conditions](../playing/conditions.md).
 
 ### Inventory
 
-Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Each item has an equip toggle. You can create new items here or drag them in from the compendiums.
+Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Weapons, shields and armor each have an equip toggle, as does anything else carrying rules. You can create new items here or drag them in from the compendiums.
+
+Equipping is never blocked. An equipped weapon whose Strength requirement you do not meet is marked with a warning you can hover for the details, and it is left to your GM to decide what to do about it.
 
 Items set up as containers, such as a chest, a backpack, a pouch or a quiver, show their contents nested underneath them, and the row highlights as you drag something over it.
 
