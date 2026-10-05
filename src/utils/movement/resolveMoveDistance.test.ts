@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 // The shared Roll mock has no formula helpers; give it the two this helper uses.
 const RollGlobal = Roll as unknown as {
@@ -93,6 +93,7 @@ describe('resolveMoveDistance', () => {
 	});
 
 	it('never offers an unreadable or negative distance', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 		expect(
 			resolveMoveDistance({ distance: 'nonsense', distanceBySize: {} }, source, recipient),
 		).toBe(0);
@@ -104,5 +105,21 @@ describe('resolveMoveDistance', () => {
 				recipient,
 			),
 		).toBe(0);
+		warn.mockRestore();
+	});
+
+	it('names the formula in a console warning when it cannot be worked out', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		expect(
+			resolveMoveDistance({ distance: '2 + oops', distanceBySize: {} }, source, recipient),
+		).toBe(0);
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn.mock.calls[0][0]).toContain('2 + oops');
+		warn.mockClear();
+
+		expect(resolveMoveDistance({ distance: '3', distanceBySize: {} }, source, recipient)).toBe(3);
+		expect(resolveMoveDistance({ distance: '', distanceBySize: {} }, source, recipient)).toBe(0);
+		expect(warn).not.toHaveBeenCalled();
+		warn.mockRestore();
 	});
 });

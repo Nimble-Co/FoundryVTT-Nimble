@@ -22,7 +22,8 @@ export function resolveMoveDistance(
 	try {
 		const value = Roll.safeEval(Roll.replaceFormulaData(formula, rollData, { missing: '0' }));
 		return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
-	} catch {
+	} catch (error) {
+		console.warn(`Nimble | Could not work out the movement distance formula "${formula}".`, error);
 		return 0;
 	}
 }
