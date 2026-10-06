@@ -79,6 +79,8 @@ Deleting a container that still holds something asks you to confirm first, then 
 
 Your class features, subclass features, ancestry, background, and boons, grouped by category. Click a feature's icon to use it and post its details to chat.
 
+Everything a class gives you sits under that class. The features it hands you automatically come first, then your subclass and the features it brings, then each named set of choices the class offers under a heading of its own, taken from the name of the set. A Shadowmancer sees **Lesser Invocations** and **Greater Invocations** as separate headings under their class rather than one long list, and a class offering no such choices shows no extra headings at all. A line runs down the left of everything nested under a card, so when you have scrolled past the class heading you can still see what you are inside and where it ends. Ancestry and background keep their own sections below.
+
 ### Spells
 
 Your known spells. When you know spells from two or more schools, a school filter appears. Click a spell's icon to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.

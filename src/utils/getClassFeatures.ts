@@ -288,7 +288,7 @@ function clusterFeaturesBySource(features: StoredFeatureItem[]): StoredFeatureIt
 }
 
 /** Groups whose features apply without a choice: the ungrouped bucket and level progressions. */
-function isAutoGrantGroup(groupName: string): boolean {
+export function isAutoGrantGroup(groupName: string): boolean {
 	return groupName === 'ungrouped' || groupName.endsWith('-progression');
 }
 
