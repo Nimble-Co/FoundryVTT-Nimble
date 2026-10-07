@@ -64,3 +64,4 @@ export { Migration063MasterOfStormTracks } from './Migration063MasterOfStormTrac
 export { Migration064ObjectSizeTypeChoices } from './Migration064ObjectSizeTypeChoices.js';
 export { Migration065AuraOfZealJudgmentDie } from './Migration065AuraOfZealJudgmentDie.js';
 export { Migration066BanditParry } from './Migration066BanditParry.js';
+export { Migration067MovementPilots } from './Migration067MovementPilots.js';

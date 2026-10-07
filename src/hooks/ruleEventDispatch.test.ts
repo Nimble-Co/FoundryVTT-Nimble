@@ -58,6 +58,8 @@ interface RuleLike {
 	onActorDying: Mock;
 	onRoundChanged: Mock;
 	onMovementFinished: Mock;
+	onPoolGain: Mock;
+	onActiveGmTurnStart: Mock;
 }
 
 function createMockRule(): RuleLike {
@@ -76,6 +78,8 @@ function createMockRule(): RuleLike {
 		onActorDying: vi.fn().mockResolvedValue(undefined),
 		onRoundChanged: vi.fn().mockResolvedValue(undefined),
 		onMovementFinished: vi.fn().mockResolvedValue(undefined),
+		onPoolGain: vi.fn().mockResolvedValue(undefined),
+		onActiveGmTurnStart: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -108,6 +112,8 @@ describe('ruleEventDispatch', () => {
 		expect(handlers.has('deleteCombat')).toBe(true);
 		expect(handlers.has('nimble.conditionApplied')).toBe(true);
 		expect(handlers.has('nimble.movementFinished')).toBe(true);
+		expect(handlers.has('nimble.dicePool.changed')).toBe(true);
+		expect(handlers.has('nimbleCombatTurnStart')).toBe(true);
 	});
 
 	describe('automation.applyRuleEffects gating', () => {
@@ -822,6 +828,130 @@ describe('ruleEventDispatch', () => {
 			await fire(makeRecord(mover, []));
 
 			expect(rule.onMovementFinished).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('nimble.dicePool.changed → onPoolGain', () => {
+		async function fire(payload: unknown): Promise<void> {
+			await handlers.get('nimble.dicePool.changed')?.(payload);
+		}
+
+		it('dispatches the bare pool identifier and label when the pool gains dice', async () => {
+			const first = createMockRule();
+			const second = createMockRule();
+			const actor = { rules: [first, second] };
+
+			await fire({
+				actor,
+				poolId: 'actor:fury',
+				poolLabel: 'Fury Dice',
+				previousFaces: [2],
+				newFaces: [2, 5],
+			});
+
+			expect(first.onPoolGain).toHaveBeenCalledWith({
+				actor,
+				poolIdentifier: 'fury',
+				poolLabel: 'Fury Dice',
+			});
+			expect(second.onPoolGain).toHaveBeenCalledTimes(1);
+		});
+
+		it('keeps an identifier that has no actor prefix', async () => {
+			const rule = createMockRule();
+
+			await fire({ actor: { rules: [rule] }, poolId: 'fury', previousFaces: [], newFaces: [3] });
+
+			expect(rule.onPoolGain).toHaveBeenCalledWith(
+				expect.objectContaining({ poolIdentifier: 'fury' }),
+			);
+		});
+
+		it('does not dispatch when the pool did not gain dice', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+
+			await fire({ actor, poolId: 'fury', previousFaces: [2, 4], newFaces: [2] });
+			await fire({ actor, poolId: 'fury', previousFaces: [2], newFaces: [6] });
+
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('does not dispatch when spent dice are refunded', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'fury',
+				previousFaces: [3],
+				newFaces: [3, 4, 5],
+				reason: 'refund',
+			});
+
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('dispatches a manual gain', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'fury',
+				previousFaces: [3],
+				newFaces: [3, 4],
+				reason: 'manual',
+			});
+
+			expect(rule.onPoolGain).toHaveBeenCalledTimes(1);
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockImplementation(
+				(_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+			);
+			const rule = createMockRule();
+
+			await fire({ actor: { rules: [rule] }, poolId: 'fury', previousFaces: [], newFaces: [3] });
+
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('nimbleCombatTurnStart → onActiveGmTurnStart', () => {
+		async function fire(combatant: unknown): Promise<void> {
+			await handlers.get('nimbleCombatTurnStart')?.(combatant);
+		}
+
+		it('dispatches the combat, combatant and actor to the actor rules', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combat = { id: 'combat' };
+			const combatant = { actor, combat };
+
+			await fire(combatant);
+
+			expect(rule.onActiveGmTurnStart).toHaveBeenCalledWith({ combat, combatant, actor });
+			expect(rule.onTurnStart).not.toHaveBeenCalled();
+		});
+
+		it('dispatches to no other actor for a combatant without an actor', async () => {
+			const otherRule = createMockRule();
+			const otherCombatant = { actor: { rules: [otherRule] } };
+			const combat = { combatant: otherCombatant, combatants: { contents: [otherCombatant] } };
+
+			await fire({ actor: null, combat });
+
+			expect(otherRule.onActiveGmTurnStart).not.toHaveBeenCalled();
+			expect(otherRule.onTurnStart).not.toHaveBeenCalled();
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockReturnValue(false);
+			const rule = createMockRule();
+
+			await fire({ actor: { rules: [rule] }, combat: {} });
+
+			expect(rule.onActiveGmTurnStart).not.toHaveBeenCalled();
 		});
 	});
 });

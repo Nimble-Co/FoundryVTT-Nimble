@@ -142,6 +142,16 @@ The card does not record the saving throw of each target. Under a save result, t
 
 This toggle needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the card shows the distance as text and the token is dragged as usual. Turning either toggle on or off stops the card from watching every waiting move, so no creature keeps a move from the old setting. The tag of that move then shows only the distance, as when a toggle is off.
 
+Some features let a creature move for free without being used, for example when a creature gains dice in a pool, rolls Initiative, starts its turn or is crit. These post a small card of their own, which says why the creature can move. It works the same as a move for free on a feature's card: the creature's next drag counts as that move, and its tag shows the result, or that the move was not used. A feature that moves allies too gives one move to each ally within the number of spaces the feature names, and each player moves their own token. These cards post only while Forced Movement and Moves for Free is on, which needs Movement Tracking. The **Apply Conditions and Effects from Rules** toggle does not turn them off. Everyone sees these cards, unless the feature is set to whisper its card. Then only the feature's owner, the players whose creatures get the move, and the GM see it.
+
+## Features that react to movement
+
+With **Movement Tracking** on, in a started combat, a feature can react when its creature finishes a move, or when another creature finishes a move near it: an enemy that moves next to you, or a move of your own that ends next to a creature. Both creatures must be in the combat. Out of combat, these features post nothing. The system never uses the feature for you. It posts a card that says who moved, how many spaces that move covered and how many this turn, and names the creatures the move found, with a **Use** button for the feature's owner. The button targets the creatures the card names and then uses the feature as normal, so the player can still change the targets or cancel. Nothing is spent until the feature is used. The **Apply Conditions and Effects from Rules** toggle does not turn these cards off.
+
+By default the card is a whisper to the feature's owner and the GM, because only they can use the button. A feature can be set to show its card to everyone. To show one card to everyone, the GM can right-click it in the chat and choose Foundry's **Reveal To Everyone**.
+
+A move counts from where it began to where it stopped. A move broken into two drags is two moves, but a feature that needs "at least 4 spaces" counts all the spaces moved this turn unless it says otherwise. Each stop that meets the condition posts a new card; whether the feature applies again is the table's call.
+
 ## Token adjacency tracking
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.

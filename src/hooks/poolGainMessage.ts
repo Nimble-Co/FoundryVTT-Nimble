@@ -1,5 +1,6 @@
 import { systemHookName } from '#system';
 import { isChatNotificationsAutomationEnabled } from '../settings/automationSettings.js';
+import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 
 let registered = false;
 
@@ -8,6 +9,7 @@ type PoolChangedPayload = {
 	poolId?: string;
 	previousFaces?: number[];
 	newFaces?: number[];
+	reason?: string;
 };
 
 type PoolGainMessageRuleLike = {
@@ -27,7 +29,7 @@ type ActorWithRules = Actor.Implementation & {
  * gains dice. Listens to the pool-changed event, which fires locally on the
  * client that performed the change, so the message posts exactly once
  * regardless of how the gain happened (activation roll, refill trigger, or
- * manual sheet edit).
+ * manual sheet edit). Spent dice that are refunded are not a gain.
  */
 export function registerPoolGainMessageHooks(): void {
 	if (registered) return;
@@ -36,16 +38,11 @@ export function registerPoolGainMessageHooks(): void {
 	// @ts-expect-error Custom hook
 	Hooks.on(systemHookName('dicePool.changed'), (payload: PoolChangedPayload) => {
 		if (!isChatNotificationsAutomationEnabled()) return;
-		const previousCount = payload.previousFaces?.length ?? 0;
-		const newCount = payload.newFaces?.length ?? 0;
-		if (newCount <= previousCount) return;
+		const poolIdentifier = gainedPoolIdentifier(payload);
+		if (poolIdentifier === null) return;
 
 		const actor = payload.actor as ActorWithRules | null | undefined;
 		if (!actor?.rules) return;
-		const poolId = payload.poolId ?? '';
-		// Actor-scoped pool ids carry an "actor:" prefix; rules reference the
-		// bare identifier in both scopes.
-		const poolIdentifier = poolId.startsWith('actor:') ? poolId.slice('actor:'.length) : poolId;
 
 		for (const rule of actor.rules) {
 			if (rule.type !== 'poolGainMessage' || rule.disabled) continue;

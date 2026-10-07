@@ -10,7 +10,7 @@ describe('cardCarriesMovementOffers', () => {
 		const carrying = Object.keys(chatDataModels).filter((type) =>
 			cardCarriesMovementOffers(type, models),
 		);
-		expect(carrying.sort()).toEqual(['feature', 'object', 'spell']);
+		expect(carrying.sort()).toEqual(['feature', 'movementOffer', 'object', 'spell']);
 	});
 
 	it('is false for a card type with no data model, and for no type', () => {

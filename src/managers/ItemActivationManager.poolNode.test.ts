@@ -12,6 +12,9 @@ const mockRollDieIntoPool = vi
 	.spyOn(dicePoolRefillModule, 'rollDieIntoPool')
 	.mockResolvedValue({ applied: true, face: 4 });
 const mockRollPoolFresh = vi.spyOn(dicePoolRefillModule, 'rollPoolFresh').mockResolvedValue(true);
+const mockEmitDicePoolChanged = vi
+	.spyOn(dicePoolRefillModule, 'emitDicePoolChanged')
+	.mockImplementation(() => {});
 const mockSetPoolFaces = vi.spyOn(dicePoolRefillModule, 'setPoolFaces').mockResolvedValue(true);
 const mockAdjustPool = vi.spyOn(chargePoolRecoverModule, 'adjustPool').mockResolvedValue(true);
 
@@ -169,6 +172,48 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(mockRollDieIntoPool).toHaveBeenCalledTimes(2);
 			expect(mockRollDieIntoPool.mock.calls[0][1]).toBe('fury');
 			expect(out.result?.applied).toBe(true);
+		});
+
+		it('rollDie: announces one gain for all its dice, not one per die', async () => {
+			const actor = makeActor(3);
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 2 }));
+
+			for (const call of mockRollDieIntoPool.mock.calls) {
+				expect(call[2]).toMatchObject({ emitChange: false });
+			}
+			expect(mockEmitDicePoolChanged).toHaveBeenCalledTimes(1);
+			expect(mockEmitDicePoolChanged.mock.calls[0][1]).toBe('fury');
+		});
+
+		it('rollDie: announces the faces before the rolls first, then the faces after them', async () => {
+			const pool = { label: 'Fury Dice', faces: [2] };
+			const item = { id: 'rage', flags: { nimble: { dicePools: { fury: pool } } } };
+			const actor = makeActor(3, { items: { contents: [item] } });
+			mockRollDieIntoPool.mockImplementation(async () => {
+				pool.faces = [...pool.faces, 4];
+				return { applied: true, face: 4 };
+			});
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 2 }));
+			mockRollDieIntoPool.mockResolvedValue({ applied: true, face: 4 });
+
+			expect(mockEmitDicePoolChanged).toHaveBeenCalledTimes(1);
+			expect(mockEmitDicePoolChanged).toHaveBeenCalledWith(
+				actor,
+				'fury',
+				'Fury Dice',
+				[2],
+				[2, 4, 4],
+			);
+		});
+
+		it('rollDie: announces nothing when no die landed in the pool', async () => {
+			mockRollDieIntoPool
+				.mockResolvedValueOnce({ applied: false, face: 3 })
+				.mockResolvedValueOnce({ applied: false, face: 1 });
+			const actor = makeActor(3);
+			await runAndGetNode(actor, poolNode({ poolType: 'dice', action: 'rollDie', value: 2 }));
+
+			expect(mockEmitDicePoolChanged).not.toHaveBeenCalled();
 		});
 
 		it('rollDie: continues rolling even when the pool fills up so all rolls are surfaced (player decides what to keep)', async () => {

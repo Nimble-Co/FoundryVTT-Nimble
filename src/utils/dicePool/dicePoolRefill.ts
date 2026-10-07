@@ -271,7 +271,7 @@ type RollDieIntoPoolResult = { applied: boolean; face: number | null };
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string; suppressChat?: boolean } = {},
+	options: { flavor?: string; suppressChat?: boolean; emitChange?: boolean } = {},
 ): Promise<RollDieIntoPoolResult> {
 	if (!isCharacterActor(actor)) return { applied: false, face: null };
 	if (typeof poolId !== 'string' || poolId.length < 1) return { applied: false, face: null };
@@ -317,17 +317,33 @@ async function rollDieIntoPool(
 
 	await persistDicePoolMap(actor, currentPools);
 
+	if (options.emitChange !== false) {
+		emitDicePoolChanged(actor, poolId, pool.label, previousFaces, pool.faces);
+	}
+
+	return { applied: true, face };
+}
+
+/**
+ * Announces a manual change to a pool's faces. A caller that rolls several dice
+ * as one gain announces them once, so listeners see one gain of several dice.
+ */
+function emitDicePoolChanged(
+	actor: CharacterActorLike,
+	poolId: string,
+	poolLabel: string | undefined,
+	previousFaces: readonly number[],
+	newFaces: readonly number[],
+): void {
 	emitForCharacter(actor, 'changed', {
 		actor,
 		poolId,
-		poolLabel: pool.label,
-		previousFaces,
-		newFaces: [...pool.faces],
+		poolLabel,
+		previousFaces: [...previousFaces],
+		newFaces: [...newFaces],
 		reason: 'manual',
 		trigger: 'manual',
 	});
-
-	return { applied: true, face };
 }
 
 /**
@@ -467,12 +483,14 @@ async function maximizePoolDie(
 
 /**
  * Manually adjust a pool's faces (GM tool or sheet UI). Operates on a single pool by id.
- * Pass an explicit `faces` array to overwrite, or null to clear.
+ * Pass an explicit `faces` array to overwrite, or null to clear. Pass `'refund'`
+ * when spent dice go back, so pool-gain listeners do not count them as a gain.
  */
 async function setPoolFaces(
 	actor: Actor | null | undefined,
 	poolId: string,
 	faces: number[] | null,
+	reason: 'manual' | 'refund' = 'manual',
 ): Promise<boolean> {
 	if (!isCharacterActor(actor)) return false;
 	if (typeof poolId !== 'string' || poolId.length < 1) return false;
@@ -499,7 +517,7 @@ async function setPoolFaces(
 		poolLabel: pool.label,
 		previousFaces,
 		newFaces: [...pool.faces],
-		reason: 'manual',
+		reason,
 		trigger: 'manual',
 	});
 
@@ -512,6 +530,7 @@ export {
 	applyRefillTriggersToPools,
 	applyRestRefill,
 	maximizePoolDie,
+	emitDicePoolChanged,
 	rollDieIntoPool,
 	rollPoolFresh,
 	setPoolFaces,

@@ -9,6 +9,7 @@ import type {
 	ItemUsedContext,
 	MovementFinishedContext,
 	NimbleBaseRule,
+	PoolGainContext,
 	RestContext,
 	RoundChangedContext,
 	SaveResolvedContext,
@@ -25,6 +26,7 @@ import {
 	hasAnyActorChangeAt,
 } from '../utils/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
+import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 
 const DYING_STATUS_ID = 'dying';
@@ -60,6 +62,15 @@ interface NimbleRestPayload {
 interface NimbleInitiativePayload {
 	actor: ActorWithRules;
 	combatant: Combatant;
+}
+
+interface NimblePoolChangedPayload {
+	actor?: ActorWithRules | null;
+	poolId?: string;
+	poolLabel?: string;
+	previousFaces?: number[];
+	newFaces?: number[];
+	reason?: string;
 }
 
 interface NimbleConditionAppliedPayload {
@@ -150,6 +161,32 @@ function handleCombatTurn(
 		};
 		void dispatch(nextActor, 'onTurnStart', startContext);
 	}
+}
+
+// Nimble's own turn-start hook fires once per turn start, on the active GM only,
+// unlike combatTurn, which runs on the client that advanced the turn.
+async function handleActiveGmTurnStart(combatant: Combatant): Promise<void> {
+	const actor = (combatant?.actor ?? null) as ActorWithRules | null;
+	if (!actor) return;
+	const context: TurnContext = {
+		combat: combatant.combat as Combat,
+		combatant,
+		actor: actor as unknown as TurnContext['actor'],
+	};
+	await dispatch(actor, 'onActiveGmTurnStart', context);
+}
+
+// The pool-changed hook fires only on the client that changed the pool.
+async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<void> {
+	const poolIdentifier = gainedPoolIdentifier(payload);
+	const actor = payload?.actor ?? null;
+	if (poolIdentifier === null || !actor) return;
+	const context: PoolGainContext = {
+		actor: actor as unknown as PoolGainContext['actor'],
+		poolIdentifier,
+		poolLabel: payload.poolLabel,
+	};
+	await dispatch(actor, 'onPoolGain', context);
 }
 
 function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, unknown>): void {
@@ -383,6 +420,8 @@ export default function registerRuleEventDispatch(): void {
 	onHook('deleteCombat', handleDeleteCombat as HookFn);
 	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);
 	onHook(systemHookName('movementFinished'), handleMovementFinished as HookFn);
+	onHook(systemHookName('dicePool.changed'), handlePoolChanged as HookFn);
+	onHook('nimbleCombatTurnStart', handleActiveGmTurnStart as HookFn);
 }
 
 export type { NimbleSavePayload, NimbleRestPayload, NimbleInitiativePayload };

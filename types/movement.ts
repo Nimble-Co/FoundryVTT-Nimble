@@ -180,3 +180,31 @@ export interface MoveBandWaypoint {
 	/** The Move of the turn a planned waypoint falls in: 1 for the first Speed spaces. */
 	moveBand?: number;
 }
+
+export type TriggerCreature = 'enemy' | 'ally' | 'any';
+export type TriggerGeometry =
+	| 'any'
+	| 'endsAdjacent'
+	| 'enteredReach'
+	| 'leftReach'
+	| 'inPath'
+	| 'movedToward';
+
+export interface MovementTriggerOptions {
+	event: 'selfMoved' | 'creatureMoved';
+	/** selfMoved: which other creatures the geometry is tested against. creatureMoved: which movers count. */
+	creature: TriggerCreature;
+	/** Empty means no kind counts. A teleport never counts. */
+	kinds: ('regular' | 'free' | 'forced')[];
+	minSpaces: number;
+	spacesScope: 'thisTurn' | 'thisMovement';
+	geometry: TriggerGeometry;
+	reach: number;
+	minTargets: number;
+	observerScope: 'self' | 'selfOrAllyWithin';
+	/** 0 means any ally on the scene. */
+	allyRadius: number;
+}
+
+/** The slice of an actor that says which users own it, for the whisper list of a movement card. */
+export type CardCreature = Pick<Actor, 'testUserPermission'>;
