@@ -4,6 +4,7 @@ import { createConditionNode } from './createConditionNode.js';
 import { createDamageNode } from './createDamageNode.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
 import { createHealingNode } from './createHealingNode.js';
+import { createMoveNode } from './createMoveNode.js';
 import { createPoolNode } from './createPoolNode.js';
 import { createSavingThrowNode } from './createSavingThrowNode.js';
 import { createTextNode } from './createTextNode.js';
@@ -33,6 +34,7 @@ export async function createEffectNode(
 	else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
 	else if (nodeType === 'damageOutcome') newNode = createDamageOutcomeNode(parentId!, context);
 	else if (nodeType === 'healing') newNode = createHealingNode(parentId, context);
+	else if (nodeType === 'move') newNode = createMoveNode(parentId, context);
 	else if (nodeType === 'note') newNode = createTextNode(parentId, context);
 	else if (nodeType === 'pool') newNode = createPoolNode(parentId, context);
 	else if (nodeType === 'savingThrow') newNode = createSavingThrowNode(parentId, context);

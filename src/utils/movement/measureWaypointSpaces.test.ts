@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { measureWaypointSpaces } from './measureWaypointSpaces.js';
 
-type Segment = { distance: number; spaces: number };
+type Segment = { distance: number; spaces: number; cost?: number };
 
 function makeToken(segments: Segment[], grid = { isGridless: false, distance: 5 }) {
 	return {
@@ -168,5 +168,22 @@ describe('measureWaypointSpaces', () => {
 	it('counts nothing without a grid distance', () => {
 		const token = makeToken([{ distance: 5, spaces: 1 }], { isGridless: false, distance: 0 });
 		expect(measureWaypointSpaces(token, [{}, {}])).toEqual([0]);
+	});
+
+	it('counts what each leg cost when asked, so difficult terrain counts double', () => {
+		const token = makeToken([
+			{ distance: 5, cost: 10, spaces: 1 },
+			{ distance: 5, cost: 5, spaces: 1 },
+		]);
+		expect(measureWaypointSpaces(token, [{}, {}, {}], 'cost')).toEqual([2, 1]);
+		expect(measureWaypointSpaces(token, [{}, {}, {}])).toEqual([1, 1]);
+	});
+
+	it('counts the distance of a leg with no finite cost', () => {
+		const token = makeToken([
+			{ distance: 5, spaces: 1 },
+			{ distance: 5, cost: Number.POSITIVE_INFINITY, spaces: 1 },
+		]);
+		expect(measureWaypointSpaces(token, [{}, {}, {}], 'cost')).toEqual([1, 1]);
 	});
 });

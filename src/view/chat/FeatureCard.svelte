@@ -11,6 +11,7 @@
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
@@ -53,6 +54,9 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
+
+	const showsTargets = untrack(() => featureType === 'feature' || featureType === 'monsterFeature');
+	setTargetsSectionShown(showsTargets);
 </script>
 
 <CardHeader {messageDocument} />
@@ -74,7 +78,7 @@
 		</section>
 	{/if}
 
-	{#if featureType === 'feature' || featureType === 'monsterFeature'}
+	{#if showsTargets}
 		<Targets />
 	{/if}
 

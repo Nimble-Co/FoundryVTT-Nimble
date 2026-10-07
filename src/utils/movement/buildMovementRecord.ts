@@ -2,6 +2,7 @@ import type { MovementRecord, TokenPosition } from '#types/movement.js';
 import { type CombatLike, isInStartedCombat } from './isInStartedCombat.js';
 import { measureWaypointSpaces } from './measureWaypointSpaces.js';
 import { getMovementKind } from './movementKind.js';
+import { readMovementOfferTag } from './movementOfferTag.js';
 import { summariseMovementHistory } from './summariseMovementHistory.js';
 
 interface Waypoint extends TokenPosition {
@@ -21,6 +22,7 @@ interface MovementLike {
 		unrecorded: { waypoints: readonly Waypoint[] };
 	};
 	user: User;
+	constrainOptions?: unknown;
 }
 
 interface RecordableToken {
@@ -28,7 +30,9 @@ interface RecordableToken {
 	actor: Actor | null;
 	movementHistory: readonly { action: string }[];
 	parent?: { id?: string | null; grid?: { isGridless?: boolean; distance: number } } | null;
-	measureMovementPath(waypoints: object[]): { segments: { distance: number; spaces: number }[] };
+	measureMovementPath(waypoints: object[]): {
+		segments: { distance: number; cost?: number; spaces: number }[];
+	};
 	getCompleteMovementPath(waypoints: object[]): TokenPosition[];
 }
 
@@ -78,12 +82,15 @@ export function buildMovementRecord(
 	const origin = known[originIndex];
 
 	const legs = measureWaypointSpaces(token, known);
+	const costLegs = measureWaypointSpaces(token, known, 'cost');
 	let spaces = 0;
+	let costSpaces = 0;
 	for (let index = originIndex; index < legs.length; index++) {
 		const destination = known[index + 1];
 		if (!chainIds.has(destination.movementId ?? '')) continue;
 		if (getMovementKind(destination.action) === 'teleport') continue;
 		spaces += legs[index];
+		costSpaces += costLegs[index];
 	}
 
 	const path = token.getCompleteMovementPath(known.slice(originIndex)).map(toPosition);
@@ -99,10 +106,12 @@ export function buildMovementRecord(
 		stop: toPosition(lastPassed),
 		path,
 		spaces,
+		costSpaces,
 		spacesThisTurn: inStartedCombat
 			? summariseMovementHistory(token, token.movementHistory).counted
 			: null,
 		stopped: movement.state === 'stopped' || movement.constrained,
 		user: movement.user,
+		offer: readMovementOfferTag(movement.constrainOptions),
 	};
 }

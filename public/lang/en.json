@@ -118,6 +118,62 @@
 				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
 				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
 			},
+			"movementOffers": {
+				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"upTo": "up to {distance}",
+				"directions": {
+					"away": "away from {source}",
+					"toward": "toward {source}",
+					"any": "in any direction"
+				},
+				"distanceAndDirection": "{distance} {direction}",
+				"sentences": "{first} {second}",
+				"verbs": {
+					"away": { "past": "Pushed", "passive": "pushed" },
+					"toward": { "past": "Pulled", "passive": "pulled" },
+					"any": { "past": "Moved", "passive": "moved" }
+				},
+				"forFree": {
+					"plain": "for free",
+					"ignoringDifficultTerrain": "for free, ignoring difficult terrain"
+				},
+				"summary": {
+					"forced": "{verb} {motion}.",
+					"forcedBare": "{verb}.",
+					"free": "Can move {motion} {forFree}.",
+					"freeBare": "Can move {forFree}.",
+					"eachShowsSpaces": "Each creature shows its spaces."
+				},
+				"status": {
+					"forced": {
+						"open": "Waiting to be {passive} {motion}.",
+						"taken": "{verb} the full {offered}.",
+						"short": "{verb} {moved} of {offered}.",
+						"unused": "Not {passive}. The token was moved another way.",
+						"unusedAny": "Not moved by this effect. The token was moved another way.",
+						"lapsed": "Not {passive}. The turn ended first.",
+						"failedSave": "Will be {passive} {motion} on a failed save.",
+						"passedSave": "Will be {passive} {motion} on a passed save.",
+						"otherSave": "Will be {passive} {motion}, depending on the save."
+					},
+					"free": {
+						"open": "Can move {motion} {forFree}.",
+						"taken": "Moved the full {offered} for free.",
+						"partial": "Moved {moved} of {offered} for free.",
+						"short": "Moved {moved} of {offered} for free before something blocked the path.",
+						"unused": "Did not move for free. The token was moved another way.",
+						"lapsed": "Did not move for free. The turn ended first.",
+						"failedSave": "Can move {motion} for free on a failed save.",
+						"passedSave": "Can move {motion} for free on a passed save.",
+						"otherSave": "Can move {motion} for free, depending on the save."
+					}
+				},
+				"chip": { "notMoved": "Not {passive}", "notUsed": "Not used" },
+				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
+				"noRecipient": "No creature to move."
+			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
@@ -2672,6 +2728,20 @@
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
+			"move": "Move",
+			"moveNode": {
+				"kind": "Kind",
+				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
+				"recipient": "Who Moves",
+				"recipients": { "self": "The creature that uses this", "targets": "The targets" },
+				"distance": "Distance (spaces)",
+				"distanceHint": "A formula against the data of the creature that uses this: @abilities.strength.mod is the Strength modifier of that creature. @speed is the walk speed of the creature that moves.",
+				"upTo": "Show the distance as \"up to\" (the creature can move less)",
+				"distanceBySize": "Distance by size (optional)",
+				"ignoreDifficultTerrain": "Ignore difficult terrain",
+				"direction": "Direction",
+				"directions": { "any": "Any", "away": "Away", "toward": "Toward" }
+			},
 			"note": "Note",
 			"pool": "Pool",
 			"onFailedSave": "On Failed Save",
@@ -2702,6 +2772,7 @@
 			"noteType": "Note Type",
 			"deleteDamage": "Delete damage roll",
 			"deleteCondition": "Delete condition",
+			"deleteMove": "Delete move",
 			"deleteDamageOutcome": "Delete Damage Outcome",
 			"deleteNote": "Delete Note",
 			"deleteHealing": "Delete healing roll",
@@ -3102,6 +3173,10 @@
 			"chatNotifications": {
 				"name": "Chat Notifications",
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
+			},
+			"movementOffers": {
+				"name": "Forced Movement and Moves for Free",
+				"hint": "When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
 			},
 			"movementTracking": {
 				"name": "Movement Tracking",
@@ -3693,8 +3768,13 @@
 		},
 		"movement": {
 			"actions": {
-				"free": "Free Move",
+				"free": "Move for free",
 				"forced": "Forced Movement"
+			},
+			"ruler": {
+				"free": "Move for free: {spaces} of {limit}",
+				"forced": "Forced Movement: {spaces} of {limit}",
+				"switchTo": "{key}: switch to {movement}"
 			}
 		}
 	}

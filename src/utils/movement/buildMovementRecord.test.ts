@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildMovementRecord } from './buildMovementRecord.js';
 import { FORCED_MOVEMENT_ACTION } from './movementActions.js';
+import { MOVEMENT_OFFER_TAG_KEY } from './movementOfferTag.js';
 
 const GRID = 100;
 const user = { id: 'u1' } as unknown as User;
@@ -212,9 +213,44 @@ describe('buildMovementRecord', () => {
 		);
 	});
 
+	it('names the Movement Offer the drag was made under, and none otherwise', () => {
+		const tag = { messageId: 'card', offerId: 'n1.tok' };
+		const constrainOptions = { ignoreWalls: false, [MOVEMENT_OFFER_TAG_KEY]: tag };
+		expect(buildMovementRecord(makeToken(), makeMovement({ constrainOptions }))?.offer).toEqual(
+			tag,
+		);
+		expect(buildMovementRecord(makeToken(), makeMovement())?.offer).toBeNull();
+	});
+
 	it('returns null when nothing was passed', () => {
 		expect(
 			buildMovementRecord(makeToken(), makeMovement({ passed: { waypoints: [] } })),
 		).toBeNull();
+	});
+
+	it('records what the Movement cost next to its distance, for this chain only', () => {
+		const earlier = [waypoint(0, 0, 'm0'), waypoint(0, 4, 'm0')];
+		const movement = makeMovement({
+			passed: { waypoints: [waypoint(2, 4, 'm1'), waypoint(3, 4, 'm1')] },
+			history: { recorded: { waypoints: earlier }, unrecorded: { waypoints: [] } },
+		});
+		const token = makeToken();
+		const measure = token.measureMovementPath;
+		// The first leg of this chain crosses difficult terrain.
+		const costs = [9, 2, 1];
+		token.measureMovementPath = (waypoints) => ({
+			segments: measure(waypoints).segments.map((segment, index) => ({
+				...segment,
+				cost: segment.distance * costs[index],
+			})),
+		});
+		const record = buildMovementRecord(token, movement);
+		expect(record?.spaces).toBe(3);
+		expect(record?.costSpaces).toBe(5);
+	});
+
+	it('records a cost equal to the distance when the path has no cost of its own', () => {
+		const record = buildMovementRecord(makeToken(), makeMovement());
+		expect(record).toMatchObject({ spaces: 3, costSpaces: 3 });
 	});
 });

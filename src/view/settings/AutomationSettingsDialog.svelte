@@ -13,6 +13,7 @@
 		isResourceRecoveryAutomationEnabled,
 		isResourceSpendingAutomationEnabled,
 		isRuleAutomationEnabled,
+		readAutomationToggle,
 		setAutomationToggle,
 	} from '../../settings/automationSettings.js';
 
@@ -33,6 +34,7 @@
 		combatConvenience: isCombatConvenienceAutomationEnabled(),
 		chatNotifications: isChatNotificationsAutomationEnabled(),
 		movementTracking: isMovementTrackingAutomationEnabled(),
+		movementOffers: readAutomationToggle(AUTOMATION_SETTING_KEYS.movementOffers),
 	};
 
 	const toggles = $state({ ...initialValues });
@@ -42,7 +44,13 @@
 		{ legendKey: 'sectionResources', shortKeys: ['resourceRecovery', 'resourceSpending'] },
 		{
 			legendKey: 'sectionCombat',
-			shortKeys: ['actionTracking', 'healthStateSync', 'combatConvenience', 'movementTracking'],
+			shortKeys: [
+				'actionTracking',
+				'healthStateSync',
+				'combatConvenience',
+				'movementTracking',
+				'movementOffers',
+			],
 		},
 		{ legendKey: 'sectionChat', shortKeys: ['chatNotifications'] },
 	];
