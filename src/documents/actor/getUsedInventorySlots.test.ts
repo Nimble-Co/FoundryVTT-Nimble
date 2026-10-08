@@ -11,7 +11,7 @@ import { NimbleCharacter } from './character.js';
 function makeStub(objects: ObjectStub[], includeCurrencyBulk = false, goldPieces = 0) {
 	return {
 		items: { forEach: (callback: (item: ObjectStub) => void) => objects.forEach(callback) },
-		system: { currency: { gp: { value: goldPieces } } },
+		system: { currency: { gp: goldPieces } },
 		getFlag: () => includeCurrencyBulk,
 		getCarriedObjects: NimbleCharacter.prototype.getCarriedObjects,
 	} as unknown as NimbleCharacter;

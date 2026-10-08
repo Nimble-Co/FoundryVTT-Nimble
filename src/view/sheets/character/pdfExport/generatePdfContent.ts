@@ -521,12 +521,12 @@ function extractInventorySectionHtml(actor: NimbleCharacter): ContentSectionHtml
 	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
 	const { gp, sp, cp } = actor.system.currency;
 
-	if (objects.length === 0 && gp.value === 0 && sp.value === 0 && cp.value === 0) return null;
+	if (objects.length === 0 && gp === 0 && sp === 0 && cp === 0) return null;
 
 	const items: string[] = [];
 
 	// Currency always first
-	items.push(`• <strong>Currency:</strong> ${gp.value} GP, ${sp.value} SP, ${cp.value} CP`);
+	items.push(`• <strong>Currency:</strong> ${gp} GP, ${sp} SP, ${cp} CP`);
 
 	for (const obj of objects) {
 		const qty = obj.system.quantity ?? 1;
@@ -833,7 +833,7 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 	// Inventory items — currency always first, then individual objects
 	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
 	const { gp, sp, cp } = actor.system.currency;
-	const currencyText = `${gp.value} GP, ${sp.value} SP, ${cp.value} CP`;
+	const currencyText = `${gp} GP, ${sp} SP, ${cp} CP`;
 	items.push({
 		id: 'currency',
 		category: 'inventory',

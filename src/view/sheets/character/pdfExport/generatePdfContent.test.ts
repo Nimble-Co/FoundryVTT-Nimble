@@ -8,7 +8,10 @@ const CONDUIT_OF_SHADOW_DESCRIPTION =
 	'<p>@UUID[Compendium.nimble.nimble-spells.Item.9TNPdOXlCcGgxw6r]{Shadow Blast}</p>' +
 	'<p>@UUID[Compendium.nimble.nimble-spells.Item.ho2KADcmQWWTeYR0]{Summon Shadow}</p>';
 
-function createCharacterWithFeature(description: string): NimbleCharacter {
+function createCharacterWithFeature(
+	description: string,
+	currency = { gp: 0, sp: 0, cp: 0 },
+): NimbleCharacter {
 	const feature = {
 		id: 'conduitOfShadow01',
 		type: 'feature',
@@ -33,9 +36,7 @@ function createCharacterWithFeature(description: string): NimbleCharacter {
 				system: { groupIdentifiers: ['shadowmancer-progression'] },
 			},
 		},
-		system: {
-			currency: { gp: { value: 0 }, sp: { value: 0 }, cp: { value: 0 } },
-		},
+		system: { currency },
 	} as unknown as NimbleCharacter;
 }
 
@@ -51,5 +52,13 @@ describe('generateInitialColumnContentHtml', () => {
 		expect(content).not.toContain('@UUID');
 		expect(content).not.toContain('9TNPdOXlCcGgxw6r');
 		expect(content).not.toContain('ho2KADcmQWWTeYR0');
+	});
+
+	it('renders the coins the character carries', () => {
+		const columns = generateInitialColumnContentHtml(
+			createCharacterWithFeature('', { gp: 7, sp: 3, cp: 0 }),
+		);
+
+		expect(columns.join('\n')).toContain('<strong>Currency:</strong> 7 GP, 3 SP, 0 CP');
 	});
 });

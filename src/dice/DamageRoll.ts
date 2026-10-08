@@ -1,7 +1,7 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
+import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
-import { getPrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
 import { applyKeep, getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
