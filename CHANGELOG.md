@@ -6,6 +6,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.10.0] - 2026-10-07
+
+### Added
+
+- [#570] Each selection group is nested under its class, with a labelled heading beside the class features and subclass and a rail showing where a class ends. Ancestry and background keep their own sections. @trevlar
+- [#921] The unlocked spell tier derives from the `grantSpells` rules on a character's class, subclass and feature items, replacing a global level-to-tier table that contradicted every class ladder in pack data. A stored tier is still a manual override, and the scroll dialog warns when a scroll's tier is above what the actor has unlocked. @fronix
+- [#922] A class can declare that its tiered spells cost a charge pool instead of mana, with a cost per cast, an optional overdraft consequence, and the last level at which that consequence applies. It can also declare that its spells always cast at the highest unlocked tier. Both are editable on the class sheet's Config tab. @fronix
+- [#926] A charge pool can be promoted to the sheet header with a Show As Resource toggle, where it renders beside mana. Existing pools default to off. @fronix
+- [#933] A charge consumer can spend a player-chosen amount: the activation asks for a number, the item's formulas read it as `@spent`, and the card reports it. Lay on Hands uses it as a pool of `5 * @level` refilled on a Safe Rest. Migration 048 backfills existing copies. @fronix
+- [#951] The rest dialogs offer the class option picks a character holds, so options a class lets you re-pick can be swapped when the rest is confirmed. Adds the `optionSwap`, `skillPointMove` and `poolMaxBonus` rule types and a re-pick feature for every class. Migrations 049, 050 and 051 grant them to existing characters. @fronix
+- [#954] Imported Nimble Nexus monsters carry a credit to their creator in the sheet header, and the browse list shows it before you import. @fronix
+- [#971] A generated formula reference page lists every `@` shortcut and full path a formula can read, and which actor types carry each value. @fronix
+- [#974] An object can be marked as a container: items dragged onto its row are stored inside it, and the container decides what its contents cost their carrier. Capacity, allowed types and an equipped-only switch limit what it takes. Large Sack ships as one, and the bag of holding is supported as documented homebrew. Migration 064 resets off-list object size types. @trevlar
+- [#975] Casting an item with the concentration property applies the Concentrating condition to the caster, ending any concentration they already held, and the card shows an indicator. A `concentrationTrack` rule lets a named spell school hold a concentration of its own. Migrations 062 and 063 prune the redundant spell nodes and add the Master of Storm track. @trevlar
+- [#976] Movement Tracking, a world toggle in the Automation menu, records each finished token move, counts the spaces each combatant moves this turn, measures Reach between token footprints through the scene grid, and reports moves to features through the `movementFinished` hook and the `onMovementFinished` rule event. The system's own diagonal toggle is retired in favour of the world's Grid Diagonals setting. @fronix
+- [#977] A Move effect node lets a feature push, pull, or let a creature move for free. The Forced Movement and Moves for Free toggle arms the creature's token, so the next drag counts as that movement and the ruler shows how far it can go without ever stopping the drag. Tab switches between the offered movement and the token's own, and a character's Moves are drawn on the ruler on its own turn. @fronix
+- [#984] A Move for Free rule posts a card offering a free move on a use, a pool gain, an Initiative roll, a turn start or a crit, and a Movement Trigger rule offers an item on the creatures a finished move found. Both can be whispered. Fleet Feet, Swift Fury, Chaos Lash, Thunderous Steps and Coordinated Strike pilot them. Migration 067 brings existing copies up. @fronix
+- [#985] Objects gain a stowed slot cost, so armor costs one slot worn and two in a pack. Armor already in a world keeps its old cost. @trevlar
+- [#986] Every inventory row is reachable without a mouse, and each row gains a move button that stores an object or takes it back out. @trevlar
+- [#989] A `raiseMissThreshold` modifier lets a target raise the roll at or under which an attack misses, and the seven bandit stat blocks carry Parry at threshold 2. Migration 066 brings existing copies up. @trevlar
+
+### Fixed
+
+- [#920] Spell cost indicators on the sheet's spell list and the level-up card read a field that never existed, so a cost had never rendered. The cast dialog also blocked on insufficient mana with Resource Spending automation off, and an actor with no tier ladder was handed a slider up to tier 9. @fronix
+- [#958] On a scene with more than one level, the conditions grid landed under Change Level and Assign Status Effects showed the empty core palette. @fronix
+- [#979] A damage entry drew its roll twice on the card when it sat beside an outcome child carrying the same roll, nested under another entry's outcome bucket, or had its Target Disposition dropdown touched. Apply Damage removed twice the rolled amount in the nested case. @fronix
+- [#981] A crit card read both the On Critical Hit and On Hit buckets, so a homebrew effect holding a Damage Outcome under both applied one roll twice. @fronix
+- [#995] The primary die modifier was applied before the primary die rather than after it, and was missing from a set primary die result. @fronix
+
+### Changed
+
+- [#925] The Shadowmancer has no mana. Pilfered Power carries a charge pool of max DEX refreshed on a Safe Rest, spent one use per cast at the highest unlocked tier, with overdraw costing half maximum hit points up to level 11. Migration 052 moves existing Shadowmancers. @fronix
+- [#955] Aura of Refuge read a roll data key that does not exist, so its shield armor resolved to +0. Enveloped by the Master no longer raises max Wounds, Fleet Footed and Winged no longer add speed outside a Direbeast form, and Savage Awareness offers Perception advantage as a roll choice. Migration 053 corrects existing copies. @fronix
+- [#956] The Mage's Talented Researcher offers advantage on Arcana and Lore as a roll choice, and the Shepherd's Searing Light spends a pool of WIL uses per Safe Rest. Migration 054 brings existing copies up. @fronix
+- [#957] Commander Combat Dice are lost when combat ends, Hold the Line! heals the ally at 0 HP by 3 x LVL, I Can Do This ALL DAY! costs an action, and Commanding Presence no longer rolls damage it never deals. Migration 055 brings existing copies up. @fronix
+- [#959] Oathsworn Paragon of Virtue offers advantage and disadvantage on Influence checks, My Life, for My Friends makes Interpose free, and Master of Radiance offers a Radiant utility spell at levels 7 and 11. Reaction panels now print the resolved cost instead of a constant "1 Action". Migration 056 brings existing copies up. @fronix
+- [#960] Songweaver Inspiring Anthem heals and grants an action once per encounter, Chorus of Champions is a free reaction that gives the party an action, and the four friends track their Safe Rest use. Five features that wrongly carried the Inspiration reaction cost are passive now. Migration 057 brings existing copies up. @fronix
+- [#965] The Cheat! offers the gambler's advantage and a once-per-round action for a Move or a Hide, and Sweet Talk offers advantage and disadvantage on Influence checks. Migration 058 brings existing copies up. @fronix
+- [#967] Hunter Forager and Skilled Tracker offer advantage as roll choices, and Keen Sight gives every Perception check advantage. Migration 059 brings existing copies up. @fronix
+- [#969] Zephyr Swift Fists sets unarmed strike damage to 1d4+STR, Quickstrike grants the free unarmed strike before an Interpose, and Ethereal Projection tracks its once per day use. Migration 060 brings existing copies up. @fronix
+- [#972] Shadowmancer Whispers of the Grave tracks its once per day use, and Stormshifter Stormborn halves lightning damage and tracks its once per day advantage. Migration 061 brings existing copies up. @fronix
+- [#994] Aura of Zeal shipped with no rules, so an Oath of Vengeance Oathsworn rolled 2 Judgment Dice where the book gives 3. Migration 065 adds the pool modifier, leaving a hand-made one alone. @fronix
+
+---
+
+
 ## [0.9.0] - 2026-09-03
 
 ### Added
