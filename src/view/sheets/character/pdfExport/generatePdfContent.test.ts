@@ -34,7 +34,7 @@ function createCharacterWithFeature(description: string): NimbleCharacter {
 			},
 		},
 		system: {
-			currency: { gp: { value: 0 }, sp: { value: 0 }, cp: { value: 0 } },
+			currency: { gp: 0, sp: 0, cp: 0 },
 		},
 	} as unknown as NimbleCharacter;
 }

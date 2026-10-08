@@ -5,6 +5,7 @@ import type { SkillKeyType } from '#types/skillKey.js';
 import { DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
 import { RecordField } from '../fields/RecordField.js';
 import { abilities, savingThrows } from './common.js';
+import { flattenLegacyCurrency } from './flattenLegacyCurrency.js';
 
 const { fields } = foundry.data;
 
@@ -267,42 +268,9 @@ const characterSchema = () => ({
 		),
 	}),
 	currency: new fields.SchemaField({
-		cp: new fields.SchemaField({
-			label: new fields.StringField({
-				required: true,
-				nullable: false,
-				initial: 'NIMBLE.currencyAbbreviations.cp',
-			}),
-			value: new fields.NumberField({
-				required: true,
-				nullable: false,
-				initial: 0,
-			}),
-		}),
-		sp: new fields.SchemaField({
-			label: new fields.StringField({
-				required: true,
-				nullable: false,
-				initial: 'NIMBLE.currencyAbbreviations.sp',
-			}),
-			value: new fields.NumberField({
-				required: true,
-				nullable: false,
-				initial: 0,
-			}),
-		}),
-		gp: new fields.SchemaField({
-			label: new fields.StringField({
-				required: true,
-				nullable: false,
-				initial: 'NIMBLE.currencyAbbreviations.gp',
-			}),
-			value: new fields.NumberField({
-				required: true,
-				nullable: false,
-				initial: 0,
-			}),
-		}),
+		cp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		sp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		gp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 	}),
 	details: new fields.SchemaField({
 		age: new fields.StringField({
@@ -491,12 +459,6 @@ interface BonusHitDieEntry {
 	name: string;
 }
 
-/** Type definitions for currency entry */
-interface CurrencyData {
-	label: string;
-	value: number;
-}
-
 /** Type definitions for armor component */
 interface ArmorComponent {
 	mode: 'add' | 'multiply' | 'override';
@@ -602,9 +564,9 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 		levels: string[];
 	};
 	declare currency: {
-		cp: CurrencyData;
-		sp: CurrencyData;
-		gp: CurrencyData;
+		cp: number;
+		sp: number;
+		gp: number;
 	};
 	declare details: {
 		age: string;
@@ -645,6 +607,12 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			...savingThrows(),
 		};
 	}
+
+	static override migrateData(source: Record<string, any>): Record<string, any> {
+		flattenLegacyCurrency(source);
+		return super.migrateData(source);
+	}
+
 	// This is necessary to ensure that derived data is included in the toObject data.
 	override toObject(source: true): this['_source'];
 	override toObject(source?: boolean): ReturnType<this['schema']['toObject']>;

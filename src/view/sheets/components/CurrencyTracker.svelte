@@ -8,27 +8,20 @@
 	let currency = $derived(actor.reactive?.system?.currency);
 </script>
 
-{#each Object.entries(currency).reverse() as [key, denomination] (key)}
+{#each Object.entries(currency).reverse() as [key, amount] (key)}
 	<label class="nimble-currency-wrapper">
 		<h4 class="nimble-heading" data-heading-variant="section">
-			{#if denomination.label}
-				{localize(denomination.label)}
-			{:else}
-				{localize(`NIMBLE.currencyAbbreviations.${key}`)}
-			{/if}
-
-			{#if !denomination.label || denomination.label === `NIMBLE.currencyAbbreviations.${key}`}
-				<div class="nimble-coin nimble-coin--{key}"></div>
-			{/if}
+			{localize(`NIMBLE.currencyAbbreviations.${key}`)}
+			<div class="nimble-coin nimble-coin--{key}"></div>
 		</h4>
 
 		<input
 			type="number"
 			class="nimble-currency-field"
-			value={denomination.value}
+			value={amount}
 			onchange={({ target }) =>
 				actor.update({
-					[`system.currency.${key}.value`]: target.value,
+					[`system.currency.${key}`]: target.value,
 				})}
 		/>
 	</label>
