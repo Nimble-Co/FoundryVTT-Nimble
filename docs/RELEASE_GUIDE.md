@@ -66,7 +66,7 @@ When you've created the changelog file, confirm in the script prompt. The script
 5. Checkout the `main` branch
 6. Merge `dev` into `main`
 7. Create a git tag for the version
-8. Push the `main` branch and tags to origin
+8. Push the `main` branch and the release tag to origin
 
 After running, you'll be on the `main` branch ready to create the GitHub release.
 

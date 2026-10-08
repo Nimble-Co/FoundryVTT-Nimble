@@ -262,9 +262,14 @@ async function release() {
 	execCommand(`git tag ${newVersion}`, { cwd: rootDir }, dryRun);
 	console.log(`${dryRun ? '[DRY-RUN] Would create' : 'Created'} tag: ${newVersion}`);
 
-	// Push main branch and tags
-	execCommand('git push origin main --tags', { cwd: rootDir, stdio: 'inherit' }, dryRun);
-	console.log(`${dryRun ? '[DRY-RUN] Would push' : 'Pushed'} main branch and tags to origin`);
+	// Push main branch and the release tag. Pushing --tags would also push every
+	// other local tag, including the rolling dev-release tag, whose remote value is
+	// moved by CI and cannot be rewound.
+	execCommand('git push origin main', { cwd: rootDir, stdio: 'inherit' }, dryRun);
+	execCommand(`git push origin ${newVersion}`, { cwd: rootDir, stdio: 'inherit' }, dryRun);
+	console.log(
+		`${dryRun ? '[DRY-RUN] Would push' : 'Pushed'} main branch and tag ${newVersion} to origin`,
+	);
 
 	if (dryRun) {
 		console.log(`\n${'='.repeat(60)}`);
