@@ -22,6 +22,15 @@ type TargetToken = {
 	name?: string;
 };
 
+type ReactionRule = {
+	type: string;
+	mode: string;
+	priority: number;
+	appliesTo: () => boolean;
+	matchesReaction: (reactionKey: string) => boolean;
+	resolveValue: () => number | null;
+};
+
 type ReactionActor = {
 	id: string;
 	name: string;
@@ -31,6 +40,7 @@ type ReactionActor = {
 		unarmedDamage: string;
 	};
 	permission: number;
+	rules: ReactionRule[];
 	reactive: {
 		system: {
 			attributes: {
@@ -39,6 +49,7 @@ type ReactionActor = {
 				};
 			};
 		};
+		rules: ReactionRule[];
 		items?: Item[];
 	};
 	items?: {
@@ -47,7 +58,22 @@ type ReactionActor = {
 	activateItem?: ReturnType<typeof vi.fn>;
 };
 
-function createReactionActor(): ReactionActor {
+/**
+ * Stands in for an `actionCost` rule that reprices one heroic reaction.
+ * `resolveHeroicReactionActionCost` reads only these members.
+ */
+function createReactionCostRule(reactionKey: string, cost: number): ReactionRule {
+	return {
+		type: 'actionCost',
+		mode: 'set',
+		priority: 1,
+		appliesTo: () => true,
+		matchesReaction: (key: string) => key === reactionKey,
+		resolveValue: () => cost,
+	};
+}
+
+function createReactionActor(rules: ReactionRule[] = []): ReactionActor {
 	return {
 		id: 'reaction-panel-actor',
 		name: 'Shield Bearer',
@@ -57,6 +83,8 @@ function createReactionActor(): ReactionActor {
 			unarmedDamage: '1d4',
 		},
 		permission: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
+		// The live document returns itself from `reactive`, so both views share the rules.
+		rules,
 		reactive: {
 			system: {
 				attributes: {
@@ -65,6 +93,7 @@ function createReactionActor(): ReactionActor {
 					},
 				},
 			},
+			rules,
 		},
 	};
 }
@@ -255,6 +284,48 @@ describe('reaction panel confirmation wrappers', () => {
 
 		expect(onUseCombinedReaction).toHaveBeenCalledWith({ force: true });
 		await waitFor(() => expect(ChatMessage.create).toHaveBeenCalledTimes(2));
+	});
+
+	it('prints the resolved cost when an actionCost rule makes interpose free', () => {
+		const actor = createReactionActor([createReactionCostRule('interpose', 0)]);
+
+		const interposePanel = render(InterposeReactionPanel.default, {
+			props: {
+				actor,
+				reactionDisabled: false,
+				combinedReactionDisabled: false,
+				defendSpent: false,
+				interposeSpent: false,
+				noActions: false,
+				onUseReaction: vi.fn().mockResolvedValue(true),
+				onUseCombinedReaction: vi.fn().mockResolvedValue(true),
+			},
+		});
+
+		expect(
+			interposePanel.container.querySelector('.reaction-panel__cost')?.textContent?.trim(),
+		).toBe('Free');
+		// Interpose is free, so the combined use costs the defend action only.
+		expect(
+			interposePanel.container.querySelector('.reaction-panel__button-cost')?.textContent?.trim(),
+		).toBe('(1 Action)');
+
+		const defendPanel = render(DefendReactionPanel.default, {
+			props: {
+				actor,
+				reactionDisabled: false,
+				combinedReactionDisabled: false,
+				defendSpent: false,
+				interposeSpent: false,
+				noActions: false,
+				onUseReaction: vi.fn().mockResolvedValue(true),
+				onUseCombinedReaction: vi.fn().mockResolvedValue(true),
+			},
+		});
+
+		expect(defendPanel.container.querySelector('.reaction-panel__cost')?.textContent?.trim()).toBe(
+			`1 ${game.i18n.localize('NIMBLE.activationCosts.action')}`,
+		);
 	});
 
 	it('does not activate an opportunity attack weapon when the confirmation dialog is cancelled', async () => {

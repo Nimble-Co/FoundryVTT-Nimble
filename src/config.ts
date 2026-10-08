@@ -154,6 +154,7 @@ const characterCreation = {
 
 const actorImport = {
 	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
+	creatorPrefix: 'NIMBLE.actorImport.creatorPrefix',
 	jsonButtonLabel: 'NIMBLE.actorImport.jsonButtonLabel',
 	dialogTitle: 'NIMBLE.actorImport.dialogTitle',
 	searchPlaceholder: 'NIMBLE.actorImport.searchPlaceholder',
@@ -373,6 +374,55 @@ const effectTypes = {
 	healing: 'NIMBLE.effectTypes.healing',
 } as const;
 
+/**
+ * Headings for the named selection groups a class offers. A group with no entry here
+ * (a homebrew one, say) falls back to its kebab-case key read as Title Case.
+ */
+const featureGroupHeadings: Record<string, string> = {
+	'a-people-person': 'NIMBLE.featureGroupHeadings.a-people-person',
+	beastmaster: 'NIMBLE.featureGroupHeadings.beastmaster',
+	'champion-of-the-bulwark': 'NIMBLE.featureGroupHeadings.champion-of-the-bulwark',
+	'champion-of-the-vanguard': 'NIMBLE.featureGroupHeadings.champion-of-the-vanguard',
+	'chimeric-boon': 'NIMBLE.featureGroupHeadings.chimeric-boon',
+	'circle-of-fang-and-claw': 'NIMBLE.featureGroupHeadings.circle-of-fang-and-claw',
+	'circle-of-sky-and-storm': 'NIMBLE.featureGroupHeadings.circle-of-sky-and-storm',
+	'combat-tactics': 'NIMBLE.featureGroupHeadings.combat-tactics',
+	'commanders-orders': 'NIMBLE.featureGroupHeadings.commanders-orders',
+	'direbeast-form': 'NIMBLE.featureGroupHeadings.direbeast-form',
+	'greater-invocations': 'NIMBLE.featureGroupHeadings.greater-invocations',
+	'herald-of-courage': 'NIMBLE.featureGroupHeadings.herald-of-courage',
+	'herald-of-snark': 'NIMBLE.featureGroupHeadings.herald-of-snark',
+	'invoker-of-chaos': 'NIMBLE.featureGroupHeadings.invoker-of-chaos',
+	'invoker-of-control': 'NIMBLE.featureGroupHeadings.invoker-of-control',
+	'keeper-of-the-shadowpath': 'NIMBLE.featureGroupHeadings.keeper-of-the-shadowpath',
+	'keeper-of-the-wildheart': 'NIMBLE.featureGroupHeadings.keeper-of-the-wildheart',
+	'lesser-invocations': 'NIMBLE.featureGroupHeadings.lesser-invocations',
+	'luminary-of-malice': 'NIMBLE.featureGroupHeadings.luminary-of-malice',
+	'luminary-of-mercy': 'NIMBLE.featureGroupHeadings.luminary-of-mercy',
+	'lyrical-weaponry': 'NIMBLE.featureGroupHeadings.lyrical-weaponry',
+	'martial-arts-ability': 'NIMBLE.featureGroupHeadings.martial-arts-ability',
+	'oath-of-refuge': 'NIMBLE.featureGroupHeadings.oath-of-refuge',
+	'oath-of-vengeance': 'NIMBLE.featureGroupHeadings.oath-of-vengeance',
+	oathbreaker: 'NIMBLE.featureGroupHeadings.oathbreaker',
+	'pact-of-the-abyssal-depths': 'NIMBLE.featureGroupHeadings.pact-of-the-abyssal-depths',
+	'pact-of-the-red-dragon': 'NIMBLE.featureGroupHeadings.pact-of-the-red-dragon',
+	'path-of-the-mountainheart': 'NIMBLE.featureGroupHeadings.path-of-the-mountainheart',
+	'path-of-the-red-mist': 'NIMBLE.featureGroupHeadings.path-of-the-red-mist',
+	reaver: 'NIMBLE.featureGroupHeadings.reaver',
+	'sacred-decree': 'NIMBLE.featureGroupHeadings.sacred-decree',
+	'sacred-grace': 'NIMBLE.featureGroupHeadings.sacred-grace',
+	'savage-arsenal': 'NIMBLE.featureGroupHeadings.savage-arsenal',
+	spellblade: 'NIMBLE.featureGroupHeadings.spellblade',
+	spellshaper: 'NIMBLE.featureGroupHeadings.spellshaper',
+	'thrill-of-the-hunt': 'NIMBLE.featureGroupHeadings.thrill-of-the-hunt',
+	'tools-of-the-scoundrel': 'NIMBLE.featureGroupHeadings.tools-of-the-scoundrel',
+	'tools-of-the-silent-blade': 'NIMBLE.featureGroupHeadings.tools-of-the-silent-blade',
+	'underhanded-abilities': 'NIMBLE.featureGroupHeadings.underhanded-abilities',
+	'way-of-flame': 'NIMBLE.featureGroupHeadings.way-of-flame',
+	'way-of-pain': 'NIMBLE.featureGroupHeadings.way-of-pain',
+	'weapon-mastery': 'NIMBLE.featureGroupHeadings.weapon-mastery',
+};
+
 const featureTypeHeadings = {
 	ancestry: 'NIMBLE.featureTypeHeadings.ancestry',
 	ancestryBonus: 'NIMBLE.featureTypeHeadings.ancestryBonus',
@@ -489,6 +539,13 @@ const npcArmorTypeAbbreviations = {
 	heavy: 'H',
 };
 
+const containerSlotCostModes = {
+	none: 'NIMBLE.containerSlotCostModes.none',
+	ignore: 'NIMBLE.containerSlotCostModes.ignore',
+	reduce: 'NIMBLE.containerSlotCostModes.reduce',
+	half: 'NIMBLE.containerSlotCostModes.half',
+};
+
 const objectSizeTypes = {
 	slots: 'NIMBLE.objectSizeTypes.slots',
 	stackable: 'NIMBLE.objectSizeTypes.stackable',
@@ -509,6 +566,13 @@ const objectTypes = {
 	weapon: 'NIMBLE.objectTypes.weapon',
 	consumable: 'NIMBLE.objectTypes.consumable',
 	misc: 'NIMBLE.objectTypes.misc',
+};
+
+// Keyed by the value stored on a class's spell cost. The empty key is the
+// absence of a consequence, which makes exceeding the pool a hard block.
+const overdraftConsequences = {
+	'': 'NIMBLE.overdraftConsequences.none',
+	halfMaxHpDamage: 'NIMBLE.overdraftConsequences.halfMaxHpDamage',
 };
 
 const restTypes = {
@@ -586,6 +650,8 @@ const skills: Record<SkillKeyType, string> = {
 const spellUpcastDialog = {
 	upcastHeading: 'NIMBLE.spells.spellUpcastDialog.upcastHeading',
 	castSpell: 'NIMBLE.spells.spellUpcastDialog.castSpell',
+	cost: 'NIMBLE.spells.spellUpcastDialog.cost',
+	castsAtTier: 'NIMBLE.spells.spellUpcastDialog.castsAtTier',
 	manaInfo: {
 		currentManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.currentManaCost',
 		upcastManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.upcastManaCost',
@@ -600,6 +666,20 @@ const spellUpcastDialog = {
 	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
+	warnings: {
+		minMana: 'NIMBLE.spells.spellUpcastDialog.warnings.minMana',
+		insufficientMana: 'NIMBLE.spells.spellUpcastDialog.warnings.insufficientMana',
+		aboveMaxTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveMaxTier',
+		aboveUnlockedTier: 'NIMBLE.spells.spellUpcastDialog.warnings.aboveUnlockedTier',
+		upcastFailed: 'NIMBLE.spells.spellUpcastDialog.warnings.upcastFailed',
+		cantripCannotUpcast: 'NIMBLE.spells.spellUpcastDialog.warnings.cantripCannotUpcast',
+		spellCannotUpcast: 'NIMBLE.spells.spellUpcastDialog.warnings.spellCannotUpcast',
+	},
+};
+
+const spellNotifications = {
+	insufficientMana: 'NIMBLE.spells.notifications.insufficientMana',
+	pinnedUpcastChoice: 'NIMBLE.spells.notifications.pinnedUpcastChoice',
 };
 
 const spellProperties = {
@@ -967,6 +1047,7 @@ const NIMBLE = {
 	charges,
 	classBanners,
 	classes,
+	containerSlotCostModes,
 	creatureFeatures,
 	damageTypes,
 	data,
@@ -975,6 +1056,7 @@ const NIMBLE = {
 	durationTypesPlural,
 	effectApplications,
 	effectTypes,
+	featureGroupHeadings,
 	featureTypeHeadings,
 	featureTypes,
 	fieldRest,
@@ -1004,6 +1086,7 @@ const NIMBLE = {
 	objectSizeTypes,
 	objectTypeHeadings,
 	objectTypes,
+	overdraftConsequences,
 	restTypes,
 	rollCheckTypes,
 	safeRest,
@@ -1016,6 +1099,7 @@ const NIMBLE = {
 	sizeCategoryDescriptions,
 	skillPointAssignment,
 	skills,
+	spellNotifications,
 	spellUpcastDialog,
 	spellProperties,
 	startingEquipment,

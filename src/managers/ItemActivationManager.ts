@@ -1,10 +1,25 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
+import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
+import {
+	findConflictingVariablePools,
+	findUnofferableVariableSpends,
+	getChargeConsumers,
+	getFixedChargeCostsByPool,
+} from '#utils/chargePool/helpers.js';
+import type {
+	CharacterActorLike,
+	ChargeConsumptionDetail,
+	RuleBackedItem,
+} from '#utils/chargePool/types.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
+import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../utils/attackDelivery.js';
@@ -13,10 +28,10 @@ import {
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/attackUtils.js';
-import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
 import { buildTargetDomain } from '../utils/conditionalBonuses.js';
 import {
+	emitDicePoolChanged,
 	maximizePoolDie,
 	rollDieIntoPool,
 	rollPoolFresh,
@@ -30,9 +45,23 @@ import {
 	type IncomingAttackPlan,
 } from '../utils/incomingAttackModifiers.js';
 import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
+import localize from '../utils/localize.js';
+import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
-import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
+import {
+	applyUpcastDeltas,
+	UpcastError,
+	type UpcastErrorCode,
+} from '../utils/spell/applyUpcastDeltas.js';
+import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
+import {
+	exceedsUnlockedSpellTier,
+	resolveEffectiveCastTier,
+	resolvePinnedCastTier,
+	resolveSpellCost,
+	synthesizePinnedUpcast,
+} from '../utils/spell/spellCost.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -80,10 +109,56 @@ class ItemActivationManager {
 	/** Result of spell upcasting, if applicable. */
 	upcastResult: UpcastResult | null = null;
 
+	/**
+	 * The tier the spell is forced to resolve at when the actor's class
+	 * declares that its spells always cast at the highest unlocked tier.
+	 * Resolved here rather than in the dialog so the macro and skip-dialog
+	 * paths get the same tier.
+	 */
+	pinnedCastTier: number | null = null;
+
+	/**
+	 * The resolved cost of this cast, for spells. Set before the dialog from
+	 * the pinned tier when one lifts the spell, else from the spell's own tier,
+	 * then re-resolved against the tier actually cast once an upcast has been
+	 * applied.
+	 */
+	spellCost: ResolvedSpellCost | null = null;
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
+
+	/**
+	 * Charge spends named in the activation dialog, held until the caller has
+	 * cleared the preUseItem gate. Deducting them during getData() would spend
+	 * the pool before the gate validates it, and the gate reads a variable
+	 * consumer's minimum against what is left: spending a pool to empty would
+	 * fail its own validation and lose the charges with no card.
+	 */
+	#deferredChargeSpends: Array<{ poolId: string; count: number }> = [];
+
+	#deferredVariableSpends: Array<{ poolId: string; count: number }> = [];
+
+	/**
+	 * Dice-pool faces named in the dialog, held for the same reason: the gate
+	 * refuses a use over its charge cost, and a refused use must not have eaten
+	 * the dice the player picked for it.
+	 */
+	#deferredPoolDice: Array<{ poolId: string; faceIndex: number }> = [];
+
+	/**
+	 * What the player spent from charge pools in the activation dialog, in the
+	 * shape the chat card's consumption readout renders. The rule-driven spend
+	 * writes the same flag from the useItem hook; this one is stamped when the
+	 * card is created, which is after the deferred spend has settled.
+	 */
+	#chargeConsumption: ChargeConsumptionDetail[] = [];
+
+	get chargeConsumption(): ChargeConsumptionDetail[] {
+		return this.#chargeConsumption;
+	}
 
 	/**
 	 * Creates a new ItemActivationManager.
@@ -124,6 +199,27 @@ class ItemActivationManager {
 	async getData() {
 		const options = this.#options;
 
+		if (this.#item.type === 'spell' && this.actor) {
+			this.pinnedCastTier = resolvePinnedCastTier(this.actor, this.#item);
+
+			// Checked on every activation path, not just the dialog, so a macro or
+			// a spell without a tier control cannot cast above the caster's ladder.
+			if (exceedsUnlockedSpellTier(this.actor, this.#item)) {
+				ui.notifications?.warn(
+					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
+						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
+					}),
+				);
+				return { activation: null, rolls: null };
+			}
+
+			this.spellCost = resolveSpellCost(this.actor, this.#item, {
+				castTier:
+					resolveEffectiveCastTier(this.#item as unknown as SpellLike, this.pinnedCastTier) ??
+					undefined,
+			});
+		}
+
 		const rollOptions = {
 			domain: this.#getItemDomain(),
 			executeMacro: options.executeMacro ?? false,
@@ -135,10 +231,36 @@ class ItemActivationManager {
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
 
+		// A pinned cast tier applies on every activation path, so the macro and
+		// skip-dialog routes synthesize the upcast the dialog would have chosen.
+		if (this.#item.type === 'spell' && !dialogData.upcast) {
+			const synthesized = synthesizePinnedUpcast(
+				this.#item as unknown as SpellLike,
+				this.pinnedCastTier,
+			);
+			if (synthesized) {
+				if (synthesized.choiceIndex !== undefined && options.upcastChoiceIndex !== undefined) {
+					synthesized.choiceIndex = options.upcastChoiceIndex;
+				}
+				dialogData.upcast = synthesized;
+			}
+		}
+
 		// Apply upcast deltas if present
 		if (dialogData.upcast && this.#item.type === 'spell') {
 			const spellSystem = this.#item.system as any;
 			const actorSystem = this.actor!.system as any;
+			// Mana affordability only applies when mana is what the cast
+			// costs; a class-declared pool cost is validated at spend time.
+			const flatCost = this.spellCost?.type === 'pool';
+			const enforceManaCost = isResourceSpendingAutomationEnabled() && !flatCost;
+			const bounds = computeUpcastBounds({
+				spellTier: spellSystem.tier,
+				resources: actorSystem.resources,
+				enforceManaCost,
+				flatCost,
+				pinnedCastTier: this.pinnedCastTier,
+			});
 			const context = {
 				spell: {
 					tier: spellSystem.tier,
@@ -146,25 +268,49 @@ class ItemActivationManager {
 				},
 				actor: {
 					resources: {
-						mana: {
-							current: actorSystem.resources?.mana?.current || 0,
-						},
-						// In any case highestUnlockedSpellTier isn't set correctly we default to highest tier to ensure upcasting works
-						highestUnlockedSpellTier: actorSystem.resources?.highestUnlockedSpellTier ?? 9,
+						mana: { current: bounds.currentMana },
+						highestUnlockedSpellTier: bounds.maxTier,
 					},
 				},
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
+				enforceManaCost,
 			};
 
 			try {
 				const upcastData = applyUpcastDeltas(context);
 				this.activationData = upcastData.activationData;
 				this.upcastResult = upcastData.upcastResult;
+				// The cost was first resolved before the tier was known. Re-resolve
+				// it against the tier actually cast so callers read the real cost.
+				if (this.actor) {
+					this.spellCost = resolveSpellCost(this.actor, this.#item, {
+						castTier: upcastData.upcastResult.manaSpent,
+					});
+				}
 			} catch (error) {
+				// Mapped by hand so a code without a message is a type error.
+				if (error instanceof UpcastError) {
+					const { warnings } = CONFIG.NIMBLE.spellUpcastDialog;
+					const messageKeys: Record<UpcastErrorCode, string> = {
+						cantripCannotUpcast: warnings.cantripCannotUpcast,
+						spellCannotUpcast: warnings.spellCannotUpcast,
+						insufficientMana: warnings.insufficientMana,
+						belowBaseTier: warnings.minMana,
+						aboveUnlockedTier: warnings.aboveMaxTier,
+					};
+					ui.notifications?.error(localize(messageKeys[error.refusal.code], error.refusal.data));
+					console.warn('Nimble | Upcast refused:', error.message);
+					return { activation: null, rolls: null };
+				}
+
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-				ui.notifications?.error(`Upcast failed: ${errorMessage}`);
+				ui.notifications?.error(
+					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.upcastFailed, {
+						error: errorMessage,
+					}),
+				);
 				return { activation: null, rolls: null };
 			}
 		}
@@ -178,13 +324,14 @@ class ItemActivationManager {
 			{ delivery: this.#getAttackDelivery() },
 		);
 
+		// Hold what the dialog spent until the caller clears the preUseItem gate.
+		// The dialog already included the dice faces in rollFormula above. Settled
+		// before the rolls so the spend and the `@spent` the formulas resolve
+		// against are capped by one reading of the pools.
+		this.#deferPoolSpends(dialogData);
+
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
-
-		// Persist consumption of pool dice the player spent in the dialog.
-		// The dialog already included their face value in rollFormula above.
-		await this.#consumePoolDice(dialogData);
-		await this.#consumeChargePools(dialogData);
 
 		return {
 			rolls,
@@ -233,6 +380,13 @@ class ItemActivationManager {
 		const effects = this.activationData?.effects ?? [];
 		const updatedEffects: EffectNode[] = [];
 		const rolls: (Roll | DamageRoll)[] = [];
+		// `@spent` is only meaningful for this activation, so it is added here
+		// rather than on the actor's roll data. Absent a variable spend it is 0,
+		// which keeps a formula referencing it from failing to parse.
+		const activationRollData = {
+			...(this.actor?.getRollData() ?? {}),
+			spent: this.#resolveSpentCharges(),
+		};
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
 		// roll evaluates (automatic rerolls need the outcome).
@@ -362,6 +516,9 @@ class ItemActivationManager {
 							damageOptions.rollModeSources = sources;
 						}
 						if (incomingAttackPlan.forceMiss) damageOptions.forceMiss = true;
+						if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
+							damageOptions.missThreshold = incomingAttackPlan.missThreshold;
+						}
 						if (incomingAttackPlan.appliedEntries.length > 0) {
 							(damageOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
 								incomingAttackPlan.appliedEntries;
@@ -372,7 +529,7 @@ class ItemActivationManager {
 
 					roll = new dependencies.DamageRoll(
 						formula,
-						this.actor!.getRollData() as DamageRoll.Data,
+						activationRollData as DamageRoll.Data,
 						damageOptions,
 					);
 
@@ -385,7 +542,9 @@ class ItemActivationManager {
 						formula = this.#applyHealingBonus(formula, healingBonus);
 					}
 
-					roll = new Roll(formula, this.actor!.getRollData()) as Roll;
+					// The extra `spent` key widens the roll data past Roll's default
+					// EmptyObject parameter, which the two types will not narrow between.
+					roll = new Roll(formula, activationRollData) as unknown as Roll;
 				}
 
 				await roll.evaluate();
@@ -496,9 +655,10 @@ class ItemActivationManager {
 	 * from the same pool are removed in descending index order so earlier
 	 * removals don't shift later indices.
 	 */
-	async #consumePoolDice(dialogData: ItemActivationManager.DialogData): Promise<void> {
-		const consumed = dialogData.consumedPoolDice;
-		if (!Array.isArray(consumed) || consumed.length < 1) return;
+	async #consumePoolDice(): Promise<void> {
+		const consumed = this.#deferredPoolDice;
+		this.#deferredPoolDice = [];
+		if (consumed.length < 1) return;
 
 		const actor = this.actor as Actor.Implementation | null;
 		if (!actor) return;
@@ -547,14 +707,122 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Persist consumption of charge-pool charges the player spent in the dialog.
-	 * The dialog already added `+Nd<size>[Label]` to the damage formula so the
-	 * dice roll as part of the damage roll; this step decrements the charge
-	 * pool's current count by the spent amount.
+	 * The most each of this item's variable consumers can spend right now, keyed
+	 * by pool id.
+	 *
+	 * Two claims come off the same pool later in the activation and are reserved
+	 * rather than spent twice over: the item's own fixed charge costs, and any
+	 * rollable charges the player also chose to spend from that pool.
 	 */
-	async #consumeChargePools(dialogData: ItemActivationManager.DialogData): Promise<void> {
-		const consumed = dialogData.consumedChargePools;
-		if (!Array.isArray(consumed) || consumed.length < 1) return;
+	#getVariableChargeCeilings(
+		rollableSpends: Array<{ poolId: string; count: number }> = [],
+	): Map<string, number> {
+		const ceilings = new Map<string, number>();
+
+		const actor = this.actor;
+		if (actor?.type !== 'character') return ceilings;
+
+		const variablePoolIds = new Set(
+			getChargeConsumers(
+				actor as unknown as CharacterActorLike,
+				this.#item as unknown as RuleBackedItem,
+				{ includeVariable: true },
+			)
+				.filter((consumer) => consumer.variable)
+				.map((consumer) => consumer.poolId),
+		);
+		if (variablePoolIds.size < 1) return ceilings;
+
+		const fixedCosts = getFixedChargeCostsByPool(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
+		const pools = getChargePools(actor as unknown as Actor.Implementation);
+		for (const poolId of variablePoolIds) {
+			const current = pools.find((candidate) => candidate.id === poolId)?.current ?? 0;
+			const rollable = rollableSpends
+				.filter((entry) => entry?.poolId === poolId)
+				.reduce((total, entry) => total + Math.max(0, Math.floor(Number(entry.count) || 0)), 0);
+			ceilings.set(poolId, Math.max(0, current - (fixedCosts.get(poolId) ?? 0) - rollable));
+		}
+
+		return ceilings;
+	}
+
+	/**
+	 * What the item's own formulas read as `@spent`: the variable spends the
+	 * dialog submitted, after `#deferPoolSpends` capped them at what their pools
+	 * can pay. Reading the deducted numbers rather than a separate total from the
+	 * dialog is what keeps the effect and the pool in step when a pool moved
+	 * underneath the open dialog.
+	 */
+	#resolveSpentCharges(): number {
+		return this.#deferredVariableSpends.reduce((total, entry) => total + entry.count, 0);
+	}
+
+	/**
+	 * The dialog's variable spends, each capped at what its pool can still pay.
+	 * The dialog bounded the player's choice against a snapshot taken when it
+	 * opened, which the pool may have moved out from under.
+	 */
+	#clampVariableSpends(
+		entries: unknown,
+		rollableSpends: Array<{ poolId: string; count: number }>,
+	): Array<{ poolId: string; count: number }> {
+		if (!Array.isArray(entries)) return [];
+
+		const ceilings = this.#getVariableChargeCeilings(rollableSpends);
+		const clamped: Array<{ poolId: string; count: number }> = [];
+		for (const entry of entries as Array<{ poolId?: unknown; count?: unknown }>) {
+			if (!entry || typeof entry.poolId !== 'string') continue;
+			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
+			const ceiling = ceilings.get(entry.poolId);
+			if (ceiling === undefined) continue;
+			const allowed = Math.min(count, ceiling);
+			if (allowed < 1) continue;
+			clamped.push({ poolId: entry.poolId, count: allowed });
+		}
+
+		return clamped;
+	}
+
+	/**
+	 * Collect what the dialog spent, to be applied once the caller has cleared
+	 * the preUseItem gate. See `#deferredChargeSpends` and `#deferredPoolDice`.
+	 */
+	#deferPoolSpends(dialogData: ItemActivationManager.DialogData): void {
+		// One activation, one readout: reset rather than append, so a manager
+		// reused for a second getData() does not report the first spend again.
+		this.#chargeConsumption = [];
+
+		const charges = dialogData.consumedChargePools;
+		this.#deferredChargeSpends = Array.isArray(charges) ? [...charges] : [];
+		this.#deferredVariableSpends = this.#clampVariableSpends(
+			dialogData.consumedVariableCharges,
+			this.#deferredChargeSpends,
+		);
+
+		const dice = dialogData.consumedPoolDice;
+		this.#deferredPoolDice = Array.isArray(dice) ? [...dice] : [];
+	}
+
+	/**
+	 * Persist consumption of charge-pool charges the player spent in the dialog:
+	 * both rollable charges, whose dice the dialog already added to the damage
+	 * formula, and variable spends, whose amount the item's own effects read as
+	 * `@spent`. Either way this step decrements the pool by what was spent.
+	 *
+	 * Skipped with spending automation off, which leaves the pool for the table
+	 * to track. The dialog still asks for the amount: it feeds the item's own
+	 * effect formulas, so suppressing it would heal for nothing rather than
+	 * hand the count back to the GM.
+	 */
+	async #consumeChargePools(): Promise<void> {
+		const consumed = [...this.#deferredChargeSpends, ...this.#deferredVariableSpends];
+		this.#deferredChargeSpends = [];
+		this.#deferredVariableSpends = [];
+		if (consumed.length < 1) return;
+		if (!isResourceSpendingAutomationEnabled()) return;
 
 		const actor = this.actor as Actor.Implementation | null;
 		if (!actor) return;
@@ -564,29 +832,34 @@ class ItemActivationManager {
 			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
 			if (count < 1) continue;
 			// adjustPool with negative-equivalent: 'add' supports only non-negative
-			// values, so read current and 'set' to current - count.
-			let currentValue = 0;
-			for (const item of actor.items.contents) {
-				const map = foundry.utils.getProperty(item, ChargePoolRuleConfig.flagPath) as
-					| Record<string, { current?: number }>
-					| undefined;
-				const poolEntry = map?.[entry.poolId];
-				if (poolEntry && typeof poolEntry.current === 'number') {
-					currentValue = poolEntry.current;
-					break;
-				}
-			}
-			const next = Math.max(0, currentValue - count);
-			await adjustPool(actor, entry.poolId, 'set', next);
+			// values, so read current and 'set' to current - count. Read through
+			// getPools rather than the item flags directly: an actor-scoped pool is
+			// stored on the actor, and scanning items alone would read it as 0 and
+			// wipe the pool instead of deducting from it.
+			const pool = getChargePools(actor).find((candidate) => candidate.id === entry.poolId);
+			if (!pool) continue;
+			const next = Math.max(0, pool.current - count);
+			if (next === pool.current) continue;
+			const adjusted = await adjustPool(actor, entry.poolId, 'set', next);
+			if (!adjusted) continue;
+
+			this.#chargeConsumption.push({
+				poolLabel: pool.label,
+				previousValue: pool.current,
+				currentValue: next,
+				maxValue: pool.max,
+				change: next - pool.current,
+			});
 		}
 	}
 
 	/**
-	 * Apply the pool effect nodes collected during getData. Pool nodes carry
-	 * actor-state side effects, so they must not run until the caller has
-	 * cleared the preUseItem gate (which fires after getData); results are
-	 * recorded on the same node objects the activation data references, so
-	 * the chat card still renders them. Safe to call once per activation.
+	 * Apply the pool side effects collected during getData: the pool effect
+	 * nodes, and the dice and charges the activation dialog spent. All mutate
+	 * actor state, so they must not run until the caller has cleared the
+	 * preUseItem gate (which fires after getData); results are recorded on the
+	 * same node objects the activation data references, so the chat card still
+	 * renders them. Safe to call once per activation.
 	 */
 	async applyDeferredPoolNodes(): Promise<void> {
 		const nodes = this.#deferredPoolNodes;
@@ -594,6 +867,8 @@ class ItemActivationManager {
 		for (const node of nodes) {
 			await this.#applyPoolNode(node);
 		}
+		await this.#consumePoolDice();
+		await this.#consumeChargePools();
 	}
 
 	/**
@@ -684,11 +959,20 @@ class ItemActivationManager {
 				// player can see what was rolled.
 				const rolledFaces: number[] = [];
 				for (let i = 0; i < count; i += 1) {
-					const result = await rollDieIntoPool(actor, poolId, { suppressChat });
+					const result = await rollDieIntoPool(actor, poolId, { suppressChat, emitChange: false });
 					if (result.face !== null) rolledFaces.push(result.face);
 					if (result.applied) applied = true;
 				}
 				const after = readPool();
+				if (applied) {
+					emitDicePoolChanged(
+						actor as unknown as CharacterActorLike,
+						poolId,
+						after.label ?? before.label,
+						before.faces,
+						after.faces,
+					);
+				}
 				node.result = {
 					applied,
 					poolLabel: after.label ?? before.label,
@@ -816,6 +1100,18 @@ class ItemActivationManager {
 		const options = this.#options;
 
 		if (options.fastForward) {
+			// No window opens here, and a pinned tier that lands on a list of
+			// enhancements has no default: the pick belongs to the player. Refuse
+			// unless the caller named one, as an unofferable variable spend does.
+			if (this.#hasPinnedUpcastChoice() && options.upcastChoiceIndex === undefined) {
+				ui.notifications?.error(
+					game.i18n.format(CONFIG.NIMBLE.spellNotifications.pinnedUpcastChoice, {
+						item: this.#item.name ?? '',
+					}),
+				);
+				return null;
+			}
+
 			return {
 				rollMode: options.rollMode ?? 0,
 				rollFormula: options.rollFormula,
@@ -835,7 +1131,40 @@ class ItemActivationManager {
 		// Check if this is a spell (for upcast dialog)
 		const isSpell = this.#item.type === 'spell';
 
-		if (!hasRolls && !isSpell) {
+		// The preUseItem gate refuses this too, but it fires after the dialog, and
+		// the dialog is what a duplicate pool breaks: it renders one prompt per
+		// pool, so two would collide. Refuse before opening it.
+		const conflict = this.#findConflictingVariableSpend();
+		if (conflict) {
+			ui.notifications?.error(
+				game.i18n.format('NIMBLE.charges.notifications.conflictingConsumers', {
+					item: this.#item.name ?? '',
+					pool: conflict,
+				}),
+			);
+			return null;
+		}
+
+		// Same reason: the dialog would render no prompt for a spend it cannot
+		// offer, so the player would fill in a blank window and roll before the
+		// gate refused the use.
+		const unofferable = this.#findUnofferableVariableSpend();
+		if (unofferable) {
+			ui.notifications?.error(
+				game.i18n.format('NIMBLE.charges.notifications.unofferableSpend', {
+					item: this.#item.name ?? '',
+					pool: unofferable,
+				}),
+			);
+			return null;
+		}
+
+		// A variable charge spend has no sensible default — the amount is the
+		// player's input — so an item that asks for one always gets the dialog.
+		// The same holds for the enhancement a pinned upcast picks from a list.
+		const mustPrompt = this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice();
+
+		if (!hasRolls && !isSpell && !mustPrompt) {
 			// No rolls needed, use default
 			return this.#getDefaultDialogData(rollOptions);
 		}
@@ -847,7 +1176,8 @@ class ItemActivationManager {
 		});
 		unsubscribe();
 
-		const skipDialog = this.activationData?.skipRollDialog ? !altPressed : altPressed;
+		const skipDialog =
+			!mustPrompt && (this.activationData?.skipRollDialog ? !altPressed : altPressed);
 
 		if (skipDialog) {
 			return this.#getDefaultDialogData(rollOptions);
@@ -858,18 +1188,65 @@ class ItemActivationManager {
 			? dependencies.SpellUpcastDialog
 			: dependencies.ItemActivationConfigDialog;
 
-		const dialog = new DialogClass(
-			this.actor,
-			this.#item,
-			`Activate ${this.#item.name}`,
-			rollOptions,
-		);
+		const dialog = new DialogClass(this.actor, this.#item, `Activate ${this.#item.name}`, {
+			...rollOptions,
+			pinnedCastTier: this.pinnedCastTier,
+			spellCost: this.spellCost,
+		});
 		await dialog.render(true);
 		const result = await dialog.promise;
 		if (result) return result;
 
 		// If dialog is cancelled, don't roll
 		return null;
+	}
+
+	/** The pool this item asks to spend a chosen amount from twice, if any. */
+	#findConflictingVariableSpend(): string | null {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return null;
+
+		const [conflict] = findConflictingVariablePools(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
+		return conflict?.poolIdentifier ?? null;
+	}
+
+	/** The first pool whose player-chosen spend cannot be offered, if any. */
+	#findUnofferableVariableSpend(): string | null {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return null;
+
+		const [unofferable] = findUnofferableVariableSpends(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
+		return unofferable?.poolLabel ?? null;
+	}
+
+	/** Whether this item spends a player-chosen number of charges. */
+	#hasVariableChargeSpend(): boolean {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return false;
+
+		return getChargeConsumers(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+			{
+				includeVariable: true,
+			},
+		).some((consumer) => consumer.variable);
+	}
+
+	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
+	#hasPinnedUpcastChoice(): boolean {
+		if (this.#item.type !== 'spell') return false;
+		const synthesized = synthesizePinnedUpcast(
+			this.#item as unknown as SpellLike,
+			this.pinnedCastTier,
+		);
+		return synthesized?.choiceIndex !== undefined;
 	}
 
 	/**
@@ -942,6 +1319,12 @@ namespace ItemActivationManager {
 		executeMacro?: boolean;
 		/** Skip dialogs and use provided/default values directly. */
 		fastForward?: boolean;
+		/**
+		 * The upcast enhancement to apply, by index, for a caller that skips the
+		 * dialog. A pinned cast tier that reaches a list of enhancements is
+		 * refused without it, so nothing picks one on the player's behalf.
+		 */
+		upcastChoiceIndex?: number;
 		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode?: number;
 		/**
@@ -1011,6 +1394,13 @@ namespace ItemActivationManager {
 		 * pool's current count after the roll succeeds.
 		 */
 		consumedChargePools?: Array<{ poolId: string; count: number }>;
+		/**
+		 * Charges spent by this item's variable charge consumers, per pool. Their
+		 * total is what the item's own effect formulas read as `@spent`, which is
+		 * how an activation whose effect *is* the amount spent gets at the
+		 * player's choice.
+		 */
+		consumedVariableCharges?: Array<{ poolId: string; count: number }>;
 		/**
 		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
 		 * grants a specific damage type). Each becomes its own damage effect so the

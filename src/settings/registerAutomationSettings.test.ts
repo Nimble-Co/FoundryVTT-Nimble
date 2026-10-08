@@ -26,7 +26,7 @@ type SettingsMock = {
 	storage: { get: ReturnType<typeof vi.fn> };
 };
 
-type RegisteredSettingConfig = { default?: boolean };
+type RegisteredSettingConfig = { default?: boolean; onChange?: (value: unknown) => void };
 
 /**
  * Installs a settings mock simulating a world database. `worldStorageContents`
@@ -73,7 +73,7 @@ function expectOtherTogglesDefaultTrue(settingsMock: SettingsMock): void {
 	const otherSettingKeys = Object.values(AUTOMATION_SETTING_KEYS).filter(
 		(settingKey) => settingKey !== AUTOMATION_SETTING_KEYS.applyRuleEffects,
 	);
-	expect(otherSettingKeys).toHaveLength(7);
+	expect(otherSettingKeys).toHaveLength(9);
 	for (const settingKey of otherSettingKeys) {
 		expect(getRegisteredConfig(settingsMock, settingKey)).toMatchObject({ default: true });
 	}
@@ -88,8 +88,8 @@ describe('registerAutomationSettings', () => {
 
 		registerAutomationSettings();
 
-		// The legacy setting plus the 8 automation family toggles.
-		expect(settingsMock.register).toHaveBeenCalledTimes(9);
+		// The legacy setting plus the 10 automation family toggles.
+		expect(settingsMock.register).toHaveBeenCalledTimes(11);
 		for (const [namespace] of settingsMock.register.mock.calls) {
 			expect(namespace).toBe(SYSTEM_ID);
 		}
@@ -157,5 +157,44 @@ describe('registerAutomationSettings', () => {
 			getRegisteredConfig(settingsMock, AUTOMATION_SETTING_KEYS.applyRuleEffects),
 		).toMatchObject({ default: true });
 		expectOtherTogglesDefaultTrue(settingsMock);
+	});
+
+	it('re-prepares the actors of started combats when the Movement Tracking toggle changes', () => {
+		const settingsMock = setupSettingsMock({
+			worldStorageContents: [],
+			legacyStoredValue: false,
+		});
+		const fighting = { reset: vi.fn(), render: vi.fn() };
+		const waiting = { reset: vi.fn(), render: vi.fn() };
+		(game as unknown as { combats: unknown }).combats = [
+			{ started: true, combatants: [{ actor: fighting }] },
+			{ started: false, combatants: [{ actor: waiting }] },
+		];
+
+		registerAutomationSettings();
+		const onChange = getRegisteredConfig(
+			settingsMock,
+			AUTOMATION_SETTING_KEYS.movementTracking,
+		)?.onChange;
+		onChange?.(false);
+		onChange?.(true);
+
+		expect(fighting.reset).toHaveBeenCalledTimes(2);
+		expect(fighting.render).toHaveBeenCalledWith(false);
+		expect(waiting.reset).not.toHaveBeenCalled();
+	});
+
+	it('gives no other automation toggle an onChange', () => {
+		const settingsMock = setupSettingsMock({
+			worldStorageContents: [],
+			legacyStoredValue: false,
+		});
+
+		registerAutomationSettings();
+
+		for (const settingKey of Object.values(AUTOMATION_SETTING_KEYS)) {
+			if (settingKey === AUTOMATION_SETTING_KEYS.movementTracking) continue;
+			expect(getRegisteredConfig(settingsMock, settingKey)?.onChange).toBeUndefined();
+		}
 	});
 });

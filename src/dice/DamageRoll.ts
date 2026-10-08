@@ -1,7 +1,8 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
+import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { getPrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
-import { getNimbleMods } from './nimbleDieModifiers.js';
+import { applyKeep, getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -14,14 +15,18 @@ declare namespace DamageRoll {
 	interface Options extends foundry.dice.Roll.Options {
 		/** Whether this roll can score a critical hit (exploding die). */
 		canCrit: boolean;
-		/** Whether this roll can miss (rolling a 1 on the primary die). */
+		/** Whether this roll can miss based on the primary die. */
 		canMiss: boolean;
 		/** The minimum roll value needed to score a critical hit. */
 		criticalThreshold?: number;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
 		damageType?: string;
-		/** The maximum roll value that counts as a fumble/miss. */
-		fumbleThreshold?: number;
+		/**
+		 * The highest primary-die result that counts as a miss. Defaults to 1.
+		 * Raised by target-side incoming-attack rules. Only consulted when
+		 * `canMiss`.
+		 */
+		missThreshold?: number;
 		/** The roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode: number;
 		/**
@@ -43,6 +48,8 @@ declare namespace DamageRoll {
 		primaryDieValue: number;
 		/** A modifier to add to the primary die result. */
 		primaryDieModifier: number;
+		/** The primary die roll before primaryDieModifier was added (computed; do not set manually). */
+		primaryDieBaseResult?: number;
 		/**
 		 * Whether the primary die's base result contributes to damage.
 		 * When false, the primary die is used only for hit/miss/crit detection,
@@ -110,13 +117,13 @@ declare namespace DamageRoll {
  *
  * DamageRoll extends Foundry's Roll class with support for:
  * - Critical hit detection via exploding primary dice
- * - Miss detection when rolling a 1 on the primary die
+ * - Miss detection against a configurable primary-die threshold
  * - Advantage/disadvantage on damage (roll multiple primary dice, keep highest/lowest)
  * - Automatic separation and tracking of the "primary die" from the formula
  *
  * The primary die is the first die term in the formula and determines critical/miss status.
  * When the primary die explodes (rolls max value), the roll is a critical hit.
- * When the primary die rolls a 1, the roll is a miss.
+ * When the primary die rolls at or below the miss threshold, the roll is a miss.
  *
  * @extends {foundry.dice.Roll<DamageRoll.Data>}
  *
@@ -341,7 +348,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				number: 1,
 				faces: faces ?? 6,
 				modifiers: [],
-				options: { flavor: 'Primary Die', isVicious, ...diceSoNiceOptions },
+				options: {
+					flavor: 'Primary Die',
+					isVicious,
+					missThreshold: options.missThreshold,
+					...diceSoNiceOptions,
+				},
 			});
 
 			// Apply advantage/disadvantage to primary die only (keeps 1)
@@ -351,15 +363,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
 			if (shouldExplode && explosionStyle === 'standard') primaryTerm.modifiers.push('x');
 
-			this._applyPrimaryDiePresets(primaryTerm, options);
 			this.terms.unshift(primaryTerm);
+			this._applyPrimaryDiePresets(primaryTerm, options);
 		} else {
 			// Single-die formula: convert to PrimaryDie
 			primaryTerm = new PrimaryDie({
 				number: 1,
 				faces: firstDieTerm.faces ?? 6,
 				modifiers: [],
-				options: { isVicious, ...diceSoNiceOptions },
+				options: { isVicious, missThreshold: options.missThreshold, ...diceSoNiceOptions },
 			});
 
 			// Apply advantage/disadvantage (keeps 1)
@@ -369,10 +381,10 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
 			if (shouldExplode && explosionStyle === 'standard') primaryTerm.modifiers.push('x');
 
-			this._applyPrimaryDiePresets(primaryTerm, options);
-
 			const idx = this.terms.findIndex((t) => t instanceof Terms.Die);
 			if (idx !== -1) this.terms[idx] = primaryTerm;
+
+			this._applyPrimaryDiePresets(primaryTerm, options);
 		}
 
 		this.primaryDie = primaryTerm;
@@ -385,24 +397,37 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
 	 */
 	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
-		if (options.primaryDieValue) {
-			primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
+		const { primaryDieValue, primaryDieModifier } = options;
+		const faces = primaryTerm.faces;
+		if (typeof faces !== 'number' || (!primaryDieValue && !primaryDieModifier)) return;
+
+		// The preset applies to the die that stays, so the pool is rolled and dropped here.
+		const poolSize = Math.max(1, Number(primaryTerm.number) || 1);
+		const results: foundry.dice.terms.DiceTerm.Result[] = Array.from({ length: poolSize }, () => ({
+			result: Math.ceil(Math.random() * faces),
+			active: true,
+		}));
+		if (poolSize > 1) {
+			const keepHighest = primaryTerm.modifiers.some((modifier) => modifier.startsWith('khn'));
+			applyKeep(results, 1, keepHighest);
+			primaryTerm.options.keepResolved = true;
 		}
 
-		const faces = primaryTerm.faces;
-		if (options.primaryDieModifier && faces) {
-			const baseResult = Math.ceil(Math.random() * faces);
-			const modifiedResult = baseResult + options.primaryDieModifier;
+		const kept = results.find((result) => result.active) ?? results[0];
+		if (primaryDieValue) kept.result = primaryDieValue;
+
+		if (primaryDieModifier) {
+			this.options.primaryDieBaseResult = kept.result;
+			const modifiedResult = kept.result + primaryDieModifier;
+			kept.result = Math.min(modifiedResult, faces);
 			if (modifiedResult > faces) {
-				primaryTerm.results = [{ result: faces, active: true }];
-				const excess = modifiedResult - faces;
-				const excessTerm = new Terms.NumericTerm({ number: excess });
+				const excessTerm = new Terms.NumericTerm({ number: modifiedResult - faces });
 				const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
 				this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
-			} else {
-				primaryTerm.results = [{ result: modifiedResult, active: true }];
 			}
 		}
+
+		primaryTerm.results = results;
 	}
 
 	/**
@@ -491,7 +516,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 *
 	 * After evaluation, checks the primary die's results to determine:
 	 * - `isCritical`: true if the primary die exploded (rolled max value)
-	 * - `isMiss`: true if the primary die rolled a 1
+	 * - `isMiss`: true if the primary die rolled at or below the miss threshold
 	 *
 	 * For vicious weapons, explosion dice are rolled manually after the initial roll
 	 * to avoid preemptive rolling that would show in visual dice mods like Dice So Nice.
@@ -782,8 +807,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				return !(meta && !meta.canCrit && meta.explosionStyle === 'none');
 			});
 			if (missDie) {
+				const threshold = this.options.missThreshold ?? DEFAULT_MISS_THRESHOLD;
 				const firstActive = missDie.results.find((r) => r.active && !r.discarded);
-				this.isMiss = firstActive?.result === 1;
+				this.isMiss =
+					firstActive !== undefined &&
+					firstActive.result <= threshold &&
+					firstActive.result !== missDie.faces;
 			} else {
 				// All dice are neutral — no die qualifies for miss detection
 				this.isMiss = false;
@@ -958,8 +987,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
 		const options = (data.options ?? baseRoll.options) as DamageRoll.Options;
 		const damageData = data.data ?? {};
+		const primaryDieBaseResult = options?.primaryDieBaseResult;
 
 		const roll = new DamageRoll(formula, damageData, options);
+
+		// The constructor rolls a new base result; keep the recorded one.
+		if (primaryDieBaseResult === undefined) delete roll.options.primaryDieBaseResult;
+		else roll.options.primaryDieBaseResult = primaryDieBaseResult;
 
 		if (baseRoll.terms && baseRoll.terms.length > 0) {
 			// Restore terms from baseRoll (which has properly reconstructed term instances)

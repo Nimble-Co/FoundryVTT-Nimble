@@ -33,7 +33,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 3,
-			auto: ['Elemental Mastery'],
+			auto: ['Elemental Mastery', 'Study!'],
 			pools: [],
 			subclass: [
 				{

@@ -1,5 +1,6 @@
 <script>
 	import localize from '../../../../utils/localize.js';
+	import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.js';
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
@@ -11,8 +12,7 @@
 			mod > 0 ? count + mod : count,
 		);
 
-		// skill points capped at 12
-		if (skillMod >= 12) return false;
+		if (skillMod >= MAX_SKILL_MODIFIER) return false;
 		if (skillPointRemoved && skillPointChanges[skillKey] === 2) return false;
 		if (!skillPointRemoved && skillPointAdded) return false;
 		if (quantityOfSkillsWithPointsAdded === 2) return false;
@@ -26,8 +26,7 @@
 			mod > 0 ? count + mod : count,
 		);
 
-		// skill points capped at 12
-		if (skillMod >= 12) return skillPointAssignment.maxSkillBonus;
+		if (skillMod >= MAX_SKILL_MODIFIER) return skillPointAssignment.maxSkillBonus;
 		if (skillPointRemoved && skillPointChanges[skillKey] === 2)
 			return skillPointAssignment.onlyOneNewPointAndOneTransferAllowed;
 		if (!skillPointRemoved && skillPointAdded)
@@ -181,7 +180,7 @@
 				{@const skillPointChange = skillPointChanges[key] ?? 0}
 				{@const abilityBonus = isAbilitySelected ? 1 : 0}
 				{@const totalSkillPoints = skill.points + skillPointChange + abilityBonus}
-				{@const isOverMax = totalSkillPoints > 12}
+				{@const isOverMax = totalSkillPoints > MAX_SKILL_MODIFIER}
 				{@const skillMod = getSkillMod(skill, key, skillPointChange)}
 
 				<tr class:nimble-skill-over-cap={isOverMax}>

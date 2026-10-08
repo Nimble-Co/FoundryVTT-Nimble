@@ -9,7 +9,7 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "A diamond  worth at least 10,000 gp",
+				"details": "",
 				"quantity": 1,
 				"type": "action",
 				"isReaction": false

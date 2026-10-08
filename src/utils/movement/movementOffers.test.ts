@@ -1,0 +1,497 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { MoveNode } from '#types/effectTree.js';
+import type { MovementOffer, OfferCard } from '#types/movement.js';
+import {
+	findArmedMovementOffer,
+	forgetArmedMovementOffers,
+	lapseMovementOffers,
+	movementOfferOutcome,
+	type OfferToken,
+	reconcileMovementOffers,
+	settleMovementOffer,
+	untrackMovementOffers,
+} from './movementOffers.js';
+
+const RollGlobal = Roll as unknown as {
+	replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
+	safeEval?: (expression: string) => number;
+};
+const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+
+beforeAll(() => {
+	RollGlobal.replaceFormulaData = (formula, data) =>
+		formula.replace('@speed', String(data.speed)).replace('@str', String(data.str));
+	RollGlobal.safeEval = (expression) => {
+		if (!/^[\d\s+\-*/().]+$/.test(expression)) throw new Error(`unsafe: ${expression}`);
+		return Function(`"use strict"; return (${expression});`)() as number;
+	};
+});
+
+afterAll(() => {
+	RollGlobal.replaceFormulaData = original.replace;
+	RollGlobal.safeEval = original.safeEval;
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
+
+function moveNode(over: Partial<MoveNode> = {}): MoveNode {
+	return {
+		id: 'n1',
+		type: 'move',
+		kind: 'forced',
+		recipient: 'targets',
+		distance: '@str + @speed',
+		distanceBySize: {},
+		ignoreDifficultTerrain: false,
+		direction: 'away',
+		parentContext: null,
+		parentNode: null,
+		...over,
+	};
+}
+
+function makeActor(str: number, walk: number) {
+	return {
+		getRollData: () => ({ str }),
+		system: { attributes: { movement: { walk }, sizeCategory: 'medium' } },
+	};
+}
+
+const hero = { name: 'Hero', actor: makeActor(3, 6) };
+const goblin = { name: 'Goblin', actor: makeActor(-1, 4) };
+const ogre = { name: 'Ogre', actor: makeActor(4, 8) };
+const tokens: Record<string, OfferToken> = {
+	'Scene.s.Token.hero': hero,
+	'Scene.s.Token.gob': goblin,
+	'Scene.s.Token.ogre': ogre,
+};
+const lookups = {
+	resolveToken: (uuid: string) => tokens[uuid] ?? null,
+	resolveActor: () => null,
+};
+
+function card(
+	effects: unknown[] = [moveNode()],
+	targets = ['Scene.s.Token.gob'],
+	movementOffers: MovementOffer[] = [],
+	outcome: { isCritical?: boolean; isMiss?: boolean } = {},
+): OfferCard {
+	return {
+		id: 'm1',
+		speaker: { scene: 's', token: 'hero', actor: 'a-hero' },
+		system: { targets, activation: { effects: effects as never[] }, movementOffers, ...outcome },
+	};
+}
+
+function offer(over: Partial<MovementOffer> = {}): MovementOffer {
+	return {
+		id: 'n1.gob',
+		nodeId: 'n1',
+		tokenUuid: 'Scene.s.Token.gob',
+		name: 'Goblin',
+		kind: 'forced',
+		spaces: 7,
+		ignoreDifficultTerrain: true,
+		state: 'open',
+		usedBy: null,
+		movedSpaces: null,
+		stopped: false,
+		conditional: false,
+		...over,
+	};
+}
+
+describe('reconcileMovementOffers', () => {
+	it("works out one offer per recipient from the feature user's data and the mover's speed", () => {
+		expect(reconcileMovementOffers(card(), lookups)).toEqual([offer()]);
+	});
+
+	it('makes a self offer to the speaker token', () => {
+		const offers = reconcileMovementOffers(
+			card([moveNode({ recipient: 'self', kind: 'free', distance: '@speed' })]),
+			lookups,
+		);
+		expect(offers).toEqual([
+			offer({
+				id: 'n1.hero',
+				tokenUuid: 'Scene.s.Token.hero',
+				name: 'Hero',
+				kind: 'free',
+				spaces: 6,
+				ignoreDifficultTerrain: false,
+			}),
+		]);
+	});
+
+	it('uses the source the caller already holds', () => {
+		const offers = reconcileMovementOffers(card(), { ...lookups, source: makeActor(10, 0) });
+		expect(offers[0].spaces).toBe(14);
+	});
+
+	it('finds the feature user through the speaker actor when the speaker token is gone', () => {
+		const offers = reconcileMovementOffers(card(), {
+			resolveToken: (uuid) => (uuid === 'Scene.s.Token.gob' ? goblin : null),
+			resolveActor: (id) => (id === 'a-hero' ? hero.actor : null),
+		});
+		expect(offers[0].spaces).toBe(7);
+	});
+
+	it('keeps an offer as it was made when the card is reconciled again', () => {
+		const made = offer({ spaces: 2 });
+		expect(reconcileMovementOffers(card(undefined, undefined, [made]), lookups)).toEqual([made]);
+	});
+
+	it('adds an offer for a target added later and leaves the others alone', () => {
+		const made = offer({ spaces: 2 });
+		const offers = reconcileMovementOffers(
+			card(undefined, ['Scene.s.Token.gob', 'Scene.s.Token.ogre'], [made]),
+			lookups,
+		);
+		expect(offers.map((o) => [o.id, o.spaces])).toEqual([
+			['n1.gob', 2],
+			['n1.ogre', 11],
+		]);
+	});
+
+	it('drops an open or untracked offer with its removed target but keeps a settled one', () => {
+		const open = offer();
+		const taken = offer({ id: 'n1.ogre', tokenUuid: 'Scene.s.Token.ogre', state: 'taken' });
+		const untracked = offer({ id: 'n1.orc', tokenUuid: 'Scene.s.Token.orc', state: 'untracked' });
+		expect(reconcileMovementOffers(card(undefined, [], [open, taken, untracked]), lookups)).toEqual(
+			[taken],
+		);
+	});
+
+	it('skips a recipient that does not resolve here', () => {
+		expect(reconcileMovementOffers(card(undefined, ['Scene.s.Token.gone']), lookups)).toEqual([]);
+	});
+
+	it('keeps an offer of zero spaces, so a later change to the creature does not make one', () => {
+		const zero = card([moveNode({ distance: '@speed - 5' })]);
+		const [made] = reconcileMovementOffers(zero, lookups);
+		expect(made).toEqual(offer({ spaces: 0 }));
+
+		const faster = {
+			...lookups,
+			resolveToken: (uuid: string) =>
+				uuid === 'Scene.s.Token.gob' ? { ...goblin, actor: makeActor(-1, 9) } : null,
+		};
+		const again = card([moveNode({ distance: '@speed - 5' })], undefined, [made]);
+		expect(reconcileMovementOffers(again, faster)).toEqual([made]);
+	});
+
+	it('finds a move node nested under another effect', () => {
+		const nested = [{ id: 'd', type: 'damage', on: { hit: [moveNode()] } }];
+		expect(reconcileMovementOffers(card(nested), lookups)).toEqual([offer()]);
+	});
+
+	it('makes no offer on a card with no move node', () => {
+		expect(reconcileMovementOffers(card([]), lookups)).toEqual([]);
+	});
+});
+
+describe('reconcileMovementOffers on an outcome branch', () => {
+	const underAttack = (context: string) => [
+		{ id: 'd', type: 'damage', on: { [context]: [moveNode()] } },
+	];
+	const underSave = (context: string) => [
+		{ id: 's', type: 'savingThrow', on: { [context]: [moveNode()] } },
+	];
+	const ids = (offers: MovementOffer[]) => offers.map((o) => [o.id, o.conditional]);
+
+	it('makes the offer under On Hit on a hit', () => {
+		expect(ids(reconcileMovementOffers(card(underAttack('hit')), lookups))).toEqual([
+			['n1.gob', false],
+		]);
+	});
+
+	it('makes no offer under On Hit on a miss', () => {
+		const missed = card(underAttack('hit'), undefined, [], { isMiss: true });
+		expect(reconcileMovementOffers(missed, lookups)).toEqual([]);
+	});
+
+	it('makes the offer under On Miss only on a miss', () => {
+		const missed = card(underAttack('miss'), undefined, [], { isMiss: true });
+		expect(ids(reconcileMovementOffers(missed, lookups))).toEqual([['n1.gob', false]]);
+		expect(reconcileMovementOffers(card(underAttack('miss')), lookups)).toEqual([]);
+	});
+
+	it('reads a critical hit as a hit too', () => {
+		const crit = { isCritical: true };
+		expect(
+			ids(reconcileMovementOffers(card(underAttack('hit'), undefined, [], crit), lookups)),
+		).toEqual([['n1.gob', false]]);
+		expect(
+			ids(reconcileMovementOffers(card(underAttack('criticalHit'), undefined, [], crit), lookups)),
+		).toEqual([['n1.gob', false]]);
+		expect(reconcileMovementOffers(card(underAttack('criticalHit')), lookups)).toEqual([]);
+	});
+
+	it('drops the open offer an outcome no longer makes, but keeps a settled one', () => {
+		const open = offer();
+		const taken = offer({ id: 'n1.ogre', tokenUuid: 'Scene.s.Token.ogre', state: 'taken' });
+		const targets = ['Scene.s.Token.gob', 'Scene.s.Token.ogre'];
+		const missed = card(underAttack('hit'), targets, [open, taken], { isMiss: true });
+		expect(reconcileMovementOffers(missed, lookups)).toEqual([taken]);
+	});
+
+	it('adds the offer under On Critical Hit when a hit turns critical', () => {
+		const effects = [
+			{ id: 'd', type: 'damage', on: { hit: [moveNode()], criticalHit: [moveNode({ id: 'n2' })] } },
+		];
+		const hit = reconcileMovementOffers(card(effects), lookups);
+		expect(ids(hit)).toEqual([['n1.gob', false]]);
+
+		const crit = card(effects, undefined, hit, { isCritical: true });
+		expect(ids(reconcileMovementOffers(crit, lookups))).toEqual([
+			['n1.gob', false],
+			['n2.gob', false],
+		]);
+	});
+
+	it('stamps a conditional offer under a save outcome', () => {
+		for (const context of ['failedSave', 'passedSave']) {
+			expect(ids(reconcileMovementOffers(card(underSave(context)), lookups))).toEqual([
+				['n1.gob', true],
+			]);
+		}
+		const bySave = [{ id: 's', type: 'savingThrow', on: { failedSaveBy: { 5: [moveNode()] } } }];
+		expect(ids(reconcileMovementOffers(card(bySave), lookups))).toEqual([['n1.gob', true]]);
+	});
+
+	it('reads every outcome up the chain, not only the parent', () => {
+		const nested = [
+			{
+				id: 'd',
+				type: 'damage',
+				on: { hit: [{ id: 's', type: 'savingThrow', on: { failedSave: [moveNode()] } }] },
+			},
+		];
+		expect(ids(reconcileMovementOffers(card(nested), lookups))).toEqual([['n1.gob', true]]);
+		expect(reconcileMovementOffers(card(nested, undefined, [], { isMiss: true }), lookups)).toEqual(
+			[],
+		);
+	});
+});
+
+describe('findArmedMovementOffer', () => {
+	const message = (id: string, offers: MovementOffer[]): OfferCard => ({
+		id,
+		system: { movementOffers: offers },
+	});
+
+	it('is the open offer a card makes to the token, with its card', () => {
+		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
+			messages: [message('m1', [offer()])],
+			enabled: true,
+		});
+		expect(armed).toEqual({ ...offer(), messageId: 'm1' });
+	});
+
+	it('prefers the newest card, so a second push supersedes the first', () => {
+		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
+			messages: [message('old', [offer()]), message('new', [offer({ spaces: 3 })])],
+			enabled: true,
+		});
+		expect(armed?.messageId).toBe('new');
+	});
+
+	it('passes over a settled offer to an older open one', () => {
+		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
+			messages: [message('old', [offer()]), message('new', [offer({ state: 'taken' })])],
+			enabled: true,
+		});
+		expect(armed?.messageId).toBe('old');
+	});
+
+	it('never arms a conditional offer, and passes over it to an older open one', () => {
+		const messages = [message('old', [offer()]), message('new', [offer({ conditional: true })])];
+		expect(
+			findArmedMovementOffer('Scene.s.Token.gob', { messages, enabled: true })?.messageId,
+		).toBe('old');
+		expect(
+			findArmedMovementOffer('Scene.s.Token.gob', {
+				messages: [message('m1', [offer({ conditional: true })])],
+				enabled: true,
+			}),
+		).toBeNull();
+	});
+
+	it('is nothing for another token, an offer of no distance, or the toggle off', () => {
+		const messages = [
+			message('m1', [offer(), offer({ id: 'x', tokenUuid: 'Scene.s.Token.ogre', spaces: 0 })]),
+		];
+		expect(findArmedMovementOffer('Scene.s.Token.hero', { messages, enabled: true })).toBeNull();
+		expect(findArmedMovementOffer('Scene.s.Token.ogre', { messages, enabled: true })).toBeNull();
+		expect(findArmedMovementOffer('Scene.s.Token.gob', { messages, enabled: false })).toBeNull();
+	});
+
+	it('reads the chat log once until a chat message changes', () => {
+		let reads = 0;
+		let contents = [message('m1', [offer()])];
+		vi.stubGlobal('game', {
+			...game,
+			messages: {
+				get contents() {
+					reads++;
+					return contents;
+				},
+			},
+		});
+		try {
+			forgetArmedMovementOffers();
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m1');
+			contents = [message('m2', [offer()])];
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m1');
+			expect(findArmedMovementOffer('Scene.s.Token.hero', { enabled: true })).toBeNull();
+			expect(reads).toBe(1);
+
+			forgetArmedMovementOffers();
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })?.messageId).toBe('m2');
+			expect(reads).toBe(2);
+
+			const first = findArmedMovementOffer('Scene.s.Token.gob', { enabled: true });
+			expect(findArmedMovementOffer('Scene.s.Token.gob', { enabled: true })).not.toBe(first);
+		} finally {
+			forgetArmedMovementOffers();
+		}
+	});
+});
+
+describe('settleMovementOffer', () => {
+	const settle = (over: Partial<Parameters<typeof settleMovementOffer>[2]> = {}) =>
+		settleMovementOffer([offer({ spaces: 2 }), offer({ id: 'other' })], 'n1.gob', {
+			taken: true,
+			spaces: 2,
+			stopped: false,
+			userId: 'p1',
+			...over,
+		});
+
+	it('records the spaces a taken offer covered and leaves the other offers alone', () => {
+		const offers = settle();
+		expect(offers?.[0]).toMatchObject({
+			state: 'taken',
+			usedBy: 'p1',
+			movedSpaces: 2,
+			stopped: false,
+		});
+		expect(offers?.[1]).toEqual(offer({ id: 'other' }));
+	});
+
+	it('never records more than was offered, however far the token went', () => {
+		expect(settle({ spaces: 5 })?.[0].movedSpaces).toBe(2);
+	});
+
+	it('keeps a Movement cut short', () => {
+		expect(settle({ spaces: 1, stopped: true })?.[0]).toMatchObject({
+			movedSpaces: 1,
+			stopped: true,
+		});
+	});
+
+	it('leaves the offer unused when the mover went their own way', () => {
+		expect(settle({ taken: false, stopped: true })?.[0]).toMatchObject({
+			state: 'unused',
+			movedSpaces: null,
+			stopped: false,
+		});
+	});
+
+	it('is nothing to write for a missing or already settled offer', () => {
+		const base = { taken: true, spaces: 1, stopped: false, userId: null };
+		expect(settleMovementOffer([offer()], 'missing', base)).toBeNull();
+		expect(settleMovementOffer([offer({ state: 'unused' })], 'n1.gob', base)).toBeNull();
+	});
+
+	it('never settles a conditional offer', () => {
+		const base = { taken: true, spaces: 1, stopped: false, userId: null };
+		expect(settleMovementOffer([offer({ conditional: true })], 'n1.gob', base)).toBeNull();
+	});
+});
+
+describe('lapseMovementOffers', () => {
+	it('lapses the open offers the filter keeps and leaves the rest', () => {
+		const offers = [offer(), offer({ id: 'b', state: 'taken' }), offer({ id: 'c' })];
+		const lapsed = lapseMovementOffers(offers, (o) => o.id !== 'c');
+		expect(lapsed?.map((o) => o.state)).toEqual(['lapsed', 'taken', 'open']);
+	});
+
+	it('is nothing to write when no open offer lapses', () => {
+		expect(lapseMovementOffers([offer({ state: 'unused' })])).toBeNull();
+		expect(lapseMovementOffers([offer({ conditional: true })])).toBeNull();
+		expect(lapseMovementOffers([offer({ spaces: 0 })])).toBeNull();
+		expect(lapseMovementOffers([])).toBeNull();
+	});
+});
+
+describe('untrackMovementOffers', () => {
+	it('untracks every open offer a token could carry and leaves the rest', () => {
+		const offers = [
+			offer(),
+			offer({ id: 'b', state: 'lapsed' }),
+			offer({ id: 'c', conditional: true }),
+			offer({ id: 'd', spaces: 0 }),
+		];
+		expect(untrackMovementOffers(offers)?.map((o) => o.state)).toEqual([
+			'untracked',
+			'lapsed',
+			'open',
+			'open',
+		]);
+	});
+
+	it('is nothing to write when no offer is open', () => {
+		expect(untrackMovementOffers([offer({ state: 'taken' })])).toBeNull();
+		expect(untrackMovementOffers([])).toBeNull();
+	});
+});
+
+describe('movementOfferOutcome', () => {
+	it('reports a push cut short, with the damage the book deals for it', () => {
+		const outcome = movementOfferOutcome(offer({ state: 'taken', movedSpaces: 3, stopped: true }));
+		expect(outcome).toEqual({
+			state: 'taken',
+			offered: 7,
+			moved: 3,
+			shortfall: 4,
+			damageOwed: true,
+		});
+	});
+
+	it('owes no damage for a Free Move cut short', () => {
+		const outcome = movementOfferOutcome(
+			offer({ kind: 'free', state: 'taken', movedSpaces: 3, stopped: true }),
+		);
+		expect(outcome).toMatchObject({ shortfall: 4, damageOwed: false });
+	});
+
+	it('reports a push dropped short even when nothing cut the path', () => {
+		const outcome = movementOfferOutcome(offer({ state: 'taken', movedSpaces: 3 }));
+		expect(outcome).toMatchObject({ moved: 3, shortfall: 4, damageOwed: true });
+	});
+
+	it('is no shortfall for a push taken in full, or carried past its distance', () => {
+		expect(movementOfferOutcome(offer({ state: 'taken', movedSpaces: 7 }))).toMatchObject({
+			shortfall: 0,
+			damageOwed: false,
+		});
+	});
+
+	it('is no shortfall when a Free Move stops early by choice', () => {
+		const outcome = movementOfferOutcome(offer({ kind: 'free', state: 'taken', movedSpaces: 3 }));
+		expect(outcome).toMatchObject({ shortfall: 0, damageOwed: false });
+	});
+
+	it('is no shortfall for a push that was not taken', () => {
+		expect(movementOfferOutcome(offer({ state: 'unused', stopped: true })).shortfall).toBe(0);
+		expect(movementOfferOutcome(offer({ state: 'lapsed' })).shortfall).toBe(0);
+	});
+
+	it('has no moved spaces for an open or unused offer', () => {
+		expect(movementOfferOutcome(offer()).moved).toBeNull();
+		expect(movementOfferOutcome(offer({ state: 'unused' })).moved).toBeNull();
+	});
+});

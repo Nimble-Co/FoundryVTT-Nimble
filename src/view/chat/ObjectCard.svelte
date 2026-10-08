@@ -6,11 +6,13 @@
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
+	import ConcentrationNode from './components/ConcentrationNode.svelte';
 	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
@@ -37,6 +39,7 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
+	setTargetsSectionShown(true);
 </script>
 
 <CardHeader {messageDocument} />
@@ -75,22 +78,6 @@
 	<ChargeConsumptionNode />
 
 	<ActionDeltaSummaryNode />
+
+	<ConcentrationNode />
 </article>
-
-<style>
-	.nimble-card-section {
-		padding: var(--nimble-card-section-padding, 0.5rem);
-
-		&:not(:last-of-type) {
-			border-bottom: 1px solid var(--nimble-card-border-color);
-		}
-	}
-
-	:global(.nimble-card-section--description *:first-child) {
-		margin-block-start: 0 !important;
-	}
-
-	:global(.nimble-card-section--description *:last-child) {
-		margin-block-end: 0 !important;
-	}
-</style>

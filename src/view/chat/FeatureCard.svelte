@@ -11,6 +11,7 @@
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
@@ -53,6 +54,9 @@
 		'messageDocument',
 		untrack(() => messageDocument),
 	);
+
+	const showsTargets = untrack(() => featureType === 'feature' || featureType === 'monsterFeature');
+	setTargetsSectionShown(showsTargets);
 </script>
 
 <CardHeader {messageDocument} />
@@ -74,7 +78,7 @@
 		</section>
 	{/if}
 
-	{#if featureType === 'feature' || featureType === 'monsterFeature'}
+	{#if showsTargets}
 		<Targets />
 	{/if}
 
@@ -100,17 +104,9 @@
 </article>
 
 <style lang="scss">
-	.nimble-card-section {
-		padding: var(--nimble-card-section-padding, 0.5rem);
-
-		&:not(:last-of-type) {
-			border-bottom: 1px solid var(--nimble-card-border-color);
-		}
-
-		&--attack-type {
-			display: flex;
-			gap: 0.25rem;
-		}
+	.nimble-card-section--attack-type {
+		display: flex;
+		gap: 0.25rem;
 	}
 
 	.nimble-attack-type-tag {
@@ -120,13 +116,5 @@
 		background: hsl(41, 18%, 54%, 15%);
 		border-radius: 3px;
 		color: var(--nimble-muted-text-color, hsl(41, 18%, 40%));
-	}
-
-	:global(.nimble-card-section--description *:first-child) {
-		margin-block-start: 0 !important;
-	}
-
-	:global(.nimble-card-section--description *:last-child) {
-		margin-block-end: 0 !important;
 	}
 </style>

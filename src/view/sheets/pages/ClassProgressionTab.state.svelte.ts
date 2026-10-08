@@ -5,6 +5,7 @@ import type {
 	SubclassChoice,
 } from '#types/components/ClassProgressionTab.d.ts';
 import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.js';
+import formatGroupName from '#utils/formatGroupName.js';
 import getClassProgressionData from '#utils/getClassProgressionData.js';
 import type { ItemSource } from '#utils/getItemSource.ts';
 import getItemSource from '#utils/getItemSource.ts';
@@ -14,7 +15,6 @@ import localize from '#utils/localize.js';
 import { SUBCLASS_LEVELS } from './ClassProgressionTabConstants.js';
 import {
 	collectSelectionGroups,
-	formatGroupName,
 	getAbilityScoreEntry,
 	getGroupLevels,
 	isSubclassLevel,

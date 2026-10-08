@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
 	applyRecoveryTriggersToPools,
+	areChargePoolMapsEqual,
 	buildEffectiveChargePoolMap,
+	findConflictingVariablePools,
 	getChargeConsumers,
+	getChargePoolMapFromActor,
 } from './helpers.js';
 import type {
 	CharacterActorLike,
@@ -49,18 +52,31 @@ function createMockActor(
 	items: MockItem[],
 	rollData: Record<string, unknown> = {},
 	actorFlags: Record<string, Record<string, unknown>> = {},
-	levelUpHistory: Array<{ poolMaxBonuses?: Record<string, number> }> = [],
 ): MockActor {
 	return {
 		type: 'character',
-		system: { levelUpHistory },
+		system: { levelUpHistory: [] },
 		items: {
 			contents: items,
 			get: (id: string) => items.find((i) => i.id === id),
 		},
+		// Mirrors NimbleBaseActor#prepareRules: every owned item's rules, flattened.
+		rules: items.flatMap((item) => [...item.rules.values()]),
 		flags: actorFlags,
 		getRollData: vi.fn(() => rollData),
 	} as unknown as MockActor;
+}
+
+/** A "+1 Max Combat Die"-style granted item: one item, one bonus. */
+function createPoolMaxBonusItem(id: string, poolIdentifier: string, amount: number): MockItem {
+	return createMockItem(id, `+${amount} Max Combat Die`, [
+		{
+			type: 'poolMaxBonus',
+			poolIdentifier,
+			amount,
+			appliesToPool: (identifier: string) => identifier === poolIdentifier && amount !== 0,
+		} as unknown as MockRule,
+	]);
 }
 
 describe('charge pool modifier predicate gating', () => {
@@ -193,98 +209,56 @@ describe('charge pool modifier predicate gating', () => {
 	});
 });
 
-describe('charge pool level-up max bonus (poolMaxBonus from history)', () => {
-	it('adds the cumulative pool bonus from level-up history to the resolved max', () => {
-		// Commander with STR 3 → base 3 combat dice; selected "+1 Max Combat Die" once.
+describe('charge pool max bonus (poolMaxBonus rules on owned items)', () => {
+	const combatDicePool = (max: string) =>
+		createMockItem('ffab', 'Fit for Any Battlefield', [
+			{
+				type: 'chargePool',
+				id: 'combat-dice-pool',
+				identifier: 'combat-dice',
+				scope: 'item',
+				max,
+				initial: 'zero',
+			} as MockRule,
+		]);
+
+	it('adds the bonus from a granted item to the resolved max', () => {
+		// Commander with STR 3 → base 3 combat dice; holds one "+1 Max Combat Die".
 		const actor = createMockActor(
-			[
-				createMockItem('ffab', 'Fit for Any Battlefield', [
-					{
-						type: 'chargePool',
-						id: 'combat-dice-pool',
-						identifier: 'combat-dice',
-						scope: 'item',
-						max: '@strength + @combatDiceBonus',
-						initial: 'zero',
-					} as MockRule,
-				]),
-			],
+			[combatDicePool('@strength'), createPoolMaxBonusItem('bonus1', 'combat-dice', 1)],
 			{ strength: 3 },
-			{},
-			[{ poolMaxBonuses: { 'combat-dice': 1 } }],
 		);
 
 		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
 		expect(pool.max).toBe(4);
 	});
 
-	it('works even when the embedded formula is the stale "@strength" (ignores @combatDiceBonus)', () => {
-		// Reproduces the reported bug: an actor whose embedded chargePool formula predates the
-		// @combatDiceBonus change. The bonus must still apply because it is added in code.
+	it('accumulates one bonus per granted item', () => {
 		const actor = createMockActor(
 			[
-				createMockItem('ffab', 'Fit for Any Battlefield', [
-					{
-						type: 'chargePool',
-						id: 'combat-dice-pool',
-						identifier: 'combat-dice',
-						scope: 'item',
-						max: '@strength',
-						initial: 'zero',
-					} as MockRule,
-				]),
+				combatDicePool('@strength'),
+				createPoolMaxBonusItem('bonus1', 'combat-dice', 1),
+				createPoolMaxBonusItem('bonus2', 'combat-dice', 1),
 			],
 			{ strength: 3 },
-			{},
-			[{ poolMaxBonuses: { 'combat-dice': 1 } }],
-		);
-
-		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
-		expect(pool.max).toBe(4);
-	});
-
-	it('accumulates the bonus across multiple level-up selections', () => {
-		const actor = createMockActor(
-			[
-				createMockItem('ffab', 'Fit for Any Battlefield', [
-					{
-						type: 'chargePool',
-						id: 'combat-dice-pool',
-						identifier: 'combat-dice',
-						scope: 'item',
-						max: '@strength',
-						initial: 'zero',
-					} as MockRule,
-				]),
-			],
-			{ strength: 3 },
-			{},
-			[{ poolMaxBonuses: { 'combat-dice': 1 } }, { poolMaxBonuses: { 'combat-dice': 1 } }],
 		);
 
 		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
 		expect(pool.max).toBe(5);
 	});
 
-	it('drops the bonus when history no longer contains it (revert)', () => {
-		// After reverting the level-up that added the bonus, history has no poolMaxBonuses → base only.
+	it('ignores a bonus that names a different pool', () => {
 		const actor = createMockActor(
-			[
-				createMockItem('ffab', 'Fit for Any Battlefield', [
-					{
-						type: 'chargePool',
-						id: 'combat-dice-pool',
-						identifier: 'combat-dice',
-						scope: 'item',
-						max: '@strength',
-						initial: 'zero',
-					} as MockRule,
-				]),
-			],
+			[combatDicePool('@strength'), createPoolMaxBonusItem('bonus1', 'fury', 2)],
 			{ strength: 3 },
-			{},
-			[],
 		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.max).toBe(3);
+	});
+
+	it('drops the bonus when the granted item is removed', () => {
+		const actor = createMockActor([combatDicePool('@strength')], { strength: 3 });
 
 		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
 		expect(pool.max).toBe(3);
@@ -332,7 +306,13 @@ describe('charge consumer predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
-			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: false,
+				maxCost: null,
+			},
 		]);
 	});
 
@@ -347,7 +327,210 @@ describe('charge consumer predicate gating', () => {
 		const actor = createMockActor([item]);
 
 		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([
-			{ poolId: 'focus', poolIdentifier: 'focus', cost: 1 },
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: false,
+				maxCost: null,
+			},
+		]);
+	});
+});
+
+describe('variable charge consumers', () => {
+	function createVariableConsumerItem(overrides: Partial<MockRule> = {}): MockItem {
+		return createMockItem('item-1', 'Flexible Feature', [
+			{
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'item',
+				max: '10',
+				initial: 'max',
+			} as MockRule,
+			{
+				type: 'chargeConsumer',
+				id: 'consumer-rule',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '',
+				...overrides,
+			} as MockRule,
+		]);
+	}
+
+	it('is hidden from callers that spend a fixed cost', () => {
+		const item = createVariableConsumerItem();
+		const actor = createMockActor([item]);
+
+		expect(getChargeConsumers(actor, item as unknown as RuleBackedItem)).toEqual([]);
+	});
+
+	describe('two of them on one pool', () => {
+		function createDoubleSpendItem(secondConsumer: Partial<MockRule> = {}): MockItem {
+			return createMockItem('item-1', 'Flexible Feature', [
+				{
+					type: 'chargePool',
+					id: 'pool-rule',
+					identifier: 'focus',
+					scope: 'item',
+					max: '10',
+					initial: 'max',
+				} as MockRule,
+				{
+					type: 'chargeConsumer',
+					id: 'consumer-a',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					costMode: 'variable',
+					cost: '1',
+					maxCost: '',
+				} as MockRule,
+				{
+					type: 'chargeConsumer',
+					id: 'consumer-b',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					costMode: 'variable',
+					cost: '2',
+					maxCost: '',
+					...secondConsumer,
+				} as MockRule,
+			]);
+		}
+
+		it('is reported as a conflict, naming the pool once', () => {
+			const item = createDoubleSpendItem();
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toMatchObject([
+				{ poolId: 'focus', poolIdentifier: 'focus' },
+			]);
+		});
+
+		it('is not a conflict when only one of them is variable', () => {
+			const item = createDoubleSpendItem({ costMode: 'fixed' } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+
+		it('is not a conflict when they spend from different pools', () => {
+			const item = createDoubleSpendItem({ poolIdentifier: 'resolve' } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+
+		it('is not a conflict when a predicate rules the second one out', () => {
+			const item = createDoubleSpendItem({ appliesTo: () => false } as Partial<MockRule>);
+			const actor = createMockActor([item]);
+
+			expect(findConflictingVariablePools(actor, item as unknown as RuleBackedItem)).toEqual([]);
+		});
+	});
+
+	it('is reported with its minimum and an open ceiling when asked for', () => {
+		const item = createVariableConsumerItem();
+		const actor = createMockActor([item]);
+
+		expect(
+			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true }),
+		).toEqual([
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: true,
+				maxCost: null,
+			},
+		]);
+	});
+
+	it('resolves a maxCost formula into the reported ceiling', () => {
+		const item = createVariableConsumerItem({ maxCost: '3' } as Partial<MockRule>);
+		const actor = createMockActor([item]);
+
+		expect(
+			getChargeConsumers(actor, item as unknown as RuleBackedItem, { includeVariable: true })[0]
+				.maxCost,
+		).toBe(3);
+	});
+});
+
+describe('cross-item pool spending', () => {
+	// An item-scoped pool id is the bare identifier, which is what lets a second
+	// feature spend from a pool a first feature declares (a subclass feature
+	// drawing on its base class's pool, say) without an actor-scoped pool.
+	function createPoolAndConsumerItems(): { poolItem: MockItem; consumerItem: MockItem } {
+		return {
+			poolItem: createMockItem('item-1', 'Pool Owner', [
+				{
+					type: 'chargePool',
+					id: 'pool-rule',
+					identifier: 'focus',
+					label: 'Focus',
+					scope: 'item',
+					max: '10',
+					initial: 'max',
+				} as MockRule,
+			]),
+			consumerItem: createMockItem('item-2', 'Other Feature', [
+				{
+					type: 'chargeConsumer',
+					id: 'other-consumer',
+					poolIdentifier: 'focus',
+					poolScope: 'item',
+					cost: '2',
+				} as MockRule,
+			]),
+		};
+	}
+
+	it('resolves a consumer on one item to a pool declared on another', () => {
+		const { poolItem, consumerItem } = createPoolAndConsumerItems();
+		const actor = createMockActor([poolItem, consumerItem]);
+
+		const [consumer] = getChargeConsumers(actor, consumerItem as unknown as RuleBackedItem);
+
+		expect(consumer).toMatchObject({ poolId: 'focus', poolIdentifier: 'focus', cost: 2 });
+		expect(buildEffectiveChargePoolMap(actor)[consumer!.poolId]).toMatchObject({
+			identifier: 'focus',
+			sourceItemId: 'item-1',
+			current: 10,
+		});
+	});
+
+	it('resolves a variable consumer on one item to the other item pool', () => {
+		const { poolItem } = createPoolAndConsumerItems();
+		const variableConsumer = createMockItem('item-2', 'Other Feature', [
+			{
+				type: 'chargeConsumer',
+				id: 'other-consumer',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'variable',
+				cost: '1',
+				maxCost: '4',
+			} as MockRule,
+		]);
+		const actor = createMockActor([poolItem, variableConsumer]);
+
+		expect(
+			getChargeConsumers(actor, variableConsumer as unknown as RuleBackedItem, {
+				includeVariable: true,
+			}),
+		).toEqual([
+			{
+				poolId: 'focus',
+				poolIdentifier: 'focus',
+				cost: 1,
+				variable: true,
+				maxCost: 4,
+			},
 		]);
 	});
 });
@@ -521,5 +704,147 @@ describe('charge pool modifier contributed recoveries', () => {
 		(actor as unknown as { getDomain: () => Set<string> }).getDomain = () =>
 			new Set(['self:raging']);
 		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(1);
+	});
+});
+
+describe('a pool whose maximum only appears later', () => {
+	const poolRule = {
+		type: 'chargePool',
+		id: 'pilfered-rule',
+		identifier: 'pilfered-power',
+		scope: 'item',
+		max: '@dexterity',
+		initial: 'max',
+	} as MockRule;
+
+	// Stored state from a time when the formula still read zero.
+	const storedAtZero = {
+		nimble: {
+			chargePools: {
+				'pilfered-power': {
+					id: 'pilfered-power',
+					identifier: 'pilfered-power',
+					scope: 'item',
+					sourceItemId: 'item-1',
+					sourceItemName: 'Pilfered Power',
+					label: 'Pilfered Power',
+					current: 0,
+					max: 0,
+					dieSize: null,
+					recoveries: [],
+				},
+			},
+		},
+	};
+
+	it('fills once the maximum becomes real', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[poolRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(3);
+	});
+
+	it('leaves a pool that was spent down to zero alone', () => {
+		const spent = foundry.utils.deepClone(storedAtZero);
+		spent.nimble.chargePools['pilfered-power'].max = 3;
+
+		const actor = createMockActor([createMockItem('item-1', 'Pilfered Power', [poolRule], spent)], {
+			dexterity: 3,
+		});
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+
+	it('does not re-seed a spent pool when its maximum returns', () => {
+		// Seeded while the maximum was real, spent down to nothing, then the
+		// maximum resolved to zero for a while and came back.
+		const spentThenLapsed = {
+			nimble: {
+				chargePools: {
+					'pilfered-power': {
+						...storedAtZero.nimble.chargePools['pilfered-power'],
+						seeded: true,
+					},
+				},
+			},
+		};
+
+		const actor = createMockActor(
+			[createMockItem('item-1', 'Pilfered Power', [poolRule], spentThenLapsed)],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
+	});
+
+	it('writes a pool whose only change is the seeded marker', () => {
+		const spent = foundry.utils.deepClone(storedAtZero);
+		spent.nimble.chargePools['pilfered-power'].max = 3;
+
+		const actor = createMockActor([createMockItem('item-1', 'Pilfered Power', [poolRule], spent)], {
+			dexterity: 3,
+		});
+
+		const stored = getChargePoolMapFromActor(actor);
+		const effective = buildEffectiveChargePoolMap(actor);
+		const [storedPool] = Object.values(stored);
+		const [effectivePool] = Object.values(effective);
+
+		expect(storedPool.seeded).toBeUndefined();
+		expect({ ...storedPool, seeded: effectivePool.seeded }).toEqual(effectivePool);
+		expect(areChargePoolMapsEqual(stored, effective)).toBe(false);
+	});
+
+	it('records the seeded marker once the maximum is real', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[poolRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		expect(Object.values(buildEffectiveChargePoolMap(actor))[0].seeded).toBe(true);
+	});
+
+	it('seeds an empty pool at zero when that is what the rule asks for', () => {
+		const actor = createMockActor(
+			[
+				createMockItem(
+					'item-1',
+					'Pilfered Power',
+					[{ ...poolRule, initial: 'zero' } as MockRule],
+					foundry.utils.deepClone(storedAtZero),
+				),
+			],
+			{ dexterity: 3 },
+		);
+
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+
+		expect(pool.max).toBe(3);
+		expect(pool.current).toBe(0);
 	});
 });

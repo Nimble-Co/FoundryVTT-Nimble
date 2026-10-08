@@ -1,9 +1,11 @@
 import { activation } from '../item/common.js';
 import {
 	appliedHealing,
+	concentration,
 	grantedActionOffers,
 	incomingReactions,
 	metadata,
+	movementOffers,
 	targets,
 } from './common.js';
 
@@ -14,10 +16,6 @@ const spellCardSchema = () => ({
 		baseEffect: new fields.HTMLField({ required: false, initial: '', nullable: false }),
 		higherLevelEffect: new fields.HTMLField({ required: false, initial: '', nullable: false }),
 		upcastEffect: new fields.HTMLField({ required: false, initial: '', nullable: false }),
-	}),
-	duration: new fields.SchemaField({
-		concentration: new fields.BooleanField({ required: true, initial: false, nullable: false }),
-		period: new fields.StringField({ required: true, initial: '', nullable: false }),
 	}),
 	isCritical: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	isMiss: new fields.BooleanField({ required: true, initial: false, nullable: false }),
@@ -37,8 +35,10 @@ declare namespace NimbleSpellCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof activation> &
 		ReturnType<typeof appliedHealing> &
+		ReturnType<typeof concentration> &
 		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof incomingReactions> &
+		ReturnType<typeof movementOffers> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
 		ReturnType<typeof targets>;
@@ -56,8 +56,10 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 		return {
 			...activation(),
 			...appliedHealing(),
+			...concentration(),
 			...grantedActionOffers(),
 			...incomingReactions(),
+			...movementOffers(),
 			...spellCardSchema(),
 			...metadata(),
 			...targets(),

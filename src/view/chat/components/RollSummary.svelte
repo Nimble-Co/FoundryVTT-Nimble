@@ -3,11 +3,18 @@
 
 	import { SYSTEM_ID } from '#system';
 
+	import { getPrimaryDieBreakdown } from './RollSummary.svelte.ts';
+
 	const { label, subheading, tooltip, total, options, showRollDetails }: RollSummaryProps =
 		$props();
 	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get(SYSTEM_ID, 'autoExpandRolls');
 	let expanded = $state(autoExpand);
+
+	const rollOptions = $derived(options?.rollOptions ?? {});
+	const primaryDieValue = $derived(Number(rollOptions.primaryDieValue) || 0);
+	const primaryDieModifier = $derived(Number(rollOptions.primaryDieModifier) || 0);
+	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -43,8 +50,14 @@
 
 {#if showRollDetails}
 	<div class="roll-details">
-		<span>{hitDice.primaryDieValue}: {options.rollOptions.primaryDieValue}</span>
-		<span>{hitDice.primaryDieModifier}: {options.rollOptions.primaryDieModifier}</span>
+		{#if primaryDieValue}
+			<span>{hitDice.primaryDieValue}: {primaryDieValue}</span>
+		{/if}
+		{#if primaryDieBreakdown}
+			<span>{primaryDieBreakdown}</span>
+		{:else if primaryDieModifier}
+			<span>{hitDice.primaryDieModifier}: {primaryDieModifier}</span>
+		{/if}
 	</div>
 {/if}
 

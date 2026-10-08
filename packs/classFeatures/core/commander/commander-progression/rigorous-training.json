@@ -1,0 +1,70 @@
+{
+	"name": "Rigorous Training",
+	"type": "feature",
+	"img": "icons/environment/people/infantry.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "HVX1bzCXgdkwUeKi",
+				"type": "optionSwap",
+				"label": "Whenever you train with your party or other soldiers during a Safe Rest",
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you train with your party or other soldiers during a Safe Rest, you may choose different Commander options available to you.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
+	},
+	"effects": [],
+	"folder": "406c4e162069a4a8",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "WIB9jRGrfsvph4ol"
+}

@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "",
+		"description": "<p>Choose an Underhanded Ability.</p><hr><p>Level 6: Choose a 2nd Underhanded Ability.</p><p>Level 8: Choose a 3rd Underhanded Ability.</p><p>Level 10: Choose a 4th Underhanded Ability.</p><p>Level 12: Choose a 5th Underhanded Ability.</p><p>Level 14: Choose a 6th Underhanded Ability.</p><p>Level 16: Choose a 7th Underhanded Ability.</p><p>Level 18: Choose an 8th Underhanded Ability.</p>",
 		"featureType": "class",
 		"class": "the-cheat",
 		"group": "the-cheat-progression",

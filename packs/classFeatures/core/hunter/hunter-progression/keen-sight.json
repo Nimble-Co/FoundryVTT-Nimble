@@ -6,7 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "skillRollMode",
+				"disabled": false,
+				"id": "6QGM2txygKfA7mpY",
+				"identifier": "",
+				"label": "Keen Sight",
+				"predicate": {},
+				"priority": 1,
+				"skills": [
+					"perception"
+				],
+				"value": 1,
+				"mode": "adjust"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

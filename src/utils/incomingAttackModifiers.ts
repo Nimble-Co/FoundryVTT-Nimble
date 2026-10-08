@@ -1,5 +1,6 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
 import type { IncomingReactionEntry, RerollTrigger } from './incomingReactionEntry.js';
+import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
 	collectPoolSpendCardOffers,
@@ -22,6 +23,7 @@ interface RuleLike {
 	automatic?: boolean;
 	rerollTrigger?: RerollTrigger;
 	rerollWithDisadvantage?: boolean;
+	missThreshold?: number;
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
 }
@@ -45,12 +47,16 @@ interface IncomingAttackModifierEntry {
 	rerollTrigger?: RerollTrigger;
 	/** forceReroll only: roll the reroll at disadvantage */
 	rerollWithDisadvantage?: boolean;
+	/** raiseMissThreshold only: the highest primary-die result that misses */
+	missThreshold?: number;
 }
 
 interface IncomingAttackPlan {
 	disadvantageCount: number;
 	forceMiss: boolean;
-	/** Automatically applied modifiers (disadvantage / autoMiss), for roll metadata */
+	/** Highest primary-die result that counts as a miss; 1 unless a rule raises it */
+	missThreshold: number;
+	/** Automatically applied modifiers, for roll metadata */
 	appliedEntries: IncomingAttackModifierEntry[];
 	/** Interactive prompts (forceReroll / redirectToSelf) to stamp onto the card */
 	reactionEntries: IncomingReactionEntry[];
@@ -191,12 +197,13 @@ function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 		automatic: rule.automatic ?? false,
 		rerollTrigger: rule.rerollTrigger ?? 'always',
 		rerollWithDisadvantage: rule.rerollWithDisadvantage ?? false,
+		missThreshold: rule.missThreshold ?? DEFAULT_MISS_THRESHOLD,
 	};
 }
 
 /**
- * Collect the target's own attack-time modifiers (disadvantage, forceReroll,
- * autoMiss). `redirectToSelf` is protector-side and excluded here.
+ * Collect the target's own attack-time modifiers. `redirectToSelf` is
+ * protector-side and excluded here.
  */
 function collectTargetIncomingModifiers(actor: ActorLike | null | undefined) {
 	return getMatchingRules(actor)
@@ -315,6 +322,7 @@ function computeIncomingAttackPlan(
 	const plan: IncomingAttackPlan = {
 		disadvantageCount: 0,
 		forceMiss: false,
+		missThreshold: DEFAULT_MISS_THRESHOLD,
 		appliedEntries: [],
 		reactionEntries: [...collectPoolSpendCardOffers(attackingActor, attackContext)],
 		autoRerollEntries: [],
@@ -331,6 +339,12 @@ function computeIncomingAttackPlan(
 			plan.appliedEntries.push(entry);
 		} else if (entry.modifier === 'autoMiss') {
 			plan.forceMiss = true;
+			plan.appliedEntries.push(entry);
+		} else if (entry.modifier === 'raiseMissThreshold') {
+			plan.missThreshold = Math.max(
+				plan.missThreshold,
+				entry.missThreshold ?? DEFAULT_MISS_THRESHOLD,
+			);
 			plan.appliedEntries.push(entry);
 		}
 	}

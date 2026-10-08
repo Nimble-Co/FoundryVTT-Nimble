@@ -3,6 +3,7 @@ import type { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 type ChargePoolScope = (typeof ChargePoolRuleConfig.scopes)[number];
 type ChargePoolDieSize = (typeof ChargePoolRuleConfig.dieSizes)[number];
 type ChargePoolInitialMode = (typeof ChargePoolRuleConfig.initialModes)[number];
+type ChargeCostMode = (typeof ChargePoolRuleConfig.costModes)[number];
 type ChargeRecoveryTrigger = (typeof ChargePoolRuleConfig.recoveryTriggers)[number];
 type ChargeRecoveryMode = (typeof ChargePoolRuleConfig.recoveryModes)[number];
 type ChargeRestType = (typeof ChargePoolRuleConfig.restTypes)[number];
@@ -43,12 +44,25 @@ type ChargePoolState = {
 	 * the pool the player actually manages.
 	 */
 	hidden: boolean;
+	/**
+	 * Whether the pool has already taken its initial value. A pool whose maximum
+	 * has never resolved above zero is not seeded yet, so it takes `initial` when
+	 * the maximum first appears instead of reading a stored zero as spent. Absent
+	 * on pools stored before the marker existed.
+	 */
+	seeded?: boolean;
+	/**
+	 * Promotes the pool to the sheet header alongside the other standing
+	 * resources, in addition to the badge on the item that grants it. `hidden`
+	 * wins: a pool left out of the readouts never reaches the header.
+	 */
+	showAsResource: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
 type ChargePoolMap = Record<string, ChargePoolState>;
 
-type ChargePoolDefinition = Omit<ChargePoolState, 'current'> & {
+type ChargePoolDefinition = Omit<ChargePoolState, 'current' | 'seeded'> & {
 	initial: ChargePoolInitialMode;
 };
 
@@ -64,6 +78,7 @@ type ChargePoolRuleLike = {
 	initial?: string;
 	dieSize?: string | null;
 	hidden?: boolean;
+	showAsResource?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;
@@ -76,7 +91,9 @@ type ChargeConsumerRuleLike = {
 	identifier?: string;
 	poolIdentifier?: string;
 	poolScope?: string;
+	costMode?: string;
 	cost?: string;
+	maxCost?: string;
 	/**
 	 * Optional because the structural type is also satisfied by plain objects in
 	 * tests; real rule instances always inherit it from the base rule class.
@@ -95,6 +112,16 @@ type ModifyPoolRuleLike = {
 	addRefills?: unknown;
 };
 
+type PoolMaxBonusRuleLike = {
+	type?: string;
+	amount: number;
+	/**
+	 * Optional because the structural type is also satisfied by plain objects in
+	 * tests; real rule instances always inherit it from the base rule class.
+	 */
+	appliesToPool?: (identifier: string) => boolean;
+};
+
 type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike & ModifyPoolRuleLike;
 
 type RuleBackedItem = Item.Implementation & {
@@ -110,7 +137,11 @@ type CharacterActorLike = Actor.Implementation & {
 type ChargeConsumerState = {
 	poolId: string;
 	poolIdentifier: string;
+	/** A variable consumer reads this as the smallest legal spend. */
 	cost: number;
+	variable: boolean;
+	/** Ceiling for a variable spend; `null` means the pool's current charges. */
+	maxCost: number | null;
 };
 
 type ChargeContext = {
@@ -119,7 +150,12 @@ type ChargeContext = {
 };
 
 type ChargeValidationFailure = {
-	code: 'poolMissing' | 'insufficientCharges' | 'consumptionBlocked';
+	code:
+		| 'poolMissing'
+		| 'insufficientCharges'
+		| 'consumptionBlocked'
+		| 'conflictingConsumers'
+		| 'unofferableSpend';
 	poolIdentifier: string;
 	poolLabel: string;
 	required: number;
@@ -159,6 +195,7 @@ export type {
 	ChargePoolScope,
 	ChargePoolDieSize,
 	ChargePoolInitialMode,
+	ChargeCostMode,
 	ChargeRecoveryTrigger,
 	ChargeRecoveryMode,
 	ChargeRestType,
@@ -171,6 +208,7 @@ export type {
 	ChargePoolRuleLike,
 	ChargeConsumerRuleLike,
 	ModifyPoolRuleLike,
+	PoolMaxBonusRuleLike,
 	RuleLike,
 	RuleBackedItem,
 	CharacterActorLike,

@@ -205,14 +205,6 @@
 </article>
 
 <style lang="scss">
-	.nimble-card-section {
-		padding: var(--nimble-card-section-padding, 0.5rem);
-
-		&:not(:last-of-type) {
-			border-bottom: 1px solid var(--nimble-card-border-color);
-		}
-	}
-
 	.nimble-group-member-rolls {
 		display: flex;
 		flex-direction: column;

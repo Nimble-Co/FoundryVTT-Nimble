@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -211,5 +212,100 @@ describe('The Cheat selection pools per level', () => {
 			.filter((s) => s.optionFeatureNames.includes('Underhanded Abilities'))
 			.map((s) => s.level);
 		expect(actualLevels).toEqual(expectedLevels);
+	});
+});
+
+describe('The Cheat - pack data', () => {
+	const { feature, rulesOf, effectsOf } = packFeatureHelpers(CLASS_ID);
+
+	describe('Cheat!', () => {
+		it('ships one favourable skill-check roll-mode rule for games, competitions and wagers', () => {
+			const rules = rulesOf('Cheat!', 'situationalRollMode');
+			expect(rules).toHaveLength(1);
+			const [rule] = rules;
+			expect(rule.label).toBe('Playing a game, competing, or placing a wager');
+			expect(rule.checkType).toBe('skillCheck');
+			expect(rule.value).toBe(1);
+			expect(rule.skills).toEqual(['all']);
+			expect(rule.saves).toEqual([]);
+			expect(rule.abilities).toEqual([]);
+			expect(rule.disabled).toBe(false);
+		});
+
+		it('ships one charge pool that refreshes each round and again when the encounter ends', () => {
+			const pools = rulesOf('Cheat!', 'chargePool');
+			expect(pools).toHaveLength(1);
+			const [pool] = pools;
+			expect(pool.identifier).toBe('cheat-free-move-or-hide');
+			expect(pool.scope).toBe('item');
+			expect(pool.max).toBe('1');
+			expect(pool.initial).toBe('max');
+			expect(pool.hidden).toBe(true);
+			expect(pool.disabled).toBe(false);
+			expect(pool.recoveries).toEqual([
+				{ trigger: 'onTurnStart', mode: 'refresh', value: '1' },
+				{ trigger: 'encounterEnd', mode: 'refresh', value: '1' },
+			]);
+		});
+
+		it('ships a consumer that spends one charge from that pool', () => {
+			const consumers = rulesOf('Cheat!', 'chargeConsumer');
+			expect(consumers).toHaveLength(1);
+			const [consumer] = consumers;
+			expect(consumer.poolIdentifier).toBe('cheat-free-move-or-hide');
+			expect(consumer.poolScope).toBe('item');
+			expect(consumer.costMode).toBe('fixed');
+			expect(consumer.cost).toBe('1');
+			expect(consumer.disabled).toBe(false);
+		});
+
+		it('ships one action delta that gives the Cheat 1 action now', () => {
+			const deltas = rulesOf('Cheat!', 'actionDelta');
+			expect(deltas).toHaveLength(1);
+			const [delta] = deltas;
+			expect(delta.target).toBe('self');
+			expect(delta.value).toBe('1');
+			expect(delta.timing).toBe('now');
+			expect(delta.borrowFromNextTurn).toBe(false);
+			expect(delta.disabled).toBe(false);
+		});
+
+		it('ships reminders for the action limit and the two parts the player applies by hand', () => {
+			const notes = effectsOf('Cheat!', 'note');
+			expect(notes.map((note) => [note.noteType, note.text])).toEqual([
+				['reminder', 'Spend the extra action on a Move or a Hide only.'],
+				['reminder', '1/day: you may change any skill check to 10+INT.'],
+				['reminder', 'If you roll under 10 on Initiative, you may change it to 10.'],
+			]);
+		});
+	});
+
+	describe('Sweet Talk', () => {
+		it('ships two influence roll-mode rules, one favourable and one not', () => {
+			const rules = rulesOf('Sweet Talk', 'situationalRollMode');
+			expect(rules).toHaveLength(2);
+			for (const rule of rules) {
+				expect(rule.checkType).toBe('skillCheck');
+				expect(rule.skills).toEqual(['influence']);
+				expect(rule.disabled).toBe(false);
+			}
+			expect(rules.map((rule) => rule.value).sort((a, b) => a - b)).toEqual([-1, 1]);
+			const byValue = Object.fromEntries(rules.map((rule) => [rule.value, rule.label]));
+			expect(byValue[1]).toBe(
+				'An NPC you have just met (until you fail a check with them or meet again)',
+			);
+			expect(byValue[-1]).toBe(
+				'An NPC you already Sweet Talked (until you get back on their good side)',
+			);
+		});
+	});
+
+	describe('Underhanded Abilities', () => {
+		it('ships a description that lists every pick up to level 18', () => {
+			const description = feature('Underhanded Abilities').system.description;
+			expect(description).toBe(
+				'<p>Choose an Underhanded Ability.</p><hr><p>Level 6: Choose a 2nd Underhanded Ability.</p><p>Level 8: Choose a 3rd Underhanded Ability.</p><p>Level 10: Choose a 4th Underhanded Ability.</p><p>Level 12: Choose a 5th Underhanded Ability.</p><p>Level 14: Choose a 6th Underhanded Ability.</p><p>Level 16: Choose a 7th Underhanded Ability.</p><p>Level 18: Choose an 8th Underhanded Ability.</p>',
+			);
+		});
 	});
 });

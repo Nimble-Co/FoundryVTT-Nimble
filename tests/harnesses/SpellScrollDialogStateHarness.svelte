@@ -33,6 +33,7 @@
 			submitIcon: state.submitIcon,
 			manaCostLabel: state.manaCostLabel,
 			upcastLabel: state.upcastLabel,
+			showTierWarning: state.showTierWarning,
 			arcanaLabel: state.arcanaLabel,
 		}),
 	);

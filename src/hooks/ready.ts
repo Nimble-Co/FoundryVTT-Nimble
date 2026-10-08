@@ -4,7 +4,10 @@ import { runDevFlagRebrandPersist } from '../migration/devFlagRebrand.js';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
-import { getAdjacencySyncEnabled } from '../settings/adjacencySettings.js';
+import {
+	getAdjacencySyncEnabled,
+	migrateLegacyDiagonalSetting,
+} from '../settings/adjacencySettings.js';
 import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
@@ -21,6 +24,7 @@ import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerDicePoolSpendRequestRouter from './dicePoolSpendRequestRouter.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
+import registerMovementOffers from './movementOffers.js';
 
 let canvasConditionsPanelComponent: object | null = null;
 
@@ -64,6 +68,7 @@ export default async function ready() {
 	}
 	registerCombatTurnSocketListener();
 	registerGrantedActionOfferSocketListener();
+	registerMovementOffers();
 	registerIncomingReactionSocketListener();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
@@ -93,6 +98,7 @@ export default async function ready() {
 
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
+	migrateLegacyDiagonalSetting().catch((error) => console.error(error));
 	registerMinionGroupTokenActions();
 	registerDicePoolSpendRequestRouter();
 

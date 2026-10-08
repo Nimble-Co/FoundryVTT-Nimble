@@ -9,6 +9,7 @@
 	import { createLevelUpSpellGrantsState } from './LevelUpSpellGrants.svelte.ts';
 
 	let {
+		actor,
 		spells,
 		schoolSelections,
 		spellSelections,
@@ -22,6 +23,7 @@
 	}: LevelUpSpellGrantsProps = $props();
 
 	const state = createLevelUpSpellGrantsState(() => ({
+		actor,
 		spells,
 		schoolSelections,
 		spellSelections,
@@ -61,7 +63,7 @@
 					</h4>
 					<ul class="level-up-spell-grants__spell-list">
 						{#each schoolSpells as spell (spell.uuid)}
-							<LevelUpSpellCard {spell} />
+							<LevelUpSpellCard {spell} {actor} />
 						{/each}
 					</ul>
 				</div>
@@ -94,7 +96,7 @@
 						</div>
 						<ul class="level-up-spell-grants__spell-list">
 							{#each schoolSpells as spell (spell.uuid)}
-								<LevelUpSpellCard {spell} />
+								<LevelUpSpellCard {spell} {actor} />
 							{/each}
 						</ul>
 					</div>

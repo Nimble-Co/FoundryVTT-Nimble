@@ -6,7 +6,26 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "actionCost",
+				"disabled": false,
+				"id": "o4qFJ7V9yf2E7Qrl",
+				"identifier": "",
+				"label": "My Life, for My Friends",
+				"predicate": {},
+				"priority": 1,
+				"suppressActivationCard": "auto",
+				"applies": "heroicReaction",
+				"mode": "set",
+				"value": "0",
+				"itemTypes": [],
+				"itemIdentifier": "",
+				"reactions": [
+					"interpose"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

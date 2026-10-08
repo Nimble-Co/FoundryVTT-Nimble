@@ -1,4 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { MovementRecord } from '#types/movement.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
@@ -146,6 +147,25 @@ interface RoundChangedContext {
 	combat: Combat;
 	actor: NimbleBaseActor;
 	round: number;
+}
+
+// Context passed to onMovementFinished. Fires once per finished Movement, to the
+// mover's rules and to the rules of every other actor with a token on the scene.
+// `actor` and `token` are the observer whose rules are running.
+interface MovementFinishedContext {
+	record: MovementRecord;
+	actor: NimbleBaseActor;
+	token: TokenDocument;
+	isMover: boolean;
+}
+
+// Context passed to onPoolGain. Fires on the client that changed the pool when one
+// of the actor's dice pools gains dice. `poolIdentifier` is the bare identifier,
+// without the `actor:` scope prefix.
+interface PoolGainContext {
+	actor: NimbleBaseActor;
+	poolIdentifier: string;
+	poolLabel?: string;
 }
 
 // Members of NimbleBaseRule, used to type `alwaysDispatchedEvents` (statics
@@ -388,6 +408,22 @@ abstract class NimbleBaseRule<
 	}
 
 	/**
+	 * Add an entry to an accumulator Set on the actor's system data, creating the
+	 * Set on first use. Registers the path so the actor empties it at the start of
+	 * each prepare cycle, which matters for values read outside data prep.
+	 */
+	protected addToActorSystemSet(path: string, entry: string): void {
+		actorAccumulatorPaths.add(path);
+		const { actor } = this.item;
+		const existing = foundry.utils.getProperty(actor.system, path) as Set<string> | undefined;
+		if (existing instanceof Set) {
+			existing.add(entry);
+			return;
+		}
+		foundry.utils.setProperty(actor.system, path, new Set([entry]));
+	}
+
+	/**
 	 * Hook called during item pre-creation. Override in subclasses to implement rule-specific logic.
 	 */
 	async preCreate(_args: PreCreateArgs): Promise<void> {
@@ -429,6 +465,15 @@ abstract class NimbleBaseRule<
 
 	/** Hook called at the start of a combatant's turn. */
 	async onTurnStart(_context: TurnContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
+	 * Hook called once per turn start, on the active GM. Unlike onTurnStart, which
+	 * runs on the client that advanced the turn, this runs where every actor's
+	 * data can be changed.
+	 */
+	async onActiveGmTurnStart(_context: TurnContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
@@ -474,6 +519,16 @@ abstract class NimbleBaseRule<
 
 	/** Hook called once per combatant when the combat's round counter changes. */
 	async onRoundChanged(_context: RoundChangedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called once per finished token Movement, on the mover and on every observer. */
+	async onMovementFinished(_context: MovementFinishedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when one of the actor's dice pools gains dice, on the client that changed it. */
+	async onPoolGain(_context: PoolGainContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
@@ -545,4 +600,6 @@ export {
 	type EncounterEndContext,
 	type ActorDyingContext,
 	type RoundChangedContext,
+	type MovementFinishedContext,
+	type PoolGainContext,
 };

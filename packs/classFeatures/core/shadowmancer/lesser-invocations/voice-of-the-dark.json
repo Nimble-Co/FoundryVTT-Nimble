@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You can communicate telepathically with a humanoid within 6 spaces</p>",
+		"description": "<p>You can communicate telepathically with a humanoid within 6 spaces.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
 		"group": "lesser-invocations",

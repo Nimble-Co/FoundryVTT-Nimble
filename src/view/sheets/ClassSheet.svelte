@@ -6,6 +6,7 @@
 	import { createClassSheetState } from './ClassSheet.state.svelte.js';
 	import type { ClassSheetProps } from '#types/components/ClassSheet.d.ts';
 
+	import ChargePoolPicker from '#view/rulesBuilder/components/ChargePoolPicker.svelte';
 	import ClassProgressionTab from './pages/ClassProgressionTab.svelte';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
@@ -171,6 +172,122 @@
 					--nimble-tag-group-grid-columns="repeat(3, 1fr)"
 				/>
 			</section>
+		{/if}
+
+		<section>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.classSheet.spellcasting.heading')}
+				</h3>
+			</header>
+
+			<label class="nimble-field">
+				<input
+					type="checkbox"
+					checked={item.reactive.system.spellcasting.castAtHighestTier}
+					onchange={({ currentTarget }) =>
+						classState.toggleCastAtHighestTier(currentTarget.checked)}
+				/>
+
+				<span class="nimble-field__label">
+					{localize('NIMBLE.classSheet.spellcasting.castAtHighestTier')}
+
+					<i
+						class="nimble-field__hint-icon fa-solid fa-circle-info"
+						data-tooltip={localize('NIMBLE.classSheet.spellcasting.castAtHighestTierHint')}
+						data-tooltip-direction="UP"
+					></i>
+				</span>
+			</label>
+		</section>
+
+		<section>
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.spellcasting.poolIdentifier')}
+
+					<i
+						class="nimble-field__hint-icon fa-solid fa-circle-info"
+						data-tooltip={localize('NIMBLE.classSheet.spellcasting.poolIdentifierHint')}
+						data-tooltip-direction="UP"
+					></i>
+				</h3>
+			</header>
+
+			<ChargePoolPicker
+				value={item.reactive.system.spellcasting.cost.poolIdentifier}
+				onChange={(identifier) => classState.updateSpellCostPoolIdentifier(identifier)}
+				document={item}
+			/>
+		</section>
+
+		{#if item.reactive.system.spellcasting.cost.poolIdentifier.length}
+			<section>
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.classSheet.spellcasting.amount')}
+
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.classSheet.spellcasting.amountHint')}
+							data-tooltip-direction="UP"
+						></i>
+					</h3>
+				</header>
+
+				<input
+					type="text"
+					value={item.reactive.system.spellcasting.cost.amount}
+					onchange={({ currentTarget }) => classState.updateSpellCostAmount(currentTarget.value)}
+				/>
+			</section>
+
+			<section>
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.classSheet.spellcasting.overdraftConsequence')}
+
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.classSheet.spellcasting.overdraftConsequenceHint')}
+							data-tooltip-direction="UP"
+						></i>
+					</h3>
+				</header>
+
+				<TagGroup
+					grid={true}
+					options={classState.overdraftConsequenceOptions}
+					selectedOptions={[item.reactive.system.spellcasting.cost.overdraftConsequence]}
+					toggleOption={classState.toggleOverdraftConsequence}
+					--nimble-tag-group-grid-columns="repeat(2, 1fr)"
+				/>
+			</section>
+
+			{#if item.reactive.system.spellcasting.cost.overdraftConsequence.length}
+				<section>
+					<header class="nimble-section-header">
+						<h3 class="nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.classSheet.spellcasting.overdraftMaxLevel')}
+
+							<i
+								class="nimble-field__hint-icon fa-solid fa-circle-info"
+								data-tooltip={localize('NIMBLE.classSheet.spellcasting.overdraftMaxLevelHint')}
+								data-tooltip-direction="UP"
+							></i>
+						</h3>
+					</header>
+
+					<input
+						type="number"
+						min="1"
+						step="1"
+						value={item.reactive.system.spellcasting.cost.overdraftMaxLevel ?? ''}
+						onchange={({ currentTarget }) =>
+							classState.updateOverdraftMaxLevel(currentTarget.value)}
+					/>
+				</section>
+			{/if}
 		{/if}
 
 		<section>

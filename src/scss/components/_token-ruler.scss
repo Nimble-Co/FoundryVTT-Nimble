@@ -1,0 +1,41 @@
+// What the system adds to a token ruler label: the die of the Move on core's line, and lines of text under it.
+// Without the lines of text the label keeps core's layout.
+#measurement .waypoint-label .nimble-ruler-measure {
+  display: contents;
+}
+
+#measurement .waypoint-label:has(.nimble-ruler-budget, .nimble-ruler-hint) {
+  flex-direction: column;
+
+  .nimble-ruler-measure {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+#measurement .waypoint-label .nimble-ruler-move {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--font-size-20);
+  color: var(--color-text-emphatic);
+}
+
+// The colour of the grid spaces past the third Move.
+#measurement .waypoint-label .nimble-ruler-move-over {
+  font-size: var(--font-size-24);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--nimble-ruler-move-over-color);
+}
+
+#measurement .waypoint-label .nimble-ruler-budget {
+  font-size: var(--font-size-16);
+  color: var(--color-text-emphatic);
+}
+
+#measurement .waypoint-label .nimble-ruler-hint {
+  font-size: var(--font-size-12);
+  color: var(--color-text-subtle);
+}

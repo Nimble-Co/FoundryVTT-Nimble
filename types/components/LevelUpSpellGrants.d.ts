@@ -1,3 +1,4 @@
+import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import type {
 	SchoolSelectionGroup,
@@ -6,6 +7,8 @@ import type {
 
 export interface LevelUpSpellGrantsProps {
 	spells: SpellIndexEntry[];
+	/** Passed to each card so a spell's cost is the one this character pays. */
+	actor: SpellCostActorLike;
 	schoolSelections: SchoolSelectionGroup[];
 	spellSelections: SpellSelectionGroup[];
 	spellIndex: SpellIndex | null;

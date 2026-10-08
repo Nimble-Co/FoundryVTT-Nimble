@@ -18,7 +18,7 @@ function schema() {
 				label: 'NIMBLE.rules.grantSpells.schools.label',
 			},
 		),
-		tiers: new fields.ArrayField(new fields.NumberField({ integer: true, min: 0 }), {
+		tiers: new fields.ArrayField(new fields.NumberField({ integer: true, min: 0, max: 9 }), {
 			required: false,
 			nullable: false,
 			initial: [0],

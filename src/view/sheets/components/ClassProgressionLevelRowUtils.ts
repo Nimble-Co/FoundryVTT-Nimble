@@ -2,8 +2,8 @@ import type {
 	AbilityScoreDataEntry,
 	ClassProgressionLevelData,
 } from '#types/components/ClassProgressionTab.d.ts';
+import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
-import { formatGroupName } from '../pages/ClassProgressionTabUtils.js';
 
 function formatStats(stats: readonly string[] | string[]): string {
 	return stats

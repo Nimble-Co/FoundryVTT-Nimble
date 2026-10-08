@@ -11,8 +11,8 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "An ally makes a roll",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 0,
+				"type": "action",
 				"isReaction": true
 			},
 			"duration": {

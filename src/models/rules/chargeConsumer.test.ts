@@ -9,6 +9,33 @@ describe('ChargeConsumerRule', () => {
 			expect(schema).toHaveProperty('poolIdentifier');
 			expect(schema).toHaveProperty('poolScope');
 			expect(schema).toHaveProperty('cost');
+			expect(schema).toHaveProperty('costMode');
+			expect(schema).toHaveProperty('maxCost');
+		});
+
+		it('spends a fixed cost until told otherwise', () => {
+			const schema = ChargeConsumerRule.defineSchema() as any;
+
+			expect(schema.costMode.initial).toBe('fixed');
+			expect(schema.maxCost.initial).toBe('');
+		});
+
+		it('offers both cost modes with localized labels', () => {
+			const schema = ChargeConsumerRule.defineSchema() as any;
+			const choices = schema.costMode.choices();
+
+			expect(choices).toEqual({
+				fixed: 'NIMBLE.rules.chargeConsumer.costMode.choices.fixed',
+				variable: 'NIMBLE.rules.chargeConsumer.costMode.choices.variable',
+			});
+		});
+
+		it('shows the ceiling only where it applies', () => {
+			const schema = ChargeConsumerRule.defineSchema() as any;
+			const { showWhen } = schema.maxCost.options;
+
+			expect(showWhen({ costMode: 'variable' })).toBe(true);
+			expect(showWhen({ costMode: 'fixed' })).toBe(false);
 		});
 	});
 

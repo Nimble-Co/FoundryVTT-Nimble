@@ -4,6 +4,7 @@
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
+	import OptionChangesList from './components/OptionChangesList.svelte';
 	import RollSummary from './components/RollSummary.svelte';
 
 	let { messageDocument } = $props();
@@ -18,6 +19,7 @@
 	const wasMaximized = $derived(system.wasMaximized);
 	const hadAdvantage = $derived(system.hadAdvantage);
 	const advantageSource = $derived(system.advantageSource);
+	const optionChanges = $derived(system.optionChanges ?? []);
 	const manaRestored = $derived(system.manaRestored);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
@@ -107,15 +109,18 @@
 				{/if}
 			</div>
 		{/if}
+
+		<OptionChangesList changes={optionChanges} />
 	</section>
 </article>
 
 <style lang="scss">
 	.nimble-card-section {
+		--nimble-card-section-padding: 0.5rem;
+
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		padding: 0.5rem;
 	}
 
 	.hit-dice-spent {

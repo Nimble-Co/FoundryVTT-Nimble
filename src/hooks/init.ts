@@ -24,7 +24,10 @@ import ObjectSheet from '../documents/sheets/ObjectSheet.svelte.js';
 import PlayerCharacterSheet from '../documents/sheets/PlayerCharacterSheet.svelte.js';
 import SpellSheet from '../documents/sheets/SpellSheet.svelte.js';
 import SubclassSheet from '../documents/sheets/SubclassSheet.svelte.js';
+import { NimbleToken } from '../documents/token/token.js';
 import { NimbleTokenDocument } from '../documents/token/tokenDocument.js';
+import { NimbleTokenLayer } from '../documents/token/tokenLayer.js';
+import { NimbleTokenRuler } from '../documents/token/tokenRuler.js';
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 import { NIMBLE_GAME } from '../game.js';
 import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels.js';
@@ -32,6 +35,7 @@ import actorDataModels from '../models/actor/actorDataModels.js';
 import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
+import { registerMovementActions } from '../utils/movement/movementActions.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -46,6 +50,10 @@ export default function init() {
 	CONFIG.Item.documentClass = ItemProxy as typeof CONFIG.Item.documentClass;
 	CONFIG.Scene.documentClass = NimbleScene as typeof CONFIG.Scene.documentClass;
 	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;
+	CONFIG.Token.objectClass = NimbleToken as unknown as typeof CONFIG.Token.objectClass;
+	CONFIG.Token.rulerClass = NimbleTokenRuler as unknown as typeof CONFIG.Token.rulerClass;
+	CONFIG.Canvas.layers.tokens.layerClass =
+		NimbleTokenLayer as unknown as typeof CONFIG.Canvas.layers.tokens.layerClass;
 
 	// Add data models. ActiveEffect must MERGE, not replace: V14 registers a core
 	// `base` model (foundry.data.ActiveEffectTypeDataModel) that owns the AE V2
@@ -86,6 +94,9 @@ export default function init() {
 
 	// Register Nimble custom Die modifiers (khn / kln — leftmost-on-tie keep).
 	registerNimbleDieModifiers();
+
+	// Movement actions must exist before Foundry freezes CONFIG.Token.movement.actions in setup.
+	registerMovementActions();
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;

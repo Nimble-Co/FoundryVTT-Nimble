@@ -23,6 +23,12 @@ The harness handles the rest: if Foundry is sitting on the **setup screen**, it 
 pnpm test:integration
 ```
 
+Foundry serves the worktree's `dist/`, which `pnpm worktree:setup` builds once. `pnpm dev` does not rebuild it, so after source changes either run `pnpm build` or point the suite at the Vite dev server, which injects the current bundle:
+
+```sh
+FOUNDRY_URL=http://localhost:30001 pnpm test:integration
+```
+
 ## Configuration
 
 Set environment variables in `.env.local` at the repo root (loaded automatically, not committed):

@@ -15,6 +15,7 @@ import {
 	computeIncomingAttackPlan,
 } from '../../../utils/incomingAttackModifiers.js';
 import localize from '../../../utils/localize.js';
+import { DEFAULT_MISS_THRESHOLD } from '../../../utils/missThreshold.js';
 import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
 import sortItems from '../../../utils/sortItems.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
@@ -264,6 +265,9 @@ export function createAttackPanelState(
 			];
 		}
 		if (incomingAttackPlan.forceMiss) rollOptions.forceMiss = true;
+		if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
+			rollOptions.missThreshold = incomingAttackPlan.missThreshold;
+		}
 		if (incomingAttackPlan.appliedEntries.length > 0) {
 			(rollOptions as { incomingAttackModifiers?: unknown }).incomingAttackModifiers =
 				incomingAttackPlan.appliedEntries;

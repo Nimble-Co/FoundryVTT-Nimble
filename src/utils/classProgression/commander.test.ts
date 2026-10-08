@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -71,6 +72,7 @@ const EXPECTED_AUTO_UNION = [
 	'Weapon Mastery',
 	'Unparalleled Tactics',
 	'Captain of Legions',
+	'Rigorous Training',
 ];
 
 /** #708 option features expected to surface a picker, keyed by level. */
@@ -352,5 +354,90 @@ describe('Commander — "Choose a Combat Ability" is one combined pool (#708)', 
 			expect(pool.selectionCount).toBe(1);
 			expect(pool.options.length).toBeGreaterThanOrEqual(1);
 		}
+	});
+});
+
+// --- Pack data --------------------------------------------------------------
+
+/** One recovery entry on a charge pool: when it refills and by how much. */
+interface PoolRecovery {
+	trigger: string;
+	mode: string;
+	value: string;
+}
+
+/** A rule of any type, narrowed to the charge-pool fields the tests read. */
+interface PoolRule {
+	type: string;
+	identifier: string;
+	recoveries?: PoolRecovery[];
+}
+
+/** An activation effect node, narrowed to the fields the tests read. */
+interface EffectNode {
+	type: string;
+	noteType?: string;
+	text?: string;
+	formula?: string;
+}
+
+const { feature: commanderFeature } = packFeatureHelpers('commander');
+
+function poolRulesOf(name: string): PoolRule[] {
+	return (commanderFeature(name).system.rules ?? []) as PoolRule[];
+}
+
+function effectsOf(name: string): EffectNode[] {
+	return (commanderFeature(name).system.activation?.effects ?? []) as EffectNode[];
+}
+
+describe('Commander — Combat Dice pool in the pack data', () => {
+	it('ships an encounterEnd recovery that sets the combat-dice pool to 0', () => {
+		const pool = poolRulesOf('Fit for Any Battlefield').find(
+			(rule) => rule.type === 'chargePool' && rule.identifier === 'combat-dice',
+		);
+		expect(pool, 'combat-dice charge pool').toBeDefined();
+
+		const encounterEnd = (pool?.recoveries ?? []).filter(
+			(recovery) => recovery.trigger === 'encounterEnd',
+		);
+		expect(encounterEnd).toEqual([{ trigger: 'encounterEnd', mode: 'set', value: '0' }]);
+	});
+});
+
+describe('Commander — Hold the Line! in the pack data', () => {
+	it('ships one healing node of 3 * @level', () => {
+		const healing = effectsOf('Hold the Line!').filter((node) => node.type === 'healing');
+		expect(healing).toHaveLength(1);
+		expect(healing[0].formula).toBe('3 * @level');
+	});
+
+	it('ships no warning note', () => {
+		const warnings = effectsOf('Hold the Line!').filter(
+			(node) => node.type === 'note' && node.noteType === 'warning',
+		);
+		expect(warnings).toEqual([]);
+	});
+});
+
+describe('Commander — I Can Do This ALL DAY! in the pack data', () => {
+	it('ships an action cost of 1, as a reaction', () => {
+		const cost = commanderFeature('I Can Do This ALL DAY!').system.activation?.cost;
+		expect(cost?.type).toBe('action');
+		expect(cost?.quantity).toBe(1);
+		expect(cost?.isReaction).toBe(true);
+	});
+});
+
+describe('Commander — Commanding Presence in the pack data', () => {
+	it('ships no damage node', () => {
+		const damage = effectsOf('Commanding Presence').filter((node) => node.type === 'damage');
+		expect(damage).toEqual([]);
+	});
+
+	it('keeps the Combat Tactics note the other tactics carry', () => {
+		const noteTexts = (name: string) =>
+			effectsOf(name).flatMap((node) => (node.type === 'note' ? [node.text] : []));
+		expect(noteTexts('Commanding Presence')).toEqual(noteTexts('Heavy Strike'));
 	});
 });

@@ -6,18 +6,7 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [
-			{
-				"type": "maxWounds",
-				"disabled": false,
-				"id": "NRuKjNvofPWzKu5v",
-				"identifier": "",
-				"label": "Enveloped by the Master",
-				"predicate": {},
-				"priority": 1,
-				"value": "1d4"
-			}
-		],
+		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

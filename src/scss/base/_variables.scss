@@ -74,6 +74,16 @@
 	--nimble-selected-tag-text-color: white;
 	--nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
 	--nimble-hp-bar-background: hsl(0, 0%, 24%);
+
+	/** RESOURCE BARS (mana, promoted charge pools) **/
+	--nimble-resource-bar-border-color: var(--nimble-box-color);
+	--nimble-resource-bar-text-color: var(--nimble-light-text-color);
+	--nimble-resource-bar-shadow-color: hsla(0, 0%, 0%, 0.45);
+	--nimble-resource-bar-fill: linear-gradient(
+		to right,
+		hsl(207deg 47% 20%) 0%,
+		hsl(212deg 47% 44%) 100%
+	);
 	--nimble-range-slider-handle-color: hsl(223, 14%, 35%);
 	--nimble-image-background-color: #494949;
 	--nimble-basic-button-background-color: hsl(41, 18%, 80%);
@@ -93,6 +103,18 @@
 	--nimble-damage-badge-resistant-color: hsl(210, 75%, 26%);
 	--nimble-damage-badge-reduction-background-color: hsl(105, 22%, 80%);
 	--nimble-damage-badge-reduction-color: hsl(109, 60%, 20%);
+
+	/** MOVEMENT TAGS **/
+	--nimble-movement-chip-background-color: hsl(41, 20%, 88%);
+	--nimble-movement-chip-done-background-color: hsl(105, 22%, 80%);
+	--nimble-movement-chip-done-color: hsl(109, 60%, 20%);
+	--nimble-movement-chip-short-background-color: hsl(40, 80%, 82%);
+	--nimble-movement-chip-short-color: hsl(30, 90%, 25%);
+
+	/** MOVES ON THE TOKEN RULER: the ruler reads these, so each must be a 6-digit hex colour **/
+	--nimble-ruler-move-2-color: #f2c94c;
+	--nimble-ruler-move-3-color: #f2994a;
+	--nimble-ruler-move-over-color: #eb5757;
 
 	--nimble-condition-hud-disabled-color: hsl(130, 42%, 44%);
 	--nimble-condition-hud-selected-color: hsl(130, 60%, 36%);
@@ -242,6 +264,10 @@
 	--nimble-chat-advantage-background: hsla(210, 70%, 50%, 0.15);
 	--nimble-chat-advantage-color: hsl(210, 70%, 40%);
 	--nimble-chat-advantage-border-color: hsla(210, 70%, 50%, 0.3);
+	--nimble-chat-concentration-background: hsla(280, 55%, 50%, 0.15);
+	--nimble-chat-concentration-color: hsl(280, 55%, 40%);
+	--nimble-chat-upcast-background: hsla(150, 50%, 45%, 0.15);
+	--nimble-chat-upcast-color: hsl(150, 50%, 32%);
 
 	/** WEAPON CARD COLORS **/
 	--nimble-weapon-toggle-on-color: hsl(120, 45%, 40%);

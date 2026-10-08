@@ -18,12 +18,12 @@ References start with `@` and are filled in from the character carrying the item
 | Reference | Value |
 | :--- | :--- |
 | `@level` | Character level. |
-| `@strength`, `@dexterity`, `@constitution`, `@intelligence`, `@will` | The character's stat modifiers. |
+| `@strength`, `@dexterity`, `@intelligence`, `@will` | The character's stat modifiers. |
 | `@key` | The highest modifier among the character's class key stats, handy for class features that should work for every subclass build. |
 | `@strengthSave`, `@dexteritySave`, `@intelligenceSave`, `@willSave` | Saving throw modifiers. |
 | `@arcana`, `@examination`, `@finesse`, `@influence`, `@insight`, `@lore`, `@might`, `@naturecraft`, `@perception`, `@stealth` | Skill modifiers. |
 
-You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.movement.walk`. On NPCs and monsters the shortcuts above are mostly unavailable. Stick to plain numbers or full paths for monster features.
+You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only the save shortcuts work, so use full paths for monster features. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
 
 Formulas support basic math (`+`, `-`, `*`, `/`, parentheses) and rounding helpers: `floor(@level / 2)` gives half the character's level, rounded down.
 
@@ -85,3 +85,4 @@ The exception is the **Damage Bonus** rule. Its **Bonus** field recognizes dice 
 - [The Condition Box](predicates.md)
 - [Rules Reference: Bonuses](../reference/rules-bonuses.md)
 - [Rules Reference: Resources](../reference/rules-resource.md)
+- [Formula Reference](../reference/formula-reference.md)

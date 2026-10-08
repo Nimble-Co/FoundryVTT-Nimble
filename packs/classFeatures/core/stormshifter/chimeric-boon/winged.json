@@ -6,15 +6,7 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [
-			{
-				"type": "speedBonus",
-				"value": "@attributes.movement.walk",
-				"movementType": "fly",
-				"label": "Winged",
-				"id": "RivdlU4xcZIxnZQt"
-			}
-		],
+		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

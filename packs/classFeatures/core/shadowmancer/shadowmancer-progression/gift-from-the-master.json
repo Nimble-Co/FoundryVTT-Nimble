@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "",
+		"description": "<p>Choose 1 Greater Shadow Invocation.</p><hr><p>Level 6: Choose a 2nd Greater Shadow Invocation.</p><p>Level 9: Choose a 3rd Greater Shadow Invocation.</p><p>Level 14: Choose a 4th Greater Shadow Invocation.</p><p>Level 18: Choose a 5th Greater Shadow Invocation.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
 		"group": "shadowmancer-progression",

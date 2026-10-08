@@ -7,6 +7,9 @@
 			"rules": {
 				"index:0": {
 					"label": "+1 Speed"
+				},
+				"wczhdygtYEAnNUS0": {
+					"label": "+1 Speed"
 				}
 			}
 		},
@@ -87,6 +90,9 @@
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 Speed [M]<br>+4 Initiative [A]</span></p>",
 			"name": "Epic Speed",
 			"rules": {
+				"C7maLpA1q4TnENvQ": {
+					"label": "Epic Speed"
+				},
 				"index:1": {
 					"label": "Epic Speed"
 				}
@@ -117,6 +123,9 @@
 			"description": "<p>+1 max Hit Die. [M]</p>",
 			"name": "Feisty",
 			"rules": {
+				"2lMztAia47L6iT1s": {
+					"label": "Feisty"
+				},
 				"index:0": {
 					"label": "Feisty"
 				}
@@ -145,7 +154,12 @@
 		},
 		"Hardy": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you would roll your Hit Dice to increase your max HP, roll with advantage 2 instead. [M]</span></p>",
-			"name": "Hardy"
+			"name": "Hardy",
+			"rules": {
+				"1lZPqDoh5KF6oxc5": {
+					"label": "Hardy"
+				}
+			}
 		},
 		"Honorable Protector": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain LVL temp HP whenever you Interpose. Suffer LVL psychic damage whenever an ally within 2 spaces is attacked and you don't Interpose. [M]</span></p>",
@@ -160,6 +174,9 @@
 			"name": "Intrepid",
 			"rules": {
 				"index:0": {
+					"label": "Intrepid"
+				},
+				"lApcrxi3FeR92dow": {
 					"label": "Intrepid"
 				}
 			}
@@ -217,6 +234,9 @@
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+1 max Hit Die. [M]</span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Might. [A]</span></p>",
 			"name": "Stalwart",
 			"rules": {
+				"i7arJ8qAqOVRtpXG": {
+					"label": "Stalwart"
+				},
 				"index:1": {
 					"label": "Stalwart"
 				}
@@ -230,6 +250,9 @@
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 max Hit Dice. [M]</span></p>",
 			"name": "Tenacious",
 			"rules": {
+				"3Lgy6EQ3HyPW4D27": {
+					"label": "Tenacious"
+				},
 				"index:0": {
 					"label": "Tenacious"
 				}

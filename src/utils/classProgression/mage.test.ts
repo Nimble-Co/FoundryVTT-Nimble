@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -221,5 +222,49 @@ describe('Mage — pools match the report (case-insensitive group match)', () =>
 		expect(pool.selectionCount).toBe(2);
 		const reportPool = REPORT.levels[3].pools.find((p) => norm(p.group) === 'spellshaper');
 		expect([...pool.options].sort()).toEqual([...(reportPool?.options ?? [])].sort());
+	});
+});
+
+/**
+ * Asserts the shipped compendium data itself, the way
+ * `CharacterCreationDialog.test.ts` asserts the background packs: a typo in the
+ * pack (`skillCheck` for `abilityCheck`, `disabled: true`, a dropped skill)
+ * fails here instead of shipping a feature that does nothing.
+ */
+describe('Mage — shipped pack data', () => {
+	const { feature: packFeature } = packFeatureHelpers(CLASS_ID);
+
+	function packRules(name: string): Record<string, unknown>[] {
+		return (packFeature(name).system.rules ?? []) as Record<string, unknown>[];
+	}
+
+	// The advantage only applies with books and study time, so it is offered per
+	// roll in the check dialog rather than baked into the skill's default mode.
+	it('ships exactly one situational roll rule on Talented Researcher', () => {
+		const situational = packRules('Talented Researcher').filter(
+			(rule) => rule.type === 'situationalRollMode',
+		);
+
+		expect(situational).toHaveLength(1);
+		expect(situational[0]).toEqual(
+			expect.objectContaining({
+				checkType: 'skillCheck',
+				skills: ['arcana', 'lore'],
+				value: 1,
+				disabled: false,
+			}),
+		);
+	});
+
+	it('labels the Talented Researcher rule with the condition it needs', () => {
+		const [situational] = packRules('Talented Researcher').filter(
+			(rule) => rule.type === 'situationalRollMode',
+		);
+
+		expect(String(situational?.label ?? '').trim()).not.toBe('');
+	});
+
+	it('gives Spell Shaper a description', () => {
+		expect(String(packFeature('Spell Shaper').system.description ?? '').trim()).not.toBe('');
 	});
 });

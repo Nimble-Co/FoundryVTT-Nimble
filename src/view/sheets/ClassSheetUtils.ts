@@ -29,6 +29,13 @@ export function prepareManaRecoveryTypeOptions(): TagOption[] {
 	}));
 }
 
+export function prepareOverdraftConsequenceOptions(): TagOption[] {
+	return Object.entries(CONFIG.NIMBLE.overdraftConsequences).map(([key, label]) => ({
+		label: label as string,
+		value: key,
+	}));
+}
+
 export function prepareSavingThrowTagOptions(): TagOption[] {
 	return Object.entries(CONFIG.NIMBLE.savingThrows).map(([key, label]) => ({
 		label: label as string,

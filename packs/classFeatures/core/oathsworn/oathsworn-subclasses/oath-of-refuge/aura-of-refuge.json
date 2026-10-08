@@ -17,7 +17,7 @@
 					"self": "shield"
 				},
 				"priority": 1,
-				"formula": "@willpower",
+				"formula": "@will",
 				"mode": "add"
 			},
 			{

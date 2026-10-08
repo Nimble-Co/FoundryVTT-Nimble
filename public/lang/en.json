@@ -94,6 +94,8 @@
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
+			"concentrationApplied": "Concentration Applied",
+			"concentrationFailed": "The concentration condition could not be applied to the caster.",
 			"healing": "Healing",
 			"healingApplied": "Healing Applied",
 			"undoHealing": "Undo Healing",
@@ -115,6 +117,72 @@
 				"gainActionsNextTurn": "{name} gains {count} actions at the start of their next turn",
 				"loseActionNextTurn": "{name} loses {count} action at the start of their next turn",
 				"loseActionsNextTurn": "{name} loses {count} actions at the start of their next turn"
+			},
+			"movementOffers": {
+				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"upTo": "up to {distance}",
+				"directions": {
+					"away": "away from {source}",
+					"toward": "toward {source}",
+					"any": "in any direction"
+				},
+				"distanceAndDirection": "{distance} {direction}",
+				"sentences": "{first} {second}",
+				"verbs": {
+					"away": { "past": "Pushed", "passive": "pushed" },
+					"toward": { "past": "Pulled", "passive": "pulled" },
+					"any": { "past": "Moved", "passive": "moved" }
+				},
+				"forFree": {
+					"plain": "for free",
+					"ignoringDifficultTerrain": "for free, ignoring difficult terrain"
+				},
+				"summary": {
+					"forced": "{verb} {motion}.",
+					"forcedBare": "{verb}.",
+					"free": "Can move {motion} {forFree}.",
+					"freeBare": "Can move {forFree}.",
+					"eachShowsSpaces": "Each creature shows its spaces."
+				},
+				"status": {
+					"forced": {
+						"open": "Waiting to be {passive} {motion}.",
+						"taken": "{verb} the full {offered}.",
+						"short": "{verb} {moved} of {offered}.",
+						"unused": "Not {passive}. The token was moved another way.",
+						"unusedAny": "Not moved by this effect. The token was moved another way.",
+						"lapsed": "Not {passive}. The turn ended first.",
+						"failedSave": "Will be {passive} {motion} on a failed save.",
+						"passedSave": "Will be {passive} {motion} on a passed save.",
+						"otherSave": "Will be {passive} {motion}, depending on the save."
+					},
+					"free": {
+						"open": "Can move {motion} {forFree}.",
+						"taken": "Moved the full {offered} for free.",
+						"partial": "Moved {moved} of {offered} for free.",
+						"short": "Moved {moved} of {offered} for free before something blocked the path.",
+						"unused": "Did not move for free. The token was moved another way.",
+						"lapsed": "Did not move for free. The turn ended first.",
+						"failedSave": "Can move {motion} for free on a failed save.",
+						"passedSave": "Can move {motion} for free on a passed save.",
+						"otherSave": "Can move {motion} for free, depending on the save."
+					}
+				},
+				"chip": { "notMoved": "Not {passive}", "notUsed": "Not used" },
+				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
+				"noRecipient": "No creature to move."
+			},
+			"movementTrigger": {
+				"use": "Use {name}",
+				"targets": "Creatures: {names}",
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"movement": "{mover} moved {spaces}.",
+				"movementThisTurn": "{mover} moved {spaces}, {spacesThisTurn} this turn.",
+				"unknownMover": "A creature",
+				"useFailed": "Could not use {name}."
 			},
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
@@ -360,6 +428,13 @@
 			"wounded": "Wounded",
 			"lastStand": "Last Stand"
 		},
+		"concentration": {
+			"endPrompt": {
+				"title": "End Concentration",
+				"content": "This caster is concentrating on more than one thing. Which should end?",
+				"all": "End All"
+			}
+		},
 		"conditionDescriptions": {
 			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
 			"bloodied": "<p>At half HP or less.</p>",
@@ -457,6 +532,50 @@
 			"boon": "Boon",
 			"class": "Class"
 		},
+		"featureGroupHeadings": {
+			"a-people-person": "A People Person",
+			"beastmaster": "Beastmaster",
+			"champion-of-the-bulwark": "Champion of the Bulwark",
+			"champion-of-the-vanguard": "Champion of the Vanguard",
+			"chimeric-boon": "Chimeric Boon",
+			"circle-of-fang-and-claw": "Circle of Fang and Claw",
+			"circle-of-sky-and-storm": "Circle of Sky and Storm",
+			"combat-tactics": "Combat Tactics",
+			"commanders-orders": "Commander's Orders",
+			"direbeast-form": "Direbeast Form",
+			"greater-invocations": "Greater Invocations",
+			"herald-of-courage": "Herald of Courage",
+			"herald-of-snark": "Herald of Snark",
+			"invoker-of-chaos": "Invoker of Chaos",
+			"invoker-of-control": "Invoker of Control",
+			"keeper-of-the-shadowpath": "Keeper of the Shadowpath",
+			"keeper-of-the-wildheart": "Keeper of the Wildheart",
+			"lesser-invocations": "Lesser Invocations",
+			"luminary-of-malice": "Luminary of Malice",
+			"luminary-of-mercy": "Luminary of Mercy",
+			"lyrical-weaponry": "Lyrical Weaponry",
+			"martial-arts-ability": "Martial Arts Ability",
+			"oath-of-refuge": "Oath of Refuge",
+			"oath-of-vengeance": "Oath of Vengeance",
+			"oathbreaker": "Oathbreaker",
+			"pact-of-the-abyssal-depths": "Pact of the Abyssal Depths",
+			"pact-of-the-red-dragon": "Pact of the Red Dragon",
+			"path-of-the-mountainheart": "Path of the Mountainheart",
+			"path-of-the-red-mist": "Path of the Red Mist",
+			"reaver": "Reaver",
+			"sacred-decree": "Sacred Decree",
+			"sacred-grace": "Sacred Grace",
+			"savage-arsenal": "Savage Arsenal",
+			"spellblade": "Spellblade",
+			"spellshaper": "Spellshaper",
+			"thrill-of-the-hunt": "Thrill of the Hunt",
+			"tools-of-the-scoundrel": "Tools of the Scoundrel",
+			"tools-of-the-silent-blade": "Tools of the Silent Blade",
+			"underhanded-abilities": "Underhanded Abilities",
+			"way-of-flame": "Way of Flame",
+			"way-of-pain": "Way of Pain",
+			"weapon-mastery": "Weapon Mastery"
+		},
 		"featureTypeHeadings": {
 			"ancestry": "Ancestry",
 			"ancestryBonus": "Ancestry Bonus",
@@ -523,6 +642,47 @@
 			"swim": "Swimming",
 			"walk": "Walking"
 		},
+		"containerSlotCostModes": {
+			"none": "Normal slot cost",
+			"ignore": "Ignore slot cost",
+			"reduce": "Reduce slot cost",
+			"half": "Half slot cost"
+		},
+		"inventory": {
+			"stowedSlotsRequired": "Slots When Stowed",
+			"stowedSlotsRequiredHint": "Slots this takes while it is not equipped. Worn armor takes 1 slot and the same armor packed away takes 2. Leave blank to cost the same either way."
+		},
+		"containers": {
+			"allowedObjectTypes": "Allowed Object Types",
+			"allowedObjectTypesHint": "Only objects of these types may be stored. Select none to allow anything.",
+			"capacity": "Capacity",
+			"capacityHint": "How many slots' worth of objects fit inside. Leave blank for no limit.",
+			"capacityUsage": "{used} / {capacity} slots stored",
+			"chooseContainer": "Where should {object} go?",
+			"chooseContainerTitle": "Store Object",
+			"storeObject": "Store {object} in a container",
+			"takeOut": "Take {object} out of {container}",
+			"deleteStocked": "Deleting {container} will empty it. The {count} objects inside go back into the inventory. Continue?",
+			"deleteStockedTitle": "Delete a container that holds objects",
+			"empty": "Nothing stored",
+			"enabled": "This Object Is A Container",
+			"enabledHint": "Objects can be dropped into this one, and this object's rule changes what they cost their carrier.",
+			"heading": "Container",
+			"quantityExceedsCapacity": "{container} has no room for that many of {object}.",
+			"rejection": {
+				"capacity": "{container} has no room left for {object}.",
+				"nested": "{object} is a container, and containers cannot be stored inside other containers.",
+				"nestedConfig": "{object} is stored in a container, so it cannot become one. Take it out first.",
+				"notAContainer": "{container} is not a container.",
+				"objectType": "{container} does not hold objects of that type."
+			},
+			"releaseFailed": "Could not empty {container}. The objects it held may still point at it.",
+			"requiresEquipped": "Only Apply While Equipped",
+			"slotCostMode": "Stored Object Slot Cost",
+			"slotCostReduction": "Slots Reduced By",
+			"unequipToStore": "Putting {object} into {container} will unequip it. Continue?",
+			"unequipToStoreTitle": "Unequip to store"
+		},
 		"objectSizeTypes": {
 			"slots": "Slots required",
 			"stackable": "Stackable",
@@ -563,6 +723,8 @@
 			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
+			"configureItem": "Configure {name}",
+			"deleteItem": "Delete {name}",
 			"toggleEquipment": "Toggle Equipped State of {name}",
 			"equippedTooltip": "Equipped",
 			"unequippedTooltip": "Not Equipped",
@@ -625,7 +787,8 @@
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
-			"levelUpInProgress": "Cannot revert level while a level up is in progress."
+			"levelUpInProgress": "Cannot revert level while a level up is in progress.",
+			"skillPointsMovedAway": "This level's skill points were moved to other skills, so they could not all be taken back: {skills}. Adjust the skills by hand."
 		},
 		"levelCorrectionDialog": {
 			"title": "Level Correction",
@@ -783,13 +946,15 @@
 			"chargeConsumer": "Charge Consumer",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
+			"concentrationTrack": "Concentration Track",
 			"conditionalBonus": "Conditional Bonus",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
 			"damageReduction": "Damage Reduction",
 			"dyingActionLimit": "Dying Action Limit",
 			"grantActivation": "Grant Activation",
-			"grantMovement": "Grant Movement",
+			"freeMove": "Move for Free",
+			"grantMovement": "Grant Movement Mode",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
 			"grantItem": "Item",
@@ -810,12 +975,16 @@
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
 			"modifyToggle": "Modify Toggle",
+			"movementTrigger": "Movement Trigger",
 			"note": "Note",
+			"optionSwap": "Option Swap",
 			"poolGainMessage": "Pool Gain Message",
+			"poolMaxBonus": "Pool Max Bonus",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"situationalRollMode": "Situational Roll Mode",
 			"skillBonus": "Skill Bonus",
+			"skillPointMove": "Skill Point Move",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
@@ -902,7 +1071,23 @@
 				}
 			},
 			"chargeConsumer": {
-				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
+				"description": "Spend charges from an item or actor pool when this rule’s owner is activated.",
+				"costMode": {
+					"label": "Cost mode",
+					"hint": "Fixed spends the cost every activation. Variable asks the player how much to spend, from the cost up to the maximum, and the item’s effect formulas read the chosen amount as @spent.",
+					"choices": {
+						"fixed": "Fixed",
+						"variable": "Variable"
+					}
+				},
+				"cost": {
+					"label": "Cost",
+					"hint": "Charges spent per activation. In variable mode this is the smallest amount the player may choose."
+				},
+				"maxCost": {
+					"label": "Maximum cost",
+					"hint": "Variable mode only. Ceiling formula for the player’s choice. Leave blank to allow the pool’s remaining charges."
+				}
 			},
 			"diceConsumer": {
 				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool.",
@@ -950,6 +1135,10 @@
 					"label": "Hide from sheet",
 					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
 				},
+				"showAsResource": {
+					"label": "Show as a resource",
+					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
+				},
 				"recoveries": {
 					"label": "Recoveries",
 					"hint": "When and how charges are restored. Add an entry per trigger.",
@@ -969,6 +1158,13 @@
 			},
 			"combatMana": {
 				"description": "Grant a mana resource on a combat trigger and clear it on a configurable event."
+			},
+			"concentrationTrack": {
+				"description": "Track concentration on the named spell schools separately, so the actor can concentrate on one spell from each at the same time.",
+				"schools": {
+					"label": "Tracked separately",
+					"hint": "Each school named here gets a concentration of its own. Naming schools splits the caster's single concentration rather than adding one, so casting in a school no rule names ends every concentration they hold."
+				}
 			},
 			"conditionImmunity": {
 				"description": "Make the actor immune to one or more named conditions.",
@@ -1094,6 +1290,104 @@
 					"label": "Granted activation",
 					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
 				}
+			},
+			"freeMove": {
+				"description": "Let a creature move for free, on a chat card, when an event occurs. The player chooses where to move, or chooses not to move.",
+				"trigger": {
+					"label": "Trigger",
+					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit."
+				},
+				"poolIdentifier": {
+					"label": "Dice pool",
+					"hint": "The dice pool that must gain dice (e.g. fury)."
+				},
+				"distance": {
+					"label": "Distance",
+					"hint": "How many spaces the creature can move. A formula: @speed is the speed of the creature that moves, and all other references use the data of this creature."
+				},
+				"recipient": {
+					"label": "Recipient",
+					"hint": "Who can move for free. self: this creature. allies: each ally within the set number of spaces. selfAndAllies: this creature and each ally within that number of spaces."
+				},
+				"within": {
+					"label": "Allies within (spaces)",
+					"hint": "The maximum number of spaces between this creature and an ally that can move for free. 0 means all allies on the scene."
+				},
+				"direction": {
+					"label": "Direction",
+					"hint": "any: in any direction. away: away from this creature. toward: toward this creature."
+				},
+				"ignoresDifficultTerrain": {
+					"label": "Ignores difficult terrain",
+					"hint": "When set, difficult terrain does not decrease the move."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the rule lets the creature move for free only while this charge pool has a charge, and each card it posts spends 1 charge. Leave empty for no limit."
+				},
+				"whisper": {
+					"label": "Whisper the card",
+					"hint": "When set, only the feature's owner, the players whose creatures get the move, and the GM see the card. When not set, everyone sees it."
+				},
+				"reasons": {
+					"onActivation": "used {item}",
+					"onPoolGain": "gained {pool}",
+					"onInitiativeRolled": "rolled Initiative",
+					"onTurnStart": "turn started",
+					"onCritReceived": "took a critical hit"
+				}
+			},
+			"movementTrigger": {
+				"description": "Post a chat card when a Movement in a started combat agrees with the conditions. The card lets the owner use this item.",
+				"event": {
+					"label": "Event",
+					"hint": "selfMoved: this creature moves. creatureMoved: a different creature moves."
+				},
+				"creature": {
+					"label": "Creature",
+					"hint": "selfMoved: the other creatures that the geometry is tested against. creatureMoved: the creatures whose Movement counts. enemy, ally, or any."
+				},
+				"kinds": {
+					"label": "Movement kinds",
+					"hint": "The kinds of Movement that count: regular, free, and forced. By default all three count. A Teleport never counts."
+				},
+				"minSpaces": {
+					"label": "Minimum spaces",
+					"hint": "The Movement counts only when the creature moved this number of spaces or more."
+				},
+				"spacesScope": {
+					"label": "Count spaces",
+					"hint": "thisTurn: all spaces moved this turn. thisMovement: the spaces of this Movement only."
+				},
+				"geometry": {
+					"label": "Geometry",
+					"hint": "any: no position test. endsAdjacent: the Movement stops in the Reach of the creature. enteredReach: it goes into the Reach. leftReach: it goes out of the Reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started."
+				},
+				"reach": {
+					"label": "Reach",
+					"hint": "The Reach, in spaces, that the geometry tests use. Reach 1 is adjacent."
+				},
+				"minTargets": {
+					"label": "Minimum creatures",
+					"hint": "The number of creatures that must agree with the geometry."
+				},
+				"observerScope": {
+					"label": "Watched creatures",
+					"hint": "self: the geometry is tested against this creature only. selfOrAllyWithin: against this creature or an ally within the set number of spaces."
+				},
+				"allyRadius": {
+					"label": "Allies within (spaces)",
+					"hint": "The maximum number of spaces between this creature and a watched ally. 0 means all allies on the scene."
+				},
+				"message": {
+					"label": "Message",
+					"hint": "The text on the card, under the line that says who moved and how far. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn) and {targets} (the creatures that were found). Leave empty to use the default text."
+				},
+				"whisper": {
+					"label": "Whisper the card",
+					"hint": "When set, only the feature's owner and the GM see the card. When not set, everyone sees it."
+				},
+				"defaultMessage": "You can use this item now."
 			},
 			"grantMovement": {
 				"description": "Grant a base movement mode (walk, fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
@@ -1244,10 +1538,17 @@
 				}
 			},
 			"modifyIncomingAttack": {
-				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, a raised miss threshold, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"modifiers": {
+					"disadvantage": "Disadvantage",
+					"forceReroll": "Force Reroll",
+					"redirectToSelf": "Redirect to Self",
+					"autoMiss": "Auto Miss",
+					"raiseMissThreshold": "Raise Miss Threshold"
+				},
 				"modifier": {
 					"label": "Modifier",
-					"hint": "Disadvantage and Auto Miss apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card."
+					"hint": "Disadvantage, Auto Miss, and Raise Miss Threshold apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card."
 				},
 				"range": {
 					"label": "Range (spaces)",
@@ -1264,6 +1565,10 @@
 				"rerollWithDisadvantage": {
 					"label": "Reroll at disadvantage",
 					"hint": "The forced reroll is made at disadvantage instead of a straight reroll (e.g. FAST)."
+				},
+				"missThreshold": {
+					"label": "Miss threshold",
+					"hint": "The highest primary die result that counts as a miss against this actor. Attacks normally miss on a 1. Set 2 to make attacks miss on a 1 and a 2. If more than one rule applies, the highest value wins."
 				}
 			},
 			"modifyPool": {
@@ -1311,6 +1616,17 @@
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
 			},
+			"optionSwap": {
+				"description": "Offer the character a chance to swap class options they already picked, on a Safe Rest or Field Rest. The rule offers the swap; it cannot check whatever the feature asks the character to do in the fiction, so state that in the rule's label.",
+				"selectionGroups": {
+					"label": "Option pools",
+					"hint": "Which pools may be swapped. Use 'all' for every pool the character's class offers, which is what the class features mean by 'different <Class> options'."
+				},
+				"trigger": {
+					"label": "Offered on",
+					"hint": "The rest that offers the swap."
+				}
+			},
 			"poolGainMessage": {
 				"description": "Post a chat reminder whenever a dice pool gains dice. Supports `{value}` interpolation from a formula.",
 				"poolIdentifier": {
@@ -1324,6 +1640,17 @@
 				"message": {
 					"label": "Message",
 					"hint": "Chat text posted when the pool gains dice. Use {value} to insert the formula result."
+				}
+			},
+			"poolMaxBonus": {
+				"description": "Raise the maximum of a charge pool by a flat amount. The bonus lives on this item, so taking the same option twice grants two items and twice the bonus, and removing an item removes its share.",
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The identifier of the charge pool whose maximum is raised (e.g. combat-dice)."
+				},
+				"amount": {
+					"label": "Amount",
+					"hint": "How much this item adds to the pool maximum."
 				}
 			},
 			"savingThrowBonus": {
@@ -1364,6 +1691,17 @@
 				"skills": {
 					"label": "Apply to",
 					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				}
+			},
+			"skillPointMove": {
+				"description": "Let the character move skill points between skills on a rest. A skill may not go negative and may not exceed +12.",
+				"points": {
+					"label": "Points",
+					"hint": "How many points may be moved each time."
+				},
+				"trigger": {
+					"label": "Offered on",
+					"hint": "The rest that offers the move."
 				}
 			},
 			"skillRollMode": {
@@ -1527,7 +1865,9 @@
 			"setPrompt": "Set current charges for {pool}.",
 			"notifications": {
 				"poolMissing": "{item} requires the charge pool \"{pool}\", but it is not available.",
-				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available."
+				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available.",
+				"conflictingConsumers": "{item} asks for more than one player-chosen spend from the charge pool \"{pool}\". Give each variable consumer its own pool, or make all but one a fixed cost.",
+				"unofferableSpend": "{item} cannot ask how much to spend from the charge pool \"{pool}\". A hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell asks about tier instead."
 			}
 		},
 		"dicePoolTracker": {
@@ -1670,6 +2010,8 @@
 			"spellUpcastDialog": {
 				"upcastHeading": "Upcast {spellName}",
 				"castSpell": "Cast Spell",
+				"cost": "Cost: {cost}",
+				"castsAtTier": "This spell is cast at tier {tier}, your highest unlocked tier.",
 				"manaInfo": {
 					"currentManaCost": "Current mana cost: {currentCost}",
 					"upcastManaCost": "Upcast mana cost: {upcastCost} (Total)"
@@ -1683,7 +2025,20 @@
 				"increaseDieSize": "Die size +{steps}",
 				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
 				"appliedEffect": "Applied Effect",
-				"maxTier": "Max tier"
+				"maxTier": "Max tier",
+				"warnings": {
+					"minMana": "Must spend at least {min} mana for a tier {min} spell.",
+					"insufficientMana": "Not enough mana. You have {current}, but need {needed}.",
+					"aboveMaxTier": "Cannot spend more mana than your highest unlocked spell tier ({maxTier}).",
+					"aboveUnlockedTier": "This spell is above your highest unlocked spell tier ({maxTier}), so you cannot cast it.",
+					"upcastFailed": "Upcast failed: {error}",
+					"cantripCannotUpcast": "Cantrips cannot be upcast.",
+					"spellCannotUpcast": "This spell cannot be upcast."
+				}
+			},
+			"notifications": {
+				"insufficientMana": "{item} needs {required} mana, but only {available} is available.",
+				"pinnedUpcastChoice": "{item} casts at your highest unlocked tier, which offers a choice of enhancement. Cast it from the sheet so the window can ask which one, or pass an upcast choice when you activate it from a macro."
 			}
 		},
 		"statArrays": {
@@ -1732,6 +2087,15 @@
 				"message": "This costs {cost} action(s), but you only have {current} remaining.",
 				"confirmQuestion": "Do you still want to use {name}?",
 				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			},
+			"confirmSpellOverdraft": {
+				"title": "Overdraw Spell Resource",
+				"message": "You have {available} of the {required} {pool} this cast requires.",
+				"halfMaxHpDamage": "Casting anyway will deal {damage} damage to you (half your maximum Hit Points).",
+				"resolvedAtTable": "At your level your class replaces the usual penalty with its own rule, which the system does not apply for you. Resolve it at the table.",
+				"confirmQuestion": "Cast {name} anyway?",
+				"confirm": "Cast Anyway",
 				"cancel": "Cancel"
 			},
 			"combatTracker": {
@@ -1822,7 +2186,6 @@
 					},
 					"interposeAndDefend": {
 						"confirm": "Interpose & Defend",
-						"cost": "2 Actions",
 						"chatMessage": "<p><strong>{name}</strong> uses <strong>2 reactions</strong> to <strong>Interpose</strong> for <strong>{target}</strong> and <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
 					},
 					"opportunity": {
@@ -1918,6 +2281,7 @@
 				"toggleOn": "Activate {name}",
 				"toggleOff": "Deactivate {name}",
 				"mana": "{cost} Mana",
+				"poolCost": "{cost} {pool}",
 				"thrown": "Thrown: {distance}",
 				"baseEffect": "Effect",
 				"higherLevelEffect": "At Higher Levels",
@@ -2086,6 +2450,7 @@
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
 			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
+			"conditionReplacementLost": "A condition was removed to make room for a new one, and neither could be put back.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",
 			"failedToRemoveEffect": "Failed to remove effect.",
@@ -2123,11 +2488,15 @@
 			"selectAll": "Select all",
 			"heading": "Hit Dice",
 			"configureHitDice": "Configure Hit Dice",
-			"primaryDieValue": "Primary Die Value",
-			"primaryDieModifier": "Primary Die Modifier",
-			"setPrimaryDie": "Set Primary Die",
-			"setPrimaryDieModifier": "Set Primary Die Modifier",
-			"situationalModifiers": "Situational Modifiers"
+			"primaryDieValue": "Primary Die Set To",
+			"primaryDieModifier": "Added to Primary Die",
+			"primaryDieModifierBreakdown": "Primary Die: rolled {base}, modifier {modifier}, result {result}",
+			"primaryDieModifierBreakdownCapped": "Primary Die: rolled {base}, modifier {modifier}, result {result} (maximum), {excess} added to damage",
+			"setPrimaryDie": "Set Primary Die Result",
+			"setPrimaryDieModifier": "Add to Primary Die Result",
+			"situationalModifiers": "Add to Roll (number or dice)",
+			"invalidAddToRoll": "Add to Roll must be a number or a dice formula.",
+			"invalidSetPrimaryDie": "Set Primary Die Result must be from 1 to the size of the die."
 		},
 		"hitPoints": {
 			"startingHp": "Starting HP",
@@ -2213,6 +2582,49 @@
 			"restedWithoutSpending": "Rested without spending hit dice",
 			"manaRestored": "Mana Restored"
 		},
+		"optionSwap": {
+			"cardHeading": "Options Changed",
+			"toggleLabel": "Change my options",
+			"toggleHint": "Swap class options or move a skill point",
+			"classOptions": "Class options",
+			"cardSwap": "Swap class options",
+			"cardSkills": "Move a skill point",
+			"cardBoth": "Swap class options, move a skill point",
+			"countPair": "{chosen} / {granted}",
+			"countTooltip": "Chosen / what your level gives you",
+			"holdingsLine": "Your level gives you {granted} options. You have {held}.",
+			"holdingsLineOne": "Your level gives you 1 option. You have {held}.",
+			"holdingsShortfall": "Choose {missing} more.",
+			"emptyPlace": "Empty. Choose below.",
+			"giveUpPick": "Give up {featureName}",
+			"choosePick": "Select {featureName}",
+			"showChoices": "Show {count} other options",
+			"showOneChoice": "Show 1 other option",
+			"hideChoices": "Hide other options",
+			"needEmptyPlace": "Give up an option to choose another.",
+			"statusSwap": "You give up {removed} and take {added}.",
+			"statusTake": "You take {added}.",
+			"statusChooseOne": "Choose 1 more option to complete the swap.",
+			"statusChooseMore": "Choose {count} more options to complete the swap.",
+			"statusGiveUpOne": "Give up 1 more option to complete the swap.",
+			"statusGiveUpMore": "Give up {count} more options to complete the swap.",
+			"peekRepeatable": "You can take this more than once.",
+			"givenUpCard": "You are giving up {name}. What it lets you do is not offered on this rest.",
+			"skillMoveLabel": "Move a point",
+			"skillFrom": "from a skill",
+			"skillTo": "to a skill",
+			"skillFromNumbered": "from a skill (point {number})",
+			"skillToNumbered": "to a skill (point {number})",
+			"skillOption": "{name} ({total})",
+			"skillMoveResult": "{fromName} {fromTotal} → {fromNext}, {toName} {toTotal} → {toNext}",
+			"skillMoveNeedsTarget": "Pick a skill to give the point to.",
+			"confirmWithSwap": "Safe Rest and swap options",
+			"fieldRestWithSwap": "Field Rest and swap options",
+			"grantFailed": "One of the chosen options could not be found, so no options were changed.",
+			"swapFailed": "The options could not be changed. Your picks were put back as they were.",
+			"countedName": "{name} x{count}",
+			"skillPointRange": "{from} to {to}"
+		},
 		"npcSheet": {
 			"armor": "Armor",
 			"decreaseArmor": "Decrease Armor",
@@ -2223,8 +2635,6 @@
 			"expandAllDescriptions": "Expand all descriptions",
 			"collapseAllDescriptions": "Collapse all descriptions",
 			"editAttackSequence": "Edit Attack Sequence",
-			"configureItem": "Configure {name}",
-			"deleteItem": "Delete {name}",
 			"collapseDescription": "Collapse description for {name}",
 			"revealDescription": "Reveal description for {name}",
 			"melee": "Melee",
@@ -2325,7 +2735,20 @@
 			"progressionNewSubclassName": "New {className} Subclass",
 			"progressionNewSubclassFeatureName": "New {subclassName} Feature (Level {level})",
 			"progressionNewGroupFeatureName": "New {groupName} Feature",
-			"progressionNewFeatureChoiceName": "New Feature Choice"
+			"progressionNewFeatureChoiceName": "New Feature Choice",
+			"spellcasting": {
+				"heading": "Spellcasting",
+				"castAtHighestTier": "Cast at Highest Tier",
+				"castAtHighestTierHint": "Tiered spells from this class always cast at the highest tier the character has unlocked. The cast dialog shows the tier instead of offering it.",
+				"poolIdentifier": "Spell Cost Pool",
+				"poolIdentifierHint": "Leave blank to use mana, where a tiered spell costs its tier. Naming a charge pool makes the class spend that pool instead.",
+				"amount": "Cost Per Cast",
+				"amountHint": "How much of the pool one cast spends. A number, or a formula resolved against the character's roll data.",
+				"overdraftConsequence": "Casting Beyond the Pool",
+				"overdraftConsequenceHint": "What happens when a cast would take more than the pool holds. Not Allowed blocks the cast.",
+				"overdraftMaxLevel": "Consequence Stops After Level",
+				"overdraftMaxLevelHint": "The last level in this class at which the consequence is applied. Levels in other classes do not count. Above it the cast is still allowed, but the cost is settled at the table. Leave blank for no limit."
+			}
 		},
 		"skillsConfig": {
 			"skill": "Skill",
@@ -2415,6 +2838,20 @@
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
+			"move": "Move",
+			"moveNode": {
+				"kind": "Kind",
+				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
+				"recipient": "Who Moves",
+				"recipients": { "self": "The creature that uses this", "targets": "The targets" },
+				"distance": "Distance (spaces)",
+				"distanceHint": "A formula against the data of the creature that uses this: @abilities.strength.mod is the Strength modifier of that creature. @speed is the walk speed of the creature that moves.",
+				"upTo": "Show the distance as \"up to\" (the creature can move less)",
+				"distanceBySize": "Distance by size (optional)",
+				"ignoreDifficultTerrain": "Ignore difficult terrain",
+				"direction": "Direction",
+				"directions": { "any": "Any", "away": "Away", "toward": "Toward" }
+			},
 			"note": "Note",
 			"pool": "Pool",
 			"onFailedSave": "On Failed Save",
@@ -2445,6 +2882,7 @@
 			"noteType": "Note Type",
 			"deleteDamage": "Delete damage roll",
 			"deleteCondition": "Delete condition",
+			"deleteMove": "Delete move",
 			"deleteDamageOutcome": "Delete Damage Outcome",
 			"deleteNote": "Delete Note",
 			"deleteHealing": "Delete healing roll",
@@ -2495,8 +2933,10 @@
 		"activationDialog": {
 			"spendPoolDice": "Spend Pool Dice",
 			"spendCharge": {
-				"increment": "Spend one more",
-				"decrement": "Spend one less"
+				"increment": "Spend one more from {pool}",
+				"decrement": "Spend one less from {pool}",
+				"heading": "Spend Charges",
+				"amount": "Charges to spend from {pool}"
 			},
 			"conditionalBonus": {
 				"heading": "Conditional Bonuses",
@@ -2804,8 +3244,9 @@
 				"hint": "When enabled, the system automatically tracks the adjacency status of combatants."
 			},
 			"adjacencyIncludesDiagonals": {
-				"name": "Adjacency Includes Diagonals",
-				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
+				"name": "Adjacency Includes Diagonals (Legacy)",
+				"hint": "Superseded by Foundry's Grid Diagonals core setting. A stored value is carried over once and has no other effect.",
+				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting (diagonals are not adjacent). Reload for it to take effect."
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules (Legacy)",
@@ -2813,7 +3254,7 @@
 			},
 			"applyRuleEffects": {
 				"name": "Apply Conditions and Effects from Rules",
-				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire, and put Concentration on a caster who casts a concentration spell. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
 			},
 			"derivedConditions": {
 				"name": "Derived Conditions",
@@ -2842,6 +3283,14 @@
 			"chatNotifications": {
 				"name": "Chat Notifications",
 				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
+			},
+			"movementOffers": {
+				"name": "Forced Movement and Moves for Free",
+				"hint": "When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
+			},
+			"movementTracking": {
+				"name": "Movement Tracking",
+				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react, in a started combat, when a creature finishes moving or moves adjacent. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
@@ -3242,6 +3691,8 @@
 		},
 		"actorImport": {
 			"buttonLabel": "Import from Nimble Nexus",
+			"creatorCredit": "Created by {creator} on {source}",
+			"creatorPrefix": "by {creator}",
 			"jsonButtonLabel": "Import Player Character",
 			"json": {
 				"dialogTitle": "Import Player Character from JSON",
@@ -3379,7 +3830,7 @@
 				"addToSpellListHintCantrip": "Learn it. Cantrips are free to cast.",
 				"addAsScroll": "Add as a spell scroll",
 				"addAsScrollHint": "Single use. No mana, no magical ability needed.",
-				"noManaWarning": "{name} has no mana, so this spell would sit on the list uncastable.",
+				"tierLockedWarning": "{name} cannot cast spells of this tier. It would be added to their spell list, but they would not be able to use it.",
 				"labelTier": "Tier",
 				"labelValue": "Value",
 				"labelCasting": "Casting",
@@ -3419,6 +3870,21 @@
 				"advantage": "Advantage × {count}",
 				"disadvantage": "Disadvantage × {count}",
 				"noEffect": "No effect"
+			}
+		},
+		"overdraftConsequences": {
+			"none": "Not Allowed",
+			"halfMaxHpDamage": "Half Max HP Damage"
+		},
+		"movement": {
+			"actions": {
+				"free": "Move for free",
+				"forced": "Forced Movement"
+			},
+			"ruler": {
+				"free": "Move for free: {spaces} of {limit}",
+				"forced": "Forced Movement: {spaces} of {limit}",
+				"switchTo": "{key}: switch to {movement}"
 			}
 		}
 	}

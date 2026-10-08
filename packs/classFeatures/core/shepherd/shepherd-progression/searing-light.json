@@ -6,7 +6,42 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "XT0h4EYadjuZKMUT",
+				"identifier": "searing-light",
+				"label": "Searing Light",
+				"predicate": {},
+				"priority": 1,
+				"scope": "actor",
+				"max": "max(@will, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": true,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "Kgtq6K1KQkOUtMYX",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "searing-light",
+				"poolScope": "actor",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -3,6 +3,8 @@ import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { SYSTEM_ID } from '#system';
+import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { getResourcePools } from '#utils/chargePool/chargePoolSync.js';
 import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
 import {
 	getInitiativeCombatManaRules,
@@ -23,7 +25,7 @@ type NavigationComponents = {
 };
 
 function getHitPointPercentage(currentHP: number, maxHP: number): number {
-	return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
+	return Math.clamp(Math.round((currentHP / maxHP) * 100), 0, 100);
 }
 
 function hasInitiativeCombatManaRule(character: any, _primeVersion = 0): boolean {
@@ -223,6 +225,10 @@ export function createPlayerCharacterSheetState(params: {
 			});
 	});
 
+	// Charge pools the author promoted to the header, read through `reactive` so
+	// they track spends and recoveries the same way the mana bar tracks mana.
+	const resourcePools = $derived(getResourcePools(actor.reactive));
+
 	const flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	const actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	const actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
@@ -339,16 +345,10 @@ export function createPlayerCharacterSheetState(params: {
 		});
 	}
 
-	function updateMaxMana(newValue: number): void {
-		const manaData = actor.reactive.system.resources.mana;
-		const baseMax = manaData.baseMax ?? 0;
-		const max = manaData.max || baseMax;
-		const formulaBonus = max - baseMax;
-		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
-
-		void actor.update({
-			'system.resources.mana.baseMax': adjustedBaseMax,
-		});
+	// Manual correction of a promoted pool, on the same write path the charges
+	// dialog uses, so a GM fixing a misplay does it wherever the pool is shown.
+	function updatePoolCurrent(poolId: string, newValue: number): void {
+		void adjustPool(actor, poolId, 'set', newValue);
 	}
 
 	async function updateCurrentHitDice(newValue: number): Promise<void> {
@@ -392,6 +392,9 @@ export function createPlayerCharacterSheetState(params: {
 		get hasMana() {
 			return hasMana;
 		},
+		get resourcePools() {
+			return resourcePools;
+		},
 		get actorImageXOffset() {
 			return actorImageXOffset;
 		},
@@ -418,7 +421,7 @@ export function createPlayerCharacterSheetState(params: {
 		updateMaxHP,
 		updateTempHP,
 		updateCurrentMana,
-		updateMaxMana,
+		updatePoolCurrent,
 		updateCurrentHitDice,
 		rollHitDice,
 		editCurrentHitDice,

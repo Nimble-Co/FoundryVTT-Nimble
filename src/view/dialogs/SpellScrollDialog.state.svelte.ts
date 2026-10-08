@@ -4,6 +4,7 @@ import type {
 } from '#types/components/SpellScrollDialog.d.ts';
 
 import localize from '#utils/localize.js';
+import { getSpellManaCost } from '#utils/spell/getSpellManaCost.js';
 import { getSpellSchoolLabel, getSpellTierLabel } from '#utils/spellLabels.js';
 
 /** The tab the school filter starts on, matching the Spells tab's own "All" entry. */
@@ -64,9 +65,9 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 	);
 
 	const manaCostLabel = $derived.by(() => {
-		const { tier = 0 } = getProps();
-		return tier > 0
-			? localize('NIMBLE.spellScroll.dialog.addToSpellListHint', { mana: String(tier) })
+		const mana = getSpellManaCost(getProps());
+		return mana > 0
+			? localize('NIMBLE.spellScroll.dialog.addToSpellListHint', { mana: String(mana) })
 			: localize('NIMBLE.spellScroll.dialog.addToSpellListHintCantrip');
 	});
 
@@ -77,6 +78,13 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 					tier: getSpellTierLabel(highestUnlockedSpellTier),
 				})
 			: localize('NIMBLE.spellScroll.dialog.upcastNone');
+	});
+
+	// The scroll's spell is castable only up to the tier the actor has unlocked;
+	// an actor with no spellcasting has unlocked nothing, so this covers them too.
+	const showTierWarning = $derived.by(() => {
+		const { tier = 0, highestUnlockedSpellTier = 0 } = getProps();
+		return tier > 0 && tier > highestUnlockedSpellTier;
 	});
 
 	const arcanaLabel = $derived.by(() => {
@@ -141,6 +149,9 @@ export function createSpellScrollDialogState(getProps: () => SpellScrollDialogPr
 		},
 		get upcastLabel() {
 			return upcastLabel;
+		},
+		get showTierWarning() {
+			return showTierWarning;
 		},
 		get arcanaLabel() {
 			return arcanaLabel;

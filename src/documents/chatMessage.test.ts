@@ -1161,14 +1161,16 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 	function createDamageMessage(params: {
 		roll: object;
 		isMiss?: boolean;
+		isCritical?: boolean;
 		ignoreArmor?: boolean;
 		targets?: string[];
+		on?: Record<string, object[]>;
 	}) {
 		return new NimbleChatMessage({
 			type: 'spell',
 			system: {
 				targets: params.targets ?? ['Scene.scene.Token.token'],
-				isCritical: false,
+				isCritical: params.isCritical ?? false,
 				isMiss: params.isMiss ?? false,
 				activation: {
 					effects: [
@@ -1183,7 +1185,7 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 							roll: params.roll,
 							parentNode: null,
 							parentContext: null,
-							on: {
+							on: params.on ?? {
 								hit: [
 									{ id: 'dmg-hit', type: 'damageOutcome', parentNode: 'dmg', parentContext: 'hit' },
 								],
@@ -1224,6 +1226,41 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll(), ignoreArmor: true });
 
 		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(42);
+	});
+
+	it('applies a crit once when both On Critical Hit and On Hit hold a Damage Outcome', () => {
+		globals().fromUuidSync.mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+		});
+
+		const message = createDamageMessage({
+			roll: { class: 'DamageRoll', formula: '1d6', total: 6, isCritical: true },
+			isCritical: true,
+			on: {
+				criticalHit: [
+					{
+						id: 'dmg-crit',
+						type: 'damageOutcome',
+						outcome: 'halfDamage',
+						parentNode: 'dmg',
+						parentContext: 'criticalHit',
+					},
+				],
+				hit: [
+					{
+						id: 'dmg-hit',
+						type: 'damageOutcome',
+						outcome: 'fullDamage',
+						parentNode: 'dmg',
+						parentContext: 'hit',
+					},
+				],
+			},
+		});
+
+		// The crit bucket's outcome decides what the roll does: half of 6 is 3, once.
+		expect(message.effectNodes.flat().map((node) => node.id)).toEqual(['dmg-crit']);
+		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(3);
 	});
 
 	it('returns null for a miss so the target list shows no preview', () => {
@@ -1376,6 +1413,143 @@ describe('NimbleChatMessage.getDamageBreakdownForTarget — totals', () => {
 		const message = createDamageMessage({ roll: battleaxeRoll() });
 
 		expect(message.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total ?? null).toBe(37);
+	});
+});
+
+describe('NimbleChatMessage.effectNodes', () => {
+	function spellCard(damageOverrides: Record<string, unknown> = {}) {
+		return new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: [],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula: '1d6',
+							damageType: 'slashing',
+							canCrit: true,
+							canMiss: true,
+							roll: { class: 'DamageRoll', total: 5 },
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{
+										id: 'dmg-hit',
+										type: 'damageOutcome',
+										outcome: 'fullDamage',
+										parentNode: 'dmg',
+										parentContext: 'hit',
+									},
+								],
+							},
+							...damageOverrides,
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	function damageIds(message: NimbleChatMessage) {
+		return message.effectNodes
+			.flat()
+			.filter((node) => node.type === 'damage' || node.type === 'damageOutcome')
+			.map((node) => node.id);
+	}
+
+	it('shows the damage roll once on a hit', () => {
+		expect(damageIds(spellCard())).toEqual(['dmg-hit']);
+	});
+
+	it('shows the damage roll once when Target Disposition is Any', () => {
+		expect(damageIds(spellCard({ targetDisposition: 'any' }))).toEqual(['dmg-hit']);
+	});
+
+	it('shows the damage roll once when Target Disposition is Hostile', () => {
+		expect(damageIds(spellCard({ targetDisposition: 'hostile' }))).toEqual(['dmg-hit']);
+	});
+});
+
+describe('NimbleChatMessage — a damage node nested under another damage node', () => {
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn().mockReturnValue({
+			actor: { system: { attributes: { armor: 'none' } } },
+			name: 'Test Token',
+		});
+	});
+
+	/** Damage -> On Hit -> Damage -> On Hit -> Damage Outcome. */
+	function nestedCard(nestedOverrides: Record<string, unknown> = {}) {
+		return new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [
+						{
+							id: 'root',
+							type: 'damage',
+							formula: '1d6',
+							damageType: 'slashing',
+							canCrit: true,
+							canMiss: true,
+							roll: createSerializedDamageRoll({ diceResults: [5] }),
+							parentNode: null,
+							parentContext: null,
+							on: {
+								hit: [
+									{
+										id: 'nested',
+										type: 'damage',
+										formula: '1d4',
+										damageType: 'necrotic',
+										roll: createSerializedDamageRoll({ diceResults: [3] }),
+										parentNode: 'root',
+										parentContext: 'hit',
+										on: {
+											hit: [
+												{
+													id: 'nested-hit',
+													type: 'damageOutcome',
+													outcome: 'fullDamage',
+													parentNode: 'nested',
+													parentContext: 'hit',
+												},
+											],
+										},
+										...nestedOverrides,
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('counts the nested roll once, so Apply Damage does not double it', () => {
+		// The nested node and its outcome child carry the same roll. Counting
+		// both removes twice the rolled damage from the target's real HP.
+		const breakdown = nestedCard().getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+		expect(breakdown?.components).toHaveLength(1);
+		expect(breakdown?.total).toBe(3);
+	});
+
+	it('counts a nested roll that has no outcome child of its own', () => {
+		// The shape the shipped Shatter uses for its critical-hit bonus damage.
+		const breakdown = nestedCard({ on: {} }).getDamageBreakdownForTarget('Scene.scene.Token.token');
+
+		expect(breakdown?.components).toHaveLength(1);
+		expect(breakdown?.total).toBe(3);
 	});
 });
 
@@ -2414,6 +2588,49 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-hit']);
 	});
 
+	it('drops an open Movement Offer the new outcome no longer makes', async () => {
+		const message = createReactionMessage({ isCritical: true, entries: [createReactionEntry()] });
+		const system = message.system as unknown as {
+			activation: { effects: Array<Record<string, unknown>> };
+			movementOffers?: unknown[];
+		};
+		system.activation.effects[0].on = {
+			criticalHit: [
+				{
+					id: 'push',
+					type: 'move',
+					kind: 'forced',
+					recipient: 'targets',
+					distance: '2',
+					distanceBySize: {},
+					ignoreDifficultTerrain: false,
+					direction: 'away',
+				},
+			],
+		};
+		system.movementOffers = [
+			{
+				id: 'push.victim',
+				nodeId: 'push',
+				tokenUuid: 'Scene.scene.Token.victim',
+				name: 'Victim',
+				kind: 'forced',
+				spaces: 2,
+				ignoreDifficultTerrain: true,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional: false,
+			},
+		];
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const payload = message.update.mock.calls[0][0] as { system: { movementOffers: unknown[] } };
+		expect(payload.system.movementOffers).toEqual([]);
+	});
+
 	it('keeps a spent entry whose outcome no longer matches, for its attribution', async () => {
 		const message = createReactionMessage({
 			isCritical: true,
@@ -2620,6 +2837,78 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 			'Scene.scene.Token.protector',
 		]);
 		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('moves the open Movement Offers from the old target to the protector', async () => {
+		const RollGlobal = Roll as unknown as Record<string, unknown>;
+		const saved = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+		RollGlobal.replaceFormulaData = (formula: string) => formula;
+		RollGlobal.safeEval = (expression: string) => Number(expression);
+		const sourceActor = { getRollData: () => ({}), system: { attributes: {} } };
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) => {
+			if (uuid === 'Scene.scene.Token.protector') {
+				return { name: 'Protector', actor: { ...protectorActor, getRollData: () => ({}) } };
+			}
+			if (uuid === 'Scene.scene.Token.source') return { name: 'Source', actor: sourceActor };
+			return null;
+		});
+
+		const message = createReactionMessage({
+			entries: [createRedirectEntry()],
+			targets: ['Scene.scene.Token.victim'],
+		});
+		const moveNode = {
+			id: 'push',
+			type: 'move',
+			kind: 'forced',
+			recipient: 'targets',
+			distance: '2',
+			distanceBySize: {},
+			ignoreDifficultTerrain: false,
+			direction: 'away',
+			parentNode: null,
+			parentContext: null,
+		};
+		const system = message.system as unknown as { activation: { effects: unknown[] } } & Record<
+			string,
+			unknown
+		>;
+		system.activation.effects.push(moveNode);
+		system.movementOffers = [
+			{
+				id: 'push.victim',
+				nodeId: 'push',
+				tokenUuid: 'Scene.scene.Token.victim',
+				name: 'Victim',
+				kind: 'forced',
+				spaces: 2,
+				ignoreDifficultTerrain: true,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional: false,
+			},
+		];
+		(message as unknown as { speaker: unknown }).speaker = { scene: 'scene', token: 'source' };
+
+		try {
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		} finally {
+			RollGlobal.replaceFormulaData = saved.replace;
+			RollGlobal.safeEval = saved.safeEval;
+		}
+
+		const payload = message.update.mock.calls[0][0] as {
+			system: { movementOffers: { tokenUuid: string; state: string; spaces: number }[] };
+		};
+		expect(payload.system.movementOffers).toEqual([
+			expect.objectContaining({
+				tokenUuid: 'Scene.scene.Token.protector',
+				state: 'open',
+				spaces: 2,
+			}),
+		]);
 	});
 
 	it('marks every entry tied to the original target as used, leaving other targets live', async () => {

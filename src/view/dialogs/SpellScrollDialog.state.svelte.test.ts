@@ -22,6 +22,7 @@ interface Snapshot {
 	submitIcon: string;
 	manaCostLabel: string;
 	upcastLabel: string;
+	showTierWarning: boolean;
 	arcanaLabel: string;
 }
 
@@ -372,6 +373,38 @@ describe('createSpellScrollDialogState', () => {
 				.upcastLabel;
 
 			expect(label).not.toContain('5');
+		});
+
+		it('warns when the scroll is above the tier the actor has unlocked', async () => {
+			const { showTierWarning } = setup({
+				mode: 'chooser',
+				tier: 3,
+				highestUnlockedSpellTier: 1,
+			}).read();
+
+			expect(showTierWarning).toBe(true);
+		});
+
+		it('warns an actor with no spellcasting about any tiered scroll', async () => {
+			const { showTierWarning } = setup({ mode: 'chooser', tier: 1 }).read();
+
+			expect(showTierWarning).toBe(true);
+		});
+
+		it('does not warn when the actor has unlocked the tier', async () => {
+			const { showTierWarning } = setup({
+				mode: 'chooser',
+				tier: 3,
+				highestUnlockedSpellTier: 3,
+			}).read();
+
+			expect(showTierWarning).toBe(false);
+		});
+
+		it('never warns about a cantrip', async () => {
+			const { showTierWarning } = setup({ mode: 'chooser', tier: 0 }).read();
+
+			expect(showTierWarning).toBe(false);
 		});
 
 		it('asks for an Arcana check when the actor knows nothing of the school', async () => {

@@ -8,6 +8,7 @@
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import ObjectContainerConfig from './components/ObjectContainerConfig.svelte';
 	import ObjectDescriptionTab from './pages/ObjectDescriptionTab.svelte';
 	import RangeConfig from './components/RangeConfig.svelte';
 	import ReachConfig from './components/ReachConfig.svelte';
@@ -37,6 +38,13 @@
 	function updateObjectType(newSelection) {
 		item.update({
 			'system.objectType': newSelection,
+		});
+	}
+
+	/** A blank field means it costs the same stowed as it does in use. */
+	function updateStowedSlotsRequired(value) {
+		item.update({
+			'system.stowedSlotsRequired': value === '' ? null : Number(value),
 		});
 	}
 
@@ -224,6 +232,26 @@
 						disabled={objectSizeType != 'slots'}
 					/>
 				</div>
+
+				<div class="nimble-field nimble-field--column">
+					<span class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.inventory.stowedSlotsRequired')}
+
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.inventory.stowedSlotsRequiredHint')}
+							data-tooltip-direction="UP"
+						></i>
+					</span>
+
+					<input
+						type="number"
+						min="0"
+						step="0.5"
+						value={item.reactive.system.stowedSlotsRequired ?? ''}
+						onchange={({ target }) => updateStowedSlotsRequired(target.value)}
+					/>
+				</div>
 			{/if}
 
 			{#if objectSizeType === 'stackable'}
@@ -252,6 +280,8 @@
 				</div>
 			{/if}
 		</div>
+
+		<ObjectContainerConfig />
 
 		{#if objectType === 'weapon'}
 			{@const itemWeaponProperties = item.reactive?.system?.properties?.selected ?? []}

@@ -16,6 +16,7 @@ The header is always visible, whatever tab you're on:
 - **Hit Points bar.** Shows current, temporary, and maximum HP. Click the numbers to edit them. The heart icon cracks when you're at half HP or less (Bloodied).
 - **Hit Dice bar.** Shows your remaining hit dice out of your total, with buttons to roll them and adjust the current count.
 - **Mana bar.** Appears only if your class uses mana. Shows current and maximum mana.
+- **Resource bars.** Any charge pool a feature marks as a resource appears here too, under its own name, with the same current-and-maximum readout as mana. Click the current value to edit it. The maximum comes from the feature and is not editable here.
 - **Name and summary line.** Your ancestry, size, class, subclass, and level.
 
 ## The sidebar buttons
@@ -54,15 +55,57 @@ Every condition the system knows, with the ones affecting you highlighted. Searc
 
 Your equipment and loot. Click an item's icon to use it (attack with a weapon, drink a potion); this posts a chat card. Each item has an equip toggle. You can create new items here or drag them in from the compendiums.
 
+Items set up as containers, such as a chest, a backpack, a pouch or a quiver, show their contents nested underneath them, and the row highlights as you drag something over it.
+
+- **To put something in**, drag it onto the container's row, or onto anything already inside it.
+- **To take something out**, drag it onto an item carried directly, or onto any empty part of the inventory list.
+- **To move it between containers**, drag it straight onto the other one, or take it out with the
+  row's button and then store it again.
+
+Item rows carry a button for this, so a drag is never the only way. On a carried item it stores the
+item, asking which container when you have more than one; on a stored item it takes the item back
+out. A container has no button, since containers do not nest, and neither does a carried item while
+you have no container to put it in. The item's name is a button too: press it to use the item.
+
+A container keeps its own slot cost; what its contents cost you depends on how the container is set up, and the slot total at the bottom of the tab reflects that. If a container has a capacity, the row says how much of it is in use, a drop that would not fit is refused, and so is raising a stored stack past the limit.
+
+You cannot equip something that is packed away, so stored items show a quantity field rather than an equip toggle. Storing an item you have equipped asks you to confirm before unequipping it, whether you drag it in or use the row's button.
+
+Some items cost more packed away than they do in use. Armor is the one the rulebook names: worn it takes 1 slot, and stowed it takes 2. Unequipping a suit of armor, or putting it in a container, raises the slot total to match.
+
+Deleting a container that still holds something asks you to confirm first, then leaves its contents in the inventory at their own slot cost.
+
 ### Features
 
 Your class features, subclass features, ancestry, background, and boons, grouped by category. Click a feature's icon to use it and post its details to chat.
+
+Everything a class gives you sits under that class. The features it hands you automatically come first, then your subclass and the features it brings, then each named set of choices the class offers under a heading of its own, taken from the name of the set. A Shadowmancer sees **Lesser Invocations** and **Greater Invocations** as separate headings under their class rather than one long list, and a class offering no such choices shows no extra headings at all. A line runs down the left of everything nested under a card, so when you have scrolled past the class heading you can still see what you are inside and where it ends. Ancestry and background keep their own sections below.
 
 ### Spells
 
 Your known spells. When you know spells from two or more schools, a school filter appears. Click a spell's icon to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
+Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
+
+Each spell card shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead, and their cards show that pool by name.
+
 ![The spells tab with the school filter and a spell card visible](/images/documentation/character-sheet-spells-tab.png)
+
+#### Casting without enough left to pay
+
+A class that pays from a pool may also declare what happens when you cast anyway with the pool empty. The Shadowmancer is the example that ships with the system: Pilfered Power is a pool of uses equal to your Dexterity, spells always cast at your highest unlocked tier for one use, and casting on an empty pool asks you to confirm and then costs you half your maximum hit points.
+
+::: warning Greedy Pact is not automated
+From Shadowmancer level 12 Greedy Pact replaces that fixed penalty with a saving throw that has three different outcomes, one of which changes the tier the spell is cast at. The system cannot express that yet, so from Shadowmancer level 12 it stops applying the penalty instead of applying the wrong one. Levels in other classes do not count toward this. The confirmation still offers the overdraw and says the cost is settled at the table. Roll Greedy Pact by hand and apply the result yourself.
+:::
+
+::: warning Heart of Burning Fire returns one use per combat and does not expire
+Pact of the Red Dragon's Heart of Burning Fire returns a use of Pilfered Power when you roll Initiative. The system gives that use once, when the GM starts the combat, so rolling Initiative again does not give a second use. A character added to a combat that is already running does not get the use; give it by hand. The rules also say that use expires at the end of combat if you do not spend it; the system keeps it until your next Safe Rest, because it cannot yet tell a temporary use apart from one you already had. Take the use away at the end of combat if it went unspent.
+:::
+
+::: warning Hollow One and free casts are not automated
+The system does not know when a use of Pilfered Power should not be spent. The Reaver subclass's Hollow One cuts you off from your patron, so you can no longer cast tiered spells using Pilfered Power; the sheet still shows the pool and still lets you cast. Three features grant a cast without Pilfering Power: We'll ALL Burn! (Pact of the Red Dragon) for Pyroclasm when you include yourself in the damage, Shadowfrost (Pact of the Abyssal Depths) for Cryosleep or Rimeblades when you expend 10 temp HP, and the Hungering Shadows invocation for the next tiered spell after one of your shadows would crit. The sheet spends a use for those casts anyway. Handle both at the table: a Reaver does not cast tiered spells from the pool, and after a free cast add the use back by hand.
+:::
 
 ### Bio
 
@@ -72,11 +115,15 @@ Freeform character details: age, height, weight, gender, and notes.
 
 Per-character sheet options: portrait positioning and scale, whether item macros run when you use an item, whether item images are shown, and inventory slot tracking.
 
+This tab also shows your **Highest Unlocked Spell Tier**. The sheet works this out from the spell grants on your class, subclass, and features, so it normally needs no attention. If your table plays it differently, enable editing and use the plus and minus buttons to set the tier by hand. A tier you set stays until you click **Reset spell tier**, which hands the value back to the sheet.
+
 ## Dice pools and charges
 
 Some features give you a resource that lives on the sheet rather than on a chat card. Both kinds appear as a tracker under the action tracker.
 
 **Charges** are a simple count, like 1 use per turn or 3 per safe rest. The pip shows what you have left and refills on whatever the feature says. Using a feature that costs a charge spends it for you, and if you have none left the use is blocked with a message explaining why.
+
+Some features spend an amount you choose instead of a fixed cost. An Oathsworn's Lay on Hands is the clearest example: the pool holds 5 x LVL points of healing power and refills on a safe rest, and using the feature asks how much of it to spend before healing your target for exactly that much. The roll window cannot be skipped for these, because the amount is yours to name. The chat card reports what you spent and what the pool is down to.
 
 **Dice pools** hold rolled dice, and each die remembers the number it came up with. A Berserker's Fury Dice are the clearest example: you Rage, dice go into the pool, and they add to your attacks until the Rage ends.
 

@@ -1,5 +1,6 @@
 import { HitDiceManager } from '#managers/HitDiceManager.js';
 import { systemHookName } from '#system';
+import type { OptionSwapSubmitData } from '#types/optionSwap.d.ts';
 import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
@@ -65,7 +66,7 @@ class RestManager {
 			skipChatCard: false,
 		};
 
-		this.#data = foundry.utils.mergeObject(defaultData, data);
+		this.#data = { ...defaultData, ...data };
 	}
 
 	get restTypes(): string[] {
@@ -77,7 +78,12 @@ class RestManager {
 	}
 
 	async rest() {
-		const { skipChatCard, makeCamp = false, activeAdvantageRuleIds = [] } = this.#data;
+		const {
+			skipChatCard,
+			makeCamp = false,
+			activeAdvantageRuleIds = [],
+			optionChanges = [],
+		} = this.#data;
 
 		if (this.#restType === 'safe') {
 			this.#restoreHitDice();
@@ -117,9 +123,12 @@ class RestManager {
 				this.#recovery.hpRestored > 0 ||
 				this.#recovery.manaRestored > 0 ||
 				this.#recovery.woundsRecovered > 0 ||
-				this.#recovery.chargePoolsRecovered.length > 0;
+				this.#recovery.chargePoolsRecovered.length > 0 ||
+				// A fully rested character who only changed their options still has something
+				// to report, and the table should see a build change.
+				optionChanges.length > 0;
 
-			// Only show chat card if something was recovered
+			// Only show chat card if something happened
 			if (hasRecovery) {
 				await ChatMessage.create({
 					author: game.user?.id,
@@ -140,6 +149,7 @@ class RestManager {
 						manaRestored: this.#recovery.manaRestored,
 						woundsRecovered: this.#recovery.woundsRecovered,
 						chargePoolsRecovered: this.#recovery.chargePoolsRecovered,
+						optionChanges,
 					},
 				} as unknown as ChatMessage.CreateData);
 			}
@@ -190,6 +200,7 @@ class RestManager {
 					hadAdvantage,
 					advantageSource,
 					manaRestored: this.#recovery.manaRestored,
+					optionChanges,
 				},
 			} as unknown as ChatMessage.CreateData);
 		}
@@ -333,6 +344,13 @@ class RestManager {
 	}
 }
 
+/** One pool or skill the character changed, named for display on the rest card. */
+interface OptionChange {
+	label: string;
+	removed: string[];
+	added: string[];
+}
+
 declare namespace RestManager {
 	interface Data {
 		restType: 'field' | 'safe';
@@ -340,7 +358,12 @@ declare namespace RestManager {
 		skipChatCard: boolean;
 		selectedHitDice?: Record<number, number>;
 		activeAdvantageRuleIds?: string[];
+		/** What the rest dialog's option swap section submitted, if it was shown. */
+		optionSwap?: OptionSwapSubmitData;
+		/** Class options and skills the character changed as part of this rest. */
+		optionChanges?: OptionChange[];
 	}
 }
 
 export { RestManager };
+export type { OptionChange };

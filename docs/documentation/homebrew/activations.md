@@ -34,11 +34,11 @@ On monster features only, an **Attack Type** dropdown (None / Reach / Range) and
 
 ## The Effects sub-tab: the effect tree
 
-Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
+Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
 
 ### Damage
 
-A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
+A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. **Any** means no preference: the Apply Damage button gets no hint about the targets. Picking Any is still a choice, so the entry keeps its own box on the chat card even when nothing else shows its roll. Leave the dropdown alone and a damage entry with no outcome child under On Hit shows on a miss only. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
 
 **Roll Damage From Card** is for damage that lands on a later trigger than the activation itself, such as a trap that springs on the next creature to step adjacent. The card posts with the damage unrolled and shows a **Roll Damage** button in its place; the message author and the GM can press it, and the result then behaves like any other damage packet. It appears on top-level damage entries only, because damage nested under an outcome already waits on that outcome. Can Miss and Can Crit still apply to the deferred roll.
 
@@ -50,7 +50,9 @@ Even with Can Crit ticked, some attacks never crit: template (AoE) attacks, atta
 
 Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, a condition, a saving throw, or a note.
 
-- **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit.
+A critical hit is also a hit, so a crit card shows the children of both **On Critical Hit** and **On Hit**. The Damage Outcome is the one exception. If both buckets hold one, only the On Critical Hit outcome applies. Two outcomes would apply the same roll two times.
+
+- **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit. A damage entry nested in a bucket can hold its own Damage Outcome, and the rule is the same at every depth: the roll shows once, through that outcome.
 - **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**.
 
 ### Healing
@@ -67,6 +69,10 @@ A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity
 ### Condition
 
 A condition entry picks one status condition from the system's list (Frightened, Poisoned, Prone…). It renders as a labeled button on the chat card.
+
+### Move
+
+A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Tick **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it. **Show the distance as "up to"** sets how the card words the distance. It starts ticked for a move for free ("Can move up to 6 spaces for free.") and clear for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Tick it for a push or pull whose text says "up to"; clear it for a move for free of a set distance. It changes only the words on the card. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Forced Movement and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
 
 ### Pool
 
@@ -102,8 +108,8 @@ Because the item has a healing effect, drinking it with no target selected autom
 **The roll window.** If the activation contains any damage or healing, clicking the item opens a roll window first (spells always get one; see [Spells](spells.md)). It offers:
 
 - a roll mode selector (advantage / disadvantage),
-- a **Situational Modifiers** field for one-off bonuses like `1d4`,
-- fields to preset the primary die and its modifier (useful for handling table rulings),
+- an **Add to Roll** field for one-off bonuses like `2` or `1d4`,
+- **Set Primary Die Result** and **Add to Primary Die Result** fields, to handle table rulings (see [The attack roll window](../playing/dice-and-chat.md#the-attack-roll-window)),
 - if the character has spendable dice or charge pools, a section to click individual rolled dice or step charges to add to the roll,
 - a live preview of each damage formula with references filled in,
 - for GMs activating a non-player-character item, a **Hide roll** checkbox that whispers the card to GMs only,
@@ -111,7 +117,7 @@ Because the item has a healing effect, drinking it with no target selected autom
 
 Holding **Alt** while clicking the item skips the window and rolls with defaults.
 
-![The activation roll window showing roll mode, situational modifiers, and the formula preview pills](/images/documentation/roll-dialog-simple-attack.png)
+![The activation roll window showing roll mode, the Add to Roll field, and the formula preview pills](/images/documentation/roll-dialog-simple-attack.png)
 
 **The chat card.** After rolling, a card is posted with:
 

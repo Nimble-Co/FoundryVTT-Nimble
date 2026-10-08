@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "KVe65ndJ6XU7BU8u",
+				"identifier": "",
+				"label": "Forthrightly telling the truth",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"influence"
+				]
+			},
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "J7Fuc9p4b5DK318m",
+				"identifier": "",
+				"label": "Misleading",
+				"predicate": {},
+				"priority": 1,
+				"value": -1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"influence"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

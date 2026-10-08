@@ -35,6 +35,11 @@
 						"trigger": "onInitiativeRolled",
 						"mode": "refresh",
 						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "set",
+						"value": "0"
 					}
 				]
 			},
@@ -171,10 +176,16 @@
 				],
 				"rules": [
 					{
-						"type": "poolMaxBonus",
-						"poolIdentifier": "combat-dice",
-						"amount": 1,
-						"grantItemUuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt"
+						"id": "max-combat-die-grant",
+						"type": "grantItem",
+						"label": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt",
+						"allowDuplicate": true,
+						"inMemoryOnly": false,
+						"quantity": null
 					}
 				],
 				"selectionGroups": []

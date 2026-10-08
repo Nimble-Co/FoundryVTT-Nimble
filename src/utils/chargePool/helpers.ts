@@ -19,6 +19,7 @@ import type {
 	ChargeRecoveryTrigger,
 	ModifyPoolRuleLike,
 	NumericInput,
+	PoolMaxBonusRuleLike,
 	RuleBackedItem,
 } from './types.js';
 
@@ -77,10 +78,10 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 }
 
 /**
- * Only an explicit `true` hides a pool, so stored state and rule data that
- * predate the field keep rendering.
+ * Only an explicit `true` sets one of a pool's display flags, so stored state
+ * and rule data that predate a flag keep rendering where they always did.
  */
-function toHiddenFlag(value: unknown): boolean {
+function toPoolDisplayFlag(value: unknown): boolean {
 	return value === true;
 }
 
@@ -89,6 +90,14 @@ function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
 	const trimmed = value.trim() as ChargePoolDieSize;
 	if (VALID_DIE_SIZES.has(trimmed)) return trimmed;
 	return null;
+}
+
+/**
+ * Reads the stored seeding marker. Stays undefined when absent so a pool
+ * written before the marker existed falls back to its maximum.
+ */
+function toSeededMarker(value: unknown): boolean | undefined {
+	return typeof value === 'boolean' ? value : undefined;
 }
 
 function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
@@ -127,7 +136,9 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
 		}
@@ -175,7 +186,9 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				max,
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
-				hidden: toHiddenFlag(sourcePool.hidden),
+				hidden: toPoolDisplayFlag(sourcePool.hidden),
+				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
 		}
@@ -185,19 +198,18 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 }
 
 /**
- * Sums the cumulative level-up pool bonus for a pool identifier from the actor's level-up history
- * (e.g. each level a Commander selected "+1 Max Combat Die" contributes +1 to "combat-dice").
- * Returns 0 when the actor has no matching history entries.
+ * Sums every `poolMaxBonus` rule the actor owns for a pool identifier (e.g. each
+ * "+1 Max Combat Die" item a Commander holds contributes +1 to "combat-dice").
+ * Returns 0 when the actor owns no matching rule.
  */
 function getPoolMaxBonusTotal(actor: CharacterActorLike, identifier: string): number {
-	const history =
-		(actor as { system?: { levelUpHistory?: Array<{ poolMaxBonuses?: Record<string, number> }> } })
-			.system?.levelUpHistory ?? [];
+	const rules = (actor as { rules?: PoolMaxBonusRuleLike[] }).rules ?? [];
 
 	let total = 0;
-	for (const entry of history) {
-		const bonus = entry.poolMaxBonuses?.[identifier];
-		if (typeof bonus === 'number' && Number.isFinite(bonus)) total += bonus;
+	for (const rule of rules) {
+		if (rule?.type !== 'poolMaxBonus') continue;
+		if (!rule.appliesToPool?.(identifier)) continue;
+		total += rule.amount;
 	}
 	return total;
 }
@@ -356,8 +368,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			if (identifier.length < 1) continue;
 
 			const scope = toChargePoolScope(poolRule.scope);
-			// The pool max is the resolved formula PLUS any cumulative level-up pool bonus
-			// (e.g. "+1 Max Combat Die") recorded in levelUpHistory. Applying the bonus here —
+			// The pool max is the resolved formula PLUS every poolMaxBonus rule the actor owns
+			// for this pool (e.g. each "+1 Max Combat Die" item). Applying the bonus here —
 			// rather than requiring the formula to reference @<pool>Bonus — keeps it correct even
 			// when an actor carries a stale embedded formula.
 			const max =
@@ -377,7 +389,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				max,
 				dieSize,
 				icon: normalizeIcon(poolRule.icon),
-				hidden: toHiddenFlag(poolRule.hidden),
+				hidden: toPoolDisplayFlag(poolRule.hidden),
+				showAsResource: toPoolDisplayFlag(poolRule.showAsResource),
 				initial,
 				recoveries,
 			};
@@ -399,7 +412,16 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	for (const definition of definitions) {
 		const existingPool = existingPools[definition.id];
 		const defaultCurrent = definition.initial === 'zero' ? 0 : definition.max;
-		const current = clampCurrentToMax(existingPool?.current ?? defaultCurrent, definition.max);
+		// A pool takes its initial value until it has been seeded. The marker is
+		// stored rather than derived from the maximum, so a maximum that falls to
+		// zero and returns does not re-seed a pool the player has already spent.
+		// Pools stored before the marker existed are read as seeded when they held
+		// a maximum.
+		const wasSeeded = existingPool !== undefined && (existingPool.seeded ?? existingPool.max > 0);
+		const current = clampCurrentToMax(
+			wasSeeded ? existingPool.current : defaultCurrent,
+			definition.max,
+		);
 
 		nextPools[definition.id] = {
 			id: definition.id,
@@ -410,11 +432,13 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			label: definition.label,
 			current,
 			max: definition.max,
+			seeded: wasSeeded || definition.max > 0,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
 			// The rule is the source of truth for visibility: flipping the flag on the
 			// rule re-hides or re-reveals a pool that is already tracked in storage.
 			hidden: definition.hidden,
+			showAsResource: definition.showAsResource,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -422,9 +446,19 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 	return nextPools;
 }
 
+/**
+ * The charge consumers declared on an item.
+ *
+ * Variable consumers are left out by default: their spend is chosen by the
+ * player at activation and deducted from that choice, so a caller that spends
+ * or validates a fixed cost must not see them. Callers that describe an item's
+ * relationship to a pool (the sheet readout, the activation dialog) pass
+ * `includeVariable`.
+ */
 function getChargeConsumers(
 	actor: CharacterActorLike,
 	item: RuleBackedItem,
+	{ includeVariable = false }: { includeVariable?: boolean } = {},
 ): ChargeConsumerState[] {
 	const rules = item.rules;
 	if (!rules) return [];
@@ -445,17 +479,114 @@ function getChargeConsumers(
 		);
 		if (poolIdentifier.length < 1) continue;
 
+		const variable = consumerRule.costMode === 'variable';
+		if (variable && !includeVariable) continue;
+
 		const poolScope = toChargePoolScope(consumerRule.poolScope);
 		const cost = resolveFormulaToInteger(actor, consumerRule.cost);
+		const maxCostFormula = typeof consumerRule.maxCost === 'string' ? consumerRule.maxCost : '';
 		const poolId = buildChargePoolId(poolScope, poolIdentifier, sourceItemId);
 		consumers.push({
 			poolId,
 			poolIdentifier,
 			cost,
+			variable,
+			maxCost:
+				variable && maxCostFormula.trim().length > 0
+					? resolveFormulaToInteger(actor, maxCostFormula)
+					: null,
 		});
 	}
 
 	return consumers;
+}
+
+/**
+ * Total fixed charge cost this item takes from each pool, keyed by pool id.
+ *
+ * A variable spend has to stay inside what is left once these are reserved.
+ * The two are deducted at different points in the activation, so an amount
+ * sized against the raw balance can empty the pool first and leave the fixed
+ * cost unpaid after the effect has already resolved.
+ */
+function getFixedChargeCostsByPool(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): Map<string, number> {
+	const costsByPoolId = new Map<string, number>();
+	for (const consumer of getChargeConsumers(actor, item)) {
+		costsByPoolId.set(consumer.poolId, (costsByPoolId.get(consumer.poolId) ?? 0) + consumer.cost);
+	}
+	return costsByPoolId;
+}
+
+/**
+ * Pools that more than one variable consumer on this item spends from.
+ *
+ * The activation collects one amount per pool, so a second variable consumer
+ * on the same pool has no amount of its own: what the author asked for cannot
+ * be honoured, and guessing between "one budget" and "two spends" would make
+ * the item quietly do something nobody wrote. The use is refused instead.
+ */
+function findConflictingVariablePools(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): ChargeConsumerState[] {
+	const seen = new Map<string, ChargeConsumerState>();
+	const conflicting = new Map<string, ChargeConsumerState>();
+
+	for (const consumer of getChargeConsumers(actor, item, { includeVariable: true })) {
+		if (!consumer.variable) continue;
+		const first = seen.get(consumer.poolId);
+		if (first) conflicting.set(consumer.poolId, first);
+		else seen.set(consumer.poolId, consumer);
+	}
+
+	return [...conflicting.values()];
+}
+
+/**
+ * Variable consumers on this item whose amount could never be asked for.
+ *
+ * A hidden pool is an internal gate rather than a resource the player manages,
+ * so it renders no stepper to prompt with; a maximum below the minimum leaves
+ * no legal amount; and a spell is routed to the upcast window, which asks about
+ * tier rather than charges. Each would post a card that resolved `@spent` as 0
+ * and moved neither the pool nor the target, so the use is refused instead.
+ */
+function findUnofferableVariableSpends(
+	actor: CharacterActorLike,
+	item: RuleBackedItem,
+): Array<{ poolIdentifier: string; poolLabel: string; minimum: number; available: number }> {
+	const pools = buildEffectiveChargePoolMap(actor);
+	const unofferable: Array<{
+		poolIdentifier: string;
+		poolLabel: string;
+		minimum: number;
+		available: number;
+	}> = [];
+
+	for (const consumer of getChargeConsumers(actor, item, { includeVariable: true })) {
+		if (!consumer.variable) continue;
+		const pool = pools[consumer.poolId];
+		if (!pool) continue;
+
+		const minimum = Math.max(1, consumer.cost);
+		const offerable =
+			!pool.hidden &&
+			item.type !== 'spell' &&
+			(consumer.maxCost === null || consumer.maxCost >= minimum);
+		if (offerable) continue;
+
+		unofferable.push({
+			poolIdentifier: consumer.poolIdentifier,
+			poolLabel: pool.label,
+			minimum,
+			available: toFiniteNonNegativeInteger(pool.current),
+		});
+	}
+
+	return unofferable;
 }
 
 function getApplicableUsageTriggers(context: {
@@ -666,6 +797,8 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&
+		left.showAsResource === right.showAsResource &&
+		left.seeded === right.seeded &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
 }
@@ -687,6 +820,26 @@ function areChargePoolMapsEqual(left: ChargePoolMap, right: ChargePoolMap): bool
 	return true;
 }
 
+/**
+ * Looks up a pool by its bare identifier, falling back to the actor-scoped id
+ * so callers that only know the authored identifier find the pool whichever
+ * scope it was declared at. Returns the matched key alongside the pool so the
+ * caller can write back to the right entry.
+ */
+function findChargePoolByIdentifier(
+	pools: ChargePoolMap,
+	identifier: string,
+): { key: string; pool: ChargePoolState } | null {
+	const bareEntry = pools[identifier];
+	if (bareEntry) return { key: identifier, pool: bareEntry };
+
+	const actorScopedKey = buildChargePoolId('actor', identifier, '');
+	const actorEntry = pools[actorScopedKey];
+	if (actorEntry) return { key: actorScopedKey, pool: actorEntry };
+
+	return null;
+}
+
 export {
 	VALID_RECOVERY_TRIGGERS,
 	VALID_RECOVERY_MODES,
@@ -705,7 +858,11 @@ export {
 	normalizeRecoveries,
 	getChargePoolDefinitions,
 	buildEffectiveChargePoolMap,
+	findChargePoolByIdentifier,
 	getChargeConsumers,
+	getFixedChargeCostsByPool,
+	findConflictingVariablePools,
+	findUnofferableVariableSpends,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,
 	resolveRecoveryTrigger,

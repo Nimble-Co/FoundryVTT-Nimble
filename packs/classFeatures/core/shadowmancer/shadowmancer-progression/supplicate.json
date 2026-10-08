@@ -1,0 +1,70 @@
+{
+	"folder": "81e685bc5c9127ce",
+	"name": "Supplicate",
+	"type": "feature",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "1F16zybf0bJL989y",
+				"type": "optionSwap",
+				"label": "Whenever you commune with your Patron on a Safe Rest",
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"selectionGroups": [
+					"all"
+				],
+				"trigger": "safeRest"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you commune with your Patron on a Safe Rest, you may beg them to allow you to choose different Shadowmancer options (they may ask for something in return).</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "shadowmancer-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1788649660182,
+		"modifiedTime": 1788649660182,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "P7THnH0G3rFkE1CM"
+}

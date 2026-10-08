@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "",
+		"description": "<p>You gain the ability to enhance your spells with powerful effects by spending additional mana. Choose 2 Spellshaper abilities. You may use 1/turn.</p><hr><p>Level 9: Choose 1 additional Spellshaper ability.</p><p>Level 13: Choose 1 additional Spellshaper ability.</p>",
 		"featureType": "class",
 		"class": "mage",
 		"group": "mage-progression",

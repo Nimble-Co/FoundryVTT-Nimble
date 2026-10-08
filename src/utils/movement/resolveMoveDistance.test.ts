@@ -1,0 +1,125 @@
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
+// The shared Roll mock has no formula helpers; give it the two this helper uses.
+const RollGlobal = Roll as unknown as {
+	replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
+	safeEval?: (expression: string) => number;
+};
+const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+
+function lookup(data: Record<string, unknown>, path: string): unknown {
+	return path
+		.split('.')
+		.reduce<unknown>((cursor, key) => (cursor as Record<string, unknown>)?.[key], data);
+}
+
+beforeAll(() => {
+	RollGlobal.replaceFormulaData = (formula, data) =>
+		formula.replace(/@([\w.]+)/g, (_match, path: string) => String(lookup(data, path) ?? 0));
+	RollGlobal.safeEval = (expression) => {
+		if (!/^[\d\s+\-*/().]+$/.test(expression)) throw new Error(`unsafe: ${expression}`);
+		return Function(`"use strict"; return (${expression});`)() as number;
+	};
+});
+
+afterAll(() => {
+	RollGlobal.replaceFormulaData = original.replace;
+	RollGlobal.safeEval = original.safeEval;
+});
+
+import { resolveMoveDistance } from './resolveMoveDistance.js';
+
+function makeActor(size = 'medium', walk = 6, str = 3) {
+	return {
+		getRollData: () => ({ abilities: { strength: { mod: str } } }),
+		system: { attributes: { movement: { walk }, sizeCategory: size } },
+	};
+}
+
+// Distinct numbers on each side, so a test cannot pass by reading the wrong actor.
+const source = makeActor('large', 4, 3);
+const recipient = makeActor('medium', 7, -1);
+
+describe('resolveMoveDistance', () => {
+	it('resolves @speed to the recipient walk speed', () => {
+		expect(resolveMoveDistance({ distance: '@speed', distanceBySize: {} }, source, recipient)).toBe(
+			7,
+		);
+	});
+
+	it('floors arithmetic on the formula', () => {
+		expect(
+			resolveMoveDistance({ distance: '@speed / 4', distanceBySize: {} }, source, recipient),
+		).toBe(1);
+	});
+
+	it("reads ability modifiers from the feature user's roll data", () => {
+		expect(
+			resolveMoveDistance(
+				{ distance: '@abilities.strength.mod', distanceBySize: {} },
+				source,
+				recipient,
+			),
+		).toBe(3);
+	});
+
+	it('prefers the size override for the recipient size', () => {
+		const node = {
+			distance: '@abilities.strength.mod',
+			distanceBySize: { small: '@abilities.strength.mod * 2' },
+		};
+		expect(resolveMoveDistance(node, source, makeActor('small', 7, -1))).toBe(6);
+		expect(resolveMoveDistance(node, source, makeActor('large', 7, -1))).toBe(3);
+	});
+
+	it('keeps the sign of a negative term', () => {
+		const weak = makeActor('medium', 4, -1);
+		expect(
+			resolveMoveDistance(
+				{ distance: '@abilities.strength.mod', distanceBySize: {} },
+				weak,
+				recipient,
+			),
+		).toBe(0);
+		expect(resolveMoveDistance({ distance: '4 + -1', distanceBySize: {} }, source, recipient)).toBe(
+			3,
+		);
+	});
+
+	it('floors the whole formula, not each term', () => {
+		expect(
+			resolveMoveDistance({ distance: '6 / 4 + 6 / 4', distanceBySize: {} }, source, recipient),
+		).toBe(3);
+	});
+
+	it('never offers an unreadable or negative distance', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		expect(
+			resolveMoveDistance({ distance: 'nonsense', distanceBySize: {} }, source, recipient),
+		).toBe(0);
+		expect(resolveMoveDistance({ distance: '', distanceBySize: {} }, source, recipient)).toBe(0);
+		expect(
+			resolveMoveDistance(
+				{ distance: '@abilities.strength.mod - 5', distanceBySize: {} },
+				source,
+				recipient,
+			),
+		).toBe(0);
+		warn.mockRestore();
+	});
+
+	it('names the formula in a console warning when it cannot be worked out', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		expect(
+			resolveMoveDistance({ distance: '2 + oops', distanceBySize: {} }, source, recipient),
+		).toBe(0);
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn.mock.calls[0][0]).toContain('2 + oops');
+		warn.mockClear();
+
+		expect(resolveMoveDistance({ distance: '3', distanceBySize: {} }, source, recipient)).toBe(3);
+		expect(resolveMoveDistance({ distance: '', distanceBySize: {} }, source, recipient)).toBe(0);
+		expect(warn).not.toHaveBeenCalled();
+		warn.mockRestore();
+	});
+});

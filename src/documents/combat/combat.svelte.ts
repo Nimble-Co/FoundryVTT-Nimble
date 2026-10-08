@@ -20,7 +20,10 @@ import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import resolveHeroicReactionActionCost from '#utils/resolveHeroicReactionActionCost.js';
-import { isCombatConvenienceAutomationEnabled } from '../../settings/automationSettings.js';
+import {
+	isCombatConvenienceAutomationEnabled,
+	isMovementTrackingAutomationEnabled,
+} from '../../settings/automationSettings.js';
 import {
 	buildCharacterTurnRefillUpdate,
 	getCombatantManualSortValue,
@@ -139,6 +142,10 @@ class NimbleCombat extends Combat {
 	// only the winner emits. Reset at the start of every turn-changing entry point so a stale
 	// claim never suppresses a later legitimate emission.
 	#turnStartedCombatantId: string | null = null;
+	// The combatant whose movement history the turn-start backstop cleared. A late
+	// `_clearMovementHistoryOnStartTurn` for the same combatant consumes it instead of
+	// clearing twice. Reset with `#turnStartedCombatantId`.
+	#backstopClearedHistoryCombatantId: string | null = null;
 	#initiativeRollRequests = new Map<string, Promise<LockedInitiativeRollOutcome | null>>();
 
 	#findActorCombatantInScene(actorId: string, sceneId: string): Combatant.Implementation | null {
@@ -752,11 +759,19 @@ class NimbleCombat extends Combat {
 	 * computes an empty interval and skips the turn events for that boundary entirely — which
 	 * would silently drop every `onTurnStart` pool refill and charge recovery. This backstops
 	 * that case; it is a no-op when `_onStartTurn` already ran.
+	 *
+	 * The skipped turn start also skips `_clearMovementHistoryOnStartTurn`, so the incoming
+	 * movement history is cleared here too. Only the active GM clears, as in core, because
+	 * the tokens of other combatants may not be writable by the user who advanced the turn.
 	 */
-	#ensureIncomingTurnStarted(combatant: Combatant.Implementation | null): void {
+	async #ensureIncomingTurnStarted(combatant: Combatant.Implementation | null): Promise<void> {
 		if (!combatant) return;
 		if (!this.#claimTurnStart(combatant)) return;
 		this.#emitTurnStart(combatant);
+
+		if (!isMovementTrackingAutomationEnabled() || !game.user?.isActiveGM) return;
+		this.#backstopClearedHistoryCombatantId = combatant.id ?? null;
+		await this.clearMovementHistories(this.#getMovementHistoryClearTargets(combatant));
 	}
 
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
@@ -835,6 +850,39 @@ class NimbleCombat extends Combat {
 		// Claim before any await so a late-dispatched `_onEndTurn` skips its own refill.
 		this.#endingTurnRefilledCharacterId = outgoingCombatantId;
 		await this.#applyCharacterTurnEndRefill(combatant);
+	}
+
+	/**
+	 * Foundry clears every combatant's movement history when any turn starts. Nimble
+	 * counts Spaces Moved This Turn until the mover's own turn begins, so only the
+	 * incoming combatant is cleared. Skipped turns never took place, so they clear nothing.
+	 */
+	protected override async _clearMovementHistoryOnStartTurn(
+		combatant: Combatant.Implementation,
+		context: Combat.TurnEventContext,
+	) {
+		if (!isMovementTrackingAutomationEnabled()) {
+			return super._clearMovementHistoryOnStartTurn(combatant, context);
+		}
+		if (context.skipped) return;
+		if (combatant.id && this.#backstopClearedHistoryCombatantId === combatant.id) {
+			this.#backstopClearedHistoryCombatantId = null;
+			return;
+		}
+		await this.clearMovementHistories(this.#getMovementHistoryClearTargets(combatant));
+	}
+
+	/**
+	 * A minion group takes one turn through its leader, so the whole group's movement
+	 * history is cleared with it.
+	 */
+	#getMovementHistoryClearTargets(combatant: Combatant.Implementation): Combatant.Implementation[] {
+		const groupId = getMinionGroupId(combatant);
+		if (!groupId) return [combatant];
+
+		const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
+		if (!summary?.members.length) return [combatant];
+		return summary.members;
 	}
 
 	override async _onEndRound() {
@@ -1252,6 +1300,7 @@ class NimbleCombat extends Combat {
 		// outgoing combatant on this direct turn hand-off is never mistaken for a duplicate.
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
+		this.#backstopClearedHistoryCombatantId = null;
 		await this.#syncTurnToCombatant(targetIdentity);
 		const changed = this.turn !== previousTurnIndex;
 		if (changed) {
@@ -1335,6 +1384,7 @@ class NimbleCombat extends Combat {
 		const outgoingCombatantId = this.#endingTurnCombatantId;
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
+		this.#backstopClearedHistoryCombatantId = null;
 		let intercepted: boolean;
 		let result: this;
 		try {
@@ -1360,7 +1410,7 @@ class NimbleCombat extends Combat {
 		// The same desync skips `_onStartTurn` for the incoming combatant. Emit the turn-start
 		// hook here if that happened, after the outgoing turn-end so the ordering matches a
 		// normal advance.
-		this.#ensureIncomingTurnStarted(this.combatant ?? null);
+		await this.#ensureIncomingTurnStarted(this.combatant ?? null);
 		return result;
 	}
 
@@ -1373,6 +1423,7 @@ class NimbleCombat extends Combat {
 		const outgoingCombatantId = this.#endingTurnCombatantId;
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
+		this.#backstopClearedHistoryCombatantId = null;
 		let intercepted: boolean;
 		let result: this;
 		try {
@@ -1392,7 +1443,7 @@ class NimbleCombat extends Combat {
 		// (see `nextTurn`); no-op when `_onEndTurn` already handled it.
 		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
 		// Same for the incoming combatant's turn-start hook when `_onStartTurn` was skipped.
-		this.#ensureIncomingTurnStarted(this.combatant ?? null);
+		await this.#ensureIncomingTurnStarted(this.combatant ?? null);
 		return result;
 	}
 
@@ -1402,6 +1453,7 @@ class NimbleCombat extends Combat {
 		// later (e.g. after navigating back to them) is never mistaken for a duplicate.
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
+		this.#backstopClearedHistoryCombatantId = null;
 		const preferredPreviousTurnIdentity = this.#resolvePreviousTurnIdentity();
 		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
 			preferredPreviousTurnIdentity,
@@ -1422,6 +1474,7 @@ class NimbleCombat extends Combat {
 		// Clear any claim from a prior forward advance (see `previousTurn`).
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
+		this.#backstopClearedHistoryCombatantId = null;
 		const preferredLastTurnIdentity = this.#resolveTurnIdentityAtIndex(
 			this.turns,
 			Math.max(this.turns.length - 1, 0),

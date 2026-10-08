@@ -16,18 +16,10 @@
 			},
 			"duration": {
 				"details": "",
-				"quantity": 1,
+				"quantity": 10,
 				"type": "minute"
 			},
-			"effects": [
-				{
-					"id": "B7rec2cRfIdgOFVb",
-					"type": "condition",
-					"condition": "concentration",
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

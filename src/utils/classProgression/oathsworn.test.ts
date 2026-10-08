@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -227,5 +228,61 @@ describe('Oathsworn - data integrity', () => {
 	it('produces exactly 20 level summaries (L1..L20)', () => {
 		expect(summaries.length).toBe(20);
 		expect(summaries.map((s) => s.level)).toEqual(Array.from({ length: 20 }, (_v, i) => i + 1));
+	});
+});
+
+describe('Oathsworn - pack data', () => {
+	const { feature, rulesOf } = packFeatureHelpers(ID);
+
+	it('Paragon of Virtue ships two influence roll-mode rules, one favourable and one not', () => {
+		const rules = rulesOf('Paragon of Virtue', 'situationalRollMode');
+		expect(rules).toHaveLength(2);
+		for (const rule of rules) {
+			expect(rule.checkType).toBe('skillCheck');
+			expect(rule.skills).toEqual(['influence']);
+			expect(rule.disabled).toBe(false);
+		}
+		expect(rules.map((rule) => rule.value).sort((a, b) => a - b)).toEqual([-1, 1]);
+	});
+
+	it('My Life, for My Friends sets the cost of the interpose heroic reaction to 0', () => {
+		const rules = rulesOf('My Life, for My Friends', 'actionCost');
+		expect(rules).toHaveLength(1);
+		const [rule] = rules;
+		expect(rule.applies).toBe('heroicReaction');
+		expect(rule.reactions).toEqual(['interpose']);
+		expect(rule.mode).toBe('set');
+		expect(String(rule.value)).toBe('0');
+		expect(rule.disabled).toBe(false);
+	});
+
+	it('Master of Radiance ships two radiant utility spell picks, gated at L7 and L11', () => {
+		const rules = rulesOf('Master of Radiance', 'grantSpells');
+		expect(rules).toHaveLength(2);
+		for (const rule of rules) {
+			expect(rule.mode).toBe('selectSpell');
+			expect(rule.schools).toEqual(['radiant']);
+			expect(rule.tiers).toEqual([0]);
+			expect(rule.utilityOnly).toBe(true);
+			expect(rule.count).toBe(1);
+		}
+		const gates = rules.map((rule) => rule.predicate?.level?.min).sort((a, b) => a - b);
+		expect(gates).toEqual([7, 11]);
+	});
+
+	it('Sacred Decree ships a description', () => {
+		expect(feature('Sacred Decree').system.description.trim()).not.toBe('');
+	});
+
+	for (const name of ['Well Armored', 'Shining Mandate']) {
+		it(`${name} is always on and costs nothing to use`, () => {
+			expect(feature(name).system.activation.cost.type).toBe('none');
+		});
+	}
+
+	it('Lay on Hands carries rulebook text only, with no how-to-use paragraph', () => {
+		const description = feature('Lay on Hands').system.description;
+		expect(description.trim()).not.toBe('');
+		expect(description).not.toContain('<em>');
 	});
 });

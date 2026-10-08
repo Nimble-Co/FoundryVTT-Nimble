@@ -6,6 +6,7 @@ import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
+import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
@@ -13,6 +14,7 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
@@ -33,12 +35,16 @@ import { ModifyConsumerRule } from '../models/rules/modifyConsumer.js';
 import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
+import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
+import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
+import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
+import { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
@@ -54,11 +60,13 @@ export default function registerRulesConfig() {
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
 		chargePool: 'NIMBLE.ruleTypes.chargePool',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
+		concentrationTrack: 'NIMBLE.ruleTypes.concentrationTrack',
 		conditionalBonus: 'NIMBLE.ruleTypes.conditionalBonus',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
+		freeMove: 'NIMBLE.ruleTypes.freeMove',
 		grantActivation: 'NIMBLE.ruleTypes.grantActivation',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		diceConsumer: 'NIMBLE.ruleTypes.diceConsumer',
@@ -81,12 +89,16 @@ export default function registerRulesConfig() {
 		modifyConsumer: 'NIMBLE.ruleTypes.modifyConsumer',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
+		movementTrigger: 'NIMBLE.ruleTypes.movementTrigger',
 		note: 'NIMBLE.ruleTypes.note',
+		optionSwap: 'NIMBLE.ruleTypes.optionSwap',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
+		poolMaxBonus: 'NIMBLE.ruleTypes.poolMaxBonus',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		situationalRollMode: 'NIMBLE.ruleTypes.situationalRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
+		skillPointMove: 'NIMBLE.ruleTypes.skillPointMove',
 		skillRollMode: 'NIMBLE.ruleTypes.skillRollMode',
 		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
 		toggleEffect: 'NIMBLE.ruleTypes.toggleEffect',
@@ -102,11 +114,13 @@ export default function registerRulesConfig() {
 		chargeConsumer: ChargeConsumerRule,
 		chargePool: ChargePoolRule,
 		combatMana: CombatManaRule,
+		concentrationTrack: ConcentrationTrackRule,
 		conditionalBonus: ConditionalBonusRule,
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
+		freeMove: FreeMoveRule,
 		grantActivation: GrantActivationRule,
 		grantMovement: GrantMovementRule,
 		diceConsumer: DiceConsumerRule,
@@ -129,12 +143,16 @@ export default function registerRulesConfig() {
 		modifyConsumer: ModifyConsumerRule,
 		modifyPool: ModifyPoolRule,
 		modifyToggle: ModifyToggleRule,
+		movementTrigger: MovementTriggerRule,
 		note: NoteRule,
+		optionSwap: OptionSwapRule,
 		poolGainMessage: PoolGainMessageRule,
+		poolMaxBonus: PoolMaxBonusRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		situationalRollMode: SituationalRollModeRule,
 		skillBonus: SkillBonusRule,
+		skillPointMove: SkillPointMoveRule,
 		skillRollMode: SkillRollModeRule,
 		speedBonus: SpeedBonusRule,
 		toggleEffect: ToggleEffectRule,

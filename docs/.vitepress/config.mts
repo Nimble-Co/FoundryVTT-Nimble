@@ -106,6 +106,7 @@ export default defineConfig({
 						{ text: 'Rules: Notes', link: '/documentation/reference/rules-notes' },
 						{ text: 'Settings', link: '/documentation/reference/settings' },
 						{ text: 'Conditions', link: '/documentation/reference/conditions' },
+						{ text: 'Formulas', link: '/documentation/reference/formula-reference' },
 					],
 				},
 			],

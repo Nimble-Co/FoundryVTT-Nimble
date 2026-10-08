@@ -47,6 +47,14 @@
 	--nimble-selected-tag-text-color: white;
 	--nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
 	--nimble-hp-bar-background: hsl(293, 10%, 17%);
+	--nimble-resource-bar-border-color: hsl(36, 53%, 80%);
+	--nimble-resource-bar-text-color: var(--nimble-light-text-color);
+	--nimble-resource-bar-shadow-color: hsla(0, 0%, 0%, 0.6);
+	--nimble-resource-bar-fill: linear-gradient(
+		to right,
+		hsl(207deg 40% 26%) 0%,
+		hsl(212deg 44% 52%) 100%
+	);
 	--nimble-sheet-background: hsl(247, 16%, 11%);
 	--nimble-navigation-background-color: hsl(293, 10%, 17%);
 	--nimble-navigation-border-color: hsl(293, 10%, 25%);
@@ -115,6 +123,13 @@
 	--nimble-damage-badge-reduction-background-color: hsl(120, 28%, 25%);
 	--nimble-damage-badge-reduction-color: hsl(120, 50%, 70%);
 
+	/** MOVEMENT TAGS **/
+	--nimble-movement-chip-background-color: hsl(293, 10%, 25%);
+	--nimble-movement-chip-done-background-color: hsl(120, 28%, 25%);
+	--nimble-movement-chip-done-color: hsl(120, 50%, 70%);
+	--nimble-movement-chip-short-background-color: hsl(35, 45%, 25%);
+	--nimble-movement-chip-short-color: hsl(40, 90%, 70%);
+
 	/** HEROIC ACTIONS **/
 	--nimble-action-icon-color: hsl(210, 70%, 65%);
 	--nimble-action-info-background: hsla(45, 70%, 50%, 0.15);
@@ -145,6 +160,10 @@
 	--nimble-chat-advantage-background: hsla(210, 70%, 50%, 0.2);
 	--nimble-chat-advantage-color: hsl(210, 70%, 65%);
 	--nimble-chat-advantage-border-color: hsla(210, 70%, 50%, 0.4);
+	--nimble-chat-concentration-background: hsla(280, 55%, 50%, 0.25);
+	--nimble-chat-concentration-color: hsl(280, 60%, 75%);
+	--nimble-chat-upcast-background: hsla(150, 50%, 45%, 0.25);
+	--nimble-chat-upcast-color: hsl(150, 55%, 65%);
 
 	/** WEAPON CARD COLORS **/
 	--nimble-weapon-toggle-on-color: hsl(120, 50%, 62%);

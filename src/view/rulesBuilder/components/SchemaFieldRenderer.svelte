@@ -136,7 +136,7 @@
 					<option value=""></option>
 				{/if}
 				{#each choices as [val, label]}
-					<option value={val}>{label}</option>
+					<option value={val}>{localize(label)}</option>
 				{/each}
 			</select>
 		{:else}

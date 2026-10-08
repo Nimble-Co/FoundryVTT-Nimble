@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "",
+		"description": "<p>Choose 1 ability from the Lyrical Weaponry list.</p><hr><p>Level 9: Choose a 2nd ability from the Lyrical Weaponry list.</p><p>Level 13: Choose a 3rd ability from the Lyrical Weaponry list.</p><p>Level 17: Choose a 4th ability from the Lyrical Weaponry list.</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "songweaver-progression",

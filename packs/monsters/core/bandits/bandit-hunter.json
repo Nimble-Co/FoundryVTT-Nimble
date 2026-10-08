@@ -144,7 +144,15 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "modifyIncomingAttack",
+						"modifier": "raiseMissThreshold",
+						"missThreshold": 2,
+						"label": "",
+						"id": "2PNINTsA5RlvXHrK"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

@@ -70,7 +70,7 @@
 	<div
 		class="nimble-hit-dice-bar__fill"
 		style="--nimble-hit-dice-percentage: {max > 0
-			? Math.clamp(0, Math.round((value / max) * 100), 100)
+			? Math.clamp(Math.round((value / max) * 100), 0, 100)
 			: 0}%"
 	>
 		{#if hasMultipleDieSizes}

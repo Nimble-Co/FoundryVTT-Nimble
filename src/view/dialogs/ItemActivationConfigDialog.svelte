@@ -22,7 +22,7 @@
 		if (state.situationalModifiers !== '') {
 			const isValid = Roll.validate(state.situationalModifiers);
 			if (!isValid) {
-				ui.notifications?.warn('❌ Invalid dice formula in the situational modifiers!');
+				ui.notifications?.warn(localize('NIMBLE.hitDice.invalidAddToRoll'));
 				return;
 			}
 		}
@@ -32,7 +32,7 @@
 			const firstDieIndex = terms.findIndex((t) => t instanceof foundry.dice.terms.Die);
 			const firstDie = terms[firstDieIndex] as { faces?: number } | undefined;
 			if (!firstDie?.faces || state.primaryDieValue > firstDie.faces || state.primaryDieValue < 0) {
-				ui.notifications?.warn('❌ Invalid value for primary die!');
+				ui.notifications?.warn(localize('NIMBLE.hitDice.invalidSetPrimaryDie'));
 				return;
 			}
 		}
@@ -55,6 +55,7 @@
 			rollHidden: state.shouldRollBeHidden,
 			consumedPoolDice,
 			consumedChargePools,
+			consumedVariableCharges: state.consumedVariableCharges,
 			// Typed conditional-bonus damage rolls as its own damage effect so the
 			// chosen type applies; untyped choices are already folded into rollFormula.
 			conditionalDamages: state.conditionalTypedDamages,
@@ -144,6 +145,69 @@
 		</div>
 	</div>
 
+	{#if state.variableChargeSpends.length > 0}
+		<div class="nimble-roll-modifiers-container">
+			<div class="nimble-roll-modifiers nimble-pool-spend">
+				<h5 class="nimble-pool-spend__heading">
+					{localize('NIMBLE.activationDialog.spendCharge.heading')}
+				</h5>
+
+				{#each state.variableChargeSpends as spend (spend.poolId)}
+					{@const selected = state.variableSpendCounts[spend.poolId] ?? spend.minimum}
+					<div class="nimble-pool-spend__row">
+						<span class="nimble-pool-spend__label">{spend.label}</span>
+						<div class="nimble-pool-spend__stepper">
+							<button
+								type="button"
+								class="nimble-pool-spend__stepper-btn"
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement', {
+									pool: spend.label,
+								})}
+								disabled={selected <= spend.minimum}
+								onclick={() => state.adjustVariableSpend(spend.poolId, -1)}
+							>
+								−
+							</button>
+							<span class="nimble-pool-spend__stepper-value">
+								<input
+									class="nimble-pool-spend__stepper-input"
+									type="number"
+									min={spend.minimum}
+									max={spend.limit}
+									value={selected}
+									aria-label={localize('NIMBLE.activationDialog.spendCharge.amount', {
+										pool: spend.label,
+									})}
+									onchange={({ currentTarget }) => {
+										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber);
+										// The clamp often lands on the value already stored — typing 99 at
+										// the limit, or clearing the field — which leaves Svelte nothing to
+										// push back, so the box would keep showing what was typed.
+										currentTarget.value = String(state.variableSpendCounts[spend.poolId]);
+									}}
+								/>
+								<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
+									/ {spend.limit}
+								</span>
+							</span>
+							<button
+								type="button"
+								class="nimble-pool-spend__stepper-btn"
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment', {
+									pool: spend.label,
+								})}
+								disabled={selected >= spend.limit}
+								onclick={() => state.adjustVariableSpend(spend.poolId, 1)}
+							>
+								+
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	{#if state.hasSpendablePools}
 		<div class="nimble-roll-modifiers-container">
 			<div class="nimble-roll-modifiers nimble-pool-spend">
@@ -201,7 +265,9 @@
 							<button
 								type="button"
 								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement')}
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement', {
+									pool: pool.label,
+								})}
 								disabled={selected <= 0}
 								onclick={() => state.adjustChargeSpend(pool.id, -1)}
 							>
@@ -209,14 +275,16 @@
 							</button>
 							<span class="nimble-pool-spend__stepper-value">
 								<strong>{selected}</strong>{pool.dieSize}
-								<span class="nimble-pool-spend__stepper-available">
+								<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
 									/ {pool.current}
 								</span>
 							</span>
 							<button
 								type="button"
 								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment')}
+								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment', {
+									pool: pool.label,
+								})}
 								disabled={selected >= pool.current}
 								onclick={() => state.adjustChargeSpend(pool.id, 1)}
 							>
@@ -251,20 +319,22 @@
 		</div>
 	{/if}
 
-	<div class="nimble-roll-formulas">
-		{#each state.damagePreviews as damageEffect}
-			<div class="nimble-roll-formula">
-				{#if damageEffect.damageType}
-					<span class="nimble-roll-formula__type">
-						{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
+	{#if state.damagePreviews.length > 0}
+		<div class="nimble-roll-formulas">
+			{#each state.damagePreviews as damageEffect}
+				<div class="nimble-roll-formula">
+					{#if damageEffect.damageType}
+						<span class="nimble-roll-formula__type">
+							{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
+						</span>
+					{/if}
+					<span class="nimble-roll-formula__formula">
+						{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
 					</span>
-				{/if}
-				<span class="nimble-roll-formula__formula">
-					{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
-				</span>
-			</div>
-		{/each}
-	</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
 	{#if game.user?.isGM}
 		<div class="nimble-roll-modifiers-container">
 			<label>
@@ -530,6 +600,13 @@
 				opacity: 0.35;
 				cursor: not-allowed;
 			}
+		}
+
+		&__stepper-input {
+			width: 3.5rem;
+			padding-block: 0;
+			text-align: center;
+			font-weight: 700;
 		}
 
 		&__stepper-value {

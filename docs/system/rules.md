@@ -33,6 +33,24 @@ The actor collects all enabled rules from all items, sorts by `priority` (lower 
 
 Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from the corresponding system events. See `NimbleBaseRule` for the full surface.
 
+### `onActiveGmTurnStart(context)` and `onPoolGain(context)`
+
+`onTurnStart` comes from core `combatTurn`, which runs only on the client that advanced the turn. That client can belong to a different player, who cannot change this actor. `onActiveGmTurnStart` takes the same `TurnContext` (combat, combatant, actor) but comes from Nimble's `nimbleCombatTurnStart` hook, which the combat document calls once per turn start, on the active GM only. Use it when the rule must write to the actor or post exactly one card.
+
+`onPoolGain` fires when one of the actor's dice pools gains dice, on the client that changed the pool (the `nimble.dicePool.changed` hook). Spent dice that go back to the pool (`reason: 'refund'`, for example after a reroll removes the crit they were spent on) are not a gain. The context holds `actor`, `poolIdentifier` (the bare identifier, with the `actor:` prefix removed) and `poolLabel`. `src/hooks/ruleEventDispatch.ts` dispatches both through the same `dispatch()` as every other event, so the `applyRuleEffects` toggle gates them unless the rule lists them in `alwaysDispatchedEvents`.
+
+### `onMovementFinished(context)`
+
+Fires once per finished token Movement (one drag; a Teleport is reported too, with kind `teleport` and zero spaces) when the Movement Tracking toggle is on. The system hook `nimble.movementFinished` carries a `MovementRecord` on every client; the active GM dispatches it, in order and awaiting each, to the mover's rules first and then to the rules of every other actor with a token on the same scene. Like every other lifecycle event it is also skipped when `applyRuleEffects` is off. The context holds `record` (token, actor, movementId, kind `regular | free | forced | teleport`, action, origin, stop, path, spaces, spacesThisTurn, stopped, user, and `offer`: the Movement Offer the drop named, or null), the observing `actor` and `token`, and `isMover`. Use `reachChanges(record, observerToken, reach)` from `src/utils/movement/reachChanges.ts` to learn whether the mover entered, left or passed through the observer's Reach.
+
+The `movementTrigger` rule reads these records. It tests its predicate, stops unless both the observer's token and the mover's token are in a started combat (`isInStartedCombat`), then runs `matchMovementTrigger` (`src/utils/movement/matchMovementTrigger.ts`) on the record, and posts a `movementTrigger` chat card through `postMovementTriggerCard`, spoken by the observer's token. The card lets the owner use the owning item on the tokens the match found. It never deals damage and never moves a token. While the rule's `whisper` field is set (the default), the card is a whisper to the users `movementCardWhisper` (`src/utils/movement/movementCardWhisper.ts`) names: every GM, the players who own the observer's actor, and the author. The creatures the card names are not in the list, because only the item's owners can use the card. The list is set when the card posts, so a later change of ownership does not change who sees it. The rule lists `onMovementFinished` in `alwaysDispatchedEvents`, so `applyRuleEffects` does not stop it; the hook itself fires only while Movement Tracking is on.
+
+### Rules that post a Movement Offer
+
+`freeMove` posts a standalone `movementOffer` chat card through `postMovementOfferCard` (`src/utils/movement/postMovementOfferCard.ts`). The card carries one synthetic `move` node and is stamped with its offers before it is created, so arming, the drag tag, settling and lapsing work the same as for an activation card. Each trigger posts on exactly one client: `onActivation` (this item's `onItemActivated`) and `onInitiativeRolled` on the acting client, `onTurnStart` (the stored trigger value; the rule overrides `onActiveGmTurnStart`) once on the active GM, `onCritReceived` (`onAttackReceived` with `isCritical`) on the GM who applied damage, and `onPoolGain` on the client that changed the pool. When the event carries no token, the rule finds the actor's token with `findActorToken` (`src/utils/movement/findActorToken.ts`), which does not read the canvas; `onCritReceived` first looks for the struck actor's token among the attack card's targets. The rule lists all five lifecycle methods in `alwaysDispatchedEvents`, so `applyRuleEffects` does not stop it. It posts nothing while the Forced and Free Movement toggle is off, and that toggle counts as off while Movement Tracking is off. The card is public unless the rule's `whisper` field is set. Then it is a whisper to every GM, the players who own the source or a creature that gets an offer, and the author. Foundry sends a whisper to every client and only hides it in the chat log, so a whispered card still arms the token on every client.
+
+`freeMove` takes a `chargePoolIdentifier`: when set, the rule fires only while that pool holds a charge and spends one when its card posts (`src/utils/chargePool/ruleChargeGate.ts`). Calls for one actor and pool run in turn (`withRuleCharge`), so two offers started in the same tick, for example two combatants of one actor rolling Initiative together, cannot share one charge. `movementTrigger` has no charge field, because its card only offers the item: a limited item gates the rule on the `self:<identifier>ChargePool` predicate tag, and the item's own charge consumer spends the charge when the player uses it.
+
 ## Key Patterns
 
 - **Guard with `isEmbedded`**: Always start `prePrepareData()` with `if (!this.item.isEmbedded) return;`. Rules on un-embedded items have no actor to mutate.
@@ -111,7 +129,7 @@ Tags are populated during `_populateDerivedTags()` in actor data prep, before ru
 Not every tag exists at every lifecycle phase. Three populating points, in order:
 
 1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
-2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`, and pool state (`self:*ChargePool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there, folding in their `maxHpBonus` rules — see [Rules read outside the hook sweep](#rules-read-outside-the-hook-sweep)) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, `spacesMovedThisTurn:*` (combatants in a started combat with Movement Tracking on), character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`, and pool state (`self:*ChargePool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there, folding in their `maxHpBonus` rules — see [Rules read outside the hook sweep](#rules-read-outside-the-hook-sweep)) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
 3. **Late in `prepareDerivedData()`** (after ability mods are finalized) — emits the character `<ability>:<mod>` tags. Ability mods can't exist earlier: `abilityBonus` rules contribute to them *during* `prePrepareData`, so these tags are visible **only in `afterPrepareData` and later hooks**.
 
 A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<ability>:<mod>` tag — the predicate would never match. This is enforced by guardrails rather than left silent: the Rules Builder's predicate editor shows a warning banner (instead of the match preview) when an early-phase rule references a key in `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, and rule construction emits a once-per-rule `console.warn` for the same condition. Whether a rule class is early-phase is introspected automatically via `NimbleBaseRule.appliesInPrePrepareData` (true when the class implements a `prePrepareData` method) — never add a no-op `prePrepareData` for documentation purposes, as it would falsely mark the rule early. A rule read outside the hook sweep overrides the getter instead (see below).
@@ -136,6 +154,7 @@ Two consequences for a rule in this position:
 | `enemiesAdjacent:most` | Adjacency sync | Has most adjacent enemies |
 | `alliesAdjacent:<count>` | Adjacency sync | In combat |
 | `alliesAdjacent:most` | Adjacency sync | Has most adjacent allies |
+| `spacesMovedThisTurn:<n>` | Token movement history | Combatant in a started combat, with Movement Tracking on. Emitted at `0` too, so in a started combat `{ "spacesMovedThisTurn": { "max": 0 } }` reads "has not moved this turn"; when the tag is absent (out of combat, tracking off) neither `min` nor `max` matches. Counts Regular Movement (a Free Move included) and Forced Movement; a Teleport or a Swap never counts. Resets when the actor's own turn begins. |
 | `self:bloodied` | `actor.statuses` | Bloodied status active |
 | `self:dying` | `actor.statuses` (dying) | PC/Hero at 0 HP with wounds remaining |
 | `self:lastStand` | `actor.statuses` (lastStand) | Solo/Legendary monster phase change at 0 HP |
@@ -308,7 +327,7 @@ A rule offering a zero adjustment is skipped, since its checkbox would do nothin
 4. Implement lifecycle hooks (most commonly `prePrepareData()`).
 5. Register in `src/config/registerRulesConfig.ts` — add to both `ruleTypes` and `ruleDataModels`.
 6. Add the i18n label key to `en.json` (under `NIMBLE.ruleTypes.<key>`).
-7. Add a description i18n key under `NIMBLE.ruleDescriptions.<key>` for the builder UI.
+7. Add a description i18n key under `NIMBLE.rules.<key>.description` for the builder UI, with field labels and hints under `NIMBLE.rules.<key>.<field>`.
 8. Make the rule renderable in the **Rules Builder** — see [below](#rules-builder-integration).
 9. Keep the rule **generic** — it should be reusable across any item type.
 10. Add a co-located test (`src/models/rules/yourRule.test.ts`). Mock actor/item, instantiate the rule directly, and verify the lifecycle hook mutates actor data correctly. See `speedBonus.test.ts` for the pattern.
@@ -319,7 +338,7 @@ A rule offering a zero adjustment is skipped, since its checkbox would do nothin
 ```typescript
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
   static override group = 'bonuses';
-  static override description = 'NIMBLE.ruleDescriptions.abilityBonus';
+  static override description = 'NIMBLE.rules.abilityBonus.description';
 
   static override defineSchema(): AbilityBonusRule.Schema {
     return { ...NimbleBaseRule.defineSchema(), ...schema() };
@@ -346,13 +365,13 @@ The rules-builder UI (`src/view/rulesBuilder/`) auto-generates a card per rule f
 ```typescript
 class YourRule extends NimbleBaseRule<YourRule.Schema> {
   static override group = 'bonuses';
-  static override description = 'NIMBLE.ruleDescriptions.yourRule';
+  static override description = 'NIMBLE.rules.yourRule.description';
   // ...
 }
 ```
 
 - `static group` — bucket in the rule-type picker. Existing groups: `'bonuses'`, `'grants'`, `'triggers'`, `'resources'`, `'flavor'`. Defaulting to `'unsorted'` triggers a dev-mode warning.
-- `static description` — i18n key shown in the card's help tooltip and the picker's grid. Add the string to `en.json` under `NIMBLE.ruleDescriptions.<key>`.
+- `static description` — i18n key shown in the card's help tooltip and the picker's grid. Add the string to `en.json` under `NIMBLE.rules.<key>.description`.
 
 ### Per-field metadata (required)
 
@@ -513,7 +532,7 @@ That is harmless for a one-way gate such as a level threshold, which is what the
 - **`modifyPool.minFace`**: a minimum face value for dice rolled into the target pool. Rolls below the floor are raised to it at every roll point (refills, activation rolls, initial seeding); manual face edits stay unclamped. The highest floor among contributing modifiers wins.
 
 - **`modifyConsumer`**: augments the effect formula of `diceConsumer` rules targeting a pool. Matching consumers' `effectFormula` gains `+ (appendFormula)`, with an optional `effectTypeFilter` to restrict the change to e.g. `damageReduction` spends. Applied at consumer enumeration time, so both the spend panel and its preview reflect the change.
-- **`poolGainMessage`**: posts a chat reminder whenever the targeted dice pool gains dice. `formula` is resolved against actor data and interpolated into `message` via `{value}`.
+- **`poolGainMessage`**: posts a chat reminder whenever the targeted dice pool gains dice. Refunded dice do not count as a gain. `formula` is resolved against actor data and interpolated into `message` via `{value}`.
 - **Dice refill triggers wired to dispatchers**: `onAttacked` and `onCritReceived` (damage-application pipeline), `onTurnStart` / `onTurnEnd` (turn-boundary custom hooks, GM-side), and `encounterEnd`. Other declared triggers have no dispatcher yet.
 - **`maximizeDie` pool node action**: an activation effect node that raises the lowest N faces of a dice pool to the die's maximum.
 
@@ -581,12 +600,15 @@ The system never hides Active Effects: every enabled AE on an actor renders on t
 | --- | --- | --- |
 | `disadvantage` | Automatic, pre-roll | One disadvantage level per matching rule, pushed into the attack roll's `rollModeSources` (cancels 1-for-1 with advantage) |
 | `autoMiss` | Automatic, pre-roll | The attack roll is forced to a miss (`forceMiss` on `DamageRoll`), even against attacker-side "cannot miss" effects |
+| `raiseMissThreshold` | Automatic, pre-roll | Raises the highest primary-die result that misses to the rule's `missThreshold` (`missThreshold` on `DamageRoll`). The bandit Parry trait sets 2, so attacks miss on a 1 and a 2 |
 | `forceReroll` | Interactive or automatic | Discard the roll and roll once more; the second result stands. See the reroll options below |
 | `redirectToSelf` | Interactive | An Interpose offer: when an ally within `range` spaces is targeted, the rule's owner may swap in as the target |
 
-`disadvantage`, `forceReroll`, and `autoMiss` fire when the rule's owner is the attack's target; the predicate is tested against the owner's own domain at attack time (positional tags such as `alliesAdjacent` are fresh). `redirectToSelf` is protector-side: it fires when an ally within `range` spaces (default 2) is targeted, with the predicate tested against the protector's own domain.
+`disadvantage`, `forceReroll`, `autoMiss`, and `raiseMissThreshold` fire when the rule's owner is the attack's target; the predicate is tested against the owner's own domain at attack time (positional tags such as `alliesAdjacent` are fresh). `redirectToSelf` is protector-side: it fires when an ally within `range` spaces (default 2) is targeted, with the predicate tested against the protector's own domain.
 
-These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and minion group attack cards are not covered.
+Miss thresholds are absolute values, not increments, and several matching rules resolve to their maximum rather than their sum. Parry is a fixed "misses on a 1 and a 2", and two Parry sources do not make it 3. The threshold sits behind `canMiss`, so an attacker who cannot miss ignores it entirely, and a max-face primary die crits rather than missing.
+
+These rules are not consulted during data preparation. The attacker's activation flow (`ItemActivationManager`, and the Zephyr unarmed strike path) reads the first target's rules through `computeIncomingAttackPlan` (`src/utils/incomingAttackModifiers.ts`) when the attack roll is built. Scope limits: only the first target is consulted (matching the `targetCondition` precedent), AoE attacks are exempt because their single shared roll must not absorb one target's defensive rules, and the opportunity-attack panel, heroic-action macro, deferred-damage chat flow, and minion group attack cards are not covered.
 
 ### Interactive reactions
 

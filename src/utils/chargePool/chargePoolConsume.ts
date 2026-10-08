@@ -4,6 +4,8 @@ import {
 	areChargePoolMapsEqual,
 	buildEffectiveChargePoolMap,
 	clampCurrentToMax,
+	findConflictingVariablePools,
+	findUnofferableVariableSpends,
 	getApplicableUsageTriggers,
 	getChargeConsumers,
 	isCharacterActor,
@@ -25,8 +27,32 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 	const actor = item.actor;
 	if (!isCharacterActor(actor)) return { ok: true };
 
+	// An item that asks for two player-chosen spends from one pool cannot be
+	// honoured as written, so the use is refused rather than silently spending
+	// for only one of them. See findConflictingVariablePools.
+	const [conflict] = findConflictingVariablePools(actor, ruleBackedItem);
+	if (conflict) {
+		return {
+			ok: false,
+			failure: {
+				code: 'conflictingConsumers',
+				poolIdentifier: conflict.poolIdentifier,
+				poolLabel: conflict.poolIdentifier,
+				required: conflict.cost,
+				available: 0,
+			},
+		};
+	}
+
 	const pools = buildEffectiveChargePoolMap(actor);
-	const consumers = getChargeConsumers(actor, ruleBackedItem);
+	// Variable consumers are validated too, against their minimum: an item whose
+	// only cost is "spend any amount" still has nothing to do on an empty pool.
+	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true });
+
+	// Summed per pool, not checked one consumer at a time: costs that each fit
+	// alone can still overdraw the pool together, and the two kinds are deducted
+	// at different points in the activation, so nothing later catches it.
+	const requiredByPoolId = new Map<string, { identifier: string; required: number }>();
 	for (const consumer of consumers) {
 		const pool = pools[consumer.poolId];
 		if (!pool) {
@@ -47,15 +73,42 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 			};
 		}
 
-		const available = toFiniteNonNegativeInteger(pool.current);
-		if (available < consumer.cost) {
+		const minimum = consumer.variable ? Math.max(1, consumer.cost) : consumer.cost;
+		const tally = requiredByPoolId.get(consumer.poolId);
+		if (tally) tally.required += minimum;
+		else
+			requiredByPoolId.set(consumer.poolId, {
+				identifier: consumer.poolIdentifier,
+				required: minimum,
+			});
+	}
+
+	// See findUnofferableVariableSpends: an amount the activation could never ask
+	// about is an authoring mistake, not a spend of nothing.
+	const [unofferable] = findUnofferableVariableSpends(actor, ruleBackedItem);
+	if (unofferable) {
+		return {
+			ok: false,
+			failure: {
+				code: 'unofferableSpend',
+				poolIdentifier: unofferable.poolIdentifier,
+				poolLabel: unofferable.poolLabel,
+				required: unofferable.minimum,
+				available: unofferable.available,
+			},
+		};
+	}
+
+	for (const [poolId, tally] of requiredByPoolId) {
+		const available = toFiniteNonNegativeInteger(pools[poolId].current);
+		if (available < tally.required) {
 			return {
 				ok: false,
 				failure: {
 					code: 'insufficientCharges',
-					poolIdentifier: consumer.poolIdentifier,
-					poolLabel: pool.label,
-					required: consumer.cost,
+					poolIdentifier: tally.identifier,
+					poolLabel: pools[poolId].label,
+					required: tally.required,
 					available,
 				},
 			};

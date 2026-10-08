@@ -14,11 +14,9 @@
 	let {
 		mode,
 		actorName,
-		tier = 0,
 		school = '',
 		activationSummary = '',
 		scrollPrice = 0,
-		hasMana = false,
 		candidates = [],
 		tierLabel = '',
 	} = $derived(props);
@@ -48,11 +46,11 @@
 				<dd>{state.upcastLabel}</dd>
 			</dl>
 
-			{#if !hasMana && tier > 0}
+			{#if state.showTierWarning}
 				<Hint
 					hintType="warning"
 					hintIcon="fa-solid fa-circle-exclamation"
-					hintText={localize('NIMBLE.spellScroll.dialog.noManaWarning', { name: actorName })}
+					hintText={localize('NIMBLE.spellScroll.dialog.tierLockedWarning', { name: actorName })}
 				/>
 			{/if}
 		</SpellScrollChoiceCard>

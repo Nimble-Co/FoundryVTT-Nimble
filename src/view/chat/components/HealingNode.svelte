@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import type { NimbleChatMessage, AppliedHealingRecord } from '../../../documents/chatMessage.js';
+	import { hasDispositionTarget } from '#utils/treeManipulation/hasDispositionTarget.ts';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
 	const messageDocument = getContext('messageDocument') as NimbleChatMessage;
@@ -33,9 +34,7 @@
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
 
-	let targetDisposition = $derived(
-		node.targetDisposition as 'friendly' | 'neutral' | 'hostile' | 'secret' | undefined,
-	);
+	let targetDisposition = $derived(hasDispositionTarget(node) ? node.targetDisposition : undefined);
 
 	const { dispositionState } = useDispositionState(
 		() => targetDisposition,

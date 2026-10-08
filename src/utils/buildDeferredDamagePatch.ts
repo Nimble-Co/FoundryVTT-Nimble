@@ -1,6 +1,7 @@
 import type { DamageNode, EffectNode } from '#types/effectTree.js';
 import { replaceDamageRollInRollsSource } from './foldBonusIntoPrimaryDamage.js';
 import { flattenEffectsTree } from './treeManipulation/flattenEffectsTree.js';
+import { isAwaitingDeferredRoll } from './treeManipulation/isAwaitingDeferredRoll.js';
 import { reconstructEffectsTree } from './treeManipulation/reconstructEffectsTree.js';
 
 interface DeferredDamageResult {
@@ -19,8 +20,7 @@ function findRollableNode(nodes: EffectNode[], nodeId: string): DamageNode | nul
 		(node): node is DamageNode => node.type === 'damage' && node.id === nodeId,
 	);
 
-	if (!damageNode?.deferredRoll) return null;
-	if (damageNode.roll?.class) return null;
+	if (!damageNode || !isAwaitingDeferredRoll(damageNode)) return null;
 
 	return damageNode;
 }

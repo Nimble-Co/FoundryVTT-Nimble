@@ -18,7 +18,7 @@ The Primary Die is whichever base-weapon die is **leftmost** in your pool. Every
 On top of that:
 
 - **Crit** = Primary Die rolls its maximum value. You reroll the Primary Die, add it to damage, and repeat as long as it keeps rolling max.
-- **Miss** = Primary Die rolls a 1. Damage from bonus dice still doesn't matter — you missed.
+- **Miss** = Primary Die rolls a 1, or at or under the target's miss threshold when a `modifyIncomingAttack` rule raises it (the bandit Parry trait misses on a 1 and a 2). Damage from bonus dice still doesn't matter — you missed.
 - **Advantage** = add one more die of the same type to the pool, drop the lowest. On ties, drop the leftmost tied die. Disadvantage is the same but drops the highest.
 - **Adv + Dis cancel 1-for-1 before rolling.** Two advantages and one disadvantage net to one advantage.
 - **AoE / multi-target attacks** can't miss and can't crit. One roll applies to everyone hit.

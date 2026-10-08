@@ -6,7 +6,57 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "inspiring-anthem-encounter-pool",
+				"identifier": "inspiring-anthem-encounter",
+				"label": "Inspiring Anthem (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "inspiring-anthem-encounter-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "inspiring-anthem-encounter",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "actionDelta",
+				"disabled": false,
+				"id": "inspiring-anthem-action",
+				"identifier": "",
+				"label": "Inspiring Anthem",
+				"predicate": {},
+				"priority": 3,
+				"value": "1",
+				"timing": "now",
+				"target": "targeted",
+				"borrowFromNextTurn": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +70,25 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "9szVrtMDOk3M8eff",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "1",
+					"targetDisposition": "friendly",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "yfLZ0fyJxVRAZekF",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Target the friendly Dying creatures who can hear you.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

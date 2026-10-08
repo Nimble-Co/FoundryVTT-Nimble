@@ -8,6 +8,11 @@ export const metadata = () => ({
 	rollMode: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
 });
 
+/** Whether the activated item made its user concentrate. */
+export const concentration = () => ({
+	concentration: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+});
+
 export const targets = () => ({
 	targets: new fields.ArrayField(new fields.StringField({ required: true, nullable: false }), {
 		required: true,
@@ -43,6 +48,58 @@ export const grantedActionOffers = () => ({
 			sourceItemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
+});
+
+/**
+ * Movement Offers made by this card's `move` effect nodes, one per node and
+ * recipient, stamped when the card is posted or a target is added. The active
+ * GM settles each one after the recipient's next Movement, lapses it when the
+ * combat turn ends, or untracks it when a toggle that gates offers changes.
+ */
+export const movementOffers = () => ({
+	movementOffers: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			nodeId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			tokenUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			kind: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'free',
+				choices: ['free', 'forced'],
+			}),
+			spaces: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			ignoreDifficultTerrain: new fields.BooleanField({
+				required: true,
+				nullable: false,
+				initial: false,
+			}),
+			state: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'open',
+				choices: ['open', 'taken', 'unused', 'lapsed', 'untracked'],
+			}),
+			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+			movedSpaces: new fields.NumberField({
+				required: false,
+				nullable: true,
+				initial: null,
+				integer: true,
+				min: 0,
+			}),
+			stopped: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			conditional: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),

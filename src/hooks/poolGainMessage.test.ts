@@ -81,6 +81,30 @@ describe('registerPoolGainMessageHooks', () => {
 		expect(chat.create).not.toHaveBeenCalled();
 	});
 
+	it('does not post when spent dice are refunded', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const chat = stubChatMessage();
+		const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+		registerPoolGainMessageHooks();
+
+		const actor = makeActor([makeRule()]);
+		callbacks.get('nimble.dicePool.changed')?.(gainPayload(actor, { reason: 'refund' }));
+
+		expect(chat.create).not.toHaveBeenCalled();
+	});
+
+	it('posts for a manual gain', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const chat = stubChatMessage();
+		const { registerPoolGainMessageHooks } = await import('./poolGainMessage.js');
+		registerPoolGainMessageHooks();
+
+		const actor = makeActor([makeRule()]);
+		callbacks.get('nimble.dicePool.changed')?.(gainPayload(actor, { reason: 'manual' }));
+
+		expect(chat.create).toHaveBeenCalledTimes(1);
+	});
+
 	it('matches actor-scoped pool ids against the bare identifier', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const chat = stubChatMessage();

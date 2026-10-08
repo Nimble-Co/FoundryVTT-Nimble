@@ -1,6 +1,8 @@
+import type { EffectNodeDisposition } from '#types/effectTree.d.ts';
+
 export interface ApplyDamageButtonProps {
 	/** The card's damage group, read only for the disposition hint */
-	nodes?: Array<{ targetDisposition?: 'friendly' | 'neutral' | 'hostile' | 'secret' }>;
+	nodes?: Array<{ targetDisposition?: EffectNodeDisposition }>;
 	/**
 	 * Set to apply one packet on its own instead of the whole card. Only
 	 * save-gated damage needs this: the card-level pass excludes it, because

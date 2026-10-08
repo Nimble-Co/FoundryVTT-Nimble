@@ -23,6 +23,9 @@
 				},
 				"index:1": {
 					"label": "Highborn"
+				},
+				"mbCpzjDXY6k0ZZFV": {
+					"label": "Highborn"
 				}
 			}
 		},
@@ -43,6 +46,9 @@
 				},
 				"io7K8HETN3dgovbH": {
 					"label": "Draconic heritage"
+				},
+				"ONMVoM2545DOr6Ib": {
+					"label": "Draconic Heritage"
 				}
 			}
 		},
@@ -50,6 +56,9 @@
 			"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against those who dare to harm them.</p><hr><p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p><p>You know Elvish if your INT is not negative. [M]</p>",
 			"name": "Dryad/Shroomling",
 			"rules": {
+				"93J1JO4w6KUqXpqo": {
+					"label": "Danger Pollen/Spores"
+				},
 				"index:0": {
 					"label": "Danger Pollen/Spores"
 				}
@@ -66,6 +75,9 @@
 					"label": "Stout"
 				},
 				"index:3": {
+					"label": "Stout"
+				},
+				"PPHsbGkbuWOhTruC": {
 					"label": "Stout"
 				},
 				"v5rARnVgo5eGgtcJ": {
@@ -85,6 +97,9 @@
 				},
 				"index:2": {
 					"label": "Lithe (Advantage on Initiative)"
+				},
+				"wwJMcxgBUNmFaf6X": {
+					"label": "Lithe"
 				}
 			}
 		},
@@ -96,6 +111,9 @@
 					"label": "Flameborn"
 				},
 				"index:1": {
+					"label": "Flameborn"
+				},
+				"Jg42GZD7ParxVgSz": {
 					"label": "Flameborn"
 				}
 			}
@@ -109,6 +127,9 @@
 				},
 				"index:1": {
 					"label": "Optimistic"
+				},
+				"utvbMgCYMl6eoIm7": {
+					"label": "Optimistic"
 				}
 			}
 		},
@@ -118,6 +139,9 @@
 			"rules": {
 				"index:0": {
 					"label": "Skedaddle"
+				},
+				"UON7rnMCdp2jx0iy": {
+					"label": "Skedaddle"
 				}
 			}
 		},
@@ -125,6 +149,9 @@
 			"description": "<p>Towering beings whose strength is as immovable as the mountains they call home. Their sheer size and resilience make them fearsome opponents, capable of surviving even devastating blows.</p><hr><p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p><p>You know Dwarvish if your INT is not negative. [M]</p>",
 			"name": "Half-Giant",
 			"rules": {
+				"AvwGjGVx5mDqgBHu": {
+					"label": "Strength of Stone"
+				},
 				"eJoTbJqZZAqwHrZ2": {
 					"label": "Strength of Stone"
 				},
@@ -155,6 +182,9 @@
 			"rules": {
 				"index:0": {
 					"label": "Wily"
+				},
+				"KMR4cBnh3wKJMTpr": {
+					"label": "Wily"
 				}
 			}
 		},
@@ -178,6 +208,9 @@
 			"description": "<p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death's approach, Orcs boldly defy its grasp.</p><hr><p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
 			"name": "Orc",
 			"rules": {
+				"ehGVxOF7pLnbpDsk": {
+					"label": "Relentless"
+				},
 				"FDQIIE9eJorL65lg": {
 					"label": "Relentless"
 				},

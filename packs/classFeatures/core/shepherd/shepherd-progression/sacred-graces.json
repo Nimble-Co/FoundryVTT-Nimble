@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "",
+		"description": "<p>Choose 2 Sacred Graces.</p><hr><p>Level 9: Choose a 3rd Sacred Grace.</p><p>Level 13: Choose a 4th Sacred Grace.</p>",
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "shepherd-progression",

@@ -643,6 +643,12 @@ export const foundryApiMocks = {
 						assignWithOptions(this, options);
 					}
 				},
+				SetField: class SetField {
+					constructor(element?: any, options?: any) {
+						(this as unknown as { element: unknown }).element = element;
+						assignWithOptions(this, options);
+					}
+				},
 				DataField: class DataField {
 					constructor(options?: any) {
 						assignWithOptions(this, options);
@@ -662,6 +668,13 @@ export const foundryApiMocks = {
 	canvas: {
 		layers: {
 			TemplateLayer: class TemplateLayer {},
+			TokenLayer: class TokenLayer {},
+		},
+		placeables: {
+			Token: class Token {},
+			tokens: {
+				TokenRuler: class TokenRuler {},
+			},
 		},
 	},
 };
@@ -779,6 +792,7 @@ export const configStructure = {
 	Canvas: {
 		layers: {
 			templates: {},
+			tokens: {},
 		},
 	},
 	TextEditor: {

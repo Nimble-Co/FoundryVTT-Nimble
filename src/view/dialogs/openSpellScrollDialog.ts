@@ -22,7 +22,6 @@ export interface ScrollDialogActor {
 	items: Iterable<{ type: string; system?: unknown }>;
 	system?: {
 		resources?: {
-			mana?: { max?: number };
 			highestUnlockedSpellTier?: number;
 		};
 	};
@@ -59,10 +58,6 @@ function activationSummary(spell: DroppedSpell): string {
 
 function highestUnlockedSpellTier(actor: ScrollDialogActor): number {
 	return actor.system?.resources?.highestUnlockedSpellTier ?? 0;
-}
-
-function hasMana(actor: ScrollDialogActor): boolean {
-	return (actor.system?.resources?.mana?.max ?? 0) > 0;
 }
 
 /**
@@ -126,7 +121,6 @@ export default async function openSpellScrollDialog(
 						SPELL_SCROLL_PRICE_BY_TIER[options.spell.system?.tier ?? 0] ??
 						SPELL_SCROLL_PRICE_BY_TIER[0],
 					highestUnlockedSpellTier: highestUnlockedSpellTier(options.actor),
-					hasMana: hasMana(options.actor),
 					knowsSchool: knowsSpellSchool(options.actor, options.spell.system?.school ?? ''),
 				}
 			: {

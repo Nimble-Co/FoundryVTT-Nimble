@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "loy2dA3ngmIEphzU",
+				"identifier": "",
+				"label": "An NPC you have just met (until you fail a check with them or meet again)",
+				"predicate": {},
+				"priority": 1,
+				"value": 1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"influence"
+				]
+			},
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "y5EICRH40pAkITTY",
+				"identifier": "",
+				"label": "An NPC you already Sweet Talked (until you get back on their good side)",
+				"predicate": {},
+				"priority": 1,
+				"value": -1,
+				"checkType": "skillCheck",
+				"saves": [],
+				"abilities": [],
+				"skills": [
+					"influence"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

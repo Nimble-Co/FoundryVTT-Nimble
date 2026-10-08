@@ -14,6 +14,7 @@
 		onSelect,
 		asHeader = false,
 		showSourceLabel = false,
+		trailing,
 	}: FeatureCardProps = $props();
 
 	const state = createFeatureCardState(() => feature);
@@ -78,22 +79,28 @@
 			<SourceTag source={getItemSource(feature.uuid)} />
 		{/if}
 
-		{#if isSelectable}
+		{#if isSelectable || trailing}
 			<div class="feature-row__actions">
-				<SelectionIndicator
-					selected={isSelected}
-					onclick={handleSelectClick}
-					tooltip={isSelected
-						? localize('NIMBLE.classFeatureSelection.deselectFeature')
-						: localize('NIMBLE.classFeatureSelection.selectFeature')}
-					ariaLabel={isSelected
-						? localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
-								featureName: feature.name,
-							})
-						: localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
-								featureName: feature.name,
-							})}
-				/>
+				{#if trailing}
+					{@render trailing()}
+				{/if}
+
+				{#if isSelectable}
+					<SelectionIndicator
+						selected={isSelected}
+						onclick={handleSelectClick}
+						tooltip={isSelected
+							? localize('NIMBLE.classFeatureSelection.deselectFeature')
+							: localize('NIMBLE.classFeatureSelection.selectFeature')}
+						ariaLabel={isSelected
+							? localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
+									featureName: feature.name,
+								})
+							: localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
+									featureName: feature.name,
+								})}
+					/>
+				{/if}
 			</div>
 		{/if}
 	</div>

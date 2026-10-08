@@ -6,6 +6,7 @@
 	class="nimble-hint"
 	class:nimble-hint--info={['general', 'flavor', 'info', 'reminder'].includes(hintType)}
 	class:nimble-hint--warning={hintType === 'warning'}
+	class:nimble-hint--success={hintType === 'success'}
 >
 	{#if hintIcon}
 		<i class="nimble-hint__icon {hintIcon}"></i>

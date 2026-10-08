@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { SYSTEM_ID } from '#system';
-	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 	import localize from '#utils/localize.ts';
 	import CharacterJsonExportButton from '#view/sheets/components/CharacterJsonExportButton.svelte';
 	import CharacterPdfExportButton from '#view/sheets/character/pdfExport/CharacterPdfExportButton.svelte';
@@ -14,7 +13,11 @@
 		() => actor,
 		() => $editingEnabledStore ?? true,
 	);
-	const { updateBonusInventorySlots, updateHighestUnlockedSpellTier } = state;
+	const {
+		updateBonusInventorySlots,
+		updateHighestUnlockedSpellTier,
+		resetHighestUnlockedSpellTier,
+	} = state;
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -229,7 +232,7 @@
 				type="button"
 				disabled={!state.editingEnabled}
 				aria-label="Reset Highest Unlocked Spell Tier"
-				onclick={() => updateHighestUnlockedSpellTier(getHighestSpellTier(actor))}
+				onclick={() => resetHighestUnlockedSpellTier()}
 			>
 				Reset spell tier
 			</button>

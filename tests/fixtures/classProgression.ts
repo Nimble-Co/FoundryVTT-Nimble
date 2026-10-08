@@ -343,3 +343,34 @@ export async function simulateProgression(
 
 	return summaries;
 }
+
+/**
+ * Lookups over one class's pack features by exact name, for the pack-data
+ * assertions each class test carries.
+ */
+export interface PackFeatureHelpers {
+	feature: (name: string) => FeatureDoc;
+	rulesOf: (name: string, type: string) => Record<string, any>[];
+	effectsOf: (name: string, type: string) => Record<string, any>[];
+	costOf: (name: string) => Record<string, any>;
+}
+
+export function packFeatureHelpers(classId: string): PackFeatureHelpers {
+	const feature = (name: string): FeatureDoc => {
+		const doc = loadAllFeatureDocs().find((f) => f.system.class === classId && f.name === name);
+		if (!doc) throw new Error(`No ${classId} feature named "${name}"`);
+		return doc;
+	};
+
+	const rulesOf = (name: string, type: string): Record<string, any>[] =>
+		(feature(name).system.rules ?? []).filter((rule: Record<string, any>) => rule.type === type);
+
+	const effectsOf = (name: string, type: string): Record<string, any>[] =>
+		(feature(name).system.activation?.effects ?? []).filter(
+			(node: Record<string, any>) => node.type === type,
+		);
+
+	const costOf = (name: string): Record<string, any> => feature(name).system.activation.cost;
+
+	return { feature, rulesOf, effectsOf, costOf };
+}

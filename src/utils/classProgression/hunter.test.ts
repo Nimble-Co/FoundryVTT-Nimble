@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	buildRealIndex,
 	getClassMeta,
+	packFeatureHelpers,
 	restoreMocks,
 	simulateProgression,
 } from '../../../tests/fixtures/classProgression.ts';
@@ -218,5 +219,61 @@ describe('Thrill of the Hunt (#708 option feature) selection counts', () => {
 			expect(offered.options.length).toBeLessThan(previous);
 			previous = offered.options.length;
 		}
+	});
+});
+
+describe('Hunter - pack data', () => {
+	const { feature, rulesOf } = packFeatureHelpers(CLASS_ID);
+
+	describe.each([
+		['Forager', 'Finding food and water in the wild'],
+		['Skilled Tracker', 'Tracking a creature'],
+	])('%s favourable skill-check roll mode', (name, label) => {
+		it('ships exactly one situational roll-mode rule', () => {
+			expect(rulesOf(name, 'situationalRollMode')).toHaveLength(1);
+		});
+
+		it('makes the roll favourable for every skill check', () => {
+			const [rule] = rulesOf(name, 'situationalRollMode');
+			expect(rule.disabled).toBe(false);
+			expect(rule.checkType).toBe('skillCheck');
+			expect(rule.value).toBe(1);
+			expect(rule.skills).toEqual(['all']);
+			expect(rule.saves).toEqual([]);
+			expect(rule.abilities).toEqual([]);
+			expect(rule.priority).toBe(1);
+		});
+
+		it('names the situation the advantage applies to', () => {
+			const [rule] = rulesOf(name, 'situationalRollMode');
+			expect(rule.label).toBe(label);
+		});
+	});
+
+	describe('Skilled Tracker', () => {
+		it('ends its description with a period', () => {
+			const prose = String(feature('Skilled Tracker').system.description ?? '')
+				.replace(/<[^>]*>/g, '')
+				.replace(/&nbsp;/g, ' ')
+				.trim();
+			expect(prose).toBe('You have advantage on skill checks to track creatures.');
+		});
+	});
+
+	describe('Keen Sight', () => {
+		it('ships exactly one skill roll-mode rule', () => {
+			expect(rulesOf('Keen Sight', 'skillRollMode')).toHaveLength(1);
+		});
+
+		it("adjusts Perception checks in the player's favour with no gating predicate", () => {
+			const [rule] = rulesOf('Keen Sight', 'skillRollMode');
+			expect(rule.disabled).toBe(false);
+			expect(rule.label).toBe('Keen Sight');
+			expect(rule.priority).toBe(1);
+			expect(rule.skills).toEqual(['perception']);
+			expect(rule.value).toBe(1);
+			expect(rule.mode).toBe('adjust');
+			expect(rule.predicate).toEqual({});
+		});
 	});
 });

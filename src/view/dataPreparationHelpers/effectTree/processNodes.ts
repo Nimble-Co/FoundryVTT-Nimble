@@ -11,6 +11,7 @@ export function processNodes(effects: EffectNode[], relevantNodes: EffectNode[])
 
 			if (parentNode?.type === 'damage') {
 				node.damageType = parentNode.damageType;
+				node.targetDisposition = parentNode.targetDisposition;
 				node.ignoreArmor = parentNode.ignoreArmor;
 				node.ignoreAllies = parentNode.ignoreAllies;
 				node.roll = parentNode.roll;

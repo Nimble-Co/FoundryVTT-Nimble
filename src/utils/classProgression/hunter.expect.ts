@@ -36,7 +36,7 @@ export const report: Report = {
 		},
 		{
 			level: 2,
-			auto: ['Roll & Strike', 'Thrill of the Hunt'],
+			auto: ['Remember the Wild', 'Roll & Strike', 'Thrill of the Hunt'],
 			pools: [
 				{
 					group: 'Thrill Of The Hunt',

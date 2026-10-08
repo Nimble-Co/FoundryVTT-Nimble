@@ -11,7 +11,7 @@ Nimble rolls dice a little differently from most systems, and the chat cards are
 When you attack, the whole damage pool is rolled at once, but only one die decides the outcome: the **primary die**, the first die of your weapon's base damage. Everything else (sneak attack dice, bonus damage, flat modifiers) just adds to the total.
 
 - **Critical hit:** the primary die rolls its maximum value. It explodes: the die is rerolled and added to the damage, and keeps going as long as it keeps rolling maximum.
-- **Miss:** the primary die rolls a natural 1. The attack misses no matter what the bonus dice rolled.
+- **Miss:** the primary die normally rolls a natural 1. Some targets can raise this threshold, causing other low primary-die results to miss too. The attack misses no matter what the bonus dice rolled.
 - **Advantage and disadvantage:** each level of advantage adds one extra die to the pool, and the lowest die is dropped before anything else is decided (disadvantage drops the highest instead). Advantage and disadvantage cancel each other out one-for-one, and only the leftover applies.
 - **Area attacks** (anything with a template shape, such as a cone, line, or circle) can neither crit nor miss: one shared roll applies to everyone in the area.
 - **No proficiency, no crit.** If a weapon requires a proficiency you don't have, you can still use it, but it won't crit. Minions never crit.
@@ -36,14 +36,26 @@ Saving throws can start with the slider already offset: each save has a default 
 If you're a GM who usually rolls in secret, turn on the **Hide Rolls by Default** setting. The hide checkbox will then start ticked in every roll window. See the [Settings Reference](../reference/settings.md).
 :::
 
-Attacks and spells cast from the sheet go through their own activation flow and post a card directly.
+### The attack roll window
+
+Attacks, spells, and other items that roll damage or healing open their own roll window. It has the same advantage slider, plus three fields for one-off changes. Leave a field empty (or at 0) and it does nothing.
+
+- **Add to Roll (number or dice).** A bonus for this roll only, such as `2` or `1d4`. It is added to the end of the item's first damage formula. Other damage rolls of the item, and healing rolls, do not get it. It does not change the primary die, so it cannot cause a crit or prevent a miss.
+- **Set Primary Die Result.** The primary die is not rolled: it shows the number you enter, from 1 up to the die's size. Enter the maximum and the attack crits and the die explodes as usual, if the attack can crit. Enter 1 and the attack misses.
+- **Add to Primary Die Result.** The primary die is rolled, then this number is added to its result. A die cannot show more than its maximum. If the sum goes past the maximum, the die counts as its maximum (so the attack crits and the die explodes, if the attack can crit), and the remainder is added to the damage as a flat number. For example, a d6 that rolls 4 with 5 added becomes a 6, a crit, with 3 more damage.
+
+If you fill in both **Set Primary Die Result** and **Add to Primary Die Result**, the number is added to the set result. Both fields only apply to attacks that can crit or miss. They do nothing for area attacks, and the card shows nothing for them.
+
+With advantage or disadvantage, the dice are rolled and dropped first. The set result or the added number then applies to the die that stays, so it is never dropped.
+
+The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the roll before and after it, for example "Primary Die: rolled 1, modifier +1, result 2". If the sum goes past the maximum, the line also says how much was added to the damage. The die on the card always shows the result after the number is added.
 
 ## Anatomy of a chat card
 
 An attack or spell card is built from a few recurring pieces:
 
 - **Header and outcome.** The card names the item used, and the subheading calls out **Critical Hit** or **Miss** when the primary die decided one.
-- **Roll summaries.** Each damage or healing roll shows its total in a box, with a damage type label. Click the arrow beside it to expand the individual dice; hovering the total shows the same breakdown as a tooltip. Below the dice you can see the primary die's value and modifier.
+- **Roll summaries.** Each damage or healing roll shows its total in a box, with a damage type label. Click the arrow beside it to expand the individual dice; hovering the total shows the same breakdown as a tooltip. If the roll window set the primary die or added to it, that is shown below the dice, with the roll before the added number.
 - **Apply Damage** *(GMs only)*. Applies the damage to the card's targets. If a target takes less than the rolled total, from a damage reduction rule, a monster's resistances or immunities, or a pending one-shot reduction from a feature like the Berserker's "That all you got?!", the reduced number is what lands, and the card lists each reason per target under **Reduced Damage**. The button stays available even when reduction absorbs the whole hit, and is disabled only when there's nothing to apply, for example on a miss.
 - **Targets.** Tokens targeted when the roll was made are listed on the card. Buttons in this section let you add the currently selected or currently targeted tokens as targets, or remove targets, so a GM can fix up targeting after the roll. Hostile targets are highlighted so it's obvious when you're about to damage the wrong side.
 - **Save prompts.** If the item forces a saving throw, the card shows the save with a d20 button: select the tokens that need to save and click it to roll the save for each of them. The card lists what happens on a failed and a successful save.

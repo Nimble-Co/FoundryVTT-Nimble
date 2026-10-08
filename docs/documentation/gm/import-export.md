@@ -55,6 +55,16 @@ Click **Create Actor** and choose **Import from Nimble Nexus** (this button is G
 
 Each monster arrives as the right actor type automatically (legendary monsters become solo monsters, minions become minions, everything else becomes an NPC), with hit points, armor, movement, saves, size, a portrait, and a hostile token already configured. Abilities and actions are converted into monster features, including attack sequences and the Bloodied and Last Stand phases of legendary monsters.
 
+### Creator credit
+
+The browse list shows who published each monster, and every import keeps that name. The credit then sits in the monster's sheet header, beside the level and size line, on every tab:
+
+> *Created by [(user)](https://nimble.nexus/u/user) on Nimble Nexus*
+
+It is a courtesy to the person who made the monster, not a licence notice. The name is a snapshot taken at the moment you imported, so it never updates afterwards. The credit is stored on the actor rather than written into its description, so it survives an edit to the notes and it travels with the actor when you duplicate or export it.
+
+Monsters imported before this feature existed carry no credit, and it cannot be added to them after the fact.
+
 ::: warning Imports are a strong starting point, not always a finished monster
 The converter reads the stat block's action text to build rollable attacks, including reach, range, and cone/line/area templates. It's good, but it's parsing prose, so know its limits:
 

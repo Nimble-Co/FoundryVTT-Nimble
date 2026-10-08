@@ -38,6 +38,8 @@
 	// present-and-non-zero test is the only one that keeps the details block from
 	// drawing two empty labels.
 	function hasPrimaryDieDetails(rollOptions) {
+		if (rollOptions?.canCrit === false && rollOptions?.canMiss === false) return false;
+
 		return [rollOptions?.primaryDieValue, rollOptions?.primaryDieModifier].some(
 			(value) => value != null && value != 0,
 		);

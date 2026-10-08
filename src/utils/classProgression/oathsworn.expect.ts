@@ -43,7 +43,7 @@ export const REPORT: Report = {
 		},
 		{
 			level: 3,
-			auto: ['Radiant Judgement', 'Sacred Decree'],
+			auto: ['Radiant Judgement', 'Sacred Decree', 'Serve Selflessly'],
 			pools: [
 				{
 					group: 'Sacred Decree',

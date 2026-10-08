@@ -13,6 +13,16 @@
 		type SheetDropItemFlashState,
 	} from '../dropItemFlashState.js';
 
+	import {
+		buildFeatureSections,
+		FEATURE_TYPE_ORDER,
+		type FeatureSection,
+		getEffectiveLevel,
+	} from './PlayerCharacterFeaturesTabUtils.js';
+
+	import formatGroupName from '#utils/formatGroupName.ts';
+	import localize from '#utils/localize.ts';
+
 	import SearchBar from '../components/SearchBar.svelte';
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 
@@ -34,89 +44,24 @@
 		await actor.deleteItem(id);
 	}
 
-	function formatGroupName(name: string): string {
-		return name
-			.split('-')
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
+	function getSectionHeading(section: FeatureSection<unknown>): string {
+		if (section.kind === 'group') return getGroupHeading(section.key);
+
+		const heading = featureTypeHeadings[section.key];
+
+		return heading ? localize(heading) : getGroupHeading(section.key);
 	}
 
-	function getCategoryHeading(categoryName: string): string {
-		return featureTypeHeadings[categoryName] ?? formatGroupName(categoryName);
-	}
+	/** Falls back to the key read as Title Case so a homebrew group still gets a heading. */
+	function getGroupHeading(groupName: string): string {
+		const heading = featureGroupHeadings[groupName];
 
-	function groupItemsByType(items) {
-		const categories = items.reduce((categories, item) => {
-			const { type: itemType } = item.reactive;
-
-			if (itemType === 'feature') {
-				// Grouped class features and subclass features are rendered nested under their
-				// parent card — only ungrouped features get their own top-level section here.
-				if (!item.reactive.system.group && !item.reactive.system.subclass) {
-					categories['feature'] ??= [];
-					categories['feature'].push(item);
-				}
-			} else {
-				categories[itemType] ??= [];
-				categories[itemType].push(item);
-			}
-
-			return categories;
-		}, {});
-
-		// Ancestry bonuses normally render nested under the ancestry card. Only suppress the
-		// top-level section when there is an ancestry to nest them under — otherwise deleting
-		// the ancestry, or searching for the bonus by name, hides an item whose rules are
-		// still applying, with no path left to edit or delete it.
-		if (categories.ancestry) delete categories.ancestryBonus;
-
-		return categories;
+		return heading ? localize(heading) : formatGroupName(groupName);
 	}
 
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
 		if (event.animationName !== DROP_ITEM_FLASH_ANIMATION_NAME) return;
 		sheet.clearDroppedItemFlash(itemId);
-	}
-
-	/**
-	 * The level an item sorts at within its group. Items with no level sort last.
-	 *
-	 * Deliberately silent about a missing level. Most cards on this tab are types
-	 * that carry no level fields at all (a class or subclass card cannot have
-	 * one), and a feature that another feature's rule grants must have none:
-	 * level data is what makes the class progression surface an item, so adding
-	 * it there would offer a second copy alongside the granted one.
-	 *
-	 * Reporting either at runtime puts a message in every player's console about
-	 * pack data they cannot act on, once per sort. Which items should carry level
-	 * data is asserted by `featureLevelData.test.ts` instead, before it ships.
-	 */
-	function getEffectiveLevel(item): number {
-		const explicit = item.reactive.system?.gainedAtLevel;
-		if (explicit != null) return explicit;
-		const levels = item.reactive.system?.gainedAtLevels;
-		if (levels?.length) return Math.min(...levels);
-		return Infinity;
-	}
-
-	function sortFeatureItems(items) {
-		return [...items].sort((a, b) => {
-			const levelA = getEffectiveLevel(a);
-			const levelB = getEffectiveLevel(b);
-			if (levelA !== levelB) return levelA - levelB;
-			return (a.reactive.sort ?? 0) - (b.reactive.sort ?? 0);
-		});
-	}
-
-	function sortItemCategories(
-		[categoryA]: [string, unknown],
-		[categoryB]: [string, unknown],
-	): number {
-		const orderA = validTypes.indexOf(categoryA);
-		const orderB = validTypes.indexOf(categoryB);
-
-		if (orderA !== orderB) return orderA - orderB;
-		return categoryA.localeCompare(categoryB);
 	}
 
 	// Local collapse state — resets when the sheet is closed/reopened
@@ -137,17 +82,7 @@
 		return !allExpanded;
 	}
 
-	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = [
-		'class',
-		'subclass',
-		'feature',
-		'ancestry',
-		'ancestryBonus',
-		'background',
-		'boon',
-	];
-	const { featureTypeHeadings } = CONFIG.NIMBLE;
+	const { featureGroupHeadings, featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
 	let sheet = getContext<PlayerCharacterSheet>('application');
@@ -157,30 +92,8 @@
 	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	let searchTerm = $state('');
-	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
-	let categorizedItems = $derived(groupItemsByType(items));
-
-	// Class features (grouped, non-subclass) sorted by level — rendered nested under the class card
-	let classFeatureItems = $derived(
-		sortFeatureItems(
-			items.filter(
-				(item) =>
-					item.reactive.type === 'feature' &&
-					item.reactive.system.group &&
-					!item.reactive.system.subclass,
-			),
-		),
-	);
-
-	// Subclass features sorted by level — rendered nested under the subclass card
-	let subclassFeatureItems = $derived(
-		sortFeatureItems(
-			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
-		),
-	);
-
-	// Ancestry bonuses — rendered nested under the ancestry card
-	let ancestryBonusItems = $derived(items.filter((item) => item.reactive.type === 'ancestryBonus'));
+	let items = $derived(filterItems(actor.reactive, FEATURE_TYPE_ORDER, searchTerm));
+	let sections = $derived(buildFeatureSections(items));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
@@ -321,42 +234,36 @@
 </header>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
-	{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
+	{#each sections as section (`${section.kind}:${section.key}`)}
 		<div>
 			<header>
 				<h3 class="nimble-heading" data-heading-variant="section">
-					{getCategoryHeading(categoryName)}
+					{getSectionHeading(section)}
 				</h3>
 			</header>
 
 			<ul class="nimble-item-list">
-				{#each sortFeatureItems(itemCategory) as item (item.reactive._id)}
+				{#each section.items as item (item.reactive._id)}
 					{@render featureCard(item)}
 				{/each}
 			</ul>
 
-			{#if categoryName === 'class' && classFeatureItems.length}
-				<ul class="nimble-item-list nimble-item-list--sublist">
-					{#each classFeatureItems as item (item.reactive._id)}
-						{@render featureCard(item)}
-					{/each}
-				</ul>
-			{/if}
+			{#if section.blocks.length}
+				<div class="nimble-nested-blocks">
+					{#each section.blocks as block (`${block.kind}:${block.key}`)}
+						{#if block.kind === 'group'}
+							<h4 class="nimble-heading nimble-group-heading" data-heading-variant="section">
+								{getGroupHeading(block.key)}
+							</h4>
+						{/if}
 
-			{#if categoryName === 'subclass' && subclassFeatureItems.length}
-				<ul class="nimble-item-list nimble-item-list--sublist">
-					{#each subclassFeatureItems as item (item.reactive._id)}
-						{@render featureCard(item)}
+						<ul class="nimble-item-list nimble-item-list--sublist">
+							{#each block.items as item (item.reactive._id)}
+								{@render featureCard(item)}
+							{/each}
+						</ul>
 					{/each}
-				</ul>
-			{/if}
-
-			{#if categoryName === 'ancestry' && ancestryBonusItems.length}
-				<ul class="nimble-item-list nimble-item-list--sublist">
-					{#each ancestryBonusItems as item (item.reactive._id)}
-						{@render featureCard(item)}
-					{/each}
-				</ul>
+				</div>
 			{/if}
 		</div>
 	{/each}
@@ -373,8 +280,29 @@
 
 		&--sublist {
 			margin-block-start: 0;
-			margin-inline-start: 1rem;
+
+			& + & {
+				margin-block-start: 0.5rem;
+			}
 		}
+	}
+
+	// The rail brackets everything the parent card brings with it, so a class reads as one
+	// scope however many groups it offers.
+	.nimble-nested-blocks {
+		margin-inline-start: 0.5rem;
+		padding-inline-start: 0.625rem;
+		border-inline-start: 2px solid
+			color-mix(in srgb, var(--nimble-medium-text-color) 40%, transparent);
+		border-end-start-radius: 2px;
+	}
+
+	.nimble-group-heading {
+		// The global .nimble-heading rule sets the margin shorthand, so feed it the variable
+		// it reads rather than setting margin-inline-start, which it would reset to 0.
+		--nimble-heading-margin: 0.625rem 0 0.25rem 0;
+		--nimble-heading-size: var(--nimble-xs-text);
+		--nimble-heading-color: var(--nimble-medium-text-color);
 	}
 
 	.nimble-feature-card {

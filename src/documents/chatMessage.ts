@@ -3,6 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
 import {
@@ -22,6 +23,8 @@ import {
 import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
 import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
+import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
+import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -984,14 +987,22 @@ class NimbleChatMessage extends ChatMessage {
 
 		const systemData = this.system as ActivationCardSystemData;
 		const existingTargets = systemData.targets || [];
-		const targets = new Set([
-			...existingTargets,
-			...newTargets.map((token) => token.document.uuid),
-		]);
+		const added = newTargets.map((token) => token.document.uuid).filter((uuid) => uuid !== null);
+		const targets = [...new Set([...existingTargets, ...added])];
 
 		return this.update({
-			system: { targets: [...targets] },
+			system: { targets, ...this.#movementOfferChanges({ targets }) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+	}
+
+	/**
+	 * The card's Movement Offers once its targets or its outcome change. Empty
+	 * for a card type that has no field for them.
+	 */
+	#movementOfferChanges(changes: Record<string, unknown>): { movementOffers?: MovementOffer[] } {
+		if (!cardCarriesMovementOffers(this.type)) return {};
+		const system = { ...(this.system as object), ...changes } as OfferCard['system'];
+		return { movementOffers: reconcileMovementOffers({ speaker: this.speaker, system }) };
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */
@@ -1052,13 +1063,14 @@ class NimbleChatMessage extends ChatMessage {
 		);
 		if (!patched) return;
 
+		const outcome = {
+			activation: patched.activation,
+			isCritical: roll.isCritical === true,
+			isMiss: roll.isMiss === true,
+		};
 		await this.update({
 			rolls: patched.rolls,
-			system: {
-				activation: patched.activation,
-				isCritical: roll.isCritical === true,
-				isMiss: roll.isMiss === true,
-			},
+			system: { ...outcome, ...this.#movementOfferChanges(outcome) },
 		} as Record<string, unknown>);
 
 		await showDiceAnimation(roll, this.id ?? undefined);
@@ -1227,21 +1239,9 @@ class NimbleChatMessage extends ChatMessage {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
 		const isMiss = (this.system as unknown as ActivationCardSystemData).isMiss === true;
 
-		// Disposition-targeted damage nodes are surfaced alongside their own
-		// outcome children, which carry the same roll; count only the children.
-		const surfacedOutcomeParentIds = new Set<string>();
-		for (const group of this.effectNodes) {
-			for (const node of group) {
-				if (node.type === 'damageOutcome') {
-					surfacedOutcomeParentIds.add((node as DamageOutcomeNode).parentNode);
-				}
-			}
-		}
-
 		for (const group of this.effectNodes) {
 			for (const node of group) {
 				if (node.type !== 'damage' && node.type !== 'damageOutcome') continue;
-				if (node.type === 'damage' && surfacedOutcomeParentIds.has(node.id)) continue;
 
 				const roll = (node as { roll?: Record<string, unknown> }).roll;
 				if (!roll || typeof roll.class !== 'string') continue;
@@ -1420,7 +1420,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = existingTargets.filter((id) => id !== targetId);
 
 		return this.update({
-			system: { targets },
+			system: { targets, ...this.#movementOfferChanges({ targets }) },
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
@@ -1567,13 +1567,13 @@ class NimbleChatMessage extends ChatMessage {
 			carried.roll,
 		);
 
+		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
 		await this.update({
 			rolls: rollsSource,
 			system: {
-				activation,
-				isCritical: newRoll.isCritical,
-				isMiss: newRoll.isMiss,
+				...outcome,
 				incomingReactions: this.#dropStaleOutcomeOffers(carried.entries, newRoll),
+				...this.#movementOfferChanges(outcome),
 			},
 		} as Record<string, unknown>);
 	}
@@ -1666,7 +1666,7 @@ class NimbleChatMessage extends ChatMessage {
 		const source = this.#findOfferSource(entry);
 		if (!source) return false;
 
-		return setPoolFaces(source.actor, source.pool.id, [...source.pool.faces, ...faces]);
+		return setPoolFaces(source.actor, source.pool.id, [...source.pool.faces, ...faces], 'refund');
 	}
 
 	/**
@@ -1969,7 +1969,11 @@ class NimbleChatMessage extends ChatMessage {
 		);
 
 		await this.update({
-			system: { targets, incomingReactions: updatedEntries },
+			system: {
+				targets,
+				incomingReactions: updatedEntries,
+				...this.#movementOfferChanges({ targets }),
+			},
 		} as Record<string, unknown>);
 
 		const tokenDoc = fromUuidSync(entry.tokenUuid) as TokenDocument | null;
