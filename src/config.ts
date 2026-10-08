@@ -546,6 +546,28 @@ const containerSlotCostModes = {
 	half: 'NIMBLE.containerSlotCostModes.half',
 };
 
+/** Exchange rates are relative to gold. The Core Rules give 10 sp = 1 gp; copper follows the same step. */
+const currencies = {
+	gp: {
+		label: 'NIMBLE.currency.gp',
+		abbreviation: 'NIMBLE.currencyAbbreviations.gp',
+		img: 'icons/commodities/currency/coin-embossed-crown-gold.webp',
+		exchangeRate: 1,
+	},
+	sp: {
+		label: 'NIMBLE.currency.sp',
+		abbreviation: 'NIMBLE.currencyAbbreviations.sp',
+		img: 'icons/commodities/currency/coin-engraved-moon-silver.webp',
+		exchangeRate: 0.1,
+	},
+	cp: {
+		label: 'NIMBLE.currency.cp',
+		abbreviation: 'NIMBLE.currencyAbbreviations.cp',
+		img: 'icons/commodities/currency/coin-engraved-waves-copper.webp',
+		exchangeRate: 0.01,
+	},
+};
+
 const objectSizeTypes = {
 	slots: 'NIMBLE.objectSizeTypes.slots',
 	stackable: 'NIMBLE.objectSizeTypes.stackable',
@@ -1052,6 +1074,7 @@ const NIMBLE = {
 	damageTypes,
 	data,
 	defaultSkillAbilities,
+	currencies,
 	durationTypes,
 	durationTypesPlural,
 	effectApplications,
