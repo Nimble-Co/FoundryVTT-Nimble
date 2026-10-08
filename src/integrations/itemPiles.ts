@@ -23,7 +23,7 @@ function currencyPath(denomination: string): string {
 	return `system.currency.${denomination}`;
 }
 
-export function getItemPilesCurrencies(): ItemPilesCurrency[] {
+function getItemPilesCurrencies(): ItemPilesCurrency[] {
 	return Object.entries(CONFIG.NIMBLE.currencies).map(([denomination, currency]) => ({
 		type: 'attribute',
 		name: currency.label,
@@ -64,7 +64,7 @@ export function transformItem(itemData: ItemSource): ItemSource {
 	return itemData;
 }
 
-export function getItemPilesConfig(): Record<string, unknown> {
+function getItemPilesConfig(): Record<string, unknown> {
 	const nonTradeableTypes = Object.keys(CONFIG.Item.dataModels).filter(
 		(type) => type !== TRADEABLE_ITEM_TYPE,
 	);
@@ -78,7 +78,7 @@ export function getItemPilesConfig(): Record<string, unknown> {
 		ITEM_QUANTITY_ATTRIBUTE: 'system.quantity',
 		ITEM_PRICE_ATTRIBUTE: 'system.price.value',
 		ITEM_FILTERS: [{ path: 'type', filters: nonTradeableTypes.join(',') }],
-		ITEM_SIMILARITIES: ['name', 'type'],
+		ITEM_SIMILARITIES: ['name', 'type', 'system.price.value', 'system.price.denomination'],
 		ITEM_TRANSFORMER: transformItem,
 		ITEM_COST_TRANSFORMER: getItemCost,
 		CURRENCIES: getItemPilesCurrencies(),

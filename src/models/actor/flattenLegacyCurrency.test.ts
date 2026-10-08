@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { flattenLegacyCurrency } from './flattenLegacyCurrency.js';
 
 describe('flattenLegacyCurrency', () => {
