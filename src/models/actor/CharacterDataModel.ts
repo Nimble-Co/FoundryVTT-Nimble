@@ -4,7 +4,7 @@ import type { SkillKeyType } from '#types/skillKey.js';
 
 import { DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
 import { RecordField } from '../fields/RecordField.js';
-import { abilities, savingThrows } from './common.js';
+import { abilities, currency, savingThrows } from './common.js';
 import { flattenLegacyCurrency } from './flattenLegacyCurrency.js';
 
 const { fields } = foundry.data;
@@ -266,11 +266,6 @@ const characterSchema = () => ({
 			new fields.StringField({ required: true, nullable: false, initial: '' }),
 			{ required: true, nullable: false },
 		),
-	}),
-	currency: new fields.SchemaField({
-		cp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-		sp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-		gp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 	}),
 	details: new fields.SchemaField({
 		age: new fields.StringField({
@@ -603,6 +598,7 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 	static override defineSchema(): NimbleCharacterData.Schema {
 		return {
 			...characterSchema(),
+			...currency(),
 			...abilities(),
 			...savingThrows(),
 		};

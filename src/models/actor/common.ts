@@ -153,3 +153,14 @@ export const attackSequence = () => ({
 		initial: '',
 	}) as AttackSequenceSchema,
 });
+
+/** ******************************** */
+//          Currency Schema
+/** ******************************** */
+export const currency = () => ({
+	currency: new fields.SchemaField({
+		cp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		sp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		gp: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+	}),
+});
