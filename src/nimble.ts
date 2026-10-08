@@ -1,8 +1,5 @@
-import registerDiceSoNiceIntegration from './dice/diceSoNiceIntegration.js';
 import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
-import registerBabeleHooks from './hooks/babeleInit.js';
-import registerBabeleInstallNotice from './hooks/babeleInstallNotice.js';
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
@@ -36,6 +33,7 @@ import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
+import registerModuleIntegrations from './integrations/index.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import './scss/main.scss';
@@ -150,9 +148,7 @@ registerArmedMovementOfferIndex();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
 registerRuleEventDispatch();
-registerBabeleHooks();
-registerBabeleInstallNotice();
-registerDiceSoNiceIntegration();
+registerModuleIntegrations();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {
