@@ -1,6 +1,6 @@
-import registerDiceSoNiceIntegration from '../dice/diceSoNiceIntegration.js';
-import registerBabeleHooks from '../hooks/babeleInit.js';
-import registerBabeleInstallNotice from '../hooks/babeleInstallNotice.js';
+import registerBabeleHooks from './babeleInit.js';
+import registerBabeleInstallNotice from './babeleInstallNotice.js';
+import registerDiceSoNiceIntegration from './diceSoNice.js';
 import registerItemPilesIntegration from './itemPiles.js';
 
 export default function registerModuleIntegrations(): void {
