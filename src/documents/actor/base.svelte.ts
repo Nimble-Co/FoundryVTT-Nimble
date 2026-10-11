@@ -20,6 +20,7 @@ import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
+import { prototypeTokenNameFor } from './prototypeTokenNameFor.js';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
 
@@ -1165,6 +1166,15 @@ class NimbleBaseActor<
 			if (game.modules.get('tokenizer')?.active === false) {
 				foundry.utils.setProperty(changes, 'prototypeToken.texture.src', img);
 			}
+		}
+
+		const tokenName = prototypeTokenNameFor(
+			changesObj,
+			this._source.name,
+			this._source.prototypeToken.name,
+		);
+		if (tokenName !== undefined) {
+			foundry.utils.setProperty(changesObj, 'prototypeToken.name', tokenName);
 		}
 
 		return super._preUpdate(changes, options, user);
