@@ -77,7 +77,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 8. <strong>Damage</strong>: 1d12+KEY. 1/round.</p>",
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 8. <strong>Damage</strong>: 1d12+KEY. 1/turn.</p>",
 			"higherLevelEffect": "<p>+1d12 every 5 levels.</p>",
 			"upcastEffect": ""
 		},
