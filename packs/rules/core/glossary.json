@@ -1,0 +1,51 @@
+{
+	"name": "Glossary",
+	"pages": [
+		{
+			"_id": "z7qGsxoxrneQGczj",
+			"name": "Glossary",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<ul><li><strong>Advantage X.</strong> Roll X additional dice and drop the X lowest dice (removing dice from the left to right in the case of a tie).</li><li><strong>Ally.</strong> A friendly creature, not yourself.</li><li><strong>Assess.</strong> An action to strategically analyze the situation in combat, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.7oaOqkg5Sp05mR2s.JournalEntryPage.88BfZWt1WsX6hQd0]{pg. 13}.</li><li><strong>Attack.</strong> Any offensive action. Swinging with a weapon, casting a harmful spell, Grappling, etc.</li><li><strong>Blindsight X.</strong> You can sense creatures and obstacles normally within X spaces, ignoring Blinded, darkness, and invisibility.</li><li><strong>Cantrip.</strong> A basic spell. Costs 0 mana to cast, and their power increases as you level up.</li><li><strong>Climbing.</strong> A creature with a climbing speed can move across vertical surfaces as flat ground.</li><li><strong>Concentration.</strong> Can only Concentrate on 1 thing at a time. DC 10 STR save when crit or lose concentration, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.X8vcz20tujVb4tIj]{pg. 10}.</li><li><strong>Cone X.</strong> Starts at the character and extends X spaces outward, becoming up to X spaces wide at the farthest edge.</li><li><strong>Cover.</strong> If partially obscured, incoming attacks have disadvantage. If completely obscured, cannot be targeted. See @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.X8vcz20tujVb4tIj]{pg. 10}.</li><li><strong>d44, d66, d88.</strong> Roll 2 of the same dice, the leftmost die is the tens place, and the second is the ones. These rolls cannot miss or crit.</li><li><strong>Darkvision X.</strong> Can see normally in the dark, up to X spaces.</li><li><strong>Decrement/Increment.</strong> Use a die one size smaller or larger (d4 » d6 » d8 » d10 » d12 » d20).</li><li><strong>Difficult Terrain.</strong> Speed halved while here. (e.g., moving through the space of an enemy).</li><li><strong>Disadvantage X.</strong> Roll X additional dice and drop the X highest dice.</li><li><strong>Distracted.</strong> A target is distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</li><li><strong>Encounter.</strong> An encounter begins when Initiative is rolled and ends when hostilities do.</li><li><strong>Falling.</strong> Suffer 1d6 damage per 10 ft. fallen.</li><li><strong>Field Rest/Safe Rest.</strong> Spend time to recover some of your resources, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZDLldXZlTUPQdNW0.JournalEntryPage.tDb8Kp3Vcy71IMir]{pg. 16}.</li><li><strong>Free.</strong> Does not cost an action or any other resource (e.g., mana) unless otherwise stated.</li><li><strong>Hampered.</strong> Any creature with their actions or movement reduced (e.g., Dazed, Grappled, Prone, Difficult Terrain).</li><li><strong>KEY.</strong> Use either of your KEY attributes.</li><li><strong>Knockback/Push X.</strong> Forcibly move a creature X spaces, ignoring Difficult Terrain. Other creatures or the environment may halt movement prematurely and deal damage. See @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.k8KNiVoBdSx1bkPE]{“Falling &amp; Forced Movement” on page 10}.</li><li><strong>Line X.</strong> A straight line extending up to X spaces in one direction.</li><li><strong>LVL.</strong> Replace this with your Hero’s level.</li><li><strong>Mana.</strong> Used to fuel spellcasting. See the Heroes book for more info on how classes gain mana.</li><li><strong>Move X.</strong> Move up to that many spaces.</li><li><strong>Paralyzed, Stunned, Unconscious.</strong> Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</li><li><strong>Reach X.</strong> The area within X spaces around a character; forming your choice of a cube or sphere.</li><li><strong>Range X.</strong> Ranged attacks are made with disadvantage if ANY enemy is adjacent. Range can be extended, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.k8KNiVoBdSx1bkPE]{pg. 10} for more.</li><li><strong>Resistance.</strong> Take half as much damage.</li><li><strong>Restrained.</strong> Same effect as Grappled, objects Restrain, creatures Grapple. See @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.X8vcz20tujVb4tIj]{pg. 10}.</li><li><strong>Round.</strong> The time in combat when each Hero and enemy has a chance to act.</li><li><strong>Rushed Attacks.</strong> Attacking more than once on a turn imposes a cumulative disadvantage penalty (e.g., attacking with a short sword for the third time on a turn, you would roll 3d6 and take the lowest result). See @UUID[Compendium.nimble.nimble-rules.JournalEntry.7oaOqkg5Sp05mR2s.JournalEntryPage.88BfZWt1WsX6hQd0]{pg. 13}.</li><li><strong>Skill Points.</strong> Use them to increase your skills. Start with 4 at level 1 and gain 1 each level.</li><li><strong>Spellcasting Focus.</strong> Can be used instead of an empty hand to cast spells.</li><li><strong>Stats.</strong> The core attributes of a character.</li><li><strong>Surprise.</strong> When combat starts before all sides are aware, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.7oaOqkg5Sp05mR2s.JournalEntryPage.DbMyP7nSle3oP1CA]{pg. 15}.</li><li><strong>Target.</strong> A selected creature or object. It must be within Range/Reach and able to be sensed.</li><li><strong>Teleport.</strong> Move instantaneously. Does not provoke opportunity attacks.</li><li><strong>Temp HP.</strong> HP that do not replenish, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.X8pgFflL0fe1D9Gr]{pg. 9}.</li><li><strong>Turn.</strong> The primary time allotted for an individual hero or monster group to act.</li><li><strong>Unheld.</strong> Not touched, worn, or held by anyone.</li><li><strong>Vulnerable.</strong> When a creature is vulnerable to a damage type, that kind of damage ignores its armor; if unarmored, they take double the damage instead.</li><li><strong>Wound.</strong> A measure of how close a hero is to death. Typically 6 and you’re dead, see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.X8pgFflL0fe1D9Gr]{pg. 9}.</li></ul><h3>More for Your Game</h3><p>Get more out of Nimble with free resources online! Download character sheets, premade heroes, how-to videos, and tools to streamline your game.</p><p><strong>Want More?</strong> New content is on the way! Expand your world with upcoming classes like the Hexbinder, Mechanist, and Psion; dive into fresh adventures, new monsters, items, spells schools, and explore even more options to customize your game. Find it all at <a href=\"https://nimblerpg.com/new\" target=\"_blank\" rel=\"noopener\">nimbleRPG.com/new</a></p><h3>For Creators</h3><p>Interested in creating content using the Nimble rules? Great! Go to <a href=\"https://nimblerpg.com/creators\" target=\"_blank\" rel=\"noopener\">nimbleRPG.com/creators</a> for more information and resources on homebrewing and publishing Nimble-compatible content.</p><p><strong>Free Creator's Kit.</strong> Download the creator's kit for helpful tips on game design, making a Nimble class, subclass, adventures, spells, items and more. Learn the basic frameworks of Nimble to help make creating for the system even easier!</p><p><strong>Open &amp; Friendly License.</strong> The Nimble 3rd Party Creator's License is wide open, easy-to-understand, and super friendly for creators. It's designed to give you maximum freedom to make cool things while keeping the legal stuff simple, clear, and hassle-free.</p><p>Download the free Nimble Creator's Kit: <a href=\"https://nimblerpg.com/creators\" target=\"_blank\" rel=\"noopener\">nimbleRPG.com/creators</a></p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "ZuhDliTOf0Rp6Gng",
+	"sort": 1000000
+}

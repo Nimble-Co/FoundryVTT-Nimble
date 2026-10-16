@@ -1,0 +1,187 @@
+{
+	"name": "Equipment",
+	"pages": [
+		{
+			"_id": "5k379xcPg8Zsysjl",
+			"name": "Armor",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h3>Equipment Proficiency</h3><p>Heroes can use any equipment they like; however, each class has a list of weapons and armor types they are most skilled with. Weapons used without proficiency cannot crit. Defending while wearing armor worn without proficiency costs 1 additional action.</p><h3>Swapping Equipment</h3><p>A hero can sheathe weapons or shields they are proficient with and equip a different one for free 1/round.</p><h3>Armor</h3><p>Armor represents your hero’s ability to dodge or block damage when you use the Defend reaction. While unarmored or wearing regular clothes, your Armor is equal to your DEX. Some items may grant additional Armor while equipped.</p><blockquote><p><strong>Defend Yourself!</strong></p><p>If you're standing right next to a baddie with an axe and you're not doing anything to defend yourself, chances are, you're going to get axed! (See the \"Defend\" heroic reaction on @UUID[Compendium.nimble.nimble-rules.JournalEntry.7oaOqkg5Sp05mR2s.JournalEntryPage.D7MGafOpszttWdhz]{pg. 14}.)</p></blockquote><h3>Cloth</h3><table><thead><tr><th>CLOTH</th><th>ARMOR</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.Bdm2ynI2J7Xt9FNf]{Adventurer's Garb}</td><td>2+DEX</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.r5DwHJVvvUW8hwVG]{Minor Enchantment}</td><td>3+DEX</td><td>100 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.TtYVEjoXaceUwWjl]{Major Enchantment}</td><td>4+DEX</td><td>1,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.RcnPLTvSHAKIyrLY]{Epic Enchantment}</td><td>5+DEX</td><td>10,000 gp</td></tr></tbody></table><h3>Leather</h3><table><thead><tr><th>LEATHER</th><th>ARMOR</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.zA3N93almf9RSt34]{Cheap Hides}</td><td>3+DEX</td><td>5 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ysAlwyX3jdyeBn9e]{Ox Hide}</td><td>4+DEX</td><td>45 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.8mEsmtEVQNPadPIi]{Hard Leather} (Req. 1 STR)</td><td>5+DEX</td><td>300 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.XPbHxDLkEN789xCf]{Wyrmhide} (Req. 1 STR)</td><td>6+DEX</td><td>2,000 gp</td></tr></tbody></table><h3>Mail</h3><table><thead><tr><th>MAIL</th><th>ARMOR</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.jJHrcyDD6ByCnrFJ]{Rusty Mail}</td><td>6+DEX (max 2)</td><td>15 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.nKk3NTdbE9Ktptoz]{Chain Shirt} (Req. 2 STR)</td><td>9+DEX (max 2)</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.uyWg3owv9dXfkQgK]{Scale Mail} (Req. 3 STR)</td><td>12+DEX (max 2)</td><td>700 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.j2aRVSozXiIZfj7y]{Dragonscale} (Req. 4 STR)</td><td>15+DEX (max 2)</td><td>3,000 gp</td></tr></tbody></table><h3>Plate</h3><table><thead><tr><th>PLATE</th><th>ARMOR</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ExSohwUQJH6k2pmx]{Rusty Plate} (Req. 2 STR)</td><td>10</td><td>25 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.oOOmASw6sbPyKEAf]{Half Plate} (Req. 3 STR)</td><td>14</td><td>200 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.Fg9t0JlrQ5eHL8VD]{Full Plate} (Req. 4 STR)</td><td>18</td><td>2,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.tit1WGPyVsjls7EN]{Mithril Plate} (Req. 5 STR)</td><td>22</td><td>5,000 gp</td></tr></tbody></table><h3>Shields</h3><table><thead><tr><th>SHIELDS</th><th>ARMOR</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.H6jL4fp2gvK7E2E9]{Wooden Buckler}</td><td>2</td><td>5 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.jBG6IrYWBnSHWmdj]{Iron Shield} (Req. 2 STR)</td><td>4</td><td>80 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.SfoteVDew5BpUyNr]{Tower Shield} (Req. 3 STR)</td><td>6</td><td>1,500 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.GJ0rNPSMtjUxVG6t]{Dragon Shield} (Req. 3 STR)</td><td>8</td><td>9,000 gp</td></tr></tbody></table><blockquote><p><strong>Deflect</strong></p><p>An optional rule for additional defensive flexibility: instead of adding your shield’s armor to your total armor as normal, you may reduce the damage of an attack by your shield’s armor value for free 1/round.</p></blockquote>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "koxqzkVhtXOYLWkY",
+			"name": "Weapons",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h4>Weapon Properties</h4><ul><li><strong>2-handed.</strong> Can be held in a single hand, but must be wielded in 2 hands to attack with it.</li><li><strong>Load.</strong> Some weapons require extra actions to load before each shot.</li><li><strong>Reach.</strong> How close an enemy must be to be affected by this attack. If unspecified, Reach 1.</li><li><strong>Range.</strong> Attacks can be made from afar. If any enemy is adjacent to you, your Ranged attacks are made with disadvantage. Add 1 die of disadvantage to gain +2 Range.</li><li><strong>Thrown.</strong> Treat a melee weapon as if it had Range. Once thrown, you no longer have it!</li><li><strong>Vicious.</strong> Roll 1 additional die whenever you roll crit damage.</li></ul><blockquote><p><strong>Remember!</strong></p><p>Only the Primary Die (the leftmost one) is used for determining whether an attack crits. Every time you roll crit damage, roll the additional Vicious die as well!</p></blockquote><h4>Dual Wielding</h4><p>Heroes may wield 2 Light weapons at the same time. While dual wielding, you may gain advantage on an attack with those weapons, 1/round.</p><p>You may dual wield 1-handed weapons without the Light property if your STR is 3 or greater, or 1 weapon without the Light property if your STR is 2. If completely unarmed, fists/feet can be considered dual wielded.</p><blockquote><p><strong>Dual wielding different weapons?</strong></p><p>Roll dice for both weapons and choose either result instead (the 1/round limit still applies). Attacking with advantage? Add an extra die for one of the weapons.</p></blockquote><h4>Unarmed Strikes</h4><p>To attack with your bare hands or feet, roll 1d4; on hit: deal 1+STR damage.</p><h4>Improvised Weapons</h4><p>Using an improvised weapon (e.g. a chair, a frying pan, a big rock), default to 1d4+STR or 1d6+STR. Your GM may allow you to use bigger dice or other properties if it makes sense. An improvised weapon may be likely to break if it lands a crit, though!</p><h4>Customizing Weapons</h4><p>Can you reflavor a staff as a greatclub? Sure! A sai instead of a dagger? Of course! Could you pay a blacksmith to make your 1d12 Greatmaul deal 2d6 or 3d4 damage instead? Since the dice all add up to 12, it won’t break the game; ask your GM! Can a blacksmith make your Dagger deal that much damage? No, sorry!</p><h3>Melee Weapons</h3><table><thead><tr><th>ITEM</th><th>DAMAGE</th><th>PROPERTIES</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.O1sCIVQKfAqSlDT5]{Dagger}</td><td>1d4+DEX Piercing</td><td>Light, Thrown 4</td><td>3 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.XsT9DWdPp0ZhnOZR]{Sickle}</td><td>1d4+DEX Slashing</td><td>Vicious</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.8cTFT4FrrpdAiENQ]{Club/Mace}</td><td>1d6+STR Bludgeoning</td><td>-</td><td>2 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.8hW6gSC7FhAg1HZU]{Hand Axe}</td><td>1d6+STR Slashing</td><td>Thrown 4</td><td>8 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.I0O7kFkKt4aglDv7]{Short Sword}</td><td>1d6+DEX Piercing</td><td>Light</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.rSMpZCsymLTNJzGg]{Rapier}</td><td>2d4+DEX Piercing</td><td>-</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.eqFoSxHnz5UxtHKd]{Staff}</td><td>1d8+STR Bludgeoning</td><td>2-handed</td><td>8 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.DPfIK6l48uJ2ik2s]{Longsword}</td><td>1d8+STR Slashing</td><td>2-handed (1-handed: Req. 2 STR)</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.H9zJYnWv93THpkxw]{Battleaxe}</td><td>1d10+STR Slashing</td><td>2-handed</td><td>30 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.hIspeCpRGNaHU5Qo]{Pole Hammer}</td><td>1d10+STR Bludgeoning</td><td>2-handed, Reach 2</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.3QTrIlLotH9UTpls]{Glaive}</td><td>1d10+STR Slashing</td><td>2-handed, Reach 2</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.hV6fKV4bX6EMvcQq]{Spear}</td><td>1d10+STR Piercing</td><td>2-handed, Reach 2</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ICFd5BjIIRDzA0y5]{Greatmaul}</td><td>1d12+STR Bludgeoning</td><td>2-handed (Req. 2 STR)</td><td>80 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.n9XAnzWIUCaR6C6T]{Greataxe}</td><td>2d6+STR Slashing</td><td>2-handed (Req. 2 STR)</td><td>100 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.oRFd8K71REypDh73]{Greatsword}</td><td>3d4+STR Slashing/Piercing</td><td>2-handed (Req. 2 STR)</td><td>120 gp</td></tr></tbody></table><h3>Ranged Weapons</h3><table><thead><tr><th>ITEM</th><th>DAMAGE</th><th>PROPERTIES</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.YjGUoWybYcwxI2Ky]{Sling}</td><td>1d4+DEX Bludgeoning</td><td>2-handed, Range 12, Vicious</td><td>4 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.YbHHJEDlYHoEvyje]{Javelins}</td><td>1d6+STR Piercing</td><td>Range 8, Stack of 4</td><td>20 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.aWD1c0GgL1ay49RQ]{Throwing Hammers}</td><td>1d8+STR Bludgeoning</td><td>Range 4, Stack of 3</td><td>25 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.oYAez9KAFeguBKxO]{Shortbow}</td><td>1d6+DEX Piercing</td><td>2-handed, Range 12</td><td>25 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.9PodmCbF1lkpHEIN]{Longbow}</td><td>1d8+DEX Piercing</td><td>2-handed, Range 16 (Req. 1 STR)</td><td>30 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.PokBRzYd9bstJCEJ]{Crossbow}</td><td>4d4+DEX Piercing</td><td>2-handed, Load: 1 action, Range 8</td><td>60 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.zdZkxV0bAA2ERANt]{Handheld Ballista}</td><td>1d20+DEX Piercing</td><td>2-handed, Load: 2 actions, Range 8 (Req. 2 STR)</td><td>120 gp</td></tr></tbody></table>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "WeKK6oE6UUrcNQ1T",
+			"name": "Adventuring Equipment",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h3>Key Equipment</h3><h4>Healing Potions</h4><p>Healing potions are deep, shimmering red elixirs with a refreshing, effervescent taste. These potions are crucial for quick recovery, though their availability is limited. Small towns may have only a few, while cities offer more (but they are not in unlimited supply). The wealthy often use healing potions as a display of affluence, incorporating them into elaborate mixed drinks at social events to showcase their status. Potions require one action to drink or to administer to an adjacent willing creature.</p><h4>Torches &amp; Lanterns</h4><p>Heroes cannot typically see in the dark. Fighting in the dark imposes the Blinded condition. Heroes can bring a lantern or torch to light their way in the dark as long as they have a hand free (or some other way) to hold it. A torch typically lasts for 1 dungeon (or 1 level of a very large one). A lamp with oil can typically last for 1 entire outing, until your next Safe Rest. Torches and lanterns cast light up to <strong>6 spaces</strong> away; beyond this is darkness.</p><blockquote><p><strong>Be Warned</strong></p><p>Denizens of the dark may not appreciate the light and may attack the light bearers first. Certain spells (e.g., Fire, Lightning, and Radiant) may cause flashes of light as well and draw unwanted attention!</p></blockquote><h4>Equipment Availability</h4><p>Costs for mundane items typically range from a few silver pieces to a few gold pieces. If you can find an artisan, you can commission them to create something for you—basically anything you can think of that their level of technology could support. The more ornate, the higher the price. Commissioning the creation of a special item will typically start around 50 gp and only go up from there. Smaller towns will have fewer items and artisans than larger cities.</p><h3>Misc Adventuring Equipment</h3><table><thead><tr><th>ITEM</th><th>PROPERTIES</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-items.Item.7ZPoo93Dm8dVHO99]{Healing Potion}</td><td>(action) Heal 2d4+4 HP</td><td>50 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.RuytwY5RTuHMlYMg]{Greater Healing Potion}</td><td>(action) Heal 3d6+6 HP</td><td>150 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.rPpszgwsZX82KdL9]{Supreme Healing Potion}</td><td>(action) Heal 4d8+8 HP</td><td>450 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.MNFxluopbBHRBybK]{Torch (stack of 2)}</td><td>For when it's dark. 1 use each.</td><td>5 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.6H2c2XCKug4EV9YN]{Lantern &amp; Oil}</td><td>Like a torch, but not as cool (refill: 1 gp)</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.3DATN9QiaWXXcU75]{Vial of Pitch}</td><td>Sticky, and VERY flammable</td><td>2 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.lDY5KXQtyhwXARkX]{Rope (50 ft.)}</td><td>You always need rope</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ppj5od92yR7MXnaW]{Chain (10 ft.)}</td><td>Like rope, but stronger (and heavy)</td><td>50 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.g3RMBTR9kDY5jLYW]{Bucket}</td><td>Also works as a hat in a pinch!</td><td>1 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.GtoJCoYz2uJc7vmQ]{Padlock &amp; Key}</td><td>Lock it or lose it</td><td>3 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.6u0lORebcaYqjAEb]{Mirror}</td><td>For medusas AND spinach teeth</td><td>4 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.jISt9uXiNU0tCDGy]{Telescope}</td><td>Arrr</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.0kqV2kl2UY5d0s1e]{Magnifying Glass}</td><td>Make the small, big</td><td>5 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ryRt6TtOU0xqxlvP]{Chalk}</td><td>Not JUST for kids</td><td>1 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.9hggZlqj29JHZncD]{Shovel}</td><td>Sometimes you need a hole dug</td><td>3 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.wp8DINppeNZhXnKz]{Pulley}</td><td>Pull down, go up</td><td>3 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.aD1tvK9ZnEeqoI4R]{Grappling Hook}</td><td>For climbing or catching BIG fish</td><td>4 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.39NPR1GRphTbQYKJ]{Quiver &amp; Ammo}</td><td>Don't leave home without it</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.4LrG132eX08W6Imx]{Saw}</td><td>For cutting lumber</td><td>4 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.Bc2LSulAmIfQvIBz]{Soap}</td><td>Useless</td><td>1 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.kc9nmzlNv6yecQoJ]{Strange Plant}</td><td>Who knows?</td><td>5 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.dtQbZBKbxM0EGNAd]{Shiny Object}</td><td>Worthless, but VERY pretty</td><td>1 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.c2elOkqap0TBFpT4]{Lock Pick}</td><td>It's not mine, honest!</td><td>5 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.sA48zduVIzZpOsY6]{Bell}</td><td>For service</td><td>2 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.dYOACxBeFNJTN0Vw]{Dice}</td><td>LOTS of fun</td><td>5 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.DBeqkbYmH1xEvdDA]{Blanket}</td><td>Warm &amp; fuzzy</td><td>1 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ueO8AjVL8kQ1Up1I]{Hunting Trap}</td><td>Snap snap, don't lose a finger!</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.V0Wp4avgdL7wRNmz]{Camping Supplies}</td><td>Bedroll, rations, simple tent</td><td>5 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.NVSTG7cEyrgZgTXq]{Crowbar}</td><td>It's LIKE a key</td><td>2 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.Zn4ohFLqqKP1W52v]{Pitons}</td><td>Metal spikes, for sealing doors</td><td>5 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.ObibU3UhmYIgJzf5]{Manacles}</td><td>For when someone has been bad</td><td>3 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.WANHzXEVF3wgi0Cc]{Large Sack}</td><td>Like a BIG pocket</td><td>5 sp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-items.Item.LWLLT7NQxjvL2chh]{Instrument}</td><td>Drums, Horn, Lyre, Flute, etc.</td><td>5-50 gp</td></tr></tbody></table><blockquote><p><strong>What About…?</strong></p><p>These are not all of the items available for purchase, merely a sampling. If you can think of it, you can likely buy it!</p></blockquote><h4>Currency</h4><p>Currency is made up of Silver (sp) and Gold pieces (gp). 10 silver = 1 gold. 1 sp is roughly the cost of a humble meal; 1 gp, a sumptuous feast. Most small towns will have equipment and items worth 50 gp or less. You’ll need to adventure to larger towns or cities or find a traveling merchant to purchase more valuable pieces of equipment.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "AvMvxtWjZnHnUWfZ",
+			"name": "Magical Items",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Though some magical items can be purchased, most cannot. Some special shops may have a very small selection of them to purchase, but more typically these powerful items are acquired through adventuring.</p><h3>Typical Costs of Magical Items</h3><table><tbody><tr><td>Uncommon</td><td>Typically found around levels 2-6</td><td>50-500+ gp</td></tr><tr><td>Rare</td><td>Typically found around levels 5-12</td><td>500-5,000+ gp</td></tr><tr><td>Very Rare</td><td>Typically found around levels 8-18</td><td>5,000-500,000+ gp</td></tr><tr><td>Legendary</td><td>Typically found around levels 15-20</td><td>1,000,000+ gp or Priceless</td></tr></tbody></table><h3>Examples of Magical Items</h3><h4>Weapon of Many Hands</h4><p><em>(Rarity varies)</em></p><p>While equipped, this weapon grants the wearer additional arms. The wearer can use the extra arms to perform any task their normal hands can do (wield equipment, Grapple enemies, climb, etc.) but does not allow the wearer to perform actions any faster. These extra appendages may be horrifying to people in polite society. A weapon that grants 1 extra hand is likely to be uncommon; 4 extra hands, legendary.</p><blockquote><p><strong>Extra Arms?!</strong></p><p>Yes, you can dual wield 2-handed weapons or wear more than 1 shield, or Grapple 2 different creatures while hitting them both at the same time! Or any number of creative things, provided you have the arms to perform the task.</p></blockquote><h4>Weapon of Animosity</h4><p>Whenever you attack with this weapon, roll an additional animosity die. The weapon deals that much additional damage to your target on a hit. Whenever this weapon misses, you take that damage instead. A weapon that adds 1d4 is likely to be uncommon; 1d10 or greater, legendary.</p><h4>Weapon of Slaying</h4><p>Whenever you attack with this weapon, it deals an additional die of damage against a particular creature type. Those creatures may try to kill you first. A 1d4 weapon of slaying is likely to be uncommon; +1d10 or more, legendary.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.JPgGnUpNqdoYNsXT]{Weapon of Wounding}</h4><p><em>(Uncommon)</em></p><p>When you land a hit with this weapon, you may suffer 1d6 damage to deal twice that much additional damage to your target.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.Bz018hWCZIoxRyzQ]{Gnatbane Weapon}</h4><p><em>(Uncommon)</em></p><p>Does not miss Small or Tiny creatures (they may hate you for it and attack you first).</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.iQMkJdk4D1lTHDav]{Harbinger &amp; Sovereign, Abyssal's Claim}</h4><p><em>(Legendary Glaives)</em></p><p>Set of 2 matching glaives, +4 extra arms while both are equipped.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.4DeCFtvpQhoMDoAc]{Trinket of Ill Omen}</h4><p><em>(Rare)</em></p><p>While equipped, you have –1 to saves you roll and +1 to your save DC.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.3tFYs9Jq7fVcOhkA]{Mindlink Daggers}</h4><p><em>(Rare)</em></p><p>A matched pair of slender, silver daggers with intertwining runes. Enables the sharing of thoughts between any who holds (or is stabbed by) one.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.gGeGcFcmWeCLLXMd]{Bloodstained Quill}</h4><p><em>(Uncommon)</em></p><p>If you dip this quill into the blood of a dead intelligent creature, the quill animates and writes the last words spoken by that creature.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.QquArQNbzmNgchsl]{Eyes of the Street}</h4><p><em>(Uncommon)</em></p><p>A pair of goggles covered in muck that you can’t ever clean off completely. While wearing them, you can look at a rat or a pigeon to gain the ability to see and hear through its senses for 10 minutes. Once you use this ability, you must whisper a secret to the goggles before you can use them again. That secret always seems to become a local rumor before too long….</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.Noj92NMSIfPfPw6e]{Handwraps of Force}</h4><p><em>(Rare)</em></p><p>While wearing these wraps, whenever you make an unarmed strike, you may push your target up to 2 spaces and yourself the same distance in the opposite direction. You may instead make an attack with no target, striking the air to propel yourself 4 spaces in any direction.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.tegF7lnwbUYVImL7]{Resolute Fangs, Golden Bastion}</h4><p><em>(Legendary Shield)</em></p><p>+8 Armor.</p><p><strong>Reaction:</strong> When you reduce damage from a melee attack with this shield, it may Grapple the attacker regardless of its size (escape DC 20 STR, max 1 creature).</p><p><strong>Action:</strong> Speak this shield’s command word to make it immovable, fixed in place, until it is spoken again.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.43c7Y0dg5pFF6UWr]{Key of Doors}</h4><p><em>(Very Rare)</em></p><p>Insert this key into any locked door to open it, not to the room beyond, but to any doorway you’ve previously walked through while holding this item.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.sjlDjucyfIOTEsc9]{Grim Coronet}</h4><p><em>(Rare)</em></p><p>When you would die while wearing this crown, gain 3 actions and take a turn immediately. You die at the end of your turn.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.216uEBFDaXJEmed5]{Vindication}</h4><p><em>(Legendary Weapon of Animosity)</em></p><p>A jagged blade marred by scorch marks and dark stains, radiating a bitter, vengeful energy that punishes both wielder and foe alike. +1d12 damage. You take this damage on a miss.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.ogxzx3J53DPSbaeQ]{Pocket Cauldron}</h4><p><em>(Rare)</em></p><p>While Safe Resting, use this to brew your choice of 1 potion, to be consumed immediately:</p><ul><li><strong>Elixir of Futuresight:</strong> This potion grants the drinker a brief, cryptic vision of a future event.</li><li><strong>Elixir of Requiem:</strong> This potion allows the drinker to relive a crucial memory from their past.</li><li><strong>Elixir of Time:</strong> Once every 100 years, the cauldron can brew a potion that can take the drinker back in time 1 day.</li></ul><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.oONPSYQXXzEiVaT9]{Phoenix Helm}</h4><p><em>(Legendary)</em></p><p>If you die while wearing this golden helm, your body explodes in flames and hot ash. You rise anew from the ashes... (see pg. 19 of the GM’s Guide for more).</p><p>On Death: You are reborn as a golden fiery phoenix. Enemies within 6 spaces take <strong>LVL d10</strong> fire damage on a failed <strong>DC 10+KEY</strong> DEX save (half on save). Gain the following stats and abilities:</p><ul><li>Gain a fly speed of 10, 10 Armor, and 10×LVL HP.</li><li>Creatures that touch you take LVL fire damage.</li><li><strong>Fiery Talons.</strong> 1 Action, 1d10+LVL damage.</li></ul><p>After 10 minutes, this form ends, the helm is no more and you return with 0 HP and all but 1 Wound.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.aWMZHKVqyl7LNdH5]{Ball of Spiders}</h4><p><em>(Uncommon)</em></p><p>A black, palm-sized ball with faintly writhing patterns etched into its surface.</p><p><strong>Action:</strong> Throw this ball up to 6 spaces. Upon impact, it shatters, releasing a swarm of harmless but horrifyingly realistic spectral spiders that cover a 2x2 area. Creatures in the area must make a WIL save or be Frightened until the end of their next turn. Once used, the ball reforms at the next Safe Rest.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.RPxVXbGzExPRi0os]{Skitter Shoes}</h4><p><em>(Rare)</em></p><p>While wearing these shoes, you can walk on vertical surfaces or ceilings as if they were flat ground, but only at half your normal Speed. If you end your turn upside down or on a vertical surface, you must make a DC 10 STR save or fall down, landing prone.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.oD5JR2yPOgmROqBn]{Button of Protection}</h4><p><em>(Rare)</em></p><p>A small, unassuming button etched with a faintly glowing sigil. When sewn onto an outfit, as a reaction when you are attacked, you may pull the button off and throw it into the air. The button emits a sudden, dazzling flash of light and a high-pitched whistle. The attacker must make a WIL save or be distracted, causing the attack to miss you.</p><p>After use, the button becomes inert. It can be sewn back onto a garment during a Safe Rest by an experienced seamstress or tailor with silver thread, which reactivates its power.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 400000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "NAiNRaAhDg2fiuCD",
+			"name": "Spell Scrolls & Wands",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Spell scrolls are single-use inscribed magical spells. Casting a spell with a spell scroll does not cost mana, nor does it require magical ability. Anyone who can read the language the scroll is written in can utilize it. Reading one aloud takes the same number of actions the spell normally takes and consumes the scroll.</p><p>A character must succeed on a <strong>DC 10 Arcana</strong> check to cast it successfully if they do not already know a spell from that school; on a failure, it is wasted. Spell tier and typical price:</p><table><thead><tr><th>SPELL TIER</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.1UL6G7MDgUqtt4fN]{Cantrip}</td><td>10 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.FS6fnTIbAVk8CNSa]{Tier 1 Spell}</td><td>35 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.2aE1qNnrjVjNlsMe]{Tier 2 Spell}</td><td>100 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.M893NOzlKaimRo0t]{Tier 3 Spell}</td><td>300 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.0txsSMjpZOhH5mW5]{Tier 4 Spell}</td><td>1,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.blN77nwJUFdIfboX]{Tier 5 Spell}</td><td>3,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.rRJiGuX9hFAE2zcH]{Tier 6 Spell}</td><td>10,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.n8I8eqs8zYv67NA7]{Tier 7 Spell}</td><td>25,000+ gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.UjUhwAWjkvdhavcp]{Tier 8 Spell}</td><td>75,000+ gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.3YHEw1vfuHAFRJ2a]{Tier 9 Spell}</td><td>200,000+ gp</td></tr></tbody></table><h4>Wands</h4><p>Like spell scrolls, these can be used to cast spells without consuming mana and do not require magical ability. Unlike spell scrolls, wands can be recharged and used again. Characters proficient with wands can use one from any spell school, spending only the normal amount of actions to cast the spell.</p><p>Characters not proficient with wands must succeed on a <strong>DC 10+spell tier Arcana</strong> check to successfully cast the spell. Success or failure, the charge is spent. Typical wand prices and examples:</p><table><thead><tr><th>SPELL TIER</th><th>COST</th></tr></thead><tbody><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.1UL6G7MDgUqtt4fN]{Cantrip}</td><td>50 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.FS6fnTIbAVk8CNSa]{Tier 1 Spell}</td><td>175 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.2aE1qNnrjVjNlsMe]{Tier 2 Spell}</td><td>500 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.M893NOzlKaimRo0t]{Tier 3 Spell}</td><td>1,500 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.0txsSMjpZOhH5mW5]{Tier 4 Spell}</td><td>5,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.blN77nwJUFdIfboX]{Tier 5 Spell}</td><td>15,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.rRJiGuX9hFAE2zcH]{Tier 6 Spell}</td><td>50,000 gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.n8I8eqs8zYv67NA7]{Tier 7 Spell}</td><td>125,000+ gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.UjUhwAWjkvdhavcp]{Tier 8 Spell}</td><td>375,000+ gp</td></tr><tr><td>@UUID[Compendium.nimble.nimble-magic-items.Item.3YHEw1vfuHAFRJ2a]{Tier 9 Spell}</td><td>1,000,000+ gp</td></tr></tbody></table><h3>Examples of Wands</h3><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.6IlvlUzYK4TUy4Eu]{Wand of Firestep}</h4><p>Uncommon wand, Cantrip (3 charges)</p><p><strong>Recharge:</strong> Heat the wand in a blacksmith’s forge until it glows, then quench it in oil.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.IwuNoIFhINDZmrGg]{Wand of Dread Visage}</h4><p>Uncommon wand, Tier 2 (2 charges)</p><p><strong>Recharge:</strong> Place the wand in a freshly slain corpse. Leave it until only bones remain.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.bR2a2h5E66PlKUuq]{Wand of Barrier of Wind}</h4><p>Rare wand, Tier 2 (3 charges)</p><p><strong>Recharge:</strong> Hang the wand with wind chimes in a breezy area. Let it ring for 3 days.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.xk3YG0WdGuzb432h]{Wand of Fly}</h4><p>Uncommon wand, Tier 3 (2 charges)</p><p><strong>Recharge:</strong> Give it to a wild bird and let it fly freely. Retrieve it wherever the bird drops it.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.yigWacRAsbiWexnC]{Wand of Ride the Lightning}</h4><p>Very Rare wand, Tier 6 (2 charges)</p><p><strong>Recharge:</strong> Place at the highest point within 1 mile. Retrieve after 3 thunderstorms.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.D70H7d2eYhRI75Iq]{Wand of Sacrifice}</h4><p>Very Rare wand, Tier 6 (1 charge)</p><p><strong>Recharge:</strong> Plant it in a new garden, leave it undisturbed until the flowers bloom.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.y70OMkEOcgGoof4Z]{Wand of Glacier Strike}</h4><p>Very Rare wand, Tier 8 (1 charge)</p><p><strong>Recharge:</strong> Leave the wand at the bottom of a lake until it freezes over and thaws naturally.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.kXytTrvhKd0HYiMw]{Elderwyrm's Majesty}</h4><p>Legendary wand, Tier 9 (1 charge)</p><p>This wand can cast Dragonform, turning into the type of dragon that last charged it.</p><p><strong>Recharge:</strong> Give an ancient dragon a gift it truly desires.</p><h4>@UUID[Compendium.nimble.nimble-magic-items.Item.ZW2AEWMDXWomDLXU]{Heartwood, Splinter of the Tree of Life}</h4><p>Legendary wand, Tier 9 (1 charge)</p><p>Cast Redeem with no required components.</p><p><strong>Recharge:</strong> A sacred hymn must be sung over it ceaselessly for 100 years.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 500000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "Oz9KSXS5xNFbsx3l",
+	"sort": 700000
+}
