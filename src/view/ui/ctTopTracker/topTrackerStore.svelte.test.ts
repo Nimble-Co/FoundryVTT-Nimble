@@ -8,6 +8,7 @@ import {
 	clearExpandedTurnIdentityHint,
 	setExpandedTurnIdentityHint,
 } from '../../../documents/combat/expandedTurnIdentityStore.js';
+import { COMBAT_TRACKER_MINIMIZED_SETTING_KEY } from '../../../settings/combatTrackerSettings.js';
 import { CtTopTrackerStore } from './topTrackerStore.svelte.js';
 
 describe('CtTopTrackerStore', () => {
@@ -545,5 +546,23 @@ describe('CtTopTrackerStore', () => {
 		expect(combat.update).toHaveBeenCalledWith({
 			'flags.nimble.ctMonsterCardsExpanded': true,
 		});
+	});
+
+	it('picks up a minimize toggle from the client setting', () => {
+		const settings = (game as unknown as { settings: { get: ReturnType<typeof vi.fn> } }).settings;
+		const store = new CtTopTrackerStore();
+
+		expect(store.ctMinimized).toBe(false);
+
+		settings.get.mockImplementation((namespace: string, key: string) =>
+			namespace === 'nimble' && key === COMBAT_TRACKER_MINIMIZED_SETTING_KEY ? true : undefined,
+		);
+
+		expect(store.applySettingPatch(COMBAT_TRACKER_MINIMIZED_SETTING_KEY)).toEqual({
+			ctMinimized: true,
+			layoutVersionDelta: 1,
+			shouldCenterActiveEntry: true,
+		});
+		expect(store.ctMinimized).toBe(true);
 	});
 });
