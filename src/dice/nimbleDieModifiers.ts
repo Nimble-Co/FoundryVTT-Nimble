@@ -31,7 +31,10 @@
  *   - `kln3`   → keep 3 lowest
  */
 
-import { getPrimaryDieDiceOptions, type PrimaryDieDiceOptions } from './diceSoNiceIntegration.js';
+import {
+	getPrimaryDieDiceOptions,
+	type PrimaryDieDiceOptions,
+} from '../integrations/diceSoNice.js';
 
 // ─── Die Modifier Metadata ──────────────────────────────────────────
 

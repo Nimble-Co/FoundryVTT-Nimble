@@ -1,4 +1,4 @@
-import { attackSequence, savingThrows } from './common.js';
+import { attackSequence, currency, savingThrows } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -93,6 +93,7 @@ class NimbleMinionData extends foundry.abstract.TypeDataModel<
 	static override defineSchema(): NimbleMinionData.Schema {
 		return {
 			...MinionSchema(),
+			...currency(),
 			...attackSequence(),
 			...savingThrows(),
 		};

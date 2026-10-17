@@ -12,7 +12,7 @@ Babele is an optional dependency. With Babele uninstalled, compendiums display E
   - Actor-only: `creatureType` (`system.details.creatureType`), `tokenName` (`prototypeToken.name`, only when it differs from `name`), and embedded `items` keyed by item name.
   - Item-only: `costDetails`, `durationDetails`, `targetsRestrictions` (flattened from `system.activation.*.details` / `targets.restrictions`), and `rules` keyed by `rule.id` (falling back to `index:N`) capturing each rule's `label`. The `nimbleRules` converter overlays these back onto `system.rules[]` at runtime.
   - RollTable-only: `results` keyed by `_id`, capturing `name` and `description`. The `nimbleTableResults` converter overlays these back onto `results[]` at runtime.
-- **`src/hooks/babeleInit.ts`** — registers `lang/babele` as the system translations directory via the `babele.init` hook. Lowest precedence; community translation modules can override.
+- **`src/integrations/babeleInit.ts`** — registers `lang/babele` as the system translations directory via the `babele.init` hook. Lowest precedence; community translation modules can override.
 
 The skeleton files are committed source. They are not generated at build time; they are regenerated on demand.
 

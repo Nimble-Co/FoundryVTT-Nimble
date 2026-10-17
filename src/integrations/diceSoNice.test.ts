@@ -7,7 +7,7 @@ import {
 	DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY,
 	DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY,
 } from '../settings/diceSoNiceSettings.js';
-import { getPrimaryDieDiceOptions, PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
+import { getPrimaryDieDiceOptions, PRIMARY_DIE_COLORSET } from './diceSoNice.js';
 
 type SettingsMock = {
 	settings: { has: (id: string) => boolean };

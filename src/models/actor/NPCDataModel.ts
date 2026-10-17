@@ -1,4 +1,4 @@
-import { attackSequence, savingThrows } from './common.js';
+import { attackSequence, currency, savingThrows } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -94,6 +94,7 @@ class NimbleNPCData extends foundry.abstract.TypeDataModel<
 	static override defineSchema(): NimbleNPCData.Schema {
 		return {
 			...NPCSchema(),
+			...currency(),
 			...attackSequence(),
 			...savingThrows(),
 		};

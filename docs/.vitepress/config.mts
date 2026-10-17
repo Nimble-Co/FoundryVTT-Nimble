@@ -73,6 +73,7 @@ export default defineConfig({
 						{ text: 'Importing & Exporting', link: '/documentation/gm/import-export' },
 						{ text: 'Macros & the Hotbar', link: '/documentation/gm/macros' },
 						{ text: 'Settings', link: '/documentation/gm/settings' },
+						{ text: 'Module Support', link: '/documentation/gm/modules' },
 					],
 				},
 				{

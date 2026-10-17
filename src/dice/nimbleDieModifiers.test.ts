@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { PRIMARY_DIE_COLORSET } from '../integrations/diceSoNice.js';
 import { DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY } from '../settings/diceSoNiceSettings.js';
-import { PRIMARY_DIE_COLORSET } from './diceSoNiceIntegration.js';
 import {
 	_resetVWarned,
 	getNimbleMods,

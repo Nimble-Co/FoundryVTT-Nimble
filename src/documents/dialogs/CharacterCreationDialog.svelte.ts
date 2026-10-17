@@ -442,7 +442,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		// If gold was chosen, add 50 gp to the character
 		if (startingEquipmentChoice === 'gold') {
-			(updateData.system as Record<string, unknown>)['currency.gp.value'] = 50;
+			(updateData.system as Record<string, unknown>)['currency.gp'] = 50;
 		}
 
 		await actor?.update(updateData);

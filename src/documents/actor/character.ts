@@ -431,7 +431,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// account for coinage
 		if (this.getFlag(SYSTEM_ID, 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
-				(totalCurrencyBulk, { value }) => totalCurrencyBulk + value,
+				(totalCurrencyBulk, amount) => totalCurrencyBulk + amount,
 				0,
 			) as number;
 

@@ -103,6 +103,7 @@ These are mandatory implementation constraints, not slogans.
 | Document classes | `src/documents/` |
 | Data models | `src/models/` |
 | Managers | `src/managers/` |
+| Module integrations | `src/integrations/` (one file per module, registered in `registerModuleIntegrations()`) |
 | Component prop types | `types/components/` |
 
 ### Code Promotion Rules

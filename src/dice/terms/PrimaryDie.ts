@@ -1,6 +1,6 @@
 import type { InexactPartial } from 'fvtt-types/utils';
+import type { PrimaryDieDiceOptions } from '../../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../../utils/missThreshold.js';
-import type { PrimaryDieDiceOptions } from '../diceSoNiceIntegration.js';
 
 declare namespace PrimaryDie {
 	/** Options for PrimaryDie that extend standard die options. */
