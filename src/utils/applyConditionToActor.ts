@@ -123,15 +123,21 @@ function resolveConditionOrigin(options: ApplyConditionOptions): string | null {
 	return null;
 }
 
+/**
+ * The duration in the shape core stores. The unit order and the `turnStart` expiry are
+ * what core picks when it migrates a legacy duration and when it fills a numeric
+ * duration's expiry. The status-built effect already holds a null expiry, which
+ * `updateSource` would keep, so the expiry has to be written.
+ */
 function buildDurationPatch(duration: ConditionDuration | null | undefined) {
 	if (!duration) return null;
 
-	const patch: Record<string, number> = {};
-	if (typeof duration.rounds === 'number') patch.rounds = duration.rounds;
-	if (typeof duration.turns === 'number') patch.turns = duration.turns;
-	if (typeof duration.seconds === 'number') patch.seconds = duration.seconds;
+	for (const units of ['seconds', 'turns', 'rounds'] as const) {
+		const value = duration[units];
+		if (typeof value === 'number') return { value, units, expiry: 'turnStart' };
+	}
 
-	return Object.keys(patch).length > 0 ? patch : null;
+	return null;
 }
 
 interface ActiveEffectImplementation {

@@ -1,9 +1,10 @@
 /**
- * Live regression tests for the applyCondition rule merged from dev:
- * trigger-driven condition application through the real dispatch machinery —
- * an hp drop firing onWound (with an ActiveEffect duration patch), and real
- * combat turn advancement firing onTurnStart/onTurnEnd. All dispatch runs
- * through ruleEventDispatch, gated on `automation.applyRuleEffects`.
+ * Live regression tests for the applyCondition rule merged from dev. They cover
+ * trigger-driven condition application through the real dispatch machinery:
+ * an hp drop firing onWound (with an ActiveEffect duration that real turn
+ * advancement ends), and real combat turn advancement firing
+ * onTurnStart/onTurnEnd. All dispatch runs through ruleEventDispatch, gated on
+ * `automation.applyRuleEffects`.
  */
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
@@ -27,11 +28,11 @@ interface ConditionActor {
 		contents: Array<{
 			id: string;
 			statuses: Set<string>;
-			duration: { value: number | null; units: string };
+			duration: { value: number | null; units: string; expiry: string | null; expired: boolean };
 		}>;
 	};
 	createEmbeddedDocuments(type: 'Item', data: object[]): Promise<Array<{ id: string }>>;
-	deleteEmbeddedDocuments(type: 'Item', ids: string[]): Promise<unknown>;
+	deleteEmbeddedDocuments(type: 'Item' | 'ActiveEffect', ids: string[]): Promise<unknown>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
 	toggleStatusEffect(statusId: string, options?: { active?: boolean }): Promise<unknown>;
 }
@@ -97,14 +98,14 @@ describe('applyCondition rule', () => {
 		await actor.update({ 'system.attributes.hp.value': 5 });
 		await waitFor(() => actor.statuses.has('dazed'), 'dazed to be applied on wound');
 
-		// The rule patches the created effect's duration after application. It
-		// still writes the legacy `{rounds}` shape, which core V14 migrates to
-		// the new `{value, units}` duration schema — assert the migrated form.
+		// Without an expiry core ends the effect only on a world time change,
+		// which combat never makes.
 		const effect = actor.effects.contents.find((candidate) => candidate.statuses.has('dazed'))!;
 		await waitFor(
 			() => effect.duration.value === 2 && effect.duration.units === 'rounds',
 			'the duration patch to land',
 		);
+		expect(effect.duration.expiry).toBe('turnStart');
 
 		await actor.deleteEmbeddedDocuments('Item', [item.id]);
 		await clearStatus('dazed');
@@ -113,6 +114,63 @@ describe('applyCondition rule', () => {
 		await actor.update({ 'system.attributes.hp.value': 10 });
 		await settle(600);
 	}, 60_000);
+
+	test('a condition with a rounds duration ends when real turns reach the next round', async () => {
+		await actor.update({ 'system.attributes.hp.value': 10 });
+		await settle(800);
+		await clearStatus('slowed');
+		await clearStatus('hampered');
+
+		const npc = (await Actor.create({
+			name: `${TEST_PREFIX} Goblin`,
+			type: 'npc',
+		})) as unknown as ConditionActor;
+		const [item] = await actor.createEmbeddedDocuments('Item', [
+			ruleFeatureData(`${TEST_PREFIX} Slowing Wounds`, [
+				{
+					type: 'applyCondition',
+					trigger: 'onWound',
+					condition: 'slowed',
+					duration: { rounds: 1 },
+				},
+			]),
+		]);
+
+		const combat = await createCombatWith([
+			{ actor: actor as unknown as Actor },
+			{ actor: npc as unknown as Actor },
+		]);
+		createdCombatIds.add(combat.id!);
+		await waitFor(() => combat.combatant?.actorId === actor.id, 'the character turn in round 1');
+		const startRound = combat.round;
+
+		await actor.update({ 'system.attributes.hp.value': 5 });
+		await waitFor(() => actor.statuses.has('slowed'), 'slowed to be applied on wound');
+		const effect = actor.effects.contents.find((candidate) => candidate.statuses.has('slowed'))!;
+		await waitFor(() => effect.duration.value === 1, 'the duration patch to land');
+
+		await combat.nextTurn();
+		await waitFor(() => combat.combatant?.actorId === npc.id, 'the npc turn');
+		await settle(500);
+		expect(effect.duration.expired).toBe(false);
+		expect(actor.statuses.has('slowed')).toBe(true);
+
+		await combat.nextTurn();
+		await waitFor(
+			() => combat.combatant?.actorId === actor.id && combat.round === startRound + 1,
+			'the character turn in the next round',
+		);
+		await waitFor(() => effect.duration.expired, 'slowed to expire at the character turn start');
+		await waitFor(() => !actor.statuses.has('slowed'), 'slowed to stop applying');
+
+		await combat.delete();
+		createdCombatIds.delete(combat.id!);
+		await actor.deleteEmbeddedDocuments('Item', [item.id]);
+		await actor.deleteEmbeddedDocuments('ActiveEffect', [effect.id]);
+		await clearStatus('hampered');
+		await actor.update({ 'system.attributes.hp.value': 10 });
+		await settle(600);
+	}, 90_000);
 
 	test('onTurnStart and onTurnEnd fire from real combat turn advancement', async () => {
 		const [item] = await actor.createEmbeddedDocuments('Item', [
