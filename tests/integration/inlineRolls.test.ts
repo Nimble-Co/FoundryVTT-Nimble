@@ -153,6 +153,26 @@ describe('inline rolls and save enrichers', () => {
 		});
 	});
 
+	test('@level on an open NPC sheet follows a level change', async () => {
+		const actor = (await Actor.create({
+			name: `${TEST_PREFIX} Growing Monster`,
+			type: 'npc',
+			system: { details: { level: '2' } },
+		})) as unknown as Actor & SheetDocument;
+		await actor.createEmbeddedDocuments('Item', [
+			{ name: `${TEST_PREFIX} Bite`, type: 'monsterFeature', system: { description: LEVEL_ROLL } },
+		]);
+		sheets.push(actor);
+		await actor.sheet.render(true);
+		await waitFor(() => !!actor.sheet.element?.querySelector('a.inline-roll'), 'inline roll link');
+
+		await actor.update({ 'system.details.level': '7' });
+		await settle(500);
+
+		const result = await clickInlineRoll(() => actor.sheet.element);
+		expect(result).toEqual({ formula: expect.any(String), total: 8, errors: [] });
+	});
+
 	test('@level on an NPC sheet rolls with the monster level', async () => {
 		const actor = (await Actor.create({
 			name: `${TEST_PREFIX} Monster`,
