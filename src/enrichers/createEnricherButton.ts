@@ -1,6 +1,7 @@
 export default function createEnricherButton(enricherType: string, args?: Record<string, string>) {
 	const { icon, label, tooltip } = args ?? {};
 	const button = document.createElement('button');
+	button.type = 'button';
 
 	button.classList.add('nimble-button');
 	button.dataset.buttonVariant = 'enricher';

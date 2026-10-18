@@ -1934,6 +1934,13 @@
 			"intelligenceSave": "Intelligence Save",
 			"willSave": "Will Save"
 		},
+		"savingThrowEnricher": {
+			"label": "{save} save",
+			"labelWithDC": "DC {dc} {save} save",
+			"tag": "Save",
+			"hint": "Left click to roll this save for each selected token.",
+			"noTokensSelected": "No tokens are selected."
+		},
 		"savingThrows": {
 			"strength": "Strength",
 			"dexterity": "Dexterity",
