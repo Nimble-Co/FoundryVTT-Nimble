@@ -178,8 +178,6 @@ describe('applyConditionToActor origin', () => {
 });
 
 describe('applyConditionToActor duration', () => {
-	// A status entry has no duration, so the built effect holds a null expiry, and core
-	// ends a null-expiry effect only when world time changes, which combat never does.
 	it('writes a rounds duration in the core shape with a turn start expiry', async () => {
 		const effect = createFakeEffect();
 		fromStatusEffect.mockResolvedValue(effect);

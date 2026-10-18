@@ -98,8 +98,6 @@ describe('applyCondition rule', () => {
 		await actor.update({ 'system.attributes.hp.value': 5 });
 		await waitFor(() => actor.statuses.has('dazed'), 'dazed to be applied on wound');
 
-		// Without an expiry core ends the effect only on a world time change,
-		// which combat never makes.
 		const effect = actor.effects.contents.find((candidate) => candidate.statuses.has('dazed'))!;
 		await waitFor(
 			() => effect.duration.value === 2 && effect.duration.units === 'rounds',

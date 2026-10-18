@@ -123,12 +123,7 @@ function resolveConditionOrigin(options: ApplyConditionOptions): string | null {
 	return null;
 }
 
-/**
- * The duration in the shape core stores. The unit order and the `turnStart` expiry are
- * what core picks when it migrates a legacy duration and when it fills a numeric
- * duration's expiry. The status-built effect already holds a null expiry, which
- * `updateSource` would keep, so the expiry has to be written.
- */
+/** Core's legacy unit order and numeric-duration expiry; the status-built effect holds a null expiry. */
 function buildDurationPatch(duration: ConditionDuration | null | undefined) {
 	if (!duration) return null;
 
