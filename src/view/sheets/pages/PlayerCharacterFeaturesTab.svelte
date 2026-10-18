@@ -21,6 +21,7 @@
 	} from './PlayerCharacterFeaturesTabUtils.js';
 
 	import formatGroupName from '#utils/formatGroupName.ts';
+	import enrichDocumentHTML from '#utils/enrichDocumentHTML.js';
 	import localize from '#utils/localize.ts';
 
 	import SearchBar from '../components/SearchBar.svelte';
@@ -197,7 +198,7 @@
 			class:nimble-feature-card__body--collapsed={isCollapsed(item.reactive._id)}
 		>
 			<div class="nimble-feature-card__description">
-				{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.reactive.system?.description || '') then description}
+				{#await enrichDocumentHTML(item.reactive.system?.description || '', item) then description}
 					{@html description}
 				{/await}
 			</div>

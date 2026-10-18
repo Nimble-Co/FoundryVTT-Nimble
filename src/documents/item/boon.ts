@@ -1,14 +1,13 @@
 import type { NimbleBoonData } from '../../models/item/BoonDataModel.js';
 
+import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleBoonItem extends NimbleBaseItem<'boon'> {
 	declare system: NimbleBoonData;
 
 	override async prepareChatCardData() {
-		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description,
-		);
+		const description = await enrichDocumentHTML(this.system.description, this);
 
 		return {
 			author: game.user?.id,

@@ -3,6 +3,7 @@
 	import localize from '../../../utils/localize.js';
 	import { createSpellPanelState } from './CastSpellActionPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
+	import enrichDocumentHTML from '#utils/enrichDocumentHTML.js';
 
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 	import SearchBar from './SearchBar.svelte';
@@ -138,7 +139,7 @@
 								{#if spellEffects.baseEffect}
 									<div class="spell-card__effect-section">
 										<strong>{localize('NIMBLE.ui.heroicActions.baseEffect')}</strong>
-										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(spellEffects.baseEffect) then enrichedEffect}
+										{#await enrichDocumentHTML(spellEffects.baseEffect, spell) then enrichedEffect}
 											{@html enrichedEffect}
 										{:catch}
 											{@html spellEffects.baseEffect}
@@ -148,7 +149,7 @@
 								{#if spellEffects.higherLevelEffect}
 									<div class="spell-card__effect-section">
 										<strong>{localize('NIMBLE.ui.heroicActions.higherLevelEffect')}</strong>
-										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(spellEffects.higherLevelEffect) then enrichedEffect}
+										{#await enrichDocumentHTML(spellEffects.higherLevelEffect, spell) then enrichedEffect}
 											{@html enrichedEffect}
 										{:catch}
 											{@html spellEffects.higherLevelEffect}

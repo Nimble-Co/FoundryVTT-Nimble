@@ -1,12 +1,12 @@
 import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
 import { getSpellScrollData } from '#utils/createScrollFromSpell.js';
+import enrichDocumentHTML from '#utils/enrichDocumentHTML.js';
 import knowsSpellSchool from '#utils/knowsSpellSchool.js';
 import localize from '#utils/localize.js';
 import { getSpellSchoolLabel } from '#utils/spellLabels.js';
 import toMessageMode from '#utils/toMessageMode.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-
 import { NimbleBaseItem } from './base.svelte.js';
 
 /** The check a scroll's wielder must pass when they know no spell of its school. */
@@ -95,14 +95,12 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 
 	override async prepareChatCardData(_options) {
 		const showDescription = this.system.activation.showDescription;
-		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description.public,
-		);
+		const publicDescription = await enrichDocumentHTML(this.system.description.public, this);
 
-		const unidentifiedDescription =
-			await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-				this.system.description.unidentified,
-			);
+		const unidentifiedDescription = await enrichDocumentHTML(
+			this.system.description.unidentified,
+			this,
+		);
 
 		return {
 			system: {
