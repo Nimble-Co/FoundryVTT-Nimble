@@ -4,7 +4,6 @@
 	import localize from '../../../utils/localize.js';
 	import { createCustomReactionsPanelState } from './CustomReactionsPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import enrichDocumentHTML from '#utils/enrichDocumentHTML.js';
 
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 
@@ -98,7 +97,7 @@
 
 						{#if expanded && description}
 							<div class="reaction-card__description">
-								{#await enrichDocumentHTML(description, reaction) then enriched}
+								{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(description) then enriched}
 									{@html enriched}
 								{:catch}
 									{@html description}

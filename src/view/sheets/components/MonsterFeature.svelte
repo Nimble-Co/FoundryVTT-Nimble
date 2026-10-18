@@ -2,7 +2,6 @@
 	import { getContext } from 'svelte';
 
 	import { SYSTEM_ID } from '#system';
-	import enrichDocumentHTML from '../../../utils/enrichDocumentHTML.js';
 
 	let { icon = 'fa-solid fa-message', item } = $props();
 
@@ -57,7 +56,7 @@
 		</header>
 
 		<div class="nimble-monster-feature-text">
-			{#await enrichDocumentHTML(item?.reactive?.system?.description ?? '', item) then description}
+			{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item?.reactive?.system?.description ?? '') then description}
 				{@html description}
 			{/await}
 		</div>

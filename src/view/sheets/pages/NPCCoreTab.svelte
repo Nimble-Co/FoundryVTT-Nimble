@@ -2,7 +2,6 @@
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import enrichDocumentHTML from '#utils/enrichDocumentHTML.js';
 	import getDamageTypeLabel from '#utils/getDamageTypeLabel.js';
 	import localize from '#utils/localize.js';
 	import sortItems from '#utils/sortItems.js';
@@ -755,7 +754,7 @@
 		}}
 	>
 		<div class="nimble-attack-sequence-description">
-			{#await enrichDocumentHTML(item.reactive?.system?.description || item.system?.description || '', item) then featureDescription}
+			{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.reactive?.system?.description || item.system?.description || '') then featureDescription}
 				{#if featureDescription}
 					{@html featureDescription}
 				{/if}
@@ -1000,7 +999,7 @@
 			class:nimble-monster-feature-description-wrapper--collapsed={getItemCollapsed(item)}
 		>
 			<div class="nimble-monster-feature-description">
-				{#await enrichDocumentHTML(item.system.description, item) then featureDescription}
+				{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
 					{#if featureDescription}
 						{@html featureDescription}
 					{/if}
@@ -1178,7 +1177,7 @@
 			class:nimble-monster-feature-description-wrapper--collapsed={getItemCollapsed(item)}
 		>
 			<div class="nimble-monster-feature-description">
-				{#await enrichDocumentHTML(item.system.description, item) then featureDescription}
+				{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
 					{#if featureDescription}
 						{@html featureDescription}
 					{/if}

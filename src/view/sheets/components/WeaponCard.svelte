@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { WeaponCardProps } from '../../../../types/components/WeaponCard.d.ts';
 	import localize from '../../../utils/localize.js';
-	import enrichDocumentHTML from '../../../utils/enrichDocumentHTML.js';
 
 	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 
@@ -111,7 +110,7 @@
 
 	{#if isExpanded && description}
 		<div class="weapon-card__description">
-			{#await enrichDocumentHTML(description, actor) then enrichedDescription}
+			{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(description) then enrichedDescription}
 				{@html enrichedDescription}
 			{:catch}
 				{@html description}
