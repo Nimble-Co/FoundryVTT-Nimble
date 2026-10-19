@@ -25,7 +25,7 @@ class AutomationSettingsMenu extends GenericDialog {
 			game.i18n.localize('NIMBLE.settings.automationMenu.title'),
 			AutomationSettingsDialog as unknown as Component<Record<string, never>>,
 			{},
-			{ uniqueId: 'nimble-automation-settings', icon: MENU_ICON, width: 520, resizable: true },
+			{ uniqueId: 'nimble-automation-settings', icon: MENU_ICON, width: 360, resizable: true },
 		);
 	}
 
@@ -114,7 +114,7 @@ export function registerAutomationSettings(): void {
 	game.settings.registerMenu(SYSTEM_ID, 'automationMenu', {
 		name: 'NIMBLE.settings.automationMenu.name',
 		label: 'NIMBLE.settings.automationMenu.manageButton',
-		hint: 'NIMBLE.settings.automationMenu.hint',
+		hint: 'NIMBLE.settings.automationMenu.intro',
 		icon: MENU_ICON,
 		type: AutomationSettingsMenu as unknown as new () => foundry.applications.api.ApplicationV2.Any,
 		restricted: true,

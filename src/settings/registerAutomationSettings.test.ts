@@ -184,6 +184,37 @@ describe('registerAutomationSettings', () => {
 		expect(waiting.reset).not.toHaveBeenCalled();
 	});
 
+	it('registers each toggle and the menu with the words of the Automation window', () => {
+		const settingsMock = setupSettingsMock({
+			worldStorageContents: [],
+			legacyStoredValue: false,
+		});
+
+		registerAutomationSettings();
+
+		const config = (settingKey: string) =>
+			getRegisteredConfig(settingsMock, settingKey) as { name?: string; hint?: string };
+		expect(game.i18n.localize(config(AUTOMATION_SETTING_KEYS.movementTracking).name!)).toBe(
+			'Movement Count',
+		);
+		expect(game.i18n.localize(config(AUTOMATION_SETTING_KEYS.resourceSpending).hint!)).toBe(
+			'Spells, items and rerolls spend their mana and charges, and stop when there is not enough.',
+		);
+		for (const [shortKey, settingKey] of Object.entries(AUTOMATION_SETTING_KEYS)) {
+			expect(config(settingKey)).toMatchObject({
+				name: `NIMBLE.settings.${shortKey}.name`,
+				hint: `NIMBLE.settings.${shortKey}.hint`,
+			});
+			expect(game.i18n.localize(`NIMBLE.settings.${shortKey}.name`)).not.toMatch(/^NIMBLE\./);
+			expect(game.i18n.localize(`NIMBLE.settings.${shortKey}.hint`)).not.toMatch(/^NIMBLE\./);
+		}
+		expect(settingsMock.registerMenu).toHaveBeenCalledWith(
+			SYSTEM_ID,
+			'automationMenu',
+			expect.objectContaining({ hint: 'NIMBLE.settings.automationMenu.intro' }),
+		);
+	});
+
 	it('gives no other automation toggle an onChange', () => {
 		const settingsMock = setupSettingsMock({
 			worldStorageContents: [],
