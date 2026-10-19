@@ -6,6 +6,7 @@ import {
 	collectPoolSpendCardOffers,
 	type OfferingActor,
 } from './poolSpendCardOffers.js';
+import { rerollOptions } from './rerollOptions.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -161,10 +162,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	);
 
 	if (autoEntry && !view.options.forceMiss) {
-		// netRollMode is recomputed from rollModeSources; carrying the stale
-		// value forward would double-apply it.
-		let options: Record<string, unknown> = { ...view.options };
-		delete options.netRollMode;
+		let options = rerollOptions(view.options);
 		if (autoEntry.rerollWithDisadvantage) options = withRerollDisadvantage(options);
 		const formula = view.originalFormula ?? '';
 

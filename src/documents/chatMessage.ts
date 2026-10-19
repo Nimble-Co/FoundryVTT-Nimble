@@ -25,6 +25,7 @@ import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
+import { rerollOptions } from '#utils/rerollOptions.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -1539,10 +1540,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
 		const formula = serialized.originalFormula ?? serialized.formula;
-		// netRollMode is computed from rollModeSources; carrying the stale value
-		// into the fresh roll would double-apply it.
-		let options = { ...(serialized.options ?? {}) } as Record<string, unknown>;
-		delete options.netRollMode;
+		let options = rerollOptions(serialized.options);
 		if (entry.rerollWithDisadvantage) options = withRerollDisadvantage(options);
 
 		const newRoll = new DamageRoll(

@@ -150,6 +150,15 @@ describe('incoming attack modifiers', () => {
 			| undefined;
 	}
 
+	/** The reroll must not keep the set primary die value of the discarded roll. */
+	function expectRerollDropsSetPrimaryDie(message: AttackMessageLike, seeded: number) {
+		const discarded = damageNode(message)?.discardedRoll as
+			| { options?: Record<string, unknown> }
+			| undefined;
+		expect(discarded?.options?.primaryDieValue).toBe(seeded);
+		expect(message.rolls[0]!.options).not.toHaveProperty('primaryDieValue');
+	}
+
 	/**
 	 * Reposition the protector by re-placing its token. On V14 an `update({x, y})`
 	 * routes through the token movement system — the document coordinates trail
@@ -242,6 +251,7 @@ describe('incoming attack modifiers', () => {
 			async () => {
 				const message = await attack(4);
 				expect(damageNode(message)?.discardedRoll).toBeTruthy();
+				expectRerollDropsSetPrimaryDie(message, 4);
 				const entry = message.system.incomingReactions.find(
 					(candidate) => candidate.kind === 'forceReroll',
 				);
@@ -286,6 +296,7 @@ describe('incoming attack modifiers', () => {
 				// A forced crit does, and the reroll is made at disadvantage.
 				const crit = await attack(8);
 				expect(damageNode(crit)?.discardedRoll).toBeTruthy();
+				expectRerollDropsSetPrimaryDie(crit, 8);
 				const sources = crit.rolls[0]!.options.rollModeSources as number[] | undefined;
 				expect(sources).toContain(-1);
 			},
@@ -316,6 +327,7 @@ describe('incoming attack modifiers', () => {
 				'the force-reroll offer to be marked used',
 			);
 			expect(damageNode(readMessage(message.id))?.discardedRoll).toBeTruthy();
+			expectRerollDropsSetPrimaryDie(readMessage(message.id), 4);
 		} finally {
 			await defender.deleteEmbeddedDocuments('Item', [pocketSand.id!]);
 		}
