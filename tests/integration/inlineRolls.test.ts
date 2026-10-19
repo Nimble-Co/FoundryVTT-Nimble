@@ -69,11 +69,12 @@ describe('inline rolls and save enrichers', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
-	test('[[/savingThrow]] with an unknown save stays as text', async () => {
+	test.each(['luck', 'constructor'])('[[/savingThrow save=%s]] stays as text', async (save) => {
+		const tag = `[[/savingThrow save=${save}]]`;
 		const html = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			'<p>[[/savingThrow save=luck]]</p>',
+			`<p>${tag}</p>`,
 		);
-		expect(html).toContain('[[/savingThrow save=luck]]');
+		expect(html).toContain(tag);
 	});
 
 	test('[[/savingThrow]] on a sheet rolls the save for the selected token', async () => {

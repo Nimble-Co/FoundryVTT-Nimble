@@ -18,8 +18,8 @@ export default function enrichSavingThrow(
 	_options?: foundry.applications.ux.TextEditor.EnrichmentOptions,
 ) {
 	const { enricherType, save: saveArg, dc: dcArg } = args;
+	if (!Object.hasOwn(SAVE_KEYS, String(saveArg))) return null;
 	const saveKey = SAVE_KEYS[String(saveArg)];
-	if (!saveKey) return null;
 
 	const dc = typeof dcArg === 'number' ? dcArg : undefined;
 	const save = localize(CONFIG.NIMBLE.savingThrowAbbreviations[saveKey]).toLocaleUpperCase();
