@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 type TestGlobals = {
@@ -2553,6 +2554,21 @@ describe('NimbleChatMessage.resolveForceRerollReaction', () => {
 		expect(updatePayload.system.isCritical).toBe(false);
 		expect(updatePayload.system.isMiss).toBe(false);
 		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
+	});
+
+	it('drops a set primary die value and keeps the primary die modifier', async () => {
+		const roll = createSerializedReactionRoll();
+		Object.assign(roll.options, { primaryDieValue: 3, primaryDieModifier: 2 });
+		const message = createReactionMessage({ entries: [createReactionEntry()], roll });
+
+		const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
+
+		await message.resolveForceRerollReaction('entry-1', 'gm-user');
+
+		const { options } = evaluate.mock.contexts[0] as DamageRoll;
+		evaluate.mockRestore();
+		expect(options).not.toHaveProperty('primaryDieValue');
+		expect(options.primaryDieModifier).toBe(2);
 	});
 
 	it('drops offers the new outcome no longer satisfies', async () => {

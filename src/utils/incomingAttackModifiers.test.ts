@@ -771,6 +771,24 @@ describe('applyPostRollIncomingBehavior', () => {
 		expect(opts).not.toHaveProperty('netRollMode');
 	});
 
+	it('drops a set primary die value and keeps the primary die modifier', async () => {
+		const roll = makeRoll(true);
+		Object.assign(roll.options, { primaryDieValue: 20, primaryDieModifier: 2 });
+		const rebuildRoll = vi.fn(async (_formula: string, _options: Record<string, unknown>) =>
+			makeRoll(false),
+		);
+
+		await applyPostRollIncomingBehavior(
+			roll,
+			{ ...emptyPlan(), autoRerollEntries: [autoEntry('criticalHit')] },
+			rebuildRoll,
+		);
+
+		const opts = rebuildRoll.mock.calls[0][1];
+		expect(opts).not.toHaveProperty('primaryDieValue');
+		expect(opts.primaryDieModifier).toBe(2);
+	});
+
 	it('drops a hit-gated interactive offer when the final roll was a miss', async () => {
 		const missRoll = makeRoll(false, false, true);
 		const offer = { ...autoEntry('hit'), id: 'offer-1', automatic: undefined };

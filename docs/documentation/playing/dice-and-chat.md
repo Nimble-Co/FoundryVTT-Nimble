@@ -48,6 +48,8 @@ If you fill in both **Set Primary Die Result** and **Add to Primary Die Result**
 
 With advantage or disadvantage, the dice are rolled and dropped first. The set result or the added number then applies to the die that stays, so it is never dropped.
 
+When an ability rerolls the attack, the new roll does not keep **Set Primary Die Result**: its primary die is rolled again. It keeps **Add to Primary Die Result**, and the number is added to the new result.
+
 The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the roll before and after it, for example "Primary Die: rolled 1, modifier +1, result 2". If the sum goes past the maximum, the line also says how much was added to the damage. The die on the card always shows the result after the number is added.
 
 ## Anatomy of a chat card
