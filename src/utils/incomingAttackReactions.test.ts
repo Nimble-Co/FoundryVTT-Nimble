@@ -6,6 +6,7 @@ interface MockMessage {
 	system: { incomingReactions: Array<{ id: string; kind: string }> };
 	resolveForceRerollReaction: ReturnType<typeof vi.fn>;
 	resolveRedirectReaction: ReturnType<typeof vi.fn>;
+	resolveRerollReaction: ReturnType<typeof vi.fn>;
 }
 
 type TestGlobals = {
@@ -31,6 +32,7 @@ function createMessage(entries: Array<{ id: string; kind: string }>): MockMessag
 		system: { incomingReactions: entries },
 		resolveForceRerollReaction: vi.fn().mockResolvedValue(undefined),
 		resolveRedirectReaction: vi.fn().mockResolvedValue(undefined),
+		resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -92,6 +94,40 @@ describe('requestIncomingAttackReaction', () => {
 
 		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false);
 		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+	});
+
+	it('routes a reroll entry to resolveRerollReaction with the heroic reaction answer', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			forceHeroicReaction: true,
+		});
+
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, true);
+	});
+
+	it('sends the heroic reaction answer of a player reroll to the GM', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			forceHeroicReaction: true,
+		});
+
+		expect(globals().game.socket.emit).toHaveBeenCalledWith('system.nimble', {
+			type: 'incomingAttackReaction',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+			forceHeroicReaction: true,
+		});
 	});
 
 	it('emits a socket request with the expected payload for a non-GM user', async () => {
@@ -164,6 +200,23 @@ describe('registerIncomingReactionSocketListener', () => {
 		await flushAsync();
 
 		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true);
+	});
+
+	it('routes a relayed reroll request to resolveRerollReaction', async () => {
+		setUser({ id: 'gm-user', isGM: true });
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		const listener = await registerAndGetListener();
+
+		listener({
+			type: 'incomingAttackReaction',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+		});
+		await flushAsync();
+
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true, false);
 	});
 
 	it('routes redirectToSelf entries to resolveRedirectReaction', async () => {

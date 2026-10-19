@@ -13,4 +13,44 @@ function rerollOptions(
 	);
 }
 
-export { rerollOptions };
+/** What a reroll adds on top of the roll it replaces. */
+interface RerollChanges {
+	/** Roll mode steps added to the roll's sources: -1 disadvantage, +1 advantage */
+	rollModeChange: number;
+	/** Added to the roll's primary die modifier */
+	primaryDieBonus: number;
+	/** Formula added to the damage, with references already resolved */
+	extraDamage: string;
+}
+
+/** The formula and options of a reroll, with the reroll's own changes added. */
+function prepareReroll(
+	formula: string,
+	options: Record<string, unknown> | null | undefined,
+	changes: Partial<RerollChanges> = {},
+): { formula: string; options: Record<string, unknown> } {
+	const next = rerollOptions(options);
+
+	const rollModeChange = Math.trunc(Number(changes.rollModeChange) || 0);
+	if (rollModeChange !== 0) {
+		const rollMode = typeof next.rollMode === 'number' ? next.rollMode : 0;
+		const sources = Array.isArray(next.rollModeSources)
+			? [...(next.rollModeSources as number[])]
+			: [rollMode];
+		sources.push(rollModeChange);
+		next.rollModeSources = sources;
+	}
+
+	const primaryDieBonus = Math.trunc(Number(changes.primaryDieBonus) || 0);
+	if (primaryDieBonus !== 0) {
+		next.primaryDieModifier = (Number(next.primaryDieModifier) || 0) + primaryDieBonus;
+	}
+
+	const extraDamage = changes.extraDamage?.trim() ?? '';
+	return {
+		formula: extraDamage ? `${formula} + (${extraDamage})` : formula,
+		options: next,
+	};
+}
+
+export { prepareReroll, rerollOptions, type RerollChanges };

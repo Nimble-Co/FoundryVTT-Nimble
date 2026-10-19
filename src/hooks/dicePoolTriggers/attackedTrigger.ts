@@ -1,6 +1,7 @@
 import { systemHookName } from '#system';
 import { applyRefillToActorIfEligible } from '#utils/dicePool/dicePoolRefill.js';
 import type { CharacterActorLike } from '#utils/dicePool/types.js';
+import { firesCritTriggers } from '#utils/firesCritTriggers.js';
 
 let registered = false;
 
@@ -16,7 +17,11 @@ export function registerAttackedTriggerHooks(): void {
 	if (registered) return;
 	registered = true;
 
-	const handleDamageApplied = (payload: { targetActor?: unknown; isCritical?: boolean }) => {
+	const handleDamageApplied = (payload: {
+		targetActor?: unknown;
+		isCritical?: boolean;
+		discardedCritTriggers?: boolean;
+	}) => {
 		const target = payload?.targetActor;
 		if (!target || typeof target !== 'object') return;
 		const actor = target as Actor.Implementation;
@@ -26,7 +31,7 @@ export function registerAttackedTriggerHooks(): void {
 
 		// Only crits that reach damage application register — an attack that
 		// never applies damage does not fire this trigger.
-		if (payload?.isCritical === true) {
+		if (firesCritTriggers(payload ?? {})) {
 			void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onCritReceived');
 		}
 	};

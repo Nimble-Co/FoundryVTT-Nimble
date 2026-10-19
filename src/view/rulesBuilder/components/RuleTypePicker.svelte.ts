@@ -40,6 +40,7 @@ const RULE_ICONS: Record<string, string> = {
 	modifyIncomingAttack: 'fa-solid fa-shield-slash',
 	movementTrigger: 'fa-solid fa-shoe-prints',
 	note: 'fa-solid fa-note-sticky',
+	reroll: 'fa-solid fa-rotate-left',
 	savingThrowBonus: 'fa-solid fa-shield',
 	savingThrowRollMode: 'fa-solid fa-dice-five',
 	skillBonus: 'fa-solid fa-screwdriver-wrench',

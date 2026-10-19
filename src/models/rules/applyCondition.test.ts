@@ -207,6 +207,22 @@ describe('ApplyConditionRule', () => {
 			expect(conditionsAppliedTo(targetActor)).toEqual(['smoldering']);
 		});
 
+		it('follows the roll that stands, not a discarded crit that keeps its triggers', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed({
+				...buildItemUsedContext(attackerActor, targetActor),
+				discardedCritTriggers: true,
+			});
+
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+		});
+
 		it('fires onHit trigger only when not critical', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();

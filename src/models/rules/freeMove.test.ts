@@ -436,6 +436,20 @@ describe('FreeMoveRule', () => {
 			expect(lastOffer().token).toBe(struck);
 		});
 
+		it('fires for a crit that a reroll discarded when the reroll keeps its crit triggers', async () => {
+			const harness = makeRule({ trigger: 'onCritReceived' });
+			await harness.rule.onAttackReceived({
+				sourceItem: {},
+				sourceActor: {},
+				targetActor: harness.actor,
+				card: null,
+				isCritical: false,
+				isMiss: false,
+				discardedCritTriggers: true,
+			} as never);
+			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
+		});
+
 		it('does not fire on a hit that is not critical, or on another target', async () => {
 			const harness = makeRule({ trigger: 'onCritReceived' });
 			await receive(harness, false);

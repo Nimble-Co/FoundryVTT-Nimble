@@ -37,7 +37,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		}
 
 		const manager = new ItemActivationManager(this as any, options);
-		const { activation, rolls, rollHidden, incomingReactions } = await manager.getData();
+		const { activation, rolls, rollHidden, incomingReactions, rerollHistory } =
+			await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
 		}
@@ -132,6 +133,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					activation,
 					image: this.img || 'icons/svg/item-bag.svg',
 					incomingReactions: incomingReactions ?? [],
+					lastReroll: rerollHistory?.lastReroll ?? null,
+					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 					isCritical,
 					isMiss,
 					permissions: this.permission,
@@ -155,6 +158,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			rolls,
 			isCritical,
 			isMiss,
+			discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 			targets: Array.from(game.user?.targets ?? []),
 			upcast: manager.upcastResult,
 		});

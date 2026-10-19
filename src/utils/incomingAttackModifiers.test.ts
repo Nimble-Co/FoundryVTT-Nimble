@@ -18,6 +18,7 @@ let collectTargetIncomingModifiers: typeof import('./incomingAttackModifiers.js'
 let collectRedirectCandidates: typeof import('./incomingAttackModifiers.js').collectRedirectCandidates;
 let computeIncomingAttackPlan: typeof import('./incomingAttackModifiers.js').computeIncomingAttackPlan;
 let applyPostRollIncomingBehavior: typeof import('./incomingAttackModifiers.js').applyPostRollIncomingBehavior;
+let rerollTriggerMatches: typeof import('./incomingAttackModifiers.js').rerollTriggerMatches;
 
 beforeAll(async () => {
 	vi.resetModules();
@@ -26,6 +27,7 @@ beforeAll(async () => {
 		collectRedirectCandidates,
 		computeIncomingAttackPlan,
 		applyPostRollIncomingBehavior,
+		rerollTriggerMatches,
 	} = await import('./incomingAttackModifiers.js'));
 });
 
@@ -874,6 +876,293 @@ describe('applyPostRollIncomingBehavior', () => {
 			);
 
 			expect(result.stampEntries.map((e) => e.id)).toEqual(['auto-1']);
+		});
+	});
+});
+
+describe('rerollTriggerMatches', () => {
+	const crit = { isCritical: true, isMiss: false };
+	const hit = { isCritical: false, isMiss: false };
+	const miss = { isCritical: false, isMiss: true };
+
+	it('matches a hit that is not a crit', () => {
+		expect(rerollTriggerMatches('nonCriticalHit', hit)).toBe(true);
+		expect(rerollTriggerMatches('nonCriticalHit', crit)).toBe(false);
+		expect(rerollTriggerMatches('nonCriticalHit', miss)).toBe(false);
+	});
+
+	it('matches a miss', () => {
+		expect(rerollTriggerMatches('miss', miss)).toBe(true);
+		expect(rerollTriggerMatches('miss', hit)).toBe(false);
+		expect(rerollTriggerMatches('miss', crit)).toBe(false);
+	});
+
+	it('still counts a crit as a hit', () => {
+		expect(rerollTriggerMatches('hit', crit)).toBe(true);
+	});
+});
+
+describe('Reroll rules on the attack', () => {
+	const FREE = {
+		chargePoolIdentifier: '',
+		chargeCost: 1,
+		manaCost: 0,
+		woundCost: 0,
+		heroicReaction: '' as const,
+	};
+
+	function rerollRule(overrides: Record<string, unknown> = {}) {
+		return {
+			type: 'reroll',
+			id: 'reroll-1',
+			label: '',
+			item: { name: 'Pocket Sand', uuid: 'Item.sand' },
+			outcome: 'always',
+			automatic: false,
+			discardedCritTriggers: false,
+			rerollCost: FREE,
+			offersRerollOn: vi.fn((context: { side: string }) => context.side === 'target'),
+			rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
+			...overrides,
+		};
+	}
+
+	function makeRoll(isCritical: boolean, isMiss = false, forceMiss = false, primaryDieValue = 8) {
+		return {
+			isCritical,
+			isMiss,
+			primaryDieValue,
+			originalFormula: '1d8 + 2',
+			options: { forceMiss, rollMode: 0, primaryDieModifier: 1 } as Record<string, unknown>,
+			toJSON: () => ({ class: 'DamageRoll', total: 10 }),
+		};
+	}
+
+	describe('computeIncomingAttackPlan', () => {
+		it('stamps the attacker rules for the roller and the target rules for the target', () => {
+			const rollerRule = rerollRule({
+				id: 'roller-rule',
+				offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller'),
+			});
+			const targetRule = rerollRule({ id: 'target-rule' });
+			const target = createToken({
+				actor: createActor({ uuid: 'Actor.target', rules: [targetRule] as never }),
+			});
+			setCanvasTokens([target]);
+
+			const plan = computeIncomingAttackPlan(
+				target as never,
+				{ uuid: 'Actor.attacker', rules: [rollerRule] } as never,
+				{ delivery: 'melee' },
+			);
+
+			const rerolls = plan.reactionEntries.filter((entry) => entry.kind === 'reroll');
+			expect(rerolls).toEqual([
+				expect.objectContaining({
+					actorUuid: 'Actor.attacker',
+					ruleId: 'roller-rule',
+					targetTokenUuid: null,
+				}),
+				expect.objectContaining({
+					actorUuid: 'Actor.target',
+					ruleId: 'target-rule',
+					targetTokenUuid: target.document.uuid,
+				}),
+			]);
+			expect(rollerRule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
+			expect(targetRule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+		});
+
+		it('puts an automatic rule on the automatic list with its rule', () => {
+			const rule = rerollRule({ automatic: true });
+			const target = createToken({ actor: createActor({ rules: [rule] as never }) });
+			setCanvasTokens([target]);
+
+			const plan = computeIncomingAttackPlan(target as never);
+
+			expect(plan.reactionEntries.some((entry) => entry.kind === 'reroll')).toBe(false);
+			expect(plan.autoRerollEntries).toHaveLength(1);
+			expect(plan.rerollRules?.get(plan.autoRerollEntries[0].id)).toBe(rule);
+		});
+
+		it('gives a target no reroll against an attack that misses by force', () => {
+			const target = createToken({
+				actor: createActor({
+					rules: [rerollRule(), createRule({ modifier: 'autoMiss' })] as never,
+				}),
+			});
+			setCanvasTokens([target]);
+
+			const plan = computeIncomingAttackPlan(target as never);
+
+			expect(plan.reactionEntries.some((entry) => entry.kind === 'reroll')).toBe(false);
+		});
+	});
+
+	describe('applyPostRollIncomingBehavior', () => {
+		function rerollEntry(outcomeTrigger: string, overrides: Record<string, unknown> = {}) {
+			return {
+				id: 'reroll-entry',
+				kind: 'reroll' as const,
+				source: 'rule' as const,
+				actorUuid: 'Actor.target',
+				tokenUuid: null,
+				targetTokenUuid: 'Scene.s.Token.target',
+				label: 'Pocket Sand',
+				ruleId: 'reroll-1',
+				itemUuid: 'Item.sand',
+				used: false,
+				outcomeTrigger: outcomeTrigger as 'always',
+				...overrides,
+			};
+		}
+
+		function plan(overrides: Record<string, unknown> = {}) {
+			return {
+				disadvantageCount: 0,
+				forceMiss: false,
+				missThreshold: 1,
+				appliedEntries: [],
+				reactionEntries: [],
+				autoRerollEntries: [],
+				...overrides,
+			};
+		}
+
+		it('keeps a reroll button only for the outcome it names', async () => {
+			const entries = [
+				rerollEntry('miss', { id: 'on-miss' }),
+				rerollEntry('nonCriticalHit', { id: 'on-plain-hit' }),
+				rerollEntry('criticalHit', { id: 'on-crit' }),
+			];
+			const onMiss = await applyPostRollIncomingBehavior(
+				makeRoll(false, true),
+				plan({ reactionEntries: entries }),
+				vi.fn(),
+			);
+			const onHit = await applyPostRollIncomingBehavior(
+				makeRoll(false),
+				plan({ reactionEntries: entries }),
+				vi.fn(),
+			);
+
+			expect(onMiss.stampEntries.map((e) => e.id)).toEqual(['on-miss']);
+			expect(onHit.stampEntries.map((e) => e.id)).toEqual(['on-plain-hit']);
+		});
+
+		it('drops reroll buttons from a roll that misses by force', async () => {
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false, true, true),
+				plan({ reactionEntries: [rerollEntry('miss')] }),
+				vi.fn(),
+			);
+			expect(result.stampEntries).toEqual([]);
+		});
+
+		it('rerolls by itself with the rule changes and keeps the history', async () => {
+			const rule = rerollRule({
+				automatic: true,
+				rerollChanges: () => ({ rollModeChange: -1, primaryDieBonus: 2, extraDamage: '1d6' }),
+			});
+			const entry = rerollEntry('criticalHit');
+			const rebuilt = makeRoll(false, false, false, 4);
+			const rebuildRoll = vi.fn(
+				async (_formula: string, _options: Record<string, unknown>) => rebuilt,
+			);
+
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(true),
+				plan({ autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) }),
+				rebuildRoll,
+			);
+
+			expect(rebuildRoll).toHaveBeenCalledWith('1d8 + 2 + (1d6)', {
+				forceMiss: false,
+				rollMode: 0,
+				rollModeSources: [0, -1],
+				primaryDieModifier: 3,
+			});
+			expect(result.roll).toBe(rebuilt);
+			expect(result.discardedRoll).toEqual({ class: 'DamageRoll', total: 10 });
+			expect(result.stampEntries).toEqual([expect.objectContaining({ id: entry.id, used: true })]);
+			expect(result.lastReroll).toEqual({
+				entryId: entry.id,
+				itemUuid: 'Item.sand',
+				label: 'Pocket Sand',
+				actorUuid: 'Actor.target',
+				previousResult: 8,
+				previousWasCritical: true,
+				newResult: 4,
+				usesLeft: null,
+				woundsGained: 0,
+			});
+			expect(result.discardedCritTriggers).toBe(false);
+		});
+
+		it('keeps the crit triggers of a discarded crit only when the rule says so', async () => {
+			const entry = rerollEntry('criticalHit');
+			const run = (discardedCritTriggers: boolean) =>
+				applyPostRollIncomingBehavior(
+					makeRoll(true),
+					plan({
+						autoRerollEntries: [entry],
+						rerollRules: new Map([
+							[entry.id, rerollRule({ automatic: true, discardedCritTriggers })],
+						]),
+					}),
+					vi.fn(async () => makeRoll(false)),
+				);
+
+			expect((await run(true)).discardedCritTriggers).toBe(true);
+			expect((await run(false)).discardedCritTriggers).toBe(false);
+		});
+
+		it('charges the cost of an automatic reroll and records the Wound gained', async () => {
+			const actor = {
+				type: 'character',
+				system: { attributes: { wounds: { value: 1, max: 6 } } },
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					actor.system.attributes.wounds.value = changes[
+						'system.attributes.wounds.value'
+					] as number;
+				}),
+			};
+			const entry = rerollEntry('always');
+			const rule = rerollRule({ automatic: true, actor, rerollCost: { ...FREE, woundCost: 1 } });
+
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false),
+				plan({ autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) }),
+				vi.fn(async () => makeRoll(false)),
+			);
+
+			expect(actor.system.attributes.wounds.value).toBe(2);
+			expect(result.lastReroll?.woundsGained).toBe(1);
+		});
+
+		it('gives the cost back when the new roll fails', async () => {
+			const actor = {
+				type: 'character',
+				system: { attributes: { wounds: { value: 1, max: 6 } } },
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					actor.system.attributes.wounds.value = changes[
+						'system.attributes.wounds.value'
+					] as number;
+				}),
+			};
+			const entry = rerollEntry('always');
+			const rule = rerollRule({ automatic: true, actor, rerollCost: { ...FREE, woundCost: 1 } });
+
+			await expect(
+				applyPostRollIncomingBehavior(
+					makeRoll(false),
+					plan({ autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) }),
+					vi.fn(async () => {
+						throw new Error('roll failed');
+					}),
+				),
+			).rejects.toThrow('roll failed');
+			expect(actor.system.attributes.wounds.value).toBe(1);
 		});
 	});
 });

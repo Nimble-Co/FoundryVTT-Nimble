@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+	import type { IncomingReactionEntry, LastReroll } from '#utils/incomingReactionEntry.ts';
 
 	import { getContext } from 'svelte';
 	import PoolSpendOfferDialog from '#documents/dialogs/PoolSpendOfferDialog.svelte.ts';
+	import { confirmRerollHeroicReaction } from '#utils/confirmRerollHeroicReaction.js';
 	import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 	import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 	import {
@@ -15,6 +16,8 @@
 		type IncomingReactionRejection,
 		requestIncomingAttackReaction,
 	} from '#utils/incomingAttackReactions.js';
+	import { canPayRerollCost } from '#utils/rerollCost.js';
+	import { findRerollRule } from '#utils/rerollEntries.js';
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 
@@ -23,9 +26,14 @@
 	}
 
 	function canUseEntry(entry: IncomingReactionEntry): boolean {
-		if (game.user?.isGM) return true;
 		const actor = getReactingActor(entry);
-		return !!actor?.isOwner;
+		if (!game.user?.isGM && !actor?.isOwner) return false;
+		// A reroll whose cost can no longer be paid (no charges left) is hidden.
+		if (entry.kind === 'reroll') {
+			const cost = findRerollRule(entry)?.rerollCost;
+			return !!cost && canPayRerollCost(actor, cost);
+		}
+		return true;
 	}
 
 	function getEntryHeading(entry: IncomingReactionEntry): string {
@@ -46,6 +54,11 @@
 	}
 
 	function getEntryLabel(entry: IncomingReactionEntry): string {
+		if (entry.kind === 'reroll') {
+			return localize('NIMBLE.chat.incomingReactions.rerollWith', {
+				feature: getSourceItemName(entry) || entry.label,
+			});
+		}
 		const heading = getEntryHeading(entry);
 		const actorName = getReactingActor(entry)?.name ?? '';
 		// An attacker-side spend is already attributed by the card's speaker, so
@@ -60,7 +73,7 @@
 	}
 
 	function getEntryIcon(entry: IncomingReactionEntry): string {
-		if (entry.kind === 'forceReroll') return 'fa-solid fa-rotate-left';
+		if (entry.kind === 'forceReroll' || entry.kind === 'reroll') return 'fa-solid fa-rotate-left';
 		if (entry.kind === 'spendPoolForDamage') return 'fa-solid fa-dice-d6';
 		return 'fa-solid fa-shield-heart';
 	}
@@ -206,6 +219,58 @@
 		});
 	}
 
+	async function useReroll(entry: IncomingReactionEntry): Promise<void> {
+		const forceHeroicReaction = await confirmRerollHeroicReaction(entry);
+		if (forceHeroicReaction === null) return;
+
+		holdEntry(entry.id);
+		await requestIncomingAttackReaction({
+			messageId: messageDocument?.id ?? '',
+			entryId: entry.id,
+			forceHeroicReaction,
+		});
+	}
+
+	/** The card's reroll history line: what changed, then who used it and what it cost. */
+	function getRerollHistoryLines(lastReroll: LastReroll): string[] {
+		const feature =
+			((fromUuidSync(lastReroll.itemUuid) as { name?: string } | null)?.name ?? '').trim() ||
+			lastReroll.label;
+		const hasResults =
+			typeof lastReroll.previousResult === 'number' && typeof lastReroll.newResult === 'number';
+		let changeKey = 'NIMBLE.chat.incomingReactions.rerollHistoryPlain';
+		if (hasResults) {
+			changeKey = lastReroll.previousWasCritical
+				? 'NIMBLE.chat.incomingReactions.rerollHistoryFromCrit'
+				: 'NIMBLE.chat.incomingReactions.rerollHistory';
+		}
+		const change = localize(changeKey, {
+			feature,
+			previous: String(lastReroll.previousResult ?? ''),
+			next: String(lastReroll.newResult ?? ''),
+		});
+
+		const name = (
+			(fromUuidSync(lastReroll.actorUuid) as { name?: string } | null)?.name ?? ''
+		).trim();
+		const details = [localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name })];
+		if (typeof lastReroll.usesLeft === 'number') {
+			details.push(
+				localize('NIMBLE.chat.incomingReactions.rerollUsesLeft', {
+					count: String(lastReroll.usesLeft),
+				}),
+			);
+		}
+		if (lastReroll.woundsGained > 0) {
+			details.push(
+				localize('NIMBLE.chat.incomingReactions.rerollWoundsGained', {
+					count: String(lastReroll.woundsGained),
+				}),
+			);
+		}
+		return [change, details.join(' - ')];
+	}
+
 	async function useEntry(entry: IncomingReactionEntry) {
 		if (busy) return;
 		busy = true;
@@ -213,6 +278,11 @@
 		try {
 			if (entry.kind === 'spendPoolForDamage') {
 				await useSpendOffer(entry);
+				return;
+			}
+
+			if (entry.kind === 'reroll') {
+				await useReroll(entry);
 				return;
 			}
 
@@ -280,10 +350,15 @@
 	let pendingEntries = $derived(
 		entries.filter((entry) => !entry.used && !heldEntryIds.has(entry.id) && canUseEntry(entry)),
 	);
-	let usedEntries = $derived(entries.filter((entry) => entry.used));
+	// A used reroll is told by the card's history line, not by its entry.
+	let usedEntries = $derived(entries.filter((entry) => entry.used && entry.kind !== 'reroll'));
+	let lastReroll = $derived(
+		(messageDocument?.reactive?.system as { lastReroll?: LastReroll | null })?.lastReroll ?? null,
+	);
+	let rerollHistoryLines = $derived(lastReroll ? getRerollHistoryLines(lastReroll) : []);
 </script>
 
-{#if pendingEntries.length > 0 || usedEntries.length > 0}
+{#if pendingEntries.length > 0 || usedEntries.length > 0 || rerollHistoryLines.length > 0}
 	<section class="nimble-card-section nimble-card-section--incoming-reactions">
 		{#if pendingEntries.length > 0}
 			<header class="nimble-section-header">
@@ -309,6 +384,13 @@
 				{/each}
 			</ul>
 		{/if}
+
+		{#each rerollHistoryLines as line, index (index)}
+			<p class="nimble-incoming-reaction-attribution">
+				{#if index === 0}<i class="fa-solid fa-rotate-left"></i>{/if}
+				{line}
+			</p>
+		{/each}
 
 		{#each usedEntries as entry (entry.id)}
 			<p class="nimble-incoming-reaction-attribution">

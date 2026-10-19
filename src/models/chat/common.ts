@@ -118,7 +118,7 @@ export const incomingReactions = () => ({
 			kind: new fields.StringField({
 				required: true,
 				nullable: false,
-				choices: ['forceReroll', 'redirectToSelf', 'spendPoolForDamage'],
+				choices: ['forceReroll', 'redirectToSelf', 'spendPoolForDamage', 'reroll'],
 			}),
 			source: new fields.StringField({
 				required: true,
@@ -154,7 +154,7 @@ export const incomingReactions = () => ({
 				required: false,
 				nullable: true,
 				initial: null,
-				choices: ['always', 'hit', 'criticalHit'],
+				choices: ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'],
 			}),
 			// What a spend offer did once used, as components rather than a
 			// sentence: the attribution line is localized at render time, so a
@@ -169,4 +169,41 @@ export const incomingReactions = () => ({
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),
+});
+
+/**
+ * What the last reroll on an attack card did, for its history line, and
+ * whether a discarded crit still triggers when-crit abilities. Each reroll
+ * replaces `lastReroll`; `discardedCritTriggers` stays on once set.
+ */
+export const rerollHistory = () => ({
+	lastReroll: new fields.SchemaField(
+		{
+			entryId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			previousResult: new fields.NumberField({ required: true, nullable: true, initial: null }),
+			previousWasCritical: new fields.BooleanField({
+				required: true,
+				nullable: false,
+				initial: false,
+			}),
+			newResult: new fields.NumberField({ required: true, nullable: true, initial: null }),
+			usesLeft: new fields.NumberField({ required: true, nullable: true, initial: null }),
+			woundsGained: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+		},
+		{ required: false, nullable: true, initial: null },
+	),
+	discardedCritTriggers: new fields.BooleanField({
+		required: false,
+		nullable: false,
+		initial: false,
+	}),
 });

@@ -48,6 +48,9 @@ vi.mock('#utils/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
 }));
+vi.mock('#utils/confirmRerollHeroicReaction.js', () => ({
+	confirmRerollHeroicReaction: vi.fn(async () => false),
+}));
 
 import { render, screen } from '@testing-library/svelte';
 import IncomingReactionPromptsTestHarness from './IncomingReactionPrompts.testHarness.svelte';
@@ -61,7 +64,7 @@ function spendDialogMock(): SpendDialogMock {
 
 interface EntryOptions {
 	id?: string;
-	kind?: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage';
+	kind?: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage' | 'reroll';
 	source?: 'baseline' | 'rule';
 	label?: string;
 	used?: boolean;
@@ -90,10 +93,13 @@ function createEntry(options: EntryOptions = {}) {
 	};
 }
 
-function createMessage(entries: ReturnType<typeof createEntry>[]) {
+function createMessage(
+	entries: ReturnType<typeof createEntry>[],
+	lastReroll: Record<string, unknown> | null = null,
+) {
 	const message = {
 		id: 'message-1',
-		system: { incomingReactions: entries },
+		system: { incomingReactions: entries, lastReroll },
 		reactive: null as unknown,
 	};
 	message.reactive = message;
@@ -357,6 +363,135 @@ describe('IncomingReactionPrompts', () => {
 
 			await Promise.resolve();
 			expect(screen.queryByRole('button')).toBeNull();
+		});
+	});
+
+	describe('Reroll rule entries', () => {
+		// The words for these keys are added to en.json separately; until then
+		// the test supplies them so it reads the same before and after.
+		const REROLL_STRINGS: Record<string, string> = {
+			'NIMBLE.chat.incomingReactions.rerollWith': 'Reroll with {feature}',
+			'NIMBLE.chat.incomingReactions.rerollHistory':
+				'Rerolled with {feature}: {previous} became {next}',
+			'NIMBLE.chat.incomingReactions.rerollHistoryFromCrit':
+				'Rerolled with {feature}: {previous} (crit) became {next}',
+			'NIMBLE.chat.incomingReactions.rerollUsedBy': 'Used by {name}',
+			'NIMBLE.chat.incomingReactions.rerollUsesLeft': 'Uses left: {count}',
+			'NIMBLE.chat.incomingReactions.rerollWoundsGained': 'Wounds gained: {count}',
+		};
+		let previousI18n: unknown;
+
+		beforeEach(() => {
+			const g = globalThis as Record<string, any>;
+			previousI18n = g.game.i18n;
+			const base = g.game.i18n;
+			g.game.i18n = {
+				...base,
+				localize: (key: string) => REROLL_STRINGS[key] ?? base.localize(key),
+				format: (key: string, data: Record<string, string> = {}) =>
+					(REROLL_STRINGS[key] ?? base.localize(key)).replace(
+						/{(\w+)}/g,
+						(_match: string, name: string) => data[name] ?? '',
+					),
+			};
+			g.fromUuidSync = vi.fn((uuid: string) => {
+				if (uuid === 'Item.sand') {
+					return {
+						name: 'Pocket Sand',
+						rules: new Map([
+							[
+								'reroll-1',
+								{
+									type: 'reroll',
+									id: 'reroll-1',
+									disabled: false,
+									rerollCost: {
+										chargePoolIdentifier: '',
+										chargeCost: 1,
+										manaCost: 0,
+										woundCost: 0,
+										heroicReaction: '',
+									},
+								},
+							],
+						]),
+					};
+				}
+				return { name: 'Brom', isOwner: true };
+			});
+		});
+
+		afterEach(() => {
+			(globalThis as Record<string, any>).game.i18n = previousI18n;
+		});
+
+		function rerollEntry(options: EntryOptions = {}) {
+			return createEntry({
+				id: 'reroll-entry',
+				kind: 'reroll',
+				label: 'Pocket Sand rule',
+				itemUuid: 'Item.sand',
+				ruleId: 'reroll-1',
+				...options,
+			});
+		}
+
+		it('shows a "Reroll with" button named for the feature', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			expect(screen.getByRole('button').textContent?.trim()).toBe('Reroll with Pocket Sand');
+		});
+
+		it('asks the GM to reroll when the button is pressed', async () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+				messageId: 'message-1',
+				entryId: 'reroll-entry',
+				forceHeroicReaction: false,
+			});
+		});
+
+		it('hides the button when the feature is gone', () => {
+			(globalThis as Record<string, any>).fromUuidSync = vi.fn(() => ({
+				name: 'Brom',
+				isOwner: true,
+			}));
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			expect(screen.queryByRole('button')).toBeNull();
+		});
+
+		it('shows the history line for the last reroll', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage([rerollEntry({ used: true })], {
+						entryId: 'reroll-entry',
+						itemUuid: 'Item.sand',
+						label: 'Pocket Sand rule',
+						actorUuid: 'Actor.target',
+						previousResult: 8,
+						previousWasCritical: true,
+						newResult: 4,
+						usesLeft: 1,
+						woundsGained: 1,
+					}),
+				},
+			});
+
+			expect(screen.queryByRole('button')).toBeNull();
+			expect(screen.getByText('Rerolled with Pocket Sand: 8 (crit) became 4')).toBeTruthy();
+			expect(screen.getByText('Used by Brom - Uses left: 1 - Wounds gained: 1')).toBeTruthy();
 		});
 	});
 });

@@ -1,5 +1,8 @@
-/** When an outcome-gated offer or reroll applies, given how the attack landed. */
-export type RerollTrigger = 'always' | 'hit' | 'criticalHit';
+/**
+ * When an outcome-gated offer or reroll applies, given how the attack landed.
+ * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
+ */
+export type RerollTrigger = 'always' | 'hit' | 'criticalHit' | 'nonCriticalHit' | 'miss';
 
 /**
  * A pending interactive offer stamped onto an attack chat card. Entries are
@@ -8,7 +11,8 @@ export type RerollTrigger = 'always' | 'hit' | 'criticalHit';
  *
  * Most kinds are defender-side reactions to the attack. `spendPoolForDamage`
  * is attacker-side: the attacker spends their own dice pool into this card's
- * damage total.
+ * damage total. `reroll` comes from a Reroll rule of either the attacker or
+ * the target.
  *
  * Lives apart from `incomingAttackModifiers` so the modules that only build
  * entries (e.g. `poolSpendCardOffers`) do not have to depend on the module
@@ -16,14 +20,14 @@ export type RerollTrigger = 'always' | 'hit' | 'criticalHit';
  */
 export interface IncomingReactionEntry {
 	id: string;
-	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage';
+	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage' | 'reroll';
 	/** `baseline` = universal heroic Interpose; `rule` = granted by a rule */
 	source: 'baseline' | 'rule';
 	/** Acting actor (token-actor uuid, so unlinked tokens resolve) */
 	actorUuid: string;
 	/** Protector's token (redirect only) */
 	tokenUuid: string | null;
-	/** Token whose targeting the redirect replaces (redirect only) */
+	/** Token whose targeting the redirect replaces (redirect, and target-side rerolls) */
 	targetTokenUuid: string | null;
 	label: string;
 	ruleId: string;
@@ -47,4 +51,22 @@ export interface IncomingReactionEntry {
 	usedAmount?: number | null;
 	usedPoolLabel?: string;
 	usedFaces?: number[];
+}
+
+/**
+ * The last reroll on an attack card, for its history line. Each reroll
+ * replaces it: only the result just before the current one is shown.
+ */
+export interface LastReroll {
+	entryId: string;
+	itemUuid: string;
+	label: string;
+	/** The actor whose feature made the reroll */
+	actorUuid: string;
+	previousResult: number | null;
+	previousWasCritical: boolean;
+	newResult: number | null;
+	/** Charges left in the feature's charge pool, or null when it has none */
+	usesLeft: number | null;
+	woundsGained: number;
 }

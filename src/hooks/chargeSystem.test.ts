@@ -196,6 +196,25 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledTimes(1);
 	});
 
+	it('recovers crit charges for a crit that a reroll discarded when the reroll keeps its crit triggers', async () => {
+		const hooks = captureHooks();
+		setSpendingAutomation(true);
+		const registerChargeSystemHooks = (await import('./chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const item = createCharacterItem();
+		hooks.get('nimble.useItem')?.(item, null, {
+			isCritical: false,
+			isMiss: true,
+			discardedCritTriggers: true,
+		});
+
+		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledWith(item, {
+			isCritical: true,
+			isMiss: false,
+		});
+	});
+
 	it('skips validation and consumption but allows the use when spending automation is off', async () => {
 		const hooks = captureHooks();
 		setSpendingAutomation(false);

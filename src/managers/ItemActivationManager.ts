@@ -44,7 +44,7 @@ import {
 	computeIncomingAttackPlan,
 	type IncomingAttackPlan,
 } from '../utils/incomingAttackModifiers.js';
-import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
+import type { IncomingReactionEntry, LastReroll } from '../utils/incomingReactionEntry.js';
 import localize from '../utils/localize.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
@@ -127,6 +127,12 @@ class ItemActivationManager {
 
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
+
+	/** What an automatic reroll left for the chat card. */
+	#rerollHistory: { lastReroll: LastReroll | null; discardedCritTriggers: boolean } = {
+		lastReroll: null,
+		discardedCritTriggers: false,
+	};
 
 	#deferredPoolNodes: PoolNode[] = [];
 
@@ -338,6 +344,7 @@ class ItemActivationManager {
 			activation: this.activationData,
 			rollHidden: dialogData.rollHidden ?? false,
 			incomingReactions: this.#appliedIncomingReactions,
+			rerollHistory: this.#rerollHistory,
 		};
 	}
 
@@ -572,6 +579,10 @@ class ItemActivationManager {
 						(node as { discardedRoll?: unknown }).discardedRoll = result.discardedRoll;
 					}
 					this.#appliedIncomingReactions = result.stampEntries;
+					this.#rerollHistory = {
+						lastReroll: result.lastReroll,
+						discardedCritTriggers: result.discardedCritTriggers,
+					};
 				}
 
 				node.roll = roll.toJSON() as Record<string, unknown>;
