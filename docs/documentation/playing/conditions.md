@@ -49,7 +49,7 @@ What the system does *not* do is break concentration for you. Losing it when cri
 
 Only spells and objects carry the **Concentration** property, so a feature that holds concentration in its text, such as Shadowmancer's **Gaze of Two Minds**, is not covered. Apply and remove the condition by hand for those.
 
-Turning off **Apply Conditions and Effects from Rules** in the Automation settings turns this off with it: casting then applies nothing and ends nothing, and Concentration is yours to place by hand.
+Turning off **Feature Effects** in the Automation settings turns this off with it: casting then applies nothing and ends nothing, and Concentration is yours to place by hand.
 
 ## Custom conditions
 
@@ -69,12 +69,12 @@ Items can make a character immune to specific conditions through a condition imm
 
 Two toggles in the GM's [Automation settings](../gm/settings.md#automation) govern conditions. Both are world settings, both default to **on**, and changes take effect immediately without a reload.
 
-**Apply Conditions and Effects from Rules** controls what happens when a feature's rules say "on X, apply condition Y" (for example, a weapon that poisons on a hit):
+**Feature Effects** controls what happens when a feature's rules say "on X, apply condition Y" (for example, a weapon that poisons on a hit):
 
 - **On (the default):** when the trigger fires (damage is applied, a save is failed, a turn starts), the condition is applied to the target automatically.
 - **Off:** nothing happens automatically, but the condition still appears as a button on the chat card so the GM can apply it manually.
 
-**Derived Conditions** controls the automatic Hampered behavior described above: whether applying Dazed, Grappled, Prone, Slowed, or Restrained automatically brings Hampered along, and whether Hampered leaves when they do. The counts-as implications, Petrified carrying Incapacitated, and Wounded stacking are always active regardless of these toggles.
+**Linked Conditions** controls the automatic Hampered behavior described above: whether applying Dazed, Grappled, Prone, Slowed, or Restrained automatically brings Hampered along, and whether Hampered leaves when they do. The counts-as implications, Petrified carrying Incapacitated, and Wounded stacking are always active regardless of these toggles.
 
 ## Related pages
 

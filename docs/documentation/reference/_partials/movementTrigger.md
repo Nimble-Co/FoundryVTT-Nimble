@@ -7,7 +7,7 @@
 - **Reach** → `1`
 - **Predicate** → `{ "self:chaos-lash-useChargePool": { "min": 1 } }`
 
-With **Movement Tracking** on, and with both creatures in a started combat, each finished Movement that matches posts a card for the Mage's owner. The card names the creature that moved, shows the spaces of that Movement and the spaces it moved this turn, and has a **Use Chaos Lash** button. The button targets the creatures the card names and then uses the feature as normal, so the player can still change the targets or not use it at all. The system never uses the feature for you. The **Apply Conditions and Effects from Rules** toggle does not stop the card.
+With **Movement Count** on, and with both creatures in a started combat, each finished Movement that matches posts a card for the Mage's owner. The card names the creature that moved, shows the spaces of that Movement and the spaces it moved this turn, and has a **Use Chaos Lash** button. The button targets the creatures the card names and then uses the feature as normal, so the player can still change the targets or not use it at all. The system never uses the feature for you. The **Feature Effects** toggle does not stop the card.
 
 **Whisper the card** is set by default, so only the feature's owner and the GM see the card, because only they can use its button. Clear it to show the card to everyone. The button still shows only to the feature's owner and the GM.
 

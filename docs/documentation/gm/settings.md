@@ -8,18 +8,32 @@ You'll find the system's settings in Foundry under **Game Settings → Configure
 
 ## Automation
 
-How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with ten world toggles, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
+How much the system does on its own is controlled from one place: the **Configure Automation** button in the system settings tab (GM only). It opens a window with ten world toggles in five groups, all **on** by default, so a fresh world automates everything out of the box. Changes apply immediately; no reload is needed.
 
-- **Apply Conditions and Effects from Rules.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and timed effects end on their own. When off, conditions still appear as one-click buttons on the chat card. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
-- **Derived Conditions.** Conditions implied by other conditions are applied and removed automatically, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
-- **Resource Recovery.** Charges and dice pools refill from their recovery triggers: turn start, rests, wounds, kills, and encounter end.
-- **Resource Spending.** Mana is deducted when casting, and charges are validated and consumed on use. When off, casting and item use no longer deduct or check costs, so they must be tracked by hand. The spell upcast dialog follows the same rule: with the toggle off it lets you upcast to your highest unlocked tier regardless of the mana on your sheet.
-- **Action Tracking.** Using an item during combat spends the combatant's actions.
-- **Health-State Sync.** Bloodied is applied at half hit points and removed on recovery.
-- **Combat Convenience.** Player characters roll initiative automatically when combat starts.
-- **Movement Tracking.** The system reports each finished token move to features and, during combat, keeps count of the spaces moved this turn, so features can react, in a started combat, when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, the system counts nothing, and features that react to movement or let a creature move for free on their own post nothing. Foundry still keeps its own movement history. See [Running Combat](combat.md#movement-tracking) and [Features that react to movement](combat.md#features-that-react-to-movement).
-- **Forced Movement and Moves for Free.** When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that movement: it never draws on the creature's own speed, and the ruler shows how far it can go. Nothing stops a longer drag, there is nothing to click, and the player still picks the path and the final space. It needs Movement Tracking, because only a recorded move can update the card. When either toggle is off, the card shows the distance as text, the token is dragged as usual, and a feature that lets a creature move for free on its own, for example when a creature gains dice in a pool, posts no card. Turning either toggle on or off stops the card from watching every waiting move, and its tag then shows only the distance. See [Running Combat](combat.md#forced-movement-and-moves-for-free).
-- **Chat Notifications.** Informational messages such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements.
+**Features and Effects**
+
+- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, rerolls happen, and timed effects end on their own. Casting a Concentration spell starts Concentration. When off, the chat card shows a button for each one instead. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
+- **Linked Conditions.** A condition adds and removes the conditions that come with it, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
+
+**Resources**
+
+- **Refills.** Charges and dice pools refill at their set times: turn start, rests, wounds, kills, and encounter end.
+- **Costs.** Spells, items and rerolls spend their mana and charges, and stop when there is not enough. When off, nothing is spent or checked, so track costs by hand. The spell upcast dialog follows the same rule: with the toggle off it lets you upcast to your highest unlocked tier regardless of the mana on your sheet.
+
+**Combat**
+
+- **Action Spending.** Using an item during combat marks the combatant's actions as spent.
+- **Bloodied Status.** Bloodied is applied at half hit points or less and removed when the creature is healed above half.
+- **Initiative for Heroes.** Player characters roll initiative automatically when combat starts.
+
+**Movement**
+
+- **Movement Count.** The system reports each finished token move to features and, during combat, counts the spaces moved this turn, so features can react, in a started combat, when a creature finishes moving or moves adjacent to someone. It never moves a token and never blocks a drag. When off, the system counts nothing, and features that react to movement or let a creature move for free on their own post nothing. Foundry still keeps its own movement history. See [Running Combat](combat.md#movement-tracking) and [Features that react to movement](combat.md#features-that-react-to-movement).
+- **Pushes, Pulls and Moves for Free.** This toggle sits under Movement Count, and the window disables it while Movement Count is off. When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that move: it never draws on the creature's own speed, and the ruler shows how far it can go. Nothing stops a longer drag, there is nothing to click, and the player still picks the path and the final space. It needs Movement Count, because only a recorded move can update the card. When either toggle is off, the card shows the distance as text, the token is dragged as usual, and a feature that lets a creature move for free on its own, for example when a creature gains dice in a pool, posts no card. Turning either toggle on or off stops the card from watching every waiting move, and its tag then shows only the distance. See [Running Combat](combat.md#forced-movement-and-moves-for-free).
+
+**Chat**
+
+- **Chat Notes.** Short notes in chat, such as initiative bonus reminders, pool gain notices, and when a toggle effect such as Rage starts or ends.
 
 Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on. The Moves on the ruler are always on too, because they only show distance. See [Running Combat](combat.md#moves-on-the-ruler).
 
@@ -27,7 +41,7 @@ Some behaviors are deliberately not toggleable because removing them would break
 Toggles only stop future events. Effects that were already applied linger until removed by hand, and refills skipped while a toggle was off are not replayed when you turn it back on.
 :::
 
-Worlds upgrading from an earlier version keep their old choice: the stored value of the legacy Auto-Apply Conditions from Rules setting seeds the initial state of Apply Conditions and Effects from Rules.
+Worlds upgrading from an earlier version keep their old choice: the stored value of the legacy Auto-Apply Conditions from Rules setting seeds the initial state of Feature Effects.
 
 ## Custom conditions
 
@@ -52,7 +66,7 @@ Want the system to carry as much as possible? Leave every Automation toggle **on
 :::
 
 ::: tip A keep-it-manual table
-Prefer to stay hands-on? Open Configure Automation and turn **off** Apply Conditions and Effects from Rules (conditions become one-click suggestions on chat cards instead), plus any other family you'd rather track yourself, such as Resource Spending or Action Tracking. Leave **off** Auto-Add Character To Combat On Initiative Roll and Auto-Track Token Adjacency. Consider turning **on** Hide Rolls by Default on your own client so GM rolls stay behind the screen. The system still rolls the dice and does the math. It just asks before changing anything.
+Prefer to stay hands-on? Open Configure Automation and turn **off** Feature Effects (conditions become one-click suggestions on chat cards instead), plus any other toggle you'd rather track yourself, such as Costs or Action Spending. Leave **off** Auto-Add Character To Combat On Initiative Roll and Auto-Track Token Adjacency. Consider turning **on** Hide Rolls by Default on your own client so GM rolls stay behind the screen. The system still rolls the dice and does the math. It just asks before changing anything.
 :::
 
 ## 3D dice

@@ -3257,47 +3257,51 @@
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules (Legacy)",
-				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Apply Conditions and Effects from Rules toggle and has no other effect."
+				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Feature Effects toggle and has no other effect."
 			},
 			"applyRuleEffects": {
-				"name": "Apply Conditions and Effects from Rules",
-				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire, and put Concentration on a caster who casts a concentration spell. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+				"name": "Feature Effects",
+				"hint": "Features apply their conditions, marks and rerolls by themselves, and their effects end on time. Casting a Concentration spell starts Concentration.",
+				"off": "Off: the chat card shows a button for each one."
 			},
 			"derivedConditions": {
-				"name": "Derived Conditions",
-				"hint": "Automatically apply and remove conditions implied by other conditions, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained."
+				"name": "Linked Conditions",
+				"hint": "A condition adds and removes the conditions that come with it, such as Hampered with Dazed."
 			},
 			"resourceRecovery": {
-				"name": "Resource Recovery",
-				"hint": "Automatically refill charges and dice pools from their recovery triggers, such as turn start, rests, wounds, kills, and encounter end."
+				"name": "Refills",
+				"hint": "Charges and dice pools refill at their set times, such as a rest or the end of an encounter."
 			},
 			"resourceSpending": {
-				"name": "Resource Spending",
-				"hint": "Automatically deduct mana when casting spells and validate and consume charges when using items. When off, resource costs are not enforced and must be tracked manually."
+				"name": "Costs",
+				"hint": "Spells, items and rerolls spend their mana and charges, and stop when there is not enough.",
+				"off": "Off: nothing is spent. Track costs by hand."
 			},
 			"actionTracking": {
-				"name": "Action Tracking",
-				"hint": "Automatically spend combatant actions when items are used during combat."
+				"name": "Action Spending",
+				"hint": "Using an item in combat marks its actions as spent."
 			},
 			"healthStateSync": {
-				"name": "Health-State Sync",
-				"hint": "Automatically apply and remove the Bloodied status when a combatant drops to or recovers above half hit points. Last Stand handling is always on."
+				"name": "Bloodied Status",
+				"hint": "A creature at half HP or less gets Bloodied, and loses it when healed above half."
 			},
 			"combatConvenience": {
-				"name": "Combat Convenience",
-				"hint": "Automatically roll initiative for player characters when combat starts."
+				"name": "Initiative for Heroes",
+				"hint": "Rolls initiative for each player character when combat starts."
 			},
 			"chatNotifications": {
-				"name": "Chat Notifications",
-				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
+				"name": "Chat Notes",
+				"hint": "Short notes in chat, such as initiative reminders and when Rage starts or ends."
 			},
 			"movementOffers": {
-				"name": "Forced Movement and Moves for Free",
-				"hint": "When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
+				"name": "Pushes, Pulls and Moves for Free",
+				"hint": "A push, pull or move for free from a card makes the creature's next drag count as that move, and the ruler shows how far it can go.",
+				"off": "Off: the card shows the distance as text."
 			},
 			"movementTracking": {
-				"name": "Movement Tracking",
-				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react, in a started combat, when a creature finishes moving or moves adjacent. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history."
+				"name": "Movement Count",
+				"hint": "Counts the spaces each creature moves on its turn, so that features can react to a move.",
+				"off": "Off: movement features do nothing."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
@@ -3375,11 +3379,11 @@
 				"name": "Automation",
 				"title": "Automation",
 				"manageButton": "Configure Automation",
-				"hint": "Choose which parts of the Nimble rules the system automates for your world. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
-				"intro": "Choose which parts of the Nimble rules the system automates. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
-				"sectionRulesEffects": "Rules & Effects",
+				"intro": "Choose what the system does for you. Everything is on by default. Core rules, such as Last Stand and defeat, are always on.",
+				"sectionFeaturesEffects": "Features and Effects",
 				"sectionResources": "Resources",
 				"sectionCombat": "Combat",
+				"sectionMovement": "Movement",
 				"sectionChat": "Chat",
 				"save": "Save Automation Settings",
 				"saved": "Automation settings saved.",

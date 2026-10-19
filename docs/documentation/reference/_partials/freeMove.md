@@ -7,9 +7,9 @@
 - **Recipient** → `self`
 - **Ignores difficult terrain** → on
 
-When the trigger fires, the rule posts a small card that says why, for example "gained Fury Dice". The card title is the rule's **Label**, or the item name when the label is empty. The creature's next drag then counts as the Free Move, so it does not draw on the creature's speed for the turn. Nothing moves by itself, and the player can choose not to move. See [Forced and Free Movement](../gm/combat.md#forced-and-free-movement) for how the card follows the move and what its tag shows.
+When the trigger fires, the rule posts a small card that says why, for example "gained Fury Dice". The card title is the rule's **Label**, or the item name when the label is empty. The creature's next drag then counts as the Free Move, so it does not draw on the creature's speed for the turn. Nothing moves by itself, and the player can choose not to move. See [Forced Movement and Moves for Free](../gm/combat.md#forced-movement-and-moves-for-free) for how the card follows the move and what its tag shows.
 
-The rule posts nothing while the **Forced and Free Movement** toggle is off, or while **Movement Tracking** is off, because Forced and Free Movement needs it. The **Apply Conditions and Effects from Rules** toggle does not stop it. It also posts nothing when the distance comes to zero for every creature, for example Swift Fury with DEX 0 or less.
+The rule posts nothing while the **Pushes, Pulls and Moves for Free** toggle is off, or while **Movement Count** is off, because Pushes, Pulls and Moves for Free needs it. The **Feature Effects** toggle does not stop it. It also posts nothing when the distance comes to zero for every creature, for example Swift Fury with DEX 0 or less.
 
 **Recipient** `allies` or `selfAndAllies` gives one move to each ally within **Allies within (spaces)** of this creature, and each player moves their own token. Advance! works this way: when a Champion of the Vanguard uses Coordinated Strike, the Commander and each ally within 12 spaces can first move up to half their speed. In **Distance**, `@speed` is the speed of the creature that moves, so each creature's distance uses its own speed.
 

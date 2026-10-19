@@ -19,6 +19,14 @@
 
 	type AutomationShortKey = keyof typeof AUTOMATION_SETTING_KEYS;
 
+	interface AutomationSettingRow {
+		shortKey: AutomationShortKey;
+		/** Shows the `off` line under the hint. */
+		hasOffLine?: boolean;
+		/** Indented under this row, and disabled while this row is unchecked. */
+		child?: AutomationSettingRow;
+	}
+
 	let { dialog }: AutomationSettingsDialogProps = $props();
 
 	const t = (key: string) => localize(`NIMBLE.settings.automationMenu.${key}`);
@@ -39,20 +47,34 @@
 
 	const toggles = $state({ ...initialValues });
 
-	const sections: { legendKey: string; shortKeys: AutomationShortKey[] }[] = [
-		{ legendKey: 'sectionRulesEffects', shortKeys: ['applyRuleEffects', 'derivedConditions'] },
-		{ legendKey: 'sectionResources', shortKeys: ['resourceRecovery', 'resourceSpending'] },
+	const sections: { legendKey: string; rows: AutomationSettingRow[] }[] = [
+		{
+			legendKey: 'sectionFeaturesEffects',
+			rows: [{ shortKey: 'applyRuleEffects', hasOffLine: true }, { shortKey: 'derivedConditions' }],
+		},
+		{
+			legendKey: 'sectionResources',
+			rows: [{ shortKey: 'resourceRecovery' }, { shortKey: 'resourceSpending', hasOffLine: true }],
+		},
 		{
 			legendKey: 'sectionCombat',
-			shortKeys: [
-				'actionTracking',
-				'healthStateSync',
-				'combatConvenience',
-				'movementTracking',
-				'movementOffers',
+			rows: [
+				{ shortKey: 'actionTracking' },
+				{ shortKey: 'healthStateSync' },
+				{ shortKey: 'combatConvenience' },
 			],
 		},
-		{ legendKey: 'sectionChat', shortKeys: ['chatNotifications'] },
+		{
+			legendKey: 'sectionMovement',
+			rows: [
+				{
+					shortKey: 'movementTracking',
+					hasOffLine: true,
+					child: { shortKey: 'movementOffers', hasOffLine: true },
+				},
+			],
+		},
+		{ legendKey: 'sectionChat', rows: [{ shortKey: 'chatNotifications' }] },
 	];
 
 	async function save() {
@@ -79,6 +101,48 @@
 	}
 </script>
 
+{#snippet settingRow(row: AutomationSettingRow, disabled: boolean)}
+	{@const inputId = `nimble-automation-${row.shortKey}`}
+	{@const hintId = `${inputId}-hint`}
+	{@const offId = `${inputId}-off`}
+	<div
+		class="nimble-automation-settings__row"
+		class:nimble-automation-settings__row--disabled={disabled}
+	>
+		<div class="nimble-automation-settings__text">
+			<label class="nimble-automation-settings__label" for={inputId}>
+				{localize(`NIMBLE.settings.${row.shortKey}.name`)}
+			</label>
+			<p id={hintId} class="nimble-automation-settings__hint">
+				{localize(`NIMBLE.settings.${row.shortKey}.hint`)}
+			</p>
+			{#if row.hasOffLine}
+				<p id={offId} class="nimble-automation-settings__off">
+					{localize(`NIMBLE.settings.${row.shortKey}.off`)}
+				</p>
+			{/if}
+		</div>
+
+		<input
+			id={inputId}
+			class="nimble-automation-settings__checkbox"
+			type="checkbox"
+			aria-describedby={row.hasOffLine ? `${hintId} ${offId}` : hintId}
+			checked={toggles[row.shortKey]}
+			{disabled}
+			onchange={({ currentTarget }) => {
+				toggles[row.shortKey] = currentTarget.checked;
+			}}
+		/>
+	</div>
+
+	{#if row.child}
+		<div class="nimble-automation-settings__child">
+			{@render settingRow(row.child, disabled || !toggles[row.shortKey])}
+		</div>
+	{/if}
+{/snippet}
+
 <article class="nimble-sheet__body nimble-automation-settings">
 	<p class="nimble-automation-settings__intro">{t('intro')}</p>
 
@@ -86,32 +150,9 @@
 		<fieldset class="nimble-automation-settings__section">
 			<legend class="nimble-automation-settings__section-title">{t(section.legendKey)}</legend>
 
-			<div class="nimble-automation-settings__rows">
-				{#each section.shortKeys as shortKey (shortKey)}
-					<div class="nimble-automation-settings__row">
-						<div class="nimble-automation-settings__text">
-							<label
-								class="nimble-automation-settings__label"
-								for={`nimble-automation-${shortKey}`}
-							>
-								{localize(`NIMBLE.settings.${shortKey}.name`)}
-							</label>
-							<p class="nimble-automation-settings__hint">
-								{localize(`NIMBLE.settings.${shortKey}.hint`)}
-							</p>
-						</div>
-
-						<input
-							id={`nimble-automation-${shortKey}`}
-							type="checkbox"
-							checked={toggles[shortKey]}
-							onchange={({ currentTarget }) => {
-								toggles[shortKey] = currentTarget.checked;
-							}}
-						/>
-					</div>
-				{/each}
-			</div>
+			{#each section.rows as row (row.shortKey)}
+				{@render settingRow(row, false)}
+			{/each}
 		</fieldset>
 	{/each}
 </article>
@@ -127,13 +168,13 @@
 		--nimble-sheet-body-padding-block-start: 0.5rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0.625rem;
 
 		&__intro {
 			margin: 0;
 			font-size: var(--nimble-sm-text);
 			line-height: 1.4;
-			color: var(--nimble-medium-text-color);
+			color: var(--nimble-dark-text-color);
 		}
 
 		&__section {
@@ -141,40 +182,52 @@
 			min-width: 0;
 			display: flex;
 			flex-direction: column;
-			gap: 0.5rem;
-			padding: 0.625rem;
+			padding: 0.25rem 0.625rem 0.375rem;
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 6px;
+			border-radius: 4px;
 		}
 
 		&__section-title {
-			margin-inline-start: 0.3rem;
-			padding-inline: 0.3rem;
-			font-size: var(--nimble-sm-text);
+			padding-inline: 0.25rem;
+			font-size: var(--nimble-xs-text);
 			line-height: 1;
-			font-weight: 700;
+			font-weight: 900;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
 			color: var(--nimble-dark-text-color);
-		}
-
-		&__rows {
-			display: flex;
-			flex-direction: column;
-			gap: 0.625rem;
 		}
 
 		&__row {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: start;
-			gap: 0.75rem;
+			align-items: center;
+			gap: 0.625rem;
+			padding-block: 0.375rem;
+		}
+
+		&__row + &__row,
+		&__row + &__child,
+		&__child + &__row {
+			border-block-start: 1px solid var(--nimble-card-border-color);
+		}
+
+		&__row--disabled &__text {
+			opacity: 0.6;
+		}
+
+		&__child {
+			margin-inline-start: 0.875rem;
+			padding-inline-start: 0.625rem;
+			border-inline-start: 2px solid var(--nimble-card-border-color);
 		}
 
 		&__text {
 			display: flex;
 			flex-direction: column;
-			gap: 0.1875rem;
+			gap: 0.125rem;
 			min-width: 0;
+			overflow-wrap: anywhere;
 		}
 
 		&__label {
@@ -183,11 +236,23 @@
 			color: var(--nimble-dark-text-color);
 		}
 
-		&__hint {
+		&__hint,
+		&__off {
 			margin: 0;
 			font-size: var(--nimble-xs-text);
 			line-height: 1.4;
+		}
+
+		&__hint {
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__off {
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__checkbox {
+			margin: 0;
 		}
 	}
 
