@@ -211,7 +211,16 @@
 				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
 				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
-				"useFailed": "That reaction could not be completed."
+				"useFailed": "That reaction could not be completed.",
+				"rerollWith": "Reroll with {feature}",
+				"rerollHistory": "Rerolled with {feature}: {previous} became {next}",
+				"rerollHistoryFromCrit": "Rerolled with {feature}: {previous} (crit) became {next}",
+				"rerollHistoryPlain": "Rerolled with {feature}",
+				"rerollUsedBy": "Used by {name}",
+				"rerollUsesLeft": "Uses left: {count}",
+				"rerollWoundsGained": "Wounds gained: {count}",
+				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
+				"rerollCostUnpaid": "The cost of this reroll could not be paid."
 			}
 		},
 		"characterCreationStages": {
@@ -988,7 +997,8 @@
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
-			"unarmedDamage": "Unarmed Damage"
+			"unarmedDamage": "Unarmed Damage",
+			"reroll": "Reroll"
 		},
 		"rules": {
 			"abilityBonus": {
@@ -1818,6 +1828,91 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"reroll": {
+				"description": "Lets the one who rolled, or the target, roll an attack again. The new result stands.",
+				"rolls": {
+					"label": "Which roll can be rerolled?",
+					"hint": "The kind of roll this feature rerolls.",
+					"choices": {
+						"attack": "Attack"
+					}
+				},
+				"usedBy": {
+					"label": "Who can use it?",
+					"hint": "The one who made the attack, or the creature the attack is against.",
+					"choices": {
+						"roller": "The one who rolled",
+						"target": "The target"
+					}
+				},
+				"outcome": {
+					"label": "When can it be used?",
+					"hint": "The result the first roll must have. A hit includes a crit.",
+					"choices": {
+						"always": "Any result",
+						"hit": "A hit",
+						"criticalHit": "A crit",
+						"nonCriticalHit": "A hit that is not a crit",
+						"miss": "A miss"
+					}
+				},
+				"attackDelivery": {
+					"label": "Which attacks?",
+					"hint": "Melee attacks, ranged attacks, or both.",
+					"choices": {
+						"any": "Any attack",
+						"melee": "Melee attacks",
+						"ranged": "Ranged attacks"
+					}
+				},
+				"automatic": {
+					"label": "Reroll by itself?",
+					"hint": "Reroll as soon as the roll is made, with no button. Use this only when the feature gives no choice. With Feature Effects off in Automation, a button shows instead."
+				},
+				"discardedCritTriggers": {
+					"label": "Does a rerolled crit still count for when-crit features?",
+					"hint": "When the first roll was a crit, features that react to a crit still react, as if the crit landed. Damage and effects follow the new roll."
+				},
+				"rollModeChange": {
+					"label": "Change to the new roll's advantage",
+					"hint": "-1 rolls the new roll with one more disadvantage, 1 with one more advantage, 0 changes nothing. Added to what the first roll had."
+				},
+				"primaryDieBonus": {
+					"label": "Add to the Primary Die",
+					"hint": "A number added to the Primary Die of the new roll, on top of what the first roll added."
+				},
+				"extraDamage": {
+					"label": "Extra damage",
+					"hint": "A formula added to the damage of the new roll, such as 1d6 or @level. References read the owner of this feature."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool it uses",
+					"hint": "The charge pool that limits how often this feature can be used. Leave empty for no limit. The button does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"label": "Charges per use",
+					"hint": "How many charges one reroll takes from the pool."
+				},
+				"manaCost": {
+					"label": "Mana per use",
+					"hint": "Mana one reroll costs. 0 is free."
+				},
+				"woundCost": {
+					"label": "Wounds gained per use",
+					"hint": "Wounds the user gains when they use this feature. 0 is none."
+				},
+				"heroicReaction": {
+					"label": "Heroic reaction it uses",
+					"hint": "A heroic reaction this feature spends in combat. Out of combat it costs nothing.",
+					"choices": {
+						"none": "None",
+						"defend": "Defend",
+						"interpose": "Interpose",
+						"opportunityAttack": "Opportunity Attack",
+						"help": "Help"
+					}
 				}
 			}
 		},

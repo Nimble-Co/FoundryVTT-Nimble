@@ -38,6 +38,8 @@ type IncomingReactionRequest = {
 	userId: string;
 	/** spendPoolForDamage only */
 	selection?: PoolSpendSelection;
+	/** reroll only: the player confirmed using a heroic reaction already spent */
+	forceHeroicReaction?: boolean;
 };
 
 /** Why the GM refused, as a localization key the asking client renders. */
@@ -69,6 +71,12 @@ interface ReactionCapableMessage {
 		selection: PoolSpendSelection,
 		viaSocket?: boolean,
 	) => Promise<void>;
+	resolveRerollReaction?: (
+		entryId: string,
+		requestingUserId: string,
+		viaSocket?: boolean,
+		forceHeroicReaction?: boolean,
+	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
 }
 
@@ -83,6 +91,7 @@ async function executeIncomingReaction(
 	requestingUserId: string,
 	viaSocket: boolean,
 	selection?: PoolSpendSelection,
+	forceHeroicReaction?: boolean,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -100,6 +109,13 @@ async function executeIncomingReaction(
 	} else if (entry.kind === 'spendPoolForDamage') {
 		if (!selection) return;
 		await message.resolveSpendPoolForDamageOffer?.(entryId, requestingUserId, selection, viaSocket);
+	} else if (entry.kind === 'reroll') {
+		await message.resolveRerollReaction?.(
+			entryId,
+			requestingUserId,
+			viaSocket,
+			forceHeroicReaction === true,
+		);
 	}
 }
 
@@ -118,6 +134,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		request.userId,
 		true,
 		request.selection,
+		request.forceHeroicReaction === true,
 	);
 }
 
@@ -196,6 +213,7 @@ export async function requestIncomingAttackReaction(params: {
 	messageId: string;
 	entryId: string;
 	selection?: PoolSpendSelection;
+	forceHeroicReaction?: boolean;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
 
@@ -206,6 +224,7 @@ export async function requestIncomingAttackReaction(params: {
 			game.user.id,
 			false,
 			params.selection,
+			params.forceHeroicReaction,
 		);
 		return true;
 	}
@@ -225,6 +244,7 @@ export async function requestIncomingAttackReaction(params: {
 		entryId: params.entryId,
 		userId: game.user.id,
 		...(params.selection ? { selection: params.selection } : {}),
+		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
 	});
 	return true;
 }

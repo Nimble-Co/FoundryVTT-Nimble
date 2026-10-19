@@ -66,6 +66,21 @@ describe('registerAttackedTriggerHooks', () => {
 		expect(applyRefillToActorIfEligible).not.toHaveBeenCalledWith(target, 'onCritReceived');
 	});
 
+	it('fires onCritReceived for a crit that a reroll discarded when the reroll keeps its crit triggers', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const { registerAttackedTriggerHooks } = await import('./attackedTrigger.js');
+		registerAttackedTriggerHooks();
+
+		const target = { id: 'hero', type: 'character' } as unknown as Actor.Implementation;
+		callbacks.get('nimble.damageApplied')?.({
+			targetActor: target,
+			isCritical: false,
+			discardedCritTriggers: true,
+		});
+
+		expect(applyRefillToActorIfEligible).toHaveBeenCalledWith(target, 'onCritReceived');
+	});
+
 	it('fires onCritReceived in addition to onAttacked for a critical hit', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const { registerAttackedTriggerHooks } = await import('./attackedTrigger.js');

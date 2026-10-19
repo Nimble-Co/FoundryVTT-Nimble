@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rerollOptions } from './rerollOptions.js';
+import { prepareReroll, rerollOptions } from './rerollOptions.js';
 
 describe('rerollOptions', () => {
 	it('drops the set primary die value and computed values', () => {
@@ -31,5 +31,53 @@ describe('rerollOptions', () => {
 
 	it('returns empty options for missing options', () => {
 		expect(rerollOptions(undefined)).toEqual({});
+	});
+});
+
+describe('prepareReroll', () => {
+	it('keeps the formula and drops results when there are no changes', () => {
+		expect(prepareReroll('1d8 + 2', { primaryDieValue: 5, rollMode: 1 })).toEqual({
+			formula: '1d8 + 2',
+			options: { rollMode: 1 },
+		});
+	});
+
+	it('adds the roll mode change to the first roll sources', () => {
+		const { options } = prepareReroll(
+			'1d8',
+			{ rollMode: 1, rollModeSources: [1, -1], netRollMode: 0 },
+			{ rollModeChange: -1 },
+		);
+		expect(options.rollModeSources).toEqual([1, -1, -1]);
+		expect(options).not.toHaveProperty('netRollMode');
+	});
+
+	it('starts the sources from the roll mode when the first roll had none', () => {
+		const { options } = prepareReroll('1d8', { rollMode: 1 }, { rollModeChange: 1 });
+		expect(options.rollModeSources).toEqual([1, 1]);
+	});
+
+	it('adds to the primary die modifier the first roll had', () => {
+		const { options } = prepareReroll(
+			'1d8',
+			{ primaryDieModifier: 2, primaryDieValue: 8 },
+			{ primaryDieBonus: 1 },
+		);
+		expect(options.primaryDieModifier).toBe(3);
+		expect(options).not.toHaveProperty('primaryDieValue');
+	});
+
+	it('adds the extra damage to the formula', () => {
+		expect(prepareReroll('1d8 + 2', {}, { extraDamage: ' 1d6 ' }).formula).toBe('1d8 + 2 + (1d6)');
+	});
+
+	it('ignores an empty extra damage and a zero change', () => {
+		expect(
+			prepareReroll(
+				'1d8',
+				{ rollMode: 0 },
+				{ extraDamage: '  ', rollModeChange: 0, primaryDieBonus: 0 },
+			),
+		).toEqual({ formula: '1d8', options: { rollMode: 0 } });
 	});
 });

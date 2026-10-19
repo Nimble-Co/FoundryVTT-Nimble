@@ -16,22 +16,53 @@ function findPool(actor: Actor | null | undefined, identifier: string) {
  * unlimited. Pools exist on character actors only, so any other actor fails.
  * With resource spending automation off the pool is not a limit.
  */
-export function hasRuleCharge(actor: Actor | null | undefined, identifier: string): boolean {
+export function hasRuleCharge(
+	actor: Actor | null | undefined,
+	identifier: string,
+	amount = 1,
+): boolean {
 	const id = identifier.trim();
 	if (!id || !isResourceSpendingAutomationEnabled()) return true;
-	return (findPool(actor, id)?.pool.current ?? 0) >= 1;
+	return (findPool(actor, id)?.pool.current ?? 0) >= amount;
 }
 
-/** Spends one charge for a rule that fired. No-op when `hasRuleCharge` would not limit it. */
+/**
+ * Spends charges for a rule that fired. No-op when `hasRuleCharge` would not
+ * limit it. Resolves false when the pool is missing or holds too few charges.
+ */
 export async function spendRuleCharge(
 	actor: Actor | null | undefined,
 	identifier: string,
-): Promise<void> {
+	amount = 1,
+): Promise<boolean> {
 	const id = identifier.trim();
-	if (!id || !isResourceSpendingAutomationEnabled()) return;
+	if (!id || !isResourceSpendingAutomationEnabled()) return true;
 	const entry = findPool(actor, id);
-	if (!entry || entry.pool.current < 1) return;
-	await adjustPool(actor, entry.key, 'set', entry.pool.current - 1);
+	if (!entry || entry.pool.current < amount) return false;
+	return adjustPool(actor, entry.key, 'set', entry.pool.current - amount);
+}
+
+/** Gives back charges a rule spent, capped at the pool's maximum. */
+export async function refundRuleCharge(
+	actor: Actor | null | undefined,
+	identifier: string,
+	amount: number,
+): Promise<boolean> {
+	const id = identifier.trim();
+	if (!id || amount < 1) return false;
+	const entry = findPool(actor, id);
+	if (!entry) return false;
+	return adjustPool(actor, entry.key, 'add', amount);
+}
+
+/** Charges left in a rule's pool, or null when the rule names no pool that exists. */
+export function ruleChargesLeft(
+	actor: Actor | null | undefined,
+	identifier: string,
+): number | null {
+	const id = identifier.trim();
+	if (!id) return null;
+	return findPool(actor, id)?.pool.current ?? null;
 }
 
 const pending = new WeakMap<object, Map<string, Promise<void>>>();

@@ -72,6 +72,9 @@ interface ItemUsedContext {
 	card: ChatMessage | null;
 	isCritical: boolean;
 	isMiss: boolean;
+	// A reroll discarded a crit and its rule keeps the crit's triggers. Read
+	// through `firesCritTriggers`; damage and effects follow `isCritical`.
+	discardedCritTriggers?: boolean;
 }
 
 // Context passed to getActivationCardNodes when a chat card renders.

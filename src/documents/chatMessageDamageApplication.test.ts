@@ -245,6 +245,20 @@ describe('NimbleChatMessage.applyAllDamage', () => {
 		expect(damageAppliedCalls).toHaveLength(1);
 	});
 
+	it('tells damageApplied that a discarded crit still triggers when-crit abilities', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue({ actor });
+		const card = createCard([{ damageType: 'slashing', total: 7 }]);
+		(card.system as unknown as { discardedCritTriggers: boolean }).discardedCritTriggers = true;
+
+		await card.applyAllDamage();
+
+		const payload = globals().Hooks.callAll.mock.calls.find(
+			([hook]) => hook === systemHookName('damageApplied'),
+		)?.[1];
+		expect(payload).toMatchObject({ isCritical: false, discardedCritTriggers: true });
+	});
+
 	it('reports a kill once when neither packet would drop the target alone', async () => {
 		const actor = createTarget({ hp: 10 });
 		globals().fromUuidSync.mockReturnValue({ actor });

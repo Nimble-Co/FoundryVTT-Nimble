@@ -231,6 +231,25 @@ describe('ruleEventDispatch', () => {
 			expect(ctx).toMatchObject({ isCritical: true, sourceActor, targetActor });
 		});
 
+		it('passes on that a discarded crit still triggers when-crit abilities', async () => {
+			const targetRule = createMockRule();
+			const handler = handlers.get('nimble.damageApplied');
+			handler?.({
+				sourceItem: { name: 'Club' },
+				sourceActor: { rules: [] },
+				targetActor: { rules: [targetRule] },
+				card: null,
+				isCritical: false,
+				isMiss: false,
+				discardedCritTriggers: true,
+			});
+			await Promise.resolve();
+			await Promise.resolve();
+
+			const ctx = targetRule.onAttackReceived.mock.calls[0]?.[0];
+			expect(ctx).toMatchObject({ isCritical: false, discardedCritTriggers: true });
+		});
+
 		it('no-ops when sourceActor or targetActor is missing', async () => {
 			const handler = handlers.get('nimble.damageApplied');
 			expect(() =>
