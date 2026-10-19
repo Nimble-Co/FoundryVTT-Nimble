@@ -166,7 +166,11 @@ describe('inline rolls and save enrichers', () => {
 		await actor.sheet.render(true);
 		await waitFor(() => !!actor.sheet.element?.querySelector('a.inline-roll'), 'inline roll link');
 
-		await actor.update({ 'system.details.level': '7' });
+		await (
+			actor as unknown as { update(changes: Record<string, unknown>): Promise<unknown> }
+		).update({
+			'system.details.level': '7',
+		});
 		await settle(500);
 
 		const result = await clickInlineRoll(() => actor.sheet.element);
