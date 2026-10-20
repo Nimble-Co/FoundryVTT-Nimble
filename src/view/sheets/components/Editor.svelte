@@ -226,33 +226,33 @@
 		position: relative;
 		height: 100%;
 		display: block;
+
+		:global(prose-mirror) {
+			height: 100%;
+			display: block;
+		}
+
+		:global(.editor-container) {
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+		}
+
+		:global(.editor-content) {
+			height: 100%;
+			overflow-y: auto;
+			flex: 1;
+			padding-bottom: 1rem !important;
+		}
+
+		:global(.editor-menu) {
+			flex-shrink: 0;
+		}
 	}
 
 	.nimble-editor-wrapper {
 		height: 100%;
 		display: block;
-	}
-
-	:global(prose-mirror) {
-		height: 100%;
-		display: block;
-	}
-
-	:global(.editor-container) {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	:global(.editor-content) {
-		height: 100%;
-		overflow-y: auto;
-		flex: 1;
-		padding-bottom: 1rem !important;
-	}
-
-	:global(.editor-menu) {
-		flex-shrink: 0;
 	}
 
 	.nimble-editor-empty-state {
