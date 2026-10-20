@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IncomingReactionEntry } from './incomingReactionEntry.js';
-import { collectRerollEntries, findRerollRule, type RerollRuleLike } from './rerollEntries.js';
+import type { IncomingReactionEntry, RerollSide, RerollTrigger } from './incomingReactionEntry.js';
+import {
+	canPayForRerollEntry,
+	collectRerollEntries,
+	findRerollRule,
+	type RerollingActor,
+	type RerollRollContext,
+	type RerollRuleLike,
+	rerollEntryStands,
+	usableRerollEntry,
+} from './rerollEntries.js';
 
 const testGlobals = globalThis as unknown as {
 	game: { settings?: { get: (scope: string, key: string) => unknown } };
@@ -19,22 +28,42 @@ const FREE = {
 	heroicReaction: '' as const,
 };
 
-function rerollRule(overrides: Partial<RerollRuleLike> = {}): RerollRuleLike {
+const TOKEN = 'Scene.s.Token.t';
+const OTHER_TOKEN = 'Scene.s.Token.other';
+const CRIT = { isCritical: true, isMiss: false };
+const HIT = { isCritical: false, isMiss: false };
+const MISS = { isCritical: false, isMiss: true };
+
+/** A rule that offers to the side it is used by, on any delivery. */
+function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide } = {}) {
+	const { usedBy = 'target', ...rest } = overrides;
 	return {
 		type: 'reroll',
 		id: 'rule-1',
 		label: '',
-		item: { name: 'Pocket Sand', uuid: 'Actor.hero.Item.sand' },
-		outcome: 'always',
+		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
+		outcome: 'always' as RerollTrigger,
 		automatic: false,
 		rerollCost: FREE,
-		offersRerollOn: () => true,
+		offersRerollOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
+		...rest,
+	} satisfies RerollRuleLike;
+}
+
+function actor(uuid: string, rules: RerollRuleLike[] = [], extra: Partial<RerollingActor> = {}) {
+	return { uuid, rules, ...extra };
+}
+
+function context(overrides: Partial<RerollRollContext> = {}): RerollRollContext {
+	return {
+		attacker: actor('Actor.attacker'),
+		targets: [{ tokenUuid: TOKEN, actor: actor('Actor.target') }],
+		delivery: 'melee',
+		outcome: null,
+		forcedMiss: false,
 		...overrides,
 	};
 }
-
-const ROLLER = { side: 'roller', delivery: 'melee', targetTokenUuid: null } as const;
-const TARGET = { side: 'target', delivery: 'melee', targetTokenUuid: 'Scene.s.Token.t' } as const;
 
 describe('collectRerollEntries', () => {
 	beforeEach(() => setToggles({}));
@@ -43,10 +72,9 @@ describe('collectRerollEntries', () => {
 	});
 
 	it('builds a button entry per rule that offers on this side', () => {
-		const offersRerollOn = vi.fn(() => true);
+		const rule = rerollRule({ usedBy: 'roller', outcome: 'miss' });
 		const { manual, automatic } = collectRerollEntries(
-			{ uuid: 'Actor.hero', rules: [rerollRule({ outcome: 'miss', offersRerollOn })] },
-			ROLLER,
+			context({ attacker: actor('Actor.hero', [rule]) }),
 		);
 
 		expect(automatic).toEqual([]);
@@ -57,49 +85,142 @@ describe('collectRerollEntries', () => {
 				actorUuid: 'Actor.hero',
 				tokenUuid: null,
 				targetTokenUuid: null,
+				side: 'roller',
 				label: 'Pocket Sand',
 				ruleId: 'rule-1',
-				itemUuid: 'Actor.hero.Item.sand',
+				itemUuid: 'Item.sand',
 				used: false,
 				outcomeTrigger: 'miss',
 			}),
 		]);
-		expect(offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
 	});
 
 	it('ties a target entry to the attack target token', () => {
-		const { manual } = collectRerollEntries({ uuid: 'Actor.t', rules: [rerollRule()] }, TARGET);
-		expect(manual[0]?.targetTokenUuid).toBe('Scene.s.Token.t');
+		const rule = rerollRule();
+		const { manual } = collectRerollEntries(
+			context({ targets: [{ tokenUuid: TOKEN, actor: actor('Actor.t', [rule]) }] }),
+		);
+		expect(manual[0]).toMatchObject({
+			side: 'target',
+			targetTokenUuid: TOKEN,
+			actorUuid: 'Actor.t',
+		});
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+	});
+
+	type Case = [string, Partial<RerollRollContext>, RerollTrigger, string[]];
+	const rollerRule = rerollRule({ id: 'roller', usedBy: 'roller' });
+	const targetRule = rerollRule({ id: 'target' });
+	const both = (rules: { roller?: RerollRuleLike[]; target?: RerollRuleLike[] }) => ({
+		attacker: actor('Actor.attacker', rules.roller ?? []),
+		targets: [{ tokenUuid: TOKEN, actor: actor('Actor.target', rules.target ?? []) }],
+	});
+
+	it.each<Case>([
+		[
+			'offers each side its own rules',
+			both({ roller: [rollerRule], target: [targetRule] }),
+			'always',
+			['roller', 'target'],
+		],
+		[
+			'offers nothing on a forced miss',
+			{ ...both({ roller: [rollerRule], target: [targetRule] }), forcedMiss: true },
+			'always',
+			[],
+		],
+		[
+			'does not offer a rule to the other side',
+			both({ roller: [targetRule], target: [rollerRule] }),
+			'always',
+			[],
+		],
+		[
+			'offers before the roll whatever the outcome it names',
+			{ ...both({ target: [targetRule] }), outcome: null },
+			'criticalHit',
+			['target'],
+		],
+		[
+			'offers on a roll that matches the outcome',
+			{ ...both({ target: [targetRule] }), outcome: CRIT },
+			'criticalHit',
+			['target'],
+		],
+		[
+			'does not offer on a roll that does not match the outcome',
+			{ ...both({ target: [targetRule] }), outcome: HIT },
+			'criticalHit',
+			[],
+		],
+		[
+			'offers a miss rule on a miss',
+			{ ...both({ target: [targetRule] }), outcome: MISS },
+			'miss',
+			['target'],
+		],
+		[
+			'takes rules from the first target only',
+			{
+				targets: [
+					{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.other') },
+					{ tokenUuid: TOKEN, actor: actor('Actor.target', [targetRule]) },
+				],
+			},
+			'always',
+			[],
+		],
+		[
+			'offers nothing without a target',
+			{ attacker: actor('Actor.attacker'), targets: [] },
+			'always',
+			[],
+		],
+	])('%s', (_name, overrides, outcome, expected) => {
+		for (const rule of [rollerRule, targetRule]) rule.outcome = outcome;
+		const { manual } = collectRerollEntries(context(overrides));
+		expect(manual.map((entry) => entry.ruleId)).toEqual(expected);
 	});
 
 	it('skips rules that do not offer, and rules of another type', () => {
 		const { manual } = collectRerollEntries(
-			{
-				uuid: 'Actor.hero',
-				rules: [rerollRule({ offersRerollOn: () => false }), { type: 'modifyIncomingAttack' }],
-			},
-			ROLLER,
+			context({
+				attacker: actor('Actor.hero', [
+					rerollRule({ usedBy: 'roller', offersRerollOn: () => false }),
+					{ type: 'modifyIncomingAttack' },
+				]),
+			}),
 		);
 		expect(manual).toEqual([]);
 	});
 
 	it('gives two rules two entries', () => {
 		const { manual } = collectRerollEntries(
-			{ uuid: 'Actor.hero', rules: [rerollRule({ id: 'a' }), rerollRule({ id: 'b' })] },
-			ROLLER,
+			context({
+				attacker: actor('Actor.hero', [
+					rerollRule({ id: 'a', usedBy: 'roller' }),
+					rerollRule({ id: 'b', usedBy: 'roller' }),
+				]),
+			}),
 		);
 		expect(manual.map((entry) => entry.ruleId)).toEqual(['a', 'b']);
 		expect(new Set(manual.map((entry) => entry.id)).size).toBe(2);
 	});
 
 	it('returns nothing for a missing actor or an actor without a uuid', () => {
-		expect(collectRerollEntries(null, ROLLER).manual).toEqual([]);
-		expect(collectRerollEntries({ rules: [rerollRule()] }, ROLLER).manual).toEqual([]);
+		const rule = rerollRule({ usedBy: 'roller' });
+		expect(collectRerollEntries(context({ attacker: null })).manual).toEqual([]);
+		expect(collectRerollEntries(context({ attacker: { rules: [rule] } })).manual).toEqual([]);
 	});
+
+	function targetOnly(rule: RerollRuleLike, extra: Partial<RerollingActor> = {}) {
+		return context({ targets: [{ tokenUuid: TOKEN, actor: actor('Actor.t', [rule], extra) }] });
+	}
 
 	it('rerolls by itself when the rule is automatic and Feature Effects is on', () => {
 		const rule = rerollRule({ automatic: true });
-		const { manual, automatic } = collectRerollEntries({ uuid: 'Actor.t', rules: [rule] }, TARGET);
+		const { manual, automatic } = collectRerollEntries(targetOnly(rule));
 		expect(manual).toEqual([]);
 		expect(automatic).toHaveLength(1);
 		expect(automatic[0]?.rule).toBe(rule);
@@ -107,10 +228,7 @@ describe('collectRerollEntries', () => {
 
 	it('shows an automatic rule as a button while Feature Effects is off', () => {
 		setToggles({ 'automation.applyRuleEffects': false });
-		const { manual, automatic } = collectRerollEntries(
-			{ uuid: 'Actor.t', rules: [rerollRule({ automatic: true })] },
-			TARGET,
-		);
+		const { manual, automatic } = collectRerollEntries(targetOnly(rerollRule({ automatic: true })));
 		expect(automatic).toEqual([]);
 		expect(manual).toHaveLength(1);
 	});
@@ -120,11 +238,8 @@ describe('collectRerollEntries', () => {
 			automatic: true,
 			rerollCost: { ...FREE, chargePoolIdentifier: 'sand' },
 		});
-		const notOwner = collectRerollEntries(
-			{ uuid: 'Actor.t', isOwner: false, rules: [rule] },
-			TARGET,
-		);
-		const owner = collectRerollEntries({ uuid: 'Actor.t', isOwner: true, rules: [rule] }, TARGET);
+		const notOwner = collectRerollEntries(targetOnly(rule, { isOwner: false }));
+		const owner = collectRerollEntries(targetOnly(rule, { isOwner: true }));
 
 		expect(notOwner.manual).toHaveLength(1);
 		expect(owner.automatic).toHaveLength(1);
@@ -133,11 +248,230 @@ describe('collectRerollEntries', () => {
 	it('lets any client roll an automatic rule whose cost charges nothing', () => {
 		setToggles({ 'automation.resourceSpending': false });
 		const rule = rerollRule({ automatic: true, rerollCost: { ...FREE, woundCost: 1 } });
-		const { automatic } = collectRerollEntries(
-			{ uuid: 'Actor.t', isOwner: false, rules: [rule] },
-			TARGET,
-		);
+		const { automatic } = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		expect(automatic).toHaveLength(1);
+	});
+});
+
+describe('rerollEntryStands', () => {
+	const entry = (outcomeTrigger: RerollTrigger | null | undefined) =>
+		({ kind: 'reroll', outcomeTrigger }) as IncomingReactionEntry;
+
+	it.each<[RerollTrigger | null | undefined, boolean, boolean, boolean]>([
+		['always', true, true, true],
+		[null, true, true, true],
+		[undefined, true, true, true],
+		['hit', true, true, false],
+		['criticalHit', true, false, false],
+		['nonCriticalHit', false, true, false],
+		['miss', false, false, true],
+	])('a %s entry stands on crit %s, hit %s, miss %s', (trigger, onCrit, onHit, onMiss) => {
+		const stands = (outcome: typeof HIT) =>
+			rerollEntryStands(entry(trigger), { outcome, forcedMiss: false });
+		expect([stands(CRIT), stands(HIT), stands(MISS)]).toEqual([onCrit, onHit, onMiss]);
+	});
+
+	it('stands before the roll is made', () => {
+		expect(rerollEntryStands(entry('criticalHit'), { outcome: null, forcedMiss: false })).toBe(
+			true,
+		);
+	});
+
+	it('never stands on a forced miss', () => {
+		expect(rerollEntryStands(entry('miss'), { outcome: MISS, forcedMiss: true })).toBe(false);
+		expect(rerollEntryStands(entry('always'), { outcome: null, forcedMiss: true })).toBe(false);
+	});
+});
+
+describe('usableRerollEntry', () => {
+	const attacker = actor('Actor.attacker');
+	const target = actor('Actor.target');
+	let rule: ReturnType<typeof rerollRule>;
+
+	function useWorld(live: RerollRuleLike | null = rule): void {
+		const byUuid: Record<string, unknown> = {
+			'Actor.attacker': attacker,
+			'Actor.target': target,
+			'Item.sand': live ? { rules: new Map([[live.id ?? '', live]]) } : null,
+		};
+		testGlobals.fromUuidSync = vi.fn((uuid: string) => byUuid[uuid] ?? null);
+	}
+
+	function entry(overrides: Partial<IncomingReactionEntry> = {}): IncomingReactionEntry {
+		return {
+			id: 'entry-1',
+			kind: 'reroll',
+			source: 'rule',
+			actorUuid: 'Actor.target',
+			tokenUuid: null,
+			targetTokenUuid: TOKEN,
+			side: 'target',
+			label: 'Pocket Sand',
+			ruleId: 'rule-1',
+			itemUuid: 'Item.sand',
+			used: false,
+			outcomeTrigger: 'always',
+			...overrides,
+		};
+	}
+
+	const roller = { actorUuid: 'Actor.attacker', targetTokenUuid: null, side: 'roller' as const };
+	const card = (overrides: Partial<RerollRollContext> = {}) =>
+		context({
+			attacker,
+			targets: [{ tokenUuid: TOKEN, actor: target }],
+			outcome: HIT,
+			...overrides,
+		});
+
+	beforeEach(() => {
+		rule = rerollRule();
+		useWorld();
+	});
+
+	afterEach(() => {
+		testGlobals.fromUuidSync = vi.fn();
+	});
+
+	it('gives the live rule and actor for an entry that can be used', () => {
+		expect(usableRerollEntry(entry(), card())).toEqual({ ok: true, rule, actor: target });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+	});
+
+	it('lets the attacker use a roller entry', () => {
+		rule = rerollRule({ usedBy: 'roller' });
+		useWorld();
+		expect(usableRerollEntry(entry(roller), card())).toMatchObject({ ok: true, actor: attacker });
+	});
+
+	it('lets a target entry be used while its token is any of the targets', () => {
+		const targets = [
+			{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.other') },
+			{ tokenUuid: TOKEN, actor: target },
+		];
+		expect(usableRerollEntry(entry(), card({ targets }))).toMatchObject({ ok: true });
+	});
+
+	type Refusal = [string, () => IncomingReactionEntry, () => RerollRollContext, string];
+	it.each<Refusal>([
+		['an entry with no side', () => entry({ side: undefined }), () => card(), 'unavailable'],
+		[
+			'a roller entry of anyone but the attacker',
+			() => entry({ ...roller, actorUuid: 'Actor.target' }),
+			() => card(),
+			'unavailable',
+		],
+		[
+			'a target entry once its token is no longer a target',
+			() => entry(),
+			() => card({ targets: [{ tokenUuid: OTHER_TOKEN, actor: target }] }),
+			'unavailable',
+		],
+		[
+			'a target entry whose token now holds another actor',
+			() => entry(),
+			() => card({ targets: [{ tokenUuid: TOKEN, actor: attacker }] }),
+			'unavailable',
+		],
+		[
+			'an entry the rule no longer offers, such as an empty pool',
+			() => {
+				vi.mocked(rule.offersRerollOn).mockReturnValue(false);
+				return entry();
+			},
+			() => card(),
+			'unavailable',
+		],
+		[
+			'an entry for another side than the rule is used by',
+			() => entry({ side: 'roller', actorUuid: 'Actor.attacker', targetTokenUuid: null }),
+			() => card(),
+			'unavailable',
+		],
+		[
+			'an entry whose rule outcome the card no longer matches',
+			() => {
+				rule.outcome = 'criticalHit';
+				return entry();
+			},
+			() => card({ outcome: HIT }),
+			'unavailable',
+		],
+		[
+			'an outcome mismatch on a forced miss',
+			() => {
+				rule.outcome = 'criticalHit';
+				return entry();
+			},
+			() => card({ outcome: MISS, forcedMiss: true }),
+			'unavailable',
+		],
+		[
+			'an entry on a forced miss',
+			() => entry(),
+			() => card({ outcome: MISS, forcedMiss: true }),
+			'forcedMiss',
+		],
+		[
+			'an entry whose rule is gone',
+			() => {
+				useWorld(null);
+				return entry();
+			},
+			() => card(),
+			'unavailable',
+		],
+		[
+			'an entry whose rule is disabled',
+			() => {
+				useWorld({ ...rule, disabled: true });
+				return entry();
+			},
+			() => card(),
+			'unavailable',
+		],
+		[
+			'an entry whose actor is gone',
+			() => entry({ actorUuid: 'Actor.gone' }),
+			() => card(),
+			'unavailable',
+		],
+	])('refuses %s', (_name, makeEntry, makeContext, reason) => {
+		const stamped = makeEntry();
+		expect(usableRerollEntry(stamped, makeContext())).toEqual({ ok: false, reason });
+	});
+});
+
+describe('canPayForRerollEntry', () => {
+	const entry = {
+		kind: 'reroll',
+		itemUuid: 'Item.sand',
+		ruleId: 'rule-1',
+	} as IncomingReactionEntry;
+	const caster = (mana: number) =>
+		({ system: { resources: { mana: { current: mana, max: 5 } } } }) as unknown as Actor;
+
+	function useRule(live: RerollRuleLike | null): void {
+		testGlobals.fromUuidSync = vi.fn(() =>
+			live ? { rules: new Map([[live.id ?? '', live]]) } : null,
+		);
+	}
+
+	beforeEach(() => setToggles({}));
+	afterEach(() => {
+		delete testGlobals.game.settings;
+		testGlobals.fromUuidSync = vi.fn();
+	});
+
+	it('is true while the actor can pay the live rule cost, and false once it cannot', () => {
+		useRule(rerollRule({ rerollCost: { ...FREE, manaCost: 2 } }));
+		expect(canPayForRerollEntry(entry, caster(2))).toBe(true);
+		expect(canPayForRerollEntry(entry, caster(1))).toBe(false);
+	});
+
+	it('is false once the rule is gone', () => {
+		useRule(null);
+		expect(canPayForRerollEntry(entry, caster(5))).toBe(false);
 	});
 });
 

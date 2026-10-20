@@ -133,6 +133,12 @@ export const incomingReactions = () => ({
 			ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			side: new fields.StringField({
+				required: false,
+				nullable: true,
+				initial: null,
+				choices: ['roller', 'target'],
+			}),
 			// forceReroll offers carry their reroll semantics so the executor can
 			// honor them on click.
 			rerollTrigger: new fields.StringField({

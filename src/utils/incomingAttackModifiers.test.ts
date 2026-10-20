@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { rerollTriggerMatches } from './incomingReactionEntry.js';
 
 const { mockAreAllies, mockAreWithinSpaces } = vi.hoisted(() => ({
 	mockAreAllies: vi.fn(),
@@ -18,7 +19,6 @@ let collectTargetIncomingModifiers: typeof import('./incomingAttackModifiers.js'
 let collectRedirectCandidates: typeof import('./incomingAttackModifiers.js').collectRedirectCandidates;
 let computeIncomingAttackPlan: typeof import('./incomingAttackModifiers.js').computeIncomingAttackPlan;
 let applyPostRollIncomingBehavior: typeof import('./incomingAttackModifiers.js').applyPostRollIncomingBehavior;
-let rerollTriggerMatches: typeof import('./incomingAttackModifiers.js').rerollTriggerMatches;
 
 beforeAll(async () => {
 	vi.resetModules();
@@ -27,7 +27,6 @@ beforeAll(async () => {
 		collectRedirectCandidates,
 		computeIncomingAttackPlan,
 		applyPostRollIncomingBehavior,
-		rerollTriggerMatches,
 	} = await import('./incomingAttackModifiers.js'));
 });
 
@@ -962,11 +961,13 @@ describe('Reroll rules on the attack', () => {
 					actorUuid: 'Actor.attacker',
 					ruleId: 'roller-rule',
 					targetTokenUuid: null,
+					side: 'roller',
 				}),
 				expect.objectContaining({
 					actorUuid: 'Actor.target',
 					ruleId: 'target-rule',
 					targetTokenUuid: target.document.uuid,
+					side: 'target',
 				}),
 			]);
 			expect(rollerRule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
