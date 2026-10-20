@@ -4,9 +4,8 @@ import localize from '../utils/localize.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 /**
- * The GM-side executor for Reroll rule entries: the gates it checks again,
- * the cost it pays and gives back, the new roll, and what it writes for the
- * card's history line and for when-crit abilities.
+ * The GM-side executor for Reroll rule entries: how it wires the gate and the
+ * reroll step to the card. The step itself is tested in `rerollStep.test.ts`.
  */
 
 const FREE = {
@@ -234,16 +233,6 @@ describe('resolveRerollReaction', () => {
 		expect((rolled.options as { rollModeSources?: number[] }).rollModeSources).toEqual([0, -1]);
 	});
 
-	it('charges the cost and records the Wound gained', async () => {
-		const { target } = setupWorld({ rerollCost: { ...FREE, woundCost: 1 } });
-		const message = createMessage();
-
-		await message.resolveRerollReaction('entry-1', 'gm-user');
-
-		expect(target.system.attributes.wounds.value).toBe(1);
-		expect(updatePayload(message).system.lastReroll?.woundsGained).toBe(1);
-	});
-
 	it('gives the cost back when the reroll cannot be written', async () => {
 		const { target } = setupWorld({ rerollCost: { ...FREE, woundCost: 1 } });
 		const message = createMessage();
@@ -255,6 +244,18 @@ describe('resolveRerollReaction', () => {
 		consoleError.mockRestore();
 		expect(target.system.attributes.wounds.value).toBe(0);
 		expect(globals().ui.notifications.warn).toHaveBeenCalled();
+	});
+
+	it('sends a warning, and makes no roll, when the cost cannot be paid', async () => {
+		setupWorld({ rerollCost: { ...FREE, manaCost: 1 } });
+		const message = createMessage();
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.rerollCostUnpaid'),
+		);
 	});
 
 	it('refuses, and charges nothing, when the card outcome no longer matches', async () => {
@@ -348,35 +349,6 @@ describe('resolveRerollReaction', () => {
 	});
 
 	describe('a discarded crit and when-crit abilities (#1009)', () => {
-		it('keeps the crit triggers when the rule says so and the discarded roll was a crit', async () => {
-			setupWorld({ discardedCritTriggers: true });
-			const message = createMessage({ isCritical: true });
-
-			await message.resolveRerollReaction('entry-1', 'gm-user');
-
-			const { system } = updatePayload(message);
-			expect(system.lastReroll?.previousWasCritical).toBe(true);
-			expect(system.discardedCritTriggers).toBe(true);
-		});
-
-		it('drops the crit triggers when the rule does not keep them', async () => {
-			setupWorld({ discardedCritTriggers: false });
-			const message = createMessage({ isCritical: true });
-
-			await message.resolveRerollReaction('entry-1', 'gm-user');
-
-			expect(updatePayload(message).system.discardedCritTriggers).toBe(false);
-		});
-
-		it('has nothing to keep when the discarded roll was not a crit', async () => {
-			setupWorld({ discardedCritTriggers: true });
-			const message = createMessage({ isCritical: false });
-
-			await message.resolveRerollReaction('entry-1', 'gm-user');
-
-			expect(updatePayload(message).system.discardedCritTriggers).toBe(false);
-		});
-
 		it('keeps crit triggers an earlier reroll kept', async () => {
 			setupWorld({ discardedCritTriggers: false });
 			const message = createMessage({ discardedCritTriggers: true });
