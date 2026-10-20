@@ -1,5 +1,4 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
-import { ruleChargesLeft } from './chargePool/ruleChargeGate.js';
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
@@ -14,15 +13,14 @@ import {
 	collectPoolSpendCardOffers,
 	type OfferingActor,
 } from './poolSpendCardOffers.js';
-import { payRerollCost, refundRerollCost } from './rerollCost.js';
 import {
-	type AutomaticReroll,
 	collectRerollEntries,
 	type RerollingActor,
 	type RerollRuleLike,
 	rerollEntryStands,
 } from './rerollEntries.js';
-import { prepareReroll, type RerollChanges } from './rerollOptions.js';
+import { prepareReroll } from './rerollOptions.js';
+import { rerollWithRule } from './rerollStep.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -124,49 +122,6 @@ interface PostRollIncomingResult<TRoll> {
 
 type RebuildRoll<TRoll> = (formula: string, options: Record<string, unknown>) => Promise<TRoll>;
 
-/**
- * Run an automatic `reroll`: pay its cost, roll again with its changes, and
- * give the cost back if the new roll fails. Null when the cost cannot be paid.
- */
-async function runAutomaticReroll<TRoll>(
-	view: EvaluatedDamageRollLike,
-	formula: string,
-	automatic: AutomaticReroll,
-	rebuildRoll: RebuildRoll<TRoll>,
-): Promise<Omit<PostRollIncomingResult<TRoll>, 'discardedRoll' | 'stampEntries'> | null> {
-	const { entry, rule } = automatic;
-	const actor = rule.actor as Actor | null | undefined;
-	const cost = rule.rerollCost;
-	const paid = cost ? await payRerollCost(actor, cost) : null;
-	if (cost && !paid) return null;
-
-	const changes: Partial<RerollChanges> = rule.rerollChanges?.() ?? {};
-	const next = prepareReroll(formula, view.options, changes);
-	let roll: TRoll;
-	try {
-		roll = await rebuildRoll(next.formula, next.options);
-	} catch (error) {
-		if (cost && paid) await refundRerollCost(actor, cost, paid);
-		throw error;
-	}
-
-	return {
-		roll,
-		lastReroll: {
-			entryId: entry.id,
-			itemUuid: entry.itemUuid,
-			label: entry.label,
-			actorUuid: entry.actorUuid,
-			previousResult: view.primaryDieValue ?? null,
-			previousWasCritical: view.isCritical === true,
-			newResult: (roll as unknown as EvaluatedDamageRollLike).primaryDieValue ?? null,
-			usesLeft: ruleChargesLeft(actor, cost?.chargePoolIdentifier ?? ''),
-			woundsGained: paid?.wounds ?? 0,
-		},
-		discardedCritTriggers: rule.discardedCritTriggers === true && view.isCritical === true,
-	};
-}
-
 /** Whether a pending offer still belongs on a card whose roll resolved as `view`. */
 function offerStands(entry: IncomingReactionEntry, view: EvaluatedDamageRollLike): boolean {
 	if (entry.kind === 'reroll') {
@@ -200,13 +155,17 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	if (autoEntry && formula) {
 		const rule = plan.rerollRules?.get(autoEntry.id);
 		if (autoEntry.kind === 'reroll' && rule) {
-			const result = await runAutomaticReroll(
-				view,
-				formula,
-				{ entry: autoEntry, rule },
-				rebuildRoll,
-			);
-			if (result) {
+			const result = await rerollWithRule({
+				rule,
+				entry: autoEntry,
+				payer: rule.actor as Actor | null | undefined,
+				replaced: view,
+				previousResult: view.primaryDieValue ?? null,
+				makeRoll: rebuildRoll,
+				earlierCritTriggers: false,
+			});
+			if (result.status === 'failed') throw result.error;
+			if (result.status === 'done') {
 				discardedRoll = view.toJSON();
 				finalRoll = result.roll;
 				lastReroll = result.lastReroll;

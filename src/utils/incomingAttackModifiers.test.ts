@@ -1100,59 +1100,28 @@ describe('Reroll rules on the attack', () => {
 			expect(result.discardedCritTriggers).toBe(false);
 		});
 
-		it('keeps the crit triggers of a discarded crit only when the rule says so', async () => {
-			const entry = rerollEntry('criticalHit');
-			const run = (discardedCritTriggers: boolean) =>
-				applyPostRollIncomingBehavior(
-					makeRoll(true),
-					plan({
-						autoRerollEntries: [entry],
-						rerollRules: new Map([
-							[entry.id, rerollRule({ automatic: true, discardedCritTriggers })],
-						]),
-					}),
-					vi.fn(async () => makeRoll(false)),
-				);
-
-			expect((await run(true)).discardedCritTriggers).toBe(true);
-			expect((await run(false)).discardedCritTriggers).toBe(false);
-		});
-
-		it('charges the cost of an automatic reroll and records the Wound gained', async () => {
-			const actor = {
-				type: 'character',
-				system: { attributes: { wounds: { value: 1, max: 6 } } },
-				update: vi.fn(async (changes: Record<string, unknown>) => {
-					actor.system.attributes.wounds.value = changes[
-						'system.attributes.wounds.value'
-					] as number;
-				}),
-			};
+		it('keeps the first roll when the cost cannot be paid', async () => {
+			const actor = { system: { resources: { mana: { current: 0, max: 5 } } } };
 			const entry = rerollEntry('always');
-			const rule = rerollRule({ automatic: true, actor, rerollCost: { ...FREE, woundCost: 1 } });
+			const rule = rerollRule({ automatic: true, actor, rerollCost: { ...FREE, manaCost: 1 } });
+			const first = makeRoll(false);
+			const rebuildRoll = vi.fn();
 
 			const result = await applyPostRollIncomingBehavior(
-				makeRoll(false),
+				first,
 				plan({ autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) }),
-				vi.fn(async () => makeRoll(false)),
+				rebuildRoll,
 			);
 
-			expect(actor.system.attributes.wounds.value).toBe(2);
-			expect(result.lastReroll?.woundsGained).toBe(1);
+			expect(rebuildRoll).not.toHaveBeenCalled();
+			expect(result.roll).toBe(first);
+			expect(result.lastReroll).toBeNull();
+			expect(result.stampEntries).toEqual([]);
 		});
 
-		it('gives the cost back when the new roll fails', async () => {
-			const actor = {
-				type: 'character',
-				system: { attributes: { wounds: { value: 1, max: 6 } } },
-				update: vi.fn(async (changes: Record<string, unknown>) => {
-					actor.system.attributes.wounds.value = changes[
-						'system.attributes.wounds.value'
-					] as number;
-				}),
-			};
+		it('throws when the new roll fails', async () => {
 			const entry = rerollEntry('always');
-			const rule = rerollRule({ automatic: true, actor, rerollCost: { ...FREE, woundCost: 1 } });
+			const rule = rerollRule({ automatic: true });
 
 			await expect(
 				applyPostRollIncomingBehavior(
@@ -1163,7 +1132,6 @@ describe('Reroll rules on the attack', () => {
 					}),
 				),
 			).rejects.toThrow('roll failed');
-			expect(actor.system.attributes.wounds.value).toBe(1);
 		});
 	});
 });

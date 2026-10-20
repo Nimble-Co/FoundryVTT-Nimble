@@ -29,7 +29,7 @@ import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
-import { prepareReroll, type RerollChanges } from '#utils/rerollOptions.js';
+import { prepareReroll } from '#utils/rerollOptions.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -39,7 +39,6 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
-import { ruleChargesLeft } from '../utils/chargePool/ruleChargeGate.js';
 import { offerSurvives } from '../utils/incomingAttackModifiers.js';
 import {
 	type PoolSpendSelection,
@@ -48,16 +47,15 @@ import {
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
-	type LastReroll,
 	rerollTriggerMatches,
 } from '../utils/incomingReactionEntry.js';
-import { payRerollCost, refundRerollCost } from '../utils/rerollCost.js';
 import {
 	collectRerollEntries,
 	type RerollingActor,
 	type RerollRollContext,
 	usableRerollEntry,
 } from '../utils/rerollEntries.js';
+import { type RerollHistory, rerollWithRule } from '../utils/rerollStep.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -99,12 +97,6 @@ interface PrimaryDamageRoll {
 	activation: { effects: unknown[]; [key: string]: unknown };
 	nodes: EffectNode[];
 	damageNode: EffectNode & { roll?: Record<string, unknown>; discardedRoll?: unknown };
-}
-
-/** What a reroll writes to the card for its history line and crit triggers. */
-interface RerollHistoryChanges {
-	lastReroll: LastReroll;
-	discardedCritTriggers: boolean;
 }
 
 type HpMutableActor = Actor.Implementation &
@@ -745,10 +737,13 @@ function resolvePoolSpendSelection(
 	};
 }
 
-/** The kept primary die result of a serialized DamageRoll, or null. */
+/**
+ * The kept primary die result of a serialized DamageRoll, or null. Reads a
+ * copy, because `fromData` writes option defaults into the data it is given.
+ */
 function primaryDieResult(serialized: DamageRoll.SerializedData): number | null {
 	try {
-		return DamageRoll.fromData(serialized).primaryDieValue ?? null;
+		return DamageRoll.fromData(foundry.utils.deepClone(serialized)).primaryDieValue ?? null;
 	} catch {
 		return null;
 	}
@@ -1567,9 +1562,32 @@ class NimbleChatMessage extends ChatMessage {
 		const target = this.#findPrimaryDamageRoll();
 		if (!target) return;
 
-		await this.#rerollPrimaryDamage(entry, target, {
-			rollModeChange: entry.rerollWithDisadvantage ? -1 : 0,
-		});
+		const previous = target.damageNode.roll as unknown as DamageRoll.SerializedData;
+		const next = prepareReroll(
+			previous.originalFormula ?? previous.formula,
+			previous.options as Record<string, unknown> | undefined,
+			{ rollModeChange: entry.rerollWithDisadvantage ? -1 : 0 },
+		);
+		await this.#rerollPrimaryDamage(
+			entry,
+			target,
+			await this.#makeDamageRoll(previous, next.formula, next.options),
+		);
+	}
+
+	/** Make and evaluate a new roll with the data of the roll it replaces. */
+	async #makeDamageRoll(
+		previous: DamageRoll.SerializedData,
+		formula: string,
+		options: Record<string, unknown>,
+	): Promise<DamageRoll> {
+		const roll = new DamageRoll(
+			formula,
+			(previous.data ?? {}) as DamageRoll.Data,
+			options as unknown as DamageRoll.Options,
+		);
+		await roll.evaluate();
+		return roll;
 	}
 
 	/** The card's primary DamageRoll node, with a working copy of the activation. */
@@ -1588,30 +1606,18 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
-	 * Discard the card's primary damage roll and roll it again with `changes`
-	 * added; the second result stands. Crit, miss, offers and Movement Offers
-	 * follow the new roll. `history` adds what the card shows about this reroll.
+	 * Put `newRoll` on the card in place of its primary damage roll; the second
+	 * result stands. Crit, miss, offers and Movement Offers follow the new roll.
+	 * `history` adds what the card shows about this reroll.
 	 */
 	async #rerollPrimaryDamage(
 		entry: IncomingReactionEntry,
 		target: PrimaryDamageRoll,
-		changes: Partial<RerollChanges>,
-		history?: (newRoll: DamageRoll, previous: DamageRoll.SerializedData) => RerollHistoryChanges,
+		newRoll: DamageRoll,
+		history?: RerollHistory,
 	): Promise<void> {
 		const { activation, nodes, damageNode } = target;
 		const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
-		const next = prepareReroll(
-			serialized.originalFormula ?? serialized.formula,
-			serialized.options as Record<string, unknown> | undefined,
-			changes,
-		);
-
-		const newRoll = new DamageRoll(
-			next.formula,
-			(serialized.data ?? {}) as DamageRoll.Data,
-			next.options as unknown as DamageRoll.Options,
-		);
-		await newRoll.evaluate();
 
 		const carried = await this.#carryFoldedSpendsAcrossReroll(
 			newRoll.toJSON() as Record<string, unknown>,
@@ -1638,7 +1644,7 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				...outcome,
 				incomingReactions: entries,
-				...(history?.(newRoll, serialized) ?? {}),
+				...(history ?? {}),
 				...this.#movementOfferChanges(outcome),
 			},
 		} as Record<string, unknown>);
@@ -1895,41 +1901,24 @@ class NimbleChatMessage extends ChatMessage {
 			);
 		}
 		if (!target) return reject('NIMBLE.chat.incomingReactions.useFailed');
-		const { rule, actor } = usable;
-
-		const cost = rule.rerollCost;
-		const paid = cost ? await payRerollCost(actor, cost, { forceHeroicReaction }) : null;
-		if (cost && !paid) return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
-
-		try {
-			await this.#rerollPrimaryDamage(
-				entry,
-				target,
-				rule.rerollChanges?.() ?? {},
-				(newRoll, previous) => {
-					const previousWasCritical = previous.isCritical === true;
-					const lastReroll: LastReroll = {
-						entryId: entry.id,
-						itemUuid: entry.itemUuid,
-						label: entry.label,
-						actorUuid: entry.actorUuid,
-						previousResult: primaryDieResult(previous),
-						previousWasCritical,
-						newResult: newRoll.primaryDieValue ?? null,
-						usesLeft: ruleChargesLeft(actor, cost?.chargePoolIdentifier ?? ''),
-						woundsGained: paid?.wounds ?? 0,
-					};
-					return {
-						lastReroll,
-						discardedCritTriggers:
-							systemData.discardedCritTriggers === true ||
-							(rule.discardedCritTriggers === true && previousWasCritical),
-					};
-				},
-			);
-		} catch (error) {
-			console.error('Nimble | A reroll failed; its cost is given back.', error);
-			if (cost && paid) await refundRerollCost(actor, cost, paid);
+		const previous = target.damageNode.roll as unknown as DamageRoll.SerializedData;
+		const result = await rerollWithRule({
+			rule: usable.rule,
+			entry,
+			payer: usable.actor,
+			replaced: previous,
+			previousResult: primaryDieResult(previous),
+			makeRoll: (formula, options) => this.#makeDamageRoll(previous, formula, options),
+			earlierCritTriggers: systemData.discardedCritTriggers === true,
+			payOptions: { forceHeroicReaction },
+			place: ({ roll, lastReroll, discardedCritTriggers }) =>
+				this.#rerollPrimaryDamage(entry, target, roll, { lastReroll, discardedCritTriggers }),
+		});
+		if (result.status === 'unpaid') {
+			return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		}
+		if (result.status === 'failed') {
+			console.error('Nimble | A reroll failed; its cost is given back.', result.error);
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}
