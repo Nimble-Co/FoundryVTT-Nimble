@@ -1,6 +1,13 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
 import { ruleChargesLeft } from './chargePool/ruleChargeGate.js';
-import type { IncomingReactionEntry, LastReroll, RerollTrigger } from './incomingReactionEntry.js';
+import {
+	type AttackOutcomeView,
+	type IncomingReactionEntry,
+	type LastReroll,
+	type RerollSide,
+	type RerollTrigger,
+	rerollTriggerMatches,
+} from './incomingReactionEntry.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
@@ -13,6 +20,7 @@ import {
 	collectRerollEntries,
 	type RerollingActor,
 	type RerollRuleLike,
+	rerollEntryStands,
 } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
@@ -90,35 +98,6 @@ interface EvaluatedDamageRollLike {
 }
 
 /**
- * The outcome fields a trigger is checked against. An evaluated DamageRoll
- * satisfies this, and so does a posted card's own system data, which is what
- * the GM-side executors re-check against.
- */
-interface AttackOutcomeView {
-	isCritical?: boolean;
-	isMiss?: boolean;
-}
-
-/** Does the attack's outcome satisfy a trigger? */
-function rerollTriggerMatches(
-	trigger: RerollTrigger | undefined,
-	view: AttackOutcomeView,
-): boolean {
-	switch (trigger) {
-		case 'criticalHit':
-			return !!view.isCritical;
-		case 'hit':
-			return !view.isMiss;
-		case 'nonCriticalHit':
-			return !view.isMiss && !view.isCritical;
-		case 'miss':
-			return !!view.isMiss;
-		default:
-			return true; // 'always'
-	}
-}
-
-/**
  * Should a pending offer be stamped onto the card, given how the attack
  * actually resolved? `forceReroll` keeps its own trigger field; every other
  * kind uses the shared `outcomeTrigger`, and an offer with neither always
@@ -188,12 +167,11 @@ async function runAutomaticReroll<TRoll>(
 	};
 }
 
-/**
- * Whether a pending offer still belongs on a card whose roll resolved as
- * `view`. A forced miss stays a miss on any reroll, so reroll offers go.
- */
+/** Whether a pending offer still belongs on a card whose roll resolved as `view`. */
 function offerStands(entry: IncomingReactionEntry, view: EvaluatedDamageRollLike): boolean {
-	if (entry.kind === 'reroll' && view.options.forceMiss) return false;
+	if (entry.kind === 'reroll') {
+		return rerollEntryStands(entry, { outcome: view, forcedMiss: !!view.options.forceMiss });
+	}
 	return offerSurvives(entry, view);
 }
 
@@ -216,10 +194,10 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	const stampEntries: IncomingReactionEntry[] = [];
 
 	const view = asView(roll);
-	const autoEntry = plan.autoRerollEntries.find((entry) => offerSurvives(entry, view));
+	const autoEntry = plan.autoRerollEntries.find((entry) => offerStands(entry, view));
 	const formula = view.originalFormula ?? '';
 
-	if (autoEntry && !view.options.forceMiss && formula) {
+	if (autoEntry && formula) {
 		const rule = plan.rerollRules?.get(autoEntry.id);
 		if (autoEntry.kind === 'reroll' && rule) {
 			const result = await runAutomaticReroll(
@@ -235,7 +213,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 				discardedCritTriggers = result.discardedCritTriggers;
 				stampEntries.push({ ...autoEntry, used: true });
 			}
-		} else if (autoEntry.kind === 'forceReroll') {
+		} else if (autoEntry.kind === 'forceReroll' && !view.options.forceMiss) {
 			const next = prepareReroll(formula, view.options, {
 				rollModeChange: autoEntry.rerollWithDisadvantage ? -1 : 0,
 			});
@@ -377,9 +355,11 @@ function collectRedirectCandidates(targetToken: Token.Implementation): IncomingR
 function addRerollEntries(
 	plan: IncomingAttackPlan,
 	entries: ReturnType<typeof collectRerollEntries>,
+	side: RerollSide,
 ): void {
-	plan.reactionEntries.push(...entries.manual);
+	plan.reactionEntries.push(...entries.manual.filter((entry) => entry.side === side));
 	for (const { entry, rule } of entries.automatic) {
+		if (entry.side !== side) continue;
 		plan.autoRerollEntries.push(entry);
 		plan.rerollRules ??= new Map();
 		plan.rerollRules.set(entry.id, rule);
@@ -409,20 +389,7 @@ function computeIncomingAttackPlan(
 		reactionEntries: [...collectPoolSpendCardOffers(attackingActor, attackContext)],
 		autoRerollEntries: [],
 	};
-	const delivery = attackContext?.delivery ?? null;
-
-	addRerollEntries(
-		plan,
-		collectRerollEntries(attackingActor as RerollingActor | undefined, {
-			side: 'roller',
-			delivery,
-			targetTokenUuid: null,
-		}),
-	);
-
-	if (!firstTargetToken?.actor) return plan;
-
-	const targetActor = firstTargetToken.actor as unknown as ActorLike;
+	const targetActor = (firstTargetToken?.actor ?? null) as unknown as ActorLike | null;
 	const targetModifiers = collectTargetIncomingModifiers(targetActor);
 
 	for (const entry of targetModifiers) {
@@ -441,7 +408,18 @@ function computeIncomingAttackPlan(
 		}
 	}
 
-	if (plan.forceMiss) return plan;
+	const rerolls = collectRerollEntries({
+		attacker: attackingActor as RerollingActor | undefined,
+		targets: firstTargetToken
+			? [{ tokenUuid: firstTargetToken.document.uuid, actor: targetActor as RerollingActor | null }]
+			: [],
+		delivery: attackContext?.delivery ?? null,
+		outcome: null,
+		forcedMiss: plan.forceMiss,
+	});
+	addRerollEntries(plan, rerolls, 'roller');
+
+	if (!firstTargetToken?.actor || plan.forceMiss) return plan;
 
 	const targetActorUuid = (firstTargetToken.actor?.uuid as string) ?? '';
 	for (const entry of targetModifiers) {
@@ -464,14 +442,7 @@ function computeIncomingAttackPlan(
 		else plan.reactionEntries.push(reactionEntry);
 	}
 
-	addRerollEntries(
-		plan,
-		collectRerollEntries(targetActor as RerollingActor, {
-			side: 'target',
-			delivery,
-			targetTokenUuid: firstTargetToken.document.uuid,
-		}),
-	);
+	addRerollEntries(plan, rerolls, 'target');
 
 	plan.reactionEntries.push(...collectRedirectCandidates(firstTargetToken));
 
@@ -485,8 +456,6 @@ export {
 	collectTargetIncomingModifiers,
 	computeIncomingAttackPlan,
 	offerSurvives,
-	rerollTriggerMatches,
-	type AttackOutcomeView,
 	type IncomingAttackModifierEntry,
 	type IncomingAttackPlan,
 };

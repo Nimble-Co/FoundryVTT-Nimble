@@ -16,8 +16,7 @@
 		type IncomingReactionRejection,
 		requestIncomingAttackReaction,
 	} from '#utils/incomingAttackReactions.js';
-	import { canPayRerollCost } from '#utils/rerollCost.js';
-	import { findRerollRule } from '#utils/rerollEntries.js';
+	import { canPayForRerollEntry } from '#utils/rerollEntries.js';
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 
@@ -29,10 +28,7 @@
 		const actor = getReactingActor(entry);
 		if (!game.user?.isGM && !actor?.isOwner) return false;
 		// A reroll whose cost can no longer be paid (no charges left) is hidden.
-		if (entry.kind === 'reroll') {
-			const cost = findRerollRule(entry)?.rerollCost;
-			return !!cost && canPayRerollCost(actor, cost);
-		}
+		if (entry.kind === 'reroll') return canPayForRerollEntry(entry, actor);
 		return true;
 	}
 

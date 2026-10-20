@@ -4,6 +4,38 @@
  */
 export type RerollTrigger = 'always' | 'hit' | 'criticalHit' | 'nonCriticalHit' | 'miss';
 
+/** The side of a roll a `reroll` entry is for. */
+export type RerollSide = 'roller' | 'target';
+
+/**
+ * The outcome fields a trigger is checked against. An evaluated DamageRoll
+ * satisfies this, and so does a posted card's own system data, which is what
+ * the GM-side executors re-check against.
+ */
+export interface AttackOutcomeView {
+	isCritical?: boolean;
+	isMiss?: boolean;
+}
+
+/** Does the attack's outcome satisfy a trigger? */
+export function rerollTriggerMatches(
+	trigger: RerollTrigger | null | undefined,
+	view: AttackOutcomeView,
+): boolean {
+	switch (trigger) {
+		case 'criticalHit':
+			return !!view.isCritical;
+		case 'hit':
+			return !view.isMiss;
+		case 'nonCriticalHit':
+			return !view.isMiss && !view.isCritical;
+		case 'miss':
+			return !!view.isMiss;
+		default:
+			return true; // 'always'
+	}
+}
+
 /**
  * A pending interactive offer stamped onto an attack chat card. Entries are
  * snapshotted on the attacker's client at card creation so every client sees
@@ -33,6 +65,8 @@ export interface IncomingReactionEntry {
 	ruleId: string;
 	itemUuid: string;
 	used: boolean;
+	/** reroll only: the side of the roll the entry was stamped for */
+	side?: RerollSide;
 	/** forceReroll only: gate the offer/execution on the roll's outcome */
 	rerollTrigger?: RerollTrigger;
 	/** forceReroll only: roll the reroll at disadvantage */

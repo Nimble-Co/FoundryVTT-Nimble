@@ -1,12 +1,16 @@
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import type { AttackDelivery } from './attackDelivery.js';
-import type { IncomingReactionEntry, RerollTrigger } from './incomingReactionEntry.js';
-import { type RerollCost, rerollCostCharges } from './rerollCost.js';
+import {
+	type AttackOutcomeView,
+	type IncomingReactionEntry,
+	type RerollSide,
+	type RerollTrigger,
+	rerollTriggerMatches,
+} from './incomingReactionEntry.js';
+import { canPayRerollCost, type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
 
 const REROLL_RULE_TYPE = 'reroll';
-
-type RerollSide = 'roller' | 'target';
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
 interface RerollRuleLike {
@@ -30,17 +34,44 @@ interface RerollingActor {
 	rules?: RerollRuleLike[];
 }
 
-interface RerollEntryContext {
-	side: RerollSide;
-	delivery: AttackDelivery;
-	/** The attack's target token; set for target-side entries only */
-	targetTokenUuid: string | null;
+interface RerollTarget {
+	tokenUuid: string | null;
+	actor: RerollingActor | null | undefined;
 }
+
+/** One roll as the reroll gate sees it. The caller builds it once per roll. */
+interface RerollRollContext {
+	attacker: RerollingActor | null | undefined;
+	/** The roll's targets in card order. Only the first one's rules give entries. */
+	targets: RerollTarget[];
+	delivery: AttackDelivery;
+	/** Null before the roll is made. */
+	outcome: AttackOutcomeView | null;
+	/** A forced miss stays a miss on any reroll. */
+	forcedMiss: boolean;
+}
+
+type RerollRollOutcome = Pick<RerollRollContext, 'outcome' | 'forcedMiss'>;
 
 /** A reroll that happens by itself when the roll is made. */
 interface AutomaticReroll {
 	entry: IncomingReactionEntry;
 	rule: RerollRuleLike;
+}
+
+/** Whether a stamped entry can be used now, and from what. */
+type UsableReroll =
+	| { ok: true; rule: RerollRuleLike; actor: Actor.Implementation }
+	| { ok: false; reason: 'unavailable' | 'forcedMiss' };
+
+const UNAVAILABLE: UsableReroll = { ok: false, reason: 'unavailable' };
+
+function outcomeAllows(
+	trigger: RerollTrigger | null | undefined,
+	roll: RerollRollOutcome,
+): boolean {
+	if (roll.forcedMiss) return false;
+	return !roll.outcome || rerollTriggerMatches(trigger, roll.outcome);
 }
 
 /**
@@ -55,43 +86,60 @@ function rerollsByItself(rule: RerollRuleLike, actor: RerollingActor): boolean {
 	return actor.isOwner === true;
 }
 
+function rollingActorFor(side: RerollSide, context: RerollRollContext) {
+	if (side === 'roller') return { actor: context.attacker, targetTokenUuid: null };
+	const target = context.targets[0];
+	return { actor: target?.actor, targetTokenUuid: target?.tokenUuid ?? null };
+}
+
 /**
- * Build the reroll entries an actor's `reroll` rules give one side of an
- * attack. The roll's outcome is checked later, against the roll that stands.
+ * The reroll entries the attacker's and the first target's `reroll` rules
+ * give this roll, split into buttons and rerolls that happen by themselves.
+ * Before the roll, the outcome is checked later with `rerollEntryStands`.
  */
-function collectRerollEntries(
-	actor: RerollingActor | null | undefined,
-	context: RerollEntryContext,
-): { manual: IncomingReactionEntry[]; automatic: AutomaticReroll[] } {
+function collectRerollEntries(context: RerollRollContext): {
+	manual: IncomingReactionEntry[];
+	automatic: AutomaticReroll[];
+} {
 	const result = { manual: [] as IncomingReactionEntry[], automatic: [] as AutomaticReroll[] };
-	const actorUuid = actor?.uuid ?? '';
-	if (!actor || !actorUuid || !Array.isArray(actor.rules)) return result;
+	if (context.forcedMiss) return result;
 
-	for (const rule of actor.rules) {
-		if (rule?.type !== REROLL_RULE_TYPE) continue;
-		if (rule.offersRerollOn?.({ side: context.side, delivery: context.delivery }) !== true) {
-			continue;
+	for (const side of ['roller', 'target'] as const) {
+		const { actor, targetTokenUuid } = rollingActorFor(side, context);
+		const actorUuid = actor?.uuid ?? '';
+		if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
+
+		for (const rule of actor.rules) {
+			if (rule?.type !== REROLL_RULE_TYPE) continue;
+			if (rule.offersRerollOn?.({ side, delivery: context.delivery }) !== true) continue;
+			if (!outcomeAllows(rule.outcome, context)) continue;
+
+			const entry: IncomingReactionEntry = {
+				id: foundry.utils.randomID(),
+				kind: 'reroll',
+				source: 'rule',
+				actorUuid,
+				tokenUuid: null,
+				targetTokenUuid,
+				side,
+				label: rule.label || rule.item?.name || '',
+				ruleId: rule.id ?? '',
+				itemUuid: rule.item?.uuid ?? '',
+				used: false,
+				outcomeTrigger: rule.outcome ?? 'always',
+			};
+
+			if (rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
+			else result.manual.push(entry);
 		}
-
-		const entry: IncomingReactionEntry = {
-			id: foundry.utils.randomID(),
-			kind: 'reroll',
-			source: 'rule',
-			actorUuid,
-			tokenUuid: null,
-			targetTokenUuid: context.side === 'target' ? context.targetTokenUuid : null,
-			label: rule.label || rule.item?.name || '',
-			ruleId: rule.id ?? '',
-			itemUuid: rule.item?.uuid ?? '',
-			used: false,
-			outcomeTrigger: rule.outcome ?? 'always',
-		};
-
-		if (rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
-		else result.manual.push(entry);
 	}
 
 	return result;
+}
+
+/** Whether a stamped `reroll` entry still belongs on a roll that resolved this way. */
+function rerollEntryStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
+	return outcomeAllows(entry.outcomeTrigger, roll);
 }
 
 /** The live `reroll` rule an entry came from, or null when it is gone or off. */
@@ -107,11 +155,53 @@ function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	return rule;
 }
 
+/**
+ * Whether the entry's actor is still on its side of the roll: the attacker
+ * for a roller entry, the actor of a token still among the targets otherwise.
+ */
+function isOnSide(entry: IncomingReactionEntry, side: RerollSide, context: RerollRollContext) {
+	if (side === 'roller') return context.attacker?.uuid === entry.actorUuid;
+	const tokenUuid = entry.targetTokenUuid ?? '';
+	const target = context.targets.find((candidate) => candidate.tokenUuid === tokenUuid);
+	return target?.actor?.uuid === entry.actorUuid;
+}
+
+/**
+ * Check a stamped entry again from its live rule, on the client that uses it.
+ * An entry with no side is not usable.
+ */
+function usableRerollEntry(entry: IncomingReactionEntry, context: RerollRollContext): UsableReroll {
+	const rule = findRerollRule(entry);
+	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+	if (!rule || !actor || !entry.side) return UNAVAILABLE;
+	if (!isOnSide(entry, entry.side, context)) return UNAVAILABLE;
+	if (rule.offersRerollOn?.({ side: entry.side, delivery: context.delivery }) !== true) {
+		return UNAVAILABLE;
+	}
+	if (context.outcome && !rerollTriggerMatches(rule.outcome, context.outcome)) return UNAVAILABLE;
+	if (context.forcedMiss) return { ok: false, reason: 'forcedMiss' };
+	return { ok: true, rule, actor };
+}
+
+/** Whether the entry's actor can still pay for it. */
+function canPayForRerollEntry(
+	entry: IncomingReactionEntry,
+	actor: Actor | null | undefined,
+): boolean {
+	const cost = findRerollRule(entry)?.rerollCost;
+	return !!cost && canPayRerollCost(actor, cost);
+}
+
 export {
+	canPayForRerollEntry,
 	collectRerollEntries,
 	findRerollRule,
+	rerollEntryStands,
+	usableRerollEntry,
 	type AutomaticReroll,
 	type RerollingActor,
+	type RerollRollContext,
 	type RerollRuleLike,
-	type RerollSide,
+	type RerollTarget,
+	type UsableReroll,
 };

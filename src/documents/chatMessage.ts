@@ -5,7 +5,11 @@ import { systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
-import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
+import {
+	type AttackDelivery,
+	attackDeliveryFromAttackType,
+	matchesAttackDelivery,
+} from '#utils/attackDelivery.js';
 import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
@@ -36,22 +40,23 @@ import {
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
 import { ruleChargesLeft } from '../utils/chargePool/ruleChargeGate.js';
-import {
-	type AttackOutcomeView,
-	offerSurvives,
-	rerollTriggerMatches,
-} from '../utils/incomingAttackModifiers.js';
+import { offerSurvives } from '../utils/incomingAttackModifiers.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
 } from '../utils/incomingAttackReactions.js';
-import type { IncomingReactionEntry, LastReroll } from '../utils/incomingReactionEntry.js';
+import {
+	type AttackOutcomeView,
+	type IncomingReactionEntry,
+	type LastReroll,
+	rerollTriggerMatches,
+} from '../utils/incomingReactionEntry.js';
 import { payRerollCost, refundRerollCost } from '../utils/rerollCost.js';
 import {
 	collectRerollEntries,
-	findRerollRule,
 	type RerollingActor,
-	type RerollSide,
+	type RerollRollContext,
+	usableRerollEntry,
 } from '../utils/rerollEntries.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -1626,7 +1631,7 @@ class NimbleChatMessage extends ChatMessage {
 		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
 		const entries = this.#withRerollEntriesFor(
 			this.#dropStaleOutcomeOffers(carried.entries, newRoll),
-			newRoll,
+			this.#rerollContext(newRoll, newRoll.options.forceMiss === true),
 		);
 		await this.update({
 			rolls: rollsSource,
@@ -1655,6 +1660,29 @@ class NimbleChatMessage extends ChatMessage {
 		return speaker?.actor ? (game.actors?.get(speaker.actor) ?? null) : null;
 	}
 
+	/** How this card's attack is delivered. */
+	#attackDelivery(): AttackDelivery {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		return attackDeliveryFromAttackType(
+			(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
+		);
+	}
+
+	/** This card's roll as the reroll gate sees it. */
+	#rerollContext(outcome: AttackOutcomeView, forcedMiss: boolean): RerollRollContext {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		return {
+			attacker: this.#attackingActor() as unknown as RerollingActor | null,
+			targets: (systemData.targets ?? []).map((tokenUuid) => ({
+				tokenUuid,
+				actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
+			})),
+			delivery: this.#attackDelivery(),
+			outcome: { isCritical: outcome.isCritical, isMiss: outcome.isMiss },
+			forcedMiss,
+		};
+	}
+
 	/**
 	 * Add the reroll entries the new roll allows, from the live rules of the
 	 * attacker and the first target. A feature that already has an entry
@@ -1663,31 +1691,9 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#withRerollEntriesFor(
 		entries: IncomingReactionEntry[],
-		roll: DamageRoll,
+		context: RerollRollContext,
 	): IncomingReactionEntry[] {
-		if ((roll.options as { forceMiss?: boolean }).forceMiss) return entries;
-
-		const systemData = this.system as unknown as ActivationCardSystemData;
-		const delivery = attackDeliveryFromAttackType(
-			(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
-		);
-		const targetTokenUuid = systemData.targets?.[0] ?? null;
-		const targetToken = targetTokenUuid
-			? (fromUuidSync(targetTokenUuid) as { actor?: Actor.Implementation | null } | null)
-			: null;
-
-		const found = [
-			...collectRerollEntries(this.#attackingActor() as unknown as RerollingActor, {
-				side: 'roller',
-				delivery,
-				targetTokenUuid: null,
-			}).manual,
-			...collectRerollEntries(targetToken?.actor as unknown as RerollingActor, {
-				side: 'target',
-				delivery,
-				targetTokenUuid,
-			}).manual,
-		].filter((entry) => offerSurvives(entry, roll));
+		const found = collectRerollEntries(context).manual;
 
 		const key = (entry: IncomingReactionEntry) =>
 			`${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
@@ -1873,27 +1879,23 @@ class NimbleChatMessage extends ChatMessage {
 		const entry = this.#validateIncomingReaction(entryId, 'reroll', requestingUserId, viaSocket);
 		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
-		const rule = findRerollRule(entry);
-		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-		if (!rule || !actor) return reject('NIMBLE.chat.incomingReactions.rerollNoLongerAvailable');
-
 		// Every gate again, from the live rule and this card: the card's outcome,
 		// its targets and the actor's state can all change after stamping.
 		const systemData = this.system as unknown as ActivationCardSystemData;
-		const side: RerollSide = entry.targetTokenUuid ? 'target' : 'roller';
-		const delivery = attackDeliveryFromAttackType(
-			(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
-		);
-		const stillOffered =
-			this.#isRerollSide(entry, side) &&
-			rule.offersRerollOn?.({ side, delivery }) === true &&
-			rerollTriggerMatches(rule.outcome, systemData);
-		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.rerollNoLongerAvailable');
-
 		const target = this.#findPrimaryDamageRoll();
-		const options = (target?.damageNode.roll as { options?: { forceMiss?: boolean } } | undefined)
-			?.options;
-		if (!target || options?.forceMiss) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const forcedMiss =
+			(target?.damageNode.roll as { options?: { forceMiss?: boolean } } | undefined)?.options
+				?.forceMiss === true;
+		const usable = usableRerollEntry(entry, this.#rerollContext(systemData, forcedMiss));
+		if (!usable.ok) {
+			return reject(
+				usable.reason === 'forcedMiss'
+					? 'NIMBLE.chat.incomingReactions.useFailed'
+					: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
+			);
+		}
+		if (!target) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const { rule, actor } = usable;
 
 		const cost = rule.rerollCost;
 		const paid = cost ? await payRerollCost(actor, cost, { forceHeroicReaction }) : null;
@@ -1930,20 +1932,6 @@ class NimbleChatMessage extends ChatMessage {
 			if (cost && paid) await refundRerollCost(actor, cost, paid);
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
-	}
-
-	/**
-	 * Whether the entry's actor is still on the side of the attack it claims:
-	 * the attacker for a roller entry, the target it was stamped for otherwise.
-	 */
-	#isRerollSide(entry: IncomingReactionEntry, side: RerollSide): boolean {
-		if (side === 'roller') return this.#attackingActor()?.uuid === entry.actorUuid;
-
-		const systemData = this.system as unknown as ActivationCardSystemData;
-		const tokenUuid = entry.targetTokenUuid ?? '';
-		if (!systemData.targets?.includes(tokenUuid)) return false;
-		const token = fromUuidSync(tokenUuid) as { actor?: { uuid?: string } | null } | null;
-		return token?.actor?.uuid === entry.actorUuid;
 	}
 
 	/**
@@ -2051,12 +2039,7 @@ class NimbleChatMessage extends ChatMessage {
 			consumer.effectType === 'generic' &&
 			consumer.selectionOutcome === 'consume' &&
 			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData) &&
-			matchesAttackDelivery(
-				consumer.bonusOnAttackDelivery,
-				attackDeliveryFromAttackType(
-					(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
-				),
-			);
+			matchesAttackDelivery(consumer.bonusOnAttackDelivery, this.#attackDelivery());
 		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
 
 		const picked = resolvePoolSpendSelection(pool.faces, selection);

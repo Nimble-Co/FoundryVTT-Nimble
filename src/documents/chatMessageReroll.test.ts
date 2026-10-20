@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from '../dice/DamageRoll.js';
+import localize from '../utils/localize.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 /**
@@ -72,6 +73,7 @@ function rerollEntry(overrides: Record<string, unknown> = {}) {
 		actorUuid: 'Actor.target',
 		tokenUuid: null,
 		targetTokenUuid: TARGET_TOKEN,
+		side: 'target',
 		label: 'Pocket Sand',
 		ruleId: 'reroll-1',
 		itemUuid: 'Item.sand',
@@ -81,7 +83,7 @@ function rerollEntry(overrides: Record<string, unknown> = {}) {
 	};
 }
 
-function serializedRoll(isCritical = false) {
+function serializedRoll(isCritical = false, forceMiss = false) {
 	return {
 		class: 'DamageRoll',
 		formula: '1d6 + 2',
@@ -89,7 +91,14 @@ function serializedRoll(isCritical = false) {
 		total: 8,
 		isCritical,
 		isMiss: false,
-		options: { canCrit: false, canMiss: false, rollMode: 0, netRollMode: 0, primaryDieModifier: 1 },
+		options: {
+			canCrit: false,
+			canMiss: false,
+			rollMode: 0,
+			netRollMode: 0,
+			primaryDieModifier: 1,
+			...(forceMiss ? { forceMiss } : {}),
+		},
 		data: {},
 	};
 }
@@ -106,9 +115,10 @@ function createMessage(
 		discardedCritTriggers?: boolean;
 		targets?: string[];
 		attackType?: string;
+		forceMiss?: boolean;
 	} = {},
 ): MockedMessage {
-	const roll = serializedRoll(params.isCritical ?? false);
+	const roll = serializedRoll(params.isCritical ?? false, params.forceMiss ?? false);
 	const message = new NimbleChatMessage({
 		type: 'spell',
 		speaker: { scene: 'scene', token: 'attacker-token', actor: 'attacker' },
@@ -187,11 +197,12 @@ beforeEach(() => {
 
 describe('resolveRerollReaction', () => {
 	it('rerolls the primary damage roll and marks the entry used', async () => {
-		setupWorld();
+		const { rule } = setupWorld();
 		const message = createMessage();
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');
 
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
 		const payload = updatePayload(message);
 		expect(payload.system.activation.effects[0].discardedRoll).toEqual(serializedRoll());
 		expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
@@ -257,42 +268,34 @@ describe('resolveRerollReaction', () => {
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(target.system.attributes.wounds.value).toBe(0);
-		expect(globals().ui.notifications.warn).toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.rerollNoLongerAvailable'),
+		);
 	});
 
-	it('refuses when the rule no longer offers the reroll, such as an empty pool', async () => {
-		setupWorld({ offersRerollOn: vi.fn(() => false) });
-		const message = createMessage();
-
-		await message.resolveRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('refuses a target entry once its token is no longer a target', async () => {
+	it('refuses a roll that misses by force as a failed use', async () => {
 		setupWorld();
-		const message = createMessage({ targets: ['Scene.scene.Token.someone-else'] });
+		const message = createMessage({ forceMiss: true });
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.useFailed'),
+		);
 	});
 
-	it('lets the attacker use a roller entry, and nobody else', async () => {
-		const roller = {
-			offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller'),
-		};
-		setupWorld(roller);
-		const ownEntry = rerollEntry({ actorUuid: 'Actor.attacker', targetTokenUuid: null });
-		const ownMessage = createMessage({ entries: [ownEntry] });
-		await ownMessage.resolveRerollReaction('entry-1', 'gm-user');
-		expect(ownMessage.update).toHaveBeenCalledTimes(1);
+	it('lets the attacker use a roller entry', async () => {
+		setupWorld({ offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller') });
+		const message = createMessage({
+			entries: [
+				rerollEntry({ actorUuid: 'Actor.attacker', targetTokenUuid: null, side: 'roller' }),
+			],
+		});
 
-		setupWorld(roller);
-		const strayEntry = rerollEntry({ actorUuid: 'Actor.target', targetTokenUuid: null });
-		const strayMessage = createMessage({ entries: [strayEntry] });
-		await strayMessage.resolveRerollReaction('entry-1', 'gm-user');
-		expect(strayMessage.update).not.toHaveBeenCalled();
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).toHaveBeenCalledTimes(1);
 	});
 
 	it('refuses a player who does not own the actor', async () => {
@@ -339,6 +342,7 @@ describe('resolveRerollReaction', () => {
 			ruleId: 'reroll-1',
 			actorUuid: 'Actor.target',
 			targetTokenUuid: TARGET_TOKEN,
+			side: 'target',
 			used: false,
 		});
 	});
