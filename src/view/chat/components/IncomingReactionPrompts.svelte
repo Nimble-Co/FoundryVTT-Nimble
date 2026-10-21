@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { IncomingReactionPromptsProps } from '#types/components/IncomingReactionPrompts.d.ts';
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { IncomingReactionEntry, LastReroll } from '#utils/incomingReactionEntry.ts';
 
@@ -19,6 +20,17 @@
 	import { canPayForRerollEntry } from '#utils/rerollEntries.js';
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
+	import { getIncomingReactionCost } from './incomingReactionCost.ts';
+
+	interface ActorGroup {
+		actorUuid: string;
+		name: string;
+		entries: IncomingReactionEntry[];
+	}
+
+	function changesTheRoll(entry: IncomingReactionEntry): boolean {
+		return entry.kind === 'reroll' || entry.kind === 'forceReroll';
+	}
 
 	function getReactingActor(entry: IncomingReactionEntry) {
 		return (fromUuidSync(entry.actorUuid) ?? null) as Actor.Implementation | null;
@@ -32,44 +44,52 @@
 		return true;
 	}
 
-	function getEntryHeading(entry: IncomingReactionEntry): string {
-		if (entry.kind === 'forceReroll') {
-			return localize('NIMBLE.chat.incomingReactions.forceReroll');
-		}
-		if (entry.kind === 'spendPoolForDamage') {
-			return localize('NIMBLE.chat.incomingReactions.spendPoolForDamage');
-		}
-		return entry.source === 'baseline'
-			? localize('NIMBLE.chat.incomingReactions.baselineInterpose')
-			: localize('NIMBLE.chat.incomingReactions.interpose');
-	}
-
 	function getSourceItemName(entry: IncomingReactionEntry): string {
 		if (!entry.itemUuid) return '';
 		return ((fromUuidSync(entry.itemUuid) as { name?: string } | null)?.name ?? '').trim();
 	}
 
 	function getEntryLabel(entry: IncomingReactionEntry): string {
-		if (entry.kind === 'reroll') {
+		if (changesTheRoll(entry)) {
 			return localize('NIMBLE.chat.incomingReactions.rerollWith', {
 				feature: getSourceItemName(entry) || entry.label,
 			});
 		}
-		const heading = getEntryHeading(entry);
-		const actorName = getReactingActor(entry)?.name ?? '';
-		// An attacker-side spend is already attributed by the card's speaker, so
-		// the actor name adds nothing. Prefer the feature's own name over the
-		// rule label, which is written for the rules builder, not for players.
+		// Prefer the feature's own name over the rule label, which is written
+		// for the rules builder, not for players.
 		if (entry.kind === 'spendPoolForDamage') {
+			const heading = localize('NIMBLE.chat.incomingReactions.spendPoolForDamage');
 			const featureName = getSourceItemName(entry);
 			return featureName ? `${heading}: ${featureName}` : heading;
 		}
-		const source = entry.label ? `: ${entry.label}` : '';
-		return `${heading}${source} — ${actorName}`;
+		const heading = localize('NIMBLE.chat.incomingReactions.interpose');
+		return entry.source === 'rule' && entry.label ? `${heading}: ${entry.label}` : heading;
+	}
+
+	function getEntryCost(entry: IncomingReactionEntry): string {
+		return getIncomingReactionCost(entry, getReactingActor(entry));
+	}
+
+	/** One group per actor, in the order the card lists them. */
+	function groupByActor(list: IncomingReactionEntry[]): ActorGroup[] {
+		const groups = new Map<string, ActorGroup>();
+		for (const entry of list) {
+			let group = groups.get(entry.actorUuid);
+			if (!group) {
+				group = {
+					actorUuid: entry.actorUuid,
+					name: (getReactingActor(entry)?.name ?? '').trim(),
+					entries: [],
+				};
+				groups.set(entry.actorUuid, group);
+			}
+			group.entries.push(entry);
+		}
+		return [...groups.values()];
 	}
 
 	function getEntryIcon(entry: IncomingReactionEntry): string {
-		if (entry.kind === 'forceReroll' || entry.kind === 'reroll') return 'fa-solid fa-rotate-left';
+		if (changesTheRoll(entry)) return 'fa-solid fa-rotate-left';
 		if (entry.kind === 'spendPoolForDamage') return 'fa-solid fa-dice-d6';
 		return 'fa-solid fa-shield-heart';
 	}
@@ -300,6 +320,7 @@
 	}
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
+	let { place }: IncomingReactionPromptsProps = $props();
 	let busy = $state(false);
 
 	/**
@@ -343,28 +364,36 @@
 		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
 			?.incomingReactions ?? [],
 	);
-	let pendingEntries = $derived(
-		entries.filter((entry) => !entry.used && !heldEntryIds.has(entry.id) && canUseEntry(entry)),
+	let placeEntries = $derived(
+		entries.filter((entry) => changesTheRoll(entry) === (place === 'roll')),
+	);
+	let pendingGroups = $derived(
+		groupByActor(
+			placeEntries.filter(
+				(entry) => !entry.used && !heldEntryIds.has(entry.id) && canUseEntry(entry),
+			),
+		),
 	);
 	// A used reroll is told by the card's history line, not by its entry.
-	let usedEntries = $derived(entries.filter((entry) => entry.used && entry.kind !== 'reroll'));
+	let usedEntries = $derived(placeEntries.filter((entry) => entry.used && entry.kind !== 'reroll'));
 	let lastReroll = $derived(
 		(messageDocument?.reactive?.system as { lastReroll?: LastReroll | null })?.lastReroll ?? null,
 	);
-	let rerollHistoryLines = $derived(lastReroll ? getRerollHistoryLines(lastReroll) : []);
+	let rerollHistoryLines = $derived(
+		place === 'roll' && lastReroll ? getRerollHistoryLines(lastReroll) : [],
+	);
 </script>
 
-{#if pendingEntries.length > 0 || usedEntries.length > 0 || rerollHistoryLines.length > 0}
-	<section class="nimble-card-section nimble-card-section--incoming-reactions">
-		{#if pendingEntries.length > 0}
-			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">
-					{localize('NIMBLE.chat.incomingReactions.heading')}
-				</h3>
-			</header>
+{#snippet actorGroups(groups: ActorGroup[])}
+	{#each groups as group (group.actorUuid)}
+		<div class="nimble-incoming-reaction-group">
+			{#if group.name}
+				<p class="nimble-incoming-reaction-group__actor">{group.name}</p>
+			{/if}
 
 			<ul class="nimble-incoming-reaction-list">
-				{#each pendingEntries as entry (entry.id)}
+				{#each group.entries as entry (entry.id)}
+					{@const cost = getEntryCost(entry)}
 					<li>
 						<button
 							class="nimble-button nimble-incoming-reaction-button"
@@ -373,20 +402,57 @@
 							data-tooltip={getEntryTooltip(entry)}
 							onclick={() => useEntry(entry)}
 						>
-							<i class="nimble-button__icon {getEntryIcon(entry)}"></i>
-							{getEntryLabel(entry)}
+							<i class="nimble-incoming-reaction-button__icon {getEntryIcon(entry)}"></i>
+							<span class="nimble-incoming-reaction-button__label">{getEntryLabel(entry)}</span>
+							{#if cost}
+								<span class="nimble-incoming-reaction-button__cost">{cost}</span>
+							{/if}
 						</button>
 					</li>
 				{/each}
 			</ul>
-		{/if}
+		</div>
+	{/each}
+{/snippet}
 
-		{#each rerollHistoryLines as line, index (index)}
-			<p class="nimble-incoming-reaction-attribution">
-				{#if index === 0}<i class="fa-solid fa-rotate-left"></i>{/if}
-				{line}
-			</p>
-		{/each}
+{#if place === 'roll'}
+	{#if pendingGroups.length > 0 || usedEntries.length > 0 || rerollHistoryLines.length > 0}
+		<section class="nimble-roll-changes">
+			{#if rerollHistoryLines.length > 0}
+				<div class="nimble-roll-changes__history">
+					<i class="fa-solid fa-rotate-left"></i>
+					<div>
+						<p>{rerollHistoryLines[0]}</p>
+						<p class="nimble-roll-changes__detail">{rerollHistoryLines[1]}</p>
+					</div>
+				</div>
+			{/if}
+
+			{#each usedEntries as entry (entry.id)}
+				<div class="nimble-roll-changes__history">
+					<i class={getEntryIcon(entry)}></i>
+					<p>{getUsedAttribution(entry)}</p>
+				</div>
+			{/each}
+
+			{#if pendingGroups.length > 0}
+				<div class="nimble-roll-changes__well">
+					{@render actorGroups(pendingGroups)}
+				</div>
+			{/if}
+		</section>
+	{/if}
+{:else if pendingGroups.length > 0 || usedEntries.length > 0}
+	<section class="nimble-card-section nimble-card-section--incoming-reactions">
+		{#if pendingGroups.length > 0}
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.chat.incomingReactions.heading')}
+				</h3>
+			</header>
+
+			{@render actorGroups(pendingGroups)}
+		{/if}
 
 		{#each usedEntries as entry (entry.id)}
 			<p class="nimble-incoming-reaction-attribution">
@@ -398,6 +464,54 @@
 {/if}
 
 <style lang="scss">
+	.nimble-roll-changes {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		padding: 0.5rem;
+
+		&:not(:last-of-type) {
+			padding-bottom: 0;
+		}
+
+		&__history {
+			display: flex;
+			align-items: flex-start;
+			gap: 0.375rem;
+			font-size: var(--nimble-sm-text);
+
+			i {
+				margin-top: 0.125rem;
+			}
+
+			p {
+				margin: 0;
+			}
+		}
+
+		&__detail {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__well {
+			margin-top: 0.125rem;
+		}
+	}
+
+	.nimble-incoming-reaction-group {
+		&:not(:first-child) {
+			margin-top: 0.375rem;
+		}
+
+		&__actor {
+			margin: 0 0 0.1875rem;
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+		}
+	}
+
 	.nimble-incoming-reaction-list {
 		display: flex;
 		flex-direction: column;
@@ -417,7 +531,22 @@
 		text-align: left;
 
 		&__icon {
+			flex: none;
 			line-height: 0;
+		}
+
+		&__label {
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__cost {
+			flex: none;
+			margin-left: auto;
+			font-size: var(--nimble-xs-text);
+			font-weight: 400;
+			color: var(--nimble-medium-text-color);
+			white-space: nowrap;
 		}
 	}
 

@@ -1,6 +1,5 @@
-import { ruleChargesLeft } from './chargePool/ruleChargeGate.js';
 import type { IncomingReactionEntry, LastReroll } from './incomingReactionEntry.js';
-import { payRerollCost, refundRerollCost } from './rerollCost.js';
+import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll } from './rerollOptions.js';
 
@@ -73,7 +72,7 @@ async function rerollWithRule<TRoll>(
 				previousResult: input.previousResult,
 				previousWasCritical,
 				newResult: (roll as { primaryDieValue?: number }).primaryDieValue ?? null,
-				usesLeft: ruleChargesLeft(payer, cost?.chargePoolIdentifier ?? ''),
+				usesLeft: cost ? rerollUsesLeft(payer, cost) : null,
 				woundsGained: paid?.wounds ?? 0,
 			},
 			discardedCritTriggers:

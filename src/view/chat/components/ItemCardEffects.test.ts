@@ -153,6 +153,35 @@ describe('ItemCardEffects apply-damage controls', () => {
 		expect(applyButtons()).toHaveLength(1);
 	});
 
+	it('tells a reroll inside the roll section, before Apply Damage', () => {
+		const g = globalThis as unknown as { fromUuidSync: unknown };
+		const previousFromUuidSync = g.fromUuidSync;
+		g.fromUuidSync = () => ({ name: 'Pocket Sand' });
+		const message = createMessage([[damageNode('a', 'slashing', 4)]]);
+		(message.system as Record<string, unknown>).lastReroll = {
+			entryId: 'reroll-entry',
+			itemUuid: 'Item.sand',
+			label: '',
+			actorUuid: 'Actor.wren',
+			previousResult: 7,
+			previousWasCritical: false,
+			newResult: 4,
+			usesLeft: null,
+			woundsGained: 0,
+		};
+
+		try {
+			render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
+
+			const history = screen.getByText('Rerolled with Pocket Sand: 7 became 4');
+			const [apply] = applyButtons();
+			expect(history.closest('.nimble-card-section')).toBe(apply.closest('.nimble-card-section'));
+			expect(history.compareDocumentPosition(apply)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		} finally {
+			g.fromUuidSync = previousFromUuidSync;
+		}
+	});
+
 	it('renders nothing for a player, who cannot apply damage', () => {
 		gameStub().user = { isGM: false };
 

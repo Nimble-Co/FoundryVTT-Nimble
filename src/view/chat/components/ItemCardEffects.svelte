@@ -3,6 +3,7 @@
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
 	import localize from '../../../utils/localize.js';
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
+	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
 
 	/**
 	 * `groupNodes` collects every damage node of a card into one group, so a
@@ -41,10 +42,14 @@
 				{/if}
 			{/each}
 
-			{#if game.user?.isGM && isDamageGroup(nodeGroup)}
-				<section class="nimble-effect">
-					<ApplyDamageButton nodes={nodeGroup} />
-				</section>
+			{#if isDamageGroup(nodeGroup)}
+				<IncomingReactionPrompts place="roll" />
+
+				{#if game.user?.isGM}
+					<section class="nimble-effect">
+						<ApplyDamageButton nodes={nodeGroup} />
+					</section>
+				{/if}
 			{/if}
 		</section>
 	{/if}

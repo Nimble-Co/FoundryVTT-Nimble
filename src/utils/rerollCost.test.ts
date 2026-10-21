@@ -5,6 +5,7 @@ import {
 	type RerollCost,
 	refundRerollCost,
 	rerollCostCharges,
+	rerollUsesLeft,
 } from './rerollCost.js';
 
 const testGlobals = globalThis as unknown as {
@@ -125,6 +126,21 @@ describe('rerollCost', () => {
 			expect(
 				canPayRerollCost(makeActor().asActor, cost({ chargePoolIdentifier: 'sand', manaCost: 9 })),
 			).toBe(true);
+		});
+	});
+
+	describe('rerollUsesLeft', () => {
+		it('counts uses, not charges', () => {
+			const twoCharges = cost({ chargePoolIdentifier: 'sand', chargeCost: 2 });
+			expect(rerollUsesLeft(makeActor({ charges: 2 }).asActor, twoCharges)).toBe(1);
+			expect(rerollUsesLeft(makeActor({ charges: 1 }).asActor, twoCharges)).toBe(0);
+			expect(
+				rerollUsesLeft(makeActor({ charges: 2 }).asActor, cost({ chargePoolIdentifier: 'sand' })),
+			).toBe(2);
+		});
+
+		it('is null without a charge pool', () => {
+			expect(rerollUsesLeft(makeActor({ charges: 2 }).asActor, cost())).toBeNull();
 		});
 	});
 

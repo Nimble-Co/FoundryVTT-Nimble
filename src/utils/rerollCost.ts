@@ -1,7 +1,12 @@
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { getActorWoundsValueAndMax } from './actorResources.js';
-import { hasRuleCharge, refundRuleCharge, spendRuleCharge } from './chargePool/ruleChargeGate.js';
+import {
+	hasRuleCharge,
+	refundRuleCharge,
+	ruleChargesLeft,
+	spendRuleCharge,
+} from './chargePool/ruleChargeGate.js';
 import { getHeroicReactionAvailabilityUpdate, type HeroicReactionKey } from './heroicActions.js';
 import { isCombatStarted } from './isCombatStarted.js';
 import { spendSpellCost } from './spell/spendSpellCost.js';
@@ -60,6 +65,12 @@ function findActorCombatant(
 		(candidate) => candidate.actor === actor || candidate.actor?.uuid === actor.uuid,
 	);
 	return combatant ? { combat, combatant } : null;
+}
+
+/** How many more times the cost's charges pay for it, or null when it uses no charge pool. */
+function rerollUsesLeft(actor: RerollPayer, cost: RerollCost): number | null {
+	const charges = ruleChargesLeft(actor, cost.chargePoolIdentifier);
+	return charges === null ? null : Math.floor(charges / Math.max(1, cost.chargeCost));
 }
 
 /**
@@ -215,6 +226,7 @@ export {
 	payRerollCost,
 	refundRerollCost,
 	rerollCostCharges,
+	rerollUsesLeft,
 	type PaidRerollCost,
 	type RerollCost,
 };
