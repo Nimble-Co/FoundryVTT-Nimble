@@ -15,6 +15,7 @@ import type {
 	ChargePoolScope,
 	ChargePoolState,
 	ChargeRecoveryEntry,
+	ChargeRecoveryGiven,
 	ChargeRecoveryMode,
 	ChargeRecoveryTrigger,
 	ModifyPoolRuleLike,
@@ -617,35 +618,56 @@ function recoveryPredicateHolds(actor: CharacterActorLike, recovery: ChargeRecov
 	return new Predicate(raw as RawPredicate).test(domain);
 }
 
+function recoveredValue(
+	actor: CharacterActorLike,
+	pool: ChargePoolState,
+	recovery: ChargeRecoveryEntry,
+): number {
+	if (recovery.mode === 'refresh') return pool.max;
+
+	const value = resolveFormulaToInteger(actor, recovery.value);
+	if (recovery.mode === 'set') return clampCurrentToMax(value, pool.max);
+	return clampCurrentToMax(pool.current + value, pool.max);
+}
+
+function addRecoveryGiven(
+	given: ChargeRecoveryGiven,
+	poolId: string,
+	trigger: ChargeRecoveryTrigger,
+	change: number,
+): void {
+	if (change === 0) return;
+	const entry = given.find((e) => e.poolId === poolId && e.trigger === trigger);
+	if (entry) entry.change += change;
+	else given.push({ poolId, trigger, change });
+}
+
+/**
+ * Apply every recovery whose trigger is in `triggers`. When `given` is passed,
+ * the net change each trigger made on each pool is added to it.
+ */
 function applyRecoveryTriggersToPools(
 	actor: CharacterActorLike,
 	pools: ChargePoolMap,
 	triggers: ChargeRecoveryTrigger[],
+	given?: ChargeRecoveryGiven,
 ): ChargePoolMap {
 	if (triggers.length < 1) return pools;
 
 	const triggerSet = new Set(triggers);
 	const nextPools = foundry.utils.deepClone(pools) as ChargePoolMap;
 
-	for (const pool of Object.values(nextPools)) {
+	for (const [poolId, pool] of Object.entries(nextPools)) {
 		for (const recovery of pool.recoveries) {
 			if (!triggerSet.has(recovery.trigger)) continue;
 			// Entry-level predicates are evaluated now, against live state, so a
 			// recovery can depend on something that flips mid-combat.
 			if (!recoveryPredicateHolds(actor, recovery)) continue;
 
-			if (recovery.mode === 'refresh') {
-				pool.current = pool.max;
-				continue;
-			}
+			const before = pool.current;
+			pool.current = recoveredValue(actor, pool, recovery);
 
-			const value = resolveFormulaToInteger(actor, recovery.value);
-			if (recovery.mode === 'set') {
-				pool.current = clampCurrentToMax(value, pool.max);
-				continue;
-			}
-
-			pool.current = clampCurrentToMax(pool.current + value, pool.max);
+			if (given) addRecoveryGiven(given, poolId, recovery.trigger, pool.current - before);
 		}
 	}
 
@@ -865,6 +887,7 @@ export {
 	findUnofferableVariableSpends,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,
+	addRecoveryGiven,
 	resolveRecoveryTrigger,
 	buildPoolUpdatePayload,
 	persistChargePoolMap,

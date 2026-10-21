@@ -1,7 +1,7 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
@@ -39,6 +39,13 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
+import {
+	applyRerollRecoveryChange,
+	RECOVERY_GIVEN_FLAG,
+	type RecoveryTriggerChange,
+	rerollRecoveryChange,
+} from '../utils/chargePool/chargePoolReroll.js';
+import type { ChargeRecoveryGiven } from '../utils/chargePool/types.js';
 import { offerSurvives } from '../utils/incomingAttackModifiers.js';
 import {
 	type PoolSpendSelection,
@@ -1634,6 +1641,13 @@ class NimbleChatMessage extends ChatMessage {
 			carried.roll,
 		);
 
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const recoveryChange = rerollRecoveryChange(
+			systemData,
+			newRoll,
+			history?.discardedCritTriggers ?? systemData.discardedCritTriggers === true,
+		);
+
 		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
 		const entries = this.#withRerollEntriesFor(
 			this.#dropStaleOutcomeOffers(carried.entries, newRoll),
@@ -1648,6 +1662,33 @@ class NimbleChatMessage extends ChatMessage {
 				...this.#movementOfferChanges(outcome),
 			},
 		} as Record<string, unknown>);
+
+		await this.#rerollChargeRecovery(recoveryChange);
+	}
+
+	/**
+	 * Make the attacker's charge recoveries follow the roll that now stands.
+	 * Runs after the card is written; a failure here does not undo the reroll.
+	 */
+	async #rerollChargeRecovery(change: RecoveryTriggerChange): Promise<void> {
+		const flags = (this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID];
+		const itemUuid = flags?.itemUuid;
+		if (typeof itemUuid !== 'string') return;
+
+		try {
+			const item = fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null;
+			const given = await applyRerollRecoveryChange(
+				item?.actor,
+				change,
+				flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined,
+			);
+			if (!given) return;
+			await this.update({
+				[`flags.${SYSTEM_ID}.${RECOVERY_GIVEN_FLAG}`]: given,
+			} as Record<string, unknown>);
+		} catch (error) {
+			console.error('Nimble | Could not change charge recovery after a reroll.', error);
+		}
 	}
 
 	/** The actor that made this card's attack. */

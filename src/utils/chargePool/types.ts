@@ -175,10 +175,15 @@ type ChargeConsumptionDetail = {
 	};
 };
 
+/** Net charges a recovery trigger moved on one pool. */
+type ChargeRecoveryGivenEntry = { poolId: string; trigger: ChargeRecoveryTrigger; change: number };
+type ChargeRecoveryGiven = ChargeRecoveryGivenEntry[];
+
 type ChargeValidationResult = {
 	ok: boolean;
 	failure?: ChargeValidationFailure;
 	consumption?: ChargeConsumptionDetail[];
+	recoveryGiven?: ChargeRecoveryGiven;
 };
 
 type ChargePoolRecoveryPreview = {
@@ -217,5 +222,7 @@ export type {
 	ChargeValidationFailure,
 	ChargeConsumptionDetail,
 	ChargeValidationResult,
+	ChargeRecoveryGiven,
+	ChargeRecoveryGivenEntry,
 	ChargePoolRecoveryPreview,
 };

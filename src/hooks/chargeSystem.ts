@@ -4,6 +4,7 @@ import {
 	validateItemChargeConsumption,
 } from '#utils/chargePool/chargePoolConsume.js';
 import { applyEncounterRecovery, applyRestRecovery } from '#utils/chargePool/chargePoolRecover.js';
+import { RECOVERY_GIVEN_FLAG } from '#utils/chargePool/chargePoolReroll.js';
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import { firesCritTriggers } from '#utils/firesCritTriggers.js';
@@ -169,13 +170,22 @@ function registerItemUseHooks(): void {
 		} | null;
 
 		void consumeOnResolvedItemUse(characterItem, itemUseContext).then(async (validation) => {
-			if (validation.consumption && validation.consumption.length > 0 && typedChatMessage?.update) {
+			const cardChanges: Record<string, unknown> = {};
+			if (validation.consumption && validation.consumption.length > 0) {
 				// The card may already carry what the player spent in the activation
 				// dialog, which this rule-driven spend adds to rather than replaces.
-				const alreadyOnCard = typedChatMessage.flags?.[SYSTEM_ID]?.chargeConsumption ?? [];
-				await typedChatMessage.update({
-					[`flags.${SYSTEM_ID}.chargeConsumption`]: [...alreadyOnCard, ...validation.consumption],
-				} as Record<string, unknown>);
+				const alreadyOnCard = typedChatMessage?.flags?.[SYSTEM_ID]?.chargeConsumption ?? [];
+				cardChanges[`flags.${SYSTEM_ID}.chargeConsumption`] = [
+					...alreadyOnCard,
+					...validation.consumption,
+				];
+			}
+			// A reroll on the card reads this to take back what the first roll gave.
+			if (validation.recoveryGiven) {
+				cardChanges[`flags.${SYSTEM_ID}.${RECOVERY_GIVEN_FLAG}`] = validation.recoveryGiven;
+			}
+			if (Object.keys(cardChanges).length > 0 && typedChatMessage?.update) {
+				await typedChatMessage.update(cardChanges);
 			}
 
 			if (validation.ok) return;

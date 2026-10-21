@@ -215,6 +215,25 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 		});
 	});
 
+	it('writes what each attack recovery gave onto the card', async () => {
+		const hooks = captureHooks();
+		const recoveryGiven = [{ poolId: 'actor:focus', trigger: 'onCriticalHit', change: 1 }];
+		consumeOnResolvedItemUseMock.mockResolvedValueOnce({
+			ok: true,
+			recoveryGiven,
+		} as unknown as { ok: boolean });
+		const registerChargeSystemHooks = (await import('./chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const card = { flags: {}, update: vi.fn(async () => undefined) };
+		hooks.get('nimble.useItem')?.(createCharacterItem(), card, { isCritical: true });
+
+		await vi.waitFor(() => expect(card.update).toHaveBeenCalledTimes(1));
+		expect(card.update).toHaveBeenCalledWith({
+			'flags.nimble.chargeRecoveryGiven': recoveryGiven,
+		});
+	});
+
 	it('skips validation and consumption but allows the use when spending automation is off', async () => {
 		const hooks = captureHooks();
 		setSpendingAutomation(false);
