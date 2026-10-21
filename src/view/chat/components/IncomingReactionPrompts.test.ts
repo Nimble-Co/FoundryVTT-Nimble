@@ -48,7 +48,7 @@ vi.mock('#utils/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
 }));
-vi.mock('#utils/confirmRerollHeroicReaction.js', () => ({
+vi.mock('./confirmRerollHeroicReaction.js', () => ({
 	confirmRerollHeroicReaction: vi.fn(async () => false),
 }));
 
@@ -104,6 +104,7 @@ function createMessage(
 		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
 		system: { incomingReactions: entries, lastReroll },
 		reactive: null as unknown,
+		canStillUseReroll: vi.fn(() => true),
 	};
 	message.reactive = message;
 	return message;
@@ -395,9 +396,11 @@ describe('IncomingReactionPrompts', () => {
 	});
 
 	describe('Reroll rule entries', () => {
-		const ACTORS: Record<string, { name: string; isOwner: boolean }> = {
-			'Actor.wren': { name: 'Wren', isOwner: true },
-			'Actor.bram': { name: 'Bram', isOwner: false },
+		// Room below the Wound maximum, so a Wound cost can be paid.
+		const system = { attributes: { wounds: { value: 0, max: 6 } } };
+		const ACTORS: Record<string, { name: string; isOwner: boolean; system: typeof system }> = {
+			'Actor.wren': { name: 'Wren', isOwner: true, system },
+			'Actor.bram': { name: 'Bram', isOwner: false, system },
 		};
 		let rerollCost: Record<string, unknown>;
 
@@ -418,7 +421,7 @@ describe('IncomingReactionPrompts', () => {
 						]),
 					};
 				}
-				return ACTORS[uuid] ?? { name: 'Brom', isOwner: true };
+				return ACTORS[uuid] ?? { name: 'Brom', isOwner: true, system };
 			});
 		});
 
@@ -528,6 +531,51 @@ describe('IncomingReactionPrompts', () => {
 			expect(cost?.textContent).toBe('1 Wound, Heroic Reaction');
 		});
 
+		describe('with the Costs toggle off', () => {
+			let previousSettings: unknown;
+
+			beforeEach(() => {
+				const g = globalThis as Record<string, any>;
+				previousSettings = g.game.settings;
+				g.game.settings = {
+					get: (_scope: string, key: string) => key !== 'automation.resourceSpending',
+				};
+			});
+
+			afterEach(() => {
+				(globalThis as Record<string, any>).game.settings = previousSettings;
+			});
+
+			const costText = () =>
+				screen
+					.getByTestId('roll-place')
+					.querySelector('.nimble-incoming-reaction-button__cost')
+					?.textContent?.trim() ?? '';
+
+			it('shows only the heroic reaction, the one part still spent', () => {
+				rerollCost.chargePoolIdentifier = 'sand';
+				rerollCost.manaCost = 2;
+				rerollCost.woundCost = 1;
+				rerollCost.heroicReaction = 'defend';
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: createMessage([rerollEntry()]) },
+				});
+
+				expect(costText()).toBe('Heroic Reaction');
+			});
+
+			it('shows no cost when the reroll uses no heroic reaction', () => {
+				rerollCost.chargePoolIdentifier = 'sand';
+				rerollCost.manaCost = 2;
+				rerollCost.woundCost = 1;
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: createMessage([rerollEntry()]) },
+				});
+
+				expect(costText()).toBe('');
+			});
+		});
+
 		it('asks the GM to reroll when the button is pressed', async () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: createMessage([rerollEntry()]) },
@@ -544,15 +592,14 @@ describe('IncomingReactionPrompts', () => {
 			});
 		});
 
-		it('hides the button when the feature is gone', () => {
-			(globalThis as Record<string, any>).fromUuidSync = vi.fn(() => ({
-				name: 'Brom',
-				isOwner: true,
-			}));
-			render(IncomingReactionPromptsTestHarness, {
-				props: { messageDocument: createMessage([rerollEntry()]) },
-			});
+		it('asks the card whether each reroll can still be used, and hides it when not', () => {
+			const message = createMessage([rerollEntry()]);
+			message.canStillUseReroll.mockReturnValue(false);
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
+			expect(message.canStillUseReroll).toHaveBeenCalledWith(
+				expect.objectContaining({ id: 'reroll-entry' }),
+			);
 			expect(screen.queryByRole('button')).toBeNull();
 		});
 

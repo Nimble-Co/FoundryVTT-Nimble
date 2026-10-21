@@ -213,7 +213,9 @@ describe('RerollRule', () => {
 					continue;
 				const options = (field.options ?? field) as { label?: string; hint?: string };
 				expect(options.label, name).toBe(`NIMBLE.rules.reroll.${name}.label`);
-				expect(options.hint, name).toBe(`NIMBLE.rules.reroll.${name}.hint`);
+				expect(options.hint, name).toBe(
+					name === 'rolls' ? undefined : `NIMBLE.rules.reroll.${name}.hint`,
+				);
 			}
 		});
 

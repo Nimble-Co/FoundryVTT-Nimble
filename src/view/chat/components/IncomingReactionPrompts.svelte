@@ -5,7 +5,7 @@
 
 	import { getContext } from 'svelte';
 	import PoolSpendOfferDialog from '#documents/dialogs/PoolSpendOfferDialog.svelte.ts';
-	import { confirmRerollHeroicReaction } from '#utils/confirmRerollHeroicReaction.js';
+	import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
 	import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 	import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 	import {
@@ -17,7 +17,6 @@
 		type IncomingReactionRejection,
 		requestIncomingAttackReaction,
 	} from '#utils/incomingAttackReactions.js';
-	import { canPayForRerollEntry } from '#utils/rerollEntries.js';
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 	import { getIncomingReactionCost } from './incomingReactionCost.ts';
@@ -39,8 +38,8 @@
 	function canUseEntry(entry: IncomingReactionEntry): boolean {
 		const actor = getReactingActor(entry);
 		if (!game.user?.isGM && !actor?.isOwner) return false;
-		// A reroll whose cost can no longer be paid (no charges left) is hidden.
-		if (entry.kind === 'reroll') return canPayForRerollEntry(entry, actor);
+		// A reroll the card no longer allows (outcome, side, cost) is hidden.
+		if (entry.kind === 'reroll') return messageDocument?.canStillUseReroll(entry) ?? false;
 		return true;
 	}
 

@@ -1,5 +1,6 @@
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-import { firesCritTriggers } from '../firesCritTriggers.js';
+import { critTriggerOutcome } from '../firesCritTriggers.js';
+import type { AttackOutcomeView } from '../incomingReactionEntry.js';
 import { emitForCharacter } from './chargePoolHooks.js';
 import {
 	applyRecoveryTriggersToPools,
@@ -21,11 +22,6 @@ import type {
 /** Card flag with what each attack recovery trigger gave on each pool. */
 const RECOVERY_GIVEN_FLAG = 'chargeRecoveryGiven';
 
-interface AttackOutcome {
-	isCritical?: boolean;
-	isMiss?: boolean;
-}
-
 interface RecoveryTriggerChange {
 	takeBack: ChargeRecoveryTrigger[];
 	give: ChargeRecoveryTrigger[];
@@ -38,15 +34,16 @@ interface RerollRecoveryResult {
 
 /** The attack recovery triggers an outcome fires, as item use reads them. */
 function attackRecoveryTriggers(
-	outcome: AttackOutcome,
+	outcome: AttackOutcomeView,
 	critStillCounts: boolean,
 ): ChargeRecoveryTrigger[] {
-	if (
-		firesCritTriggers({ isCritical: outcome.isCritical, discardedCritTriggers: critStillCounts })
-	) {
-		return getApplicableUsageTriggers({ isMiss: false, isCritical: true });
-	}
-	return getApplicableUsageTriggers({ isMiss: outcome.isMiss === true, isCritical: false });
+	return getApplicableUsageTriggers(
+		critTriggerOutcome({
+			isCritical: outcome.isCritical,
+			isMiss: outcome.isMiss,
+			discardedCritTriggers: critStillCounts,
+		}),
+	);
 }
 
 /**
@@ -54,8 +51,8 @@ function attackRecoveryTriggers(
  * crit that still counts keeps the crit for both rolls, so it changes nothing.
  */
 function rerollRecoveryChange(
-	previous: AttackOutcome,
-	next: AttackOutcome,
+	previous: AttackOutcomeView,
+	next: AttackOutcomeView,
 	critStillCounts: boolean,
 ): RecoveryTriggerChange {
 	const before = attackRecoveryTriggers(previous, critStillCounts);
@@ -169,10 +166,6 @@ function entryPoolId(entry: ChargeConsumptionDetail, pools: ChargePoolMap): stri
 	return matches.length === 1 ? matches[0][0] : null;
 }
 
-function clampValue(value: number, max: number): number {
-	return Math.max(0, Math.min(value, max));
-}
-
 function copyEntry(entry: ChargeConsumptionDetail): ChargeConsumptionDetail {
 	return entry.recovery ? { ...entry, recovery: { ...entry.recovery } } : { ...entry };
 }
@@ -209,14 +202,14 @@ function rerollChargeConsumption(
 		entry.recovery = {
 			trigger: refill.trigger,
 			previousValue: entry.currentValue,
-			newValue: clampValue(entry.currentValue + refill.change, entry.maxValue),
+			newValue: clampCurrentToMax(entry.currentValue + refill.change, entry.maxValue),
 		};
 	}
 
 	for (const [poolId, refill] of refills) {
 		const pool = pools[poolId];
 		if (!pool || refill.change === 0 || carriers.has(poolId)) continue;
-		const before = clampValue(pool.current - refill.change, pool.max);
+		const before = clampCurrentToMax(pool.current - refill.change, pool.max);
 		next.push({
 			poolId,
 			poolLabel: pool.label,
@@ -237,7 +230,5 @@ export {
 	applyRerollRecoveryChange,
 	rerollChargeConsumption,
 	rerollRecoveryChange,
-	type AttackOutcome,
 	type RecoveryTriggerChange,
-	type RerollRecoveryResult,
 };

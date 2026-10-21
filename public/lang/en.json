@@ -1853,7 +1853,6 @@
 				},
 				"rolls": {
 					"label": "Which roll can it reroll?",
-					"hint": "",
 					"choices": {
 						"attack": "Attack"
 					}
@@ -1931,11 +1930,7 @@
 					"label": "Heroic reaction it spends",
 					"hint": "Spent only in combat.",
 					"choices": {
-						"none": "None",
-						"defend": "Defend",
-						"interpose": "Interpose",
-						"opportunityAttack": "Opportunity Attack",
-						"help": "Help"
+						"none": "None"
 					}
 				}
 			}

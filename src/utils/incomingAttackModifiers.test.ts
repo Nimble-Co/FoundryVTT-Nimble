@@ -1086,18 +1086,20 @@ describe('Reroll rules on the attack', () => {
 			expect(result.roll).toBe(rebuilt);
 			expect(result.discardedRoll).toEqual({ class: 'DamageRoll', total: 10 });
 			expect(result.stampEntries).toEqual([expect.objectContaining({ id: entry.id, used: true })]);
-			expect(result.lastReroll).toEqual({
-				entryId: entry.id,
-				itemUuid: 'Item.sand',
-				label: 'Pocket Sand',
-				actorUuid: 'Actor.target',
-				previousResult: 8,
-				previousWasCritical: true,
-				newResult: 4,
-				usesLeft: null,
-				woundsGained: 0,
+			expect(result.rerollHistory).toEqual({
+				lastReroll: {
+					entryId: entry.id,
+					itemUuid: 'Item.sand',
+					label: 'Pocket Sand',
+					actorUuid: 'Actor.target',
+					previousResult: 8,
+					previousWasCritical: true,
+					newResult: 4,
+					usesLeft: null,
+					woundsGained: 0,
+				},
+				discardedCritTriggers: false,
 			});
-			expect(result.discardedCritTriggers).toBe(false);
 		});
 
 		it('keeps the first roll when the cost cannot be paid', async () => {
@@ -1115,7 +1117,7 @@ describe('Reroll rules on the attack', () => {
 
 			expect(rebuildRoll).not.toHaveBeenCalled();
 			expect(result.roll).toBe(first);
-			expect(result.lastReroll).toBeNull();
+			expect(result.rerollHistory).toBeNull();
 			expect(result.stampEntries).toEqual([]);
 		});
 

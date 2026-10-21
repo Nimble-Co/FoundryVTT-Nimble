@@ -2,10 +2,12 @@
  * When an outcome-gated offer or reroll applies, given how the attack landed.
  * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
  */
-export type RerollTrigger = 'always' | 'hit' | 'criticalHit' | 'nonCriticalHit' | 'miss';
+export const REROLL_TRIGGERS = ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'] as const;
+export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 
 /** The side of a roll a `reroll` entry is for. */
-export type RerollSide = 'roller' | 'target';
+export const REROLL_SIDES = ['roller', 'target'] as const;
+export type RerollSide = (typeof REROLL_SIDES)[number];
 
 /**
  * The outcome fields a trigger is checked against. An evaluated DamageRoll

@@ -2,7 +2,6 @@ import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttac
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
-	type LastReroll,
 	type RerollSide,
 	type RerollTrigger,
 	rerollTriggerMatches,
@@ -20,7 +19,7 @@ import {
 	rerollEntryStands,
 } from './rerollEntries.js';
 import { prepareReroll } from './rerollOptions.js';
-import { rerollWithRule } from './rerollStep.js';
+import { type RerollHistory, rerollWithRule } from './rerollStep.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -115,9 +114,7 @@ interface PostRollIncomingResult<TRoll> {
 	/** Entries to stamp onto the card: filtered offers + used auto-reroll attribution */
 	stampEntries: IncomingReactionEntry[];
 	/** History of an automatic `reroll`, for the card */
-	lastReroll: LastReroll | null;
-	/** The discarded roll was a crit that still triggers when-crit abilities */
-	discardedCritTriggers: boolean;
+	rerollHistory: RerollHistory | null;
 }
 
 type RebuildRoll<TRoll> = (formula: string, options: Record<string, unknown>) => Promise<TRoll>;
@@ -144,8 +141,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	const asView = (r: TRoll) => r as unknown as EvaluatedDamageRollLike;
 	let finalRoll = roll;
 	let discardedRoll: object | null = null;
-	let lastReroll: LastReroll | null = null;
-	let discardedCritTriggers = false;
+	let rerollHistory: RerollHistory | null = null;
 	const stampEntries: IncomingReactionEntry[] = [];
 
 	const view = asView(roll);
@@ -168,8 +164,10 @@ async function applyPostRollIncomingBehavior<TRoll>(
 			if (result.status === 'done') {
 				discardedRoll = view.toJSON();
 				finalRoll = result.roll;
-				lastReroll = result.lastReroll;
-				discardedCritTriggers = result.discardedCritTriggers;
+				rerollHistory = {
+					lastReroll: result.lastReroll,
+					discardedCritTriggers: result.discardedCritTriggers,
+				};
 				stampEntries.push({ ...autoEntry, used: true });
 			}
 		} else if (autoEntry.kind === 'forceReroll' && !view.options.forceMiss) {
@@ -185,7 +183,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	const finalView = asView(finalRoll);
 	stampEntries.push(...plan.reactionEntries.filter((entry) => offerStands(entry, finalView)));
 
-	return { roll: finalRoll, discardedRoll, stampEntries, lastReroll, discardedCritTriggers };
+	return { roll: finalRoll, discardedRoll, stampEntries, rerollHistory };
 }
 
 function getMatchingRules(actor: ActorLike | null | undefined): RuleLike[] {

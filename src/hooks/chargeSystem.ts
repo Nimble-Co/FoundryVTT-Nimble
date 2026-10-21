@@ -7,7 +7,7 @@ import { applyEncounterRecovery, applyRestRecovery } from '#utils/chargePool/cha
 import { RECOVERY_GIVEN_FLAG } from '#utils/chargePool/chargePoolReroll.js';
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
-import { firesCritTriggers } from '#utils/firesCritTriggers.js';
+import { critTriggerOutcome } from '#utils/firesCritTriggers.js';
 import localize from '#utils/localize.js';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 
@@ -49,12 +49,7 @@ function toItemUseContext(context: unknown): ItemUseContext {
 	if (!context || typeof context !== 'object') return {};
 	const sourceContext = context as Record<string, unknown>;
 
-	// A discarded crit that keeps its triggers recovers charges as if it landed.
-	if (firesCritTriggers(sourceContext)) return { isMiss: false, isCritical: true };
-	return {
-		isMiss: sourceContext.isMiss === true,
-		isCritical: false,
-	};
+	return critTriggerOutcome(sourceContext);
 }
 
 function toRestContext(context: unknown): RestContext {

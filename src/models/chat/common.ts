@@ -1,3 +1,5 @@
+import { REROLL_SIDES, REROLL_TRIGGERS } from '../../utils/incomingReactionEntry.js';
+
 const { fields } = foundry.data;
 
 export const metadata = () => ({
@@ -137,7 +139,7 @@ export const incomingReactions = () => ({
 				required: false,
 				nullable: true,
 				initial: null,
-				choices: ['roller', 'target'],
+				choices: [...REROLL_SIDES],
 			}),
 			// forceReroll offers carry their reroll semantics so the executor can
 			// honor them on click.
@@ -160,7 +162,7 @@ export const incomingReactions = () => ({
 				required: false,
 				nullable: true,
 				initial: null,
-				choices: ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'],
+				choices: [...REROLL_TRIGGERS],
 			}),
 			// What a spend offer did once used, as components rather than a
 			// sentence: the attribution line is localized at render time, so a

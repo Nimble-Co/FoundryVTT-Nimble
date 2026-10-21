@@ -7,8 +7,8 @@ import {
 	ruleChargesLeft,
 	spendRuleCharge,
 } from './chargePool/ruleChargeGate.js';
+import { findActorCombatant } from './findActorCombatant.js';
 import { getHeroicReactionAvailabilityUpdate, type HeroicReactionKey } from './heroicActions.js';
-import { isCombatStarted } from './isCombatStarted.js';
 import { spendSpellCost } from './spell/spendSpellCost.js';
 import { validateSpellCost } from './spell/validateSpellCost.js';
 
@@ -38,7 +38,6 @@ type RerollPayer = Actor | null | undefined;
 
 interface HeroicReactionCombat {
 	id?: string | null;
-	combatants: { find(predicate: (combatant: Combatant) => boolean): Combatant | undefined };
 	useHeroicReactions?: (
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
@@ -55,16 +54,10 @@ function asSpellCostActor(actor: RerollPayer): SpellCostActorLike {
 	return actor as unknown as SpellCostActorLike;
 }
 
-/** The actor's combatant in a started combat, or null outside combat. */
-function findActorCombatant(
-	actor: RerollPayer,
-): { combat: HeroicReactionCombat; combatant: Combatant } | null {
-	const combat = game.combat as unknown as HeroicReactionCombat | null;
-	if (!actor || !combat || !isCombatStarted(combat as unknown as Combat)) return null;
-	const combatant = combat.combatants.find(
-		(candidate) => candidate.actor === actor || candidate.actor?.uuid === actor.uuid,
-	);
-	return combatant ? { combat, combatant } : null;
+/** Whether the actor can gain all of `amount` Wounds without going past the maximum. */
+function canGainWounds(actor: RerollPayer, amount: number): boolean {
+	const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
+	return !!wounds && wounds.value + amount <= wounds.max;
 }
 
 /** How many more times the cost's charges pay for it, or null when it uses no charge pool. */
@@ -74,8 +67,9 @@ function rerollUsesLeft(actor: RerollPayer, cost: RerollCost): number | null {
 }
 
 /**
- * Whether the actor can pay the cost now. A heroic reaction is not checked
- * here: the table confirms a spent one on the click. With resource spending
+ * Whether the actor can pay the cost now. A Wound cost needs room below the
+ * maximum for every Wound it gives. A heroic reaction is not checked here:
+ * the table confirms a spent one on the click. With resource spending
  * automation off, every cost can be paid.
  */
 function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
@@ -86,10 +80,13 @@ function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
 	) {
 		return false;
 	}
-	if (cost.manaCost > 0) {
-		return validateSpellCost(asSpellCostActor(actor), { type: 'mana', amount: cost.manaCost }).ok;
+	if (
+		cost.manaCost > 0 &&
+		!validateSpellCost(asSpellCostActor(actor), { type: 'mana', amount: cost.manaCost }).ok
+	) {
+		return false;
 	}
-	return true;
+	return cost.woundCost <= 0 || canGainWounds(actor, cost.woundCost);
 }
 
 /** Whether paying the cost would change anything on the actor or combat. */
@@ -105,15 +102,16 @@ async function spendHeroicReaction(
 	force: boolean,
 ): Promise<PaidRerollCost['heroicReaction'] | false> {
 	const found = findActorCombatant(actor);
-	if (!found?.combatant.id || !found.combat.useHeroicReactions) return null;
+	const combat = found?.combat as unknown as HeroicReactionCombat | undefined;
+	if (!found?.combatant.id || !combat?.useHeroicReactions) return null;
 
 	const previousActions = Number(
 		foundry.utils.getProperty(found.combatant, 'system.actions.base.current') ?? 0,
 	);
-	const used = await found.combat.useHeroicReactions(found.combatant.id, [key], { force });
+	const used = await combat.useHeroicReactions(found.combatant.id, [key], { force });
 	if (!used) return false;
 	return {
-		combatId: found.combat.id ?? '',
+		combatId: combat.id ?? '',
 		combatantId: found.combatant.id,
 		key,
 		previousActions,
@@ -204,13 +202,11 @@ async function payRerollCost(
 
 	if (cost.woundCost > 0) {
 		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
-		if (wounds) {
-			const next = Math.min(wounds.max, wounds.value + cost.woundCost);
-			if (next > wounds.value) {
-				await actor?.update({ 'system.attributes.wounds.value': next } as Record<string, unknown>);
-				paid.wounds = next - wounds.value;
-			}
-		}
+		if (!wounds || wounds.value + cost.woundCost > wounds.max) return fail();
+		await actor?.update({
+			'system.attributes.wounds.value': wounds.value + cost.woundCost,
+		} as Record<string, unknown>);
+		paid.wounds = cost.woundCost;
 	}
 
 	return paid;
@@ -218,7 +214,6 @@ async function payRerollCost(
 
 export {
 	canPayRerollCost,
-	findActorCombatant,
 	payRerollCost,
 	refundRerollCost,
 	rerollCostCharges,

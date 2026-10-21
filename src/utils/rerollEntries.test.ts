@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IncomingReactionEntry, RerollSide, RerollTrigger } from './incomingReactionEntry.js';
 import {
-	canPayForRerollEntry,
 	collectRerollEntries,
 	findRerollRule,
 	type RerollingActor,
@@ -439,39 +438,6 @@ describe('usableRerollEntry', () => {
 	])('refuses %s', (_name, makeEntry, makeContext, reason) => {
 		const stamped = makeEntry();
 		expect(usableRerollEntry(stamped, makeContext())).toEqual({ ok: false, reason });
-	});
-});
-
-describe('canPayForRerollEntry', () => {
-	const entry = {
-		kind: 'reroll',
-		itemUuid: 'Item.sand',
-		ruleId: 'rule-1',
-	} as IncomingReactionEntry;
-	const caster = (mana: number) =>
-		({ system: { resources: { mana: { current: mana, max: 5 } } } }) as unknown as Actor;
-
-	function useRule(live: RerollRuleLike | null): void {
-		testGlobals.fromUuidSync = vi.fn(() =>
-			live ? { rules: new Map([[live.id ?? '', live]]) } : null,
-		);
-	}
-
-	beforeEach(() => setToggles({}));
-	afterEach(() => {
-		delete testGlobals.game.settings;
-		testGlobals.fromUuidSync = vi.fn();
-	});
-
-	it('is true while the actor can pay the live rule cost, and false once it cannot', () => {
-		useRule(rerollRule({ rerollCost: { ...FREE, manaCost: 2 } }));
-		expect(canPayForRerollEntry(entry, caster(2))).toBe(true);
-		expect(canPayForRerollEntry(entry, caster(1))).toBe(false);
-	});
-
-	it('is false once the rule is gone', () => {
-		useRule(null);
-		expect(canPayForRerollEntry(entry, caster(5))).toBe(false);
 	});
 });
 

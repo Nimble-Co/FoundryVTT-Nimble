@@ -3,10 +3,16 @@ import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import { rerollCostCharges, rerollUsesLeft } from '#utils/rerollCost.js';
 import { findRerollRule } from '#utils/rerollEntries.js';
+import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
 function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[] {
 	const cost = findRerollRule(entry)?.rerollCost;
 	if (!cost || !rerollCostCharges(cost)) return [];
+	if (!isResourceSpendingAutomationEnabled()) {
+		return cost.heroicReaction
+			? [localize('NIMBLE.chat.incomingReactions.costHeroicReaction')]
+			: [];
+	}
 
 	const parts: string[] = [];
 	const usesLeft = rerollUsesLeft(actor, cost);
