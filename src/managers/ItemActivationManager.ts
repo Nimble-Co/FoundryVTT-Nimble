@@ -44,11 +44,12 @@ import {
 	computeIncomingAttackPlan,
 	type IncomingAttackPlan,
 } from '../utils/incomingAttackModifiers.js';
-import type { IncomingReactionEntry, LastReroll } from '../utils/incomingReactionEntry.js';
+import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
 import localize from '../utils/localize.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
+import type { RerollHistory } from '../utils/rerollStep.js';
 import {
 	applyUpcastDeltas,
 	UpcastError,
@@ -129,10 +130,7 @@ class ItemActivationManager {
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
 	/** What an automatic reroll left for the chat card. */
-	#rerollHistory: { lastReroll: LastReroll | null; discardedCritTriggers: boolean } = {
-		lastReroll: null,
-		discardedCritTriggers: false,
-	};
+	#rerollHistory: RerollHistory | null = null;
 
 	#deferredPoolNodes: PoolNode[] = [];
 
@@ -579,10 +577,7 @@ class ItemActivationManager {
 						(node as { discardedRoll?: unknown }).discardedRoll = result.discardedRoll;
 					}
 					this.#appliedIncomingReactions = result.stampEntries;
-					this.#rerollHistory = {
-						lastReroll: result.lastReroll,
-						discardedCritTriggers: result.discardedCritTriggers,
-					};
+					this.#rerollHistory = result.rerollHistory;
 				}
 
 				node.roll = roll.toJSON() as Record<string, unknown>;

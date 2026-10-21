@@ -887,7 +887,6 @@ export {
 	findUnofferableVariableSpends,
 	getApplicableUsageTriggers,
 	applyRecoveryTriggersToPools,
-	addRecoveryGiven,
 	resolveRecoveryTrigger,
 	buildPoolUpdatePayload,
 	persistChargePoolMap,

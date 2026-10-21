@@ -24,6 +24,7 @@ type Globals = {
 		user: { isGM: boolean; id: string };
 		users: { get: ReturnType<typeof vi.fn> };
 		actors?: { get: ReturnType<typeof vi.fn> };
+		scenes?: { get: ReturnType<typeof vi.fn> };
 	};
 	ui: { notifications: { warn: ReturnType<typeof vi.fn> } };
 };
@@ -163,9 +164,20 @@ function setupWorld(ruleOverrides: Record<string, unknown> = {}): World {
 		'Actor.target': target,
 		'Item.sand': item,
 		[TARGET_TOKEN]: { actor: target },
-		'Scene.scene.Token.attacker-token': { actor: attacker },
 	};
 	globals().fromUuidSync = vi.fn((uuid: string) => byUuid[uuid] ?? null);
+	const attackerToken = { actor: attacker };
+	globals().game.scenes = {
+		get: vi.fn((id: string) =>
+			id === 'scene'
+				? {
+						tokens: {
+							get: (tokenId: string) => (tokenId === 'attacker-token' ? attackerToken : null),
+						},
+					}
+				: null,
+		),
+	};
 	return { attacker, target, rule };
 }
 
@@ -347,6 +359,225 @@ describe('resolveRerollReaction', () => {
 			targetTokenUuid: TARGET_TOKEN,
 			side: 'target',
 			used: false,
+		});
+	});
+
+	describe('an automatic reroll the new roll allows', () => {
+		const WARD_ITEM = { name: 'Warding Bond', uuid: 'Item.ward' };
+
+		/** The target rerolls every crit against it by itself. */
+		function withAutomaticCritReroll(world: World) {
+			const ward = rerollRule({
+				id: 'ward-1',
+				outcome: 'criticalHit',
+				automatic: true,
+				item: WARD_ITEM,
+				actor: world.target,
+			});
+			world.target.rules = [ward];
+			return ward;
+		}
+
+		/** Each evaluated DamageRoll reports the next outcome in the list. */
+		function rollOutcomes(...crits: boolean[]) {
+			const rolled = { count: 0 };
+			// The shared Roll mock leaves `class` out, which marks the primary roll.
+			const toJSON = vi
+				.spyOn(Object.getPrototypeOf(DamageRoll.prototype), 'toJSON')
+				.mockImplementation(function (this: DamageRoll) {
+					return { class: 'DamageRoll', formula: this.formula, options: this.options, data: {} };
+				});
+			const spy = vi.spyOn(DamageRoll.prototype, 'evaluate').mockImplementation(async function (
+				this: DamageRoll,
+			) {
+				Object.defineProperty(this, 'isCritical', { value: crits[rolled.count] ?? false });
+				Object.defineProperty(this, 'isMiss', { value: false });
+				rolled.count += 1;
+				return this as never;
+			});
+			return {
+				rolled,
+				mockRestore: () => {
+					spy.mockRestore();
+					toJSON.mockRestore();
+				},
+			};
+		}
+
+		/** The card takes its own writes, so a later step reads them. */
+		function writesApply(message: MockedMessage) {
+			message.update.mockImplementation(async (changes: Record<string, unknown>) => {
+				const { system, rolls, ...paths } = changes as {
+					system?: Record<string, unknown>;
+					rolls?: string[];
+				};
+				if (system) Object.assign(message.system, system);
+				if (rolls) (message as unknown as { _source: { rolls: string[] } })._source.rolls = rolls;
+				for (const [path, value] of Object.entries(paths)) {
+					foundry.utils.setProperty(message, path, value);
+				}
+			});
+		}
+
+		function wardEntries(message: MockedMessage) {
+			const entries = message.system.incomingReactions as Array<Record<string, unknown>>;
+			return entries.filter((entry) => entry.ruleId === 'ward-1');
+		}
+
+		it("runs the target's rule once when a button reroll turns a hit into a crit", async () => {
+			const world = setupWorld();
+			withAutomaticCritReroll(world);
+			const message = createMessage();
+			writesApply(message);
+			const evaluate = rollOutcomes(true, false);
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			evaluate.mockRestore();
+			expect(evaluate.rolled.count).toBe(2);
+			expect(message.system.isCritical).toBe(false);
+			expect(wardEntries(message)).toEqual([
+				expect.objectContaining({ kind: 'reroll', side: 'target', used: true }),
+			]);
+			expect(message.system.lastReroll).toMatchObject({
+				itemUuid: 'Item.ward',
+				actorUuid: 'Actor.target',
+				previousWasCritical: true,
+			});
+		});
+
+		it('does not run the same rule twice on a card', async () => {
+			const world = setupWorld();
+			withAutomaticCritReroll(world);
+			const message = createMessage();
+			writesApply(message);
+			const evaluate = rollOutcomes(true, true, true);
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			evaluate.mockRestore();
+			expect(evaluate.rolled.count).toBe(2);
+			expect(message.system.isCritical).toBe(true);
+			expect(wardEntries(message)).toHaveLength(1);
+		});
+
+		it('shows the rule as a button while Feature Effects is off', async () => {
+			const world = setupWorld();
+			withAutomaticCritReroll(world);
+			const settings = globals().game as unknown as {
+				settings?: { get: (scope: string, key: string) => unknown };
+			};
+			const previousSettings = settings.settings;
+			settings.settings = { get: (_scope, key) => key !== 'automation.applyRuleEffects' };
+			const message = createMessage();
+			writesApply(message);
+			const evaluate = rollOutcomes(true, false);
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			evaluate.mockRestore();
+			settings.settings = previousSettings;
+			expect(evaluate.rolled.count).toBe(1);
+			expect(message.system.isCritical).toBe(true);
+			expect(wardEntries(message)).toEqual([expect.objectContaining({ used: false })]);
+		});
+
+		it('leaves the charges as the final roll gives them', async () => {
+			const world = setupWorld();
+			withAutomaticCritReroll(world);
+			const pool = { current: 1 };
+			const recoveries = [{ trigger: 'onCriticalHit', mode: 'add', value: '1' }];
+			const blade = {
+				id: 'blade',
+				name: 'Blade',
+				actor: world.attacker,
+				rules: new Map([
+					[
+						'0',
+						{
+							type: 'chargePool',
+							id: 'pool-rule',
+							identifier: 'focus',
+							scope: 'actor',
+							max: '3',
+							initial: 'max',
+							recoveries,
+						},
+					],
+				]),
+				flags: {},
+				update: vi.fn(async () => ({})),
+			};
+			Object.assign(world.attacker, {
+				flags: {
+					nimble: {
+						chargePools: {
+							'actor:focus': {
+								id: 'actor:focus',
+								identifier: 'focus',
+								scope: 'actor',
+								sourceItemId: 'blade',
+								sourceItemName: 'Blade',
+								label: 'Focus',
+								current: pool.current,
+								max: 3,
+								seeded: true,
+								recoveries,
+							},
+						},
+					},
+				},
+				items: { contents: [blade], get: () => blade },
+				getRollData: () => ({}),
+				getDomain: () => new Set<string>(),
+			});
+			const lookup = globals().fromUuidSync.getMockImplementation() as (uuid: string) => unknown;
+			globals().fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.blade' ? blade : lookup(uuid),
+			);
+			const message = createMessage({ flags: { itemUuid: 'Item.blade', chargeRecoveryGiven: [] } });
+			writesApply(message);
+			const evaluate = rollOutcomes(true, false);
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			evaluate.mockRestore();
+			expect(
+				foundry.utils.getProperty(world.attacker, 'flags.nimble.chargePools.actor:focus.current'),
+			).toBe(1);
+			expect(foundry.utils.getProperty(message, 'flags.nimble.chargeRecoveryGiven')).toEqual([]);
+		});
+	});
+
+	describe('canStillUseReroll', () => {
+		it('is true while every gate passes', () => {
+			setupWorld();
+			const message = createMessage();
+
+			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(true);
+		});
+
+		it('is false when the outcome no longer matches the rule', () => {
+			setupWorld({ outcome: 'criticalHit' });
+			const message = createMessage({ isCritical: false });
+
+			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
+		});
+
+		it('is false when the rule no longer offers the reroll', () => {
+			setupWorld({ offersRerollOn: vi.fn(() => false) });
+			const message = createMessage();
+
+			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
+		});
+
+		it('is false for a used entry and for a roll that misses by force', () => {
+			setupWorld();
+
+			expect(createMessage().canStillUseReroll(rerollEntry({ used: true }) as never)).toBe(false);
+			expect(createMessage({ forceMiss: true }).canStillUseReroll(rerollEntry() as never)).toBe(
+				false,
+			);
 		});
 	});
 

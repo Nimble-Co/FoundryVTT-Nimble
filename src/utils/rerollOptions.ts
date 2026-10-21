@@ -53,4 +53,4 @@ function prepareReroll(
 	};
 }
 
-export { prepareReroll, rerollOptions, type RerollChanges };
+export { prepareReroll, type RerollChanges };

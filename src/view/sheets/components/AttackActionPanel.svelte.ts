@@ -348,8 +348,8 @@ export function createAttackPanelState(
 				},
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 				incomingReactions: reactionEntries,
-				lastReroll: postRoll.lastReroll,
-				discardedCritTriggers: postRoll.discardedCritTriggers,
+				lastReroll: postRoll.rerollHistory?.lastReroll ?? null,
+				discardedCritTriggers: postRoll.rerollHistory?.discardedCritTriggers ?? false,
 			},
 			type: 'feature',
 		};

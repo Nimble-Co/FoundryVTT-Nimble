@@ -121,10 +121,26 @@ describe('rerollCost', () => {
 			expect(canPayRerollCost(makeActor({ mana: 2 }).asActor, cost({ manaCost: 2 }))).toBe(true);
 		});
 
+		it('needs room for every Wound the cost gives', () => {
+			const twoWounds = cost({ woundCost: 2 });
+			expect(canPayRerollCost(makeActor({ wounds: 4, maxWounds: 6 }).asActor, twoWounds)).toBe(
+				true,
+			);
+			expect(canPayRerollCost(makeActor({ wounds: 5, maxWounds: 6 }).asActor, twoWounds)).toBe(
+				false,
+			);
+			expect(canPayRerollCost(makeActor({ wounds: 6, maxWounds: 6 }).asActor, twoWounds)).toBe(
+				false,
+			);
+		});
+
 		it('pays anything while resource spending automation is off', () => {
 			setToggles({ 'automation.resourceSpending': false });
 			expect(
-				canPayRerollCost(makeActor().asActor, cost({ chargePoolIdentifier: 'sand', manaCost: 9 })),
+				canPayRerollCost(
+					makeActor({ wounds: 6, maxWounds: 6 }).asActor,
+					cost({ chargePoolIdentifier: 'sand', manaCost: 9, woundCost: 1 }),
+				),
 			).toBe(true);
 		});
 	});
@@ -169,11 +185,15 @@ describe('rerollCost', () => {
 			expect(actor.system.attributes.wounds.value).toBe(2);
 		});
 
-		it('gains no more Wounds than the maximum', async () => {
-			const { actor, asActor } = makeActor({ wounds: 5, maxWounds: 6 });
-			const paid = await payRerollCost(asActor, cost({ woundCost: 3 }));
-			expect(paid?.wounds).toBe(1);
-			expect(actor.system.attributes.wounds.value).toBe(6);
+		it('refuses, and gives back what it charged, when the Wounds would pass the maximum', async () => {
+			const { actor, item, asActor } = makeActor({ charges: 2, wounds: 5, maxWounds: 6 });
+			const paid = await payRerollCost(
+				asActor,
+				cost({ chargePoolIdentifier: 'sand', woundCost: 2 }),
+			);
+			expect(paid).toBeNull();
+			expect(item.flags.nimble.chargePools.sand.current).toBe(2);
+			expect(actor.system.attributes.wounds.value).toBe(5);
 		});
 
 		it('gives back what it charged when a later part cannot be paid', async () => {

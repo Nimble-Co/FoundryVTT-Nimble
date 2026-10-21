@@ -1,9 +1,12 @@
-import { getHeroicReactionUsageState, isSoftBlockedReason } from './getHeroicReactionUsageState.js';
-import { getHeroicReactionLabel } from './heroicActions.js';
-import type { IncomingReactionEntry } from './incomingReactionEntry.js';
-import { findActorCombatant } from './rerollCost.js';
-import { findRerollRule } from './rerollEntries.js';
-import showReactionConfirmation from './showReactionConfirmation.js';
+import { findActorCombatant } from '#utils/findActorCombatant.js';
+import {
+	getHeroicReactionUsageState,
+	isSoftBlockedReason,
+} from '#utils/getHeroicReactionUsageState.js';
+import { getHeroicReactionLabel } from '#utils/heroicActions.js';
+import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.js';
+import { findRerollRule } from '#utils/rerollEntries.js';
+import showReactionConfirmation from '#utils/showReactionConfirmation.js';
 
 /**
  * Ask the player, on their own client, before a reroll uses a heroic reaction

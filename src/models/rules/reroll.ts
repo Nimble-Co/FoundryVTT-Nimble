@@ -1,6 +1,15 @@
 import { type AttackDelivery, matchesAttackDelivery } from '../../utils/attackDelivery.js';
-import { HEROIC_REACTIONS, type HeroicReactionKey } from '../../utils/heroicActions.js';
-import type { RerollTrigger } from '../../utils/incomingReactionEntry.js';
+import {
+	getHeroicReactionLabelKey,
+	HEROIC_REACTIONS,
+	type HeroicReactionKey,
+} from '../../utils/heroicActions.js';
+import {
+	REROLL_SIDES,
+	REROLL_TRIGGERS,
+	type RerollSide,
+	type RerollTrigger,
+} from '../../utils/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/rerollCost.js';
 import type { RerollChanges } from '../../utils/rerollOptions.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -8,20 +17,17 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const REROLL_ROLLS = ['attack'] as const;
-const REROLL_USERS = ['roller', 'target'] as const;
-const REROLL_OUTCOMES = ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'] as const;
 const REROLL_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
 
 // Outcomes whose first roll can be a crit.
 const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
 
 type RerollRoll = (typeof REROLL_ROLLS)[number];
-type RerollUser = (typeof REROLL_USERS)[number];
 type RerollAttackDelivery = (typeof REROLL_ATTACK_DELIVERIES)[number];
 
 function choiceLabels(field: string, values: readonly string[]): Record<string, string> {
 	return Object.fromEntries(
-		values.map((value) => [value, `NIMBLE.rules.reroll.${field}.choices.${value || 'none'}`]),
+		values.map((value) => [value, `NIMBLE.rules.reroll.${field}.choices.${value}`]),
 	);
 }
 
@@ -40,7 +46,6 @@ function schema() {
 				nullable: false,
 				initial: ['attack'],
 				label: 'NIMBLE.rules.reroll.rolls.label',
-				hint: 'NIMBLE.rules.reroll.rolls.hint',
 			},
 		),
 		usedBy: new fields.StringField(
@@ -48,7 +53,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: 'roller',
-				choices: choiceLabels('usedBy', REROLL_USERS),
+				choices: choiceLabels('usedBy', REROLL_SIDES),
 				label: 'NIMBLE.rules.reroll.usedBy.label',
 				hint: 'NIMBLE.rules.reroll.usedBy.hint',
 				widget: 'chips',
@@ -58,7 +63,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'always',
-			choices: choiceLabels('outcome', REROLL_OUTCOMES),
+			choices: choiceLabels('outcome', REROLL_TRIGGERS),
 			label: 'NIMBLE.rules.reroll.outcome.label',
 			hint: 'NIMBLE.rules.reroll.outcome.hint',
 		}),
@@ -117,7 +122,10 @@ function schema() {
 			nullable: false,
 			blank: true,
 			initial: '',
-			choices: choiceLabels('heroicReaction', ['', ...HEROIC_REACTIONS]),
+			choices: {
+				'': 'NIMBLE.rules.reroll.heroicReaction.choices.none',
+				...Object.fromEntries(HEROIC_REACTIONS.map((key) => [key, getHeroicReactionLabelKey(key)])),
+			} as Record<HeroicReactionKey | '', string>,
 			label: 'NIMBLE.rules.reroll.heroicReaction.label',
 			hint: 'NIMBLE.rules.reroll.heroicReaction.hint',
 		}),
@@ -181,7 +189,7 @@ declare namespace RerollRule {
 
 /** Which side of an attack is asking, and how the attack is delivered. */
 interface RerollOfferContext {
-	side: RerollUser;
+	side: RerollSide;
 	delivery: AttackDelivery;
 }
 
@@ -217,7 +225,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	];
 
 	declare rolls: RerollRoll[];
-	declare usedBy: RerollUser;
+	declare usedBy: RerollSide;
 	declare outcome: RerollTrigger;
 	declare attackDelivery: RerollAttackDelivery;
 	declare automatic: boolean;
@@ -296,4 +304,4 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 }
 
-export { RerollRule, type RerollOfferContext, type RerollUser };
+export { RerollRule, type RerollOfferContext };

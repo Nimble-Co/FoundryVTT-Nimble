@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { prepareReroll, rerollOptions } from './rerollOptions.js';
+import { prepareReroll } from './rerollOptions.js';
 
-describe('rerollOptions', () => {
+describe('prepareReroll', () => {
 	it('drops the set primary die value and computed values', () => {
-		const options = rerollOptions({
+		const { options } = prepareReroll('1d8', {
 			rollMode: -1,
 			rollModeSources: [0, -1],
 			netRollMode: -1,
@@ -22,19 +22,17 @@ describe('rerollOptions', () => {
 	});
 
 	it('does not change the options it is given', () => {
-		const source = { primaryDieValue: 3 };
+		const source = { primaryDieValue: 3, primaryDieModifier: 1 };
 
-		rerollOptions(source);
+		prepareReroll('1d8', source, { primaryDieBonus: 1 });
 
-		expect(source).toEqual({ primaryDieValue: 3 });
+		expect(source).toEqual({ primaryDieValue: 3, primaryDieModifier: 1 });
 	});
 
 	it('returns empty options for missing options', () => {
-		expect(rerollOptions(undefined)).toEqual({});
+		expect(prepareReroll('1d8', undefined).options).toEqual({});
 	});
-});
 
-describe('prepareReroll', () => {
 	it('keeps the formula and drops results when there are no changes', () => {
 		expect(prepareReroll('1d8 + 2', { primaryDieValue: 5, rollMode: 1 })).toEqual({
 			formula: '1d8 + 2',

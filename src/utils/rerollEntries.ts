@@ -7,7 +7,7 @@ import {
 	type RerollTrigger,
 	rerollTriggerMatches,
 } from './incomingReactionEntry.js';
-import { canPayRerollCost, type RerollCost, rerollCostCharges } from './rerollCost.js';
+import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
 
 const REROLL_RULE_TYPE = 'reroll';
@@ -183,17 +183,7 @@ function usableRerollEntry(entry: IncomingReactionEntry, context: RerollRollCont
 	return { ok: true, rule, actor };
 }
 
-/** Whether the entry's actor can still pay for it. */
-function canPayForRerollEntry(
-	entry: IncomingReactionEntry,
-	actor: Actor | null | undefined,
-): boolean {
-	const cost = findRerollRule(entry)?.rerollCost;
-	return !!cost && canPayRerollCost(actor, cost);
-}
-
 export {
-	canPayForRerollEntry,
 	collectRerollEntries,
 	findRerollRule,
 	rerollEntryStands,

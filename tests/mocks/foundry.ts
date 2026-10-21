@@ -50,6 +50,18 @@ export const globalFoundryMocks = {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
 		}
+
+		// Mirrors Foundry: the token's actor first, then the world actor.
+		static getSpeakerActor(speaker?: { scene?: string; token?: string; actor?: string } | null) {
+			if (!speaker) return null;
+			const g = globalThis as any;
+			let actor = null;
+			if (speaker.scene && speaker.token) {
+				actor = g.game?.scenes?.get(speaker.scene)?.tokens?.get(speaker.token)?.actor ?? null;
+			}
+			if (speaker.actor && !actor) actor = g.game?.actors?.get(speaker.actor) ?? null;
+			return actor || null;
+		}
 	},
 	Scene: class Scene {
 		constructor(data?: any, _context?: any) {

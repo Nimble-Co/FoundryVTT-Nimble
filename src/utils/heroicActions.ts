@@ -54,8 +54,12 @@ export function getHeroicActionCategoryLabel(category: HeroicActionCategory): st
 		: localize('NIMBLE.ui.heroicActions.reactionsTitle');
 }
 
+export function getHeroicReactionLabelKey(reactionKey: HeroicReactionKey): string {
+	return HEROIC_REACTION_DEFINITIONS[reactionKey].labelKey;
+}
+
 export function getHeroicReactionLabel(reactionKey: HeroicReactionKey): string {
-	return localize(HEROIC_REACTION_DEFINITIONS[reactionKey].labelKey);
+	return localize(getHeroicReactionLabelKey(reactionKey));
 }
 
 export function getHeroicReactionAvailability(
