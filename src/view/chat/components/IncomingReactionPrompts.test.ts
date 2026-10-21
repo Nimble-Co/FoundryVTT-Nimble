@@ -52,7 +52,7 @@ vi.mock('#utils/confirmRerollHeroicReaction.js', () => ({
 	confirmRerollHeroicReaction: vi.fn(async () => false),
 }));
 
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import IncomingReactionPromptsTestHarness from './IncomingReactionPrompts.testHarness.svelte';
 
 const { getPools, getDicePoolConsumers, requestIncomingAttackReaction } = mocks;
@@ -66,6 +66,7 @@ interface EntryOptions {
 	id?: string;
 	kind?: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage' | 'reroll';
 	source?: 'baseline' | 'rule';
+	actorUuid?: string;
 	label?: string;
 	used?: boolean;
 	itemUuid?: string;
@@ -80,7 +81,7 @@ function createEntry(options: EntryOptions = {}) {
 		id: options.id ?? 'entry-1',
 		kind: options.kind ?? 'redirectToSelf',
 		source: options.source ?? 'rule',
-		actorUuid: 'Actor.protector',
+		actorUuid: options.actorUuid ?? 'Actor.protector',
 		tokenUuid: 'Scene.s.Token.protector',
 		targetTokenUuid: 'Scene.s.Token.victim',
 		label: options.label ?? 'Aura of Refuge',
@@ -167,19 +168,32 @@ afterEach(() => {
 	g.Hooks = previousHooks;
 });
 
+const rollPlace = () => within(screen.getByTestId('roll-place'));
+const optionsPlace = () => within(screen.getByTestId('options-place'));
+
 describe('IncomingReactionPrompts', () => {
-	it('renders a labeled button for a pending rule-granted redirect entry', () => {
+	it('puts a rule-granted Interpose under Options, with the actor name above it', () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: { messageDocument: createMessage([createEntry()]) },
 		});
 
-		const button = screen.getByRole('button');
-		expect(button.textContent).toContain('Interpose');
-		expect(button.textContent).toContain('Aura of Refuge');
-		expect(button.textContent).toContain('Sir Brannon');
+		const button = optionsPlace().getByRole('button');
+		expect(button.textContent?.trim()).toBe('Interpose: Aura of Refuge');
+		expect(optionsPlace().getByText('Sir Brannon')).toBeTruthy();
+		expect(screen.getByTestId('roll-place').textContent?.trim()).toBe('');
 	});
 
-	it('renders a force reroll button with its granting feature label', () => {
+	it('shows the Heroic Reaction cost on the baseline Interpose button', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: createMessage([createEntry({ source: 'baseline', label: '' })]) },
+		});
+
+		const button = optionsPlace().getByRole('button');
+		expect(button.textContent).toContain('Interpose');
+		expect(button.textContent).toContain('Heroic Reaction');
+	});
+
+	it('puts a force reroll in the roll section, named for its feature', () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: {
 				messageDocument: createMessage([
@@ -188,9 +202,21 @@ describe('IncomingReactionPrompts', () => {
 			},
 		});
 
-		const button = screen.getByRole('button');
-		expect(button.textContent).toContain('Force Reroll');
-		expect(button.textContent).toContain("Mountain's Endurance");
+		const button = rollPlace().getByRole('button');
+		expect(button.textContent?.trim()).toBe("Reroll with Mountain's Endurance");
+		expect(optionsPlace().queryByRole('button')).toBeNull();
+	});
+
+	it('tells a used force reroll at the roll', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ kind: 'forceReroll', label: "Mountain's Endurance", used: true }),
+				]),
+			},
+		});
+
+		expect(rollPlace().getByText("Attack rerolled by Mountain's Endurance")).toBeTruthy();
 	});
 
 	it('renders an attribution line instead of a button for used entries', () => {
@@ -199,7 +225,7 @@ describe('IncomingReactionPrompts', () => {
 		});
 
 		expect(screen.queryByRole('button')).toBeNull();
-		expect(screen.getByText(/Sir Brannon/)).toBeTruthy();
+		expect(optionsPlace().getByText(/Sir Brannon/)).toBeTruthy();
 	});
 
 	it('renders nothing when there are no entries', () => {
@@ -367,62 +393,31 @@ describe('IncomingReactionPrompts', () => {
 	});
 
 	describe('Reroll rule entries', () => {
-		// The words for these keys are added to en.json separately; until then
-		// the test supplies them so it reads the same before and after.
-		const REROLL_STRINGS: Record<string, string> = {
-			'NIMBLE.chat.incomingReactions.rerollWith': 'Reroll with {feature}',
-			'NIMBLE.chat.incomingReactions.rerollHistory':
-				'Rerolled with {feature}: {previous} became {next}',
-			'NIMBLE.chat.incomingReactions.rerollHistoryFromCrit':
-				'Rerolled with {feature}: {previous} (crit) became {next}',
-			'NIMBLE.chat.incomingReactions.rerollUsedBy': 'Used by {name}',
-			'NIMBLE.chat.incomingReactions.rerollUsesLeft': 'Uses left: {count}',
-			'NIMBLE.chat.incomingReactions.rerollWoundsGained': 'Wounds gained: {count}',
+		const ACTORS: Record<string, { name: string; isOwner: boolean }> = {
+			'Actor.wren': { name: 'Wren', isOwner: true },
+			'Actor.bram': { name: 'Bram', isOwner: false },
 		};
-		let previousI18n: unknown;
+		let rerollCost: Record<string, unknown>;
 
 		beforeEach(() => {
-			const g = globalThis as Record<string, any>;
-			previousI18n = g.game.i18n;
-			const base = g.game.i18n;
-			g.game.i18n = {
-				...base,
-				localize: (key: string) => REROLL_STRINGS[key] ?? base.localize(key),
-				format: (key: string, data: Record<string, string> = {}) =>
-					(REROLL_STRINGS[key] ?? base.localize(key)).replace(
-						/{(\w+)}/g,
-						(_match: string, name: string) => data[name] ?? '',
-					),
+			rerollCost = {
+				chargePoolIdentifier: '',
+				chargeCost: 1,
+				manaCost: 0,
+				woundCost: 0,
+				heroicReaction: '',
 			};
-			g.fromUuidSync = vi.fn((uuid: string) => {
+			(globalThis as Record<string, any>).fromUuidSync = vi.fn((uuid: string) => {
 				if (uuid === 'Item.sand') {
 					return {
 						name: 'Pocket Sand',
 						rules: new Map([
-							[
-								'reroll-1',
-								{
-									type: 'reroll',
-									id: 'reroll-1',
-									disabled: false,
-									rerollCost: {
-										chargePoolIdentifier: '',
-										chargeCost: 1,
-										manaCost: 0,
-										woundCost: 0,
-										heroicReaction: '',
-									},
-								},
-							],
+							['reroll-1', { type: 'reroll', id: 'reroll-1', disabled: false, rerollCost }],
 						]),
 					};
 				}
-				return { name: 'Brom', isOwner: true };
+				return ACTORS[uuid] ?? { name: 'Brom', isOwner: true };
 			});
-		});
-
-		afterEach(() => {
-			(globalThis as Record<string, any>).game.i18n = previousI18n;
 		});
 
 		function rerollEntry(options: EntryOptions = {}) {
@@ -436,12 +431,99 @@ describe('IncomingReactionPrompts', () => {
 			});
 		}
 
-		it('shows a "Reroll with" button named for the feature', () => {
+		function lastReroll(overrides: Record<string, unknown> = {}) {
+			return {
+				entryId: 'reroll-entry',
+				itemUuid: 'Item.sand',
+				label: 'Pocket Sand rule',
+				actorUuid: 'Actor.wren',
+				previousResult: 7,
+				previousWasCritical: false,
+				newResult: 4,
+				usesLeft: null,
+				woundsGained: 0,
+				...overrides,
+			};
+		}
+
+		/** Wren and Bram each have a reroll; only Wren is owned by the player. */
+		function twoActorMessage() {
+			return createMessage([
+				rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
+				createEntry({
+					id: 'bram-1',
+					kind: 'forceReroll',
+					actorUuid: 'Actor.bram',
+					label: "Mountain's Endurance",
+				}),
+				rerollEntry({ id: 'wren-2', actorUuid: 'Actor.wren' }),
+			]);
+		}
+
+		function groupNames(): string[] {
+			return [
+				...screen
+					.getByTestId('roll-place')
+					.querySelectorAll('.nimble-incoming-reaction-group__actor'),
+			].map((label) => label.textContent?.trim() ?? '');
+		}
+
+		it('shows a "Reroll with" button named for the feature, in the roll section', () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: createMessage([rerollEntry()]) },
 			});
 
-			expect(screen.getByRole('button').textContent?.trim()).toBe('Reroll with Pocket Sand');
+			expect(rollPlace().getByRole('button').textContent?.trim()).toBe('Reroll with Pocket Sand');
+			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+		});
+
+		it('groups the buttons by actor, with the name above each group', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: twoActorMessage() },
+			});
+
+			expect(groupNames()).toEqual(['Wren', 'Bram']);
+			const groups = screen
+				.getByTestId('roll-place')
+				.querySelectorAll('.nimble-incoming-reaction-group');
+			expect(within(groups[0] as HTMLElement).getAllByRole('button')).toHaveLength(2);
+			expect(within(groups[1] as HTMLElement).getAllByRole('button')).toHaveLength(1);
+			for (const button of rollPlace().getAllByRole('button')) {
+				expect(button.textContent).not.toContain('Wren');
+				expect(button.textContent).not.toContain('Bram');
+			}
+		});
+
+		it('shows a player only the groups of the actors they own', () => {
+			(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: twoActorMessage() },
+			});
+
+			expect(groupNames()).toEqual(['Wren']);
+			expect(rollPlace().getAllByRole('button')).toHaveLength(2);
+		});
+
+		it('shows the GM every group', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: twoActorMessage() },
+			});
+
+			expect(groupNames()).toEqual(['Wren', 'Bram']);
+			expect(rollPlace().getAllByRole('button')).toHaveLength(3);
+		});
+
+		it('shows the cost at the right of the button', () => {
+			rerollCost.woundCost = 1;
+			rerollCost.heroicReaction = 'defend';
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			const cost = screen
+				.getByTestId('roll-place')
+				.querySelector('.nimble-incoming-reaction-button__cost');
+			expect(cost?.textContent).toBe('1 Wound, Heroic Reaction');
 		});
 
 		it('asks the GM to reroll when the button is pressed', async () => {
@@ -472,26 +554,85 @@ describe('IncomingReactionPrompts', () => {
 			expect(screen.queryByRole('button')).toBeNull();
 		});
 
-		it('shows the history line for the last reroll', () => {
+		it('tells the last reroll at the roll, with who used it under it', () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: {
-					messageDocument: createMessage([rerollEntry({ used: true })], {
-						entryId: 'reroll-entry',
-						itemUuid: 'Item.sand',
-						label: 'Pocket Sand rule',
-						actorUuid: 'Actor.target',
-						previousResult: 8,
-						previousWasCritical: true,
-						newResult: 4,
-						usesLeft: 1,
-						woundsGained: 1,
-					}),
+					messageDocument: createMessage([rerollEntry({ used: true })], lastReroll()),
 				},
 			});
 
 			expect(screen.queryByRole('button')).toBeNull();
-			expect(screen.getByText('Rerolled with Pocket Sand: 8 (crit) became 4')).toBeTruthy();
-			expect(screen.getByText('Used by Brom - Uses left: 1 - Wounds gained: 1')).toBeTruthy();
+			expect(rollPlace().getByText('Rerolled with Pocket Sand: 7 became 4')).toBeTruthy();
+			expect(rollPlace().getByText('Used by Wren')).toBeTruthy();
+			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+		});
+
+		it('says so when the reroll took away a crit', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ used: true })],
+						lastReroll({
+							previousResult: 8,
+							previousWasCritical: true,
+							usesLeft: 1,
+							woundsGained: 1,
+						}),
+					),
+				},
+			});
+
+			expect(rollPlace().getByText('Rerolled with Pocket Sand: 8 (crit) became 4')).toBeTruthy();
+			expect(rollPlace().getByText('Used by Wren - Uses left: 1 - Wounds gained: 1')).toBeTruthy();
+		});
+
+		it('keeps the well under the history line while another reroll can still be used', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ used: true }), rerollEntry({ id: 'reroll-2', actorUuid: 'Actor.bram' })],
+						lastReroll(),
+					),
+				},
+			});
+
+			const roll = screen.getByTestId('roll-place');
+			const history = roll.querySelector('.nimble-roll-changes__history');
+			const well = roll.querySelector('.nimble-roll-changes__well');
+			expect(history?.textContent).toContain('7 became 4');
+			expect(well?.textContent).toContain('Reroll with Pocket Sand');
+			expect(history?.compareDocumentPosition(well as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		});
+
+		it('puts no em dash and no middle dot in any label', () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			rerollCost.woundCost = 2;
+			const { container } = render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[
+							rerollEntry({ actorUuid: 'Actor.wren' }),
+							createEntry({ id: 'force', kind: 'forceReroll', actorUuid: 'Actor.bram' }),
+							createEntry({ id: 'rule-interpose', actorUuid: 'Actor.bram' }),
+							createEntry({
+								id: 'baseline',
+								source: 'baseline',
+								label: '',
+								actorUuid: 'Actor.bram',
+							}),
+							createEntry({ id: 'used-interpose', used: true }),
+							spendEntry(),
+						],
+						lastReroll({ usesLeft: 1, woundsGained: 2 }),
+					),
+				},
+			});
+
+			expect(container.querySelectorAll('button').length).toBeGreaterThan(4);
+			// Em dash, en dash and middle dot, by code point.
+			for (const mark of [0x2014, 0x2013, 0xb7].map((code) => String.fromCodePoint(code))) {
+				expect(container.textContent).not.toContain(mark);
+			}
 		});
 	});
 });
