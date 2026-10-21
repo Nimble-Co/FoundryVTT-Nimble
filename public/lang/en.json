@@ -3393,7 +3393,7 @@
 			},
 			"resourceSpending": {
 				"name": "Costs",
-				"hint": "Spells, items and rerolls spend their mana and charges, and stop when there is not enough.",
+				"hint": "Spells, items and rerolls spend their mana and charges, and stop when there is not enough. Charges that an attack refills on a hit or a crit count as costs too.",
 				"off": "Off: only heroic reactions are spent. Track other costs by hand."
 			},
 			"actionTracking": {

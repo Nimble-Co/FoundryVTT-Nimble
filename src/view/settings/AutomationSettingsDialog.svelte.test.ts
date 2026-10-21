@@ -114,7 +114,7 @@ describe('AutomationSettingsDialog', () => {
 			'Features apply their conditions, marks and rerolls by themselves, and their effects end on time. Casting a Concentration spell starts Concentration. Off: the chat card shows a button for each one.',
 		);
 		expect(checkbox('Costs')).toHaveAccessibleDescription(
-			'Spells, items and rerolls spend their mana and charges, and stop when there is not enough. Off: only heroic reactions are spent. Track other costs by hand.',
+			'Spells, items and rerolls spend their mana and charges, and stop when there is not enough. Charges that an attack refills on a hit or a crit count as costs too. Off: only heroic reactions are spent. Track other costs by hand.',
 		);
 		expect(checkbox('Refills')).toHaveAccessibleDescription(
 			'Charges and dice pools refill at their set times, such as a rest or the end of an encounter.',

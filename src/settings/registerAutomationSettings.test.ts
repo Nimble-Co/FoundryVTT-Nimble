@@ -198,7 +198,7 @@ describe('registerAutomationSettings', () => {
 			'Movement Count',
 		);
 		expect(game.i18n.localize(config(AUTOMATION_SETTING_KEYS.resourceSpending).hint!)).toBe(
-			'Spells, items and rerolls spend their mana and charges, and stop when there is not enough.',
+			'Spells, items and rerolls spend their mana and charges, and stop when there is not enough. Charges that an attack refills on a hit or a crit count as costs too.',
 		);
 		for (const [shortKey, settingKey] of Object.entries(AUTOMATION_SETTING_KEYS)) {
 			expect(config(settingKey)).toMatchObject({
