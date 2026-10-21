@@ -90,6 +90,17 @@
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />
 	{:else if field instanceof fields.BooleanField}
 		<input type="checkbox" checked={Boolean(value)} {disabled} onchange={state.emitBoolean} />
+	{:else if field instanceof fields.NumberField && state.resolveChoices()}
+		<select
+			class="nimble-field-input"
+			value={String(value ?? '')}
+			{disabled}
+			onchange={state.emitNumber}
+		>
+			{#each state.resolveChoices() ?? [] as [val, label]}
+				<option value={val}>{localize(label)}</option>
+			{/each}
+		</select>
 	{:else if field instanceof fields.NumberField}
 		{@const numField = field as foundry.data.fields.NumberField}
 		{@const isInt = (numField as unknown as { integer?: boolean }).integer === true}
@@ -125,7 +136,16 @@
 		/>
 	{:else if field instanceof fields.StringField}
 		{@const choices = state.resolveChoices()}
-		{#if choices}
+		{#if choices && state.widget === 'chips'}
+			<TagGroup
+				options={choices.map(([val, label]) => ({ value: val, label: localize(label) }))}
+				selectedOptions={[String(value ?? '')]}
+				{disabled}
+				toggleOption={async (v) => {
+					if (v !== value) onChange(v);
+				}}
+			/>
+		{:else if choices}
 			<select
 				class="nimble-field-input"
 				value={String(value ?? '')}
@@ -162,7 +182,7 @@
 				if (evaluated && typeof evaluated === 'object') {
 					return Object.entries(evaluated as Record<string, string>).map(([k, label]) => ({
 						value: k,
-						label: typeof label === 'string' ? label : k,
+						label: typeof label === 'string' ? localize(label) : k,
 					}));
 				}
 				return null;

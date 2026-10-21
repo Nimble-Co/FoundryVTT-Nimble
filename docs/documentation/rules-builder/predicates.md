@@ -4,7 +4,7 @@ title: "The Condition Box"
 
 # The Condition Box
 
-Every rule has a Condition box, found under **Advanced** on the rule card, labelled **Applies when**. It answers one question: *when should this rule apply?*
+Every rule has a Condition box, found under **Advanced** on the rule card, labelled **Applies when**. The Reroll rule shows it in the form instead, labelled **Only while**. It answers one question: *when should this rule apply?*
 
 An empty Condition box means **always**. Fill it in and the rule only applies while the character matches every requirement you list. That's how you build things like "+2 Armor, but only while unarmored" or "this feature only kicks in from level 5".
 

@@ -27,6 +27,7 @@ export const WIDGET_HINTS = [
 	'hidden',
 	'dicePoolPicker',
 	'chargePoolPicker',
+	'chips',
 ] as const;
 
 export type WidgetHint = (typeof WIDGET_HINTS)[number];

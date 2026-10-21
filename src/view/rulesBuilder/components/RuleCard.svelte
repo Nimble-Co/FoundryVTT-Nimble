@@ -8,6 +8,7 @@
 	} from '#view/rulesBuilder/components/RuleCardState.svelte.js';
 	import type { RuleCardProps } from '#view/rulesBuilder/types.js';
 	import PredicateBuilder from './PredicateBuilder.svelte';
+	import RuleFormLayout from './RuleFormLayout.svelte';
 	import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
 
 	let {
@@ -195,7 +196,18 @@
 				([fieldName]) => !FIXED_FIELDS.has(fieldName),
 			)}
 			<div class="nimble-rule-card__body">
-				{#if editableEntries.length === 0}
+				{#if state.formGroups}
+					<RuleFormLayout
+						groups={state.formGroups}
+						{rule}
+						onFieldChange={state.emitFieldChange}
+						fieldLabel={state.fieldLabel}
+						fieldHint={state.fieldHint}
+						{previewDomain}
+						appliesInPrePrepareData={state.appliesInPrePrepareData}
+						{document}
+					/>
+				{:else if editableEntries.length === 0}
 					<p class="nimble-rule-card__empty">
 						{localize('NIMBLE.rulesBuilder.noFurtherConfig')}
 					</p>
@@ -227,17 +239,19 @@
 				</summary>
 
 				<div class="nimble-rule-card__advanced-body">
-					<div class="nimble-field-row">
-						<span class="nimble-field-row__label"
-							>{localize('NIMBLE.rulesBuilder.appliesWhen')}</span
-						>
-						<PredicateBuilder
-							value={(rule.predicate as RawPredicate) ?? {}}
-							onChange={(v) => state.emitFieldChange('predicate', v)}
-							{previewDomain}
-							appliesInPrePrepareData={state.appliesInPrePrepareData}
-						/>
-					</div>
+					{#if !state.predicateInForm}
+						<div class="nimble-field-row">
+							<span class="nimble-field-row__label"
+								>{localize('NIMBLE.rulesBuilder.appliesWhen')}</span
+							>
+							<PredicateBuilder
+								value={(rule.predicate as RawPredicate) ?? {}}
+								onChange={(v) => state.emitFieldChange('predicate', v)}
+								{previewDomain}
+								appliesInPrePrepareData={state.appliesInPrePrepareData}
+							/>
+						</div>
+					{/if}
 
 					<div class="nimble-field-row">
 						<span class="nimble-field-row__label"

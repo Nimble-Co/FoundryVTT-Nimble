@@ -10,6 +10,7 @@
 
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import type { Predicate, RawPredicate } from '../../etc/Predicate.js';
+import type { ResolvedFormGroup } from './components/ruleFormLayout.js';
 
 export interface RuleSource {
 	id: string;
@@ -92,6 +93,17 @@ export interface RuleCardProps {
 	collapsed?: boolean;
 	onToggleCollapse?: () => void;
 	/** Parent item — threaded through to rich-text widgets. */
+	document?: NimbleBaseItem;
+}
+
+export interface RuleFormLayoutProps {
+	groups: ResolvedFormGroup[];
+	rule: Record<string, unknown>;
+	onFieldChange: (name: string, value: unknown) => void;
+	fieldLabel: (name: string, field: foundry.data.fields.DataField.Any) => string;
+	fieldHint: (field: foundry.data.fields.DataField.Any) => string;
+	previewDomain?: Set<string>;
+	appliesInPrePrepareData?: boolean;
 	document?: NimbleBaseItem;
 }
 
