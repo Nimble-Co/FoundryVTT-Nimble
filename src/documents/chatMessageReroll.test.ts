@@ -448,7 +448,74 @@ describe('resolveRerollReaction', () => {
 			expect(focus(world)).toBe(2);
 			expect(message.update.mock.calls[1][0]).toEqual({
 				'flags.nimble.chargeRecoveryGiven': CRIT_GAVE_ONE,
+				'flags.nimble.chargeConsumption': [
+					{
+						poolId: 'actor:focus',
+						poolLabel: 'Blade',
+						previousValue: 1,
+						currentValue: 1,
+						maxValue: 3,
+						change: 0,
+						recovery: { trigger: 'onCriticalHit', previousValue: 1, newValue: 2 },
+					},
+				],
 			});
+		});
+
+		it('shows only the spend on the card when a crit is rerolled to a hit', async () => {
+			const world = setupWorld();
+			withCritPool(world, 1);
+			const spend = {
+				poolId: 'actor:focus',
+				poolLabel: 'Blade',
+				previousValue: 1,
+				currentValue: 0,
+				maxValue: 3,
+				change: -1,
+			};
+			const message = createMessage({
+				isCritical: true,
+				flags: {
+					...ATTACK_FLAGS,
+					chargeConsumption: [
+						{ ...spend, recovery: { trigger: 'onCriticalHit', previousValue: 0, newValue: 1 } },
+					],
+				},
+			});
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(focus(world)).toBe(0);
+			expect(message.update).toHaveBeenCalledTimes(2);
+			expect(message.update.mock.calls[1][0]).toEqual({
+				'flags.nimble.chargeRecoveryGiven': [],
+				'flags.nimble.chargeConsumption': [spend],
+			});
+		});
+
+		it('leaves the lines alone on a card made before the recovery record', async () => {
+			const world = setupWorld();
+			withCritPool(world, 1);
+			const message = createMessage({
+				isCritical: true,
+				flags: {
+					itemUuid: 'Item.blade',
+					chargeConsumption: [
+						{
+							poolLabel: 'Blade',
+							previousValue: 1,
+							currentValue: 0,
+							maxValue: 3,
+							change: -1,
+							recovery: { trigger: 'onCriticalHit', previousValue: 0, newValue: 1 },
+						},
+					],
+				},
+			});
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(message.update.mock.calls[1][0]).toEqual({ 'flags.nimble.chargeRecoveryGiven': [] });
 		});
 
 		it('leaves charges alone on a card no item made', async () => {

@@ -220,6 +220,7 @@ async function consumeOnResolvedItemUse(
 		const change = currentValue - previousValue;
 
 		consumptionByPoolId.set(poolId, {
+			poolId,
 			poolLabel: postRecoveryPool.label,
 			previousValue,
 			currentValue,
@@ -251,6 +252,7 @@ async function consumeOnResolvedItemUse(
 		const change = currentValue - previousValue;
 
 		consumptionByPoolId.set(poolId, {
+			poolId,
 			poolLabel: postRecoveryPool.label,
 			previousValue,
 			currentValue,
