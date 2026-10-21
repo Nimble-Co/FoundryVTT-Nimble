@@ -333,7 +333,33 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(lastAppliedEffect()?.sourceData.duration).toEqual({ rounds: 2 });
+			expect(lastAppliedEffect()?.sourceData.duration).toEqual({
+				value: 2,
+				units: 'rounds',
+				expiry: 'turnStart',
+			});
+		});
+
+		it('stamps the configured duration on a condition applied to the owner', async () => {
+			const ownerActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'slowed', trigger: 'onWound', duration: { turns: 1 } },
+				ownerActor,
+			);
+
+			await rule.onActorWounded({
+				actor: ownerActor as unknown as Parameters<
+					ApplyConditionRule['onActorWounded']
+				>[0]['actor'],
+				previousHp: 10,
+				currentHp: 5,
+			});
+
+			expect(lastAppliedEffect()?.sourceData.duration).toEqual({
+				value: 1,
+				units: 'turns',
+				expiry: 'turnStart',
+			});
 		});
 
 		it('leaves the duration alone when no duration fields are set', async () => {
