@@ -97,9 +97,11 @@ function createEntry(options: EntryOptions = {}) {
 function createMessage(
 	entries: ReturnType<typeof createEntry>[],
 	lastReroll: Record<string, unknown> | null = null,
+	speakerUuid: string | null = null,
 ) {
 	const message = {
 		id: 'message-1',
+		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
 		system: { incomingReactions: entries, lastReroll },
 		reactive: null as unknown,
 	};
@@ -602,6 +604,59 @@ describe('IncomingReactionPrompts', () => {
 			expect(history?.textContent).toContain('7 became 4');
 			expect(well?.textContent).toContain('Reroll with Pocket Sand');
 			expect(history?.compareDocumentPosition(well as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		});
+
+		it('leaves out the name of the one who rolled, which the card header shows', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[
+							rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
+							rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
+						],
+						lastReroll({ usesLeft: 1 }),
+						'Actor.wren',
+					),
+				},
+			});
+
+			expect(groupNames()).toEqual(['Bram']);
+			expect(rollPlace().queryByText(/Used by/)).toBeNull();
+		});
+
+		it('names the button "Reroll again" when the last feature can reroll again', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ id: 'again', actorUuid: 'Actor.wren' })],
+						lastReroll({ usesLeft: 1 }),
+					),
+				},
+			});
+
+			const button = rollPlace().getByRole('button');
+			expect(button.querySelector('.nimble-incoming-reaction-button__label')?.textContent).toBe(
+				'Reroll again',
+			);
+			expect(groupNames()).toEqual(['Wren']);
+			expect(rollPlace().queryByText(/Used by|Uses left/)).toBeNull();
+		});
+
+		it('shows no detail line when the header and the button already say it all', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ id: 'again', actorUuid: 'Actor.wren' })],
+						lastReroll({ usesLeft: 1 }),
+						'Actor.wren',
+					),
+				},
+			});
+
+			expect(
+				screen.getByTestId('roll-place').querySelector('.nimble-roll-changes__detail'),
+			).toBeNull();
+			expect(rollPlace().getByText('Rerolled with Pocket Sand: 7 became 4')).toBeTruthy();
 		});
 
 		it('puts no em dash and no middle dot in any label', () => {

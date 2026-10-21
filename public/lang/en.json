@@ -213,6 +213,7 @@
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
 				"useFailed": "That reaction could not be completed.",
 				"rerollWith": "Reroll with {feature}",
+				"rerollAgain": "Reroll again",
 				"rerollHistory": "Rerolled with {feature}: {previous} became {next}",
 				"rerollHistoryFromCrit": "Rerolled with {feature}: {previous} (crit) became {next}",
 				"rerollHistoryPlain": "Rerolled with {feature}",
