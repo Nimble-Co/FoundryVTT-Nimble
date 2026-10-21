@@ -86,4 +86,16 @@ describe('confirmRerollHeroicReaction', () => {
 		testGlobals.foundry.applications.api.DialogV2.confirm = vi.fn(async () => false);
 		await expect(confirmRerollHeroicReaction(entry)).resolves.toBeNull();
 	});
+
+	it('asks also while resource spending automation is off', async () => {
+		setup({ defendAvailable: false });
+		testGlobals.game.settings = {
+			get: (_scope: string, key: string) => key !== 'automation.resourceSpending',
+		};
+		try {
+			await expect(confirmRerollHeroicReaction(entry)).resolves.toBe(true);
+		} finally {
+			delete testGlobals.game.settings;
+		}
+	});
 });
