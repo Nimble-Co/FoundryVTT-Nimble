@@ -1835,9 +1835,24 @@
 			},
 			"reroll": {
 				"description": "Lets the one who rolled, or the target, roll an attack again. The new result stands.",
+				"form": {
+					"when": "When?",
+					"onlyWhile": {
+						"label": "Only while",
+						"hint": "For example, only while Raging."
+					},
+					"cost": {
+						"label": "Cost (optional)",
+						"hint": "A use limit such as 1/Safe Rest is a charge pool on this item."
+					},
+					"changes": {
+						"label": "Changes to the new roll (optional)",
+						"hint": "The new roll keeps the first roll's advantage and disadvantage."
+					}
+				},
 				"rolls": {
-					"label": "Which roll can be rerolled?",
-					"hint": "The kind of roll this feature rerolls.",
+					"label": "Which roll can it reroll?",
+					"hint": "",
 					"choices": {
 						"attack": "Attack"
 					}
@@ -1851,8 +1866,8 @@
 					}
 				},
 				"outcome": {
-					"label": "When can it be used?",
-					"hint": "The result the first roll must have. A hit includes a crit.",
+					"label": "The first roll is",
+					"hint": "A hit includes a crit.",
 					"choices": {
 						"always": "Any result",
 						"hit": "A hit",
@@ -1862,37 +1877,42 @@
 					}
 				},
 				"attackDelivery": {
-					"label": "Which attacks?",
-					"hint": "Melee attacks, ranged attacks, or both.",
+					"label": "Attack type",
+					"hint": "Any is melee and ranged.",
 					"choices": {
-						"any": "Any attack",
-						"melee": "Melee attacks",
-						"ranged": "Ranged attacks"
+						"any": "Any",
+						"melee": "Melee",
+						"ranged": "Ranged"
 					}
 				},
 				"automatic": {
-					"label": "Reroll by itself?",
-					"hint": "Reroll as soon as the roll is made, with no button. Use this only when the feature gives no choice. With Feature Effects off in Automation, a button shows instead."
+					"label": "Rerolls by itself",
+					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead."
 				},
 				"discardedCritTriggers": {
-					"label": "Does a rerolled crit still count for when-crit features?",
-					"hint": "When the first roll was a crit, features that react to a crit still react, as if the crit landed. Damage and effects follow the new roll."
+					"label": "The discarded crit still triggers when-crit abilities",
+					"hint": "When the first roll was a crit, abilities that react to a crit still react. Damage and effects follow the new roll."
 				},
 				"rollModeChange": {
-					"label": "Change to the new roll's advantage",
-					"hint": "-1 rolls the new roll with one more disadvantage, 1 with one more advantage, 0 changes nothing. Added to what the first roll had."
+					"label": "Advantage or disadvantage",
+					"hint": "Added to what the first roll had.",
+					"choices": {
+						"none": "None",
+						"advantage": "One more advantage",
+						"disadvantage": "One more disadvantage"
+					}
 				},
 				"primaryDieBonus": {
 					"label": "Add to the Primary Die",
-					"hint": "A number added to the Primary Die of the new roll, on top of what the first roll added."
+					"hint": "A number added to the Primary Die of the new roll."
 				},
 				"extraDamage": {
 					"label": "Extra damage",
 					"hint": "A formula added to the damage of the new roll, such as 1d6 or @level. References read the owner of this feature."
 				},
 				"chargePoolIdentifier": {
-					"label": "Charge pool it uses",
-					"hint": "The charge pool that limits how often this feature can be used. Leave empty for no limit. The button does not show when the pool is empty."
+					"label": "Charge pool",
+					"hint": "The pool it spends charges from. Leave empty for no limit. The reroll button does not show when the pool is empty."
 				},
 				"chargeCost": {
 					"label": "Charges per use",
@@ -1900,15 +1920,15 @@
 				},
 				"manaCost": {
 					"label": "Mana per use",
-					"hint": "Mana one reroll costs. 0 is free."
+					"hint": "0 is free."
 				},
 				"woundCost": {
 					"label": "Wounds gained per use",
-					"hint": "Wounds the user gains when they use this feature. 0 is none."
+					"hint": "Wounds the user gains. 0 is none."
 				},
 				"heroicReaction": {
-					"label": "Heroic reaction it uses",
-					"hint": "A heroic reaction this feature spends in combat. Out of combat it costs nothing.",
+					"label": "Heroic reaction it spends",
+					"hint": "Spent only in combat.",
 					"choices": {
 						"none": "None",
 						"defend": "Defend",

@@ -3,6 +3,7 @@ import { HEROIC_REACTIONS, type HeroicReactionKey } from '../../utils/heroicActi
 import type { RerollTrigger } from '../../utils/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/rerollCost.js';
 import type { RerollChanges } from '../../utils/rerollOptions.js';
+import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -42,14 +43,17 @@ function schema() {
 				hint: 'NIMBLE.rules.reroll.rolls.hint',
 			},
 		),
-		usedBy: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: 'roller',
-			choices: choiceLabels('usedBy', REROLL_USERS),
-			label: 'NIMBLE.rules.reroll.usedBy.label',
-			hint: 'NIMBLE.rules.reroll.usedBy.hint',
-		}),
+		usedBy: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'roller',
+				choices: choiceLabels('usedBy', REROLL_USERS),
+				label: 'NIMBLE.rules.reroll.usedBy.label',
+				hint: 'NIMBLE.rules.reroll.usedBy.hint',
+				widget: 'chips',
+			}),
+		),
 		outcome: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -68,7 +72,8 @@ function schema() {
 		}),
 		chargePoolIdentifier: new fields.StringField(
 			withWidget({
-				required: true,
+				// Not required, so the picker lists an empty choice for no pool.
+				required: false,
 				nullable: false,
 				initial: '',
 				label: 'NIMBLE.rules.reroll.chargePoolIdentifier.label',
@@ -123,6 +128,11 @@ function schema() {
 			min: -1,
 			max: 1,
 			integer: true,
+			choices: {
+				0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
+				1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
+				[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
+			},
 			label: 'NIMBLE.rules.reroll.rollModeChange.label',
 			hint: 'NIMBLE.rules.reroll.rollModeChange.hint',
 		}),
@@ -184,6 +194,27 @@ interface RerollOfferContext {
 class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.reroll.description';
+	static override formLayout: readonly RuleFormGroup[] = [
+		{ fields: ['rolls'] },
+		{ fields: ['usedBy'] },
+		{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
+		{
+			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
+			hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
+			fields: ['predicate'],
+		},
+		{
+			label: 'NIMBLE.rules.reroll.form.cost.label',
+			hint: 'NIMBLE.rules.reroll.form.cost.hint',
+			fields: ['chargePoolIdentifier', 'chargeCost', 'manaCost', 'woundCost', 'heroicReaction'],
+		},
+		{
+			label: 'NIMBLE.rules.reroll.form.changes.label',
+			hint: 'NIMBLE.rules.reroll.form.changes.hint',
+			fields: ['rollModeChange', 'primaryDieBonus', 'extraDamage'],
+		},
+		{ fields: ['automatic', 'discardedCritTriggers'] },
+	];
 
 	declare rolls: RerollRoll[];
 	declare usedBy: RerollUser;

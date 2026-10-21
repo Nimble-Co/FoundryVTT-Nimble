@@ -1,6 +1,8 @@
 import { untrack } from 'svelte';
 import localize from '#utils/localize.js';
 import type { RuleCardProps } from '#view/rulesBuilder/types.js';
+import type { RuleFormGroup } from '../../../models/rules/_formLayout.js';
+import { resolveFormGroups } from './ruleFormLayout.js';
 
 export const FIXED_FIELDS = new Set([
 	'id',
@@ -62,6 +64,17 @@ export function createRuleCardState(
 			return null;
 		}
 	});
+
+	const formLayout = $derived(
+		(RuleClass as unknown as { formLayout?: readonly RuleFormGroup[] | null } | undefined)
+			?.formLayout ?? null,
+	);
+	const formGroups = $derived(
+		formLayout && schema ? resolveFormGroups(formLayout, schema, getRule(), FIXED_FIELDS) : null,
+	);
+	const predicateInForm = $derived(
+		Boolean(formLayout?.some((group) => group.fields.includes('predicate'))),
+	);
 
 	let showJson = $state(false);
 	let jsonDraft = $state(untrack(() => JSON.stringify(getRule(), null, 2)));
@@ -159,6 +172,12 @@ export function createRuleCardState(
 		},
 		get schema() {
 			return schema;
+		},
+		get formGroups() {
+			return formGroups;
+		},
+		get predicateInForm() {
+			return predicateInForm;
 		},
 		get showJson() {
 			return showJson;
