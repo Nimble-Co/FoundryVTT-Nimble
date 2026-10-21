@@ -1,4 +1,3 @@
-import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { getHeroicReactionUsageState, isSoftBlockedReason } from './getHeroicReactionUsageState.js';
 import { getHeroicReactionLabel } from './heroicActions.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
@@ -16,7 +15,7 @@ export async function confirmRerollHeroicReaction(
 	entry: IncomingReactionEntry,
 ): Promise<boolean | null> {
 	const key = findRerollRule(entry)?.rerollCost?.heroicReaction;
-	if (!key || !isResourceSpendingAutomationEnabled()) return false;
+	if (!key) return false;
 
 	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor | null;
 	const found = findActorCombatant(actor);

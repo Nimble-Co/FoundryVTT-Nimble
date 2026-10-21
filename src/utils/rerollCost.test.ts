@@ -145,12 +145,13 @@ describe('rerollCost', () => {
 	});
 
 	describe('rerollCostCharges', () => {
-		it('is true for any part that charges, and false with spending off', () => {
+		it('is true for any part that charges, and only for a heroic reaction with spending off', () => {
 			expect(rerollCostCharges(cost())).toBe(false);
 			expect(rerollCostCharges(cost({ woundCost: 1 }))).toBe(true);
 			expect(rerollCostCharges(cost({ heroicReaction: 'defend' }))).toBe(true);
 			setToggles({ 'automation.resourceSpending': false });
 			expect(rerollCostCharges(cost({ woundCost: 1 }))).toBe(false);
+			expect(rerollCostCharges(cost({ heroicReaction: 'defend' }))).toBe(true);
 		});
 	});
 
@@ -204,6 +205,20 @@ describe('rerollCost', () => {
 
 			expect(paid).toEqual({ charges: 0, mana: 0, wounds: 0, heroicReaction: null });
 			expect(item.update).not.toHaveBeenCalled();
+			expect(actor.update).not.toHaveBeenCalled();
+		});
+
+		it('still uses the heroic reaction while resource spending automation is off', async () => {
+			setToggles({ 'automation.resourceSpending': false });
+			const { actor, asActor } = makeActor({ wounds: 0 });
+			const combat = makeCombat(asActor);
+			const paid = await payRerollCost(asActor, cost({ heroicReaction: 'defend', woundCost: 1 }));
+
+			expect(combat.useHeroicReactions).toHaveBeenCalledWith('combatant-1', ['defend'], {
+				force: false,
+			});
+			expect(paid?.heroicReaction).toMatchObject({ key: 'defend' });
+			expect(paid?.wounds).toBe(0);
 			expect(actor.update).not.toHaveBeenCalled();
 		});
 

@@ -3373,7 +3373,7 @@
 			"resourceSpending": {
 				"name": "Costs",
 				"hint": "Spells, items and rerolls spend their mana and charges, and stop when there is not enough.",
-				"off": "Off: nothing is spent. Track costs by hand."
+				"off": "Off: only heroic reactions are spent. Track other costs by hand."
 			},
 			"actionTracking": {
 				"name": "Action Spending",

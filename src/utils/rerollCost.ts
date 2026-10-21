@@ -94,13 +94,9 @@ function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
 
 /** Whether paying the cost would change anything on the actor or combat. */
 function rerollCostCharges(cost: RerollCost): boolean {
+	if (cost.heroicReaction !== '') return true;
 	if (!isResourceSpendingAutomationEnabled()) return false;
-	return (
-		cost.chargePoolIdentifier.trim() !== '' ||
-		cost.manaCost > 0 ||
-		cost.woundCost > 0 ||
-		cost.heroicReaction !== ''
-	);
+	return cost.chargePoolIdentifier.trim() !== '' || cost.manaCost > 0 || cost.woundCost > 0;
 }
 
 async function spendHeroicReaction(
@@ -166,7 +162,8 @@ async function refundRerollCost(
  * Charge the cost of a reroll: the heroic reaction first, as the part most
  * likely to be refused, then charges, mana and Wounds. When a part fails,
  * the parts already charged are given back and null is returned. With
- * resource spending automation off, nothing is charged.
+ * resource spending automation off, only the heroic reaction is spent, as
+ * for every other heroic reaction.
  */
 async function payRerollCost(
 	actor: RerollPayer,
@@ -174,8 +171,6 @@ async function payRerollCost(
 	options: { forceHeroicReaction?: boolean } = {},
 ): Promise<PaidRerollCost | null> {
 	const paid = nothingPaid();
-	if (!isResourceSpendingAutomationEnabled()) return paid;
-
 	const fail = async () => {
 		await refundRerollCost(actor, cost, paid);
 		return null;
@@ -190,6 +185,7 @@ async function payRerollCost(
 		if (spent === false) return null;
 		paid.heroicReaction = spent;
 	}
+	if (!isResourceSpendingAutomationEnabled()) return paid;
 
 	if (cost.chargePoolIdentifier.trim()) {
 		const amount = Math.max(1, cost.chargeCost);
