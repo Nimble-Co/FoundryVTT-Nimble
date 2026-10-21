@@ -18,7 +18,7 @@ How much the system does on its own is controlled from one place: the **Configur
 **Resources**
 
 - **Refills.** Charges and dice pools refill at their set times: turn start, rests, wounds, kills, and encounter end.
-- **Costs.** Spells, items and rerolls spend their mana and charges, and stop when there is not enough. When off, nothing is spent or checked except heroic reactions, which are spent as always, so track the other costs by hand. The spell upcast dialog follows the same rule: with the toggle off it lets you upcast to your highest unlocked tier regardless of the mana on your sheet.
+- **Costs.** Spells, items and rerolls spend their mana and charges, and stop when there is not enough. Charges that an attack refills on a hit or a crit count as costs too, so they follow this toggle and not **Refills**. When off, nothing is spent or checked except heroic reactions, which are spent as always, so track the other costs by hand. The spell upcast dialog follows the same rule: with the toggle off it lets you upcast to your highest unlocked tier regardless of the mana on your sheet.
 
 **Combat**
 
