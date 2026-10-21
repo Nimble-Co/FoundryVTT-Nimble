@@ -12,6 +12,7 @@ import {
 } from './helpers.js';
 import type {
 	CharacterActorLike,
+	ChargeConsumptionDetail,
 	ChargePoolMap,
 	ChargeRecoveryGiven,
 	ChargeRecoveryTrigger,
@@ -28,6 +29,11 @@ interface AttackOutcome {
 interface RecoveryTriggerChange {
 	takeBack: ChargeRecoveryTrigger[];
 	give: ChargeRecoveryTrigger[];
+}
+
+interface RerollRecoveryResult {
+	given: ChargeRecoveryGiven;
+	pools: ChargePoolMap;
 }
 
 /** The attack recovery triggers an outcome fires, as item use reads them. */
@@ -81,14 +87,15 @@ function takeBackRecovery(
 /**
  * Make the attacker's charge pools follow a rerolled attack: take back what
  * the triggers in `change.takeBack` gave, then give what `change.give` earns.
- * `given` is what the card's recoveries gave so far; the updated copy is
- * returned, or null when nothing ran. Gated like the item use recovery.
+ * `given` is what the card's recoveries gave so far. Returns the updated copy
+ * and the pools after the change, or null when nothing ran. Gated like the
+ * item use recovery.
  */
 async function applyRerollRecoveryChange(
 	actor: Actor | null | undefined,
 	change: RecoveryTriggerChange,
 	given: ChargeRecoveryGiven | null | undefined,
-): Promise<ChargeRecoveryGiven | null> {
+): Promise<RerollRecoveryResult | null> {
 	if (change.takeBack.length < 1 && change.give.length < 1) return null;
 	if (!isResourceSpendingAutomationEnabled()) return null;
 	if (!isCharacterActor(actor)) return null;
@@ -105,7 +112,7 @@ async function applyRerollRecoveryChange(
 		emitChanges(actor, currentPools, nextPools, change);
 	}
 
-	return nextGiven;
+	return { given: nextGiven, pools: nextPools };
 }
 
 function emitChanges(
@@ -131,10 +138,106 @@ function emitChanges(
 	}
 }
 
+/** Item use names a pool's refill after the last of these triggers that gave. */
+const TRIGGER_ORDER: ChargeRecoveryTrigger[] = getApplicableUsageTriggers({ isCritical: true });
+
+interface NetRefill {
+	change: number;
+	trigger: ChargeRecoveryTrigger;
+}
+
+function netRefillsByPool(given: ChargeRecoveryGiven): Map<string, NetRefill> {
+	const refills = new Map<string, NetRefill>();
+	for (const entry of given) {
+		const refill = refills.get(entry.poolId);
+		if (!refill) {
+			refills.set(entry.poolId, { change: entry.change, trigger: entry.trigger });
+			continue;
+		}
+		refill.change += entry.change;
+		if (TRIGGER_ORDER.indexOf(entry.trigger) >= TRIGGER_ORDER.indexOf(refill.trigger)) {
+			refill.trigger = entry.trigger;
+		}
+	}
+	return refills;
+}
+
+/** The pool an entry is for; an entry without a pool id matches a unique label. */
+function entryPoolId(entry: ChargeConsumptionDetail, pools: ChargePoolMap): string | null {
+	if (entry.poolId) return entry.poolId;
+	const matches = Object.entries(pools).filter(([, pool]) => pool.label === entry.poolLabel);
+	return matches.length === 1 ? matches[0][0] : null;
+}
+
+function clampValue(value: number, max: number): number {
+	return Math.max(0, Math.min(value, max));
+}
+
+function copyEntry(entry: ChargeConsumptionDetail): ChargeConsumptionDetail {
+	return entry.recovery ? { ...entry, recovery: { ...entry.recovery } } : { ...entry };
+}
+
+/**
+ * The card's charge lines after a reroll. Each pool keeps its spend; its
+ * refill becomes the net that `given` now records for it. A line left with
+ * neither is dropped, a pool newly refilled gets a line, and a line that
+ * matches no pool is left as it was.
+ */
+function rerollChargeConsumption(
+	consumption: ChargeConsumptionDetail[],
+	given: ChargeRecoveryGiven,
+	pools: ChargePoolMap,
+): ChargeConsumptionDetail[] {
+	const refills = netRefillsByPool(given);
+	const next = consumption.map(copyEntry);
+
+	// One line per pool carries its refill: the one that has it, else the last.
+	const carriers = new Map<string, ChargeConsumptionDetail>();
+	for (const entry of next) {
+		const poolId = entryPoolId(entry, pools);
+		if (!poolId) continue;
+		if (carriers.get(poolId)?.recovery) continue;
+		carriers.set(poolId, entry);
+	}
+
+	for (const [poolId, entry] of carriers) {
+		const refill = refills.get(poolId);
+		if (!refill || refill.change === 0) {
+			delete entry.recovery;
+			continue;
+		}
+		entry.recovery = {
+			trigger: refill.trigger,
+			previousValue: entry.currentValue,
+			newValue: clampValue(entry.currentValue + refill.change, entry.maxValue),
+		};
+	}
+
+	for (const [poolId, refill] of refills) {
+		const pool = pools[poolId];
+		if (!pool || refill.change === 0 || carriers.has(poolId)) continue;
+		const before = clampValue(pool.current - refill.change, pool.max);
+		next.push({
+			poolId,
+			poolLabel: pool.label,
+			previousValue: before,
+			currentValue: before,
+			maxValue: pool.max,
+			change: 0,
+			recovery: { trigger: refill.trigger, previousValue: before, newValue: pool.current },
+		});
+	}
+
+	const carried = new Set(carriers.values());
+	return next.filter((entry) => !carried.has(entry) || entry.change !== 0 || entry.recovery);
+}
+
 export {
 	RECOVERY_GIVEN_FLAG,
 	applyRerollRecoveryChange,
+	rerollChargeConsumption,
 	rerollRecoveryChange,
 	type AttackOutcome,
 	type RecoveryTriggerChange,
+	type RerollRecoveryResult,
 };

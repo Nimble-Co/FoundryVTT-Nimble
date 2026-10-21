@@ -163,6 +163,8 @@ type ChargeValidationFailure = {
 };
 
 type ChargeConsumptionDetail = {
+	/** Missing on cards made before it was recorded. */
+	poolId?: string;
 	poolLabel: string;
 	previousValue: number;
 	currentValue: number;

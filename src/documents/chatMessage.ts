@@ -43,9 +43,10 @@ import {
 	applyRerollRecoveryChange,
 	RECOVERY_GIVEN_FLAG,
 	type RecoveryTriggerChange,
+	rerollChargeConsumption,
 	rerollRecoveryChange,
 } from '../utils/chargePool/chargePoolReroll.js';
-import type { ChargeRecoveryGiven } from '../utils/chargePool/types.js';
+import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '../utils/chargePool/types.js';
 import { offerSurvives } from '../utils/incomingAttackModifiers.js';
 import {
 	type PoolSpendSelection,
@@ -1677,15 +1678,27 @@ class NimbleChatMessage extends ChatMessage {
 
 		try {
 			const item = fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null;
-			const given = await applyRerollRecoveryChange(
-				item?.actor,
-				change,
-				flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined,
-			);
-			if (!given) return;
-			await this.update({
-				[`flags.${SYSTEM_ID}.${RECOVERY_GIVEN_FLAG}`]: given,
-			} as Record<string, unknown>);
+			const recordedGiven = flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined;
+			const result = await applyRerollRecoveryChange(item?.actor, change, recordedGiven);
+			if (!result) return;
+
+			const changes: Record<string, unknown> = {
+				[`flags.${SYSTEM_ID}.${RECOVERY_GIVEN_FLAG}`]: result.given,
+			};
+			const consumption = Array.isArray(flags?.chargeConsumption)
+				? (flags.chargeConsumption as ChargeConsumptionDetail[])
+				: [];
+			// A card with a refill line but no record predates the record, so its
+			// lines cannot be matched to what was given.
+			const predatesRecord =
+				!Array.isArray(recordedGiven) && consumption.some((entry) => entry.recovery);
+			if (!predatesRecord) {
+				const nextConsumption = rerollChargeConsumption(consumption, result.given, result.pools);
+				if (consumption.length > 0 || nextConsumption.length > 0) {
+					changes[`flags.${SYSTEM_ID}.chargeConsumption`] = nextConsumption;
+				}
+			}
+			await this.update(changes);
 		} catch (error) {
 			console.error('Nimble | Could not change charge recovery after a reroll.', error);
 		}

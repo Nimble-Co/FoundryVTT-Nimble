@@ -855,6 +855,7 @@ class ItemActivationManager {
 			if (!adjusted) continue;
 
 			this.#chargeConsumption.push({
+				poolId: entry.poolId,
 				poolLabel: pool.label,
 				previousValue: pool.current,
 				currentValue: next,

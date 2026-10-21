@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
-import { applyRerollRecoveryChange, rerollRecoveryChange } from './chargePoolReroll.js';
-import type { ChargeRecoveryGiven } from './types.js';
+import {
+	applyRerollRecoveryChange,
+	rerollChargeConsumption,
+	rerollRecoveryChange,
+} from './chargePoolReroll.js';
+import type { ChargeConsumptionDetail, ChargePoolMap, ChargeRecoveryGiven } from './types.js';
 
 type Outcome = 'miss' | 'hit' | 'crit';
 
@@ -143,7 +147,7 @@ describe('applyRerollRecoveryChange', () => {
 		);
 
 		expect(current(actor)).toBe(0);
-		expect(next).toEqual([]);
+		expect(next?.given).toEqual([]);
 	});
 
 	it('gives what the new crit earns and records it', async () => {
@@ -156,7 +160,8 @@ describe('applyRerollRecoveryChange', () => {
 		);
 
 		expect(current(actor)).toBe(2);
-		expect(next).toEqual([{ poolId: 'actor:focus', trigger: 'onCriticalHit', change: 1 }]);
+		expect(next?.given).toEqual([{ poolId: 'actor:focus', trigger: 'onCriticalHit', change: 1 }]);
+		expect(next?.pools['actor:focus'].current).toBe(2);
 	});
 
 	it('takes back nothing the crit did not give, as on a full pool', async () => {
@@ -199,7 +204,7 @@ describe('applyRerollRecoveryChange', () => {
 		);
 
 		expect(current(actor)).toBe(5);
-		expect(next).toEqual([{ poolId: 'actor:focus', trigger: 'onHit', change: 1 }]);
+		expect(next?.given).toEqual([{ poolId: 'actor:focus', trigger: 'onHit', change: 1 }]);
 	});
 
 	it('keeps what an outcome that still stands gave', async () => {
@@ -221,7 +226,7 @@ describe('applyRerollRecoveryChange', () => {
 		);
 
 		expect(current(actor)).toBe(2);
-		expect(next).toEqual([{ poolId: 'actor:focus', trigger: 'onHit', change: 1 }]);
+		expect(next?.given).toEqual([{ poolId: 'actor:focus', trigger: 'onHit', change: 1 }]);
 	});
 
 	it('gives nothing when the recovery predicate fails', async () => {
@@ -239,7 +244,7 @@ describe('applyRerollRecoveryChange', () => {
 		);
 
 		expect(current(actor)).toBe(1);
-		expect(next).toEqual([]);
+		expect(next?.given).toEqual([]);
 	});
 
 	it('does nothing with resource spending automation off', async () => {
@@ -280,5 +285,153 @@ describe('applyRerollRecoveryChange', () => {
 		);
 
 		expect(next).toBeNull();
+	});
+});
+
+describe('rerollChargeConsumption', () => {
+	function pool(id: string, label: string, current: number) {
+		return { id, label, current, max: 5 };
+	}
+
+	const POOLS = {
+		'actor:focus': pool('actor:focus', 'Focus', 3),
+		'actor:fury': pool('actor:fury', 'Fury', 3),
+		'actor:twin-a': pool('actor:twin-a', 'Twin', 1),
+		'actor:twin-b': pool('actor:twin-b', 'Twin', 1),
+	} as unknown as ChargePoolMap;
+
+	function line(
+		values: Partial<ChargeConsumptionDetail> & { recovery?: ChargeConsumptionDetail['recovery'] },
+	): ChargeConsumptionDetail {
+		return {
+			poolId: 'actor:focus',
+			poolLabel: 'Focus',
+			previousValue: 3,
+			currentValue: 2,
+			maxValue: 5,
+			change: -1,
+			...values,
+		};
+	}
+
+	const hit = (change: number, poolId = 'actor:focus') =>
+		({ poolId, trigger: 'onHit', change }) as const;
+	const crit = (change: number, poolId = 'actor:focus') =>
+		({ poolId, trigger: 'onCriticalHit', change }) as const;
+	const refillOnly = { previousValue: 2, currentValue: 2, change: 0 };
+
+	// [case, card lines, record after the reroll, lines expected]
+	const table: Array<
+		[string, ChargeConsumptionDetail[], ChargeRecoveryGiven, ChargeConsumptionDetail[]]
+	> = [
+		['spend only', [line({})], [], [line({})]],
+		[
+			'refill only, raised by a crit',
+			[line({ ...refillOnly, recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 } })],
+			[hit(1), crit(1)],
+			[
+				line({
+					...refillOnly,
+					recovery: { trigger: 'onCriticalHit', previousValue: 2, newValue: 4 },
+				}),
+			],
+		],
+		[
+			'spend plus refill, crit taken back',
+			[line({ recovery: { trigger: 'onCriticalHit', previousValue: 2, newValue: 4 } })],
+			[hit(1)],
+			[line({ recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 } })],
+		],
+		[
+			'spend plus refill, refill taken back to 0',
+			[line({ recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 } })],
+			[],
+			[line({})],
+		],
+		[
+			'refill only, taken back to 0',
+			[line({ ...refillOnly, recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 } })],
+			[],
+			[],
+		],
+		[
+			'refill added to a pool with no line',
+			[line({})],
+			[crit(1, 'actor:fury')],
+			[
+				line({}),
+				{
+					poolId: 'actor:fury',
+					poolLabel: 'Fury',
+					previousValue: 2,
+					currentValue: 2,
+					maxValue: 5,
+					change: 0,
+					recovery: { trigger: 'onCriticalHit', previousValue: 2, newValue: 3 },
+				},
+			],
+		],
+		[
+			'refill added to the last line of a pool spent in the dialog',
+			[line({}), line({ previousValue: 2, currentValue: 1 })],
+			[hit(1)],
+			[
+				line({}),
+				line({
+					previousValue: 2,
+					currentValue: 1,
+					recovery: { trigger: 'onHit', previousValue: 1, newValue: 2 },
+				}),
+			],
+		],
+		[
+			'old line without a pool id matches by label',
+			[line({ poolId: undefined, recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 } })],
+			[],
+			[line({ poolId: undefined })],
+		],
+		[
+			'old line with no matching label is left alone',
+			[
+				line({
+					poolId: undefined,
+					poolLabel: 'Gone',
+					recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 },
+				}),
+			],
+			[],
+			[
+				line({
+					poolId: undefined,
+					poolLabel: 'Gone',
+					recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 },
+				}),
+			],
+		],
+		[
+			'old line whose label two pools share is left alone',
+			[
+				line({
+					poolId: undefined,
+					poolLabel: 'Twin',
+					recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 },
+				}),
+			],
+			[],
+			[
+				line({
+					poolId: undefined,
+					poolLabel: 'Twin',
+					recovery: { trigger: 'onHit', previousValue: 2, newValue: 3 },
+				}),
+			],
+		],
+	];
+
+	it.each(table)('%s', (_case, consumption, given, expected) => {
+		const before = structuredClone(consumption);
+
+		expect(rerollChargeConsumption(consumption, given, POOLS)).toEqual(expected);
+		expect(consumption).toEqual(before);
 	});
 });
