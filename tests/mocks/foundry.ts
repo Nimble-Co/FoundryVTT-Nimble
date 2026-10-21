@@ -788,6 +788,7 @@ export const configStructure = {
 	Dice: {
 		rolls: [],
 		types: [],
+		termTypes: {},
 	},
 	Canvas: {
 		layers: {

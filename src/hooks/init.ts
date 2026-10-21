@@ -70,6 +70,8 @@ export default function init() {
 	CONFIG.Dice.rolls.push(DamageRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.rolls.push(NimbleRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.types.push(PrimaryDie);
+	// A saved roll rebuilds its terms by class name from this map.
+	CONFIG.Dice.termTypes.PrimaryDie = PrimaryDie;
 
 	// Override Roll.create so /r formulas with Nimble modifiers route to DamageRoll.
 	// Foundry v14's default Roll.create just instantiates CONFIG.Dice.rolls[0] (the
