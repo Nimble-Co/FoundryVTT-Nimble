@@ -496,6 +496,10 @@ describe('ChargePoolService', () => {
 				},
 			},
 		]);
+		expect(result.recoveryGiven).toEqual([
+			{ poolId: 'actor:thoth', trigger: 'onHit', change: 1 },
+			{ poolId: 'actor:thoth', trigger: 'onCriticalHit', change: 2 },
+		]);
 		expect(actor.update).toHaveBeenCalled();
 		expect(
 			foundry.utils.getProperty(

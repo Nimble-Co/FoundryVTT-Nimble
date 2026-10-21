@@ -115,11 +115,13 @@ function createMessage(
 		targets?: string[];
 		attackType?: string;
 		forceMiss?: boolean;
+		flags?: Record<string, unknown>;
 	} = {},
 ): MockedMessage {
 	const roll = serializedRoll(params.isCritical ?? false, params.forceMiss ?? false);
 	const message = new NimbleChatMessage({
 		type: 'spell',
+		flags: { nimble: params.flags ?? {} },
 		speaker: { scene: 'scene', token: 'attacker-token', actor: 'attacker' },
 		system: {
 			targets: params.targets ?? [TARGET_TOKEN],
@@ -345,6 +347,119 @@ describe('resolveRerollReaction', () => {
 			targetTokenUuid: TARGET_TOKEN,
 			side: 'target',
 			used: false,
+		});
+	});
+
+	describe('charge recovery follows the roll that stands', () => {
+		const CRIT_GAVE_ONE = [{ poolId: 'actor:focus', trigger: 'onCriticalHit', change: 1 }];
+		const ATTACK_FLAGS = { itemUuid: 'Item.blade', chargeRecoveryGiven: CRIT_GAVE_ONE };
+
+		/** Give the attacker a pool that a crit refills by 1, holding `current`. */
+		function withCritPool(world: World, current: number) {
+			const recoveries = [{ trigger: 'onCriticalHit', mode: 'add', value: '1' }];
+			const pool = {
+				id: 'actor:focus',
+				identifier: 'focus',
+				scope: 'actor',
+				sourceItemId: 'blade',
+				sourceItemName: 'Blade',
+				label: 'Focus',
+				current,
+				max: 3,
+				seeded: true,
+				recoveries,
+			};
+			const poolRule = {
+				type: 'chargePool',
+				id: 'pool-rule',
+				identifier: 'focus',
+				scope: 'actor',
+				max: '3',
+				initial: 'max',
+				recoveries,
+			};
+			const blade = {
+				id: 'blade',
+				name: 'Blade',
+				actor: world.attacker,
+				rules: new Map([['0', poolRule]]),
+				flags: {},
+				update: vi.fn(async () => ({})),
+			};
+			Object.assign(world.attacker, {
+				flags: { nimble: { chargePools: { 'actor:focus': pool } } },
+				items: { contents: [blade], get: () => blade },
+				getRollData: () => ({}),
+				getDomain: () => new Set<string>(),
+			});
+			const lookup = globals().fromUuidSync.getMockImplementation() as
+				| ((uuid: string) => unknown)
+				| undefined;
+			globals().fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.blade' ? blade : lookup?.(uuid),
+			);
+		}
+
+		function focus(world: World): number {
+			return foundry.utils.getProperty(
+				world.attacker,
+				'flags.nimble.chargePools.actor:focus.current',
+			) as number;
+		}
+
+		it('takes back the crit recovery when a crit is rerolled to a hit', async () => {
+			const world = setupWorld();
+			withCritPool(world, 1);
+			const message = createMessage({ isCritical: true, flags: ATTACK_FLAGS });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(focus(world)).toBe(0);
+			expect(message.update).toHaveBeenCalledTimes(2);
+			expect(message.update.mock.calls[1][0]).toEqual({ 'flags.nimble.chargeRecoveryGiven': [] });
+		});
+
+		it('keeps the crit recovery when the discarded crit still counts', async () => {
+			const world = setupWorld({ discardedCritTriggers: true });
+			withCritPool(world, 1);
+			const message = createMessage({ isCritical: true, flags: ATTACK_FLAGS });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(focus(world)).toBe(1);
+			expect(message.update).toHaveBeenCalledTimes(1);
+		});
+
+		it('gives the crit recovery when a hit is rerolled to a crit', async () => {
+			const world = setupWorld();
+			withCritPool(world, 1);
+			const message = createMessage({ flags: { itemUuid: 'Item.blade' } });
+			const evaluate = vi
+				.spyOn(DamageRoll.prototype, 'evaluate')
+				.mockImplementation(async function (this: DamageRoll) {
+					Object.defineProperty(this, 'isCritical', { value: true });
+					Object.defineProperty(this, 'isMiss', { value: false });
+					return this as never;
+				});
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			evaluate.mockRestore();
+			expect(focus(world)).toBe(2);
+			expect(message.update.mock.calls[1][0]).toEqual({
+				'flags.nimble.chargeRecoveryGiven': CRIT_GAVE_ONE,
+			});
+		});
+
+		it('leaves charges alone on a card no item made', async () => {
+			const world = setupWorld();
+			withCritPool(world, 1);
+			const message = createMessage({ isCritical: true });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(focus(world)).toBe(1);
+			expect(message.update).toHaveBeenCalledTimes(1);
 		});
 	});
 
