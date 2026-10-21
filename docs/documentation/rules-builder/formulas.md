@@ -17,13 +17,13 @@ References start with `@` and are filled in from the character carrying the item
 
 | Reference | Value |
 | :--- | :--- |
-| `@level` | Character level. |
+| `@level` | Character level. On a monster, its level as a number, so a level `1/2` monster gives 0.5. |
 | `@strength`, `@dexterity`, `@intelligence`, `@will` | The character's stat modifiers. |
 | `@key` | The highest modifier among the character's class key stats, handy for class features that should work for every subclass build. |
 | `@strengthSave`, `@dexteritySave`, `@intelligenceSave`, `@willSave` | Saving throw modifiers. |
 | `@arcana`, `@examination`, `@finesse`, `@influence`, `@insight`, `@lore`, `@might`, `@naturecraft`, `@perception`, `@stealth` | Skill modifiers. |
 
-You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only the save shortcuts work, so use full paths for monster features. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
+You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only `@level` and the save shortcuts work, so use full paths for the other monster values. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
 
 Formulas support basic math (`+`, `-`, `*`, `/`, parentheses) and rounding helpers: `floor(@level / 2)` gives half the character's level, rounded down.
 
@@ -76,7 +76,7 @@ The exception is the **Damage Bonus** rule. Its **Bonus** field recognizes dice 
 
 1. **Watch for the warning.** "Invalid roll formula" pops up when the sheet recalculates a broken formula. Check for typos like `@leve` or an unclosed parenthesis.
 2. **Test with a plain number first.** If `2` works but `@will` doesn't, the reference is the problem.
-3. **Mind who's carrying the item.** `@level` and stat references resolve on the character the item sits on. On a monster, most shortcuts resolve to nothing.
+3. **Mind who's carrying the item.** `@level` and stat references resolve on the actor the item sits on. On a monster, most shortcuts other than `@level` and the saves resolve to nothing.
 4. **Dice doing nothing?** You've probably used dice in a field that needs a single number. Only Damage Bonus rolls dice; everywhere else, replace `1d4` with a flat value or a reference.
 
 ## Related pages

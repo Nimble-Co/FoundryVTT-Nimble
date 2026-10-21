@@ -785,7 +785,12 @@ function generateFormulaReferencePage(): void {
 	const skillShortcuts = Object.keys(skills).map((key) => inlineCode(`@${key}`));
 
 	const shortcutRows = [
-		['`@level`', 'Character level.', 'Yes', ''],
+		[
+			'`@level`',
+			'Character level. On a monster, its level as a number: `1/2` gives 0.5.',
+			'Yes',
+			'Yes',
+		],
 		['`@key`', "The highest modifier among the character's class key stats.", 'Yes', ''],
 		[statShortcuts.join(', '), 'Stat modifiers.', 'Yes', ''],
 		[saveShortcuts.join(', '), 'Saving throw modifiers.', 'Yes', 'Late'],

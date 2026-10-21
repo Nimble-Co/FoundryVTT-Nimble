@@ -1,5 +1,6 @@
 import type { NimbleMonsterFeatureData } from '../../models/item/MonsterFeatureDataModel.js';
 
+import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleMonsterFeatureItem extends NimbleBaseItem<'monsterFeature'> {
@@ -7,9 +8,7 @@ export class NimbleMonsterFeatureItem extends NimbleBaseItem<'monsterFeature'> {
 
 	override async prepareChatCardData(_options) {
 		const showDescription = this.system.activation.showDescription;
-		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description,
-		);
+		const description = await enrichDocumentHTML(this.system.description, this);
 
 		const targets = this.system.activation.targets;
 

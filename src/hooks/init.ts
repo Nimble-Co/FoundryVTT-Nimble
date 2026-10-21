@@ -28,6 +28,7 @@ import { NimbleToken } from '../documents/token/token.js';
 import { NimbleTokenDocument } from '../documents/token/tokenDocument.js';
 import { NimbleTokenLayer } from '../documents/token/tokenLayer.js';
 import { NimbleTokenRuler } from '../documents/token/tokenRuler.js';
+import activateEnricherListeners from '../enrichers/activateEnricherListeners.js';
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 import { NIMBLE_GAME } from '../game.js';
 import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels.js';
@@ -107,6 +108,7 @@ export default function init() {
 	foundry.helpers.interaction.TooltipManager.implementation.TOOLTIP_ACTIVATION_MS = 100;
 
 	registerCustomEnrichers();
+	activateEnricherListeners();
 
 	// Sheet registration types
 	type ActorSheetConstructor = Parameters<

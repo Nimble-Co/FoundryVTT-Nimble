@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import enrichDocumentHTML from '../../../utils/enrichDocumentHTML.js';
 
 	let item = getContext('document');
 
@@ -19,7 +20,7 @@
 			<h3 class="nimble-heading" data-heading-variant="section">Base Spell Effect</h3>
 		</header>
 
-		{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(baseEffectDescription) then baseEffect}
+		{#await enrichDocumentHTML(baseEffectDescription, item) then baseEffect}
 			<div class="nimble-summary__description">
 				{@html baseEffect || 'No description available'}
 			</div>
@@ -27,7 +28,7 @@
 	</section>
 
 	{#if higherLevelEffectDescription}
-		{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(higherLevelEffectDescription) then higherLevelEffect}
+		{#await enrichDocumentHTML(higherLevelEffectDescription, item) then higherLevelEffect}
 			{#if higherLevelEffect}
 				<section class="nimble-spell-description-content">
 					<header class="nimble-section-header">
@@ -43,7 +44,7 @@
 	{/if}
 
 	{#if spellTier > 0 && !isUtilitySpell && upcastEffectDescription}
-		{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(upcastEffectDescription) then upcastContent}
+		{#await enrichDocumentHTML(upcastEffectDescription, item) then upcastContent}
 			{#if upcastContent}
 				<section class="nimble-spell-description-content">
 					<header class="nimble-section-header">

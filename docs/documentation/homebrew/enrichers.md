@@ -66,16 +66,31 @@ Check buttons currently render as an icon and do not perform a roll when clicked
 
 ## Saving throw buttons: `[[/savingThrow]]`
 
-The `savingThrow` type is recognized by the matcher, but in the current version the tag produces no button at all: the text is left exactly as you typed it.
+Renders a labeled button with a d20 icon, such as *DC 12 DEX save*. A left click rolls that save for each selected token, with the usual roll dialog, and posts each result to chat. The DC is only shown on the button: compare it with the result at the table.
+
+| Argument | Required | Value |
+| :--- | :--- | :--- |
+| `save` | yes | The save: `str`, `dex`, `int`, or `wil`. The full names `strength`, `dexterity`, `intelligence`, and `will` also work. |
+| `dc` | no | A number. When you leave it out, the button only names the save, for example *DEX save*. |
+
+Examples:
 
 ```
-[[/savingThrow saveType=will]]
+Each creature in the cone makes a [[/savingThrow save=dex dc=12]] or takes 2d6 fire damage.
 ```
 
-Currently renders nothing (the raw text remains).
+Renders the sentence with a *DC 12 DEX save* button in place of the tag.
 
-::: warning Prefer a Save effect
-For anything that should actually prompt a save, configure a **Save** effect on the item's [Activation tab](activations.md). Its chat card includes a working d20 button that rolls the saving throw for all selected tokens.
+```
+On a failed [[/savingThrow save=wil]] the target is [[/condition condition=frightened]].
+```
+
+A *WIL save* button and a *Frightened* button in one line.
+
+An unknown save, such as `save=luck`, is left as plain text so you can see the mistake.
+
+::: tip A Save effect does more
+For an item that players use, a **Save** effect on the item's [Activation tab](activations.md) puts the save on the item's chat card. Use the inline button for descriptions, journals, and monster text.
 :::
 
 ## Plain dice rolls: `[[/r]]`
@@ -90,7 +105,9 @@ Roll [[/r 1d20]] on the chaos table.
 The trap deals [[/r 2d6]] damage.
 ```
 
-Each renders a clickable roll that posts its result to chat. Compendium content also uses formula references in these, such as `[[/r 1d20+@level]]` on legendary monsters.
+Each renders a clickable roll that posts its result to chat. Compendium content also uses formula references in these, such as `[[/r 1d20+@level]]` on magic items.
+
+References like `@level` come from the actor that owns the item, also on the item's chat card, whoever clicks the roll. On a monster, `@level` is its level as a number, so a level `1/2` monster gives 0.5 and `[[/r (@level)d6]]` is not a valid roll for it. A description that is not on an actor, such as a journal page, takes them from the clicking player's selected token or character. See [Formulas](../rules-builder/formulas.md) for every reference.
 
 ## Common mistakes
 
@@ -111,6 +128,8 @@ The creature is [[/condition condition=poisoned]] for 1 minute.
 The target starts [[/condition condition=smoldering]].
 On its next turn it is [[/condition condition=dazed]].
 The victim falls [[/condition condition=unconscious]].
+Make a [[/savingThrow save=dex dc=12]] or take half damage.
+Make a [[/savingThrow save=str dc=14]] or be knocked [[/condition condition=prone]].
 Roll [[/r 1d4]] to recharge this ability.
 Deals [[/r 2d6]] bludgeoning damage to everyone in the area.
 Roll [[/r 1d20]] and consult the table below.

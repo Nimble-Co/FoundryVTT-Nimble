@@ -14,6 +14,7 @@ import { type ConcentratingActor, heldConcentrations } from '../../utils/concent
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
+import parseMonsterLevel from '../../utils/parseMonsterLevel.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -60,6 +61,7 @@ interface BaseActorSystemData {
 		};
 	};
 	abilities?: Record<string, { mod: number; defaultRollMode?: number }>;
+	details?: { level?: unknown };
 	savingThrows?: Record<string, { mod: number; defaultRollMode?: number }>;
 }
 
@@ -731,6 +733,9 @@ class NimbleBaseActor<
 			acc[`${key}Save`] = save.mod ?? 0;
 			return acc;
 		}, data);
+
+		const monsterLevel = parseMonsterLevel(systemData.details?.level);
+		if (monsterLevel !== undefined) data.level = monsterLevel;
 
 		return data;
 	}

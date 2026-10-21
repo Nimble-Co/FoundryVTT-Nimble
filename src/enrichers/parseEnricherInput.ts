@@ -12,10 +12,10 @@ export default async function parseEnricherInput(
 	const args = parseEnricherArguments(argString);
 	args.enricherType = enricherType.toLowerCase();
 
-	switch (enricherType) {
+	switch (args.enricherType) {
 		case 'check':
 			return enrichCheck(args, options);
-		case 'save':
+		case 'savingthrow':
 			return enrichSavingThrow(args, options);
 		case 'condition':
 			return enrichCondition(args, options);

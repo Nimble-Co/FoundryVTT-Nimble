@@ -4,6 +4,7 @@ import {
 } from '../../managers/ClassResourceManager.js';
 import type { NimbleSubclassData } from '../../models/item/SubclassDataModel.js';
 
+import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
 import { NimbleBaseItem } from './base.svelte.js';
 import type { NimbleClassItem } from './class.js';
 
@@ -24,9 +25,7 @@ export class NimbleSubclassItem extends NimbleBaseItem<'subclass'> {
 	}
 
 	override async prepareChatCardData() {
-		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description,
-		);
+		const description = await enrichDocumentHTML(this.system.description, this);
 
 		return {
 			author: game.user?.id,

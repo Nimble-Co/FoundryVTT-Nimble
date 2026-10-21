@@ -3,6 +3,7 @@ import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts'
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
+import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
 import { paySpellCost } from '../../utils/spell/paySpellCost.js';
@@ -161,17 +162,14 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 
 	override async prepareChatCardData() {
 		const showDescription = this.system.activation.showDescription;
-		const baseEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description.baseEffect,
-		);
+		const baseEffect = await enrichDocumentHTML(this.system.description.baseEffect, this);
 
-		const higherLevelEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+		const higherLevelEffect = await enrichDocumentHTML(
 			this.system.description.higherLevelEffect,
+			this,
 		);
 
-		const upcastEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description.upcastEffect,
-		);
+		const upcastEffect = await enrichDocumentHTML(this.system.description.upcastEffect, this);
 
 		return {
 			system: {

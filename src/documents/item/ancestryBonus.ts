@@ -1,5 +1,5 @@
 import type { NimbleAncestryBonusData } from '../../models/item/AncestryBonusDataModel.js';
-
+import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
@@ -7,9 +7,7 @@ export class NimbleAncestryBonusItem extends NimbleBaseItem {
 	declare system: NimbleAncestryBonusData;
 
 	override async prepareChatCardData() {
-		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description,
-		);
+		const description = await enrichDocumentHTML(this.system.description, this);
 
 		return {
 			author: game.user?.id,
