@@ -1,11 +1,7 @@
 import type { RuleFormGroup } from '../../../models/rules/_formLayout.js';
+import { isFieldShown } from './isFieldShown.js';
 
 type DataField = foundry.data.fields.DataField.Any;
-
-interface FieldExtras {
-	widget?: string | ((data: Record<string, unknown>) => string);
-	showWhen?: (data: Record<string, unknown>) => boolean;
-}
 
 export interface ResolvedFormField {
 	name: string;
@@ -23,14 +19,6 @@ export interface ResolvedFormGroup {
 	labelField?: ResolvedFormField;
 	hint?: string;
 	fields: ResolvedFormField[];
-}
-
-/** The same visibility the field renderer applies: `showWhen` and the `hidden` widget. */
-export function isFieldShown(field: DataField, data: Record<string, unknown>): boolean {
-	const options = (field as unknown as { options?: FieldExtras }).options;
-	const widget = typeof options?.widget === 'function' ? options.widget(data) : options?.widget;
-	if (widget === 'hidden') return false;
-	return typeof options?.showWhen === 'function' ? Boolean(options.showWhen(data)) : true;
 }
 
 /**
