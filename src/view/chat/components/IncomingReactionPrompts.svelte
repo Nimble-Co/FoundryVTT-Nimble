@@ -49,7 +49,18 @@
 		return ((fromUuidSync(entry.itemUuid) as { name?: string } | null)?.name ?? '').trim();
 	}
 
+	/** The feature that made the last reroll can reroll again: its name is on the history line. */
+	function isRerollAgain(entry: IncomingReactionEntry): boolean {
+		return (
+			entry.kind === 'reroll' &&
+			!!lastReroll &&
+			entry.itemUuid === lastReroll.itemUuid &&
+			entry.actorUuid === lastReroll.actorUuid
+		);
+	}
+
 	function getEntryLabel(entry: IncomingReactionEntry): string {
+		if (isRerollAgain(entry)) return localize('NIMBLE.chat.incomingReactions.rerollAgain');
 		if (changesTheRoll(entry)) {
 			return localize('NIMBLE.chat.incomingReactions.rerollWith', {
 				feature: getSourceItemName(entry) || entry.label,
@@ -76,9 +87,10 @@
 		for (const entry of list) {
 			let group = groups.get(entry.actorUuid);
 			if (!group) {
+				// The card's header already names the one who rolled.
 				group = {
 					actorUuid: entry.actorUuid,
-					name: (getReactingActor(entry)?.name ?? '').trim(),
+					name: entry.actorUuid === speakerUuid ? '' : (getReactingActor(entry)?.name ?? '').trim(),
 					entries: [],
 				};
 				groups.set(entry.actorUuid, group);
@@ -247,8 +259,12 @@
 		});
 	}
 
-	/** The card's reroll history line: what changed, then who used it and what it cost. */
-	function getRerollHistoryLines(lastReroll: LastReroll): string[] {
+	/**
+	 * The card's reroll history line: what changed, then who used it and what
+	 * it cost. The name and the uses left are left out when the header or a
+	 * "Reroll again" button under the line already show them.
+	 */
+	function getRerollHistoryLines(lastReroll: LastReroll, canRerollAgain: boolean): string[] {
 		const feature =
 			((fromUuidSync(lastReroll.itemUuid) as { name?: string } | null)?.name ?? '').trim() ||
 			lastReroll.label;
@@ -269,8 +285,11 @@
 		const name = (
 			(fromUuidSync(lastReroll.actorUuid) as { name?: string } | null)?.name ?? ''
 		).trim();
-		const details = [localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name })];
-		if (typeof lastReroll.usesLeft === 'number') {
+		const details: string[] = [];
+		if (lastReroll.actorUuid !== speakerUuid && !canRerollAgain) {
+			details.push(localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name }));
+		}
+		if (typeof lastReroll.usesLeft === 'number' && !canRerollAgain) {
 			details.push(
 				localize('NIMBLE.chat.incomingReactions.rerollUsesLeft', {
 					count: String(lastReroll.usesLeft),
@@ -284,7 +303,7 @@
 				}),
 			);
 		}
-		return [change, details.join(' - ')];
+		return details.length > 0 ? [change, details.join(' - ')] : [change];
 	}
 
 	async function useEntry(entry: IncomingReactionEntry) {
@@ -321,6 +340,9 @@
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let { place }: IncomingReactionPromptsProps = $props();
+	let speakerUuid = $derived(
+		(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
+	);
 	let busy = $state(false);
 
 	/**
@@ -380,7 +402,12 @@
 		(messageDocument?.reactive?.system as { lastReroll?: LastReroll | null })?.lastReroll ?? null,
 	);
 	let rerollHistoryLines = $derived(
-		place === 'roll' && lastReroll ? getRerollHistoryLines(lastReroll) : [],
+		place === 'roll' && lastReroll
+			? getRerollHistoryLines(
+					lastReroll,
+					pendingGroups.some((group) => group.entries.some(isRerollAgain)),
+				)
+			: [],
 	);
 </script>
 
@@ -423,7 +450,9 @@
 					<i class="fa-solid fa-rotate-left"></i>
 					<div>
 						<p>{rerollHistoryLines[0]}</p>
-						<p class="nimble-roll-changes__detail">{rerollHistoryLines[1]}</p>
+						{#if rerollHistoryLines[1]}
+							<p class="nimble-roll-changes__detail">{rerollHistoryLines[1]}</p>
+						{/if}
 					</div>
 				</div>
 			{/if}
@@ -486,6 +515,7 @@
 
 			p {
 				margin: 0;
+				text-wrap: pretty;
 			}
 		}
 
