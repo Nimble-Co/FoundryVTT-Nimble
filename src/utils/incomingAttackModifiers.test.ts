@@ -1135,5 +1135,67 @@ describe('Reroll rules on the attack', () => {
 				),
 			).rejects.toThrow('roll failed');
 		});
+
+		function automaticPlan(entries: ReturnType<typeof rerollEntry>[]) {
+			const rules = new Map(
+				entries.map((entry) => [entry.id, rerollRule({ id: entry.ruleId, automatic: true })]),
+			);
+			return plan({ autoRerollEntries: entries, rerollRules: rules });
+		}
+
+		it('runs the next automatic rule that matches the new roll', async () => {
+			const onMiss = rerollEntry('miss', { id: 'on-miss', ruleId: 'rule-a' });
+			const onCrit = rerollEntry('criticalHit', { id: 'on-crit', ruleId: 'rule-b' });
+			const crit = makeRoll(true, false, false, 8);
+			const hit = makeRoll(false, false, false, 5);
+			const rebuildRoll = vi.fn().mockResolvedValueOnce(crit).mockResolvedValueOnce(hit);
+
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false, true, false, 1),
+				automaticPlan([onMiss, onCrit]),
+				rebuildRoll,
+			);
+
+			expect(rebuildRoll).toHaveBeenCalledTimes(2);
+			expect(result.roll).toBe(hit);
+			expect(result.stampEntries.map((entry) => [entry.id, entry.used])).toEqual([
+				['on-miss', true],
+				['on-crit', true],
+			]);
+			expect(result.rerollHistory?.lastReroll).toMatchObject({
+				entryId: 'on-crit',
+				previousResult: 8,
+				previousWasCritical: true,
+				newResult: 5,
+			});
+		});
+
+		it('never runs one rule twice on a roll', async () => {
+			const onMiss = rerollEntry('miss', { id: 'on-miss', ruleId: 'rule-a' });
+			const rebuildRoll = vi.fn(async () => makeRoll(false, true, false, 1));
+
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false, true, false, 1),
+				automaticPlan([onMiss]),
+				rebuildRoll,
+			);
+
+			expect(rebuildRoll).toHaveBeenCalledTimes(1);
+			expect(result.stampEntries.map((entry) => entry.id)).toEqual(['on-miss']);
+		});
+
+		it('runs no automatic rule on a roll that misses by force', async () => {
+			const onMiss = rerollEntry('miss', { id: 'on-miss', ruleId: 'rule-a' });
+			const rebuildRoll = vi.fn();
+
+			const result = await applyPostRollIncomingBehavior(
+				makeRoll(false, true, true, 1),
+				automaticPlan([onMiss]),
+				rebuildRoll,
+			);
+
+			expect(rebuildRoll).not.toHaveBeenCalled();
+			expect(result.stampEntries).toEqual([]);
+		});
 	});
 });

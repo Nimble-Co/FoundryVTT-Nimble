@@ -47,7 +47,6 @@ import {
 	rerollRecoveryChange,
 } from '../utils/chargePool/chargePoolReroll.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '../utils/chargePool/types.js';
-import { offerSurvives } from '../utils/incomingAttackModifiers.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
@@ -60,9 +59,13 @@ import {
 import {
 	type AutomaticReroll,
 	collectRerollEntries,
+	nextAutomaticReroll,
+	offerStands,
 	type RerollingActor,
 	type RerollRollContext,
+	type RerollRollOutcome,
 	usableRerollEntry,
+	withNewRerollEntries,
 } from '../utils/rerollEntries.js';
 import { type RerollHistory, rerollWithRule } from '../utils/rerollStep.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
@@ -759,11 +762,6 @@ function isAreaActivation(activation: Record<string, unknown>): boolean {
 	return !!activation.acquireTargetsFromTemplate && shape !== '';
 }
 
-/** One `reroll` rule on one actor, so a rule is not added or run twice on a card. */
-function rerollEntryKey(entry: IncomingReactionEntry): string {
-	return `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
-}
-
 /**
  * The kept primary die result of a serialized DamageRoll, or null. Reads a
  * copy, because `fromData` writes option defaults into the data it is given.
@@ -1142,7 +1140,12 @@ class NimbleChatMessage extends ChatMessage {
 
 		await showDiceAnimation(roll, this.id ?? undefined);
 		await this.#followChargeRecovery(recoveryChange);
-		if (rerolls) await this.#runAutomaticReroll(rerolls.automatic, rerolls.entries, critTriggers);
+		if (rerolls) {
+			await this.#runAutomaticReroll(rerolls.automatic, rerolls.entries, critTriggers, {
+				outcome,
+				forcedMiss: false,
+			});
+		}
 	}
 
 	/**
@@ -1163,7 +1166,7 @@ class NimbleChatMessage extends ChatMessage {
 		const found = collectRerollEntries(this.#rerollContext(roll, false));
 		if (found.manual.length < 1 && found.automatic.length < 1) return null;
 		return {
-			entries: this.#withRerollEntriesFor(this.#incomingReactionEntries(), found.manual),
+			entries: withNewRerollEntries(this.#incomingReactionEntries(), found.manual),
 			automatic: found.automatic,
 		};
 	}
@@ -1676,10 +1679,11 @@ class NimbleChatMessage extends ChatMessage {
 		const { activation, nodes, damageNode } = target;
 		const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
 
+		const forcedMiss = newRoll.options.forceMiss === true;
 		const carried = await this.#carryFoldedSpendsAcrossReroll(
 			newRoll.toJSON() as Record<string, unknown>,
 			this.#withEntryUsed(entry),
-			newRoll,
+			{ outcome: newRoll, forcedMiss },
 		);
 
 		damageNode.discardedRoll = serialized;
@@ -1697,11 +1701,10 @@ class NimbleChatMessage extends ChatMessage {
 		const recoveryChange = rerollRecoveryChange(systemData, newRoll, critTriggers);
 
 		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
-		const rerolls = collectRerollEntries(
-			this.#rerollContext(newRoll, newRoll.options.forceMiss === true),
-		);
-		const entries = this.#withRerollEntriesFor(
-			this.#dropStaleOutcomeOffers(carried.entries, newRoll),
+		const context = this.#rerollContext(newRoll, forcedMiss);
+		const rerolls = collectRerollEntries(context);
+		const entries = withNewRerollEntries(
+			this.#dropStaleOutcomeOffers(carried.entries, context),
 			rerolls.manual,
 		);
 		await this.update({
@@ -1715,7 +1718,7 @@ class NimbleChatMessage extends ChatMessage {
 		} as Record<string, unknown>);
 
 		await this.#followChargeRecovery(recoveryChange);
-		await this.#runAutomaticReroll(rerolls.automatic, entries, critTriggers);
+		await this.#runAutomaticReroll(rerolls.automatic, entries, critTriggers, context);
 	}
 
 	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */
@@ -1726,19 +1729,17 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
-	 * Run the first automatic reroll the card's roll now allows, the same way
-	 * the roll-time path does. A rule that already has an entry on the card,
-	 * used or waiting, does not run, so each automatic rule runs at most once
-	 * per card. Runs after the card is written; a failure here does not undo
-	 * the reroll before it.
+	 * Run the next automatic reroll the card's roll now allows, by the same
+	 * rule as the roll-time path. Runs after the card is written; a failure
+	 * here does not undo the reroll before it.
 	 */
 	async #runAutomaticReroll(
 		automatic: AutomaticReroll[],
 		entries: IncomingReactionEntry[],
 		earlierCritTriggers: boolean,
+		roll: RerollRollOutcome,
 	): Promise<void> {
-		const onCard = new Set(entries.filter((entry) => entry.kind === 'reroll').map(rerollEntryKey));
-		const next = automatic.find(({ entry }) => !onCard.has(rerollEntryKey(entry)));
+		const next = nextAutomaticReroll(automatic, entries, roll);
 		if (!next) return;
 
 		try {
@@ -1828,22 +1829,6 @@ class NimbleChatMessage extends ChatMessage {
 		};
 	}
 
-	/**
-	 * Add the reroll buttons the new roll allows (`found`, from the live rules
-	 * of the attacker and the first target). A feature that already has an
-	 * entry waiting is not added twice; one that was used gets a new entry
-	 * when it can still be paid for.
-	 */
-	#withRerollEntriesFor(
-		entries: IncomingReactionEntry[],
-		found: IncomingReactionEntry[],
-	): IncomingReactionEntry[] {
-		const waiting = new Set(
-			entries.filter((entry) => entry.kind === 'reroll' && !entry.used).map(rerollEntryKey),
-		);
-		return [...entries, ...found.filter((entry) => !waiting.has(rerollEntryKey(entry)))];
-	}
-
 	/** Whether the card's primary damage roll was made to miss by force. */
 	#isForcedMiss(target: PrimaryDamageRoll | null): boolean {
 		return (
@@ -1885,7 +1870,7 @@ class NimbleChatMessage extends ChatMessage {
 	async #carryFoldedSpendsAcrossReroll(
 		rollJson: Record<string, unknown>,
 		entries: IncomingReactionEntry[],
-		view: AttackOutcomeView,
+		outcome: RerollRollOutcome,
 	): Promise<{ roll: Record<string, unknown>; entries: IncomingReactionEntry[] }> {
 		let roll = rollJson;
 
@@ -1915,7 +1900,7 @@ class NimbleChatMessage extends ChatMessage {
 				continue;
 			}
 
-			if (offerSurvives(entry, view)) {
+			if (offerStands(entry, outcome)) {
 				refold(entry, amount);
 				carriedEntries.push(entry);
 				continue;
@@ -1991,9 +1976,9 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#dropStaleOutcomeOffers(
 		entries: IncomingReactionEntry[],
-		view: AttackOutcomeView,
+		outcome: RerollRollOutcome,
 	): IncomingReactionEntry[] {
-		return entries.filter((entry) => entry.used || offerSurvives(entry, view));
+		return entries.filter((entry) => entry.used || offerStands(entry, outcome));
 	}
 
 	/**

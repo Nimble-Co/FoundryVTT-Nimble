@@ -95,7 +95,7 @@ function rollingActorFor(side: RerollSide, context: RerollRollContext) {
 /**
  * The reroll entries the attacker's and the first target's `reroll` rules
  * give this roll, split into buttons and rerolls that happen by themselves.
- * Before the roll, the outcome is checked later with `rerollEntryStands`.
+ * Before the roll, the outcome is checked later with `offerStands`.
  */
 function collectRerollEntries(context: RerollRollContext): {
 	manual: IncomingReactionEntry[];
@@ -137,9 +137,55 @@ function collectRerollEntries(context: RerollRollContext): {
 	return result;
 }
 
-/** Whether a stamped `reroll` entry still belongs on a roll that resolved this way. */
-function rerollEntryStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
-	return outcomeAllows(entry.outcomeTrigger, roll);
+/**
+ * Whether a pending offer still belongs on a roll that resolved this way. A
+ * `reroll` entry never stands on a forced miss. `forceReroll` keeps its own
+ * trigger field; every other kind uses `outcomeTrigger`, and an offer with
+ * neither always stands. Before the roll is made, every offer stands.
+ */
+function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
+	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll);
+	if (!roll.outcome) return true;
+	const trigger = entry.kind === 'forceReroll' ? entry.rerollTrigger : entry.outcomeTrigger;
+	return rerollTriggerMatches(trigger, roll.outcome);
+}
+
+/** One `reroll` rule on one actor, so a rule is not added or run twice on a card. */
+function rerollRuleKey(entry: IncomingReactionEntry): string {
+	return `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
+}
+
+function rerollRuleKeys(entries: IncomingReactionEntry[]): Set<string> {
+	return new Set(entries.filter((entry) => entry.kind === 'reroll').map(rerollRuleKey));
+}
+
+/**
+ * The card's entries with the new reroll buttons added. A rule that already
+ * has an entry waiting is not added twice; one that was used gets a new entry.
+ */
+function withNewRerollEntries(
+	entries: IncomingReactionEntry[],
+	found: IncomingReactionEntry[],
+): IncomingReactionEntry[] {
+	const waiting = rerollRuleKeys(entries.filter((entry) => !entry.used));
+	return [...entries, ...found.filter((entry) => !waiting.has(rerollRuleKey(entry)))];
+}
+
+/**
+ * The automatic reroll that may run next on this roll: the first one that
+ * stands and whose rule has no entry on the card, used or waiting. So each
+ * automatic rule runs at most once per card.
+ */
+function nextAutomaticReroll(
+	automatic: AutomaticReroll[],
+	entries: IncomingReactionEntry[],
+	roll: RerollRollOutcome,
+): AutomaticReroll | null {
+	const onCard = rerollRuleKeys(entries);
+	return (
+		automatic.find(({ entry }) => !onCard.has(rerollRuleKey(entry)) && offerStands(entry, roll)) ??
+		null
+	);
 }
 
 /** The live `reroll` rule an entry came from, or null when it is gone or off. */
@@ -186,11 +232,15 @@ function usableRerollEntry(entry: IncomingReactionEntry, context: RerollRollCont
 export {
 	collectRerollEntries,
 	findRerollRule,
-	rerollEntryStands,
+	nextAutomaticReroll,
+	offerStands,
+	rerollRuleKey,
 	usableRerollEntry,
+	withNewRerollEntries,
 	type AutomaticReroll,
 	type RerollingActor,
 	type RerollRollContext,
+	type RerollRollOutcome,
 	type RerollRuleLike,
 	type RerollTarget,
 	type UsableReroll,

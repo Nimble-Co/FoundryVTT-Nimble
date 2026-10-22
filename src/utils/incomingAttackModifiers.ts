@@ -1,11 +1,5 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
-import {
-	type AttackOutcomeView,
-	type IncomingReactionEntry,
-	type RerollSide,
-	type RerollTrigger,
-	rerollTriggerMatches,
-} from './incomingReactionEntry.js';
+import type { IncomingReactionEntry, RerollSide, RerollTrigger } from './incomingReactionEntry.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
@@ -13,10 +7,13 @@ import {
 	type OfferingActor,
 } from './poolSpendCardOffers.js';
 import {
+	type AutomaticReroll,
 	collectRerollEntries,
+	nextAutomaticReroll,
+	offerStands,
 	type RerollingActor,
+	type RerollRollOutcome,
 	type RerollRuleLike,
-	rerollEntryStands,
 } from './rerollEntries.js';
 import { prepareReroll } from './rerollOptions.js';
 import { type RerollHistory, rerollWithRule } from './rerollStep.js';
@@ -94,18 +91,6 @@ interface EvaluatedDamageRollLike {
 	toJSON: () => object;
 }
 
-/**
- * Should a pending offer be stamped onto the card, given how the attack
- * actually resolved? `forceReroll` keeps its own trigger field; every other
- * kind uses the shared `outcomeTrigger`, and an offer with neither always
- * survives (e.g. Interpose, which is outcome-independent).
- */
-function offerSurvives(entry: IncomingReactionEntry, view: AttackOutcomeView): boolean {
-	if (entry.kind === 'forceReroll') return rerollTriggerMatches(entry.rerollTrigger, view);
-	if (!entry.outcomeTrigger) return true;
-	return rerollTriggerMatches(entry.outcomeTrigger, view);
-}
-
 interface PostRollIncomingResult<TRoll> {
 	/** The roll that stands (the reroll when one fired, else the original) */
 	roll: TRoll;
@@ -113,25 +98,32 @@ interface PostRollIncomingResult<TRoll> {
 	discardedRoll: object | null;
 	/** Entries to stamp onto the card: filtered offers + used auto-reroll attribution */
 	stampEntries: IncomingReactionEntry[];
-	/** History of an automatic `reroll`, for the card */
+	/** History of the last automatic `reroll`, for the card */
 	rerollHistory: RerollHistory | null;
 }
 
 type RebuildRoll<TRoll> = (formula: string, options: Record<string, unknown>) => Promise<TRoll>;
 
-/** Whether a pending offer still belongs on a card whose roll resolved as `view`. */
-function offerStands(entry: IncomingReactionEntry, view: EvaluatedDamageRollLike): boolean {
-	if (entry.kind === 'reroll') {
-		return rerollEntryStands(entry, { outcome: view, forcedMiss: !!view.options.forceMiss });
-	}
-	return offerSurvives(entry, view);
+function rollOutcomeOf(view: EvaluatedDamageRollLike): RerollRollOutcome {
+	return { outcome: view, forcedMiss: view.options?.forceMiss === true };
+}
+
+/** The plan's automatic `reroll` entries with their rules, in plan order. */
+function automaticRerollsOf(plan: IncomingAttackPlan): AutomaticReroll[] {
+	return plan.autoRerollEntries.flatMap((entry) => {
+		const rule = entry.kind === 'reroll' ? plan.rerollRules?.get(entry.id) : undefined;
+		return rule ? [{ entry, rule }] : [];
+	});
 }
 
 /**
  * Resolve outcome-dependent incoming-attack behavior after the attack roll has
- * been evaluated: execute the first matching automatic reroll (the second
- * result stands), and drop interactive reroll offers whose trigger the final
- * outcome does not satisfy.
+ * been evaluated, and drop offers the final outcome does not satisfy.
+ *
+ * Automatic rerolls chain the same way they do on the card: after each one,
+ * the next automatic `reroll` rule that matches the new roll runs, and each
+ * rule runs at most once. The second result stands each time. An automatic
+ * `forceReroll` can only replace the first roll.
  */
 async function applyPostRollIncomingBehavior<TRoll>(
 	roll: TRoll,
@@ -141,49 +133,53 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	const asView = (r: TRoll) => r as unknown as EvaluatedDamageRollLike;
 	let finalRoll = roll;
 	let discardedRoll: object | null = null;
-	let rerollHistory: RerollHistory | null = null;
+	const histories: RerollHistory[] = [];
 	const stampEntries: IncomingReactionEntry[] = [];
 
 	const view = asView(roll);
-	const autoEntry = plan.autoRerollEntries.find((entry) => offerStands(entry, view));
 	const formula = view.originalFormula ?? '';
-
-	if (autoEntry && formula) {
-		const rule = plan.rerollRules?.get(autoEntry.id);
-		if (autoEntry.kind === 'reroll' && rule) {
-			const result = await rerollWithRule({
-				rule,
-				entry: autoEntry,
-				payer: rule.actor as Actor | null | undefined,
-				replaced: view,
-				previousResult: view.primaryDieValue ?? null,
-				makeRoll: rebuildRoll,
-				earlierCritTriggers: false,
-			});
-			if (result.status === 'failed') throw result.error;
-			if (result.status === 'done') {
-				discardedRoll = view.toJSON();
-				finalRoll = result.roll;
-				rerollHistory = {
-					lastReroll: result.lastReroll,
-					discardedCritTriggers: result.discardedCritTriggers,
-				};
-				stampEntries.push({ ...autoEntry, used: true });
-			}
-		} else if (autoEntry.kind === 'forceReroll' && !view.options.forceMiss) {
+	if (formula) {
+		const first = plan.autoRerollEntries.find((entry) => offerStands(entry, rollOutcomeOf(view)));
+		if (first?.kind === 'forceReroll' && !view.options.forceMiss) {
 			const next = prepareReroll(formula, view.options, {
-				rollModeChange: autoEntry.rerollWithDisadvantage ? -1 : 0,
+				rollModeChange: first.rerollWithDisadvantage ? -1 : 0,
 			});
 			discardedRoll = view.toJSON();
 			finalRoll = await rebuildRoll(next.formula, next.options);
-			stampEntries.push({ ...autoEntry, used: true });
+			stampEntries.push({ ...first, used: true });
+		}
+
+		const automatic = automaticRerollsOf(plan);
+		let next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
+		while (next) {
+			const replaced = asView(finalRoll);
+			const result = await rerollWithRule({
+				rule: next.rule,
+				entry: next.entry,
+				payer: next.rule.actor as Actor | null | undefined,
+				replaced,
+				previousResult: replaced.primaryDieValue ?? null,
+				makeRoll: rebuildRoll,
+				earlierCritTriggers: histories.at(-1)?.discardedCritTriggers ?? false,
+			});
+			if (result.status === 'failed') throw result.error;
+			if (result.status !== 'done') break;
+
+			discardedRoll = replaced.toJSON();
+			finalRoll = result.roll;
+			histories.push({
+				lastReroll: result.lastReroll,
+				discardedCritTriggers: result.discardedCritTriggers,
+			});
+			stampEntries.push({ ...next.entry, used: true });
+			next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
 		}
 	}
 
-	const finalView = asView(finalRoll);
-	stampEntries.push(...plan.reactionEntries.filter((entry) => offerStands(entry, finalView)));
+	const finalOutcome = rollOutcomeOf(asView(finalRoll));
+	stampEntries.push(...plan.reactionEntries.filter((entry) => offerStands(entry, finalOutcome)));
 
-	return { roll: finalRoll, discardedRoll, stampEntries, rerollHistory };
+	return { roll: finalRoll, discardedRoll, stampEntries, rerollHistory: histories.at(-1) ?? null };
 }
 
 function getMatchingRules(actor: ActorLike | null | undefined): RuleLike[] {
@@ -412,7 +408,6 @@ export {
 	collectRedirectCandidates,
 	collectTargetIncomingModifiers,
 	computeIncomingAttackPlan,
-	offerSurvives,
 	type IncomingAttackModifierEntry,
 	type IncomingAttackPlan,
 };
