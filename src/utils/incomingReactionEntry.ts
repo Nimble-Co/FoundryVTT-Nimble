@@ -93,19 +93,29 @@ export interface IncomingReactionEntry {
 	usedFaces?: number[];
 }
 
+/** One Primary Die result in a reroll record. */
+export interface RerollDieResult {
+	value: number;
+	outcome: DieOutcome;
+}
+
 /**
- * The last reroll on an attack card, for its history line. Each reroll
- * replaces it: only the result just before the current one is shown.
+ * One reroll on an attack card, for its history line. The card keeps the
+ * rerolls of its last action in roll order.
  */
-export interface LastReroll {
+export interface RerollRecord {
 	entryId: string;
 	itemUuid: string;
+	ruleId: string;
 	label: string;
 	/** The actor whose feature made the reroll */
 	actorUuid: string;
-	previousResult: number | null;
-	previousWasCritical: boolean;
-	newResult: number | null;
+	/** The Primary Die size, or null when it cannot be read */
+	faces: number | null;
+	/** The replaced Primary Die result, or null when it cannot be read */
+	previous: RerollDieResult | null;
+	/** The new Primary Die result, or null when it cannot be read */
+	next: RerollDieResult | null;
 	/** Charges left in the feature's charge pool, or null when it has none */
 	usesLeft: number | null;
 	woundsGained: number;

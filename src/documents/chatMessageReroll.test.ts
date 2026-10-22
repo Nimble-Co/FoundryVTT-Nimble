@@ -83,6 +83,22 @@ function rerollEntry(overrides: Record<string, unknown> = {}) {
 	};
 }
 
+function forceRerollEntry() {
+	return {
+		id: 'force-1',
+		kind: 'forceReroll',
+		source: 'baseline',
+		actorUuid: 'Actor.target',
+		tokenUuid: null,
+		targetTokenUuid: TARGET_TOKEN,
+		label: 'Force Reroll',
+		ruleId: '',
+		itemUuid: '',
+		used: false,
+		rerollTrigger: 'always',
+	};
+}
+
 function serializedRoll(isCritical = false, forceMiss = false) {
 	return {
 		class: 'DamageRoll',
@@ -187,7 +203,7 @@ function updatePayload(message: MockedMessage) {
 		system: {
 			isCritical: boolean;
 			incomingReactions: Array<Record<string, unknown>>;
-			lastReroll?: Record<string, unknown>;
+			rerolls?: Array<Record<string, unknown>>;
 			discardedCritTriggers?: boolean;
 			activation: { effects: Array<Record<string, unknown>> };
 		};
@@ -219,15 +235,16 @@ describe('resolveRerollReaction', () => {
 		const payload = updatePayload(message);
 		expect(payload.system.activation.effects[0].discardedRoll).toEqual(serializedRoll());
 		expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
-		expect(payload.system.lastReroll).toMatchObject({
-			entryId: 'entry-1',
-			itemUuid: 'Item.sand',
-			label: 'Pocket Sand',
-			actorUuid: 'Actor.target',
-			previousWasCritical: false,
-			usesLeft: null,
-			woundsGained: 0,
-		});
+		expect(payload.system.rerolls).toEqual([
+			expect.objectContaining({
+				entryId: 'entry-1',
+				itemUuid: 'Item.sand',
+				label: 'Pocket Sand',
+				actorUuid: 'Actor.target',
+				usesLeft: null,
+				woundsGained: 0,
+			}),
+		]);
 		expect(payload.system.discardedCritTriggers).toBe(false);
 	});
 
@@ -362,6 +379,20 @@ describe('resolveRerollReaction', () => {
 		});
 	});
 
+	it('clears the earlier rerolls on a Force Reroll click', async () => {
+		setupWorld();
+		const message = createMessage({ entries: [forceRerollEntry()] });
+		(message.system as Record<string, unknown>).rerolls = [
+			{ entryId: 'earlier-action', itemUuid: 'Item.old' },
+		];
+
+		await message.resolveForceRerollReaction('force-1', 'gm-user');
+
+		const payload = updatePayload(message);
+		expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'force-1', used: true });
+		expect(payload.system.rerolls).toEqual([]);
+	});
+
 	describe('an automatic reroll the new roll allows', () => {
 		const WARD_ITEM = { name: 'Warding Bond', uuid: 'Item.ward' };
 
@@ -439,11 +470,33 @@ describe('resolveRerollReaction', () => {
 			expect(wardEntries(message)).toEqual([
 				expect.objectContaining({ kind: 'reroll', side: 'target', used: true }),
 			]);
-			expect(message.system.lastReroll).toMatchObject({
-				itemUuid: 'Item.ward',
-				actorUuid: 'Actor.target',
-				previousWasCritical: true,
-			});
+			expect(message.system.rerolls).toEqual([
+				expect.objectContaining({ itemUuid: 'Item.sand' }),
+				expect.objectContaining({ itemUuid: 'Item.ward', actorUuid: 'Actor.target' }),
+			]);
+		});
+
+		it('keeps the button reroll and its cost when it starts an automatic one', async () => {
+			const world = setupWorld({ rerollCost: { ...FREE, woundCost: 1 } });
+			withAutomaticCritReroll(world);
+			const message = createMessage();
+			(message.system as Record<string, unknown>).rerolls = [
+				{ entryId: 'earlier-action', itemUuid: 'Item.old' },
+			];
+			writesApply(message);
+			const evaluate = rollOutcomes(true, false);
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			evaluate.mockRestore();
+			expect(message.system.rerolls).toEqual([
+				expect.objectContaining({
+					entryId: 'entry-1',
+					itemUuid: 'Item.sand',
+					woundsGained: 1,
+				}),
+				expect.objectContaining({ itemUuid: 'Item.ward', woundsGained: 0 }),
+			]);
 		});
 
 		it('does not run the same rule twice on a card', async () => {
@@ -459,6 +512,25 @@ describe('resolveRerollReaction', () => {
 			expect(evaluate.rolled.count).toBe(2);
 			expect(message.system.isCritical).toBe(true);
 			expect(wardEntries(message)).toHaveLength(1);
+		});
+
+		it('starts a new list on a Force Reroll click, with the automatic reroll it starts', async () => {
+			const world = setupWorld();
+			withAutomaticCritReroll(world);
+			const message = createMessage({ entries: [forceRerollEntry()] });
+			(message.system as Record<string, unknown>).rerolls = [
+				{ entryId: 'earlier-action', itemUuid: 'Item.old' },
+			];
+			writesApply(message);
+			const evaluate = rollOutcomes(true, false);
+
+			await message.resolveForceRerollReaction('force-1', 'gm-user');
+
+			evaluate.mockRestore();
+			expect(evaluate.rolled.count).toBe(2);
+			expect(message.system.rerolls).toEqual([
+				expect.objectContaining({ itemUuid: 'Item.ward', ruleId: 'ward-1' }),
+			]);
 		});
 
 		it('shows the rule as a button while Feature Effects is off', async () => {

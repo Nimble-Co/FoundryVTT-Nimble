@@ -95,7 +95,12 @@ function rule(overrides: Partial<RerollRuleLike> = {}): RerollRuleLike {
 	};
 }
 
-type Roll = { primaryDieValue?: number };
+type Roll = {
+	primaryDieValue?: number;
+	primaryDie?: { faces: number };
+	isCritical?: boolean;
+	isMiss?: boolean;
+};
 
 function input(overrides: Partial<RerollStepInput<Roll>> = {}): RerollStepInput<Roll> {
 	return {
@@ -154,18 +159,48 @@ describe('rerollWithRule', () => {
 		expect(payer.system.attributes.wounds.value).toBe(2);
 		expect(result).toMatchObject({
 			status: 'done',
-			lastReroll: {
+			reroll: {
 				entryId: 'entry-1',
 				itemUuid: 'Item.sand',
+				ruleId: 'rule-1',
 				label: 'Pocket Sand',
 				actorUuid: 'Actor.hero',
-				previousResult: 7,
-				previousWasCritical: true,
-				newResult: 3,
+				previous: { value: 7, outcome: 'crit' },
+				next: { value: 3, outcome: null },
 				usesLeft: 1,
 				woundsGained: 1,
 			},
 		});
+	});
+
+	it('records the die size and whether each result was a crit or a miss', async () => {
+		const result = await rerollWithRule(
+			input({
+				replaced: { ...REPLACED, isMiss: true },
+				previousResult: 1,
+				makeRoll: vi.fn(async () => ({
+					primaryDieValue: 8,
+					primaryDie: { faces: 8 },
+					isCritical: true,
+				})),
+			}),
+		);
+
+		expect(result).toMatchObject({
+			reroll: {
+				faces: 8,
+				previous: { value: 1, outcome: 'miss' },
+				next: { value: 8, outcome: 'crit' },
+			},
+		});
+	});
+
+	it('records no die when it cannot be read', async () => {
+		const result = await rerollWithRule(
+			input({ previousResult: null, makeRoll: vi.fn(async () => ({})) }),
+		);
+
+		expect(result).toMatchObject({ reroll: { faces: null, previous: null, next: null } });
 	});
 
 	it('passes the pay options on, such as a forced heroic reaction', async () => {

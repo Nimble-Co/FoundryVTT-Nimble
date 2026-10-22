@@ -1,4 +1,8 @@
-import type { IncomingReactionEntry, LastReroll } from './incomingReactionEntry.js';
+import type {
+	IncomingReactionEntry,
+	RerollDieResult,
+	RerollRecord,
+} from './incomingReactionEntry.js';
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll } from './rerollOptions.js';
@@ -8,16 +12,22 @@ interface ReplacedRoll {
 	originalFormula?: string;
 	formula?: string;
 	isCritical?: boolean;
+	isMiss?: boolean;
 	options?: object | null;
 }
 
-/** What the card shows about a reroll, and whether when-crit abilities still trigger. */
+/** The card's reroll history fields: the rerolls of its last action. */
 interface RerollHistory {
-	lastReroll: LastReroll;
+	rerolls: RerollRecord[];
 	discardedCritTriggers: boolean;
 }
 
-type RerollStepDone<TRoll> = RerollHistory & { status: 'done'; roll: TRoll };
+type RerollStepDone<TRoll> = {
+	status: 'done';
+	roll: TRoll;
+	reroll: RerollRecord;
+	discardedCritTriggers: boolean;
+};
 
 type RerollStepOutcome<TRoll> =
 	| RerollStepDone<TRoll>
@@ -40,6 +50,22 @@ interface RerollStepInput<TRoll> {
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
 
+interface NewRoll {
+	primaryDie?: { faces?: number | null } | null;
+	primaryDieValue?: number;
+	isCritical?: boolean;
+	isMiss?: boolean;
+}
+
+function dieResult(
+	value: number | null | undefined,
+	roll: { isCritical?: boolean; isMiss?: boolean },
+): RerollDieResult | null {
+	if (typeof value !== 'number') return null;
+	if (roll.isCritical === true) return { value, outcome: 'crit' };
+	return { value, outcome: roll.isMiss === true ? 'miss' : null };
+}
+
 /**
  * Reroll with a `reroll` rule: pay its cost, roll again with its changes, and
  * build the history. When anything after paying throws, the cost is given
@@ -60,18 +86,20 @@ async function rerollWithRule<TRoll>(
 			rule.rerollChanges?.() ?? {},
 		);
 		const roll = await input.makeRoll(next.formula, next.options);
+		const rolled = roll as NewRoll;
 		const previousWasCritical = replaced.isCritical === true;
 		const done: RerollStepDone<TRoll> = {
 			status: 'done',
 			roll,
-			lastReroll: {
+			reroll: {
 				entryId: entry.id,
 				itemUuid: entry.itemUuid,
+				ruleId: entry.ruleId,
 				label: entry.label,
 				actorUuid: entry.actorUuid,
-				previousResult: input.previousResult,
-				previousWasCritical,
-				newResult: (roll as { primaryDieValue?: number }).primaryDieValue ?? null,
+				faces: rolled.primaryDie?.faces ?? null,
+				previous: dieResult(input.previousResult, replaced),
+				next: dieResult(rolled.primaryDieValue, rolled),
 				usesLeft: cost ? rerollUsesLeft(payer, cost) : null,
 				woundsGained: paid?.wounds ?? 0,
 			},

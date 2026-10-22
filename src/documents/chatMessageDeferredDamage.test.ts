@@ -234,6 +234,16 @@ describe('rollDeferredDamage', () => {
 		expect(payload.system).toMatchObject({ isCritical: false, isMiss: true });
 	});
 
+	it('clears the rerolls of the earlier action on the card', async () => {
+		const message = createMessage();
+		(message.system as unknown as Record<string, unknown>).rerolls = [{ entryId: 'earlier' }];
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as { system: { rerolls: unknown[] } };
+		expect(payload.system.rerolls).toEqual([]);
+	});
+
 	it('reads a crit off the deferred roll onto the card', async () => {
 		stubEvaluate({ isCritical: true, isMiss: false });
 		const message = createMessage();

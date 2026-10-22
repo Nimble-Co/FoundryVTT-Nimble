@@ -54,6 +54,7 @@ import {
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
+	type RerollRecord,
 	rerollTriggerMatches,
 } from '../utils/incomingReactionEntry.js';
 import {
@@ -67,7 +68,7 @@ import {
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '../utils/rerollEntries.js';
-import { type RerollHistory, rerollWithRule } from '../utils/rerollStep.js';
+import { rerollWithRule } from '../utils/rerollStep.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -96,12 +97,24 @@ interface ActivationCardSystemData {
 	isCritical: boolean;
 	isMiss: boolean;
 	discardedCritTriggers?: boolean;
+	rerolls?: RerollRecord[];
 	activation?: {
 		effects: unknown[];
 		[key: string]: unknown;
 	};
 	appliedHealing?: Record<string, AppliedHealingRecord>;
 	[key: string]: unknown;
+}
+
+/**
+ * A reroll for the card's history. A new action starts a new list; an
+ * automatic reroll it triggers is added to that list.
+ */
+interface CardReroll {
+	/** Null for an action that makes no record of its own */
+	reroll: RerollRecord | null;
+	discardedCritTriggers: boolean;
+	list: 'new' | 'append';
 }
 
 /** A card's primary DamageRoll node, inside a working copy of its activation. */
@@ -1133,6 +1146,7 @@ class NimbleChatMessage extends ChatMessage {
 			rolls: patched.rolls,
 			system: {
 				...outcome,
+				rerolls: [],
 				...(rerolls ? { incomingReactions: rerolls.entries } : {}),
 				...this.#movementOfferChanges(outcome),
 			},
@@ -1631,10 +1645,16 @@ class NimbleChatMessage extends ChatMessage {
 			previous.options as Record<string, unknown> | undefined,
 			{ rollModeChange: entry.rerollWithDisadvantage ? -1 : 0 },
 		);
+		const systemData = this.system as unknown as ActivationCardSystemData;
 		await this.#rerollPrimaryDamage(
 			entry,
 			target,
 			await this.#makeDamageRoll(previous, next.formula, next.options),
+			{
+				reroll: null,
+				discardedCritTriggers: systemData.discardedCritTriggers === true,
+				list: 'new',
+			},
 		);
 	}
 
@@ -1674,7 +1694,7 @@ class NimbleChatMessage extends ChatMessage {
 		entry: IncomingReactionEntry,
 		target: PrimaryDamageRoll,
 		newRoll: DamageRoll,
-		history?: RerollHistory,
+		history: CardReroll,
 	): Promise<void> {
 		const { activation, nodes, damageNode } = target;
 		const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
@@ -1696,9 +1716,16 @@ class NimbleChatMessage extends ChatMessage {
 		);
 
 		const systemData = this.system as unknown as ActivationCardSystemData;
-		const critTriggers =
-			history?.discardedCritTriggers ?? systemData.discardedCritTriggers === true;
+		const critTriggers = history.discardedCritTriggers;
 		const recoveryChange = rerollRecoveryChange(systemData, newRoll, critTriggers);
+
+		const historyChanges = {
+			rerolls: [
+				...(history.list === 'append' ? (systemData.rerolls ?? []) : []),
+				...(history.reroll ? [history.reroll] : []),
+			],
+			discardedCritTriggers: history.discardedCritTriggers,
+		};
 
 		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
 		const context = this.#rerollContext(newRoll, forcedMiss);
@@ -1712,7 +1739,7 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				...outcome,
 				incomingReactions: entries,
-				...(history ?? {}),
+				...historyChanges,
 				...this.#movementOfferChanges(outcome),
 			},
 		} as Record<string, unknown>);
@@ -1754,10 +1781,11 @@ class NimbleChatMessage extends ChatMessage {
 				previousResult: primaryDieResult(previous),
 				makeRoll: (formula, options) => this.#makeDamageRoll(previous, formula, options),
 				earlierCritTriggers,
-				place: ({ roll, lastReroll, discardedCritTriggers }) =>
+				place: ({ roll, reroll, discardedCritTriggers }) =>
 					this.#rerollPrimaryDamage(next.entry, target, roll, {
-						lastReroll,
+						reroll,
 						discardedCritTriggers,
+						list: 'append',
 					}),
 			});
 			if (result.status === 'failed') throw result.error;
@@ -2052,8 +2080,12 @@ class NimbleChatMessage extends ChatMessage {
 			makeRoll: (formula, options) => this.#makeDamageRoll(previous, formula, options),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
-			place: ({ roll, lastReroll, discardedCritTriggers }) =>
-				this.#rerollPrimaryDamage(entry, target, roll, { lastReroll, discardedCritTriggers }),
+			place: ({ roll, reroll, discardedCritTriggers }) =>
+				this.#rerollPrimaryDamage(entry, target, roll, {
+					reroll,
+					discardedCritTriggers,
+					list: 'new',
+				}),
 		});
 		if (result.status === 'unpaid') {
 			return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');

@@ -1,4 +1,4 @@
-import { REROLL_SIDES, REROLL_TRIGGERS } from '../../utils/incomingReactionEntry.js';
+import { DIE_OUTCOMES, REROLL_SIDES, REROLL_TRIGGERS } from '../../utils/incomingReactionEntry.js';
 
 const { fields } = foundry.data;
 
@@ -179,25 +179,36 @@ export const incomingReactions = () => ({
 	),
 });
 
+const rerollDieResult = () =>
+	new fields.SchemaField(
+		{
+			value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+			outcome: new fields.StringField({
+				required: true,
+				nullable: true,
+				initial: null,
+				choices: [...DIE_OUTCOMES],
+			}),
+		},
+		{ required: true, nullable: true, initial: null },
+	);
+
 /**
- * What the last reroll on an attack card did, for its history line, and
- * whether a discarded crit still triggers when-crit abilities. Each reroll
- * replaces `lastReroll`; `discardedCritTriggers` stays on once set.
+ * The rerolls of an attack card's last action, for its history lines, and
+ * whether a discarded crit still triggers when-crit abilities. A new action
+ * replaces `rerolls`; `discardedCritTriggers` stays on once set.
  */
 export const rerollHistory = () => ({
-	lastReroll: new fields.SchemaField(
-		{
+	rerolls: new fields.ArrayField(
+		new fields.SchemaField({
 			entryId: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
-			previousResult: new fields.NumberField({ required: true, nullable: true, initial: null }),
-			previousWasCritical: new fields.BooleanField({
-				required: true,
-				nullable: false,
-				initial: false,
-			}),
-			newResult: new fields.NumberField({ required: true, nullable: true, initial: null }),
+			faces: new fields.NumberField({ required: true, nullable: true, initial: null }),
+			previous: rerollDieResult(),
+			next: rerollDieResult(),
 			usesLeft: new fields.NumberField({ required: true, nullable: true, initial: null }),
 			woundsGained: new fields.NumberField({
 				required: true,
@@ -206,8 +217,8 @@ export const rerollHistory = () => ({
 				integer: true,
 				min: 0,
 			}),
-		},
-		{ required: false, nullable: true, initial: null },
+		}),
+		{ required: false, nullable: false, initial: [] },
 	),
 	discardedCritTriggers: new fields.BooleanField({
 		required: false,

@@ -158,22 +158,25 @@ describe('ItemCardEffects apply-damage controls', () => {
 		const previousFromUuidSync = g.fromUuidSync;
 		g.fromUuidSync = () => ({ name: 'Pocket Sand' });
 		const message = createMessage([[damageNode('a', 'slashing', 4)]]);
-		(message.system as Record<string, unknown>).lastReroll = {
-			entryId: 'reroll-entry',
-			itemUuid: 'Item.sand',
-			label: '',
-			actorUuid: 'Actor.wren',
-			previousResult: 7,
-			previousWasCritical: false,
-			newResult: 4,
-			usesLeft: null,
-			woundsGained: 0,
-		};
+		(message.system as Record<string, unknown>).rerolls = [
+			{
+				entryId: 'reroll-entry',
+				itemUuid: 'Item.sand',
+				ruleId: 'reroll-1',
+				label: '',
+				actorUuid: 'Actor.wren',
+				faces: 8,
+				previous: { value: 7, outcome: null },
+				next: { value: 4, outcome: null },
+				usesLeft: null,
+				woundsGained: 0,
+			},
+		];
 
 		try {
 			render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
 
-			const history = screen.getByText('Rerolled with Pocket Sand: 7 became 4');
+			const history = screen.getByText('Rerolled with Pocket Sand');
 			const [apply] = applyButtons();
 			expect(history.closest('.nimble-card-section')).toBe(apply.closest('.nimble-card-section'));
 			expect(history.compareDocumentPosition(apply)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
