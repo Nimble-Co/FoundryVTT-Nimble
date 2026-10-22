@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { IncomingReactionPromptsProps } from '#types/components/IncomingReactionPrompts.d.ts';
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { IncomingReactionEntry, LastReroll } from '#utils/incomingReactionEntry.ts';
+	import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
 
 	import { getContext } from 'svelte';
 	import PoolSpendOfferDialog from '#documents/dialogs/PoolSpendOfferDialog.svelte.ts';
@@ -19,7 +19,9 @@
 	} from '#utils/incomingAttackReactions.js';
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
+	import DieFace from '../../components/DieFace.svelte';
 	import { getIncomingReactionCost } from './incomingReactionCost.ts';
+	import { isRerollAgain, rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 
 	interface ActorGroup {
 		actorUuid: string;
@@ -44,22 +46,15 @@
 	}
 
 	function getSourceItemName(entry: IncomingReactionEntry): string {
-		if (!entry.itemUuid) return '';
-		return ((fromUuidSync(entry.itemUuid) as { name?: string } | null)?.name ?? '').trim();
+		return entry.itemUuid ? getDocumentName(entry.itemUuid) : '';
 	}
 
-	/** The feature that made the last reroll can reroll again: its name is on the history line. */
-	function isRerollAgain(entry: IncomingReactionEntry): boolean {
-		return (
-			entry.kind === 'reroll' &&
-			!!lastReroll &&
-			entry.itemUuid === lastReroll.itemUuid &&
-			entry.actorUuid === lastReroll.actorUuid
-		);
+	function getDocumentName(uuid: string): string {
+		return ((fromUuidSync(uuid) as { name?: string } | null)?.name ?? '').trim();
 	}
 
 	function getEntryLabel(entry: IncomingReactionEntry): string {
-		if (isRerollAgain(entry)) return localize('NIMBLE.chat.incomingReactions.rerollAgain');
+		if (isRerollAgain(entry, rerolls)) return localize('NIMBLE.chat.incomingReactions.rerollAgain');
 		if (changesTheRoll(entry)) {
 			return localize('NIMBLE.chat.incomingReactions.rerollWith', {
 				feature: getSourceItemName(entry) || entry.label,
@@ -258,53 +253,6 @@
 		});
 	}
 
-	/**
-	 * The card's reroll history line: what changed, then who used it and what
-	 * it cost. The name and the uses left are left out when the header or a
-	 * "Reroll again" button under the line already show them.
-	 */
-	function getRerollHistoryLines(lastReroll: LastReroll, canRerollAgain: boolean): string[] {
-		const feature =
-			((fromUuidSync(lastReroll.itemUuid) as { name?: string } | null)?.name ?? '').trim() ||
-			lastReroll.label;
-		const hasResults =
-			typeof lastReroll.previousResult === 'number' && typeof lastReroll.newResult === 'number';
-		let changeKey = 'NIMBLE.chat.incomingReactions.rerollHistoryPlain';
-		if (hasResults) {
-			changeKey = lastReroll.previousWasCritical
-				? 'NIMBLE.chat.incomingReactions.rerollHistoryFromCrit'
-				: 'NIMBLE.chat.incomingReactions.rerollHistory';
-		}
-		const change = localize(changeKey, {
-			feature,
-			previous: String(lastReroll.previousResult ?? ''),
-			next: String(lastReroll.newResult ?? ''),
-		});
-
-		const name = (
-			(fromUuidSync(lastReroll.actorUuid) as { name?: string } | null)?.name ?? ''
-		).trim();
-		const details: string[] = [];
-		if (lastReroll.actorUuid !== speakerUuid && !canRerollAgain) {
-			details.push(localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name }));
-		}
-		if (typeof lastReroll.usesLeft === 'number' && !canRerollAgain) {
-			details.push(
-				localize('NIMBLE.chat.incomingReactions.rerollUsesLeft', {
-					count: String(lastReroll.usesLeft),
-				}),
-			);
-		}
-		if (lastReroll.woundsGained > 0) {
-			details.push(
-				localize('NIMBLE.chat.incomingReactions.rerollWoundsGained', {
-					count: String(lastReroll.woundsGained),
-				}),
-			);
-		}
-		return details.length > 0 ? [change, details.join(' - ')] : [change];
-	}
-
 	async function useEntry(entry: IncomingReactionEntry) {
 		if (busy) return;
 		busy = true;
@@ -397,15 +345,20 @@
 	);
 	// A used reroll is told by the card's history line, not by its entry.
 	let usedEntries = $derived(placeEntries.filter((entry) => entry.used && entry.kind !== 'reroll'));
-	let lastReroll = $derived(
-		(messageDocument?.reactive?.system as { lastReroll?: LastReroll | null })?.lastReroll ?? null,
+	let rerolls = $derived(
+		(messageDocument?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
 	);
-	let rerollHistoryLines = $derived(
-		place === 'roll' && lastReroll
-			? getRerollHistoryLines(
-					lastReroll,
-					pendingGroups.some((group) => group.entries.some(isRerollAgain)),
-				)
+	let historyLines = $derived(
+		place === 'roll'
+			? rerollHistoryLines({
+					records: rerolls,
+					speakerUuid,
+					rerollAgain: rerollAgainRecords(
+						rerolls,
+						pendingGroups.flatMap((group) => group.entries),
+					),
+					documentName: getDocumentName,
+				})
 			: [],
 	);
 </script>
@@ -442,19 +395,26 @@
 {/snippet}
 
 {#if place === 'roll'}
-	{#if pendingGroups.length > 0 || usedEntries.length > 0 || rerollHistoryLines.length > 0}
+	{#if pendingGroups.length > 0 || usedEntries.length > 0 || historyLines.length > 0}
 		<section class="nimble-roll-changes">
-			{#if rerollHistoryLines.length > 0}
-				<div class="nimble-roll-changes__history">
+			{#each historyLines as line, index (index)}
+				<div class="nimble-roll-changes__history nimble-roll-changes__history--reroll">
 					<i class="fa-solid fa-rotate-left"></i>
-					<div>
-						<p>{rerollHistoryLines[0]}</p>
-						{#if rerollHistoryLines[1]}
-							<p class="nimble-roll-changes__detail">{rerollHistoryLines[1]}</p>
+					<div class="nimble-roll-changes__text">
+						<p>{line.text}</p>
+						{#if line.detail}
+							<p class="nimble-roll-changes__detail">{line.detail}</p>
 						{/if}
 					</div>
+					{#if line.dice}
+						<span class="nimble-roll-changes__dice">
+							<DieFace {...line.dice.previous} discarded />
+							<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
+							<DieFace {...line.dice.next} />
+						</span>
+					{/if}
 				</div>
-			{/if}
+			{/each}
 
 			{#each usedEntries as entry (entry.id)}
 				<div class="nimble-roll-changes__history">
@@ -508,7 +468,7 @@
 			gap: 0.375rem;
 			font-size: var(--nimble-sm-text);
 
-			i {
+			> i {
 				margin-top: 0.125rem;
 			}
 
@@ -516,6 +476,32 @@
 				margin: 0;
 				text-wrap: pretty;
 			}
+		}
+
+		&__history--reroll {
+			align-items: center;
+			gap: 0.25rem;
+
+			> i {
+				align-self: flex-start;
+			}
+		}
+
+		&__text {
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__dice {
+			display: flex;
+			flex: none;
+			align-items: center;
+			gap: 0.25rem;
+		}
+
+		&__arrow {
+			font-size: 0.625rem;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__detail {

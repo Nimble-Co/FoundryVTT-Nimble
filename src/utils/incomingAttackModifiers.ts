@@ -1,5 +1,10 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
-import type { IncomingReactionEntry, RerollSide, RerollTrigger } from './incomingReactionEntry.js';
+import type {
+	IncomingReactionEntry,
+	RerollRecord,
+	RerollSide,
+	RerollTrigger,
+} from './incomingReactionEntry.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
@@ -98,7 +103,7 @@ interface PostRollIncomingResult<TRoll> {
 	discardedRoll: object | null;
 	/** Entries to stamp onto the card: filtered offers + used auto-reroll attribution */
 	stampEntries: IncomingReactionEntry[];
-	/** History of the last automatic `reroll`, for the card */
+	/** The automatic `reroll`s in roll order, for the card; null when none ran */
 	rerollHistory: RerollHistory | null;
 }
 
@@ -133,7 +138,8 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	const asView = (r: TRoll) => r as unknown as EvaluatedDamageRollLike;
 	let finalRoll = roll;
 	let discardedRoll: object | null = null;
-	const histories: RerollHistory[] = [];
+	const rerolls: RerollRecord[] = [];
+	let discardedCritTriggers = false;
 	const stampEntries: IncomingReactionEntry[] = [];
 
 	const view = asView(roll);
@@ -160,17 +166,15 @@ async function applyPostRollIncomingBehavior<TRoll>(
 				replaced,
 				previousResult: replaced.primaryDieValue ?? null,
 				makeRoll: rebuildRoll,
-				earlierCritTriggers: histories.at(-1)?.discardedCritTriggers ?? false,
+				earlierCritTriggers: discardedCritTriggers,
 			});
 			if (result.status === 'failed') throw result.error;
 			if (result.status !== 'done') break;
 
 			discardedRoll = replaced.toJSON();
 			finalRoll = result.roll;
-			histories.push({
-				lastReroll: result.lastReroll,
-				discardedCritTriggers: result.discardedCritTriggers,
-			});
+			rerolls.push(result.reroll);
+			discardedCritTriggers = result.discardedCritTriggers;
 			stampEntries.push({ ...next.entry, used: true });
 			next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
 		}
@@ -179,7 +183,12 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	const finalOutcome = rollOutcomeOf(asView(finalRoll));
 	stampEntries.push(...plan.reactionEntries.filter((entry) => offerStands(entry, finalOutcome)));
 
-	return { roll: finalRoll, discardedRoll, stampEntries, rerollHistory: histories.at(-1) ?? null };
+	return {
+		roll: finalRoll,
+		discardedRoll,
+		stampEntries,
+		rerollHistory: rerolls.length > 0 ? { rerolls, discardedCritTriggers } : null,
+	};
 }
 
 function getMatchingRules(actor: ActorLike | null | undefined): RuleLike[] {

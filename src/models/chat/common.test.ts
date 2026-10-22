@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MovementOffer } from '#types/movement.js';
-import type { IncomingReactionEntry, LastReroll } from '#utils/incomingReactionEntry.js';
+import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.js';
 import { grantedActionOffers, incomingReactions, movementOffers, rerollHistory } from './common.js';
 
 describe('grantedActionOffers schema factory', () => {
@@ -96,8 +96,8 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 	const entryFields = () =>
 		(incomingReactions().incomingReactions as unknown as { element: { fields: Fields } }).element
 			.fields;
-	const lastRerollFields = () =>
-		(rerollHistory().lastReroll as unknown as { fields: Fields }).fields;
+	const rerollFields = () =>
+		(rerollHistory().rerolls as unknown as { element: { fields: Fields } }).element.fields;
 
 	it('stores every field an entry carries, so none is dropped when the card is saved', () => {
 		const stamped: Required<IncomingReactionEntry> = {
@@ -122,18 +122,27 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 		expect(Object.keys(entryFields()).sort()).toEqual(Object.keys(stamped).sort());
 	});
 
-	it('stores every field of the last reroll', () => {
-		const last: LastReroll = {
+	it('stores every field of a reroll record', () => {
+		const record: RerollRecord = {
 			entryId: 'e1',
 			itemUuid: 'Actor.a.Item.i',
+			ruleId: 'r1',
 			label: 'Feature',
 			actorUuid: 'Actor.a',
-			previousResult: 7,
-			previousWasCritical: false,
-			newResult: 4,
+			faces: 8,
+			previous: { value: 8, outcome: 'crit' },
+			next: { value: 4, outcome: null },
 			usesLeft: 1,
 			woundsGained: 0,
 		};
-		expect(Object.keys(lastRerollFields()).sort()).toEqual(Object.keys(last).sort());
+		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
+		const die = (rerollFields().previous as { fields: Fields }).fields;
+		expect(Object.keys(die).sort()).toEqual(Object.keys(record.previous ?? {}).sort());
+	});
+
+	it('starts with no rerolls', () => {
+		expect(
+			(rerollHistory().rerolls as unknown as { options: { initial: unknown } }).options.initial,
+		).toEqual([]);
 	});
 });

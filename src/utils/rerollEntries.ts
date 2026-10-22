@@ -151,7 +151,9 @@ function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boo
 }
 
 /** One `reroll` rule on one actor, so a rule is not added or run twice on a card. */
-function rerollRuleKey(entry: IncomingReactionEntry): string {
+function rerollRuleKey(
+	entry: Pick<IncomingReactionEntry, 'actorUuid' | 'itemUuid' | 'ruleId'>,
+): string {
 	return `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
 }
 

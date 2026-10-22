@@ -931,6 +931,7 @@ describe('Reroll rules on the attack', () => {
 			isCritical,
 			isMiss,
 			primaryDieValue,
+			primaryDie: { faces: 8 },
 			originalFormula: '1d8 + 2',
 			options: { forceMiss, rollMode: 0, primaryDieModifier: 1 } as Record<string, unknown>,
 			toJSON: () => ({ class: 'DamageRoll', total: 10 }),
@@ -1087,17 +1088,20 @@ describe('Reroll rules on the attack', () => {
 			expect(result.discardedRoll).toEqual({ class: 'DamageRoll', total: 10 });
 			expect(result.stampEntries).toEqual([expect.objectContaining({ id: entry.id, used: true })]);
 			expect(result.rerollHistory).toEqual({
-				lastReroll: {
-					entryId: entry.id,
-					itemUuid: 'Item.sand',
-					label: 'Pocket Sand',
-					actorUuid: 'Actor.target',
-					previousResult: 8,
-					previousWasCritical: true,
-					newResult: 4,
-					usesLeft: null,
-					woundsGained: 0,
-				},
+				rerolls: [
+					{
+						entryId: entry.id,
+						itemUuid: 'Item.sand',
+						ruleId: 'reroll-1',
+						label: 'Pocket Sand',
+						actorUuid: 'Actor.target',
+						faces: 8,
+						previous: { value: 8, outcome: 'crit' },
+						next: { value: 4, outcome: null },
+						usesLeft: null,
+						woundsGained: 0,
+					},
+				],
 				discardedCritTriggers: false,
 			});
 		});
@@ -1162,12 +1166,18 @@ describe('Reroll rules on the attack', () => {
 				['on-miss', true],
 				['on-crit', true],
 			]);
-			expect(result.rerollHistory?.lastReroll).toMatchObject({
-				entryId: 'on-crit',
-				previousResult: 8,
-				previousWasCritical: true,
-				newResult: 5,
-			});
+			expect(result.rerollHistory?.rerolls).toMatchObject([
+				{
+					entryId: 'on-miss',
+					previous: { value: 1, outcome: 'miss' },
+					next: { value: 8, outcome: 'crit' },
+				},
+				{
+					entryId: 'on-crit',
+					previous: { value: 8, outcome: 'crit' },
+					next: { value: 5, outcome: null },
+				},
+			]);
 		});
 
 		it('never runs one rule twice on a roll', async () => {

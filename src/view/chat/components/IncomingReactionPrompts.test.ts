@@ -96,13 +96,13 @@ function createEntry(options: EntryOptions = {}) {
 
 function createMessage(
 	entries: ReturnType<typeof createEntry>[],
-	lastReroll: Record<string, unknown> | null = null,
+	rerolls: Record<string, unknown>[] = [],
 	speakerUuid: string | null = null,
 ) {
 	const message = {
 		id: 'message-1',
 		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
-		system: { incomingReactions: entries, lastReroll },
+		system: { incomingReactions: entries, rerolls },
 		reactive: null as unknown,
 		canStillUseReroll: vi.fn(() => true),
 	};
@@ -436,15 +436,16 @@ describe('IncomingReactionPrompts', () => {
 			});
 		}
 
-		function lastReroll(overrides: Record<string, unknown> = {}) {
+		function rerollRecord(overrides: Record<string, unknown> = {}) {
 			return {
 				entryId: 'reroll-entry',
 				itemUuid: 'Item.sand',
+				ruleId: 'reroll-1',
 				label: 'Pocket Sand rule',
 				actorUuid: 'Actor.wren',
-				previousResult: 7,
-				previousWasCritical: false,
-				newResult: 4,
+				faces: 8,
+				previous: { value: 7, outcome: null },
+				next: { value: 4, outcome: null },
 				usesLeft: null,
 				woundsGained: 0,
 				...overrides,
@@ -606,13 +607,15 @@ describe('IncomingReactionPrompts', () => {
 		it('tells the last reroll at the roll, with who used it under it', () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: {
-					messageDocument: createMessage([rerollEntry({ used: true })], lastReroll()),
+					messageDocument: createMessage([rerollEntry({ used: true })], [rerollRecord()]),
 				},
 			});
 
 			expect(screen.queryByRole('button')).toBeNull();
-			expect(rollPlace().getByText('Rerolled with Pocket Sand: 7 became 4')).toBeTruthy();
+			expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
 			expect(rollPlace().getByText('Used by Wren')).toBeTruthy();
+			expect(rollPlace().getByRole('img', { name: 'Was 7' })).toBeTruthy();
+			expect(rollPlace().getByRole('img', { name: 'Now 4' })).toBeTruthy();
 			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
 		});
 
@@ -621,18 +624,62 @@ describe('IncomingReactionPrompts', () => {
 				props: {
 					messageDocument: createMessage(
 						[rerollEntry({ used: true })],
-						lastReroll({
-							previousResult: 8,
-							previousWasCritical: true,
-							usesLeft: 1,
-							woundsGained: 1,
-						}),
+						[
+							rerollRecord({
+								previous: { value: 8, outcome: 'crit' },
+								usesLeft: 1,
+								woundsGained: 1,
+							}),
+						],
 					),
 				},
 			});
 
-			expect(rollPlace().getByText('Rerolled with Pocket Sand: 8 (crit) became 4')).toBeTruthy();
+			const old = rollPlace().getByRole('img', { name: 'Was 8, a crit' });
+			expect(old.classList.contains('nimble-die-face--discarded')).toBe(true);
 			expect(rollPlace().getByText('Used by Wren - Uses left: 1 - Wounds gained: 1')).toBeTruthy();
+		});
+
+		it('shows one line per reroll of the last action, the first at the top', () => {
+			const globals = globalThis as Record<string, any>;
+			const lookUp = globals.fromUuidSync;
+			globals.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.ward' ? { name: 'Warding Bond' } : lookUp(uuid),
+			);
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ used: true })],
+						[
+							rerollRecord({ woundsGained: 1 }),
+							rerollRecord({
+								entryId: 'ward-entry',
+								itemUuid: 'Item.ward',
+								label: 'Warding Bond',
+								actorUuid: 'Actor.bram',
+								faces: null,
+							}),
+						],
+						'Actor.wren',
+					),
+				},
+			});
+
+			const lines = [
+				...screen.getByTestId('roll-place').querySelectorAll('.nimble-roll-changes__history'),
+			];
+			expect(lines.map((line) => line.querySelector('p')?.textContent)).toEqual([
+				'Rerolled with Pocket Sand',
+				'Rerolled with Warding Bond',
+			]);
+			expect(lines[0].querySelector('.nimble-roll-changes__detail')?.textContent).toBe(
+				'Wounds gained: 1',
+			);
+			expect(lines[0].querySelectorAll('.nimble-die-face')).toHaveLength(2);
+			expect(lines[1].querySelector('.nimble-roll-changes__detail')?.textContent).toBe(
+				'Used by Bram',
+			);
+			expect(lines[1].querySelector('.nimble-die-face')).toBeNull();
 		});
 
 		it('keeps the well under the history line while another reroll can still be used', () => {
@@ -640,7 +687,7 @@ describe('IncomingReactionPrompts', () => {
 				props: {
 					messageDocument: createMessage(
 						[rerollEntry({ used: true }), rerollEntry({ id: 'reroll-2', actorUuid: 'Actor.bram' })],
-						lastReroll(),
+						[rerollRecord()],
 					),
 				},
 			});
@@ -648,7 +695,7 @@ describe('IncomingReactionPrompts', () => {
 			const roll = screen.getByTestId('roll-place');
 			const history = roll.querySelector('.nimble-roll-changes__history');
 			const well = roll.querySelector('.nimble-roll-changes__well');
-			expect(history?.textContent).toContain('7 became 4');
+			expect(history?.textContent).toContain('Rerolled with Pocket Sand');
 			expect(well?.textContent).toContain('Reroll with Pocket Sand');
 			expect(history?.compareDocumentPosition(well as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 		});
@@ -661,7 +708,7 @@ describe('IncomingReactionPrompts', () => {
 							rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
 							rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
 						],
-						lastReroll({ usesLeft: 1 }),
+						[rerollRecord({ usesLeft: 1 })],
 						'Actor.wren',
 					),
 				},
@@ -676,7 +723,7 @@ describe('IncomingReactionPrompts', () => {
 				props: {
 					messageDocument: createMessage(
 						[rerollEntry({ id: 'again', actorUuid: 'Actor.wren' })],
-						lastReroll({ usesLeft: 1 }),
+						[rerollRecord({ usesLeft: 1 })],
 					),
 				},
 			});
@@ -694,7 +741,7 @@ describe('IncomingReactionPrompts', () => {
 				props: {
 					messageDocument: createMessage(
 						[rerollEntry({ id: 'again', actorUuid: 'Actor.wren' })],
-						lastReroll({ usesLeft: 1 }),
+						[rerollRecord({ usesLeft: 1 })],
 						'Actor.wren',
 					),
 				},
@@ -703,7 +750,7 @@ describe('IncomingReactionPrompts', () => {
 			expect(
 				screen.getByTestId('roll-place').querySelector('.nimble-roll-changes__detail'),
 			).toBeNull();
-			expect(rollPlace().getByText('Rerolled with Pocket Sand: 7 became 4')).toBeTruthy();
+			expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
 		});
 
 		it('puts no em dash and no middle dot in any label', () => {
@@ -725,7 +772,7 @@ describe('IncomingReactionPrompts', () => {
 							createEntry({ id: 'used-interpose', used: true }),
 							spendEntry(),
 						],
-						lastReroll({ usesLeft: 1, woundsGained: 2 }),
+						[rerollRecord({ usesLeft: 1, woundsGained: 2 })],
 					),
 				},
 			});
