@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IncomingReactionEntry, RerollSide, RerollTrigger } from './incomingReactionEntry.js';
 import {
+	type AutomaticReroll,
 	collectRerollEntries,
 	findRerollRule,
+	nextAutomaticReroll,
+	offerStands,
 	type RerollingActor,
 	type RerollRollContext,
 	type RerollRuleLike,
-	rerollEntryStands,
+	rerollRuleKey,
 	usableRerollEntry,
+	withNewRerollEntries,
 } from './rerollEntries.js';
 
 const testGlobals = globalThis as unknown as {
@@ -252,7 +256,7 @@ describe('collectRerollEntries', () => {
 	});
 });
 
-describe('rerollEntryStands', () => {
+describe('offerStands', () => {
 	const entry = (outcomeTrigger: RerollTrigger | null | undefined) =>
 		({ kind: 'reroll', outcomeTrigger }) as IncomingReactionEntry;
 
@@ -264,21 +268,127 @@ describe('rerollEntryStands', () => {
 		['criticalHit', true, false, false],
 		['nonCriticalHit', false, true, false],
 		['miss', false, false, true],
-	])('a %s entry stands on crit %s, hit %s, miss %s', (trigger, onCrit, onHit, onMiss) => {
+	])('a %s reroll entry stands on crit %s, hit %s, miss %s', (trigger, onCrit, onHit, onMiss) => {
 		const stands = (outcome: typeof HIT) =>
-			rerollEntryStands(entry(trigger), { outcome, forcedMiss: false });
+			offerStands(entry(trigger), { outcome, forcedMiss: false });
 		expect([stands(CRIT), stands(HIT), stands(MISS)]).toEqual([onCrit, onHit, onMiss]);
 	});
 
 	it('stands before the roll is made', () => {
-		expect(rerollEntryStands(entry('criticalHit'), { outcome: null, forcedMiss: false })).toBe(
+		expect(offerStands(entry('criticalHit'), { outcome: null, forcedMiss: false })).toBe(true);
+		const spend = { kind: 'spendPoolForDamage', outcomeTrigger: 'criticalHit' };
+		expect(offerStands(spend as IncomingReactionEntry, { outcome: null, forcedMiss: false })).toBe(
 			true,
 		);
 	});
 
-	it('never stands on a forced miss', () => {
-		expect(rerollEntryStands(entry('miss'), { outcome: MISS, forcedMiss: true })).toBe(false);
-		expect(rerollEntryStands(entry('always'), { outcome: null, forcedMiss: true })).toBe(false);
+	it('never lets a reroll entry stand on a forced miss', () => {
+		expect(offerStands(entry('miss'), { outcome: MISS, forcedMiss: true })).toBe(false);
+		expect(offerStands(entry('always'), { outcome: null, forcedMiss: true })).toBe(false);
+	});
+
+	it('checks other kinds against the outcome only, also on a forced miss', () => {
+		const spend = { kind: 'spendPoolForDamage', outcomeTrigger: 'miss' } as IncomingReactionEntry;
+		expect(offerStands(spend, { outcome: MISS, forcedMiss: true })).toBe(true);
+		expect(offerStands(spend, { outcome: HIT, forcedMiss: false })).toBe(false);
+	});
+
+	it('checks a forceReroll entry against its own trigger', () => {
+		const force = {
+			kind: 'forceReroll',
+			rerollTrigger: 'criticalHit',
+			outcomeTrigger: 'miss',
+		} as IncomingReactionEntry;
+		expect(offerStands(force, { outcome: CRIT, forcedMiss: false })).toBe(true);
+		expect(offerStands(force, { outcome: MISS, forcedMiss: false })).toBe(false);
+	});
+
+	it('always lets an offer with no trigger stand', () => {
+		const interpose = { kind: 'redirectToSelf' } as IncomingReactionEntry;
+		expect(offerStands(interpose, { outcome: MISS, forcedMiss: true })).toBe(true);
+	});
+});
+
+function stamped(overrides: Partial<IncomingReactionEntry> = {}): IncomingReactionEntry {
+	return {
+		id: foundry.utils.randomID(),
+		kind: 'reroll',
+		source: 'rule',
+		actorUuid: 'Actor.hero',
+		tokenUuid: null,
+		targetTokenUuid: null,
+		side: 'roller',
+		label: 'Pocket Sand',
+		ruleId: 'rule-1',
+		itemUuid: 'Item.sand',
+		used: false,
+		outcomeTrigger: 'always',
+		...overrides,
+	};
+}
+
+describe('rerollRuleKey', () => {
+	it('is the same for two entries of one rule on one actor', () => {
+		expect(rerollRuleKey(stamped({ id: 'a', used: true }))).toBe(
+			rerollRuleKey(stamped({ id: 'b', side: 'target' })),
+		);
+	});
+
+	it('differs by actor, item and rule', () => {
+		const key = rerollRuleKey(stamped());
+		expect(rerollRuleKey(stamped({ actorUuid: 'Actor.other' }))).not.toBe(key);
+		expect(rerollRuleKey(stamped({ itemUuid: 'Item.other' }))).not.toBe(key);
+		expect(rerollRuleKey(stamped({ ruleId: 'rule-2' }))).not.toBe(key);
+	});
+});
+
+describe('withNewRerollEntries', () => {
+	it('does not add a rule that already has an entry waiting', () => {
+		const waiting = stamped({ id: 'waiting' });
+		const result = withNewRerollEntries([waiting], [stamped({ id: 'new' })]);
+		expect(result.map((entry) => entry.id)).toEqual(['waiting']);
+	});
+
+	it('adds a new entry for a rule whose earlier entry was used', () => {
+		const used = stamped({ id: 'used', used: true });
+		const result = withNewRerollEntries([used], [stamped({ id: 'new' })]);
+		expect(result.map((entry) => entry.id)).toEqual(['used', 'new']);
+	});
+
+	it('adds an entry for another rule, and ignores entries of other kinds', () => {
+		const spend = stamped({ id: 'spend', kind: 'spendPoolForDamage' });
+		const result = withNewRerollEntries([spend], [stamped({ id: 'new' })]);
+		expect(result.map((entry) => entry.id)).toEqual(['spend', 'new']);
+	});
+});
+
+describe('nextAutomaticReroll', () => {
+	const automatic = (overrides: Partial<IncomingReactionEntry>): AutomaticReroll => ({
+		entry: stamped(overrides),
+		rule: rerollRule({ automatic: true }),
+	});
+	const onMiss = automatic({ ruleId: 'on-miss', outcomeTrigger: 'miss' });
+	const onCrit = automatic({ ruleId: 'on-crit', outcomeTrigger: 'criticalHit' });
+	const roll = (outcome: typeof HIT, forcedMiss = false) => ({ outcome, forcedMiss });
+
+	it('gives the first one that stands for the roll', () => {
+		expect(nextAutomaticReroll([onMiss, onCrit], [], roll(CRIT))).toBe(onCrit);
+		expect(nextAutomaticReroll([onMiss, onCrit], [], roll(MISS))).toBe(onMiss);
+		expect(nextAutomaticReroll([onMiss, onCrit], [], roll(HIT))).toBeNull();
+	});
+
+	it('skips a rule that already has a used entry on the card', () => {
+		const card = [{ ...onMiss.entry, id: 'earlier', used: true }];
+		expect(nextAutomaticReroll([onMiss], card, roll(MISS))).toBeNull();
+	});
+
+	it('skips a rule that already has a waiting entry on the card', () => {
+		const card = [{ ...onMiss.entry, id: 'button' }];
+		expect(nextAutomaticReroll([onMiss], card, roll(MISS))).toBeNull();
+	});
+
+	it('runs nothing on a forced miss', () => {
+		expect(nextAutomaticReroll([onMiss], [], roll(MISS, true))).toBeNull();
 	});
 });
 
