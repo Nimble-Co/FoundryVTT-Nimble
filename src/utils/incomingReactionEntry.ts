@@ -9,6 +9,10 @@ export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 export const REROLL_SIDES = ['roller', 'target'] as const;
 export type RerollSide = (typeof REROLL_SIDES)[number];
 
+/** How one die result counts: a crit, a miss, or neither (null). */
+export const DIE_OUTCOMES = ['crit', 'miss'] as const;
+export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;
+
 /**
  * The outcome fields a trigger is checked against. An evaluated DamageRoll
  * satisfies this, and so does a posted card's own system data, which is what

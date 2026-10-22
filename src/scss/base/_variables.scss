@@ -94,6 +94,21 @@
 	--nimble-roll-failure-background-color: hsl(0, 66%, 83%);
 	--nimble-roll-failure-color: hsl(1, 100%, 33%);
 
+	/** DIE FACE (one die result, e.g. a reroll line) **/
+	// Each number/fill pair keeps at least 6.8:1 contrast. Discarded dice are paler, not faded.
+	--nimble-die-face-fill: hsl(50, 14%, 22%);
+	--nimble-die-face-number-color: #fff;
+	--nimble-die-face-crit-fill: hsl(120, 45%, 28%);
+	--nimble-die-face-crit-number-color: #fff;
+	--nimble-die-face-miss-fill: hsl(0, 60%, 38%);
+	--nimble-die-face-miss-number-color: #fff;
+	--nimble-die-face-discarded-fill: hsl(40, 12%, 72%);
+	--nimble-die-face-discarded-number-color: hsl(50, 14%, 10%);
+	--nimble-die-face-discarded-crit-fill: hsl(110, 32%, 72%);
+	--nimble-die-face-discarded-crit-number-color: hsl(120, 55%, 12%);
+	--nimble-die-face-discarded-miss-fill: hsl(0, 42%, 80%);
+	--nimble-die-face-discarded-miss-number-color: hsl(0, 65%, 16%);
+
 	/** DAMAGE DEFENSE BADGES **/
 	--nimble-damage-badge-immune-background-color: hsl(293, 12%, 82%);
 	--nimble-damage-badge-immune-color: hsl(293, 25%, 25%);
