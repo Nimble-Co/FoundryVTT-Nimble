@@ -511,6 +511,14 @@
 			"category": "Nimble",
 			"primaryDieColorset": "Nimble Primary Die"
 		},
+		"dieFace": {
+			"now": "Now {value}",
+			"nowCrit": "Now {value}, a crit",
+			"nowMiss": "Now {value}, a miss",
+			"was": "Was {value}",
+			"wasCrit": "Was {value}, a crit",
+			"wasMiss": "Was {value}, a miss"
+		},
 		"durations": {
 			"action": "Action",
 			"minute": "Minute",
