@@ -195,6 +195,22 @@ describe('rerollWithRule', () => {
 		});
 	});
 
+	it('takes the new die from the caller when it reads it', async () => {
+		const newRoll: Roll = { isCritical: false };
+		const readNewDie = vi.fn(() => ({ faces: 20, value: 14 }));
+		const result = await rerollWithRule(
+			input({ makeRoll: vi.fn(async () => newRoll), readNewDie }),
+		);
+
+		expect(readNewDie).toHaveBeenCalledWith(newRoll);
+		expect(result).toMatchObject({ reroll: { faces: 20, next: { value: 14, outcome: null } } });
+	});
+
+	it('records no new die when the caller reads none', async () => {
+		const result = await rerollWithRule(input({ readNewDie: () => ({ faces: 20, value: null }) }));
+		expect(result).toMatchObject({ reroll: { faces: 20, next: null } });
+	});
+
 	it('records no die when it cannot be read', async () => {
 		const result = await rerollWithRule(
 			input({ previousResult: null, makeRoll: vi.fn(async () => ({})) }),

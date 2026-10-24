@@ -1,6 +1,6 @@
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
-import type { ReplacedRoll, RerollHistory } from './rerollStep.js';
+import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
 
 /**
  * The part of a card reroll that changes with the kind of card. The card's
@@ -23,6 +23,8 @@ interface RerollableRoll<TRoll = unknown> {
 	previousResult: number | null;
 	/** Make and evaluate the new roll from the formula and options the reroll step gives. */
 	makeRoll(formula: string, options: Record<string, unknown>): Promise<TRoll>;
+	/** Read the new roll's kept die. Without it, the primary die of a damage roll is read. */
+	readNewDie?(roll: TRoll): RolledDie;
 	/**
 	 * Do the card kind's own work for the new roll, and write nothing yet.
 	 * `entries` are the card's entries with the used entry stamped.
