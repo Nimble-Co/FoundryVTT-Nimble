@@ -52,12 +52,24 @@
 	let speakerUuid = $derived(
 		(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
 	);
-	// Old cards can still hold the legacy `forceReroll` kind, which nothing resolves.
-	let entries = $derived(
-		(
-			(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
-				?.incomingReactions ?? []
-		).filter((entry) => entry.kind !== 'forceReroll'),
+	let storedEntries = $derived(
+		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
+			?.incomingReactions ?? [],
+	);
+	// Old cards can still hold the legacy `forceReroll` kind. Nothing resolves a
+	// waiting one, and a used one wrote no reroll record, so it keeps its old line.
+	let entries = $derived(storedEntries.filter((entry) => entry.kind !== 'forceReroll'));
+	let legacyRerollLines = $derived(
+		place === 'roll'
+			? storedEntries
+					.filter((entry) => entry.kind === 'forceReroll' && entry.used)
+					.map((entry) => ({
+						id: entry.id,
+						text: localize('NIMBLE.chat.incomingReactions.rerolledBy', {
+							label: entry.label || (getReactingActor(entry)?.name ?? ''),
+						}),
+					}))
+			: [],
 	);
 	let placeEntries = $derived(
 		entries.filter((entry) => changesTheRoll(entry) === (place === 'roll')),
@@ -397,8 +409,15 @@
 {/snippet}
 
 {#if place === 'roll'}
-	{#if pendingGroups.length > 0 || usedEntries.length > 0 || historyLines.length > 0}
+	{#if pendingGroups.length > 0 || usedEntries.length > 0 || historyLines.length > 0 || legacyRerollLines.length > 0}
 		<section class="nimble-roll-changes">
+			{#each legacyRerollLines as line (line.id)}
+				<div class="nimble-roll-changes__history">
+					<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+					<p>{line.text}</p>
+				</div>
+			{/each}
+
 			{#each historyLines as line, index (index)}
 				<div class="nimble-roll-changes__history nimble-roll-changes__history--reroll">
 					<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>

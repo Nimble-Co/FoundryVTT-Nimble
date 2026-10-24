@@ -196,18 +196,43 @@ describe('IncomingReactionPrompts', () => {
 		expect(button.textContent).toContain('Heroic Reaction');
 	});
 
-	it('shows nothing for a legacy forceReroll entry on an old card, waiting or used', () => {
-		const { container } = render(IncomingReactionPromptsTestHarness, {
+	it('tells a used legacy forceReroll entry at the roll, as old cards did', () => {
+		render(IncomingReactionPromptsTestHarness, {
 			props: {
 				messageDocument: createMessage([
-					createEntry({ id: 'waiting', kind: 'forceReroll', label: 'Old Feature' }),
 					createEntry({ id: 'used', kind: 'forceReroll', label: 'Old Feature', used: true }),
 				]),
 			},
 		});
 
 		expect(screen.queryByRole('button')).toBeNull();
-		expect(container.textContent).not.toContain('Old Feature');
+		expect(rollPlace().getByText('Attack rerolled by Old Feature')).toBeTruthy();
+		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+	});
+
+	it('names the actor when a used legacy forceReroll entry has no label', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ id: 'used', kind: 'forceReroll', label: '', used: true }),
+				]),
+			},
+		});
+
+		expect(rollPlace().getByText('Attack rerolled by Sir Brannon')).toBeTruthy();
+	});
+
+	it('shows nothing for a waiting legacy forceReroll entry, which nothing can resolve', () => {
+		const { container } = render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ id: 'waiting', kind: 'forceReroll', label: 'Old Feature' }),
+				]),
+			},
+		});
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(container.textContent?.trim()).toBe('');
 	});
 
 	it('still shows the other entries of an old card with a legacy forceReroll entry', () => {
@@ -614,6 +639,20 @@ describe('IncomingReactionPrompts', () => {
 			expect(rollPlace().getByRole('img', { name: 'Was 7' })).toBeTruthy();
 			expect(rollPlace().getByRole('img', { name: 'Now 4' })).toBeTruthy();
 			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+		});
+
+		it('shows no legacy reroll line on a card with reroll history', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage([rerollEntry({ used: true })], [rerollRecord()]),
+				},
+			});
+
+			expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+			expect(
+				screen.getByTestId('roll-place').querySelectorAll('.nimble-roll-changes__history'),
+			).toHaveLength(1);
+			expect(screen.getByTestId('roll-place').textContent).not.toContain('Attack rerolled by');
 		});
 
 		it('says so when the reroll took away a crit', () => {
