@@ -34,11 +34,13 @@ import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { checkCardRerollData } from '../../utils/checkCardRollTarget.js';
 import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
 } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import type { RerollingActor } from '../../utils/rerollEntries.js';
 import showInsufficientActionsConfirmation from '../../utils/showInsufficientActionsConfirmation.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
@@ -1342,17 +1344,25 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		roll: NimbleRoll,
 		options = { rollMode: 0 } as ActorRollOptions,
 	) {
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'skillCheck', key: skillKey },
+			options.rollMode ?? 0,
+		);
+
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.skills[skillKey]} Check`,
 			type: 'skillCheck',
-			rolls: [roll],
+			rolls: [rerolls.roll],
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
 				rollMode: options.rollMode,
 				skillKey,
+				...rerolls.system,
 			},
 		};
 	}
