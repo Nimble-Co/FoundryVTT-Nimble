@@ -8,6 +8,13 @@ export function canShowDiceAnimation(): boolean {
 const DICE_WAIT_LIMIT = 10_000;
 
 /**
+ * Dice So Nice animates rolls that an update adds to a message by itself. A
+ * write that adds the roll `showDiceAnimation` already threw spreads this in,
+ * so the dice are not thrown twice.
+ */
+export const SKIP_DICE_SO_NICE = { 'flags.dice-so-nice.skip': true } as const;
+
+/**
  * Throw Dice So Nice's dice for a roll that was written onto an existing chat
  * message.
  *

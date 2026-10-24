@@ -343,6 +343,14 @@ describe('rollDeferredDamage', () => {
 		);
 	});
 
+	it('tells Dice So Nice not to throw the added roll a second time', async () => {
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(message.update.mock.calls[0][0]).toMatchObject({ 'flags.dice-so-nice.skip': true });
+	});
+
 	it('does not throw dice for a click that rolled nothing', async () => {
 		const showForRoll = vi.fn().mockResolvedValue(true);
 		(globals.game as { dice3d?: unknown }).dice3d = { showForRoll };

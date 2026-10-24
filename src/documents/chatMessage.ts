@@ -30,7 +30,11 @@ import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
-import { canShowDiceAnimation, showDiceAnimation } from '#utils/showDiceAnimation.js';
+import {
+	canShowDiceAnimation,
+	SKIP_DICE_SO_NICE,
+	showDiceAnimation,
+} from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
@@ -1159,6 +1163,7 @@ class NimbleChatMessage extends ChatMessage {
 		const rerolls = isPrimaryRoll ? this.#deferredRollRerolls(roll) : null;
 		await this.update({
 			rolls: patched.rolls,
+			...SKIP_DICE_SO_NICE,
 			system: {
 				...outcome,
 				...(isPrimaryRoll ? { rerolls: [] } : {}),
