@@ -363,6 +363,69 @@ describe('registerIncomingReactionSocketListener', () => {
 	});
 });
 
+describe('the rolling reroll die', () => {
+	const D20 = { slot: 'check', faces: 20 };
+
+	async function rollingOf(messageId: string) {
+		const { rollingRerollOf } = await import('./rerollRolling.svelte.js');
+		return rollingRerollOf(messageId);
+	}
+
+	it('shows on this client and tells every other client', async () => {
+		const { broadcastRerollRolling } = await loadModule();
+
+		broadcastRerollRolling('message-1', D20);
+
+		expect(await rollingOf('message-1')).toEqual(D20);
+		expect(globals().game.socket.emit).toHaveBeenCalledWith('system.nimble', {
+			type: 'rerollRolling',
+			messageId: 'message-1',
+			roll: D20,
+		});
+	});
+
+	it('stops on this client and every other client', async () => {
+		const { broadcastRerollRolling } = await loadModule();
+		broadcastRerollRolling('message-1', D20);
+
+		broadcastRerollRolling('message-1', null);
+
+		expect(await rollingOf('message-1')).toBeNull();
+		expect(globals().game.socket.emit).toHaveBeenLastCalledWith('system.nimble', {
+			type: 'rerollRolling',
+			messageId: 'message-1',
+			roll: null,
+		});
+	});
+
+	it('shows the die another client threw, on any client', async () => {
+		setUser({ id: 'player-1', isGM: false });
+		const { registerIncomingReactionSocketListener } = await loadModule();
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+
+		listener({ type: 'rerollRolling', messageId: 'message-1', roll: D20 });
+		expect(await rollingOf('message-1')).toEqual(D20);
+
+		listener({ type: 'rerollRolling', messageId: 'message-1', roll: null });
+		expect(await rollingOf('message-1')).toBeNull();
+	});
+
+	it.each([
+		{ messageId: '', roll: D20 },
+		{ messageId: 'message-1', roll: { slot: 'check' } },
+		{ messageId: 'message-1', roll: { slot: 7, faces: 20 } },
+	])('ignores a malformed signal %o', async (payload) => {
+		const { registerIncomingReactionSocketListener } = await loadModule();
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+
+		listener({ type: 'rerollRolling', ...payload });
+
+		expect(await rollingOf('message-1')).toBeNull();
+	});
+});
+
 describe('rejectIncomingAttackReaction', () => {
 	const rejection = {
 		messageId: 'message-1',

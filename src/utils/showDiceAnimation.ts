@@ -7,6 +7,13 @@
  * the module's own entry point for that case. It resolves immediately when DSN
  * is absent or disabled, so callers need no capability check of their own.
  */
+/** Whether Dice So Nice is on for this client, so a roll will be thrown. */
+export function canShowDiceAnimation(): boolean {
+	const { dice3d } = game as { dice3d?: { showForRoll?: unknown; isEnabled?: () => boolean } };
+	if (!dice3d?.showForRoll) return false;
+	return dice3d.isEnabled?.() ?? true;
+}
+
 export async function showDiceAnimation(
 	roll: foundry.dice.Roll.Any,
 	messageId?: string,

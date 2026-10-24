@@ -16,4 +16,8 @@ export interface RollSummaryProps {
 	total: number;
 	options?: RollSummaryOptions;
 	showRollDetails?: boolean;
+	/** The reroll dice of this roll are in the air: the total shows a tumbling die this size. */
+	rolling?: { faces: number } | null;
+	/** The total just replaced a rolling die, so it settles in. */
+	landed?: boolean;
 }

@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import localize from '../utils/localize.js';
+import { rollingRerollOf, stopRerollRolling } from '../utils/rerollRolling.svelte.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 /**
@@ -271,6 +272,82 @@ describe('resolveRerollReaction', () => {
 		}
 
 		expect(message.update).toHaveBeenCalledTimes(1);
+	});
+
+	describe('the rolling die while the dice roll', () => {
+		function rollingMessage() {
+			const message = createMessage();
+			Object.defineProperty(message, 'id', { value: 'message-1' });
+			const emit = vi.fn();
+			(globals().game as { socket?: unknown }).socket = { emit };
+			return { message, emit };
+		}
+
+		function diceSoNice(showForRoll: ReturnType<typeof vi.fn>) {
+			(globals().game as { dice3d?: unknown }).dice3d = { showForRoll, isEnabled: () => true };
+		}
+
+		afterEach(() => {
+			stopRerollRolling('message-1', false);
+			delete (globals().game as { dice3d?: unknown }).dice3d;
+			delete (globals().game as { socket?: unknown }).socket;
+		});
+
+		it('shows every client a die of the new roll in place of the damage roll', async () => {
+			setupWorld();
+			const { message, emit } = rollingMessage();
+			let land = () => {};
+			diceSoNice(
+				vi.fn(
+					() =>
+						new Promise<void>((resolve) => {
+							land = resolve;
+						}),
+				),
+			);
+
+			const rerolled = message.resolveRerollReaction('entry-1', 'gm-user');
+			try {
+				await vi.waitFor(() => expect(rollingRerollOf('message-1')).not.toBeNull());
+				expect(rollingRerollOf('message-1')).toEqual({ slot: 'damage-node', faces: 6 });
+				expect(emit).toHaveBeenCalledWith('system.nimble', {
+					type: 'rerollRolling',
+					messageId: 'message-1',
+					roll: { slot: 'damage-node', faces: 6 },
+				});
+			} finally {
+				land();
+				await rerolled;
+			}
+		});
+
+		it('stops the die on every client when the new roll cannot be written', async () => {
+			setupWorld();
+			const { message, emit } = rollingMessage();
+			diceSoNice(vi.fn().mockResolvedValue(true));
+			message.update.mockRejectedValueOnce(new Error('write failed'));
+			const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			consoleError.mockRestore();
+			expect(rollingRerollOf('message-1')).toBeNull();
+			expect(emit).toHaveBeenLastCalledWith('system.nimble', {
+				type: 'rerollRolling',
+				messageId: 'message-1',
+				roll: null,
+			});
+		});
+
+		it('shows no die when Dice So Nice is off', async () => {
+			setupWorld();
+			const { message, emit } = rollingMessage();
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(emit).not.toHaveBeenCalled();
+			expect(rollingRerollOf('message-1')).toBeNull();
+		});
 	});
 
 	it('rolls the new roll with the rule changes on top of the first roll', async () => {
