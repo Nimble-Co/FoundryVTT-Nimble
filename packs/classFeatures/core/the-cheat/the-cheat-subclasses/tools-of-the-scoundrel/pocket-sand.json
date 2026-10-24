@@ -53,7 +53,8 @@
 				"primaryDieBonus": 0,
 				"extraDamage": "",
 				"automatic": false,
-				"discardedCritTriggers": false
+				"discardedCritTriggers": false,
+				"oncePerRoll": true
 			}
 		],
 		"activation": {
