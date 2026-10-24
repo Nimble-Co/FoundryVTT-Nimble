@@ -16,7 +16,7 @@ import SkillCheckCard from './SkillCheckCard.svelte';
 const { requestIncomingAttackReaction } = mocks;
 
 type Globals = Record<string, any>;
-const g = globalThis as Globals;
+const globals = globalThis as Globals;
 
 const ROLLER = 'Actor.kael';
 
@@ -127,11 +127,11 @@ let previous: Record<string, unknown>;
 
 beforeEach(() => {
 	previous = {
-		fromUuidSync: g.fromUuidSync,
-		user: g.game.user,
-		timeSince: g.foundry.utils.timeSince,
-		Hooks: g.Hooks,
-		settings: g.game.settings,
+		fromUuidSync: globals.fromUuidSync,
+		user: globals.game.user,
+		timeSince: globals.foundry.utils.timeSince,
+		Hooks: globals.Hooks,
+		settings: globals.game.settings,
 	};
 	rerollCost = {
 		chargePoolIdentifier: '',
@@ -142,19 +142,19 @@ beforeEach(() => {
 	};
 	rollerIsOwner = true;
 	requestIncomingAttackReaction.mockResolvedValue(true);
-	g.fromUuidSync = vi.fn((uuid: string) => DOCUMENTS[uuid]?.() ?? null);
-	g.game.user = { isGM: false, id: 'player' };
-	g.foundry.utils.timeSince = () => 'now';
-	g.Hooks = { on: vi.fn(() => 1), off: vi.fn() };
-	g.game.settings = { get: (_scope: string, key: string) => key !== 'autoExpandRolls' };
+	globals.fromUuidSync = vi.fn((uuid: string) => DOCUMENTS[uuid]?.() ?? null);
+	globals.game.user = { isGM: false, id: 'player' };
+	globals.foundry.utils.timeSince = () => 'now';
+	globals.Hooks = { on: vi.fn(() => 1), off: vi.fn() };
+	globals.game.settings = { get: (_scope: string, key: string) => key !== 'autoExpandRolls' };
 });
 
 afterEach(() => {
-	g.fromUuidSync = previous.fromUuidSync;
-	g.game.user = previous.user;
-	g.foundry.utils.timeSince = previous.timeSince;
-	g.Hooks = previous.Hooks;
-	g.game.settings = previous.settings;
+	globals.fromUuidSync = previous.fromUuidSync;
+	globals.game.user = previous.user;
+	globals.foundry.utils.timeSince = previous.timeSince;
+	globals.Hooks = previous.Hooks;
+	globals.game.settings = previous.settings;
 });
 
 describe('rerolls on check cards', () => {
@@ -172,7 +172,7 @@ describe('rerolls on check cards', () => {
 
 	it('shows the button to the GM when the GM does not own the roller', () => {
 		rollerIsOwner = false;
-		g.game.user = { isGM: true, id: 'gm' };
+		globals.game.user = { isGM: true, id: 'gm' };
 		renderSave();
 
 		expect(rerollButton()).not.toBeNull();
