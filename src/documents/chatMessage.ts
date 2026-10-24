@@ -1701,6 +1701,7 @@ class NimbleChatMessage extends ChatMessage {
 			},
 		} as Record<string, unknown>);
 
+		await showDiceAnimation(newRoll, this.id ?? undefined);
 		await this.#followChargeRecovery(recoveryChange);
 		await this.#runAutomaticReroll(rerolls.automatic, entries, critTriggers, context);
 	}
