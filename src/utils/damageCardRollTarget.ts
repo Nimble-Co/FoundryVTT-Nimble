@@ -93,7 +93,7 @@ function damageRollContext(
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
-		delivery: card.delivery(),
+		roll: { kind: 'attack', delivery: card.delivery() },
 		outcome: { isCritical: outcome.isCritical, isMiss: outcome.isMiss },
 		forcedMiss,
 	};

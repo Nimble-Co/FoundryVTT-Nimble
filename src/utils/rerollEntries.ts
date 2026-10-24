@@ -1,5 +1,4 @@
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
-import type { AttackDelivery } from './attackDelivery.js';
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
@@ -9,6 +8,7 @@ import {
 } from './incomingReactionEntry.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
+import type { RollToReroll } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
 
@@ -25,7 +25,7 @@ interface RerollRuleLike {
 	discardedCritTriggers?: boolean;
 	oncePerAttack?: boolean;
 	rerollCost?: RerollCost;
-	offersRerollOn?: (context: { side: RerollSide; delivery: AttackDelivery }) => boolean;
+	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
 	rerollChanges?: () => RerollChanges;
 }
 
@@ -45,10 +45,10 @@ interface RerollRollContext {
 	attacker: RerollingActor | null | undefined;
 	/** The roll's targets in card order. Only the first one's rules give entries. */
 	targets: RerollTarget[];
-	delivery: AttackDelivery;
-	/** Null before the roll is made. */
+	roll: RollToReroll;
+	/** Attacks only. Null before the roll is made. */
 	outcome: AttackOutcomeView | null;
-	/** A forced miss stays a miss on any reroll. */
+	/** Attacks only. A forced miss stays a miss on any reroll. */
 	forcedMiss: boolean;
 }
 
@@ -66,6 +66,14 @@ type UsableReroll =
 	| { ok: false; reason: 'unavailable' | 'forcedMiss' };
 
 const UNAVAILABLE: UsableReroll = { ok: false, reason: 'unavailable' };
+
+const NO_OUTCOME: RerollRollOutcome = { outcome: null, forcedMiss: false };
+
+/** The roll's outcome as the gate reads it. A check has none. */
+function attackOutcome(context: RerollRollContext): RerollRollOutcome {
+	if (context.roll.kind !== 'attack') return NO_OUTCOME;
+	return { outcome: context.outcome, forcedMiss: context.forcedMiss };
+}
 
 function outcomeAllows(
 	trigger: RerollTrigger | null | undefined,
@@ -103,7 +111,9 @@ function collectRerollEntries(context: RerollRollContext): {
 	automatic: AutomaticReroll[];
 } {
 	const result = { manual: [] as IncomingReactionEntry[], automatic: [] as AutomaticReroll[] };
-	if (context.forcedMiss) return result;
+	const outcome = attackOutcome(context);
+	if (outcome.forcedMiss) return result;
+	const isAttack = context.roll.kind === 'attack';
 
 	for (const side of ['roller', 'target'] as const) {
 		const { actor, targetTokenUuid } = rollingActorFor(side, context);
@@ -112,8 +122,9 @@ function collectRerollEntries(context: RerollRollContext): {
 
 		for (const rule of actor.rules) {
 			if (rule?.type !== REROLL_RULE_TYPE) continue;
-			if (rule.offersRerollOn?.({ side, delivery: context.delivery }) !== true) continue;
-			if (!outcomeAllows(rule.outcome, context)) continue;
+			if (rule.offersRerollOn?.({ side, roll: context.roll }) !== true) continue;
+			const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
+			if (!outcomeAllows(trigger, outcome)) continue;
 
 			const entry: IncomingReactionEntry = {
 				id: foundry.utils.randomID(),
@@ -127,8 +138,8 @@ function collectRerollEntries(context: RerollRollContext): {
 				ruleId: rule.id ?? '',
 				itemUuid: rule.item?.uuid ?? '',
 				used: false,
-				outcomeTrigger: rule.outcome ?? 'always',
-				oncePerAttack: rule.oncePerAttack === true,
+				outcomeTrigger: trigger,
+				oncePerAttack: isAttack && rule.oncePerAttack === true,
 			};
 
 			if (rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
@@ -249,12 +260,14 @@ function usableRerollEntry(
 	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
 	if (!rule || !actor || !entry.side) return UNAVAILABLE;
 	if (!isOnSide(entry, entry.side, context)) return UNAVAILABLE;
-	if (rule.oncePerAttack === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
-	if (rule.offersRerollOn?.({ side: entry.side, delivery: context.delivery }) !== true) {
+	const isAttack = context.roll.kind === 'attack';
+	if (isAttack && rule.oncePerAttack === true && ruleUsedOnCard(entry, cardEntries)) {
 		return UNAVAILABLE;
 	}
-	if (context.outcome && !rerollTriggerMatches(rule.outcome, context.outcome)) return UNAVAILABLE;
-	if (context.forcedMiss) return { ok: false, reason: 'forcedMiss' };
+	if (rule.offersRerollOn?.({ side: entry.side, roll: context.roll }) !== true) return UNAVAILABLE;
+	const { outcome, forcedMiss } = attackOutcome(context);
+	if (outcome && !rerollTriggerMatches(rule.outcome, outcome)) return UNAVAILABLE;
+	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
 	return { ok: true, rule, actor };
 }
 

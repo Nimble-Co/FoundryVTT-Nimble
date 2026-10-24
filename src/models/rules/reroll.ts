@@ -1,4 +1,4 @@
-import { type AttackDelivery, matchesAttackDelivery } from '../../utils/attackDelivery.js';
+import { matchesAttackDelivery } from '../../utils/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
 	HEROIC_REACTIONS,
@@ -12,6 +12,7 @@ import {
 } from '../../utils/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/rerollCost.js';
 import type { RerollChanges } from '../../utils/rerollOptions.js';
+import type { RollToReroll } from '../../utils/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -194,10 +195,10 @@ declare namespace RerollRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-/** Which side of an attack is asking, and how the attack is delivered. */
+/** Which side of the roll is asking, and which roll it is. */
 interface RerollOfferContext {
 	side: RerollSide;
-	delivery: AttackDelivery;
+	roll: RollToReroll;
 }
 
 /**
@@ -294,15 +295,16 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 
 	/**
-	 * Whether this rule lets `context.side` reroll an attack delivered that
-	 * way, now. The outcome is checked by the caller against the roll.
+	 * Whether this rule lets `context.side` reroll this roll now. The outcome
+	 * of an attack is checked by the caller against the roll.
 	 */
 	offersRerollOn(context: RerollOfferContext): boolean {
 		if (!this.item.isEmbedded) return false;
 		if (!this.test()) return false;
-		if (!this.rolls?.includes('attack')) return false;
+		const { roll } = context;
+		if (roll.kind !== 'attack' || !this.rolls?.includes('attack')) return false;
 		if (this.usedBy !== context.side) return false;
-		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return false;
+		if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
 		return canPayRerollCost(this.actor, this.rerollCost);
 	}
 

@@ -216,7 +216,10 @@ describe('resolveRerollReaction', () => {
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');
 
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			side: 'target',
+			roll: { kind: 'attack', delivery: 'melee' },
+		});
 		const payload = updatePayload(message);
 		expect(payload.system.activation.effects[0].discardedRoll).toEqual(serializedRoll());
 		expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
