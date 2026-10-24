@@ -477,14 +477,17 @@ describe('usableRerollEntry', () => {
 	});
 
 	it('gives the live rule and actor for an entry that can be used', () => {
-		expect(usableRerollEntry(entry(), card())).toEqual({ ok: true, rule, actor: target });
+		expect(usableRerollEntry(entry(), card(), [])).toEqual({ ok: true, rule, actor: target });
 		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
 	});
 
 	it('lets the attacker use a roller entry', () => {
 		rule = rerollRule({ usedBy: 'roller' });
 		useWorld();
-		expect(usableRerollEntry(entry(roller), card())).toMatchObject({ ok: true, actor: attacker });
+		expect(usableRerollEntry(entry(roller), card(), [])).toMatchObject({
+			ok: true,
+			actor: attacker,
+		});
 	});
 
 	it('lets a target entry be used while its token is any of the targets', () => {
@@ -492,7 +495,7 @@ describe('usableRerollEntry', () => {
 			{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.other') },
 			{ tokenUuid: TOKEN, actor: target },
 		];
-		expect(usableRerollEntry(entry(), card({ targets }))).toMatchObject({ ok: true });
+		expect(usableRerollEntry(entry(), card({ targets }), [])).toMatchObject({ ok: true });
 	});
 
 	type Refusal = [string, () => IncomingReactionEntry, () => RerollRollContext, string];
@@ -581,7 +584,46 @@ describe('usableRerollEntry', () => {
 		],
 	])('refuses %s', (_name, makeEntry, makeContext, reason) => {
 		const stamped = makeEntry();
-		expect(usableRerollEntry(stamped, makeContext())).toEqual({ ok: false, reason });
+		expect(usableRerollEntry(stamped, makeContext(), [stamped])).toEqual({ ok: false, reason });
+	});
+
+	describe('once per attack', () => {
+		const usedBefore = () => entry({ id: 'entry-0', used: true });
+
+		it('refuses a waiting entry when its live rule is once per attack and was used', () => {
+			rule = rerollRule({ oncePerRoll: true });
+			useWorld();
+			const waiting = entry({ oncePerRoll: false });
+			expect(usableRerollEntry(waiting, card(), [usedBefore(), waiting])).toEqual({
+				ok: false,
+				reason: 'unavailable',
+			});
+		});
+
+		it('lets the entry be used when the live rule is no longer once per attack', () => {
+			const waiting = entry({ oncePerRoll: true });
+			expect(usableRerollEntry(waiting, card(), [usedBefore(), waiting])).toMatchObject({
+				ok: true,
+			});
+		});
+
+		it('lets the entry be used when no entry of the same rule was used', () => {
+			rule = rerollRule({ oncePerRoll: true });
+			useWorld();
+			const waiting = entry();
+			const otherRule = entry({ id: 'entry-0', used: true, ruleId: 'rule-2' });
+			const otherActor = entry({ id: 'entry-x', used: true, actorUuid: 'Actor.other' });
+			expect(usableRerollEntry(waiting, card(), [otherRule, otherActor, waiting])).toMatchObject({
+				ok: true,
+			});
+		});
+
+		it('lets the first entry of a once per attack rule be used', () => {
+			rule = rerollRule({ oncePerRoll: true });
+			useWorld();
+			const waiting = entry();
+			expect(usableRerollEntry(waiting, card(), [waiting])).toMatchObject({ ok: true });
+		});
 	});
 });
 

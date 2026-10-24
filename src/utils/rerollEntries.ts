@@ -222,15 +222,32 @@ function isOnSide(entry: IncomingReactionEntry, side: RerollSide, context: Rerol
 	return target?.actor?.uuid === entry.actorUuid;
 }
 
+/** Whether another entry of the same rule is already used on the card. */
+function ruleUsedOnCard(entry: IncomingReactionEntry, cardEntries: IncomingReactionEntry[]) {
+	const key = rerollRuleKey(entry);
+	return cardEntries.some(
+		(other) =>
+			other.id !== entry.id &&
+			other.kind === 'reroll' &&
+			other.used &&
+			rerollRuleKey(other) === key,
+	);
+}
+
 /**
- * Check a stamped entry again from its live rule, on the client that uses it.
- * An entry with no side is not usable.
+ * Check a stamped entry again from its live rule and the card's entries, on
+ * the client that uses it. An entry with no side is not usable.
  */
-function usableRerollEntry(entry: IncomingReactionEntry, context: RerollRollContext): UsableReroll {
+function usableRerollEntry(
+	entry: IncomingReactionEntry,
+	context: RerollRollContext,
+	cardEntries: IncomingReactionEntry[],
+): UsableReroll {
 	const rule = findRerollRule(entry);
 	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
 	if (!rule || !actor || !entry.side) return UNAVAILABLE;
 	if (!isOnSide(entry, entry.side, context)) return UNAVAILABLE;
+	if (rule.oncePerRoll === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
 	if (rule.offersRerollOn?.({ side: entry.side, delivery: context.delivery }) !== true) {
 		return UNAVAILABLE;
 	}
