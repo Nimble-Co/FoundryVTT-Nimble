@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import {
 	applyRecoveryTriggersToPools,
 	areChargePoolMapsEqual,
@@ -6,6 +7,7 @@ import {
 	findConflictingVariablePools,
 	getChargeConsumers,
 	getChargePoolMapFromActor,
+	getChargePoolRollData,
 } from './helpers.js';
 import type {
 	CharacterActorLike,
@@ -846,5 +848,93 @@ describe('a pool whose maximum only appears later', () => {
 
 		expect(pool.max).toBe(3);
 		expect(pool.current).toBe(0);
+	});
+});
+
+describe('getChargePoolRollData', () => {
+	const { flagScope, flagKey } = ChargePoolRuleConfig;
+
+	function storedFlags(pools: Record<string, Record<string, unknown>>) {
+		return { [flagScope]: { [flagKey]: pools } };
+	}
+
+	it('gives the die face count of an actor-scope pool, keyed by identifier', () => {
+		const actor = createMockActor(
+			[],
+			{},
+			storedFlags({
+				'actor:combat-dice': { identifier: 'combat-dice', current: 2, max: 3, dieSize: 'd8' },
+			}),
+		);
+
+		expect(getChargePoolRollData(actor)).toEqual({ 'combat-dice': { faces: 8 } });
+	});
+
+	it('gives the die face count of an item-scope pool', () => {
+		const actor = createMockActor([
+			createMockItem(
+				'item-1',
+				'Feature',
+				[],
+				storedFlags({ 'mana-dice': { current: 1, max: 2, dieSize: 'd10' } }),
+			),
+		]);
+
+		expect(getChargePoolRollData(actor)).toEqual({ 'mana-dice': { faces: 10 } });
+	});
+
+	it('gives no faces for a pool with no die', () => {
+		const actor = createMockActor(
+			[createMockItem('item-1', 'Feature', [], storedFlags({ uses: { current: 1, max: 1 } }))],
+			{},
+			storedFlags({
+				'actor:charges': { identifier: 'charges', current: 1, max: 1, dieSize: null },
+			}),
+		);
+
+		expect(getChargePoolRollData(actor)).toEqual({});
+	});
+
+	it('reads only stored state and never resolves pool formulas', () => {
+		const actor = createMockActor(
+			[
+				createMockItem('item-1', 'Feature', [
+					{ type: 'chargePool', identifier: 'combat-dice', max: '@level', dieSize: 'd6' },
+				]),
+			],
+			{ level: 3 },
+		);
+
+		expect(getChargePoolRollData(actor)).toEqual({});
+		expect(actor.getRollData).not.toHaveBeenCalled();
+	});
+
+	it('reads a die size that a modifyPool rule changed once sync stores it', () => {
+		const rules: MockRule[] = [
+			{
+				type: 'chargePool',
+				identifier: 'combat-dice',
+				scope: 'actor',
+				max: '3',
+				dieSize: 'd6',
+			},
+			{ type: 'modifyPool', poolType: 'charge', poolIdentifier: 'combat-dice', dieSize: 'd8' },
+		];
+		const staleFlags = storedFlags({
+			'actor:combat-dice': { identifier: 'combat-dice', current: 3, max: 3, dieSize: 'd6' },
+		});
+		const stale = createMockActor([createMockItem('item-1', 'Feature', rules)], {}, staleFlags);
+
+		const synced = buildEffectiveChargePoolMap(stale);
+		expect(synced['actor:combat-dice'].dieSize).toBe('d8');
+
+		const stored = createMockActor(
+			[createMockItem('item-1', 'Feature', rules)],
+			{},
+			storedFlags(synced as unknown as Record<string, Record<string, unknown>>),
+		);
+
+		expect(getChargePoolRollData(stale)).toEqual({ 'combat-dice': { faces: 6 } });
+		expect(getChargePoolRollData(stored)).toEqual({ 'combat-dice': { faces: 8 } });
 	});
 });

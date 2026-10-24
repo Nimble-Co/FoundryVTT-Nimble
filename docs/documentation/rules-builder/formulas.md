@@ -22,6 +22,7 @@ References start with `@` and are filled in from the character carrying the item
 | `@key` | The highest modifier among the character's class key stats, handy for class features that should work for every subclass build. |
 | `@strengthSave`, `@dexteritySave`, `@intelligenceSave`, `@willSave` | Saving throw modifiers. |
 | `@arcana`, `@examination`, `@finesse`, `@influence`, `@insight`, `@lore`, `@might`, `@naturecraft`, `@perception`, `@stealth` | Skill modifiers. |
+| `@pools.<identifier>.faces` | The face count of the die of the charge pool with that identifier, for example 8 for a d8. Only for pools with a die. `1d@pools.combat-dice.faces` rolls one die of that size. |
 
 You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only `@level` and the save shortcuts work, so use full paths for the other monster values. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
 

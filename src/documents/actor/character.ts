@@ -14,6 +14,7 @@ import type {
 import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import { getChargePoolRollData } from '#utils/chargePool/helpers.js';
 import collectHeldPicks, { countHeldPicks, type HeldFeature } from '#utils/collectHeldPicks.ts';
 import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
@@ -1254,6 +1255,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		data.key = highestKeyAbility;
 
 		data.level = this.levels.character ?? 1;
+
+		data.pools = getChargePoolRollData(this);
 
 		// NOTE: Pool max bonuses (e.g. "+1 Max Combat Die") are applied directly in the
 		// charge-pool max computation (see getChargePoolDefinitions), which sums the
