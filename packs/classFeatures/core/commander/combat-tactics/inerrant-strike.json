@@ -18,6 +18,9 @@
 				"rolls": [
 					"attack"
 				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
 				"usedBy": "roller",
 				"outcome": "miss",
 				"attackDelivery": "any",
