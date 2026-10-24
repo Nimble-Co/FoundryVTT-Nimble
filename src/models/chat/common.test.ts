@@ -112,7 +112,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			itemUuid: 'Actor.a.Item.i',
 			used: false,
 			side: 'target',
-			oncePerRoll: false,
+			oncePerAttack: false,
 			rerollTrigger: 'always',
 			rerollWithDisadvantage: false,
 			outcomeTrigger: 'always',

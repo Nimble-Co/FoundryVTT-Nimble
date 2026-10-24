@@ -290,7 +290,7 @@ describe('resolveRerollReaction', () => {
 	});
 
 	it('refuses a waiting entry of a once per attack rule that was already used', async () => {
-		const { target } = setupWorld({ oncePerRoll: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const { target } = setupWorld({ oncePerAttack: true, rerollCost: { ...FREE, woundCost: 1 } });
 		const message = createMessage({
 			entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
 		});
@@ -776,7 +776,7 @@ describe('resolveRerollReaction', () => {
 		});
 
 		it('is false for a once per attack rule when the card has a used entry of it', () => {
-			setupWorld({ oncePerRoll: true });
+			setupWorld({ oncePerAttack: true });
 			const message = createMessage({
 				entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
 			});

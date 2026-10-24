@@ -144,7 +144,7 @@ export const incomingReactions = () => ({
 				initial: null,
 				choices: [...REROLL_SIDES],
 			}),
-			oncePerRoll: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			// Legacy forceReroll fields, kept so old cards validate.
 			rerollTrigger: new fields.StringField({
 				required: false,

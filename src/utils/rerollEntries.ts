@@ -23,7 +23,7 @@ interface RerollRuleLike {
 	outcome?: RerollTrigger;
 	automatic?: boolean;
 	discardedCritTriggers?: boolean;
-	oncePerRoll?: boolean;
+	oncePerAttack?: boolean;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; delivery: AttackDelivery }) => boolean;
 	rerollChanges?: () => RerollChanges;
@@ -128,7 +128,7 @@ function collectRerollEntries(context: RerollRollContext): {
 				itemUuid: rule.item?.uuid ?? '',
 				used: false,
 				outcomeTrigger: rule.outcome ?? 'always',
-				oncePerRoll: rule.oncePerRoll === true,
+				oncePerAttack: rule.oncePerAttack === true,
 			};
 
 			if (rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
@@ -162,21 +162,36 @@ function rerollRuleKeys(entries: IncomingReactionEntry[]): Set<string> {
 	return new Set(entries.filter((entry) => entry.kind === 'reroll').map(rerollRuleKey));
 }
 
+/** Whether another entry of the same rule is already used on the card. */
+function ruleUsedOnCard(
+	entry: IncomingReactionEntry,
+	cardEntries: IncomingReactionEntry[],
+): boolean {
+	const key = rerollRuleKey(entry);
+	return cardEntries.some(
+		(other) =>
+			other.id !== entry.id &&
+			other.kind === 'reroll' &&
+			other.used &&
+			rerollRuleKey(other) === key,
+	);
+}
+
 /**
  * The card's entries with the new reroll buttons added. A rule that already
  * has an entry waiting is not added twice. A rule that was used gets a new
- * entry, unless the new entry has `oncePerRoll`.
+ * entry, unless the new entry has `oncePerAttack`.
  */
 function withNewRerollEntries(
 	entries: IncomingReactionEntry[],
 	found: IncomingReactionEntry[],
 ): IncomingReactionEntry[] {
 	const waiting = rerollRuleKeys(entries.filter((entry) => !entry.used));
-	const used = rerollRuleKeys(entries.filter((entry) => entry.used));
-	const added = found.filter((entry) => {
-		const key = rerollRuleKey(entry);
-		return !waiting.has(key) && !(entry.oncePerRoll === true && used.has(key));
-	});
+	const added = found.filter(
+		(entry) =>
+			!waiting.has(rerollRuleKey(entry)) &&
+			!(entry.oncePerAttack === true && ruleUsedOnCard(entry, entries)),
+	);
 	return [...entries, ...added];
 }
 
@@ -221,18 +236,6 @@ function isOnSide(entry: IncomingReactionEntry, side: RerollSide, context: Rerol
 	return target?.actor?.uuid === entry.actorUuid;
 }
 
-/** Whether another entry of the same rule is already used on the card. */
-function ruleUsedOnCard(entry: IncomingReactionEntry, cardEntries: IncomingReactionEntry[]) {
-	const key = rerollRuleKey(entry);
-	return cardEntries.some(
-		(other) =>
-			other.id !== entry.id &&
-			other.kind === 'reroll' &&
-			other.used &&
-			rerollRuleKey(other) === key,
-	);
-}
-
 /**
  * Check a stamped entry again from its live rule and the card's entries, on
  * the client that uses it. An entry with no side is not usable.
@@ -246,7 +249,7 @@ function usableRerollEntry(
 	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
 	if (!rule || !actor || !entry.side) return UNAVAILABLE;
 	if (!isOnSide(entry, entry.side, context)) return UNAVAILABLE;
-	if (rule.oncePerRoll === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
+	if (rule.oncePerAttack === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
 	if (rule.offersRerollOn?.({ side: entry.side, delivery: context.delivery }) !== true) {
 		return UNAVAILABLE;
 	}

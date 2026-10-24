@@ -99,13 +99,13 @@ describe('collectRerollEntries', () => {
 		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
 	});
 
-	it('stamps the once-per-roll flag of the rule on its entry', () => {
-		const once = rerollRule({ id: 'once', usedBy: 'roller', oncePerRoll: true });
+	it('stamps the once-per-attack flag of the rule on its entry', () => {
+		const once = rerollRule({ id: 'once', usedBy: 'roller', oncePerAttack: true });
 		const again = rerollRule({ id: 'again', usedBy: 'roller' });
 		const { manual } = collectRerollEntries(
 			context({ attacker: actor('Actor.hero', [once, again]) }),
 		);
-		expect(manual.map((entry) => entry.oncePerRoll)).toEqual([true, false]);
+		expect(manual.map((entry) => entry.oncePerAttack)).toEqual([true, false]);
 	});
 
 	it('ties a target entry to the attack target token', () => {
@@ -360,27 +360,27 @@ describe('withNewRerollEntries', () => {
 		expect(result.map((entry) => entry.id)).toEqual(['spend', 'new']);
 	});
 
-	it('adds no new entry for a once-per-roll rule whose entry was used', () => {
-		const used = stamped({ id: 'used', used: true, oncePerRoll: true });
-		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerRoll: true })]);
+	it('adds no new entry for a once-per-attack rule whose entry was used', () => {
+		const used = stamped({ id: 'used', used: true, oncePerAttack: true });
+		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerAttack: true })]);
 		expect(result.map((entry) => entry.id)).toEqual(['used']);
 	});
 
 	it('reads the flag from the new entry, so the live rule decides', () => {
 		const used = stamped({ id: 'used', used: true });
-		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerRoll: true })]);
+		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerAttack: true })]);
 		expect(result.map((entry) => entry.id)).toEqual(['used']);
 	});
 
-	it('still adds a new entry for a used rule with once per roll off', () => {
-		const used = stamped({ id: 'used', used: true, oncePerRoll: true });
-		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerRoll: false })]);
+	it('still adds a new entry for a used rule with once per attack off', () => {
+		const used = stamped({ id: 'used', used: true, oncePerAttack: true });
+		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerAttack: false })]);
 		expect(result.map((entry) => entry.id)).toEqual(['used', 'new']);
 	});
 
-	it('does not stop another rule when a once-per-roll rule was used', () => {
-		const used = stamped({ id: 'used', used: true, oncePerRoll: true });
-		const other = stamped({ id: 'other', ruleId: 'rule-2', oncePerRoll: true });
+	it('does not stop another rule when a once-per-attack rule was used', () => {
+		const used = stamped({ id: 'used', used: true, oncePerAttack: true });
+		const other = stamped({ id: 'other', ruleId: 'rule-2', oncePerAttack: true });
 		const result = withNewRerollEntries([used], [other]);
 		expect(result.map((entry) => entry.id)).toEqual(['used', 'other']);
 	});
@@ -581,9 +581,9 @@ describe('usableRerollEntry', () => {
 		const usedBefore = () => entry({ id: 'entry-0', used: true });
 
 		it('refuses a waiting entry when its live rule is once per attack and was used', () => {
-			rule = rerollRule({ oncePerRoll: true });
+			rule = rerollRule({ oncePerAttack: true });
 			useWorld();
-			const waiting = entry({ oncePerRoll: false });
+			const waiting = entry({ oncePerAttack: false });
 			expect(usableRerollEntry(waiting, card(), [usedBefore(), waiting])).toEqual({
 				ok: false,
 				reason: 'unavailable',
@@ -591,14 +591,14 @@ describe('usableRerollEntry', () => {
 		});
 
 		it('lets the entry be used when the live rule is no longer once per attack', () => {
-			const waiting = entry({ oncePerRoll: true });
+			const waiting = entry({ oncePerAttack: true });
 			expect(usableRerollEntry(waiting, card(), [usedBefore(), waiting])).toMatchObject({
 				ok: true,
 			});
 		});
 
 		it('lets the entry be used when no entry of the same rule was used', () => {
-			rule = rerollRule({ oncePerRoll: true });
+			rule = rerollRule({ oncePerAttack: true });
 			useWorld();
 			const waiting = entry();
 			const otherRule = entry({ id: 'entry-0', used: true, ruleId: 'rule-2' });
@@ -609,7 +609,7 @@ describe('usableRerollEntry', () => {
 		});
 
 		it('lets the first entry of a once per attack rule be used', () => {
-			rule = rerollRule({ oncePerRoll: true });
+			rule = rerollRule({ oncePerAttack: true });
 			useWorld();
 			const waiting = entry();
 			expect(usableRerollEntry(waiting, card(), [waiting])).toMatchObject({ ok: true });
