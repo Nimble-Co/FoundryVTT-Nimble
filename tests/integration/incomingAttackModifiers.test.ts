@@ -1,7 +1,8 @@
 /**
  * Live regression tests for the modifyIncomingAttack rule merged from dev:
- * target-side attack modifiers (disadvantage, autoMiss), automatic force
- * rerolls with outcome triggers, and the interactive reactions (force reroll,
+ * target-side attack modifiers (disadvantage, autoMiss), automatic rerolls
+ * (`reroll` rule and force reroll) with outcome triggers, and the interactive
+ * reactions (force reroll,
  * Interpose-style redirect) that render as buttons on the attack chat card.
  *
  * Attacks are posted through the real activation flow against real tokens on
@@ -34,7 +35,7 @@ const TEST_PREFIX = 'V14 Incoming Attack';
 
 interface ReactionEntryLike {
 	id: string;
-	kind: 'forceReroll' | 'redirectToSelf';
+	kind: 'forceReroll' | 'reroll' | 'redirectToSelf';
 	source: 'baseline' | 'rule';
 	label: string;
 	tokenUuid: string | null;
@@ -49,6 +50,11 @@ interface AttackMessageLike {
 		isCritical: boolean;
 		targets: string[];
 		incomingReactions: ReactionEntryLike[];
+		rerolls: Array<{
+			label: string;
+			previous: { value: number; outcome: string | null } | null;
+			next: { value: number; outcome: string | null } | null;
+		}>;
 		activation: { effects: Array<Record<string, unknown>> };
 	};
 }
@@ -237,23 +243,33 @@ describe('incoming attack modifiers', () => {
 		);
 	}, 60_000);
 
-	test("automatic forceReroll with the 'hit' trigger rerolls a hit", async () => {
+	test("an automatic reroll rule with the 'hit' outcome replaces a hit with a new roll", async () => {
 		await withDefenderRules(
 			[
 				{
-					type: 'modifyIncomingAttack',
-					modifier: 'forceReroll',
+					type: 'reroll',
+					usedBy: 'target',
+					outcome: 'hit',
 					automatic: true,
-					rerollTrigger: 'hit',
 					label: 'Stubborn Defense',
 				},
 			],
 			async () => {
 				const message = await attack(4);
-				expect(damageNode(message)?.discardedRoll).toBeTruthy();
+				const node = damageNode(message);
+				expect(node?.discardedRoll).toBeTruthy();
+				expect(node?.roll).not.toEqual(node?.discardedRoll);
 				expectRerollDropsSetPrimaryDie(message, 4);
+
+				expect(message.system.rerolls).toHaveLength(1);
+				const [reroll] = message.system.rerolls;
+				expect(reroll?.label).toBe('Stubborn Defense');
+				expect(reroll?.previous?.value).toBe(4);
+				expect(reroll?.next?.value).toBeGreaterThanOrEqual(1);
+				expect(reroll?.next?.value).toBeLessThanOrEqual(8);
+
 				const entry = message.system.incomingReactions.find(
-					(candidate) => candidate.kind === 'forceReroll',
+					(candidate) => candidate.kind === 'reroll',
 				);
 				expect(entry?.used).toBe(true);
 				expect(entry?.label).toBe('Stubborn Defense');
