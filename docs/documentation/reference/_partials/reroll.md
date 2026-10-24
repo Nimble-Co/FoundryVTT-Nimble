@@ -25,6 +25,6 @@ The button shows only while the condition holds, and its cost reads "1 Wound". T
 
 After a reroll, a feature with uses left shows a **Reroll again** button on the same card. Set **Only once per attack** to stop this: the feature then rerolls an attack one time only.
 
-**Changes to the new roll** add to the reroll: one more advantage or disadvantage, a number added to the Primary Die, or extra damage. The new roll keeps the first roll's advantage and disadvantage.
+**Changes to the new roll** add to the reroll: one more advantage or disadvantage, a number added to the Primary Die, or extra damage. The new roll keeps the first roll's advantage and disadvantage. A later reroll of the same attack, from any feature, keeps these changes too.
 
 **Rerolls by itself** is for text with no choice, such as "the attack is rerolled". The attack is rolled again at once, with no button. With **Feature Effects** off, a button shows instead. **The discarded crit still triggers when-crit abilities** keeps the crit's triggers when the first roll was a crit: abilities that react to a crit still react, but damage and effects follow the new roll.
