@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import localize from '../utils/localize.js';
+import { rollingRerollOf, stopRerollRolling } from '../utils/rerollRolling.svelte.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 /** Reroll rule entries on save, skill check and ability check cards. */
@@ -197,6 +198,40 @@ describe('a reroll on a save card', () => {
 		expect(showForRoll.mock.invocationCallOrder[0]).toBeLessThan(
 			message.update.mock.invocationCallOrder[0],
 		);
+	});
+
+	it('shows every client a tumbling d20 in place of the check while the dice roll', async () => {
+		setupWorld();
+		const message = createSaveCard();
+		Object.defineProperty(message, 'id', { value: 'message-1' });
+		const emit = vi.fn();
+		let land = () => {};
+		const showForRoll = vi.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					land = resolve;
+				}),
+		);
+		const game = globals().game as { dice3d?: unknown; socket?: unknown };
+		game.dice3d = { showForRoll, isEnabled: () => true };
+		game.socket = { emit };
+
+		const rerolled = message.resolveRerollReaction('entry-1', 'gm-user');
+		try {
+			await vi.waitFor(() => expect(rollingRerollOf('message-1')).not.toBeNull());
+			expect(rollingRerollOf('message-1')).toEqual({ slot: 'check', faces: 20 });
+			expect(emit).toHaveBeenCalledWith('system.nimble', {
+				type: 'rerollRolling',
+				messageId: 'message-1',
+				roll: { slot: 'check', faces: 20 },
+			});
+		} finally {
+			land();
+			await rerolled;
+			stopRerollRolling('message-1', false);
+			delete game.dice3d;
+			delete game.socket;
+		}
 	});
 
 	it('lets the owner of the roller use it through the GM', async () => {

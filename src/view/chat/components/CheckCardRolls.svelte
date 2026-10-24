@@ -2,6 +2,8 @@
 	import type { CheckCardRollsProps } from '#types/components/CheckCardRolls.d.ts';
 
 	import { setContext, untrack } from 'svelte';
+	import { CHECK_ROLL_SLOT } from '#utils/checkCardRollTarget.ts';
+	import { rerollJustLanded, rollingRerollOf } from '#utils/rerollRolling.svelte.ts';
 	import { getRollModeSummary } from '../../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
@@ -22,6 +24,11 @@
 		},
 	);
 	let rolls = $derived(messageDocument.reactive.rolls);
+	let rolling = $derived.by(() => {
+		const inAir = rollingRerollOf(messageDocument.id);
+		return inAir?.slot === CHECK_ROLL_SLOT ? inAir : null;
+	});
+	let landed = $derived(rerollJustLanded(messageDocument.id, CHECK_ROLL_SLOT));
 </script>
 
 {#snippet rerollButton()}
@@ -36,6 +43,8 @@
 		tooltip={prepareRollTooltip(system.actorType, system.permissions, roll)}
 		total={roll.total ?? 0}
 		action={index === 0 ? rerollButton : undefined}
+		rolling={index === 0 ? rolling : null}
+		landed={index === 0 && landed}
 	/>
 
 	{#if index === 0}

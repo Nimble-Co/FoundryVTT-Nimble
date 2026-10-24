@@ -73,7 +73,7 @@ A player sees only the buttons of the characters they own. The GM sees every gro
 
 A save, skill check or ability check card is one line, so its reroll is a small button at the right end of the roll. Only the owner of the one who rolled and the GM see it. Hover it to see the feature and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)", and click it to reroll. When two or more features can reroll the roll, the button opens a short list of them, each with its cost: click one to reroll with it. The arrow keys move through the list and Escape closes it.
 
-The button shows only while a feature can reroll the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before this version show no button.
+The button shows only while a feature can reroll the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. While the Dice So Nice dice are in the air, the roll on the card is a tumbling d20, as on an attack card. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before this version show no button.
 
 ## Spending dice from a card
 
