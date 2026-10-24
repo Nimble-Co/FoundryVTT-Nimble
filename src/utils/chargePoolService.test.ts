@@ -484,6 +484,7 @@ describe('ChargePoolService', () => {
 		expect(result.ok).toBe(true);
 		expect(result.consumption).toEqual([
 			{
+				poolId: 'actor:thoth',
 				poolLabel: 'Thrill of the Hunt',
 				previousValue: 2,
 				currentValue: 1,
@@ -495,6 +496,10 @@ describe('ChargePoolService', () => {
 					newValue: 4,
 				},
 			},
+		]);
+		expect(result.recoveryGiven).toEqual([
+			{ poolId: 'actor:thoth', trigger: 'onHit', change: 1 },
+			{ poolId: 'actor:thoth', trigger: 'onCriticalHit', change: 2 },
 		]);
 		expect(actor.update).toHaveBeenCalled();
 		expect(
@@ -575,6 +580,7 @@ describe('ChargePoolService', () => {
 		expect(result.ok).toBe(true);
 		expect(result.consumption).toEqual([
 			{
+				poolId: 'actor:focus',
 				poolLabel: 'Critical Battery',
 				previousValue: 2,
 				currentValue: 1,
@@ -582,6 +588,7 @@ describe('ChargePoolService', () => {
 				change: -1,
 			},
 			{
+				poolId: 'actor:surge',
 				poolLabel: 'Critical Battery',
 				previousValue: 0,
 				currentValue: 0,

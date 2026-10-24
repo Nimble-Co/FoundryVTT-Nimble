@@ -2,7 +2,7 @@
 	import { setContext, untrack } from 'svelte';
 	import DamageNode from './DamageNode.svelte';
 
-	let { messageDocument, node } = $props();
+	let { messageDocument, node, component: Node = DamageNode } = $props();
 
 	setContext(
 		'messageDocument',
@@ -10,4 +10,4 @@
 	);
 </script>
 
-<DamageNode {node} />
+<Node {node} />

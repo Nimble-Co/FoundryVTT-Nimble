@@ -46,6 +46,7 @@ interface NimbleDamageAppliedPayload {
 	card: ChatMessage | null;
 	isCritical: boolean;
 	isMiss: boolean;
+	discardedCritTriggers?: boolean;
 }
 
 interface NimbleSavePayload {
@@ -120,6 +121,7 @@ function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
 		card: payload.card,
 		isCritical: payload.isCritical,
 		isMiss: payload.isMiss,
+		discardedCritTriggers: payload.discardedCritTriggers === true,
 	};
 	void dispatch(payload.sourceActor, 'onItemUsed', context);
 	void dispatch(payload.targetActor, 'onAttackReceived', context);

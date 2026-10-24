@@ -65,3 +65,4 @@ export { Migration064ObjectSizeTypeChoices } from './Migration064ObjectSizeTypeC
 export { Migration065AuraOfZealJudgmentDie } from './Migration065AuraOfZealJudgmentDie.js';
 export { Migration066BanditParry } from './Migration066BanditParry.js';
 export { Migration067MovementPilots } from './Migration067MovementPilots.js';
+export { Migration068RerollRule } from './Migration068RerollRule.js';

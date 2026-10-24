@@ -2,6 +2,11 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 import localize from './localize.js';
+import {
+	type RollingReroll,
+	startRerollRolling,
+	stopRerollRolling,
+} from './rerollRolling.svelte.js';
 
 /**
  * Foundry system socket channel. Must be `system.<id>` to reach other clients,
@@ -11,6 +16,7 @@ import localize from './localize.js';
 const INCOMING_REACTION_SOCKET_NAME = `system.${SYSTEM_ID}`;
 const INCOMING_REACTION_REQUEST_TYPE = 'incomingAttackReaction';
 const INCOMING_REACTION_REJECTED_TYPE = 'incomingAttackReactionRejected';
+const REROLL_ROLLING_TYPE = 'rerollRolling';
 
 /**
  * Hook announcing that the GM refused an offer this client asked to use, so
@@ -38,6 +44,8 @@ type IncomingReactionRequest = {
 	userId: string;
 	/** spendPoolForDamage only */
 	selection?: PoolSpendSelection;
+	/** reroll only: the player confirmed using a heroic reaction already spent */
+	forceHeroicReaction?: boolean;
 };
 
 /** Why the GM refused, as a localization key the asking client renders. */
@@ -52,12 +60,14 @@ type IncomingReactionRejectedMessage = IncomingReactionRejection & {
 	type: typeof INCOMING_REACTION_REJECTED_TYPE;
 };
 
+type RerollRollingMessage = {
+	type: typeof REROLL_ROLLING_TYPE;
+	messageId: string;
+	/** Null when the dice stopped with no new result. */
+	roll: RollingReroll | null;
+};
+
 interface ReactionCapableMessage {
-	resolveForceRerollReaction?: (
-		entryId: string,
-		requestingUserId: string,
-		viaSocket?: boolean,
-	) => Promise<void>;
 	resolveRedirectReaction?: (
 		entryId: string,
 		requestingUserId: string,
@@ -68,6 +78,12 @@ interface ReactionCapableMessage {
 		requestingUserId: string,
 		selection: PoolSpendSelection,
 		viaSocket?: boolean,
+	) => Promise<void>;
+	resolveRerollReaction?: (
+		entryId: string,
+		requestingUserId: string,
+		viaSocket?: boolean,
+		forceHeroicReaction?: boolean,
 	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
 }
@@ -83,6 +99,7 @@ async function executeIncomingReaction(
 	requestingUserId: string,
 	viaSocket: boolean,
 	selection?: PoolSpendSelection,
+	forceHeroicReaction?: boolean,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -92,14 +109,19 @@ async function executeIncomingReaction(
 
 	// The executors revalidate (unused entry, ownership, rule still enabled, and
 	// — for socket-relayed requests — that the unauthenticated userId is not
-	// claiming GM identity).
-	if (entry.kind === 'forceReroll') {
-		await message.resolveForceRerollReaction?.(entryId, requestingUserId, viaSocket);
-	} else if (entry.kind === 'redirectToSelf') {
+	// claiming GM identity). A legacy kind has no executor and is ignored.
+	if (entry.kind === 'redirectToSelf') {
 		await message.resolveRedirectReaction?.(entryId, requestingUserId, viaSocket);
 	} else if (entry.kind === 'spendPoolForDamage') {
 		if (!selection) return;
 		await message.resolveSpendPoolForDamageOffer?.(entryId, requestingUserId, selection, viaSocket);
+	} else if (entry.kind === 'reroll') {
+		await message.resolveRerollReaction?.(
+			entryId,
+			requestingUserId,
+			viaSocket,
+			forceHeroicReaction === true,
+		);
 	}
 }
 
@@ -118,6 +140,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		request.userId,
 		true,
 		request.selection,
+		request.forceHeroicReaction === true,
 	);
 }
 
@@ -165,6 +188,28 @@ export function rejectIncomingAttackReaction(rejection: IncomingReactionRejectio
 	});
 }
 
+function applyRerollRolling(messageId: string, roll: RollingReroll | null): void {
+	if (roll) startRerollRolling(messageId, roll);
+	else stopRerollRolling(messageId, false);
+}
+
+function handleRerollRolling(payload: unknown): void {
+	const message = payload as Partial<RerollRollingMessage> | null;
+	if (typeof message?.messageId !== 'string' || !message.messageId) return;
+	const roll = message.roll;
+	if (roll && (typeof roll.slot !== 'string' || typeof roll.faces !== 'number')) return;
+	applyRerollRolling(message.messageId, roll ?? null);
+}
+
+/** Show a card's rolling reroll die on every client, or stop it with `null`. */
+export function broadcastRerollRolling(messageId: string, roll: RollingReroll | null): void {
+	applyRerollRolling(messageId, roll);
+	const socket = game.socket as
+		| { emit?: (eventName: string, payload: RerollRollingMessage) => void }
+		| undefined;
+	socket?.emit?.(INCOMING_REACTION_SOCKET_NAME, { type: REROLL_ROLLING_TYPE, messageId, roll });
+}
+
 let hasRegisteredIncomingReactionSocketListener = false;
 
 export function registerIncomingReactionSocketListener(): void {
@@ -180,6 +225,7 @@ export function registerIncomingReactionSocketListener(): void {
 		const type = (payload as { type?: string } | null)?.type;
 		if (type === INCOMING_REACTION_REQUEST_TYPE) void handleIncomingReactionRequest(payload);
 		else if (type === INCOMING_REACTION_REJECTED_TYPE) handleIncomingReactionRejected(payload);
+		else if (type === REROLL_ROLLING_TYPE) handleRerollRolling(payload);
 	});
 }
 
@@ -196,6 +242,7 @@ export async function requestIncomingAttackReaction(params: {
 	messageId: string;
 	entryId: string;
 	selection?: PoolSpendSelection;
+	forceHeroicReaction?: boolean;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
 
@@ -206,6 +253,7 @@ export async function requestIncomingAttackReaction(params: {
 			game.user.id,
 			false,
 			params.selection,
+			params.forceHeroicReaction,
 		);
 		return true;
 	}
@@ -225,6 +273,7 @@ export async function requestIncomingAttackReaction(params: {
 		entryId: params.entryId,
 		userId: game.user.id,
 		...(params.selection ? { selection: params.selection } : {}),
+		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
 	});
 	return true;
 }

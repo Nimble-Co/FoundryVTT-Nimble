@@ -8,4 +8,4 @@
 	let roll = $derived(node.roll);
 </script>
 
-<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} />
+<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} nodeId={node.parentNode} />

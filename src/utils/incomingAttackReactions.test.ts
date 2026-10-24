@@ -4,8 +4,8 @@ type ReactionModule = typeof import('./incomingAttackReactions.js');
 
 interface MockMessage {
 	system: { incomingReactions: Array<{ id: string; kind: string }> };
-	resolveForceRerollReaction: ReturnType<typeof vi.fn>;
 	resolveRedirectReaction: ReturnType<typeof vi.fn>;
+	resolveRerollReaction: ReturnType<typeof vi.fn>;
 }
 
 type TestGlobals = {
@@ -29,8 +29,8 @@ function globals(): TestGlobals {
 function createMessage(entries: Array<{ id: string; kind: string }>): MockMessage {
 	return {
 		system: { incomingReactions: entries },
-		resolveForceRerollReaction: vi.fn().mockResolvedValue(undefined),
 		resolveRedirectReaction: vi.fn().mockResolvedValue(undefined),
+		resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -70,6 +70,20 @@ beforeEach(() => {
 describe('requestIncomingAttackReaction', () => {
 	it('executes the reaction directly for a GM user without emitting a socket request', async () => {
 		const { requestIncomingAttackReaction } = await loadModule();
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await expect(
+			requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' }),
+		).resolves.toBe(true);
+
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, false);
+		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('does nothing, and does not throw, for a legacy forceReroll entry', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
 		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
 		setMessages({ 'message-1': message });
 		setUser({ id: 'gm-user', isGM: true });
@@ -78,8 +92,8 @@ describe('requestIncomingAttackReaction', () => {
 			requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' }),
 		).resolves.toBe(true);
 
-		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false);
-		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRedirectReaction).not.toHaveBeenCalled();
 	});
 
 	it('routes a redirectToSelf entry to resolveRedirectReaction for a GM user', async () => {
@@ -91,12 +105,46 @@ describe('requestIncomingAttackReaction', () => {
 		await requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' });
 
 		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false);
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+	});
+
+	it('routes a reroll entry to resolveRerollReaction with the heroic reaction answer', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			forceHeroicReaction: true,
+		});
+
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, true);
+	});
+
+	it('sends the heroic reaction answer of a player reroll to the GM', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			forceHeroicReaction: true,
+		});
+
+		expect(globals().game.socket.emit).toHaveBeenCalledWith('system.nimble', {
+			type: 'incomingAttackReaction',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+			forceHeroicReaction: true,
+		});
 	});
 
 	it('emits a socket request with the expected payload for a non-GM user', async () => {
 		const { requestIncomingAttackReaction } = await loadModule();
-		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
 		setMessages({ 'message-1': message });
 		setUser({ id: 'player-1', isGM: false });
 
@@ -110,7 +158,7 @@ describe('requestIncomingAttackReaction', () => {
 			entryId: 'entry-1',
 			userId: 'player-1',
 		});
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('returns false for a non-GM user when no GM is active', async () => {
@@ -149,9 +197,29 @@ describe('registerIncomingReactionSocketListener', () => {
 		await Promise.resolve();
 	}
 
-	it('lets the primary active GM execute a forceReroll request', async () => {
+	it('refuses a relayed request for a legacy forceReroll entry', async () => {
 		setUser({ id: 'gm-user', isGM: true });
 		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
+		setMessages({ 'message-1': message });
+		const listener = await registerAndGetListener();
+
+		expect(() =>
+			listener({
+				type: 'incomingAttackReaction',
+				messageId: 'message-1',
+				entryId: 'entry-1',
+				userId: 'player-1',
+			}),
+		).not.toThrow();
+		await flushAsync();
+
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRedirectReaction).not.toHaveBeenCalled();
+	});
+
+	it('routes a relayed reroll request to resolveRerollReaction', async () => {
+		setUser({ id: 'gm-user', isGM: true });
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
 		setMessages({ 'message-1': message });
 		const listener = await registerAndGetListener();
 
@@ -163,7 +231,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveForceRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true, false);
 	});
 
 	it('routes redirectToSelf entries to resolveRedirectReaction', async () => {
@@ -181,12 +249,12 @@ describe('registerIncomingReactionSocketListener', () => {
 		await flushAsync();
 
 		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'player-1', true);
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('ignores requests of a different type', async () => {
 		setUser({ id: 'gm-user', isGM: true });
-		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
 		setMessages({ 'message-1': message });
 		const listener = await registerAndGetListener();
 
@@ -198,13 +266,13 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
 		expect(message.resolveRedirectReaction).not.toHaveBeenCalled();
 	});
 
 	it('ignores requests on non-GM clients', async () => {
 		setUser({ id: 'player-2', isGM: false });
-		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
 		setMessages({ 'message-1': message });
 		const listener = await registerAndGetListener();
 
@@ -216,13 +284,13 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('only executes on the primary active GM client', async () => {
 		setUser({ id: 'secondary-gm', isGM: true });
 		setActiveGm('gm-user');
-		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
 		setMessages({ 'message-1': message });
 		const listener = await registerAndGetListener();
 
@@ -234,12 +302,12 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('ignores malformed payloads missing required fields', async () => {
 		setUser({ id: 'gm-user', isGM: true });
-		const message = createMessage([{ id: 'entry-1', kind: 'forceReroll' }]);
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
 		setMessages({ 'message-1': message });
 		const listener = await registerAndGetListener();
 
@@ -248,7 +316,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener('not-an-object');
 		await flushAsync();
 
-		expect(message.resolveForceRerollReaction).not.toHaveBeenCalled();
+		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('registers the socket listener only once per module instance', async () => {
@@ -292,6 +360,69 @@ describe('registerIncomingReactionSocketListener', () => {
 
 		expect(globals().ui.notifications.warn).not.toHaveBeenCalled();
 		expect(globals().Hooks.callAll).not.toHaveBeenCalled();
+	});
+});
+
+describe('the rolling reroll die', () => {
+	const D20 = { slot: 'check', faces: 20 };
+
+	async function rollingOf(messageId: string) {
+		const { rollingRerollOf } = await import('./rerollRolling.svelte.js');
+		return rollingRerollOf(messageId);
+	}
+
+	it('shows on this client and tells every other client', async () => {
+		const { broadcastRerollRolling } = await loadModule();
+
+		broadcastRerollRolling('message-1', D20);
+
+		expect(await rollingOf('message-1')).toEqual(D20);
+		expect(globals().game.socket.emit).toHaveBeenCalledWith('system.nimble', {
+			type: 'rerollRolling',
+			messageId: 'message-1',
+			roll: D20,
+		});
+	});
+
+	it('stops on this client and every other client', async () => {
+		const { broadcastRerollRolling } = await loadModule();
+		broadcastRerollRolling('message-1', D20);
+
+		broadcastRerollRolling('message-1', null);
+
+		expect(await rollingOf('message-1')).toBeNull();
+		expect(globals().game.socket.emit).toHaveBeenLastCalledWith('system.nimble', {
+			type: 'rerollRolling',
+			messageId: 'message-1',
+			roll: null,
+		});
+	});
+
+	it('shows the die another client threw, on any client', async () => {
+		setUser({ id: 'player-1', isGM: false });
+		const { registerIncomingReactionSocketListener } = await loadModule();
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+
+		listener({ type: 'rerollRolling', messageId: 'message-1', roll: D20 });
+		expect(await rollingOf('message-1')).toEqual(D20);
+
+		listener({ type: 'rerollRolling', messageId: 'message-1', roll: null });
+		expect(await rollingOf('message-1')).toBeNull();
+	});
+
+	it.each([
+		{ messageId: '', roll: D20 },
+		{ messageId: 'message-1', roll: { slot: 'check' } },
+		{ messageId: 'message-1', roll: { slot: 7, faces: 20 } },
+	])('ignores a malformed signal %o', async (payload) => {
+		const { registerIncomingReactionSocketListener } = await loadModule();
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+
+		listener({ type: 'rerollRolling', ...payload });
+
+		expect(await rollingOf('message-1')).toBeNull();
 	});
 });
 

@@ -1,4 +1,5 @@
 import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
+import { isFieldShown } from './isFieldShown.js';
 
 // Foundry keeps the original options object on `field.options` and only
 // lifts recognised keys onto the field instance. The test mock now
@@ -6,7 +7,6 @@ import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
 // `.options` is the canonical read site in both worlds.
 interface FieldExtras {
 	widget?: string | ((data: Record<string, unknown>) => string);
-	showWhen?: (data: Record<string, unknown>) => boolean;
 	documentTypes?: string[];
 }
 type FieldWithOptions = { options?: FieldExtras };
@@ -28,12 +28,7 @@ export function createSchemaFieldRendererState(
 	const documentTypes = $derived(
 		(getField() as unknown as FieldWithOptions).options?.documentTypes,
 	);
-	const visibleByPredicate = $derived.by(() => {
-		const showWhen = (getField() as unknown as FieldWithOptions).options?.showWhen;
-		return typeof showWhen === 'function' ? Boolean(showWhen(getParentData())) : true;
-	});
-
-	const isHidden = $derived(widget === 'hidden' || !visibleByPredicate);
+	const isHidden = $derived(!isFieldShown(getField(), getParentData()));
 
 	function setupUnknownWidgetWarning(): void {
 		// Warn if a rule schema set a widget hint we don't recognise — typos

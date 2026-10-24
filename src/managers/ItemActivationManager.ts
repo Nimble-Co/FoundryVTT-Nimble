@@ -49,6 +49,7 @@ import localize from '../utils/localize.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
+import type { RerollHistory } from '../utils/rerollStep.js';
 import {
 	applyUpcastDeltas,
 	UpcastError,
@@ -127,6 +128,9 @@ class ItemActivationManager {
 
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
+
+	/** What an automatic reroll left for the chat card. */
+	#rerollHistory: RerollHistory | null = null;
 
 	#deferredPoolNodes: PoolNode[] = [];
 
@@ -338,6 +342,7 @@ class ItemActivationManager {
 			activation: this.activationData,
 			rollHidden: dialogData.rollHidden ?? false,
 			incomingReactions: this.#appliedIncomingReactions,
+			rerollHistory: this.#rerollHistory,
 		};
 	}
 
@@ -572,6 +577,7 @@ class ItemActivationManager {
 						(node as { discardedRoll?: unknown }).discardedRoll = result.discardedRoll;
 					}
 					this.#appliedIncomingReactions = result.stampEntries;
+					this.#rerollHistory = result.rerollHistory;
 				}
 
 				node.roll = roll.toJSON() as Record<string, unknown>;
@@ -844,6 +850,7 @@ class ItemActivationManager {
 			if (!adjusted) continue;
 
 			this.#chargeConsumption.push({
+				poolId: entry.poolId,
 				poolLabel: pool.label,
 				previousValue: pool.current,
 				currentValue: next,

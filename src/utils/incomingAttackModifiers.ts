@@ -1,11 +1,21 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
-import type { IncomingReactionEntry, RerollTrigger } from './incomingReactionEntry.js';
+import type { IncomingReactionEntry, RerollRecord, RerollSide } from './incomingReactionEntry.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
 	collectPoolSpendCardOffers,
 	type OfferingActor,
 } from './poolSpendCardOffers.js';
+import {
+	type AutomaticReroll,
+	collectRerollEntries,
+	nextAutomaticReroll,
+	offerStands,
+	type RerollingActor,
+	type RerollRollOutcome,
+	type RerollRuleLike,
+} from './rerollEntries.js';
+import { type RerollHistory, rerollWithRule } from './rerollStep.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -20,9 +30,6 @@ interface RuleLike {
 	label?: string;
 	modifier?: IncomingAttackModifier;
 	range?: number;
-	automatic?: boolean;
-	rerollTrigger?: RerollTrigger;
-	rerollWithDisadvantage?: boolean;
 	missThreshold?: number;
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
@@ -41,12 +48,6 @@ interface IncomingAttackModifierEntry {
 	label: string;
 	ruleId: string;
 	itemUuid: string;
-	/** forceReroll only: execute at roll time instead of offering a button */
-	automatic?: boolean;
-	/** forceReroll only: when the reroll applies */
-	rerollTrigger?: RerollTrigger;
-	/** forceReroll only: roll the reroll at disadvantage */
-	rerollWithDisadvantage?: boolean;
 	/** raiseMissThreshold only: the highest primary-die result that misses */
 	missThreshold?: number;
 }
@@ -58,10 +59,12 @@ interface IncomingAttackPlan {
 	missThreshold: number;
 	/** Automatically applied modifiers, for roll metadata */
 	appliedEntries: IncomingAttackModifierEntry[];
-	/** Interactive prompts (forceReroll / redirectToSelf) to stamp onto the card */
+	/** Interactive prompts (redirectToSelf / reroll / spends) to stamp onto the card */
 	reactionEntries: IncomingReactionEntry[];
 	/** Automatic rerolls, resolved against the evaluated roll's outcome */
 	autoRerollEntries: IncomingReactionEntry[];
+	/** The rule behind each automatic `reroll` entry, by entry id */
+	rerollRules?: Map<string, RerollRuleLike>;
 }
 
 /**
@@ -73,61 +76,9 @@ interface EvaluatedDamageRollLike {
 	isCritical?: boolean;
 	isMiss?: boolean;
 	originalFormula?: string;
+	primaryDieValue?: number;
 	options: { forceMiss?: boolean; netRollMode?: number; [key: string]: unknown };
 	toJSON: () => object;
-}
-
-/**
- * The outcome fields a trigger is checked against. An evaluated DamageRoll
- * satisfies this, and so does a posted card's own system data, which is what
- * the GM-side executors re-check against.
- */
-interface AttackOutcomeView {
-	isCritical?: boolean;
-	isMiss?: boolean;
-}
-
-/** Does the attack's outcome satisfy a trigger? */
-function rerollTriggerMatches(
-	trigger: RerollTrigger | undefined,
-	view: AttackOutcomeView,
-): boolean {
-	switch (trigger) {
-		case 'criticalHit':
-			return !!view.isCritical;
-		case 'hit':
-			return !view.isMiss;
-		default:
-			return true; // 'always'
-	}
-}
-
-/**
- * Should a pending offer be stamped onto the card, given how the attack
- * actually resolved? `forceReroll` keeps its own trigger field; every other
- * kind uses the shared `outcomeTrigger`, and an offer with neither always
- * survives (e.g. Interpose, which is outcome-independent).
- */
-function offerSurvives(entry: IncomingReactionEntry, view: AttackOutcomeView): boolean {
-	if (entry.kind === 'forceReroll') return rerollTriggerMatches(entry.rerollTrigger, view);
-	if (!entry.outcomeTrigger) return true;
-	return rerollTriggerMatches(entry.outcomeTrigger, view);
-}
-
-/**
- * Return a copy of roll options with one disadvantage level appended (used by
- * "reroll at disadvantage" rules). netRollMode is dropped so the DamageRoll
- * constructor recomputes it from the sources.
- */
-function withRerollDisadvantage(options: Record<string, unknown>): Record<string, unknown> {
-	const rollMode = typeof options.rollMode === 'number' ? options.rollMode : 0;
-	const sources = Array.isArray(options.rollModeSources)
-		? [...(options.rollModeSources as number[])]
-		: [rollMode];
-	sources.push(-1);
-	const next = { ...options, rollModeSources: sources };
-	delete (next as { netRollMode?: number }).netRollMode;
-	return next;
 }
 
 interface PostRollIncomingResult<TRoll> {
@@ -137,48 +88,79 @@ interface PostRollIncomingResult<TRoll> {
 	discardedRoll: object | null;
 	/** Entries to stamp onto the card: filtered offers + used auto-reroll attribution */
 	stampEntries: IncomingReactionEntry[];
+	/** The automatic `reroll`s in roll order, for the card; null when none ran */
+	rerollHistory: RerollHistory | null;
+}
+
+type RebuildRoll<TRoll> = (formula: string, options: Record<string, unknown>) => Promise<TRoll>;
+
+function rollOutcomeOf(view: EvaluatedDamageRollLike): RerollRollOutcome {
+	return { outcome: view, forcedMiss: view.options?.forceMiss === true };
+}
+
+/** The plan's automatic `reroll` entries with their rules, in plan order. */
+function automaticRerollsOf(plan: IncomingAttackPlan): AutomaticReroll[] {
+	return plan.autoRerollEntries.flatMap((entry) => {
+		const rule = entry.kind === 'reroll' ? plan.rerollRules?.get(entry.id) : undefined;
+		return rule ? [{ entry, rule }] : [];
+	});
 }
 
 /**
  * Resolve outcome-dependent incoming-attack behavior after the attack roll has
- * been evaluated: execute the first matching automatic reroll (the second
- * result stands), and drop interactive reroll offers whose trigger the final
- * outcome does not satisfy.
+ * been evaluated, and drop offers the final outcome does not satisfy.
+ *
+ * Automatic rerolls chain the same way they do on the card: after each one,
+ * the next automatic `reroll` rule that matches the new roll runs, and each
+ * rule runs at most once. The second result stands each time.
  */
 async function applyPostRollIncomingBehavior<TRoll>(
 	roll: TRoll,
 	plan: IncomingAttackPlan,
-	rebuildRoll: (formula: string, options: Record<string, unknown>) => Promise<TRoll>,
+	rebuildRoll: RebuildRoll<TRoll>,
 ): Promise<PostRollIncomingResult<TRoll>> {
 	const asView = (r: TRoll) => r as unknown as EvaluatedDamageRollLike;
 	let finalRoll = roll;
 	let discardedRoll: object | null = null;
+	const rerolls: RerollRecord[] = [];
+	let discardedCritTriggers = false;
 	const stampEntries: IncomingReactionEntry[] = [];
 
-	const view = asView(roll);
-	const autoEntry = plan.autoRerollEntries.find((entry) =>
-		rerollTriggerMatches(entry.rerollTrigger, view),
-	);
+	if (asView(roll).originalFormula) {
+		const automatic = automaticRerollsOf(plan);
+		let next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
+		while (next) {
+			const replaced = asView(finalRoll);
+			const result = await rerollWithRule({
+				rule: next.rule,
+				entry: next.entry,
+				payer: next.rule.actor as Actor | null | undefined,
+				replaced,
+				previousResult: replaced.primaryDieValue ?? null,
+				makeRoll: rebuildRoll,
+				earlierCritTriggers: discardedCritTriggers,
+			});
+			if (result.status === 'failed') throw result.error;
+			if (result.status !== 'done') break;
 
-	if (autoEntry && !view.options.forceMiss) {
-		// netRollMode is recomputed from rollModeSources; carrying the stale
-		// value forward would double-apply it.
-		let options: Record<string, unknown> = { ...view.options };
-		delete options.netRollMode;
-		if (autoEntry.rerollWithDisadvantage) options = withRerollDisadvantage(options);
-		const formula = view.originalFormula ?? '';
-
-		if (formula) {
-			discardedRoll = view.toJSON();
-			finalRoll = await rebuildRoll(formula, options);
-			stampEntries.push({ ...autoEntry, used: true });
+			discardedRoll = replaced.toJSON();
+			finalRoll = result.roll;
+			rerolls.push(result.reroll);
+			discardedCritTriggers = result.discardedCritTriggers;
+			stampEntries.push({ ...next.entry, used: true });
+			next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
 		}
 	}
 
-	const finalView = asView(finalRoll);
-	stampEntries.push(...plan.reactionEntries.filter((entry) => offerSurvives(entry, finalView)));
+	const finalOutcome = rollOutcomeOf(asView(finalRoll));
+	stampEntries.push(...plan.reactionEntries.filter((entry) => offerStands(entry, finalOutcome)));
 
-	return { roll: finalRoll, discardedRoll, stampEntries };
+	return {
+		roll: finalRoll,
+		discardedRoll,
+		stampEntries,
+		rerollHistory: rerolls.length > 0 ? { rerolls, discardedCritTriggers } : null,
+	};
 }
 
 function getMatchingRules(actor: ActorLike | null | undefined): RuleLike[] {
@@ -194,9 +176,6 @@ function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 		label: rule.label || rule.item?.name || '',
 		ruleId: rule.id ?? '',
 		itemUuid: rule.item?.uuid ?? '',
-		automatic: rule.automatic ?? false,
-		rerollTrigger: rule.rerollTrigger ?? 'always',
-		rerollWithDisadvantage: rule.rerollWithDisadvantage ?? false,
 		missThreshold: rule.missThreshold ?? DEFAULT_MISS_THRESHOLD,
 	};
 }
@@ -304,6 +283,20 @@ function collectRedirectCandidates(targetToken: Token.Implementation): IncomingR
 	return Array.from(entriesByToken.values());
 }
 
+function addRerollEntries(
+	plan: IncomingAttackPlan,
+	entries: ReturnType<typeof collectRerollEntries>,
+	side: RerollSide,
+): void {
+	plan.reactionEntries.push(...entries.manual.filter((entry) => entry.side === side));
+	for (const { entry, rule } of entries.automatic) {
+		if (entry.side !== side) continue;
+		plan.autoRerollEntries.push(entry);
+		plan.rerollRules ??= new Map();
+		plan.rerollRules.set(entry.id, rule);
+	}
+}
+
 /**
  * Compute everything the attack pipeline needs before the roll: the first
  * target's incoming-attack rules, plus the attacker's own outcome-gated spend
@@ -327,10 +320,7 @@ function computeIncomingAttackPlan(
 		reactionEntries: [...collectPoolSpendCardOffers(attackingActor, attackContext)],
 		autoRerollEntries: [],
 	};
-
-	if (!firstTargetToken?.actor) return plan;
-
-	const targetActor = firstTargetToken.actor as unknown as ActorLike;
+	const targetActor = (firstTargetToken?.actor ?? null) as unknown as ActorLike | null;
 	const targetModifiers = collectTargetIncomingModifiers(targetActor);
 
 	for (const entry of targetModifiers) {
@@ -349,28 +339,20 @@ function computeIncomingAttackPlan(
 		}
 	}
 
-	if (plan.forceMiss) return plan;
+	const rerolls = collectRerollEntries({
+		attacker: attackingActor as RerollingActor | undefined,
+		targets: firstTargetToken
+			? [{ tokenUuid: firstTargetToken.document.uuid, actor: targetActor as RerollingActor | null }]
+			: [],
+		delivery: attackContext?.delivery ?? null,
+		outcome: null,
+		forcedMiss: plan.forceMiss,
+	});
+	addRerollEntries(plan, rerolls, 'roller');
 
-	const targetActorUuid = (firstTargetToken.actor?.uuid as string) ?? '';
-	for (const entry of targetModifiers) {
-		if (entry.modifier !== 'forceReroll') continue;
-		const reactionEntry: IncomingReactionEntry = {
-			id: foundry.utils.randomID(),
-			kind: 'forceReroll',
-			source: 'rule',
-			actorUuid: targetActorUuid,
-			tokenUuid: null,
-			targetTokenUuid: firstTargetToken.document.uuid,
-			label: entry.label,
-			ruleId: entry.ruleId,
-			itemUuid: entry.itemUuid,
-			used: false,
-			rerollTrigger: entry.rerollTrigger ?? 'always',
-			rerollWithDisadvantage: entry.rerollWithDisadvantage ?? false,
-		};
-		if (entry.automatic) plan.autoRerollEntries.push(reactionEntry);
-		else plan.reactionEntries.push(reactionEntry);
-	}
+	if (!firstTargetToken?.actor || plan.forceMiss) return plan;
+
+	addRerollEntries(plan, rerolls, 'target');
 
 	plan.reactionEntries.push(...collectRedirectCandidates(firstTargetToken));
 
@@ -383,10 +365,6 @@ export {
 	collectRedirectCandidates,
 	collectTargetIncomingModifiers,
 	computeIncomingAttackPlan,
-	offerSurvives,
-	rerollTriggerMatches,
-	withRerollDisadvantage,
-	type AttackOutcomeView,
 	type IncomingAttackModifierEntry,
 	type IncomingAttackPlan,
 };

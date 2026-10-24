@@ -1,5 +1,5 @@
 /** Standard die progression used when a die size is stepped up or down. */
-const DIE_SIZE_CHAIN = [4, 6, 8, 10, 12, 20];
+export const DIE_SIZE_CHAIN = [4, 6, 8, 10, 12, 20];
 
 /**
  * Matches dice terms such as `d6`, `1d6` or `2d10`. The lookbehind keeps it from

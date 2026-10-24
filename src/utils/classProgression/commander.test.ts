@@ -108,7 +108,7 @@ const EXPECTED_POOL_GROUPS: Record<number, string[]> = {
 const COMBAT_TACTICS_OPTIONS = [
 	'Commanding Presence',
 	'Heavy Strike',
-	'Inerrant Strike.',
+	'Inerrant Strike',
 	'Lunging Strike',
 	'Sweeping Strike',
 ];

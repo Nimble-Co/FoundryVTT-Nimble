@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { hasRuleCharge, spendRuleCharge, withRuleCharge } from './ruleChargeGate.js';
+import {
+	hasRuleCharge,
+	refundRuleCharge,
+	ruleChargesLeft,
+	spendRuleCharge,
+	withRuleCharge,
+} from './ruleChargeGate.js';
 
 function makeActor(current: number, { type = 'character', scope = 'item' } = {}) {
 	const poolKey = scope === 'actor' ? 'actor:thrill' : 'thrill';
@@ -103,6 +109,46 @@ describe('ruleChargeGate', () => {
 			{ 'flags.nimble.chargePools': { 'actor:thrill': expect.objectContaining({ current: 1 }) } },
 			expect.anything(),
 		);
+	});
+
+	it('checks and spends several charges at once', async () => {
+		expect(hasRuleCharge(makeActor(1).actor, 'thrill', 2)).toBe(false);
+		const { actor, item } = makeActor(2);
+		expect(hasRuleCharge(actor, 'thrill', 2)).toBe(true);
+		await expect(spendRuleCharge(actor, 'thrill', 2)).resolves.toBe(true);
+		expect(item.update).toHaveBeenCalledWith(
+			{ 'flags.nimble.chargePools': { thrill: expect.objectContaining({ current: 0 }) } },
+			expect.anything(),
+		);
+	});
+
+	it('refuses to spend more charges than the pool holds', async () => {
+		const { actor, item } = makeActor(1);
+		await expect(spendRuleCharge(actor, 'thrill', 2)).resolves.toBe(false);
+		expect(item.update).not.toHaveBeenCalled();
+	});
+
+	it('gives charges back, capped at the maximum', async () => {
+		const { actor, item } = makeActor(1);
+		await expect(refundRuleCharge(actor, 'thrill', 3)).resolves.toBe(true);
+		expect(item.update).toHaveBeenCalledWith(
+			{ 'flags.nimble.chargePools': { thrill: expect.objectContaining({ current: 2 }) } },
+			expect.anything(),
+		);
+	});
+
+	it('gives nothing back for no identifier, no amount or a missing pool', async () => {
+		const { actor, item } = makeActor(1);
+		await expect(refundRuleCharge(actor, '', 1)).resolves.toBe(false);
+		await expect(refundRuleCharge(actor, 'thrill', 0)).resolves.toBe(false);
+		await expect(refundRuleCharge(actor, 'fury', 1)).resolves.toBe(false);
+		expect(item.update).not.toHaveBeenCalled();
+	});
+
+	it('reads the charges left, or null without a pool', () => {
+		expect(ruleChargesLeft(makeActor(1).actor, 'thrill')).toBe(1);
+		expect(ruleChargesLeft(makeActor(1).actor, '')).toBeNull();
+		expect(ruleChargesLeft(makeActor(1).actor, 'fury')).toBeNull();
 	});
 
 	describe('withRuleCharge', () => {

@@ -1,11 +1,15 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
-import { attackDeliveryFromAttackType, matchesAttackDelivery } from '#utils/attackDelivery.js';
+import {
+	type AttackDelivery,
+	attackDeliveryFromAttackType,
+	matchesAttackDelivery,
+} from '#utils/attackDelivery.js';
 import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
@@ -17,6 +21,7 @@ import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.j
 import type { DicePoolState } from '#utils/dicePool/types.js';
 import {
 	appendFlavoredBonusToRoll,
+	findPrimaryDamageNode,
 	foldBonusIntoPrimaryDamage,
 	replaceDamageRollInRollsSource,
 } from '#utils/foldBonusIntoPrimaryDamage.js';
@@ -25,7 +30,7 @@ import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
-import { showDiceAnimation } from '#utils/showDiceAnimation.js';
+import { canShowDiceAnimation, showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
@@ -35,16 +40,36 @@ import {
 	getBankedDamageReductionEntries,
 } from '../utils/bankedDamageReduction.js';
 import {
-	type AttackOutcomeView,
-	offerSurvives,
-	rerollTriggerMatches,
-	withRerollDisadvantage,
-} from '../utils/incomingAttackModifiers.js';
+	applyRerollRecoveryChange,
+	RECOVERY_GIVEN_FLAG,
+	type RecoveryTriggerChange,
+	rerollChargeConsumption,
+	rerollRecoveryChange,
+} from '../utils/chargePool/chargePoolReroll.js';
+import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '../utils/chargePool/types.js';
 import {
+	broadcastRerollRolling,
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
 } from '../utils/incomingAttackReactions.js';
-import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
+import {
+	type AttackOutcomeView,
+	type IncomingReactionEntry,
+	type RerollRecord,
+	rerollTriggerMatches,
+} from '../utils/incomingReactionEntry.js';
+import {
+	type AutomaticReroll,
+	collectRerollEntries,
+	nextAutomaticReroll,
+	offerStands,
+	type RerollingActor,
+	type RerollRollContext,
+	type RerollRollOutcome,
+	usableRerollEntry,
+	withNewRerollEntries,
+} from '../utils/rerollEntries.js';
+import { rerollWithRule } from '../utils/rerollStep.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -72,12 +97,31 @@ interface ActivationCardSystemData {
 	targets: string[];
 	isCritical: boolean;
 	isMiss: boolean;
+	discardedCritTriggers?: boolean;
+	rerolls?: RerollRecord[];
 	activation?: {
 		effects: unknown[];
 		[key: string]: unknown;
 	};
 	appliedHealing?: Record<string, AppliedHealingRecord>;
 	[key: string]: unknown;
+}
+
+/**
+ * A reroll for the card's history. A new action starts a new list; an
+ * automatic reroll it triggers is added to that list.
+ */
+interface CardReroll {
+	reroll: RerollRecord;
+	discardedCritTriggers: boolean;
+	list: 'new' | 'append';
+}
+
+/** A card's primary DamageRoll node, inside a working copy of its activation. */
+interface PrimaryDamageRoll {
+	activation: { effects: unknown[]; [key: string]: unknown };
+	nodes: EffectNode[];
+	damageNode: EffectNode & { roll?: Record<string, unknown>; discardedRoll?: unknown };
 }
 
 type HpMutableActor = Actor.Implementation &
@@ -718,12 +762,38 @@ function resolvePoolSpendSelection(
 	};
 }
 
+/** Whether an activation spreads one roll over a template's targets, so it cannot crit or miss. */
+function isAreaActivation(activation: Record<string, unknown>): boolean {
+	const shape = (activation.template as { shape?: string } | undefined)?.shape ?? '';
+	return !!activation.acquireTargetsFromTemplate && shape !== '';
+}
+
+/** Whether a deferred roll became the card's primary damage roll. Never for an area activation. */
+function isPrimaryDeferredRoll(activation: Record<string, unknown>, nodeId: string): boolean {
+	if (isAreaActivation(activation)) return false;
+	const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
+	return findPrimaryDamageNode(nodes)?.id === nodeId;
+}
+
 /**
- * Spend offers currently resolving, keyed `<messageId>:<entryId>`.
+ * The kept primary die result of a serialized DamageRoll, or null. Reads a
+ * copy, because `fromData` writes option defaults into the data it is given.
+ */
+function primaryDieResult(serialized: DamageRoll.SerializedData): number | null {
+	try {
+		return DamageRoll.fromData(foundry.utils.deepClone(serialized)).primaryDieValue ?? null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Paid offers currently resolving (pool spends and rerolls), keyed
+ * `<messageId>:<entryId>`.
  *
  * `used` is only written at the end of a resolve, several awaits in. A second
  * request arriving inside that window passes the unused-entry check and reads
- * the same unspent pool, so the dice come out once and the damage goes on
+ * the same unspent pool, so the cost comes out once and the effect lands
  * twice. Every request lands on the one primary GM's client, so an in-memory
  * lock is enough to serialize them.
  */
@@ -790,7 +860,18 @@ class NimbleChatMessage extends ChatMessage {
 					}
 				}
 
+				if (this.#waitsOnRerollActor((triggeringDocument as { uuid?: string }).uuid)) {
+					requiresUpdate = true;
+				}
+
 				if (requiresUpdate) update();
+			});
+
+			// Charge pools can live on the actor's items.
+			const updateItemHook = Hooks.on('updateItem', (triggeringDocument, _change, options) => {
+				if ((options as { diff?: boolean }).diff === false) return;
+				const parent = (triggeringDocument as { parent?: { uuid?: string } | null }).parent;
+				if (this.#waitsOnRerollActor(parent?.uuid)) update();
 			});
 
 			const updateChatMessageHook = Hooks.on(
@@ -808,6 +889,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			return () => {
 				Hooks.off('updateActor', updateActorHook);
+				Hooks.off('updateItem', updateItemHook);
 				Hooks.off('updateChatMessage', updateChatMessageHook);
 				Hooks.off('updateUser', updateUserHook);
 			};
@@ -1054,6 +1136,8 @@ class NimbleChatMessage extends ChatMessage {
 			} as DamageRoll.Options,
 		);
 		await roll.evaluate();
+		// The card shows the result only after the dice land.
+		await showDiceAnimation(roll, this.id ?? undefined);
 
 		const patched = buildDeferredDamagePatch(
 			activation,
@@ -1068,12 +1152,44 @@ class NimbleChatMessage extends ChatMessage {
 			isCritical: roll.isCritical === true,
 			isMiss: roll.isMiss === true,
 		};
+		// Item use gave refills for the outcome the card had before this roll.
+		const critTriggers = systemData.discardedCritTriggers === true;
+		const recoveryChange = rerollRecoveryChange(systemData, outcome, critTriggers);
+		const isPrimaryRoll = isPrimaryDeferredRoll(patched.activation, nodeId);
+		const rerolls = isPrimaryRoll ? this.#deferredRollRerolls(roll) : null;
 		await this.update({
 			rolls: patched.rolls,
-			system: { ...outcome, ...this.#movementOfferChanges(outcome) },
+			system: {
+				...outcome,
+				...(isPrimaryRoll ? { rerolls: [] } : {}),
+				...(rerolls ? { incomingReactions: rerolls.entries } : {}),
+				...this.#movementOfferChanges(outcome),
+			},
 		} as Record<string, unknown>);
 
-		await showDiceAnimation(roll, this.id ?? undefined);
+		await this.#followChargeRecovery(recoveryChange);
+		if (rerolls) {
+			await this.#runAutomaticReroll(rerolls.automatic, rerolls.entries, critTriggers, {
+				outcome,
+				forcedMiss: false,
+			});
+		}
+	}
+
+	/**
+	 * The reroll entries a deferred roll gets when it becomes the card's
+	 * primary damage roll, as an attack roll gets them when it is made. Null
+	 * when there are none.
+	 */
+	#deferredRollRerolls(
+		roll: DamageRoll,
+	): { entries: IncomingReactionEntry[]; automatic: AutomaticReroll[] } | null {
+		const found = collectRerollEntries(this.#rerollContext(roll, false));
+		if (found.manual.length < 1 && found.automatic.length < 1) return null;
+		return {
+			entries: withNewRerollEntries(this.#incomingReactionEntries(), found.manual),
+			automatic: found.automatic,
+		};
 	}
 
 	/**
@@ -1174,6 +1290,7 @@ class NimbleChatMessage extends ChatMessage {
 				card: this,
 				isCritical: systemData.isCritical,
 				isMiss: systemData.isMiss,
+				discardedCritTriggers: systemData.discardedCritTriggers === true,
 			});
 
 			if (wasKilled) {
@@ -1474,6 +1591,14 @@ class NimbleChatMessage extends ChatMessage {
 		return entry;
 	}
 
+	/** Whether a waiting reroll on this card can be used by the actor with this uuid. */
+	#waitsOnRerollActor(actorUuid: string | undefined): boolean {
+		if (!actorUuid) return false;
+		return this.#incomingReactionEntries().some(
+			(entry) => entry.kind === 'reroll' && !entry.used && entry.actorUuid === actorUuid,
+		);
+	}
+
 	#incomingReactionEntries(): IncomingReactionEntry[] {
 		return (
 			(this.system as unknown as { incomingReactions?: IncomingReactionEntry[] })
@@ -1495,67 +1620,52 @@ class NimbleChatMessage extends ChatMessage {
 		);
 	}
 
-	/**
-	 * Discard the attack's primary damage roll and roll once more; the second
-	 * result stands. Executes on the primary GM's client (players reach it via
-	 * the incoming-attack reaction socket).
-	 */
-	async resolveForceRerollReaction(
-		entryId: string,
-		requestingUserId: string,
-		viaSocket = false,
-	): Promise<void> {
-		if (!game.user?.isGM) return;
-		if (!this.isActivationCard()) return;
-
-		return queueReactionWrite(this.id ?? '', () =>
-			this.#applyForceRerollReaction(entryId, requestingUserId, viaSocket),
+	/** Make and evaluate a new roll with the data of the roll it replaces. */
+	async #makeDamageRoll(
+		previous: DamageRoll.SerializedData,
+		formula: string,
+		options: Record<string, unknown>,
+	): Promise<DamageRoll> {
+		const roll = new DamageRoll(
+			formula,
+			(previous.data ?? {}) as DamageRoll.Data,
+			options as unknown as DamageRoll.Options,
 		);
+		await roll.evaluate();
+		return roll;
 	}
 
-	async #applyForceRerollReaction(
-		entryId: string,
-		requestingUserId: string,
-		viaSocket: boolean,
-	): Promise<void> {
-		const entry = this.#validateIncomingReaction(
-			entryId,
-			'forceReroll',
-			requestingUserId,
-			viaSocket,
-		);
-		if (!entry) return;
-
-		// The caller has already gated on `isActivationCard()`; that narrowing does
-		// not survive the hop into this method.
+	/** The card's primary DamageRoll node, with a working copy of the activation. */
+	#findPrimaryDamageRoll(): PrimaryDamageRoll | null {
+		// The callers have already gated on `isActivationCard()`; that narrowing
+		// does not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const activation = foundry.utils.deepClone(systemData.activation ?? { effects: [] });
 		const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
-		const damageNode = nodes.find(
-			(n) =>
-				n.type === 'damage' && (n as { roll?: { class?: string } }).roll?.class === 'DamageRoll',
-		) as (EffectNode & { roll?: Record<string, unknown>; discardedRoll?: unknown }) | undefined;
-		if (!damageNode?.roll) return;
+		const damageNode = findPrimaryDamageNode(nodes) as PrimaryDamageRoll['damageNode'] | undefined;
+		if (!damageNode?.roll) return null;
+		return { activation, nodes, damageNode };
+	}
 
+	/**
+	 * Put `newRoll` on the card in place of its primary damage roll; the second
+	 * result stands. Crit, miss, offers and Movement Offers follow the new roll.
+	 * `history` adds what the card shows about this reroll.
+	 */
+	async #rerollPrimaryDamage(
+		entry: IncomingReactionEntry,
+		target: PrimaryDamageRoll,
+		newRoll: DamageRoll,
+		history: CardReroll,
+	): Promise<void> {
+		const { activation, nodes, damageNode } = target;
 		const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
-		const formula = serialized.originalFormula ?? serialized.formula;
-		// netRollMode is computed from rollModeSources; carrying the stale value
-		// into the fresh roll would double-apply it.
-		let options = { ...(serialized.options ?? {}) } as Record<string, unknown>;
-		delete options.netRollMode;
-		if (entry.rerollWithDisadvantage) options = withRerollDisadvantage(options);
 
-		const newRoll = new DamageRoll(
-			formula,
-			(serialized.data ?? {}) as DamageRoll.Data,
-			options as unknown as DamageRoll.Options,
-		);
-		await newRoll.evaluate();
-
+		const forcedMiss = newRoll.options.forceMiss === true;
 		const carried = await this.#carryFoldedSpendsAcrossReroll(
 			newRoll.toJSON() as Record<string, unknown>,
-			this.#markIncomingReactionsUsed((e) => e.id === entry.id),
-			newRoll,
+			this.#withEntryUsed(entry),
+			{ outcome: newRoll, forcedMiss },
 		);
 
 		damageNode.discardedRoll = serialized;
@@ -1567,15 +1677,181 @@ class NimbleChatMessage extends ChatMessage {
 			carried.roll,
 		);
 
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const critTriggers = history.discardedCritTriggers;
+		const recoveryChange = rerollRecoveryChange(systemData, newRoll, critTriggers);
+
+		const historyChanges = {
+			rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
+			discardedCritTriggers: history.discardedCritTriggers,
+		};
+
 		const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
-		await this.update({
-			rolls: rollsSource,
-			system: {
-				...outcome,
-				incomingReactions: this.#dropStaleOutcomeOffers(carried.entries, newRoll),
-				...this.#movementOfferChanges(outcome),
-			},
-		} as Record<string, unknown>);
+		const context = this.#rerollContext(newRoll, forcedMiss);
+		const rerolls = collectRerollEntries(context);
+		const entries = withNewRerollEntries(
+			this.#dropStaleOutcomeOffers(carried.entries, context),
+			rerolls.manual,
+		);
+		const messageId = this.id;
+		const rolling =
+			messageId && canShowDiceAnimation()
+				? { slot: damageNode.id, faces: history.reroll.faces ?? 6 }
+				: null;
+		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
+		try {
+			// The card shows the new result only after the dice land.
+			await showDiceAnimation(newRoll, messageId ?? undefined);
+			await this.update({
+				rolls: rollsSource,
+				system: {
+					...outcome,
+					incomingReactions: entries,
+					...historyChanges,
+					...this.#movementOfferChanges(outcome),
+				},
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (rolling && messageId) broadcastRerollRolling(messageId, null);
+			throw error;
+		}
+
+		await this.#followChargeRecovery(recoveryChange);
+		await this.#runAutomaticReroll(rerolls.automatic, entries, critTriggers, context);
+	}
+
+	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */
+	#withEntryUsed(entry: IncomingReactionEntry): IncomingReactionEntry[] {
+		const entries = this.#incomingReactionEntries();
+		if (!entries.some((e) => e.id === entry.id)) return [...entries, { ...entry, used: true }];
+		return this.#markIncomingReactionsUsed((e) => e.id === entry.id);
+	}
+
+	/**
+	 * Run the next automatic reroll the card's roll now allows, by the same
+	 * rule as the roll-time path. Runs after the card is written; a failure
+	 * here does not undo the reroll before it.
+	 */
+	async #runAutomaticReroll(
+		automatic: AutomaticReroll[],
+		entries: IncomingReactionEntry[],
+		earlierCritTriggers: boolean,
+		roll: RerollRollOutcome,
+	): Promise<void> {
+		const next = nextAutomaticReroll(automatic, entries, roll);
+		if (!next) return;
+
+		try {
+			const target = this.#findPrimaryDamageRoll();
+			if (!target) return;
+			const previous = target.damageNode.roll as unknown as DamageRoll.SerializedData;
+			const result = await rerollWithRule({
+				rule: next.rule,
+				entry: next.entry,
+				payer: next.rule.actor as Actor | null | undefined,
+				replaced: previous,
+				previousResult: primaryDieResult(previous),
+				makeRoll: (formula, options) => this.#makeDamageRoll(previous, formula, options),
+				earlierCritTriggers,
+				place: ({ roll, reroll, discardedCritTriggers }) =>
+					this.#rerollPrimaryDamage(next.entry, target, roll, {
+						reroll,
+						discardedCritTriggers,
+						list: 'append',
+					}),
+			});
+			if (result.status === 'failed') throw result.error;
+		} catch (error) {
+			console.error('Nimble | An automatic reroll failed.', error);
+		}
+	}
+
+	/**
+	 * Make the attacker's charge recoveries follow the roll that now stands.
+	 * Runs after the card is written; a failure here does not undo the roll.
+	 */
+	async #followChargeRecovery(change: RecoveryTriggerChange): Promise<void> {
+		const flags = (this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID];
+		const itemUuid = flags?.itemUuid;
+		if (typeof itemUuid !== 'string') return;
+
+		try {
+			const item = fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null;
+			const recordedGiven = flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined;
+			const result = await applyRerollRecoveryChange(item?.actor, change, recordedGiven);
+			if (!result) return;
+
+			const changes: Record<string, unknown> = {
+				[`flags.${SYSTEM_ID}.${RECOVERY_GIVEN_FLAG}`]: result.given,
+			};
+			const consumption = Array.isArray(flags?.chargeConsumption)
+				? (flags.chargeConsumption as ChargeConsumptionDetail[])
+				: [];
+			// A card with a refill line but no record predates the record, so its
+			// lines cannot be matched to what was given.
+			const predatesRecord =
+				!Array.isArray(recordedGiven) && consumption.some((entry) => entry.recovery);
+			if (!predatesRecord) {
+				const nextConsumption = rerollChargeConsumption(consumption, result.given, result.pools);
+				if (consumption.length > 0 || nextConsumption.length > 0) {
+					changes[`flags.${SYSTEM_ID}.chargeConsumption`] = nextConsumption;
+				}
+			}
+			await this.update(changes);
+		} catch (error) {
+			console.error('Nimble | Could not change charge recovery after a new roll.', error);
+		}
+	}
+
+	/** How this card's attack is delivered. */
+	#attackDelivery(): AttackDelivery {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		return attackDeliveryFromAttackType(
+			(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
+		);
+	}
+
+	/** This card's roll as the reroll gate sees it. */
+	#rerollContext(outcome: AttackOutcomeView, forcedMiss: boolean): RerollRollContext {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		return {
+			// Not `speakerActor`: it falls back to the author's character.
+			attacker: (this.constructor as typeof ChatMessage).getSpeakerActor(
+				this.speaker,
+			) as unknown as RerollingActor | null,
+			targets: (systemData.targets ?? []).map((tokenUuid) => ({
+				tokenUuid,
+				actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
+			})),
+			delivery: this.#attackDelivery(),
+			outcome: { isCritical: outcome.isCritical, isMiss: outcome.isMiss },
+			forcedMiss,
+		};
+	}
+
+	/** Whether the card's primary damage roll was made to miss by force. */
+	#isForcedMiss(target: PrimaryDamageRoll | null): boolean {
+		return (
+			(target?.damageNode.roll as { options?: { forceMiss?: boolean } } | undefined)?.options
+				?.forceMiss === true
+		);
+	}
+
+	/**
+	 * Whether a `reroll` entry on this card passes every gate again on this
+	 * client, from its live rule and this card: side, delivery, outcome,
+	 * predicate and cost.
+	 */
+	canStillUseReroll(entry: IncomingReactionEntry): boolean {
+		if (!this.isActivationCard() || entry.kind !== 'reroll' || entry.used) return false;
+		const target = this.#findPrimaryDamageRoll();
+		if (!target) return false;
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		return usableRerollEntry(
+			entry,
+			this.#rerollContext(systemData, this.#isForcedMiss(target)),
+			this.#incomingReactionEntries(),
+		).ok;
 	}
 
 	/**
@@ -1598,7 +1874,7 @@ class NimbleChatMessage extends ChatMessage {
 	async #carryFoldedSpendsAcrossReroll(
 		rollJson: Record<string, unknown>,
 		entries: IncomingReactionEntry[],
-		view: AttackOutcomeView,
+		outcome: RerollRollOutcome,
 	): Promise<{ roll: Record<string, unknown>; entries: IncomingReactionEntry[] }> {
 		let roll = rollJson;
 
@@ -1628,7 +1904,7 @@ class NimbleChatMessage extends ChatMessage {
 				continue;
 			}
 
-			if (offerSurvives(entry, view)) {
+			if (offerStands(entry, outcome)) {
 				refold(entry, amount);
 				carriedEntries.push(entry);
 				continue;
@@ -1704,9 +1980,97 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#dropStaleOutcomeOffers(
 		entries: IncomingReactionEntry[],
-		view: AttackOutcomeView,
+		outcome: RerollRollOutcome,
 	): IncomingReactionEntry[] {
-		return entries.filter((entry) => entry.used || offerSurvives(entry, view));
+		return entries.filter((entry) => entry.used || offerStands(entry, outcome));
+	}
+
+	/**
+	 * Use a Reroll rule's entry: pay its cost, then discard the primary damage
+	 * roll and roll again with the rule's changes. The cost is given back when
+	 * the new roll cannot be made. Executes on the primary GM's client, like
+	 * the other reaction resolvers.
+	 */
+	async resolveRerollReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket = false,
+		forceHeroicReaction = false,
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!this.isActivationCard()) return;
+
+		const lockKey = `${this.id}:${entryId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+
+		try {
+			await queueReactionWrite(this.id ?? '', () =>
+				this.#applyRerollReaction(entryId, requestingUserId, viaSocket, forceHeroicReaction),
+			);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	async #applyRerollReaction(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+		forceHeroicReaction: boolean,
+	): Promise<void> {
+		const reject = (reasonKey: string) =>
+			rejectIncomingAttackReaction({
+				messageId: this.id ?? '',
+				entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+
+		const entry = this.#validateIncomingReaction(entryId, 'reroll', requestingUserId, viaSocket);
+		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		// Every gate again, from the live rule and this card: the card's outcome,
+		// its targets and the actor's state can all change after stamping.
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const target = this.#findPrimaryDamageRoll();
+		const usable = usableRerollEntry(
+			entry,
+			this.#rerollContext(systemData, this.#isForcedMiss(target)),
+			this.#incomingReactionEntries(),
+		);
+		if (!usable.ok) {
+			return reject(
+				usable.reason === 'forcedMiss'
+					? 'NIMBLE.chat.incomingReactions.useFailed'
+					: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
+			);
+		}
+		if (!target) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const previous = target.damageNode.roll as unknown as DamageRoll.SerializedData;
+		const result = await rerollWithRule({
+			rule: usable.rule,
+			entry,
+			payer: usable.actor,
+			replaced: previous,
+			previousResult: primaryDieResult(previous),
+			makeRoll: (formula, options) => this.#makeDamageRoll(previous, formula, options),
+			earlierCritTriggers: systemData.discardedCritTriggers === true,
+			payOptions: { forceHeroicReaction },
+			place: ({ roll, reroll, discardedCritTriggers }) =>
+				this.#rerollPrimaryDamage(entry, target, roll, {
+					reroll,
+					discardedCritTriggers,
+					list: 'new',
+				}),
+		});
+		if (result.status === 'unpaid') {
+			return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		}
+		if (result.status === 'failed') {
+			console.error('Nimble | A reroll failed; its cost is given back.', result.error);
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
 	}
 
 	/**
@@ -1814,12 +2178,7 @@ class NimbleChatMessage extends ChatMessage {
 			consumer.effectType === 'generic' &&
 			consumer.selectionOutcome === 'consume' &&
 			rerollTriggerMatches(consumer.cardOffer ?? undefined, systemData) &&
-			matchesAttackDelivery(
-				consumer.bonusOnAttackDelivery,
-				attackDeliveryFromAttackType(
-					(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
-				),
-			);
+			matchesAttackDelivery(consumer.bonusOnAttackDelivery, this.#attackDelivery());
 		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
 
 		const picked = resolvePoolSpendSelection(pool.faces, selection);
@@ -1905,7 +2264,7 @@ class NimbleChatMessage extends ChatMessage {
 			return null;
 		}
 
-		// A plain Roll, never a DamageRoll: both `resolveForceRerollReaction` and
+		// A plain Roll, never a DamageRoll: both the reroll resolvers and
 		// `foldBonusIntoPrimaryDamage` find their target by `class === 'DamageRoll'`,
 		// and this packet is neither of their business.
 		const bonusRoll = new Roll(String(bonusDamage));
@@ -1963,7 +2322,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!targets.includes(entry.tokenUuid)) targets.push(entry.tokenUuid);
 
 		// The ally is no longer the target, so every other offer tied to them
-		// is stale: other redirect offers, and their own forceReroll offers.
+		// is stale: other redirect offers, and their own reroll offers.
 		const updatedEntries = this.#markIncomingReactionsUsed(
 			(e) => e.id === entry.id || e.targetTokenUuid === entry.targetTokenUuid,
 		);
