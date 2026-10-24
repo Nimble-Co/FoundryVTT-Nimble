@@ -754,6 +754,21 @@ describe('IncomingReactionPrompts', () => {
 			expect(rollPlace().queryByText(/Used by/)).toBeNull();
 		});
 
+		it('takes the one who rolled from a check card, which has no speaker', () => {
+			const message = createMessage(
+				[
+					rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
+					rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
+				],
+				[rerollRecord({ usesLeft: 1 })],
+			);
+			Object.assign(message.system, { actorUuid: 'Actor.wren' });
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			expect(groupNames()).toEqual(['Bram']);
+			expect(rollPlace().queryByText(/Used by/)).toBeNull();
+		});
+
 		it('names the button "Reroll again" when the last feature can reroll again', () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: {

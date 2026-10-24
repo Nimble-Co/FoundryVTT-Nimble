@@ -29,8 +29,11 @@ export function createIncomingReactionPromptsState(
 	const atTheRoll = $derived(getPlace() !== 'options');
 	const showsHistory = $derived(getPlace() === 'roll' || getPlace() === 'rollHistory');
 
+	// Check cards post with no speaker; their roller is in the card data.
 	const speakerUuid = $derived(
-		(message as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
+		(message?.system as { actorUuid?: string | null } | undefined)?.actorUuid ||
+			(message as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ||
+			'',
 	);
 	const storedEntries = $derived(
 		(message?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
