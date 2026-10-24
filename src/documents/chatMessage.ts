@@ -46,6 +46,12 @@ import {
 } from '../utils/chargePool/chargePoolReroll.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '../utils/chargePool/types.js';
 import {
+	type CheckCard,
+	type CheckRoll,
+	checkCardRollTarget,
+	checkRollOfCard,
+} from '../utils/checkCardRollTarget.js';
+import {
 	type DamageCard,
 	damageCardRollTarget,
 	damageRollContext,
@@ -1604,8 +1610,33 @@ class NimbleChatMessage extends ChatMessage {
 
 	/** The roll target of this card, or null when its kind has no reroll. */
 	#rerollTarget(): RerollRollTarget | null {
-		if (!this.isActivationCard()) return null;
-		return damageCardRollTarget(this.#damageCard());
+		if (this.isActivationCard()) return damageCardRollTarget(this.#damageCard());
+		const check = checkRollOfCard(this.type, this.system as unknown as Record<string, unknown>);
+		return check ? checkCardRollTarget(this.#checkCard(check)) : null;
+	}
+
+	/** This check card as the check-card roll target reads and writes it. */
+	#checkCard(roll: CheckRoll): CheckCard {
+		const system = () =>
+			this.system as unknown as {
+				actorUuid?: string | null;
+				tokenUuid?: string | null;
+				rollMode?: number;
+			};
+		return {
+			roll,
+			rollMode: () => Number(system().rollMode) || 0,
+			roller: () => {
+				const { actorUuid, tokenUuid } = system();
+				const actor = actorUuid ? fromUuidSync(actorUuid as `Actor.${string}`) : null;
+				const token = !actor && tokenUuid ? fromUuidSync(tokenUuid as `Scene.${string}`) : null;
+				return (actor ??
+					(token as { actor?: unknown } | null)?.actor ??
+					null) as RerollingActor | null;
+			},
+			rollsSource: () => ((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			update: (changes) => this.update(changes),
+		};
 	}
 
 	/** This card as the damage-card roll target reads and writes it. */

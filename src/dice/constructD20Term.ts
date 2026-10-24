@@ -3,7 +3,7 @@
  */
 export type d20TermOptions = {
 	/** The actor making the roll (currently unused but reserved for future features). */
-	actor: Actor;
+	actor?: Actor;
 	/** Minimum value for the d20 roll (e.g., 10 for reliable talent). */
 	minRoll: number;
 	/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */

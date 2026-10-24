@@ -10,11 +10,13 @@ import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
+import { checkCardRerollData } from '../../utils/checkCardRollTarget.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
 import parseMonsterLevel from '../../utils/parseMonsterLevel.js';
+import type { RerollingActor } from '../../utils/rerollEntries.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -888,17 +890,25 @@ class NimbleBaseActor<
 		roll: Roll<Record<string, unknown>>,
 		options = { rollMode: 0 } as ActorRollOptions,
 	) {
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'abilityCheck', key: abilityKey },
+			options.rollMode ?? 0,
+		);
+
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.abilityScores[abilityKey]} Check`,
 			type: 'abilityCheck',
-			rolls: [roll],
+			rolls: [rerolls.roll],
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
 				rollMode: options.rollMode,
 				abilityKey,
+				...rerolls.system,
 			},
 		};
 	}
@@ -1035,17 +1045,25 @@ class NimbleBaseActor<
 		roll: NimbleRoll | Roll<Record<string, unknown>>,
 		options = { rollMode: 0 } as ActorRollOptions,
 	) {
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'save', key: saveKey },
+			options.rollMode ?? 0,
+		);
+
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.savingThrows[saveKey]} Save`,
 			type: 'savingThrow',
-			rolls: [roll],
+			rolls: [rerolls.roll],
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
 				rollMode: options.rollMode,
 				saveKey,
+				...rerolls.system,
 			},
 		};
 	}

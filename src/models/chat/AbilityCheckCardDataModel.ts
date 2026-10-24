@@ -1,4 +1,4 @@
-import { metadata } from './common.js';
+import { incomingReactions, metadata, rerollHistory, roller } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -10,7 +10,10 @@ const abilityCheckCardSchema = () => ({
 declare namespace NimbleAbilityCheckCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof metadata> &
-		ReturnType<typeof abilityCheckCardSchema>;
+		ReturnType<typeof abilityCheckCardSchema> &
+		ReturnType<typeof roller> &
+		ReturnType<typeof incomingReactions> &
+		ReturnType<typeof rerollHistory>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
@@ -25,6 +28,9 @@ class NimbleAbilityCheckCardData extends foundry.abstract.TypeDataModel<
 		return {
 			...abilityCheckCardSchema(),
 			...metadata(),
+			...roller(),
+			...incomingReactions(),
+			...rerollHistory(),
 		};
 	}
 }
