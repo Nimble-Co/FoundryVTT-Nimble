@@ -305,6 +305,21 @@ describe('resolveRerollReaction', () => {
 		);
 	});
 
+	it('refuses a waiting entry of a once per attack rule that was already used', async () => {
+		const { target } = setupWorld({ oncePerRoll: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const message = createMessage({
+			entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
+		});
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(target.system.attributes.wounds.value).toBe(0);
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.rerollNoLongerAvailable'),
+		);
+	});
+
 	it('refuses a roll that misses by force as a failed use', async () => {
 		setupWorld();
 		const message = createMessage({ forceMiss: true });
@@ -639,6 +654,15 @@ describe('resolveRerollReaction', () => {
 		it('is false when the rule no longer offers the reroll', () => {
 			setupWorld({ offersRerollOn: vi.fn(() => false) });
 			const message = createMessage();
+
+			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
+		});
+
+		it('is false for a once per attack rule when the card has a used entry of it', () => {
+			setupWorld({ oncePerRoll: true });
+			const message = createMessage({
+				entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
+			});
 
 			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
 		});

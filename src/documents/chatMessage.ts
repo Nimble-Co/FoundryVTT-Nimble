@@ -1876,7 +1876,11 @@ class NimbleChatMessage extends ChatMessage {
 		const target = this.#findPrimaryDamageRoll();
 		if (!target) return false;
 		const systemData = this.system as unknown as ActivationCardSystemData;
-		return usableRerollEntry(entry, this.#rerollContext(systemData, this.#isForcedMiss(target))).ok;
+		return usableRerollEntry(
+			entry,
+			this.#rerollContext(systemData, this.#isForcedMiss(target)),
+			this.#incomingReactionEntries(),
+		).ok;
 	}
 
 	/**
@@ -2062,6 +2066,7 @@ class NimbleChatMessage extends ChatMessage {
 		const usable = usableRerollEntry(
 			entry,
 			this.#rerollContext(systemData, this.#isForcedMiss(target)),
+			this.#incomingReactionEntries(),
 		);
 		if (!usable.ok) {
 			return reject(
