@@ -8,7 +8,7 @@ import {
 } from './incomingReactionEntry.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
-import type { RollToReroll } from './rollToReroll.js';
+import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
 
@@ -26,7 +26,7 @@ interface RerollRuleLike {
 	oncePerAttack?: boolean;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
-	rerollChanges?: () => RerollChanges;
+	rerollChanges?: (kind?: RerollRollKind) => RerollChanges;
 }
 
 interface RerollingActor {

@@ -1690,11 +1690,13 @@ class NimbleChatMessage extends ChatMessage {
 		if (!next) return;
 
 		try {
-			const target = this.#rerollTarget()?.findRoll();
-			if (!target) return;
+			const rollTarget = this.#rerollTarget();
+			const target = rollTarget?.findRoll();
+			if (!rollTarget || !target) return;
 			const result = await rerollWithRule({
 				rule: next.rule,
 				entry: next.entry,
+				rollKind: rollTarget.context().roll.kind,
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced: target.replaced,
 				previousResult: target.previousResult,
@@ -1854,6 +1856,7 @@ class NimbleChatMessage extends ChatMessage {
 		const result = await rerollWithRule({
 			rule: usable.rule,
 			entry,
+			rollKind: rollTarget.context().roll.kind,
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,

@@ -374,10 +374,10 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 
 	/**
 	 * The changes this rule adds to the new roll. Extra damage reads this
-	 * rule's actor. A rule that rerolls no attack has no attack changes.
+	 * rule's actor. Only an attack gets the attack changes.
 	 */
-	rerollChanges(): RerollChanges {
-		const forAttack = this.rolls?.includes('attack') === true;
+	rerollChanges(kind: RerollRollKind = 'attack'): RerollChanges {
+		const forAttack = kind === 'attack' && this.rolls?.includes('attack') === true;
 		const formula = forAttack ? (this.extraDamage ?? '').trim() : '';
 		const extraDamage = formula
 			? Roll.replaceFormulaData(formula, this.actor?.getRollData() ?? {}, { missing: '0' })
