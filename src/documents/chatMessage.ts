@@ -1699,6 +1699,7 @@ class NimbleChatMessage extends ChatMessage {
 				replaced: target.replaced,
 				previousResult: target.previousResult,
 				makeRoll: (formula, options) => target.makeRoll(formula, options),
+				readNewDie: target.readNewDie?.bind(target),
 				earlierCritTriggers,
 				place: ({ roll, reroll, discardedCritTriggers }) =>
 					this.#placeReroll(next.entry, target, roll, {
@@ -1857,6 +1858,7 @@ class NimbleChatMessage extends ChatMessage {
 			replaced: target.replaced,
 			previousResult: target.previousResult,
 			makeRoll: (formula, options) => target.makeRoll(formula, options),
+			readNewDie: target.readNewDie?.bind(target),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
 			place: ({ roll, reroll, discardedCritTriggers }) =>
