@@ -69,7 +69,7 @@ describe('damageCardRollTarget', () => {
 		expect(context).toMatchObject({
 			attacker: { uuid: 'Actor.attacker' },
 			targets: [{ tokenUuid: TARGET_TOKEN }],
-			delivery: 'melee',
+			roll: { kind: 'attack', delivery: 'melee' },
 			outcome: { isCritical: false, isMiss: false },
 			forcedMiss: true,
 		});

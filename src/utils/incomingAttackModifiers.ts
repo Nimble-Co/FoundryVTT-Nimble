@@ -344,7 +344,7 @@ function computeIncomingAttackPlan(
 		targets: firstTargetToken
 			? [{ tokenUuid: firstTargetToken.document.uuid, actor: targetActor as RerollingActor | null }]
 			: [],
-		delivery: attackContext?.delivery ?? null,
+		roll: { kind: 'attack', delivery: attackContext?.delivery ?? null },
 		outcome: null,
 		forcedMiss: plan.forceMiss,
 	});

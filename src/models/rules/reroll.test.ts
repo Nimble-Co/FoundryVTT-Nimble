@@ -99,7 +99,7 @@ function makeRule(
 	return { rule, actor, item };
 }
 
-const TARGET_MELEE = { side: 'target', delivery: 'melee' } as const;
+const TARGET_MELEE = { side: 'target', roll: { kind: 'attack', delivery: 'melee' } } as const;
 
 describe('RerollRule', () => {
 	beforeEach(() => {
@@ -253,19 +253,32 @@ describe('RerollRule', () => {
 		it('does not offer to the other side', () => {
 			const { rule } = makeRule({ usedBy: 'roller' });
 			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
-			expect(rule.offersRerollOn({ side: 'roller', delivery: 'melee' })).toBe(true);
+			expect(
+				rule.offersRerollOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } }),
+			).toBe(true);
 		});
 
 		it('filters on how the attack is delivered', () => {
 			const { rule } = makeRule({ attackDelivery: 'ranged' });
 			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
-			expect(rule.offersRerollOn({ side: 'target', delivery: 'ranged' })).toBe(true);
-			expect(rule.offersRerollOn({ side: 'target', delivery: null })).toBe(false);
+			expect(
+				rule.offersRerollOn({ side: 'target', roll: { kind: 'attack', delivery: 'ranged' } }),
+			).toBe(true);
+			expect(
+				rule.offersRerollOn({ side: 'target', roll: { kind: 'attack', delivery: null } }),
+			).toBe(false);
 		});
 
 		it('does not offer when attacks are not among its rolls', () => {
 			const { rule } = makeRule({ rolls: [] });
 			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+		});
+
+		it('does not offer on a check while only attacks are among its rolls', () => {
+			const { rule } = makeRule({ usedBy: 'roller' });
+			expect(rule.offersRerollOn({ side: 'roller', roll: { kind: 'save', key: 'will' } })).toBe(
+				false,
+			);
 		});
 
 		it('is hidden while its charge pool is empty, and shown with charges left', () => {
