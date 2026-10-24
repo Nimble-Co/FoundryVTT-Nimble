@@ -6,7 +6,62 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "GDYnjVhtzNdh9YzW",
+				"identifier": "beguiling-influence",
+				"label": "Beguiling Influence (1/day)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "vZMwyQ5cAsDOdB5E",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"skillCheck"
+				],
+				"saves": [],
+				"skills": [
+					"influence"
+				],
+				"abilities": [],
+				"usedBy": "roller",
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "beguiling-influence",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"oncePerAttack": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

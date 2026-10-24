@@ -6,7 +6,62 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "xWhxCrLYXis3Ia61",
+				"identifier": "blood-sight",
+				"label": "Blood Sight (1/day)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "2DH0khjr6UI6KCMe",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"skillCheck"
+				],
+				"saves": [],
+				"skills": [
+					"examination"
+				],
+				"abilities": [],
+				"usedBy": "roller",
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "blood-sight",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"oncePerAttack": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
