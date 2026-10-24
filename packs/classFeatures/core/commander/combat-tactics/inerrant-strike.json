@@ -1,11 +1,38 @@
 {
-	"name": "Inerrant Strike.",
+	"name": "Inerrant Strike",
 	"type": "feature",
 	"img": "icons/skills/melee/shield-damaged-broken-orange.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "SR4BSATJmlsbW6tI",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"usedBy": "roller",
+				"outcome": "miss",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "combat-dice",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 1,
+				"extraDamage": "1d@pools.combat-dice.faces",
+				"automatic": false,
+				"discardedCritTriggers": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

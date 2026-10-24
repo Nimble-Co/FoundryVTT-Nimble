@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "modifyIncomingAttack",
+				"type": "reroll",
 				"disabled": false,
 				"id": "2t2MTnfR7EJBX5LP",
 				"identifier": "",
@@ -17,10 +17,23 @@
 					"self": "dying"
 				},
 				"priority": 1,
-				"modifier": "forceReroll",
-				"range": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"usedBy": "target",
+				"outcome": "criticalHit",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
 				"automatic": true,
-				"rerollTrigger": "criticalHit"
+				"discardedCritTriggers": true
 			}
 		],
 		"activation": {

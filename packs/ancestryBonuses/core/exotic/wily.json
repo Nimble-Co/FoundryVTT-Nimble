@@ -5,7 +5,56 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "67DMZ5mCJGQwlYvy",
+				"identifier": "wily",
+				"label": "Wily (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "7cex6ECfNqnD2Ln5",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"usedBy": "target",
+				"outcome": "nonCriticalHit",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "wily",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false
+			}
+		],
 		"description": "<p><strong>Wily</strong> </p><p>Force an enemy to reroll a non-critical attack against you, 1/encounter. </p><p>+3 to Influence friendly characters. [M]</p><p>Advantage on skill checks related to dragons. [M]</p>"
 	},
 	"effects": [],

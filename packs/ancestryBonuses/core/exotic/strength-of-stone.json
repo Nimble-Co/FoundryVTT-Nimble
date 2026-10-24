@@ -18,6 +18,54 @@
 				"skills": [
 					"might"
 				]
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "mlOTQQZYk27NHFCE",
+				"identifier": "strength-of-stone",
+				"label": "Strength of Stone (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "IYPgkLaFdJxohpkT",
+				"identifier": "",
+				"label": "Strength of Stone",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"usedBy": "target",
+				"outcome": "criticalHit",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "strength-of-stone",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false
 			}
 		],
 		"description": "<p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p>"
