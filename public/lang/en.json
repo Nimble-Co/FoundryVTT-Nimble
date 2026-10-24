@@ -1828,7 +1828,7 @@
 				}
 			},
 			"reroll": {
-				"description": "Lets the one who rolled, or the target, roll an attack again. The new result stands.",
+				"description": "Lets the one who rolled, or the target of an attack, roll an attack, a save or a check again. The new result stands.",
 				"form": {
 					"when": "When?",
 					"onlyWhile": {
@@ -1847,12 +1847,25 @@
 				"rolls": {
 					"label": "Which roll can it reroll?",
 					"choices": {
-						"attack": "Attack"
+						"attack": "Attack",
+						"save": "Save",
+						"skillCheck": "Skill Check",
+						"abilityCheck": "Ability Check"
 					}
 				},
+				"saves": {
+					"label": "Which saves?"
+				},
+				"skills": {
+					"label": "Which skills?"
+				},
+				"abilities": {
+					"label": "Which abilities?"
+				},
+				"noneMeansAny": "None picked means any.",
 				"usedBy": {
 					"label": "Who can use it?",
-					"hint": "The one who made the attack, or the creature the attack is against.",
+					"hint": "The one who made the attack, or the creature the attack is against. On a save or a check, only the one who rolled.",
 					"choices": {
 						"roller": "The one who rolled",
 						"target": "The target"

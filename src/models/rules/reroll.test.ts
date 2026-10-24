@@ -88,6 +88,9 @@ function makeRule(
 		disabled: false,
 		id: 'rule-1',
 		label: '',
+		saves: [],
+		skills: [],
+		abilities: [],
 		...config,
 	});
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
@@ -119,7 +122,7 @@ describe('RerollRule', () => {
 				min?: number;
 				max?: number;
 				integer?: boolean;
-				element?: { choices?: Record<string, string> };
+				element?: { choices?: Record<string, string> | (() => Record<string, string>) };
 				options?: Record<string, unknown>;
 				showWhen?: (data: Record<string, unknown>) => boolean;
 			}
@@ -141,6 +144,9 @@ describe('RerollRule', () => {
 			expect(schema.woundCost?.initial).toBe(0);
 			expect(schema.heroicReaction?.initial).toBe('');
 			expect(schema.oncePerAttack?.initial).toBe(false);
+			expect(schema.saves?.initial).toEqual([]);
+			expect(schema.skills?.initial).toEqual([]);
+			expect(schema.abilities?.initial).toEqual([]);
 			expect(schema.type?.initial).toBe('reroll');
 		});
 
@@ -175,6 +181,49 @@ describe('RerollRule', () => {
 			);
 		});
 
+		it('offers attacks, saves, skill checks and ability checks as rolls', () => {
+			expect(schema.rolls?.element?.choices).toEqual({
+				attack: 'NIMBLE.rules.reroll.rolls.choices.attack',
+				save: 'NIMBLE.rules.reroll.rolls.choices.save',
+				skillCheck: 'NIMBLE.rules.reroll.rolls.choices.skillCheck',
+				abilityCheck: 'NIMBLE.rules.reroll.rolls.choices.abilityCheck',
+			});
+		});
+
+		it.each([
+			['saves', () => CONFIG.NIMBLE.savingThrows],
+			['skills', () => CONFIG.NIMBLE.skills],
+			['abilities', () => CONFIG.NIMBLE.abilityScores],
+		] as const)('picks %s from the system keys', (name, keys) => {
+			const choices = schema[name]?.element?.choices;
+			const resolved = typeof choices === 'function' ? choices() : choices;
+			expect(Object.keys(resolved ?? {})).toEqual(Object.keys(keys()));
+		});
+
+		it.each([
+			['saves', 'save'],
+			['skills', 'skillCheck'],
+			['abilities', 'abilityCheck'],
+		])('shows %s only when %s is among the rolls', (name, kind) => {
+			const showWhen = schema[name]?.options?.showWhen as (
+				data: Record<string, unknown>,
+			) => boolean;
+			expect(showWhen({ rolls: ['attack', kind] })).toBe(true);
+			expect(showWhen({ rolls: ['attack'] })).toBe(false);
+			expect(showWhen({})).toBe(false);
+		});
+
+		it.each(['outcome', 'attackDelivery', 'primaryDieBonus', 'extraDamage', 'oncePerAttack'])(
+			'shows %s only when attack is among the rolls',
+			(name) => {
+				const showWhen = schema[name]?.options?.showWhen as (
+					data: Record<string, unknown>,
+				) => boolean;
+				expect(showWhen({ rolls: ['save', 'attack'] })).toBe(true);
+				expect(showWhen({ rolls: ['save'] })).toBe(false);
+			},
+		);
+
 		it('bounds the numbers', () => {
 			expect(schema.rollModeChange).toMatchObject({ min: -1, max: 1, integer: true });
 			expect(schema.chargeCost).toMatchObject({ min: 1, integer: true });
@@ -191,11 +240,13 @@ describe('RerollRule', () => {
 
 		it('asks about a discarded crit only when the first roll can be a crit', () => {
 			const showWhen = schema.discardedCritTriggers?.showWhen;
-			expect(showWhen?.({ outcome: 'criticalHit' })).toBe(true);
-			expect(showWhen?.({ outcome: 'hit' })).toBe(true);
-			expect(showWhen?.({ outcome: 'always' })).toBe(true);
-			expect(showWhen?.({ outcome: 'nonCriticalHit' })).toBe(false);
-			expect(showWhen?.({ outcome: 'miss' })).toBe(false);
+			const attack = ['attack'];
+			expect(showWhen?.({ rolls: attack, outcome: 'criticalHit' })).toBe(true);
+			expect(showWhen?.({ rolls: attack, outcome: 'hit' })).toBe(true);
+			expect(showWhen?.({ rolls: attack, outcome: 'always' })).toBe(true);
+			expect(showWhen?.({ rolls: attack, outcome: 'nonCriticalHit' })).toBe(false);
+			expect(showWhen?.({ rolls: attack, outcome: 'miss' })).toBe(false);
+			expect(showWhen?.({ rolls: ['save'], outcome: 'always' })).toBe(false);
 		});
 
 		it('labels every field for the rules builder', () => {
@@ -215,9 +266,10 @@ describe('RerollRule', () => {
 					continue;
 				const options = (field.options ?? field) as { label?: string; hint?: string };
 				expect(options.label, name).toBe(`NIMBLE.rules.reroll.${name}.label`);
-				expect(options.hint, name).toBe(
-					name === 'rolls' ? undefined : `NIMBLE.rules.reroll.${name}.hint`,
-				);
+				const hint = ['saves', 'skills', 'abilities'].includes(name)
+					? 'NIMBLE.rules.reroll.noneMeansAny'
+					: `NIMBLE.rules.reroll.${name}.hint`;
+				expect(options.hint, name).toBe(name === 'rolls' ? undefined : hint);
 			}
 		});
 
@@ -279,6 +331,70 @@ describe('RerollRule', () => {
 			expect(rule.offersRerollOn({ side: 'roller', roll: { kind: 'save', key: 'will' } })).toBe(
 				false,
 			);
+		});
+
+		describe('on a check', () => {
+			const save = (key: string) => ({
+				side: 'roller' as const,
+				roll: { kind: 'save', key } as const,
+			});
+
+			it('offers any save when no save is picked', () => {
+				const { rule } = makeRule({ usedBy: 'roller', rolls: ['save'] });
+				expect(rule.offersRerollOn(save('will'))).toBe(true);
+				expect(rule.offersRerollOn(save('strength'))).toBe(true);
+			});
+
+			it.each([
+				['save', 'saves', 'intelligence', 'will'],
+				['skillCheck', 'skills', 'arcana', 'stealth'],
+				['abilityCheck', 'abilities', 'dexterity', 'strength'],
+			] as const)('offers a %s only on the %s picked', (kind, list, picked, other) => {
+				const { rule } = makeRule({ usedBy: 'roller', rolls: [kind], [list]: [picked, 'lore'] });
+				expect(rule.offersRerollOn({ side: 'roller', roll: { kind, key: picked } })).toBe(true);
+				expect(rule.offersRerollOn({ side: 'roller', roll: { kind, key: other } })).toBe(false);
+			});
+
+			it('filters each check kind with its own list only', () => {
+				const { rule } = makeRule({
+					usedBy: 'roller',
+					rolls: ['save', 'skillCheck'],
+					skills: ['arcana'],
+				});
+				expect(rule.offersRerollOn(save('will'))).toBe(true);
+			});
+
+			it('does not offer a check kind that is not among its rolls', () => {
+				const { rule } = makeRule({ usedBy: 'roller', rolls: ['attack', 'save'] });
+				const skill = { side: 'roller', roll: { kind: 'skillCheck', key: 'arcana' } } as const;
+				expect(rule.offersRerollOn(skill)).toBe(false);
+			});
+
+			it('never offers a check to the target side', () => {
+				const { rule } = makeRule({ usedBy: 'target', rolls: ['save'] });
+				expect(rule.offersRerollOn({ side: 'target', roll: { kind: 'save', key: 'will' } })).toBe(
+					false,
+				);
+			});
+
+			it('ignores the attack type on a check', () => {
+				const { rule } = makeRule({ usedBy: 'roller', rolls: ['save'], attackDelivery: 'ranged' });
+				expect(rule.offersRerollOn(save('dexterity'))).toBe(true);
+			});
+
+			it('does not offer on an attack when attack is not among its rolls', () => {
+				const { rule } = makeRule({ usedBy: 'roller', rolls: ['save'] });
+				const attack = { side: 'roller', roll: { kind: 'attack', delivery: 'melee' } } as const;
+				expect(rule.offersRerollOn(attack)).toBe(false);
+			});
+
+			it('still needs the cost to be payable', () => {
+				const { rule } = makeRule(
+					{ usedBy: 'roller', rolls: ['save'], chargePoolIdentifier: 'sand' },
+					{ pool: 0 },
+				);
+				expect(rule.offersRerollOn(save('will'))).toBe(false);
+			});
 		});
 
 		it('is hidden while its charge pool is empty, and shown with charges left', () => {
@@ -363,6 +479,20 @@ describe('RerollRule', () => {
 			} finally {
 				rollGlobal.Roll.replaceFormulaData = previous;
 			}
+		});
+
+		it('drops the attack changes from a rule that rerolls no attack', () => {
+			const { rule } = makeRule({
+				rolls: ['save'],
+				rollModeChange: 1,
+				primaryDieBonus: 2,
+				extraDamage: '1d6',
+			});
+			expect(rule.rerollChanges()).toEqual({
+				rollModeChange: 1,
+				primaryDieBonus: 0,
+				extraDamage: '',
+			});
 		});
 
 		it('leaves the extra damage empty when none is set', () => {
