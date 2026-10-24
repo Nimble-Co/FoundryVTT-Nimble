@@ -19,8 +19,12 @@
 				"priority": 1,
 				"suppressActivationCard": "auto",
 				"rolls": [
-					"attack"
+					"attack",
+					"save"
 				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
 				"usedBy": "roller",
 				"outcome": "always",
 				"attackDelivery": "any",
