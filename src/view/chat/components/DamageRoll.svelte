@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import { rerollJustLanded, rollingRerollOf } from '#utils/rerollRolling.svelte.ts';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import RollSummary from './RollSummary.svelte';
@@ -50,7 +51,12 @@
 	const messageDocument = getContext('messageDocument');
 	const { actorType, permissions } = messageDocument.system;
 
-	let { damageType, ignoreArmor = false, outcome, roll } = $props();
+	let { damageType, ignoreArmor = false, outcome, roll, nodeId = null } = $props();
+	let rolling = $derived.by(() => {
+		const inAir = nodeId ? rollingRerollOf(messageDocument.id) : null;
+		return inAir?.slot === nodeId ? inAir : null;
+	});
+	let landed = $derived(!!nodeId && rerollJustLanded(messageDocument.id, nodeId));
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
 	let multiplier = $derived(getDamageMultiplier(outcome));
@@ -65,6 +71,8 @@
 		total={Math.ceil(roll.total * multiplier)}
 		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={hasPrimaryDieDetails(rollOptions)}
+		{rolling}
+		{landed}
 	/>
 {:else}
 	<RollSummary

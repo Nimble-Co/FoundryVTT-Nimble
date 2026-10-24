@@ -30,7 +30,7 @@ import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
-import { showDiceAnimation } from '#utils/showDiceAnimation.js';
+import { canShowDiceAnimation, showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
@@ -48,6 +48,7 @@ import {
 } from '../utils/chargePool/chargePoolReroll.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '../utils/chargePool/types.js';
 import {
+	broadcastRerollRolling,
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
 } from '../utils/incomingAttackReactions.js';
@@ -1691,17 +1692,28 @@ class NimbleChatMessage extends ChatMessage {
 			this.#dropStaleOutcomeOffers(carried.entries, context),
 			rerolls.manual,
 		);
-		// The card shows the new result only after the dice land.
-		await showDiceAnimation(newRoll, this.id ?? undefined);
-		await this.update({
-			rolls: rollsSource,
-			system: {
-				...outcome,
-				incomingReactions: entries,
-				...historyChanges,
-				...this.#movementOfferChanges(outcome),
-			},
-		} as Record<string, unknown>);
+		const messageId = this.id;
+		const rolling =
+			messageId && canShowDiceAnimation()
+				? { slot: damageNode.id, faces: history.reroll.faces ?? 6 }
+				: null;
+		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
+		try {
+			// The card shows the new result only after the dice land.
+			await showDiceAnimation(newRoll, messageId ?? undefined);
+			await this.update({
+				rolls: rollsSource,
+				system: {
+					...outcome,
+					incomingReactions: entries,
+					...historyChanges,
+					...this.#movementOfferChanges(outcome),
+				},
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (rolling && messageId) broadcastRerollRolling(messageId, null);
+			throw error;
+		}
 
 		await this.#followChargeRecovery(recoveryChange);
 		await this.#runAutomaticReroll(rerolls.automatic, entries, critTriggers, context);

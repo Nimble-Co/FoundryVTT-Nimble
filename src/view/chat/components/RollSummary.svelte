@@ -2,11 +2,20 @@
 	import type { RollSummaryProps } from '#types/components/RollSummary.d.ts';
 
 	import { SYSTEM_ID } from '#system';
+	import DieFace from '#view/components/DieFace.svelte';
 
 	import { getPrimaryDieBreakdown } from './RollSummary.svelte.ts';
 
-	const { label, subheading, tooltip, total, options, showRollDetails }: RollSummaryProps =
-		$props();
+	const {
+		label,
+		subheading,
+		tooltip,
+		total,
+		options,
+		showRollDetails,
+		rolling = null,
+		landed = false,
+	}: RollSummaryProps = $props();
 	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get(SYSTEM_ID, 'autoExpandRolls');
 	let expanded = $state(autoExpand);
@@ -20,11 +29,16 @@
 <div class="roll" class:roll--no-subheading={!subheading}>
 	<div
 		class="roll__total"
-		data-tooltip={expanded ? null : tooltip}
+		data-tooltip={expanded || rolling ? null : tooltip}
 		data-tooltip-class="nimble-tooltip nimble-tooltip--roll"
 		data-tooltip-direction="LEFT"
+		aria-busy={rolling ? 'true' : undefined}
 	>
-		{total}
+		{#if rolling}
+			<DieFace faces={rolling.faces} rolling />
+		{:else}
+			<span class="roll__value" class:roll__value--landed={landed}>{total}</span>
+		{/if}
 	</div>
 
 	<h3 class="roll__label">{label}</h3>
@@ -156,6 +170,29 @@
 			font-weight: 700;
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
+		}
+
+		&__value--landed {
+			display: inline-block;
+			animation: roll-value-land 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+			@media (prefers-reduced-motion: reduce) {
+				animation: roll-value-fade 150ms ease-out both;
+			}
+		}
+	}
+
+	@keyframes roll-value-land {
+		from {
+			opacity: 0;
+			transform: scale(0.8);
+			filter: blur(3px);
+		}
+	}
+
+	@keyframes roll-value-fade {
+		from {
+			opacity: 0;
 		}
 	}
 </style>

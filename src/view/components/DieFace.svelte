@@ -17,14 +17,16 @@
 		},
 	} as const;
 
-	let { faces, value, outcome = null, discarded = false }: DieFaceProps = $props();
+	let { faces, value, outcome = null, discarded = false, rolling = false }: DieFaceProps = $props();
 
 	// Foundry's own dice tooltip draws a d6 for a die size it has no icon for.
 	let shape = $derived(DIE_SIZE_CHAIN.includes(faces) ? faces : 6);
 	let ariaLabel = $derived(
-		localize(ARIA_LABEL_KEYS[discarded ? 'was' : 'now'][outcome ?? 'none'], {
-			value: String(value),
-		}),
+		rolling
+			? localize('NIMBLE.dieFace.rolling')
+			: localize(ARIA_LABEL_KEYS[discarded ? 'was' : 'now'][outcome ?? 'none'], {
+					value: String(value),
+				}),
 	);
 </script>
 
@@ -39,10 +41,13 @@
 	class:nimble-die-face--crit={outcome === 'crit'}
 	class:nimble-die-face--miss={outcome === 'miss'}
 	class:nimble-die-face--discarded={discarded}
+	class:nimble-die-face--rolling={rolling}
 	role="img"
 	aria-label={ariaLabel}
 >
-	<span class="nimble-die-face__number" aria-hidden="true">{value}</span>
+	{#if !rolling}
+		<span class="nimble-die-face__number" aria-hidden="true">{value}</span>
+	{/if}
 </span>
 
 <style lang="scss">
@@ -127,6 +132,15 @@
 			--die-face-number-color: var(--nimble-die-face-discarded-miss-number-color);
 		}
 
+		// One turn per throw, squashed at mid-turn like a die meeting the table.
+		&--rolling {
+			animation: nimble-die-face-tumble 760ms cubic-bezier(0.45, 0, 0.2, 1) infinite;
+
+			@media (prefers-reduced-motion: reduce) {
+				animation: nimble-die-face-pulse 900ms ease-in-out infinite alternate;
+			}
+		}
+
 		&__number {
 			position: absolute;
 			top: var(--die-face-y);
@@ -137,6 +151,30 @@
 			line-height: 1;
 			font-variant-numeric: lining-nums tabular-nums;
 			text-box: trim-both cap alphabetic;
+		}
+	}
+
+	@keyframes nimble-die-face-tumble {
+		from {
+			transform: rotate(0deg) scale(1);
+		}
+
+		50% {
+			transform: rotate(200deg) scale(0.86, 0.92);
+		}
+
+		to {
+			transform: rotate(360deg) scale(1);
+		}
+	}
+
+	@keyframes nimble-die-face-pulse {
+		from {
+			opacity: 0.45;
+		}
+
+		to {
+			opacity: 1;
 		}
 	}
 </style>

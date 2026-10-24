@@ -23,6 +23,21 @@ describe('DieFace', () => {
 		expect(die.className).not.toMatch(/nimble-die-face--d(4|8|10|12|20)\b/);
 	});
 
+	it('tumbles with no number while the die is in the air', () => {
+		const die = renderDie({ faces: 20, rolling: true });
+
+		expect(die).toHaveClass('nimble-die-face--rolling');
+		expect(die).toHaveClass('nimble-die-face--d20');
+		expect(die.querySelector('.nimble-die-face__number')).toBeNull();
+		expect(die).toHaveAccessibleName('Rolling the dice');
+	});
+
+	it('does not tumble once the die has landed', () => {
+		const die = renderDie({ faces: 20, value: 17 });
+
+		expect(die).not.toHaveClass('nimble-die-face--rolling');
+	});
+
 	it('shows the number once, hidden from screen readers', () => {
 		const die = renderDie({ faces: 20, value: 17 });
 		const number = die.querySelector('.nimble-die-face__number');

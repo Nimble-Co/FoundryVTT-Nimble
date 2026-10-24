@@ -17,6 +17,7 @@ import { registerGrantedActionOfferSocketListener } from '../utils/grantedAction
 import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
 import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
+import { registerRerollRollingHook } from '../utils/rerollRolling.svelte.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
 import registerAdjacencySync from './combatantHooks/adjacencySync.js';
@@ -70,6 +71,7 @@ export default async function ready() {
 	registerGrantedActionOfferSocketListener();
 	registerMovementOffers();
 	registerIncomingReactionSocketListener();
+	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
 

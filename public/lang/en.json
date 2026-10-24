@@ -512,6 +512,7 @@
 			"now": "Now {value}",
 			"nowCrit": "Now {value}, a crit",
 			"nowMiss": "Now {value}, a miss",
+			"rolling": "Rolling the dice",
 			"was": "Was {value}",
 			"wasCrit": "Was {value}, a crit",
 			"wasMiss": "Was {value}, a miss"
