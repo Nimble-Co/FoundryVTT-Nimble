@@ -7,8 +7,8 @@ import {
 	ruleChargesLeft,
 	spendRuleCharge,
 } from './chargePool/ruleChargeGate.js';
-import { findActorCombatant } from './findActorCombatant.js';
 import { getHeroicReactionAvailabilityUpdate, type HeroicReactionKey } from './heroicActions.js';
+import { isCombatStarted } from './isCombatStarted.js';
 import { spendSpellCost } from './spell/spendSpellCost.js';
 import { validateSpellCost } from './spell/validateSpellCost.js';
 
@@ -52,6 +52,18 @@ function nothingPaid(): PaidRerollCost {
 
 function asSpellCostActor(actor: RerollPayer): SpellCostActorLike {
 	return actor as unknown as SpellCostActorLike;
+}
+
+/** The actor's combatant in the started combat, or null outside combat. */
+function findActorCombatant(
+	actor: Actor | null | undefined,
+): { combat: Combat; combatant: Combatant } | null {
+	const combat = game.combat ?? null;
+	if (!actor || !combat || !isCombatStarted(combat)) return null;
+	const combatant = combat.combatants.find(
+		(candidate) => candidate.actor === actor || candidate.actor?.uuid === actor.uuid,
+	);
+	return combatant ? { combat, combatant } : null;
 }
 
 /** Whether the actor can gain all of `amount` Wounds without going past the maximum. */
@@ -214,6 +226,7 @@ async function payRerollCost(
 
 export {
 	canPayRerollCost,
+	findActorCombatant,
 	payRerollCost,
 	refundRerollCost,
 	rerollCostCharges,
