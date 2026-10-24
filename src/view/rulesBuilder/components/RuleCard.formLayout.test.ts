@@ -136,7 +136,76 @@ describe('RuleCard with a form layout (reroll)', () => {
 		const { container } = render(RuleCard, { rule: initialRule('reroll'), manager });
 		const field = container.querySelector('[data-field="rolls"]') as HTMLElement;
 		const chips = [...field.querySelectorAll('button')].map((chip) => chip.textContent?.trim());
-		expect(chips).toEqual(['Attack']);
+		expect(chips).toEqual(['Attack', 'Save', 'Skill Check', 'Ability Check']);
+	});
+
+	it('adds a roll to the rolls it can reroll', async () => {
+		const { container } = render(RuleCard, { rule: initialRule('reroll'), manager });
+		const field = container.querySelector('[data-field="rolls"]') as HTMLElement;
+		const save = [...field.querySelectorAll('button')].find(
+			(chip) => chip.textContent?.trim() === 'Save',
+		);
+		await fireEvent.click(save as HTMLButtonElement);
+		expect(updateRule).toHaveBeenCalledWith(
+			'test-reroll',
+			expect.objectContaining({ rolls: ['attack', 'save'] }),
+		);
+	});
+
+	it('asks which saves, skills and abilities under the roll question', () => {
+		const rolls = ['attack', 'save', 'skillCheck', 'abilityCheck'];
+		const { container } = render(RuleCard, { rule: initialRule('reroll', { rolls }), manager });
+		const group = container
+			.querySelector('[data-field="rolls"]')
+			?.closest('section') as HTMLElement;
+		expect(
+			[...group.querySelectorAll<HTMLElement>('[data-field]')].map((el) => el.dataset.field),
+		).toEqual(['rolls', 'saves', 'skills', 'abilities']);
+		expect(group.querySelector('.nimble-rule-form__question')?.textContent?.trim()).toBe(
+			'Which roll can it reroll?',
+		);
+		const labels = [...group.querySelectorAll('.nimble-rule-form__label')].map((el) =>
+			el.textContent?.trim(),
+		);
+		expect(labels).toEqual(['Which saves?', 'Which skills?', 'Which abilities?']);
+		expect(group.textContent).toContain('None picked means any.');
+	});
+
+	it('shows only the fields that apply to a rule with no attack', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('reroll', { rolls: ['save'] }),
+			manager,
+		});
+		expect(shownFields(container)).toEqual([
+			'rolls',
+			'saves',
+			'usedBy',
+			'predicate',
+			'chargePoolIdentifier',
+			'manaCost',
+			'woundCost',
+			'heroicReaction',
+			'rollModeChange',
+			'automatic',
+		]);
+		const questions = [...container.querySelectorAll('.nimble-rule-form__question')].map((el) =>
+			el.textContent?.trim(),
+		);
+		expect(questions).not.toContain('When?');
+	});
+
+	it('lists the saves by name', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('reroll', { rolls: ['save'] }),
+			manager,
+		});
+		const field = container.querySelector('[data-field="saves"]') as HTMLElement;
+		expect([...field.querySelectorAll('button')].map((chip) => chip.textContent?.trim())).toEqual([
+			'Strength',
+			'Dexterity',
+			'Intelligence',
+			'Will',
+		]);
 	});
 
 	it('picks advantage or disadvantage from a list and stores a number', async () => {

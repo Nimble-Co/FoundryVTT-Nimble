@@ -40,6 +40,9 @@
 				"rolls": [
 					"attack"
 				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
 				"usedBy": "target",
 				"outcome": "nonCriticalHit",
 				"attackDelivery": "any",

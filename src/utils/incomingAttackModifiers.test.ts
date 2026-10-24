@@ -860,8 +860,14 @@ describe('Reroll rules on the attack', () => {
 					side: 'target',
 				}),
 			]);
-			expect(rollerRule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
-			expect(targetRule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+			expect(rollerRule.offersRerollOn).toHaveBeenCalledWith({
+				side: 'roller',
+				roll: { kind: 'attack', delivery: 'melee' },
+			});
+			expect(targetRule.offersRerollOn).toHaveBeenCalledWith({
+				side: 'target',
+				roll: { kind: 'attack', delivery: 'melee' },
+			});
 		});
 
 		it('puts an automatic rule on the automatic list with its rule', () => {

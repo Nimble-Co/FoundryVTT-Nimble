@@ -134,6 +134,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 			const result = await rerollWithRule({
 				rule: next.rule,
 				entry: next.entry,
+				rollKind: 'attack',
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced,
 				previousResult: replaced.primaryDieValue ?? null,
@@ -344,7 +345,7 @@ function computeIncomingAttackPlan(
 		targets: firstTargetToken
 			? [{ tokenUuid: firstTargetToken.document.uuid, actor: targetActor as RerollingActor | null }]
 			: [],
-		delivery: attackContext?.delivery ?? null,
+		roll: { kind: 'attack', delivery: attackContext?.delivery ?? null },
 		outcome: null,
 		forcedMiss: plan.forceMiss,
 	});

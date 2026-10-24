@@ -1,3 +1,5 @@
+import type { Snippet } from 'svelte';
+
 export interface RollSummaryOptions {
 	rollOptions?: {
 		primaryDieValue?: string | number;
@@ -16,6 +18,8 @@ export interface RollSummaryProps {
 	total: number;
 	options?: RollSummaryOptions;
 	showRollDetails?: boolean;
+	/** Controls at the right end of the roll row, before the expand button. */
+	action?: Snippet;
 	/** The reroll dice of this roll are in the air: the total shows a tumbling die this size. */
 	rolling?: { faces: number } | null;
 	/** The total just replaced a rolling die, so it settles in. */
