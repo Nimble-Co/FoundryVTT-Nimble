@@ -1691,6 +1691,8 @@ class NimbleChatMessage extends ChatMessage {
 			this.#dropStaleOutcomeOffers(carried.entries, context),
 			rerolls.manual,
 		);
+		// The card shows the new result only after the dice land.
+		await showDiceAnimation(newRoll, this.id ?? undefined);
 		await this.update({
 			rolls: rollsSource,
 			system: {
@@ -1701,7 +1703,6 @@ class NimbleChatMessage extends ChatMessage {
 			},
 		} as Record<string, unknown>);
 
-		await showDiceAnimation(newRoll, this.id ?? undefined);
 		await this.#followChargeRecovery(recoveryChange);
 		await this.#runAutomaticReroll(rerolls.automatic, entries, critTriggers, context);
 	}
