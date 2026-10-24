@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import {
 	type CheckCard,
+	checkCardRerollData,
 	checkCardRollTarget,
 	checkRollOfCard,
 	collectCheckRerolls,
@@ -168,7 +169,21 @@ describe('checkCardRollTarget', () => {
 		};
 		expect(JSON.parse(changes.rolls[0]).formula).toBe('1d20 + 3[Will]');
 		expect(changes.rolls).toHaveLength(1);
-		expect(changes.system).toEqual({ incomingReactions: entries, rerolls: [] });
+		expect(changes.system).toEqual({ incomingReactions: entries, rerolls: [], rollMode: 0 });
+	});
+
+	it('writes the roll mode the new roll used, so the card shows it', async () => {
+		rollD20(4);
+		const card = makeCard();
+		const found = checkCardRollTarget(card).findRoll();
+		if (!found) throw new Error('no roll');
+		const roll = await found.makeRoll('1d20 + 3[Will]', { rollModeSources: [0, 1] });
+
+		const prepared = await found.prepare(roll, []);
+		await prepared.write({ incomingReactions: [], rerolls: [], discardedCritTriggers: false });
+
+		const changes = vi.mocked(card.update).mock.calls[0][0] as { system: Record<string, unknown> };
+		expect(changes.system.rollMode).toBe(1);
 	});
 });
 
@@ -269,5 +284,41 @@ describe('collectCheckRerolls', () => {
 		});
 
 		expect(result.incomingReactions).toEqual([]);
+	});
+});
+
+describe('checkCardRerollData', () => {
+	it('writes the roller and keeps the roll mode when nothing rerolled', async () => {
+		const roller = {
+			uuid: 'Actor.roller',
+			token: { uuid: 'Scene.s.Token.t' },
+			rules: [rerollRule()],
+		};
+
+		const data = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, -1);
+
+		expect(data.system).toMatchObject({
+			actorUuid: 'Actor.roller',
+			tokenUuid: 'Scene.s.Token.t',
+			rerolls: [],
+			rollMode: -1,
+		});
+	});
+
+	it('writes the roll mode of the roll that stands after an automatic reroll', async () => {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => true,
+		};
+		rollD20(15);
+		const rule = rerollRule({
+			automatic: true,
+			rerollChanges: () => ({ rollModeChange: 1, primaryDieBonus: 0, extraDamage: '' }),
+		});
+		const roller = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };
+
+		const data = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
+
+		expect(data.roll.formula).toBe('2d20khn + 3[Will]');
+		expect(data.system.rollMode).toBe(1);
 	});
 });

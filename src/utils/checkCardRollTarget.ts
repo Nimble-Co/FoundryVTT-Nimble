@@ -175,6 +175,7 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 							system: {
 								incomingReactions: changes.incomingReactions,
 								rerolls: changes.rerolls,
+								rollMode: netRollMode(roll.options as Record<string, unknown>),
 							},
 						});
 					},
@@ -246,6 +247,7 @@ async function checkCardRerollData<TRoll extends AnyRoll>(
 		tokenUuid: string | null;
 		incomingReactions: IncomingReactionEntry[];
 		rerolls: RerollRecord[];
+		rollMode: number;
 	};
 }> {
 	const result = await collectCheckRerolls({ roller, roll, check, rollMode });
@@ -256,6 +258,10 @@ async function checkCardRerollData<TRoll extends AnyRoll>(
 			tokenUuid: roller.token?.uuid ?? null,
 			incomingReactions: result.incomingReactions,
 			rerolls: result.rerolls,
+			rollMode:
+				result.rerolls.length > 0
+					? netRollMode(result.roll.options as Record<string, unknown>)
+					: rollMode,
 		},
 	};
 }
