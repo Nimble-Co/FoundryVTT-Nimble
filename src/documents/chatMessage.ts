@@ -865,7 +865,18 @@ class NimbleChatMessage extends ChatMessage {
 					}
 				}
 
+				if (this.#waitsOnRerollActor((triggeringDocument as { uuid?: string }).uuid)) {
+					requiresUpdate = true;
+				}
+
 				if (requiresUpdate) update();
+			});
+
+			// Charge pools can live on the actor's items.
+			const updateItemHook = Hooks.on('updateItem', (triggeringDocument, _change, options) => {
+				if ((options as { diff?: boolean }).diff === false) return;
+				const parent = (triggeringDocument as { parent?: { uuid?: string } | null }).parent;
+				if (this.#waitsOnRerollActor(parent?.uuid)) update();
 			});
 
 			const updateChatMessageHook = Hooks.on(
@@ -883,6 +894,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			return () => {
 				Hooks.off('updateActor', updateActorHook);
+				Hooks.off('updateItem', updateItemHook);
 				Hooks.off('updateChatMessage', updateChatMessageHook);
 				Hooks.off('updateUser', updateUserHook);
 			};
@@ -1581,6 +1593,14 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		return entry;
+	}
+
+	/** Whether a waiting reroll on this card can be used by the actor with this uuid. */
+	#waitsOnRerollActor(actorUuid: string | undefined): boolean {
+		if (!actorUuid) return false;
+		return this.#incomingReactionEntries().some(
+			(entry) => entry.kind === 'reroll' && !entry.used && entry.actorUuid === actorUuid,
+		);
 	}
 
 	#incomingReactionEntries(): IncomingReactionEntry[] {
