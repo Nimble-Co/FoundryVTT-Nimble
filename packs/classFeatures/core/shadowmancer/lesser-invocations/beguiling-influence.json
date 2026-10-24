@@ -12,7 +12,7 @@
 				"disabled": false,
 				"id": "GDYnjVhtzNdh9YzW",
 				"identifier": "beguiling-influence",
-				"label": "Beguiling Influence (1/day)",
+				"label": "Beguiling Influence (1/Safe Rest)",
 				"predicate": {},
 				"priority": 1,
 				"scope": "item",
