@@ -1924,7 +1924,7 @@
 						"none": "None"
 					}
 				},
-				"oncePerRoll": {
+				"oncePerAttack": {
 					"label": "Only once per attack",
 					"hint": "The feature can reroll the same attack only once, even with uses left."
 				}

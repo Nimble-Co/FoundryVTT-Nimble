@@ -75,7 +75,7 @@ export interface IncomingReactionEntry {
 	/** reroll only: the side of the roll the entry was stamped for */
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
-	oncePerRoll?: boolean;
+	oncePerAttack?: boolean;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollTrigger?: RerollTrigger;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */

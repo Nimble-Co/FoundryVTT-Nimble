@@ -157,10 +157,10 @@ describe('rerollAgainRecords', () => {
 	});
 });
 
-describe('"Reroll again" for a once-per-roll rule', () => {
-	function pendingAfterReroll(oncePerRoll: boolean) {
-		const used = entry({ id: 'used', used: true, oncePerRoll });
-		const entries = withNewRerollEntries([used], [entry({ id: 'new', oncePerRoll })]);
+describe('"Reroll again" for a once-per-attack rule', () => {
+	function pendingAfterReroll(oncePerAttack: boolean) {
+		const used = entry({ id: 'used', used: true, oncePerAttack });
+		const entries = withNewRerollEntries([used], [entry({ id: 'new', oncePerAttack })]);
 		return entries.filter((candidate) => !candidate.used);
 	}
 
@@ -172,7 +172,7 @@ describe('"Reroll again" for a once-per-roll rule', () => {
 		expect([...rerollAgainRecords([sand], pending)]).toEqual([]);
 	});
 
-	it('still shows "Reroll again" for a rule with once per roll off', () => {
+	it('still shows "Reroll again" for a rule with once per attack off', () => {
 		const sand = record();
 		const pending = pendingAfterReroll(false);
 
