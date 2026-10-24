@@ -49,6 +49,7 @@ function makeCharacterStub(rules: { prePrepareData(): void }[] = []) {
 	const stub = {
 		system: makeSystem(),
 		rules,
+		items: { contents: [] },
 		classes: {},
 		levels: { character: 1 },
 		getClassAbilityBonuses: () => ({}),

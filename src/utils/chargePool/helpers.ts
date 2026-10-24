@@ -215,6 +215,47 @@ function getPoolMaxBonusTotal(actor: CharacterActorLike, identifier: string): nu
 	return total;
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function addPoolDieFaces(
+	target: Record<string, { faces: number }>,
+	identifier: unknown,
+	dieSize: unknown,
+): void {
+	const key = normalizeIdentifier(identifier);
+	const size = toChargePoolDieSize(dieSize);
+	if (key.length < 1 || size === null) return;
+	target[key] = { faces: Number(size.slice(1)) };
+}
+
+/**
+ * Roll data for `@pools.<identifier>.faces`. Reads only the stored pool state,
+ * because pool max formulas resolve against roll data and must not recurse.
+ */
+function getChargePoolRollData(actor: CharacterActorLike): Record<string, { faces: number }> {
+	const pools: Record<string, { faces: number }> = {};
+
+	const actorPools = foundry.utils.getProperty(actor, ChargePoolRuleConfig.flagPath);
+	if (isPlainRecord(actorPools)) {
+		for (const [poolId, pool] of Object.entries(actorPools)) {
+			if (!poolId.startsWith('actor:') || !isPlainRecord(pool)) continue;
+			addPoolDieFaces(pools, pool.identifier, pool.dieSize);
+		}
+	}
+
+	for (const item of actor.items.contents) {
+		const itemPools = foundry.utils.getProperty(item, ChargePoolRuleConfig.flagPath);
+		if (!isPlainRecord(itemPools)) continue;
+		for (const [identifier, pool] of Object.entries(itemPools)) {
+			if (isPlainRecord(pool)) addPoolDieFaces(pools, identifier, pool.dieSize);
+		}
+	}
+
+	return pools;
+}
+
 function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
 	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
@@ -876,6 +917,7 @@ export {
 	toChargePoolScope,
 	toChargePoolDieSize,
 	getChargePoolMapFromActor,
+	getChargePoolRollData,
 	resolveFormulaToInteger,
 	normalizeRecoveries,
 	getChargePoolDefinitions,
