@@ -1326,6 +1326,18 @@ In Svelte templates:
 <label>{localize('NIMBLE.HitPoints')}</label>
 ```
 
+### Rolls Written Onto an Existing Chat Message
+
+Dice So Nice does not animate a roll that `message.update({ rolls })` writes in place of another, and it does not know about the card's own result tiles. Throw the dice with `showDiceAnimation` (`src/utils/showDiceAnimation.ts`) **before** the write, so the card shows the result after the dice land. When the write adds a roll to the message, spread `SKIP_DICE_SO_NICE` into it, or Dice So Nice throws the same roll a second time:
+
+```typescript
+await roll.evaluate();
+await showDiceAnimation(roll, message.id ?? undefined);
+await message.update({ rolls: [...], ...SKIP_DICE_SO_NICE });
+```
+
+`showDiceAnimation` does nothing without Dice So Nice, does not wait on a hidden tab, and stops waiting after 10 seconds. While a card waits for a reroll's dice, its result tile shows a tumbling die on every client (`src/utils/rerollRolling.svelte.ts`).
+
 ### Configuration
 
 Define system constants in `src/config.ts`:
