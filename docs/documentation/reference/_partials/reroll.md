@@ -23,6 +23,8 @@ The button shows only while the condition holds, and its cost reads "1 Wound". T
 
 **Cost** can also spend mana or a heroic reaction. A heroic reaction is spent only in combat, and the player confirms on the click when the combat would normally not let them use it. With the **Costs** toggle off, only the heroic reaction is spent, and the button shows only that cost.
 
+After a reroll, a feature with uses left shows a **Reroll again** button on the same card. Set **Only once per attack** to stop this: the feature then rerolls an attack one time only.
+
 **Changes to the new roll** add to the reroll: one more advantage or disadvantage, a number added to the Primary Die, or extra damage. The new roll keeps the first roll's advantage and disadvantage.
 
 **Rerolls by itself** is for text with no choice, such as "the attack is rerolled". The attack is rolled again at once, with no button. With **Feature Effects** off, a button shows instead. **The discarded crit still triggers when-crit abilities** keeps the crit's triggers when the first roll was a crit: abilities that react to a crit still react, but damage and effects follow the new roll.

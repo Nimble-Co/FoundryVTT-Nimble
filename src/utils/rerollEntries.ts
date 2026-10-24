@@ -23,6 +23,7 @@ interface RerollRuleLike {
 	outcome?: RerollTrigger;
 	automatic?: boolean;
 	discardedCritTriggers?: boolean;
+	oncePerRoll?: boolean;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; delivery: AttackDelivery }) => boolean;
 	rerollChanges?: () => RerollChanges;
@@ -127,6 +128,7 @@ function collectRerollEntries(context: RerollRollContext): {
 				itemUuid: rule.item?.uuid ?? '',
 				used: false,
 				outcomeTrigger: rule.outcome ?? 'always',
+				oncePerRoll: rule.oncePerRoll === true,
 			};
 
 			if (rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
@@ -163,14 +165,20 @@ function rerollRuleKeys(entries: IncomingReactionEntry[]): Set<string> {
 
 /**
  * The card's entries with the new reroll buttons added. A rule that already
- * has an entry waiting is not added twice; one that was used gets a new entry.
+ * has an entry waiting is not added twice. A rule that was used gets a new
+ * entry, unless the new entry has `oncePerRoll`.
  */
 function withNewRerollEntries(
 	entries: IncomingReactionEntry[],
 	found: IncomingReactionEntry[],
 ): IncomingReactionEntry[] {
 	const waiting = rerollRuleKeys(entries.filter((entry) => !entry.used));
-	return [...entries, ...found.filter((entry) => !waiting.has(rerollRuleKey(entry)))];
+	const used = rerollRuleKeys(entries.filter((entry) => entry.used));
+	const added = found.filter((entry) => {
+		const key = rerollRuleKey(entry);
+		return !waiting.has(key) && !(entry.oncePerRoll === true && used.has(key));
+	});
+	return [...entries, ...added];
 }
 
 /**

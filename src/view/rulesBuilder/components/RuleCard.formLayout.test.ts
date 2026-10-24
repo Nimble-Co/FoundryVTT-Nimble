@@ -53,6 +53,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'manaCost',
 			'woundCost',
 			'heroicReaction',
+			'oncePerRoll',
 			'rollModeChange',
 			'primaryDieBonus',
 			'extraDamage',
