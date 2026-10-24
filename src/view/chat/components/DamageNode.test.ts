@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 
+import { startRerollRolling, stopRerollRolling } from '#utils/rerollRolling.svelte.ts';
 import DamageNodeTestHarness from './DamageNode.testHarness.svelte';
+import DamageOutcomeNode from './DamageOutcomeNode.svelte';
 
 /**
  * The three states a damage node can be rendered in: an ordinary rolled total,
@@ -195,5 +197,51 @@ describe('DamageNode', () => {
 		await waitFor(() => expect(ui.notifications?.error).toHaveBeenCalled());
 		// The guard has to clear or the button stays dead after one failure.
 		await waitFor(() => expect(rollDamageButton()?.hasAttribute('disabled')).toBe(false));
+	});
+});
+
+describe('while the reroll dice are in the air', () => {
+	afterEach(() => {
+		stopRerollRolling('message-1', false);
+	});
+
+	function rollingDie() {
+		return screen.queryByRole('img', { name: /rolling the dice/i });
+	}
+
+	it('shows a rolling die in place of the damage total', () => {
+		startRerollRolling('message-1', { slot: 'trap-damage', faces: 12 });
+		renderNode(createMessage(), deferredNode({ deferredRoll: false, roll: rolledRoll() }));
+
+		expect(rollingDie()).not.toBeNull();
+		expect(screen.queryByText('21')).toBeNull();
+	});
+
+	it('shows the rolling die on the hit that draws the damage total', () => {
+		startRerollRolling('message-1', { slot: 'trap-damage', faces: 12 });
+		render(DamageNodeTestHarness, {
+			props: {
+				messageDocument: createMessage(),
+				component: DamageOutcomeNode,
+				node: {
+					id: 'trap-hit',
+					type: 'damageOutcome',
+					outcome: 'fullDamage',
+					parentNode: 'trap-damage',
+					damageType: 'necrotic',
+					roll: rolledRoll(),
+				},
+			},
+		});
+
+		expect(rollingDie()).not.toBeNull();
+	});
+
+	it('leaves the total of another damage roll alone', () => {
+		startRerollRolling('message-1', { slot: 'other-damage', faces: 12 });
+		renderNode(createMessage(), deferredNode({ deferredRoll: false, roll: rolledRoll() }));
+
+		expect(rollingDie()).toBeNull();
+		expect(screen.getByText('21')).toBeTruthy();
 	});
 });
