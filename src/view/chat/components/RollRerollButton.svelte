@@ -37,7 +37,9 @@
 		}
 		open = !open;
 		await tick();
-		if (open) items[0]?.focus();
+		if (!open) return;
+		menu?.scrollIntoView?.({ block: 'nearest' });
+		items[0]?.focus({ preventScroll: true });
 	}
 
 	function choose(id: string) {
@@ -169,6 +171,8 @@
 		margin: 0.375rem 0 0;
 		padding: 0;
 		list-style: none;
+		// Clears the chat log's bottom fade and its jump-to-bottom button.
+		scroll-margin-block-end: 3rem;
 
 		&__item {
 			display: flex;

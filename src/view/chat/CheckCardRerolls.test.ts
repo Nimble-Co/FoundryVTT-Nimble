@@ -233,6 +233,18 @@ describe('rerolls on check cards', () => {
 			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 		});
 
+		it('scrolls the whole list into view, so the last feature is not under the chat input', async () => {
+			const scrollIntoView = vi.fn();
+			Element.prototype.scrollIntoView = scrollIntoView;
+			renderSave(message());
+
+			await fireEvent.click(rerollButton() as HTMLElement);
+
+			expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+			expect(scrollIntoView.mock.contexts[0]).toBe(screen.getByRole('menu'));
+			delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+		});
+
 		it('rerolls with the feature picked in the list', async () => {
 			renderSave(message());
 
