@@ -99,6 +99,15 @@ describe('collectRerollEntries', () => {
 		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
 	});
 
+	it('stamps the once-per-roll flag of the rule on its entry', () => {
+		const once = rerollRule({ id: 'once', usedBy: 'roller', oncePerRoll: true });
+		const again = rerollRule({ id: 'again', usedBy: 'roller' });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [once, again]) }),
+		);
+		expect(manual.map((entry) => entry.oncePerRoll)).toEqual([true, false]);
+	});
+
 	it('ties a target entry to the attack target token', () => {
 		const rule = rerollRule();
 		const { manual } = collectRerollEntries(
@@ -359,6 +368,31 @@ describe('withNewRerollEntries', () => {
 		const spend = stamped({ id: 'spend', kind: 'spendPoolForDamage' });
 		const result = withNewRerollEntries([spend], [stamped({ id: 'new' })]);
 		expect(result.map((entry) => entry.id)).toEqual(['spend', 'new']);
+	});
+
+	it('adds no new entry for a once-per-roll rule whose entry was used', () => {
+		const used = stamped({ id: 'used', used: true, oncePerRoll: true });
+		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerRoll: true })]);
+		expect(result.map((entry) => entry.id)).toEqual(['used']);
+	});
+
+	it('reads the flag from the new entry, so the live rule decides', () => {
+		const used = stamped({ id: 'used', used: true });
+		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerRoll: true })]);
+		expect(result.map((entry) => entry.id)).toEqual(['used']);
+	});
+
+	it('still adds a new entry for a used rule with once per roll off', () => {
+		const used = stamped({ id: 'used', used: true, oncePerRoll: true });
+		const result = withNewRerollEntries([used], [stamped({ id: 'new', oncePerRoll: false })]);
+		expect(result.map((entry) => entry.id)).toEqual(['used', 'new']);
+	});
+
+	it('does not stop another rule when a once-per-roll rule was used', () => {
+		const used = stamped({ id: 'used', used: true, oncePerRoll: true });
+		const other = stamped({ id: 'other', ruleId: 'rule-2', oncePerRoll: true });
+		const result = withNewRerollEntries([used], [other]);
+		expect(result.map((entry) => entry.id)).toEqual(['used', 'other']);
 	});
 });
 

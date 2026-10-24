@@ -73,6 +73,8 @@ export interface IncomingReactionEntry {
 	used: boolean;
 	/** reroll only: the side of the roll the entry was stamped for */
 	side?: RerollSide;
+	/** reroll only: the rule gives no new entry after it is used on this card */
+	oncePerRoll?: boolean;
 	/** forceReroll only: gate the offer/execution on the roll's outcome */
 	rerollTrigger?: RerollTrigger;
 	/** forceReroll only: roll the reroll at disadvantage */

@@ -1933,11 +1933,15 @@
 					"hint": "Wounds the user gains. 0 is none."
 				},
 				"heroicReaction": {
-					"label": "Heroic reaction it spends",
+					"label": "Heroic Reaction it spends",
 					"hint": "Spent only in combat.",
 					"choices": {
 						"none": "None"
 					}
+				},
+				"oncePerRoll": {
+					"label": "Only once per attack",
+					"hint": "The feature can reroll the same attack only once, even with uses left."
 				}
 			}
 		},

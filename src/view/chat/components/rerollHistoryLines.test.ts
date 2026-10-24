@@ -1,4 +1,5 @@
 import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
+import { withNewRerollEntries } from '#utils/rerollEntries.ts';
 import { isRerollAgain, rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 
 const NAMES: Record<string, string> = {
@@ -153,5 +154,29 @@ describe('rerollAgainRecords', () => {
 			{ detail: 'Used by Wren' },
 			{ detail: null },
 		]);
+	});
+});
+
+describe('"Reroll again" for a once-per-roll rule', () => {
+	function pendingAfterReroll(oncePerRoll: boolean) {
+		const used = entry({ id: 'used', used: true, oncePerRoll });
+		const entries = withNewRerollEntries([used], [entry({ id: 'new', oncePerRoll })]);
+		return entries.filter((candidate) => !candidate.used);
+	}
+
+	it('shows no "Reroll again" after the rule rerolled once', () => {
+		const sand = record();
+		const pending = pendingAfterReroll(true);
+
+		expect(pending).toEqual([]);
+		expect([...rerollAgainRecords([sand], pending)]).toEqual([]);
+	});
+
+	it('still shows "Reroll again" for a rule with once per roll off', () => {
+		const sand = record();
+		const pending = pendingAfterReroll(false);
+
+		expect(pending.map((candidate) => isRerollAgain(candidate, [sand]))).toEqual([true]);
+		expect([...rerollAgainRecords([sand], pending)]).toEqual([sand]);
 	});
 });

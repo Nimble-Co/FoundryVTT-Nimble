@@ -84,6 +84,7 @@ function makeRule(
 		manaCost: 0,
 		woundCost: 0,
 		heroicReaction: '',
+		oncePerRoll: false,
 		disabled: false,
 		id: 'rule-1',
 		label: '',
@@ -139,6 +140,7 @@ describe('RerollRule', () => {
 			expect(schema.manaCost?.initial).toBe(0);
 			expect(schema.woundCost?.initial).toBe(0);
 			expect(schema.heroicReaction?.initial).toBe('');
+			expect(schema.oncePerRoll?.initial).toBe(false);
 			expect(schema.type?.initial).toBe('reroll');
 		});
 

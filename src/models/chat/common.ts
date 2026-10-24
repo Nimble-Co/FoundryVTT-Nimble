@@ -141,6 +141,7 @@ export const incomingReactions = () => ({
 				initial: null,
 				choices: [...REROLL_SIDES],
 			}),
+			oncePerRoll: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			// forceReroll offers carry their reroll semantics so the executor can
 			// honor them on click.
 			rerollTrigger: new fields.StringField({

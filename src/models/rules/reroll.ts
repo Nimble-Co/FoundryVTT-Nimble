@@ -129,6 +129,13 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.heroicReaction.label',
 			hint: 'NIMBLE.rules.reroll.heroicReaction.hint',
 		}),
+		oncePerRoll: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.reroll.oncePerRoll.label',
+			hint: 'NIMBLE.rules.reroll.oncePerRoll.hint',
+		}),
 		rollModeChange: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -214,7 +221,14 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 		{
 			label: 'NIMBLE.rules.reroll.form.cost.label',
 			hint: 'NIMBLE.rules.reroll.form.cost.hint',
-			fields: ['chargePoolIdentifier', 'chargeCost', 'manaCost', 'woundCost', 'heroicReaction'],
+			fields: [
+				'chargePoolIdentifier',
+				'chargeCost',
+				'manaCost',
+				'woundCost',
+				'heroicReaction',
+				'oncePerRoll',
+			],
 		},
 		{
 			label: 'NIMBLE.rules.reroll.form.changes.label',
@@ -238,6 +252,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	declare manaCost: number;
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
+	declare oncePerRoll: boolean;
 
 	static override defineSchema(): RerollRule.Schema {
 		return {
@@ -263,6 +278,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 				['manaCost', 'number'],
 				['woundCost', 'number'],
 				['heroicReaction', 'string'],
+				['oncePerRoll', 'boolean'],
 			]),
 		);
 	}
