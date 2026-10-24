@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	canPayRerollCost,
+	findActorCombatant,
 	payRerollCost,
 	type RerollCost,
 	refundRerollCost,
@@ -303,6 +304,51 @@ describe('rerollCost', () => {
 					'system.actions.heroic.defendAvailable': true,
 				},
 			]);
+		});
+	});
+
+	describe('findActorCombatant', () => {
+		it('finds the combatant of the actor itself', () => {
+			const { actor, asActor } = makeActor();
+			const combat = makeCombat(actor);
+
+			const found = findActorCombatant(asActor);
+
+			expect(found?.combat).toBe(combat);
+			expect(found?.combatant.id).toBe('combatant-1');
+		});
+
+		it('finds the combatant of another copy of the same actor by its uuid', () => {
+			const { asActor } = makeActor();
+			makeCombat({ uuid: 'Actor.hero' });
+
+			expect(findActorCombatant(asActor)?.combatant.id).toBe('combatant-1');
+		});
+
+		it('finds nothing for an actor that is not in the combat', () => {
+			const { asActor } = makeActor();
+			makeCombat({ uuid: 'Actor.someone-else' });
+
+			expect(findActorCombatant(asActor)).toBeNull();
+		});
+
+		it('finds nothing before the combat starts', () => {
+			const { actor, asActor } = makeActor();
+			Object.assign(makeCombat(actor), { started: false });
+
+			expect(findActorCombatant(asActor)).toBeNull();
+		});
+
+		it('finds nothing outside combat', () => {
+			testGlobals.game.combat = null;
+
+			expect(findActorCombatant(makeActor().asActor)).toBeNull();
+		});
+
+		it('finds nothing for no actor', () => {
+			makeCombat(makeActor().actor);
+
+			expect(findActorCombatant(null)).toBeNull();
 		});
 	});
 });
