@@ -29,6 +29,74 @@
 		entries: IncomingReactionEntry[];
 	}
 
+	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
+	let { place }: IncomingReactionPromptsProps = $props();
+
+	let busy = $state(false);
+
+	/**
+	 * Offers whose request has been handed off but whose result has not come
+	 * back yet. For a player the request is a socket emit, so it returns long
+	 * before the GM writes `used: true`; leaving the offer clickable in that
+	 * window lets a second confirm read the same unspent pool and fold the
+	 * bonus twice for one set of dice.
+	 *
+	 * A refusal releases the hold as soon as it reaches us, so the button comes
+	 * back with an explanation rather than in silence. The timer is the fallback
+	 * for a refusal that never arrives (the GM disconnecting mid-request). The
+	 * executor holds its own lock for the correctness half of this.
+	 */
+	const SPEND_HOLD_DURATION = 10_000;
+	let heldEntryIds = $state(new Set<string>());
+
+	let speakerUuid = $derived(
+		(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
+	);
+	let entries = $derived(
+		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
+			?.incomingReactions ?? [],
+	);
+	let placeEntries = $derived(
+		entries.filter((entry) => changesTheRoll(entry) === (place === 'roll')),
+	);
+	let pendingGroups = $derived(
+		groupByActor(
+			placeEntries.filter(
+				(entry) => !entry.used && !heldEntryIds.has(entry.id) && canUseEntry(entry),
+			),
+		),
+	);
+	// A used reroll is told by the card's history line, not by its entry.
+	let usedEntries = $derived(placeEntries.filter((entry) => entry.used && entry.kind !== 'reroll'));
+	let rerolls = $derived(
+		(messageDocument?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
+	);
+	let historyLines = $derived(
+		place === 'roll'
+			? rerollHistoryLines({
+					records: rerolls,
+					speakerUuid,
+					rerollAgain: rerollAgainRecords(
+						rerolls,
+						pendingGroups.flatMap((group) => group.entries),
+					),
+					documentName: getDocumentName,
+				})
+			: [],
+	);
+
+	$effect(() => {
+		const hooksApi = Hooks as unknown as {
+			on: (hook: string, listener: (rejection: IncomingReactionRejection) => void) => number;
+			off: (hook: string, id: number) => void;
+		};
+		const hookId = hooksApi.on(INCOMING_REACTION_REJECTED_HOOK, (rejection) => {
+			if (rejection.messageId !== messageDocument?.id) return;
+			releaseEntry(rejection.entryId);
+		});
+		return () => hooksApi.off(INCOMING_REACTION_REJECTED_HOOK, hookId);
+	});
+
 	function changesTheRoll(entry: IncomingReactionEntry): boolean {
 		return entry.kind === 'reroll' || entry.kind === 'forceReroll';
 	}
@@ -285,28 +353,6 @@
 		}
 	}
 
-	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
-	let { place }: IncomingReactionPromptsProps = $props();
-	let speakerUuid = $derived(
-		(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
-	);
-	let busy = $state(false);
-
-	/**
-	 * Offers whose request has been handed off but whose result has not come
-	 * back yet. For a player the request is a socket emit, so it returns long
-	 * before the GM writes `used: true`; leaving the offer clickable in that
-	 * window lets a second confirm read the same unspent pool and fold the
-	 * bonus twice for one set of dice.
-	 *
-	 * A refusal releases the hold as soon as it reaches us, so the button comes
-	 * back with an explanation rather than in silence. The timer is the fallback
-	 * for a refusal that never arrives (the GM disconnecting mid-request). The
-	 * executor holds its own lock for the correctness half of this.
-	 */
-	const SPEND_HOLD_DURATION = 10_000;
-	let heldEntryIds = $state(new Set<string>());
-
 	function releaseEntry(entryId: string): void {
 		const next = new Set(heldEntryIds);
 		if (next.delete(entryId)) heldEntryIds = next;
@@ -316,51 +362,6 @@
 		heldEntryIds = new Set(heldEntryIds).add(entryId);
 		setTimeout(() => releaseEntry(entryId), SPEND_HOLD_DURATION);
 	}
-
-	$effect(() => {
-		const hooksApi = Hooks as unknown as {
-			on: (hook: string, listener: (rejection: IncomingReactionRejection) => void) => number;
-			off: (hook: string, id: number) => void;
-		};
-		const hookId = hooksApi.on(INCOMING_REACTION_REJECTED_HOOK, (rejection) => {
-			if (rejection.messageId !== messageDocument?.id) return;
-			releaseEntry(rejection.entryId);
-		});
-		return () => hooksApi.off(INCOMING_REACTION_REJECTED_HOOK, hookId);
-	});
-
-	let entries = $derived(
-		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
-			?.incomingReactions ?? [],
-	);
-	let placeEntries = $derived(
-		entries.filter((entry) => changesTheRoll(entry) === (place === 'roll')),
-	);
-	let pendingGroups = $derived(
-		groupByActor(
-			placeEntries.filter(
-				(entry) => !entry.used && !heldEntryIds.has(entry.id) && canUseEntry(entry),
-			),
-		),
-	);
-	// A used reroll is told by the card's history line, not by its entry.
-	let usedEntries = $derived(placeEntries.filter((entry) => entry.used && entry.kind !== 'reroll'));
-	let rerolls = $derived(
-		(messageDocument?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
-	);
-	let historyLines = $derived(
-		place === 'roll'
-			? rerollHistoryLines({
-					records: rerolls,
-					speakerUuid,
-					rerollAgain: rerollAgainRecords(
-						rerolls,
-						pendingGroups.flatMap((group) => group.entries),
-					),
-					documentName: getDocumentName,
-				})
-			: [],
-	);
 </script>
 
 {#snippet actorGroups(groups: ActorGroup[])}
@@ -381,7 +382,10 @@
 							data-tooltip={getEntryTooltip(entry)}
 							onclick={() => useEntry(entry)}
 						>
-							<i class="nimble-incoming-reaction-button__icon {getEntryIcon(entry)}"></i>
+							<i
+								class="nimble-incoming-reaction-button__icon {getEntryIcon(entry)}"
+								aria-hidden="true"
+							></i>
 							<span class="nimble-incoming-reaction-button__label">{getEntryLabel(entry)}</span>
 							{#if cost}
 								<span class="nimble-incoming-reaction-button__cost">{cost}</span>
@@ -399,7 +403,7 @@
 		<section class="nimble-roll-changes">
 			{#each historyLines as line, index (index)}
 				<div class="nimble-roll-changes__history nimble-roll-changes__history--reroll">
-					<i class="fa-solid fa-rotate-left"></i>
+					<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
 					<div class="nimble-roll-changes__text">
 						<p>{line.text}</p>
 						{#if line.detail}
@@ -418,7 +422,7 @@
 
 			{#each usedEntries as entry (entry.id)}
 				<div class="nimble-roll-changes__history">
-					<i class={getEntryIcon(entry)}></i>
+					<i class={getEntryIcon(entry)} aria-hidden="true"></i>
 					<p>{getUsedAttribution(entry)}</p>
 				</div>
 			{/each}
@@ -444,7 +448,7 @@
 
 		{#each usedEntries as entry (entry.id)}
 			<p class="nimble-incoming-reaction-attribution">
-				<i class={getEntryIcon(entry)}></i>
+				<i class={getEntryIcon(entry)} aria-hidden="true"></i>
 				{getUsedAttribution(entry)}
 			</p>
 		{/each}

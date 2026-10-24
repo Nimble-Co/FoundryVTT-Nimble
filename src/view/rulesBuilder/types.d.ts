@@ -10,7 +10,6 @@
 
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import type { Predicate, RawPredicate } from '../../etc/Predicate.js';
-import type { ResolvedFormGroup } from './components/ruleFormLayout.js';
 
 export interface RuleSource {
 	id: string;
@@ -94,6 +93,24 @@ export interface RuleCardProps {
 	onToggleCollapse?: () => void;
 	/** Parent item — threaded through to rich-text widgets. */
 	document?: NimbleBaseItem;
+}
+
+export interface ResolvedFormField {
+	name: string;
+	field: foundry.data.fields.DataField.Any;
+	isBoolean: boolean;
+	/** False when the group heading already is this field's label. */
+	showLabel: boolean;
+}
+
+export interface ResolvedFormGroup {
+	key: string;
+	/** Lang key of the group question, when the layout gives one. */
+	label?: string;
+	/** Field whose label is the group question, when the layout gives none. */
+	labelField?: ResolvedFormField;
+	hint?: string;
+	fields: ResolvedFormField[];
 }
 
 export interface RuleFormLayoutProps {

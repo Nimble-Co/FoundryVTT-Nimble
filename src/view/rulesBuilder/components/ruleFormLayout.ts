@@ -1,25 +1,8 @@
+import type { ResolvedFormGroup } from '#view/rulesBuilder/types.js';
 import type { RuleFormGroup } from '../../../models/rules/_formLayout.js';
 import { isFieldShown } from './isFieldShown.js';
 
 type DataField = foundry.data.fields.DataField.Any;
-
-export interface ResolvedFormField {
-	name: string;
-	field: DataField;
-	isBoolean: boolean;
-	/** False when the group heading already is this field's label. */
-	showLabel: boolean;
-}
-
-export interface ResolvedFormGroup {
-	key: string;
-	/** Lang key of the group question, when the layout gives one. */
-	label?: string;
-	/** Field whose label is the group question, when the layout gives none. */
-	labelField?: ResolvedFormField;
-	hint?: string;
-	fields: ResolvedFormField[];
-}
 
 /**
  * Turns a rule's `formLayout` into the groups to show for the current data.
