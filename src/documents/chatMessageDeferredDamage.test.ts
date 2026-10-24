@@ -244,6 +244,25 @@ describe('rollDeferredDamage', () => {
 		expect(payload.system.rerolls).toEqual([]);
 	});
 
+	it('keeps the reroll history of the primary roll when a later damage node is rolled', async () => {
+		const message = createMessage([
+			{
+				id: 'blade-damage',
+				type: 'damage',
+				parentNode: null,
+				parentContext: null,
+				roll: { class: 'DamageRoll', formula: '1d6', total: 4 },
+			},
+			deferredDamageNode(),
+		]);
+		(message.system as unknown as Record<string, unknown>).rerolls = [{ entryId: 'earlier' }];
+
+		await message.rollDeferredDamage('trap-damage');
+
+		const payload = message.update.mock.calls[0][0] as { system: Record<string, unknown> };
+		expect(payload.system).not.toHaveProperty('rerolls');
+	});
+
 	it('reads a crit off the deferred roll onto the card', async () => {
 		stubEvaluate({ isCritical: true, isMiss: false });
 		const message = createMessage();
