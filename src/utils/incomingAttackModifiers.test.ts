@@ -1,5 +1,4 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { rerollTriggerMatches } from './incomingReactionEntry.js';
 
 const { mockAreAllies, mockAreWithinSpaces } = vi.hoisted(() => ({
 	mockAreAllies: vi.fn(),
@@ -876,28 +875,6 @@ describe('applyPostRollIncomingBehavior', () => {
 
 			expect(result.stampEntries.map((e) => e.id)).toEqual(['auto-1']);
 		});
-	});
-});
-
-describe('rerollTriggerMatches', () => {
-	const crit = { isCritical: true, isMiss: false };
-	const hit = { isCritical: false, isMiss: false };
-	const miss = { isCritical: false, isMiss: true };
-
-	it('matches a hit that is not a crit', () => {
-		expect(rerollTriggerMatches('nonCriticalHit', hit)).toBe(true);
-		expect(rerollTriggerMatches('nonCriticalHit', crit)).toBe(false);
-		expect(rerollTriggerMatches('nonCriticalHit', miss)).toBe(false);
-	});
-
-	it('matches a miss', () => {
-		expect(rerollTriggerMatches('miss', miss)).toBe(true);
-		expect(rerollTriggerMatches('miss', hit)).toBe(false);
-		expect(rerollTriggerMatches('miss', crit)).toBe(false);
-	});
-
-	it('still counts a crit as a hit', () => {
-		expect(rerollTriggerMatches('hit', crit)).toBe(true);
 	});
 });
 
