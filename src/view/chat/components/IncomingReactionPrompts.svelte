@@ -54,8 +54,11 @@
 	const SPEND_HOLD_DURATION = 10_000;
 	let heldEntryIds = $state(new Set<string>());
 
+	// Check cards post with no speaker; their roller is in the card data.
 	let speakerUuid = $derived(
-		(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
+		(messageDocument?.system as { actorUuid?: string | null } | undefined)?.actorUuid ||
+			(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ||
+			'',
 	);
 	let storedEntries = $derived(
 		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
