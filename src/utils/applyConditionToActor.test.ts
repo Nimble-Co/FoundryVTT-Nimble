@@ -178,7 +178,7 @@ describe('applyConditionToActor origin', () => {
 });
 
 describe('applyConditionToActor duration', () => {
-	it('stamps the requested duration on the created effect', async () => {
+	it('writes a rounds duration in the core shape with a turn start expiry', async () => {
 		const effect = createFakeEffect();
 		fromStatusEffect.mockResolvedValue(effect);
 
@@ -186,7 +186,31 @@ describe('applyConditionToActor duration', () => {
 			duration: { rounds: 3, turns: null, seconds: null },
 		});
 
-		expect(effect.sourceData.duration).toEqual({ rounds: 3 });
+		expect(effect.sourceData.duration).toEqual({ value: 3, units: 'rounds', expiry: 'turnStart' });
+	});
+
+	it('gives a seconds duration the same turn start expiry core gives any numeric duration', async () => {
+		const effect = createFakeEffect();
+		fromStatusEffect.mockResolvedValue(effect);
+
+		await applyConditionToActor(createTargetActor(), 'dazed', { duration: { seconds: 60 } });
+
+		expect(effect.sourceData.duration).toEqual({
+			value: 60,
+			units: 'seconds',
+			expiry: 'turnStart',
+		});
+	});
+
+	it('keeps one unit when several are set, preferring seconds, then turns, then rounds', async () => {
+		const effect = createFakeEffect();
+		fromStatusEffect.mockResolvedValue(effect);
+
+		await applyConditionToActor(createTargetActor(), 'dazed', {
+			duration: { rounds: 2, turns: 1, seconds: null },
+		});
+
+		expect(effect.sourceData.duration).toEqual({ value: 1, units: 'turns', expiry: 'turnStart' });
 	});
 
 	it('leaves the duration alone when every field is empty', async () => {
@@ -241,7 +265,7 @@ describe('applyConditionToActor effect creation', () => {
 		const created = createEffect.mock.calls[0][0] as Record<string, unknown>;
 		expect(created).not.toBe(effect);
 		expect(created.origin).toBe('Item.feature');
-		expect(created.duration).toEqual({ rounds: 1 });
+		expect(created.duration).toEqual({ value: 1, units: 'rounds', expiry: 'turnStart' });
 	});
 
 	it('passes the target as the parent when building from the status entry', async () => {

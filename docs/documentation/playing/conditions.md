@@ -23,6 +23,10 @@ Some conditions come bundled together, and the system tracks the relationships f
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.
 
+## Conditions with a duration
+
+A condition can have a duration: a feature's rules can give it one, and the GM can set one on the condition's effect. When the duration ends, the system removes the condition, the same as removing it by hand: Hampered follows the rules above, and the condition can be applied again. A GM must be connected for a duration to end.
+
 ## Concentration
 
 Concentration applies itself. Casting a spell whose **Concentration** property is ticked puts the Concentration condition on the caster as the chat card posts, and the card says **Concentration Applied** so the player can see it took. No GM click is involved, and it happens whether the spell targets an ally, several creatures, or nobody at all. The condition always lands on the caster, never on the targets. If the condition cannot be applied, the card says nothing and the caster gets a warning instead.
