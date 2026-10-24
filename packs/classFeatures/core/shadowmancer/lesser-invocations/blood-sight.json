@@ -12,7 +12,7 @@
 				"disabled": false,
 				"id": "xWhxCrLYXis3Ia61",
 				"identifier": "blood-sight",
-				"label": "Blood Sight (1/day)",
+				"label": "Blood Sight (1/Safe Rest)",
 				"predicate": {},
 				"priority": 1,
 				"scope": "item",
