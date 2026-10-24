@@ -232,6 +232,37 @@ describe('resolveRerollReaction', () => {
 		expect(payload.system.discardedCritTriggers).toBe(false);
 	});
 
+	it('throws the new roll with Dice So Nice once the card is written', async () => {
+		setupWorld();
+		const message = createMessage();
+		const showForRoll = vi.fn().mockResolvedValue(true);
+		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		delete (globals().game as { dice3d?: unknown }).dice3d;
+		expect(showForRoll).toHaveBeenCalledTimes(1);
+		expect(showForRoll.mock.calls[0][0]).toBeInstanceOf(DamageRoll);
+		expect(showForRoll.mock.invocationCallOrder[0]).toBeGreaterThan(
+			message.update.mock.invocationCallOrder[0],
+		);
+	});
+
+	it('throws no dice when the reroll cannot be written', async () => {
+		setupWorld();
+		const message = createMessage();
+		message.update.mockRejectedValueOnce(new Error('write failed'));
+		const showForRoll = vi.fn().mockResolvedValue(true);
+		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		consoleError.mockRestore();
+		delete (globals().game as { dice3d?: unknown }).dice3d;
+		expect(showForRoll).not.toHaveBeenCalled();
+	});
+
 	it('rolls the new roll with the rule changes on top of the first roll', async () => {
 		setupWorld({
 			rerollChanges: () => ({ rollModeChange: -1, primaryDieBonus: 2, extraDamage: '1d4' }),
