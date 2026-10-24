@@ -3,9 +3,10 @@
  * sets `static formLayout` gets its fields shown in these groups, in this
  * order. Rules without one keep the flat field list.
  *
- * A group with no `label` takes its heading from its only field. Schema
- * fields that no group names are shown after the last group. `predicate`
- * may be placed in a group; it then leaves the Advanced section.
+ * A group with no `label` takes its heading from its first shown field,
+ * unless that field is a checkbox. Schema fields that no group names are
+ * shown after the last group. `predicate` may be placed in a group; it then
+ * leaves the Advanced section.
  */
 export interface RuleFormGroup {
 	/** Lang key of the question above the group. */
