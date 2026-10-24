@@ -775,6 +775,13 @@ function isAreaActivation(activation: Record<string, unknown>): boolean {
 	return !!activation.acquireTargetsFromTemplate && shape !== '';
 }
 
+/** Whether a deferred roll became the card's primary damage roll. Never for an area activation. */
+function isPrimaryDeferredRoll(activation: Record<string, unknown>, nodeId: string): boolean {
+	if (isAreaActivation(activation)) return false;
+	const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
+	return findPrimaryDamageNode(nodes)?.id === nodeId;
+}
+
 /**
  * The kept primary die result of a serialized DamageRoll, or null. Reads a
  * copy, because `fromData` writes option defaults into the data it is given.
@@ -1141,12 +1148,13 @@ class NimbleChatMessage extends ChatMessage {
 		// Item use gave refills for the outcome the card had before this roll.
 		const critTriggers = systemData.discardedCritTriggers === true;
 		const recoveryChange = rerollRecoveryChange(systemData, outcome, critTriggers);
-		const rerolls = this.#deferredRollRerolls(patched.activation, nodeId, roll);
+		const isPrimaryRoll = isPrimaryDeferredRoll(patched.activation, nodeId);
+		const rerolls = isPrimaryRoll ? this.#deferredRollRerolls(roll) : null;
 		await this.update({
 			rolls: patched.rolls,
 			system: {
 				...outcome,
-				rerolls: [],
+				...(isPrimaryRoll ? { rerolls: [] } : {}),
 				...(rerolls ? { incomingReactions: rerolls.entries } : {}),
 				...this.#movementOfferChanges(outcome),
 			},
@@ -1165,18 +1173,11 @@ class NimbleChatMessage extends ChatMessage {
 	/**
 	 * The reroll entries a deferred roll gets when it becomes the card's
 	 * primary damage roll, as an attack roll gets them when it is made. Null
-	 * when there are none, when it is not the primary roll, or when the
-	 * activation is an area one.
+	 * when there are none.
 	 */
 	#deferredRollRerolls(
-		activation: Record<string, unknown>,
-		nodeId: string,
 		roll: DamageRoll,
 	): { entries: IncomingReactionEntry[]; automatic: AutomaticReroll[] } | null {
-		if (isAreaActivation(activation)) return null;
-		const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
-		if (findPrimaryDamageNode(nodes)?.id !== nodeId) return null;
-
 		const found = collectRerollEntries(this.#rerollContext(roll, false));
 		if (found.manual.length < 1 && found.automatic.length < 1) return null;
 		return {
