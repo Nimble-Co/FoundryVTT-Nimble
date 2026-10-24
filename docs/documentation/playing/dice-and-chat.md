@@ -69,6 +69,12 @@ A player sees only the buttons of the characters they own. The GM sees every gro
 
 ![An attack chat card showing a damage total, the Apply Damage button, a targets list, and a saving throw prompt](/images/documentation/condition-chatcard-with-button.png)
 
+## Rerolling a save or check
+
+A save, skill check or ability check card is one line, so its reroll is a small button at the right end of the roll. Only the owner of the one who rolled and the GM see it. Hover it to see the feature and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)", and click it to reroll. When two or more features can reroll the roll, the button opens a short list of them, each with its cost: click one to reroll with it. The arrow keys move through the list and Escape closes it.
+
+The button shows only while a feature can reroll the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before this version show no button.
+
 ## Spending dice from a card
 
 A feature that adds damage when an attack lands puts its button on that attack's card rather than asking you to run it separately. Click it, pick which dice to spend, and confirm: the bonus is added to the attack's own damage total, so the number in the roll box goes up and the GM still clicks **Apply Damage** exactly once.

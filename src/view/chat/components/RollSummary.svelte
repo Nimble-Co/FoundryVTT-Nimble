@@ -13,6 +13,7 @@
 		total,
 		options,
 		showRollDetails,
+		action,
 		rolling = null,
 		landed = false,
 	}: RollSummaryProps = $props();
@@ -26,7 +27,7 @@
 	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
-<div class="roll" class:roll--no-subheading={!subheading}>
+<div class="roll" class:roll--no-subheading={!subheading} class:roll--with-action={!!action}>
 	<div
 		class="roll__total"
 		data-tooltip={expanded || rolling ? null : tooltip}
@@ -42,6 +43,8 @@
 	</div>
 
 	<h3 class="roll__label">{label}</h3>
+
+	{@render action?.()}
 
 	{#if tooltip}
 		<button
@@ -111,6 +114,17 @@
 
 		&--no-subheading {
 			grid-template-areas: 'rollResult rollLabel expandButton';
+		}
+
+		&--with-action {
+			grid-template-areas:
+				'rollResult rollLabel rollAction expandButton'
+				'rollResult subHeading rollAction expandButton';
+			grid-template-columns: max-content 1fr max-content max-content;
+		}
+
+		&--with-action.roll--no-subheading {
+			grid-template-areas: 'rollResult rollLabel rollAction expandButton';
 		}
 
 		.roll-expand {

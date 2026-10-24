@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { IncomingReactionPromptsProps } from '#types/components/IncomingReactionPrompts.d.ts';
+	import type { RollRerollChoice } from '#types/components/RollRerollButton.d.ts';
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
 
@@ -20,6 +21,7 @@
 	import localize from '../../../utils/localize.js';
 	import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import RollRerollButton from './RollRerollButton.svelte';
 	import { getIncomingReactionCost } from './incomingReactionCost.ts';
 	import { isRerollAgain, rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 
@@ -33,6 +35,9 @@
 	let { place }: IncomingReactionPromptsProps = $props();
 
 	let busy = $state(false);
+
+	let atTheRoll = $derived(place !== 'options');
+	let showsHistory = $derived(place === 'roll' || place === 'rollHistory');
 
 	/**
 	 * Offers whose request has been handed off but whose result has not come
@@ -60,7 +65,7 @@
 	// waiting one, and a used one wrote no reroll record, so it keeps its old line.
 	let entries = $derived(storedEntries.filter((entry) => entry.kind !== 'forceReroll'));
 	let legacyRerollLines = $derived(
-		place === 'roll'
+		showsHistory
 			? storedEntries
 					.filter((entry) => entry.kind === 'forceReroll' && entry.used)
 					.map((entry) => ({
@@ -71,9 +76,7 @@
 					}))
 			: [],
 	);
-	let placeEntries = $derived(
-		entries.filter((entry) => changesTheRoll(entry) === (place === 'roll')),
-	);
+	let placeEntries = $derived(entries.filter((entry) => changesTheRoll(entry) === atTheRoll));
 	let pendingGroups = $derived(
 		groupByActor(
 			placeEntries.filter(
@@ -87,7 +90,7 @@
 		(messageDocument?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
 	);
 	let historyLines = $derived(
-		place === 'roll'
+		showsHistory
 			? rerollHistoryLines({
 					records: rerolls,
 					speakerUuid,
@@ -97,6 +100,17 @@
 					),
 					documentName: getDocumentName,
 				})
+			: [],
+	);
+	let rerollChoices = $derived<RollRerollChoice[]>(
+		place === 'rollButton'
+			? pendingGroups
+					.flatMap((group) => group.entries)
+					.map((entry) => ({
+						id: entry.id,
+						label: getEntryLabel(entry),
+						cost: getEntryCost(entry),
+					}))
 			: [],
 	);
 
@@ -363,6 +377,11 @@
 		}
 	}
 
+	function useEntryById(entryId: string): void {
+		const entry = entries.find((candidate) => candidate.id === entryId);
+		if (entry) useEntry(entry);
+	}
+
 	function releaseEntry(entryId: string): void {
 		const next = new Set(heldEntryIds);
 		if (next.delete(entryId)) heldEntryIds = next;
@@ -408,34 +427,48 @@
 	{/each}
 {/snippet}
 
-{#if place === 'roll'}
+{#snippet rerollHistory()}
+	{#each legacyRerollLines as line (line.id)}
+		<div class="nimble-roll-changes__history">
+			<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+			<p>{line.text}</p>
+		</div>
+	{/each}
+
+	{#each historyLines as line, index (index)}
+		<div class="nimble-roll-changes__history nimble-roll-changes__history--reroll">
+			<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+			<div class="nimble-roll-changes__text">
+				<p>{line.text}</p>
+				{#if line.detail}
+					<p class="nimble-roll-changes__detail">{line.detail}</p>
+				{/if}
+			</div>
+			{#if line.dice}
+				<span class="nimble-roll-changes__dice">
+					<DieFace {...line.dice.previous} discarded />
+					<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
+					<DieFace {...line.dice.next} />
+				</span>
+			{/if}
+		</div>
+	{/each}
+{/snippet}
+
+{#if place === 'rollButton'}
+	{#if rerollChoices.length > 0}
+		<RollRerollButton choices={rerollChoices} disabled={busy} onchoose={useEntryById} />
+	{/if}
+{:else if place === 'rollHistory'}
+	{#if historyLines.length > 0 || legacyRerollLines.length > 0}
+		<section class="nimble-roll-changes nimble-roll-changes--under-row">
+			{@render rerollHistory()}
+		</section>
+	{/if}
+{:else if place === 'roll'}
 	{#if pendingGroups.length > 0 || usedEntries.length > 0 || historyLines.length > 0 || legacyRerollLines.length > 0}
 		<section class="nimble-roll-changes">
-			{#each legacyRerollLines as line (line.id)}
-				<div class="nimble-roll-changes__history">
-					<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-					<p>{line.text}</p>
-				</div>
-			{/each}
-
-			{#each historyLines as line, index (index)}
-				<div class="nimble-roll-changes__history nimble-roll-changes__history--reroll">
-					<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-					<div class="nimble-roll-changes__text">
-						<p>{line.text}</p>
-						{#if line.detail}
-							<p class="nimble-roll-changes__detail">{line.detail}</p>
-						{/if}
-					</div>
-					{#if line.dice}
-						<span class="nimble-roll-changes__dice">
-							<DieFace {...line.dice.previous} discarded />
-							<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
-							<DieFace {...line.dice.next} />
-						</span>
-					{/if}
-				</div>
-			{/each}
+			{@render rerollHistory()}
 
 			{#each usedEntries as entry (entry.id)}
 				<div class="nimble-roll-changes__history">
@@ -481,6 +514,10 @@
 
 		&:not(:last-of-type) {
 			padding-bottom: 0;
+		}
+
+		&--under-row {
+			padding: 0.5rem 0 0;
 		}
 
 		&__history {
