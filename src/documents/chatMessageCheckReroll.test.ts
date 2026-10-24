@@ -183,6 +183,22 @@ describe('a reroll on a save card', () => {
 		]);
 	});
 
+	it('throws the new d20 with Dice So Nice before the card shows it', async () => {
+		setupWorld();
+		const message = createSaveCard();
+		const showForRoll = vi.fn().mockResolvedValue(true);
+		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		delete (globals().game as { dice3d?: unknown }).dice3d;
+		expect(showForRoll).toHaveBeenCalledTimes(1);
+		expect((showForRoll.mock.calls[0][0] as { formula: string }).formula).toBe('2d20khn + 3[Will]');
+		expect(showForRoll.mock.invocationCallOrder[0]).toBeLessThan(
+			message.update.mock.invocationCallOrder[0],
+		);
+	});
+
 	it('lets the owner of the roller use it through the GM', async () => {
 		setupWorld();
 		const message = createSaveCard();
