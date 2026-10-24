@@ -232,7 +232,7 @@ describe('resolveRerollReaction', () => {
 		expect(payload.system.discardedCritTriggers).toBe(false);
 	});
 
-	it('throws the new roll with Dice So Nice once the card is written', async () => {
+	it('throws the new roll with Dice So Nice before the card shows it', async () => {
 		setupWorld();
 		const message = createMessage();
 		const showForRoll = vi.fn().mockResolvedValue(true);
@@ -243,24 +243,34 @@ describe('resolveRerollReaction', () => {
 		delete (globals().game as { dice3d?: unknown }).dice3d;
 		expect(showForRoll).toHaveBeenCalledTimes(1);
 		expect(showForRoll.mock.calls[0][0]).toBeInstanceOf(DamageRoll);
-		expect(showForRoll.mock.invocationCallOrder[0]).toBeGreaterThan(
+		expect(showForRoll.mock.invocationCallOrder[0]).toBeLessThan(
 			message.update.mock.invocationCallOrder[0],
 		);
 	});
 
-	it('throws no dice when the reroll cannot be written', async () => {
+	it('writes the card only after the dice land', async () => {
 		setupWorld();
 		const message = createMessage();
-		message.update.mockRejectedValueOnce(new Error('write failed'));
-		const showForRoll = vi.fn().mockResolvedValue(true);
+		let land = () => {};
+		const showForRoll = vi.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					land = resolve;
+				}),
+		);
 		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
-		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		const rerolled = message.resolveRerollReaction('entry-1', 'gm-user');
+		try {
+			await vi.waitFor(() => expect(showForRoll).toHaveBeenCalled());
+			expect(message.update).not.toHaveBeenCalled();
+		} finally {
+			land();
+			await rerolled;
+			delete (globals().game as { dice3d?: unknown }).dice3d;
+		}
 
-		consoleError.mockRestore();
-		delete (globals().game as { dice3d?: unknown }).dice3d;
-		expect(showForRoll).not.toHaveBeenCalled();
+		expect(message.update).toHaveBeenCalledTimes(1);
 	});
 
 	it('rolls the new roll with the rule changes on top of the first roll', async () => {
