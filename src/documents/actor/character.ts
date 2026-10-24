@@ -1360,7 +1360,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
-				rollMode: options.rollMode,
 				skillKey,
 				...rerolls.system,
 			},
