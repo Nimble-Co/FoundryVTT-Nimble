@@ -26,7 +26,7 @@ interface RerollRuleLike {
 	oncePerAttack?: boolean;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
-	rerollChanges?: (kind?: RerollRollKind) => RerollChanges;
+	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 }
 
 interface RerollingActor {

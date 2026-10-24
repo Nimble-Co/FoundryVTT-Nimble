@@ -46,8 +46,8 @@ interface RerollStepInput<TRoll> {
 	/** The replaced roll's primary die result, read the way the caller reads it. */
 	previousResult: number | null;
 	makeRoll: (formula: string, options: Record<string, unknown>) => Promise<TRoll>;
-	/** The kind of roll being rerolled; attack changes apply only to an attack. Default attack. */
-	rollKind?: RerollRollKind;
+	/** The kind of roll being rerolled; attack changes apply only to an attack. */
+	rollKind: RerollRollKind;
 	/** Reads the new roll's kept die. By default, the primary die of a damage roll. */
 	readNewDie?: (roll: TRoll) => RolledDie;
 	/** An earlier reroll of this roll kept the crit triggers. */
@@ -103,7 +103,7 @@ async function rerollWithRule<TRoll>(
 		const next = prepareReroll(
 			replaced.originalFormula ?? replaced.formula ?? '',
 			replaced.options as Record<string, unknown> | null | undefined,
-			rule.rerollChanges?.(input.rollKind ?? 'attack') ?? {},
+			rule.rerollChanges?.(input.rollKind) ?? {},
 		);
 		const roll = await input.makeRoll(next.formula, next.options);
 		const rolled = roll as NewRoll;
