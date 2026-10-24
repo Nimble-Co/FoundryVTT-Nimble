@@ -106,6 +106,7 @@ function input(overrides: Partial<RerollStepInput<Roll>> = {}): RerollStepInput<
 	return {
 		rule: rule(),
 		entry: ENTRY,
+		rollKind: 'attack',
 		payer: makeActor() as unknown as Actor,
 		replaced: REPLACED,
 		previousResult: 7,

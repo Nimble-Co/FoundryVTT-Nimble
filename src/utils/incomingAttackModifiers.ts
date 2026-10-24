@@ -134,6 +134,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 			const result = await rerollWithRule({
 				rule: next.rule,
 				entry: next.entry,
+				rollKind: 'attack',
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced,
 				previousResult: replaced.primaryDieValue ?? null,

@@ -466,7 +466,7 @@ describe('RerollRule', () => {
 					primaryDieBonus: 1,
 					extraDamage: '1d@combatDie',
 				});
-				expect(rule.rerollChanges()).toEqual({
+				expect(rule.rerollChanges('attack')).toEqual({
 					rollModeChange: -1,
 					primaryDieBonus: 1,
 					extraDamage: '1d8',
@@ -488,7 +488,7 @@ describe('RerollRule', () => {
 				primaryDieBonus: 2,
 				extraDamage: '1d6',
 			});
-			expect(rule.rerollChanges()).toEqual({
+			expect(rule.rerollChanges('attack')).toEqual({
 				rollModeChange: 1,
 				primaryDieBonus: 0,
 				extraDamage: '',
@@ -511,7 +511,7 @@ describe('RerollRule', () => {
 
 		it('leaves the extra damage empty when none is set', () => {
 			const { rule } = makeRule();
-			expect(rule.rerollChanges()).toEqual({
+			expect(rule.rerollChanges('attack')).toEqual({
 				rollModeChange: 0,
 				primaryDieBonus: 0,
 				extraDamage: '',
