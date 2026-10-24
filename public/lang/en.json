@@ -1854,7 +1854,7 @@
 					},
 					"changes": {
 						"label": "Changes to the new roll (optional)",
-						"hint": "The new roll keeps the first roll's advantage and disadvantage."
+						"hint": "The new roll keeps the first roll's advantage and disadvantage. A later reroll of the same attack, from any feature, keeps these changes too."
 					}
 				},
 				"rolls": {
