@@ -21,6 +21,7 @@ import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.j
 import type { DicePoolState } from '#utils/dicePool/types.js';
 import {
 	appendFlavoredBonusToRoll,
+	findPrimaryDamageNode,
 	foldBonusIntoPrimaryDamage,
 	replaceDamageRollInRollsSource,
 } from '#utils/foldBonusIntoPrimaryDamage.js';
@@ -758,13 +759,6 @@ function resolvePoolSpendSelection(
 		spentFaces,
 		remainingFaces: faces.filter((_, index) => !picked.has(index)),
 	};
-}
-
-/** The first damage node that holds a DamageRoll: the card's primary damage roll. */
-function findPrimaryDamageNode(nodes: EffectNode[]): PrimaryDamageRoll['damageNode'] | undefined {
-	return nodes.find(
-		(n) => n.type === 'damage' && (n as { roll?: { class?: string } }).roll?.class === 'DamageRoll',
-	) as PrimaryDamageRoll['damageNode'] | undefined;
 }
 
 /** Whether an activation spreads one roll over a template's targets, so it cannot crit or miss. */
@@ -1646,7 +1640,7 @@ class NimbleChatMessage extends ChatMessage {
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const activation = foundry.utils.deepClone(systemData.activation ?? { effects: [] });
 		const nodes = flattenEffectsTree((activation.effects ?? []) as EffectNode[]);
-		const damageNode = findPrimaryDamageNode(nodes);
+		const damageNode = findPrimaryDamageNode(nodes) as PrimaryDamageRoll['damageNode'] | undefined;
 		if (!damageNode?.roll) return null;
 		return { activation, nodes, damageNode };
 	}
