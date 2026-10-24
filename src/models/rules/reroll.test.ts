@@ -495,6 +495,20 @@ describe('RerollRule', () => {
 			});
 		});
 
+		it('drops the attack changes when the roll is a check, also for a rule with Attack', () => {
+			const { rule } = makeRule({
+				rolls: ['attack', 'save'],
+				rollModeChange: 1,
+				primaryDieBonus: 2,
+				extraDamage: '1d6',
+			});
+			expect(rule.rerollChanges('save')).toEqual({
+				rollModeChange: 1,
+				primaryDieBonus: 0,
+				extraDamage: '',
+			});
+		});
+
 		it('leaves the extra damage empty when none is set', () => {
 			const { rule } = makeRule();
 			expect(rule.rerollChanges()).toEqual({

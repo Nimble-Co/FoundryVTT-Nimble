@@ -140,6 +140,13 @@ describe('rerollWithRule', () => {
 		expect(result).toMatchObject({ status: 'done', roll: { primaryDieValue: 3 } });
 	});
 
+	it('asks the rule for the changes of the kind of roll it rerolls', async () => {
+		const rerollChanges = vi.fn(() => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }));
+		await rerollWithRule(input({ rule: rule({ rerollChanges }), rollKind: 'save' }));
+		await rerollWithRule(input({ rule: rule({ rerollChanges }) }));
+		expect(rerollChanges.mock.calls).toEqual([['save'], ['attack']]);
+	});
+
 	it('reads the formula of a serialized roll that has no original formula', async () => {
 		const makeRoll = vi.fn(async () => ({}));
 		await rerollWithRule(input({ replaced: { formula: '2d6', options: {} }, makeRoll }));
