@@ -1,0 +1,202 @@
+<script lang="ts">
+	import type {
+		RollRerollButtonProps,
+		RollRerollChoice,
+	} from '#types/components/RollRerollButton.d.ts';
+
+	import { tick } from 'svelte';
+	import localize from '#utils/localize.js';
+
+	let { choices, disabled = false, onchoose }: RollRerollButtonProps = $props();
+
+	const menuId = $props.id();
+
+	let open = $state(false);
+	let trigger = $state<HTMLButtonElement>();
+	let menu = $state<HTMLUListElement>();
+	let items = $state<HTMLButtonElement[]>([]);
+
+	let single = $derived(choices.length === 1 ? choices[0] : null);
+	let menuOpen = $derived(open && !single);
+	let triggerLabel = $derived(
+		single ? choiceText(single) : localize('NIMBLE.chat.incomingReactions.rerollChoose'),
+	);
+
+	function choiceText(choice: RollRerollChoice): string {
+		if (!choice.cost) return choice.label;
+		return localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
+			label: choice.label,
+			cost: choice.cost,
+		});
+	}
+
+	async function onTriggerClick() {
+		if (single) {
+			onchoose(single.id);
+			return;
+		}
+		open = !open;
+		await tick();
+		if (open) items[0]?.focus();
+	}
+
+	function choose(id: string) {
+		closeMenu();
+		onchoose(id);
+	}
+
+	function closeMenu(returnFocus = false) {
+		open = false;
+		if (returnFocus) trigger?.focus();
+	}
+
+	function onMenuKeydown(event: KeyboardEvent) {
+		const current = items.indexOf(event.target as HTMLButtonElement);
+		const last = choices.length - 1;
+		const next = {
+			ArrowDown: current >= last ? 0 : current + 1,
+			ArrowUp: current <= 0 ? last : current - 1,
+			Home: 0,
+			End: last,
+		}[event.key];
+
+		if (next !== undefined) {
+			event.preventDefault();
+			items[next]?.focus();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			closeMenu(true);
+		} else if (event.key === 'Tab') {
+			closeMenu();
+		}
+	}
+
+	function onWindowPointerDown(event: PointerEvent) {
+		const target = event.target as Node | null;
+		if (!menuOpen || trigger?.contains(target) || menu?.contains(target)) return;
+		closeMenu();
+	}
+</script>
+
+<svelte:window onpointerdown={onWindowPointerDown} />
+
+<button
+	bind:this={trigger}
+	class="nimble-roll-reroll"
+	type="button"
+	{disabled}
+	aria-label={triggerLabel}
+	aria-haspopup={single ? undefined : 'menu'}
+	aria-expanded={single ? undefined : menuOpen}
+	aria-controls={menuOpen ? menuId : undefined}
+	data-tooltip={triggerLabel}
+	onclick={onTriggerClick}
+>
+	<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+</button>
+
+{#if menuOpen}
+	<ul
+		bind:this={menu}
+		id={menuId}
+		class="nimble-roll-reroll-menu"
+		role="menu"
+		aria-label={triggerLabel}
+		tabindex="-1"
+		onkeydown={onMenuKeydown}
+	>
+		{#each choices as choice, index (choice.id)}
+			<li role="none">
+				<button
+					bind:this={items[index]}
+					class="nimble-button nimble-roll-reroll-menu__item"
+					type="button"
+					role="menuitem"
+					tabindex="-1"
+					aria-label={choiceText(choice)}
+					{disabled}
+					onclick={() => choose(choice.id)}
+				>
+					<span class="nimble-roll-reroll-menu__label">{choice.label}</span>
+					{#if choice.cost}
+						<span class="nimble-roll-reroll-menu__cost">{choice.cost}</span>
+					{/if}
+				</button>
+			</li>
+		{/each}
+	</ul>
+{/if}
+
+<style lang="scss">
+	.nimble-roll-reroll {
+		grid-area: rollAction;
+		align-self: center;
+		display: grid;
+		place-items: center;
+		width: 1.625rem;
+		height: 1.625rem;
+		margin: 0;
+		padding: 0;
+		font-size: var(--nimble-sm-text);
+		line-height: 1;
+		color: var(--nimble-dark-text-color);
+		background: var(--nimble-basic-button-background-color);
+		border: 1px solid var(--nimble-input-border-color);
+		border-radius: 4px;
+		cursor: pointer;
+
+		&:hover:not(:disabled) {
+			color: var(--nimble-dark-text-hover-color);
+			filter: brightness(1.1);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--nimble-input-border-color);
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			cursor: default;
+			opacity: 0.6;
+		}
+	}
+
+	.nimble-roll-reroll-menu {
+		grid-column: 1 / -1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin: 0.375rem 0 0;
+		padding: 0;
+		list-style: none;
+
+		&__item {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			width: 100%;
+			padding: 0.25rem 0.5rem;
+			font-size: var(--nimble-sm-text);
+			text-align: left;
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-input-border-color);
+				outline-offset: -2px;
+			}
+		}
+
+		&__label {
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__cost {
+			flex: none;
+			margin-left: auto;
+			font-size: var(--nimble-xs-text);
+			font-weight: 400;
+			color: var(--nimble-medium-text-color);
+			white-space: nowrap;
+		}
+	}
+</style>

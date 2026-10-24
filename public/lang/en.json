@@ -213,6 +213,8 @@
 				"useFailed": "That reaction could not be completed.",
 				"rerollWith": "Reroll with {feature}",
 				"rerollAgain": "Reroll again",
+				"rerollChoose": "Choose a feature to reroll with",
+				"rerollWithCost": "{label} ({cost})",
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollUsedBy": "Used by {name}",
 				"rerollUsesLeft": "Uses left: {count}",

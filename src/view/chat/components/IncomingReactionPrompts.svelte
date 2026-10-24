@@ -7,6 +7,7 @@
 	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
 	import RerollHistory from './RerollHistory.svelte';
+	import RollRerollButton from './RollRerollButton.svelte';
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let { place }: IncomingReactionPromptsProps = $props();
@@ -28,7 +29,21 @@
 	/>
 {/snippet}
 
-{#if place === 'roll'}
+{#if place === 'rollButton'}
+	{#if prompts.rerollChoices.length > 0}
+		<RollRerollButton
+			choices={prompts.rerollChoices}
+			disabled={prompts.busy}
+			onchoose={prompts.useEntryById}
+		/>
+	{/if}
+{:else if place === 'rollHistory'}
+	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0}
+		<section class="nimble-roll-changes nimble-roll-changes--under-row">
+			{@render rerollHistory()}
+		</section>
+	{/if}
+{:else if place === 'roll'}
 	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
@@ -77,6 +92,10 @@
 
 		&:not(:last-of-type) {
 			padding-bottom: 0;
+		}
+
+		&--under-row {
+			padding: 0.5rem 0 0;
 		}
 
 		// The used-entry lines; the reroll lines style their own copy in RerollHistory.
