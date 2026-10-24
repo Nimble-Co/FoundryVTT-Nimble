@@ -141,15 +141,14 @@ function collectRerollEntries(context: RerollRollContext): {
 
 /**
  * Whether a pending offer still belongs on a roll that resolved this way. A
- * `reroll` entry never stands on a forced miss. `forceReroll` keeps its own
- * trigger field; every other kind uses `outcomeTrigger`, and an offer with
- * neither always stands. Before the roll is made, every offer stands.
+ * `reroll` entry never stands on a forced miss. Every kind is gated by
+ * `outcomeTrigger`, and an offer without one always stands. Before the roll is
+ * made, every offer stands.
  */
 function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
 	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll);
 	if (!roll.outcome) return true;
-	const trigger = entry.kind === 'forceReroll' ? entry.rerollTrigger : entry.outcomeTrigger;
-	return rerollTriggerMatches(trigger, roll.outcome);
+	return rerollTriggerMatches(entry.outcomeTrigger, roll.outcome);
 }
 
 /** One `reroll` rule on one actor, so a rule is not added or run twice on a card. */

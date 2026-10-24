@@ -29,7 +29,6 @@ import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
-import { prepareReroll } from '#utils/rerollOptions.js';
 import { showDiceAnimation } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -111,8 +110,7 @@ interface ActivationCardSystemData {
  * automatic reroll it triggers is added to that list.
  */
 interface CardReroll {
-	/** Null for an action that makes no record of its own */
-	reroll: RerollRecord | null;
+	reroll: RerollRecord;
 	discardedCritTriggers: boolean;
 	list: 'new' | 'append';
 }
@@ -1606,59 +1604,6 @@ class NimbleChatMessage extends ChatMessage {
 		);
 	}
 
-	/**
-	 * Discard the attack's primary damage roll and roll once more; the second
-	 * result stands. Executes on the primary GM's client (players reach it via
-	 * the incoming-attack reaction socket).
-	 */
-	async resolveForceRerollReaction(
-		entryId: string,
-		requestingUserId: string,
-		viaSocket = false,
-	): Promise<void> {
-		if (!game.user?.isGM) return;
-		if (!this.isActivationCard()) return;
-
-		return queueReactionWrite(this.id ?? '', () =>
-			this.#applyForceRerollReaction(entryId, requestingUserId, viaSocket),
-		);
-	}
-
-	async #applyForceRerollReaction(
-		entryId: string,
-		requestingUserId: string,
-		viaSocket: boolean,
-	): Promise<void> {
-		const entry = this.#validateIncomingReaction(
-			entryId,
-			'forceReroll',
-			requestingUserId,
-			viaSocket,
-		);
-		if (!entry) return;
-
-		const target = this.#findPrimaryDamageRoll();
-		if (!target) return;
-
-		const previous = target.damageNode.roll as unknown as DamageRoll.SerializedData;
-		const next = prepareReroll(
-			previous.originalFormula ?? previous.formula,
-			previous.options as Record<string, unknown> | undefined,
-			{ rollModeChange: entry.rerollWithDisadvantage ? -1 : 0 },
-		);
-		const systemData = this.system as unknown as ActivationCardSystemData;
-		await this.#rerollPrimaryDamage(
-			entry,
-			target,
-			await this.#makeDamageRoll(previous, next.formula, next.options),
-			{
-				reroll: null,
-				discardedCritTriggers: systemData.discardedCritTriggers === true,
-				list: 'new',
-			},
-		);
-	}
-
 	/** Make and evaluate a new roll with the data of the roll it replaces. */
 	async #makeDamageRoll(
 		previous: DamageRoll.SerializedData,
@@ -1721,10 +1666,7 @@ class NimbleChatMessage extends ChatMessage {
 		const recoveryChange = rerollRecoveryChange(systemData, newRoll, critTriggers);
 
 		const historyChanges = {
-			rerolls: [
-				...(history.list === 'append' ? (systemData.rerolls ?? []) : []),
-				...(history.reroll ? [history.reroll] : []),
-			],
+			rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
 			discardedCritTriggers: history.discardedCritTriggers,
 		};
 
@@ -2293,7 +2235,7 @@ class NimbleChatMessage extends ChatMessage {
 			return null;
 		}
 
-		// A plain Roll, never a DamageRoll: both `resolveForceRerollReaction` and
+		// A plain Roll, never a DamageRoll: both the reroll resolvers and
 		// `foldBonusIntoPrimaryDamage` find their target by `class === 'DamageRoll'`,
 		// and this packet is neither of their business.
 		const bonusRoll = new Roll(String(bonusDamage));
@@ -2351,7 +2293,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!targets.includes(entry.tokenUuid)) targets.push(entry.tokenUuid);
 
 		// The ally is no longer the target, so every other offer tied to them
-		// is stale: other redirect offers, and their own forceReroll offers.
+		// is stale: other redirect offers, and their own reroll offers.
 		const updatedEntries = this.#markIncomingReactionsUsed(
 			(e) => e.id === entry.id || e.targetTokenUuid === entry.targetTokenUuid,
 		);

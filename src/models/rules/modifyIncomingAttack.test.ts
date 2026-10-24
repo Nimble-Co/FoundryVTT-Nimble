@@ -26,7 +26,6 @@ describe('ModifyIncomingAttackRule', () => {
 
 			expect(modifier.choices).toEqual({
 				disadvantage: 'NIMBLE.rules.modifyIncomingAttack.modifiers.disadvantage',
-				forceReroll: 'NIMBLE.rules.modifyIncomingAttack.modifiers.forceReroll',
 				redirectToSelf: 'NIMBLE.rules.modifyIncomingAttack.modifiers.redirectToSelf',
 				autoMiss: 'NIMBLE.rules.modifyIncomingAttack.modifiers.autoMiss',
 				raiseMissThreshold: 'NIMBLE.rules.modifyIncomingAttack.modifiers.raiseMissThreshold',
@@ -82,27 +81,13 @@ describe('ModifyIncomingAttackRule', () => {
 			expect(typeof range.showWhen).toBe('function');
 			expect(range.showWhen({ modifier: 'redirectToSelf' })).toBe(true);
 			expect(range.showWhen({ modifier: 'disadvantage' })).toBe(false);
-			expect(range.showWhen({ modifier: 'forceReroll' })).toBe(false);
 			expect(range.showWhen({ modifier: 'autoMiss' })).toBe(false);
 		});
 
-		it('restricts rerollTrigger to always / hit / criticalHit, defaulting to always', () => {
+		it('has no reroll fields', () => {
 			const schema = ModifyIncomingAttackRule.defineSchema();
-			const trigger = schema.rerollTrigger as unknown as { choices: string[]; initial: string };
-
-			expect(trigger.choices).toEqual(['always', 'hit', 'criticalHit']);
-			expect(trigger.initial).toBe('always');
-		});
-
-		it('exposes automatic and rerollWithDisadvantage flags gated to forceReroll', () => {
-			const schema = ModifyIncomingAttackRule.defineSchema();
-			const flags = ['automatic', 'rerollTrigger', 'rerollWithDisadvantage'] as const;
-			for (const key of flags) {
-				const field = schema[key] as unknown as {
-					showWhen: (data: Record<string, unknown>) => boolean;
-				};
-				expect(field.showWhen({ modifier: 'forceReroll' })).toBe(true);
-				expect(field.showWhen({ modifier: 'disadvantage' })).toBe(false);
+			for (const key of ['automatic', 'rerollTrigger', 'rerollWithDisadvantage']) {
+				expect(schema).not.toHaveProperty(key);
 			}
 		});
 

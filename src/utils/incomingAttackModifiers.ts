@@ -1,10 +1,5 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
-import type {
-	IncomingReactionEntry,
-	RerollRecord,
-	RerollSide,
-	RerollTrigger,
-} from './incomingReactionEntry.js';
+import type { IncomingReactionEntry, RerollRecord, RerollSide } from './incomingReactionEntry.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
 import {
 	type CardOfferContext,
@@ -20,7 +15,6 @@ import {
 	type RerollRollOutcome,
 	type RerollRuleLike,
 } from './rerollEntries.js';
-import { prepareReroll } from './rerollOptions.js';
 import { type RerollHistory, rerollWithRule } from './rerollStep.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
@@ -36,9 +30,6 @@ interface RuleLike {
 	label?: string;
 	modifier?: IncomingAttackModifier;
 	range?: number;
-	automatic?: boolean;
-	rerollTrigger?: RerollTrigger;
-	rerollWithDisadvantage?: boolean;
 	missThreshold?: number;
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
@@ -57,12 +48,6 @@ interface IncomingAttackModifierEntry {
 	label: string;
 	ruleId: string;
 	itemUuid: string;
-	/** forceReroll only: execute at roll time instead of offering a button */
-	automatic?: boolean;
-	/** forceReroll only: when the reroll applies */
-	rerollTrigger?: RerollTrigger;
-	/** forceReroll only: roll the reroll at disadvantage */
-	rerollWithDisadvantage?: boolean;
 	/** raiseMissThreshold only: the highest primary-die result that misses */
 	missThreshold?: number;
 }
@@ -74,7 +59,7 @@ interface IncomingAttackPlan {
 	missThreshold: number;
 	/** Automatically applied modifiers, for roll metadata */
 	appliedEntries: IncomingAttackModifierEntry[];
-	/** Interactive prompts (forceReroll / redirectToSelf / reroll) to stamp onto the card */
+	/** Interactive prompts (redirectToSelf / reroll / spends) to stamp onto the card */
 	reactionEntries: IncomingReactionEntry[];
 	/** Automatic rerolls, resolved against the evaluated roll's outcome */
 	autoRerollEntries: IncomingReactionEntry[];
@@ -127,8 +112,7 @@ function automaticRerollsOf(plan: IncomingAttackPlan): AutomaticReroll[] {
  *
  * Automatic rerolls chain the same way they do on the card: after each one,
  * the next automatic `reroll` rule that matches the new roll runs, and each
- * rule runs at most once. The second result stands each time. An automatic
- * `forceReroll` can only replace the first roll.
+ * rule runs at most once. The second result stands each time.
  */
 async function applyPostRollIncomingBehavior<TRoll>(
 	roll: TRoll,
@@ -142,19 +126,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	let discardedCritTriggers = false;
 	const stampEntries: IncomingReactionEntry[] = [];
 
-	const view = asView(roll);
-	const formula = view.originalFormula ?? '';
-	if (formula) {
-		const first = plan.autoRerollEntries.find((entry) => offerStands(entry, rollOutcomeOf(view)));
-		if (first?.kind === 'forceReroll' && !view.options.forceMiss) {
-			const next = prepareReroll(formula, view.options, {
-				rollModeChange: first.rerollWithDisadvantage ? -1 : 0,
-			});
-			discardedRoll = view.toJSON();
-			finalRoll = await rebuildRoll(next.formula, next.options);
-			stampEntries.push({ ...first, used: true });
-		}
-
+	if (asView(roll).originalFormula) {
 		const automatic = automaticRerollsOf(plan);
 		let next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
 		while (next) {
@@ -204,9 +176,6 @@ function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 		label: rule.label || rule.item?.name || '',
 		ruleId: rule.id ?? '',
 		itemUuid: rule.item?.uuid ?? '',
-		automatic: rule.automatic ?? false,
-		rerollTrigger: rule.rerollTrigger ?? 'always',
-		rerollWithDisadvantage: rule.rerollWithDisadvantage ?? false,
 		missThreshold: rule.missThreshold ?? DEFAULT_MISS_THRESHOLD,
 	};
 }
@@ -382,27 +351,6 @@ function computeIncomingAttackPlan(
 	addRerollEntries(plan, rerolls, 'roller');
 
 	if (!firstTargetToken?.actor || plan.forceMiss) return plan;
-
-	const targetActorUuid = (firstTargetToken.actor?.uuid as string) ?? '';
-	for (const entry of targetModifiers) {
-		if (entry.modifier !== 'forceReroll') continue;
-		const reactionEntry: IncomingReactionEntry = {
-			id: foundry.utils.randomID(),
-			kind: 'forceReroll',
-			source: 'rule',
-			actorUuid: targetActorUuid,
-			tokenUuid: null,
-			targetTokenUuid: firstTargetToken.document.uuid,
-			label: entry.label,
-			ruleId: entry.ruleId,
-			itemUuid: entry.itemUuid,
-			used: false,
-			rerollTrigger: entry.rerollTrigger ?? 'always',
-			rerollWithDisadvantage: entry.rerollWithDisadvantage ?? false,
-		};
-		if (entry.automatic) plan.autoRerollEntries.push(reactionEntry);
-		else plan.reactionEntries.push(reactionEntry);
-	}
 
 	addRerollEntries(plan, rerolls, 'target');
 

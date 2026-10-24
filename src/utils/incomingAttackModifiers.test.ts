@@ -33,11 +33,9 @@ interface MockRule {
 	type?: string;
 	id?: string;
 	label?: string;
-	modifier?: 'disadvantage' | 'forceReroll' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
+	modifier?: 'disadvantage' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
 	missThreshold?: number;
 	range?: number;
-	automatic?: boolean;
-	rerollTrigger?: 'always' | 'criticalHit';
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
 }
@@ -70,6 +68,18 @@ function createRule(overrides: Partial<MockRule> = {}): MockRule {
 		item: { name: 'Test Item', uuid: 'Item.test-item' },
 		appliesTo: () => true,
 		...overrides,
+	};
+}
+
+/** A `reroll` rule that gives the target a button. */
+function createTargetRerollRule(id: string) {
+	return {
+		type: 'reroll',
+		id,
+		label: '',
+		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
+		outcome: 'always',
+		offersRerollOn: (context: { side: string }) => context.side === 'target',
 	};
 }
 
@@ -174,12 +184,12 @@ describe('collectTargetIncomingModifiers', () => {
 
 	it('excludes redirectToSelf rules (protector-side, not target-side)', () => {
 		const actor = createActor({
-			rules: [createRule({ modifier: 'redirectToSelf' }), createRule({ modifier: 'forceReroll' })],
+			rules: [createRule({ modifier: 'redirectToSelf' }), createRule({ modifier: 'disadvantage' })],
 		});
 
 		const entries = collectTargetIncomingModifiers(actor);
 
-		expect(entries).toEqual([expect.objectContaining({ modifier: 'forceReroll' })]);
+		expect(entries).toEqual([expect.objectContaining({ modifier: 'disadvantage' })]);
 	});
 
 	it('falls back to the owning item name when the rule has no label', () => {
@@ -458,7 +468,7 @@ describe('computeIncomingAttackPlan', () => {
 			actor: createActor({
 				rules: [
 					createRule({ modifier: 'autoMiss', id: 'auto-miss' }),
-					createRule({ modifier: 'forceReroll', id: 'force-reroll' }),
+					createTargetRerollRule('target-reroll') as never,
 				],
 			}),
 		});
@@ -525,45 +535,10 @@ describe('computeIncomingAttackPlan', () => {
 		expect(computeIncomingAttackPlan(target as never).missThreshold).toBe(2);
 	});
 
-	it('creates a forceReroll reaction entry bound to the target actor', () => {
-		const target = createToken({
-			actor: createActor({
-				uuid: 'Actor.target-actor',
-				rules: [
-					createRule({
-						modifier: 'forceReroll',
-						id: 'reroll-rule',
-						label: 'Fate Twist',
-						item: { name: 'Fate Item', uuid: 'Item.fate' },
-					}),
-				],
-			}),
-		});
-		setCanvasTokens([target]);
-
-		const plan = computeIncomingAttackPlan(target as never);
-
-		expect(plan.disadvantageCount).toBe(0);
-		expect(plan.reactionEntries).toHaveLength(1);
-		expect(plan.reactionEntries[0]).toEqual(
-			expect.objectContaining({
-				kind: 'forceReroll',
-				source: 'rule',
-				actorUuid: 'Actor.target-actor',
-				tokenUuid: null,
-				targetTokenUuid: target.document.uuid,
-				label: 'Fate Twist',
-				ruleId: 'reroll-rule',
-				itemUuid: 'Item.fate',
-				used: false,
-			}),
-		);
-	});
-
 	it('includes redirect candidates from allies alongside target-side reactions', () => {
 		const target = createToken({
 			actor: createActor({
-				rules: [createRule({ modifier: 'forceReroll', id: 'reroll-rule' })],
+				rules: [createTargetRerollRule('reroll-rule') as never],
 			}),
 		});
 		const ally = createToken();
@@ -572,18 +547,15 @@ describe('computeIncomingAttackPlan', () => {
 		const plan = computeIncomingAttackPlan(target as never);
 
 		expect(plan.reactionEntries).toHaveLength(2);
-		expect(plan.reactionEntries.map((entry) => entry.kind)).toEqual([
-			'forceReroll',
-			'redirectToSelf',
-		]);
+		expect(plan.reactionEntries.map((entry) => entry.kind)).toEqual(['reroll', 'redirectToSelf']);
 	});
 
 	it('assigns unique ids to reaction entries', () => {
 		const target = createToken({
 			actor: createActor({
 				rules: [
-					createRule({ modifier: 'forceReroll', id: 'rule-a' }),
-					createRule({ modifier: 'forceReroll', id: 'rule-b' }),
+					createTargetRerollRule('rule-a') as never,
+					createTargetRerollRule('rule-b') as never,
 				],
 			}),
 		});
@@ -594,23 +566,6 @@ describe('computeIncomingAttackPlan', () => {
 
 		expect(new Set(ids).size).toBe(ids.length);
 		expect(ids.every((id) => typeof id === 'string' && id.length > 0)).toBe(true);
-	});
-
-	it('routes an automatic forceReroll rule into autoRerollEntries, not offers', () => {
-		const target = createToken({
-			actor: createActor({
-				rules: [
-					createRule({ modifier: 'forceReroll', automatic: true, rerollTrigger: 'criticalHit' }),
-				],
-			}),
-		});
-		setCanvasTokens([target]);
-
-		const plan = computeIncomingAttackPlan(target as never);
-
-		expect(plan.reactionEntries.some((e) => e.kind === 'forceReroll')).toBe(false);
-		expect(plan.autoRerollEntries).toHaveLength(1);
-		expect(plan.autoRerollEntries[0].rerollTrigger).toBe('criticalHit');
 	});
 
 	it('forwards the attack context to the attacker-side offer collector', () => {
@@ -637,24 +592,28 @@ describe('applyPostRollIncomingBehavior', () => {
 		};
 	}
 
-	function autoEntry(
-		rerollTrigger: 'always' | 'hit' | 'criticalHit',
-		rerollWithDisadvantage = false,
-	) {
+	function rerollEntry(outcomeTrigger: 'always' | 'hit' | 'criticalHit') {
 		return {
 			id: 'auto-1',
-			kind: 'forceReroll' as const,
+			kind: 'reroll' as const,
 			source: 'rule' as const,
 			actorUuid: 'Actor.target',
 			tokenUuid: null,
 			targetTokenUuid: 'Scene.s.Token.target',
+			side: 'target' as const,
 			label: "Mountain's Endurance",
 			ruleId: 'rule-1',
-			itemUuid: '',
+			itemUuid: 'Item.endurance',
 			used: false,
-			rerollTrigger,
-			rerollWithDisadvantage,
+			outcomeTrigger,
 		};
+	}
+
+	/** An automatic `reroll` rule with no cost, and its entry. */
+	function automaticReroll(outcomeTrigger: 'always' | 'hit' | 'criticalHit') {
+		const entry = rerollEntry(outcomeTrigger);
+		const rule = { type: 'reroll', id: 'rule-1', automatic: true, outcome: outcomeTrigger };
+		return { autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) };
 	}
 
 	const emptyPlan = () => ({
@@ -675,7 +634,7 @@ describe('applyPostRollIncomingBehavior', () => {
 
 		const result = await applyPostRollIncomingBehavior(
 			roll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('criticalHit')] },
+			{ ...emptyPlan(), ...automaticReroll('criticalHit') },
 			rebuildRoll,
 		);
 
@@ -693,7 +652,7 @@ describe('applyPostRollIncomingBehavior', () => {
 
 		const result = await applyPostRollIncomingBehavior(
 			roll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('criticalHit')] },
+			{ ...emptyPlan(), ...automaticReroll('criticalHit') },
 			rebuildRoll,
 		);
 
@@ -703,23 +662,9 @@ describe('applyPostRollIncomingBehavior', () => {
 		expect(result.stampEntries).toEqual([]);
 	});
 
-	it('never rerolls when the attack was force-missed', async () => {
-		const roll = makeRoll(true, true);
-		const rebuildRoll = vi.fn(async () => makeRoll(false));
-
-		const result = await applyPostRollIncomingBehavior(
-			roll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('always')] },
-			rebuildRoll,
-		);
-
-		expect(rebuildRoll).not.toHaveBeenCalled();
-		expect(result.roll).toBe(roll);
-	});
-
 	it('passes interactive offers through unchanged', async () => {
 		const roll = makeRoll(false);
-		const offer = { ...autoEntry('always'), id: 'offer-1', automatic: undefined };
+		const offer = { ...rerollEntry('always'), id: 'offer-1' };
 
 		const result = await applyPostRollIncomingBehavior(
 			roll,
@@ -736,7 +681,7 @@ describe('applyPostRollIncomingBehavior', () => {
 
 		const onHit = await applyPostRollIncomingBehavior(
 			hitRoll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('hit')] },
+			{ ...emptyPlan(), ...automaticReroll('hit') },
 			vi.fn(async () => makeRoll(false)),
 		);
 		expect(onHit.discardedRoll).not.toBeNull();
@@ -744,31 +689,11 @@ describe('applyPostRollIncomingBehavior', () => {
 		const rebuildMiss = vi.fn(async () => makeRoll(false));
 		const onMiss = await applyPostRollIncomingBehavior(
 			missRoll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('hit')] },
+			{ ...emptyPlan(), ...automaticReroll('hit') },
 			rebuildMiss,
 		);
 		expect(rebuildMiss).not.toHaveBeenCalled();
 		expect(onMiss.roll).toBe(missRoll);
-	});
-
-	it('rebuilds an automatic reroll at disadvantage when the rule says so', async () => {
-		const roll = makeRoll(true);
-		const rebuildRoll = vi.fn(async (_formula: string, _options: Record<string, unknown>) =>
-			makeRoll(false),
-		);
-
-		await applyPostRollIncomingBehavior(
-			roll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('criticalHit', true)] },
-			rebuildRoll,
-		);
-
-		const opts = rebuildRoll.mock.calls[0][1] as {
-			rollModeSources?: number[];
-			netRollMode?: number;
-		};
-		expect(opts.rollModeSources).toContain(-1);
-		expect(opts).not.toHaveProperty('netRollMode');
 	});
 
 	it('drops a set primary die value and keeps the primary die modifier', async () => {
@@ -780,26 +705,13 @@ describe('applyPostRollIncomingBehavior', () => {
 
 		await applyPostRollIncomingBehavior(
 			roll,
-			{ ...emptyPlan(), autoRerollEntries: [autoEntry('criticalHit')] },
+			{ ...emptyPlan(), ...automaticReroll('criticalHit') },
 			rebuildRoll,
 		);
 
 		const opts = rebuildRoll.mock.calls[0][1];
 		expect(opts).not.toHaveProperty('primaryDieValue');
 		expect(opts.primaryDieModifier).toBe(2);
-	});
-
-	it('drops a hit-gated interactive offer when the final roll was a miss', async () => {
-		const missRoll = makeRoll(false, false, true);
-		const offer = { ...autoEntry('hit'), id: 'offer-1', automatic: undefined };
-
-		const result = await applyPostRollIncomingBehavior(
-			missRoll,
-			{ ...emptyPlan(), reactionEntries: [offer] },
-			vi.fn(async () => makeRoll(false)),
-		);
-
-		expect(result.stampEntries).toEqual([]);
 	});
 
 	describe('attacker-side spend offers', () => {
@@ -867,7 +779,7 @@ describe('applyPostRollIncomingBehavior', () => {
 				makeRoll(true),
 				{
 					...emptyPlan(),
-					autoRerollEntries: [autoEntry('criticalHit')],
+					...automaticReroll('criticalHit'),
 					reactionEntries: [spendOffer('criticalHit')],
 				},
 				vi.fn(async () => makeRoll(false)),

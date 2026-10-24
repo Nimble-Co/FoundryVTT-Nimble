@@ -498,24 +498,46 @@ describe('resolveSpendPoolForDamageOffer', () => {
  * comes across to the new roll or the dice go back — the one thing that must
  * not happen is the player paying for damage the card no longer shows.
  */
-describe('resolveForceRerollReaction with a folded card-side spend', () => {
+describe('resolveRerollReaction with a folded card-side spend', () => {
 	beforeEach(setupSpendGlobals);
 
 	function rerollEntry() {
 		return {
 			id: 'reroll-1',
-			kind: 'forceReroll',
+			kind: 'reroll',
 			source: 'rule',
 			actorUuid: 'Actor.cheat',
 			tokenUuid: null,
 			targetTokenUuid: 'Scene.scene.Token.victim',
+			side: 'target',
 			label: 'Pocket Sand',
 			ruleId: 'pocket-sand',
-			// Empty itemUuid skips the rule-still-enabled revalidation
-			itemUuid: '',
+			itemUuid: 'Item.sand',
 			used: false,
-			rerollTrigger: 'always',
+			outcomeTrigger: 'always',
 		};
+	}
+
+	/** The target owns a free `reroll` rule; every other uuid is the spender. */
+	function useRerollWorld(spender: ReturnType<typeof createActor>) {
+		const cheat = {
+			uuid: 'Actor.cheat',
+			type: 'character',
+			rules: [],
+			testUserPermission: () => true,
+		};
+		const rule = {
+			type: 'reroll',
+			id: 'pocket-sand',
+			disabled: false,
+			offersRerollOn: () => true,
+		};
+		const byUuid: Record<string, unknown> = {
+			'Actor.cheat': cheat,
+			'Item.sand': { rules: new Map([[rule.id, rule]]) },
+			'Scene.scene.Token.victim': { actor: cheat },
+		};
+		globals.fromUuidSync = vi.fn((uuid: string) => byUuid[uuid] ?? spender);
 	}
 
 	function spentEntry(overrides: Record<string, unknown> = {}) {
@@ -546,10 +568,10 @@ describe('resolveForceRerollReaction with a folded card-side spend', () => {
 
 	it('re-applies a spend the new outcome still satisfies', async () => {
 		const actor = createActor([3], [POOL_RULE, consumerRule()]);
-		useActor(actor);
+		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'hit' })]);
 
-		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+		await message.resolveRerollReaction('reroll-1', 'gm-user');
 
 		// The mock rebuild totals 0, so the whole total is the carried bonus
 		const roll = rerolledRoll(message);
@@ -573,10 +595,10 @@ describe('resolveForceRerollReaction with a folded card-side spend', () => {
 	it('refunds the dice and drops a spend the new outcome no longer satisfies', async () => {
 		// The reroll comes back a non-crit, so the crit-only spend was never owed
 		const actor = createActor([3], [POOL_RULE, consumerRule()]);
-		useActor(actor);
+		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'criticalHit' })]);
 
-		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+		await message.resolveRerollReaction('reroll-1', 'gm-user');
 
 		expect(rerolledRoll(message).total).toBe(0);
 
@@ -597,10 +619,10 @@ describe('resolveForceRerollReaction with a folded card-side spend', () => {
 		// A typed spend is its own damage node, which the reroll never rebuilds;
 		// re-appending it to the primary roll would pay the bonus twice
 		const actor = createActor([3], [POOL_RULE, consumerRule({ damageType: 'radiant' })]);
-		useActor(actor);
+		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'hit' })]);
 
-		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+		await message.resolveRerollReaction('reroll-1', 'gm-user');
 
 		expect(rerolledRoll(message).total).toBe(0);
 		expect(rerolledEntries(message)[1]).toMatchObject({ used: true, usedAmount: 18 });
@@ -610,10 +632,10 @@ describe('resolveForceRerollReaction with a folded card-side spend', () => {
 		// No pool to refund into: charging the player and dropping the damage
 		// would be the worst of both, so the bonus rides on the new roll
 		const actor = createActor([3], [POOL_RULE]);
-		useActor(actor);
+		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'criticalHit' })]);
 
-		await message.resolveForceRerollReaction('reroll-1', 'gm-user');
+		await message.resolveRerollReaction('reroll-1', 'gm-user');
 
 		expect(rerolledRoll(message).total).toBe(18);
 		expect(actor._item.update).not.toHaveBeenCalled();

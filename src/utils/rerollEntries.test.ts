@@ -302,16 +302,6 @@ describe('offerStands', () => {
 		expect(offerStands(spend, { outcome: HIT, forcedMiss: false })).toBe(false);
 	});
 
-	it('checks a forceReroll entry against its own trigger', () => {
-		const force = {
-			kind: 'forceReroll',
-			rerollTrigger: 'criticalHit',
-			outcomeTrigger: 'miss',
-		} as IncomingReactionEntry;
-		expect(offerStands(force, { outcome: CRIT, forcedMiss: false })).toBe(true);
-		expect(offerStands(force, { outcome: MISS, forcedMiss: false })).toBe(false);
-	});
-
 	it('always lets an offer with no trigger stand', () => {
 		const interpose = { kind: 'redirectToSelf' } as IncomingReactionEntry;
 		expect(offerStands(interpose, { outcome: MISS, forcedMiss: true })).toBe(true);

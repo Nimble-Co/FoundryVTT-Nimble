@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleChatMessage } from './chatMessage.js';
 
 type TestGlobals = {
@@ -2406,7 +2405,7 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 
 interface ReactionEntryFixture {
 	id: string;
-	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage';
+	kind: 'redirectToSelf' | 'spendPoolForDamage' | 'reroll';
 	source: 'baseline' | 'rule';
 	actorUuid: string;
 	tokenUuid: string | null;
@@ -2421,7 +2420,7 @@ interface ReactionEntryFixture {
 function createReactionEntry(overrides: Partial<ReactionEntryFixture> = {}): ReactionEntryFixture {
 	return {
 		id: 'entry-1',
-		kind: 'forceReroll',
+		kind: 'reroll',
 		source: 'rule',
 		actorUuid: 'Actor.reactor',
 		tokenUuid: null,
@@ -2516,293 +2515,6 @@ function setupReactionGlobals(): void {
 	reactionGlobals().ChatMessage.create = vi.fn().mockResolvedValue(undefined);
 	reactionGlobals().ChatMessage.getSpeaker = vi.fn(() => ({ alias: 'Protector' }));
 }
-
-describe('NimbleChatMessage.resolveForceRerollReaction', () => {
-	beforeEach(() => {
-		setupReactionGlobals();
-	});
-
-	it('rerolls the primary damage roll, replaces it, and marks the entry used', async () => {
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).toHaveBeenCalledTimes(1);
-		const updatePayload = message.update.mock.calls[0][0] as {
-			rolls: string[];
-			system: {
-				activation: { effects: Array<Record<string, unknown>> };
-				isCritical: boolean;
-				isMiss: boolean;
-				incomingReactions: ReactionEntryFixture[];
-			};
-		};
-
-		// The fresh roll replaces the serialized DamageRoll in the rolls source
-		expect(updatePayload.rolls).toHaveLength(1);
-		const replacedRoll = JSON.parse(updatePayload.rolls[0]) as Record<string, unknown>;
-		expect(replacedRoll.originalFormula).toBe('1d6 + 2');
-		expect(replacedRoll.isMiss).toBe(false);
-		expect(replacedRoll.isCritical).toBe(false);
-
-		// The damage node keeps the discarded roll for display and gets the new one
-		const damageNode = updatePayload.system.activation.effects[0];
-		expect(damageNode.discardedRoll).toEqual(createSerializedReactionRoll());
-		expect((damageNode.roll as Record<string, unknown>).originalFormula).toBe('1d6 + 2');
-
-		// The card outcome mirrors the new roll and the entry is spent
-		expect(updatePayload.system.isCritical).toBe(false);
-		expect(updatePayload.system.isMiss).toBe(false);
-		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
-	});
-
-	it('drops a set primary die value and keeps the primary die modifier', async () => {
-		const roll = createSerializedReactionRoll();
-		Object.assign(roll.options, { primaryDieValue: 3, primaryDieModifier: 2 });
-		const message = createReactionMessage({ entries: [createReactionEntry()], roll });
-
-		const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		const { options } = evaluate.mock.contexts[0] as DamageRoll;
-		evaluate.mockRestore();
-		expect(options).not.toHaveProperty('primaryDieValue');
-		expect(options.primaryDieModifier).toBe(2);
-	});
-
-	it('drops offers the new outcome no longer satisfies', async () => {
-		// A crit card whose reroll comes back a plain hit: the crit-gated spend
-		// offer stamped on it is stranded and must go, while the hit-gated one
-		// still applies. Reading the card's own (now stale) outcome instead of the
-		// fresh roll would keep both.
-		const message = createReactionMessage({
-			isCritical: true,
-			entries: [
-				createReactionEntry(),
-				createReactionEntry({
-					id: 'spend-crit',
-					kind: 'spendPoolForDamage',
-					outcomeTrigger: 'criticalHit',
-				}),
-				createReactionEntry({
-					id: 'spend-hit',
-					kind: 'spendPoolForDamage',
-					outcomeTrigger: 'hit',
-				}),
-			],
-		});
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		const entries = (
-			message.update.mock.calls[0][0] as {
-				system: { incomingReactions: ReactionEntryFixture[] };
-			}
-		).system.incomingReactions;
-
-		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-hit']);
-	});
-
-	it('drops an open Movement Offer the new outcome no longer makes', async () => {
-		const message = createReactionMessage({ isCritical: true, entries: [createReactionEntry()] });
-		const system = message.system as unknown as {
-			activation: { effects: Array<Record<string, unknown>> };
-			movementOffers?: unknown[];
-		};
-		system.activation.effects[0].on = {
-			criticalHit: [
-				{
-					id: 'push',
-					type: 'move',
-					kind: 'forced',
-					recipient: 'targets',
-					distance: '2',
-					distanceBySize: {},
-					ignoreDifficultTerrain: false,
-					direction: 'away',
-				},
-			],
-		};
-		system.movementOffers = [
-			{
-				id: 'push.victim',
-				nodeId: 'push',
-				tokenUuid: 'Scene.scene.Token.victim',
-				name: 'Victim',
-				kind: 'forced',
-				spaces: 2,
-				ignoreDifficultTerrain: true,
-				state: 'open',
-				usedBy: null,
-				movedSpaces: null,
-				stopped: false,
-				conditional: false,
-			},
-		];
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		const payload = message.update.mock.calls[0][0] as { system: { movementOffers: unknown[] } };
-		expect(payload.system.movementOffers).toEqual([]);
-	});
-
-	it('keeps a spent entry whose outcome no longer matches, for its attribution', async () => {
-		const message = createReactionMessage({
-			isCritical: true,
-			entries: [
-				createReactionEntry(),
-				createReactionEntry({
-					id: 'spend-crit',
-					kind: 'spendPoolForDamage',
-					outcomeTrigger: 'criticalHit',
-					used: true,
-				}),
-			],
-		});
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		const entries = (
-			message.update.mock.calls[0][0] as {
-				system: { incomingReactions: ReactionEntryFixture[] };
-			}
-		).system.incomingReactions;
-
-		expect(entries.map((e) => e.id)).toEqual(['entry-1', 'spend-crit']);
-	});
-
-	it('serializes two entries resolving at once, so neither used flag is lost', async () => {
-		// Both resolvers read `incomingReactions`, await a roll, then write the
-		// whole array back. Overlapping, the second would write a copy taken
-		// before the first landed and undo it.
-		const message = createReactionMessage({
-			entries: [createReactionEntry(), createReactionEntry({ id: 'entry-2' })],
-		});
-		Object.defineProperty(message, 'id', { value: 'message-1' });
-		message.update = vi.fn().mockImplementation(async (payload: Record<string, unknown>) => {
-			const next = (payload.system as { incomingReactions?: ReactionEntryFixture[] })
-				?.incomingReactions;
-			if (next) (message.system as Record<string, unknown>).incomingReactions = next;
-			return undefined;
-		});
-
-		await Promise.all([
-			message.resolveForceRerollReaction('entry-1', 'gm-user'),
-			message.resolveForceRerollReaction('entry-2', 'gm-user'),
-		]);
-
-		expect(message.update).toHaveBeenCalledTimes(2);
-		const finalEntries = (
-			message.update.mock.calls[1][0] as {
-				system: { incomingReactions: ReactionEntryFixture[] };
-			}
-		).system.incomingReactions;
-		expect(finalEntries.map((e) => e.used)).toEqual([true, true]);
-	});
-
-	it('does nothing on non-GM clients', async () => {
-		reactionGlobals().game.user.isGM = false;
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing for an unknown entry id', async () => {
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('missing-entry', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing for an already-used entry', async () => {
-		const message = createReactionMessage({ entries: [createReactionEntry({ used: true })] });
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing when the entry is of a different kind', async () => {
-		const message = createReactionMessage({
-			entries: [
-				createReactionEntry({ kind: 'redirectToSelf', tokenUuid: 'Scene.scene.Token.protector' }),
-			],
-		});
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing when the requesting user is neither GM nor owner of the reacting actor', async () => {
-		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: false }));
-		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
-			uuid === 'Actor.reactor' ? { testUserPermission: vi.fn(() => false) } : null,
-		);
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('entry-1', 'player-1');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('allows a non-GM owner of the reacting actor to use the entry', async () => {
-		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: false }));
-		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
-			uuid === 'Actor.reactor' ? { testUserPermission: vi.fn(() => true) } : null,
-		);
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('entry-1', 'player-1');
-
-		expect(message.update).toHaveBeenCalledTimes(1);
-	});
-
-	it('rejects a socket-relayed request that claims GM identity (spoof guard)', async () => {
-		// A genuine GM executes on their own client (viaSocket false); a relayed
-		// request whose unauthenticated userId points at a GM is a spoof.
-		reactionGlobals().game.users.get = vi.fn(() => ({ isGM: true }));
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user', true);
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing when an unknown user requests the reaction', async () => {
-		reactionGlobals().game.users.get = vi.fn(() => null);
-		const message = createReactionMessage({ entries: [createReactionEntry()] });
-
-		await message.resolveForceRerollReaction('entry-1', 'ghost-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing when the granting rule no longer exists or is disabled', async () => {
-		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
-			uuid === 'Item.fate' ? { rules: new Map([['0', { id: 'rule-1', disabled: true }]]) } : null,
-		);
-		const message = createReactionMessage({
-			entries: [createReactionEntry({ itemUuid: 'Item.fate' })],
-		});
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-
-	it('does nothing when the card has no serialized damage roll', async () => {
-		const message = createReactionMessage({ entries: [createReactionEntry()], roll: null });
-
-		await message.resolveForceRerollReaction('entry-1', 'gm-user');
-
-		expect(message.update).not.toHaveBeenCalled();
-	});
-});
 
 describe('NimbleChatMessage.resolveRedirectReaction', () => {
 	const protectorActor = {
@@ -2938,10 +2650,9 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 				}),
 				// The original target's own reroll offer is moot once the attack
 				// no longer targets them.
-				createReactionEntry({ id: 'reroll-1', kind: 'forceReroll' }),
+				createReactionEntry({ id: 'reroll-1' }),
 				createReactionEntry({
 					id: 'reroll-other-target',
-					kind: 'forceReroll',
 					targetTokenUuid: 'Scene.scene.Token.bystander',
 				}),
 			],

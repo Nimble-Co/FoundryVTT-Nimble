@@ -83,22 +83,6 @@ function rerollEntry(overrides: Record<string, unknown> = {}) {
 	};
 }
 
-function forceRerollEntry() {
-	return {
-		id: 'force-1',
-		kind: 'forceReroll',
-		source: 'baseline',
-		actorUuid: 'Actor.target',
-		tokenUuid: null,
-		targetTokenUuid: TARGET_TOKEN,
-		label: 'Force Reroll',
-		ruleId: '',
-		itemUuid: '',
-		used: false,
-		rerollTrigger: 'always',
-	};
-}
-
 function serializedRoll(isCritical = false, forceMiss = false) {
 	return {
 		class: 'DamageRoll',
@@ -394,18 +378,170 @@ describe('resolveRerollReaction', () => {
 		});
 	});
 
-	it('clears the earlier rerolls on a Force Reroll click', async () => {
+	it('starts a new list of rerolls on a button click', async () => {
 		setupWorld();
-		const message = createMessage({ entries: [forceRerollEntry()] });
+		const message = createMessage();
 		(message.system as Record<string, unknown>).rerolls = [
 			{ entryId: 'earlier-action', itemUuid: 'Item.old' },
 		];
 
-		await message.resolveForceRerollReaction('force-1', 'gm-user');
+		await message.resolveRerollReaction('entry-1', 'gm-user');
 
-		const payload = updatePayload(message);
-		expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'force-1', used: true });
-		expect(payload.system.rerolls).toEqual([]);
+		expect(updatePayload(message).system.rerolls).toEqual([
+			expect.objectContaining({ entryId: 'entry-1' }),
+		]);
+	});
+
+	it('puts the new roll in the rolls source and the card outcome follows it', async () => {
+		setupWorld();
+		const message = createMessage({ isCritical: true });
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		const payload = updatePayload(message) as ReturnType<typeof updatePayload> & {
+			system: { isMiss: boolean };
+		};
+		expect(payload.rolls).toHaveLength(1);
+		expect(JSON.parse(payload.rolls[0])).toMatchObject({
+			originalFormula: '1d6 + 2',
+			isCritical: false,
+			isMiss: false,
+		});
+		expect(payload.system.activation.effects[0].roll).toMatchObject({
+			originalFormula: '1d6 + 2',
+		});
+		expect(payload.system.isCritical).toBe(false);
+		expect(payload.system.isMiss).toBe(false);
+	});
+
+	it('drops waiting offers the new outcome no longer allows, and keeps used ones', async () => {
+		setupWorld();
+		const spend = (id: string, outcomeTrigger: string, used = false) => ({
+			...rerollEntry({ id, kind: 'spendPoolForDamage', side: null, itemUuid: '' }),
+			actorUuid: 'Actor.attacker',
+			outcomeTrigger,
+			used,
+		});
+		const message = createMessage({
+			isCritical: true,
+			entries: [
+				rerollEntry(),
+				spend('spend-crit', 'criticalHit'),
+				spend('spend-hit', 'hit'),
+				spend('spend-crit-used', 'criticalHit', true),
+			],
+		});
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(updatePayload(message).system.incomingReactions.map((entry) => entry.id)).toEqual([
+			'entry-1',
+			'spend-hit',
+			'spend-crit-used',
+		]);
+	});
+
+	it('drops an open Movement Offer the new outcome no longer makes', async () => {
+		setupWorld();
+		const message = createMessage({ isCritical: true });
+		const system = message.system as unknown as {
+			activation: { effects: Array<Record<string, unknown>> };
+			movementOffers?: unknown[];
+		};
+		system.activation.effects[0].on = {
+			criticalHit: [
+				{
+					id: 'push',
+					type: 'move',
+					kind: 'forced',
+					recipient: 'targets',
+					distance: '2',
+					distanceBySize: {},
+					ignoreDifficultTerrain: false,
+					direction: 'away',
+				},
+			],
+		};
+		system.movementOffers = [
+			{
+				id: 'push.victim',
+				nodeId: 'push',
+				tokenUuid: TARGET_TOKEN,
+				name: 'Victim',
+				kind: 'forced',
+				spaces: 2,
+				ignoreDifficultTerrain: true,
+				state: 'open',
+				usedBy: null,
+				movedSpaces: null,
+				stopped: false,
+				conditional: false,
+			},
+		];
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		const payload = message.update.mock.calls[0][0] as { system: { movementOffers: unknown[] } };
+		expect(payload.system.movementOffers).toEqual([]);
+	});
+
+	it('writes two entries used at the same time one after the other', async () => {
+		setupWorld();
+		const message = createMessage({ entries: [rerollEntry(), rerollEntry({ id: 'entry-2' })] });
+		Object.defineProperty(message, 'id', { value: 'message-1' });
+		message.update.mockImplementation(async (changes: Record<string, unknown>) => {
+			const next = (changes.system as { incomingReactions?: unknown[] } | undefined)
+				?.incomingReactions;
+			if (next) Object.assign(message.system, { incomingReactions: next });
+		});
+
+		await Promise.all([
+			message.resolveRerollReaction('entry-1', 'gm-user'),
+			message.resolveRerollReaction('entry-2', 'gm-user'),
+		]);
+
+		expect(message.update).toHaveBeenCalledTimes(2);
+		const entries = message.system.incomingReactions as Array<{ used: boolean }>;
+		expect(entries.map((entry) => entry.used)).toEqual([true, true]);
+	});
+
+	it.each([
+		['an unknown entry', () => ({ entryId: 'missing-entry' })],
+		['an entry of another kind', () => ({ entries: [rerollEntry({ kind: 'redirectToSelf' })] })],
+		['an unknown user', () => ({ userId: 'ghost-user' })],
+		['a relayed request that claims GM identity', () => ({ viaSocket: true })],
+		['a disabled rule', () => ({ ruleOverrides: { disabled: true } })],
+	])('refuses %s', async (_name, scenario) => {
+		const { entries, entryId, userId, viaSocket, ruleOverrides } = scenario() as {
+			entries?: Array<Record<string, unknown>>;
+			entryId?: string;
+			userId?: string;
+			viaSocket?: boolean;
+			ruleOverrides?: Record<string, unknown>;
+		};
+		setupWorld(ruleOverrides);
+		const message = createMessage({ entries });
+
+		await message.resolveRerollReaction(
+			entryId ?? 'entry-1',
+			userId ?? 'gm-user',
+			viaSocket ?? false,
+		);
+
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses when the card has no damage roll', async () => {
+		setupWorld();
+		const message = createMessage();
+		(message.system.activation as { effects: unknown[] }).effects = [];
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.useFailed'),
+		);
 	});
 
 	describe('an automatic reroll the new roll allows', () => {
@@ -527,25 +663,6 @@ describe('resolveRerollReaction', () => {
 			expect(evaluate.rolled.count).toBe(2);
 			expect(message.system.isCritical).toBe(true);
 			expect(wardEntries(message)).toHaveLength(1);
-		});
-
-		it('starts a new list on a Force Reroll click, with the automatic reroll it starts', async () => {
-			const world = setupWorld();
-			withAutomaticCritReroll(world);
-			const message = createMessage({ entries: [forceRerollEntry()] });
-			(message.system as Record<string, unknown>).rerolls = [
-				{ entryId: 'earlier-action', itemUuid: 'Item.old' },
-			];
-			writesApply(message);
-			const evaluate = rollOutcomes(true, false);
-
-			await message.resolveForceRerollReaction('force-1', 'gm-user');
-
-			evaluate.mockRestore();
-			expect(evaluate.rolled.count).toBe(2);
-			expect(message.system.rerolls).toEqual([
-				expect.objectContaining({ itemUuid: 'Item.ward', ruleId: 'ward-1' }),
-			]);
 		});
 
 		it('shows the rule as a button while Feature Effects is off', async () => {

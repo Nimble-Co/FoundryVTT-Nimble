@@ -50,7 +50,8 @@ export function rerollTriggerMatches(
  * Most kinds are defender-side reactions to the attack. `spendPoolForDamage`
  * is attacker-side: the attacker spends their own dice pool into this card's
  * damage total. `reroll` comes from a Reroll rule of either the attacker or
- * the target.
+ * the target. `forceReroll` is a legacy stored kind: old cards still hold it,
+ * but nothing makes or resolves it any more.
  *
  * Lives apart from `incomingAttackModifiers` so the modules that only build
  * entries (e.g. `poolSpendCardOffers`) do not have to depend on the module
@@ -75,9 +76,9 @@ export interface IncomingReactionEntry {
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
 	oncePerRoll?: boolean;
-	/** forceReroll only: gate the offer/execution on the roll's outcome */
+	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollTrigger?: RerollTrigger;
-	/** forceReroll only: roll the reroll at disadvantage */
+	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollWithDisadvantage?: boolean;
 	/**
 	 * Gate on the attack's resolved outcome. Checked before stamping, again

@@ -1,9 +1,9 @@
 /**
  * Live regression tests for the modifyIncomingAttack rule merged from dev:
- * target-side attack modifiers (disadvantage, autoMiss), automatic rerolls
- * (`reroll` rule and force reroll) with outcome triggers, and the interactive
- * reactions (force reroll,
- * Interpose-style redirect) that render as buttons on the attack chat card.
+ * target-side attack modifiers (disadvantage, autoMiss), automatic `reroll`
+ * rules with outcome triggers, and the interactive reactions (a target-side
+ * `reroll` button, Interpose-style redirect) that render as buttons on the
+ * attack chat card.
  *
  * Attacks are posted through the real activation flow against real tokens on
  * a viewed scene; the interactive reactions are exercised by clicking the
@@ -35,7 +35,7 @@ const TEST_PREFIX = 'V14 Incoming Attack';
 
 interface ReactionEntryLike {
 	id: string;
-	kind: 'forceReroll' | 'reroll' | 'redirectToSelf';
+	kind: 'reroll' | 'redirectToSelf' | 'spendPoolForDamage';
 	source: 'baseline' | 'rule';
 	label: string;
 	tokenUuid: string | null;
@@ -133,9 +133,12 @@ describe('incoming attack modifiers', () => {
 	});
 
 	/** Post a real attack activation against the defender's token. */
-	async function attack(primaryDieValue: number): Promise<AttackMessageLike> {
+	async function attack(
+		primaryDieValue: number,
+		itemName = `${TEST_PREFIX} Claw`,
+	): Promise<AttackMessageLike> {
 		await targetToken(defenderToken);
-		const claw = attacker.items.find((item) => item.name === `${TEST_PREFIX} Claw`)!;
+		const claw = attacker.items.find((item) => item.name === itemName)!;
 		const message = await (
 			claw as unknown as {
 				activate(options: Record<string, unknown>): Promise<{ id: string } | null>;
@@ -277,31 +280,34 @@ describe('incoming attack modifiers', () => {
 		);
 	}, 60_000);
 
-	test('automatic forceReroll respects its outcome trigger', async () => {
+	test('an automatic reroll rule respects its outcome trigger', async () => {
 		await withDefenderRules(
 			[
 				{
-					type: 'modifyIncomingAttack',
-					modifier: 'forceReroll',
+					type: 'reroll',
+					usedBy: 'target',
+					outcome: 'hit',
 					automatic: true,
-					rerollTrigger: 'hit',
+					label: 'Stubborn Defense',
 				},
 			],
 			async () => {
 				const message = await attack(1);
 				expect(message.system.isMiss).toBe(true);
 				expect(damageNode(message)?.discardedRoll).toBeFalsy();
+				expect(message.system.rerolls ?? []).toHaveLength(0);
 			},
 		);
 
 		await withDefenderRules(
 			[
 				{
-					type: 'modifyIncomingAttack',
-					modifier: 'forceReroll',
+					type: 'reroll',
+					usedBy: 'target',
+					outcome: 'criticalHit',
 					automatic: true,
-					rerollTrigger: 'criticalHit',
-					rerollWithDisadvantage: true,
+					rollModeChange: -1,
+					label: 'Crit Ward',
 				},
 			],
 			async () => {
@@ -319,16 +325,47 @@ describe('incoming attack modifiers', () => {
 		);
 	}, 120_000);
 
-	test('interactive forceReroll (Pocket Sand) resolves via a real button click', async () => {
+	test('a target reroll button (Pocket Sand) rerolls at disadvantage and spends a charge', async () => {
 		const pocketSand = await importPackItem(
 			defender as unknown as Actor,
 			'nimble-class-features',
 			(entry) => entry.name === 'Pocket Sand',
 		);
+		// The card shows its roll, and the reroll buttons with it, on a hit only
+		// when the damage node has a hit outcome, as pack attacks do.
+		const hitClawData = attackFeatureData(`${TEST_PREFIX} Hit Claw`);
+		const [clawDamage] = hitClawData.system.activation.effects;
+		Object.assign(clawDamage!, {
+			on: {
+				hit: [
+					{
+						id: 'atk-hit',
+						type: 'damageOutcome',
+						outcome: 'fullDamage',
+						parentContext: 'hit',
+						parentNode: 'atk',
+					},
+				],
+			},
+		});
+		const [hitClaw] = await attacker.createEmbeddedDocuments('Item', [
+			hitClawData as unknown as Item.CreateData,
+		]);
+		// The defender's token is unlinked, so the token's own actor holds the charges.
+		const charges = () => {
+			const pools = foundry.utils.getProperty(
+				defenderToken.actor?.items.get(pocketSand.id!) ?? {},
+				`flags.${game.system.id}.chargePools`,
+			) as Record<string, { identifier: string; current: number }> | undefined;
+			return Object.values(pools ?? {}).find((pool) => pool.identifier === 'pocket-sand')?.current;
+		};
 		try {
-			const message = await attack(4);
+			await waitFor(() => (charges() ?? 0) > 0, 'Pocket Sand to fill its charge pool');
+			const before = charges();
+
+			const message = await attack(4, `${TEST_PREFIX} Hit Claw`);
 			const pending = message.system.incomingReactions.find(
-				(entry) => entry.kind === 'forceReroll' && !entry.used,
+				(entry) => entry.kind === 'reroll' && !entry.used,
 			);
 			expect(pending?.label).toBe('Pocket Sand');
 			expect(damageNode(message)?.discardedRoll).toBeFalsy();
@@ -337,15 +374,26 @@ describe('incoming attack modifiers', () => {
 
 			await waitFor(
 				() =>
-					readMessage(message.id).system.incomingReactions.every(
-						(entry) => entry.kind !== 'forceReroll' || entry.used,
+					readMessage(message.id).system.incomingReactions.some(
+						(entry) => entry.id === pending!.id && entry.used,
 					),
-				'the force-reroll offer to be marked used',
+				'the reroll entry to be marked used',
 			);
-			expect(damageNode(readMessage(message.id))?.discardedRoll).toBeTruthy();
-			expectRerollDropsSetPrimaryDie(readMessage(message.id), 4);
+			const rerolled = readMessage(message.id);
+			expect(damageNode(rerolled)?.discardedRoll).toBeTruthy();
+			expectRerollDropsSetPrimaryDie(rerolled, 4);
+			const sources = rerolled.rolls[0]!.options.rollModeSources as number[] | undefined;
+			expect(sources).toContain(-1);
+			expect(rerolled.system.rerolls.map((reroll) => reroll.label)).toEqual(['Pocket Sand']);
+
+			// Once per attack: the feature gives no second button on this card.
+			expect(
+				rerolled.system.incomingReactions.some((entry) => entry.kind === 'reroll' && !entry.used),
+			).toBe(false);
+			await waitFor(() => charges() === before! - 1, 'Pocket Sand to spend one charge');
 		} finally {
 			await defender.deleteEmbeddedDocuments('Item', [pocketSand.id!]);
+			await attacker.deleteEmbeddedDocuments('Item', [hitClaw!.id!]);
 		}
 	}, 120_000);
 
