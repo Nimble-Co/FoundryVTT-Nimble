@@ -52,7 +52,8 @@
 				"primaryDieBonus": 0,
 				"extraDamage": "",
 				"automatic": false,
-				"discardedCritTriggers": false
+				"discardedCritTriggers": false,
+				"oncePerRoll": false
 			}
 		],
 		"description": "<p><strong>Wily</strong> </p><p>Force an enemy to reroll a non-critical attack against you, 1/encounter. </p><p>+3 to Influence friendly characters. [M]</p><p>Advantage on skill checks related to dragons. [M]</p>"

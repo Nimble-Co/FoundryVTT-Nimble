@@ -65,7 +65,8 @@
 				"primaryDieBonus": 0,
 				"extraDamage": "",
 				"automatic": false,
-				"discardedCritTriggers": false
+				"discardedCritTriggers": false,
+				"oncePerRoll": false
 			}
 		],
 		"description": "<p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p>"
