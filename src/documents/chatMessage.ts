@@ -1136,6 +1136,8 @@ class NimbleChatMessage extends ChatMessage {
 			} as DamageRoll.Options,
 		);
 		await roll.evaluate();
+		// The card shows the result only after the dice land.
+		await showDiceAnimation(roll, this.id ?? undefined);
 
 		const patched = buildDeferredDamagePatch(
 			activation,
@@ -1165,7 +1167,6 @@ class NimbleChatMessage extends ChatMessage {
 			},
 		} as Record<string, unknown>);
 
-		await showDiceAnimation(roll, this.id ?? undefined);
 		await this.#followChargeRecovery(recoveryChange);
 		if (rerolls) {
 			await this.#runAutomaticReroll(rerolls.automatic, rerolls.entries, critTriggers, {

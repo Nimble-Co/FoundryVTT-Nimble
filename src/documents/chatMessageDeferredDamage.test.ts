@@ -331,6 +331,18 @@ describe('rollDeferredDamage', () => {
 		expect(showForRoll.mock.calls[0][0]).toMatchObject({ originalFormula: '3d12' });
 	});
 
+	it('writes the result only after the dice land', async () => {
+		const showForRoll = vi.fn().mockResolvedValue(true);
+		(globals.game as { dice3d?: unknown }).dice3d = { showForRoll };
+		const message = createMessage();
+
+		await message.rollDeferredDamage('trap-damage');
+
+		expect(showForRoll.mock.invocationCallOrder[0]).toBeLessThan(
+			message.update.mock.invocationCallOrder[0],
+		);
+	});
+
 	it('does not throw dice for a click that rolled nothing', async () => {
 		const showForRoll = vi.fn().mockResolvedValue(true);
 		(globals.game as { dice3d?: unknown }).dice3d = { showForRoll };
