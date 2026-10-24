@@ -197,6 +197,7 @@
 				"heading": "Options",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
+				"rerolledBy": "Attack rerolled by {label}",
 				"redirectedTo": "Attack redirected to {name}",
 				"redirectedToVia": "Attack redirected to {name} via {label}",
 				"spendPoolForDamage": "Add Damage",
