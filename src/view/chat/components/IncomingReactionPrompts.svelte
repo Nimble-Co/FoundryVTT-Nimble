@@ -52,9 +52,12 @@
 	let speakerUuid = $derived(
 		(messageDocument as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
 	);
+	// Old cards can still hold the legacy `forceReroll` kind, which nothing resolves.
 	let entries = $derived(
-		(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
-			?.incomingReactions ?? [],
+		(
+			(messageDocument?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
+				?.incomingReactions ?? []
+		).filter((entry) => entry.kind !== 'forceReroll'),
 	);
 	let placeEntries = $derived(
 		entries.filter((entry) => changesTheRoll(entry) === (place === 'roll')),
@@ -98,7 +101,7 @@
 	});
 
 	function changesTheRoll(entry: IncomingReactionEntry): boolean {
-		return entry.kind === 'reroll' || entry.kind === 'forceReroll';
+		return entry.kind === 'reroll';
 	}
 
 	function getReactingActor(entry: IncomingReactionEntry) {
@@ -186,11 +189,6 @@
 				amount: String(entry.usedAmount),
 				pool: entry.usedPoolLabel ?? '',
 				faces: (entry.usedFaces ?? []).join(', '),
-			});
-		}
-		if (entry.kind === 'forceReroll') {
-			return localize('NIMBLE.chat.incomingReactions.rerolledBy', {
-				label: entry.label || actorName,
 			});
 		}
 		return entry.label

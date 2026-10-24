@@ -123,6 +123,13 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 		expect(Object.keys(entryFields()).sort()).toEqual(Object.keys(stamped).sort());
 	});
 
+	it('accepts the legacy forceReroll kind and its fields, so old cards still validate', () => {
+		const fields = entryFields() as Record<string, { choices?: string[] }>;
+		expect(fields.kind.choices).toContain('forceReroll');
+		expect(fields.rerollTrigger.choices).toEqual(['always', 'hit', 'criticalHit']);
+		expect(fields).toHaveProperty('rerollWithDisadvantage');
+	});
+
 	it('stores every field of a reroll record', () => {
 		const record: RerollRecord = {
 			entryId: 'e1',

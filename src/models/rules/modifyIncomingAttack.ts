@@ -1,12 +1,7 @@
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-type IncomingAttackModifier =
-	| 'disadvantage'
-	| 'forceReroll'
-	| 'redirectToSelf'
-	| 'autoMiss'
-	| 'raiseMissThreshold';
+type IncomingAttackModifier = 'disadvantage' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -18,7 +13,6 @@ function schema() {
 			initial: 'disadvantage',
 			choices: {
 				disadvantage: 'NIMBLE.rules.modifyIncomingAttack.modifiers.disadvantage',
-				forceReroll: 'NIMBLE.rules.modifyIncomingAttack.modifiers.forceReroll',
 				redirectToSelf: 'NIMBLE.rules.modifyIncomingAttack.modifiers.redirectToSelf',
 				autoMiss: 'NIMBLE.rules.modifyIncomingAttack.modifiers.autoMiss',
 				raiseMissThreshold: 'NIMBLE.rules.modifyIncomingAttack.modifiers.raiseMissThreshold',
@@ -36,37 +30,6 @@ function schema() {
 				label: 'NIMBLE.rules.modifyIncomingAttack.range.label',
 				hint: 'NIMBLE.rules.modifyIncomingAttack.range.hint',
 				showWhen: (data: Record<string, unknown>) => data.modifier === 'redirectToSelf',
-			}),
-		),
-		automatic: new fields.BooleanField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: false,
-				label: 'NIMBLE.rules.modifyIncomingAttack.automatic.label',
-				hint: 'NIMBLE.rules.modifyIncomingAttack.automatic.hint',
-				showWhen: (data: Record<string, unknown>) => data.modifier === 'forceReroll',
-			}),
-		),
-		rerollTrigger: new fields.StringField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 'always',
-				choices: ['always', 'hit', 'criticalHit'],
-				label: 'NIMBLE.rules.modifyIncomingAttack.rerollTrigger.label',
-				hint: 'NIMBLE.rules.modifyIncomingAttack.rerollTrigger.hint',
-				showWhen: (data: Record<string, unknown>) => data.modifier === 'forceReroll',
-			}),
-		),
-		rerollWithDisadvantage: new fields.BooleanField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: false,
-				label: 'NIMBLE.rules.modifyIncomingAttack.rerollWithDisadvantage.label',
-				hint: 'NIMBLE.rules.modifyIncomingAttack.rerollWithDisadvantage.hint',
-				showWhen: (data: Record<string, unknown>) => data.modifier === 'forceReroll',
 			}),
 		),
 		missThreshold: new fields.NumberField(
@@ -96,9 +59,9 @@ declare namespace ModifyIncomingAttackRule {
 /**
  * Rule that modifies attacks made against an actor.
  *
- * `disadvantage`, `forceReroll`, `autoMiss`, and `raiseMissThreshold` fire when
- * the rule's owner is the attack's target; the predicate is tested against the
- * owner's own domain.
+ * `disadvantage`, `autoMiss`, and `raiseMissThreshold` fire when the rule's
+ * owner is the attack's target; the predicate is tested against the owner's
+ * own domain.
  * `redirectToSelf` fires when an ally within `range` spaces is targeted: the
  * owner is offered a reaction to swap in as the target (predicate tested
  * against the owner's domain).
@@ -113,9 +76,6 @@ class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.S
 
 	declare modifier: IncomingAttackModifier;
 	declare range: number;
-	declare automatic: boolean;
-	declare rerollTrigger: 'always' | 'hit' | 'criticalHit';
-	declare rerollWithDisadvantage: boolean;
 	declare missThreshold: number;
 
 	static override defineSchema(): ModifyIncomingAttackRule.Schema {
@@ -130,9 +90,6 @@ class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.S
 			new Map([
 				['modifier', 'string'],
 				['range', 'number'],
-				['automatic', 'boolean'],
-				['rerollTrigger', 'string'],
-				['rerollWithDisadvantage', 'boolean'],
 				['missThreshold', 'number'],
 			]),
 		);

@@ -133,7 +133,7 @@ describe('isRerollAgain', () => {
 	});
 
 	it('is false for an entry that is not a reroll', () => {
-		expect(isRerollAgain(entry({ kind: 'forceReroll' }), [record()])).toBe(false);
+		expect(isRerollAgain(entry({ kind: 'redirectToSelf' }), [record()])).toBe(false);
 	});
 });
 

@@ -196,30 +196,32 @@ describe('IncomingReactionPrompts', () => {
 		expect(button.textContent).toContain('Heroic Reaction');
 	});
 
-	it('puts a force reroll in the roll section, named for its feature', () => {
-		render(IncomingReactionPromptsTestHarness, {
+	it('shows nothing for a legacy forceReroll entry on an old card, waiting or used', () => {
+		const { container } = render(IncomingReactionPromptsTestHarness, {
 			props: {
 				messageDocument: createMessage([
-					createEntry({ kind: 'forceReroll', label: "Mountain's Endurance" }),
+					createEntry({ id: 'waiting', kind: 'forceReroll', label: 'Old Feature' }),
+					createEntry({ id: 'used', kind: 'forceReroll', label: 'Old Feature', used: true }),
 				]),
 			},
 		});
 
-		const button = rollPlace().getByRole('button');
-		expect(button.textContent?.trim()).toBe("Reroll with Mountain's Endurance");
-		expect(optionsPlace().queryByRole('button')).toBeNull();
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(container.textContent).not.toContain('Old Feature');
 	});
 
-	it('tells a used force reroll at the roll', () => {
+	it('still shows the other entries of an old card with a legacy forceReroll entry', () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: {
 				messageDocument: createMessage([
-					createEntry({ kind: 'forceReroll', label: "Mountain's Endurance", used: true }),
+					createEntry({ id: 'legacy', kind: 'forceReroll', label: 'Old Feature' }),
+					createEntry({ id: 'interpose' }),
 				]),
 			},
 		});
 
-		expect(rollPlace().getByText("Attack rerolled by Mountain's Endurance")).toBeTruthy();
+		expect(screen.getAllByRole('button')).toHaveLength(1);
+		expect(optionsPlace().getByRole('button').textContent).toContain('Aura of Refuge');
 	});
 
 	it('renders an attribution line instead of a button for used entries', () => {
@@ -456,12 +458,7 @@ describe('IncomingReactionPrompts', () => {
 		function twoActorMessage() {
 			return createMessage([
 				rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
-				createEntry({
-					id: 'bram-1',
-					kind: 'forceReroll',
-					actorUuid: 'Actor.bram',
-					label: "Mountain's Endurance",
-				}),
+				rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
 				rerollEntry({ id: 'wren-2', actorUuid: 'Actor.wren' }),
 			]);
 		}
@@ -761,7 +758,7 @@ describe('IncomingReactionPrompts', () => {
 					messageDocument: createMessage(
 						[
 							rerollEntry({ actorUuid: 'Actor.wren' }),
-							createEntry({ id: 'force', kind: 'forceReroll', actorUuid: 'Actor.bram' }),
+							rerollEntry({ id: 'bram-reroll', actorUuid: 'Actor.bram' }),
 							createEntry({ id: 'rule-interpose', actorUuid: 'Actor.bram' }),
 							createEntry({
 								id: 'baseline',

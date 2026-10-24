@@ -108,10 +108,13 @@ export const movementOffers = () => ({
 });
 
 /**
- * Pending interactive offers stamped onto an attack card. Mostly defender-side
- * reactions (force reroll, redirect to self), plus attacker-side spends such as
- * `spendPoolForDamage`. Snapshotted at card creation by the attacker's client;
- * `kind` is an open extension point for future offer types.
+ * Pending interactive offers stamped onto an attack card: defender-side
+ * reactions (redirect to self), rerolls from either side, and attacker-side
+ * spends such as `spendPoolForDamage`. Snapshotted at card creation by the
+ * attacker's client; `kind` is an open extension point for future offer types.
+ *
+ * `forceReroll`, `rerollTrigger` and `rerollWithDisadvantage` are legacy: old
+ * cards still hold them, so the schema accepts them, but nothing makes them.
  */
 export const incomingReactions = () => ({
 	incomingReactions: new fields.ArrayField(
@@ -142,8 +145,7 @@ export const incomingReactions = () => ({
 				choices: [...REROLL_SIDES],
 			}),
 			oncePerRoll: new fields.BooleanField({ required: false, nullable: false, initial: false }),
-			// forceReroll offers carry their reroll semantics so the executor can
-			// honor them on click.
+			// Legacy forceReroll fields, kept so old cards validate.
 			rerollTrigger: new fields.StringField({
 				required: false,
 				nullable: false,
@@ -156,9 +158,7 @@ export const incomingReactions = () => ({
 				initial: false,
 			}),
 			// Gate on the attack's resolved outcome, applied before the offer is
-			// stamped. Distinct from `rerollTrigger`, which also governs whether an
-			// *automatic* reroll executes; this only decides whether an offer is
-			// worth showing.
+			// stamped.
 			outcomeTrigger: new fields.StringField({
 				required: false,
 				nullable: true,

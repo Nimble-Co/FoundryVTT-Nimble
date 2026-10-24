@@ -55,11 +55,6 @@ type IncomingReactionRejectedMessage = IncomingReactionRejection & {
 };
 
 interface ReactionCapableMessage {
-	resolveForceRerollReaction?: (
-		entryId: string,
-		requestingUserId: string,
-		viaSocket?: boolean,
-	) => Promise<void>;
 	resolveRedirectReaction?: (
 		entryId: string,
 		requestingUserId: string,
@@ -101,10 +96,8 @@ async function executeIncomingReaction(
 
 	// The executors revalidate (unused entry, ownership, rule still enabled, and
 	// — for socket-relayed requests — that the unauthenticated userId is not
-	// claiming GM identity).
-	if (entry.kind === 'forceReroll') {
-		await message.resolveForceRerollReaction?.(entryId, requestingUserId, viaSocket);
-	} else if (entry.kind === 'redirectToSelf') {
+	// claiming GM identity). A legacy kind has no executor and is ignored.
+	if (entry.kind === 'redirectToSelf') {
 		await message.resolveRedirectReaction?.(entryId, requestingUserId, viaSocket);
 	} else if (entry.kind === 'spendPoolForDamage') {
 		if (!selection) return;
