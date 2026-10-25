@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
 	import localize from '#utils/localize.js';
+	import { poolHeading } from '#utils/chargePool/poolHeading.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import { PORTRAIT_FALLBACK_IMAGE } from '#view/ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
@@ -309,9 +310,14 @@
 				/>
 			{/if}
 
-			{#each resourcePools as pool (pool.id)}
-				<h3 class="nimble-heading nimble-heading--resource">
-					{pool.label}
+			{#each resourcePools as pool, index (pool.id)}
+				{@const heading = poolHeading(pool.label)}
+				<h3
+					class="nimble-heading nimble-heading--resource"
+					class:nimble-heading--stacked={hasMana || index > 0}
+					data-tooltip={heading.tooltip}
+				>
+					{heading.name}
 					<i class={pool.icon || ChargeUiConfig.defaultPoolIcon}></i>
 				</h3>
 
@@ -662,5 +668,10 @@
 		--nimble-button-icon-y-nudge: 0;
 
 		margin-block-start: 0.25rem;
+	}
+
+	// A heading under another bar needs more room above it than below it.
+	.nimble-heading--stacked {
+		--nimble-heading-margin: 0.625rem 0 0;
 	}
 </style>
