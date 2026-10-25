@@ -6,6 +6,7 @@
 	import localize from '../../../utils/localize.js';
 	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
+	import RerollDiePicker from './RerollDiePicker.svelte';
 	import RerollHistory from './RerollHistory.svelte';
 	import RollRerollButton from './RollRerollButton.svelte';
 
@@ -23,9 +24,13 @@
 {#snippet entryGroups()}
 	<IncomingReactionEntryGroups
 		groups={prompts.pendingGroups}
+		picking={prompts.picking}
 		busy={prompts.busy}
+		primaryOutcome={prompts.primaryOutcome}
 		{text}
 		onuse={prompts.useEntry}
+		onpick={prompts.pickDie}
+		oncancel={prompts.cancelPick}
 	/>
 {/snippet}
 
@@ -35,6 +40,16 @@
 			choices={prompts.rerollChoices}
 			disabled={prompts.busy}
 			onChoose={prompts.useEntryById}
+		/>
+	{/if}
+	{#if prompts.picking}
+		<RerollDiePicker
+			dice={prompts.picking.dice}
+			feature={text.featureName(prompts.picking.entry) || prompts.picking.entry.label}
+			primaryOutcome={null}
+			rolling={prompts.picking.rolling}
+			onpick={prompts.pickDie}
+			oncancel={prompts.cancelPick}
 		/>
 	{/if}
 {:else if place === 'rollHistory'}

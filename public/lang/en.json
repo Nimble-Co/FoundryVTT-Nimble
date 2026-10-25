@@ -224,7 +224,19 @@
 				"costHeroicReaction": "Heroic Reaction",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
 				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
-				"rerollPickADie": "Pick the die to reroll."
+				"rerollPickADie": "Pick the die to reroll.",
+				"pickDie": {
+					"title": "Pick a die to reroll",
+					"rolling": "Rerolling with {feature}",
+					"cancel": "Cancel",
+					"die": "Reroll the {value}",
+					"dieWithRole": "Reroll the {value} ({role})",
+					"roles": {
+						"primary": "Primary",
+						"kept": "Kept",
+						"dropped": "Dropped"
+					}
+				}
 			}
 		},
 		"characterCreationStages": {

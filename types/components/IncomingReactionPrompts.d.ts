@@ -1,3 +1,4 @@
+import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
 
 /**
@@ -18,6 +19,15 @@ export interface IncomingReactionActorGroup {
 	/** Empty for the one who rolled: the card's header already names them. */
 	name: string;
 	entries: IncomingReactionEntry[];
+}
+
+/** A reroll whose die the player is picking, or whose picked die is rolling. */
+export interface IncomingReactionPicking {
+	entry: IncomingReactionEntry;
+	dice: PickableDie[];
+	rolling: PickableDie | null;
+	/** The request for the picked die is out. */
+	sent: boolean;
 }
 
 /** Entries whose request is out, so their buttons stay hidden until it comes back. */

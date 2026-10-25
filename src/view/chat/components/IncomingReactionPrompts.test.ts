@@ -52,7 +52,7 @@ vi.mock('./confirmRerollHeroicReaction.js', () => ({
 	confirmRerollHeroicReaction: vi.fn(async () => false),
 }));
 
-import { render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import IncomingReactionPromptsTestHarness from './IncomingReactionPrompts.testHarness.svelte';
 
 const { getPools, getDicePoolConsumers, requestIncomingAttackReaction } = mocks;
@@ -612,6 +612,105 @@ describe('IncomingReactionPrompts', () => {
 				messageId: 'message-1',
 				entryId: 'reroll-entry',
 				forceHeroicReaction: false,
+			});
+		});
+
+		describe('a reroll of a die the player picks', () => {
+			const primary = { term: 0, result: 0, faces: 8, value: 1, role: 'primary' };
+			const pool = { term: 2, result: 0, faces: 6, value: 5, role: 'kept' };
+
+			function pickerMessage(dice: unknown[]) {
+				const message = createMessage([rerollEntry()]);
+				return Object.assign(message, { rerollDiceToPick: vi.fn(() => dice) });
+			}
+
+			async function settle() {
+				for (let i = 0; i < 4; i++) await Promise.resolve();
+			}
+
+			it('opens the dice in place of the button, and sends the die the player clicks', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				expect(rollPlace().getByText('Pick a die to reroll')).toBeTruthy();
+				expect(rollPlace().queryByRole('button', { name: /Reroll with Pocket Sand/ })).toBeNull();
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Reroll the 5' }));
+				await settle();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'reroll-entry',
+					forceHeroicReaction: false,
+					die: { term: 2, result: 0 },
+				});
+				expect(rollPlace().getByText('Rerolling with Pocket Sand')).toBeTruthy();
+			});
+
+			it('names the Primary Die and puts the focus on it', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([pool, primary]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				const primaryButton = rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' });
+				expect(document.activeElement).toBe(primaryButton);
+			});
+
+			it('closes on Cancel or Escape and sends nothing', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				const open = () =>
+					fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				await open();
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+
+				await open();
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Reroll the 5' }), {
+					key: 'Escape',
+				});
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			});
+
+			it('moves between the dice with the arrow keys', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
+				expect(document.activeElement).toBe(
+					rollPlace().getByRole('button', { name: 'Reroll the 5' }),
+				);
+				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
+				expect(document.activeElement).toBe(
+					rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' }),
+				);
+			});
+
+			it('sends the only die there is without a picker', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([pool]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ die: { term: 2, result: 0 } }),
+				);
 			});
 		});
 
