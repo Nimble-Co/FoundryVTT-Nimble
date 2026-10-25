@@ -30,7 +30,37 @@
 					"canCrit": true,
 					"canMiss": true,
 					"ignoreArmor": false,
-					"on": {},
+					"on": {
+						"miss": [
+							{
+								"id": "bloHVeUhmDpC6rn5",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "tMyTaEsCtivi63VN"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "Q7AS1WhDyGlakzrl",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "tMyTaEsCtivi63VN"
+							}
+						],
+						"hit": [
+							{
+								"id": "uviGQOlMHcakXbU3",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "tMyTaEsCtivi63VN"
+							}
+						]
+					},
 					"parentContext": null,
 					"parentNode": null
 				}

@@ -27,7 +27,40 @@
 					"damageType": "bludgeoning",
 					"formula": "1d10+@str",
 					"parentContext": null,
-					"parentNode": null
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "9icIp9vs60wyzeFM",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "GrimbeardDmg"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "aYtrx15vPvREQE2l",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "GrimbeardDmg"
+							}
+						],
+						"hit": [
+							{
+								"id": "BWmlLyTrP63efuNQ",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "GrimbeardDmg"
+							}
+						]
+					}
 				}
 			],
 			"showDescription": true,
