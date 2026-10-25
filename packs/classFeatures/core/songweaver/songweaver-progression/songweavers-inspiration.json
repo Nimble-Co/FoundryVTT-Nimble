@@ -6,7 +6,64 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "6sqyzYbuyfK8ZMFY",
+				"identifier": "songweavers-inspiration",
+				"label": "Songweaver's Inspiration (2×WIL/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(2 * @will, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": true,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "pcJYnQqF2qxgjKiU",
+				"identifier": "songweavers-inspiration",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack",
+					"save"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "ally",
+				"range": 0,
+				"die": "pickedDie",
+				"keep": "rollerChooses",
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "songweavers-inspiration",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"oncePerAttack": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

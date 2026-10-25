@@ -11,6 +11,72 @@
 				"value": "-1",
 				"label": "Optimistic",
 				"id": "dRasAQ5eyCA70sWv"
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "hmFVxSMoWCRN2Ezz",
+				"identifier": "optimistic",
+				"label": "Optimistic (1/healed to max HP)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onHealed",
+						"mode": "refresh",
+						"value": "1",
+						"predicate": {
+							"self": "fullHp"
+						}
+					},
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "UzmmzgQsrj71E4dx",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 3,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack",
+					"save",
+					"skillCheck",
+					"abilityCheck"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "ally",
+				"range": 6,
+				"die": "pickedDie",
+				"keep": "new",
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "optimistic",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"oncePerAttack": false
 			}
 		],
 		"description": "<p><strong>Optimistic</strong></p><p>Allow an ally within Reach 6 to reroll any single die. Resets when healed to your max HP. </p><p>-1 Speed [M]</p>"
