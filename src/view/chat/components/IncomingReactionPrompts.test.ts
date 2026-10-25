@@ -793,7 +793,7 @@ describe('IncomingReactionPrompts', () => {
 				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
 				expect(rollPlace().getByText('1 ally reroll left out')).toBeTruthy();
-				expect(rollPlace().getByText('7 spaces away, range 6')).toBeTruthy();
+				expect(rollPlace().getByText('7 spaces away, Reach 6')).toBeTruthy();
 				await fireEvent.click(rollPlace().getByRole('button', { name: /^Add Pocket Sand/ }));
 
 				expect(message.addLeftOutReroll).toHaveBeenCalledWith('pip');

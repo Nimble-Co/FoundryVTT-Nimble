@@ -46,6 +46,6 @@ describe('leftOutRerollReason', () => {
 			allyDisposition: FRIENDLY,
 			rollerDisposition: FRIENDLY,
 		});
-		expect(reason).toBe('7 spaces away, range 6');
+		expect(reason).toBe('7 spaces away, Reach 6');
 	});
 });

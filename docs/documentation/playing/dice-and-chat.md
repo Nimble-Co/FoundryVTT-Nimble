@@ -77,9 +77,9 @@ The button shows only while a feature can reroll the roll and has a use left. It
 
 ## Rerolls from an ally
 
-Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's button shows on the ally's card, in the character's own group, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a range shows its button only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll buttons.
+Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's button shows on the ally's card, in the character's own group, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows its button only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll buttons.
 
-When a disposition or a range kept an ally's reroll off a card, the GM sees one quiet line under the options, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the button on that card.
+When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under the options, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the button on that card.
 
 ### Rerolling one die
 
@@ -87,7 +87,7 @@ Some features reroll one die and keep the others. When the player picks the die,
 
 ### Keeping either result
 
-Some features let a player keep the new result or the old one. After the dice roll, two **Keep** buttons show under the reroll line, for example **Keep 9** (Miss) and **Keep 12** (Hit). The player who chooses and the GM see them; everyone else sees who chooses. Until a result is kept, the card keeps the old roll, no other reroll can be used, and **Apply Damage** says "Keep a result first". The reroll line then tells the kept total, for example "Rerolled with Songweaver's Inspiration, kept 12". The feature's use is spent either way.
+Some features let a player keep the new result or the old one. After the dice roll, two **Keep** buttons show under the reroll line, for example **Keep 9** (Miss) and **Keep 12** (Hit). The player who keeps a result and the GM see them; everyone else sees who keeps it. Until a result is kept, the card keeps the old roll, no other reroll can be used, and **Apply Damage** says "Keep a result first". The reroll line then tells the kept total, for example "Rerolled with Songweaver's Inspiration, kept 12". The feature's use is spent either way.
 
 ## Spending dice from a card
 

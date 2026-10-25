@@ -240,7 +240,7 @@
 					"feature": "{feature} ({name})",
 					"disposition": "{name}'s token is {disposition}, not {rollerDisposition}",
 					"notAlly": "{name}'s token is not marked as an ally",
-					"range": "{spaces} spaces away, range {range}",
+					"range": "{spaces} spaces away, Reach {range}",
 					"add": "Add",
 					"addLabel": "Add {feature} for {name}"
 				},
@@ -1867,7 +1867,7 @@
 				}
 			},
 			"reroll": {
-				"description": "Lets the one who rolled, the target of an attack, or an ally roll an attack, a save or a check again, or one die of it.",
+				"description": "Lets the one who rolled, the target of an attack, or an ally reroll an attack, a save or a check, or one die of it.",
 				"form": {
 					"when": "When?",
 					"onlyWhile": {
@@ -1912,7 +1912,7 @@
 					}
 				},
 				"range": {
-					"label": "Range",
+					"label": "Reach",
 					"hint": "How many spaces the ally can be from the one who rolled, measured when the roll is made. 0 is any distance."
 				},
 				"die": {
@@ -1926,11 +1926,11 @@
 				},
 				"keep": {
 					"label": "Which result stands?",
-					"hint": "With a choice, nothing that depends on the roll happens until a result is kept.",
+					"hint": "When a player keeps a result, nothing that depends on the roll happens until they do.",
 					"choices": {
 						"new": "The new result",
-						"rollerChooses": "The one who rolled chooses",
-						"ownerChooses": "The owner of this feature chooses"
+						"rollerChooses": "The one who rolled keeps one",
+						"ownerChooses": "The owner of this feature keeps one"
 					}
 				},
 				"outcome": {
