@@ -288,6 +288,13 @@ function thrownDice(term: DieTermLike & { options?: object }, drawn: number[]): 
 	} as never) as foundry.dice.Roll;
 }
 
+/** One die rolled as a Foundry roll, so manual dice entry and dice modules can give its result. */
+async function rollOneDieFace(faces: number): Promise<number> {
+	const roll = new foundry.dice.Roll(`1d${faces}`);
+	await roll.evaluate();
+	return roll.total ?? 0;
+}
+
 /**
  * Reroll one die of an evaluated roll. The old roll is not changed: the new
  * roll is a copy with that die rolled again and its total, crit and miss
@@ -311,9 +318,7 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 
 	const style =
 		copy.explosionStyleOf?.(term) ?? (hasExplodeModifier(term.modifiers) ? 'standard' : 'none');
-	const changed = await rerollDieInTerm(term, ref.result, style, async (faces) =>
-		new foundry.dice.terms.Die({ faces }).randomFace(),
-	);
+	const changed = await rerollDieInTerm(term, ref.result, style, rollOneDieFace);
 
 	if (copy.refreshOutcome) copy.refreshOutcome();
 	else {

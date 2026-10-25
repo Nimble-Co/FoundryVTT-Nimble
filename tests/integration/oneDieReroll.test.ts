@@ -151,4 +151,29 @@ describe('rerollOneDie on live dice', () => {
 		expect(resultsOf(after)).toEqual(['(15)', 19]);
 		expect(after.total).toBe(22);
 	});
+
+	test('the new die and its explosion die come from the dice fulfillment, as manual entry does', async () => {
+		const roll = await rolled('DamageRoll', '1d6 + 2', DAMAGE, 6, [2]);
+		const methods = CONFIG.Dice.fulfillment.methods as Record<string, unknown>;
+		const settingKey = 'diceConfiguration';
+		const before = game.settings.get('core', settingKey as never) as Record<string, string>;
+		const entered = [6, 3];
+		methods.nimbleTest = { label: 'Test', interactive: false, handler: () => entered.shift() };
+		await game.settings.set('core', settingKey as never, { ...before, d6: 'nimbleTest' } as never);
+		CONFIG.Dice.randomUniform = () => {
+			throw new Error('A digital die was rolled.');
+		};
+		try {
+			const ref = primaryDieRef(roll as never);
+			if (!ref) throw new Error('no Primary Die');
+			const result = await rerollOneDie(roll as never, ref);
+
+			expect(entered).toEqual([]);
+			expect(result.next).toBe(6);
+			expect((result.roll as unknown as LiveRoll).total).toBe(11);
+		} finally {
+			await game.settings.set('core', settingKey as never, before as never);
+			delete methods.nimbleTest;
+		}
+	});
 });
