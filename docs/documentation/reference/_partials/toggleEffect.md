@@ -10,7 +10,7 @@
 
 - `onActorKilled` when the character dies.
 - `onActorWounded` when they gain a Wound.
-- `onActorHealed` when their hit points go up, from any source. Temporary hit points do not count, and healing a character already at max HP heals nothing.
+- `onActorHealed` when their hit points go up, from any source. Temporary hit points do not count, the hit points a level up adds do not count, and healing a character already at max HP heals nothing.
 - `onActorDying` when they drop to 0 HP with Wounds to spare.
 - `onRest` when they finish a Field Rest or a Safe Rest.
 - `onTurnStart` and `onTurnEnd` at the start or the end of their turn.

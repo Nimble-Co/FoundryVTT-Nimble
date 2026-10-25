@@ -83,7 +83,7 @@ When a disposition or a Reach kept an ally's reroll off a card, the GM sees one 
 
 ### Rerolling one die
 
-Some features reroll one die and keep the others. When the player picks the die, the button opens the dice of the roll in its place, with the Primary Die marked. Click a die to reroll it, or click **Cancel** or press Escape to close the dice. The arrow keys move between the dice. On a save or a check rolled with advantage or disadvantage, you can also pick the d20 that was dropped. The roll then keeps the highest or lowest again and works out the hit, the crit and the total again. A Primary Die that rolls its maximum explodes, and one that no longer rolls its maximum loses its explosion dice. With Dice So Nice on, only the rerolled die is thrown.
+Some features reroll one die and keep the others. When the player picks the die, the button opens the dice of the roll in its place, with the Primary Die marked. Click a die to reroll it, or click **Cancel** or press Escape to close the dice and go back to the reroll button. The arrow keys move between the dice. On a save or a check rolled with advantage or disadvantage, you can also pick the d20 that was dropped. The roll then keeps the highest or lowest again and works out the hit, the crit and the total again. A Primary Die that rolls its maximum explodes, and one that no longer rolls its maximum loses its explosion dice. With Dice So Nice on, only the rerolled die is thrown. With manual dice entry on in Foundry's Dice Configuration, the new die and each explosion die are asked for, as for a whole reroll. A player's reroll is rolled on the GM's client, so the GM's dice settings apply to it.
 
 ### Keeping either result
 

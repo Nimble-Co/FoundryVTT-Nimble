@@ -12,7 +12,7 @@
 - **Max charges** → `1`
 - **Recoveries** → two entries: **Trigger** → `onHealed`, **Mode** → `refresh`, **Only while** → `{ "self": "fullHp" }`; and **Trigger** → `safeRest`, **Mode** → `refresh`
 
-A **Healed** recovery applies each time the character's hit points go up, from any source. Temporary hit points do not count, and healing a character already at max HP heals nothing. **Only while** is checked when the trigger happens, so `self` **is** `fullHp` makes the entry apply only when the healing brings the character to max HP.
+A **Healed** recovery applies each time the character's hit points go up, from any source. Temporary hit points do not count, the hit points a level up adds do not count, and healing a character already at max HP heals nothing. **Only while** is checked when the trigger happens, so `self` **is** `fullHp` makes the entry apply only when the healing brings the character to max HP.
 
 **Hide from sheet** covers the other kind of pool: one that exists to gate a feature rather than to be managed. A feature limited to once per round *and* a few times per rest needs two pools, but only the second is a budget the player spends down. Hiding the round limiter keeps it enforced (it is still tracked, spent, refilled, and it still blocks the feature when empty) while leaving a single charge badge on the card, so the two limits are not read as one larger allowance. Chat cards still report the hidden pool when a use spends it.
 
