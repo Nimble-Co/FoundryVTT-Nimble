@@ -33,7 +33,8 @@
 	});
 </script>
 
-<div class="nimble-reroll-picker" role="group" aria-labelledby={titleId}>
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div class="nimble-reroll-picker" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
 	<div class="nimble-reroll-picker__head">
 		<i class="nimble-reroll-picker__icon fa-solid fa-rotate-left" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-reroll-picker__title">{title}</span>
@@ -48,8 +49,7 @@
 		{/if}
 	</div>
 
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<ul class="nimble-reroll-picker__dice" onkeydown={onKeydown}>
+	<ul class="nimble-reroll-picker__dice">
 		{#each dice as die, index (`${die.term}-${die.result}`)}
 			{@const caption = dieCaption(die, dice)}
 			<li>
@@ -82,8 +82,7 @@
 		flex-direction: column;
 		gap: 0.375rem;
 		padding: 0.375rem 0.5rem 0.5rem;
-		color: var(--nimble-card-text-color);
-		background: var(--nimble-button-background-color);
+		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-input-border-color);
 		border-radius: 4px;
 		// Clears the chat log's bottom fade and its jump-to-bottom button.

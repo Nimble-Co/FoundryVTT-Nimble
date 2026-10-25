@@ -98,7 +98,6 @@
 			flex-direction: column;
 			min-width: 0;
 			font-size: var(--nimble-sm-text);
-			color: var(--nimble-card-text-color);
 
 			small {
 				font-size: var(--nimble-xs-text);

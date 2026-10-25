@@ -686,6 +686,19 @@ describe('IncomingReactionPrompts', () => {
 				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 			});
 
+			it('closes on Escape while Cancel has the focus', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
+					key: 'Escape',
+				});
+
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+			});
+
 			it('moves between the dice with the arrow keys', async () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },
