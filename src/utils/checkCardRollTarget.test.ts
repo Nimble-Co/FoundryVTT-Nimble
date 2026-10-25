@@ -5,9 +5,7 @@ import {
 	checkCardRerollData,
 	checkCardRollTarget,
 	checkRollOfCard,
-	collectCheckRerolls,
 	createCheckCard,
-	d20FormulaWithRollMode,
 } from './checkCardRollTarget.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 import type { RerollingActor, RerollRuleLike } from './rerollEntries.js';
@@ -86,19 +84,28 @@ describe('checkRollOfCard', () => {
 	});
 });
 
-describe('d20FormulaWithRollMode', () => {
-	it('rebuilds the d20 term and keeps the modifiers', () => {
-		expect(d20FormulaWithRollMode('1d20 + 3[Will] + 1d4', 1)).toBe('2d20khn + 3[Will] + 1d4');
-		expect(d20FormulaWithRollMode('2d20khn + 3[Will]', -1)).toBe('2d20kln + 3[Will]');
-		expect(d20FormulaWithRollMode('3d20kln + 2', 0)).toBe('1d20 + 2');
+describe('the d20 of a check reroll', () => {
+	async function rerollFormula(formula: string, rollMode: number) {
+		rollD20(10);
+		const found = checkCardRollTarget(makeCard({}, serializedSave(formula))).findRoll();
+		if (!found) throw new Error('no roll');
+		return found.makeRoll(formula, { rollMode });
+	}
+
+	it('is rebuilt for the roll mode, and the modifiers stay', async () => {
+		expect((await rerollFormula('1d20 + 3[Will] + 1d4', 1)).formula).toBe(
+			'2d20khn + 3[Will] + 1d4',
+		);
+		expect((await rerollFormula('2d20khn + 3[Will]', -1)).formula).toBe('2d20kln + 3[Will]');
+		expect((await rerollFormula('3d20kln + 2', 0)).formula).toBe('1d20 + 2');
 	});
 
-	it('keeps a minimum d20 result', () => {
-		expect(d20FormulaWithRollMode('1d20min10 + 2', 1)).toBe('2d20min10khn + 2');
+	it('keeps a minimum d20 result', async () => {
+		expect((await rerollFormula('1d20min10 + 2', 1)).formula).toBe('2d20min10khn + 2');
 	});
 
-	it('refuses a formula that does not start with a d20', () => {
-		expect(() => d20FormulaWithRollMode('1d6 + 2', 1)).toThrow();
+	it('refuses a formula that does not start with a d20', async () => {
+		await expect(rerollFormula('1d6 + 2', 1)).rejects.toThrow();
 	});
 });
 
@@ -283,16 +290,16 @@ function postedRoll() {
 	return roll;
 }
 
-describe('collectCheckRerolls', () => {
+describe('the rerolls of a posted check', () => {
 	it('stamps the roller entries of a rule that matches the check', async () => {
 		const roller: RerollingActor = { uuid: 'Actor.roller', rules: [rerollRule()] };
 		const roll = postedRoll();
 
-		const result = await collectCheckRerolls({ roller, roll, check: WILL_SAVE, rollMode: 0 });
+		const result = await checkCardRerollData(roller, roll, WILL_SAVE, 0);
 
 		expect(result.roll).toBe(roll);
-		expect(result.rerolls).toEqual([]);
-		expect(result.incomingReactions).toEqual([
+		expect(result.system.rerolls).toEqual([]);
+		expect(result.system.incomingReactions).toEqual([
 			expect.objectContaining({
 				kind: 'reroll',
 				side: 'roller',
@@ -307,14 +314,14 @@ describe('collectCheckRerolls', () => {
 	it('stamps nothing for a check with another key', async () => {
 		const roller: RerollingActor = { uuid: 'Actor.roller', rules: [rerollRule()] };
 
-		const result = await collectCheckRerolls({
+		const result = await checkCardRerollData(
 			roller,
-			roll: postedRoll(),
-			check: { kind: 'save', key: 'strength' },
-			rollMode: 0,
-		});
+			postedRoll(),
+			{ kind: 'save', key: 'strength' },
+			0,
+		);
 
-		expect(result.incomingReactions).toEqual([]);
+		expect(result.system.incomingReactions).toEqual([]);
 	});
 
 	it('runs an automatic rule before the card is posted', async () => {
@@ -328,18 +335,13 @@ describe('collectCheckRerolls', () => {
 		});
 		const roller: RerollingActor = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };
 
-		const result = await collectCheckRerolls({
-			roller,
-			roll: postedRoll(),
-			check: WILL_SAVE,
-			rollMode: 0,
-		});
+		const result = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
 
 		expect(result.roll.formula).toBe('2d20khn + 3[Will]');
-		expect(result.incomingReactions).toEqual([
+		expect(result.system.incomingReactions).toEqual([
 			expect.objectContaining({ itemUuid: 'Item.head', used: true }),
 		]);
-		expect(result.rerolls).toEqual([
+		expect(result.system.rerolls).toEqual([
 			expect.objectContaining({
 				faces: 20,
 				previous: { value: 6, outcome: null },
@@ -348,15 +350,10 @@ describe('collectCheckRerolls', () => {
 		]);
 	});
 
-	it('stamps nothing when the roller is unknown', async () => {
-		const result = await collectCheckRerolls({
-			roller: null,
-			roll: postedRoll(),
-			check: WILL_SAVE,
-			rollMode: 0,
-		});
+	it('stamps nothing for a roller with no rules', async () => {
+		const result = await checkCardRerollData({ uuid: 'Actor.roller' }, postedRoll(), WILL_SAVE, 0);
 
-		expect(result.incomingReactions).toEqual([]);
+		expect(result.system.incomingReactions).toEqual([]);
 	});
 });
 
