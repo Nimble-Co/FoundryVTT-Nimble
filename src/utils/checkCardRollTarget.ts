@@ -199,11 +199,13 @@ async function collectCheckRerolls(input: {
 	roll: AnyRoll;
 	incomingReactions: IncomingReactionEntry[];
 	rerolls: RerollRecord[];
+	refund: () => Promise<void>;
 }> {
 	const context = checkRollContext(input.roller, input.check);
 	const found = collectRerollEntries(context);
 	const stamped: IncomingReactionEntry[] = [];
 	const rerolls: RerollRecord[] = [];
+	const refunds: Array<() => Promise<void>> = [];
 	let roll = input.roll;
 
 	let next = nextAutomaticReroll(found.automatic, stamped, context);
@@ -227,20 +229,23 @@ async function collectCheckRerolls(input: {
 
 		roll = result.roll;
 		rerolls.push(result.reroll);
+		refunds.unshift(result.refund);
 		stamped.push({ ...next.entry, used: true });
 		next = nextAutomaticReroll(found.automatic, stamped, context);
 	}
 
-	return { roll, incomingReactions: withNewRerollEntries(stamped, found.manual), rerolls };
+	return {
+		roll,
+		incomingReactions: withNewRerollEntries(stamped, found.manual),
+		rerolls,
+		refund: async () => {
+			for (const refund of refunds) await refund();
+		},
+	};
 }
 
-/** A check card's roll and reroll fields from its roller, when the card is posted. */
-async function checkCardRerollData<TRoll extends AnyRoll>(
-	roller: RerollingActor & { token?: { uuid?: string } | null },
-	roll: TRoll,
-	check: CheckRoll,
-	rollMode: number,
-): Promise<{
+/** A check card's roll and reroll fields, and how to give back what its automatic rerolls paid. */
+interface CheckCardRerollData<TRoll extends AnyRoll> {
 	roll: TRoll;
 	system: {
 		actorUuid: string | null;
@@ -249,7 +254,16 @@ async function checkCardRerollData<TRoll extends AnyRoll>(
 		rerolls: RerollRecord[];
 		rollMode: number;
 	};
-}> {
+	refund: () => Promise<void>;
+}
+
+/** A check card's roll and reroll fields from its roller, when the card is posted. */
+async function checkCardRerollData<TRoll extends AnyRoll>(
+	roller: RerollingActor & { token?: { uuid?: string } | null },
+	roll: TRoll,
+	check: CheckRoll,
+	rollMode: number,
+): Promise<CheckCardRerollData<TRoll>> {
 	const result = await collectCheckRerolls({ roller, roll, check, rollMode });
 	return {
 		roll: result.roll as TRoll,
@@ -263,7 +277,24 @@ async function checkCardRerollData<TRoll extends AnyRoll>(
 					? netRollMode(result.roll.options as Record<string, unknown>)
 					: rollMode,
 		},
+		refund: result.refund,
 	};
+}
+
+/** Create a check card. When the card is not made, its automatic rerolls give their cost back. */
+async function createCheckCard(
+	chatData: object,
+	rerolls: Pick<CheckCardRerollData<AnyRoll>, 'refund'>,
+): Promise<ChatMessage | null> {
+	let card: ChatMessage | undefined;
+	try {
+		card = await ChatMessage.create(chatData as ChatMessage.CreateData);
+	} catch (error) {
+		await rerolls.refund();
+		throw error;
+	}
+	if (!card) await rerolls.refund();
+	return card ?? null;
 }
 
 export {
@@ -272,7 +303,9 @@ export {
 	checkCardRollTarget,
 	checkRollOfCard,
 	collectCheckRerolls,
+	createCheckCard,
 	d20FormulaWithRollMode,
 	type CheckCard,
+	type CheckCardRerollData,
 	type CheckRoll,
 };

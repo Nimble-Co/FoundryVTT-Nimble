@@ -6,6 +6,7 @@ import {
 	checkCardRollTarget,
 	checkRollOfCard,
 	collectCheckRerolls,
+	createCheckCard,
 	d20FormulaWithRollMode,
 } from './checkCardRollTarget.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
@@ -184,6 +185,78 @@ describe('checkCardRollTarget', () => {
 
 		const changes = vi.mocked(card.update).mock.calls[0][0] as { system: Record<string, unknown> };
 		expect(changes.system.rollMode).toBe(1);
+	});
+});
+
+describe('createCheckCard', () => {
+	/** A roller whose automatic Will save reroll costs 1 Wound. */
+	async function postWithWoundCost() {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => true,
+		};
+		rollD20(15);
+		const roller = {
+			uuid: 'Actor.roller',
+			isOwner: true,
+			system: { attributes: { wounds: { value: 0, max: 6 } } },
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				for (const [path, value] of Object.entries(changes)) {
+					foundry.utils.setProperty(roller, path, value);
+				}
+			}),
+			rules: [] as RerollRuleLike[],
+		};
+		roller.rules.push(
+			rerollRule({ automatic: true, actor: roller, rerollCost: { ...FREE, woundCost: 1 } }),
+		);
+		const rerolls = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
+		expect(roller.system.attributes.wounds.value).toBe(1);
+		return { roller, rerolls };
+	}
+
+	function stubCreate(create: () => Promise<unknown>) {
+		vi.stubGlobal('ChatMessage', { create: vi.fn(create) });
+	}
+
+	it('keeps the cost paid when the card is made', async () => {
+		const { roller, rerolls } = await postWithWoundCost();
+		const message = { id: 'message-1' };
+		stubCreate(async () => message);
+
+		try {
+			expect(await createCheckCard({ type: 'savingThrow' }, rerolls)).toBe(message);
+			expect(roller.system.attributes.wounds.value).toBe(1);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('gives the cost back when a hook stops the card', async () => {
+		const { roller, rerolls } = await postWithWoundCost();
+		stubCreate(async () => undefined);
+
+		try {
+			expect(await createCheckCard({ type: 'savingThrow' }, rerolls)).toBeNull();
+			expect(roller.system.attributes.wounds.value).toBe(0);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('gives the cost back when the create throws', async () => {
+		const { roller, rerolls } = await postWithWoundCost();
+		stubCreate(async () => {
+			throw new Error('create failed');
+		});
+
+		try {
+			await expect(createCheckCard({ type: 'savingThrow' }, rerolls)).rejects.toThrow(
+				'create failed',
+			);
+			expect(roller.system.attributes.wounds.value).toBe(0);
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 });
 

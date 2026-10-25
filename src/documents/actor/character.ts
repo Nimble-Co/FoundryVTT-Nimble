@@ -34,7 +34,11 @@ import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
-import { checkCardRerollData } from '../../utils/checkCardRollTarget.js';
+import {
+	type CheckCardRerollData,
+	checkCardRerollData,
+	createCheckCard,
+} from '../../utils/checkCardRollTarget.js';
 import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
@@ -1282,18 +1286,24 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareSkillCheckChatCardData(skillKey, roll, {
-			...options,
-			rollMode,
-		});
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'skillCheck', key: skillKey },
+			rollMode ?? 0,
+		);
+		const chatData = await this.prepareSkillCheckChatCardData(
+			skillKey,
+			roll,
+			{ ...options, rollMode },
+			rerolls,
+		);
 
 		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
 			toMessageMode(visibilityMode),
 		);
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		return chatCard ?? null;
+		return createCheckCard(chatData, rerolls);
 	}
 
 	async rollSkillCheck(skillKey: SkillKeyType, options: ActorRollOptions = {}) {
@@ -1343,13 +1353,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		skillKey: SkillKeyType,
 		roll: NimbleRoll,
 		options = { rollMode: 0 } as ActorRollOptions,
+		givenRerolls?: CheckCardRerollData<NimbleRoll>,
 	) {
-		const rerolls = await checkCardRerollData(
-			this as unknown as RerollingActor,
-			roll,
-			{ kind: 'skillCheck', key: skillKey },
-			options.rollMode ?? 0,
-		);
+		const rerolls =
+			givenRerolls ??
+			(await checkCardRerollData(
+				this as unknown as RerollingActor,
+				roll,
+				{ kind: 'skillCheck', key: skillKey },
+				options.rollMode ?? 0,
+			));
 
 		return {
 			author: game.user?.id,

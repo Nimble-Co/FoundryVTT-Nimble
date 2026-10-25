@@ -10,7 +10,11 @@ import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
-import { checkCardRerollData } from '../../utils/checkCardRollTarget.js';
+import {
+	type CheckCardRerollData,
+	checkCardRerollData,
+	createCheckCard,
+} from '../../utils/checkCardRollTarget.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
@@ -827,15 +831,21 @@ class NimbleBaseActor<
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, roll, {
-			...options,
-			rollMode,
-		});
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'abilityCheck', key: abilityKey },
+			rollMode ?? 0,
+		);
+		const chatData = await this.prepareAbilityCheckChatCardData(
+			abilityKey,
+			roll,
+			{ ...options, rollMode },
+			rerolls,
+		);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		return chatCard ?? null;
+		return createCheckCard(chatData, rerolls);
 	}
 
 	async rollAbilityCheck(abilityKey: AbilityKeyType, options: ActorRollOptions = {}) {
@@ -889,13 +899,16 @@ class NimbleBaseActor<
 		abilityKey: AbilityKeyType,
 		roll: Roll<Record<string, unknown>>,
 		options = { rollMode: 0 } as ActorRollOptions,
+		givenRerolls?: CheckCardRerollData<Roll<Record<string, unknown>>>,
 	) {
-		const rerolls = await checkCardRerollData(
-			this as unknown as RerollingActor,
-			roll,
-			{ kind: 'abilityCheck', key: abilityKey },
-			options.rollMode ?? 0,
-		);
+		const rerolls =
+			givenRerolls ??
+			(await checkCardRerollData(
+				this as unknown as RerollingActor,
+				roll,
+				{ kind: 'abilityCheck', key: abilityKey },
+				options.rollMode ?? 0,
+			));
 
 		return {
 			author: game.user?.id,
@@ -921,15 +934,21 @@ class NimbleBaseActor<
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareSavingThrowChatCardData(saveKey, roll, {
-			...options,
-			rollMode,
-		});
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'save', key: saveKey },
+			rollMode ?? 0,
+		);
+		const chatData = await this.prepareSavingThrowChatCardData(
+			saveKey,
+			roll,
+			{ ...options, rollMode },
+			rerolls,
+		);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		return chatCard ?? null;
+		return createCheckCard(chatData, rerolls);
 	}
 
 	async rollInitiativeToChat(options = {} as ActorRollOptions): Promise<ChatMessage | null> {
@@ -1043,13 +1062,16 @@ class NimbleBaseActor<
 		saveKey: SaveKeyType,
 		roll: NimbleRoll | Roll<Record<string, unknown>>,
 		options = { rollMode: 0 } as ActorRollOptions,
+		givenRerolls?: CheckCardRerollData<NimbleRoll | Roll<Record<string, unknown>>>,
 	) {
-		const rerolls = await checkCardRerollData(
-			this as unknown as RerollingActor,
-			roll,
-			{ kind: 'save', key: saveKey },
-			options.rollMode ?? 0,
-		);
+		const rerolls =
+			givenRerolls ??
+			(await checkCardRerollData(
+				this as unknown as RerollingActor,
+				roll,
+				{ kind: 'save', key: saveKey },
+				options.rollMode ?? 0,
+			));
 
 		return {
 			author: game.user?.id,
