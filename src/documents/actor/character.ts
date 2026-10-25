@@ -1983,7 +1983,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
 
 		await this.updateItem(characterClass.id!, itemUpdates);
-		await this.update(actorUpdates);
+		// The class update already raised max HP, so the HP this update adds is not healing.
+		await this.update(actorUpdates, {
+			nimble: { hpFollowingMax: hp }, // allow-hardcoded-system-id: _preUpdate and hpGained use this literal key
+		} as unknown as Actor.Database.UpdateOptions);
 		this.sheet?.render(true);
 	}
 

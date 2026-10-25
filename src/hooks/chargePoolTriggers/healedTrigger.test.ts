@@ -22,6 +22,11 @@ function recordedHp(hp: number) {
 	return { nimble: { previousHp: { value: hp, max: 20, temp: 0 } } };
 }
 
+/** A level up update: max HP rose to 20 in an earlier update, and `following` HP follows it. */
+function levelUp(hp: number, following: number) {
+	return { nimble: { previousHp: { value: hp, max: 20, temp: 0 }, hpFollowingMax: following } };
+}
+
 async function registeredHook(): Promise<HealedHook> {
 	const callbacks = createHookCapture(globals().Hooks.on as never);
 	const { registerHealedTriggerHooks } = await import('./healedTrigger.js');
@@ -43,6 +48,23 @@ describe('registerHealedTriggerHooks', () => {
 		hook(healedActor, {}, recordedHp(10), 'user-1');
 
 		expect(applyRecovery).toHaveBeenCalledTimes(1);
+		expect(applyRecovery).toHaveBeenCalledWith(healedActor, 'onHealed');
+	});
+
+	it('does nothing for the HP a level up adds', async () => {
+		const hook = await registeredHook();
+
+		hook(actor('character', 15), {}, levelUp(10, 5), 'user-1');
+
+		expect(applyRecovery).not.toHaveBeenCalled();
+	});
+
+	it('applies the healed trigger when an update heals more than the level up adds', async () => {
+		const hook = await registeredHook();
+		const healedActor = actor('character', 20);
+
+		hook(healedActor, {}, levelUp(10, 5), 'user-1');
+
 		expect(applyRecovery).toHaveBeenCalledWith(healedActor, 'onHealed');
 	});
 

@@ -31,6 +31,8 @@ export function hasAnyActorChangeAt(
 export interface ActorUpdateBefore {
 	previousHp?: { value: number; max: number; temp: number };
 	previousWounds?: number;
+	/** HP the update adds only because max HP rose, set by the one who updates (a level up). */
+	hpFollowingMax?: number;
 }
 
 function recordedBefore(options: unknown): ActorUpdateBefore {
@@ -55,14 +57,19 @@ export function hpBeforeUpdate(options: unknown): number | undefined {
 
 /**
  * HP the update healed; 0 when it healed none or did not record the HP before it.
- * HP that only follows a higher max HP (a level up) is not healing.
+ * HP that only follows a higher max HP (a level up) is not healing: the amount the
+ * update gives in `hpFollowingMax`, else the max HP rise in this update.
  */
 export function hpGained(actor: unknown, options: unknown): number {
-	const before = recordedBefore(options).previousHp;
+	const recorded = recordedBefore(options);
+	const before = recorded.previousHp;
 	if (typeof before?.value !== 'number') return 0;
 	const valueRise = numberAt(actor, ACTOR_HP_PATHS.value) - before.value;
-	const maxRise = Math.max(0, numberAt(actor, ACTOR_HP_PATHS.max) - (before.max ?? 0));
-	return Math.max(0, valueRise - maxRise);
+	const following =
+		typeof recorded.hpFollowingMax === 'number'
+			? recorded.hpFollowingMax
+			: Math.max(0, numberAt(actor, ACTOR_HP_PATHS.max) - (before.max ?? 0));
+	return Math.max(0, valueRise - following);
 }
 
 /** Wounds the update added; 0 when it added none or did not record the wounds before it. */

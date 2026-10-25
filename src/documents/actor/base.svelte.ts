@@ -81,6 +81,7 @@ interface HpTrackingOptions {
 	nimble?: {
 		previousHp?: HpSnapshot;
 		previousWounds?: number;
+		hpFollowingMax?: number;
 	};
 }
 
