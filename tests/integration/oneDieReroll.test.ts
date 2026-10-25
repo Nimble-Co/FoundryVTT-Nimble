@@ -1,0 +1,154 @@
+/**
+ * A one-die reroll on real Foundry dice: the keep, explode, crit and miss
+ * modifiers run as Foundry runs them. The page's random source is replaced, so
+ * every die is known.
+ */
+
+import { afterEach, describe, expect, test } from 'vitest';
+import { primaryDieRef, rerollOneDie } from '../../src/dice/oneDieReroll.ts';
+
+interface LiveResult {
+	result: number;
+	active?: boolean;
+	discarded?: boolean;
+	exploded?: boolean;
+}
+
+interface LiveRoll {
+	terms: Array<{ faces?: number; results?: LiveResult[] }>;
+	total: number;
+	isCritical?: boolean;
+	isMiss?: boolean;
+	critCount?: number;
+	primaryDie?: unknown;
+	options: Record<string, unknown>;
+	evaluate(options?: object): Promise<unknown>;
+	toJSON(): object;
+}
+
+type LiveRollClass = new (formula: string, data?: object, options?: object) => LiveRoll;
+
+const rollClass = (name: string) =>
+	CONFIG.Dice.rolls.find((cls) => cls.name === name) as unknown as LiveRollClass;
+
+const originalRandom = CONFIG.Dice.randomUniform;
+
+/** The next dice roll these values, each on a die of `faces`. */
+function nextDice(faces: number, ...values: number[]) {
+	const queue = [...values];
+	CONFIG.Dice.randomUniform = () => {
+		const value = queue.shift();
+		if (value === undefined) throw new Error('The test ran out of dice.');
+		return 1 - (value - 0.5) / faces;
+	};
+}
+
+async function rolled(
+	cls: string,
+	formula: string,
+	options: object,
+	faces: number,
+	values: number[],
+) {
+	nextDice(faces, ...values);
+	const roll = new (rollClass(cls))(formula, {}, options);
+	await roll.evaluate({ allowInteractive: false });
+	return roll;
+}
+
+const resultsOf = (roll: LiveRoll, term = 0) =>
+	(roll.terms[term].results ?? []).map((r) => (r.active === false ? `(${r.result})` : r.result));
+
+const DAMAGE = {
+	canCrit: true,
+	canMiss: true,
+	rollMode: 0,
+	primaryDieValue: 0,
+	primaryDieModifier: 0,
+};
+
+afterEach(() => {
+	CONFIG.Dice.randomUniform = originalRandom;
+});
+
+describe('rerollOneDie on live dice', () => {
+	test('a crit Primary Die rerolled below max loses its explosion and the crit', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [8, 3]);
+		expect([roll.total, roll.isCritical]).toEqual([13, true]);
+
+		nextDice(8, 4);
+		const ref = primaryDieRef(roll as never);
+		const done = await rerollOneDie(roll as never, ref ?? { term: 0, result: 0 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([4]);
+		expect([after.total, after.isCritical, after.isMiss]).toEqual([6, false, false]);
+		expect([done.previous, done.next, done.faces]).toEqual([8, 4, 8]);
+		expect(resultsOf(roll)).toEqual([8, 3]);
+	});
+
+	test('a Primary Die rerolled to its max explodes and crits', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [1]);
+		expect(roll.isMiss).toBe(true);
+
+		nextDice(8, 8, 5);
+		const done = await rerollOneDie(roll as never, { term: 0, result: 0 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([8, 5]);
+		expect([after.total, after.isCritical, after.isMiss]).toEqual([15, true, false]);
+		expect(
+			(done.thrown.terms[0] as unknown as { results: LiveResult[] }).results.map((r) => r.result),
+		).toEqual([8, 5]);
+	});
+
+	test('a pool die of a damage roll changes only the total', async () => {
+		const roll = await rolled('DamageRoll', '2d6', DAMAGE, 6, [3, 2]);
+		const poolIndex = roll.terms.findIndex((term, index) => index > 0 && term.faces === 6);
+
+		nextDice(6, 5);
+		const after = (await rerollOneDie(roll as never, { term: poolIndex, result: 0 }))
+			.roll as unknown as LiveRoll;
+
+		expect(after.total).toBe(8);
+		expect(after.isCritical).toBe(false);
+	});
+
+	test('a vicious chain die rerolled below max ends the chain', async () => {
+		const options = { ...DAMAGE, explosionStyle: 'vicious' };
+		const roll = await rolled('DamageRoll', '1d8 + 2', options, 8, [8, 8, 3, 2, 5]);
+		expect(resultsOf(roll)).toEqual([8, 8, 3, 2, 5]);
+
+		nextDice(8, 1);
+		const after = (await rerollOneDie(roll as never, { term: 0, result: 1 }))
+			.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([8, 1, 3]);
+		expect([after.total, after.isCritical]).toEqual([14, true]);
+	});
+
+	test('a c die explodes, and a reroll below max takes the crit away', async () => {
+		const roll = await rolled('DamageRoll', '2d4c + 1', DAMAGE, 4, [4, 2, 1]);
+		expect(resultsOf(roll)).toEqual([4, 2, 1]);
+		expect([roll.total, roll.critCount]).toEqual([8, 1]);
+
+		nextDice(4, 3);
+		const after = (await rerollOneDie(roll as never, { term: 0, result: 0 }))
+			.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([3, 2]);
+		expect([after.total, after.isCritical, after.critCount]).toEqual([6, false, 0]);
+	});
+
+	test('the dropped d20 of a check, rerolled higher, becomes the kept one', async () => {
+		const roll = await rolled('NimbleRoll', '2d20khn + 3', {}, 20, [15, 4]);
+		expect(roll.total).toBe(18);
+
+		nextDice(20, 19);
+		const after = (await rerollOneDie(roll as never, { term: 0, result: 1 }))
+			.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual(['(15)', 19]);
+		expect(after.total).toBe(22);
+	});
+});

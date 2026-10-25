@@ -10,6 +10,7 @@ import {
 	NIMBLE_MODS,
 	nimbleCrit,
 	nimbleCritVicious,
+	nimbleModsFromModifiers,
 	nimbleNeutral,
 	nimbleVicious,
 } from './nimbleDieModifiers.js';
@@ -210,6 +211,23 @@ describe('getNimbleMods', () => {
 });
 
 // ─── NIMBLE_MODS symbol ─────────────────────────────────────────────
+
+describe('nimbleModsFromModifiers', () => {
+	it('gives the metadata the handlers set, the last Nimble modifier winning', () => {
+		expect(nimbleModsFromModifiers(['khn', 'x', 'c'])).toEqual({
+			canCrit: true,
+			explosionStyle: 'standard',
+		});
+		expect(nimbleModsFromModifiers(['CV'])).toEqual({ canCrit: true, explosionStyle: 'vicious' });
+		expect(nimbleModsFromModifiers(['c', 'n'])).toEqual({ canCrit: false, explosionStyle: 'none' });
+		expect(nimbleModsFromModifiers(['v'])).toEqual({ canCrit: false, explosionStyle: 'vicious' });
+	});
+
+	it('gives nothing for a die without a Nimble modifier', () => {
+		expect(nimbleModsFromModifiers(['khn', 'x'])).toBeUndefined();
+		expect(nimbleModsFromModifiers(undefined)).toBeUndefined();
+	});
+});
 
 describe('NIMBLE_MODS', () => {
 	it('should be a symbol', () => {

@@ -2,7 +2,13 @@ import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
-import { applyKeep, getNimbleMods } from './nimbleDieModifiers.js';
+import {
+	applyKeep,
+	getNimbleMods,
+	NIMBLE_MODS,
+	nimbleModsFromModifiers,
+} from './nimbleDieModifiers.js';
+import { type ExplosionStyle, hasExplodeModifier } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -855,6 +861,55 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
 				}
 			}
+		}
+	}
+
+	/** How a die term of this roll explodes at its max. */
+	explosionStyleOf(term: foundry.dice.terms.DiceTerm): ExplosionStyle {
+		if (this.modifierMode) {
+			const meta = getNimbleMods(term) ?? nimbleModsFromModifiers(term.modifiers);
+			if (meta?.canCrit && meta.explosionStyle === 'vicious') return 'vicious';
+		} else if (
+			term instanceof PrimaryDie &&
+			this.options.canCrit &&
+			this.options.explosionStyle === 'vicious'
+		) {
+			return 'vicious';
+		}
+		return hasExplodeModifier(term.modifiers) ? 'standard' : 'none';
+	}
+
+	/**
+	 * Work out the total, crit and miss again after a die result of this
+	 * evaluated roll changed.
+	 */
+	refreshOutcome(): void {
+		const internals = this as unknown as {
+			_total: number;
+			_evaluateASTSync(node: unknown): number;
+		};
+		internals._total = internals._evaluateASTSync(CONFIG.Dice.parser.toAST(this.terms));
+		this.excludedPrimaryDieValue = 0;
+		this.isCritical = this.options.canCrit ? undefined : false;
+		this.isMiss = this.options.canMiss ? undefined : false;
+
+		if (this.modifierMode) {
+			for (const term of this.terms) {
+				if (!(term instanceof Terms.Die) || getNimbleMods(term)) continue;
+				const meta = nimbleModsFromModifiers(term.modifiers);
+				if (meta) (term as unknown as Record<symbol, unknown>)[NIMBLE_MODS] = meta;
+			}
+			this.critCount = this._countModifierModeCrits();
+			this._finalizeOutcomeModifierMode();
+		} else {
+			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
+			if (primaryTerm) this._finalizeOutcome(primaryTerm);
+		}
+
+		if (this.options.forceMiss) {
+			this.isMiss = true;
+			this.isCritical = false;
+			this.critCount = 0;
 		}
 	}
 
