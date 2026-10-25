@@ -499,6 +499,14 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/**
+	 * Hook called when an actor's HP goes up, from any source. Temp HP does not
+	 * count, nor HP that only follows a higher max HP.
+	 */
+	async onActorHealed(_context: ActorHealthContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/** Hook called when a saving throw resolves. */
 	async onSaveResolved(_context: SaveResolvedContext): Promise<void> {
 		// Default implementation does nothing

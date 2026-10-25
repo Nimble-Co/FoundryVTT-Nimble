@@ -39,15 +39,30 @@ function recordedBefore(options: unknown): ActorUpdateBefore {
 }
 
 function numberAt(actor: unknown, path: string): number {
-	const value = foundry.utils.getProperty(actor as object, path);
-	return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+	let cursor: unknown = actor;
+	for (const key of path.split('.')) {
+		if (cursor === null || typeof cursor !== 'object') return 0;
+		cursor = (cursor as Record<string, unknown>)[key];
+	}
+	return typeof cursor === 'number' && Number.isFinite(cursor) ? cursor : 0;
 }
 
-/** HP the update added; 0 when it added none or did not record the HP before it. */
-export function hpGained(actor: unknown, options: unknown): number {
+/** The HP value before the update, or undefined when the update did not record it. */
+export function hpBeforeUpdate(options: unknown): number | undefined {
 	const before = recordedBefore(options).previousHp?.value;
-	if (typeof before !== 'number') return 0;
-	return Math.max(0, numberAt(actor, ACTOR_HP_PATHS.value) - before);
+	return typeof before === 'number' ? before : undefined;
+}
+
+/**
+ * HP the update healed; 0 when it healed none or did not record the HP before it.
+ * HP that only follows a higher max HP (a level up) is not healing.
+ */
+export function hpGained(actor: unknown, options: unknown): number {
+	const before = recordedBefore(options).previousHp;
+	if (typeof before?.value !== 'number') return 0;
+	const valueRise = numberAt(actor, ACTOR_HP_PATHS.value) - before.value;
+	const maxRise = Math.max(0, numberAt(actor, ACTOR_HP_PATHS.max) - (before.max ?? 0));
+	return Math.max(0, valueRise - maxRise);
 }
 
 /** Wounds the update added; 0 when it added none or did not record the wounds before it. */
