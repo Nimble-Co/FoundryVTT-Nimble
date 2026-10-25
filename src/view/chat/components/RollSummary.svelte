@@ -27,7 +27,7 @@
 	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
-<div class="roll" class:roll--no-subheading={!subheading} class:roll--with-action={!!action}>
+<div class="roll" class:roll--no-subheading={!subheading}>
 	<div
 		class="roll__total"
 		data-tooltip={expanded || rolling ? null : tooltip}
@@ -44,7 +44,9 @@
 
 	<h3 class="roll__label">{label}</h3>
 
-	{@render action?.()}
+	{#if action}
+		<div class="roll__action">{@render action()}</div>
+	{/if}
 
 	{#if tooltip}
 		<button
@@ -116,15 +118,20 @@
 			grid-template-areas: 'rollResult rollLabel expandButton';
 		}
 
-		&--with-action {
+		// The action column is there only when the action rendered something.
+		&:has(> .roll__action > :global(*)) {
 			grid-template-areas:
 				'rollResult rollLabel rollAction expandButton'
 				'rollResult subHeading rollAction expandButton';
 			grid-template-columns: max-content 1fr max-content max-content;
 		}
 
-		&--with-action.roll--no-subheading {
+		&--no-subheading:has(> .roll__action > :global(*)) {
 			grid-template-areas: 'rollResult rollLabel rollAction expandButton';
+		}
+
+		&__action {
+			display: contents;
 		}
 
 		.roll-expand {
