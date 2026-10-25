@@ -127,10 +127,8 @@ let previous: Record<string, unknown>;
 
 beforeEach(() => {
 	previous = {
-		fromUuidSync: globals.fromUuidSync,
 		user: globals.game.user,
 		timeSince: globals.foundry.utils.timeSince,
-		Hooks: globals.Hooks,
 		settings: globals.game.settings,
 	};
 	rerollCost = {
@@ -142,18 +140,20 @@ beforeEach(() => {
 	};
 	rollerIsOwner = true;
 	requestIncomingAttackReaction.mockResolvedValue(true);
-	globals.fromUuidSync = vi.fn((uuid: string) => DOCUMENTS[uuid]?.() ?? null);
+	vi.stubGlobal(
+		'fromUuidSync',
+		vi.fn((uuid: string) => DOCUMENTS[uuid]?.() ?? null),
+	);
 	globals.game.user = { isGM: false, id: 'player' };
 	globals.foundry.utils.timeSince = () => 'now';
-	globals.Hooks = { on: vi.fn(() => 1), off: vi.fn() };
+	vi.stubGlobal('Hooks', { on: vi.fn(() => 1), off: vi.fn() });
 	globals.game.settings = { get: (_scope: string, key: string) => key !== 'autoExpandRolls' };
 });
 
 afterEach(() => {
-	globals.fromUuidSync = previous.fromUuidSync;
+	vi.unstubAllGlobals();
 	globals.game.user = previous.user;
 	globals.foundry.utils.timeSince = previous.timeSince;
-	globals.Hooks = previous.Hooks;
 	globals.game.settings = previous.settings;
 });
 
@@ -236,13 +236,16 @@ describe('rerolls on check cards', () => {
 		it('scrolls the whole list into view, so the last feature is not under the chat input', async () => {
 			const scrollIntoView = vi.fn();
 			Element.prototype.scrollIntoView = scrollIntoView;
-			renderSave(message());
+			try {
+				renderSave(message());
 
-			await fireEvent.click(rerollButton() as HTMLElement);
+				await fireEvent.click(rerollButton() as HTMLElement);
 
-			expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
-			expect(scrollIntoView.mock.contexts[0]).toBe(screen.getByRole('menu'));
-			delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+				expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+				expect(scrollIntoView.mock.contexts[0]).toBe(screen.getByRole('menu'));
+			} finally {
+				delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+			}
 		});
 
 		it('rerolls with the feature picked in the list', async () => {

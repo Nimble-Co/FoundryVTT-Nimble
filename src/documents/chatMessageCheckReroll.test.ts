@@ -18,7 +18,6 @@ const ROLLER = 'Actor.roller';
 const ROLLER_TOKEN = 'Scene.s.Token.t';
 
 type Globals = {
-	fromUuidSync: ReturnType<typeof vi.fn>;
 	game: {
 		user: { isGM: boolean; id: string };
 		users: { get: ReturnType<typeof vi.fn> };
@@ -70,7 +69,10 @@ function setupWorld() {
 		[ROLLER_TOKEN]: { actor: roller },
 		'Item.head': { rules: new Map([[rule.id, rule]]) },
 	};
-	globals().fromUuidSync = vi.fn((uuid: string) => byUuid[uuid] ?? null);
+	vi.stubGlobal(
+		'fromUuidSync',
+		vi.fn((uuid: string) => byUuid[uuid] ?? null),
+	);
 	return { roller, rule };
 }
 
@@ -134,6 +136,7 @@ function payload(message: MockedMessage) {
 
 beforeEach(() => {
 	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
 	globals().game.user = { isGM: true, id: 'gm-user' };
 	globals().game.users = {
 		get: vi.fn((id: string) => {
