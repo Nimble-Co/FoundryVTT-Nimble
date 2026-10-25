@@ -211,7 +211,12 @@ describe('checkCardRollTarget', () => {
 		};
 		expect(JSON.parse(changes.rolls[0]).formula).toBe('1d20 + 3[Will]');
 		expect(changes.rolls).toHaveLength(1);
-		expect(changes.system).toEqual({ incomingReactions: entries, rerolls: [], rollMode: 0 });
+		expect(changes.system).toEqual({
+			incomingReactions: entries,
+			rerolls: [],
+			pendingKeep: null,
+			rollMode: 0,
+		});
 	});
 
 	it('writes the roll mode the new roll used, so the card shows it', async () => {

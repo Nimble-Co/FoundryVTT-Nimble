@@ -179,6 +179,10 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 				current: () =>
 					foundry.dice.Roll.fromData(JSON.parse(card.rollsSource()[0])) as unknown as OneDieRoll,
 				pickDropped: true,
+				keepChoice: (roll) => ({
+					total: Number((roll as { total?: number }).total) || 0,
+					outcome: null,
+				}),
 				prepare: async (roll, entries) => ({
 					context: context(),
 					entries,
@@ -188,6 +192,7 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 							system: {
 								incomingReactions: changes.incomingReactions,
 								rerolls: changes.rerolls,
+								pendingKeep: null,
 								rollMode: netRollMode(roll.options as Record<string, unknown>),
 							},
 						});

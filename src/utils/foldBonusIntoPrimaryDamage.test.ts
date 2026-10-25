@@ -149,8 +149,11 @@ describe('removeFlavoredBonusesFromRoll', () => {
 	it('takes off the last folded bonuses, as many as it is told', () => {
 		const roll = { class: 'DamageRoll', total: 12, terms: [die, ...plus(3), ...plus(5)] };
 
-		expect(removeFlavoredBonusesFromRoll(roll, 1).terms).toEqual([die, ...plus(3)]);
-		expect(removeFlavoredBonusesFromRoll(roll, 2).terms).toEqual([die]);
+		expect(removeFlavoredBonusesFromRoll(roll, 1)).toMatchObject({
+			terms: [die, ...plus(3)],
+			total: 7,
+		});
+		expect(removeFlavoredBonusesFromRoll(roll, 2)).toMatchObject({ terms: [die], total: 4 });
 		expect(roll.terms).toHaveLength(5);
 	});
 
@@ -159,6 +162,9 @@ describe('removeFlavoredBonusesFromRoll', () => {
 		const operator = { class: 'OperatorTerm', operator: '+', evaluated: true, options: {} };
 		const roll = { class: 'DamageRoll', total: 6, terms: [die, operator, flat] };
 
-		expect(removeFlavoredBonusesFromRoll(roll, 1).terms).toEqual([die, operator, flat]);
+		expect(removeFlavoredBonusesFromRoll(roll, 1)).toMatchObject({
+			terms: [die, operator, flat],
+			total: 6,
+		});
 	});
 });

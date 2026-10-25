@@ -139,4 +139,37 @@ export interface RerollRecord {
 	/** Charges left in the feature's charge pool, or null when it has none */
 	usesLeft: number | null;
 	woundsGained: number;
+	/** Which result a player kept, when the rule let them choose. */
+	kept?: RerollKept | null;
+	/** The total of the kept roll, when a player chose. */
+	keptTotal?: number | null;
+}
+
+export const REROLL_KEPT = ['new', 'old'] as const;
+export type RerollKept = (typeof REROLL_KEPT)[number];
+
+export const KEEP_OUTCOMES = ['crit', 'hit', 'miss'] as const;
+
+/** A roll a player can keep, as its Keep button shows it. */
+export interface KeepChoiceRoll {
+	total: number;
+	/** Null for a roll that has no hit or miss, such as a save. */
+	outcome: (typeof KEEP_OUTCOMES)[number] | null;
+}
+
+/**
+ * A reroll whose new roll waits for a player to keep it or the old one. The
+ * card still shows the old roll.
+ */
+export interface PendingKeep {
+	entryId: string;
+	/** The actor whose owner chooses. */
+	chooserUuid: string;
+	/** The new roll, serialized. */
+	roll: Record<string, unknown>;
+	reroll: RerollRecord;
+	old: KeepChoiceRoll;
+	new: KeepChoiceRoll;
+	/** What `discardedCritTriggers` becomes if the new roll is kept. */
+	discardedCritTriggers: boolean;
 }

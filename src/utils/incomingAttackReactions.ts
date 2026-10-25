@@ -1,7 +1,11 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DieRef } from '../dice/oneDieReroll.js';
 import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
-import type { IncomingReactionEntry } from './incomingReactionEntry.js';
+import {
+	type IncomingReactionEntry,
+	REROLL_KEPT,
+	type RerollKept,
+} from './incomingReactionEntry.js';
 import localize from './localize.js';
 import {
 	type RollingReroll,
@@ -18,6 +22,7 @@ const INCOMING_REACTION_SOCKET_NAME = `system.${SYSTEM_ID}`;
 const INCOMING_REACTION_REQUEST_TYPE = 'incomingAttackReaction';
 const INCOMING_REACTION_REJECTED_TYPE = 'incomingAttackReactionRejected';
 const REROLL_ROLLING_TYPE = 'rerollRolling';
+const KEEP_CHOICE_REQUEST_TYPE = 'rerollKeep';
 
 /**
  * Hook announcing that the GM refused an offer this client asked to use, so
@@ -49,6 +54,13 @@ type IncomingReactionRequest = {
 	forceHeroicReaction?: boolean;
 	/** reroll only: the die the player picked */
 	die?: DieRef;
+};
+
+type KeepChoiceRequest = {
+	type: typeof KEEP_CHOICE_REQUEST_TYPE;
+	messageId: string;
+	userId: string;
+	choice: RerollKept;
 };
 
 /** Why the GM refused, as a localization key the asking client renders. */
@@ -88,6 +100,11 @@ interface ReactionCapableMessage {
 		viaSocket?: boolean,
 		forceHeroicReaction?: boolean,
 		die?: DieRef | null,
+	) => Promise<void>;
+	resolveKeepChoice?: (
+		choice: RerollKept,
+		requestingUserId: string,
+		viaSocket?: boolean,
 	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
 }
@@ -158,6 +175,16 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		request.forceHeroicReaction === true,
 		dieRefFrom(request.die),
 	);
+}
+
+async function handleKeepChoiceRequest(payload: unknown): Promise<void> {
+	if (!game.user?.isGM) return;
+	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	const request = payload as Partial<KeepChoiceRequest> | null;
+	if (!request?.messageId || !request.userId) return;
+	const choice = REROLL_KEPT.find((kept) => kept === request.choice);
+	if (!choice) return;
+	await getMessageById(request.messageId)?.resolveKeepChoice?.(choice, request.userId, true);
 }
 
 /**
@@ -242,6 +269,7 @@ export function registerIncomingReactionSocketListener(): void {
 		if (type === INCOMING_REACTION_REQUEST_TYPE) void handleIncomingReactionRequest(payload);
 		else if (type === INCOMING_REACTION_REJECTED_TYPE) handleIncomingReactionRejected(payload);
 		else if (type === REROLL_ROLLING_TYPE) handleRerollRolling(payload);
+		else if (type === KEEP_CHOICE_REQUEST_TYPE) void handleKeepChoiceRequest(payload);
 	});
 }
 
@@ -293,6 +321,36 @@ export async function requestIncomingAttackReaction(params: {
 		...(params.selection ? { selection: params.selection } : {}),
 		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
 		...(params.die ? { die: params.die } : {}),
+	});
+	return true;
+}
+
+/**
+ * Keep the new roll or the old one of the reroll that waits on a card. GMs
+ * execute directly; everyone else asks the primary active GM.
+ */
+export async function requestKeepChoice(params: {
+	messageId: string;
+	choice: RerollKept;
+}): Promise<boolean> {
+	if (!game.user?.id) return false;
+
+	if (game.user.isGM) {
+		await getMessageById(params.messageId)?.resolveKeepChoice?.(params.choice, game.user.id, false);
+		return true;
+	}
+
+	if (!getPrimaryActiveGmId()) return false;
+	const socket = game.socket as
+		| { emit?: (eventName: string, payload: KeepChoiceRequest) => void }
+		| undefined;
+	if (!socket?.emit) return false;
+
+	socket.emit(INCOMING_REACTION_SOCKET_NAME, {
+		type: KEEP_CHOICE_REQUEST_TYPE,
+		messageId: params.messageId,
+		userId: game.user.id,
+		choice: params.choice,
 	});
 	return true;
 }

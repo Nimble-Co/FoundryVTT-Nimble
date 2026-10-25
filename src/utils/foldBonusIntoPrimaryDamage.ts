@@ -58,14 +58,15 @@ export function appendFlavoredBonusToRoll(
 
 /**
  * The roll without its last `count` bonuses that `appendFlavoredBonusToRoll`
- * folded in. Stops at the first term pair that is not one. The total is left
- * as it is; the caller works it out again.
+ * folded in, and without their amounts in its total. Stops at the first term
+ * pair that is not one.
  */
 export function removeFlavoredBonusesFromRoll(
 	serializedRoll: Record<string, unknown>,
 	count: number,
 ): Record<string, unknown> {
 	const terms = Array.isArray(serializedRoll.terms) ? [...(serializedRoll.terms as unknown[])] : [];
+	let total = Number(serializedRoll.total ?? 0);
 	for (let removed = 0; removed < count && terms.length >= 2; removed++) {
 		const operator = terms[terms.length - 2] as { class?: string; operator?: string };
 		const bonus = terms[terms.length - 1] as { class?: string; options?: { flavor?: unknown } };
@@ -75,9 +76,10 @@ export function removeFlavoredBonusesFromRoll(
 			bonus?.class === 'NumericTerm' &&
 			typeof bonus.options?.flavor === 'string';
 		if (!folded) break;
+		total -= Number((bonus as { number?: unknown }).number) || 0;
 		terms.length -= 2;
 	}
-	return { ...serializedRoll, terms };
+	return { ...serializedRoll, terms, total };
 }
 
 /**

@@ -3,6 +3,7 @@ import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
 	type RerollDie,
+	type RerollKeep,
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
@@ -28,6 +29,7 @@ interface RerollRuleLike {
 	oncePerAttack?: boolean;
 	range?: number;
 	die?: RerollDie;
+	keep?: RerollKeep;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;

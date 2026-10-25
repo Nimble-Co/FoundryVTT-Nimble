@@ -68,6 +68,10 @@ import {
 } from '../utils/incomingAttackReactions.js';
 import {
 	type IncomingReactionEntry,
+	type KeepChoiceRoll,
+	type PendingKeep,
+	type RerollKeep,
+	type RerollKept,
 	type RerollRecord,
 	rerollTriggerMatches,
 } from '../utils/incomingReactionEntry.js';
@@ -84,7 +88,7 @@ import {
 	withNewRerollEntries,
 } from '../utils/rerollEntries.js';
 import type { RerollableRoll, RerollRollTarget } from '../utils/rerollRollTarget.js';
-import { rerollWithRule } from '../utils/rerollStep.js';
+import { type RerollStepDone, rerollWithRule } from '../utils/rerollStep.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 
 /** Types for activation cards that have targets and effects */
@@ -1199,7 +1203,7 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	async applyDamage(value: number, options?: DamageApplyOptions): Promise<void> {
 		if (!this.isActivationCard()) return;
-		if (!game.user?.isGM) return;
+		if (!game.user?.isGM || this.pendingKeep()) return;
 
 		if (options?.outcome === 'noDamage') {
 			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
@@ -1223,7 +1227,7 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	async applyAllDamage(): Promise<void> {
 		if (!this.isActivationCard()) return;
-		if (!game.user?.isGM) return;
+		if (!game.user?.isGM || this.pendingKeep()) return;
 
 		const packets = this.#applicableDamagePackets();
 		if (packets.length < 1) {
@@ -1319,7 +1323,7 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	canApplyDamage(value: number, options?: DamageApplyOptions): boolean {
-		if (!this.isActivationCard()) return false;
+		if (!this.isActivationCard() || this.pendingKeep()) return false;
 		if (options?.outcome === 'noDamage') return false;
 
 		const damage = Math.floor(Number(value));
@@ -1330,7 +1334,7 @@ class NimbleChatMessage extends ChatMessage {
 
 	/** Whether the card's single Apply Damage control should be live. */
 	canApplyAllDamage(): boolean {
-		if (!this.isActivationCard()) return false;
+		if (!this.isActivationCard() || this.pendingKeep()) return false;
 
 		const packets = this.#applicableDamagePackets();
 		if (packets.length < 1) return false;
@@ -1685,6 +1689,7 @@ class NimbleChatMessage extends ChatMessage {
 		target: RerollableRoll,
 		newRoll: unknown,
 		history: CardReroll,
+		options: { thrown?: boolean } = {},
 	): Promise<void> {
 		const prepared = await target.prepare(newRoll, this.#withEntryUsed(entry));
 		const systemData = this.system as unknown as { rerolls?: RerollRecord[] };
@@ -1695,14 +1700,13 @@ class NimbleChatMessage extends ChatMessage {
 		);
 		const messageId = this.id;
 		const rolling =
-			messageId && canShowDiceAnimation()
+			messageId && !options.thrown && canShowDiceAnimation()
 				? { slot: target.slot, faces: history.reroll.faces ?? 6 }
 				: null;
 		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
 		try {
 			// The card shows the new result only after the dice land.
-			const thrown = target.diceToThrow?.(newRoll) ?? newRoll;
-			await showDiceAnimation(thrown as foundry.dice.Roll.Any, messageId ?? undefined);
+			if (!options.thrown) await this.#throwRerollDice(target, newRoll);
 			await prepared.write({
 				incomingReactions: entries,
 				rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
@@ -1718,6 +1722,157 @@ class NimbleChatMessage extends ChatMessage {
 			history.discardedCritTriggers,
 			prepared.context,
 		);
+	}
+
+	async #throwRerollDice(target: RerollableRoll, newRoll: unknown): Promise<void> {
+		const thrown = target.diceToThrow?.(newRoll) ?? newRoll;
+		await showDiceAnimation(thrown as foundry.dice.Roll.Any, this.id ?? undefined);
+	}
+
+	/**
+	 * Show the new roll and wait for a player to keep it or the old one. The
+	 * cost is paid and the entry used; the card keeps its old roll until then.
+	 */
+	async #waitForKeep(
+		entry: IncomingReactionEntry,
+		target: RerollableRoll,
+		done: RerollStepDone<unknown>,
+		chooserUuid: string,
+	): Promise<void> {
+		const describe = (roll: unknown): KeepChoiceRoll =>
+			target.keepChoice?.(roll) ?? {
+				total: Number((roll as { total?: number } | null)?.total) || 0,
+				outcome: null,
+			};
+		const messageId = this.id;
+		const rolling =
+			messageId && canShowDiceAnimation()
+				? { slot: target.slot, faces: done.reroll.faces ?? 6 }
+				: null;
+		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
+		try {
+			await this.#throwRerollDice(target, done.roll);
+			const pendingKeep: PendingKeep = {
+				entryId: entry.id,
+				chooserUuid,
+				roll: (done.roll as { toJSON(): Record<string, unknown> }).toJSON(),
+				reroll: done.reroll,
+				old: describe(target.current?.() ?? target.replaced),
+				new: describe(done.roll),
+				discardedCritTriggers: done.discardedCritTriggers,
+			};
+			await this.update({
+				system: { incomingReactions: this.#withEntryUsed(entry), pendingKeep },
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (rolling && messageId) broadcastRerollRolling(messageId, null);
+			throw error;
+		}
+	}
+
+	/** The reroll result waiting for a player to choose, or null. */
+	pendingKeep(): PendingKeep | null {
+		return (this.system as unknown as { pendingKeep?: PendingKeep | null }).pendingKeep ?? null;
+	}
+
+	/**
+	 * Keep the new roll or the old one of the reroll that waits on this card.
+	 * Runs on the primary GM's client. Keeping the new roll places it as any
+	 * reroll is placed; keeping the old one only writes the history. The cost
+	 * stays paid either way.
+	 */
+	async resolveKeepChoice(
+		choice: RerollKept,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+		const lockKey = `${this.id}:keep`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+		try {
+			await queueReactionWrite(this.id ?? '', () =>
+				this.#applyKeepChoice(choice, requestingUserId, viaSocket),
+			);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	async #applyKeepChoice(
+		choice: RerollKept,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const pending = this.pendingKeep();
+		if (!pending) return;
+		const reject = (reasonKey: string) =>
+			rejectIncomingAttackReaction({
+				messageId: this.id ?? '',
+				entryId: pending.entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+		if (!this.#mayKeep(pending, requestingUserId, viaSocket)) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		const kept: RerollRecord = {
+			...pending.reroll,
+			kept: choice,
+			keptTotal: pending[choice].total,
+		};
+		if (choice === 'old') {
+			const context = this.#rerollTarget()?.context();
+			const found = context ? collectRerollEntries(context).manual : [];
+			await this.update({
+				system: {
+					incomingReactions: withNewRerollEntries(this.#incomingReactionEntries(), found),
+					rerolls: [kept],
+					pendingKeep: null,
+				},
+			} as Record<string, unknown>);
+			return;
+		}
+
+		const entry = this.#incomingReactionEntries().find((e) => e.id === pending.entryId);
+		const target = this.#rerollTarget()?.findRoll();
+		if (!entry || !target) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		try {
+			const roll = foundry.dice.Roll.fromData(foundry.utils.deepClone(pending.roll) as never);
+			await this.#placeReroll(
+				entry,
+				target,
+				roll,
+				{ reroll: kept, discardedCritTriggers: pending.discardedCritTriggers, list: 'new' },
+				{ thrown: true },
+			);
+		} catch (error) {
+			console.error('Nimble | The kept roll could not be placed.', error);
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/** The actor that chooses which result stands, or '' when the new result simply stands. */
+	#keepChooser(
+		keep: RerollKeep | undefined,
+		entry: IncomingReactionEntry,
+		rollTarget: RerollRollTarget,
+	): string {
+		if (keep === 'ownerChooses') return entry.actorUuid;
+		if (keep === 'rollerChooses') return rollTarget.context().attacker?.uuid ?? '';
+		return '';
+	}
+
+	/** A GM, or a player who owns the actor that chooses. */
+	#mayKeep(pending: PendingKeep, requestingUserId: string, viaSocket: boolean): boolean {
+		const user = game.users?.get(requestingUserId) ?? null;
+		if (!user) return false;
+		if (user.isGM) return !viaSocket;
+		const chooser = fromUuidSync(
+			pending.chooserUuid as `Actor.${string}`,
+		) as Actor.Implementation | null;
+		return chooser?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
 	}
 
 	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */
@@ -1820,7 +1975,7 @@ class NimbleChatMessage extends ChatMessage {
 	 * predicate and cost.
 	 */
 	canStillUseReroll(entry: IncomingReactionEntry): boolean {
-		if (entry.kind !== 'reroll' || entry.used) return false;
+		if (entry.kind !== 'reroll' || entry.used || this.pendingKeep()) return false;
 		const target = this.#rerollTarget();
 		if (!target?.findRoll()) return false;
 		return usableRerollEntry(entry, target.context(), this.#incomingReactionEntries()).ok;
@@ -1908,6 +2063,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		const entry = this.#validateIncomingReaction(entryId, 'reroll', requestingUserId, viaSocket);
 		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		if (this.pendingKeep()) return reject('NIMBLE.chat.incomingReactions.keepFirst');
 
 		// Every gate again, from the live rule and this card: the card's outcome,
 		// its targets and the actor's state can all change after stamping.
@@ -1923,6 +2079,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		const target = rerollableFor(found, usable.rule.die, die);
 		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
+		const chooserUuid = this.#keepChooser(usable.rule.keep, entry, rollTarget);
 		const systemData = this.system as unknown as { discardedCritTriggers?: boolean };
 		const result = await rerollWithRule({
 			rule: usable.rule,
@@ -1935,12 +2092,14 @@ class NimbleChatMessage extends ChatMessage {
 			readNewDie: target.readNewDie?.bind(target),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
-			place: ({ roll, reroll, discardedCritTriggers }) =>
-				this.#placeReroll(entry, target, roll, {
-					reroll,
-					discardedCritTriggers,
-					list: 'new',
-				}),
+			place: (done) =>
+				chooserUuid
+					? this.#waitForKeep(entry, target, done, chooserUuid)
+					: this.#placeReroll(entry, target, done.roll, {
+							reroll: done.reroll,
+							discardedCritTriggers: done.discardedCritTriggers,
+							list: 'new',
+						}),
 		});
 		if (result.status === 'unpaid') {
 			return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');

@@ -6,6 +6,7 @@ interface MockMessage {
 	system: { incomingReactions: Array<{ id: string; kind: string }> };
 	resolveRedirectReaction: ReturnType<typeof vi.fn>;
 	resolveRerollReaction: ReturnType<typeof vi.fn>;
+	resolveKeepChoice: ReturnType<typeof vi.fn>;
 }
 
 type TestGlobals = {
@@ -31,6 +32,7 @@ function createMessage(entries: Array<{ id: string; kind: string }>): MockMessag
 		system: { incomingReactions: entries },
 		resolveRedirectReaction: vi.fn().mockResolvedValue(undefined),
 		resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
+		resolveKeepChoice: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -511,5 +513,44 @@ describe('rejectIncomingAttackReaction', () => {
 
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('requestKeepChoice', () => {
+	it('keeps the result directly for a GM', async () => {
+		const { requestKeepChoice } = await loadModule();
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestKeepChoice({ messageId: 'message-1', choice: 'old' });
+
+		expect(message.resolveKeepChoice).toHaveBeenCalledWith('old', 'gm-user', false);
+		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('asks the GM for a player, and the GM keeps only a known choice', async () => {
+		const { requestKeepChoice, registerIncomingReactionSocketListener } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+		await requestKeepChoice({ messageId: 'message-1', choice: 'new' });
+		const payload = globals().game.socket.emit?.mock.calls[0]?.[1];
+		expect(payload).toEqual({
+			type: 'rerollKeep',
+			messageId: 'message-1',
+			userId: 'player-1',
+			choice: 'new',
+		});
+
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+		listener(payload);
+		listener({ ...payload, choice: 'both' });
+		for (let i = 0; i < 4; i++) await Promise.resolve();
+
+		expect(message.resolveKeepChoice).toHaveBeenCalledTimes(1);
+		expect(message.resolveKeepChoice).toHaveBeenCalledWith('new', 'player-1', true);
 	});
 });

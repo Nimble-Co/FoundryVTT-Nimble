@@ -1,5 +1,5 @@
 import type { OneDieRoll } from '../dice/oneDieReroll.js';
-import type { IncomingReactionEntry } from './incomingReactionEntry.js';
+import type { IncomingReactionEntry, KeepChoiceRoll } from './incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
 import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
 
@@ -33,6 +33,8 @@ interface RerollableRoll<TRoll = unknown> {
 	current?(): OneDieRoll | null;
 	/** A player can also pick a dropped d20 of this roll. */
 	pickDropped?: boolean;
+	/** A roll as its Keep button shows it. */
+	keepChoice?(roll: unknown): KeepChoiceRoll;
 	/** The dice the 3D dice throw for the new roll. Without it, the whole new roll. */
 	diceToThrow?(roll: TRoll): unknown;
 	/**

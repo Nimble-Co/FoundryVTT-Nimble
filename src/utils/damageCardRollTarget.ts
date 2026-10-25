@@ -272,6 +272,7 @@ async function preparePrimaryDamage(
 					incomingReactions: changes.incomingReactions,
 					rerolls: changes.rerolls,
 					discardedCritTriggers: changes.discardedCritTriggers,
+					pendingKeep: null,
 					...card.movementOfferChanges(outcome),
 				},
 			});
@@ -307,6 +308,16 @@ function primaryDamageReroll(
 					(card.system().incomingReactions ?? []).filter(isFoldedSpend).length,
 				) as unknown as DamageRoll.SerializedData,
 			),
+		keepChoice: (roll) => {
+			const shown = roll as { total?: number; isCritical?: boolean; isMiss?: boolean };
+			const folded = (card.system().incomingReactions ?? [])
+				.filter(isFoldedSpend)
+				.reduce((sum, entry) => sum + (entry.usedAmount ?? 0), 0);
+			return {
+				total: (Number(shown.total) || 0) + folded,
+				outcome: shown.isCritical ? 'crit' : shown.isMiss ? 'miss' : 'hit',
+			};
+		},
 		prepare: (roll, entries) => preparePrimaryDamage(card, found, roll, entries),
 	};
 }
