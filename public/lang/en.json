@@ -1175,6 +1175,10 @@
 					"value": {
 						"label": "Value",
 						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+					},
+					"predicate": {
+						"label": "Only while",
+						"hint": "Optional condition tested when the trigger fires (e.g. self: fullHp). Leave empty to always apply."
 					}
 				}
 			},
@@ -1978,6 +1982,7 @@
 				"encounterEnd": "Encounter End",
 				"onInitiativeRolled": "Initiative Rolled",
 				"onWound": "Wounded",
+				"onHealed": "Healed",
 				"onTurnStart": "Turn Start",
 				"onTurnEnd": "Turn End",
 				"onKill": "Kill",

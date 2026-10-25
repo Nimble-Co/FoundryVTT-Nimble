@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { Predicate } from '../../etc/Predicate.js';
 import {
 	applyRecoveryTriggersToPools,
 	areChargePoolMapsEqual,
@@ -706,6 +707,91 @@ describe('charge pool modifier contributed recoveries', () => {
 		(actor as unknown as { getDomain: () => Set<string> }).getDomain = () =>
 			new Set(['self:raging']);
 		expect(applyRecoveryTriggersToPools(actor, pools, ['encounterStart'])[poolId].current).toBe(1);
+	});
+});
+
+describe('charge pool own recoveries: healed trigger and condition', () => {
+	function actorWithRecoveries(recoveries: unknown[], tags: string[] = []) {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Feature', [
+				{
+					type: 'chargePool',
+					id: 'uses-rule',
+					identifier: 'uses',
+					scope: 'item',
+					max: '3',
+					initial: 'max',
+					recoveries,
+				} as MockRule,
+			]),
+		]);
+		(actor as unknown as { getDomain: () => Set<string> }).getDomain = () => new Set(tags);
+		return actor;
+	}
+
+	function emptyPool(actor: MockActor) {
+		const pools = buildEffectiveChargePoolMap(actor);
+		const poolId = Object.keys(pools)[0];
+		pools[poolId].current = 0;
+		return { pools, poolId };
+	}
+
+	const healed = { trigger: 'onHealed', mode: 'add', value: '1' };
+
+	it('applies a recovery on the healed trigger', () => {
+		const actor = actorWithRecoveries([healed]);
+		const { pools, poolId } = emptyPool(actor);
+
+		expect(applyRecoveryTriggersToPools(actor, pools, ['onHealed'])[poolId].current).toBe(1);
+		expect(applyRecoveryTriggersToPools(actor, pools, ['onWound'])[poolId].current).toBe(0);
+	});
+
+	it('applies a conditional recovery only while the actor has the tag', () => {
+		const gated = { ...healed, predicate: { self: 'fullHp' } };
+
+		const notFull = actorWithRecoveries([gated], ['self:bloodied']);
+		const a = emptyPool(notFull);
+		expect(applyRecoveryTriggersToPools(notFull, a.pools, ['onHealed'])[a.poolId].current).toBe(0);
+
+		const full = actorWithRecoveries([gated], ['self:fullHp']);
+		const b = emptyPool(full);
+		expect(applyRecoveryTriggersToPools(full, b.pools, ['onHealed'])[b.poolId].current).toBe(1);
+	});
+
+	it('reads the condition from initialised rule data', () => {
+		// Initialised rule data carries a Predicate instance, not the raw object.
+		const gated = { ...healed, predicate: new Predicate({ self: 'fullHp' }) };
+
+		const notFull = actorWithRecoveries([gated]);
+		const a = emptyPool(notFull);
+		expect(applyRecoveryTriggersToPools(notFull, a.pools, ['onHealed'])[a.poolId].current).toBe(0);
+
+		const full = actorWithRecoveries([gated], ['self:fullHp']);
+		const b = emptyPool(full);
+		expect(applyRecoveryTriggersToPools(full, b.pools, ['onHealed'])[b.poolId].current).toBe(1);
+	});
+
+	it('treats an empty condition as always true', () => {
+		const actor = actorWithRecoveries([{ ...healed, predicate: {} }]);
+		const { pools, poolId } = emptyPool(actor);
+
+		expect(applyRecoveryTriggersToPools(actor, pools, ['onHealed'])[poolId].current).toBe(1);
+	});
+
+	it('keeps recoveries without a condition as before', () => {
+		const actor = actorWithRecoveries([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+		const pool = Object.values(buildEffectiveChargePoolMap(actor))[0];
+		expect(pool.recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+
+		const { pools, poolId } = emptyPool(actor);
+		expect(applyRecoveryTriggersToPools(actor, pools, ['safeRest'])[poolId].current).toBe(3);
+	});
+
+	it('stacks two healed recoveries on one pool', () => {
+		const actor = actorWithRecoveries([healed, healed]);
+		const { pools, poolId } = emptyPool(actor);
+
+		expect(applyRecoveryTriggersToPools(actor, pools, ['onHealed'])[poolId].current).toBe(2);
 	});
 });
 

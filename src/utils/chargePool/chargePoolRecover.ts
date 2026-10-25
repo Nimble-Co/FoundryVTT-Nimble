@@ -28,6 +28,7 @@ type CombatEventTrigger =
 	| 'onTurnStart'
 	| 'onTurnEnd'
 	| 'onWound'
+	| 'onHealed'
 	| 'onKill'
 	| 'onBloodied'
 	| 'onInitiativeRolled';

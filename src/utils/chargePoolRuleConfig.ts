@@ -13,6 +13,7 @@ const ChargePoolRuleConfig = {
 		'encounterStart',
 		'encounterEnd',
 		'onWound',
+		'onHealed',
 		'onTurnStart',
 		'onTurnEnd',
 		'onKill',
