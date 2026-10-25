@@ -65,7 +65,9 @@ export function createRollRerollButtonState(
 			event.preventDefault();
 			elements.items[next]?.focus();
 		} else if (event.key === 'Escape') {
+			// Foundry opens its main menu on an Escape that reaches the window.
 			event.preventDefault();
+			event.stopPropagation();
 			closeMenu(true);
 		} else if (event.key === 'Tab') {
 			closeMenu();

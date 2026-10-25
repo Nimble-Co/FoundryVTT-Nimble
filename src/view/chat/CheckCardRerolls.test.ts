@@ -279,6 +279,21 @@ describe('rerolls on check cards', () => {
 			expect(screen.queryByRole('menu')).toBeNull();
 			expect(document.activeElement).toBe(button);
 		});
+
+		it("keeps Escape from also opening Foundry's main menu", async () => {
+			const windowKeydown = vi.fn();
+			window.addEventListener('keydown', windowKeydown);
+			try {
+				renderSave(message());
+				await fireEvent.click(rerollButton() as HTMLElement);
+
+				await fireEvent.keyDown(screen.getAllByRole('menuitem')[0], { key: 'Escape' });
+
+				expect(windowKeydown).not.toHaveBeenCalled();
+			} finally {
+				window.removeEventListener('keydown', windowKeydown);
+			}
+		});
 	});
 
 	it('shows the reroll history under the roll row, with the old and the new d20', () => {
