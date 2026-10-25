@@ -21,7 +21,7 @@ interface RerollRuleLike {
 	item?: { name?: string; uuid?: string } | null;
 	actor?: unknown;
 	outcome?: RerollTrigger;
-	automatic?: boolean;
+	rerollsByItself?: boolean;
 	discardedCritTriggers?: boolean;
 	oncePerAttack?: boolean;
 	rerollCost?: RerollCost;
@@ -90,7 +90,7 @@ function outcomeAllows(
  * button for the owner instead.
  */
 function rerollsByItself(rule: RerollRuleLike, actor: RerollingActor): boolean {
-	if (rule.automatic !== true || !isRuleAutomationEnabled()) return false;
+	if (rule.rerollsByItself !== true || !isRuleAutomationEnabled()) return false;
 	if (!rule.rerollCost || !rerollCostCharges(rule.rerollCost)) return true;
 	return actor.isOwner === true;
 }

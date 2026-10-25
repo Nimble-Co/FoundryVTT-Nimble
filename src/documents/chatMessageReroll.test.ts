@@ -674,6 +674,7 @@ describe('resolveRerollReaction', () => {
 				id: 'ward-1',
 				outcome: 'criticalHit',
 				automatic: true,
+				rerollsByItself: true,
 				item: WARD_ITEM,
 				actor: world.target,
 			});

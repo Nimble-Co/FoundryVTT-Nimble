@@ -1835,7 +1835,7 @@
 				}
 			},
 			"reroll": {
-				"description": "Lets the one who rolled, or the target of an attack, roll an attack, a save or a check again. The new result stands.",
+				"description": "Lets the one who rolled, the target of an attack, or an ally roll an attack, a save or a check again, or one die of it.",
 				"form": {
 					"when": "When?",
 					"onlyWhile": {
@@ -1872,10 +1872,33 @@
 				"noneMeansAny": "None picked means any.",
 				"usedBy": {
 					"label": "Who can use it?",
-					"hint": "The one who made the attack, or the creature the attack is against. On a save or a check, only the one who rolled.",
+					"hint": "The one who rolled, the creature an attack is against, or an ally of the one who rolled (a friendly creature, not yourself). On a save or a check there is no target.",
 					"choices": {
 						"roller": "The one who rolled",
-						"target": "The target"
+						"target": "The target",
+						"ally": "An ally"
+					}
+				},
+				"range": {
+					"label": "Range",
+					"hint": "How many spaces the ally can be from the one who rolled, measured when the roll is made. 0 is any distance."
+				},
+				"die": {
+					"label": "Which dice does it reroll?",
+					"hint": "One die leaves the other dice as they are. The player picks the die when they use the reroll.",
+					"choices": {
+						"wholeRoll": "The whole roll",
+						"primaryDie": "The Primary Die",
+						"pickedDie": "One die the player picks"
+					}
+				},
+				"keep": {
+					"label": "Which result stands?",
+					"hint": "With a choice, nothing that depends on the roll happens until a result is kept.",
+					"choices": {
+						"new": "The new result",
+						"rollerChooses": "The one who rolled chooses",
+						"ownerChooses": "The owner of this feature chooses"
 					}
 				},
 				"outcome": {
@@ -1900,7 +1923,7 @@
 				},
 				"automatic": {
 					"label": "Rerolls by itself",
-					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead."
+					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead. Not for an ally, a picked die, or a choice of result."
 				},
 				"discardedCritTriggers": {
 					"label": "The discarded crit still triggers when-crit abilities",

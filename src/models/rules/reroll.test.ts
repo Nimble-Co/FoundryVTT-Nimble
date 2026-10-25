@@ -91,6 +91,9 @@ function makeRule(
 		saves: [],
 		skills: [],
 		abilities: [],
+		range: 0,
+		die: 'wholeRoll',
+		keep: 'new',
 		...config,
 	});
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
@@ -147,6 +150,9 @@ describe('RerollRule', () => {
 			expect(schema.saves?.initial).toEqual([]);
 			expect(schema.skills?.initial).toEqual([]);
 			expect(schema.abilities?.initial).toEqual([]);
+			expect(schema.range?.initial).toBe(0);
+			expect(schema.die?.initial).toBe('wholeRoll');
+			expect(schema.keep?.initial).toBe('new');
 			expect(schema.type?.initial).toBe('reroll');
 		});
 
@@ -157,7 +163,17 @@ describe('RerollRule', () => {
 		});
 
 		it('limits each choice field to its closed set', () => {
-			expect(Object.keys(schema.usedBy?.choices ?? {})).toEqual(['roller', 'target']);
+			expect(Object.keys(schema.usedBy?.choices ?? {})).toEqual(['roller', 'target', 'ally']);
+			expect(Object.keys(schema.die?.choices ?? {})).toEqual([
+				'wholeRoll',
+				'primaryDie',
+				'pickedDie',
+			]);
+			expect(Object.keys(schema.keep?.choices ?? {})).toEqual([
+				'new',
+				'rollerChooses',
+				'ownerChooses',
+			]);
 			expect(Object.keys(schema.outcome?.choices ?? {})).toEqual([
 				'always',
 				'hit',
@@ -229,6 +245,25 @@ describe('RerollRule', () => {
 			expect(schema.chargeCost).toMatchObject({ min: 1, integer: true });
 			expect(schema.manaCost).toMatchObject({ min: 0, integer: true });
 			expect(schema.woundCost).toMatchObject({ min: 0, integer: true });
+			expect(schema.range).toMatchObject({ min: 0, integer: true });
+		});
+
+		it('asks for a range only for an ally', () => {
+			const showWhen = schema.range?.showWhen;
+			expect(showWhen?.({ usedBy: 'ally' })).toBe(true);
+			expect(showWhen?.({ usedBy: 'roller' })).toBe(false);
+			expect(showWhen?.({ usedBy: 'target' })).toBe(false);
+		});
+
+		it('offers Rerolls by itself only when nobody has a choice to make', () => {
+			const showWhen = schema.automatic?.showWhen;
+			const plain = { usedBy: 'target', die: 'wholeRoll', keep: 'new' };
+			expect(showWhen?.(plain)).toBe(true);
+			expect(showWhen?.({ ...plain, die: 'primaryDie' })).toBe(true);
+			expect(showWhen?.({ ...plain, usedBy: 'ally' })).toBe(false);
+			expect(showWhen?.({ ...plain, die: 'pickedDie' })).toBe(false);
+			expect(showWhen?.({ ...plain, keep: 'rollerChooses' })).toBe(false);
+			expect(showWhen?.({ ...plain, keep: 'ownerChooses' })).toBe(false);
 		});
 
 		it('shows charges per use only when a charge pool is named', () => {
@@ -370,6 +405,13 @@ describe('RerollRule', () => {
 				expect(rule.offersRerollOn(skill)).toBe(false);
 			});
 
+			it('offers a check to an ally', () => {
+				const { rule } = makeRule({ usedBy: 'ally', rolls: ['save'] });
+				expect(rule.offersRerollOn({ side: 'ally', roll: { kind: 'save', key: 'will' } })).toBe(
+					true,
+				);
+			});
+
 			it('never offers a check to the target side', () => {
 				const { rule } = makeRule({ usedBy: 'target', rolls: ['save'] });
 				expect(rule.offersRerollOn({ side: 'target', roll: { kind: 'save', key: 'will' } })).toBe(
@@ -430,6 +472,20 @@ describe('RerollRule', () => {
 				configurable: true,
 			});
 			expect([first, second].filter((r) => r.offersRerollOn(TARGET_MELEE))).toHaveLength(2);
+		});
+	});
+
+	describe('rerollsByItself', () => {
+		it('follows the automatic field when nobody has a choice to make', () => {
+			expect(makeRule({ automatic: true }).rule.rerollsByItself).toBe(true);
+			expect(makeRule({ automatic: false }).rule.rerollsByItself).toBe(false);
+			expect(makeRule({ automatic: true, die: 'primaryDie' }).rule.rerollsByItself).toBe(true);
+		});
+
+		it('never rerolls by itself for an ally, a picked die or a choice of result', () => {
+			expect(makeRule({ automatic: true, usedBy: 'ally' }).rule.rerollsByItself).toBe(false);
+			expect(makeRule({ automatic: true, die: 'pickedDie' }).rule.rerollsByItself).toBe(false);
+			expect(makeRule({ automatic: true, keep: 'rollerChooses' }).rule.rerollsByItself).toBe(false);
 		});
 	});
 

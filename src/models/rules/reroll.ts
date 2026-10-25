@@ -23,11 +23,20 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const REROLL_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
+const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
+const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
 
 // Outcomes whose first roll can be a crit.
 const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
 
 type RerollAttackDelivery = (typeof REROLL_ATTACK_DELIVERIES)[number];
+type RerollDie = (typeof REROLL_DICE)[number];
+type RerollKeep = (typeof REROLL_KEEPS)[number];
+
+// A reroll that needs a choice from someone can never happen by itself.
+function nobodyChooses(data: Record<string, unknown>): boolean {
+	return data.usedBy !== 'ally' && data.die !== 'pickedDie' && (data.keep ?? 'new') === 'new';
+}
 
 function choiceLabels(field: string, values: readonly string[]): Record<string, string> {
 	return Object.fromEntries(
@@ -92,6 +101,34 @@ function schema() {
 				widget: 'chips',
 			}),
 		),
+		range: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: 0,
+				integer: true,
+				label: 'NIMBLE.rules.reroll.range.label',
+				hint: 'NIMBLE.rules.reroll.range.hint',
+				showWhen: (data: Record<string, unknown>) => data.usedBy === 'ally',
+			}),
+		),
+		die: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'wholeRoll',
+			choices: choiceLabels('die', REROLL_DICE),
+			label: 'NIMBLE.rules.reroll.die.label',
+			hint: 'NIMBLE.rules.reroll.die.hint',
+		}),
+		keep: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'new',
+			choices: choiceLabels('keep', REROLL_KEEPS),
+			label: 'NIMBLE.rules.reroll.keep.label',
+			hint: 'NIMBLE.rules.reroll.keep.hint',
+		}),
 		outcome: new fields.StringField(
 			withWidget({
 				required: true,
@@ -215,13 +252,16 @@ function schema() {
 				showWhen: forAttacks,
 			}),
 		),
-		automatic: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: 'NIMBLE.rules.reroll.automatic.label',
-			hint: 'NIMBLE.rules.reroll.automatic.hint',
-		}),
+		automatic: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.reroll.automatic.label',
+				hint: 'NIMBLE.rules.reroll.automatic.hint',
+				showWhen: nobodyChooses,
+			}),
+		),
 		discardedCritTriggers: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -258,7 +298,8 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	static override description = 'NIMBLE.rules.reroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['rolls', 'saves', 'skills', 'abilities'] },
-		{ fields: ['usedBy'] },
+		{ fields: ['usedBy', 'range'] },
+		{ fields: ['die', 'keep'] },
 		{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
 		{
 			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
@@ -303,6 +344,9 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
 	declare oncePerAttack: boolean;
+	declare range: number;
+	declare die: RerollDie;
+	declare keep: RerollKeep;
 
 	static override defineSchema(): RerollRule.Schema {
 		return {
@@ -332,8 +376,16 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 				['woundCost', 'number'],
 				['heroicReaction', 'string'],
 				['oncePerAttack', 'boolean'],
+				['range', 'number'],
+				['die', 'string'],
+				['keep', 'string'],
 			]),
 		);
+	}
+
+	/** Whether the rule rerolls with no button. Never when someone has a choice to make. */
+	get rerollsByItself(): boolean {
+		return this.automatic === true && nobodyChooses(this as unknown as Record<string, unknown>);
 	}
 
 	get rerollCost(): RerollCost {
@@ -360,7 +412,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
 		} else {
 			// A check has no target side.
-			if (side !== 'roller') return false;
+			if (side === 'target') return false;
 			const keys = this.checkKeys(roll.kind);
 			if (keys.length > 0 && !keys.includes(roll.key)) return false;
 		}
@@ -390,4 +442,11 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 }
 
-export { RerollRule, type RerollOfferContext };
+export {
+	RerollRule,
+	type RerollOfferContext,
+	type RerollDie,
+	type RerollKeep,
+	REROLL_DICE,
+	REROLL_KEEPS,
+};

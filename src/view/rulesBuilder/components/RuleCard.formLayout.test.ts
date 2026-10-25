@@ -46,6 +46,8 @@ describe('RuleCard with a form layout (reroll)', () => {
 		expect(shownFields(container)).toEqual([
 			'rolls',
 			'usedBy',
+			'die',
+			'keep',
 			'outcome',
 			'attackDelivery',
 			'predicate',
@@ -70,6 +72,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 		expect(questions).toEqual([
 			'Which roll can it reroll?',
 			'Who can use it?',
+			'Which dice does it reroll?',
 			'When?',
 			'Only while',
 			'Cost (optional)',
@@ -124,12 +127,23 @@ describe('RuleCard with a form layout (reroll)', () => {
 		expect(chips.map((chip) => chip.textContent?.trim())).toEqual([
 			'The one who rolled',
 			'The target',
+			'An ally',
 		]);
 		await fireEvent.click(chips[1] as HTMLButtonElement);
 		expect(updateRule).toHaveBeenCalledWith(
 			'test-reroll',
 			expect.objectContaining({ usedBy: 'target' }),
 		);
+	});
+
+	it('asks for a range for an ally, and hides Rerolls by itself', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('reroll', { usedBy: 'ally' }),
+			manager,
+		});
+		const fields = shownFields(container);
+		expect(fields.slice(0, 5)).toEqual(['rolls', 'usedBy', 'range', 'die', 'keep']);
+		expect(fields).not.toContain('automatic');
 	});
 
 	it('shows the roll chip with its name, not its key', () => {
@@ -180,6 +194,8 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'rolls',
 			'saves',
 			'usedBy',
+			'die',
+			'keep',
 			'predicate',
 			'chargePoolIdentifier',
 			'manaCost',

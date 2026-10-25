@@ -48,7 +48,7 @@ function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide }
 		label: '',
 		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always' as RerollTrigger,
-		automatic: false,
+		rerollsByItself: false,
 		rerollCost: FREE,
 		offersRerollOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
 		...rest,
@@ -259,7 +259,7 @@ describe('collectRerollEntries', () => {
 	}
 
 	it('rerolls by itself when the rule is automatic and Feature Effects is on', () => {
-		const rule = rerollRule({ automatic: true });
+		const rule = rerollRule({ rerollsByItself: true });
 		const { manual, automatic } = collectRerollEntries(targetOnly(rule));
 		expect(manual).toEqual([]);
 		expect(automatic).toHaveLength(1);
@@ -268,14 +268,16 @@ describe('collectRerollEntries', () => {
 
 	it('shows an automatic rule as a button while Feature Effects is off', () => {
 		setToggles({ 'automation.applyRuleEffects': false });
-		const { manual, automatic } = collectRerollEntries(targetOnly(rerollRule({ automatic: true })));
+		const { manual, automatic } = collectRerollEntries(
+			targetOnly(rerollRule({ rerollsByItself: true })),
+		);
 		expect(automatic).toEqual([]);
 		expect(manual).toHaveLength(1);
 	});
 
 	it('shows an automatic rule with a cost as a button for a client that cannot pay it', () => {
 		const rule = rerollRule({
-			automatic: true,
+			rerollsByItself: true,
 			rerollCost: { ...FREE, chargePoolIdentifier: 'sand' },
 		});
 		const notOwner = collectRerollEntries(targetOnly(rule, { isOwner: false }));
@@ -287,7 +289,7 @@ describe('collectRerollEntries', () => {
 
 	it('lets any client roll an automatic rule whose cost charges nothing', () => {
 		setToggles({ 'automation.resourceSpending': false });
-		const rule = rerollRule({ automatic: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const rule = rerollRule({ rerollsByItself: true, rerollCost: { ...FREE, woundCost: 1 } });
 		const { automatic } = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		expect(automatic).toHaveLength(1);
 	});
@@ -417,7 +419,7 @@ describe('withNewRerollEntries', () => {
 describe('nextAutomaticReroll', () => {
 	const automatic = (overrides: Partial<IncomingReactionEntry>): AutomaticReroll => ({
 		entry: stamped(overrides),
-		rule: rerollRule({ automatic: true }),
+		rule: rerollRule({ rerollsByItself: true }),
 	});
 	const onMiss = automatic({ ruleId: 'on-miss', outcomeTrigger: 'miss' });
 	const onCrit = automatic({ ruleId: 'on-crit', outcomeTrigger: 'criticalHit' });

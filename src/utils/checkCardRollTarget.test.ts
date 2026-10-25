@@ -214,7 +214,7 @@ describe('createCheckCard', () => {
 			rules: [] as RerollRuleLike[],
 		};
 		roller.rules.push(
-			rerollRule({ automatic: true, actor: roller, rerollCost: { ...FREE, woundCost: 1 } }),
+			rerollRule({ rerollsByItself: true, actor: roller, rerollCost: { ...FREE, woundCost: 1 } }),
 		);
 		const rerolls = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
 		expect(roller.system.attributes.wounds.value).toBe(1);
@@ -273,7 +273,7 @@ function rerollRule(overrides: Partial<RerollRuleLike> = {}) {
 		id: 'rule-1',
 		label: '',
 		item: { name: 'Clear Head', uuid: 'Item.head' },
-		automatic: false,
+		rerollsByItself: false,
 		rerollCost: FREE,
 		offersRerollOn: vi.fn(
 			(context: { side: string; roll: { kind: string; key?: string } }) =>
@@ -330,7 +330,7 @@ describe('the rerolls of a posted check', () => {
 		};
 		rollD20(15);
 		const rule = rerollRule({
-			automatic: true,
+			rerollsByItself: true,
 			rerollChanges: () => ({ rollModeChange: 1, primaryDieBonus: 0, extraDamage: '' }),
 		});
 		const roller: RerollingActor = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };
@@ -381,7 +381,7 @@ describe('checkCardRerollData', () => {
 		};
 		rollD20(15);
 		const rule = rerollRule({
-			automatic: true,
+			rerollsByItself: true,
 			rerollChanges: () => ({ rollModeChange: 1, primaryDieBonus: 0, extraDamage: '' }),
 		});
 		const roller = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };

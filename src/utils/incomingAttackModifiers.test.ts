@@ -612,7 +612,13 @@ describe('applyPostRollIncomingBehavior', () => {
 	/** An automatic `reroll` rule with no cost, and its entry. */
 	function automaticReroll(outcomeTrigger: 'always' | 'hit' | 'criticalHit') {
 		const entry = rerollEntry(outcomeTrigger);
-		const rule = { type: 'reroll', id: 'rule-1', automatic: true, outcome: outcomeTrigger };
+		const rule = {
+			type: 'reroll',
+			id: 'rule-1',
+			automatic: true,
+			rerollsByItself: true,
+			outcome: outcomeTrigger,
+		};
 		return { autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) };
 	}
 
@@ -871,7 +877,7 @@ describe('Reroll rules on the attack', () => {
 		});
 
 		it('puts an automatic rule on the automatic list with its rule', () => {
-			const rule = rerollRule({ automatic: true });
+			const rule = rerollRule({ automatic: true, rerollsByItself: true });
 			const target = createToken({ actor: createActor({ rules: [rule] as never }) });
 			setCanvasTokens([target]);
 
@@ -959,6 +965,7 @@ describe('Reroll rules on the attack', () => {
 		it('rerolls by itself with the rule changes and keeps the history', async () => {
 			const rule = rerollRule({
 				automatic: true,
+				rerollsByItself: true,
 				rerollChanges: () => ({ rollModeChange: -1, primaryDieBonus: 2, extraDamage: '1d6' }),
 			});
 			const entry = rerollEntry('criticalHit');
@@ -1004,7 +1011,12 @@ describe('Reroll rules on the attack', () => {
 		it('keeps the first roll when the cost cannot be paid', async () => {
 			const actor = { system: { resources: { mana: { current: 0, max: 5 } } } };
 			const entry = rerollEntry('always');
-			const rule = rerollRule({ automatic: true, actor, rerollCost: { ...FREE, manaCost: 1 } });
+			const rule = rerollRule({
+				automatic: true,
+				rerollsByItself: true,
+				actor,
+				rerollCost: { ...FREE, manaCost: 1 },
+			});
 			const first = makeRoll(false);
 			const rebuildRoll = vi.fn();
 
@@ -1022,7 +1034,7 @@ describe('Reroll rules on the attack', () => {
 
 		it('throws when the new roll fails', async () => {
 			const entry = rerollEntry('always');
-			const rule = rerollRule({ automatic: true });
+			const rule = rerollRule({ automatic: true, rerollsByItself: true });
 
 			await expect(
 				applyPostRollIncomingBehavior(
@@ -1037,7 +1049,10 @@ describe('Reroll rules on the attack', () => {
 
 		function automaticPlan(entries: ReturnType<typeof rerollEntry>[]) {
 			const rules = new Map(
-				entries.map((entry) => [entry.id, rerollRule({ id: entry.ruleId, automatic: true })]),
+				entries.map((entry) => [
+					entry.id,
+					rerollRule({ id: entry.ruleId, automatic: true, rerollsByItself: true }),
+				]),
 			);
 			return plan({ autoRerollEntries: entries, rerollRules: rules });
 		}

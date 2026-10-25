@@ -6,7 +6,7 @@ export const REROLL_TRIGGERS = ['always', 'hit', 'criticalHit', 'nonCriticalHit'
 export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 
 /** The side of a roll a `reroll` entry is for. */
-export const REROLL_SIDES = ['roller', 'target'] as const;
+export const REROLL_SIDES = ['roller', 'target', 'ally'] as const;
 export type RerollSide = (typeof REROLL_SIDES)[number];
 
 /** How one die result counts: a crit, a miss, or neither (null). */
