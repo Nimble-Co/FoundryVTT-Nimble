@@ -23,7 +23,7 @@ Read and follow all instructions in AGENTS.md
 5. Pack content (JSON in `packs/`): **content-pack-agent**
 6. Tests, migrations, type checks, linting: **quality-agent**
 
-The nimble-rules-agent says what the game should do. The rules-engine-agent implements it. The rulebooks are local files in `_bmad-output/rules/` and are not in the repository.
+The nimble-rules-agent says what the game should do. The rules-engine-agent implements it. The rulebooks are local files in `rules/` and are not in the repository (`.gitignore` keeps them out).
 
 ## User-facing docs
 
