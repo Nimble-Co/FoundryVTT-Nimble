@@ -78,7 +78,13 @@ describe('requestIncomingAttackReaction', () => {
 			requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' }),
 		).resolves.toBe(true);
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, false);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
+			'entry-1',
+			'gm-user',
+			false,
+			false,
+			null,
+		);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
 
@@ -120,7 +126,29 @@ describe('requestIncomingAttackReaction', () => {
 			forceHeroicReaction: true,
 		});
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, true);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
+			'entry-1',
+			'gm-user',
+			false,
+			true,
+			null,
+		);
+	});
+
+	it("sends a player's picked die to the GM", async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			die: { term: 0, result: 1 },
+		});
+
+		expect(globals().game.socket.emit).toHaveBeenCalledWith(
+			'system.nimble',
+			expect.objectContaining({ die: { term: 0, result: 1 } }),
+		);
 	});
 
 	it('sends the heroic reaction answer of a player reroll to the GM', async () => {
@@ -231,7 +259,35 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true, false);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
+			'entry-1',
+			'player-1',
+			true,
+			false,
+			null,
+		);
+	});
+
+	it('gives the GM the die a player picked, and drops a pick that is not a die', async () => {
+		setUser({ id: 'gm-user', isGM: true });
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		const listener = await registerAndGetListener();
+		const request = (die: unknown) => ({
+			type: 'incomingAttackReaction',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+			die,
+		});
+
+		listener(request({ term: 2, result: 0 }));
+		listener(request({ term: -1, result: 0 }));
+		listener(request({ term: '2', result: 0 }));
+		await flushAsync();
+
+		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4]);
+		expect(dice).toEqual([{ term: 2, result: 0 }, null, null]);
 	});
 
 	it('routes redirectToSelf entries to resolveRedirectReaction', async () => {

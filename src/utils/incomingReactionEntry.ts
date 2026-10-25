@@ -9,6 +9,14 @@ export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 export const REROLL_SIDES = ['roller', 'target', 'ally'] as const;
 export type RerollSide = (typeof REROLL_SIDES)[number];
 
+/** Which dice a reroll rolls again. */
+export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
+export type RerollDie = (typeof REROLL_DICE)[number];
+
+/** Which result stands after a reroll. */
+export const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
+export type RerollKeep = (typeof REROLL_KEEPS)[number];
+
 /** How one die result counts: a crit, a miss, or neither (null). */
 export const DIE_OUTCOMES = ['crit', 'miss'] as const;
 export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;

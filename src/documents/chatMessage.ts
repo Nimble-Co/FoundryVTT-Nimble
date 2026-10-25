@@ -35,6 +35,7 @@ import {
 } from '#utils/showDiceAnimation.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
+import type { DieRef, PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import {
 	clearBankedDamageReduction,
@@ -71,6 +72,7 @@ import {
 	rerollTriggerMatches,
 } from '../utils/incomingReactionEntry.js';
 import { rollerTokenOf, scanRerollAllies } from '../utils/rerollAllies.js';
+import { diceToPick, rerollableFor } from '../utils/rerollDieChoice.js';
 import {
 	type AutomaticReroll,
 	collectRerollEntries,
@@ -1699,7 +1701,8 @@ class NimbleChatMessage extends ChatMessage {
 		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
 		try {
 			// The card shows the new result only after the dice land.
-			await showDiceAnimation(newRoll as foundry.dice.Roll.Any, messageId ?? undefined);
+			const thrown = target.diceToThrow?.(newRoll) ?? newRoll;
+			await showDiceAnimation(thrown as foundry.dice.Roll.Any, messageId ?? undefined);
 			await prepared.write({
 				incomingReactions: entries,
 				rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
@@ -1740,7 +1743,8 @@ class NimbleChatMessage extends ChatMessage {
 
 		try {
 			const rollTarget = this.#rerollTarget();
-			const target = rollTarget?.findRoll();
+			const found = rollTarget?.findRoll();
+			const target = found ? rerollableFor(found, next.rule.die) : null;
 			if (!rollTarget || !target) return;
 			const result = await rerollWithRule({
 				rule: next.rule,
@@ -1823,6 +1827,19 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
+	 * The dice a player picks from for a `reroll` entry whose rule rerolls a
+	 * picked die. Null when the rule rerolls no picked die.
+	 */
+	rerollDiceToPick(entry: IncomingReactionEntry): PickableDie[] | null {
+		const target = this.#rerollTarget();
+		const found = target?.findRoll();
+		if (!target || !found) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#incomingReactionEntries());
+		if (!usable.ok || usable.rule.die !== 'pickedDie') return null;
+		return diceToPick(found);
+	}
+
+	/**
 	 * Drop offers the card's new outcome no longer satisfies. Pending offers are
 	 * filtered against the outcome once, when the card is posted; a reroll
 	 * resolved afterwards can turn a crit into an ordinary hit and strand a
@@ -1847,6 +1864,7 @@ class NimbleChatMessage extends ChatMessage {
 		requestingUserId: string,
 		viaSocket = false,
 		forceHeroicReaction = false,
+		die: DieRef | null = null,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
 		const target = this.#rerollTarget();
@@ -1864,6 +1882,7 @@ class NimbleChatMessage extends ChatMessage {
 					requestingUserId,
 					viaSocket,
 					forceHeroicReaction,
+					die,
 				),
 			);
 		} finally {
@@ -1877,6 +1896,7 @@ class NimbleChatMessage extends ChatMessage {
 		requestingUserId: string,
 		viaSocket: boolean,
 		forceHeroicReaction: boolean,
+		die: DieRef | null,
 	): Promise<void> {
 		const reject = (reasonKey: string) =>
 			rejectIncomingAttackReaction({
@@ -1899,8 +1919,10 @@ class NimbleChatMessage extends ChatMessage {
 					: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
 			);
 		}
-		const target = rollTarget.findRoll();
-		if (!target) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const found = rollTarget.findRoll();
+		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const target = rerollableFor(found, usable.rule.die, die);
+		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
 		const systemData = this.system as unknown as { discardedCritTriggers?: boolean };
 		const result = await rerollWithRule({
 			rule: usable.rule,

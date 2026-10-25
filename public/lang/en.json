@@ -223,7 +223,8 @@
 				"costWounds": "{count} Wounds",
 				"costHeroicReaction": "Heroic Reaction",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
-				"rerollCostUnpaid": "The cost of this reroll could not be paid."
+				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
+				"rerollPickADie": "Pick the die to reroll."
 			}
 		},
 		"characterCreationStages": {

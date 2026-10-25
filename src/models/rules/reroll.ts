@@ -5,8 +5,12 @@ import {
 	type HeroicReactionKey,
 } from '../../utils/heroicActions.js';
 import {
+	REROLL_DICE,
+	REROLL_KEEPS,
 	REROLL_SIDES,
 	REROLL_TRIGGERS,
+	type RerollDie,
+	type RerollKeep,
 	type RerollSide,
 	type RerollTrigger,
 } from '../../utils/incomingReactionEntry.js';
@@ -23,15 +27,11 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const REROLL_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
-const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
-const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
 
 // Outcomes whose first roll can be a crit.
 const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
 
 type RerollAttackDelivery = (typeof REROLL_ATTACK_DELIVERIES)[number];
-type RerollDie = (typeof REROLL_DICE)[number];
-type RerollKeep = (typeof REROLL_KEEPS)[number];
 
 // A reroll that needs a choice from someone can never happen by itself.
 function nobodyChooses(data: Record<string, unknown>): boolean {
@@ -49,6 +49,10 @@ function rollsInclude(kind: RerollRollKind) {
 }
 
 const forAttacks = rollsInclude('attack');
+
+// Roll changes apply to a new roll of the whole formula only.
+const wholeRoll = (data: Record<string, unknown>) => (data.die ?? 'wholeRoll') === 'wholeRoll';
+const forWholeAttackRolls = (data: Record<string, unknown>) => forAttacks(data) && wholeRoll(data);
 
 /** The save, skill or ability keys a check reroll is limited to. Empty is any. */
 function checkKeysField(
@@ -215,21 +219,24 @@ function schema() {
 				showWhen: forAttacks,
 			}),
 		),
-		rollModeChange: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			min: -1,
-			max: 1,
-			integer: true,
-			choices: {
-				0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
-				1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
-				[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
-			},
-			label: 'NIMBLE.rules.reroll.rollModeChange.label',
-			hint: 'NIMBLE.rules.reroll.rollModeChange.hint',
-		}),
+		rollModeChange: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: -1,
+				max: 1,
+				integer: true,
+				choices: {
+					0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
+					1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
+					[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
+				},
+				label: 'NIMBLE.rules.reroll.rollModeChange.label',
+				hint: 'NIMBLE.rules.reroll.rollModeChange.hint',
+				showWhen: wholeRoll,
+			}),
+		),
 		primaryDieBonus: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -238,7 +245,7 @@ function schema() {
 				integer: true,
 				label: 'NIMBLE.rules.reroll.primaryDieBonus.label',
 				hint: 'NIMBLE.rules.reroll.primaryDieBonus.hint',
-				showWhen: forAttacks,
+				showWhen: forWholeAttackRolls,
 			}),
 		),
 		extraDamage: new fields.StringField(
@@ -249,7 +256,7 @@ function schema() {
 				label: 'NIMBLE.rules.reroll.extraDamage.label',
 				hint: 'NIMBLE.rules.reroll.extraDamage.hint',
 				widget: 'diceFormula',
-				showWhen: forAttacks,
+				showWhen: forWholeAttackRolls,
 			}),
 		),
 		automatic: new fields.BooleanField(
@@ -442,11 +449,4 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 }
 
-export {
-	RerollRule,
-	type RerollOfferContext,
-	type RerollDie,
-	type RerollKeep,
-	REROLL_DICE,
-	REROLL_KEEPS,
-};
+export { RerollRule, type RerollOfferContext };

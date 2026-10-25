@@ -146,6 +146,22 @@ describe('RuleCard with a form layout (reroll)', () => {
 		expect(fields).not.toContain('automatic');
 	});
 
+	it('shows the roll changes only for a reroll of the whole roll', () => {
+		const changes = ['rollModeChange', 'primaryDieBonus', 'extraDamage'];
+		const whole = shownFields(
+			render(RuleCard, { rule: initialRule('reroll', { rolls: ['attack'] }), manager }).container,
+		);
+		expect(whole).toEqual(expect.arrayContaining(changes));
+
+		const oneDie = shownFields(
+			render(RuleCard, {
+				rule: initialRule('reroll', { rolls: ['attack'], die: 'primaryDie' }),
+				manager,
+			}).container,
+		);
+		for (const field of changes) expect(oneDie).not.toContain(field);
+	});
+
 	it('shows the roll chip with its name, not its key', () => {
 		const { container } = render(RuleCard, { rule: initialRule('reroll'), manager });
 		const field = container.querySelector('[data-field="rolls"]') as HTMLElement;

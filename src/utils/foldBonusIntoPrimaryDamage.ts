@@ -57,6 +57,30 @@ export function appendFlavoredBonusToRoll(
 }
 
 /**
+ * The roll without its last `count` bonuses that `appendFlavoredBonusToRoll`
+ * folded in. Stops at the first term pair that is not one. The total is left
+ * as it is; the caller works it out again.
+ */
+export function removeFlavoredBonusesFromRoll(
+	serializedRoll: Record<string, unknown>,
+	count: number,
+): Record<string, unknown> {
+	const terms = Array.isArray(serializedRoll.terms) ? [...(serializedRoll.terms as unknown[])] : [];
+	for (let removed = 0; removed < count && terms.length >= 2; removed++) {
+		const operator = terms[terms.length - 2] as { class?: string; operator?: string };
+		const bonus = terms[terms.length - 1] as { class?: string; options?: { flavor?: unknown } };
+		const folded =
+			operator?.class === 'OperatorTerm' &&
+			operator.operator === '+' &&
+			bonus?.class === 'NumericTerm' &&
+			typeof bonus.options?.flavor === 'string';
+		if (!folded) break;
+		terms.length -= 2;
+	}
+	return { ...serializedRoll, terms };
+}
+
+/**
  * The card's primary damage node: the first one carrying an evaluated
  * `DamageRoll`. Shared so the fold path and the typed-packet path cannot
  * disagree about which node a spend attaches to.

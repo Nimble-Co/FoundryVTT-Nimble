@@ -1,4 +1,5 @@
 import constructD20Term from '../dice/constructD20Term.js';
+import type { OneDieRoll } from '../dice/oneDieReroll.js';
 import type { IncomingReactionEntry, RerollRecord } from './incomingReactionEntry.js';
 import { alliesOnCard, rollerTokenOf, scanRerollAllies } from './rerollAllies.js';
 import {
@@ -175,6 +176,9 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 			if (!source) return null;
 			return {
 				...checkReroll(source, card.rollMode()),
+				current: () =>
+					foundry.dice.Roll.fromData(JSON.parse(card.rollsSource()[0])) as unknown as OneDieRoll,
+				pickDropped: true,
 				prepare: async (roll, entries) => ({
 					context: context(),
 					entries,

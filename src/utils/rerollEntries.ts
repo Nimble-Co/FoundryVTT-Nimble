@@ -2,6 +2,7 @@ import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
+	type RerollDie,
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
@@ -26,6 +27,7 @@ interface RerollRuleLike {
 	discardedCritTriggers?: boolean;
 	oncePerAttack?: boolean;
 	range?: number;
+	die?: RerollDie;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;

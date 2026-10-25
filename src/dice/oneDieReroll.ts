@@ -256,7 +256,7 @@ function primaryDieRef(roll: RollLike): DieRef | null {
 	return best === -1 ? null : { term: termIndex, result: best };
 }
 
-interface RerollableRoll {
+interface OneDieRoll {
 	terms: unknown[];
 	toJSON(): object;
 	explosionStyleOf?(term: unknown): ExplosionStyle;
@@ -293,7 +293,7 @@ function thrownDice(term: DieTermLike & { options?: object }, drawn: number[]): 
  * roll is a copy with that die rolled again and its total, crit and miss
  * worked out again. `thrown` holds only the dice this reroll rolled.
  */
-async function rerollOneDie<TRoll extends RerollableRoll>(
+async function rerollOneDie<TRoll extends OneDieRoll>(
 	roll: TRoll,
 	ref: DieRef,
 ): Promise<{
@@ -337,6 +337,7 @@ export {
 	type DieRef,
 	type DieTermLike,
 	type ExplosionStyle,
+	type OneDieRoll,
 	type PickableDie,
 	type PickableRole,
 	hasExplodeModifier,

@@ -665,6 +665,25 @@ describe('resolveRerollReaction', () => {
 		);
 	});
 
+	it('refuses a reroll of a picked die when no die was picked', async () => {
+		setupWorld({ die: 'pickedDie' });
+		const message = createMessage();
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.rerollPickADie'),
+		);
+	});
+
+	it('gives no dice to pick for a rule that rerolls the whole roll', () => {
+		setupWorld();
+		const message = createMessage();
+
+		expect(message.rerollDiceToPick(rerollEntry() as never)).toBeNull();
+	});
+
 	describe('an automatic reroll the new roll allows', () => {
 		const WARD_ITEM = { name: 'Warding Bond', uuid: 'Item.ward' };
 

@@ -1,4 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { DieRef } from '../dice/oneDieReroll.js';
 import { getPrimaryActiveGmId } from './getPrimaryActiveGmId.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 import localize from './localize.js';
@@ -46,6 +47,8 @@ type IncomingReactionRequest = {
 	selection?: PoolSpendSelection;
 	/** reroll only: the player confirmed using a heroic reaction already spent */
 	forceHeroicReaction?: boolean;
+	/** reroll only: the die the player picked */
+	die?: DieRef;
 };
 
 /** Why the GM refused, as a localization key the asking client renders. */
@@ -84,6 +87,7 @@ interface ReactionCapableMessage {
 		requestingUserId: string,
 		viaSocket?: boolean,
 		forceHeroicReaction?: boolean,
+		die?: DieRef | null,
 	) => Promise<void>;
 	system?: { incomingReactions?: IncomingReactionEntry[] };
 }
@@ -100,6 +104,7 @@ async function executeIncomingReaction(
 	viaSocket: boolean,
 	selection?: PoolSpendSelection,
 	forceHeroicReaction?: boolean,
+	die?: DieRef | null,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -121,8 +126,18 @@ async function executeIncomingReaction(
 			requestingUserId,
 			viaSocket,
 			forceHeroicReaction === true,
+			die ?? null,
 		);
 	}
+}
+
+/** A die reference from a socket payload, or null when it is not one. */
+function dieRefFrom(value: unknown): DieRef | null {
+	const ref = value as Partial<DieRef> | null | undefined;
+	const index = (n: unknown) => typeof n === 'number' && Number.isInteger(n) && n >= 0;
+	return ref && index(ref.term) && index(ref.result)
+		? { term: ref.term as number, result: ref.result as number }
+		: null;
 }
 
 async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
@@ -141,6 +156,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		true,
 		request.selection,
 		request.forceHeroicReaction === true,
+		dieRefFrom(request.die),
 	);
 }
 
@@ -243,6 +259,7 @@ export async function requestIncomingAttackReaction(params: {
 	entryId: string;
 	selection?: PoolSpendSelection;
 	forceHeroicReaction?: boolean;
+	die?: DieRef;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
 
@@ -254,6 +271,7 @@ export async function requestIncomingAttackReaction(params: {
 			false,
 			params.selection,
 			params.forceHeroicReaction,
+			params.die ?? null,
 		);
 		return true;
 	}
@@ -274,6 +292,7 @@ export async function requestIncomingAttackReaction(params: {
 		userId: game.user.id,
 		...(params.selection ? { selection: params.selection } : {}),
 		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
+		...(params.die ? { die: params.die } : {}),
 	});
 	return true;
 }
