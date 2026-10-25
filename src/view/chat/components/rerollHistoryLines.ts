@@ -18,6 +18,8 @@ interface RerollHistoryLine {
 	detail: string | null;
 	/** The old and the new Primary Die; null when either cannot be read */
 	dice: { previous: RerollHistoryDie; next: RerollHistoryDie } | null;
+	/** A player kept the old roll, so the old die stands and the new one does not. */
+	keptOld: boolean;
 }
 
 interface RerollHistoryInput {
@@ -83,10 +85,17 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			);
 		}
 
+		const kept = record.kept && typeof record.keptTotal === 'number';
 		return {
-			text: localize('NIMBLE.chat.incomingReactions.rerollHistoryPlain', { feature }),
+			text: kept
+				? localize('NIMBLE.chat.incomingReactions.rerollHistoryKept', {
+						feature,
+						total: String(record.keptTotal),
+					})
+				: localize('NIMBLE.chat.incomingReactions.rerollHistoryPlain', { feature }),
 			detail: details.length > 0 ? details.join(' - ') : null,
 			dice: dice(record),
+			keptOld: record.kept === 'old',
 		};
 	});
 }

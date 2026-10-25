@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
 	getPools: vi.fn(),
 	getDicePoolConsumers: vi.fn(),
 	requestIncomingAttackReaction: vi.fn(),
+	requestKeepChoice: vi.fn(),
 }));
 
 vi.mock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: mocks.getPools }));
@@ -47,6 +48,7 @@ vi.mock('#utils/dicePool/dicePoolConsumers.js', () => ({
 vi.mock('#utils/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
+	requestKeepChoice: mocks.requestKeepChoice,
 }));
 vi.mock('./confirmRerollHeroicReaction.js', () => ({
 	confirmRerollHeroicReaction: vi.fn(async () => false),
@@ -55,7 +57,7 @@ vi.mock('./confirmRerollHeroicReaction.js', () => ({
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import IncomingReactionPromptsTestHarness from './IncomingReactionPrompts.testHarness.svelte';
 
-const { getPools, getDicePoolConsumers, requestIncomingAttackReaction } = mocks;
+const { getPools, getDicePoolConsumers, requestIncomingAttackReaction, requestKeepChoice } = mocks;
 
 function spendDialogMock(): SpendDialogMock {
 	const globals = globalThis as Record<string, any>;
@@ -711,6 +713,64 @@ describe('IncomingReactionPrompts', () => {
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
 					expect.objectContaining({ die: { term: 2, result: 0 } }),
 				);
+			});
+		});
+
+		describe('a result a player keeps', () => {
+			function waiting(chooserUuid = 'Actor.wren') {
+				const message = createMessage([rerollEntry({ used: true })]);
+				(message.system as Record<string, unknown>).pendingKeep = {
+					entryId: 'reroll-entry',
+					chooserUuid,
+					roll: {},
+					reroll: rerollRecord(),
+					old: { total: 9, outcome: 'miss' },
+					new: { total: 12, outcome: 'hit' },
+					discardedCritTriggers: false,
+				};
+				return message;
+			}
+
+			it('gives the chooser a Keep button for each roll, and sends the one clicked', async () => {
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: waiting() } });
+
+				expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+				const keepOld = rollPlace().getByRole('button', { name: /Keep 9/ });
+				expect(keepOld.textContent).toContain('Miss');
+				expect(rollPlace().getByRole('button', { name: /Keep 12/ }).textContent).toContain('Hit');
+
+				await fireEvent.click(keepOld);
+
+				expect(requestKeepChoice).toHaveBeenCalledWith({ messageId: 'message-1', choice: 'old' });
+				expect((keepOld as HTMLButtonElement).disabled).toBe(true);
+			});
+
+			it('tells everyone else who chooses, with no buttons', () => {
+				(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+				const g = globalThis as Record<string, any>;
+				const named = g.fromUuidSync;
+				g.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Actor.wren' ? { name: 'Wren', isOwner: false } : named(uuid),
+				);
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: waiting() } });
+
+				expect(rollPlace().getByText('Wren keeps 9 or 12.')).toBeTruthy();
+				expect(rollPlace().queryByRole('button', { name: /Keep/ })).toBeNull();
+			});
+
+			it('shows the old die as the one that stands when it was kept', () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: {
+						messageDocument: createMessage(
+							[rerollEntry({ used: true })],
+							[rerollRecord({ kept: 'old', keptTotal: 9 })],
+						),
+					},
+				});
+
+				expect(rollPlace().getByText('Rerolled with Pocket Sand, kept 9')).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Now 7' })).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Was 4' })).toBeTruthy();
 			});
 		});
 

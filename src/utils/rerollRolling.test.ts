@@ -106,5 +106,15 @@ describe('rerollRolling', () => {
 
 			expect(rolling.rollingRerollOf('message-1')).toEqual(D20);
 		});
+
+		it('shows the old roll again when the new one waits for a player to keep it', () => {
+			const onUpdate = registerAndGetHook();
+			rolling.startRerollRolling('message-1', D20);
+
+			onUpdate({ id: 'message-1' }, { system: { pendingKeep: { entryId: 'entry-1' } } });
+
+			expect(rolling.rollingRerollOf('message-1')).toBeNull();
+			expect(rolling.rerollJustLanded('message-1', 'check')).toBe(false);
+		});
 	});
 });

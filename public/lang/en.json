@@ -216,6 +216,15 @@
 				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
 				"rerollHistoryPlain": "Rerolled with {feature}",
+				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
+				"keepResult": "Keep {total}",
+				"keepWaiting": "{name} keeps {old} or {new}.",
+				"keepFirst": "Keep a result first",
+				"keepOutcomes": {
+					"crit": "Critical Hit",
+					"hit": "Hit",
+					"miss": "Miss"
+				},
 				"rerollUsedBy": "Used by {name}",
 				"rerollUsesLeft": "Uses left: {count}",
 				"rerollWoundsGained": "Wounds gained: {count}",

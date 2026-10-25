@@ -9,6 +9,7 @@ import { requestIncomingAttackReaction } from '#utils/incomingAttackReactions.js
 import type {
 	DieOutcome,
 	IncomingReactionEntry,
+	PendingKeep,
 	RerollRecord,
 } from '#utils/incomingReactionEntry.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
@@ -93,6 +94,22 @@ export function createIncomingReactionPromptsState(
 					documentName: text.documentName,
 				})
 			: [],
+	);
+	const pendingKeep = $derived(
+		showsHistory
+			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
+					?.pendingKeep ?? null)
+			: null,
+	);
+	const pendingLine = $derived(
+		pendingKeep
+			? rerollHistoryLines({
+					records: [pendingKeep.reroll],
+					speakerUuid,
+					rerollAgain: new Set(),
+					documentName: text.documentName,
+				})[0]
+			: null,
 	);
 	const rerollChoices = $derived<RollRerollChoice[]>(
 		getPlace() === 'rollButton'
@@ -265,6 +282,12 @@ export function createIncomingReactionPromptsState(
 		},
 		get historyLines() {
 			return historyLines;
+		},
+		get pendingKeep() {
+			return pendingKeep;
+		},
+		get pendingLine() {
+			return pendingLine;
 		},
 		get rerollChoices() {
 			return rerollChoices;

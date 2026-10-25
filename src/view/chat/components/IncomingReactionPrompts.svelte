@@ -14,11 +14,17 @@
 	let { place }: IncomingReactionPromptsProps = $props();
 
 	const prompts = createIncomingReactionPromptsState(messageDocument, () => place);
-	const { text } = prompts;
+	const { held, text } = prompts;
 </script>
 
 {#snippet rerollHistory()}
-	<RerollHistory legacyLines={prompts.legacyRerollLines} lines={prompts.historyLines} />
+	<RerollHistory
+		legacyLines={prompts.legacyRerollLines}
+		lines={prompts.historyLines}
+		pendingKeep={prompts.pendingKeep}
+		pendingLine={prompts.pendingLine}
+		{held}
+	/>
 {/snippet}
 
 {#snippet entryGroups()}
@@ -53,13 +59,13 @@
 		/>
 	{/if}
 {:else if place === 'rollHistory'}
-	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0}
+	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep}
 		<section class="nimble-roll-changes nimble-roll-changes--under-row">
 			{@render rerollHistory()}
 		</section>
 	{/if}
 {:else if place === 'roll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0}
+	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
 
