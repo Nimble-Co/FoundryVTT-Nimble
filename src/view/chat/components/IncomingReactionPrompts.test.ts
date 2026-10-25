@@ -686,6 +686,25 @@ describe('IncomingReactionPrompts', () => {
 				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 			});
 
+			it('gives the focus back to the reroll button on Cancel or Escape', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				const opener = () => rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ });
+
+				await fireEvent.click(opener());
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				await settle();
+				expect(document.activeElement).toBe(opener());
+
+				await fireEvent.click(opener());
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
+					key: 'Escape',
+				});
+				await settle();
+				expect(document.activeElement).toBe(opener());
+			});
+
 			it('closes on Escape while Cancel has the focus', async () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },

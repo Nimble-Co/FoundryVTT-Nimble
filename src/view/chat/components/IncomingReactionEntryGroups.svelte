@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { IncomingReactionEntryGroupsProps } from '#types/components/IncomingReactionEntryGroups.d.ts';
 
+	import { tick } from 'svelte';
 	import RerollDiePicker from './RerollDiePicker.svelte';
 
 	let {
@@ -13,6 +14,15 @@
 		onpick,
 		oncancel,
 	}: IncomingReactionEntryGroupsProps = $props();
+
+	/** The buttons a die picker opens from, so the focus can go back to them. */
+	const entryButtons = $state<Record<string, HTMLButtonElement | undefined>>({});
+
+	async function cancelPick(): Promise<void> {
+		const entryId = oncancel();
+		await tick();
+		if (entryId) entryButtons[entryId]?.focus();
+	}
 </script>
 
 {#each groups as group (group.actorUuid)}
@@ -32,10 +42,11 @@
 							{primaryOutcome}
 							rolling={picking.rolling}
 							{onpick}
-							{oncancel}
+							oncancel={cancelPick}
 						/>
 					{:else}
 						<button
+							bind:this={entryButtons[entry.id]}
 							class="nimble-button nimble-incoming-reaction-button"
 							type="button"
 							disabled={busy}

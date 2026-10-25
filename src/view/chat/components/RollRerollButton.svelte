@@ -13,6 +13,10 @@
 	let single = $derived(rerollButton.single);
 	let menuOpen = $derived(rerollButton.menuOpen);
 	let triggerLabel = $derived(rerollButton.triggerLabel);
+
+	export function focus() {
+		elements.trigger?.focus();
+	}
 </script>
 
 <svelte:window onpointerdown={onWindowPointerDown} />

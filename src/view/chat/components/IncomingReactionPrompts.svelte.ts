@@ -227,8 +227,11 @@ export function createIncomingReactionPromptsState(
 		}
 	}
 
-	function cancelPick(): void {
+	/** Closes the die picker. Returns the id of the entry it was open for. */
+	function cancelPick(): string | null {
+		const entryId = picking?.entry.id ?? null;
 		picking = null;
+		return entryId;
 	}
 
 	async function useEntry(entry: IncomingReactionEntry) {

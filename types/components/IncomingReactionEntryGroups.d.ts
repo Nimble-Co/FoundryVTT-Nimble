@@ -16,5 +16,6 @@ export interface IncomingReactionEntryGroupsProps {
 	text: IncomingReactionText;
 	onuse: (entry: IncomingReactionEntry) => void;
 	onpick: (die: PickableDie) => void;
-	oncancel: () => void;
+	/** Closes the die picker; returns the id of the entry it was open for. */
+	oncancel: () => string | null;
 }

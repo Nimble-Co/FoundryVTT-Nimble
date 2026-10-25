@@ -2,7 +2,7 @@
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { IncomingReactionPromptsProps } from '#types/components/IncomingReactionPrompts.d.ts';
 
-	import { getContext } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
@@ -16,6 +16,14 @@
 
 	const prompts = createIncomingReactionPromptsState(messageDocument, () => place);
 	const { held, text } = prompts;
+
+	let rollRerollButton = $state<{ focus(): void } | undefined>();
+
+	async function cancelPickAtRollButton(): Promise<void> {
+		prompts.cancelPick();
+		await tick();
+		rollRerollButton?.focus();
+	}
 </script>
 
 {#snippet rerollHistory()}
@@ -44,6 +52,7 @@
 {#if place === 'rollButton'}
 	{#if prompts.rerollChoices.length > 0}
 		<RollRerollButton
+			bind:this={rollRerollButton}
 			choices={prompts.rerollChoices}
 			disabled={prompts.busy}
 			onChoose={prompts.useEntryById}
@@ -56,7 +65,7 @@
 			primaryOutcome={null}
 			rolling={prompts.picking.rolling}
 			onpick={prompts.pickDie}
-			oncancel={prompts.cancelPick}
+			oncancel={cancelPickAtRollButton}
 		/>
 	{/if}
 {:else if place === 'rollHistory'}

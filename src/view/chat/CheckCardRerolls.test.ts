@@ -209,6 +209,28 @@ describe('rerolls on check cards', () => {
 		});
 	});
 
+	it('gives the focus back to the reroll button when the die picker closes', async () => {
+		const message = Object.assign(createMessage(), {
+			rerollDiceToPick: vi.fn(() => [
+				{ term: 0, result: 0, faces: 20, value: 6, role: 'primary' },
+				{ term: 0, result: 1, faces: 20, value: 3, role: 'dropped' },
+			]),
+		});
+		renderSave(message);
+
+		await fireEvent.click(rerollButton() as HTMLElement);
+		await settle();
+		await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+		await settle();
+		expect(document.activeElement).toBe(rerollButton());
+
+		await fireEvent.click(rerollButton() as HTMLElement);
+		await settle();
+		await fireEvent.keyDown(screen.getByRole('button', { name: 'Cancel' }), { key: 'Escape' });
+		await settle();
+		expect(document.activeElement).toBe(rerollButton());
+	});
+
 	describe('with two features', () => {
 		const message = () => createMessage({ incomingReactions: [rerollEntry(), luckEntry()] });
 
