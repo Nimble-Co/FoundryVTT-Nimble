@@ -173,8 +173,8 @@ export function kln(this: DieLike, modifier: string): boolean {
 /**
  * Foundry Die modifier handler: `c` — crit-capable with standard explosion.
  *
- * Attaches metadata `{ canCrit: true, explosionStyle: 'standard' }` and
- * ensures Foundry's native `x` modifier is present for explosion chaining.
+ * Attaches metadata `{ canCrit: true, explosionStyle: 'standard' }`. The
+ * explosion is Foundry's `x`, which the roll asks for before evaluation.
  *
  * @example `1d8c` — primary die can crit with standard explosion.
  */
@@ -183,9 +183,6 @@ export function nimbleCrit(this: DieLike, _modifier: string): boolean {
 		canCrit: true,
 		explosionStyle: 'standard',
 	} satisfies NimbleDieMetadata;
-	if (this.modifiers && !this.modifiers.includes('x')) {
-		this.modifiers.push('x');
-	}
 	applyPrimaryDieAppearance(this);
 	return true;
 }

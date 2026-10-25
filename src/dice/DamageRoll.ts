@@ -456,6 +456,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					this._applyRollMode(firstDieTerm, rollMode);
 				}
 			}
+			// The `c` handler adds `x` too late for Foundry to run it.
+			if (options.canCrit !== false) {
+				for (const term of this.terms) {
+					if (!(term instanceof Terms.Die)) continue;
+					if (term.modifiers.includes('c') && !term.modifiers.includes('x'))
+						term.modifiers.push('x');
+				}
+			}
 			this.resetFormula();
 			return;
 		}
@@ -767,18 +775,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (highestDie) this.primaryDie = highestDie;
 	}
 
-	/**
-	 * Count crit-capable dice that rolled max BEFORE vicious explosions append
-	 * chain dice to the results array. Called from `_evaluate` so that
-	 * `critCount` reflects base crits only, not continuation dice.
-	 */
+	/** Count the crit-capable dice that rolled max, not their explosion dice. */
 	private _countModifierModeCrits(): number {
 		let count = 0;
 		for (const term of this.terms) {
 			if (!(term instanceof Terms.Die)) continue;
 			const meta = getNimbleMods(term);
 			if (!meta?.canCrit) continue;
-			for (const r of term.results) {
+			// Explosion dice come after the dice the term rolled.
+			for (const r of term.results.slice(0, term.number ?? term.results.length)) {
 				if (r.active && !r.discarded && r.result === term.faces) {
 					count++;
 				}

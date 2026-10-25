@@ -55,28 +55,12 @@ describe('nimbleCrit', () => {
 		expect(result).toBe(true);
 	});
 
-	it('should add x to modifiers when not already present', () => {
-		const die = createMockDie({ modifiers: [] });
-
-		nimbleCrit.call(die, 'c');
-
-		expect(die.modifiers).toContain('x');
-	});
-
-	it('should not duplicate x when already present in modifiers', () => {
-		const die = createMockDie({ modifiers: ['x'] });
-
-		nimbleCrit.call(die, 'c');
-
-		expect(die.modifiers).toEqual(['x']);
-	});
-
-	it('should preserve existing modifiers when adding x', () => {
+	it('leaves the modifier list alone', () => {
 		const die = createMockDie({ modifiers: ['khn'] });
 
 		nimbleCrit.call(die, 'c');
 
-		expect(die.modifiers).toEqual(['khn', 'x']);
+		expect(die.modifiers).toEqual(['khn']);
 	});
 });
 
