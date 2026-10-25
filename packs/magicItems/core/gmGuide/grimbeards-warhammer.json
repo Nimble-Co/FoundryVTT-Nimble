@@ -25,7 +25,7 @@
 					"id": "GrimbeardDmg",
 					"type": "damage",
 					"damageType": "bludgeoning",
-					"formula": "1d10+@str",
+					"formula": "1d10+@strength",
 					"parentContext": null,
 					"parentNode": null,
 					"canCrit": true,

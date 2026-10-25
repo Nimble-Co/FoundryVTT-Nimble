@@ -25,7 +25,7 @@
 					"id": "ManglemaulDmg",
 					"type": "damage",
 					"damageType": "bludgeoning",
-					"formula": "1d6+@str",
+					"formula": "1d6+@strength",
 					"parentContext": null,
 					"parentNode": null,
 					"canCrit": true,
