@@ -88,7 +88,7 @@
 		}
 
 		&:focus-visible {
-			outline: 2px solid var(--nimble-input-border-color);
+			outline: 2px solid var(--nimble-dark-text-color);
 			outline-offset: 1px;
 		}
 
@@ -119,7 +119,7 @@
 			text-align: left;
 
 			&:focus-visible {
-				outline: 2px solid var(--nimble-input-border-color);
+				outline: 2px solid var(--nimble-dark-text-color);
 				outline-offset: -2px;
 			}
 		}
