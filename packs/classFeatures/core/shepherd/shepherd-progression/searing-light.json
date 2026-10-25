@@ -73,8 +73,39 @@
 					"targetDisposition": "hostile",
 					"parentContext": null,
 					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "7Pt9HZkaBHeDOUzJ",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "SearingLightDamage1"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "hoGS4h5cDShX8sjc",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "SearingLightDamage1"
+							}
+						],
+						"hit": [
+							{
+								"id": "a0IY6dMDHYjTfyfT",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "SearingLightDamage1"
+							}
+						]
+					}
 				}
 			],
 			"showDescription": true,
