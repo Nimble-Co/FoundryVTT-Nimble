@@ -34,7 +34,7 @@
 		<RollRerollButton
 			choices={prompts.rerollChoices}
 			disabled={prompts.busy}
-			onchoose={prompts.useEntryById}
+			onChoose={prompts.useEntryById}
 		/>
 	{/if}
 {:else if place === 'rollHistory'}

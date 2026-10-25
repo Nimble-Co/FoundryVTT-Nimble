@@ -3,11 +3,11 @@
 
 	import { createRollRerollButtonState } from './RollRerollButton.svelte.ts';
 
-	let { choices, disabled = false, onchoose }: RollRerollButtonProps = $props();
+	let { choices, disabled = false, onChoose }: RollRerollButtonProps = $props();
 
 	const menuId = $props.id();
 
-	const rerollButton = createRollRerollButtonState(() => ({ choices, onchoose }));
+	const rerollButton = createRollRerollButtonState(() => ({ choices, onChoose }));
 	const { elements, choiceText, onTriggerClick, choose, onMenuKeydown, onWindowPointerDown } =
 		rerollButton;
 	let single = $derived(rerollButton.single);

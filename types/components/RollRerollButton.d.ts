@@ -9,5 +9,5 @@ export interface RollRerollChoice {
 export interface RollRerollButtonProps {
 	choices: RollRerollChoice[];
 	disabled?: boolean;
-	onchoose: (id: string) => void;
+	onChoose: (id: string) => void;
 }

@@ -6,7 +6,7 @@ import type {
 import localize from '#utils/localize.js';
 
 export function createRollRerollButtonState(
-	getProps: () => Pick<RollRerollButtonProps, 'choices' | 'onchoose'>,
+	getProps: () => Pick<RollRerollButtonProps, 'choices' | 'onChoose'>,
 ) {
 	let open = $state(false);
 	const elements = $state<{
@@ -31,7 +31,7 @@ export function createRollRerollButtonState(
 
 	async function onTriggerClick() {
 		if (single) {
-			getProps().onchoose(single.id);
+			getProps().onChoose(single.id);
 			return;
 		}
 		open = !open;
@@ -43,7 +43,7 @@ export function createRollRerollButtonState(
 
 	function choose(id: string) {
 		closeMenu();
-		getProps().onchoose(id);
+		getProps().onChoose(id);
 	}
 
 	function closeMenu(returnFocus = false) {
