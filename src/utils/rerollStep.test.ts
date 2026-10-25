@@ -254,6 +254,34 @@ describe('rerollWithRule', () => {
 		expect(payer.system.resources.mana.current).toBe(2);
 	});
 
+	it('gives the cost back later, when the caller cannot use the new roll', async () => {
+		const payer = makeActor({ mana: 2, wounds: 1 });
+		const result = await rerollWithRule(
+			input({
+				payer: payer as unknown as Actor,
+				rule: rule({ rerollCost: cost({ manaCost: 2, woundCost: 1 }) }),
+			}),
+		);
+		if (result.status !== 'done') throw new Error('expected a reroll');
+		expect(payer.system.resources.mana.current).toBe(0);
+		expect(payer.system.attributes.wounds.value).toBe(2);
+
+		await result.refund();
+
+		expect(payer.system.resources.mana.current).toBe(2);
+		expect(payer.system.attributes.wounds.value).toBe(1);
+	});
+
+	it('has nothing to give back for a reroll with no cost', async () => {
+		const payer = makeActor();
+		const result = await rerollWithRule(
+			input({ payer: payer as unknown as Actor, rule: rule({ rerollCost: undefined }) }),
+		);
+		if (result.status !== 'done') throw new Error('expected a reroll');
+		await result.refund();
+		expect(payer.update).not.toHaveBeenCalled();
+	});
+
 	it('places the new roll, and gives the cost back when placing it fails', async () => {
 		const payer = makeActor({ mana: 2 });
 		const place = vi.fn(async () => {

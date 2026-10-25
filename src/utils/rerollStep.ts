@@ -27,6 +27,8 @@ type RerollStepDone<TRoll> = {
 	roll: TRoll;
 	reroll: RerollRecord;
 	discardedCritTriggers: boolean;
+	/** Gives back the cost this reroll paid, for a caller that cannot use the new roll. */
+	refund: () => Promise<void>;
 };
 
 type RerollStepOutcome<TRoll> =
@@ -78,6 +80,9 @@ async function rerollWithRule<TRoll>(
 	const cost = rule.rerollCost;
 	const paid = cost ? await payRerollCost(payer, cost, input.payOptions) : null;
 	if (cost && !paid) return { status: 'unpaid' };
+	const refund = async () => {
+		if (cost && paid) await refundRerollCost(payer, cost, paid);
+	};
 
 	try {
 		const next = prepareReroll(
@@ -105,11 +110,12 @@ async function rerollWithRule<TRoll>(
 			},
 			discardedCritTriggers:
 				input.earlierCritTriggers || (rule.discardedCritTriggers === true && previousWasCritical),
+			refund,
 		};
 		await input.place?.(done);
 		return done;
 	} catch (error) {
-		if (cost && paid) await refundRerollCost(payer, cost, paid);
+		await refund();
 		return { status: 'failed', error };
 	}
 }
