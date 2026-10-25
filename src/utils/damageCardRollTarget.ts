@@ -12,8 +12,10 @@ import {
 	replaceDamageRollInRollsSource,
 } from './foldBonusIntoPrimaryDamage.js';
 import type { AttackOutcomeView, IncomingReactionEntry } from './incomingReactionEntry.js';
+import { alliesOnCard } from './rerollAllies.js';
 import {
 	offerStands,
+	type RerollAlly,
 	type RerollingActor,
 	type RerollRollContext,
 	type RerollRollOutcome,
@@ -28,6 +30,7 @@ interface DamageCardSystem {
 	isCritical?: boolean;
 	isMiss?: boolean;
 	activation?: { effects: unknown[]; [key: string]: unknown };
+	incomingReactions?: IncomingReactionEntry[];
 }
 
 /** The activation card the damage-card roll target reads and writes. */
@@ -81,14 +84,19 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 	);
 }
 
-/** A damage card's roll with this outcome, as the reroll gate sees it. */
+/**
+ * A damage card's roll with this outcome, as the reroll gate sees it. The
+ * allies are those the card was posted with, unless the caller scanned anew.
+ */
 function damageRollContext(
 	card: DamageCard,
 	outcome: AttackOutcomeView,
 	forcedMiss: boolean,
+	allies: RerollAlly[] = alliesOnCard(card.system().incomingReactions ?? []),
 ): RerollRollContext {
 	return {
 		attacker: card.attacker(),
+		allies,
 		targets: (card.system().targets ?? []).map((tokenUuid) => ({
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,

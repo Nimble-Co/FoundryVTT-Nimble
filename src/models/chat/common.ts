@@ -1,4 +1,9 @@
-import { DIE_OUTCOMES, REROLL_SIDES, REROLL_TRIGGERS } from '../../utils/incomingReactionEntry.js';
+import {
+	DIE_OUTCOMES,
+	REROLL_LEFT_OUT_REASONS,
+	REROLL_SIDES,
+	REROLL_TRIGGERS,
+} from '../../utils/incomingReactionEntry.js';
 
 const { fields } = foundry.data;
 
@@ -151,6 +156,18 @@ export const incomingReactions = () => ({
 				choices: [...REROLL_SIDES],
 			}),
 			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			leftOut: new fields.SchemaField(
+				{
+					reason: new fields.StringField({
+						required: true,
+						nullable: false,
+						choices: [...REROLL_LEFT_OUT_REASONS],
+					}),
+					spaces: new fields.NumberField({ required: false, nullable: true, initial: null }),
+					range: new fields.NumberField({ required: false, nullable: true, initial: null }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
 			// Legacy forceReroll fields, kept so old cards validate.
 			rerollTrigger: new fields.StringField({
 				required: false,

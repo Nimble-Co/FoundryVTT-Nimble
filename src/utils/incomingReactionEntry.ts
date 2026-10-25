@@ -42,6 +42,13 @@ export function rerollTriggerMatches(
 	}
 }
 
+export const REROLL_LEFT_OUT_REASONS = ['disposition', 'range'] as const;
+
+/** Why an ally-side reroll was left out when the card was posted. */
+export type RerollLeftOut =
+	| { reason: 'disposition' }
+	| { reason: 'range'; spaces: number; range: number };
+
 /**
  * A pending interactive offer stamped onto an attack chat card. Entries are
  * snapshotted on the attacker's client at card creation so every client sees
@@ -49,8 +56,8 @@ export function rerollTriggerMatches(
  *
  * Most kinds are defender-side reactions to the attack. `spendPoolForDamage`
  * is attacker-side: the attacker spends their own dice pool into this card's
- * damage total. `reroll` comes from a Reroll rule of either the attacker or
- * the target. `forceReroll` is a legacy stored kind: old cards still hold it,
+ * damage total. `reroll` comes from a Reroll rule of the one who rolled,
+ * the target, or an ally of the one who rolled. `forceReroll` is a legacy stored kind: old cards still hold it,
  * but nothing makes or resolves it any more.
  *
  * Lives apart from `incomingAttackModifiers` so the modules that only build
@@ -64,7 +71,7 @@ export interface IncomingReactionEntry {
 	source: 'baseline' | 'rule';
 	/** Acting actor (token-actor uuid, so unlinked tokens resolve) */
 	actorUuid: string;
-	/** Protector's token (redirect only) */
+	/** Protector's token (redirect), or the ally's token (ally-side rerolls) */
 	tokenUuid: string | null;
 	/** Token whose targeting the redirect replaces (redirect, and target-side rerolls) */
 	targetTokenUuid: string | null;
@@ -76,6 +83,8 @@ export interface IncomingReactionEntry {
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
 	oncePerAttack?: boolean;
+	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
+	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollTrigger?: RerollTrigger;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */

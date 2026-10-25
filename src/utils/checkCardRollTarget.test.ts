@@ -42,6 +42,7 @@ function makeCard(overrides: Partial<CheckCard> = {}, serialized = serializedSav
 		rollMode: () => 0,
 		roller: () => ({ uuid: 'Actor.roller' }),
 		rollsSource: () => [JSON.stringify(serialized)],
+		incomingReactions: () => [],
 		update: vi.fn(async (_changes: Record<string, unknown>) => undefined),
 		...overrides,
 	} satisfies CheckCard;
@@ -116,10 +117,43 @@ describe('checkCardRollTarget', () => {
 		expect(context).toEqual({
 			attacker: { uuid: 'Actor.roller' },
 			targets: [],
+			allies: [],
 			roll: WILL_SAVE,
 			outcome: null,
 			forcedMiss: false,
 		});
+	});
+
+	it("gives the gate the allies the card's entries name, without a new scan", () => {
+		const bard = { uuid: 'Actor.bard' };
+		(globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.bard' ? bard : null,
+		);
+		const allyEntry = (id: string, extra: Partial<IncomingReactionEntry> = {}) =>
+			({
+				id,
+				kind: 'reroll',
+				source: 'rule',
+				actorUuid: 'Actor.bard',
+				tokenUuid: 'Scene.s.Token.bard',
+				targetTokenUuid: null,
+				side: 'ally',
+				label: '',
+				ruleId: 'r',
+				itemUuid: 'Item.song',
+				used: false,
+				...extra,
+			}) satisfies IncomingReactionEntry;
+		const card = makeCard({
+			incomingReactions: () => [
+				allyEntry('a'),
+				allyEntry('b', { actorUuid: 'Actor.foe', leftOut: { reason: 'disposition' } }),
+			],
+		});
+
+		expect(checkCardRollTarget(card).context().allies).toEqual([
+			{ tokenUuid: 'Scene.s.Token.bard', actor: bard, isAlly: true, spaces: 0 },
+		]);
 	});
 
 	it('finds the card roll with its formula, the card roll mode and the kept d20', () => {
@@ -346,6 +380,59 @@ describe('the rerolls of a posted check', () => {
 				faces: 20,
 				previous: { value: 6, outcome: null },
 				next: { value: 15, outcome: null },
+			}),
+		]);
+	});
+
+	it("stamps the ally entries of creatures on the roller's scene, and keeps one that is not an ally as left out", async () => {
+		const offersRerollOn = vi.fn(
+			(context: { side: string; roll: { kind: string } }) =>
+				context.side === 'ally' && context.roll.kind === 'save',
+		);
+		const allyActor = (uuid: string) => ({
+			uuid,
+			rules: [{ ...rerollRule({ offersRerollOn }), usedBy: 'ally' }],
+		});
+		const grid = { isGridless: true, size: 100 };
+		const placed = (id: string, actor: unknown, disposition: number) => ({
+			id,
+			uuid: `Scene.s.Token.${id}`,
+			x: 0,
+			y: 0,
+			hidden: false,
+			disposition,
+			actor,
+		});
+		const roller = { uuid: 'Actor.roller', rules: [] as RerollRuleLike[] };
+		const rollerToken = placed('roller', roller, 1);
+		const scene = {
+			grid,
+			tokens: [
+				rollerToken,
+				placed('bard', allyActor('Actor.bard'), 1),
+				placed('foe', allyActor('Actor.foe'), -1),
+			],
+		};
+		for (const token of scene.tokens) Object.assign(token, { parent: scene });
+
+		const result = await checkCardRerollData(
+			{ ...roller, token: rollerToken } as RerollingActor,
+			postedRoll(),
+			WILL_SAVE,
+			0,
+		);
+
+		expect(result.system.incomingReactions).toEqual([
+			expect.objectContaining({
+				side: 'ally',
+				actorUuid: 'Actor.bard',
+				tokenUuid: 'Scene.s.Token.bard',
+				leftOut: null,
+			}),
+			expect.objectContaining({
+				side: 'ally',
+				actorUuid: 'Actor.foe',
+				leftOut: { reason: 'disposition' },
 			}),
 		]);
 	});

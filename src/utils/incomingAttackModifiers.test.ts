@@ -876,6 +876,45 @@ describe('Reroll rules on the attack', () => {
 			});
 		});
 
+		it("stamps the ally rules of creatures on the attacker's scene after the roller rules", () => {
+			const allyRule = rerollRule({
+				id: 'ally-rule',
+				usedBy: 'ally',
+				offersRerollOn: vi.fn((context: { side: string }) => context.side === 'ally'),
+			});
+			const target = createToken({ actor: createActor({ uuid: 'Actor.target' }) });
+			setCanvasTokens([target]);
+			const scene = { grid: { isGridless: true, size: 100 }, tokens: [] as unknown[] };
+			const placed = (id: string, actor: unknown) => ({
+				id,
+				uuid: `Scene.s.Token.${id}`,
+				x: 0,
+				y: 0,
+				hidden: false,
+				disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+				actor,
+				parent: scene,
+			});
+			const attackerToken = placed('attacker', { uuid: 'Actor.attacker', rules: [] });
+			scene.tokens.push(attackerToken, placed('bard', { uuid: 'Actor.bard', rules: [allyRule] }));
+
+			const plan = computeIncomingAttackPlan(
+				target as never,
+				{ uuid: 'Actor.attacker', rules: [], token: attackerToken } as never,
+				{ delivery: 'melee' },
+			);
+
+			expect(plan.reactionEntries.filter((entry) => entry.kind === 'reroll')).toEqual([
+				expect.objectContaining({
+					actorUuid: 'Actor.bard',
+					tokenUuid: 'Scene.s.Token.bard',
+					ruleId: 'ally-rule',
+					side: 'ally',
+					leftOut: null,
+				}),
+			]);
+		});
+
 		it('puts an automatic rule on the automatic list with its rule', () => {
 			const rule = rerollRule({ automatic: true, rerollsByItself: true });
 			const target = createToken({ actor: createActor({ rules: [rule] as never }) });

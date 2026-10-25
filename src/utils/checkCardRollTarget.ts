@@ -1,8 +1,10 @@
 import constructD20Term from '../dice/constructD20Term.js';
 import type { IncomingReactionEntry, RerollRecord } from './incomingReactionEntry.js';
+import { alliesOnCard, rollerTokenOf, scanRerollAllies } from './rerollAllies.js';
 import {
 	collectRerollEntries,
 	nextAutomaticReroll,
+	type RerollAlly,
 	type RerollingActor,
 	type RerollRollContext,
 	withNewRerollEntries,
@@ -31,6 +33,8 @@ interface CheckCard {
 	roller(): RerollingActor | null;
 	/** The card's `rolls` source. */
 	rollsSource(): string[];
+	/** The card's incoming reaction entries. */
+	incomingReactions(): IncomingReactionEntry[];
 	update(changes: Record<string, unknown>): Promise<unknown>;
 }
 
@@ -125,8 +129,12 @@ function checkReroll(
 	};
 }
 
-function checkRollContext(roller: RerollingActor | null, check: CheckRoll): RerollRollContext {
-	return { attacker: roller, targets: [], roll: check, outcome: null, forcedMiss: false };
+function checkRollContext(
+	roller: RerollingActor | null,
+	check: CheckRoll,
+	allies: RerollAlly[],
+): RerollRollContext {
+	return { attacker: roller, targets: [], allies, roll: check, outcome: null, forcedMiss: false };
 }
 
 function liveRollSource(roll: AnyRoll): CheckRollSource {
@@ -158,7 +166,8 @@ function serializedRollSource(json: string | undefined): CheckRollSource | null 
 
 /** The roll target of a check card: its first roll. */
 function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
-	const context = () => checkRollContext(card.roller(), card.roll);
+	const context = () =>
+		checkRollContext(card.roller(), card.roll, alliesOnCard(card.incomingReactions()));
 	return {
 		context,
 		findRoll: () => {
@@ -201,7 +210,11 @@ async function collectCheckRerolls(input: {
 	rerolls: RerollRecord[];
 	refund: () => Promise<void>;
 }> {
-	const context = checkRollContext(input.roller, input.check);
+	const context = checkRollContext(
+		input.roller,
+		input.check,
+		scanRerollAllies(rollerTokenOf(input.roller)),
+	);
 	const found = collectRerollEntries(context);
 	const stamped: IncomingReactionEntry[] = [];
 	const rerolls: RerollRecord[] = [];

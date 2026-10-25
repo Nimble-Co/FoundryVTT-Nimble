@@ -70,6 +70,7 @@ import {
 	type RerollRecord,
 	rerollTriggerMatches,
 } from '../utils/incomingReactionEntry.js';
+import { rollerTokenOf, scanRerollAllies } from '../utils/rerollAllies.js';
 import {
 	type AutomaticReroll,
 	collectRerollEntries,
@@ -1178,7 +1179,9 @@ class NimbleChatMessage extends ChatMessage {
 	#deferredRollRerolls(
 		roll: DamageRoll,
 	): { entries: IncomingReactionEntry[]; automatic: AutomaticReroll[] } | null {
-		const found = collectRerollEntries(damageRollContext(this.#damageCard(), roll, false));
+		const card = this.#damageCard();
+		const allies = scanRerollAllies(rollerTokenOf(card.attacker()));
+		const found = collectRerollEntries(damageRollContext(card, roll, false, allies));
 		if (found.manual.length < 1 && found.automatic.length < 1) return null;
 		return {
 			entries: withNewRerollEntries(this.#incomingReactionEntries(), found.manual),
@@ -1649,6 +1652,7 @@ class NimbleChatMessage extends ChatMessage {
 					null) as RerollingActor | null;
 			},
 			rollsSource: () => ((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+			incomingReactions: () => this.#incomingReactionEntries(),
 			update: (changes) => this.update(changes),
 		};
 	}

@@ -119,6 +119,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			usedAmount: null,
 			usedPoolLabel: '',
 			usedFaces: [],
+			leftOut: null,
 		};
 		expect(Object.keys(entryFields()).sort()).toEqual(Object.keys(stamped).sort());
 	});

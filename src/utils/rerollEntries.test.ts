@@ -295,6 +295,86 @@ describe('collectRerollEntries', () => {
 	});
 });
 
+describe('collectRerollEntries for an ally', () => {
+	beforeEach(() => setToggles({}));
+	afterEach(() => {
+		delete testGlobals.game.settings;
+	});
+
+	const ALLY_TOKEN = 'Scene.s.Token.ally';
+
+	function withAlly(rule: RerollRuleLike, ally: { isAlly?: boolean; spaces?: number } = {}) {
+		return context({
+			allies: [
+				{
+					tokenUuid: ALLY_TOKEN,
+					actor: actor('Actor.ally', [rule]),
+					isAlly: ally.isAlly ?? true,
+					spaces: ally.spaces ?? 3,
+				},
+			],
+		});
+	}
+
+	it("gives an ally a button entry on the one who rolled's roll, tied to the ally's token", () => {
+		const { manual, automatic } = collectRerollEntries(withAlly(rerollRule({ usedBy: 'ally' })));
+		expect(automatic).toEqual([]);
+		expect(manual).toEqual([
+			expect.objectContaining({
+				side: 'ally',
+				actorUuid: 'Actor.ally',
+				tokenUuid: ALLY_TOKEN,
+				targetTokenUuid: null,
+				leftOut: null,
+			}),
+		]);
+	});
+
+	it('leaves out a reroll from a token that is not an ally, and says why', () => {
+		const rule = rerollRule({ usedBy: 'ally' });
+		const { manual } = collectRerollEntries(withAlly(rule, { isAlly: false }));
+		expect(manual).toEqual([
+			expect.objectContaining({ side: 'ally', leftOut: { reason: 'disposition' } }),
+		]);
+	});
+
+	it('leaves out a reroll from an ally out of range, with the spaces and the range', () => {
+		const rule = rerollRule({ usedBy: 'ally', range: 6 });
+		expect(collectRerollEntries(withAlly(rule, { spaces: 7 })).manual).toEqual([
+			expect.objectContaining({ leftOut: { reason: 'range', spaces: 7, range: 6 } }),
+		]);
+		expect(collectRerollEntries(withAlly(rule, { spaces: 6 })).manual).toEqual([
+			expect.objectContaining({ leftOut: null }),
+		]);
+	});
+
+	it('takes a range of 0 as any distance', () => {
+		const rule = rerollRule({ usedBy: 'ally', range: 0 });
+		expect(collectRerollEntries(withAlly(rule, { spaces: 40 })).manual).toEqual([
+			expect.objectContaining({ leftOut: null }),
+		]);
+	});
+
+	it('never gives the one who rolled an ally entry on their own roll', () => {
+		const rule = rerollRule({ usedBy: 'ally' });
+		const attacker = actor('Actor.attacker', [rule]);
+		const result = collectRerollEntries(
+			context({
+				attacker,
+				allies: [{ tokenUuid: ALLY_TOKEN, actor: attacker, isAlly: true, spaces: 0 }],
+			}),
+		);
+		expect(result.manual).toEqual([]);
+	});
+
+	it('asks the rule about the ally side and checks the attack outcome', () => {
+		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
+		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
+		expect(collectRerollEntries({ ...withAlly(rule), outcome: MISS }).manual).toHaveLength(1);
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'ally', roll: MELEE });
+	});
+});
+
 describe('offerStands', () => {
 	const entry = (outcomeTrigger: RerollTrigger | null | undefined) =>
 		({ kind: 'reroll', outcomeTrigger }) as IncomingReactionEntry;
@@ -605,6 +685,46 @@ describe('usableRerollEntry', () => {
 	])('refuses %s', (_name, makeEntry, makeContext, reason) => {
 		const stamped = makeEntry();
 		expect(usableRerollEntry(stamped, makeContext(), [stamped])).toEqual({ ok: false, reason });
+	});
+
+	describe('an ally entry', () => {
+		const ally = actor('Actor.ally');
+		const allyEntry = (overrides: Partial<IncomingReactionEntry> = {}) =>
+			entry({
+				actorUuid: 'Actor.ally',
+				tokenUuid: 'Scene.s.Token.ally',
+				targetTokenUuid: null,
+				side: 'ally',
+				...overrides,
+			});
+
+		beforeEach(() => {
+			rule = rerollRule({ usedBy: 'ally' });
+			const byUuid: Record<string, unknown> = {
+				'Actor.attacker': attacker,
+				'Actor.ally': ally,
+				'Item.sand': { rules: new Map([[rule.id ?? '', rule]]) },
+			};
+			testGlobals.fromUuidSync = vi.fn((uuid: string) => byUuid[uuid] ?? null);
+		});
+
+		it('can be used by the ally, whatever the targets are', () => {
+			expect(usableRerollEntry(allyEntry(), card({ targets: [] }), [])).toEqual({
+				ok: true,
+				rule,
+				actor: ally,
+			});
+		});
+
+		it('cannot be used while it is left out', () => {
+			const leftOut = allyEntry({ leftOut: { reason: 'disposition' } });
+			expect(usableRerollEntry(leftOut, card(), [])).toEqual({ ok: false, reason: 'unavailable' });
+		});
+
+		it('cannot be used by the one who rolled', () => {
+			const own = allyEntry({ actorUuid: 'Actor.attacker' });
+			expect(usableRerollEntry(own, card(), [])).toEqual({ ok: false, reason: 'unavailable' });
+		});
 	});
 
 	describe('on a check', () => {
