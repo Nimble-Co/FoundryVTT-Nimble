@@ -1981,6 +1981,22 @@ class NimbleChatMessage extends ChatMessage {
 		return usableRerollEntry(entry, target.context(), this.#incomingReactionEntries()).ok;
 	}
 
+	/** Give an ally reroll the scan left out its button on this card. GM only. */
+	async addLeftOutReroll(entryId: string): Promise<void> {
+		if (!game.user?.isGM) return;
+		await queueReactionWrite(this.id ?? '', async () => {
+			const entries = this.#incomingReactionEntries();
+			if (!entries.some((entry) => entry.id === entryId && entry.leftOut)) return;
+			await this.update({
+				system: {
+					incomingReactions: entries.map((entry) =>
+						entry.id === entryId ? { ...entry, leftOut: null } : entry,
+					),
+				},
+			} as Record<string, unknown>);
+		});
+	}
+
 	/**
 	 * The dice a player picks from for a `reroll` entry whose rule rerolls a
 	 * picked die. Null when the rule rerolls no picked die.

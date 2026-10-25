@@ -234,6 +234,16 @@
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
 				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
 				"rerollPickADie": "Pick the die to reroll.",
+				"leftOut": {
+					"one": "1 ally reroll left out",
+					"many": "{count} ally rerolls left out",
+					"feature": "{feature} ({name})",
+					"disposition": "{name}'s token is {disposition}, not {rollerDisposition}",
+					"notAlly": "{name}'s token is not marked as an ally",
+					"range": "{spaces} spaces away, range {range}",
+					"add": "Add",
+					"addLabel": "Add {feature} for {name}"
+				},
 				"pickDie": {
 					"title": "Pick a die to reroll",
 					"rolling": "Rerolling with {feature}",

@@ -6,6 +6,7 @@
 	import localize from '../../../utils/localize.js';
 	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
+	import LeftOutRerolls from './LeftOutRerolls.svelte';
 	import RerollDiePicker from './RerollDiePicker.svelte';
 	import RerollHistory from './RerollHistory.svelte';
 	import RollRerollButton from './RollRerollButton.svelte';
@@ -59,13 +60,16 @@
 		/>
 	{/if}
 {:else if place === 'rollHistory'}
-	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep}
+	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
 		<section class="nimble-roll-changes nimble-roll-changes--under-row">
 			{@render rerollHistory()}
+			{#if prompts.leftOutEntries.length > 0}
+				<LeftOutRerolls entries={prompts.leftOutEntries} />
+			{/if}
 		</section>
 	{/if}
 {:else if place === 'roll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep}
+	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
 
@@ -80,6 +84,10 @@
 				<div class="nimble-roll-changes__well">
 					{@render entryGroups()}
 				</div>
+			{/if}
+
+			{#if prompts.leftOutEntries.length > 0}
+				<LeftOutRerolls entries={prompts.leftOutEntries} />
 			{/if}
 		</section>
 	{/if}

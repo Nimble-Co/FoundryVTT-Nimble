@@ -834,6 +834,38 @@ describe('resolveRerollReaction', () => {
 		});
 	});
 
+	describe('an ally reroll the scan left out', () => {
+		const leftOut = () =>
+			rerollEntry({
+				id: 'pip',
+				side: 'ally',
+				actorUuid: 'Actor.target',
+				leftOut: { reason: 'disposition' },
+			});
+
+		it('the GM can add it', async () => {
+			setupWorld();
+			const message = createMessage({ entries: [rerollEntry(), leftOut()] });
+
+			await message.addLeftOutReroll('pip');
+
+			expect(updatePayload(message).system.incomingReactions).toEqual([
+				expect.objectContaining({ id: 'entry-1' }),
+				expect.objectContaining({ id: 'pip', leftOut: null }),
+			]);
+		});
+
+		it('cannot be added by a player', async () => {
+			setupWorld();
+			globals().game.user = { isGM: false, id: 'player-1' };
+			const message = createMessage({ entries: [leftOut()] });
+
+			await message.addLeftOutReroll('pip');
+
+			expect(message.update).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('an automatic reroll the new roll allows', () => {
 		const WARD_ITEM = { name: 'Warding Bond', uuid: 'Item.ward' };
 

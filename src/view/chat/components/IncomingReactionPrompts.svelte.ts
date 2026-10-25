@@ -95,6 +95,12 @@ export function createIncomingReactionPromptsState(
 				})
 			: [],
 	);
+	// Only the GM sees the ally rerolls the scan left out.
+	const leftOutEntries = $derived(
+		showsHistory && game.user?.isGM
+			? storedEntries.filter((entry) => entry.kind === 'reroll' && !entry.used && !!entry.leftOut)
+			: [],
+	);
 	const pendingKeep = $derived(
 		showsHistory
 			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
@@ -282,6 +288,9 @@ export function createIncomingReactionPromptsState(
 		},
 		get historyLines() {
 			return historyLines;
+		},
+		get leftOutEntries() {
+			return leftOutEntries;
 		},
 		get pendingKeep() {
 			return pendingKeep;

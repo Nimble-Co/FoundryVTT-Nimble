@@ -76,6 +76,7 @@ interface EntryOptions {
 	usedAmount?: number;
 	usedPoolLabel?: string;
 	usedFaces?: number[];
+	leftOut?: unknown;
 }
 
 function createEntry(options: EntryOptions = {}) {
@@ -93,6 +94,7 @@ function createEntry(options: EntryOptions = {}) {
 		...(options.usedAmount === undefined ? {} : { usedAmount: options.usedAmount }),
 		...(options.usedPoolLabel === undefined ? {} : { usedPoolLabel: options.usedPoolLabel }),
 		...(options.usedFaces === undefined ? {} : { usedFaces: options.usedFaces }),
+		...(options.leftOut === undefined ? {} : { leftOut: options.leftOut }),
 	};
 }
 
@@ -771,6 +773,54 @@ describe('IncomingReactionPrompts', () => {
 				expect(rollPlace().getByText('Rerolled with Pocket Sand, kept 9')).toBeTruthy();
 				expect(rollPlace().getByRole('img', { name: 'Now 7' })).toBeTruthy();
 				expect(rollPlace().getByRole('img', { name: 'Was 4' })).toBeTruthy();
+			});
+		});
+
+		describe('ally rerolls the scan left out', () => {
+			function leftOutMessage() {
+				const message = createMessage([
+					rerollEntry({
+						id: 'pip',
+						actorUuid: 'Actor.pip',
+						leftOut: { reason: 'range', spaces: 7, range: 6 },
+					} as EntryOptions),
+				]);
+				return Object.assign(message, { addLeftOutReroll: vi.fn(async () => undefined) });
+			}
+
+			it('shows the GM one quiet line, and Add gives the reroll its button', async () => {
+				const message = leftOutMessage();
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				expect(rollPlace().getByText('1 ally reroll left out')).toBeTruthy();
+				expect(rollPlace().getByText('7 spaces away, range 6')).toBeTruthy();
+				await fireEvent.click(rollPlace().getByRole('button', { name: /^Add Pocket Sand/ }));
+
+				expect(message.addLeftOutReroll).toHaveBeenCalledWith('pip');
+			});
+
+			it('stays open when the card renders again', async () => {
+				const message = leftOutMessage();
+				const first = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+				await fireEvent.click(rollPlace().getByText('1 ally reroll left out'));
+				first.unmount();
+
+				const { container } = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+
+				expect(container.querySelector('details')?.open).toBe(true);
+			});
+
+			it('shows a player nothing', () => {
+				(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: leftOutMessage() },
+				});
+
+				expect(rollPlace().queryByText('1 ally reroll left out')).toBeNull();
 			});
 		});
 
