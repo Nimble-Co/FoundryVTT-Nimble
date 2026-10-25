@@ -1,89 +1,24 @@
 <script lang="ts">
-	import type {
-		RollRerollButtonProps,
-		RollRerollChoice,
-	} from '#types/components/RollRerollButton.d.ts';
+	import type { RollRerollButtonProps } from '#types/components/RollRerollButton.d.ts';
 
-	import { tick } from 'svelte';
-	import localize from '#utils/localize.js';
+	import { createRollRerollButtonState } from './RollRerollButton.svelte.ts';
 
 	let { choices, disabled = false, onchoose }: RollRerollButtonProps = $props();
 
 	const menuId = $props.id();
 
-	let open = $state(false);
-	let trigger = $state<HTMLButtonElement>();
-	let menu = $state<HTMLUListElement>();
-	let items = $state<HTMLButtonElement[]>([]);
-
-	let single = $derived(choices.length === 1 ? choices[0] : null);
-	let menuOpen = $derived(open && !single);
-	let triggerLabel = $derived(
-		single ? choiceText(single) : localize('NIMBLE.chat.incomingReactions.rerollChoose'),
-	);
-
-	function choiceText(choice: RollRerollChoice): string {
-		if (!choice.cost) return choice.label;
-		return localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
-			label: choice.label,
-			cost: choice.cost,
-		});
-	}
-
-	async function onTriggerClick() {
-		if (single) {
-			onchoose(single.id);
-			return;
-		}
-		open = !open;
-		await tick();
-		if (!open) return;
-		menu?.scrollIntoView?.({ block: 'nearest' });
-		items[0]?.focus({ preventScroll: true });
-	}
-
-	function choose(id: string) {
-		closeMenu();
-		onchoose(id);
-	}
-
-	function closeMenu(returnFocus = false) {
-		open = false;
-		if (returnFocus) trigger?.focus();
-	}
-
-	function onMenuKeydown(event: KeyboardEvent) {
-		const current = items.indexOf(event.target as HTMLButtonElement);
-		const last = choices.length - 1;
-		const next = {
-			ArrowDown: current >= last ? 0 : current + 1,
-			ArrowUp: current <= 0 ? last : current - 1,
-			Home: 0,
-			End: last,
-		}[event.key];
-
-		if (next !== undefined) {
-			event.preventDefault();
-			items[next]?.focus();
-		} else if (event.key === 'Escape') {
-			event.preventDefault();
-			closeMenu(true);
-		} else if (event.key === 'Tab') {
-			closeMenu();
-		}
-	}
-
-	function onWindowPointerDown(event: PointerEvent) {
-		const target = event.target as Node | null;
-		if (!menuOpen || trigger?.contains(target) || menu?.contains(target)) return;
-		closeMenu();
-	}
+	const rerollButton = createRollRerollButtonState(() => ({ choices, onchoose }));
+	const { elements, choiceText, onTriggerClick, choose, onMenuKeydown, onWindowPointerDown } =
+		rerollButton;
+	let single = $derived(rerollButton.single);
+	let menuOpen = $derived(rerollButton.menuOpen);
+	let triggerLabel = $derived(rerollButton.triggerLabel);
 </script>
 
 <svelte:window onpointerdown={onWindowPointerDown} />
 
 <button
-	bind:this={trigger}
+	bind:this={elements.trigger}
 	class="nimble-roll-reroll"
 	type="button"
 	{disabled}
@@ -99,7 +34,7 @@
 
 {#if menuOpen}
 	<ul
-		bind:this={menu}
+		bind:this={elements.menu}
 		id={menuId}
 		class="nimble-roll-reroll-menu"
 		role="menu"
@@ -110,7 +45,7 @@
 		{#each choices as choice, index (choice.id)}
 			<li role="none">
 				<button
-					bind:this={items[index]}
+					bind:this={elements.items[index]}
 					class="nimble-button nimble-roll-reroll-menu__item"
 					type="button"
 					role="menuitem"
