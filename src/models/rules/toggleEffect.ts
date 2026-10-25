@@ -19,6 +19,7 @@ import {
 const TURN_OFF_CHOICES = [
 	'onActorKilled',
 	'onActorWounded',
+	'onActorHealed',
 	'onRest',
 	'onTurnStart',
 	'onTurnEnd',
@@ -266,6 +267,10 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 	override async onActorWounded(context: ActorHealthContext): Promise<void> {
 		await this.#maybeTurnOff('onActorWounded', context.actor);
+	}
+
+	override async onActorHealed(context: ActorHealthContext): Promise<void> {
+		await this.#maybeTurnOff('onActorHealed', context.actor);
 	}
 
 	override async onRest(context: RestContext): Promise<void> {

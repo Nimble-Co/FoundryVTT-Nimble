@@ -1778,6 +1778,7 @@
 				"endReasons": {
 					"onActorKilled": "died",
 					"onActorWounded": "took a wound",
+					"onActorHealed": "was healed",
 					"onRest": "completed a rest",
 					"onTurnStart": "turn started",
 					"onTurnEnd": "turn ended",

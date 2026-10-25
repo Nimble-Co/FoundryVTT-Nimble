@@ -247,6 +247,7 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 |---|---|
 | `onActorKilled` | `updateActor` when HP drops to 0 with a full wound track (or no wound track, e.g. monsters) |
 | `onActorWounded` | `updateActor` on bloodied / lastStand transition |
+| `onActorHealed` | `updateActor` when HP goes up (temp HP and a level-up max HP rise do not count; `hpGained`) |
 | `onRest` | `nimble.rest` hook |
 | `onTurnStart` | `combatTurn` start of owner's turn |
 | `onTurnEnd` | `combatTurn` end of owner's turn |
