@@ -1,0 +1,1079 @@
+interface SpendDialogMock {
+	instances: Array<{ args: unknown[]; rendered: boolean }>;
+	/** What the picker resolves with; null stands for a cancelled dialog. */
+	selection: unknown;
+}
+
+/**
+ * The picker is stubbed through a self-contained factory that stashes its
+ * registry on `globalThis`: this module cannot be mocked from a `vi.hoisted`
+ * binding, which trips Vitest's mock hoisting.
+ */
+vi.mock('#documents/dialogs/PoolSpendOfferDialog.svelte.ts', () => {
+	const globals = globalThis as Record<string, any>;
+	const registry: SpendDialogMock = (globals.__poolSpendDialogMock ??= {
+		instances: [],
+		selection: null,
+	});
+
+	return {
+		default: class MockPoolSpendOfferDialog {
+			promise: Promise<unknown>;
+			entry: { args: unknown[]; rendered: boolean };
+
+			constructor(...args: unknown[]) {
+				this.promise = Promise.resolve(registry.selection);
+				this.entry = { args, rendered: false };
+				registry.instances.push(this.entry);
+			}
+
+			render() {
+				this.entry.rendered = true;
+			}
+		},
+	};
+});
+
+const mocks = vi.hoisted(() => ({
+	getPools: vi.fn(),
+	getDicePoolConsumers: vi.fn(),
+	requestIncomingAttackReaction: vi.fn(),
+	requestKeepChoice: vi.fn(),
+}));
+
+vi.mock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: mocks.getPools }));
+vi.mock('#utils/dicePool/dicePoolConsumers.js', () => ({
+	getDicePoolConsumers: mocks.getDicePoolConsumers,
+}));
+vi.mock('#utils/incomingAttackReactions.js', () => ({
+	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
+	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
+	requestKeepChoice: mocks.requestKeepChoice,
+}));
+vi.mock('../confirmRerollHeroicReaction.js', () => ({
+	confirmRerollHeroicReaction: vi.fn(async () => false),
+}));
+
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import IncomingReactionPromptsTestHarness from './IncomingReactionPrompts.testHarness.svelte';
+
+const { getPools, getDicePoolConsumers, requestIncomingAttackReaction, requestKeepChoice } = mocks;
+
+function spendDialogMock(): SpendDialogMock {
+	const globals = globalThis as Record<string, any>;
+	return (globals.__poolSpendDialogMock ??= { instances: [], selection: null });
+}
+
+interface EntryOptions {
+	id?: string;
+	kind?: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage' | 'reroll';
+	source?: 'baseline' | 'rule';
+	actorUuid?: string;
+	label?: string;
+	used?: boolean;
+	itemUuid?: string;
+	ruleId?: string;
+	usedAmount?: number;
+	usedPoolLabel?: string;
+	usedFaces?: number[];
+	leftOut?: unknown;
+}
+
+function createEntry(options: EntryOptions = {}) {
+	return {
+		id: options.id ?? 'entry-1',
+		kind: options.kind ?? 'redirectToSelf',
+		source: options.source ?? 'rule',
+		actorUuid: options.actorUuid ?? 'Actor.protector',
+		tokenUuid: 'Scene.s.Token.protector',
+		targetTokenUuid: 'Scene.s.Token.victim',
+		label: options.label ?? 'Aura of Refuge',
+		ruleId: options.ruleId ?? 'rule-1',
+		itemUuid: options.itemUuid ?? '',
+		used: options.used ?? false,
+		...(options.usedAmount === undefined ? {} : { usedAmount: options.usedAmount }),
+		...(options.usedPoolLabel === undefined ? {} : { usedPoolLabel: options.usedPoolLabel }),
+		...(options.usedFaces === undefined ? {} : { usedFaces: options.usedFaces }),
+		...(options.leftOut === undefined ? {} : { leftOut: options.leftOut }),
+	};
+}
+
+function createMessage(
+	entries: ReturnType<typeof createEntry>[],
+	rerolls: Record<string, unknown>[] = [],
+	speakerUuid: string | null = null,
+) {
+	const message = {
+		id: 'message-1',
+		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
+		system: { incomingReactions: entries, rerolls },
+		reactive: null as unknown,
+		canStillUseReroll: vi.fn(() => true),
+	};
+	message.reactive = message;
+	return message;
+}
+
+/** A crit-only Fury spend offered on the attacker's own card. */
+function spendEntry(options: EntryOptions = {}) {
+	return createEntry({
+		id: 'spend-1',
+		kind: 'spendPoolForDamage',
+		label: 'Death Blow: bonus damage',
+		itemUuid: 'Item.death-blow',
+		ruleId: 'death-blow-fury-consumer',
+		...options,
+	});
+}
+
+function useConsumer(consumer: { ruleId: string; itemId: string | null } | null, poolId = 'fury') {
+	getPools.mockReturnValue([{ id: poolId, label: 'Fury Dice', faces: [4, 5] }]);
+	getDicePoolConsumers.mockReturnValue(consumer ? [consumer] : []);
+}
+
+let previousFromUuidSync: unknown;
+let previousGameUser: unknown;
+let previousUi: unknown;
+let previousHooks: unknown;
+let rejectionListener: ((payload: unknown) => void) | null = null;
+
+beforeEach(() => {
+	const g = globalThis as Record<string, any>;
+	previousFromUuidSync = g.fromUuidSync;
+	previousGameUser = g.game?.user;
+	previousUi = g.ui;
+	previousHooks = g.Hooks;
+
+	spendDialogMock().instances.length = 0;
+	spendDialogMock().selection = null;
+	rejectionListener = null;
+	vi.clearAllMocks();
+	requestIncomingAttackReaction.mockResolvedValue(true);
+
+	g.fromUuidSync = vi.fn((uuid: string) =>
+		uuid === 'Item.death-blow'
+			? { id: 'item-death-blow', name: 'Death Blow' }
+			: { name: 'Sir Brannon', isOwner: true },
+	);
+	g.game = g.game ?? {};
+	g.game.user = { isGM: true, id: 'gm' };
+	g.ui = { notifications: { warn: vi.fn(), error: vi.fn() } };
+	g.Hooks = {
+		on: vi.fn((_hook: string, listener: (payload: unknown) => void) => {
+			rejectionListener = listener;
+			return 1;
+		}),
+		off: vi.fn(),
+	};
+});
+
+afterEach(() => {
+	const g = globalThis as Record<string, any>;
+	g.fromUuidSync = previousFromUuidSync;
+	if (g.game) g.game.user = previousGameUser;
+	g.ui = previousUi;
+	g.Hooks = previousHooks;
+});
+
+const rollPlace = () => within(screen.getByTestId('roll-place'));
+const optionsPlace = () => within(screen.getByTestId('options-place'));
+
+describe('IncomingReactionPrompts', () => {
+	it('puts a rule-granted Interpose under Options, with the actor name above it', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: createMessage([createEntry()]) },
+		});
+
+		const button = optionsPlace().getByRole('button');
+		expect(button.textContent?.trim()).toBe('Interpose: Aura of Refuge');
+		expect(optionsPlace().getByText('Sir Brannon')).toBeTruthy();
+		expect(screen.getByTestId('roll-place').textContent?.trim()).toBe('');
+	});
+
+	it('shows the Heroic Reaction cost on the baseline Interpose button', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: createMessage([createEntry({ source: 'baseline', label: '' })]) },
+		});
+
+		const button = optionsPlace().getByRole('button');
+		expect(button.textContent).toContain('Interpose');
+		expect(button.textContent).toContain('Heroic Reaction');
+	});
+
+	it('tells a used legacy forceReroll entry at the roll, as old cards did', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ id: 'used', kind: 'forceReroll', label: 'Old Feature', used: true }),
+				]),
+			},
+		});
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(rollPlace().getByText('Attack rerolled by Old Feature')).toBeTruthy();
+		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+	});
+
+	it('names the actor when a used legacy forceReroll entry has no label', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ id: 'used', kind: 'forceReroll', label: '', used: true }),
+				]),
+			},
+		});
+
+		expect(rollPlace().getByText('Attack rerolled by Sir Brannon')).toBeTruthy();
+	});
+
+	it('shows nothing for a waiting legacy forceReroll entry, which nothing can resolve', () => {
+		const { container } = render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ id: 'waiting', kind: 'forceReroll', label: 'Old Feature' }),
+				]),
+			},
+		});
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(container.textContent?.trim()).toBe('');
+	});
+
+	it('still shows the other entries of an old card with a legacy forceReroll entry', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createEntry({ id: 'legacy', kind: 'forceReroll', label: 'Old Feature' }),
+					createEntry({ id: 'interpose' }),
+				]),
+			},
+		});
+
+		expect(screen.getAllByRole('button')).toHaveLength(1);
+		expect(optionsPlace().getByRole('button').textContent).toContain('Aura of Refuge');
+	});
+
+	it('renders an attribution line instead of a button for used entries', () => {
+		render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: createMessage([createEntry({ used: true })]) },
+		});
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(optionsPlace().getByText(/Sir Brannon/)).toBeTruthy();
+	});
+
+	it('renders nothing when there are no entries', () => {
+		const { container } = render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: createMessage([]) },
+		});
+
+		expect(container.querySelector('section')).toBeNull();
+	});
+
+	it('hides pending buttons from non-owners who are not GMs', () => {
+		const g = globalThis as Record<string, any>;
+		g.game.user = { isGM: false, id: 'player' };
+		g.fromUuidSync = vi.fn(() => ({ name: 'Sir Brannon', isOwner: false }));
+
+		render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: createMessage([createEntry()]) },
+		});
+
+		expect(screen.queryByRole('button')).toBeNull();
+	});
+
+	describe('card-side spend offers', () => {
+		it('labels a spend offer with its feature name and no actor name', () => {
+			// The card's speaker already attributes the attacker, and the rule label
+			// is written for the rules builder rather than for players
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			const button = screen.getByRole('button');
+			expect(button.textContent).toContain('Add Damage');
+			expect(button.textContent).toContain('Death Blow');
+			expect(button.textContent).not.toContain('Sir Brannon');
+		});
+
+		it('attributes a used spend with its amount, pool and faces', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage([
+						spendEntry({
+							used: true,
+							usedAmount: 18,
+							usedPoolLabel: 'Fury Dice',
+							usedFaces: [4, 5],
+						}),
+					]),
+				},
+			});
+
+			expect(screen.getByText('Death Blow: +18 damage (Fury Dice: 4, 5)')).toBeTruthy();
+		});
+
+		it('falls back to the feature name when a used spend recorded no amount', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry({ used: true })]) },
+			});
+
+			expect(screen.getByText('Death Blow')).toBeTruthy();
+		});
+
+		it('opens the picker against the pool and item the live consumer resolves to', async () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+			await vi.waitFor(() => expect(spendDialogMock().instances).toHaveLength(1));
+
+			const [actor, poolId, ruleId, itemId] = spendDialogMock().instances[0].args;
+			expect(poolId).toBe('fury');
+			expect(ruleId).toBe('death-blow-fury-consumer');
+			expect(itemId).toBe('item-death-blow');
+			expect(actor).toBeTruthy();
+			expect(spendDialogMock().instances[0].rendered).toBe(true);
+		});
+
+		it('refuses to open the picker when no live consumer matches the offer', async () => {
+			// Rule ids are only unique within an item, so a consumer on another item
+			// must not satisfy this offer
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-something-else' });
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+
+			await vi.waitFor(() =>
+				expect((globalThis as Record<string, any>).ui.notifications.warn).toHaveBeenCalledWith(
+					"That feature's dice pool is no longer available.",
+				),
+			);
+			expect(spendDialogMock().instances).toHaveLength(0);
+			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+		});
+
+		it('does not relay a cancelled pick', async () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			spendDialogMock().selection = null;
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+			await vi.waitFor(() => expect(spendDialogMock().instances).toHaveLength(1));
+
+			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			expect(screen.queryByRole('button')).toBeTruthy();
+		});
+
+		it('holds the button once a pick is handed off, so it cannot be spent twice', async () => {
+			// The request is a socket emit for a player: it returns long before the
+			// GM writes `used`, and a second confirm in that window would read the
+			// same unspent pool
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			spendDialogMock().selection = { poolId: 'fury', faceIndices: [0], expectedFaces: [4] };
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+
+			await vi.waitFor(() =>
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'spend-1',
+					selection: spendDialogMock().selection,
+				}),
+			);
+			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
+		});
+
+		it('releases the hold when the GM reports the spend was refused', async () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			spendDialogMock().selection = { poolId: 'fury', faceIndices: [0], expectedFaces: [4] };
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
+
+			rejectionListener?.({ messageId: 'message-1', entryId: 'spend-1' });
+
+			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeTruthy());
+		});
+
+		it('ignores a refusal aimed at a different card', async () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			spendDialogMock().selection = { poolId: 'fury', faceIndices: [0], expectedFaces: [4] };
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([spendEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
+
+			rejectionListener?.({ messageId: 'another-message', entryId: 'spend-1' });
+
+			await Promise.resolve();
+			expect(screen.queryByRole('button')).toBeNull();
+		});
+	});
+
+	describe('Reroll rule entries', () => {
+		// Room below the Wound maximum, so a Wound cost can be paid.
+		const system = { attributes: { wounds: { value: 0, max: 6 } } };
+		const ACTORS: Record<string, { name: string; isOwner: boolean; system: typeof system }> = {
+			'Actor.wren': { name: 'Wren', isOwner: true, system },
+			'Actor.bram': { name: 'Bram', isOwner: false, system },
+		};
+		let rerollCost: Record<string, unknown>;
+
+		beforeEach(() => {
+			rerollCost = {
+				chargePoolIdentifier: '',
+				chargeCost: 1,
+				manaCost: 0,
+				woundCost: 0,
+				heroicReaction: '',
+			};
+			(globalThis as Record<string, any>).fromUuidSync = vi.fn((uuid: string) => {
+				if (uuid === 'Item.sand') {
+					return {
+						name: 'Pocket Sand',
+						rules: new Map([
+							['reroll-1', { type: 'reroll', id: 'reroll-1', disabled: false, rerollCost }],
+						]),
+					};
+				}
+				return ACTORS[uuid] ?? { name: 'Brom', isOwner: true, system };
+			});
+		});
+
+		function rerollEntry(options: EntryOptions = {}) {
+			return createEntry({
+				id: 'reroll-entry',
+				kind: 'reroll',
+				label: 'Pocket Sand rule',
+				itemUuid: 'Item.sand',
+				ruleId: 'reroll-1',
+				...options,
+			});
+		}
+
+		function rerollRecord(overrides: Record<string, unknown> = {}) {
+			return {
+				entryId: 'reroll-entry',
+				itemUuid: 'Item.sand',
+				ruleId: 'reroll-1',
+				label: 'Pocket Sand rule',
+				actorUuid: 'Actor.wren',
+				faces: 8,
+				previous: { value: 7, outcome: null },
+				next: { value: 4, outcome: null },
+				usesLeft: null,
+				woundsGained: 0,
+				...overrides,
+			};
+		}
+
+		/** Wren and Bram each have a reroll; only Wren is owned by the player. */
+		function twoActorMessage() {
+			return createMessage([
+				rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
+				rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
+				rerollEntry({ id: 'wren-2', actorUuid: 'Actor.wren' }),
+			]);
+		}
+
+		function groupNames(): string[] {
+			return [
+				...screen
+					.getByTestId('roll-place')
+					.querySelectorAll('.nimble-incoming-reaction-group__actor'),
+			].map((label) => label.textContent?.trim() ?? '');
+		}
+
+		it('shows a "Reroll with" button named for the feature, in the roll section', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			expect(rollPlace().getByRole('button').textContent?.trim()).toBe('Reroll with Pocket Sand');
+			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+		});
+
+		it('groups the buttons by actor, with the name above each group', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: twoActorMessage() },
+			});
+
+			expect(groupNames()).toEqual(['Wren', 'Bram']);
+			const groups = screen
+				.getByTestId('roll-place')
+				.querySelectorAll('.nimble-incoming-reaction-group');
+			expect(within(groups[0] as HTMLElement).getAllByRole('button')).toHaveLength(2);
+			expect(within(groups[1] as HTMLElement).getAllByRole('button')).toHaveLength(1);
+			for (const button of rollPlace().getAllByRole('button')) {
+				expect(button.textContent).not.toContain('Wren');
+				expect(button.textContent).not.toContain('Bram');
+			}
+		});
+
+		it('shows a player only the groups of the actors they own', () => {
+			(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: twoActorMessage() },
+			});
+
+			expect(groupNames()).toEqual(['Wren']);
+			expect(rollPlace().getAllByRole('button')).toHaveLength(2);
+		});
+
+		it('shows the GM every group', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: twoActorMessage() },
+			});
+
+			expect(groupNames()).toEqual(['Wren', 'Bram']);
+			expect(rollPlace().getAllByRole('button')).toHaveLength(3);
+		});
+
+		it('shows the cost at the right of the button', () => {
+			rerollCost.woundCost = 1;
+			rerollCost.heroicReaction = 'defend';
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			const cost = screen
+				.getByTestId('roll-place')
+				.querySelector('.nimble-incoming-reaction-button__cost');
+			expect(cost?.textContent).toBe('1 Wound, Heroic Reaction');
+		});
+
+		describe('with the Costs toggle off', () => {
+			let previousSettings: unknown;
+
+			beforeEach(() => {
+				const g = globalThis as Record<string, any>;
+				previousSettings = g.game.settings;
+				g.game.settings = {
+					get: (_scope: string, key: string) => key !== 'automation.resourceSpending',
+				};
+			});
+
+			afterEach(() => {
+				(globalThis as Record<string, any>).game.settings = previousSettings;
+			});
+
+			const costText = () =>
+				screen
+					.getByTestId('roll-place')
+					.querySelector('.nimble-incoming-reaction-button__cost')
+					?.textContent?.trim() ?? '';
+
+			it('shows only the heroic reaction, the one part still spent', () => {
+				rerollCost.chargePoolIdentifier = 'sand';
+				rerollCost.manaCost = 2;
+				rerollCost.woundCost = 1;
+				rerollCost.heroicReaction = 'defend';
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: createMessage([rerollEntry()]) },
+				});
+
+				expect(costText()).toBe('Heroic Reaction');
+			});
+
+			it('shows no cost when the reroll uses no heroic reaction', () => {
+				rerollCost.chargePoolIdentifier = 'sand';
+				rerollCost.manaCost = 2;
+				rerollCost.woundCost = 1;
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: createMessage([rerollEntry()]) },
+				});
+
+				expect(costText()).toBe('');
+			});
+		});
+
+		it('asks the GM to reroll when the button is pressed', async () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([rerollEntry()]) },
+			});
+
+			screen.getByRole('button').click();
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+				messageId: 'message-1',
+				entryId: 'reroll-entry',
+				forceHeroicReaction: false,
+			});
+		});
+
+		describe('a reroll of a die the player picks', () => {
+			const primary = { term: 0, result: 0, faces: 8, value: 1, role: 'primary' };
+			const pool = { term: 2, result: 0, faces: 6, value: 5, role: 'kept' };
+
+			function pickerMessage(dice: unknown[]) {
+				const message = createMessage([rerollEntry()]);
+				return Object.assign(message, { rerollDiceToPick: vi.fn(() => dice) });
+			}
+
+			async function settle() {
+				for (let i = 0; i < 4; i++) await Promise.resolve();
+			}
+
+			it('opens the dice in place of the button, and sends the die the player clicks', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				expect(rollPlace().getByText('Pick a die to reroll')).toBeTruthy();
+				expect(rollPlace().queryByRole('button', { name: /Reroll with Pocket Sand/ })).toBeNull();
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Reroll the 5' }));
+				await settle();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'reroll-entry',
+					forceHeroicReaction: false,
+					die: { term: 2, result: 0 },
+				});
+				expect(rollPlace().getByText('Rerolling with Pocket Sand')).toBeTruthy();
+			});
+
+			it('names the Primary Die and puts the focus on it', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([pool, primary]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				const primaryButton = rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' });
+				expect(document.activeElement).toBe(primaryButton);
+			});
+
+			it('closes on Cancel or Escape and sends nothing', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				const open = () =>
+					fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				await open();
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+
+				await open();
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Reroll the 5' }), {
+					key: 'Escape',
+				});
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			});
+
+			it('gives the focus back to the reroll button on Cancel or Escape', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				const opener = () => rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ });
+
+				await fireEvent.click(opener());
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				await settle();
+				expect(document.activeElement).toBe(opener());
+
+				await fireEvent.click(opener());
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
+					key: 'Escape',
+				});
+				await settle();
+				expect(document.activeElement).toBe(opener());
+			});
+
+			it('closes on Escape while Cancel has the focus', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
+					key: 'Escape',
+				});
+
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+			});
+
+			it('moves between the dice with the arrow keys', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
+				expect(document.activeElement).toBe(
+					rollPlace().getByRole('button', { name: 'Reroll the 5' }),
+				);
+				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
+				expect(document.activeElement).toBe(
+					rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' }),
+				);
+			});
+
+			it('sends the only die there is without a picker', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([pool]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ die: { term: 2, result: 0 } }),
+				);
+			});
+		});
+
+		describe('a result a player keeps', () => {
+			function waiting(chooserUuid = 'Actor.wren') {
+				const message = createMessage([rerollEntry({ used: true })]);
+				(message.system as Record<string, unknown>).pendingKeep = {
+					entryId: 'reroll-entry',
+					chooserUuid,
+					roll: {},
+					reroll: rerollRecord(),
+					old: { total: 9, outcome: 'miss' },
+					new: { total: 12, outcome: 'hit' },
+					discardedCritTriggers: false,
+				};
+				return message;
+			}
+
+			it('gives the chooser a Keep button for each roll, and sends the one clicked', async () => {
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: waiting() } });
+
+				expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+				const keepOld = rollPlace().getByRole('button', { name: /Keep 9/ });
+				expect(keepOld.textContent).toContain('Miss');
+				expect(rollPlace().getByRole('button', { name: /Keep 12/ }).textContent).toContain('Hit');
+
+				await fireEvent.click(keepOld);
+
+				expect(requestKeepChoice).toHaveBeenCalledWith({ messageId: 'message-1', choice: 'old' });
+				expect((keepOld as HTMLButtonElement).disabled).toBe(true);
+			});
+
+			it('tells everyone else who chooses, with no buttons', () => {
+				(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+				const g = globalThis as Record<string, any>;
+				const named = g.fromUuidSync;
+				g.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Actor.wren' ? { name: 'Wren', isOwner: false } : named(uuid),
+				);
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: waiting() } });
+
+				expect(rollPlace().getByText('Wren keeps 9 or 12.')).toBeTruthy();
+				expect(rollPlace().queryByRole('button', { name: /Keep/ })).toBeNull();
+			});
+
+			it('shows the old die as the one that stands when it was kept', () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: {
+						messageDocument: createMessage(
+							[rerollEntry({ used: true })],
+							[rerollRecord({ kept: 'old', keptTotal: 9 })],
+						),
+					},
+				});
+
+				expect(rollPlace().getByText('Rerolled with Pocket Sand, kept 9')).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Now 7' })).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Was 4' })).toBeTruthy();
+			});
+		});
+
+		describe('ally rerolls the scan left out', () => {
+			function leftOutMessage() {
+				const message = createMessage([
+					rerollEntry({
+						id: 'pip',
+						actorUuid: 'Actor.pip',
+						leftOut: { reason: 'reach', spaces: 7, reach: 6 },
+					} as EntryOptions),
+				]);
+				return Object.assign(message, { addLeftOutReroll: vi.fn(async () => undefined) });
+			}
+
+			it('shows the GM one quiet line, and Add gives the reroll its button', async () => {
+				const message = leftOutMessage();
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				expect(rollPlace().getByText('1 ally reroll left out')).toBeTruthy();
+				expect(rollPlace().getByText('7 spaces away, Reach 6')).toBeTruthy();
+				await fireEvent.click(rollPlace().getByRole('button', { name: /^Add Pocket Sand/ }));
+
+				expect(message.addLeftOutReroll).toHaveBeenCalledWith('pip');
+			});
+
+			it('stays open when the card renders again', async () => {
+				const message = leftOutMessage();
+				const first = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+				await fireEvent.click(rollPlace().getByText('1 ally reroll left out'));
+				first.unmount();
+
+				const { container } = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+
+				expect(container.querySelector('details')?.open).toBe(true);
+			});
+
+			it('shows a player nothing', () => {
+				(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: leftOutMessage() },
+				});
+
+				expect(rollPlace().queryByText('1 ally reroll left out')).toBeNull();
+			});
+		});
+
+		it('asks the card whether each reroll can still be used, and hides it when not', () => {
+			const message = createMessage([rerollEntry()]);
+			message.canStillUseReroll.mockReturnValue(false);
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			expect(message.canStillUseReroll).toHaveBeenCalledWith(
+				expect.objectContaining({ id: 'reroll-entry' }),
+			);
+			expect(screen.queryByRole('button')).toBeNull();
+		});
+
+		it('tells the last reroll at the roll, with who used it under it', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage([rerollEntry({ used: true })], [rerollRecord()]),
+				},
+			});
+
+			expect(screen.queryByRole('button')).toBeNull();
+			expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+			expect(rollPlace().getByText('Used by Wren')).toBeTruthy();
+			expect(rollPlace().getByRole('img', { name: 'Was 7' })).toBeTruthy();
+			expect(rollPlace().getByRole('img', { name: 'Now 4' })).toBeTruthy();
+			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+		});
+
+		it('shows no legacy reroll line on a card with reroll history', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage([rerollEntry({ used: true })], [rerollRecord()]),
+				},
+			});
+
+			expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+			expect(
+				screen.getByTestId('roll-place').querySelectorAll('.nimble-roll-changes__history'),
+			).toHaveLength(1);
+			expect(screen.getByTestId('roll-place').textContent).not.toContain('Attack rerolled by');
+		});
+
+		it('says so when the reroll took away a crit', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ used: true })],
+						[
+							rerollRecord({
+								previous: { value: 8, outcome: 'crit' },
+								usesLeft: 1,
+								woundsGained: 1,
+							}),
+						],
+					),
+				},
+			});
+
+			const old = rollPlace().getByRole('img', { name: 'Was 8, a crit' });
+			expect(old.classList.contains('nimble-die-face--discarded')).toBe(true);
+			expect(rollPlace().getByText('Used by Wren - Uses left: 1 - Wounds gained: 1')).toBeTruthy();
+		});
+
+		it('shows one line per reroll of the last action, the first at the top', () => {
+			const globals = globalThis as Record<string, any>;
+			const lookUp = globals.fromUuidSync;
+			globals.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.ward' ? { name: 'Warding Bond' } : lookUp(uuid),
+			);
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ used: true })],
+						[
+							rerollRecord({ woundsGained: 1 }),
+							rerollRecord({
+								entryId: 'ward-entry',
+								itemUuid: 'Item.ward',
+								label: 'Warding Bond',
+								actorUuid: 'Actor.bram',
+								faces: null,
+							}),
+						],
+						'Actor.wren',
+					),
+				},
+			});
+
+			const lines = [
+				...screen.getByTestId('roll-place').querySelectorAll('.nimble-roll-changes__history'),
+			];
+			expect(lines.map((line) => line.querySelector('p')?.textContent)).toEqual([
+				'Rerolled with Pocket Sand',
+				'Rerolled with Warding Bond',
+			]);
+			expect(lines[0].querySelector('.nimble-roll-changes__detail')?.textContent).toBe(
+				'Wounds gained: 1',
+			);
+			expect(lines[0].querySelectorAll('.nimble-die-face')).toHaveLength(2);
+			expect(lines[1].querySelector('.nimble-roll-changes__detail')?.textContent).toBe(
+				'Used by Bram',
+			);
+			expect(lines[1].querySelector('.nimble-die-face')).toBeNull();
+		});
+
+		it('keeps the well under the history line while another reroll can still be used', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ used: true }), rerollEntry({ id: 'reroll-2', actorUuid: 'Actor.bram' })],
+						[rerollRecord()],
+					),
+				},
+			});
+
+			const roll = screen.getByTestId('roll-place');
+			const history = roll.querySelector('.nimble-roll-changes__history');
+			const well = roll.querySelector('.nimble-roll-changes__well');
+			expect(history?.textContent).toContain('Rerolled with Pocket Sand');
+			expect(well?.textContent).toContain('Reroll with Pocket Sand');
+			expect(history?.compareDocumentPosition(well as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		});
+
+		it('leaves out the name of the one who rolled, which the card header shows', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[
+							rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
+							rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
+						],
+						[rerollRecord({ usesLeft: 1 })],
+						'Actor.wren',
+					),
+				},
+			});
+
+			expect(groupNames()).toEqual(['Bram']);
+			expect(rollPlace().queryByText(/Used by/)).toBeNull();
+		});
+
+		it('takes the one who rolled from a check card, which has no speaker', () => {
+			const message = createMessage(
+				[
+					rerollEntry({ id: 'wren-1', actorUuid: 'Actor.wren' }),
+					rerollEntry({ id: 'bram-1', actorUuid: 'Actor.bram' }),
+				],
+				[rerollRecord({ usesLeft: 1 })],
+			);
+			Object.assign(message.system, { actorUuid: 'Actor.wren' });
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			expect(groupNames()).toEqual(['Bram']);
+			expect(rollPlace().queryByText(/Used by/)).toBeNull();
+		});
+
+		it('names the button "Reroll again" when the last feature can reroll again', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ id: 'again', actorUuid: 'Actor.wren' })],
+						[rerollRecord({ usesLeft: 1 })],
+					),
+				},
+			});
+
+			const button = rollPlace().getByRole('button');
+			expect(button.querySelector('.nimble-incoming-reaction-button__label')?.textContent).toBe(
+				'Reroll again',
+			);
+			expect(groupNames()).toEqual(['Wren']);
+			expect(rollPlace().queryByText(/Used by|Uses left/)).toBeNull();
+		});
+
+		it('shows no detail line when the header and the button already say it all', () => {
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[rerollEntry({ id: 'again', actorUuid: 'Actor.wren' })],
+						[rerollRecord({ usesLeft: 1 })],
+						'Actor.wren',
+					),
+				},
+			});
+
+			expect(
+				screen.getByTestId('roll-place').querySelector('.nimble-roll-changes__detail'),
+			).toBeNull();
+			expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+		});
+
+		it('puts no em dash and no middle dot in any label', () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			rerollCost.woundCost = 2;
+			const { container } = render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage(
+						[
+							rerollEntry({ actorUuid: 'Actor.wren' }),
+							rerollEntry({ id: 'bram-reroll', actorUuid: 'Actor.bram' }),
+							createEntry({ id: 'rule-interpose', actorUuid: 'Actor.bram' }),
+							createEntry({
+								id: 'baseline',
+								source: 'baseline',
+								label: '',
+								actorUuid: 'Actor.bram',
+							}),
+							createEntry({ id: 'used-interpose', used: true }),
+							spendEntry(),
+						],
+						[rerollRecord({ usesLeft: 1, woundsGained: 2 })],
+					),
+				},
+			});
+
+			expect(container.querySelectorAll('button').length).toBeGreaterThan(4);
+			// Em dash, en dash and middle dot, by code point.
+			for (const mark of [0x2014, 0x2013, 0xb7].map((code) => String.fromCodePoint(code))) {
+				expect(container.textContent).not.toContain(mark);
+			}
+		});
+	});
+});

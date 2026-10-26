@@ -1,0 +1,327 @@
+import { render, screen } from '@testing-library/svelte';
+import { getRelevantNodes } from '../../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
+import ItemCardEffectsTestHarness from './ItemCardEffects.testHarness.svelte';
+
+/**
+ * Where the Apply Damage control renders. The card-level control covers every
+ * packet `applyAllDamage` collects; save-gated damage is excluded from that
+ * pass by construction and so keeps a control of its own. Both paths are pure
+ * render wiring, invisible to the document-level tests.
+ */
+
+function damageRoll(total: number) {
+	return {
+		class: 'Roll',
+		formula: String(total),
+		total,
+		evaluated: true,
+		options: {},
+		terms: [{ class: 'NumericTerm', number: total, evaluated: true, options: {} }],
+	};
+}
+
+function damageNode(id: string, damageType: string, total: number) {
+	return {
+		id,
+		type: 'damage',
+		damageType,
+		formula: String(total),
+		parentNode: null,
+		parentContext: null,
+		roll: damageRoll(total),
+	};
+}
+
+function saveGatedDamageNode(id: string, parentNode: string) {
+	return {
+		id,
+		type: 'damage',
+		damageType: 'fire',
+		formula: '10',
+		parentNode,
+		parentContext: 'failedSave',
+		roll: damageRoll(10),
+	};
+}
+
+/** `effectNodes` is already grouped by `groupNodes` when the card renders. */
+function createMessage(groups: unknown[][], effects: unknown[] = []) {
+	const message = {
+		id: 'message-1',
+		effectNodes: groups,
+		system: {
+			isMiss: false,
+			isCritical: false,
+			actorType: 'character',
+			permissions: 3,
+			activation: { effects },
+		},
+		canApplyAllDamage: () => true,
+		canApplyDamage: () => true,
+		canRollDeferredDamage: () => true,
+		applyAllDamage: () => undefined,
+		applyDamage: () => undefined,
+		reactive: null as unknown,
+	};
+	message.reactive = message;
+	return message;
+}
+
+type GameStub = { user: unknown; settings: unknown };
+const gameStub = () => (globalThis as unknown as { game: GameStub }).game;
+const rollStub = () => (globalThis as unknown as { Roll: { fromData: unknown } }).Roll;
+
+let previousGameUser: unknown;
+let previousGameSettings: unknown;
+let previousRollFromData: unknown;
+
+beforeEach(() => {
+	previousGameUser = gameStub().user;
+	previousGameSettings = gameStub().settings;
+	previousRollFromData = rollStub().fromData;
+
+	gameStub().user = { isGM: true };
+	// RollSummary reads the auto-expand world setting as it renders.
+	gameStub().settings = { get: () => false };
+	// The roll tooltip walks `roll.dice`, which the shared Roll mock has no
+	// notion of. Nothing here asserts on tooltips.
+	rollStub().fromData = (data: Record<string, unknown>) => ({ ...data, dice: [] });
+	// The button's disposition hint watches controlled tokens on the canvas.
+	(globalThis as unknown as { canvas: unknown }).canvas = { tokens: { controlled: [] } };
+});
+
+afterEach(() => {
+	gameStub().user = previousGameUser;
+	gameStub().settings = previousGameSettings;
+	rollStub().fromData = previousRollFromData;
+	(globalThis as unknown as { canvas: unknown }).canvas = undefined;
+});
+
+function applyButtons() {
+	return screen.queryAllByRole('button', { name: /apply damage/i });
+}
+
+describe('ItemCardEffects apply-damage controls', () => {
+	it('renders one control for a card with a single damage packet', () => {
+		render(ItemCardEffectsTestHarness, {
+			props: { messageDocument: createMessage([[damageNode('a', 'slashing', 8)]]) },
+		});
+
+		expect(applyButtons()).toHaveLength(1);
+	});
+
+	it('renders one control, not two, for a card with two damage packets', () => {
+		render(ItemCardEffectsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					[damageNode('a', 'slashing', 8), damageNode('b', 'radiant', 5)],
+				]),
+			},
+		});
+
+		expect(applyButtons()).toHaveLength(1);
+	});
+
+	it('renders no control for a card with no damage at all', () => {
+		render(ItemCardEffectsTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					[{ id: 'n', type: 'note', noteType: 'general', text: 'Hello', parentNode: null }],
+				]),
+			},
+		});
+
+		expect(applyButtons()).toHaveLength(0);
+	});
+
+	it('renders a control for save-gated damage, which the card-level pass excludes', () => {
+		const save = {
+			id: 'save',
+			type: 'savingThrow',
+			savingThrowType: 'strength',
+			saveType: 'strength',
+			parentNode: null,
+			parentContext: null,
+			on: { failedSave: [saveGatedDamageNode('save-damage', 'save')] },
+			sharedRolls: [],
+		};
+
+		render(ItemCardEffectsTestHarness, {
+			props: { messageDocument: createMessage([[save]], [save]), effects: [save] },
+		});
+
+		expect(applyButtons()).toHaveLength(1);
+	});
+
+	it('tells a reroll inside the roll section, before Apply Damage', () => {
+		const g = globalThis as unknown as { fromUuidSync: unknown };
+		const previousFromUuidSync = g.fromUuidSync;
+		g.fromUuidSync = () => ({ name: 'Pocket Sand' });
+		const message = createMessage([[damageNode('a', 'slashing', 4)]]);
+		(message.system as Record<string, unknown>).rerolls = [
+			{
+				entryId: 'reroll-entry',
+				itemUuid: 'Item.sand',
+				ruleId: 'reroll-1',
+				label: '',
+				actorUuid: 'Actor.wren',
+				faces: 8,
+				previous: { value: 7, outcome: null },
+				next: { value: 4, outcome: null },
+				usesLeft: null,
+				woundsGained: 0,
+			},
+		];
+
+		try {
+			render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
+
+			const history = screen.getByText('Rerolled with Pocket Sand');
+			const [apply] = applyButtons();
+			expect(history.closest('.nimble-card-section')).toBe(apply.closest('.nimble-card-section'));
+			expect(history.compareDocumentPosition(apply)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		} finally {
+			g.fromUuidSync = previousFromUuidSync;
+		}
+	});
+
+	it('renders nothing for a player, who cannot apply damage', () => {
+		gameStub().user = { isGM: false };
+
+		render(ItemCardEffectsTestHarness, {
+			props: { messageDocument: createMessage([[damageNode('a', 'slashing', 8)]]) },
+		});
+
+		expect(applyButtons()).toHaveLength(0);
+	});
+});
+
+/**
+ * One damage roll on the card per damage roll on the item, whatever the node
+ * carries. A homebrew attack spell's damage reaches the card through its on-hit
+ * outcome child, so the node it hangs off must not draw a box of its own.
+ */
+describe('ItemCardEffects damage boxes', () => {
+	let previousDamageTypes: unknown;
+
+	beforeEach(() => {
+		previousDamageTypes = CONFIG.NIMBLE.damageTypes;
+		CONFIG.NIMBLE.damageTypes = {
+			slashing: 'Slashing',
+		} as unknown as typeof CONFIG.NIMBLE.damageTypes;
+	});
+
+	afterEach(() => {
+		CONFIG.NIMBLE.damageTypes = previousDamageTypes as typeof CONFIG.NIMBLE.damageTypes;
+	});
+
+	function attackSpellEffects(overrides: Record<string, unknown> = {}) {
+		return [
+			{
+				id: 'dmg',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentNode: null,
+				parentContext: null,
+				roll: damageRoll(5),
+				on: {
+					hit: [
+						{
+							id: 'dmg-hit',
+							type: 'damageOutcome',
+							outcome: 'fullDamage',
+							parentNode: 'dmg',
+							parentContext: 'hit',
+						},
+					],
+				},
+				...overrides,
+			},
+		];
+	}
+
+	function renderHit(effects: unknown[]) {
+		const groups = getRelevantNodes(effects as never, ['hit']);
+
+		render(ItemCardEffectsTestHarness, {
+			props: { messageDocument: createMessage(groups, effects), effects },
+		});
+	}
+
+	it('draws one damage box for a plain attack spell', () => {
+		renderHit(attackSpellEffects());
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+	});
+
+	it('draws one damage box when Target Disposition is Any', () => {
+		renderHit(attackSpellEffects({ targetDisposition: 'any' }));
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+	});
+
+	it('draws one damage box when Target Disposition is Hostile', () => {
+		renderHit(attackSpellEffects({ targetDisposition: 'hostile' }));
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+	});
+
+	it('draws one damage box for a damage node nested under another damage node', () => {
+		// Damage -> On Hit -> Damage -> On Hit -> Damage Outcome. The nested node
+		// reaches the card through its own outcome child, so it must not draw a
+		// box of its own either.
+		renderHit([
+			{
+				id: 'dmg',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentNode: null,
+				parentContext: null,
+				roll: damageRoll(5),
+				on: {
+					hit: [
+						{
+							id: 'nested',
+							type: 'damage',
+							damageType: 'slashing',
+							formula: '1d4',
+							parentNode: 'dmg',
+							parentContext: 'hit',
+							roll: damageRoll(3),
+							on: {
+								hit: [
+									{
+										id: 'nested-hit',
+										type: 'damageOutcome',
+										outcome: 'fullDamage',
+										parentNode: 'nested',
+										parentContext: 'hit',
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+		]);
+
+		expect(screen.getAllByText('Slashing')).toHaveLength(1);
+		expect(screen.getByText('3')).toBeTruthy();
+	});
+	it('draws a "0" box beside the Roll Damage button on unrolled deferred damage', () => {
+		// Pinned as-is, not as the intent: `DamageNode.svelte` keeps the node
+		// itself off the card until the roll lands for exactly this reason, but
+		// its outcome child has no such guard and draws the placeholder anyway.
+		// Every deferred node built in the UI carries that child.
+		renderHit(attackSpellEffects({ deferredRoll: true, roll: undefined }));
+
+		expect(screen.getByRole('button', { name: /roll damage/i })).toBeTruthy();
+		expect(screen.getByText('0')).toBeTruthy();
+	});
+});
