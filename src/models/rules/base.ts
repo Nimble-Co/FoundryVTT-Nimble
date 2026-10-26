@@ -4,6 +4,7 @@ import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import type { RuleFormGroup } from './_formLayout.js';
 import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 
 // Rules are re-instantiated on every data-prep cycle; dedupe the late-predicate
@@ -72,6 +73,9 @@ interface ItemUsedContext {
 	card: ChatMessage | null;
 	isCritical: boolean;
 	isMiss: boolean;
+	// A reroll discarded a crit and its rule keeps the crit's triggers. Read
+	// through `firesCritTriggers`; damage and effects follow `isCritical`.
+	discardedCritTriggers?: boolean;
 }
 
 // Context passed to getActivationCardNodes when a chat card renders.
@@ -182,6 +186,9 @@ abstract class NimbleBaseRule<
 	static group: string = 'unsorted';
 
 	static description: string = '';
+
+	/** Groups and order for the rules-builder form. Null keeps the flat field list. */
+	static formLayout: readonly RuleFormGroup[] | null = null;
 
 	/**
 	 * Lifecycle event names this rule class must still receive when rule

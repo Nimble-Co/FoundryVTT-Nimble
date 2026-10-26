@@ -163,6 +163,8 @@ type ChargeValidationFailure = {
 };
 
 type ChargeConsumptionDetail = {
+	/** Missing on cards made before it was recorded. */
+	poolId?: string;
 	poolLabel: string;
 	previousValue: number;
 	currentValue: number;
@@ -175,10 +177,15 @@ type ChargeConsumptionDetail = {
 	};
 };
 
+/** Net charges a recovery trigger moved on one pool. */
+type ChargeRecoveryGivenEntry = { poolId: string; trigger: ChargeRecoveryTrigger; change: number };
+type ChargeRecoveryGiven = ChargeRecoveryGivenEntry[];
+
 type ChargeValidationResult = {
 	ok: boolean;
 	failure?: ChargeValidationFailure;
 	consumption?: ChargeConsumptionDetail[];
+	recoveryGiven?: ChargeRecoveryGiven;
 };
 
 type ChargePoolRecoveryPreview = {
@@ -217,5 +224,7 @@ export type {
 	ChargeValidationFailure,
 	ChargeConsumptionDetail,
 	ChargeValidationResult,
+	ChargeRecoveryGiven,
+	ChargeRecoveryGivenEntry,
 	ChargePoolRecoveryPreview,
 };

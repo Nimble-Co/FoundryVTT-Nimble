@@ -679,6 +679,12 @@ const CALCULATED_FORMULA_PATHS: FormulaPathEntry[] = [
 			'Monster level. Stored as text such as `1/2`, so put it in parentheses when you divide by it: `10 / (@details.level)`.',
 		actors: forMonsters({ late: false }),
 	},
+	{
+		path: 'pools.<identifier>.faces',
+		description:
+			'Face count of the die of the charge pool with this identifier, for example 8 for a d8. Only for pools with a die.',
+		actors: { character: { late: false } },
+	},
 ];
 
 // Formula rule types that resolve before and after the late values exist.
@@ -841,6 +847,7 @@ Write any of these with \`@\` in front, for example \`@attributes.wounds.value\`
 
 - \`<stat>\` is one of: ${keyList(abilityScores)}.
 - \`<skill>\` is one of: ${keyList(skills)}.
+- \`<identifier>\` is the **Identifier** of a charge pool, for example \`@pools.combat-dice.faces\`.
 
 | Reference | Value | ${ACTOR_COLUMNS.map(({ title }) => title).join(' | ')} |
 | :--- | :--- | ${ACTOR_COLUMNS.map(() => ':---').join(' | ')} |
@@ -884,6 +891,7 @@ it('generates the documentation reference pages', () => {
 		'`@attributes.wounds.bonus`',
 		'`@strengthSave`',
 		'`@details.level`',
+		'`@pools.<identifier>.faces`',
 	]) {
 		expect(formulaPage, `formula-reference.md should list ${reference}`).toContain(reference);
 	}

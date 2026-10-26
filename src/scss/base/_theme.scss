@@ -113,6 +113,21 @@
 	--nimble-roll-failure-color: hsl(0, 65%, 60%);
 	--nimble-roll-failure-background-color: hsl(0, 40%, 25%);
 
+	/** DIE FACE **/
+	// Each number/fill pair keeps at least 5.7:1 contrast.
+	--nimble-die-face-fill: hsl(38, 38%, 88%);
+	--nimble-die-face-number-color: hsl(50, 14%, 9%);
+	--nimble-die-face-crit-fill: hsl(120, 45%, 55%);
+	--nimble-die-face-crit-number-color: hsl(120, 40%, 8%);
+	--nimble-die-face-miss-fill: hsl(0, 70%, 70%);
+	--nimble-die-face-miss-number-color: hsl(0, 45%, 8%);
+	--nimble-die-face-discarded-fill: hsl(38, 8%, 36%);
+	--nimble-die-face-discarded-number-color: hsl(38, 38%, 94%);
+	--nimble-die-face-discarded-crit-fill: hsl(120, 24%, 28%);
+	--nimble-die-face-discarded-crit-number-color: hsl(120, 55%, 88%);
+	--nimble-die-face-discarded-miss-fill: hsl(0, 28%, 30%);
+	--nimble-die-face-discarded-miss-number-color: hsl(0, 70%, 90%);
+
 	/** DAMAGE DEFENSE BADGES **/
 	--nimble-damage-badge-immune-background-color: hsl(293, 12%, 30%);
 	--nimble-damage-badge-immune-color: hsl(293, 20%, 82%);

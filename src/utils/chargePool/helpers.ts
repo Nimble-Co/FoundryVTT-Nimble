@@ -15,6 +15,7 @@ import type {
 	ChargePoolScope,
 	ChargePoolState,
 	ChargeRecoveryEntry,
+	ChargeRecoveryGiven,
 	ChargeRecoveryMode,
 	ChargeRecoveryTrigger,
 	ModifyPoolRuleLike,
@@ -212,6 +213,47 @@ function getPoolMaxBonusTotal(actor: CharacterActorLike, identifier: string): nu
 		total += rule.amount;
 	}
 	return total;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function addPoolDieFaces(
+	target: Record<string, { faces: number }>,
+	identifier: unknown,
+	dieSize: unknown,
+): void {
+	const key = normalizeIdentifier(identifier);
+	const size = toChargePoolDieSize(dieSize);
+	if (key.length < 1 || size === null) return;
+	target[key] = { faces: Number(size.slice(1)) };
+}
+
+/**
+ * Roll data for `@pools.<identifier>.faces`. Reads only the stored pool state,
+ * because pool max formulas resolve against roll data and must not recurse.
+ */
+function getChargePoolRollData(actor: CharacterActorLike): Record<string, { faces: number }> {
+	const pools: Record<string, { faces: number }> = {};
+
+	const actorPools = foundry.utils.getProperty(actor, ChargePoolRuleConfig.flagPath);
+	if (isPlainRecord(actorPools)) {
+		for (const [poolId, pool] of Object.entries(actorPools)) {
+			if (!poolId.startsWith('actor:') || !isPlainRecord(pool)) continue;
+			addPoolDieFaces(pools, pool.identifier, pool.dieSize);
+		}
+	}
+
+	for (const item of actor.items.contents) {
+		const itemPools = foundry.utils.getProperty(item, ChargePoolRuleConfig.flagPath);
+		if (!isPlainRecord(itemPools)) continue;
+		for (const [identifier, pool] of Object.entries(itemPools)) {
+			if (isPlainRecord(pool)) addPoolDieFaces(pools, identifier, pool.dieSize);
+		}
+	}
+
+	return pools;
 }
 
 function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
@@ -617,35 +659,56 @@ function recoveryPredicateHolds(actor: CharacterActorLike, recovery: ChargeRecov
 	return new Predicate(raw as RawPredicate).test(domain);
 }
 
+function recoveredValue(
+	actor: CharacterActorLike,
+	pool: ChargePoolState,
+	recovery: ChargeRecoveryEntry,
+): number {
+	if (recovery.mode === 'refresh') return pool.max;
+
+	const value = resolveFormulaToInteger(actor, recovery.value);
+	if (recovery.mode === 'set') return clampCurrentToMax(value, pool.max);
+	return clampCurrentToMax(pool.current + value, pool.max);
+}
+
+function addRecoveryGiven(
+	given: ChargeRecoveryGiven,
+	poolId: string,
+	trigger: ChargeRecoveryTrigger,
+	change: number,
+): void {
+	if (change === 0) return;
+	const entry = given.find((e) => e.poolId === poolId && e.trigger === trigger);
+	if (entry) entry.change += change;
+	else given.push({ poolId, trigger, change });
+}
+
+/**
+ * Apply every recovery whose trigger is in `triggers`. When `given` is passed,
+ * the net change each trigger made on each pool is added to it.
+ */
 function applyRecoveryTriggersToPools(
 	actor: CharacterActorLike,
 	pools: ChargePoolMap,
 	triggers: ChargeRecoveryTrigger[],
+	given?: ChargeRecoveryGiven,
 ): ChargePoolMap {
 	if (triggers.length < 1) return pools;
 
 	const triggerSet = new Set(triggers);
 	const nextPools = foundry.utils.deepClone(pools) as ChargePoolMap;
 
-	for (const pool of Object.values(nextPools)) {
+	for (const [poolId, pool] of Object.entries(nextPools)) {
 		for (const recovery of pool.recoveries) {
 			if (!triggerSet.has(recovery.trigger)) continue;
 			// Entry-level predicates are evaluated now, against live state, so a
 			// recovery can depend on something that flips mid-combat.
 			if (!recoveryPredicateHolds(actor, recovery)) continue;
 
-			if (recovery.mode === 'refresh') {
-				pool.current = pool.max;
-				continue;
-			}
+			const before = pool.current;
+			pool.current = recoveredValue(actor, pool, recovery);
 
-			const value = resolveFormulaToInteger(actor, recovery.value);
-			if (recovery.mode === 'set') {
-				pool.current = clampCurrentToMax(value, pool.max);
-				continue;
-			}
-
-			pool.current = clampCurrentToMax(pool.current + value, pool.max);
+			if (given) addRecoveryGiven(given, poolId, recovery.trigger, pool.current - before);
 		}
 	}
 
@@ -854,6 +917,7 @@ export {
 	toChargePoolScope,
 	toChargePoolDieSize,
 	getChargePoolMapFromActor,
+	getChargePoolRollData,
 	resolveFormulaToInteger,
 	normalizeRecoveries,
 	getChargePoolDefinitions,

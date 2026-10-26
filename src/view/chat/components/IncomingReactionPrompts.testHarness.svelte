@@ -10,4 +10,9 @@
 	);
 </script>
 
-<IncomingReactionPrompts />
+<div data-testid="roll-place">
+	<IncomingReactionPrompts place="roll" />
+</div>
+<div data-testid="options-place">
+	<IncomingReactionPrompts place="options" />
+</div>

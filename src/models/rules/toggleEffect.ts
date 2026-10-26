@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { firesCritTriggers } from '#utils/firesCritTriggers.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
@@ -291,7 +292,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	}
 
 	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
-		if (context.isCritical !== true) return;
+		if (!firesCritTriggers(context)) return;
 		await this.#maybeAutoTurnOn('onCritReceived', context.targetActor);
 	}
 

@@ -8,17 +8,53 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "modifyIncomingAttack",
+				"type": "chargePool",
+				"disabled": false,
+				"id": "MVE6XSpb5pjS6tzS",
+				"identifier": "pocket-sand",
+				"label": "Pocket Sand (2/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "2",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "2"
+					}
+				]
+			},
+			{
+				"type": "reroll",
 				"disabled": false,
 				"id": "CqGMYxQoLrVI17x3",
 				"identifier": "",
 				"label": "",
 				"predicate": {},
-				"priority": 1,
-				"modifier": "forceReroll",
-				"range": 2,
-				"rerollTrigger": "always",
-				"rerollWithDisadvantage": true
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"usedBy": "target",
+				"outcome": "always",
+				"attackDelivery": "melee",
+				"chargePoolIdentifier": "pocket-sand",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"rollModeChange": -1,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"oncePerAttack": true
 			}
 		],
 		"activation": {

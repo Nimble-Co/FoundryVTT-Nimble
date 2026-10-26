@@ -95,6 +95,35 @@ export interface RuleCardProps {
 	document?: NimbleBaseItem;
 }
 
+export interface ResolvedFormField {
+	name: string;
+	field: foundry.data.fields.DataField.Any;
+	isBoolean: boolean;
+	/** False when the group heading already is this field's label. */
+	showLabel: boolean;
+}
+
+export interface ResolvedFormGroup {
+	key: string;
+	/** Lang key of the group question, when the layout gives one. */
+	label?: string;
+	/** Field whose label is the group question, when the layout gives none. */
+	labelField?: ResolvedFormField;
+	hint?: string;
+	fields: ResolvedFormField[];
+}
+
+export interface RuleFormLayoutProps {
+	groups: ResolvedFormGroup[];
+	rule: Record<string, unknown>;
+	onFieldChange: (name: string, value: unknown) => void;
+	fieldLabel: (name: string, field: foundry.data.fields.DataField.Any) => string;
+	fieldHint: (field: foundry.data.fields.DataField.Any) => string;
+	previewDomain?: Set<string>;
+	appliesInPrePrepareData?: boolean;
+	document?: NimbleBaseItem;
+}
+
 export interface RuleTypePickerProps {
 	onPick: (ruleKey: string) => void;
 	disabled?: boolean;

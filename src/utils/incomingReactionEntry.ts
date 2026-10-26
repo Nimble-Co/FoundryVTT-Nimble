@@ -1,5 +1,46 @@
-/** When an outcome-gated offer or reroll applies, given how the attack landed. */
-export type RerollTrigger = 'always' | 'hit' | 'criticalHit';
+/**
+ * When an outcome-gated offer or reroll applies, given how the attack landed.
+ * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
+ */
+export const REROLL_TRIGGERS = ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'] as const;
+export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
+
+/** The side of a roll a `reroll` entry is for. */
+export const REROLL_SIDES = ['roller', 'target'] as const;
+export type RerollSide = (typeof REROLL_SIDES)[number];
+
+/** How one die result counts: a crit, a miss, or neither (null). */
+export const DIE_OUTCOMES = ['crit', 'miss'] as const;
+export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;
+
+/**
+ * The outcome fields a trigger is checked against. An evaluated DamageRoll
+ * satisfies this, and so does a posted card's own system data, which is what
+ * the GM-side executors re-check against.
+ */
+export interface AttackOutcomeView {
+	isCritical?: boolean;
+	isMiss?: boolean;
+}
+
+/** Does the attack's outcome satisfy a trigger? */
+export function rerollTriggerMatches(
+	trigger: RerollTrigger | null | undefined,
+	view: AttackOutcomeView,
+): boolean {
+	switch (trigger) {
+		case 'criticalHit':
+			return !!view.isCritical;
+		case 'hit':
+			return !view.isMiss;
+		case 'nonCriticalHit':
+			return !view.isMiss && !view.isCritical;
+		case 'miss':
+			return !!view.isMiss;
+		default:
+			return true; // 'always'
+	}
+}
 
 /**
  * A pending interactive offer stamped onto an attack chat card. Entries are
@@ -8,7 +49,9 @@ export type RerollTrigger = 'always' | 'hit' | 'criticalHit';
  *
  * Most kinds are defender-side reactions to the attack. `spendPoolForDamage`
  * is attacker-side: the attacker spends their own dice pool into this card's
- * damage total.
+ * damage total. `reroll` comes from a Reroll rule of either the attacker or
+ * the target. `forceReroll` is a legacy stored kind: old cards still hold it,
+ * but nothing makes or resolves it any more.
  *
  * Lives apart from `incomingAttackModifiers` so the modules that only build
  * entries (e.g. `poolSpendCardOffers`) do not have to depend on the module
@@ -16,22 +59,26 @@ export type RerollTrigger = 'always' | 'hit' | 'criticalHit';
  */
 export interface IncomingReactionEntry {
 	id: string;
-	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage';
+	kind: 'forceReroll' | 'redirectToSelf' | 'spendPoolForDamage' | 'reroll';
 	/** `baseline` = universal heroic Interpose; `rule` = granted by a rule */
 	source: 'baseline' | 'rule';
 	/** Acting actor (token-actor uuid, so unlinked tokens resolve) */
 	actorUuid: string;
 	/** Protector's token (redirect only) */
 	tokenUuid: string | null;
-	/** Token whose targeting the redirect replaces (redirect only) */
+	/** Token whose targeting the redirect replaces (redirect, and target-side rerolls) */
 	targetTokenUuid: string | null;
 	label: string;
 	ruleId: string;
 	itemUuid: string;
 	used: boolean;
-	/** forceReroll only: gate the offer/execution on the roll's outcome */
+	/** reroll only: the side of the roll the entry was stamped for */
+	side?: RerollSide;
+	/** reroll only: the rule gives no new entry after it is used on this card */
+	oncePerAttack?: boolean;
+	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollTrigger?: RerollTrigger;
-	/** forceReroll only: roll the reroll at disadvantage */
+	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollWithDisadvantage?: boolean;
 	/**
 	 * Gate on the attack's resolved outcome. Checked before stamping, again
@@ -47,4 +94,32 @@ export interface IncomingReactionEntry {
 	usedAmount?: number | null;
 	usedPoolLabel?: string;
 	usedFaces?: number[];
+}
+
+/** One Primary Die result in a reroll record. */
+export interface RerollDieResult {
+	value: number;
+	outcome: DieOutcome;
+}
+
+/**
+ * One reroll on an attack card, for its history line. The card keeps the
+ * rerolls of its last action in roll order.
+ */
+export interface RerollRecord {
+	entryId: string;
+	itemUuid: string;
+	ruleId: string;
+	label: string;
+	/** The actor whose feature made the reroll */
+	actorUuid: string;
+	/** The Primary Die size, or null when it cannot be read */
+	faces: number | null;
+	/** The replaced Primary Die result, or null when it cannot be read */
+	previous: RerollDieResult | null;
+	/** The new Primary Die result, or null when it cannot be read */
+	next: RerollDieResult | null;
+	/** Charges left in the feature's charge pool, or null when it has none */
+	usesLeft: number | null;
+	woundsGained: number;
 }

@@ -195,7 +195,6 @@
 			},
 			"incomingReactions": {
 				"heading": "Options",
-				"forceReroll": "Force Reroll",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
 				"rerolledBy": "Attack rerolled by {label}",
@@ -211,7 +210,18 @@
 				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
 				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
-				"useFailed": "That reaction could not be completed."
+				"useFailed": "That reaction could not be completed.",
+				"rerollWith": "Reroll with {feature}",
+				"rerollAgain": "Reroll again",
+				"rerollHistoryPlain": "Rerolled with {feature}",
+				"rerollUsedBy": "Used by {name}",
+				"rerollUsesLeft": "Uses left: {count}",
+				"rerollWoundsGained": "Wounds gained: {count}",
+				"costWound": "{count} Wound",
+				"costWounds": "{count} Wounds",
+				"costHeroicReaction": "Heroic Reaction",
+				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
+				"rerollCostUnpaid": "The cost of this reroll could not be paid."
 			}
 		},
 		"characterCreationStages": {
@@ -497,6 +507,15 @@
 		"diceSoNice": {
 			"category": "Nimble",
 			"primaryDieColorset": "Nimble Primary Die"
+		},
+		"dieFace": {
+			"now": "Now {value}",
+			"nowCrit": "Now {value}, a crit",
+			"nowMiss": "Now {value}, a miss",
+			"rolling": "Rolling the dice",
+			"was": "Was {value}",
+			"wasCrit": "Was {value}, a crit",
+			"wasMiss": "Was {value}, a miss"
 		},
 		"durations": {
 			"action": "Action",
@@ -988,7 +1007,8 @@
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"toggleEffect": "Toggle Effect",
-			"unarmedDamage": "Unarmed Damage"
+			"unarmedDamage": "Unarmed Damage",
+			"reroll": "Reroll"
 		},
 		"rules": {
 			"abilityBonus": {
@@ -1538,33 +1558,20 @@
 				}
 			},
 			"modifyIncomingAttack": {
-				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, a raised miss threshold, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"description": "Modify attacks made against this actor. Disadvantage, a raised miss threshold, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
 				"modifiers": {
 					"disadvantage": "Disadvantage",
-					"forceReroll": "Force Reroll",
 					"redirectToSelf": "Redirect to Self",
 					"autoMiss": "Auto Miss",
 					"raiseMissThreshold": "Raise Miss Threshold"
 				},
 				"modifier": {
 					"label": "Modifier",
-					"hint": "Disadvantage, Auto Miss, and Raise Miss Threshold apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card."
+					"hint": "Disadvantage, Auto Miss, and Raise Miss Threshold apply automatically to the attack roll. Redirect to Self offers an interactive prompt on the attack card."
 				},
 				"range": {
 					"label": "Range (spaces)",
 					"hint": "How far away a targeted ally can be for this actor to redirect the attack to themselves. The baseline heroic Interpose reaction covers 2 spaces."
-				},
-				"automatic": {
-					"label": "Automatic",
-					"hint": "Reroll happens automatically when the attack resolves instead of offering a button. Use when you want a reroll to be mandatory."
-				},
-				"rerollTrigger": {
-					"label": "Reroll when",
-					"hint": "Always, only when the attack hits (not a miss), or only when it is a critical hit."
-				},
-				"rerollWithDisadvantage": {
-					"label": "Reroll at disadvantage",
-					"hint": "The forced reroll is made at disadvantage instead of a straight reroll (e.g. FAST)."
 				},
 				"missThreshold": {
 					"label": "Miss threshold",
@@ -1818,6 +1825,110 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"reroll": {
+				"description": "Lets the one who rolled, or the target, roll an attack again. The new result stands.",
+				"form": {
+					"when": "When?",
+					"onlyWhile": {
+						"label": "Only while",
+						"hint": "For example, only while Raging."
+					},
+					"cost": {
+						"label": "Cost (optional)",
+						"hint": "A use limit such as 1/Safe Rest is a charge pool on this item."
+					},
+					"changes": {
+						"label": "Changes to the new roll (optional)",
+						"hint": "The new roll keeps the first roll's advantage and disadvantage. A later reroll of the same attack, from any feature, keeps these changes too."
+					}
+				},
+				"rolls": {
+					"label": "Which roll can it reroll?",
+					"choices": {
+						"attack": "Attack"
+					}
+				},
+				"usedBy": {
+					"label": "Who can use it?",
+					"hint": "The one who made the attack, or the creature the attack is against.",
+					"choices": {
+						"roller": "The one who rolled",
+						"target": "The target"
+					}
+				},
+				"outcome": {
+					"label": "The first roll is",
+					"hint": "A hit includes a crit.",
+					"choices": {
+						"always": "Any result",
+						"hit": "A hit",
+						"criticalHit": "A crit",
+						"nonCriticalHit": "A hit that is not a crit",
+						"miss": "A miss"
+					}
+				},
+				"attackDelivery": {
+					"label": "Attack type",
+					"hint": "Any is melee and ranged.",
+					"choices": {
+						"any": "Any",
+						"melee": "Melee",
+						"ranged": "Ranged"
+					}
+				},
+				"automatic": {
+					"label": "Rerolls by itself",
+					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead."
+				},
+				"discardedCritTriggers": {
+					"label": "The discarded crit still triggers when-crit abilities",
+					"hint": "When the first roll was a crit, abilities that react to a crit still react. Damage and effects follow the new roll."
+				},
+				"rollModeChange": {
+					"label": "Advantage or disadvantage",
+					"hint": "Added to what the first roll had.",
+					"choices": {
+						"none": "None",
+						"advantage": "One more advantage",
+						"disadvantage": "One more disadvantage"
+					}
+				},
+				"primaryDieBonus": {
+					"label": "Add to the Primary Die",
+					"hint": "A number added to the Primary Die of the new roll."
+				},
+				"extraDamage": {
+					"label": "Extra damage",
+					"hint": "A formula added to the damage of the new roll, such as 1d6 or @level. References read the owner of this feature."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool it spends charges from. Leave empty for no limit. The reroll button does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"label": "Charges per use",
+					"hint": "How many charges one reroll takes from the pool."
+				},
+				"manaCost": {
+					"label": "Mana per use",
+					"hint": "0 is free."
+				},
+				"woundCost": {
+					"label": "Wounds gained per use",
+					"hint": "Wounds the user gains. 0 is none."
+				},
+				"heroicReaction": {
+					"label": "Heroic Reaction it spends",
+					"hint": "Spent only in combat.",
+					"choices": {
+						"none": "None"
+					}
+				},
+				"oncePerAttack": {
+					"label": "Only once per attack",
+					"hint": "The feature can reroll the same attack only once, even with uses left."
 				}
 			}
 		},
@@ -3257,47 +3368,51 @@
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules (Legacy)",
-				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Apply Conditions and Effects from Rules toggle and has no other effect."
+				"hint": "Superseded by the Automation settings. This stored value only seeds the initial state of the Feature Effects toggle and has no other effect."
 			},
 			"applyRuleEffects": {
-				"name": "Apply Conditions and Effects from Rules",
-				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire, and put Concentration on a caster who casts a concentration spell. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work."
+				"name": "Feature Effects",
+				"hint": "Features apply their conditions, marks and rerolls by themselves, and their effects end on time. Casting a Concentration spell starts Concentration.",
+				"off": "Off: the chat card shows a button for each one."
 			},
 			"derivedConditions": {
-				"name": "Derived Conditions",
-				"hint": "Automatically apply and remove conditions implied by other conditions, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained."
+				"name": "Linked Conditions",
+				"hint": "A condition adds and removes the conditions that come with it, such as Hampered with Dazed."
 			},
 			"resourceRecovery": {
-				"name": "Resource Recovery",
-				"hint": "Automatically refill charges and dice pools from their recovery triggers, such as turn start, rests, wounds, kills, and encounter end."
+				"name": "Refills",
+				"hint": "Charges and dice pools refill at their set times, such as a rest or the end of an encounter."
 			},
 			"resourceSpending": {
-				"name": "Resource Spending",
-				"hint": "Automatically deduct mana when casting spells and validate and consume charges when using items. When off, resource costs are not enforced and must be tracked manually."
+				"name": "Costs",
+				"hint": "Spells, items and rerolls spend their mana and charges, and stop when there is not enough. Charges that an attack refills on a hit or a crit count as costs too.",
+				"off": "Off: only heroic reactions are spent. Track other costs by hand."
 			},
 			"actionTracking": {
-				"name": "Action Tracking",
-				"hint": "Automatically spend combatant actions when items are used during combat."
+				"name": "Action Spending",
+				"hint": "Using an item in combat marks its actions as spent."
 			},
 			"healthStateSync": {
-				"name": "Health-State Sync",
-				"hint": "Automatically apply and remove the Bloodied status when a combatant drops to or recovers above half hit points. Last Stand handling is always on."
+				"name": "Bloodied Status",
+				"hint": "A creature at half HP or less gets Bloodied, and loses it when healed above half."
 			},
 			"combatConvenience": {
-				"name": "Combat Convenience",
-				"hint": "Automatically roll initiative for player characters when combat starts."
+				"name": "Initiative for Heroes",
+				"hint": "Rolls initiative for each player character when combat starts."
 			},
 			"chatNotifications": {
-				"name": "Chat Notifications",
-				"hint": "Post informational automation messages to chat, such as initiative bonus reminders, pool gain notices, and toggle effect start and end announcements."
+				"name": "Chat Notes",
+				"hint": "Short notes in chat, such as initiative reminders and when Rage starts or ends."
 			},
 			"movementOffers": {
-				"name": "Forced Movement and Moves for Free",
-				"hint": "When a card pushes or pulls a creature, or lets it move for free, the creature's next drag counts as that movement, and the ruler shows how far it can go. Nothing stops a longer drag. Needs Movement Tracking. When either setting is off, the card shows the distance as text and the token is dragged as usual."
+				"name": "Pushes, Pulls and Moves for Free",
+				"hint": "A push, pull or move for free from a card makes the creature's next drag count as that move, and the ruler shows how far it can go.",
+				"off": "Off: the card shows the distance as text."
 			},
 			"movementTracking": {
-				"name": "Movement Tracking",
-				"hint": "Report each finished token move to features, in and out of combat, keep count of the spaces each combatant moves this turn, and let features react, in a started combat, when a creature finishes moving or moves adjacent. When off, the system counts nothing and movement rules stay silent. Foundry still keeps its own movement history."
+				"name": "Movement Count",
+				"hint": "Counts the spaces each creature moves on its turn, so that features can react to a move.",
+				"off": "Off: movement features do nothing."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
@@ -3375,11 +3490,11 @@
 				"name": "Automation",
 				"title": "Automation",
 				"manageButton": "Configure Automation",
-				"hint": "Choose which parts of the Nimble rules the system automates for your world. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
-				"intro": "Choose which parts of the Nimble rules the system automates. All toggles are on by default. Core behaviors such as Last Stand, defeat sync, dice spend prompts, and toggle effect activation are always on and are not listed here.",
-				"sectionRulesEffects": "Rules & Effects",
+				"intro": "Choose what the system does for you. Everything is on by default. Core rules, such as Last Stand and defeat, are always on.",
+				"sectionFeaturesEffects": "Features and Effects",
 				"sectionResources": "Resources",
 				"sectionCombat": "Combat",
+				"sectionMovement": "Movement",
 				"sectionChat": "Chat",
 				"save": "Save Automation Settings",
 				"saved": "Automation settings saved.",

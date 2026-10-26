@@ -1,4 +1,5 @@
 import type { OfferCard } from '#types/movement.js';
+import { firesCritTriggers } from '#utils/firesCritTriggers.js';
 import localize from '#utils/localize.js';
 import { alliesWithin } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
@@ -213,7 +214,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.item.isEmbedded) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onCritReceived') return;
-		if (context.isCritical !== true || context.targetActor !== this.actor) return;
+		if (!firesCritTriggers(context) || context.targetActor !== this.actor) return;
 		await this.#offer(
 			localize('NIMBLE.rules.freeMove.reasons.onCritReceived'),
 			targetTokenOf(context.card, this.actor),

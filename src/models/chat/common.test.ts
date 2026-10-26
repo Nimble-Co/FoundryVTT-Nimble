@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { MovementOffer } from '#types/movement.js';
-import { grantedActionOffers, movementOffers } from './common.js';
+import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.js';
+import { grantedActionOffers, incomingReactions, movementOffers, rerollHistory } from './common.js';
 
 describe('grantedActionOffers schema factory', () => {
 	it('defines an offers array that is empty by default', () => {
@@ -87,5 +88,69 @@ describe('movementOffers schema factory', () => {
 		expect(state.options.initial).toBe('open');
 		expect(state.options.choices).toEqual(['open', 'taken', 'unused', 'lapsed', 'untracked']);
 		expect(kind.options.choices).toEqual(['free', 'forced']);
+	});
+});
+
+describe('incomingReactions and rerollHistory schema factories', () => {
+	type Fields = Record<string, unknown>;
+	const entryFields = () =>
+		(incomingReactions().incomingReactions as unknown as { element: { fields: Fields } }).element
+			.fields;
+	const rerollFields = () =>
+		(rerollHistory().rerolls as unknown as { element: { fields: Fields } }).element.fields;
+
+	it('stores every field an entry carries, so none is dropped when the card is saved', () => {
+		const stamped: Required<IncomingReactionEntry> = {
+			id: 'e1',
+			kind: 'reroll',
+			source: 'rule',
+			actorUuid: 'Actor.a',
+			tokenUuid: null,
+			targetTokenUuid: 'Scene.s.Token.t',
+			label: 'Feature',
+			ruleId: 'r1',
+			itemUuid: 'Actor.a.Item.i',
+			used: false,
+			side: 'target',
+			oncePerAttack: false,
+			rerollTrigger: 'always',
+			rerollWithDisadvantage: false,
+			outcomeTrigger: 'always',
+			usedAmount: null,
+			usedPoolLabel: '',
+			usedFaces: [],
+		};
+		expect(Object.keys(entryFields()).sort()).toEqual(Object.keys(stamped).sort());
+	});
+
+	it('accepts the legacy forceReroll kind and its fields, so old cards still validate', () => {
+		const fields = entryFields() as Record<string, { choices?: string[] }>;
+		expect(fields.kind.choices).toContain('forceReroll');
+		expect(fields.rerollTrigger.choices).toEqual(['always', 'hit', 'criticalHit']);
+		expect(fields).toHaveProperty('rerollWithDisadvantage');
+	});
+
+	it('stores every field of a reroll record', () => {
+		const record: RerollRecord = {
+			entryId: 'e1',
+			itemUuid: 'Actor.a.Item.i',
+			ruleId: 'r1',
+			label: 'Feature',
+			actorUuid: 'Actor.a',
+			faces: 8,
+			previous: { value: 8, outcome: 'crit' },
+			next: { value: 4, outcome: null },
+			usesLeft: 1,
+			woundsGained: 0,
+		};
+		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
+		const die = (rerollFields().previous as { fields: Fields }).fields;
+		expect(Object.keys(die).sort()).toEqual(Object.keys(record.previous ?? {}).sort());
+	});
+
+	it('starts with no rerolls', () => {
+		expect(
+			(rerollHistory().rerolls as unknown as { options: { initial: unknown } }).options.initial,
+		).toEqual([]);
 	});
 });

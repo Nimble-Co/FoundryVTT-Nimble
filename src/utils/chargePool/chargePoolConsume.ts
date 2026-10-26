@@ -17,6 +17,7 @@ import type {
 	CharacterActorLike,
 	ChargeConsumptionDetail,
 	ChargeContext,
+	ChargeRecoveryGiven,
 	ChargeValidationResult,
 	RuleBackedItem,
 } from './types.js';
@@ -204,7 +205,8 @@ async function consumeOnResolvedItemUse(
 		consumedPoolIds.add(consumer.poolId);
 	}
 
-	const postRecoveryPools = applyRecoveryTriggersToPools(actor, nextPools, triggers);
+	const recoveryGiven: ChargeRecoveryGiven = [];
+	const postRecoveryPools = applyRecoveryTriggersToPools(actor, nextPools, triggers, recoveryGiven);
 
 	for (const poolId of consumedPoolIds) {
 		const preConsumptionPool = currentPools[poolId];
@@ -218,6 +220,7 @@ async function consumeOnResolvedItemUse(
 		const change = currentValue - previousValue;
 
 		consumptionByPoolId.set(poolId, {
+			poolId,
 			poolLabel: postRecoveryPool.label,
 			previousValue,
 			currentValue,
@@ -249,6 +252,7 @@ async function consumeOnResolvedItemUse(
 		const change = currentValue - previousValue;
 
 		consumptionByPoolId.set(poolId, {
+			poolId,
 			poolLabel: postRecoveryPool.label,
 			previousValue,
 			currentValue,
@@ -314,7 +318,11 @@ async function consumeOnResolvedItemUse(
 		}
 	}
 
-	return { ok: true, consumption };
+	return {
+		ok: true,
+		consumption,
+		...(recoveryGiven.length > 0 ? { recoveryGiven } : {}),
+	};
 }
 
 export { validateItemChargeConsumption, consumeOnResolvedItemUse };

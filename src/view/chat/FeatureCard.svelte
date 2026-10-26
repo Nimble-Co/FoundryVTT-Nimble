@@ -96,7 +96,7 @@
 
 	<GrantedActionOffers />
 
-	<IncomingReactionPrompts />
+	<IncomingReactionPrompts place="options" />
 
 	<ChargeConsumptionNode />
 

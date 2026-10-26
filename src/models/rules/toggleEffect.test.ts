@@ -929,6 +929,23 @@ describe('ToggleEffectRule', () => {
 			expect(actor.createEmbeddedDocuments).toHaveBeenCalled();
 		});
 
+		it('turns on from a crit that a reroll discarded when the reroll keeps its crit triggers', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:raging'], turnOff: [], identifier: 'rage' },
+				actor,
+			);
+			attachModifier(actor, {
+				type: 'modifyToggle',
+				toggleIdentifier: 'rage',
+				turnOn: ['onCritReceived'],
+			});
+
+			await rule.onAttackReceived({ ...attackContext(actor, false), discardedCritTriggers: true });
+
+			expect(actor.createEmbeddedDocuments).toHaveBeenCalled();
+		});
+
 		it('does nothing when this client is not the active GM', async () => {
 			const gameGlobal = globalThis as unknown as {
 				game: { users?: { activeGM?: { id: string; isSelf: boolean } } };
