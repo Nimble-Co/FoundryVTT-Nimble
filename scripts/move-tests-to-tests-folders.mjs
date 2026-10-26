@@ -6,8 +6,10 @@
  *   pnpm tests:relocate            move and rewrite
  *   pnpm tests:relocate --dry-run  print the plan only
  *
- * Safe to run again: files already in `__tests__` are left alone. Run it after a
- * rebase that brings in tests written next to the source.
+ * Safe to run again. After a rebase onto the move, run it to move tests the branch
+ * added next to the source. For a conflict in a test that was moved, take the
+ * branch's side (`git checkout --theirs <file>`) and run it: it repairs the
+ * relative imports of tests already in `__tests__`.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
