@@ -68,7 +68,7 @@ Testing conventions in `STYLE_GUIDE.md`. Non-obvious setup details:
 - **Foundry mocks** — All mocks in `tests/mocks/foundry.js`. Key exports: `createGameMock()`, `globalFoundryMocks`, `MockRollConstructor`, `uiMock`. Use these — don't create new Foundry mocks.
 - **Roll mock reset** — `globalThis.__MockRollConstructor` is available for tests that need to reset or customize Roll behavior.
 - **Automatic cleanup** — `vi.clearAllMocks()` and `@testing-library/svelte` `cleanup()` run in `afterEach` via setup. Don't duplicate this in test files.
-- **Co-located tests** — Place `.test.ts` files next to the source file they test.
+- **`__tests__` folders** — Place `.test.ts` files in a `__tests__` folder next to the source file they test: `src/utils/foo.ts` -> `src/utils/__tests__/foo.test.ts`. `src/__tests__/testLayout.test.ts` fails on a test outside `__tests__`; `pnpm tests:relocate` moves it.
 - **Live integration suite** — `tests/integration/` runs Vitest inside a real Foundry v14 world via Playwright (`pnpm test:integration`). Local-only: requires a local Foundry install and QA world — see `tests/integration/README.md`. The mocked unit suite does NOT certify v14 runtime behavior; write an integration test for anything that depends on real Foundry APIs.
 
 ## Code Quality & Style Rules

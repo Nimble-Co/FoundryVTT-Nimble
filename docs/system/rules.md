@@ -331,7 +331,7 @@ A rule offering a zero adjustment is skipped, since its checkbox would do nothin
 7. Add a description i18n key under `NIMBLE.rules.<key>.description` for the builder UI, with field labels and hints under `NIMBLE.rules.<key>.<field>`.
 8. Make the rule renderable in the **Rules Builder** — see [below](#rules-builder-integration).
 9. Keep the rule **generic** — it should be reusable across any item type.
-10. Add a co-located test (`src/models/rules/yourRule.test.ts`). Mock actor/item, instantiate the rule directly, and verify the lifecycle hook mutates actor data correctly. See `speedBonus.test.ts` for the pattern.
+10. Add a test in the `__tests__` folder (`src/models/rules/__tests__/yourRule.test.ts`). Mock actor/item, instantiate the rule directly, and verify the lifecycle hook mutates actor data correctly. See `speedBonus.test.ts` for the pattern.
 11. The user documentation's rule reference is generated automatically from your schema (`pnpm docs:generate`), so labels, hints, and choices must be user-comprehensible. Optionally add a hand-written worked example at `docs/documentation/reference/_partials/<key>.md` (no headings; start with `**Example: <item name>.**` followed by a `- **Field** → \`value\`` list) — it is inlined under your rule's entry.
 
 ### Minimal class skeleton
@@ -468,7 +468,7 @@ The `auto` branch only fires when its replacement flow is guaranteed to run: eit
 
 ### Coverage test
 
-`src/view/rulesBuilder/components/RuleCard.allRules.test.ts` instantiates every registered rule type with default values and fails on any inline-error block or "no widget" warning. It runs automatically — your new rule is covered as soon as it's registered.
+`src/view/rulesBuilder/components/__tests__/RuleCard.allRules.test.ts` instantiates every registered rule type with default values and fails on any inline-error block or "no widget" warning. It runs automatically — your new rule is covered as soon as it's registered.
 
 ## Pool storage vs. pool consumption
 

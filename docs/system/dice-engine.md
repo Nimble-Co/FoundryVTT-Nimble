@@ -164,7 +164,7 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 | Multi-crit count | `DamageRoll.critCount` |
 | Brutal primary remapping | `DamageRoll.Options.brutalPrimary` |
 | Primary die value getter | `DamageRoll.primaryDieValue` |
-| Test coverage | `src/dice/DamageRoll.test.ts` |
+| Test coverage | `src/dice/__tests__/DamageRoll.test.ts` |
 | Developer testbench | `src/view/debug/DiceTestbench.svelte` (gated behind the Debug Mode setting) |
 
 ## A worked example end-to-end

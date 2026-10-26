@@ -56,7 +56,7 @@ reviews:
     - path: "src/**/*.ts"
       instructions: |
         - Never import the Foundry globals (`game`, `CONFIG`, `Hooks`, `Roll`, `Actor`, `Item`, `foundry`, `ui`, `canvas`). Reach namespaced v14 APIs through `foundry.*`, for example `foundry.applications.ux.TextEditor.implementation`, not through deprecated bare globals.
-        - Never hardcode `'nimble'` as the system id in flag scopes, flag paths, settings, hook names, asset paths or object scope keys. Use `SYSTEM_ID`, `SYSTEM_PATH` or `systemHookName()` from `#system`, because the dev build runs as `nimble-dev`. `src/utils/systemId.test.ts` finds the literal forms. Flag the indirect forms that it can miss. `game.nimble` and `Compendium.nimble.*` ids in `src/migration/**` are permitted exceptions.
+        - Never hardcode `'nimble'` as the system id in flag scopes, flag paths, settings, hook names, asset paths or object scope keys. Use `SYSTEM_ID`, `SYSTEM_PATH` or `systemHookName()` from `#system`, because the dev build runs as `nimble-dev`. `src/utils/__tests__/systemId.test.ts` finds the literal forms. Flag the indirect forms that it can miss. `game.nimble` and `Compendium.nimble.*` ids in `src/migration/**` are permitted exceptions.
         - Persist changes with `update()`, `updateEmbeddedDocuments()` or `createEmbeddedDocuments()`. A direct assignment to `document.system` in an event handler does not persist. Mutation of prepared data with `foundry.utils.setProperty` inside a data-preparation hook is correct.
         - Document classes extend `NimbleBaseActor` or `NimbleBaseItem`, never the Foundry `Actor` or `Item` classes.
         - Use `@ts-expect-error` with a reason. Never use `@ts-ignore`.
@@ -104,7 +104,7 @@ reviews:
         - Change actor data with `foundry.utils.setProperty(actor.system, path, value)`. For list values, use `pushToActorSystemArray()`, which registers the path so that the array is reset each prepare cycle. Flag a direct `push` onto actor system arrays.
         - `static alwaysDispatchedEvents` makes an event run when the user turns rule automation off. Use it only for core plumbing that a player cannot do by hand. Flag any other use.
         - Derived values stay derived. Flag code that adds a rule total into a stored source field (see issue #499).
-        - A co-located `<rule>.test.ts` covers the embedded, not-embedded, disabled, predicate-fail and stacking (two instances) paths, and each phase of a dual-phase rule.
+        - A `__tests__/<rule>.test.ts` covers the embedded, not-embedded, disabled, predicate-fail and stacking (two instances) paths, and each phase of a dual-phase rule.
         - A schema change alters the generated rule reference. If `docs/documentation/reference/_partials/<key>.md` exists, check that it is still correct.
 
     - path: "src/migration/**"
@@ -244,7 +244,7 @@ code_generation:
     path_instructions:
       - path: "src/**/*.ts"
         instructions: >-
-          Write Vitest tests next to the source file as `<name>.test.ts`.
+          Write Vitest tests in a `__tests__` folder next to the source file, as `__tests__/<name>.test.ts`.
           `describe`, `it`, `expect` and `vi` are globals. `tests/setup.ts`
           already mocks the Foundry globals and runs `init()`, so `CONFIG.NIMBLE`
           is populated. Use `tests/fixtures/` and `tests/mocks/`, and never edit

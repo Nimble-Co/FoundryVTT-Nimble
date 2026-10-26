@@ -25,9 +25,9 @@ pnpm lang:detect-untranslated   # run after adding i18n keys
 ```
 
 ## Unit tests
-Vitest with `happy-dom`; setup in `tests/setup.ts`, config in `vite.config.mts`. Tests are **colocated**: `src/models/rules/speedBonus.ts` -> `src/models/rules/speedBonus.test.ts`.
+Vitest with `happy-dom`; setup in `tests/setup.ts`, config in `vite.config.mts`. Tests live in a **`__tests__` folder** next to the source: `src/models/rules/speedBonus.ts` -> `src/models/rules/__tests__/speedBonus.test.ts`. Test harness components (`*.testHarness.svelte`) go there too. `src/__tests__/testLayout.test.ts` fails on a test outside `__tests__`; `pnpm tests:relocate` moves it and fixes its imports.
 
-There is no Foundry runtime in unit tests — no `game`, `canvas`, or `ui`. Everything is a plain mock object implementing just the surface the code under test touches. **Copy the mock setup from the nearest existing `.test.ts`** rather than inventing one; `src/models/rules/speedBonus.test.ts` and `src/managers/RulesManager.test.ts` are good references.
+There is no Foundry runtime in unit tests — no `game`, `canvas`, or `ui`. Everything is a plain mock object implementing just the surface the code under test touches. **Copy the mock setup from the nearest existing `.test.ts`** rather than inventing one; `src/models/rules/__tests__/speedBonus.test.ts` and `src/managers/__tests__/RulesManager.test.ts` are good references.
 
 For DataModel subclasses, construct with `{ parent: mockItem, strict: false }` and override getters the model cannot resolve from a mock parent:
 ```ts
