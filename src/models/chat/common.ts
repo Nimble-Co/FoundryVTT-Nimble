@@ -198,6 +198,8 @@ const rerollDieResult = () =>
  * The rerolls of an attack card's last action, for its history lines, and
  * whether a discarded crit still triggers when-crit abilities. A new action
  * replaces `rerolls`; `discardedCritTriggers` stays on once set.
+ * `discardedCritTriggersFired` is set once the targets' crit triggers for
+ * that discarded crit have fired, so they fire once per card.
  */
 export const rerollHistory = () => ({
 	rerolls: new fields.ArrayField(
@@ -222,6 +224,11 @@ export const rerollHistory = () => ({
 		{ required: false, nullable: false, initial: [] },
 	),
 	discardedCritTriggers: new fields.BooleanField({
+		required: false,
+		nullable: false,
+		initial: false,
+	}),
+	discardedCritTriggersFired: new fields.BooleanField({
 		required: false,
 		nullable: false,
 		initial: false,

@@ -21,6 +21,7 @@ export function registerAttackedTriggerHooks(): void {
 		targetActor?: unknown;
 		isCritical?: boolean;
 		discardedCritTriggers?: boolean;
+		discardedCritTriggersFired?: boolean;
 	}) => {
 		const target = payload?.targetActor;
 		if (!target || typeof target !== 'object') return;
@@ -31,13 +32,31 @@ export function registerAttackedTriggerHooks(): void {
 
 		// Only crits that reach damage application register — an attack that
 		// never applies damage does not fire this trigger.
-		if (firesCritTriggers(payload ?? {})) {
+		const critTriggers = {
+			isCritical: payload?.isCritical,
+			discardedCritTriggers:
+				payload?.discardedCritTriggers === true && payload.discardedCritTriggersFired !== true,
+		};
+		if (firesCritTriggers(critTriggers)) {
 			void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onCritReceived');
 		}
+	};
+
+	// A kept discarded crit that ends in a miss applies no damage, so its
+	// crit refill fires from its own hook.
+	const handleDiscardedCritTriggered = (payload: { targetActor?: unknown }) => {
+		const target = payload?.targetActor;
+		if (!target || typeof target !== 'object') return;
+		const actor = target as Actor.Implementation;
+		if (actor.type !== 'character') return;
+		void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onCritReceived');
 	};
 
 	// @ts-expect-error nimble.damageApplied is a custom Nimble hook not in
 	// Foundry's typed Hooks union; emitted by the damage application pipeline
 	// once per affected target, consumed here to drive onAttacked refill.
 	Hooks.on(systemHookName('damageApplied'), handleDamageApplied);
+	// @ts-expect-error nimble.discardedCritTriggered is a custom Nimble hook
+	// emitted once per target by the discarded-crit trigger hooks.
+	Hooks.on(systemHookName('discardedCritTriggered'), handleDiscardedCritTriggered);
 }

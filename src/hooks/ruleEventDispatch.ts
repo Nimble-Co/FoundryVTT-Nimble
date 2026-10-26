@@ -47,6 +47,17 @@ interface NimbleDamageAppliedPayload {
 	isCritical: boolean;
 	isMiss: boolean;
 	discardedCritTriggers?: boolean;
+	/** The targets' crit triggers for the discarded crit have already fired. */
+	discardedCritTriggersFired?: boolean;
+}
+
+interface NimbleDiscardedCritTriggeredPayload {
+	sourceItem: unknown;
+	sourceActor: ActorWithRules | null;
+	targetActor: ActorWithRules;
+	card: ChatMessage | null;
+	isCritical: boolean;
+	isMiss: boolean;
 }
 
 interface NimbleSavePayload {
@@ -124,6 +135,24 @@ function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
 		discardedCritTriggers: payload.discardedCritTriggers === true,
 	};
 	void dispatch(payload.sourceActor, 'onItemUsed', context);
+	void dispatch(payload.targetActor, 'onAttackReceived', {
+		...context,
+		discardedCritTriggers:
+			context.discardedCritTriggers && payload.discardedCritTriggersFired !== true,
+	});
+}
+
+function handleDiscardedCritTriggered(payload: NimbleDiscardedCritTriggeredPayload): void {
+	if (!payload.targetActor) return;
+	const context: ItemUsedContext = {
+		sourceItem: payload.sourceItem as unknown as ItemUsedContext['sourceItem'],
+		sourceActor: payload.sourceActor as unknown as ItemUsedContext['sourceActor'],
+		targetActor: payload.targetActor as unknown as ItemUsedContext['targetActor'],
+		card: payload.card,
+		isCritical: payload.isCritical,
+		isMiss: payload.isMiss,
+		discardedCritTriggers: true,
+	};
 	void dispatch(payload.targetActor, 'onAttackReceived', context);
 }
 
@@ -411,6 +440,7 @@ export default function registerRuleEventDispatch(): void {
 	didRegister = true;
 
 	onHook(systemHookName('damageApplied'), handleDamageApplied as HookFn);
+	onHook(systemHookName('discardedCritTriggered'), handleDiscardedCritTriggered as HookFn);
 	onHook(systemHookName('useItem'), handleUseItem as HookFn);
 	onHook('combatTurn', handleCombatTurn as HookFn);
 	onHook('combatRound', handleCombatTurn as HookFn);

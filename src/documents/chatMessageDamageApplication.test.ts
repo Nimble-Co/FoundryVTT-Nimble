@@ -250,13 +250,40 @@ describe('NimbleChatMessage.applyAllDamage', () => {
 		globals().fromUuidSync.mockReturnValue({ actor });
 		const card = createCard([{ damageType: 'slashing', total: 7 }]);
 		(card.system as unknown as { discardedCritTriggers: boolean }).discardedCritTriggers = true;
+		const update = vi.fn().mockResolvedValue(undefined);
+		Object.defineProperty(card, 'update', { value: update });
 
 		await card.applyAllDamage();
 
 		const payload = globals().Hooks.callAll.mock.calls.find(
 			([hook]) => hook === systemHookName('damageApplied'),
 		)?.[1];
-		expect(payload).toMatchObject({ isCritical: false, discardedCritTriggers: true });
+		expect(payload).toMatchObject({
+			isCritical: false,
+			discardedCritTriggers: true,
+			discardedCritTriggersFired: false,
+		});
+		expect(update).toHaveBeenCalledWith({ 'system.discardedCritTriggersFired': true });
+	});
+
+	it('tells damageApplied when the discarded crit triggers already fired, and writes no flag again', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue({ actor });
+		const card = createCard([{ damageType: 'slashing', total: 7 }]);
+		Object.assign(card.system as object, {
+			discardedCritTriggers: true,
+			discardedCritTriggersFired: true,
+		});
+		const update = vi.fn().mockResolvedValue(undefined);
+		Object.defineProperty(card, 'update', { value: update });
+
+		await card.applyAllDamage();
+
+		const payload = globals().Hooks.callAll.mock.calls.find(
+			([hook]) => hook === systemHookName('damageApplied'),
+		)?.[1];
+		expect(payload).toMatchObject({ discardedCritTriggersFired: true });
+		expect(update).not.toHaveBeenCalled();
 	});
 
 	it('reports a kill once when neither packet would drop the target alone', async () => {

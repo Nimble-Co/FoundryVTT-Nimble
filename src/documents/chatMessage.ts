@@ -102,6 +102,7 @@ interface ActivationCardSystemData {
 	isCritical: boolean;
 	isMiss: boolean;
 	discardedCritTriggers?: boolean;
+	discardedCritTriggersFired?: boolean;
 	rerolls?: RerollRecord[];
 	activation?: {
 		effects: unknown[];
@@ -1296,6 +1297,7 @@ class NimbleChatMessage extends ChatMessage {
 				isCritical: systemData.isCritical,
 				isMiss: systemData.isMiss,
 				discardedCritTriggers: systemData.discardedCritTriggers === true,
+				discardedCritTriggersFired: systemData.discardedCritTriggersFired === true,
 			});
 
 			if (wasKilled) {
@@ -1305,6 +1307,13 @@ class NimbleChatMessage extends ChatMessage {
 					Hooks.call('nimbleKillApplied', attacker, target.actor);
 				}
 			}
+		}
+
+		if (
+			systemData.discardedCritTriggers === true &&
+			systemData.discardedCritTriggersFired !== true
+		) {
+			await this.update({ 'system.discardedCritTriggersFired': true } as Record<string, unknown>);
 		}
 
 		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {
