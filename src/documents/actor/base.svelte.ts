@@ -837,12 +837,7 @@ class NimbleBaseActor<
 			{ kind: 'abilityCheck', key: abilityKey },
 			rollMode ?? 0,
 		);
-		const chatData = await this.prepareAbilityCheckChatCardData(
-			abilityKey,
-			roll,
-			{ ...options, rollMode },
-			rerolls,
-		);
+		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);
@@ -897,19 +892,8 @@ class NimbleBaseActor<
 
 	async prepareAbilityCheckChatCardData(
 		abilityKey: AbilityKeyType,
-		roll: Roll<Record<string, unknown>>,
-		options = { rollMode: 0 } as ActorRollOptions,
-		givenRerolls?: CheckCardRerollData<Roll<Record<string, unknown>>>,
+		rerolls: CheckCardRerollData<Roll<Record<string, unknown>>>,
 	) {
-		const rerolls =
-			givenRerolls ??
-			(await checkCardRerollData(
-				this as unknown as RerollingActor,
-				roll,
-				{ kind: 'abilityCheck', key: abilityKey },
-				options.rollMode ?? 0,
-			));
-
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.abilityScores[abilityKey]} Check`,
@@ -940,12 +924,7 @@ class NimbleBaseActor<
 			{ kind: 'save', key: saveKey },
 			rollMode ?? 0,
 		);
-		const chatData = await this.prepareSavingThrowChatCardData(
-			saveKey,
-			roll,
-			{ ...options, rollMode },
-			rerolls,
-		);
+		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);
@@ -1060,19 +1039,8 @@ class NimbleBaseActor<
 
 	async prepareSavingThrowChatCardData(
 		saveKey: SaveKeyType,
-		roll: NimbleRoll | Roll<Record<string, unknown>>,
-		options = { rollMode: 0 } as ActorRollOptions,
-		givenRerolls?: CheckCardRerollData<NimbleRoll | Roll<Record<string, unknown>>>,
+		rerolls: CheckCardRerollData<NimbleRoll | Roll<Record<string, unknown>>>,
 	) {
-		const rerolls =
-			givenRerolls ??
-			(await checkCardRerollData(
-				this as unknown as RerollingActor,
-				roll,
-				{ kind: 'save', key: saveKey },
-				options.rollMode ?? 0,
-			));
-
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.savingThrows[saveKey]} Save`,
