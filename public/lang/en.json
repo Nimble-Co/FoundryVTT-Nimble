@@ -240,7 +240,7 @@
 					"feature": "{feature} ({name})",
 					"disposition": "{name}'s token is {disposition}, not {rollerDisposition}",
 					"notAlly": "{name}'s token is not marked as an ally",
-					"range": "{spaces} spaces away, Reach {range}",
+					"reach": "{spaces} spaces away, Reach {reach}",
 					"add": "Add",
 					"addLabel": "Add {feature} for {name}"
 				},
@@ -1911,7 +1911,7 @@
 						"ally": "An ally"
 					}
 				},
-				"range": {
+				"reach": {
 					"label": "Reach",
 					"hint": "How many spaces the ally can be from the one who rolled, measured when the roll is made. 0 is any distance."
 				},

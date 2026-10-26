@@ -18,10 +18,10 @@ function dispositionLabel(disposition: number | null | undefined): string | null
 /** Why the ally scan left this reroll out, for the GM. */
 export function leftOutRerollReason(entry: IncomingReactionEntry, tokens: LeftOutTokens): string {
 	const leftOut = entry.leftOut;
-	if (leftOut?.reason === 'range') {
-		return localize('NIMBLE.chat.incomingReactions.leftOut.range', {
+	if (leftOut?.reason === 'reach') {
+		return localize('NIMBLE.chat.incomingReactions.leftOut.reach', {
 			spaces: String(leftOut.spaces),
-			range: String(leftOut.range),
+			reach: String(leftOut.reach),
 		});
 	}
 	const disposition = dispositionLabel(tokens.allyDisposition);

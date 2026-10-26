@@ -61,7 +61,7 @@
 				"skills": [],
 				"abilities": [],
 				"usedBy": "ally",
-				"range": 6,
+				"reach": 6,
 				"die": "pickedDie",
 				"keep": "new",
 				"outcome": "always",

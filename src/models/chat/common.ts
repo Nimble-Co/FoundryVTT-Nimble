@@ -166,7 +166,7 @@ export const incomingReactions = () => ({
 						choices: [...REROLL_LEFT_OUT_REASONS],
 					}),
 					spaces: new fields.NumberField({ required: false, nullable: true, initial: null }),
-					range: new fields.NumberField({ required: false, nullable: true, initial: null }),
+					reach: new fields.NumberField({ required: false, nullable: true, initial: null }),
 				},
 				{ required: false, nullable: true, initial: null },
 			),

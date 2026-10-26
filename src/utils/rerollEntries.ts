@@ -27,7 +27,7 @@ interface RerollRuleLike {
 	rerollsByItself?: boolean;
 	discardedCritTriggers?: boolean;
 	oncePerAttack?: boolean;
-	range?: number;
+	reach?: number;
 	die?: RerollDie;
 	keep?: RerollKeep;
 	rerollCost?: RerollCost;
@@ -138,8 +138,8 @@ function rerollUsers(side: RerollSide, context: RerollRollContext): RerollUser[]
 
 function leftOutFor(rule: RerollRuleLike, ally: RerollAlly): RerollLeftOut | null {
 	if (!ally.isAlly) return { reason: 'disposition' };
-	const range = Math.max(0, Number(rule.range) || 0);
-	if (range > 0 && ally.spaces > range) return { reason: 'range', spaces: ally.spaces, range };
+	const reach = Math.max(0, Number(rule.reach) || 0);
+	if (reach > 0 && ally.spaces > reach) return { reason: 'reach', spaces: ally.spaces, reach };
 	return null;
 }
 

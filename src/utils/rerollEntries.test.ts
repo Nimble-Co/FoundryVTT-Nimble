@@ -338,18 +338,18 @@ describe('collectRerollEntries for an ally', () => {
 		]);
 	});
 
-	it('leaves out a reroll from an ally out of range, with the spaces and the range', () => {
-		const rule = rerollRule({ usedBy: 'ally', range: 6 });
+	it('leaves out a reroll from an ally out of Reach, with the spaces and the Reach', () => {
+		const rule = rerollRule({ usedBy: 'ally', reach: 6 });
 		expect(collectRerollEntries(withAlly(rule, { spaces: 7 })).manual).toEqual([
-			expect.objectContaining({ leftOut: { reason: 'range', spaces: 7, range: 6 } }),
+			expect.objectContaining({ leftOut: { reason: 'reach', spaces: 7, reach: 6 } }),
 		]);
 		expect(collectRerollEntries(withAlly(rule, { spaces: 6 })).manual).toEqual([
 			expect.objectContaining({ leftOut: null }),
 		]);
 	});
 
-	it('takes a range of 0 as any distance', () => {
-		const rule = rerollRule({ usedBy: 'ally', range: 0 });
+	it('takes a Reach of 0 as any distance', () => {
+		const rule = rerollRule({ usedBy: 'ally', reach: 0 });
 		expect(collectRerollEntries(withAlly(rule, { spaces: 40 })).manual).toEqual([
 			expect.objectContaining({ leftOut: null }),
 		]);

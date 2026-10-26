@@ -105,15 +105,15 @@ function schema() {
 				widget: 'chips',
 			}),
 		),
-		range: new fields.NumberField(
+		reach: new fields.NumberField(
 			withWidget({
 				required: true,
 				nullable: false,
 				initial: 0,
 				min: 0,
 				integer: true,
-				label: 'NIMBLE.rules.reroll.range.label',
-				hint: 'NIMBLE.rules.reroll.range.hint',
+				label: 'NIMBLE.rules.reroll.reach.label',
+				hint: 'NIMBLE.rules.reroll.reach.hint',
 				showWhen: (data: Record<string, unknown>) => data.usedBy === 'ally',
 			}),
 		),
@@ -305,7 +305,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	static override description = 'NIMBLE.rules.reroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['rolls', 'saves', 'skills', 'abilities'] },
-		{ fields: ['usedBy', 'range'] },
+		{ fields: ['usedBy', 'reach'] },
 		{ fields: ['die', 'keep'] },
 		{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
 		{
@@ -351,7 +351,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
 	declare oncePerAttack: boolean;
-	declare range: number;
+	declare reach: number;
 	declare die: RerollDie;
 	declare keep: RerollKeep;
 
@@ -383,7 +383,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 				['woundCost', 'number'],
 				['heroicReaction', 'string'],
 				['oncePerAttack', 'boolean'],
-				['range', 'number'],
+				['reach', 'number'],
 				['die', 'string'],
 				['keep', 'string'],
 			]),

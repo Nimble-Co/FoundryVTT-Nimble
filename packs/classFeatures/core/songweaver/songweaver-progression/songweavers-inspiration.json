@@ -46,7 +46,7 @@
 				"skills": [],
 				"abilities": [],
 				"usedBy": "ally",
-				"range": 0,
+				"reach": 0,
 				"die": "pickedDie",
 				"keep": "rollerChooses",
 				"outcome": "always",

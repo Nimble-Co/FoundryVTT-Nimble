@@ -136,13 +136,13 @@ describe('RuleCard with a form layout (reroll)', () => {
 		);
 	});
 
-	it('asks for a range for an ally, and hides Rerolls by itself', () => {
+	it('asks for a Reach for an ally, and hides Rerolls by itself', () => {
 		const { container } = render(RuleCard, {
 			rule: initialRule('reroll', { usedBy: 'ally' }),
 			manager,
 		});
 		const fields = shownFields(container);
-		expect(fields.slice(0, 5)).toEqual(['rolls', 'usedBy', 'range', 'die', 'keep']);
+		expect(fields.slice(0, 5)).toEqual(['rolls', 'usedBy', 'reach', 'die', 'keep']);
 		expect(fields).not.toContain('automatic');
 	});
 

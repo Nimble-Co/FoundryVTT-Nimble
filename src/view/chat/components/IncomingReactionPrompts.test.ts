@@ -814,7 +814,7 @@ describe('IncomingReactionPrompts', () => {
 					rerollEntry({
 						id: 'pip',
 						actorUuid: 'Actor.pip',
-						leftOut: { reason: 'range', spaces: 7, range: 6 },
+						leftOut: { reason: 'reach', spaces: 7, reach: 6 },
 					} as EntryOptions),
 				]);
 				return Object.assign(message, { addLeftOutReroll: vi.fn(async () => undefined) });

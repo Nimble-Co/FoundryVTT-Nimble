@@ -91,7 +91,7 @@ function makeRule(
 		saves: [],
 		skills: [],
 		abilities: [],
-		range: 0,
+		reach: 0,
 		die: 'wholeRoll',
 		keep: 'new',
 		...config,
@@ -150,7 +150,7 @@ describe('RerollRule', () => {
 			expect(schema.saves?.initial).toEqual([]);
 			expect(schema.skills?.initial).toEqual([]);
 			expect(schema.abilities?.initial).toEqual([]);
-			expect(schema.range?.initial).toBe(0);
+			expect(schema.reach?.initial).toBe(0);
 			expect(schema.die?.initial).toBe('wholeRoll');
 			expect(schema.keep?.initial).toBe('new');
 			expect(schema.type?.initial).toBe('reroll');
@@ -245,11 +245,11 @@ describe('RerollRule', () => {
 			expect(schema.chargeCost).toMatchObject({ min: 1, integer: true });
 			expect(schema.manaCost).toMatchObject({ min: 0, integer: true });
 			expect(schema.woundCost).toMatchObject({ min: 0, integer: true });
-			expect(schema.range).toMatchObject({ min: 0, integer: true });
+			expect(schema.reach).toMatchObject({ min: 0, integer: true });
 		});
 
-		it('asks for a range only for an ally', () => {
-			const showWhen = schema.range?.showWhen;
+		it('asks for a Reach only for an ally', () => {
+			const showWhen = schema.reach?.showWhen;
 			expect(showWhen?.({ usedBy: 'ally' })).toBe(true);
 			expect(showWhen?.({ usedBy: 'roller' })).toBe(false);
 			expect(showWhen?.({ usedBy: 'target' })).toBe(false);

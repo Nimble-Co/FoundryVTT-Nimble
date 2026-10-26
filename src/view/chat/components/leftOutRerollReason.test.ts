@@ -40,8 +40,8 @@ describe('leftOutRerollReason', () => {
 		expect(reason).toBe("Pip's token is not marked as an ally");
 	});
 
-	it('gives the spaces and the range for an ally out of range', () => {
-		const reason = leftOutRerollReason(entry({ reason: 'range', spaces: 7, range: 6 }), {
+	it('gives the spaces and the Reach for an ally out of Reach', () => {
+		const reason = leftOutRerollReason(entry({ reason: 'reach', spaces: 7, reach: 6 }), {
 			allyName: 'Pip',
 			allyDisposition: FRIENDLY,
 			rollerDisposition: FRIENDLY,

@@ -50,12 +50,12 @@ export function rerollTriggerMatches(
 	}
 }
 
-export const REROLL_LEFT_OUT_REASONS = ['disposition', 'range'] as const;
+export const REROLL_LEFT_OUT_REASONS = ['disposition', 'reach'] as const;
 
 /** Why an ally-side reroll was left out when the card was posted. */
 export type RerollLeftOut =
 	| { reason: 'disposition' }
-	| { reason: 'range'; spaces: number; range: number };
+	| { reason: 'reach'; spaces: number; reach: number };
 
 /**
  * A pending interactive offer stamped onto an attack chat card. Entries are
