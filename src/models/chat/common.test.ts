@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { MovementOffer } from '#types/movement.js';
-import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.js';
+import type {
+	IncomingReactionEntry,
+	PendingKeep,
+	RerollRecord,
+} from '#utils/incomingReactionEntry.js';
 import { grantedActionOffers, incomingReactions, movementOffers, rerollHistory } from './common.js';
 
 describe('grantedActionOffers schema factory', () => {
@@ -119,6 +123,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			usedAmount: null,
 			usedPoolLabel: '',
 			usedFaces: [],
+			leftOut: null,
 		};
 		expect(Object.keys(entryFields()).sort()).toEqual(Object.keys(stamped).sort());
 	});
@@ -142,10 +147,30 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			next: { value: 4, outcome: null },
 			usesLeft: 1,
 			woundsGained: 0,
+			kept: 'new',
+			keptTotal: 12,
 		};
 		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
 		const die = (rerollFields().previous as { fields: Fields }).fields;
 		expect(Object.keys(die).sort()).toEqual(Object.keys(record.previous ?? {}).sort());
+	});
+
+	it('stores every field of a waiting choice of result, and starts with none', () => {
+		const pending: Required<PendingKeep> = {
+			entryId: 'e1',
+			chooserUuid: 'Actor.wren',
+			roll: { class: 'DamageRoll' },
+			reroll: {} as RerollRecord,
+			old: { total: 9, outcome: 'miss' },
+			new: { total: 12, outcome: 'hit' },
+			discardedCritTriggers: false,
+		};
+		const field = rerollHistory().pendingKeep as unknown as {
+			fields: Fields;
+			options: { initial: unknown };
+		};
+		expect(Object.keys(field.fields).sort()).toEqual(Object.keys(pending).sort());
+		expect(field.options.initial).toBeNull();
 	});
 
 	it('starts with no rerolls', () => {

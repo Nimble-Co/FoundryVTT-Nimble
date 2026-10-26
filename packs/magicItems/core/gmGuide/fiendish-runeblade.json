@@ -27,7 +27,40 @@
 					"damageType": "slashing",
 					"formula": "1d8",
 					"parentContext": null,
-					"parentNode": null
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "ZFRjbqg9SYvtbGpH",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "FiendishRuneDmg"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "r4wjM03ZetSTjW1V",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "FiendishRuneDmg"
+							}
+						],
+						"hit": [
+							{
+								"id": "XQETP377B9AXXUDX",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "FiendishRuneDmg"
+							}
+						]
+					}
 				}
 			],
 			"showDescription": true,

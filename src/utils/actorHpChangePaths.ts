@@ -23,3 +23,58 @@ export function hasAnyActorChangeAt(
 ): boolean {
 	return paths.some((path) => foundry.utils.hasProperty(changes, path));
 }
+
+/**
+ * What an actor's `_preUpdate` recorded before the update, read back from the
+ * update options that reach `_onUpdate` and the `updateActor` hook on every client.
+ */
+export interface ActorUpdateBefore {
+	previousHp?: { value: number; max: number; temp: number };
+	previousWounds?: number;
+	/** HP the update adds only because max HP rose, set by the one who updates (a level up). */
+	hpFollowingMax?: number;
+}
+
+function recordedBefore(options: unknown): ActorUpdateBefore {
+	const nimble = (options as { nimble?: ActorUpdateBefore } | null | undefined)?.nimble; // allow-hardcoded-system-id
+	return nimble ?? {};
+}
+
+function numberAt(actor: unknown, path: string): number {
+	let cursor: unknown = actor;
+	for (const key of path.split('.')) {
+		if (cursor === null || typeof cursor !== 'object') return 0;
+		cursor = (cursor as Record<string, unknown>)[key];
+	}
+	return typeof cursor === 'number' && Number.isFinite(cursor) ? cursor : 0;
+}
+
+/** The HP value before the update, or undefined when the update did not record it. */
+export function hpBeforeUpdate(options: unknown): number | undefined {
+	const before = recordedBefore(options).previousHp?.value;
+	return typeof before === 'number' ? before : undefined;
+}
+
+/**
+ * HP the update healed; 0 when it healed none or did not record the HP before it.
+ * HP that only follows a higher max HP (a level up) is not healing: the amount the
+ * update gives in `hpFollowingMax`, else the max HP rise in this update.
+ */
+export function hpGained(actor: unknown, options: unknown): number {
+	const recorded = recordedBefore(options);
+	const before = recorded.previousHp;
+	if (typeof before?.value !== 'number') return 0;
+	const valueRise = numberAt(actor, ACTOR_HP_PATHS.value) - before.value;
+	const following =
+		typeof recorded.hpFollowingMax === 'number'
+			? recorded.hpFollowingMax
+			: Math.max(0, numberAt(actor, ACTOR_HP_PATHS.max) - (before.max ?? 0));
+	return Math.max(0, valueRise - following);
+}
+
+/** Wounds the update added; 0 when it added none or did not record the wounds before it. */
+export function woundsGained(actor: unknown, options: unknown): number {
+	const before = recordedBefore(options).previousWounds;
+	if (typeof before !== 'number') return 0;
+	return Math.max(0, numberAt(actor, ACTOR_WOUNDS_PATHS.value) - before);
+}

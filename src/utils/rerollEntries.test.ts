@@ -48,7 +48,7 @@ function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide }
 		label: '',
 		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always' as RerollTrigger,
-		automatic: false,
+		rerollsByItself: false,
 		rerollCost: FREE,
 		offersRerollOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
 		...rest,
@@ -259,7 +259,7 @@ describe('collectRerollEntries', () => {
 	}
 
 	it('rerolls by itself when the rule is automatic and Feature Effects is on', () => {
-		const rule = rerollRule({ automatic: true });
+		const rule = rerollRule({ rerollsByItself: true });
 		const { manual, automatic } = collectRerollEntries(targetOnly(rule));
 		expect(manual).toEqual([]);
 		expect(automatic).toHaveLength(1);
@@ -268,14 +268,16 @@ describe('collectRerollEntries', () => {
 
 	it('shows an automatic rule as a button while Feature Effects is off', () => {
 		setToggles({ 'automation.applyRuleEffects': false });
-		const { manual, automatic } = collectRerollEntries(targetOnly(rerollRule({ automatic: true })));
+		const { manual, automatic } = collectRerollEntries(
+			targetOnly(rerollRule({ rerollsByItself: true })),
+		);
 		expect(automatic).toEqual([]);
 		expect(manual).toHaveLength(1);
 	});
 
 	it('shows an automatic rule with a cost as a button for a client that cannot pay it', () => {
 		const rule = rerollRule({
-			automatic: true,
+			rerollsByItself: true,
 			rerollCost: { ...FREE, chargePoolIdentifier: 'sand' },
 		});
 		const notOwner = collectRerollEntries(targetOnly(rule, { isOwner: false }));
@@ -287,9 +289,89 @@ describe('collectRerollEntries', () => {
 
 	it('lets any client roll an automatic rule whose cost charges nothing', () => {
 		setToggles({ 'automation.resourceSpending': false });
-		const rule = rerollRule({ automatic: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const rule = rerollRule({ rerollsByItself: true, rerollCost: { ...FREE, woundCost: 1 } });
 		const { automatic } = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		expect(automatic).toHaveLength(1);
+	});
+});
+
+describe('collectRerollEntries for an ally', () => {
+	beforeEach(() => setToggles({}));
+	afterEach(() => {
+		delete testGlobals.game.settings;
+	});
+
+	const ALLY_TOKEN = 'Scene.s.Token.ally';
+
+	function withAlly(rule: RerollRuleLike, ally: { isAlly?: boolean; spaces?: number } = {}) {
+		return context({
+			allies: [
+				{
+					tokenUuid: ALLY_TOKEN,
+					actor: actor('Actor.ally', [rule]),
+					isAlly: ally.isAlly ?? true,
+					spaces: ally.spaces ?? 3,
+				},
+			],
+		});
+	}
+
+	it("gives an ally a button entry on the one who rolled's roll, tied to the ally's token", () => {
+		const { manual, automatic } = collectRerollEntries(withAlly(rerollRule({ usedBy: 'ally' })));
+		expect(automatic).toEqual([]);
+		expect(manual).toEqual([
+			expect.objectContaining({
+				side: 'ally',
+				actorUuid: 'Actor.ally',
+				tokenUuid: ALLY_TOKEN,
+				targetTokenUuid: null,
+				leftOut: null,
+			}),
+		]);
+	});
+
+	it('leaves out a reroll from a token that is not an ally, and says why', () => {
+		const rule = rerollRule({ usedBy: 'ally' });
+		const { manual } = collectRerollEntries(withAlly(rule, { isAlly: false }));
+		expect(manual).toEqual([
+			expect.objectContaining({ side: 'ally', leftOut: { reason: 'disposition' } }),
+		]);
+	});
+
+	it('leaves out a reroll from an ally out of Reach, with the spaces and the Reach', () => {
+		const rule = rerollRule({ usedBy: 'ally', reach: 6 });
+		expect(collectRerollEntries(withAlly(rule, { spaces: 7 })).manual).toEqual([
+			expect.objectContaining({ leftOut: { reason: 'reach', spaces: 7, reach: 6 } }),
+		]);
+		expect(collectRerollEntries(withAlly(rule, { spaces: 6 })).manual).toEqual([
+			expect.objectContaining({ leftOut: null }),
+		]);
+	});
+
+	it('takes a Reach of 0 as any distance', () => {
+		const rule = rerollRule({ usedBy: 'ally', reach: 0 });
+		expect(collectRerollEntries(withAlly(rule, { spaces: 40 })).manual).toEqual([
+			expect.objectContaining({ leftOut: null }),
+		]);
+	});
+
+	it('never gives the one who rolled an ally entry on their own roll', () => {
+		const rule = rerollRule({ usedBy: 'ally' });
+		const attacker = actor('Actor.attacker', [rule]);
+		const result = collectRerollEntries(
+			context({
+				attacker,
+				allies: [{ tokenUuid: ALLY_TOKEN, actor: attacker, isAlly: true, spaces: 0 }],
+			}),
+		);
+		expect(result.manual).toEqual([]);
+	});
+
+	it('asks the rule about the ally side and checks the attack outcome', () => {
+		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
+		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
+		expect(collectRerollEntries({ ...withAlly(rule), outcome: MISS }).manual).toHaveLength(1);
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'ally', roll: MELEE });
 	});
 });
 
@@ -417,7 +499,7 @@ describe('withNewRerollEntries', () => {
 describe('nextAutomaticReroll', () => {
 	const automatic = (overrides: Partial<IncomingReactionEntry>): AutomaticReroll => ({
 		entry: stamped(overrides),
-		rule: rerollRule({ automatic: true }),
+		rule: rerollRule({ rerollsByItself: true }),
 	});
 	const onMiss = automatic({ ruleId: 'on-miss', outcomeTrigger: 'miss' });
 	const onCrit = automatic({ ruleId: 'on-crit', outcomeTrigger: 'criticalHit' });
@@ -603,6 +685,46 @@ describe('usableRerollEntry', () => {
 	])('refuses %s', (_name, makeEntry, makeContext, reason) => {
 		const stamped = makeEntry();
 		expect(usableRerollEntry(stamped, makeContext(), [stamped])).toEqual({ ok: false, reason });
+	});
+
+	describe('an ally entry', () => {
+		const ally = actor('Actor.ally');
+		const allyEntry = (overrides: Partial<IncomingReactionEntry> = {}) =>
+			entry({
+				actorUuid: 'Actor.ally',
+				tokenUuid: 'Scene.s.Token.ally',
+				targetTokenUuid: null,
+				side: 'ally',
+				...overrides,
+			});
+
+		beforeEach(() => {
+			rule = rerollRule({ usedBy: 'ally' });
+			const byUuid: Record<string, unknown> = {
+				'Actor.attacker': attacker,
+				'Actor.ally': ally,
+				'Item.sand': { rules: new Map([[rule.id ?? '', rule]]) },
+			};
+			testGlobals.fromUuidSync = vi.fn((uuid: string) => byUuid[uuid] ?? null);
+		});
+
+		it('can be used by the ally, whatever the targets are', () => {
+			expect(usableRerollEntry(allyEntry(), card({ targets: [] }), [])).toEqual({
+				ok: true,
+				rule,
+				actor: ally,
+			});
+		});
+
+		it('cannot be used while it is left out', () => {
+			const leftOut = allyEntry({ leftOut: { reason: 'disposition' } });
+			expect(usableRerollEntry(leftOut, card(), [])).toEqual({ ok: false, reason: 'unavailable' });
+		});
+
+		it('cannot be used by the one who rolled', () => {
+			const own = allyEntry({ actorUuid: 'Actor.attacker' });
+			expect(usableRerollEntry(own, card(), [])).toEqual({ ok: false, reason: 'unavailable' });
+		});
 	});
 
 	describe('on a check', () => {

@@ -1,4 +1,11 @@
-import { DIE_OUTCOMES, REROLL_SIDES, REROLL_TRIGGERS } from '../../utils/incomingReactionEntry.js';
+import {
+	DIE_OUTCOMES,
+	KEEP_OUTCOMES,
+	REROLL_KEPT,
+	REROLL_LEFT_OUT_REASONS,
+	REROLL_SIDES,
+	REROLL_TRIGGERS,
+} from '../../utils/incomingReactionEntry.js';
 
 const { fields } = foundry.data;
 
@@ -151,6 +158,18 @@ export const incomingReactions = () => ({
 				choices: [...REROLL_SIDES],
 			}),
 			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			leftOut: new fields.SchemaField(
+				{
+					reason: new fields.StringField({
+						required: true,
+						nullable: false,
+						choices: [...REROLL_LEFT_OUT_REASONS],
+					}),
+					spaces: new fields.NumberField({ required: false, nullable: true, initial: null }),
+					reach: new fields.NumberField({ required: false, nullable: true, initial: null }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
 			// Legacy forceReroll fields, kept so old cards validate.
 			rerollTrigger: new fields.StringField({
 				required: false,
@@ -207,28 +226,46 @@ const rerollDieResult = () =>
  * `discardedCritTriggersFired` is set once the targets' crit triggers for
  * that discarded crit have fired, so they fire once per card.
  */
-export const rerollHistory = () => ({
-	rerolls: new fields.ArrayField(
-		new fields.SchemaField({
-			entryId: new fields.StringField({ required: true, nullable: false, initial: '' }),
-			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
-			ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
-			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
-			actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
-			faces: new fields.NumberField({ required: true, nullable: true, initial: null }),
-			previous: rerollDieResult(),
-			next: rerollDieResult(),
-			usesLeft: new fields.NumberField({ required: true, nullable: true, initial: null }),
-			woundsGained: new fields.NumberField({
-				required: true,
-				nullable: false,
-				initial: 0,
-				integer: true,
-				min: 0,
-			}),
+const rerollRecord = () =>
+	new fields.SchemaField({
+		entryId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		faces: new fields.NumberField({ required: true, nullable: true, initial: null }),
+		previous: rerollDieResult(),
+		next: rerollDieResult(),
+		usesLeft: new fields.NumberField({ required: true, nullable: true, initial: null }),
+		woundsGained: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			min: 0,
 		}),
-		{ required: false, nullable: false, initial: [] },
-	),
+		kept: new fields.StringField({
+			required: false,
+			nullable: true,
+			initial: null,
+			choices: [...REROLL_KEPT],
+		}),
+		keptTotal: new fields.NumberField({ required: false, nullable: true, initial: null }),
+	});
+
+const keepChoiceRoll = () =>
+	new fields.SchemaField({
+		total: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		outcome: new fields.StringField({
+			required: true,
+			nullable: true,
+			initial: null,
+			choices: [...KEEP_OUTCOMES],
+		}),
+	});
+
+export const rerollHistory = () => ({
+	rerolls: new fields.ArrayField(rerollRecord(), { required: false, nullable: false, initial: [] }),
 	discardedCritTriggers: new fields.BooleanField({
 		required: false,
 		nullable: false,
@@ -239,4 +276,20 @@ export const rerollHistory = () => ({
 		nullable: false,
 		initial: false,
 	}),
+	pendingKeep: new fields.SchemaField(
+		{
+			entryId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			chooserUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			roll: new fields.ObjectField({ required: true, nullable: false }),
+			reroll: rerollRecord(),
+			old: keepChoiceRoll(),
+			new: keepChoiceRoll(),
+			discardedCritTriggers: new fields.BooleanField({
+				required: true,
+				nullable: false,
+				initial: false,
+			}),
+		},
+		{ required: false, nullable: true, initial: null },
+	),
 });

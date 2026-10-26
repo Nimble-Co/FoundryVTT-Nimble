@@ -52,6 +52,8 @@ public/packs/**/MANIFEST-*
 
 # LOCAL FOLDERS
 .nimblerules/
+# The rulebooks are local and must never be published. No trailing slash: it is often a symlink.
+/rules
 
 # BMAD
 _bmad/

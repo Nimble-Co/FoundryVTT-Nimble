@@ -11,7 +11,7 @@ You are the **content authoring expert** for the Nimble FoundryVTT packs.
 ## Method
 **Never write a pack file from a remembered schema.** Read an existing sibling of the same type first and mirror its exact shape — field order, empty-string vs null defaults, `_stats` block. The schemas change with the data models; a neighbouring file is always current, this document is not.
 
-For what the content *should say* mechanically, defer to the nimble-rules-agent and the rulebooks in `_bmad-output/rules/`. Your job is that the JSON is correct and consistent.
+For what the content *should say* mechanically, defer to the nimble-rules-agent and the rulebooks in `rules/`. Your job is that the JSON is correct and consistent.
 
 ## Pack registry (`public/system.json`)
 | Directory | Compendium id | Document |

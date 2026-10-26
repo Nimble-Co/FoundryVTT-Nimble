@@ -216,6 +216,15 @@
 				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
 				"rerollHistoryPlain": "Rerolled with {feature}",
+				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
+				"keepResult": "Keep {total}",
+				"keepWaiting": "{name} keeps {old} or {new}.",
+				"keepFirst": "Keep a result first",
+				"keepOutcomes": {
+					"crit": "Critical Hit",
+					"hit": "Hit",
+					"miss": "Miss"
+				},
 				"rerollUsedBy": "Used by {name}",
 				"rerollUsesLeft": "Uses left: {count}",
 				"rerollWoundsGained": "Wounds gained: {count}",
@@ -223,7 +232,30 @@
 				"costWounds": "{count} Wounds",
 				"costHeroicReaction": "Heroic Reaction",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
-				"rerollCostUnpaid": "The cost of this reroll could not be paid."
+				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
+				"rerollPickADie": "Pick the die to reroll.",
+				"leftOut": {
+					"one": "1 ally reroll left out",
+					"many": "{count} ally rerolls left out",
+					"feature": "{feature} ({name})",
+					"disposition": "{name}'s token is {disposition}, not {rollerDisposition}",
+					"notAlly": "{name}'s token is not marked as an ally",
+					"reach": "{spaces} spaces away, Reach {reach}",
+					"add": "Add",
+					"addLabel": "Add {feature} for {name}"
+				},
+				"pickDie": {
+					"title": "Pick a die to reroll",
+					"rolling": "Rerolling with {feature}",
+					"cancel": "Cancel",
+					"die": "Reroll the {value}",
+					"dieWithRole": "Reroll the {value} ({role})",
+					"roles": {
+						"primary": "Primary",
+						"kept": "Kept",
+						"dropped": "Dropped"
+					}
+				}
 			}
 		},
 		"characterCreationStages": {
@@ -1175,6 +1207,10 @@
 					"value": {
 						"label": "Value",
 						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+					},
+					"predicate": {
+						"label": "Only while",
+						"hint": "Optional condition tested when the trigger fires (e.g. self: fullHp). Leave empty to always apply."
 					}
 				}
 			},
@@ -1774,6 +1810,7 @@
 				"endReasons": {
 					"onActorKilled": "died",
 					"onActorWounded": "took a wound",
+					"onActorHealed": "was healed",
 					"onRest": "completed a rest",
 					"onTurnStart": "turn started",
 					"onTurnEnd": "turn ended",
@@ -1830,7 +1867,7 @@
 				}
 			},
 			"reroll": {
-				"description": "Lets the one who rolled, or the target of an attack, roll an attack, a save or a check again. The new result stands.",
+				"description": "Lets the one who rolled, the target of an attack, or an ally reroll an attack, a save or a check, or one die of it.",
 				"form": {
 					"when": "When?",
 					"onlyWhile": {
@@ -1867,10 +1904,33 @@
 				"noneMeansAny": "None picked means any.",
 				"usedBy": {
 					"label": "Who can use it?",
-					"hint": "The one who made the attack, or the creature the attack is against. On a save or a check, only the one who rolled.",
+					"hint": "The one who rolled, the creature an attack is against, or an ally of the one who rolled (a friendly creature, not yourself). On a save or a check there is no target.",
 					"choices": {
 						"roller": "The one who rolled",
-						"target": "The target"
+						"target": "The target",
+						"ally": "An ally"
+					}
+				},
+				"reach": {
+					"label": "Reach",
+					"hint": "How many spaces the ally can be from the one who rolled, measured when the roll is made. 0 is any distance."
+				},
+				"die": {
+					"label": "Which dice does it reroll?",
+					"hint": "One die leaves the other dice as they are. The player picks the die when they use the reroll.",
+					"choices": {
+						"wholeRoll": "The whole roll",
+						"primaryDie": "The Primary Die",
+						"pickedDie": "One die the player picks"
+					}
+				},
+				"keep": {
+					"label": "Which result stands?",
+					"hint": "When a player keeps a result, nothing that depends on the roll happens until they do.",
+					"choices": {
+						"new": "The new result",
+						"rollerChooses": "The one who rolled keeps one",
+						"ownerChooses": "The owner of this feature keeps one"
 					}
 				},
 				"outcome": {
@@ -1895,7 +1955,7 @@
 				},
 				"automatic": {
 					"label": "Rerolls by itself",
-					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead."
+					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead. Not for an ally, a picked die, or a choice of result."
 				},
 				"discardedCritTriggers": {
 					"label": "The discarded crit still triggers when-crit abilities",
@@ -1978,6 +2038,7 @@
 				"encounterEnd": "Encounter End",
 				"onInitiativeRolled": "Initiative Rolled",
 				"onWound": "Wounded",
+				"onHealed": "Healed",
 				"onTurnStart": "Turn Start",
 				"onTurnEnd": "Turn End",
 				"onKill": "Kill",

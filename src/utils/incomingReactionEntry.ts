@@ -6,8 +6,16 @@ export const REROLL_TRIGGERS = ['always', 'hit', 'criticalHit', 'nonCriticalHit'
 export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 
 /** The side of a roll a `reroll` entry is for. */
-export const REROLL_SIDES = ['roller', 'target'] as const;
+export const REROLL_SIDES = ['roller', 'target', 'ally'] as const;
 export type RerollSide = (typeof REROLL_SIDES)[number];
+
+/** Which dice a reroll rolls again. */
+export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
+export type RerollDie = (typeof REROLL_DICE)[number];
+
+/** Which result stands after a reroll. */
+export const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
+export type RerollKeep = (typeof REROLL_KEEPS)[number];
 
 /** How one die result counts: a crit, a miss, or neither (null). */
 export const DIE_OUTCOMES = ['crit', 'miss'] as const;
@@ -42,6 +50,13 @@ export function rerollTriggerMatches(
 	}
 }
 
+export const REROLL_LEFT_OUT_REASONS = ['disposition', 'reach'] as const;
+
+/** Why an ally-side reroll was left out when the card was posted. */
+export type RerollLeftOut =
+	| { reason: 'disposition' }
+	| { reason: 'reach'; spaces: number; reach: number };
+
 /**
  * A pending interactive offer stamped onto an attack chat card. Entries are
  * snapshotted on the attacker's client at card creation so every client sees
@@ -49,8 +64,8 @@ export function rerollTriggerMatches(
  *
  * Most kinds are defender-side reactions to the attack. `spendPoolForDamage`
  * is attacker-side: the attacker spends their own dice pool into this card's
- * damage total. `reroll` comes from a Reroll rule of either the attacker or
- * the target. `forceReroll` is a legacy stored kind: old cards still hold it,
+ * damage total. `reroll` comes from a Reroll rule of the one who rolled,
+ * the target, or an ally of the one who rolled. `forceReroll` is a legacy stored kind: old cards still hold it,
  * but nothing makes or resolves it any more.
  *
  * Lives apart from `incomingAttackModifiers` so the modules that only build
@@ -64,7 +79,7 @@ export interface IncomingReactionEntry {
 	source: 'baseline' | 'rule';
 	/** Acting actor (token-actor uuid, so unlinked tokens resolve) */
 	actorUuid: string;
-	/** Protector's token (redirect only) */
+	/** Protector's token (redirect), or the ally's token (ally-side rerolls) */
 	tokenUuid: string | null;
 	/** Token whose targeting the redirect replaces (redirect, and target-side rerolls) */
 	targetTokenUuid: string | null;
@@ -76,6 +91,8 @@ export interface IncomingReactionEntry {
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
 	oncePerAttack?: boolean;
+	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
+	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
 	rerollTrigger?: RerollTrigger;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
@@ -122,4 +139,37 @@ export interface RerollRecord {
 	/** Charges left in the feature's charge pool, or null when it has none */
 	usesLeft: number | null;
 	woundsGained: number;
+	/** Which result a player kept, when the rule let them choose. */
+	kept?: RerollKept | null;
+	/** The total of the kept roll, when a player chose. */
+	keptTotal?: number | null;
+}
+
+export const REROLL_KEPT = ['new', 'old'] as const;
+export type RerollKept = (typeof REROLL_KEPT)[number];
+
+export const KEEP_OUTCOMES = ['crit', 'hit', 'miss'] as const;
+
+/** A roll a player can keep, as its Keep button shows it. */
+export interface KeepChoiceRoll {
+	total: number;
+	/** Null for a roll that has no hit or miss, such as a save. */
+	outcome: (typeof KEEP_OUTCOMES)[number] | null;
+}
+
+/**
+ * A reroll whose new roll waits for a player to keep it or the old one. The
+ * card still shows the old roll.
+ */
+export interface PendingKeep {
+	entryId: string;
+	/** The actor whose owner chooses. */
+	chooserUuid: string;
+	/** The new roll, serialized. */
+	roll: Record<string, unknown>;
+	reroll: RerollRecord;
+	old: KeepChoiceRoll;
+	new: KeepChoiceRoll;
+	/** What `discardedCritTriggers` becomes if the new roll is kept. */
+	discardedCritTriggers: boolean;
 }

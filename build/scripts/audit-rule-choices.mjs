@@ -7,8 +7,7 @@
  * array, reports values that fall outside the choice sets that Phase 2 will
  * enforce via `StringField({ choices: ... })`.
  *
- * The proposed choice sets mirror Task 6 of
- * `_bmad-output/implementation-artifacts/tech-spec-rules-builder-foundation.md`.
+ * The proposed choice sets mirror Task 6 of the rules builder foundation tech-spec.
  * If this script reports a non-empty list of mismatches, Cutoff 3 must include
  * the conditional migration script (Task 8); otherwise migration can be
  * skipped.

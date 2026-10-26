@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
 	getPools: vi.fn(),
 	getDicePoolConsumers: vi.fn(),
 	requestIncomingAttackReaction: vi.fn(),
+	requestKeepChoice: vi.fn(),
 }));
 
 vi.mock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: mocks.getPools }));
@@ -47,15 +48,16 @@ vi.mock('#utils/dicePool/dicePoolConsumers.js', () => ({
 vi.mock('#utils/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
+	requestKeepChoice: mocks.requestKeepChoice,
 }));
 vi.mock('./confirmRerollHeroicReaction.js', () => ({
 	confirmRerollHeroicReaction: vi.fn(async () => false),
 }));
 
-import { render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import IncomingReactionPromptsTestHarness from './IncomingReactionPrompts.testHarness.svelte';
 
-const { getPools, getDicePoolConsumers, requestIncomingAttackReaction } = mocks;
+const { getPools, getDicePoolConsumers, requestIncomingAttackReaction, requestKeepChoice } = mocks;
 
 function spendDialogMock(): SpendDialogMock {
 	const globals = globalThis as Record<string, any>;
@@ -74,6 +76,7 @@ interface EntryOptions {
 	usedAmount?: number;
 	usedPoolLabel?: string;
 	usedFaces?: number[];
+	leftOut?: unknown;
 }
 
 function createEntry(options: EntryOptions = {}) {
@@ -91,6 +94,7 @@ function createEntry(options: EntryOptions = {}) {
 		...(options.usedAmount === undefined ? {} : { usedAmount: options.usedAmount }),
 		...(options.usedPoolLabel === undefined ? {} : { usedPoolLabel: options.usedPoolLabel }),
 		...(options.usedFaces === undefined ? {} : { usedFaces: options.usedFaces }),
+		...(options.leftOut === undefined ? {} : { leftOut: options.leftOut }),
 	};
 }
 
@@ -612,6 +616,243 @@ describe('IncomingReactionPrompts', () => {
 				messageId: 'message-1',
 				entryId: 'reroll-entry',
 				forceHeroicReaction: false,
+			});
+		});
+
+		describe('a reroll of a die the player picks', () => {
+			const primary = { term: 0, result: 0, faces: 8, value: 1, role: 'primary' };
+			const pool = { term: 2, result: 0, faces: 6, value: 5, role: 'kept' };
+
+			function pickerMessage(dice: unknown[]) {
+				const message = createMessage([rerollEntry()]);
+				return Object.assign(message, { rerollDiceToPick: vi.fn(() => dice) });
+			}
+
+			async function settle() {
+				for (let i = 0; i < 4; i++) await Promise.resolve();
+			}
+
+			it('opens the dice in place of the button, and sends the die the player clicks', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				expect(rollPlace().getByText('Pick a die to reroll')).toBeTruthy();
+				expect(rollPlace().queryByRole('button', { name: /Reroll with Pocket Sand/ })).toBeNull();
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Reroll the 5' }));
+				await settle();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'reroll-entry',
+					forceHeroicReaction: false,
+					die: { term: 2, result: 0 },
+				});
+				expect(rollPlace().getByText('Rerolling with Pocket Sand')).toBeTruthy();
+			});
+
+			it('names the Primary Die and puts the focus on it', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([pool, primary]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				const primaryButton = rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' });
+				expect(document.activeElement).toBe(primaryButton);
+			});
+
+			it('closes on Cancel or Escape and sends nothing', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				const open = () =>
+					fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				await open();
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+
+				await open();
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Reroll the 5' }), {
+					key: 'Escape',
+				});
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			});
+
+			it('gives the focus back to the reroll button on Cancel or Escape', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				const opener = () => rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ });
+
+				await fireEvent.click(opener());
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				await settle();
+				expect(document.activeElement).toBe(opener());
+
+				await fireEvent.click(opener());
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
+					key: 'Escape',
+				});
+				await settle();
+				expect(document.activeElement).toBe(opener());
+			});
+
+			it('closes on Escape while Cancel has the focus', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+
+				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
+					key: 'Escape',
+				});
+
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+			});
+
+			it('moves between the dice with the arrow keys', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([primary, pool]) },
+				});
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
+				expect(document.activeElement).toBe(
+					rollPlace().getByRole('button', { name: 'Reroll the 5' }),
+				);
+				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
+				expect(document.activeElement).toBe(
+					rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' }),
+				);
+			});
+
+			it('sends the only die there is without a picker', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: pickerMessage([pool]) },
+				});
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ }));
+				await settle();
+
+				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ die: { term: 2, result: 0 } }),
+				);
+			});
+		});
+
+		describe('a result a player keeps', () => {
+			function waiting(chooserUuid = 'Actor.wren') {
+				const message = createMessage([rerollEntry({ used: true })]);
+				(message.system as Record<string, unknown>).pendingKeep = {
+					entryId: 'reroll-entry',
+					chooserUuid,
+					roll: {},
+					reroll: rerollRecord(),
+					old: { total: 9, outcome: 'miss' },
+					new: { total: 12, outcome: 'hit' },
+					discardedCritTriggers: false,
+				};
+				return message;
+			}
+
+			it('gives the chooser a Keep button for each roll, and sends the one clicked', async () => {
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: waiting() } });
+
+				expect(rollPlace().getByText('Rerolled with Pocket Sand')).toBeTruthy();
+				const keepOld = rollPlace().getByRole('button', { name: /Keep 9/ });
+				expect(keepOld.textContent).toContain('Miss');
+				expect(rollPlace().getByRole('button', { name: /Keep 12/ }).textContent).toContain('Hit');
+
+				await fireEvent.click(keepOld);
+
+				expect(requestKeepChoice).toHaveBeenCalledWith({ messageId: 'message-1', choice: 'old' });
+				expect((keepOld as HTMLButtonElement).disabled).toBe(true);
+			});
+
+			it('tells everyone else who chooses, with no buttons', () => {
+				(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+				const g = globalThis as Record<string, any>;
+				const named = g.fromUuidSync;
+				g.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Actor.wren' ? { name: 'Wren', isOwner: false } : named(uuid),
+				);
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: waiting() } });
+
+				expect(rollPlace().getByText('Wren keeps 9 or 12.')).toBeTruthy();
+				expect(rollPlace().queryByRole('button', { name: /Keep/ })).toBeNull();
+			});
+
+			it('shows the old die as the one that stands when it was kept', () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: {
+						messageDocument: createMessage(
+							[rerollEntry({ used: true })],
+							[rerollRecord({ kept: 'old', keptTotal: 9 })],
+						),
+					},
+				});
+
+				expect(rollPlace().getByText('Rerolled with Pocket Sand, kept 9')).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Now 7' })).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Was 4' })).toBeTruthy();
+			});
+		});
+
+		describe('ally rerolls the scan left out', () => {
+			function leftOutMessage() {
+				const message = createMessage([
+					rerollEntry({
+						id: 'pip',
+						actorUuid: 'Actor.pip',
+						leftOut: { reason: 'reach', spaces: 7, reach: 6 },
+					} as EntryOptions),
+				]);
+				return Object.assign(message, { addLeftOutReroll: vi.fn(async () => undefined) });
+			}
+
+			it('shows the GM one quiet line, and Add gives the reroll its button', async () => {
+				const message = leftOutMessage();
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				expect(rollPlace().getByText('1 ally reroll left out')).toBeTruthy();
+				expect(rollPlace().getByText('7 spaces away, Reach 6')).toBeTruthy();
+				await fireEvent.click(rollPlace().getByRole('button', { name: /^Add Pocket Sand/ }));
+
+				expect(message.addLeftOutReroll).toHaveBeenCalledWith('pip');
+			});
+
+			it('stays open when the card renders again', async () => {
+				const message = leftOutMessage();
+				const first = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+				await fireEvent.click(rollPlace().getByText('1 ally reroll left out'));
+				first.unmount();
+
+				const { container } = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+
+				expect(container.querySelector('details')?.open).toBe(true);
+			});
+
+			it('shows a player nothing', () => {
+				(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: leftOutMessage() },
+				});
+
+				expect(rollPlace().queryByText('1 ally reroll left out')).toBeNull();
 			});
 		});
 

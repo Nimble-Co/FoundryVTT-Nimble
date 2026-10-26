@@ -9,11 +9,14 @@ import type { DicePoolState } from './dicePool/types.js';
 import {
 	appendFlavoredBonusToRoll,
 	findPrimaryDamageNode,
+	removeFlavoredBonusesFromRoll,
 	replaceDamageRollInRollsSource,
 } from './foldBonusIntoPrimaryDamage.js';
 import type { AttackOutcomeView, IncomingReactionEntry } from './incomingReactionEntry.js';
+import { alliesOnCard } from './rerollAllies.js';
 import {
 	offerStands,
+	type RerollAlly,
 	type RerollingActor,
 	type RerollRollContext,
 	type RerollRollOutcome,
@@ -28,6 +31,7 @@ interface DamageCardSystem {
 	isCritical?: boolean;
 	isMiss?: boolean;
 	activation?: { effects: unknown[]; [key: string]: unknown };
+	incomingReactions?: IncomingReactionEntry[];
 }
 
 /** The activation card the damage-card roll target reads and writes. */
@@ -81,14 +85,19 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 	);
 }
 
-/** A damage card's roll with this outcome, as the reroll gate sees it. */
+/**
+ * A damage card's roll with this outcome, as the reroll gate sees it. The
+ * allies are those the card was posted with, unless the caller scanned anew.
+ */
 function damageRollContext(
 	card: DamageCard,
 	outcome: AttackOutcomeView,
 	forcedMiss: boolean,
+	allies: RerollAlly[] = alliesOnCard(card.system().incomingReactions ?? []),
 ): RerollRollContext {
 	return {
 		attacker: card.attacker(),
+		allies,
 		targets: (card.system().targets ?? []).map((tokenUuid) => ({
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
@@ -142,6 +151,20 @@ async function refundSpentPoolFaces(entry: IncomingReactionEntry): Promise<boole
 }
 
 /**
+ * A used spend whose bonus was folded into the primary damage roll. A typed
+ * spend was posted as its own damage packet, on a node a reroll never
+ * touches, so carrying it would pay the bonus twice. A consumer that has
+ * since vanished counts as folded, which risks an unearned bonus rather than
+ * silently eating a paid-for one.
+ */
+function isFoldedSpend(entry: IncomingReactionEntry): boolean {
+	if (entry.kind !== 'spendPoolForDamage' || !entry.used || typeof entry.usedAmount !== 'number') {
+		return false;
+	}
+	return !findOfferSource(entry)?.consumer.damageType;
+}
+
+/**
  * Carry already-folded card-side spends onto the roll a reroll produced.
  *
  * The rebuild starts from the discarded roll's `originalFormula`, so a bonus
@@ -176,17 +199,7 @@ async function carryFoldedSpendsAcrossReroll(
 	const carriedEntries: IncomingReactionEntry[] = [];
 	for (const entry of entries) {
 		const amount = entry.usedAmount;
-		if (entry.kind !== 'spendPoolForDamage' || !entry.used || typeof amount !== 'number') {
-			carriedEntries.push(entry);
-			continue;
-		}
-
-		// A typed spend was posted as its own damage packet, on a node the
-		// reroll never touches. It needs no carrying, and re-appending it here
-		// would pay the bonus twice. Only a folded (untyped) spend is at risk.
-		// A consumer that has since vanished is treated as folded, which risks
-		// an unearned bonus rather than silently eating a paid-for one.
-		if (findOfferSource(entry)?.consumer.damageType) {
+		if (!isFoldedSpend(entry) || typeof amount !== 'number') {
 			carriedEntries.push(entry);
 			continue;
 		}
@@ -259,6 +272,7 @@ async function preparePrimaryDamage(
 					incomingReactions: changes.incomingReactions,
 					rerolls: changes.rerolls,
 					discardedCritTriggers: changes.discardedCritTriggers,
+					pendingKeep: null,
 					...card.movementOfferChanges(outcome),
 				},
 			});
@@ -285,6 +299,24 @@ function primaryDamageReroll(
 			);
 			await roll.evaluate();
 			return roll;
+		},
+		// Without its folded spends: the reroll folds them in again.
+		current: () =>
+			DamageRoll.fromData(
+				removeFlavoredBonusesFromRoll(
+					foundry.utils.deepClone(previous) as unknown as Record<string, unknown>,
+					(card.system().incomingReactions ?? []).filter(isFoldedSpend).length,
+				) as unknown as DamageRoll.SerializedData,
+			),
+		keepChoice: (roll) => {
+			const shown = roll as { total?: number; isCritical?: boolean; isMiss?: boolean };
+			const folded = (card.system().incomingReactions ?? [])
+				.filter(isFoldedSpend)
+				.reduce((sum, entry) => sum + (entry.usedAmount ?? 0), 0);
+			return {
+				total: (Number(shown.total) || 0) + folded,
+				outcome: shown.isCritical ? 'crit' : shown.isMiss ? 'miss' : 'hit',
+			};
 		},
 		prepare: (roll, entries) => preparePrimaryDamage(card, found, roll, entries),
 	};

@@ -50,6 +50,7 @@ interface RuleLike {
 	onTurnEnd: Mock;
 	onActorKilled: Mock;
 	onActorWounded: Mock;
+	onActorHealed: Mock;
 	onSaveResolved: Mock;
 	onRest: Mock;
 	onInitiativeRolled: Mock;
@@ -70,6 +71,7 @@ function createMockRule(): RuleLike {
 		onTurnEnd: vi.fn().mockResolvedValue(undefined),
 		onActorKilled: vi.fn().mockResolvedValue(undefined),
 		onActorWounded: vi.fn().mockResolvedValue(undefined),
+		onActorHealed: vi.fn().mockResolvedValue(undefined),
 		onSaveResolved: vi.fn().mockResolvedValue(undefined),
 		onRest: vi.fn().mockResolvedValue(undefined),
 		onInitiativeRolled: vi.fn().mockResolvedValue(undefined),
@@ -477,6 +479,51 @@ describe('ruleEventDispatch', () => {
 
 			expect(rule.onActorKilled).not.toHaveBeenCalled();
 			expect(rule.onActorWounded).not.toHaveBeenCalled();
+		});
+
+		it('passes the HP from before the update to onActorWounded', async () => {
+			(getActorHealthState as unknown as Mock).mockReturnValue('bloodied');
+			const rule = createMockRule();
+			const actor = { rules: [rule], system: { attributes: { hp: { value: 5, max: 20 } } } };
+			const changes = { system: { attributes: { hp: { value: 5 } } } };
+			const options = { nimble: { previousHp: { value: 15, max: 20, temp: 0 } } };
+
+			handlers.get('updateActor')?.(actor, changes, options);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorWounded).toHaveBeenCalledWith({ actor, previousHp: 15, currentHp: 5 });
+		});
+
+		it('fires onActorHealed with the HP before and after when HP went up', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule], system: { attributes: { hp: { value: 12, max: 20 } } } };
+			const changes = { system: { attributes: { hp: { value: 12 } } } };
+			const options = { nimble: { previousHp: { value: 5, max: 20, temp: 0 } } };
+
+			handlers.get('updateActor')?.(actor, changes, options);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onActorHealed).toHaveBeenCalledWith({ actor, previousHp: 5, currentHp: 12 });
+		});
+
+		it('does not fire onActorHealed when HP went down, stayed, or was not recorded', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule], system: { attributes: { hp: { value: 12, max: 20 } } } };
+			const changes = { system: { attributes: { hp: { value: 12 } } } };
+
+			for (const options of [
+				{ nimble: { previousHp: { value: 15, max: 20, temp: 0 } } },
+				{ nimble: { previousHp: { value: 12, max: 20, temp: 3 } } },
+				{},
+			]) {
+				handlers.get('updateActor')?.(actor, changes, options);
+				await Promise.resolve();
+				await Promise.resolve();
+			}
+
+			expect(rule.onActorHealed).not.toHaveBeenCalled();
 		});
 
 		it('does nothing when HP was not part of the update', async () => {

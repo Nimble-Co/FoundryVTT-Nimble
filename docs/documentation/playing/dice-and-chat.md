@@ -71,9 +71,23 @@ A player sees only the buttons of the characters they own. The GM sees every gro
 
 ## Rerolling a save or check
 
-A save, skill check or ability check card is one line, so its reroll is a small button at the right end of the roll. Only the owner of the one who rolled and the GM see it. Hover it to see the feature and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)", and click it to reroll. When two or more features can reroll the roll, the button opens a short list of them, each with its cost: click one to reroll with it. The arrow keys move through the list and Escape closes it.
+A save, skill check or ability check card is one line, so its reroll is a small button at the right end of the roll. Only the owner of the one who rolled, the owner of an ally with a reroll, and the GM see it. Hover it to see the feature and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)", and click it to reroll. When two or more features can reroll the roll, the button opens a short list of them, each with its cost: click one to reroll with it. The arrow keys move through the list and Escape closes it.
 
 The button shows only while a feature can reroll the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. While the Dice So Nice dice are in the air, the roll on the card is a tumbling d20, as on an attack card. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before this version show no button.
+
+## Rerolls from an ally
+
+Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's button shows on the ally's card, in the character's own group, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows its button only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll buttons.
+
+When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under the options, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the button on that card.
+
+### Rerolling one die
+
+Some features reroll one die and keep the others. When the player picks the die, the button opens the dice of the roll in its place, with the Primary Die marked. Click a die to reroll it, or click **Cancel** or press Escape to close the dice and go back to the reroll button. The arrow keys move between the dice. On a save or a check rolled with advantage or disadvantage, you can also pick the d20 that was dropped. The roll then keeps the highest or lowest again and works out the hit, the crit and the total again. A Primary Die that rolls its maximum explodes, and one that no longer rolls its maximum loses its explosion dice. With Dice So Nice on, only the rerolled die is thrown. With manual dice entry on in Foundry's Dice Configuration, the new die and each explosion die are asked for, as for a whole reroll. A player's reroll is rolled on the GM's client, so the GM's dice settings apply to it.
+
+### Keeping either result
+
+Some features let a player keep the new result or the old one. After the dice roll, two **Keep** buttons show under the reroll line, for example **Keep 9** (Miss) and **Keep 12** (Hit). The player who keeps a result and the GM see them; everyone else sees who keeps it. Until a result is kept, the card keeps the old roll, no other reroll can be used, and **Apply Damage** says "Keep a result first". The reroll line then tells the kept total, for example "Rerolled with Songweaver's Inspiration, kept 12". The feature's use is spent either way.
 
 ## Spending dice from a card
 

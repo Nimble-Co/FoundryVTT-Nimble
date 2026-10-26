@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { foldBonusIntoPrimaryDamage } from './foldBonusIntoPrimaryDamage.js';
+import {
+	foldBonusIntoPrimaryDamage,
+	removeFlavoredBonusesFromRoll,
+} from './foldBonusIntoPrimaryDamage.js';
 
 function damageRoll(overrides: Record<string, unknown> = {}) {
 	return {
@@ -133,5 +136,35 @@ describe('foldBonusIntoPrimaryDamage', () => {
 		foldBonusIntoPrimaryDamage(activationWith(roll), rollsSource, 18, 'Death Blow');
 
 		expect(JSON.parse(rollsSource[0]).total).toBe(8);
+	});
+});
+
+describe('removeFlavoredBonusesFromRoll', () => {
+	const die = { class: 'Die', faces: 6, number: 1, results: [{ result: 4, active: true }] };
+	const plus = (amount: number, flavor = 'Sneak') => [
+		{ class: 'OperatorTerm', operator: '+', evaluated: true, options: {} },
+		{ class: 'NumericTerm', number: amount, evaluated: true, options: { flavor } },
+	];
+
+	it('takes off the last folded bonuses, as many as it is told', () => {
+		const roll = { class: 'DamageRoll', total: 12, terms: [die, ...plus(3), ...plus(5)] };
+
+		expect(removeFlavoredBonusesFromRoll(roll, 1)).toMatchObject({
+			terms: [die, ...plus(3)],
+			total: 7,
+		});
+		expect(removeFlavoredBonusesFromRoll(roll, 2)).toMatchObject({ terms: [die], total: 4 });
+		expect(roll.terms).toHaveLength(5);
+	});
+
+	it('stops at a term that is not a folded bonus', () => {
+		const flat = { class: 'NumericTerm', number: 2, evaluated: true, options: {} };
+		const operator = { class: 'OperatorTerm', operator: '+', evaluated: true, options: {} };
+		const roll = { class: 'DamageRoll', total: 6, terms: [die, operator, flat] };
+
+		expect(removeFlavoredBonusesFromRoll(roll, 1)).toMatchObject({
+			terms: [die, operator, flat],
+			total: 6,
+		});
 	});
 });

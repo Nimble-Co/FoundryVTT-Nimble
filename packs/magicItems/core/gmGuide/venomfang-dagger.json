@@ -27,7 +27,40 @@
 					"damageType": "piercing",
 					"formula": "1d4",
 					"parentContext": null,
-					"parentNode": null
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "yqd1YxWUPrzDSX0i",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "VenomfangDmg"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "VRZ2BczqgFA1Eylv",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "VenomfangDmg"
+							}
+						],
+						"hit": [
+							{
+								"id": "WfgPkyuO9FO2of7O",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "VenomfangDmg"
+							}
+						]
+					}
 				}
 			],
 			"showDescription": true,

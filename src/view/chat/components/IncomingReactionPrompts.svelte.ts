@@ -1,11 +1,18 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type {
 	IncomingReactionActorGroup,
+	IncomingReactionPicking,
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
 import type { RollRerollChoice } from '#types/components/RollRerollButton.d.ts';
 import { requestIncomingAttackReaction } from '#utils/incomingAttackReactions.js';
-import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
+import type {
+	DieOutcome,
+	IncomingReactionEntry,
+	PendingKeep,
+	RerollRecord,
+} from '#utils/incomingReactionEntry.ts';
+import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
 import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
 import { createHeldIncomingReactions } from './heldIncomingReactions.svelte.ts';
@@ -25,6 +32,7 @@ export function createIncomingReactionPromptsState(
 ) {
 	const held = createHeldIncomingReactions(message);
 	let busy = $state(false);
+	let picking = $state<IncomingReactionPicking | null>(null);
 
 	const atTheRoll = $derived(getPlace() !== 'options');
 	const showsHistory = $derived(getPlace() === 'roll' || getPlace() === 'rollHistory');
@@ -62,7 +70,12 @@ export function createIncomingReactionPromptsState(
 	const placeEntries = $derived(entries.filter((entry) => changesTheRoll(entry) === atTheRoll));
 	const pendingGroups = $derived(
 		groupByActor(
-			placeEntries.filter((entry) => !entry.used && !held.has(entry.id) && canUseEntry(entry)),
+			placeEntries.filter(
+				(entry) =>
+					!entry.used &&
+					(!held.has(entry.id) || picking?.entry.id === entry.id) &&
+					canUseEntry(entry),
+			),
 		),
 	);
 	// A used reroll is told by the card's history line, not by its entry.
@@ -82,6 +95,28 @@ export function createIncomingReactionPromptsState(
 				})
 			: [],
 	);
+	// Only the GM sees the ally rerolls the scan left out.
+	const leftOutEntries = $derived(
+		showsHistory && game.user?.isGM
+			? storedEntries.filter((entry) => entry.kind === 'reroll' && !entry.used && !!entry.leftOut)
+			: [],
+	);
+	const pendingKeep = $derived(
+		showsHistory
+			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
+					?.pendingKeep ?? null)
+			: null,
+	);
+	const pendingLine = $derived(
+		pendingKeep
+			? rerollHistoryLines({
+					records: [pendingKeep.reroll],
+					speakerUuid,
+					rerollAgain: new Set(),
+					documentName: text.documentName,
+				})[0]
+			: null,
+	);
 	const rerollChoices = $derived<RollRerollChoice[]>(
 		getPlace() === 'rollButton'
 			? pendingGroups
@@ -93,6 +128,21 @@ export function createIncomingReactionPromptsState(
 					}))
 			: [],
 	);
+	const primaryOutcome = $derived.by<DieOutcome>(() => {
+		const system = message?.reactive?.system as
+			| { isCritical?: boolean; isMiss?: boolean }
+			| undefined;
+		if (system?.isCritical) return 'crit';
+		return system?.isMiss ? 'miss' : null;
+	});
+
+	// The picker closes once the picked reroll is on the card, or was refused.
+	$effect(() => {
+		const current = picking;
+		if (!current?.sent) return;
+		const stored = storedEntries.find((entry) => entry.id === current.entry.id);
+		if (!stored || stored.used || !held.has(current.entry.id)) picking = null;
+	});
 
 	function canUseEntry(entry: IncomingReactionEntry): boolean {
 		const actor = text.reactingActor(entry);
@@ -134,15 +184,54 @@ export function createIncomingReactionPromptsState(
 	}
 
 	async function useReroll(entry: IncomingReactionEntry): Promise<void> {
+		const dice = message?.rerollDiceToPick?.(entry) ?? null;
+		if (dice && dice.length > 1) {
+			picking = { entry, dice, rolling: null, sent: false };
+			return;
+		}
+		await sendReroll(entry, dice?.[0] ?? null);
+	}
+
+	/** Ask for the reroll. False when the player said no to the heroic reaction. */
+	async function sendReroll(
+		entry: IncomingReactionEntry,
+		die: PickableDie | null,
+	): Promise<boolean> {
 		const forceHeroicReaction = await confirmRerollHeroicReaction(entry);
-		if (forceHeroicReaction === null) return;
+		if (forceHeroicReaction === null) return false;
 
 		held.hold(entry.id);
 		await requestIncomingAttackReaction({
 			messageId: message?.id ?? '',
 			entryId: entry.id,
 			forceHeroicReaction,
+			...(die ? { die: { term: die.term, result: die.result } } : {}),
 		});
+		return true;
+	}
+
+	async function pickDie(die: PickableDie): Promise<void> {
+		const current = picking;
+		if (!current || current.rolling || busy) return;
+		busy = true;
+		try {
+			picking = { ...current, rolling: die };
+			const sent = await sendReroll(current.entry, die);
+			picking = sent && picking ? { ...picking, sent: true } : null;
+		} catch (error) {
+			picking = null;
+			console.error('Nimble | Failed to use a chat card reaction', error);
+			ui.notifications?.error(localize('NIMBLE.chat.incomingReactions.useFailed'));
+		} finally {
+			busy = false;
+		}
+	}
+
+	/** Closes the die picker. Returns the id of the entry it was open for. */
+	function cancelPick(): string | null {
+		const entryId = picking?.entry.id ?? null;
+		picking = null;
+		return entryId;
 	}
 
 	async function useEntry(entry: IncomingReactionEntry) {
@@ -188,6 +277,9 @@ export function createIncomingReactionPromptsState(
 		get busy() {
 			return busy;
 		},
+		get picking() {
+			return picking;
+		},
 		get pendingGroups() {
 			return pendingGroups;
 		},
@@ -200,10 +292,24 @@ export function createIncomingReactionPromptsState(
 		get historyLines() {
 			return historyLines;
 		},
+		get leftOutEntries() {
+			return leftOutEntries;
+		},
+		get pendingKeep() {
+			return pendingKeep;
+		},
+		get pendingLine() {
+			return pendingLine;
+		},
 		get rerollChoices() {
 			return rerollChoices;
 		},
+		get primaryOutcome() {
+			return primaryOutcome;
+		},
 		useEntry,
 		useEntryById,
+		pickDie,
+		cancelPick,
 	};
 }

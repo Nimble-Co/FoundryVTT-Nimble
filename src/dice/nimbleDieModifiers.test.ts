@@ -10,6 +10,7 @@ import {
 	NIMBLE_MODS,
 	nimbleCrit,
 	nimbleCritVicious,
+	nimbleModsFromModifiers,
 	nimbleNeutral,
 	nimbleVicious,
 } from './nimbleDieModifiers.js';
@@ -55,28 +56,12 @@ describe('nimbleCrit', () => {
 		expect(result).toBe(true);
 	});
 
-	it('should add x to modifiers when not already present', () => {
-		const die = createMockDie({ modifiers: [] });
-
-		nimbleCrit.call(die, 'c');
-
-		expect(die.modifiers).toContain('x');
-	});
-
-	it('should not duplicate x when already present in modifiers', () => {
-		const die = createMockDie({ modifiers: ['x'] });
-
-		nimbleCrit.call(die, 'c');
-
-		expect(die.modifiers).toEqual(['x']);
-	});
-
-	it('should preserve existing modifiers when adding x', () => {
+	it('leaves the modifier list alone', () => {
 		const die = createMockDie({ modifiers: ['khn'] });
 
 		nimbleCrit.call(die, 'c');
 
-		expect(die.modifiers).toEqual(['khn', 'x']);
+		expect(die.modifiers).toEqual(['khn']);
 	});
 });
 
@@ -226,6 +211,23 @@ describe('getNimbleMods', () => {
 });
 
 // ─── NIMBLE_MODS symbol ─────────────────────────────────────────────
+
+describe('nimbleModsFromModifiers', () => {
+	it('gives the metadata the handlers set, the last Nimble modifier winning', () => {
+		expect(nimbleModsFromModifiers(['khn', 'x', 'c'])).toEqual({
+			canCrit: true,
+			explosionStyle: 'standard',
+		});
+		expect(nimbleModsFromModifiers(['CV'])).toEqual({ canCrit: true, explosionStyle: 'vicious' });
+		expect(nimbleModsFromModifiers(['c', 'n'])).toEqual({ canCrit: false, explosionStyle: 'none' });
+		expect(nimbleModsFromModifiers(['v'])).toEqual({ canCrit: false, explosionStyle: 'vicious' });
+	});
+
+	it('gives nothing for a die without a Nimble modifier', () => {
+		expect(nimbleModsFromModifiers(['khn', 'x'])).toBeUndefined();
+		expect(nimbleModsFromModifiers(undefined)).toBeUndefined();
+	});
+});
 
 describe('NIMBLE_MODS', () => {
 	it('should be a symbol', () => {

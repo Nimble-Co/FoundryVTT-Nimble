@@ -1,4 +1,5 @@
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -88,6 +89,11 @@ function schema() {
 						widget: 'formula',
 					}),
 				),
+				// Cast: PredicateField's constructor typing does not accept label/hint.
+				predicate: new PredicateField({
+					label: 'NIMBLE.rules.chargePool.recoveries.predicate.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.predicate.hint',
+				} as unknown as never),
 			}),
 			{
 				required: true,
@@ -153,7 +159,10 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 				['initial', '"max" | "zero"'],
 				['hidden', 'boolean'],
 				['showAsResource', 'boolean'],
-				['recoveries', 'Array<{ trigger: string; mode: string; value: string }>'],
+				[
+					'recoveries',
+					'Array<{ trigger: string; mode: string; value: string; predicate: object }>',
+				],
 			]),
 		);
 	}

@@ -80,6 +80,8 @@ interface HpSnapshot {
 interface HpTrackingOptions {
 	nimble?: {
 		previousHp?: HpSnapshot;
+		previousWounds?: number;
+		hpFollowingMax?: number;
 	};
 }
 
@@ -1155,6 +1157,14 @@ class NimbleBaseActor<
 			const optionsWithTracking = options as Actor.Database.PreUpdateOptions & HpTrackingOptions;
 			optionsWithTracking.nimble ??= {}; // allow-hardcoded-system-id
 			optionsWithTracking.nimble.previousHp = this.#getCurrentHpSnapshot(); // allow-hardcoded-system-id
+		}
+		if (foundry.utils.hasProperty(changesObj, 'system.attributes.wounds.value')) {
+			const optionsWithTracking = options as Actor.Database.PreUpdateOptions & HpTrackingOptions;
+			optionsWithTracking.nimble ??= {}; // allow-hardcoded-system-id
+			const woundsBefore = toFiniteInteger(
+				foundry.utils.getProperty(this, 'system.attributes.wounds.value'),
+			);
+			optionsWithTracking.nimble.previousWounds = woundsBefore; // allow-hardcoded-system-id
 		}
 
 		// If hp drops below 0, set the value to 0.

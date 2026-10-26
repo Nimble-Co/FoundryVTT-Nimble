@@ -32,4 +32,13 @@ describe('ModifyPoolRule schema', () => {
 
 		expect(poolType.initial).toBe('dice');
 	});
+
+	it('offers the healed trigger on a contributed entry', () => {
+		const schema = ModifyPoolRule.defineSchema();
+		const fields = (
+			schema.addRefills as unknown as { element: { fields: { trigger: { choices: string[] } } } }
+		).element.fields;
+
+		expect(fields.trigger.choices).toContain('onHealed');
+	});
 });

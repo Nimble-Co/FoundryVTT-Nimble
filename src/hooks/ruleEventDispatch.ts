@@ -24,6 +24,8 @@ import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
 	hasAnyActorChangeAt,
+	hpBeforeUpdate,
+	hpGained,
 } from '../utils/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
@@ -220,7 +222,11 @@ async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<voi
 	await dispatch(actor, 'onPoolGain', context);
 }
 
-function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, unknown>): void {
+function handleActorUpdate(
+	actor: Actor.Implementation,
+	changes: Record<string, unknown>,
+	options?: unknown,
+): void {
 	const hpChanged = hasAnyActorChangeAt(changes, [ACTOR_HP_PATHS.value]);
 	// Death can arrive via a wounds-only update: a dying PC at 0 HP gains
 	// their final wound without the HP value moving at all.
@@ -235,7 +241,7 @@ function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, 
 	const actorWithRules = actor as unknown as ActorWithRules;
 	const healthContext: ActorHealthContext = {
 		actor: actor as unknown as ActorHealthContext['actor'],
-		previousHp: currentHp,
+		previousHp: hpBeforeUpdate(options) ?? currentHp,
 		currentHp,
 	};
 
@@ -260,6 +266,9 @@ function handleActorUpdate(actor: Actor.Implementation, changes: Record<string, 
 	}
 
 	if (!hpChanged) return;
+	if (hpGained(actor, options) > 0) {
+		void dispatch(actorWithRules, 'onActorHealed', healthContext);
+	}
 	const healthState = getActorHealthState(actor);
 	if (healthState === 'bloodied' || healthState === 'lastStand') {
 		void dispatch(actorWithRules, 'onActorWounded', healthContext);

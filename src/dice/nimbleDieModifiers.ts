@@ -65,6 +65,29 @@ export function getNimbleMods(die: any): NimbleDieMetadata | undefined {
 	return die[NIMBLE_MODS] as NimbleDieMetadata | undefined;
 }
 
+const METADATA_BY_MODIFIER: Record<string, NimbleDieMetadata> = {
+	cv: { canCrit: true, explosionStyle: 'vicious' },
+	c: { canCrit: true, explosionStyle: 'standard' },
+	v: { canCrit: false, explosionStyle: 'vicious' },
+	n: { canCrit: false, explosionStyle: 'none' },
+};
+
+/**
+ * The Nimble metadata a die's modifiers give, as the handlers set it when the
+ * die is evaluated. A roll rebuilt from saved data has the modifiers but not
+ * the metadata. The last Nimble modifier wins, as when the handlers run.
+ */
+export function nimbleModsFromModifiers(
+	modifiers: readonly string[] | undefined,
+): NimbleDieMetadata | undefined {
+	let metadata: NimbleDieMetadata | undefined;
+	for (const modifier of modifiers ?? []) {
+		const found = METADATA_BY_MODIFIER[modifier.toLowerCase()];
+		if (found) metadata = { ...found };
+	}
+	return metadata;
+}
+
 // ─── Internal Types ─────────────────────────────────────────────────
 
 type DieResult = {
@@ -173,8 +196,8 @@ export function kln(this: DieLike, modifier: string): boolean {
 /**
  * Foundry Die modifier handler: `c` — crit-capable with standard explosion.
  *
- * Attaches metadata `{ canCrit: true, explosionStyle: 'standard' }` and
- * ensures Foundry's native `x` modifier is present for explosion chaining.
+ * Attaches metadata `{ canCrit: true, explosionStyle: 'standard' }`. The
+ * explosion is Foundry's `x`, which the roll asks for before evaluation.
  *
  * @example `1d8c` — primary die can crit with standard explosion.
  */
@@ -183,9 +206,6 @@ export function nimbleCrit(this: DieLike, _modifier: string): boolean {
 		canCrit: true,
 		explosionStyle: 'standard',
 	} satisfies NimbleDieMetadata;
-	if (this.modifiers && !this.modifiers.includes('x')) {
-		this.modifiers.push('x');
-	}
 	applyPrimaryDieAppearance(this);
 	return true;
 }

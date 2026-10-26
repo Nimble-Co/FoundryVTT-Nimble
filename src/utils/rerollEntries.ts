@@ -2,6 +2,9 @@ import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
+	type RerollDie,
+	type RerollKeep,
+	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
 	rerollTriggerMatches,
@@ -21,9 +24,12 @@ interface RerollRuleLike {
 	item?: { name?: string; uuid?: string } | null;
 	actor?: unknown;
 	outcome?: RerollTrigger;
-	automatic?: boolean;
+	rerollsByItself?: boolean;
 	discardedCritTriggers?: boolean;
 	oncePerAttack?: boolean;
+	reach?: number;
+	die?: RerollDie;
+	keep?: RerollKeep;
 	rerollCost?: RerollCost;
 	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
@@ -40,11 +46,25 @@ interface RerollTarget {
 	actor: RerollingActor | null | undefined;
 }
 
+/**
+ * A creature that may use an ally-side reroll on this roll, as the scan found it
+ * when the card was posted. `isAlly` is false when the scan does not count it as
+ * an ally of the one who rolled; its rerolls are then left out.
+ */
+interface RerollAlly {
+	tokenUuid: string;
+	actor: RerollingActor | null | undefined;
+	isAlly: boolean;
+	spaces: number;
+}
+
 /** One roll as the reroll gate sees it. The caller builds it once per roll. */
 interface RerollRollContext {
 	attacker: RerollingActor | null | undefined;
 	/** The roll's targets in card order. Only the first one's rules give entries. */
 	targets: RerollTarget[];
+	/** Creatures that may use an ally-side reroll. Absent means none. */
+	allies?: RerollAlly[];
 	roll: RollToReroll;
 	/** Attacks only. Null before the roll is made. */
 	outcome: AttackOutcomeView | null;
@@ -90,20 +110,43 @@ function outcomeAllows(
  * button for the owner instead.
  */
 function rerollsByItself(rule: RerollRuleLike, actor: RerollingActor): boolean {
-	if (rule.automatic !== true || !isRuleAutomationEnabled()) return false;
+	if (rule.rerollsByItself !== true || !isRuleAutomationEnabled()) return false;
 	if (!rule.rerollCost || !rerollCostCharges(rule.rerollCost)) return true;
 	return actor.isOwner === true;
 }
 
-function rollingActorFor(side: RerollSide, context: RerollRollContext) {
-	if (side === 'roller') return { actor: context.attacker, targetTokenUuid: null };
-	const target = context.targets[0];
-	return { actor: target?.actor, targetTokenUuid: target?.tokenUuid ?? null };
+interface RerollUser {
+	actor: RerollingActor | null | undefined;
+	tokenUuid: string | null;
+	targetTokenUuid: string | null;
+	ally?: RerollAlly;
+}
+
+/** Who can use a rule on each side of this roll. */
+function rerollUsers(side: RerollSide, context: RerollRollContext): RerollUser[] {
+	if (side === 'roller')
+		return [{ actor: context.attacker, tokenUuid: null, targetTokenUuid: null }];
+	if (side === 'target') {
+		const target = context.targets[0];
+		return [{ actor: target?.actor, tokenUuid: null, targetTokenUuid: target?.tokenUuid ?? null }];
+	}
+	const rollerUuid = context.attacker?.uuid;
+	return (context.allies ?? [])
+		.filter((ally) => !!ally.actor && ally.actor.uuid !== rollerUuid)
+		.map((ally) => ({ actor: ally.actor, tokenUuid: ally.tokenUuid, targetTokenUuid: null, ally }));
+}
+
+function leftOutFor(rule: RerollRuleLike, ally: RerollAlly): RerollLeftOut | null {
+	if (!ally.isAlly) return { reason: 'disposition' };
+	const reach = Math.max(0, Number(rule.reach) || 0);
+	if (reach > 0 && ally.spaces > reach) return { reason: 'reach', spaces: ally.spaces, reach };
+	return null;
 }
 
 /**
- * The reroll entries the attacker's and the first target's `reroll` rules
- * give this roll, split into buttons and rerolls that happen by themselves.
+ * The reroll entries the attacker's, the first target's and the allies' `reroll`
+ * rules give this roll, split into buttons and rerolls that happen by themselves.
+ * An ally's reroll that the scan left out is still listed, with `leftOut` set.
  * Before the roll, the outcome is checked later with `offerStands`.
  */
 function collectRerollEntries(context: RerollRollContext): {
@@ -115,35 +158,37 @@ function collectRerollEntries(context: RerollRollContext): {
 	if (outcome.forcedMiss) return result;
 	const isAttack = context.roll.kind === 'attack';
 
-	for (const side of ['roller', 'target'] as const) {
-		const { actor, targetTokenUuid } = rollingActorFor(side, context);
-		const actorUuid = actor?.uuid ?? '';
-		if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
+	for (const side of ['roller', 'target', 'ally'] as const) {
+		for (const { actor, tokenUuid, targetTokenUuid, ally } of rerollUsers(side, context)) {
+			const actorUuid = actor?.uuid ?? '';
+			if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
 
-		for (const rule of actor.rules) {
-			if (rule?.type !== REROLL_RULE_TYPE) continue;
-			if (rule.offersRerollOn?.({ side, roll: context.roll }) !== true) continue;
-			const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
-			if (!outcomeAllows(trigger, outcome)) continue;
+			for (const rule of actor.rules) {
+				if (rule?.type !== REROLL_RULE_TYPE) continue;
+				if (rule.offersRerollOn?.({ side, roll: context.roll }) !== true) continue;
+				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
+				if (!outcomeAllows(trigger, outcome)) continue;
 
-			const entry: IncomingReactionEntry = {
-				id: foundry.utils.randomID(),
-				kind: 'reroll',
-				source: 'rule',
-				actorUuid,
-				tokenUuid: null,
-				targetTokenUuid,
-				side,
-				label: rule.label || rule.item?.name || '',
-				ruleId: rule.id ?? '',
-				itemUuid: rule.item?.uuid ?? '',
-				used: false,
-				outcomeTrigger: trigger,
-				oncePerAttack: isAttack && rule.oncePerAttack === true,
-			};
+				const entry: IncomingReactionEntry = {
+					id: foundry.utils.randomID(),
+					kind: 'reroll',
+					source: 'rule',
+					actorUuid,
+					tokenUuid,
+					targetTokenUuid,
+					side,
+					label: rule.label || rule.item?.name || '',
+					ruleId: rule.id ?? '',
+					itemUuid: rule.item?.uuid ?? '',
+					used: false,
+					outcomeTrigger: trigger,
+					oncePerAttack: isAttack && rule.oncePerAttack === true,
+					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
+				};
 
-			if (rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
-			else result.manual.push(entry);
+				if (!ally && rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
+				else result.manual.push(entry);
+			}
 		}
 	}
 
@@ -238,10 +283,12 @@ function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 
 /**
  * Whether the entry's actor is still on its side of the roll: the attacker
- * for a roller entry, the actor of a token still among the targets otherwise.
+ * for a roller entry, anyone but the attacker for an ally entry (the scan
+ * decided once, at post), the actor of a token still among the targets otherwise.
  */
 function isOnSide(entry: IncomingReactionEntry, side: RerollSide, context: RerollRollContext) {
 	if (side === 'roller') return context.attacker?.uuid === entry.actorUuid;
+	if (side === 'ally') return !!entry.actorUuid && context.attacker?.uuid !== entry.actorUuid;
 	const tokenUuid = entry.targetTokenUuid ?? '';
 	const target = context.targets.find((candidate) => candidate.tokenUuid === tokenUuid);
 	return target?.actor?.uuid === entry.actorUuid;
@@ -258,7 +305,7 @@ function usableRerollEntry(
 ): UsableReroll {
 	const rule = findRerollRule(entry);
 	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-	if (!rule || !actor || !entry.side) return UNAVAILABLE;
+	if (!rule || !actor || !entry.side || entry.leftOut) return UNAVAILABLE;
 	if (!isOnSide(entry, entry.side, context)) return UNAVAILABLE;
 	const isAttack = context.roll.kind === 'attack';
 	if (isAttack && rule.oncePerAttack === true && ruleUsedOnCard(entry, cardEntries)) {
@@ -276,10 +323,12 @@ export {
 	findRerollRule,
 	nextAutomaticReroll,
 	offerStands,
+	REROLL_RULE_TYPE,
 	rerollRuleKey,
 	usableRerollEntry,
 	withNewRerollEntries,
 	type AutomaticReroll,
+	type RerollAlly,
 	type RerollingActor,
 	type RerollRollContext,
 	type RerollRollOutcome,

@@ -68,6 +68,10 @@ export function registerRerollRollingHook(): void {
 	if (hasRegisteredHook) return;
 	hasRegisteredHook = true;
 	Hooks.on('updateChatMessage', (message: { id?: string | null }, changes: object) => {
-		if (message.id && 'rolls' in changes) stopRerollRolling(message.id);
+		if (!message.id) return;
+		if ('rolls' in changes) stopRerollRolling(message.id);
+		else if ((changes as { system?: { pendingKeep?: unknown } }).system?.pendingKeep) {
+			stopRerollRolling(message.id, false);
+		}
 	});
 }

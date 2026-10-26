@@ -2521,27 +2521,32 @@ describe('die modifier vocabulary — modifier-mode', () => {
 		});
 	});
 
-	describe('c modifier adds x for standard explosion', () => {
-		it('1d8c die term gets x added by handler during evaluation', async () => {
-			const roll = new DamageRoll(
-				'1d8c',
-				{},
-				{
-					canCrit: true,
-					canMiss: true,
-					rollMode: 0,
-					primaryDieValue: 0,
-					primaryDieModifier: 0,
-				},
-			);
-			const Terms = foundry.dice.terms;
-			const dieTerm = roll.terms.find((t) => t instanceof Terms.Die);
-			// Before evaluation, the formula has 'c' but not yet 'x' (added by handler)
-			expect(dieTerm?.modifiers).toContain('c');
-			stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
-			await (roll as any)._evaluate();
-			// After evaluation, handler should have added 'x'
-			expect(dieTerm?.modifiers).toContain('x');
+	describe('a c die explodes in Foundry', () => {
+		const Terms = () => foundry.dice.terms;
+		const base = {
+			canCrit: true,
+			canMiss: true,
+			rollMode: 0,
+			primaryDieValue: 0,
+			primaryDieModifier: 0,
+		};
+		const firstDie = (roll: DamageRoll) => roll.terms.find((t) => t instanceof Terms().Die);
+
+		it('asks for the x modifier when the roll is made, after the keep modifier', () => {
+			// Foundry runs only the modifiers a die asked for before evaluation.
+			expect(firstDie(new DamageRoll('1d8c', {}, base))?.modifiers).toEqual(['c', 'x']);
+			expect(firstDie(new DamageRoll('1d8c', {}, { ...base, rollMode: 1 }))?.modifiers).toEqual([
+				'c',
+				'khn',
+				'x',
+			]);
+		});
+
+		it('does not ask for it for a roll that cannot crit, nor for a vicious die', () => {
+			expect(firstDie(new DamageRoll('1d8c', {}, { ...base, canCrit: false }))?.modifiers).toEqual([
+				'c',
+			]);
+			expect(firstDie(new DamageRoll('1d8cv', {}, base))?.modifiers).toEqual(['cv']);
 		});
 	});
 
@@ -2577,6 +2582,34 @@ describe('critCount', () => {
 	});
 
 	describe('modifier-mode', () => {
+		it('2d4c counts the dice it rolled, not the explosion dice that also roll a max', async () => {
+			const roll = new DamageRoll(
+				'2d4c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 4, active: true, exploded: true },
+						{ result: 1, active: true },
+						{ result: 4, active: true, exploded: true },
+						{ result: 2, active: true },
+					],
+				],
+				11,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.critCount).toBe(1);
+		});
+
 		it('4d4cv with 0 of 4 at max → critCount === 0', async () => {
 			const roll = new DamageRoll(
 				'4d4cv',

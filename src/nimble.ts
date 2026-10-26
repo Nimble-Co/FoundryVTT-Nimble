@@ -3,6 +3,7 @@ import { handleAutomaticConditionApplication } from './hooks/automaticConditions
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
+import { registerHealedTriggerHooks } from './hooks/chargePoolTriggers/healedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
 import { registerKillTriggerHooks } from './hooks/chargePoolTriggers/killTrigger.js';
 import { registerTurnTriggerHooks } from './hooks/chargePoolTriggers/turnTrigger.js';
@@ -135,6 +136,7 @@ registerManaSeedingHooks();
 registerActionEconomySystemHooks();
 registerDicePoolSystemHooks();
 registerWoundTriggerHooks();
+registerHealedTriggerHooks();
 registerTurnTriggerHooks();
 registerKillTriggerHooks();
 registerBloodiedTriggerHooks();

@@ -200,7 +200,7 @@ Activating a consumable does not automatically reduce its quantity. Have players
 
 For items with limited uses that recharge, such as wands and once-per-rest trinkets, use **charges** instead of quantity:
 
-- A **Charge Pool** rule (Rules tab) gives the item a pool: a maximum (which can be a formula), a starting value, and recovery entries such as "refill on safe rest". A recovery on a hit or a critical hit follows the roll that stands: when a reroll changes the outcome, the pool loses what the old outcome gave and gains what the new one earns, unless the Reroll rule keeps the discarded crit's triggers.
+- A **Charge Pool** rule (Rules tab) gives the item a pool: a maximum (which can be a formula), a starting value, and recovery entries such as "refill on safe rest". A recovery on a hit or a critical hit follows the roll that stands: when a reroll changes the outcome, the pool loses what the old outcome gave and gains what the new one earns, unless the Reroll rule keeps the discarded crit's triggers. A **Healed** recovery applies each time the character's hit points go up (temporary hit points do not count). Each recovery entry can also have an **Only while** condition, checked when the trigger happens: for example, `self` **is** `fullHp` makes the entry apply only when the healing brought the character to full hit points. See [The Condition Box](../rules-builder/predicates.md) for the tags you can test.
 - A **Charge Consumer** rule makes every activation of the item automatically spend charges from a pool.
 - Alternatively, a **Pool** effect on the Activation tab can spend, fill, or clear a pool only when the item is used in a particular way.
 

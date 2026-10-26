@@ -2,7 +2,13 @@ import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
-import { applyKeep, getNimbleMods } from './nimbleDieModifiers.js';
+import {
+	applyKeep,
+	getNimbleMods,
+	NIMBLE_MODS,
+	nimbleModsFromModifiers,
+} from './nimbleDieModifiers.js';
+import { type ExplosionStyle, hasExplodeModifier, type KeptDieBonus } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -456,6 +462,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					this._applyRollMode(firstDieTerm, rollMode);
 				}
 			}
+			// The `c` handler adds `x` too late for Foundry to run it.
+			if (options.canCrit !== false) {
+				for (const term of this.terms) {
+					if (!(term instanceof Terms.Die)) continue;
+					if (term.modifiers.includes('c') && !term.modifiers.includes('x'))
+						term.modifiers.push('x');
+				}
+			}
 			this.resetFormula();
 			return;
 		}
@@ -767,18 +781,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (highestDie) this.primaryDie = highestDie;
 	}
 
-	/**
-	 * Count crit-capable dice that rolled max BEFORE vicious explosions append
-	 * chain dice to the results array. Called from `_evaluate` so that
-	 * `critCount` reflects base crits only, not continuation dice.
-	 */
+	/** Count the crit-capable dice that rolled max, not their explosion dice. */
 	private _countModifierModeCrits(): number {
 		let count = 0;
 		for (const term of this.terms) {
 			if (!(term instanceof Terms.Die)) continue;
 			const meta = getNimbleMods(term);
 			if (!meta?.canCrit) continue;
-			for (const r of term.results) {
+			// Explosion dice come after the dice the term rolled.
+			for (const r of term.results.slice(0, term.number ?? term.results.length)) {
 				if (r.active && !r.discarded && r.result === term.faces) {
 					count++;
 				}
@@ -850,6 +861,112 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
 				}
 			}
+		}
+	}
+
+	/** How a die term of this roll explodes at its max. */
+	explosionStyleOf(term: foundry.dice.terms.DiceTerm): ExplosionStyle {
+		if (this.modifierMode) {
+			const meta = getNimbleMods(term) ?? nimbleModsFromModifiers(term.modifiers);
+			if (meta?.canCrit && meta.explosionStyle === 'vicious') return 'vicious';
+		} else if (
+			term instanceof PrimaryDie &&
+			this.options.canCrit &&
+			this.options.explosionStyle === 'vicious'
+		) {
+			return 'vicious';
+		}
+		return hasExplodeModifier(term.modifiers) ? 'standard' : 'none';
+	}
+
+	/** "Add to Primary Die Result" of `term`, if it is the Primary Die and has one. */
+	primaryDieBonusOf(term: unknown): KeptDieBonus | null {
+		const add = Number(this.options.primaryDieModifier) || 0;
+		const base = this.options.primaryDieBaseResult;
+		if (!add || typeof base !== 'number' || !this._isPresetPrimaryDie(term)) return null;
+		return { add, base };
+	}
+
+	/**
+	 * The Primary Die was rolled again. A set result no longer holds, and the
+	 * damage past the die's max is worked out again from the new result.
+	 */
+	primaryDieRerolled(term: unknown, keptBase: number | null): void {
+		if (!this._isPresetPrimaryDie(term) || keptBase === null) return;
+		if (this.options.primaryDieValue && this.options.primaryDieValue !== keptBase) {
+			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
+		}
+
+		const add = Number(this.options.primaryDieModifier) || 0;
+		const oldBase = this.options.primaryDieBaseResult;
+		if (!add || typeof oldBase !== 'number') return;
+
+		const at = this.terms.indexOf(term) + 1;
+		const oldExcess = oldBase + add - term.faces;
+		const [operator, excess] = this.terms.slice(at, at + 2);
+		if (
+			oldExcess > 0 &&
+			operator instanceof Terms.OperatorTerm &&
+			operator.operator === '+' &&
+			excess instanceof Terms.NumericTerm &&
+			excess.number === oldExcess
+		) {
+			this.terms.splice(at, 2);
+		}
+
+		const newExcess = keptBase + add - term.faces;
+		if (newExcess > 0) {
+			this.terms.splice(
+				at,
+				0,
+				Terms.OperatorTerm.fromData({ class: 'OperatorTerm', operator: '+', evaluated: true }),
+				Terms.NumericTerm.fromData({ class: 'NumericTerm', number: newExcess, evaluated: true }),
+			);
+		}
+		this.options.primaryDieBaseResult = keptBase;
+		this.resetFormula();
+	}
+
+	private _isPresetPrimaryDie(term: unknown): term is PrimaryDie & { faces: number } {
+		return (
+			!this.modifierMode &&
+			term instanceof PrimaryDie &&
+			term === this.primaryDie &&
+			typeof term.faces === 'number'
+		);
+	}
+
+	/**
+	 * Work out the total, crit and miss again after a die result of this
+	 * evaluated roll changed.
+	 */
+	refreshOutcome(): void {
+		const internals = this as unknown as {
+			_total: number;
+			_evaluateASTSync(node: unknown): number;
+		};
+		internals._total = internals._evaluateASTSync(CONFIG.Dice.parser.toAST(this.terms));
+		this.excludedPrimaryDieValue = 0;
+		this.isCritical = this.options.canCrit ? undefined : false;
+		this.isMiss = this.options.canMiss ? undefined : false;
+
+		if (this.modifierMode) {
+			for (const term of this.terms) {
+				if (!(term instanceof Terms.Die) || getNimbleMods(term)) continue;
+				const meta = nimbleModsFromModifiers(term.modifiers);
+				if (meta) (term as unknown as Record<symbol, unknown>)[NIMBLE_MODS] = meta;
+			}
+			this.critCount = this._countModifierModeCrits();
+			this._finalizeOutcomeModifierMode();
+		} else {
+			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
+			if (primaryTerm) this._finalizeOutcome(primaryTerm);
+		}
+
+		if (this.options.forceMiss) {
+			this.isMiss = true;
+			this.isCritical = false;
+			this.critCount = 0;
 		}
 	}
 

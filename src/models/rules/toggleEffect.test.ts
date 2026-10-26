@@ -234,6 +234,7 @@ describe('ToggleEffectRule', () => {
 			const choices = turnOffField.element.choices;
 			expect(choices).toContain('onActorKilled');
 			expect(choices).toContain('onActorWounded');
+			expect(choices).toContain('onActorHealed');
 			expect(choices).toContain('onRest');
 			expect(choices).toContain('onTurnStart');
 			expect(choices).toContain('onTurnEnd');
@@ -569,6 +570,24 @@ describe('ToggleEffectRule', () => {
 				actor: actor as unknown as Ctx['actor'],
 				previousHp: 20,
 				currentHp: 5,
+			});
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('onActorHealed deletes the AE when listed in turnOff', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule(
+				{ tags: ['self:poisoned'], turnOff: ['onActorHealed'] },
+				actor,
+			);
+			pushAE(actor, rule.id, rule.item.id);
+
+			type Ctx = Parameters<ToggleEffectRule['onActorHealed']>[0];
+			await rule.onActorHealed({
+				actor: actor as unknown as Ctx['actor'],
+				previousHp: 5,
+				currentHp: 9,
 			});
 
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);

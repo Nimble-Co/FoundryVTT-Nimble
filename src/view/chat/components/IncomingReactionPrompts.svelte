@@ -2,10 +2,12 @@
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { IncomingReactionPromptsProps } from '#types/components/IncomingReactionPrompts.d.ts';
 
-	import { getContext } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
+	import LeftOutRerolls from './LeftOutRerolls.svelte';
+	import RerollDiePicker from './RerollDiePicker.svelte';
 	import RerollHistory from './RerollHistory.svelte';
 	import RollRerollButton from './RollRerollButton.svelte';
 
@@ -13,38 +15,70 @@
 	let { place }: IncomingReactionPromptsProps = $props();
 
 	const prompts = createIncomingReactionPromptsState(messageDocument, () => place);
-	const { text } = prompts;
+	const { held, text } = prompts;
+
+	let rollRerollButton = $state<{ focus(): void } | undefined>();
+
+	async function cancelPickAtRollButton(): Promise<void> {
+		prompts.cancelPick();
+		await tick();
+		rollRerollButton?.focus();
+	}
 </script>
 
 {#snippet rerollHistory()}
-	<RerollHistory legacyLines={prompts.legacyRerollLines} lines={prompts.historyLines} />
+	<RerollHistory
+		legacyLines={prompts.legacyRerollLines}
+		lines={prompts.historyLines}
+		pendingKeep={prompts.pendingKeep}
+		pendingLine={prompts.pendingLine}
+		{held}
+	/>
 {/snippet}
 
 {#snippet entryGroups()}
 	<IncomingReactionEntryGroups
 		groups={prompts.pendingGroups}
+		picking={prompts.picking}
 		busy={prompts.busy}
+		primaryOutcome={prompts.primaryOutcome}
 		{text}
 		onuse={prompts.useEntry}
+		onpick={prompts.pickDie}
+		oncancel={prompts.cancelPick}
 	/>
 {/snippet}
 
 {#if place === 'rollButton'}
 	{#if prompts.rerollChoices.length > 0}
 		<RollRerollButton
+			bind:this={rollRerollButton}
 			choices={prompts.rerollChoices}
 			disabled={prompts.busy}
 			onChoose={prompts.useEntryById}
 		/>
 	{/if}
+	{#if prompts.picking}
+		<RerollDiePicker
+			dice={prompts.picking.dice}
+			feature={text.featureName(prompts.picking.entry) || prompts.picking.entry.label}
+			primaryOutcome={null}
+			rolling={prompts.picking.rolling}
+			onpick={prompts.pickDie}
+			oncancel={cancelPickAtRollButton}
+		/>
+	{/if}
 {:else if place === 'rollHistory'}
-	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0}
+	{#if prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
 		<section class="nimble-roll-changes nimble-roll-changes--under-row">
 			{@render rerollHistory()}
+			{#if prompts.leftOutEntries.length > 0}
+				<LeftOutRerolls entries={prompts.leftOutEntries} />
+			{/if}
 		</section>
 	{/if}
 {:else if place === 'roll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0}
+	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
 
@@ -59,6 +93,10 @@
 				<div class="nimble-roll-changes__well">
 					{@render entryGroups()}
 				</div>
+			{/if}
+
+			{#if prompts.leftOutEntries.length > 0}
+				<LeftOutRerolls entries={prompts.leftOutEntries} />
 			{/if}
 		</section>
 	{/if}

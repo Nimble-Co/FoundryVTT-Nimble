@@ -1,7 +1,28 @@
 <script lang="ts">
 	import type { IncomingReactionEntryGroupsProps } from '#types/components/IncomingReactionEntryGroups.d.ts';
 
-	let { groups, busy, text, onuse }: IncomingReactionEntryGroupsProps = $props();
+	import { tick } from 'svelte';
+	import RerollDiePicker from './RerollDiePicker.svelte';
+
+	let {
+		groups,
+		picking,
+		busy,
+		primaryOutcome,
+		text,
+		onuse,
+		onpick,
+		oncancel,
+	}: IncomingReactionEntryGroupsProps = $props();
+
+	/** The buttons a die picker opens from, so the focus can go back to them. */
+	const entryButtons = $state<Record<string, HTMLButtonElement | undefined>>({});
+
+	async function cancelPick(): Promise<void> {
+		const entryId = oncancel();
+		await tick();
+		if (entryId) entryButtons[entryId]?.focus();
+	}
 </script>
 
 {#each groups as group (group.actorUuid)}
@@ -14,20 +35,32 @@
 			{#each group.entries as entry (entry.id)}
 				{@const cost = text.cost(entry)}
 				<li>
-					<button
-						class="nimble-button nimble-incoming-reaction-button"
-						type="button"
-						disabled={busy}
-						data-tooltip={text.tooltip(entry)}
-						onclick={() => onuse(entry)}
-					>
-						<i class="nimble-incoming-reaction-button__icon {text.icon(entry)}" aria-hidden="true"
-						></i>
-						<span class="nimble-incoming-reaction-button__label">{text.label(entry)}</span>
-						{#if cost}
-							<span class="nimble-incoming-reaction-button__cost">{cost}</span>
-						{/if}
-					</button>
+					{#if picking?.entry.id === entry.id}
+						<RerollDiePicker
+							dice={picking.dice}
+							feature={text.featureName(picking.entry) || picking.entry.label}
+							{primaryOutcome}
+							rolling={picking.rolling}
+							{onpick}
+							oncancel={cancelPick}
+						/>
+					{:else}
+						<button
+							bind:this={entryButtons[entry.id]}
+							class="nimble-button nimble-incoming-reaction-button"
+							type="button"
+							disabled={busy}
+							data-tooltip={text.tooltip(entry)}
+							onclick={() => onuse(entry)}
+						>
+							<i class="nimble-incoming-reaction-button__icon {text.icon(entry)}" aria-hidden="true"
+							></i>
+							<span class="nimble-incoming-reaction-button__label">{text.label(entry)}</span>
+							{#if cost}
+								<span class="nimble-incoming-reaction-button__cost">{cost}</span>
+							{/if}
+						</button>
+					{/if}
 				</li>
 			{/each}
 		</ul>

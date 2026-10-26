@@ -1,4 +1,5 @@
-import type { IncomingReactionEntry } from './incomingReactionEntry.js';
+import type { OneDieRoll } from '../dice/oneDieReroll.js';
+import type { IncomingReactionEntry, KeepChoiceRoll } from './incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
 import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
 
@@ -25,6 +26,17 @@ interface RerollableRoll<TRoll = unknown> {
 	makeRoll(formula: string, options: Record<string, unknown>): Promise<TRoll>;
 	/** Read the new roll's kept die. Without it, the primary die of a damage roll is read. */
 	readNewDie?(roll: TRoll): RolledDie;
+	/**
+	 * The roll as it stands on the card, rebuilt, for a reroll of one of its
+	 * dice. Without it, only the whole roll can be rerolled.
+	 */
+	current?(): OneDieRoll | null;
+	/** A player can also pick a dropped d20 of this roll. */
+	pickDropped?: boolean;
+	/** A roll as its Keep button shows it. */
+	keepChoice?(roll: unknown): KeepChoiceRoll;
+	/** The dice the 3D dice throw for the new roll. Without it, the whole new roll. */
+	diceToThrow?(roll: TRoll): unknown;
 	/**
 	 * Do the card kind's own work for the new roll, and write nothing yet.
 	 * `entries` are the card's entries with the used entry stamped.

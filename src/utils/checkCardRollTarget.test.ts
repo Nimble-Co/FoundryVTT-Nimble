@@ -42,6 +42,7 @@ function makeCard(overrides: Partial<CheckCard> = {}, serialized = serializedSav
 		rollMode: () => 0,
 		roller: () => ({ uuid: 'Actor.roller' }),
 		rollsSource: () => [JSON.stringify(serialized)],
+		incomingReactions: () => [],
 		update: vi.fn(async (_changes: Record<string, unknown>) => undefined),
 		...overrides,
 	} satisfies CheckCard;
@@ -116,10 +117,43 @@ describe('checkCardRollTarget', () => {
 		expect(context).toEqual({
 			attacker: { uuid: 'Actor.roller' },
 			targets: [],
+			allies: [],
 			roll: WILL_SAVE,
 			outcome: null,
 			forcedMiss: false,
 		});
+	});
+
+	it("gives the gate the allies the card's entries name, without a new scan", () => {
+		const bard = { uuid: 'Actor.bard' };
+		(globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.bard' ? bard : null,
+		);
+		const allyEntry = (id: string, extra: Partial<IncomingReactionEntry> = {}) =>
+			({
+				id,
+				kind: 'reroll',
+				source: 'rule',
+				actorUuid: 'Actor.bard',
+				tokenUuid: 'Scene.s.Token.bard',
+				targetTokenUuid: null,
+				side: 'ally',
+				label: '',
+				ruleId: 'r',
+				itemUuid: 'Item.song',
+				used: false,
+				...extra,
+			}) satisfies IncomingReactionEntry;
+		const card = makeCard({
+			incomingReactions: () => [
+				allyEntry('a'),
+				allyEntry('b', { actorUuid: 'Actor.foe', leftOut: { reason: 'disposition' } }),
+			],
+		});
+
+		expect(checkCardRollTarget(card).context().allies).toEqual([
+			{ tokenUuid: 'Scene.s.Token.bard', actor: bard, isAlly: true, spaces: 0 },
+		]);
 	});
 
 	it('finds the card roll with its formula, the card roll mode and the kept d20', () => {
@@ -177,7 +211,12 @@ describe('checkCardRollTarget', () => {
 		};
 		expect(JSON.parse(changes.rolls[0]).formula).toBe('1d20 + 3[Will]');
 		expect(changes.rolls).toHaveLength(1);
-		expect(changes.system).toEqual({ incomingReactions: entries, rerolls: [], rollMode: 0 });
+		expect(changes.system).toEqual({
+			incomingReactions: entries,
+			rerolls: [],
+			pendingKeep: null,
+			rollMode: 0,
+		});
 	});
 
 	it('writes the roll mode the new roll used, so the card shows it', async () => {
@@ -214,7 +253,7 @@ describe('createCheckCard', () => {
 			rules: [] as RerollRuleLike[],
 		};
 		roller.rules.push(
-			rerollRule({ automatic: true, actor: roller, rerollCost: { ...FREE, woundCost: 1 } }),
+			rerollRule({ rerollsByItself: true, actor: roller, rerollCost: { ...FREE, woundCost: 1 } }),
 		);
 		const rerolls = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
 		expect(roller.system.attributes.wounds.value).toBe(1);
@@ -273,7 +312,7 @@ function rerollRule(overrides: Partial<RerollRuleLike> = {}) {
 		id: 'rule-1',
 		label: '',
 		item: { name: 'Clear Head', uuid: 'Item.head' },
-		automatic: false,
+		rerollsByItself: false,
 		rerollCost: FREE,
 		offersRerollOn: vi.fn(
 			(context: { side: string; roll: { kind: string; key?: string } }) =>
@@ -330,7 +369,7 @@ describe('the rerolls of a posted check', () => {
 		};
 		rollD20(15);
 		const rule = rerollRule({
-			automatic: true,
+			rerollsByItself: true,
 			rerollChanges: () => ({ rollModeChange: 1, primaryDieBonus: 0, extraDamage: '' }),
 		});
 		const roller: RerollingActor = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };
@@ -346,6 +385,59 @@ describe('the rerolls of a posted check', () => {
 				faces: 20,
 				previous: { value: 6, outcome: null },
 				next: { value: 15, outcome: null },
+			}),
+		]);
+	});
+
+	it("stamps the ally entries of creatures on the roller's scene, and keeps one that is not an ally as left out", async () => {
+		const offersRerollOn = vi.fn(
+			(context: { side: string; roll: { kind: string } }) =>
+				context.side === 'ally' && context.roll.kind === 'save',
+		);
+		const allyActor = (uuid: string) => ({
+			uuid,
+			rules: [{ ...rerollRule({ offersRerollOn }), usedBy: 'ally' }],
+		});
+		const grid = { isGridless: true, size: 100 };
+		const placed = (id: string, actor: unknown, disposition: number) => ({
+			id,
+			uuid: `Scene.s.Token.${id}`,
+			x: 0,
+			y: 0,
+			hidden: false,
+			disposition,
+			actor,
+		});
+		const roller = { uuid: 'Actor.roller', rules: [] as RerollRuleLike[] };
+		const rollerToken = placed('roller', roller, 1);
+		const scene = {
+			grid,
+			tokens: [
+				rollerToken,
+				placed('bard', allyActor('Actor.bard'), 1),
+				placed('foe', allyActor('Actor.foe'), -1),
+			],
+		};
+		for (const token of scene.tokens) Object.assign(token, { parent: scene });
+
+		const result = await checkCardRerollData(
+			{ ...roller, token: rollerToken } as RerollingActor,
+			postedRoll(),
+			WILL_SAVE,
+			0,
+		);
+
+		expect(result.system.incomingReactions).toEqual([
+			expect.objectContaining({
+				side: 'ally',
+				actorUuid: 'Actor.bard',
+				tokenUuid: 'Scene.s.Token.bard',
+				leftOut: null,
+			}),
+			expect.objectContaining({
+				side: 'ally',
+				actorUuid: 'Actor.foe',
+				leftOut: { reason: 'disposition' },
 			}),
 		]);
 	});
@@ -381,7 +473,7 @@ describe('checkCardRerollData', () => {
 		};
 		rollD20(15);
 		const rule = rerollRule({
-			automatic: true,
+			rerollsByItself: true,
 			rerollChanges: () => ({ rollModeChange: 1, primaryDieBonus: 0, extraDamage: '' }),
 		});
 		const roller = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };

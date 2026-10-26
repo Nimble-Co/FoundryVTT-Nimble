@@ -206,3 +206,8 @@ The testbench lets you build arbitrary roll configurations (formula, flags, adv/
 ---
 
 **If this doc gets out of date, prefer updating it over letting it drift.** The rule of thumb: if a content author or teammate can read this doc once and then plug into the engine without reading the engine source, it's doing its job.
+
+## Rerolling one die
+
+`rerollOneDie` (`src/dice/oneDieReroll.ts`) changes one result of an evaluated roll and keeps the others. It works on a copy, so the old roll is not changed. Each term is read as trees: every die with the dice its explosion rolled. Foundry appends a standard explosion die breadth first; a vicious chain appends pairs, base die after base die. The picked die gets a new result and loses its explosion dice. The term keeps the highest or lowest again (`applyKeep`, leftmost tie dropped), a die a reroll drops loses its explosion dice, and a new max explodes in the term's style. A die a reroll newly keeps also explodes at its max. The term is then written back in the order Foundry would have made it, so a later reroll reads it the same way. `DamageRoll#refreshOutcome` works out the total, crit and miss again, and rebuilds the `c`/`cv` metadata that a rebuilt roll does not carry. A `c` die asks for `x` when the roll is made, because Foundry runs only the modifiers a die asked for before it is evaluated.
+

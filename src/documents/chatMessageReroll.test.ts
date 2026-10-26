@@ -665,6 +665,207 @@ describe('resolveRerollReaction', () => {
 		);
 	});
 
+	it('refuses a reroll of a picked die when no die was picked', async () => {
+		setupWorld({ die: 'pickedDie' });
+		const message = createMessage();
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.incomingReactions.rerollPickADie'),
+		);
+	});
+
+	it('gives no dice to pick for a rule that rerolls the whole roll', () => {
+		setupWorld();
+		const message = createMessage();
+
+		expect(message.rerollDiceToPick(rerollEntry() as never)).toBeNull();
+	});
+
+	describe('a reroll whose result a player chooses', () => {
+		function pending(overrides: Record<string, unknown> = {}) {
+			return {
+				entryId: 'entry-1',
+				chooserUuid: 'Actor.target',
+				roll: { ...serializedRoll(), total: 11 },
+				reroll: {
+					entryId: 'entry-1',
+					itemUuid: 'Item.sand',
+					ruleId: 'reroll-1',
+					label: 'Pocket Sand',
+					actorUuid: 'Actor.target',
+					faces: 6,
+					previous: { value: 4, outcome: null },
+					next: { value: 6, outcome: null },
+					usesLeft: null,
+					woundsGained: 0,
+				},
+				old: { total: 8, outcome: 'hit' },
+				new: { total: 11, outcome: 'hit' },
+				discardedCritTriggers: false,
+				...overrides,
+			};
+		}
+
+		function waitingMessage() {
+			const message = createMessage({ entries: [rerollEntry({ used: true })] });
+			(message.system as Record<string, unknown>).pendingKeep = pending();
+			return message;
+		}
+
+		it('pays and rolls, then waits with both results and leaves the old roll on the card', async () => {
+			setupWorld({ keep: 'ownerChooses' });
+			const message = createMessage();
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			const payload = updatePayload(message) as unknown as {
+				rolls?: unknown;
+				system: Record<string, unknown> & {
+					incomingReactions: Array<Record<string, unknown>>;
+					pendingKeep: Record<string, unknown>;
+				};
+			};
+			expect(payload.rolls).toBeUndefined();
+			expect(payload.system.rerolls).toBeUndefined();
+			expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
+			expect(payload.system.pendingKeep).toMatchObject({
+				entryId: 'entry-1',
+				chooserUuid: 'Actor.target',
+				old: { total: 8, outcome: 'hit' },
+				new: { outcome: 'hit' },
+				reroll: expect.objectContaining({ entryId: 'entry-1', label: 'Pocket Sand' }),
+			});
+		});
+
+		it('lets the one who rolled choose for a rule that says so', async () => {
+			setupWorld({ keep: 'rollerChooses' });
+			const message = createMessage();
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(updatePayload(message).system).toMatchObject({
+				pendingKeep: { chooserUuid: 'Actor.attacker' },
+			});
+		});
+
+		it('keeps the old roll: only the history changes', async () => {
+			setupWorld();
+			const message = waitingMessage();
+
+			await message.resolveKeepChoice('old', 'gm-user');
+
+			expect(message.update).toHaveBeenCalledTimes(1);
+			const payload = updatePayload(message);
+			expect(payload.rolls).toBeUndefined();
+			expect(payload.system).toMatchObject({
+				rerolls: [expect.objectContaining({ entryId: 'entry-1', kept: 'old', keptTotal: 8 })],
+				pendingKeep: null,
+			});
+		});
+
+		it.each(['old', 'new'] as const)(
+			'offers the feature again after the %s result is kept',
+			async (choice) => {
+				const { target, rule } = setupWorld();
+				target.rules = [{ ...rule, item: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
+				const message = waitingMessage();
+
+				await message.resolveKeepChoice(choice, 'gm-user');
+
+				const entries = updatePayload(message).system.incomingReactions as Array<
+					Record<string, unknown>
+				>;
+				expect(entries).toEqual([
+					expect.objectContaining({ id: 'entry-1', used: true }),
+					expect.objectContaining({ ruleId: 'reroll-1', used: false }),
+				]);
+			},
+		);
+
+		it('keeps the new roll: it goes on the card as a reroll does', async () => {
+			setupWorld();
+			const message = waitingMessage();
+
+			await message.resolveKeepChoice('new', 'gm-user');
+
+			const payload = updatePayload(message);
+			expect(JSON.parse(payload.rolls[0])).toMatchObject({ total: 11 });
+			expect(payload.system.rerolls).toEqual([
+				expect.objectContaining({ entryId: 'entry-1', kept: 'new', keptTotal: 11 }),
+			]);
+			expect((payload.system as Record<string, unknown>).pendingKeep).toBeNull();
+		});
+
+		it('refuses a player who does not own the actor that chooses', async () => {
+			const { target } = setupWorld();
+			target.testUserPermission = vi.fn(() => false);
+			const message = waitingMessage();
+
+			await message.resolveKeepChoice('new', 'player-1', true);
+
+			expect(message.update).not.toHaveBeenCalled();
+		});
+
+		it('holds Apply Damage and the other rerolls while it waits', () => {
+			setupWorld();
+			const message = waitingMessage();
+			const other = rerollEntry({ id: 'entry-2' });
+			(message.system.incomingReactions as unknown[]).push(other);
+
+			expect(message.canStillUseReroll(other as never)).toBe(false);
+			expect(message.canApplyAllDamage()).toBe(false);
+			expect(message.canApplyDamage(5)).toBe(false);
+		});
+
+		it('refuses a second reroll that arrives while it waits', async () => {
+			setupWorld();
+			const message = waitingMessage();
+			(message.system.incomingReactions as unknown[]).push(rerollEntry({ id: 'entry-2' }));
+
+			await message.resolveRerollReaction('entry-2', 'gm-user');
+
+			expect(message.update).not.toHaveBeenCalled();
+			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+				localize('NIMBLE.chat.incomingReactions.keepFirst'),
+			);
+		});
+	});
+
+	describe('an ally reroll the scan left out', () => {
+		const leftOut = () =>
+			rerollEntry({
+				id: 'pip',
+				side: 'ally',
+				actorUuid: 'Actor.target',
+				leftOut: { reason: 'disposition' },
+			});
+
+		it('the GM can add it', async () => {
+			setupWorld();
+			const message = createMessage({ entries: [rerollEntry(), leftOut()] });
+
+			await message.addLeftOutReroll('pip');
+
+			expect(updatePayload(message).system.incomingReactions).toEqual([
+				expect.objectContaining({ id: 'entry-1' }),
+				expect.objectContaining({ id: 'pip', leftOut: null }),
+			]);
+		});
+
+		it('cannot be added by a player', async () => {
+			setupWorld();
+			globals().game.user = { isGM: false, id: 'player-1' };
+			const message = createMessage({ entries: [leftOut()] });
+
+			await message.addLeftOutReroll('pip');
+
+			expect(message.update).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('an automatic reroll the new roll allows', () => {
 		const WARD_ITEM = { name: 'Warding Bond', uuid: 'Item.ward' };
 
@@ -674,6 +875,7 @@ describe('resolveRerollReaction', () => {
 				id: 'ward-1',
 				outcome: 'criticalHit',
 				automatic: true,
+				rerollsByItself: true,
 				item: WARD_ITEM,
 				actor: world.target,
 			});

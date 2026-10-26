@@ -41,9 +41,16 @@
 		else messageDocument?.applyAllDamage();
 	}
 
-	const applyDamageLabel = $derived(localize('NIMBLE.chat.applyDamage'));
+	// A reroll whose result a player still chooses holds the damage.
+	const waitsForKeep = $derived(
+		!!(messageDocument?.reactive as unknown as { system?: { pendingKeep?: unknown } } | undefined)
+			?.system?.pendingKeep,
+	);
+	const applyDamageLabel = $derived(
+		localize(waitsForKeep ? 'NIMBLE.chat.incomingReactions.keepFirst' : 'NIMBLE.chat.applyDamage'),
+	);
 	const applyDamageTooltip = $derived(
-		canApplyDamage ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
+		canApplyDamage || waitsForKeep ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
 	);
 
 	const { dispositionState } = useDispositionState(

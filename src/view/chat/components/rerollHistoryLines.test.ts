@@ -66,6 +66,7 @@ describe('rerollHistoryLines', () => {
 			{
 				text: 'Rerolled with Pocket Sand',
 				detail: 'Wounds gained: 1',
+				keptOld: false,
 				dice: {
 					previous: { faces: 8, value: 8, outcome: 'crit' },
 					next: { faces: 8, value: 3, outcome: null },
@@ -74,12 +75,23 @@ describe('rerollHistoryLines', () => {
 			{
 				text: 'Rerolled with Warding Bond',
 				detail: 'Used by Bram - Uses left: 2',
+				keptOld: false,
 				dice: {
 					previous: { faces: 8, value: 3, outcome: null },
 					next: { faces: 8, value: 1, outcome: 'miss' },
 				},
 			},
 		]);
+	});
+
+	it('tells the total a player kept, and whether it was the old roll', () => {
+		const [keptNew, keptOld] = lines([
+			record({ kept: 'new', keptTotal: 12 }),
+			record({ kept: 'old', keptTotal: 9 }),
+		]);
+
+		expect([keptNew.text, keptNew.keptOld]).toEqual(['Rerolled with Pocket Sand, kept 12', false]);
+		expect([keptOld.text, keptOld.keptOld]).toEqual(['Rerolled with Pocket Sand, kept 9', true]);
 	});
 
 	it("leaves out the name on the speaker's own reroll", () => {

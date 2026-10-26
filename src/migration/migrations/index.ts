@@ -67,3 +67,4 @@ export { Migration066BanditParry } from './Migration066BanditParry.js';
 export { Migration067MovementPilots } from './Migration067MovementPilots.js';
 export { Migration068RerollRule } from './Migration068RerollRule.js';
 export { Migration069CheckRerolls } from './Migration069CheckRerolls.js';
+export { Migration070AllyRerolls } from './Migration070AllyRerolls.js';

@@ -6,6 +6,7 @@ import {
 	collectPoolSpendCardOffers,
 	type OfferingActor,
 } from './poolSpendCardOffers.js';
+import { rollerTokenOf, scanRerollAllies } from './rerollAllies.js';
 import {
 	type AutomaticReroll,
 	collectRerollEntries,
@@ -345,11 +346,13 @@ function computeIncomingAttackPlan(
 		targets: firstTargetToken
 			? [{ tokenUuid: firstTargetToken.document.uuid, actor: targetActor as RerollingActor | null }]
 			: [],
+		allies: scanRerollAllies(rollerTokenOf(attackingActor)),
 		roll: { kind: 'attack', delivery: attackContext?.delivery ?? null },
 		outcome: null,
 		forcedMiss: plan.forceMiss,
 	});
 	addRerollEntries(plan, rerolls, 'roller');
+	addRerollEntries(plan, rerolls, 'ally');
 
 	if (!firstTargetToken?.actor || plan.forceMiss) return plan;
 
