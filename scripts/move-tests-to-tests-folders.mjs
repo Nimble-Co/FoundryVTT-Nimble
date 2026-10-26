@@ -23,10 +23,14 @@ const SPECIFIER =
 	/(\bfrom\s*|\bimport\s*\(?\s*|\bvi\.(?:mock|doMock|unmock|doUnmock|importActual|importMock)\s*(?:<[^>]*>)?\(\s*)(['"])(\.{1,2}\/[^'"]*)\2/g;
 
 const root = process.cwd();
-const tracked = execFileSync('git', ['ls-files', '-z', '--', ...ROOTS], { encoding: 'utf8' })
-	.split('\0')
-	.filter(Boolean)
-	.filter((file) => existsSync(file));
+const tracked = [
+	...new Set(
+		execFileSync('git', ['ls-files', '-z', '--', ...ROOTS], { encoding: 'utf8' })
+			.split('\0')
+			.filter(Boolean)
+			.filter((file) => existsSync(file)),
+	),
+];
 
 const moves = new Map();
 for (const file of tracked) {
@@ -36,12 +40,41 @@ for (const file of tracked) {
 	moves.set(path.resolve(root, file), path.resolve(root, dir, '__tests__', path.basename(file)));
 }
 
+const EXTENSIONS = ['', '.ts', '.js', '.mjs', '.svelte', '.svelte.ts', '/index.ts', '/index.js'];
+
+function resolves(absSpecifier) {
+	const bare = absSpecifier.replace(/\.js$/, '');
+	return [absSpecifier, ...EXTENSIONS.map((ext) => bare + ext)].some((candidate) =>
+		existsSync(candidate),
+	);
+}
+
+// A test already in __tests__ whose specifiers are still written from the folder
+// above, e.g. the incoming side of a rebase conflict taken with `git checkout --theirs`.
+let repaired = 0;
+for (const file of tracked) {
+	if (!MOVABLE.test(file) || !path.dirname(file).split('/').includes('__tests__')) continue;
+	const dir = path.resolve(root, path.dirname(file));
+	const source = readFileSync(file, 'utf8');
+	const next = source.replace(SPECIFIER, (match, lead, quote, specifier) => {
+		const [pathPart, query = ''] = specifier.split(/(?=\?)/);
+		if (resolves(path.resolve(dir, pathPart))) return match;
+		const fromParent = path.resolve(dir, '..', pathPart);
+		if (!resolves(fromParent)) return match;
+		return `${lead}${quote}${toSpecifier(dir, fromParent)}${query}${quote}`;
+	});
+	if (next === source) continue;
+	repaired += 1;
+	if (DRY_RUN) console.log(`repair  ${file}`);
+	else writeFileSync(file, next);
+}
+if (repaired > 0)
+	console.log(`${DRY_RUN ? 'Would repair' : 'Repaired'} imports in ${repaired} files.`);
+
 if (moves.size === 0) {
 	console.log('Nothing to move. Every test is in a __tests__ folder.');
 	process.exit(0);
 }
-
-const EXTENSIONS = ['', '.ts', '.js', '.mjs', '.svelte', '.svelte.ts', '/index.ts', '/index.js'];
 
 /** The moved file a specifier points at, or undefined. */
 function movedTarget(absSpecifier) {
