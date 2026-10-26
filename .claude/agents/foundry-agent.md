@@ -47,6 +47,15 @@ this.#subscribe = createSubscriber((update) => {
 
 **Subpath imports** — `#documents/*`, `#managers/*`, `#utils/*`, `#view/*`, `#lib/*`, `#types/*`, `#stores/*`, `#system` are defined in `package.json`.
 
+## Dice So Nice
+Facts from Dice So Nice 6.2 (the module source is in the v14 data folder, `Data/modules/dice-so-nice/main.js`):
+- It animates the rolls of a new message, and the rolls an `update()` ADDS (more rolls after the update than before; it hides those results until its dice land). A roll that REPLACES another gets no dice and no hiding. A message with the flag `dice-so-nice.skip` is never animated.
+- `game.dice3d.showForRoll(roll, user, synchronize, whisper, blind, messageId, speaker)` resolves after the local animation. With `synchronize` it first sends socket `module.dice-so-nice` type `show` to the other clients, which get no hook and no done event.
+- A hidden tab queues its dice until the tab is visible again, so `showForRoll` does not resolve until then.
+- The `diceSoNiceRollStart` hook fires on the calling client only.
+
+The project rule for this is in `docs/STYLE_GUIDE.md`, "Rolls Written Onto an Existing Chat Message".
+
 ## Multi-GM
 Combat automation assumes exactly one connected GM. Double-fire under multiple GMs is accepted by design — do not raise it as a bug or add guards for it.
 

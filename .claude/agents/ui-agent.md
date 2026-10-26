@@ -56,6 +56,9 @@ Never raw `game.i18n.localize()` in a component. New keys go in `public/lang/en.
 ## Styling
 SCSS in `src/scss/`, plus `<style>` blocks in components. BEM-like naming under the `nimble-` namespace: `nimble-character-sheet__section`. `pnpm format:scss` fixes stylelint issues.
 
+## Chat cards that show a new roll
+A card that gets a new roll after it is posted (a reroll, a deferred damage roll) shows the result after the Dice So Nice dice land. Follow `docs/STYLE_GUIDE.md`, "Rolls Written Onto an Existing Chat Message".
+
 ## Do not
 - Call `actor.prepareData()` from a component.
 - Use `document.querySelector` — use bindings or Svelte actions.

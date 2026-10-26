@@ -6,6 +6,7 @@ import type {
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll } from './rerollOptions.js';
+import type { RerollRollKind } from './rollToReroll.js';
 
 /** The roll a reroll replaces. A live roll and a serialized one both fit. */
 interface ReplacedRoll {
@@ -45,6 +46,10 @@ interface RerollStepInput<TRoll> {
 	/** The replaced roll's primary die result, read the way the caller reads it. */
 	previousResult: number | null;
 	makeRoll: (formula: string, options: Record<string, unknown>) => Promise<TRoll>;
+	/** The kind of roll being rerolled; attack changes apply only to an attack. */
+	rollKind: RerollRollKind;
+	/** Reads the new roll's kept die. By default, the primary die of a damage roll. */
+	readNewDie?: (roll: TRoll) => RolledDie;
 	/** An earlier reroll of this roll kept the crit triggers. */
 	earlierCritTriggers: boolean;
 	payOptions?: { forceHeroicReaction?: boolean };
@@ -52,11 +57,21 @@ interface RerollStepInput<TRoll> {
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
 
+/** A roll's kept die: its size and result, each null when it cannot be read. */
+interface RolledDie {
+	faces: number | null;
+	value: number | null;
+}
+
 interface NewRoll {
 	primaryDie?: { faces?: number | null } | null;
 	primaryDieValue?: number;
 	isCritical?: boolean;
 	isMiss?: boolean;
+}
+
+function primaryDieOf(roll: NewRoll): RolledDie {
+	return { faces: roll.primaryDie?.faces ?? null, value: roll.primaryDieValue ?? null };
 }
 
 function dieResult(
@@ -88,10 +103,11 @@ async function rerollWithRule<TRoll>(
 		const next = prepareReroll(
 			replaced.originalFormula ?? replaced.formula ?? '',
 			replaced.options as Record<string, unknown> | null | undefined,
-			rule.rerollChanges?.() ?? {},
+			rule.rerollChanges?.(input.rollKind) ?? {},
 		);
 		const roll = await input.makeRoll(next.formula, next.options);
 		const rolled = roll as NewRoll;
+		const die = input.readNewDie ? input.readNewDie(roll) : primaryDieOf(rolled);
 		const previousWasCritical = replaced.isCritical === true;
 		const done: RerollStepDone<TRoll> = {
 			status: 'done',
@@ -102,9 +118,9 @@ async function rerollWithRule<TRoll>(
 				ruleId: entry.ruleId,
 				label: entry.label,
 				actorUuid: entry.actorUuid,
-				faces: rolled.primaryDie?.faces ?? null,
+				faces: die.faces,
 				previous: dieResult(input.previousResult, replaced),
-				next: dieResult(rolled.primaryDieValue, rolled),
+				next: dieResult(die.value, rolled),
 				usesLeft: cost ? rerollUsesLeft(payer, cost) : null,
 				woundsGained: paid?.wounds ?? 0,
 			},
@@ -124,6 +140,7 @@ export {
 	rerollWithRule,
 	type ReplacedRoll,
 	type RerollHistory,
+	type RolledDie,
 	type RerollStepDone,
 	type RerollStepInput,
 	type RerollStepOutcome,

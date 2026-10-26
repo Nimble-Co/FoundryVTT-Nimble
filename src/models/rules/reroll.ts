@@ -1,4 +1,4 @@
-import { type AttackDelivery, matchesAttackDelivery } from '../../utils/attackDelivery.js';
+import { matchesAttackDelivery } from '../../utils/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
 	HEROIC_REACTIONS,
@@ -12,22 +12,52 @@ import {
 } from '../../utils/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/rerollCost.js';
 import type { RerollChanges } from '../../utils/rerollOptions.js';
+import {
+	type CheckRollKind,
+	REROLL_ROLL_KINDS,
+	type RerollRollKind,
+	type RollToReroll,
+} from '../../utils/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const REROLL_ROLLS = ['attack'] as const;
 const REROLL_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
 
 // Outcomes whose first roll can be a crit.
 const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
 
-type RerollRoll = (typeof REROLL_ROLLS)[number];
 type RerollAttackDelivery = (typeof REROLL_ATTACK_DELIVERIES)[number];
 
 function choiceLabels(field: string, values: readonly string[]): Record<string, string> {
 	return Object.fromEntries(
 		values.map((value) => [value, `NIMBLE.rules.reroll.${field}.choices.${value}`]),
+	);
+}
+
+function rollsInclude(kind: RerollRollKind) {
+	return (data: Record<string, unknown>) => Array.isArray(data.rolls) && data.rolls.includes(kind);
+}
+
+const forAttacks = rollsInclude('attack');
+
+/** The save, skill or ability keys a check reroll is limited to. Empty is any. */
+function checkKeysField(
+	name: 'saves' | 'skills' | 'abilities',
+	kind: CheckRollKind,
+	choices: () => Record<string, string>,
+) {
+	const { fields } = foundry.data;
+	return new fields.ArrayField(
+		new fields.StringField({ required: true, nullable: false, choices }),
+		withWidget({
+			required: true,
+			nullable: false,
+			initial: [] as string[],
+			label: `NIMBLE.rules.reroll.${name}.label`,
+			hint: 'NIMBLE.rules.reroll.noneMeansAny',
+			showWhen: rollsInclude(kind),
+		}),
 	);
 }
 
@@ -39,7 +69,7 @@ function schema() {
 			new fields.StringField({
 				required: true,
 				nullable: false,
-				choices: choiceLabels('rolls', REROLL_ROLLS),
+				choices: choiceLabels('rolls', REROLL_ROLL_KINDS),
 			}),
 			{
 				required: true,
@@ -48,6 +78,9 @@ function schema() {
 				label: 'NIMBLE.rules.reroll.rolls.label',
 			},
 		),
+		saves: checkKeysField('saves', 'save', () => CONFIG.NIMBLE.savingThrows),
+		skills: checkKeysField('skills', 'skillCheck', () => CONFIG.NIMBLE.skills),
+		abilities: checkKeysField('abilities', 'abilityCheck', () => CONFIG.NIMBLE.abilityScores),
 		usedBy: new fields.StringField(
 			withWidget({
 				required: true,
@@ -59,22 +92,28 @@ function schema() {
 				widget: 'chips',
 			}),
 		),
-		outcome: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: 'always',
-			choices: choiceLabels('outcome', REROLL_TRIGGERS),
-			label: 'NIMBLE.rules.reroll.outcome.label',
-			hint: 'NIMBLE.rules.reroll.outcome.hint',
-		}),
-		attackDelivery: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: 'any',
-			choices: choiceLabels('attackDelivery', REROLL_ATTACK_DELIVERIES),
-			label: 'NIMBLE.rules.reroll.attackDelivery.label',
-			hint: 'NIMBLE.rules.reroll.attackDelivery.hint',
-		}),
+		outcome: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'always',
+				choices: choiceLabels('outcome', REROLL_TRIGGERS),
+				label: 'NIMBLE.rules.reroll.outcome.label',
+				hint: 'NIMBLE.rules.reroll.outcome.hint',
+				showWhen: forAttacks,
+			}),
+		),
+		attackDelivery: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: choiceLabels('attackDelivery', REROLL_ATTACK_DELIVERIES),
+				label: 'NIMBLE.rules.reroll.attackDelivery.label',
+				hint: 'NIMBLE.rules.reroll.attackDelivery.hint',
+				showWhen: forAttacks,
+			}),
+		),
 		chargePoolIdentifier: new fields.StringField(
 			withWidget({
 				// Not required, so the picker lists an empty choice for no pool.
@@ -129,13 +168,16 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.heroicReaction.label',
 			hint: 'NIMBLE.rules.reroll.heroicReaction.hint',
 		}),
-		oncePerAttack: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: 'NIMBLE.rules.reroll.oncePerAttack.label',
-			hint: 'NIMBLE.rules.reroll.oncePerAttack.hint',
-		}),
+		oncePerAttack: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.reroll.oncePerAttack.label',
+				hint: 'NIMBLE.rules.reroll.oncePerAttack.hint',
+				showWhen: forAttacks,
+			}),
+		),
 		rollModeChange: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -151,14 +193,17 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.rollModeChange.label',
 			hint: 'NIMBLE.rules.reroll.rollModeChange.hint',
 		}),
-		primaryDieBonus: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			integer: true,
-			label: 'NIMBLE.rules.reroll.primaryDieBonus.label',
-			hint: 'NIMBLE.rules.reroll.primaryDieBonus.hint',
-		}),
+		primaryDieBonus: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				label: 'NIMBLE.rules.reroll.primaryDieBonus.label',
+				hint: 'NIMBLE.rules.reroll.primaryDieBonus.hint',
+				showWhen: forAttacks,
+			}),
+		),
 		extraDamage: new fields.StringField(
 			withWidget({
 				required: true,
@@ -167,6 +212,7 @@ function schema() {
 				label: 'NIMBLE.rules.reroll.extraDamage.label',
 				hint: 'NIMBLE.rules.reroll.extraDamage.hint',
 				widget: 'diceFormula',
+				showWhen: forAttacks,
 			}),
 		),
 		automatic: new fields.BooleanField({
@@ -183,7 +229,8 @@ function schema() {
 				initial: false,
 				label: 'NIMBLE.rules.reroll.discardedCritTriggers.label',
 				hint: 'NIMBLE.rules.reroll.discardedCritTriggers.hint',
-				showWhen: (data: Record<string, unknown>) => CRIT_OUTCOMES.has(String(data.outcome)),
+				showWhen: (data: Record<string, unknown>) =>
+					forAttacks(data) && CRIT_OUTCOMES.has(String(data.outcome)),
 			}),
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'reroll' }),
@@ -194,10 +241,10 @@ declare namespace RerollRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-/** Which side of an attack is asking, and how the attack is delivered. */
+/** Which side of the roll is asking, and which roll it is. */
 interface RerollOfferContext {
 	side: RerollSide;
-	delivery: AttackDelivery;
+	roll: RollToReroll;
 }
 
 /**
@@ -210,7 +257,7 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.reroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [
-		{ fields: ['rolls'] },
+		{ fields: ['rolls', 'saves', 'skills', 'abilities'] },
 		{ fields: ['usedBy'] },
 		{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
 		{
@@ -238,7 +285,10 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 		{ fields: ['automatic', 'discardedCritTriggers'] },
 	];
 
-	declare rolls: RerollRoll[];
+	declare rolls: RerollRollKind[];
+	declare saves: string[];
+	declare skills: string[];
+	declare abilities: string[];
 	declare usedBy: RerollSide;
 	declare outcome: RerollTrigger;
 	declare attackDelivery: RerollAttackDelivery;
@@ -265,6 +315,9 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['rolls', 'string[]'],
+				['saves', 'string[]'],
+				['skills', 'string[]'],
+				['abilities', 'string[]'],
 				['usedBy', 'string'],
 				['outcome', 'string'],
 				['attackDelivery', 'string'],
@@ -294,27 +347,44 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 
 	/**
-	 * Whether this rule lets `context.side` reroll an attack delivered that
-	 * way, now. The outcome is checked by the caller against the roll.
+	 * Whether this rule lets `context.side` reroll this roll now. The outcome
+	 * of an attack is checked by the caller against the roll.
 	 */
 	offersRerollOn(context: RerollOfferContext): boolean {
 		if (!this.item.isEmbedded) return false;
 		if (!this.test()) return false;
-		if (!this.rolls?.includes('attack')) return false;
-		if (this.usedBy !== context.side) return false;
-		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return false;
+		const { side, roll } = context;
+		if (!this.rolls?.includes(roll.kind)) return false;
+		if (this.usedBy !== side) return false;
+		if (roll.kind === 'attack') {
+			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
+		} else {
+			// A check has no target side.
+			if (side !== 'roller') return false;
+			const keys = this.checkKeys(roll.kind);
+			if (keys.length > 0 && !keys.includes(roll.key)) return false;
+		}
 		return canPayRerollCost(this.actor, this.rerollCost);
 	}
 
-	/** The changes this rule adds to the new roll. Extra damage reads this rule's actor. */
-	rerollChanges(): RerollChanges {
-		const formula = (this.extraDamage ?? '').trim();
+	private checkKeys(kind: CheckRollKind): string[] {
+		const keys = { save: this.saves, skillCheck: this.skills, abilityCheck: this.abilities }[kind];
+		return Array.isArray(keys) ? keys : [];
+	}
+
+	/**
+	 * The changes this rule adds to the new roll. Extra damage reads this
+	 * rule's actor. Only an attack gets the attack changes.
+	 */
+	rerollChanges(kind: RerollRollKind): RerollChanges {
+		const attackChanges = kind === 'attack' && this.rolls?.includes('attack') === true;
+		const formula = attackChanges ? (this.extraDamage ?? '').trim() : '';
 		const extraDamage = formula
 			? Roll.replaceFormulaData(formula, this.actor?.getRollData() ?? {}, { missing: '0' })
 			: '';
 		return {
 			rollModeChange: Number(this.rollModeChange) || 0,
-			primaryDieBonus: Number(this.primaryDieBonus) || 0,
+			primaryDieBonus: attackChanges ? Number(this.primaryDieBonus) || 0 : 0,
 			extraDamage,
 		};
 	}

@@ -10,11 +10,17 @@ import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
+import {
+	type CheckCardRerollData,
+	checkCardRerollData,
+	createCheckCard,
+} from '../../utils/checkCardRollTarget.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
 import parseMonsterLevel from '../../utils/parseMonsterLevel.js';
+import type { RerollingActor } from '../../utils/rerollEntries.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -825,15 +831,16 @@ class NimbleBaseActor<
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, roll, {
-			...options,
-			rollMode,
-		});
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'abilityCheck', key: abilityKey },
+			rollMode ?? 0,
+		);
+		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		return chatCard ?? null;
+		return createCheckCard(chatData, rerolls);
 	}
 
 	async rollAbilityCheck(abilityKey: AbilityKeyType, options: ActorRollOptions = {}) {
@@ -885,20 +892,19 @@ class NimbleBaseActor<
 
 	async prepareAbilityCheckChatCardData(
 		abilityKey: AbilityKeyType,
-		roll: Roll<Record<string, unknown>>,
-		options = { rollMode: 0 } as ActorRollOptions,
+		rerolls: CheckCardRerollData<Roll<Record<string, unknown>>>,
 	) {
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.abilityScores[abilityKey]} Check`,
 			type: 'abilityCheck',
-			rolls: [roll],
+			rolls: [rerolls.roll],
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
-				rollMode: options.rollMode,
 				abilityKey,
+				...rerolls.system,
 			},
 		};
 	}
@@ -912,15 +918,16 @@ class NimbleBaseActor<
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareSavingThrowChatCardData(saveKey, roll, {
-			...options,
-			rollMode,
-		});
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'save', key: saveKey },
+			rollMode ?? 0,
+		);
+		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		return chatCard ?? null;
+		return createCheckCard(chatData, rerolls);
 	}
 
 	async rollInitiativeToChat(options = {} as ActorRollOptions): Promise<ChatMessage | null> {
@@ -1032,20 +1039,19 @@ class NimbleBaseActor<
 
 	async prepareSavingThrowChatCardData(
 		saveKey: SaveKeyType,
-		roll: NimbleRoll | Roll<Record<string, unknown>>,
-		options = { rollMode: 0 } as ActorRollOptions,
+		rerolls: CheckCardRerollData<NimbleRoll | Roll<Record<string, unknown>>>,
 	) {
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.savingThrows[saveKey]} Save`,
 			type: 'savingThrow',
-			rolls: [roll],
+			rolls: [rerolls.roll],
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
-				rollMode: options.rollMode,
 				saveKey,
+				...rerolls.system,
 			},
 		};
 	}

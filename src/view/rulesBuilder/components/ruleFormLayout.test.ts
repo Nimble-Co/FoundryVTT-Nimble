@@ -47,6 +47,28 @@ describe('resolveFormGroups', () => {
 		]);
 	});
 
+	it('uses the first field as the question of a group with no label', () => {
+		const [group] = resolveFormGroups(
+			[{ fields: ['mode', 'extra'] }],
+			schema(),
+			{ mode: 'variable' },
+			new Set([...fixed, 'amount', 'hiddenOne', 'silent']),
+		);
+		expect(group?.labelField?.name).toBe('mode');
+		expect(group?.fields.map((field) => field.showLabel)).toEqual([false, true]);
+	});
+
+	it('takes no question from a first field that is a checkbox', () => {
+		const [group] = resolveFormGroups(
+			[{ fields: ['silent', 'extra'] }],
+			schema(),
+			{},
+			new Set([...fixed, 'amount', 'hiddenOne', 'mode']),
+		);
+		expect(group?.labelField).toBeUndefined();
+		expect(group?.fields.map((field) => field.showLabel)).toEqual([true, true]);
+	});
+
 	it('uses the only field as the question of a group with no label', () => {
 		const [single, labelled, checkbox] = resolveFormGroups(
 			[{ fields: ['mode'] }, { label: 'Q', fields: ['extra'] }, { fields: ['silent'] }],

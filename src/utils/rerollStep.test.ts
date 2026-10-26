@@ -106,6 +106,7 @@ function input(overrides: Partial<RerollStepInput<Roll>> = {}): RerollStepInput<
 	return {
 		rule: rule(),
 		entry: ENTRY,
+		rollKind: 'attack',
 		payer: makeActor() as unknown as Actor,
 		replaced: REPLACED,
 		previousResult: 7,
@@ -138,6 +139,13 @@ describe('rerollWithRule', () => {
 			primaryDieModifier: 3,
 		});
 		expect(result).toMatchObject({ status: 'done', roll: { primaryDieValue: 3 } });
+	});
+
+	it('asks the rule for the changes of the kind of roll it rerolls', async () => {
+		const rerollChanges = vi.fn(() => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }));
+		await rerollWithRule(input({ rule: rule({ rerollChanges }), rollKind: 'save' }));
+		await rerollWithRule(input({ rule: rule({ rerollChanges }) }));
+		expect(rerollChanges.mock.calls).toEqual([['save'], ['attack']]);
 	});
 
 	it('reads the formula of a serialized roll that has no original formula', async () => {
@@ -193,6 +201,22 @@ describe('rerollWithRule', () => {
 				next: { value: 8, outcome: 'crit' },
 			},
 		});
+	});
+
+	it('takes the new die from the caller when it reads it', async () => {
+		const newRoll: Roll = { isCritical: false };
+		const readNewDie = vi.fn(() => ({ faces: 20, value: 14 }));
+		const result = await rerollWithRule(
+			input({ makeRoll: vi.fn(async () => newRoll), readNewDie }),
+		);
+
+		expect(readNewDie).toHaveBeenCalledWith(newRoll);
+		expect(result).toMatchObject({ reroll: { faces: 20, next: { value: 14, outcome: null } } });
+	});
+
+	it('records no new die when the caller reads none', async () => {
+		const result = await rerollWithRule(input({ readNewDie: () => ({ faces: 20, value: null }) }));
+		expect(result).toMatchObject({ reroll: { faces: 20, next: null } });
 	});
 
 	it('records no die when it cannot be read', async () => {

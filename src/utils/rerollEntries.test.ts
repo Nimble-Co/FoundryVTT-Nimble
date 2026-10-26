@@ -36,6 +36,8 @@ const OTHER_TOKEN = 'Scene.s.Token.other';
 const CRIT = { isCritical: true, isMiss: false };
 const HIT = { isCritical: false, isMiss: false };
 const MISS = { isCritical: false, isMiss: true };
+const MELEE = { kind: 'attack', delivery: 'melee' } as const;
+const WILL_SAVE = { kind: 'save', key: 'will' } as const;
 
 /** A rule that offers to the side it is used by, on any delivery. */
 function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide } = {}) {
@@ -61,7 +63,7 @@ function context(overrides: Partial<RerollRollContext> = {}): RerollRollContext 
 	return {
 		attacker: actor('Actor.attacker'),
 		targets: [{ tokenUuid: TOKEN, actor: actor('Actor.target') }],
-		delivery: 'melee',
+		roll: MELEE,
 		outcome: null,
 		forcedMiss: false,
 		...overrides,
@@ -96,7 +98,7 @@ describe('collectRerollEntries', () => {
 				outcomeTrigger: 'miss',
 			}),
 		]);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', delivery: 'melee' });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: MELEE });
 	});
 
 	it('stamps the once-per-attack flag of the rule on its entry', () => {
@@ -118,7 +120,7 @@ describe('collectRerollEntries', () => {
 			targetTokenUuid: TOKEN,
 			actorUuid: 'Actor.t',
 		});
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', roll: MELEE });
 	});
 
 	type Case = [string, Partial<RerollRollContext>, RerollTrigger, string[]];
@@ -193,6 +195,32 @@ describe('collectRerollEntries', () => {
 		for (const rule of [rollerRule, targetRule]) rule.outcome = outcome;
 		const { manual } = collectRerollEntries(context(overrides));
 		expect(manual.map((entry) => entry.ruleId)).toEqual(expected);
+	});
+
+	it('gives the rule the check roll it is asked about', () => {
+		const rule = rerollRule({ usedBy: 'roller' });
+		collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [rule]), targets: [], roll: WILL_SAVE }),
+		);
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: WILL_SAVE });
+	});
+
+	it('ignores the outcome and once per attack of a rule on a check', () => {
+		const rule = rerollRule({ usedBy: 'roller', outcome: 'miss', oncePerAttack: true });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [rule]), roll: WILL_SAVE, outcome: HIT }),
+		);
+		expect(manual).toEqual([
+			expect.objectContaining({ ruleId: 'rule-1', outcomeTrigger: 'always', oncePerAttack: false }),
+		]);
+	});
+
+	it('has no forced miss on a check', () => {
+		const rule = rerollRule({ usedBy: 'roller' });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [rule]), roll: WILL_SAVE, forcedMiss: true }),
+		);
+		expect(manual).toHaveLength(1);
 	});
 
 	it('skips rules that do not offer, and rules of another type', () => {
@@ -468,7 +496,7 @@ describe('usableRerollEntry', () => {
 
 	it('gives the live rule and actor for an entry that can be used', () => {
 		expect(usableRerollEntry(entry(), card(), [])).toEqual({ ok: true, rule, actor: target });
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', delivery: 'melee' });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', roll: MELEE });
 	});
 
 	it('lets the attacker use a roller entry', () => {
@@ -575,6 +603,31 @@ describe('usableRerollEntry', () => {
 	])('refuses %s', (_name, makeEntry, makeContext, reason) => {
 		const stamped = makeEntry();
 		expect(usableRerollEntry(stamped, makeContext(), [stamped])).toEqual({ ok: false, reason });
+	});
+
+	describe('on a check', () => {
+		const check = () => card({ roll: WILL_SAVE, targets: [], outcome: HIT });
+
+		beforeEach(() => {
+			rule = rerollRule({ usedBy: 'roller', outcome: 'criticalHit', oncePerAttack: true });
+			useWorld();
+		});
+
+		it('gives the rule the check roll and ignores its outcome', () => {
+			expect(usableRerollEntry(entry(roller), check(), [])).toMatchObject({ ok: true });
+			expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: WILL_SAVE });
+		});
+
+		it('ignores once per attack', () => {
+			const used = entry({ ...roller, id: 'entry-0', used: true });
+			const waiting = entry(roller);
+			expect(usableRerollEntry(waiting, check(), [used, waiting])).toMatchObject({ ok: true });
+		});
+
+		it('has no forced miss', () => {
+			const forced = card({ roll: WILL_SAVE, targets: [], forcedMiss: true });
+			expect(usableRerollEntry(entry(roller), forced, [])).toMatchObject({ ok: true });
+		});
 	});
 
 	describe('once per attack', () => {

@@ -3,6 +3,7 @@ import type {
 	IncomingReactionActorGroup,
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
+import type { RollRerollChoice } from '#types/components/RollRerollButton.d.ts';
 import { requestIncomingAttackReaction } from '#utils/incomingAttackReactions.js';
 import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
 import localize from '../../../utils/localize.js';
@@ -26,10 +27,13 @@ export function createIncomingReactionPromptsState(
 	let busy = $state(false);
 
 	const atTheRoll = $derived(getPlace() !== 'options');
-	const showsHistory = $derived(getPlace() === 'roll');
+	const showsHistory = $derived(getPlace() === 'roll' || getPlace() === 'rollHistory');
 
+	// Check cards post with no speaker; their roller is in the card data.
 	const speakerUuid = $derived(
-		(message as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ?? '',
+		(message?.system as { actorUuid?: string | null } | undefined)?.actorUuid ||
+			(message as { speakerActor?: { uuid?: string } | null })?.speakerActor?.uuid ||
+			'',
 	);
 	const storedEntries = $derived(
 		(message?.reactive?.system as { incomingReactions?: IncomingReactionEntry[] })
@@ -76,6 +80,17 @@ export function createIncomingReactionPromptsState(
 					),
 					documentName: text.documentName,
 				})
+			: [],
+	);
+	const rerollChoices = $derived<RollRerollChoice[]>(
+		getPlace() === 'rollButton'
+			? pendingGroups
+					.flatMap((group) => group.entries)
+					.map((entry) => ({
+						id: entry.id,
+						label: text.label(entry),
+						cost: text.cost(entry),
+					}))
 			: [],
 	);
 
@@ -162,6 +177,11 @@ export function createIncomingReactionPromptsState(
 		}
 	}
 
+	function useEntryById(entryId: string): void {
+		const entry = entries.find((candidate) => candidate.id === entryId);
+		if (entry) useEntry(entry);
+	}
+
 	return {
 		held,
 		text,
@@ -180,6 +200,10 @@ export function createIncomingReactionPromptsState(
 		get historyLines() {
 			return historyLines;
 		},
+		get rerollChoices() {
+			return rerollChoices;
+		},
 		useEntry,
+		useEntryById,
 	};
 }

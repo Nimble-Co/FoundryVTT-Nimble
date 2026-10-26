@@ -10,6 +10,12 @@ export const metadata = () => ({
 	rollMode: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
 });
 
+/** The actor that made a check, and its token when it has one. */
+export const roller = () => ({
+	actorUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
+	tokenUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
+});
+
 /** Whether the activated item made its user concentrate. */
 export const concentration = () => ({
 	concentration: new fields.BooleanField({ required: true, initial: false, nullable: false }),

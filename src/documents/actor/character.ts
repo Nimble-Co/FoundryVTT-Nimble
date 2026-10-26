@@ -35,10 +35,16 @@ import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import {
+	type CheckCardRerollData,
+	checkCardRerollData,
+	createCheckCard,
+} from '../../utils/checkCardRollTarget.js';
+import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
 } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import type { RerollingActor } from '../../utils/rerollEntries.js';
 import showInsufficientActionsConfirmation from '../../utils/showInsufficientActionsConfirmation.js';
 import toMessageMode from '../../utils/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
@@ -1280,18 +1286,19 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareSkillCheckChatCardData(skillKey, roll, {
-			...options,
-			rollMode,
-		});
+		const rerolls = await checkCardRerollData(
+			this as unknown as RerollingActor,
+			roll,
+			{ kind: 'skillCheck', key: skillKey },
+			rollMode ?? 0,
+		);
+		const chatData = await this.prepareSkillCheckChatCardData(skillKey, rerolls);
 
 		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
 			toMessageMode(visibilityMode),
 		);
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-
-		return chatCard ?? null;
+		return createCheckCard(chatData, rerolls);
 	}
 
 	async rollSkillCheck(skillKey: SkillKeyType, options: ActorRollOptions = {}) {
@@ -1339,20 +1346,19 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 	async prepareSkillCheckChatCardData(
 		skillKey: SkillKeyType,
-		roll: NimbleRoll,
-		options = { rollMode: 0 } as ActorRollOptions,
+		rerolls: CheckCardRerollData<NimbleRoll>,
 	) {
 		return {
 			author: game.user?.id,
 			flavor: `${this.name}: ${CONFIG.NIMBLE.skills[skillKey]} Check`,
 			type: 'skillCheck',
-			rolls: [roll],
+			rolls: [rerolls.roll],
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
 				actorType: this.type,
 				permissions: this.permission,
-				rollMode: options.rollMode,
 				skillKey,
+				...rerolls.system,
 			},
 		};
 	}

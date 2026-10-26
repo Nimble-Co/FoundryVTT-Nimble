@@ -6,8 +6,10 @@ type DataField = foundry.data.fields.DataField.Any;
 
 /**
  * Turns a rule's `formLayout` into the groups to show for the current data.
- * Hidden fields and empty groups drop out. Editable fields the layout does
- * not name follow in one last group, so a new schema field is never lost.
+ * Hidden fields and empty groups drop out. A group with no label takes its
+ * question from its first shown field, unless that field is a checkbox.
+ * Editable fields the layout does not name follow in one last group, so a
+ * new schema field is never lost.
  */
 export function resolveFormGroups(
 	layout: readonly RuleFormGroup[],
@@ -41,10 +43,10 @@ export function resolveFormGroups(
 			}));
 		if (fields.length === 0) return [];
 
-		const only = fields.length === 1 ? fields[0] : undefined;
-		if (group.label || !only || only.isBoolean) return [{ ...group, fields }];
+		const [first] = fields;
+		if (group.label || !first || first.isBoolean) return [{ ...group, fields }];
 
-		only.showLabel = false;
-		return [{ ...group, labelField: only, fields }];
+		first.showLabel = false;
+		return [{ ...group, labelField: first, fields }];
 	});
 }
