@@ -323,6 +323,7 @@ export {
 	findRerollRule,
 	nextAutomaticReroll,
 	offerStands,
+	REROLL_RULE_TYPE,
 	rerollRuleKey,
 	usableRerollEntry,
 	withNewRerollEntries,
