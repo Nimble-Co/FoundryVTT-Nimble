@@ -36,6 +36,7 @@
 		"prepare": "lefthook install",
 		"release": "node build/release.mjs",
 		"lang:reconcile": "node scripts/reconcile-languages.mjs",
+		"tests:relocate": "node scripts/move-tests-to-tests-folders.mjs",
 		"lang:detect-untranslated": "node scripts/detect-untranslated.mjs",
 		"lang:build-compendium-skeletons": "node build/buildBabeleSkeletons.mjs",
 		"audit:rules-choices": "node build/scripts/audit-rule-choices.mjs"
