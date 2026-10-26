@@ -8,7 +8,7 @@ import {
 	NIMBLE_MODS,
 	nimbleModsFromModifiers,
 } from './nimbleDieModifiers.js';
-import { type ExplosionStyle, hasExplodeModifier } from './oneDieReroll.js';
+import { type ExplosionStyle, hasExplodeModifier, type KeptDieBonus } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -877,6 +877,63 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			return 'vicious';
 		}
 		return hasExplodeModifier(term.modifiers) ? 'standard' : 'none';
+	}
+
+	/** "Add to Primary Die Result" of `term`, if it is the Primary Die and has one. */
+	primaryDieBonusOf(term: unknown): KeptDieBonus | null {
+		const add = Number(this.options.primaryDieModifier) || 0;
+		const base = this.options.primaryDieBaseResult;
+		if (!add || typeof base !== 'number' || !this._isPresetPrimaryDie(term)) return null;
+		return { add, base };
+	}
+
+	/**
+	 * The Primary Die was rolled again. A set result no longer holds, and the
+	 * damage past the die's max is worked out again from the new result.
+	 */
+	primaryDieRerolled(term: unknown, keptBase: number | null): void {
+		if (!this._isPresetPrimaryDie(term) || keptBase === null) return;
+		if (this.options.primaryDieValue && this.options.primaryDieValue !== keptBase) {
+			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
+		}
+
+		const add = Number(this.options.primaryDieModifier) || 0;
+		const oldBase = this.options.primaryDieBaseResult;
+		if (!add || typeof oldBase !== 'number') return;
+
+		const at = this.terms.indexOf(term) + 1;
+		const oldExcess = oldBase + add - term.faces;
+		const [operator, excess] = this.terms.slice(at, at + 2);
+		if (
+			oldExcess > 0 &&
+			operator instanceof Terms.OperatorTerm &&
+			operator.operator === '+' &&
+			excess instanceof Terms.NumericTerm &&
+			excess.number === oldExcess
+		) {
+			this.terms.splice(at, 2);
+		}
+
+		const newExcess = keptBase + add - term.faces;
+		if (newExcess > 0) {
+			this.terms.splice(
+				at,
+				0,
+				Terms.OperatorTerm.fromData({ class: 'OperatorTerm', operator: '+', evaluated: true }),
+				Terms.NumericTerm.fromData({ class: 'NumericTerm', number: newExcess, evaluated: true }),
+			);
+		}
+		this.options.primaryDieBaseResult = keptBase;
+		this.resetFormula();
+	}
+
+	private _isPresetPrimaryDie(term: unknown): term is PrimaryDie & { faces: number } {
+		return (
+			!this.modifierMode &&
+			term instanceof PrimaryDie &&
+			term === this.primaryDie &&
+			typeof term.faces === 'number'
+		);
 	}
 
 	/**

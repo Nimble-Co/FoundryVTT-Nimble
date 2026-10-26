@@ -102,6 +102,31 @@ describe('rerollOneDie on live dice', () => {
 		).toEqual([8, 5]);
 	});
 
+	test('a Primary Die rerolled gets Add to Primary Die Result again, and the damage past its max is worked out again', async () => {
+		const options = { ...DAMAGE, primaryDieValue: 4, primaryDieModifier: 5 };
+		const roll = await rolled('DamageRoll', '1d6 + 2', options, 6, [2]);
+		expect(resultsOf(roll)).toEqual([6, 2]);
+		expect([roll.total, roll.isCritical]).toEqual([13, true]);
+
+		nextDice(6, 3, 1);
+		const done = await rerollOneDie(roll as never, { term: 0, result: 0 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([6, 1]);
+		expect([after.total, after.isCritical, after.isMiss]).toEqual([11, true, false]);
+		expect([done.previous, done.next]).toEqual([6, 6]);
+		expect(after.options.primaryDieBaseResult).toBe(3);
+		expect(after.options.primaryDieValue).toBeUndefined();
+
+		nextDice(6, 1, 2);
+		const exact = (await rerollOneDie(after as never, { term: 0, result: 0 }))
+			.roll as unknown as LiveRoll;
+
+		expect(resultsOf(exact)).toEqual([6, 2]);
+		expect([exact.total, exact.isCritical]).toEqual([10, true]);
+		expect(exact.options.primaryDieBaseResult).toBe(1);
+	});
+
 	test('a pool die of a damage roll changes only the total', async () => {
 		const roll = await rolled('DamageRoll', '2d6', DAMAGE, 6, [3, 2]);
 		const poolIndex = roll.terms.findIndex((term, index) => index > 0 && term.faces === 6);

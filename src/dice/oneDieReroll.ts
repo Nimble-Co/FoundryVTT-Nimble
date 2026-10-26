@@ -134,17 +134,29 @@ function keepRule(modifiers: readonly string[] = []): { count: number; highest: 
 }
 
 /**
+ * A number added to the die of a term that stays, up to the die's size. `base`
+ * is the result of that die before the number was added.
+ */
+interface KeptDieBonus {
+	add: number;
+	base: number;
+}
+
+/**
  * Reroll one die of an evaluated term in place. The term keeps the highest or
  * lowest again, the dice the old result made explode are dropped, and a new
  * max explodes in the term's style. A die a reroll newly keeps explodes at its
- * max too. `draw` rolls one die of the term's size.
+ * max too. `draw` rolls one die of the term's size. With a `bonus`, the keep
+ * reads the dice before the bonus, and the die that stays gets it again.
+ * `keptBase` is the result of that die before the bonus.
  */
 async function rerollDieInTerm(
 	term: DieTermLike,
 	index: number,
 	style: ExplosionStyle,
 	draw: (faces: number) => Promise<number>,
-): Promise<{ previous: number; next: number; drawn: number[] }> {
+	bonus: KeptDieBonus | null = null,
+): Promise<{ previous: number; next: number; drawn: number[]; keptBase: number | null }> {
 	const baseCount =
 		style === 'none' ? term.results.length : Math.min(term.number, term.results.length);
 	const roots = dieTree(term.results, baseCount, style);
@@ -160,11 +172,14 @@ async function rerollDieInTerm(
 	};
 
 	const previous = picked.result.result;
-	const next = await roll();
-	picked.result.result = next;
+	const keptBefore = new Set(roots.filter((root) => isActive(root.result)));
+	if (bonus) {
+		const stayed = roots.find((root) => isActive(root.result));
+		if (stayed) stayed.result.result = bonus.base;
+	}
+	picked.result.result = await roll();
 	cutExplosion(picked);
 
-	const keptBefore = new Set(roots.filter((root) => isActive(root.result)));
 	const keep = roots.includes(picked) ? keepRule(term.modifiers) : null;
 	if (keep) {
 		applyKeep(
@@ -174,6 +189,13 @@ async function rerollDieInTerm(
 		);
 		for (const root of roots) if (!isActive(root.result)) cutExplosion(root);
 	}
+
+	const stays = roots.find((root) => isActive(root.result));
+	const keptBase = stays?.result.result ?? null;
+	if (bonus && stays && keptBase !== null) {
+		stays.result.result = Math.min(keptBase + bonus.add, term.faces);
+	}
+	const next = picked.result.result;
 
 	const canExplode = (node: DieNode) =>
 		style !== 'none' &&
@@ -207,7 +229,7 @@ async function rerollDieInTerm(
 	}
 
 	term.results = flattenDieTree(roots, style);
-	return { previous, next, drawn };
+	return { previous, next, drawn, keptBase };
 }
 
 /**
@@ -261,6 +283,10 @@ interface OneDieRoll {
 	toJSON(): object;
 	explosionStyleOf?(term: unknown): ExplosionStyle;
 	refreshOutcome?(): void;
+	/** "Add to Primary Die Result" when `term` is the Primary Die and has it. */
+	primaryDieBonusOf?(term: unknown): KeptDieBonus | null;
+	/** The Primary Die `term` was rolled again; `keptBase` is its new result before the bonus. */
+	primaryDieRerolled?(term: unknown, keptBase: number | null): void;
 }
 
 function hasExplodeModifier(modifiers: readonly string[] = []): boolean {
@@ -318,7 +344,14 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 
 	const style =
 		copy.explosionStyleOf?.(term) ?? (hasExplodeModifier(term.modifiers) ? 'standard' : 'none');
-	const changed = await rerollDieInTerm(term, ref.result, style, rollOneDieFace);
+	const changed = await rerollDieInTerm(
+		term,
+		ref.result,
+		style,
+		rollOneDieFace,
+		copy.primaryDieBonusOf?.(term) ?? null,
+	);
+	copy.primaryDieRerolled?.(term, changed.keptBase);
 
 	if (copy.refreshOutcome) copy.refreshOutcome();
 	else {
@@ -342,6 +375,7 @@ export {
 	type DieRef,
 	type DieTermLike,
 	type ExplosionStyle,
+	type KeptDieBonus,
 	type OneDieRoll,
 	type PickableDie,
 	type PickableRole,

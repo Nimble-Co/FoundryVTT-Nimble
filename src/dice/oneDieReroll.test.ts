@@ -38,7 +38,7 @@ describe('rerollDieInTerm', () => {
 
 		const changed = await rerollDieInTerm(die, 1, 'none', draws(4));
 
-		expect(changed).toEqual({ previous: 5, next: 4, drawn: [4] });
+		expect(changed).toEqual({ previous: 5, next: 4, drawn: [4], keptBase: 2 });
 		expect(die.results).toEqual([kept(2), kept(4), kept(1)]);
 	});
 
@@ -176,6 +176,39 @@ describe('rerollDieInTerm', () => {
 			await rerollDieInTerm(die, 0, 'vicious', draws(8, 6, 2));
 
 			expect(die.results).toEqual([kept(8, { exploded: true }), chain(6), bonus(2)]);
+		});
+	});
+
+	describe('with a bonus on the die that stays', () => {
+		it('adds the bonus to the new result, up to the max, and explodes at the max', async () => {
+			const die = term(6, 1, [kept(6, { exploded: true }), kept(2)], ['x']);
+
+			const changed = await rerollDieInTerm(die, 0, 'standard', draws(3, 4), {
+				add: 5,
+				base: 4,
+			});
+
+			expect(changed).toEqual({ previous: 6, next: 6, drawn: [3, 4], keptBase: 3 });
+			expect(die.results).toEqual([kept(6, { exploded: true }), kept(4)]);
+		});
+
+		it('keeps the highest by the results before the bonus', async () => {
+			const die = term(6, 2, [kept(3), dropped(3)], ['khn']);
+
+			const changed = await rerollDieInTerm(die, 1, 'none', draws(4), { add: 1, base: 2 });
+
+			expect(changed.keptBase).toBe(4);
+			expect(values(die)).toEqual([2, 5]);
+			expect(die.results[1].active).toBe(true);
+		});
+
+		it('gives the bonus again to a die that stays and was not rerolled', async () => {
+			const die = term(6, 2, [kept(6), dropped(1)], ['khn']);
+
+			const changed = await rerollDieInTerm(die, 1, 'none', draws(3), { add: 2, base: 4 });
+
+			expect(changed).toEqual({ previous: 1, next: 3, drawn: [3], keptBase: 4 });
+			expect(values(die)).toEqual([6, 3]);
 		});
 	});
 
