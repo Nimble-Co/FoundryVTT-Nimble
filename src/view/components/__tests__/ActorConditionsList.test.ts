@@ -1,0 +1,411 @@
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import ActorConditionsList from '../ActorConditionsList.svelte';
+
+function confirmMock(): Mock {
+	return (
+		globalThis as unknown as {
+			foundry: { applications: { api: { DialogV2: { confirm: Mock } } } };
+		}
+	).foundry.applications.api.DialogV2.confirm;
+}
+
+function createActor({
+	owner = true,
+	statuses = ['blinded'],
+	effects,
+}: {
+	owner?: boolean;
+	statuses?: string[];
+	effects?: ActiveEffect[];
+} = {}): Actor.Implementation {
+	const actor = {
+		id: 'actor-1',
+		name: 'Hero',
+		isOwner: owner,
+		conditionsMetadata: {
+			active: new Set(statuses),
+			overlay: new Set<string>(),
+		},
+		effects:
+			effects ??
+			([
+				{
+					id: 'effect-condition',
+					name: 'Blinded Condition Effect',
+					statuses: new Set(['blinded']),
+					duration: { rounds: 3 },
+					sourceName: 'Spell',
+				},
+			] as unknown as ActiveEffect[]),
+		toggleStatusEffect: vi.fn().mockResolvedValue(undefined),
+		deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+	} as Record<string, unknown>;
+
+	// Component accesses actor.reactive (which proxies back to actor)
+	actor.reactive = {
+		...actor,
+		flags: { nimble: { editingEnabled: owner } },
+	};
+
+	return actor as unknown as Actor.Implementation;
+}
+
+describe('ActorConditionsList', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: CONFIG.NIMBLE.conditions[id] ?? id,
+			img: CONFIG.NIMBLE.conditionDefaultImages[id] ?? '',
+		}));
+	});
+
+	it('renders no content in canvas mode when actor has no active conditions', () => {
+		const actor = createActor({ statuses: [], effects: [] });
+		const { container } = render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+
+		expect(container.querySelector('.nimble-actor-conditions__icons')).not.toBeInTheDocument();
+		expect(screen.queryByText('No conditions')).not.toBeInTheDocument();
+	});
+
+	it('renders condition rows and effect sections in sheet mode', () => {
+		const actor = createActor();
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+		expect(screen.getAllByText('Blinded').length).toBeGreaterThan(0);
+		expect(screen.getByText('Temporary Effects')).toBeInTheDocument();
+		expect(screen.getByText('Passive Effects')).toBeInTheDocument();
+	});
+
+	it('removes condition on right click in canvas mode', async () => {
+		const actor = createActor();
+		render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+
+		const rowButton = screen.getByRole('button', { name: /blinded/i });
+		expect(rowButton).toHaveAttribute(
+			'data-tooltip-class',
+			'nimble-tooltip nimble-tooltip--rules nimble-tooltip--condition',
+		);
+		expect(rowButton).toHaveAttribute('data-tooltip');
+		expect(screen.getByText('3r')).toBeInTheDocument();
+		await fireEvent.contextMenu(rowButton);
+
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('blinded', { active: false });
+	});
+
+	it('removes non-standard status icons by deleting matching active effects', async () => {
+		const actor = createActor({
+			statuses: [],
+			effects: [
+				{
+					id: 'effect-haste',
+					name: 'Test Haste',
+					img: 'icons/svg/aura.svg',
+					statuses: new Set(['test-haste']),
+					duration: { rounds: 2 },
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+		const button = screen.getByRole('button', { name: 'test-haste' });
+		await fireEvent.contextMenu(button);
+
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['effect-haste']);
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalledWith('test-haste', { active: false });
+	});
+
+	it('shows toggle button and can remove active conditions in sheet mode', async () => {
+		const actor = createActor();
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+		const toggleButton = screen.getByRole('button', { name: 'Toggle Blinded' });
+		const sheetRow = toggleButton.closest('.nimble-actor-conditions__catalog-item');
+		expect(sheetRow).toHaveAttribute(
+			'class',
+			expect.stringContaining('nimble-document-card--active'),
+		);
+
+		await fireEvent.click(toggleButton);
+
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('blinded', { active: false });
+	});
+
+	it('shows apply toggle for inactive condition and activates it', async () => {
+		const actor = createActor({ statuses: [], effects: [] });
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+		const applyButton = screen.getByRole('button', { name: 'Toggle Blinded' });
+		await fireEvent.click(applyButton);
+
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('blinded', { active: true });
+	});
+
+	it('does not include standard condition effects in temporary/passive effect sections', () => {
+		const actor = createActor({
+			effects: [
+				{
+					id: 'effect-condition',
+					name: 'Blinded Condition Effect',
+					statuses: new Set(['blinded']),
+					duration: { rounds: 2 },
+				},
+				{
+					id: 'effect-haste',
+					name: 'Haste',
+					statuses: new Set(['haste']),
+					duration: { rounds: 2 },
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+		expect(screen.queryByText('Blinded Condition Effect')).not.toBeInTheDocument();
+		expect(screen.getByText('Haste')).toBeInTheDocument();
+	});
+
+	it('allows removing temporary effects from sheet without confirmation', async () => {
+		const effectDelete = vi.fn().mockResolvedValue(undefined);
+		const actor = createActor({
+			effects: [
+				{
+					id: 'effect-haste',
+					name: 'Haste',
+					statuses: new Set(['haste']),
+					duration: { rounds: 2 },
+					delete: effectDelete,
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+		const removeEffectButton = screen.getByRole('button', { name: 'Remove effect' });
+		await fireEvent.click(removeEffectButton);
+
+		expect(effectDelete).toHaveBeenCalledTimes(1);
+		expect(confirmMock()).not.toHaveBeenCalled();
+	});
+
+	it('shows non-standard effect statuses in canvas mode', () => {
+		const actor = createActor({
+			statuses: [],
+			effects: [
+				{
+					id: 'effect-haste',
+					name: 'Test Haste',
+					img: 'icons/svg/aura.svg',
+					statuses: new Set(['test-haste']),
+					duration: { rounds: 2 },
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+		expect(screen.getByRole('button', { name: 'test-haste' })).toBeInTheDocument();
+		expect(screen.getByText('2r')).toBeInTheDocument();
+	});
+
+	it('hides condition toggle controls when actor is not editable', () => {
+		const actor = createActor({ owner: false });
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+		expect(screen.queryByRole('button', { name: 'Toggle Blinded' })).not.toBeInTheDocument();
+	});
+
+	describe('active toggles section', () => {
+		function createToggleAE({
+			id = 'ae-rage',
+			name = 'Rage',
+			ruleId = 'rage-toggle',
+			itemId = 'rage-item',
+		} = {}) {
+			return {
+				id,
+				name,
+				img: 'icons/svg/aura.svg',
+				statuses: new Set<string>(),
+				getFlag: (scope: string, key: string): unknown => {
+					if (scope !== 'nimble') return undefined;
+					if (key === 'toggleEffectRuleId') return ruleId;
+					if (key === 'toggleEffectItemId') return itemId;
+					return undefined;
+				},
+			};
+		}
+
+		function withToggleItem(actor: Actor.Implementation, ruleId = 'rage-toggle') {
+			(actor as unknown as Record<string, unknown>).items = {
+				get: (id: string) =>
+					id === 'rage-item'
+						? {
+								id: 'rage-item',
+								name: 'Rage',
+								rules: new Map([['0', { type: 'toggleEffect', id: ruleId }]]),
+							}
+						: undefined,
+			};
+			return actor;
+		}
+
+		it('renders toggle-backed AEs in the Temporary Effects section, not the passive bucket', () => {
+			const actor = createActor({
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			const temporarySection = screen
+				.getByText('Temporary Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(temporarySection).toHaveTextContent('Rage');
+
+			const passiveSection = screen
+				.getByText('Passive Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(passiveSection).not.toHaveTextContent('Rage');
+			expect(passiveSection).toHaveTextContent('No effects');
+		});
+
+		it('shows the off switch instead of the trash button for toggle-backed AEs', () => {
+			const actor = createActor({
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			expect(screen.getByRole('button', { name: 'Turn off Rage' })).toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: 'Remove effect' })).not.toBeInTheDocument();
+		});
+
+		it('renders toggle-backed AEs as canvas icons and ends them on right click', async () => {
+			const actor = withToggleItem(
+				createActor({
+					statuses: [],
+					effects: [createToggleAE()] as unknown as ActiveEffect[],
+				}),
+			);
+
+			render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+
+			const iconButton = screen.getByRole('button', { name: 'Rage' });
+			await fireEvent.contextMenu(iconButton);
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
+		});
+
+		it('ends the toggle through the rule path when the off switch is clicked', async () => {
+			const actor = withToggleItem(
+				createActor({
+					statuses: [],
+					effects: [createToggleAE()] as unknown as ActiveEffect[],
+				}),
+			);
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			const offSwitch = screen.getByRole('button', { name: 'Turn off Rage' });
+			await fireEvent.click(offSwitch);
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
+		});
+
+		it('falls back to deleting the AE when the owning item no longer exists', async () => {
+			const actor = createActor({
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+			(actor as unknown as Record<string, unknown>).items = { get: () => undefined };
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Turn off Rage' }));
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
+		});
+
+		it('hides the off switch when the actor is not editable', () => {
+			const actor = createActor({
+				owner: false,
+				statuses: [],
+				effects: [createToggleAE()] as unknown as ActiveEffect[],
+			});
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			const temporarySection = screen
+				.getByText('Temporary Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(temporarySection).toHaveTextContent('Rage');
+			expect(screen.queryByRole('button', { name: 'Turn off Rage' })).not.toBeInTheDocument();
+		});
+	});
+
+	describe('item-granted effects', () => {
+		function createItemEffect({ id = 'ae-stoneskin', name = 'Stoneskin' } = {}) {
+			return {
+				id,
+				name,
+				img: 'icons/svg/shield.svg',
+				statuses: new Set<string>(),
+				parent: { documentName: 'Item' },
+				delete: vi.fn().mockResolvedValue(undefined),
+			};
+		}
+
+		function createActorWithItemEffect(itemEffect = createItemEffect()) {
+			const actor = createActor({ statuses: [], effects: [] });
+			// Item-transferred effects only surface through allApplicableEffects.
+			(actor as unknown as Record<string, unknown>).allApplicableEffects = function* () {
+				yield itemEffect;
+			};
+			return { actor, itemEffect };
+		}
+
+		it('lists item-transferred effects from allApplicableEffects in the passive bucket', () => {
+			const { actor } = createActorWithItemEffect();
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+
+			const passiveSection = screen
+				.getByText('Passive Effects')
+				.closest('.nimble-actor-conditions__section') as HTMLElement;
+			expect(passiveSection).toHaveTextContent('Stoneskin');
+		});
+
+		it('asks for confirmation and aborts deletion when declined', async () => {
+			confirmMock().mockResolvedValue(false);
+			const { actor, itemEffect } = createActorWithItemEffect();
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Remove effect' }));
+
+			expect(confirmMock()).toHaveBeenCalledTimes(1);
+			expect(itemEffect.delete).not.toHaveBeenCalled();
+		});
+
+		it('deletes the item-granted effect through its own document when confirmed', async () => {
+			confirmMock().mockResolvedValue(true);
+			const { actor, itemEffect } = createActorWithItemEffect();
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Remove effect' }));
+
+			expect(confirmMock()).toHaveBeenCalledTimes(1);
+			expect(itemEffect.delete).toHaveBeenCalledTimes(1);
+		});
+
+		it('shows item-granted effects on the canvas panel and confirms on right click', async () => {
+			confirmMock().mockResolvedValue(true);
+			const { actor, itemEffect } = createActorWithItemEffect();
+
+			render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+			await fireEvent.contextMenu(screen.getByRole('button', { name: 'Stoneskin' }));
+
+			expect(confirmMock()).toHaveBeenCalledTimes(1);
+			expect(itemEffect.delete).toHaveBeenCalledTimes(1);
+		});
+	});
+});

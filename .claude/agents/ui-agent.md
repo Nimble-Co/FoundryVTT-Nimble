@@ -13,7 +13,7 @@ You are the **Svelte 5 and UI expert** for the Nimble FoundryVTT codebase. Packa
 src/view/
 ├── sheets/       # Actor and item sheet roots (PlayerCharacterSheet.svelte, NPCSheet.svelte, SpellSheet.svelte, ...)
 │                 #   plus colocated *.state.svelte.ts state classes and *Utils.ts helpers
-├── dialogs/      # Dialog components, flat, with *.state.svelte.ts state and colocated tests
+├── dialogs/      # Dialog components, flat, with *.state.svelte.ts state, tests in __tests__/
 ├── chat/         # Chat card components
 ├── components/   # Reusable primitives (navigation, tags, pickers, indicators)
 ├── rulesBuilder/ # The rule authoring UI
@@ -66,4 +66,4 @@ A card that gets a new roll after it is posted (a reroll, a deferred damage roll
 - Inline complex derivation — put it in `dataPreparationHelpers/` or a state class.
 
 ## Before reporting done
-`pnpm check:svelte`, `pnpm lint:svelte`, and `pnpm test` (components have colocated tests using @testing-library/svelte). When behaviour a player, GM, or homebrewer sees changes, update the VitePress docs in `docs/` on the same branch — never edit `documentation/reference/*.md`, it is generated.
+`pnpm check:svelte`, `pnpm lint:svelte`, and `pnpm test` (component tests live in a `__tests__` folder next to the component and use @testing-library/svelte). When behaviour a player, GM, or homebrewer sees changes, update the VitePress docs in `docs/` on the same branch — never edit `documentation/reference/*.md`, it is generated.

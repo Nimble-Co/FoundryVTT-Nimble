@@ -1279,7 +1279,7 @@ Hooks.on(systemHookName('damageApplied'), handler);
 // listeners then use systemHookName('dicePool.changed') directly.
 ```
 
-Never write a literal `'nimble.X'` hook string. `src/utils/systemId.test.ts` fails the build if you do.
+Never write a literal `'nimble.X'` hook string. `src/utils/__tests__/systemId.test.ts` fails the build if you do.
 
 ### Sheet Registration
 
@@ -1475,7 +1475,7 @@ export const myStore = writable<MyStoreState>(initialState);
 
 | Utility | Location | Purpose |
 |---------|----------|---------|
-| `SYSTEM_ID`, `SYSTEM_PATH`, `systemHookName()` | `src/utils/systemId.ts` (alias: `#system`) | Build-time-baked system id from `public/system.json`, the `systems/<id>` path prefix, and a helper that namespaces custom hook names (`systemHookName('damageApplied')` → `<id>.damageApplied`). Use for every flag scope, flag-object key, settings namespace, sheet/keybinding registration, asset path, and custom hook name — never hardcode `'nimble'`. The dev rolling release rebuilds under a different id (`nimble-dev`). Enforced by `src/utils/systemId.test.ts` |
+| `SYSTEM_ID`, `SYSTEM_PATH`, `systemHookName()` | `src/utils/systemId.ts` (alias: `#system`) | Build-time-baked system id from `public/system.json`, the `systems/<id>` path prefix, and a helper that namespaces custom hook names (`systemHookName('damageApplied')` → `<id>.damageApplied`). Use for every flag scope, flag-object key, settings namespace, sheet/keybinding registration, asset path, and custom hook name — never hardcode `'nimble'`. The dev rolling release rebuilds under a different id (`nimble-dev`). Enforced by `src/utils/__tests__/systemId.test.ts` |
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
 | `DEFAULT_MISS_THRESHOLD` | `src/utils/missThreshold.ts` | Normal highest primary-die result that counts as an attack miss; shared by roll construction, outcome detection, and tooltip styling |
 | `applyConditionToActor()` | `src/utils/applyConditionToActor.ts` | The shared path for applying a condition from chat cards and condition rules: dedupes against a condition the target already has, fires the blocking `preApplyCondition` hook that condition immunity listens on, creates the effect with a recorded `origin` (the causing item, falling back to the causing actor), an optional duration and optional system flags, then fires `conditionApplied`. A caller that passes `replaces` names the instances this application supersedes and takes over the dedupe decision: they are removed in a single `deleteDocuments` call once the hook has allowed it, and restored if creation fails or is refused. `Actor#toggleStatusEffect` cannot record an origin, so this mirrors its internals instead. Not yet universal: `src/hooks/automaticConditions.ts` still applies derived conditions through `toggleStatusEffect` with its own immunity check |
