@@ -55,11 +55,17 @@ function rerollableFor<TRoll>(
 	return {
 		...found,
 		previousResult: term.results[dieRef.result].result,
-		makeRoll: async () => {
-			made = await reroll(current, dieRef);
+		makeRoll: async (_formula, _options, changes) => {
+			made = await reroll(current, dieRef, {
+				rollModeChange: Math.sign(Number(changes?.rollModeChange) || 0),
+			});
 			return made.roll as unknown as TRoll;
 		},
-		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null }),
+		readNewDie: () => ({
+			faces: made?.faces ?? null,
+			value: made?.next ?? null,
+			dropped: made?.dropped ?? null,
+		}),
 		diceToThrow: () => made?.thrown ?? null,
 	};
 }

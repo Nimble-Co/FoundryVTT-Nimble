@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import type { OneDieRoll } from '../../dice/oneDieReroll.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type OneDieRoll, rerollOneDie } from '../../dice/oneDieReroll.js';
 import { diceToPick, rerollableFor } from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 
@@ -47,6 +47,7 @@ describe('rerollableFor', () => {
 			faces: 8,
 			previous: 6,
 			next: 3,
+			dropped: null,
 			thrown: 'thrown' as never,
 		}));
 		const current = damageRoll();
@@ -55,8 +56,8 @@ describe('rerollableFor', () => {
 
 		expect(one.previousResult).toBe(6);
 		expect(await one.makeRoll('ignored', {})).toBe('one die');
-		expect(reroll).toHaveBeenCalledWith(current, { term: 0, result: 1 });
-		expect(one.readNewDie?.('one die')).toEqual({ faces: 8, value: 3 });
+		expect(reroll).toHaveBeenCalledWith(current, { term: 0, result: 1 }, { rollModeChange: 0 });
+		expect(one.readNewDie?.('one die')).toEqual({ faces: 8, value: 3, dropped: null });
 		expect(one.diceToThrow?.('one die')).toBe('thrown');
 	});
 
@@ -97,5 +98,92 @@ describe('diceToPick', () => {
 			'dropped',
 		]);
 		expect(diceToPick(found(null))).toEqual([]);
+	});
+});
+
+describe('rerollableFor with a roll mode change on the reroll', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	// The copy rerollOneDie makes of the card's roll: same dice, its outcome worked out again.
+	function copyRolls() {
+		vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(
+			(data: unknown) =>
+				({
+					...(data as object),
+					toJSON: () => data,
+					refreshOutcome: () => undefined,
+				}) as never,
+		);
+	}
+
+	function draws(...values: number[]) {
+		const queue = [...values];
+		return vi.fn(async () => {
+			const value = queue.shift();
+			if (value === undefined) throw new Error('no more draws');
+			return value;
+		});
+	}
+
+	function d6(results: Array<{ result: number; active: boolean }>, modifiers: string[] = []) {
+		const terms = [{ faces: 6, number: 1, modifiers, results }];
+		return { terms, toJSON: () => ({ terms: structuredClone(terms) }) } as OneDieRoll;
+	}
+
+	function withDraws(draw: ReturnType<typeof draws>) {
+		return ((roll: OneDieRoll, ref: { term: number; result: number }, options?: object) =>
+			rerollOneDie(roll, ref, { ...options, draw })) as typeof rerollOneDie;
+	}
+
+	it('rolls the die two times with advantage and keeps the higher', async () => {
+		copyRolls();
+		const draw = draws(2, 5);
+		const one = rerollableFor(found(d6([kept(3)])), 'pickedDie', null, withDraws(draw));
+		if (!one) throw new Error('expected a reroll');
+
+		const roll = await one.makeRoll('ignored', {}, { rollModeChange: 1 });
+
+		expect((roll as unknown as OneDieRoll).terms[0]).toMatchObject({ results: [kept(5)] });
+		expect(one.readNewDie?.(roll)).toEqual({ faces: 6, value: 5, dropped: 2 });
+	});
+
+	it('keeps the lower with disadvantage', async () => {
+		copyRolls();
+		const one = rerollableFor(found(d6([kept(3)])), 'pickedDie', null, withDraws(draws(2, 5)));
+		if (!one) throw new Error('expected a reroll');
+
+		const roll = await one.makeRoll('ignored', {}, { rollModeChange: -1 });
+
+		expect(one.readNewDie?.(roll)).toEqual({ faces: 6, value: 2, dropped: 5 });
+	});
+
+	it('rolls the die once with no change', async () => {
+		copyRolls();
+		const draw = draws(4);
+		const one = rerollableFor(found(d6([kept(3)])), 'pickedDie', null, withDraws(draw));
+		if (!one) throw new Error('expected a reroll');
+
+		const roll = await one.makeRoll('ignored', {});
+
+		expect(draw).toHaveBeenCalledTimes(1);
+		expect(one.readNewDie?.(roll)).toEqual({ faces: 6, value: 4, dropped: null });
+	});
+
+	it('rolls only the picked die two times, not the dice its max explodes into', async () => {
+		copyRolls();
+		const draw = draws(1, 6, 3);
+		const one = rerollableFor(found(d6([kept(2)], ['x'])), 'pickedDie', null, withDraws(draw));
+		if (!one) throw new Error('expected a reroll');
+
+		const roll = await one.makeRoll('ignored', {}, { rollModeChange: 1 });
+
+		expect(draw).toHaveBeenCalledTimes(3);
+		expect((roll as unknown as OneDieRoll).terms[0]).toMatchObject({
+			results: [
+				{ result: 6, active: true, exploded: true },
+				{ result: 3, active: true },
+			],
+		});
+		expect(one.readNewDie?.(roll)).toEqual({ faces: 6, value: 6, dropped: 1 });
 	});
 });

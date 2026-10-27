@@ -61,6 +61,8 @@ interface RerollStepInput<TRoll> {
 interface RolledDie {
 	faces: number | null;
 	value: number | null;
+	/** The other result of a die rolled two times for advantage or disadvantage. */
+	dropped?: number | null;
 }
 
 interface NewRoll {

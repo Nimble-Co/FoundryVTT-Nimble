@@ -1,6 +1,7 @@
 import type { OneDieRoll } from '../dice/oneDieReroll.js';
 import type { IncomingReactionEntry, KeepChoiceRoll } from './incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
+import type { RerollChanges } from './rerollOptions.js';
 import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
 
 /**
@@ -22,8 +23,15 @@ interface RerollableRoll<TRoll = unknown> {
 	replaced: ReplacedRoll;
 	/** The replaced roll's kept primary die result, or null. */
 	previousResult: number | null;
-	/** Make and evaluate the new roll from the formula and options the reroll step gives. */
-	makeRoll(formula: string, options: Record<string, unknown>): Promise<TRoll>;
+	/**
+	 * Make and evaluate the new roll from the formula and options the reroll
+	 * step gives. A reroll of one die reads the roll mode change from `changes`.
+	 */
+	makeRoll(
+		formula: string,
+		options: Record<string, unknown>,
+		changes?: Partial<RerollChanges>,
+	): Promise<TRoll>;
 	/** Read the new roll's kept die. Without it, the primary die of a damage roll is read. */
 	readNewDie?(roll: TRoll): RolledDie;
 	/**
