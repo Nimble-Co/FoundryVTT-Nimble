@@ -436,6 +436,9 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	 * rule's actor. Only an attack gets the attack changes.
 	 */
 	rerollChanges(kind: RerollRollKind): RerollChanges {
+		if ((this.die ?? 'wholeRoll') !== 'wholeRoll') {
+			return { rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' };
+		}
 		const attackChanges = kind === 'attack' && this.rolls?.includes('attack') === true;
 		const formula = attackChanges ? (this.extraDamage ?? '').trim() : '';
 		const extraDamage = formula

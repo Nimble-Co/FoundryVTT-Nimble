@@ -565,6 +565,20 @@ describe('RerollRule', () => {
 			});
 		});
 
+		it('gives no changes for a rule that rerolls one die, which hides the change fields', () => {
+			const { rule } = makeRule({
+				die: 'pickedDie',
+				rollModeChange: 1,
+				primaryDieBonus: 2,
+				extraDamage: '1d6',
+			});
+			expect(rule.rerollChanges('attack')).toEqual({
+				rollModeChange: 0,
+				primaryDieBonus: 0,
+				extraDamage: '',
+			});
+		});
+
 		it('leaves the extra damage empty when none is set', () => {
 			const { rule } = makeRule();
 			expect(rule.rerollChanges('attack')).toEqual({
