@@ -59,8 +59,8 @@
 		position: relative;
 		display: inline-block;
 		flex: none;
-		width: 1.875rem;
-		height: 1.875rem;
+		width: var(--nimble-die-face-size, 1.875rem);
+		height: var(--nimble-die-face-size, 1.875rem);
 		vertical-align: middle;
 		color: var(--die-face-number-color);
 
@@ -146,7 +146,7 @@
 			top: var(--die-face-y);
 			left: 50%;
 			transform: translate(-50%, -50%);
-			font-size: 0.75rem;
+			font-size: calc(var(--nimble-die-face-size, 1.875rem) * 0.4);
 			font-weight: 800;
 			line-height: 1;
 			font-variant-numeric: lining-nums tabular-nums;

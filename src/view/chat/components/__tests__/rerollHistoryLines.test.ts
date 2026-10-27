@@ -64,6 +64,10 @@ describe('rerollHistoryLines', () => {
 
 		expect(lines([button, automatic], [], 'Actor.wren')).toEqual([
 			{
+				title: 'Pocket Sand',
+				tags: [],
+				tempHpNote: null,
+				offNote: null,
 				text: 'Rerolled with Pocket Sand',
 				detail: 'Wounds gained: 1',
 				keptOld: false,
@@ -73,6 +77,10 @@ describe('rerollHistoryLines', () => {
 				},
 			},
 			{
+				title: 'Warding Bond',
+				tags: [],
+				tempHpNote: null,
+				offNote: null,
 				text: 'Rerolled with Warding Bond',
 				detail: 'Used by Bram - Uses left: 2',
 				keptOld: false,
@@ -129,6 +137,108 @@ describe('rerollHistoryLines', () => {
 	it('falls back to the record label when the feature is gone', () => {
 		const [line] = lines([record({ itemUuid: 'Item.gone' })], [], 'Actor.wren');
 		expect(line.text).toBe('Rerolled with Pocket Sand rule');
+	});
+});
+
+describe('rerollHistoryLines, what a use changed and gave', () => {
+	const courage = {
+		key: 'Item.courage#r:rollMode',
+		kind: 'rollMode' as const,
+		label: 'Unfailing Courage',
+		value: 1,
+	};
+	const ballad = {
+		key: 'Item.ballad#r:extraDamage',
+		kind: 'extraDamage' as const,
+		label: 'Heroic Ballad',
+		value: 3,
+	};
+	const gain = (name: string, extra: Record<string, unknown> = {}) => ({
+		actorUuid: `Actor.${name}`,
+		name,
+		tempHp: { amount: 3, keeps: null, source: 'Inspiring Presence' },
+		actions: null,
+		applied: true,
+		...extra,
+	});
+
+	it('gives a tag per roll change, the dropped die in the advantage tooltip', () => {
+		const [line] = lines([
+			record({ next: { value: 4, outcome: null }, dropped: 2, changes: [courage, ballad] }),
+		]);
+
+		expect(line.title).toBe('Pocket Sand');
+		expect(line.tags).toEqual([
+			{
+				kind: 'rollMode',
+				label: 'Advantage',
+				tooltip: 'Unfailing Courage. Rolled 4 and 2, kept 4.',
+				off: false,
+			},
+			{
+				kind: 'extraDamage',
+				label: '+3 Heroic Ballad',
+				tooltip: 'Heroic Ballad: +3 damage, in the total.',
+				off: false,
+			},
+		]);
+	});
+
+	it('gives an action tag, a temp HP tag with its count, and the note that lists them', () => {
+		const [line] = lines([
+			record({
+				grants: [
+					gain('Wren', { actions: { amount: 1, reason: null, source: 'Fire in my Bones' } }),
+					gain('Pip'),
+					gain('Bram', { tempHp: { amount: 3, keeps: 5, source: 'Inspiring Presence' } }),
+				],
+			}),
+		]);
+
+		expect(line.tags).toEqual([
+			{ kind: 'action', label: 'Wren +1 action', tooltip: 'Fire in my Bones', off: false },
+			{ kind: 'tempHp', label: '3 temp HP: 2', tooltip: 'Inspiring Presence', off: false },
+		]);
+		expect(line.tempHpNote).toBe('Wren, Pip gain 3 temp HP. Bram keeps 5 (larger).');
+		expect(line.offNote).toBeNull();
+	});
+
+	it('puts an action that was not given last, with the reason', () => {
+		const [line] = lines([
+			record({
+				grants: [
+					gain('Wren', {
+						actions: { amount: 0, reason: 'notInCombat', source: 'Fire in my Bones' },
+					}),
+				],
+			}),
+		]);
+
+		expect(line.tags.map((tag) => [tag.kind, tag.label])).toEqual([
+			['tempHp', '3 temp HP: 1'],
+			['noAction', 'No action: not in combat'],
+		]);
+	});
+
+	it('marks the temp HP and action tags off, with one note, when Feature Effects is off', () => {
+		const [line] = lines([
+			record({
+				changes: [courage],
+				grants: [
+					gain('Wren', {
+						applied: false,
+						actions: { amount: 1, reason: null, source: 'Fire in my Bones' },
+					}),
+				],
+			}),
+		]);
+
+		expect(line.tags.map((tag) => [tag.kind, tag.off])).toEqual([
+			['rollMode', false],
+			['action', true],
+			['tempHp', true],
+		]);
+		expect(line.offNote).toBe('Feature Effects is off. Give the temp HP and the action by hand.');
 	});
 });
 

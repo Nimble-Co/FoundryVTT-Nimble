@@ -945,10 +945,12 @@ describe('IncomingReactionPrompts', () => {
 			const lines = [
 				...screen.getByTestId('roll-place').querySelectorAll('.nimble-roll-changes__history'),
 			];
-			expect(lines.map((line) => line.querySelector('p')?.textContent)).toEqual([
-				'Rerolled with Pocket Sand',
-				'Rerolled with Warding Bond',
-			]);
+			expect(
+				lines.map((line) => line.querySelector('p > [aria-hidden="true"]')?.textContent),
+			).toEqual(['Pocket Sand', 'Warding Bond']);
+			expect(
+				lines.map((line) => line.querySelector('.nimble-roll-changes__spoken')?.textContent),
+			).toEqual(['Rerolled with Pocket Sand', 'Rerolled with Warding Bond']);
 			expect(lines[0].querySelector('.nimble-roll-changes__detail')?.textContent).toBe(
 				'Wounds gained: 1',
 			);
