@@ -261,6 +261,13 @@ A `modifyToggle` rule (matched to the target toggle by `toggleIdentifier`, falli
 - `suppressTurnOff`: turn-off events the target toggle should ignore while the modifier's predicate passes.
 - `turnOn` (`onTurnStart` | `onActorDying` | `onCritReceived`): events on which the target toggle switches **on** automatically. The modifier's own predicate gates the turn-on, so the granting feature carries its condition (e.g. `{ "self": "dying" }` for a while-Dying auto-activation). Auto-turn-on restores the toggle's state only — it creates or re-enables the backing AE (GM-side, with a chat announcement) but does not run the owning item's activation effects. `onCritReceived` is driven by the defender-side `onAttackReceived` dispatch, which fires when damage from a critical hit is applied to the actor.
 
+### Adding to a reroll from another feature: `modifyReroll`
+
+A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by `rerollIdentifier` against the reroll rule's `identifier`. Like `modifyToggle` it has no hooks: the card's reroll code (`src/documents/chatMessage/cardRerolls.ts`) scans the reroll owner's items for enabled `modifyReroll` rules whose `appliesTo()` passes (`modifyRerollRules` in `src/utils/modifyReroll.ts`).
+
+- **Roll changes** (`rollModeChange`, `extraDamage`) count once per card. Each has a key (`<item uuid>#<rule id>:<kind>`); the card stores the applied ones in `system.rollChanges`, and the reroll record lists those of that use in `changes`. `rollModeChange` adds to the reroll's own roll mode. On a one-die reroll it rolls that die two times and keeps the higher or lower (`rerollOneDie`), and the record keeps the other result in `dropped`. `extraDamage` is attacks only: it is rolled when the reroll is used and folded into the primary damage roll as a flavoured bonus named by the item, when the result stands (at once, or on whichever result a player keeps). The damage card target folds every extra damage roll change of the card in again on each later reroll, the way it carries folded pool spends.
+- **Creature gains** (`actionsForRoller`, `tempHp`, `tempHpWithin`) come with each use, on the GM client, after the new roll is on the card or waits for a keep (`src/documents/chatMessage/rerollUseGrants.ts`, pure part in `src/utils/rerollGrants.ts`). Temp HP goes to allies of the one who rolled (`countsAsAlly`: two player characters always, else disposition; hidden tokens out) within `tempHpWithin` spaces of the owner's token, the owner left out. No token for the owner, or for the one who rolled, means no temp HP. Actions go to the one who rolled through `requestCombatantActionDelta`, only for a character combatant in a started combat. The record keeps what each creature got in `grants`; with the `applyRuleEffects` toggle off, the list is kept with `applied: false` and nothing is written.
+
 ### Worked example: Rage
 
 The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "while raging" features (Intensifying Fury, etc.) live on their own items and just predicate on `self:raging`:
@@ -482,6 +489,12 @@ Both pool kinds (`dicePool`, `chargePool`) are **pure storage rules** — they d
 A `dicePool` rule with no paired `diceConsumer` defaults to `manual` spending — the dialog prompts the player at activation time. To make a pool snowball as a damage bonus (Berserker Fury Dice), add a sibling `diceConsumer` with `mode: 'autoBonus'` and the desired `bonusOnAttackDelivery` filter (`'melee'`, `'ranged'`, `'any'`, or `null`).
 
 Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` consumer for outgoing damage and a `manual` consumer that a reaction effect spends from. This is how features like Berserker's "That all you got?!" reaction share the Fury Dice pool with the auto-bonus damage path.
+
+### Temporary charges
+
+A recovery entry (on `chargePool.recoveries` or `modifyPool.addRefills`) can set `temporary: true`. An `add` with it raises the pool's `temporary` count by what was really added (the add is still clamped to the max). `temporary` is part of the stored pool state and never above `current`. `persistChargePoolMap` spends temporary charges first: when a write lowers `current`, it lowers `temporary` by the same amount first, so every spend path gets the rule without knowing it. `applyEncounterRecovery(actor, 'encounterEnd')` takes the remaining temporary charges away before the pool's own `encounterEnd` recoveries.
+
+The `onInitiativeRolled` trigger runs once per actor per combat: `initiativeTrigger.ts` stores the combat id on the actor (`flags.<system>.initiativeRecoveryCombat`) and ignores a later Initiative roll in that combat.
 
 ### Charge pool state tags
 
