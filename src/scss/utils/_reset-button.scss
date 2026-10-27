@@ -1,0 +1,11 @@
+// One class, no .system-nimble prefix: the scoped styles of a part must win.
+.nimble-u-reset-button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--nimble-ui-focus);
+    outline-offset: -2px;
+  }
+}
