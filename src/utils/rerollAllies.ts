@@ -106,4 +106,4 @@ function alliesOnCard(entries: readonly IncomingReactionEntry[]): RerollAlly[] {
 	return allies;
 }
 
-export { alliesOnCard, rollerTokenOf, scanRerollAllies };
+export { alliesOnCard, countsAsAlly, rollerTokenOf, type ScannedToken, scanRerollAllies };
