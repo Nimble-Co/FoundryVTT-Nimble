@@ -87,6 +87,24 @@ describe('rerollOneDie on live dice', () => {
 		expect(resultsOf(roll)).toEqual([8, 3]);
 	});
 
+	test.each([
+		[1, 6, 2],
+		[-1, 2, 6],
+	])(
+		'with roll mode change %i the die is rolled two times and one result stays',
+		async (rollModeChange, kept, dropped) => {
+			const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [4]);
+
+			nextDice(8, 2, 6);
+			const done = await rerollOneDie(roll as never, { term: 0, result: 0 }, { rollModeChange });
+			const after = done.roll as unknown as LiveRoll;
+
+			expect(resultsOf(after)).toEqual([kept]);
+			expect([done.next, done.dropped]).toEqual([kept, dropped]);
+			expect(after.total).toBe(kept + 2);
+		},
+	);
+
 	test('a Primary Die rerolled to its max explodes and crits', async () => {
 		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [1]);
 		expect(roll.isMiss).toBe(true);
