@@ -1213,6 +1213,10 @@
 					"predicate": {
 						"label": "Only while",
 						"hint": "Optional condition tested when the trigger fires (e.g. self: fullHp). Leave empty to always apply."
+					},
+					"temporary": {
+						"label": "Temporary uses",
+						"hint": "Charge pools only, with \"add\". The uses this adds are spent first and go away when the encounter ends."
 					}
 				}
 			},

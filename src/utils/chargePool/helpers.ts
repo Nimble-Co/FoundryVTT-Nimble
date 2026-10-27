@@ -101,6 +101,15 @@ function toSeededMarker(value: unknown): boolean | undefined {
 	return typeof value === 'boolean' ? value : undefined;
 }
 
+/** The `temporary` field of a pool: present only when some of `current` is temporary. */
+function temporaryOf(value: unknown, current: number): { temporary?: number } {
+	const temporary = Math.min(
+		toFiniteNonNegativeInteger(toNumericInput(value as NumericInput)),
+		current,
+	);
+	return temporary > 0 ? { temporary } : {};
+}
+
 function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 	const normalizedRecord: ChargePoolMap = {};
 
@@ -135,6 +144,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				label: label || sourceItemName || identifier,
 				current,
 				max,
+				...temporaryOf(sourcePool.temporary, current),
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toPoolDisplayFlag(sourcePool.hidden),
@@ -185,6 +195,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				label: item.name || normalizedIdentifier,
 				current,
 				max,
+				...temporaryOf(sourcePool.temporary, current),
 				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toPoolDisplayFlag(sourcePool.hidden),
@@ -365,6 +376,7 @@ function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 			mode: modeValue as ChargeRecoveryMode,
 			value: formula,
 		};
+		if (sourceEntry.temporary === true) normalized.temporary = true;
 
 		// Initialized rule data carries Predicate instances (whose enumerable
 		// shape is { isValid, _source }); persisted flag state may carry that
@@ -474,6 +486,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			label: definition.label,
 			current,
 			max: definition.max,
+			...temporaryOf(wasSeeded ? existingPool.temporary : 0, current),
 			seeded: wasSeeded || definition.max > 0,
 			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
@@ -707,6 +720,8 @@ function applyRecoveryTriggersToPools(
 
 			const before = pool.current;
 			pool.current = recoveredValue(actor, pool, recovery);
+			const gained = pool.current - before;
+			if (recovery.temporary && gained > 0) pool.temporary = (pool.temporary ?? 0) + gained;
 
 			if (given) addRecoveryGiven(given, poolId, recovery.trigger, pool.current - before);
 		}
@@ -731,6 +746,23 @@ function resolveRecoveryTrigger(
 	return triggers[triggers.length - 1] ?? 'onHit';
 }
 
+/**
+ * The pool as it is written: uses spent since the stored state come out of
+ * its temporary uses first. A stored count that falls to none is written as 0,
+ * because a flag update merges and would keep the old count.
+ */
+function withTemporarySpentFirst(poolState: ChargePoolState, stored: unknown): ChargePoolState {
+	const storedPool = (stored ?? {}) as { current?: unknown; temporary?: unknown };
+	const storedCurrent = toFiniteNonNegativeInteger(
+		toNumericInput(storedPool.current as NumericInput),
+	);
+	const spent = Math.max(0, storedCurrent - poolState.current);
+	const temporary = Math.min(Math.max(0, (poolState.temporary ?? 0) - spent), poolState.current);
+	const { temporary: _old, ...rest } = poolState;
+	if (temporary > 0) return { ...rest, temporary };
+	return storedPool.temporary === undefined ? rest : { ...rest, temporary: 0 };
+}
+
 function buildPoolUpdatePayload(
 	existingPools: Record<string, unknown>,
 	nextPools: Record<string, ChargePoolState>,
@@ -738,7 +770,7 @@ function buildPoolUpdatePayload(
 	const payload: Record<string, unknown> = {};
 
 	for (const [poolId, poolState] of Object.entries(nextPools)) {
-		payload[poolId] = poolState;
+		payload[poolId] = withTemporarySpentFirst(poolState, existingPools[poolId]);
 	}
 
 	for (const existingPoolId of Object.keys(existingPools)) {
@@ -838,7 +870,8 @@ function areRecoveryEntriesEqual(
 		if (
 			leftEntry.trigger !== rightEntry.trigger ||
 			leftEntry.mode !== rightEntry.mode ||
-			leftEntry.value !== rightEntry.value
+			leftEntry.value !== rightEntry.value ||
+			(leftEntry.temporary ?? false) !== (rightEntry.temporary ?? false)
 		) {
 			return false;
 		}
@@ -857,6 +890,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.label === right.label &&
 		left.current === right.current &&
 		left.max === right.max &&
+		(left.temporary ?? 0) === (right.temporary ?? 0) &&
 		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&

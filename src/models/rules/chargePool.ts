@@ -89,6 +89,13 @@ function schema() {
 						widget: 'formula',
 					}),
 				),
+				temporary: new fields.BooleanField({
+					required: false,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.chargePool.recoveries.temporary.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.temporary.hint',
+				}),
 				// Cast: PredicateField's constructor typing does not accept label/hint.
 				predicate: new PredicateField({
 					label: 'NIMBLE.rules.chargePool.recoveries.predicate.label',

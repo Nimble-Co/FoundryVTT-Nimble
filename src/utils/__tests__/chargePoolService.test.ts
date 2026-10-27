@@ -6,6 +6,7 @@ import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 import {
 	adjustPool,
 	applyEncounterRecovery,
+	applyRecoveryToActorIfEligible,
 	applyRestRecovery,
 } from '#utils/chargePool/chargePoolRecover.js';
 import { getPoolsForItem, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
@@ -1670,6 +1671,107 @@ describe('ChargePoolService', () => {
 			const item = actor.items.contents[0];
 			const storedPools = item.flags.nimble.chargePools as Record<string, Record<string, unknown>>;
 			expect(storedPools.gate.current).toBe(1);
+		});
+	});
+
+	describe('temporary uses', () => {
+		const quickWit = { trigger: 'onInitiativeRolled', mode: 'add', value: '2', temporary: true };
+
+		function songweaver(current: number, temporary = 0, recoveries: unknown[] = []) {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'inspiration-item',
+						name: "Songweaver's Inspiration",
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'inspiration',
+								scope: 'item',
+								max: '6',
+								initial: 'max',
+								recoveries: [{ trigger: 'safeRest', mode: 'refresh', value: '0' }, ...recoveries],
+							} as unknown as MockRule,
+						],
+						itemFlags: {
+							nimble: { chargePools: { inspiration: { current, max: 6, temporary } } },
+						},
+					},
+				],
+			});
+			const pool = () =>
+				(actor.items.contents[0].flags.nimble.chargePools as Record<string, unknown>)
+					.inspiration as { current: number; temporary?: number };
+			return { actor: actor as unknown as Actor.Implementation, pool };
+		}
+
+		it('adds temporary uses, counted apart from the others', async () => {
+			const { actor, pool } = songweaver(3, 0, [quickWit]);
+
+			await applyRecoveryToActorIfEligible(actor, 'onInitiativeRolled');
+
+			expect(pool()).toMatchObject({ current: 5, temporary: 2 });
+		});
+
+		it('counts only the uses the maximum lets in as temporary', async () => {
+			const { actor, pool } = songweaver(5, 0, [quickWit]);
+
+			await applyRecoveryToActorIfEligible(actor, 'onInitiativeRolled');
+
+			expect(pool()).toMatchObject({ current: 6, temporary: 1 });
+		});
+
+		it('adds them from a Modify Pool refill too', async () => {
+			const { actor, pool } = songweaver(3);
+			const items = (actor as unknown as MockActor).items.contents;
+			items.push({
+				...items[0],
+				id: 'quick-wit',
+				name: 'Quick Wit',
+				rules: new Map([
+					[
+						'0',
+						{
+							type: 'modifyPool',
+							poolType: 'charge',
+							poolIdentifier: 'inspiration',
+							addRefills: [quickWit],
+						} as unknown as MockRule,
+					],
+				]),
+				flags: { nimble: { chargePools: {} } },
+			});
+
+			await applyRecoveryToActorIfEligible(actor, 'onInitiativeRolled');
+
+			expect(pool()).toMatchObject({ current: 5, temporary: 2 });
+		});
+
+		it('spends temporary uses first', async () => {
+			const { actor, pool } = songweaver(6, 2);
+
+			await adjustPool(actor, 'inspiration', 'set', 5);
+			expect(pool()).toMatchObject({ current: 5, temporary: 1 });
+
+			await adjustPool(actor, 'inspiration', 'set', 2);
+			expect(pool()).toMatchObject({ current: 2, temporary: 0 });
+		});
+
+		it('keeps temporary uses when uses are added', async () => {
+			const { actor, pool } = songweaver(4, 2);
+
+			await adjustPool(actor, 'inspiration', 'add', 1);
+
+			expect(pool()).toMatchObject({ current: 5, temporary: 2 });
+		});
+
+		it('takes the temporary uses away when the encounter ends', async () => {
+			const { actor, pool } = songweaver(5, 2);
+
+			await applyEncounterRecovery(actor, 'encounterEnd');
+
+			expect(pool()).toMatchObject({ current: 3, temporary: 0 });
 		});
 	});
 });
