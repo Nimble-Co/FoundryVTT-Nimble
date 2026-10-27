@@ -22,6 +22,8 @@ interface ReplacedRoll {
 interface RerollHistory {
 	rerolls: RerollRecord[];
 	discardedCritTriggers: boolean;
+	/** The roll changes of Modify Reroll rules the rerolls applied. */
+	rollChanges?: RollChange[];
 }
 
 type RerollStepDone<TRoll> = {
@@ -60,6 +62,8 @@ interface RerollStepInput<TRoll> {
 	/** An earlier reroll of this roll kept the crit triggers. */
 	earlierCritTriggers: boolean;
 	payOptions?: { forceHeroicReaction?: boolean };
+	/** The rule rerolls by itself, with no click. */
+	automatic?: boolean;
 	/** Puts the new roll in place. A throw here gives the cost back too. */
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
@@ -142,6 +146,7 @@ async function rerollWithRule<TRoll>(
 				woundsGained: paid?.wounds ?? 0,
 				dropped: die.dropped ?? null,
 				changes: rollChanges,
+				...(input.automatic ? { automatic: true } : {}),
 			},
 			discardedCritTriggers:
 				input.earlierCritTriggers || (rule.discardedCritTriggers === true && previousWasCritical),

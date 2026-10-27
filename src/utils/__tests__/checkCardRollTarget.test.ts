@@ -400,6 +400,43 @@ describe('the rerolls of a posted check', () => {
 		]);
 	});
 
+	it("adds the owner's Modify Reroll changes to an automatic reroll, and marks it automatic", async () => {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => true,
+		};
+		rollD20(15);
+		const courage = {
+			id: 'courage-rule',
+			type: 'modifyReroll',
+			rerollIdentifier: 'inspiration',
+			rollModeChange: 1,
+			item: { name: 'Courage', uuid: 'Item.courage' },
+		};
+		const rule = rerollRule({
+			rerollsByItself: true,
+			identifier: 'inspiration',
+			actor: {
+				getRollData: () => ({}),
+				items: { contents: [{ rules: new Map([[courage.id, courage]]) }] },
+			} as never,
+		});
+		const roller: RerollingActor = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };
+
+		const data = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
+
+		const change = {
+			key: 'Item.courage#courage-rule:rollMode',
+			kind: 'rollMode',
+			label: 'Courage',
+			value: 1,
+		};
+		expect(data.roll.formula).toBe('2d20khn + 3[Will]');
+		expect(data.system.rollChanges).toEqual([change]);
+		expect(data.system.rerolls).toEqual([
+			expect.objectContaining({ automatic: true, changes: [change] }),
+		]);
+	});
+
 	it("stamps the ally entries of creatures on the roller's scene, and keeps one that is not an ally as left out", async () => {
 		const offersRerollOn = vi.fn(
 			(context: { side: string; roll: { kind: string } }) =>

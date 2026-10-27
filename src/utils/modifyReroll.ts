@@ -135,6 +135,22 @@ async function resolveRollChanges(changes: readonly ModifyRerollChange[]): Promi
 	return resolved;
 }
 
+/** The resolved changes the reroll owner's Modify Reroll rules add, without those in `applied`. */
+async function newRollChanges(
+	reroll: { identifier?: string; actor?: unknown },
+	kind: RerollRollKind,
+	applied: readonly RollChange[],
+): Promise<RollChange[]> {
+	const owner = { identifier: reroll.identifier, actor: reroll.actor as ModifierOwner | null };
+	return resolveRollChanges(
+		modifyRerollChanges(
+			owner,
+			kind,
+			applied.map((change) => change.key),
+		),
+	);
+}
+
 export {
 	type ModifyRerollChange,
 	type ModifyRerollRuleLike,
@@ -142,5 +158,6 @@ export {
 	type ModifierOwner,
 	modifyRerollChanges,
 	modifyRerollRules,
+	newRollChanges,
 	resolveRollChanges,
 };

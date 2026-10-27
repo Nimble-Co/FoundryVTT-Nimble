@@ -16,7 +16,7 @@ interface RerollHistoryDie {
 
 /** One thing a use of a reroll changed on the roll or gave a creature. */
 interface RerollTag {
-	kind: 'rollMode' | 'extraDamage' | 'action' | 'noAction' | 'tempHp';
+	kind: 'automatic' | 'rollMode' | 'extraDamage' | 'action' | 'noAction' | 'tempHp';
 	label: string;
 	tooltip: string;
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
@@ -214,9 +214,21 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 
 		const kept = record.kept && typeof record.keptTotal === 'number';
 		const given = grantTags(record.grants ?? []);
+		const automatic: RerollTag[] = record.automatic
+			? [
+					{
+						kind: 'automatic',
+						label: localize('NIMBLE.chat.incomingReactions.rerollTags.automatic'),
+						tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.automaticTooltip', {
+							feature,
+						}),
+						off: false,
+					},
+				]
+			: [];
 		return {
 			title: feature,
-			tags: [...rollChangeTags(record), ...given.tags],
+			tags: [...automatic, ...rollChangeTags(record), ...given.tags],
 			tempHpNote: given.tempHpNote,
 			offNote: given.offNote,
 			text: kept
@@ -224,7 +236,12 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 						feature,
 						total: String(record.keptTotal),
 					})
-				: localize('NIMBLE.chat.incomingReactions.rerollHistoryPlain', { feature }),
+				: localize(
+						record.automatic
+							? 'NIMBLE.chat.incomingReactions.rerollHistoryAutomatic'
+							: 'NIMBLE.chat.incomingReactions.rerollHistoryPlain',
+						{ feature },
+					),
 			detail: details.length > 0 ? details.join(' - ') : null,
 			dice: dice(record),
 			keptOld: record.kept === 'old',

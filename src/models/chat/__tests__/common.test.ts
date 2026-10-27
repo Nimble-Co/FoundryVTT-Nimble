@@ -157,6 +157,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			dropped: 2,
 			changes: [],
 			grants: [],
+			automatic: true,
 		};
 		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
 		const die = (rerollFields().previous as { fields: Fields }).fields;

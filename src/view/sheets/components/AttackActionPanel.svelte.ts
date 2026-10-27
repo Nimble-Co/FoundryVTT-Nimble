@@ -349,6 +349,7 @@ export function createAttackPanelState(
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 				incomingReactions: reactionEntries,
 				rerolls: postRoll.rerollHistory?.rerolls ?? [],
+				rollChanges: postRoll.rerollHistory?.rollChanges ?? [],
 				discardedCritTriggers: postRoll.rerollHistory?.discardedCritTriggers ?? false,
 			},
 			type: 'feature',

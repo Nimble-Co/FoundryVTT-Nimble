@@ -31,7 +31,7 @@ import type {
 	RerollRecord,
 	RollChange,
 } from '#utils/incomingReactionEntry.js';
-import { modifyRerollChanges, resolveRollChanges } from '#utils/modifyReroll.js';
+import { newRollChanges } from '#utils/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/rerollAllies.js';
 import { diceToPick, rerollableFor } from '#utils/rerollDieChoice.js';
 import {
@@ -389,11 +389,8 @@ export class CardRerolls {
 	}
 
 	/** The rule owner's Modify Reroll changes this card has not applied yet. */
-	async #newRollChanges(rule: RerollRuleLike, kind: RerollRollKind): Promise<RollChange[]> {
-		const applied = this.#rollChanges().map((change) => change.key);
-		return resolveRollChanges(
-			modifyRerollChanges(rule as Parameters<typeof modifyRerollChanges>[0], kind, applied),
-		);
+	#newRollChanges(rule: RerollRuleLike, kind: RerollRollKind): Promise<RollChange[]> {
+		return newRollChanges(rule, kind, this.#rollChanges());
 	}
 
 	/** Put on the reroll's record what creatures get from this use. */
@@ -443,6 +440,7 @@ export class CardRerolls {
 				entry: next.entry,
 				rollKind,
 				rollChanges: await this.#newRollChanges(next.rule, rollKind),
+				automatic: true,
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced: target.replaced,
 				previousResult: target.previousResult,

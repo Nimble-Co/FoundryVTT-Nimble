@@ -217,7 +217,10 @@
 				"rerollWithCost": "{label} ({cost})",
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
+				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",
 				"rerollTags": {
+					"automatic": "Automatic",
+					"automaticTooltip": "{feature} rerolled by itself. Nobody clicked.",
 					"advantage": "Advantage",
 					"disadvantage": "Disadvantage",
 					"rollModeDropped": "{source}. Rolled {first} and {second}, kept {kept}.",

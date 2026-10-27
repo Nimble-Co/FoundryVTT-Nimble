@@ -9,6 +9,7 @@
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
 
 	const TAG_ICONS: Record<RerollHistoryLine['tags'][number]['kind'], string> = {
+		automatic: 'fa-gear',
 		rollMode: 'fa-dice',
 		extraDamage: 'fa-burst',
 		action: 'fa-bolt',

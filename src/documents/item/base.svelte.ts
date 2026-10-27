@@ -339,6 +339,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 					image: this.img || 'icons/svg/item-bag.svg',
 					incomingReactions: incomingReactions ?? [],
 					rerolls: rerollHistory?.rerolls ?? [],
+					rollChanges: rerollHistory?.rollChanges ?? [],
 					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 					isCritical,
 					isMiss,

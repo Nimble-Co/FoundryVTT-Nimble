@@ -7,6 +7,7 @@ import { setPoolFaces } from './dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from './dicePool/dicePoolSync.js';
 import type { DicePoolState } from './dicePool/types.js';
 import {
+	appendExtraDamageToRoll,
 	appendFlavoredBonusToRoll,
 	findPrimaryDamageNode,
 	removeFlavoredBonusesFromRoll,
@@ -242,16 +243,6 @@ function extraDamageChanges(card: DamageCard, added: readonly RollChange[] = [])
 	);
 }
 
-function foldRollChanges(
-	roll: Record<string, unknown>,
-	changes: readonly RollChange[],
-): Record<string, unknown> {
-	return changes.reduce(
-		(folded, change) => appendFlavoredBonusToRoll(folded, change.value, change.label),
-		roll,
-	);
-}
-
 /**
  * Get `newRoll` ready to go on the card in place of its primary damage roll;
  * the second result stands. Crit, miss, folded spends, the charge recovery and
@@ -274,7 +265,7 @@ async function preparePrimaryDamage(
 		{ outcome: newRoll, forcedMiss },
 	);
 
-	const roll = foldRollChanges(carried.roll, extraDamageChanges(card, added));
+	const roll = appendExtraDamageToRoll(carried.roll, extraDamageChanges(card, added));
 	damageNode.discardedRoll = serialized;
 	damageNode.roll = roll;
 	activation.effects = reconstructEffectsTree(nodes) as unknown[];
@@ -351,7 +342,7 @@ function primaryDamageReroll(
 			const applied = new Set(extraDamageChanges(card).map((change) => change.key));
 			const fresh = extraDamageChanges(card, added).filter((change) => !applied.has(change.key));
 			if (fresh.length < 1) return null;
-			const roll = foldRollChanges(previous as unknown as Record<string, unknown>, fresh);
+			const roll = appendExtraDamageToRoll(previous as unknown as Record<string, unknown>, fresh);
 			found.damageNode.roll = roll;
 			found.activation.effects = reconstructEffectsTree(found.nodes) as unknown[];
 			return {

@@ -429,6 +429,7 @@ describe('computeIncomingAttackPlan', () => {
 			appliedEntries: [],
 			reactionEntries: [],
 			autoRerollEntries: [],
+			roller: null,
 		});
 	});
 
@@ -442,6 +443,7 @@ describe('computeIncomingAttackPlan', () => {
 			appliedEntries: [],
 			reactionEntries: [],
 			autoRerollEntries: [],
+			roller: null,
 		});
 	});
 
@@ -1047,10 +1049,106 @@ describe('Reroll rules on the attack', () => {
 						woundsGained: 0,
 						dropped: null,
 						changes: [],
+						automatic: true,
 					},
 				],
 				discardedCritTriggers: false,
+				rollChanges: [],
 			});
+		});
+
+		it("adds the owner's Modify Reroll changes, says what they gave, and marks the reroll automatic", async () => {
+			const modifier = (config: Record<string, unknown>, name: string) => ({
+				id: `${name}-rule`,
+				type: 'modifyReroll',
+				rerollIdentifier: 'inspiration',
+				item: { name, uuid: `Item.${name}` },
+				...config,
+			});
+			const owner = {
+				uuid: 'Actor.lyra',
+				getRollData: () => ({}),
+				items: {
+					contents: [
+						modifier({ rollModeChange: 1 }, 'Courage'),
+						modifier({ extraDamage: '3' }, 'Ballad'),
+						modifier({ actionsForRoller: 1 }, 'Bones'),
+					].map((rule) => ({ rules: new Map([[rule.id, rule]]) })),
+				},
+			};
+			const rule = rerollRule({
+				automatic: true,
+				rerollsByItself: true,
+				identifier: 'inspiration',
+				actor: owner,
+			});
+			const entry = rerollEntry('always');
+			const rebuilt = {
+				...makeRoll(false, false, false, 4),
+				toJSON: () => ({ class: 'DamageRoll', formula: '1d8 + 2', total: 6, terms: [] }),
+			};
+			const rebuildRoll = vi.fn(async () => rebuilt);
+			const rollGlobal = globalThis as unknown as { Roll: { replaceFormulaData?: unknown } };
+			const previousReplace = rollGlobal.Roll.replaceFormulaData;
+			rollGlobal.Roll.replaceFormulaData = (formula: string) => formula;
+			const fromData = vi
+				.spyOn(foundry.dice.Roll, 'fromData')
+				.mockImplementation((data) => ({ fromData: data }) as never);
+
+			try {
+				const result = await applyPostRollIncomingBehavior(
+					makeRoll(false),
+					plan({
+						roller: { uuid: 'Actor.kael', name: 'Kael' },
+						autoRerollEntries: [entry],
+						rerollRules: new Map([[entry.id, rule]]),
+					}),
+					rebuildRoll,
+				);
+
+				expect(rebuildRoll).toHaveBeenCalledWith(
+					'1d8 + 2',
+					expect.anything(),
+					expect.objectContaining({ rollModeChange: 1 }),
+				);
+				const changes = [
+					{
+						key: 'Item.Courage#Courage-rule:rollMode',
+						kind: 'rollMode',
+						label: 'Courage',
+						value: 1,
+					},
+					{
+						key: 'Item.Ballad#Ballad-rule:extraDamage',
+						kind: 'extraDamage',
+						label: 'Ballad',
+						value: 3,
+					},
+				];
+				expect(result.rerollHistory?.rollChanges).toEqual(changes);
+				expect(result.rerollHistory?.rerolls[0]).toMatchObject({
+					automatic: true,
+					changes,
+					grants: [
+						expect.objectContaining({
+							actorUuid: 'Actor.kael',
+							actions: { amount: 0, reason: 'notInCombat', source: 'Bones' },
+						}),
+					],
+				});
+				expect(result.roll).toEqual({
+					fromData: expect.objectContaining({
+						total: 9,
+						terms: [
+							expect.objectContaining({ class: 'OperatorTerm', operator: '+' }),
+							expect.objectContaining({ number: 3, options: { flavor: 'Ballad' } }),
+						],
+					}),
+				});
+			} finally {
+				rollGlobal.Roll.replaceFormulaData = previousReplace;
+				fromData.mockRestore();
+			}
 		});
 
 		it('keeps the first roll when the cost cannot be paid', async () => {

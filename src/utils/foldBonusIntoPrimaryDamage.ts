@@ -1,4 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { RollChange } from './incomingReactionEntry.js';
 import { flattenEffectsTree } from './treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from './treeManipulation/reconstructEffectsTree.js';
 
@@ -54,6 +55,19 @@ export function appendFlavoredBonusToRoll(
 	serialized.terms = terms;
 	serialized.total = Number(serialized.total ?? 0) + amount;
 	return serialized;
+}
+
+/** The roll with the extra damage roll changes in `changes` appended, each named by its source. */
+export function appendExtraDamageToRoll(
+	serializedRoll: Record<string, unknown>,
+	changes: readonly RollChange[],
+): Record<string, unknown> {
+	return changes
+		.filter((change) => change.kind === 'extraDamage')
+		.reduce(
+			(roll, change) => appendFlavoredBonusToRoll(roll, change.value, change.label),
+			serializedRoll,
+		);
 }
 
 /**

@@ -149,6 +149,8 @@ export interface RerollRecord {
 	changes?: RollChange[];
 	/** What creatures got from this use. */
 	grants?: RerollGrant[];
+	/** The rule rerolled by itself, with no click. */
+	automatic?: boolean;
 }
 
 /**

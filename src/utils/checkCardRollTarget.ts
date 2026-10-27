@@ -1,6 +1,7 @@
 import constructD20Term from '../dice/constructD20Term.js';
 import type { OneDieRoll } from '../dice/oneDieReroll.js';
-import type { IncomingReactionEntry, RerollRecord } from './incomingReactionEntry.js';
+import type { IncomingReactionEntry, RerollRecord, RollChange } from './incomingReactionEntry.js';
+import { newRollChanges } from './modifyReroll.js';
 import { alliesOnCard, rollerTokenOf, scanRerollAllies } from './rerollAllies.js';
 import {
 	collectRerollEntries,
@@ -12,6 +13,7 @@ import {
 } from './rerollEntries.js';
 import type { RerollableRoll, RerollRollTarget } from './rerollRollTarget.js';
 import { rerollWithRule } from './rerollStep.js';
+import { applyGrants, grantsForUse } from './rerollUseGrants.js';
 import type { CheckRollKind } from './rollToReroll.js';
 
 type CheckRoll = { kind: CheckRollKind; key: string };
@@ -218,6 +220,7 @@ async function collectCheckRerolls(input: {
 	roll: AnyRoll;
 	incomingReactions: IncomingReactionEntry[];
 	rerolls: RerollRecord[];
+	rollChanges: RollChange[];
 	refund: () => Promise<void>;
 }> {
 	const context = checkRollContext(
@@ -228,16 +231,20 @@ async function collectCheckRerolls(input: {
 	const found = collectRerollEntries(context);
 	const stamped: IncomingReactionEntry[] = [];
 	const rerolls: RerollRecord[] = [];
+	const rollChanges: RollChange[] = [];
 	const refunds: Array<() => Promise<void>> = [];
 	let roll = input.roll;
 
 	let next = nextAutomaticReroll(found.automatic, stamped, context);
 	while (next) {
 		const target = checkReroll(liveRollSource(roll), input.rollMode);
+		const added = await newRollChanges(next.rule, input.check.kind, rollChanges);
 		const result = await rerollWithRule({
 			rule: next.rule,
 			entry: next.entry,
 			rollKind: input.check.kind,
+			rollChanges: added,
+			automatic: true,
 			payer: next.rule.actor as Actor | null | undefined,
 			replaced: target.replaced,
 			previousResult: target.previousResult,
@@ -250,9 +257,13 @@ async function collectCheckRerolls(input: {
 		}
 		if (result.status !== 'done') break;
 
+		const grants = await grantsForUse(next.rule, input.roller);
+		if (grants.length > 0) result.reroll.grants = grants;
 		roll = result.roll;
 		rerolls.push(result.reroll);
+		rollChanges.push(...added);
 		refunds.unshift(result.refund);
+		await applyGrants(grants, next.rule.item?.uuid ?? '');
 		stamped.push({ ...next.entry, used: true });
 		next = nextAutomaticReroll(found.automatic, stamped, context);
 	}
@@ -261,6 +272,7 @@ async function collectCheckRerolls(input: {
 		roll,
 		incomingReactions: withNewRerollEntries(stamped, found.manual),
 		rerolls,
+		rollChanges,
 		refund: async () => {
 			for (const refund of refunds) await refund();
 		},
@@ -275,6 +287,7 @@ interface CheckCardRerollData<TRoll extends AnyRoll> {
 		tokenUuid: string | null;
 		incomingReactions: IncomingReactionEntry[];
 		rerolls: RerollRecord[];
+		rollChanges: RollChange[];
 		rollMode: number;
 	};
 	refund: () => Promise<void>;
@@ -295,6 +308,7 @@ async function checkCardRerollData<TRoll extends AnyRoll>(
 			tokenUuid: roller.token?.uuid ?? null,
 			incomingReactions: result.incomingReactions,
 			rerolls: result.rerolls,
+			rollChanges: result.rollChanges,
 			rollMode:
 				result.rerolls.length > 0
 					? netRollMode(result.roll.options as Record<string, unknown>)

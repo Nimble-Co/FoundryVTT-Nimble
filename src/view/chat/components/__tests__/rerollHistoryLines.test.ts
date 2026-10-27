@@ -184,6 +184,19 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		]);
 	});
 
+	it('starts an automatic reroll with a tag that names the feature, and says so in the sentence', () => {
+		const [line] = lines([record({ automatic: true, changes: [courage] })]);
+
+		expect(line.tags[0]).toEqual({
+			kind: 'automatic',
+			label: 'Automatic',
+			tooltip: 'Pocket Sand rerolled by itself. Nobody clicked.',
+			off: false,
+		});
+		expect(line.tags.map((tag) => tag.kind)).toEqual(['automatic', 'rollMode']);
+		expect(line.text).toBe('Rerolled automatically by Pocket Sand');
+	});
+
 	it('gives an action tag, a temp HP tag with its count, and the note that lists them', () => {
 		const [line] = lines([
 			record({

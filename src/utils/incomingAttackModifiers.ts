@@ -1,6 +1,13 @@
 import type { IncomingAttackModifier } from '../models/rules/modifyIncomingAttack.js';
-import type { IncomingReactionEntry, RerollRecord, RerollSide } from './incomingReactionEntry.js';
+import { appendExtraDamageToRoll } from './foldBonusIntoPrimaryDamage.js';
+import type {
+	IncomingReactionEntry,
+	RerollRecord,
+	RerollSide,
+	RollChange,
+} from './incomingReactionEntry.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
+import { newRollChanges } from './modifyReroll.js';
 import {
 	type CardOfferContext,
 	collectPoolSpendCardOffers,
@@ -17,6 +24,7 @@ import {
 	type RerollRuleLike,
 } from './rerollEntries.js';
 import { type RerollHistory, rerollWithRule } from './rerollStep.js';
+import { applyGrants, grantsForUse } from './rerollUseGrants.js';
 import { areAllies, areWithinSpaces } from './tokenAdjacency.js';
 
 // Every hero can Interpose for an ally within 2 spaces (Core Rules heroic
@@ -66,6 +74,8 @@ interface IncomingAttackPlan {
 	autoRerollEntries: IncomingReactionEntry[];
 	/** The rule behind each automatic `reroll` entry, by entry id */
 	rerollRules?: Map<string, RerollRuleLike>;
+	/** The one who rolls the attack */
+	roller?: RerollingActor | null;
 }
 
 /**
@@ -124,6 +134,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 	let finalRoll = roll;
 	let discardedRoll: object | null = null;
 	const rerolls: RerollRecord[] = [];
+	const rollChanges: RollChange[] = [];
 	let discardedCritTriggers = false;
 	const stampEntries: IncomingReactionEntry[] = [];
 
@@ -132,10 +143,13 @@ async function applyPostRollIncomingBehavior<TRoll>(
 		let next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
 		while (next) {
 			const replaced = asView(finalRoll);
+			const added = await newRollChanges(next.rule, 'attack', rollChanges);
 			const result = await rerollWithRule({
 				rule: next.rule,
 				entry: next.entry,
 				rollKind: 'attack',
+				rollChanges: added,
+				automatic: true,
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced,
 				previousResult: replaced.primaryDieValue ?? null,
@@ -145,13 +159,25 @@ async function applyPostRollIncomingBehavior<TRoll>(
 			if (result.status === 'failed') throw result.error;
 			if (result.status !== 'done') break;
 
+			const grants = await grantsForUse(next.rule, plan.roller);
+			if (grants.length > 0) result.reroll.grants = grants;
 			discardedRoll = replaced.toJSON();
 			finalRoll = result.roll;
 			rerolls.push(result.reroll);
+			rollChanges.push(...added);
+			await applyGrants(grants, next.rule.item?.uuid ?? '');
 			discardedCritTriggers = result.discardedCritTriggers;
 			stampEntries.push({ ...next.entry, used: true });
 			next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
 		}
+	}
+
+	if (rollChanges.some((change) => change.kind === 'extraDamage')) {
+		const folded = appendExtraDamageToRoll(
+			asView(finalRoll).toJSON() as Record<string, unknown>,
+			rollChanges,
+		);
+		finalRoll = foundry.dice.Roll.fromData(folded as never) as unknown as TRoll;
 	}
 
 	const finalOutcome = rollOutcomeOf(asView(finalRoll));
@@ -161,7 +187,7 @@ async function applyPostRollIncomingBehavior<TRoll>(
 		roll: finalRoll,
 		discardedRoll,
 		stampEntries,
-		rerollHistory: rerolls.length > 0 ? { rerolls, discardedCritTriggers } : null,
+		rerollHistory: rerolls.length > 0 ? { rerolls, discardedCritTriggers, rollChanges } : null,
 	};
 }
 
@@ -321,6 +347,7 @@ function computeIncomingAttackPlan(
 		appliedEntries: [],
 		reactionEntries: [...collectPoolSpendCardOffers(attackingActor, attackContext)],
 		autoRerollEntries: [],
+		roller: (attackingActor as RerollingActor | undefined) ?? null,
 	};
 	const targetActor = (firstTargetToken?.actor ?? null) as unknown as ActorLike | null;
 	const targetModifiers = collectTargetIncomingModifiers(targetActor);

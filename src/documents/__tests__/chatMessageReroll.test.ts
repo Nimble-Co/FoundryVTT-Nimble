@@ -1253,8 +1253,15 @@ describe('resolveRerollReaction', () => {
 			]);
 			expect(message.system.rerolls).toEqual([
 				expect.objectContaining({ itemUuid: 'Item.sand' }),
-				expect.objectContaining({ itemUuid: 'Item.ward', actorUuid: 'Actor.target' }),
+				expect.objectContaining({
+					itemUuid: 'Item.ward',
+					actorUuid: 'Actor.target',
+					automatic: true,
+				}),
 			]);
+			expect(
+				(message.system.rerolls as Array<{ automatic?: boolean }>)[0].automatic,
+			).toBeUndefined();
 		});
 
 		it('keeps the button reroll and its cost when it starts an automatic one', async () => {

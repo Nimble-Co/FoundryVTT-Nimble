@@ -253,6 +253,7 @@ const rerollRecord = () =>
 		keptTotal: new fields.NumberField({ required: false, nullable: true, initial: null }),
 		dropped: new fields.NumberField({ required: false, nullable: true, initial: null }),
 		changes: new fields.ArrayField(rollChange(), { required: false, nullable: false, initial: [] }),
+		automatic: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 		grants: new fields.ArrayField(rerollGrant(), { required: false, nullable: false, initial: [] }),
 	});
 
