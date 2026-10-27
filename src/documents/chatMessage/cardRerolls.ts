@@ -52,6 +52,7 @@ import type { RerollableRoll, RerollRollTarget } from '../../utils/rerollRollTar
 import { type RerollStepDone, rerollWithRule } from '../../utils/rerollStep.js';
 import type { RerollRollKind } from '../../utils/rollToReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
+import { applyGrants, grantsForUse } from './rerollUseGrants.js';
 
 /**
  * A reroll for the card's history. A new action starts a new list; an
@@ -395,6 +396,21 @@ export class CardRerolls {
 		);
 	}
 
+	/** Put on the reroll's record what creatures get from this use. */
+	async #addGrants(
+		done: RerollStepDone<unknown>,
+		rule: RerollRuleLike,
+		rollTarget: RerollRollTarget,
+	): Promise<void> {
+		const grants = await grantsForUse(rule, rollTarget.context().attacker);
+		if (grants.length > 0) done.reroll.grants = grants;
+	}
+
+	/** Give creatures what this use gave, once the new roll is on the card or waits for a keep. */
+	async #applyGrants(reroll: RerollRecord, rule: RerollRuleLike): Promise<void> {
+		if (reroll.grants?.length) await applyGrants(reroll.grants, rule.item?.uuid ?? '');
+	}
+
 	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */
 	#withEntryUsed(entry: IncomingReactionEntry): IncomingReactionEntry[] {
 		const entries = this.#host.incomingReactions();
@@ -430,17 +446,20 @@ export class CardRerolls {
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced: target.replaced,
 				previousResult: target.previousResult,
-				makeRoll: (formula, options) => target.makeRoll(formula, options),
+				makeRoll: (formula, options, changes) => target.makeRoll(formula, options, changes),
 				readNewDie: target.readNewDie?.bind(target),
 				earlierCritTriggers,
-				place: ({ roll, reroll, discardedCritTriggers }) =>
-					this.#placeReroll(next.entry, target, roll, {
-						reroll,
-						discardedCritTriggers,
+				place: async (done) => {
+					await this.#addGrants(done, next.rule, rollTarget);
+					return this.#placeReroll(next.entry, target, done.roll, {
+						reroll: done.reroll,
+						discardedCritTriggers: done.discardedCritTriggers,
 						list: 'append',
-					}),
+					});
+				},
 			});
 			if (result.status === 'failed') throw result.error;
+			if (result.status === 'done') await this.#applyGrants(result.reroll, next.rule);
 		} catch (error) {
 			console.error('Nimble | An automatic reroll failed.', error);
 		}
@@ -625,19 +644,21 @@ export class CardRerolls {
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,
-			makeRoll: (formula, options) => target.makeRoll(formula, options),
+			makeRoll: (formula, options, changes) => target.makeRoll(formula, options, changes),
 			readNewDie: target.readNewDie?.bind(target),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
-			place: (done) =>
-				chooserUuid
-					? this.#waitForKeep(entry, target, done, chooserUuid)
-					: this.#placeReroll(entry, target, done.roll, {
-							reroll: done.reroll,
-							discardedCritTriggers: done.discardedCritTriggers,
-							list: 'new',
-						}),
+			place: async (done) => {
+				await this.#addGrants(done, usable.rule, rollTarget);
+				if (chooserUuid) return this.#waitForKeep(entry, target, done, chooserUuid);
+				return this.#placeReroll(entry, target, done.roll, {
+					reroll: done.reroll,
+					discardedCritTriggers: done.discardedCritTriggers,
+					list: 'new',
+				});
+			},
 		});
+		if (result.status === 'done') await this.#applyGrants(result.reroll, usable.rule);
 		if (result.status === 'unpaid') {
 			return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
 		}

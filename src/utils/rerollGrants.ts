@@ -1,4 +1,6 @@
+import type { MeasurableTokenDocument } from '#types/movement.js';
 import type { RerollGrant } from './incomingReactionEntry.js';
+import { spacesBetween } from './movement/spacesBetween.js';
 import { countsAsAlly, type ScannedToken } from './rerollAllies.js';
 
 /** What one Modify Reroll rule gives creatures, its formulas already worked out. */
@@ -26,8 +28,11 @@ interface RerollGrantsInput {
 	ownerToken: ScannedToken | null;
 	actionState: (actor: GrantActor) => ActionState;
 	featureEffects: boolean;
-	measure: (a: ScannedToken, b: ScannedToken) => number;
+	measure?: (a: ScannedToken, b: ScannedToken) => number;
 }
+
+const measureOnGrid = (a: ScannedToken, b: ScannedToken) =>
+	spacesBetween(a as unknown as MeasurableTokenDocument, b as unknown as MeasurableTokenDocument);
 
 /** The creatures that gain temp HP: allies of the one who rolled near the owner, not the owner. */
 function tempHpCreatures(
@@ -44,7 +49,7 @@ function tempHpCreatures(
 			continue;
 		const isRoller = token.uuid === rollerToken.uuid;
 		if (!isRoller && !countsAsAlly(rollerToken, token)) continue;
-		if (within > 0 && input.measure(ownerToken, token) > within) continue;
+		if (within > 0 && (input.measure ?? measureOnGrid)(ownerToken, token) > within) continue;
 		found.set(actor.uuid, { actor, token });
 	}
 	return [...found.values()];

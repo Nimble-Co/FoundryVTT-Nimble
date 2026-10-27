@@ -1,4 +1,5 @@
 import type { RollChange } from './incomingReactionEntry.js';
+import type { GrantModifier } from './rerollGrants.js';
 import type { RerollRollKind } from './rollToReroll.js';
 
 /** A `modifyReroll` rule as the reroll code reads it. */
@@ -9,6 +10,9 @@ interface ModifyRerollRuleLike {
 	rerollIdentifier?: string;
 	rollModeChange?: number;
 	extraDamage?: string;
+	actionsForRoller?: number;
+	tempHp?: string;
+	tempHpWithin?: number;
 	appliesTo?: () => boolean;
 	item?: { name?: string; uuid?: string } | null;
 }
@@ -73,6 +77,40 @@ function modifyRerollChanges(
 	return changes.filter((change) => !applied.includes(change.key));
 }
 
+/** A formula of a Modify Reroll rule worked out with its owner's values. */
+async function evaluateOwnerFormula(formula: string, owner: ModifierOwner | null | undefined) {
+	const text = formula.trim();
+	if (!text) return 0;
+	const replaced = Roll.replaceFormulaData(text, owner?.getRollData?.() ?? {}, { missing: '0' });
+	let value = Number(replaced);
+	if (!Number.isFinite(value)) {
+		const roll = new Roll(replaced);
+		await roll.evaluate();
+		value = Number(roll.total) || 0;
+	}
+	return Math.trunc(value);
+}
+
+/** What the owner's Modify Reroll rules give creatures on each use of the reroll. */
+async function grantModifiers(reroll: {
+	identifier?: string;
+	actor?: ModifierOwner | null;
+}): Promise<GrantModifier[]> {
+	const modifiers: GrantModifier[] = [];
+	for (const modifier of modifyRerollRules(reroll)) {
+		const actions = Math.max(0, Math.trunc(Number(modifier.actionsForRoller) || 0));
+		const tempHp = Math.max(0, await evaluateOwnerFormula(modifier.tempHp ?? '', reroll.actor));
+		if (actions < 1 && tempHp < 1) continue;
+		modifiers.push({
+			label: modifier.item?.name ?? '',
+			actions,
+			tempHp,
+			tempHpWithin: Math.max(0, Number(modifier.tempHpWithin) || 0),
+		});
+	}
+	return modifiers;
+}
+
 /** The changes with their extra damage rolled, as the card stores them. */
 async function resolveRollChanges(changes: readonly ModifyRerollChange[]): Promise<RollChange[]> {
 	const resolved: RollChange[] = [];
@@ -100,6 +138,8 @@ async function resolveRollChanges(changes: readonly ModifyRerollChange[]): Promi
 export {
 	type ModifyRerollChange,
 	type ModifyRerollRuleLike,
+	grantModifiers,
+	type ModifierOwner,
 	modifyRerollChanges,
 	modifyRerollRules,
 	resolveRollChanges,
