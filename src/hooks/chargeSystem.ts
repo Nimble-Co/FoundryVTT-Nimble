@@ -8,6 +8,7 @@ import { RECOVERY_GIVEN_FLAG } from '#utils/chargePool/chargePoolReroll.js';
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import { critTriggerOutcome } from '#utils/firesCritTriggers.js';
+import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 
@@ -210,10 +211,12 @@ function getCombatIdentifier(combat: Combat): string | null {
 	return combatId.length > 0 ? combatId : null;
 }
 
+/** Every client sees the combat hooks; only the active GM writes the recovery. */
 function applyEncounterRecoveryToCombatants(
 	combat: Combat,
 	encounterTrigger: 'encounterStart' | 'encounterEnd',
 ): void {
+	if (!isActiveGM()) return;
 	for (const combatant of combat.combatants.contents) {
 		const actor = combatant.actor;
 		if (!actor || actor.type !== 'character') continue;
