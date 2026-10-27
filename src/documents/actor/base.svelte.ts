@@ -18,6 +18,7 @@ import {
 import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import localize from '../../utils/localize.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
 import parseMonsterLevel from '../../utils/parseMonsterLevel.js';
 import type { RerollingActor } from '../../utils/rerollEntries.js';
@@ -715,9 +716,13 @@ class NimbleBaseActor<
 
 		if (healingType === 'tempHealing') {
 			if (healingAmount <= temp) {
-				ui.notifications.warn('Temporary hit points were not granted to {this.name}. ', {
-					localize: true,
-				});
+				ui.notifications.warn(
+					localize('NIMBLE.healingTypes.tempHealingNotGranted', {
+						name: this.name,
+						temp: String(temp),
+						amount: String(healingAmount),
+					}),
+				);
 				return;
 			}
 

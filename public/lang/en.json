@@ -638,7 +638,8 @@
 		},
 		"healingTypes": {
 			"healing": "Healing",
-			"tempHealing": "Temporary Healing"
+			"tempHealing": "Temporary Healing",
+			"tempHealingNotGranted": "{name} keeps their own {temp} temp HP, which is not less than {amount}."
 		},
 		"languages": {
 			"common": "Common",
