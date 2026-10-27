@@ -375,4 +375,11 @@
 	--nimble-ui-edge: hsl(41, 26%, 40%);
 	--nimble-ui-focus: hsl(22, 100%, 30%);
 	--nimble-ui-chrome: hsl(0, 0%, 24%);
+
+	/** POOL KINDS: one tone each, the parts darken it in the light theme **/
+	--nimble-pool-mana-color: hsl(212, 65%, 70%);
+	--nimble-pool-dice-color: hsl(1, 70%, 70%);
+	--nimble-pool-charges-color: hsl(205, 60%, 70%);
+	--nimble-pool-uses-color: hsl(300, 45%, 76%);
+	--nimble-mana-fill: linear-gradient(to right, hsl(207deg 47% 20%) 0%, hsl(212deg 47% 44%) 100%);
 }
