@@ -34,6 +34,7 @@ For what the content *should say* mechanically, defer to the nimble-rules-agent 
 Reference format: `Compendium.nimble.<compendium-id>.Item.<id>` (or `.Actor.<id>`, `.RollTable.<id>`, matching the pack's document type). Verify a UUID resolves to a real file before shipping it — a dead `grantItem` uuid fails silently at the table.
 
 ## Invariants
+- File format: tab indent and NO final newline, as `pnpm build` writes it (`build/lib/Pack.mjs`). A pack file with a final newline shows as changed after every build.
 - Abilities: `strength`, `dexterity`, `intelligence`, `will` only.
 - Skills: the 10 in `src/config.ts` only.
 - Spell `tier` 0-9 (0 is a cantrip); `school` is a key of `spellSchools` in `src/config.ts` (fire, ice, lightning, necrotic, radiant, wind).
