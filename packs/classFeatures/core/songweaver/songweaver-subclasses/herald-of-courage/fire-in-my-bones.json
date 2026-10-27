@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyReroll",
+				"disabled": false,
+				"id": "6rJVNCnwFNiKH5D1",
+				"identifier": "",
+				"label": "Fire in my Bones: +1 action for the target",
+				"predicate": {},
+				"priority": 1,
+				"suppressActivationCard": "auto",
+				"rerollIdentifier": "songweavers-inspiration",
+				"rollModeChange": 0,
+				"extraDamage": "",
+				"actionsForRoller": 1,
+				"tempHp": "",
+				"tempHpWithin": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

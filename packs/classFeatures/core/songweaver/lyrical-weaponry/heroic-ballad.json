@@ -6,7 +6,37 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "WsahvMpr5UZttmr1",
+				"identifier": "",
+				"label": "Heroic Ballad: +2 max Songweaver's Inspiration charges",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "songweavers-inspiration",
+				"dieSize": null,
+				"maxDelta": "2"
+			},
+			{
+				"type": "modifyReroll",
+				"disabled": false,
+				"id": "3sarD7NY2XSbU6Ws",
+				"identifier": "",
+				"label": "Heroic Ballad: +WIL damage on a rerolled attack",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rerollIdentifier": "songweavers-inspiration",
+				"rollModeChange": 0,
+				"extraDamage": "@will",
+				"actionsForRoller": 0,
+				"tempHp": "",
+				"tempHpWithin": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

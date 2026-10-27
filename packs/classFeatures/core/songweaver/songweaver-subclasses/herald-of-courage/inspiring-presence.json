@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyReroll",
+				"disabled": false,
+				"id": "twYeLI5LqpF3fUsS",
+				"identifier": "",
+				"label": "Inspiring Presence: WIL temp HP to allies within 12 spaces",
+				"predicate": {},
+				"priority": 1,
+				"suppressActivationCard": "auto",
+				"rerollIdentifier": "songweavers-inspiration",
+				"rollModeChange": 0,
+				"extraDamage": "",
+				"actionsForRoller": 0,
+				"tempHp": "@will",
+				"tempHpWithin": 12
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
