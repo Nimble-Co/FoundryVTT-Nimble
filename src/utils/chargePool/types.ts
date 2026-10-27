@@ -19,6 +19,8 @@ type ChargeRecoveryEntry = {
 	predicate?: Record<string, unknown>;
 	/** An `add` with this flag gives temporary uses: spent first, gone when the encounter ends. */
 	temporary?: boolean;
+	/** The feature that added this entry to another feature's pool. Absent for the pool's own. */
+	source?: string;
 };
 
 type ChargePoolState = {
@@ -114,6 +116,7 @@ type ModifyPoolRuleLike = {
 	dieSize?: string | null;
 	maxDelta?: string | null;
 	addRefills?: unknown;
+	item?: { name?: string } | null;
 };
 
 type PoolMaxBonusRuleLike = {

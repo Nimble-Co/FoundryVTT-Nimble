@@ -339,7 +339,10 @@ function applyModifiersToDefinition(
 		// can give an existing pool a new way to come back without the pool's own
 		// rule knowing about it. The modifier's rule-level predicate already gated
 		// inclusion, so entries land unconditionally once it applies.
-		const contributed = normalizeRecoveries(modifier.addRefills);
+		const source = modifier.item?.name;
+		const contributed = normalizeRecoveries(modifier.addRefills).map((entry) =>
+			source ? { ...entry, source } : entry,
+		);
 		if (contributed.length > 0) {
 			recoveries = [...recoveries, ...contributed];
 		}
@@ -858,6 +861,15 @@ async function persistChargePoolMap(
 	await Promise.all(itemUpdates);
 }
 
+/** The names of the features whose recoveries give the pool temporary uses. */
+function temporaryUseSources(pool: ChargePoolState | undefined): string[] {
+	const names = (pool?.recoveries ?? [])
+		.filter((recovery) => recovery.temporary)
+		.map((recovery) => recovery.source ?? pool?.sourceItemName ?? '')
+		.filter((name) => name.length > 0);
+	return [...new Set(names)];
+}
+
 function areRecoveryEntriesEqual(
 	left: ChargeRecoveryEntry[],
 	right: ChargeRecoveryEntry[],
@@ -871,7 +883,8 @@ function areRecoveryEntriesEqual(
 			leftEntry.trigger !== rightEntry.trigger ||
 			leftEntry.mode !== rightEntry.mode ||
 			leftEntry.value !== rightEntry.value ||
-			(leftEntry.temporary ?? false) !== (rightEntry.temporary ?? false)
+			(leftEntry.temporary ?? false) !== (rightEntry.temporary ?? false) ||
+			(leftEntry.source ?? '') !== (rightEntry.source ?? '')
 		) {
 			return false;
 		}
@@ -968,5 +981,6 @@ export {
 	persistChargePoolMap,
 	areRecoveryEntriesEqual,
 	areChargePoolStatesEqual,
+	temporaryUseSources,
 	areChargePoolMapsEqual,
 };

@@ -2,13 +2,25 @@
 	import type { ResourceBarProps } from '#types/components/ResourceBar.d.ts';
 	import localize from '#utils/localize.js';
 
-	let { current, max, label, temporary = 0, updateCurrent }: ResourceBarProps = $props();
+	let {
+		current,
+		max,
+		label,
+		temporary = 0,
+		temporarySource = '',
+		updateCurrent,
+	}: ResourceBarProps = $props();
 
 	const percent = (value: number) =>
 		max > 0 ? Math.clamp(Math.round((value / max) * 100), 0, 100) : 0;
 	const shownTemporary = $derived(Math.clamp(temporary, 0, current));
 	const temporaryTooltip = $derived(
-		localize('NIMBLE.charges.temporaryUses', { count: String(shownTemporary) }),
+		temporarySource
+			? localize('NIMBLE.charges.temporaryUsesFrom', {
+					count: String(shownTemporary),
+					source: temporarySource,
+				})
+			: localize('NIMBLE.charges.temporaryUses', { count: String(shownTemporary) }),
 	);
 </script>
 

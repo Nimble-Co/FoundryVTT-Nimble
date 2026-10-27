@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
 	import localize from '#utils/localize.js';
+	import { temporaryUseSources } from '#utils/chargePool/helpers.js';
 	import { poolHeading } from '#utils/chargePool/poolHeading.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import { PORTRAIT_FALLBACK_IMAGE } from '#view/ui/ctTopTracker/constants.js';
@@ -326,6 +327,7 @@
 					max={pool.max}
 					label={pool.label}
 					temporary={pool.temporary ?? 0}
+					temporarySource={temporaryUseSources(pool).join(', ')}
 					updateCurrent={(value) => updatePoolCurrent(pool.id, value)}
 				/>
 			{/each}

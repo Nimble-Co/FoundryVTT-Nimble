@@ -10,6 +10,8 @@ import {
 	applyRestRecovery,
 } from '#utils/chargePool/chargePoolRecover.js';
 import { getPoolsForItem, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
+import { buildEffectiveChargePoolMap, temporaryUseSources } from '#utils/chargePool/helpers.js';
+import type { CharacterActorLike } from '#utils/chargePool/types.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 
 type MockRule = {
@@ -1746,6 +1748,38 @@ describe('ChargePoolService', () => {
 			await applyRecoveryToActorIfEligible(actor, 'onInitiativeRolled');
 
 			expect(pool()).toMatchObject({ current: 5, temporary: 2 });
+		});
+
+		it('names the features that give temporary uses, for the sheet', () => {
+			const own = songweaver(3, 0, [quickWit]).actor;
+			const added = songweaver(3).actor;
+			const items = (added as unknown as MockActor).items.contents;
+			items.push({
+				...items[0],
+				id: 'quick-wit',
+				name: 'Quick Wit',
+				rules: new Map([
+					[
+						'0',
+						{
+							type: 'modifyPool',
+							poolType: 'charge',
+							poolIdentifier: 'inspiration',
+							addRefills: [quickWit],
+							item: { name: 'Quick Wit' },
+						} as unknown as MockRule,
+					],
+				]),
+				flags: { nimble: { chargePools: {} } },
+			});
+
+			const sources = (actor: Actor.Implementation) =>
+				temporaryUseSources(
+					buildEffectiveChargePoolMap(actor as unknown as CharacterActorLike).inspiration,
+				);
+			expect(sources(own)).toEqual(["Songweaver's Inspiration"]);
+			expect(sources(added)).toEqual(['Quick Wit']);
+			expect(sources(songweaver(3).actor)).toEqual([]);
 		});
 
 		it('spends temporary uses first', async () => {

@@ -2081,6 +2081,7 @@
 		"charges": {
 			"header": "Charges",
 			"temporaryUses": "{count} temporary: spent first, gone when the encounter ends.",
+			"temporaryUsesFrom": "{count} temporary from {source}: spent first, gone when the encounter ends.",
 			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
