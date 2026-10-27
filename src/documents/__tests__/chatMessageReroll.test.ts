@@ -863,16 +863,20 @@ describe('resolveRerollReaction', () => {
 								started: true,
 								combatants: {
 									get: (id: string) => all.find((c) => c.id === id) ?? null,
-									find: (fn: (c: Combatant) => boolean) => all.find(fn),
 									contents: all,
 								},
+								getCombatantsByActor: (actor: unknown) => all.filter((c) => c.actor === actor),
 							}
 						: null;
 				return combatant;
 			}
 
+			let previousCombat: unknown;
+			beforeEach(() => {
+				previousCombat = (globals().game as Record<string, unknown>).combat;
+			});
 			afterEach(() => {
-				(globals().game as Record<string, unknown>).combat = null;
+				(globals().game as Record<string, unknown>).combat = previousCombat;
 			});
 
 			it('gives temp HP to allies and an action to the one who rolled, and keeps the list', async () => {
@@ -951,8 +955,11 @@ describe('resolveRerollReaction', () => {
 				message.update.mockRejectedValueOnce(new Error('write failed'));
 				const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-				await message.resolveRerollReaction('entry-1', 'gm-user');
-				error.mockRestore();
+				try {
+					await message.resolveRerollReaction('entry-1', 'gm-user');
+				} finally {
+					error.mockRestore();
+				}
 
 				expect(world.attacker.applyHealing).not.toHaveBeenCalled();
 				expect(combatant.update).not.toHaveBeenCalled();

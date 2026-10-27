@@ -1,24 +1,22 @@
-import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import type { RerollGrant } from '../../utils/incomingReactionEntry.js';
-import { grantModifiers, type ModifierOwner } from '../../utils/modifyReroll.js';
-import { requestCombatantActionDelta } from '../../utils/requestCombatantActionDelta.js';
-import { rollerTokenOf } from '../../utils/rerollAllies.js';
-import type { RerollingActor, RerollRuleLike } from '../../utils/rerollEntries.js';
-import { type ActionState, rerollGrants } from '../../utils/rerollGrants.js';
+import type { RerollGrant } from '#utils/incomingReactionEntry.js';
+import { grantModifiers, type ModifierOwner } from '#utils/modifyReroll.js';
+import { requestCombatantActionDelta } from '#utils/requestCombatantActionDelta.js';
+import { rollerTokenOf } from '#utils/rerollAllies.js';
+import type { RerollingActor, RerollRuleLike } from '#utils/rerollEntries.js';
+import { type ActionState, rerollGrants } from '#utils/rerollGrants.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 interface CombatantLike {
 	id?: string | null;
 	type?: string;
-	actor?: { uuid?: string } | null;
 }
 
 function combatantOf(actorUuid: string): { combat: Combat; combatant: CombatantLike } | null {
 	const combat = game.combat as (Combat & { started?: boolean }) | null | undefined;
 	if (!combat?.started) return null;
-	const combatants = combat.combatants as unknown as {
-		find(fn: (c: CombatantLike) => boolean): CombatantLike | undefined;
-	};
-	const combatant = combatants.find((c) => c.actor?.uuid === actorUuid);
+	const actor = fromUuidSync(actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+	if (!actor) return null;
+	const [combatant] = combat.getCombatantsByActor(actor) as unknown as CombatantLike[];
 	return combatant ? { combat, combatant } : null;
 }
 
