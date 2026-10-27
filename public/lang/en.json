@@ -1236,7 +1236,7 @@
 					},
 					"temporary": {
 						"label": "Temporary uses",
-						"hint": "Charge pools only, with \"add\". The uses this adds are spent first and go away when the encounter ends."
+						"hint": "Only on a charge pool, with the \"add\" mode. These uses are spent first. They go away when the encounter ends."
 					}
 				}
 			},
@@ -1670,39 +1670,39 @@
 				}
 			},
 			"modifyReroll": {
-				"description": "Add to a Reroll rule on the same character, found by its identifier: a change to the new roll, or something the one who rolled and their allies gain each time the reroll is used.",
+				"description": "Adds to a Reroll rule on this character. It can change the new roll. It can also give actions and temp HP each time the reroll is used.",
 				"rerollIdentifier": {
 					"label": "Reroll identifier",
-					"hint": "The identifier of the Reroll rule this rule adds to. Only Reroll rules on the same character count."
+					"hint": "Type the identifier of the Reroll rule to add to. That rule must be on this character."
 				},
 				"rollModeChange": {
-					"label": "Roll the reroll with",
-					"hint": "Advantage or disadvantage on the reroll. For a reroll of one die, that die is rolled two times. Counts once per attack or check."
+					"label": "Advantage or disadvantage",
+					"hint": "On the new roll. For a reroll of one die, that die is rolled two times."
 				},
 				"extraDamage": {
 					"label": "Extra damage",
-					"hint": "Added to an attack's damage when its result stands. Uses this character's values, for example @will. Counts once per attack."
+					"hint": "A formula, such as 1d6 or @will. It is added to the attack's damage when its result stands. Values such as @will come from this character."
 				},
 				"actionsForRoller": {
 					"label": "Actions for the one who rolled",
-					"hint": "The one who rolled gains this many actions at once. Only in combat, and only for a hero."
+					"hint": "The one who rolled gains this many actions immediately. This applies only in combat and only to a hero."
 				},
 				"tempHp": {
-					"label": "Temp HP for allies",
-					"hint": "Allies of the one who rolled, the one who rolled included, gain this temp HP. A creature that already has more keeps its own. Uses this character's values, for example @will."
+					"label": "Temp HP for the one who rolled and allies",
+					"hint": "The one who rolled and their allies gain this temp HP. This character does not gain it. A creature with more temp HP keeps its own. Values such as @will come from this character."
 				},
 				"tempHpWithin": {
-					"label": "Allies within (spaces)",
-					"hint": "Only allies this many spaces or fewer from this character's token. 0 means any distance. With no token for this character, nobody gains temp HP."
+					"label": "Reach",
+					"hint": "How many spaces a creature can be from this character's token. 0 is any distance. If this character has no token, no creature gains temp HP."
 				},
 				"form": {
 					"roll": {
-						"label": "What changes on the roll?",
-						"hint": "These apply once per attack or check, however many times the reroll is used."
+						"label": "Changes to the new roll",
+						"hint": "These count one time per attack or check. Using the reroll again does not add them again."
 					},
 					"creatures": {
 						"label": "What do creatures gain?",
-						"hint": "Each use of the reroll gives these again."
+						"hint": "Creatures gain these each time the reroll is used."
 					}
 				}
 			},
