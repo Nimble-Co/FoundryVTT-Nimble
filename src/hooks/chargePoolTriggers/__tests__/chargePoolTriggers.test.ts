@@ -226,6 +226,71 @@ describe('registerInitiativeTriggerHooks', () => {
 		expect(threw).toBe(false);
 	});
 
+	describe('a pool that refills when Initiative is rolled', () => {
+		function commander(start: number) {
+			const pools: Record<string, unknown> = {
+				dice: { current: start, max: 5, recoveries: [] },
+			};
+			const actor: Record<string, unknown> = {
+				uuid: 'Actor.commander',
+				type: 'character',
+				flags: { nimble: {} },
+				getRollData: () => ({}),
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					for (const [path, value] of Object.entries(changes)) {
+						foundry.utils.setProperty(actor, path, value);
+					}
+				}),
+			};
+			const item = {
+				id: 'combat-dice',
+				name: 'Combat Dice',
+				actor,
+				flags: { nimble: { chargePools: pools } },
+				rules: new Map([
+					[
+						'0',
+						{
+							type: 'chargePool',
+							id: 'pool',
+							identifier: 'dice',
+							scope: 'item',
+							max: '5',
+							initial: 'max',
+							recoveries: [{ trigger: 'onInitiativeRolled', mode: 'add', value: '2' }],
+						},
+					],
+				]),
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					const payload = changes['flags.nimble.chargePools'] as Record<string, unknown>;
+					Object.assign(item.flags.nimble.chargePools, payload);
+				}),
+			};
+			actor.items = { contents: [item], get: () => item };
+			const current = () => (item.flags.nimble.chargePools.dice as { current: number }).current;
+			return { actor, current };
+		}
+
+		const rolledIn = (combatId: string) => ({ parent: { id: combatId } });
+
+		it('refills once per combat, however many times Initiative is rolled', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+			registerInitiativeTriggerHooks();
+			const hook = callbacks.get('nimble.initiativeRolled');
+			const { actor, current } = commander(0);
+
+			await hook?.({ actor, combatant: rolledIn('combat-1') });
+			await vi.waitFor(() => expect(current()).toBe(2));
+			await hook?.({ actor, combatant: rolledIn('combat-1') });
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(current()).toBe(2);
+
+			await hook?.({ actor, combatant: rolledIn('combat-2') });
+			await vi.waitFor(() => expect(current()).toBe(4));
+		});
+	});
+
 	it('does not throw when payload has no actor', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
