@@ -34,6 +34,7 @@ import { MaxWoundsRule } from '../models/rules/maxWounds.js';
 import { ModifyConsumerRule } from '../models/rules/modifyConsumer.js';
 import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
+import { ModifyRerollRule } from '../models/rules/modifyReroll.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
@@ -89,6 +90,7 @@ export default function registerRulesConfig() {
 		modifyIncomingAttack: 'NIMBLE.ruleTypes.modifyIncomingAttack',
 		modifyConsumer: 'NIMBLE.ruleTypes.modifyConsumer',
 		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
+		modifyReroll: 'NIMBLE.ruleTypes.modifyReroll',
 		modifyToggle: 'NIMBLE.ruleTypes.modifyToggle',
 		movementTrigger: 'NIMBLE.ruleTypes.movementTrigger',
 		note: 'NIMBLE.ruleTypes.note',
@@ -144,6 +146,7 @@ export default function registerRulesConfig() {
 		modifyIncomingAttack: ModifyIncomingAttackRule,
 		modifyConsumer: ModifyConsumerRule,
 		modifyPool: ModifyPoolRule,
+		modifyReroll: ModifyRerollRule,
 		modifyToggle: ModifyToggleRule,
 		movementTrigger: MovementTriggerRule,
 		note: NoteRule,

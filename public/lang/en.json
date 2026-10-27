@@ -1027,6 +1027,7 @@
 			"modifyConsumer": "Modify Consumer",
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
+			"modifyReroll": "Modify Reroll",
 			"modifyToggle": "Modify Toggle",
 			"movementTrigger": "Movement Trigger",
 			"note": "Note",
@@ -1641,6 +1642,43 @@
 				"addRefills": {
 					"label": "Additional refills",
 					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition."
+				}
+			},
+			"modifyReroll": {
+				"description": "Add to a Reroll rule on the same character, found by its identifier: a change to the new roll, or something the one who rolled and their allies gain each time the reroll is used.",
+				"rerollIdentifier": {
+					"label": "Reroll identifier",
+					"hint": "The identifier of the Reroll rule this rule adds to. Only Reroll rules on the same character count."
+				},
+				"rollModeChange": {
+					"label": "Roll the reroll with",
+					"hint": "Advantage or disadvantage on the reroll. For a reroll of one die, that die is rolled two times. Counts once per attack or check."
+				},
+				"extraDamage": {
+					"label": "Extra damage",
+					"hint": "Added to an attack's damage when its result stands. Uses this character's values, for example @will. Counts once per attack."
+				},
+				"actionsForRoller": {
+					"label": "Actions for the one who rolled",
+					"hint": "The one who rolled gains this many actions at once. Only in combat, and only for a hero."
+				},
+				"tempHp": {
+					"label": "Temp HP for allies",
+					"hint": "Allies of the one who rolled, the one who rolled included, gain this temp HP. A creature that already has more keeps its own. Uses this character's values, for example @will."
+				},
+				"tempHpWithin": {
+					"label": "Allies within (spaces)",
+					"hint": "Only allies this many spaces or fewer from this character's token. 0 means any distance. With no token for this character, nobody gains temp HP."
+				},
+				"form": {
+					"roll": {
+						"label": "What changes on the roll?",
+						"hint": "These apply once per attack or check, however many times the reroll is used."
+					},
+					"creatures": {
+						"label": "What do creatures gain?",
+						"hint": "Each use of the reroll gives these again."
+					}
 				}
 			},
 			"modifyToggle": {
