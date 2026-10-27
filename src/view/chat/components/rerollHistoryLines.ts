@@ -141,33 +141,57 @@ function grantTags(grants: readonly RerollGrant[]): {
 	let tempHpNote: string | null = null;
 	const first = withTempHp[0]?.tempHp;
 	if (first) {
+		const amount = String(first.amount);
 		const gainers = withTempHp.filter((grant) => grant.tempHp?.keeps === null);
+		const fresh = gainers.filter((grant) => !grant.tempHp?.had);
 		tags.push({
 			kind: 'tempHp',
-			label: localize('NIMBLE.chat.incomingReactions.rerollTags.tempHp', {
-				amount: String(first.amount),
-				count: String(gainers.length),
-			}),
+			label:
+				gainers.length === 0
+					? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpNobody', { amount })
+					: gainers.length === 1
+						? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpOne', {
+								amount,
+								name: gainers[0].name,
+							})
+						: localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpMany', {
+								amount,
+								count: String(gainers.length),
+							}),
 			tooltip: first.source,
 			off: withTempHp.some((grant) => !grant.applied),
 		});
 		const parts: string[] = [];
-		if (gainers.length > 0) {
+		if (fresh.length > 0) {
 			parts.push(
-				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpGain', {
-					names: gainers.map((grant) => grant.name).join(', '),
-					amount: String(first.amount),
+				localize(
+					`NIMBLE.chat.incomingReactions.rerollTags.${fresh.length === 1 ? 'tempHpGainOne' : 'tempHpGain'}`,
+					{ names: fresh.map((grant) => grant.name).join(', '), amount },
+				),
+			);
+		}
+		const replaced = gainers.filter((grant) => grant.tempHp?.had);
+		const kept = withTempHp.filter((grant) => grant.tempHp?.keeps !== null);
+		for (const grant of replaced) {
+			parts.push(
+				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpReplaced', {
+					name: grant.name,
+					had: String(grant.tempHp?.had),
+					amount,
 				}),
 			);
 		}
-		for (const grant of withTempHp) {
-			if (grant.tempHp?.keeps === null || !grant.tempHp) continue;
+		for (const grant of kept) {
 			parts.push(
 				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpKeeps', {
 					name: grant.name,
-					temp: String(grant.tempHp.keeps),
+					had: String(grant.tempHp?.had),
+					amount,
 				}),
 			);
+		}
+		if (replaced.length > 0 || kept.length > 0) {
+			parts.push(localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpChoice'));
 		}
 		tempHpNote = parts.join(' ');
 	}

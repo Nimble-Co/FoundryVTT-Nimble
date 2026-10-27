@@ -168,8 +168,8 @@ export interface RollChange {
 export interface RerollGrant {
 	actorUuid: string;
 	name: string;
-	/** `keeps` is the creature's own temp HP when it is not less than `amount`. */
-	tempHp: { amount: number; keeps: number | null; source: string } | null;
+	/** `had` is the creature's temp HP before; `keeps` is that amount when it is not less than `amount`. */
+	tempHp: { amount: number; had: number; keeps: number | null; source: string } | null;
 	actions: {
 		amount: number;
 		reason: 'notInCombat' | 'notACharacter' | null;

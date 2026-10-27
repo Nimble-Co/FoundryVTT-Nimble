@@ -897,7 +897,7 @@ describe('resolveRerollReaction', () => {
 					{
 						actorUuid: 'Actor.attacker',
 						name: 'Kael',
-						tempHp: { amount: 3, keeps: null, source: 'Inspiring Presence' },
+						tempHp: { amount: 3, had: 0, keeps: null, source: 'Inspiring Presence' },
 						actions: { amount: 1, reason: null, source: 'Fire in my Bones' },
 						applied: true,
 					},

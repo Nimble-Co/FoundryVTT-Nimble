@@ -156,7 +156,7 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 	const gain = (name: string, extra: Record<string, unknown> = {}) => ({
 		actorUuid: `Actor.${name}`,
 		name,
-		tempHp: { amount: 3, keeps: null, source: 'Inspiring Presence' },
+		tempHp: { amount: 3, had: 0, keeps: null, source: 'Inspiring Presence' },
 		actions: null,
 		applied: true,
 		...extra,
@@ -203,16 +203,24 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 				grants: [
 					gain('Wren', { actions: { amount: 1, reason: null, source: 'Fire in my Bones' } }),
 					gain('Pip'),
-					gain('Bram', { tempHp: { amount: 3, keeps: 5, source: 'Inspiring Presence' } }),
+					gain('Bram', { tempHp: { amount: 3, had: 5, keeps: 5, source: 'Inspiring Presence' } }),
+					gain('Tam', { tempHp: { amount: 3, had: 1, keeps: null, source: 'Inspiring Presence' } }),
 				],
 			}),
 		]);
 
 		expect(line.tags).toEqual([
 			{ kind: 'action', label: 'Wren +1 action', tooltip: 'Fire in my Bones', off: false },
-			{ kind: 'tempHp', label: '3 temp HP: 2', tooltip: 'Inspiring Presence', off: false },
+			{
+				kind: 'tempHp',
+				label: '3 temp HP to 3 creatures',
+				tooltip: 'Inspiring Presence',
+				off: false,
+			},
 		]);
-		expect(line.tempHpNote).toBe('Wren, Pip gain 3 temp HP. Bram keeps 5 (larger).');
+		expect(line.tempHpNote).toBe(
+			'Wren, Pip gain 3 temp HP. Tam had 1, now has 3. Bram keeps 5, not 3. Temp HP does not add up. A creature can keep the other amount: change it on its sheet.',
+		);
 		expect(line.offNote).toBeNull();
 	});
 
@@ -228,9 +236,24 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		]);
 
 		expect(line.tags.map((tag) => [tag.kind, tag.label])).toEqual([
-			['tempHp', '3 temp HP: 1'],
+			['tempHp', '3 temp HP to Wren'],
 			['noAction', 'No action: not in combat'],
 		]);
+	});
+
+	it('names the one creature that gains temp HP, and says when nobody gains it', () => {
+		const one = lines([record({ grants: [gain('Pip')] })])[0];
+		const none = lines([
+			record({
+				grants: [
+					gain('Bram', { tempHp: { amount: 3, had: 5, keeps: 5, source: 'Inspiring Presence' } }),
+				],
+			}),
+		])[0];
+
+		expect(one.tags[0].label).toBe('3 temp HP to Pip');
+		expect(one.tempHpNote).toBe('Pip gains 3 temp HP.');
+		expect(none.tags[0].label).toBe('3 temp HP: nobody gains it');
 	});
 
 	it('marks the temp HP and action tags off, with one note, when Feature Effects is off', () => {

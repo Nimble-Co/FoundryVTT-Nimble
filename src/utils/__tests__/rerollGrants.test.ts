@@ -97,14 +97,14 @@ describe('rerollGrants', () => {
 			{
 				actorUuid: 'Actor.Wren',
 				name: 'Wren',
-				tempHp: { amount: 3, keeps: null, source: 'Inspiring Presence' },
+				tempHp: { amount: 3, had: 0, keeps: null, source: 'Inspiring Presence' },
 				actions: null,
 				applied: true,
 			},
 			{
 				actorUuid: 'Actor.Pip',
 				name: 'Pip',
-				tempHp: { amount: 3, keeps: null, source: 'Inspiring Presence' },
+				tempHp: { amount: 3, had: 0, keeps: null, source: 'Inspiring Presence' },
 				actions: null,
 				applied: true,
 			},
@@ -118,7 +118,22 @@ describe('rerollGrants', () => {
 			(row) => row.name === 'Bram',
 		);
 
-		expect(bramRow?.tempHp).toEqual({ amount: 3, keeps: 5, source: 'Inspiring Presence' });
+		expect(bramRow?.tempHp).toEqual({ amount: 3, had: 5, keeps: 5, source: 'Inspiring Presence' });
+	});
+
+	it('gives a creature with less temp HP the new amount, and tells what it had', () => {
+		const [lyra, wren, bram] = scene(hero('Lyra', 0), hero('Wren', 1), hero('Bram', 2, 1));
+
+		const bramRow = grants([lyra, wren, bram], { roller: wren, owner: lyra }).find(
+			(row) => row.name === 'Bram',
+		);
+
+		expect(bramRow?.tempHp).toEqual({
+			amount: 3,
+			had: 1,
+			keeps: null,
+			source: 'Inspiring Presence',
+		});
 	});
 
 	it('gives temp HP at any distance when the range is 0', () => {

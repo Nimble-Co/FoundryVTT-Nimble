@@ -100,6 +100,7 @@ function rerollGrants(input: RerollGrantsInput): RerollGrant[] {
 			const current = Number(actor.system?.attributes?.hp?.temp) || 0;
 			row.tempHp = {
 				amount: modifier.tempHp,
+				had: current,
 				keeps: current >= modifier.tempHp ? current : null,
 				source: modifier.label,
 			};

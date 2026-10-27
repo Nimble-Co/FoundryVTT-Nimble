@@ -278,6 +278,7 @@ const rerollGrant = () =>
 		tempHp: new fields.SchemaField(
 			{
 				amount: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+				had: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 				keeps: new fields.NumberField({ required: true, nullable: true, initial: null }),
 				source: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			},
