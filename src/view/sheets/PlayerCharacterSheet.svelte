@@ -325,6 +325,7 @@
 					current={pool.current}
 					max={pool.max}
 					label={pool.label}
+					temporary={pool.temporary ?? 0}
 					updateCurrent={(value) => updatePoolCurrent(pool.id, value)}
 				/>
 			{/each}
