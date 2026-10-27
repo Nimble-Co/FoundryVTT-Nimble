@@ -77,18 +77,22 @@ function modifyRerollChanges(
 	return changes.filter((change) => !applied.includes(change.key));
 }
 
-/** A formula of a Modify Reroll rule worked out with its owner's values. */
-async function evaluateOwnerFormula(formula: string, owner: ModifierOwner | null | undefined) {
-	const text = formula.trim();
-	if (!text) return 0;
-	const replaced = Roll.replaceFormulaData(text, owner?.getRollData?.() ?? {}, { missing: '0' });
-	let value = Number(replaced);
+/** The whole-number result of a formula that has no `@` values left; dice are rolled. */
+async function rollTotal(formula: string): Promise<number> {
+	let value = Number(formula);
 	if (!Number.isFinite(value)) {
-		const roll = new Roll(replaced);
+		const roll = new Roll(formula);
 		await roll.evaluate();
 		value = Number(roll.total) || 0;
 	}
 	return Math.trunc(value);
+}
+
+/** A formula of a Modify Reroll rule worked out with its owner's values. */
+async function evaluateOwnerFormula(formula: string, owner: ModifierOwner | null | undefined) {
+	const text = formula.trim();
+	if (!text) return 0;
+	return rollTotal(Roll.replaceFormulaData(text, owner?.getRollData?.() ?? {}, { missing: '0' }));
 }
 
 /** What the owner's Modify Reroll rules give creatures on each use of the reroll. */
@@ -119,17 +123,11 @@ async function resolveRollChanges(changes: readonly ModifyRerollChange[]): Promi
 			resolved.push(change);
 			continue;
 		}
-		let value = Number(change.formula);
-		if (!Number.isFinite(value)) {
-			const roll = new Roll(change.formula);
-			await roll.evaluate();
-			value = Number(roll.total) || 0;
-		}
 		resolved.push({
 			key: change.key,
 			kind: change.kind,
 			label: change.label,
-			value: Math.trunc(value),
+			value: await rollTotal(change.formula),
 		});
 	}
 	return resolved;

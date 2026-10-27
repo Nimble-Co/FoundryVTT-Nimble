@@ -1,6 +1,7 @@
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
+import { ROLL_MODE_CHANGE_CHOICES } from './reroll.js';
 
 const givesTempHp = (data: Record<string, unknown>) =>
 	typeof data.tempHp === 'string' && data.tempHp.trim() !== '';
@@ -23,11 +24,7 @@ function schema() {
 			min: -1,
 			max: 1,
 			integer: true,
-			choices: {
-				0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
-				1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
-				[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
-			},
+			choices: ROLL_MODE_CHANGE_CHOICES,
 			label: 'NIMBLE.rules.modifyReroll.rollModeChange.label',
 			hint: 'NIMBLE.rules.modifyReroll.rollModeChange.hint',
 		}),

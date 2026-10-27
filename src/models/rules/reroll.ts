@@ -51,6 +51,13 @@ function rollsInclude(kind: RerollRollKind) {
 const forAttacks = rollsInclude('attack');
 
 // Roll changes apply to a new roll of the whole formula only.
+/** The roll mode change choices: none, advantage or disadvantage. */
+const ROLL_MODE_CHANGE_CHOICES = {
+	0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
+	1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
+	[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
+};
+
 const wholeRoll = (data: Record<string, unknown>) => (data.die ?? 'wholeRoll') === 'wholeRoll';
 const forWholeAttackRolls = (data: Record<string, unknown>) => forAttacks(data) && wholeRoll(data);
 
@@ -227,11 +234,7 @@ function schema() {
 				min: -1,
 				max: 1,
 				integer: true,
-				choices: {
-					0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
-					1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
-					[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
-				},
+				choices: ROLL_MODE_CHANGE_CHOICES,
 				label: 'NIMBLE.rules.reroll.rollModeChange.label',
 				hint: 'NIMBLE.rules.reroll.rollModeChange.hint',
 				showWhen: wholeRoll,
@@ -452,4 +455,4 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 }
 
-export { RerollRule, type RerollOfferContext };
+export { RerollRule, ROLL_MODE_CHANGE_CHOICES, type RerollOfferContext };
