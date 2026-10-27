@@ -1019,12 +1019,16 @@ describe('Reroll rules on the attack', () => {
 				rebuildRoll,
 			);
 
-			expect(rebuildRoll).toHaveBeenCalledWith('1d8 + 2 + (1d6)', {
-				forceMiss: false,
-				rollMode: 0,
-				rollModeSources: [0, -1],
-				primaryDieModifier: 3,
-			});
+			expect(rebuildRoll).toHaveBeenCalledWith(
+				'1d8 + 2 + (1d6)',
+				{
+					forceMiss: false,
+					rollMode: 0,
+					rollModeSources: [0, -1],
+					primaryDieModifier: 3,
+				},
+				expect.objectContaining({ rollModeChange: -1 }),
+			);
 			expect(result.roll).toBe(rebuilt);
 			expect(result.discardedRoll).toEqual({ class: 'DamageRoll', total: 10 });
 			expect(result.stampEntries).toEqual([expect.objectContaining({ id: entry.id, used: true })]);
@@ -1041,6 +1045,8 @@ describe('Reroll rules on the attack', () => {
 						next: { value: 4, outcome: null },
 						usesLeft: null,
 						woundsGained: 0,
+						dropped: null,
+						changes: [],
 					},
 				],
 				discardedCritTriggers: false,

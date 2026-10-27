@@ -251,6 +251,51 @@ const rerollRecord = () =>
 			choices: [...REROLL_KEPT],
 		}),
 		keptTotal: new fields.NumberField({ required: false, nullable: true, initial: null }),
+		dropped: new fields.NumberField({ required: false, nullable: true, initial: null }),
+		changes: new fields.ArrayField(rollChange(), { required: false, nullable: false, initial: [] }),
+		grants: new fields.ArrayField(rerollGrant(), { required: false, nullable: false, initial: [] }),
+	});
+
+const rollChange = () =>
+	new fields.SchemaField({
+		key: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		kind: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'rollMode',
+			choices: ['rollMode', 'extraDamage'],
+		}),
+		label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
+	});
+
+/** What one creature got from a use of a reroll. */
+const rerollGrant = () =>
+	new fields.SchemaField({
+		actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		tempHp: new fields.SchemaField(
+			{
+				amount: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+				keeps: new fields.NumberField({ required: true, nullable: true, initial: null }),
+				source: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			},
+			{ required: false, nullable: true, initial: null },
+		),
+		actions: new fields.SchemaField(
+			{
+				amount: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+				reason: new fields.StringField({
+					required: true,
+					nullable: true,
+					initial: null,
+					choices: ['notInCombat', 'notACharacter'],
+				}),
+				source: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			},
+			{ required: false, nullable: true, initial: null },
+		),
+		applied: new fields.BooleanField({ required: true, nullable: false, initial: true }),
 	});
 
 const keepChoiceRoll = () =>
@@ -266,6 +311,12 @@ const keepChoiceRoll = () =>
 
 export const rerollHistory = () => ({
 	rerolls: new fields.ArrayField(rerollRecord(), { required: false, nullable: false, initial: [] }),
+	// Roll changes of Modify Reroll rules this card applied; each counts once per card.
+	rollChanges: new fields.ArrayField(rollChange(), {
+		required: false,
+		nullable: false,
+		initial: [],
+	}),
 	discardedCritTriggers: new fields.BooleanField({
 		required: false,
 		nullable: false,

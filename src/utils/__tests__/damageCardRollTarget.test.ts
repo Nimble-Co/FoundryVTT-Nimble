@@ -89,6 +89,7 @@ describe('damageCardRollTarget', () => {
 			incomingReactions: [usedEntry],
 			rerolls: [],
 			discardedCritTriggers: false,
+			rollChanges: [],
 		});
 
 		expect(card.update).toHaveBeenCalledTimes(1);
@@ -100,6 +101,7 @@ describe('damageCardRollTarget', () => {
 			incomingReactions: [usedEntry],
 			rerolls: [],
 			discardedCritTriggers: false,
+			rollChanges: [],
 		});
 		expect(changes.system.activation.effects[0]?.discardedRoll).toEqual(serializedRoll());
 		expect(changes.rolls).toHaveLength(1);

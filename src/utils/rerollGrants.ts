@@ -1,3 +1,4 @@
+import type { RerollGrant } from './incomingReactionEntry.js';
 import { countsAsAlly, type ScannedToken } from './rerollAllies.js';
 
 /** What one Modify Reroll rule gives creatures, its formulas already worked out. */
@@ -10,17 +11,6 @@ interface GrantModifier {
 }
 
 type ActionState = 'ok' | 'notInCombat' | 'notACharacter';
-
-/** What one creature gets from a use of a reroll. */
-interface RerollGrant {
-	actorUuid: string;
-	name: string;
-	/** `keeps` is the creature's own temp HP when it is not less than `amount`. */
-	tempHp: { amount: number; keeps: number | null; source: string } | null;
-	actions: { amount: number; reason: Exclude<ActionState, 'ok'> | null; source: string } | null;
-	/** False when Feature Effects is off: the GM applies it by hand. */
-	applied: boolean;
-}
 
 interface GrantActor {
 	uuid: string;

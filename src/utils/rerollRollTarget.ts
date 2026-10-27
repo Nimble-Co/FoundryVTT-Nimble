@@ -1,5 +1,5 @@
 import type { OneDieRoll } from '../dice/oneDieReroll.js';
-import type { IncomingReactionEntry, KeepChoiceRoll } from './incomingReactionEntry.js';
+import type { IncomingReactionEntry, KeepChoiceRoll, RollChange } from './incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
 import type { RerollChanges } from './rerollOptions.js';
 import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
@@ -55,6 +55,8 @@ interface RerollableRoll<TRoll = unknown> {
 /** What the reroll flow adds to the card in the write that places the new roll. */
 interface CardRerollChanges extends RerollHistory {
 	incomingReactions: IncomingReactionEntry[];
+	/** Every roll change of Modify Reroll rules the card has applied. */
+	rollChanges: RollChange[];
 }
 
 /** A new roll that is ready to go on the card. */

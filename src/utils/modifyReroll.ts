@@ -1,3 +1,4 @@
+import type { RollChange } from './incomingReactionEntry.js';
 import type { RerollRollKind } from './rollToReroll.js';
 
 /** A `modifyReroll` rule as the reroll code reads it. */
@@ -72,9 +73,34 @@ function modifyRerollChanges(
 	return changes.filter((change) => !applied.includes(change.key));
 }
 
+/** The changes with their extra damage rolled, as the card stores them. */
+async function resolveRollChanges(changes: readonly ModifyRerollChange[]): Promise<RollChange[]> {
+	const resolved: RollChange[] = [];
+	for (const change of changes) {
+		if (change.kind === 'rollMode') {
+			resolved.push(change);
+			continue;
+		}
+		let value = Number(change.formula);
+		if (!Number.isFinite(value)) {
+			const roll = new Roll(change.formula);
+			await roll.evaluate();
+			value = Number(roll.total) || 0;
+		}
+		resolved.push({
+			key: change.key,
+			kind: change.kind,
+			label: change.label,
+			value: Math.trunc(value),
+		});
+	}
+	return resolved;
+}
+
 export {
 	type ModifyRerollChange,
 	type ModifyRerollRuleLike,
 	modifyRerollChanges,
 	modifyRerollRules,
+	resolveRollChanges,
 };

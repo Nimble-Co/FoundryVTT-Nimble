@@ -192,6 +192,7 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 							system: {
 								incomingReactions: changes.incomingReactions,
 								rerolls: changes.rerolls,
+								rollChanges: changes.rollChanges,
 								pendingKeep: null,
 								rollMode: netRollMode(roll.options as Record<string, unknown>),
 							},

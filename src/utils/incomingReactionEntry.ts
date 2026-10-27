@@ -143,6 +143,38 @@ export interface RerollRecord {
 	kept?: RerollKept | null;
 	/** The total of the kept roll, when a player chose. */
 	keptTotal?: number | null;
+	/** The other result of a die rerolled two times for advantage or disadvantage. */
+	dropped?: number | null;
+	/** The roll changes of Modify Reroll rules this reroll applied. */
+	changes?: RollChange[];
+	/** What creatures got from this use. */
+	grants?: RerollGrant[];
+}
+
+/**
+ * A roll change a Modify Reroll rule adds to a reroll. `key` makes it count
+ * once per card. `value` is the roll mode step, or the extra damage.
+ */
+export interface RollChange {
+	key: string;
+	kind: 'rollMode' | 'extraDamage';
+	label: string;
+	value: number;
+}
+
+/** What one creature got from a use of a reroll. */
+export interface RerollGrant {
+	actorUuid: string;
+	name: string;
+	/** `keeps` is the creature's own temp HP when it is not less than `amount`. */
+	tempHp: { amount: number; keeps: number | null; source: string } | null;
+	actions: {
+		amount: number;
+		reason: 'notInCombat' | 'notACharacter' | null;
+		source: string;
+	} | null;
+	/** False when Feature Effects is off: the GM applies it by hand. */
+	applied: boolean;
 }
 
 export const REROLL_KEPT = ['new', 'old'] as const;

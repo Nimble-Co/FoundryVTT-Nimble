@@ -133,11 +133,15 @@ describe('rerollWithRule', () => {
 			input({ rule: rule({ rerollChanges: () => changes }), makeRoll }),
 		);
 
-		expect(makeRoll).toHaveBeenCalledWith('1d8 + 2 + (1d6)', {
-			rollMode: 0,
-			rollModeSources: [0, -1],
-			primaryDieModifier: 3,
-		});
+		expect(makeRoll).toHaveBeenCalledWith(
+			'1d8 + 2 + (1d6)',
+			{
+				rollMode: 0,
+				rollModeSources: [0, -1],
+				primaryDieModifier: 3,
+			},
+			changes,
+		);
 		expect(result).toMatchObject({ status: 'done', roll: { primaryDieValue: 3 } });
 	});
 
@@ -151,7 +155,7 @@ describe('rerollWithRule', () => {
 	it('reads the formula of a serialized roll that has no original formula', async () => {
 		const makeRoll = vi.fn(async () => ({}));
 		await rerollWithRule(input({ replaced: { formula: '2d6', options: {} }, makeRoll }));
-		expect(makeRoll).toHaveBeenCalledWith('2d6', expect.any(Object));
+		expect(makeRoll).toHaveBeenCalledWith('2d6', expect.any(Object), expect.any(Object));
 	});
 
 	it('pays the cost and keeps the history of the reroll', async () => {

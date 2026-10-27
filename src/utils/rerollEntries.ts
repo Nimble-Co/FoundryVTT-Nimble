@@ -19,6 +19,8 @@ const REROLL_RULE_TYPE = 'reroll';
 interface RerollRuleLike {
 	type?: string;
 	id?: string;
+	/** Modify Reroll rules on the same actor find this rule by it. */
+	identifier?: string;
 	label?: string;
 	disabled?: boolean;
 	item?: { name?: string; uuid?: string } | null;

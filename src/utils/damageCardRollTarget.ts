@@ -271,6 +271,7 @@ async function preparePrimaryDamage(
 					...outcome,
 					incomingReactions: changes.incomingReactions,
 					rerolls: changes.rerolls,
+					rollChanges: changes.rollChanges,
 					discardedCritTriggers: changes.discardedCritTriggers,
 					pendingKeep: null,
 					...card.movementOfferChanges(outcome),

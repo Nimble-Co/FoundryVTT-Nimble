@@ -32,7 +32,9 @@ import type {
 	RerollKeep,
 	RerollKept,
 	RerollRecord,
+	RollChange,
 } from '../../utils/incomingReactionEntry.js';
+import { modifyRerollChanges, resolveRollChanges } from '../../utils/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '../../utils/rerollAllies.js';
 import { diceToPick, rerollableFor } from '../../utils/rerollDieChoice.js';
 import {
@@ -42,11 +44,13 @@ import {
 	offerStands,
 	type RerollingActor,
 	type RerollRollOutcome,
+	type RerollRuleLike,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '../../utils/rerollEntries.js';
 import type { RerollableRoll, RerollRollTarget } from '../../utils/rerollRollTarget.js';
 import { type RerollStepDone, rerollWithRule } from '../../utils/rerollStep.js';
+import type { RerollRollKind } from '../../utils/rollToReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
 
 /**
@@ -196,6 +200,7 @@ export class CardRerolls {
 				incomingReactions: entries,
 				rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
 				discardedCritTriggers: history.discardedCritTriggers,
+				rollChanges: this.#withRollChanges(history.reroll.changes),
 			});
 		} catch (error) {
 			if (rolling && messageId) broadcastRerollRolling(messageId, null);
@@ -316,6 +321,7 @@ export class CardRerolls {
 				system: {
 					incomingReactions: withNewRerollEntries(this.#host.incomingReactions(), found),
 					rerolls: [kept],
+					rollChanges: this.#withRollChanges(kept.changes),
 					pendingKeep: null,
 				},
 			} as Record<string, unknown>);
@@ -362,6 +368,25 @@ export class CardRerolls {
 		return chooser?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
 	}
 
+	/** The roll changes of Modify Reroll rules this card has applied. */
+	#rollChanges(): RollChange[] {
+		return (this.#host.system() as { rollChanges?: RollChange[] }).rollChanges ?? [];
+	}
+
+	#withRollChanges(added: readonly RollChange[] = []): RollChange[] {
+		const applied = this.#rollChanges();
+		const keys = new Set(applied.map((change) => change.key));
+		return [...applied, ...added.filter((change) => !keys.has(change.key))];
+	}
+
+	/** The rule owner's Modify Reroll changes this card has not applied yet. */
+	async #newRollChanges(rule: RerollRuleLike, kind: RerollRollKind): Promise<RollChange[]> {
+		const applied = this.#rollChanges().map((change) => change.key);
+		return resolveRollChanges(
+			modifyRerollChanges(rule as Parameters<typeof modifyRerollChanges>[0], kind, applied),
+		);
+	}
+
 	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */
 	#withEntryUsed(entry: IncomingReactionEntry): IncomingReactionEntry[] {
 		const entries = this.#host.incomingReactions();
@@ -388,10 +413,12 @@ export class CardRerolls {
 			const found = rollTarget?.findRoll();
 			const target = found ? rerollableFor(found, next.rule.die) : null;
 			if (!rollTarget || !target) return;
+			const rollKind = rollTarget.context().roll.kind;
 			const result = await rerollWithRule({
 				rule: next.rule,
 				entry: next.entry,
-				rollKind: rollTarget.context().roll.kind,
+				rollKind,
+				rollChanges: await this.#newRollChanges(next.rule, rollKind),
 				payer: next.rule.actor as Actor | null | undefined,
 				replaced: target.replaced,
 				previousResult: target.previousResult,
@@ -581,10 +608,12 @@ export class CardRerolls {
 		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
 		const chooserUuid = this.#keepChooser(usable.rule.keep, entry, rollTarget);
 		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
+		const rollKind = rollTarget.context().roll.kind;
 		const result = await rerollWithRule({
 			rule: usable.rule,
 			entry,
-			rollKind: rollTarget.context().roll.kind,
+			rollKind,
+			rollChanges: await this.#newRollChanges(usable.rule, rollKind),
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,

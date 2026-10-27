@@ -202,7 +202,12 @@ describe('checkCardRollTarget', () => {
 		expect(prepared.context.roll).toEqual(WILL_SAVE);
 		expect(prepared.entries).toBe(entries);
 
-		await prepared.write({ incomingReactions: entries, rerolls: [], discardedCritTriggers: false });
+		await prepared.write({
+			incomingReactions: entries,
+			rerolls: [],
+			discardedCritTriggers: false,
+			rollChanges: [],
+		});
 
 		expect(vi.mocked(card.update)).toHaveBeenCalledTimes(1);
 		const changes = vi.mocked(card.update).mock.calls[0][0] as {
@@ -214,6 +219,7 @@ describe('checkCardRollTarget', () => {
 		expect(changes.system).toEqual({
 			incomingReactions: entries,
 			rerolls: [],
+			rollChanges: [],
 			pendingKeep: null,
 			rollMode: 0,
 		});
@@ -227,7 +233,12 @@ describe('checkCardRollTarget', () => {
 		const roll = await found.makeRoll('1d20 + 3[Will]', { rollModeSources: [0, 1] });
 
 		const prepared = await found.prepare(roll, []);
-		await prepared.write({ incomingReactions: [], rerolls: [], discardedCritTriggers: false });
+		await prepared.write({
+			incomingReactions: [],
+			rerolls: [],
+			discardedCritTriggers: false,
+			rollChanges: [],
+		});
 
 		const changes = vi.mocked(card.update).mock.calls[0][0] as { system: Record<string, unknown> };
 		expect(changes.system.rollMode).toBe(1);
