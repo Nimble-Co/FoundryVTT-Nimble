@@ -41,15 +41,24 @@ interface RerollableRoll<TRoll = unknown> {
 	current?(): OneDieRoll | null;
 	/** A player can also pick a dropped d20 of this roll. */
 	pickDropped?: boolean;
-	/** A roll as its Keep button shows it. */
-	keepChoice?(roll: unknown): KeepChoiceRoll;
+	/** A roll as its Keep button shows it, with the extra damage of `added` too. */
+	keepChoice?(roll: unknown, added?: readonly RollChange[]): KeepChoiceRoll;
+	/**
+	 * Fold the extra damage of `added` onto the roll as it stands, for a kept
+	 * old result. The card changes to write, or null when there is none.
+	 */
+	foldRollChanges?(added: readonly RollChange[]): Record<string, unknown> | null;
 	/** The dice the 3D dice throw for the new roll. Without it, the whole new roll. */
 	diceToThrow?(roll: TRoll): unknown;
 	/**
 	 * Do the card kind's own work for the new roll, and write nothing yet.
 	 * `entries` are the card's entries with the used entry stamped.
 	 */
-	prepare(roll: TRoll, entries: IncomingReactionEntry[]): Promise<PreparedReroll>;
+	prepare(
+		roll: TRoll,
+		entries: IncomingReactionEntry[],
+		added?: readonly RollChange[],
+	): Promise<PreparedReroll>;
 }
 
 /** What the reroll flow adds to the card in the write that places the new roll. */

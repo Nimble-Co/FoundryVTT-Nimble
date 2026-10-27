@@ -12,7 +12,11 @@ import {
 	removeFlavoredBonusesFromRoll,
 	replaceDamageRollInRollsSource,
 } from './foldBonusIntoPrimaryDamage.js';
-import type { AttackOutcomeView, IncomingReactionEntry } from './incomingReactionEntry.js';
+import type {
+	AttackOutcomeView,
+	IncomingReactionEntry,
+	RollChange,
+} from './incomingReactionEntry.js';
 import { alliesOnCard } from './rerollAllies.js';
 import {
 	offerStands,
@@ -32,6 +36,7 @@ interface DamageCardSystem {
 	isMiss?: boolean;
 	activation?: { effects: unknown[]; [key: string]: unknown };
 	incomingReactions?: IncomingReactionEntry[];
+	rollChanges?: RollChange[];
 }
 
 /** The activation card the damage-card roll target reads and writes. */
@@ -228,6 +233,25 @@ async function carryFoldedSpendsAcrossReroll(
 	return { roll, entries: carriedEntries };
 }
 
+/** The extra damage roll changes of the card, then the `added` ones it does not have yet. */
+function extraDamageChanges(card: DamageCard, added: readonly RollChange[] = []): RollChange[] {
+	const applied = card.system().rollChanges ?? [];
+	const keys = new Set(applied.map((change) => change.key));
+	return [...applied, ...added.filter((change) => !keys.has(change.key))].filter(
+		(change) => change.kind === 'extraDamage',
+	);
+}
+
+function foldRollChanges(
+	roll: Record<string, unknown>,
+	changes: readonly RollChange[],
+): Record<string, unknown> {
+	return changes.reduce(
+		(folded, change) => appendFlavoredBonusToRoll(folded, change.value, change.label),
+		roll,
+	);
+}
+
 /**
  * Get `newRoll` ready to go on the card in place of its primary damage roll;
  * the second result stands. Crit, miss, folded spends, the charge recovery and
@@ -238,6 +262,7 @@ async function preparePrimaryDamage(
 	found: PrimaryDamageRoll,
 	newRoll: DamageRoll,
 	entries: IncomingReactionEntry[],
+	added: readonly RollChange[],
 ): Promise<PreparedReroll> {
 	const { activation, nodes, damageNode } = found;
 	const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
@@ -249,11 +274,12 @@ async function preparePrimaryDamage(
 		{ outcome: newRoll, forcedMiss },
 	);
 
+	const roll = foldRollChanges(carried.roll, extraDamageChanges(card, added));
 	damageNode.discardedRoll = serialized;
-	damageNode.roll = carried.roll;
+	damageNode.roll = roll;
 	activation.effects = reconstructEffectsTree(nodes) as unknown[];
 
-	const rollsSource = replaceDamageRollInRollsSource(card.rollsSource(), carried.roll);
+	const rollsSource = replaceDamageRollInRollsSource(card.rollsSource(), roll);
 	const outcome = { activation, isCritical: newRoll.isCritical, isMiss: newRoll.isMiss };
 
 	return {
@@ -301,25 +327,40 @@ function primaryDamageReroll(
 			await roll.evaluate();
 			return roll;
 		},
-		// Without its folded spends: the reroll folds them in again.
+		// Without its folded spends and extra damage: the reroll folds them in again.
 		current: () =>
 			DamageRoll.fromData(
 				removeFlavoredBonusesFromRoll(
 					foundry.utils.deepClone(previous) as unknown as Record<string, unknown>,
-					(card.system().incomingReactions ?? []).filter(isFoldedSpend).length,
+					(card.system().incomingReactions ?? []).filter(isFoldedSpend).length +
+						extraDamageChanges(card).length,
 				) as unknown as DamageRoll.SerializedData,
 			),
-		keepChoice: (roll) => {
+		keepChoice: (roll, added) => {
 			const shown = roll as { total?: number; isCritical?: boolean; isMiss?: boolean };
 			const folded = (card.system().incomingReactions ?? [])
 				.filter(isFoldedSpend)
 				.reduce((sum, entry) => sum + (entry.usedAmount ?? 0), 0);
+			const extra = extraDamageChanges(card, added).reduce((sum, change) => sum + change.value, 0);
 			return {
-				total: (Number(shown.total) || 0) + folded,
+				total: (Number(shown.total) || 0) + folded + extra,
 				outcome: shown.isCritical ? 'crit' : shown.isMiss ? 'miss' : 'hit',
 			};
 		},
-		prepare: (roll, entries) => preparePrimaryDamage(card, found, roll, entries),
+		foldRollChanges: (added) => {
+			const applied = new Set(extraDamageChanges(card).map((change) => change.key));
+			const fresh = extraDamageChanges(card, added).filter((change) => !applied.has(change.key));
+			if (fresh.length < 1) return null;
+			const roll = foldRollChanges(previous as unknown as Record<string, unknown>, fresh);
+			found.damageNode.roll = roll;
+			found.activation.effects = reconstructEffectsTree(found.nodes) as unknown[];
+			return {
+				rolls: replaceDamageRollInRollsSource(card.rollsSource(), roll),
+				activation: found.activation,
+			};
+		},
+		prepare: (roll, entries, added) =>
+			preparePrimaryDamage(card, found, roll, entries, added ?? []),
 	};
 }
 

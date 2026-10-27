@@ -180,7 +180,11 @@ export class CardRerolls {
 		history: CardReroll,
 		options: { thrown?: boolean } = {},
 	): Promise<void> {
-		const prepared = await target.prepare(newRoll, this.#withEntryUsed(entry));
+		const prepared = await target.prepare(
+			newRoll,
+			this.#withEntryUsed(entry),
+			history.reroll.changes,
+		);
 		const systemData = this.#host.system() as unknown as { rerolls?: RerollRecord[] };
 		const rerolls = collectRerollEntries(prepared.context);
 		const entries = withNewRerollEntries(
@@ -230,7 +234,7 @@ export class CardRerolls {
 		chooserUuid: string,
 	): Promise<void> {
 		const describe = (roll: unknown): KeepChoiceRoll =>
-			target.keepChoice?.(roll) ?? {
+			target.keepChoice?.(roll, done.reroll.changes) ?? {
 				total: Number((roll as { total?: number } | null)?.total) || 0,
 				outcome: null,
 			};
@@ -315,10 +319,14 @@ export class CardRerolls {
 			keptTotal: pending[choice].total,
 		};
 		if (choice === 'old') {
-			const context = this.#rerollTarget()?.context();
+			const rollTarget = this.#rerollTarget();
+			const context = rollTarget?.context();
 			const found = context ? collectRerollEntries(context).manual : [];
+			const folded = rollTarget?.findRoll()?.foldRollChanges?.(kept.changes ?? []) ?? null;
 			await this.#host.update({
+				...(folded ? { rolls: folded.rolls } : {}),
 				system: {
+					...(folded ? { activation: folded.activation } : {}),
 					incomingReactions: withNewRerollEntries(this.#host.incomingReactions(), found),
 					rerolls: [kept],
 					rollChanges: this.#withRollChanges(kept.changes),

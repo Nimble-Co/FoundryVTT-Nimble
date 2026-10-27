@@ -712,6 +712,19 @@ describe('resolveRerollReaction', () => {
 
 		const advantage = () => modifier({ rollModeChange: 1 }, 'Unfailing Courage');
 
+		const rollGlobal = globalThis as unknown as { Roll: { replaceFormulaData?: unknown } };
+		let previousReplace: unknown;
+
+		beforeEach(() => {
+			previousReplace = rollGlobal.Roll.replaceFormulaData;
+			rollGlobal.Roll.replaceFormulaData = (formula: string, data: Record<string, number>) =>
+				formula.replace(/@(\w+)/g, (_match, key: string) => String(data[key] ?? 0));
+		});
+
+		afterEach(() => {
+			rollGlobal.Roll.replaceFormulaData = previousReplace;
+		});
+
 		it('rolls the reroll with the advantage, and the card keeps that it was applied', async () => {
 			const world = setupWorld();
 			withModifiers(world, advantage());
@@ -733,6 +746,81 @@ describe('resolveRerollReaction', () => {
 			expect(system.rollChanges).toEqual([change]);
 			expect((system.rerolls as Array<Record<string, unknown>>)[0].changes).toEqual([change]);
 		});
+
+		const ballad = () => modifier({ extraDamage: '@will' }, 'Heroic Ballad');
+		const balladChange = {
+			key: 'Item.Heroic Ballad#Heroic Ballad-rule:extraDamage',
+			kind: 'extraDamage',
+			label: 'Heroic Ballad',
+			value: 3,
+		};
+
+		function foldedBonuses(serialized: string | Record<string, unknown>) {
+			const roll = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
+			return ((roll.terms ?? []) as Array<{ number?: number; options?: { flavor?: string } }>)
+				.filter((term) => term.options?.flavor === 'Heroic Ballad')
+				.map((term) => term.number);
+		}
+
+		it('adds extra damage to the new roll as a bonus named by its feature', async () => {
+			const world = setupWorld();
+			withModifiers(world, ballad());
+			const message = createMessage();
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			const payload = updatePayload(message);
+			expect(foldedBonuses(payload.rolls[0])).toEqual([3]);
+			expect(foldedBonuses(payload.system.activation.effects[0].roll as never)).toEqual([3]);
+			expect((payload.system as Record<string, unknown>).rollChanges).toEqual([balladChange]);
+		});
+
+		it('carries extra damage the card applied onto a later reroll, once', async () => {
+			const world = setupWorld();
+			withModifiers(world, ballad());
+			const message = createMessage();
+			(message.system as Record<string, unknown>).rollChanges = [balladChange];
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(foldedBonuses(updatePayload(message).rolls[0])).toEqual([3]);
+		});
+
+		it.each(['old', 'new'] as const)(
+			'adds the extra damage to the %s result when a player keeps it',
+			async (choice) => {
+				const world = setupWorld();
+				withModifiers(world, ballad());
+				const message = createMessage({ entries: [rerollEntry({ used: true })] });
+				(message.system as Record<string, unknown>).pendingKeep = {
+					entryId: 'entry-1',
+					chooserUuid: 'Actor.target',
+					roll: { ...serializedRoll(), total: 11 },
+					reroll: {
+						entryId: 'entry-1',
+						itemUuid: 'Item.sand',
+						ruleId: 'reroll-1',
+						label: 'Pocket Sand',
+						actorUuid: 'Actor.target',
+						faces: 6,
+						previous: { value: 4, outcome: null },
+						next: { value: 6, outcome: null },
+						usesLeft: null,
+						woundsGained: 0,
+						changes: [balladChange],
+					},
+					old: { total: 11, outcome: 'hit' },
+					new: { total: 14, outcome: 'hit' },
+					discardedCritTriggers: false,
+				};
+
+				await message.resolveKeepChoice(choice, 'gm-user');
+
+				const payload = updatePayload(message);
+				expect(foldedBonuses(payload.rolls[0])).toEqual([3]);
+				expect((payload.system as Record<string, unknown>).rollChanges).toEqual([balladChange]);
+			},
+		);
 
 		it('applies a roll change once per attack', async () => {
 			const world = setupWorld();
