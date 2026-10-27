@@ -1,8 +1,8 @@
 import type { ReactionCardProps } from '../../../types/components/ReactionCard.d.ts';
-import type { HeroicReactionKey } from '../../utils/heroicActions.js';
+import type { HeroicReactionKey } from '../../utils/incomingReactions/heroicActions.js';
 import getHeroicReactionCostLabel, {
 	type HeroicReactionCostActor,
-} from '../../utils/heroicReactionCostLabel.js';
+} from '../../utils/incomingReactions/heroicReactionCostLabel.js';
 import localize from '../../utils/localize.js';
 import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 

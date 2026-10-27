@@ -12,13 +12,13 @@ import type {
 	ResolvedOptionSwapOffer,
 	ResolvedSwappableOptionPool,
 } from '#types/optionSwap.d.ts';
+import { MAX_SKILL_MODIFIER } from '#utils/actor/skillLimits.ts';
 import countBy from '#utils/countBy.ts';
+import sortDocumentsByName from '#utils/documents/sortDocumentsByName.ts';
 import formatGroupName from '#utils/formatGroupName.ts';
 import localize from '#utils/localize.ts';
-import { isSelectionApplicable } from '#utils/planOptionSwap.ts';
-import type { OptionSwapSource } from '#utils/resolveOptionSwapOffer.ts';
-import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.ts';
-import sortDocumentsByName from '#utils/sortDocumentsByName.ts';
+import { isSelectionApplicable } from '#utils/optionSwap/planOptionSwap.ts';
+import type { OptionSwapSource } from '#utils/optionSwap/resolveOptionSwapOffer.ts';
 import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.ts';
 
 const DEFAULT_SOURCE_IMAGE = 'icons/svg/book.svg';

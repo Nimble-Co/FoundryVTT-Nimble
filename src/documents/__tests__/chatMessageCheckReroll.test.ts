@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import localize from '../../utils/localize.js';
-import { rollingRerollOf, stopRerollRolling } from '../../utils/rerollRolling.svelte.js';
+import { rollingRerollOf, stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 /** Reroll rule entries on save, skill check and ability check cards. */

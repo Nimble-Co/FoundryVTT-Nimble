@@ -1,9 +1,9 @@
 import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
-} from '../../utils/combatantOrdering.js';
-import { canUserTakeCombatTurn } from '../../utils/combatTurnActions.js';
-import { isCombatantDead } from '../../utils/isCombatantDead.js';
+} from '../../utils/combat/combatantOrdering.js';
+import { canUserTakeCombatTurn } from '../../utils/combat/combatTurnActions.js';
+import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import { getCombatantManualSortValue } from './combatantSystem.js';
 import { getSourceSortValueForDrop } from './combatCommon.js';
 import type { DropResolution, DropTargetResolution, TurnIdentity } from './combatTypes.js';

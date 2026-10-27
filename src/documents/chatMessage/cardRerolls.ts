@@ -1,5 +1,4 @@
 import { SYSTEM_ID } from '#system';
-import type { AttackDelivery } from '#utils/attackDelivery.js';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_GIVEN_FLAG,
@@ -7,21 +6,11 @@ import {
 	rerollChargeConsumption,
 } from '#utils/chargePool/chargePoolReroll.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
-import {
-	type CheckCard,
-	type CheckRoll,
-	checkCardRollTarget,
-	checkRollOfCard,
-} from '#utils/checkCardRollTarget.js';
-import {
-	type DamageCard,
-	damageCardRollTarget,
-	damageRollContext,
-} from '#utils/damageCardRollTarget.js';
+import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import {
 	broadcastRerollRolling,
 	rejectIncomingAttackReaction,
-} from '#utils/incomingAttackReactions.js';
+} from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	IncomingReactionEntry,
 	KeepChoiceRoll,
@@ -30,10 +19,21 @@ import type {
 	RerollKept,
 	RerollRecord,
 	RollChange,
-} from '#utils/incomingReactionEntry.js';
-import { newRollChanges } from '#utils/modifyReroll.js';
-import { rollerTokenOf, scanRerollAllies } from '#utils/rerollAllies.js';
-import { diceToPick, rerollableFor } from '#utils/rerollDieChoice.js';
+} from '#utils/incomingReactions/incomingReactionEntry.js';
+import {
+	type CheckCard,
+	type CheckRoll,
+	checkCardRollTarget,
+	checkRollOfCard,
+} from '#utils/reroll/checkCardRollTarget.js';
+import {
+	type DamageCard,
+	damageCardRollTarget,
+	damageRollContext,
+} from '#utils/reroll/damageCardRollTarget.js';
+import { newRollChanges } from '#utils/reroll/modifyReroll.js';
+import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
+import { diceToPick, rerollableFor } from '#utils/reroll/rerollDieChoice.js';
 import {
 	type AutomaticReroll,
 	collectRerollEntries,
@@ -44,12 +44,12 @@ import {
 	type RerollRuleLike,
 	usableRerollEntry,
 	withNewRerollEntries,
-} from '#utils/rerollEntries.js';
-import type { RerollableRoll, RerollRollTarget } from '#utils/rerollRollTarget.js';
-import { type RerollStepDone, rerollWithRule } from '#utils/rerollStep.js';
-import { applyGrants, grantsForUse } from '#utils/rerollUseGrants.js';
-import type { RerollRollKind } from '#utils/rollToReroll.js';
-import { canShowDiceAnimation, showDiceAnimation } from '#utils/showDiceAnimation.js';
+} from '#utils/reroll/rerollEntries.js';
+import type { RerollableRoll, RerollRollTarget } from '#utils/reroll/rerollRollTarget.js';
+import { type RerollStepDone, rerollWithRule } from '#utils/reroll/rerollStep.js';
+import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
+import type { RerollRollKind } from '#utils/reroll/rollToReroll.js';
+import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';

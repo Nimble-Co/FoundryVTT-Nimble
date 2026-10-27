@@ -1,7 +1,7 @@
 import type { ReactionPanelStateOptions } from '../../../../types/components/ReactionPanel.d.ts';
+import showReactionConfirmation from '../../../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../../../utils/localize.js';
-import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
-import { getTargetedTokens } from '../../../utils/targeting.js';
+import { getTargetedTokens } from '../../../utils/tokens/targeting.js';
 
 export default async function handleInterposeAndDefend(
 	options: Pick<

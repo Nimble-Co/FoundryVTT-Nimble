@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import enrichDocumentHTML from '../../../utils/enrichDocumentHTML.js';
+	import enrichDocumentHTML from '../../../utils/documents/enrichDocumentHTML.js';
 
 	let item = getContext('document');
 

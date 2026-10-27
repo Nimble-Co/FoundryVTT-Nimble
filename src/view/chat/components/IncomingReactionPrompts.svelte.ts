@@ -5,13 +5,13 @@ import type {
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
 import type { RollRerollChoice } from '#types/components/RollRerollButton.d.ts';
-import { requestIncomingAttackReaction } from '#utils/incomingAttackReactions.js';
+import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	DieOutcome,
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
-} from '#utils/incomingReactionEntry.ts';
+} from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
 import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';

@@ -2,9 +2,9 @@ import type { SpellDisplayData } from '#types/components/LevelUpSpellCard.d.ts';
 import type { SpellSystemData } from '#types/components/SpellReferenceCard.d.ts';
 import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import { flattenActivationEffects } from '#utils/activationEffects.js';
-import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
-import type { SpellIndexEntry } from '#utils/getSpells.js';
+import formatActivationCostLabel from '#utils/combat/formatActivationCostLabel.js';
 import localize from '#utils/localize.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 import {
 	formatSpellCostLabel,
 	resolveEffectiveCastTier,

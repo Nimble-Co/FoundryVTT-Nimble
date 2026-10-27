@@ -4,8 +4,8 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import type { NimbleSpellItem } from '#documents/item/spell.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
-import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
-import resolveContentLinks from '#utils/resolveContentLinks.js';
+import formatActivationCostLabel from '#utils/combat/formatActivationCostLabel.js';
+import resolveContentLinks from '#utils/documents/resolveContentLinks.js';
 
 /** Estimated characters per column based on PDF config */
 const CHARS_PER_COLUMN = 1150;

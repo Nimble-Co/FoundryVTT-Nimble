@@ -3,7 +3,7 @@ import {
 	ClassResourceManager,
 } from '../../managers/ClassResourceManager.js';
 import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
-import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
+import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { NimbleBaseItem } from './base.svelte.js';
 

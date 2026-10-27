@@ -1,4 +1,4 @@
-import { hasWeaponProficiency } from '#utils/attackUtils.js';
+import { hasWeaponProficiency } from '#utils/damage/attackUtils.js';
 import localize from '#utils/localize.js';
 import type { CategorizedPrimary, ResultDump, TestbenchActor } from './DiceTestbench.types.js';
 import { categorizeDie, parseFormulaForDice } from './DiceTestbench.utils.js';

@@ -1,6 +1,6 @@
 /// <reference types="vitest/globals" />
 
-import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
+import { initiativeRollLock } from '../../../utils/combat/initiativeRollLock.js';
 import { NimbleCombatant } from '../combatant.svelte.js';
 
 describe('NimbleCombatant', () => {

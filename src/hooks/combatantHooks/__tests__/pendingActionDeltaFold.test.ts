@@ -6,7 +6,7 @@ import {
 	createHookCapture,
 } from '../../../../tests/mocks/combat.js';
 import { buildCharacterTurnRefillUpdate } from '../../../documents/combat/combatantSystem.js';
-import { buildCombatantActionDeltaUpdate } from '../../../utils/requestCombatantActionDelta.js';
+import { buildCombatantActionDeltaUpdate } from '../../../utils/combat/requestCombatantActionDelta.js';
 
 function globals() {
 	return getTestGlobals<CombatDefeatSyncTestGlobals>();

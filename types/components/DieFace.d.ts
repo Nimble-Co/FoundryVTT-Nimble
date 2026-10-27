@@ -1,4 +1,4 @@
-import type { DieOutcome } from '#utils/incomingReactionEntry.ts';
+import type { DieOutcome } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 export interface DieFaceProps {
 	/** Die size. Sizes without a Foundry die icon (anything but 4, 6, 8, 10, 12, 20) draw a d6. */

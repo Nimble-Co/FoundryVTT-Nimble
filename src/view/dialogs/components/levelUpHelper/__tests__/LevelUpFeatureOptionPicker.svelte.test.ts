@@ -5,7 +5,7 @@ import { render, waitFor } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import type { ClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
 import FeatureOptionPickerStateHarness from '../../../../../../tests/harnesses/FeatureOptionPickerStateHarness.svelte';
 // @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import LevelUpFeatureOptionPicker from '../LevelUpFeatureOptionPicker.svelte';

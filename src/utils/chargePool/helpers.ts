@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { NimbleRollData } from '#types/rollData.d.ts';
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import type {

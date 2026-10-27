@@ -2,9 +2,9 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
-	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
-	import sortItems from '#utils/sortItems.js';
+	import formatActivationCostLabel from '#utils/combat/formatActivationCostLabel.js';
+	import shouldFlashDroppedItem from '#utils/documents/shouldFlashDroppedItem.js';
+	import sortItems from '#utils/documents/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import SecondaryNavigation from '#view/components/SecondaryNavigation.svelte';
 	import SpellSchoolIcon from '#view/components/SpellSchoolIcon.svelte';

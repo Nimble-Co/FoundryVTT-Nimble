@@ -2,7 +2,11 @@ import type { SkillKeyType } from '#types/skillKey.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { ASSESS_DC, assessOptions } from '../../../utils/assessOptions.js';
 import localize from '../../../utils/localize.js';
-import { getInvalidTargets, getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
+import {
+	getInvalidTargets,
+	getTargetedTokens,
+	getTargetName,
+} from '../../../utils/tokens/targeting.js';
 
 export function createAssessPanelState(
 	getActor: () => NimbleCharacter,

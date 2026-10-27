@@ -1,7 +1,7 @@
 import { systemHookName } from '#system';
 import { applyRefillToActorIfEligible } from '#utils/dicePool/dicePoolRefill.js';
 import type { CharacterActorLike } from '#utils/dicePool/types.js';
-import { firesCritTriggers } from '#utils/firesCritTriggers.js';
+import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 
 let registered = false;
 

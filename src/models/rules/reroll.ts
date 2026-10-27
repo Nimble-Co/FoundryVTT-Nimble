@@ -1,9 +1,9 @@
-import { matchesAttackDelivery } from '../../utils/attackDelivery.js';
+import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
-} from '../../utils/heroicActions.js';
+} from '../../utils/incomingReactions/heroicActions.js';
 import {
 	REROLL_DICE,
 	REROLL_KEEPS,
@@ -13,15 +13,15 @@ import {
 	type RerollKeep,
 	type RerollSide,
 	type RerollTrigger,
-} from '../../utils/incomingReactionEntry.js';
-import { canPayRerollCost, type RerollCost } from '../../utils/rerollCost.js';
-import type { RerollChanges } from '../../utils/rerollOptions.js';
+} from '../../utils/incomingReactions/incomingReactionEntry.js';
+import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
+import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
 import {
 	type CheckRollKind,
 	REROLL_ROLL_KINDS,
 	type RerollRollKind,
 	type RollToReroll,
-} from '../../utils/rollToReroll.js';
+} from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';

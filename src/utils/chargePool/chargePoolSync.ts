@@ -1,4 +1,4 @@
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import {
 	areChargePoolMapsEqual,
 	buildEffectiveChargePoolMap,

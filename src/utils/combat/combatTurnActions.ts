@@ -1,0 +1,422 @@
+import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { getActorDyingActionLimit, isActorDying } from '../actor/actorHealthState.js';
+import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
+import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
+import { isCombatantDead } from './isCombatantDead.js';
+import { queueCombatantMutationWithFreshDocument } from './queueCombatantMutationWithFreshDocument.js';
+
+export const COMBATANT_ACTIONS_CURRENT_PATH = 'system.actions.base.current';
+export const COMBATANT_ACTIONS_MAX_PATH = 'system.actions.base.max';
+const COMBAT_TURN_SOCKET_NAME = 'system.nimble';
+const ADVANCE_COMBAT_TURN_REQUEST_TYPE = 'advanceCombatTurn';
+const SET_ACTIVE_COMBAT_TURN_REQUEST_TYPE = 'setActiveCombatTurn';
+const SWAP_COMBAT_TURN_REQUEST_TYPE = 'swapCombatTurn';
+
+type AdvanceCombatTurnRequest = {
+	type: typeof ADVANCE_COMBAT_TURN_REQUEST_TYPE;
+	combatId: string;
+	userId: string;
+	activeCombatantId: string | null;
+};
+
+type SetActiveCombatTurnRequest = {
+	type: typeof SET_ACTIVE_COMBAT_TURN_REQUEST_TYPE;
+	combatId: string;
+	userId: string;
+	targetCombatantId: string;
+	expectedActiveCombatantId: string | null;
+};
+
+type SwapCombatTurnRequest = {
+	type: typeof SWAP_COMBAT_TURN_REQUEST_TYPE;
+	combatId: string;
+	userId: string;
+	targetCombatantId: string;
+	expectedActiveCombatantId: string | null;
+};
+
+type CombatWithSetActiveTurn = Combat & {
+	setActiveTurnToCombatant?: (combatantId: string) => Promise<boolean>;
+	swapTurnWithActiveCombatant?: (combatantId: string) => Promise<boolean>;
+};
+
+function toFiniteNonNegativeNumber(value: unknown): number {
+	const numericValue = Number(value);
+	if (!Number.isFinite(numericValue)) return 0;
+	return Math.max(0, numericValue);
+}
+
+export function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
+	return toFiniteNonNegativeNumber(
+		foundry.utils.getProperty(combatant, COMBATANT_ACTIONS_CURRENT_PATH),
+	);
+}
+
+export function getCombatantMaxActions(combatant: Combatant.Implementation): number {
+	const baseMax = toFiniteNonNegativeNumber(
+		foundry.utils.getProperty(combatant, COMBATANT_ACTIONS_MAX_PATH),
+	);
+	if (isActorDying(combatant.actor)) {
+		return Math.min(baseMax, getActorDyingActionLimit(combatant.actor));
+	}
+	return baseMax;
+}
+
+export function resolveCombatantCurrentActionsAfterDelta(params: {
+	currentActions: number;
+	maxActions: number;
+	delta: number;
+	allowOverflow?: boolean;
+}): number {
+	const rawCurrent = Math.floor(toFiniteNonNegativeNumber(params.currentActions));
+	const normalizedMax = Math.max(0, Math.floor(toFiniteNonNegativeNumber(params.maxActions)));
+	const numericDelta = Number(params.delta);
+	const normalizedDelta = Number.isFinite(numericDelta) ? Math.trunc(numericDelta) : 0;
+	const normalizedCurrent = params.allowOverflow
+		? Math.max(0, rawCurrent)
+		: Math.min(normalizedMax, Math.max(0, rawCurrent));
+	const nextActions = normalizedCurrent + normalizedDelta;
+	if (params.allowOverflow) return Math.max(0, nextActions);
+	return Math.min(normalizedMax, Math.max(0, nextActions));
+}
+
+export function canCurrentUserEndTurn(combatant: Combatant.Implementation | null): boolean {
+	if (!combatant) return false;
+	if (game.user?.isGM) return true;
+	return Boolean(combatant.actor?.isOwner);
+}
+
+/**
+ * Whether `user` may hand the active turn to `targetCombatant` without advancing the round.
+ *
+ * GMs can target any living combatant. Non-GM owners may only swap the turn between fellow player
+ * characters they own — they can never pull the turn onto their character while a monster (or any
+ * non-character) holds it, since monster turns are GM-controlled.
+ */
+export function canUserTakeCombatTurn(
+	combat: Combat | null,
+	targetCombatant: Combatant.Implementation | null,
+	user: User.Implementation | null = game.user,
+): boolean {
+	if (!combat?.started || !targetCombatant || !user) return false;
+	if (targetCombatant.parent?.id !== combat.id) return false;
+	if (isCombatantDead(targetCombatant)) return false;
+	if (user.isGM) return true;
+
+	if (targetCombatant.type !== 'character') return false;
+	if (!targetCombatant.actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)) {
+		return false;
+	}
+
+	const activeCombatant = combat.combatant ?? null;
+	if (!activeCombatant || activeCombatant.type !== 'character') return false;
+	return !isCombatantDead(activeCombatant);
+}
+
+function getUserById(userId: string | null | undefined): User.Implementation | null {
+	if (!userId) return null;
+	const usersCollection = game.users as unknown as {
+		get?: (id: string) => User.Implementation | null;
+		contents?: User.Implementation[];
+	};
+	return (
+		usersCollection.get?.(userId) ??
+		usersCollection.contents?.find((user) => user.id === userId) ??
+		null
+	);
+}
+
+function canUserEndTurnForCombatant(
+	combatant: Combatant.Implementation | null,
+	user: User.Implementation | null,
+): boolean {
+	if (!combatant || !user) return false;
+	if (user.isGM) return true;
+	return Boolean(
+		combatant.actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+	);
+}
+
+function getCombatById(combatId: string | null | undefined): Combat | null {
+	if (!combatId) return null;
+	const combatsCollection = game.combats as unknown as {
+		get?: (id: string) => Combat | null;
+		contents?: Combat[];
+	};
+	return (
+		combatsCollection.get?.(combatId) ??
+		combatsCollection.contents?.find((combat) => (combat.id ?? combat._id ?? null) === combatId) ??
+		null
+	);
+}
+
+async function handleAdvanceCombatTurnRequest(payload: unknown): Promise<void> {
+	if (!game.user?.isGM) return;
+	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	if (!payload || typeof payload !== 'object') return;
+
+	const request = payload as Partial<AdvanceCombatTurnRequest>;
+	if (request.type !== ADVANCE_COMBAT_TURN_REQUEST_TYPE) return;
+
+	const combat = getCombatById(request.combatId);
+	if (!combat?.started) return;
+	if ((combat.combatant?.id ?? null) !== (request.activeCombatantId ?? null)) return;
+
+	const requestingUser = getUserById(request.userId);
+	if (!canUserEndTurnForCombatant(combat.combatant ?? null, requestingUser)) return;
+
+	await combat.nextTurn();
+}
+
+async function handleSetActiveCombatTurnRequest(payload: unknown): Promise<void> {
+	if (!game.user?.isGM) return;
+	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	if (!payload || typeof payload !== 'object') return;
+
+	const request = payload as Partial<SetActiveCombatTurnRequest>;
+	if (request.type !== SET_ACTIVE_COMBAT_TURN_REQUEST_TYPE) return;
+	if (!request.targetCombatantId) return;
+
+	const combat = getCombatById(request.combatId);
+	if (!combat?.started) return;
+	// Guard against races: only honor the request if the active combatant is still what the
+	// requester saw when they initiated the swap.
+	if ((combat.combatant?.id ?? null) !== (request.expectedActiveCombatantId ?? null)) return;
+
+	const targetCombatant = combat.combatants.get(request.targetCombatantId) ?? null;
+	const requestingUser = getUserById(request.userId);
+	if (!canUserTakeCombatTurn(combat, targetCombatant, requestingUser)) return;
+
+	await (combat as CombatWithSetActiveTurn).setActiveTurnToCombatant?.(request.targetCombatantId);
+}
+
+async function handleSwapCombatTurnRequest(payload: unknown): Promise<void> {
+	if (!game.user?.isGM) return;
+	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	if (!payload || typeof payload !== 'object') return;
+
+	const request = payload as Partial<SwapCombatTurnRequest>;
+	if (request.type !== SWAP_COMBAT_TURN_REQUEST_TYPE) return;
+	if (!request.targetCombatantId) return;
+
+	const combat = getCombatById(request.combatId);
+	if (!combat?.started) return;
+	// Guard against races: only honor the request if the active combatant is still what the
+	// requester saw when they initiated the swap.
+	if ((combat.combatant?.id ?? null) !== (request.expectedActiveCombatantId ?? null)) return;
+
+	const targetCombatant = combat.combatants.get(request.targetCombatantId) ?? null;
+	const requestingUser = getUserById(request.userId);
+	if (!canUserTakeCombatTurn(combat, targetCombatant, requestingUser)) return;
+
+	await (combat as CombatWithSetActiveTurn).swapTurnWithActiveCombatant?.(
+		request.targetCombatantId,
+	);
+}
+
+let hasRegisteredCombatTurnSocketListener = false;
+
+export function registerCombatTurnSocketListener(): void {
+	if (hasRegisteredCombatTurnSocketListener) return;
+	hasRegisteredCombatTurnSocketListener = true;
+
+	const socket = game.socket as
+		| {
+				on?: (eventName: string, listener: (payload: unknown) => void) => void;
+		  }
+		| undefined;
+	socket?.on?.(COMBAT_TURN_SOCKET_NAME, (payload) => {
+		void handleAdvanceCombatTurnRequest(payload);
+		void handleSetActiveCombatTurnRequest(payload);
+		void handleSwapCombatTurnRequest(payload);
+	});
+	Hooks.on('deleteCombat', (combat: Combat) => {
+		combatantActionMutationQueue.clearForCombat(combat.id ?? combat._id ?? null);
+	});
+}
+
+export async function requestAdvanceCombatTurn(params: {
+	combat: Combat;
+	activeCombatantId?: string | null;
+}): Promise<boolean> {
+	const activeCombatant = params.combat.combatant ?? null;
+	if (!activeCombatant) return false;
+	const activeCombatantId = params.activeCombatantId ?? activeCombatant.id ?? null;
+	await combatantActionMutationQueue.waitForCombatant({
+		combat: params.combat,
+		combatantId: activeCombatantId,
+	});
+
+	if (game.user?.isGM) {
+		await params.combat.nextTurn();
+		return true;
+	}
+
+	if (!canCurrentUserEndTurn(activeCombatant)) return false;
+	if (!game.user?.id) return false;
+	if (!getPrimaryActiveGmId()) return false;
+
+	const socket = game.socket as
+		| {
+				emit?: (eventName: string, payload: AdvanceCombatTurnRequest) => void;
+		  }
+		| undefined;
+	if (!socket?.emit) return false;
+
+	socket.emit(COMBAT_TURN_SOCKET_NAME, {
+		type: ADVANCE_COMBAT_TURN_REQUEST_TYPE,
+		combatId: params.combat.id ?? params.combat._id ?? '',
+		userId: game.user.id,
+		activeCombatantId,
+	});
+	return true;
+}
+
+/**
+ * Hand the active turn to a specific combatant within the current round. GMs apply it directly;
+ * eligible players relay the request to the primary active GM (mirroring {@link requestAdvanceCombatTurn}).
+ *
+ * Returns whether the change was applied (GM) or successfully relayed (player).
+ */
+export async function requestSetActiveCombatTurn(params: {
+	combat: Combat;
+	targetCombatantId: string;
+}): Promise<boolean> {
+	const { combat, targetCombatantId } = params;
+	if (!targetCombatantId) return false;
+	if ((combat.combatant?.id ?? null) === targetCombatantId) return false;
+
+	const targetCombatant = combat.combatants.get(targetCombatantId) ?? null;
+	if (!canUserTakeCombatTurn(combat, targetCombatant, game.user)) return false;
+
+	if (game.user?.isGM) {
+		return Boolean(
+			await (combat as CombatWithSetActiveTurn).setActiveTurnToCombatant?.(targetCombatantId),
+		);
+	}
+
+	if (!game.user?.id) return false;
+	if (!getPrimaryActiveGmId()) return false;
+
+	const socket = game.socket as
+		| {
+				emit?: (eventName: string, payload: SetActiveCombatTurnRequest) => void;
+		  }
+		| undefined;
+	if (!socket?.emit) return false;
+
+	socket.emit(COMBAT_TURN_SOCKET_NAME, {
+		type: SET_ACTIVE_COMBAT_TURN_REQUEST_TYPE,
+		combatId: combat.id ?? combat._id ?? '',
+		userId: game.user.id,
+		targetCombatantId,
+		expectedActiveCombatantId: combat.combatant?.id ?? null,
+	});
+	return true;
+}
+
+/**
+ * Swap the active turn with a specific combatant within the current round, exchanging their
+ * positions in the turn order. GMs apply it directly; eligible players relay the request to the
+ * primary active GM (mirroring {@link requestSetActiveCombatTurn}).
+ *
+ * Returns whether the change was applied (GM) or successfully relayed (player).
+ */
+export async function requestSwapCombatTurn(params: {
+	combat: Combat;
+	targetCombatantId: string;
+}): Promise<boolean> {
+	const { combat, targetCombatantId } = params;
+	if (!targetCombatantId) return false;
+
+	const activeCombatantId = combat.combatant?.id ?? null;
+	if (!activeCombatantId || activeCombatantId === targetCombatantId) return false;
+
+	const targetCombatant = combat.combatants.get(targetCombatantId) ?? null;
+	if (!canUserTakeCombatTurn(combat, targetCombatant, game.user)) return false;
+
+	if (game.user?.isGM) {
+		return Boolean(
+			await (combat as CombatWithSetActiveTurn).swapTurnWithActiveCombatant?.(targetCombatantId),
+		);
+	}
+
+	if (!game.user?.id) return false;
+	if (!getPrimaryActiveGmId()) return false;
+
+	const socket = game.socket as
+		| {
+				emit?: (eventName: string, payload: SwapCombatTurnRequest) => void;
+		  }
+		| undefined;
+	if (!socket?.emit) return false;
+
+	socket.emit(COMBAT_TURN_SOCKET_NAME, {
+		type: SWAP_COMBAT_TURN_REQUEST_TYPE,
+		combatId: combat.id ?? combat._id ?? '',
+		userId: game.user.id,
+		targetCombatantId,
+		expectedActiveCombatantId: activeCombatantId,
+	});
+	return true;
+}
+
+export async function consumeCombatantAction(params: {
+	combat: Combat;
+	combatantId: string;
+	actionCost?: number;
+}): Promise<number> {
+	const combatant = params.combat.combatants.get(params.combatantId) ?? null;
+	if (!combatant) return 0;
+
+	// With action-tracking automation off, item use never deducts actions. The
+	// returned pool value cannot be distinguished from the blocked-use 0 below;
+	// callers must not branch on it.
+	if (!isActionTrackingAutomationEnabled()) return getCombatantCurrentActions(combatant);
+
+	// Cheap early-out on a possibly stale snapshot. The queued mutation below
+	// recomputes from the fresh document before writing, so at worst a stale
+	// zero here skips a deduction; it can never cause an incorrect write.
+	const snapshotActions = getCombatantCurrentActions(combatant);
+	if (snapshotActions < 1) return 0;
+
+	const cost = Number(params.actionCost ?? 1);
+	const normalizedCost = Number.isFinite(cost) && cost >= 0 ? cost : 1;
+	if (normalizedCost === 0) return snapshotActions;
+
+	const appliedActions = await queueCombatantMutationWithFreshDocument({
+		combat: params.combat,
+		combatantId: params.combatantId,
+		mutation: async (currentCombatant) => {
+			// Recompute from the fresh document so overlapping deductions each
+			// apply on top of the latest persisted value instead of a shared
+			// pre-queue snapshot clobbering one another.
+			const currentActions = getCombatantCurrentActions(currentCombatant);
+			const nextActions = Math.max(0, currentActions - normalizedCost);
+			if (nextActions === currentActions) return currentActions;
+			await currentCombatant.update({
+				[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
+			} as Record<string, unknown>);
+			return nextActions;
+		},
+	});
+	// A skipped write (the combatant vanished before the queued mutation ran)
+	// leaves the action count unchanged, so report the value that is actually
+	// persisted rather than the deduction we intended to make.
+	return appliedActions ?? snapshotActions;
+}
+
+export async function maybeAdvanceTurnForCombatant(params: {
+	combat: Combat;
+	combatantId: string | null | undefined;
+	endTurn: boolean;
+}): Promise<boolean> {
+	if (!params.endTurn) return false;
+	const activeCombatantId = params.combat.combatant?.id ?? null;
+	if (!activeCombatantId || !params.combatantId) return false;
+	if (activeCombatantId !== params.combatantId) return false;
+	return requestAdvanceCombatTurn({
+		combat: params.combat,
+		activeCombatantId,
+	});
+}

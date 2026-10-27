@@ -3,9 +3,9 @@ import type {
 	FeatureGroupSelectionProps,
 	SelectionGroup,
 } from '#types/components/ClassFeatureSelection.d.ts';
+import sortDocumentsByName from '#utils/documents/sortDocumentsByName.js';
 import formatGroupName from '#utils/formatGroupName.js';
 import localize from '#utils/localize.js';
-import sortDocumentsByName from '#utils/sortDocumentsByName.js';
 import { isFixedGroup, isGroupComplete } from '../../selectionGroupRules.ts';
 
 type FeatureGroupSelectionStateProps = Pick<

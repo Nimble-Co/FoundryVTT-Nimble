@@ -1,8 +1,8 @@
 import { SvelteSet } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type { RerollHistoryProps } from '#types/components/RerollHistory.d.ts';
-import { requestKeepChoice } from '#utils/incomingAttackReactions.js';
-import type { KeepChoiceRoll, RerollKept } from '#utils/incomingReactionEntry.ts';
+import { requestKeepChoice } from '#utils/incomingReactions/incomingAttackReactions.js';
+import type { KeepChoiceRoll, RerollKept } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '../../../utils/localize.js';
 
 /** Temp HP notes a user opened, by message id and line: a card renders again on every update. */

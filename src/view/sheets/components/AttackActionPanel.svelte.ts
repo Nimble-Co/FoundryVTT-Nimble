@@ -2,22 +2,22 @@ import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
-import { attackDeliveryFromAttackType } from '../../../utils/attackDelivery.js';
+import { attackDeliveryFromAttackType } from '../../../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
 	getUnarmedDamageFormula,
 	hasUnarmedProficiency,
-} from '../../../utils/attackUtils.js';
-import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
+} from '../../../utils/damage/attackUtils.js';
+import { DEFAULT_MISS_THRESHOLD } from '../../../utils/damage/missThreshold.js';
+import sortItems from '../../../utils/documents/sortItems.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
-} from '../../../utils/incomingAttackModifiers.js';
+} from '../../../utils/incomingReactions/incomingAttackModifiers.js';
+import type { OfferingActor } from '../../../utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '../../../utils/localize.js';
-import { DEFAULT_MISS_THRESHOLD } from '../../../utils/missThreshold.js';
-import type { OfferingActor } from '../../../utils/poolSpendCardOffers.js';
-import sortItems from '../../../utils/sortItems.js';
+import { evaluateFormula as evalFormula } from '../../../utils/rolls/evaluateFormula.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
 
 /**

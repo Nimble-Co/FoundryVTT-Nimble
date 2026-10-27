@@ -4,8 +4,8 @@
 	import { RulesManager } from '#managers/RulesManager.js';
 	import localize from '#utils/localize.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
-	import sortItems from '#utils/sortItems.js';
+	import shouldFlashDroppedItem from '#utils/documents/shouldFlashDroppedItem.js';
+	import sortItems from '#utils/documents/sortItems.js';
 	import { SYSTEM_ID } from '#system';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import CurrencyTracker from '#view/sheets/components/CurrencyTracker.svelte';

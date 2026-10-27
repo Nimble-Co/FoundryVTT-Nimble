@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { populateChargePoolTags } from '../chargePoolTags.js';
 
 const { flagScope, flagKey } = ChargePoolRuleConfig;

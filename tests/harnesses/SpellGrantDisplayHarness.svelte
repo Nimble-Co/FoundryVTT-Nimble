@@ -13,7 +13,7 @@
 	}: {
 		sourceFilter?: 'class' | 'background';
 		spellGrants: import('../../src/view/dialogs/characterCreation/types.js').SpellGrantResult;
-		spellIndex?: import('#utils/getSpells.js').SpellIndex | null;
+		spellIndex?: import('#utils/spell/getSpells.js').SpellIndex | null;
 		initialSelectedSchools: Map<string, string[]>;
 		initialSelectedSpells: Map<string, string[]>;
 		initialConfirmedSchools: Set<string>;

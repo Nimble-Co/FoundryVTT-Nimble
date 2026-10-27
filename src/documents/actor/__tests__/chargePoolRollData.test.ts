@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { NimbleCharacter } from '../character.js';
 
 const characterProto = NimbleCharacter.prototype as unknown as {

@@ -1,4 +1,4 @@
-import { getTargetName } from '#utils/targeting.ts';
+import { getTargetName } from '#utils/tokens/targeting.ts';
 
 interface GrantedOfferTargetingParams {
 	/** Actor the offer belongs to, i.e. the one about to activate an item. */

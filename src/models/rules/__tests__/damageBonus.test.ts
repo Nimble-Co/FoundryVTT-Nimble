@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
-import { getDamageBonusFormulas, getDamageBonusTotal } from '../../../utils/attackUtils.js';
+import { getDamageBonusFormulas, getDamageBonusTotal } from '../../../utils/damage/attackUtils.js';
 import {
 	type DamageBonusDelivery,
 	type DamageBonusEntry,

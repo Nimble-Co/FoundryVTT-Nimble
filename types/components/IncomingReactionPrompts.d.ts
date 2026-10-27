@@ -1,5 +1,5 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 /**
  * Where on the card the prompts render. `roll` is inside the roll section:

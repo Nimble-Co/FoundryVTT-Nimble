@@ -1,12 +1,12 @@
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { isHealthStateSyncAutomationEnabled } from '../../settings/automationSettings.js';
-import { hasLastStandStatus, isActorAtOrBelowHalfHp } from '../../utils/actorHealthState.js';
-import { ACTOR_HP_PATHS, hasAnyActorChangeAt } from '../../utils/actorHpChangePaths.js';
+import { hasLastStandStatus, isActorAtOrBelowHalfHp } from '../../utils/actor/actorHealthState.js';
+import { ACTOR_HP_PATHS, hasAnyActorChangeAt } from '../../utils/actor/actorHpChangePaths.js';
 import {
 	getActorHpMaxValue,
 	getActorHpValue,
 	getActorLastStandHp,
-} from '../../utils/actorResources.js';
+} from '../../utils/actor/actorResources.js';
 
 let didRegisterCombatantHealthStateSync = false;
 

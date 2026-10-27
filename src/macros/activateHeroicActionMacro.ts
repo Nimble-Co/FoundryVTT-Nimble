@@ -1,23 +1,23 @@
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../documents/actor/character.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import { getMovementSpeeds } from '../utils/actor/movementSpeeds.js';
+import { getActiveCombatForCurrentScene } from '../utils/combat/combatState.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
 	getUnarmedDamageFormula,
 	hasUnarmedProficiency,
-} from '../utils/attackUtils.js';
-import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
-import { getHeroicReactionUsageState } from '../utils/getHeroicReactionUsageState.js';
+} from '../utils/damage/attackUtils.js';
+import { getHeroicReactionUsageState } from '../utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,
 	getHeroicReactionLabel,
 	type HeroicReactionKey,
-} from '../utils/heroicActions.js';
+} from '../utils/incomingReactions/heroicActions.js';
+import showReactionConfirmation from '../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../utils/localize.js';
-import { getMovementSpeeds } from '../utils/movementSpeeds.js';
-import showReactionConfirmation from '../utils/showReactionConfirmation.js';
-import { getTargetedTokens } from '../utils/targeting.js';
+import { getTargetedTokens } from '../utils/tokens/targeting.js';
 
 type CombatWithHeroicReactionUse = Combat & {
 	useHeroicReactions?: (

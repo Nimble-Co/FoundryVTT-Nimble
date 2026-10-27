@@ -1,4 +1,4 @@
-import { isValidDiceModifier } from '../../../utils/isValidDiceModifier.js';
+import { isValidDiceModifier } from '../../../utils/rolls/isValidDiceModifier.js';
 import { identifier } from '../../common.js';
 
 /** ---------------------------------------------------------- */

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import localize from '#utils/localize.js';
-	import { effectiveSizes, toggleAllSizes, toggleSize } from '#utils/sizeSelection.js';
+	import { effectiveSizes, toggleAllSizes, toggleSize } from '#utils/actor/sizeSelection.js';
 
 	interface Props {
 		selectedSizes: string[] | undefined;

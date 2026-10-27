@@ -15,17 +15,20 @@ import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getChargePoolRollData } from '#utils/chargePool/helpers.js';
-import collectHeldPicks, { countHeldPicks, type HeldFeature } from '#utils/collectHeldPicks.ts';
-import collectSwappableOptions from '#utils/collectSwappableOptions.ts';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
-} from '#utils/findMissingLevelSelections.ts';
-import { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
+} from '#utils/classProgression/findMissingLevelSelections.ts';
+import { buildClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
 import localize from '#utils/localize.js';
-import planOptionSwap, { type OptionSwapPlan } from '#utils/planOptionSwap.ts';
-import resolveOptionSwapOffer from '#utils/resolveOptionSwapOffer.ts';
+import collectHeldPicks, {
+	countHeldPicks,
+	type HeldFeature,
+} from '#utils/optionSwap/collectHeldPicks.ts';
+import collectSwappableOptions from '#utils/optionSwap/collectSwappableOptions.ts';
+import planOptionSwap, { type OptionSwapPlan } from '#utils/optionSwap/planOptionSwap.ts';
+import resolveOptionSwapOffer from '#utils/optionSwap/resolveOptionSwapOffer.ts';
+import summarizeOptionSwap from '#utils/optionSwap/summarizeOptionSwap.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
-import summarizeOptionSwap from '#utils/summarizeOptionSwap.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -33,20 +36,20 @@ import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.
 import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
-import calculateRollMode from '../../utils/calculateRollMode.js';
+import {
+	consumeCombatantAction,
+	getCombatantCurrentActions,
+} from '../../utils/combat/combatTurnActions.js';
+import showInsufficientActionsConfirmation from '../../utils/combat/showInsufficientActionsConfirmation.js';
 import {
 	type CheckCardRerollData,
 	checkCardRerollData,
 	createCheckCard,
-} from '../../utils/checkCardRollTarget.js';
-import {
-	consumeCombatantAction,
-	getCombatantCurrentActions,
-} from '../../utils/combatTurnActions.js';
-import getRollFormula from '../../utils/getRollFormula.js';
-import type { RerollingActor } from '../../utils/rerollEntries.js';
-import showInsufficientActionsConfirmation from '../../utils/showInsufficientActionsConfirmation.js';
-import toMessageMode from '../../utils/toMessageMode.js';
+} from '../../utils/reroll/checkCardRollTarget.js';
+import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
+import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
+import getRollFormula from '../../utils/rolls/getRollFormula.js';
+import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelCorrectionDialog from '../../view/dialogs/CharacterLevelCorrectionDialog.svelte';

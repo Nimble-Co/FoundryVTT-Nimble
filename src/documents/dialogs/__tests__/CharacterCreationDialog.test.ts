@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 import CharacterCreationDialog from '../CharacterCreationDialog.svelte.js';
 
 function createSpellEntry({

@@ -2,7 +2,7 @@ import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 
-import { DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
+import { DYING_MAX_ACTIONS } from '#utils/actor/actorHealthState.js';
 import { RecordField } from '../fields/RecordField.js';
 import { abilities, currency, savingThrows } from './common.js';
 import { flattenLegacyCurrency } from './flattenLegacyCurrency.js';

@@ -2,9 +2,9 @@ import {
 	concentrationTrackOf,
 	DEFAULT_CONCENTRATION_TRACK,
 	type HeldConcentration,
-} from '../../utils/concentration.js';
+} from '../../utils/actor/concentration.js';
 import localize from '../../utils/localize.js';
-import { getSpellSchoolLabel } from '../../utils/spellLabels.js';
+import { getSpellSchoolLabel } from '../../utils/spell/spellLabels.js';
 
 const END_EVERY_TRACK = 'all';
 

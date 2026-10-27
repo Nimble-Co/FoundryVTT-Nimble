@@ -5,7 +5,7 @@ const { clearBankedDamageReductionMock, isActiveGMMock } = vi.hoisted(() => ({
 	isActiveGMMock: vi.fn(() => true),
 }));
 
-vi.mock('#utils/bankedDamageReduction.js', () => ({
+vi.mock('#utils/damage/bankedDamageReduction.js', () => ({
 	clearBankedDamageReduction: clearBankedDamageReductionMock,
 }));
 

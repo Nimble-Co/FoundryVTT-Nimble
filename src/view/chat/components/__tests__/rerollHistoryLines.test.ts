@@ -1,5 +1,8 @@
-import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
-import { withNewRerollEntries } from '#utils/rerollEntries.ts';
+import type {
+	IncomingReactionEntry,
+	RerollRecord,
+} from '#utils/incomingReactions/incomingReactionEntry.ts';
+import { withNewRerollEntries } from '#utils/reroll/rerollEntries.ts';
 import { isRerollAgain, rerollAgainRecords, rerollHistoryLines } from '../rerollHistoryLines.ts';
 
 const NAMES: Record<string, string> = {

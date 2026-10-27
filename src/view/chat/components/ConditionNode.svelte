@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { ConditionTargetActor } from '#utils/applyConditionToActor.ts';
+	import type { ConditionTargetActor } from '#utils/actor/applyConditionToActor.ts';
 
 	import { getContext } from 'svelte';
 	import { SYSTEM_ID } from '#system';
-	import applyConditionToActor from '#utils/applyConditionToActor.ts';
+	import applyConditionToActor from '#utils/actor/applyConditionToActor.ts';
 	import localize from '#utils/localize.ts';
 
 	const { node } = $props();

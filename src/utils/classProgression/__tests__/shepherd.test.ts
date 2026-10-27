@@ -9,7 +9,7 @@ import {
 	simulateProgression,
 } from '../../../../tests/fixtures/classProgression.ts';
 import type { ClassMeta, LevelSummary } from '../../../../tests/fixtures/classProgression.types.ts';
-import type { ClassFeatureIndex } from '../../getClassFeatures.ts';
+import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { REPORT, SACRED_GRACE_OPTIONS } from '../shepherd.expect.ts';
 
 /**

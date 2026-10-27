@@ -1,8 +1,8 @@
 import PoolSpendOfferDialog from '#documents/dialogs/PoolSpendOfferDialog.svelte.ts';
 import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import { requestIncomingAttackReaction } from '#utils/incomingAttackReactions.js';
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '../../../utils/localize.js';
 
 /**

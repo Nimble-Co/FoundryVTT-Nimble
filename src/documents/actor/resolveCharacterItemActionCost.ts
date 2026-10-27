@@ -1,5 +1,5 @@
 import type { ActionCostRule } from '../../models/rules/actionCost.js';
-import resolveItemActionCost from '../../utils/resolveItemActionCost.js';
+import resolveItemActionCost from '../../utils/combat/resolveItemActionCost.js';
 
 interface ActorWithRules {
 	rules?: unknown[];

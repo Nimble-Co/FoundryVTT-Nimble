@@ -4,7 +4,7 @@ import {
 } from '../../managers/ClassResourceManager.js';
 import type { NimbleSubclassData } from '../../models/item/SubclassDataModel.js';
 
-import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
+import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import { NimbleBaseItem } from './base.svelte.js';
 import type { NimbleClassItem } from './class.js';
 

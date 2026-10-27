@@ -1,4 +1,4 @@
-import { effectiveSizes } from '#utils/sizeSelection.js';
+import { effectiveSizes } from '#utils/actor/sizeSelection.js';
 import type { NimbleAncestryItem } from '../../../documents/item/ancestry.js';
 
 export default function prepareAncestryMetadata(ancestry: NimbleAncestryItem): string {

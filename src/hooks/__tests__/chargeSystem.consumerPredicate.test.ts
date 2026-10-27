@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 
 // chargePoolConsume is deliberately NOT mocked here: this file asserts the real
 // validation path, so that a consumer which predicates itself out never aborts

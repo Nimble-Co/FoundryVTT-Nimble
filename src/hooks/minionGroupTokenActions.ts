@@ -10,13 +10,14 @@ import {
 	flattenActivationEffects,
 	getUnsupportedActivationEffectTypes,
 } from '../utils/activationEffects.js';
-import { getCombatantImage } from '../utils/combatantImage.js';
+import { getCombatantImage } from '../utils/combat/combatantImage.js';
 import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
 	maybeAdvanceTurnForCombatant,
-} from '../utils/combatTurnActions.js';
-import { isCombatantDead } from '../utils/isCombatantDead.js';
+} from '../utils/combat/combatTurnActions.js';
+import { isCombatantDead } from '../utils/combat/isCombatantDead.js';
+import resolveMinionAttackActionCost from '../utils/combat/resolveMinionAttackActionCost.js';
 import {
 	createMinionGroupAttackSelectionState,
 	deriveDefaultMemberActionSelection,
@@ -24,10 +25,9 @@ import {
 	type MinionGroupAttackSelectionState,
 	type MinionGroupAttackSessionContext,
 	rememberMemberActionSelection,
-} from '../utils/minionGroupAttackSession.js';
-import { isMinionCombatant } from '../utils/minionGrouping.js';
-import resolveMinionAttackActionCost from '../utils/resolveMinionAttackActionCost.js';
-import { tokenHoverIn, tokenHoverOut } from '../utils/tokenHoverHighlight.js';
+} from '../utils/minions/minionGroupAttackSession.js';
+import { isMinionCombatant } from '../utils/minions/minionGrouping.js';
+import { tokenHoverIn, tokenHoverOut } from '../utils/tokens/tokenHoverHighlight.js';
 
 const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
 const MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY = 'NIMBLE_ENABLE_GROUP_TOKEN_UI_LOGS';

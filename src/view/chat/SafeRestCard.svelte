@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';

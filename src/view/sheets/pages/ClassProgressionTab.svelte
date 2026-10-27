@@ -5,7 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import { createClassProgressionTabState } from './ClassProgressionTab.state.svelte.js';
-	import { MAX_LEVEL } from '#utils/getClassProgressionData.js';
+	import { MAX_LEVEL } from '#utils/classProgression/getClassProgressionData.js';
 
 	const item: NimbleClassItem = getContext('document');
 	const state = createClassProgressionTabState(() => item);

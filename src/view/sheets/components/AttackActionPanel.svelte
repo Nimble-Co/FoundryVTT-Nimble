@@ -6,7 +6,7 @@
 		findToggleEffectAE,
 		findToggleEffectRule,
 		toggleEffectAE,
-	} from '../../../utils/toggleEffectControl.js';
+	} from '../../../utils/actor/toggleEffectControl.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 

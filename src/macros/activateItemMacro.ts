@@ -1,7 +1,7 @@
-import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
+import { getActiveCombatForCurrentScene } from '../utils/combat/combatState.js';
 import resolveItemActionCost, {
 	type ItemWithActivationCost,
-} from '../utils/resolveItemActionCost.js';
+} from '../utils/combat/resolveItemActionCost.js';
 
 /**
  * The function called by macros created by dragging an item to the macro hot bar.

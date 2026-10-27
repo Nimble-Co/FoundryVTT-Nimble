@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ConfigureChargesDialogProps } from '#types/components/ConfigureChargesDialog.d.ts';
 	import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
-	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
 
 	type ChargePoolState = ConfigureChargesDialogProps['pools'][number];

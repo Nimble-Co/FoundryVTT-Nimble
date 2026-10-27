@@ -4,9 +4,9 @@ import type {
 	SpellSystemData,
 } from '#types/components/SpellReferenceCard.d.ts';
 import { flattenActivationEffects } from '#utils/activationEffects.js';
-import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
+import formatActivationCostLabel from '#utils/combat/formatActivationCostLabel.js';
 import localize from '#utils/localize.js';
-import enrichSpellText from '#utils/spellDescription.js';
+import enrichSpellText from '#utils/spell/spellDescription.js';
 
 interface SpellDescriptionParts {
 	baseEffect?: string;

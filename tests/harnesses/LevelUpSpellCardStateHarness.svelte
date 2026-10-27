@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SpellCostActorLike } from '#types/spellCost.d.ts';
-	import type { SpellIndexEntry } from '#utils/getSpells.js';
+	import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 
 	import { createLevelUpSpellCardState } from '../../src/view/dialogs/components/levelUpHelper/LevelUpSpellCard.svelte.ts';
 

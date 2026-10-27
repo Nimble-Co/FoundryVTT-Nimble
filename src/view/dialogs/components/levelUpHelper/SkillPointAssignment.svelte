@@ -1,6 +1,6 @@
 <script>
 	import localize from '../../../../utils/localize.js';
-	import { MAX_SKILL_MODIFIER } from '#utils/skillLimits.js';
+	import { MAX_SKILL_MODIFIER } from '#utils/actor/skillLimits.js';
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 

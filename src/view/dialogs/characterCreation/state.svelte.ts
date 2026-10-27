@@ -1,14 +1,14 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
-import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import type { ClassFeatureIndex } from '#utils/classProgression/getClassFeatures.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
-import { offersVariantChoice } from '../../../utils/ancestryVariants.js';
-import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
-import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
+import generateBlankAttributeSet from '../../../utils/actor/generateBlankAttributeSet.js';
+import { offersSizeChoice } from '../../../utils/actor/sizeSelection.js';
+import { offersVariantChoice } from '../../../utils/classProgression/ancestryVariants.js';
+import getClassFeaturesFromIndex from '../../../utils/classProgression/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
-import { offersSizeChoice } from '../../../utils/sizeSelection.js';
 import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
 	AbilityScoreAssignment,

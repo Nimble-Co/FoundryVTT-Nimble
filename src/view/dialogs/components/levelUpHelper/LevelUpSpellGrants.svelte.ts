@@ -1,5 +1,5 @@
 import type { LevelUpSpellGrantsProps } from '#types/components/LevelUpSpellGrants.d.ts';
-import type { SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 
 /**
  * Creates reactive state for the LevelUpSpellGrants component.

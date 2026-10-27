@@ -7,11 +7,11 @@ import type {
 	SpendablePool,
 	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
-import { matchesAttackDelivery } from '#utils/attackDelivery.js';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
-} from '#utils/conditionalBonuses.js';
+} from '#utils/actor/conditionalBonuses.js';
+import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,

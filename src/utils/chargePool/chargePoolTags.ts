@@ -1,4 +1,4 @@
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 
 /**
  * Read chargePool state directly from flag storage and emit domain tags.

@@ -6,8 +6,8 @@ import {
 	simulateProgression,
 } from '../../../../tests/fixtures/classProgression.ts';
 import type { LevelSummary } from '../../../../tests/fixtures/classProgression.types.ts';
-import type { ClassFeatureIndex } from '../../getClassFeatures.ts';
 import { REPORT, SAVAGE_ARSENAL_OPTIONS } from '../berserker.expect.ts';
+import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 
 /**
  * Integration test for the Berserker class progression.

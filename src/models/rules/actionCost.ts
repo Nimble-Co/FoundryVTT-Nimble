@@ -1,4 +1,7 @@
-import { HEROIC_REACTIONS, type HeroicReactionKey } from '#utils/heroicActions.js';
+import {
+	HEROIC_REACTIONS,
+	type HeroicReactionKey,
+} from '#utils/incomingReactions/heroicActions.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 

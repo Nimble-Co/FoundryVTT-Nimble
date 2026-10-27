@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ReactionPanelProps } from '../../../../types/components/ReactionPanel.d.ts';
-	import getHeroicReactionCostLabel from '../../../utils/heroicReactionCostLabel.js';
+	import getHeroicReactionCostLabel from '../../../utils/incomingReactions/heroicReactionCostLabel.js';
 	import localize from '../../../utils/localize.js';
 	import { createDefendPanelState } from './DefendReactionPanel.svelte.ts';
 	import TargetSelector from './TargetSelector.svelte';

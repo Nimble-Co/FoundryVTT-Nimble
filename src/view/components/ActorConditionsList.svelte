@@ -2,7 +2,10 @@
 	import { onMount } from 'svelte';
 	import prepareActorConditions from '../dataPreparationHelpers/prepareActorConditions.js';
 	import localize from '../../utils/localize.js';
-	import { endToggleEffectFromAE, isToggleEffectAE } from '../../utils/toggleEffectControl.js';
+	import {
+		endToggleEffectFromAE,
+		isToggleEffectAE,
+	} from '../../utils/actor/toggleEffectControl.js';
 	import { CONDITIONS_CHANGED_HOOK } from '../../settings/customConditionSettings.js';
 	import { SYSTEM_ID } from '#system';
 

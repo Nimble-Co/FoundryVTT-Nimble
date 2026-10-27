@@ -2,12 +2,15 @@ import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
-import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../../../utils/attackUtils.js';
-import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
+import {
+	getUnarmedDamageFormula,
+	hasUnarmedProficiency,
+} from '../../../utils/damage/attackUtils.js';
+import sortItems from '../../../utils/documents/sortItems.js';
+import showReactionConfirmation from '../../../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../../../utils/localize.js';
-import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
-import sortItems from '../../../utils/sortItems.js';
-import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
+import { evaluateFormula as evalFormula } from '../../../utils/rolls/evaluateFormula.js';
+import { getTargetedTokens, getTargetName } from '../../../utils/tokens/targeting.js';
 
 interface WeaponSystemData {
 	objectType: string;

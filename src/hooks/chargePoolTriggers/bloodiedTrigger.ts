@@ -1,4 +1,4 @@
-import { isActorBloodied } from '#utils/actorHealthState.js';
+import { isActorBloodied } from '#utils/actor/actorHealthState.js';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
 

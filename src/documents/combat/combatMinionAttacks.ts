@@ -3,11 +3,14 @@ import {
 	getPrimaryDamageFormulaFromActivationEffects,
 	getUnsupportedActivationEffectTypes,
 } from '../../utils/activationEffects.js';
-import { getCombatantImage } from '../../utils/combatantImage.js';
-import { isCombatantDead } from '../../utils/isCombatantDead.js';
-import { isMinionCombatant } from '../../utils/minionGrouping.js';
-import resolveMinionAttackActionCost from '../../utils/resolveMinionAttackActionCost.js';
-import { getCurrentUserTargetTokenIds, getTargetTokenName } from '../../utils/tokenTargetLookup.js';
+import { getCombatantImage } from '../../utils/combat/combatantImage.js';
+import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
+import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
+import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
+import {
+	getCurrentUserTargetTokenIds,
+	getTargetTokenName,
+} from '../../utils/tokens/tokenTargetLookup.js';
 import {
 	appendMinionAttackRollOutcome,
 	buildNcsGroupAttackChatData,

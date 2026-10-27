@@ -4,7 +4,7 @@
 	import type { Readable } from 'svelte/store';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
-	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
+	import shouldFlashDroppedItem from '../../../utils/documents/shouldFlashDroppedItem.js';
 	import { getPools, getPoolsForItem } from '../../../utils/chargePool/chargePoolSync.js';
 	import { SYSTEM_ID } from '#system';
 	import {

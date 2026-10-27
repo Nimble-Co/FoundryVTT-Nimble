@@ -4,14 +4,14 @@ import type {
 	SpellScrollCandidate,
 	SpellScrollDialogResult,
 } from '#types/components/SpellScrollDialog.d.ts';
-import { SPELL_SCROLL_PRICE_BY_TIER } from '#utils/createScrollFromSpell.js';
-import formatActivationCostLabel from '#utils/formatActivationCostLabel.js';
-import { buildSpellIndex, type SpellIndexEntry } from '#utils/getSpells.js';
-import knowsSpellSchool from '#utils/knowsSpellSchool.js';
+import formatActivationCostLabel from '#utils/combat/formatActivationCostLabel.js';
+import sortDocumentsByName from '#utils/documents/sortDocumentsByName.js';
 import localize from '#utils/localize.js';
-import sortDocumentsByName from '#utils/sortDocumentsByName.js';
-import enrichSpellText from '#utils/spellDescription.js';
-import { getSpellTierLabel } from '#utils/spellLabels.js';
+import { SPELL_SCROLL_PRICE_BY_TIER } from '#utils/spell/createScrollFromSpell.js';
+import { buildSpellIndex, type SpellIndexEntry } from '#utils/spell/getSpells.js';
+import knowsSpellSchool from '#utils/spell/knowsSpellSchool.js';
+import enrichSpellText from '#utils/spell/spellDescription.js';
+import { getSpellTierLabel } from '#utils/spell/spellLabels.js';
 import SpellScrollDialog from '#view/dialogs/SpellScrollDialog.svelte';
 
 const DIALOG_ICON = 'fa-solid fa-scroll';

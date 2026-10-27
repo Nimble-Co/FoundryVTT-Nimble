@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.js';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.js';
 import { confirmRerollHeroicReaction } from '../confirmRerollHeroicReaction.js';
 
 const testGlobals = globalThis as unknown as {

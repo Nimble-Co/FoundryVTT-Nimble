@@ -1,6 +1,6 @@
 import registerKeybindings from '../registerKeyBindings.js';
 import registerSystemSettings from '../settings/index.js';
-import { preparePackIndexes } from '../utils/preparePackIndexes.js';
+import { preparePackIndexes } from '../utils/documents/preparePackIndexes.js';
 import registerCompendiumSpellsFilter from './compendiumSpellsFilter.js';
 
 /**

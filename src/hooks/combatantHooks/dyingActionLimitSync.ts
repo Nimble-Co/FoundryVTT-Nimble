@@ -1,7 +1,7 @@
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { getCombatantAdditionalActions } from '../../documents/combat/combatantSystem.js';
-import { getActorDyingActionLimit } from '../../utils/actorHealthState.js';
-import { getCombatantCurrentActions } from '../../utils/combatTurnActions.js';
+import { getActorDyingActionLimit } from '../../utils/actor/actorHealthState.js';
+import { getCombatantCurrentActions } from '../../utils/combat/combatTurnActions.js';
 
 let didRegisterDyingActionLimitSync = false;
 

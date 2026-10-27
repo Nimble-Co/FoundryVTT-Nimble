@@ -5,11 +5,11 @@ import {
 } from '#utils/chargePool/chargePoolConsume.js';
 import { applyEncounterRecovery, applyRestRecovery } from '#utils/chargePool/chargePoolRecover.js';
 import { RECOVERY_GIVEN_FLAG } from '#utils/chargePool/chargePoolReroll.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
-import { critTriggerOutcome } from '#utils/firesCritTriggers.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
+import { critTriggerOutcome } from '#utils/reroll/firesCritTriggers.js';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 
 type HookFn = (...args: unknown[]) => unknown;

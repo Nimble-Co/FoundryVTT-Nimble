@@ -6,7 +6,7 @@
 	import {
 		getManaRecoveryTypesFromClasses,
 		type ManaRecoveryType,
-	} from '../../utils/manaRecovery.js';
+	} from '../../utils/actor/manaRecovery.js';
 
 	interface Props {
 		document: NimbleCharacter;

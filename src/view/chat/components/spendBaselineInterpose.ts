@@ -1,10 +1,10 @@
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
-} from '#utils/getHeroicReactionUsageState.js';
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+} from '#utils/incomingReactions/getHeroicReactionUsageState.js';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import showReactionConfirmation from '../../../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../../../utils/localize.js';
-import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 
 /**
  * Baseline Interpose costs the standard heroic reaction; spend it through

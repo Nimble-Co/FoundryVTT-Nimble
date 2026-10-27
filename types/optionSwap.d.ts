@@ -1,6 +1,6 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { SwappableOptionPool } from '#utils/collectSwappableOptions.ts';
-import type { OptionSwapOffer } from '#utils/resolveOptionSwapOffer.ts';
+import type { SwappableOptionPool } from '#utils/optionSwap/collectSwappableOptions.ts';
+import type { OptionSwapOffer } from '#utils/optionSwap/resolveOptionSwapOffer.ts';
 
 /** A swappable pool with its members resolved to documents the picker can render. */
 export interface ResolvedSwappableOptionPool extends SwappableOptionPool {

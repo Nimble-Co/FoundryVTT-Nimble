@@ -5,7 +5,7 @@ import type {
 
 import localize from '#utils/localize.js';
 import { getSpellManaCost } from '#utils/spell/getSpellManaCost.js';
-import { getSpellSchoolLabel, getSpellTierLabel } from '#utils/spellLabels.js';
+import { getSpellSchoolLabel, getSpellTierLabel } from '#utils/spell/spellLabels.js';
 
 /** The tab the school filter starts on, matching the Spells tab's own "All" entry. */
 const ALL_SCHOOLS_TAB: SpellScrollNavigationTab = {

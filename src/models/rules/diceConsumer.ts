@@ -1,7 +1,7 @@
 import { systemHookName } from '#system';
-import { matchesAttackDelivery } from '#utils/attackDelivery.js';
+import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
-import type { CardOfferContext } from '#utils/poolSpendCardOffers.js';
+import type { CardOfferContext } from '#utils/incomingReactions/poolSpendCardOffers.js';
 import { withWidget } from './_widgetOption.js';
 import type { ItemActivatedContext } from './base.js';
 import { NimbleBaseRule } from './base.js';

@@ -1,4 +1,4 @@
-import { DEFAULT_SIZE } from '#utils/sizeSelection.js';
+import { DEFAULT_SIZE } from '#utils/actor/sizeSelection.js';
 
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 
@@ -14,7 +14,7 @@ const schema = {
 		{ required: true, nullable: false, initial: () => [DEFAULT_SIZE] },
 	),
 	// Names for the kinds of people this ancestry covers ("Dryad", "Shroomling"). Most cover one and
-	// list none. See `src/utils/ancestryVariants.ts`.
+	// list none. See `src/utils/classProgression/ancestryVariants.ts`.
 	variants: new fields.ArrayField(
 		new fields.StringField({ required: true, initial: '', nullable: false }),
 		{ required: true, nullable: false, initial: () => [] },

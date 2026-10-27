@@ -1,4 +1,4 @@
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 
 interface LeftOutTokens {

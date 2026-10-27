@@ -1,5 +1,5 @@
 <script>
-	import getLanguageName from '../../utils/getLanguageName.js';
+	import getLanguageName from '../../utils/documents/getLanguageName.js';
 
 	function prepareLanguageOptions() {
 		const ancestryIdentifier = document.ancestry?.identifier ?? null;

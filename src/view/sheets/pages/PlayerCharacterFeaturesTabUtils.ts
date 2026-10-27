@@ -1,4 +1,4 @@
-import { isAutoGrantGroup } from '#utils/getClassFeatures.ts';
+import { isAutoGrantGroup } from '#utils/classProgression/getClassFeatures.ts';
 
 /** The prepared view of a feature-tab row that the tab's sectioning and sorting read. */
 export type FeatureRowItem = {

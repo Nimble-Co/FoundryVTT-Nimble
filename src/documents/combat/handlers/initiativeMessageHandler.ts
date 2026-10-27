@@ -1,6 +1,6 @@
 import { InitiativeMessageRule } from '../../../models/rules/initiativeMessage.js';
 import { isChatNotificationsAutomationEnabled } from '../../../settings/automationSettings.js';
-import { getRulesFromCompendiumSource } from '../../../utils/itemSourceRules.js';
+import { getRulesFromCompendiumSource } from '../../../utils/documents/itemSourceRules.js';
 
 type ItemLike = {
 	uuid?: string;

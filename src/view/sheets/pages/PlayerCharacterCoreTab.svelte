@@ -6,10 +6,10 @@
 	import { getContext } from 'svelte';
 	import { createSubscriber } from 'svelte/reactivity';
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
-	import { registerCombatStateHooks } from '../../../utils/combatState.js';
-	import getDamageTypeLabel from '../../../utils/getDamageTypeLabel.js';
-	import getLanguageName from '../../../utils/getLanguageName.js';
-	import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
+	import { registerCombatStateHooks } from '../../../utils/combat/combatState.js';
+	import getDamageTypeLabel from '../../../utils/damage/getDamageTypeLabel.js';
+	import getLanguageName from '../../../utils/documents/getLanguageName.js';
+	import { initiativeRollLock } from '../../../utils/combat/initiativeRollLock.js';
 	import localize from '../../../utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';

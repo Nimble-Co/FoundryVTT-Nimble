@@ -1,7 +1,7 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
+import showReactionConfirmation from '../../../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../../../utils/localize.js';
-import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
-import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
+import { getTargetedTokens, getTargetName } from '../../../utils/tokens/targeting.js';
 
 export function createHelpPanelState(
 	getActor: () => NimbleCharacter,

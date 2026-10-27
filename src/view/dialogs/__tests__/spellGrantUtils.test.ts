@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 
 import type { RulesArray } from '../spellGrantUtils.js';
 import {

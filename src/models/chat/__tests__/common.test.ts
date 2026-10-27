@@ -4,7 +4,7 @@ import type {
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
-} from '#utils/incomingReactionEntry.js';
+} from '#utils/incomingReactions/incomingReactionEntry.js';
 import {
 	grantedActionOffers,
 	incomingReactions,

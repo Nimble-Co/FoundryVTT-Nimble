@@ -1,4 +1,4 @@
-import type { SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 import type { SpellSelectionGroup } from '../../characterCreation/types.js';
 
 /**

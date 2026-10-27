@@ -4,15 +4,17 @@ vi.mock('#system', () => ({
 	SYSTEM_ID: 'nimble',
 	systemHookName: (name: string) => `nimble.${name}`,
 }));
-vi.mock('#utils/grantedActionOffers.js', () => ({ collectGrantedActionOffers: vi.fn(() => []) }));
-vi.mock('#utils/requestCombatantActionDelta.js', () => ({
+vi.mock('#utils/combat/grantedActionOffers.js', () => ({
+	collectGrantedActionOffers: vi.fn(() => []),
+}));
+vi.mock('#utils/combat/requestCombatantActionDelta.js', () => ({
 	requestCombatantActionDelta: vi.fn(),
 }));
-vi.mock('#utils/isCombatantDead.js', () => ({
+vi.mock('#utils/combat/isCombatantDead.js', () => ({
 	isCombatantDead: (combatant: { dead?: boolean }) => Boolean(combatant?.dead),
 }));
 
-import { collectGrantedActionOffers } from '#utils/grantedActionOffers.js';
+import { collectGrantedActionOffers } from '#utils/combat/grantedActionOffers.js';
 import { handleUseItem, resolveTargetCombatants } from '../actionEconomySystem.js';
 
 const FRIENDLY = 1;

@@ -1,7 +1,7 @@
 import { getCombatantPendingActionDelta } from '#documents/combat/combatantSystem.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
+import { buildCombatantActionDeltaUpdate } from '#utils/combat/requestCombatantActionDelta.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
-import { buildCombatantActionDeltaUpdate } from '#utils/requestCombatantActionDelta.js';
 
 let didRegisterPendingActionDeltaFold = false;
 

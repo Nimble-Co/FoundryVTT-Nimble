@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import { leftOutRerollReason } from '../leftOutRerollReason.ts';
 
 const { FRIENDLY, NEUTRAL } = { FRIENDLY: 1, NEUTRAL: 0 };

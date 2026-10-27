@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../../tests/mocks/foundry.js';
 import { keyPressStore } from '../../stores/keyPressStore.js';
-import { ChargePoolRuleConfig } from '../../utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '../../utils/chargePool/chargePoolRuleConfig.js';
 import { DicePoolRuleConfig } from '../../utils/dicePool/dicePoolRuleConfig.js';
 import { findNodesByContexts } from '../../utils/treeManipulation/findNodesByContexts.js';
 import { ItemActivationManager, testDependencies } from '../ItemActivationManager.js';

@@ -10,7 +10,7 @@ import {
 	type NimbleCombatDocumentTestGlobals,
 } from '../../../../tests/mocks/combat.js';
 import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
-import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
+import { initiativeRollLock } from '../../../utils/combat/initiativeRollLock.js';
 import { NimbleCombat } from '../combat.svelte.js';
 import { clearExpandedTurnIdentityHint } from '../expandedTurnIdentityStore.js';
 

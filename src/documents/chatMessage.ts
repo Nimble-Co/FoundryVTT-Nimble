@@ -4,52 +4,52 @@ import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
-import { appendTypedBonusDamage } from '#utils/appendTypedBonusDamage.js';
+import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackDelivery,
 	attackDeliveryFromAttackType,
 	matchesAttackDelivery,
-} from '#utils/attackDelivery.js';
+} from '#utils/damage/attackDelivery.js';
 import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
-} from '#utils/buildDeferredDamagePatch.js';
+} from '#utils/damage/buildDeferredDamagePatch.js';
+import {
+	findPrimaryDamageNode,
+	foldBonusIntoPrimaryDamage,
+} from '#utils/damage/foldBonusIntoPrimaryDamage.js';
+import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.ts';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
-import {
-	findPrimaryDamageNode,
-	foldBonusIntoPrimaryDamage,
-} from '#utils/foldBonusIntoPrimaryDamage.js';
-import getDamageTypeLabel from '#utils/getDamageTypeLabel.ts';
-import isTokenDefeated from '#utils/isTokenDefeated.js';
 import localize from '#utils/localize.ts';
 import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
-import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/showDiceAnimation.js';
+import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
+import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
+import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
-} from '../utils/bankedDamageReduction.js';
-import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
+} from '../utils/damage/bankedDamageReduction.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
-} from '../utils/incomingAttackReactions.js';
+} from '../utils/incomingReactions/incomingAttackReactions.js';
 import {
 	type IncomingReactionEntry,
 	type PendingKeep,
 	type RerollKept,
 	type RerollRecord,
 	rerollTriggerMatches,
-} from '../utils/incomingReactionEntry.js';
-import type { RerollingActor } from '../utils/rerollEntries.js';
+} from '../utils/incomingReactions/incomingReactionEntry.js';
+import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { CardRerolls } from './chatMessage/cardRerolls.js';
 import { inFlightSpendOffers, queueReactionWrite } from './chatMessage/reactionWriteQueue.js';

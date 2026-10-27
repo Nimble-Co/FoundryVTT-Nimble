@@ -8,14 +8,17 @@ import {
 	isCombatantDying,
 } from '#documents/combat/combatantSystem.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import { getActorDyingActionLimit } from '#utils/actorHealthState.js';
-import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
-import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
-import { getActiveCombatant } from '#utils/combatTurnSync.js';
-import { initiativeRollLock } from '#utils/initiativeRollLock.js';
+import { getActorDyingActionLimit } from '#utils/actor/actorHealthState.js';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '#utils/combat/combatState.js';
+import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
+import { getActiveCombatant } from '#utils/combat/combatTurnSync.js';
+import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
+import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
 import localize from '#utils/localize.js';
-import { getPendingActionsLocalizationKey } from '#utils/pendingActionWording.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 
 // ============================================================================
 // Types

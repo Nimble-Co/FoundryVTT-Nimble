@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import localize from '../../utils/localize.js';
-import { rollingRerollOf, stopRerollRolling } from '../../utils/rerollRolling.svelte.js';
+import { rollingRerollOf, stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 /**

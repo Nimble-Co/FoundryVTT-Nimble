@@ -3,7 +3,7 @@ import type { HeldIncomingReactions } from '#types/components/IncomingReactionPr
 import {
 	INCOMING_REACTION_REJECTED_HOOK,
 	type IncomingReactionRejection,
-} from '#utils/incomingAttackReactions.js';
+} from '#utils/incomingReactions/incomingAttackReactions.js';
 
 /**
  * Offers whose request has been handed off but whose result has not come

@@ -1,16 +1,16 @@
 import { SYSTEM_ID } from '#system';
-import localize from '#utils/localize.js';
 import {
 	applyMarkEffect,
 	MARK_TARGET_ITEM_FLAG,
 	removeMarkEffect,
-} from '#utils/markTargetEffects.js';
+} from '#utils/actor/markTargetEffects.js';
 import {
 	computeNextToggledList,
 	readToggledEffects,
 	TOGGLED_EFFECTS_FLAG_KEY,
 	type ToggledTargetEntry,
-} from '#utils/toggledEffects.js';
+} from '#utils/actor/toggledEffects.js';
+import localize from '#utils/localize.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
 
 function schema() {

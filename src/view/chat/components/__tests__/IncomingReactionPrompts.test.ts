@@ -45,7 +45,7 @@ vi.mock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: mocks.getPools }))
 vi.mock('#utils/dicePool/dicePoolConsumers.js', () => ({
 	getDicePoolConsumers: mocks.getDicePoolConsumers,
 }));
-vi.mock('#utils/incomingAttackReactions.js', () => ({
+vi.mock('#utils/incomingReactions/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
 	requestKeepChoice: mocks.requestKeepChoice,

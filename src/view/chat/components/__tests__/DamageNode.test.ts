@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 
-import { startRerollRolling, stopRerollRolling } from '#utils/rerollRolling.svelte.ts';
+import { startRerollRolling, stopRerollRolling } from '#utils/reroll/rerollRolling.svelte.ts';
 import DamageOutcomeNode from '../DamageOutcomeNode.svelte';
 import DamageNodeTestHarness from './DamageNode.testHarness.svelte';
 

@@ -8,10 +8,10 @@ import {
 	getCombatTrackerPlayerHpBarTextMode,
 	getCombatTrackerResourceDrawerHoverEnabled,
 } from '../../../settings/combatTrackerSettings.js';
-import { canCurrentUserEndTurn as canCurrentUserEndCombatantTurn } from '../../../utils/combatTurnActions.js';
-import { getHeroicReactionUsageState } from '../../../utils/getHeroicReactionUsageState.js';
-import type { HeroicReactionKey } from '../../../utils/heroicActions.js';
-import { isCombatStarted } from '../../../utils/isCombatStarted.js';
+import { canCurrentUserEndTurn as canCurrentUserEndCombatantTurn } from '../../../utils/combat/combatTurnActions.js';
+import { isCombatStarted } from '../../../utils/combat/isCombatStarted.js';
+import { getHeroicReactionUsageState } from '../../../utils/incomingReactions/getHeroicReactionUsageState.js';
+import type { HeroicReactionKey } from '../../../utils/incomingReactions/heroicActions.js';
 import {
 	buildAliveEntries,
 	buildCombatSyncSignature,

@@ -5,7 +5,7 @@ import {
 	REROLL_LEFT_OUT_REASONS,
 	REROLL_SIDES,
 	REROLL_TRIGGERS,
-} from '../../utils/incomingReactionEntry.js';
+} from '../../utils/incomingReactions/incomingReactionEntry.js';
 
 const { fields } = foundry.data;
 

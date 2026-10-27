@@ -1,4 +1,4 @@
-import { DEFAULT_MISS_THRESHOLD } from '../../../utils/missThreshold.js';
+import { DEFAULT_MISS_THRESHOLD } from '../../../utils/damage/missThreshold.js';
 
 export default function prepareRollTooltipDiceResults({ faces, flavor, options, results }) {
 	const isPrimaryDie = flavor === 'Primary Die';

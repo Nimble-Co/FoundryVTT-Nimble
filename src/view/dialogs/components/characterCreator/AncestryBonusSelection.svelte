@@ -6,7 +6,7 @@
 	import Hint from '../../../components/Hint.svelte';
 	import DocumentCard from './DocumentCard.svelte';
 	import prepareAncestryBonusTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryBonusTooltip.js';
-	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
+	import getDocumentSourceLabel from '../../../../utils/documents/getDocumentSourceLabel.js';
 	import localize from '../../../../utils/localize.js';
 	import { createAncestryBonusSelectionState } from './AncestryBonusSelection.svelte.js';
 

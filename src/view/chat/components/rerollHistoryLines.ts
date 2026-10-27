@@ -3,10 +3,10 @@ import type {
 	IncomingReactionEntry,
 	RerollGrant,
 	RerollRecord,
-} from '#utils/incomingReactionEntry.ts';
+} from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '#utils/localize.js';
-import { rerollRuleKey } from '#utils/rerollEntries.ts';
+import { rerollRuleKey } from '#utils/reroll/rerollEntries.ts';
 
 interface RerollHistoryDie {
 	faces: number;

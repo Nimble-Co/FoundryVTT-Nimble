@@ -7,7 +7,7 @@ import {
 	simulateProgression,
 } from '../../../../tests/fixtures/classProgression.ts';
 import type { LevelSummary } from '../../../../tests/fixtures/classProgression.types.ts';
-import type { ClassFeatureIndex } from '../../getClassFeatures.ts';
+import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { CHIMERIC_BOON_OPTIONS, REPORT } from '../stormshifter.expect.ts';
 
 /**

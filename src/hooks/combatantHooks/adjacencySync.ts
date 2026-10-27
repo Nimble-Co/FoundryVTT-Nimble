@@ -3,7 +3,7 @@ import {
 	countAdjacentAllies,
 	countAdjacentEnemies,
 	type PositionOverrides,
-} from '../../utils/tokenAdjacency.js';
+} from '../../utils/tokens/tokenAdjacency.js';
 
 const ADJACENCY_FLAG_PATH = `flags.${SYSTEM_ID}.adjacency`;
 

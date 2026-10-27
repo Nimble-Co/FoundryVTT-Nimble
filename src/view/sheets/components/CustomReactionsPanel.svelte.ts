@@ -1,6 +1,6 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import type { NimbleBaseItem } from '../../../documents/item/base.svelte.js';
-import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
+import formatActivationCostLabel from '../../../utils/combat/formatActivationCostLabel.js';
 
 /** A prepared embedded item always has a non-null `_id`. */
 export type ReactionItem = NimbleBaseItem & { _id: string };

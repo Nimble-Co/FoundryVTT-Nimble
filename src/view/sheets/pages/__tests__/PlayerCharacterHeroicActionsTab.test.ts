@@ -20,7 +20,7 @@ vi.mock('../../../../documents/dialogs/ItemActivationConfigDialog.svelte.js', ()
 	default: itemActivationConfigDialogMock,
 }));
 
-vi.mock('../../../../utils/attackUtils.js', () => ({
+vi.mock('../../../../utils/damage/attackUtils.js', () => ({
 	getUnarmedDamageFormula: getUnarmedDamageFormulaMock,
 	hasUnarmedProficiency: hasUnarmedProficiencyMock,
 }));

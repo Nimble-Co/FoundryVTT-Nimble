@@ -1,5 +1,5 @@
-﻿import { hasCombatantTurnEndedThisRound } from '../utils/combatTurnProgress.js';
-import { getMinionGroupSummaries } from '../utils/minionGrouping.js';
+﻿import { hasCombatantTurnEndedThisRound } from '../utils/combat/combatTurnProgress.js';
+import { getMinionGroupSummaries } from '../utils/minions/minionGrouping.js';
 
 const TOKEN_TURN_COMPLETE_BADGE_KEY = '_nimbleTurnCompleteBadge';
 

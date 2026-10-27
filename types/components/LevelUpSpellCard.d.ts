@@ -1,4 +1,4 @@
-import type { SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import type { SpellEffect } from './SpellReferenceCard.d.ts';
 

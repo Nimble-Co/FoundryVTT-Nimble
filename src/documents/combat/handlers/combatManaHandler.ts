@@ -4,7 +4,7 @@ import {
 	getCombatManaGrantMap,
 	getCombatManaGrantTotalForInitiative,
 	primeActorCombatManaSourceRules,
-} from '../../../utils/combatManaRules.js';
+} from '../../../utils/actor/combatManaRules.js';
 
 interface CombatManaHandlerParams {
 	combatId: string | null;

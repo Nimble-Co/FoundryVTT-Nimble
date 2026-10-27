@@ -5,9 +5,12 @@
 	import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
 	import { incrementDieSize } from '#managers/HitDiceManager.js';
 	import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
-	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
-	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
-	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
+	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
+	import { clampHitDiceBySize } from '#utils/actor/clampHitDiceBySize.ts';
+	import {
+		getManaRecoveryTypesFromClasses,
+		restoresManaOnRest,
+	} from '#utils/actor/manaRecovery.js';
 	import localize from '#utils/localize.ts';
 	import OptionSwapSection from './components/optionSwap/OptionSwapSection.svelte';
 

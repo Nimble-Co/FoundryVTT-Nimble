@@ -3,7 +3,7 @@ import { SYSTEM_ID } from '#system';
 
 const mocks = vi.hoisted(() => ({ applyConditionToActor: vi.fn() }));
 
-vi.mock('#utils/applyConditionToActor.ts', () => ({ default: mocks.applyConditionToActor }));
+vi.mock('#utils/actor/applyConditionToActor.ts', () => ({ default: mocks.applyConditionToActor }));
 
 import ConditionNodeTestHarness from './ConditionNode.testHarness.svelte';
 

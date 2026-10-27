@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte';
 
-import type { SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 
 /**
  * `chooser` asks where a dropped spell should go; `picker` asks which spell a

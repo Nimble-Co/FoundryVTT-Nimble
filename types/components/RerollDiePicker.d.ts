@@ -1,5 +1,5 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
-import type { DieOutcome } from '#utils/incomingReactionEntry.ts';
+import type { DieOutcome } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 export interface RerollDiePickerProps {
 	dice: PickableDie[];

@@ -1,6 +1,6 @@
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
-import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import localize from '#utils/localize.ts';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
+import { getSpellsFromIndex } from '#utils/spell/getSpellsFromIndex.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 

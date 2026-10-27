@@ -3,9 +3,9 @@ import {
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import type { ContainableObject } from '#types/inventoryContainers.js';
-import createScrollFromSpell from '#utils/createScrollFromSpell.js';
-import getSpellScrollTemplateTier from '#utils/getSpellScrollTemplateTier.js';
 import localize from '#utils/localize.js';
+import createScrollFromSpell from '#utils/spell/createScrollFromSpell.js';
+import getSpellScrollTemplateTier from '#utils/spell/getSpellScrollTemplateTier.js';
 import openSpellScrollDialog, {
 	type ScrollDialogActor,
 } from '#view/dialogs/openSpellScrollDialog.js';

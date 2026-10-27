@@ -1,0 +1,73 @@
+import {
+	type DieRef,
+	type OneDieRoll,
+	type PickableDie,
+	pickableDice,
+	primaryDieRef,
+	rerollOneDie,
+} from '../../dice/oneDieReroll.js';
+import type { RerollDie } from '../incomingReactions/incomingReactionEntry.js';
+import type { RerollableRoll } from './rerollRollTarget.js';
+
+function pickOptions(found: RerollableRoll<unknown>, current: OneDieRoll) {
+	if (!found.pickDropped) return {};
+	const d20 = current.terms.findIndex((term) => (term as { faces?: unknown })?.faces === 20);
+	return d20 === -1 ? {} : { droppedFrom: d20 };
+}
+
+/** The dice of the card's roll a player can pick to reroll. */
+function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
+	const current = found.current?.();
+	return current ? pickableDice(current, pickOptions(found, current)) : [];
+}
+
+/**
+ * The roll a rule rerolls: the whole roll, its Primary Die, or the die the
+ * player picked. Null when that die is not one the roll has, or a pick is
+ * needed and missing.
+ */
+function rerollableFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	die: RerollDie | undefined,
+	picked: DieRef | null = null,
+	reroll: typeof rerollOneDie = rerollOneDie,
+): RerollableRoll<TRoll> | null {
+	if (!die || die === 'wholeRoll') return found;
+	const current = found.current?.();
+	if (!current) return null;
+
+	let ref: DieRef | null;
+	if (die === 'primaryDie') ref = primaryDieRef(current);
+	else {
+		const dice = pickableDice(current, pickOptions(found, current));
+		const match = picked
+			? dice.find((d) => d.term === picked.term && d.result === picked.result)
+			: dice.length === 1
+				? dice[0]
+				: undefined;
+		ref = match ? { term: match.term, result: match.result } : null;
+	}
+	if (!ref) return null;
+	const dieRef = ref;
+
+	const term = current.terms[dieRef.term] as { results: Array<{ result: number }> };
+	let made: Awaited<ReturnType<typeof rerollOneDie>> | null = null;
+	return {
+		...found,
+		previousResult: term.results[dieRef.result].result,
+		makeRoll: async (_formula, _options, changes) => {
+			made = await reroll(current, dieRef, {
+				rollModeChange: Math.sign(Number(changes?.rollModeChange) || 0),
+			});
+			return made.roll as unknown as TRoll;
+		},
+		readNewDie: () => ({
+			faces: made?.faces ?? null,
+			value: made?.next ?? null,
+			dropped: made?.dropped ?? null,
+		}),
+		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
+export { diceToPick, rerollableFor };

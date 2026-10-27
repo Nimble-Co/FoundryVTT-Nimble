@@ -1,8 +1,8 @@
 import { SYSTEM_ID, systemHookName } from '#system';
-import { buildActionDeltaSummary } from '#utils/actionDeltaSummary.js';
-import { collectGrantedActionOffers } from '#utils/grantedActionOffers.js';
-import { isCombatantDead } from '#utils/isCombatantDead.js';
-import { requestCombatantActionDelta } from '#utils/requestCombatantActionDelta.js';
+import { buildActionDeltaSummary } from '#utils/combat/actionDeltaSummary.js';
+import { collectGrantedActionOffers } from '#utils/combat/grantedActionOffers.js';
+import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
+import { requestCombatantActionDelta } from '#utils/combat/requestCombatantActionDelta.js';
 import type { ActionDeltaApplication, ActionDeltaRule } from '../models/rules/actionDelta.js';
 
 type HookFn = (...args: unknown[]) => unknown;

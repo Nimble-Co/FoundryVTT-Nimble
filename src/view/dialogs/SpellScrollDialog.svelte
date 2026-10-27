@@ -2,7 +2,7 @@
 	import type { SpellScrollDialogProps } from '#types/components/SpellScrollDialog.d.ts';
 
 	import localize from '#utils/localize.js';
-	import { getSpellSchoolLabel } from '#utils/spellLabels.js';
+	import { getSpellSchoolLabel } from '#utils/spell/spellLabels.js';
 	import Hint from '#view/components/Hint.svelte';
 	import SecondaryNavigation from '#view/components/SecondaryNavigation.svelte';
 

@@ -1,4 +1,4 @@
-import type { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import type { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 
 type ChargePoolScope = (typeof ChargePoolRuleConfig.scopes)[number];
 type ChargePoolDieSize = (typeof ChargePoolRuleConfig.dieSizes)[number];

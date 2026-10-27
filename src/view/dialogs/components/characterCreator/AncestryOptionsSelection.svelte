@@ -7,7 +7,7 @@
 	import { getContext } from 'svelte';
 
 	import localize from '#utils/localize.js';
-	import { variantIcon } from '#utils/ancestryVariants.js';
+	import { variantIcon } from '#utils/classProgression/ancestryVariants.js';
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
 	import { createAncestryOptionsSelectionState } from './AncestryOptionsSelection.svelte.js';

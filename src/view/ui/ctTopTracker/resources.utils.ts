@@ -6,22 +6,25 @@ import type {
 	CombatTrackerNonPlayerHpBarTextMode,
 	CombatTrackerPlayerHpBarTextMode,
 } from '../../../settings/combatTrackerSettings.js';
-import { type ActorHealthState, getActorHealthState } from '../../../utils/actorHealthState.js';
+import {
+	type ActorHealthState,
+	getActorHealthState,
+} from '../../../utils/actor/actorHealthState.js';
 import {
 	getActorHpMaxValue,
 	getActorHpValue,
 	getActorManaValueAndMax,
 	getActorWoundsValueAndMax,
-} from '../../../utils/actorResources.js';
-import { getCombatantImage } from '../../../utils/combatantImage.js';
+} from '../../../utils/actor/actorResources.js';
+import { getCombatantImage } from '../../../utils/combat/combatantImage.js';
 import {
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
-} from '../../../utils/combatTurnActions.js';
+} from '../../../utils/combat/combatTurnActions.js';
 import {
 	getHeroicReactionAvailability,
 	getHeroicReactionAvailabilityTitle,
-} from '../../../utils/heroicActions.js';
+} from '../../../utils/incomingReactions/heroicActions.js';
 import localize from '../../../utils/localize.js';
 import {
 	isFriendlyCombatant,

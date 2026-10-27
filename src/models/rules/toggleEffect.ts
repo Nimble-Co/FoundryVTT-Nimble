@@ -1,8 +1,8 @@
 import { SYSTEM_ID } from '#system';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
-import { firesCritTriggers } from '#utils/firesCritTriggers.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
+import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type ActorDyingContext,
