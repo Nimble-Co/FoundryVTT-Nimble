@@ -2,7 +2,11 @@
 	import { PredicateField } from '../../../models/fields/PredicateField.js';
 	import type { RawPredicate } from '../../../etc/Predicate.js';
 	import localize from '#utils/localize.js';
-	import { createSchemaFieldRendererState } from '#view/rulesBuilder/components/SchemaFieldRendererState.svelte.js';
+	import {
+		childFieldHint,
+		childFieldLabel,
+		createSchemaFieldRendererState,
+	} from '#view/rulesBuilder/components/SchemaFieldRendererState.svelte.js';
 	import type { SchemaFieldRendererProps } from '#view/rulesBuilder/types.js';
 	import DocumentPicker from '#view/components/DocumentPicker.svelte';
 	import TagGroup from '#view/components/TagGroup.svelte';
@@ -280,8 +284,10 @@
 					<fieldset class="nimble-array-of-schema__entry">
 						<legend>#{i + 1}</legend>
 						{#each Object.entries((elementField as unknown as { fields: Record<string, foundry.data.fields.DataField.Any> }).fields) as [childName, childField]}
+							{@const hint = childFieldHint(childField)}
 							<div class="nimble-field-row">
-								<span class="nimble-field-row__label">{childName}</span>
+								<span class="nimble-field-row__label">{childFieldLabel(childName, childField)}</span
+								>
 								<Self
 									field={childField}
 									value={entry[childName]}
@@ -295,6 +301,9 @@
 										onChange(next);
 									}}
 								/>
+								{#if hint}
+									<small class="nimble-field-row__hint">{hint}</small>
+								{/if}
 							</div>
 						{/each}
 						<button
@@ -337,8 +346,9 @@
 	{:else if field instanceof fields.SchemaField}
 		<fieldset class="nimble-schema-field">
 			{#each Object.entries((field as unknown as { fields: Record<string, foundry.data.fields.DataField.Any> }).fields) as [childName, childField]}
+				{@const hint = childFieldHint(childField)}
 				<div class="nimble-field-row">
-					<span class="nimble-field-row__label">{childName}</span>
+					<span class="nimble-field-row__label">{childFieldLabel(childName, childField)}</span>
 					<Self
 						field={childField}
 						value={(value as Record<string, unknown> | undefined)?.[childName]}
@@ -352,6 +362,9 @@
 								[childName]: v,
 							})}
 					/>
+					{#if hint}
+						<small class="nimble-field-row__hint">{hint}</small>
+					{/if}
 				</div>
 			{/each}
 		</fieldset>
@@ -450,6 +463,18 @@
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
 			color: var(--color-text-dark-secondary);
+		}
+
+		&__hint {
+			margin-top: 0.0625rem;
+			font-size: var(--nimble-xs-text);
+			color: var(--color-text-dark-secondary);
+			line-height: 1.3;
+		}
+
+		> :global(input[type='checkbox']) {
+			align-self: flex-start;
+			width: auto;
 		}
 	}
 </style>
