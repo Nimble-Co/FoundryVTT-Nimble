@@ -73,7 +73,7 @@ function dice(record: RerollRecord): RerollHistoryLine['dice'] {
 	return { previous: { faces, ...previous }, next: { faces, ...next } };
 }
 
-function rollChangeTags(record: RerollRecord): RerollTag[] {
+function buildRollChangeTags(record: RerollRecord): RerollTag[] {
 	return (record.changes ?? []).map((change) => {
 		if (change.kind === 'extraDamage') {
 			const values = { amount: String(change.value), source: change.label };
@@ -105,7 +105,7 @@ function rollChangeTags(record: RerollRecord): RerollTag[] {
 	});
 }
 
-function grantTags(grants: readonly RerollGrant[]): {
+function buildGrantTags(grants: readonly RerollGrant[]): {
 	tags: RerollTag[];
 	tempHpNote: string | null;
 	offNote: string | null;
@@ -237,7 +237,7 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 		}
 
 		const kept = record.kept && typeof record.keptTotal === 'number';
-		const given = grantTags(record.grants ?? []);
+		const given = buildGrantTags(record.grants ?? []);
 		const automatic: RerollTag[] = record.automatic
 			? [
 					{
@@ -252,7 +252,7 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			: [];
 		return {
 			title: feature,
-			tags: [...automatic, ...rollChangeTags(record), ...given.tags],
+			tags: [...automatic, ...buildRollChangeTags(record), ...given.tags],
 			tempHpNote: given.tempHpNote,
 			offNote: given.offNote,
 			text: kept

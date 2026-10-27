@@ -146,7 +146,7 @@
 			top: var(--die-face-y);
 			left: 50%;
 			transform: translate(-50%, -50%);
-			font-size: calc(var(--nimble-die-face-size, 1.875rem) * 0.4);
+			font-size: max(0.6875rem, calc(var(--nimble-die-face-size, 1.875rem) * 0.4));
 			font-weight: 800;
 			line-height: 1;
 			font-variant-numeric: lining-nums tabular-nums;
