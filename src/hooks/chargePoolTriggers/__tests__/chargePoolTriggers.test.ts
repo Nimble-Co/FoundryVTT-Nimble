@@ -268,7 +268,7 @@ describe('registerInitiativeTriggerHooks', () => {
 			};
 			actor.items = { contents: [item], get: () => item };
 			const current = () => (item.flags.nimble.chargePools.dice as { current: number }).current;
-			return { actor, current };
+			return { actor, item, current };
 		}
 
 		const rolledIn = (combatId: string) => ({ parent: { id: combatId } });
@@ -278,12 +278,14 @@ describe('registerInitiativeTriggerHooks', () => {
 			const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
 			registerInitiativeTriggerHooks();
 			const hook = callbacks.get('nimble.initiativeRolled');
-			const { actor, current } = commander(0);
+			const { actor, item, current } = commander(0);
 
 			await hook?.({ actor, combatant: rolledIn('combat-1') });
 			await vi.waitFor(() => expect(current()).toBe(2));
+			const writes = item.update.mock.calls.length;
 			await hook?.({ actor, combatant: rolledIn('combat-1') });
 			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(item.update).toHaveBeenCalledTimes(writes);
 			expect(current()).toBe(2);
 
 			await hook?.({ actor, combatant: rolledIn('combat-2') });

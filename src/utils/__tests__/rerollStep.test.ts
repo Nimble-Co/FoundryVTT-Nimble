@@ -145,6 +145,27 @@ describe('rerollWithRule', () => {
 		expect(result).toMatchObject({ status: 'done', roll: { primaryDieValue: 3 } });
 	});
 
+	it("adds the roll mode changes of two Modify Reroll rules to the rule's own", async () => {
+		const makeRoll = vi.fn(async () => ({ primaryDieValue: 3 }));
+		const advantage = (key: string) => ({ key, kind: 'rollMode' as const, label: key, value: 1 });
+
+		await rerollWithRule(
+			input({
+				rule: rule({
+					rerollChanges: () => ({ rollModeChange: 1, primaryDieBonus: 0, extraDamage: '' }),
+				}),
+				rollChanges: [advantage('a'), advantage('b')],
+				makeRoll,
+			}),
+		);
+
+		expect(makeRoll).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.objectContaining({ rollModeSources: [0, 3] }),
+			expect.objectContaining({ rollModeChange: 3 }),
+		);
+	});
+
 	it('asks the rule for the changes of the kind of roll it rerolls', async () => {
 		const rerollChanges = vi.fn(() => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }));
 		await rerollWithRule(input({ rule: rule({ rerollChanges }), rollKind: 'save' }));

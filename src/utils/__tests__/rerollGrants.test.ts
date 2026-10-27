@@ -204,16 +204,19 @@ describe('rerollGrants', () => {
 	});
 
 	it('marks every row not applied when Feature Effects is off', () => {
-		const [lyra, wren] = scene(hero('Lyra', 0), hero('Wren', 1));
+		const [lyra, wren, pip] = scene(hero('Lyra', 0), hero('Wren', 1), hero('Pip', 2));
 
-		const rows = grants([lyra, wren], {
+		const rows = grants([lyra, wren, pip], {
 			roller: wren,
 			owner: lyra,
 			modifiers: [presence, bones],
 			featureEffects: false,
 		});
 
-		expect(rows.map((r) => r.applied)).toEqual([false]);
+		expect(rows.map((r) => [r.name, r.applied])).toEqual([
+			['Wren', false],
+			['Pip', false],
+		]);
 		expect(rows[0].actions?.amount).toBe(1);
 	});
 });
