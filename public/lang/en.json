@@ -97,6 +97,51 @@
 					"hp": "HP",
 					"tempHp": "Temp HP"
 				}
+			},
+			"hero": {
+				"core": {
+					"abilitiesAndSaves": "Abilities and saves",
+					"armor": "Armor",
+					"conditions": "Conditions",
+					"damage": "Damage",
+					"defense": "{label}: {types}",
+					"languages": "Languages",
+					"none": "None",
+					"proficiencies": "Proficiencies and defenses",
+					"skills": "Skills",
+					"speed": "Speed",
+					"speedBonus": "{amount} from {source}",
+					"speedValue": "{type} {value}",
+					"weapons": "Weapons"
+				},
+				"rail": {
+					"armor": "Armor",
+					"armorTooltip": "Armor {value}",
+					"endTurnQuestion": "You have actions left. End your turn?",
+					"hp": {
+						"bloodied": "Bloodied: at half HP or less.",
+						"dying": "Dying: at 0 HP. Taking damage while Dying causes 2 Wounds, a crit causes 3 instead.",
+						"healthy": "Hit Points"
+					},
+					"levelUpHint": "Level Up. This opens the Level Up window",
+					"levelUpMax": "You are at the highest level",
+					"levelUpNoClass": "Add a class to level up",
+					"metaAncestry": "{ancestry} ({size})",
+					"metaClass": "{class} ({level})",
+					"metaSubclass": "{class} ({subclass}, {level})",
+					"notYourTurn": "Not your turn",
+					"offTurnHint": "A reaction spends 1 action. You start your next turn with the actions that are left.",
+					"speed": {
+						"burrow": "Burrow",
+						"climb": "Climb",
+						"fly": "Fly",
+						"swim": "Swim",
+						"walk": "Speed"
+					},
+					"speedTooltip": "{type} {value} spaces",
+					"toggleWound": "Toggle wound {number}",
+					"yourTurn": "Your turn"
+				}
 			}
 		},
 		"abilityScores": {
