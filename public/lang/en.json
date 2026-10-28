@@ -112,7 +112,10 @@
 					"speed": "Speed",
 					"speedBonus": "{amount} from {source}",
 					"speedValue": "{type} {value}",
-					"weapons": "Weapons"
+					"weapons": "Weapons",
+					"save": "Save",
+					"saves": "Saves",
+					"stats": "Stats"
 				},
 				"rail": {
 					"armor": "Armor",
@@ -140,7 +143,45 @@
 					},
 					"speedTooltip": "{type} {value} spaces",
 					"toggleWound": "Toggle wound {number}",
-					"yourTurn": "Your turn"
+					"yourTurn": "Your turn",
+					"configureHp": "Configure Hit Points",
+					"edit": "Edit",
+					"editHint": "Edit the sheet: show where you configure your hero",
+					"hpShort": "Hit Points",
+					"label": "Hero",
+					"metaLabel": "Configure Size",
+					"metaShort": "Size",
+					"movementShort": "Movement",
+					"name": "Name",
+					"revertLevelUp": "Revert Last Level Up",
+					"stopEditing": "Stop editing"
+				},
+				"meter": {
+					"dieLabel": "{label} die {number}: {face}",
+					"dieMenu": "Change one die",
+					"discard": "Discard",
+					"discardAll": "Discard all",
+					"discardAllQuestion": "Discard all {label}?",
+					"fromInitiative": "from Initiative",
+					"idleHint": "You get these when you roll Initiative",
+					"roll": "Roll",
+					"rollHitDiceHint": "Roll Hit Dice. This opens the Hit Dice window",
+					"rollOne": "Roll and spend one {label} die",
+					"setValue": "Set value",
+					"temporary": "+{count} temporary"
+				},
+				"turn": {
+					"keepPlaying": "Keep my turn",
+					"label": "Actions"
+				},
+				"tabs": {
+					"core": "Core",
+					"label": "Sheet tabs"
+				},
+				"frame": {
+					"done": "Done",
+					"editing": "Editing.",
+					"editingHint": "Click an outlined part to configure it."
 				}
 			}
 		},
