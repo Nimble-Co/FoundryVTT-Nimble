@@ -4,6 +4,7 @@ Asks once before something that you cannot take back (Delete, end an effect), in
 It is a bar, not a second window. Foundry has no undo, so the question comes before the act.
 -->
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
 
 	interface Props {
@@ -17,6 +18,17 @@ It is a bar, not a second window. Foundry has no undo, so the question comes bef
 	}
 
 	let { question, confirmLabel, cancelLabel, onconfirm, oncancel }: Props = $props();
+
+	let cancelButton: HTMLButtonElement | undefined;
+
+	// Focus goes to the safe answer when the bar opens, and back to the trigger when it closes.
+	onMount(() => {
+		const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		cancelButton?.focus();
+		return () => {
+			if (trigger?.isConnected) trigger.focus();
+		};
+	});
 </script>
 
 <div class="ask" role="alertdialog" aria-label={question}>
@@ -24,7 +36,12 @@ It is a bar, not a second window. Foundry has no undo, so the question comes bef
 	<button type="button" class="nimble-u-reset-button yes" onclick={onconfirm}>
 		{confirmLabel ?? localize('NIMBLE.actorSheet.parts.confirmBar.confirm')}
 	</button>
-	<button type="button" class="nimble-u-reset-button no" onclick={oncancel}>
+	<button
+		type="button"
+		class="nimble-u-reset-button no"
+		bind:this={cancelButton}
+		onclick={oncancel}
+	>
 		{cancelLabel ?? localize('NIMBLE.actorSheet.parts.confirmBar.cancel')}
 	</button>
 </div>
