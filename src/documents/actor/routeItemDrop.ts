@@ -2,10 +2,10 @@ import type { ContainableObject } from '#types/inventoryContainers.js';
 import localize from '#utils/localize.js';
 import createScrollFromSpell from '#utils/spell/createScrollFromSpell.js';
 import getSpellScrollTemplateTier from '#utils/spell/getSpellScrollTemplateTier.js';
-import { shouldIncludeSpellDescriptionOnScrolls } from '../../settings/spellScrollSettings.js';
 import openSpellScrollDialog, {
 	type ScrollDialogActor,
-} from '../../view/dialogs/openSpellScrollDialog.js';
+} from '#view/dialogs/openSpellScrollDialog.js';
+import { shouldIncludeSpellDescriptionOnScrolls } from '../../settings/spellScrollSettings.js';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { NimbleCharacter } from './character.js';
 

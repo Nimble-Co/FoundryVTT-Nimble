@@ -15,7 +15,7 @@ function hasLangKey(key: string): boolean {
 }
 
 describe('built-in heroic action definitions', () => {
-	it('keeps the action ids that existing hotbar macros call', () => {
+	it('keeps the action id that each built-in hotbar macro calls', () => {
 		expect(BUILT_IN_HEROIC_ACTIONS.map((action) => action.actionId)).toEqual([
 			'attack',
 			'unarmedStrike',

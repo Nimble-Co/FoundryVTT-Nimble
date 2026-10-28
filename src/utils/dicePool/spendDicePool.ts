@@ -5,7 +5,7 @@ import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import localize from '#utils/localize.ts';
 
-export interface SpendDicePoolPool {
+export interface SpendablePool {
 	id: string;
 	label: string;
 	faces: readonly number[];
@@ -13,13 +13,13 @@ export interface SpendDicePoolPool {
 
 export interface SpendDicePoolRequest {
 	actor: NimbleCharacter;
-	pool: SpendDicePoolPool;
+	pool: SpendablePool;
 	consumer: DicePoolConsumer;
 	/** Indices into `pool.faces` that the player picked. */
 	selectedIndices: Iterable<number>;
 }
 
-function chatClass(): typeof ChatMessage {
+function chatMessageClass(): typeof ChatMessage {
 	return (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
 }
 
@@ -49,7 +49,7 @@ async function applyMaximizeOutcome(
 		}),
 	);
 
-	const ChatMessageCls = chatClass();
+	const ChatMessageCls = chatMessageClass();
 	await ChatMessageCls.create({
 		speaker: ChatMessageCls.getSpeaker({ actor }),
 		content: spendFlavor(consumer.itemName, subLine),
@@ -106,7 +106,7 @@ export async function spendDicePool(request: SpendDicePoolRequest): Promise<void
 	}
 
 	await effectRoll.toMessage({
-		speaker: chatClass().getSpeaker({ actor }),
+		speaker: chatMessageClass().getSpeaker({ actor }),
 		flavor: spendFlavor(consumer.itemName, subLine),
 	} as Parameters<Roll['toMessage']>[0]);
 }

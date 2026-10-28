@@ -85,8 +85,8 @@ export default class NPCSheet extends SvelteApplicationMixin(
 			case 'refused':
 				return false;
 			case 'sort':
-				// Without an `id` the core sort finds no source item, so a row reorder
-				// that bubbles up here is not applied a second time.
+				// Passed without an `id`, as before: the core sort cannot find the item
+				// and stops, so a row reorder that bubbles up here is not applied twice.
 				return (this as object as { _onSortItem(e: DragEvent, d: object): void })._onSortItem(
 					event,
 					outcome.itemData,

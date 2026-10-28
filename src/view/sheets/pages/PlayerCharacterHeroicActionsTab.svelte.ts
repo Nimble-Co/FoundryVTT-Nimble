@@ -30,10 +30,9 @@ interface ActionsData {
 const HEROIC_ACTIONS = BUILT_IN_HEROIC_ACTIONS.filter(
 	(action) => action.actionId !== 'unarmedStrike',
 );
-const HEROIC_REACTIONS = BUILT_IN_HEROIC_REACTIONS;
 
 type HeroicReactionUsageState = ReturnType<typeof getHeroicReactionUsageState>;
-type HeroicReactionId = (typeof HEROIC_REACTIONS)[number]['actionId'];
+type HeroicReactionId = (typeof BUILT_IN_HEROIC_REACTIONS)[number]['actionId'];
 type ReactionUsageStateMap = Record<HeroicReactionId, HeroicReactionUsageState>;
 
 type CombatWithHeroicReactionUse = Combat & {
@@ -114,7 +113,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		subscribeCombatState();
 		const combat = getCombat();
 		const combatant = getCombatant();
-		return HEROIC_REACTIONS.reduce((acc, reaction) => {
+		return BUILT_IN_HEROIC_REACTIONS.reduce((acc, reaction) => {
 			acc[reaction.actionId as HeroicReactionId] = getHeroicReactionUsageState({
 				combat,
 				combatant,
@@ -164,19 +163,19 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	}
 
 	function isReactionAvailable(reactionKey: HeroicReactionKey): boolean {
-		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		const reaction = BUILT_IN_HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
 		if (!reaction) return false;
 		return getReactionUsageState(reaction).isAvailable;
 	}
 
 	function canUseReaction(reactionKey: HeroicReactionKey): boolean {
-		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		const reaction = BUILT_IN_HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
 		if (!reaction) return false;
 		return getReactionUsageState(reaction).canUse;
 	}
 
 	function isReactionActiveTurnBlocked(reactionKey: HeroicReactionKey): boolean {
-		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		const reaction = BUILT_IN_HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
 		if (!reaction) return false;
 		return getReactionUsageState(reaction).isActiveTurn;
 	}
@@ -311,7 +310,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 			return showEmbeddedDocumentImages;
 		},
 		HEROIC_ACTIONS,
-		HEROIC_REACTIONS,
+		HEROIC_REACTIONS: BUILT_IN_HEROIC_REACTIONS,
 		canUseReaction,
 		isReactionActiveTurnBlocked,
 		deductActionPips,
