@@ -62,7 +62,9 @@ In edit mode, `editing` leaves 8 px under a heading over rows, and `buttonGap="m
 	class:now
 	class:flush
 >
-	{label}{#if note !== undefined}<small class={noteTone}>{note}</small>{/if}
+	<span role="heading" aria-level="3">{label}</span>{#if note !== undefined}<small class={noteTone}
+			>{note}</small
+		>{/if}
 	{#if children}<span class="act" class:md={buttonGap === 'md'}>{@render children()}</span>{/if}
 </div>
 
