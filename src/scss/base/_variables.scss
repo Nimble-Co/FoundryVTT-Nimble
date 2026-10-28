@@ -381,5 +381,7 @@
 	--nimble-pool-dice-color: hsl(1, 70%, 70%);
 	--nimble-pool-charges-color: hsl(205, 60%, 70%);
 	--nimble-pool-uses-color: hsl(300, 45%, 76%);
+	/** the share of a tone in a toned label; the rest is black **/
+	--nimble-ui-tone-mix: 45%;
 	--nimble-mana-fill: linear-gradient(to right, hsl(207deg 47% 20%) 0%, hsl(212deg 47% 44%) 100%);
 }

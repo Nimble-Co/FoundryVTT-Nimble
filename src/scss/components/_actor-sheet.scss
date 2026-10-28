@@ -1,0 +1,23 @@
+//** ACTOR SHEET: the root of the new character and NPC sheets; the parts render under it **/
+
+.nimble-actor-sheet {
+	--fa-width: auto;
+
+	font-family: var(--nimble-primary-font);
+	color: var(--nimble-ui-ink);
+
+	:is(h1, h2, h3, h4, h5, h6) {
+		font-family: inherit;
+		color: inherit;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&,
+		*,
+		*::before,
+		*::after {
+			animation: none !important;
+			transition: none !important;
+		}
+	}
+}
