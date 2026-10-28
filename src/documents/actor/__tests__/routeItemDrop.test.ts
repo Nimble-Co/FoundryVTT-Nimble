@@ -152,7 +152,9 @@ describe('routeItemDrop', () => {
 			});
 
 			expect(await drop(actor, subclass())).toEqual({ kind: 'refused' });
-			expect(globals().ui.notifications.warn).toHaveBeenCalled();
+			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+				'You must be at least level 3 to select a subclass. You are currently level 2.',
+			);
 		});
 
 		it('refuses a subclass of a class the character does not have', async () => {

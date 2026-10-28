@@ -2251,6 +2251,7 @@
 					"spendWithCount": "Spend ({count})",
 					"maximize": "Maximize",
 					"maximizedNote": "Maximized {count} {label} ({changes})",
+					"spentNote": "Spent {count} {label} ({faces})",
 					"bankedReductionNote": "Applied automatically as damage reduction against damage taken."
 				}
 			}
@@ -3373,6 +3374,13 @@
 			"deselectSubclass": "Deselect this subclass",
 			"selectSubclassAriaLabel": "Select {subclassName}",
 			"deselectSubclassAriaLabel": "Deselect {subclassName}"
+		},
+		"subclassDrop": {
+			"levelTooLow": "You must be at least level 3 to select a subclass. You are currently level {level}.",
+			"missingClass": "The subclass \"{subclass}\" requires the {className} class.",
+			"alreadyHave": "You already have the \"{subclass}\" subclass.",
+			"replaceIntro": "You already have the {subclass} subclass.",
+			"replaceQuestion": "Do you want to replace it with {subclass}?"
 		},
 		"epicBoonSelection": {
 			"header": "Epic Boon",

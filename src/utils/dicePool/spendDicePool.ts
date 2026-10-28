@@ -99,7 +99,11 @@ export async function spendDicePool(request: SpendDicePoolRequest): Promise<void
 	}
 
 	let subLine = foundry.utils.escapeHTML(
-		`Spent ${spentFaces.length} ${pool.label} (${spentFaces.join(', ')})`,
+		localize('NIMBLE.dicePoolTracker.panel.useFeature.spentNote', {
+			count: String(spentFaces.length),
+			label: pool.label,
+			faces: spentFaces.join(', '),
+		}),
 	);
 	if (consumer.effectType === 'damageReduction') {
 		subLine += `<br />${foundry.utils.escapeHTML(localize('NIMBLE.dicePoolTracker.panel.useFeature.bankedReductionNote'))}`;

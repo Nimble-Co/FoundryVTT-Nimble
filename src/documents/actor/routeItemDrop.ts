@@ -229,7 +229,7 @@ async function createValidatedSubclasses(
 			const characterLevel = actor.levels?.character ?? 0;
 			if (characterLevel < 3) {
 				ui.notifications?.warn(
-					`You must be at least level 3 to select a subclass. You are currently level ${characterLevel}.`,
+					localize('NIMBLE.subclassDrop.levelTooLow', { level: String(characterLevel) }),
 				);
 				continue;
 			}
@@ -240,7 +240,12 @@ async function createValidatedSubclasses(
 
 			if (!hasMatchingClass) {
 				const className = parentClass ? (CONFIG.NIMBLE?.classes?.[parentClass] ?? parentClass) : '';
-				ui.notifications?.warn(`The subclass "${subclass.name}" requires the ${className} class.`);
+				ui.notifications?.warn(
+					localize('NIMBLE.subclassDrop.missingClass', {
+						subclass: String(subclass.name ?? ''),
+						className: String(className),
+					}),
+				);
 				continue;
 			}
 
@@ -259,12 +264,18 @@ async function createValidatedSubclasses(
 					typeof subclass.system?.identifier === 'string' ? subclass.system.identifier : null;
 
 				if (existingIdentifier && newIdentifier && existingIdentifier === newIdentifier) {
-					ui.notifications?.warn(`You already have the "${existingSubclass.name}" subclass.`);
+					ui.notifications?.warn(
+						localize('NIMBLE.subclassDrop.alreadyHave', { subclass: existingSubclass.name ?? '' }),
+					);
 					continue;
 				}
 
 				const confirmed = await foundry.applications.api.DialogV2.confirm({
-					content: `<p>You already have the <strong>${existingSubclass.name}</strong> subclass.<br />Do you want to replace it with <strong>${subclass.name}</strong>?</p>`,
+					content: `<p>${localize('NIMBLE.subclassDrop.replaceIntro', {
+						subclass: `<strong>${foundry.utils.escapeHTML(existingSubclass.name ?? '')}</strong>`,
+					})}<br />${localize('NIMBLE.subclassDrop.replaceQuestion', {
+						subclass: `<strong>${foundry.utils.escapeHTML(String(subclass.name ?? ''))}</strong>`,
+					})}</p>`,
 					rejectClose: false,
 					modal: true,
 				});
