@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { sveltePreprocess } from 'svelte-preprocess';
 import { defineConfig } from 'vitest/config';
 
 const systemJson = JSON.parse(readFileSync(path.resolve(__dirname, 'public/system.json'), 'utf8'));
@@ -134,23 +133,6 @@ const config = defineConfig({
 					return { runes: false };
 				}
 			},
-			preprocess: [
-				// Rewrites `.system-nimble` in component <style lang="scss"> blocks
-				// before they hit sass. Component blocks don't @use our partials,
-				// so a string-level rewrite covers them — no sass importer needed.
-				{
-					name: 'system-namespace-rewrite',
-					style({ content, attributes }) {
-						if (attributes.lang !== 'scss' && attributes.lang !== 'sass') return;
-						return { code: rewriteNamespace(content) };
-					},
-				},
-				sveltePreprocess({
-					typescript: {
-						tsconfigFile: './tsconfig.json',
-					},
-				}),
-			],
 			onwarn: (warning, handler) => {
 				// Suppress `a11y-missing-attribute` for missing href in <a> links.
 				// Foundry doesn't follow accessibility rules.

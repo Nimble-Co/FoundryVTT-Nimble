@@ -1,0 +1,24 @@
+//** CHROME: the dark rail and window chrome of the actor sheets, in both themes **/
+
+.nimble-chrome {
+	--nimble-ui-ink: hsl(36, 58%, 90%);
+	--nimble-ui-ink-muted: hsl(0, 0%, 86%);
+	--nimble-ui-ink-dim: hsl(41, 24%, 66%);
+	--nimble-ui-highlight: hsl(36, 53%, 80%);
+	--nimble-ui-line: hsla(41, 18%, 54%, 0.5);
+	--nimble-ui-ring: hsla(41, 18%, 58%, 0.8);
+	--nimble-ui-soft: hsla(41, 18%, 54%, 0.2);
+	--nimble-ui-hover: hsla(0, 0%, 100%, 0.08);
+	--nimble-ui-well: hsla(0, 0%, 0%, 0.32);
+	--nimble-ui-own: hsl(1, 80%, 80%);
+	--nimble-ui-own-background: hsla(1, 51%, 40%, 0.38);
+	--nimble-ui-action: hsl(139, 47%, 62%);
+	--nimble-ui-action-background: hsla(139, 35%, 20%, 0.4);
+	--nimble-ui-vital: hsl(1, 70%, 70%);
+	--nimble-ui-warn: hsl(38, 85%, 68%);
+	--nimble-ui-edge: hsl(41, 26%, 64%);
+	--nimble-ui-focus: #ff6400;
+
+	background: var(--nimble-ui-chrome);
+	color: var(--nimble-ui-ink);
+}

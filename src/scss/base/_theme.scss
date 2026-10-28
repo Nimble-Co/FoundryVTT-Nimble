@@ -274,4 +274,30 @@
 	--nimble-pool-spend-auto-face-text-color: hsl(45, 85%, 72%);
 	--nimble-pool-spend-auto-total-color: hsl(45, 90%, 60%);
 	--nimble-pool-spend-total-color: hsl(150, 55%, 60%);
+
+	/** ACTOR SHEET PARTS **/
+	--nimble-class-resource-color: hsl(1, 62%, 60%);
+	--nimble-sequence-background: hsl(41 18% 20% / 30%);
+	--nimble-sequence-border-color: hsl(41 18% 40% / 30%);
+	--nimble-sequence-text-color: hsl(41, 30%, 70%);
+	--nimble-ui-ink: hsl(36, 58%, 90%);
+	--nimble-ui-ink-muted: hsl(0, 0%, 84%);
+	--nimble-ui-ink-dim: hsl(41, 18%, 58%);
+	--nimble-ui-highlight: hsl(36, 53%, 80%);
+	--nimble-ui-line: hsla(41, 18%, 54%, 0.45);
+	--nimble-ui-ring: hsla(41, 18%, 54%, 0.75);
+	--nimble-ui-soft: hsla(41, 18%, 54%, 0.16);
+	--nimble-ui-hover: hsla(293, 10%, 34%, 0.5);
+	--nimble-ui-well: hsla(0, 0%, 0%, 0.28);
+	--nimble-ui-tile: hsl(41, 18%, 54%);
+	--nimble-ui-tile-ink: #181821;
+	--nimble-ui-own: hsl(1, 75%, 76%);
+	--nimble-ui-own-background: hsla(1, 51%, 40%, 0.24);
+	--nimble-ui-action: hsl(139, 47%, 58%);
+	--nimble-ui-action-background: hsla(139, 30%, 22%, 0.3);
+	--nimble-ui-vital: hsl(1, 70%, 70%);
+	--nimble-ui-warn: hsl(38, 85%, 66%);
+	--nimble-ui-edge: hsl(41, 24%, 60%);
+	--nimble-ui-focus: #ff6400;
+	--nimble-ui-chrome: #181821;
 }

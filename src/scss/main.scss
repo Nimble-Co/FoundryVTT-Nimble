@@ -2,6 +2,7 @@
 @use "base/base";
 @use "base/functions";
 @use "base/theme";
+@use "base/chrome";
 @use "base/typography";
 
 @use "components/ability-score";
@@ -56,5 +57,6 @@
 @use "vendor/range-slider-pips/spell-roll-mode";
 
 @use "utils/display-contents";
+@use "utils/reset-button";
 @use "utils/spacing";
 @use "utils/unstyled-button";
