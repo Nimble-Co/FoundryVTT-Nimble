@@ -6,7 +6,7 @@ import {
 	getActiveCombatForCurrentScene,
 	registerCombatStateHooks,
 } from '#utils/combat/combatState.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
+import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	BUILT_IN_HEROIC_ACTIONS,
@@ -91,28 +91,12 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		};
 	}
 
-	async function updateActionPips(newValue: number): Promise<void> {
+	async function deductActionPips(count = 1): Promise<void> {
 		const combat = getCombat();
 		const combatantId = getCombatantInCombat()?.id ?? null;
 		if (!combat || !combatantId) return;
 
-		await queueCombatantMutationWithFreshDocument({
-			combat,
-			combatantId,
-			mutation: async (currentCombatant) => {
-				await currentCombatant.update({
-					'system.actions.base.current': newValue,
-				} as Record<string, unknown>);
-			},
-		});
-	}
-
-	async function deductActionPips(count = 1): Promise<void> {
-		const { current } = getActionsData();
-		if (current > 0) {
-			const newValue = Math.max(0, current - count);
-			await updateActionPips(newValue);
-		}
+		await consumeCombatantAction({ combat, combatantId, actionCost: count });
 	}
 
 	// Reactive combat state

@@ -1,4 +1,5 @@
 import { getActiveCombatForCurrentScene } from '../utils/combat/combatState.js';
+import { consumeCombatantAction } from '../utils/combat/combatTurnActions.js';
 import resolveItemActionCost, {
 	type ItemWithActivationCost,
 } from '../utils/combat/resolveItemActionCost.js';
@@ -49,12 +50,7 @@ async function deductActionPips(actor: Actor, count: number): Promise<void> {
 	if (!combat) return;
 
 	const combatant = combat.combatants.find((c) => c.actorId === actor.id);
-	if (!combatant || combatant.initiative === null) return;
+	if (!combatant?.id || combatant.initiative === null) return;
 
-	// @ts-expect-error - combatant.system is not typed
-	const currentActions = combatant.system?.actions?.base?.current ?? 0;
-	if (currentActions > 0) {
-		const newValue = Math.max(0, currentActions - count);
-		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
-	}
+	await consumeCombatantAction({ combat, combatantId: combatant.id, actionCost: count });
 }
