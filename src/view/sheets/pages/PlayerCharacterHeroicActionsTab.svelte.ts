@@ -6,9 +6,13 @@ import {
 	getActiveCombatForCurrentScene,
 	registerCombatStateHooks,
 } from '#utils/combat/combatState.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
+import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
+	BUILT_IN_HEROIC_ACTIONS,
+	BUILT_IN_HEROIC_REACTIONS,
+	type BuiltInHeroicAction,
+	type BuiltInHeroicReaction,
 	getHeroicReactionAvailabilityTitle,
 	type HeroicReactionKey,
 } from '#utils/incomingReactions/heroicActions.js';
@@ -17,105 +21,18 @@ import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 import HeroicActionsHelpDialog from '#view/dialogs/HeroicActionsHelpDialog.svelte';
 import { isCustomReaction } from '#view/sheets/components/CustomReactionsPanel.svelte.js';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-interface HeroicAction {
-	id: string;
-	icon: string;
-	labelKey: string;
-	descriptionKey: string;
-	type: string;
-	requiresCombat?: boolean;
-}
-
-interface HeroicReaction {
-	id: string;
-	icon: string;
-	labelKey: string;
-	descriptionKey: string;
-	reactionKey: HeroicReactionKey;
-	type: string;
-}
-
 interface ActionsData {
 	current: number;
 	max: number;
 }
 
-// ============================================================================
-// Action Definitions (Single source of truth for all heroic actions)
-// ============================================================================
-
-export const HEROIC_ACTIONS: HeroicAction[] = [
-	{
-		id: 'attack',
-		icon: 'fa-solid fa-sword',
-		labelKey: 'NIMBLE.ui.heroicActions.actions.attack.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.actions.attack.description',
-		type: 'panel',
-	},
-	{
-		id: 'spell',
-		icon: 'fa-solid fa-wand-sparkles',
-		labelKey: 'NIMBLE.ui.heroicActions.actions.spell.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.actions.spell.description',
-		type: 'panel',
-	},
-	{
-		id: 'move',
-		icon: 'fa-solid fa-person-running',
-		labelKey: 'NIMBLE.ui.heroicActions.actions.move.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.actions.move.description',
-		type: 'panel',
-	},
-	{
-		id: 'assess',
-		icon: 'fa-solid fa-eye',
-		labelKey: 'NIMBLE.ui.heroicActions.actions.assess.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.actions.assess.description',
-		type: 'panel',
-	},
-];
-
-export const HEROIC_REACTIONS: HeroicReaction[] = [
-	{
-		id: 'defend',
-		icon: 'fa-solid fa-shield',
-		labelKey: 'NIMBLE.ui.heroicActions.reactions.defend.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.defend.description',
-		reactionKey: 'defend',
-		type: 'panel',
-	},
-	{
-		id: 'interpose',
-		icon: 'fa-solid fa-people-arrows',
-		labelKey: 'NIMBLE.ui.heroicActions.reactions.interpose.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.interpose.description',
-		reactionKey: 'interpose',
-		type: 'panel',
-	},
-	{
-		id: 'opportunity',
-		icon: 'fa-solid fa-bullseye',
-		labelKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.description',
-		reactionKey: 'opportunityAttack',
-		type: 'panel',
-	},
-	{
-		id: 'help',
-		icon: 'fa-solid fa-handshake-angle',
-		labelKey: 'NIMBLE.ui.heroicActions.reactions.help.label',
-		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.help.description',
-		reactionKey: 'help',
-		type: 'panel',
-	},
-];
+// Unarmed Strike lives inside the Attack panel on this sheet.
+const HEROIC_ACTIONS = BUILT_IN_HEROIC_ACTIONS.filter(
+	(action) => action.actionId !== 'unarmedStrike',
+);
 
 type HeroicReactionUsageState = ReturnType<typeof getHeroicReactionUsageState>;
-type HeroicReactionId = (typeof HEROIC_REACTIONS)[number]['id'];
+type HeroicReactionId = (typeof BUILT_IN_HEROIC_REACTIONS)[number]['actionId'];
 type ReactionUsageStateMap = Record<HeroicReactionId, HeroicReactionUsageState>;
 
 type CombatWithHeroicReactionUse = Combat & {
@@ -173,28 +90,12 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		};
 	}
 
-	async function updateActionPips(newValue: number): Promise<void> {
+	async function deductActionPips(count = 1): Promise<void> {
 		const combat = getCombat();
 		const combatantId = getCombatantInCombat()?.id ?? null;
 		if (!combat || !combatantId) return;
 
-		await queueCombatantMutationWithFreshDocument({
-			combat,
-			combatantId,
-			mutation: async (currentCombatant) => {
-				await currentCombatant.update({
-					'system.actions.base.current': newValue,
-				} as Record<string, unknown>);
-			},
-		});
-	}
-
-	async function deductActionPips(count = 1): Promise<void> {
-		const { current } = getActionsData();
-		if (current > 0) {
-			const newValue = Math.max(0, current - count);
-			await updateActionPips(newValue);
-		}
+		await consumeCombatantAction({ combat, combatantId, actionCost: count });
 	}
 
 	// Reactive combat state
@@ -212,8 +113,8 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		subscribeCombatState();
 		const combat = getCombat();
 		const combatant = getCombatant();
-		return HEROIC_REACTIONS.reduce((acc, reaction) => {
-			acc[reaction.id as HeroicReactionId] = getHeroicReactionUsageState({
+		return BUILT_IN_HEROIC_REACTIONS.reduce((acc, reaction) => {
+			acc[reaction.actionId as HeroicReactionId] = getHeroicReactionUsageState({
 				combat,
 				combatant,
 				reactionKeys: [reaction.reactionKey],
@@ -242,12 +143,8 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		expandedPanel = panelName;
 	}
 
-	function handleActionClick(action: HeroicAction): void {
-		switch (action.type) {
-			case 'panel':
-				togglePanel(action.id);
-				break;
-		}
+	function handleActionClick(action: BuiltInHeroicAction): void {
+		togglePanel(action.actionId);
 	}
 
 	function toggleReactionPanel(panelName: string): void {
@@ -257,32 +154,28 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		expandedReactionPanel = panelName;
 	}
 
-	function handleReactionClick(reaction: HeroicReaction): void {
-		switch (reaction.type) {
-			case 'panel':
-				toggleReactionPanel(reaction.id);
-				break;
-		}
+	function handleReactionClick(reaction: BuiltInHeroicReaction): void {
+		toggleReactionPanel(reaction.actionId);
 	}
 
-	function getReactionUsageState(reaction: HeroicReaction): HeroicReactionUsageState {
-		return reactionUsageStates[reaction.id as HeroicReactionId];
+	function getReactionUsageState(reaction: BuiltInHeroicReaction): HeroicReactionUsageState {
+		return reactionUsageStates[reaction.actionId as HeroicReactionId];
 	}
 
 	function isReactionAvailable(reactionKey: HeroicReactionKey): boolean {
-		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		const reaction = BUILT_IN_HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
 		if (!reaction) return false;
 		return getReactionUsageState(reaction).isAvailable;
 	}
 
 	function canUseReaction(reactionKey: HeroicReactionKey): boolean {
-		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		const reaction = BUILT_IN_HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
 		if (!reaction) return false;
 		return getReactionUsageState(reaction).canUse;
 	}
 
 	function isReactionActiveTurnBlocked(reactionKey: HeroicReactionKey): boolean {
-		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		const reaction = BUILT_IN_HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
 		if (!reaction) return false;
 		return getReactionUsageState(reaction).isActiveTurn;
 	}
@@ -344,34 +237,20 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	const flags = $derived(getActor().reactive.flags[SYSTEM_ID]);
 	const showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
-	function isActionDisabled(action: HeroicAction): boolean {
-		if (action.requiresCombat) {
-			return !inCombat || actionsData.current <= 0;
-		}
-		if (action.id === 'spell') {
-			return !hasSpells;
-		}
-		return false;
+	function isActionDisabled(action: BuiltInHeroicAction): boolean {
+		return action.actionId === 'spell' && !hasSpells;
 	}
 
-	function getActionTooltip(action: HeroicAction): string {
+	function getActionTooltip(action: BuiltInHeroicAction): string {
 		const label = localize(action.labelKey);
 
-		if (action.requiresCombat) {
-			if (!inCombat) {
-				return `${label} (${localize('NIMBLE.ui.heroicActions.outsideCombat')})`;
-			}
-			if (actionsData.current <= 0) {
-				return `${label} (${localize('NIMBLE.ui.heroicActions.noActions')})`;
-			}
-		}
-		if (action.id === 'spell' && !hasSpells) {
+		if (action.actionId === 'spell' && !hasSpells) {
 			return `${label} (${localize('NIMBLE.ui.heroicActions.noSpells')})`;
 		}
 		return label;
 	}
 
-	function getReactionTooltip(reaction: HeroicReaction): string {
+	function getReactionTooltip(reaction: BuiltInHeroicReaction): string {
 		const usageState = getReactionUsageState(reaction);
 		const label = localize(reaction.labelKey);
 
@@ -431,7 +310,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 			return showEmbeddedDocumentImages;
 		},
 		HEROIC_ACTIONS,
-		HEROIC_REACTIONS,
+		HEROIC_REACTIONS: BUILT_IN_HEROIC_REACTIONS,
 		canUseReaction,
 		isReactionActiveTurnBlocked,
 		deductActionPips,

@@ -2,14 +2,13 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { systemHookName } from '#system';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
-import { addBankedDamageReduction } from '#utils/damage/bankedDamageReduction.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
-import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { dieSizeToMaxFace, resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
+import { spendDicePool } from '#utils/dicePool/spendDicePool.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
-import localize from '#utils/localize.ts';
 import type { LivePoolView } from './DicePoolTracker.svelte.ts';
 
 // Reactive subscription so the panel reflects pool mutations made by other
@@ -270,90 +269,12 @@ export function createDicePoolPanelState(
 		await adjustPool(getActor(), pool.id, 'set', clamped);
 	}
 
-	/** Raise every picked die to the pool's highest face, leaving the pool size
-	 *  untouched, and report the before/after faces to chat. The raising itself is
-	 *  `maximizePoolDie`, shared with the activation-driven pool node, so both entry
-	 *  points stay in step. */
-	async function applyMaximizeOutcome(
-		pool: Extract<LivePoolView, { kind: 'rolled' }>,
-		consumer: DicePoolConsumer,
-	): Promise<void> {
-		const picked = [...selectedIndices];
-		const result = await maximizePoolDie(getActor(), pool.id, picked.length, {
-			indices: picked,
-		});
-		if (!result.changed) return;
-
-		const changes = result.changes.map(({ from, to }) => `${from} → ${to}`);
-
-		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
-			.ChatMessage;
-		const headerLine = `<strong>${foundry.utils.escapeHTML(consumer.itemName)}</strong>`;
-		const subLine = foundry.utils.escapeHTML(
-			localize('NIMBLE.dicePoolTracker.panel.useFeature.maximizedNote', {
-				count: String(changes.length),
-				label: pool.label,
-				changes: changes.join(', '),
-			}),
-		);
-		await ChatMessageCls.create({
-			speaker: ChatMessageCls.getSpeaker({ actor: getActor() }),
-			content: `${headerLine}<div class="nimble-dice-pool-spend-flavor">${subLine}</div>`,
-		} as ChatMessage.CreateData);
-	}
-
 	async function spend(): Promise<void> {
 		const pool = livePool;
 		const consumer = selectedConsumer;
 		if (!pool || pool.kind !== 'rolled' || !consumer || selectedCount < 1) return;
 
-		if (consumer.selectionOutcome === 'maximize') {
-			await applyMaximizeOutcome(pool, consumer);
-			selectedIndices = new Set();
-			selectedConsumerKey = null;
-			livePreviewTotal = null;
-			return;
-		}
-
-		const spentFaces = pool.faces.filter((_, i) => selectedIndices.has(i));
-		const nextFaces = pool.faces.filter((_, i) => !selectedIndices.has(i));
-
-		await setPoolFaces(getActor(), pool.id, nextFaces);
-
-		const substituted = substituteSpendFormula(
-			consumer.effectFormula ?? '0',
-			spentFaces.length,
-			spentFaces.reduce((a, b) => a + b, 0),
-		);
-		const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
-		const effectRoll = new RollCls(substituted, getActor().getRollData());
-		await effectRoll.evaluate();
-
-		if (consumer.effectType === 'damageReduction') {
-			await addBankedDamageReduction(
-				getActor(),
-				effectRoll.total ?? 0,
-				consumer.itemImg,
-				consumer.itemName,
-			);
-		}
-
-		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
-			.ChatMessage;
-		const speaker = ChatMessageCls.getSpeaker({ actor: getActor() });
-		const headerLine = `<strong>${foundry.utils.escapeHTML(consumer.itemName)}</strong>`;
-		let subLine = foundry.utils.escapeHTML(
-			`Spent ${spentFaces.length} ${pool.label} (${spentFaces.join(', ')})`,
-		);
-		if (consumer.effectType === 'damageReduction') {
-			subLine += `<br />${foundry.utils.escapeHTML(localize('NIMBLE.dicePoolTracker.panel.useFeature.bankedReductionNote'))}`;
-		}
-		const flavor = `${headerLine}<div class="nimble-dice-pool-spend-flavor">${subLine}</div>`;
-
-		await effectRoll.toMessage({
-			speaker,
-			flavor,
-		} as Parameters<Roll['toMessage']>[0]);
+		await spendDicePool({ actor: getActor(), pool, consumer, selectedIndices });
 
 		// Reset selection so the panel is fresh for another spend, but keep open.
 		selectedIndices = new Set();

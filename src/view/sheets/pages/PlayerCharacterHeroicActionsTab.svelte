@@ -110,10 +110,10 @@
 
 		{#if heroicState.activeHeroicTab === 'actions'}
 			<div class="heroic-actions-tabs">
-				{#each heroicState.HEROIC_ACTIONS as action (action.id)}
+				{#each heroicState.HEROIC_ACTIONS as action (action.actionId)}
 					<button
 						class="heroic-action-tab"
-						class:heroic-action-tab--active={heroicState.expandedPanel === action.id}
+						class:heroic-action-tab--active={heroicState.expandedPanel === action.actionId}
 						class:heroic-action-tab--disabled={heroicState.isActionDisabled(action)}
 						type="button"
 						aria-label={localize(action.labelKey)}
@@ -121,7 +121,7 @@
 						disabled={heroicState.isActionDisabled(action)}
 						draggable="true"
 						ondragstart={(event) =>
-							handleActionDragStart(event, action.id, 'action', action.labelKey)}
+							handleActionDragStart(event, action.actionId, 'action', action.labelKey)}
 						onclick={() => heroicState.handleActionClick(action)}
 					>
 						<i class={action.icon}></i>
@@ -133,10 +133,11 @@
 
 		{#if heroicState.activeHeroicTab === 'reactions'}
 			<div class="heroic-actions-tabs">
-				{#each heroicState.HEROIC_REACTIONS as reaction (reaction.id)}
+				{#each heroicState.HEROIC_REACTIONS as reaction (reaction.actionId)}
 					<button
 						class="heroic-action-tab"
-						class:heroic-action-tab--active={heroicState.expandedReactionPanel === reaction.id}
+						class:heroic-action-tab--active={heroicState.expandedReactionPanel ===
+							reaction.actionId}
 						class:heroic-action-tab--available={heroicState.isReactionAvailable(
 							reaction.reactionKey,
 						)}
@@ -148,7 +149,7 @@
 						data-tooltip={heroicState.getReactionTooltip(reaction)}
 						draggable="true"
 						ondragstart={(event) =>
-							handleActionDragStart(event, reaction.id, 'reaction', reaction.labelKey)}
+							handleActionDragStart(event, reaction.actionId, 'reaction', reaction.labelKey)}
 						onclick={() => heroicState.handleReactionClick(reaction)}
 					>
 						<i class={reaction.icon}></i>

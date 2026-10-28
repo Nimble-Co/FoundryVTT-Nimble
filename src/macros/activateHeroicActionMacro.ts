@@ -3,6 +3,7 @@ import type { NimbleCharacter } from '../documents/actor/character.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getMovementSpeeds } from '../utils/actor/movementSpeeds.js';
 import { getActiveCombatForCurrentScene } from '../utils/combat/combatState.js';
+import { consumeCombatantAction } from '../utils/combat/combatTurnActions.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -233,10 +234,9 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 		if (confirmed !== true) return;
 	}
 
-	// Deduct action pip (clamp at 0)
-	await combatant.update({
-		'system.actions.base.current': Math.max(0, actionsRemaining - 1),
-	} as Record<string, unknown>);
+	if (combat && combatant.id) {
+		await consumeCombatantAction({ combat, combatantId: combatant.id });
+	}
 
 	// Get movement speed
 	const movementSpeeds = getMovementSpeeds(actor);
@@ -377,11 +377,6 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 	const inCombat = !!combatant && combatant.initiative !== null;
 
-	// Get current actions if in combat
-	// @ts-expect-error - combatant.system is not typed
-	const actions = combatant?.system?.actions?.base;
-	const actionsRemaining = actions?.current ?? 0;
-
 	let rollFormula = getUnarmedDamageFormula(actor);
 	const canCrit = hasUnarmedProficiency(actor);
 
@@ -500,10 +495,7 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	await ChatMessage.create(chatData as any);
 
-	// Deduct action pip if in combat
-	if (inCombat && combatant) {
-		await combatant.update({
-			'system.actions.base.current': Math.max(0, actionsRemaining - 1),
-		} as Record<string, unknown>);
+	if (inCombat && combat && combatant?.id) {
+		await consumeCombatantAction({ combat, combatantId: combatant.id });
 	}
 }

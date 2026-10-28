@@ -7,6 +7,96 @@ export type HeroicActionKey = (typeof HEROIC_ACTIONS)[number];
 export type HeroicReactionKey = (typeof HEROIC_REACTIONS)[number];
 export type HeroicActionCategory = 'heroicAction' | 'heroicReaction';
 
+interface BuiltInHeroicDefinition {
+	/** The id that `HeroicAction` drag data and hotbar macro commands carry. */
+	actionId: string;
+	icon: string;
+	labelKey: string;
+	descriptionKey: string;
+}
+
+export interface BuiltInHeroicAction extends BuiltInHeroicDefinition {
+	actionType: 'action';
+}
+
+export interface BuiltInHeroicReaction extends BuiltInHeroicDefinition {
+	actionType: 'reaction';
+	reactionKey: HeroicReactionKey;
+}
+
+export const BUILT_IN_HEROIC_ACTIONS: readonly BuiltInHeroicAction[] = [
+	{
+		actionId: 'attack',
+		actionType: 'action',
+		icon: 'fa-solid fa-sword',
+		labelKey: 'NIMBLE.ui.heroicActions.actions.attack.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.actions.attack.description',
+	},
+	{
+		actionId: 'unarmedStrike',
+		actionType: 'action',
+		icon: 'fa-solid fa-hand-fist',
+		labelKey: 'NIMBLE.ui.heroicActions.unarmedStrike',
+		descriptionKey: 'NIMBLE.ui.heroicActions.actions.unarmedStrike.description',
+	},
+	{
+		actionId: 'spell',
+		actionType: 'action',
+		icon: 'fa-solid fa-wand-sparkles',
+		labelKey: 'NIMBLE.ui.heroicActions.actions.spell.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.actions.spell.description',
+	},
+	{
+		actionId: 'move',
+		actionType: 'action',
+		icon: 'fa-solid fa-person-running',
+		labelKey: 'NIMBLE.ui.heroicActions.actions.move.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.actions.move.description',
+	},
+	{
+		actionId: 'assess',
+		actionType: 'action',
+		icon: 'fa-solid fa-eye',
+		labelKey: 'NIMBLE.ui.heroicActions.actions.assess.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.actions.assess.description',
+	},
+];
+
+export const BUILT_IN_HEROIC_REACTIONS: readonly BuiltInHeroicReaction[] = [
+	{
+		actionId: 'defend',
+		actionType: 'reaction',
+		icon: 'fa-solid fa-shield',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.defend.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.defend.description',
+		reactionKey: 'defend',
+	},
+	{
+		actionId: 'interpose',
+		actionType: 'reaction',
+		icon: 'fa-solid fa-people-arrows',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.interpose.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.interpose.description',
+		reactionKey: 'interpose',
+	},
+	{
+		actionId: 'opportunity',
+		actionType: 'reaction',
+		icon: 'fa-solid fa-bullseye',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.description',
+		reactionKey: 'opportunityAttack',
+	},
+	{
+		actionId: 'help',
+		actionType: 'reaction',
+		icon: 'fa-solid fa-handshake-angle',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.help.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.help.description',
+		reactionKey: 'help',
+	},
+];
+
 interface HeroicReactionDefinition {
 	labelKey: string;
 	availabilityPath: string;

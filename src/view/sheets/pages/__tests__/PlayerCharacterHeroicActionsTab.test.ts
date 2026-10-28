@@ -25,7 +25,9 @@ vi.mock('../../../../utils/damage/attackUtils.js', () => ({
 	hasUnarmedProficiency: hasUnarmedProficiencyMock,
 }));
 
+import { createCombatantsCollectionFixture } from '../../../../../tests/fixtures/combat.js';
 import { activateHeroicActionMacro } from '../../../../macros/activateHeroicActionMacro.ts';
+import { AUTOMATION_SETTING_KEYS } from '../../../../settings/automationSettings.js';
 import PlayerCharacterHeroicActionsTabTestHarness from './PlayerCharacterHeroicActionsTab.testHarness.svelte';
 
 function globals() {
@@ -207,5 +209,90 @@ describe('PlayerCharacterHeroicActionsTab opportunity macro handoff', () => {
 			),
 		);
 		expect(globals().foundry.applications.api.DialogV2.confirm).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('PlayerCharacterHeroicActionsTab Move button', () => {
+	const settingsHolder = globalThis as unknown as { game: { settings?: unknown } };
+	let previousSettings: unknown;
+
+	function setActionTracking(enabled: boolean) {
+		settingsHolder.game.settings = {
+			get: vi.fn(
+				(_namespace: string, key: string) =>
+					key !== AUTOMATION_SETTING_KEYS.actionTracking || enabled,
+			),
+		};
+	}
+
+	function renderInCombat() {
+		const sheetState: Record<string, unknown> = {};
+		const actor = {
+			...createOpportunityActor(sheetState),
+			system: { attributes: { movement: { walk: 6 } } },
+		};
+		const combatant = {
+			id: 'combatant-move',
+			actorId: actor.id,
+			actor,
+			initiative: 12,
+			system: { actions: { base: { current: 2, max: 3 } } },
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+		const combat = {
+			scene: { id: 'scene-move' },
+			active: true,
+			started: true,
+			round: 1,
+			combatant,
+			combatants: createCombatantsCollectionFixture([
+				combatant,
+			] as unknown as Combatant.Implementation[]),
+		};
+		globals().canvas = { scene: { id: 'scene-move' } };
+		globals().game.combat = combat;
+		globals().game.combats = { contents: [combat], viewed: combat };
+		(globalThis as unknown as { ChatMessage: { create: unknown } }).ChatMessage.create = vi
+			.fn()
+			.mockResolvedValue({});
+
+		render(PlayerCharacterHeroicActionsTabTestHarness, {
+			actor,
+			application: { _onDragStart: vi.fn() },
+			sheetState,
+		});
+		return combatant;
+	}
+
+	async function clickMove() {
+		await fireEvent.click(screen.getByRole('button', { name: 'Move' }));
+		await fireEvent.click(await screen.findByRole('button', { name: /confirm move/i }));
+		await waitFor(() => expect(ChatMessage.create).toHaveBeenCalled());
+	}
+
+	beforeEach(() => {
+		previousSettings = settingsHolder.game.settings;
+	});
+
+	afterEach(() => {
+		settingsHolder.game.settings = previousSettings;
+	});
+
+	it('spends 1 action', async () => {
+		setActionTracking(true);
+		const combatant = renderInCombat();
+
+		await clickMove();
+
+		expect(combatant.update).toHaveBeenCalledWith({ 'system.actions.base.current': 1 });
+	});
+
+	it('spends no action with action tracking off', async () => {
+		setActionTracking(false);
+		const combatant = renderInCombat();
+
+		await clickMove();
+
+		expect(combatant.update).not.toHaveBeenCalled();
 	});
 });

@@ -1,3 +1,5 @@
+import { createCombatantsCollectionFixture } from '../../../tests/fixtures/combat.js';
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 import { activateItemMacro } from '../activateItemMacro.ts';
 
 function globals() {
@@ -95,7 +97,9 @@ function setActiveCombat(combatant: ReturnType<typeof createCombatant> | null) {
 			: {
 					scene: { id: 'scene-item-macro' },
 					active: true,
-					combatants: [combatant],
+					combatants: createCombatantsCollectionFixture([
+						combatant as unknown as Combatant.Implementation,
+					]),
 				};
 	globals().game.combat = combat;
 	globals().game.combats = {
@@ -177,5 +181,36 @@ describe('activateItemMacro', () => {
 		await activateItemMacro('Longsword');
 
 		expect(combatant.update).not.toHaveBeenCalled();
+	});
+
+	describe('with action tracking off', () => {
+		const settingsHolder = globalThis as unknown as { game: { settings?: unknown } };
+		let previousSettings: unknown;
+
+		beforeEach(() => {
+			previousSettings = settingsHolder.game.settings;
+			settingsHolder.game.settings = {
+				get: vi.fn(
+					(_namespace: string, key: string) => key !== AUTOMATION_SETTING_KEYS.actionTracking,
+				),
+			};
+		});
+
+		afterEach(() => {
+			settingsHolder.game.settings = previousSettings;
+		});
+
+		it('activates the item but spends no action pips', async () => {
+			const item = createItem({});
+			const actor = createActor(item);
+			const combatant = createCombatant(2);
+			setSpeakerActor(actor);
+			setActiveCombat(combatant);
+
+			await activateItemMacro('Longsword');
+
+			expect(item.activate).toHaveBeenCalled();
+			expect(combatant.update).not.toHaveBeenCalled();
+		});
 	});
 });

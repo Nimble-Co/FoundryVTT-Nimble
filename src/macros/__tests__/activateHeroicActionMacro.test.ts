@@ -1,29 +1,31 @@
-const {
-	damageRollMock,
-	getUnarmedDamageFormulaMock,
-	hasUnarmedProficiencyMock,
-	itemActivationConfigDialogMock,
-} = vi.hoisted(() => ({
-	damageRollMock: vi.fn(),
-	getUnarmedDamageFormulaMock: vi.fn(),
-	hasUnarmedProficiencyMock: vi.fn(),
-	itemActivationConfigDialogMock: vi.fn(),
-}));
+import { createCombatantsCollectionFixture } from '../../../tests/fixtures/combat.js';
+import { AUTOMATION_SETTING_KEYS } from '../../settings/automationSettings.js';
 
-vi.mock('../../dice/DamageRoll.js', () => ({
-	DamageRoll: damageRollMock,
-}));
+const damageRollMock = vi.fn();
+const getUnarmedDamageFormulaMock = vi.fn();
+const hasUnarmedProficiencyMock = vi.fn();
+const itemActivationConfigDialogMock = vi.fn();
 
-vi.mock('../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
-	default: itemActivationConfigDialogMock,
-}));
+// The test setup has already loaded this macro through game.ts, so a hoisted
+// vi.mock would not reach it. Load a fresh copy after the mocks are registered.
+let activateHeroicActionMacro: typeof import('../activateHeroicActionMacro.ts').activateHeroicActionMacro;
 
-vi.mock('../../utils/damage/attackUtils.js', () => ({
-	getUnarmedDamageFormula: getUnarmedDamageFormulaMock,
-	hasUnarmedProficiency: hasUnarmedProficiencyMock,
-}));
-
-import { activateHeroicActionMacro } from '../activateHeroicActionMacro.ts';
+beforeAll(async () => {
+	vi.resetModules();
+	vi.doMock('../../dice/DamageRoll.js', () => ({
+		DamageRoll: damageRollMock,
+	}));
+	vi.doMock('../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
+		default: itemActivationConfigDialogMock,
+	}));
+	vi.doMock('../../utils/damage/attackUtils.js', () => ({
+		getDamageBonusFormulas: () => [],
+		getDamageBonusTotal: () => 0,
+		getUnarmedDamageFormula: getUnarmedDamageFormulaMock,
+		hasUnarmedProficiency: hasUnarmedProficiencyMock,
+	}));
+	({ activateHeroicActionMacro } = await import('../activateHeroicActionMacro.ts'));
+});
 
 function globals() {
 	return globalThis as unknown as {
@@ -94,6 +96,7 @@ function createCharacterActor(): MacroTestActor {
 		isOwner: true,
 		img: 'hero.webp',
 		permission: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
+		getRollData: () => ({}),
 		system: {
 			attributes: {
 				movement: {
@@ -160,7 +163,10 @@ function setActiveCombat(
 		started: true,
 		round: 1,
 		combatant: activeCombatant,
-		combatants: [combatant, activeCombatant],
+		combatants: createCombatantsCollectionFixture([
+			combatant,
+			activeCombatant,
+		] as unknown as Combatant.Implementation[]),
 	} as unknown as Combat;
 	globals().game.combat = combat;
 	globals().game.combats = {
@@ -228,9 +234,7 @@ describe('activateHeroicActionMacro', () => {
 
 		await activateHeroicActionMacro('move', 'action');
 
-		expect(combatant.update).toHaveBeenCalledWith({
-			'system.actions.base.current': 0,
-		});
+		expect(combatant.update).not.toHaveBeenCalled();
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				type: 'moveAction',
@@ -347,6 +351,81 @@ describe('activateHeroicActionMacro', () => {
 					reactionType: 'defend',
 				}),
 			}),
+		);
+	});
+
+	describe('action pips', () => {
+		const holder = globalThis as unknown as {
+			game: { settings?: unknown };
+			CONST: { CHAT_MESSAGE_STYLES?: unknown };
+			CONFIG: { sounds?: unknown };
+		};
+		let previousSettings: unknown;
+
+		function setActionTracking(enabled: boolean) {
+			holder.game.settings = {
+				get: vi.fn(
+					(_namespace: string, key: string) =>
+						key !== AUTOMATION_SETTING_KEYS.actionTracking || enabled,
+				),
+			};
+		}
+
+		function setUpUnarmedStrike() {
+			getUnarmedDamageFormulaMock.mockReturnValue('1d4');
+			hasUnarmedProficiencyMock.mockReturnValue(false);
+			itemActivationConfigDialogMock.mockImplementation(function dialog() {
+				return { render: vi.fn(), promise: Promise.resolve({ rollMode: 0 }) };
+			});
+			damageRollMock.mockImplementation(function roll() {
+				return { evaluate: vi.fn(), toJSON: () => ({}), isCritical: false, isMiss: false };
+			});
+			holder.CONST.CHAT_MESSAGE_STYLES ??= { OTHER: 0 };
+			holder.CONFIG.sounds ??= { dice: '' };
+		}
+
+		function inCombatWithActions(currentActions: number) {
+			const actor = createCharacterActor();
+			const combatant = createCombatant(actor, currentActions);
+			setSpeakerActor(actor);
+			setActiveCombat(combatant, {
+				id: 'active-combatant',
+				actorId: 'other-actor',
+				initiative: 15,
+			} as Combatant);
+			return combatant;
+		}
+
+		beforeEach(() => {
+			previousSettings = holder.game.settings;
+		});
+
+		afterEach(() => {
+			holder.game.settings = previousSettings;
+		});
+
+		it.each(['move', 'unarmedStrike'])('spends 1 action for %s', async (actionId) => {
+			setActionTracking(true);
+			setUpUnarmedStrike();
+			const combatant = inCombatWithActions(2);
+
+			await activateHeroicActionMacro(actionId, 'action');
+
+			expect(combatant.update).toHaveBeenCalledWith({ 'system.actions.base.current': 1 });
+		});
+
+		it.each(['move', 'unarmedStrike'])(
+			'spends no action for %s with action tracking off',
+			async (actionId) => {
+				setActionTracking(false);
+				setUpUnarmedStrike();
+				const combatant = inCombatWithActions(2);
+
+				await activateHeroicActionMacro(actionId, 'action');
+
+				expect(ChatMessage.create).toHaveBeenCalled();
+				expect(combatant.update).not.toHaveBeenCalled();
+			},
 		);
 	});
 });
